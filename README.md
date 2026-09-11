@@ -176,6 +176,31 @@ no core dump, no clear Xid"), that's exactly the gap this project targets.
 
 ---
 
+## Related work
+
+`blackbox` isn't the only project reacting to this hardware class's rough
+edges, and it isn't trying to duplicate what already exists elsewhere:
+
+- **[sparkview](https://github.com/parallelArchitect/sparkview)** — a live
+  TUI dashboard for GB10 boxes: GPU/CPU/PSI/clock-throttle state in real
+  time, plus an anomaly auto-logger that starts recording *before* a human
+  notices something is wrong. `blackbox`'s use of `/proc/pressure` (PSI) as
+  the signal that catches what `MemFree`/`MemAvailable` miss was informed by
+  sparkview's write-up on the same [forum thread](https://forums.developer.nvidia.com/t/sparkview-gpu-monitor-tool-with-gb10-aware-unified-memory-handling/366877)
+  this repo cites above. The two tools are complementary, not overlapping:
+  sparkview watches the machine *live*; `blackbox` is what you run *after*,
+  to reconstruct a window of time nobody was staring at when it happened.
+- **[nvml-unified-shim](https://github.com/parallelArchitect/nvml-unified-shim)**
+  — fixes NVML memory reporting on unified-memory platforms. Independent
+  confirmation of the same quirk this README documents above: on GB10,
+  `nvmlDeviceGetMemoryInfo` reports `total ≈ MemTotal`, which is not
+  allocatable memory, and both projects landed on the same workaround
+  (derive used/available from the host side, not from NVML's own total).
+
+If you maintain a tool in this space and it belongs here, open a PR.
+
+---
+
 ## A platform gap that makes this harder than it should be: no cgroup accounting for GPU/unified memory
 
 A good chunk of the OOM-adjacent failures above trace back to one thing:
