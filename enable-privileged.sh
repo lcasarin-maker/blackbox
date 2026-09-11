@@ -12,6 +12,8 @@
 #   2. sysstat ENABLED   -- el paquete esta instalado y el servicio activo,
 #      pero con ENABLED="false": sus datos paran el 2026-08-27.
 #   3. limite de core    -- sin esto, systemd-coredump recibe procesos truncados.
+#   4. accounting de GPU -- sin esto, `bb scan` solo ve procesos de GPU VIVOS;
+#      el que ya salio para cuando se corre el scan es invisible.
 #
 # NO cambia kernel.dmesg_restrict: `journalctl -k` ya da el log del kernel a
 # este usuario (grupo adm), asi que abrir dmesg no anade informacion.
@@ -46,6 +48,9 @@ if [ "$REVERT" = 1 ]; then
   run rm -f /etc/security/limits.d/99-blackbox-core.conf
   run rm -f /etc/systemd/coredump.conf.d/99-blackbox.conf
   echo "  limites y coredump.conf de blackbox retirados"
+  if command -v nvidia-smi >/dev/null 2>&1; then
+    run nvidia-smi -am 0 && echo "  accounting mode de GPU apagado"
+  fi
   echo
   echo "  systemd-coredump NO se desinstala (quitarlo devuelve core_pattern a"
   echo "  apport, y esa decision es tuya): sudo apt remove systemd-coredump"
@@ -124,6 +129,31 @@ else
   echo "  sar sin datos frescos. Revisa el drop-in antes de cambiar ENABLED:"
   echo "    systemctl list-timers sysstat-collect.timer"
   echo "    cat /etc/systemd/system/sysstat-collect.timer.d/override.conf"
+fi
+
+# --- 4. accounting mode de GPU -------------------------------------------
+# `bb scan` solo veia procesos de GPU VIVOS via --query-compute-apps: el que
+# ya salio para cuando se corre el scan quedaba invisible, justo la pregunta
+# forense de "quien uso la GPU antes del fallo". Accounting mode retiene
+# pid/gpu_util/mem_util/memoria_max/tiempo por proceso hasta que se limpian o
+# el driver se reinicia. Verificado 2026-09-11: apagado por defecto, y
+# `nvidia-smi -am 1` sin root falla con "Insufficient Permissions".
+#
+# NO sobrevive un reinicio del driver por si solo, a diferencia de los
+# ficheros de arriba -- si hace falta que sobreviva un reboot, sumar
+# `nvidia-smi -am 1` como segundo ExecStart del oneshot que ya reaplica -lgc
+# en el arranque (adopted/system-config/etc_systemd_system_atom-clock-lock.
+# service), fuera del alcance de este script.
+echo
+echo "-- 4. accounting de GPU (bb scan: quien uso la GPU y ya salio) --"
+if command -v nvidia-smi >/dev/null 2>&1; then
+  if run nvidia-smi -am 1; then
+    echo "  accounting mode: Enabled (hasta el proximo reinicio del driver)"
+  else
+    echo "  no se pudo activar accounting mode (revisa el error de arriba)"
+  fi
+else
+  echo "  nvidia-smi no disponible, se omite"
 fi
 
 # --- recarga ------------------------------------------------------------

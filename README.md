@@ -92,6 +92,8 @@ signals that a stock install doesn't produce on its own:
 | OCI/nvidia-container-runtime prestart hook | Catches the silent fallback to "legacy" mode with no real GPU, where the container still reports "Up" |
 | kdump | Confirms it's actually installed and captured a crash, instead of trusting the unit's `enabled` state |
 | PSI (`/proc/pressure`) | Neither `MemFree` nor `MemAvailable` says how much time was actually spent *stalled* waiting on memory — PSI does |
+| Named throttle reasons + lifetime counters | `nvidia-smi`'s binary throttle flag doesn't say *why* — `-q -d PERFORMANCE` separates SW power cap from HW/SW thermal slowdown from HW power-brake, plus how many seconds each has accumulated since the last driver reload |
+| GPU processes that already exited | `--query-compute-apps` only sees what's running *now* — accounting mode (`bb`'s privileged setup step) keeps per-PID GPU usage around after the process is gone, for exactly the question a post-mortem actually asks |
 
 Every check that can't run is counted and printed, never silently skipped.
 **A report with `could_not_run > 0` is not a clean report**, however many

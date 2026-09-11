@@ -53,6 +53,44 @@ gpu_stat() { # temp,util,power
     --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' '
 }
 
+# Razones de throttle CON NOMBRE, mas sus contadores acumulados de por vida.
+# Verificado 2026-09-11 en este GB10 (nvidia-smi 580.173.02): `-q -d
+# PERFORMANCE` distingue SW Power Cap de HW/SW Thermal Slowdown y de HW Power
+# Brake Slowdown -- hasta hoy bin/bb solo veia un bit "throttle" sin decir
+# CUAL de esas causas era, y HARVEST-364166/374274/376039 son justo reportes
+# donde esa distincion importaba. Los contadores son acumulados desde el
+# ultimo reinicio del driver, no una muestra de la ventana de `bb scan` --
+# ninguna fuente existente en este repo los leia. Confirmado NO aplicable en
+# este hardware, mismo dia: ECC, PAGE_RETIREMENT y ROW_REMAPPER devuelven
+# N/A via `-q -d ECC`/`PAGE_RETIREMENT`/`ROW_REMAPPER` (GB10 no los expone).
+gpu_perf_raw() {
+  have nvidia-smi || return 1
+  timeout 5 nvidia-smi -q -d PERFORMANCE 2>/dev/null
+}
+
+gpu_throttle_activas() { # stdin: gpu_perf_raw -> una razon "Active" ahora mismo por linea
+  awk '
+    /Clocks Event Reasons Counters/ { exit }
+    /Clocks Event Reasons *$/ { en=1; next }
+    en && / : *Active$/ {
+      line=$0
+      sub(/ *: *Active$/, "", line)
+      gsub(/^ +/, "", line)
+      print line
+    }'
+}
+
+gpu_throttle_contadores() { # stdin: gpu_perf_raw -> "razon  Ns" por cada contador > 0
+  awk -F': *' '
+    /Clocks Event Reasons Counters/ { en=1; next }
+    /Sparse Operation Mode/ { exit }
+    en && /us *$/ {
+      label=$1; gsub(/^ +| +$/, "", label)
+      val=$2+0
+      if (val > 0) printf "    %-24s %d s\n", label, int(val/1000000)
+    }'
+}
+
 # MemFree ademas de MemAvailable. En el incidente del 07-sep MemAvailable decia
 # 28 GB mientras MemFree estaba en 4.6 GB: mirar solo el primero oculta la
 # presion real, y con memoria unificada la GPU compite por esa misma RAM.
@@ -370,8 +408,53 @@ cmd_scan() {
   # limite de tiempo, no si historicamente escribio datos.
   if timeout 5 nvidia-smi >/dev/null 2>&1; then
     echo "  nvidia-smi responde ahora:   si"
+    local perf activas
+    perf=$(gpu_perf_raw)
+    if [ -n "$perf" ]; then
+      activas=$(gpu_throttle_activas <<<"$perf")
+      if [ -n "$activas" ]; then
+        echo "  razones de throttle activas ahora mismo:"
+        printf '%s\n' "$activas" | sed 's/^/    /'
+      else
+        echo "  razones de throttle activas ahora mismo: ninguna"
+      fi
+    fi
   else
     echo "  nvidia-smi responde ahora:   NO (timeout o error -- ver 'GPU sin responder' abajo)"
+  fi
+  echo
+
+  # --- 1c. accounting de GPU: procesos ya salidos (FEATURE-GPU-ACCOUNTING) -
+  # `--query-compute-apps` (gpu_procs / bb who) solo ve procesos VIVOS ahora
+  # mismo -- inutil para la pregunta forense real: quien uso la GPU justo
+  # ANTES del fallo, si para cuando se corre `bb scan` ya salio. Accounting
+  # mode (root, `sudo ./enable-privileged.sh`) hace que el driver retenga
+  # pid/gpu_util/mem_util/memoria_max/tiempo por proceso hasta que se limpian
+  # o el driver se reinicia. Verificado 2026-09-11: apagado por defecto, y
+  # sin -am 1 `--query-accounted-apps` no da error, da CSV vacio (solo
+  # cabecera) -- se distingue leyendo el modo, no adivinando por la salida.
+  echo "-- procesos de GPU ya salidos (accounting mode) --"
+  if have nvidia-smi; then
+    local am
+    am=$(timeout 5 nvidia-smi -q -d ACCOUNTING 2>/dev/null |
+      awk -F': *' '/Accounting Mode/{print $2; exit}')
+    if [ "$am" = "Enabled" ]; then
+      local acc
+      acc=$(nvidia-smi --query-accounted-apps=pid,gpu_utilization,mem_utilization,max_memory_usage,time \
+        --format=csv,noheader 2>/dev/null)
+      if [ -n "$acc" ]; then
+        echo "  pid, gpu_util%, mem_util%, memoria_max_MiB, tiempo_ms"
+        printf '%s\n' "$acc" | sed 's/^/    /'
+      else
+        echo "  accounting mode armado, sin procesos registrados todavia"
+      fi
+    else
+      cannot_run "accounting de GPU" "accounting mode apagado -- sudo ./enable-privileged.sh lo arma"
+      echo "  accounting mode:             COULD_NOT_RUN (apagado)"
+    fi
+  else
+    cannot_run "accounting de GPU" "nvidia-smi no disponible"
+    echo "  accounting mode:             COULD_NOT_RUN"
   fi
   echo
 
@@ -1087,6 +1170,15 @@ cmd_hw() {
     gpu_procs | sed 's/^/    /' || echo "    (sin procesos de computo)"
     local tot; tot=$(gpu_mem_mib)
     echo "    TOTAL: ${tot:-0} MiB de la RAM unificada"
+    echo "  contadores de throttle (acumulado desde el ultimo reinicio del driver):"
+    local perf contadores; perf=$(gpu_perf_raw)
+    if [ -n "$perf" ]; then
+      contadores=$(gpu_throttle_contadores <<<"$perf")
+      [ -n "$contadores" ] && printf '%s\n' "$contadores" ||
+        echo "    ninguno con tiempo acumulado > 0"
+    else
+      echo "    (no se pudo leer -q -d PERFORMANCE)"
+    fi
   else
     echo "  nvidia-smi no disponible"
   fi
