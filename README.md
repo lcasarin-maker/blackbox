@@ -248,6 +248,29 @@ procps, systemd, `nvidia-smi`. Python is only used for one small,
 fully-tested close-check helper (`tools/check_harvest_accepted.py`) — the
 tool itself is plain bash.
 
+## Hardening
+
+`bin/bb` and `enable-privileged.sh` pass `shellcheck` with zero warnings
+(a few `info`-level suggestions on `ls`/`ps` usage against
+kernel/systemd-controlled paths are left as-is — not exploitable in this
+context, and `find`/`pgrep` equivalents would be less readable for no real
+gain here). Run it yourself before sending a PR:
+
+```bash
+shellcheck bin/bb enable-privileged.sh
+```
+
+Two things worth knowing if you're touching either script:
+
+- **`bin/bb` deliberately does not use `set -e`** (only `set -uo pipefail`).
+  A forensic scanner that dies on the first failing sub-check instead of
+  counting it and moving on defeats its own purpose — `could_not_run > 0`
+  has to survive to the final report, not abort it.
+- **`$BLACKBOX_DATA` is `chmod 700` on every run**, not just at creation —
+  it holds full command-lines of other processes (`bb who`/`scan`/`sample`),
+  and an already-existing data directory from before this was added won't
+  fix itself from an idempotent `mkdir -p` alone.
+
 ## Contributing
 
 This started as instrumentation for one machine and is being opened up

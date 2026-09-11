@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2319
+# SC2319 sigue disparando en cmd_status incluso capturando "$?" en la MISMA
+# linea que la condicion ("[ ... ]; ok=$?") -- shellcheck no distingue esa
+# forma seria de la version bare que de verdad era fragil (chk "..." $?,
+# corregida 2026-09-11 tras un hallazgo real de shellcheck). No hay comando
+# intermedio que pueda pisar "$ok" entre la condicion y su captura: es un
+# falso positivo del lint sobre un patron ya endurecido, no una desactivacion
+# para esconder el problema original.
 # blackbox -- caja negra de esta maquina.
 # Registra continuamente lo que hace falta para diagnosticar DESPUES de un fallo:
 # cuelgues, crashes, OOM (RAM y GPU), procesos que desaparecen.
@@ -17,6 +25,13 @@ RETAIN_DAYS="${BLACKBOX_RETAIN_DAYS:-14}"
 ATLAS_TELEMETRY="${ATLAS_TELEMETRY:-$HOME/projects/Atlas/logs/atom_gpu_telemetry.jsonl}"
 
 mkdir -p "$SAMPLES" "$SNAPS"
+# $DATA guarda command-lines completas de procesos ajenos (bb who/scan/sample)
+# -- no depender del umask heredado para su permiso. chmod en cada arranque,
+# no solo al crear: un $DATA ya existente de antes de este endurecimiento
+# (verificado 2026-09-11: 775 en esta maquina, heredado de umask 002) no lo
+# arregla un `mkdir -p` idempotente. 700 en el directorio TOPE ya bloquea el
+# acceso a samples/ y snapshots/ debajo, aunque esos conserven su propio modo.
+chmod 700 "$DATA" 2>/dev/null || true
 
 # ---------------------------------------------------------------- utilidades
 
@@ -306,7 +321,7 @@ cmd_sample() {
 
 cmd_snapshot() {
   local reason="${1:-manual}"
-  local d="$SNAPS/$(date +%Y-%m-%dT%H%M%S)_${reason//[^a-zA-Z0-9_-]/_}"
+  local d; d="$SNAPS/$(date +%Y-%m-%dT%H%M%S)_${reason//[^a-zA-Z0-9_-]/_}"
   mkdir -p "$d"
 
   echo "$reason" >"$d/reason.txt"
@@ -786,7 +801,7 @@ else:
   # El CSV de la fecha de la VENTANA, no el de hoy: `bb scan "2026-09-07 19:00"`
   # buscaba el fichero de hoy y decia "sin CSV" sobre una ventana que si lo
   # tenia. Lo destapo el control negativo, no el caso positivo.
-  local gcsv="/srv/ai/logs/gpu/gpu_telemetry_$(date -d "$since" +%F 2>/dev/null || date +%F).csv"
+  local gcsv; gcsv="/srv/ai/logs/gpu/gpu_telemetry_$(date -d "$since" +%F 2>/dev/null || date +%F).csv"
   if [ -f "$gcsv" ]; then
     local since_hm; since_hm=$(date -d "$since" '+%Y-%m-%dT%H:%M:%S')
     local nto nrows
@@ -1220,59 +1235,66 @@ cmd_hw() {
 
 cmd_status() {
   echo "== estado de la instrumentacion =="
-  local armed=0 missing=0
+  local armed=0 missing=0 ok
 
   chk() { # nombre, condicion_ya_evaluada(0=ok), detalle
     if [ "$2" -eq 0 ]; then echo "  ARMADO    $1"; armed=$((armed + 1))
     else echo "  FALTA     $1 -- $3"; missing=$((missing + 1)); fi
   }
 
-  systemctl --user is-active blackbox-sample.timer >/dev/null 2>&1
-  chk "blackbox: muestreo de apps/zombis" $? "corre: bb install"
+  # Cada chequeo captura su $? en "$ok" EN LA MISMA LINEA que la condicion,
+  # nunca como argumento bare ($?) en la linea de chk: un $? bare depende de
+  # que nada se ejecute entre la condicion y la llamada, y una insercion tan
+  # inocente como un echo de depuracion lo pisa en silencio -- el chequeo
+  # seguiria corriendo, sin error, mintiendo sobre CUALQUIER instrumento.
+  # Detectado por shellcheck (SC2319) 2026-09-11, hallazgo real: los 9
+  # chequeos de abajo tenian exactamente este patron.
+  systemctl --user is-active blackbox-sample.timer >/dev/null 2>&1; ok=$?
+  chk "blackbox: muestreo de apps/zombis" "$ok" "corre: bb install"
 
-  [ -d /var/log/journal ]
-  chk "journald persistente" $? "los logs se pierden al reiniciar"
+  [ -d /var/log/journal ]; ok=$?
+  chk "journald persistente" "$ok" "los logs se pierden al reiniciar"
 
-  journalctl -k -n1 >/dev/null 2>&1
-  chk "journal del kernel legible" $? "hace falta grupo adm o systemd-journal"
+  journalctl -k -n1 >/dev/null 2>&1; ok=$?
+  chk "journal del kernel legible" "$ok" "hace falta grupo adm o systemd-journal"
 
-  have coredumpctl
-  chk "systemd-coredump" $? "corre: sudo ./enable-privileged.sh"
+  have coredumpctl; ok=$?
+  chk "systemd-coredump" "$ok" "corre: sudo ./enable-privileged.sh"
 
-  [ "$(ulimit -c)" != "0" ]
-  chk "limite de core > 0" $? "ulimit -c = 0, no se guardan volcados"
+  [ "$(ulimit -c)" != "0" ]; ok=$?
+  chk "limite de core > 0" "$ok" "ulimit -c = 0, no se guardan volcados"
 
   # sysstat se comprueba por SUS DATOS, no por la variable ENABLED de
   # /etc/default/sysstat: aqui ENABLED="false" y sin embargo el override
   # sysstat-collect.timer.d dispara la recoleccion cada minuto. Leer la
   # variable daba un falso negativo (comprobado 2026-09-07).
-  [ -n "$(find /var/log/sysstat -name "sa$(date +%Y%m%d)" -mmin -10 2>/dev/null)" ]
-  chk "sar recolectando (datos de hace <10 min)" $? "sin historico de CPU/mem/IO"
+  [ -n "$(find /var/log/sysstat -name "sa$(date +%Y%m%d)" -mmin -10 2>/dev/null)" ]; ok=$?
+  chk "sar recolectando (datos de hace <10 min)" "$ok" "sin historico de CPU/mem/IO"
 
   # gpu_sampler.sh NO se comprueba: esta suspendido a proposito desde el
   # 2026-09-07 y su trabajo lo hace atom_gpu_telemetry.py (ver
   # suspended/MANIFIESTO.md). Mantener la comprobacion pedia rearmar justo lo
   # que se acababa de consolidar -- un FALTA que mentia.
 
-  [ -n "$(find /srv/ai/logs -name 'memory_monitor.log' -mmin -10 2>/dev/null)" ]
-  chk "monitor de memoria (<10 min)" $? "systemctl --user start ai-memory-monitor.timer"
+  [ -n "$(find /srv/ai/logs -name 'memory_monitor.log' -mmin -10 2>/dev/null)" ]; ok=$?
+  chk "monitor de memoria (<10 min)" "$ok" "systemctl --user start ai-memory-monitor.timer"
 
   # Por sus datos, no por la unit: una unit "active" cuyo proceso dejo de
   # escribir es exactamente el fallo silencioso que buscamos.
-  [ -n "$(find "$(dirname "$ATLAS_TELEMETRY")" -name "$(basename "$ATLAS_TELEMETRY")" -mmin -2 2>/dev/null)" ]
-  chk "termica de Atlas (atom_gpu_telemetry, <2 min)" $? "systemctl --user start atom-gpu-telemetry"
+  [ -n "$(find "$(dirname "$ATLAS_TELEMETRY")" -name "$(basename "$ATLAS_TELEMETRY")" -mmin -2 2>/dev/null)" ]; ok=$?
+  chk "termica de Atlas (atom_gpu_telemetry, <2 min)" "$ok" "systemctl --user start atom-gpu-telemetry"
 
-  systemctl is-active atom-clock-lock.service >/dev/null 2>&1
-  chk "clock lock de GPU (300-2800 MHz)" $? "limite termico DGX-342/344/345 sin aplicar"
+  systemctl is-active atom-clock-lock.service >/dev/null 2>&1; ok=$?
+  chk "clock lock de GPU (300-2800 MHz)" "$ok" "limite termico DGX-342/344/345 sin aplicar"
 
-  systemctl is-active earlyoom.service >/dev/null 2>&1
-  chk "earlyoom" $? "sin guardia de OOM en espacio de usuario"
+  systemctl is-active earlyoom.service >/dev/null 2>&1; ok=$?
+  chk "earlyoom" "$ok" "sin guardia de OOM en espacio de usuario"
 
-  [ -n "$(gateway_modelo)" ]
-  chk "motor de inferencia sirviendo" $? "el gateway no responde en $GATEWAY_URL"
+  [ -n "$(gateway_modelo)" ]; ok=$?
+  chk "motor de inferencia sirviendo" "$ok" "el gateway no responde en $GATEWAY_URL"
 
-  have nvidia-smi
-  chk "nvidia-smi" $? "sin telemetria de GPU"
+  have nvidia-smi; ok=$?
+  chk "nvidia-smi" "$ok" "sin telemetria de GPU"
 
   # enable-privileged.sh solo arma coredump de USERSPACE. Un apagado duro por
   # corte de VRM/PMIC no deja rastro de kernel -- FEATURE-KDUMP-PSTORE-
