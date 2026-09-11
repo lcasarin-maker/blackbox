@@ -85,6 +85,7 @@ signals that a stock install doesn't produce on its own:
 | GPU Xid codes | `nvidia-smi`/dmesg carry them, but nothing greps for them by default — Xid is how the driver reports firmware faults and RPC timeouts, and it looks nothing like an OOM or a segfault |
 | xHCI/USB controller death | Zero coverage in a stock install: no "HC died", no speed-fallback, no enumeration conflicts |
 | PCIe power/AER events | Cross-referenced against OOM and thermal so a hard power-off gets one verdict instead of three unrelated logs |
+| PCIe replay counters | NVML-level link retransmit counts, from `nvidia-smi -q`'s PCI section — a replay can happen without the kernel ever writing an AER log line, so this is a second, independent signal, not a duplicate of the AER grep above |
 | GPU clock/pstate vs. throttle | Clock and pstate are cheap to sample every few seconds; almost nothing correlates them with the thermal trip point |
 | GPU 0% with active load | Correlates reserved GPU memory with sustained 0% utilization — the signature of a silent fallback to CPU |
 | Boot stuck in GDM | `journalctl -b -1` for "gdm started, no login followed" — a layer below the desktop-app checks |

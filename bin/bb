@@ -1109,7 +1109,32 @@ if not hallazgos:
     grep -icE 'AER: (Corrected|Uncorrected|Correctable|Fatal) error|\] RxErr|Cable removal|Link Down' || true)
   echo "  PCIe: insuficiencia de energia:  ${npower:-0}"
   echo "  PCIe: errores AER/RxErr/cable:   ${nnaer:-0}"
+  # Replay counter de NVML (seccion PCI de `nvidia-smi -q`, sin -d: esta
+  # seccion no tiene su propia categoria en este driver). Un reintento de
+  # capa de enlace puede pasar SIN que el kernel escriba una linea AER --
+  # depende de mascaras de severidad -- asi que es una fuente distinta de la
+  # de arriba, no un duplicado. Verificado 2026-09-11 en este GB10: existe
+  # como "Replays Since Reset"/"Replay Number Rollovers", ambos en 0 ahora.
+  #
+  # OJO -- lo que NO se agrega aqui y por que: `pcie.link.width.current` en
+  # este chip esta en 1x contra un maximo de 16x, pero se comprobo con carga
+  # real (burst CUDA, 96% de utilizacion) que NO retrena -- se queda en 1x
+  # igual con GPU ociosa que a plena carga. En GB10 (memoria coherente
+  # CPU-GPU via NVLink-C2C) ese campo probablemente no refleja la via que de
+  # verdad importa. Comparar current contra max aqui seria un falso positivo
+  # PERMANENTE, no ocasional -- el mismo error que el patron amplio de AER
+  # ya corrigio arriba, asi que no se repite con otro campo.
+  local pciraw nreplay_reset nreplay_roll
+  if have nvidia-smi; then
+    pciraw=$(timeout 5 nvidia-smi -q 2>/dev/null)
+    nreplay_reset=$(awk -F': *' '/Replays Since Reset/{print $2; exit}' <<<"$pciraw")
+    nreplay_roll=$(awk -F': *' '/Replay Number Rollovers/{print $2; exit}' <<<"$pciraw")
+  fi
+  echo "  PCIe: replays NVML desde el ultimo reset: ${nreplay_reset:-N/A}"
+  echo "  PCIe: rollovers del contador de replay:   ${nreplay_roll:-N/A}"
   local indicadores=""
+  { [ "${nreplay_reset:-0}" -gt 0 ] 2>/dev/null || [ "${nreplay_roll:-0}" -gt 0 ] 2>/dev/null; } &&
+    indicadores="${indicadores}replays PCIe (NVML), "
   [ "${npower:-0}" -gt 0 ] && indicadores="${indicadores}energia PCIe insuficiente, "
   [ "${nnaer:-0}" -gt 0 ] && indicadores="${indicadores}errores PCIe (AER/RxErr/cable), "
   [ "${koom:-0}" -gt 0 ] && indicadores="${indicadores}OOM del kernel, "
