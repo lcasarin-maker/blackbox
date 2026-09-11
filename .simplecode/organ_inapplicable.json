@@ -1,0 +1,36 @@
+{
+  "expires": "2026-10-08",
+  "owner": "the maintainer",
+  "entries": {
+    "claim_guard": {
+      "reason": "claim_guard es CONSULTIVO por construccion: su entry en el config canonico lo envuelve en `bash -c '... || true'`, y ademas el modulo devuelve rc=0 por si mismo. Medido 2026-09-08 en este repo, sin el `|| true`: con dos rutas en colision -> rc=0; con el indice limpio -> rc=0. Al no bloquear nunca, su columna `bloqueos` es 0 por diseno y no por ceguera. La columna `hallazgos` tampoco se puede llenar: gate_runner deja ese campo AUSENTE a proposito hasta que un organo declare su propio numero, y el propio codigo del kit dice literalmente 'the field stays absent until an organ DECLARES its own number, which none does yet'. Es decir, el canal para que un organo consultivo registre una captura todavia no existe en el kit, ni aqui ni en ningun satelite.",
+      "canary": "INTENTADO Y EXITOSO COMO DETECCION, IMPOSIBLE DE REGISTRAR. Se planto el caso real: `sync-satellites --fix` deja un claim vivo de `simplecode-kit:sync_runtime` sobre `.simplecode/run.py` y `.simplecode/runtime.zip`; al stagear esas dos rutas, el organo IMPRIMIO la captura literal: '[claim-guard] 2 staged path(s) collide with a foreign claim (as the maintainer): - .simplecode/run.py: claimed by simplecode-kit:sync_runtime (2 min ago, cmd: simplecode sync-satellites --fix)' y lo mismo para runtime.zip. Control negativo acto seguido, mismo comando con esas rutas fuera del indice: sin colisiones. O sea el organo NO esta muerto -- capturo de verdad, y la captura es reproducible. Lo que no hay es forma de que esa captura llegue a la telemetria, porque el rc es 0 en los dos casos y el campo de hallazgos no tiene emisor. Esta declaracion NO apaga la linea: la traslada a donde esta el defecto, que es el canal de medicion del kit y no este repo.",
+      "difiere": "No difiere por repo: es una limitacion del kit, igual en la madre y en todos los satelites. Por eso esta entrada caduca el 2026-10-08 y no se renueva sola. Queda refutada, y hay que borrarla, en cuanto (a) el kit construya el canal de hallazgos que su propio comentario pide, o (b) claim_guard deje de ser consultivo y pase a bloquear. Cualquiera de las dos hace que su columna se pueda llenar con una medicion de verdad."
+    },
+    "version_bump": {
+      "reason": "El organo lo dice el mismo y sale por esa puerta antes de cualquier rama de bloqueo. Medido 2026-09-08: `python .simplecode/run.py simplecode.verification.version_bump --root . --gate` -> rc=0 con la linea literal '[version-bump] N/A: neither pyproject.toml nor VERSION.txt declares a version -- this project has no version for this gate to check.' blackbox no publica paquete ni declara semver: no hay pyproject.toml, ni VERSION.txt, ni un numero que mover.",
+      "canary": "INTENTADO Y RECHAZADO A PROPOSITO. El unico sujeto que lo haria disparar es un pyproject.toml con [project].version en la RAIZ, y plantarlo seria fabricar dentro del repo el caso que se dice medir -- exactamente el 'control falso para apagar la linea' que este gate prohibe por escrito. Mismo razonamiento y mismo veredicto que own_chats registro el 2026-09-05 para este mismo organo.",
+      "difiere": "En simplecode y en los satelites que se versionan, pyproject.toml es la casa del semver que este organo audita, y alli captura. Aqui no hay version que quedarse quieta. Queda refutada en cuanto blackbox declare una version."
+    },
+    "lockfile_parity": {
+      "reason": "El organo tambien lo declara solo. Medido 2026-09-08: rc=0 con la linea literal '[lockfile-parity] NO APLICA: este repo no tiene pyproject.toml'. Comprueba que las versiones fijadas sobrevivan a un clon, y aqui no hay pyproject.toml del que derivar ese pinneo: bin/bb es bash y no declara dependencias mas alla de lo que ya trae el sistema.",
+      "canary": "No se planta: exigiria crear un pyproject.toml con dependencias fijadas solo para que el organo tuviera algo que comparar, que es fabricar el sujeto. El propio organo distingue 'NO APLICA' de 'sin hallazgos', y esa distincion es la medicion.",
+      "difiere": "Captura en los satelites Python con pyproject.toml y lockfile. Queda refutada si blackbox adopta dependencias Python fijadas."
+    },
+    "red_team_corpus": {
+      "reason": "Vigila que un caso una vez probado no desaparezca en silencio. Medido 2026-09-08: rc=0 con '[red-team-corpus] casos registrados: 0 | generados hoy: 91 | registrados que hoy NO se generan: 0'. Con CERO casos registrados no hay nada que pueda desvanecerse: el conjunto que el organo compara esta vacio por un lado.",
+      "canary": "No se planta registrando un caso falso: el registro es precisamente el sujeto que este organo protege, y ensuciarlo para que dispare seria corromper la evidencia que vigila. La linea 'registrados: 0' ES la medicion de por que no puede capturar.",
+      "difiere": "Captura donde hay corpus registrado. Queda refutada en cuanto blackbox registre su primer caso de red team."
+    },
+    "ponytail_debt": {
+      "reason": "Es consultivo (`|| true` en su entry) y ademas no ve el sujeto de este repo. Medido 2026-09-08: se anadio '# TODO: esto no declara techo ni disparador' al final de bin/bb y el organo siguio diciendo '[ponytail-debt] OK: 5 file(s) scanned, 0 unmanaged debt markers.' con rc=0. El repo tiene 0 ficheros .py y su unico ejecutable es bin/bb, que ese escaneo no abre.",
+      "canary": "INTENTADO Y NO DISPARO, y esa es la medicion: el marcador se planto de verdad en el fichero que es el 100% del codigo ejecutable, y el organo no lo vio. No se insiste plantandolo en un .md para forzar un rc, porque eso mediria el escaneo de prosa y no la deuda del codigo.",
+      "difiere": "Captura en repos Python, donde sus marcadores viven en los .py que si escanea. Queda refutada si el organo aprende a leer bash, o si blackbox incorpora codigo Python propio."
+    },
+    "telemetry_prune": {
+      "reason": "No esta cableado como compuerta con nombre en el .pre-commit-config.yaml generado de este repo: la busqueda de su `id:` no devuelve entry alguno. Sus filas llegan desde otra ruta del kit, no desde un hook que este repo invoque, asi que este repo no puede plantarle un control sin inventar la invocacion.",
+      "canary": "No se planta: no hay hook local que ejecutar. Plantarlo exigiria cablear una compuerta nueva solo para poder medirla, que es construir el sujeto para el instrumento en vez de al reves.",
+      "difiere": "Es una limitacion del cableado del kit en este satelite, no una propiedad de blackbox. Caduca sin renovarse y se revisa si el organo pasa a tener entry propio."
+    }
+  }
+}

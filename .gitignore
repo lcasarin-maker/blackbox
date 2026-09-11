@@ -1,0 +1,50 @@
+# Estado de la herramienta simplecode. Con `.simplecode/*` git no desciende y
+# solo las negaciones de abajo rescatan lo que SI es declaracion revisable.
+# El runtime, run.py y evidence/ son estado generado: los reescribe cada
+# `sync-satellites --fix`, y el 2026-09-08 intentar commitearlos hizo fallar
+# claim-guard (los reclama el propio sync) y staged-parity (los gates los
+# reescriben durante el commit).
+# sunset-reviewed: permanent -- estado de la herramienta simplecode; retirar si el repo deja de usar simplecode
+.simplecode/*
+
+# Los hooks propios NO son estado: son la unica casa durable de `bash-sintaxis`,
+# porque `.pre-commit-config.yaml` es GENERADO y se reescribe entero en cada
+# `sync-satellites --fix`. Ignorado, ese gate no existiria en un clon -- y es el
+# unico que mira bin/bb, que es el 100% del codigo ejecutable de este repo.
+# sunset-reviewed: permanent -- hooks propios reinyectados por satellite_sync; retirar si deja de leerlos de aqui
+!.simplecode/local_hooks.yaml
+
+# La linea base de deuda va TRACKEADA a proposito: ignorada por git seria una
+# declaracion local y no una revisable, que es como un techo se convierte en
+# amnistia silenciosa.
+# sunset-reviewed: permanent -- declaracion de deuda revisable; retirar si el repo deja de usar simplecode
+!.simplecode/backlog_baseline.json
+
+# Los ejecutables de confianza son parte del contrato de verificacion, no estado
+# local: un clon sin este fichero rechazaria los close_check de las fichas.
+# sunset-reviewed: permanent -- contrato de verificacion; retirar si el repo deja de usar simplecode
+!.simplecode/build_tools.txt
+
+# Amnistia de recibos por SHA explicito: ignorada seria una absolucion local.
+# sunset-reviewed: permanent -- declaracion revisable; retirar si el repo deja de usar simplecode
+!.simplecode/hook_receipt_baseline.json
+
+# Declaracion de organos que no pueden disparar aqui: ignorada seria una excusa
+# local en vez de una afirmacion revisable con dueno y caducidad.
+# sunset-reviewed: permanent -- declaracion revisable; retirar si el repo deja de usar simplecode
+!.simplecode/organ_inapplicable.json
+
+# Alcance de coverage_target.py: sin este fichero un clon vuelve a caer en
+# COULD_NOT_RUN (rc=2) porque la autodeteccion busca src/ o un paquete con
+# __init__.py y blackbox es bash puro con un solo modulo Python suelto
+# (tools/check_harvest_accepted.py). Es contrato de verificacion, no estado
+# local -- mismo razonamiento que build_tools.txt.
+# sunset-reviewed: permanent -- contrato de verificacion; retirar si el repo deja de usar simplecode
+!.simplecode/corpus_exempt.yaml
+
+# Estado generado por pytest/coverage (tests/ existe desde que se agrego
+# tools/check_harvest_accepted.py -- ver corpus_exempt.yaml arriba).
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage

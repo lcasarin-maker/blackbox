@@ -1,0 +1,13 @@
+[Unit]
+Description=Corre el detector de crash de la ATOM una vez, poco despues de cada arranque
+
+[Timer]
+# 2 min de margen para que el sistema termine de asentarse (red, journald con
+# los servicios ya arrancados) antes de leer su propio journal.
+OnBootSec=2min
+# No repite dentro del mismo boot: una corrida por arranque basta, el propio
+# script es idempotente por boot_id de todos modos.
+Persistent=false
+
+[Install]
+WantedBy=timers.target

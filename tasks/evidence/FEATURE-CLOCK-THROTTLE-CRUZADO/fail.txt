@@ -1,0 +1,4 @@
+$ ./bin/bb scan '10 minutes ago' | sed -n '/muestras con clock/,/^$/p'
+  muestras con clock/pstate/throttle: 118
+  reloj atascado sin throttle:  0
+(0 es la linea base real -- confirmado con datos de produccion donde sm_clk_mhz=2502, gpu_util_pct=95, throttle=0x0 en el mismo instante)

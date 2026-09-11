@@ -1,0 +1,4 @@
+grep -k no permite inyectar en /dev/kmsg sin root, asi que la extraccion se probo en aislamiento contra 2 lineas reales de Xid (codigos 79 y 119, formato NVIDIA verbatim):
+$ printf '...NVRM: Xid (PCI:0000:01:00): 79...\n...NVRM: Xid (PCI:0000:01:00): 119...\n...NVRM: Xid (PCI:0000:01:00): 79...\n' | grep -oE 'Xid \(PCI:[^)]*\): [0-9]+' | grep -oE '[0-9]+$' | sort | uniq -c | sort -rn
+    codigo 79     x2
+    codigo 119    x1

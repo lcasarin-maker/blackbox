@@ -1,0 +1,17 @@
+[Unit]
+Description=Telemetria continua de GPU (15s) — deja rastro de cuelgues del driver
+Documentation=file:///srv/ai/gpu_governance/gpu_sampler.sh
+
+[Service]
+Type=simple
+ExecStart=/srv/ai/gpu_governance/gpu_sampler.sh
+Restart=always
+RestartSec=10
+# Prioridad baja: es un observador, nunca debe competir con la inferencia.
+Nice=10
+IOSchedulingClass=idle
+# Si el propio muestreador se vuelve pesado, que lo mate el kernel primero.
+OOMScoreAdjust=500
+
+[Install]
+WantedBy=default.target

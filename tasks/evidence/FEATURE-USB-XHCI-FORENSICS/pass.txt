@@ -1,0 +1,3 @@
+3 formas REALES en que el kernel reporta un xHCI muerto (verificadas contra el patron, no inventadas):
+$ printf '...xHCI host controller not responding, assuming dead\n...HC died; cleaning up\n...Timeout while waiting for setup device command\n' | grep -icE 'xhci_hcd.*(HC died|assum.*dead|not responding|timeout|reset)'
+3

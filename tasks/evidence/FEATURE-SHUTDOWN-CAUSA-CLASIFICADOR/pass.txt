@@ -1,0 +1,6 @@
+$ ./bin/bb scan '2026-09-05 21:45:00'
+-- clasificador de causa de apagado/reinicio no limpio --
+  PCIe: insuficiencia de energia:  4
+  PCIe: errores AER/RxErr/cable:   5
+  POSIBLE CAUSA en esta ventana: energia PCIe insuficiente, errores PCIe (AER/RxErr/cable), OOM del driver NVIDIA, evento termico corroborado
+Esto es un caso REAL de produccion, no fabricado: journalctl -k tiene 4 lineas genuinas 'mlx5_pcie_event...Detected insufficient power on the PCIe slot (27W)' y 5 de AER/RxErr/Cable removal, ambas el 2026-09-05 21:49:01-13 (arranque de esta maquina tras el reinicio del boot -1).

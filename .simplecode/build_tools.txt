@@ -1,0 +1,8 @@
+# Ejecutables de confianza para los `close_check` de este repo.
+# El kit trae una whitelist pensada para Python (pytest, ruff, pyright...). Aqui
+# el sujeto es bash: `bin/bb` es el 100% del codigo ejecutable, y sus
+# comprobaciones se enuncian con las herramientas del sistema. El propio gate
+# pide declararlas aqui en vez de esconderlas tras un envoltorio de Python, que
+# pondria una capa entre la compuerta y el sujeto.
+grep
+bash

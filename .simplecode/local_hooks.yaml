@@ -1,0 +1,19 @@
+# Hooks propios de este repo que el sync canonico debe PRESERVAR (DGX-244).
+#
+# Van AQUI y no en `.pre-commit-config.yaml`, que es GENERADO: `satellite_sync` lo
+# reescribe entero ante cualquier diferencia. El dry-run del 2026-09-08 lo anuncio
+# explicitamente para este repo: "REMOVES_UNKNOWN_HOOKS (bash-sintaxis)".
+#
+# `bash-sintaxis` existe porque este repo es bash puro, no Python: ruff y pyright
+# no ven `bin/bb`, que es el 100% del codigo ejecutable. Sin este hook el arsenal
+# canonico entero no comprueba ni una linea de lo unico que aqui se ejecuta.
+# Verificado que BLOQUEA: con un `if [ roto` al final de bin/bb, el hook falla.
+extra_hooks: |2
+        - id: bash-sintaxis
+          name: sintaxis de los scripts bash
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name bash-sintaxis --hook pre-commit --
+            bash -n
+          language: system
+          files: '^(bin/bb|.*\.sh)$'

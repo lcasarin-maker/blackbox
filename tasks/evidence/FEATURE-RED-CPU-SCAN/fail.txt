@@ -1,0 +1,1 @@
+Segundo bug, mismo mecanismo: parse_pairs(...,2) para el campo 'red' (formato real 'iface:rx:tx', 3 partes al hacer split, no 2) devolvia diccionarios vacios en silencio -- ningun error, cero lineas de red impresas. Verificado en aislamiento: `parse_pairs(primero_red.get('red'), 2)` -> `[]`; con n=3 -> los 7 interfaces reales. Arreglado cambiando el argumento a 3.

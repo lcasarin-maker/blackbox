@@ -1,0 +1,1380 @@
+#!/usr/bin/env bash
+# blackbox -- caja negra de esta maquina.
+# Registra continuamente lo que hace falta para diagnosticar DESPUES de un fallo:
+# cuelgues, crashes, OOM (RAM y GPU), procesos que desaparecen.
+#
+# Disenado sobre el incidente del 2026-09-07 (claude-desktop colgada sin renderer,
+# sin volcado, sin OOM registrado): las senales que faltaron estan en `bb scan`.
+#
+# Sin dependencias fuera de lo ya instalado: coreutils, procps, systemd, nvidia-smi.
+
+set -uo pipefail
+
+DATA="${BLACKBOX_DATA:-$HOME/.local/share/blackbox}"
+SAMPLES="$DATA/samples"
+SNAPS="$DATA/snapshots"
+RETAIN_DAYS="${BLACKBOX_RETAIN_DAYS:-14}"
+ATLAS_TELEMETRY="${ATLAS_TELEMETRY:-$HOME/projects/Atlas/logs/atom_gpu_telemetry.jsonl}"
+
+mkdir -p "$SAMPLES" "$SNAPS"
+
+# ---------------------------------------------------------------- utilidades
+
+# Contador de comprobaciones que NO se pudieron correr. La politica de reporte
+# es que un informe con could_not_run > 0 no es un informe limpio, por muchas
+# filas que pasen -- asi que se imprime al lado de lo que si corrio.
+CNR=0
+CNR_LIST=""
+cannot_run() { CNR=$((CNR + 1)); CNR_LIST="${CNR_LIST}  - $1: $2"$'\n'; }
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# ------------------------------------------------------------ fuentes de dato
+
+# Memoria GPU. En el GB10 de esta maquina `--query-gpu=memory.used` devuelve
+# N/A (memoria unificada), asi que el agregado se obtiene sumando los procesos
+# de computo. Comprobado 2026-09-07: query-gpu -> [N/A]; query-compute-apps ->
+# vLLM 33813 MiB, aequitas_os 10251 MiB, rustdesk 237 MiB.
+gpu_mem_mib() {
+  have nvidia-smi || { echo ""; return 1; }
+  nvidia-smi --query-compute-apps=used_memory --format=csv,noheader,nounits 2>/dev/null |
+    awk '{s+=$1} END{if(NR==0) print 0; else print s}'
+}
+
+gpu_procs() {
+  have nvidia-smi || return 1
+  nvidia-smi --query-compute-apps=pid,process_name,used_memory \
+    --format=csv,noheader,nounits 2>/dev/null
+}
+
+gpu_stat() { # temp,util,power
+  have nvidia-smi || { echo ",,"; return 1; }
+  nvidia-smi --query-gpu=temperature.gpu,utilization.gpu,power.draw \
+    --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' '
+}
+
+# MemFree ademas de MemAvailable. En el incidente del 07-sep MemAvailable decia
+# 28 GB mientras MemFree estaba en 4.6 GB: mirar solo el primero oculta la
+# presion real, y con memoria unificada la GPU compite por esa misma RAM.
+meminfo_kb() { awk -v k="$1" '$1==k":"{print $2}' /proc/meminfo; }
+
+# PSI (Pressure Stall Information): el porcentaje de tiempo que las tareas
+# estuvieron PARADAS esperando un recurso. Es la senal que faltaba el
+# 2026-09-07: MemAvailable decia 28 GB mientras MemFree estaba en 4.6 GB, y
+# ninguno de los dos dice cuanto se esta sufriendo -- PSI si.
+#
+# `some` = al menos una tarea parada; `full` = TODAS paradas, o sea trabajo
+# util cero. `full` de memoria por encima de cero sostenido es la antesala del
+# colapso, y por eso se guardan los dos.
+#
+# Via: sparkview (foro NVIDIA 366877), ingerido en Atlas
+# knowledge/references/forum_nvidia_366877_sparkview-gpu-monitor-tool-with-
+# gb10-aware-unified-memory-handling.md -- clasifica LOW/MODERATE/HIGH/CRITICAL
+# sobre esta misma fuente para GB10.
+psi_campo() { # recurso, linea(some|full), clave(avg10|avg60) -> valor o ""
+  awk -v l="$2" -v k="$3" '$1==l { for (i=2; i<=NF; i++) {
+      split($i, kv, "="); if (kv[1]==k) print kv[2] } }' \
+    "/proc/pressure/$1" 2>/dev/null
+}
+
+# Estado del motor de inferencia. Hueco demostrado el 2026-09-08: el gateway se
+# cayo a las 07:41 ("AsyncLLM output_handler failed"), systemd reintento,
+# admission_check lo rechazo por falta de memoria y la maquina estuvo sin su LLM
+# principal un buen rato -- sin que nada lo reportara. Tener el contenedor "Up"
+# no basta: durante la carga del modelo responde el proceso pero no el endpoint.
+#
+# Mecanismo tomado de thx0701/dgx_spark_status y MiaAI_Lab/sparkDash (ambos
+# ingeridos en la KB de Atlas), que vigilan el motor de inferencia junto al
+# hardware en vez de dejarlo fuera del cuadro.
+GATEWAY_URL="${BLACKBOX_GATEWAY_URL:-http://127.0.0.1:8000/v1/models}"
+
+gateway_modelo() { # -> nombre del modelo servido, o "" si no responde
+  have curl || { echo ""; return 1; }
+  # grep -o y no sed: el `.*` de sed es codicioso y devolvia el ULTIMO "id" de
+  # la respuesta (el `modelperm-...` del bloque de permisos) en vez del primero,
+  # que es el nombre del modelo servido.
+  timeout 4 curl -s "$GATEWAY_URL" 2>/dev/null |
+    grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4
+}
+
+# Salud interna del motor de inferencia, de su propio /metrics de Prometheus.
+# Saber que el endpoint responde no basta: un gateway con la cola llena o
+# expulsando peticiones esta "vivo" y sirviendo mal. `num_preemptions` subiendo
+# es presion de KV cache, que en memoria unificada es presion de TODA la
+# maquina.
+# Via: MiaAI_Lab/sparkDash (KB de Atlas), que lee estas mismas metricas.
+GATEWAY_METRICS="${BLACKBOX_GATEWAY_METRICS:-http://127.0.0.1:8000/metrics}"
+
+# Rendimiento REAL, no un benchmark sintetico. La degradacion de inferencia es
+# un problema documentado en este hardware (foro NVIDIA 374274, "suddenly much
+# lower GPU performance", en la KB de Atlas) y ninguna metrica de ESTADO la ve:
+# un gateway a mitad de velocidad responde igual de "vivo".
+#
+# sparkDash lo resuelve con benchmarks de decode/prefill, pero eso consume GPU y
+# compite -- justo el problema que se midio hoy. Mejor: los contadores de tokens
+# que vLLM ya lleva del trafico real. Derivando entre dos muestras salen tok/s
+# de verdad, con coste cero y sobre trabajo que igualmente iba a ocurrir.
+# `errores` distingue "no sirvio" de "sirvio mal".
+gateway_salud() { # -> "run,wait,kv_perc,preempt,gen_tokens,prompt_tokens,errores"
+  have curl || { echo ""; return 1; }
+  timeout 5 curl -s "$GATEWAY_METRICS" 2>/dev/null | awk '
+    /^vllm:num_requests_running\{/                    { run = $2 }
+    /^vllm:num_requests_waiting\{/                    { wait = $2 }
+    /^vllm:kv_cache_usage_perc\{/                     { kv = $2 }
+    /^vllm:num_preemptions_total\{/                   { pre = $2 }
+    /^vllm:generation_tokens_total\{/                 { gen = $2 }
+    /^vllm:prompt_tokens_total\{/                     { pro = $2 }
+    /^vllm:request_success_total\{.*reason="error"/   { err = $2 }
+    END { if (run == "") exit 1
+          printf "%.0f,%.0f,%.3f,%.0f,%.0f,%.0f,%.0f", run, wait, kv, pre, gen, pro, err }'
+}
+
+# Uso de disco por particion. Un disco llenandose es un fallo silencioso hasta
+# que algo deja de escribir -- y hoy mismo los core dumps se comieron 2.2 GB en
+# horas. `df` en el snapshot no bastaba: sin serie no se ve la pendiente.
+# Via: thx0701/dgx_spark_status (KB de Atlas), bajado a solo el porcentaje de
+# las particiones reales (sin tmpfs ni snaps, que no dicen nada).
+disco_pct() { # -> "montaje:pct,montaje:pct"
+  df -P -x tmpfs -x devtmpfs -x squashfs -x overlay -x efivarfs 2>/dev/null |
+    awk 'NR>1 && $5 ~ /%/ { gsub("%","",$5); printf "%s%s:%s", (n++?",":""), $6, $5 }'
+}
+
+# Contenedores: aqui viven el gateway, pgvector, librechat y mongo, y un
+# contenedor reiniciandose en bucle es invisible desde `ps`.
+# Via: DanTup/dgx_dashboard (KB de Atlas).
+docker_estado() { # -> "vivos/total" o ""
+  have docker || { echo ""; return 1; }
+  local t v
+  t=$(timeout 5 docker ps -aq 2>/dev/null | wc -l)
+  v=$(timeout 5 docker ps -q 2>/dev/null | wc -l)
+  [ "$t" = "0" ] && { echo ""; return 1; }
+  echo "$v/$t"
+}
+
+# Red y CPU por nucleo. `sar` ya los guarda, pero en OTRO fichero y OTRO
+# formato: diagnosticar obliga entonces a cruzar dos series a mano, que es justo
+# lo que costo tiempo el 2026-09-08. En la misma linea JSON, ese cruce es un
+# grep. Leer /proc cuesta microsegundos, asi que la duplicacion se paga sola.
+#
+# Se guardan CONTADORES CRUDOS, no tasas: la tasa depende del intervalo y una
+# muestra perdida la falsea, mientras que dos contadores siempre dan la verdad
+# entre ellos. El analisis deriva la pendiente.
+# Via: thx0701/dgx_spark_status y GigCoder/ai_dgxtop (KB de Atlas).
+red_bytes() { # -> "iface:rx:tx,..." solo interfaces fisicas con trafico
+  awk 'NR>2 { gsub(":","",$1)
+      if ($1 != "lo" && $2 > 0) printf "%s%s:%s:%s", (n++?",":""), $1, $2, $10 }' \
+    /proc/net/dev 2>/dev/null
+}
+
+cpu_jiffies() { # -> "core:idle:total,..." el idle y el total por nucleo
+  awk '/^cpu[0-9]/ { t=0; for (i=2; i<=NF; i++) t+=$i
+      printf "%s%s:%s:%s", (n++?",":""), $1, $5, t }' /proc/stat 2>/dev/null
+}
+
+zombie_count() { ps -eo stat= 2>/dev/null | grep -c '^Z'; }
+
+# Procesos con hijos zombi: en el incidente el zygote dejo de cosechar, y eso
+# fue visible mucho antes que el sintoma.
+zombie_parents() {
+  ps -eo ppid=,stat= 2>/dev/null | awk '$2 ~ /^Z/ {print $1}' | sort | uniq -c | sort -rn
+}
+
+# ------------------------------------------------------------------- comandos
+
+# Muestrea SOLO lo que ninguna otra fuente de esta maquina cubre.
+# Ya cubierto, y por eso ausente aqui:
+#   - GPU, zonas termicas, throttle, clocks, memoria del sistema y procesos de
+#     computo -> Atlas/tools/atom_gpu_telemetry.py cada 5s (absorbio a
+#     gpu_sampler.sh el 2026-09-07; ver suspended/MANIFIESTO.md)
+#   - CPU, memoria, I/O, red, procesos bloqueados -> sar, cada minuto en /var/log/sysstat
+#   - alarma de margen de memoria -> monitor_memory.sh cada 5 min
+# Lo que NO cubria nada, y es justo lo que fallo el 2026-09-07: el estado de
+# las apps de escritorio (renderizadores vivos) y los procesos sin cosechar.
+cmd_sample() {
+  local ts f
+  ts=$(date +%Y-%m-%dT%H:%M:%S%z)
+  f="$SAMPLES/$(date +%Y-%m-%d).jsonl"
+
+  local mf ma zc la
+  mf=$(meminfo_kb MemFree); ma=$(meminfo_kb MemAvailable)
+  local psi_m_some psi_m_full psi_io_some psi_cpu_some
+  psi_m_some=$(psi_campo memory some avg10); psi_m_full=$(psi_campo memory full avg10)
+  psi_io_some=$(psi_campo io some avg10);    psi_cpu_some=$(psi_campo cpu some avg10)
+  local gw dk
+  gw=$(gateway_modelo); dk=$(docker_estado)
+  local salud disco
+  salud=$(gateway_salud); disco=$(disco_pct)
+  local red cpuj
+  red=$(red_bytes); cpuj=$(cpu_jiffies)
+  zc=$(zombie_count)
+  la=$(awk '{print $1}' /proc/loadavg)
+
+  # Apps Electron y su cuenta de renderizadores. Un 0 aqui es la firma exacta
+  # del cuelgue: proceso principal vivo, ventana en pantalla, UI muerta.
+  # Solo apps Chromium/Electron de verdad: se identifican por tener un proceso
+  # --type=zygote. Sin ese filtro entraban xdg-desktop-portal y compania, que
+  # nunca tienen renderizadores y darian un "0 renderers" falso para siempre.
+  local apps
+  apps=$(ps -eo pid=,args= 2>/dev/null | awk '
+    { exe=$2; if (exe !~ /^\//) next; split(exe,a,"/"); app=a[length(a)] }
+    /--type=zygote/   { zyg[app]=1; next }
+    /--type=renderer/ { r[app]++;   next }
+    /--type=/         { next }
+    { main[app]=$1 }
+    END { first=1
+      for (app in zyg) {
+        printf "%s{\"app\":\"%s\",\"pid\":%s,\"renderers\":%d}", (first?"":","), app, (app in main ? main[app] : 0), (app in r ? r[app] : 0)
+        first=0 } }')
+
+  # El top lleva la UNIT de cgroup: sin ella la muestra dice que habia un
+  # python de 41 GB pero no quien lo lanzo, y esa es justo la pregunta que hubo
+  # que contestar a mano tres veces el 2026-09-08. El cgroup sobrevive a que el
+  # padre muera y lo adopte init, que es cuando el ppid deja de servir.
+  local top
+  top=$(ps -eo rss=,pid=,comm= --sort=-rss 2>/dev/null | head -5 |
+    while read -r rss pid comm; do
+      u=$(sed -n 's/^0::\///p' "/proc/$pid/cgroup" 2>/dev/null | sed 's/.*\///')
+      printf '{"rss_kb":%s,"pid":%s,"comm":"%s","unit":"%s"},' "$rss" "$pid" "$comm" "${u:-?}"
+    done | sed 's/,$//')
+
+  # Procesos con memoria de GPU y quien los lanzo. En memoria unificada esto es
+  # lo que decide si el gateway puede arrancar: el 2026-09-08 sumaban ~91 GB de
+  # los 121 y `admission_check.sh` rechazo los 85 GB que pedia el gateway.
+  local gpu
+  gpu=$(gpu_procs 2>/dev/null | while IFS=, read -r p n m; do
+      p=$(echo "$p" | tr -d ' '); m=$(echo "$m" | tr -d ' ')
+      [ -d "/proc/$p" ] || continue
+      u=$(sed -n 's/^0::\///p' "/proc/$p/cgroup" 2>/dev/null | sed 's/.*\///')
+      printf '{"pid":%s,"mib":%s,"unit":"%s"},' "$p" "${m:-0}" "${u:-?}"
+    done | sed 's/,$//')
+
+  # DGX-438: algo mata procesos python de fondo cada 10-15 min con rc=143
+  # (SIGTERM) y no se sabe qué. Un SIGTERM ajeno no deja linea en el journal ni
+  # core dump, asi que la unica via es notar QUE PID estaba y dejo de estar.
+  # Aqui solo se registran; `bb scan` compara muestras consecutivas.
+  local pybg
+  pybg=$(ps -eo pid=,etimes=,comm= 2>/dev/null |
+    awk '$3 ~ /^python/ && $2 > 60 {printf "%s%s", (n++?",":""), $1}')
+
+  printf '{"ts":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"py_bg":[%s],"gpu":[%s],"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s"}\n' \
+    "$ts" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$pybg" "$gpu" \
+    "${psi_m_some:-0}" "${psi_m_full:-0}" "${psi_io_some:-0}" "${psi_cpu_some:-0}" \
+    "${gw:-CAIDO}" "${dk:-?}" "${salud:-}" "${disco:-}" "${red:-}" "${cpuj:-}" >>"$f"
+
+  # rotacion: solo se borra lo que ya excedio la retencion declarada
+  find "$SAMPLES" -name '*.jsonl' -mtime +"$RETAIN_DAYS" -delete 2>/dev/null
+  find "$SNAPS" -maxdepth 1 -type d -mtime +"$RETAIN_DAYS" -exec rm -rf {} + 2>/dev/null
+}
+
+cmd_snapshot() {
+  local reason="${1:-manual}"
+  local d="$SNAPS/$(date +%Y-%m-%dT%H%M%S)_${reason//[^a-zA-Z0-9_-]/_}"
+  mkdir -p "$d"
+
+  echo "$reason" >"$d/reason.txt"
+  date -Iseconds >"$d/when.txt"
+
+  ps -eo pid,ppid,stat,etime,pcpu,pmem,rss,comm,args >"$d/ps.txt" 2>&1
+  cp /proc/meminfo "$d/meminfo.txt" 2>/dev/null
+  cp /proc/loadavg "$d/loadavg.txt" 2>/dev/null
+  free -h >"$d/free.txt" 2>&1
+  df -h >"$d/df.txt" 2>&1
+
+  zombie_parents >"$d/zombie-parents.txt" 2>&1
+  gpu_procs >"$d/gpu-procs.txt" 2>&1 || echo "nvidia-smi no disponible" >"$d/gpu-procs.txt"
+  have nvidia-smi && nvidia-smi -q >"$d/nvidia-smi-q.txt" 2>&1
+  have sensors && sensors >"$d/sensors.txt" 2>&1
+
+  # Distingue fallo de MODULO DE KERNEL de fallo de ESPACIO DE USUARIO en un
+  # cuelgue de GUI + nvidia-smi (FEATURE-GUI-KERNEL-VS-USERSPACE,
+  # HARVEST-366211): si lsmod no lista nvidia, el modulo se descargo o nunca
+  # cargo -- eso es kernel. Si SI esta cargado pero gdm no esta activo, el
+  # fallo es de espacio de usuario. Es diagnostico puro (lee estado); NO
+  # incluye la mitigacion que la ficha original tambien proponia
+  # (systemctl set-default/isolate), que es intervencion activa.
+  lsmod 2>&1 | grep -i '^nvidia' >"$d/lsmod-nvidia.txt" || echo "(modulo nvidia NO cargado)" >"$d/lsmod-nvidia.txt"
+  systemctl status gdm.service --no-pager >"$d/gdm-status.txt" 2>&1
+
+  # ventanas X mapeadas: distingue "app viva sin ventana" de "app muerta"
+  if have xprop && [ -n "${DISPLAY:-}" ]; then
+    { for w in $(xprop -root _NET_CLIENT_LIST 2>/dev/null | sed 's/.*# //; s/,//g'); do
+        echo "$w $(xprop -id "$w" WM_CLASS WM_NAME 2>/dev/null | tr '\n' ' ')"
+      done; } >"$d/x-windows.txt" 2>&1
+  fi
+
+  journalctl -k -n 500 --no-pager >"$d/journal-kernel.txt" 2>&1
+  journalctl -n 1000 --no-pager >"$d/journal-recent.txt" 2>&1
+
+  echo "$d"
+}
+
+# ---------------------------------------------------------------------- scan
+
+cmd_scan() {
+  local since="${1:-2 hours ago}"
+  local since_fmt; since_fmt=$(date -d "$since" '+%Y-%m-%d %H:%M:%S' 2>/dev/null) || {
+    echo "fecha invalida: $since" >&2; return 2; }
+
+  echo "== blackbox scan =="
+  echo "ventana: desde $since_fmt hasta $(date '+%Y-%m-%d %H:%M:%S')"
+  echo "maquina: $(cat /sys/devices/virtual/dmi/id/product_name 2>/dev/null || echo desconocida)"
+  echo
+
+  # --- 1. OOM del kernel y del driver NVIDIA -------------------------------
+  echo "-- OOM / fallos de memoria --"
+  local koom nvoom
+  if journalctl -k -S "$since_fmt" --no-pager >/dev/null 2>&1; then
+    # Las lineas NVRM tambien dicen "Out of memory", pero son de la GPU, no de
+    # la RAM. Contarlas aqui daba 4 falsos positivos de OOM del kernel.
+    koom=$(journalctl -k -S "$since_fmt" --no-pager 2>/dev/null |
+      grep -vi 'NVRM' | grep -icE 'oom-kill|oom_reaper|killed process|out of memory' || true)
+    nvoom=$(journalctl -k -S "$since_fmt" --no-pager 2>/dev/null |
+      grep -icE 'NVRM.*(Out of memory|NV_ERR_NO_MEMORY)' || true)
+    echo "  OOM del kernel (RAM):        ${koom:-0}"
+    echo "  OOM del driver NVIDIA:       ${nvoom:-0}"
+    if [ "${nvoom:-0}" -gt 0 ]; then
+      journalctl -k -S "$since_fmt" --no-pager 2>/dev/null |
+        grep -iE 'NVRM.*(Out of memory|NV_ERR_NO_MEMORY)' | tail -5 | sed 's/^/    /'
+    fi
+  else
+    cannot_run "OOM del kernel" "journalctl -k no legible (hace falta el grupo adm o systemd-journal)"
+    echo "  OOM del kernel:              COULD_NOT_RUN"
+  fi
+  echo
+
+  # --- 1b. Xid del driver NVIDIA (FEATURE-GPU-XID-DETECTION) ---------------
+  # Distinto de la OOM del driver de arriba: Xid es la forma en que el driver
+  # reporta fallos de hardware/firmware que NO son falta de memoria (timeout
+  # de RPC del GSP, fallo de init de firmware, ECC, etc.). Hasta hoy bin/bb
+  # nunca lo grep-eaba -- HARVEST-374016/379959/348223.
+  echo "-- Xid del driver NVIDIA --"
+  if journalctl -k -S "$since_fmt" --no-pager >/dev/null 2>&1; then
+    local nxid
+    nxid=$(journalctl -k -S "$since_fmt" --no-pager 2>/dev/null | grep -icE 'NVRM: Xid' || true)
+    echo "  eventos Xid:                 ${nxid:-0}"
+    if [ "${nxid:-0}" -gt 0 ]; then
+      # El codigo va DESPUES de "): ", no despues de "Xid": la direccion PCI
+      # (ej. "PCI:0000:01:00") tiene digitos propios que un split ingenuo por
+      # "Xid[^0-9]*" confunde con el codigo. Medido: sobre una linea real
+      # daba "0000:01:00):" en vez de "79". Se extrae con el patron completo.
+      journalctl -k -S "$since_fmt" --no-pager 2>/dev/null | grep -oE 'Xid \(PCI:[^)]*\): [0-9]+' |
+        grep -oE '[0-9]+$' | sort | uniq -c | sort -rn |
+        awk '{printf "    codigo %-6s x%s\n", $2, $1}'
+    fi
+  else
+    cannot_run "Xid de GPU" "journalctl -k no legible (hace falta el grupo adm o systemd-journal)"
+    echo "  eventos Xid:                 COULD_NOT_RUN"
+  fi
+  # Disponibilidad explicita: distinto de que la telemetria de 5s no haya
+  # escrito una muestra -- esto pregunta si nvidia-smi responde AHORA, con
+  # limite de tiempo, no si historicamente escribio datos.
+  if timeout 5 nvidia-smi >/dev/null 2>&1; then
+    echo "  nvidia-smi responde ahora:   si"
+  else
+    echo "  nvidia-smi responde ahora:   NO (timeout o error -- ver 'GPU sin responder' abajo)"
+  fi
+  echo
+
+  # --- 2. segfaults --------------------------------------------------------
+  echo "-- segfaults / traps --"
+  local segf
+  segf=$(journalctl -S "$since_fmt" --no-pager 2>/dev/null |
+    grep -icE 'segfault|general protection|traps:' || true)
+  echo "  segfaults registrados:       ${segf:-0}"
+  [ "${segf:-0}" -gt 0 ] && journalctl -S "$since_fmt" --no-pager 2>/dev/null |
+    grep -iE 'segfault|general protection|traps:' | tail -5 | sed 's/^/    /'
+  echo
+
+  # --- 2b. xHCI/USB (FEATURE-USB-XHCI-FORENSICS) ---------------------------
+  # Cero cobertura de USB en todo el inventario anterior. Solo se agrega la
+  # firma de error INEQUIVOCA del controlador (HC died / "assuming dead" /
+  # not responding / timeout / reset forzado -- las dos primeras frases son
+  # las que el kernel realmente emite; un primer intento solo buscaba "HC
+  # died" y "error" y NO atrapaba "xHCI host controller not responding,
+  # assuming dead", la forma mas comun en HARVEST-355453/365609). NO se
+  # juzga la velocidad negociada por puerto (480M en esta
+  # maquina es, verificado, el root hub USB2 legitimo de cada par xHCI y un
+  # dongle Bluetooth que es 480M por diseno; marcarlo como "degradado" sin un
+  # manifiesto de que deberia ir mas rapido seria un falso positivo
+  # garantizado). El inventario de velocidad por puerto, sin veredicto, vive
+  # en `bb hw`.
+  echo "-- xHCI / USB --"
+  if journalctl -k -S "$since_fmt" --no-pager >/dev/null 2>&1; then
+    local nxhci
+    nxhci=$(journalctl -k -S "$since_fmt" --no-pager 2>/dev/null |
+      grep -icE 'xhci_hcd.*(HC died|assum.*dead|not responding|timeout|reset)' || true)
+    echo "  errores xHCI:                ${nxhci:-0}"
+    [ "${nxhci:-0}" -gt 0 ] && journalctl -k -S "$since_fmt" --no-pager 2>/dev/null |
+      grep -iE 'xhci_hcd.*(HC died|assum.*dead|not responding|timeout|reset)' | tail -5 | sed 's/^/    /'
+  else
+    cannot_run "xHCI/USB" "journalctl -k no legible (hace falta el grupo adm o systemd-journal)"
+    echo "  errores xHCI:                COULD_NOT_RUN"
+  fi
+  echo
+
+  # --- 3. core dumps -------------------------------------------------------
+  echo "-- core dumps --"
+  if have coredumpctl; then
+    local nd
+    nd=$(coredumpctl list --since "$since_fmt" --no-pager 2>/dev/null | grep -cE '^(Mon|Tue|Wed|Thu|Fri|Sat|Sun|[0-9])' || true)
+    echo "  volcados capturados:         ${nd:-0}"
+    # Un binario que aparece cientos de veces no son cientos de hallazgos: es
+    # UN bucle de crash, y su ruido entierra el volcado que si importa. Se
+    # agrupa por ejecutable y se separa el bucle del resto.
+    # Medido 2026-09-08, horas despues de armar la captura: 10880 volcados,
+    # 1.7 GB, casi todos de `llama-server --list-devices` abortando ~3 veces
+    # por segundo -- un bucle que existia y era invisible.
+    if [ "${nd:-0}" -gt 0 ]; then
+      # El EXE es la PENULTIMA columna: la ultima es el tamano (p.ej. "151.8K").
+      # Agrupar por $NF devolvia tamanos en vez de binarios.
+      coredumpctl list --since "$since_fmt" --no-pager 2>/dev/null |
+        awk 'NF>5 && $(NF-1) ~ /\// {print $(NF-1)}' | sort | uniq -c | sort -rn |
+        awk '{ if ($1 >= 20) printf "    BUCLE  %6d x %s\n", $1, $2;
+               else printf "    %6d x %s\n", $1, $2 }' | head -8
+      local disco
+      disco=$(du -sh /var/lib/systemd/coredump 2>/dev/null | cut -f1)
+      [ -n "$disco" ] && echo "  espacio ocupado:             $disco"
+    fi
+  else
+    cannot_run "core dumps" "systemd-coredump no instalado -- corre enable-privileged.sh"
+    echo "  volcados capturados:         COULD_NOT_RUN"
+  fi
+  local climit; climit=$(ulimit -c)
+  if [ "$climit" = "0" ]; then
+    echo "  AVISO: ulimit -c = 0 en esta shell, no dejaria volcado"
+  fi
+  # Lo que de verdad importa no es esta shell, sino si las apps de escritorio
+  # que se cuelgan pueden dejar volcado. Un proceso arrancado antes de subir el
+  # limite lo conserva a 0 de por vida: instalar systemd-coredump NO lo protege
+  # retroactivamente. Medido el 2026-09-07: tras instalarlo, claude-desktop,
+  # ChatGPT y gnome-shell seguian los tres con core=0.
+  local desprotegidas=0 revisadas=0
+  while read -r p; do
+    [ -z "$p" ] && continue
+    revisadas=$((revisadas + 1))
+    [ "$(awk '/Max core file size/{print $5}' "/proc/$p/limits" 2>/dev/null)" = "0" ] &&
+      desprotegidas=$((desprotegidas + 1))
+  done < <(ps -eo pid=,args= 2>/dev/null | awk '/--type=zygote/{print $1}')
+  echo "  apps Electron revisadas:     $revisadas"
+  echo "  de ellas SIN volcado (core=0): $desprotegidas"
+  if [ "$desprotegidas" -gt 0 ]; then
+    echo "    Heredaron el limite viejo. Se arregla relanzandolas desde una"
+    echo "    sesion con el limite nuevo, no reinstalando nada."
+  fi
+  echo "  crashes de apport en /var/crash: $(ls /var/crash/*.crash 2>/dev/null | wc -l)"
+  # Volcados de KERNEL via kdump-tools (KDUMP_SKIP_VMCORE=1 en esta maquina:
+  # no guarda el vmcore completo -- 121 GB seria impracticable -- pero SI
+  # guarda el dmesg del kernel al momento del panic en cada subdirectorio con
+  # timestamp). Esto es lo que enable-privileged.sh no cubre: userspace tiene
+  # systemd-coredump, kernel tiene esto. FEATURE-KDUMP-PSTORE-PREAPAGADO.
+  local nkdump; nkdump=$(find /var/crash -mindepth 1 -maxdepth 1 -type d -name '[0-9]*' 2>/dev/null | wc -l)
+  echo "  volcados de kernel (kdump) en /var/crash: ${nkdump:-0}"
+  if [ "${nkdump:-0}" -gt 0 ]; then
+    find /var/crash -mindepth 1 -maxdepth 1 -type d -name '[0-9]*' 2>/dev/null | sort | tail -3 |
+      while read -r d; do echo "    $d/$(ls "$d" 2>/dev/null | tr '\n' ' ')"; done
+  fi
+  echo
+
+  # --- 4. zombis y procesos sin cosechar -----------------------------------
+  echo "-- zombis --"
+  local zc; zc=$(zombie_count)
+  echo "  zombis ahora mismo:          ${zc:-0}"
+  if [ "${zc:-0}" -gt 0 ]; then
+    echo "  padres que no cosechan:"
+    zombie_parents | head -5 | while read -r n ppid; do
+      echo "    ppid=$ppid ($n zombis): $(ps -o comm= -p "$ppid" 2>/dev/null || echo '<padre muerto>')"
+    done
+  fi
+  echo
+
+  # --- 5. apps Electron: viva pero sin renderer ----------------------------
+  # La firma exacta del cuelgue del 2026-09-07: proceso principal vivo,
+  # ventana mapeada, cero procesos --type=renderer.
+  echo "-- apps Electron sin renderer (proceso vivo, UI muerta) --"
+  local found=0
+  for main in $(pgrep -f 'type=zygote' 2>/dev/null | while read -r p; do
+        ps -o ppid= -p "$p" 2>/dev/null; done | sort -u); do
+    [ -z "$main" ] && continue
+    local exe name nrend
+    exe=$(readlink -f "/proc/$main/exe" 2>/dev/null) || continue
+    [ -z "$exe" ] && continue
+    name=$(basename "$exe")
+    nrend=$(pgrep -P "$main" -f 'type=renderer' 2>/dev/null | wc -l)
+    # los renderers pueden colgar del zygote, no solo del main
+    [ "$nrend" -eq 0 ] && nrend=$(ps -eo args= 2>/dev/null | grep -c "^$exe.*--type=renderer")
+    if [ "$nrend" -eq 0 ]; then
+      echo "  SOSPECHOSO  $name (pid $main): 0 renderers"
+      found=$((found + 1))
+    fi
+  done
+  echo "  apps sin renderer:           $found"
+  echo
+
+  # --- 6. locks de instancia unica huerfanos -------------------------------
+  # Lo que impidio reiniciar el 07-sep: SingletonLock apuntando a un pid muerto.
+  echo "-- locks de instancia unica huerfanos --"
+  local orph=0 checked=0
+  while IFS= read -r lock; do
+    checked=$((checked + 1))
+    local target pid
+    target=$(readlink "$lock" 2>/dev/null) || continue
+    pid=${target##*-}
+    case "$pid" in
+      ''|*[!0-9]*) continue ;;
+    esac
+    if ! kill -0 "$pid" 2>/dev/null; then
+      echo "  HUERFANO  $lock -> $target (pid $pid no existe)"
+      orph=$((orph + 1))
+    fi
+  done < <(find "$HOME/.config" -maxdepth 2 -name 'SingletonLock' -type l 2>/dev/null)
+  echo "  locks revisados:             $checked"
+  echo "  locks huerfanos:             $orph"
+  echo
+
+  # --- 6b. boot anterior: GDM llego a iniciar pero nadie inicio sesion? ----
+  # (FEATURE-GDM-BOOT-COLGADO). Distinto del check de Electron de arriba, que
+  # exige un proceso --type=zygote ya vivo -- opera DESPUES de que arranca
+  # una sesion de usuario. Un cuelgue de GDM (pantalla de login) antes de esa
+  # sesion, con los servicios de arranque en "[OK]" y colgado ahi
+  # indefinidamente (HARVEST-347951), es una capa distinta que nada cubria.
+  # Se revisa el boot ANTERIOR (forense, como el resto de bb scan): si esta
+  # colgado AHORA, no hay como correr bb scan para verlo.
+  echo "-- boot anterior: gdm llego a iniciar pero nadie inicio sesion? --"
+  if have journalctl; then
+    local gdm_line
+    gdm_line=$(journalctl -b -1 --no-pager -u gdm --no-hostname 2>/dev/null | grep -m1 "Started gdm.service")
+    if [ -z "$gdm_line" ]; then
+      echo "  (boot anterior no tiene gdm.service -- headless o no disponible)"
+    else
+      # gdm abre su PROPIA sesion interna (uid gdm) ademas de la del usuario
+      # que hace login real -- 1 sola sesion en todo el boot es solo la de
+      # gdm, sin login real despues.
+      local logins
+      logins=$(journalctl -b -1 --no-pager 2>/dev/null | grep -c "New session .* of user" || true)
+      if [ "${logins:-0}" -le 1 ]; then
+        echo "  AVISO: gdm.service inicio en el boot anterior y no se registro ningun login real despues"
+      else
+        echo "  boot anterior: gdm inicio y hubo ${logins:-0} sesion(es) -- login normal"
+      fi
+    fi
+  else
+    cannot_run "GDM boot anterior" "journalctl no disponible"
+  fi
+  echo
+
+  # --- 7. presion de memoria segun nuestras propias muestras ---------------
+  echo "-- presion de memoria (muestras de blackbox) --"
+  local nsamp
+  nsamp=$(cat "$SAMPLES"/*.jsonl 2>/dev/null | wc -l)
+  echo "  muestras en disco:           $nsamp"
+  if [ "$nsamp" -eq 0 ]; then
+    cannot_run "serie de memoria" "no hay muestras -- el timer no esta corriendo (bb install)"
+    echo "  minimo de MemFree:           COULD_NOT_RUN"
+  else
+    cat "$SAMPLES"/*.jsonl 2>/dev/null |
+      sed -n 's/.*"ts":"\([^"]*\)","mem_free_kb":\([0-9]*\).*/\1 \2/p' |
+      sort -k2 -n | head -1 |
+      awk '{printf "  MemFree minimo:  %6.1f GB  el %s\n", $2/1048576, $1}'
+    cat "$SAMPLES"/*.jsonl 2>/dev/null |
+      sed -n 's/.*"zombies":\([0-9]*\).*/\1/p' | sort -n | tail -1 |
+      awk '{printf "  pico de zombis:  %s\n", $1}'
+    # apps Electron que en algun momento se quedaron sin renderizador
+    local norend
+    norend=$(grep -ho '{"app":"[^"]*","pid":[0-9]*,"renderers":0}' "$SAMPLES"/*.jsonl 2>/dev/null |
+      sed 's/.*"app":"\([^"]*\)".*/\1/' | sort -u | tr '\n' ' ')
+    echo "  apps vistas sin renderizador: ${norend:-ninguna}"
+  fi
+  echo
+
+  # --- 7b. red y CPU por nucleo (muestras de blackbox) ---------------------
+  # `bb sample` guarda contadores crudos de red y CPU desde 2026-09-07
+  # (red_bytes()/cpu_jiffies() arriba), pero hasta hoy NADA los leia: el dato
+  # se acumulaba en disco y `bb scan` nunca cruzaba dos muestras para sacar
+  # una tasa. Hallazgo propio al revisar el codigo contra la cosecha de Atlas
+  # (HARVEST-351340/362964/366125, FEATURE-RED-CPU-SCAN): no faltaba un
+  # mecanismo de captura nuevo, faltaba el analisis sobre el que ya existia.
+  echo "-- red y CPU por nucleo (muestras de blackbox) --"
+  if [ "$(cat "$SAMPLES"/*.jsonl 2>/dev/null | wc -l)" -lt 2 ]; then
+    cannot_run "red/CPU por nucleo" "hacen falta 2 muestras y hay menos"
+    echo "  tasas de red/CPU:            COULD_NOT_RUN"
+  else
+    cat "$SAMPLES"/*.jsonl 2>/dev/null | python3 -c '
+import json, sys
+from datetime import datetime
+
+
+def parse_pairs(s, n):
+    out = {}
+    for tok in (s or "").split(","):
+        if not tok:
+            continue
+        parts = tok.split(":")
+        if len(parts) != n:
+            continue
+        out[parts[0]] = [int(x) for x in parts[1:]]
+    return out
+
+
+# Las muestras mas viejas retenidas (antes de 2026-09-07 tarde) no tienen
+# "cpu_jiffies"/"red": el campo se agrego a mitad de dia. Tomar la PRIMERA
+# linea del archivo sin mas daba "primero" sin esos campos y una ventana
+# vacia por diseno -- lo destapo el control negativo (misma corrida con
+# "1 hora" vs "1 segundo" daba identico resultado), no el caso positivo.
+# Por eso "primero"/"ultimo" se buscan por separado para cada campo, sobre
+# solo las lineas que SI lo traen.
+primero_cpu = ultimo_cpu = primero_red = ultimo_red = None
+for linea in sys.stdin:
+    try:
+        d = json.loads(linea)
+    except Exception:
+        continue
+    if d.get("cpu_jiffies"):
+        if primero_cpu is None:
+            primero_cpu = d
+        ultimo_cpu = d
+    if d.get("red"):
+        if primero_red is None:
+            primero_red = d
+        ultimo_red = d
+
+if primero_cpu is None or ultimo_cpu is primero_cpu:
+    print("  CPU por nucleo: (sin ventana con dato -- faltan >= 2 muestras con cpu_jiffies)")
+else:
+    t0 = datetime.strptime(primero_cpu["ts"][:19], "%Y-%m-%dT%H:%M:%S")
+    t1 = datetime.strptime(ultimo_cpu["ts"][:19], "%Y-%m-%dT%H:%M:%S")
+    dt = (t1 - t0).total_seconds()
+
+    # CPU por nucleo: un promedio de maquina esconde un solo nucleo saturado
+    # (medido: cpu19 al 72% invisible en el promedio, README "Cherry-pick").
+    cpu0 = parse_pairs(primero_cpu.get("cpu_jiffies"), 3)
+    cpu1 = parse_pairs(ultimo_cpu.get("cpu_jiffies"), 3)
+    picos = []
+    for core, (idle1, tot1) in cpu1.items():
+        if core not in cpu0:
+            continue
+        idle0, tot0 = cpu0[core]
+        dtot = tot1 - tot0
+        didle = idle1 - idle0
+        if dtot <= 0:
+            continue
+        busy = 100.0 * (1 - didle / dtot)
+        picos.append((busy, core))
+    if picos:
+        picos.sort(reverse=True)
+        print("  nucleo mas ocupado en la ventana: %s al %.1f%%" % (picos[0][1], picos[0][0]))
+        saturados = [c for b, c in picos if b >= 90]
+        if saturados:
+            print("  AVISO: %d nucleo(s) >= 90%% sostenido: %s" % (len(saturados), ", ".join(saturados)))
+    else:
+        print("  CPU por nucleo: (sin dato en las muestras)")
+
+# Red: contadores crudos rx/tx por interfaz fisica. Una caida a 0 KB/s
+# sostenida, o un contador que retrocede (reconexion), son la senal que
+# HARVEST-351340/366125 pedian y que sar guarda en otro fichero/formato.
+if primero_red is None or ultimo_red is primero_red:
+    print("  red por interfaz: (sin ventana con dato -- faltan >= 2 muestras con \"red\")")
+else:
+    t0r = datetime.strptime(primero_red["ts"][:19], "%Y-%m-%dT%H:%M:%S")
+    t1r = datetime.strptime(ultimo_red["ts"][:19], "%Y-%m-%dT%H:%M:%S")
+    dtr = (t1r - t0r).total_seconds()
+    red0 = parse_pairs(primero_red.get("red"), 3)
+    red1 = parse_pairs(ultimo_red.get("red"), 3)
+    if dtr > 0:
+        for iface, (rx1, tx1) in red1.items():
+            if iface not in red0:
+                continue
+            rx0, tx0 = red0[iface]
+            drx, dtx = rx1 - rx0, tx1 - tx0
+            if drx < 0 or dtx < 0:
+                print("  %-10s contador retrocedio (interfaz se reconecto?)" % iface)
+                continue
+            print("  %-10s rx %8.1f KB/s  tx %8.1f KB/s  (%d s)" % (
+                iface, drx / dtr / 1024, dtx / dtr / 1024, int(dtr)))
+            if drx == 0 and dtx == 0:
+                print("    AVISO: cero trafico en toda la ventana pese a tener contador activo")
+    else:
+        print("  red: ventana de 0 segundos, sin tasa")
+' 2>/dev/null || echo "  red/CPU: (python3 no pudo analizar las muestras)"
+  fi
+  echo
+
+  # --- 8. fuentes que ya existian en la maquina ---------------------------
+  echo "-- GPU (gpu_sampler.sh, cada 15s) --"
+  # El CSV de la fecha de la VENTANA, no el de hoy: `bb scan "2026-09-07 19:00"`
+  # buscaba el fichero de hoy y decia "sin CSV" sobre una ventana que si lo
+  # tenia. Lo destapo el control negativo, no el caso positivo.
+  local gcsv="/srv/ai/logs/gpu/gpu_telemetry_$(date -d "$since" +%F 2>/dev/null || date +%F).csv"
+  if [ -f "$gcsv" ]; then
+    local since_hm; since_hm=$(date -d "$since" '+%Y-%m-%dT%H:%M:%S')
+    local nto nrows
+    nto=$(awk -F, -v s="$since_hm" '$1>=s && ($2=="TIMEOUT"||$2=="ERROR")' "$gcsv" 2>/dev/null | wc -l)
+    nrows=$(awk -F, -v s="$since_hm" '$1>=s' "$gcsv" 2>/dev/null | wc -l)
+    echo "  muestras en la ventana:      $nrows"
+    echo "  driver sin responder:        $nto"
+    awk -F, -v s="$since_hm" '$1>=s && $2=="OK" && $5!="" {if($5>mx) {mx=$5; mt=$1}} END{if(mx!="") printf "  temperatura maxima:          %s C  (%s)\n", mx, mt}' "$gcsv" 2>/dev/null
+    awk -F, -v s="$since_hm" '$1>=s && $2=="OK" && $9!="" && $9!="0x0000000000000000"' "$gcsv" 2>/dev/null | wc -l |
+      awk '{printf "  filas con throttle activo:   %s\n", $1}'
+  else
+    # NO es un COULD_NOT_RUN: gpu_sampler.sh esta suspendido a proposito desde
+    # el 2026-09-07 y no escribe CSV nuevos. Su trabajo lo hace la seccion
+    # termica de abajo. Solo seria una averia si TAMPOCO hubiera telemetria de
+    # Atlas fresca, y eso ya lo vigila esa seccion.
+    echo "  (sin CSV para esta ventana: gpu_sampler suspendido el 2026-09-07,"
+    echo "   sus campos los cubre atom_gpu_telemetry.py -- los CSV anteriores"
+    echo "   a esa fecha siguen en /srv/ai/logs/gpu/ y si se leen)"
+  fi
+  echo
+
+  echo "-- termica (Atlas/atom_gpu_telemetry.py, cada 5s) --"
+  local ajl="$ATLAS_TELEMETRY"
+  if [ -f "$ajl" ]; then
+    local since_iso; since_iso=$(date -u -d "$since" '+%Y-%m-%dT%H:%M:%S' 2>/dev/null)
+    # Solo cuentan los eventos que el propio instrumento CORROBORA: escribe
+    # tambien los picos aislados de sensor, y son la gran mayoria (1093 de
+    # 1223 al 2026-09-07). Contar los descartados daria una alarma falsa.
+    local tc td mp
+    tc=$(grep -a '"evento": *"temp_critica"' "$ajl" 2>/dev/null |
+      grep '"corroboracion": *"corrobora"' | awk -v s="$since_iso" -F'"' '$4>=s' | wc -l)
+    td=$(grep -a '"evento": *"temp_critica"' "$ajl" 2>/dev/null |
+      grep '"corroboracion": *"descarta"' | awk -v s="$since_iso" -F'"' '$4>=s' | wc -l)
+    mp=$(grep -a '"evento": *"mitigacion_pausa"' "$ajl" 2>/dev/null |
+      awk -v s="$since_iso" -F'"' '$4>=s' | wc -l)
+    echo "  eventos termicos REALES:     $tc"
+    echo "  picos de sensor descartados: $td  (ruido, no eventos)"
+    echo "  pausas por mitigacion:       $mp"
+    [ "${tc:-0}" -gt 0 ] && grep -a '"corroboracion": *"corrobora"' "$ajl" |
+      awk -v s="$since_iso" -F'"' '$4>=s' | tail -3 | sed 's/^/    /' | cut -c1-160
+  else
+    cannot_run "termica de Atlas" "no existe $ajl -- atom-gpu-telemetry parado?"
+    echo "  eventos termicos:            COULD_NOT_RUN"
+  fi
+  echo
+
+  # --- 8b. reloj/pstate vs. bandera de throttle (FEATURE-CLOCK-THROTTLE- ---
+  # CRUZADO). atom_gpu_telemetry.py ya escribe sm_clk_mhz/pstate/throttle en
+  # cada muestra desde el 2026-09-07 (absorbidos de gpu_sampler.sh), pero
+  # hasta hoy esta seccion solo leia temp_critica/mitigacion_pausa del mismo
+  # JSONL -- nunca esos tres campos. Un reloj bajo SOSTENIDO con utilizacion
+  # alta y SIN bandera de throttle es la firma que HARVEST-364166/374274/
+  # 376039 reportan y que hoy es invisible aunque el dato ya se escriba.
+  # Umbral PROVISIONAL (800 MHz con >50% de utilizacion): igual que los
+  # umbrales de PSI, sale del rango de clock ya registrado (300-2800 MHz),
+  # no de un incidente propio calibrado en esta maquina.
+  if [ -f "$ajl" ]; then
+    grep -a '"evento": *"muestra"' "$ajl" 2>/dev/null |
+      awk -v s="$since_iso" -F'"' '$4>=s' | python3 -c '
+import json, sys
+
+atascados = []
+n = 0
+for linea in sys.stdin:
+    try:
+        d = json.loads(linea)
+    except Exception:
+        continue
+    clk = d.get("sm_clk_mhz")
+    util = d.get("gpu_util_pct")
+    thr = d.get("throttle")
+    if clk is None or util is None or thr is None:
+        continue
+    n += 1
+    if clk < 800 and util > 50 and thr == "0x0000000000000000":
+        atascados.append((d.get("ts", "")[:19], clk, util))
+print("  muestras con clock/pstate/throttle: %d" % n)
+if atascados:
+    print("  AVISO: %d muestra(s) con reloj < 800MHz, util > 50%%, SIN throttle:" % len(atascados))
+    for ts, clk, util in atascados[-3:]:
+        print("    %s  clock=%.0fMHz  util=%.0f%%" % (ts, clk, util))
+else:
+    print("  reloj atascado sin throttle:  0")
+' 2>/dev/null || echo "  reloj/throttle: (python3 no pudo analizar las muestras)"
+  fi
+  echo
+
+  # --- 8c. GPU con memoria reservada y 0% de utilizacion sostenido ---------
+  # (FEATURE-GPU-UTIL-CERO-FALLBACK-CPU). Mismo patron que el tok/s de
+  # trafico real ya adoptado: un proceso con memoria de GPU reservada
+  # (gpu_procs, 1 de cada 3 muestras) que luego pasa varias muestras seguidas
+  # con gpu_util_pct=0 esta corriendo en fallback silencioso a CPU -- el
+  # driver no fallo, nadie lo reporta, y hoy nada lo correlaciona.
+  if [ -f "$ajl" ]; then
+    grep -a '"evento": *"muestra"' "$ajl" 2>/dev/null |
+      awk -v s="$since_iso" -F'"' '$4>=s' | python3 -c '
+import json, sys
+
+ultimos_procs = None
+racha = 0
+avisos = []
+for linea in sys.stdin:
+    try:
+        d = json.loads(linea)
+    except Exception:
+        continue
+    procs = d.get("gpu_procs")
+    if procs:
+        ultimos_procs = procs
+    util = d.get("gpu_util_pct")
+    if util is None:
+        continue
+    if util == 0 and ultimos_procs:
+        racha += 1
+        if racha == 3:
+            nombres = ", ".join("%s (%.0fMiB)" % (p.get("nombre", "?"), p.get("mem_mib", 0)) for p in ultimos_procs)
+            avisos.append((d.get("ts", "")[:19], nombres))
+    else:
+        racha = 0
+if avisos:
+    print("  AVISO: %d caso(s) de 0%% de utilizacion sostenida con memoria de GPU reservada:" % len(avisos))
+    for ts, nombres in avisos[-3:]:
+        print("    %s  proceso(s): %s" % (ts, nombres))
+else:
+    print("  GPU con memoria reservada y 0% util sostenido: 0")
+' 2>/dev/null || echo "  fallback a CPU: (python3 no pudo analizar las muestras)"
+  fi
+  echo
+
+  echo "-- margen de memoria (monitor_memory.sh, cada 5 min) --"
+  if [ -f /srv/ai/logs/memory_monitor.log ]; then
+    local nwarn
+    # -a: el log tiene bytes binarios y sin esto grep se niega a leerlo entero
+    nwarn=$(grep -ac 'WARNING' /srv/ai/logs/memory_monitor.log 2>/dev/null || echo 0)
+    echo "  avisos historicos de margen: $nwarn"
+    echo "  ultimo aviso:                $(grep -a 'WARNING' /srv/ai/logs/memory_monitor.log 2>/dev/null | tail -1 | cut -c1-19)"
+    [ "${nwarn:-0}" -gt 0 ] && grep -a 'WARNING' /srv/ai/logs/memory_monitor.log | tail -3 | sed 's/^/    /'
+  else
+    cannot_run "monitor de memoria" "no existe /srv/ai/logs/memory_monitor.log"
+    echo "  avisos de margen:            COULD_NOT_RUN"
+  fi
+  echo
+
+  # --- 8b. motor de inferencia y contenedores -----------------------------
+  # El 2026-09-08 el gateway se cayo y nadie lo reporto. Se mira el ENDPOINT,
+  # no el contenedor: durante la carga del modelo el contenedor esta "Up" y el
+  # endpoint todavia no responde.
+  echo "-- motor de inferencia --"
+  local gw_ahora; gw_ahora=$(gateway_modelo)
+  echo "  ahora mismo:                 ${gw_ahora:-CAIDO (no responde $GATEWAY_URL)}"
+  local caidas
+  caidas=$(grep -ho '"gateway":"[^"]*"' "$SAMPLES"/*.jsonl 2>/dev/null | grep -c 'CAIDO' || true)
+  local conmuestra
+  conmuestra=$(grep -ho '"gateway":"[^"]*"' "$SAMPLES"/*.jsonl 2>/dev/null | wc -l)
+  echo "  muestras con el gateway caido: ${caidas:-0} de ${conmuestra:-0}"
+  echo "  contenedores (vivos/total):  $(docker_estado 2>/dev/null || echo '?')"
+  # Fallback silencioso a modo "legacy" (sin GPU real) por fallo del
+  # prestart hook OCI de nvidia-container-runtime (FEATURE-NVIDIA-CONTAINER-
+  # RUNTIME-HOOK, HARVEST-351579): el contenedor puede reportar "Up" con el
+  # hook fallando por debajo -- mismo espiritu que el resto de esta seccion
+  # (mirar el ENDPOINT/hook, no solo el estado del contenedor).
+  local nhook
+  nhook=$(journalctl -S "$since_fmt" --no-pager 2>/dev/null |
+    grep -icE 'nvidia-container-(runtime|cli).*(error|fail)|OCI runtime.*nvidia.*fail|failed to initialize NVML' || true)
+  echo "  fallos de prestart hook OCI/nvidia: ${nhook:-0}"
+  [ "${nhook:-0}" -gt 0 ] && journalctl -S "$since_fmt" --no-pager 2>/dev/null |
+    grep -iE 'nvidia-container-(runtime|cli).*(error|fail)|OCI runtime.*nvidia.*fail|failed to initialize NVML' |
+    tail -3 | sed 's/^/    /'
+  # tok/s del trafico REAL, derivado de los contadores entre muestras. Un
+  # gateway degradado responde igual de "vivo": esto es lo que lo delata.
+  cat "$SAMPLES"/*.jsonl 2>/dev/null | python3 -c '
+import json, sys
+from datetime import datetime
+prev = None
+picos, errores, preempt = [], 0, 0
+for linea in sys.stdin:
+    try: d = json.loads(linea)
+    except Exception: continue
+    s = d.get("gw_salud") or ""
+    partes = s.split(",")
+    if len(partes) < 7: continue
+    try:
+        gen, err, pre = int(partes[4]), int(partes[6]), int(partes[3])
+        ts = datetime.strptime(d["ts"][:19], "%Y-%m-%dT%H:%M:%S")
+    except Exception: continue
+    if prev:
+        dt = (ts - prev[0]).total_seconds()
+        dgen = gen - prev[1]
+        if dt > 0 and dgen > 0: picos.append((dgen / dt, d["ts"][11:19]))
+    errores, preempt = max(errores, err), max(preempt, pre)
+    prev = (ts, gen)
+if picos:
+    mx = max(picos); print("  pico de generacion:          %.1f tok/s (%s)" % mx)
+    print("  intervalos con trafico:      %d" % len(picos))
+else:
+    print("  pico de generacion:          sin trafico en las muestras")
+print("  peticiones con error:        %d" % errores)
+print("  preempciones (presion KV):   %d" % preempt)
+' 2>/dev/null || echo "  rendimiento: (no se pudo derivar)"
+  echo
+
+  # --- 9a. presion real del kernel (PSI) ----------------------------------
+  # Ni MemFree ni MemAvailable dicen cuanto se esta SUFRIENDO por memoria; PSI
+  # si, porque mide tiempo de tareas paradas. Mecanismo tomado de sparkview
+  # (foro NVIDIA 366877, ingerido en Atlas), que lo usa justamente para GB10.
+  #
+  # Los umbrales son PROVISIONALES: vienen de la escala LOW/MODERATE/HIGH/
+  # CRITICAL de esa fuente, NO de una medicion propia en esta maquina. Cuando
+  # haya suficientes muestras habra que calibrarlos contra un incidente real.
+  echo "-- presion del kernel (PSI, umbrales provisionales) --"
+  if [ -r /proc/pressure/memory ]; then
+    cat "$SAMPLES"/*.jsonl 2>/dev/null | python3 -c '
+import json, sys
+picos = {"mem_some": (0, ""), "mem_full": (0, ""), "io_some": (0, ""), "cpu_some": (0, "")}
+n = 0
+for linea in sys.stdin:
+    try: d = json.loads(linea)
+    except Exception: continue
+    p = d.get("psi")
+    if not p: continue
+    n += 1
+    for k in picos:
+        v = p.get(k, 0)
+        if isinstance(v, (int, float)) and v > picos[k][0]:
+            picos[k] = (v, d.get("ts", "")[11:19])
+
+def clase(v):
+    return "LOW" if v < 5 else "MODERATE" if v < 20 else "HIGH" if v < 50 else "CRITICAL"
+
+if n == 0:
+    print("  muestras con PSI:            0 (aun no hay)")
+else:
+    print("  muestras con PSI:            %d" % n)
+    for k, etiq in (("mem_full", "memoria (TODAS paradas)"),
+                    ("mem_some", "memoria (alguna parada)"),
+                    ("io_some",  "E/S"),
+                    ("cpu_some", "CPU")):
+        v, ts = picos[k]
+        print("  pico %-24s %6.2f %%  %-8s %s" % (etiq, v, clase(v), ts))
+    if picos["mem_full"][0] > 0:
+        print("    AVISO: mem_full > 0 significa trabajo util CERO por esperar memoria.")
+' 2>/dev/null || echo "  PSI: (python3 no pudo analizar las muestras)"
+  else
+    cannot_run "PSI" "/proc/pressure/memory no legible (kernel sin CONFIG_PSI?)"
+    echo "  PSI:                         COULD_NOT_RUN"
+  fi
+  echo
+
+  # --- 9b. procesos con el directorio de trabajo borrado ------------------
+  # Un servicio cuyo cwd se borro sigue "activo" y responde, pero todo lo que
+  # lance muere en getcwd(). Medido 2026-09-08: `ollama serve` heredo su cwd de
+  # un worktree de agente que luego se limpio, y durante 8h42m cada
+  # llama-server aborto con una excepcion C++ no capturada -- 14158 volcados,
+  # 2.2 GB. Nada lo reportaba: el proceso estaba vivo y el puerto respondia.
+  echo "-- procesos con el cwd borrado --"
+  local cwdmuertos=0 revisados=0
+  for p in $(ps -eo pid=,etimes= 2>/dev/null | awk '$2 > 300 {print $1}'); do
+    local c; c=$(readlink "/proc/$p/cwd" 2>/dev/null) || continue
+    revisados=$((revisados + 1))
+    case "$c" in
+      *" (deleted)")
+        echo "  MUERTO  pid=$p $(ps -o comm= -p "$p" 2>/dev/null): ${c%\ (deleted)}"
+        cwdmuertos=$((cwdmuertos + 1)) ;;
+    esac
+  done
+  echo "  procesos revisados (>5 min): $revisados"
+  echo "  con el cwd borrado:          $cwdmuertos"
+  [ "$cwdmuertos" -gt 0 ] && echo "    Se arregla relanzandolos desde un directorio que exista."
+  echo
+
+  # --- 10. DGX-438: procesos python que desaparecen -----------------------
+  # Atlas midio muertes con rc=143 (SIGTERM) cada 10-15 min sin causa raiz.
+  # Un SIGTERM ajeno no deja linea en el journal ni core dump, asi que la via
+  # es comparar muestras consecutivas: un pid que estaba y ya no esta, sin OOM
+  # ni evento termico en medio, es un candidato.
+  echo "-- procesos python desaparecidos (DGX-438) --"
+  if [ "$(cat "$SAMPLES"/*.jsonl 2>/dev/null | wc -l)" -lt 2 ]; then
+    cannot_run "desapariciones python" "hacen falta 2 muestras y hay menos"
+    echo "  desapariciones:              COULD_NOT_RUN"
+  else
+    cat "$SAMPLES"/*.jsonl 2>/dev/null | python3 -c '
+import json, sys
+prev, prev_ts, hallazgos = None, None, []
+for linea in sys.stdin:
+    try: d = json.loads(linea)
+    except Exception: continue
+    cur = set(d.get("py_bg") or [])
+    if prev is not None:
+        idos = prev - cur
+        if idos:
+            hallazgos.append((prev_ts, d.get("ts"), sorted(idos)))
+    prev, prev_ts = cur, d.get("ts")
+print("  transiciones con desaparicion: %d" % len(hallazgos))
+for a, b, pids in hallazgos[-5:]:
+    print("    entre %s y %s: pid(s) %s" % (a[11:19], b[11:19], ", ".join(map(str, pids))))
+if not hallazgos:
+    print("    (ninguna en las muestras guardadas)")
+' 2>/dev/null || echo "  desapariciones:              (python3 no pudo analizar)"
+    echo "  Nota: una desaparicion NO prueba SIGTERM ajeno -- un proceso que"
+    echo "  termina bien tambien desaparece. Cruzar con OOM y termica de arriba."
+  fi
+  echo
+
+  # --- clasificador de causa de apagado/reinicio no limpio -----------------
+  # (FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR). Arma UN veredicto cruzando PCIe
+  # (nuevo aqui) con OOM/termico (ya calculados arriba en esta misma corrida)
+  # -- hoy hay que leer tres secciones y cruzar a mano, el mismo costo que ya
+  # motivo consolidar "Red y CPU por nucleo". No reemplaza los conteos de
+  # arriba, los resume en una linea.
+  echo "-- clasificador de causa de apagado/reinicio no limpio --"
+  local npower nnaer
+  npower=$(journalctl -k -S "$since_fmt" --no-pager 2>/dev/null |
+    grep -icE 'mlx5_pcie_event.*insufficient power' || true)
+  # OJO: un grep amplio de "AER:|hotplug" cuenta tambien el RUIDO de
+  # inicializacion al boot ("AER: enabled with IRQ", "pciehp: Slot #N
+  # AttnBtn-...") -- medido: 28 lineas con ese patron amplio, de las cuales
+  # solo 5 eran errores reales. El patron de abajo exige la palabra "error"
+  # o la firma real de RxErr/remocion de cable/caida de enlace.
+  nnaer=$(journalctl -k -S "$since_fmt" --no-pager 2>/dev/null |
+    grep -icE 'AER: (Corrected|Uncorrected|Correctable|Fatal) error|\] RxErr|Cable removal|Link Down' || true)
+  echo "  PCIe: insuficiencia de energia:  ${npower:-0}"
+  echo "  PCIe: errores AER/RxErr/cable:   ${nnaer:-0}"
+  local indicadores=""
+  [ "${npower:-0}" -gt 0 ] && indicadores="${indicadores}energia PCIe insuficiente, "
+  [ "${nnaer:-0}" -gt 0 ] && indicadores="${indicadores}errores PCIe (AER/RxErr/cable), "
+  [ "${koom:-0}" -gt 0 ] && indicadores="${indicadores}OOM del kernel, "
+  [ "${nvoom:-0}" -gt 0 ] && indicadores="${indicadores}OOM del driver NVIDIA, "
+  [ "${tc:-0}" -gt 0 ] && indicadores="${indicadores}evento termico corroborado, "
+  if [ -n "$indicadores" ]; then
+    echo "  POSIBLE CAUSA en esta ventana: ${indicadores%, }"
+  else
+    echo "  sin indicador de causa en esta ventana (no prueba que no la haya -- solo"
+    echo "  que ninguna de las señales que este scan cruza aparecio)"
+  fi
+  # Correlacion (NO causalidad) con init/replug de USB o Bluetooth cerca del
+  # fin del boot ANTERIOR -- HARVEST-358034 mecanismo 3. Solo señala
+  # coincidencia, igual que la nota de "un evento escrito no es un evento
+  # ocurrido" de mas arriba en este mismo archivo.
+  local prevend
+  prevend=$(journalctl -b -1 --no-pager 2>/dev/null | tail -1 | awk '{print $1, $2, $3}')
+  if [ -n "$prevend" ]; then
+    local nusb
+    nusb=$(journalctl -b -1 --no-pager 2>/dev/null | tail -30 | grep -icE 'usb|bluetooth|btusb' || true)
+    if [ "${nusb:-0}" -gt 0 ]; then
+      echo "  COINCIDENCIA (no causalidad): $nusb evento(s) de USB/Bluetooth en las ultimas lineas del boot anterior, antes de su fin"
+    fi
+  fi
+  echo
+
+  # --- veredicto -----------------------------------------------------------
+  echo "-- veredicto --"
+  echo "  comprobaciones que NO pudieron correr: $CNR"
+  if [ "$CNR" -gt 0 ]; then
+    printf '%s' "$CNR_LIST"
+    echo
+    echo "  Este informe NO esta limpio: $CNR comprobaciones no llegaron a ejecutarse."
+  else
+    echo "  Todas las comprobaciones corrieron."
+  fi
+}
+
+# ------------------------------------------------------------------ hardware
+
+cmd_hw() {
+  echo "== inventario de hardware =="
+  echo "modelo:  $(cat /sys/devices/virtual/dmi/id/product_name 2>/dev/null || echo '?')"
+  echo "kernel:  $(uname -r)"
+  echo "so:      $(. /etc/os-release 2>/dev/null && echo "$PRETTY_NAME")"
+  echo
+  echo "-- CPU --"; lscpu 2>/dev/null | grep -E 'Arquitectura|Architecture|Model name|Nombre del modelo|^CPU\(s\)|Thread|N.cleo' | sed 's/^/  /'
+  echo
+  echo "-- memoria --"
+  awk '/MemTotal|MemFree|MemAvailable|SwapTotal/{printf "  %-14s %8.1f GB\n", $1, $2/1048576}' /proc/meminfo
+  echo "  nodos NUMA:  $(ls -d /sys/devices/system/node/node[0-9]* 2>/dev/null | wc -l)"
+  echo
+  echo "-- GPU --"
+  if have nvidia-smi; then
+    nvidia-smi --query-gpu=name,driver_version,temperature.gpu,utilization.gpu,power.draw \
+      --format=csv 2>&1 | sed 's/^/  /'
+    echo "  memoria por proceso (unica via fiable en GB10):"
+    gpu_procs | sed 's/^/    /' || echo "    (sin procesos de computo)"
+    local tot; tot=$(gpu_mem_mib)
+    echo "    TOTAL: ${tot:-0} MiB de la RAM unificada"
+  else
+    echo "  nvidia-smi no disponible"
+  fi
+  echo
+  echo "-- discos --"; lsblk -d -o NAME,SIZE,MODEL,ROTA 2>/dev/null | grep -v '^loop' | sed 's/^/  /'
+  echo
+  echo "-- temperaturas --"; have sensors && sensors 2>/dev/null | grep -iE '°C' | head -10 | sed 's/^/  /' || echo "  (sensors sin lecturas)"
+  echo
+  echo "-- USB (velocidad negociada por dispositivo, sin veredicto) --"
+  have lsusb && lsusb -t 2>/dev/null | sed 's/^/  /' || echo "  lsusb no disponible"
+}
+
+# -------------------------------------------------------------------- status
+
+cmd_status() {
+  echo "== estado de la instrumentacion =="
+  local armed=0 missing=0
+
+  chk() { # nombre, condicion_ya_evaluada(0=ok), detalle
+    if [ "$2" -eq 0 ]; then echo "  ARMADO    $1"; armed=$((armed + 1))
+    else echo "  FALTA     $1 -- $3"; missing=$((missing + 1)); fi
+  }
+
+  systemctl --user is-active blackbox-sample.timer >/dev/null 2>&1
+  chk "blackbox: muestreo de apps/zombis" $? "corre: bb install"
+
+  [ -d /var/log/journal ]
+  chk "journald persistente" $? "los logs se pierden al reiniciar"
+
+  journalctl -k -n1 >/dev/null 2>&1
+  chk "journal del kernel legible" $? "hace falta grupo adm o systemd-journal"
+
+  have coredumpctl
+  chk "systemd-coredump" $? "corre: sudo ./enable-privileged.sh"
+
+  [ "$(ulimit -c)" != "0" ]
+  chk "limite de core > 0" $? "ulimit -c = 0, no se guardan volcados"
+
+  # sysstat se comprueba por SUS DATOS, no por la variable ENABLED de
+  # /etc/default/sysstat: aqui ENABLED="false" y sin embargo el override
+  # sysstat-collect.timer.d dispara la recoleccion cada minuto. Leer la
+  # variable daba un falso negativo (comprobado 2026-09-07).
+  [ -n "$(find /var/log/sysstat -name "sa$(date +%Y%m%d)" -mmin -10 2>/dev/null)" ]
+  chk "sar recolectando (datos de hace <10 min)" $? "sin historico de CPU/mem/IO"
+
+  # gpu_sampler.sh NO se comprueba: esta suspendido a proposito desde el
+  # 2026-09-07 y su trabajo lo hace atom_gpu_telemetry.py (ver
+  # suspended/MANIFIESTO.md). Mantener la comprobacion pedia rearmar justo lo
+  # que se acababa de consolidar -- un FALTA que mentia.
+
+  [ -n "$(find /srv/ai/logs -name 'memory_monitor.log' -mmin -10 2>/dev/null)" ]
+  chk "monitor de memoria (<10 min)" $? "systemctl --user start ai-memory-monitor.timer"
+
+  # Por sus datos, no por la unit: una unit "active" cuyo proceso dejo de
+  # escribir es exactamente el fallo silencioso que buscamos.
+  [ -n "$(find "$(dirname "$ATLAS_TELEMETRY")" -name "$(basename "$ATLAS_TELEMETRY")" -mmin -2 2>/dev/null)" ]
+  chk "termica de Atlas (atom_gpu_telemetry, <2 min)" $? "systemctl --user start atom-gpu-telemetry"
+
+  systemctl is-active atom-clock-lock.service >/dev/null 2>&1
+  chk "clock lock de GPU (300-2800 MHz)" $? "limite termico DGX-342/344/345 sin aplicar"
+
+  systemctl is-active earlyoom.service >/dev/null 2>&1
+  chk "earlyoom" $? "sin guardia de OOM en espacio de usuario"
+
+  [ -n "$(gateway_modelo)" ]
+  chk "motor de inferencia sirviendo" $? "el gateway no responde en $GATEWAY_URL"
+
+  have nvidia-smi
+  chk "nvidia-smi" $? "sin telemetria de GPU"
+
+  # enable-privileged.sh solo arma coredump de USERSPACE. Un apagado duro por
+  # corte de VRM/PMIC no deja rastro de kernel -- FEATURE-KDUMP-PSTORE-
+  # PREAPAGADO. Hallazgo real (2026-09-09): kdump-tools YA esta instalado y
+  # armado en esta maquina (nadie de blackbox lo hizo), pero nada lo
+  # comprobaba. Nota honesta: kdump solo captura panics/oops donde el kernel
+  # sigue vivo para hacer kexec -- un corte de energia real no pasa por aqui.
+  # OJO: `kdump-config show | grep -q ...` se ve bien y esta MAL bajo
+  # `set -o pipefail`: grep -q cierra su stdin en cuanto encuentra el primer
+  # match, kdump-config recibe SIGPIPE y muere con rc=141 -- pipefail
+  # propaga ESE 141, no el 0 de grep, y el chequeo decia FALTA con kdump
+  # armado y corriendo. Medido 2026-09-09. Se evita el pipe: se captura la
+  # salida completa primero.
+  kdstate=""
+  have kdump-config && kdstate=$(kdump-config show 2>/dev/null)
+  case "$kdstate" in *"ready to kdump"*) kdok=0 ;; *) kdok=1 ;; esac
+  chk "kdump (volcado de kernel ante panic, no ante corte de energia)" "$kdok" \
+    "sudo kdump-config load -- captura panics/oops, no cortes de energia reales"
+
+  echo
+  echo "  armado: $armed    falta: $missing"
+  local n; n=$(cat "$SAMPLES"/*.jsonl 2>/dev/null | wc -l)
+  echo "  muestras acumuladas: $n"
+  echo "  datos en: $DATA"
+  [ "$missing" -gt 0 ] && echo && echo "  Con $missing piezas sin armar, un fallo puede volver a quedarse sin rastro."
+  return 0
+}
+
+cmd_install() {
+  local unitdir="$HOME/.config/systemd/user"
+  mkdir -p "$unitdir"
+  cp "$(dirname "$0")/../systemd/blackbox-sample.service" "$unitdir/"
+  cp "$(dirname "$0")/../systemd/blackbox-sample.timer" "$unitdir/"
+  systemctl --user daemon-reload
+  systemctl --user enable --now blackbox-sample.timer
+  echo "timer instalado. estado:"
+  systemctl --user status blackbox-sample.timer --no-pager 2>&1 | head -5
+}
+
+# "Que procesos hay y QUIEN los llamo". El 2026-09-08 esa pregunta hubo que
+# contestarla a mano tres veces (ollama con el cwd de un worktree borrado, el
+# bucle de llama-server, y un python de 16 GB en la GPU), porque el muestreo
+# guardaba RSS y nombre pero no el linaje.
+#
+# La respuesta buena en este sistema es el CGROUP: dice que unit de systemd
+# contiene al proceso, y sobrevive a que el padre muera y lo adopte init --
+# que es justo cuando el ppid deja de servir. Se dan los dos.
+linaje() { # pid -> "unit | ppid comm_padre | cwd"
+  local p="$1" unit ppid pcomm cwd
+  unit=$(sed -n 's/^0::\///p' "/proc/$p/cgroup" 2>/dev/null | sed 's/.*\///')
+  ppid=$(ps -o ppid= -p "$p" 2>/dev/null | tr -d ' ')
+  pcomm=$(ps -o comm= -p "${ppid:-0}" 2>/dev/null | tr -d ' ')
+  cwd=$(readlink "/proc/$p/cwd" 2>/dev/null)
+  case "$cwd" in *" (deleted)") cwd="$cwd  <-- CWD BORRADO" ;; esac
+  echo "${unit:-?} | ppid=${ppid:-?} ${pcomm:-?} | ${cwd:-?}"
+}
+
+# `bb who` responde la pregunta para un pid, o para los que mas consumen.
+cmd_who() {
+  local objetivo="${1:-}"
+  if [ -n "$objetivo" ]; then
+    [ -d "/proc/$objetivo" ] || { echo "pid $objetivo no existe" >&2; return 1; }
+    echo "== pid $objetivo =="
+    echo "  cmd:    $(ps -o args= -p "$objetivo" 2>/dev/null | cut -c1-100)"
+    echo "  linaje: $(linaje "$objetivo")"
+    echo "  cadena de padres:"
+    local p="$objetivo"
+    for _ in 1 2 3 4 5 6; do
+      p=$(ps -o ppid= -p "$p" 2>/dev/null | tr -d ' ')
+      [ -z "$p" ] || [ "$p" = "0" ] && break
+      echo "    $p $(ps -o args= -p "$p" 2>/dev/null | cut -c1-80)"
+      [ "$p" = "1" ] && break
+    done
+    return 0
+  fi
+
+  echo "== quien lanzo lo que mas consume =="
+  echo
+  echo "-- top por RSS --"
+  ps -eo pid=,rss=,comm= --sort=-rss 2>/dev/null | head -6 | while read -r p rss comm; do
+    printf "  %-8s %7.1f GB  %-18s %s\n" "$p" "$(echo "$rss/1048576" | bc -l)" "$comm" "$(linaje "$p")"
+  done
+  echo
+  echo "-- procesos con memoria de GPU --"
+  if have nvidia-smi; then
+    nvidia-smi --query-compute-apps=pid,used_memory --format=csv,noheader,nounits 2>/dev/null |
+      while IFS=, read -r p mib; do
+        p=$(echo "$p" | tr -d ' '); mib=$(echo "$mib" | tr -d ' ')
+        [ -d "/proc/$p" ] || { echo "  $p (ya no existe) $mib MiB"; continue; }
+        printf "  %-8s %7s MiB  %-18s %s\n" "$p" "$mib" \
+          "$(ps -o comm= -p "$p" 2>/dev/null | tr -d ' ')" "$(linaje "$p")"
+      done
+  else
+    echo "  nvidia-smi no disponible"
+  fi
+}
+
+# Instalar systemd-coredump NO protege a lo que ya estaba corriendo: un proceso
+# conserva de por vida el limite de core que heredo al arrancar. Medido el
+# 2026-09-07: tras instalarlo, claude-desktop, ChatGPT y gnome-shell seguian los
+# tres con core=0, o sea que un cuelgue no habria dejado volcado igual.
+# `prlimit` lo cambia en caliente, sin reiniciar la app ni perder su estado
+# (verificado: un proceso a 0 paso a unlimited y el kernel le genero el core).
+cmd_protect() {
+  local aplicados=0 fallidos=0 ya=0
+  have prlimit || { echo "prlimit no disponible (paquete util-linux)" >&2; return 1; }
+
+  # Se protege el ARBOL entero, no solo el proceso principal: en una app
+  # Electron el que muere suele ser un renderizador, no el main.
+  local raices
+  raices=$(ps -eo pid=,args= 2>/dev/null | awk '/--type=zygote/{print $1}' |
+    while read -r z; do ps -o ppid= -p "$z" 2>/dev/null | tr -d ' '; done | sort -u)
+
+  for main in $raices; do
+    [ -z "$main" ] && continue
+    local exe; exe=$(readlink -f "/proc/$main/exe" 2>/dev/null) || continue
+    [ -z "$exe" ] && continue
+    echo "  $(basename "$exe") (pid $main):"
+    # el main mas todo lo que cuelgue de el
+    for p in $main $(pgrep -P "$main" 2>/dev/null) $(ps -eo pid=,args= 2>/dev/null |
+                     awk -v e="$exe" '$2==e{print $1}'); do
+      [ -d "/proc/$p" ] || continue
+      local antes; antes=$(awk '/Max core file size/{print $5}' "/proc/$p/limits" 2>/dev/null)
+      [ -z "$antes" ] && continue
+      if [ "$antes" != "0" ]; then ya=$((ya + 1)); continue; fi
+      if prlimit --core=unlimited --pid="$p" 2>/dev/null; then
+        aplicados=$((aplicados + 1))
+      else
+        fallidos=$((fallidos + 1))
+      fi
+    done
+  done
+  echo
+  echo "  protegidos ahora:   $aplicados"
+  echo "  ya lo estaban:      $ya"
+  echo "  no se pudo:         $fallidos"
+  [ "$fallidos" -gt 0 ] && echo "  (los que fallan suelen ser de otro usuario o ya muertos)"
+  echo
+  echo "  Esto NO persiste: un relanzamiento de la app vuelve a heredar el"
+  echo "  limite de su padre. Para que sea permanente hay que reabrir la"
+  echo "  sesion grafica, cuyo gnome-shell ya nacera con el limite nuevo."
+  return 0
+}
+
+# El repo es la fuente de verdad de lo adoptado, pero lo que CORRE es la copia
+# desplegada. Si divergen en silencio, el repo documenta una maquina que no
+# existe -- asi que la divergencia se mide, no se supone.
+cmd_drift() {
+  local root; root=$(cd "$(dirname "$0")/.." && pwd)
+  local diverged=0 checked=0 missing=0
+
+  cmp_one() { # origen_desplegado, copia_en_repo
+    checked=$((checked + 1))
+    if [ ! -e "$1" ]; then
+      echo "  AUSENTE     $1 (esta en el repo pero ya no en la maquina)"
+      missing=$((missing + 1)); return
+    fi
+    if cmp -s "$1" "$2"; then
+      echo "  igual       $1"
+    else
+      echo "  DIVERGE     $1"
+      diff -u "$2" "$1" 2>/dev/null | head -12 | sed 's/^/                /'
+      diverged=$((diverged + 1))
+    fi
+  }
+
+  echo "== divergencia repo vs maquina =="
+  for f in "$root"/adopted/gpu_governance/*.sh; do
+    [ -e "$f" ] || continue
+    cmp_one "/srv/ai/gpu_governance/$(basename "$f")" "$f"
+  done
+  for f in "$root"/adopted/systemd-user/*; do
+    [ -e "$f" ] || continue
+    cmp_one "$HOME/.config/systemd/user/$(basename "$f")" "$f"
+  done
+  for f in "$root"/adopted/system-config/*; do
+    [ -e "$f" ] || continue
+    cmp_one "/$(basename "$f" | tr _ /)" "$f"
+  done
+
+  echo
+  echo "  revisados: $checked   divergentes: $diverged   ausentes: $missing"
+  [ $((diverged + missing)) -eq 0 ] && echo "  El repo describe la maquina que hay."
+  return 0
+}
+
+usage() {
+  cat <<'USAGE'
+bb -- caja negra de la maquina
+
+  bb sample              una muestra de lo que nada mas cubre (apps, zombis)
+  bb snapshot [razon]    volcado forense completo AHORA
+  bb scan ["hace X"]     informe de fallos en una ventana (def: "2 hours ago")
+  bb hw                  inventario de hardware y limites aplicados
+  bb status              que instrumento esta armado y cual no
+  bb drift               compara lo adoptado en el repo con lo desplegado
+  bb protect             sube el limite de core de las apps ya corriendo (prlimit)
+  bb who [pid]           que procesos pesan y QUIEN los lanzo (unit, padre, cwd)
+  bb install             instala el timer de usuario
+
+Datos propios en ~/.local/share/blackbox (retencion 14 dias).
+Fuentes de terceros que `bb scan` lee, no duplica:
+  /srv/ai/logs/gpu/       telemetria de GPU cada 15s (gpu_sampler.sh)
+  /srv/ai/logs/           memory_monitor.log cada 5 min
+  /var/log/sysstat/       sar cada minuto
+  journalctl              kernel, NVRM, segfaults
+USAGE
+}
+
+case "${1:-}" in
+  sample)   shift; cmd_sample "$@" ;;
+  snapshot) shift; cmd_snapshot "$@" ;;
+  scan)     shift; cmd_scan "$@" ;;
+  hw)       shift; cmd_hw "$@" ;;
+  status)   shift; cmd_status "$@" ;;
+  drift)    shift; cmd_drift "$@" ;;
+  protect)  shift; cmd_protect "$@" ;;
+  who)      shift; cmd_who "$@" ;;
+  install)  shift; cmd_install "$@" ;;
+  ""|-h|--help|help) usage ;;
+  *) echo "subcomando desconocido: $1" >&2; usage >&2; exit 2 ;;
+esac

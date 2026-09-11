@@ -1,0 +1,9 @@
+[Unit]
+Description=Detecta si el boot anterior de la ATOM termino sin apagado limpio y lo registra en Atlas (DGX-326)
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/Atlas
+ExecStart=%h/projects/Atlas/.venv/bin/python3 %h/projects/Atlas/tools/detect_atom_crash.py
+Nice=10
+IOSchedulingClass=idle

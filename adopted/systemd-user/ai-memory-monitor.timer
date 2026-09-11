@@ -1,0 +1,14 @@
+[Unit]
+Description=Corre ai-memory-monitor cada 5 minutos
+
+[Timer]
+# OnCalendar en vez de OnBootSec+OnUnitActiveSec: el par monotonico moria
+# cuando el manager de usuario arrancaba mas de 2 min despues del boot
+# (medido 2026-08-28: boot 06:58:16, manager 07:02:24 -> Trigger: n/a,
+#  cero disparos en 57 min). OnCalendar no depende del instante de arranque.
+OnCalendar=*:0/5
+Persistent=true
+AccuracySec=15s
+
+[Install]
+WantedBy=timers.target

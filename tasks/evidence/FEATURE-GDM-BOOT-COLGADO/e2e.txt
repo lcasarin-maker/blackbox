@@ -1,0 +1,4 @@
+$ ./bin/bb scan '1 hour ago' | sed -n '/boot anterior: gdm/,/^$/p'
+-- boot anterior: gdm llego a iniciar pero nadie inicio sesion? --
+  boot anterior: gdm inicio y hubo 2 sesion(es) -- login normal
+(verificado a mano: journalctl -b -1 muestra 'Started gdm.service' a las 20:23:20 y 'New session 4 of user redacted' a las 20:32:50 -- login real, la deteccion NO debe disparar, y no dispara)

@@ -1,0 +1,11 @@
+$ ./bin/bb scan "1 hour ago" | sed -n '/red y CPU por nucleo/,/^-- /p'
+-- red y CPU por nucleo (muestras de blackbox) --
+  nucleo mas ocupado en la ventana: cpu5 al 28.4%
+  enP7s7     rx     91.1 KB/s  tx     92.8 KB/s  (100215 s)
+  br-420d1def4d77 rx      5.4 KB/s  tx     19.2 KB/s  (100215 s)
+  docker0    rx     32.8 KB/s  tx     11.0 KB/s  (100215 s)
+  veth2817fe9 rx      0.2 KB/s  tx      0.1 KB/s  (100215 s)
+  veth5a2b7fa rx      5.6 KB/s  tx     19.2 KB/s  (100215 s)
+  vethabc37ce rx     32.7 KB/s  tx     10.9 KB/s  (100215 s)
+  veth3d22ec8 rx      0.0 KB/s  tx      0.0 KB/s  (100215 s)
+Corrido sobre datos reales de produccion (2342 muestras, 2026-09-07..09).

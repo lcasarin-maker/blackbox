@@ -1,0 +1,5 @@
+$ ./bin/bb scan '5 minutes ago' | sed -n '/Xid del driver/,/^$/p'
+-- Xid del driver NVIDIA --
+  eventos Xid:                 0
+  nvidia-smi responde ahora:   si
+(0 es la linea base real de esta maquina -- journalctl -k nunca vio un Xid historico)

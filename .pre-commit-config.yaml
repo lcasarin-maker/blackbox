@@ -1,0 +1,439 @@
+fail_fast: false
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.22
+    hooks:
+      - id: ruff
+        name: "ruff (staged fatal blockers)"
+        args: [--select, "E9,F821,F632,F811"]
+        stages: [pre-commit, pre-merge-commit]
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+        name: "gitleaks (secrets staged)"
+        args: [--no-banner, --redact]
+        stages: [pre-commit, pre-merge-commit]
+
+  - repo: local
+    hooks:
+      # `--staged`: this gate judges what the COMMIT introduces, never
+      # the repo's accumulated debt. Without the flag the module falls
+      # back to a whole-repo sweep, and one already-committed corrupt
+      # file freezes EVERY commit in the satellite -- measured in Atlas
+      # 2026-09-01, two sessions frozen over corruption verified already
+      # in HEAD. The repo-wide sweep stays available for `make`/manual.
+      - id: corruption-guard
+        name: "corruption guard (bytes, mojibake, CRLF, BOM) -- staged"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name corruption-guard --hook pre-commit --
+          python .simplecode/run.py simplecode.guards.corruption_guard --staged
+        language: system
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: false
+
+      - id: angry-path
+        name: "angry path dominance (Rule B3)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name angry-path --hook pre-commit --
+          python .simplecode/run.py simplecode.guards.angry_path --gate
+        language: system
+        types: [python]
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: true
+
+      - id: spec-check
+        name: "SPEC.md is complete and verified"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name spec-check --hook pre-commit --
+          python .simplecode/run.py simplecode.cli_spec check
+        language: system
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: false
+
+      - id: zero-debt
+        name: "zero debt (staged, blocks)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name zero-debt-staged --hook pre-commit --
+          python .simplecode/run.py simplecode.worktree.zero_debt
+          --root . --mode zero --staged --gate
+        language: system
+        types: [python]
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: false
+
+      # PRE-COMMIT, not pre-push, and scoped to what THIS commit stages
+      # (`git diff --cached -M`) -- the same class as corruption-guard and
+      # zero-debt --staged right above, never a repo-wide judgment. That
+      # matters here specifically: `ledger-schema`/`backlog-verifier` stay
+      # at pre-push because a repo-wide schema check at pre-commit froze
+      # office2office on 128 pre-existing fichas, and a satellite can
+      # retire either of those two hooks by a vote aimed at something
+      # else (Atlas did, DGX-475) -- silently losing the only other check
+      # that would have caught this. Measured (Atlas, 2026-09-06, commit
+      # 3e057605, reverted before push as 8c1954ea): a swarm chasing zero
+      # open backlog closed 11 fichas by rewriting close_check to
+      # `python3 -c "...os.path.exists('tasks/done/DGX-96.md')..."` --
+      # verifying the commit's own rename, not the fix -- with no
+      # evidence field and no code or test change behind it.
+      - id: genuine-task-closure
+        name: "task closures are not synthetic (real fix, real close_check)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name genuine-task-closure --hook pre-commit --
+          python .simplecode/run.py simplecode.verification.genuine_task_closure
+          --root .
+        language: system
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: false
+
+      - id: staged-parity
+        name: "staged-parity (index vs working tree)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name staged-parity --hook pre-commit --
+          python .simplecode/run.py simplecode.worktree.staged_parity
+        language: system
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: false
+
+      # DEBT-SURVEY-NO-CONCURRENT-OWNERSHIP: prints (never blocks -- `claims.claim()`
+      # is advisory, "ni siquiera un lock") when a staged path carries an active
+      # claim from someone other than this commit's owner, so the `git diff
+      # --cached` a human reads by hand today gets read by the hook instead.
+      - id: claim-guard
+        name: "claim guard: staged paths vs foreign active claims (OWNS, CLAUDE.md)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name claim-guard --hook pre-commit --
+          bash -c 'python .simplecode/run.py simplecode.worktree.claim_guard --root . || true'
+        language: system
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: false
+
+      # OWNS law, second half ("si ya lo cometiste, avisa al dueno"): the
+      # commit already landed by post-commit time, so this never blocks --
+      # it names what THIS commit wrote over a foreign claim, for a human
+      # to relay. The only channel that exists for the automated version.
+      - id: claim-guard-notify
+        name: "claim guard: this commit landed over a foreign claim -- notify them (OWNS)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name claim-guard-notify --hook post-commit --
+          bash -c 'python .simplecode/run.py simplecode.worktree.claim_guard --root . --post-commit || true'
+        language: system
+        stages: [post-commit]
+        pass_filenames: false
+        always_run: true
+
+      - id: clean-worktree
+        name: "clean worktree (no dodged/partial-commit changes)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name clean-worktree --hook pre-commit --
+          python .simplecode/run.py simplecode.worktree.clean_worktree --root .
+        language: system
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: false
+
+      - id: truncation-guard
+        name: "truncation guard (integrity of edits)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name truncation-guard --hook pre-commit --
+          python .simplecode/run.py simplecode.guards.truncation_guard --gate
+        language: system
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: false
+
+      # Producer half of WP18/G3 (see hook_receipts.py). Added to the
+      # mother's OWN .pre-commit-config.yaml on 2026-08-25 (c695fdb)
+      # but never mirrored here -- the consumer (post-commit-receipt,
+      # below) shipped to every satellite that syncs, the producer
+      # never did. Measured live by RePic 2026-09-08: fresh syncs
+      # (runtime 6.1.3 -> 6.1.4) never delivered it, confirmed absent
+      # from RePic's entire .pre-commit-config.yaml history since the
+      # file exists -- every satellite has been writing this hook's
+      # CONSUMER against a producer that was never there, for the
+      # full 2 weeks since c695fdb, until this line closes the gap.
+      - id: write-hook-receipt
+        name: "write hook receipt nonce (WP18/G3 producer)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name write-hook-receipt --hook pre-commit --
+          python .simplecode/run.py simplecode.verification.hook_receipts
+          --root . --write-receipt
+        language: system
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: false
+
+      - id: zero-debt-repo
+        name: "zero debt (repo-wide ship freeze)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name zero-debt-repo --hook pre-push --
+          python .simplecode/run.py simplecode.worktree.zero_debt
+          --root . --mode zero --gate
+        language: system
+        types: [python]
+        stages: [pre-push]
+        pass_filenames: false
+
+      - id: coverage-floor
+        name: "coverage target (ratchet: never below watermark)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name coverage-100 --hook pre-push --
+          python .simplecode/run.py simplecode.verification.coverage_target
+          -q
+        language: system
+        types: [python]
+        stages: [pre-push]
+        pass_filenames: false
+
+      - id: pyright
+        name: "pyright (type checking)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name pyright --hook pre-push --
+          python .simplecode/run.py simplecode.verification.pyright_gate --root .
+        language: system
+        types: [python]
+        stages: [pre-push]
+        pass_filenames: false
+
+      - id: version-bump
+        name: "version reflects what shipped (semver from Conventional Commits)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name version-bump --hook pre-push --
+          python .simplecode/run.py simplecode.verification.version_bump --root . --gate
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+
+      - id: backlog-verifier
+        name: "closed debt has executable evidence"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name backlog-verifier --hook pre-push --
+          python .simplecode/run.py simplecode.verification.backlog_verifier
+          --root . --gate
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+
+      # The three canon gates below run at PRE-PUSH, never pre-commit, and this is
+      # load-bearing, not a style choice. Reported by the session 020 (2026-09-04):
+      # a hand-wired copy of `ledger-schema` shipped with `always_run: true` and NO
+      # `stages:` -- so it ran on every stage, judged the WHOLE repo state (never
+      # just what's staged), and froze office2office solid: 128 historical
+      # noncompliant fichas blocked EVERY commit, including the commits that would
+      # have fixed them. `--hook-stage pre-commit --all-files ledger-schema` had
+      # `No hook with id`; `--hook-stage pre-push` gave `checked=799 failed=128`.
+      # These three judge repo-wide schema state, the same class as
+      # `backlog-verifier` right above -- pre-push, matching it exactly.
+      - id: ledger-schema
+        name: "task schema is typed and closed tasks carry evidence"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name ledger-schema --hook pre-push --
+          python .simplecode/run.py simplecode.verification.ledger_schema --root .
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+
+      - id: no-perder-lineas
+        name: "no tracked task entry loses lines vs HEAD"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name no-perder-lineas --hook pre-push --
+          python .simplecode/run.py simplecode.verification.no_perder_lineas --root .
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+
+      - id: pii-scan
+        name: "no third-party PII (RFC/CURP) in tasks/ or docs/"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name pii-scan --hook pre-push --
+          python .simplecode/run.py simplecode.verification.pii_scan --root .
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+
+      - id: adversarial-judge
+        name: "Judge-Zero forensic auditor"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name adversarial-judge --hook pre-push --
+          python .simplecode/run.py simplecode.verification.adversarial_judge
+          --root . --gate
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+
+      - id: ship-freeze
+        name: "ship freeze (no open backlog)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name ship-freeze --hook pre-push --propagate-only --
+          python .simplecode/run.py simplecode.verification.finding_backlog
+          --root . --gate
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+
+      - id: hook-receipts-gate
+        name: "hook receipts: no unverified commits reaching push"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name hook-receipts-gate --hook pre-push --
+          python .simplecode/run.py simplecode.verification.hook_receipts
+          --root . --audit --gate
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+
+      # Blocking fleet-wide. On 2026-09-11 all 18 enrolled satellites
+      # were scanned with ponytail_debt and each returned 0 unmanaged
+      # markers. `--gate` writes/retires
+      # tasks/backlog/DEBT-PONYTAIL-UNDECLARED.md, so a future failure
+      # has an actionable record instead of becoming console noise.
+      # ADVISORY (`|| true`), and the reason is measured, not assumed. The first
+      # draft of this hook shipped BLOCKING on the assumption that "every
+      # satellite starts at ~0 MiB". Surveying the subject before trusting that
+      # sentence is what the ponytail-debt note below exists to teach, so it was
+      # surveyed -- 18 repos carrying `.simplecode/evidence/`, 2026-09-04:
+      #     Atlas        26.38 MiB   263.8% of the ceiling
+      #     aequitas_os  18.38 MiB   183.8%
+      #     simplecode    5.59 MiB    55.9%
+      #     declutter     4.70 MiB    47.0%
+      #     every other repo below 1.5 MiB
+      # Blocking would have stopped `git push` in the two busiest repos in the
+      # fleet on install. Worse, it would have offered them no way out: their
+      # rows are recent, so `--apply --keep-days 90` archives 0 in BOTH. They
+      # need a deliberate shorter window, which is a decision for their owner
+      # and not something a hook should force at push time.
+      # The ceiling therefore REPORTS everywhere and blocks nowhere. It becomes
+      # blocking fleet-wide the day Atlas and aequitas_os are under it -- that is
+      # the trigger, and it is written down here because a hook that is advisory
+      # with no stated trigger stays advisory forever.
+      - id: telemetry-bound
+        name: "telemetry stays under the 10 MiB horizon SPEC declares (advisory)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name telemetry-bound --hook pre-push --
+          bash -c 'python .simplecode/run.py simplecode.verification.telemetry_prune --root . --gate || true'
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+
+      - id: ponytail-debt
+        name: "ponytail/TODO/FIXME markers declare a ceiling and trigger"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name ponytail-debt --hook pre-push --
+          python .simplecode/run.py simplecode.guards.ponytail_debt --root . --gate
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+
+      # The gate that watches the gates. The standing law says a gate with many
+      # runs and zero catches is a defect in the instrument, never evidence of a
+      # clean subject; the effectiveness report printed that list for weeks and
+      # nothing acted on it. Eighteen blind instruments surfaced across four
+      # repos on 2026-09-01 and not one was caught by a gate. Honest limit: this
+      # sees only instruments that never convict, not two organs measuring the
+      # same thing and diverging while both stay green.
+      - id: gate-effectiveness
+        name: "gate effectiveness: no organ with many runs and zero catches"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name gate-effectiveness --hook pre-push --
+          python .simplecode/run.py simplecode.verification.gate_effectiveness --root . --gate
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+
+      # DEBT-CABLEAR-DISPOSICION-CON-FECHA-DE-CORTE / DEBT-DISPOSICION-DE-
+      # BLOQUEOS-SIN-CABLEAR (voted by the maintainer 2026-09-05): the disposition
+      # organ existed complete (CLI, ledger, gate_effectiveness reads it)
+      # and no hook ever invoked it -- measured 0 in this template and 0
+      # in every satellite that derives from it. Only blocked rows AFTER
+      # the cutoff (declared the first time this hook runs anywhere) need
+      # a disposition; everything before is historical and never blocks,
+      # and a row blocked in the last 5 minutes gets a grace window --
+      # own_chats measured 7 new blocked rows in 2 minutes on a live repo.
+      - id: telemetry-disposition
+        name: "telemetry disposition: blocked rows after the cutoff need a verdict"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name telemetry-disposition --hook pre-push --
+          python .simplecode/run.py simplecode.verification.telemetry_dispositions --root . --gate
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+
+      # El lock es la verdad de referencia: lo que pyproject.toml fija a
+      # mano tiene que estar en el, o un clone instala algo distinto de lo
+      # declarado y nadie se entera. Medido en simplecode 2026-09-06:
+      # pytest-xdist llevaba semanas fijado y ausente del lock, asi que la
+      # paralelizacion de la suite no aplicaba en un clone, en silencio.
+      # Un satelite sin lock (o sin pyproject) imprime NO APLICA y sale 0,
+      # asi que esto no pone en rojo a quien legitimamente no lo tiene.
+      # Bratan (cosecha Atlas 2026-09-06, cita contra captura cruda):
+      # "Old cases never deleted... Regressions are hard failures". Nuestro
+      # red_team regenera sus casos en cada corrida como funcion pura de los
+      # controles, asi que quitar un control los baja de 91 a 87 y el
+      # veredicto sigue verde. Medido. Este gate le da memoria: un caso que
+      # el corpus recuerda y hoy no se genera es un fallo, salvo retirada
+      # firmada. NUNCA graba -- eso es `--record`, un paso aparte.
+      - id: red-team-corpus
+        name: "red-team corpus: a case once tested never vanishes in silence"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name red-team-corpus --hook pre-push --
+          python .simplecode/run.py simplecode.verification.red_team_corpus --root . --gate
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+
+      - id: lockfile-parity
+        name: "lockfile parity: every pinned version survives a clone"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name lockfile-parity --hook pre-push --
+          python .simplecode/run.py simplecode.verification.lockfile_parity --root .
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+
+      - id: post-commit-receipt
+        name: "post-commit receipt and telemetry ledger"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.hook_receipts
+          --root . --stamp-head
+        language: system
+        stages: [post-commit]
+        pass_filenames: false
+        always_run: true
+      - id: bash-sintaxis
+        name: sintaxis de los scripts bash
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name bash-sintaxis --hook pre-commit --
+          bash -n
+        language: system
+        files: '^(bin/bb|.*\.sh)$'

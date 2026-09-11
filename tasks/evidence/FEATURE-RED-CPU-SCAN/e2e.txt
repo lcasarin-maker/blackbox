@@ -1,0 +1,4 @@
+$ BLACKBOX_DATA=/tmp/bb_empty_test ./bin/bb scan '1 hour ago' | sed -n '/red y CPU por nucleo/,/^-- /p'
+-- red y CPU por nucleo (muestras de blackbox) --
+  tasas de red/CPU:            COULD_NOT_RUN
+Sin historial, el gate cae en COULD_NOT_RUN y no en un falso 'sin dato' -- distingue instrumento apagado de sujeto sin sintoma.

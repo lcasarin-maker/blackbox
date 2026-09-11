@@ -1,0 +1,15 @@
+[Unit]
+Description=Muestrea GPU y zonas termicas de la ATOM cada 5s con alarma de margen contra el trip point (DGX-334)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/Atlas
+ExecStart=%h/projects/Atlas/.venv/bin/python3 %h/projects/Atlas/tools/atom_gpu_telemetry.py
+Restart=always
+RestartSec=5
+Nice=10
+IOSchedulingClass=idle
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,10 @@
+$ ./bin/bb snapshot test
+$ cat <snapshot>/lsmod-nvidia.txt
+nvidia_uvm           1900544  28
+nvidia_drm            135168  16
+nvidia_modeset       1957888  31 nvidia_drm
+nvidia              14684160  523 nvidia_uvm,nvidia_modeset
+$ head -3 <snapshot>/gdm-status.txt
+● gdm.service - GNOME Display Manager
+     Loaded: loaded (...)
+     Active: active (running) since Sat 2026-09-05 21:49:14 CST; 3 days ago

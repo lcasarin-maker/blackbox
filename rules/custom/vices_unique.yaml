@@ -1,0 +1,54 @@
+# ESCAPING: single backslashes. In single-quoted YAML `\\s` is a literal
+# backslash followed by `s`, not whitespace -- three of the four rules carried
+# doubled escapes and were BLIND from the day they were written. Measured
+# 2026-09-01 with planted positive controls: only vc-050 (the one rule with
+# single escapes) fired; vt-080 and vt-035 matched nothing. The gate ran green
+# over a ruleset that was 75%% dead, and its recorded blocks all came from the
+# single live rule. After the fix all three convict their controls, and the
+# sweep over src/ returns zero -- the repo was clean, the instrument was not.
+version: 1
+# 2026-08-31 dedup pass: 4 rules removed from this file.
+#
+# Three duplicated an AST detector in simplecode.guards.pattern_detectors,
+# already registered in PATTERN_DETECTORS and already run (against the same
+# src/ tree) by the EARLIER, gating `zero-debt-repo` hook in the same push
+# (.pre-commit-config.yaml: zero-debt-repo is position 12, vices-semgrep is
+# position 16) -- re-running an equivalent check here produced no new
+# information, only duplicate work:
+#   vt-009-tautological-assert     -> pattern_detectors.tautological_assert
+#   vt-005-assert-true             -> pattern_detectors.assert_true
+#   vc-025-unvalidated-command-input -> pattern_detectors.io_without_validation
+# (this file's own prior comment on vt-009 already said as much: "the token
+# list is copied from the catalog rather than reinvented" -- the AST version
+# was already treated as canonical, the semgrep copy just never got removed)
+#
+# The fourth, vt-006-test-without-assert, was DEAD: it targets
+# `**/tests/**/*.py`, but the vices-semgrep hook's own command scans `src/`
+# only (see .pre-commit-config.yaml, id: vices-semgrep) -- it could never
+# have fired against anything in this repo's real hook invocation.
+rules:
+  - id: vt-080-physical-address-assert
+    message: "VT-080: assertion depends on identity, address, or unstable hash"
+    severity: ERROR
+    languages: [python]
+    pattern-regex: 'assert\s+(?:id|hash)\([^\n]+\)\s*==\s*-?\d+'
+
+  - id: vt-106-unjustified-coverage-exclusion
+    message: "VT-106: coverage exclusion needs an inline reason or review marker"
+    severity: ERROR
+    languages: [generic]
+    paths:
+      include: [".coveragerc", "*coverage*.ini", "pyproject.toml"]
+    pattern-regex: '(?mi)^\s*(?:omit|exclude_lines)\s*=(?![^\n]*(?:reason|justification|reviewed(?:_at)?))'
+
+  - id: vc-050-runtime-dependency-install
+    message: "VC-050: application code installs dependencies at runtime"
+    severity: ERROR
+    languages: [python]
+    pattern-regex: '(?i)(?:os\.system|subprocess\.(?:run|call|Popen))\s*\([^\n]*(?:pip|npm|pnpm|yarn)\s+(?:install|add)\b'
+
+  - id: vt-035-permanent-xfail
+    message: "VT-035: xfail needs strict=True and an explicit reason"
+    severity: ERROR
+    languages: [python]
+    pattern-regex: '(?m)^\s*@(?:pytest\.)?mark\.xfail(?:\((?![^\n]*strict\s*=\s*True)[^\n]*\))?\s*$$'
