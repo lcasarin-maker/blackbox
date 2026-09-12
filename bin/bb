@@ -1327,7 +1327,11 @@ cmd_status() {
   # /etc/default/sysstat: aqui ENABLED="false" y sin embargo el override
   # sysstat-collect.timer.d dispara la recoleccion cada minuto. Leer la
   # variable daba un falso negativo (comprobado 2026-09-07).
-  [ -n "$(find /var/log/sysstat -name "sa$(date +%Y%m%d)" -mmin -10 2>/dev/null)" ]; ok=$?
+  # sysstat nombra los ficheros "saDD" (dia del mes, dos digitos) en Ubuntu,
+  # no "saYYYYMMDD" -- comprobado en esta maquina el 2026-09-12: el patron
+  # con fecha completa nunca encontraba el fichero de hoy pese a datos
+  # frescos, dando un FALTA permanente.
+  [ -n "$(find /var/log/sysstat -name "sa$(date +%d)" -mmin -10 2>/dev/null)" ]; ok=$?
   chk "sar recolectando (datos de hace <10 min)" "$ok" "sin historico de CPU/mem/IO"
 
   # gpu_sampler.sh NO se comprueba: esta suspendido a proposito desde el

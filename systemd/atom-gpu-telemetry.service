@@ -1,0 +1,14 @@
+[Unit]
+Description=Muestrea GPU y throttle de la ATOM cada 5s (reemplazo bash de Atlas/tools/atom_gpu_telemetry.py, ver tools/atom_gpu_telemetry.sh)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=%h/projects/blackbox/tools/atom_gpu_telemetry.sh
+Restart=always
+RestartSec=5
+Nice=10
+IOSchedulingClass=idle
+
+[Install]
+WantedBy=default.target
