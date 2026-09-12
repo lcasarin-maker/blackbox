@@ -91,6 +91,7 @@ signals that a stock install doesn't produce on its own:
 | Boot stuck in GDM | `journalctl -b -1` for "gdm started, no login followed" — a layer below the desktop-app checks |
 | Kernel vs. userspace GUI hang | Two-probe check: is the NVIDIA kernel module loaded, is the display manager actually up |
 | OCI/nvidia-container-runtime prestart hook | Catches the silent fallback to "legacy" mode with no real GPU, where the container still reports "Up" |
+| NVIDIA's own Field Diagnostic results | If `dgx-spark-fieldiag` (NVIDIA's official RMA pre-check suite) was run in the scan window, its `summary.json` verdict is read and cross-referenced — blackbox never installs or runs it itself, since it's deliberately disruptive (kills the GUI, stops docker, 30–40 min) |
 | kdump | Confirms it's actually installed and captured a crash, instead of trusting the unit's `enabled` state |
 | PSI (`/proc/pressure`) | Neither `MemFree` nor `MemAvailable` says how much time was actually spent *stalled* waiting on memory — PSI does |
 | Named throttle reasons + lifetime counters | `nvidia-smi`'s binary throttle flag doesn't say *why* — `-q -d PERFORMANCE` separates SW power cap from HW/SW thermal slowdown from HW power-brake, plus how many seconds each has accumulated since the last driver reload |
@@ -227,6 +228,40 @@ process gets killed or aborts because it couldn't get unified memory instead
 of RAM. See the full write-up in the forum post linked from this repo's
 issues, or the [Contributing](#contributing) section if you have data from
 other GB10 boxes that confirms or contradicts this.
+
+### A community hypothesis worth testing: UVM page-migration livelock
+
+**Unverified — this is a third-party forum claim, not something confirmed
+on this hardware.** One report on the NVIDIA developer forum, describing
+the same "dies under sustained load, fine at idle, no warning, no log"
+pattern documented above, proposes a specific mechanism: on GB10, weights +
+KV cache + CUDA workspace share the same 128 GB unified pool, and if total
+allocation creeps too close to the ceiling during a long-running job, the
+result isn't a clean OOM — it's a UVM (Unified Virtual Memory) page-migration
+livelock that hard-locks the machine with no warning and no log, because the
+OOM-killer never fires. That would explain why this failure class evades
+every log-based detector, including this repo's own DGX-438 (the
+still-unexplained periodic SIGTERM killer, see `tasks/backlog/`): a livelock
+during page migration wouldn't route through the kernel OOM path, the
+cgroup OOM path, or PSI at all, since none of those instrument UVM directly.
+
+The mitigation the same report credits, in order: cap the memory a server
+actually claims (in vLLM, `--gpu-memory-utilization` at 0.85–0.92 rather than
+0.94+, leaving 10–15 GB of headroom) and update platform firmware (BIOS/BMC,
+separate from OS/driver packages). Two more items commonly paired with it —
+locking GPU clocks and capping GPU power draw via `nvidia-smi -pl` — are
+worth a hardware-specific gut check before following blindly: on this box,
+clock locking (`nvidia-smi -lgc 300,2800`) is already applied via a boot-time
+systemd unit, but `-pl` power capping is **not supported at all** —
+`nvidia-smi -q -d POWER` returns `N/A` for every power-limit field
+(current/requested/default/min/max) on this GB10. If you're on different
+GB10 hardware and `-pl` works for you, that's useful data in itself — open
+an issue.
+
+If `bb scan`/`bb sample` ever catch a hang with this exact fingerprint —
+unified memory near its ceiling, no kernel OOM, no thermal event, no Xid —
+that would be the first real evidence either for or against this theory on
+this specific box, instead of another anonymous forum report.
 
 ---
 

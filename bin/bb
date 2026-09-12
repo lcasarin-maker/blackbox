@@ -473,6 +473,46 @@ cmd_scan() {
   fi
   echo
 
+  # --- 1d. NVIDIA Field Diagnostic (dgx-spark-fieldiag), si corrio ---------
+  # blackbox NO lo instala ni lo corre: es DISRUPTIVO por diseno (mata la
+  # GUI, para docker, 30-40 min) y pensado para pre-chequeo de RMA, no para
+  # correr junto al uso normal. Si el operador YA lo corrio, se lee su
+  # veredicto en vez de duplicarlo. Verificado 2026-09-12 contra la guia
+  # oficial (userguide-dgx-spark-fieldiag.pdf): cada corrida escribe
+  # dgx/logs-<yyyymmdd-hhnnss>/summary.json, un array con "Error Code"
+  # (000000000000 = sin error), "Test", "Virtual ID" y "Notes" por prueba.
+  echo "-- NVIDIA Field Diagnostic (dgx-spark-fieldiag), si corrio en la ventana --"
+  local fdroot="/opt/nvidia/dgx-spark-fieldiag/dgx"
+  if [ -d "$fdroot" ]; then
+    local fdsince fdrun
+    fdsince=$(date -d "$since" +%Y%m%d-%H%M%S 2>/dev/null)
+    fdrun=$(find "$fdroot" -maxdepth 1 -type d -name 'logs-*' 2>/dev/null |
+      awk -F'logs-' -v s="$fdsince" '{if ($2 >= s) print}' | sort | tail -1)
+    if [ -n "$fdrun" ] && [ -f "$fdrun/summary.json" ]; then
+      echo "  corrida encontrada: $fdrun"
+      python3 -c '
+import json, sys
+try:
+    with open(sys.argv[1]) as f:
+        data = json.load(f)
+except Exception as e:
+    print("  (no se pudo leer summary.json: %s)" % e)
+    sys.exit(0)
+fallos = [d for d in data
+          if str(d.get("Error Code", "")).split("-")[-1] not in ("000000000000", "")]
+print("  tests en el resultado: %d" % len(data))
+print("  tests con error:       %d" % len(fallos))
+for d in fallos[:5]:
+    print("    %s (%s): %s" % (d.get("Test"), d.get("Virtual ID"), d.get("Notes")))
+' "$fdrun/summary.json"
+    else
+      echo "  ninguna corrida dentro de esta ventana"
+    fi
+  else
+    echo "  no instalado ($fdroot no existe -- ver 'bb hw' para instalarlo)"
+  fi
+  echo
+
   # --- 2. segfaults --------------------------------------------------------
   echo "-- segfaults / traps --"
   local segf
@@ -1134,9 +1174,12 @@ if not hallazgos:
   # OJO -- lo que NO se agrega aqui y por que: `pcie.link.width.current` en
   # este chip esta en 1x contra un maximo de 16x, pero se comprobo con carga
   # real (burst CUDA, 96% de utilizacion) que NO retrena -- se queda en 1x
-  # igual con GPU ociosa que a plena carga. En GB10 (memoria coherente
-  # CPU-GPU via NVLink-C2C) ese campo probablemente no refleja la via que de
-  # verdad importa. Comparar current contra max aqui seria un falso positivo
+  # igual con GPU ociosa que a plena carga. Confirmado 2026-09-12, ya no es
+  # solo hipotesis propia: la guia oficial de dgx-spark-fieldiag (NVIDIA)
+  # tiene un test aparte llamado "C2CStress" ("stress chip-to-chip interface
+  # between CPU and GPU"), distinto de GpuStress/CpuStress -- prueba
+  # independiente de que NVLink-C2C es la via real en GB10 y esta PCI
+  # enumerada no. Comparar current contra max aqui seria un falso positivo
   # PERMANENTE, no ocasional -- el mismo error que el patron amplio de AER
   # ya corrigio arriba, asi que no se repite con otro campo.
   local pciraw nreplay_reset nreplay_roll
@@ -1229,6 +1272,22 @@ cmd_hw() {
   echo
   echo "-- USB (velocidad negociada por dispositivo, sin veredicto) --"
   have lsusb && lsusb -t 2>/dev/null | sed 's/^/  /' || echo "  lsusb no disponible"
+  echo
+  # Inventario, no arma nada: dgx-spark-fieldiag es la suite OFICIAL de
+  # NVIDIA para pre-chequeo de RMA (GpuStress, C2CStress, CpuStress,
+  # PowerStress, ThermalStress, FioSSD, MemStress, CX7Stress -- 30-40 min,
+  # DISRUPTIVA, mata GUI y docker). blackbox solo dice si esta disponible
+  # para cuando haga falta escalar; nunca la ejecuta. `bb scan` lee sus
+  # resultados si el operador la corrio (ver -- NVIDIA Field Diagnostic --).
+  echo "-- NVIDIA Field Diagnostic (dgx-spark-fieldiag) --"
+  if have dpkg-query && dpkg-query -W -f='${Status}' dgx-spark-fieldiag 2>/dev/null | grep -q '^install ok'; then
+    local fdver; fdver=$(dpkg-query -W -f='${Version}' dgx-spark-fieldiag 2>/dev/null)
+    echo "  instalado: si (version $fdver)"
+    echo "  correrla (RMA/calificacion, DISRUPTIVA -- mata GUI y docker, 30-40 min):"
+    echo "    sudo init 3 && cd /opt/nvidia/dgx-spark-fieldiag && sudo ./partnerdiag --field"
+  else
+    echo "  instalado: no -- sudo apt-get install dgx-spark-fieldiag (pre-chequeo de RMA)"
+  fi
 }
 
 # -------------------------------------------------------------------- status
