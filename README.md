@@ -1,9 +1,9 @@
 # blackbox
 
 A black box for NVIDIA GB10-class AI workstations — DGX Spark, ASUS Ascent
-GX10, and the other partner boxes built on the same chip. It records what you
-need to diagnose a failure **after** it happens, and tells you which
-instrument isn't armed *before* the next one.
+GX10, Gigabyte AI TOP ATOM, and the other partner boxes built on the same
+chip. It records what you need to diagnose a failure **after** it happens,
+and tells you which instrument isn't armed *before* the next one.
 
 This hardware class is new enough that a lot of the failure modes are still
 being figured out in public, one NVIDIA forum thread at a time: silent
@@ -35,11 +35,12 @@ dump, an Xid code, or a PCIe AER log at the moment it happened.
 
 ## Hardware this targets
 
-Built and tested on an NVIDIA GB10 board (20 aarch64 cores, 121 GB unified
-memory, Ubuntu 24.04), the chip shared by:
+Built and tested on a **Gigabyte AI TOP ATOM** (NVIDIA GB10, 20 aarch64
+cores, 121 GB unified memory, Ubuntu 24.04) — the same chip shared by:
 
 - NVIDIA DGX Spark
 - ASUS Ascent GX10
+- Gigabyte AI TOP ATOM
 - other OEM boxes built on the same GB10 module
 
 Most of the forensic logic (Xid codes, PCIe/AER, xHCI, unified-memory
@@ -312,8 +313,9 @@ This started as instrumentation for one machine and is being opened up
 because the failure modes above are clearly not specific to that one box.
 Useful contributions:
 
-- **Data from other GB10 hardware** (DGX Spark, ASUS Ascent GX10, other
-  OEM boxes) — does a given check fire correctly on your unit? Different
+- **Data from other GB10 hardware** (DGX Spark, ASUS Ascent GX10, Gigabyte
+  AI TOP ATOM, other OEM boxes) — does a given check fire correctly on your
+  unit? Different
   thermal trip points, different USB topology, different firmware revision
   are all useful data points, not just bug reports.
 - **New forensic checks** for failure classes not yet covered — a PR should
