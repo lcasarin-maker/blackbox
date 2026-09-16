@@ -141,6 +141,29 @@ repos:
         stages: [pre-commit, pre-merge-commit]
         pass_filenames: false
 
+      # DEBT-PUSH-LOOP-11. The one dimension no other hook reads: the
+      # MODE of the staged entries. `always_run: true` is load-bearing,
+      # not caution -- pre-commit resolves `types:` through `identify`,
+      # and a symlink's ONLY tag is `symlink` (measured:
+      # `identify.tags_from_path` on a staged symlink returns
+      # ['symlink'], no `file`, no `text`), so every hook with the
+      # default `types: [file]` is structurally unable to see one. That
+      # is why all twelve of the mother's staged hooks reported `no
+      # files to check` over a `100644 -> 120000` typechange on a
+      # TRACKED path and the suite exited 0. Ships to the fleet because
+      # the blind spot is in pre-commit's file selection, not in
+      # anything specific to this repo.
+      - id: staged-mode-guard
+        name: "staged file modes (no typechange into/out of a symlink, no absolute targets)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name staged-mode-guard --hook pre-commit --
+          python .simplecode/run.py simplecode.guards.staged_mode_guard --root . --gate
+        language: system
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: false
+        always_run: true
+
       - id: truncation-guard
         name: "truncation guard (integrity of edits)"
         entry: >-
