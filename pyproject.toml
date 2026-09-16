@@ -11,3 +11,17 @@
 [project]
 name = "blackbox"
 version = "0.1.0"
+
+# GS2-192 (adversarial-judge / unselected_rules): la flota exige que estas 8
+# reglas esten SELECCIONADAS explicitamente, no solo instaladas -- una regla
+# que ruff sabe correr pero que el config no activa deja su propiedad sin
+# verificar y ningun output muestra el hueco. Sin ningun `[tool.ruff.lint]`
+# antes de este cambio, `unselected_rules.audit_linter_rules` no encontraba
+# config y reportaba las 8 como faltantes (medido:
+# `python .simplecode/run.py simplecode.verification.adversarial_judge --root . --gate`
+# fallaba con "Unselected Mandatory Rule" x8). Medido tambien el control
+# negativo: `ruff check --select E9,F821,F632,F811,C901,PLR0912,PLR0913,PLR0915 .`
+# sobre el repo completo (los 3 .py reales bajo tools/ y tests/) -- "All checks
+# passed!", cero hallazgos nuevos al activar las reglas.
+[tool.ruff.lint]
+select = ["E9", "F821", "F632", "F811", "C901", "PLR0912", "PLR0913", "PLR0915"]
