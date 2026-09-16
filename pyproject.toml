@@ -1,0 +1,13 @@
+# Declaracion minima de VERSION, anadida 2026-09-15.
+#
+# Por que existe este fichero: la ley de caducidad de exenciones (ADR-0013 D4,
+# decision de Luis) exige que toda exencion `sunset-reviewed:` lleve un
+# MAJOR.MINOR contra el que vencer. Un repo que no declara version no tiene
+# reloj, asi que ninguna de sus exenciones puede caducar nunca -- el mismo
+# agujero que el literal `permanent` que se abolio ese dia, un nivel mas
+# arriba. `sunset_audit` lee exactamente `[project].version`.
+#
+# 0.1.0 es la primera version declarada: el repo no tenia ninguna y no hay etiquetas previas que honrar.
+[project]
+name = "blackbox"
+version = "0.1.0"

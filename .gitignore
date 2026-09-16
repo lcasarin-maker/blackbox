@@ -42,6 +42,16 @@
 # sunset-reviewed: permanent -- contrato de verificacion; retirar si el repo deja de usar simplecode
 !.simplecode/corpus_exempt.yaml
 
+# El ledger H1 va TRACKEADO a proposito, igual que backlog_baseline.json:
+# ignorado, ningun commit de release podria nunca llevarlo, y
+# version_bump.py::verify_audit_fresh_at_commit lee el ledger DEL ARBOL de ese
+# commit via git archive -- un ledger que nunca se commitea bloquea el gate
+# para siempre, sin importar cuantas auditorias se corran. Medido 2026-09-16:
+# faltaba esta linea y por eso el commit de bump 0.1.0->0.1.1 (d7f723d) salia
+# BLOCKED pese a tener un ledger fresco y verde en el arbol de trabajo.
+# sunset-reviewed: permanent -- declaracion de auditoria revisable; retirar si el repo deja de usar simplecode
+!.simplecode/audit_ledger.json
+
 # Estado generado por pytest/coverage (tests/ existe desde que se agrego
 # tools/check_harvest_accepted.py -- ver corpus_exempt.yaml arriba).
 __pycache__/
