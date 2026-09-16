@@ -90,7 +90,7 @@ procps, systemd, nvidia-smi, curl). Python sólo se usa para analizar muestras.
 
 | Risk | Likelihood | Mitigation |
 | --- | --- | --- |
-| Un instrumento deja de escribir en silencio | Alta | `bb status` mira la antigüedad de los datos, no si la unit está activa |
+| Un instrumento deja de escribir en silencio | Alta | `bb status` mira la antigüedad de los datos sólo donde hay un artefacto que revisar (sar, memory-monitor, telemetría de Atlas: "por sus datos, no por la unit"); el resto (timer del muestreo, clock lock de GPU, earlyoom) sigue leyendo `systemctl is-active`, que no detecta una unit activa que dejó de trabajar -- verificado 2026-09-16, gap real y sin cerrar en esos tres |
 | Una comprobación que no puede fallar da falsa confianza | Alta | Cada gate se verifica con control negativo; `bb scan` cuenta las que no pudieron correr |
 | El propio muestreo compite por la memoria unificada | Media | Sólo lee `/proc` y endpoints ya existentes; `Nice=19` e `IOSchedulingClass=idle` |
 | Los umbrales de PSI vienen de otra máquina | Media | Marcados como provisionales hasta calibrarlos contra un incidente propio |
