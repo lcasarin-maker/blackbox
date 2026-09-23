@@ -1,9 +1,11 @@
 # Declaraciones de alcance para gates que asumen un layout de paquete Python.
 #
 # blackbox es bash puro (bin/bb es el 100% del codigo ejecutable, ver
-# .simplecode/local_hooks.yaml sobre bash-sintaxis). El unico Python del repo
-# es tools/check_harvest_accepted.py, una utilidad de una funcion sin
-# dependencias -- no un paquete con __init__.py, asi que la autodeteccion de
+# .simplecode/local_hooks.yaml sobre bash-sintaxis). El Python del repo son dos
+# utilidades sueltas bajo tools/ -- check_harvest_accepted.py y, desde
+# 2026-09-23, calibra_psi.py (el calibrador de los cortes de PSI, ficha
+# DEBT-PSI-UMBRALES-SIN-CALIBRAR) -- sin dependencias y sin __init__.py que las
+# haga paquete, asi que la autodeteccion de
 # `coverage_target.py` (busca src/ o un paquete top-level) no encuentra nada
 # y sale COULD_NOT_RUN (rc=2). Se declara aqui, apuntando el gate a lo unico
 # que hay, en vez de dejarlo bloqueando por una ausencia estructural que no
