@@ -1,16 +1,22 @@
 # Declaraciones de alcance para gates que asumen un layout de paquete Python.
 #
 # blackbox es casi todo bash (bin/bb es el grueso del codigo ejecutable, ver
-# .simplecode/local_hooks.yaml sobre bash-sintaxis). Corregido 2026-09-23 en la
-# revision sunset del 0.3: este comentario decia "El unico Python del repo es
-# tools/check_harvest_accepted.py" y dejo de ser cierto ese mismo dia -- bin/bb-usable
-# (64d3daa) es un segundo ejecutable Python. No lleva extension .py, asi que ninguna
-# autodeteccion lo encuentra NI lo encontraria aunque este fichero no existiera; queda
-# fuera de coverage_targets y se declara aqui en vez de que pase inadvertido.
-# Sigue sin haber un paquete con __init__.py, asi que la autodeteccion de
-# `coverage_target.py` (busca src/ o un paquete top-level) no encuentra nada
-# y sale COULD_NOT_RUN (rc=2). Se declara aqui, apuntando el gate a lo unico
-# que hay, en vez de dejarlo bloqueando por una ausencia estructural que no
-# es un descuido.
+# .simplecode/local_hooks.yaml sobre bash-sintaxis). El Python son TRES ficheros,
+# y esta declaracion cubre dos:
+#   - tools/check_harvest_accepted.py
+#   - tools/calibra_psi.py  (2026-09-23, ficha DEBT-PSI-UMBRALES-SIN-CALIBRAR)
+#   - bin/bb-usable  (64d3daa, 2026-09-23) -- FUERA de coverage_targets: es un
+#     ejecutable Python sin extension .py, asi que ninguna autodeteccion lo ve
+#     NI lo veria aunque este fichero no existiera. Se dice aqui para que la
+#     ausencia sea declarada y no inadvertida.
+#
+# Correccion 2026-09-23 sobre lo que este comentario venia afirmando: decia que
+# sin esta declaracion `coverage_target.py` "no encuentra nada y sale
+# COULD_NOT_RUN (rc=2)". Eso es falso y lo fue siempre -- tools/__init__.py esta
+# trackeado desde 8a4133f (initial public release) y 'tools' no esta en
+# _EXCLUDED_TOP_LEVEL, asi que `_auto_detect_targets()` devuelve ('tools',) por
+# su cuenta: medido, no supuesto. Lo que esta declaracion hace de verdad es FIJAR
+# ese alcance en vez de depender de la autodeteccion -- util, pero no es el
+# rescate de un rc=2 que decia ser.
 coverage_targets:
   - tools
