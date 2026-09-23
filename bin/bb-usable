@@ -1,0 +1,141 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""bb-usable -- vigila si la maquina SIRVE, no si systemd sigue vivo.
+
+Por que existe
+--------------
+El 2026-09-22 esta maquina se congelo dos veces y las dos terminaron en reset
+duro por el operador: 05:45->23:30 (17 h 45 min) y 23:49->05:44 (5 h 55 min).
+`RuntimeWatchdogSec=60` estaba armado y `/dev/watchdog` existia. No disparo
+ninguna de las dos veces, y no fue un fallo: vigila a PID 1, y PID 1 estuvo
+sano toda la noche -- entre 570 y 1578 lineas de journal por hora, timers
+lanzandose cada minuto. La pregunta que contestaba era "sigue systemd vivo",
+y la respuesta era si mientras la maquina llevaba seis horas inservible.
+
+Este demonio contesta la otra pregunta, y la contesta haciendo el trabajo que
+estaba bloqueado: pide memoria y la toca. Durante los dos casos PSI memory
+full marco 98-99 %, o sea que TODAS las tareas estaban estancadas pidiendo
+memoria el 99 % del tiempo; una asignacion de 64 MiB no habria vuelto.
+
+Como actua
+----------
+No abre /dev/watchdog: systemd ya lo tiene. Usa el watchdog de servicio de
+systemd (Type=notify + WatchdogSec=), que es la via nativa -- acaricia con
+sd_notify(WATCHDOG=1) SOLO cuando la sonda vuelve dentro de su plazo. Si no
+vuelve, systemd deja de recibir la caricia, mata el servicio, y FailureAction
+reinicia la maquina. El watchdog de hardware de PID 1 se queda donde estaba,
+como respaldo; esto no lo sustituye ni lo desarma.
+
+Margen contra falsos positivos
+------------------------------
+Los dos eventos medidos duraron 6 y 18 HORAS. Cualquier plazo entre uno y
+diez minutos los atrapa con margen enorme. El plazo por defecto son 5 minutos
+(PROBE_DEADLINE). Medido en esta caja el 2026-09-23, cinco corridas de la
+sonda con la maquina sana: 19, 15, 15, 15, 15 ms. Contra el peor de esos, el
+plazo es 15 525x; contra el mas breve de los dos congelamientos (5 h 55 min),
+es 71x mas corto. El falso positivo exige que la maquina no sirva 64 MiB
+durante cinco minutos seguidos.
+
+Lo que NO se pudo medir: cuanto tarda la sonda DURANTE un congelamiento. La
+unica forma de medirlo es provocar uno. Por eso el plazo se calibra por el
+lado sano, que si es medible, y se declara aqui en vez de afirmarse.
+"""
+from __future__ import annotations
+
+import os
+import socket
+import sys
+import time
+
+# Cada cuanto se corre la sonda. Mas corto que el WatchdogSec del servicio
+# (systemd recomienda acariciar a la mitad del plazo).
+PROBE_INTERVAL = 30.0
+
+# Plazo de la sonda. Ver "Margen contra falsos positivos" arriba.
+PROBE_DEADLINE = 300.0
+
+# Cuanta memoria pide y TOCA la sonda. Pedirla sin tocarla no prueba nada:
+# Linux no asigna paginas hasta el primer acceso, que es justo donde se
+# estancaba (PSI memory full 98-99 %, pgsteal ~20 000 pag/s sostenido).
+PROBE_BYTES = 64 * 1024 * 1024
+PAGE = 4096
+
+# Umbral de aviso, no de accion. Por debajo de esto la sonda sigue pasando;
+# sirve para que quede registro ANTES del apagon, que es lo que falto los dos
+# dias. 98-99 % fue el valor sostenido durante los dos congelamientos.
+PSI_WARN_FULL_AVG10 = 50.0
+
+
+def notify(state: str) -> None:
+    """sd_notify por socket, sin dependencias (stdlib cubre esto)."""
+    addr = os.environ.get("NOTIFY_SOCKET")
+    if not addr:
+        return
+    if addr.startswith("@"):  # namespace abstracto
+        addr = "\0" + addr[1:]
+    with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as s:
+        s.connect(addr)
+        s.sendall(state.encode())
+
+
+def psi_memory_full_avg10() -> float | None:
+    """avg10 de 'full' en /proc/pressure/memory, o None si no se puede leer."""
+    try:
+        with open("/proc/pressure/memory", encoding="ascii") as fh:
+            for line in fh:
+                if line.startswith("full "):
+                    for field in line.split():
+                        if field.startswith("avg10="):
+                            return float(field.split("=", 1)[1])
+    except (OSError, ValueError):
+        return None
+    return None
+
+
+def probe() -> float:
+    """Pide memoria, la TOCA pagina por pagina y la suelta. Devuelve segundos.
+
+    Una excepcion aqui NO se traga: si esto revienta, el servicio muere y
+    FailureAction actua, que es exactamente lo que debe pasar cuando la
+    maquina ya no puede servir una asignacion de 64 MiB.
+    """
+    t0 = time.monotonic()
+    buf = bytearray(PROBE_BYTES)
+    for off in range(0, PROBE_BYTES, PAGE):
+        buf[off] = 1
+    del buf
+    return time.monotonic() - t0
+
+
+def main() -> int:
+    notify("READY=1")
+    log = lambda m: (print(m, file=sys.stderr, flush=True))  # noqa: E731
+
+    first = probe()
+    log(f"[bb-usable] sonda sana de referencia: {first*1000:.0f} ms para "
+        f"{PROBE_BYTES // (1024*1024)} MiB -- plazo {PROBE_DEADLINE:.0f}s "
+        f"({PROBE_DEADLINE/max(first, 1e-6):.0f}x ese valor)")
+    notify("WATCHDOG=1")
+
+    while True:
+        time.sleep(PROBE_INTERVAL)
+        psi = psi_memory_full_avg10()
+        took = probe()
+
+        if took > PROBE_DEADLINE:
+            # Se paso del plazo pero volvio: NO se acaricia. systemd cobra.
+            log(f"[bb-usable] SONDA FUERA DE PLAZO: {took:.1f}s > "
+                f"{PROBE_DEADLINE:.0f}s (PSI memory full avg10={psi}) -- "
+                f"no se acaricia el watchdog")
+            continue
+
+        if psi is not None and psi >= PSI_WARN_FULL_AVG10:
+            log(f"[bb-usable] PSI memory full avg10={psi:.1f} >= "
+                f"{PSI_WARN_FULL_AVG10:.0f} (sonda {took*1000:.0f} ms) -- "
+                f"aviso, no accion")
+
+        notify("WATCHDOG=1")
+
+
+if __name__ == "__main__":
+    sys.exit(main())
