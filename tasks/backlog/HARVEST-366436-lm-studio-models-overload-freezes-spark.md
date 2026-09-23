@@ -8,8 +8,8 @@ origin: asserted
 satd_family: HARVEST_SUGGESTION
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/backlog/HARVEST-366436-lm-studio-models-overload-freezes-spark.md", "expect": "exit_zero", "porque": "Sugerencia de adopcion, no un defecto -- verifica que accepted.by/date/trigger este lleno y no sea el placeholder, patron de own_chats/tools/check_harvest_accepted.py (DGX-505)."}
 created: 2026-09-09
-accepted: {"by": "(pendiente)", "date": "(pendiente)", "trigger": "(pendiente)"}
-reason: "REABIERTA 2026-09-23: el trigger de la decision del 2026-09-09 -- 'reabrir si aparece un caso real medido en esta maquina que lo contradiga' -- se cumplio dos veces en 30 horas. Ver 'Por que se reabrio' abajo. La decision anterior queda registrada ahi, no borrada."
+accepted: {"by": "Luis + Claude Opus 5, decision sobre el fondo 2026-09-23 (boleta tras el bloqueo del zero-debt gate)", "date": "2026-09-23", "trigger": "reabrir si un congelamiento futuro ocurre CON bb-usable armado y el tope de workers puesto -- eso probaria que la causa no era el abanico y que la vigilancia adoptada mira el sitio equivocado"}
+reason: "ADOPTADA, y ya implementada el mismo dia -- no prometida. Los mecanismos 1 y 3 se adoptaron partidos en dos mitades, cada una donde vive su causa; el de un-modelo-a-la-vez se descarta con evidencia. Ver 'Decision del 2026-09-23' abajo. La reapertura y la decision del 2026-09-09 quedan registradas, no borradas."
 ---
 
 ## Qué es esto
@@ -99,6 +99,50 @@ throttling en ninguno de los dos casos, así que esta ficha no descarta ni sosti
 componente térmica; lo que sí consta es que el kernel siguió escribiendo journal, corriendo
 timers y aceptando systemd durante las 17 y las 6 horas, o sea que no fue un hard-freeze de
 protección de hardware (esa es la razón por la que no se reabrió HARVEST-379195).
+
+## Decision del 2026-09-23: adoptada, partida en dos mitades
+
+La reapertura de arriba dejo el diagnostico: lo que faltaba NO era la lectura
+-- PSI marco 98-99 % las dos noches y nadie la consumio para frenar. El
+mecanismo 3 del hilo pedia exactamente eso: *"Watchdogs que monitoreen limites
+de memoria en tiempo real para prevenir congelamientos del sistema en lugar de
+solo detectarlos despues"*.
+
+Se adopta, partido donde vive cada causa:
+
+**Mitad preventiva -- que el abanico no arranque.** `simplecode`,
+`UNIFIED_MEMORY_WORKER_CAP = 6`. Va ahi y no aqui porque el disparador medido
+estaba ahi: un `ThreadPoolExecutor(max_workers=os.cpu_count())` lanzando un
+pytest completo por hilo, cada uno inicializando CUDA. blackbox no puede
+acotar un abanico que no lanza.
+
+**Mitad de vigilancia activa -- consumir la senal y actuar.** `bin/bb-usable`,
+en ESTE repo (commit 64d3daa). Pide 64 MiB y los toca; si no vuelven en plazo
+deja de acariciar el watchdog de servicio y `FailureAction=reboot-immediate`
+cobra. Convierte 17 h 45 min en ~6 min.
+
+**Esto cruza la frontera declarada de blackbox** ("deteccion, no prevencion",
+ver la unidad ai-memory-monitor). Se cruza a proposito y con el costo delante:
+la frontera se sostuvo desde el 2026-09-08 y costo 23 h 40 min de maquina en
+30 horas. El dictamen del 2026-09-09 mandaba esta mitad a Atlas; se queda aqui
+porque lo que bb-usable consume -- PSI, sonda de asignacion, /dev/watchdog --
+es telemetria de hardware de ESTA caja, que es la mision declarada del repo, y
+porque una deuda cuya gemela nadie crea en el otro repo es como se pierde una
+deuda.
+
+**Lo que NO se adopta, con evidencia.** El mecanismo de *"forzar que solo un
+modelo este cargado a la vez"* (carga JIT de LM Studio) se descarta: la causa
+medida no fueron dos modelos compitiendo, sino un abanico sin tope junto a UN
+gateway residente que estaba en su presupuesto. El 2026-09-22 a las 23:39, con
+el gateway cargado y sin abanico, la caja llevaba `load 2.44` y 63 GiB
+disponibles. Limitar a un modelo no habria cambiado nada y habria costado el
+gateway residente, que es el trabajo util de esta maquina.
+
+**Lo que esta decision NO cierra.** Sigue sin haber un contador global de
+procesos que reservan memoria unificada: un pytest a mano, o cualquier otra
+herramienta, repite el cuadro sin que nada lo cuente. Se declara como el hueco
+conocido que queda, no como algo resuelto -- y es lo que el trigger de arriba
+vigila.
 
 ## Lo que esta ficha NO decide
 
