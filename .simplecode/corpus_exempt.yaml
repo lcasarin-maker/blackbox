@@ -1,9 +1,13 @@
 # Declaraciones de alcance para gates que asumen un layout de paquete Python.
 #
-# blackbox es bash puro (bin/bb es el 100% del codigo ejecutable, ver
-# .simplecode/local_hooks.yaml sobre bash-sintaxis). El unico Python del repo
-# es tools/check_harvest_accepted.py, una utilidad de una funcion sin
-# dependencias -- no un paquete con __init__.py, asi que la autodeteccion de
+# blackbox es casi todo bash (bin/bb es el grueso del codigo ejecutable, ver
+# .simplecode/local_hooks.yaml sobre bash-sintaxis). Corregido 2026-09-23 en la
+# revision sunset del 0.3: este comentario decia "El unico Python del repo es
+# tools/check_harvest_accepted.py" y dejo de ser cierto ese mismo dia -- bin/bb-usable
+# (64d3daa) es un segundo ejecutable Python. No lleva extension .py, asi que ninguna
+# autodeteccion lo encuentra NI lo encontraria aunque este fichero no existiera; queda
+# fuera de coverage_targets y se declara aqui en vez de que pase inadvertido.
+# Sigue sin haber un paquete con __init__.py, asi que la autodeteccion de
 # `coverage_target.py` (busca src/ o un paquete top-level) no encuentra nada
 # y sale COULD_NOT_RUN (rc=2). Se declara aqui, apuntando el gate a lo unico
 # que hay, en vez de dejarlo bloqueando por una ausencia estructural que no
