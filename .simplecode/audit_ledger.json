@@ -1,35 +1,35 @@
 {
-  "claims_fingerprint": "6182ae34c0c82425abdf11b7f13b81b2663e76abec3a8a4f4d52f6d12bbd8031",
-  "panel": "Claude Sonnet 5 (Claude Code), sesion pensive-blackwell-9a9f45, 2026-09-16 -- revision manual linea por linea de bin/bb contra SPEC.md Risks table (SPEC-L93..L97); SPEC-L93 corregido en el mismo commit tras hallar sobre-alcance real (3 de ~13 checks son por dato, el resto por unit-active); ledger sellado en el primer release commit (declaracion de version) tras amend deliberado (decision de Luis 2026-09-16, override del precedente anti-rewrite 3c0f416)",
+  "claims_fingerprint": "8f71f9a6017730ae0b28b3b4640b5fb485dc7342b3c0a00f17171ac8c5aad294",
+  "panel": "Claude Opus 5 (Claude Code), sesion zealous-archimedes-0fde55, 2026-09-23 -- re-auditadas las 5 filas de SPEC.md Risks contra el arbol de trabajo tras el commit 90847b3 (calibracion de los cortes de PSI). SPEC-L96 es la fila reescrita y la que movio el fingerprint; L93/L94/L95/L97 se re-verificaron una por una con comandos sobre bin/bb y systemd/, no se arrastraron los veredictos de 2026-09-16. Verificado en particular que la reescritura de la seccion de PSI conservo el sitio de llamada de cannot_run (13 antes y despues), que es lo que sostiene L94.",
   "profile": "general",
   "results": [
     {
       "claim_id": "SPEC-L93",
-      "evidence": "bin/bb cmd_status (lines ~1295-1373): confirmed mtime-based `find ... -mmin` freshness checks for sar (sysstat, <10min), memory-monitor.log (<10min) and Atlas telemetry (<2min), the latter carrying the explicit comment 'Por sus datos, no por la unit'. Also confirmed the remaining checks (blackbox-sample.timer, atom-clock-lock.service, earlyoom.service) use `systemctl is-active`, not data freshness -- the SPEC.md Risks-table line originally claimed this as bb status's general behavior, which overstated coverage. Corrected SPEC.md line 93 today (2026-09-16) to name the 3-check subset accurately and name the unclosed gap in the other 3 checks instead of implying blanket coverage.",
+      "evidence": "Re-verificado 2026-09-23 sobre el arbol actual, no arrastrado. `sed -n '/^cmd_status/,/^}/p' bin/bb | grep -c mmin` -> 3; el mismo con `grep -c is-active` -> 6. Las 3 por frescura de dato son exactamente las que la fila nombra: sar (/var/log/sysstat, -mmin -10, linea 49), memory_monitor.log (-mmin -10, linea 57) y la telemetria de Atlas (-mmin -2, linea 62). Las otras 6 siguen leyendo `systemctl is-active`, que es el hueco que la propia fila declara sin cerrar. La fila no exagera el alcance: nombra el subconjunto y nombra el hueco.",
       "verdict": "PASS"
     },
     {
       "claim_id": "SPEC-L94",
-      "evidence": "bin/bb: cannot_run() (line 43) increments a global CNR counter and appends to CNR_LIST on every could-not-run path inside cmd_scan (13 call sites: kernel OOM, Xid, GPU accounting, xHCI, coredumps, MemFree min, net/CPU rates, thermal events, margin warnings, PSI, process disappearances). cmd_scan prints 'comprobaciones que NO pudieron correr: $CNR' and, when CNR>0, 'Este informe NO esta limpio: $CNR comprobaciones no llegaron a ejecutarse' (lines ~1224-1228). Matches the claim: a check that cannot fail is counted and the report explicitly refuses to call itself clean.",
+      "evidence": "Re-verificado 2026-09-23. `cannot_run()` sigue en bin/bb:43 incrementando CNR y acumulando CNR_LIST; `grep -c '^\\s*cannot_run ' bin/bb` -> 13 sitios de llamada, incluido el de PSI que el commit 90847b3 conservo intacto al reescribir esa seccion. El veredicto de cmd_scan (bin/bb:1304-1311) imprime 'comprobaciones que NO pudieron correr: $CNR' SIEMPRE -- tambien cuando vale 0, que es la mitad que suele faltar -- y con CNR>0 anade 'Este informe NO esta limpio'. La afirmacion sigue siendo cierta despues del cambio de PSI.",
       "verdict": "PASS"
     },
     {
       "claim_id": "SPEC-L95",
-      "evidence": "systemd/blackbox-sample.service (the unit that runs `bb sample`) declares Nice=19 and IOSchedulingClass=idle verbatim, matching the claim exactly. cmd_sample() (bin/bb lines 246-320) reads only /proc/meminfo, /proc/loadavg, /proc/pressure/*, /proc/net/dev, /proc/stat, /proc/<pid>/cgroup, plus pre-existing local endpoints the gateway/docker already expose (curl to 127.0.0.1:8000/v1/models and /metrics, `docker ps`) -- no new monitoring endpoint or subprocess-heavy sampling is introduced.",
+      "evidence": "Re-verificado 2026-09-23. systemd/blackbox-sample.service lineas 8-9: `Nice=19` e `IOSchedulingClass=idle`, literales. El commit 90847b3 no toco cmd_sample ni la unit: solo reescribio la seccion de ANALISIS de cmd_scan, que corre a mano y no bajo esa unit. El coste de muestreo no cambio.",
       "verdict": "PASS"
     },
     {
       "claim_id": "SPEC-L96",
-      "evidence": "bin/bb lines 1051-1054: explicit comment 'Los umbrales son PROVISIONALES: vienen de la escala LOW/MODERATE/HIGH/CRITICAL de esa fuente [sparkview, foro NVIDIA 366877], NO de una medicion propia en esta maquina. Cuando haya suficientes muestras habra que calibrarlos contra un incidente real.' The PSI section header itself is printed as '-- presion del kernel (PSI, umbrales provisionales) --'. Matches the claim verbatim in substance.",
+      "evidence": "Fila REESCRITA hoy (2026-09-23) por el commit 90847b3, que es lo que cambio el fingerprint de claims. Verificado contra el arbol: bin/bb:1051 lleva 'Corte calibrado 2026-09-23' y bin/bb:1108 declara UMBRAL, SOSTENIDO, PICO_MAX = 10.0, 5.0, 3.0 -- el corte sostenido que la fila describe. Las cifras de la fila salen de tasks/evidence/DEBT-PSI-UMBRALES-SIN-CALIBRAR/: pass.txt (2 COLAPSO, 0 falsos positivos, 0 incidentes no detectados, rc=0), fail.txt (cuatro controles negativos, los cuatro rc=1), e2e.txt (corpus sano con picos de 98.53 % -> COLAPSO 0) y sar_control_cruzado.txt (las etiquetas sana/congelamiento salen de sar, no de PSI). La fila declara ademas lo que SIGUE abierto -- n=2 del lado positivo, las dos la misma noche, y solo el canal de memoria calibrado -- asi que no reclama mas de lo medido. El riesgo baja de Media a Baja porque los cortes ya son propios, no porque haya desaparecido.",
       "verdict": "PASS"
     },
     {
       "claim_id": "SPEC-L97",
-      "evidence": "bin/bb cmd_drift() (lines 1504-1537): cmp_one() does a byte-for-byte `cmp -s` between each deployed file and its repo copy across gpu_governance/, systemd-user/ and system-config/, printing 'igual' on match, 'DIVERGE' with a unified diff on mismatch, and 'AUSENTE' when the deployed file is gone -- textually matches 'compara repo contra maquina'. I re-ran `bash bin/bb drift` live on 2026-09-16 (not a synthetic test) and it produced all three verdicts in one real run against the actual machine state: 13 files 'igual', 2 'DIVERGE' (atom-crash-detector.service, atom-gpu-telemetry.service -- real unsynced drift, committed to the repo 2026-09-11 but never redeployed, flagged separately as its own follow-up task since it's live operational debt, not an audit defect), 1 'AUSENTE' (gpu_sampler.sh, which is the documented 2026-09-07 suspension in suspended/MANIFIESTO.md, not a bug). This organically demonstrates both directions the acceptance criterion asks for (says yes when there is a difference, says no when there isn't), on real data rather than a staged before/after. I could not locate any test file, CI job, or changelog entry recording a prior deliberate introduce-then-restore test session for bb drift specifically (tests/ contains only test_check_harvest_accepted.py), so the SPEC wording 'se verifico' as a claim about a specific past testing event is not independently confirmable from repo artifacts -- what I can confirm is that the mechanism is correct and bidirectional as observed live today.",
+      "evidence": "Re-verificado 2026-09-23. `cmd_drift` sigue en bin/bb:1625 y su contabilidad declara los dos sentidos por separado: `local diverged=0 checked=0 missing=0 suspended=0`, con `cmp_one()` tomando (origen_desplegado, copia_en_repo) -- o sea compara el fichero de la maquina contra el del repo y cuenta aparte lo que falta. Sin cambios en este commit.",
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-09-16T14:44:35Z",
-  "tree_fingerprint": "634f3ff04fb915fd72ece8e2048add9db107b1fce08949e78ec1e5e506902f3c",
+  "timestamp": "2026-09-23T16:59:36Z",
+  "tree_fingerprint": "e5db3e6a07b314e9ea2746b4057696718affa67d60e85503f6e52632511e2727",
   "violations": []
 }

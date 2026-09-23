@@ -1,0 +1,53 @@
+Lo que ve el usuario en bb scan, y su control negativo.
+
+=== 1. bb scan sobre el corpus REAL (control positivo: los 2 congelamientos) ===
+$ ./bin/bb scan | sed -n "/presion del kernel/,/^$/p"
+-- presion del kernel (PSI, corte calibrado 2026-09-23) --
+  muestras con PSI:            19804
+  linea base (mem_full 0.00):  19377  (97.84 %)
+  -- memoria: canal CALIBRADO contra los 2 congelamientos propios --
+  pico memoria (TODAS paradas)   99.00 %   2026-09-22 07:16:52
+  pico memoria (alguna parada)   99.00 %   2026-09-22 05:57:47
+  excursiones con mem_full >= 10 %:
+    PICO         (<= 3 min)    11   se recuperan solas, no predicen colapso
+    SIN OBSERVAR (3-5 min)      0   banda vacia en la calibracion
+    COLAPSO      (>= 5 min)     2   
+      2026-09-22 05:45   1042 min  pico 99.00 %
+      2026-09-22 23:49    292 min  pico 99.00 %
+    AVISO: los 2 COLAPSO de referencia solo salieron con reset duro.
+  -- E/S y CPU: canales SIN CALIBRAR (ningun incidente propio los etiqueta) --
+  pico E/S                       61.10 %   2026-09-08 17:02:05
+  pico CPU                       92.05 %   2026-09-11 14:37:04
+    (pico sin etiqueta a proposito: heredar la escala ajena fue el fallo original)
+
+
+=== 2. CONTROL NEGATIVO: mismo codigo, corpus 100% sano con picos de 98.53 % ===
+(98.53 % es el valor mas alto que esta maquina alcanzo SIN colgarse, 2026-09-10 19:56)
+$ BLACKBOX_DATA=<corpus-sano> ./bin/bb scan | sed -n "/presion del kernel/,/^$/p"
+-- presion del kernel (PSI, corte calibrado 2026-09-23) --
+  muestras con PSI:            60
+  linea base (mem_full 0.00):  58  (96.67 %)
+  -- memoria: canal CALIBRADO contra los 2 congelamientos propios --
+  pico memoria (TODAS paradas)   98.53 %   2026-09-01 10:20:00
+  pico memoria (alguna parada)   98.53 %   2026-09-01 10:20:00
+  excursiones con mem_full >= 10 %:
+    PICO         (<= 3 min)     2   se recuperan solas, no predicen colapso
+    SIN OBSERVAR (3-5 min)      0   banda vacia en la calibracion
+    COLAPSO      (>= 5 min)     0   
+  -- E/S y CPU: canales SIN CALIBRAR (ningun incidente propio los etiqueta) --
+  pico E/S                        0.00 %   
+  pico CPU                        0.00 %   
+    (pico sin etiqueta a proposito: heredar la escala ajena fue el fallo original)
+
+-> COLAPSO 0. La escala VIEJA sobre ese mismo corpus:
+     mem_full  98.53 % -> CRITICAL
+     mem_full  48.80 % -> HIGH
+     mem_full   0.00 % -> LOW
+   o sea: CRITICAL en un corpus donde no paso nada, y HIGH (no CRITICAL) en
+   el valor mas bajo que sostuvo un congelamiento real.
+
+=== 3. Las dos implementaciones de la misma regla coinciden ===
+(bin/bb lleva la logica embebida; tools/calibra_psi.py la lleva aparte.
+ Si divergieran, una de las dos estaria mintiendo.)
+  bin/bb            : PICO 11   SIN OBSERVAR 0   COLAPSO 2  (1042 min, 292 min)
+  tools/calibra_psi : PICO 11   SIN OBSERVAR 0   COLAPSO 2  (1042 min, 292 min)

@@ -94,7 +94,7 @@ signals that a stock install doesn't produce on its own:
 | OCI/nvidia-container-runtime prestart hook | Catches the silent fallback to "legacy" mode with no real GPU, where the container still reports "Up" |
 | NVIDIA's own Field Diagnostic results | If `dgx-spark-fieldiag` (NVIDIA's official RMA pre-check suite) was run in the scan window, its `summary.json` verdict is read and cross-referenced — blackbox never installs or runs it itself, since it's deliberately disruptive (kills the GUI, stops docker, 30–40 min) |
 | kdump | Confirms it's actually installed and captured a crash, instead of trusting the unit's `enabled` state |
-| PSI (`/proc/pressure`) | Neither `MemFree` nor `MemAvailable` says how much time was actually spent *stalled* waiting on memory — PSI does |
+| PSI (`/proc/pressure`) | Neither `MemFree` nor `MemAvailable` says how much time was actually spent *stalled* waiting on memory — PSI does. During both 2026-09-22 freezes `kbavail` sat at 32–47 GB **free** while every task was stalled. The cut is on sustained duration (≥10 % for ≥5 min), not on level: six healthy spikes reached 98.53 % and one real freeze dipped to 48.80 %, so level alone is wrong in both directions |
 | Named throttle reasons + lifetime counters | `nvidia-smi`'s binary throttle flag doesn't say *why* — `-q -d PERFORMANCE` separates SW power cap from HW/SW thermal slowdown from HW power-brake, plus how many seconds each has accumulated since the last driver reload |
 | GPU processes that already exited | `--query-compute-apps` only sees what's running *now* — accounting mode (`bb`'s privileged setup step) keeps per-PID GPU usage around after the process is gone, for exactly the question a post-mortem actually asks |
 
@@ -192,7 +192,12 @@ edges, and it isn't trying to duplicate what already exists elsewhere:
   notices something is wrong. `blackbox`'s use of `/proc/pressure` (PSI) as
   the signal that catches what `MemFree`/`MemAvailable` miss was informed by
   sparkview's write-up on the same [forum thread](https://forums.developer.nvidia.com/t/sparkview-gpu-monitor-tool-with-gb10-aware-unified-memory-handling/366877)
-  this repo cites above. The two tools are complementary, not overlapping:
+  this repo cites above. The *mechanism* is still theirs; the *thresholds* are
+  no longer — `blackbox` shipped sparkview's LOW/MODERATE/HIGH/CRITICAL bands
+  until 2026-09-23, then replaced them with cuts measured on this machine's own
+  freezes (`tools/calibra_psi.py`). That is not a defect in sparkview's scale:
+  it is what any borrowed threshold earns once you have your own incident.
+  The two tools are complementary, not overlapping:
   sparkview watches the machine *live*; `blackbox` is what you run *after*,
   to reconstruct a window of time nobody was staring at when it happened.
 - **[nvml-unified-shim](https://github.com/parallelArchitect/nvml-unified-shim)**
