@@ -45,6 +45,18 @@ if [ "$REVERT" = 1 ]; then
   else
     echo "  /etc/default/sysstat: sin copia previa, NO se toca"
   fi
+  if systemctl list-unit-files bb-usable.service >/dev/null 2>&1; then
+    run systemctl disable --now bb-usable.service
+    run rm -f /etc/systemd/system/bb-usable.service
+    echo "  bb-usable desarmado y retirado"
+  fi
+  if [ -f "$BACKUP/earlyoom" ]; then
+    run cp "$BACKUP/earlyoom" /etc/default/earlyoom
+    run systemctl restart earlyoom.service
+    echo "  /etc/default/earlyoom restaurado"
+  else
+    echo "  /etc/default/earlyoom: sin copia previa, NO se toca"
+  fi
   run rm -f /etc/security/limits.d/99-blackbox-core.conf
   run rm -f /etc/systemd/coredump.conf.d/99-blackbox.conf
   echo "  limites y coredump.conf de blackbox retirados"
@@ -154,6 +166,54 @@ if command -v nvidia-smi >/dev/null 2>&1; then
   fi
 else
   echo "  nvidia-smi no disponible, se omite"
+fi
+
+# --- 5. vigilante de usabilidad (bb-usable) ------------------------------
+echo
+echo "-- 5. vigilante de usabilidad --"
+# Por que: RuntimeWatchdogSec=60 estaba armado los dias 22 y 23 y no disparo
+# ninguna de las dos veces, porque vigila a PID 1 y PID 1 estaba sano (570 a
+# 1578 lineas de journal por hora durante el congelamiento). bb-usable
+# contesta la otra pregunta -- si la maquina sirve -- pidiendo 64 MiB y
+# tocandolos. Ver bin/bb-usable para la calibracion y sus margenes.
+# Esto NO desarma el watchdog de PID 1: convive con el.
+SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ "$DRY" = 0 ]; then
+  sed "s|/home/lcasarin/projects/blackbox|$SELF_DIR|g" \
+      "$SELF_DIR/systemd/bb-usable.service" > /etc/systemd/system/bb-usable.service
+  systemctl daemon-reload
+  systemctl enable --now bb-usable.service
+else
+  echo "  [dry-run] instalaria /etc/systemd/system/bb-usable.service y lo activaria"
+fi
+echo "  bb-usable armado: sonda cada 30s, plazo 300s, WatchdogSec=360,"
+echo "  FailureAction=reboot-immediate"
+
+# --- 6. punteria de earlyoom ---------------------------------------------
+echo
+echo "-- 6. punteria de earlyoom --"
+# Medido 2026-09-22 05:51:40: earlyoom disparo UNA vez en 17h45m y mato
+# 'VLLM::EngineCor' -- 33 GiB de GPU, el proceso util -- dejando vivos a los
+# veinte workers de pytest que eran la causa. No fue mala suerte: 'vllm'
+# estaba en --prefer. Esto lo saca de ahi y mete a 'pytest'.
+#
+# LIMITE DECLARADO: esto corrige la punteria, NO el umbral. earlyoom solo
+# sabe leer MemAvailable y SwapFree, y MemAvailable marco 56 % durante las
+# 17 horas -- por eso disparo una vez y nunca mas. Con esta correccion
+# seguira sin disparar en un caso como los medidos. Quien cubre eso es
+# bb-usable, no earlyoom.
+if [ -f /etc/default/earlyoom ]; then
+  run cp -n /etc/default/earlyoom "$BACKUP/earlyoom"
+  if [ "$DRY" = 0 ]; then
+    sed -i "s/--prefer '(vllm|VLLM|python3|triton)'/--prefer '(pytest|python3|triton)'/" \
+        /etc/default/earlyoom
+    systemctl restart earlyoom.service
+    echo "  --prefer ahora: $(grep -o "\-\-prefer '[^']*'" /etc/default/earlyoom)"
+  else
+    echo "  [dry-run] quitaria vllm de --prefer y anadiria pytest"
+  fi
+else
+  echo "  /etc/default/earlyoom no existe, se omite"
 fi
 
 # --- recarga ------------------------------------------------------------

@@ -1,0 +1,35 @@
+[Unit]
+Description=blackbox: vigila si la maquina SIRVE (no si systemd sigue vivo)
+Documentation=file:%h/projects/blackbox/bin/bb-usable
+# Arranca tarde: antes de que haya sesion no hay nada que proteger, y un
+# reinicio durante el arranque seria el peor falso positivo posible.
+After=multi-user.target
+
+[Service]
+Type=notify
+ExecStart=/home/lcasarin/projects/blackbox/bin/bb-usable
+
+# El plazo que cobra. bb-usable acaricia cada PROBE_INTERVAL (30s) y se niega
+# a acariciar si su sonda pasa de PROBE_DEADLINE (300s), asi que este numero
+# tiene que ser MAYOR que el plazo de la sonda para que esa negativa llegue a
+# cobrarse: 300s de sonda + 60s de holgura.
+WatchdogSec=360
+
+# Que pasa cuando el watchdog cobra. `reboot-immediate` llama a reboot(2) sin
+# intentar parar unidades: es lo mas parecido al reset a mano que hubo que
+# hacer los dias 22 y 23, y es deliberado -- durante los dos casos parar
+# unidades ordenadamente era justo lo que la maquina no podia hacer.
+# Los datos de blackbox sobreviven: bin/bb escribe cada muestra y cierra.
+FailureAction=reboot-immediate
+
+# Sin esto systemd reiniciaria el servicio en vez de cobrar: el watchdog
+# marca la unidad como fallida, y el reinicio automatico se la comeria.
+Restart=no
+
+# Que el vigilante no sea la victima. Si la maquina se queda sin memoria, el
+# proceso que la mide tiene que seguir corriendo para poder decir que no.
+OOMScoreAdjust=-900
+MemoryMin=128M
+
+[Install]
+WantedBy=multi-user.target
