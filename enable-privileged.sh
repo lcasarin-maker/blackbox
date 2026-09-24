@@ -57,6 +57,17 @@ if [ "$REVERT" = 1 ]; then
   else
     echo "  /etc/default/earlyoom: sin copia previa, NO se toca"
   fi
+  if [ -f /etc/modprobe.d/99-blackbox-uvm.conf ]; then
+    run rm -f /etc/modprobe.d/99-blackbox-uvm.conf
+    echo "  uvm_global_oversubscription vuelve a su defecto (tras reiniciar)"
+  fi
+  if [ -f "$BACKUP/grub" ]; then
+    run cp "$BACKUP/grub" /etc/default/grub
+    run update-grub
+    echo "  /etc/default/grub restaurado (kernel por defecto y menu como estaban)"
+  else
+    echo "  /etc/default/grub: sin copia previa, NO se toca"
+  fi
   if [ -f /etc/audit/rules.d/10-blackbox-signals.rules ]; then
     run rm -f /etc/audit/rules.d/10-blackbox-signals.rules
     run augenrules --load
@@ -297,6 +308,87 @@ RULES
     echo "    vacia, la regla no esta capturando por mucho que -l la liste."
   fi
 fi
+
+# --- 8. mitigaciones del bug de NVIDIA #1358 -----------------------------
+echo
+echo "-- 8. mitigaciones del cuelgue por memoria unificada (NVIDIA #1358) --"
+# Por que: esta maquina se congelo TRES veces (2026-09-22 x2, 2026-09-24) y el
+# boot del primer caso tiene 203 ocurrencias de
+#   NVRM: Check failed: Out of memory [NV_ERR_NO_MEMORY] ... _memdescAllocInternal
+# que es la firma exacta de NVIDIA/open-gpu-kernel-modules#1358, abierto y sin
+# fix. Tres reporteros independientes en GB10, tres cargas distintas (vLLM,
+# hashcat, DeepSeek+NCCL); uno lo disparo con `hashcat -I`, una consulta de
+# identificacion de dispositivo.
+#
+# MEDIDO AQUI antes de escribir esto: los cgroups NO ven esa memoria. 7 GiB de
+# GPU tomados con torch -> el memory.current del slice sube 15 MiB, el 0.2 %.
+# Por eso el techo de app.slice no cubre este fallo y hacen falta estas dos.
+#
+# Las dos salen del hilo, ninguna esta medida en NUESTRA carga, y se aplican
+# juntas por decision de Luis (2026-09-24) aceptando que si deja de
+# congelarse no sabremos cual de las dos lo arreglo.
+
+# --- 8a. uvm_global_oversubscription -------------------------------------
+# El asignador UVM admite peticiones por encima de lo disponible fisicamente
+# esperando reconciliarlas despues, y eso es lo que convierte un fallo de
+# asignacion que deberia ser limpio en un cuelgue. Un reportero del hilo lo
+# puso a 0: el cuelgue silencioso IRRECUPERABLE paso a un OOM global
+# RECUPERABLE. Sigue barriendo procesos ajenos (vio morir sshd,
+# NetworkManager, contenedores) -- protege la caja, no lo que corre en ella.
+if [ "$DRY" = 0 ]; then
+  cat >/etc/modprobe.d/99-blackbox-uvm.conf <<'CONF'
+# blackbox: NVIDIA/open-gpu-kernel-modules#1358 -- sin esto, una peticion de
+# memoria unificada por encima de lo disponible cuelga el host entero en vez
+# de fallar. Con esto, el kernel puede al menos matar y sobrevivir.
+options nvidia_uvm uvm_global_oversubscription=0
+CONF
+  echo "  /etc/modprobe.d/99-blackbox-uvm.conf escrito"
+else
+  echo "  [dry-run] escribiria /etc/modprobe.d/99-blackbox-uvm.conf"
+fi
+echo "  valor EN CALIENTE (no cambia hasta recargar el modulo o reiniciar):"
+echo "    $(cat /sys/module/nvidia_uvm/parameters/uvm_global_oversubscription 2>/dev/null || echo '?')"
+
+# --- 8b. volver al kernel 6.17.0-1032-nvidia ------------------------------
+# Un reportero con 2 Sparks: 7 de 7 arranques fallidos en 7.0.0-1019-nvidia y
+# el MISMO driver sobre 6.17.0-1032-nvidia funciono a la primera y siguio
+# estable. Nosotros corremos el primero y tenemos el segundo instalado, con su
+# linux-modules-nvidia-580-open correspondiente (comprobado con dpkg).
+KOBJ="6.17.0-1032-nvidia"
+if [ ! -e "/boot/vmlinuz-$KOBJ" ]; then
+  echo "  AVISO: /boot/vmlinuz-$KOBJ no existe. NO se toca GRUB."
+elif ! dpkg -l "linux-modules-nvidia-580-open-$KOBJ" >/dev/null 2>&1; then
+  echo "  AVISO: no hay modulos nvidia para $KOBJ. Arrancar ahi dejaria la GPU"
+  echo "  sin driver, que es peor que el bug. NO se toca GRUB."
+elif [ "$DRY" = 0 ]; then
+  run cp -n /etc/default/grub "$BACKUP/grub"
+  SUB=$(awk -F"'" '/^submenu/ {print $2; exit}' /boot/grub/grub.cfg 2>/dev/null)
+  ENT=$(awk -F"'" "/menuentry .*$KOBJ'/ {print \$2; exit}" /boot/grub/grub.cfg 2>/dev/null)
+  if [ -z "$ENT" ]; then
+    echo "  AVISO: no encuentro la entrada de GRUB para $KOBJ. NO se toca GRUB."
+  else
+    [ -n "$SUB" ] && DEF="$SUB>$ENT" || DEF="$ENT"
+    sed -i "s|^GRUB_DEFAULT=.*|GRUB_DEFAULT=\"$DEF\"|" /etc/default/grub
+    # Escotilla: hoy el menu esta OCULTO con timeout 0. Cambiar el kernel por
+    # defecto sin dejar forma de elegir otro es quedarse sin salida si el
+    # nuevo no arranca. 5 segundos de menu es el precio.
+    sed -i 's|^GRUB_TIMEOUT_STYLE=.*|GRUB_TIMEOUT_STYLE=menu|' /etc/default/grub
+    sed -i 's|^GRUB_TIMEOUT=.*|GRUB_TIMEOUT=5|' /etc/default/grub
+    update-grub >/dev/null 2>&1
+    echo "  GRUB_DEFAULT -> $DEF"
+    echo "  menu de arranque VISIBLE 5s (escotilla si $KOBJ no arranca)"
+  fi
+else
+  echo "  [dry-run] pondria GRUB_DEFAULT en la entrada de $KOBJ y el menu a 5s"
+fi
+
+echo
+echo "  NINGUNA DE LAS DOS ESTA ACTIVA HASTA QUE REINICIES."
+echo "  Despues, comprueba las dos:"
+echo "    uname -r                                                  # espera $KOBJ"
+echo "    cat /sys/module/nvidia_uvm/parameters/uvm_global_oversubscription  # espera 0"
+echo "  Y si vuelve a congelarse, la firma a buscar es:"
+echo "    journalctl -k -b -1 | grep -c _memdescAllocInternal"
 
 # --- recarga ------------------------------------------------------------
 echo
