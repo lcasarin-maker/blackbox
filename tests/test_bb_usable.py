@@ -41,7 +41,9 @@ RUTA = Path(__file__).resolve().parent.parent / "bin" / "bb-usable"
 def _cargar():
     """Carga bin/bb-usable como modulo, sin ejecutar main()."""
     loader = machinery.SourceFileLoader("bb_usable", str(RUTA))
-    mod = util.module_from_spec(util.spec_from_loader("bb_usable", loader))
+    spec = util.spec_from_loader("bb_usable", loader)
+    assert spec is not None, f"no se pudo construir el spec de {RUTA}"
+    mod = util.module_from_spec(spec)
     loader.exec_module(mod)
     return mod
 
@@ -244,8 +246,13 @@ def test_notify_sin_socket_no_manda_nada_y_no_revienta(bbu, tmp_path, monkeypatc
     monkeypatch.delenv("NOTIFY_SOCKET", raising=False)
     try:
         bbu.notify("WATCHDOG=1")  # no debe lanzar
-        with pytest.raises(socket.timeout):
+        # Se afirma SOBRE la excepcion, no solo que haya una: sin esto,
+        # cualquier fallo del socket (permisos, ruta mala) se leeria como
+        # "no llego nada", que es la conclusion que este test vende.
+        with pytest.raises(socket.timeout) as exc:
             srv.recv(64)
+        assert exc.type is socket.timeout
+        assert "timed out" in str(exc.value).lower()
     finally:
         srv.close()
 
