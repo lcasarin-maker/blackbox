@@ -168,5 +168,79 @@ Two details that may save someone else time:
    `>= 10 % sustained >= 5 min`, calibration against the three real wedges gives
    0 false positives and 0 missed incidents.
 
+## The allocation path, read from the shipped source — and a regkey that targets it
+
+`_memdescAllocInternal` is inside `nv-kernel.o_binary` and not patchable
+locally, but the path it ends in **is** shipped as source, in
+`nvidia/os-interface.c::os_alloc_pages_node()`:
+
+```c
+gfp_mask = __GFP_THISNODE | GFP_HIGHUSER_MOVABLE | __GFP_COMP | __GFP_NOWARN;
+
+#if defined(__GFP_RETRY_MAYFAIL)
+    /*
+     * __GFP_RETRY_MAYFAIL :  Used to avoid the Linux kernel OOM killer.
+     *                        To help PMA on paths where UVM might be
+     *                        in memory over subscription. ...
+     */
+    gfp_mask |= __GFP_RETRY_MAYFAIL;
+#endif
+
+#if defined(__GFP_RECLAIM)
+    if (flag & NV_ALLOC_PAGES_NODE_SKIP_RECLAIM)
+        gfp_mask &= ~(__GFP_RECLAIM);
+#endif
+
+    alloc_addr = alloc_pages_node(nid, gfp_mask, order);
+```
+
+`__GFP_RETRY_MAYFAIL` asks the kernel to retry reclaim hard **and to not invoke
+the OOM killer**. On a unified-memory part where the "GPU" allocation is system
+memory and the request is tens of GiB, that is a very good description of what
+we measured: 99.5 % system time, swap driven to 100 %, no OOM kill ever, and
+tens of GiB nominally free the whole time. The intent (don't let the OOM killer
+shoot the user's processes) is reasonable; the outcome on GB10 is that nothing
+stops it either.
+
+The `SKIP_RECLAIM` branch is the escape, and it is driven by a registry key.
+Disassembling `pmaNumaAllocate` in the blob, the flag is computed as:
+
+```
+ldr  w1, [x27, #712]     ; RmNumaAllocSkipReclaimPercent
+ldr  x3, [x27, #608]     ; total
+ldr  x0, [x27, #616]     ; free
+mul  x1, x1, x3
+lsl  x1, x1, #5
+cmp  x1, x2, lsl #2      ; (pct * total * 32) vs (100 * free)
+cset w19, hi             ; -> NV_ALLOC_PAGES_NODE_SKIP_RECLAIM
+```
+
+i.e. **skip reclaim once free memory drops below `RmNumaAllocSkipReclaimPercent`
+of the pool**, and then `alloc_pages_node` fails fast and RM returns
+`NV_ERR_NO_MEMORY` — which is exactly the clean failure this issue is asking
+for, and exactly the error we see 203 of in the wedge-1 journal. So the good
+path exists; on this hardware it appears to engage too late, or not at all,
+before the reclaim spin has already taken the host.
+
+On this host `/proc/driver/nvidia/params` shows `RegistryDwords: ""` and
+`EnableUserNUMAManagement: 1` — no regkey set, stock behaviour.
+
+**Questions for NVIDIA, which is why I am reporting this rather than just
+tuning it:**
+
+1. What is the default of `RmNumaAllocSkipReclaimPercent` on GB10, and is it
+   intended to be tuned on unified-memory parts?
+2. Is `__GFP_RETRY_MAYFAIL` the right choice when the NUMA node being
+   allocated from is the *only* system memory? Avoiding the OOM killer there
+   means there is no backstop at all.
+3. Would a `dmem` region registration (the controller is present and its six
+   helpers are `EXPORT_SYMBOL_GPL`; the driver is Dual MIT/GPL) be considered?
+   It would give operators a supported ceiling instead of leaving them to
+   discover that `memory.max` does not apply.
+
+I have not tuned the regkey here yet, because reproducing takes a wedge and a
+power cycle per iteration, and I would rather have the intended default from
+you than guess at it.
+
 Happy to supply `nvidia-bug-report.log.gz`, the raw per-minute samples, or the
 `sar` binaries for any of the three windows.
