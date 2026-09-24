@@ -1,0 +1,22 @@
+$ systemctl show bb-usable.service -p ActiveState -p Result -p NRestarts -p WatchdogUSec -p FailureAction
+WatchdogUSec=6min
+Result=success
+NRestarts=0
+ActiveState=active
+FailureAction=reboot-immediate
+
+$ python3 -c 'from simplecode.utils.tool_limits import UNIFIED_MEMORY_WORKER_CAP; print(UNIFIED_MEMORY_WORKER_CAP)'
+6
+
+$ python3 -m simplecode.utils.unified_memory_slots
+[unified-slots] 0/12 held  (/run/user/1000/simplecode)
+  PSI full avg10=0.00  corte=10.00  -> admite
+  (nobody -- 0 is a measured 0: dead holders were purged just now)
+
+$ # el contador FRENA: tres PROCESOS (no hilos) pidiendo 6 con techo 12
+coderA: espero  0.00s -> concedido 6
+coderB: espero  0.00s -> concedido 6
+coderC: espero  2.42s -> concedido 6   <- espero a que A soltara
+
+$ # el veto RECHAZA con la presion real de la noche del 2026-09-22
+PSI full avg10=98.70 >= 10.00  ->  RECHAZADO (UnifiedMemoryPressure)

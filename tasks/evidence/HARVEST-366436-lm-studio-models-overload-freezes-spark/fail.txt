@@ -1,0 +1,22 @@
+$ # CONTROLES NEGATIVOS -- las mismas medidas donde NO debe frenar
+
+$ SIMPLECODE_UNIFIED_SLOT_CEILING=18, mismos tres procesos
+coderA: espero  0.00s -> concedido 6
+coderB: espero  0.00s -> concedido 6
+coderC: espero  0.00s -> concedido 6
+  -> el freno de 2.42s lo pone el TECHO, no el modulo
+
+$ # el veto, con PSI sano
+ADMITIDO 6 slots tras 0.00s
+$ # el veto apagado a proposito, pese a PSI 98.70
+ADMITIDO 6 slots tras 0.00s   (la escotilla funciona)
+$ # sin fichero de PSI
+ADMITIDO   (no se inventa veredicto)
+
+$ # y la SUITE puede salir en rojo: 5 mutantes, corridos 2026-09-23
+  rc=1  el veto nunca veta
+  rc=1  el veto veta siempre
+  rc=1  sin PSI se inventa 0.0 en vez de None
+  rc=1  la escotilla no apaga el veto
+  rc=1  el plazo ignora el timeout del llamador
+  rc=0  original restaurado

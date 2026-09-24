@@ -2,14 +2,16 @@
 id: HARVEST-366436-lm-studio-models-overload-freezes-spark
 kind: task
 title: "Evaluar adopción: mecanismo cosechado por Atlas (366436-lm-studio-models-overload-freezes-spark)"
-status: open
+status: done
+closure_type: adopted_prior_implementation
+closed_at: 2026-09-23
+evidence: {"bb_usable_no_da_falso_positivo": "SOBREVIVIO 441s (> una ventana completa de WatchdogSec=360)\nsuccess 0 active", "limite_declarado": "Los slots son ADVISORY: un proceso que no llame no se cuenta y nada lo para. Sube el suelo de los dos abanicos de simplecode; no es una reserva del kernel (H34: el controlador dmem existe en estructura y el driver 580.173.02 no lo rellena). bb-usable sigue sin suite propia y fuera de coverage_targets.", "pass": "tasks/evidence/HARVEST-366436-lm-studio-models-overload-freezes-spark/pass.txt", "fail": "tasks/evidence/HARVEST-366436-lm-studio-models-overload-freezes-spark/fail.txt", "e2e": "tasks/evidence/HARVEST-366436-lm-studio-models-overload-freezes-spark/e2e.txt"}
 severity: P3
 origin: asserted
 satd_family: HARVEST_SUGGESTION
-close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/backlog/HARVEST-366436-lm-studio-models-overload-freezes-spark.md", "expect": "exit_zero", "porque": "Sugerencia de adopcion, no un defecto -- verifica que accepted.by/date/trigger este lleno y no sea el placeholder, patron de own_chats/tools/check_harvest_accepted.py (DGX-505)."}
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/HARVEST-366436-lm-studio-models-overload-freezes-spark.md", "expect": "exit_zero", "porque": "Sugerencia de adopcion, no un defecto -- verifica que accepted.by/date/trigger este lleno y no sea el placeholder, patron de own_chats/tools/check_harvest_accepted.py (DGX-505)."}
 created: 2026-09-09
-accepted: {"by": "Luis + Claude Opus 5, decision sobre el fondo 2026-09-23 (boleta tras el bloqueo del zero-debt gate)", "date": "2026-09-23", "trigger": "reabrir si un congelamiento futuro ocurre CON bb-usable armado y el tope de workers puesto -- eso probaria que la causa no era el abanico y que la vigilancia adoptada mira el sitio equivocado"}
-reason: "ADOPTADA, y ya implementada el mismo dia -- no prometida. Los mecanismos 1 y 3 se adoptaron partidos en dos mitades, cada una donde vive su causa; el de un-modelo-a-la-vez se descarta con evidencia. Ver 'Decision del 2026-09-23' abajo. La reapertura y la decision del 2026-09-09 quedan registradas, no borradas."
+reason: "CERRADA 2026-09-23 como adopted_prior_implementation -- el primer uso del closure_type que este caso obligo a crear (simplecode f66157a, publicado en 8.1.0). La adopcion se implemento con codigo real en commits ANTERIORES: bin/bb-usable (64d3daa) en este repo y UNIFIED_MEMORY_WORKER_CAP en simplecode (770a6ed). El hueco que esta misma ficha declaraba sin tapar -- 'nada cuenta globalmente los procesos que reservan memoria unificada' -- tambien se cerro el mismo dia con simplecode.utils.unified_memory_slots, que ademas consume PSI, que es la senal que las dos noches midio la verdad y nadie frenaba con ella."
 ---
 
 ## Qué es esto
@@ -149,3 +151,63 @@ vigila.
 No dice que blackbox deba adoptar nada. No mide si el código fuente es
 production-ready, tiene licencia compatible, o pasa los propios gates de este repo -- eso lo
 evalúa quien trabaje aquí, si decide que vale la pena mirarlo.
+
+## Root Cause
+
+Esta ficha nacio como evaluacion de cosecha y su historia esta entera arriba:
+se DESCARTO el 2026-09-09, su propio trigger se cumplio dos veces en 30 horas
+--dos congelamientos de 17 h 45 min y 5 h 55 min, con PSI memory full al
+98-99 % las dos noches-- y se REABRIO el 2026-09-23. Nada de eso se borra.
+
+La causa raiz, que la reapertura establecio: lo que faltaba NO era la lectura.
+PSI marco 98-99 % y funciono. **Nadie la consumia.** `bb` la registraba y
+ningun gate la miraba antes de dejar arrancar trabajo. Un instrumento que mide
+y no frena no es una mitigacion.
+
+## Regression Test
+
+Tres, porque la adopcion se partio en tres piezas y cada una tiene la suya:
+
+```
+systemctl show bb-usable.service -p ActiveState -p Result -p NRestarts
+  -> ActiveState=active  Result=success  NRestarts=0
+     WatchdogSec=360  FailureAction=reboot-immediate
+
+python3 -c "from simplecode.utils.tool_limits import UNIFIED_MEMORY_WORKER_CAP; print(UNIFIED_MEMORY_WORKER_CAP)"
+  -> 6
+
+python3 -m simplecode.utils.unified_memory_slots
+  -> [unified-slots] 0/12 held
+     PSI full avg10=0.00  corte=10.00  -> admite
+```
+
+## Verification Evidence
+
+- **bb-usable no da falso positivo**: sobrevivio 441 s, mas de una ventana
+  completa de `WatchdogSec=360`, con `Result=success` y `NRestarts=0`.
+- **El tope por proceso se consume de verdad**: `xdist_workers()` lo aplican
+  `backlog_verifier.py:2908` y `coverage_target.py`, y no queda ningun otro
+  `ThreadPoolExecutor(max_workers=...)` sin topar en simplecode.
+- **El contador global frena, con su control**: tres procesos DE VERDAD (no
+  hilos) pidiendo 6 con techo 12 -> 0.00 s, 0.00 s y **2.42 s**; los mismos con
+  techo 18 -> 0.00 s los tres. El freno lo pone el techo.
+- **El veto por senal rechaza**: con PSI a 98.70 --el valor real de aquella
+  noche-- lanza `UnifiedMemoryPressure`; con PSI sano admite en 0.00 s; con el
+  veto apagado admite pese al 98.70. 52 tests, 219 sentencias, 100 % de
+  cobertura, y 5 mutantes que ponen los cinco la suite en rojo.
+
+### Lo que esta ficha declaraba sin tapar, y quedo tapado
+
+Decia: *"Sigue sin haber un contador global de procesos que reservan memoria
+unificada: un pytest a mano, o cualquier otra herramienta, repite el cuadro sin
+que nada lo cuente."* Eso se cerro el mismo dia con
+`simplecode.utils.unified_memory_slots`, que cuenta por maquina tras un `flock`
+y ademas consume PSI con el corte que blackbox calibro contra estos dos
+congelamientos.
+
+### Lo que sigue sin taparse, y por eso se dice
+
+Los slots son **advisory**: un proceso que no llame no se cuenta y nada lo
+para. Sube el suelo de los dos abanicos de simplecode; no es una reserva del
+kernel, que H34 ya establecio que no existe en este driver. Y `bb-usable`
+sigue **sin suite propia** y fuera de `coverage_targets`.

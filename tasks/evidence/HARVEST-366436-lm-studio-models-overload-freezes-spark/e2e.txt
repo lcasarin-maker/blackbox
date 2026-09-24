@@ -1,0 +1,14 @@
+$ # bb-usable de punta a punta: NO da falso positivo
+SOBREVIVIO 441s (> una ventana completa de WatchdogSec=360)
+success 0 active
+
+$ cd ~/projects/simplecode && python3 -m pytest tests/test_unified_memory_slots.py -q --cov=simplecode.utils.unified_memory_slots
+Name                                           Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------------
+src/simplecode/utils/unified_memory_slots.py     219      0   100%
+----------------------------------------------------------------------------
+TOTAL                                            219      0   100%
+Required test coverage of 100.0% reached. Total coverage: 100.00%
+
+$ # el disparador medido de los dos congelamientos, ya topado
+simplecode/verification/backlog_verifier.py:2916:            ThreadPoolExecutor(max_workers=_slots) as pool:
