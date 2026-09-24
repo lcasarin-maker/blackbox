@@ -140,6 +140,46 @@ no corre, nadie genera el ruido que la regla calla y un cero no distingue
 
 ## Lo que sigue sin saberse
 
-Quien manda el SIGTERM del sujeto. El instrumento ya existe y captura; falta
-que el fenomeno ocurra con la regla puesta. Hasta entonces esta ficha sigue
-abierta, y `bb sigterm` distingue "no ha pasado" de "no estabamos mirando".
+Quien manda el SIGTERM del sujeto.
+
+## Que espera esta ficha, reescrito el 2026-09-23
+
+Hasta hoy esperaba un arreglo. **Ya no: espera una REAPARICION con el
+instrumento puesto**, y el cambio se hace porque el sujeto dejo de aparecer.
+Medido el 2026-09-23:
+
+| medida | resultado |
+|---|---|
+| senales capturadas desde que se armo (~1 h) | 4 |
+| de ellas con emisor DEMONIO, que es la forma del sujeto | **0** |
+| muertes `code=killed, signal=TERM` en el journal, ultimos 10 dias | **2** (sep 16, sep 20) |
+| `Atlas/uvicorn` en pie | 16 h 24 min |
+| `simplecode.daemon` en pie | 16 h 24 min |
+| `bb-usable` en pie | 11 h 45 min |
+
+La ficha describe muertes "a intervalos irregulares (10-15 min)". Eso no esta
+ocurriendo: los candidatos llevan dieciseis horas vivos y el journal registra
+DOS muertes en diez dias, no cientos. Lo medido el 2026-09-08 se midio y no se
+retira; lo que cambia es que el fenomeno no se reproduce hoy.
+
+**Por que NO se cierra pese a eso.** Un cierre por no-reproducible tiraria el
+contexto que mas cuesta reconstruir: tres sospechosos ya descartados con
+evidencia (`systemd-oomd` ni instalado, la mitigacion de
+`atom_gpu_telemetry.py` que usa SIGSTOP/SIGCONT, `liberation_watchdog.py` que
+no manda kill) y dos todavia vivos (`earlyoom`, un cgroup ajeno con
+`TimeoutStopSec`). Si reaparece sin ficha, ese trabajo se repite entero.
+
+**Que la cierra ahora**, cualquiera de las dos:
+
+1. **Reaparece y se identifica al emisor.** `bb sigterm` lo dara con nombre,
+   `exe` y `auid`. Los dos sospechosos vivos mandan la senal por syscall, asi
+   que los dos caen en la regla. Un emisor con `auid` sin poner es un demonio y
+   se distingue de un vistazo de una sesion interactiva.
+2. **Pasa el plazo sin una sola captura de demonio.** Entonces se cierra como
+   no reproducible, con el instrumento puesto y el trigger de reapertura
+   automatica: si `bb sigterm` caza un emisor demonio matando un python de
+   fondo, vuelve a abrirse.
+
+La diferencia con antes es que ahora las dos salidas son medibles. Hasta el
+2026-09-23 esta ficha no podia cerrarse por ninguna via, porque no habia
+instrumento que distinguiera "no ha pasado" de "no estabamos mirando".
