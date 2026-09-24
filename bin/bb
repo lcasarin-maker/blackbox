@@ -1694,6 +1694,131 @@ cmd_drift() {
   return 0
 }
 
+# ------------------------------------------------------- DEBT-DGX-438
+# Quien manda la senal que mata. `bb scan` compara muestras y ve que la
+# victima DESAPARECIO; no ve quien la mato, porque la muestra se toma del
+# lado de la victima y el emisor solo existe durante el syscall. El unico
+# sitio de esta caja que guarda esa pareja es el registro de auditoria:
+# auditd ya corre (active/enabled) y /var/log/audit es root:adm, asi que
+# este usuario lo LEE sin root -- la misma dependencia de grupo que bb ya
+# tiene para `journalctl -k`.
+#
+# La regla la instala `sudo ./enable-privileged.sh` (seccion 7). Sin ella
+# auditd no registra un solo kill: medido 2026-09-23, 0 eventos de syscall
+# kill en las 4 h 08 min que cubria el anillo.
+AUDIT_DIR="${BLACKBOX_AUDIT_DIR:-/var/log/audit}"
+
+cmd_sigterm() {
+  local desde="${1:-2 hours ago}"
+  local corte
+  corte=$(date -d "$desde" +%s 2>/dev/null) || {
+    echo "no entiendo la ventana: $desde" >&2; return 2; }
+
+  echo "== emisores de SIGTERM/SIGKILL desde $desde =="
+  echo
+
+  # El parseo usa match(s, re, arr), que es extension de GNU awk. Aqui `awk`
+  # es un symlink de alternatives a gawk 5.2.1 (verificado 2026-09-23), pero
+  # si esa alternativa cambiara a mawk el tercer argumento se ignora y el
+  # lector devolveria CERO FILAS sin un solo error -- que es la forma exacta
+  # de mentir que este repo persigue. Se comprueba, no se supone.
+  if ! echo "audit(1:2)" | awk 'match($0,/audit\(([0-9]+)/,m){exit m[1]==1?0:1} {exit 1}' 2>/dev/null; then
+    cannot_run "lector de auditoria" "el awk de esta caja no soporta match(s,re,arr) (hace falta gawk); sin el, el parseo devolveria 0 filas en silencio"
+    echo "  awk sin soporte de GNU match() -- NO se lee el registro"
+    echo
+    printf "could_not_run: %d\n%s" "$CNR" "$CNR_LIST"
+    return 0
+  fi
+
+  if ! ls "$AUDIT_DIR"/audit.log >/dev/null 2>&1; then
+    cannot_run "registro de auditoria" "$AUDIT_DIR/audit.log ilegible (hace falta grupo adm, o auditd no corre)"
+    echo "  registro de auditoria ILEGIBLE -- sin el no hay emisor que leer"
+    echo
+    printf "could_not_run: %d\n%s" "$CNR" "$CNR_LIST"
+    return 0
+  fi
+
+  # Distinguir "no hubo senales" de "el instrumento no esta armado" es la
+  # mitad del valor de este subcomando: las dos salidas imprimen cero filas
+  # y significan lo contrario. El discriminador NO es "cero eventos con mi
+  # clave" -- eso es justo lo ambiguo. Es el efecto de la OTRA regla que
+  # instala la misma seccion 7: la que calla el sondeo de rustdesk. Si ese
+  # sondeo sigue cayendo en el anillo, la seccion 7 no esta cargada, y por
+  # tanto la regla de kill tampoco.
+  local ruido armado_txt
+  ruido=$(awk -v c="$corte" '
+    /^type=SYSCALL/ && /exe="\/usr\/bin\/loginctl"/ && /auid=4294967295/ {
+      if (match($0, /audit\(([0-9]+)/, m) && m[1] >= c) n++
+    } END { print n+0 }' "$AUDIT_DIR"/audit.log 2>/dev/null)
+  ruido=${ruido:-0}
+  if [ "$ruido" -gt 0 ]; then
+    armado_txt="NO ARMADO"
+  else
+    armado_txt="armado"
+  fi
+
+  local eventos
+  eventos=$(awk -v c="$corte" '
+    # Une el SYSCALL (emisor: pid/comm/exe/auid) con el OBJ_PID (victima:
+    # opid/ocomm) por el id de evento audit(TS:SERIAL), que es lo unico que
+    # los relaciona: auditd emite los dos registros por separado.
+    match($0, /audit\(([0-9]+)\.[0-9]+:([0-9]+)\)/, m) {
+      ts = m[1]; id = m[2]
+      if (ts < c) next
+      if ($0 ~ /^type=SYSCALL/ && $0 ~ /key="blackbox_sig/) {
+        s_ts[id] = ts
+        if (match($0, /[ ]pid=([0-9]+)/, x))  s_pid[id]  = x[1]
+        if (match($0, /comm="([^"]*)"/, x))   s_comm[id] = x[1]
+        if (match($0, /exe="([^"]*)"/, x))    s_exe[id]  = x[1]
+        if (match($0, /auid=([0-9]+)/, x))    s_auid[id] = x[1]
+        if (match($0, /key="([^"]*)"/, x))    s_key[id]  = x[1]
+      }
+      if ($0 ~ /^type=OBJ_PID/) {
+        if (match($0, /opid=([0-9]+)/, x))    v_pid[id]  = x[1]
+        if (match($0, /ocomm="([^"]*)"/, x))  v_comm[id] = x[1]
+      }
+    }
+    END {
+      for (id in s_ts) {
+        sig = (s_key[id] == "blackbox_sigkill") ? "SIGKILL" : "SIGTERM"
+        printf "%s.%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", s_ts[id], id, sig,
+               s_pid[id], s_comm[id], s_exe[id], s_auid[id],
+               (v_pid[id] == "" ? "?" : v_pid[id]),
+               (v_comm[id] == "" ? "?" : v_comm[id])
+      }
+    }' "$AUDIT_DIR"/audit.log 2>/dev/null | sort -n)
+
+  local n; n=$(printf "%s" "$eventos" | grep -c . || true)
+  if [ "$n" -gt 0 ]; then
+    printf "  %-19s %-8s %-22s -> %s\n" "CUANDO" "SENAL" "EMISOR" "VICTIMA"
+    printf "%s\n" "$eventos" | while IFS=$'\t' read -r ts sig spid scomm sexe sauid vpid vcomm; do
+      ts=${ts%%.*}
+      local quien="demonio"
+      [ "$sauid" != "4294967295" ] && quien="humano auid=$sauid"
+      printf "  %-19s %-8s %-22s -> %s\n" \
+        "$(date -d "@$ts" '+%Y-%m-%d %H:%M:%S')" "$sig" \
+        "$scomm[$spid] $quien" "$vcomm[$vpid]"
+      printf "  %-19s %-8s   exe: %s\n" "" "" "$sexe"
+    done
+    echo
+    echo "  emisores distintos: $(printf "%s\n" "$eventos" | cut -f4 | sort -u | tr '\n' ' ')"
+  else
+    echo "  0 senales registradas en la ventana"
+  fi
+
+  echo
+  echo "-- estado del instrumento --"
+  echo "  regla de auditoria: $armado_txt"
+  if [ "$ruido" -gt 0 ]; then
+    cannot_run "regla de auditoria de senales" "no cargada: el sondeo de rustdesk sigue cayendo en el anillo ($ruido eventos en la ventana). Corre: sudo ./enable-privileged.sh"
+    echo "            $ruido execve de loginctl con auid=unset siguen en el anillo,"
+    echo "            asi que la seccion 7 no esta cargada y un 0 de arriba NO"
+    echo "            significa que nadie mando la senal: significa que nadie miraba."
+  fi
+  echo
+  printf "could_not_run: %d\n%s" "$CNR" "$CNR_LIST"
+}
+
 usage() {
   cat <<'USAGE'
 bb -- caja negra de la maquina
@@ -1706,6 +1831,7 @@ bb -- caja negra de la maquina
   bb drift               compara lo adoptado en el repo con lo desplegado
   bb protect             sube el limite de core de las apps ya corriendo (prlimit)
   bb who [pid]           que procesos pesan y QUIEN los lanzo (unit, padre, cwd)
+  bb sigterm ["hace X"]  QUIEN mando SIGTERM/SIGKILL a quien (DEBT-DGX-438)
   bb install             instala el timer de usuario
 
 Datos propios en ~/.local/share/blackbox (retencion 14 dias).
@@ -1726,6 +1852,7 @@ case "${1:-}" in
   drift)    shift; cmd_drift "$@" ;;
   protect)  shift; cmd_protect "$@" ;;
   who)      shift; cmd_who "$@" ;;
+  sigterm)  shift; cmd_sigterm "$@" ;;
   install)  shift; cmd_install "$@" ;;
   ""|-h|--help|help) usage ;;
   *) echo "subcomando desconocido: $1" >&2; usage >&2; exit 2 ;;
