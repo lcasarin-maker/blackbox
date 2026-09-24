@@ -59,7 +59,17 @@ REASON_RE = re.compile(r"^reason:\s*(.+?)\s*$", re.MULTILINE)
 # lo ataría a una instalación que un clon puede no tener. Si el enum de la
 # flota crece, esta lista se queda corta y el fallo es RECHAZAR de más, que se
 # ve; lo contrario -- aceptar de más -- es lo que hubo que arreglar hoy.
-CLOSURE_TYPES = frozenset({"void_wontfix", "duplicate", "relocated_prior_verification"})
+CLOSURE_TYPES = frozenset({
+    "void_wontfix", "duplicate", "relocated_prior_verification",
+    # Anadido en simplecode 8.0.1 (2026-09-23) porque el caso llego de verdad y
+    # nada lo cubria: una ficha HARVEST cuya ADOPCION se implemento con codigo
+    # real en un commit ANTERIOR. Es exactamente el caso de
+    # HARVEST-366436, adoptada e implementada el mismo dia (bin/bb-usable,
+    # 64d3daa): void_wontfix y duplicate son falsos, y
+    # relocated_prior_verification no encaja porque la ficha nunca estuvo done
+    # en un commit anterior, que es su premisa entera.
+    "adopted_prior_implementation",
+})
 
 # Marcadores de "aquí todavía no hay una decisión". `(pendiente)` es el que
 # Atlas deja al crear la ficha; el resto son las formas en que un humano o un
