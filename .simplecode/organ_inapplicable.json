@@ -26,6 +26,11 @@
       "reason": "No esta cableado como compuerta con nombre en el .pre-commit-config.yaml generado de este repo: la busqueda de su `id:` no devuelve entry alguno. Sus filas llegan desde otra ruta del kit, no desde un hook que este repo invoque, asi que este repo no puede plantarle un control sin inventar la invocacion.",
       "canary": "No se planta: no hay hook local que ejecutar. Plantarlo exigiria cablear una compuerta nueva solo para poder medirla, que es construir el sujeto para el instrumento en vez de al reves.",
       "difiere": "Es una limitacion del cableado del kit en este satelite, no una propiedad de blackbox. Caduca sin renovarse y se revisa si el organo pasa a tener entry propio."
+    },
+    "backlog_md_freeze": {
+      "reason": "Este repo NO TIENE BACKLOG.md y su ausencia es una decision, no un olvido: el declutter del 2026-09-13 lo retiro a proposito bajo 'un solo canon de estado', y el propio scan.py de /debt lo documenta ('Sin indice, el ranking lee DIRECTO de tasks/backlog/*.md -- declutter retiro BACKLOG.md a proposito'). Medido 2026-09-24: `ls BACKLOG.md` -> no existe el fichero, y `git log -- BACKLOG.md` no devuelve un solo commit, o sea que nunca existio en este repo. El organo vigila que no se anada contenido nuevo a un indice ya declarado; sin indice no hay nada que congelar.",
+      "canary": "NO se planta, y por la misma razon ya aceptada para lockfile_parity en este mismo fichero: exigiria CREAR un BACKLOG.md solo para que el organo tuviera algo que vigilar, que es fabricar el sujeto para el instrumento en vez de al reves. Peor aqui, porque ese fichero fue retirado por decision explicita y plantarlo deshace la decision que el repo tomo. Lo que SI se midio es la ausencia del sujeto, arriba, con dos comandos y sus salidas.",
+      "difiere": "Captura en los repos que si mantienen BACKLOG.md como indice: no es una propiedad de blackbox sino de su canon de estado. Queda refutada, y hay que borrar esta entrada, en cuanto blackbox vuelva a tener BACKLOG.md por cualquier via."
     }
   }
 }
