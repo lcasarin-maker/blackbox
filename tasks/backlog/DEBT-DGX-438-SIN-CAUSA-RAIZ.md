@@ -93,11 +93,53 @@ A esa retencion, una captura de kill envejece antes de que nadie la lea. La
 seccion 7 excluye ese ruido con `auid=unset` sin cegar la regla `reboot_cmd`
 que lo produce; la causa queda en `DEBT-AUDIT-AHOGADO-POR-RUSTDESK`.
 
+## ARMADO el 2026-09-23 22:01, y el control lo confirmo
+
+`sudo ./enable-privileged.sh` cargo la seccion 7 y su propia verificacion
+respondio `reglas CARGADAS en el kernel (auditctl -l las ve)`.
+
+El control negativo devolvio filas, que es lo que hacia falta:
+
+```
+  CUANDO              SENAL    EMISOR                          -> VICTIMA
+  2026-09-23 22:01:46 SIGTERM  bash[1695154] humano auid=1000  -> bash[1695156]
+  2026-09-23 22:01:48 SIGKILL  python[1657416] humano auid=1000 -> sleep[1698528]
+  2026-09-23 22:02:47 SIGKILL  claude-desktop[130715] humano auid=1000 -> bash[1698596]
+```
+
+Emisor, victima, `exe` y `auid`, que es exactamente lo que faltaba desde el
+2026-09-08.
+
+**Estas tres capturas NO son el sujeto de esta ficha**, y se dice para que
+nadie las lea como un cierre: las tres son gestion de procesos de la propia
+herramienta (el SIGTERM es el del control, y los dos SIGKILL matan shells y
+`sleep` de comandos que acababan de terminar), todas con `auid=1000` de una
+sesion interactiva. El sujeto son procesos python de FONDO muriendo a
+intervalos de 10-15 min sin que nadie lo pida. Eso no ha vuelto a pasar desde
+que la regla esta puesta, y cuando pase quedara registrado con su emisor.
+
+Efecto lateral medido: el sondeo de rustdesk **paro en seco** al cargar la
+regla -- 408 eventos en los 60 s previos, **0 en los 30 s siguientes**. La
+retencion del anillo deja de ser de 37 min, que era la condicion para que una
+captura sobreviviera hasta que alguien la leyera.
+
+### Un defecto que el control encontro en el propio instrumento
+
+La primera lectura tras armar imprimio las dos capturas y debajo dijo
+**NO ARMADO**. El estado se calculaba contando ruido de rustdesk en la ventana
+que pide el usuario, y en esos 5 minutos cabian 417 eventos ANTERIORES a la
+instalacion: el instrumento estaba capturando y su propia linea de estado lo
+desmentia. Corregido a una ventana FIJA de 30 s (a 1.9/s el sondeo mas lento,
+30 s de silencio son >=57 eventos que no llegaron), con su control en las dos
+direcciones: ruido llegando ahora -> NO ARMADO con could_not_run 1; el mismo
+ruido de hace 5 min -> armado con could_not_run 0.
+
+Se anadio ademas un tercer veredicto, **NO SE PUDO DETERMINAR**: si rustdesk
+no corre, nadie genera el ruido que la regla calla y un cero no distingue
+"regla puesta" de "nada que callar". Antes eso se habria leido como armado.
+
 ## Lo que sigue sin saberse
 
-El instrumento esta escrito y probado; **no esta armado**, porque la regla
-necesita root y el `sudo` lo corre el usuario. Hasta que corra
-`sudo ./enable-privileged.sh` y el control negativo de ahi
-(`sleep 300 & kill -TERM $!` -> `bb sigterm '5 minutes ago'`) devuelva una fila,
-esta ficha sigue sin instrumento en la practica, y este bloque no dice otra
-cosa.
+Quien manda el SIGTERM del sujeto. El instrumento ya existe y captura; falta
+que el fenomeno ocurra con la regla puesta. Hasta entonces esta ficha sigue
+abierta, y `bb sigterm` distingue "no ha pasado" de "no estabamos mirando".

@@ -1742,17 +1742,36 @@ cmd_sigterm() {
   # mitad del valor de este subcomando: las dos salidas imprimen cero filas
   # y significan lo contrario. El discriminador NO es "cero eventos con mi
   # clave" -- eso es justo lo ambiguo. Es el efecto de la OTRA regla que
-  # instala la misma seccion 7: la que calla el sondeo de rustdesk. Si ese
-  # sondeo sigue cayendo en el anillo, la seccion 7 no esta cargada, y por
-  # tanto la regla de kill tampoco.
+  # instala la misma seccion 7: la que calla el sondeo de rustdesk.
+  #
+  # La ventana de esa comprobacion es FIJA y corta, no la que pide el usuario.
+  # Medido el 2026-09-23, y lo encontro el control negativo: recien instalada
+  # la regla, `bb sigterm '5 minutes ago'` imprimio dos capturas reales y
+  # debajo dijo NO ARMADO, porque en esos 5 minutos cabian 417 eventos de
+  # ruido ANTERIORES a la instalacion. El instrumento estaba armado y
+  # capturando, y su propia linea de estado lo desmentia.
+  #
+  # 30 s: el sondeo va a 1.9/s con solo el servicio root y a 14.6/s cuando
+  # vive su hijo --server, o sea que 30 s de silencio son >=57 eventos que no
+  # llegaron. Medido tras cargar la regla: 0 en 30 s, 408 en 60 s (los de
+  # antes). Corta lo justo para no arrastrar el pasado y sobra para que el
+  # cero signifique algo.
   local ruido armado_txt
-  ruido=$(awk -v c="$corte" '
+  ruido=$(awk -v c="$(( $(date +%s) - 30 ))" '
     /^type=SYSCALL/ && /exe="\/usr\/bin\/loginctl"/ && /auid=4294967295/ {
       if (match($0, /audit\(([0-9]+)/, m) && m[1] >= c) n++
     } END { print n+0 }' "$AUDIT_DIR"/audit.log 2>/dev/null)
   ruido=${ruido:-0}
+  # Tercer veredicto. El proxy necesita un SUJETO: si rustdesk no corre, nadie
+  # esta generando el ruido que la regla calla, y entonces un cero no dice si
+  # la regla esta puesta o si simplemente no habia nada que callar. Eso es
+  # COULD_NOT_RUN, no "armado".
+  local hay_sujeto=1
+  pgrep -f "rustdesk" >/dev/null 2>&1 || hay_sujeto=0
   if [ "$ruido" -gt 0 ]; then
     armado_txt="NO ARMADO"
+  elif [ "$hay_sujeto" = 0 ]; then
+    armado_txt="NO SE PUDO DETERMINAR"
   else
     armado_txt="armado"
   fi
@@ -1810,10 +1829,15 @@ cmd_sigterm() {
   echo "-- estado del instrumento --"
   echo "  regla de auditoria: $armado_txt"
   if [ "$ruido" -gt 0 ]; then
-    cannot_run "regla de auditoria de senales" "no cargada: el sondeo de rustdesk sigue cayendo en el anillo ($ruido eventos en la ventana). Corre: sudo ./enable-privileged.sh"
-    echo "            $ruido execve de loginctl con auid=unset siguen en el anillo,"
+    cannot_run "regla de auditoria de senales" "no cargada: el sondeo de rustdesk sigue cayendo en el anillo ($ruido eventos en los ultimos 30s). Corre: sudo ./enable-privileged.sh"
+    echo "            $ruido execve de loginctl con auid=unset en los ultimos 30s,"
     echo "            asi que la seccion 7 no esta cargada y un 0 de arriba NO"
     echo "            significa que nadie mando la senal: significa que nadie miraba."
+  elif [ "$hay_sujeto" = 0 ]; then
+    cannot_run "regla de auditoria de senales" "rustdesk no corre, asi que el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad"
+    echo "            rustdesk no corre, asi que nadie genera el ruido que la regla"
+    echo "            calla y este cero no distingue 'regla puesta' de 'nada que callar'."
+    echo "            Comprobalo directo:  sudo auditctl -l | grep blackbox_sig"
   fi
   echo
   printf "could_not_run: %d\n%s" "$CNR" "$CNR_LIST"
