@@ -12,19 +12,46 @@ sano toda la noche -- entre 570 y 1578 lineas de journal por hora, timers
 lanzandose cada minuto. La pregunta que contestaba era "sigue systemd vivo",
 y la respuesta era si mientras la maquina llevaba seis horas inservible.
 
-Este demonio contesta la otra pregunta, y la contesta haciendo el trabajo que
-estaba bloqueado: pide memoria y la toca. Durante los dos casos PSI memory
-full marco 98-99 %, o sea que TODAS las tareas estaban estancadas pidiendo
-memoria el 99 % del tiempo; una asignacion de 64 MiB no habria vuelto.
+Este demonio contesta la otra pregunta: si la maquina SIRVE.
 
-Como actua
-----------
-No abre /dev/watchdog: systemd ya lo tiene. Usa el watchdog de servicio de
-systemd (Type=notify + WatchdogSec=), que es la via nativa -- acaricia con
-sd_notify(WATCHDOG=1) SOLO cuando la sonda vuelve dentro de su plazo. Si no
-vuelve, systemd deja de recibir la caricia, mata el servicio, y FailureAction
-reinicia la maquina. El watchdog de hardware de PID 1 se queda donde estaba,
-como respaldo; esto no lo sustituye ni lo desarma.
+LA PREMISA ORIGINAL ERA FALSA, Y UN TERCER CONGELAMIENTO LA MIDIO
+-----------------------------------------------------------------
+Hasta el 2026-09-24 este fichero decia, aqui mismo: "durante los dos casos
+PSI memory full marco 98-99 %, o sea que TODAS las tareas estaban estancadas
+pidiendo memoria el 99 % del tiempo; una asignacion de 64 MiB no habria
+vuelto". Sonaba razonable y es falsa.
+
+El 2026-09-24 la maquina se congelo por tercera vez, 5 h 32 min, con PSI
+memory full en 99.0 y hubo que resetearla a mano. Este demonio estaba armado,
+vio el colapso entero y escribio, cada 30 segundos durante cinco horas:
+
+    [bb-usable] PSI memory full avg10=99.0 >= 50 (sonda 18 ms) -- aviso, no accion
+
+La sonda de 64 MiB volvio en 18-21 ms MIENTRAS la maquina estaba inservible.
+La asignacion si volvia. Un vigilante que mide lo que no discrimina y ademas
+se niega a actuar sobre lo que si discrimina es peor que no tener vigilante,
+porque su `Result=success` afirma que todo esta bien.
+
+Como actua, desde el 2026-09-24
+-------------------------------
+Dos caminos independientes, y el segundo es el que faltaba:
+
+1. LA SONDA. Pide 64 MiB y los TOCA pagina por pagina (Linux no asigna hasta
+   el primer acceso). Si tarda mas de PROBE_DEADLINE, no acaricia.
+   Se conserva porque cubre un fallo distinto -- una caja que de verdad no
+   puede servir memoria -- aunque NO cubriera ninguno de los tres casos reales.
+
+2. PSI SOSTENIDA. Si `mem_full avg10` se mantiene por encima de
+   PSI_ACT_FULL_AVG10 durante PSI_ACT_SOSTENIDO_S, no acaricia. Este es el
+   camino que atrapa los tres congelamientos medidos.
+
+En los dos casos el mecanismo es el mismo y es nativo: systemd deja de recibir
+sd_notify(WATCHDOG=1), marca la unidad fallida, y FailureAction cobra. No se
+abre /dev/watchdog: el de PID 1 sigue donde estaba, como respaldo.
+
+Cuanto tarda ahora en cobrar: 5 min de deteccion sostenida + hasta 6 min de
+WatchdogSec = ~11 min en el peor caso. Frente a las 5 h 32 min de este tercer
+caso, y a las 17 h 45 min del primero.
 
 Margen contra falsos positivos
 ------------------------------
@@ -36,9 +63,20 @@ plazo es 15 525x; contra el mas breve de los dos congelamientos (5 h 55 min),
 es 71x mas corto. El falso positivo exige que la maquina no sirva 64 MiB
 durante cinco minutos seguidos.
 
-Lo que NO se pudo medir: cuanto tarda la sonda DURANTE un congelamiento. La
-unica forma de medirlo es provocar uno. Por eso el plazo se calibra por el
-lado sano, que si es medible, y se declara aqui en vez de afirmarse.
+Lo que NO se pudo medir cuando esto se escribio: cuanto tarda la sonda
+DURANTE un congelamiento. Se dijo que la unica forma era provocar uno. Ya no
+hace falta: el tercer congelamiento lo midio solo, y la respuesta es 18-21 ms.
+Ese hueco declarado era exactamente donde vivia el defecto.
+
+Margen contra falsos positivos del camino nuevo
+-----------------------------------------------
+El corte de PSI no es un numero elegido: es el mismo que `bin/bb` usa para
+clasificar, y esta VALIDADO por tools/calibra_psi.py contra los TRES
+congelamientos reales -- 19696 muestras, falsos positivos 0, incidentes no
+detectados 0, veredicto CALIBRADO. Lo que hace el trabajo es la DURACION, no
+el nivel: entre los 7 picos sanos del corpus hay dos que llegaron a 90.69 % y
+98.53 % durante 2 minutos, y un corte por nivel solo los habria reiniciado sin
+motivo.
 """
 from __future__ import annotations
 
@@ -60,10 +98,36 @@ PROBE_DEADLINE = 300.0
 PROBE_BYTES = 64 * 1024 * 1024
 PAGE = 4096
 
-# Umbral de aviso, no de accion. Por debajo de esto la sonda sigue pasando;
-# sirve para que quede registro ANTES del apagon, que es lo que falto los dos
-# dias. 98-99 % fue el valor sostenido durante los dos congelamientos.
+# Umbral de AVISO. Sigue existiendo para que quede registro temprano.
 PSI_WARN_FULL_AVG10 = 50.0
+
+# --- Umbral de ACCION, anadido el 2026-09-24 tras el tercer congelamiento ---
+#
+# LA PREMISA DE ESTE FICHERO ERA FALSA Y ESTE CONGELAMIENTO LA MIDIO. Arriba
+# se afirmaba que durante los colapsos "una asignacion de 64 MiB no habria
+# vuelto". El 2026-09-24, con PSI memory full en 99.0 y la maquina inservible
+# durante 5 h 32 min, la sonda volvio en 18-21 ms, cada 30 s, cinco horas
+# seguidas. El journal lo tiene 600 veces:
+#
+#   [bb-usable] PSI memory full avg10=99.0 >= 50 (sonda 18 ms) -- aviso, no accion
+#
+# O sea: la sonda NO detecta esta condicion. Este demonio vio el colapso
+# entero, lo escribio correcto, y decidio no actuar -- que es peor que no
+# existir, porque su `Result=success` afirma que el vigilante esta bien.
+#
+# El corte de abajo NO es nuevo ni inventado: es el mismo que `bin/bb` usa
+# para clasificar (UMBRAL=10 %, SOSTENIDO=5 min) y esta VALIDADO por
+# tools/calibra_psi.py contra los TRES congelamientos reales de esta maquina:
+# 19696 muestras, 4 excursiones COLAPSO, 7 PICOS sanos, falsos positivos 0,
+# incidentes no detectados 0, veredicto CALIBRADO.
+#
+# La duracion es lo que hace el trabajo, no el nivel: entre los 7 picos sanos
+# hay dos que llegaron a 90.69 % y 98.53 % durante 2 minutos. Un corte por
+# nivel solo los habria reiniciado sin motivo.
+PSI_ACT_FULL_AVG10 = 10.0
+PSI_ACT_SOSTENIDO_S = 300.0
+# Cuantas sondas consecutivas por encima del umbral hacen los 5 minutos.
+PSI_ACT_SONDAS = max(1, round(PSI_ACT_SOSTENIDO_S / PROBE_INTERVAL))
 
 
 def notify(state: str) -> None:
@@ -78,10 +142,17 @@ def notify(state: str) -> None:
         s.sendall(state.encode())
 
 
+# Ruta de PSI, sustituible SOLO para poder probar el camino de accion. Este
+# demonio reinicia la maquina: dejarlo sin prueba porque "no se puede simular
+# un colapso" era la misma excusa que dejo la premisa falsa sin detectar
+# durante tres congelamientos. Con esto el camino se ejercita de verdad.
+PSI_PATH = os.environ.get("BB_USABLE_PSI_PATH", "/proc/pressure/memory")
+
+
 def psi_memory_full_avg10() -> float | None:
-    """avg10 de 'full' en /proc/pressure/memory, o None si no se puede leer."""
+    """avg10 de 'full' en PSI_PATH, o None si no se puede leer."""
     try:
-        with open("/proc/pressure/memory", encoding="ascii") as fh:
+        with open(PSI_PATH, encoding="ascii") as fh:
             for line in fh:
                 if line.startswith("full "):
                     for field in line.split():
@@ -117,6 +188,8 @@ def main() -> int:
         f"({PROBE_DEADLINE/max(first, 1e-6):.0f}x ese valor)")
     notify("WATCHDOG=1")
 
+    sostenido = 0  # sondas consecutivas con PSI por encima del umbral de accion
+
     while True:
         time.sleep(PROBE_INTERVAL)
         psi = psi_memory_full_avg10()
@@ -129,10 +202,40 @@ def main() -> int:
                 f"no se acaricia el watchdog")
             continue
 
-        if psi is not None and psi >= PSI_WARN_FULL_AVG10:
+        # PSI que no se pudo leer NO cuenta como colapso: "no se midio" y
+        # "la maquina esta bien" son cosas distintas, y reiniciar por la
+        # primera seria reiniciar por ceguera. Tampoco reinicia la racha:
+        # una lectura perdida en medio de un colapso no lo absuelve.
+        if psi is None:
+            log("[bb-usable] PSI ILEGIBLE -- no cuenta ni para actuar ni para "
+                f"absolver (racha sigue en {sostenido}/{PSI_ACT_SONDAS})")
+            notify("WATCHDOG=1")
+            continue
+
+        if psi >= PSI_ACT_FULL_AVG10:
+            sostenido += 1
+            if sostenido >= PSI_ACT_SONDAS:
+                # Esto es lo que no pasaba. No se acaricia: systemd deja de
+                # recibir la caricia, marca la unidad como fallida y
+                # FailureAction=reboot-immediate cobra dentro de WatchdogSec.
+                log(f"[bb-usable] COLAPSO: PSI memory full avg10={psi:.1f} >= "
+                    f"{PSI_ACT_FULL_AVG10:.0f} sostenido "
+                    f"{sostenido * PROBE_INTERVAL:.0f}s "
+                    f">= {PSI_ACT_SOSTENIDO_S:.0f}s (sonda {took*1000:.0f} ms, "
+                    f"que es justo por lo que la sonda sola no lo ve) -- "
+                    f"NO se acaricia el watchdog, que reinicie")
+                continue
             log(f"[bb-usable] PSI memory full avg10={psi:.1f} >= "
-                f"{PSI_WARN_FULL_AVG10:.0f} (sonda {took*1000:.0f} ms) -- "
-                f"aviso, no accion")
+                f"{PSI_ACT_FULL_AVG10:.0f} -- racha {sostenido}/{PSI_ACT_SONDAS} "
+                f"({sostenido * PROBE_INTERVAL:.0f}s de {PSI_ACT_SOSTENIDO_S:.0f}s), "
+                f"sonda {took*1000:.0f} ms")
+        else:
+            if sostenido:
+                log(f"[bb-usable] PSI bajo a {psi:.1f}: la racha de "
+                    f"{sostenido * PROBE_INTERVAL:.0f}s se corta. Era un pico, "
+                    f"no un colapso -- que es exactamente lo que el criterio de "
+                    f"DURACION existe para distinguir")
+            sostenido = 0
 
         notify("WATCHDOG=1")
 

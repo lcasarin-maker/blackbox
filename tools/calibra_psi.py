@@ -57,6 +57,20 @@ MUESTRAS = Path.home() / ".local/share/blackbox/samples"
 INCIDENTES = [
     ("2026-09-22 05:45", "2026-09-22 23:30"),
     ("2026-09-22 23:49", "2026-09-23 05:44"),
+    # Tercero, 2026-09-24. Mismo origen que los dos de arriba: la maquina dejo
+    # de responder y hubo que resetearla a mano. Corroborado por sar, que es
+    # instrumento independiente de PSI: %system entre 99.42 y 99.54 durante la
+    # ventana entera con %user en 0.13, swap al 100 % desde las 00:24, ldavg-1
+    # entre 103 y 110, y 3211 procesos frente a los ~490 de una maquina sana.
+    # kbavail entre 38 y 47 GB LIBRES, igual que en los dos anteriores: no fue
+    # agotamiento de RAM.
+    #
+    # El inicio sale de las muestras de bin/bb, que esta vez si grabaron el
+    # arranque: 00:00:02 mem_full 0.0 -> 00:02:03 mem_full 19.28 con la memoria
+    # disponible cayendo de 47.5 GB a 3.8 GB y los procesos con GPU pasando de
+    # 2 a 23 en ese minuto, 22 de ellos en app-com.anthropic.Claude-130715.scope.
+    # El fin es el reset: el boot anterior termina a las 05:56:45.
+    ("2026-09-24 00:02", "2026-09-24 05:56"),
 ]
 
 
