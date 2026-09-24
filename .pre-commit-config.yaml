@@ -67,6 +67,26 @@ repos:
         stages: [pre-commit, pre-merge-commit]
         pass_filenames: false
 
+      - id: backlog-md-freeze
+        name: "BACKLOG.md frozen (blocks new content once declared)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name backlog-md-freeze --hook pre-commit --
+          python .simplecode/run.py simplecode.verification.backlog_md_freeze --root .
+        language: system
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: false
+
+      - id: close-check-discrimina
+        name: "close_check does not close two fichas at once (done only)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name close-check-discrimina --hook pre-commit --
+          python .simplecode/run.py simplecode.verification.close_check_discrimina --root .
+        language: system
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: false
+
       # PRE-COMMIT, not pre-push, and scoped to what THIS commit stages
       # (`git diff --cached -M`) -- the same class as corruption-guard and
       # zero-debt --staged right above, never a repo-wide judgment. That
