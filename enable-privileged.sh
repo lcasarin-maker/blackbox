@@ -57,6 +57,11 @@ if [ "$REVERT" = 1 ]; then
   else
     echo "  /etc/default/earlyoom: sin copia previa, NO se toca"
   fi
+  if [ -f /etc/audit/rules.d/10-blackbox-signals.rules ]; then
+    run rm -f /etc/audit/rules.d/10-blackbox-signals.rules
+    run augenrules --load
+    echo "  regla de auditoria de senales retirada (DGX-438 se queda sin instrumento)"
+  fi
   run rm -f /etc/security/limits.d/99-blackbox-core.conf
   run rm -f /etc/systemd/coredump.conf.d/99-blackbox.conf
   echo "  limites y coredump.conf de blackbox retirados"
@@ -214,6 +219,83 @@ if [ -f /etc/default/earlyoom ]; then
   fi
 else
   echo "  /etc/default/earlyoom no existe, se omite"
+fi
+
+# --- 7. quien manda el SIGTERM (DEBT-DGX-438) ----------------------------
+echo
+echo "-- 7. auditoria de senales: quien mata a quien --"
+# Por que: DEBT-DGX-438 lleva abierta desde el 2026-09-08. Algo mata procesos
+# python de fondo con SIGTERM a intervalos irregulares (10-15 min) y no se
+# sabe que. Descartados CON evidencia: systemd-oomd (`is-enabled` -> not-found,
+# ni instalado), la mitigacion de atom_gpu_telemetry.py (usa SIGSTOP/SIGCONT,
+# no mata) y liberation_watchdog.py (no envia kill a nadie). Vivos: earlyoom y
+# un cgroup ajeno con TimeoutStopSec. Los dos mandan la senal por syscall, o
+# sea que los dos caen en una regla de auditoria -- y auditd YA corre aqui.
+#
+# Medido 2026-09-23 sobre /var/log/audit: 0 eventos de syscall kill en las
+# 4 h 08 min que cubria el anillo. No es que nadie matara: es que nadie
+# miraba. Falta la regla, no el demonio.
+if [ "$DRY" = 0 ] && ! command -v auditctl >/dev/null 2>&1; then
+  echo "  auditctl no esta: se omite (instala auditd para cerrar DGX-438)"
+else
+  run mkdir -p /etc/audit/rules.d
+  if [ "$DRY" = 0 ]; then
+    cat >/etc/audit/rules.d/10-blackbox-signals.rules <<'RULES'
+## blackbox -- DEBT-DGX-438: quien manda la senal que mata.
+## Se carga con `augenrules --load`. El numero 10 es para entrar ANTES que la
+## regla estandar que genera el diluvio de abajo: auditd resuelve por primera
+## coincidencia, asi que un `never` posterior no serviria de nada.
+
+## (1) Callar el diluvio, sin cegar la regla que lo produce.
+## La regla estandar `reboot_cmd` audita loginctl/systemctl para saber quien
+## reinicio la maquina. rustdesk.service la dispara sondeando sesiones:
+## medido 2026-09-23, 12934 de 12961 execve del anillo eran /usr/bin/loginctl
+## -- 99.8 % del registro -- a 1.9/s con solo el servicio root, y a 14.6/s
+## mientras vive su hijo --server. A esa tasa el anillo (5 x 8 MiB) cae de
+## 248 min a 37 min, y una captura de kill envejeceria antes de que nadie la
+## lea. Esta linea excluye SOLO la invocacion de demonio: los 12934 llevan
+## auid=unset y un humano deja auid puesto (control corrido el 2026-09-23:
+## `loginctl` desde esta terminal quedo con auid=1000, y antes de ese control
+## habia 0 eventos de loginctl con auid humano en tres ficheros del anillo;
+## systemctl da 106 con auid=1000 frente a 10 unset). Lo que reboot_cmd
+## existe para ver -- una persona apagando la maquina -- se sigue auditando.
+-a never,exit -F arch=b64 -S execve -F exe=/usr/bin/loginctl -F auid=unset
+
+## (2) La captura. kill/tkill llevan la senal en a1; tgkill la lleva en a2,
+## asi que van en lineas distintas -- una sola regla con -F a1 dejaria pasar
+## todo tgkill sin que nada lo dijera.
+-a always,exit -F arch=b64 -S kill -S tkill -F a1=15 -k blackbox_sigterm
+-a always,exit -F arch=b64 -S tgkill -F a2=15 -k blackbox_sigterm
+-a always,exit -F arch=b64 -S kill -S tkill -F a1=9 -k blackbox_sigkill
+-a always,exit -F arch=b64 -S tgkill -F a2=9 -k blackbox_sigkill
+RULES
+    augenrules --load >/dev/null 2>&1 || auditctl -R /etc/audit/rules.d/10-blackbox-signals.rules >/dev/null 2>&1 || true
+  else
+    echo "  [dry-run] escribiria /etc/audit/rules.d/10-blackbox-signals.rules y la cargaria"
+  fi
+
+  # VERIFICAR, no suponer. Los ficheros de rules.d se concatenan en orden
+  # lexico, y un `-D` (borra todas las reglas) en un fichero que ordene
+  # DESPUES de 10- dejaria estas reglas escritas en disco y ausentes del
+  # kernel. Eso se lee igual que "instalado" y no lo esta, asi que se mira.
+  if [ "$DRY" = 0 ]; then
+    if auditctl -l 2>/dev/null | grep -q "blackbox_sigterm"; then
+      echo "  reglas CARGADAS en el kernel (auditctl -l las ve)"
+      echo "  emisor y victima quedan en /var/log/audit; se leen con: bb sigterm"
+    else
+      echo "  AVISO: las reglas se escribieron pero auditctl -l NO las ve."
+      echo "  Algo las esta borrando despues de cargarlas -- lo tipico es un -D"
+      echo "  en un fichero de /etc/audit/rules.d que ordene despues de 10-."
+      echo "  Comprueba:  grep -rn '^-D' /etc/audit/rules.d/"
+      echo "  Hasta que aparezcan ahi, DGX-438 sigue sin instrumento y"
+      echo "  'bb sigterm' te lo dira en vez de darte un cero limpio."
+    fi
+    echo
+    echo "  CONTROL NEGATIVO -- comprueba que la captura de verdad funciona:"
+    echo "    sleep 300 & kill -TERM \$!    # y luego:  bb sigterm '5 minutes ago'"
+    echo "    Tiene que salir una fila con TU terminal como emisor. Si sale"
+    echo "    vacia, la regla no esta capturando por mucho que -l la liste."
+  fi
 fi
 
 # --- recarga ------------------------------------------------------------
