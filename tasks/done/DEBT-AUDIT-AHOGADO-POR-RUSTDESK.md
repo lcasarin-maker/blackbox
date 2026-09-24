@@ -18,7 +18,9 @@ evidence:
 reason: "CERRADO como void_wontfix 2026-09-23. El dano caro estaba en el REGISTRO y ya esta tapado (0 eventos en 60s). El coste que quedaba era la incognita que la propia ficha declaraba, y medido resulta ser 0.2% de un nucleo -- 500 veces menos que un soffice.bin que ya corre en esta caja sin que nadie lo llame deuda. Tocar la frecuencia de rustdesk costaria mas que lo que ahorra, y es el canal de acceso remoto en uso. Se reabre por el trigger de abajo."
 ---
 
-## Que pasa
+## Root Cause
+
+### Que pasa
 
 `rustdesk.service` sondea sesiones ejecutando `loginctl` en bucle. Medido el
 2026-09-23 sobre `/var/log/audit`:
@@ -40,7 +42,7 @@ Dos emisores, los dos de `rustdesk.service` (`0::/system.slice/rustdesk.service`
 Las lineas de comando exactas, sacadas del `PROCTITLE` del propio registro:
 `/bin/loginctl show-session 2`, `show-session -p State 2`, `show-session -p Type 2`.
 
-## Por que importa, con su medida
+### Por que importa, con su medida
 
 **99.8 % del registro de auditoria es este sondeo.** En `audit.log` habia 4731
 eventos de syscall y 4724 eran `loginctl`. El resto del dia entero: 12632
@@ -60,7 +62,7 @@ audita `loginctl`/`systemctl` para saber quien reinicio la maquina. O sea que
 una regla de seguridad para cazar a una persona apagando la caja la esta
 disparando un demonio quince veces por segundo.
 
-## Como se mitiga hoy (no es el arreglo)
+### Como se mitiga hoy (no es el arreglo)
 
 `enable-privileged.sh` seccion 7 instala
 `/etc/audit/rules.d/10-blackbox-signals.rules`, que excluye SOLO la invocacion
@@ -83,7 +85,9 @@ auditando.
 ejecutando un binario 15 veces por segundo, con su coste de fork/exec y de
 planificador aunque auditd deje de anotarlo.
 
-## CERRADO el 2026-09-23 -- salida 2 de las dos que la ficha se dio
+## Verification Evidence
+
+### CERRADO el 2026-09-23 -- salida 2 de las dos que la ficha se dio
 
 La ficha ofrecia dos cierres: bajar la frecuencia, o aceptar el coste por
 escrito con medida delante. Se toma el segundo, y aqui esta la medida.
@@ -119,6 +123,8 @@ Eso lo tapo la regla `auid=unset` de `enable-privileged.sh` seccion 7, y esta
 medido: **0 execve de loginctl con auid=unset en los ultimos 60 s**, frente a
 los ~114 a 876 que caian antes en esa misma ventana. Era la condicion para que
 DGX-438 pudiera cazar algo, y se cumplio.
+
+## Regression Test
 
 ### Trigger de reapertura
 
