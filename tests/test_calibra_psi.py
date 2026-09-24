@@ -92,10 +92,16 @@ def test_clasifica_colapso_gana_cuando_las_bandas_se_solapan():
 
 # --- ventanas / solapa -----------------------------------------------------
 
-def test_ventanas_por_defecto_son_los_dos_congelamientos():
+def test_ventanas_por_defecto_son_los_congelamientos_reales():
+    """Tres desde el 2026-09-24. Este test existe para que anadir un incidente
+    sea un cambio DELIBERADO y no algo que se cuela: la lista es la verdad de
+    referencia contra la que se mide el corte, y una lista rancia hace que el
+    calibrador llame falso positivo a un colapso real -- que es exactamente lo
+    que paso al aparecer el tercero."""
     vs = ventanas()
-    assert len(vs) == 2
+    assert len(vs) == 3
     assert vs[0][0] == dt.datetime(2026, 9, 22, 5, 45)
+    assert vs[-1][0] == dt.datetime(2026, 9, 24, 0, 2)
 
 
 def test_solapa_en_los_dos_bordes_y_fuera():
@@ -168,6 +174,14 @@ CORPUS_BUENO = [
     # congelamiento 2 (23:49 -> 05:44): sostenido 311 min
     ("2026-09-22 23:49", 98), ("2026-09-23 05:00", 99),
     ("2026-09-23 05:50", 0),
+    # congelamiento 3 (2026-09-24 00:02 -> 05:56): sostenido 354 min.
+    # Anadido el 2026-09-24 al declararse el tercer incidente real. El corpus
+    # sintetico se coloca SOBRE las ventanas reales, asi que al crecer
+    # INCIDENTES tiene que crecer con el: si no, el tercero sale como
+    # "incidente no detectado" y el control negativo de este fichero se pone
+    # rojo por una laguna del corpus y no por un defecto del corte.
+    ("2026-09-24 00:02", 98), ("2026-09-24 05:00", 99),
+    ("2026-09-24 06:00", 0),
 ]
 
 
@@ -212,9 +226,13 @@ def test_control_negativo_sin_corte_de_duracion_sale_uno(tmp_path, capsys):
 
 
 def test_control_negativo_corte_demasiado_largo_deja_pasar_el_incidente(tmp_path, capsys):
+    """Con el corte a 500 min se escapan DOS de los tres: el de 311 min y el de
+    354. El primero dura 1035 y se sigue detectando, que es lo que hace de
+    este un control y no un apagon -- si no detectara ninguno tampoco sabriamos
+    si el corte discrimina o si el corpus esta vacio."""
     d = _corpus(tmp_path, CORPUS_BUENO)
     assert main(["--muestras", str(d), "--sostenido", "500"]) == 1
-    assert "incidentes no detectados:  1" in capsys.readouterr().out
+    assert "incidentes no detectados:  2" in capsys.readouterr().out
 
 
 def test_main_usa_argv_cuando_no_se_le_pasa_nada(tmp_path, monkeypatch, capsys):
