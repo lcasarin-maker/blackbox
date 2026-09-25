@@ -1862,6 +1862,52 @@ cmd_status() {
   [ -n "$(find "$(dirname "$TELEMETRIA_GPU")" -name "$(basename "$TELEMETRIA_GPU")" -mmin -2 2>/dev/null)" ]; ok=$?
   chk "termica de la GPU (atom_gpu_telemetry, <2 min)" "$ok" "systemctl --user start atom-gpu-telemetry"
 
+  # La proteccion del escritorio, POR EL DATO y no por el fichero: se leen los
+  # cgroups de la maquina. Un drop-in copiado que systemd no aplico -- por no
+  # recargar, por un nombre mal puesto, o porque la sesion grafica nacio antes --
+  # deja los ficheros en su sitio y memory.low en 0, y eso es indistinguible de
+  # no haberlo hecho salvo mirando aqui.
+  #
+  # Se exige la CADENA, no un nivel: en cgroup v2 la proteccion efectiva de un
+  # hijo esta acotada por la del padre, asi que un 0 en cualquier eslabon anula
+  # los de abajo. Un chequeo que mirase solo el ultimo diria ARMADO sobre una
+  # cadena rota.
+  local cg="${BB_CGROUP_ROOT:-/sys/fs/cgroup}" uid; uid=$(id -u)
+  local eslabones rotos=0
+  eslabones="$cg/user.slice/memory.low
+$cg/user.slice/user-$uid.slice/memory.low
+$cg/user.slice/user-$uid.slice/user@$uid.service/memory.low
+$cg/user.slice/user-$uid.slice/user@$uid.service/session.slice/memory.low
+$cg/user.slice/user-$uid.slice/user@$uid.service/app.slice/memory.low"
+  while IFS= read -r ruta; do
+    [ -z "$ruta" ] && continue
+    v=$(cat "$ruta" 2>/dev/null)
+    [ -n "$v" ] && [ "$v" != "0" ] || rotos=$((rotos + 1))
+  done <<EOF
+$eslabones
+EOF
+  # Los dos ultimos eslabones llevan un identificador variable en el nombre y no
+  # se pueden escribir arriba: el scope de la sesion grafica lleva su numero
+  # (cambia en cada login) y el de una ventana lleva el pid. Se busca el que
+  # exista, y que NO exista NINGUNO tambien cuenta como roto -- una cadena que
+  # no llega a ningun sujeto no protege nada, por mucho que sus niveles altos
+  # esten puestos.
+  local sc
+  for patron in "$cg/user.slice/user-$uid.slice/session-*.scope" \
+                "$cg/user.slice/user-$uid.slice/user@$uid.service/app.slice/app-gnome-*.scope"; do
+    # shellcheck disable=SC2086
+    sc=$(ls -d $patron 2>/dev/null | head -1)
+    if [ -n "$sc" ]; then
+      v=$(cat "$sc/memory.low" 2>/dev/null)
+      [ -n "$v" ] && [ "$v" != "0" ] || rotos=$((rotos + 1))
+    else
+      rotos=$((rotos + 1))
+    fi
+  done
+  [ "$rotos" -eq 0 ]; ok=$?
+  chk "memoria del escritorio protegida del reclamo (7 eslabones)" "$ok" \
+      "$rotos eslabon(es) en memory.low=0 -- sudo ./enable-privileged.sh (seccion 13)"
+
   systemctl is-active atom-clock-lock.service >/dev/null 2>&1; ok=$?
   chk "clock lock de GPU (300-2800 MHz)" "$ok" "limite termico DGX-342/344/345 sin aplicar"
 

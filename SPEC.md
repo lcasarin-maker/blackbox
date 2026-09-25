@@ -179,6 +179,14 @@ cuelgue que corre cada 5 minutos — existía sólo en el disco.
 | `/etc/systemd/system/nvrm-watch.timer` | su cadencia. |
 | `/etc/systemd/system/sysstat-collect.timer.d/override.conf` | cadencia de `sar`, la serie historica de memoria. |
 | `/home/lcasarin/.config/systemd/user/app.slice.d/99-blackbox.conf` | techo de la sesion grafica. Presion de memoria. |
+| `/etc/systemd/system/user.slice.d/99-blackbox-escritorio.conf` | nivel 1 de la cadena de `memory.low`. Sin ella los niveles de abajo no protegen nada. |
+| `/etc/systemd/system/user-.slice.d/99-blackbox-escritorio.conf` | nivel 2: el slice por UID. |
+| `/etc/systemd/system/session-.scope.d/99-blackbox-escritorio.conf` | nivel 3a: aqui vive **Xorg**, medido en `/proc/<pid>/cgroup`, no en `session.slice`. |
+| `/etc/systemd/system/user@.service.d/99-blackbox-escritorio.conf` | nivel 3b: el gestor de usuario, padre de `session.slice` y de `app.slice`. |
+| `/home/lcasarin/.config/systemd/user/session.slice.d/99-blackbox-escritorio.conf` | nivel 4: gnome-shell, dbus, pipewire, ibus. El camino de una tecla tras el servidor X. |
+| `/home/lcasarin/.config/systemd/user/app.slice.d/99-blackbox-escritorio.conf` | nivel 5: no se protege a sí mismo, **pasa** la protección a los scopes de ventana. |
+| `/home/lcasarin/.config/systemd/user/app-gnome-.scope.d/99-blackbox-escritorio.conf` | nivel 6: **la ventana** donde se escribe. Prefijo truncado: alcanza al scope lleve el pid que lleve. |
+| `/home/lcasarin/.config/systemd/user/snap.antigravity.antigravity-.scope.d/99-blackbox-escritorio.conf` | nivel 7: el editor del episodio del 2026-09-25. Prefijo **derivado del journal**, no verificado sobre unit viva. |
 | `/usr/local/bin/nvrm-watch.sh` | su cuerpo. Estaba en /usr/local/bin sin versionar en ningun sitio. |
 | `~/.config/systemd/user/ai-gpu-telemetry.service` | telemetria de GPU que `bb scan` LEE en vez de duplicar. |
 | `~/.config/systemd/user/ai-memory-monitor.service` | monitor de memoria cada 5 min que `bb scan` lee. |
@@ -218,6 +226,8 @@ procps, systemd, nvidia-smi, curl). Python sólo se usa para analizar muestras.
 | 0009 | blackbox produce telemetria y Atlas la consume; ningun import cruzado entre los dos | Accepted |
 | 0010 | Una frontera de propiedad se traza midiendo el acoplamiento, no afirmandolo | Accepted |
 | 0011 | Un total de máquina no puede ver un cuello de botella de un solo hilo: se mide también la latencia del camino y se nombra al proceso | Accepted |
+| 0012 | El camino interactivo se protege del reclamo de memoria por cadena completa de cgroups; una protección con un eslabón en cero no protege nada | Accepted |
+| 0013 | La protección discrimina por **cómo se lanzó** el proceso (prefijo de scope), nunca por el nombre del producto; el arnés queda reclamable por no pedir protección, no por estar en una lista | Accepted |
 
 ## Risks
 
@@ -231,7 +241,7 @@ procps, systemd, nvidia-smi, curl). Python sólo se usa para analizar muestras.
 | Esta spec envejece y pasa a describir lo que alguien recordaba | **Ocurrió** | Pasó: declaraba "Out of scope: actuar sobre lo que mide" mientras `bb-usable` reiniciaba la máquina. `tools/inventario.py --check` corre en `pre-commit` y ata las dos tablas a `bin/bb`, `tools/` y `adopted/`; cazó 6 desajustes en su primera corrida, 2 de ellos defectos del propio instrumento |
 | Un instrumento de cuelgue vive en la máquina y en ningún repo | **Ocurrió** | Pasó con 11 sujetos, 8 creados el 2026-09-09 siguiendo el foro de NVIDIA #358951; `/usr/local/bin/nvrm-watch.sh` existía sólo en disco. Adoptados el 2026-09-24; `bb drift` vigila 30 sujetos, antes 19 |
 | La máquina es inusable mientras todos los totales leen sanos | **Ocurrió** | Pasó el 2026-09-25: el dueño reinició a mano porque "casi no se podía escribir" y veinticinco segundos antes bb medía load1 0.95 sobre 20 núcleos, 65.8 GB disponibles, PSI en cero y nvidia-smi en 22 ms. Medido después en el journal: el scope de antigravity consumió 2 h 37 min de CPU en 2 h 15 min de reloj (116.5 % de UN núcleo) y el de Claude 101.4 % de otro — el 11 % de una máquina de 20 núcleos, que no mueve ningún total. Se añadieron `cpu_top` (quién quema CPU, con su unit), `x.{estado,ms}` (ida y vuelta contra el servidor X: 5-7 ms sano) y `swap.{free,in_pag_s,out_pag_s}`. La causa del episodio sigue **sin probar**: `DEBT-SLUGGISH-SIN-CAUSA-PROBADA` |
-| `bin/bb` es el 100% del código ejecutable y ningún gate mide su cobertura | **Ocurrió** | `coverage.py` no instrumenta bash, así que `coverage-target` pasaba sin mirarlo. `tools/cobertura_bash.sh` lo mide (**25.7%** el 2026-09-25, desde 17.7% el 2026-09-24, al probar `bb status`, `cpu_top`, `swap` y `latencia_x`) y `bb-cobertura-piso` impide que baje. El número sigue siendo bajo y es el hallazgo, no la solución |
+| `bin/bb` es el 100% del código ejecutable y ningún gate mide su cobertura | **Ocurrió** | `coverage.py` no instrumenta bash, así que `coverage-target` pasaba sin mirarlo. `tools/cobertura_bash.sh` lo mide (**26.7-26.9%** el 2026-09-25, desde 17.7% el 2026-09-24, al probar `bb status`, `cpu_top`, `swap`, `latencia_x` y la cadena de `memory.low`; el piso queda en 26.5 porque la cifra VARÍA entre corridas — parte de la suite lee el estado real de la máquina — y un trinquete puesto en el máximo de una medida ruidosa se vuelve intermitente y acaba ignorándose) y `bb-cobertura-piso` impide que baje. El número sigue siendo bajo y es el hallazgo, no la solución |
 
 ## Acceptance Criteria
 

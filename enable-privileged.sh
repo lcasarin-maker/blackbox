@@ -102,6 +102,24 @@ if [ "$REVERT" = 1 ]; then
     run sysctl -q -w kernel.panic=0
     echo "  kernel.panic devuelto a 0 (el kernel vuelve a colgarse en un panic)"
   fi
+  if [ -f /etc/systemd/system/user.slice.d/99-blackbox-escritorio.conf ]; then
+    run rm -f /etc/systemd/system/user.slice.d/99-blackbox-escritorio.conf \
+              /etc/systemd/system/user-.slice.d/99-blackbox-escritorio.conf \
+              /etc/systemd/system/session-.scope.d/99-blackbox-escritorio.conf \
+              "/etc/systemd/system/user@.service.d/99-blackbox-escritorio.conf"
+    run rmdir --ignore-fail-on-non-empty /etc/systemd/system/user.slice.d \
+              /etc/systemd/system/user-.slice.d \
+              /etc/systemd/system/session-.scope.d \
+              /etc/systemd/system/user@.service.d
+    DESK_BASE_REV="$(getent passwd "$DUENO" | cut -d: -f6)/.config/systemd/user"
+    for sub in session.slice.d app.slice.d app-gnome-.scope.d \
+               snap.antigravity.antigravity-.scope.d; do
+      run rm -f "$DESK_BASE_REV/$sub/99-blackbox-escritorio.conf"
+      run rmdir --ignore-fail-on-non-empty "$DESK_BASE_REV/$sub"
+    done
+    echo "  proteccion de memoria del escritorio retirada (vuelve a memory.low=0"
+    echo "  en toda la cadena: el reclamo deja de distinguir tu ventana de un arnes)"
+  fi
   if [ -f /etc/systemd/system.conf.d/99-blackbox-watchdog.conf ]; then
     run rm -f /etc/systemd/system.conf.d/99-blackbox-watchdog.conf
     run rmdir --ignore-fail-on-non-empty /etc/systemd/system.conf.d
@@ -550,6 +568,82 @@ echo "    journalctl -b 0 | grep -i 'hardware watchdog'"
 echo "    espera: Using hardware watchdog 'SBSA Generic Watchdog' ... /dev/watchdog0"
 echo "    NO uses /sys/class/watchdog/watchdog0/timeleft: en esta maquina"
 echo "    reporta ~40 anos, o sea no distingue alimentado de no alimentado."
+
+# --- 13. proteger la memoria del escritorio del reclamo -------------------
+echo
+echo "-- 13. memory.low: que el reclamo se lleve los arneses, no tu ventana --"
+echo "  Medido el 2026-09-25, la manana del reinicio por 'casi no se podia"
+echo "  escribir': memory.low = 0 y memory.min = 0 en user.slice, en app.slice"
+echo "  y en session.slice. NADA estaba protegido del reclamo. La ventana en la"
+echo "  que escribes y el arnes que se come la memoria son hermanos sin"
+echo "  ninguna prioridad relativa."
+echo "  Esa noche el swap paso de 16383 MiB libres a 12067: 4.3 GB expulsados y"
+echo "  nunca recuperados, con el 53 % de la RAM libre."
+echo
+echo "  NO es un problema de CPU, y eso se DESCARTO con experimento: una rampa"
+echo "  de carga midiendo el ida y vuelta al servidor X dio 4 ms en reposo y"
+echo "  8 ms con 40 quemadores sobre 20 nucleos. Dar prioridad de CPU al"
+echo "  escritorio habria sido la respuesta obvia y habria sido inutil."
+run mkdir -p /etc/systemd/system/user.slice.d \
+             /etc/systemd/system/user-.slice.d \
+             /etc/systemd/system/session-.scope.d \
+             /etc/systemd/system/user@.service.d
+run cp adopted/system-config/etc_systemd_system_user.slice.d_99-blackbox-escritorio.conf \
+       /etc/systemd/system/user.slice.d/99-blackbox-escritorio.conf
+run cp adopted/system-config/etc_systemd_system_user-.slice.d_99-blackbox-escritorio.conf \
+       /etc/systemd/system/user-.slice.d/99-blackbox-escritorio.conf
+run cp adopted/system-config/etc_systemd_system_session-.scope.d_99-blackbox-escritorio.conf \
+       /etc/systemd/system/session-.scope.d/99-blackbox-escritorio.conf
+run cp "adopted/system-config/etc_systemd_system_user@.service.d_99-blackbox-escritorio.conf" \
+       "/etc/systemd/system/user@.service.d/99-blackbox-escritorio.conf"
+# El cuarto nivel es un slice del GESTOR DE USUARIO: su sitio canonico es el
+# drop-in de usuario, igual que el techo de app.slice que ya vive ahi. Se
+# instala con la propiedad de $DUENO, no de root, o su propio systemd no lo lee.
+DESK_BASE="$(getent passwd "$DUENO" | cut -d: -f6)/.config/systemd/user"
+# Los tres ultimos niveles son unidades del GESTOR DE USUARIO: su sitio canonico
+# es el drop-in de usuario, igual que el techo de app.slice que ya vive ahi.
+for par in \
+  "session.slice.d:home_lcasarin_.config_systemd_user_session.slice.d_99-blackbox-escritorio.conf" \
+  "app.slice.d:home_lcasarin_.config_systemd_user_app.slice.d_99-blackbox-escritorio.conf" \
+  "app-gnome-.scope.d:home_lcasarin_.config_systemd_user_app-gnome-.scope.d_99-blackbox-escritorio.conf" \
+  "snap.antigravity.antigravity-.scope.d:home_lcasarin_.config_systemd_user_snap.antigravity.antigravity-.scope.d_99-blackbox-escritorio.conf"
+do
+  run mkdir -p "$DESK_BASE/${par%%:*}"
+  run cp "adopted/system-config/${par#*:}" "$DESK_BASE/${par%%:*}/99-blackbox-escritorio.conf"
+done
+run chown -R "$DUENO": "$DESK_BASE"
+echo "  siete niveles puestos:"
+echo "    user.slice 8G . user-<uid>.slice 8G . session-<N>.scope 2G (Xorg)"
+echo "    user@.service 6G . session.slice 2G (gnome-shell, dbus, pipewire)"
+echo "    app.slice 4G  -- no se protege a si mismo: PASA la proteccion abajo"
+echo "    app-gnome-<lo que sea>.scope 2G       <- LA VENTANA donde escribes"
+echo "    snap.antigravity.antigravity-<uuid>.scope 2G"
+echo
+echo "  COMO DISCRIMINA, que es lo unico que hace que esto sirva: dentro de"
+echo "  app.slice la proteccion va a los hijos que la PIDEN. La piden los"
+echo "  scopes de ventana; NO la pide el scope del arnes"
+echo "  (app-com.anthropic.Claude-<pid>.scope), medido hoy en 19.74 GB"
+echo "  actuales y 22.70 GB de pico contra 1.29 GB de la ventana. El arnes"
+echo "  queda entero reclamable sin tener que nombrarlo."
+echo
+echo "  ALCANCE, declarado: el prefijo de antigravity esta DERIVADO del journal"
+echo "  del 2026-09-25, no verificado sobre una unit viva. Comprueba con"
+echo "  'systemctl --user show <scope> -p MemoryLow -p DropInPaths' la proxima"
+echo "  vez que lo abras. El mecanismo SI esta verificado, sobre el scope de la"
+echo "  ventana de Claude: MemoryLow=3221225472 aplicado por prefijo."
+echo
+echo "  CONTROL NEGATIVO -- no te fies de este informe, mira los cgroups:"
+echo "    cat /sys/fs/cgroup/user.slice/memory.low                  # espera 6442450944"
+echo "    cat /sys/fs/cgroup/user.slice/user-1000.slice/session-*.scope/memory.low"
+echo "    cat /sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/session.slice/memory.low"
+echo "    Un 0 en cualquiera de esos rompe la cadena entera: en cgroup v2 la"
+echo "    proteccion de un hijo esta acotada por la del padre."
+echo "    Y 'bb status' lo comprueba solo, por el DATO y no por el fichero."
+echo
+echo "  El nivel de usuario necesita que SU systemd recargue:"
+echo "    systemctl --user daemon-reload"
+echo "  Los niveles de /etc necesitan que la sesion grafica se reinicie para"
+echo "  que session-<N>.scope nazca con el drop-in: vale un logout, no un boot."
 
 # --- recarga ------------------------------------------------------------
 echo
