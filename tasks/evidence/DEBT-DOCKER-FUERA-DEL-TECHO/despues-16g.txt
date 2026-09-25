@@ -1,0 +1,31 @@
+# El criterio de esta ficha cambio de numero, y este es el sujeto medido.
+# Fecha: 2026-09-25T13:21:31-06:00   Commit que bajo el techo: 7061336
+
+$ cat /sys/fs/cgroup/docker.slice/memory.max
+17179869184
+
+# 16 GiB = 17179869184. El numero anterior, 34359738368, eran 32 GiB.
+
+$ grep -qx 17179869184 /sys/fs/cgroup/docker.slice/memory.max; echo rc=$?
+rc=0
+
+# CONTROL NEGATIVO 1 -- el mismo comando contra una slice sin techo debe dar 1.
+$ cat /sys/fs/cgroup/system.slice/memory.max
+max
+$ grep -qx 17179869184 /sys/fs/cgroup/system.slice/memory.max; echo rc=$?
+rc=1
+
+# CONTROL NEGATIVO 2 -- el criterio VIEJO contra el sujeto de hoy debe dar 1,
+# que es exactamente por lo que backlog-verifier bloqueo el push.
+$ grep -qx 34359738368 /sys/fs/cgroup/docker.slice/memory.max; echo rc=$?
+rc=1
+
+# Lo que NO cambio: el hallazgo original era que los contenedores colgaban
+# de system.slice sin techo agregado. Sigue arreglado.
+# (nemotron-server ya no es un contenedor: desde el 2026-09-24 corre como unit
+#  de usuario bajo app.slice, asi que preguntarle a el no mide esta ficha.
+#  El sujeto son los contenedores que SI siguen en docker.)
+$ ls /sys/fs/cgroup/docker.slice/ | grep -c "^docker-.*\.scope$"
+6
+$ ls /sys/fs/cgroup/system.slice/ | grep -c "^docker-.*\.scope$"   # debe ser 0
+0
