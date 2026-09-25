@@ -8,6 +8,12 @@
 # no ven `bin/bb`, que es el 100% del codigo ejecutable. Sin este hook el arsenal
 # canonico entero no comprueba ni una linea de lo unico que aqui se ejecuta.
 # Verificado que BLOQUEA: con un `if [ roto` al final de bin/bb, el hook falla.
+# `bb-cobertura-piso` existe porque `coverage-target` instrumenta Python y este
+# repo es bash: el trinquete canonico pasaba sin haber mirado una sola linea de
+# `bin/bb`. Un gate con cero capturas posibles es un defecto del instrumento, no
+# evidencia de que el sujeto este limpio. Medido el 2026-09-24: 146 de 829
+# lineas, 17.6%. Control negativo corrido, no argumentado: suite vacia -> 0.0%,
+# tres tests -> 4.3%, los dieciocho -> 17.6%. El medidor puede salir negativo.
 extra_hooks: |2
         - id: bash-sintaxis
           name: sintaxis de los scripts bash
@@ -17,3 +23,13 @@ extra_hooks: |2
             bash -n
           language: system
           files: '^(bin/bb|.*\.sh)$'
+        - id: bb-cobertura-piso
+          name: cobertura de bin/bb no baja del piso
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name bb-cobertura-piso --hook pre-push --
+            tools/piso_cobertura.sh
+          language: system
+          stages: [pre-push]
+          pass_filenames: false
+          always_run: true

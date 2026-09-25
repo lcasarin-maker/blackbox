@@ -480,3 +480,13 @@ repos:
           bash -n
         language: system
         files: '^(bin/bb|.*\.sh)$'
+      - id: bb-cobertura-piso
+        name: cobertura de bin/bb no baja del piso
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name bb-cobertura-piso --hook pre-push --
+          tools/piso_cobertura.sh
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
