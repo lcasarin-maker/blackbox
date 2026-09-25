@@ -1,0 +1,15 @@
+CONTROL NEGATIVO: el medidor tiene que poder BAJAR. Si no, no mide.
+
+$ tools/cobertura_bash.sh bin/bb true     # suite vacia
+FICHERO      LINEAS CUBIERTAS     PCT
+bin/bb          829        0    0.0%
+
+
+$ tools/cobertura_bash.sh bin/bb python3 -m pytest tests/test_bb_bash.py -q -p no:randomly -k cap   # 3 de 18 tests
+FICHERO      LINEAS CUBIERTAS     PCT
+bin/bb          829       36    4.3%
+
+
+$ tools/cobertura_bash.sh bin/bb python3 -m pytest tests/test_bb_bash.py -q -p no:randomly   # las 18
+FICHERO      LINEAS CUBIERTAS     PCT
+bin/bb          829      146   17.6%

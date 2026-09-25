@@ -1,0 +1,10 @@
+CONTROL NEGATIVO DEL TRINQUETE: un gate que no puede bloquear no es un gate.
+
+$ echo 99.0 > tests/cobertura_bb.piso; tools/piso_cobertura.sh   # piso imposible
+[bb-cobertura] FAIL: bin/bb al 17.6%, por debajo del piso 99.0%.
+[bb-cobertura] O se recupera la cobertura, o se justifica bajar el piso.
+  rc=1
+
+$ echo 17.6 > tests/cobertura_bb.piso; tools/piso_cobertura.sh   # piso real
+[bb-cobertura] bin/bb al 17.6% (piso 17.6%)
+  rc=0
