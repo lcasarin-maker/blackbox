@@ -107,24 +107,32 @@ gpu_procs() {
 # `memory.peak` es acumulado desde el arranque y no se reinicia, asi que sirve
 # para el maximo pero no da distribucion: la distribucion la da `current`
 # muestreado. Se guardan los dos.
+# Se acumula en una variable y se recorta la coma con `${out%,}`, en vez del
+# `{ ... } | sed 's/,$//'` que usan otros bloques de este fichero. No es estilo:
+# la primera version era invisible para `tools/cobertura_bash.sh`. Medido el
+# 2026-09-25 corriendo SOLO sus tres tests, que la ejecutan de principio a fin:
+# 11 de sus 14 lineas candidatas salian SIN CUBRIR, porque el lado izquierdo de
+# una tuberia corre en un subshell cuyo xtrace no llega a la traza. El piso de
+# cobertura de bin/bb bajo de 27.1 a 26.8 y bloqueo el push -- por codigo no
+# MEDIBLE, no por codigo sin probar. Sin tuberia, se traza.
 slices_mem() {
-  local cg="${BB_CGROUP_ROOT:-/sys/fs/cgroup}" uid n r cur pk
+  local cg="${BB_CGROUP_ROOT:-/sys/fs/cgroup}" uid n r cur pk pk_kb out=""
   uid=$(id -u)
-  { for n in app docker system; do
-      case $n in
-        app)    r="$cg/user.slice/user-$uid.slice/user@$uid.service/app.slice" ;;
-        docker) r="$cg/docker.slice" ;;
-        system) r="$cg/system.slice" ;;
-      esac
-      cur=$(cat "$r/memory.current" 2>/dev/null) || continue
-      # `memory.peak` no existe en todos los kernels. Su ausencia se escribe
-      # como null y no como 0: "no lo da este kernel" y "el pico fue cero" son
-      # cosas distintas, y un 0 se promediaria como si fuera una medida.
-      pk=$(cat "$r/memory.peak" 2>/dev/null)
-      printf '{"slice":"%s","cur_kb":%s,"peak_kb":%s},' \
-        "$n" "$(( ${cur:-0} / 1024 ))" \
-        "$([ -n "$pk" ] && echo $(( pk / 1024 )) || echo null)"
-    done; } | sed 's/,$//'
+  for n in app docker system; do
+    case $n in
+      app)    r="$cg/user.slice/user-$uid.slice/user@$uid.service/app.slice" ;;
+      docker) r="$cg/docker.slice" ;;
+      system) r="$cg/system.slice" ;;
+    esac
+    cur=$(cat "$r/memory.current" 2>/dev/null) || continue
+    # `memory.peak` no existe en todos los kernels. Su ausencia se escribe
+    # como null y no como 0: "no lo da este kernel" y "el pico fue cero" son
+    # cosas distintas, y un 0 se promediaria como si fuera una medida.
+    pk=$(cat "$r/memory.peak" 2>/dev/null)
+    if [ -n "$pk" ]; then pk_kb=$(( pk / 1024 )); else pk_kb=null; fi
+    out="${out}{\"slice\":\"$n\",\"cur_kb\":$(( cur / 1024 )),\"peak_kb\":$pk_kb},"
+  done
+  printf '%s' "${out%,}"
 }
 
 # Salud del PROPIO nvidia-smi, no de la GPU. Que la consulta no responda es EL
