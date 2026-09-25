@@ -8,7 +8,7 @@ origin: detected
 detector: {"rule": "bb/diagnostico-post-reinicio", "confidence": 1.0}
 satd_family: MISSING_INSTRUMENT
 created: 2026-09-25
-close_check: {"cmd": "python3 -m pytest tests/test_bb_bash.py -k \"latencia_x or cpu_top or swap or DISPLAY or RETROCEDE\" -q", "expect": "exit_zero"}
+close_check: {"cmd": "grep -q 'SLUGGISH causa probada' tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md", "expect": "exit_zero"}
 ---
 
 ## Que pasa
@@ -91,17 +91,28 @@ Y una seccion en `bb scan` que lista las ventanas de contencion de CPU con su
 atribucion y **el hueco maximo entre muestras**, para que dos puntos separados
 cuatro horas no se lean igual que una ventana observada minuto a minuto.
 
-## LIMITE DECLARADO del criterio de cierre
+## El criterio de cierre, y por que es ese
 
-El `close_check` de arriba comprueba que las sondas existen y que **pueden
-salir negativas** -- borra `latencia_x` y falla. No comprueba que el episodio
-se haya explicado, porque eso exige que vuelva a ocurrir con las sondas
-puestas, y no hay forma honesta de forzarlo desde un gate.
+Mismo patron que `DEBT-DGX-438-SIN-CAUSA-RAIZ`, que esta en la misma
+situacion: la ficha cierra cuando alguien **escribe la causa** en
+`tasks/done/`, no cuando el repo compila.
 
-Se declara asi a proposito, en vez de escribir un criterio que suene mas
-fuerte. Un criterio que no puede pasar nunca es tan inservible como uno que no
-puede fallar, y esa leccion salio de este mismo repo el 2026-09-25, cuando
-`DEBT-SIN-ARNES-DE-MUTACION` nacio con un criterio imposible.
+El primer criterio que se le puso a esta ficha corria la suite de las sondas
+nuevas, y **pasaba el mismo dia de abrirla**. Una ficha abierta cuyo criterio
+ya esta satisfecho es una ficha que dice una cosa y mide otra: guardaba el
+instrumento, que ya estaba puesto, en vez del sujeto, que sigue sin
+explicarse. Se cambio antes de publicarla.
+
+Lo que se pierde diciendolo: este criterio depende de que alguien escriba, no
+de una medida automatica. Esa es su debilidad y esta aqui a proposito, igual
+que en DGX-438 -- porque la alternativa mecanica exige que la maquina vuelva a
+ponerse lenta, y un gate no puede provocar eso. La caducidad de la linea base
+es lo que impide que envejezca callada.
+
+Las sondas nuevas SI tienen su propia verificacion, y es un gate distinto:
+`python3 -m pytest tests/test_bb_bash.py -k "latencia_x or cpu_top or swap"`,
+con sus controles negativos. Borra `latencia_x` y fallan tres. Pero eso
+verifica el instrumento; esta ficha es sobre la respuesta.
 
 ## Lo que falta, si vuelve a pasar
 
