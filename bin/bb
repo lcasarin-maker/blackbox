@@ -111,6 +111,39 @@ gpu_throttle_contadores() { # stdin: gpu_perf_raw -> "razon  Ns" por cada contad
 # presion real, y con memoria unificada la GPU compite por esa misma RAM.
 meminfo_kb() { awk -v k="$1" '$1==k":"{print $2}' /proc/meminfo; }
 
+# Committed_AS: memoria que los procesos han PEDIDO, aunque no la hayan tocado.
+# Es un indicador ADELANTADO y por eso se anadio el 2026-09-24. En el cuarto
+# congelamiento salto de 48.3 GB a 126.2 GB en UN minuto -- 33.64 % -> 87.81 %
+# de compromiso -- y lo hizo ANTES de que la memoria usada subiera y DOS minutos
+# antes de que PSI se moviera. La muestra registraba mem_free y mem_avail, que
+# no se enteraron hasta que el dano ya estaba hecho.
+compromiso_pct() { # imprime el % de RAM+swap ya comprometido
+  awk '/^MemTotal:/{mt=$2} /^SwapTotal:/{st=$2} /^Committed_AS:/{c=$2}
+       END{ if (mt+st > 0) printf "%.2f", c*100/(mt+st); else print 0 }' /proc/meminfo
+}
+
+# Memoria que NADIE reclama: ni libre, ni cache, ni de un proceso, ni de un
+# contexto CUDA. Se anadio el 2026-09-24 porque en el cuarto congelamiento
+# desaparecieron 21 GB y NINGUN instrumento los vio: `nvidia-smi` por proceso no
+# se movio (37.6 GB antes y despues) y la suma de RSS solo subio 2.1 GB.
+#
+# CONTROL corrido antes de escribirlo: con 4 GiB de CUDA tomados por torch --
+# memoria que SI tiene dueno -- el residuo no se mueve (delta +0.0 GB). O sea
+# que es insensible a lo atribuible, que es lo que lo hace util: cuando se
+# mueva, lo que lo movio no tiene dueno.
+#
+# El valor absoluto es negativo (~-4 GB) por doble conteo de paginas
+# compartidas entre procesos. Lo que importa es el DELTA, no el nivel.
+residuo_mb() { # MemTotal - todo lo reclamado, en MiB
+  local rss gpu
+  rss=$(ps -eo rss= 2>/dev/null | awk '{s+=$1} END{print s+0}')
+  gpu=$(gpu_mem_mib 2>/dev/null); gpu=$(( ${gpu:-0} * 1024 ))
+  awk -v rss="$rss" -v gpu="$gpu" '
+    /^MemTotal:/{mt=$2} /^MemFree:/{mf=$2} /^Buffers:/{bu=$2} /^Cached:/{ca=$2}
+    /^SwapCached:/{sc=$2} /^Slab:/{sl=$2} /^KernelStack:/{ks=$2} /^PageTables:/{pt=$2}
+    END{ printf "%.0f", (mt - (mf+bu+ca+sc+sl+ks+pt+rss+gpu))/1024 }' /proc/meminfo
+}
+
 # PSI (Pressure Stall Information): el porcentaje de tiempo que las tareas
 # estuvieron PARADAS esperando un recurso. Es la senal que faltaba el
 # 2026-09-07: MemAvailable decia 28 GB mientras MemFree estaba en 4.6 GB, y
@@ -243,6 +276,62 @@ zombie_parents() {
 #   - alarma de margen de memoria -> monitor_memory.sh cada 5 min
 # Lo que NO cubria nada, y es justo lo que fallo el 2026-09-07: el estado de
 # las apps de escritorio (renderizadores vivos) y los procesos sin cosechar.
+# Umbrales de la rafaga. Ver el bloque que los invoca para su derivacion.
+RAFAGA_COMMIT_PTS="${BLACKBOX_RAFAGA_COMMIT_PTS:-10}"   # puntos de %commit en 1 min
+RAFAGA_AVAIL_GB="${BLACKBOX_RAFAGA_AVAIL_GB:-8}"        # GB de MemAvailable perdidos
+RAFAGA_SEGS="${BLACKBOX_RAFAGA_SEGS:-50}"               # duracion maxima
+RAFAGA_PASO="${BLACKBOX_RAFAGA_PASO:-2}"                # cada cuanto
+
+# Muestra LIGERA: solo los contadores baratos. No llama a nvidia-smi ni recorre
+# cgroups -- durante una rampa lo que importa es la resolucion temporal, y una
+# muestra cara cada 2 s competiria por la misma maquina que se esta cayendo.
+muestra_ligera() {
+  printf '{"ts":"%s","burst":true,"mem_free_kb":%s,"mem_avail_kb":%s,"commit_pct":%s,"load1":%s,"psi":{"mem_some":%s,"mem_full":%s}}\n' \
+    "$(date +%Y-%m-%dT%H:%M:%S%z)" "$(meminfo_kb MemFree)" "$(meminfo_kb MemAvailable)" \
+    "$(compromiso_pct)" "$(awk '{print $1}' /proc/loadavg)" \
+    "$(psi_campo memory some avg10)" "$(psi_campo memory full avg10)"
+}
+
+rafaga_si_hace_falta() { # fichero, mem_avail_kb, commit_pct, psi_full
+  local f="$1" ma="$2" cp="$3" psi="$4"
+  local prev d_commit d_avail motivo=""
+  # La muestra ANTERIOR de verdad: la penultima linea no-rafaga del fichero.
+  prev=$(grep -v '"burst":true' "$f" 2>/dev/null | tail -2 | head -1)
+  if [ -n "$prev" ]; then
+    d_commit=$(printf '%s' "$prev" | sed -n 's/.*"commit_pct":\([0-9.-]*\).*/\1/p')
+    d_avail=$(printf '%s' "$prev" | sed -n 's/.*"mem_avail_kb":\([0-9]*\).*/\1/p')
+    if [ -n "$d_commit" ] && awk -v a="$cp" -v b="$d_commit" -v u="$RAFAGA_COMMIT_PTS" \
+         'BEGIN{exit !(a-b >= u)}'; then
+      motivo="commit +$(awk -v a="$cp" -v b="$d_commit" 'BEGIN{printf "%.1f", a-b}') puntos"
+    fi
+    if [ -z "$motivo" ] && [ -n "$d_avail" ] && awk -v a="$ma" -v b="$d_avail" -v u="$RAFAGA_AVAIL_GB" \
+         'BEGIN{exit !((b-a)/1048576 >= u)}'; then
+      motivo="mem_avail -$(awk -v a="$ma" -v b="$d_avail" 'BEGIN{printf "%.1f", (b-a)/1048576}') GB"
+    fi
+  fi
+  if [ -z "$motivo" ] && awk -v p="${psi:-0}" 'BEGIN{exit !(p > 0)}'; then
+    motivo="psi mem_full=$psi"
+  fi
+  [ -z "$motivo" ] && return 0
+
+  printf '{"ts":"%s","burst_inicio":true,"motivo":"%s"}\n' \
+    "$(date +%Y-%m-%dT%H:%M:%S%z)" "$motivo" >>"$f"
+  local fin=$(( $(date +%s) + RAFAGA_SEGS )) tranquilas=0
+  while [ "$(date +%s)" -lt "$fin" ]; do
+    sleep "$RAFAGA_PASO"
+    muestra_ligera >>"$f"
+    # Se corta antes si la maquina se calma: tres lecturas seguidas con PSI en
+    # cero. Seguir midiendo una caja sana es gastar la maquina que se vigila.
+    if awk -v p="$(psi_campo memory full avg10)" 'BEGIN{exit !(p == 0)}'; then
+      tranquilas=$((tranquilas + 1))
+      [ "$tranquilas" -ge 3 ] && break
+    else
+      tranquilas=0
+    fi
+  done
+  printf '{"ts":"%s","burst_fin":true}\n' "$(date +%Y-%m-%dT%H:%M:%S%z)" >>"$f"
+}
+
 cmd_sample() {
   local ts f
   ts=$(date +%Y-%m-%dT%H:%M:%S%z)
@@ -261,6 +350,8 @@ cmd_sample() {
   red=$(red_bytes); cpuj=$(cpu_jiffies)
   zc=$(zombie_count)
   la=$(awk '{print $1}' /proc/loadavg)
+  local commit_pct residuo
+  commit_pct=$(compromiso_pct); residuo=$(residuo_mb)
 
   # Apps Electron y su cuenta de renderizadores. Un 0 aqui es la firma exacta
   # del cuelgue: proceso principal vivo, ventana en pantalla, UI muerta.
@@ -309,10 +400,26 @@ cmd_sample() {
   pybg=$(ps -eo pid=,etimes=,comm= 2>/dev/null |
     awk '$3 ~ /^python/ && $2 > 60 {printf "%s%s", (n++?",":""), $1}')
 
-  printf '{"ts":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"py_bg":[%s],"gpu":[%s],"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s"}\n' \
+  printf '{"ts":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"py_bg":[%s],"gpu":[%s],"commit_pct":%s,"residuo_mb":%s,"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s"}\n' \
     "$ts" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$pybg" "$gpu" \
+    "${commit_pct:-0}" "${residuo:-0}" \
     "${psi_m_some:-0}" "${psi_m_full:-0}" "${psi_io_some:-0}" "${psi_cpu_some:-0}" \
     "${gw:-CAIDO}" "${dk:-?}" "${salud:-}" "${disco:-}" "${red:-}" "${cpuj:-}" >>"$f"
+
+  # --- muestreo adaptativo, anadido el 2026-09-24 -------------------------
+  # El cuarto congelamiento entero -- de maquina sana a memoria agotada --
+  # ocurrio DENTRO de un intervalo de muestreo: 13:58:04 con 58.0 GB libres,
+  # 13:59:05 con 36.9 GB. Con una muestra por minuto eso es un escalon entre
+  # dos puntos, y no hay forma de saber que lo movio. Cuando algo se mueve
+  # rapido hace falta mirar rapido.
+  #
+  # Los umbrales salen de ese incidente contra la operacion normal, no de una
+  # corazonada. En el minuto del colapso: commit_pct +54.17 puntos y mem_avail
+  # -21 GB. En operacion normal (sar, horas 13:00-13:58 del mismo dia):
+  # commit_pct se mueve menos de 1 punto por minuto y mem_avail 1-3 GB. Los
+  # cortes de abajo quedan muy por encima del ruido y muy por debajo del
+  # evento.
+  rafaga_si_hace_falta "$f" "$ma" "$commit_pct" "$psi_m_full"
 
   # rotacion: solo se borra lo que ya excedio la retencion declarada
   find "$SAMPLES" -name '*.jsonl' -mtime +"$RETAIN_DAYS" -delete 2>/dev/null
