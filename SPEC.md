@@ -217,19 +217,21 @@ procps, systemd, nvidia-smi, curl). Python sólo se usa para analizar muestras.
 | 0008 | Los inventarios de esta spec los ata un gate al sujeto, nunca la memoria de nadie | Accepted |
 | 0009 | blackbox produce telemetria y Atlas la consume; ningun import cruzado entre los dos | Accepted |
 | 0010 | Una frontera de propiedad se traza midiendo el acoplamiento, no afirmandolo | Accepted |
+| 0011 | Un total de máquina no puede ver un cuello de botella de un solo hilo: se mide también la latencia del camino y se nombra al proceso | Accepted |
 
 ## Risks
 
 | Risk | Likelihood | Mitigation |
 | --- | --- | --- |
-| Un instrumento deja de escribir en silencio | Alta | `bb status` mira la antigüedad de los datos sólo donde hay un artefacto que revisar (sar, memory-monitor, telemetría de Atlas: "por sus datos, no por la unit"); el resto (timer del muestreo, clock lock de GPU, earlyoom) sigue leyendo `systemctl is-active`, que no detecta una unit activa que dejó de trabajar -- verificado 2026-09-16, gap real y sin cerrar en esos tres |
+| Un instrumento deja de escribir en silencio | Alta | `bb status` mira la antigüedad de los datos sólo donde hay un artefacto que revisar (sar, memory-monitor, telemetría térmica de este repo: "por sus datos, no por la unit" — y el 2026-09-25 ese mismo chequeo se midió mintiendo al revés, declarando FALTA sobre un instrumento activo porque leía la ruta que Atlas ya había borrado); el resto (timer del muestreo, clock lock de GPU, earlyoom) sigue leyendo `systemctl is-active`, que no detecta una unit activa que dejó de trabajar -- verificado 2026-09-16, gap real y sin cerrar en esos tres |
 | Una comprobación que no puede fallar da falsa confianza | Alta | Cada gate se verifica con control negativo; `bb scan` cuenta las que no pudieron correr |
 | El propio muestreo compite por la memoria unificada | Media | Sólo lee `/proc` y endpoints ya existentes; `Nice=19` e `IOSchedulingClass=idle` |
 | Los umbrales de PSI vienen de otra máquina | Baja | Calibrados 2026-09-23 contra los dos congelamientos propios del 2026-09-22/23 sobre 19 804 muestras (2026-09-08 07:57 -> 2026-09-23 10:53): el corte pasó de nivel instantáneo a duración sostenida (≥10 % durante ≥5 min), porque el nivel se equivoca en las dos direcciones — seis excursiones sanas llegaron a 98.53 % y un congelamiento real bajó a 48.80 %. `tools/calibra_psi.py` re-deriva los cortes y sale 1 si dejan pasar un incidente o disparan en una muestra sana. Sigue abierto: n=2 del lado positivo y las dos la misma noche, y sólo el canal de memoria está calibrado — `io_some`/`cpu_some` se imprimen sin etiqueta a propósito |
 | Un repo adoptado diverge de lo desplegado sin avisar | Media | `bb drift` compara repo contra máquina y se verificó en ambos sentidos |
 | Esta spec envejece y pasa a describir lo que alguien recordaba | **Ocurrió** | Pasó: declaraba "Out of scope: actuar sobre lo que mide" mientras `bb-usable` reiniciaba la máquina. `tools/inventario.py --check` corre en `pre-commit` y ata las dos tablas a `bin/bb`, `tools/` y `adopted/`; cazó 6 desajustes en su primera corrida, 2 de ellos defectos del propio instrumento |
 | Un instrumento de cuelgue vive en la máquina y en ningún repo | **Ocurrió** | Pasó con 11 sujetos, 8 creados el 2026-09-09 siguiendo el foro de NVIDIA #358951; `/usr/local/bin/nvrm-watch.sh` existía sólo en disco. Adoptados el 2026-09-24; `bb drift` vigila 30 sujetos, antes 19 |
-| `bin/bb` es el 100% del código ejecutable y ningún gate mide su cobertura | **Ocurrió** | `coverage.py` no instrumenta bash, así que `coverage-target` pasaba sin mirarlo. `tools/cobertura_bash.sh` lo mide (17.7%, 149 de 843 líneas, medido el 2026-09-24 tras añadirle `smi_salud`) y `bb-cobertura-piso` impide que baje. El número es bajo y es el hallazgo, no la solución |
+| La máquina es inusable mientras todos los totales leen sanos | **Ocurrió** | Pasó el 2026-09-25: el dueño reinició a mano porque "casi no se podía escribir" y veinticinco segundos antes bb medía load1 0.95 sobre 20 núcleos, 65.8 GB disponibles, PSI en cero y nvidia-smi en 22 ms. Medido después en el journal: el scope de antigravity consumió 2 h 37 min de CPU en 2 h 15 min de reloj (116.5 % de UN núcleo) y el de Claude 101.4 % de otro — el 11 % de una máquina de 20 núcleos, que no mueve ningún total. Se añadieron `cpu_top` (quién quema CPU, con su unit), `x.{estado,ms}` (ida y vuelta contra el servidor X: 5-7 ms sano) y `swap.{free,in_pag_s,out_pag_s}`. La causa del episodio sigue **sin probar**: `DEBT-SLUGGISH-SIN-CAUSA-PROBADA` |
+| `bin/bb` es el 100% del código ejecutable y ningún gate mide su cobertura | **Ocurrió** | `coverage.py` no instrumenta bash, así que `coverage-target` pasaba sin mirarlo. `tools/cobertura_bash.sh` lo mide (**25.7%** el 2026-09-25, desde 17.7% el 2026-09-24, al probar `bb status`, `cpu_top`, `swap` y `latencia_x`) y `bb-cobertura-piso` impide que baje. El número sigue siendo bajo y es el hallazgo, no la solución |
 
 ## Acceptance Criteria
 
@@ -286,4 +288,12 @@ WHEN the test suite of `bin/bb` covers fewer lines than the recorded floor THEN
 the system SHALL block the push instead of reporting a coverage number nobody
 measured.
 verify: `bash tools/piso_cobertura.sh`
+expect: exit_zero
+
+### REQ-0007
+WHEN the machine is sampled THEN the system SHALL record how long the desktop
+takes to answer and which processes burned CPU since the previous sample, so
+that a single-threaded bottleneck is distinguishable from an idle machine
+instead of both reading identical.
+verify: `python3 -m pytest tests/test_bb_bash.py -k "latencia_x or cpu_top" -q`
 expect: exit_zero

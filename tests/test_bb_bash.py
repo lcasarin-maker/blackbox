@@ -169,6 +169,239 @@ def test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado(datos):
         quieto.kill(); quieto.wait()
 
 
+# =====================================================================
+# latencia_x -- cuanto tarda el escritorio en contestar
+# =====================================================================
+
+
+def _con_xset_falso(tmp_path, cuerpo):
+    """Antepone al PATH un `xset` de mentira con el cuerpo que se le pase."""
+    shim = tmp_path / "shim_x"
+    shim.mkdir(exist_ok=True)
+    x = shim / "xset"
+    x.write_text("#!/usr/bin/env bash\n" + cuerpo, encoding="utf-8")
+    x.chmod(0o755)
+    return {"PATH": f"{shim}:{os.environ['PATH']}", "DISPLAY": ":1"}
+
+
+def _x_de_la_ultima_muestra(datos):
+    f = sorted((datos / "samples").glob("*.jsonl"))[-1]
+    return json.loads(f.read_text(encoding="utf-8").strip().splitlines()[-1])["x"]
+
+
+def test_latencia_x_dice_OK_cuando_el_escritorio_contesta(datos, tmp_path):
+    """La pregunta que bb no supo contestar el 2026-09-25: "casi no se podia
+    escribir, por que". Todos sus instrumentos leian sano porque todos miden la
+    MAQUINA, y una tecla no pasa por la maquina: pasa por el servidor X."""
+    correr(["sample"], datos, _con_xset_falso(tmp_path, "exit 0\n"))
+    x = _x_de_la_ultima_muestra(datos)
+    assert x["estado"] == "OK", x
+    assert x["ms"] >= 0, x
+
+
+def test_control_negativo_latencia_x_dice_TIMEOUT_si_el_escritorio_no_contesta(
+        datos, tmp_path):
+    """El caso que importa: el servidor X vivo pero sin atender. Es el estado
+    en el que se teclea y no aparece nada, y el que ningun total de maquina
+    puede distinguir de una maquina en reposo."""
+    env = _con_xset_falso(tmp_path, "sleep 30\n")
+    env["BB_X_TIMEOUT_S"] = "1"
+    correr(["sample"], datos, env)
+    x = _x_de_la_ultima_muestra(datos)
+    assert x["estado"] == "TIMEOUT", x
+    assert x["ms"] >= 900, f"si no espero el timeout, no midio nada: {x}"
+
+
+def test_control_negativo_latencia_x_dice_ERROR_si_el_servidor_rechaza(datos, tmp_path):
+    correr(["sample"], datos, _con_xset_falso(tmp_path, "exit 1\n"))
+    assert _x_de_la_ultima_muestra(datos)["estado"] == "ERROR"
+
+
+def test_control_negativo_sin_DISPLAY_dice_AUSENTE_y_no_OK(datos, tmp_path):
+    """Un instrumento que no puede correr no deja el sujeto limpio: deja el
+    informe sin esa fila. AUSENTE y OK no son lo mismo."""
+    env = _con_xset_falso(tmp_path, "exit 0\n")
+    env["DISPLAY"] = ""
+    correr(["sample"], datos, env)
+    assert _x_de_la_ultima_muestra(datos)["estado"] == "AUSENTE"
+
+
+# =====================================================================
+# swap -- el nivel y el RITMO
+# =====================================================================
+
+
+def _vmstat(tmp_path, pin, pout):
+    f = tmp_path / f"vmstat_{pin}_{pout}"
+    f.write_text(f"pswpin {pin}\npswpout {pout}\n", encoding="utf-8")
+    return str(f)
+
+
+@pytest.mark.sleeps_aceptados
+def test_swap_mide_el_RITMO_no_solo_el_nivel(datos, tmp_path):
+    """La noche del 2026-09-24 al 25 el swap fue la unica magnitud que se movio
+    en una sola direccion -- 4.3 GB expulsados entre las 20:51 y las 03:28, con
+    el 53 % de la RAM libre -- y bb no la registraba: el numero hubo que sacarlo
+    del log de earlyoom.
+
+    Lo que se paga no es tener paginas fuera, es traerlas de vuelta, y eso es
+    `pswpin`, un contador acumulado desde el arranque. Como nivel no dice nada;
+    lo que informa es el delta por segundo.
+    """
+    correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 1000, 2000)})
+    time.sleep(4)  # blocking-sleep: el ritmo es un delta y necesita dos instantes separados -- DEBT-ACCEPTED-SLEEP-TESTS-BB
+    correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 5000, 2400)})
+    s = muestras(datos)[-1]["swap"]
+    # 4000 paginas en ~4-6 s; el intervalo exacto lo pone el reloj, asi que se
+    # asierta el orden de magnitud y el signo, no una cifra al decimal.
+    assert 500 < s["in_pag_s"] < 1200, s
+    assert 50 < s["out_pag_s"] < 120, s
+    assert s["total_kb"] > 0, "SwapTotal real de la maquina"
+
+
+@pytest.mark.sleeps_aceptados
+def test_control_negativo_sin_trafico_de_swap_el_ritmo_es_cero(datos, tmp_path):
+    """Sin esto, el test de arriba no distingue "mide el ritmo" de "escupe un
+    numero grande". Los mismos contadores en las dos muestras tienen que dar
+    cero, no un residuo."""
+    v = _vmstat(tmp_path, 1000, 2000)
+    correr(["sample"], datos, {"BB_VMSTAT": v})
+    time.sleep(2)  # blocking-sleep: dos muestras separadas, mismos contadores -- DEBT-ACCEPTED-SLEEP-TESTS-BB
+    correr(["sample"], datos, {"BB_VMSTAT": v})
+    s = muestras(datos)[-1]["swap"]
+    assert float(s["in_pag_s"]) == 0.0, s
+    assert float(s["out_pag_s"]) == 0.0, s
+
+
+@pytest.mark.sleeps_aceptados
+def test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo(datos, tmp_path):
+    """`pswpin` se reinicia con la maquina. Si bb restara sin mas, la primera
+    muestra despues de un arranque emitiria un ritmo negativo -- un numero que
+    no significa nada y que cualquier grafica leeria como dato."""
+    correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 900000, 900000)})
+    time.sleep(2)  # blocking-sleep: dos muestras separadas -- DEBT-ACCEPTED-SLEEP-TESTS-BB
+    correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 12, 34)})
+    s = muestras(datos)[-1]["swap"]
+    assert float(s["in_pag_s"]) == 0.0, s
+    assert float(s["out_pag_s"]) == 0.0, s
+
+
+# =====================================================================
+# bb status -- el veredicto sobre la propia instrumentacion
+# =====================================================================
+
+
+def test_status_ve_la_telemetria_termica_EN_ESTE_REPO(datos):
+    """DGX-585 movio el productor de la telemetria termica a blackbox y borro
+    la copia de Atlas. El consumidor dentro de `bin/bb` se quedo apuntando a
+    la ruta borrada, y el resultado medido el 2026-09-25 fue que `bb status`
+    decia
+
+        FALTA  termica de Atlas (atom_gpu_telemetry, <2 min)
+               -- systemctl --user start atom-gpu-telemetry
+
+    mientras la unit llevaba horas activa escribiendo 711 muestras por hora.
+    El informe de instrumentacion mintiendo sobre su propio instrumento: manda
+    a rearmar lo que ya esta armado, y quien lo lee deja de creerle al resto
+    de las filas.
+    """
+    (datos / "atom_gpu_telemetry.jsonl").write_text(
+        '{"ts": "2026-09-25T00:00:00+00:00", "evento": "muestra"}\n', encoding="utf-8")
+    r = correr(["status"], datos)
+    fila = [l for l in r.stdout.splitlines() if "atom_gpu_telemetry" in l]
+    assert fila, r.stdout
+    assert "ARMADO" in fila[0], fila[0]
+
+
+def test_control_negativo_status_DICE_falta_si_la_telemetria_no_esta(datos):
+    """Un chequeo que no puede salir negativo no es un chequeo. Este es el
+    unico motivo por el que el de arriba significa algo."""
+    r = correr(["status"], datos)
+    fila = [l for l in r.stdout.splitlines() if "atom_gpu_telemetry" in l]
+    assert fila, r.stdout
+    assert "FALTA" in fila[0], fila[0]
+
+
+def test_control_negativo_status_DICE_falta_si_la_telemetria_esta_rancia(datos):
+    """Por sus DATOS, no por la unit: el chequeo exige escritura de hace menos
+    de 2 minutos, porque una unit `active` cuyo proceso dejo de escribir es
+    exactamente el fallo silencioso que se busca."""
+    f = datos / "atom_gpu_telemetry.jsonl"
+    f.write_text('{"evento": "muestra"}\n', encoding="utf-8")
+    viejo = time.time() - 3600
+    os.utime(f, (viejo, viejo))
+    r = correr(["status"], datos)
+    fila = [l for l in r.stdout.splitlines() if "atom_gpu_telemetry" in l]
+    assert fila, r.stdout
+    assert "FALTA" in fila[0], fila[0]
+
+
+# =====================================================================
+# cpu_top -- quien quema CPU
+# =====================================================================
+
+
+@pytest.mark.sleeps_aceptados
+def test_cpu_top_NOMBRA_a_quien_quema_cpu(datos):
+    """El hueco que `psi.cpu_some` y `load1` no cierran: dicen cuanto sufre la
+    maquina, no quien la hace sufrir.
+
+    Medido la noche del 2026-09-24 al 25: ocho muestras con `cpu_some` entre
+    50.38 y 85.43 y load1 hasta 47.65 sobre 20 nucleos, y ninguna nombra a un
+    responsable -- `top_rss` ordena por memoria residente y `pidio` por
+    crecimiento de VmSize, asi que un proceso que solo quema CPU no sale.
+    """
+    quemador = subprocess.Popen(["bash", "-c", "while :; do :; done"])
+    try:
+        time.sleep(1)  # blocking-sleep: el hijo tiene que existir en la muestra 1 -- DEBT-ACCEPTED-SLEEP-TESTS-BB
+        correr(["sample"], datos)                  # muestra 1: linea base
+        time.sleep(4)  # blocking-sleep: `ps -o times=` da segundos ENTEROS; hacen falta varios para que el delta sea legible -- DEBT-ACCEPTED-SLEEP-TESTS-BB
+        correr(["sample"], datos)                  # muestra 2: ya quemo
+        d = muestras(datos)[-1]
+        por_pid = {x["pid"]: x for x in d["cpu_top"]}
+        assert quemador.pid in por_pid, \
+            f"no nombro al pid {quemador.pid} que quemaba un nucleo entero: {d['cpu_top']}"
+        fila = por_pid[quemador.pid]
+        # Un bucle vacio de bash satura UN nucleo: por debajo del 50 % de uno
+        # el campo estaria midiendo otra cosa que lo que dice medir.
+        assert fila["pct_nucleo"] >= 50, fila
+        assert fila["unit"], "sin la unit de cgroup no se sabe quien lo lanzo"
+    finally:
+        quemador.kill(); quemador.wait()
+
+
+@pytest.mark.sleeps_aceptados
+def test_control_negativo_un_proceso_dormido_no_sale_como_que_quema(datos):
+    """Sin esto, el test de arriba no distingue "atribuye" de "lista a todo el
+    mundo".
+
+    Igual que el control de `pidio`, NO se asierta que `cpu_top` este vacio:
+    esta maquina tiene ~500 procesos y siempre hay alguno trabajando. Lo que
+    se controla es un proceso propio, vivo en las dos muestras, que no quema
+    nada: ese no puede aparecer.
+    """
+    dormido = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(20)"])
+    try:
+        time.sleep(1)  # blocking-sleep: el hijo tiene que existir ya -- DEBT-ACCEPTED-SLEEP-TESTS-BB
+        correr(["sample"], datos)
+        time.sleep(4)  # blocking-sleep: mismo intervalo que el caso positivo, para que la comparacion valga -- DEBT-ACCEPTED-SLEEP-TESTS-BB
+        correr(["sample"], datos)
+        nombrados = {x["pid"] for x in muestras(datos)[-1]["cpu_top"]}
+        assert dormido.pid not in nombrados, \
+            "un proceso dormido no puede aparecer como que quemo CPU"
+    finally:
+        dormido.kill(); dormido.wait()
+
+
+def test_cpu_top_va_vacio_en_la_primera_muestra_y_no_inventa(datos):
+    """Sin muestra anterior no hay delta, y un delta inventado seria peor que
+    la ausencia: la primera muestra tras arrancar reportaria como "quemado
+    ahora" todo el CPU acumulado desde el arranque de cada proceso."""
+    correr(["sample"], datos)
+    d = muestras(datos)[-1]
+    assert d["cpu_top"] == [], d["cpu_top"]
+
+
 @pytest.mark.sleeps_aceptados
 def test_residuo_es_un_numero_y_no_se_mueve_solo(datos):
     """Mide memoria que nadie reclama. Entre dos muestras en reposo tiene que
