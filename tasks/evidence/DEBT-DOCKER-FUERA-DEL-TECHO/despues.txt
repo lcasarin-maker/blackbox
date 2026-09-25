@@ -1,0 +1,38 @@
+DESPUES -- 2026-09-24, tras 'sudo ./enable-privileged.sh' + 'systemctl restart docker'
+
+$ cat /sys/fs/cgroup/docker.slice/memory.max /sys/fs/cgroup/docker.slice/memory.swap.max
+34359738368
+4294967296
+  (34359738368 = 32 GiB ; 4294967296 = 4 GiB)
+
+$ # donde cuelga cada contenedor AHORA -- el sujeto, no el informe
+  nemotron-server    /docker.slice/docker-0573e19c78b6e383452dde907e76654d8528f1f1c826d600eaba3ffa2f41eaa0.scope
+  atlas-pgvector     /docker.slice/docker-3b414c224c8566074d56a9c1204441cb9d4d35a2eb8c2c28697a93e44394d0c8.scope
+  librechat          /docker.slice/docker-b5b17168b78634e6887fd02e381bf6b397b42fcf576493e41fc54ebc429dab47.scope
+  mongo-librechat    /docker.slice/docker-403165c7681ff11bbb066996ecb2a79e4a39f3f8ae980c49ecea52a0484eba90.scope
+  aequitas-pg        /docker.slice/docker-5cff72a4323661083384caa51f6702a2256959396b1543546e4c55b7f0ffa62c.scope
+
+$ # ninguno queda en system.slice:
+  contenedores todavia en system.slice: 0
+
+$ # el runtime de nvidia sobrevivio a la mezcla:
+{
+    "runtimes": {
+        "nvidia": {
+            "args": [],
+            "path": "nvidia-container-runtime"
+        }
+    },
+    "cgroup-parent": "docker.slice"
+}
+
+$ close_check literal de la ficha:
+  grep -qx 34359738368 /sys/fs/cgroup/docker.slice/memory.max
+  rc=0
+
+$ # CONTROL NEGATIVO: el mismo close_check contra una slice sin techo
+  grep -qx 34359738368 /sys/fs/cgroup/system.slice/memory.max
+  rc=1   <- sabe decir que NO
+
+  docker.slice current = 3.89 GiB  de 32 GiB
+  system.slice current = 9.99 GiB  (ya sin contenedores; antes 19.5)
