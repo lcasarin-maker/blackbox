@@ -1,0 +1,28 @@
+CONTROL NEGATIVO de la MEZCLA de daemon.json: el runtime de nvidia tiene que sobrevivir.
+
+$ cat /etc/docker/daemon.json   # antes
+{
+    "runtimes": {
+        "nvidia": {
+            "args": [],
+            "path": "nvidia-container-runtime"
+        }
+    }
+}
+$ cat daemon.json   # despues de la mezcla
+{
+    "runtimes": {
+        "nvidia": {
+            "args": [],
+            "path": "nvidia-container-runtime"
+        }
+    },
+    "cgroup-parent": "docker.slice"
+}
+
+$ # el runtime de nvidia sigue ahi?
+  runtimes.nvidia.path = nvidia-container-runtime
+  cgroup-parent        = docker.slice
+
+$ # y es idempotente? segunda pasada:
+  ya apunta a docker.slice, sin cambios
