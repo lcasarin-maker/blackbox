@@ -291,6 +291,115 @@ def test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo(datos, tmp_path)
 # =====================================================================
 
 
+def _arbol_cgroup(tmp_path, low=2 * 1024**3, con_scope=True, con_ventana=True, roto=None):
+    """Monta un arbol de cgroups de mentira con la cadena de 7 eslabones.
+
+    Los dos ultimos llevan un identificador variable en el nombre -- el numero
+    de sesion y el pid -- y por eso se montan con nombres concretos: lo que se
+    prueba es que el chequeo los ENCUENTRA por patron, no que adivine el nombre.
+    """
+    u = os.getuid()
+    r = tmp_path / f"cg_{low}_{con_scope}_{con_ventana}_{roto}"
+    base = r / "user.slice" / f"user-{u}.slice"
+    app = base / f"user@{u}.service" / "app.slice"
+    rutas = {
+        "user.slice": r / "user.slice",
+        "user-uid.slice": base,
+        "user@.service": base / f"user@{u}.service",
+        "session.slice": base / f"user@{u}.service" / "session.slice",
+        "app.slice": app,
+    }
+    if con_scope:
+        rutas["session-N.scope"] = base / "session-7.scope"
+    if con_ventana:
+        rutas["app-gnome-N.scope"] = app / "app-gnome-com.ejemplo.App-4242.scope"
+    for nombre, d in rutas.items():
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "memory.low").write_text("0" if nombre == roto else str(low), encoding="utf-8")
+    return {"BB_CGROUP_ROOT": str(r)}
+
+
+def _fila_escritorio(r):
+    filas = [l for l in r.stdout.splitlines() if "escritorio" in l]
+    assert filas, r.stdout
+    return filas[0]
+
+
+def test_status_ve_la_proteccion_de_memoria_del_escritorio(datos, tmp_path):
+    """Por el DATO y no por el fichero: un drop-in copiado que systemd no
+    aplico -- por no recargar, por un nombre mal puesto, o porque la sesion
+    grafica nacio antes -- deja los ficheros en su sitio y memory.low en 0, y
+    eso es indistinguible de no haberlo hecho salvo leyendo el cgroup."""
+    r = correr(["status"], datos, _arbol_cgroup(tmp_path))
+    assert "ARMADO" in _fila_escritorio(r), _fila_escritorio(r)
+
+
+@pytest.mark.parametrize("eslabon", [
+    "user.slice", "user-uid.slice", "user@.service", "session.slice", "app.slice",
+    "session-N.scope", "app-gnome-N.scope"])
+def test_control_negativo_UN_eslabon_en_cero_rompe_la_cadena(datos, tmp_path, eslabon):
+    """En cgroup v2 la proteccion efectiva de un hijo esta acotada por la del
+    padre, asi que un 0 en cualquier nivel anula los de abajo. Un chequeo que
+    mirase solo el ultimo diria ARMADO sobre una cadena rota -- que es la forma
+    exacta en que un instrumento da falsa confianza."""
+    r = correr(["status"], datos, _arbol_cgroup(tmp_path, roto=eslabon))
+    assert "FALTA" in _fila_escritorio(r), _fila_escritorio(r)
+
+
+def test_control_negativo_sin_scope_grafico_NO_dice_armado(datos, tmp_path):
+    """Ahi vive Xorg. Medido el 2026-09-25 leyendo /proc/<pid>/cgroup: Xorg NO
+    esta en session.slice sino en session-<N>.scope, hermano de
+    user@<uid>.service. Si no hay ninguno, no hay nada que proteger y el
+    chequeo no puede decir que si."""
+    r = correr(["status"], datos, _arbol_cgroup(tmp_path, con_scope=False))
+    assert "FALTA" in _fila_escritorio(r), _fila_escritorio(r)
+
+
+def test_control_negativo_sin_proteccion_ninguna_cuenta_los_siete(datos, tmp_path):
+    r = correr(["status"], datos, _arbol_cgroup(tmp_path, low=0))
+    fila = _fila_escritorio(r)
+    assert "FALTA" in fila and "7 eslabon" in fila, fila
+
+
+def test_ventana_de_la_aplicacion_protegida_y_el_arnes_NO(datos, tmp_path):
+    """El P1: la ventana donde se escribe y el arnes que la ahoga eran hermanos
+    en app.slice sin ninguna prioridad relativa.
+
+    La ficha decia que el scope de una ventana "lleva el pid en el nombre, asi
+    que no admite un drop-in estable", y eso era FALSO: systemd resuelve los
+    drop-ins tambien por prefijo truncado en cada guion. Comprobado sobre la
+    unit viva el 2026-09-25 con `app-gnome-.scope.d/`:
+
+        app-gnome-com.anthropic.Claude-38380.scope   memory.low = 3221225472
+        app-com.anthropic.Claude-38380.scope         memory.low = 0
+
+    El arnes queda reclamable sin tener que nombrarlo: no pide proteccion, y
+    por eso no la recibe. Aqui se comprueba la otra mitad -- que el chequeo
+    encuentra el scope de ventana por patron, con el pid que sea.
+    """
+    env = _arbol_cgroup(tmp_path)
+    r = correr(["status"], datos, env)
+    assert "ARMADO" in _fila_escritorio(r), _fila_escritorio(r)
+    # Y el control que da sentido al de arriba: un arnes SIN proteccion, al
+    # lado de la ventana protegida, no rompe la cadena. Si lo rompiera, el
+    # chequeo estaria exigiendo proteger justo lo que se quiere reclamar.
+    u = os.getuid()
+    app = (Path(env["BB_CGROUP_ROOT"]) / "user.slice" / f"user-{u}.slice"
+           / f"user@{u}.service" / "app.slice")
+    arnes = app / "app-com.ejemplo.Arnes-9999.scope"
+    arnes.mkdir(parents=True, exist_ok=True)
+    (arnes / "memory.low").write_text("0", encoding="utf-8")
+    r2 = correr(["status"], datos, env)
+    assert "ARMADO" in _fila_escritorio(r2), _fila_escritorio(r2)
+
+
+def test_control_negativo_sin_ninguna_ventana_NO_dice_armado(datos, tmp_path):
+    """Una cadena que no llega a ningun sujeto no protege nada, por mucho que
+    sus niveles altos esten puestos."""
+    r = correr(["status"], datos, _arbol_cgroup(tmp_path, con_ventana=False))
+    assert "FALTA" in _fila_escritorio(r), _fila_escritorio(r)
+
+
 def test_status_ve_la_telemetria_termica_EN_ESTE_REPO(datos):
     """DGX-585 movio el productor de la telemetria termica a blackbox y borro
     la copia de Atlas. El consumidor dentro de `bin/bb` se quedo apuntando a
