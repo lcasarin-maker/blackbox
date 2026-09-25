@@ -14,10 +14,11 @@ memoria, el disparador de la rafaga y el veredicto de "instrumento armado".
 
 ## Lo que esta suite NO compra, dicho antes de que alguien lo suponga
 
-No hay cobertura MEDIDA. `coverage` no instrumenta bash, asi que nadie puede
-afirmar un porcentaje sobre `bin/bb` -- ni yo. Lo que hay son pruebas de
-comportamiento sobre el ejecutable real, cada una con su control negativo.
-Decir "100 % de cobertura" aqui seria falso; decir "sin pruebas" ya no lo es.
+La cobertura SI esta medida desde el 2026-09-24 -- `tools/cobertura_bash.sh`
+traza el ejecutable con BASH_XTRACEFD -- y da **17.6 %**, 146 de 829 lineas.
+Ese numero es el hallazgo, no la solucion: lo que hay son pruebas de
+comportamiento sobre los caminos que DECIDEN algo, cada una con su control
+negativo. `tools/piso_cobertura.sh` impide que baje sin que nadie se entere.
 """
 
 from __future__ import annotations
@@ -124,6 +125,7 @@ def test_commit_pct_es_un_porcentaje_real_no_un_cero_de_adorno(datos):
     assert v > 0, "una maquina con procesos siempre tiene algo comprometido"
 
 
+@pytest.mark.sleeps_aceptados
 def test_pidio_NOMBRA_a_quien_pide_memoria(datos):
     """El hueco que Committed_AS no cerraba: decia cuanto, no quien."""
     correr(["sample"], datos)                      # muestra 1: linea base
@@ -131,7 +133,7 @@ def test_pidio_NOMBRA_a_quien_pide_memoria(datos):
         [sys.executable, "-c",
          "import mmap,time; m=mmap.mmap(-1, 5*1024**3); time.sleep(20)"])
     try:
-        time.sleep(3)  # blocking-sleep: se espera a que el hijo reserve -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.0 -- nace en 1.0: espera a un SUBPROCESO, no a estado propio; no hay evento que compartir con un hijo que reserva memoria
+        time.sleep(3)  # blocking-sleep: se espera a que el hijo reserve -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.1 -- relido 2026-09-24: nace en 1.0: espera a un SUBPROCESO, no a estado propio; no hay evento que compartir con un hijo que reserva memoria
         correr(["sample"], datos)                  # muestra 2: ya crecio
         d = muestras(datos)[-1]
         crecidos = {x["pid"]: x for x in d["pidio"]}
@@ -142,6 +144,7 @@ def test_pidio_NOMBRA_a_quien_pide_memoria(datos):
         hijo.kill(); hijo.wait()
 
 
+@pytest.mark.sleeps_aceptados
 def test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado(datos):
     """Sin esto, el test de arriba no distingue "atribuye" de "lista a todo el
     mundo".
@@ -155,9 +158,9 @@ def test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado(datos):
     """
     quieto = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(20)"])
     try:
-        time.sleep(1)  # blocking-sleep: el hijo tiene que existir ya -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.0 -- nace en 1.0: sondear /proc/<pid> seria cambiar un sleep por otro con mas codigo
+        time.sleep(1)  # blocking-sleep: el hijo tiene que existir ya -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.1 -- relido 2026-09-24: nace en 1.0: sondear /proc/<pid> seria cambiar un sleep por otro con mas codigo
         correr(["sample"], datos)
-        time.sleep(2)  # blocking-sleep: separa las dos muestras -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.0 -- nace en 1.0: bb marca las muestras con resolucion de segundo; sin la espera caen en el mismo
+        time.sleep(2)  # blocking-sleep: separa las dos muestras -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.1 -- relido 2026-09-24: nace en 1.0: bb marca las muestras con resolucion de segundo; sin la espera caen en el mismo
         correr(["sample"], datos)
         nombrados = {x["pid"] for x in muestras(datos)[-1]["pidio"]}
         assert quieto.pid not in nombrados, \
@@ -166,11 +169,12 @@ def test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado(datos):
         quieto.kill(); quieto.wait()
 
 
+@pytest.mark.sleeps_aceptados
 def test_residuo_es_un_numero_y_no_se_mueve_solo(datos):
     """Mide memoria que nadie reclama. Entre dos muestras en reposo tiene que
     quedarse practicamente igual, o su delta no significaria nada."""
     correr(["sample"], datos)
-    time.sleep(1)  # blocking-sleep: dos muestras distintas -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.0 -- nace en 1.0: misma razon, resolucion de segundo del sello de bb
+    time.sleep(1)  # blocking-sleep: dos muestras distintas -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.1 -- relido 2026-09-24: nace en 1.0: misma razon, resolucion de segundo del sello de bb
     correr(["sample"], datos)
     a, b = (int(x["residuo_mb"]) for x in muestras(datos)[:2])
     assert abs(b - a) < 2048, f"el residuo se movio {b-a} MiB sin que nadie pidiera"
@@ -314,3 +318,56 @@ def test_la_ayuda_documenta_los_subcomandos_que_deciden(datos):
     r = correr([], datos)
     for sub in ("bb cap", "bb sigterm", "bb sample", "bb scan"):
         assert sub in r.stdout, f"{sub} no aparece en la ayuda"
+
+
+# --------------------------------------------------------------- smi_salud
+# Que `nvidia-smi` deje de responder es EL sintoma del cuelgue -- da titulo al
+# hilo del foro de NVIDIA #358951 -- y hasta el 2026-09-24 no lo registraba
+# nadie: el `gpu_sampler.sh` retirado el 2026-09-07 tenia una columna `status`
+# con TIMEOUT/ERROR, `atom_gpu_telemetry.py` no la absorbio (su campo `evento`
+# vale "muestra" en 2000 de 2000 muestras medidas), y el resto de `bin/bb`
+# llamaba a nvidia-smi con `2>/dev/null || return 1`, tragandose el cuelgue.
+#
+# Estos tres tests son el control negativo de esa recuperacion: el campo tiene
+# que saber decir OK, TIMEOUT y ERROR. Uno que solo supiera decir OK no
+# distinguiria una maquina sana de una colgada, que es justo su unico trabajo.
+
+
+def _con_smi_falso(tmp_path, cuerpo):
+    """Antepone al PATH un nvidia-smi de mentira con el cuerpo que se le pase."""
+    shim = tmp_path / "shim"
+    shim.mkdir(exist_ok=True)
+    smi = shim / "nvidia-smi"
+    smi.write_text("#!/usr/bin/env bash\n" + cuerpo, encoding="utf-8")
+    smi.chmod(0o755)
+    return {"PATH": f"{shim}:{os.environ['PATH']}"}
+
+
+def _smi_de_la_ultima_muestra(datos):
+    f = sorted((datos / "samples").glob("*.jsonl"))[-1]
+    return json.loads(f.read_text(encoding="utf-8").strip().splitlines()[-1])["smi"]
+
+
+def test_smi_dice_OK_cuando_el_driver_responde(datos, tmp_path):
+    env = _con_smi_falso(tmp_path, "exit 0\n")
+    correr(["sample"], datos=datos, extra_env=env)
+    smi = _smi_de_la_ultima_muestra(datos)
+    assert smi["estado"] == "OK", smi
+    assert isinstance(smi["ms"], int) and smi["ms"] >= 0, smi
+
+
+def test_control_negativo_smi_dice_TIMEOUT_cuando_el_driver_se_cuelga(datos, tmp_path):
+    """El caso que importa: nvidia-smi vivo pero sin contestar."""
+    env = _con_smi_falso(tmp_path, "sleep 30\n")
+    env["BB_SMI_TIMEOUT_S"] = "1"
+    correr(["sample"], datos=datos, extra_env=env)
+    smi = _smi_de_la_ultima_muestra(datos)
+    assert smi["estado"] == "TIMEOUT", smi
+    assert smi["ms"] >= 900, f"debe haber esperado ~1 s de verdad: {smi}"
+
+
+def test_control_negativo_smi_dice_ERROR_cuando_el_driver_falla(datos, tmp_path):
+    env = _con_smi_falso(tmp_path, "exit 9\n")
+    correr(["sample"], datos=datos, extra_env=env)
+    smi = _smi_de_la_ultima_muestra(datos)
+    assert smi["estado"] == "ERROR", smi

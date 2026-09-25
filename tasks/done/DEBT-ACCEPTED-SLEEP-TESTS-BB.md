@@ -11,7 +11,7 @@ lifespan: accepted
 tag: DECISION
 kind: debt
 origin: asserted
-close_check: {"cmd": "python3 -m pytest tests/test_bb_bash.py -q", "expect": "exit_zero"}
+close_check: {"cmd": "python3 -m pytest tests/test_bb_bash.py -q -p no:randomly -m sleeps_aceptados", "expect": "exit_zero", "porque": "los TRES tests que llevan los cuatro sleeps aceptados, y solo esos. La suite entera dejo de caber en el presupuesto de 53s de backlog-verifier al crecer (COULD_NOT_RUN el 2026-09-24), y un close_check que no puede correr no verifica nada."}
 evidence:
   pass: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/pass.txt
   fail: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/fail.txt
@@ -37,8 +37,14 @@ Es la misma clase que `DEBT-SLOT-WAIT-SLEEP` en simplecode, resuelta igual.
 ## Regression Test
 
 ```
-python3 -m pytest tests/test_bb_bash.py -q
+python3 -m pytest tests/test_bb_bash.py -q -p no:randomly -m sleeps_aceptados
 ```
+
+Son los TRES tests que contienen los cuatro sleeps, y solo esos: 7.2 s. La
+suite entera paso de 24 s a mas de 85 s al crecer, y `backlog-verifier` la
+declaro COULD_NOT_RUN por su presupuesto de 53 s el 2026-09-24. Un
+`close_check` que no puede correr no verifica nada, asi que se estrecha al
+sujeto de ESTA ficha en vez de subirle el presupuesto al gate.
 
 Y el detector que lo cazo, sobre el fichero final: `blocking_sleep` sin
 justificar -> 0.
