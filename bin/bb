@@ -286,9 +286,27 @@ RAFAGA_PASO="${BLACKBOX_RAFAGA_PASO:-2}"                # cada cuanto
 # cgroups -- durante una rampa lo que importa es la resolucion temporal, y una
 # muestra cara cada 2 s competiria por la misma maquina que se esta cayendo.
 muestra_ligera() {
-  printf '{"ts":"%s","burst":true,"mem_free_kb":%s,"mem_avail_kb":%s,"commit_pct":%s,"load1":%s,"psi":{"mem_some":%s,"mem_full":%s}}\n' \
+  # Quien CRECIO desde la muestra anterior, con el mismo criterio que la
+  # muestra completa: el nivel de VmSize no sirve (un Electron reserva 1.4 TB
+  # con MAP_NORESERVE y sale siempre primero), el crecimiento si. Cuesta 12 ms
+  # y es lo unico "caro" de la rafaga -- y es justo lo que faltaba: sin esto la
+  # rafaga daba resolucion temporal pero no decia QUIEN, que era el hueco
+  # declarado al anadirla.
+  # Estado PROPIO: si la rafaga pisara $DATA/vsz_prev, la muestra completa
+  # compararia contra un mapa de hace 2 s en vez de hace un minuto y su columna
+  # `pidio` dejaria de medir lo que dice medir. Detectado al ver la rafaga
+  # disparar de verdad el 2026-09-24.
+  local tv="" pv="$DATA/vsz_prev_rafaga"
+  ps -eo pid=,vsz=,comm= 2>/dev/null | awk '{print $1, $2, $3}' > "$pv.b"
+  [ -s "$pv" ] && tv=$(awk 'NR==FNR{v[$1]=$2; next}
+      { c = ($1 in v) ? $2 - v[$1] : $2
+        if (c > 262144) printf "%s %s %s %s\n", $1, c, $3, (($1 in v) ? 0 : 1) }' \
+      "$pv" "$pv.b" 2>/dev/null | sort -k2 -rn | head -3 |
+    awk '{printf "%s{\"pid\":%s,\"crecio_kb\":%s,\"comm\":\"%s\",\"nuevo\":%s}", (n++?",":""), $1, $2, $3, ($4==1?"true":"false")}')
+  mv -f "$pv.b" "$pv" 2>/dev/null
+  printf '{"ts":"%s","burst":true,"mem_free_kb":%s,"mem_avail_kb":%s,"commit_pct":%s,"load1":%s,"pidio":[%s],"psi":{"mem_some":%s,"mem_full":%s}}\n' \
     "$(date +%Y-%m-%dT%H:%M:%S%z)" "$(meminfo_kb MemFree)" "$(meminfo_kb MemAvailable)" \
-    "$(compromiso_pct)" "$(awk '{print $1}' /proc/loadavg)" \
+    "$(compromiso_pct)" "$(awk '{print $1}' /proc/loadavg)" "$tv" \
     "$(psi_campo memory some avg10)" "$(psi_campo memory full avg10)"
 }
 
@@ -309,7 +327,14 @@ rafaga_si_hace_falta() { # fichero, mem_avail_kb, commit_pct, psi_full
       motivo="mem_avail -$(awk -v a="$ma" -v b="$d_avail" 'BEGIN{printf "%.1f", (b-a)/1048576}') GB"
     fi
   fi
-  if [ -z "$motivo" ] && awk -v p="${psi:-0}" 'BEGIN{exit !(p > 0)}'; then
+  # PSI dispara con el corte CALIBRADO (UMBRAL=10), no con "distinto de cero".
+  # Medido: la linea base de esta maquina es mem_full 0.00 en el 97.99 % de
+  # 19696 muestras, o sea que PSI es no-cero el 2 % del tiempo por causas
+  # normales -- una asignacion de 3 GiB lo puso en 0.55 y disparo una rafaga
+  # inutil el 2026-09-24. 10 es el mismo numero que usan `bb scan`,
+  # `bb-usable` y el veto de simplecode, validado contra los cuatro
+  # congelamientos con 0 falsos positivos.
+  if [ -z "$motivo" ] && awk -v p="${psi:-0}" 'BEGIN{exit !(p >= 10)}'; then
     motivo="psi mem_full=$psi"
   fi
   [ -z "$motivo" ] && return 0
@@ -381,6 +406,41 @@ cmd_sample() {
       printf '{"rss_kb":%s,"pid":%s,"comm":"%s","unit":"%s"},' "$rss" "$pid" "$comm" "${u:-?}"
     done | sed 's/,$//')
 
+  # QUIEN pidio memoria desde la muestra anterior. Anadido el 2026-09-24
+  # porque el cuarto congelamiento se vio venir en Committed_AS (+78 GB en un
+  # minuto) y ese contador es un TOTAL: no nombraba a nadie.
+  #
+  # Se mide el CRECIMIENTO de VmSize, no su nivel, y eso no es un detalle.
+  # Medido: reservando 6 GiB con mmap, Committed_AS sube 6.00 GB y la suma de
+  # VmSize sube 6.00 GB -- el delta sigue al compromiso 1:1. Pero el NIVEL de
+  # VmSize es inservible: los procesos Electron reservan ~1.4 TB virtuales con
+  # MAP_NORESERVE, que no cuentan en Committed_AS, asi que un "top 5 por
+  # VmSize" son siempre las mismas cinco ventanas de Chromium y no dice nada.
+  # Por eso se guarda el mapa anterior y se emite quien CRECIO.
+  #
+  # Piso de 256 MB: por debajo de eso es ruido de arranque y cierre de procesos
+  # normales, y llenaria la muestra de filas sin informacion.
+  local topvsz="" prev_vsz="$DATA/vsz_prev"
+  ps -eo pid=,vsz=,comm= 2>/dev/null | awk '{print $1, $2, $3}' > "$prev_vsz.new"
+  if [ -s "$prev_vsz" ]; then
+    # Se recorre el fichero ACTUAL, no el anterior: un proceso que nacio entre
+    # las dos muestras no esta en el anterior y de otro modo seria invisible.
+    # Para uno nuevo se toma su VmSize entero como crecimiento y se marca
+    # "nuevo":true, porque ahi el numero es el que es -- en un Electron recien
+    # nacido sera enorme por las reservas MAP_NORESERVE, y quien lea la muestra
+    # tiene que poder distinguirlo de un crecimiento real.
+    topvsz=$(awk 'NR==FNR{v[$1]=$2; next}
+                  { c = ($1 in v) ? $2 - v[$1] : $2
+                    if (c > 262144) printf "%s %s %s %s\n", $1, c, $3, (($1 in v) ? 0 : 1) }' \
+             "$prev_vsz" "$prev_vsz.new" 2>/dev/null | sort -k2 -rn | head -5 |
+      while read -r pid crec comm nuevo; do
+        u=$(sed -n 's/^0::\///p' "/proc/$pid/cgroup" 2>/dev/null | sed 's/.*\///')
+        printf '{"pid":%s,"crecio_kb":%s,"comm":"%s","unit":"%s","nuevo":%s},' \
+          "$pid" "$crec" "$comm" "${u:-?}" "$([ "${nuevo:-0}" = 1 ] && echo true || echo false)"
+      done | sed 's/,$//')
+  fi
+  mv -f "$prev_vsz.new" "$prev_vsz" 2>/dev/null
+
   # Procesos con memoria de GPU y quien los lanzo. En memoria unificada esto es
   # lo que decide si el gateway puede arrancar: el 2026-09-08 sumaban ~91 GB de
   # los 121 y `admission_check.sh` rechazo los 85 GB que pedia el gateway.
@@ -400,8 +460,8 @@ cmd_sample() {
   pybg=$(ps -eo pid=,etimes=,comm= 2>/dev/null |
     awk '$3 ~ /^python/ && $2 > 60 {printf "%s%s", (n++?",":""), $1}')
 
-  printf '{"ts":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"py_bg":[%s],"gpu":[%s],"commit_pct":%s,"residuo_mb":%s,"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s"}\n' \
-    "$ts" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$pybg" "$gpu" \
+  printf '{"ts":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"py_bg":[%s],"gpu":[%s],"commit_pct":%s,"residuo_mb":%s,"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s"}\n' \
+    "$ts" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$topvsz" "$pybg" "$gpu" \
     "${commit_pct:-0}" "${residuo:-0}" \
     "${psi_m_some:-0}" "${psi_m_full:-0}" "${psi_io_some:-0}" "${psi_cpu_some:-0}" \
     "${gw:-CAIDO}" "${dk:-?}" "${salud:-}" "${disco:-}" "${red:-}" "${cpuj:-}" >>"$f"
@@ -1950,6 +2010,56 @@ cmd_sigterm() {
   printf "could_not_run: %d\n%s" "$CNR" "$CNR_LIST"
 }
 
+# ---------------------------------------------- techo por aplicacion
+# Lanza un programa dentro de su PROPIO cgroup con techo de memoria. Si lo
+# toca, el kernel mata DENTRO de ese cgroup y nadie mas se entera.
+#
+# Por que hace falta esto y no basta el techo de app.slice: ese cubre el slice
+# ENTERO (48 GiB para todas las apps del escritorio juntas), asi que una sola
+# aplicacion desbocada puede llevarse 40 GiB sin tocarlo y arrastrar al resto.
+# Medido el 2026-09-24: el cuarto congelamiento consumio ~21 GB reales -- por
+# debajo del techo del slice, o sea que no lo habria parado.
+#
+# Y por que SI funciona aqui, a diferencia del techo contra la memoria de GPU:
+# medido el mismo dia, 3 GiB ordinarios TOCADOS suben memory.current en 2974
+# MiB (el cgroup los ve), mientras que 7 GiB de CUDA solo suben 15 MiB (no los
+# ve). Un IDE Electron usa memoria ordinaria: este techo si lo contiene.
+cmd_cap() {
+  local gb="${1:-}"; shift 2>/dev/null || true
+  case "$gb" in
+    ''|*[!0-9]*) echo "uso: bb cap <GB> <comando...>" >&2
+                 echo "  ej: bb cap 16 /home/lcasarin/.local/share/antigravity-ide/antigravity" >&2
+                 return 2 ;;
+  esac
+  [ $# -eq 0 ] && { echo "falta el comando" >&2; return 2; }
+
+  local nom; nom="bb-cap-$(basename "$1" | tr -cd 'a-zA-Z0-9_-')-$$"
+  echo "[bb cap] $1 bajo techo de ${gb}G (scope $nom)" >&2
+  echo "[bb cap] si lo toca, el kernel mata SOLO lo que corre aqui dentro" >&2
+
+  # --scope: el proceso hereda la terminal y las senales, que es lo que quiere
+  # un lanzador de escritorio. MemorySwapMax evita que el techo se esquive
+  # paginando: sin el, un proceso topado a 16G puede tener 16G mas en swap y
+  # el sistema vuelve a sufrir el reclaim que este techo existe para evitar.
+  systemd-run --user --scope --quiet --unit="$nom" \
+    -p MemoryMax="${gb}G" -p MemorySwapMax="${gb}G" \
+    -- "$@"
+  local rc=$?
+
+  # El pico se REPORTA para que el proximo numero salga de una medicion y no
+  # de una corazonada. systemd lo conserva un rato tras salir el scope.
+  local pico; pico=$(systemctl --user show "$nom.scope" -p MemoryPeak --value 2>/dev/null)
+  case "$pico" in
+    ''|'[not set]'|infinity) echo "[bb cap] pico: no disponible (el scope ya se recogio)" >&2 ;;
+    *) awk -v p="$pico" -v g="$gb" 'BEGIN{
+         printf "[bb cap] pico de memoria: %.1f GiB de %s permitidos (%.0f%% del techo)\n",
+                p/1073741824, g"G", p*100/(g*1073741824) }' >&2 ;;
+  esac
+  [ "$rc" -eq 137 ] || [ "$rc" -eq 134 ] && \
+    echo "[bb cap] salio con $rc: el kernel lo mato por el techo. Sube el numero o mira que pidio tanto." >&2
+  return "$rc"
+}
+
 usage() {
   cat <<'USAGE'
 bb -- caja negra de la maquina
@@ -1963,6 +2073,7 @@ bb -- caja negra de la maquina
   bb protect             sube el limite de core de las apps ya corriendo (prlimit)
   bb who [pid]           que procesos pesan y QUIEN los lanzo (unit, padre, cwd)
   bb sigterm ["hace X"]  QUIEN mando SIGTERM/SIGKILL a quien (DEBT-DGX-438)
+  bb cap <GB> <cmd...>   lanza algo con techo de memoria propio (el kernel lo aplica)
   bb install             instala el timer de usuario
 
 Datos propios en ~/.local/share/blackbox (retencion 14 dias).
@@ -1984,6 +2095,7 @@ case "${1:-}" in
   protect)  shift; cmd_protect "$@" ;;
   who)      shift; cmd_who "$@" ;;
   sigterm)  shift; cmd_sigterm "$@" ;;
+  cap)      shift; cmd_cap "$@" ;;
   install)  shift; cmd_install "$@" ;;
   ""|-h|--help|help) usage ;;
   *) echo "subcomando desconocido: $1" >&2; usage >&2; exit 2 ;;
