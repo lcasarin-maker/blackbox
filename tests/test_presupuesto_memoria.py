@@ -177,3 +177,116 @@ def test_control_negativo_sin_ilegibles_no_se_inventa_el_aviso(monkeypatch, tmp_
     rc = pm.main(["--check"])
     salida = capsys.readouterr()
     assert "could_not_run" not in salida.out and rc == 0, salida
+
+
+# =====================================================================
+# los caminos que NO son el feliz: cada uno tiene que decir la verdad
+# =====================================================================
+
+
+def test_meminfo_sin_la_linea_MemTotal_devuelve_None(tmp_path, monkeypatch):
+    """Un /proc/meminfo que existe pero no trae MemTotal no es un MemTotal de 0:
+    es un instrumento que no contesta lo que se le pregunta."""
+    f = tmp_path / "meminfo"
+    f.write_text("MemFree:  1 kB\nBuffers:  2 kB\n", encoding="utf-8")
+    monkeypatch.setattr(pm, "MEMINFO", f)
+    assert pm.mem_total_gib() is None
+
+
+def test_meminfo_con_basura_devuelve_None_y_no_revienta(tmp_path, monkeypatch):
+    f = tmp_path / "meminfo"
+    f.write_text("MemTotal:       no-soy-un-numero kB\n", encoding="utf-8")
+    monkeypatch.setattr(pm, "MEMINFO", f)
+    assert pm.mem_total_gib() is None
+
+
+def test_un_cgroup_que_no_existe_no_tiene_techo_ni_uso(tmp_path):
+    """Distinto de tener techo 0: no hay sujeto que leer."""
+    d = tmp_path / "no-existe"
+    assert pm.techo_gib(d) is None
+    assert pm.uso_gib(d) == 0.0
+
+
+def test_memory_current_ilegible_cuenta_como_cero_y_no_revienta(tmp_path):
+    """El uso es informativo; que falte no puede tumbar el presupuesto entero."""
+    d = tmp_path / "cg"
+    d.mkdir()
+    (d / "memory.current").write_text("basura\n", encoding="utf-8")
+    assert pm.uso_gib(d) == 0.0
+
+
+def test_un_directorio_de_muestras_que_no_se_puede_recorrer(tmp_path, monkeypatch):
+    """Si ni siquiera se puede listar, se registra y se devuelve None: "no se
+    pudo comprobar" no es "no hay picos"."""
+    class _Roto:
+        def glob(self, _):
+            raise OSError("no se puede listar")
+    monkeypatch.setattr(pm, "DATA_DIR", tmp_path)
+    assert pm.pico_gpu_observado_mib(_Roto()) is None
+    assert pm._ILEGIBLES, "un directorio ilegible tiene que quedar registrado"
+
+
+def test_lineas_que_no_son_una_muestra_de_GPU_se_saltan_sin_ruido(tmp_path):
+    """El jsonl mezcla muestras, rafagas y eventos. Las que no traen `gpu`, las
+    que no parsean y las que traen la lista vacia no son errores: son el resto
+    del fichero. Lo que NO puede pasar es que una de ellas cuente como un pico.
+    """
+    d = tmp_path / "samples"
+    d.mkdir()
+    (d / "x.jsonl").write_text(
+        '{"ts":"a","burst":true,"load1":1}\n'          # sin campo gpu
+        'esto no es json\n'                            # no parsea, y no dice gpu
+        '{"ts":"z","gpu":[{"mib":99999  <-- truncada\n'  # DICE gpu y NO parsea:
+        #    una linea a medio escribir, que es lo que deja un corte de energia
+        #    en un fichero de solo-anadir. Si contara, el pico seria inventado.
+        '{"ts":"b","gpu":[]}\n'                        # gpu vacio
+        '{"ts":"c","gpu":[{"pid":1,"mib":700}]}\n',    # el unico real
+        encoding="utf-8")
+    pico = pm.pico_gpu_observado_mib(d)
+    assert pico == (700, "c"), pico
+
+
+def test_un_slice_AUSENTE_se_dice_y_no_se_cuenta(tmp_path, monkeypatch, capsys):
+    """Un cgroup que no esta en esta maquina no puede entrar en la suma como 0:
+    eso haria que el presupuesto cuadrara por no encontrar al sujeto."""
+    raiz = _cgroups(tmp_path)
+    import shutil
+    shutil.rmtree(raiz / "docker.slice")
+    monkeypatch.setattr(pm, "CGROUP", raiz)
+    monkeypatch.setattr(pm, "MEMINFO", _meminfo(tmp_path))
+    monkeypatch.setattr(pm, "DATA_DIR", tmp_path)
+    _muestras(tmp_path, [1024])
+    monkeypatch.setattr(pm, "RESERVA_GPU_GIB", 10.0)
+    pm.main([])
+    salida = capsys.readouterr().out
+    assert "AUSENTE" in salida, salida
+    # y los 32 GiB de docker NO estan en la suma
+    assert "docker" in salida and "32.0 GiB" not in salida.split("AUSENTE")[0].split("docker")[-1]
+
+
+def test_sin_muestras_el_informe_dice_COULD_NOT_RUN_y_no_calla(tmp_path, monkeypatch, capsys):
+    """Un informe sin la fila del pico es un informe que perdio una fila; uno
+    que la imprime vacia miente. Se imprime COULD_NOT_RUN."""
+    monkeypatch.setattr(pm, "CGROUP", _cgroups(tmp_path))
+    monkeypatch.setattr(pm, "MEMINFO", _meminfo(tmp_path))
+    monkeypatch.setattr(pm, "DATA_DIR", tmp_path / "vacio")
+    pm.main([])
+    assert "COULD_NOT_RUN" in capsys.readouterr().out
+
+
+def test_sin_check_informa_y_sale_cero_aunque_no_componga(tmp_path, monkeypatch, capsys):
+    """Informar y bloquear son cosas distintas: sin `--check` esto es un
+    informe, y un informe no decide."""
+    _montar(monkeypatch, tmp_path)   # reparto que NO compone
+    assert pm.main([]) == 0
+    assert "SUMA declarada" in capsys.readouterr().out
+
+
+def test_json_saca_la_cuenta_entera_sin_veredicto(tmp_path, monkeypatch, capsys):
+    """Para que otro lo consuma sin parsear texto -- y sin que el formato de
+    salida decida nada."""
+    _montar(monkeypatch, tmp_path)
+    assert pm.main(["--json"]) == 0
+    d = json.loads(capsys.readouterr().out)
+    assert d["mem_total_gib"] > 0 and d["gasto_gib"] > d["mem_total_gib"]
+    assert [f["nombre"] for f in d["slices"]], d
