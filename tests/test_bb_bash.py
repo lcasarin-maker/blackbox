@@ -249,7 +249,7 @@ def test_swap_mide_el_RITMO_no_solo_el_nivel(datos, tmp_path):
     lo que informa es el delta por segundo.
     """
     correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 1000, 2000)})
-    time.sleep(4)  # blocking-sleep: el ritmo es un delta y necesita dos instantes separados -- DEBT-ACCEPTED-SLEEP-TESTS-BB
+    time.sleep(4)  # blocking-sleep: el ritmo es un delta y necesita dos instantes separados -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- nace en 1.4: el ritmo de swap es un DELTA entre dos lecturas de /proc/vmstat; no hay evento propio que esperar, solo reloj. Un contador acumulado no avisa cuando cambia
     correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 5000, 2400)})
     s = muestras(datos)[-1]["swap"]
     # 4000 paginas en ~4-6 s; el intervalo exacto lo pone el reloj, asi que se
@@ -266,7 +266,7 @@ def test_control_negativo_sin_trafico_de_swap_el_ritmo_es_cero(datos, tmp_path):
     cero, no un residuo."""
     v = _vmstat(tmp_path, 1000, 2000)
     correr(["sample"], datos, {"BB_VMSTAT": v})
-    time.sleep(2)  # blocking-sleep: dos muestras separadas, mismos contadores -- DEBT-ACCEPTED-SLEEP-TESTS-BB
+    time.sleep(2)  # blocking-sleep: dos muestras separadas, mismos contadores -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- nace en 1.4: el control negativo exige dos muestras SEPARADAS con los mismos contadores. Sin espera caerian en el mismo segundo y el delta seria 0 por la razon equivocada
     correr(["sample"], datos, {"BB_VMSTAT": v})
     s = muestras(datos)[-1]["swap"]
     assert float(s["in_pag_s"]) == 0.0, s
@@ -279,7 +279,7 @@ def test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo(datos, tmp_path)
     muestra despues de un arranque emitiria un ritmo negativo -- un numero que
     no significa nada y que cualquier grafica leeria como dato."""
     correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 900000, 900000)})
-    time.sleep(2)  # blocking-sleep: dos muestras separadas -- DEBT-ACCEPTED-SLEEP-TESTS-BB
+    time.sleep(2)  # blocking-sleep: dos muestras separadas -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- nace en 1.4: igual que el anterior, y ademas bb marca las muestras con resolucion de segundo
     correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 12, 34)})
     s = muestras(datos)[-1]["swap"]
     assert float(s["in_pag_s"]) == 0.0, s
@@ -606,9 +606,9 @@ def test_cpu_top_NOMBRA_a_quien_quema_cpu(datos):
     """
     quemador = subprocess.Popen(["bash", "-c", "while :; do :; done"])
     try:
-        time.sleep(1)  # blocking-sleep: el hijo tiene que existir en la muestra 1 -- DEBT-ACCEPTED-SLEEP-TESTS-BB
+        time.sleep(1)  # blocking-sleep: el hijo tiene que existir en la muestra 1 -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- nace en 1.4: se espera a que un SUBPROCESO exista y empiece a quemar CPU, no a estado propio; no hay evento que compartir con un hijo bash
         correr(["sample"], datos)                  # muestra 1: linea base
-        time.sleep(4)  # blocking-sleep: `ps -o times=` da segundos ENTEROS; hacen falta varios para que el delta sea legible -- DEBT-ACCEPTED-SLEEP-TESTS-BB
+        time.sleep(4)  # blocking-sleep: `ps -o times=` da segundos ENTEROS; hacen falta varios para que el delta sea legible -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- nace en 1.4: `ps -o times=` da SEGUNDOS ENTEROS, asi que el piso de deteccion es 1 segundo-nucleo. Con menos espera el delta seria 0 y el test pasaria por casualidad, no por medir
         correr(["sample"], datos)                  # muestra 2: ya quemo
         d = muestras(datos)[-1]
         por_pid = {x["pid"]: x for x in d["cpu_top"]}
@@ -635,9 +635,9 @@ def test_control_negativo_un_proceso_dormido_no_sale_como_que_quema(datos):
     """
     dormido = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(20)"])
     try:
-        time.sleep(1)  # blocking-sleep: el hijo tiene que existir ya -- DEBT-ACCEPTED-SLEEP-TESTS-BB
+        time.sleep(1)  # blocking-sleep: el hijo tiene que existir ya -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- nace en 1.4: el hijo dormido tiene que existir ya en la muestra 1 o el control negativo no controla nada
         correr(["sample"], datos)
-        time.sleep(4)  # blocking-sleep: mismo intervalo que el caso positivo, para que la comparacion valga -- DEBT-ACCEPTED-SLEEP-TESTS-BB
+        time.sleep(4)  # blocking-sleep: mismo intervalo que el caso positivo, para que la comparacion valga -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- nace en 1.4: MISMO intervalo que el caso positivo. Si fuera distinto, la comparacion entre el que quema y el que duerme no valdria
         correr(["sample"], datos)
         nombrados = {x["pid"] for x in muestras(datos)[-1]["cpu_top"]}
         assert dormido.pid not in nombrados, \
