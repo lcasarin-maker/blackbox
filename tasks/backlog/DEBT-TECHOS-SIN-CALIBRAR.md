@@ -1,7 +1,7 @@
 ---
 id: DEBT-TECHOS-SIN-CALIBRAR
 kind: debt
-title: Los techos declarados suman 125G en una maquina de 121.1G -- no componen
+title: "Los techos declarados suman 168.3 GiB en una maquina de 121.1: el hueco es la memoria unificada que ningun cgroup ve"
 status: open
 severity: P1
 origin: asserted
@@ -43,18 +43,80 @@ Contraste deliberado: el umbral de PSI **si** esta calibrado contra los cuatro
 incidentes y sus controles sanos (`tools/calibra_psi.py`, `VEREDICTO: CALIBRADO`).
 Aqui se sabe como se hace y no se hizo.
 
-## Como se cierra
+## Pasos 1, 2 y 4: HECHOS el 2026-09-25
 
-1. `tools/presupuesto_memoria.py`, con la forma de `tools/calibra_psi.py`:
-   lee `MemTotal`, lee los techos declarados de cada slice y contenedor, y
-   **falla si la suma excede el presupuesto** -- descontando la reserva para la
-   memoria unificada de GPU, que ningun cgroup ve.
-2. Fijar esa reserva con medida, no a ojo: cuanto reserva de verdad el vLLM en
-   memoria unificada (`nvidia-smi`, no el cgroup).
-3. Reescribir los techos con los numeros que salgan, y que el gate de (1) los
-   defienda.
-4. Control negativo obligatorio: el gate tiene que FALLAR con el reparto de hoy
-   (125G sobre 121.1). Si pasa, no mide.
+**(1) El gate existe**: `tools/presupuesto_memoria.py`, ocho tests. Lee
+`MemTotal`, los techos de cada slice desde la maquina, y la reserva de GPU.
+
+**(4) El control negativo se cumple**: falla con el reparto de hoy, y tambien
+pasa cuando los techos caben -- las dos direcciones tienen test, porque un
+presupuesto que siempre cuadra no es un presupuesto.
+
+```
+MemTotal                                    121.1 GiB
+reserva de GPU (ningun cgroup la ve)         86.0 GiB
+  app.slice (escritorio y arneses)           48.0 GiB   (usa 30.8)
+  docker.slice (contenedores)                32.0 GiB   (usa 11.0)
+  system.slice                             SIN TECHO    (usa 2.3, y eso es una observacion)
+SUMA declarada                              168.3 GiB   -- 47.2 de mas
+```
+
+**(2) La reserva se fijo con medida, y la medida desmintio lo esperado.**
+
+Era tentador presupuestar contra lo que el vLLM declara:
+`--gpu-memory-utilization 0.3`, que sobre 121.1 GiB son 36.3. Los picos DIARIOS
+de memoria unificada, sacados de las muestras que bb ya guardaba, lo superan
+**todos los dias**:
+
+```
+09-10  70.3   09-13  53.3   09-16  50.2   09-19  49.1   09-22  57.4
+09-11  53.5   09-14  54.8   09-17  49.5   09-20  66.6   09-23  38.0  <- el minimo
+09-12  74.2   09-15  50.1   09-18  49.1   09-21  85.4   09-24  67.0
+```
+
+## EL HALLAZGO: el techo que falta no es el del vLLM
+
+El pico de 85.4 GiB del 2026-09-21T00:33, abierto:
+
+```
+  34363 MiB = 33.6 GiB   docker-86305327...        <- vLLM, coherente con su 0.3
+   9761 MiB =  9.5 GiB   cov-solo.scope
+   7959 MiB =  7.8 GiB   cov-solo.scope
+   5715 MiB =  5.6 GiB   cov-solo.scope
+   5703 MiB =  5.6 GiB   cov-solo.scope
+   5431 MiB =  5.3 GiB   cov-solo.scope
+   4815 MiB =  4.7 GiB   cov-solo.scope
+   4631 MiB =  4.5 GiB   cov-solo.scope
+   4587 MiB =  4.5 GiB   cov-solo.scope           <- OCHO, 48 GiB entre todos
+   4522 MiB =  4.4 GiB   atlas-api.service
+  mem_avail en esa muestra: 0.2 GB   load1: 18.38
+```
+
+**El vLLM se porto.** Lo que no tiene techo es el abanico: ocho procesos de GPU
+simultaneos de un `cov-solo.scope` -- que no existe en este repo ni en el kit,
+viene de fuera-- llevandose 48 GiB de memoria unificada que **ningun cgroup ve**
+(medido aqui: 7 GiB de CUDA se contabilizan como 15 MiB).
+
+Los techos de 48G y 32G se pusieron como si esa memoria no existiera.
+
+## Paso 3: PENDIENTE, y es una decision con coste
+
+Reescribir los techos para que compongan exige elegir, y ninguna opcion es
+gratis:
+
+- **Bajarlos al peor caso**: `app.slice` + `docker.slice` tendrian que caber en
+  ~33 GiB. `app.slice` usa 30.8 AHORA, asi que esto mata sesiones de agente en
+  operacion normal, no solo en el pico. Es lo unico que garantiza que todo quepa.
+- **Poner techo de memoria unificada al abanico**: control de admision por
+  numero de procesos de GPU concurrentes. Es la solucion de fondo, y el codigo
+  que lanza ese abanico NO esta en blackbox.
+- **Aceptarlo por escrito** y cerrar como `void_wontfix`, dejando la aritmetica
+  y el motivo por el que la maquina sobrevive: los picos no coinciden.
+
+Se ofrecio como boleta el 2026-09-25 y la opcion elegida -- presupuestar contra
+el tope configurado del vLLM y vigilar el abanico -- **no sobrevivio a la
+medicion**: con 36.3 GiB de reserva el gate fallaria todos los dias, que no es
+vigilancia sino ruido. Se dijo, y la decision sigue abierta.
 
 ## Limite declarado
 
