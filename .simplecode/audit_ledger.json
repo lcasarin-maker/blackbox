@@ -1,65 +1,70 @@
 {
-  "claims_fingerprint": "5c9ea3b8311dcafaab4f66d6affe3c1b37c39a5e9d33468375baea84c03c2c79",
-  "panel": "Claude Opus 5, sesion bb del 2026-09-25. Re-auditoria tras cambiar SPEC.md: cada afirmacion contrastada contra el SUJETO -- disco, unidades desplegadas, salida de bb drift, loginctl y la corrida real de cada gate. DOS mejoraron desde la auditoria del 24 y se sellan con el hecho nuevo, no con el viejo: L98 se habia sellado con un limite declarado porque la copia de Atlas seguia existiendo, y ya no existe (DGX-585 cerrada alli); L229 se habia sellado con 1 divergente y 1 ausente en bb drift, y ahora da 0 y 0 porque el dueno aplico el sudo pendiente.",
+  "claims_fingerprint": "dd77eb8965c5dd9dd7e3361e2b8d0d9c78568ad56030014e2a32dddcfac23ee2",
+  "panel": "Claude Opus 5 (sesion blackbox 2026-09-25, release 1.3.1)",
   "profile": "general",
   "results": [
     {
       "claim_id": "SPEC-L94",
-      "evidence": "Medido en disco: 0 ficheros de blackbox importan modulos de Atlas y 0 ficheros de Atlas importan de blackbox. La via de consumo es el jsonl en ~/.local/share/blackbox/atom_gpu_telemetry.jsonl mas los comandos --gate-termico y --procesos-gpu, que Atlas invoca por subproceso desde tools/bb_consulta.py.",
+      "evidence": "Medido hoy 2026-09-25 sobre el disco: 0 ficheros de Atlas importan modulos de blackbox (grep -rlE '^(from|import) .*blackbox' sobre tools/ y tests/ de Atlas) y 0 de blackbox importan de Atlas. La via de consumo sigue siendo el jsonl mas los comandos --gate-termico y --procesos-gpu, que Atlas invoca por subproceso desde tools/bb_consulta.py.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L98",
-      "evidence": "MEJORA sobre la auditoria del 2026-09-24, que sello esta afirmacion con un limite declarado: la copia de tools/atom_gpu_telemetry.py YA NO EXISTE en Atlas -- DGX-585 se cerro alli el 2026-09-25 con el commit 82b27781, que la borro junto con sus suites y reencamino sus 13 consumidores. El duplicado en transito que la version anterior declaraba ha desaparecido. detect_atom_crash.py se queda en Atlas, importando tools.durable_log y escribiendo en docs/agent_findings/.",
+      "evidence": "Sellada el 2026-09-25 con el hecho nuevo, no con el limite declarado del 2026-09-24: la copia de atom_gpu_telemetry.py en Atlas ya no existe. ESTE release anade una correccion sobre esa misma frontera: bin/bb todavia LEIA la ruta borrada de Atlas, asi que `bb status` declaraba FALTA sobre un instrumento activo (711 muestras/hora). Repuntado a $DATA con la misma variable del productor, ATOM_TELEMETRY_JSONL; armado pasa de 13 a 14 y falta de 1 a 0, con control negativo corrido (el bin/bb de HEAD sigue diciendo FALTA con el fichero presente).",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L102",
-      "evidence": "loginctl show-user lcasarin -p Linger --value devuelve yes. Aplicado por el dueno con enable-privileged.sh seccion 10. Antes valia no, y eso costo 4h21m36s de stack de inferencia caido tras el arranque de las 14:11:31 del 2026-09-24.",
-      "verdict": "verified"
-    },
-    {
-      "claim_id": "SPEC-L225",
-      "evidence": "bb status imprime la antiguedad del DATO donde hay artefacto que revisar. El hueco que la propia fila declara -- timer del muestreo, clock lock y earlyoom leidos por systemctl is-active, que no detecta una unit activa que dejo de trabajar -- sigue abierto y la fila lo dice en vez de callarlo.",
+      "evidence": "loginctl show-user lcasarin -p Linger --value devuelve yes. Y esta vez con control sobre la maquina, no solo sobre el fichero: en el arranque de hoy user@1000.service arranco a las 05:10:14 y blackbox-sample.timer a las 05:10:15, 2 min 46 s ANTES del primer inicio de sesion grafico (05:13:01). En el arranque anterior, previo a aplicar linger, el gestor de usuario no arranco hasta las 18:33:07, cuando alguien inicio sesion.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L226",
-      "evidence": "Cada gate anadido trae su control negativo CORRIDO. Los de este release: tools/mutacion_alcanza.py monta un repo cuyos tests no importan modulo local y exige rc=1; el trinquete de cobertura con el piso a 99.0 da rc=1; el gate de inventario con un cmd_ mutado en bin/bb da rc=1 nombrandolo.",
+      "evidence": "bb status imprime la antiguedad del DATO donde hay artefacto que revisar, y el hueco que la fila declara (timer, clock lock, earlyoom por is-active) sigue abierto y dicho. La adenda nueva de esta fila esta MEDIDA: el 2026-09-25 ese mismo chequeo mintio al reves -- declaraba FALTA sobre la telemetria termica activa porque leia la ruta que Atlas ya habia borrado. Arreglado en este release y con control negativo: con $DATA vacio, o con el fichero de hace una hora, el chequeo vuelve a decir FALTA.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L227",
-      "evidence": "blackbox-sample.service declara Nice=19 e IOSchedulingClass=idle, comprobado en la unit desplegada y en la copia adoptada, que bb drift compara y reporta igual.",
+      "evidence": "Cada sonda anadida en este release trae su control negativo CORRIDO, no argumentado: latencia_x sale TIMEOUT con un xset que duerme (y espera >=900 ms, no adivina), ERROR con uno que sale 1, y AUSENTE sin DISPLAY -- que no es lo mismo que OK; cpu_top no existe contra el bin/bb de HEAD (rc=1) y si contra el arreglo (rc=0), y un proceso dormido no aparece; swap.in_pag_s da 800 pag/s con contadores plantados, 0 sin trafico, y 0 -- no negativo -- cuando el contador retrocede. El trinquete de cobertura tambien: piso 30.0 -> FAIL, 25.7 -> pasa.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L228",
-      "evidence": "tools/calibra_psi.py sigue devolviendo VEREDICTO: CALIBRADO con los cuatro incidentes propios cargados. Los dos limites que la fila declara -- n pequeno del lado positivo y solo el canal de memoria calibrado -- siguen abiertos y sin cerrar.",
+      "evidence": "blackbox-sample.service declara Nice=19 e IOSchedulingClass=idle, leido de la unit en la maquina hoy. Las tres sondas nuevas de este release no cambian eso: cpu_top y swap leen /proc, y latencia_x es un unico xset q con timeout de 5 s, medido en 4-7 ms.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L229",
-      "evidence": "MEJORA sobre la auditoria del 2026-09-24, que sello con 1 divergente y 1 ausente: bb drift da ahora revisados 30, divergentes 0, ausentes 0, suspendidos 1. El dueno aplico enable-privileged.sh, que puso el drop-in del watchdog SBSA y convergio el fichero de kernel.panic. El unico suspendido es gpu_sampler.sh, con manifiesto y caducidad 2026-10-07.",
+      "evidence": "tools/calibra_psi.py corrido hoy devuelve VEREDICTO: CALIBRADO con 0 incidentes no detectados. El limite que la fila declara sigue vigente y sin maquillar: solo el canal de memoria esta calibrado. Este release anade una seccion de ventanas de contencion de CPU a bb scan y la deja explicitamente SIN veredicto por esa misma razon.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L230",
-      "evidence": "tools/inventario.py --check corre como hook inventario-spec en pre-commit. En ESTE release volvio a cazar: dos herramientas nuevas sin declarar en SPEC.md, en su primera corrida despues de traerlas de Atlas, y despues tools/mutacion_alcanza.py. Control negativo: con un cmd_ nuevo en bin/bb da rc=1 nombrandolo.",
+      "evidence": "bb drift corrido hoy: revisados 30, divergentes 0, ausentes 0, suspendidos 1.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L231",
-      "evidence": "bb drift vigila 30 sujetos, antes 19. Los 11 adoptados el 2026-09-24 incluyen /usr/local/bin/nvrm-watch.sh, con fecha 2026-09-09 15:40, que corre cada 5 minutos, ha cazado 17 NVRM Out-of-memory y no estaba versionado en ningun repo.",
+      "evidence": "tools/inventario.py --check corre como hook inventario-spec en pre-commit y devuelve HALLAZGOS: 0 despues de las ediciones de SPEC de este release (ADR 0011, REQ-0007 y la fila de riesgo nueva).",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L232",
-      "evidence": "tools/cobertura_bash.sh mide bin/bb en 17.7% (149 de 843), y el hook bb-cobertura-piso corre en pre-push contra tests/cobertura_bb.piso = 17.7. Verificado que puede bloquear: con el piso a 99.0 da rc=1 con el motivo impreso.",
+      "evidence": "bb drift vigila 30 sujetos, antes 19. Los 11 adoptados el 2026-09-24 siguen sin divergencias ni ausencias en la corrida de hoy.",
+      "verdict": "verified"
+    },
+    {
+      "claim_id": "SPEC-L233",
+      "evidence": "Fila NUEVA y marcada Ocurrio con la medida delante. Lo que bb registro 25 s antes del reinicio del 2026-09-25 (muestra de las 05:08:01): load1 0.95 sobre 20 nucleos, mem_avail 65.8 GB, psi io 0.00 cpu 0.00 mem_full 0.00, smi OK en 22 ms. Sobre las 686 muestras del arranque entero, cpu_some >= 10 % en el 3.2 % y la racha mas larga de 3 min. Lo que el journal si tenia: snap.antigravity...scope consumio 2 h 37 min 14 s de CPU entre 02:45:59 y 05:00:57 -- 2 h 14 min 58 s de reloj, 116.5 % de un nucleo -- y app-com.anthropic.Claude-345364.scope 15 h 09 min 54 s en un arranque de 14 h 56 min 56 s, 101.4 %. Las tres sondas que cierran el hueco de instrumento (cpu_top, x, swap) estan escribiendo en vivo, verificado sobre las muestras reales. La CAUSA del episodio sigue sin probar y esta en DEBT-SLUGGISH-SIN-CAUSA-PROBADA, en la linea base con dueno y caducidad 2026-10-23.",
+      "verdict": "verified"
+    },
+    {
+      "claim_id": "SPEC-L234",
+      "evidence": "tools/piso_cobertura.sh corrido hoy: bin/bb al 25.7 %, piso 25.7. La cifra de la fila sube de 17.7 % (2026-09-24) a 25.7 % porque este release prueba bb status, cpu_top, swap y latencia_x. El control negativo del trinquete se corrio, no se argumento: con el piso en 30.0 el hook FALLA y lo dice; con 25.7 pasa. La fila sigue diciendo que el numero es bajo y que eso es el hallazgo, no la solucion.",
       "verdict": "verified"
     }
   ],
-  "timestamp": "2026-09-25T08:55:24Z",
-  "tree_fingerprint": "a9670940d0ac7ba77fa1e4ec98854538c774646ad7270be77c690e48fbb48a91",
+  "timestamp": "2026-09-25T12:01:54Z",
+  "tree_fingerprint": "af5dc8ff414d9852eca9f0a72cecf4bc5c6dcdb72cf3fe9590536cc20ef54559",
   "violations": []
 }
