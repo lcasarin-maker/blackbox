@@ -5,10 +5,13 @@
 # `.simplecode/*`, asi que un allowlist ahi no viajaria al clone y el siguiente
 # que clonara veria hallazgos sin ninguna firma que los explique.
 #
-# Las dos de abajo son NOMBRES DE UNIT DE SYSTEMD con instancia. El patron de
+# Las TRES de abajo son NOMBRES DE UNIT DE SYSTEMD con instancia. El patron de
 # correo del gate es `[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}`, y
-# `user@1000.service` lo casa igual que `alguien@dominio.com`: local, arroba,
-# "dominio", punto, "tld". No hay forma de distinguirlos mirando solo la cadena.
+# `user@1000.service` tiene la MISMA FORMA que una direccion cualquiera: parte
+# local, arroba, "dominio", punto, "tld". No hay forma de distinguirlos mirando
+# solo la cadena. (Aqui no se escribe una direccion de ejemplo a proposito: la
+# doctrina del propio gate es que un hallazgo se describe por su FORMA, no por
+# su contenido -- y una direccion inventada casa el patron igual que una real.)
 #
 # Que se declara exactamente: no son direcciones de correo de nadie, no
 # identifican a un tercero, y son la ruta literal de un cgroup y el nombre
@@ -29,3 +32,4 @@
 # Firmado: sesion blackbox 2026-09-25, con el dueno en la conversacion.
 user@1000.service
 org.gnome.Shell@x11.service
+getty@tty1.service
