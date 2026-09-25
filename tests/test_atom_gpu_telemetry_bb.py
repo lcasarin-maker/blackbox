@@ -452,3 +452,45 @@ def test_el_gate_por_comando_NO_se_relaja_sin_telemetria_fresca(monkeypatch, cap
                "zonas": [{"zona": "thermal_zone0", "temp_c": 96.0}]} for _ in range(10)]
     rc, salida = _gate(monkeypatch, capsys, ZONA_CALIENTE, UMBRALES, rancio, tmp_path)
     assert rc == 1 and "el gate NO se relaja" in salida["motivo"], salida
+
+
+# ------------------------------------------- procesos de GPU como comando
+# Atlas preguntaba "quien esta en la GPU" invocando nvidia-smi por su cuenta.
+# Con la frontera de DGX-585 el driver lo interroga quien gobierna el hardware
+# y Atlas decide con la respuesta: el HECHO aqui, la POLITICA alli.
+
+
+def test_procesos_gpu_como_comando_devuelve_el_hecho(monkeypatch, capsys):
+    monkeypatch.setattr(agt, "_correr", lambda *a: "1234, python3, 500\n")
+    monkeypatch.setattr(agt.sys, "argv", ["agt", "--procesos-gpu"])
+    rc = agt.main()
+    salida = json.loads(capsys.readouterr().out)
+    assert rc == 0, salida
+    assert salida["gpu_mem_total_mib"] == 500
+    assert salida["gpu_procs"][0]["pid"] == "1234"
+
+
+def test_control_negativo_procesos_gpu_sale_1_si_no_pudo_averiguarlo(monkeypatch, capsys):
+    """Quien no sabe, no pasa: si nvidia-smi no se puede ejecutar, el rc dice
+    que no hubo respuesta en vez de devolver una lista vacia, que el llamador
+    leeria como 'la GPU esta libre'."""
+    def _no_ejecutable(*_a):
+        raise OSError("no existe")
+
+    monkeypatch.setattr(agt, "_correr", _no_ejecutable)
+    monkeypatch.setattr(agt.sys, "argv", ["agt", "--procesos-gpu"])
+    rc = agt.main()
+    salida = json.loads(capsys.readouterr().out)
+    assert rc == 1, salida
+    assert salida["gpu_procs"] is None
+    assert "no ejecutable" in salida["gpu_procs_ausente"]
+
+
+def test_una_gpu_de_verdad_ociosa_NO_es_lo_mismo_que_no_saber(monkeypatch, capsys):
+    """Cero procesos es un dato valido; la diferencia con el caso de arriba es
+    justo lo que el rc distingue."""
+    monkeypatch.setattr(agt, "_correr", lambda *a: "")
+    monkeypatch.setattr(agt.sys, "argv", ["agt", "--procesos-gpu"])
+    rc = agt.main()
+    salida = json.loads(capsys.readouterr().out)
+    assert rc == 0 and salida["gpu_procs"] == [] and salida["gpu_mem_total_mib"] == 0

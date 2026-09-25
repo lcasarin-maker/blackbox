@@ -1276,12 +1276,26 @@ def main() -> int:
                     help="una sola muestra y salir, sin loop")
     ap.add_argument("--dry-run", action="store_true",
                     help="imprime los eventos, no escribe el jsonl")
+    ap.add_argument("--procesos-gpu", action="store_true",
+                    help=("imprime quien tiene memoria de GPU ahora mismo, en "
+                          "JSON. Es el HECHO fisico; la politica de quien puede "
+                          "usarla es de quien encola trabajo (DGX-585)."))
     ap.add_argument("--gate-termico", action="store_true",
                     help=("imprime {bloquea, motivo} y sale 1 si NO se le debe "
                           "sumar carga a la maquina. Es la via por la que Atlas "
                           "consulta esta decision sin importar codigo de aqui "
                           "(contrato de los dos repos, DGX-585)."))
     args = ap.parse_args()
+
+    if args.procesos_gpu:
+        # El HECHO fisico -- quien tiene memoria de GPU ahora mismo -- separado
+        # de la POLITICA, que es de quien encola trabajo. Atlas preguntaba esto
+        # invocando `nvidia-smi` por su cuenta; con la frontera de DGX-585 el
+        # driver lo interroga quien gobierna el hardware, y Atlas decide con la
+        # respuesta. Sale 1 si NO se pudo averiguar: quien no sabe, no pasa.
+        datos = leer_procesos_gpu()
+        print(json.dumps(datos, ensure_ascii=False))
+        return 1 if datos.get("gpu_procs") is None else 0
 
     if args.gate_termico:
         # Una sola fuente para el 94.8 C. Atlas llamaba a `presupuesto_termico`
