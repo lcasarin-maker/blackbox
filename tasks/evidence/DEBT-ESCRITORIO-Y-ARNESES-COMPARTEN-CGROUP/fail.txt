@@ -1,0 +1,13 @@
+# CONTROL NEGATIVO del criterio: el mismo comando sobre un cgroup SIN
+# proteger. Es el scope del arnes, que queda en 0 a proposito -- si el
+# criterio no pudiera salir negativo aqui, no estaria midiendo nada.
+#   BASE = /sys/fs/cgroup/user.slice/user-1000.slice
+
+$ grep -qvx 0 $BASE/<gestor>/app.slice/app-com.anthropic.Claude-38380.scope/memory.low
+  rc=1
+  memory.low     = 0
+  memory.current = 18.5 GB  (no es un cgroup vacio)
+
+# Y el historico: antes de la segunda corrida de enable-privileged.sh
+# (07:29:53) user-1000.slice/memory.low valia 6442450944 (6G), puesto por la
+# primera corrida de las 07:15:14, y antes de esa valia 0.

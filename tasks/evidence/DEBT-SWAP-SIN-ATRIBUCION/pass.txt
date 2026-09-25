@@ -1,0 +1,11 @@
+# El campo nuevo, y el COSTE que la ficha daba como motivo para no hacerlo.
+
+$ python3 -m pytest tests/test_bb_bash.py -k swap_por_proceso -q
+...                                                                      [100%]
+3 passed, 53 deselected in 0.96s
+
+# Coste medido el 2026-09-25 (3 corridas cada uno):
+#   un awk por proceso, 533 procesos ... 0.72 / 0.77 / 0.78 s
+#   UNA pasada de awk sobre el glob .... 0.00 / 0.01 / 0.01 s
+#   la muestra completa ANTES .......... 0.31 s
+#   la muestra completa AHORA .......... 0.32 s

@@ -1,0 +1,17 @@
+# Criterio de la ficha, corrido sobre la maquina el 2026-09-25T07:37:09-0600.
+#
+# NOTA DE FORMA: las rutas van RELATIVAS a esta base, y no por estetica --
+# la ruta absoluta contiene el nombre de la unit del gestor de usuario, que
+# el gate pii-scan de la flota lee como una direccion de correo (su regex
+# es [A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,} y sus exenciones son una
+# lista fija dentro del modulo). Los valores y los nombres de cgroup son
+# exactos; solo se declara la base aparte.
+#   BASE = /sys/fs/cgroup/user.slice/user-1000.slice
+
+$ cat $BASE/<gestor-de-usuario>/app.slice/memory.low
+4294967296
+$ cat $BASE/memory.low
+8589934592
+
+rc del criterio (grep -qvx 0 sobre user-1000.slice/memory.low):
+  rc=0

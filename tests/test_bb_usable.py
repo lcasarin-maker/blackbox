@@ -276,3 +276,90 @@ def test_la_racha_se_REINICIA_tras_un_pico_no_se_acumula(bbu, monkeypatch):
         "episodios sanos separados reinician la maquina"
     )
     assert caricias == bbu.PSI_ACT_SONDAS + 1
+
+
+# =====================================================================
+# latencia del escritorio -- se OBSERVA, no se actua sobre ella
+# =====================================================================
+
+
+def _xset_falso(tmp_path, cuerpo):
+    f = tmp_path / "xset_falso"
+    f.write_text("#!/usr/bin/env bash\n" + cuerpo, encoding="utf-8")
+    f.chmod(0o755)
+    return str(f)
+
+
+def test_observa_la_latencia_del_servidor_grafico(bbu, tmp_path, monkeypatch):
+    """El 2026-09-25 la maquina fue inusable para teclear con `mem_full` en 0.00
+    casi todo el rato. Este demonio vio una caja sana y tenia razon por su
+    definicion: pregunta si sirve MEMORIA. Esto anade la otra pregunta.
+    """
+    monkeypatch.setenv("DISPLAY", ":1")
+    monkeypatch.setenv("BB_USABLE_XSET", _xset_falso(tmp_path, "exit 0\n"))
+    v = bbu.latencia_x_ms()
+    assert v is not None and v >= 0
+
+
+def test_control_negativo_un_servidor_que_se_cuelga_devuelve_el_PLAZO(
+        bbu, tmp_path, monkeypatch):
+    """El caso que importa: el servidor X vivo pero sin atender. Tiene que
+    devolver el plazo entero, no un numero pequeno -- si devolviera algo bajo,
+    una grafica leeria 'rapido' justo durante el incidente."""
+    monkeypatch.setenv("DISPLAY", ":1")
+    monkeypatch.setenv("BB_USABLE_XSET", _xset_falso(tmp_path, "sleep 30\n"))
+    monkeypatch.setenv("BB_USABLE_X_TIMEOUT_S", "1")
+    assert bbu.latencia_x_ms() >= 900
+
+
+def test_control_negativo_sin_DISPLAY_devuelve_None_y_no_cero(bbu, monkeypatch):
+    """`None` y `0 ms` no son lo mismo: uno dice 'no se midio' y el otro
+    'instantaneo'. Reportar el segundo por el primero es como reiniciar por
+    ceguera, que es el error que este fichero ya documenta haber cometido."""
+    monkeypatch.delenv("DISPLAY", raising=False)
+    assert bbu.latencia_x_ms() is None
+
+
+@pytest.mark.parametrize("cuerpo", ["exit 1\n", "exit 127\n"])
+def test_control_negativo_un_servidor_que_rechaza_devuelve_None(
+        bbu, tmp_path, monkeypatch, cuerpo):
+    monkeypatch.setenv("DISPLAY", ":1")
+    monkeypatch.setenv("BB_USABLE_XSET", _xset_falso(tmp_path, cuerpo))
+    assert bbu.latencia_x_ms() is None
+
+
+def test_el_comando_se_lee_del_entorno_EN_CADA_llamada(bbu, tmp_path, monkeypatch):
+    """Ligarlo al importar dejaba los casos negativos sin poder montarse: al
+    cambiar la variable despues, la funcion seguia llamando al `xset` real y
+    devolvia un numero donde debia devolver `None`. Lo encontro el control
+    negativo, no leer el codigo.
+    """
+    monkeypatch.setenv("DISPLAY", ":1")
+    monkeypatch.setenv("BB_USABLE_XSET", _xset_falso(tmp_path, "exit 0\n"))
+    assert bbu.latencia_x_ms() is not None
+    monkeypatch.setenv("BB_USABLE_XSET", "/no/existe/xset")
+    assert bbu.latencia_x_ms() is None
+
+
+def test_la_latencia_NO_entra_en_ninguna_decision(bbu):
+    """La propiedad mas importante de este cambio, y por eso tiene test: este
+    proceso no informa, ACTUA -- su unit lleva FailureAction=reboot-immediate.
+    Con UNA medida sana y CERO episodios malos no hay calibracion posible, y un
+    vigilante que actua sobre un numero sin calibrar reinicia la maquina y
+    ademas afirma haber tenido razon.
+
+    Se comprueba sobre el texto porque lo que se guarda es una AUSENCIA: que
+    ninguna rama de decision consulte la latencia.
+    """
+    import ast
+    fuente = Path(bbu.__file__).read_text(encoding="utf-8") if getattr(bbu, "__file__", None) \
+        else (Path(__file__).resolve().parent.parent / "bin" / "bb-usable").read_text(encoding="utf-8")
+    arbol = ast.parse(fuente)
+    principal = next(n for n in ast.walk(arbol)
+                     if isinstance(n, ast.FunctionDef) and n.name == "main")
+    for nodo in ast.walk(principal):
+        if isinstance(nodo, (ast.If, ast.While)):
+            usados = {n.id for n in ast.walk(nodo.test) if isinstance(n, ast.Name)}
+            assert "xms" not in usados, (
+                "la latencia entro en una decision de bb-usable: eso es darle "
+                "permiso para reiniciar la maquina por un umbral sin calibrar")

@@ -1050,3 +1050,72 @@ def test_procesos_gpu_no_se_piden_en_cada_muestra(thermal, gpu_ok):
     assert presentes[1] is False
     assert presentes[agt.PROCESOS_GPU_CADA] is True
     assert sum(presentes) == 2
+
+
+# =====================================================================
+# rotacion EN CALIENTE -- el anillo sin esperar a que el proceso reinicie
+# =====================================================================
+
+
+def test_rotacion_en_caliente_recorta_cuando_el_fichero_pasa_del_techo(
+        tmp_path, monkeypatch):
+    """`rotar_si_hace_falta()` se llama una sola vez, en `main()`. Este servicio
+    corre en bucle cada 5 s y solo se reinicia con la maquina, asi que entre que
+    el fichero pasa del corte y el siguiente arranque no hay cota ninguna.
+
+    Medido el 2026-09-25: 138.3 MB y 150,040 lineas creciendo 15.9 MB al dia.
+    """
+    f = tmp_path / "telemetria.jsonl"
+    f.write_text("".join(f'{{"n": {i}}}\n' for i in range(60)), encoding="utf-8")
+    monkeypatch.setattr(agt, "JSONL_PATH", f)
+    monkeypatch.setattr(agt, "MAX_BYTES", 100)      # el fichero lo pasa
+    monkeypatch.setattr(agt, "MAX_LINEAS", 40)
+    monkeypatch.setattr(agt, "LINEAS_A_CONSERVAR", 10)
+    assert agt.rotar_en_caliente() == 50
+    assert len(f.read_text(encoding="utf-8").splitlines()) == 10
+
+
+def test_control_negativo_por_debajo_del_techo_NO_toca_el_fichero(
+        tmp_path, monkeypatch):
+    """Si recortara igual, la 'rotacion en caliente' seria una perdida de datos
+    periodica con otro nombre."""
+    f = tmp_path / "telemetria.jsonl"
+    original = "".join(f'{{"n": {i}}}\n' for i in range(60))
+    f.write_text(original, encoding="utf-8")
+    monkeypatch.setattr(agt, "JSONL_PATH", f)
+    monkeypatch.setattr(agt, "MAX_BYTES", 10 * 1024 * 1024)
+    monkeypatch.setattr(agt, "MAX_LINEAS", 40)
+    assert agt.rotar_en_caliente() is None
+    assert f.read_text(encoding="utf-8") == original
+
+
+def test_control_negativo_mira_los_BYTES_y_no_las_lineas(tmp_path, monkeypatch):
+    """La diferencia entera del guardia: contar lineas exige LEER el fichero, y
+    leer 138 MB cada hora para descubrir que no hay nada que hacer seria
+    cambiar un problema por otro. Aqui el fichero pasa de MAX_LINEAS pero NO de
+    MAX_BYTES, y no se toca -- prueba que la puerta es el tamano."""
+    f = tmp_path / "telemetria.jsonl"
+    original = "".join(f'{{"n": {i}}}\n' for i in range(60))
+    f.write_text(original, encoding="utf-8")
+    monkeypatch.setattr(agt, "JSONL_PATH", f)
+    monkeypatch.setattr(agt, "MAX_BYTES", 10 * 1024 * 1024)
+    monkeypatch.setattr(agt, "MAX_LINEAS", 5)   # lo pasa de sobra
+    assert agt.rotar_en_caliente() is None
+    assert f.read_text(encoding="utf-8") == original
+
+
+def test_control_negativo_sin_fichero_no_revienta(tmp_path, monkeypatch):
+    """Corre dentro del bucle del sampler: una excepcion aqui mata la
+    telemetria entera para ahorrar un recorte."""
+    monkeypatch.setattr(agt, "JSONL_PATH", tmp_path / "no-existe.jsonl")
+    assert agt.rotar_en_caliente() is None
+
+
+def test_el_techo_en_bytes_esta_por_ENCIMA_del_techo_en_lineas(tmp_path):
+    """El guardia de bytes no debe adelantarse al de lineas: tiene que actuar
+    cuando el de lineas ya deberia haber actuado y no pudo, que es el hueco que
+    cierra. A la densidad medida (966 bytes/linea) las MAX_LINEAS del anillo
+    ocupan ~184 MB, y el techo esta en 192 MB.
+    """
+    bytes_por_linea_medidos = 966
+    assert agt.MAX_BYTES > agt.MAX_LINEAS * bytes_por_linea_medidos

@@ -1,0 +1,12 @@
+# CONTROLES NEGATIVOS, corridos y no argumentados.
+# Cada uno monta el estado que antes era INDISTINGUIBLE de sano.
+
+--- control negativo 1: sin muestras frescas ---
+  FALTA     blackbox: muestreo de apps/zombis (dato de hace <2 min) -- el timer puede estar activo y el muestreo caido: corre 'bb sample' a mano y mira el error
+--- control negativo 2: el driver confirmo OTRO rango que el declarado ---
+  FALTA     clock lock de GPU (declarado 300,2800 MHz, confirmado por el driver) -- declarado '300,2800' y el driver confirmo '300,2600' -- limite termico DGX-342/344/345 sin aplicar
+--- control negativo 3: earlyoom SIN punteria (arrancado de serie) ---
+  FALTA     earlyoom con la punteria puesta (prefiere y evita) -- activo no es lo mismo que apuntando: sudo ./enable-privileged.sh (seccion 6)
+--- control negativo 4: journal mudo (los dos) ---
+  FALTA     clock lock de GPU (declarado 300,2800 MHz, confirmado por el driver) -- declarado '300,2800' y el driver confirmo 'nada' -- limite termico DGX-342/344/345 sin aplicar
+  FALTA     earlyoom con la punteria puesta (prefiere y evita) -- activo no es lo mismo que apuntando: sudo ./enable-privileged.sh (seccion 6)
