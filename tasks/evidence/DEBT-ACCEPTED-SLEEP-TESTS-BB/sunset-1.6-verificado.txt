@@ -1,0 +1,110 @@
+# Revision de sunset para 1.6. Corrida, no argumentada.
+# El propio comentario de estas exenciones lo pide: "el control es barato, asi
+# que se CORRE cada minor en vez de argumentar que nada cambio". Se corrio,
+# aunque la revision de 1.5 fuera de esta misma manana: decir "no ha cambiado
+# nada desde hoy" es exactamente la inercia que esa frase prohibe.
+
+=====================================================================
+12 REGLAS DE .gitignore -- verificadas POR RETIRADA
+=====================================================================
+Se quita la regla y se compara el veredicto de `git check-ignore --no-index -v`
+sobre su sujeto. `--no-index` porque si no, un fichero trackeado sale "no
+ignorado" por estar en el indice y no por las reglas.
+
+regla                                   sujeto                            CON    SIN
+.simplecode/*                           .simplecode/cualquier_cosa        True   False
+!.simplecode/local_hooks.yaml           .simplecode/local_hooks.yaml      False  True
+!.simplecode/backlog_baseline.json      .simplecode/backlog_baseline.json False  True
+!.simplecode/build_tools.txt            .simplecode/build_tools.txt       False  True
+!.simplecode/hook_receipt_baseline.json .simplecode/hook_receipt_...json  False  True
+!.simplecode/organ_inapplicable.json    .simplecode/organ_inapplicab.json False  True
+!.simplecode/corpus_exempt.yaml         .simplecode/corpus_exempt.yaml    False  True
+!.simplecode/audit_ledger.json          .simplecode/audit_ledger.json     False  True
+__pycache__/                            paquete/__pycache__/algo.txt      True   False
+*.pyc                                   cualquiera/sin_existir.pyc        True   False
+.pytest_cache/                          .pytest_cache/v/cache/lastfailed  True   False
+.coverage                               .coverage                         True   False
+
+12 de 12 APORTAN. Ninguna murio.
+
+## Un error de control, corregido en la misma pasada
+El primer sujeto para `__pycache__/` fue `paquete/__pycache__/modulo.pyc`, y
+salio True/True -- o sea "regla muerta". Era falso: a ese sujeto lo caza tambien
+`*.pyc`, asi que el control no podia ver la diferencia. Con un sujeto que
+`*.pyc` NO caza (`algo.txt`) sale True/False.
+Es el mismo error que la revision de 1.5 registro sobre otras reglas. Se repitio
+y se volvio a cazar porque el control se CORRE.
+
+## Control negativo del instrumento
+  tools/presupuesto_memoria.py  ignorado=False
+  bin/bb                        ignorado=False
+Si todo saliera "ignorado", la tabla de arriba no diria nada.
+
+=====================================================================
+7 SLEEPS EN tests/test_bb_bash.py -- retirados uno a uno
+=====================================================================
+Se sustituye el sleep por `pass` y se corre SU test.
+
+linea  test                                                        sin el sleep
+ 175   test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado  PASA
+ 264   test_swap_mide_el_RITMO_no_solo_el_nivel                       FALLA
+ 281   test_control_negativo_sin_trafico_de_swap_el_ritmo_es_cero     PASA
+ 294   test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo    PASA
+ 630   test_cpu_top_NOMBRA_a_quien_quema_cpu                          FALLA
+ 662   test_control_negativo_un_proceso_dormido_no_sale_como_que_quema PASA
+ 685   test_residuo_es_un_numero_y_no_se_mueve_solo                   PASA
+
+## Lo que esto dice, y lo que NO dice
+
+**2 de 7 quedan verificados por fallo duro**: 264 y 630. Sin su espera el test
+se cae, asi que la espera es lo que produce la senal.
+
+**4 de 7 son CONTROLES NEGATIVOS y "pasa sin el sleep" no los absuelve ni los
+condena**: un control negativo afirma que algo NO ocurre, y quitarle la espera
+se lo pone mas facil. Lo que los justifica es que su caso POSITIVO emparejado no
+puede producir senal sin ella -- y eso esta en la tabla, medido:
+  - 281 y 294 se emparejan con 264, que FALLA sin su sleep;
+  - 662 se empareja con 630, que FALLA sin el suyo.
+Un control negativo que observa "cero" en un experimento donde el positivo
+tampoco puede pasar de cero no prueba nada. La espera es lo que le da al control
+la posibilidad de salir mal.
+
+**1 de 7 -- la 685 -- NO queda verificado, y se dice.**
+`test_residuo_es_un_numero_y_no_se_mueve_solo` no tiene caso positivo
+emparejado, y no encontre un control que separe "la espera importa" de "la
+espera es decoracion". Con dos muestras separadas por microsegundos la
+afirmacion "no se movio" es cierta por construccion, lo cual apunta a que la
+espera hace falta; pero eso es un argumento, no una medida, y aqui los
+argumentos no cuentan. Queda como exencion NO verificada esta vuelta, escrito
+en vez de presentado como verificado.
+
+## Una medida aparte, sobre la afirmacion que 175 y 685 escriben en su comentario
+"bb marca las muestras con resolucion de segundo y dos en el mismo segundo
+colisionan". Medido: seis `bb sample` seguidos ->
+
+  6 lineas, 4 marcas de tiempo distintas
+  2026-09-25T13:51:29, :30, :30, :31, :31, :32
+
+La afirmacion es cierta: dos muestras del mismo segundo son indistinguibles por
+`ts`. Lo que NO hace esa colision es romper esos dos tests, que leen por
+POSICION (`[:2]`, `[-1]`) y no por marca de tiempo. Se deja escrito para que
+nadie use esta medida como si verificara lo que no verifica.
+
+=====================================================================
+1 SLEEP EN tools/atom_gpu_telemetry.py:1408 -- el intervalo del sampler
+=====================================================================
+No espera a nadie: decide cada cuanto mirar. El control es que NO se ejecute en
+el camino de una sola pasada, y se corre:
+
+  $ time timeout 60 python3 -m tools.atom_gpu_telemetry --once --interval-seconds 3600
+  real 0m0.436s   rc=0
+
+Con el intervalo en una hora, `--once` vuelve en 0.4 s. Si el sleep estuviera en
+ese camino, esto habria muerto en el timeout.
+
+=====================================================================
+VEREDICTO
+=====================================================================
+19 de 20 exenciones verificadas para 1.6. La 20a (test_bb_bash.py:685) se
+retaguea con su estado real escrito en el propio comentario: sin control que la
+sostenga, a revisar en 1.7.
