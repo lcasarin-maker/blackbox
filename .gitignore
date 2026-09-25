@@ -4,34 +4,34 @@
 # `sync-satellites --fix`, y el 2026-09-08 intentar commitearlos hizo fallar
 # claim-guard (los reclama el propio sync) y staged-parity (los gates los
 # reescriben durante el commit).
-# sunset-reviewed: 1.0 -- revisado 2026-09-24: SIN CAMBIOS entre 0.9 y 1.0: `git diff --name-only 05d7c8f HEAD -- <ruta>` vacio. Control negativo: el mismo comando sobre .simplecode/local_hooks.yaml devuelve una linea, asi que sabe distinguir. Sigue siendo el paraguas: .simplecode/ es generado y solo salen de el las excepciones de abajo
+# sunset-reviewed: 1.1 -- revisado 2026-09-24: SIN CAMBIOS entre 1.0 y 1.1: `git diff --name-only 19a3e59 HEAD -- <ruta>` vacio. Control negativo: el mismo comando sobre .simplecode/local_hooks.yaml devuelve una linea, asi que sabe distinguir. Sigue siendo el paraguas de .simplecode/
 .simplecode/*
 
 # Los hooks propios NO son estado: son la unica casa durable de `bash-sintaxis`,
 # porque `.pre-commit-config.yaml` es GENERADO y se reescribe entero en cada
 # `sync-satellites --fix`. Ignorado, ese gate no existiria en un clon -- y es el
 # unico que mira bin/bb, que es el grueso del codigo ejecutable de este repo.
-# sunset-reviewed: 1.0 -- revisado 2026-09-24: **CAMBIO en 1.0**, y por eso la exencion vale mas, no menos: local_hooks.yaml gano un segundo hook, bb-cobertura-piso (pre-push, trinquete de cobertura de bin/bb). satellite_sync reescribe .pre-commit-config.yaml entero, asi que sin este fichero trackeado los DOS hooks propios de este repo desaparecen en el siguiente sync
+# sunset-reviewed: 1.1 -- revisado 2026-09-24: **CAMBIO en 1.1**: local_hooks.yaml gano un TERCER hook, inventario-spec, que ata las dos tablas de SPEC.md a bin/bb, tools/ y adopted/. satellite_sync reescribe .pre-commit-config.yaml entero: sin este fichero trackeado los TRES hooks propios desaparecen en el siguiente sync
 !.simplecode/local_hooks.yaml
 
 # La linea base de deuda va TRACKEADA a proposito: ignorada por git seria una
 # declaracion local y no una revisable, que es como un techo se convierte en
 # amnistia silenciosa.
-# sunset-reviewed: 1.0 -- revisado 2026-09-24: **CAMBIO en 1.0**: entraron DEBT-DOCKER-FUERA-DEL-TECHO y DEBT-TECHOS-SIN-CALIBRAR, con caducidad 2026-10-23. Trackeado a proposito: una linea base de deuda que viviera sin versionar seria una amnistia que nadie puede auditar
+# sunset-reviewed: 1.1 -- revisado 2026-09-24: **CAMBIO en 1.1**: DEBT-DOCKER-FUERA-DEL-TECHO SALIO por haberse cerrado (techo verificado en la maquina), y queda DEBT-TECHOS-SIN-CALIBRAR con caducidad 2026-10-23
 !.simplecode/backlog_baseline.json
 
 # Los ejecutables de confianza son parte del contrato de verificacion, no estado
 # local: un clon sin este fichero rechazaria los close_check de las fichas.
-# sunset-reviewed: 1.0 -- revisado 2026-09-24: SIN CAMBIOS entre 0.9 y 1.0: `git diff --name-only 05d7c8f HEAD -- <ruta>` vacio. Control negativo: el mismo comando sobre .simplecode/local_hooks.yaml devuelve una linea, asi que sabe distinguir
+# sunset-reviewed: 1.1 -- revisado 2026-09-24: SIN CAMBIOS entre 1.0 y 1.1: `git diff --name-only 19a3e59 HEAD -- <ruta>` vacio. Control negativo: el mismo comando sobre .simplecode/local_hooks.yaml devuelve una linea, asi que sabe distinguir
 !.simplecode/build_tools.txt
 
 # Amnistia de recibos por SHA explicito: ignorada seria una absolucion local.
-# sunset-reviewed: 1.0 -- revisado 2026-09-24: SIN CAMBIOS entre 0.9 y 1.0: `git diff --name-only 05d7c8f HEAD -- <ruta>` vacio. Control negativo: el mismo comando sobre .simplecode/local_hooks.yaml devuelve una linea, asi que sabe distinguir
+# sunset-reviewed: 1.1 -- revisado 2026-09-24: SIN CAMBIOS entre 1.0 y 1.1: `git diff --name-only 19a3e59 HEAD -- <ruta>` vacio. Control negativo: el mismo comando sobre .simplecode/local_hooks.yaml devuelve una linea, asi que sabe distinguir
 !.simplecode/hook_receipt_baseline.json
 
 # Declaracion de organos que no pueden disparar aqui: ignorada seria una excusa
 # local en vez de una afirmacion revisable con dueno y caducidad.
-# sunset-reviewed: 1.0 -- revisado 2026-09-24: SIN CAMBIOS entre 0.9 y 1.0: `git diff --name-only 05d7c8f HEAD -- <ruta>` vacio. Control negativo: el mismo comando sobre .simplecode/local_hooks.yaml devuelve una linea, asi que sabe distinguir. Sus 6 declaraciones caducan el 2026-10-08
+# sunset-reviewed: 1.1 -- revisado 2026-09-24: SIN CAMBIOS entre 1.0 y 1.1: `git diff --name-only 19a3e59 HEAD -- <ruta>` vacio. Control negativo: el mismo comando sobre .simplecode/local_hooks.yaml devuelve una linea, asi que sabe distinguir. Sus 6 declaraciones caducan el 2026-10-08
 !.simplecode/organ_inapplicable.json
 
 # Alcance de coverage_target.py. La premisa con la que nacio esta exencion es
@@ -50,7 +50,7 @@
 # ejecutable Python SIN extension .py: ni la autodeteccion ni esta declaracion lo
 # alcanzan, y queda fuera de coverage_targets -- declarado aqui en vez de que pase
 # inadvertido.
-# sunset-reviewed: 1.0 -- revisado 2026-09-24: el fichero no cambio (diff vacio), pero el SUJETO de la razon si: bin/bb ya NO esta sin cobertura medida. tools/cobertura_bash.sh lo mide (146 de 829 lineas, 17.6%) y el hook bb-cobertura-piso impide que baje. Lo que sigue en pie es que bin/bb queda fuera de coverage_targets por ser bash, igual que bin/bb-usable por no llevar extension .py
+# sunset-reviewed: 1.1 -- revisado 2026-09-24: el fichero no cambio, pero el SUJETO de la razon si, y mucho: el Python de este repo dejo de ser TRES ficheros. Entro tools/atom_gpu_telemetry.py desde Atlas (DGX-585), 462 sentencias al 100%, y tools/inventario.py, 73 al 100%. El alcance `tools` los cubre a los dos. Sigue en pie que bin/bb queda fuera por ser bash -- con cobertura ya MEDIDA aparte, 17.7% -- y bin/bb-usable por no llevar extension .py
 !.simplecode/corpus_exempt.yaml
 
 # El ledger H1 va TRACKEADO a proposito, igual que backlog_baseline.json:
@@ -60,16 +60,16 @@
 # para siempre, sin importar cuantas auditorias se corran. Medido 2026-09-16:
 # faltaba esta linea y por eso el commit de bump 0.1.0->0.1.1 (d7f723d) salia
 # BLOCKED pese a tener un ledger fresco y verde en el arbol de trabajo.
-# sunset-reviewed: 1.0 -- revisado 2026-09-24: SIN CAMBIOS entre 0.9 y 1.0: `git diff --name-only 05d7c8f HEAD -- <ruta>` vacio. Control negativo: el mismo comando sobre .simplecode/local_hooks.yaml devuelve una linea, asi que sabe distinguir
+# sunset-reviewed: 1.1 -- revisado 2026-09-24: SIN CAMBIOS entre 1.0 y 1.1: `git diff --name-only 19a3e59 HEAD -- <ruta>` vacio. Control negativo: el mismo comando sobre .simplecode/local_hooks.yaml devuelve una linea, asi que sabe distinguir
 !.simplecode/audit_ledger.json
 
 # Estado generado por pytest/coverage (tests/ existe desde que se agrego
 # tools/check_harvest_accepted.py -- ver corpus_exempt.yaml arriba).
-# sunset-reviewed: 1.0 -- revisado 2026-09-24: SIN CAMBIOS: `git ls-files -- '__pycache__/*'` -> 0 trackeados. Control negativo: el mismo comando sobre 'tools/*' devuelve 5
+# sunset-reviewed: 1.1 -- revisado 2026-09-24: SIN CAMBIOS: `git ls-files -- '__pycache__/*'` -> 0 trackeados. Control negativo: el mismo comando sobre 'tools/*' devuelve 7
 __pycache__/
-# sunset-reviewed: 1.0 -- revisado 2026-09-24: SIN CAMBIOS: `git ls-files -- '*.pyc'` -> 0
+# sunset-reviewed: 1.1 -- revisado 2026-09-24: SIN CAMBIOS: `git ls-files -- '*.pyc'` -> 0
 *.pyc
-# sunset-reviewed: 1.0 -- revisado 2026-09-24: SIN CAMBIOS: `git ls-files -- '.pytest_cache/*'` -> 0
+# sunset-reviewed: 1.1 -- revisado 2026-09-24: SIN CAMBIOS: `git ls-files -- '.pytest_cache/*'` -> 0
 .pytest_cache/
-# sunset-reviewed: 1.0 -- revisado 2026-09-24: SIN CAMBIOS: `git ls-files -- '.coverage'` -> 0
+# sunset-reviewed: 1.1 -- revisado 2026-09-24: SIN CAMBIOS: `git ls-files -- '.coverage'` -> 0
 .coverage
