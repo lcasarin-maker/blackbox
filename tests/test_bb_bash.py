@@ -879,3 +879,64 @@ def test_control_negativo_smi_dice_ERROR_cuando_el_driver_falla(datos, tmp_path)
     correr(["sample"], datos=datos, extra_env=env)
     smi = _smi_de_la_ultima_muestra(datos)
     assert smi["estado"] == "ERROR", smi
+
+
+# =====================================================================
+# memoria por slice en la muestra: sin serie no hay techo que calibrar
+# =====================================================================
+
+
+def _cg_slices(tmp_path, cur="1048576", peak="2097152", sin_peak=False, roto=None):
+    """Un arbol de cgroups con los tres slices que el presupuesto mira."""
+    u = os.getuid()
+    r = tmp_path / f"cgs_{cur}_{peak}_{sin_peak}_{roto}"
+    rutas = {
+        "app": r / "user.slice" / f"user-{u}.slice" / f"user@{u}.service" / "app.slice",
+        "docker": r / "docker.slice",
+        "system": r / "system.slice",
+    }
+    for nombre, d in rutas.items():
+        d.mkdir(parents=True, exist_ok=True)
+        if nombre != roto:
+            (d / "memory.current").write_text(cur + "\n", encoding="utf-8")
+        if not sin_peak:
+            (d / "memory.peak").write_text(peak + "\n", encoding="utf-8")
+    return {"BB_CGROUP_ROOT": str(r)}
+
+
+def _slices_de_la_muestra(datos):
+    f = next((datos / "samples").glob("*.jsonl"))
+    return json.loads(f.read_text(encoding="utf-8").splitlines()[-1])["slices"]
+
+
+def test_la_muestra_guarda_la_memoria_de_CADA_slice(datos, tmp_path):
+    """`DEBT-TECHOS-SIN-CALIBRAR` se quedo trabada por falta de esta serie.
+
+    `system.slice` es el ultimo slice sin techo; ponerle uno hace que el
+    presupuesto componga, y el 2026-09-25 no habia con que elegir el numero --
+    solo su `memory.peak` de un arranque. El techo de `docker.slice` salio de
+    18 944 muestras, y ese es el liston. Sin esto, dentro de un mes seguiria sin
+    haberlo.
+    """
+    correr(["sample"], datos, _cg_slices(tmp_path))
+    s = _slices_de_la_muestra(datos)
+    assert sorted(x["slice"] for x in s) == ["app", "docker", "system"], s
+    assert all(x["cur_kb"] == 1024 and x["peak_kb"] == 2048 for x in s), s
+
+
+def test_un_slice_que_NO_se_puede_leer_se_OMITE_y_no_entra_como_cero(datos, tmp_path):
+    """Un 0 se promediaria como si fuera una medida, y un techo calibrado sobre
+    ceros inventados saldria mas bajo de lo que el slice necesita -- o sea, un
+    techo que mata procesos por un dato que nadie tomo."""
+    correr(["sample"], datos, _cg_slices(tmp_path, roto="system"))
+    s = _slices_de_la_muestra(datos)
+    assert [x["slice"] for x in s] == ["app", "docker"], s
+
+
+def test_sin_memory_peak_en_el_kernel_se_escribe_null_y_no_cero(datos, tmp_path):
+    """`memory.peak` no existe en todos los kernels. "no lo da este kernel" y
+    "el pico fue cero" son cosas distintas, y solo una de las dos se puede
+    promediar."""
+    correr(["sample"], datos, _cg_slices(tmp_path, sin_peak=True))
+    s = _slices_de_la_muestra(datos)
+    assert all(x["peak_kb"] is None and x["cur_kb"] == 1024 for x in s), s

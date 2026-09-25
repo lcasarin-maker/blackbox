@@ -41,6 +41,7 @@ DECLARADO quepa en lo que hay.
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import os
 import sys
@@ -62,28 +63,65 @@ _ILEGIBLES: list[str] = []
 # mismo barrido.
 _SERIE: list[tuple[str, int]] = []
 
-# Reserva de memoria unificada de GPU, en GiB.
+# EL MAXIMO OBSERVADO de memoria unificada de GPU, en GiB. Ya NO es lo que la
+# aritmetica resta, y el cambio no es cosmetico -- ver `suelo_gpu_gib`.
 #
-# EL NUMERO NO ES EL QUE EL vLLM DECLARA, y eso se comprobo antes de fijarlo.
-# El gateway corre con `--gpu-memory-utilization 0.3`, que sobre 121.1 GiB son
-# 36.3 GiB, y seria tentador presupuestar contra eso. Los picos DIARIOS medidos
-# sobre las muestras de bb dicen otra cosa -- lo superan TODOS los dias:
+# ## Por que dejo de serlo (medido el 2026-09-25)
 #
-#   09-10  70.3   09-13  53.3   09-16  50.2   09-19  49.1   09-22  57.4
-#   09-11  53.5   09-14  54.8   09-17  49.5   09-20  66.6   09-23  38.0  <- minimo
-#   09-12  74.2   09-15  50.1   09-18  49.1   09-21  85.4   09-24  67.0
+# Este numero es el maximo de la serie, y sumarlo junto a los techos mezclaba
+# dos cosas que no son iguales:
 #
-# El pico del 2026-09-21 (85.4 GiB) no era el vLLM: eran 33.6 GiB suyos mas
-# **ocho procesos de GPU simultaneos en `cov-solo.scope` sumando 48 GiB**, con
-# `mem_avail` en 0.2 GB y load1 en 18.4. Un abanico de trabajo sin techo de
-# memoria unificada, que ningun cgroup ve -- medido en esta caja: 7 GiB de CUDA
-# se contabilizan como 15 MiB.
+#   - `app.slice = 48G` es un COMPROMISO. El kernel lo aplica.
+#   - `86.0` es una OBSERVACION. No lo aplica nadie, y ningun cgroup ve esa
+#     memoria (medido aqui: 7 GiB de CUDA se contabilizan como 15 MiB).
 #
-# Asi que la reserva se fija en el MAXIMO OBSERVADO y no en lo configurado:
-# 85.4 GiB redondeado al GiB de arriba. Presupuestar contra el numero bonito
-# habria dado un gate que falla todos los dias, que no es vigilancia sino ruido.
+# Sumarlas y llamar al total "SUMA declarada" es el mismo error que este modulo
+# le marca a `system.slice` -- "entra por lo que usa HOY y no por un
+# compromiso"-- cometido sobre 86 GiB en vez de sobre 1.9.
+#
+# Y tenia una consecuencia dura, no estetica: **el check no podia salir
+# positivo**. Con la reserva en 86, a los cgroups les quedan 121.1 - 86.0 =
+# 35.1 GiB, y `app.slice` SOLA pico 39.8 GiB (memory.peak = 42731823104 bytes,
+# leido el 2026-09-25). No hay reparto que satisfaga el criterio sin poner el
+# techo del escritorio por debajo de lo que el escritorio ya uso. Un criterio
+# que no puede salir positivo sin matar al sujeto no es un criterio.
+#
+# ## Que es el pico de verdad, ahora que se abrio
+#
+# Los ocho procesos del 2026-09-21T00:33 tienen nombre: son workers de
+# `pytest-xdist` corriendo una suite de tests (`test_structured_chunking.py`,
+# `test_scjn_delta_refresh_service.py`, `test_tfja_jurisprudence.py`...), cada
+# uno con su modelo en la GPU. No es carga de servicio: es una corrida de
+# tests, y duro CUATRO MINUTOS (00:30 -> 00:33).
+#
+# La serie entera, 19 067 muestras del 09-10 al 09-25:
+#
+#   p50 49.05 | p85 50.00 | p90 50.15 | p95 50.15 | p99 52.18 | max 85.40
+#   por encima de 55.3 GiB: 18 episodios, 67 min EN TOTAL, el mas largo 11 min
+#
+# O sea: una meseta de ~50 GiB el 95 % del tiempo y una cola de 33 GiB que dura
+# minutos. Reservar el maximo de forma permanente contra un transitorio de
+# cuatro minutos no es reservar: es garantizar que la cuenta no cuadre nunca.
+#
+# Se conserva como el SUJETO de la mitad 2 del criterio: la excursion hay que
+# FIRMARLA (`tasks/presupuesto_gpu.json`), porque no hay cgroup que la acote.
 RESERVA_GPU_GIB = 86.0
 RESERVA_MEDIDA_EL = "2026-09-25, maximo de 18 733 muestras (pico 2026-09-21T00:33)"
+
+# Declaracion FIRMADA del presupuesto de excursion de GPU.
+#
+# Vive en `tasks/` y no en `.simplecode/` por lo mismo que `tasks/pii_allow.txt`:
+# `.gitignore` ignora `.simplecode/*`, asi que una declaracion ahi no viajaria al
+# clone y el siguiente que clonara veria un gate rojo sin ninguna firma que lo
+# explique.
+#
+# **Su ausencia es el estado por defecto, y es ROJO a proposito.** Este modulo no
+# trae una plantilla firmada: una plantilla que el gate acepte es el agujero. La
+# excursion la firma una persona, con su nombre y una fecha de caducidad, o el
+# criterio no pasa.
+DECLARACION = Path(os.environ.get(
+    "BB_PRESUPUESTO_GPU_DECL",
+    str(Path(__file__).resolve().parent.parent / "tasks" / "presupuesto_gpu.json")))
 
 # Slices cuyo techo se lee de la maquina. La ruta del gestor de usuario lleva
 # el UID, que se resuelve en tiempo de ejecucion.
@@ -201,6 +239,85 @@ def excursiones_gpu(umbral_gib: float) -> dict:
             "ultimas": sorted(por_encima)[-3:]}
 
 
+def suelo_gpu_gib() -> dict | None:
+    """El SUELO COMPROMETIDO de memoria unificada: lo que la GPU tiene tomado en
+    el minuto ordinario, que es contra lo que los techos tienen que componer.
+
+    Se llama DESPUES de `pico_gpu_observado_mib`, que es quien llena la serie.
+    Devuelve `None` con la serie vacia -- "no se midio" no es "el suelo es 0".
+
+    ## Por que el p95, y por que eso no es una preferencia
+
+    Porque en esta serie la eleccion del percentil casi no mueve el numero, y eso
+    esta medido sobre las 19 067 muestras del 09-10 al 09-25:
+
+        p50 49.05 | p75 49.48 | p85 50.00 | p90 50.15 | p95 50.15 | p99 52.18
+
+    De p50 a p95 el suelo se mueve **1.10 GiB** sobre una maquina de 121.1; de
+    p85 a p95, **0.15**. La distribucion es una meseta, no una pendiente, asi que
+    el numero lo pone el sujeto y no quien elige el percentil. Lo que sigue
+    despues no es meseta: de p99 al maximo hay un salto de **33.26 GiB**, y ese
+    salto es justo lo que la mitad 2 obliga a firmar.
+
+    Se toma el borde alto de la meseta (p95) y no la mediana a proposito: entre
+    dos numeros que se diferencian en 1.1 GiB, el presupuesto se queda con el
+    que deja menos sitio a los techos.
+    """
+    if not _SERIE:
+        return None
+    v = sorted(m / 1024 for _, m in _SERIE)
+    n = len(v)
+
+    def q(pct: float) -> float:
+        return v[min(n - 1, int(pct * n))]
+
+    return {"gib": q(0.95), "muestras": n, "p50": q(0.50), "p95": q(0.95),
+            "max": v[-1]}
+
+
+def declaracion_excursion(hoy: str | None = None) -> tuple[dict | None, str]:
+    """La firma que autoriza la excursion de GPU, o el motivo por el que no vale.
+
+    Devuelve `(declaracion, "")` si es valida, o `(None, motivo)` si no. El motivo
+    se imprime literal: un gate que dice "FAIL" sin decir que le falta obliga a
+    adivinar, y se acaba adivinando mal.
+
+    Exige las cuatro cosas porque las cuatro han fallado antes en esta flota:
+    `excursion_gib` (que es lo que se autoriza), `owner` (una suspension sin
+    dueno no la restaura nadie), `expires` (una sin caducidad se vuelve
+    permanente en silencio -- los 59 hooks de Cerberus), y `reason` (una firma
+    sin porque no se puede discutir cuando caduque).
+    """
+    try:
+        crudo = DECLARACION.read_text(encoding="utf-8")
+    except OSError:
+        return None, (f"nadie ha firmado el presupuesto de excursion: no existe "
+                      f"{DECLARACION}. Mientras no exista, esto es ROJO a proposito")
+    try:
+        d = json.loads(crudo)
+    except ValueError as exc:
+        return None, f"{DECLARACION} no es JSON valido: {exc}"
+    if not isinstance(d, dict):
+        return None, f"{DECLARACION} no es un objeto JSON"
+    faltan = [k for k in ("excursion_gib", "expires", "owner", "reason") if not d.get(k)]
+    if faltan:
+        return None, f"{DECLARACION} no declara: {', '.join(faltan)}"
+    try:
+        gib = float(d["excursion_gib"])
+    except (TypeError, ValueError):
+        return None, f"excursion_gib no es un numero: {d['excursion_gib']!r}"
+    try:
+        vence = datetime.date.fromisoformat(str(d["expires"]))
+    except ValueError:
+        return None, f"expires no es una fecha ISO: {d['expires']!r}"
+    ahora = (datetime.date.fromisoformat(hoy) if hoy else datetime.date.today())
+    if vence < ahora:
+        return None, (f"la firma de {DECLARACION} CADUCO el {vence} "
+                      f"(hoy es {ahora}): se vuelve a discutir, no se renueva sola")
+    return {"excursion_gib": gib, "expires": str(vence),
+            "owner": str(d["owner"]), "reason": str(d["reason"])}, ""
+
+
 def presupuesto() -> dict:
     """La cuenta entera, en un dict. Sin veredicto: eso lo pone `main`."""
     total = mem_total_gib()
@@ -210,18 +327,24 @@ def presupuesto() -> dict:
         filas.append({"nombre": nombre, "techo_gib": t, "uso_gib": uso_gib(ruta),
                       "existe": (ruta / "memory.max").exists()})
     pico = pico_gpu_observado_mib()
-    # Lo que se gasta: la reserva de GPU + el techo de cada slice que lo tenga.
+    suelo = suelo_gpu_gib()
+    decl, decl_motivo = declaracion_excursion()
+    # MITAD 1 -- la suma de COMPROMISOS. Entra el suelo comprometido de GPU (lo
+    # que tiene tomado en el minuto ordinario), no su maximo: el maximo es un
+    # transitorio de cuatro minutos y no lo aplica nadie. Ver `RESERVA_GPU_GIB`.
+    #
     # Un slice SIN techo entra por lo que usa, y eso se marca, porque un numero
     # observado no es un compromiso: manana puede ser otro.
-    gasto = RESERVA_GPU_GIB
     sin_techo = []
+    gasto = None if suelo is None else suelo["gib"]
     for f in filas:
         if not f["existe"]:
             continue
         if f["techo_gib"] is None:
-            gasto += f["uso_gib"]
             sin_techo.append(f["nombre"])
-        else:
+            if gasto is not None:
+                gasto += f["uso_gib"]
+        elif gasto is not None:
             gasto += f["techo_gib"]
     # Lo que le queda a la GPU si todos los techos declarados se honran. Es el
     # mismo reparto visto por el otro lado, y es EL UMBRAL de la alarma del
@@ -241,6 +364,8 @@ def presupuesto() -> dict:
     presupuesto_gpu = (total - techos - usados_sin_techo) if total is not None else None
     return {"mem_total_gib": total, "reserva_gpu_gib": RESERVA_GPU_GIB,
             "presupuesto_gpu_gib": presupuesto_gpu,
+            "suelo_gpu": suelo,
+            "declaracion": decl, "declaracion_motivo": decl_motivo,
             "slices": filas, "gasto_gib": gasto, "sin_techo": sin_techo,
             "pico_gpu_observado_mib": pico[0] if pico else None,
             "pico_gpu_ts": pico[1] if pico else None,
@@ -262,8 +387,14 @@ def main(argv: list[str] | None = None) -> int:
     total = p["mem_total_gib"]
     print(f"[presupuesto] MemTotal:            {total:8.1f} GiB"
           if total is not None else "[presupuesto] MemTotal:            COULD_NOT_RUN")
-    print(f"[presupuesto] reserva de GPU:      {p['reserva_gpu_gib']:8.1f} GiB"
-          f"   (memoria unificada que ningun cgroup ve; medida {RESERVA_MEDIDA_EL})")
+    print("[presupuesto] -- mitad 1: COMPROMISOS (lo que el kernel aplica) --")
+    s = p["suelo_gpu"]
+    if s is None:
+        print("[presupuesto]   suelo comprometido de GPU        COULD_NOT_RUN (serie vacia)")
+    else:
+        print(f"[presupuesto]   suelo comprometido de GPU   {s['gib']:8.1f} GiB"
+              f"  (p95 de {s['muestras']} muestras; con el p50 serian"
+              f" {s['p50']:.1f} -- la meseta mueve {s['p95'] - s['p50']:.1f})")
     for f in p["slices"]:
         if not f["existe"]:
             print(f"[presupuesto]   {f['nombre']:<38} AUSENTE")
@@ -273,24 +404,38 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(f"[presupuesto]   {f['nombre']:<38} {f['techo_gib']:8.1f} GiB"
                   f"  (usa {f['uso_gib']:.1f})")
-    print(f"[presupuesto] SUMA declarada:      {p['gasto_gib']:8.1f} GiB")
+    if p["gasto_gib"] is None:
+        print("[presupuesto]   SUMA comprometida           COULD_NOT_RUN")
+    else:
+        holgura = None if total is None else total - p["gasto_gib"]
+        print(f"[presupuesto]   SUMA comprometida           {p['gasto_gib']:8.1f} GiB"
+              + ("" if holgura is None else
+                 f"  sobre {total:.1f} -> holgura {holgura:.1f}"))
+    print("[presupuesto] -- mitad 2: EXCURSION (lo que NADIE aplica, y por eso se firma) --")
+    if p["pico_gpu_observado_mib"] is None:
+        print("[presupuesto]   maximo observado             COULD_NOT_RUN (sin muestras)")
+    else:
+        print(f"[presupuesto]   maximo observado            "
+              f"{p['pico_gpu_observado_mib'] / 1024:8.1f} GiB  ({p['pico_gpu_ts']})")
+    d = p["declaracion"]
+    if d is None:
+        print(f"[presupuesto]   presupuesto firmado          SIN FIRMAR"
+              f"  ({p['declaracion_motivo']})")
+    else:
+        print(f"[presupuesto]   presupuesto firmado         {d['excursion_gib']:8.1f} GiB"
+              f"  (firma {d['owner']}, caduca {d['expires']})")
     if p["presupuesto_gpu_gib"] is not None:
-        print(f"[presupuesto] presupuesto de GPU:   {p['presupuesto_gpu_gib']:8.1f} GiB"
-              f"   (lo que le queda si TODOS los techos se honran -- el umbral del abanico)")
+        print("[presupuesto] -- vista de operacion: la alarma del abanico --")
+        print(f"[presupuesto]   umbral del abanico          {p['presupuesto_gpu_gib']:8.1f} GiB"
+              f"  (lo que le queda a la GPU si TODOS los techos se honran)")
         ex = excursiones_gpu(p["presupuesto_gpu_gib"])
         if ex["muestras"] == 0:
             print("[presupuesto] excursiones del abanico: COULD_NOT_RUN (serie vacia)")
         else:
-            print(f"[presupuesto] excursiones del abanico: {ex['por_encima']} de "
+            print(f"[presupuesto]   excursiones: {ex['por_encima']} de "
                   f"{ex['muestras']} muestras ({ex['pct']:.1f} %) por encima del presupuesto")
             for ts, m in ex["ultimas"]:
                 print(f"                 {ts}  {m/1024:.1f} GiB")
-
-    if p["pico_gpu_observado_mib"] is None:
-        print("[presupuesto] pico de GPU observado: COULD_NOT_RUN (sin muestras que leer)")
-    else:
-        print(f"[presupuesto] pico de GPU observado: {p['pico_gpu_observado_mib']/1024:6.1f} GiB"
-              f"   ({p['pico_gpu_ts']})")
 
     if not args.check:
         return 0
@@ -310,16 +455,28 @@ def main(argv: list[str] | None = None) -> int:
     if total is None:
         print("[presupuesto] COULD_NOT_RUN: no se pudo leer MemTotal", file=sys.stderr)
         return 2
-    if p["gasto_gib"] > total:
+    if p["gasto_gib"] is None:
         problemas.append(
-            f"los techos NO componen: {p['gasto_gib']:.1f} GiB declarados sobre "
+            "COULD_NOT_RUN: sin serie de GPU no hay suelo comprometido que restar, "
+            "y una suma sin el no dice nada")
+    elif p["gasto_gib"] > total:
+        problemas.append(
+            f"MITAD 1 -- los compromisos NO componen: {p['gasto_gib']:.1f} GiB sobre "
             f"{total:.1f} GiB de maquina, {p['gasto_gib'] - total:.1f} GiB de mas")
-    if p["pico_gpu_observado_mib"] is not None:
+    # MITAD 2. La excursion no la acota ningun cgroup, asi que no se puede
+    # presupuestar: solo se puede FIRMAR. Sin firma es rojo, y eso es el estado
+    # por defecto a proposito -- ver `DECLARACION`.
+    if p["declaracion"] is None:
+        problemas.append(f"MITAD 2 -- {p['declaracion_motivo']}")
+    elif p["pico_gpu_observado_mib"] is not None:
         pico_gib = p["pico_gpu_observado_mib"] / 1024
-        if pico_gib > p["reserva_gpu_gib"]:
+        firmado = p["declaracion"]["excursion_gib"]
+        if pico_gib > firmado:
             problemas.append(
-                f"la reserva de GPU quedo VIEJA: se observaron {pico_gib:.1f} GiB "
-                f"y la declarada es {p['reserva_gpu_gib']:.1f} GiB")
+                f"MITAD 2 -- la excursion se PASO de lo firmado: se observaron "
+                f"{pico_gib:.1f} GiB ({p['pico_gpu_ts']}) y la firma autoriza "
+                f"{firmado:.1f} GiB. Se vuelve a firmar con el numero nuevo delante, "
+                f"o se acota el abanico")
     if p["sin_techo"]:
         problemas.append(
             "slice(s) sin techo, que entran en la cuenta por lo que usan HOY y no "
@@ -330,7 +487,8 @@ def main(argv: list[str] | None = None) -> int:
         for x in problemas:
             print(f"  - {x}", file=sys.stderr)
         print("[presupuesto] Un conjunto de techos que no compone no es una proteccion: "
-              "es aritmetica que nadie hizo.", file=sys.stderr)
+              "es aritmetica que nadie hizo. Y una excursion que nadie firma no es "
+              "un riesgo aceptado: es uno que nadie miro.", file=sys.stderr)
         return 1
     print("[presupuesto] OK: lo declarado cabe en lo que hay.")
     return 0

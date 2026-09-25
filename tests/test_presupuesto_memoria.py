@@ -56,6 +56,15 @@ def _muestras(tmp_path, picos_mib):
     return d
 
 
+def _firma(gib=1000.0, dias=30, owner="lcasarin (prueba)", reason="control de la suite"):
+    """Una declaracion de excursion VALIDA. Por defecto autoriza mas que
+    cualquier serie de los tests, para que la mitad 2 no contamine a la mitad 1:
+    un test que quiere medir la aritmetica tiene que fallar por la aritmetica."""
+    import datetime
+    return {"excursion_gib": gib, "owner": owner, "reason": reason,
+            "expires": str(datetime.date.today() + datetime.timedelta(days=dias))}
+
+
 def _montar(monkeypatch, tmp_path, **kw):
     monkeypatch.setattr(pm, "CGROUP", _cgroups(tmp_path, **{k: v for k, v in kw.items()
                                                             if k.endswith("_max")}))
@@ -63,6 +72,14 @@ def _montar(monkeypatch, tmp_path, **kw):
     monkeypatch.setattr(pm, "DATA_DIR", tmp_path)
     _muestras(tmp_path, kw.get("picos", [1024]))
     monkeypatch.setattr(pm, "RESERVA_GPU_GIB", kw.get("reserva", 86.0))
+    # La declaracion se apunta SIEMPRE a tmp_path, tambien cuando no se escribe:
+    # si no, el test leeria el fichero real del repo y su veredicto dependeria
+    # de si alguien firmo hoy. Un test que depende del estado del repo no mide
+    # el codigo.
+    decl = tmp_path / "presupuesto_gpu.json"
+    if kw.get("firma") is not None:
+        decl.write_text(json.dumps(kw["firma"]), encoding="utf-8")
+    monkeypatch.setattr(pm, "DECLARACION", decl)
 
 
 def test_falla_con_el_reparto_real_de_esta_maquina(monkeypatch, tmp_path, capsys):
@@ -71,17 +88,21 @@ def test_falla_con_el_reparto_real_de_esta_maquina(monkeypatch, tmp_path, capsys
 
     Con la reserva de GPU contada son 168.3 sobre 121.1.
     """
-    _montar(monkeypatch, tmp_path)   # 48 + 32 + 2 de system + 86 de GPU
+    # Serie realista: una meseta de 50 GiB y un pico de 85, que es la forma
+    # medida en esta maquina. El suelo comprometido sale de la meseta.
+    _montar(monkeypatch, tmp_path, system_max=str(4 * 1024**3),
+            picos=[50 * 1024] * 20 + [85 * 1024], firma=_firma())
     assert pm.main(["--check"]) == 1
     err = capsys.readouterr().err
-    assert "NO componen" in err
+    # Falla por la ARITMETICA, con la excursion ya firmada: 50 + 48 + 32 + 4.
+    assert "los compromisos NO componen" in err, err
 
 
 def test_pasa_cuando_los_techos_SI_caben(monkeypatch, tmp_path):
     """La otra direccion, sin la cual el de arriba no significa nada: un gate
     que no puede salir en verde no mide, solo bloquea."""
     _montar(monkeypatch, tmp_path, app_max=str(8 * 1024**3), docker_max=str(8 * 1024**3),
-            system_max=str(4 * 1024**3), reserva=40.0)
+            system_max=str(4 * 1024**3), reserva=40.0, firma=_firma())
     assert pm.main(["--check"]) == 0
 
 
@@ -90,21 +111,68 @@ def test_un_slice_SIN_techo_se_cuenta_y_se_DICE(monkeypatch, tmp_path, capsys):
     suma callando que es una observacion seria presentar un numero de hoy como
     un compromiso."""
     _montar(monkeypatch, tmp_path, app_max=str(8 * 1024**3), docker_max=str(8 * 1024**3),
-            system_max="max", reserva=40.0)
+            system_max="max", reserva=40.0, firma=_firma())
     rc = pm.main(["--check"])
     err = capsys.readouterr().err
     assert rc == 1 and "sin techo" in err
 
 
-def test_la_reserva_VIEJA_se_caza_con_las_propias_muestras(monkeypatch, tmp_path, capsys):
-    """Una reserva fijada una vez y nunca releida es el techo sin calibrar que
-    esta ficha vino a quitar. Si las muestras ya vieron mas que lo declarado,
-    el numero esta viejo y el gate lo dice."""
+def test_una_firma_que_se_quedo_CORTA_se_caza_con_las_propias_muestras(
+        monkeypatch, tmp_path, capsys):
+    """Heredera directa de `test_la_reserva_VIEJA`: un numero firmado una vez y
+    nunca releido es el techo sin calibrar que esta ficha vino a quitar.
+
+    Ahora el numero lo firma una persona, y el control es el mismo: si las
+    muestras ya vieron mas de lo que la firma autoriza, el gate lo dice y nombra
+    las dos cifras."""
     _montar(monkeypatch, tmp_path, app_max=str(1024**3), docker_max=str(1024**3),
-            system_max=str(1024**3), reserva=10.0, picos=[40 * 1024])
+            system_max=str(1024**3), picos=[40 * 1024], firma=_firma(gib=10.0))
     rc = pm.main(["--check"])
     err = capsys.readouterr().err
-    assert rc == 1 and "VIEJA" in err
+    assert rc == 1 and "se PASO de lo firmado" in err, err
+    assert "40.0" in err and "10.0" in err, err
+
+
+def test_una_firma_CADUCADA_no_vale(monkeypatch, tmp_path, capsys):
+    """Una suspension sin caducidad se vuelve permanente en silencio -- los 59
+    hooks de Cerberus, "temporalmente" desactivados el 2026-08-01 y nunca
+    restaurados. Aqui la caducidad es obligatoria Y se comprueba: el dia
+    siguiente a `expires` el gate vuelve a bloquear, para que se discuta en vez
+    de renovarse sola."""
+    _montar(monkeypatch, tmp_path, app_max=str(1024**3), docker_max=str(1024**3),
+            system_max=str(1024**3), picos=[1024], firma=_firma(gib=1000.0, dias=-1))
+    rc = pm.main(["--check"])
+    err = capsys.readouterr().err
+    assert rc == 1 and "CADUCO" in err, err
+
+
+def test_control_negativo_la_MISMA_firma_un_dia_antes_SI_vale(monkeypatch, tmp_path):
+    """Sin esto, el de arriba tambien pasaria con una firma que no vale nunca.
+    Mismo fichero, misma maquina, un dia de diferencia: verde."""
+    _montar(monkeypatch, tmp_path, app_max=str(1024**3), docker_max=str(1024**3),
+            system_max=str(1024**3), picos=[1024], firma=_firma(gib=1000.0, dias=0))
+    assert pm.main(["--check"]) == 0
+
+
+def test_una_firma_SIN_dueno_no_vale(monkeypatch, tmp_path, capsys):
+    """Una declaracion sin dueno no la viene a discutir nadie cuando caduque."""
+    f = _firma()
+    del f["owner"]
+    _montar(monkeypatch, tmp_path, app_max=str(1024**3), docker_max=str(1024**3),
+            system_max=str(1024**3), firma=f)
+    rc = pm.main(["--check"])
+    assert rc == 1 and "owner" in capsys.readouterr().err
+
+
+def test_sin_firma_es_ROJO_y_lo_DICE(monkeypatch, tmp_path, capsys):
+    """El estado por defecto. Un reparto que compone perfectamente sigue en rojo
+    mientras nadie firme la excursion, porque la excursion no la acota ningun
+    cgroup: solo la acota una persona diciendo que la acepta."""
+    _montar(monkeypatch, tmp_path, app_max=str(1024**3), docker_max=str(1024**3),
+            system_max=str(1024**3), picos=[1024])   # sin firma
+    rc = pm.main(["--check"])
+    err = capsys.readouterr().err
+    assert rc == 1 and "nadie ha firmado" in err, err
 
 
 def test_sin_MemTotal_es_COULD_NOT_RUN_y_no_un_aprobado(monkeypatch, tmp_path, capsys):
@@ -173,7 +241,7 @@ def test_control_negativo_sin_ilegibles_no_se_inventa_el_aviso(monkeypatch, tmp_
     """Si el aviso saliera siempre, no distinguiria un conjunto completo de uno
     roto y seria ruido en vez de senal."""
     _montar(monkeypatch, tmp_path, app_max=str(1024**3), docker_max=str(1024**3),
-            system_max=str(1024**3), reserva=40.0)
+            system_max=str(1024**3), reserva=40.0, firma=_firma())
     rc = pm.main(["--check"])
     salida = capsys.readouterr()
     assert "could_not_run" not in salida.out and rc == 0, salida
@@ -297,17 +365,20 @@ def test_sin_check_informa_y_sale_cero_aunque_no_componga(tmp_path, monkeypatch,
     informe, y un informe no decide."""
     _montar(monkeypatch, tmp_path)   # reparto que NO compone
     assert pm.main([]) == 0
-    assert "SUMA declarada" in capsys.readouterr().out
+    assert "SUMA comprometida" in capsys.readouterr().out
 
 
 def test_json_saca_la_cuenta_entera_sin_veredicto(tmp_path, monkeypatch, capsys):
     """Para que otro lo consuma sin parsear texto -- y sin que el formato de
     salida decida nada."""
-    _montar(monkeypatch, tmp_path)
+    _montar(monkeypatch, tmp_path, system_max=str(4 * 1024**3),
+            picos=[50 * 1024] * 20 + [85 * 1024], firma=_firma())
     assert pm.main(["--json"]) == 0
     d = json.loads(capsys.readouterr().out)
     assert d["mem_total_gib"] > 0 and d["gasto_gib"] > d["mem_total_gib"]
     assert [f["nombre"] for f in d["slices"]], d
+    # Las DOS mitades viajan en el JSON, o quien lo consuma solo ve una.
+    assert d["suelo_gpu"]["muestras"] == 21 and d["declaracion"]["owner"], d
 
 
 # =====================================================================
@@ -417,6 +488,48 @@ def test_el_informe_NOMBRA_las_ultimas_excursiones_con_su_fecha(
         encoding="utf-8")
     pm.main([])
     salida = capsys.readouterr().out
-    assert "excursiones del abanico: 2 de 3" in salida, salida
+    assert "excursiones: 2 de 3" in salida, salida
     assert "2026-09-21T00:33:00-0600" in salida and "85.0 GiB" in salida, salida
     assert "2026-09-20" not in salida.split("excursiones")[1], "la que cabe no es una excursion"
+
+
+# =====================================================================
+# el suelo comprometido: que sea la MESETA y no el maximo
+# =====================================================================
+
+
+def test_el_suelo_es_la_MESETA_y_no_el_pico(monkeypatch, tmp_path):
+    """Este test existe porque su ausencia se midio.
+
+    El 2026-09-25, mutando `suelo_gpu_gib` para que devolviera `v[-1]` -- o sea
+    volviendo al criterio-muro que usaba el maximo observado-- la suite entera
+    seguia VERDE: 31 de 31. Nada fijaba la diferencia entre el suelo comprometido
+    y el pico, que es justo el cambio que esta ficha vino a hacer.
+
+    Un cambio que nadie caza es un cambio que va a volver en silencio.
+    """
+    # 20 muestras de meseta a 50 GiB y UNA espiga de 85, que es la forma medida
+    # en esta maquina: p50 49.05, p95 50.15, max 85.40.
+    _montar(monkeypatch, tmp_path, picos=[50 * 1024] * 20 + [85 * 1024])
+    pm.pico_gpu_observado_mib()          # llena la serie
+    s = pm.suelo_gpu_gib()
+    assert s is not None
+    assert s["gib"] == 50.0, s           # la meseta
+    assert s["max"] == 85.0, s           # el pico, que viaja aparte y NO se resta
+    # Y la distancia entre los dos es exactamente lo que la mitad 2 obliga a
+    # firmar. Si el suelo fuera el pico, esto seria 0 y no habria nada que firmar.
+    assert s["max"] - s["gib"] == 35.0, s
+
+
+def test_control_negativo_el_suelo_SIGUE_a_la_serie_y_no_es_una_constante(
+        monkeypatch, tmp_path):
+    """Sin esto, el de arriba se cumple con un suelo puesto a mano en 50.
+
+    Tambien medido: con `suelo_gpu_gib` devolviendo un `50.0` literal, la suite
+    seguia verde con 33 de 33, porque las dos series de los tests daban 50. Asi
+    que esta usa OTRA meseta, 30 GiB: un numero constante ya no puede pasar por
+    los dos. Y una serie plana no tiene excursion -- suelo y pico coinciden."""
+    _montar(monkeypatch, tmp_path, picos=[30 * 1024] * 21)
+    pm.pico_gpu_observado_mib()
+    s = pm.suelo_gpu_gib()
+    assert s["gib"] == 30.0 and s["max"] == 30.0, s
