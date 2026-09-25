@@ -30,6 +30,8 @@ for a in "$@"; do
 done
 
 BACKUP="/var/backups/blackbox"
+# el dueno de la sesion grafica: quien invoco el sudo, no root
+DUENO="${SUDO_USER:-$(logname 2>/dev/null || id -un)}"
 run() { if [ "$DRY" = 1 ]; then echo "  [dry-run] $*"; else "$@"; fi; }
 
 if [ "$DRY" = 0 ] && [ "$(id -u)" != "0" ]; then
@@ -84,6 +86,26 @@ if [ "$REVERT" = 1 ]; then
     echo "  (no se reinicia solo: tirar los contenedores es decision tuya)"
   else
     echo "  /etc/docker/daemon.json: sin copia previa, NO se toca"
+  fi
+  if [ -f "$BACKUP/linger-estaba" ]; then
+    if [ "$(cat "$BACKUP/linger-estaba")" = "no" ]; then
+      run loginctl disable-linger "$DUENO"
+      echo "  linger de $DUENO devuelto a 'no' (como estaba antes)"
+    else
+      echo "  linger de $DUENO ya estaba activo antes: NO se toca"
+    fi
+  else
+    echo "  linger: sin copia previa, NO se toca"
+  fi
+  if [ -f /etc/sysctl.d/99-blackbox-panic.conf ]; then
+    run rm -f /etc/sysctl.d/99-blackbox-panic.conf
+    run sysctl -q -w kernel.panic=0
+    echo "  kernel.panic devuelto a 0 (el kernel vuelve a colgarse en un panic)"
+  fi
+  if [ -f /etc/systemd/system.conf.d/99-blackbox-watchdog.conf ]; then
+    run rm -f /etc/systemd/system.conf.d/99-blackbox-watchdog.conf
+    run rmdir --ignore-fail-on-non-empty /etc/systemd/system.conf.d
+    echo "  drop-in del watchdog de hardware retirado (system.conf:34 sigue en pie)"
   fi
   run rm -f /etc/security/limits.d/99-blackbox-core.conf
   run rm -f /etc/systemd/coredump.conf.d/99-blackbox.conf
@@ -450,6 +472,84 @@ PYEOF
   echo "    Si sigue diciendo system.slice o 'max', el techo NO esta puesto"
   echo "    por mucho que este informe diga que si."
 fi
+
+# --- 10. los servicios del usuario arrancan sin login --------------------
+echo
+echo "-- 10. linger: que un reinicio automatico no deje el stack caido --"
+echo "  Medido en el arranque del 2026-09-24 14:11:31 -- user@1000.service y"
+echo "  ai-nemotron.service arrancaron LOS DOS a las 18:33:07, cuando el dueno"
+echo "  entro al escritorio: 4 h 21 min 36 s sin stack de inferencia. Con"
+echo "  Linger=no y sin autologin en GDM, una unidad de usuario 'enabled' no"
+echo "  arranca en el boot: espera a una sesion."
+echo "  bb-usable lleva FailureAction=reboot-immediate, asi que un rescate"
+echo "  automatico de madrugada cuesta exactamente esa brecha."
+LINGER_ANTES=$(loginctl show-user "$DUENO" -p Linger --value 2>/dev/null || echo "?")
+if [ ! -f "$BACKUP/linger-estaba" ]; then
+  run sh -c "printf '%s' '$LINGER_ANTES' > '$BACKUP/linger-estaba'"
+fi
+if [ "$LINGER_ANTES" = "yes" ]; then
+  echo "  linger de $DUENO ya estaba activo: nada que hacer"
+else
+  run loginctl enable-linger "$DUENO"
+  echo "  linger activado para $DUENO (antes: $LINGER_ANTES)"
+  echo
+  echo "  ALCANCE: arrancan TODAS sus unidades 'enabled', no solo el vLLM --"
+  echo "  tambien pipewire, gnome-keyring y tracker, sin sesion grafica. Es"
+  echo "  ruido, no dano. Y el vLLM vuelve a pedir 68 GB nada mas arrancar: su"
+  echo "  propio admission_check es lo unico que lo frena."
+  echo
+  echo "  CONTROL NEGATIVO -- no te fies de este informe, mira el sujeto:"
+  echo "    loginctl show-user $DUENO -p Linger        # espera Linger=yes"
+  echo "    ls /var/lib/systemd/linger/$DUENO          # el fichero tiene que existir"
+  echo "  Y la prueba de verdad es el proximo arranque:"
+  echo "    systemd-analyze --user blame | head        # tras bootear SIN entrar"
+  echo "    journalctl -b -u user@\$(id -u $DUENO).service | head -1"
+  echo "    Si su marca de tiempo va pegada al boot y no a tu login, funciono."
+fi
+
+# --- 11. que un panic reinicie, en vez de colgarse ----------------------
+echo
+echo "-- 11. kernel.panic: la ultima capa, por debajo de bb-usable --"
+PANIC_ANTES=$(sysctl -n kernel.panic 2>/dev/null || echo "?")
+echo "  /etc/sysctl.d/99-freeze-panic.conf (2026-09-09, NO es de este repo: sale"
+echo "  del hilo del foro de NVIDIA #358951) obliga al kernel a entrar en panic"
+echo "  ante hung_task 120s, softlockup y hardlockup. Su proposito alli era"
+echo "  DIAGNOSTICO -- panic + kdump para capturar -- no recuperacion."
+echo "  kdump SI esta armado aqui (ready to kdump, kexec_crash_loaded=1,"
+echo "  crashkernel=1G-:512M), asi que un panic ya reinicia por kexec."
+echo "  Lo que kernel.panic=$PANIC_ANTES deja sin cubrir es el caso en que kdump FALLA:"
+echo "  si __crash_kexec() no arranca el kernel de captura, panic() honra"
+echo "  panic_timeout, y con 0 se queda parada para siempre."
+run cp adopted/system-config/etc_sysctl.d_99-blackbox-panic.conf \
+       /etc/sysctl.d/99-blackbox-panic.conf
+run sysctl -q -p /etc/sysctl.d/99-blackbox-panic.conf
+echo "  kernel.panic: $PANIC_ANTES -> 10 (reinicia 10 s si kdump no pudo)"
+echo
+echo "  CONTROL NEGATIVO -- mira el sujeto, no este informe:"
+echo "    sysctl -n kernel.panic          # espera 10, no 0"
+echo "  Y comprueba que el watchdog de hardware sigue alimentado:"
+echo "    journalctl -b 0 | grep -i 'hardware watchdog'"
+echo "    espera: Using hardware watchdog 'SBSA Generic Watchdog' ... /dev/watchdog0"
+echo "    OJO: /sys/class/watchdog/watchdog0/timeleft NO sirve de instrumento"
+echo "    en esta maquina -- reporta ~40 anos. El journal es lo que vale."
+
+# --- 12. el watchdog de hardware, a prueba de actualizaciones -----------
+echo
+echo "-- 12. watchdog SBSA: que sobreviva a una actualizacion de systemd --"
+echo "  Medido el 2026-09-24: RuntimeWatchdogSec=60 vive en"
+echo "  /etc/systemd/system.conf:34, editado a mano. El paquete systemd"
+echo "  REESCRIBE ese fichero al actualizar, asi que la ultima capa de"
+echo "  proteccion desapareceria en silencio hasta el siguiente cuelgue."
+run mkdir -p /etc/systemd/system.conf.d
+run cp adopted/system-config/etc_systemd_system.conf.d_99-blackbox-watchdog.conf \
+       /etc/systemd/system.conf.d/99-blackbox-watchdog.conf
+echo "  drop-in puesto (mismo valor que ya hay: 60 s, sin cambio de conducta)"
+echo
+echo "  CONTROL NEGATIVO -- el journal es lo unico que prueba que esta armado:"
+echo "    journalctl -b 0 | grep -i 'hardware watchdog'"
+echo "    espera: Using hardware watchdog 'SBSA Generic Watchdog' ... /dev/watchdog0"
+echo "    NO uses /sys/class/watchdog/watchdog0/timeleft: en esta maquina"
+echo "    reporta ~40 anos, o sea no distingue alimentado de no alimentado."
 
 # --- recarga ------------------------------------------------------------
 echo
