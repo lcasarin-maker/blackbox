@@ -1,7 +1,7 @@
 ---
 id: DEBT-TECHOS-SIN-CALIBRAR
 kind: debt
-title: "Los techos declarados suman 168.3 GiB en una maquina de 121.1: el hueco es la memoria unificada que ningun cgroup ve"
+title: "El criterio de los techos no podia salir positivo: reservaba un transitorio de 4 min como si fuera un compromiso"
 status: open
 severity: P1
 origin: asserted
@@ -61,6 +61,10 @@ reserva de GPU (ningun cgroup la ve)         86.0 GiB
 SUMA declarada                              168.3 GiB   -- 47.2 de mas
 ```
 
+Esa `SUMA declarada` ya no se calcula asi, y el cambio no es de numeros: sumaba
+un maximo observado junto a compromisos. Se deja como registro de lo que decia
+el 2026-09-24. Lo que imprime hoy esta en la seccion del 2026-09-25.
+
 **(2) La reserva se fijo con medida, y la medida desmintio lo esperado.**
 
 Era tentador presupuestar contra lo que el vLLM declara:
@@ -97,6 +101,11 @@ simultaneos de un `cov-solo.scope` -- que no existe en este repo ni en el kit,
 viene de fuera-- llevandose 48 GiB de memoria unificada que **ningun cgroup ve**
 (medido aqui: 7 GiB de CUDA se contabilizan como 15 MiB).
 
+> **Actualizado el 2026-09-25**: `cov-solo.scope` ya no es anonimo. Son ocho
+> workers de `pytest-xdist` corriendo una suite de tests, y el episodio duro
+> cuatro minutos. Ver la seccion "el criterio no podia salir positivo" mas
+> abajo, que es la que manda sobre este parrafo.
+
 Los techos de 48G y 32G se pusieron como si esa memoria no existiera.
 
 ## La decision se tomo el 2026-09-25: VIGILAR, no cuadrar a la fuerza
@@ -111,7 +120,9 @@ descarto:
   matando trabajo en operacion normal, no solo en el pico.
 - **Acotar el abanico donde se lanza** -- es la solucion de fondo y hace cuadrar
   la aritmetica (con el abanico en ~40 quedan 77.1 para app+docker y 48+29
-  cabe), pero el codigo que lanza esos procesos no esta en blackbox.
+  cabe), pero el codigo que lanza esos procesos no esta en blackbox. Sigue
+  siendo cierto, y desde el 2026-09-25 tiene direccion: es el `-n` de una
+  corrida de `pytest-xdist` de la suite de otro repo.
 - **void_wontfix** -- se descarto por ahora: el desborde es real y medible.
 
 ## Lo que se hizo, y el numero que lo valida
@@ -139,6 +150,103 @@ en un solo sitio.
 Y el fichero de `docker.slice` traia una holgura declarada que era FALSA:
 "dejando 41 GiB para el kernel, el resto de system.slice y la memoria unificada
 de GPU". La memoria unificada sola tiene mediana 49.0 y maximo 85.4. Nunca cupo.
+
+## 2026-09-25: el criterio no podia salir positivo, y eso se midio
+
+Se abrio el pico del 2026-09-21T00:33 y los ocho procesos tienen nombre:
+
+```
+34363 MiB  pid 3302207  [No data]                                  <- vLLM
+ 9761 MiB  pid 3540458  [pytest-xdist idle]
+ 7959 MiB  pid 3540461  test_structured_chunking.py::test_structured_legal_chunking_axes
+ 5715 MiB  pid 3540455  [pytest-xdist idle]
+ 5703 MiB  pid 3540464  test_scjn_delta_refresh_service.py::...
+ 5431 MiB  pid 3540544  [pytest-xdist idle]
+ 5273 MiB  pid 3540467  test_ingestion_router_complementary_merge.py::...
+ 4817 MiB  pid 3540498  test_debt_canibal_atlas_hyde.py::...
+ 4631 MiB  pid 3540444  test_tfja_jurisprudence.py::...
+```
+
+El abanico es **una corrida de `pytest-xdist` con ocho workers**, cada uno con su
+modelo en la GPU. No es carga de servicio: es una suite de tests. Y duro lo que
+dura una suite --  **cuatro minutos**, de 00:30 a 00:33.
+
+La serie entera, 19 067 muestras del 09-10 al 09-25:
+
+```
+p50 49.05 | p75 49.48 | p85 50.00 | p90 50.15 | p95 50.15 | p99 52.18 | max 85.40
+por encima de 55.3 GiB: 18 episodios, 67 min EN TOTAL, el mas largo 11 min
+```
+
+### El muro
+
+```
+121.1 GiB (MemTotal) - 86.0 (reserva) = 35.1 GiB para TODOS los cgroups
+app.slice, pico de este arranque      = 39.8 GiB   (memory.peak = 42731823104)
+```
+
+`app.slice` **sola**, en su pico observado, se pasa por 4.7 GiB del presupuesto
+entero -- antes de docker, antes de `system.slice`, antes del kernel. No hay
+reparto que satisfaga el criterio sin poner el techo del escritorio por debajo
+de lo que el escritorio ya uso, que es la salida que esta misma ficha descarto
+por medicion.
+
+**Un `close_check` que no puede salir positivo sin matar al sujeto no es un
+criterio.** Es el gemelo de la regla de la flota: una verificacion que no puede
+salir negativa no verifica, y una que no puede salir positiva tampoco.
+
+### Y un defecto en el instrumento, que era mio
+
+La herramienta imprimia `SUMA declarada` sumando dos cosas distintas: los techos
+(48G, 16G) son **compromisos** que el kernel aplica; la reserva de 86.0 es un
+**maximo observado** que no aplica nadie. El propio gate marca a `system.slice`
+por exactamente eso -- "entra por lo que usa HOY y no por un compromiso"-- sobre
+1.9 GiB, mientras hacia lo mismo con 86.
+
+### Lo que se hizo: partir el criterio, sin aflojarlo
+
+- **MITAD 1, compromisos.** Los techos componen contra el SUELO comprometido de
+  GPU: el p95 de la serie, **derivado y no elegido**. De p50 a p95 el suelo se
+  mueve 1.10 GiB sobre 121.1; de p85 a p95, 0.15. Es una meseta, asi que el
+  numero lo pone el sujeto. De p99 al maximo hay un salto de 33.26 GiB, y ese
+  salto es justo lo que la mitad 2 obliga a firmar.
+- **MITAD 2, excursion.** El maximo observado tiene que caber en un presupuesto
+  **FIRMADO** (`tasks/presupuesto_gpu.json`), con `owner`, `expires` y `reason`.
+  Sin firma es ROJO, y ese es el estado por defecto a proposito: este repo no
+  trae plantilla firmada, porque una plantilla que el gate acepte es el agujero.
+
+**Partir el criterio NO lo puso en verde**, y eso es lo que separa esto de
+aflojarlo:
+
+```
+rc=1 hoy
+  MITAD 1 (compromisos)  PASA:  115.8 sobre 121.1, holgura 5.3
+  MITAD 2 (excursion)    FALLA: nadie ha firmado
+  y ademas: system.slice sigue sin techo
+```
+
+Seis mutaciones corridas contra el codigo real, en
+`tasks/evidence/DEBT-TECHOS-SIN-CALIBRAR/controles-negativos-2026-09-25.txt`.
+**Dos de ellas no las cazaba nadie** -- volver el suelo al maximo, y fijarlo a
+mano en 50.0-- y por eso existen ahora `test_el_suelo_es_la_MESETA_y_no_el_pico`
+y su control.
+
+### Lo que falta ahora, que ya no es imposible
+
+`system.slice` es el ultimo slice sin techo, y con la mitad 1 en 115.8 sobre
+121.1 hay 5.3 GiB de holgura: **ponerle un techo ahora hace que el presupuesto
+componga**, cosa que con la reserva en 86 no podia hacer ningun reparto.
+
+No se le puso hoy a proposito. Lo unico que hay para elegir el numero es su
+`memory.peak` de UN arranque (2.8 GiB en 8 h 19 min), y un techo sacado de un
+arranque es exactamente el techo sin calibrar que esta ficha vino a quitar --
+el de `docker.slice` salio de 18 944 muestras, y ese es el liston.
+
+Asi que se creo la serie que faltaba: `bb sample` guarda desde hoy un bloque
+`slices` con `cur_kb` y `peak_kb` de los tres slices. Un slice ilegible se
+OMITE en vez de entrar como 0 (un 0 se promediaria como medida, y un techo
+calibrado sobre ceros inventados mata procesos por un dato que nadie tomo), y un
+kernel sin `memory.peak` escribe `null` y no 0.
 
 ## Por que sigue ABIERTA
 

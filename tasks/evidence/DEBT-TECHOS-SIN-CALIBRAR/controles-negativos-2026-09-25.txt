@@ -1,0 +1,75 @@
+# Controles negativos del criterio partido en dos mitades.
+# Corridos el 2026-09-25, no argumentados. Cada mutacion se aplico al codigo
+# real, se corrio la suite, y se restauro el fichero.
+
+## Por que hacen falta
+Partir un criterio que hoy FALLA, hecho por quien no lo puede satisfacer, es la
+forma exacta del razonamiento motivado. La unica defensa es que las dos mitades
+puedan seguir bloqueando, y eso no se argumenta: se mide rompiendolas.
+
+## MUTACION A -- `declaracion_excursion` devuelve siempre una firma valida
+(o sea: se salta la mitad 2 entera)
+
+    4 failed, 27 passed
+      test_una_firma_que_se_quedo_CORTA_se_caza_con_las_propias_muestras
+      test_una_firma_CADUCADA_no_vale
+      test_una_firma_SIN_dueno_no_vale
+      test_sin_firma_es_ROJO_y_lo_DICE
+
+## MUTACION B -- se quita SOLO la comprobacion de caducidad (`if vence < ahora`)
+
+    1 failed, 30 passed
+      test_una_firma_CADUCADA_no_vale
+
+La precision importa: se cae UNO. Si se hubieran caido varios, el test de
+caducidad estaria midiendo de rebote otra cosa.
+
+## MUTACION C -- el suelo vuelve a ser el MAXIMO (`v[-1]` en vez del p95)
+o sea: volver al criterio-muro que esta ficha vino a quitar.
+
+    PRIMERA PASADA: 31 passed  <-- NADIE LO CAZO
+    Ese es el hallazgo, y no se dejo pasar: se escribio
+    `test_el_suelo_es_la_MESETA_y_no_el_pico`, y con el:
+
+    1 failed, 32 passed
+      test_el_suelo_es_la_MESETA_y_no_el_pico
+        assert 85.0 == 50.0
+
+## MUTACION D -- el suelo fijado a mano en `50.0`
+
+    PRIMERA PASADA: 33 passed  <-- TAMPOCO
+    porque las dos series de los tests daban 50 y una constante pasaba por las
+    dos. Se cambio el control a una meseta de 30 GiB, y con eso:
+
+    1 failed, 32 passed
+      test_control_negativo_el_suelo_SIGUE_a_la_serie_y_no_es_una_constante
+        assert (50.0 == 30.0)
+
+## MUTACION E (bash) -- un slice ilegible entra como 0 en vez de omitirse
+
+    1 failed
+      test_un_slice_que_NO_se_puede_leer_se_OMITE_y_no_entra_como_cero
+
+## MUTACION F (bash) -- sin `memory.peak` se escribe 0 en vez de null
+
+    1 failed
+      test_sin_memory_peak_en_el_kernel_se_escribe_null_y_no_cero
+        [{'cur_kb': 1024, 'peak_kb': 0, ...}]  assert False
+
+Nota sobre esta ultima: en la primera corrida la di por NO cazada, y estaba
+equivocado -- habia filtrado con `-k "slice"` y el nombre de ese test no lleva
+la palabra. El filtro no seleccionaba el test que tenia que fallar. Queda
+escrito porque un control que no se corre sobre el sujeto que dice medir es el
+mismo fallo que estos controles existen para cazar, cometido sobre el filtro.
+
+## VEREDICTO DEL GATE HOY, con todo esto puesto
+
+    rc=1  -- sigue ROJO.
+    MITAD 1 (compromisos)  PASA: 115.8 sobre 121.1, holgura 5.3
+    MITAD 2 (excursion)    FALLA: nadie ha firmado tasks/presupuesto_gpu.json
+    y ademas: system.slice sigue sin techo
+
+Partir el criterio NO lo puso en verde. Se pone en verde cuando una persona
+firma la excursion y system.slice recibe un techo calibrado -- que es lo que
+antes no se podia ni intentar, porque la aritmetica no admitia ninguna
+solucion.

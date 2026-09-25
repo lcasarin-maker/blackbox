@@ -94,6 +94,39 @@ gpu_procs() {
     --format=csv,noheader,nounits 2>/dev/null
 }
 
+# Memoria por slice: lo que USA ahora y su pico desde el arranque.
+#
+# Existe para poder CALIBRAR un techo en vez de ponerlo a ojo.
+# `DEBT-TECHOS-SIN-CALIBRAR` se quedo trabada exactamente aqui el 2026-09-25:
+# `system.slice` es el ultimo slice sin techo, ponerle uno hace que el
+# presupuesto componga, y no habia con que elegir el numero -- solo su
+# `memory.peak` de UN arranque (2.8 GiB en 8 h 19 min). Un techo sacado de un
+# arranque es el techo sin calibrar que esa ficha vino a quitar; el de
+# `docker.slice` salio de 18 944 muestras, y ese es el liston.
+#
+# `memory.peak` es acumulado desde el arranque y no se reinicia, asi que sirve
+# para el maximo pero no da distribucion: la distribucion la da `current`
+# muestreado. Se guardan los dos.
+slices_mem() {
+  local cg="${BB_CGROUP_ROOT:-/sys/fs/cgroup}" uid n r cur pk
+  uid=$(id -u)
+  { for n in app docker system; do
+      case $n in
+        app)    r="$cg/user.slice/user-$uid.slice/user@$uid.service/app.slice" ;;
+        docker) r="$cg/docker.slice" ;;
+        system) r="$cg/system.slice" ;;
+      esac
+      cur=$(cat "$r/memory.current" 2>/dev/null) || continue
+      # `memory.peak` no existe en todos los kernels. Su ausencia se escribe
+      # como null y no como 0: "no lo da este kernel" y "el pico fue cero" son
+      # cosas distintas, y un 0 se promediaria como si fuera una medida.
+      pk=$(cat "$r/memory.peak" 2>/dev/null)
+      printf '{"slice":"%s","cur_kb":%s,"peak_kb":%s},' \
+        "$n" "$(( ${cur:-0} / 1024 ))" \
+        "$([ -n "$pk" ] && echo $(( pk / 1024 )) || echo null)"
+    done; } | sed 's/,$//'
+}
+
 # Salud del PROPIO nvidia-smi, no de la GPU. Que la consulta no responda es EL
 # sintoma del cuelgue -- es lo que da titulo al hilo del foro de NVIDIA #358951,
 # "Spark hangs, requires a hard reset" -- y hoy no lo registra nadie.
@@ -686,8 +719,10 @@ cmd_sample() {
   pybg=$(ps -eo pid=,etimes=,comm= 2>/dev/null |
     awk '$3 ~ /^python/ && $2 > 60 {printf "%s%s", (n++?",":""), $1}')
 
-  printf '{"ts":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":[%s],"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s,"top":[%s]},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s}}\n' \
-    "$ts" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$topvsz" "$cputop" "$pybg" "$gpu" \
+  local slices; slices=$(slices_mem 2>/dev/null)
+
+  printf '{"ts":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":[%s],"slices":[%s],"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s,"top":[%s]},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s}}\n' \
+    "$ts" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$topvsz" "$cputop" "$pybg" "$gpu" "$slices" \
     "${commit_pct:-0}" "${residuo:-0}" \
     "${swap_free:-0}" "${swap_total:-0}" "${swpin_s:-0}" "${swpout_s:-0}" "$swaptop" \
     "${psi_m_some:-0}" "${psi_m_full:-0}" "${psi_io_some:-0}" "${psi_cpu_some:-0}" \
@@ -1646,8 +1681,13 @@ for e in largas[-5:]:
   # para la aritmetica, y esta es la vista de operacion.
   echo "-- abanico de GPU contra el presupuesto de memoria --"
   if have python3; then
+    # Se imprime ENTERO y no se filtra por etiquetas. El filtro anterior era
+    # `grep -E "presupuesto de GPU|pico de GPU|..."`, y el 2026-09-25, al partir
+    # el criterio en dos mitades, esas dos etiquetas dejaron de existir: la vista
+    # de operacion habria perdido filas en silencio y nadie lo habria notado,
+    # porque un grep que no casa nada sale con 0 y no dice nada.
     python3 -m tools.presupuesto_memoria 2>/dev/null |
-      grep -E "MemTotal|presupuesto de GPU|excursiones|pico de GPU|^ " | sed 's/^\[presupuesto\]/ /' ||
+      sed 's/^\[presupuesto\]/ /' ||
       echo "  (tools.presupuesto_memoria no pudo correr)"
   else
     cannot_run "presupuesto de memoria" "sin python3"
