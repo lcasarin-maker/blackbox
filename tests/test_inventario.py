@@ -134,3 +134,61 @@ def test_destino_de_cada_familia_de_adoptados() -> None:
     assert inventario.destino_desplegado(Path("adopted/system-config/etc_a_b.conf")) == "/etc/a/b.conf"
     assert inventario.destino_desplegado(Path("adopted/systemd-user/x.service")) == "~/.config/systemd/user/x.service"
     assert inventario.destino_desplegado(Path("adopted/gpu_governance/y.sh")) == "/srv/ai/gpu_governance/y.sh"
+
+
+# --------------------------------------------------------------- seccion()
+# `tools/piso_cobertura.sh` y el trinquete miden que las lineas se EJECUTEN.
+# El runner de mutacion mide otra cosa: si un fallo se cazaria. Sobre
+# `test_sujeto_sano_no_da_hallazgos` devolvio WEAK el 2026-09-25 -- dos
+# mutantes vivos en `seccion()`: el corte `j < 0` invertido y el indice del
+# recorte desplazado en uno. Los dos sobreviven porque ningun caso de esta
+# suite tiene DOS secciones seguidas, que es justo donde ese recorte decide.
+
+
+def test_seccion_corta_en_el_siguiente_encabezado_y_no_se_come_el_siguiente():
+    """Si el recorte se desplaza o el corte se invierte, esto lo dice."""
+    spec = ("## Uno\n\nprimera\n\n## Dos\n\nsegunda\n")
+    assert inventario.seccion(spec, "## Uno") == "\n\nprimera\n"
+
+
+def test_seccion_de_la_ultima_devuelve_hasta_el_final():
+    """La otra rama del mismo `if`: sin `\\n## ` detras, se devuelve todo."""
+    spec = ("## Uno\n\nprimera\n\n## Dos\n\nsegunda y ultima\n")
+    assert inventario.seccion(spec, "## Dos") == "\n\nsegunda y ultima\n"
+
+
+def test_control_negativo_una_seccion_no_arrastra_a_la_de_al_lado():
+    """El caso que los mutantes supervivientes habrian dejado pasar: con el
+    corte invertido, `seccion` devolveria el documento entero desde el titulo,
+    y cualquier fila de la tabla siguiente contaria como si fuera de esta."""
+    spec = "## Inventario de funciones\n\n| `bb sample` |\n\n## Inventario de propiedad\n\n| `/etc/x` |\n"
+    funciones = inventario.seccion(spec, "## Inventario de funciones")
+    assert "/etc/x" not in funciones, "se comio la seccion de al lado"
+    assert "bb sample" in funciones
+
+
+def test_una_seccion_VACIA_se_devuelve_vacia(repo: Path):
+    """El mutante que sobrevivia a todo lo demas: `j < 0` desplazado a `j < 1`.
+    Solo se distingue cuando el siguiente encabezado esta pegado al titulo, o
+    sea `j == 0` -- una seccion vacia. Con el corte desplazado, esa seccion
+    devolveria el documento ENTERO que viene detras."""
+    spec = "## Vacia\n## Siguiente\n\ncontenido de la siguiente\n"
+    assert inventario.seccion(spec, "## Vacia") == ""
+
+
+def test_un_directorio_que_no_es_fichero_no_entra_como_pieza(repo: Path):
+    """`f.is_file() and f.name not in IGNORADOS` son DOS condiciones, y con un
+    `or` en medio un subdirectorio de tools/ entraria al inventario como si
+    fuera una pieza ejecutable."""
+    (repo / "tools" / "subcarpeta").mkdir()
+    (repo / "tools" / "subcarpeta" / "algo.py").write_text("z = 1\n", encoding="utf-8")
+
+    piezas = inventario.sujetos_ejecutables(repo)
+    assert "tools/subcarpeta" not in piezas, piezas
+
+
+def test_control_negativo_un_fichero_ignorado_tampoco_entra(repo: Path):
+    """La otra mitad de la misma condicion: sin ella, `__init__.py` seria una
+    pieza que la spec tendria que inventariar."""
+    assert "tools/__init__.py" not in inventario.sujetos_ejecutables(repo)
+    assert "tools/otra.py" in inventario.sujetos_ejecutables(repo)

@@ -1,0 +1,11 @@
+$ python3 -m pytest tests/test_mutacion_alcanza.py -q --cov=tools.mutacion_alcanza
+---------------------------------------------------------
+tools/mutacion_alcanza.py      23      0   100%
+---------------------------------------------------------
+TOTAL                          23      0   100%
+4 passed in 0.08s
+
+$ # y el runner corriendo de verdad sobre un test de aqui, ya con veredicto:
+  tests/test_inventario.py::test_sujeto_sano_no_da_hallazgos -> WEAK (2/5)
+  WEAK es el veredicto NORMAL: muta el modulo entero y corre UN test.
+  Lo que importa es que YA NO dice COULD_NOT_RUN.
