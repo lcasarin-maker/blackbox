@@ -1,43 +1,68 @@
 ---
 id: DEBT-SIN-ARNES-DE-MUTACION
 kind: debt
-title: El gate termico llego sin sus dos arneses de mutacion, y este repo no tiene con que correrlos
+title: El runner de mutacion del kit no alcanza a ningun satelite: 0 de 374 tests resuelven su sujeto
 status: open
 severity: P2
 origin: asserted
 satd_family: LOST_VERIFICATION
 created: 2026-09-25
-close_check: {"cmd": "grep -q atom_gpu_telemetry tools/run_mutacion.py", "expect": "exit_zero"}
+close_check: {"cmd": "python .simplecode/run.py simplecode.verification.mutation_verify tests/test_inventario.py test_sujeto_sano_no_da_hallazgos --gate", "expect": "exit_zero", "porque": "mide el SUJETO: que el runner del kit resuelva y corra sobre un test REAL de este repo. Hoy devuelve COULD_NOT_RUN porque no encuentra el modulo."}
 ---
 
 ## Que pasa
 
 Con `tools/atom_gpu_telemetry.py` vinieron de Atlas sus dos arneses de
-mutacion -- `run_mitigacion_carga_mutation.py` y `run_alarm_mark_mutation.py`
--- que rompen el modulo a proposito, una mutacion por vez, y exigen que la
-suite MUERA. Un test que pasa igual con el codigo roto no prueba nada, y esos
-arneses son lo unico que lo comprueba sobre la compuerta de carga y sobre el
-marcado de alarmas termicas.
+mutacion -- `run_mitigacion_carga_mutation.py` (89 lineas) y
+`run_alarm_mark_mutation.py` (181) -- que rompen el modulo a proposito, una
+mutacion por vez, y exigen que la suite MUERA. Un test que pasa igual con el
+codigo roto no prueba nada, y esos arneses eran lo unico que lo comprobaba
+sobre la compuerta de carga y sobre el marcado de alarmas termicas.
 
-**No pueden correr aqui.** Los dos importan
-`tools/run_injection_mutation.py`, que son 617 lineas de infraestructura
-COMPARTIDA de Atlas: la usan unos 50 arneses de aquel repo. Traerla seria
-duplicar infraestructura ajena, que es exactamente lo que DGX-585 vino a
-quitar. Y dejarlos aqui sin ella los volvia codigo muerto que ademas rompia
-`pyright` (2 errores, medidos el 2026-09-25 en el push).
+**El reparto correcto, por funcion y no por nombre:**
 
-Asi que se retiran de este repo y se dice por que, en vez de dejarlos
-importando un modulo inexistente.
+| pieza | que es | de quien |
+| --- | --- | --- |
+| los dos arneses | tienen SUJETO: mutan `atom_gpu_telemetry.py` | **de este repo**, que es donde vive el sujeto |
+| `run_injection_mutation.py` (617 lineas, 49 usuarios en Atlas) | no tiene sujeto: es el METODO -- mutar, `compile()` antes de gastar maquina, correr pytest, exigir `failed` y no `error`, restaurar verificando sha256 | **de ninguno de los dos repos: del kit** |
 
-## Lo que se pierde, dicho sin adornos
+Y el kit **ya trae uno**: `simplecode/verification/mutation_verify.py`, 390
+lineas, vendorizado en los dos satelites.
+
+## El hallazgo: ese runner del kit no alcanza a ningun satelite
+
+Medido el 2026-09-25 con su propia funcion `resolve_source_for_test`:
+
+```
+blackbox:  0 de   9 ficheros de test resuelven su sujeto
+Atlas:     0 de 365
+```
+
+La causa esta en el codigo del kit: el resolutor exige `root/src/` y deriva de
+ahi los nombres de paquete locales. **blackbox no tiene `src/`** -- su codigo
+vive en `tools/` y `bin/` -- y el `src/` de **Atlas solo contiene `images/`**,
+sin un paquete Python dentro. Asi que devuelve `None` siempre, y el llamador lo
+reporta como `COULD_NOT_RUN`.
+
+Control negativo corrido, que es lo que convierte esto en hallazgo y no en
+sospecha: el mismo runner sobre el repo del kit, que SI tiene `src/simplecode/`,
+resuelve sus tests sin problema. O sea funciona donde nacio y no donde se
+vendoriza.
+
+Eso reencuadra los 617 lineas de Atlas: **no eran duplicacion caprichosa**, eran
+suplir un instrumento del kit que no llega. Y reencuadra al propio
+`mutation_verify`: un gate vendorizado en dos repos donde no puede capturar nada
+es un defecto del instrumento, nunca evidencia de que el sujeto este limpio.
+
+## Lo que se pierde mientras tanto, dicho sin adornos
 
 La verificacion por mutacion de dos caminos del gate termico. No eran gates de
 CI -- se corren a mano -- pero eran lo unico que respondia "¿estos tests
 cazarian el bug?" sobre la mitigacion. Lo que queda son 137 tests y el 100 % de
-cobertura de lineas, que es otra pregunta: cobertura dice que se EJECUTO, no
-que se comprobaria un fallo.
+cobertura de lineas, que contesta otra pregunta: que se EJECUTO, no que un
+fallo se cazaria.
 
-Los ficheros viven en la historia de Atlas, recuperables:
+Los tres ficheros viven en la historia de Atlas, recuperables:
 
 ```
 git -C ~/projects/Atlas show 82b27781^:tools/run_mitigacion_carga_mutation.py
@@ -47,12 +72,17 @@ git -C ~/projects/Atlas show HEAD:tools/run_injection_mutation.py
 
 ## Como se cierra
 
-Con un `tools/run_mutacion.py` propio de este repo -- no una copia del de
-Atlas, sino lo minimo que este repo necesita, que es bastante menos: mutar un
-fichero en sitio, `compile()` antes de gastar maquina, correr pytest, exigir
-`failed` y no `error`, y restaurar verificando por sha256. Las cuatro defensas
-de aquel estan documentadas en su cabecera y se pueden derivar sin copiarlo.
+**Aguas arriba, en `simplecode`, no aqui.** `resolve_source_for_test` tiene que
+dejar de suponer `src/` y derivar los paquetes locales de lo que el proyecto ya
+declara -- `coverage_targets` en `corpus_exempt.yaml`, o los paquetes de
+`pyproject.toml` -- que es como el resto del kit se adapta a cada satelite.
+Copiar el runner a este repo seria duplicar el metodo en vez de arreglarlo, y
+dejaria a Atlas con el mismo agujero.
 
-Control negativo obligatorio: un mutante que la suite NO caza tiene que
-reportarse como superviviente. Un arnes donde todos los mutantes mueren
-siempre no discrimina un test bueno de uno decorativo.
+Con eso hecho, los dos arneses vuelven aqui expresados sobre el runner del kit,
+y el `close_check` de arriba deja de dar `COULD_NOT_RUN`.
+
+Control negativo obligatorio del arreglo: un mutante que la suite NO caza tiene
+que reportarse como SUPERVIVIENTE. Un arnes donde todos los mutantes mueren
+siempre no discrimina un test bueno de uno decorativo -- y un resolutor que
+devuelve `None` los mata a todos por ausencia, que es el fallo de hoy.
