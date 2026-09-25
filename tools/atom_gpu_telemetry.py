@@ -1405,7 +1405,7 @@ def main() -> int:
                     print(json.dumps(evento, ensure_ascii=False))
             if args.once:
                 return 0
-            time.sleep(args.interval_seconds)  # blocking-sleep: intervalo del sampler de vida larga, no I/O a esperar -- DGX-334  # sunset-reviewed: 1.4 -- revisado 2026-09-25: SE QUEDA, y es el caso mas claro de todos: es el intervalo de un sampler de vida larga. No espera a nadie -- decide cada cuanto mirar. Sustituirlo por un evento seria pedirle a la maquina que avise de que ha pasado el tiempo.
+            time.sleep(args.interval_seconds)  # blocking-sleep: intervalo del sampler de vida larga, no I/O a esperar -- DGX-334  # sunset-reviewed: 1.5 -- SE QUEDA, y sigue siendo el caso mas claro: es el intervalo de un sampler de vida larga. No espera a nadie, decide cada cuanto mirar. Sustituirlo por un evento seria pedirle a la maquina que avise de que ha pasado el tiempo.
     except KeyboardInterrupt:
         return 0
 
