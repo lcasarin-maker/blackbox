@@ -532,4 +532,64 @@ def test_control_negativo_el_suelo_SIGUE_a_la_serie_y_no_es_una_constante(
     _montar(monkeypatch, tmp_path, picos=[30 * 1024] * 21)
     pm.pico_gpu_observado_mib()
     s = pm.suelo_gpu_gib()
+    assert s is not None
     assert s["gib"] == 30.0 and s["max"] == 30.0, s
+
+
+# =====================================================================
+# la firma invalida: el gate tiene que DECIR que le pasa, no solo negarse
+# =====================================================================
+
+
+@pytest.mark.parametrize("contenido,espera", [
+    ("{no es json", "no es JSON valido"),
+    ("[1, 2, 3]", "no es un objeto JSON"),
+])
+def test_una_declaracion_ILEGIBLE_dice_por_que(monkeypatch, tmp_path, capsys,
+                                               contenido, espera):
+    """Un "FAIL" sin motivo obliga a adivinar, y se acaba adivinando mal. Cada
+    forma de estar rota tiene su frase."""
+    _montar(monkeypatch, tmp_path, app_max=str(1024**3), docker_max=str(1024**3),
+            system_max=str(1024**3))
+    (tmp_path / "presupuesto_gpu.json").write_text(contenido, encoding="utf-8")
+    assert pm.main(["--check"]) == 1
+    assert espera in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("campo,valor,espera", [
+    ("excursion_gib", "ochenta", "no es un numero"),
+    ("expires", "el mes que viene", "no es una fecha ISO"),
+])
+def test_un_campo_con_la_forma_MAL_dice_cual_y_que_traia(
+        monkeypatch, tmp_path, capsys, campo, valor, espera):
+    """Y nombra el valor que encontro. Sin eso, quien firmo no sabe que
+    corregir de las cuatro lineas que escribio."""
+    f = _firma()
+    f[campo] = valor
+    _montar(monkeypatch, tmp_path, app_max=str(1024**3), docker_max=str(1024**3),
+            system_max=str(1024**3), firma=f)
+    assert pm.main(["--check"]) == 1
+    err = capsys.readouterr().err
+    assert espera in err and valor in err, err
+
+
+def test_sin_serie_de_GPU_no_hay_suelo_y_eso_es_COULD_NOT_RUN(
+        monkeypatch, tmp_path, capsys):
+    """Sin muestras no hay suelo comprometido que restar. La suma sin el no es
+    una suma pequena: es una suma que no significa nada, y decir "cabe" seria
+    una afirmacion sobre la maquina que nadie midio."""
+    _montar(monkeypatch, tmp_path, app_max=str(1024**3), docker_max=str(1024**3),
+            system_max=str(1024**3), firma=_firma())
+    monkeypatch.setattr(pm, "DATA_DIR", tmp_path / "sin-muestras")
+    assert pm.main(["--check"]) == 1
+    err = capsys.readouterr().err
+    assert "COULD_NOT_RUN" in err and "suelo comprometido" in err, err
+
+
+def test_control_negativo_CON_serie_no_sale_ese_COULD_NOT_RUN(monkeypatch, tmp_path, capsys):
+    """Si ese aviso saliera siempre, no distinguiria "no se midio" de "se midio
+    y cabe", que es toda la diferencia que este gate existe para marcar."""
+    _montar(monkeypatch, tmp_path, app_max=str(1024**3), docker_max=str(1024**3),
+            system_max=str(1024**3), firma=_firma())
+    assert pm.main(["--check"]) == 0
+    assert "COULD_NOT_RUN" not in capsys.readouterr().err
