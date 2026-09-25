@@ -35,10 +35,28 @@ user@1000.service               -> CAZADO
 org.gnome.Shell@x11.service     -> CAZADO
 getty@tty1.service              -> CAZADO
 user@.service                   -> limpio   (plantilla, sin instancia)
-alguien@ejemplo.com             -> CAZADO   (y debe serlo)
+<una direccion de verdad>       -> CAZADO   (y debe serlo)
 ```
 
 Mirando solo la cadena no hay forma de distinguirlas.
+
+## Esta misma ficha lo disparo, y eso es parte del hallazgo
+
+Al escribirla, `pii-scan` bloqueo el push con TRES hallazgos: `getty@tty1.service`
+en la tabla de arriba, y dos direcciones de EJEMPLO que yo habia escrito en
+prosa para explicar el patron.
+
+Las tres se resolvieron distinto, y la diferencia importa:
+
+- la unit entra en el allowlist, porque no hay forma de escribirla que no case;
+- las direcciones de ejemplo se BORRARON y se describieron por su forma. Una
+  direccion inventada casa el patron igual que una real, y la doctrina del
+  propio gate es que un hallazgo se describe por su forma y su tamano, no por
+  su contenido identificable. Meterlas en el allowlist habria sido usar la
+  valvula para no seguir la regla.
+
+Los literales que el test SI necesita viven en `tests/`, que este gate no
+barre -- barre `tasks/` y `docs/`.
 
 ## Lo que YA esta pagado, y con que
 
@@ -50,10 +68,15 @@ precisamente para que viaje al clone.
 Control negativo corrido, no argumentado:
 
 ```
-CON tasks/pii_allow.txt   -> revisados=154  hallazgos=0
-SIN tasks/pii_allow.txt   -> hallazgos=1
-   PII tasks/done/DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP.md:12  user***********ce
+CON tasks/pii_allow.txt   -> revisados=156  hallazgos=0
+SIN tasks/pii_allow.txt   -> revisados=155  hallazgos=8
 ```
+
+Los ocho estan en dos ficheros: siete en ESTA ficha -- que para describir el
+defecto tiene que escribir las cadenas que lo disparan-- y el octavo en el
+`close_check` de `DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP`, que es el que
+importa. El `revisados` baja de 156 a 155 porque sin el fichero de allowlist
+hay un fichero versionado menos que barrer.
 
 Y con eso se **recupero** algo que se habia perdido: el `close_check` de
 `DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP` habia tenido que cambiarse a un
