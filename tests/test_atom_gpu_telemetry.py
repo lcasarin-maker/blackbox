@@ -1119,3 +1119,67 @@ def test_el_techo_en_bytes_esta_por_ENCIMA_del_techo_en_lineas(tmp_path):
     """
     bytes_por_linea_medidos = 966
     assert agt.MAX_BYTES > agt.MAX_LINEAS * bytes_por_linea_medidos
+
+
+def test_el_bucle_LLAMA_a_la_rotacion_en_caliente_y_deja_constancia(
+        tmp_path, monkeypatch):
+    """La funcion tenia tests; el SITIO donde se la llama no, y ahi es donde se
+    rompe este tipo de cambio -- hoy mismo, en bin/bb, el relevo del fichero de
+    estado quedo una edicion mas arriba de su lector y dejaba unos deltas
+    clavados en 0. Leer el diff no lo encontro; el test con su oraculo si.
+
+    SE SUSTITUYE `rotar_en_caliente`, y no es por comodidad: `main()` ya rota al
+    ARRANCAR, asi que en la primera vuelta del bucle el fichero esta siempre por
+    debajo del techo y el guardia no puede disparar por condiciones reales. Eso
+    es correcto -- el guardia existe para cuando el fichero crece DURANTE la
+    vida del proceso-- pero significa que la unica forma de comprobar el
+    enganche en una vuelta es darle un veredicto y exigir lo que el bucle hace
+    con el. Lo que se asierta es la SALIDA observable, no que se llamara.
+    """
+    f = tmp_path / "telemetria.jsonl"
+    f.write_text('{"n": 1}\n', encoding="utf-8")
+    monkeypatch.setattr(agt, "JSONL_PATH", f)
+    monkeypatch.setattr(agt, "MUESTRAS_ENTRE_REVISIONES", 1)
+    monkeypatch.setattr(agt, "THERMAL_DIR", tmp_path / "sin-zonas")
+    monkeypatch.setattr(agt, "rotar_en_caliente", lambda: 50)
+    monkeypatch.setattr("sys.argv", ["atom_gpu_telemetry.py", "--once"])
+
+    assert agt.main() == 0
+    lineas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+    rot = [d for d in lineas if d.get("evento") == "rotacion"]
+    assert rot, f"el bucle no dejo constancia del recorte: {[d.get('evento') for d in lineas]}"
+    assert rot[0]["lineas_recortadas"] == 50, rot[0]
+    assert "por encima de" in rot[0]["motivo"], rot[0]
+
+
+def test_control_negativo_si_no_hubo_recorte_NO_se_escribe_evento(tmp_path, monkeypatch):
+    """Un evento `rotacion` cada hora diciendo que no se recorto nada seria
+    ruido con forma de registro, y ademas haria crecer el fichero que el
+    guardia existe para acotar."""
+    f = tmp_path / "telemetria.jsonl"
+    f.write_text('{"n": 1}\n', encoding="utf-8")
+    monkeypatch.setattr(agt, "JSONL_PATH", f)
+    monkeypatch.setattr(agt, "MUESTRAS_ENTRE_REVISIONES", 1)
+    monkeypatch.setattr(agt, "THERMAL_DIR", tmp_path / "sin-zonas")
+    monkeypatch.setattr(agt, "rotar_en_caliente", lambda: None)
+    monkeypatch.setattr("sys.argv", ["atom_gpu_telemetry.py", "--once"])
+
+    assert agt.main() == 0
+    assert '"rotacion"' not in f.read_text(encoding="utf-8")
+
+
+def test_control_negativo_el_bucle_NO_revisa_antes_de_tiempo(tmp_path, monkeypatch):
+    """Con el contador en su valor real (720 muestras) una sola vuelta no puede
+    alcanzarlo. Si revisara igual, el guardia seria un recorte periodico con
+    otro nombre y no una cota."""
+    llamadas = []
+    f = tmp_path / "telemetria.jsonl"
+    f.write_text('{"n": 1}\n', encoding="utf-8")
+    monkeypatch.setattr(agt, "JSONL_PATH", f)
+    monkeypatch.setattr(agt, "MUESTRAS_ENTRE_REVISIONES", 720)
+    monkeypatch.setattr(agt, "THERMAL_DIR", tmp_path / "sin-zonas")
+    monkeypatch.setattr(agt, "rotar_en_caliente", lambda: llamadas.append(1))
+    monkeypatch.setattr("sys.argv", ["atom_gpu_telemetry.py", "--once"])
+
+    assert agt.main() == 0
+    assert llamadas == [], "una sola muestra no puede alcanzar el contador de 720"
