@@ -1,0 +1,9 @@
+[Unit]
+Description=blackbox: una muestra del estado de la maquina
+Documentation=file:%h/projects/blackbox/README.md
+
+[Service]
+Type=oneshot
+ExecStart=%h/projects/blackbox/bin/bb sample
+Nice=19
+IOSchedulingClass=idle

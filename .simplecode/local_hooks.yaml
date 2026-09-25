@@ -14,6 +14,12 @@
 # evidencia de que el sujeto este limpio. Medido el 2026-09-24: 146 de 829
 # lineas, 17.6%. Control negativo corrido, no argumentado: suite vacia -> 0.0%,
 # tres tests -> 4.3%, los dieciocho -> 17.6%. El medidor puede salir negativo.
+# `inventario` existe porque SPEC.md tenia dos tablas escritas a mano y una de
+# ellas ya mentia: declaraba "Out of scope: actuar sobre lo que mide", mientras
+# bb-usable reiniciaba la maquina y bb cap ponia techos. Una tabla que nadie
+# comprueba describe lo que alguien recordaba. Este gate la ata al sujeto --
+# bin/bb, tools/, adopted/ -- y cazo 6 desajustes en su primera corrida, de los
+# cuales 2 eran defectos del propio instrumento y quedaron arreglados.
 extra_hooks: |2
         - id: bash-sintaxis
           name: sintaxis de los scripts bash
@@ -31,5 +37,14 @@ extra_hooks: |2
             tools/piso_cobertura.sh
           language: system
           stages: [pre-push]
+          pass_filenames: false
+          always_run: true
+        - id: inventario-spec
+          name: SPEC.md inventaria lo que el repo ejecuta y posee
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name inventario-spec --hook pre-commit --
+            python3 -m tools.inventario --check
+          language: system
           pass_filenames: false
           always_run: true

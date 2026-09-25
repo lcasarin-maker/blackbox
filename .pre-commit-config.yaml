@@ -490,3 +490,12 @@ repos:
         stages: [pre-push]
         pass_filenames: false
         always_run: true
+      - id: inventario-spec
+        name: SPEC.md inventaria lo que el repo ejecuta y posee
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name inventario-spec --hook pre-commit --
+          python3 -m tools.inventario --check
+        language: system
+        pass_filenames: false
+        always_run: true

@@ -1,0 +1,15 @@
+[Unit]
+Description=blackbox: muestrea cada minuto
+
+[Timer]
+# OnCalendar y no OnBootSec+OnUnitActiveSec: el par monotonico deja
+# "Trigger: n/a" y cero disparos cuando el manager de usuario arranca tarde
+# respecto al boot. Ya estaba medido en esta maquina el 2026-08-28
+# (ai-memory-monitor.timer, cero disparos en 57 min) y lo reprodujimos aqui
+# el 2026-09-07 al instalar este timer con el patron monotonico.
+OnCalendar=*:0/1
+Persistent=true
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target

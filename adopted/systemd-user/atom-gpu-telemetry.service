@@ -1,11 +1,14 @@
+# Movida de Atlas a blackbox el 2026-09-24 (DGX-585): blackbox gobierna el
+# comportamiento fisico, Atlas consume la telemetria que produce.
+# Sin venv: el modulo solo usa stdlib, comprobado con un barrido de imports.
 [Unit]
 Description=Muestrea GPU y zonas termicas de la ATOM cada 5s con alarma de margen contra el trip point (DGX-334)
 After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=%h/projects/Atlas
-ExecStart=%h/projects/Atlas/.venv/bin/python3 %h/projects/Atlas/tools/atom_gpu_telemetry.py
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 %h/projects/blackbox/tools/atom_gpu_telemetry.py
 Restart=always
 RestartSec=5
 Nice=10
