@@ -19,20 +19,24 @@ accounting gap that @reinaertvdc inferred.
 - DGX Spark (GB10), 121.7 GiB unified memory, Ubuntu 24.04 (DGX OS), aarch64
 - `nvidia-driver-580-open` **580.178.04** (newer than the 580.173.02 / 595.84
   already reported here — same signature)
-- Kernel **7.0.0-1019-nvidia** (the one @fuomag9 identifies as bad; I also have
-  6.17.0-1032-nvidia installed and have not yet switched)
-- `nvidia_uvm.uvm_global_oversubscription = 1` (default, not yet changed)
+- Kernel: wedges 1-4 all happened on **7.0.0-1019-nvidia** (the one @fuomag9
+  identifies as bad). Since 2026-09-24 14:11 this host runs
+  **6.17.0-1032-nvidia** with `nvidia_uvm.uvm_global_oversubscription = 0`;
+  no wedge yet, but that is only hours of uptime and I am not claiming it as
+  a fix.
 - Secure Boot on, 16 GiB swap
 
-## Three wedges, same signature
+## Four wedges, same signature
 
-| # | window | duration |
-|---|---|---|
-| 1 | 2026-09-22 05:45 → 23:30 | 1042 min |
-| 2 | 2026-09-22 23:49 → 09-23 05:44 | 292 min |
-| 3 | 2026-09-24 00:02 → 05:56 | 354 min |
+| # | window | duration | ended by |
+|---|---|---|---|
+| 1 | 2026-09-22 05:45 → 23:30 | 1042 min | manual power cycle |
+| 2 | 2026-09-22 23:49 → 09-23 05:44 | 292 min | manual power cycle |
+| 3 | 2026-09-24 00:02 → 05:56 | 354 min | manual power cycle |
+| 4 | 2026-09-24 13:59 → 14:09 | **10.6 min** | **PSI watchdog, automatic** |
 
-All three required a manual power cycle. The boot that ended in wedge #1 has
+The first three required a manual power cycle. The fourth is described at the
+end of this comment: same failure, but the host recovered on its own. The boot that ended in wedge #1 has
 **203 occurrences** of
 
 ```
@@ -152,8 +156,37 @@ probe:
   10 % for 300 s, stop calling `sd_notify(WATCHDOG=1)`.
 - `WatchdogSec=360`, `FailureAction=reboot-immediate`.
 
-Worst case from onset to reboot: **~11 minutes**, versus 5 h 32 min for the
-wedge that prompted it.
+Worst case from onset to reboot: ~11 minutes, versus 5 h 32 min for the wedge
+that prompted it.
+
+**It fired for real on 2026-09-24, and the predicted number held.** Wedge #4,
+same host, same kernel 7.0.0-1019, before the kernel/regkey change:
+
+```
+13:58:04  PSI mem_full 0.0    58.0 GB available   load  4.64   3 GPU procs
+13:59:05  PSI mem_full 0.04   36.9 GB available   load 24.9    3 GPU procs
+13:59:34  [bb-usable] PSI 12.1 >= 10 -- streak 1/10
+14:00:04  [bb-usable] PSI 92.8 >= 10 -- streak 2/10
+14:06:04  [bb-usable] COLLAPSE: sustained 300s -- withholding the watchdog ping
+14:09:34  systemd: bb-usable.service: Watchdog timeout (limit 6min)!
+14:09:38  systemd: Failed with result 'watchdog' -> Rebooting.
+```
+
+Onset 13:59:04 to automatic reboot 14:09:38: **10.6 minutes, no human
+involved.** The operator was on another continent at the time; wedges 1-3 had
+each required someone physically present.
+
+Worth noting for anyone reproducing: this fourth one had only **3** processes
+holding GPU memory, not the 22 of wedge #3, and 21 GB of availability vanished
+in a single 60-second sampling interval. Per-minute sampling was not enough
+resolution to attribute it. So the trigger surface is wider than "many CUDA
+processes at once" — which is consistent with @reinaertvdc reproducing it from
+`hashcat -I`.
+
+This does not fix anything. The allocation still fails, the host still becomes
+unusable, and a reboot still loses whatever was running. It only bounds the
+outage, and it does so from outside the driver, using the one signal that both
+reflects the condition and is available to userspace.
 
 Two details that may save someone else time:
 
