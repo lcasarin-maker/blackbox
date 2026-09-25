@@ -22,7 +22,27 @@ DATA="${BLACKBOX_DATA:-$HOME/.local/share/blackbox}"
 SAMPLES="$DATA/samples"
 SNAPS="$DATA/snapshots"
 RETAIN_DAYS="${BLACKBOX_RETAIN_DAYS:-14}"
-ATLAS_TELEMETRY="${ATLAS_TELEMETRY:-$HOME/projects/Atlas/logs/atom_gpu_telemetry.jsonl}"
+# La telemetria termica la PRODUCE este repo desde DGX-585: Atlas borro su copia
+# y su ruta ya no existe. Se nombra con la MISMA variable de entorno que usa el
+# productor (`tools/atom_gpu_telemetry.py`) para que consumidor y productor no
+# puedan divergir en silencio otra vez.
+#
+# Como se rompio, medido el 2026-09-25: `bb status` decia
+#   FALTA  termica de Atlas (atom_gpu_telemetry, <2 min)
+#          -- systemctl --user start atom-gpu-telemetry
+# mientras la unit llevaba horas activa escribiendo 711 muestras por hora. El
+# `find` miraba un directorio inexistente, no encontraba nada, y eso se leyo
+# como "el instrumento no escribe". Un informe de instrumentacion que se
+# equivoca sobre su propio instrumento es peor que no tenerlo: manda a rearmar
+# lo que ya esta armado y calla lo que de verdad falta.
+TELEMETRIA_GPU="${ATOM_TELEMETRY_JSONL:-$DATA/atom_gpu_telemetry.jsonl}"
+
+# Fuente de los contadores de swap, sustituible SOLO para poder probar que el
+# ritmo puede salir distinto de cero. Mismo precedente que `BB_USABLE_PSI_PATH`
+# en `bin/bb-usable`: un campo que en esta maquina vale 0 el 100 % del tiempo
+# no demuestra nada sobre si sabe contar, y forzar swap de verdad sobre 30 GB
+# libres cuesta minutos y arriesga la maquina que se vigila.
+VMSTAT="${BB_VMSTAT:-/proc/vmstat}"
 
 mkdir -p "$SAMPLES" "$SNAPS"
 # $DATA guarda command-lines completas de procesos ajenos (bb who/scan/sample)
@@ -83,6 +103,54 @@ smi_salud() { # imprime: <estado> <ms>
   local ini fin rc
   ini=$(date +%s%3N)
   timeout "$SMI_TIMEOUT_S" nvidia-smi --query-gpu=pstate --format=csv,noheader >/dev/null 2>&1
+  rc=$?
+  fin=$(date +%s%3N)
+  case "$rc" in
+    0)   echo "OK $((fin - ini))" ;;
+    124) echo "TIMEOUT $((fin - ini))" ;;
+    *)   echo "ERROR $((fin - ini))" ;;
+  esac
+}
+
+# LATENCIA DEL ESCRITORIO. Anadido el 2026-09-25, y nace de una pregunta que
+# este repo NO supo contestar: "estaba sumamente sluggish, casi no se podia
+# escribir, por que?".
+#
+# Lo que bb medio esa noche, y todo era cierto: load1 0.95 sobre 20 nucleos,
+# 65.8 GB disponibles, PSI en cero, GPU al 0-4 % sin throttle, nvidia-smi en
+# 22 ms. La MAQUINA estaba sana. Lo que no estaba sano era el camino por el
+# que pasa una tecla, y de ese camino bb no media ni un milisegundo.
+#
+# Lo que se midio despues, en el journal: el scope de antigravity vivio de
+# 02:45:59 a 05:00:57 -- 2 h 14 min 58 s de reloj -- y consumio 2 h 37 min 14 s
+# de CPU: 116.5 % de UN nucleo, sostenido, durante dos horas y cuarto. Sobre
+# 20 nucleos eso es el 5.8 % de la maquina y no mueve `load1` ni `cpu_some`.
+# Un total de maquina no puede ver un cuello de botella de un solo hilo.
+#
+# Esta sonda pregunta lo que el usuario pregunta: cuanto tarda el servidor X
+# en contestar. Un `xset q` es un ida-y-vuelta completo -- peticion, cola del
+# servidor, respuesta -- asi que si el hilo unico de Xorg esta saturado o
+# bloqueado, el numero sube, que es exactamente lo que se siente al teclear.
+# Medido en esta maquina sana: 5-7 ms.
+#
+# Lo que NO mide, dicho antes de que alguien lo suponga: no mide la latencia
+# DENTRO de la aplicacion. Un Electron con su hilo principal quemado deja de
+# atender el teclado aunque el servidor X conteste en 5 ms. Para eso hace
+# falta `cpu_top`, que nombra al proceso, y los dos juntos separan "el
+# escritorio esta lento" de "esta lenta la app en la que escribes".
+X_TIMEOUT_S="${BB_X_TIMEOUT_S:-5}"
+
+latencia_x() { # imprime: <estado> <ms>
+  have xset || { echo "AUSENTE 0"; return 0; }
+  # DISPLAY no viene heredado en una unit de usuario salvo que la sesion
+  # grafica lo haya importado. Verificado el 2026-09-25: `systemctl --user
+  # show-environment` de esta maquina si trae DISPLAY=:1 y XAUTHORITY, asi que
+  # `blackbox-sample.service` alcanza el servidor. Sin DISPLAY se dice
+  # AUSENTE, que no es lo mismo que OK.
+  [ -n "${DISPLAY:-}" ] || { echo "AUSENTE 0"; return 0; }
+  local ini fin rc
+  ini=$(date +%s%3N)
+  timeout "$X_TIMEOUT_S" xset q >/dev/null 2>&1
   rc=$?
   fin=$(date +%s%3N)
   case "$rc" in
@@ -405,6 +473,8 @@ cmd_sample() {
   red=$(red_bytes); cpuj=$(cpu_jiffies)
   local smi_estado smi_ms
   read -r smi_estado smi_ms <<<"$(smi_salud)"
+  local x_estado x_ms
+  read -r x_estado x_ms <<<"$(latencia_x)"
   zc=$(zombie_count)
   la=$(awk '{print $1}' /proc/loadavg)
   local commit_pct residuo
@@ -473,6 +543,91 @@ cmd_sample() {
   fi
   mv -f "$prev_vsz.new" "$prev_vsz" 2>/dev/null
 
+  # QUIEN quemo CPU desde la muestra anterior. Anadido el 2026-09-25 por lo que
+  # se midio la noche del 24 al 25: entre la 01:00 y las 03:15, `psi.cpu_some`
+  # llego a 85.43 con load1 47.65 sobre 20 nucleos -- contencion real, la
+  # maquina arrastrandose -- y NINGUNA de las ocho muestras de ese pico nombra
+  # a un responsable. `top_rss` ordena por memoria residente y `pidio` por
+  # crecimiento de VmSize, asi que un proceso que quema CPU sin crecer ni
+  # ocupar RAM es invisible aqui. `cpu_some` y `load1` son TOTALES: dicen que
+  # la maquina sufre, no quien la hace sufrir.
+  #
+  # Es exactamente el defecto que la memoria tenia antes de `pidio` el
+  # 2026-09-24 (Committed_AS subia 78 GB en un minuto sin nombrar a nadie), y
+  # se cierra igual: guardando el mapa anterior y emitiendo el DELTA.
+  #
+  # Resolucion declarada, para que nadie la suponga mejor de lo que es:
+  # `ps -o times=` da segundos ENTEROS de CPU acumulada, asi que el piso de
+  # deteccion es 1 segundo-nucleo en el intervalo -- con la muestra de un
+  # minuto, el 1.7 % de un nucleo. Lo que quede por debajo no sale, y esta
+  # bien: no es lo que cuelga la maquina. Para el segundo, hace falta leer
+  # /proc/<pid>/stat, que cuesta un open por proceso.
+  #
+  # La rafaga NO escribe este estado, por lo mismo que no escribe `vsz_prev`:
+  # si lo pisara, la muestra completa compararia contra hace 2 s en vez de
+  # hace un minuto y su columna diria otra cosa de la que dice medir.
+  local cputop="" prev_cpu="$DATA/cpu_prev" ahora_s antes_s dt
+  ahora_s=$(date +%s)
+  local pswpin pswpout
+  pswpin=$(awk '$1=="pswpin"{print $2}' "$VMSTAT" 2>/dev/null)
+  pswpout=$(awk '$1=="pswpout"{print $2}' "$VMSTAT" 2>/dev/null)
+  { echo "# $ahora_s ${pswpin:-0} ${pswpout:-0}"
+    ps -eo pid=,times=,comm= 2>/dev/null | awk '{print $1, $2, $3}'; } > "$prev_cpu.new"
+  if [ -s "$prev_cpu" ]; then
+    antes_s=$(awk 'NR==1 && $1=="#" {print $2; exit}' "$prev_cpu")
+    dt=$(( ahora_s - ${antes_s:-0} ))
+    if [ "$dt" -gt 0 ]; then
+      # Un pid que no estaba en el mapa anterior nacio dentro del intervalo:
+      # su CPU acumulada ES lo que quemo aqui, y se marca "nuevo" para que
+      # quien lea la muestra no lo confunda con un proceso viejo que acelero.
+      # El delta negativo se descarta: es reutilizacion de pid, no trabajo.
+      cputop=$(awk 'NR==FNR { if ($1 != "#") c[$1]=$2; next }
+                    $1 != "#" { d = ($1 in c) ? $2 - c[$1] : $2
+                      if (d > 0) printf "%s %s %s %s\n", $1, d, $3, (($1 in c) ? 0 : 1) }' \
+               "$prev_cpu" "$prev_cpu.new" 2>/dev/null | sort -k2 -rn | head -5 |
+        while read -r pid seg comm nuevo; do
+          u=$(sed -n 's/^0::\///p' "/proc/$pid/cgroup" 2>/dev/null | sed 's/.*\///')
+          printf '{"pid":%s,"cpu_s":%s,"pct_nucleo":%s,"comm":"%s","unit":"%s","nuevo":%s},' \
+            "$pid" "$seg" "$(awk -v a="$seg" -v b="$dt" 'BEGIN{printf "%.1f", 100*a/b}')" \
+            "$comm" "${u:-?}" "$([ "${nuevo:-0}" = 1 ] && echo true || echo false)"
+        done | sed 's/,$//')
+    fi
+  fi
+
+  # SWAP: el nivel y, sobre todo, el RITMO. Anadido el 2026-09-25 porque fue
+  # la unica magnitud que se movio en una direccion sola durante la noche del
+  # 24 al 25, y bb no la registraba en absoluto -- el numero hubo que sacarlo
+  # del log de earlyoom: de 16383 MiB libres a las 20:51 a 12067 a las 03:28,
+  # 4.3 GB expulsados y nunca recuperados, con 53 % de la RAM libre.
+  #
+  # El nivel por si solo no explica nada: 4 GB en swap con la maquina en
+  # reposo no cuesta nada. Lo que se paga es el REGRESO -- cada pagina que un
+  # proceso interactivo vuelve a tocar es una lectura de disco -- y eso es
+  # `pswpin`, que es un contador acumulado desde el arranque y por tanto
+  # inservible como nivel. Por eso se emite el delta por segundo.
+  #
+  # Limite declarado: esto dice cuantas paginas volvieron, no QUIEN las trajo.
+  # La atribucion por proceso exigiria /proc/<pid>/status VmSwap de los ~500
+  # procesos en cada muestra, y eso no se ha medido que quepa en el
+  # presupuesto de la muestra.
+  local swap_free swap_total swpin_s=0 swpout_s=0
+  swap_free=$(meminfo_kb SwapFree); swap_total=$(meminfo_kb SwapTotal)
+  if [ -s "$prev_cpu" ] && [ "${dt:-0}" -gt 0 ]; then
+    local ant_in ant_out
+    ant_in=$(awk 'NR==1 && $1=="#" {print $3; exit}' "$prev_cpu")
+    ant_out=$(awk 'NR==1 && $1=="#" {print $4; exit}' "$prev_cpu")
+    [ -n "${ant_in:-}" ] && swpin_s=$(awk -v a="${pswpin:-0}" -v b="$ant_in" -v d="$dt" \
+      'BEGIN{v=(a-b)/d; printf "%.1f", (v>0?v:0)}')
+    [ -n "${ant_out:-}" ] && swpout_s=$(awk -v a="${pswpout:-0}" -v b="$ant_out" -v d="$dt" \
+      'BEGIN{v=(a-b)/d; printf "%.1f", (v>0?v:0)}')
+  fi
+
+  # El relevo del estado va AQUI, despues del ultimo lector. Estuvo dos
+  # ediciones mas arriba y dejaba los deltas de swap clavados en 0: el bloque
+  # de swap leia `$prev_cpu` cuando ya lo habia pisado el nuevo. No lo encontro
+  # leer el diff, lo encontro el test con su oraculo.
+  mv -f "$prev_cpu.new" "$prev_cpu" 2>/dev/null
+
   # Procesos con memoria de GPU y quien los lanzo. En memoria unificada esto es
   # lo que decide si el gateway puede arrancar: el 2026-09-08 sumaban ~91 GB de
   # los 121 y `admission_check.sh` rechazo los 85 GB que pedia el gateway.
@@ -492,12 +647,14 @@ cmd_sample() {
   pybg=$(ps -eo pid=,etimes=,comm= 2>/dev/null |
     awk '$3 ~ /^python/ && $2 > 60 {printf "%s%s", (n++?",":""), $1}')
 
-  printf '{"ts":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"py_bg":[%s],"gpu":[%s],"commit_pct":%s,"residuo_mb":%s,"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s}}\n' \
-    "$ts" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$topvsz" "$pybg" "$gpu" \
+  printf '{"ts":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":[%s],"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s}}\n' \
+    "$ts" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$topvsz" "$cputop" "$pybg" "$gpu" \
     "${commit_pct:-0}" "${residuo:-0}" \
+    "${swap_free:-0}" "${swap_total:-0}" "${swpin_s:-0}" "${swpout_s:-0}" \
     "${psi_m_some:-0}" "${psi_m_full:-0}" "${psi_io_some:-0}" "${psi_cpu_some:-0}" \
     "${gw:-CAIDO}" "${dk:-?}" "${salud:-}" "${disco:-}" "${red:-}" "${cpuj:-}" \
-    "${smi_estado:-DESCONOCIDO}" "${smi_ms:-0}" >>"$f"
+    "${smi_estado:-DESCONOCIDO}" "${smi_ms:-0}" \
+    "${x_estado:-DESCONOCIDO}" "${x_ms:-0}" >>"$f"
 
   # --- muestreo adaptativo, anadido el 2026-09-24 -------------------------
   # El cuarto congelamiento entero -- de maquina sana a memoria agotada --
@@ -1063,8 +1220,8 @@ else:
   fi
   echo
 
-  echo "-- termica (Atlas/atom_gpu_telemetry.py, cada 5s) --"
-  local ajl="$ATLAS_TELEMETRY"
+  echo "-- termica (bb/atom_gpu_telemetry.py, cada 5s) --"
+  local ajl="$TELEMETRIA_GPU"
   if [ -f "$ajl" ]; then
     local since_iso; since_iso=$(date -u -d "$since" '+%Y-%m-%dT%H:%M:%S' 2>/dev/null)
     # Solo cuentan los eventos que el propio instrumento CORROBORA: escribe
@@ -1370,6 +1527,75 @@ else:
   fi
   echo
 
+  # --- 9a-bis. ventanas de contencion de CPU, y quien las causo -----------
+  # Anadido el 2026-09-25 por lo que NO se pudo contestar esa manana. La
+  # maquina se reinicio a mano a las 05:08 porque "estaba super sluggish", y
+  # en ese instante todos los instrumentos leian sano: load1 0.95 sobre 20
+  # nucleos, 65.8 GB disponibles, PSI en cero, nvidia-smi en 22 ms. La
+  # contencion de verdad habia sido antes -- de 01:00 a 03:15, con cpu_some
+  # hasta 85.43 y load1 hasta 47.65 -- y NADA la reportaba despues: la seccion
+  # de PSI imprime el pico de cpu_some y nada mas, asi que un pico de 85.43 de
+  # hace cuatro horas y uno de hace cuatro dias se ven igual.
+  #
+  # Lo que esta seccion NO hace, dicho antes de que alguien lo suponga: no
+  # emite veredicto. La escala de memoria (PICO / SIN OBSERVAR / COLAPSO) esta
+  # calibrada contra dos congelamientos propios; la de CPU no tiene ni uno, y
+  # heredar una escala ajena fue el fallo original de este repo. Aqui se
+  # listan ventanas y se nombra a quien las ocupo. Juzgar es de quien lee.
+  echo "-- contencion de CPU: ventanas y quien las ocupo (SIN calibrar) --"
+  cat "$SAMPLES"/*.jsonl 2>/dev/null | python3 -c '
+import json, sys, datetime as dt, collections
+UMBRAL, MINIMO_MIN = 10.0, 5.0
+serie = []
+for linea in sys.stdin:
+    try: d = json.loads(linea)
+    except Exception: continue
+    p = d.get("psi")
+    if not p: continue
+    v = p.get("cpu_some", 0)
+    if not isinstance(v, (int, float)): v = 0
+    try: t = dt.datetime.strptime(d.get("ts", ""), "%Y-%m-%dT%H:%M:%S%z")
+    except Exception: continue
+    serie.append((t, v, d.get("cpu_top") or []))
+serie.sort(key=lambda r: r[0])
+print("  muestras con cpu_some:       %d" % len(serie))
+con_atrib = sum(1 for _, _, c in serie if c)
+print("  de ellas, con cpu_top:       %d   (las anteriores al 2026-09-25 no lo llevan)" % con_atrib)
+if not serie:
+    raise SystemExit(0)
+excs, actual = [], []
+for m in serie:
+    if m[1] >= UMBRAL: actual.append(m)
+    elif actual: excs.append(actual); actual = []
+if actual: excs.append(actual)
+def dur(e): return (e[-1][0] - e[0][0]).total_seconds() / 60.0
+largas = [e for e in excs if dur(e) >= MINIMO_MIN]
+print("  excursiones con cpu_some >= %g %%:  %d" % (UMBRAL, len(excs)))
+print("  de ellas, de %g min o mas:          %d" % (MINIMO_MIN, len(largas)))
+for e in largas[-5:]:
+    quien = collections.Counter()
+    for _, _, top in e:
+        for f in top:
+            u = f.get("unit") or "?"
+            try: quien[u] += float(f.get("cpu_s", 0))
+            except (TypeError, ValueError): pass
+    # El hueco maximo entre muestras consecutivas va IMPRESO: sin el, dos
+    # muestras separadas cuatro horas se leerian igual que una ventana
+    # observada minuto a minuto, y solo una de las dos cosas esta medida.
+    # No es hipotetico: la ventana del 2026-09-22 dura 17 h y el muestreo se
+    # estiro a huecos de 20-50 min porque el propio timer estaba hambriento.
+    # Ese estiramiento ES la senal -- por eso se imprime en vez de corregirse.
+    hueco = max(((b[0] - a[0]).total_seconds() for a, b in zip(e, e[1:])), default=0) / 60.0
+    print("    %s  %5.0f min  pico %6.2f %%   hueco max entre muestras %4.0f min" % (
+        e[0][0].strftime("%Y-%m-%d %H:%M"), dur(e), max(v for _, v, _ in e), hueco))
+    if quien:
+        for u, s in quien.most_common(3):
+            print("        %8.0f s de CPU  %s" % (s, u[:64]))
+    else:
+        print("        (sin atribucion: estas muestras son anteriores a cpu_top)")
+' 2>/dev/null || echo "  contencion de CPU: (python3 no pudo analizar las muestras)"
+  echo
+
   # --- 9b. procesos con el directorio de trabajo borrado ------------------
   # Un servicio cuyo cwd se borro sigue "activo" y responde, pero todo lo que
   # lance muere en getcwd(). Medido 2026-09-08: `ollama serve` heredo su cwd de
@@ -1633,8 +1859,8 @@ cmd_status() {
 
   # Por sus datos, no por la unit: una unit "active" cuyo proceso dejo de
   # escribir es exactamente el fallo silencioso que buscamos.
-  [ -n "$(find "$(dirname "$ATLAS_TELEMETRY")" -name "$(basename "$ATLAS_TELEMETRY")" -mmin -2 2>/dev/null)" ]; ok=$?
-  chk "termica de Atlas (atom_gpu_telemetry, <2 min)" "$ok" "systemctl --user start atom-gpu-telemetry"
+  [ -n "$(find "$(dirname "$TELEMETRIA_GPU")" -name "$(basename "$TELEMETRIA_GPU")" -mmin -2 2>/dev/null)" ]; ok=$?
+  chk "termica de la GPU (atom_gpu_telemetry, <2 min)" "$ok" "systemctl --user start atom-gpu-telemetry"
 
   systemctl is-active atom-clock-lock.service >/dev/null 2>&1; ok=$?
   chk "clock lock de GPU (300-2800 MHz)" "$ok" "limite termico DGX-342/344/345 sin aplicar"
