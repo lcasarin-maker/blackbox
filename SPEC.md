@@ -140,8 +140,6 @@ efectos de esta spec, y `tools/inventario.py --check` lo bloquea en el commit.
 | `tools/cobertura_bash.sh` | mide qué líneas de un script bash ejecuta una suite (`BASH_ENV` + `BASH_XTRACEFD`), porque `coverage.py` no ve bash | control negativo: suite vacía 0.0%, 3 tests 4.3%, 18 tests 17.6% |
 | `tools/piso_cobertura.sh` | trinquete: falla si la cobertura de `bin/bb` baja de `tests/cobertura_bb.piso` | control negativo: con el piso a 99.0 devuelve 1 |
 | `tools/atom_gpu_telemetry.py` | telemetria de GPU y zonas termicas cada 5 s, presupuesto termico con corroboracion, y **mitigacion**: pausa procesos cuando la maquina se calienta con carga real. Traida de Atlas el 2026-09-24 (DGX-585) | `tests/test_atom_gpu_telemetry.py` + `tests/test_atom_gpu_telemetry_bb.py`, 98 tests, **100 %** de 456 sentencias |
-| `tools/run_mitigacion_carga_mutation.py` | arnés de mutación de la compuerta de carga: muta `atom_gpu_telemetry.py` y exige que la suite se ponga roja. Vino de Atlas con su sujeto (DGX-585) | él mismo: un mutante que sobrevive es el hallazgo |
-| `tools/run_alarm_mark_mutation.py` | lo mismo para el marcado de alarmas térmicas | él mismo |
 | `tools/inventario.py` | comprueba que estas dos tablas describen el repo y la máquina, no lo que alguien recordaba | él mismo, con `--check` sobre un sujeto mutado |
 
 ## Inventario de propiedad
