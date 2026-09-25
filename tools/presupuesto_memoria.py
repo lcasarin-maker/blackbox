@@ -57,6 +57,11 @@ GIB = 1024 ** 3
 # cambiarle la forma a una funcion que ya usan los tests por su tupla.
 _ILEGIBLES: list[str] = []
 
+# La serie completa (ts, MiB) de la ultima pasada por las muestras. Se guarda
+# para no recorrer 18 000 lineas dos veces: el pico y las excursiones salen del
+# mismo barrido.
+_SERIE: list[tuple[str, int]] = []
+
 # Reserva de memoria unificada de GPU, en GiB.
 #
 # EL NUMERO NO ES EL QUE EL vLLM DECLARA, y eso se comprobo antes de fijarlo.
@@ -145,6 +150,7 @@ def pico_gpu_observado_mib(samples: Path | None = None
     d = samples or (DATA_DIR / "samples")
     mejor: tuple[int, str] | None = None
     _ILEGIBLES.clear()
+    _SERIE.clear()
     # El permiso se comprueba ANTES y a proposito. La version anterior envolvia
     # el glob en `try/except OSError`, y eso era decoracion: medido el
     # 2026-09-25, `Path.glob` NO lanza sobre un directorio sin permisos ni sobre
@@ -175,9 +181,24 @@ def pico_gpu_observado_mib(samples: Path | None = None
             if not g:
                 continue
             s = sum(x.get("mib", 0) or 0 for x in g if isinstance(x, dict))
+            _SERIE.append((str(d_.get("ts", "?")), s))
             if mejor is None or s > mejor[0]:
                 mejor = (s, str(d_.get("ts", "?")))
     return mejor
+
+
+def excursiones_gpu(umbral_gib: float) -> dict:
+    """Cuantas muestras pasaron del presupuesto de GPU, y las ultimas.
+
+    Se llama DESPUES de `pico_gpu_observado_mib`, que es quien llena la serie.
+    Con la serie vacia devuelve ceros y lo dice: "no se midio" y "no hubo
+    excursiones" no son lo mismo, y aqui la diferencia la lleva `muestras`.
+    """
+    umbral_mib = umbral_gib * 1024
+    por_encima = [(ts, m) for ts, m in _SERIE if m > umbral_mib]
+    return {"muestras": len(_SERIE), "por_encima": len(por_encima),
+            "pct": (100.0 * len(por_encima) / len(_SERIE)) if _SERIE else 0.0,
+            "ultimas": sorted(por_encima)[-3:]}
 
 
 def presupuesto() -> dict:
@@ -202,7 +223,24 @@ def presupuesto() -> dict:
             sin_techo.append(f["nombre"])
         else:
             gasto += f["techo_gib"]
+    # Lo que le queda a la GPU si todos los techos declarados se honran. Es el
+    # mismo reparto visto por el otro lado, y es EL UMBRAL de la alarma del
+    # abanico: por encima de aqui, la memoria unificada esta comprometiendo
+    # memoria que algun cgroup tiene derecho a reclamar.
+    #
+    # No se elige: se resta. Medido el 2026-09-25 sobre 18 944 muestras, con
+    # docker.slice en 16G el corte cae en 53.1 GiB y se supera el 0.9 % del
+    # tiempo; con docker.slice en 32G caeria en 37.1 y se superaria el 75.4 %,
+    # o sea dentro del estado estacionario (mediana 49.0, p90 50.1). Que el
+    # corte derivado caiga justo por encima del p90 observado es lo que valida
+    # el reparto: el presupuesto y la conducta coinciden.
+    techos = sum(f["techo_gib"] for f in filas
+                 if f["existe"] and f["techo_gib"] is not None)
+    usados_sin_techo = sum(f["uso_gib"] for f in filas
+                           if f["existe"] and f["techo_gib"] is None)
+    presupuesto_gpu = (total - techos - usados_sin_techo) if total is not None else None
     return {"mem_total_gib": total, "reserva_gpu_gib": RESERVA_GPU_GIB,
+            "presupuesto_gpu_gib": presupuesto_gpu,
             "slices": filas, "gasto_gib": gasto, "sin_techo": sin_techo,
             "pico_gpu_observado_mib": pico[0] if pico else None,
             "pico_gpu_ts": pico[1] if pico else None,
@@ -236,6 +274,17 @@ def main(argv: list[str] | None = None) -> int:
             print(f"[presupuesto]   {f['nombre']:<38} {f['techo_gib']:8.1f} GiB"
                   f"  (usa {f['uso_gib']:.1f})")
     print(f"[presupuesto] SUMA declarada:      {p['gasto_gib']:8.1f} GiB")
+    if p["presupuesto_gpu_gib"] is not None:
+        print(f"[presupuesto] presupuesto de GPU:   {p['presupuesto_gpu_gib']:8.1f} GiB"
+              f"   (lo que le queda si TODOS los techos se honran -- el umbral del abanico)")
+        ex = excursiones_gpu(p["presupuesto_gpu_gib"])
+        if ex["muestras"] == 0:
+            print("[presupuesto] excursiones del abanico: COULD_NOT_RUN (serie vacia)")
+        else:
+            print(f"[presupuesto] excursiones del abanico: {ex['por_encima']} de "
+                  f"{ex['muestras']} muestras ({ex['pct']:.1f} %) por encima del presupuesto")
+            for ts, m in ex["ultimas"]:
+                print(f"                 {ts}  {m/1024:.1f} GiB")
 
     if p["pico_gpu_observado_mib"] is None:
         print("[presupuesto] pico de GPU observado: COULD_NOT_RUN (sin muestras que leer)")

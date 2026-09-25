@@ -1635,6 +1635,26 @@ for e in largas[-5:]:
 ' 2>/dev/null || echo "  contencion de CPU: (python3 no pudo analizar las muestras)"
   echo
 
+  # --- 9a-ter. el abanico de GPU contra el presupuesto de memoria ---------
+  # La memoria unificada que toma la GPU no la ve NINGUN cgroup -- medido en
+  # esta caja: 7 GiB de CUDA se contabilizan como 15 MiB-- asi que los techos
+  # de app.slice y docker.slice no la acotan y el reparto puede estar
+  # comprometido sin que nada lo diga.
+  #
+  # El umbral no se elige aqui: lo calcula `tools/presupuesto_memoria.py`
+  # restando los techos DECLARADOS al MemTotal de la maquina. Una sola fuente
+  # para la aritmetica, y esta es la vista de operacion.
+  echo "-- abanico de GPU contra el presupuesto de memoria --"
+  if have python3; then
+    python3 -m tools.presupuesto_memoria 2>/dev/null |
+      grep -E "MemTotal|presupuesto de GPU|excursiones|pico de GPU|^ " | sed 's/^\[presupuesto\]/ /' ||
+      echo "  (tools.presupuesto_memoria no pudo correr)"
+  else
+    cannot_run "presupuesto de memoria" "sin python3"
+    echo "  presupuesto de memoria:      COULD_NOT_RUN"
+  fi
+  echo
+
   # --- 9b. procesos con el directorio de trabajo borrado ------------------
   # Un servicio cuyo cwd se borro sigue "activo" y responde, pero todo lo que
   # lance muere en getcwd(). Medido 2026-09-08: `ollama serve` heredo su cwd de
