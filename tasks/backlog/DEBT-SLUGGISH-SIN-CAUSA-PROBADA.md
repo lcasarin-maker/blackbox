@@ -43,7 +43,7 @@ Del journal, no de bb -- y ese es parte del hallazgo:
 | `snap.antigravity...scope` | 2 h 37 min 14 s | 02:45:59 -> 05:00:57 (2 h 14 min 58 s) | **116.5 % de UN nucleo, sostenido** |
 | `app-com.anthropic.Claude-345364.scope` | 15 h 09 min 54 s | arranque entero (14 h 57 min) | 101.4 % de un nucleo |
 | `rustdesk.service` | 1 h 08 min 14 s | arranque entero | 7.6 % de un nucleo |
-| `org.gnome.Shell@x11.service` | 23 min 51 s | arranque entero | 2.7 % de un nucleo |
+| `org.gnome.Shell`, instancia `x11` | 23 min 51 s | arranque entero | 2.7 % de un nucleo |
 
 Dos aplicaciones interactivas quemando un nucleo cada una, durante horas.
 Sobre 20 nucleos eso es el 11 % de la maquina: no mueve `load1`, no mueve
