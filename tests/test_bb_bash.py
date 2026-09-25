@@ -129,11 +129,18 @@ def test_commit_pct_es_un_porcentaje_real_no_un_cero_de_adorno(datos):
 def test_pidio_NOMBRA_a_quien_pide_memoria(datos):
     """El hueco que Committed_AS no cerraba: decia cuanto, no quien."""
     correr(["sample"], datos)                      # muestra 1: linea base
+    # El hijo AVISA cuando ya reservo, en vez de que aqui se adivine cuanto
+    # tarda. La exencion de sunset decia "no hay evento que compartir con un
+    # hijo que reserva memoria" y era falso: su stdout es el evento. Sustituido
+    # en la revision de 1.4, que es para lo que existe el sunset.
     hijo = subprocess.Popen(
         [sys.executable, "-c",
-         "import mmap,time; m=mmap.mmap(-1, 5*1024**3); time.sleep(20)"])
+         "import mmap,sys,time; m=mmap.mmap(-1, 5*1024**3); "
+         "print('listo', flush=True); time.sleep(20)"],
+        stdout=subprocess.PIPE, text=True)
     try:
-        time.sleep(3)  # blocking-sleep: se espera a que el hijo reserve -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.3 -- relido 2026-09-25: relido 2026-09-24: nace en 1.0: espera a un SUBPROCESO, no a estado propio; no hay evento que compartir con un hijo que reserva memoria
+        assert hijo.stdout is not None
+        assert hijo.stdout.readline().strip() == "listo", "el hijo no llego a reservar"
         correr(["sample"], datos)                  # muestra 2: ya crecio
         d = muestras(datos)[-1]
         crecidos = {x["pid"]: x for x in d["pidio"]}
@@ -156,11 +163,16 @@ def test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado(datos):
     control, es una moneda al aire. Lo que SI se controla es un proceso propio
     que existe en las dos muestras y no pide nada: ese no puede salir.
     """
-    quieto = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(20)"])
+    # Igual que arriba: el hijo avisa de que ya existe. La exencion decia que
+    # sondear /proc/<pid> "seria cambiar un sleep por otro", y tenia razon en
+    # eso -- pero leer su stdout no es un sondeo, es esperar un evento.
+    quieto = subprocess.Popen(
+        [sys.executable, "-c", "import time; print('listo', flush=True); time.sleep(20)"],
+        stdout=subprocess.PIPE, text=True)
     try:
-        time.sleep(1)  # blocking-sleep: el hijo tiene que existir ya -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.3 -- relido 2026-09-25: relido 2026-09-24: nace en 1.0: sondear /proc/<pid> seria cambiar un sleep por otro con mas codigo
+        assert quieto.stdout is not None and quieto.stdout.readline().strip() == "listo"
         correr(["sample"], datos)
-        time.sleep(2)  # blocking-sleep: separa las dos muestras -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.3 -- relido 2026-09-25: relido 2026-09-24: nace en 1.0: bb marca las muestras con resolucion de segundo; sin la espera caen en el mismo
+        time.sleep(2)  # blocking-sleep: separa las dos muestras -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- revisado 2026-09-25: SE QUEDA. Aqui no se espera a un proceso sino al RELOJ: bb marca las muestras con resolucion de segundo y dos en el mismo segundo colisionan. No hay evento que esperar. A diferencia de los dos de esta misma suite que SI se sustituyeron en esta revision.
         correr(["sample"], datos)
         nombrados = {x["pid"] for x in muestras(datos)[-1]["pidio"]}
         assert quieto.pid not in nombrados, \
@@ -660,7 +672,7 @@ def test_residuo_es_un_numero_y_no_se_mueve_solo(datos):
     """Mide memoria que nadie reclama. Entre dos muestras en reposo tiene que
     quedarse practicamente igual, o su delta no significaria nada."""
     correr(["sample"], datos)
-    time.sleep(1)  # blocking-sleep: dos muestras distintas -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.3 -- relido 2026-09-25: relido 2026-09-24: nace en 1.0: misma razon, resolucion de segundo del sello de bb
+    time.sleep(1)  # blocking-sleep: dos muestras distintas -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- revisado 2026-09-25: SE QUEDA, mismo motivo: separar dos muestras es esperar al reloj, no a un proceso. Las que esperaban a un hijo se cambiaron por leer su stdout.
     correr(["sample"], datos)
     a, b = (int(x["residuo_mb"]) for x in muestras(datos)[:2])
     assert abs(b - a) < 2048, f"el residuo se movio {b-a} MiB sin que nadie pidiera"
