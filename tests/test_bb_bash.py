@@ -172,7 +172,7 @@ def test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado(datos):
     try:
         assert quieto.stdout is not None and quieto.stdout.readline().strip() == "listo"
         correr(["sample"], datos)
-        time.sleep(2)  # blocking-sleep: separa las dos muestras -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- revisado 2026-09-25: SE QUEDA. Aqui no se espera a un proceso sino al RELOJ: bb marca las muestras con resolucion de segundo y dos en el mismo segundo colisionan. No hay evento que esperar. A diferencia de los dos de esta misma suite que SI se sustituyeron en esta revision.
+        time.sleep(2)  # blocking-sleep: separa las dos muestras -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.5 -- SE QUEDA: separar dos muestras es esperar al RELOJ. bb las marca con resolucion de segundo y dos en el mismo segundo colisionan. En esta misma revision salieron DOS sleeps mas de esta suite, los que esperaban a un hijo: esos si tenian evento (su stdout) y se convirtieron.
         correr(["sample"], datos)
         nombrados = {x["pid"] for x in muestras(datos)[-1]["pidio"]}
         assert quieto.pid not in nombrados, \
@@ -261,7 +261,7 @@ def test_swap_mide_el_RITMO_no_solo_el_nivel(datos, tmp_path):
     lo que informa es el delta por segundo.
     """
     correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 1000, 2000)})
-    time.sleep(4)  # blocking-sleep: el ritmo es un delta y necesita dos instantes separados -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- nace en 1.4: el ritmo de swap es un DELTA entre dos lecturas de /proc/vmstat; no hay evento propio que esperar, solo reloj. Un contador acumulado no avisa cuando cambia
+    time.sleep(4)  # blocking-sleep: el ritmo es un delta y necesita dos instantes separados -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.5 -- SE QUEDA: separar dos muestras es esperar al RELOJ. bb las marca con resolucion de segundo y dos en el mismo segundo colisionan. En esta misma revision salieron DOS sleeps mas de esta suite, los que esperaban a un hijo: esos si tenian evento (su stdout) y se convirtieron.
     correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 5000, 2400)})
     s = muestras(datos)[-1]["swap"]
     # 4000 paginas en ~4-6 s; el intervalo exacto lo pone el reloj, asi que se
@@ -278,7 +278,7 @@ def test_control_negativo_sin_trafico_de_swap_el_ritmo_es_cero(datos, tmp_path):
     cero, no un residuo."""
     v = _vmstat(tmp_path, 1000, 2000)
     correr(["sample"], datos, {"BB_VMSTAT": v})
-    time.sleep(2)  # blocking-sleep: dos muestras separadas, mismos contadores -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- nace en 1.4: el control negativo exige dos muestras SEPARADAS con los mismos contadores. Sin espera caerian en el mismo segundo y el delta seria 0 por la razon equivocada
+    time.sleep(2)  # blocking-sleep: dos muestras separadas, mismos contadores -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.5 -- SE QUEDA: separar dos muestras es esperar al RELOJ. bb las marca con resolucion de segundo y dos en el mismo segundo colisionan. En esta misma revision salieron DOS sleeps mas de esta suite, los que esperaban a un hijo: esos si tenian evento (su stdout) y se convirtieron.
     correr(["sample"], datos, {"BB_VMSTAT": v})
     s = muestras(datos)[-1]["swap"]
     assert float(s["in_pag_s"]) == 0.0, s
@@ -291,7 +291,7 @@ def test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo(datos, tmp_path)
     muestra despues de un arranque emitiria un ritmo negativo -- un numero que
     no significa nada y que cualquier grafica leeria como dato."""
     correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 900000, 900000)})
-    time.sleep(2)  # blocking-sleep: dos muestras separadas -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- nace en 1.4: igual que el anterior, y ademas bb marca las muestras con resolucion de segundo
+    time.sleep(2)  # blocking-sleep: dos muestras separadas -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.5 -- SE QUEDA: separar dos muestras es esperar al RELOJ. bb las marca con resolucion de segundo y dos en el mismo segundo colisionan. En esta misma revision salieron DOS sleeps mas de esta suite, los que esperaban a un hijo: esos si tenian evento (su stdout) y se convirtieron.
     correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 12, 34)})
     s = muestras(datos)[-1]["swap"]
     assert float(s["in_pag_s"]) == 0.0, s
@@ -616,11 +616,18 @@ def test_cpu_top_NOMBRA_a_quien_quema_cpu(datos):
     responsable -- `top_rss` ordena por memoria residente y `pidio` por
     crecimiento de VmSize, asi que un proceso que solo quema CPU no sale.
     """
-    quemador = subprocess.Popen(["bash", "-c", "while :; do :; done"])
+    # El hijo AVISA de que existe antes de ponerse a quemar, en vez de que aqui
+    # se adivine cuanto tarda en arrancar. Convertido en la revision de sunset
+    # de 1.5, con la misma tecnica que en 1.4 saco a otros dos de esta suite:
+    # su stdout es el evento.
+    quemador = subprocess.Popen(
+        ["bash", "-c", "echo listo; while :; do :; done"],
+        stdout=subprocess.PIPE, text=True)
     try:
-        time.sleep(1)  # blocking-sleep: el hijo tiene que existir en la muestra 1 -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- nace en 1.4: se espera a que un SUBPROCESO exista y empiece a quemar CPU, no a estado propio; no hay evento que compartir con un hijo bash
+        assert quemador.stdout is not None
+        assert quemador.stdout.readline().strip() == "listo"
         correr(["sample"], datos)                  # muestra 1: linea base
-        time.sleep(4)  # blocking-sleep: `ps -o times=` da segundos ENTEROS; hacen falta varios para que el delta sea legible -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- nace en 1.4: `ps -o times=` da SEGUNDOS ENTEROS, asi que el piso de deteccion es 1 segundo-nucleo. Con menos espera el delta seria 0 y el test pasaria por casualidad, no por medir
+        time.sleep(4)  # blocking-sleep: `ps -o times=` da segundos ENTEROS; hacen falta varios para que el delta sea legible -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.5 -- SE QUEDA: espera a que el RELOJ acumule CPU medible. `ps -o times=` da segundos enteros, asi que el piso de deteccion es 1 segundo-nucleo; con menos espera el delta seria 0 y el test pasaria por casualidad. No hay evento que esperar: lo que se espera es tiempo.
         correr(["sample"], datos)                  # muestra 2: ya quemo
         d = muestras(datos)[-1]
         por_pid = {x["pid"]: x for x in d["cpu_top"]}
@@ -645,11 +652,14 @@ def test_control_negativo_un_proceso_dormido_no_sale_como_que_quema(datos):
     se controla es un proceso propio, vivo en las dos muestras, que no quema
     nada: ese no puede aparecer.
     """
-    dormido = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(20)"])
+    dormido = subprocess.Popen(
+        [sys.executable, "-c", "import time; print('listo', flush=True); time.sleep(20)"],
+        stdout=subprocess.PIPE, text=True)
     try:
-        time.sleep(1)  # blocking-sleep: el hijo tiene que existir ya -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- nace en 1.4: el hijo dormido tiene que existir ya en la muestra 1 o el control negativo no controla nada
+        assert dormido.stdout is not None
+        assert dormido.stdout.readline().strip() == "listo"
         correr(["sample"], datos)
-        time.sleep(4)  # blocking-sleep: mismo intervalo que el caso positivo, para que la comparacion valga -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- nace en 1.4: MISMO intervalo que el caso positivo. Si fuera distinto, la comparacion entre el que quema y el que duerme no valdria
+        time.sleep(4)  # blocking-sleep: mismo intervalo que el caso positivo, para que la comparacion valga -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.5 -- SE QUEDA: tiene que ser el MISMO intervalo que el caso positivo o la comparacion entre el que quema y el que duerme no vale. Es una simetria del experimento, no una espera a un proceso.
         correr(["sample"], datos)
         nombrados = {x["pid"] for x in muestras(datos)[-1]["cpu_top"]}
         assert dormido.pid not in nombrados, \
@@ -672,7 +682,7 @@ def test_residuo_es_un_numero_y_no_se_mueve_solo(datos):
     """Mide memoria que nadie reclama. Entre dos muestras en reposo tiene que
     quedarse practicamente igual, o su delta no significaria nada."""
     correr(["sample"], datos)
-    time.sleep(1)  # blocking-sleep: dos muestras distintas -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.4 -- revisado 2026-09-25: SE QUEDA, mismo motivo: separar dos muestras es esperar al reloj, no a un proceso. Las que esperaban a un hijo se cambiaron por leer su stdout.
+    time.sleep(1)  # blocking-sleep: dos muestras distintas -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.5 -- SE QUEDA: separar dos muestras es esperar al RELOJ. bb las marca con resolucion de segundo y dos en el mismo segundo colisionan. En esta misma revision salieron DOS sleeps mas de esta suite, los que esperaban a un hijo: esos si tenian evento (su stdout) y se convirtieron.
     correr(["sample"], datos)
     a, b = (int(x["residuo_mb"]) for x in muestras(datos)[:2])
     assert abs(b - a) < 2048, f"el residuo se movio {b-a} MiB sin que nadie pidiera"
