@@ -62,6 +62,36 @@ gpu_procs() {
     --format=csv,noheader,nounits 2>/dev/null
 }
 
+# Salud del PROPIO nvidia-smi, no de la GPU. Que la consulta no responda es EL
+# sintoma del cuelgue -- es lo que da titulo al hilo del foro de NVIDIA #358951,
+# "Spark hangs, requires a hard reset" -- y hoy no lo registra nadie.
+#
+# Se recupera del `gpu_sampler.sh` retirado el 2026-09-07, que llevaba una
+# columna `status` con TIMEOUT/ERROR. Al retirarlo, `atom_gpu_telemetry.py`
+# absorbio sm_clk, pstate y throttle, pero NO esto. Medido el 2026-09-24 sobre
+# sus 2000 ultimas muestras: el campo `evento` vale "muestra" en 2000 de 2000,
+# o sea no tiene forma de decir que la consulta fallo. Y el resto de bin/bb
+# llama a nvidia-smi con `2>/dev/null || return 1`, que se traga un cuelgue sin
+# dejar rastro.
+#
+# Consolidacion, no sustitucion: Atlas sigue siendo el dueno de los VALORES
+# (vllm_*, zonas termicas, potencia); esta caja se queda con la SALUD de la
+# consulta, que es lo que nadie cubria.
+SMI_TIMEOUT_S="${BB_SMI_TIMEOUT_S:-5}"
+smi_salud() { # imprime: <estado> <ms>
+  have nvidia-smi || { echo "AUSENTE 0"; return 0; }
+  local ini fin rc
+  ini=$(date +%s%3N)
+  timeout "$SMI_TIMEOUT_S" nvidia-smi --query-gpu=pstate --format=csv,noheader >/dev/null 2>&1
+  rc=$?
+  fin=$(date +%s%3N)
+  case "$rc" in
+    0)   echo "OK $((fin - ini))" ;;
+    124) echo "TIMEOUT $((fin - ini))" ;;
+    *)   echo "ERROR $((fin - ini))" ;;
+  esac
+}
+
 gpu_stat() { # temp,util,power
   have nvidia-smi || { echo ",,"; return 1; }
   nvidia-smi --query-gpu=temperature.gpu,utilization.gpu,power.draw \
@@ -373,6 +403,8 @@ cmd_sample() {
   salud=$(gateway_salud); disco=$(disco_pct)
   local red cpuj
   red=$(red_bytes); cpuj=$(cpu_jiffies)
+  local smi_estado smi_ms
+  read -r smi_estado smi_ms <<<"$(smi_salud)"
   zc=$(zombie_count)
   la=$(awk '{print $1}' /proc/loadavg)
   local commit_pct residuo
@@ -460,11 +492,12 @@ cmd_sample() {
   pybg=$(ps -eo pid=,etimes=,comm= 2>/dev/null |
     awk '$3 ~ /^python/ && $2 > 60 {printf "%s%s", (n++?",":""), $1}')
 
-  printf '{"ts":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"py_bg":[%s],"gpu":[%s],"commit_pct":%s,"residuo_mb":%s,"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s"}\n' \
+  printf '{"ts":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"py_bg":[%s],"gpu":[%s],"commit_pct":%s,"residuo_mb":%s,"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s}}\n' \
     "$ts" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$topvsz" "$pybg" "$gpu" \
     "${commit_pct:-0}" "${residuo:-0}" \
     "${psi_m_some:-0}" "${psi_m_full:-0}" "${psi_io_some:-0}" "${psi_cpu_some:-0}" \
-    "${gw:-CAIDO}" "${dk:-?}" "${salud:-}" "${disco:-}" "${red:-}" "${cpuj:-}" >>"$f"
+    "${gw:-CAIDO}" "${dk:-?}" "${salud:-}" "${disco:-}" "${red:-}" "${cpuj:-}" \
+    "${smi_estado:-DESCONOCIDO}" "${smi_ms:-0}" >>"$f"
 
   # --- muestreo adaptativo, anadido el 2026-09-24 -------------------------
   # El cuarto congelamiento entero -- de maquina sana a memoria agotada --
