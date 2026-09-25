@@ -73,6 +73,18 @@ if [ "$REVERT" = 1 ]; then
     run augenrules --load
     echo "  regla de auditoria de senales retirada (DGX-438 se queda sin instrumento)"
   fi
+  if [ -f /etc/systemd/system/docker.slice.d/99-blackbox.conf ]; then
+    run rm -f /etc/systemd/system/docker.slice.d/99-blackbox.conf
+    run rmdir --ignore-fail-on-non-empty /etc/systemd/system/docker.slice.d
+    echo "  techo de docker.slice retirado"
+  fi
+  if [ -f "$BACKUP/docker-daemon.json" ]; then
+    run cp "$BACKUP/docker-daemon.json" /etc/docker/daemon.json
+    echo "  /etc/docker/daemon.json restaurado -- REQUIERE: systemctl restart docker"
+    echo "  (no se reinicia solo: tirar los contenedores es decision tuya)"
+  else
+    echo "  /etc/docker/daemon.json: sin copia previa, NO se toca"
+  fi
   run rm -f /etc/security/limits.d/99-blackbox-core.conf
   run rm -f /etc/systemd/coredump.conf.d/99-blackbox.conf
   echo "  limites y coredump.conf de blackbox retirados"
@@ -389,6 +401,55 @@ echo "    uname -r                                                  # espera $KO
 echo "    cat /sys/module/nvidia_uvm/parameters/uvm_global_oversubscription  # espera 0"
 echo "  Y si vuelve a congelarse, la firma a buscar es:"
 echo "    journalctl -k -b -1 | grep -c _memdescAllocInternal"
+
+# --- 9. techo de memoria para los contenedores ---------------------------
+echo
+echo "-- 9. techo agregado de Docker (DEBT-DOCKER-FUERA-DEL-TECHO) --"
+if [ ! -S /var/run/docker.sock ] && ! command -v docker >/dev/null 2>&1; then
+  echo "  docker no esta en esta maquina: nada que acotar"
+else
+  echo "  Medido el 2026-09-24: los contenedores cuelgan de"
+  echo "  system.slice/docker-<id>.scope, hermanos del demonio -- un drop-in"
+  echo "  sobre docker.service NO los toca. Y 3 de 5 no tenian techo propio."
+
+  if [ -f /etc/docker/daemon.json ]; then
+    run cp -n /etc/docker/daemon.json "$BACKUP/docker-daemon.json"
+  fi
+  # se MEZCLA, no se sobrescribe: daemon.json ya declara el runtime de nvidia
+  if [ "$DRY" = 1 ]; then
+    echo "  [dry-run] anadir \"cgroup-parent\": \"docker.slice\" a /etc/docker/daemon.json"
+  else
+    python3 - <<'PYEOF'
+import json, pathlib
+p = pathlib.Path("/etc/docker/daemon.json")
+d = json.loads(p.read_text(encoding="utf-8")) if p.exists() and p.read_text(encoding="utf-8").strip() else {}
+if d.get("cgroup-parent") == "docker.slice":
+    print("  daemon.json ya apunta a docker.slice, sin cambios")
+else:
+    d["cgroup-parent"] = "docker.slice"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(d, indent=4) + "\n", encoding="utf-8")
+    print("  daemon.json: cgroup-parent = docker.slice (el resto se conservo)")
+PYEOF
+  fi
+
+  run mkdir -p /etc/systemd/system/docker.slice.d
+  run cp adopted/system-config/etc_systemd_system_docker.slice.d_99-blackbox.conf \
+         /etc/systemd/system/docker.slice.d/99-blackbox.conf
+  echo "  techo puesto: MemoryMax=32G, MemorySwapMax=4G sobre docker.slice"
+  echo
+  echo "  NO SURTE EFECTO HASTA REINICIAR EL DEMONIO, y eso TIRA los"
+  echo "  contenedores -- incluido el vLLM. Cuando te venga bien:"
+  echo "    sudo systemctl daemon-reload && sudo systemctl restart docker"
+  echo
+  echo "  CONTROL NEGATIVO -- despues del reinicio, comprueba el SUJETO, no el informe:"
+  echo "    cat /proc/\$(docker inspect -f '{{.State.Pid}}' nemotron-server)/cgroup"
+  echo "      espera:  0::/docker.slice/docker-<id>.scope    (NO system.slice)"
+  echo "    cat /sys/fs/cgroup/docker.slice/memory.max"
+  echo "      espera:  34359738368                          (NO 'max')"
+  echo "    Si sigue diciendo system.slice o 'max', el techo NO esta puesto"
+  echo "    por mucho que este informe diga que si."
+fi
 
 # --- recarga ------------------------------------------------------------
 echo

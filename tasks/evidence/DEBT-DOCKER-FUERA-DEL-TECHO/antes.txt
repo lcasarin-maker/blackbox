@@ -1,0 +1,18 @@
+ESTADO DEL SUJETO ANTES DEL ARREGLO -- 2026-09-24
+
+$ cat /proc/$(docker inspect -f '{{.State.Pid}}' nemotron-server)/cgroup
+0::/system.slice/docker-eaee36ede8a8958dcd470e4e88b0c9c72bee175d435c21c9691e89525cb3138c.scope
+
+$ cat /sys/fs/cgroup/system.slice/memory.max
+max
+
+$ for c in ...; do docker inspect -f '{{.HostConfig.Memory}}'; done
+  nemotron-server    80530636800  (75 GiB)
+  atlas-pgvector     2147483648  (2 GiB)
+  librechat          0  (SIN TECHO)
+  mongo-librechat    0  (SIN TECHO)
+  aequitas-pg        0  (SIN TECHO)
+
+$ awk '/MemTotal/' /proc/meminfo
+  MemTotal = 121.1 GiB
+  techos declarados: app.slice 48G + nemotron 75G + atlas-pg 2G = 125G > 121.1 GiB
