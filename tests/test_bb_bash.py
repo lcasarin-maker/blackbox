@@ -51,12 +51,56 @@ def datos(tmp_path):
     return d
 
 
+def _cpu_segundos(pid):
+    """Segundos de CPU acumulados de un pid, como los lee bb (`ps -o times=`)."""
+    r = subprocess.run(["ps", "-o", "times=", "-p", str(pid)],
+                       capture_output=True, text=True)
+    return int(r.stdout.strip() or 0)
+
+
+def _no_esta_pero_los_cinco_queman_mas(lista, campo, mio, sujeto):
+    """El invariante REAL de una lista `sort -rn | head -5`.
+
+    `pidio` y `cpu_top` prometen EL TOP 5, no "tu proceso". Que el proceso de un
+    test no salga no es un fallo del sujeto si habia cinco mas calientes: es la
+    maquina ocupada. Lo que si seria un fallo es que la lista soltara al mio
+    mientras nombra a alguien MAS FRIO, y eso es lo que se comprueba aqui.
+
+    Medido el 2026-09-25: `test_cpu_top_NOMBRA_a_quien_quema_cpu` fallo dentro
+    del `pre-push` -- con la suite entera corriendo-- y paso 3 de 3 con la
+    maquina en reposo. La asercion de pertenencia era la que estaba mal, no bb.
+    Es tambien la explicacion que le faltaba al fallo de
+    `test_pidio_NOMBRA_a_quien_pide_memoria` que quedo sin reproducir, y que se
+    commiteo como inexplicado: misma forma, mismo `head -5`.
+    """
+    assert len(lista) == 5, (
+        f"{sujeto} no nombro al mio y la lista NO esta llena ({len(lista)} de 5): "
+        f"habia sitio y no lo uso. {lista}")
+    frios = [x for x in lista if x[campo] < mio]
+    assert not frios, (
+        f"{sujeto} solto al mio ({mio}) y nombro a estos, que son MAS FRIOS: {frios}")
+
+
 def muestras(datos):
-    f = datos / "samples" / time.strftime("%Y-%m-%d") + ".jsonl" if False else \
-        next((datos / "samples").glob("*.jsonl"), None)
+    """Las muestras COMPLETAS. Las de rafaga se filtran, y no es cosmetica.
+
+    El muestreo adaptativo escribe un registro REDUCIDO -- sin `cpu_top`, sin
+    `top_rss`, sin `swap`-- cuando la maquina se mueve rapido. Un test que lee
+    `muestras(datos)[-1]["cpu_top"]` revienta con `KeyError` si justo la ultima
+    linea fue una rafaga, y eso depende de la carga de la maquina, no del sujeto.
+
+    Medido el 2026-09-25: corriendo la suite entera,
+    `test_control_negativo_un_proceso_dormido_no_sale_como_que_quema` fallo con
+    `KeyError: 'cpu_top'`. Tercera instancia del mismo modo de fallo en esta
+    misma pasada -- las otras dos fueron las aserciones de pertenencia a las
+    listas `head -5`. Los cuatro tests que SI quieren ver rafagas leen el
+    fichero por su cuenta con `_leer`, asi que este filtro no les quita nada.
+    """
+    f = next((datos / "samples").glob("*.jsonl"), None)
     if f is None:
         return []
-    return [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+    return [m for m in todas if not m.get("burst")]
 
 
 # =====================================================================
@@ -144,7 +188,11 @@ def test_pidio_NOMBRA_a_quien_pide_memoria(datos):
         correr(["sample"], datos)                  # muestra 2: ya crecio
         d = muestras(datos)[-1]
         crecidos = {x["pid"]: x for x in d["pidio"]}
-        assert hijo.pid in crecidos, f"no nombro al pid {hijo.pid}: {d['pidio']}"
+        if hijo.pid not in crecidos:
+            # Mismo `head -5` que `cpu_top`, y el mismo modo de fallo bajo carga.
+            _no_esta_pero_los_cinco_queman_mas(
+                d["pidio"], "crecio_kb", 5 * 1024 ** 2, "pidio")
+            return
         gb = crecidos[hijo.pid]["crecio_kb"] / 1048576
         assert 4.5 < gb < 5.5, f"deberia ver ~5 GiB, vio {gb:.2f}"
     finally:
@@ -626,13 +674,18 @@ def test_cpu_top_NOMBRA_a_quien_quema_cpu(datos):
     try:
         assert quemador.stdout is not None
         assert quemador.stdout.readline().strip() == "listo"
+        cpu_antes = _cpu_segundos(quemador.pid)
         correr(["sample"], datos)                  # muestra 1: linea base
         time.sleep(4)  # blocking-sleep: `ps -o times=` da segundos ENTEROS; hacen falta varios para que el delta sea legible -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.6 -- SE QUEDA, VERIFICADO POR RETIRADA: sin este sleep SU PROPIO test FALLA. Es la espera que produce la senal, no una espera a un proceso. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.6-verificado.txt
         correr(["sample"], datos)                  # muestra 2: ya quemo
+        mio = _cpu_segundos(quemador.pid) - cpu_antes
         d = muestras(datos)[-1]
         por_pid = {x["pid"]: x for x in d["cpu_top"]}
-        assert quemador.pid in por_pid, \
-            f"no nombro al pid {quemador.pid} que quemaba un nucleo entero: {d['cpu_top']}"
+        if quemador.pid not in por_pid:
+            # La maquina tenia cinco procesos mas calientes. `cpu_top` promete el
+            # top 5, no el mio: se comprueba ESA promesa.
+            _no_esta_pero_los_cinco_queman_mas(d["cpu_top"], "cpu_s", mio, "cpu_top")
+            return
         fila = por_pid[quemador.pid]
         # Un bucle vacio de bash satura UN nucleo: por debajo del 50 % de uno
         # el campo estaria midiendo otra cosa que lo que dice medir.
@@ -940,3 +993,64 @@ def test_sin_memory_peak_en_el_kernel_se_escribe_null_y_no_cero(datos, tmp_path)
     correr(["sample"], datos, _cg_slices(tmp_path, sin_peak=True))
     s = _slices_de_la_muestra(datos)
     assert all(x["peak_kb"] is None and x["cur_kb"] == 1024 for x in s), s
+
+
+# =====================================================================
+# el invariante de las listas `head -5`, que es lo unico que prometen
+# =====================================================================
+
+
+def test_la_lista_que_SUELTA_al_mio_y_nombra_a_uno_MAS_FRIO_si_es_un_fallo():
+    """El camino nuevo no puede ser una amnistia.
+
+    Si `cpu_top` deja fuera a mi proceso mientras nombra a alguien que quemo
+    MENOS, eso no es la maquina ocupada: es la lista mal ordenada, y tiene que
+    seguir siendo rojo."""
+    lista = [{"pid": i, "cpu_s": s} for i, s in enumerate([9, 8, 7, 6, 1])]
+    with pytest.raises(AssertionError, match="MAS FRIOS"):
+        _no_esta_pero_los_cinco_queman_mas(lista, "cpu_s", 4, "cpu_top")
+
+
+def test_una_lista_con_SITIO_LIBRE_que_no_me_nombra_si_es_un_fallo():
+    """Si la lista no llego a cinco, no hubo competencia que me sacara: habia
+    hueco y bb no lo uso. Eso es el defecto original, no contencion."""
+    lista = [{"pid": i, "cpu_s": 9} for i in range(3)]
+    with pytest.raises(AssertionError, match="NO esta llena"):
+        _no_esta_pero_los_cinco_queman_mas(lista, "cpu_s", 4, "cpu_top")
+
+
+def test_control_negativo_cinco_MAS_CALIENTES_que_el_mio_NO_son_un_fallo():
+    """La otra direccion, sin la cual las dos de arriba solo dirian que el
+    helper sabe levantar excepciones. Con la maquina llena de procesos mas
+    calientes, que el mio no salga es lo correcto."""
+    lista = [{"pid": i, "cpu_s": s} for i, s in enumerate([9, 8, 7, 6, 5])]
+    _no_esta_pero_los_cinco_queman_mas(lista, "cpu_s", 4, "cpu_top")   # no levanta
+    # Y el BORDE, que es lo que convierte esto en un oraculo y no en un "no
+    # reviento": con el mio en 6 el de 5 pasa a ser mas frio, y tiene que
+    # levantar. Lo pidio zero-debt con `test_without_assert`, y tenia razon --
+    # sin esta mitad, el test seguiria verde si el helper fuera un `pass`.
+    with pytest.raises(AssertionError, match="MAS FRIOS"):
+        _no_esta_pero_los_cinco_queman_mas(lista, "cpu_s", 6, "cpu_top")
+
+
+def test_muestras_FILTRA_las_de_rafaga_y_no_las_da_por_completas(datos):
+    """Una muestra de rafaga no trae `cpu_top`. Devolverla como "la ultima
+    muestra" hace que el test de al lado reviente por la carga de la maquina y
+    no por el sujeto, que es la peor clase de rojo: el que no dice nada."""
+    f = datos / "samples" / "2026-09-25.jsonl"
+    f.write_text("\n".join([
+        json.dumps({"ts": "2026-09-25T00:00:00-0600", "cpu_top": [{"pid": 1}]}),
+        json.dumps({"ts": "2026-09-25T00:00:01-0600", "burst": True, "pidio": []}),
+    ]) + "\n", encoding="utf-8")
+    ms = muestras(datos)
+    assert len(ms) == 1 and "cpu_top" in ms[-1], ms
+
+
+def test_control_negativo_sin_rafagas_NO_se_filtra_nada(datos):
+    """Sin esto, `muestras` podria devolver la lista vacia y los dos tests de
+    arriba seguirian verdes."""
+    f = datos / "samples" / "2026-09-25.jsonl"
+    f.write_text("\n".join(
+        json.dumps({"ts": f"2026-09-25T00:00:0{i}-0600", "cpu_top": []}) for i in range(3)
+    ) + "\n", encoding="utf-8")
+    assert len(muestras(datos)) == 3
