@@ -1,65 +1,65 @@
 {
-  "claims_fingerprint": "0da6be813394b2dc192d2f1fe765e6de411de558785e6d9c1ce4e840662f8bdb",
-  "panel": "Claude Opus 5, sesion bb del 2026-09-24. Cada afirmacion contrastada contra el SUJETO -- disco, unidades desplegadas, salida de bb drift, loginctl, y la corrida real de cada gate -- no contra el texto de la spec. Una salio FALSA por trabajo de esta misma sesion (L231 daba 17.6%/146 de 829 y el medidor da 17.7%/149 de 843) y se corrigio antes de sellarla. L98 se sella con su limite declarado: la copia de Atlas todavia existe y DGX-585 sigue abierta midiendo su ausencia.",
+  "claims_fingerprint": "5c9ea3b8311dcafaab4f66d6affe3c1b37c39a5e9d33468375baea84c03c2c79",
+  "panel": "Claude Opus 5, sesion bb del 2026-09-25. Re-auditoria tras cambiar SPEC.md: cada afirmacion contrastada contra el SUJETO -- disco, unidades desplegadas, salida de bb drift, loginctl y la corrida real de cada gate. DOS mejoraron desde la auditoria del 24 y se sellan con el hecho nuevo, no con el viejo: L98 se habia sellado con un limite declarado porque la copia de Atlas seguia existiendo, y ya no existe (DGX-585 cerrada alli); L229 se habia sellado con 1 divergente y 1 ausente en bb drift, y ahora da 0 y 0 porque el dueno aplico el sudo pendiente.",
   "profile": "general",
   "results": [
     {
       "claim_id": "SPEC-L94",
-      "evidence": "Medido en disco: 0 ficheros de blackbox importan modulos de Atlas (el unico acoplamiento, _argv_tokens, quedo copiado en sitio con su nota) y 0 ficheros de Atlas importan de blackbox. La via de consumo es el jsonl que bb produce en ~/.local/share/blackbox/atom_gpu_telemetry.jsonl, vivo y creciendo, mas el comando --gate-termico para la decision termica.",
+      "evidence": "Medido en disco: 0 ficheros de blackbox importan modulos de Atlas y 0 ficheros de Atlas importan de blackbox. La via de consumo es el jsonl en ~/.local/share/blackbox/atom_gpu_telemetry.jsonl mas los comandos --gate-termico y --procesos-gpu, que Atlas invoca por subproceso desde tools/bb_consulta.py.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L98",
-      "evidence": "tools/atom_gpu_telemetry.py esta en blackbox y su unit corre desde alli; detect_atom_crash.py se queda en Atlas, importa tools.durable_log (1 ocurrencia medida) y escribe en docs/agent_findings/. LIMITE DECLARADO: la copia de Atlas del primero todavia existe -- duplicado en transito, DGX-585 abierta con close_check que mide justo su ausencia.",
+      "evidence": "MEJORA sobre la auditoria del 2026-09-24, que sello esta afirmacion con un limite declarado: la copia de tools/atom_gpu_telemetry.py YA NO EXISTE en Atlas -- DGX-585 se cerro alli el 2026-09-25 con el commit 82b27781, que la borro junto con sus suites y reencamino sus 13 consumidores. El duplicado en transito que la version anterior declaraba ha desaparecido. detect_atom_crash.py se queda en Atlas, importando tools.durable_log y escribiendo en docs/agent_findings/.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L102",
-      "evidence": "loginctl show-user lcasarin -p Linger --value devuelve yes. Aplicado por el dueno el 2026-09-24 con enable-privileged.sh seccion 10. Antes valia no, y eso costo 4h21m36s de stack de inferencia caido tras el arranque de las 14:11:31 (user@1000.service y ai-nemotron.service arrancaron los dos a las 18:33:07, al entrar al escritorio).",
-      "verdict": "verified"
-    },
-    {
-      "claim_id": "SPEC-L224",
-      "evidence": "bb status imprime la antiguedad del DATO en 4 lineas de su salida. El hueco que la propia fila declara -- timer del muestreo, clock lock de GPU y earlyoom leidos por systemctl is-active, que no detecta una unit activa que dejo de trabajar -- sigue abierto, y la fila lo dice en vez de callarlo.",
+      "evidence": "loginctl show-user lcasarin -p Linger --value devuelve yes. Aplicado por el dueno con enable-privileged.sh seccion 10. Antes valia no, y eso costo 4h21m36s de stack de inferencia caido tras el arranque de las 14:11:31 del 2026-09-24.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L225",
-      "evidence": "Cada gate anadido el 2026-09-24 trae su control negativo CORRIDO, no argumentado: cobertura de bash 0.0% con suite vacia / 4.3% con 3 tests / 17.7% con 18; piso a 99.0 -> rc=1 con motivo impreso; inventario con un cmd_ mutado en bin/bb -> rc=1 nombrandolo; --gate-termico rc=0 a 46C y rc=1 con calor sostenido; close_check de Docker contra system.slice -> rc=1.",
+      "evidence": "bb status imprime la antiguedad del DATO donde hay artefacto que revisar. El hueco que la propia fila declara -- timer del muestreo, clock lock y earlyoom leidos por systemctl is-active, que no detecta una unit activa que dejo de trabajar -- sigue abierto y la fila lo dice en vez de callarlo.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L226",
-      "evidence": "blackbox-sample.service declara Nice=19 e IOSchedulingClass=idle, comprobado tanto en la unit desplegada en ~/.config/systemd/user/ como en la copia adoptada del repo, que bb drift compara y reporta igual.",
+      "evidence": "Cada gate anadido trae su control negativo CORRIDO. Los de este release: tools/mutacion_alcanza.py monta un repo cuyos tests no importan modulo local y exige rc=1; el trinquete de cobertura con el piso a 99.0 da rc=1; el gate de inventario con un cmd_ mutado en bin/bb da rc=1 nombrandolo.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L227",
-      "evidence": "tools/calibra_psi.py sigue devolviendo VEREDICTO: CALIBRADO con los cuatro incidentes propios cargados, incluido el del 2026-09-24. Los dos limites que la fila declara siguen abiertos y sin cerrar: n pequeno del lado positivo, y solo el canal de memoria calibrado -- io_some y cpu_some se imprimen sin etiqueta a proposito.",
+      "evidence": "blackbox-sample.service declara Nice=19 e IOSchedulingClass=idle, comprobado en la unit desplegada y en la copia adoptada, que bb drift compara y reporta igual.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L228",
-      "evidence": "bb drift sobre la maquina: revisados 30, divergentes 1, ausentes 1, suspendidos 1. Los tres se nombran con su causa -- 99-blackbox-panic.conf DIVERGE porque el dueno aplico la version previa a reescribirse su comentario, 99-blackbox-watchdog.conf AUSENTE porque espera sudo, gpu_sampler.sh SUSPENDIDO con manifiesto y caducidad 2026-10-07. Que el gate los saque a la luz ES la prueba de que avisa.",
+      "evidence": "tools/calibra_psi.py sigue devolviendo VEREDICTO: CALIBRADO con los cuatro incidentes propios cargados. Los dos limites que la fila declara -- n pequeno del lado positivo y solo el canal de memoria calibrado -- siguen abiertos y sin cerrar.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L229",
-      "evidence": "tools/inventario.py --check corre como hook inventario-spec en pre-commit, declarado en .simplecode/local_hooks.yaml y en .pre-commit-config.yaml. Cazo 6 desajustes en su primera corrida y 2 eran defectos del propio instrumento, arreglados con su test. Control negativo corrido: con cmd_mutante_de_prueba en bin/bb da rc=1 nombrandolo; restaurado, rc=0.",
+      "evidence": "MEJORA sobre la auditoria del 2026-09-24, que sello con 1 divergente y 1 ausente: bb drift da ahora revisados 30, divergentes 0, ausentes 0, suspendidos 1. El dueno aplico enable-privileged.sh, que puso el drop-in del watchdog SBSA y convergio el fichero de kernel.panic. El unico suspendido es gpu_sampler.sh, con manifiesto y caducidad 2026-10-07.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L230",
-      "evidence": "bb drift pasa de 19 a 30 sujetos revisados tras adoptar 11 el 2026-09-24. Ocho llevaban fecha 2026-09-09 entre las 15:39 y las 15:40, del hilo del foro de NVIDIA #358951, y ninguno estaba versionado: /usr/local/bin/nvrm-watch.sh, que corre cada 5 minutos y ha cazado 17 NVRM Out-of-memory, existia solo en disco.",
+      "evidence": "tools/inventario.py --check corre como hook inventario-spec en pre-commit. En ESTE release volvio a cazar: dos herramientas nuevas sin declarar en SPEC.md, en su primera corrida despues de traerlas de Atlas, y despues tools/mutacion_alcanza.py. Control negativo: con un cmd_ nuevo en bin/bb da rc=1 nombrandolo.",
       "verdict": "verified"
     },
     {
       "claim_id": "SPEC-L231",
-      "evidence": "Cifra CORREGIDA durante esta misma auditoria: la fila decia 17.6% / 146 de 829 y el medidor sobre el sujeto da 17.7% / 149 de 843, porque esta sesion le anadio smi_salud a bin/bb. Se corrigio SPEC.md antes de sellar. El gate bb-cobertura-piso corre en pre-push contra tests/cobertura_bb.piso = 17.7 y se verifico que puede bloquear.",
+      "evidence": "bb drift vigila 30 sujetos, antes 19. Los 11 adoptados el 2026-09-24 incluyen /usr/local/bin/nvrm-watch.sh, con fecha 2026-09-09 15:40, que corre cada 5 minutos, ha cazado 17 NVRM Out-of-memory y no estaba versionado en ningun repo.",
+      "verdict": "verified"
+    },
+    {
+      "claim_id": "SPEC-L232",
+      "evidence": "tools/cobertura_bash.sh mide bin/bb en 17.7% (149 de 843), y el hook bb-cobertura-piso corre en pre-push contra tests/cobertura_bb.piso = 17.7. Verificado que puede bloquear: con el piso a 99.0 da rc=1 con el motivo impreso.",
       "verdict": "verified"
     }
   ],
-  "timestamp": "2026-09-25T05:06:15Z",
-  "tree_fingerprint": "1a4468cfee3a9dd33a2b59ff53b11a36281a357e74a28fb68c5fb8d9f1722365",
+  "timestamp": "2026-09-25T08:55:24Z",
+  "tree_fingerprint": "a9670940d0ac7ba77fa1e4ec98854538c774646ad7270be77c690e48fbb48a91",
   "violations": []
 }

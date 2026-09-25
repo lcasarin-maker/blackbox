@@ -133,7 +133,7 @@ def test_pidio_NOMBRA_a_quien_pide_memoria(datos):
         [sys.executable, "-c",
          "import mmap,time; m=mmap.mmap(-1, 5*1024**3); time.sleep(20)"])
     try:
-        time.sleep(3)  # blocking-sleep: se espera a que el hijo reserve -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.1 -- relido 2026-09-24: nace en 1.0: espera a un SUBPROCESO, no a estado propio; no hay evento que compartir con un hijo que reserva memoria
+        time.sleep(3)  # blocking-sleep: se espera a que el hijo reserve -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.3 -- relido 2026-09-25: relido 2026-09-24: nace en 1.0: espera a un SUBPROCESO, no a estado propio; no hay evento que compartir con un hijo que reserva memoria
         correr(["sample"], datos)                  # muestra 2: ya crecio
         d = muestras(datos)[-1]
         crecidos = {x["pid"]: x for x in d["pidio"]}
@@ -158,9 +158,9 @@ def test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado(datos):
     """
     quieto = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(20)"])
     try:
-        time.sleep(1)  # blocking-sleep: el hijo tiene que existir ya -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.1 -- relido 2026-09-24: nace en 1.0: sondear /proc/<pid> seria cambiar un sleep por otro con mas codigo
+        time.sleep(1)  # blocking-sleep: el hijo tiene que existir ya -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.3 -- relido 2026-09-25: relido 2026-09-24: nace en 1.0: sondear /proc/<pid> seria cambiar un sleep por otro con mas codigo
         correr(["sample"], datos)
-        time.sleep(2)  # blocking-sleep: separa las dos muestras -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.1 -- relido 2026-09-24: nace en 1.0: bb marca las muestras con resolucion de segundo; sin la espera caen en el mismo
+        time.sleep(2)  # blocking-sleep: separa las dos muestras -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.3 -- relido 2026-09-25: relido 2026-09-24: nace en 1.0: bb marca las muestras con resolucion de segundo; sin la espera caen en el mismo
         correr(["sample"], datos)
         nombrados = {x["pid"] for x in muestras(datos)[-1]["pidio"]}
         assert quieto.pid not in nombrados, \
@@ -174,7 +174,7 @@ def test_residuo_es_un_numero_y_no_se_mueve_solo(datos):
     """Mide memoria que nadie reclama. Entre dos muestras en reposo tiene que
     quedarse practicamente igual, o su delta no significaria nada."""
     correr(["sample"], datos)
-    time.sleep(1)  # blocking-sleep: dos muestras distintas -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.1 -- relido 2026-09-24: nace en 1.0: misma razon, resolucion de segundo del sello de bb
+    time.sleep(1)  # blocking-sleep: dos muestras distintas -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.3 -- relido 2026-09-25: relido 2026-09-24: nace en 1.0: misma razon, resolucion de segundo del sello de bb
     correr(["sample"], datos)
     a, b = (int(x["residuo_mb"]) for x in muestras(datos)[:2])
     assert abs(b - a) < 2048, f"el residuo se movio {b-a} MiB sin que nadie pidiera"
