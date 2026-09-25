@@ -70,7 +70,10 @@ printf '%-12s %6s %8s %7s\n' FICHERO LINEAS CUBIERTAS PCT
 printf '%-12s %6d %8d %6s%%\n' "$sujeto" "$tot" "$cub" "$pct"
 echo
 echo "SIN CUBRIR (numero de linea):"
-comm -13 "$tmp/vistas" "$tmp/candidatas" | sort -n | tr '\n' ' ' | fold -s -w 78
+# prefijadas con L y separadas por comas: una corrida de numeros a secas hace
+# que pii-scan la lea como un RFC/CURP y bloquee el push (medido 2026-09-24).
+comm -13 "$tmp/vistas" "$tmp/candidatas" | sort -n | sed 's/^/L/' \
+  | paste -sd, - | fold -s -w 78
 echo
 echo
 echo "LIMITE DECLARADO: mide lineas EJECUTADAS, no ramas ni condiciones. Las"
