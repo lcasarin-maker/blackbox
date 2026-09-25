@@ -1,0 +1,36 @@
+EL REINICIO AUTOMATICO DE LAS 14:09:38 -- fue el vigilante, no una persona
+
+$ journalctl -b -1 | grep -E 'bb-usable|Watchdog|Rebooting'   (extracto)
+2026-09-24T13:59:34-06:00 aitopatom-41f1 bb-usable[80462]: [bb-usable] PSI memory full avg10=12.1 >= 10 -- racha 1/10 (30s de 300s), sonda 18 ms
+2026-09-24T14:00:04-06:00 aitopatom-41f1 bb-usable[80462]: [bb-usable] PSI memory full avg10=92.8 >= 10 -- racha 2/10 (60s de 300s), sonda 20 ms
+2026-09-24T14:04:04-06:00 aitopatom-41f1 bb-usable[80462]: [bb-usable] COLAPSO: PSI memory full avg10=98.0 >= 10 sostenido 300s >= 300s (sonda 15 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-09-24T14:04:34-06:00 aitopatom-41f1 bb-usable[80462]: [bb-usable] COLAPSO: PSI memory full avg10=98.0 >= 10 sostenido 330s >= 300s (sonda 14 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-09-24T14:09:04-06:00 aitopatom-41f1 bb-usable[80462]: [bb-usable] COLAPSO: PSI memory full avg10=98.0 >= 10 sostenido 600s >= 300s (sonda 15 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-09-24T14:09:34-06:00 aitopatom-41f1 systemd[1]: bb-usable.service: Watchdog timeout (limit 6min)!
+2026-09-24T14:09:38-06:00 aitopatom-41f1 systemd[1]: bb-usable.service: Failed with result 'watchdog'.
+2026-09-24T14:09:38-06:00 aitopatom-41f1 systemd[1]: Rebooting.
+
+CONTROL NEGATIVO -- el mismo instrumento sabe decir que NO:
+$ for b in -3 -2 -1; do journalctl -b $b | grep -c 'Rebooting\.'; done
+  arranque -3 -> 'Rebooting.' x0
+  arranque -2 -> 'Rebooting.' x0
+  arranque -1 -> 'Rebooting.' x1
+  arranque  0 -> 'Rebooting.' x0
+  El arranque -2 (congelamiento del 24 a las 00:02, que termino a las 05:56)
+  NO tiene la linea: ese fue reset fisico. El -1 SI la tiene.
+
+LO QUE FALTABA -- medido el 2026-09-24:
+$ cat /etc/sysctl.d/99-freeze-panic.conf
+kernel.hung_task_panic = 1
+kernel.hung_task_timeout_secs = 120
+kernel.softlockup_panic = 1
+kernel.hardlockup_panic = 1
+kernel.nmi_watchdog = 1
+$ sysctl -n kernel.panic
+0
+  -> obliga al panic y no fija la salida. 0 = colgada para siempre.
+
+$ journalctl -b 0 | grep -i 'hardware watchdog'
+sep 24 22:12:28 aitopatom-41f1 systemd[1]: Using hardware watchdog 'SBSA Generic Watchdog', version 0, device /dev/watchdog0
+sep 24 22:12:28 aitopatom-41f1 systemd[1]: Watchdog running with a timeout of 1min.
+  (el timeleft de este driver reporta ~40 anos: NO sirve de instrumento)
