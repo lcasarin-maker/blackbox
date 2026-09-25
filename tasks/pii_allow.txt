@@ -1,0 +1,31 @@
+# Allowlist de pii-scan para blackbox. Cada linea es una AFIRMACION FIRMADA:
+# "esta cadena casa el patron por casualidad y su uso aqui es legitimo".
+#
+# Vive en tasks/ y no en .simplecode/ a proposito: .gitignore ignora
+# `.simplecode/*`, asi que un allowlist ahi no viajaria al clone y el siguiente
+# que clonara veria hallazgos sin ninguna firma que los explique.
+#
+# Las dos de abajo son NOMBRES DE UNIT DE SYSTEMD con instancia. El patron de
+# correo del gate es `[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}`, y
+# `user@1000.service` lo casa igual que `alguien@dominio.com`: local, arroba,
+# "dominio", punto, "tld". No hay forma de distinguirlos mirando solo la cadena.
+#
+# Que se declara exactamente: no son direcciones de correo de nadie, no
+# identifican a un tercero, y son la ruta literal de un cgroup y el nombre
+# literal de una unit de esta maquina. Escribirlas de otra forma seria escribir
+# una ruta que no existe.
+#
+# Medido el 2026-09-25: bloquearon el push dos veces. La primera con
+# `org.gnome.Shell@x11.service` en una tabla de consumo de CPU; la segunda con
+# `user@1000.service` dentro del `close_check` de una ficha, que es una RUTA DE
+# /sys/fs/cgroup y no admite reescritura -- el precio de rodearlo fue cambiar
+# ese criterio por otro que comprueba un solo eslabon de la cadena en vez de los
+# siete.
+#
+# Lo que esto NO arregla: el patron sigue cazando la CLASE entera, asi que cada
+# unit con instancia que se documente aqui habra que anadirla a mano. Eso vive
+# en DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS.
+#
+# Firmado: sesion blackbox 2026-09-25, con el dueno en la conversacion.
+user@1000.service
+org.gnome.Shell@x11.service
