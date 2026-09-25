@@ -30,8 +30,20 @@ EOF
 BB_COV_TRAZA="$traza" BASH_ENV="$tmp/bashenv.sh" "$@" >"$tmp/suite.log" 2>&1 || true
 rc_suite=$?
 
-# lineas vistas: las que la traza atribuye al sujeto
-grep -oP "(?<=^\+\Q$abs\E:)\d+(?=:)" "$traza" 2>/dev/null | sort -u > "$tmp/vistas" || : > "$tmp/vistas"
+# lineas vistas: las que la traza atribuye al sujeto.
+#
+# `\++` y no `\+`. Bash REPITE el primer caracter de PS4 tantas veces como
+# profundidad de anidamiento tenga lo que ejecuta: `+` en el cuerpo principal,
+# `++` dentro de una funcion llamada desde `$(...)`, `+++` un nivel mas. El
+# patron anterior anclaba en UN solo `+`, asi que contaba como SIN CUBRIR todo
+# lo que corre en una substitucion, una tuberia o un subshell -- que en bin/bb
+# es casi todo, porque el muestreo se arma con `x=$(funcion)`.
+#
+# Medido el 2026-09-25: corriendo SOLO los tres tests de `slices_mem`, que la
+# ejecutan entera, 11 de sus 14 lineas salian sin cubrir. El bug no estaba en
+# la funcion; estaba aqui. Se usa `\K` en vez de lookbehind porque el lookbehind
+# de PCRE tiene que ser de ancho fijo y este prefijo no lo es.
+grep -oP "^\++\Q$abs\E:\K\d+(?=:)" "$traza" 2>/dev/null | sort -u > "$tmp/vistas" || : > "$tmp/vistas"
 
 # lineas candidatas: ejecutables de verdad. Se excluyen las que bash NUNCA
 # puede emitir -- cuerpos de heredoc, continuaciones de linea, interiores de
