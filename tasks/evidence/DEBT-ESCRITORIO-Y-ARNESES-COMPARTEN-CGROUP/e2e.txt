@@ -1,0 +1,23 @@
+# END TO END de DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP.
+# Leido del sujeto -- los cgroups de la maquina -- no del repo.
+#   BASE = /sys/fs/cgroup/user.slice/user-1000.slice
+
+  ARMADO    memoria del escritorio protegida del reclamo (7 eslabones)
+
+# los siete eslabones (memory.low en bytes):
+  8589934592     user.slice
+  8589934592     user-1000.slice
+  6442450944     <gestor de usuario>
+  2147483648     <gestor>/session.slice
+  4294967296     <gestor>/app.slice
+  2147483648     session-3.scope
+  2147483648     app-gnome-com.anthropic.Claude-38380.scope
+  2147483648     app-gnome-org.gnome.Evolution\x2dalarm\x2dnotify-36246.scope
+  2147483648     app-gnome-org.gnome.SettingsDaemon.DiskUtilityNotify-36209.scope
+
+# LO QUE DEMUESTRA LA FICHA: la ventana protegida y el arnes NO,
+# sin que el arnes este nombrado en ningun fichero de configuracion.
+  memory.low=2147483648   memory.current=   1.1 GB  app-gnome-com.anthropic.Claude-38380.scope
+  memory.low=0            memory.current=  18.4 GB  app-com.anthropic.Claude-38380.scope
+
+  revisados: 38   divergentes: 0   ausentes: 0   suspendidos: 1

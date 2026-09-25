@@ -291,6 +291,150 @@ def test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo(datos, tmp_path)
 # =====================================================================
 
 
+def _proc_falso(tmp_path, procesos):
+    """Un /proc de mentira. En esta maquina el swap esta al 100 % libre casi
+    siempre, asi que un campo que sale vacio no demuestra que sepa nombrar a
+    nadie, y forzar swap de verdad sobre 60 GB libres arriesga la maquina que
+    se vigila."""
+    r = tmp_path / f"proc_{len(procesos)}"
+    for pid, kb, nombre in procesos:
+        d = r / str(pid)
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "status").write_text(f"Name:\t{nombre}\nVmSwap:\t{kb} kB\n", encoding="utf-8")
+        (d / "cgroup").write_text(f"0::/user.slice/prueba-{nombre}.scope\n", encoding="utf-8")
+    return {"BB_PROC": str(r)}
+
+
+def test_swap_por_proceso_NOMBRA_a_quien_tiene_memoria_fuera(datos, tmp_path):
+    """`swap.in_pag_s` dice cuantas paginas vuelven del disco y no de quien --
+    el mismo defecto que tenia Committed_AS antes de `pidio` y `cpu_some` antes
+    de `cpu_top`.
+
+    La ficha que pedia esto daba el COSTE como motivo para no hacerlo. Medido
+    antes de escribirlo: un awk por proceso sobre 533 procesos cuesta 0.72-0.78 s
+    y la muestra entera dura 0.31 s -- la habria triplicado. Una sola pasada de
+    awk sobre el glob cuesta 0.00-0.01 s. El coste era el de la implementacion
+    ingenua, no el del dato.
+    """
+    env = _proc_falso(tmp_path, [(111, 9000000, "gordo"), (222, 512, "chico"),
+                                 (444, 4000000, "mediano")])
+    correr(["sample"], datos, env)
+    top = muestras(datos)[-1]["swap"]["top"]
+    assert [x["pid"] for x in top] == [111, 444, 222], top
+    assert top[0]["swap_kb"] == 9000000 and top[0]["comm"] == "gordo", top[0]
+    assert top[0]["unit"] == "prueba-gordo.scope", "sin la unit no se sabe quien lo lanzo"
+
+
+def test_control_negativo_un_proceso_SIN_swap_no_sale_nombrado(datos, tmp_path):
+    """Sin esto el test de arriba no distingue "atribuye" de "lista a todo el
+    mundo". Un proceso con VmSwap 0 existe, se lee, y no puede aparecer."""
+    env = _proc_falso(tmp_path, [(111, 4096, "tiene"), (333, 0, "no_tiene")])
+    correr(["sample"], datos, env)
+    pids = {x["pid"] for x in muestras(datos)[-1]["swap"]["top"]}
+    assert 111 in pids and 333 not in pids, muestras(datos)[-1]["swap"]["top"]
+
+
+def test_control_negativo_sin_nadie_en_swap_la_lista_va_vacia(datos, tmp_path):
+    """Y no con una fila de relleno: una lista vacia dice 'nadie', que es un
+    hecho; una fila con ceros diria 'este', que seria falso."""
+    env = _proc_falso(tmp_path, [(333, 0, "limpio"), (334, 0, "limpio2")])
+    correr(["sample"], datos, env)
+    assert muestras(datos)[-1]["swap"]["top"] == []
+
+
+def _journal_falso(tmp_path, nombre, cuerpo):
+    """Un `journalctl` de mentira. Sin esto, los chequeos que leen lo que un
+    proceso DIJO al arrancar no tendrian caso negativo montable, y un chequeo
+    cuyo caso negativo no se puede montar no esta verificado."""
+    f = tmp_path / f"journalctl_{nombre}"
+    f.write_text("#!/usr/bin/env bash\n" + cuerpo, encoding="utf-8")
+    f.chmod(0o755)
+    return {"BB_JOURNALCTL": str(f)}
+
+
+def _fila(r, texto):
+    filas = [l for l in r.stdout.splitlines() if texto in l]
+    assert filas, r.stdout
+    return filas[0]
+
+
+# --- muestreo: por el DATO, no por el timer -------------------------------
+
+
+def test_status_ve_el_muestreo_por_su_dato(datos):
+    """Un timer `active` cuyo `bb sample` falla en cada disparo se ve igual que
+    uno sano si solo se mira `systemctl is-active`."""
+    correr(["sample"], datos)
+    assert "ARMADO" in _fila(correr(["status"], datos), "muestreo de apps/zombis")
+
+
+def test_control_negativo_sin_muestra_fresca_el_muestreo_esta_FALTA(datos):
+    """El directorio existe y esta vacio: es exactamente el estado de un timer
+    activo que no escribe."""
+    assert "FALTA" in _fila(correr(["status"], datos), "muestreo de apps/zombis")
+
+
+# --- clock lock: lo que el DRIVER confirmo --------------------------------
+
+
+CLOCK_OK = """case "$*" in
+  *atom-clock-lock*) echo 'GPU clocks set to "(gpuClkMin 300, gpuClkMax 2800)" for GPU 0' ;;
+  *earlyoom*) echo "Preferring to kill process names that match regex '(pytest)'"
+              echo "Will avoid killing process names that match regex '(Xorg)'" ;;
+esac
+"""
+
+
+def test_control_negativo_clock_lock_con_OTRO_rango_que_el_declarado(datos, tmp_path):
+    """El driver NO expone el rango bloqueado -- medido sobre el driver
+    580.178.04: `nvidia-smi -q -d CLOCK` da el maximo del hardware (3003 MHz) y
+    ningun campo dice 2800. Lo unico que queda del hecho es la linea que
+    nvidia-smi imprimio al aplicarlo, y por eso se compara contra los
+    argumentos que la unit declara: no basta con que alguna vez se aplicara
+    ALGUN rango.
+    """
+    env = _journal_falso(tmp_path, "rango_distinto", CLOCK_OK.replace("2800", "2600"))
+    assert "FALTA" in _fila(correr(["status"], datos, env), "clock lock")
+
+
+def test_control_negativo_clock_lock_sin_confirmacion_del_driver(datos, tmp_path):
+    """La unit puede quedar `active` habiendo fallado en aplicar el limite."""
+    env = _journal_falso(tmp_path, "mudo", "exit 0\n")
+    assert "FALTA" in _fila(correr(["status"], datos, env), "clock lock")
+
+
+# --- earlyoom: su PUNTERIA, dicha por el mismo ----------------------------
+
+
+def test_control_negativo_earlyoom_de_serie_no_cuenta_como_armado(datos, tmp_path):
+    """Un earlyoom sin los argumentos de punteria tambien esta `active` y mata
+    lo que le parece. El ajuste vive en /etc/default/earlyoom, que un paquete
+    puede reescribir dejando la unit igual de activa; lo unico que prueba que
+    esos argumentos LE LLEGARON es lo que el proceso imprimio al arrancar.
+    """
+    env = _journal_falso(tmp_path, "serie",
+                         'echo "earlyoom v1.7"\necho "mem total: 123967 MiB"\n')
+    assert "FALTA" in _fila(correr(["status"], datos, env), "earlyoom con la punteria")
+
+
+def test_earlyoom_con_las_dos_regex_SI_cuenta(datos, tmp_path):
+    """La otra mitad: con las dos lineas puestas tiene que salir ARMADO, o el
+    chequeo seria uno que no puede salir positivo."""
+    env = _journal_falso(tmp_path, "con_punteria", CLOCK_OK)
+    assert "ARMADO" in _fila(correr(["status"], datos, env), "earlyoom con la punteria")
+
+
+def test_control_negativo_earlyoom_con_UNA_sola_regex_no_basta(datos, tmp_path):
+    """Preferir a quien matar sin proteger a quien no tocar deja el escritorio
+    expuesto: son dos propiedades y hacen falta las dos."""
+    solo_una = """case "$*" in
+  *earlyoom*) echo "Preferring to kill process names that match regex '(pytest)'" ;;
+esac
+"""
+    env = _journal_falso(tmp_path, "media_punteria", solo_una)
+    assert "FALTA" in _fila(correr(["status"], datos, env), "earlyoom con la punteria")
+
+
 def _arbol_cgroup(tmp_path, low=2 * 1024**3, con_scope=True, con_ventana=True, roto=None):
     """Monta un arbol de cgroups de mentira con la cadena de 7 eslabones.
 

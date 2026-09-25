@@ -1,0 +1,9 @@
+# CONTROLES NEGATIVOS, corridos.
+$ pytest -k 'SIN_swap or nadie_en_swap'
+..                                                                       [100%]
+2 passed, 54 deselected in 0.66s
+
+# Un proceso con VmSwap 0 existe, se lee, y NO aparece.
+# Sin nadie en swap la lista va vacia y no con una fila de relleno:
+# una lista vacia dice 'nadie', que es un hecho; una fila con ceros
+# diria 'este', que seria falso.

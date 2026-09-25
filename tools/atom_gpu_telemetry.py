@@ -97,6 +97,29 @@ MARGEN_TRIP_C = 10.0
 HISTERESIS_C = 2.0
 MAX_LINEAS = 200_000
 LINEAS_A_CONSERVAR = 100_000
+
+# Techo por BYTES para el guardia en caliente, y el número sale de medir el
+# fichero real, no de la estimación que este módulo traía escrita.
+#
+# Medido el 2026-09-25 sobre `atom_gpu_telemetry.jsonl`: 138.3 MB en 150 040
+# líneas = **966 bytes por línea**. El docstring de `rotar_si_hace_falta` decía
+# "~400 bytes por línea" y por tanto "~75 MB" para las 200 000 líneas del
+# anillo. Son **184 MB**: el techo declarado estaba 2.4 veces por debajo del
+# real, y nadie lo habría notado porque el único momento en que se comprobaba
+# era al arrancar el proceso.
+#
+# 192 MB deja el corte justo por encima de esas 200 000 líneas a la densidad
+# medida, así que el guardia de bytes no se adelanta al de líneas: actúa cuando
+# el de líneas ya debería haber actuado y no pudo, que es el hueco de esta
+# ficha.
+MAX_BYTES = 192 * 1024 * 1024
+
+# Cada cuántas muestras se mira el tamaño. A 5 s son 60 minutos, y el coste de
+# mirar es un `stat`: comprobarlo en cada iteración también sería barato, pero
+# lo que dispara es caro -- `rotar_si_hace_falta` lee el fichero ENTERO en
+# memoria-- y no hace falta detectarlo con resolución de segundos algo que
+# tarda días en ocurrir.
+MUESTRAS_ENTRE_REVISIONES = 720
 VLLM_METRICS_URL_DEFAULT = "http://127.0.0.1:8000/metrics"
 VLLM_METRICS_TIMEOUT_S = 1.0
 
@@ -657,8 +680,18 @@ def rotar_si_hace_falta() -> int | None:
     recortaron, o None si no hizo falta.
 
     Los números: a 5 s por muestra son 17,280 líneas/día, así que 200,000
-    líneas son ~11.6 días de historia y ~75 MB a ~400 bytes por línea. Se
-    conserva la mitad para que el recorte no se repita en cada arranque.
+    líneas son ~11.6 días de historia. Se conserva la mitad para que el recorte
+    no se repita en cada arranque.
+
+    CORRECCIÓN 2026-09-25: este docstring decía "~75 MB a ~400 bytes por
+    línea". Medido sobre el fichero real -- 138.3 MB en 150,040 líneas -- son
+    **966 bytes por línea**, así que las 200,000 del anillo son **184 MB**, no
+    75. El número estaba 2.4 veces por debajo y nadie lo habría notado: era una
+    estimación escrita al lado del código, nunca contrastada con el fichero que
+    el código produce.
+
+    Y sigue habiendo un límite, que `rotar_en_caliente()` cubre: esta función
+    se llama UNA vez, al arrancar el proceso.
     """
     if not JSONL_PATH.exists():
         return None
@@ -668,6 +701,31 @@ def rotar_si_hace_falta() -> int | None:
     conservadas = lineas[-LINEAS_A_CONSERVAR:]
     JSONL_PATH.write_text("\n".join(conservadas) + "\n", encoding="utf-8")
     return len(lineas) - len(conservadas)
+
+
+def rotar_en_caliente() -> int | None:
+    """El anillo, pero SIN esperar a que el proceso vuelva a arrancar.
+
+    `rotar_si_hace_falta()` se llama una sola vez, en `main()`. Este servicio
+    corre en bucle cada 5 s y sólo se reinicia con la máquina, así que entre que
+    el fichero pasa del corte y el siguiente arranque no hay cota ninguna.
+    Medido el 2026-09-25: 138.3 MB y 150 040 líneas, creciendo 15.9 MB al día.
+    Con quince días en pie serían ~400 000 líneas y ~390 MB, y el recorte no
+    llegaría hasta el siguiente reinicio.
+
+    Se mira el TAMAÑO y no las líneas, que es la diferencia entera: contar
+    líneas exige leer el fichero, y leer 138 MB cada hora para descubrir que no
+    hay nada que hacer sería cambiar un problema por otro. Un `stat` cuesta lo
+    mismo con 1 MB que con 400.
+
+    Devuelve cuántas líneas se recortaron, o `None` si no hizo falta.
+    """
+    try:
+        if JSONL_PATH.stat().st_size <= MAX_BYTES:
+            return None
+    except OSError:
+        return None
+    return rotar_si_hace_falta()
 
 
 def _muestras_recientes(cuantas: int, ruta: Path | None = None) -> list[dict]:
@@ -1328,8 +1386,20 @@ def main() -> int:
         print(json.dumps(arranque, ensure_ascii=False))
 
     try:
+        desde_revision = 0
         while True:
             eventos = muestrear(umbrales, estado, escribir=escribir)
+            # El anillo, también en caliente. Sin esto el recorte sólo ocurre al
+            # arrancar el proceso, que en este servicio significa "al reiniciar
+            # la máquina": el hueco que abre DEBT-TELEMETRIA-GPU-SIN-COTA-EN-CALIENTE.
+            desde_revision += 1
+            if escribir and desde_revision >= MUESTRAS_ENTRE_REVISIONES:
+                desde_revision = 0
+                recortadas_ahora = rotar_en_caliente()
+                if recortadas_ahora:
+                    _escribir({"ts": _ahora(), "evento": "rotacion",
+                               "lineas_recortadas": recortadas_ahora,
+                               "motivo": f"jsonl por encima de {MAX_BYTES} bytes"})
             if args.dry_run or args.once:
                 for evento in eventos:
                     print(json.dumps(evento, ensure_ascii=False))

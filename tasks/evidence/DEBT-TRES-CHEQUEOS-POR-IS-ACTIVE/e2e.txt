@@ -1,0 +1,23 @@
+# END TO END: bb status entero sobre la maquina.
+  ARMADO    journald persistente
+  ARMADO    journal del kernel legible
+  ARMADO    systemd-coredump
+  ARMADO    limite de core > 0
+  ARMADO    sar recolectando (datos de hace <10 min)
+  ARMADO    monitor de memoria (<10 min)
+  ARMADO    termica de la GPU (atom_gpu_telemetry, <2 min)
+  ARMADO    memoria del escritorio protegida del reclamo (7 eslabones)
+  ARMADO    clock lock de GPU (declarado 300,2800 MHz, confirmado por el driver)
+  ARMADO    earlyoom con la punteria puesta (prefiere y evita)
+  CIEGO     earlyoom ante agotamiento de memoria unificada
+            su umbral lee MemAvailable, que marco 56% durante los congelamientos del 2026-09-22/23
+  ARMADO    bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)
+  ARMADO    motor de inferencia sirviendo
+  ARMADO    nvidia-smi
+  ARMADO    kdump (volcado de kernel ante panic, no ante corte de energia)
+
+  armado: 15    falta: 0    ciego: 1
+  OJO: 'ciego' no es 'armado'. Un instrumento ciego no deja el sujeto
+       limpio: deja el informe sin esa fila.
+  muestras acumuladas: 20041
+  datos en: /home/lcasarin/.local/share/blackbox

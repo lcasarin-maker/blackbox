@@ -1,0 +1,8 @@
+# Los tres chequeos, leyendo el DATO, sobre esta maquina:
+  ARMADO    blackbox: muestreo de apps/zombis (dato de hace <2 min)
+  ARMADO    clock lock de GPU (declarado 300,2800 MHz, confirmado por el driver)
+  ARMADO    earlyoom con la punteria puesta (prefiere y evita)
+
+$ python3 -m pytest tests/test_bb_bash.py -k 'muestreo_por_su_dato or clock_lock or punteria' -q
+...                                                                      [100%]
+3 passed, 50 deselected in 0.71s

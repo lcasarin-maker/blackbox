@@ -44,6 +44,18 @@ TELEMETRIA_GPU="${ATOM_TELEMETRY_JSONL:-$DATA/atom_gpu_telemetry.jsonl}"
 # libres cuesta minutos y arriesga la maquina que se vigila.
 VMSTAT="${BB_VMSTAT:-/proc/vmstat}"
 
+# El journal, sustituible SOLO para poder probar los chequeos que leen lo que un
+# proceso DIJO al arrancar. Mismo precedente que `BB_VMSTAT` y `BB_CGROUP_ROOT`:
+# un chequeo cuyo caso negativo no se puede montar no esta verificado.
+JOURNALCTL="${BB_JOURNALCTL:-journalctl}"
+
+# La raiz de /proc, sustituible SOLO para poder probar la atribucion de swap.
+# En esta maquina el swap esta al 100 % libre la mayor parte del tiempo, asi que
+# un campo que siempre sale vacio no demuestra que sepa nombrar a nadie. Forzar
+# swap de verdad sobre 60 GB disponibles cuesta minutos y arriesga la maquina
+# que se vigila. Mismo precedente que `BB_VMSTAT`.
+PROC="${BB_PROC:-/proc}"
+
 mkdir -p "$SAMPLES" "$SNAPS"
 # $DATA guarda command-lines completas de procesos ajenos (bb who/scan/sample)
 # -- no depender del umask heredado para su permiso. chmod en cada arranque,
@@ -622,6 +634,33 @@ cmd_sample() {
       'BEGIN{v=(a-b)/d; printf "%.1f", (v>0?v:0)}')
   fi
 
+  # QUIEN tiene memoria fuera, en swap. `swap.in_pag_s` de arriba dice cuantas
+  # paginas vuelven del disco por segundo y no dice de quien -- el mismo defecto
+  # que tenia Committed_AS antes de `pidio` y `cpu_some` antes de `cpu_top`.
+  #
+  # EL COSTE, medido el 2026-09-25 antes de escribir esto, porque la ficha que
+  # pedia este campo lo declaraba como el motivo para no hacerlo:
+  #   un awk por proceso, 533 procesos ....... 0.72-0.78 s
+  #   UNA pasada de awk sobre el glob ........ 0.00-0.01 s
+  #   la muestra completa de hoy ............. 0.31 s
+  # El bucle habria triplicado la muestra; la pasada unica cuesta el 3 %. El
+  # coste que impedia hacerlo era el de la implementacion ingenua, no el del
+  # dato.
+  #
+  # LIMITE DECLARADO: VmSwap es un NIVEL -- cuanta memoria de ese proceso esta
+  # fuera-- no un ritmo. Una pagina que sale y vuelve dentro del mismo intervalo
+  # es invisible aqui. El ritmo agregado sigue siendo `swap.in_pag_s`.
+  local swaptop=""
+  # El pid se saca del PENULTIMO componente de la ruta, no de una posicion fija:
+  # con `/proc` son tres componentes y con una raiz de prueba son los que sean.
+  swaptop=$(awk '/^VmSwap:/ { if ($2 > 0) { n = split(FILENAME, a, "/"); print a[n-1], $2, nm } }
+                 /^Name:/ { nm = $2 }' "$PROC"/[0-9]*/status 2>/dev/null |
+    sort -k2 -rn | head -5 |
+    while read -r pid kb comm; do
+      u=$(sed -n 's/^0::\///p' "$PROC/$pid/cgroup" 2>/dev/null | sed 's/.*\///')
+      printf '{"pid":%s,"swap_kb":%s,"comm":"%s","unit":"%s"},' "$pid" "$kb" "$comm" "${u:-?}"
+    done | sed 's/,$//')
+
   # El relevo del estado va AQUI, despues del ultimo lector. Estuvo dos
   # ediciones mas arriba y dejaba los deltas de swap clavados en 0: el bloque
   # de swap leia `$prev_cpu` cuando ya lo habia pisado el nuevo. No lo encontro
@@ -647,10 +686,10 @@ cmd_sample() {
   pybg=$(ps -eo pid=,etimes=,comm= 2>/dev/null |
     awk '$3 ~ /^python/ && $2 > 60 {printf "%s%s", (n++?",":""), $1}')
 
-  printf '{"ts":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":[%s],"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s}}\n' \
+  printf '{"ts":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":[%s],"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s,"top":[%s]},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s}}\n' \
     "$ts" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$topvsz" "$cputop" "$pybg" "$gpu" \
     "${commit_pct:-0}" "${residuo:-0}" \
-    "${swap_free:-0}" "${swap_total:-0}" "${swpin_s:-0}" "${swpout_s:-0}" \
+    "${swap_free:-0}" "${swap_total:-0}" "${swpin_s:-0}" "${swpout_s:-0}" "$swaptop" \
     "${psi_m_some:-0}" "${psi_m_full:-0}" "${psi_io_some:-0}" "${psi_cpu_some:-0}" \
     "${gw:-CAIDO}" "${dk:-?}" "${salud:-}" "${disco:-}" "${red:-}" "${cpuj:-}" \
     "${smi_estado:-DESCONOCIDO}" "${smi_ms:-0}" \
@@ -1827,8 +1866,14 @@ cmd_status() {
   # seguiria corriendo, sin error, mintiendo sobre CUALQUIER instrumento.
   # Detectado por shellcheck (SC2319) 2026-09-11, hallazgo real: los 9
   # chequeos de abajo tenian exactamente este patron.
-  systemctl --user is-active blackbox-sample.timer >/dev/null 2>&1; ok=$?
-  chk "blackbox: muestreo de apps/zombis" "$ok" "corre: bb install"
+  # Por sus DATOS, no por la unit. Un timer `active` cuyo `bb sample` falla en
+  # cada disparo se veria exactamente igual que uno sano -- y ese es el fallo
+  # silencioso que este repo existe para cazar, aplicado a su propio muestreo.
+  # El intervalo declarado es de un minuto, asi que dos minutos de margen dan
+  # una corrida perdida antes de avisar.
+  [ -n "$(find "$SAMPLES" -name "$(date +%Y-%m-%d).jsonl" -mmin -2 2>/dev/null)" ]; ok=$?
+  chk "blackbox: muestreo de apps/zombis (dato de hace <2 min)" "$ok" \
+      "el timer puede estar activo y el muestreo caido: corre 'bb sample' a mano y mira el error"
 
   [ -d /var/log/journal ]; ok=$?
   chk "journald persistente" "$ok" "los logs se pierden al reiniciar"
@@ -1908,11 +1953,45 @@ EOF
   chk "memoria del escritorio protegida del reclamo (7 eslabones)" "$ok" \
       "$rotos eslabon(es) en memory.low=0 -- sudo ./enable-privileged.sh (seccion 13)"
 
-  systemctl is-active atom-clock-lock.service >/dev/null 2>&1; ok=$?
-  chk "clock lock de GPU (300-2800 MHz)" "$ok" "limite termico DGX-342/344/345 sin aplicar"
+  # El clock lock, por lo que el DRIVER confirmo y no por el estado de la unit.
+  # Una unit puede quedar `active` habiendo fallado en aplicar el limite, y el
+  # driver NO expone el rango bloqueado: medido el 2026-09-25 sobre el driver
+  # 580.178.04, `nvidia-smi -q -d CLOCK` da "Max Clocks: 3003 MHz" -- el maximo
+  # del hardware-- y ningun campo dice 2800. Lo unico que queda del hecho es lo
+  # que el propio nvidia-smi imprimio al aplicarlo:
+  #
+  #   GPU clocks set to "(gpuClkMin 300, gpuClkMax 2800)" for GPU 0000000F:01:00.0
+  #
+  # Se compara esa confirmacion contra los argumentos que la unit DECLARA, para
+  # que no baste con que alguna vez se aplicara algun rango: tiene que ser el
+  # rango de esta unit. Si manana el drop-in cambia a 300,2600 y el driver sigue
+  # confirmando 2800, esto lo caza.
+  local lgc_decl lgc_vist
+  lgc_decl=$(systemctl show atom-clock-lock.service -p ExecStart 2>/dev/null |
+    grep -o '\-lgc [0-9]*,[0-9]*' | head -1 | tr -d ' ' | sed 's/-lgc//')
+  lgc_vist=$($JOURNALCTL -b 0 -u atom-clock-lock.service --no-pager -o cat 2>/dev/null |
+    grep -o 'gpuClkMin [0-9]*, gpuClkMax [0-9]*' | tail -1 |
+    sed 's/gpuClkMin //; s/, gpuClkMax /,/')
+  [ -n "$lgc_decl" ] && [ "$lgc_decl" = "$lgc_vist" ]; ok=$?
+  chk "clock lock de GPU (declarado ${lgc_decl:-?} MHz, confirmado por el driver)" "$ok" \
+      "declarado '${lgc_decl:-nada}' y el driver confirmo '${lgc_vist:-nada}' -- limite termico DGX-342/344/345 sin aplicar"
 
-  systemctl is-active earlyoom.service >/dev/null 2>&1; ok=$?
-  chk "earlyoom" "$ok" "sin guardia de OOM en espacio de usuario"
+  # earlyoom por su PUNTERIA, no por estar vivo. Un earlyoom de serie tambien
+  # esta `active` y mata lo que le parece: el 2026-09-08 eso fue caro en esta
+  # flota. La seccion 6 de `enable-privileged.sh` le da dos regex -- a quien
+  # preferir y a quien no tocar-- y ese ajuste vive en /etc/default/earlyoom,
+  # que un paquete puede reescribir dejando la unit igual de `active`.
+  #
+  # Lo que se lee es lo que el propio proceso IMPRIMIO al arrancar, que es la
+  # unica prueba de que esos argumentos le llegaron:
+  #   Preferring to kill process names that match regex '(...)'
+  #   Will avoid killing process names that match regex '(...)'
+  # Un earlyoom sin esos argumentos no imprime ninguna de las dos lineas.
+  local eo; eo=$($JOURNALCTL -b 0 -u earlyoom.service --no-pager -o cat 2>/dev/null)
+  printf '%s' "$eo" | grep -q "Preferring to kill" &&
+    printf '%s' "$eo" | grep -q "Will avoid killing"; ok=$?
+  chk "earlyoom con la punteria puesta (prefiere y evita)" "$ok" \
+      "activo no es lo mismo que apuntando: sudo ./enable-privileged.sh (seccion 6)"
 
   # earlyoom solo sabe leer MemAvailable y SwapFree. Los dias 22 y 23,
   # MemAvailable marco 56 % durante las 17 horas de congelamiento mientras

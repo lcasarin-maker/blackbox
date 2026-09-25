@@ -82,6 +82,7 @@ from __future__ import annotations
 
 import os
 import socket
+import subprocess
 import sys
 import time
 
@@ -178,6 +179,56 @@ def probe() -> float:
     return time.monotonic() - t0
 
 
+# LATENCIA DEL ESCRITORIO: se OBSERVA, no se actua sobre ella.
+#
+# El 2026-09-25 la maquina fue inusable para teclear durante horas con
+# `mem_full` en 0.00 casi todo el rato. Este demonio vio una maquina sana y, por
+# su definicion, tenia razon: pregunta si la caja sirve MEMORIA. La pregunta que
+# no sabia hacer es si el escritorio RESPONDE.
+#
+# POR QUE SOLO SE OBSERVA, y esto es lo importante. Este proceso no informa:
+# ACTUA. Su unit lleva `FailureAction=reboot-immediate`. Enchufarle un canal
+# nuevo con un umbral inventado hoy es darle permiso para reiniciar la maquina
+# por un numero que nadie ha validado contra un incidente propio -- que es
+# exactamente el error que el encabezado de arriba documenta haber cometido ya
+# una vez con la sonda de 64 MiB.
+#
+# El corte de memoria (UMBRAL=10, SOSTENIDO=5 min) esta calibrado contra cuatro
+# congelamientos con sus controles sanos. Para la latencia del escritorio hay
+# UNA medida sana -- 4-7 ms en reposo, 8 ms con 40 quemadores sobre 20 nucleos --
+# y CERO episodios malos registrados. Con n=0 del lado positivo no hay
+# calibracion posible, y un vigilante que actua sobre un numero sin calibrar es
+# peor que no tenerlo: reinicia la maquina y ademas afirma haber tenido razon.
+#
+# Asi que esto hace una cosa sola: dejar la medida en el journal cada 30 s para
+# que, cuando vuelva a pasar, exista la linea base que hoy falta. Ver
+# DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA para los tres pasos y en que orden.
+def latencia_x_ms() -> float | None:
+    """Ida y vuelta al servidor X, en ms. `None` si no se pudo preguntar --
+    que NO es lo mismo que rapido, y por eso no devuelve 0.
+
+    El comando y el plazo se leen del entorno DENTRO de la funcion, no al
+    importar. No es un detalle de estilo: ligarlos al importar dejaba los casos
+    negativos sin poder montarse -- al cambiar la variable despues, la funcion
+    seguia llamando al `xset` real y devolvia un numero donde debia devolver
+    `None`. Lo encontro el propio control negativo, no leer el codigo. Es el
+    mismo fallo que `_muestras_recientes` documenta en atom_gpu_telemetry.py.
+    """
+    if not os.environ.get("DISPLAY"):
+        return None
+    xset = os.environ.get("BB_USABLE_XSET", "xset")
+    plazo = float(os.environ.get("BB_USABLE_X_TIMEOUT_S", "5"))
+    ini = time.monotonic()
+    try:
+        r = subprocess.run([xset, "q"], stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL, timeout=plazo)
+    except subprocess.TimeoutExpired:
+        return plazo * 1000.0
+    except OSError:
+        return None
+    return (time.monotonic() - ini) * 1000.0 if r.returncode == 0 else None
+
+
 def main() -> int:
     notify("READY=1")
     log = lambda m: (print(m, file=sys.stderr, flush=True))  # noqa: E731
@@ -194,6 +245,12 @@ def main() -> int:
         time.sleep(PROBE_INTERVAL)
         psi = psi_memory_full_avg10()
         took = probe()
+        # Se mide y se registra. No entra en ninguna decision: ver el
+        # encabezado de `latencia_x_ms`.
+        xms = latencia_x_ms()
+        log(f"[bb-usable] latencia del escritorio: "
+            f"{'sin DISPLAY' if xms is None else f'{xms:.0f} ms'} "
+            f"(observacion, no actua -- DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA)")
 
         if took > PROBE_DEADLINE:
             # Se paso del plazo pero volvio: NO se acaricia. systemd cobra.

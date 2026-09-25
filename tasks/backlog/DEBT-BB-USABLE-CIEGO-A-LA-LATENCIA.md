@@ -7,7 +7,7 @@ severity: P2
 origin: asserted
 satd_family: MISSING_INSTRUMENT
 created: 2026-09-25
-close_check: {"cmd": "python3 -m pytest tests/test_bb_usable.py -k latencia_del_escritorio -q", "expect": "exit_zero"}
+close_check: {"cmd": "grep -q 'umbral de latencia CALIBRADO' tasks/done/DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA.md", "expect": "exit_zero", "porque": "el paso 1 (observar) ya esta hecho y sus tests pasan, asi que un criterio sobre esos tests cerraria la ficha sin que el sujeto -- que bb-usable sepa contestar si el escritorio responde -- haya cambiado. Mismo patron que DGX-438: cierra cuando alguien ESCRIBE la calibracion, que exige un episodio real."}
 ---
 
 ## Que pasa
@@ -38,17 +38,39 @@ congelamientos con sus controles sanos. Para la latencia del escritorio hay
 **una sola medida sana** (4-7 ms) y **cero episodios malos registrados**. Con
 n=0 del lado positivo no hay calibracion posible.
 
-## Como se cierra
+## Como se cierra: por pasos, y el primero NO es actuar
 
-Por pasos, y el primero NO es actuar:
+**PASO 1 -- HECHO el 2026-09-25.** `bb-usable` mide la latencia del servidor X
+en cada sonda (cada 30 s) y la deja en el journal. **No entra en ninguna
+decision**, y eso tiene su propio test: recorre el AST de `main()` y falla si
+`xms` aparece en la condicion de un `if` o un `while`. Lo que se guarda ahi es
+una AUSENCIA, y una ausencia sin test se pierde en la siguiente edicion.
 
-1. Acumular linea base de `x.ms` en operacion normal y bajo carga -- ya hay un
-   punto: con 40 quemadores sobre 20 nucleos sube a 8 ms, peor caso 13 ms.
-2. Capturar al menos un episodio malo real (lo espera
-   `DEBT-SLUGGISH-SIN-CAUSA-PROBADA`).
-3. Solo entonces derivar un corte, y que `bb-usable` AVISE con el antes de que
-   se le permita actuar.
+Cinco controles negativos corridos: un servidor que se cuelga devuelve el
+PLAZO entero y no un numero pequeno (si devolviera algo bajo, una grafica
+leeria "rapido" justo durante el incidente); sin `DISPLAY` devuelve `None` y no
+`0`, porque "no se midio" e "instantaneo" no son lo mismo; un servidor que
+rechaza devuelve `None`; y el comando se lee del entorno EN CADA LLAMADA.
 
-Lo que NO cierra esto: darle un umbral inventado hoy. Un vigilante que actua
-sobre un numero sin calibrar es peor que no tenerlo, porque reinicia la
-maquina y ademas afirma haber tenido razon.
+Ese ultimo salio de un fallo real de esta misma tarde: ligar el comando al
+importar dejaba los casos negativos sin poder montarse -- al cambiar la
+variable despues, la funcion seguia llamando al `xset` real y devolvia un
+numero donde debia devolver `None`. Lo encontro el control negativo, no leer
+el codigo.
+
+**PASO 2 -- pendiente.** Capturar al menos un episodio malo real, con la sonda
+puesta. Lo espera `DEBT-SLUGGISH-SIN-CAUSA-PROBADA`.
+
+**PASO 3 -- pendiente.** Solo entonces derivar un corte, y que `bb-usable`
+AVISE con el antes de que se le permita actuar.
+
+Linea base acumulada hasta hoy, que es lo unico que el paso 1 compra:
+4-7 ms en reposo, 8 ms de mediana y 13 ms el peor caso con 40 quemadores sobre
+20 nucleos. **Cero episodios malos.** Con n=0 del lado positivo no hay
+calibracion posible: un corte derivado solo de medidas sanas no puede fallar
+por el motivo que vigila.
+
+Lo que NO cierra esto: darle un umbral inventado hoy. El `close_check` exige
+que alguien escriba la calibracion en `tasks/done/`, con la frase literal
+`umbral de latencia CALIBRADO`, porque no hay forma honesta de que un gate
+provoque el episodio que falta.
