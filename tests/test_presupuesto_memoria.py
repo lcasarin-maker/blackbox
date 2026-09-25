@@ -215,15 +215,33 @@ def test_memory_current_ilegible_cuenta_como_cero_y_no_revienta(tmp_path):
     assert pm.uso_gib(d) == 0.0
 
 
-def test_un_directorio_de_muestras_que_no_se_puede_recorrer(tmp_path, monkeypatch):
-    """Si ni siquiera se puede listar, se registra y se devuelve None: "no se
-    pudo comprobar" no es "no hay picos"."""
-    class _Roto:
-        def glob(self, _):
-            raise OSError("no se puede listar")
-    monkeypatch.setattr(pm, "DATA_DIR", tmp_path)
-    assert pm.pico_gpu_observado_mib(_Roto()) is None
-    assert pm._ILEGIBLES, "un directorio ilegible tiene que quedar registrado"
+def test_un_directorio_de_muestras_SIN_PERMISO_se_registra(tmp_path):
+    """"No se pudo comprobar" no es "no hay picos".
+
+    Este caso existe porque la primera version envolvia el glob en
+    `try/except OSError` y eso NO servia: medido, `Path.glob` no lanza sobre un
+    directorio sin permisos -- devuelve vacio. La rama era inalcanzable y el
+    efecto real era que un directorio ilegible se leia como "no hay muestras".
+    Ahora el permiso se comprueba antes, con `os.access`, y eso si puede fallar.
+    """
+    d = tmp_path / "samples"
+    d.mkdir()
+    (d / "x.jsonl").write_text('{"gpu":[{"mib":5}]}\n', encoding="utf-8")
+    d.chmod(0o000)
+    try:
+        assert pm.pico_gpu_observado_mib(d) is None
+        assert any("sin permiso" in x for x in pm._ILEGIBLES), pm._ILEGIBLES
+    finally:
+        d.chmod(0o755)
+
+
+def test_un_directorio_de_muestras_que_NO_ES_un_directorio_se_registra(tmp_path):
+    """Si alguien deja un fichero donde deberia estar `samples/`, `Path.glob`
+    tambien devuelve vacio en silencio."""
+    f = tmp_path / "samples"
+    f.write_text("no soy un directorio", encoding="utf-8")
+    assert pm.pico_gpu_observado_mib(f) is None
+    assert any("no es un directorio" in x for x in pm._ILEGIBLES), pm._ILEGIBLES
 
 
 def test_lineas_que_no_son_una_muestra_de_GPU_se_saltan_sin_ruido(tmp_path):

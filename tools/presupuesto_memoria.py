@@ -145,12 +145,20 @@ def pico_gpu_observado_mib(samples: Path | None = None
     d = samples or (DATA_DIR / "samples")
     mejor: tuple[int, str] | None = None
     _ILEGIBLES.clear()
-    try:
-        ficheros = sorted(d.glob("*.jsonl"))
-    except OSError as exc:
-        _ILEGIBLES.append(f"{d}: {exc}")
+    # El permiso se comprueba ANTES y a proposito. La version anterior envolvia
+    # el glob en `try/except OSError`, y eso era decoracion: medido el
+    # 2026-09-25, `Path.glob` NO lanza sobre un directorio sin permisos ni sobre
+    # uno inexistente -- devuelve vacio. Esa rama no podia ejecutarse, y el
+    # efecto real era peor que su ausencia: un directorio ilegible se habria
+    # leido como "no hay muestras", que es una afirmacion sobre la maquina que
+    # nadie hizo.
+    if not d.is_dir():
+        _ILEGIBLES.append(f"{d}: no es un directorio")
         return None
-    for f in ficheros:
+    if not os.access(d, os.R_OK | os.X_OK):
+        _ILEGIBLES.append(f"{d}: sin permiso de lectura")
+        return None
+    for f in sorted(d.glob("*.jsonl")):
         try:
             texto = f.read_text(encoding="utf-8", errors="replace")
         except OSError as exc:
