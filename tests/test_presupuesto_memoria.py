@@ -308,3 +308,115 @@ def test_json_saca_la_cuenta_entera_sin_veredicto(tmp_path, monkeypatch, capsys)
     d = json.loads(capsys.readouterr().out)
     assert d["mem_total_gib"] > 0 and d["gasto_gib"] > d["mem_total_gib"]
     assert [f["nombre"] for f in d["slices"]], d
+
+
+# =====================================================================
+# el presupuesto de GPU y las excursiones del abanico
+# =====================================================================
+
+
+def test_el_presupuesto_de_GPU_se_RESTA_no_se_elige(monkeypatch, tmp_path):
+    """El umbral de la alarma del abanico no es un numero puesto a ojo: es lo
+    que le queda a la memoria unificada si todos los techos declarados se
+    honran. MemTotal - techos - lo que usan los slices sin techo.
+
+    Esto importa porque el numero decide si la alarma sirve: medido el
+    2026-09-25 sobre 18 944 muestras, con docker.slice en 32G el corte cae en
+    37.1 GiB y se supera el 75.4 % del tiempo (ruido); con 16G cae en 53.1 y se
+    supera el 0.9 % (senal). Mediana observada 49.0, p90 50.1.
+    """
+    G = 1024 ** 3
+    monkeypatch.setattr(pm, "CGROUP", _cgroups(tmp_path, app_max=str(48 * G),
+                                               docker_max=str(16 * G),
+                                               system_max="max"))
+    monkeypatch.setattr(pm, "MEMINFO", _meminfo(tmp_path))   # 121.1 GiB
+    monkeypatch.setattr(pm, "DATA_DIR", tmp_path)
+    _muestras(tmp_path, [1024])
+    p = pm.presupuesto()
+    # 121.1 - 48 - 16 - 2 (lo que usa el slice sin techo en el fixture)
+    assert 54.0 < p["presupuesto_gpu_gib"] < 56.0, p["presupuesto_gpu_gib"]
+
+
+def test_un_docker_slice_mas_ancho_ESTRECHA_el_presupuesto_de_GPU(
+        monkeypatch, tmp_path):
+    """La otra mitad, y es la que justifica haber bajado docker.slice de 32 a
+    16: cada GiB que un techo reclama es un GiB que la GPU no puede tomar sin
+    romper la suma. Con el techo ancho el umbral cae DENTRO de la operacion
+    normal y la alarma deja de discriminar."""
+    G = 1024 ** 3
+    monkeypatch.setattr(pm, "MEMINFO", _meminfo(tmp_path))
+    monkeypatch.setattr(pm, "DATA_DIR", tmp_path)
+    _muestras(tmp_path, [1024])
+    monkeypatch.setattr(pm, "CGROUP", _cgroups(tmp_path, app_max=str(48 * G),
+                                               docker_max=str(32 * G),
+                                               system_max="max"))
+    estrecho = pm.presupuesto()["presupuesto_gpu_gib"]
+    monkeypatch.setattr(pm, "CGROUP", _cgroups(tmp_path, app_max=str(48 * G),
+                                               docker_max=str(16 * G),
+                                               system_max="max"))
+    ancho = pm.presupuesto()["presupuesto_gpu_gib"]
+    assert ancho - estrecho == pytest.approx(16.0, abs=0.1), (estrecho, ancho)
+
+
+def test_las_excursiones_cuentan_lo_que_PASA_del_presupuesto(tmp_path):
+    """Lo que agota la maquina es la suma simultanea por encima del umbral, y
+    lo que hace util la alarma es que se pueda contar cuantas veces paso."""
+    d = tmp_path / "samples"
+    d.mkdir()
+    filas = [json.dumps({"ts": f"2026-09-2{i}T00:00:00-0600",
+                         "gpu": [{"pid": 1, "mib": mib}]})
+             for i, mib in enumerate([10 * 1024, 60 * 1024, 20 * 1024, 70 * 1024])]
+    (d / "x.jsonl").write_text("\n".join(filas) + "\n", encoding="utf-8")
+    pm.pico_gpu_observado_mib(d)          # llena la serie
+    ex = pm.excursiones_gpu(50.0)
+    assert ex["muestras"] == 4 and ex["por_encima"] == 2, ex
+    assert ex["pct"] == pytest.approx(50.0), ex
+    assert [m for _, m in ex["ultimas"]] == [60 * 1024, 70 * 1024], ex["ultimas"]
+
+
+def test_control_negativo_bajo_el_presupuesto_no_hay_excursiones(tmp_path):
+    """Si contara igual, la alarma estaria encendida siempre y no diria nada."""
+    d = tmp_path / "samples"
+    d.mkdir()
+    (d / "x.jsonl").write_text(
+        json.dumps({"ts": "a", "gpu": [{"mib": 10 * 1024}]}) + "\n", encoding="utf-8")
+    pm.pico_gpu_observado_mib(d)
+    ex = pm.excursiones_gpu(50.0)
+    assert ex["por_encima"] == 0 and ex["muestras"] == 1, ex
+
+
+def test_control_negativo_serie_vacia_no_es_cero_excursiones(tmp_path):
+    """`muestras: 0` dice "no se midio". Reportar "0 excursiones" sobre una
+    serie vacia seria afirmar que el abanico se porta, que es justo lo que no
+    se sabe."""
+    pm.pico_gpu_observado_mib(tmp_path / "no-existe")
+    ex = pm.excursiones_gpu(50.0)
+    assert ex["muestras"] == 0 and ex["por_encima"] == 0
+
+
+def test_el_informe_NOMBRA_las_ultimas_excursiones_con_su_fecha(
+        monkeypatch, tmp_path, capsys):
+    """Un porcentaje sin fechas no sirve para diagnosticar: "el 0.9 % del
+    tiempo" no dice si fue anoche o hace tres semanas. El informe imprime las
+    tres ultimas con su marca de tiempo y su tamano.
+    """
+    G = 1024 ** 3
+    monkeypatch.setattr(pm, "CGROUP", _cgroups(tmp_path, app_max=str(48 * G),
+                                               docker_max=str(16 * G),
+                                               system_max="max"))
+    monkeypatch.setattr(pm, "MEMINFO", _meminfo(tmp_path))
+    monkeypatch.setattr(pm, "DATA_DIR", tmp_path)
+    # una por debajo del presupuesto (~55 GiB) y dos por encima
+    d = tmp_path / "samples"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "x.jsonl").write_text("\n".join(
+        json.dumps({"ts": ts, "gpu": [{"pid": 1, "mib": mib}]})
+        for ts, mib in (("2026-09-20T01:00:00-0600", 10 * 1024),
+                        ("2026-09-21T00:33:00-0600", 85 * 1024),
+                        ("2026-09-25T11:32:00-0600", 70 * 1024))) + "\n",
+        encoding="utf-8")
+    pm.main([])
+    salida = capsys.readouterr().out
+    assert "excursiones del abanico: 2 de 3" in salida, salida
+    assert "2026-09-21T00:33:00-0600" in salida and "85.0 GiB" in salida, salida
+    assert "2026-09-20" not in salida.split("excursiones")[1], "la que cabe no es una excursion"

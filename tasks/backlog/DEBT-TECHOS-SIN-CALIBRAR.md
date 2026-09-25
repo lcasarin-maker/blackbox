@@ -99,25 +99,67 @@ viene de fuera-- llevandose 48 GiB de memoria unificada que **ningun cgroup ve**
 
 Los techos de 48G y 32G se pusieron como si esa memoria no existiera.
 
-## Paso 3: PENDIENTE, y es una decision con coste
+## La decision se tomo el 2026-09-25: VIGILAR, no cuadrar a la fuerza
 
-Reescribir los techos para que compongan exige elegir, y ninguna opcion es
-gratis:
+Boleta con las cuatro salidas y su coste. Elegida: **que bb vigile el agregado
+de GPU y se apriete lo que sale gratis**. Las otras tres, con lo que las
+descarto:
 
-- **Bajarlos al peor caso**: `app.slice` + `docker.slice` tendrian que caber en
-  ~33 GiB. `app.slice` usa 30.8 AHORA, asi que esto mata sesiones de agente en
-  operacion normal, no solo en el pico. Es lo unico que garantiza que todo quepa.
-- **Poner techo de memoria unificada al abanico**: control de admision por
-  numero de procesos de GPU concurrentes. Es la solucion de fondo, y el codigo
-  que lanza ese abanico NO esta en blackbox.
-- **Aceptarlo por escrito** y cerrar como `void_wontfix`, dejando la aritmetica
-  y el motivo por el que la maquina sobrevive: los picos no coinciden.
+- **Bajar los techos al peor caso** -- DESCARTADA POR MEDICION, no por juicio.
+  Con la reserva de 86 GiB quedan 31.1 para `app.slice` y `docker.slice`
+  juntos, y `app.slice` SOLO pico 39.8 GiB hoy. Garantizaria el invariante
+  matando trabajo en operacion normal, no solo en el pico.
+- **Acotar el abanico donde se lanza** -- es la solucion de fondo y hace cuadrar
+  la aritmetica (con el abanico en ~40 quedan 77.1 para app+docker y 48+29
+  cabe), pero el codigo que lanza esos procesos no esta en blackbox.
+- **void_wontfix** -- se descarto por ahora: el desborde es real y medible.
 
-Se ofrecio como boleta el 2026-09-25 y la opcion elegida -- presupuestar contra
-el tope configurado del vLLM y vigilar el abanico -- **no sobrevivio a la
-medicion**: con 36.3 GiB de reserva el gate fallaria todos los dias, que no es
-vigilancia sino ruido. Se dijo, y la decision sigue abierta.
+## Lo que se hizo, y el numero que lo valida
 
+**`docker.slice` baja de 32G a 16G.** Su pico agregado es 11.2 GiB, asi que el
+recorte no tiene coste observado. Pero no es margen: es lo que hace usable la
+alarma. El presupuesto que le queda a la GPU es `MemTotal - techos`:
+
+```
+con docker.slice=32G  ->  37.1 GiB  ->  se supera el 75.4 % del tiempo   (ruido)
+con docker.slice=16G  ->  53.1 GiB  ->  se supera el  0.9 % del tiempo   (senal)
+
+serie observada: 18 944 muestras, mediana 49.0 GiB, p90 50.1, maximo 85.4
+```
+
+El corte de 53.1 **no se eligio: se resta**. Que caiga justo por encima del p90
+del estado estacionario es lo que valida el reparto -- el presupuesto derivado
+y la conducta observada coinciden, y eso no estaba puesto a mano.
+
+**`tools/presupuesto_memoria.py` calcula ese umbral y cuenta las excursiones**,
+con las tres ultimas fechadas: un porcentaje sin fechas no sirve para
+diagnosticar. `bb scan` lo muestra como vista de operacion; la aritmetica vive
+en un solo sitio.
+
+Y el fichero de `docker.slice` traia una holgura declarada que era FALSA:
+"dejando 41 GiB para el kernel, el resto de system.slice y la memoria unificada
+de GPU". La memoria unificada sola tiene mediana 49.0 y maximo 85.4. Nunca cupo.
+
+## Por que sigue ABIERTA
+
+Porque vigilar no es cuadrar. El `close_check` sigue siendo
+`presupuesto_memoria --check`, que exige que la suma quepa, y hoy da
+**167.7 GiB sobre 121.1**. Lo elegido hace el desborde VISIBLE; no lo impide.
+
+Lo que falta para cerrarla de verdad es acotar el abanico, y eso vive fuera de
+este repo. Mientras tanto:
+
+- bb no puede impedirlo -- no intercepta la creacion de procesos, y un cgroup
+  no ve la memoria unificada, asi que no hay techo que aplicar desde aqui;
+- el recorte de `docker.slice` necesita `sudo ./enable-privileged.sh` para
+  llegar a la maquina. Hasta entonces `bb drift` lo marca DIVERGENTE y el
+  umbral real sigue siendo 39.6, no 53.
+
+## Limite declarado
+
+El presupuesto resta el USO de los slices sin techo (`system.slice`), no un
+compromiso, porque no lo tienen. El umbral se mueve con ellos, y eso se imprime
+en cada corrida en vez de disimularse.
 ## Limite declarado
 
 Hasta que esto cierre, los 48G de `app.slice` no son un tope calibrado: son un
