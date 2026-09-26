@@ -1,6 +1,6 @@
 {
-  "claims_fingerprint": "166d70078c9d03a8e17285f52ef07db5a36dedf5f9af008f260a4314325a16d6",
-  "panel": "Claude Opus 5 (sesion blackbox 2026-09-25, release 1.4.0)",
+  "claims_fingerprint": "37d4802aff0ce34c3085b6d219150b6f62fe15bf6cf60b9bbbe0c4af2ba6d18d",
+  "panel": "Claude Opus 5 (sesion blackbox 2026-09-25, release 1.7.0)",
   "profile": "general",
   "results": [
     {
@@ -62,9 +62,14 @@
       "claim_id": "SPEC-L245",
       "evidence": "tools/piso_cobertura.sh corrido hoy: bin/bb al 27.5 %, piso 27.0. Sube desde 17.7 % del 2026-09-24. El piso se pone por DEBAJO de lo medido y no en el maximo porque la cifra varia entre corridas (26.7, 26.8, 26.9, 27.5) al leer parte de la suite el estado real de la maquina, y un trinquete en el maximo de una medida ruidosa se vuelve intermitente. Control negativo corrido: piso 40.0 -> FAIL.",
       "verdict": "verified"
+    },
+    {
+      "claim_id": "SPEC-L246",
+      "evidence": "La fila se REESCRIBE en este release y su texto nuevo esta medido. Decia 27.5 % con el piso en 27.0, y daba como razon del piso que 'la cifra VARIA entre corridas'. Las dos cosas quedaron superadas hoy, y por una causa distinta de la que la fila suponia: tools/cobertura_bash.sh ponia PS4='+${BASH_SOURCE}:${LINENO}:' y buscaba las lineas con un patron anclado en UN solo '+'. Bash repite ese caracter segun la profundidad de anidamiento, asi que todo lo ejecutado dentro de un $(...), una tuberia o un subshell se contaba SIN CUBRIR -- en bin/bb es casi todo, porque cada bloque de la muestra se arma con x=$(funcion). Medido corriendo SOLO los tres tests de slices_mem, que la ejecutan entera: 11 de sus 14 lineas candidatas salian sin cubrir. Arreglado el ancla con \\++ y \\K: 947 lineas, 256 -> 313 cubiertas, 27.0 % -> 33.1 %, sin un solo test nuevo entre las dos cifras. El piso subio a 32.8 = el minimo de tres corridas consecutivas (33.1, 33.1, 33.1) menos el vaiven medido de 0.2-0.3 entre reposo y carga; si se hubiera quedado en 27.0 quedarian 6 puntos de holgura donde la cobertura podria pudrirse sin que nadie lo note. Controles negativos corridos sobre un fixture versionado (tests/fixtures/cobertura_sujeto.sh): una funcion llamada desde $(...) cuenta como cubierta; una que NADIE llama sale sin cubrir (sin este, el arreglo perezoso de contar todo daria 100 % para siempre); la llamada directa se sigue viendo. Y el control del arreglo: restaurado el ancla vieja se cae UNO de los tres tests, justo el del bug. Lectura de hoy, 2026-09-25: bin/bb al 33.3 %, piso 32.8. El numero sigue siendo bajo y eso sigue siendo el hallazgo.",
+      "verdict": "verified"
     }
   ],
-  "timestamp": "2026-09-25T15:10:33Z",
-  "tree_fingerprint": "0ad71cc709289c7e169e658d8af6fcc98a4f8df93dd10116c00aee9f1fcffbb8",
+  "timestamp": "2026-09-26T04:54:22Z",
+  "tree_fingerprint": "7d19caa69ade51e06f18ce276f7ab806d95525a61c374733206adc69ff08b097",
   "violations": []
 }

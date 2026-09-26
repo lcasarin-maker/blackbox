@@ -1,0 +1,102 @@
+# Revision de sunset para 1.7. Corrida, no argumentada.
+# Disparada por el bump a 1.7.0: `version_bump --apply` se NEGO a escribir la
+# version mientras las 20 exenciones siguieran tagueadas 1.6. El mecanismo hizo
+# lo que tenia que hacer -- y trajo de vuelta, exactamente como estaba escrito,
+# la unica que en 1.6 se retaguo como NO VERIFICADA.
+
+=====================================================================
+LA QUE SE DEBIA: test_residuo_es_un_numero_y_no_se_mueve_solo
+=====================================================================
+En 1.6 se retaguo diciendo "no encontre un control que separe 'la espera
+importa' de 'la espera es decoracion'". El control que faltaba era medir si el
+residuo se mueve, con repeticiones y no con un punto por lado:
+
+  espera   |delta| de residuo_mb entre dos muestras, n=8, maquina en reposo
+    0 s    min  62   mediana  306   max   635 MiB
+    1 s    min  33   mediana  801   max  2305 MiB
+
+VEREDICTO 1: la espera SI importa. Mediana x2.6, maximo x3.6. No era decoracion.
+
+VEREDICTO 2, que no se esperaba: **el test era FLAKY**. Su asercion era
+`abs(b-a) < 2048` y una de las ocho corridas dio 2305. Fallaba por la varianza
+normal de la maquina en reposo, y fallaba MAS cuanto mas esperaba.
+
+Cuarta instancia el mismo dia de la misma clase de fallo -- un umbral que no
+cubre la varianza real del sujeto. Las otras tres: las dos aserciones de
+pertenencia a listas `head -5`, y el KeyError por leer una muestra de rafaga
+como completa.
+
+ACCION: la exencion se RETIRA, no se retaguea. Se quito el sleep y con el la
+mitad falsa de la asercion. Queda lo que se puede afirmar -- que `residuo_mb` es
+un entero y que cabe en la maquina-- con su control:
+
+  MemTotal = 123967 MiB
+  residuo   -3400  -> la asercion PASA   (valor real observado)
+  residuo  200000  -> la asercion ROMPE
+
+Subir el tope a 4096 habria quitado el flake sin medir nada mejor: el ruido crece
+con el intervalo y con la carga, asi que el siguiente tope tambien se quedaria
+corto. Y un umbral elegido para que el test pase es lo contrario de un umbral
+calibrado.
+
+Lo que se fue no se perdio: DEBT-RESIDUO-MAS-RUIDOSO-QUE-SU-PROPIA-SENAL, con la
+medida y con la otra mitad del hallazgo -- `bin/bb:282` afirma "el residuo no se
+mueve (delta +0.0 GB)" sobre un numero que se mueve 2.3 GiB en un segundo sin que
+nadie reserve nada.
+
+=====================================================================
+12 REGLAS DE .gitignore -- por retirada, otra vez
+=====================================================================
+  .simplecode/*                            CON=True   SIN=False
+  !.simplecode/local_hooks.yaml            CON=False  SIN=True
+  !.simplecode/backlog_baseline.json       CON=False  SIN=True
+  !.simplecode/build_tools.txt             CON=False  SIN=True
+  !.simplecode/hook_receipt_baseline.json  CON=False  SIN=True
+  !.simplecode/organ_inapplicable.json     CON=False  SIN=True
+  !.simplecode/corpus_exempt.yaml          CON=False  SIN=True
+  !.simplecode/audit_ledger.json           CON=False  SIN=True
+  __pycache__/                             CON=True   SIN=False
+  *.pyc                                    CON=True   SIN=False
+  .pytest_cache/                           CON=True   SIN=False
+  .coverage                                CON=True   SIN=False
+
+12 de 12 aportan. El sujeto de `__pycache__/` es `paquete/__pycache__/algo.txt`
+y no un `.pyc`, porque en 1.6 el primer sujeto lo cazaba tambien `*.pyc` y el
+control salia "muerta". Ese error queda fijado en el script de la revision.
+
+Control del instrumento: `bin/bb` y `tools/calibra_techo_slice.py` salen
+no-ignorados. Si todo saliera ignorado, la tabla no diria nada.
+
+=====================================================================
+6 SLEEPS QUE QUEDAN EN tests/test_bb_bash.py -- retirados uno a uno
+=====================================================================
+  L312  test_swap_mide_el_RITMO_no_solo_el_nivel                        FALLA
+  L679  test_cpu_top_NOMBRA_a_quien_quema_cpu                           FALLA
+  L223  test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado   pasa
+  L329  test_control_negativo_sin_trafico_de_swap_el_ritmo_es_cero      pasa
+  L342  test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo     pasa
+  L715  test_control_negativo_un_proceso_dormido_no_sale_como_que_quema pasa
+
+2 verificados por fallo duro. 4 son controles negativos, sostenidos por que su
+positivo emparejado (L312, L679) falla sin su propio sleep: un cero observado en
+un experimento donde el positivo tampoco puede pasar de cero no prueba nada.
+
+Comprobacion aparte que importaba: `test_cpu_top_NOMBRA_a_quien_quema_cpu` se
+MODIFICO en este mismo ciclo, para que no falle cuando la carga lo saca de la
+lista `head -5`. Podria haber quedado sin poder fallar por la retirada del
+sleep. Sigue fallando. El arreglo no debilito el control.
+
+=====================================================================
+1 SLEEP DEL SAMPLER (tools/atom_gpu_telemetry.py) -- corrido
+=====================================================================
+  $ time timeout 60 python3 -m tools.atom_gpu_telemetry --once --interval-seconds 3600
+  real 1.15s   rc=0
+
+Con el intervalo en una hora, `--once` vuelve en 1.15 s. El sleep no esta en el
+camino de una sola pasada.
+
+=====================================================================
+VEREDICTO
+=====================================================================
+19 exenciones para 1.7, no 20: una se RETIRO. Las 19 verificadas, ninguna
+declarada "pasa" sin control detras.

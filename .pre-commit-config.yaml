@@ -77,6 +77,17 @@ repos:
         stages: [pre-commit, pre-merge-commit]
         pass_filenames: false
 
+      - id: sunset-audit
+        name: "no exemption enters without a sunset tag (staged diff)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name sunset-audit --hook pre-commit --
+          python .simplecode/run.py simplecode.verification.sunset_audit --root . --staged --gate
+        language: system
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: false
+        always_run: true
+
       - id: close-check-discrimina
         name: "close_check does not close two fichas at once (done only)"
         entry: >-

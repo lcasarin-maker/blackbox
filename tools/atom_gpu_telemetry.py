@@ -1405,7 +1405,7 @@ def main() -> int:
                     print(json.dumps(evento, ensure_ascii=False))
             if args.once:
                 return 0
-            time.sleep(args.interval_seconds)  # blocking-sleep: intervalo del sampler de vida larga, no I/O a esperar -- DGX-334  # sunset-reviewed: 1.6 -- SE QUEDA, VERIFICADO: es el intervalo de un sampler de vida larga y NO esta en el camino de una sola pasada. Corrido: `--once --interval-seconds 3600` vuelve en 0.436 s; si el sleep estuviera ahi, habria muerto en el timeout de 60 s.
+            time.sleep(args.interval_seconds)  # blocking-sleep: intervalo del sampler de vida larga, no I/O a esperar -- DGX-334  # sunset-reviewed: 1.7 -- SE QUEDA, VERIFICADO: es el intervalo de un sampler de vida larga y NO esta en el camino de una sola pasada. Corrido: `--once --interval-seconds 3600` vuelve en 1.15 s; si el sleep estuviera ahi, habria muerto en el timeout de 60 s.
     except KeyboardInterrupt:
         return 0
 
