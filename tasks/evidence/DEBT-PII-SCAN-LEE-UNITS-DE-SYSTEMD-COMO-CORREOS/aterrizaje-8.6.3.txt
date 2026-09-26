@@ -1,0 +1,99 @@
+# El arreglo aguas arriba, verificado el 2026-09-26 sobre el runtime 8.6.3.
+# Y el defecto del instrumento propio que este cierre tambien paga.
+
+=====================================================================
+1 · QUE CAMBIO, Y QUE NO
+=====================================================================
+El patron NO cambio. Byte a byte el mismo que en 8.5.1:
+
+  \b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b
+
+y sigue cazando las tres units:
+
+  user@1000.service            -> CAZADO
+  org.gnome.Shell@x11.service  -> CAZADO
+  getty@tty1.service           -> CAZADO
+
+El guardia viejo tampoco cambio: `es_identificador_compuesto(linea, inicio)`
+sigue mirando solo prefijos tipo `X-Y-`.
+
+Lo que cambio es el VEREDICTO, via una funcion NUEVA:
+
+  def es_unidad_systemd(valor: str) -> bool:
+      """True si `valor` (un match ENTERO de CORREO) es el nombre de una unit
+      de systemd con instancia."""
+      return bool(_UNIDAD_SYSTEMD.match(valor))
+
+  user@1000.service               -> True
+  org.gnome.Shell@x11.service     -> True
+  getty@tty1.service              -> True
+  alguien@ejemplo.com             -> False
+  nombre.apellido@empresa.com.mx  -> False
+
+Las DOS mitades que la ficha exigia: las units dejan de casar, y el detector NO
+se apago.
+
+=====================================================================
+2 · DE PUNTA A PUNTA, porque la funcion podria estar bien y no llamarse
+=====================================================================
+Gate real sobre un arbol propio con un solo fichero en `tasks/`:
+
+  contenido: la unit org.gnome.Shell@x11.service y la ruta
+             /sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice
+  -> revisados=1 hallazgos=0 could_not_run=0    rc=0
+
+  contenido: una direccion de correo construida por trozos
+  -> hallazgos >= 1
+
+=====================================================================
+3 · EL ALLOWLIST QUEDO MUERTO, medido POR RETIRADA
+=====================================================================
+  CON tasks/pii_allow.txt  -> revisados=163  hallazgos=0
+  SIN tasks/pii_allow.txt  -> revisados=162  hallazgos=0
+
+Contra la misma medida del 2026-09-25, antes del arreglo:
+
+  CON                      -> revisados=156  hallazgos=0
+  SIN                      -> revisados=155  hallazgos=8
+
+Sus tres firmas ya no cargan nada, asi que el fichero se BORRA. Un allowlist que
+no exime nada es una afirmacion firmada sobre un riesgo que ya no existe, y el
+siguiente que lo lea creera que hace falta.
+
+Riesgo aceptado al borrarlo: si un sync futuro revierte el arreglo, el push se
+rompe hasta que alguien lo reponga. Lo cubre el test -- ahora que asierta el
+veredicto, se pone rojo si el gate deja de discriminar.
+
+=====================================================================
+4 · EL DEFECTO DEL INSTRUMENTO PROPIO, que era mio
+=====================================================================
+La suite anterior llevaba tres casos con `xfail(strict=True)` y esta promesa
+escrita en su docstring:
+
+  "el dia que el kit se sincronice con el patron arreglado pasan a XPASS y la
+   suite se pone ROJA, que es la senal para venir a cerrar esto"
+
+LA SENAL NO DISPARO. Medido el 2026-09-26, con el arreglo ya en el runtime:
+
+  $ python3 -m pytest tests/test_pii_scan_systemd.py -q
+  3 passed, 3 xfailed
+
+Verde, en silencio, el mismo dia en que el bloqueador dejo de existir.
+
+Causa: asertaba sobre `CORREO.search(unit)` -- el PATRON-- y el patron no
+cambio. Mire el patron y el guardia viejo, los vi identicos, y dije que el aviso
+de la otra sesion era falso. Era cierto; lo que no hice fue buscar una funcion
+nueva.
+
+ARREGLADO: la suite asierta ahora el veredicto (`es_unidad_systemd`) y el gate
+de punta a punta. 8 casos, sin xfail.
+
+Control de que la senal nueva SI puede disparar, corrido y no argumentado --
+se apaga `es_unidad_systemd` (que devuelva False, o sea el comportamiento de
+8.5.1) y se corre el test que tiene que cazarlo:
+
+  con la regresion simulada  -> AssertionError "vuelve a leer"   (rojo)
+  sin la regresion           -> pasa                             (verde)
+
+Eso es lo que la version anterior no tenia: un control de que su propia alarma
+suena.
