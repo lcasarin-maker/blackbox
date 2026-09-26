@@ -38,6 +38,76 @@ congelamientos con sus controles sanos. Para la latencia del escritorio hay
 **una sola medida sana** (4-7 ms) y **cero episodios malos registrados**. Con
 n=0 del lado positivo no hay calibracion posible.
 
+## 2026-09-26: la premisa de esta ficha era FALSA, y n = 36
+
+Lo encontro un enjambre de auditoria. Se verifico aqui otra vez, comando por
+comando, porque un veredicto devuelto no es evidencia. Todo en
+`tasks/evidence/DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA/n-no-es-cero-2026-09-26.txt`.
+
+### Primero: la sonda que el PASO 1 dice haber puesto NO esta corriendo
+
+```
+systemctl status bb-usable  -> active (running) since 2026-09-25 05:10:18
+stat bin/bb-usable          -> modificado    2026-09-25 07:43:06
+el commit de la sonda       ->               2026-09-25 07:54:11
+journalctl -u bb-usable | grep -c "latencia del escritorio"  ->  0
+```
+
+El demonio vivo arranco **2 h 44 min ANTES** de que el codigo existiera, y
+`Restart=no` mas ningun reinicio desde entonces. Python no recarga en caliente.
+Cero lineas de esa senal en 34 horas de servicio activo.
+
+El codigo esta en el repo y su test pasa. Lo que no esta es CORRIENDO. Y
+`bb status` dice ARMADO porque comprueba que la unit este activa -- cierto, y no
+lo mismo. **Una fila ARMADO sobre un demonio que corre codigo viejo es la forma
+mas silenciosa de este defecto.**
+
+### Segundo: la sonda HERMANA si midio, y hay 36 episodios
+
+`bin/bb` guarda `x.{estado,ms}` en cada muestra y eso si lleva grabando:
+
+```
+muestras con campo x:                          2016
+por encima del techo sano (13 ms) o no-OK:       69   (3.42 %)
+de esas, con los TOTALES SANOS                   44
+```
+
+### El control que separa "escritorio lento" de "bb sin CPU"
+
+`x.ms` incluye lanzar `xset`, asi que podria estar midiendo que el muestreador se
+quedo sin CPU. `smi.ms` mide igual contra OTRO sujeto, y su linea base es
+**mediana 21 ms, p95 25**. Si suben los dos, el confundido es bb.
+
+```
+ts                   x.ms  smi.ms  load1  cpu_some  lectura
+2026-09-25T13:38      773      41  18.82      4.71  ESCRITORIO lento
+2026-09-26T05:53      577      46   2.63      0.00  ESCRITORIO lento
+2026-09-25T12:56      654      42   5.05      0.08  ESCRITORIO lento
+2026-09-26T06:11      334    2728  14.00      0.01  bb sin CPU
+2026-09-25T08:13      289     963  10.97     24.91  bb sin CPU
+
+de las 44:  36 escritorio lento de verdad  ·  8 bb descheduleado
+```
+
+El control sabe decir NO -- caza 8 como confundidos, uno con `smi.ms` en 2728 ms.
+
+**Peor caso real: 773 ms, 59 veces el techo sano**, con nvidia-smi contestando en
+41 ms y los totales limpios. Y el mas limpio: `2026-09-26 05:53`, 577 ms con
+`load1=2.63` y `cpu_some=0.00` -- la maquina en reposo por todos los totales, y
+medio segundo para que el escritorio conteste.
+
+### Lo que esto le hace a la ficha
+
+La premisa decia: "UNA medida sana (4-7 ms) y CERO episodios malos. Con n=0 del
+lado positivo no hay calibracion posible."
+
+**n = 36.** Con techo sano medido, peor caso medido y un control que separa la
+senal del artefacto. El PASO 3 ya tiene sujeto.
+
+Lo que NO cambia: el corte sigue sin derivarse, y antes hay que arreglar que el
+demonio que tendria que usarlo no corre el codigo que mide. Ese orden importa --
+derivar un corte para un demonio que no lo va a leer es trabajo que se pierde.
+
 ## Como se cierra: por pasos, y el primero NO es actuar
 
 **PASO 1 -- HECHO el 2026-09-25.** `bb-usable` mide la latencia del servidor X

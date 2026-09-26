@@ -1,0 +1,95 @@
+# La premisa de esta ficha -- "cero episodios malos, con n=0 no hay calibracion
+# posible" -- es FALSA. Hay 36 episodios medidos. Y de paso: la sonda que la
+# ficha dice haber puesto NO esta corriendo en la maquina.
+#
+# Lo encontro un enjambre de auditoria (7 agentes, uno por ficha). Su hallazgo
+# se verifico aqui de nuevo, comando por comando, porque un veredicto devuelto
+# no es evidencia.
+
+=====================================================================
+1 · LA SONDA DE bb-usable NO ESTA OPERANDO
+=====================================================================
+El PASO 1 de la ficha se declara HECHO: "bb-usable mide la latencia del servidor
+X en cada sonda (cada 30 s) y la deja en el journal".
+
+  $ systemctl status bb-usable --no-pager | grep -E 'Active|Main PID'
+       Active: active (running) since Fri 2026-09-25 05:10:18 CST; 1 day 10h ago
+     Main PID: 5671 (python3)
+
+  $ stat -c '%y  %n' bin/bb-usable
+  2026-09-25 07:43:06.158031336 -0600  bin/bb-usable
+
+  $ git log -1 --format='%H %ai' -S'latencia del escritorio' -- bin/bb-usable
+  37ccd7db05273446fe67105a9a56bb4b3ee157d0 2026-09-25 07:54:11 -0600
+
+  $ journalctl -u bb-usable --no-pager | grep -c "latencia del escritorio"
+  0
+
+El proceso vivo arranco a las 05:10:18. El fichero se modifico a las 07:43:06 y
+el commit que anadio la sonda es de las 07:54:11 -- **2 h 44 min DESPUES**.
+Python no recarga codigo en caliente, asi que el demonio que corre no tiene la
+instrumentacion. Cero lineas de esa senal en 34 horas de servicio activo.
+
+El codigo esta en el repo y su test pasa. Lo que no esta es CORRIENDO. `bb status`
+dice ARMADO porque comprueba que la unit este activa, que es cierto y no es lo
+mismo.
+
+=====================================================================
+2 · PERO LA SONDA HERMANA SI MIDIO, Y n NO ES CERO
+=====================================================================
+`bin/bb` guarda `x.{estado,ms}` en cada muestra, y eso SI lleva grabando.
+
+  muestras con campo x:                     2016
+  por encima del techo sano (13 ms) o no-OK:  69   (3.42 %)
+  de esas, con los TOTALES SANOS
+  (load1 < 20 y psi.cpu_some < 30):           44
+
+=====================================================================
+3 · EL CONTROL QUE SEPARA "ESCRITORIO LENTO" DE "bb SIN CPU"
+=====================================================================
+`x.ms` incluye el coste de lanzar `xset`, asi que una latencia alta podria
+significar que quien se quedo sin CPU fue el propio muestreador. `smi.ms` mide
+igual -- ida y vuelta por subproceso -- contra OTRO sujeto. Si los dos suben, el
+confundido es bb; si solo sube x, el escritorio de verdad tardo.
+
+  linea base: smi.ms cuando x.ms es normal -> mediana 21 ms, p95 25 ms
+
+  ts                           x.ms  smi.ms   load1  cpu_some  lectura
+  2026-09-25T13:38:00-0600      773      41   18.82      4.71  ESCRITORIO lento
+  2026-09-25T12:56:00-0600      654      42    5.05      0.08  ESCRITORIO lento
+  2026-09-26T05:53:00-0600      577      46    2.63      0.00  ESCRITORIO lento
+  2026-09-25T22:41:00-0600      542      42   10.66      0.28  ESCRITORIO lento
+  2026-09-25T23:00:00-0600      344      43    5.13      0.09  ESCRITORIO lento
+  2026-09-26T14:55:00-0600      271      42    9.65      0.35  ESCRITORIO lento
+  2026-09-26T12:11:00-0600      469     256   14.29      0.36  bb sin CPU
+  2026-09-26T06:11:00-0600      334    2728   14.00      0.01  bb sin CPU
+  2026-09-25T08:13:00-0600      289     963   10.97     24.91  bb sin CPU
+
+  de las 44 con totales sanos:
+    ESCRITORIO lento de verdad (smi.ms <= 100): 36
+    bb descheduleado (smi.ms > 100):             8
+
+El control SABE DECIR NO: caza 8 casos como confundidos, uno con smi.ms en
+2728 ms. Si marcara todo como real no discriminaria nada.
+
+PEOR CASO REAL: 2026-09-25 13:38, x=773 ms con smi=41 ms, load1=18.82 y
+cpu_some=4.71. El escritorio tardo **59 veces** el techo sano de 13 ms mientras
+nvidia-smi contestaba en su tiempo normal y los totales leian limpios.
+
+Y el caso que mas pesa por lo limpio que esta: 2026-09-26 05:53, x=577 ms con
+load1=2.63 y cpu_some=0.00. La maquina en reposo por todos los totales, y medio
+segundo para que el escritorio conteste.
+
+=====================================================================
+VEREDICTO
+=====================================================================
+La premisa de esta ficha era "UNA medida sana (4-7 ms) y CERO episodios malos.
+Con n=0 del lado positivo no hay calibracion posible".
+
+n = 36, no 0. Con techo sano medido (13 ms), peor caso medido (773 ms) y un
+control que separa la senal del artefacto. El PASO 3 -- derivar un corte -- ya
+tiene sujeto.
+
+Lo que NO cambia: el corte no se inventa aqui. Y hay una cosa que hay que
+arreglar ANTES, porque sin ella el corte no serviria de nada: el demonio que
+tendria que usarlo no esta corriendo el codigo que mide.
