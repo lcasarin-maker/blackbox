@@ -1,0 +1,112 @@
+# Se intento calibrar el remedio intermedio contra los tres congelamientos.
+# Resultado: la VENTANA existe, la ATRIBUCION no. Medido, no argumentado.
+
+=====================================================================
+0 · HALLAZGO PREVIO: durante un congelamiento el muestreador se muere tambien
+=====================================================================
+  incidente 1  17h45m de ventana  ->  94 muestras  (una cada ~9.7 min)
+  incidente 2   5h55m             ->   9 muestras  (una cada ~40.3 min)
+  incidente 3   5h54m             ->  43 muestras  (una cada ~7.3 min)
+
+A una por minuto habrian sido ~1065, ~355 y ~354. Y los campos que NOMBRAN a un
+proceso por consumo de memoria ordinaria -- `pidio`, `cpu_top`, `swap`, `slices` --
+estan VACIOS en los tres: no existian aun. Lo que hay es `psi`, `top_rss`, `gpu`
+y `py_bg`.
+
+=====================================================================
+1 · UN ERROR DE MEDICION PROPIO, corregido en la misma pasada
+=====================================================================
+La primera medida dio "ventana de 6 y 8 min" porque tomaba el primer PSI>=10 de
+cada ventana... y las ventanas de `calibra_psi.py` estan DEFINIDAS como los
+tramos donde el PSI ya estaba alto. El primer cruce coincidia con el inicio por
+construccion. Otra vez el instrumento en vez del sujeto. Se repitio mirando las
+4 h previas.
+
+Con eso se vio la forma real: el arranque es ABRUPTO. Cuatro horas antes la
+maquina esta sana -- PSI 0.0-0.1, GPU 36-39 GiB estable-- y cruza dentro de UN
+intervalo de muestreo. Incidente 3: 00:01 con GPU 40.8 -> 00:02 con 67.0.
+
+=====================================================================
+2 · NINGUNA CLAVE POR PROCESO DISCRIMINA
+=====================================================================
+'discrimina' = el maximo del incidente MAS DIFICIL supera el p99 de lo sano.
+
+  clave                   i1 max  i2 max  i3 max  p99 sanas  max sanas  discrimina
+  rss max (GiB)              5.6     2.5     3.9        8.5       24.6      no
+  gpu agregada (GiB)        50.7    38.0    67.0       51.8       85.4      no
+  gpu del mayor (GiB)       34.5     5.6    32.0       47.3       48.5      no
+  commit_pct                 0.0     0.0     0.0       61.2      120.8      no
+  mem_avail (GiB, negado)  -16.8   -31.2    -3.8       -0.0       -0.0      no
+  load1                    153.0   176.9   115.0       23.6       90.7      SI
+
+El caso que lo decide es el incidente 2: su proceso de GPU mas grande llego a
+**5.6 GiB**, contra un p99 sano de 47.3. No habia proceso dominante que matar.
+Y su GPU agregada maxima fue 38.0 GiB, por DEBAJO de la mediana sana (49.0).
+
+Barrido del umbral de GPU agregada, para que no quede como afirmacion:
+
+  > 45 GiB : caza 2/3   y dispara en 12628 de 21150 sanas (59.71 %)
+  > 50 GiB : caza 2/3   y dispara en  2554 de 21150 sanas (12.08 %)
+  > 55 GiB : caza 1/3   y dispara en    66 de 21150 sanas ( 0.31 %)
+  > 70 GiB : caza 0/3   y dispara en    29 de 21150 sanas ( 0.14 %)
+
+No hay corte de GPU que cace los tres sin disparar en mas del 10 % de lo sano.
+
+=====================================================================
+3 · load1 SI DISCRIMINA, y compra tiempo -- pero no nombra a nadie
+=====================================================================
+  load1 >  falsos   aviso i1  aviso i2  aviso i3   sirve
+      20     354          6        57         8      no (falsos > 1 %)
+      25     121          6        57         6      SI
+      50       6          6        57         6      SI
+      60       2          6        57         6      SI
+      80       1          6        57         0      no
+     100       0         -7        57       -36      no
+
+'aviso' = minutos entre que el corte dispara y el punto en que bb-usable
+reiniciaria (PSI mem_full >= 10 % sostenido 300 s). NEGATIVO = dispara despues
+del reinicio, o sea inutil como remedio intermedio.
+
+Un corte en 50-60 caza los TRES con 6 min de aviso en el peor caso y 2-6 falsos
+de 21 159. Eso es una calibracion de verdad.
+
+Lo que NO da: un pid. `load1` es un total de la maquina -- no trae pid, ni comm,
+ni unit. Es exactamente lo que esta ficha dice que falta ("un total de maquina no
+puede ver un cuello de botella de un solo hilo"), por el otro extremo: aqui ve el
+cuello y no ve al culpable.
+
+=====================================================================
+4 · LOS 6 "FALSOS POSITIVOS" DE load1>50, abiertos uno a uno
+=====================================================================
+  2026-09-20 16:55  load1=90.66  psi_full=83.55  rss top=language_server
+  2026-09-26 06:02  load1=64.35  psi_full= 1.16  rss top=VLLM::EngineCore
+  2026-09-26 06:03  load1=58.39  psi_full= 0.09  rss top=VLLM::EngineCore
+  2026-09-26 11:58  load1=51.52  psi_full= 0.00  rss top=VLLM::EngineCore
+  2026-09-26 11:58  load1=50.88  psi_full= 0.04  rss top=(ninguno)
+  2026-09-26 11:58  load1=50.88  psi_full= 0.03  rss top=(ninguno)
+
+CINCO son de HOY y son MIOS: las pruebas de carga con diez quemadores que corri
+para verificar tres tests de bin/bb. Carga alta sin estancamiento de memoria --
+psi_full entre 0.00 y 1.16. No son del sujeto.
+
+El SEXTO no es un falso positivo: `2026-09-20 16:55` con PSI memory full en
+**83.55 %** es un estancamiento real, y NO esta en la lista `INCIDENTES` de
+`tools/calibra_psi.py`. Eso es un hallazgo aparte y se declara: la lista de tres
+incidentes puede estar incompleta, y si lo esta, toda calibracion hecha contra
+ella -- incluida la de `bb-usable`-- se hizo sobre n=3 cuando habia mas.
+
+=====================================================================
+VEREDICTO
+=====================================================================
+La ficha preguntaba si cabe un remedio intermedio en el tiempo disponible. SI:
+6 minutos en el peor de los tres, con un disparador calibrado y 2-6 falsos en
+21 159 muestras.
+
+Pero el remedio que la ficha imagina -- MATAR UN PROCESO -- no se puede calibrar
+con estos datos, y no por falta de tiempo sino de sujeto: en el incidente 2 no
+habia proceso dominante. Ninguna clave por proceso separa los tres de la
+operacion normal.
+
+Asi que el remedio intermedio que cabe es mas grueso que un kill y mas fino que
+un reinicio: congelar o estrangular un slice, o negar reservas nuevas de GPU.
+Cual, y con que control, es lo que sigue abierto.
