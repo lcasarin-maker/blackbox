@@ -183,3 +183,44 @@ La suite se reescribio: asierta `es_unidad_systemd` y el gate de punta a punta,
 La leccion queda en `DECISIONS.md`, porque es durable y no de esta ficha: un
 xfail usado como senal de aterrizaje tiene que asertar el VEREDICTO del gate, no
 un interno al que el gate llegue de paso.
+
+## Root Cause
+
+El patron de `pii-scan` es
+`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b`, y una unit de systemd
+**con instancia** tiene la misma forma que una direccion: parte local, arroba,
+"dominio", punto, "tld". `user@1000.service` y `alguien@ejemplo.com` son
+indistinguibles mirando solo la cadena.
+
+Y el guardia que existia para esto -- `es_identificador_compuesto` -- solo miraba
+prefijos tipo `X-Y-`, asi que no alcanzaba a las units.
+
+## Regression Test
+
+`tests/test_pii_scan_systemd.py`, 8 casos, sin xfail. Asierta el **veredicto** del
+gate en dos niveles, no un interno:
+
+1. `es_unidad_systemd` sobre las tres units y las dos direcciones;
+2. el gate ENTERO por subproceso -- `hallazgos=0` sobre un fichero con una unit y
+   una ruta de cgroup, `hallazgos>=1` sobre uno con una direccion-- porque la
+   funcion podria estar bien y no llamarse desde el barrido.
+
+Y el control de que la alarma suena, que es lo que la version anterior no tenia:
+
+```
+apagada `es_unidad_systemd` (la regresion de 8.5.1) -> AssertionError   rojo
+encendida                                           -> pasa            verde
+```
+
+## Verification Evidence
+
+`tasks/evidence/DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS/aterrizaje-8.6.3.txt`,
+con: el patron antes y despues (identico), la funcion nueva y su tabla de
+veredictos, el gate de punta a punta, la retirada del allowlist (163/0 con el,
+162/0 sin el, contra 155/8 el 2026-09-25) y el registro de que la senal de esta
+ficha no disparo.
+
+LIMITE DECLARADO: el arreglo vive aguas arriba y este repo no lo controla. Si un
+sync futuro lo revierte, el que avisa es el test -- ahora que asierta el
+veredicto, se pone rojo. Antes no: se quedaba verde, y eso es lo que costo que el
+aterrizaje pasara desapercibido el mismo dia que ocurrio.
