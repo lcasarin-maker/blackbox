@@ -74,6 +74,84 @@ es exactamente lo que la regla prohibe: declararla no la paga. Contarla como
 El corte no se inventa aqui: se calibra igual que se calibro el de
 `bb-usable`, contra medidas propias.
 
+## 2026-09-26: se intento calibrar. La VENTANA existe; la ATRIBUCION no
+
+Evidencia completa en
+`tasks/evidence/DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA/calibracion-2026-09-26.txt`.
+
+### Primero, un hallazgo que cambia lo que se puede pedir a estos datos
+
+**Durante un congelamiento el muestreador se muere con la maquina:**
+
+```
+incidente 1   17h45m de ventana  ->  94 muestras   (una cada  9.7 min)
+incidente 2    5h55m             ->   9 muestras   (una cada 40.3 min)
+incidente 3    5h54m             ->  43 muestras   (una cada  7.3 min)
+```
+
+A una por minuto habrian sido ~1065, ~355 y ~354. Y los campos que nombran a un
+proceso por memoria ordinaria -- `pidio`, `cpu_top`, `swap`, `slices` -- estan
+VACIOS en los tres: no existian aun.
+
+### La ventana SI cabe: 6 minutos en el peor caso
+
+Barrido de `load1`, contra el punto en que `bb-usable` reiniciaria (PSI mem_full
+>= 10 % sostenido 300 s):
+
+```
+load1 >  falsos   aviso i1  aviso i2  aviso i3
+     25     121          6        57         6
+     50       6          6        57         6
+     60       2          6        57         6
+    100       0         -7        57       -36   <- dispara DESPUES del reinicio
+```
+
+Un corte en 50-60 caza los TRES con 6 min de aviso en el peor caso y 2-6 falsos
+de 21 159 muestras sanas. Eso responde la pregunta del limite declarado: **la
+ventana no es de segundos.**
+
+### Pero el remedio que esta ficha imagina no se puede calibrar
+
+Ninguna clave POR PROCESO separa los tres incidentes de la operacion normal:
+
+| clave | i1 | i2 | i3 | p99 sanas | discrimina |
+|---|---|---|---|---|---|
+| rss max (GiB) | 5.6 | 2.5 | 3.9 | 8.5 | no |
+| gpu agregada (GiB) | 50.7 | 38.0 | 67.0 | 51.8 | no |
+| gpu del mayor (GiB) | 34.5 | 5.6 | 32.0 | 47.3 | no |
+| commit_pct | 0.0 | 0.0 | 0.0 | 61.2 | no |
+| **load1** | 153.0 | 176.9 | 115.0 | 23.6 | **SI** |
+
+El caso que lo decide es el **incidente 2**: su proceso de GPU mas grande llego a
+**5.6 GiB** contra un p99 sano de 47.3, y su GPU agregada maxima fue 38.0 GiB,
+por DEBAJO de la mediana sana. **No habia proceso dominante que matar.**
+
+Y `load1`, la unica clave que discrimina, es un total de la maquina: no trae pid,
+ni comm, ni unit. Ve el cuello y no ve al culpable -- que es esta misma ficha por
+el otro extremo.
+
+### Lo que esto deja
+
+Un remedio intermedio **cabe en el tiempo**, pero no puede ser un kill dirigido:
+tiene que ser mas grueso que matar un proceso y mas fino que reiniciar. Congelar
+o estrangular un slice, o negar reservas nuevas de GPU. Cual, y con que control,
+es lo que sigue abierto -- y ya no por falta de ventana.
+
+### Un error de medicion propio, y un hallazgo aparte
+
+La primera medida dio "6 y 8 min de ventana" porque tomaba el primer PSI>=10 de
+cada ventana, y las ventanas de `calibra_psi.py` estan DEFINIDAS como los tramos
+donde el PSI ya estaba alto: el cruce coincidia con el inicio por construccion.
+Instrumento en vez de sujeto, otra vez. Se repitio mirando las 4 h previas.
+
+Y de los 6 "falsos positivos" de `load1>50`, **cinco son mios** -- las pruebas de
+carga de hoy, con psi_full entre 0.00 y 1.16. El sexto no es falso:
+`2026-09-20 16:55` con **PSI memory full en 83.55 %** es un estancamiento real y
+**NO esta en la lista `INCIDENTES` de `tools/calibra_psi.py`**. Si esa lista esta
+incompleta, toda calibracion hecha contra ella -- incluida la de `bb-usable` --
+se hizo sobre n=3 cuando habia mas. Eso se declara aqui y necesita su propia
+mirada.
+
 ## Limite declarado
 
 Esta ficha **no prueba que el remedio intermedio sea lo que hacia falta**. Cabe
