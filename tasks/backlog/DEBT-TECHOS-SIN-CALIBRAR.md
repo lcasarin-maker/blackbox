@@ -248,6 +248,43 @@ OMITE en vez de entrar como 0 (un 0 se promediaria como medida, y un techo
 calibrado sobre ceros inventados mata procesos por un dato que nadie tomo), y un
 kernel sin `memory.peak` escribe `null` y no 0.
 
+### El calibrador, para que el numero no se elija a ojo el dia que toque
+
+`tools/calibra_techo_slice.py`, 21 tests, 100 % cubierto. Lee la serie `slices` y
+propone el techo, o se NIEGA diciendo que le falta. Dos frenos:
+
+1. **Un minimo de muestras**: 18 944, el liston que fijo `docker.slice`. Es un
+   PRECEDENTE y se declara como tal -- nadie ha demostrado que 18 944 sea el
+   numero correcto, solo que un techo de esa serie se acepto y uno de un arranque
+   se rechazo.
+2. **Que el maximo haya DEJADO DE CRECER.** Este si sale del sujeto, y es el que
+   de verdad protege: puede decir "todavia no" con 100 000 muestras. Compara el
+   maximo del ultimo tercio de la ventana contra el de los dos primeros; si la
+   cola trae un maximo nuevo, la serie no ha visto el peor caso y un techo puesto
+   ahi se queda corto POR CONSTRUCCION.
+
+El factor es 1.4, por precedente explicito: `docker.slice` quedo en 16G sobre un
+pico de 11.2 GiB. Y eso se puede comprobar -- corrido el 2026-09-25 sobre la
+maquina real:
+
+```
+$ python3 -m tools.calibra_techo_slice docker
+  maximo:    11.24 GiB      ->  x 1.4  =  15.7,  y el techo puesto a mano fue 16G
+$ python3 -m tools.calibra_techo_slice system
+  maximo:     2.78 GiB      estable: SI
+  SIN TECHO QUE PROPONER: 528 muestras, y el minimo declarado es 18944
+  rc=1
+```
+
+Que reproduzca por si solo la unica decision de este tipo que el repo ya tomo es
+lo que hace discutible el factor. Que se niegue con 528 muestras es lo que
+impide que alguien -- yo, dentro de trece dias-- escriba 4G porque le parece
+razonable.
+
+Lo que el calibrador NO hace: tocar la maquina. Propone un numero con su
+derivacion delante. El drop-in y su aplicacion siguen viviendo en
+`adopted/system-config/` y `enable-privileged.sh`, que piden `sudo`.
+
 ## Por que sigue ABIERTA
 
 Porque vigilar no es cuadrar. El `close_check` sigue siendo

@@ -8,9 +8,9 @@
       "difiere": "No difiere por repo: es una limitacion del kit, igual en la madre y en todos los satelites. Por eso esta entrada caduca el 2026-10-08 y no se renueva sola. Queda refutada, y hay que borrarla, en cuanto (a) el kit construya el canal de hallazgos que su propio comentario pide, o (b) claim_guard deje de ser consultivo y pase a bloquear. Cualquiera de las dos hace que su columna se pueda llenar con una medicion de verdad."
     },
     "lockfile_parity": {
-      "reason": "El organo tambien lo declara solo. Medido 2026-09-08: rc=0 con la linea literal '[lockfile-parity] NO APLICA: este repo no tiene pyproject.toml'. Comprueba que las versiones fijadas sobrevivan a un clon, y aqui no hay pyproject.toml del que derivar ese pinneo: bin/bb es bash y no declara dependencias mas alla de lo que ya trae el sistema.",
+      "reason": "Medido el 2026-09-25 sobre la maquina: `[lockfile-parity] NO APLICA: no hay requirements-lock.txt`. Comprueba que las versiones FIJADAS sobrevivan a un clon, y aqui no hay fichero de pinneo del que derivarlas -- `bin/bb` es bash y no declara dependencias mas alla de lo que trae el sistema. CORRECCION de la razon anterior, que decia 'este repo no tiene pyproject.toml': lo tiene, y lo tenia ya cuando se escribio (203a19f lo trae). El organo nunca hablo de pyproject.toml sino del lockfile, asi que la declaracion era correcta en su conclusion y falsa en su motivo -- que es peor que estar equivocada, porque un motivo falso no se puede refutar midiendo lo que dice.",
       "canary": "No se planta: exigiria crear un pyproject.toml con dependencias fijadas solo para que el organo tuviera algo que comparar, que es fabricar el sujeto. El propio organo distingue 'NO APLICA' de 'sin hallazgos', y esa distincion es la medicion.",
-      "difiere": "Captura en los satelites Python con pyproject.toml y lockfile. Queda refutada si blackbox adopta dependencias Python fijadas."
+      "difiere": "Captura en los satelites Python que tienen requirements-lock.txt. Queda refutada en cuanto blackbox adopte un fichero de pinneo."
     },
     "red_team_corpus": {
       "reason": "Vigila que un caso una vez probado no desaparezca en silencio. Medido 2026-09-08: rc=0 con '[red-team-corpus] casos registrados: 0 | generados hoy: 91 | registrados que hoy NO se generan: 0'. Con CERO casos registrados no hay nada que pueda desvanecerse: el conjunto que el organo compara esta vacio por un lado.",
@@ -21,11 +21,6 @@
       "reason": "Es consultivo (`|| true` en su entry) y ademas no ve el sujeto de este repo. Medido 2026-09-08: se anadio '# TODO: esto no declara techo ni disparador' al final de bin/bb y el organo siguio diciendo '[ponytail-debt] OK: 5 file(s) scanned, 0 unmanaged debt markers.' con rc=0. El repo tiene 0 ficheros .py y su unico ejecutable es bin/bb, que ese escaneo no abre.",
       "canary": "INTENTADO Y NO DISPARO, y esa es la medicion: el marcador se planto de verdad en el fichero que es el 100% del codigo ejecutable, y el organo no lo vio. No se insiste plantandolo en un .md para forzar un rc, porque eso mediria el escaneo de prosa y no la deuda del codigo.",
       "difiere": "Captura en repos Python, donde sus marcadores viven en los .py que si escanea. Queda refutada si el organo aprende a leer bash, o si blackbox incorpora codigo Python propio."
-    },
-    "telemetry_prune": {
-      "reason": "No esta cableado como compuerta con nombre en el .pre-commit-config.yaml generado de este repo: la busqueda de su `id:` no devuelve entry alguno. Sus filas llegan desde otra ruta del kit, no desde un hook que este repo invoque, asi que este repo no puede plantarle un control sin inventar la invocacion.",
-      "canary": "No se planta: no hay hook local que ejecutar. Plantarlo exigiria cablear una compuerta nueva solo para poder medirla, que es construir el sujeto para el instrumento en vez de al reves.",
-      "difiere": "Es una limitacion del cableado del kit en este satelite, no una propiedad de blackbox. Caduca sin renovarse y se revisa si el organo pasa a tener entry propio."
     },
     "backlog_md_freeze": {
       "reason": "Este repo NO TIENE BACKLOG.md y su ausencia es una decision, no un olvido: el declutter del 2026-09-13 lo retiro a proposito bajo 'un solo canon de estado', y el propio scan.py de /debt lo documenta ('Sin indice, el ranking lee DIRECTO de tasks/backlog/*.md -- declutter retiro BACKLOG.md a proposito'). Medido 2026-09-24: `ls BACKLOG.md` -> no existe el fichero, y `git log -- BACKLOG.md` no devuelve un solo commit, o sea que nunca existio en este repo. El organo vigila que no se anada contenido nuevo a un indice ya declarado; sin indice no hay nada que congelar.",
