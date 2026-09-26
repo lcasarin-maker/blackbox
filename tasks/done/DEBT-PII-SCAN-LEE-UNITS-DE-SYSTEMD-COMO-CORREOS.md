@@ -2,13 +2,17 @@
 id: DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS
 kind: debt
 title: "`pii-scan` lee un nombre de unit de systemd como una direccion de correo de un tercero"
-status: open
+status: done
+closure_type: relocated_prior_verification
+closed_at: 2026-09-26
 severity: P2
 origin: detected
 detector: {"rule": "simplecode/pii-scan", "confidence": 1.0}
 satd_family: FALSE_POSITIVE
 created: 2026-09-25
 close_check: {"cmd": "grep -q 'unit de systemd deja de casar' tasks/done/DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS.md", "expect": "exit_zero", "porque": "el arreglo vive aguas arriba, en simplecode, y esta ficha no lo puede provocar. Mismo patron que DGX-438: cierra cuando alguien ESCRIBE que aterrizo. La senal automatica la da tests/test_pii_scan_systemd.py, que lleva xfail(strict=True) y pondra la suite ROJA el dia que el kit se sincronice arreglado."}
+evidence: {"pass": "tasks/evidence/DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS/aterrizaje-8.6.3.txt"}
+reason: "relocated_prior_verification: el arreglo aterrizo aguas arriba, en el kit 8.6.3, y llego a este repo con el sync del commit 7639ce6 -- un commit ANTERIOR. Este cierre solo mueve la ficha y anade la evidencia de que se verifico sobre el runtime: `es_unidad_systemd` da True para las tres units y False para las dos direcciones reales, y el gate ENTERO da hallazgos=0 sobre un fichero con una unit y una ruta de cgroup. La unit de systemd deja de casar como direccion, y el detector NO se apago -- las dos mitades que la ficha exigia."
 ---
 
 ## Que pasa
@@ -131,3 +135,51 @@ que blackbox puede garantizar es que el falso positivo no le vuelva a costar un
 criterio de cierre (allowlist) y que la regresion se vea cuando el arreglo
 llegue (el xfail estricto). Si el plazo de la linea base vence sin que aterrice,
 se vuelve a discutir en vez de renovarse sola.
+
+## CERRADO el 2026-09-26: la unit de systemd deja de casar
+
+El arreglo aterrizo en el kit **8.6.3**, y llego con el sync del commit
+`7639ce6`. Verificado sobre el runtime, no sobre una copia:
+
+```
+es_unidad_systemd("user@1000.service")            -> True
+es_unidad_systemd("org.gnome.Shell@x11.service")  -> True
+es_unidad_systemd("getty@tty1.service")           -> True
+es_unidad_systemd("alguien@ejemplo.com")          -> False
+es_unidad_systemd("nombre.apellido@empresa...")   -> False
+```
+
+Y de punta a punta, porque la funcion podria estar bien y no llamarse: el gate
+sobre un fichero con `org.gnome.Shell@x11.service` y una ruta de
+`/sys/fs/cgroup/.../user@1000.service/app.slice` da `hallazgos=0`.
+
+El patron NO cambio -- byte a byte el mismo que en 8.5.1, y sigue cazando las
+tres cadenas. Lo que cambio es el veredicto, via una funcion nueva. Eso importa
+porque es lo que dejo muda la senal de esta ficha, abajo.
+
+### El allowlist se BORRA, medido por retirada
+
+```
+hoy, con el arreglo:   CON tasks/pii_allow.txt -> 163/0   SIN -> 162/0
+el 2026-09-25, sin el: CON                     -> 156/0   SIN -> 155/8
+```
+
+Sus tres firmas ya no cargan nada. Un allowlist que no exime nada es una
+afirmacion firmada sobre un riesgo que ya no existe.
+
+### Y el defecto del instrumento PROPIO que este cierre paga
+
+Esta ficha prometia: "el dia que el kit se sincronice arreglado, los tres
+`xfail(strict=True)` pasan a XPASS y la suite se pone ROJA. Eso es la senal".
+
+**No disparo.** `3 passed, 3 xfailed` el mismo dia en que el bloqueador dejo de
+existir, porque el test asertaba sobre `CORREO.search()` -- el patron, que nunca
+iba a cambiar-- en vez de sobre el veredicto del gate.
+
+La suite se reescribio: asierta `es_unidad_systemd` y el gate de punta a punta,
+8 casos, sin xfail. Con su control de que la alarma suena: apagada
+`es_unidad_systemd`, el test levanta `AssertionError`; encendida, pasa.
+
+La leccion queda en `DECISIONS.md`, porque es durable y no de esta ficha: un
+xfail usado como senal de aterrizaje tiene que asertar el VEREDICTO del gate, no
+un interno al que el gate llegue de paso.
