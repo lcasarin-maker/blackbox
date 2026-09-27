@@ -1,6 +1,6 @@
 {
-  "claims_fingerprint": "0b20e282f1e8c669e03706729219917d912a4e3cbfb095c93c21f10bcc2d0eec",
-  "panel": "bb (Claude Opus 5), 2026-09-27, segunda pasada. El fingerprint se movio porque SPEC.md crecio dos filas y los ids por numero de linea se reasignaron: los 12 TEXTOS son identicos como conjunto (comprobado por sha256) y 9 de 12 veredictos se RE-ATARON al id que ahora lleva su texto, cada uno diciendolo en su evidencia. Re-corridas las verificaciones de maquina: bb drift 38/0/0, calibra_psi CALIBRADO rc=0, piso de cobertura 34.8% sobre 32.8. HALLAZGO: bb status reporto FALTA sobre earlyoom armado en 1 de 6 corridas -- falso positivo, ficha abierta y en la linea base.",
+  "claims_fingerprint": "e1f548b68cdff6833e5ca222432fc16a870cddab590c326b7a6a1b2390c411db",
+  "panel": "bb (Claude Opus 5), 2026-09-27, tercera pasada tras el ataque a las 8 fichas. El fingerprint se movio otra vez porque SPEC.md crecio cuatro filas (calibra_latencia_x, nombra_victimas, status_estable, sigterm.jsonl) y los ids son por numero de linea: los 12 TEXTOS son identicos como conjunto (sha256) y 9 de 12 veredictos se re-ataron al id que ahora lleva su texto. Re-corridas las verificaciones de maquina: bb drift 38/0/0, status_estable 6 de 6, calibra_psi CALIBRADO rc=0. El hallazgo de la pasada anterior -- bb status con FALTA sobre earlyoom armado -- esta ARREGLADO y cerrado: era pipefail mas una tuberia a grep -q, no latencia, con control negativo contra el codigo roto.",
   "profile": "general",
   "results": [
     {
@@ -19,52 +19,52 @@
       "verdict": "pass"
     },
     {
-      "claim_id": "SPEC-L241",
+      "claim_id": "SPEC-L244",
       "evidence": "`bb status` corrido el 2026-09-27: 'armado: 15  falta: 0  ciego: 1'. Los tres chequeos que leian `systemctl is-active` se cerraron el 2026-09-25 y leen su artefacto. La fila 'ciego: 1' es earlyoom, y esta declarada como brecha con ficha propia (DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA), no disimulada: el informe la imprime en su propia columna. El limite que la propia fila declara sigue en pie: se comprueba que el dato es fresco, no que su contenido sea correcto. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L240 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.] [2026-09-27, HALLAZGO DE ESTA AUDITORIA: uno de esos tres chequeos produjo un FALSO POSITIVO mientras se verificaba esta misma fila. `bb status` reporto FALTA sobre `earlyoom con la punteria puesta` en 1 de 6 corridas seguidas, con el sujeto quieto y demostrablemente armado (config, proceso vivo y journal del arranque actual, las tres comprobadas). La fila afirma que los tres pueden salir mal por el motivo que vigilan, y esto sale mal por un motivo que NO vigila: la consulta vuelve vacia sin decirlo. Registrado como DEBT-BB-STATUS-DICE-FALTA-SOBRE-UN-INSTRUMENTO-ARMADO, en la linea base.]",
       "verdict": "pass"
     },
     {
-      "claim_id": "SPEC-L242",
+      "claim_id": "SPEC-L245",
       "evidence": "`bb scan` corrido el 2026-09-27 imprime 'comprobaciones que NO pudieron correr: 1' y 'accounting mode: COULD_NOT_RUN (apagado)', asi que cuenta y NOMBRA lo que no pudo correr en vez de sumarlo a lo limpio. La mitad del control negativo se midio hoy sobre dos instrumentos nuevos: tools/control_racha.py sale 0 y con --corte 180 sale 1; tools/demonio_al_dia.sh tiene los tres veredictos corridos (0 al dia, 1 viejo, 2 COULD_NOT_RUN). LIMITE: se verifico en los gates que este turno toco, no en los 30 organos del kit uno por uno. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L241 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.] [2026-09-27, HALLAZGO DE ESTA AUDITORIA: uno de esos tres chequeos produjo un FALSO POSITIVO mientras se verificaba esta misma fila. `bb status` reporto FALTA sobre `earlyoom con la punteria puesta` en 1 de 6 corridas seguidas, con el sujeto quieto y demostrablemente armado (config, proceso vivo y journal del arranque actual, las tres comprobadas). La fila afirma que los tres pueden salir mal por el motivo que vigilan, y esto sale mal por un motivo que NO vigila: la consulta vuelve vacia sin decirlo. Registrado como DEBT-BB-STATUS-DICE-FALTA-SOBRE-UN-INSTRUMENTO-ARMADO, en la linea base.]",
       "verdict": "pass"
     },
     {
-      "claim_id": "SPEC-L243",
+      "claim_id": "SPEC-L246",
       "evidence": "Leido de la unit viva, no del repo. `systemctl --user cat blackbox-sample.service` da ExecStart=%h/projects/blackbox/bin/bb sample, Nice=19, IOSchedulingClass=idle -- los dos valores que la fila afirma, literalmente. LIMITE: 'solo lee /proc y endpoints ya existentes' no se re-audit\u00f3 linea por linea en este turno; lo que se comprobo es la prioridad declarada. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L242 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.]",
       "verdict": "pass"
     },
     {
-      "claim_id": "SPEC-L244",
+      "claim_id": "SPEC-L247",
       "evidence": "Re-derivado el 2026-09-27: `python3 -m tools.calibra_psi` -> VEREDICTO CALIBRADO, rc=0, falsos positivos 0, incidentes no detectados 0, sobre 20285 muestras. Control negativo corrido: --sostenido 0 -> rc=1. Y la auditoria ENCONTRO algo: antes de tocar nada el modulo daba 'falsos positivos: 1' y VEREDICTO CORTE INVALIDO, porque el kernel panic del 2026-09-26 no estaba en su lista de incidentes y un colapso real de 13 min se leia como excursion sana. Anadido como cuarto incidente, con su corroboracion independiente (hung_task en el journal, `last reboot` 15:42:17, sar con 24-29 % de RAM disponible). Aparecio tambien un defecto del modulo: contaba como 'no detectado' un incidente FUERA del rango del corpus, que es medir su propia lista en vez del corte. Ahora se separa y se imprime. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L243 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.]",
       "verdict": "pass"
     },
     {
-      "claim_id": "SPEC-L245",
+      "claim_id": "SPEC-L248",
       "evidence": "`./bin/bb drift` corrido el 2026-09-27: 'revisados: 38  divergentes: 0  ausentes: 0  suspendidos: 1' y 'El repo describe la maquina que hay'. LIMITE: la verificacion en ambos sentidos que la fila afirma es historica (2026-09-24); hoy se comprobo el veredicto, no se re-provoco una divergencia para ver si la caza. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L244 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.]",
       "verdict": "pass"
     },
     {
-      "claim_id": "SPEC-L246",
+      "claim_id": "SPEC-L249",
       "evidence": "`grep -c inventario .pre-commit-config.yaml` da 3, y el hook 'SPEC.md inventaria lo que el repo ejecuta y posee' aparece en la salida real de los dos ultimos commits de este turno, con veredicto Passed. Y bloqueo de verdad en este mismo turno: al anadir tools/control_racha.py y tools/demonio_al_dia.sh salio 'funcion sin inventariar en SPEC.md' para las dos y el commit no paso hasta inventariarlas. La afirmacion de que ata SPEC a tools/ esta medida hoy, no recordada. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L245 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.]",
       "verdict": "pass"
     },
     {
-      "claim_id": "SPEC-L247",
+      "claim_id": "SPEC-L250",
       "evidence": "La fila estaba RANCIA y lo encontro esta auditoria: declaraba 'bb drift vigila 30 sujetos' y `./bin/bb drift` imprime 38 revisados. Corregida a 38 en el mismo turno, con la nota de que la encontro la auditoria de claims del 2026-09-27 y no una revision. El resto de la fila se sostiene: nvrm-watch.service y nvrm-watch.timer existen hoy como unidades de systemd (list-unit-files), o sea que el instrumento que vivia solo en disco esta adoptado. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L246 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.]",
       "verdict": "pass"
     },
     {
-      "claim_id": "SPEC-L248",
+      "claim_id": "SPEC-L251",
       "evidence": "Afirmacion historica del 2026-09-25 y sigue siendo la descripcion correcta del episodio; su ficha (DEBT-SLUGGISH-SIN-CAUSA-PROBADA) esta ABIERTA y en la linea base, que es la forma honesta de tenerla. Lo que se midio DESPUES y la refuerza: el 2026-09-26 se establecio que x.{estado,ms} tiene n=36 episodios reales, no 0 como afirmaba DEBT-BB-USABLE, discriminando lentitud real del escritorio de bb siendo desalojado via smi.ms. O sea que el canal que esta fila pedia ya mide algo. LIMITE: la CAUSA del episodio del 09-25 sigue sin probarse, y la fila no afirma tenerla. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L247 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.]",
       "verdict": "pass"
     },
     {
-      "claim_id": "SPEC-L249",
+      "claim_id": "SPEC-L252",
       "evidence": "`bash tools/piso_cobertura.sh` el 2026-09-27: '[bb-cobertura] bin/bb al 33.1% (piso 32.8%)', rc=0. La cifra de la fila (33.3% el 2026-09-25) es historica y lleva su fecha; el piso de 32.8 es actual y se comprobo. El 33.1 frente al 33.3 es la variacion de carga que el propio piso documenta (0.2-0.3 puntos entre reposo y carga), y por eso el piso esta en 32.8 y no en 33.1. Medido ademas hoy: este gate FALLO en el segundo push por carga de la maquina y paso en frio, que es esa misma variacion vista en produccion. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L248 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.]",
       "verdict": "pass"
     }
   ],
-  "timestamp": "2026-09-27T08:41:49Z",
-  "tree_fingerprint": "e6c8becfaa8f1b0757c21c1e765bd3eb80e08e5afdfa80caeedb0ee7c0f5c35d",
+  "timestamp": "2026-09-27T09:28:23Z",
+  "tree_fingerprint": "57b54ce42ffde97350b7e6d8f502787f6d5e817bd981046df17fc0c068ec1169",
   "violations": []
 }
