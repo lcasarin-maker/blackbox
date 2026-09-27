@@ -1,0 +1,129 @@
+# El kernel panic del 2026-09-26 15:38:26, y por que bb-usable no llego a tiempo.
+# Todo de journalctl -b -1 y de las muestras de bb.
+
+=====================================================================
+1 · LO QUE PASO: PANICO, no un reinicio controlado
+=====================================================================
+  $ journalctl --list-boots | tail -2
+   -1 ... Fri 2026-09-25 05:10:01 CST   Sat 2026-09-26 15:38:26 CST
+    0 ... Sat 2026-09-26 15:42:17 CST   ...
+
+  $ last -x reboot shutdown | head -3
+  reboot   system boot  6.17.0-1032-nvid Sat Sep 26 15:42   still running
+  reboot   system boot  6.17.0-1032-nvid Fri Sep 25 05:10   still running
+  shutdown system down  6.17.0-1032-nvid Fri Sep 25 05:08 - 05:10  (00:01)
+
+No hay registro de `shutdown` para el evento del 26 -- si lo hay para el del 25.
+Parada no limpia.
+
+  ultima linea del boot -1:
+  sep 26 15:38:26.325908 kernel: Kernel panic - not syncing: hung_task: blocked tasks
+
+  $ cat /proc/sys/kernel/hung_task_panic /proc/sys/kernel/hung_task_timeout_secs
+  1
+  120
+
+~25 procesos `python` mas un `bash`, bloqueados >122 s, todos en lookup de
+sistema de ficheros:
+
+  d_alloc_parallel -> __lookup_slow -> walk_component -> link_path_walk
+    -> path_lookupat -> filename_lookup -> vfs_statx -> vfs_fstatat
+    -> __do_sys_newfstatat
+
+Un `stat()` esperando a que termine un lookup paralelo del mismo nombre. Con
+`hung_task_panic=1` el kernel entra en panico por CONFIGURACION: no es un
+cuelgue espontaneo, es la respuesta declarada.
+
+=====================================================================
+2 · LO QUE LO CAUSO: colapso de memoria, visto por bb
+=====================================================================
+  ts        load1  io_some  cpu_s  mem_f  py_bg  x.ms   smi   top cpu
+  15:20:47  76.82     3.72  64.82    0.0     55   115   188   python3,node,[pytest-xdist
+  15:21:00  70.47     3.67  61.91    0.0     61   157   312   python3,node,tesseract
+  15:22:02 131.01    23.55  87.34  40.48     43  1054  2112   codex,python3,snap-store
+  15:34:51   (muestra VACIA: el muestreador ya no podia leer nada)
+  15:35:16 221.55                  84.75
+  15:38:26   KERNEL PANIC
+
+61 procesos python de fondo, con `pytest-xdist`, `codex`, `tesseract` y `node`
+entre los que queman CPU. La latencia del escritorio (x.ms) paso de 115 a 1054 y
+la de nvidia-smi de 188 a 2112. PSI memory full: de 0.0 a 40.5 en un minuto, y a
+92.2 al final.
+
+NOTA sobre los OOM kills, para que nadie los lea como parte de esto: hay 509
+lineas `Memory cgroup out of memory` en ese boot, pero la primera es del
+2026-09-25 05:23 y la ULTIMA del 2026-09-26 13:10 -- dos horas ANTES del
+incidente. Son el techo de app.slice funcionando sobre procesos python a lo
+largo del boot. Durante el colapso NINGUN cgroup toco su memory.max: el
+estancamiento fue de PSI, no de un limite duro.
+
+earlyoom tampoco actuo, y por lo de siempre:
+  15:32:59  mem avail: 31141 of 123967 MiB (25.12%)
+  15:37:59  mem avail: 29825 of 123967 MiB (24.06%)
+24-29 % de memoria disponible mientras PSI full estaba en 92. Lee MemAvailable.
+
+=====================================================================
+3 · bb-usable LO VIO, DECIDIO ACTUAR, Y SE ABSOLVIO SOLO
+=====================================================================
+  15:29:01  racha  1/10 (30s de 300s)   avg10=30.4
+  15:30:01  racha  3/10                 avg10=78.7
+  15:32:32  racha  8/10 (240s)          avg10=84.1
+  15:33:02  racha  9/10 (270s)          avg10=83.2      <- ULTIMA CARICIA
+  15:33:32  COLAPSO sostenido 300s  --  NO se acaricia el watchdog, que reinicie
+  15:34:02  COLAPSO sostenido 330s  --  NO se acaricia
+  15:34:32  COLAPSO sostenido 360s  --  NO se acaricia
+  15:35:02  PSI bajo a 9.8: la racha de 360s SE CORTA. "Era un pico, no un colapso"
+  15:35:32  racha  1/10 (30s de 300s)   avg10=80.2
+  15:38:02  racha  6/10 (180s)          avg10=92.2      <- ultima caricia real
+  15:38:26  KERNEL PANIC
+
+**Una sola sonda leyo 9.8 en vez de 10.0 y absolvio un colapso de 360 segundos.**
+El avg10 de la sonda siguiente, 30 s despues, era 80.2.
+
+Y la consecuencia no es solo que la racha vuelva a empezar: el camino de reinicio
+de racha TAMBIEN acaricia el watchdog. Leido en bin/bb-usable:
+
+  if psi >= PSI_ACT_FULL_AVG10:
+      sostenido += 1
+      if sostenido >= PSI_ACT_SONDAS:
+          log(... "NO se acaricia el watchdog, que reinicie")
+          continue                      # <- el UNICO camino que no acaricia
+      log(... "racha N/10")
+  else:
+      if sostenido: log(... "la racha se corta")
+      sostenido = 0
+  notify("WATCHDOG=1")                  # <- acaricia en todo lo demas
+
+Aritmetica del plazo (WatchdogUSec=6min, FailureAction=reboot-immediate):
+
+  si la racha NO se hubiera cortado:
+    ultima caricia 15:33:02 + 6 min = 15:39:02 -> el panico (15:38:26) gana por 36 s
+  con la racha cortada, que es lo que paso:
+    ultima caricia 15:38:02 + 6 min = 15:44:02 -> el panico gana por 5 min 36 s
+
+La bajada momentanea le regalo al watchdog un plazo nuevo de seis minutos en el
+peor momento posible.
+
+=====================================================================
+4 · LA ASIMETRIA, que esta escrita en el propio codigo
+=====================================================================
+El mismo fichero ya razona bien el caso de la lectura perdida:
+
+  # PSI que no se pudo leer NO cuenta como colapso... Tampoco reinicia la
+  # racha: una lectura perdida en medio de un colapso no lo absuelve.
+
+Una lectura ILEGIBLE no absuelve. Una lectura de 9.8 si. Y la segunda es mas
+informativa que la primera: 9.8 con la anterior en 79.6 y la siguiente en 80.2 no
+es una maquina que se recupero, es ruido de muestreo dentro de un colapso.
+
+=====================================================================
+LO QUE NO SE PUEDE AFIRMAR
+=====================================================================
+Que el enjambre de agentes de esta sesion causara el colapso. Se lanzaron dos
+workflows (12 y 4 agentes) a las ~14:55 y ~15:05, y sus procesos son `python3`
+leyendo ficheros del repo -- que es exactamente el tipo de carga que produce
+contencion en `d_alloc_parallel`. Pero `py_bg` marcaba 55-61 procesos python
+cuando mis dos enjambres suman ~16, y los que dominaban CPU eran `pytest-xdist`,
+`codex`, `tesseract` y `node`, que no son mios. La contribucion propia es real y
+no cuantificada; decir "fue el enjambre" o "no fue el enjambre" seria inventar
+en cualquiera de las dos direcciones.

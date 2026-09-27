@@ -93,3 +93,57 @@ tiene sujeto.
 Lo que NO cambia: el corte no se inventa aqui. Y hay una cosa que hay que
 arreglar ANTES, porque sin ella el corte no serviria de nada: el demonio que
 tendria que usarlo no esta corriendo el codigo que mide.
+
+=====================================================================
+5 · CORRECCION Y HALLAZGO NUEVO, 2026-09-26 23:40
+=====================================================================
+
+## Correccion: lo de "corre codigo viejo" era cierto Y quedo obsoleto
+
+La medida de la seccion 1 se tomo ANTES del kernel panic de las 15:38:26. El
+reinicio de las 15:42:17 rearranco `bb-usable`, y ese proceso nuevo SI cargo el
+codigo instrumentado:
+
+  sep 26 23:34:40  bb-usable[5581]: [bb-usable] latencia del escritorio: sin DISPLAY
+
+PID 5581, no 5671. El crash hizo lo que yo pedi por `sudo systemctl restart`
+ocho horas despues. Pedi ese comando arrastrando una medida previa al reinicio y
+presentandola como estado actual, en la misma sesion en que ya habia establecido
+que la maquina se reinicio. El `sudo` no hacia falta.
+
+## Hallazgo nuevo: la sonda no puede medir NADA donde corre
+
+  $ systemctl show bb-usable -p Environment
+  Environment=
+  $ grep -nE 'DISPLAY|Environment' /etc/systemd/system/bb-usable.service
+  (ninguna linea)
+
+  bb-usable.service        -> /etc/systemd/system/       unit de SISTEMA
+  blackbox-sample.service  -> ~/.config/systemd/user/    unit de USUARIO
+
+`bin/bb-usable:217` hace `if not os.environ.get("DISPLAY"): return None`. Una
+unit de SISTEMA no hereda el entorno de la sesion grafica, asi que ese `None` es
+el UNICO valor que la funcion puede devolver ahi. No es que no este operando:
+es que no puede.
+
+Y el propio repo ya tenia el razonamiento escrito, en `bin/bb:198`:
+
+  # DISPLAY no viene heredado en una unit de usuario salvo que la sesion
+  # ... `systemctl --user show-environment` de esta maquina si trae DISPLAY=:1
+  # y XAUTHORITY, asi que `blackbox-sample.service` alcanza el servidor.
+
+El muestreador mide porque es unit de USUARIO. Al anadir la sonda a `bb-usable`
+el 2026-09-25 no se llevo ese razonamiento de un fichero al otro.
+
+## Lo que esto le hace al arreglo
+
+El PASO 1 de esta ficha no se arregla reiniciando el demonio ni dandole DISPLAY
+a mano -- eso fijaria `:1` y una ruta de XAUTHORITY que cambian con la sesion.
+
+La medicion YA EXISTE y YA FUNCIONA en el sitio correcto: `x.{estado,ms}` de
+`bin/bb`, 2016 muestras, y de ahi salieron los 36 episodios reales de la seccion
+3. La escalera manda en el segundo peldano: REUSAR. `bb-usable` no necesita su
+propia sonda; necesita leer la ultima muestra.
+
+Eso cambia la forma del PASO 3: el corte no lo consume una sonda propia de
+bb-usable, lo consume bb-usable leyendo lo que bb ya midio.
