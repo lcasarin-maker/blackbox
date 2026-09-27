@@ -118,10 +118,14 @@ def nombra(caps: list[dict], idx: dict[int, tuple[str, str]]) -> list[dict]:
         # que las muestras pueden haber visto vivo. Nombrar al lider no afirma
         # que muriera el lider -- murio el grupo -- y por eso la etiqueta lo
         # dice en vez de dejarlo implicito.
-        v["grupo"] = pid is not None and pid < 0
-        clave = -pid if v["grupo"] else pid
+        grupo = pid is not None and pid < 0
+        v["grupo"] = grupo
+        if grupo and pid is not None:      # el `is not None` lo pide el tipo, no la logica
+            clave = -pid
+        else:
+            clave = pid
         comm, unit = idx.get(clave, (None, None)) if clave is not None else (None, None)
-        if v["grupo"] and comm:
+        if grupo and comm:
             comm = f"{comm} (y su grupo)"
         v["comm"] = comm or "(ninguna muestra lo vio vivo)"
         v["unit"] = unit or "?"
