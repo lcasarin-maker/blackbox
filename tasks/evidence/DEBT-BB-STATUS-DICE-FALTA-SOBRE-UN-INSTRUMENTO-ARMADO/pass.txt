@@ -1,0 +1,10 @@
+# PASS -- `bb status` estable con el arreglo puesto. 2026-09-27.
+
+$ bash tools/status_estable.sh 8
+bb status estable en 8 corridas: armado: 15    falta: 0    ciego: 1
+rc=0
+
+El criterio es la ESTABILIDAD del veredicto, no su valor. Una sola corrida buena
+no distingue arreglado de afortunado, y eso no es teoria: es como se encontro el
+defecto. La version previa de bin/bb dijo FALTA y la actual dijo armado minutos
+despues en la misma maquina, y mi primera lectura fue "lo rompi yo".

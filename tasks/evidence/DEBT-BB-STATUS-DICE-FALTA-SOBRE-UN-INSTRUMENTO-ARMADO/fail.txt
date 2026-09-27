@@ -1,0 +1,20 @@
+# FAIL -- el CONTROL NEGATIVO: el mismo script sobre bin/bb SIN el arreglo.
+#
+# Corrido el 2026-09-27 contra `git show 7e6b011:bin/bb`, que es el codigo de
+# antes de quitar la tuberia, con el script identico:
+
+$ bash tools/status_estable.sh 20     # sobre el bin/bb previo
+bb status INESTABLE: 2 resumenes distintos en 20 corridas
+       14 armado: 14    falta: 1    ciego: 1
+        6 armado: 15    falta: 0    ciego: 1
+rc=1
+
+El sujeto no cambio entre corridas: earlyoom estaba armado las 20 veces, por las
+tres vias (config, proceso vivo, journal del arranque actual).
+
+UNA CORRECCION DE MI PROPIA MEDIDA
+La ficha se abrio diciendo "1 de cada 6 corridas". Ese era un muestreo de seis.
+Con veinte salen 14 de 20 -- el 70 %. La tasa se mueve con la carga de la
+maquina, porque el defecto es una CARRERA: cuanto mas cargada la caja, mas tarda
+el `printf` en escribir sus 697 lineas y mas probable es que `grep -q` salga
+antes. No hay una frecuencia unica que declarar, y eso es parte del hallazgo.

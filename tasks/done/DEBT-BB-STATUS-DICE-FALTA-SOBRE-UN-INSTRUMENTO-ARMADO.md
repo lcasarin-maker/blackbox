@@ -2,7 +2,13 @@
 id: DEBT-BB-STATUS-DICE-FALTA-SOBRE-UN-INSTRUMENTO-ARMADO
 kind: debt
 title: "`bb status` reporta FALTA sobre earlyoom armado 1 de cada 6 corridas"
-status: open
+status: done
+closed_at: 2026-09-27
+closure_type: fixed
+evidence:
+  pass: tasks/evidence/DEBT-BB-STATUS-DICE-FALTA-SOBRE-UN-INSTRUMENTO-ARMADO/pass.txt
+  fail: tasks/evidence/DEBT-BB-STATUS-DICE-FALTA-SOBRE-UN-INSTRUMENTO-ARMADO/fail.txt
+  e2e: tasks/evidence/DEBT-BB-STATUS-DICE-FALTA-SOBRE-UN-INSTRUMENTO-ARMADO/e2e.txt
 severity: P2
 origin: detected
 detector: {"rule": "auditoria de claims de SPEC 2026-09-27", "confidence": 1.0}
@@ -89,3 +95,63 @@ configurado: dice que el veredicto se mueve entre corridas con el sujeto quieto,
 medido 1 de 6. No se midió con la máquina en reposo ni con carga controlada, así
 que la tasa real es desconocida y el 1/6 es una sola muestra de seis, no una
 frecuencia calibrada.
+
+## CERRADA 2026-09-27, el mismo dia que se abrio
+
+### Root Cause
+
+`set -uo pipefail` en `bin/bb:19` mas una tuberia a `grep -q`. `grep -q` cierra
+su stdin al primer match, el `printf` de la izquierda -- que lleva 697 lineas --
+recibe SIGPIPE y muere con 141, y `pipefail` propaga ESE 141 en vez del 0 de
+grep. Es una CARRERA entre que printf acabe de escribir y que grep salga.
+
+**La hipotesis que esta ficha declaraba como candidata era falsa**, y por eso la
+declaraba en vez de escribirla como causa: la latencia de la consulta se midio en
+0.02-0.04 s sobre 12 corridas, con 697 lineas las 12 veces. Determinista y
+rapida. Haberla escrito como causa habria mandado a alguien a optimizar una
+consulta de 20 ms.
+
+**Y este repo ya lo habia encontrado doce lineas mas abajo**, el 2026-09-09, con
+`kdump-config show | grep -q` y el mismo sintoma literal: «el chequeo decia FALTA
+con kdump armado y corriendo». El arreglo de entonces fue «se evita el pipe»; el
+de earlyoom capturaba la salida en `$eo` y LA VOLVIA A METER en una tuberia. El
+arreglo se aplico a un chequeo y el patron sobrevivio en el de al lado.
+
+### Regression Test
+
+`tools/status_estable.sh`, que es el `close_check`. No comprueba esta fila:
+comprueba que el RESUMEN de `bb status` no se mueva entre corridas, asi que
+cualquier chequeo que se vuelva flaky por cualquier razon lo mueve y sale 1. Es
+el guardia de la CLASE.
+
+Barrido de la clase en todo `bin/bb`: dos tuberias reales a `grep -q`. La de
+earlyoom arreglada sin tuberia (`case` sobre la variable); la de `dpkg-query`
+DECLARADA y dejada, medida benigna -- emite una linea corta, asi que el productor
+acaba antes de que grep salga: 20 corridas, 20 veces rc=0. Su disparador de
+revision esta escrito en el codigo.
+
+### Verification Evidence
+
+```
+CON el arreglo:  bash tools/status_estable.sh 8   -> estable, rc=0
+SIN el arreglo (git show 7e6b011:bin/bb, script identico):
+                 20 corridas -> 2 resumenes distintos, rc=1
+                   14  armado: 14  falta: 1  ciego: 1
+                    6  armado: 15  falta: 0  ciego: 1
+```
+
+El control negativo corre contra el codigo ROTO de verdad, no contra una
+simulacion.
+
+### Una correccion de la medida de esta ficha
+
+Se abrio diciendo «1 de cada 6 corridas». Eso era un muestreo de seis; con veinte
+salen **14 de 20**. La tasa se mueve con la carga, porque el defecto es una
+carrera: cuanto mas cargada la caja, mas tarda el `printf` en escribir sus 697
+lineas. No hay una frecuencia unica que declarar, y eso es parte del hallazgo.
+
+### Lo que este cierre NO afirma
+
+No afirma que `bb status` sea estable en general: afirma que su resumen no se
+movio en 8 corridas seguidas y que el unico patron conocido que lo movia esta
+retirado del sitio donde mordia. Si aparece otro, el mismo script lo dice.
