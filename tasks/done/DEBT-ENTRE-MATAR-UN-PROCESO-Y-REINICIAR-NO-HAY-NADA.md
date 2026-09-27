@@ -17,8 +17,9 @@ evidence:
   e2e: tasks/evidence/DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA/e2e.txt
 reason: "CERRADO como void_wontfix 2026-09-27, por decision del dueno, que el 2026-09-27 habia votado antes dejarla esperando un quinto incidente y hoy voto cerrarla; manda el voto nuevo. El hallazgo que la cierra no es falta de datos: con el cuarto incidente y sus campos por proceso, CINCO claves por proceso contra CUATRO incidentes y ninguna separa -- el incidente 4 queda POR DEBAJO del p99 sano (10112 frente a 35340 MiB). No hay proceso anomalo que matar; el agregado es el anomalo. Un guardia intermedio con un umbral inventado mataria un proceso Y ADEMAS afirmaria haber tenido razon, que es peor que no tenerlo. El remedio grueso esta armado y calibrado contra los cuatro incidentes (bb-usable, FailureAction=reboot-immediate, WatchdogUSec=6min, activo)."
 ---
+## Root Cause
 
-## Que dice el informe hoy
+### Que dice el informe hoy
 
 `bb status` imprime, y lleva imprimiendolo desde que se anadio la fila:
 
@@ -29,7 +30,7 @@ reason: "CERRADO como void_wontfix 2026-09-27, por decision del dueno, que el 20
 
 `armado: 15    falta: 0    ciego: 1`
 
-## Por que earlyoom no puede ver esto
+### Por que earlyoom no puede ver esto
 
 Lee dos senales, `MemAvailable` y `SwapFree`, y ninguna de las dos se movio.
 Medido en los congelamientos del 22 y el 23: `MemAvailable` marco **56 %**
@@ -40,7 +41,7 @@ No es un defecto de configuracion: es que la memoria unificada de la GPU no la
 contabiliza ningun cgroup y apenas la toca `MemAvailable`. Contra un OOM
 clasico earlyoom sigue sirviendo, y por eso sigue armado.
 
-## Lo que SI esta cubierto, y con que
+### Lo que SI esta cubierto, y con que
 
 `bin/bb-usable` lee `/proc/pressure/memory` directamente, actua sobre
 `full avg10` sostenida, y su corte (10 % durante 300 s) esta **validado por
@@ -50,7 +51,7 @@ clasico earlyoom sigue sirviendo, y por eso sigue armado.
 O sea: la maquina no esta desprotegida. Esta ficha no es un agujero de
 cobertura.
 
-## Lo que falta, que es otra cosa
+### Lo que falta, que es otra cosa
 
 El remedio de `bb-usable` es `FailureAction=reboot-immediate`. El de earlyoom
 es matar un proceso. **Entre "muere un proceso" y "se reinicia la maquina
@@ -60,7 +61,7 @@ caro: el unico remedio que lo alcanza es el mas destructivo que existe.
 Un guardia que matara al proceso que se come la memoria unificada antes de que
 haga falta reiniciar es lo que falta. No existe.
 
-## Por que esto no tenia ficha hasta hoy
+### Por que esto no tenia ficha hasta hoy
 
 La fila CIEGO se venia reportando en cada corrida de `bb status`, y el control
 compensatorio (`bb-usable`) estaba nombrado **solo en un comentario de
@@ -68,7 +69,7 @@ compensatorio (`bb-usable`) estaba nombrado **solo en un comentario de
 es exactamente lo que la regla prohibe: declararla no la paga. Contarla como
 `ciego: 1` corrida tras corrida la vuelve paisaje.
 
-## Como se cierra, con las dos mitades
+### Como se cierra, con las dos mitades
 
 1. **Dispara sobre el sujeto real**: sobre los tres congelamientos que
    `tools/calibra_psi.py` ya usa como sujeto, el guardia tiene que haber
@@ -81,12 +82,12 @@ es exactamente lo que la regla prohibe: declararla no la paga. Contarla como
 El corte no se inventa aqui: se calibra igual que se calibro el de
 `bb-usable`, contra medidas propias.
 
-## 2026-09-26: se intento calibrar. La VENTANA existe; la ATRIBUCION no
+### 2026-09-26: se intento calibrar. La VENTANA existe; la ATRIBUCION no
 
 Evidencia completa en
 `tasks/evidence/DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA/calibracion-2026-09-26.txt`.
 
-### Primero, un hallazgo que cambia lo que se puede pedir a estos datos
+#### Primero, un hallazgo que cambia lo que se puede pedir a estos datos
 
 **Durante un congelamiento el muestreador se muere con la maquina:**
 
@@ -100,7 +101,7 @@ A una por minuto habrian sido ~1065, ~355 y ~354. Y los campos que nombran a un
 proceso por memoria ordinaria -- `pidio`, `cpu_top`, `swap`, `slices` -- estan
 VACIOS en los tres: no existian aun.
 
-### La ventana SI cabe: 6 minutos en el peor caso
+#### La ventana SI cabe: 6 minutos en el peor caso
 
 Barrido de `load1`, contra el punto en que `bb-usable` reiniciaria (PSI mem_full
 >= 10 % sostenido 300 s):
@@ -117,7 +118,7 @@ Un corte en 50-60 caza los TRES con 6 min de aviso en el peor caso y 2-6 falsos
 de 21 159 muestras sanas. Eso responde la pregunta del limite declarado: **la
 ventana no es de segundos.**
 
-### Pero el remedio que esta ficha imagina no se puede calibrar
+#### Pero el remedio que esta ficha imagina no se puede calibrar
 
 Ninguna clave POR PROCESO separa los tres incidentes de la operacion normal:
 
@@ -137,14 +138,14 @@ Y `load1`, la unica clave que discrimina, es un total de la maquina: no trae pid
 ni comm, ni unit. Ve el cuello y no ve al culpable -- que es esta misma ficha por
 el otro extremo.
 
-### Lo que esto deja
+#### Lo que esto deja
 
 Un remedio intermedio **cabe en el tiempo**, pero no puede ser un kill dirigido:
 tiene que ser mas grueso que matar un proceso y mas fino que reiniciar. Congelar
 o estrangular un slice, o negar reservas nuevas de GPU. Cual, y con que control,
 es lo que sigue abierto -- y ya no por falta de ventana.
 
-### Un error de medicion propio, y un hallazgo aparte
+#### Un error de medicion propio, y un hallazgo aparte
 
 La primera medida dio "6 y 8 min de ventana" porque tomaba el primer PSI>=10 de
 cada ventana, y las ventanas de `calibra_psi.py` estan DEFINIDAS como los tramos
@@ -159,7 +160,7 @@ incompleta, toda calibracion hecha contra ella -- incluida la de `bb-usable` --
 se hizo sobre n=3 cuando habia mas. Eso se declara aqui y necesita su propia
 mirada.
 
-## Limite declarado
+### Limite declarado
 
 Esta ficha **no prueba que el remedio intermedio sea lo que hacia falta**. Cabe
 que para esta maquina el reinicio SEA proporcionado y que un asesino
@@ -169,7 +170,7 @@ es identificable como el culpable y el punto en que `bb-usable` reinicia. Si
 esa ventana es de segundos, no hay remedio intermedio que quepa, y esta ficha
 se cierra escribiendo ESO.
 
-## 2026-09-27: con el cuarto incidente y sus campos por proceso, sigue sin separar
+### 2026-09-27: con el cuarto incidente y sus campos por proceso, sigue sin separar
 
 Evidencia: `tasks/evidence/DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA/calibracion-2026-09-27.txt`.
 
@@ -195,7 +196,7 @@ proceso, se ven peores que lo que precedió al pánico. Y eso con un filtro
 derivado — un crecimiento mayor que `MemTotal` no puede ser residente, lo que
 quita el artefacto de 1.4 TB de VmSize con `MAP_NORESERVE`.
 
-## Lo que esto cambia: puede no ser falta de datos, sino falta de señal
+### Lo que esto cambia: puede no ser falta de datos, sino falta de señal
 
 Cuatro claves por proceso probadas contra cuatro incidentes — `rss max`, `gpu`
 agregada, `gpu` del mayor, `cpu_top` sostenido y crecimiento de `pidio` — y
@@ -214,14 +215,15 @@ su cuenta el mismo día. Dos caminos independientes al mismo sitio.
 consecuencias y la decisión de retirar el remedio no es de un agente. Queda
 planteada con su medida.
 
-## CERRADO 2026-09-27 -- y lo que la cierra es una SENAL que no existe, no un dato que falte
+## Verification Evidence
+### CERRADO 2026-09-27 -- y lo que la cierra es una SENAL que no existe, no un dato que falte
 
 El dueno voto dos veces el mismo dia sobre esta ficha: primero dejarla abierta
 esperando un quinto incidente, luego cerrarla con las demas. Manda el voto nuevo,
 y queda dicho que hubo dos para que nadie lea el cierre como si la duda no
 hubiera existido.
 
-### Lo que SI esta armado, verificado sobre la maquina
+#### Lo que SI esta armado, verificado sobre la maquina
 
 ```
 $ systemctl show bb-usable.service -p WatchdogUSec -p FailureAction --value
@@ -236,7 +238,7 @@ El remedio grueso existe, esta activo y esta **calibrado contra cuatro
 incidentes** (`tools/control_racha.py`, 9 tests). Lo que esta ficha pedia es el
 intermedio: matar un proceso en vez de la maquina.
 
-### Por que el intermedio no se puede calibrar, y no es por falta de datos
+#### Por que el intermedio no se puede calibrar, y no es por falta de datos
 
 El cuarto incidente aporto lo que los tres primeros no tenian: campos por
 proceso DENTRO del colapso. La rafaga del 15:35:16 -- la ultima antes del panico
