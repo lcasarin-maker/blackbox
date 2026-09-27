@@ -3,7 +3,11 @@ id: DEBT-GATE-EFFECTIVENESS-SIN-ESTADO-LEGAL
 kind: debt
 title: "`gate_effectiveness` bloquea a `telemetry_prune` esté declarado o no: sus dos mitades leen columnas distintas"
 status: done
-closed: 2026-09-27
+closed_at: 2026-09-27
+evidence:
+  pass: tasks/evidence/DEBT-GATE-EFFECTIVENESS-SIN-ESTADO-LEGAL/pass.txt
+  fail: tasks/evidence/DEBT-GATE-EFFECTIVENESS-SIN-ESTADO-LEGAL/fail.txt
+  e2e: tasks/evidence/DEBT-GATE-EFFECTIVENESS-SIN-ESTADO-LEGAL/e2e.txt
 closure_type: relocated_prior_verification
 reason: "el arreglo lo hizo el kit aguas arriba (8.6.3 -> 8.6.5) y lo unico que este repo tenia que hacer -- borrar la declaracion de telemetry_prune de .simplecode/organ_inapplicable.json-- es DATOS, no codigo. Aterrizo en el commit anterior con su evidencia y las dos direcciones medidas; este commit solo mueve la ficha, que es lo que genuine-task-closure prescribe para este caso. No se anadio un test sintetico: el regression test de esto es el propio gate, cableado en el pre-push."
 severity: P1

@@ -1,0 +1,15 @@
+# PASS -- la configuracion LEGAL existe en 8.6.5, y este es su rc.
+#
+# Sujeto: DEBT-GATE-EFFECTIVENESS-SIN-ESTADO-LEGAL. El close_check de la ficha
+# ES este comando: el gate mismo, porque lo que estaba roto era el gate.
+#
+# $ python3 .simplecode/run.py simplecode.verification.gate_effectiveness --root . --gate
+
+rc=0
+  telemetry_prune                      102         0          4         25  1
+[gate-effectiveness] HALLAZGOS: 0
+INSTRUMENTOS SIN CAPTURAS TRAS 10+ CORRIDAS: 0
+
+# Con la declaracion de telemetry_prune BORRADA, que es la configuracion que
+# 8.6.5 admite y 8.6.3 no admitia. El sujeto no cambio: el organo sigue con
+# bloqueos=0 y hallazgos=4. Lo que cambio es que eso ya no es una condena.

@@ -1,0 +1,27 @@
+# FAIL -- el CONTROL NEGATIVO: pii-scan NO se apago, sigue cazando direcciones.
+#
+# La ficha exigia DOS mitades: que una unit de systemd deje de casar como
+# direccion, y que el detector siga cazando las de verdad. La segunda es esta.
+# Sin ella, el arreglo aguas arriba podria haber sido apagar el detector, que
+# seria peor que el falso positivo -- el incidente que creo este gate fue una
+# tabla con veinte RFC de clientes reales pegada en una ficha.
+#
+# Corrido el 2026-09-27 sobre el runtime 8.6.5, por subproceso y sobre un arbol
+# propio, para que el veredicto no dependa del contenido de este repo:
+
+PASSED tests/test_pii_scan_systemd.py::test_el_gate_NO_lee_una_unit_de_systemd_como_una_direccion[user@1000.service]
+PASSED tests/test_pii_scan_systemd.py::test_el_gate_NO_lee_una_unit_de_systemd_como_una_direccion[org.gnome.Shell@x11.service]
+PASSED tests/test_pii_scan_systemd.py::test_el_gate_NO_lee_una_unit_de_systemd_como_una_direccion[getty@tty1.service]
+PASSED tests/test_pii_scan_systemd.py::test_control_negativo_una_direccion_de_verdad_NO_pasa_por_unit[alguien@ejemplo.com]
+PASSED tests/test_pii_scan_systemd.py::test_control_negativo_una_direccion_de_verdad_NO_pasa_por_unit[nombre.apellido@empresa.com.mx]
+PASSED tests/test_pii_scan_systemd.py::test_control_negativo_sin_instancia_no_hay_arroba_que_confundir
+PASSED tests/test_pii_scan_systemd.py::test_el_gate_ENTERO_no_reporta_nada_sobre_una_unit
+PASSED tests/test_pii_scan_systemd.py::test_control_negativo_el_gate_ENTERO_SI_reporta_una_direccion
+8 passed in 0.21s
+
+# Y la medida historica, del dia anterior al arreglo (2026-09-25), cuando el
+# gate SI bloqueaba este repo:
+#   SIN tasks/pii_allow.txt -> 8 hallazgos, push bloqueado dos veces
+#   CON el fichero           -> 0 hallazgos
+# Hoy el allowlist ya no existe -- se retiro por control de retirada-- y el
+# resultado es 0 hallazgos sin el, que es la diferencia que el arreglo hizo.

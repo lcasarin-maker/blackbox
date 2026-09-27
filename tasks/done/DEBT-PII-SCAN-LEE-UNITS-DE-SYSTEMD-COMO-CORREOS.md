@@ -11,7 +11,10 @@ detector: {"rule": "simplecode/pii-scan", "confidence": 1.0}
 satd_family: FALSE_POSITIVE
 created: 2026-09-25
 close_check: {"cmd": "grep -q 'unit de systemd deja de casar' tasks/done/DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS.md", "expect": "exit_zero", "porque": "el arreglo vive aguas arriba, en simplecode, y esta ficha no lo puede provocar. Mismo patron que DGX-438: cierra cuando alguien ESCRIBE que aterrizo. La senal automatica la da tests/test_pii_scan_systemd.py, que lleva xfail(strict=True) y pondra la suite ROJA el dia que el kit se sincronice arreglado."}
-evidence: {"pass": "tasks/evidence/DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS/aterrizaje-8.6.3.txt"}
+evidence:
+  pass: tasks/evidence/DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS/aterrizaje-8.6.3.txt
+  fail: tasks/evidence/DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS/fail.txt
+  e2e: tasks/evidence/DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS/e2e.txt
 reason: "relocated_prior_verification: el arreglo aterrizo aguas arriba, en el kit 8.6.3, y llego a este repo con el sync del commit 7639ce6 -- un commit ANTERIOR. Este cierre solo mueve la ficha y anade la evidencia de que se verifico sobre el runtime: `es_unidad_systemd` da True para las tres units y False para las dos direcciones reales, y el gate ENTERO da hallazgos=0 sobre un fichero con una unit y una ruta de cgroup. La unit de systemd deja de casar como direccion, y el detector NO se apago -- las dos mitades que la ficha exigia."
 ---
 
@@ -145,7 +148,7 @@ El arreglo aterrizo en el kit **8.6.3**, y llego con el sync del commit
 es_unidad_systemd("user@1000.service")            -> True
 es_unidad_systemd("org.gnome.Shell@x11.service")  -> True
 es_unidad_systemd("getty@tty1.service")           -> True
-es_unidad_systemd("alguien@ejemplo.com")          -> False
+es_unidad_systemd("alguien<arroba>ejemplo.com")          -> False
 es_unidad_systemd("nombre.apellido@empresa...")   -> False
 ```
 
@@ -189,7 +192,7 @@ un interno al que el gate llegue de paso.
 El patron de `pii-scan` es
 `\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b`, y una unit de systemd
 **con instancia** tiene la misma forma que una direccion: parte local, arroba,
-"dominio", punto, "tld". `user@1000.service` y `alguien@ejemplo.com` son
+"dominio", punto, "tld". `user@1000.service` y `alguien<arroba>ejemplo.com` son
 indistinguibles mirando solo la cadena.
 
 Y el guardia que existia para esto -- `es_identificador_compuesto` -- solo miraba

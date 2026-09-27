@@ -10,6 +10,10 @@ origin: asserted
 satd_family: HARVEST_SUGGESTION
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/HARVEST-354395-can-not-reset-spark-gpu.md", "expect": "exit_zero", "porque": "Sugerencia de adopcion, no un defecto: lo unico verificable por maquina es que la DECISION quedo registrada. Cerrada, la forma que el modulo comprueba es closure_type + reason (no accepted, que ledger_schema prohibe junto a status: done). El texto anterior describia la forma ABIERTA y quedo falso al cerrarse -- un porque falso no se puede refutar midiendo lo que dice."}
 created: 2026-09-09
+evidence:
+  pass: shared:harvest-decision-registrada
+  fail: shared:harvest-decision-registrada
+  e2e: shared:harvest-decision-registrada
 reason: "void_wontfix: la DECISION registrada ES el entregable de una ficha HARVEST -- no hay fix de codigo que probar. Decidida el 2026-09-09 por the maintainer + Claude, revision de deuda 2026-09-09, con este disparador de reapertura: revisado a fondo (codigo + fuente citada) y sin valor incremental hoy -- reabrir si aparece un caso real medido en esta maquina que lo contradiga || Motivo tecnico: Revisada la fuente citada completa: no hay ninguna tecnica de diagnostico rescatable bajo la reatribucion a 'Liberation Watchdog' (satelite inexistente) -- solo el sintoma nombrado dos veces ('estados de hardware colgados', 'sintonizacion de firmware'), sin comando ni umbral."
 ---
 
