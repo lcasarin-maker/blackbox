@@ -1,0 +1,58 @@
+# El arreglo aterrizo en el kit 8.6.5. Medido 2026-09-27, no deducido.
+
+LO QUE ESTA FICHA MEDIA EN 8.6.3
+================================
+Las dos configuraciones posibles bloqueaban, y no habia tercera:
+
+  declaracion PRESENTE  -> DECLARACIONES REFUTADAS POR EL SUJETO: 1      rc=1
+  declaracion BORRADA   -> INSTRUMENTOS SIN CAPTURAS TRAS 10+ CORRIDAS: 1  rc=1
+
+DESPUES DE SINCRONIZAR A 8.6.5
+==============================
+$ cd ~/projects/simplecode && python3 -m simplecode.satellite.satellite_sync \
+    --target ~/projects/blackbox --apply
+[blackbox] RUNTIME_INSTALLED (8.6.3 -> 8.6.5), KIT_LOCK_INSTALLED
+
+Las dos direcciones, corridas las dos. El rc se lee SIN tuberia: `$?` detras de
+un `| tail` devuelve el de `tail`, y asi me equivoque dos veces hoy midiendo
+este mismo gate.
+
+  declaracion PRESENTE:
+    telemetry_prune   corridas 101  bloqueos 0  hallazgos 4  ...
+    DECLARACIONES REFUTADAS POR EL SUJETO: 1
+      "declared inapplicable, but this repo's telemetry records
+       bloqueos_reales=0 hallazgos=4 controles=0. ... delete it."
+    rc=1
+
+  declaracion BORRADA:
+    [gate-effectiveness] HALLAZGOS: 0
+    INSTRUMENTOS SIN CAPTURAS TRAS 10+ CORRIDAS: 0
+    rc=0                                          <- LA TERCERA CONFIGURACION
+
+O sea: la mitad que condenaba al organo por no tener bloqueos dejo de hacerlo.
+`telemetry_prune` sigue con bloqueos=0 y hallazgos=4 -- el sujeto no cambio-- y
+ahora eso ya no es una condena. La configuracion legal es BORRAR la declaracion,
+que es una de las tres salidas que la ficha listaba en "Como se cierra".
+
+QUE SE HIZO AQUI
+================
+Se borro la entrada `telemetry_prune` de `.simplecode/organ_inapplicable.json`.
+No se reescribio con mejores palabras: la decision durable del 2026-09-26 dice
+que una declaracion que el sujeto refuta se borra, y en 8.6.5 el organo ya no
+necesita ninguna -- informa 4 hallazgos con rc=0 y el gate lo cuenta como
+trabajo hecho, que es lo que siempre fue.
+
+EL CONTROL NEGATIVO ES EL PAR DE ARRIBA
+=======================================
+No es un rc=0 suelto. Es que el MISMO comando, en el MISMO kit, sale 1 con la
+declaracion puesta y 0 sin ella. Si saliera 0 en las dos, el gate habria dejado
+de mirar y el cierre no probaria nada.
+
+LO QUE NO DICE ESTO
+===================
+No dice que la premisa que abrio la ficha se haya resuelto como yo proponia. La
+ficha pedia una de tres cosas aguas arriba y no decia cual; el kit eligio, y la
+eleccion se lee en el comportamiento, no en un anuncio. Tampoco revisé el codigo
+de 8.6.5 para ver POR QUE dejo de condenar: se midio el veredicto, que es el
+sujeto del close_check. La leccion del 2026-09-25 -- asertar el veredicto del
+gate y no un interno-- se aplica igual en la direccion de leerlo.
