@@ -183,3 +183,53 @@ no manda kill) y dos todavia vivos (`earlyoom`, un cgroup ajeno con
 La diferencia con antes es que ahora las dos salidas son medibles. Hasta el
 2026-09-23 esta ficha no podia cerrarse por ninguna via, porque no habia
 instrumento que distinguiera "no ha pasado" de "no estabamos mirando".
+
+## 2026-09-27: el instrumento no podia encontrar la causa, y no estaba declarado
+
+El 2026-09-23 esta ficha se extendio al 2026-10-23 con esta razon: «el mes nuevo
+es para que el instrumento acumule evidencia, no para que la deuda envejezca. Si
+el plazo pasa sin una sola captura de emisor demonio, se cierra como no
+reproducible con reapertura automatica».
+
+**Ese plan era inejecutable, por cuatro defectos del propio instrumento.** Ninguno
+estaba escrito. Medidos y arreglados hoy; evidencia completa en
+`tasks/evidence/DEBT-DGX-438-SIN-CAUSA-RAIZ/instrumento-2026-09-27.txt`.
+
+| defecto | medida | despues |
+|---|---|---|
+| leia sólo `audit.log`, no las 4 rotaciones | veía **10.1 min** de las **76 h** armado (0.2 %) | lee `audit.log*`: 135 min, emisores de 2 a 12 |
+| no decía cuánto había mirado | un 0 no distinguía «no hubo señales» de «el anillo no llega» | declara la ventana y levanta su `could_not_run` |
+| nada acumulaba fuera del anillo | el mes de espera reciclaba 127 min | `sigterm_persist` en cada muestra, con marca de agua |
+| la víctima salía `?` **siempre** | **0 de 53** capturas con víctima | **39 de 39**, leyendo `a0` del SYSCALL |
+
+El cuarto es el que importa para esta ficha: la pregunta es *qué mata* los
+procesos, y el instrumento contestaba quién dispara y nunca a quién. `auditd` no
+emite `type=OBJ_PID` para estas reglas — **0 en todo el anillo contra 307
+SYSCALL con la clave** — así que la rama que unía emisor con víctima no se
+ejecutaba nunca. La víctima estaba en el propio SYSCALL, en `a0`, en hexadecimal.
+
+Y un quinto, encontrado al medir el cuarto: `IFS=$'\t' read` **colapsa**
+tabuladores consecutivos, porque el tabulador es espacio en blanco para IFS, así
+que un campo vacío desplazaba todos los de su derecha. La fila salía
+`python3.12[1841782] humano auid=? -> [?]` con `exe: 1000`.
+
+## Por qué esto NO la cierra
+
+Hay 6 capturas de emisor demonio (`rustdesk` 2, `kill` 2, `pkill` 2), que es lo
+que la ficha esperaba. No bastan:
+
+- son de **una** ventana de 127 min, y el fenómeno descrito es de cada 10-15 min
+  con 2 muertes medidas en 10 días. Una ventana no es una serie.
+- `kill` y `pkill` con `auid=unset` son procesos que heredaron un auid sin
+  sesión; llamarlos «demonio» es lo que dice la regla, no lo que son.
+- la víctima tiene **pid pero no nombre**: el proceso ya está muerto cuando se
+  lee el registro. Ponerle nombre es cruzar `victima.pid` contra `top_rss`,
+  `cpu_top` y `py_bg` de la muestra del mismo minuto — reuso de la serie que
+  `bin/bb` ya graba, y es el siguiente paso.
+
+## Lo que cambia en su criterio de cierre
+
+La regla anterior — «si el plazo pasa sin captura, se cierra como no
+reproducible» — **no se puede aplicar a lo medido antes de hoy**: habría sido una
+conclusión sobre el 0.2 % de la ventana. El plazo del 2026-10-23 sigue, y a
+partir de hoy sí acumula algo que mirar.
