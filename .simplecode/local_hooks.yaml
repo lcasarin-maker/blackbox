@@ -20,6 +20,61 @@
 # comprueba describe lo que alguien recordaba. Este gate la ata al sujeto --
 # bin/bb, tools/, adopted/ -- y cazo 6 desajustes en su primera corrida, de los
 # cuales 2 eran defectos del propio instrumento y quedaron arreglados.
+# ---------------------------------------------------------------------------
+# 18 hooks RECOGIDOS del config canonico el 2026-09-27, al sincronizar a 8.7.0.
+#
+# El kit 8.7.0 los retira del config canonico -- `satellite_sync --plan` lo
+# anuncia como REMOVES_UNKNOWN_HOOKS con 24 nombres -- y el propio sync dice
+# como conservarlos: declararlos aqui. Se recogen estos 18 y no los 24, y la
+# diferencia esta MEDIDA, no elegida.
+#
+# LOS 16 QUE HAN CAZADO ALGO EN ESTE REPO, por su telemetria:
+#
+#   version-bump             113 corridas   44 bloqueos  187 hallazgos
+#   ledger-schema            113             7            38
+#   gate-effectiveness       115            17            27
+#   zero-debt                177            16            18
+#   ship-freeze              113            11             7
+#   telemetry-disposition     55            11             4
+#   hook-receipts-gate       280            12             1
+#   backlog-verifier         113             7             4
+#   genuine-task-closure     188             4             3
+#   clean-worktree           181             3             2
+#   telemetry-bound          113             0             4
+#   no-perder-lineas         113             3             0
+#   close-check-discrimina   136             2             0
+#   spec-check               179             1             0
+#   staged-mode-guard        166             1             0
+#   sunset-audit              37             1             0
+#
+# CINCO de ellos cazaron algo EL MISMO DIA del sync, que es la razon de que esto
+# no se decidiera leyendo la lista: `zero-debt` dos `unencoded_file_io` mios,
+# `ledger-schema` 36 fichas `done` sin evidencia, `genuine-task-closure` un
+# cierre cuyo unico cambio de fuente era un comentario, `hook-receipts-gate` un
+# commit hecho por cherry-pick sin recibo, y `sunset-audit` las 19 exenciones
+# que 1.8.0 obligo a re-ganar.
+#
+# MAS DOS PRODUCTORES sin fila propia de telemetria y MECANICAMENTE necesarios:
+# `write-hook-receipt` y `post-commit-receipt`. Conservar `hook-receipts-gate`
+# sin ellos bloquea cada push por falta de recibo -- el gate se queda y su
+# emisor no. Se comprobo que los modulos de los 16 siguen EXISTIENDO en la
+# fuente de 8.7.0 (15 de 16; `spec_check` se movio a `simplecode.cli_spec
+# check`), asi que no son hooks huerfanos apuntando a codigo borrado.
+#
+# LOS SEIS QUE NO SE RECOGEN, con su cero medido y no supuesto:
+#   backlog-md-freeze   133 corridas, 0 bloqueos, 0 hallazgos
+#   claim-guard         181 corridas, 0 bloqueos, 0 hallazgos
+#   lockfile-parity     113 corridas, 0 bloqueos, 0 hallazgos
+#   ponytail-debt       113 corridas, 0 bloqueos, 0 hallazgos
+#   red-team-corpus     113 corridas, 0 bloqueos, 0 hallazgos
+#   claim-guard-notify  sin fila de telemetria (notificador, no compuerta)
+#
+# Y esos ceros NO se leen como "el sujeto esta limpio": la ley de la casa dice
+# que un instrumento con cero capturas tras muchas corridas es un defecto del
+# instrumento. Lo que dicen es que no hay evidencia con que justificar
+# conservarlos contra la decision del kit, que es otra cosa. Si alguno resulta
+# necesario, se recoge entonces y se dice por que.
+# ---------------------------------------------------------------------------
 extra_hooks: |2
         - id: bash-sintaxis
           name: sintaxis de los scripts bash
@@ -46,5 +101,180 @@ extra_hooks: |2
             --root . --name inventario-spec --hook pre-commit --
             python3 -m tools.inventario --check
           language: system
+          pass_filenames: false
+          always_run: true
+        - id: version-bump
+          name: "version reflects what shipped (semver from Conventional Commits)"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name version-bump --hook pre-push --
+            python .simplecode/run.py simplecode.verification.version_bump --root . --gate
+          language: system
+          stages: [pre-push]
+          pass_filenames: false
+        - id: ledger-schema
+          name: "task schema is typed and closed tasks carry evidence"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name ledger-schema --hook pre-push --
+            python .simplecode/run.py simplecode.verification.ledger_schema --root .
+          language: system
+          stages: [pre-push]
+          pass_filenames: false
+        - id: gate-effectiveness
+          name: "gate effectiveness: no organ with many runs and zero catches"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name gate-effectiveness --hook pre-push --
+            python .simplecode/run.py simplecode.verification.gate_effectiveness --root . --gate
+          language: system
+          stages: [pre-push]
+          pass_filenames: false
+          always_run: true
+        - id: zero-debt
+          name: "zero debt (staged, blocks)"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name zero-debt-staged --hook pre-commit --
+            python .simplecode/run.py simplecode.worktree.zero_debt
+            --root . --mode zero --staged --gate
+          language: system
+          types: [python]
+          stages: [pre-commit, pre-merge-commit]
+          pass_filenames: false
+        - id: ship-freeze
+          name: "ship freeze (no open backlog)"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name ship-freeze --hook pre-push --propagate-only --
+            python .simplecode/run.py simplecode.verification.finding_backlog
+            --root . --gate
+          language: system
+          stages: [pre-push]
+          pass_filenames: false
+        - id: telemetry-disposition
+          name: "telemetry disposition: blocked rows after the cutoff need a verdict"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name telemetry-disposition --hook pre-push --
+            python .simplecode/run.py simplecode.verification.telemetry_dispositions --root . --gate
+          language: system
+          stages: [pre-push]
+          pass_filenames: false
+          always_run: true
+        - id: hook-receipts-gate
+          name: "hook receipts: no unverified commits reaching push"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name hook-receipts-gate --hook pre-push --
+            python .simplecode/run.py simplecode.verification.hook_receipts
+            --root . --audit --gate
+          language: system
+          stages: [pre-push]
+          pass_filenames: false
+          always_run: true
+        - id: backlog-verifier
+          name: "closed debt has executable evidence"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name backlog-verifier --hook pre-push --
+            python .simplecode/run.py simplecode.verification.backlog_verifier
+            --root . --gate
+          language: system
+          stages: [pre-push]
+          pass_filenames: false
+        - id: genuine-task-closure
+          name: "task closures are not synthetic (real fix, real close_check)"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name genuine-task-closure --hook pre-commit --
+            python .simplecode/run.py simplecode.verification.genuine_task_closure
+            --root .
+          language: system
+          stages: [pre-commit, pre-merge-commit]
+          pass_filenames: false
+        - id: clean-worktree
+          name: "clean worktree (no dodged/partial-commit changes)"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name clean-worktree --hook pre-commit --
+            python .simplecode/run.py simplecode.worktree.clean_worktree --root .
+          language: system
+          stages: [pre-commit, pre-merge-commit]
+          pass_filenames: false
+        - id: telemetry-bound
+          name: "telemetry stays under the 10 MiB horizon SPEC declares (advisory)"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name telemetry-bound --hook pre-push --
+            bash -c 'python .simplecode/run.py simplecode.verification.telemetry_prune --root . --gate || true'
+          language: system
+          stages: [pre-push]
+          pass_filenames: false
+          always_run: true
+        - id: no-perder-lineas
+          name: "no tracked task entry loses lines vs HEAD"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name no-perder-lineas --hook pre-push --
+            python .simplecode/run.py simplecode.verification.no_perder_lineas --root .
+          language: system
+          stages: [pre-push]
+          pass_filenames: false
+        - id: close-check-discrimina
+          name: "close_check does not close two fichas at once (done only)"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name close-check-discrimina --hook pre-commit --
+            python .simplecode/run.py simplecode.verification.close_check_discrimina --root .
+          language: system
+          stages: [pre-commit, pre-merge-commit]
+          pass_filenames: false
+        - id: spec-check
+          name: "SPEC.md is complete and verified"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name spec-check --hook pre-commit --
+            python .simplecode/run.py simplecode.cli_spec check
+          language: system
+          stages: [pre-commit, pre-merge-commit]
+          pass_filenames: false
+        - id: staged-mode-guard
+          name: "staged file modes (no typechange into/out of a symlink, no absolute targets)"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name staged-mode-guard --hook pre-commit --
+            python .simplecode/run.py simplecode.guards.staged_mode_guard --root . --gate
+          language: system
+          stages: [pre-commit, pre-merge-commit]
+          pass_filenames: false
+          always_run: true
+        - id: sunset-audit
+          name: "no exemption enters without a sunset tag (staged diff)"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name sunset-audit --hook pre-commit --
+            python .simplecode/run.py simplecode.verification.sunset_audit --root . --staged --gate
+          language: system
+          stages: [pre-commit, pre-merge-commit]
+          pass_filenames: false
+          always_run: true
+        - id: write-hook-receipt
+          name: "write hook receipt nonce (WP18/G3 producer)"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.gate_runner
+            --root . --name write-hook-receipt --hook pre-commit --
+            python .simplecode/run.py simplecode.verification.hook_receipts
+            --root . --write-receipt
+          language: system
+          stages: [pre-commit, pre-merge-commit]
+          pass_filenames: false
+        - id: post-commit-receipt
+          name: "post-commit receipt and telemetry ledger"
+          entry: >-
+            python .simplecode/run.py simplecode.verification.hook_receipts
+            --root . --stamp-head
+          language: system
+          stages: [post-commit]
           pass_filenames: false
           always_run: true
