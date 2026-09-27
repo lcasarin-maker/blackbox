@@ -1,0 +1,104 @@
+# Revision de sunset para 1.8.0. Las siete exenciones de blocking-sleep,
+# re-verificadas por RETIRADA. 2026-09-27.
+#
+# El bump es MINOR porque 1.8 trae herramientas nuevas, y `sunset_audit` compara
+# MAJOR.MINOR: las etiquetas 1.7 vencen y hay que volver a ganarlas. Eso es el
+# mecanismo funcionando, no un estorbo.
+
+RESUMEN
+=======
+  tests/test_bb_bash.py:312  test_swap_mide_el_RITMO_no_solo_el_nivel
+     SE QUEDA, VERIFICADO: sin el sleep su propio test FALLA
+  tests/test_bb_bash.py:679  test_cpu_top_NOMBRA_a_quien_quema_cpu
+     SE QUEDA, PERO SU JUSTIFICACION CAMBIO: sin el sleep el test PASA
+  tests/test_bb_bash.py:223, 329, 342, 715   los cuatro controles negativos
+     SE QUEDAN: su prueba es que su positivo emparejado falla sin SU sleep
+  tools/atom_gpu_telemetry.py:1408
+     SE QUEDA: intervalo de un sampler de vida larga, fuera del camino de test
+
+UN CONTROL DE QUE EL CONTROL SELECCIONA
+=======================================
+Antes de creer una sola de estas corridas: el primer intento extrajo el nombre
+del test con un awk que devolvia la linea `def` entera, asi que `pytest -k` no
+emparejaba nada y las dos corridas dijeron **"no tests ran"**. Eso es
+COULD_NOT_RUN y se lee igual que un pase si uno mira solo el rc.
+
+  linea 223  test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado  selecciona 1
+  linea 312  test_swap_mide_el_RITMO_no_solo_el_nivel                       selecciona 1
+  linea 329  test_control_negativo_sin_trafico_de_swap_el_ritmo_es_cero     selecciona 1
+  linea 342  test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo    selecciona 1
+  linea 679  test_cpu_top_NOMBRA_a_quien_quema_cpu                          selecciona 1
+  linea 715  test_control_negativo_un_proceso_dormido_no_sale_como_que_quema selecciona 1
+
+Y cada mutacion lleva `assert ls[L-1] != o`, porque el 2026-09-26 dos controles
+de mutacion sobre el bloque HARVEST no mutaron nada y sus rechazos eran corridas
+sobre el fichero intacto.
+
+LINEA 312 -- SIGUE GANANDOSELO
+=============================
+$ # se sustituye time.sleep(4) por pass
+$ python3 -m pytest tests/test_bb_bash.py -q -k test_swap_mide_el_RITMO_no_solo_el_nivel
+  1 failed, 69 deselected in 1.66s
+
+Sin la espera su propio test falla. Exencion VERIFICADA para 1.8.
+
+LINEA 679 -- YA NO FALLA SIN EL SLEEP, Y LA RAZON NO ES LA QUE PARECIA
+======================================================================
+$ # se sustituye time.sleep(4) por pass
+$ python3 -m pytest tests/test_bb_bash.py -q -k test_cpu_top_NOMBRA_a_quien_quema_cpu
+  1 passed, 69 deselected in 1.61s
+
+La etiqueta de 1.7 afirmaba "sin este sleep SU PROPIO test FALLA". Es FALSO hoy.
+
+Primera hipotesis, y era falsa: que el test tomara su rama de ESCAPE -- si el
+quemador no entra en el top-5 de cpu_top, llama a
+`_no_esta_pero_los_cinco_queman_mas` y retorna, asi que pasaria sin medir nada.
+Se instrumentaron las dos ramas y se corrio con y sin el sleep:
+
+  CON el sleep:  RAMA=DIRECTA   1 passed in 5.61s
+  SIN el sleep:  RAMA=DIRECTA   1 passed in 1.61s
+
+Las dos toman la rama directa. O sea que sin el sleep el quemador SI entra en
+cpu_top y SI supera el 50 % de un nucleo.
+
+La razon real, medida:
+
+$ for i in 1..6; do /usr/bin/time -f "%e" ./bin/bb sample; done
+  0.74 0.74 0.75 0.76 0.77 0.78
+
+`bb sample` tarda 0.75 s. El test llama a `correr(["sample"])` DOS veces, asi que
+las dos muestras quedan separadas ~1.5 s, y `ps -o times=` -- que da segundos
+ENTEROS -- ya ve un delta de 1 s sin que nadie duerma.
+
+POR QUE SE QUEDA IGUAL
+======================
+Porque esos 1.5 s son una propiedad INCIDENTAL del muestreador, no una
+declarada. `bb sample` tarda 0.75 s hoy porque hace mucho -- slices, x, smi, el
+acumulador de sigterm -- y si manana se optimiza a 0.2 s, las dos muestras caerian
+dentro del mismo segundo entero y el test dejaria de medir el RITMO **sin
+fallar**: mediria un nivel y seguiria verde.
+
+Quitar el sleep cambiaria una espera explicita por una dependencia oculta en la
+lentitud de otra cosa. La etiqueta se re-escribe con esta razon, que es mas debil
+que la de 1.7 y por eso se dice: ya no es "sin esto falla", es "sin esto pasa por
+un motivo que nadie declaro".
+
+Disparador de revision para 1.9: si `bb sample` baja de 0.5 s, este sleep pasa de
+conveniencia a necesidad y hay que volver a medirlo.
+
+LOS CUATRO CONTROLES NEGATIVOS (223, 329, 342, 715)
+===================================================
+Su prueba no es que fallen sin su espera -- quitarsela los deja pasar VACIOS, que
+no es fallar. Su prueba es que el POSITIVO emparejado falla sin la suya, y eso es
+lo que se acaba de medir arriba: la linea 312 falla (para los de swap: 329, 342)
+y la 679 pasa por el motivo incidental de arriba (para el de cpu_top: 715).
+
+Asi que el de la linea 715 hereda la debilidad del 679 y se etiqueta con ella, no
+con la afirmacion vieja. El de la 223 empareja con `pidio`, cuyo positivo no
+lleva sleep propio, y su justificacion no cambia.
+
+LO QUE NO SE VERIFICO
+=====================
+`tools/atom_gpu_telemetry.py:1408` no se re-corrio: es el intervalo de un sampler
+de vida larga y ejercitarlo pide dejarlo correr. Se re-etiqueta con la misma
+razon de 1.7 y eso queda dicho aqui en vez de presentarse como verificado.
