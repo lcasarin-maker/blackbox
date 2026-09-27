@@ -2,7 +2,10 @@
 id: DEBT-GATE-EFFECTIVENESS-SIN-ESTADO-LEGAL
 kind: debt
 title: "`gate_effectiveness` bloquea a `telemetry_prune` esté declarado o no: sus dos mitades leen columnas distintas"
-status: open
+status: done
+closed: 2026-09-27
+closure_type: relocated_prior_verification
+reason: "el arreglo lo hizo el kit aguas arriba (8.6.3 -> 8.6.5) y lo unico que este repo tenia que hacer -- borrar la declaracion de telemetry_prune de .simplecode/organ_inapplicable.json-- es DATOS, no codigo. Aterrizo en el commit anterior con su evidencia y las dos direcciones medidas; este commit solo mueve la ficha, que es lo que genuine-task-closure prescribe para este caso. No se anadio un test sintetico: el regression test de esto es el propio gate, cableado en el pre-push."
 severity: P1
 origin: detected
 detector: {"rule": "gate_effectiveness --gate", "confidence": 1.0}
@@ -112,3 +115,50 @@ Cabe que la respuesta correcta aguas arriba sea que `telemetry_prune` deje de ir
 envuelto en `|| true` y pase a bloquear, con lo que su columna `bloqueos` se
 llenaría y el conflicto desaparecería sin tocar este gate. Eso también cierra
 esto, y es la salida que no se puede decidir desde un satélite.
+
+## CERRADA 2026-09-27 -- el arreglo aterrizo en el kit 8.6.5
+
+### Root Cause
+
+Las dos mitades de `gate_effectiveness` decidian con columnas distintas.
+`_clasificar` habia quitado `hallazgos` del test de mudez con la premisa de que
+era copia del bit de bloqueo; `_refutadas` si lo usaba. Un organo consultivo con
+`bloqueos_reales=0` y `hallazgos=4` caia justo en medio: una mitad lo declaraba
+mudo, la otra lo declaraba probado, y las dos condenaban.
+
+La premisa era falsa, y la flota lo midio despues de que esta ficha se abriera:
+226 de 33 865 filas (0.67 %) tienen `hallazgos` distinto del bit de bloqueo, y
+estan en los organos consultivos -- exactamente esta clase.
+
+### Regression Test
+
+El propio gate, que corre en cada `pre-push`. No hace falta un test nuevo: el
+`close_check` de esta ficha ES el gate, y si el kit vuelve a la forma anterior el
+push se bloquea igual que bloqueaba. Un test escrito aqui seria una copia peor
+del instrumento que ya esta cableado.
+
+Lo que SI quedo: la entrada `telemetry_prune` borrada de
+`.simplecode/organ_inapplicable.json`. Si el organo volviera a necesitar
+declaracion, el gate lo dira.
+
+### Verification Evidence
+
+`tasks/evidence/DEBT-GATE-EFFECTIVENESS-SIN-ESTADO-LEGAL/aterrizaje-8.6.5.txt`,
+con las dos direcciones corridas en 8.6.5:
+
+```
+declaracion PRESENTE -> DECLARACIONES REFUTADAS POR EL SUJETO: 1   rc=1
+declaracion BORRADA  -> INSTRUMENTOS SIN CAPTURAS TRAS 10+: 0      rc=0
+en 8.6.3 las dos direcciones daban rc=1, y eso es lo que abrio la ficha
+```
+
+El control negativo es ese par, no el rc=0 suelto: el mismo comando en el mismo
+kit sale 1 con la declaracion puesta y 0 sin ella, asi que el gate sigue mirando.
+
+### Lo que este cierre NO afirma
+
+No afirma que blackbox arreglara nada: el trabajo lo hizo el kit, y esta ficha
+solo registro la contradiccion con su medida en las dos direcciones y la reporto
+aguas arriba. La decision durable que gobierna eso -- un defecto del kit se
+reporta, no se rodea ni se arregla desde un satelite-- esta en `DECISIONS.md` y
+sigue en pie. El precio que se pago fue tener el push bloqueado un dia.
