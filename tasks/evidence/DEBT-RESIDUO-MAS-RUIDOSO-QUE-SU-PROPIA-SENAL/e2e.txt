@@ -1,0 +1,35 @@
+# E2E -- el sujeto es el CAMPO en la muestra real, no una funcion aislada.
+#
+# Sujeto: DEBT-RESIDUO-MAS-RUIDOSO-QUE-SU-PROPIA-SENAL. Lo que se mide de punta a
+# punta es `residuo_mb` tal como `bb sample` lo escribe en el jsonl, que es de
+# donde lo leen el test y cualquiera que analice la serie.
+
+$ ./bin/bb sample && tail -1 ~/.local/share/blackbox/samples/2026-09-27.jsonl
+  ... "commit_pct":26.15,"residuo_mb":-2937, ...
+
+Las tres fases del control de reserva se leyeron asi, por el campo del fichero y
+no por la funcion: `bb sample` corrido entre cada lectura, y el valor extraido
+del ultimo registro con `residuo_mb`. El corpus de 3308 pares sale del mismo
+sitio.
+
+Y el gate que vigila la afirmacion corregida:
+
+$ bash -n bin/bb                 -> ok
+$ python3 -m pytest tests/test_bb_bash.py -k residuo -q
+   test_residuo_es_un_numero_y_CABE_en_la_maquina PASSED
+
+Ese test ya no afirma que el residuo "no se mueve" -- esa mitad se retiro en la
+revision de sunset de 1.7, cuando la medida la refuto. Afirma lo que se puede
+afirmar: que es un entero y que cabe en la maquina. Un `residuo_mb` mayor que
+`MemTotal` seria una resta mal hecha, y eso si es un defecto y no ruido.
+
+LO QUE SIGUE SIN VERIFICARSE, DECLARADO
+=======================================
+- El bucket de carga tiene n=83. Es el menos poblado y el que da el margen
+  incomodo (3.0x). Con mas dias de carga real esa cifra puede empeorar.
+- La reserva del control es RAM ordinaria, no memoria unificada de GPU. La
+  afirmacion original hablaba de 4 GiB de CUDA por torch, y eso NO se repitio:
+  la maquina murio de un kernel panic por presion de memoria hace 12 horas y
+  tomar memoria de GPU para un control no lo justifica. Asi que lo medido es
+  "rechaza memoria con dueno visible en RSS"; la variante de GPU queda sin
+  repetir y por eso se dice.

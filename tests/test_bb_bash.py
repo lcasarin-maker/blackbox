@@ -735,24 +735,34 @@ def test_residuo_es_un_numero_y_CABE_en_la_maquina(datos):
     la mitad de la asercion que era falsa.
 
     Antes afirmaba que `residuo_mb` "no se mueve solo" entre dos muestras, con un
-    tope de 2048 MiB. Medido con ocho repeticiones por lado, maquina en reposo:
+    tope de 2048 MiB. La primera medida que lo refuto fueron ocho repeticiones
+    por lado con la maquina en reposo (mediana 306 y 801 MiB, max 2305), y una de
+    las ocho paso de 2048.
 
-        espera 0 s -> |delta| mediana  306, max   635 MiB
-        espera 1 s -> |delta| mediana  801, max  2305 MiB
+    ESA MEDIDA QUEDO SUPERADA el 2026-09-27 por la caracterizacion completa, y
+    los numeros nuevos son peores: 3308 pares contiguos del corpus, separados por
+    estado de carga, |delta| en MiB --
 
-    O sea que el residuo SI se mueve solo, y una de las ocho corridas paso de
-    2048: el test fallaba por la varianza normal de la maquina, y fallaba MAS
-    cuanto mas esperaba. Subir el tope a 4096 habria quitado el flake sin medir
-    nada mejor -- el ruido crece con el intervalo y con la carga.
+        estado                   n     mediana   p95    p99     max
+        reposo (load1 < 4)     2690        47    825   1825    4007
+        media  (4-20)           535       849   4576   7193    8035
+        carga  (load1 >= 20)     83      1370   7096   8053    8053
+
+    El ruido ESCALA CON LA CARGA por un factor de 29 en la mediana, y el tope de
+    2048 lo superan 142 de 3308 pares: 1 de cada 23, no 1 de 8. Subir el tope a
+    4096 habria quitado el flake sin medir nada mejor, y CUALQUIER tope fijo
+    sobre este campo depende de lo ocupada que este la caja.
 
     Asi que se queda lo que se puede afirmar: que es un entero y que cabe en la
     maquina. Un `residuo_mb` mayor que `MemTotal` seria una resta mal hecha, y
     eso si es un defecto y no ruido.
 
-    Lo que se fue vive en [[DEBT-RESIDUO-MAS-RUIDOSO-QUE-SU-PROPIA-SENAL]], con
-    la medida y con la otra mitad del hallazgo: `bin/bb:282` afirma "el residuo
-    no se mueve (delta +0.0 GB)" sobre un numero que se mueve 2.3 GiB en un
-    segundo sin que nadie reserve nada.
+    Y el campo SIRVE, que es la otra mitad de la caracterizacion: rechaza el
+    92.9 % de la memoria con dueno (6 GiB tocados pagina por pagina lo mueven 437
+    MiB, que caben dentro de su propio ruido en reposo), y separa su senal -- los
+    21 GB que desaparecieron sin dueno -- del ruido por 25x en reposo y 3.0x con
+    carga. Lo que sobraba era la palabra "no se mueve", no el campo.
+    Ficha cerrada: [[DEBT-RESIDUO-MAS-RUIDOSO-QUE-SU-PROPIA-SENAL]].
     """
     correr(["sample"], datos)
     residuo = int(muestras(datos)[-1]["residuo_mb"])

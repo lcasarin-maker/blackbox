@@ -1,0 +1,58 @@
+# PASS -- el ruido de residuo_mb, MEDIDO. 2026-09-27.
+#
+# La ficha pedia tres cosas y las tres estan aqui: el ruido a varios estados de
+# carga, el delta contra una reserva de dueno conocido, y con las dos una
+# conclusion sobre si el campo sostiene lo que afirma.
+
+1 · RUIDO, n = 3308 pares contiguos del corpus
+==============================================
+No ocho repeticiones: 3308 pares de muestras consecutivas del corpus que
+`bb sample` ya graba, separados por estado de carga. |delta| en MiB:
+
+  estado                   n     mediana   p95    p99     max
+  reposo (load1 < 4)     2690        47    825   1825    4007
+  media  (4-20)           535       849   4576   7193    8035
+  carga  (load1 >= 20)     83      1370   7096   8053    8053
+  TODOS                  3308        64   1905   5015    8053
+
+  muestras con residuo_mb: 3315   descartadas: 17515 sin el campo, 4 por JSON invalido
+
+EL RUIDO ESCALA CON LA CARGA: la mediana se multiplica por 29 entre reposo y
+carga. Eso responde la pregunta que la ficha hizo -- "el ruido con la maquina
+cargada, no solo en reposo" -- y explica el flake: el tope de 2048 MiB del test
+lo superan 142 de 3308 pares, el 4.29 %. Un umbral fijo sobre este campo depende
+de lo ocupada que este la caja.
+
+2 · CONTRA UNA RESERVA DE DUENO CONOCIDO
+========================================
+Lo que `bin/bb:282` afirmaba y nadie habia medido. 6 GiB reservados y TOCADOS
+pagina por pagina (Linux no asigna hasta el primer acceso, asi que un bytearray
+sin tocar no aparece en RSS y no mediria nada), con techo de 8 GB via `bb cap`.
+RSS confirmado en 6.0 GiB durante la reserva. Cinco lecturas por fase:
+
+  antes    -2808 -2834 -2887 -2890 -2705    media -2824.8
+  durante  -3245 -3269 -3271 -3238 -3288    media -3262.2
+  despues  -2981 -2914 -2836 -2847 -2937    media -2903.0
+
+  reserva con dueno:        6144 MiB
+  el residuo se movio:      -437 MiB   = 7.1 % de la reserva
+  RECHAZA:                  92.9 % de la memoria con dueno
+  y volvio al soltarla:     +359 MiB
+
+3 · LA CONCLUSION: EL CAMPO SIRVE, SOBRABA LA PALABRA
+=====================================================
+Los 437 MiB caben DENTRO del ruido en reposo (p95 = 825), asi que el
+desplazamiento no se distingue del ruido. Lo cierto no es "+0.0 GB" -- eso era un
+cero escrito sin ruido con que compararlo -- sino "menos que su propio ruido".
+
+  senal que el campo existe para ver: 21 000 MiB desaparecidos sin dueno
+  separacion sobre el ruido en reposo:  25x
+  separacion sobre el ruido con carga:  3.0x
+
+El campo distingue memoria con dueno de memoria sin dueno, con 25x de margen en
+reposo y 3x con la maquina cargada. Eso es lo que la ficha dejaba abierto como
+posibilidad: "cabe perfectamente que la conclusion sea que el campo sirve y lo
+que sobra es la palabra 'no se mueve'". Es lo que salio.
+
+`bin/bb:282` queda reescrito con estos numeros, incluido el 3.0x, que es el
+margen incomodo y el que un lector necesita saber.
