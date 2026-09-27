@@ -278,12 +278,41 @@ compromiso_pct() { # imprime el % de RAM+swap ya comprometido
 # desaparecieron 21 GB y NINGUN instrumento los vio: `nvidia-smi` por proceso no
 # se movio (37.6 GB antes y despues) y la suma de RSS solo subio 2.1 GB.
 #
-# CONTROL corrido antes de escribirlo: con 4 GiB de CUDA tomados por torch --
-# memoria que SI tiene dueno -- el residuo no se mueve (delta +0.0 GB). O sea
-# que es insensible a lo atribuible, que es lo que lo hace util: cuando se
-# mueva, lo que lo movio no tiene dueno.
+# CARACTERIZADO el 2026-09-27 (DEBT-RESIDUO-MAS-RUIDOSO-QUE-SU-PROPIA-SENAL).
+# La version anterior de este comentario decia "el residuo no se mueve
+# (delta +0.0 GB)" y ese +0.0 era FALSO: no habia ruido medido con que
+# compararlo, asi que un desplazamiento pequeno se escribio como cero.
 #
-# El valor absoluto es negativo (~-4 GB) por doble conteo de paginas
+# RUIDO, sobre 3308 pares contiguos del corpus de muestras (n real, no ocho
+# repeticiones), en MiB de |delta| entre dos muestras consecutivas:
+#
+#   estado                   n     mediana   p95    p99     max
+#   reposo (load1 < 4)     2690        47    825   1825    4007
+#   media  (4-20)           535       849   4576   7193    8035
+#   carga  (load1 >= 20)     83      1370   7096   8053    8053
+#
+# El ruido ESCALA CON LA CARGA: la mediana se multiplica por 29 entre reposo y
+# carga. Cualquier umbral fijo sobre este campo es un umbral que depende de lo
+# ocupada que este la maquina, y por eso el test que lo topaba en 2048 MiB era
+# flaky (lo superan 142 de 3308 pares, el 4.29 %).
+#
+# INSENSIBILIDAD A LA MEMORIA CON DUENO, que es lo que hace util al campo.
+# Control corrido con 6 GiB reservados y TOCADOS pagina por pagina (RSS
+# confirmado en 6.0 GiB), cinco lecturas por fase:
+#
+#   antes    media -2824.8 MiB
+#   durante  media -3262.2 MiB     -> se movio 437 MiB, el 7.1 % de la reserva
+#   despues  media -2903.0 MiB     -> volvio 359 MiB al soltarla
+#
+# O sea que RECHAZA el 92.9 % de la memoria con dueno. Y esos 437 MiB caben
+# dentro de su propio ruido en reposo (p95 = 825), asi que lo cierto no es
+# "+0.0 GB": es "menos que su propio ruido".
+#
+# SEPARACION contra la senal que el campo existe para ver -- los 21 GB que
+# desaparecieron sin dueno: 25x sobre el ruido en reposo y 3.0x sobre el de
+# carga. El campo sirve; lo que sobraba era la palabra "no se mueve".
+#
+# El valor absoluto es negativo (~-3 GB) por doble conteo de paginas
 # compartidas entre procesos. Lo que importa es el DELTA, no el nivel.
 residuo_mb() { # MemTotal - todo lo reclamado, en MiB
   local rss gpu

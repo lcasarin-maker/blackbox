@@ -1,0 +1,35 @@
+# FAIL -- el CONTROL NEGATIVO: la medida PUEDE salir contraria, y salio.
+#
+# Sin esto, "el campo rechaza la memoria con dueno" seria una afirmacion sin
+# salida que la contradiga.
+
+1 · LA MEDIDA REFUTO LA AFIRMACION QUE ESTABA ESCRITA
+=====================================================
+`bin/bb:282` decia, antes de hoy:
+
+  "con 4 GiB de CUDA tomados por torch -- memoria que SI tiene dueno -- el
+   residuo no se mueve (delta +0.0 GB)"
+
+Medido con 6 GiB y RSS confirmado: se movio 437 MiB. El "+0.0" era falso. No es
+un fallo grande -- 437 cabe en el ruido -- pero un cero escrito donde no hay cero
+es lo que hizo que el test se topara en 2048 y fuera flaky durante semanas.
+
+2 · Y EL RUIDO REFUTO EL UMBRAL DEL TEST
+========================================
+El test afirmaba |delta| < 2048 MiB. Sobre 3308 pares reales:
+
+  lo superan 142 pares = 4.29 %,  y el maximo observado es 8053 MiB
+
+O sea que el test fallaba ~1 de cada 23 corridas por la varianza normal de la
+maquina. La ficha lo habia estimado en "1 de 8" con ocho repeticiones; con 3308
+pares la tasa real es 1 de 23, y sube con la carga.
+
+3 · EL CONTROL DE QUE LA RESERVA SE HIZO DE VERDAD
+==================================================
+Una reserva que no llega a RSS no mide nada, y es el modo de fallo obvio aqui:
+
+  ps -eo rss=,comm= durante la reserva -> python3 con 4.0 GiB y luego 6.0 GiB
+
+Se toca pagina por pagina (paso de 4096) justamente para que eso ocurra. Sin ese
+bucle el bytearray no se materializa y las tres fases habrian dado el mismo
+numero, que se habria leido como "rechaza el 100 %".
