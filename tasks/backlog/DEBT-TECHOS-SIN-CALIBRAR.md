@@ -311,3 +311,34 @@ Hasta que esto cierre, los 48G de `app.slice` no son un tope calibrado: son un
 tope que existe. Que exista ya cambia el desenlace -- mata un proceso en vez de
 congelar la maquina entera -- y eso es mas que nada. No se puede afirmar que sea
 el tope correcto, y esta ficha existe para que esa afirmacion no se cuele.
+
+## Una firma reconocible del abanico, aportada de fuera (2026-09-27)
+
+La sesion `office2office` analizo por su cuenta el kernel panic del 2026-09-26 y
+aporto un dato que aqui no estaba: el herd deja una **firma de PIDs
+consecutivos**. En el journal del arranque muerto, ~20 tareas `python` con PIDs
+de 3047709 a 3047812 mas un `bash`, todas bloqueadas mas de 123 s.
+
+Eso importa para esta ficha porque convierte "un abanico de `pytest-xdist`" en
+algo **reconocible en los datos** en vez de una atribucion. Hasta ahora el
+abanico se identificaba por el nombre de los procesos y por su numero; un rango
+contiguo de PIDs con el mismo ejecutable es una firma que `bb` podria detectar
+sin adivinar quien lanzo que.
+
+Su propio limite, tal como lo declaro y sin suavizarlo: **NO esta probado** que
+ese herd fuera el de su pre-push. Es consistente con la hora y no hay evidencia
+directa. Se registra como consistente y no atribuido.
+
+Lo que la misma sesion midio y coincide con lo de aqui: `earlyoom` corre con
+`-m 10 -s 10`, o sea que exige memoria <=10 % **Y** swap <=10 %, y la caja se
+colgo con 24-29 % de RAM disponible. No disparo, y no fue un fallo suyo -- el
+umbral no ve el thrash. Es la misma brecha que
+`DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA` ya tiene abierta, ahora con
+una segunda medida independiente.
+
+Su sugerencia era topar el herd a nivel de maquina (`PYTEST_XDIST_AUTO_NUM_WORKERS`
+en el entorno compartido, o un scope con `MemoryHigh`/`MemoryMax` para las suites
+como ya hace `bb cap`). Es la direccion correcta y es la CAUSA, no el dano: el
+arreglo de `bb-usable` del 2026-09-27 acota cuanto dura un colapso y no evita
+ninguno. No se toco nada fuera de este repo -- ni `pytest.ini` de nadie, ni
+`earlyoom`, ni sysctl -- porque el cambio es de los repos que lanzan las suites.

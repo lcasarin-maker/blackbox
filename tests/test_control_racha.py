@@ -12,15 +12,13 @@ from __future__ import annotations
 import datetime as dt
 import importlib.machinery as machinery
 import importlib.util as util
-import sys
 from pathlib import Path
 
 import pytest
 
-RAIZ = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(RAIZ / "tools"))
+from tools import control_racha as cr
 
-import control_racha as cr  # noqa: E402  # sunset-reviewed: 1.7 -- SE QUEDA: `sys.path.insert` antes del import es la unica forma de importar un modulo de tools/ sin empaquetar el repo, y E402 es su consecuencia mecanica, no una decision aparte. Disparador de revision: que tools/ pase a ser un paquete instalable. Precedente: tools/calibra_psi.py ya se importa asi desde tests/test_calibra_psi.py
+RAIZ = Path(__file__).resolve().parent.parent
 
 
 def _serie(pares, base=dt.datetime(2026, 9, 15, 3, 0)):
@@ -100,6 +98,7 @@ def test_el_corte_es_el_MISMO_que_el_del_demonio():
     fuente = (RAIZ / "bin" / "bb-usable").read_text(encoding="utf-8")
     loader = machinery.SourceFileLoader("bb_usable", str(RAIZ / "bin" / "bb-usable"))
     spec = util.spec_from_loader("bb_usable", loader)
+    assert spec is not None, "no se pudo construir el spec de bin/bb-usable"
     bbu = util.module_from_spec(spec)
     loader.exec_module(bbu)
     assert cr.CORTE_S == bbu.PSI_ACT_SOSTENIDO_S, (
@@ -134,3 +133,13 @@ def test_control_negativo_el_gate_SI_sale_1_con_el_corte_bajado(capsys):
         "el control no puede salir negativo, asi que su 'LIMPIO' no verifica "
         f"nada:\n{salida}")
     assert "FALSO POSITIVO" in salida
+
+
+def test_sin_corpus_es_COULD_NOT_RUN_y_no_limpio(tmp_path, capsys):
+    """rc=2, y lo dice. Un control que no encuentra su corpus y devuelve 0 seria
+    la peor de las tres salidas: afirma que no hay falsos positivos sobre una
+    serie que no leyo. Es el primer modo de fallo de la lista de la casa -- un
+    instrumento caido indistinguible de un sujeto limpio."""
+    rc = cr.main(["--muestras", str(tmp_path / "no-existe")])
+    assert rc == 2, "sin corpus, ni 0 ni 1: la tercera salida"
+    assert "COULD_NOT_RUN" in capsys.readouterr().err
