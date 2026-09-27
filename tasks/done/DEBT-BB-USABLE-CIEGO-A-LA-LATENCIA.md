@@ -16,8 +16,9 @@ evidence:
   e2e: tasks/evidence/DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA/e2e.txt
 reason: "CERRADO como void_wontfix 2026-09-27, por decision del dueno. El PASO 1 de la ficha (observar) esta hecho y verificado: bin/bb:761 escribe {\"x\":{\"estado\",\"ms\"}} en cada muestra y 2389 muestras del corpus tienen los dos canales OK. El PASO 3 (actuar) no se puede dar y la razon esta medida sobre la maquina: bb-usable.service corre con FailureAction=reboot-immediate, o sea que un umbral sin calibrar REINICIA LA MAQUINA, y el corte no existe porque calibra_latencia_x sale 2 -- cero episodios etiquetados con muestras. Darle un numero inventado a un demonio que reinicia es peor que no darle ninguno. Se reabre cuando el corte exista."
 ---
+## Root Cause
 
-## Que pasa
+### Que pasa
 
 `bb-usable` nacio para contestar "si la maquina SIRVE" en vez de "si systemd
 sigue vivo", y lo hace por dos caminos, los dos de MEMORIA: una sonda que pide
@@ -32,7 +33,7 @@ Desde este release esa magnitud existe y se esta registrando: `latencia_x` en
 cada muestra (4-7 ms sano en esta maquina, con controles negativos para
 TIMEOUT, ERROR y AUSENTE). `bb-usable` no la lee.
 
-## Por que no se conecto de una vez, que es la parte importante
+### Por que no se conecto de una vez, que es la parte importante
 
 Porque `bb-usable` no informa: **actua**. Su unit lleva
 `FailureAction=reboot-immediate`. Enchufarle un canal nuevo sin calibrar
@@ -45,13 +46,13 @@ congelamientos con sus controles sanos. Para la latencia del escritorio hay
 **una sola medida sana** (4-7 ms) y **cero episodios malos registrados**. Con
 n=0 del lado positivo no hay calibracion posible.
 
-## 2026-09-26: la premisa de esta ficha era FALSA, y n = 36
+### 2026-09-26: la premisa de esta ficha era FALSA, y n = 36
 
 Lo encontro un enjambre de auditoria. Se verifico aqui otra vez, comando por
 comando, porque un veredicto devuelto no es evidencia. Todo en
 `tasks/evidence/DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA/n-no-es-cero-2026-09-26.txt`.
 
-### Primero: la sonda que el PASO 1 dice haber puesto NO esta corriendo
+#### Primero: la sonda que el PASO 1 dice haber puesto NO esta corriendo
 
 ```
 systemctl status bb-usable  -> active (running) since 2026-09-25 05:10:18
@@ -69,7 +70,7 @@ El codigo esta en el repo y su test pasa. Lo que no esta es CORRIENDO. Y
 lo mismo. **Una fila ARMADO sobre un demonio que corre codigo viejo es la forma
 mas silenciosa de este defecto.**
 
-### Segundo: la sonda HERMANA si midio, y hay 36 episodios
+#### Segundo: la sonda HERMANA si midio, y hay 36 episodios
 
 `bin/bb` guarda `x.{estado,ms}` en cada muestra y eso si lleva grabando:
 
@@ -79,7 +80,7 @@ por encima del techo sano (13 ms) o no-OK:       69   (3.42 %)
 de esas, con los TOTALES SANOS                   44
 ```
 
-### El control que separa "escritorio lento" de "bb sin CPU"
+#### El control que separa "escritorio lento" de "bb sin CPU"
 
 `x.ms` incluye lanzar `xset`, asi que podria estar midiendo que el muestreador se
 quedo sin CPU. `smi.ms` mide igual contra OTRO sujeto, y su linea base es
@@ -103,7 +104,7 @@ El control sabe decir NO -- caza 8 como confundidos, uno con `smi.ms` en 2728 ms
 `load1=2.63` y `cpu_some=0.00` -- la maquina en reposo por todos los totales, y
 medio segundo para que el escritorio conteste.
 
-### Lo que esto le hace a la ficha
+#### Lo que esto le hace a la ficha
 
 La premisa decia: "UNA medida sana (4-7 ms) y CERO episodios malos. Con n=0 del
 lado positivo no hay calibracion posible."
@@ -115,7 +116,7 @@ Lo que NO cambia: el corte sigue sin derivarse, y antes hay que arreglar que el
 demonio que tendria que usarlo no corre el codigo que mide. Ese orden importa --
 derivar un corte para un demonio que no lo va a leer es trabajo que se pierde.
 
-## Como se cierra: por pasos, y el primero NO es actuar
+### Como se cierra: por pasos, y el primero NO es actuar
 
 **PASO 1 -- HECHO el 2026-09-25.** `bb-usable` mide la latencia del servidor X
 en cada sonda (cada 30 s) y la deja en el journal. **No entra en ninguna
@@ -152,15 +153,16 @@ que alguien escriba la calibracion en `tasks/done/`, con la frase literal
 `umbral de latencia CALIBRADO`, porque no hay forma honesta de que un gate
 provoque el episodio que falta.
 
-## CERRADO 2026-09-27 -- el paso 1 hecho, el paso 3 imposible hoy
+## Verification Evidence
+### CERRADO 2026-09-27 -- el paso 1 hecho, el paso 3 imposible hoy
 
-### Lo que esta hecho, verificado
+#### Lo que esta hecho, verificado
 
 `grep -c '"x":{"estado"' bin/bb` da **1**: el muestreador escribe el canal en
 cada muestra ([bin/bb:761](bin/bb:761)), y el corpus tiene **2389 muestras con
 los dos canales OK**. La mitad de observar no es deuda.
 
-### Lo que no se hace, y por que no es pereza
+#### Lo que no se hace, y por que no es pereza
 
 | medida | valor | de donde |
 |---|---|---|

@@ -17,8 +17,9 @@ evidence:
   e2e: tasks/evidence/DEBT-DGX-438-SIN-CAUSA-RAIZ/e2e.txt
 reason: "CERRADO como void_wontfix 2026-09-27, por decision del dueno con la objecion puesta delante. El instrumento esta armado, acumula fuera del anillo y su columna de victima quedo arreglada HOY: 44 de 314 capturas (14.0 %) traian el grupo de procesos leido como un pid imposible y 28 mas traian kill(0,sig), o sea 72 (22.9 %) mal clasificadas. Con el arreglo, autolimpieza pasa de 3 a 31 y atribucion incompleta de 70 a 42, y el SUJETO sigue en 0: ni una captura de un demonio matando un proceso ajeno nombrable. No se cierra afirmando que no ocurre -- se cierra porque lo que queda es un limite del corpus (top-5 a 1/min no ve procesos de vida corta) y no una via sin agotar. Se reabre por el trigger de abajo."
 ---
+## Root Cause
 
-## Que pasa
+### Que pasa
 
 Atlas registro en DGX-438 muertes de procesos python de fondo con `rc=143`
 (SIGTERM) a intervalos irregulares (10-15 min), con o sin `setsid`, con o sin
@@ -28,24 +29,24 @@ El 2026-09-08 se sumo un caso con dos victimas casi simultaneas:
 `atom-gpu-telemetry.service` murio `(code=killed, signal=TERM)` a las 07:41:02 y
 el vLLM del gateway cayo a las 07:41:27, 25 segundos despues.
 
-## Descartado con evidencia
+### Descartado con evidencia
 
 - `systemd-oomd`: `is-enabled` devuelve `not-found`, ni instalado.
 - La mitigacion de `atom_gpu_telemetry.py`: usa SIGSTOP/SIGCONT, no mata.
 - `liberation_watchdog.py`: no envia kill a nadie; el SIGTERM que documenta es el
   que RECIBE por `TimeoutStartSec=245min`, y 245 min no encaja con 10-15.
 
-## Vivos
+### Vivos
 
 `earlyoom` y un cgroup ajeno con `TimeoutStopSec`. Tampoco se ha descartado que
 el caso del 07:41 lo causara esta misma sesion con alguna operacion de esa
 franja: no se identifico quien envio la senal.
 
-## Que la cierra
+### Que la cierra
 
 Identificar al emisor del SIGTERM.
 
-## Instrumento, puesto el 2026-09-23
+### Instrumento, puesto el 2026-09-23
 
 Hasta hoy la ficha apuntaba a `bb sample`/`bb scan`, y eso no podia cerrarla:
 la muestra se toma del lado de la VICTIMA, asi que ve que un proceso
@@ -91,7 +92,7 @@ discriminador no es "cero eventos con mi clave" -- eso es justo lo ambiguo --
 sino el efecto de la otra regla que instala la misma seccion: si el sondeo de
 rustdesk sigue cayendo en el anillo, la seccion 7 no esta cargada.
 
-## Lo que hubo que resolver antes, y es su propia ficha
+### Lo que hubo que resolver antes, y es su propia ficha
 
 El anillo de auditoria estaba ahogado: **99.8 % de sus eventos eran
 `/usr/bin/loginctl` ejecutado por `rustdesk.service` a 14.6 por segundo**, lo
@@ -100,7 +101,7 @@ A esa retencion, una captura de kill envejece antes de que nadie la lea. La
 seccion 7 excluye ese ruido con `auid=unset` sin cegar la regla `reboot_cmd`
 que lo produce; la causa queda en `DEBT-AUDIT-AHOGADO-POR-RUSTDESK`.
 
-## ARMADO el 2026-09-23 22:01, y el control lo confirmo
+### ARMADO el 2026-09-23 22:01, y el control lo confirmo
 
 `sudo ./enable-privileged.sh` cargo la seccion 7 y su propia verificacion
 respondio `reglas CARGADAS en el kernel (auditctl -l las ve)`.
@@ -130,7 +131,7 @@ regla -- 408 eventos en los 60 s previos, **0 en los 30 s siguientes**. La
 retencion del anillo deja de ser de 37 min, que era la condicion para que una
 captura sobreviviera hasta que alguien la leyera.
 
-### Un defecto que el control encontro en el propio instrumento
+#### Un defecto que el control encontro en el propio instrumento
 
 La primera lectura tras armar imprimio las dos capturas y debajo dijo
 **NO ARMADO**. El estado se calculaba contando ruido de rustdesk en la ventana
@@ -145,11 +146,11 @@ Se anadio ademas un tercer veredicto, **NO SE PUDO DETERMINAR**: si rustdesk
 no corre, nadie genera el ruido que la regla calla y un cero no distingue
 "regla puesta" de "nada que callar". Antes eso se habria leido como armado.
 
-## Lo que sigue sin saberse
+### Lo que sigue sin saberse
 
 Quien manda el SIGTERM del sujeto.
 
-## Que espera esta ficha, reescrito el 2026-09-23
+### Que espera esta ficha, reescrito el 2026-09-23
 
 Hasta hoy esperaba un arreglo. **Ya no: espera una REAPARICION con el
 instrumento puesto**, y el cambio se hace porque el sujeto dejo de aparecer.
@@ -191,7 +192,7 @@ La diferencia con antes es que ahora las dos salidas son medibles. Hasta el
 2026-09-23 esta ficha no podia cerrarse por ninguna via, porque no habia
 instrumento que distinguiera "no ha pasado" de "no estabamos mirando".
 
-## 2026-09-27: el instrumento no podia encontrar la causa, y no estaba declarado
+### 2026-09-27: el instrumento no podia encontrar la causa, y no estaba declarado
 
 El 2026-09-23 esta ficha se extendio al 2026-10-23 con esta razon: «el mes nuevo
 es para que el instrumento acumule evidencia, no para que la deuda envejezca. Si
@@ -220,7 +221,7 @@ tabuladores consecutivos, porque el tabulador es espacio en blanco para IFS, as�
 que un campo vacío desplazaba todos los de su derecha. La fila salía
 `python3.12[1841782] humano auid=? -> [?]` con `exe: 1000`.
 
-## Por qué esto NO la cierra
+### Por qué esto NO la cierra
 
 Hay 6 capturas de emisor demonio (`rustdesk` 2, `kill` 2, `pkill` 2), que es lo
 que la ficha esperaba. No bastan:
@@ -234,14 +235,14 @@ que la ficha esperaba. No bastan:
   `cpu_top` y `py_bg` de la muestra del mismo minuto — reuso de la serie que
   `bin/bb` ya graba, y es el siguiente paso.
 
-## Lo que cambia en su criterio de cierre
+### Lo que cambia en su criterio de cierre
 
 La regla anterior — «si el plazo pasa sin captura, se cierra como no
 reproducible» — **no se puede aplicar a lo medido antes de hoy**: habría sido una
 conclusión sobre el 0.2 % de la ventana. El plazo del 2026-10-23 sigue, y a
 partir de hoy sí acumula algo que mirar.
 
-## 2026-09-27, mismo dia: la victima ya tiene nombre, y lo que aparecio no es esto
+### 2026-09-27, mismo dia: la victima ya tiene nombre, y lo que aparecio no es esto
 
 Con el instrumento arreglado, el siguiente paso era cruzar `victima.pid` contra
 las muestras. Hecho en `tools/nombra_victimas.py`. Lo que salio:
@@ -275,7 +276,7 @@ utensilio, no a quien decidio. Una captura cuyo emisor es un envoltorio y cuyo
 padre no se puede nombrar queda como **ATRIBUCION INCOMPLETA** -- ni sujeto ni
 descarte -- en vez de contarse como hallazgo.
 
-## Lo que este cero SI y NO dice
+### Lo que este cero SI y NO dice
 
 **SI dice:** en lo acumulado no hay una sola captura de un demonio matando un
 proceso ajeno con emisor atribuible y victima nombrable. Es un cero medido, no
@@ -291,7 +292,7 @@ un cero por ceguera, que es lo que era esta manana.
 3. `postgres` aparece 7 veces como emisor demonio con victima sin nombre. No se
    descarta ni se acusa: no se sabe a quien mato.
 
-## El siguiente paso, que ya no es "esperar"
+### El siguiente paso, que ya no es "esperar"
 
 Subir ese 8 % de victimas nombrables. El cruce solo puede usar lo que las
 muestras vieron vivo, asi que las opciones son grabar mas procesos por muestra
@@ -299,13 +300,14 @@ muestras vieron vivo, asi que las opciones son grabar mas procesos por muestra
 medido para `swap.in_pag_s`) o grabar el nombre en el momento del barrido -- que
 no sirve, porque el barrido corre hasta 10 min despues y la victima ya murio.
 
-## CERRADO 2026-09-27 -- y el instrumento se arreglo antes de cerrar
+## Verification Evidence
+### CERRADO 2026-09-27 -- y el instrumento se arreglo antes de cerrar
 
 Este cierre lo decidio el dueno con la objecion puesta delante. Lo que NO se
 hizo es cerrar sobre el numero que el modulo daba: al correrlo para escribir la
 evidencia, su propia salida delato un defecto.
 
-### El defecto, encontrado en la salida y no en el codigo
+#### El defecto, encontrado en la salida y no en el codigo
 
 La columna de victima traia `4294965290`, `4294965334`, `4294965221`. Ninguno es
 un pid: `pid_max` en Linux llega a 2^22. Son negativos leidos sin signo --
@@ -324,7 +326,7 @@ quien los recorra mas tarde vera otros. A las 05:38 eran 357 capturas y 21.3 %.
 | con `a0 == 0` (`kill(0,sig)`, el propio grupo del emisor) | 28 | 8.9 % |
 | **mal clasificadas** | **72** | **22.9 %** |
 
-### El arreglo esta vivo en el flujo, y las dos formas no se solapan
+#### El arreglo esta vivo en el flujo, y las dos formas no se solapan
 
 | forma | capturas | ventana |
 |---|---|---|
@@ -342,7 +344,7 @@ Esto es atribucion por coincidencia temporal y es mas debil que un test. El test
 controlado es el mutante M4: `bin/bb` sin la conversion a signo deja rojo a
 `test_un_a0_NEGATIVO_es_un_GRUPO_y_conserva_su_signo`.
 
-### Lo que el arreglo mueve
+#### Lo que el arreglo mueve
 
 | | antes | despues |
 |---|---|---|
@@ -354,7 +356,7 @@ La fila que lo confirma sola: `timeout` sale con **28 de 57 autolimpieza**, que
 es literalmente lo que `timeout` hace al vencer el plazo -- matar su propio
 grupo. Cuatro mutantes, uno por rama nueva, los cuatro cazados.
 
-### Por que se cierra, y que NO se afirma
+#### Por que se cierra, y que NO se afirma
 
 El veredicto no cambio: **0 sujetos**. Lo que cambio es que ahora el 0 descansa
 sobre denominadores honestos. Y lo que queda no es una via sin agotar sino un

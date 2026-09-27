@@ -17,8 +17,9 @@ evidence:
   e2e: tasks/evidence/DEBT-SLUGGISH-SIN-CAUSA-PROBADA/e2e.txt
 reason: "CERRADO como void_wontfix 2026-09-27, por decision del dueno y CON mi objecion registrada en el cuerpo: se cierra sobre un calibrador construido el mismo dia, con cero dias de acumulacion. Lo que la ficha pedia -- probar la causa del episodio del 2026-09-25-- no se puede hacer y la razon esta medida: el unico episodio etiquetado (04:08-05:08) termina 32 minutos ANTES de la primera muestra de x.ms del corpus (05:40:00), asi que no existe lado positivo. El instrumento que lo dice es tools/calibra_latencia_x.py, con sus tres salidas y control negativo corrido (rc=2 sin etiqueta, rc=1 con etiqueta sintetica). Se reabre por el trigger de abajo, que es un comando de una linea."
 ---
+## Root Cause
 
-## Que pasa
+### Que pasa
 
 El 2026-09-25 el dueno reinicio la ATOM a mano a las 05:08 porque estaba
 "sumamente sluggish, casi no se podia escribir". **Ningun instrumento de bb
@@ -41,7 +42,7 @@ de ellas, con la racha mas larga de **3 minutos**. No hubo arrastre de maquina.
 El reinicio fue limpio y pedido (`systemd-logind: System is rebooting.`): no
 hubo cuelgue, ni OOM, ni panic, ni watchdog.
 
-## Lo que SI se midio, y por que no basta
+### Lo que SI se midio, y por que no basta
 
 Del journal, no de bb -- y ese es parte del hallazgo:
 
@@ -65,7 +66,7 @@ la noche: el swap paso de 16383 MiB libres a las 20:51 a 12067 a las 03:28.
 despues de eso es una lectura de disco. Ese numero hubo que sacarlo del log de
 earlyoom porque bb tampoco lo registraba.
 
-## Lo que NO se puede afirmar, y por eso esto queda abierto
+### Lo que NO se puede afirmar, y por eso esto queda abierto
 
 Que antigravity fuera lo que impedia teclear. Es el candidato con el numero
 mas grande, pero **nadie midio la latencia mientras pasaba**, y sin eso hay al
@@ -80,7 +81,7 @@ Atribuirlo a la primera porque es la de la cifra mas llamativa seria
 exactamente la deduccion sin salida contraria que la ley de este repo prohibe.
 El episodio queda **sin causa probada**.
 
-## Lo que se hizo, que es instrumento y no respuesta
+### Lo que se hizo, que es instrumento y no respuesta
 
 Tres sondas nuevas en la muestra, cada una con su control negativo corrido:
 
@@ -98,7 +99,7 @@ Y una seccion en `bb scan` que lista las ventanas de contencion de CPU con su
 atribucion y **el hueco maximo entre muestras**, para que dos puntos separados
 cuatro horas no se lean igual que una ventana observada minuto a minuto.
 
-## El criterio de cierre, y por que es ese
+### El criterio de cierre, y por que es ese
 
 Mismo patron que `DEBT-DGX-438-SIN-CAUSA-RAIZ`, que esta en la misma
 situacion: la ficha cierra cuando alguien **escribe la causa** en
@@ -121,7 +122,7 @@ Las sondas nuevas SI tienen su propia verificacion, y es un gate distinto:
 con sus controles negativos. Borra `latencia_x` y fallan tres. Pero eso
 verifica el instrumento; esta ficha es sobre la respuesta.
 
-## Lo que falta, si vuelve a pasar
+### Lo que falta, si vuelve a pasar
 
 1. Mirar `x.ms` de las muestras de ese rato: si sube, es el escritorio y no la
    aplicacion.
@@ -131,7 +132,7 @@ verifica el instrumento; esta ficha es sobre la respuesta.
 4. Los tres pueden ser ciertos a la vez. La ficha se cierra cuando uno queda
    probado sobre un episodio real, no cuando las tres sondas estan puestas.
 
-## Limites de las sondas nuevas, dichos aqui para que nadie los suponga
+### Limites de las sondas nuevas, dichos aqui para que nadie los suponga
 
 - `cpu_top` usa `ps -o times=`, que da segundos ENTEROS: el piso de deteccion
   es 1 segundo-nucleo por intervalo -- el 1.7 % de un nucleo con la muestra de
@@ -142,7 +143,8 @@ verifica el instrumento; esta ficha es sobre la respuesta.
   exigiria leer `VmSwap` de ~500 procesos en cada muestra y no se ha medido
   que quepa en el presupuesto de la muestra.
 
-## CERRADO 2026-09-27 -- y la objecion queda escrita
+## Verification Evidence
+### CERRADO 2026-09-27 -- y la objecion queda escrita
 
 El dueno decidio cerrarla hoy. **Mi objecion, dicha antes de la decision y
 registrada aqui porque el cierre no la borra:** `tools/calibra_latencia_x.py` se
@@ -154,7 +156,7 @@ Lo que hace el cierre defendible pese a eso: la razon por la que no se puede
 calibrar **no es la falta de tiempo, es un hueco de 32 minutos que ya ocurrio y
 no se puede rellenar hacia atras.**
 
-### Las tres salidas, cada rc medido sin tuberia
+#### Las tres salidas, cada rc medido sin tuberia
 
 | comando | rc | que dice |
 |---|---|---|
@@ -165,7 +167,7 @@ no se puede rellenar hacia atras.**
 El `rc=1` es lo que hace que el `rc=2` signifique algo: un modulo que siempre
 dijera lo mismo no seria una verificacion.
 
-### El hueco, con sus instantes
+#### El hueco, con sus instantes
 
 ```
 etiqueta declarada:  2026-09-25 04:08:00 -> 05:08:00  [SIN muestras]
