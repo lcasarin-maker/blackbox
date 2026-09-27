@@ -1,0 +1,121 @@
+# El instrumento de DGX-438 no podia contestar la pregunta. Medido 2026-09-27.
+#
+# La ficha decia, desde el 2026-09-23: "el mes nuevo es para que el instrumento
+# acumule evidencia, no para que la deuda envejezca. Si el plazo pasa sin una
+# sola captura de emisor demonio, se cierra como no reproducible."
+#
+# Cuatro defectos hacian ese plan inejecutable. Ninguno estaba declarado.
+
+1 · EL INSTRUMENTO VEIA 10 MINUTOS DE LAS 76 HORAS QUE LLEVABA ARMADO
+=====================================================================
+`cmd_sigterm` leia `$AUDIT_DIR/audit.log` y nada mas. El anillo rota por
+TAMANO, no por tiempo:
+
+  audit.log      1.1 MB   2026-09-27 01:53:44 -> 02:03:48     10.1 min
+  audit.log.1    8.4 MB   ) las cuatro rotaciones, 33.6 MB,
+  audit.log.2    8.4 MB   ) que el parser NO leia
+  audit.log.3    8.4 MB   )
+  audit.log.4    8.4 MB   )
+
+  anillo COMPLETO: 2026-09-26 23:49:04 -> 2026-09-27 01:56:14   =  127 min
+  instrumento armado: 2026-09-23 22:01                          =   76 h
+  cubierto por lo que el parser leia: 10.1 min de 4 559         =   0.2 %
+
+Preguntarle por cuatro dias devolvia una respuesta sobre diez minutos, con
+`could_not_run: 0` debajo. Y su regla de cierre habria concluido "no
+reproducible" desde ese 0.2 %.
+
+ARREGLADO: el parser lee `audit.log*`. Comprobado sobre la maquina -- la lista
+de emisores paso de 2 a 12:
+  antes:   python timeout
+  despues: claude claude-desktop cupsd git kill pkill postgres pytest python
+           python3 rustdesk timeout
+
+2 · Y NO DECIA CUANTO HABIA MIRADO
+==================================
+Un cero era indistinguible entre "no hubo senales en lo que pediste" y "el
+anillo no llega hasta ahi". Ahora lo declara y levanta su propio could_not_run:
+
+  $ ./bin/bb sigterm "2026-09-23 22:01"
+    el registro cubre:  2026-09-26 23:49:04 -> 02:04:42  (135 min)
+              PEDISTE 4563 min y el anillo cubre 135.
+              Los 4428 min mas viejos no se miraron: un cero
+              de arriba NO dice que no hubiera senales en ellos.
+    could_not_run: 1
+
+CONTROL NEGATIVO del aviso, corrido: pedir una ventana que SI cabe en el anillo
+sale `could_not_run: 0`. La primera version no pasaba ese control -- comparaba
+dos cuentas de minutos redondeadas por su lado, asi que un hueco de CUATRO
+SEGUNDOS salia como "1 min" (137 - 136) y levantaba el aviso. Un aviso que salta
+por un artefacto de redondeo ensena a ignorar los avisos.
+
+3 · NADA ACUMULABA FUERA DEL ANILLO
+===================================
+`grep -nE 'append|>>|jsonl' ` sobre el bloque de sigterm de bin/bb: 0 lineas.
+El plan de esperar un mes acumulaba 127 minutos y los reciclaba.
+
+ARREGLADO con la escalera, segundo peldano: el muestreador YA corre cada 60 s y
+el anillo aguanta 127 min, asi que una pasada por muestra no puede perder un
+evento -- holgura de 127x. `sigterm_persist` escribe lo nuevo en
+$DATA/sigterm.jsonl con marca de agua del ultimo ts.serial.
+
+  primera pasada:  53 capturas escritas, marca de agua 1790496541.41414
+  segunda pasada:  53 -> 53, nuevos 0      <- el control que importa
+  JSON valido: 53 de 53;  ids duplicados: 0
+
+4 · LA COLUMNA DE VICTIMA ESTABA ESTRUCTURALMENTE VACIA
+=======================================================
+Y esta es la mitad que la ficha pregunta: "algo mata procesos de fondo y no se
+sabe que". El instrumento contestaba QUIEN dispara y nunca A QUIEN.
+
+  registros type=OBJ_PID en TODO el anillo:            0
+  registros SYSCALL con key="blackbox_sig*":         307
+  victima conocida en las 53 capturas acumuladas:      0
+
+La rama del parser que une emisor con victima por OBJ_PID no se ejecuta nunca,
+porque auditd no emite ese tipo de registro para estas reglas. La victima SI
+estaba en el registro, en el propio SYSCALL, como argumento a0 y en hexadecimal:
+
+  type=SYSCALL ... syscall=129 a0=1273e9 a1=f ppid=1 pid=1209320 auid=1000
+                        ^^^^^^^^ victima = 0x1273e9 = 1210345
+                                 ^^^^ senal = 0xf = 15 = SIGTERM
+
+ARREGLADO: a0 se lee y se convierte. Y aparecio un quinto defecto al medirlo:
+`IFS=$'\t' read` COLAPSA tabuladores consecutivos -- el tabulador es espacio en
+blanco para IFS -- asi que un campo vacio desplazaba todos los de su derecha.
+La fila salia `python3.12[1841782] humano auid=? -> [?]` con `exe: 1000`: el
+auid aterrizando en la columna de exe, y el nombre del emisor siendo en realidad
+la ruta de su ejecutable.
+
+  victima conocida, antes del arreglo de a0:          0 de 53
+  victima conocida, con a0 pero con el desplazamiento: 21 de 39
+  victima conocida, con las dos cosas:                39 de 39
+
+5 · LO QUE AHORA SE VE, Y QUE NO CIERRA LA FICHA
+================================================
+  capturas acumuladas en una pasada:  39
+  emisores por clase:  humano 33, DEMONIO 6
+  emisores DEMONIO:    rustdesk 2, kill 2, pkill 2
+
+Hay capturas de emisor demonio, que es lo que la ficha esperaba. NO cierran la
+ficha y merece decirse por que:
+
+- son de UNA ventana de 127 min, y el fenomeno que DGX-438 describe es de cada
+  10-15 min con 2 muertes medidas en 10 dias. Una ventana no es una serie.
+- `rustdesk` como emisor de SIGKILL es notable porque este repo ya cerro
+  DEBT-AUDIT-AHOGADO-POR-RUSTDESK, pero eso es una coincidencia de nombre, no
+  una atribucion: no se ha cruzado el pid de su victima contra nada.
+- `kill` y `pkill` con auid=unset son procesos que HEREDARON un auid sin
+  sesion; llamarlos "demonio" es lo que la regla dice, no lo que son.
+
+El siguiente paso, ahora que existe: cruzar `victima.pid` contra `top_rss`,
+`cpu_top` y `py_bg` de las muestras del mismo minuto, que es lo unico que puede
+ponerle NOMBRE a la victima -- el proceso ya esta muerto cuando se lee el
+registro. Eso es REUSO de la serie que bin/bb ya graba.
+
+LIMITE DECLARADO
+================
+Nada de esto prueba la causa raiz de DGX-438. Lo que prueba es que hasta hoy el
+instrumento no podia encontrarla: veia 0.2 % de su ventana, no acumulaba, y su
+columna de victima estaba vacia por construccion. La ficha sigue abierta, y su
+plazo del 2026-10-23 ahora si puede acumular algo que mirar.

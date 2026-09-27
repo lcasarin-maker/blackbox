@@ -846,17 +846,30 @@ def test_sigterm_distingue_armado_de_no_armado(datos, tmp_path):
     si la regla esta puesta, y las dos salidas se leen igual."""
     aud = tmp_path / "audit"; aud.mkdir()
     ts = int(time.time())
+
+    # El anillo se ANCLA atras a proposito, y la razon es del 2026-09-27: desde
+    # ese dia `bb sigterm` declara cuanto cubre el registro y levanta su propio
+    # could_not_run cuando se le pide mas. Sin el ancla, este test pedia 5 min
+    # contra un anillo de 0 y salia `could_not_run: 2` -- las dos razones
+    # ciertas, pero la segunda no es lo que este test mide. El ancla lo deja
+    # midiendo una cosa: si la regla esta puesta.
+    ancla = (f'type=SYSCALL msg=audit({ts - 3600}.1:7): arch=c00000b7 auid=1000 '
+             f'comm="ancla" exe="/usr/bin/true" key="otra_cosa"\n')
+
     # Ruido de rustdesk LLEGANDO ahora: la regla no esta cargada.
     (aud / "audit.log").write_text(
+        ancla +
         f'type=SYSCALL msg=audit({ts}.1:1): arch=c00000b7 auid=4294967295 '
         f'comm="loginctl" exe="/usr/bin/loginctl" key="reboot_cmd"\n',
         encoding="utf-8")
     r = correr(["sigterm", "5 minutes ago"], datos, {"BLACKBOX_AUDIT_DIR": str(aud)})
     assert "NO ARMADO" in r.stdout
-    assert "could_not_run: 1" in r.stdout
+    assert "could_not_run: 1" in r.stdout, (
+        f"solo la regla puede faltar aqui; el anillo cubre una hora:\n{r.stdout}")
 
     # El mismo ruido, pero viejo: la regla ya esta puesta.
     (aud / "audit.log").write_text(
+        ancla +
         f'type=SYSCALL msg=audit({ts - 600}.1:1): arch=c00000b7 auid=4294967295 '
         f'comm="loginctl" exe="/usr/bin/loginctl" key="reboot_cmd"\n',
         encoding="utf-8")
@@ -1077,3 +1090,148 @@ def test_control_negativo_sin_rafagas_NO_se_filtra_nada(datos):
         json.dumps({"ts": f"2026-09-25T00:00:0{i}-0600", "cpu_top": []}) for i in range(3)
     ) + "\n", encoding="utf-8")
     assert len(muestras(datos)) == 3
+
+
+# =====================================================================
+# bb sigterm, los cuatro defectos medidos el 2026-09-27 (DEBT-DGX-438)
+#
+# La ficha planeaba dejar el instrumento un mes acumulando evidencia. Medido
+# ese dia: llevaba 76 HORAS armado y podia contestar sobre 10 MINUTOS, porque
+# leia solo audit.log e ignoraba las cuatro rotaciones del anillo. Y cuando
+# contestaba, su columna de victima salia "?" en las 53 capturas, porque el
+# anillo tiene 0 registros type=OBJ_PID contra 307 SYSCALL con la clave.
+# =====================================================================
+
+
+def _syscall(ts, serial, *, pid, comm='"x"', exe='"/usr/bin/x"', a0="4d2",
+             auid="4294967295", key="blackbox_sigterm"):
+    """Una linea SYSCALL de auditd. `a0` es la VICTIMA, en hexadecimal."""
+    c = f"comm={comm} " if comm else ""
+    e = f"exe={exe} " if exe else ""
+    return (f'type=SYSCALL msg=audit({ts}.1:{serial}): arch=c00000b7 syscall=129 '
+            f'a0={a0} a1=f ppid=1 pid={pid} auid={auid} uid=0 {c}{e}key="{key}"\n')
+
+
+def test_sigterm_lee_las_ROTACIONES_y_no_solo_el_fichero_actual(datos, tmp_path):
+    """El defecto que hacia inejecutable el plan de DEBT-DGX-438.
+
+    El anillo rota por tamano: 5 ficheros, 33.6 MB, 136 min en esta caja. Leer
+    solo `audit.log` veia 10 de esos 136 minutos, y una pregunta por cuatro
+    dias recibia una respuesta sobre diez minutos.
+    """
+    aud = tmp_path / "audit"; aud.mkdir()
+    ts = int(time.time())
+    # El viejo vive en una rotacion; el nuevo en el fichero actual.
+    (aud / "audit.log.1").write_text(
+        _syscall(ts - 300, 9001, pid=1111, comm='"viejo"'), encoding="utf-8")
+    (aud / "audit.log").write_text(
+        _syscall(ts - 30, 9002, pid=2222, comm='"nuevo"'), encoding="utf-8")
+    r = correr(["sigterm", "10 minutes ago"], datos,
+               {"BLACKBOX_AUDIT_DIR": str(aud)})
+    assert "nuevo[2222]" in r.stdout
+    assert "viejo[1111]" in r.stdout, (
+        "la captura de la ROTACION no aparece: se volvio a leer solo audit.log, "
+        "que es el defecto que dejaba a DGX-438 mirando 10 min de 136")
+
+
+def test_sigterm_DECLARA_la_ventana_que_el_anillo_cubre(datos, tmp_path):
+    """Y avisa cuando se le pide mas de lo que puede mirar.
+
+    Sin esto un cero es ambiguo entre "no hubo senales en lo que pediste" y
+    "el anillo no llega hasta ahi", y solo una de las dos habla del sujeto.
+    """
+    aud = tmp_path / "audit"; aud.mkdir()
+    ts = int(time.time())
+    (aud / "audit.log").write_text(
+        _syscall(ts - 120, 9001, pid=3333), encoding="utf-8")
+    r = correr(["sigterm", "2 hours ago"], datos, {"BLACKBOX_AUDIT_DIR": str(aud)})
+    assert "el registro cubre:" in r.stdout
+    assert "no se miraron" in r.stdout
+    assert "could_not_run: 1" in r.stdout, (
+        "pedir 120 min contra un anillo de 2 no puede salir con could_not_run 0")
+
+
+def test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso(datos, tmp_path):
+    """El par del de arriba, y sin el ese aviso no vale nada.
+
+    Medido el 2026-09-27: la primera version comparaba dos cuentas de minutos
+    redondeadas por su lado, asi que un hueco de CUATRO SEGUNDOS salia como
+    "1 min" (137 - 136) y levantaba could_not_run. Un aviso que salta por un
+    artefacto de redondeo ensena a ignorar los avisos.
+    """
+    aud = tmp_path / "audit"; aud.mkdir()
+    ts = int(time.time())
+    # El anillo empieza 4 s DESPUES del corte que se va a pedir.
+    (aud / "audit.log").write_text(
+        _syscall(ts - 296, 9001, pid=4444) + _syscall(ts - 10, 9002, pid=4445),
+        encoding="utf-8")
+    r = correr(["sigterm", "5 minutes ago"], datos, {"BLACKBOX_AUDIT_DIR": str(aud)})
+    assert "no se miraron" not in r.stdout, (
+        "un hueco de segundos no es un tramo sin mirar")
+    assert "could_not_run: 0" in r.stdout
+
+
+def test_sigterm_NOMBRA_a_la_victima_desde_a0_cuando_no_hay_OBJ_PID(datos, tmp_path):
+    """La mitad que DGX-438 pregunta, y que estaba estructuralmente vacia.
+
+    El anillo de esta caja tiene 0 registros type=OBJ_PID contra 307 SYSCALL
+    con la clave de blackbox, asi que la rama que los une no corre nunca. Pero
+    la victima ya estaba en el SYSCALL: `a0`, en hexadecimal. 0x4d2 = 1234.
+    """
+    aud = tmp_path / "audit"; aud.mkdir()
+    (aud / "audit.log").write_text(
+        _syscall(int(time.time()) - 60, 9001, pid=5555, a0="4d2"), encoding="utf-8")
+    r = correr(["sigterm", "10 minutes ago"], datos, {"BLACKBOX_AUDIT_DIR": str(aud)})
+    assert "1234" in r.stdout, (
+        "la victima sigue sin nombre: a0 es hexadecimal y hay que convertirlo")
+
+
+def test_un_campo_vacio_NO_desplaza_las_columnas(datos, tmp_path):
+    """`IFS=$'\\t' read` COLAPSA tabuladores consecutivos, porque el tabulador
+    es espacio en blanco para IFS. Un campo vacio corria todos los de su
+    derecha.
+
+    Medido: con `comm` ausente la fila salia
+    `python3.12[1841782] humano auid=? -> [?]` y debajo `exe: 1000` -- el auid
+    aterrizando en la columna de exe. El emisor mostraba la ruta del ejecutable
+    como si fuera su nombre.
+    """
+    aud = tmp_path / "audit"; aud.mkdir()
+    (aud / "audit.log").write_text(
+        _syscall(int(time.time()) - 60, 9001, pid=6666, comm="", auid="1000"),
+        encoding="utf-8")
+    r = correr(["sigterm", "10 minutes ago"], datos, {"BLACKBOX_AUDIT_DIR": str(aud)})
+    assert "exe: /usr/bin/x" in r.stdout, (
+        f"la columna de exe no trae el exe; se desplazo:\n{r.stdout}")
+    assert "auid=1000" in r.stdout
+
+
+def test_sigterm_ACUMULA_fuera_del_anillo_y_no_duplica(datos, tmp_path):
+    """El anillo retiene 136 min; la ficha esperaba un mes de acumulacion.
+
+    `bb sample` barre y escribe lo nuevo en sigterm.jsonl. El control que
+    importa es el segundo: una segunda pasada sobre el mismo anillo no puede
+    volver a escribir lo mismo, o el fichero crece por muestra en vez de por
+    evento.
+    """
+    aud = tmp_path / "audit"; aud.mkdir()
+    ts = int(time.time())
+    (aud / "audit.log").write_text(
+        _syscall(ts - 60, 9001, pid=7777, comm='"asesino"', auid="4294967295"),
+        encoding="utf-8")
+    env = {"BLACKBOX_AUDIT_DIR": str(aud)}
+    assert correr(["sample"], datos, env).returncode == 0
+    acum = Path(datos) / "sigterm.jsonl"
+    assert acum.is_file(), "no se acumulo nada"
+    filas = [json.loads(l) for l in acum.read_text(encoding="utf-8").splitlines() if l.strip()]
+    assert len(filas) == 1, filas
+    assert filas[0]["emisor"]["comm"] == "asesino"
+    assert filas[0]["emisor"]["clase"] == "demonio"
+    assert str(filas[0]["victima"]["pid"]) == "1234"
+
+    # El control negativo: otra pasada, mismo anillo, ni una fila mas.
+    assert correr(["sample"], datos, env).returncode == 0
+    filas2 = [l for l in acum.read_text(encoding="utf-8").splitlines() if l.strip()]
+    assert len(filas2) == 1, (
+        f"la segunda pasada duplico: {len(filas2)} filas. La marca de agua no "
+        "esta cortando, asi que el fichero crece por muestra y no por evento")

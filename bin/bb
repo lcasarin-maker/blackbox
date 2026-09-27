@@ -753,6 +753,10 @@ cmd_sample() {
   # evento.
   rafaga_si_hace_falta "$f" "$ma" "$commit_pct" "$psi_m_full"
 
+  # Acumula las senales del anillo antes de que rote. Va aqui y no en un timer
+  # propio porque el muestreador ya corre con la cadencia que hace falta.
+  sigterm_persist
+
   # rotacion: solo se borra lo que ya excedio la retencion declarada
   find "$SAMPLES" -name '*.jsonl' -mtime +"$RETAIN_DAYS" -delete 2>/dev/null
   find "$SNAPS" -maxdepth 1 -type d -mtime +"$RETAIN_DAYS" -exec rm -rf {} + 2>/dev/null
@@ -2327,6 +2331,110 @@ cmd_drift() {
 # kill en las 4 h 08 min que cubria el anillo.
 AUDIT_DIR="${BLACKBOX_AUDIT_DIR:-/var/log/audit}"
 
+# Lee el anillo de auditoria y emite una fila TSV por senal capturada:
+#   ts.serial \t SIGNAL \t pid \t comm \t exe \t auid \t vpid \t vcomm
+#
+# Existe como funcion y no inline porque la leen DOS sitios -- `bb sigterm`,
+# que consulta, y `sigterm_persist`, que acumula. Dos copias del mismo awk son
+# dos verdades que se desincronizan, y este parseo ya tuvo un defecto propio:
+# hasta el 2026-09-27 solo miraba $AUDIT_DIR/audit.log e ignoraba las cuatro
+# rotaciones, asi que veia 10 min de los 135 que el anillo cubria.
+_sig_eventos() {
+  local corte="$1"
+  awk -v c="$corte" '
+    # Une el SYSCALL (emisor: pid/comm/exe/auid) con el OBJ_PID (victima:
+    # opid/ocomm) por el id de evento audit(TS:SERIAL), que es lo unico que
+    # los relaciona: auditd emite los dos registros por separado.
+    match($0, /audit\(([0-9]+)\.[0-9]+:([0-9]+)\)/, m) {
+      ts = m[1]; id = m[2]
+      if (ts < c) next
+      if ($0 ~ /^type=SYSCALL/ && $0 ~ /key="blackbox_sig/) {
+        s_ts[id] = ts
+        if (match($0, /[ ]pid=([0-9]+)/, x))  s_pid[id]  = x[1]
+        if (match($0, /comm="([^"]*)"/, x))   s_comm[id] = x[1]
+        if (match($0, /exe="([^"]*)"/, x))    s_exe[id]  = x[1]
+        if (match($0, /auid=([0-9]+)/, x))    s_auid[id] = x[1]
+        if (match($0, /key="([^"]*)"/, x))    s_key[id]  = x[1]
+        # La VICTIMA vive aqui, en a0, y en hexadecimal. Medido el 2026-09-27:
+        # el anillo tiene 0 registros type=OBJ_PID contra 307 SYSCALL con la
+        # clave de blackbox, asi que la rama que los une NO se ejecuta nunca y
+        # la columna de victima salia "?" en las 53 capturas acumuladas. El
+        # instrumento de DEBT-DGX-438 contestaba QUIEN dispara y nunca A QUIEN,
+        # que es justo la mitad que la ficha pregunta.
+        #
+        # Para `kill`/`tkill` a0 es el pid objetivo; para `tgkill` es el tgid,
+        # que es el pid del proceso. Las reglas filtran la SENAL en a1/a2, asi
+        # que a0 es el objetivo en los cuatro casos.
+        if (match($0, /[ ]a0=([0-9a-f]+)/, x)) s_vic[id] = strtonum("0x" x[1])
+      }
+      if ($0 ~ /^type=OBJ_PID/) {
+        if (match($0, /opid=([0-9]+)/, x))    v_pid[id]  = x[1]
+        if (match($0, /ocomm="([^"]*)"/, x))  v_comm[id] = x[1]
+      }
+    }
+    END {
+      for (id in s_ts) {
+        sig = (s_key[id] == "blackbox_sigkill") ? "SIGKILL" : "SIGTERM"
+        # Ningun campo sale VACIO, y no es cosmetica: quien lee esto usa
+        # `IFS=$'\t' read`, y el tabulador es espacio en blanco para IFS, asi
+        # que bash COLAPSA tabuladores consecutivos y un campo vacio desplaza
+        # todos los de su derecha. Medido el 2026-09-27: la fila salia
+        # `python3.12[1841782] humano auid=? -> [?]` con `exe: 1000`, o sea el
+        # auid aterrizando en la columna de exe, porque comm venia vacio.
+        if (s_comm[id] == "") s_comm[id] = "-"
+        if (s_exe[id]  == "") s_exe[id]  = "-"
+        if (s_auid[id] == "") s_auid[id] = "-"
+        if (s_pid[id]  == "") s_pid[id]  = "0"
+        printf "%s.%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", s_ts[id], id, sig,
+               s_pid[id], s_comm[id], s_exe[id], s_auid[id],
+               # OBJ_PID si existe (trae el nombre); si no, a0 del SYSCALL.
+               (v_pid[id] != "" ? v_pid[id] : (s_vic[id] != "" ? s_vic[id] : "?")),
+               (v_comm[id] == "" ? "?" : v_comm[id])
+      }
+    }' $(ls -1tr "$AUDIT_DIR"/audit.log* 2>/dev/null) 2>/dev/null | sort -n
+}
+
+# Acumula las senales capturadas FUERA del anillo de auditoria.
+#
+# Por que existe, medido el 2026-09-27
+# ------------------------------------
+# DEBT-DGX-438 planeaba dejar el instrumento un mes "acumulando evidencia".
+# No acumulaba nada: `bb sigterm` consulta el anillo, y el anillo de esta caja
+# retiene 136 minutos (5 ficheros, 33.6 MB, rotacion por tamano). El
+# instrumento llevaba 76 HORAS armado y podia contestar sobre 2.3 de ellas.
+#
+# Peor: su regla de cierre decia que si el plazo pasaba sin una sola captura de
+# emisor demonio, la ficha se cerraba como no reproducible. Eso habria sido una
+# conclusion sobre el 3 % de la ventana, leyendo el instrumento y no el sujeto.
+#
+# Lo minimo que lo arregla: el muestreador ya corre cada 60 s y el anillo
+# aguanta 136 min, asi que una pasada por muestra no puede perder un evento
+# -- 136 veces el intervalo. Se escribe lo nuevo y nada mas, con la marca de
+# agua del ultimo `ts.serial` guardado, porque el anillo se relee entero cada
+# vez y sin marca se duplicaria todo en cada muestra.
+sigterm_persist() {
+  local wm_f="$DATA/sigterm_wm" out="$DATA/sigterm.jsonl" wm
+  wm=$(cat "$wm_f" 2>/dev/null) || wm=0
+  case "$wm" in ""|*[!0-9.]*) wm=0 ;; esac
+
+  # 10 min de ventana: holgura de 10x sobre el intervalo de muestreo, para que
+  # unas cuantas muestras perdidas seguidas no abran un hueco.
+  local nuevos
+  nuevos=$(_sig_eventos "$(( $(date +%s) - 600 ))" \
+           | awk -F'\t' -v wm="$wm" '$1 + 0 > wm + 0')
+  [ -n "$nuevos" ] || return 0
+
+  printf "%s\n" "$nuevos" | while IFS=$'\t' read -r id sig spid scomm sexe sauid vpid vcomm; do
+    [ -n "$id" ] || continue
+    printf '{"ts":%s,"id":"%s","senal":"%s","emisor":{"pid":%s,"comm":"%s","exe":"%s","auid":"%s","clase":"%s"},"victima":{"pid":"%s","comm":"%s"}}\n' \
+      "${id%%.*}" "$id" "$sig" "${spid:-0}" "$scomm" "$sexe" "$sauid" \
+      "$([ "$sauid" = "4294967295" ] && echo demonio || echo humano)" \
+      "$vpid" "$vcomm"
+  done >> "$out"
+
+  printf "%s\n" "$nuevos" | awk -F'\t' 'END{print $1}' > "$wm_f"
+}
+
 cmd_sigterm() {
   local desde="${1:-2 hours ago}"
   local corte
@@ -2395,36 +2503,25 @@ cmd_sigterm() {
     armado_txt="armado"
   fi
 
+  # La ventana que el REGISTRO cubre, que no es la que pide el usuario.
+  #
+  # Medido el 2026-09-27 y es la razon de que esto exista: `bb sigterm` leia
+  # solo $AUDIT_DIR/audit.log y ese fichero cubria 10.1 MINUTOS, mientras el
+  # anillo entero (con sus 4 rotaciones, 33.6 MB) cubria 127. Preguntarle por
+  # cuatro dias devolvia una respuesta sobre diez minutos, con
+  # `could_not_run: 0` debajo. Un cero asi no dice "no hubo senales": dice
+  # "no mire donde me pediste", y las dos salidas eran identicas.
+  #
+  # DEBT-DGX-438 planeaba dejar el instrumento un mes acumulando evidencia.
+  # Acumulaba diez minutos.
+  local cubre_desde cubre_hasta
+  cubre_desde=$(awk 'match($0,/audit\(([0-9]+)/,m){print m[1]; exit}' \
+                $(ls -1tr "$AUDIT_DIR"/audit.log* 2>/dev/null | head -1) 2>/dev/null)
+  cubre_hasta=$(awk 'match($0,/audit\(([0-9]+)/,m){t=m[1]} END{print t}' \
+                "$AUDIT_DIR"/audit.log 2>/dev/null)
+
   local eventos
-  eventos=$(awk -v c="$corte" '
-    # Une el SYSCALL (emisor: pid/comm/exe/auid) con el OBJ_PID (victima:
-    # opid/ocomm) por el id de evento audit(TS:SERIAL), que es lo unico que
-    # los relaciona: auditd emite los dos registros por separado.
-    match($0, /audit\(([0-9]+)\.[0-9]+:([0-9]+)\)/, m) {
-      ts = m[1]; id = m[2]
-      if (ts < c) next
-      if ($0 ~ /^type=SYSCALL/ && $0 ~ /key="blackbox_sig/) {
-        s_ts[id] = ts
-        if (match($0, /[ ]pid=([0-9]+)/, x))  s_pid[id]  = x[1]
-        if (match($0, /comm="([^"]*)"/, x))   s_comm[id] = x[1]
-        if (match($0, /exe="([^"]*)"/, x))    s_exe[id]  = x[1]
-        if (match($0, /auid=([0-9]+)/, x))    s_auid[id] = x[1]
-        if (match($0, /key="([^"]*)"/, x))    s_key[id]  = x[1]
-      }
-      if ($0 ~ /^type=OBJ_PID/) {
-        if (match($0, /opid=([0-9]+)/, x))    v_pid[id]  = x[1]
-        if (match($0, /ocomm="([^"]*)"/, x))  v_comm[id] = x[1]
-      }
-    }
-    END {
-      for (id in s_ts) {
-        sig = (s_key[id] == "blackbox_sigkill") ? "SIGKILL" : "SIGTERM"
-        printf "%s.%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", s_ts[id], id, sig,
-               s_pid[id], s_comm[id], s_exe[id], s_auid[id],
-               (v_pid[id] == "" ? "?" : v_pid[id]),
-               (v_comm[id] == "" ? "?" : v_comm[id])
-      }
-    }' "$AUDIT_DIR"/audit.log 2>/dev/null | sort -n)
+  eventos=$(_sig_eventos "$corte")
 
   local n; n=$(printf "%s" "$eventos" | grep -c . || true)
   if [ "$n" -gt 0 ]; then
@@ -2447,6 +2544,36 @@ cmd_sigterm() {
   echo
   echo "-- estado del instrumento --"
   echo "  regla de auditoria: $armado_txt"
+
+  # La ventana que el registro CUBRE, al lado de la que se pidio. Sin esta
+  # linea un cero de arriba es ambiguo entre "no hubo senales en lo que
+  # pediste" y "el anillo no llega hasta ahi". Son cosas distintas y solo una
+  # dice algo del sujeto.
+  if [ -n "$cubre_desde" ] && [ -n "$cubre_hasta" ]; then
+    local mins=$(( (cubre_hasta - cubre_desde) / 60 ))
+    echo "  el registro cubre:  $(date -d "@$cubre_desde" '+%Y-%m-%d %H:%M:%S')" \
+         "-> $(date -d "@$cubre_hasta" '+%H:%M:%S')  ($mins min)"
+    # El aviso se levanta cuando el hueco llega a UN MINUTO, que es la
+    # resolucion con la que esta misma linea informa. Sin ese suelo, pedir
+    # "23:49" contra un anillo que empieza a las 23:49:04 levantaba un
+    # could_not_run por CUATRO SEGUNDOS -- medido el 2026-09-27. Un aviso que
+    # salta por un artefacto de redondeo ensena a ignorar los avisos, y este
+    # avisa de algo que importa: que un cero no habla de lo que no se miro.
+    # El hueco se mide en SEGUNDOS entre los dos instantes REALES, no restando
+    # dos cuentas de minutos ya redondeadas cada una por su lado: eso convertia
+    # un hueco de 4 s en "1 min" (137 - 136) y volvia a levantar el aviso.
+    local hueco_s=$(( cubre_desde - corte ))
+    local pedidos=$(( ( $(date +%s) - corte ) / 60 ))
+    if [ "$hueco_s" -ge 60 ]; then
+      cannot_run "ventana de auditoria" "se pidieron $pedidos min y el anillo empieza $(( hueco_s / 60 )) min despues del corte; ese tramo NO se miro y un cero no habla de el"
+      echo "            PEDISTE $pedidos min y el anillo cubre $mins."
+      echo "            Los $(( hueco_s / 60 )) min mas viejos no se miraron: un cero"
+      echo "            de arriba NO dice que no hubiera senales en ellos."
+      echo "            Lo que SI acumula mas alla del anillo: $DATA/sigterm.jsonl"
+    fi
+  else
+    cannot_run "ventana de auditoria" "no se pudo leer ningun timestamp del anillo, asi que no se sabe cuanto cubre lo que se acaba de leer"
+  fi
   if [ "$ruido" -gt 0 ]; then
     cannot_run "regla de auditoria de senales" "no cargada: el sondeo de rustdesk sigue cayendo en el anillo ($ruido eventos en los ultimos 30s). Corre: sudo ./enable-privileged.sh"
     echo "            $ruido execve de loginctl con auid=unset en los ultimos 30s,"
