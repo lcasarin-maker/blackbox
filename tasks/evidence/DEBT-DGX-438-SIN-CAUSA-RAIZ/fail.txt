@@ -6,7 +6,11 @@ $ # GRUPOS de procesos -- kill(-pgid, sig), que es como postgres apaga hijos.
   2026-09-27 03:16:36 SIGTERM  postgres[2908421] demonio -> ?[4294965334]
   2026-09-27 03:28:03 SIGTERM  postgres[2964803] demonio -> ?[4294965221]
 
-$ # cuantas, sobre las capturas acumuladas
+$ # cuantas, sobre las capturas acumuladas A LAS 05:12 del 2026-09-27.
+$ # El corpus CRECE (una muestra cada 60 s), asi que quien recorra esto mas
+$ # tarde vera otros totales: a las 05:38 eran 357 capturas y el 21.3 %. Lo
+$ # que NO se mueve es el numerador de la forma vieja, y eso es el hallazgo
+$ # del apartado de abajo.
 capturas totales:            314
 victimas con pid >= 2^31:    44  (14.0 %) -> son grupos de proceso, no pids
 victimas con pid 0:          28  (kill(0,sig) = el propio grupo del emisor)
@@ -21,4 +25,22 @@ autolimpieza (la senal va contra el propio arbol del emisor): 31
 ATRIBUCION INCOMPLETA (emisor es un envoltorio y su padre no se nombro): 42
 
 $ # la fila que lo confirma sola: `timeout` mata su PROPIO grupo al vencer.
-    57  humano   timeout                -> (...)  [28 de 57 autolimpieza]
+    57  humano   timeout                -> (ninguna muestra lo vio vivo)  [28 de 57 autolimpieza]
+
+$ # EL ARREGLO ESTA VIVO EN EL FLUJO, y se ve sin tocar ningun test.
+$ # Las dos formas no se solapan en el tiempo:
+victimas con pid >= 2^31 (forma vieja):  44   de 03:02:12 a 05:08:00
+victimas con pid NEGATIVO (forma nueva):  9   desde 05:15:53
+$ # Cero capturas de la forma vieja despues de las 05:15:53, y el total paso de
+$ # 314 a 357 en ese tramo. `bin/bb` es un script que bash lee del disco en cada
+$ # invocacion, asi que el parche entra en la siguiente muestra sin reiniciar
+$ # nada -- al contrario que `bb-usable`, que es un proceso python de vida larga
+$ # y sigue corriendo el codigo que cargo al arrancar (DEBT-UNA-BAJADA).
+$ #
+$ # Esto es atribucion por coincidencia temporal, mas debil que un test. El test
+$ # controlado es el mutante M4 de e2e.txt, que sale rojo sin la conversion.
+
+$ # Y la cadencia que la ficha afirma, medida en vez de heredada:
+intervalo mediana: 60.0 s   p10/p90: 60.0 / 60.0
+intervalos entre 55 y 65 s: 19020 de 20781 (91.5 %)
+intervalos por debajo de 30 s: 1202 (5.8 %)   <- las rafagas deliberadas

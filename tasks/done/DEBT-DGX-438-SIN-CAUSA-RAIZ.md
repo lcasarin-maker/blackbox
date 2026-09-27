@@ -312,12 +312,35 @@ un pid: `pid_max` en Linux llega a 2^22. Son negativos leidos sin signo --
 `4294965974 - 2^32 = -1322` -- y un pid negativo es un **grupo de procesos**:
 `kill(-pgid, sig)`, que es como `postgres` apaga a sus hijos de una vez.
 
+**Medido a las 05:12 del 2026-09-27.** El instante importa porque el corpus
+crece una muestra cada 60 s -- mediana 60.0 s, p10 y p90 los dos en 60.0, 91.5 %
+de 20 781 intervalos entre 55 y 65 s -- asi que los porcentajes se mueven y
+quien los recorra mas tarde vera otros. A las 05:38 eran 357 capturas y 21.3 %.
+
 | | capturas | % |
 |---|---|---|
 | totales | 314 | |
 | con `a0 >= 2^31` (grupos leidos como pid) | 44 | 14.0 % |
 | con `a0 == 0` (`kill(0,sig)`, el propio grupo del emisor) | 28 | 8.9 % |
 | **mal clasificadas** | **72** | **22.9 %** |
+
+### El arreglo esta vivo en el flujo, y las dos formas no se solapan
+
+| forma | capturas | ventana |
+|---|---|---|
+| `a0 >= 2^31` (vieja) | 44 | 03:02:12 -> **05:08:00** |
+| `a0` negativo (nueva) | 9 | **05:15:53** -> |
+
+Cero capturas de la forma vieja despues de las 05:15:53, mientras el total subia
+de 314 a 357. `bin/bb` es un script que bash lee del disco en cada invocacion,
+asi que el parche entra en la muestra siguiente sin reiniciar nada. Lo contrario
+de `bb-usable`, que es un proceso python de vida larga y sigue corriendo el
+codigo que cargo al arrancar -- que es exactamente DEBT-UNA-BAJADA y por que su
+criterio de cierre mira el proceso vivo y no el fichero.
+
+Esto es atribucion por coincidencia temporal y es mas debil que un test. El test
+controlado es el mutante M4: `bin/bb` sin la conversion a signo deja rojo a
+`test_un_a0_NEGATIVO_es_un_GRUPO_y_conserva_su_signo`.
 
 ### Lo que el arreglo mueve
 
