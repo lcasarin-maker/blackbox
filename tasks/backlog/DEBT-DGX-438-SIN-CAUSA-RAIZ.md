@@ -233,3 +233,61 @@ La regla anterior — «si el plazo pasa sin captura, se cierra como no
 reproducible» — **no se puede aplicar a lo medido antes de hoy**: habría sido una
 conclusión sobre el 0.2 % de la ventana. El plazo del 2026-10-23 sigue, y a
 partir de hoy sí acumula algo que mirar.
+
+## 2026-09-27, mismo dia: la victima ya tiene nombre, y lo que aparecio no es esto
+
+Con el instrumento arreglado, el siguiente paso era cruzar `victima.pid` contra
+las muestras. Hecho en `tools/nombra_victimas.py`. Lo que salio:
+
+```
+por emisor y victima (primera acumulacion de ~3 h):
+   12  demonio  kill / pkill           -> rustdesk (rustdesk.service)
+    7  demonio  postgres               -> (ninguna muestra lo vio vivo)
+    3  humano   python / pytest        -> pytest, python3
+  203  humano   varios                 -> (ninguna muestra lo vio vivo)
+
+SUJETO DE DGX-438 (emisor demonio, victima ajena, atribuible y nombrada): 0
+```
+
+**Las 12 capturas de demonio son `rustdesk` limpiando sus propios hijos.** Y esa
+conclusion costo un falso positivo MIO, que queda escrito porque es la parte
+util: la primera version de `nombra_victimas` comparaba el nombre del emisor con
+el de la victima, `kill` no se parece a `rustdesk`, y reporto las 12 como sujeto
+de esta ficha. Mandaba a buscar un culpable llamado `kill`.
+
+El arreglo no fue una heuristica mejor de nombres, fue capturar el dato que
+faltaba: **`ppid`**. Con el, la prueba es directa y se ve en el registro:
+
+```
+pkill pid 2818158 ppid 2818154 -> victima 2818154
+                                          ^^^^^^^ la victima ES el padre del emisor
+```
+
+`kill`, `pkill`, `killall` y `timeout` son ENVOLTORIOS: su nombre identifica el
+utensilio, no a quien decidio. Una captura cuyo emisor es un envoltorio y cuyo
+padre no se puede nombrar queda como **ATRIBUCION INCOMPLETA** -- ni sujeto ni
+descarte -- en vez de contarse como hallazgo.
+
+## Lo que este cero SI y NO dice
+
+**SI dice:** en lo acumulado no hay una sola captura de un demonio matando un
+proceso ajeno con emisor atribuible y victima nombrable. Es un cero medido, no
+un cero por ceguera, que es lo que era esta manana.
+
+**NO dice** que el fenomeno no ocurra, por tres razones contadas:
+
+1. la acumulacion lleva ~3 h, no el mes que el plazo concede;
+2. **el 92 % de las victimas no se puede nombrar** (18 de 227 en la primera
+   pasada): las listas de las muestras son top-5 a 1/min, y un proceso de vida
+   corta -- justo el que muere por una senal -- puede no haber sido visto nunca.
+   Eso no es un defecto del cruce: es lo que hay grabado;
+3. `postgres` aparece 7 veces como emisor demonio con victima sin nombre. No se
+   descarta ni se acusa: no se sabe a quien mato.
+
+## El siguiente paso, que ya no es "esperar"
+
+Subir ese 8 % de victimas nombrables. El cruce solo puede usar lo que las
+muestras vieron vivo, asi que las opciones son grabar mas procesos por muestra
+(coste medido: la pasada de `awk` sobre el glob de /proc cuesta 0.01 s, ya
+medido para `swap.in_pag_s`) o grabar el nombre en el momento del barrido -- que
+no sirve, porque el barrido corre hasta 10 min despues y la victima ya murio.

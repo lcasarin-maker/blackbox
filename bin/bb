@@ -2351,6 +2351,13 @@ _sig_eventos() {
       if ($0 ~ /^type=SYSCALL/ && $0 ~ /key="blackbox_sig/) {
         s_ts[id] = ts
         if (match($0, /[ ]pid=([0-9]+)/, x))  s_pid[id]  = x[1]
+        # El PADRE del emisor. Hace falta porque `kill`, `pkill` y
+        # `timeout` son ENVOLTORIOS: su nombre identifica la herramienta,
+        # no a quien decidio matar. Medido el 2026-09-27: 12 de las 12
+        # capturas de demonio de esta caja tenian emisor `kill` o `pkill`
+        # y victima `rustdesk`, o sea rustdesk limpiando sus propios
+        # hijos, y sin el ppid se leian como "un demonio mata cosas".
+        if (match($0, /[ ]ppid=([0-9]+)/, x)) s_ppid[id] = x[1]
         if (match($0, /comm="([^"]*)"/, x))   s_comm[id] = x[1]
         if (match($0, /exe="([^"]*)"/, x))    s_exe[id]  = x[1]
         if (match($0, /auid=([0-9]+)/, x))    s_auid[id] = x[1]
@@ -2385,11 +2392,12 @@ _sig_eventos() {
         if (s_exe[id]  == "") s_exe[id]  = "-"
         if (s_auid[id] == "") s_auid[id] = "-"
         if (s_pid[id]  == "") s_pid[id]  = "0"
-        printf "%s.%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", s_ts[id], id, sig,
+        if (s_ppid[id] == "") s_ppid[id] = "0"
+        printf "%s.%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", s_ts[id], id, sig,
                s_pid[id], s_comm[id], s_exe[id], s_auid[id],
                # OBJ_PID si existe (trae el nombre); si no, a0 del SYSCALL.
                (v_pid[id] != "" ? v_pid[id] : (s_vic[id] != "" ? s_vic[id] : "?")),
-               (v_comm[id] == "" ? "?" : v_comm[id])
+               (v_comm[id] == "" ? "?" : v_comm[id]), s_ppid[id]
       }
     }' $(ls -1tr "$AUDIT_DIR"/audit.log* 2>/dev/null) 2>/dev/null | sort -n
 }
@@ -2424,10 +2432,10 @@ sigterm_persist() {
            | awk -F'\t' -v wm="$wm" '$1 + 0 > wm + 0')
   [ -n "$nuevos" ] || return 0
 
-  printf "%s\n" "$nuevos" | while IFS=$'\t' read -r id sig spid scomm sexe sauid vpid vcomm; do
+  printf "%s\n" "$nuevos" | while IFS=$'\t' read -r id sig spid scomm sexe sauid vpid vcomm sppid; do
     [ -n "$id" ] || continue
-    printf '{"ts":%s,"id":"%s","senal":"%s","emisor":{"pid":%s,"comm":"%s","exe":"%s","auid":"%s","clase":"%s"},"victima":{"pid":"%s","comm":"%s"}}\n' \
-      "${id%%.*}" "$id" "$sig" "${spid:-0}" "$scomm" "$sexe" "$sauid" \
+    printf '{"ts":%s,"id":"%s","senal":"%s","emisor":{"pid":%s,"ppid":%s,"comm":"%s","exe":"%s","auid":"%s","clase":"%s"},"victima":{"pid":"%s","comm":"%s"}}\n' \
+      "${id%%.*}" "$id" "$sig" "${spid:-0}" "${sppid:-0}" "$scomm" "$sexe" "$sauid" \
       "$([ "$sauid" = "4294967295" ] && echo demonio || echo humano)" \
       "$vpid" "$vcomm"
   done >> "$out"
@@ -2526,7 +2534,7 @@ cmd_sigterm() {
   local n; n=$(printf "%s" "$eventos" | grep -c . || true)
   if [ "$n" -gt 0 ]; then
     printf "  %-19s %-8s %-22s -> %s\n" "CUANDO" "SENAL" "EMISOR" "VICTIMA"
-    printf "%s\n" "$eventos" | while IFS=$'\t' read -r ts sig spid scomm sexe sauid vpid vcomm; do
+    printf "%s\n" "$eventos" | while IFS=$'\t' read -r ts sig spid scomm sexe sauid vpid vcomm sppid; do
       ts=${ts%%.*}
       local quien="demonio"
       [ "$sauid" != "4294967295" ] && quien="humano auid=$sauid"
