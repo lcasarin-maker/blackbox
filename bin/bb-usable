@@ -129,6 +129,21 @@ PSI_ACT_FULL_AVG10 = 10.0
 PSI_ACT_SOSTENIDO_S = 300.0
 # Cuantas sondas consecutivas por encima del umbral hacen los 5 minutos.
 PSI_ACT_SONDAS = max(1, round(PSI_ACT_SOSTENIDO_S / PROBE_INTERVAL))
+# Cuantas sondas BAJAS seguidas hacen falta para dar por terminado un colapso.
+#
+# Era 1 implicito, y eso dejo que la maquina llegara a un kernel panic el
+# 2026-09-26 con este demonio armado y viendolo entero: dentro de un colapso de
+# 16 minutos hubo tres bajadas de UNA sonda (2.4, 3.7 y 9.8) y cada una reseteo
+# la racha Y acaricio el watchdog. Ver DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO.
+#
+# El 2 no se elige por redondo: el control de falsos positivos sobre las 21 636
+# muestras del corpus (2026-09-11 -> 2026-09-26) mide que el maximo tiempo
+# sostenido que la regla acumula FUERA de un incidente es 180 s con 1 baja y los
+# MISMOS 180 s con 2, 3 o 6 -- en quince dias no hay ni una excursion sana con
+# una bajada suelta dentro. La superficie nueva de falso positivo es 0 medida, y
+# el margen contra el corte de 300 s es 1.67x. El 2 es el minimo que arregla el
+# defecto, y subirlo no compra margen: compra retraso en reconocer una mejora.
+BAJAS_PARA_CORTAR = 2
 
 
 def notify(state: str) -> None:
@@ -240,6 +255,7 @@ def main() -> int:
     notify("WATCHDOG=1")
 
     sostenido = 0  # sondas consecutivas con PSI por encima del umbral de accion
+    bajas = 0      # sondas consecutivas por DEBAJO, para no cortar la racha con una
 
     while True:
         time.sleep(PROBE_INTERVAL)
@@ -271,6 +287,7 @@ def main() -> int:
 
         if psi >= PSI_ACT_FULL_AVG10:
             sostenido += 1
+            bajas = 0
             if sostenido >= PSI_ACT_SONDAS:
                 # Esto es lo que no pasaba. No se acaricia: systemd deja de
                 # recibir la caricia, marca la unidad como fallida y
@@ -287,12 +304,27 @@ def main() -> int:
                 f"({sostenido * PROBE_INTERVAL:.0f}s de {PSI_ACT_SOSTENIDO_S:.0f}s), "
                 f"sonda {took*1000:.0f} ms")
         else:
-            if sostenido:
-                log(f"[bb-usable] PSI bajo a {psi:.1f}: la racha de "
-                    f"{sostenido * PROBE_INTERVAL:.0f}s se corta. Era un pico, "
-                    f"no un colapso -- que es exactamente lo que el criterio de "
-                    f"DURACION existe para distinguir")
-            sostenido = 0
+            bajas += 1
+            # Una sola sonda baja NO absuelve un colapso. El criterio de este
+            # demonio es la DURACION, y una duracion que cualquier muestra
+            # suelta puede poner a cero no es una duracion.
+            if bajas >= BAJAS_PARA_CORTAR:
+                if sostenido:
+                    log(f"[bb-usable] PSI bajo a {psi:.1f} en "
+                        f"{bajas} sondas seguidas ({bajas * PROBE_INTERVAL:.0f}s): "
+                        f"la racha de {sostenido * PROBE_INTERVAL:.0f}s se corta. "
+                        f"Era un pico, no un colapso")
+                sostenido = 0
+                bajas = 0
+            elif sostenido:
+                log(f"[bb-usable] PSI bajo a {psi:.1f}, pero UNA sonda no "
+                    f"absuelve: la racha sigue en {sostenido}/{PSI_ACT_SONDAS} "
+                    f"(hacen falta {BAJAS_PARA_CORTAR} bajas seguidas)")
+            # Y si la racha SIGUE en colapso, esta sonda tampoco acaricia:
+            # absolver mientras el criterio de accion se cumple es lo que
+            # regalaba seis minutos de watchdog en cada bajada.
+            if sostenido >= PSI_ACT_SONDAS:
+                continue
 
         notify("WATCHDOG=1")
 

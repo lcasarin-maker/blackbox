@@ -1,0 +1,145 @@
+# Control de falsos positivos del arreglo de la racha. Corrido 2026-09-27 00:00.
+#
+# Es el control que quedaba pendiente y que bloqueaba escribir el arreglo. Se
+# habia comprometido asi: "si sale limpio, escribo el cambio con su test y su
+# control negativo; si la regla nueva dispara donde no debe, el arreglo cambia
+# de forma". Salio limpio. El arreglo esta escrito.
+
+1 · EL PRIMER INTENTO FUE INVALIDO, Y ESO ES CARGA UTIL
+=======================================================
+Se simulo la maquina de estados entera sobre las 21 636 muestras de `bb sample`
+y salio esto:
+
+  variante                         reinicios  ACIERTOS  FALSOS+
+  hoy                                     28        28        0
+  solo no-cortar-con-1                    28        28        0
+  solo no-acariciar-en-colapso            28        28        0
+  LAS DOS (el arreglo)                    28        28        0
+
+Identico en las cuatro. Una medida que no distingue el arreglo del defecto no
+mide el arreglo. Y el mismo montaje daba CERO reinicios el 2026-09-26, el dia
+del panico, cuando la medicion sobre la traza del journal ya habia establecido
+que el arreglo reinicia a las 15:32:01.
+
+La causa, medida sobre el corpus:
+
+  muestras del corpus con mem_full >= 10 en la ventana del panico:
+    15:22:02  mem_full=40.48
+    15:35:16  mem_full=84.75
+    (nada entre las dos: 794 segundos de hueco)
+    15:43:07  mem_full=0.00   <- ya es el arranque nuevo
+
+  intervalo entre muestras, corpus entero, n=21634:
+    mediana 60 s   p95 60 s   max 22160 s
+    intervalos > 600 s: 63
+
+Durante un colapso el muestreador es victima del colapso que graba. `bin/bb`
+muestrea una vez por minuto y pierde la carrera; `bb-usable` lee
+/proc/pressure cada 30 s y conservo su traza entera.
+
+  el corpus NO sirve para simular los COLAPSOS -- sus huecos SON el colapso.
+  el corpus SI sirve para las ventanas SANAS -- mediana 60 s, p95 60 s.
+
+Y un control de falsos positivos vive ENTERO en las ventanas sanas. De ahi sale
+la forma definitiva: no se simulan reinicios, se mide el maximo tiempo
+sostenido que la regla acumula FUERA de toda ventana de incidente.
+
+El journal de bb-usable tampoco sirve de corpus, y merece quedar escrito: solo
+emite linea de PSI cuando PSI esta ALTA, asi que las lecturas bajas existen
+como silencio. Leer silencio como "no acaricio" ya produjo una vez una medida
+falsa de 33 reinicios en un arranque donde no hubo ninguno.
+
+2 · LAS EXCURSIONES DEL CORPUS, ETIQUETADAS
+===========================================
+  inicio                  dur_min    n  max_psi  clase
+  2026-09-22 05:45:10      1042.0   94     99.0  INCIDENTE
+  2026-09-24 00:12:02       317.3   39     99.0  INCIDENTE
+  2026-09-22 23:49:25       291.8    9     99.0  INCIDENTE
+  2026-09-26 15:22:02        13.2    2     84.8  INCIDENTE
+  2026-09-24 00:02:03         8.2    3     99.0  INCIDENTE
+  2026-09-21 00:31:00         2.0    3     56.2  SANA
+  2026-09-25 10:45:00         0.5   16     40.6  SANA
+  2026-09-12 07:34:02         0.0    1     15.7  SANA
+  2026-09-13 00:14:04         0.0    1     14.9  SANA
+  2026-09-20 16:53:00         0.0    1     38.1  SANA
+  2026-09-20 16:55:00         0.0    1     83.5  SANA
+
+  excursiones SANAS: n=6   la mas larga 2.0 min   el corte son 5.0 min
+
+Las dos del 2026-09-20 (16:53 y 16:55) son justo el caso que el arreglo podria
+encadenar: dos excursiones sueltas separadas por una muestra baja. Encadenadas
+dan 2 min, todavia 2.5x por debajo del corte.
+
+3 · EL CONTROL, Y SU CONTROL NEGATIVO
+=====================================
+$ python3 tools/control_racha.py
+corpus 20207 muestras  2026-09-12 00:00:04 -> 2026-09-27 00:01:06
+ventanas de incidente excluidas: 4  corte de accion: 300s  umbral: 10%
+
+regla                                     max sostenido sano  veredicto
+  1 baja(s) para cortar (defecto)               180 s        no dispara
+  2 baja(s) para cortar (ARREGLO)               180 s        no dispara
+  3 baja(s) para cortar (mas flojo)             180 s        no dispara
+  6 baja(s) para cortar (mas flojo)             180 s        no dispara
+
+VEREDICTO: LIMPIO -- ninguna regla llega al corte. Margen del corte contra el
+peor caso sano: 1.67x
+rc=0
+
+CONTROL NEGATIVO -- el mismo comando con el corte bajado a 180 s:
+$ python3 tools/control_racha.py --corte 180
+  1 baja(s) para cortar (defecto)               180 s        FALSO POSITIVO en 2026-09-21 00:33:00
+  2 baja(s) para cortar (ARREGLO)               180 s        FALSO POSITIVO en 2026-09-21 00:33:00
+VEREDICTO: FALSO POSITIVO
+rc=1
+
+EL NUMERO QUE DECIDE: 180 s con 1 baja y los MISMOS 180 s con 2, 3 o 6. En
+quince dias de corpus no hay una sola excursion sana con una bajada suelta
+dentro, asi que la superficie NUEVA de falso positivo que abre el arreglo es
+0 medida, no 0 argumentada.
+
+El margen contra el corte es 1.67x, mas fino que el 2.5x que reporta
+calibra_psi. La diferencia es que este acumulador carga el intervalo que ENTRA
+en la primera muestra alta (60 s de mas), que es el lado conservador para un
+control de falsos positivos: sobreestima la racha sana.
+
+4 · CONTROL DE MUTACION DEL ARREGLO
+===================================
+Cada mutante tiene que poner la suite roja. Corrido sobre
+tests/test_bb_usable.py, 27 tests:
+
+  el mutante viejo: 'sostenido = 0' -> 'pass'          2 failed, 25 passed
+  BAJAS_PARA_CORTAR = 1 (volver al defecto)            3 failed, 24 passed
+  BAJAS_PARA_CORTAR = 99 (nunca absolver)              2 failed, 25 passed
+  quitar el no-acariciar-en-colapso de la baja         1 failed, 26 passed
+  no limpiar bajas en la racha alta                    1 failed, 26 passed
+
+  integridad: el fichero volvio identico  OK
+  suite limpia despues:  27 passed
+
+5 · UN TEST EXISTENTE AFIRMABA LO CONTRARIO, Y SU PREMISA ERA FALSA
+==================================================================
+`test_la_racha_se_REINICIA_tras_un_pico_no_se_acumula` exigia que
+[9 altas, 1 baja, 1 alta] NO diera colapso, y llamaba a esa unica lectura baja
+"una recuperacion real". Nadie habia medido esa premisa. El panico la midio:
+tres bajadas de una sonda (2.4, 3.7, 9.8) dentro de un colapso de 16 minutos,
+cada una absolviendolo entero.
+
+No se borro. Se reescribio al limite nuevo -- una recuperacion son
+BAJAS_PARA_CORTAR sondas, no una-- conservando su razon de existir, que era
+cazar el mutante `sostenido = 0` -> `pass`. La primera linea del punto 4
+comprueba que lo sigue cazando.
+
+6 · LO QUE SIGUE SIN ESTAR VERIFICADO
+=====================================
+El arreglo esta escrito, con test, control negativo, control de mutacion y
+control de falsos positivos. Lo que NO tiene es observacion en produccion:
+
+- no ha corrido en la maquina. El demonio carga el codigo al arrancar, y
+  reiniciarlo pide `sudo`, que este asistente no puede dar. Hasta entonces el
+  proceso vivo sigue con la regla vieja.
+- no se le ha visto cobrar un reinicio de verdad. Eso pide un cuarto colapso,
+  y no se provoca a proposito.
+- el corpus tiene 6 excursiones sanas. Seis no son muchas: el control se
+  RE-CORRE cuando lleguen mas, que es la razon de que sea un modulo versionado
+  y no un numero en un mensaje de commit.

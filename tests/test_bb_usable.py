@@ -258,24 +258,33 @@ def test_notify_sin_socket_no_manda_nada_y_no_revienta(bbu, tmp_path, monkeypatc
 
 
 def test_la_racha_se_REINICIA_tras_un_pico_no_se_acumula(bbu, monkeypatch):
-    """Nueve lecturas altas, UNA sana, y una alta mas.
+    """Altas, una RECUPERACION, y altas otra vez: la racha no se acumula.
 
-    Si la racha se reinicia -- que es lo correcto -- eso son 9, luego 0, luego
-    1: no hay colapso. Si NO se reiniciara, los 9 de antes se sumarian al de
-    despues y la maquina se reiniciaria por dos episodios sanos separados por
-    una recuperacion real.
+    ESTE TEST CAMBIO DE PREMISA EL 2026-09-26, y el cambio esta medido.
 
-    Este test existe porque el mutante que cambiaba `sostenido = 0` por `pass`
-    SE ESCAPABA de la suite: el caso [alto x4, sano x8] no lo distingue, porque
-    ahi la racha ya no vuelve a crecer. Hace falta alto -> sano -> alto.
+    Decia "nueve lecturas altas, UNA sana, y una alta mas" y exigia que no
+    hubiera colapso, llamando a esa unica lectura baja "una recuperacion real".
+    Esa premisa era falsa y nadie la habia medido. El kernel panic de las
+    15:38:26 la midio: dentro de un colapso de 16 minutos hubo TRES bajadas de
+    una sola sonda (2.4, 3.7 y 9.8) y cada una absolvio el colapso entero. La
+    maquina murio con el vigilante armado. Ver
+    DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO.
+
+    Lo que el test mide sigue siendo lo mismo -- que la racha se REINICIA y no
+    se acumula-- y su razon de existir tambien: el mutante que cambia
+    `sostenido = 0` por `pass` SE ESCAPABA de la suite, porque el caso
+    [alto x4, sano x8] no lo distingue (ahi la racha ya no vuelve a crecer).
+    Hace falta alto -> recuperacion -> alto. Lo unico que cambio es que una
+    recuperacion son `BAJAS_PARA_CORTAR` sondas, no una.
     """
-    caricias, salida = _correr(
-        bbu, monkeypatch, [99.0] * (bbu.PSI_ACT_SONDAS - 1) + [0.0] + [99.0])
+    serie = ([99.0] * (bbu.PSI_ACT_SONDAS - 1)
+             + [0.0] * bbu.BAJAS_PARA_CORTAR + [99.0])
+    caricias, salida = _correr(bbu, monkeypatch, serie)
     assert "COLAPSO" not in salida, (
         "la recuperacion de en medio tiene que borrar la racha; si no, dos "
         "episodios sanos separados reinician la maquina"
     )
-    assert caricias == bbu.PSI_ACT_SONDAS + 1
+    assert caricias == len(serie)
 
 
 # =====================================================================
@@ -363,3 +372,94 @@ def test_la_latencia_NO_entra_en_ninguna_decision(bbu):
             assert "xms" not in usados, (
                 "la latencia entro en una decision de bb-usable: eso es darle "
                 "permiso para reiniciar la maquina por un umbral sin calibrar")
+
+
+# ------------------------------------ DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO
+#
+# El 2026-09-26 a las 15:38:26 esta maquina murio de un kernel panic
+# (`hung_task: blocked tasks`) con este demonio armado, corriendo, y viendo el
+# colapso entero. Su journal lo cuenta:
+#
+#   15:33:02  racha  9/10 (270s)  avg10=83.2   <- ultima caricia
+#   15:33:32  COLAPSO sostenido 300s -- NO se acaricia
+#   15:34:32  COLAPSO sostenido 360s -- NO se acaricia
+#   15:35:02  PSI bajo a 9.8: la racha de 360s SE CORTA
+#   15:35:32  racha  1/10  avg10=80.2
+#   15:38:02  racha  6/10  avg10=92.2          <- ultima caricia real
+#   15:38:26  KERNEL PANIC
+#
+# Una bajada de UNA sonda a 9.8 -- dentro de un colapso de 16 minutos, con dos
+# decimas por debajo del umbral-- puso la racha a cero y volvio a acariciar el
+# watchdog. Hubo tres de esas (2.4, 3.7, 9.8) en la misma ventana.
+
+
+def test_una_bajada_suelta_NO_absuelve_un_colapso(bbu, monkeypatch):
+    """El sujeto es la traza real: 10 sondas altas, una baja, y sigue alto.
+
+    Con el defecto, la baja reseteaba la racha Y acariciaba, asi que el
+    watchdog volvia a tener sus 6 minutos enteros y el colapso no cobraba
+    nunca. Con el arreglo la racha sobrevive y el demonio deja de acariciar.
+    """
+    serie = [99.0] * bbu.PSI_ACT_SONDAS + [9.8] + [99.0] * 5
+    caricias, salida = _correr(bbu, monkeypatch, serie)
+    assert "COLAPSO" in salida
+    assert "UNA sonda no" in salida, (
+        "la bajada suelta tiene que quedar registrada como no-absolucion")
+    assert "se corta" not in salida, (
+        "una sola bajada NO puede cortar la racha: es el defecto que mato la "
+        "maquina el 2026-09-26")
+    # Y lo que de verdad importa: la baja tampoco acaricia, porque la racha
+    # sigue cumpliendo el criterio de accion.
+    assert caricias == bbu.PSI_ACT_SONDAS - 1, (
+        f"acaricio {caricias} veces; solo las {bbu.PSI_ACT_SONDAS - 1} de antes "
+        "de que la racha llegara al corte pueden acariciar")
+
+
+def test_control_negativo_DOS_bajadas_seguidas_SI_absuelven(bbu, monkeypatch):
+    """Sin esto, el de arriba se 'arregla' no cortando nunca la racha.
+
+    Un vigilante que no admite una recuperacion reinicia una maquina que ya
+    esta bien, y eso es peor que el fallo que vigila: los siete picos sanos del
+    corpus se recuperaron solos. La recuperacion tiene que reconocerse.
+    """
+    serie = [99.0] * 5 + [0.0] * bbu.BAJAS_PARA_CORTAR + [99.0] * 5
+    caricias, salida = _correr(bbu, monkeypatch, serie)
+    assert "se corta" in salida, (
+        f"{bbu.BAJAS_PARA_CORTAR} bajadas seguidas son una recuperacion y "
+        "tienen que cortar la racha")
+    assert "COLAPSO" not in salida, (
+        "cortada la racha, 5 sondas altas no llegan al corte de 300 s")
+    assert caricias == len(serie), "una maquina recuperada recibe sus caricias"
+
+
+def test_el_numero_de_bajadas_sale_del_control_de_falsos_positivos(bbu):
+    """`BAJAS_PARA_CORTAR` no es un numero redondo elegido a ojo.
+
+    Medido el 2026-09-26 sobre las 21 636 muestras del corpus
+    (2026-09-11 -> 2026-09-26): el maximo tiempo sostenido que la regla
+    acumula FUERA de una ventana de incidente es 180 s con 1 baja y los MISMOS
+    180 s con 2, 3 o 6 -- en quince dias no hay una sola excursion sana con una
+    bajada suelta dentro, asi que la superficie nueva de falso positivo es 0.
+    Contra el corte de 300 s el margen es 1.67x.
+
+    Este test fija el 2. Si alguien lo sube, el control hay que re-correrlo:
+    la evidencia esta en
+    tasks/evidence/DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO/.
+    """
+    assert bbu.BAJAS_PARA_CORTAR == 2
+    assert bbu.BAJAS_PARA_CORTAR > 1, (
+        "1 es el defecto: cualquier muestra suelta pone la duracion a cero, y "
+        "una duracion asi no es una duracion")
+    # Dos bajas son 60 s. El corte son 300 s: la ventana de absolucion tiene
+    # que ser mucho menor que el criterio de accion, o absuelve colapsos.
+    assert bbu.BAJAS_PARA_CORTAR * bbu.PROBE_INTERVAL < bbu.PSI_ACT_SOSTENIDO_S
+
+
+def test_la_racha_alta_limpia_el_contador_de_bajadas(bbu, monkeypatch):
+    """Bajadas SEGUIDAS, no acumuladas. Sin este reset, dos bajadas separadas
+    por veinte sondas altas cortarian la racha igual que dos consecutivas, y el
+    defecto volveria por la puerta de atras con un contador distinto."""
+    serie = ([99.0] * 3 + [0.0]) * 3 + [99.0] * 3
+    caricias, salida = _correr(bbu, monkeypatch, serie)
+    assert "se corta" not in salida, (
+        "tres bajadas AISLADAS no son una recuperacion sostenida")
