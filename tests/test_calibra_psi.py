@@ -93,15 +93,21 @@ def test_clasifica_colapso_gana_cuando_las_bandas_se_solapan():
 # --- ventanas / solapa -----------------------------------------------------
 
 def test_ventanas_por_defecto_son_los_congelamientos_reales():
-    """Tres desde el 2026-09-24. Este test existe para que anadir un incidente
+    """CUATRO desde el 2026-09-27. Este test existe para que anadir un incidente
     sea un cambio DELIBERADO y no algo que se cuela: la lista es la verdad de
     referencia contra la que se mide el corte, y una lista rancia hace que el
-    calibrador llame falso positivo a un colapso real -- que es exactamente lo
-    que paso al aparecer el tercero."""
+    calibrador llame falso positivo a un colapso real.
+
+    Eso volvio a pasar, y es la razon del 4: el kernel panic del 2026-09-26
+    quedo fuera de la lista y el modulo dio `falsos positivos: 1` con VEREDICTO
+    CORTE INVALIDO, leyendo un colapso real de 13 min como una excursion sana.
+    La primera vez fue al aparecer el tercero. Es la segunda."""
     vs = ventanas()
-    assert len(vs) == 3
+    assert len(vs) == 4
     assert vs[0][0] == dt.datetime(2026, 9, 22, 5, 45)
-    assert vs[-1][0] == dt.datetime(2026, 9, 24, 0, 2)
+    assert vs[-1][0] == dt.datetime(2026, 9, 26, 15, 20), (
+        "el cuarto es el kernel panic, y es el unico que NO termino en reset por "
+        "el operador: la maquina se reinicio sola en 4 min")
 
 
 def test_solapa_en_los_dos_bordes_y_fuera():
@@ -133,7 +139,13 @@ def test_calibra_cuenta_falso_positivo_fuera_de_ventana():
     s = serie((100, 90), (110, 90))          # sostenido pero fuera del incidente
     r = calibra(s, incidentes=VENTANA)
     assert len(r["falsos_positivos"]) == 1
-    assert len(r["no_detectados"]) == 1      # y ademas no cubre el incidente
+    # Y el incidente NO cuenta como no detectado, porque este corpus (minutos
+    # 100-110) no llega hasta el: cuenta como SIN OBSERVAR. La distincion se
+    # anadio el 2026-09-27 y no es cosmetica -- sin ella el modulo afirmaba que
+    # un corte bueno dejaba pasar incidentes cuyas muestras no existen, que es
+    # medir la lista INCIDENTES en vez del corte.
+    assert len(r["no_detectados"]) == 0
+    assert len(r["fuera_del_corpus"]) == 1
 
 
 def test_calibra_marca_la_banda_sin_observar():

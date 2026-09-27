@@ -71,6 +71,27 @@ INCIDENTES = [
     # 2 a 23 en ese minuto, 22 de ellos en app-com.anthropic.Claude-130715.scope.
     # El fin es el reset: el boot anterior termina a las 05:56:45.
     ("2026-09-24 00:02", "2026-09-24 05:56"),
+    # CUARTO, 2026-09-26. Distinto de los tres de arriba en el desenlace y por eso
+    # merece decirse: este NO termino en reset por el operador, termino en KERNEL
+    # PANIC -- `hung_task: blocked tasks` a las 15:38:26, con ~20 tareas `python`
+    # de PIDs contiguos bloqueadas mas de 123 s. La maquina se reinicio sola a las
+    # 15:42:17 (`last reboot`), asi que costo 4 minutos en vez de una noche.
+    #
+    # Es un incidente y no una excursion sana, y eso no se deduce de PSI -- eso
+    # seria circular: se deduce de que el kernel declaro que no podia seguir.
+    # Corroborado por sar, instrumento independiente de PSI: mem avail 24-29 %
+    # con swap al 40 % libre durante la ventana entera, o sea que NO fue
+    # agotamiento de RAM, igual que en los tres anteriores.
+    #
+    # El inicio sale de las muestras: 15:22:02 mem_full 40.48, la primera sobre el
+    # umbral. El fin es el arranque nuevo. Esta ventana es CORTA (20 min) frente a
+    # las de arriba porque el panico corto el episodio; sin hung_task_panic=1 este
+    # habria sido el cuarto congelamiento de horas.
+    #
+    # Anadido el 2026-09-27, y lo pidio el propio modulo: sin esta ventana daba
+    # `falsos positivos: 1` y VEREDICTO CORTE INVALIDO, porque leia un colapso
+    # real de 13 min como una excursion sana que el corte dispara.
+    ("2026-09-26 15:20", "2026-09-26 15:42"),
 ]
 
 
@@ -163,7 +184,21 @@ def calibra(serie, incidentes=None, umbral=UMBRAL_PCT, sostenido=SOSTENIDO_MIN,
         {"COLAPSO": colapsos, "PICO": picos, "SIN OBSERVAR": sin_observar}[veredicto].append(exc)
 
     falsos_positivos = [e for e in colapsos if not any(solapa(e, v) for v in vs)]
-    no_detectados = [v for v in vs if not any(solapa(e, v) for e in colapsos)]
+    # Una ventana FUERA del rango del corpus no esta "sin detectar": esta sin
+    # OBSERVAR, y son cosas distintas. Contarla como no detectada mide la lista
+    # INCIDENTES contra un corpus que no llega hasta ella -- el instrumento en
+    # vez del sujeto. Se descubrio el 2026-09-27 al anadir el cuarto incidente:
+    # los corpus sinteticos de la suite abarcan hasta el 09-24 y el cuarto es del
+    # 09-26, asi que tres tests se pusieron rojos afirmando que un corte bueno
+    # dejaba pasar un incidente que sus muestras no contienen.
+    if serie:
+        t0, t1 = serie[0][0], serie[-1][0]
+        observadas = [v for v in vs if v[1] >= t0 and v[0] <= t1]
+    else:
+        observadas = []
+    fuera_del_corpus = [v for v in vs if v not in observadas]
+    no_detectados = [v for v in observadas
+                     if not any(solapa(e, v) for e in colapsos)]
     return {
         "rango": (serie[0][0].strftime("%Y-%m-%d %H:%M"),
                   serie[-1][0].strftime("%Y-%m-%d %H:%M")) if serie else ("", ""),
@@ -174,6 +209,7 @@ def calibra(serie, incidentes=None, umbral=UMBRAL_PCT, sostenido=SOSTENIDO_MIN,
         "sin_observar": sin_observar,
         "falsos_positivos": falsos_positivos,
         "no_detectados": no_detectados,
+        "fuera_del_corpus": fuera_del_corpus,
         "umbral": umbral,
         "sostenido": sostenido,
     }
@@ -201,6 +237,8 @@ def informe(r: dict) -> list[str]:
         "control negativo (lo que DEBE salir en cero):",
         "  falsos positivos:          %d" % len(r["falsos_positivos"]),
         "  incidentes no detectados:  %d" % len(r["no_detectados"]),
+        "  (incidentes fuera del corpus, sin observar: %d)"
+        % len(r.get("fuera_del_corpus", [])),
     ]
     return out
 

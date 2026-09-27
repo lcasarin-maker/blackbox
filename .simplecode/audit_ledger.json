@@ -1,75 +1,70 @@
 {
-  "claims_fingerprint": "37d4802aff0ce34c3085b6d219150b6f62fe15bf6cf60b9bbbe0c4af2ba6d18d",
-  "panel": "Claude Opus 5 (sesion blackbox 2026-09-25, release 1.7.0)",
+  "claims_fingerprint": "82a2a29bf398b6166b66efc11f0c4f9425e78c68dca78c405f097c5453eb347d",
+  "panel": "bb (Claude Opus 5) en la sesion del 2026-09-27: cada claim verificado corriendo su sujeto, no leyendo SPEC. Dos hallazgos: SPEC-L246 declaraba 30 sujetos de bb drift cuando son 38 (corregida), y calibra_psi salia CORTE INVALIDO por no tener el kernel panic del 2026-09-26 en su lista de incidentes (anadido). Limites declarados claim por claim en la evidencia.",
   "profile": "general",
   "results": [
     {
       "claim_id": "SPEC-L94",
-      "evidence": "Medido hoy sobre el disco: 0 ficheros de Atlas importan modulos de blackbox y 0 de blackbox importan de Atlas. La via sigue siendo el jsonl mas --gate-termico y --procesos-gpu por subproceso desde tools/bb_consulta.py.",
-      "verdict": "verified"
+      "evidence": "Verificado en las DOS direcciones, que es lo que la afirmacion exige. blackbox -> Atlas: `grep -rn 'import Atlas|from Atlas|projects/Atlas' --include=*.py bin/ tools/ tests/` da 1 match y NO es un import: es la linea 1122 de tools/atom_gpu_telemetry.py, un docstring que nombra una ruta. Atlas -> blackbox: `grep -rl '^import blackbox|^from blackbox|import bin.bb' ~/projects/Atlas --include=*.py` da 0 ficheros, y la busqueda de rutas 'projects/blackbox' en el codigo de Atlas no devuelve ninguna. LIMITE: se comprobo la ausencia de imports, no que el consumo por salida exista y funcione hoy.",
+      "verdict": "pass"
     },
     {
       "claim_id": "SPEC-L98",
-      "evidence": "Sellada con el hecho nuevo: la copia de atom_gpu_telemetry.py en Atlas ya no existe, y en este release bin/bb dejo de leer la ruta borrada -- `bb status` declaraba FALTA sobre un instrumento que escribia 711 muestras/hora. armado 13/falta 1 -> armado 15/falta 0.",
-      "verdict": "verified"
+      "evidence": "La afirmacion es de UBICACION y se comprueba por donde vive el codigo que decide sobre el hardware. En este repo: bin/bb (muestreo, scan, status, drift, cap), bin/bb-usable (el que retira el latido y deja que systemd reinicie), enable-privileged.sh (los techos de cgroup), y tools/atom_gpu_telemetry.py (presupuesto termico y mitigacion, traido de Atlas el 2026-09-24 con DGX-585, o sea que se movio HACIA aqui, en la direccion que la afirmacion declara). Ninguna de esas piezas se importa desde Atlas, medido en SPEC-L94.",
+      "verdict": "pass"
     },
     {
       "claim_id": "SPEC-L102",
-      "evidence": "loginctl show-user lcasarin -p Linger --value = yes, y con control sobre la MAQUINA: en el arranque de hoy user@1000.service y blackbox-sample.timer arrancaron a las 05:10:14-15, 2 min 46 s ANTES del primer inicio de sesion grafico (05:13:01). En el arranque anterior, sin linger, el gestor de usuario espero hasta las 18:33:07.",
-      "verdict": "verified"
-    },
-    {
-      "claim_id": "SPEC-L237",
-      "evidence": "La fila CAMBIA en este release y su texto nuevo esta medido: los tres chequeos que leian `systemctl is-active` (timer del muestreo, clock lock, earlyoom) leen ahora su artefacto -- la muestra del dia de hace <2 min, la confirmacion que imprimio el driver contrastada con los argumentos de la unit, y las dos regex de punteria que earlyoom imprimio. Cuatro controles negativos corridos. Queda declarado lo que sigue sin comprobarse: el CONTENIDO, no solo la frescura.",
-      "verdict": "verified"
-    },
-    {
-      "claim_id": "SPEC-L238",
-      "evidence": "Cada gate anadido hoy trae su control negativo CORRIDO. Los de este release: la cadena de memory.low (cada uno de los 7 eslabones en cero -> FALTA, y un arnes sin proteger al lado de una ventana protegida -> ARMADO); latencia_x (TIMEOUT que espera >=900 ms, ERROR, AUSENTE sin DISPLAY); cpu_top y swap.top (un proceso que no quema / que no tiene swap no sale); presupuesto_memoria (falla con el reparto real y PASA cuando los techos caben); rotacion en caliente (por debajo del techo NO toca el fichero). Y el sunset de 1.4 se hizo POR RETIRADA de cada regla, no por resultado.",
-      "verdict": "verified"
-    },
-    {
-      "claim_id": "SPEC-L239",
-      "evidence": "blackbox-sample.service sigue con Nice=19 e IOSchedulingClass=idle, leido de la unit. Las sondas nuevas no cambian eso, y se midio: la muestra completa costaba 0.31 s antes de anadir cpu_top, swap, swap.top y latencia_x, y cuesta 0.30 s ahora. El barrido de VmSwap se hace con UNA pasada de awk (0.01 s) y no con un awk por proceso (0.78 s), que era la version que la ficha supuso inviable sin medirla.",
-      "verdict": "verified"
+      "evidence": "Comprobado sobre systemd, no sobre el repo. `systemctl list-unit-files` muestra bb-usable.service enabled/enabled, nvrm-watch.timer enabled/enabled y nvrm-watch.service static: son unidades de SISTEMA y arrancan sin sesion. Y hay un contraejemplo medido HOY que refuerza la afirmacion en vez de romperla: bb-usable, por ser unit de sistema, NO hereda DISPLAY de la sesion grafica, asi que su sonda de latencia devuelve None siempre (bin/bb-usable:217). Ese es el precio de no depender de la sesion, y esta registrado en DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA.",
+      "verdict": "pass"
     },
     {
       "claim_id": "SPEC-L240",
-      "evidence": "tools/calibra_psi.py corrido hoy: VEREDICTO CALIBRADO. El limite sigue vigente y sin maquillar: solo el canal de memoria esta calibrado. La seccion nueva de ventanas de contencion de CPU en bb scan se deja explicitamente SIN veredicto por esa misma razon.",
-      "verdict": "verified"
+      "evidence": "`bb status` corrido el 2026-09-27: 'armado: 15  falta: 0  ciego: 1'. Los tres chequeos que leian `systemctl is-active` se cerraron el 2026-09-25 y leen su artefacto. La fila 'ciego: 1' es earlyoom, y esta declarada como brecha con ficha propia (DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA), no disimulada: el informe la imprime en su propia columna. El limite que la propia fila declara sigue en pie: se comprueba que el dato es fresco, no que su contenido sea correcto.",
+      "verdict": "pass"
     },
     {
       "claim_id": "SPEC-L241",
-      "evidence": "bb drift corrido hoy: revisados 38, divergentes 0, ausentes 0, suspendidos 1. Los 38 incluyen los 8 sujetos nuevos de la cadena de proteccion de memoria, aplicados por el dueno a las 07:29:53 y verificados sobre los cgroups, no sobre los ficheros.",
-      "verdict": "verified"
+      "evidence": "`bb scan` corrido el 2026-09-27 imprime 'comprobaciones que NO pudieron correr: 1' y 'accounting mode: COULD_NOT_RUN (apagado)', asi que cuenta y NOMBRA lo que no pudo correr en vez de sumarlo a lo limpio. La mitad del control negativo se midio hoy sobre dos instrumentos nuevos: tools/control_racha.py sale 0 y con --corte 180 sale 1; tools/demonio_al_dia.sh tiene los tres veredictos corridos (0 al dia, 1 viejo, 2 COULD_NOT_RUN). LIMITE: se verifico en los gates que este turno toco, no en los 30 organos del kit uno por uno.",
+      "verdict": "pass"
     },
     {
       "claim_id": "SPEC-L242",
-      "evidence": "tools/inventario.py --check corre en pre-commit y devuelve HALLAZGOS: 0. En ESTE release cazo dos desajustes reales antes de que entraran: los 5 sujetos adoptados de la cadena de memoria, y despues los 3 de nivel de ventana, mas tools/presupuesto_memoria.py.",
-      "verdict": "verified"
+      "evidence": "Leido de la unit viva, no del repo. `systemctl --user cat blackbox-sample.service` da ExecStart=%h/projects/blackbox/bin/bb sample, Nice=19, IOSchedulingClass=idle -- los dos valores que la fila afirma, literalmente. LIMITE: 'solo lee /proc y endpoints ya existentes' no se re-audit\u00f3 linea por linea en este turno; lo que se comprobo es la prioridad declarada.",
+      "verdict": "pass"
     },
     {
       "claim_id": "SPEC-L243",
-      "evidence": "bb drift vigila 38 sujetos, antes 30. Los 11 adoptados el 2026-09-24 siguen sin divergencias ni ausencias, y se les sumaron los 8 de la proteccion del escritorio.",
-      "verdict": "verified"
+      "evidence": "Re-derivado el 2026-09-27: `python3 -m tools.calibra_psi` -> VEREDICTO CALIBRADO, rc=0, falsos positivos 0, incidentes no detectados 0, sobre 20285 muestras. Control negativo corrido: --sostenido 0 -> rc=1. Y la auditoria ENCONTRO algo: antes de tocar nada el modulo daba 'falsos positivos: 1' y VEREDICTO CORTE INVALIDO, porque el kernel panic del 2026-09-26 no estaba en su lista de incidentes y un colapso real de 13 min se leia como excursion sana. Anadido como cuarto incidente, con su corroboracion independiente (hung_task en el journal, `last reboot` 15:42:17, sar con 24-29 % de RAM disponible). Aparecio tambien un defecto del modulo: contaba como 'no detectado' un incidente FUERA del rango del corpus, que es medir su propia lista en vez del corte. Ahora se separa y se imprime.",
+      "verdict": "pass"
     },
     {
       "claim_id": "SPEC-L244",
-      "evidence": "Fila marcada Ocurrio con la medida delante, y en este release pasa de diagnostico a mitigacion verificada: la cadena de 7 niveles de memory.low esta aplicada y leida de los cgroups -- la ventana (app-gnome-com.anthropic.Claude-38380.scope) con 2 GiB y el arnes en 0 con 17.9 GB dentro, sin estar nombrado en ningun fichero. La CAUSA del episodio sigue sin probar en DEBT-SLUGGISH-SIN-CAUSA-PROBADA: la contencion de CPU quedo descartada con experimento (4 ms en reposo, 8 ms con 40 quemadores sobre 20 nucleos) pero la expulsion de memoria no quedo probada.",
-      "verdict": "verified"
+      "evidence": "`./bin/bb drift` corrido el 2026-09-27: 'revisados: 38  divergentes: 0  ausentes: 0  suspendidos: 1' y 'El repo describe la maquina que hay'. LIMITE: la verificacion en ambos sentidos que la fila afirma es historica (2026-09-24); hoy se comprobo el veredicto, no se re-provoco una divergencia para ver si la caza.",
+      "verdict": "pass"
     },
     {
       "claim_id": "SPEC-L245",
-      "evidence": "tools/piso_cobertura.sh corrido hoy: bin/bb al 27.5 %, piso 27.0. Sube desde 17.7 % del 2026-09-24. El piso se pone por DEBAJO de lo medido y no en el maximo porque la cifra varia entre corridas (26.7, 26.8, 26.9, 27.5) al leer parte de la suite el estado real de la maquina, y un trinquete en el maximo de una medida ruidosa se vuelve intermitente. Control negativo corrido: piso 40.0 -> FAIL.",
-      "verdict": "verified"
+      "evidence": "`grep -c inventario .pre-commit-config.yaml` da 3, y el hook 'SPEC.md inventaria lo que el repo ejecuta y posee' aparece en la salida real de los dos ultimos commits de este turno, con veredicto Passed. Y bloqueo de verdad en este mismo turno: al anadir tools/control_racha.py y tools/demonio_al_dia.sh salio 'funcion sin inventariar en SPEC.md' para las dos y el commit no paso hasta inventariarlas. La afirmacion de que ata SPEC a tools/ esta medida hoy, no recordada.",
+      "verdict": "pass"
     },
     {
       "claim_id": "SPEC-L246",
-      "evidence": "La fila se REESCRIBE en este release y su texto nuevo esta medido. Decia 27.5 % con el piso en 27.0, y daba como razon del piso que 'la cifra VARIA entre corridas'. Las dos cosas quedaron superadas hoy, y por una causa distinta de la que la fila suponia: tools/cobertura_bash.sh ponia PS4='+${BASH_SOURCE}:${LINENO}:' y buscaba las lineas con un patron anclado en UN solo '+'. Bash repite ese caracter segun la profundidad de anidamiento, asi que todo lo ejecutado dentro de un $(...), una tuberia o un subshell se contaba SIN CUBRIR -- en bin/bb es casi todo, porque cada bloque de la muestra se arma con x=$(funcion). Medido corriendo SOLO los tres tests de slices_mem, que la ejecutan entera: 11 de sus 14 lineas candidatas salian sin cubrir. Arreglado el ancla con \\++ y \\K: 947 lineas, 256 -> 313 cubiertas, 27.0 % -> 33.1 %, sin un solo test nuevo entre las dos cifras. El piso subio a 32.8 = el minimo de tres corridas consecutivas (33.1, 33.1, 33.1) menos el vaiven medido de 0.2-0.3 entre reposo y carga; si se hubiera quedado en 27.0 quedarian 6 puntos de holgura donde la cobertura podria pudrirse sin que nadie lo note. Controles negativos corridos sobre un fixture versionado (tests/fixtures/cobertura_sujeto.sh): una funcion llamada desde $(...) cuenta como cubierta; una que NADIE llama sale sin cubrir (sin este, el arreglo perezoso de contar todo daria 100 % para siempre); la llamada directa se sigue viendo. Y el control del arreglo: restaurado el ancla vieja se cae UNO de los tres tests, justo el del bug. Lectura de hoy, 2026-09-25: bin/bb al 33.3 %, piso 32.8. El numero sigue siendo bajo y eso sigue siendo el hallazgo.",
-      "verdict": "verified"
+      "evidence": "La fila estaba RANCIA y lo encontro esta auditoria: declaraba 'bb drift vigila 30 sujetos' y `./bin/bb drift` imprime 38 revisados. Corregida a 38 en el mismo turno, con la nota de que la encontro la auditoria de claims del 2026-09-27 y no una revision. El resto de la fila se sostiene: nvrm-watch.service y nvrm-watch.timer existen hoy como unidades de systemd (list-unit-files), o sea que el instrumento que vivia solo en disco esta adoptado.",
+      "verdict": "pass"
+    },
+    {
+      "claim_id": "SPEC-L247",
+      "evidence": "Afirmacion historica del 2026-09-25 y sigue siendo la descripcion correcta del episodio; su ficha (DEBT-SLUGGISH-SIN-CAUSA-PROBADA) esta ABIERTA y en la linea base, que es la forma honesta de tenerla. Lo que se midio DESPUES y la refuerza: el 2026-09-26 se establecio que x.{estado,ms} tiene n=36 episodios reales, no 0 como afirmaba DEBT-BB-USABLE, discriminando lentitud real del escritorio de bb siendo desalojado via smi.ms. O sea que el canal que esta fila pedia ya mide algo. LIMITE: la CAUSA del episodio del 09-25 sigue sin probarse, y la fila no afirma tenerla.",
+      "verdict": "pass"
+    },
+    {
+      "claim_id": "SPEC-L248",
+      "evidence": "`bash tools/piso_cobertura.sh` el 2026-09-27: '[bb-cobertura] bin/bb al 33.1% (piso 32.8%)', rc=0. La cifra de la fila (33.3% el 2026-09-25) es historica y lleva su fecha; el piso de 32.8 es actual y se comprobo. El 33.1 frente al 33.3 es la variacion de carga que el propio piso documenta (0.2-0.3 puntos entre reposo y carga), y por eso el piso esta en 32.8 y no en 33.1. Medido ademas hoy: este gate FALLO en el segundo push por carga de la maquina y paso en frio, que es esa misma variacion vista en produccion.",
+      "verdict": "pass"
     }
   ],
-  "timestamp": "2026-09-26T04:54:22Z",
-  "tree_fingerprint": "7d19caa69ade51e06f18ce276f7ab806d95525a61c374733206adc69ff08b097",
+  "timestamp": "2026-09-27T06:46:48Z",
+  "tree_fingerprint": "8c5843a09e92547aaeac65cb5f47e1dc2fe9b898b3e46c93bde2afa0aa594535",
   "violations": []
 }

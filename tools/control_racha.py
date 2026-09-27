@@ -64,11 +64,6 @@ from tools.calibra_psi import INCIDENTES, MUESTRAS, UMBRAL_PCT, carga
 # se fija aqui y `tests/test_control_racha.py` comprueba que son el mismo.
 CORTE_S = 300.0
 
-# La cuarta ventana de verdad etiquetada, que calibra_psi todavia no tiene: el
-# kernel panic. Arranca en la rampa de PSI (sar: avg10 76.8 a las 15:20:47) y
-# termina en el arranque nuevo (`last reboot`: 15:42:17).
-PANICO = (dt.datetime(2026, 9, 26, 15, 20), dt.datetime(2026, 9, 26, 15, 42))
-
 # Un hueco mas largo que esto no es continuidad: es un arranque nuevo o el
 # muestreador muerto. Encadenar a traves de el inventaria una racha que nadie
 # observo. 10 min es 10x el intervalo mediano.
@@ -76,9 +71,13 @@ HUECO_MAX_S = 600.0
 
 
 def ventanas() -> list[tuple[dt.datetime, dt.datetime]]:
+    # Las ventanas las declara `calibra_psi.INCIDENTES` y no este modulo. Hasta el
+    # 2026-09-27 aqui se anadia la del kernel panic aparte, porque aquel no la
+    # tenia; en cuanto la tuvo, tenerla en dos sitios eran dos verdades que se
+    # podian desincronizar. La escalera manda reusar.
     return [(dt.datetime.strptime(a, "%Y-%m-%d %H:%M"),
              dt.datetime.strptime(b, "%Y-%m-%d %H:%M"))
-            for a, b in INCIDENTES] + [PANICO]
+            for a, b in INCIDENTES]
 
 
 def es_incidente(t: dt.datetime, vs=None) -> bool:
