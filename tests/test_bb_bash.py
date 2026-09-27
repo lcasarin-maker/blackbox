@@ -1196,6 +1196,29 @@ def test_sigterm_NOMBRA_a_la_victima_desde_a0_cuando_no_hay_OBJ_PID(datos, tmp_p
         "la victima sigue sin nombre: a0 es hexadecimal y hay que convertirlo")
 
 
+def test_un_a0_NEGATIVO_es_un_GRUPO_y_conserva_su_signo(datos, tmp_path):
+    """`kill(-pgid, sig)` senala a un GRUPO, y a0 llega sin signo.
+
+    Encontrado el 2026-09-27 leyendo la salida, no el codigo: la columna de
+    victima traia `4294965974`, que no es ningun pid -- `pid_max` en Linux llega
+    a 2^22 -- sino -1322, el grupo 1322 de postgres. 44 de 314 capturas
+    acumuladas (14.0 %) venian asi, y `nombra_victimas` no podia nombrarlas
+    jamas porque buscaba en el indice un numero de diez cifras.
+
+    0xfffffad6 = 4294965974 sin signo = -1322 con signo.
+    """
+    aud = tmp_path / "audit"; aud.mkdir()
+    (aud / "audit.log").write_text(
+        _syscall(int(time.time()) - 60, 9001, pid=5555, a0="fffffad6"),
+        encoding="utf-8")
+    r = correr(["sigterm", "10 minutes ago"], datos, {"BLACKBOX_AUDIT_DIR": str(aud)})
+    assert "-1322" in r.stdout, (
+        "el signo se perdio: la victima sale como 4294965974, que no es un pid")
+    assert "4294965974" not in r.stdout, (
+        "y no puede salir la forma sin signo: quien la lea buscara un pid que "
+        "no existe y contara la captura como misterio")
+
+
 def test_un_campo_vacio_NO_desplaza_las_columnas(datos, tmp_path):
     """`IFS=$'\\t' read` COLAPSA tabuladores consecutivos, porque el tabulador
     es espacio en blanco para IFS. Un campo vacio corria todos los de su

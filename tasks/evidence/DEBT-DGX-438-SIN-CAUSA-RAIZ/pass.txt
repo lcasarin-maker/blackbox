@@ -1,0 +1,34 @@
+$ python3 -m tools.nombra_victimas   # DESPUES de arreglar el signo de a0
+capturas: 323   victimas nombradas: 21 (7 %)
+pids que las muestras vieron vivos: 7468
+
+por emisor y victima:
+    80  humano   strace                 -> (ninguna muestra lo vio vivo)
+    59  humano   timeout                -> (ninguna muestra lo vio vivo)  [29 de 59 autolimpieza]
+    39  humano   python3                -> (ninguna muestra lo vio vivo)
+    33  demonio  postgres               -> (ninguna muestra lo vio vivo)
+    27  humano   python                 -> (ninguna muestra lo vio vivo)
+    21  humano   -                      -> (ninguna muestra lo vio vivo)
+    15  humano   ThreadPoolSingl        -> (ninguna muestra lo vio vivo)
+    14  humano   claude                 -> (ninguna muestra lo vio vivo)
+     6  demonio  rustdesk               -> (ninguna muestra lo vio vivo)
+     6  demonio  kill                   -> rustdesk
+     6  demonio  pkill                  -> rustdesk
+     4  humano   git                    -> (ninguna muestra lo vio vivo)
+     3  humano   pkill                  -> (ninguna muestra lo vio vivo)  [1 de 3 autolimpieza]
+     3  humano   python                 -> pytest
+     2  humano   python                 -> python  [2 de 2 autolimpieza]
+
+autolimpieza (la senal va contra el propio arbol del emisor): 32
+ATRIBUCION INCOMPLETA (emisor es un envoltorio y su padre no se nombro): 45
+
+SUJETO DE DGX-438 (emisor demonio, victima ajena y nombrada): 0
+  Ninguna, y eso NO es 'no ocurre'. Es que en lo acumulado no hay
+  una sola captura de un demonio matando un proceso ajeno cuyo
+  emisor se pueda atribuir Y cuya victima se pueda nombrar. Lo que
+  hay es autolimpieza y atribucion incompleta, contadas arriba, mas
+  las victimas que ninguna muestra vio vivas.
+
+$ python3 -m pytest tests/test_nombra_victimas.py -q
+.................................                                        [100%]
+33 passed in 0.04s

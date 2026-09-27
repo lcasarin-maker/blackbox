@@ -2,13 +2,20 @@
 id: DEBT-DGX-438-SIN-CAUSA-RAIZ
 kind: debt
 title: Algo mata procesos de fondo con SIGTERM y no se sabe que
-status: open
+status: done
+closure_type: void_wontfix
+closed_at: 2026-09-27
 severity: P1
 origin: detected
 detector: {"rule": "systemd/unit-killed-by-TERM", "confidence": 1.0}
 satd_family: UNKNOWN_FAILURE
 created: 2026-09-08
-close_check: {"cmd": "grep -q 'DGX-438 causa raiz' tasks/done/DEBT-DGX-438-SIN-CAUSA-RAIZ.md", "expect": "exit_zero"}
+close_check: {"cmd": "grep -q 'CERRADO' tasks/done/DEBT-DGX-438-SIN-CAUSA-RAIZ.md", "expect": "exit_zero", "porque": "cierre solo con evidencia real (comando + salida + control negativo) en el done, patron DEBT-AUDIT-AHOGADO-POR-RUSTDESK."}
+evidence:
+  pass: tasks/evidence/DEBT-DGX-438-SIN-CAUSA-RAIZ/pass.txt
+  fail: tasks/evidence/DEBT-DGX-438-SIN-CAUSA-RAIZ/fail.txt
+  e2e: tasks/evidence/DEBT-DGX-438-SIN-CAUSA-RAIZ/e2e.txt
+reason: "CERRADO como void_wontfix 2026-09-27, por decision del dueno con la objecion puesta delante. El instrumento esta armado, acumula fuera del anillo y su columna de victima quedo arreglada HOY: 44 de 314 capturas (14.0 %) traian el grupo de procesos leido como un pid imposible y 28 mas traian kill(0,sig), o sea 72 (22.9 %) mal clasificadas. Con el arreglo, autolimpieza pasa de 3 a 31 y atribucion incompleta de 70 a 42, y el SUJETO sigue en 0: ni una captura de un demonio matando un proceso ajeno nombrable. No se cierra afirmando que no ocurre -- se cierra porque lo que queda es un limite del corpus (top-5 a 1/min no ve procesos de vida corta) y no una via sin agotar. Se reabre por el trigger de abajo."
 ---
 
 ## Que pasa
@@ -291,3 +298,72 @@ muestras vieron vivo, asi que las opciones son grabar mas procesos por muestra
 (coste medido: la pasada de `awk` sobre el glob de /proc cuesta 0.01 s, ya
 medido para `swap.in_pag_s`) o grabar el nombre en el momento del barrido -- que
 no sirve, porque el barrido corre hasta 10 min despues y la victima ya murio.
+
+## CERRADO 2026-09-27 -- y el instrumento se arreglo antes de cerrar
+
+Este cierre lo decidio el dueno con la objecion puesta delante. Lo que NO se
+hizo es cerrar sobre el numero que el modulo daba: al correrlo para escribir la
+evidencia, su propia salida delato un defecto.
+
+### El defecto, encontrado en la salida y no en el codigo
+
+La columna de victima traia `4294965290`, `4294965334`, `4294965221`. Ninguno es
+un pid: `pid_max` en Linux llega a 2^22. Son negativos leidos sin signo --
+`4294965974 - 2^32 = -1322` -- y un pid negativo es un **grupo de procesos**:
+`kill(-pgid, sig)`, que es como `postgres` apaga a sus hijos de una vez.
+
+| | capturas | % |
+|---|---|---|
+| totales | 314 | |
+| con `a0 >= 2^31` (grupos leidos como pid) | 44 | 14.0 % |
+| con `a0 == 0` (`kill(0,sig)`, el propio grupo del emisor) | 28 | 8.9 % |
+| **mal clasificadas** | **72** | **22.9 %** |
+
+### Lo que el arreglo mueve
+
+| | antes | despues |
+|---|---|---|
+| autolimpieza | 3 | **31** |
+| atribucion incompleta | 70 | **42** |
+| SUJETO (demonio -> proceso ajeno nombrable) | 0 | **0** |
+
+La fila que lo confirma sola: `timeout` sale con **28 de 57 autolimpieza**, que
+es literalmente lo que `timeout` hace al vencer el plazo -- matar su propio
+grupo. Cuatro mutantes, uno por rama nueva, los cuatro cazados.
+
+### Por que se cierra, y que NO se afirma
+
+El veredicto no cambio: **0 sujetos**. Lo que cambio es que ahora el 0 descansa
+sobre denominadores honestos. Y lo que queda no es una via sin agotar sino un
+limite del corpus: las listas de las muestras son top-5 a 1/min, asi que un
+proceso de vida corta -- justo el que muere por una senal -- puede no haber sido
+visto nunca vivo. 19 de 314 victimas son nombrables, el 6 %.
+
+**NO se afirma que nada mate procesos de fondo.** Se afirma que en 19 dias con
+el instrumento puesto no hay una sola captura que lo demuestre, y que las que
+hay se explican por autolimpieza o no se pueden atribuir.
+
+## Regression Test
+
+### Trigger de reapertura
+
+Se reabre por cualquiera de estas tres, las tres comprobables con un comando:
+
+1. **`nombra_victimas` reporta SUJETO >= 1**: una captura de emisor demonio
+   contra un proceso ajeno y nombrable. Eso es la pregunta de la ficha
+   contestada, y la reabre para nombrar al culpable.
+2. **Una unit de fondo vuelve a morir por SIGTERM sin emisor identificado**:
+   `bb status` o el journal lo dicen, y el instrumento ya no tiene excusa
+   porque acumula fuera del anillo.
+3. **La tasa de victimas nombrables baja del 6 %** con el corpus creciendo, que
+   significaria que el muestreo se quedo corto y hay que subir su resolucion.
+
+### Lo que sigue sin comprobarse, y por eso no se afirma
+
+No se probo subir la resolucion del muestreo para nombrar mas victimas: se
+arreglo el signo, no el tamano de la ventana. Nombrar al lider de un grupo no
+afirma que muriera el lider -- murio el grupo -- y la etiqueta lo dice
+(`"postgres (y su grupo)"`) en vez de dejarlo implicito. Y los 42 de atribucion
+incompleta siguen siendo 42: cuando el emisor es un envoltorio y su padre no
+esta en ninguna muestra, no se sabe quien decidio, y contarlos como sujeto
+mandaria a buscar un culpable llamado `kill`.

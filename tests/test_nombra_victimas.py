@@ -212,3 +212,65 @@ def test_una_linea_en_blanco_no_cuenta_como_captura(tmp_path):
     c = tmp_path / "s.jsonl"
     c.write_text("\n" + json.dumps(_cap()) + "\n\n   \n", encoding="utf-8")
     assert len(nv.capturas(c)) == 1
+
+
+# --- El signo de `a0`: un pid negativo es un GRUPO de procesos -------------
+#
+# Encontrado el 2026-09-27 leyendo la salida del propio modulo, no el codigo:
+# la columna de victima traia `4294965290`, que no es un pid sino -2006 leido
+# sin signo. 44 de 314 capturas (14.0 %) venian asi y eran innombrables por
+# construccion; otras 28 traian `0`, que es `kill(0, sig)` -- el propio grupo
+# del emisor-- y se contaban como misterio.
+
+
+@pytest.mark.parametrize("crudo,esperado,porque", [
+    (4294965974, -1322, "la forma SIN signo que traen las capturas ya acumuladas"),
+    (-1322, -1322, "la forma con signo que `bin/bb` escribe desde el arreglo"),
+    (0, 0, "kill(0, sig): el propio grupo del emisor, y 0 es un valor legitimo"),
+    ("200", 200, "un pid normal en texto, que es como llega del jsonl"),
+    ("no-un-numero", None, "ilegible se dice, no se adivina"),
+    (None, None, "ausente se dice, no se adivina"),
+])
+def test_normaliza_pid_lee_las_dos_formas(crudo, esperado, porque):
+    assert nv.normaliza_pid(crudo) == esperado, porque
+
+
+def test_un_grupo_se_nombra_por_su_LIDER_y_lo_dice(tmp_path):
+    """El caso que el defecto hacia imposible: `a0` sin signo de un grupo.
+
+    Control negativo del arreglo: con el codigo previo esta captura salia
+    `nombrada=False` porque buscaba el pid 4294965974 en el indice. Si alguien
+    quita `normaliza_pid` de `nombra`, este test vuelve a rojo.
+    """
+    caps = [_cap(victima={"pid": 4294965974})]
+    idx = {1322: ("postgres", "postgresql.service")}
+    v = nv.nombra(caps, idx)[0]["victima"]
+    assert v["grupo"] is True
+    assert v["nombrada"] is True
+    assert v["comm"] == "postgres (y su grupo)", (
+        "nombrar al lider no afirma que muriera el lider: murio el grupo, y la "
+        "etiqueta tiene que decirlo o el informe afirma mas de lo que sabe")
+
+
+def test_kill_cero_es_autolimpieza_por_POSIX(tmp_path):
+    """`kill(0, sig)` va contra el propio grupo del emisor, sin cruzar nada.
+
+    Control negativo: con el codigo previo daba False -- `0` no casaba con
+    ningun ppid-- y las 28 capturas de `timeout` entraban en el misterio.
+    """
+    c = _cap(victima={"pid": 0}, emisor={"comm": "timeout", "ppid": 50})
+    assert nv.es_autolimpieza(c) is True
+    assert nv.es_autolimpieza(_cap(victima={"pid": 999})) is False, (
+        "y no absuelve a cualquiera: un pid ajeno sigue sin ser autolimpieza")
+
+
+def test_un_grupo_cuyo_LIDER_es_el_padre_del_emisor_es_su_arbol():
+    """`pkill -g` desde un hijo contra el grupo del padre.
+
+    El signo distingue el caso: -50 es el grupo 50, y 50 es el ppid del emisor.
+    """
+    assert nv.es_autolimpieza(_cap(victima={"pid": -50},
+                                   emisor={"ppid": 50, "comm": "pkill"})) is True
+    assert nv.es_autolimpieza(_cap(victima={"pid": -77},
+                                   emisor={"ppid": 50, "comm": "pkill"})) is False, (
+        "el grupo de OTRO no es el arbol del emisor")

@@ -1,0 +1,13 @@
+$ # Lo que SI esta cubierto contra el caso medido, verificado sobre la maquina:
+$ systemctl show bb-usable.service -p FailureAction -p WatchdogUSec --value
+6min
+reboot-immediate
+$ systemctl is-active bb-usable.service earlyoom.service
+active
+active
+
+$ # El remedio grueso (reiniciar) esta armado y CALIBRADO contra cuatro
+$ # incidentes. Lo que no existe es el intermedio, y la razon esta medida.
+$ python3 -m pytest tests/test_control_racha.py -q
+.........                                                                [100%]
+9 passed in 0.69s

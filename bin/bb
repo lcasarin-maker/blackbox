@@ -2427,7 +2427,22 @@ _sig_eventos() {
         # Para `kill`/`tkill` a0 es el pid objetivo; para `tgkill` es el tgid,
         # que es el pid del proceso. Las reglas filtran la SENAL en a1/a2, asi
         # que a0 es el objetivo en los cuatro casos.
-        if (match($0, /[ ]a0=([0-9a-f]+)/, x)) s_vic[id] = strtonum("0x" x[1])
+        #
+        # a0 llega en hexadecimal y SIN SIGNO, y un pid NEGATIVO es un GRUPO de
+        # procesos: `kill(-pgid, sig)` es como un demonio apaga a todos sus
+        # hijos de una vez, y `kill(0, sig)` como apaga su propio grupo. Medido
+        # el 2026-09-27 sobre las 314 capturas acumuladas: 44 (14.0 %) traian
+        # a0 >= 2^31 -- p.ej. 4294965974, que son -1322, el grupo 1322 de
+        # postgres -- y el barrido las guardaba como un pid de diez cifras que
+        # no existe en ninguna muestra, asi que `nombra_victimas` no podia
+        # nombrarlas jamas y las contaba como misterio. Se convierte a 32 bits
+        # con signo y el signo se CONSERVA: quien lo lea distingue un pid de un
+        # grupo por el signo, que es la convencion de kill(2) y no una propia.
+        if (match($0, /[ ]a0=([0-9a-f]+)/, x)) {
+          vic = strtonum("0x" x[1])
+          if (vic >= 2147483648) vic -= 4294967296
+          s_vic[id] = vic
+        }
       }
       if ($0 ~ /^type=OBJ_PID/) {
         if (match($0, /opid=([0-9]+)/, x))    v_pid[id]  = x[1]

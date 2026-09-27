@@ -2,13 +2,20 @@
 id: DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA
 kind: debt
 title: "El unico remedio armado contra el caso medido es reiniciar la maquina entera"
-status: open
+status: done
+closure_type: void_wontfix
+closed_at: 2026-09-27
 severity: P2
 origin: detected
 detector: {"rule": "bb status", "confidence": 1.0}
 satd_family: MISSING_COVERAGE
 created: 2026-09-25
-close_check: {"cmd": "grep -q 'remedio intermedio CALIBRADO' tasks/done/DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA.md", "expect": "exit_zero", "porque": "cierra sobre una CALIBRACION que todavia no existe, no sobre codigo que se pueda escribir hoy. Un guardia nuevo con un umbral inventado hoy mata un proceso Y ADEMAS afirma haber tenido razon -- peor que no tenerlo. Mismo patron que DGX-438: cierra cuando alguien ESCRIBE que aterrizo, con las dos mitades medidas."}
+close_check: {"cmd": "grep -q 'CERRADO' tasks/done/DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA.md", "expect": "exit_zero", "porque": "cierre solo con evidencia real (comando + salida + control negativo) en el done, patron DEBT-AUDIT-AHOGADO-POR-RUSTDESK."}
+evidence:
+  pass: tasks/evidence/DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA/pass.txt
+  fail: tasks/evidence/DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA/fail.txt
+  e2e: tasks/evidence/DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA/e2e.txt
+reason: "CERRADO como void_wontfix 2026-09-27, por decision del dueno, que el 2026-09-27 habia votado antes dejarla esperando un quinto incidente y hoy voto cerrarla; manda el voto nuevo. El hallazgo que la cierra no es falta de datos: con el cuarto incidente y sus campos por proceso, CINCO claves por proceso contra CUATRO incidentes y ninguna separa -- el incidente 4 queda POR DEBAJO del p99 sano (10112 frente a 35340 MiB). No hay proceso anomalo que matar; el agregado es el anomalo. Un guardia intermedio con un umbral inventado mataria un proceso Y ADEMAS afirmaria haber tenido razon, que es peor que no tenerlo. El remedio grueso esta armado y calibrado contra los cuatro incidentes (bb-usable, FailureAction=reboot-immediate, WatchdogUSec=6min, activo)."
 ---
 
 ## Que dice el informe hoy
@@ -206,3 +213,73 @@ su cuenta el mismo día. Dos caminos independientes al mismo sitio.
 **Esto no cierra la ficha**, porque «no alcanzable» es una conclusión con
 consecuencias y la decisión de retirar el remedio no es de un agente. Queda
 planteada con su medida.
+
+## CERRADO 2026-09-27 -- y lo que la cierra es una SENAL que no existe, no un dato que falte
+
+El dueno voto dos veces el mismo dia sobre esta ficha: primero dejarla abierta
+esperando un quinto incidente, luego cerrarla con las demas. Manda el voto nuevo,
+y queda dicho que hubo dos para que nadie lea el cierre como si la duda no
+hubiera existido.
+
+### Lo que SI esta armado, verificado sobre la maquina
+
+```
+$ systemctl show bb-usable.service -p WatchdogUSec -p FailureAction --value
+6min
+reboot-immediate
+$ systemctl is-active bb-usable.service earlyoom.service
+active
+active
+```
+
+El remedio grueso existe, esta activo y esta **calibrado contra cuatro
+incidentes** (`tools/control_racha.py`, 9 tests). Lo que esta ficha pedia es el
+intermedio: matar un proceso en vez de la maquina.
+
+### Por que el intermedio no se puede calibrar, y no es por falta de datos
+
+El cuarto incidente aporto lo que los tres primeros no tenian: campos por
+proceso DENTRO del colapso. La rafaga del 15:35:16 -- la ultima antes del panico
+-- nombra `pytest` creciendo **10 112 MiB** en el intervalo. Parece el culpable.
+
+No lo es:
+
+```
+  p99 de las ventanas SANAS :  35340 MiB
+  max de las sanas          :  54172 MiB
+  el incidente 4            :  10112 MiB
+```
+
+**El incidente queda por debajo del p99 sano.** La operacion normal de esta
+maquina hace rutinariamente cosas que, mirando un proceso, se ven PEORES que lo
+que precedio al panico. Cinco claves por proceso probadas contra cuatro
+incidentes, y ninguna separa: los cortes que avisan del incidente 4 dan 12 a 19
+falsos positivos.
+
+Eso no es "faltan datos". Es que **la senal no vive en ningun proceso**. El
+agregado es el anomalo, y contra el agregado ya hay un remedio armado.
+
+## Regression Test
+
+### Trigger de reapertura
+
+1. **Un incidente cuyo peor proceso supere el p99 sano** (35 340 MiB de
+   crecimiento, o su equivalente en CPU). Eso seria la primera evidencia de que
+   la senal existe por proceso, y entonces el guardia intermedio es construible
+   con un corte medido.
+2. **`bb-usable` reinicia la maquina mas de una vez por semana.** El remedio
+   grueso funcionando de mas es la senal de que hacia falta uno mas fino, y es
+   contable desde el journal.
+3. **`earlyoom` deja de estar activo** o pierde su punteria: entonces el unico
+   remedio contra el caso medido seria el reinicio, sin nada antes, y la brecha
+   que esta ficha describe volveria sin control compensatorio.
+
+### Lo que sigue sin comprobarse, y por eso no se afirma
+
+El bucket de carga del que sale la comparacion tiene **n=83**, y las ventanas
+sanas se definieron excluyendo los cuatro incidentes -- si hubo un quinto sin
+registrar, esta contaminando el p99 hacia arriba y el incidente 4 quedaria
+menos por debajo de lo que dice la tabla. Y no se probo una clave AGREGADA por
+cgroup (suma de crecimiento por slice) en vez de por proceso: la conclusion es
+que ningun PROCESO separa, no que ninguna agregacion lo haga. Esa via queda sin
+agotar y se cierra igual, por decision del dueno.

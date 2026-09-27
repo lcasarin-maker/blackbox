@@ -1,0 +1,14 @@
+$ # El criterio de esta ficha, medido hoy:
+$ grep -q 'X_ACT_MS' bin/bb-usable; echo $?
+grep X_ACT_MS bin/bb-usable rc=1
+
+$ # y por que no se puede escribir la constante: el calibrador no da numero.
+$ python3 -m tools.calibra_latencia_x > /dev/null 2>&1; echo $?
+2
+
+$ # el canal SI observa, y esa mitad esta hecha. Lo que falta es ACTUAR.
+$ grep -c '"x":{"estado"' bin/bb
+1        # bin/bb:761 -- el muestreador ESCRIBE {"x":{"estado","ms"}} en cada
+         # muestra. La mitad de observar esta hecha; 2389 muestras del corpus
+         # tienen los dos canales OK. Lo que no existe es la constante con la
+         # que ACTUAR, y no existe porque nadie la puede derivar hoy.
