@@ -1,0 +1,77 @@
+# E2E -- la causa raiz, medida, y la hipotesis que descarte primero.
+#
+# Sujeto: DEBT-BB-STATUS-DICE-FALTA-SOBRE-UN-INSTRUMENTO-ARMADO.
+
+1 · LA HIPOTESIS QUE LA FICHA DECLARABA COMO CANDIDATA ERA FALSA
+===============================================================
+La ficha decia: "el candidato es la latencia de `journalctl -b 0 -u
+earlyoom.service` bajo carga (662 lineas), pero eso NO esta medido y no se
+escribe como causa hasta que lo este". Se midio, y no era:
+
+  latencia de la consulta, 12 corridas (segundos):
+    0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.03 0.03 0.03 0.04 0.04
+  lineas devueltas, 12 corridas:
+    12 veces 697
+
+Rapida y determinista. Escribir esa causa sin medirla habria mandado a alguien a
+optimizar una consulta que tarda 20 ms.
+
+2 · LA CAUSA REAL: pipefail MAS UNA TUBERIA A grep -q
+=====================================================
+`bin/bb:19` tiene `set -uo pipefail`. El chequeo era:
+
+  eo=$($JOURNALCTL -b 0 -u earlyoom.service --no-pager -o cat 2>/dev/null)
+  printf '%s' "$eo" | grep -q "Preferring to kill" &&
+    printf '%s' "$eo" | grep -q "Will avoid killing"; ok=$?
+
+`grep -q` cierra su stdin en cuanto encuentra el primer match. El `printf` de la
+izquierda, que lleva 697 lineas, recibe SIGPIPE y muere con 141. `pipefail`
+propaga ESE 141 en vez del 0 de grep, asi que `ok=141` y el chequeo dice FALTA.
+
+Es una CARRERA entre que printf acabe de escribir y que grep salga, y por eso
+falla a veces. Reproducido con el patron aislado:
+
+  $ for i in $(seq 1 20); do bash -c 'set -euo pipefail; eo=$(journalctl -b 0 \
+      -u earlyoom.service --no-pager -o cat 2>/dev/null); \
+      printf "%s" "$eo" | grep -q "Preferring to kill" && \
+      printf "%s" "$eo" | grep -q "Will avoid killing"; echo $?'; done | sort | uniq -c
+       16 0
+        2 141
+
+3 · Y ESTE REPO YA LO HABIA ENCONTRADO, DOCE LINEAS MAS ABAJO
+=============================================================
+`bin/bb:2104`, escrito el 2026-09-09:
+
+  # OJO: `kdump-config show | grep -q ...` se ve bien y esta MAL bajo
+  # `set -o pipefail`: grep -q cierra su stdin en cuanto encuentra el primer
+  # match, kdump-config recibe SIGPIPE y muere con rc=141 -- pipefail
+  # propaga ESE 141, no el 0 de grep, y el chequeo decia FALTA con kdump
+  # armado y corriendo. Medido 2026-09-09. Se evita el pipe: se captura la
+  # salida completa primero.
+
+Mismo mecanismo, mismo sintoma, misma frase ("decia FALTA con X armado y
+corriendo"). El arreglo de entonces fue "se evita el pipe", y el de earlyoom
+capturaba la salida en `$eo` y luego LA VOLVIA A METER en una tuberia. El
+arreglo se aplico a un chequeo y el patron sobrevivio en el de al lado.
+
+Eso es lo que este cierre corrige de verdad: no la fila, la clase.
+
+4 · EL BARRIDO DE LA CLASE EN TODO bin/bb
+=========================================
+  $ grep -c "| *grep -q" bin/bb
+  4    (dos son la linea del comentario de kdump y su cita)
+
+Los dos reales:
+  2063-2064  earlyoom   -> ARREGLADO, sin tuberia, con `case`
+  1900       dpkg-query -> se DECLARA y se deja, medido benigno:
+             `dpkg-query -W -f='${Status}'` emite UNA linea corta, asi que el
+             productor acaba antes de que grep salga y la carrera no se abre.
+             20 corridas, 20 veces rc=0, cero 141. Disparador de revision
+             escrito en el codigo: que esa salida deje de ser una linea.
+
+5 · LO QUE VIGILA DE AQUI EN ADELANTE
+=====================================
+`tools/status_estable.sh` no comprueba esta fila: comprueba que el RESUMEN de
+`bb status` no se mueva entre corridas. Cualquier chequeo que se vuelva flaky por
+cualquier razon lo mueve y el script sale 1. Es el guardia de la clase, y su
+control negativo esta corrido contra el codigo roto de verdad, no simulado.

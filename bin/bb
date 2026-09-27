@@ -1897,6 +1897,13 @@ cmd_hw() {
   # para cuando haga falta escalar; nunca la ejecuta. `bb scan` lee sus
   # resultados si el operador la corrio (ver -- NVIDIA Field Diagnostic --).
   echo "-- NVIDIA Field Diagnostic (dgx-spark-fieldiag) --"
+  # Esta tuberia es el MISMO patron que el de earlyoom mas abajo -- `| grep -q`
+  # bajo `set -o pipefail` -- y se deja a proposito: `dpkg-query -W -f='${Status}'`
+  # emite UNA linea corta, asi que el productor acaba de escribir antes de que
+  # grep salga y la carrera no se abre. Medido el 2026-09-27: 20 corridas, 20
+  # veces rc=0, cero 141. Se declara en vez de arreglarse en silencio porque el
+  # patron es el mismo y el que venga detras tiene que saber por que aqui no
+  # muerde. Disparador de revision: que esa salida deje de ser una linea.
   if have dpkg-query && dpkg-query -W -f='${Status}' dgx-spark-fieldiag 2>/dev/null | grep -q '^install ok'; then
     local fdver; fdver=$(dpkg-query -W -f='${Version}' dgx-spark-fieldiag 2>/dev/null)
     echo "  instalado: si (version $fdver)"
@@ -2059,9 +2066,28 @@ EOF
   #   Preferring to kill process names that match regex '(...)'
   #   Will avoid killing process names that match regex '(...)'
   # Un earlyoom sin esos argumentos no imprime ninguna de las dos lineas.
+  # SIN TUBERIA, y eso es carga util: este mismo chequeo era FLAKY y decia
+  # FALTA sobre un earlyoom armado 1 de cada 6 corridas
+  # (DEBT-BB-STATUS-DICE-FALTA-SOBRE-UN-INSTRUMENTO-ARMADO).
+  #
+  # La causa NO era la latencia del journal -- eso lo medi y era falso: 12
+  # corridas entre 0.02 y 0.04 s, 697 lineas las 12 veces. Era `pipefail` + la
+  # tuberia: `grep -q` cierra su stdin en cuanto encuentra el primer match, el
+  # `printf` de la izquierda recibe SIGPIPE y muere con 141, y pipefail propaga
+  # ESE 141 en vez del 0 de grep. Es una carrera entre que printf acabe de
+  # escribir 697 lineas y que grep salga al primer match, asi que falla a veces.
+  # Reproducido 2 de 20 con el patron aislado.
+  #
+  # Y este repo YA lo habia encontrado el 2026-09-09, doce lineas mas abajo, con
+  # `kdump-config show | grep -q` y el mismo sintoma ("decia FALTA con kdump
+  # armado y corriendo"). El arreglo de entonces fue "se evita el pipe"; aqui la
+  # salida se capturaba en $eo y luego se volvia a meter en una tuberia, asi que
+  # el arreglo se aplico a un chequeo y el patron sobrevivio en el de al lado.
   local eo; eo=$($JOURNALCTL -b 0 -u earlyoom.service --no-pager -o cat 2>/dev/null)
-  printf '%s' "$eo" | grep -q "Preferring to kill" &&
-    printf '%s' "$eo" | grep -q "Will avoid killing"; ok=$?
+  ok=1
+  case "$eo" in *"Preferring to kill"*)
+    case "$eo" in *"Will avoid killing"*) ok=0 ;; esac ;;
+  esac
   chk "earlyoom con la punteria puesta (prefiere y evita)" "$ok" \
       "activo no es lo mismo que apuntando: sudo ./enable-privileged.sh (seccion 6)"
 
