@@ -43,6 +43,11 @@ falsa de 33 reinicios en un arranque donde no hubo ninguno.
 Control negativo: `--corte 180` mete la excursion sana mas larga y el veredicto
 se vuelve FALSO POSITIVO, con rc=1. Un control que no puede salir en rojo no es
 un control.
+
+Se corre `python3 -m tools.control_racha`, que es la convencion de este repo
+para un modulo de `tools/` -- la misma de `tools.check_harvest_accepted`. Un
+`sys.path.insert` antes del import tambien habria funcionado en tiempo de
+ejecucion, y pyright lo rechaza con razon: el import no se resuelve.
 """
 
 from __future__ import annotations
@@ -52,8 +57,7 @@ import datetime as dt
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from calibra_psi import INCIDENTES, MUESTRAS, UMBRAL_PCT, carga  # noqa: E402  # sunset-reviewed: 1.7 -- SE QUEDA: `sys.path.insert` antes del import es la unica forma de importar un modulo de tools/ sin empaquetar el repo, y E402 es su consecuencia mecanica, no una decision aparte. Disparador de revision: que tools/ pase a ser un paquete instalable. Precedente: tools/calibra_psi.py ya se importa asi desde tests/test_calibra_psi.py
+from tools.calibra_psi import INCIDENTES, MUESTRAS, UMBRAL_PCT, carga
 
 # El corte de accion de bb-usable, en segundos. No se importa del demonio
 # porque `bin/bb-usable` no es importable (sin extension, con guarda main):
@@ -117,7 +121,7 @@ def max_sostenido_sano(serie, bajas_para_cortar: int, umbral=UMBRAL_PCT):
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     ap.add_argument("--muestras", type=Path, default=MUESTRAS)
     ap.add_argument("--corte", type=float, default=CORTE_S,
                     help="corte de accion en segundos; bajarlo es el control negativo")
@@ -154,5 +158,5 @@ def main(argv=None) -> int:
     return rc
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover -- entry point, ejercitado via main()
     raise SystemExit(main())
