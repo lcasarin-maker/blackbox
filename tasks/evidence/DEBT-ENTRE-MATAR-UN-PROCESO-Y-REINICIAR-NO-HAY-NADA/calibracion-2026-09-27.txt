@@ -1,0 +1,88 @@
+# Segundo intento de calibrar el remedio intermedio, con el CUARTO incidente y
+# con los campos por proceso que los tres primeros no tenian. 2026-09-27.
+#
+# Resultado: sigue sin calibrarse, y ahora se sabe POR QUE de una forma que
+# cambia lo que hay que construir.
+
+1 · LO QUE EL CUARTO INCIDENTE APORTA Y LOS TRES PRIMEROS NO TENIAN
+===================================================================
+El intento del 2026-09-26 se quedo sin atribucion porque `pidio`, `cpu_top`,
+`swap` y `slices` estaban VACIOS en los tres congelamientos: no existian aun.
+
+El kernel panic del 2026-09-26 15:38:26 es posterior a que se anadieran, asi que
+por primera vez hay datos por proceso DENTRO de un incidente.
+
+2 · LA RAFAGA DISPARO DOS VECES, Y SI NOMBRA AL CULPABLE
+=======================================================
+  15:19:59   MARCADOR  "commit +86.0 puntos"
+  15:20:04   rafaga    psi=0.37   load1=101.62  codex-code-mode:1410632MiB
+  15:20:08 .. 15:20:47  15 rafagas a 2-4 s, dominadas por soffice.bin
+  15:34:51   MARCADOR  "psi mem_full=40.48"
+  15:35:16   rafaga    psi=84.75  load1=221.55  pytest:10112MiB
+  15:38:26   KERNEL PANIC
+
+La muestra de las 15:35:16 -- la ultima antes del panico -- nombra **pytest
+creciendo 10 GiB en el intervalo**. Es el herd, visto por el instrumento de este
+repo y no por hipotesis.
+
+Lo que la rafaga NO trae es `cpu_top`: `muestra_ligera` graba `pidio`,
+`mem_*`, `commit_pct`, `load1` y `psi`, y nada mas. Asi que en el momento exacto
+del colapso hay atribucion por CRECIMIENTO pero no por CPU.
+
+3 · Y NINGUNA CLAVE SEPARA. NI UNA.
+===================================
+Con `cpu_top` de las muestras COMPLETAS (2762 muestras, 12 en la ventana):
+
+   corte % nucleo  sostenido  falsos+  avisa inc4
+              600          1       19          SI
+             1000          1       19          SI
+             1100          3       12          SI
+
+Caza el incidente y dispara 12-19 veces en operacion sana. Para un guardia que
+MATA un proceso eso es inaceptable, y es literalmente lo que esta ficha advierte:
+"un guardia con un umbral inventado hoy mata un proceso y ademas afirma haber
+tenido razon".
+
+Con `pidio` de las RAFAGAS (1024 rafagas, 16 en la ventana), filtrando por un
+criterio DERIVADO -- un crecimiento mayor que MemTotal no puede ser memoria
+residente, y quita el artefacto de 1.4 TB de VmSize con MAP_NORESERVE:
+
+  max en el incidente 4 :  10112 MiB
+  p99 de las sanas      :  35340 MiB
+  max de las sanas      :  54172 MiB
+
+**EL INCIDENTE QUEDA POR DEBAJO DEL p99 SANO.** La operacion normal de esta
+maquina hace rutinariamente cosas que, mirando un proceso, se ven PEORES que lo
+que precedio al panico.
+
+4 · LA CONCLUSION, QUE NO ES "SIGUE FALTANDO MEDIR"
+===================================================
+Cuatro claves por proceso probadas contra cuatro incidentes:
+
+  rss max, gpu agregada, gpu del mayor (2026-09-26):   ninguna discrimina
+  cpu_top sostenido (hoy):                             12-19 falsos positivos
+  crecimiento de pidio en rafaga (hoy):                el incidente esta por
+                                                       DEBAJO del p99 sano
+
+El colapso no se distingue porque UN proceso se vuelva anomalo. Se distingue
+porque el AGREGADO cruza un limite -- que es exactamente lo que `bb-usable` ya
+mide con PSI, y lo que `bb-usable` ya hace es lo unico que funciona.
+
+Asi que el remedio que esta ficha imagina -- elegir una victima y matarla -- puede
+no ser alcanzable en esta maquina, y no por falta de datos: por falta de senal.
+Ningun proceso es el culpable; el culpable es cuantos hay.
+
+5 · LO QUE SI APUNTA A ALGO
+===========================
+Un techo AGREGADO sobre el herd, que es lo que `DEBT-TECHOS-SIN-CALIBRAR` lleva
+abierto y lo que la sesion office2office sugirio por su cuenta el 2026-09-27
+(`PYTEST_XDIST_AUTO_NUM_WORKERS`, o un scope con MemoryMax para las suites como
+ya hace `bb cap`). Dos caminos independientes llegando al mismo sitio.
+
+LIMITE DECLARADO
+================
+n=12 muestras completas y n=16 rafagas en la ventana del cuarto incidente. Es
+poco, y el propio hecho de que sea poco es parte del hallazgo: durante un
+colapso el muestreador pierde la carrera. Lo que NO es poco es el lado sano
+(2762 y 1008), y el resultado negativo se apoya en ese lado: para descartar una
+clave basta ver que la operacion normal la cruza, y eso esta medido con n alto.

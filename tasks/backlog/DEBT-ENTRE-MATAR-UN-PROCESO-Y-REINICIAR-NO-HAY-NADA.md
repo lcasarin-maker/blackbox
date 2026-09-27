@@ -161,3 +161,48 @@ necesita la medicion: cuanto tiempo pasa entre el punto en que un proceso ya
 es identificable como el culpable y el punto en que `bb-usable` reinicia. Si
 esa ventana es de segundos, no hay remedio intermedio que quepa, y esta ficha
 se cierra escribiendo ESO.
+
+## 2026-09-27: con el cuarto incidente y sus campos por proceso, sigue sin separar
+
+Evidencia: `tasks/evidence/DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA/calibracion-2026-09-27.txt`.
+
+El intento anterior se quedó sin atribución porque `pidio`, `cpu_top` y `slices`
+estaban **vacíos** en los tres congelamientos: no existían aún. El kernel panic
+del 2026-09-26 es posterior, así que por primera vez hay datos por proceso dentro
+de un incidente.
+
+**La ráfaga sí nombra al culpable.** La muestra de las 15:35:16, la última antes
+del pánico, con `psi=84.75` y `load1=221.55`, dice `pytest:10112MiB`. Es el herd,
+visto por el instrumento de este repo.
+
+**Y ninguna clave separa. Ni una.**
+
+| clave | contra el incidente 4 | falsos positivos |
+|---|---|---|
+| `cpu_top` sostenido (600-1100 %) | lo caza | **12-19** de 2750 sanas |
+| crecimiento de `pidio` en ráfaga | max 10 112 MiB | el **p99 sano es 35 340** |
+
+La segunda fila es la decisiva: **el incidente queda por debajo del p99 sano**. La
+operación normal de esta máquina hace rutinariamente cosas que, mirando un
+proceso, se ven peores que lo que precedió al pánico. Y eso con un filtro
+derivado — un crecimiento mayor que `MemTotal` no puede ser residente, lo que
+quita el artefacto de 1.4 TB de VmSize con `MAP_NORESERVE`.
+
+## Lo que esto cambia: puede no ser falta de datos, sino falta de señal
+
+Cuatro claves por proceso probadas contra cuatro incidentes — `rss max`, `gpu`
+agregada, `gpu` del mayor, `cpu_top` sostenido y crecimiento de `pidio` — y
+ninguna discrimina. El colapso **no se distingue porque un proceso se vuelva
+anómalo**: se distingue porque el agregado cruza un límite, que es exactamente lo
+que `bb-usable` ya mide con PSI.
+
+Así que el remedio que esta ficha imagina — elegir una víctima y matarla — puede
+no ser alcanzable aquí. Ningún proceso es el culpable; el culpable es cuántos hay.
+
+Lo que sí apunta a algo es un techo **agregado** sobre el herd, que es
+`DEBT-TECHOS-SIN-CALIBRAR` y es también lo que la sesión office2office sugirió por
+su cuenta el mismo día. Dos caminos independientes al mismo sitio.
+
+**Esto no cierra la ficha**, porque «no alcanzable» es una conclusión con
+consecuencias y la decisión de retirar el remedio no es de un agente. Queda
+planteada con su medida.
