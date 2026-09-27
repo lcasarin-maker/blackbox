@@ -1,0 +1,24 @@
+$ # EL DEFECTO, encontrado el 2026-09-27 leyendo la salida del propio modulo.
+$ # La columna de victima traia numeros que no pueden ser pids: pid_max en
+$ # Linux llega a 2^22 y estos pasan de 2^31. Son negativos sin signo, o sea
+$ # GRUPOS de procesos -- kill(-pgid, sig), que es como postgres apaga hijos.
+  2026-09-27 03:16:36 SIGTERM  postgres[2908421] demonio -> ?[4294965290]
+  2026-09-27 03:16:36 SIGTERM  postgres[2908421] demonio -> ?[4294965334]
+  2026-09-27 03:28:03 SIGTERM  postgres[2964803] demonio -> ?[4294965221]
+
+$ # cuantas, sobre las capturas acumuladas
+capturas totales:            314
+victimas con pid >= 2^31:    44  (14.0 %) -> son grupos de proceso, no pids
+victimas con pid 0:          28  (kill(0,sig) = el propio grupo del emisor)
+  a0=4294965974 -> -1322  (grupo 1322) emisor postgres
+
+$ # 72 de 314, el 22.9 %, mal clasificadas. Lo que el informe decia ANTES:
+autolimpieza (la senal va contra el propio arbol del emisor): 3
+ATRIBUCION INCOMPLETA (emisor es un envoltorio y su padre no se nombro): 70
+
+$ # y DESPUES del arreglo:
+autolimpieza (la senal va contra el propio arbol del emisor): 31
+ATRIBUCION INCOMPLETA (emisor es un envoltorio y su padre no se nombro): 42
+
+$ # la fila que lo confirma sola: `timeout` mata su PROPIO grupo al vencer.
+    57  humano   timeout                -> (...)  [28 de 57 autolimpieza]

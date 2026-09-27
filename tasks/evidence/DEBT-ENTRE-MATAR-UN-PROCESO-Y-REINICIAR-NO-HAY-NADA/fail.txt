@@ -1,0 +1,38 @@
+# Segundo intento de calibrar el remedio intermedio, con el CUARTO incidente y
+# con los campos por proceso que los tres primeros no tenian. 2026-09-27.
+#
+# Resultado: sigue sin calibrarse, y ahora se sabe POR QUE de una forma que
+# cambia lo que hay que construir.
+
+
+$ # EL HALLAZGO QUE LO CIERRA: no hay proceso anomalo. El agregado lo es.
+3 · Y NINGUNA CLAVE SEPARA. NI UNA.
+===================================
+Con `cpu_top` de las muestras COMPLETAS (2762 muestras, 12 en la ventana):
+
+   corte % nucleo  sostenido  falsos+  avisa inc4
+              600          1       19          SI
+             1000          1       19          SI
+             1100          3       12          SI
+
+--
+  p99 de las sanas      :  35340 MiB
+  max de las sanas      :  54172 MiB
+
+**EL INCIDENTE QUEDA POR DEBAJO DEL p99 SANO.** La operacion normal de esta
+maquina hace rutinariamente cosas que, mirando un proceso, se ven PEORES que lo
+que precedio al panico.
+
+4 · LA CONCLUSION, QUE NO ES "SIGUE FALTANDO MEDIR"
+===================================================
+Cuatro claves por proceso probadas contra cuatro incidentes:
+
+  rss max, gpu agregada, gpu del mayor (2026-09-26):   ninguna discrimina
+  cpu_top sostenido (hoy):                             12-19 falsos positivos
+  crecimiento de pidio en rafaga (hoy):                el incidente esta por
+                                                       DEBAJO del p99 sano
+
+El colapso no se distingue porque UN proceso se vuelva anomalo. Se distingue
+porque el AGREGADO cruza un limite -- que es exactamente lo que `bb-usable` ya
+mide con PSI, y lo que `bb-usable` ya hace es lo unico que funciona.
+

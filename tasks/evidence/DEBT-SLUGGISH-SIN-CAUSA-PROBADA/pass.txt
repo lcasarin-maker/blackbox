@@ -1,0 +1,17 @@
+$ # Las TRES salidas del calibrador, cada rc medido SIN tuberia
+$ # (`cmd > /dev/null 2>&1; echo $?`), porque leer $? tras `| tail` da el de tail.
+
+$ python3 -m tools.calibra_latencia_x
+rc=2   COULD_NOT_RUN: no hay un solo episodio ETIQUETADO con muestras de x.ms
+
+$ python3 -m tools.calibra_latencia_x --etiqueta-de-prueba
+rc=1   CON una etiqueta sintetica en la peor muestra de muestreador sano, el
+       criterio FALLA. Eso es el control negativo del instrumento: puede salir
+       en contra cuando hay dato, asi que el 2 de arriba habla del corpus y no
+       de un modulo que siempre dice lo mismo.
+
+$ # y rc=0 existe: se ejercita en la suite, no en esta caja, porque en esta
+$ # caja no hay ningun episodio etiquetado con muestras.
+$ python3 -m pytest tests/test_calibra_latencia_x.py -q
+..........................                                               [100%]
+26 passed in 0.04s

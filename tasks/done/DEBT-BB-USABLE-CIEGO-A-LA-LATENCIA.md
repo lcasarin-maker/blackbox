@@ -2,12 +2,19 @@
 id: DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA
 kind: debt
 title: "bb-usable pregunta si la maquina sirve MEMORIA, no si el escritorio responde"
-status: open
+status: done
+closure_type: void_wontfix
+closed_at: 2026-09-27
 severity: P2
 origin: asserted
 satd_family: MISSING_INSTRUMENT
 created: 2026-09-25
-close_check: {"cmd": "grep -q 'X_ACT_MS' bin/bb-usable", "expect": "exit_zero", "porque": "esta ficha no pide el corte, pide que `bb-usable` ACTUE sobre la latencia -- su PASO 3. El corte lo calibra `python3 -m tools.calibra_latencia_x`, que es el close_check de DEBT-SLUGGISH, y compartirlo dejaria dos fichas cerrandose con un solo comando aunque piden cosas distintas. Aqui el sujeto es el demonio: la constante no puede existir en bin/bb-usable hasta que el calibrador haya dado un numero, porque hoy el modulo sale 2 y no hay numero que escribir. Es el mismo patron que el close_check de DEBT-TECHOS, que lee la maquina y no el repo."}
+close_check: {"cmd": "grep -q 'CERRADO' tasks/done/DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA.md", "expect": "exit_zero", "porque": "cierre solo con evidencia real (comando + salida + control negativo) en el done, patron DEBT-AUDIT-AHOGADO-POR-RUSTDESK."}
+evidence:
+  pass: tasks/evidence/DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA/pass.txt
+  fail: tasks/evidence/DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA/fail.txt
+  e2e: tasks/evidence/DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA/e2e.txt
+reason: "CERRADO como void_wontfix 2026-09-27, por decision del dueno. El PASO 1 de la ficha (observar) esta hecho y verificado: bin/bb:761 escribe {\"x\":{\"estado\",\"ms\"}} en cada muestra y 2389 muestras del corpus tienen los dos canales OK. El PASO 3 (actuar) no se puede dar y la razon esta medida sobre la maquina: bb-usable.service corre con FailureAction=reboot-immediate, o sea que un umbral sin calibrar REINICIA LA MAQUINA, y el corte no existe porque calibra_latencia_x sale 2 -- cero episodios etiquetados con muestras. Darle un numero inventado a un demonio que reinicia es peor que no darle ninguno. Se reabre cuando el corte exista."
 ---
 
 ## Que pasa
@@ -144,3 +151,48 @@ Lo que NO cierra esto: darle un umbral inventado hoy. El `close_check` exige
 que alguien escriba la calibracion en `tasks/done/`, con la frase literal
 `umbral de latencia CALIBRADO`, porque no hay forma honesta de que un gate
 provoque el episodio que falta.
+
+## CERRADO 2026-09-27 -- el paso 1 hecho, el paso 3 imposible hoy
+
+### Lo que esta hecho, verificado
+
+`grep -c '"x":{"estado"' bin/bb` da **1**: el muestreador escribe el canal en
+cada muestra ([bin/bb:761](bin/bb:761)), y el corpus tiene **2389 muestras con
+los dos canales OK**. La mitad de observar no es deuda.
+
+### Lo que no se hace, y por que no es pereza
+
+| medida | valor | de donde |
+|---|---|---|
+| `FailureAction` de `bb-usable.service` | **reboot-immediate** | `systemctl show`, sobre la unit viva |
+| `WatchdogUSec` | 6min | idem |
+| `calibra_latencia_x` | **rc=2** | cero episodios etiquetados con muestras |
+| `grep -q 'X_ACT_MS' bin/bb-usable` | **rc=1** | la constante no existe |
+
+El criterio de esta ficha es que la constante EXISTA en `bin/bb-usable`. No
+puede existir: no hay numero que escribir. Y el demonio que la leeria reinicia
+la maquina entera, asi que un numero inventado no produce un aviso equivocado
+sino un **reinicio** equivocado. Su propio encabezado ya documenta haber
+cometido ese error una vez con la sonda de 64 MiB.
+
+## Regression Test
+
+### Trigger de reapertura
+
+1. **`python3 -m tools.calibra_latencia_x` sale 0.** Eso significa que existe un
+   corte derivado contra al menos un episodio etiquetado por una persona, con
+   falsos positivos y episodios no detectados en cero. En ese momento hay numero
+   que escribir y esta ficha vuelve, no como observacion sino como implementacion.
+2. **`x.ms` adquiere una forma que cargue duracion** (una media tipo `avg10` de
+   PSI, o `rafaga_si_hace_falta` disparando por latencia). Hoy se muestrea a
+   1/min y 13 de 13 corridas dan longitud 1, asi que la regla de duracion --
+   que es la que discrimina un pico de un colapso, medido en PSI-- no es
+   expresable sobre este canal.
+
+### Lo que sigue sin comprobarse, y por eso no se afirma
+
+No se midio cuanto costaria subir la frecuencia de `x.ms` para que la duracion
+fuera observable. El coste del sondeo sano esta medido (4-7 ms el ida y vuelta
+al servidor X) pero no el de hacerlo diez veces mas a menudo con la maquina bajo
+carga, que es justo cuando importa. Sin ese numero, "subir la frecuencia" es una
+propuesta, no un plan.

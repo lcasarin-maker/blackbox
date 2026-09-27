@@ -1,0 +1,15 @@
+$ # CONTROL NEGATIVO -- cuatro mutantes, uno por rama nueva, los cuatro cazados.
+$ # M1: nombra() sin normaliza_pid (el defecto original)
+FAILED tests/test_nombra_victimas.py::test_un_grupo_se_nombra_por_su_LIDER_y_lo_dice
+2 failed, 31 passed in 0.09s
+$ # M2: sin la rama de kill(0)
+FAILED tests/test_nombra_victimas.py::test_kill_cero_es_autolimpieza_por_POSIX
+1 failed, 32 passed in 0.11s
+$ # M3: sin la rama del grupo-del-padre
+FAILED tests/test_nombra_victimas.py::test_un_grupo_cuyo_LIDER_es_el_padre_del_emisor_es_su_arbol
+1 failed, 32 passed in 0.09s
+$ # M4: bin/bb sin la conversion a 32 bits con signo
+FAILED tests/test_bb_bash.py::test_un_a0_NEGATIVO_es_un_GRUPO_y_conserva_su_signo
+1 failed, 70 deselected in 0.12s
+$ # restaurado: verde
+33 passed in 0.05s

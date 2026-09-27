@@ -47,6 +47,25 @@ MUESTRAS = DATOS / "samples"
 LISTAS = ("top_rss", "pidio", "cpu_top", "gpu")
 
 
+def normaliza_pid(v) -> int | None:
+    """El entero CON SIGNO que `kill(2)` recibio, leido de un `a0` sin signo.
+
+    Un pid negativo es un GRUPO de procesos y `kill(0, sig)` va contra el propio
+    grupo del emisor. `bin/bb` conserva el signo desde el 2026-09-27, pero las
+    314 capturas ya acumuladas traen la forma SIN signo -- 44 de ellas, el
+    14.0 % -- y reescribir telemetria de solo-anadir para arreglar un lector es
+    peor que ensenarle las dos formas.
+
+    La conversion no es ambigua: `pid_max` en Linux llega a 2^22, asi que ningun
+    pid legitimo alcanza 2^31.
+    """
+    try:
+        n = int(v)
+    except (TypeError, ValueError):
+        return None
+    return n - 2**32 if n >= 2**31 else n
+
+
 def indice_pids(muestras: Path) -> dict[int, tuple[str, str]]:
     """pid -> (comm, unit), de todo lo que las muestras vieron vivo.
 
@@ -94,11 +113,16 @@ def nombra(caps: list[dict], idx: dict[int, tuple[str, str]]) -> list[dict]:
     out = []
     for c in caps:
         v = dict(c.get("victima") or {})
-        try:
-            pid = int(v.get("pid") or "")
-        except (TypeError, ValueError):
-            pid = None
-        comm, unit = idx.get(pid, (None, None)) if pid is not None else (None, None)
+        pid = normaliza_pid(v.get("pid"))
+        # Un grupo se nombra por su LIDER, cuyo pid es el del grupo: eso es lo
+        # que las muestras pueden haber visto vivo. Nombrar al lider no afirma
+        # que muriera el lider -- murio el grupo -- y por eso la etiqueta lo
+        # dice en vez de dejarlo implicito.
+        v["grupo"] = pid is not None and pid < 0
+        clave = -pid if v["grupo"] else pid
+        comm, unit = idx.get(clave, (None, None)) if clave is not None else (None, None)
+        if v["grupo"] and comm:
+            comm = f"{comm} (y su grupo)"
         v["comm"] = comm or "(ninguna muestra lo vio vivo)"
         v["unit"] = unit or "?"
         v["nombrada"] = comm is not None
@@ -114,11 +138,14 @@ ENVOLTORIOS = {"kill", "pkill", "killall", "timeout", "pgrep", "xargs"}
 def es_autolimpieza(c: dict) -> bool:
     """La senal va contra el PROPIO arbol del emisor.
 
-    Dos pruebas, las dos sobre el dato y ninguna sobre el nombre:
+    Tres pruebas, las tres sobre el dato y ninguna sobre el nombre:
 
-    1. la victima ES el padre del emisor (`victima.pid == emisor.ppid`), que es
-       el caso literal de `pkill` invocado por el proceso al que mata;
-    2. la victima y el PADRE del emisor son el mismo pid o el mismo nombre.
+    1. `victima.pid == 0`: `kill(0, sig)` va contra el propio grupo del emisor
+       por definicion de POSIX;
+    2. la victima ES el padre del emisor (`victima.pid == emisor.ppid`), o el
+       GRUPO cuyo lider es ese padre, que es el caso literal de `pkill`
+       invocado por el proceso al que mata;
+    3. la victima y el PADRE del emisor son el mismo pid o el mismo nombre.
 
     La version anterior de esta funcion comparaba el nombre del EMISOR con el de
     la victima, y eso fallaba justo en el caso que domina esta caja: `kill` y
@@ -128,10 +155,20 @@ def es_autolimpieza(c: dict) -> bool:
     """
     e = c.get("emisor") or {}
     v = c.get("victima") or {}
+    vpid = normaliza_pid(v.get("pid"))
     try:
-        vpid, ppid = int(v.get("pid") or ""), int(e.get("ppid") or 0)
+        ppid = int(e.get("ppid") or 0)
     except (TypeError, ValueError):
-        vpid, ppid = None, 0
+        ppid = 0
+    # `kill(0, sig)` va contra el PROPIO grupo del emisor -- eso es POSIX, no una
+    # inferencia sobre estos datos-- asi que es autolimpieza sin cruzar nada.
+    # Medido el 2026-09-27: 28 de 314 capturas, el 8.9 %, y se venian contando
+    # como misterio porque `0` no casaba con ningun ppid.
+    if vpid == 0:
+        return True
+    # Un grupo cuyo LIDER es el emisor o su padre es el arbol del emisor.
+    if vpid is not None and vpid < 0 and ppid and -vpid == ppid:
+        return True
     if vpid is not None and ppid and vpid == ppid:
         return True
     # Mismo nombre entre victima y emisor, para el caso directo (sin envoltorio).

@@ -1,0 +1,17 @@
+$ python3 -m tools.calibra_latencia_x   # el sujeto real, hoy
+COULD_NOT_RUN: no hay un solo episodio ETIQUETADO con muestras de
+  x.ms, asi que no existe lado positivo contra el que calibrar.
+  Un corte derivado solo de 'muestras con latencia alta' mide el
+  filtro que uno elige, no el escritorio.
+lineas descartadas: 4 por json invalido, 18170 por sin x o sin smi, 464 por un canal no OK
+corpus: 2400 muestras con los dos canales OK  2026-09-25 05:40:00 -> 2026-09-27 05:18:09
+corte de muestreador sano: smi.ms <= 43
+
+etiquetas declaradas:        1
+  2026-09-25 04:08:00 -> 2026-09-25 05:08:00  [SIN muestras]  declarado: reinicio a mano; 'casi no se podia escribir'
+etiquetas utilizables:       0
+
+  COMO SE CONSIGUE UNA: durante el proximo episodio, correr
+    bb snapshot "el escritorio no responde"
+  Eso graba reason.txt + when.txt y este modulo lo lee como etiqueta.
+rc=2  (COULD_NOT_RUN, no FAIL: no hay lado positivo)

@@ -1,0 +1,121 @@
+# Por que el corte de latencia no se puede calibrar hoy, y que hace falta.
+# Medido el 2026-09-27. Sirve a DEBT-SLUGGISH y a DEBT-BB-USABLE-CIEGO: un solo
+# corte, y tenerlo en dos sitios seria tener dos cortes.
+
+1 · UNA CORRECCION MIA, PRIMERO
+===============================
+El 2026-09-26 reporte: "refute la premisa de DEBT-BB-USABLE: n no es 0, es 36".
+Eso mezclaba dos cuentas distintas y la ficha tenia razon.
+
+  n = 36-41  muestras con x.ms alto                      <- lo que yo medi
+  n = 0      muestras dentro de un episodio que una
+             PERSONA declaro inusable                    <- lo que hace falta
+
+La segunda es la que calibra, porque la primera depende del umbral que uno
+elija. Medido:
+
+  primera muestra con campo x:                        2026-09-25 05:40:00
+  reinicio a mano por "casi no se podia escribir":    2026-09-25 05:08
+  muestras con x ANTES de ese reinicio:               0
+
+La sonda empezo a grabar 32 minutos DESPUES del unico episodio etiquetado.
+Confirmado por segunda via: 0 snapshots en la maquina, asi que no hay ninguna
+otra etiqueta.
+
+2 · UN CORTE SOBRE x.ms SOLO ESTA CONTAMINADO
+=============================================
+  muestras con los dos canales OK:                    2234
+  x.ms    mediana 4    p95 10   p99 266   max 1234
+  smi.ms  mediana 21   p95 43   p99 385   max 3083
+  correlacion x.ms vs smi.ms:                         r = 0.631
+
+Cuando el muestreador es desalojado, los DOS canales se inflan juntos. De 41
+muestras con x.ms >= 100 ms, 38 tienen smi.ms >= 40 -- el 93 % son el estado del
+muestreador, no del escritorio.
+
+Y el 40 de ese filtro me lo invente yo: el "peor caso real" que reporte el
+2026-09-26 tenia smi = 41, al otro lado de mi propio corte. La respuesta se
+volteaba con un numero sin calibrar. De ahi sale SMI_SANO_MS = 43, que SI es
+derivado: es el p95 de smi.ms sobre las 2234 muestras.
+
+3 · Y EL NIVEL NO SEPARA, NI CON ESE FILTRO
+===========================================
+Control negativo con una etiqueta sintetica sobre la peor muestra con el
+muestreador sano (x=773 ms, smi=41):
+
+   corte x.ms  sostenido  falsos+  no detectados  veredicto
+           50          1       21              0  INVALIDO
+          100          1       12              0  INVALIDO
+          300          1        5              0  INVALIDO
+          500          1        3              0  INVALIDO
+          800          1        0              1  INVALIDO
+
+Los cortes que la detectan dejan entre 3 y 21 falsos positivos; el que los
+elimina la pierde. No hay nivel que separe.
+
+Es la misma leccion que este repo ya pago con PSI: seis excursiones sanas
+llegaron al 98.53 % y un congelamiento real bajo al 48.80 %, asi que el nivel se
+equivoca en las dos direcciones y lo que discrimina es la DURACION.
+
+4 · PERO LA DURACION NO ESTA DISPONIBLE A ESTA CADENCIA
+=======================================================
+Y esto es el hallazgo que cambia lo que hay que hacer. Longitudes de las rachas
+de muestras consecutivas por encima del corte, con el muestreador sano:
+
+  x.ms >= 20   26 rachas   longitudes {1: 21, 2: 3, 3: 1, 4: 1}
+  x.ms >= 50   21 rachas   longitudes {1: 20, 2: 1}
+  x.ms >= 100  13 rachas   longitudes {1: 13}      <- TODAS de una muestra
+  x.ms >= 300   6 rachas   longitudes {1: 6}
+
+  intervalo entre muestras: mediana 60 s, p95 60 s
+
+En todo el corpus no hay UN SOLO caso de dos muestras seguidas con x.ms >= 100 y
+el muestreador sano. Con `sostenido >= 2` los falsos positivos caen a 0 en todos
+los niveles -- y no detecta nada.
+
+La causa no es que el escritorio nunca se quede lento: es que `x.ms` es una
+sonda INSTANTANEA de ~4 ms tomada una vez por minuto. Un escritorio malo el 30 %
+del tiempo produce picos aislados. `calibra_psi` funciono porque `mem_full
+avg10` lleva la duracion DENTRO del valor; x.ms no.
+
+5 · QUE HACE FALTA, Y ES REUSO EN LOS DOS CASOS
+===============================================
+a) UNA ETIQUETA. El mecanismo ya existe y no hay que escribir nada:
+
+     bb snapshot "el escritorio no responde"
+
+   Graba reason.txt + when.txt, y `tools/calibra_latencia_x.py` lo lee como
+   etiqueta si el motivo coincide con MOTIVO_RE. Un snapshot con motivo "manual"
+   NO cuenta: meter ruido en el lado positivo afloja el corte, y este corte
+   termina reiniciando la maquina.
+
+b) UNA SENAL QUE LLEVE DURACION. Dos caminos, los dos reusan lo que hay:
+   - promediar x.ms en una ventana, como hace PSI con avg10;
+   - o extender el disparador de RAFAGA que `bin/bb` ya tiene
+     (`rafaga_si_hace_falta`, hoy por umbrales de memoria) para que tambien
+     dispare por latencia. La rafaga da resolucion sub-minuto justo cuando hace
+     falta, que es el patron que el cuarto congelamiento ya justifico.
+
+6 · EL INSTRUMENTO QUEDA ESCRITO, Y SE NIEGA
+============================================
+`tools/calibra_latencia_x.py`, 129 sentencias, 100 % de cobertura, 23 tests.
+Tres salidas, las tres corridas:
+
+  rc=0  CALIBRADO
+  rc=1  hay etiqueta y ninguna combinacion separa
+  rc=2  COULD_NOT_RUN: no hay episodio etiquetado con muestras   <- hoy
+
+Se niega porque `bb-usable` actua con FailureAction=reboot-immediate. Un
+calibrador que devolviera un numero plausible sin lado positivo contra el que
+medirlo le daria permiso para reiniciar la maquina por una intuicion -- el mismo
+error que el encabezado de bin/bb-usable ya documenta haber cometido con la
+sonda de 64 MiB, que volvia en 18 ms mientras la maquina llevaba cinco horas
+inservible.
+
+LIMITE DECLARADO
+================
+Nada de esto prueba la causa del episodio del 2026-09-25. Lo que prueba es que
+el corte no se puede derivar del corpus actual, por dos razones independientes:
+no hay lado positivo etiquetado, y la senal no sostiene a 1/min. Los dos
+close_check cambiaron de "alguien escribe la frase" a un criterio de maquina,
+asi que ninguna de las dos fichas se puede cerrar redactando.

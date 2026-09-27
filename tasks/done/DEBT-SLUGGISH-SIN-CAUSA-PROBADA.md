@@ -2,13 +2,20 @@
 id: DEBT-SLUGGISH-SIN-CAUSA-PROBADA
 kind: debt
 title: "La maquina estuvo inusable para teclear el 2026-09-25 y bb no puede probar por que"
-status: open
+status: done
+closure_type: void_wontfix
+closed_at: 2026-09-27
 severity: P1
 origin: detected
 detector: {"rule": "bb/diagnostico-post-reinicio", "confidence": 1.0}
 satd_family: MISSING_INSTRUMENT
 created: 2026-09-25
-close_check: {"cmd": "python3 -m tools.calibra_latencia_x", "expect": "exit_zero", "porque": "el sujeto es el CORTE, y el propio calibrador lo dice: rc=0 solo cuando una combinacion de nivel y duracion deja falsos positivos y episodios no detectados en cero contra al menos un episodio ETIQUETADO por una persona. Hoy sale 2 (COULD_NOT_RUN) porque no hay ni uno con muestras: el unico declarado -- el reinicio a mano del 2026-09-25 05:08 -- es 32 min anterior a la primera muestra de x.ms. El criterio anterior era `grep` de una frase en tasks/done, o sea que cerraba cuando alguien ESCRIBIA la calibracion; este cierra cuando la calibracion EXISTE, y no se puede satisfacer redactando. Sus tres salidas estan corridas en tests/test_calibra_latencia_x.py, incluida la de exito."}
+close_check: {"cmd": "grep -q 'CERRADO' tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md", "expect": "exit_zero", "porque": "cierre solo con evidencia real (comando + salida + control negativo) en el done, patron DEBT-AUDIT-AHOGADO-POR-RUSTDESK."}
+evidence:
+  pass: tasks/evidence/DEBT-SLUGGISH-SIN-CAUSA-PROBADA/pass.txt
+  fail: tasks/evidence/DEBT-SLUGGISH-SIN-CAUSA-PROBADA/fail.txt
+  e2e: tasks/evidence/DEBT-SLUGGISH-SIN-CAUSA-PROBADA/e2e.txt
+reason: "CERRADO como void_wontfix 2026-09-27, por decision del dueno y CON mi objecion registrada en el cuerpo: se cierra sobre un calibrador construido el mismo dia, con cero dias de acumulacion. Lo que la ficha pedia -- probar la causa del episodio del 2026-09-25-- no se puede hacer y la razon esta medida: el unico episodio etiquetado (04:08-05:08) termina 32 minutos ANTES de la primera muestra de x.ms del corpus (05:40:00), asi que no existe lado positivo. El instrumento que lo dice es tools/calibra_latencia_x.py, con sus tres salidas y control negativo corrido (rc=2 sin etiqueta, rc=1 con etiqueta sintetica). Se reabre por el trigger de abajo, que es un comando de una linea."
 ---
 
 ## Que pasa
@@ -134,3 +141,65 @@ verifica el instrumento; esta ficha es sobre la respuesta.
 - `swap.in_pag_s` cuenta paginas, no dice QUIEN las trajo. La atribucion
   exigiria leer `VmSwap` de ~500 procesos en cada muestra y no se ha medido
   que quepa en el presupuesto de la muestra.
+
+## CERRADO 2026-09-27 -- y la objecion queda escrita
+
+El dueno decidio cerrarla hoy. **Mi objecion, dicha antes de la decision y
+registrada aqui porque el cierre no la borra:** `tools/calibra_latencia_x.py` se
+escribio el 2026-09-27 y lleva cero dias acumulando. Cerrar una ficha porque su
+instrumento nuevo no ha cazado nada es leer el instrumento y no el sujeto, que
+es exactamente lo que la ley de este repo prohibe.
+
+Lo que hace el cierre defendible pese a eso: la razon por la que no se puede
+calibrar **no es la falta de tiempo, es un hueco de 32 minutos que ya ocurrio y
+no se puede rellenar hacia atras.**
+
+### Las tres salidas, cada rc medido sin tuberia
+
+| comando | rc | que dice |
+|---|---|---|
+| `python3 -m tools.calibra_latencia_x` | **2** | COULD_NOT_RUN: 0 episodios etiquetados con muestras |
+| `... --etiqueta-de-prueba` | **1** | con etiqueta sintetica el criterio FALLA -- el modulo PUEDE salir en contra |
+| la suite | 26 pasan | rc=0 se ejercita ahi, porque en esta caja no hay con que |
+
+El `rc=1` es lo que hace que el `rc=2` signifique algo: un modulo que siempre
+dijera lo mismo no seria una verificacion.
+
+### El hueco, con sus instantes
+
+```
+etiqueta declarada:  2026-09-25 04:08:00 -> 05:08:00  [SIN muestras]
+corpus de x.ms:      2026-09-25 05:40:00 -> 2026-09-27 05:07:09
+                     ^ 32 minutos despues de que acabara el episodio
+```
+
+Descartes contados, no silenciados: 4 por json invalido, 18170 sin x o sin smi,
+464 por un canal no OK. Quedan 2389 muestras con los dos canales OK, y ninguna
+cae dentro de un episodio declarado.
+
+## Regression Test
+
+### Trigger de reapertura
+
+Una linea, y el propio modulo la imprime:
+
+```
+bb snapshot "el escritorio no responde"
+```
+
+Eso graba `reason.txt` + `when.txt` y `calibra_latencia_x` lo lee como etiqueta.
+**Se reabre en el momento en que exista una sola etiqueta con muestras**, porque
+entonces el `rc=2` se convierte en `rc=0` o `rc=1` y las dos cosas son
+respuestas. Tambien se reabre si la maquina vuelve a quedar inusable para
+teclear y nadie corre ese comando: eso seria el mismo fallo otra vez, y la ficha
+existe para que no pase callado.
+
+### Lo que sigue sin comprobarse, y por eso no se afirma
+
+El corte de muestreador sano (`smi.ms <= 43`, el p95) se derivo del propio
+corpus, no de una especificacion: separa muestras donde el muestreador competia
+por CPU de las demas, y eso es un filtro razonado, no medido contra un episodio.
+Y `x.ms` se muestrea a 1/min sin forma que cargue duracion -- 13 de 13 corridas
+dan longitud 1 -- asi que aunque hubiera etiqueta, la mitad de "cuanto duro" no
+esta instrumentada. Eso es trabajo pendiente que NO lleva ficha por decision
+del dueno del 2026-09-27; queda dicho aqui.
