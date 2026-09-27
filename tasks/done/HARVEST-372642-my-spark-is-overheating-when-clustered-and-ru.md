@@ -10,6 +10,10 @@ origin: asserted
 satd_family: HARVEST_SUGGESTION
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/HARVEST-372642-my-spark-is-overheating-when-clustered-and-ru.md", "expect": "exit_zero", "porque": "Sugerencia de adopcion, no un defecto: lo unico verificable por maquina es que la DECISION quedo registrada. Cerrada, la forma que el modulo comprueba es closure_type + reason (no accepted, que ledger_schema prohibe junto a status: done). El texto anterior describia la forma ABIERTA y quedo falso al cerrarse -- un porque falso no se puede refutar midiendo lo que dice."}
 created: 2026-09-09
+evidence:
+  pass: shared:harvest-decision-registrada
+  fail: shared:harvest-decision-registrada
+  e2e: shared:harvest-decision-registrada
 reason: "void_wontfix: la DECISION registrada ES el entregable de una ficha HARVEST -- no hay fix de codigo que probar. Decidida el 2026-09-09 por the maintainer + Claude, revision de deuda 2026-09-09, con este disparador de reapertura: hardware/escenario distinto -- reabrir si ATOM cambia de configuracion (cluster, rack, otro chip) || Motivo tecnico: Escenario explicitamente de clustering multi-nodo. El throttling termico que menciona ya lo cubre atom_gpu_telemetry.py (campos throttle/temp); 'fieldiag' es diagnostico activo tipo stress-test, tambien excluido."
 ---
 

@@ -1,0 +1,17 @@
+# FAIL -- el CONTROL NEGATIVO: el gate SIGUE mirando.
+#
+# Un rc=0 suelto no verifica nada: un gate que se hubiera quedado ciego daria
+# exactamente ese rc=0. La pregunta es si PUEDE salir negativo, y la respuesta
+# se CORRE, no se argumenta.
+#
+# Se restaura la declaracion de telemetry_prune en
+# .simplecode/organ_inapplicable.json y se corre el MISMO comando, en el MISMO
+# kit 8.6.5:
+
+rc=1
+  DECLARACIONES REFUTADAS POR EL SUJETO: 1
+    telemetry_prune: declared inapplicable, but this repo's telemetry records bloqueos_reales=0 hallazgos=4 controles=0. The declaration is refuted by the subject; delete it.
+[gate-effectiveness] NOT CLEAN: 1 inapplicability declaration(s) contradicted by this repo's own telemetry. A declaration the subject refutes is worse than no declaration: it silences an organ that demonstrably has work to do here.
+
+# rc=1. El gate discrimina: 1 con la declaracion puesta, 0 sin ella.
+# Y en 8.6.3 las DOS direcciones daban 1, que es lo que abrio esta ficha.

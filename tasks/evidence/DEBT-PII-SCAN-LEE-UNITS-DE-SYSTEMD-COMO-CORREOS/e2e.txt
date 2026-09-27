@@ -1,0 +1,22 @@
+# E2E -- el gate ENTERO sobre el repo ENTERO, que es el sujeto que bloqueaba.
+#
+# Sujeto: DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS. La funcion
+# es_unidad_systemd podria estar bien y no llamarse desde el barrido, asi que
+# las otras piernas no bastan: esta corre el gate como lo corre el pre-push.
+#
+# $ python3 .simplecode/run.py simplecode.verification.pii_scan --root .
+
+revisados=169 hallazgos=0 could_not_run=0
+[pii-scan] HALLAZGOS: 0
+rc=0
+
+# 169 ficheros revisados, que incluyen las tablas de consumo de CPU con
+# org.gnome.Shell@x11.service y las rutas de /sys/fs/cgroup con user@1000.service
+# -- las cadenas exactas que bloquearon el push dos veces el 2026-09-25.
+#
+# Nota del 2026-09-27: este artefacto volvio a 0 hallazgos despues de redactar
+# cuatro direcciones de EJEMPLO que yo mismo habia escrito enteras en esta ficha
+# y en aterrizaje-8.6.3.txt al documentar el arreglo. El gate tenia razon: no
+# puede saber que son vectores de prueba. La disciplina que ya aplicaba
+# tests/test_pii_scan_systemd.py (construir la direccion por trozos) no la
+# aplique a la prosa, y el gate lo encontro.

@@ -1,0 +1,87 @@
+# E2E -- de punta a punta, sobre el repo entero y no sobre una ficha.
+#
+# Las otras dos piernas corren el modulo de cierre. Esta corre los GATES que la
+# flota cablea, porque el modulo podria estar bien y no llamarse desde ninguna
+# parte -- el mismo modo de fallo que obligo a reescribir la suite de pii-scan el
+# 2026-09-26: una funcion correcta que nadie invoca.
+#
+# Los 34 sujetos que cubre este artefacto compartido, nombrados uno a uno para
+# que el artefacto diga DE QUE fichas es evidencia:
+#   HARVEST-348760-dgx-spark-low-fan-speed-high-temps-device-ver
+#   HARVEST-352519-kernel-panic
+#   HARVEST-353218-lmstudio-error-cannot-obtain-free-vram-bytes-
+#   HARVEST-354167-dgx-spark-nvme-drive-not-detected-no-nvme-dev
+#   HARVEST-354395-can-not-reset-spark-gpu
+#   HARVEST-355625-dgx-spark-dashboard-modification
+#   HARVEST-363224-i-cannot-login-to-dgx-spark-i-cannot-ssh-into
+#   HARVEST-364636-with-two-sparks-vllm-0-18-1rc0-still-hammerin
+#   HARVEST-365938-fabricmanager-will-not-run
+#   HARVEST-366147-collective-operations-timeout-on-dual-spark-d
+#   HARVEST-366877-sparkview-gpu-monitor-tool-with-gb10-aware-un
+#   HARVEST-366944-power-delivery-bug-how-im-catching-it-early
+#   HARVEST-367765-dear-nvidia-nvidia-smi-is-broken-on-the-dgx-s
+#   HARVEST-371753-heat-and-power-numbers-for-asus-gx-10-4-days-
+#   HARVEST-372469-dgx-spark-shutting-down-under-load-mods-02000
+#   HARVEST-372642-my-spark-is-overheating-when-clustered-and-ru
+#   HARVEST-372662-cooler-gb10-temps-almost-no-performance-lost
+#   HARVEST-373187-dgx-wont-boot-tried-all-documented-methods-fr
+#   HARVEST-373342-dgx-spark-failing-fieldiag-powerstress
+#   HARVEST-373655-ubuntu-26-04-drivers-610-cuda-toolkit-13-3-zf
+#   HARVEST-376103-sparks-have-recently-powered-off-randomly
+#   HARVEST-377044-dgx-spark-gb10-thermal-throttling-after-ec-ue
+#   HARVEST-377375-what-are-normal-temps-under-load-is-94-6c-too
+#   HARVEST-378031-msi-edge-expert-nvme-devices-not-found
+#   HARVEST-378500-dgx-spark-is-not-suitable-for-professional-wo
+#   HARVEST-379195-dgx-spark-hard-freezes-under-sustained-few-mi
+#   HARVEST-379303-severe-one-way-rdma-performance-regression-on
+#   HARVEST-379778-what-is-your-power-management-solution
+#   HARVEST-DanTup-dgx-dashboard
+#   HARVEST-OyqXscpDRJo
+#   HARVEST-grafana-grafana
+#   HARVEST-niklasfrick-spark-dashboard
+#   HARVEST-with-dgx-spark-enterprise
+#   HARVEST-with-unified-memory-363137#
+# --- harvest_decision, el gate de la flota, sobre cada ficha ---
+rc=0  HARVEST-348760-dgx-spark-low-fan-speed-high-temps-device-ver.md
+rc=0  HARVEST-352519-kernel-panic.md
+rc=0  HARVEST-353218-lmstudio-error-cannot-obtain-free-vram-bytes-.md
+rc=0  HARVEST-354167-dgx-spark-nvme-drive-not-detected-no-nvme-dev.md
+rc=0  HARVEST-354395-can-not-reset-spark-gpu.md
+rc=0  HARVEST-355625-dgx-spark-dashboard-modification.md
+rc=0  HARVEST-363224-i-cannot-login-to-dgx-spark-i-cannot-ssh-into.md
+rc=0  HARVEST-364636-with-two-sparks-vllm-0-18-1rc0-still-hammerin.md
+rc=0  HARVEST-365938-fabricmanager-will-not-run.md
+rc=0  HARVEST-366147-collective-operations-timeout-on-dual-spark-d.md
+rc=0  HARVEST-366877-sparkview-gpu-monitor-tool-with-gb10-aware-un.md
+rc=0  HARVEST-366944-power-delivery-bug-how-im-catching-it-early.md
+rc=0  HARVEST-367765-dear-nvidia-nvidia-smi-is-broken-on-the-dgx-s.md
+rc=0  HARVEST-371753-heat-and-power-numbers-for-asus-gx-10-4-days-.md
+rc=0  HARVEST-372469-dgx-spark-shutting-down-under-load-mods-02000.md
+rc=0  HARVEST-372642-my-spark-is-overheating-when-clustered-and-ru.md
+rc=0  HARVEST-372662-cooler-gb10-temps-almost-no-performance-lost.md
+rc=0  HARVEST-373187-dgx-wont-boot-tried-all-documented-methods-fr.md
+rc=0  HARVEST-373342-dgx-spark-failing-fieldiag-powerstress.md
+rc=0  HARVEST-373655-ubuntu-26-04-drivers-610-cuda-toolkit-13-3-zf.md
+rc=0  HARVEST-376103-sparks-have-recently-powered-off-randomly.md
+rc=0  HARVEST-377044-dgx-spark-gb10-thermal-throttling-after-ec-ue.md
+rc=0  HARVEST-377375-what-are-normal-temps-under-load-is-94-6c-too.md
+rc=0  HARVEST-378031-msi-edge-expert-nvme-devices-not-found.md
+rc=0  HARVEST-378500-dgx-spark-is-not-suitable-for-professional-wo.md
+rc=0  HARVEST-379195-dgx-spark-hard-freezes-under-sustained-few-mi.md
+rc=0  HARVEST-379303-severe-one-way-rdma-performance-regression-on.md
+rc=0  HARVEST-379778-what-is-your-power-management-solution.md
+rc=0  HARVEST-DanTup-dgx-dashboard.md
+rc=0  HARVEST-OyqXscpDRJo.md
+rc=0  HARVEST-grafana-grafana.md
+rc=0  HARVEST-niklasfrick-spark-dashboard.md
+rc=0  HARVEST-with-dgx-spark-enterprise.md
+rc=0  HARVEST-with-unified-memory-363137.md
+#
+# harvest_decision: 34 de 34 con rc=0
+#
+# --- ledger_schema sobre el repo entero, que es quien exige esta evidencia ---
+checked=90 passed=54 failed=36 unverified=0 (sin close_check enunciado: 0) avisos=69 could_not_run=0
+#
+# --- indexar_backlog: el inventario, que es donde estas 34 dejaron de contarse ---
+usage: simplecode.verification.indexar_backlog [-h] [--root ROOT] [--check]
+                                               [--write] [--fecha FECHA]
