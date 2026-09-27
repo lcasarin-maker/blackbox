@@ -7,7 +7,7 @@ severity: P2
 origin: asserted
 satd_family: MISSING_INSTRUMENT
 created: 2026-09-25
-close_check: {"cmd": "grep -q 'umbral de latencia CALIBRADO' tasks/done/DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA.md", "expect": "exit_zero", "porque": "el paso 1 (observar) ya esta hecho y sus tests pasan, asi que un criterio sobre esos tests cerraria la ficha sin que el sujeto -- que bb-usable sepa contestar si el escritorio responde -- haya cambiado. Mismo patron que DGX-438: cierra cuando alguien ESCRIBE la calibracion, que exige un episodio real."}
+close_check: {"cmd": "grep -q 'X_ACT_MS' bin/bb-usable", "expect": "exit_zero", "porque": "esta ficha no pide el corte, pide que `bb-usable` ACTUE sobre la latencia -- su PASO 3. El corte lo calibra `python3 -m tools.calibra_latencia_x`, que es el close_check de DEBT-SLUGGISH, y compartirlo dejaria dos fichas cerrandose con un solo comando aunque piden cosas distintas. Aqui el sujeto es el demonio: la constante no puede existir en bin/bb-usable hasta que el calibrador haya dado un numero, porque hoy el modulo sale 2 y no hay numero que escribir. Es el mismo patron que el close_check de DEBT-TECHOS, que lee la maquina y no el repo."}
 ---
 
 ## Que pasa

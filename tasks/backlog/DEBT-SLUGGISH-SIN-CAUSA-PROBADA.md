@@ -8,7 +8,7 @@ origin: detected
 detector: {"rule": "bb/diagnostico-post-reinicio", "confidence": 1.0}
 satd_family: MISSING_INSTRUMENT
 created: 2026-09-25
-close_check: {"cmd": "grep -q 'SLUGGISH causa probada' tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md", "expect": "exit_zero"}
+close_check: {"cmd": "python3 -m tools.calibra_latencia_x", "expect": "exit_zero", "porque": "el sujeto es el CORTE, y el propio calibrador lo dice: rc=0 solo cuando una combinacion de nivel y duracion deja falsos positivos y episodios no detectados en cero contra al menos un episodio ETIQUETADO por una persona. Hoy sale 2 (COULD_NOT_RUN) porque no hay ni uno con muestras: el unico declarado -- el reinicio a mano del 2026-09-25 05:08 -- es 32 min anterior a la primera muestra de x.ms. El criterio anterior era `grep` de una frase en tasks/done, o sea que cerraba cuando alguien ESCRIBIA la calibracion; este cierra cuando la calibracion EXISTE, y no se puede satisfacer redactando. Sus tres salidas estan corridas en tests/test_calibra_latencia_x.py, incluida la de exito."}
 ---
 
 ## Que pasa
