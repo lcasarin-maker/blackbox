@@ -1,0 +1,43 @@
+# Las 12 exenciones de .gitignore, re-verificadas POR RETIRADA para 1.8.
+# 2026-09-27.
+
+CINCO REGLAS POSITIVAS: se quita la linea y se mide git status
+==============================================================
+  linea de base: git status --porcelain = 3 entradas
+
+   linea  regla                       al RETIRARLA            veredicto
+       8  .simplecode/*               status 3 -> 16  (+13)   EXIME
+      69  __pycache__/                status 3 ->  4  (+1)    EXIME
+      71  *.pyc                       status 3 ->  4  (+1)    EXIME
+      73  .pytest_cache/              status 3 ->  4  (+1)    EXIME
+      75  .coverage                   status 3 ->  5  (+2)    EXIME
+
+SIETE NEGACIONES: Y AQUI EL PRIMER CONTROL ESTABA MAL
+=====================================================
+El primer intento midio `git check-ignore` a secas y las siete dieron "sin
+efecto", o sea NO EXIME. La conclusion habria sido borrar siete reglas -- y eso
+rompe un clone nuevo, porque son las que rescatan los ficheros versionados de
+dentro de `.simplecode/*`.
+
+La causa: **git no ignora lo que ya sigue**. `check-ignore` sobre un fichero
+TRACKEADO responde "no ignorado" pase lo que pase con las reglas, asi que el
+control media el estado del INDICE y no la regla. Se repite con `--no-index`,
+que pregunta a las reglas:
+
+   linea  regla                                  con la regla   SIN la regla   veredicto
+      15  !.simplecode/local_hooks.yaml           NO ignorado       IGNORADO   EXIME
+      21  !.simplecode/backlog_baseline.json      NO ignorado       IGNORADO   EXIME
+      26  !.simplecode/build_tools.txt            NO ignorado       IGNORADO   EXIME
+      30  !.simplecode/hook_receipt_baseline.json NO ignorado       IGNORADO   EXIME
+      35  !.simplecode/organ_inapplicable.json    NO ignorado       IGNORADO   EXIME
+      54  !.simplecode/corpus_exempt.yaml         NO ignorado       IGNORADO   EXIME
+      64  !.simplecode/audit_ledger.json          NO ignorado       IGNORADO   EXIME
+
+  12 de 12 eximen algo.
+
+DOS CONTROLES DEL PROPIO CONTROL
+================================
+1. cada retirada lleva `assert GI.read_text() != orig`, porque una retirada que
+   no retira nada produce doce "sin efecto" identicos y se lee como un resultado.
+2. al final, `assert GI.read_text() == orig` y `git diff --stat .gitignore` vacio:
+   el fichero volvio intacto, asi que ninguna de las doce mutaciones se quedo.
