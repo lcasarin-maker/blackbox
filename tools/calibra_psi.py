@@ -10,7 +10,7 @@ cierta.
 
 Lo que mide, y por que asi:
 
-  El NIVEL instantaneo de mem_full no discrimina. Medido sobre 19797 muestras
+  El NIVEL instantaneo de mem_full no discrimina. Medido sobre 19804 muestras
   (2026-09-08 -> 2026-09-23): seis excursiones llegaron hasta 98.53 % sin que
   la maquina se colgara, y el valor mas bajo que sostuvo un congelamiento real
   fue 48.80 %. Un corte por nivel se equivoca en las dos direcciones.
