@@ -1,70 +1,118 @@
 {
-  "claims_fingerprint": "d8d03dedafc727bb770237314f48c743681d5bf5743d6ea4c3e9f0c368aaacf4",
-  "panel": "bb (Claude Opus 5) + 1 auditor Opus independiente, 2026-09-28. El auditor REFUTO las dos afirmaciones que el gate marcaba sin auditar: 'x.ms sano 5-7 ms' es falso en presente (n=3568 con x.estado OK: mediana 4, p75 5, p95 8, y solo el 33.2% cae en [5,7]), y la fila de cobertura afirmaba '33.3% ... 57 lineas' cuando 57 lineas sobre 947 dan 33.1 y 33.3 exige 59 -- se contradecia sola dos frases despues. Ademas la fila citaba DEBT-SLUGGISH-SIN-CAUSA-PROBADA como pendiente y esa ficha se cerro el 2026-09-27. Las dos se REESCRIBIERON con la medida y se sellan corregidas. Las otras 10 NO se re-auditaron: se RE-ATARON por identidad de texto probada con sha256 contra 454c6ca, porque los ids son numeros de linea y dos filas nuevas desplazaron la tabla +2. Esa distincion se dice en cada evidencia.",
+  "claims_fingerprint": "6c49cc206081d63b6a9bf0c245d47802317f2ebe46b3f9ba788bf9d73f4555b9",
+  "panel": "11 auditores Opus en serie (rondas 1-11), 2026-09-28, refutando afirmaciones de SPEC.md tras los arreglos de earlyoom/bb-usable/bb-sample/renderer-gate/bb-drift; cada ronda encontro y corrigio errores nuevos hasta converger en 12/12 PASS",
   "profile": "general",
   "results": [
     {
+      "cited": {
+        "enable-privileged.sh": "410feebd772b1d14cb2ca22fc1cdd9caf4713042c9244a06f7e026ad17aa5eb2"
+      },
+      "claim_id": "SPEC-L110",
+      "evidence": "`loginctl show-user lcasarin -p Linger` da Linger=yes y existe /var/lib/systemd/linger/lcasarin. enable-privileged.sh:633-650 es la secci\u00f3n 10 (linger). En el journal del arranque -4 (2026-09-24 14:11:37) user@1000.service y ai-nemotron arrancan a las 18:33:07: 4:21:30 contando desde el journal y 4:21:36 desde las 14:11:31 que cita el script, as\u00ed que '4 h 21 min' vale en los dos casos. Control en vivo, que puede dar el resultado contrario: en el arranque actual user@1000 arranca a las 04:29:35, 5 s despu\u00e9s del boot, y la primera sesi\u00f3n de login es de las 06:09:39. Ninguna unit de adopted/ ni de systemd/ usa graphical-session.target.",
+      "seal": "43d4797f6b2763a9193e642cb772f0e072b8f15f21423377444ccaa80c8289e3",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {
+        "tests/test_bb_bash.py": "fcf36fea504d95f59a126493ded831cf327786c44813f5236af3446811018432"
+      },
+      "claim_id": "SPEC-L265",
+      "evidence": "Los cinco tests nombrados existen en tests/test_bb_bash.py, igual que el positivo y los negativos del latido (rancio, journal_vacio, solo_arranque). `pytest -k '...'` da 9 passed = 5 + 1 positivo + 3 del latido. En bin/bb:2144-2153, bb-usable exige '[bb-usable] latencia del escritorio:' con `-S` = 120 s, y bin/bb-usable fija PROBE_INTERVAL = 30.0. El clock lock compara el `-lgc` declarado con 'gpuClkMin/gpuClkMax' del driver, y earlyoom exige 'Preferring to kill' Y 'Will avoid killing'. En 37ccd7d la SPEC ya dec\u00eda 'cuatro controles negativos' y el fichero de tests ya ten\u00eda los 5. d6ce3d9 (2026-09-25) documenta el FALTA sobre la ruta que borr\u00f3 Atlas. En vivo, `bb status` da armado 15 / falta 0 con las cuatro filas ARMADO.",
+      "seal": "254e2a4bb7709fa237edb9d81a9908a00f2c01fc6b08829ab5938466d8f63305",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {
+        ".pre-commit-config.yaml": "acb2330c40f26c909c81855253c40566471a77927f4ff749543af5f6c171db83",
+        "tests/test_bash_sintaxis.py": "e88177f8046be8e615efb81411d9ce817f0f7653011f9a4c4c50708430f18d95",
+        "tests/test_ruff_gitleaks_controles_negativos.py": "4887944d36593eb387a74b61cac6e2844136a5dfa3dd0f6f2d2dedf03f5fc482"
+      },
+      "claim_id": "SPEC-L266",
+      "evidence": "`pytest -rA`: tests/test_bash_sintaxis.py da 2 passed (pasa y FALLA) y tests/test_ruff_gitleaks_controles_negativos.py da 4 passed (ruff y gitleaks, cada uno limpio y roto). En .pre-commit-config.yaml telemetry-bound se llama '(advisory)' y su entry termina en `--gate || true`. En .simplecode/evidence/telemetry.jsonl, spec-check tiene 241 filas con 1 could_not_run y no-perder-lineas 129 filas con 3 could_not_run, las cuatro del 2026-09-08 con rc=1, fallos=0 y hallazgos=0. Los gates propios que bloquean tienen control negativo: el de inventario es test_main_sale_1_con_sujeto_mutado (19 passed). El de bb-cobertura-piso lo corr\u00ed: con piso 99.0 da rc=1, con 32.8 da rc=0. bin/bb:70-75 lleva CNR/cannot_run.",
+      "seal": "cc0b6c6966e0beb28558ef9858df62ebdde0b38bea63f724d10c6d41639a3bdb",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {},
+      "claim_id": "SPEC-L267",
+      "evidence": "Seg\u00fan `systemctl --user show -p Nice -p IOSchedulingClass`: blackbox-sample y atom-gpu-telemetry tienen Nice=19 e IOSchedulingClass=3 (idle), ai-memory-monitor Nice=0 (timer activo, OnCalendar=*:0/5), ai-gpu-telemetry Nice=10 y UnitFileState=disabled, bb-guardia-proceso Nice=10. Los ficheros coinciden (adopted/systemd-user/atom-gpu-telemetry.service:14-15, systemd/bb-guardia-proceso.service:18). El diff de c544b20 (2026-09-28) es -Nice=10/+Nice=19. ai-memory-monitor y ai-gpu-telemetry ejecutan /srv/ai/gpu_governance/*.sh. bb-guardia-proceso lee samples/<hoy>.jsonl ('No muestrea nada por su cuenta') y escribe DATA/guardia_proceso.jsonl (l\u00ednea 105).",
+      "seal": "a6b5f3dddf5bc8cc275e67fd5e1cff5b405da2bf7904a0f4a5f0d15222cc8132",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {
+        "tools/calibra_psi.py": "f8c81ce7187510428f1eb505eb594a7d760753ebc70f511ef47fb18a43bf772c"
+      },
+      "claim_id": "SPEC-L268",
+      "evidence": "`python3 -m tools.calibra_psi` da hoy rc=1, 'VEREDICTO: CORTE INVALIDO', con falsos positivos 0 e incidentes no detectados 1. calibra() nombra el no detectado: (2026-09-28 03:28, 03:39). Hay 6 INCIDENTES y dos son del 09-28. En samples/2026-09-28.jsonl la muestra 'burst' de 03:28:58 va seguida de 'burst_fin' a las 03:29:02, y la siguiente l\u00ednea es de las 03:41:52, despu\u00e9s del reinicio de 03:39:21 (`journalctl --list-boots`). En el journal de usuario, 'Starting blackbox-sample.service' de las 03:28:09 no tiene su 'Finished', y systemd/blackbox-sample.service:6 dice Type=oneshot. UMBRAL_PCT=10.0 y SOSTENIDO_MIN=5.0. El mensaje de 90847b3 (2026-09-23) trae 19804 muestras, 07:57->10:53, 98.53 % y 48.80 %.",
+      "seal": "adfeec7b7818852584964dc07b333c014fcc30dbf7d9b788ef0b97fa39cc3999",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {},
+      "claim_id": "SPEC-L269",
+      "evidence": "El diff de 09deb5b cambia `return 0` incondicional por `return 1` si diverged+missing > 0. systemd/blackbox-drift.timer tiene OnCalendar=daily y est\u00e1 enabled y active. Los 5 tests de drift dan 5 passed. Control negativo en vivo: con BLACKBOX_DRIFT_ROOT apuntando a una copia `git archive HEAD` con adopted/system-config/etc_sysctl.d_99-sysrq.conf mutado, `bb drift` da 'divergentes: 1' y rc=1. Sin mutar, sobre la m\u00e1quina, da 41/0/0/1 y rc=0.",
+      "seal": "dd9b2f3222641b803d73b4ecf94ae68a8fe725f6cee2ee4efa46dba8caaaf945",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {
+        ".pre-commit-config.yaml": "acb2330c40f26c909c81855253c40566471a77927f4ff749543af5f6c171db83",
+        "tools/inventario.py": "41c5b36faafdaa3e252270ceb657ee1360c083665b6845dacc92e94a1519e3c7"
+      },
+      "claim_id": "SPEC-L270",
+      "evidence": "`python3 -m tools.inventario --check` da HALLAZGOS: 0 y rc=0, con hook inventario-spec en .pre-commit-config.yaml (stage por defecto: pre-commit). El docstring lo ata a `bin/bb`, `tools/`, `adopted/`, y en realidad recorre todo bin/. test_main_sale_1_con_sujeto_mutado es parte de 19 passed. `git show 1ec66b3^:SPEC.md` l\u00ednea 68 dice '- Actuar sobre lo que mide.' mientras systemd/bb-usable.service ya ten\u00eda FailureAction=reboot-immediate. El mensaje de 1ec66b3 dice 'Cazo 6 desajustes en su primera corrida; 2 eran defectos del propio instrumento'.",
+      "seal": "d5eb52612ca8ebf70431a62b3b05067360efd1b4e989e81e126d973ea4a1e9f4",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {
+        "enable-privileged.sh": "410feebd772b1d14cb2ca22fc1cdd9caf4713042c9244a06f7e026ad17aa5eb2"
+      },
+      "claim_id": "SPEC-L271",
+      "evidence": "`git diff --diff-filter=A --name-only 1ec66b3^ 1ec66b3 -- adopted/` da 12 y sin filtro da 13; el extra es 'M adopted/systemd-user/atom-gpu-telemetry.service'. Los tres units son id\u00e9nticos por blob a systemd/ en 1ec66b3^ (44fc231, 085ad4a, 08f16eb). El control negativo sobre un par distinto da DISTINTO. `stat -c %w` da 15:39:20\u201315:40:37 del 09-09 para freeze-panic y los tres nvrm-watch, y 08-28 para 99-sysrq. Solo esos 4 de los 12 nacieron el 09-09. Aunque hoy a las 12:59 se volvieron a desplegar, freeze-panic, nvrm-watch y bb-usable.service (%w 09-23) conservan su %w, lo que confirma el control. En 1ec66b3^, enable-privileged.sh:351 escribe uvm por heredoc, y en 1ec66b3 panic y watchdog se instalan con `run cp adopted/...` (523, 544). En 1ec66b3, sysrq y kdump-tools no tienen escritor. `git ls-tree` da 18 sujetos en 1ec66b3^, 30 en 1ec66b3, 39 en e4cb0e2 ('A' system.slice.d_99-blackbox.conf) y 41 en 09deb5b ('A' blackbox-drift.service/.timer). `./bin/bb drift` da 41/0/0/1 con rc=0.",
+      "seal": "835e35704951942758b08a888d3bb06786e9d50d106eb7b1af797ea32b3f68cd",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {},
+      "claim_id": "SPEC-L272",
+      "evidence": "La \u00faltima muestra de samples/2026-09-25.jsonl es de 05:08:01: load1 0.95, mem_avail_kb 67376460 = 64.26 GiB, PSI todo 0.0, smi {OK, 22 ms}. logind registra 'The system will reboot now!' a las 05:08:26, 25 s despu\u00e9s. MemTotal es 121.1 GiB y nproc 20. En el journal del arranque -4, antigravity consumi\u00f3 2h37m13.96s entre 02:45:59 y 05:00:57, o sea 116.5 %. Claude-345364 consumi\u00f3 15h9m54.2s entre 20:00:33 y 05:08:27, 166.1 %. La suma sobre 20 n\u00facleos da 14.13 %. La l\u00ednea 52 de la ficha en 3e381eb^ tra\u00eda el denominador err\u00f3neo ('arranque entero (14 h 57 min) | 101.4 %'), y hoy est\u00e1 corregida. La SPEC de 2460f20 dice 3563 y su cuerpo 3568. RETAIN_DAYS=14. `python3 -m tools.calibra_latencia_x` da rc=2. La etiqueta termina a las 05:08 y el corpus empieza a las 05:40: 32 min. La ficha dice closure_type void_wontfix, closed_at 2026-09-27.",
+      "seal": "bf079eb5db1bd0df182b20cde518d69d4b84a764e390623704d3088fca396238",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {
+        "tests/test_cobertura_bash.py": "8572e932e7df72e542aadfda447e12f633f3294fb136656968888cc0c8fb125d",
+        "tools/calibra_psi.py": "f8c81ce7187510428f1eb505eb594a7d760753ebc70f511ef47fb18a43bf772c",
+        "tools/cobertura_bash.sh": "8077450089861794b37b9a4b92ec68b7342c26e80b00cbb0e2418218f709ae80",
+        "tools/piso_cobertura.sh": "4577ade3c8c7066373d7781d348cf500ee7715843263779f7c3fc84ca680e076"
+      },
+      "claim_id": "SPEC-L273",
+      "evidence": "`git merge-base --is-ancestor 3a91866 09deb5b` da rc=1, es decir, no es ancestro. Control positivo: 57ae066 respecto de 09deb5b da rc=0; 09deb5b tiene un solo padre, 57ae066. Corr\u00ed `bash tools/piso_cobertura.sh` sobre copias `git archive` (con git init): 09deb5b da 39.7 %. 57ae066 dio 35.0 / 35.2 / 35.2 / 35.2 con carga alta (load1 hasta 44) y 35.3 % (347/983) con carga baja. 3e381eb dio 35.2 % con carga, y su bin/bb y tests son id\u00e9nticos a los de 57ae066 (el diff solo toca tools/calibra_psi.py). Todo cabe dentro del vaiv\u00e9n de 0.2-0.3 que declara la propia fila, y 39.7-35.3 = 4.4. Control de la atribuci\u00f3n: en 09deb5b, con `-k 'not drift'`, la cifra baja a 34.8 % (344/989), y con los 5 tests vuelve a 39.6 %. Al commit d3d7980, bin/bb tiene 2768 l\u00edneas de 4111 (67.3 %). Excluyendo adopted/ y tests/fixtures quedan 3919 l\u00edneas, 70.6 %, que es el '71%' viejo. En 2a228fa: 947/256/313, 313/947 = 33.1, 313-256 = 57, y el patr\u00f3n anterior era `(?<=^\\+...)`. El piso vale 32.8. El docstring de tests/test_cobertura_bash.py ya dice 33.1/57.",
+      "seal": "dbb244e0415b79417ac2c611714cf631e099accbc13d2376a907bcd3eefc8bee",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {
+        "tools/atom_gpu_telemetry.py": "2a76fab22a4c1f00095a71451376f631fbf798fd243f2c95e458f38239bcc92a"
+      },
       "claim_id": "SPEC-L94",
-      "evidence": "Verificado en las DOS direcciones, que es lo que la afirmacion exige. blackbox -> Atlas: `grep -rn 'import Atlas|from Atlas|projects/Atlas' --include=*.py bin/ tools/ tests/` da 1 match y NO es un import: es la linea 1122 de tools/atom_gpu_telemetry.py, un docstring que nombra una ruta. Atlas -> blackbox: `grep -rl '^import blackbox|^from blackbox|import bin.bb' ~/projects/Atlas --include=*.py` da 0 ficheros, y la busqueda de rutas 'projects/blackbox' en el codigo de Atlas no devuelve ninguna. LIMITE: se comprobo la ausencia de imports, no que el consumo por salida exista y funcione hoy. [RE-ATADO 2026-09-28: el veredicto se traslada de SPEC-L94 a SPEC-L94 porque el TEXTO es identico -- sha256 e05f14f7e19c en las dos versiones de SPEC.md (454c6ca y HOY). Los ids son numeros de linea y dos filas nuevas mas arriba desplazaron la tabla +2; no se re-audit\u00f3, se re-at\u00f3 por identidad probada, y esa distincion queda dicha aqui porque el ledger de este kit sella el conjunto entero y no cada afirmacion.]",
-      "verdict": "pass"
+      "evidence": "El texto del lote aparece tal cual en SPEC.md de HEAD 5155866 (comparado sin '**' ni '\\|'). `git grep` de imports cruzados da 0 en las dos direcciones: en blackbox no hay imports de m\u00f3dulos de Atlas (tools.bulk_ops, detect_atom_crash, durable_log, bb_consulta), y en Atlas nada importa atom_gpu_telemetry, calibra_psi o inventario. Control negativo: el mismo patr\u00f3n s\u00ed encuentra los `from tools import` locales de blackbox. Atlas lee el jsonl v\u00eda `_BB_DATA = BLACKBOX_DATA or ~/.local/share/blackbox` / atom_gpu_telemetry.jsonl (Atlas tools/atom_degradacion_resuelta.py:67-69), y blackbox lo escribe en DATA_DIR/atom_gpu_telemetry.jsonl (tools/atom_gpu_telemetry.py:91-92). Una nota que no hace falsa la afirmaci\u00f3n: Atlas tools/bb_consulta.py adem\u00e1s EJECUTA el gate de blackbox como subproceso (subprocess, GATE_POR_DEFECTO) y lee su stdout. Eso es otra salida consumida, no un import.",
+      "seal": "bcb46851c23b3184fe9e5fdcee67f18ed335d77a9a5255f6649f8e2b5a535cbc",
+      "verdict": "PASS"
     },
     {
+      "cited": {
+        "enable-privileged.sh": "410feebd772b1d14cb2ca22fc1cdd9caf4713042c9244a06f7e026ad17aa5eb2"
+      },
       "claim_id": "SPEC-L98",
-      "evidence": "La afirmacion es de UBICACION y se comprueba por donde vive el codigo que decide sobre el hardware. En este repo: bin/bb (muestreo, scan, status, drift, cap), bin/bb-usable (el que retira el latido y deja que systemd reinicie), enable-privileged.sh (los techos de cgroup), y tools/atom_gpu_telemetry.py (presupuesto termico y mitigacion, traido de Atlas el 2026-09-24 con DGX-585, o sea que se movio HACIA aqui, en la direccion que la afirmacion declara). Ninguna de esas piezas se importa desde Atlas, medido en SPEC-L94. [RE-ATADO 2026-09-28: el veredicto se traslada de SPEC-L98 a SPEC-L98 porque el TEXTO es identico -- sha256 042de58fcd68 en las dos versiones de SPEC.md (454c6ca y HOY). Los ids son numeros de linea y dos filas nuevas mas arriba desplazaron la tabla +2; no se re-audit\u00f3, se re-at\u00f3 por identidad probada, y esa distincion queda dicha aqui porque el ledger de este kit sella el conjunto entero y no cada afirmacion.]",
-      "verdict": "pass"
-    },
-    {
-      "claim_id": "SPEC-L102",
-      "evidence": "Comprobado sobre systemd, no sobre el repo. `systemctl list-unit-files` muestra bb-usable.service enabled/enabled, nvrm-watch.timer enabled/enabled y nvrm-watch.service static: son unidades de SISTEMA y arrancan sin sesion. Y hay un contraejemplo medido HOY que refuerza la afirmacion en vez de romperla: bb-usable, por ser unit de sistema, NO hereda DISPLAY de la sesion grafica, asi que su sonda de latencia devuelve None siempre (bin/bb-usable:217). Ese es el precio de no depender de la sesion, y esta registrado en DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA. [RE-ATADO 2026-09-28: el veredicto se traslada de SPEC-L102 a SPEC-L102 porque el TEXTO es identico -- sha256 3c90074dbc6d en las dos versiones de SPEC.md (454c6ca y HOY). Los ids son numeros de linea y dos filas nuevas mas arriba desplazaron la tabla +2; no se re-audit\u00f3, se re-at\u00f3 por identidad probada, y esa distincion queda dicha aqui porque el ledger de este kit sella el conjunto entero y no cada afirmacion.]",
-      "verdict": "pass"
-    },
-    {
-      "claim_id": "SPEC-L246",
-      "evidence": "`bb status` corrido el 2026-09-27: 'armado: 15  falta: 0  ciego: 1'. Los tres chequeos que leian `systemctl is-active` se cerraron el 2026-09-25 y leen su artefacto. La fila 'ciego: 1' es earlyoom, y esta declarada como brecha con ficha propia (DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA), no disimulada: el informe la imprime en su propia columna. El limite que la propia fila declara sigue en pie: se comprueba que el dato es fresco, no que su contenido sea correcto. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L240 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.] [2026-09-27, HALLAZGO DE ESTA AUDITORIA: uno de esos tres chequeos produjo un FALSO POSITIVO mientras se verificaba esta misma fila. `bb status` reporto FALTA sobre `earlyoom con la punteria puesta` en 1 de 6 corridas seguidas, con el sujeto quieto y demostrablemente armado (config, proceso vivo y journal del arranque actual, las tres comprobadas). La fila afirma que los tres pueden salir mal por el motivo que vigilan, y esto sale mal por un motivo que NO vigila: la consulta vuelve vacia sin decirlo. Registrado como DEBT-BB-STATUS-DICE-FALTA-SOBRE-UN-INSTRUMENTO-ARMADO, en la linea base.] [RE-ATADO 2026-09-28: el veredicto se traslada de SPEC-L244 a SPEC-L246 porque el TEXTO es identico -- sha256 a776c2df813a en las dos versiones de SPEC.md (454c6ca y HOY). Los ids son numeros de linea y dos filas nuevas mas arriba desplazaron la tabla +2; no se re-audit\u00f3, se re-at\u00f3 por identidad probada, y esa distincion queda dicha aqui porque el ledger de este kit sella el conjunto entero y no cada afirmacion.]",
-      "verdict": "pass"
-    },
-    {
-      "claim_id": "SPEC-L247",
-      "evidence": "`bb scan` corrido el 2026-09-27 imprime 'comprobaciones que NO pudieron correr: 1' y 'accounting mode: COULD_NOT_RUN (apagado)', asi que cuenta y NOMBRA lo que no pudo correr en vez de sumarlo a lo limpio. La mitad del control negativo se midio hoy sobre dos instrumentos nuevos: tools/control_racha.py sale 0 y con --corte 180 sale 1; tools/demonio_al_dia.sh tiene los tres veredictos corridos (0 al dia, 1 viejo, 2 COULD_NOT_RUN). LIMITE: se verifico en los gates que este turno toco, no en los 30 organos del kit uno por uno. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L241 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.] [2026-09-27, HALLAZGO DE ESTA AUDITORIA: uno de esos tres chequeos produjo un FALSO POSITIVO mientras se verificaba esta misma fila. `bb status` reporto FALTA sobre `earlyoom con la punteria puesta` en 1 de 6 corridas seguidas, con el sujeto quieto y demostrablemente armado (config, proceso vivo y journal del arranque actual, las tres comprobadas). La fila afirma que los tres pueden salir mal por el motivo que vigilan, y esto sale mal por un motivo que NO vigila: la consulta vuelve vacia sin decirlo. Registrado como DEBT-BB-STATUS-DICE-FALTA-SOBRE-UN-INSTRUMENTO-ARMADO, en la linea base.] [RE-ATADO 2026-09-28: el veredicto se traslada de SPEC-L245 a SPEC-L247 porque el TEXTO es identico -- sha256 9704fc3ba05e en las dos versiones de SPEC.md (454c6ca y HOY). Los ids son numeros de linea y dos filas nuevas mas arriba desplazaron la tabla +2; no se re-audit\u00f3, se re-at\u00f3 por identidad probada, y esa distincion queda dicha aqui porque el ledger de este kit sella el conjunto entero y no cada afirmacion.]",
-      "verdict": "pass"
-    },
-    {
-      "claim_id": "SPEC-L248",
-      "evidence": "Leido de la unit viva, no del repo. `systemctl --user cat blackbox-sample.service` da ExecStart=%h/projects/blackbox/bin/bb sample, Nice=19, IOSchedulingClass=idle -- los dos valores que la fila afirma, literalmente. LIMITE: 'solo lee /proc y endpoints ya existentes' no se re-audit\u00f3 linea por linea en este turno; lo que se comprobo es la prioridad declarada. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L242 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.] [RE-ATADO 2026-09-28: el veredicto se traslada de SPEC-L246 a SPEC-L248 porque el TEXTO es identico -- sha256 cd7dbb1d56be en las dos versiones de SPEC.md (454c6ca y HOY). Los ids son numeros de linea y dos filas nuevas mas arriba desplazaron la tabla +2; no se re-audit\u00f3, se re-at\u00f3 por identidad probada, y esa distincion queda dicha aqui porque el ledger de este kit sella el conjunto entero y no cada afirmacion.]",
-      "verdict": "pass"
-    },
-    {
-      "claim_id": "SPEC-L249",
-      "evidence": "Re-derivado el 2026-09-27: `python3 -m tools.calibra_psi` -> VEREDICTO CALIBRADO, rc=0, falsos positivos 0, incidentes no detectados 0, sobre 20285 muestras. Control negativo corrido: --sostenido 0 -> rc=1. Y la auditoria ENCONTRO algo: antes de tocar nada el modulo daba 'falsos positivos: 1' y VEREDICTO CORTE INVALIDO, porque el kernel panic del 2026-09-26 no estaba en su lista de incidentes y un colapso real de 13 min se leia como excursion sana. Anadido como cuarto incidente, con su corroboracion independiente (hung_task en el journal, `last reboot` 15:42:17, sar con 24-29 % de RAM disponible). Aparecio tambien un defecto del modulo: contaba como 'no detectado' un incidente FUERA del rango del corpus, que es medir su propia lista en vez del corte. Ahora se separa y se imprime. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L243 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.] [RE-ATADO 2026-09-28: el veredicto se traslada de SPEC-L247 a SPEC-L249 porque el TEXTO es identico -- sha256 d66656a37765 en las dos versiones de SPEC.md (454c6ca y HOY). Los ids son numeros de linea y dos filas nuevas mas arriba desplazaron la tabla +2; no se re-audit\u00f3, se re-at\u00f3 por identidad probada, y esa distincion queda dicha aqui porque el ledger de este kit sella el conjunto entero y no cada afirmacion.]",
-      "verdict": "pass"
-    },
-    {
-      "claim_id": "SPEC-L250",
-      "evidence": "`./bin/bb drift` corrido el 2026-09-27: 'revisados: 38  divergentes: 0  ausentes: 0  suspendidos: 1' y 'El repo describe la maquina que hay'. LIMITE: la verificacion en ambos sentidos que la fila afirma es historica (2026-09-24); hoy se comprobo el veredicto, no se re-provoco una divergencia para ver si la caza. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L244 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.] [RE-ATADO 2026-09-28: el veredicto se traslada de SPEC-L248 a SPEC-L250 porque el TEXTO es identico -- sha256 a5d1b34a1732 en las dos versiones de SPEC.md (454c6ca y HOY). Los ids son numeros de linea y dos filas nuevas mas arriba desplazaron la tabla +2; no se re-audit\u00f3, se re-at\u00f3 por identidad probada, y esa distincion queda dicha aqui porque el ledger de este kit sella el conjunto entero y no cada afirmacion.]",
-      "verdict": "pass"
-    },
-    {
-      "claim_id": "SPEC-L251",
-      "evidence": "`grep -c inventario .pre-commit-config.yaml` da 3, y el hook 'SPEC.md inventaria lo que el repo ejecuta y posee' aparece en la salida real de los dos ultimos commits de este turno, con veredicto Passed. Y bloqueo de verdad en este mismo turno: al anadir tools/control_racha.py y tools/demonio_al_dia.sh salio 'funcion sin inventariar en SPEC.md' para las dos y el commit no paso hasta inventariarlas. La afirmacion de que ata SPEC a tools/ esta medida hoy, no recordada. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L245 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.] [RE-ATADO 2026-09-28: el veredicto se traslada de SPEC-L249 a SPEC-L251 porque el TEXTO es identico -- sha256 1e1d77ae286c en las dos versiones de SPEC.md (454c6ca y HOY). Los ids son numeros de linea y dos filas nuevas mas arriba desplazaron la tabla +2; no se re-audit\u00f3, se re-at\u00f3 por identidad probada, y esa distincion queda dicha aqui porque el ledger de este kit sella el conjunto entero y no cada afirmacion.]",
-      "verdict": "pass"
-    },
-    {
-      "claim_id": "SPEC-L252",
-      "evidence": "La fila estaba RANCIA y lo encontro esta auditoria: declaraba 'bb drift vigila 30 sujetos' y `./bin/bb drift` imprime 38 revisados. Corregida a 38 en el mismo turno, con la nota de que la encontro la auditoria de claims del 2026-09-27 y no una revision. El resto de la fila se sostiene: nvrm-watch.service y nvrm-watch.timer existen hoy como unidades de systemd (list-unit-files), o sea que el instrumento que vivia solo en disco esta adoptado. [2026-09-27, re-atado: esta MISMA afirmacion, byte a byte, se llamaba SPEC-L246 antes de que SPEC.md creciera dos filas. La verificacion es la de esa fecha; lo que cambio es el numero de linea, y se comprobo que el conjunto de los 12 textos es identico.] [RE-ATADO 2026-09-28: el veredicto se traslada de SPEC-L250 a SPEC-L252 porque el TEXTO es identico -- sha256 3ff188d2a8d0 en las dos versiones de SPEC.md (454c6ca y HOY). Los ids son numeros de linea y dos filas nuevas mas arriba desplazaron la tabla +2; no se re-audit\u00f3, se re-at\u00f3 por identidad probada, y esa distincion queda dicha aqui porque el ledger de este kit sella el conjunto entero y no cada afirmacion.]",
-      "verdict": "pass"
-    },
-    {
-      "claim_id": "SPEC-L253",
-      "evidence": "REESCRITA el 2026-09-28 tras una auditoria adversarial que la declaro FALSA como estaba, y este veredicto es sobre el texto CORREGIDO. (a) Los campos SI existen hoy. El printf de la muestra esta en bin/bb:761 y emite literalmente \"cpu_top\":[%s], \"swap\":{\"free_kb\":%s,\"total_kb\":%s,\"in_pag_s\":%s,\"out_pag_s\":%s,...} y \"x\":{\"estado\":\"%s\",\"ms\":%s}. Comando y salida: `grep -c '\"cpu_top\"' bin/bb` -> 2; `grep -c '\"x\":{\"estado\":\"%s\",\"ms\":%s}' bin/bb` -> 1; `grep -c '\"swap\":{\"free_kb\"' bin/bb` -> 1. CONTROL NEGATIVO corrido: `grep -c '\"cpu_topz\"' bin/bb` -> 0, asi que el grep puede dar el veredicto contrario. Nota menor: el campo se llama `swap.free_kb`, no `swap.free` como escribe la fila; la ficha misma lo escribe bien (`swap.{free_kb,total_kb,in_pag_s,out_pag_s}`).\n\n(b) REFUTADO el rango '5-7 ms sano'. Medido hoy (2026-09-28) sobre el corpus de produccion /home/lcasarin/.local/share/blackbox/samples, contando solo muestras con x.estado==OK: n=3563, min 2, p25 4, mediana 4, p75 5, p90 6, p95 8, p99 169, max 1234. El 61.4 % de las muestras sanas caen POR DEBAJO de 5 ms y solo el 33.3 % cae dentro de [5,7]. El propio repo ya lo dice con otras cifras: tasks/evidence/DEBT-SLUGGISH-SIN-CAUSA-PROBADA/calibracion-2026-09-27.txt seccion 2 registra 'x.ms mediana 4 p95 10'. Un lector que tome '5-7 ms sano' como banda sana declara anormal a la muestra mediana.\n\n(c) REFUTADA la frase 'La causa del episodio sigue sin probar: DEBT-SLUGGISH-SIN-CAUSA-PROBADA' en cuanto puntero a deuda viva. La ficha esta CERRADA: tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md lleva `status: done`, `closure_type: void_wontfix`, `closed_at: 2026-09-27`. Comando y salida: `grep -rn SLUGGISH tasks/backlog/` no imprime nada y `echo $?` (sin tuberia) da 1 -- no queda en el backlog; el unico fichero de tasks/backlog/ es DEBT-CONFIG-ADOPTADA-QUE-NINGUN-SCRIPT-INSTALA.md. El contenido de la causa sigue sin probarse (eso es cierto y la ficha lo dice), pero la fila apunta a un identificador que hoy vive en done/ y no se puede tirar de el como si estuviera abierto.\n\nInstrumento corrido con su control negativo, para no leer el instrumento en vez del sujeto: `python3 -m tools.calibra_latencia_x` -> rc=2, 'COULD_NOT_RUN: no hay un solo episodio ETIQUETADO con muestras de x.ms', corpus 3558 muestras 2026-09-25 05:40:00 -> 2026-09-28 00:33:01, 1 etiqueta declarada [SIN muestras], 0 utilizables. CONTROL NEGATIVO: `python3 -m tools.calibra_latencia_x --etiqueta-de-prueba` -> rc=1, 'VEREDICTO: NINGUN CORTE SEPARA' -- el modulo puede salir en contra. El corte de muestreador sano declarado por el modulo es SMI_SANO_MS = 43.0 (tools/calibra_latencia_x.py:94), derivado del p95 de smi.ms, y no es un corte sobre x.ms: no hay ningun corte sano de x.ms calibrado hoy, ni de 5-7 ms ni de ningun otro.\n\nCifras del episodio que SI se sostienen: load1 0.95 sobre 20 nucleos, mem_avail 65.8 GB, PSI 0.00, nvidia-smi 22 ms, antigravity 116.5 % de un nucleo, Claude 101.4 %, 11 % de 20 nucleos -- todas coinciden literalmente con tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md seccion 'Root Cause'.\n\nLIMITES DE LO COMPROBADO: no verifique el journal del 2026-09-25 de forma independiente (las cifras del episodio salen de la ficha, no de una re-medida del journal); la distribucion de x.ms que mido es del corpus vivo 2026-09-25 05:40 en adelante, que por construccion NO contiene el episodio; y no comprobe que '5-7 ms' fuera falso el 2026-09-25 -- la fila no fecha ese rango, lo declara en presente, y en presente es falso. La correccion se aplico literalmente a SPEC.md:253, asi que la afirmacion que hoy se sella es la que la medida sostiene, no la que fallo.",
-      "verdict": "pass"
-    },
-    {
-      "claim_id": "SPEC-L254",
-      "evidence": "REESCRITA el 2026-09-28 tras una auditoria adversarial que la declaro FALSA como estaba, y este veredicto es sobre el texto CORREGIDO. (c) El gate SIGUE EXISTIENDO y con ese nombre exacto: .pre-commit-config.yaml:135 `- id: bb-cobertura-piso`, name 'cobertura de bin/bb no baja del piso', entry `python .simplecode/run.py simplecode.verification.gate_runner --root . --name bb-cobertura-piso --hook pre-push -- tools/piso_cobertura.sh`, stages [pre-push]. (b) El piso declarado ES 32.8: `cat tests/cobertura_bb.piso` -> `32.8`. Esas dos mitades de la fila se sostienen hoy.\n\n(a) La cifra de hoy, medida dos veces sin tuberia: `bash tools/piso_cobertura.sh; echo $?` -> rc=0, '[bb-cobertura] bin/bb al 34.8% (piso 32.8%)'; segunda corrida -> rc=0, '[bb-cobertura] bin/bb al 34.7% (piso 32.8%)'. (Ojo: `bash tools/cobertura_bash.sh` a secas sale rc=1 con 'falta el sujeto, p.ej. bin/bb' -- el medidor exige sujeto y suite; el gate lo invoca via tools/piso_cobertura.sh.) CONTROL NEGATIVO del medidor, corrido: `tools/cobertura_bash.sh bin/bb true` -> 'bin/bb 977 0 0.0%' -- el instrumento puede dar 0 %, asi que el 34.8 % no es un numero que salga siempre.\n\nLO QUE REFUTA LA FILA: el par '33.3% ... 57 l\u00edneas' es aritmeticamente imposible contra el denominador que el propio repo registra. El commit que hizo el arreglo, 2a228fa 'fix(cobertura): el medidor de bash no veia nada dentro de una substitucion' (2026-09-25), dice en su cuerpo: 'antes del arreglo 947 lineas 256 cubiertas 27.0 % / despues 947 lineas 313 cubiertas 33.1 %' y '57 lineas siempre estuvieron cubiertas'. El docstring de tests/test_cobertura_bash.py:15-16, puesto por ESE MISMO commit, dice lo otro: 'paso de 27.0 % a 33.3 %' y '59 lineas siempre estuvieron cubiertas'. Aritmetica: 256/947 = 27.03 %; 256+57 = 313 -> 33.05 % = 33.1 %; 256+59 = 315 -> 33.26 % = 33.3 %. Es decir 33.3 % implica 59 lineas y 57 lineas implican 33.1 %. La fila del SPEC toma el 33.3 de un registro y el 57 del otro, y el par que escribe no corresponde a ninguna corrida. La propia fila se contradice a si misma dos frases mas abajo: 'El piso de 32.8 sale del m\u00ednimo de tres corridas (33.1)' -- si las tres corridas del 2026-09-25 dieron 33.1, la medida de ese dia no fue 33.3.\n\nEl resto del cuerpo de la fila se sostiene contra el codigo: tools/cobertura_bash.sh:25-27 pone `PS4='+${BASH_SOURCE}:${LINENO}:'` y el comentario de las lineas 36-41 documenta el ancla de UN solo `+` y el `\\++` que la sustituye, con la razon ('en bin/bb es casi todo, porque el muestreo se arma con x=$(funcion)').\n\nLIMITES DE LO COMPROBADO: no reconstrui la medida historica corriendo el medidor viejo sobre el bin/bb de aquel commit -- el 27.0/33.1/33.3 lo leo de los registros del repo, no lo re-medi; la aritmetica sobre 947/256 es lo que decide. Las dos corridas de hoy (34.8, 34.7) se hicieron en una maquina con carga desconocida, asi que el vaiven de 0.1 punto que observo no acota el vaiven real. Y no verifique que el hook se ejecute de hecho en pre-push (le\u00ed la configuracion, no un recibo de ejecucion). La correccion se aplico literalmente a SPEC.md:254, asi que la afirmacion que hoy se sella es la que la medida sostiene, no la que fallo.",
-      "verdict": "pass"
+      "evidence": "tools/detect_atom_crash.py existe en Atlas y no en blackbox (`git ls-files | grep -c` = 0). Importa `from tools.durable_log import append_jsonl` (l\u00ednea 53) y FINDINGS_DIR = docs/agent_findings (l\u00ednea 59). En Atlas, tools/instalar_earlyoom.sh ya no existe y tools/_retired/instalar_earlyoom.sh s\u00ed. `git merge-base --is-ancestor 558ea990c ec9b4288a` da rc=0 (el retiro va dentro del merge), `--is-ancestor ec9b4288a master` da rc=0, tasks/done/DGX-604.md trata de instalar_earlyoom.sh, y los commits 0877f0de6/0b36774c4 hacen la renumeraci\u00f3n 'DGX-600/601 -> DGX-602/603'. El script retirado escrib\u00eda un EARLYOOM_ARGS distinto del que despliega enable-privileged.sh (secci\u00f3n 6).",
+      "seal": "73363258dedf068453429b6f2a9ab0ae55d34231a15c6559b69829499765a1b4",
+      "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-09-28T06:43:34Z",
-  "tree_fingerprint": "2aa9be1d839a6e958c1d26d7303fcbca7f74c99527800a2f04b229407cc0a0a5",
+  "timestamp": "2026-09-28T21:00:21Z",
+  "tree_fingerprint": "81eedb587dba671330900eeb0f8ad9c3a488bff5223859a56f48e7e48c4b7b41",
   "violations": []
 }
