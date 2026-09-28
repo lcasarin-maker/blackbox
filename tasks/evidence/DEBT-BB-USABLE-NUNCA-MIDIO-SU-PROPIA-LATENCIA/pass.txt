@@ -1,0 +1,13 @@
+# PASS -- el close_check corrido hoy, tras sudo systemctl restart bb-usable.service.
+
+$ systemctl show bb-usable -p ActiveEnterTimestamp,MainPID --value
+224411
+Mon 2026-09-28 13:54:24 CST
+
+$ bash tools/verifica_bb_usable_mide_latencia.sh; echo $?
+0
+
+$ journalctl -u bb-usable --since "13:54:24" | grep "latencia del escritorio" | tail -3
+sep 28 13:54:54 ... [bb-usable] latencia del escritorio: 4 ms (...)
+sep 28 13:55:24 ... [bb-usable] latencia del escritorio: 4 ms (...)
+sep 28 13:55:54 ... [bb-usable] latencia del escritorio: 4 ms (...)
