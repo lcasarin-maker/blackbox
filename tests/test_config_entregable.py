@@ -98,3 +98,79 @@ def test_un_directorio_dentro_de_adoptados_no_cuenta_como_fichero(tmp_path):
     r = corre(raiz)
     assert r.returncode == 0, r.stdout + r.stderr
     assert "adoptados: 1" in r.stdout
+
+
+# --------------------------- que el instalador COPIE, no que solo lo mencione
+#
+# `config_entregable.sh` busca el NOMBRE del fichero dentro del instalador, y
+# ese es su limite declarado: un comentario que lo nombre sin llegar a copiarlo
+# pasaria igual. Con once ficheros anadidos al instalador el 2026-09-28 para
+# cerrar la ficha, ese limite dejo de ser teorico -- si manana alguien borra un
+# `cp` y deja el comentario, el comprobador seguiria diciendo OK.
+#
+# Estos dos tests lo cierran leyendo lo que el instalador DICE QUE HARIA en vez
+# de lo que menciona: `--dry-run` no necesita root y tarda 0.03, 0.03 y 0.04 s
+# en tres corridas medidas hoy.
+
+SEGUNDOS_DRY_RUN = 0.04
+TIMEOUT_DRY_S = int(SEGUNDOS_DRY_RUN * 100)
+
+INSTALADOR = RAIZ / "enable-privileged.sh"
+ADOPTADOS = RAIZ / "adopted" / "system-config"
+DECLARADOS = RAIZ / "adopted" / "solo-registro.txt"
+MARCA = "[dry-run] cp adopted/system-config/"
+
+
+def copiados(salida: str) -> set[str]:
+    """Los ficheros que el dry-run dice que copiaria desde `adopted/`."""
+    nombres = set()
+    for linea in salida.splitlines():
+        i = linea.find(MARCA)
+        if i != -1:
+            nombres.add(linea[i + len(MARCA):].split()[0])
+    return nombres
+
+
+def sin_camino(salida: str) -> set[str]:
+    """Adoptados que ni se copian ni estan declarados solo-registro.
+
+    La pertenencia a la declaracion se mira por subcadena, igual que hace
+    `grep -qF` en el comprobador: si los dos criterios divergieran, el gate y su
+    test dirian cosas distintas sobre el mismo repo.
+    """
+    declarados = (DECLARADOS.read_text(encoding="utf-8")
+                  if DECLARADOS.exists() else "")
+    hechos = copiados(salida)
+    return {f.name for f in ADOPTADOS.iterdir()
+            if f.is_file() and f.name not in hechos and f.name not in declarados}
+
+
+@pytest.fixture(scope="module")
+def dry_run() -> str:
+    r = subprocess.run([str(INSTALADOR), "--dry-run"], capture_output=True,
+                       text=True, cwd=RAIZ, timeout=TIMEOUT_DRY_S)
+    assert r.returncode == 0, (
+        "el dry-run del instalador no llego a correr. Eso es COULD_NOT_RUN, no "
+        "un veredicto: un instrumento caido no prueba que el sujeto este "
+        f"limpio.\n{r.stdout}{r.stderr}")
+    return r.stdout
+
+
+def test_el_instalador_COPIA_cada_adoptado_no_solo_lo_nombra(dry_run):
+    faltan = sin_camino(dry_run)
+    assert not faltan, (
+        "adoptados que el instalador NO copia y que tampoco estan declarados en "
+        f"adopted/solo-registro.txt: {sorted(faltan)}")
+
+
+def test_control_negativo_quitar_un_cp_lo_delata(dry_run):
+    """Sin esto, el de arriba pasaria con un lector que devolviera siempre todo.
+
+    Se le quita a la salida la linea que copia UN fichero y se comprueba que
+    sale ese y solo ese.
+    """
+    victima = "etc_sysctl.d_99-sysrq.conf"
+    assert victima in copiados(dry_run), "la victima elegida ya no se copia"
+    mutilada = "\n".join(l for l in dry_run.splitlines()
+                         if f"{MARCA}{victima}" not in l)
+    assert sin_camino(mutilada) == {victima}
