@@ -1,0 +1,27 @@
+sep 28 11:28:41 aitopatom-41f1 systemd[2865]: blackbox-sample.service: start operation timed out. Terminating.
+sep 28 11:28:41 aitopatom-41f1 systemd[2865]: blackbox-sample.service: Main process exited, code=killed, status=15/TERM
+sep 28 11:28:41 aitopatom-41f1 systemd[2865]: blackbox-sample.service: Failed with result 'timeout'.
+sep 28 11:28:41 aitopatom-41f1 systemd[2865]: Failed to start blackbox-sample.service - blackbox: una muestra del estado de la maquina.
+sep 28 11:28:41 aitopatom-41f1 systemd[2865]: blackbox-sample.service: Consumed 4.035s CPU time, 57.8M memory peak, 0B memory swap peak.
+sep 28 11:28:41 aitopatom-41f1 systemd[2865]: Starting blackbox-sample.service - blackbox: una muestra del estado de la maquina...
+sep 28 11:29:26 aitopatom-41f1 systemd[2865]: blackbox-sample.service: start operation timed out. Terminating.
+sep 28 11:29:26 aitopatom-41f1 systemd[2865]: blackbox-sample.service: Main process exited, code=killed, status=15/TERM
+sep 28 11:29:26 aitopatom-41f1 systemd[2865]: blackbox-sample.service: Failed with result 'timeout'.
+sep 28 11:29:26 aitopatom-41f1 systemd[2865]: Failed to start blackbox-sample.service - blackbox: una muestra del estado de la maquina.
+sep 28 11:29:26 aitopatom-41f1 systemd[2865]: blackbox-sample.service: Consumed 1.546s CPU time.
+sep 28 11:29:27 aitopatom-41f1 systemd[2865]: Starting blackbox-sample.service - blackbox: una muestra del estado de la maquina...
+sep 28 11:29:27 aitopatom-41f1 systemd[2865]: Finished blackbox-sample.service - blackbox: una muestra del estado de la maquina.
+
+# --- corroboracion en vivo, no buscada ---
+# Mientras se desplegaba este mismo arreglo (2026-09-28, 11:28-11:29 CST), con
+# load1 real de hasta 52.40 (uptime: '11:29:51 up 7:00, load average: 52.40, 60.86, 34.76'),
+# blackbox-sample.service se colgo DOS VECES seguidas bajo el nuevo TimeoutStartSec=45s
+# -- lineas arriba -- y en ambas consumio solo 1.5-4.0s de CPU en los 45s de reloj,
+# confirmando que estaba bloqueado, no calculando. Sin el arreglo, esas dos invocaciones
+# habrian dejado el instrumento sin escribir indefinidamente, como el 2026-09-28 03:28-03:41.
+# Con el arreglo, se recupero solo en el siguiente disparo del timer (11:29:27, Finished en <1s).
+#
+# Bajado el pico de carga (load1 22-24), 5 corridas directas con las MISMAS Nice=19 +
+# IOSchedulingClass=idle y un timeout generoso (300s) tardaron 0.71-0.87s cada una --
+# el techo de 45s no le pega a una corrida normal, ni bajo carga alta sostenida; solo
+# corta el pico transitorio real que se acaba de medir.
