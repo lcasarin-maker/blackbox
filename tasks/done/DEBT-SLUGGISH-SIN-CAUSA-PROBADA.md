@@ -49,12 +49,12 @@ Del journal, no de bb -- y ese es parte del hallazgo:
 | sujeto | CPU consumida | reloj | equivale a |
 | --- | --- | --- | --- |
 | `snap.antigravity...scope` | 2 h 37 min 14 s | 02:45:59 -> 05:00:57 (2 h 14 min 58 s) | **116.5 % de UN nucleo, sostenido** |
-| `app-com.anthropic.Claude-345364.scope` | 15 h 09 min 54 s | arranque entero (14 h 57 min) | 101.4 % de un nucleo |
+| `app-com.anthropic.Claude-345364.scope` | 15 h 09 min 54 s | 20:00:33 -> 05:08:27 (9 h 07 min 54 s, no el arranque entero) | **166 % de un nucleo** -- corregido el 2026-09-28 (auditoria H1): el 101.4% dividia por el arranque completo (14h57m) en vez de por lo que el scope vivio de verdad |
 | `rustdesk.service` | 1 h 08 min 14 s | arranque entero | 7.6 % de un nucleo |
 | `org.gnome.Shell`, instancia `x11` | 23 min 51 s | arranque entero | 2.7 % de un nucleo |
 
 Dos aplicaciones interactivas quemando un nucleo cada una, durante horas.
-Sobre 20 nucleos eso es el 11 % de la maquina: no mueve `load1`, no mueve
+Sobre 20 nucleos eso es el 14 % de la maquina: no mueve `load1`, no mueve
 `cpu_some`, no mueve nada de lo que bb miraba. **Un total de maquina no puede
 ver un cuello de botella de un solo hilo**, y teclear es un camino de hilos
 unicos encadenados -- servidor X, compositor, hilo principal de la aplicacion.
