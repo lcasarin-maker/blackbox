@@ -1,0 +1,18 @@
+# E2E -- extremo a extremo sobre el sujeto real, no el repo. 2026-09-28.
+
+$ bash tools/verifica_timeout_start.sh --user blackbox-sample.service; echo $?
+0
+
+$ systemctl --user show blackbox-sample.service -p TimeoutStartUSec --value
+45s
+
+$ ./bin/bb drift 2>&1 | tail -2
+  revisados: 41   divergentes: 0   ausentes: 0   suspendidos: 1
+  El repo describe la maquina que hay.
+
+Las tres copias (systemd/, adopted/systemd-user/, la unit real desplegada en
+~/.config/systemd/user/) coinciden, y bb drift lo confirma sin divergencias.
+El propio corroborado en vivo (ver "Corroboracion en vivo, no buscada" en el
+cuerpo de esta ficha) es evidencia e2e adicional: el mecanismo actuo de
+verdad sobre una invocacion real colgada, dos veces, minutos despues de
+desplegarse.

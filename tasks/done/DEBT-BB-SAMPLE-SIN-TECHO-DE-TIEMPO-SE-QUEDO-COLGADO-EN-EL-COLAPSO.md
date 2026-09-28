@@ -9,10 +9,11 @@ severity: P1
 origin: asserted
 satd_family: MISSING_COVERAGE
 created: 2026-09-28
-close_check: {"cmd": "bash -c 'test \"$(systemctl --user show blackbox-sample.service -p TimeoutStartUSec --value)\" != infinity'", "expect": "exit_zero", "porque": "systemctl no esta en .simplecode/build_tools.txt (solo grep y bash), asi que se envuelve en bash -c, el mismo patron ya usado en DEBT-PROCESO-SIN-TECHO. Comprobar el VALOR desplegado, no solo que el archivo del repo lo declare, porque el propio bug de esta ficha es exactamente esa distancia: 'adopted/' puede decir una cosa y la unit real otra si no se recarga."}
+close_check: {"cmd": "bash tools/verifica_timeout_start.sh --user blackbox-sample.service", "expect": "exit_zero", "porque": "systemctl no esta en .simplecode/build_tools.txt (solo grep y bash); envuelto en un script de verdad, no `bash -c` inline (corregido el 2026-09-28: backlog_verifier prohibe `-c` como flag de ejecucion inline en verification_command, el mismo motivo por el que build_tools.txt exige script real). Comprobar el VALOR desplegado, no solo que el archivo del repo lo declare, porque el propio bug de esta ficha es exactamente esa distancia: 'adopted/' puede decir una cosa y la unit real otra si no se recarga."}
 evidence:
   pass: tasks/evidence/DEBT-BB-SAMPLE-SIN-TECHO-DE-TIEMPO-SE-QUEDO-COLGADO-EN-EL-COLAPSO/pass.txt
   fail: tasks/evidence/DEBT-BB-SAMPLE-SIN-TECHO-DE-TIEMPO-SE-QUEDO-COLGADO-EN-EL-COLAPSO/fail.txt
+  e2e: tasks/evidence/DEBT-BB-SAMPLE-SIN-TECHO-DE-TIEMPO-SE-QUEDO-COLGADO-EN-EL-COLAPSO/e2e.txt
 reason: "CERRADO 2026-09-28. TimeoutStartSec=45 anadido a blackbox-sample.service en las tres copias (systemd/, adopted/systemd-user/, la unit real), recargado con daemon-reload. Verificado con bb drift: 39 revisados / 0 divergentes. Corroboracion en vivo, NO buscada: mientras se desplegaba el arreglo, con load1 real de 52.40, blackbox-sample.service se colgo DOS VECES seguidas bajo el nuevo techo -- 4.035s y 1.546s de CPU consumidos en 45s de reloj cada vez, confirmando que estaba bloqueado y no calculando -- y se recupero solo en el siguiente disparo del timer (Finished en <1s). Sin el arreglo, esas dos invocaciones habrian dejado el instrumento sin escribir indefinidamente, igual que el 2026-09-28 03:28-03:41. Bajado el pico (load1 22-24), 5 corridas directas con las mismas Nice=19+IOSchedulingClass=idle y un timeout generoso (300s) tardaron 0.71-0.87s cada una: el techo de 45s no le pega a una corrida normal, solo corta el pico transitorio real que se acaba de medir dos veces. Limite declarado: si el proceso esta en D-state de verdad, ni SIGTERM ni un SIGKILL posterior lo sacan de ahi al instante -- el timeout acota el hueco de `infinity` a un maximo conocido, no lo elimina bajo cualquier causa de cuelgue."
 ---
 
@@ -106,3 +107,30 @@ Esto cambia el marco del hallazgo: no es solo un riesgo de la ventana exacta
 de un colapso por OOM, es cualquier pico de contencion suficientemente agudo
 -- y en esta maquina, con sesiones de agentes corriendo pytest en paralelo,
 esos picos ocurren en operacion normal, no solo en incidentes.
+
+## Verification Evidence
+
+```
+$ bash tools/verifica_timeout_start.sh --user blackbox-sample.service; echo $?
+0
+$ systemctl --user show blackbox-sample.service -p TimeoutStartUSec --value
+45s
+$ ./bin/bb drift 2>&1 | tail -2
+  revisados: 41   divergentes: 0   ausentes: 0   suspendidos: 1
+  El repo describe la maquina que hay.
+```
+
+Las tres copias (`systemd/`, `adopted/systemd-user/`, la unit real) coinciden
+byte a byte, confirmado por `bb drift`. Ver `tasks/evidence/.../e2e.txt` y
+`pass.txt` para la corroboración en vivo completa: la invocación real que se
+colgó dos veces bajo el nuevo techo, y se recuperó sola.
+
+## Regression Test
+
+El propio `close_check` (`tools/verifica_timeout_start.sh --user
+blackbox-sample.service`) es el guardián de la regresión: si alguien quita
+`TimeoutStartSec` de cualquiera de las tres copias sin recargar las otras
+dos, `TimeoutStartUSec` vuelve a `infinity` y el comando da `rc=1` de
+inmediato. `./bin/bb drift` es un segundo guardián independiente: si las
+tres copias divergen entre sí, lo marca sin que nadie tenga que acordarse
+de correrlo (`blackbox-drift.timer`, diario, desde el commit `2912259`).
