@@ -1,0 +1,332 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""bb-guardia-proceso -- frena a UN proceso individual antes de que tumbe la
+maquina entera.
+
+Por que existe
+--------------
+El 2026-09-28 esta maquina se reinicio DOS veces en 50 minutos (03:39:21 y
+04:27:29), las dos por el mismo patron: un solo `python3`, bajo el cgroup de
+una sesion de Claude Desktop, crecio sin freno hasta 30+ GiB de RSS. Ver
+DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES para el diagnostico
+completo con hora, pid y comando literal.
+
+Se revisaron las cinco capas que ya existen en este repo, una por una, contra
+el sujeto real de esos dos incidentes: `app.slice` topa la SUMA de todo
+(nunca se cruzo, un proceso mas el resto no llego a 42G); `earlyoom` mira un
+TOTAL de memoria disponible (nunca disparo -- se quedo entre 22% y 51% libre
+las dos veces, jamas cerca de su corte); `memory.low` prioriza reclamo, no
+frena crecimiento; `bb cap` topa un proceso que se LANZA con el wrapper, pero
+es opt-in y nadie envolvio a estos dos; `bb-usable` reacciono bien, pero por
+diseno tarda ~11 minutos y se lleva a TODAS las sesiones por delante, no solo
+a la culpable.
+
+Ninguna capa dice "un proceso individual esta creciendo sin control, frenalo
+a EL, ahora". Este demonio es esa capa.
+
+Como actua
+----------
+No muestrea nada por su cuenta: LEE el mismo stream que ya existe,
+`$DATA/samples/<hoy>.jsonl`, que `blackbox-sample.timer` escribe cada minuto
+corriendo `bb sample` (ya instalado, ya probado en tests/test_bb_bash.py).
+Cada linea trae `top_rss[0]`, el proceso con mas RSS de la maquina en ese
+instante -- exactamente el dato que hace falta, ya calculado, ya con su
+propia suite. Reinventar el sampleo aqui habria sido la MISMA logica dos
+veces con dos suites que mantener.
+
+Dos caminos (tasa y techo absoluto, ver abajo) que alimentan la MISMA
+escalada de tres pasos -- nunca SIGKILL en el primer disparo:
+
+  1. AVISO (racha == UMBRAL_AVISO). Solo se registra, journal y evidencia.
+     Le da al proceso -- y a quien lo lanzo -- una ventana para notar el
+     problema y pararlo solo. No es una cortesia vacia: bb-usable ya usa el
+     mismo patron para PSI (PSI_WARN_FULL_AVG10, "aviso, no accion").
+  2. SIGTERM (racha == UMBRAL_TERM). La primera accion real, y NO
+     destructiva en el sentido de POSIX: un proceso bien portado la atrapa,
+     limpia y sale solo. Un runaway sin manejador muere igual, pero le dimos
+     la oportunidad.
+  3. SIGKILL (racha == UMBRAL_KILL), SOLO si para entonces el pid SIGUE VIVO
+     y SIGUE cumpliendo el disparador. Si SIGTERM ya lo cerro, `/proc/<pid>`
+     ya no existe y esta etapa no hace nada -- se registra como "ya se fue".
+
+LO QUE NO PUEDE HACER, dicho para no prometer de mas: no hay forma de
+mandarle un mensaje a la SESION de Claude que lanzo el proceso -- este
+demonio corre como systemd plano, fuera del framework de agentes, sin acceso
+a `SendMessage` ni a ningun canal de esa sesion. Lo mas cercano es SIGTERM
+(que el proceso puede manejar) y un aviso bien visible en el journal antes de
+llegar ahi, para que un humano o otra sesion vigilando la maquina lo vea a
+tiempo.
+
+1. TASA. El MISMO pid crece >= RATE_KB entre dos muestras consecutivas,
+   repetido. Calibrado contra el colapso 1: el proceso crecio ~8-10 GiB por
+   minuto, sostenido en TRES muestras seguidas (4.8 -> 13.7 -> 21.4 -> 31.0
+   GiB, 03:25:09-03:28:09).
+
+2. TECHO ABSOLUTO. `top_rss[0]` solo (sea el pid que sea) por encima de
+   CEILING_KB, repetido. Calibrado contra el colapso 2: el proceso ya estaba
+   en 30-36 GiB estable cuando aparecio en la telemetria y NUNCA broto rapido
+   dentro de la ventana observada -- un umbral solo de tasa no lo habria
+   cazado. Con CEILING_KB en 16 GiB (2.7x el proceso legitimo mas grande
+   visto en los datos de ambos incidentes, VLLM::EngineCor a 3.3-5.9 GiB), la
+   escalada de tres pasos se cumple en tres muestras (~45s con el poll por
+   defecto) desde la primera lectura util.
+
+LIMITE DECLARADO, y se dice en vez de callarse: estos dos numeros estan
+calibrados contra DOS incidentes reales, no contra un corpus de miles de
+muestras como el PSI de bb-usable (19696, validado por tools/calibra_psi.py).
+No hay una `tools/calibra_*` para este umbral. Es la misma situacion que
+`DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA` declaro para la latencia del escritorio
+--con una diferencia real: la accion aqui es matar UN proceso, no reiniciar
+la maquina entera, asi que el costo de un falso positivo es mucho menor y
+mucho mas reversible. Eso es lo que hace defendible actuar con n=2 en vez de
+esperar un corpus que no existe.
+
+Seguridad, antes de matar nada
+-------------------------------
+Nunca actua sobre uid 0 (root), nunca sobre PID 1, nunca sobre su propio pid
+ni el de `bb-usable`, y nunca sobre un `comm` de la lista de intocables
+(systemd, sshd, dockerd, containerd). Si `/proc/<pid>` ya desaparecio para
+cuando llega a matar, no es un error: el proceso goloso ya se fue solo.
+"""
+from __future__ import annotations
+
+import json
+import os
+import signal
+import subprocess
+import sys
+import time
+from dataclasses import dataclass
+from pathlib import Path
+
+DATA = Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox"))
+SAMPLES_DIR = DATA / "samples"
+ESTADO = DATA / "guardia_proceso_estado.json"
+EVIDENCIA = DATA / "guardia_proceso.jsonl"
+
+# Cada cuanto se revisa si hay linea nueva en el fichero de hoy. Mas corto que
+# el minuto al que escribe blackbox-sample.timer, para no perderse una.
+POLL_INTERVAL = float(os.environ.get("BB_GUARDIA_POLL_S", "15"))
+
+# --- Los dos umbrales, ver el docstring para de donde salen ---
+RATE_KB = int(float(os.environ.get("BB_GUARDIA_RATE_GIB", "4")) * 1024 * 1024)
+CEILING_KB = int(float(os.environ.get("BB_GUARDIA_CEILING_GIB", "16")) * 1024 * 1024)
+# La escalada de tres pasos. Cada umbral es un numero de muestras
+# CONSECUTIVAS con el disparador activo -- nunca una sola. Con el poll por
+# defecto y el minuto al que escribe blackbox-sample.timer, UMBRAL_KILL=4
+# son ~4 minutos desde la primera senal hasta el ultimo recurso, con dos
+# oportunidades de que el proceso (o quien lo lanzo) lo note y pare solo.
+UMBRAL_AVISO = int(os.environ.get("BB_GUARDIA_UMBRAL_AVISO", "2"))
+UMBRAL_TERM = int(os.environ.get("BB_GUARDIA_UMBRAL_TERM", "3"))
+UMBRAL_KILL = int(os.environ.get("BB_GUARDIA_UMBRAL_KILL", "4"))
+
+# Nunca se tocan, pase lo que pase con su RSS.
+COMM_INTOCABLES = {"systemd", "sshd", "dockerd", "containerd", "init"}
+
+DRY_RUN = os.environ.get("BB_GUARDIA_DRY_RUN", "0") == "1"
+
+
+def log(msg: str) -> None:
+    print(f"[bb-guardia-proceso] {msg}", file=sys.stderr, flush=True)
+
+
+def _leer_estado() -> dict:
+    try:
+        return json.loads(ESTADO.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _escribir_estado(d: dict) -> None:
+    tmp = ESTADO.with_suffix(".tmp")
+    tmp.write_text(json.dumps(d), encoding="utf-8")
+    tmp.replace(ESTADO)
+
+
+def _uid_de(pid: int) -> int | None:
+    try:
+        with open(f"/proc/{pid}/status", encoding="ascii") as fh:
+            for line in fh:
+                if line.startswith("Uid:"):
+                    return int(line.split()[1])
+    except (OSError, ValueError, IndexError):
+        return None
+    return None
+
+
+def _es_intocable(pid: int, comm: str) -> str | None:
+    """Devuelve el motivo si NO se puede tocar, o None si es seguro matarlo."""
+    if pid in (1, os.getpid()):
+        return "PID 1 o el propio guardian"
+    if comm in COMM_INTOCABLES:
+        return f"comm '{comm}' esta en la lista de intocables"
+    uid = _uid_de(pid)
+    if uid is None:
+        return "no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca"
+    if uid == 0:
+        return "corre como root (uid 0)"
+    return None
+
+
+@dataclass(frozen=True)
+class Proceso:
+    """pid/comm/rss viajan juntos en cada aviso y cada senal -- agrupados
+    para no pasar seis argumentos posicionales sueltos (PLR0913, ruff)."""
+    pid: int
+    comm: str
+    rss_kb: int
+
+
+def _registrar(p: Proceso, motivo: str, etapa: str, accion: str) -> None:
+    evento = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "pid": p.pid, "comm": p.comm,
+              "rss_kb": p.rss_kb, "motivo": motivo, "etapa": etapa, "accion": accion,
+              "dry_run": DRY_RUN}
+    with open(EVIDENCIA, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(evento, ensure_ascii=False) + "\n")
+
+
+def _avisar(p: Proceso, motivo: str) -> None:
+    """Paso 1: solo se registra. Ninguna senal, ningun efecto sobre el
+    proceso -- la ventana para que se note y se pare solo."""
+    log(f"AVISO pid={p.pid} comm={p.comm} rss={p.rss_kb/1048576:.1f} GiB -- {motivo}. "
+        f"Si sigue asi, el siguiente paso es SIGTERM.")
+    _registrar(p, motivo, "aviso", "ninguna")
+
+
+def _enviar_senal(p: Proceso, motivo: str, etapa: str, sig: signal.Signals) -> None:
+    """Pasos 2 y 3: SIGTERM primero (no destructiva -- el proceso la puede
+    atrapar y salir limpio), SIGKILL solo si para entonces sigue vivo Y
+    sigue disparando (lo decide `procesar_muestra`, no esta funcion)."""
+    if DRY_RUN:
+        log(f"[DRY-RUN] mandaria {sig.name} a pid={p.pid} comm={p.comm} "
+            f"rss={p.rss_kb/1048576:.1f} GiB -- {motivo}")
+        _registrar(p, motivo, etapa, f"[dry-run] {sig.name}")
+        return
+    bloqueo = _es_intocable(p.pid, p.comm)
+    if bloqueo:
+        log(f"NO SE TOCA pid={p.pid} comm={p.comm}: {bloqueo} (motivo del disparo: {motivo})")
+        _registrar(p, motivo, etapa, f"bloqueado: {bloqueo}")
+        return
+    try:
+        os.kill(p.pid, sig)
+        log(f"{sig.name} enviado a pid={p.pid} comm={p.comm} "
+            f"rss={p.rss_kb/1048576:.1f} GiB -- {motivo}")
+        _registrar(p, motivo, etapa, sig.name)
+    except ProcessLookupError:
+        log(f"pid={p.pid} comm={p.comm} ya no existia al mandarle {sig.name} -- {motivo}")
+        _registrar(p, motivo, etapa, "ya habia terminado")
+
+
+def _lineas_nuevas(fh, offset: int) -> tuple[list[str], int]:
+    fh.seek(offset)
+    contenido = fh.read()
+    return contenido.splitlines(), offset + len(contenido)
+
+
+def procesar_muestra(top0: dict, estado: dict) -> dict:
+    """Aplica los dos caminos y la escalada de tres pasos sobre UNA lectura
+    de top_rss[0]. Devuelve el estado actualizado. Separado de main() para
+    poder probarlo sin journal, sin systemd y sin matar nada de verdad.
+
+    Los dos caminos (tasa y techo) alimentan la MISMA racha: los dos miran
+    `top_rss[0]`, asi que en la practica son el mismo proceso el que dispara
+    uno u otro. Lo que cambia es solo el MOTIVO que queda en el registro.
+    """
+    pid = top0.get("pid")
+    comm = top0.get("comm", "?")
+    rss = top0.get("rss_kb", 0)
+    if pid is None:
+        return estado
+
+    prev = estado.get("prev", {})
+    racha = estado.get("racha", 0)
+    etapa = estado.get("etapa", "")
+    pid_en_racha = estado.get("pid_en_racha")
+
+    dispara_tasa = prev.get("pid") == pid and rss - prev.get("rss_kb", 0) >= RATE_KB
+    dispara_techo = rss >= CEILING_KB
+    dispara = dispara_tasa or dispara_techo
+
+    if dispara and pid_en_racha == pid:
+        racha += 1
+    elif dispara:
+        racha = 1
+        etapa = ""
+    else:
+        racha = 0
+        etapa = ""
+        pid_en_racha = None
+
+    if dispara:
+        pid_en_racha = pid
+        if dispara_tasa:
+            delta_gib = (rss - prev.get("rss_kb", 0)) / 1048576
+            motivo = (f"crecio {delta_gib:.1f} GiB desde la muestra anterior "
+                      f"(>= {RATE_KB/1048576:.0f} GiB), racha {racha}")
+        else:
+            motivo = (f"{rss/1048576:.1f} GiB >= techo de "
+                      f"{CEILING_KB/1048576:.0f} GiB, racha {racha}")
+
+        p = Proceso(pid=pid, comm=comm, rss_kb=rss)
+        if racha >= UMBRAL_KILL and etapa != "matado":
+            # Solo llega aqui si SIGTERM (paso anterior) no lo paro: sigue
+            # vivo y sigue disparando. Ultimo recurso.
+            _enviar_senal(p, motivo, "kill", signal.SIGKILL)
+            etapa = "matado"
+            racha = 0
+            pid_en_racha = None
+        elif racha >= UMBRAL_TERM and etapa in ("", "aviso"):
+            _enviar_senal(p, motivo, "term", signal.SIGTERM)
+            etapa = "term_enviado"
+        elif racha >= UMBRAL_AVISO and etapa == "":
+            _avisar(p, motivo)
+            etapa = "aviso"
+
+    return {"prev": {"pid": pid, "rss_kb": rss}, "racha": racha,
+            "etapa": etapa, "pid_en_racha": pid_en_racha}
+
+
+def main() -> int:
+    log(f"armado: tasa >= {RATE_KB/1048576:.0f} GiB/muestra, "
+        f"techo >= {CEILING_KB/1048576:.0f} GiB, escalada aviso={UMBRAL_AVISO} "
+        f"term={UMBRAL_TERM} kill={UMBRAL_KILL} muestras, "
+        f"poll cada {POLL_INTERVAL:.0f}s"
+        f"{' -- DRY-RUN, no mata nada de verdad' if DRY_RUN else ''}")
+    estado = _leer_estado()
+    ruta_actual = None
+    fh = None
+    offset = 0
+
+    while True:
+        ruta_hoy = SAMPLES_DIR / f"{time.strftime('%Y-%m-%d')}.jsonl"
+        if ruta_hoy != ruta_actual:
+            if fh:
+                fh.close()
+            try:
+                fh = open(ruta_hoy, encoding="utf-8")
+            except OSError:
+                fh = None
+            ruta_actual = ruta_hoy
+            offset = 0
+
+        if fh:
+            lineas, offset = _lineas_nuevas(fh, offset)
+            for linea in lineas:
+                linea = linea.strip()
+                if not linea:
+                    continue
+                try:
+                    muestra = json.loads(linea)
+                except ValueError:
+                    continue
+                top_rss = muestra.get("top_rss") or []
+                if not top_rss:
+                    continue
+                estado = procesar_muestra(top_rss[0], estado)
+                _escribir_estado(estado)
+
+        time.sleep(POLL_INTERVAL)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
