@@ -1,0 +1,40 @@
+# Re-verificacion de los 6 sleeps de tests/test_bb_bash.py para 1.9.
+# Metodo: quitarle la espera a UNO, correr SU test, y ver si falla.
+# Un sleep cuyo test pasa sin el no esta sosteniendo lo que dice sostener.
+
+  L223  test_control_negativo_un_proceso_que_NO_pide_no_sale_nombr sin la espera: 1 passed in 1.78s
+  L312  test_swap_mide_el_RITMO_no_solo_el_nivel                   sin la espera: 1 failed in 1.64s
+  L329  test_control_negativo_sin_trafico_de_swap_el_ritmo_es_cero sin la espera: 1 passed in 1.64s
+  L342  test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativ sin la espera: 1 passed in 1.58s
+  L679  test_cpu_top_NOMBRA_a_quien_quema_cpu                      sin la espera: 1 failed in 1.59s
+  L715  test_control_negativo_un_proceso_dormido_no_sale_como_que_ sin la espera: 1 passed in 1.64s
+
+# restaurado; control de que el selector apunta a UN test:
+
+1 test collected in 0.07s
+
+## LECTURA, y lo que cambio desde 1.8
+##
+## L312 y L679 FALLAN sin su espera: sostienen lo que dicen sostener.
+## L679 CAMBIO DE VEREDICTO: en 1.8 se anoto que PASABA sin su sleep y que por
+##   eso su justificacion era mas debil que en 1.7. Hoy falla. La exencion esta
+##   mejor sostenida que entonces. El disparador que 1.8 dejo escrito para 1.9
+##   -- "que bb sample baje de 0.5 s" -- se midio y NO se cumple: mediana 1.21 s
+##   sobre 6 corridas (min 1.20, max 1.25), frente a los 0.75 s de 1.8. Se alejo.
+##
+## L223, L329, L342, L715 PASAN sin su espera, y eso no los absuelve: son
+##   controles negativos, y quitarles la espera los deja pasar VACIOS en vez de
+##   fallar. Su prueba es que su POSITIVO emparejado falle sin la suya:
+##     L329 -> su positivo es L312, que FALLA.  Sostenida.
+##     L715 -> su positivo es L679, que FALLA.  Sostenida (mejor que en 1.8).
+##     L223 -> su positivo (test_pidio_NOMBRA_a_quien_pide_memoria) NO tiene
+##             sleep de test, asi que el argumento emparejado no aplica.
+##     L342 -> no es un control emparejado: prueba un contador que retrocede.
+##   Las dos ultimas se quedan solo con el argumento estructural -- la espera
+##   separa dos muestras -- igual que en 1.8, y esa debilidad se declara aqui en
+##   vez de presentarse como medida.
+##
+## tools/atom_gpu_telemetry.py:1408 -- es el intervalo del bucle de un sampler de
+##   vida larga, no una espera de test. Verificado para 1.9: ningun test
+##   referencia `interval_seconds` (466 tests recolectados, 0 coincidencias), asi
+##   que no esta en el camino de la suite.

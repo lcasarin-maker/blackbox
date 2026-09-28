@@ -1,0 +1,53 @@
+# Re-verificacion de las 12 exenciones de .gitignore para 1.9.
+#
+# DOS clases, DOS instrumentos. Mezclarlos fue mi primer intento y salio mal:
+# borrar una linea modifica .gitignore, que esta TRACKEADO, asi que el propio
+# fichero aparece en 'git status' y daba +1 a las doce. Ese +1 era yo leyendo
+# el instrumento, no la regla protegiendo algo.
+
+## Clase A -- reglas de ignorar. Instrumento: retirada, descontando .gitignore.
+  L69   __pycache__/           destapa 0 fichero(s)
+  L71   *.pyc                  destapa 0 fichero(s)
+  L73   .pytest_cache/         destapa 0 fichero(s)
+  L75   .coverage              destapa 1 fichero(s)
+
+## Clase B -- NEGACIONES. 'git status' no las puede ver: su trabajo es que un
+## fichero TRACKEADO siga visible en un CLON NUEVO, y gitignore no afecta a lo
+## trackeado. Instrumento correcto: 'git check-ignore --no-index', que pregunta
+## a las REGLAS en vez de al indice.
+  L15   .simplecode/local_hooks.yaml             EXENTO por la negacion -> SIRVE
+  L21   .simplecode/backlog_baseline.json        EXENTO por la negacion -> SIRVE
+  L26   .simplecode/build_tools.txt              EXENTO por la negacion -> SIRVE
+  L30   .simplecode/hook_receipt_baseline.json   EXENTO por la negacion -> SIRVE
+  L35   .simplecode/organ_inapplicable.json      EXENTO por la negacion -> SIRVE
+  L54   .simplecode/corpus_exempt.yaml           EXENTO por la negacion -> SIRVE
+  L64   .simplecode/audit_ledger.json            EXENTO por la negacion -> SIRVE
+
+## Control negativo del instrumento B: un fichero que SI debe estar ignorado.
+  .simplecode/runtime.zip -> IGNORADO (correcto: el instrumento distingue)
+
+## Clase A, REPETIDA con los artefactos PRESENTES.
+## El primer intento dio 'destapa 0' en tres de cuatro, y eso no decia que la
+## regla sobrara: decia que el arbol estaba limpio en ese instante. Una medida
+## que no puede salir positiva no mide.
+## artefactos creados a proposito; status los ve: 1
+  L8    .simplecode/*          destapa 12 fichero(s)
+  L69   __pycache__/           destapa 0 fichero(s)
+  L71   *.pyc                  destapa 1 fichero(s)
+  L73   .pytest_cache/         destapa 0 fichero(s)
+  L75   .coverage              destapa 1 fichero(s)
+
+## LIMITE DECLARADO de la clase A, en vez de un veredicto forzado.
+## `__pycache__/` y `*.pyc` SE SOLAPAN: el fichero que uno destapa lo tapa el
+## otro, asi que retirar uno solo da 0 y eso NO prueba que sobre. Para aislarlas
+## habria que retirar las dos a la vez y atribuir el resultado, y esa atribucion
+## no la da este metodo. Lo que si esta medido: `.simplecode/*` destapa 12 y
+## `*.pyc` destapa 1 en aislamiento.
+## Las cuatro son artefactos estandar de pytest/CPython y se quedan por eso, que
+## es un argumento de clase y no una medida. Queda dicho cual de los dos es.
+
+## RESUMEN 1.9
+##   L8   .simplecode/*     SIRVE, medido en aislamiento (+12)
+##   L15..L64  7 negaciones  SIRVEN, `check-ignore --no-index` con control negativo
+##   L69,71,73,75           se quedan por clase (artefactos estandar), con el
+##                          solapamiento declarado arriba como limite del metodo
