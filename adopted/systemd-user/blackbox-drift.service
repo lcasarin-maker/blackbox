@@ -1,0 +1,13 @@
+[Unit]
+Description=blackbox: compara lo adoptado en el repo contra lo desplegado
+Documentation=file:%h/projects/blackbox/README.md
+
+[Service]
+Type=oneshot
+ExecStart=%h/projects/blackbox/bin/bb drift
+Nice=19
+IOSchedulingClass=idle
+# Mismo motivo que TimeoutStartSec en blackbox-sample.service: sin techo, una
+# corrida colgada deja el instrumento sin disparar hasta el reinicio. 39
+# comparaciones de fichero tardan segundos; 60s es generoso.
+TimeoutStartSec=60
