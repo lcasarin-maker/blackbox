@@ -364,10 +364,22 @@ if [ -f /etc/default/earlyoom ]; then
   if [ "$DRY" = 0 ]; then
     sed -i "s/--prefer '(vllm|VLLM|python3|triton)'/--prefer '(pytest|python3|triton)'/" \
         /etc/default/earlyoom
+    # DEBT-EARLYOOM-DESARMADO-POR-EL-AND-DEL-SWAP, medido 2026-09-28: el
+    # gatillo de earlyoom es un AND memoria+swap ("both memory and swap must
+    # be below minimum"). MemAvailable llego a 0.19 % ese dia y earlyoom NO
+    # disparo -- el swap seguia al 65 % libre, muy por encima del umbral de
+    # `-s 10`. `-s 100,100` abre las dos compuertas (mem y swap por
+    # separado) sin tocar la punteria de arriba: con las dos abiertas la
+    # victima seria VLLM::EngineCor (oom_score 1026), no claude-desktop
+    # (866, y --avoid lo baja mas). `-s 100` a secas NO basta: deja el
+    # SIGKILL en "swap <= 50 %", y el swap estaba al 65 %.
+    sed -i "s/-s 10\b/-s 100,100/" /etc/default/earlyoom
     systemctl restart earlyoom.service
     echo "  --prefer ahora: $(grep -o "\-\-prefer '[^']*'" /etc/default/earlyoom)"
+    echo "  -s ahora: $(grep -oE '\-s [0-9,]+' /etc/default/earlyoom)"
   else
     echo "  [dry-run] quitaria vllm de --prefer y anadiria pytest"
+    echo "  [dry-run] cambiaria -s 10 a -s 100,100 (AND memoria+swap, DEBT-EARLYOOM-DESARMADO-POR-EL-AND-DEL-SWAP)"
   fi
   # El drop-in que le da CAP_KILL y lo saca de la mira del OOM killer tambien
   # era solo-maquina hasta el 2026-09-28. Sin el, el vigilante es matable antes
