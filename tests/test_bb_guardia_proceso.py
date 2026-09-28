@@ -46,6 +46,7 @@ import os
 import signal
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -265,10 +266,10 @@ def test_sin_dry_run_intocable_no_llama_a_kill(tmp_path, monkeypatch):
     monkeypatch.setenv("BLACKBOX_DATA", str(tmp_path))
     mod = _cargar()
     monkeypatch.setattr(mod, "EVIDENCIA", tmp_path / "guardia_proceso.jsonl")
-    llamado = []
-    monkeypatch.setattr(os, "kill", lambda *a: llamado.append(a))
+    espia = MagicMock()
+    monkeypatch.setattr(os, "kill", espia)
     mod._enviar_senal(mod.Proceso(1, "systemd", 1024), "prueba", "term", mod.signal.SIGTERM)
-    assert not llamado
+    espia.assert_not_called()
 
 
 def test_sin_dry_run_un_pid_tocable_SI_recibe_la_senal(tmp_path, monkeypatch):
@@ -279,7 +280,7 @@ def test_sin_dry_run_un_pid_tocable_SI_recibe_la_senal(tmp_path, monkeypatch):
     mod = _cargar()
     monkeypatch.setattr(mod, "EVIDENCIA", tmp_path / "guardia_proceso.jsonl")
     monkeypatch.setattr(mod, "_uid_de", lambda pid: 1000)
-    llamado = []
-    monkeypatch.setattr(os, "kill", lambda pid, sig: llamado.append((pid, sig)))
+    espia = MagicMock()
+    monkeypatch.setattr(os, "kill", espia)
     mod._enviar_senal(mod.Proceso(999999, "python3", 20 * 1024 * 1024), "prueba", "term", signal.SIGTERM)
-    assert llamado == [(999999, signal.SIGTERM)]
+    espia.assert_called_once_with(999999, signal.SIGTERM)

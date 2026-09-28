@@ -6,7 +6,7 @@ status: done
 closure_type: fixed
 closed_at: 2026-09-28
 severity: P1
-origin: detected
+origin: asserted
 satd_family: MISSING_COVERAGE
 created: 2026-09-28
 close_check: {"cmd": "bash tools/demonio_al_dia.sh --user bb-guardia-proceso.service bin/bb-guardia-proceso", "expect": "exit_zero", "porque": "`systemctl` no esta en .simplecode/build_tools.txt (solo grep y bash), asi que llamarlo directo en el close_check es un CONTRACT BREACH que backlog-verifier cazo en la practica. Se envuelve en demonio_al_dia.sh -- YA existente, YA con suite, extendido con --user en este mismo commit -- que ademas comprueba algo mas fuerte que is-active: que el PROCESO VIVO arranco DESPUES de la ultima modificacion del codigo, el mismo patron que ya usa DEBT-UNA-BAJADA-MOMENTANEA. Se invoca via bash porque es lo que build_tools.txt declara y backlog-verifier solo confia en esa lista."}
