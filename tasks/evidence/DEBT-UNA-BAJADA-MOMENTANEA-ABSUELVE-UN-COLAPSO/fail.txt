@@ -1,0 +1,9 @@
+$ # CONTROL NEGATIVO, corrido hoy ANTES del reinicio con el mismo comando:
+$ bash tools/demonio_al_dia.sh bb-usable.service bin/bb-usable
+bb-usable.service arranco Sat 2026-09-26 23:36:57 CST y bin/bb-usable se modifico despues
+el proceso vivo corre codigo VIEJO. Lo arregla:  sudo systemctl restart bb-usable.service
+rc=1
+
+$ # O sea que el criterio puede salir en contra, y salia en contra: durante 24 h
+$ # el codigo correcto estuvo en disco con el defecto todavia en memoria, que es
+$ # exactamente el estado en que la maquina murio el 2026-09-26 15:38:26.

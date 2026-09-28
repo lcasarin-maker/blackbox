@@ -1,0 +1,10 @@
+$ # El criterio, sobre el PROCESO VIVO y no sobre el repo:
+$ bash tools/demonio_al_dia.sh bb-usable.service bin/bb-usable
+bb-usable.service arranco Sun 2026-09-27 23:48:05 CST, despues de la ultima modificacion de bin/bb-usable
+rc=0
+
+$ systemctl show bb-usable.service -p ExecMainStartTimestamp -p ActiveState --value
+Sun 2026-09-27 23:48:05 CST
+active
+$ stat -c %y bin/bb-usable
+2026-09-26 23:59:06.112905950 -0600

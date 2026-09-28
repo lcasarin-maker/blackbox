@@ -1,0 +1,6 @@
+{
+  "excursion_gib": 86,
+  "owner": "Luis Casarin (lcasarin-maker)",
+  "expires": "2026-10-27",
+  "reason": "Techo de memoria de GPU firmado por voto de Luis el 2026-09-27, con la medida delante y no como plantilla. Los topes de cgroup dejan a la GPU 49.4 GiB, y la GPU se pasa de ahi en 4758 de 19897 muestras (23.9 %) con un pico observado de 85.4 GiB el 2026-09-21T00:33. Ningun cgroup acota la memoria unificada de la GPU, asi que esa excursion no la aplica nadie: por eso se firma en vez de configurarse. Se eligen 86 y no mas porque es el numero MAS AJUSTADO que puede salir verde hoy -- apenas 0.6 GiB sobre el pico medido -- y por tanto conserva la capacidad de volver a bloquear: el dia que la GPU pase de 86 el chequeo salta y esto se discute con datos nuevos. Un numero con margen amplio (95, por ejemplo) seria un guardia que casi no puede disparar, que es el defecto que esta ficha existe para cerrar. Lo que se acepta a cambio, dicho sin adornos: se autoriza que la maquina llegue a 86 GiB de GPU, 36 por encima de lo que los topes le dejan, sin que nada la detenga. Caduca en un mes -- el mismo plazo que el resto de declaraciones de este repo -- para que no se vuelva permanente en silencio, que es como se perdieron los 59 hooks de Cerberus."
+}

@@ -80,6 +80,11 @@ if [ "$REVERT" = 1 ]; then
     run rmdir --ignore-fail-on-non-empty /etc/systemd/system/docker.slice.d
     echo "  techo de docker.slice retirado"
   fi
+  if [ -f /etc/systemd/system/system.slice.d/99-blackbox.conf ]; then
+    run rm -f /etc/systemd/system/system.slice.d/99-blackbox.conf
+    run rmdir --ignore-fail-on-non-empty /etc/systemd/system/system.slice.d
+    echo "  techo de system.slice retirado -- REQUIERE: systemctl daemon-reload"
+  fi
   if [ -f "$BACKUP/docker-daemon.json" ]; then
     run cp "$BACKUP/docker-daemon.json" /etc/docker/daemon.json
     echo "  /etc/docker/daemon.json restaurado -- REQUIERE: systemctl restart docker"
@@ -476,7 +481,7 @@ PYEOF
   run mkdir -p /etc/systemd/system/docker.slice.d
   run cp adopted/system-config/etc_systemd_system_docker.slice.d_99-blackbox.conf \
          /etc/systemd/system/docker.slice.d/99-blackbox.conf
-  echo "  techo puesto: MemoryMax=32G, MemorySwapMax=4G sobre docker.slice"
+  echo "  techo puesto: MemoryMax=14G, MemorySwapMax=4G sobre docker.slice"
   echo
   echo "  NO SURTE EFECTO HASTA REINICIAR EL DEMONIO, y eso TIRA los"
   echo "  contenedores -- incluido el vLLM. Cuando te venga bien:"
@@ -486,10 +491,27 @@ PYEOF
   echo "    cat /proc/\$(docker inspect -f '{{.State.Pid}}' nemotron-server)/cgroup"
   echo "      espera:  0::/docker.slice/docker-<id>.scope    (NO system.slice)"
   echo "    cat /sys/fs/cgroup/docker.slice/memory.max"
-  echo "      espera:  34359738368                          (NO 'max')"
+  echo "      espera:  15032385536                          (NO 'max')"
   echo "    Si sigue diciendo system.slice o 'max', el techo NO esta puesto"
   echo "    por mucho que este informe diga que si."
 fi
+
+# --- Techo de system.slice (DEBT-TECHOS-SIN-CALIBRAR, voto de Luis 2026-09-27)
+#
+# Sin el, `system.slice` entraba en el presupuesto por lo que USABA y no por lo
+# que prometia, y los compromisos sumaban 121.8 GiB sobre 121.1 disponibles.
+run mkdir -p /etc/systemd/system/system.slice.d
+run cp adopted/system-config/etc_systemd_system_system.slice.d_99-blackbox.conf \
+       /etc/systemd/system/system.slice.d/99-blackbox.conf
+echo "  techo puesto: MemoryMax=12G sobre system.slice (pico medido 10.8)"
+echo
+echo "  NO SURTE EFECTO HASTA:  sudo systemctl daemon-reload"
+echo "  (no reinicia nada: system.slice ya existe, solo se le aplica el limite)"
+echo
+echo "  CONTROL NEGATIVO -- comprueba el SUJETO, no este informe:"
+echo "    cat /sys/fs/cgroup/system.slice/memory.max"
+echo "      espera:  12884901888                          (NO 'max')"
+echo "    Si dice 'max', el techo NO esta puesto por mucho que esto diga que si."
 
 # --- 10. los servicios del usuario arrancan sin login --------------------
 echo
