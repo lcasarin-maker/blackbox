@@ -12,11 +12,20 @@ Asi que todo lo que corria en una substitucion, una tuberia o un subshell se
 contaba como SIN CUBRIR. En `bin/bb` eso es casi todo, porque cada bloque de la
 muestra se arma con `x=$(funcion)`.
 
-Medido el 2026-09-25: al arreglar el ancla, `bin/bb` paso de 27.0 % a 33.3 %.
-**Nadie escribio un test nuevo entre las dos cifras.** 59 lineas siempre
+Medido el 2026-09-25: al arreglar el ancla, `bin/bb` paso de 27.0 % a 33.1 %.
+**Nadie escribio un test nuevo entre las dos cifras.** 57 lineas siempre
 estuvieron cubiertas y el instrumento no las veia -- que es la forma en que un
 medidor da un numero mas bajo del real y nadie lo nota, porque un numero bajo
 parece prudente.
+
+Este parrafo decia 33.3 % y 59 lineas hasta el 2026-09-28, y SPEC.md lo llevaba
+anotado como pendiente: dos registros del mismo commit (`2a228fa`) en desacuerdo,
+y habia que elegir. Lo zanja la aritmetica contra la medida que ese commit
+guarda en su propio mensaje -- `947 lineas, 256 cubiertas, 27.0 %` antes y
+`313 cubiertas, 33.1 %` despues: 313-256 = 57, y 313/947 = 33.1 %. Para que
+diera 33.3 % harian falta 315 cubiertas, o sea 59. El piso de 32.8 tambien sale
+de 33.1 (minimo de tres corridas menos el vaiven de 0.2-0.3), no de 33.3, asi
+que la cifra buena es la que sostiene el trinquete.
 """
 
 from __future__ import annotations
