@@ -1,0 +1,103 @@
+Medido el 2026-09-28 en AI TOP ATOM (aitopatom-41f1) durante el incidente que
+mato el renderer de claude-desktop.
+
+=== 1. LA CADENA DEL INCIDENTE ===
+
+$ journalctl -u earlyoom --since today | grep 'mem avail'
+sep 28 11:25:38 earlyoom[2110]: mem avail:  1592 of 123967 MiB ( 1.28%), swap free: 10706 of 16383 MiB (65.35%)
+sep 28 11:26:39 earlyoom[2110]: mem avail:   234 of 123967 MiB ( 0.19%), swap free: 10655 of 16383 MiB (65.03%)
+
+$ journalctl --since "2026-09-28 11:25" --until "2026-09-28 11:32" | grep oom-killer
+sep 28 11:28:27 kernel: systemd-logind invoked oom-killer: gfp_mask=0x140cca(GFP_HIGHUSER_MOVABLE|__GFP_COMP), order=0, oom_score_adj=0
+
+$ coredumpctl list | tail -1
+Mon 2026-09-28 11:28:38 CST  137261  1000  1000 SIGTRAP truncated /usr/lib/claude-desktop/claude-desktop  166.1M
+
+La victima llevaba oom_score_adj=300 en la tabla del OOM killer -- el mas alto
+de toda la lista (los demas claude-desktop en 100/200, earlyoom en -1000).
+Chromium marca sus renderers como victima preferida a proposito, asi que el
+kernel hizo exactamente lo que se le pidio.
+
+=== 2. POR QUE earlyoom NO ACTUO: LA COMPUERTA ES AND ===
+
+$ /usr/bin/earlyoom --help | grep -A1 '^  -s PERCENT'
+  -s PERCENT[,KILL_PERCENT] set free swap minimum to PERCENT of total (default
+                            10 %).
+                            Note: both memory and swap must be below minimum for
+                            earlyoom to act.
+
+$ man earlyoom | grep -A3 'You  can  use  -s  100'
+       You  can  use  -s  100  to have earlyoom effectively ignore swap usage:
+       Processes are killed once available memory drops below  the  configured
+       minimum, no matter how much swap is free.
+
+RAM a 0.19%. Swap a 65% libre. El AND no se cumplio.
+
+$ journalctl -u earlyoom --since today | grep -cE 'sending SIG(KILL|TERM) to process'
+0
+CONTROL NEGATIVO de que el log NO estaba vacio ni el demonio caido:
+$ journalctl -u earlyoom --since today | wc -l
+744
+
+Cero kills en 744 lineas. El --avoid '(claude-desktop|...)' fue irrelevante:
+earlyoom nunca llego a elegir, y el kernel no respeta --avoid, respeta
+oom_score_adj.
+
+=== 3. CONTROL NEGATIVO DE LA COMPUERTA: PUEDE DAR LOS DOS VEREDICTOS ===
+
+Mismo estado de maquina (MemAvailable 37.8%, SwapFree 90.9%), misma compuerta
+de memoria (-m 50), solo cambia el swap.
+
+--- CASO QUE DEBE BLOQUEAR ---
+$ timeout 5 stdbuf -oL /usr/bin/earlyoom --dryrun -r 1 -m 50 -s 10
+earlyoom v1.7
+dryrun mode enabled, will not kill anything
+mem total: 123967 MiB, swap total: 16383 MiB
+sending SIGTERM when mem <= 50.00% and swap <= 10.00%,
+        SIGKILL when mem <= 25.00% and swap <=  5.00%
+mem avail: 46796 of 123967 MiB (37.75%), swap free: 14887 of 16383 MiB (90.87%)
+mem avail: 46801 of 123967 MiB (37.75%), swap free: 14887 of 16383 MiB (90.87%)
+mem avail: 46807 of 123967 MiB (37.76%), swap free: 14887 of 16383 MiB (90.87%)
+mem avail: 46821 of 123967 MiB (37.77%), swap free: 14887 of 16383 MiB (90.87%)
+mem avail: 46815 of 123967 MiB (37.76%), swap free: 14887 of 16383 MiB (90.87%)
+$ grep -cE 'low memory!|sending SIGTERM to process' <salida>
+0
+Corrio (banner + 5 muestras) y NO actuo. Esa es la prueba de que el veredicto
+negativo es alcanzable, no una ausencia de salida.
+
+--- CASO QUE DEBE DISPARAR ---
+$ timeout 6 /usr/bin/earlyoom --dryrun -r 1 -m 50 -s 100
+sending SIGTERM when mem <= 50.00% and swap <= 100.00%,
+        SIGKILL when mem <= 25.00% and swap <= 50.00%
+mem avail: 46809 of 123967 MiB (37.76%), swap free: 14887 of 16383 MiB (90.87%)
+low memory! at or below SIGTERM limits: mem 50.00%, swap 100.00%
+sending SIGTERM to process 2224763 uid 0 "VLLM::EngineCor": badness 1026, VmRSS 5716 MiB
+dryrun, not actually sending any signal
+
+=== 4. -s 100 SOLA NO BASTA: DEJA EL SIGKILL CERRADO ===
+
+$ timeout 3 /usr/bin/earlyoom --dryrun -r 1 -m 10 -s 100 | grep -E 'SIGTERM when|SIGKILL when'
+sending SIGTERM when mem <= 10.00% and swap <= 100.00%,
+        SIGKILL when mem <=  5.00% and swap <= 50.00%
+
+$ timeout 3 /usr/bin/earlyoom --dryrun -r 1 -m 10 -s 100,100 | grep -E 'SIGTERM when|SIGKILL when'
+sending SIGTERM when mem <= 10.00% and swap <= 100.00%,
+        SIGKILL when mem <=  5.00% and swap <= 100.00%
+
+Durante el evento el swap estaba al 65%, o sea POR ENCIMA del 50% del SIGKILL.
+Con -s 100 a secas earlyoom habria mandado SIGTERM y nunca SIGKILL.
+
+=== 5. LA PUNTERIA, MEDIDA (no deducida) ===
+
+$ for p in ...; do echo "$(cat /proc/$p/oom_score) $p $(cat /proc/$p/comm)"; done | sort -rn | head -6
+1026 2224763 VLLM::EngineCor
+1007 2201251 vllm
+1000 2224762 python3
+ 866  137241 claude-desktop
+ 819 2577022 python3
+ 801 2521015 claude
+
+La victima con -s 100,100 seria VLLM::EngineCor (el consumidor real de 50 GB),
+no el python3 de Atlas y no claude-desktop. El --prefer '(pytest|python3|triton)'
+no empareja "VLLM::EngineCor", y no hace falta: la badness cruda ya lo pone
+primero.
