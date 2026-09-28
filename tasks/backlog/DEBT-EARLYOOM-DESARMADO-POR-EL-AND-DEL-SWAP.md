@@ -87,3 +87,27 @@ Tampoco se midio el coste del lado contrario: con el swap fuera de la ecuacion,
 earlyoom pasa a poder matar en cualquier episodio de RAM baja con swap sano, y
 en esta caja eso incluye las rafagas normales de vLLM. No hay cuenta de cuantas
 veces al dia habria disparado retroactivamente sobre el corpus de muestras.
+
+## Progreso -- correccion de registro (2026-09-28)
+
+El commit `d3d7980` puso el arreglo (`sed` en `enable-privileged.sh`) en
+presente ("earlyoom deja de ser un AND ciego"), pero eso describe el
+INSTALADOR, no la maquina. Una sesion par lo midio en vivo, minutos despues:
+
+```
+$ grep -o 'EARLYOOM_ARGS=.*' /etc/default/earlyoom
+EARLYOOM_ARGS="-r 60 -m 10 -s 10 --avoid '(...)' --prefer '(pytest|python3|triton)'"
+$ systemctl show earlyoom -p ActiveEnterTimestamp
+ActiveEnterTimestamp=Mon 2026-09-28 04:29:31 CST
+```
+
+Sigue en `-s 10`, con el demonio vivo desde ANTES del incidente de las 11:28
+y nunca reiniciado. El arreglo esta escrito y probado sobre una copia (ver
+mas arriba), pero **no aplicado**: falta `sudo ./enable-privileged.sh`, que
+necesita la contrasena de Luis. El close_check ya elegido
+(`grep -qE "^EARLYOOM_ARGS=.*-s 100,100" /etc/default/earlyoom`) mide
+justo esto -- el sujeto, no el repo -- por eso sigue en `status: open`.
+
+Es la misma familia de error que `tools/config_entregable.sh` ya documenta:
+editar `adopted/` (o aqui, el instalador) y asumir que correr el script
+alguna vez basta, sin verificar que se corrio DESPUES del cambio.
