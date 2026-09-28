@@ -1,3 +1,16 @@
+# FAIL -- el CONTROL NEGATIVO: el close_check puede dar rc != 0 de verdad.
+
+$ echo 'EARLYOOM_ARGS="-r 60 -m 10 -s 10 --avoid X --prefer Y"' > /tmp/viejo
+$ grep -qE "^EARLYOOM_ARGS=.*-s 100,100" /tmp/viejo; echo $?
+1
+
+Reconstruido con el valor real de EARLYOOM_ARGS antes del arreglo (-s 10, el
+que la maquina tenia en vivo hasta las 12:59:14 de hoy). El mismo comando que
+cierra la ficha da rc=1 contra el estado viejo -- no es un check que solo
+pueda salir verde.
+
+# Medicion original del incidente que motivo la ficha, 2026-09-28:
+
 Medido el 2026-09-28 en AI TOP ATOM (aitopatom-41f1) durante el incidente que
 mato el renderer de claude-desktop.
 
