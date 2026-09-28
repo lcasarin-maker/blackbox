@@ -1,3 +1,18 @@
+# FAIL -- el CONTROL NEGATIVO en dos capas: el defecto original, y el
+# cierre-en-falso que el close_check viejo habria permitido.
+
+$ bash tools/verifica_bb_usable_mide_latencia.sh; echo $?
+(corrido a las 13:30, DESPUES de desplegar Environment=DISPLAY -- el fichero
+ya lo declaraba, pero el proceso vivo, arrancado a las 04:29:39, seguia con
+el entorno viejo; Environment= de una unit no se aplica retroactivamente)
+1
+
+Confirma que el check nuevo distingue "declarado" de "en efecto", justo lo
+que el close_check original (systemctl show -p Environment | grep DISPLAY=)
+NO podia distinguir -- ese habria dado rc=0 en este mismo instante.
+
+# Medicion original del defecto, antes de cualquier arreglo:
+
 Medido el 2026-09-28 en AI TOP ATOM (aitopatom-41f1).
 
 === EL CANAL DE LATENCIA DE bb-usable NUNCA PRODUJO UN NUMERO ===
