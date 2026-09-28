@@ -192,3 +192,23 @@ def test_control_negativo_un_fichero_ignorado_tampoco_entra(repo: Path):
     pieza que la spec tendria que inventariar."""
     assert "tools/__init__.py" not in inventario.sujetos_ejecutables(repo)
     assert "tools/otra.py" in inventario.sujetos_ejecutables(repo)
+
+
+def test_un_fichero_suelto_bajo_adopted_NO_es_un_sujeto_de_la_maquina():
+    """`adopted/solo-registro.txt` es una declaracion del repo, no un fichero
+    desplegado. Hasta el 2026-09-28 el mapeo lo convertia en
+    `/srv/ai/gpu_governance/solo-registro.txt` y `--check` exigia una fila de
+    SPEC para un sujeto inventado."""
+    assert inventario.destino_desplegado(Path("adopted/solo-registro.txt")) is None
+    assert inventario.destino_desplegado(Path("adopted/otro/x.conf")) is None
+
+
+def test_los_tres_directorios_del_mapeo_siguen_dando_destino():
+    """El control negativo del de arriba: si `destino_desplegado` devolviera
+    `None` para todo, aquel pasaria y el inventario se quedaria sin sujetos."""
+    assert inventario.destino_desplegado(
+        Path("adopted/system-config/etc_a_b.conf")) == "/etc/a/b.conf"
+    assert inventario.destino_desplegado(
+        Path("adopted/systemd-user/x.service")) == "~/.config/systemd/user/x.service"
+    assert inventario.destino_desplegado(
+        Path("adopted/gpu_governance/y.sh")) == "/srv/ai/gpu_governance/y.sh"
