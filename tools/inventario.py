@@ -44,21 +44,33 @@ def sujetos_ejecutables(root: Path) -> set[str]:
     return nombres
 
 
-def destino_desplegado(f: Path) -> str:
-    """Donde vive en la maquina un fichero de adopted/, segun el mapeo de `bb drift`."""
+def destino_desplegado(f: Path) -> str | None:
+    """Donde vive en la maquina un fichero de adopted/, segun el mapeo de `bb drift`.
+
+    `None` cuando el fichero no esta en ninguno de los tres directorios que ese
+    mapeo conoce. Hasta el 2026-09-28 el ultimo caso era un `return` sin
+    condicion, asi que CUALQUIER fichero suelto bajo `adopted/` se convertia en
+    un sujeto inventado en `/srv/ai/gpu_governance/`: al anadir
+    `adopted/solo-registro.txt` -- una declaracion del repo, no un fichero de la
+    maquina-- este chequeo exigio una fila de SPEC para
+    `/srv/ai/gpu_governance/solo-registro.txt`, que no existe ni existira.
+    `bb drift` no tenia el fallo porque recorre los tres directorios uno a uno
+    (bin/bb:2356-2364); era esta funcion la que se apartaba del mapeo que su
+    propia primera linea dice seguir.
+    """
     if f.parent.name == "system-config":
         return "/" + f.name.replace("_", "/")
     if f.parent.name == "systemd-user":
         return "~/.config/systemd/user/" + f.name
-    return "/srv/ai/gpu_governance/" + f.name
+    if f.parent.name == "gpu_governance":
+        return "/srv/ai/gpu_governance/" + f.name
+    return None
 
 
 def sujetos_adoptados(root: Path) -> set[str]:
-    return {
-        destino_desplegado(f)
-        for f in sorted((root / "adopted").rglob("*"))
-        if f.is_file()
-    }
+    destinos = (destino_desplegado(f)
+                for f in sorted((root / "adopted").rglob("*")) if f.is_file())
+    return {d for d in destinos if d is not None}
 
 
 def citados(texto: str) -> set[str]:
