@@ -120,3 +120,23 @@ def test_el_sujeto_de_la_ficha_se_puede_medir():
     r = _correr(UNIT, "bin/bb-usable")
     assert r.returncode in (0, 1), (
         f"COULD_NOT_RUN sobre el sujeto real:\n{r.stdout}{r.stderr}")
+
+
+# ------------------------------------ --user: unit del gestor de usuario
+
+
+@necesita_unit
+def test_flag_user_es_transparente_para_el_caso_positivo(tmp_path):
+    """Sin --user esta unit es de SISTEMA, asi que --user apuntandole a ella
+    debe fallar por ausencia (COULD_NOT_RUN), no dar un falso positivo --
+    prueba que el flag de verdad cambia el namespace consultado y no es un
+    adorno que systemctl ignora."""
+    r = _correr("--user", UNIT, "bin/bb")
+    assert r.returncode == 2, r.stdout + r.stderr
+    assert "COULD_NOT_RUN" in r.stderr
+
+
+def test_sin_flag_uso_menciona_el_flag_opcional():
+    r = _correr()
+    assert r.returncode != 0
+    assert "--user" in (r.stdout + r.stderr)

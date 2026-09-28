@@ -1,12 +1,11 @@
-# Estado ACTUAL (2026-09-28), antes de cualquier mecanismo nuevo.
-# No hay `tests/test_techo_por_proceso.py`: el close_check falla por
-# AUSENCIA, no por un veredicto negativo.
-
-$ python3 -m pytest tests/test_techo_por_proceso.py -q
-ERROR: file or directory not found: tests/test_techo_por_proceso.py
+# Estado ANTES de armar, medido antes del commit que instala el servicio:
+$ systemctl --user is-active bb-guardia-proceso.service
+inactive
 rc=4
 
-# Y el sujeto que motiva la ficha, sin ningun mecanismo que lo frene:
-$ python3 -c "import mmap; m=mmap.mmap(-1, 30*1024**3); m.write(b'x'*(30*1024**3))"
-# corre hasta el final, sin que nada lo detenga -- es literalmente lo que
-# pasaron pid 1410728 y pid 320489 el 2026-09-28 (ver Root Cause).
+# El codigo existia y pasaba pytest, pero eso no es proteccion corriendo:
+$ python3 -m pytest tests/test_bb_guardia_proceso.py -q
+20 passed
+$ systemctl --user is-active bb-guardia-proceso.service   # el mismo momento
+inactive
+rc=4
