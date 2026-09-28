@@ -1,10 +1,11 @@
 """Control negativo para el gate `bash-sintaxis` (.pre-commit-config.yaml).
 
 La auditoria H1 del 2026-09-28 encontro que SPEC.md afirmaba "cada gate se
-verifica con control negativo" mientras este gate -- cuyo entry es un `bash -n`
-desnudo, sin wrapper de gate_runner -- no tenia ninguno registrado. Esto prueba
-lo unico que un control negativo tiene que probar: que el mismo comando puede
-dar los dos veredictos, no solo el que ya esperabamos.
+verifica con control negativo" mientras este gate -- envuelto en gate_runner
+como los demas, pero cuyo comando real es un `bash -n` desnudo -- no tenia
+ninguno registrado. Esto prueba lo unico que un control negativo tiene que
+probar: que el mismo comando puede dar los dos veredictos, no solo el que ya
+esperabamos.
 """
 import subprocess
 
