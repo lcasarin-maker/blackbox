@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -1341,3 +1342,189 @@ def test_sigterm_ACUMULA_fuera_del_anillo_y_no_duplica(datos, tmp_path):
     assert len(filas2) == 1, (
         f"la segunda pasada duplico: {len(filas2)} filas. La marca de agua no "
         "esta cortando, asi que el fichero crece por muestra y no por evento")
+
+
+# =====================================================================
+# bb scan -- "apps Electron sin renderer" (proceso vivo, UI muerta)
+# =====================================================================
+#
+# DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA: el 2026-09-28 el OOM
+# killer mato el renderer de UNA ventana de claude-desktop y la UI paso 59
+# minutos sin pintar, pero el proceso "main" tenia un renderer HERMANO vivo
+# (de otra ventana) bajo el mismo zygote, y el gate cuenta renderers por
+# proceso main, no por ventana -- asi que "bb scan" reporto "apps sin
+# renderer: 0" sobre un incidente real. Ese limite NO se arregla aqui (arreglarlo
+# de verdad exige correlacionar con la ventana X, que la ficha deja declarado
+# como trabajo futuro sin coste medido); lo que hace falta primero, y lo que
+# faltaba antes de esta suite, es que el bloque tenga ALGUNA cobertura: ni
+# siquiera su caso positivo (cero renderers -> SOSPECHOSO) se habia probado
+# nunca. Los dos tests de abajo cierran eso.
+#
+# `cmd_scan` es un comando forense grande (journal, GPU, coredumps...) y
+# lanzarlo entero por `bin/bb scan` seria lento y ruidoso para un test que solo
+# quiere UNA de sus filas. En vez de eso, el bloque exacto de bin/bb:1100-1120
+# se copia LITERAL (no se reinterpreta) a un script bash temporal, envuelto en
+# una funcion para poder usar `local`. Si el bloque real cambia de forma en
+# bin/bb, esta copia puede desincronizarse -- quien toque bin/bb:1100-1120
+# deberia revisar esta constante tambien.
+
+_BLOQUE_ELECTRON_BASH = r'''#!/usr/bin/env bash
+# Copia LITERAL de bin/bb:1100-1120 (bloque "apps Electron sin renderer"
+# dentro de cmd_scan), citada el 2026-09-28 -- ver
+# tests/test_bb_bash.py::_BLOQUE_ELECTRON_BASH para el porque de la copia.
+set -u
+
+chequeo_electron() {
+  # --- 5. apps Electron: viva pero sin renderer ----------------------------
+  # La firma exacta del cuelgue del 2026-09-07: proceso principal vivo,
+  # ventana mapeada, cero procesos --type=renderer.
+  echo "-- apps Electron sin renderer (proceso vivo, UI muerta) --"
+  local found=0
+  for main in $(pgrep -f 'type=zygote' 2>/dev/null | while read -r p; do
+        ps -o ppid= -p "$p" 2>/dev/null; done | sort -u); do
+    [ -z "$main" ] && continue
+    local exe name nrend
+    exe=$(readlink -f "/proc/$main/exe" 2>/dev/null) || continue
+    [ -z "$exe" ] && continue
+    name=$(basename "$exe")
+    nrend=$(pgrep -P "$main" -f 'type=renderer' 2>/dev/null | wc -l)
+    # los renderers pueden colgar del zygote, no solo del main
+    [ "$nrend" -eq 0 ] && nrend=$(ps -eo args= 2>/dev/null | grep -c "^$exe.*--type=renderer")
+    if [ "$nrend" -eq 0 ]; then
+      echo "  SOSPECHOSO  $name (pid $main): 0 renderers"
+      found=$((found + 1))
+    fi
+  done
+  echo "  apps sin renderer:           $found"
+}
+
+chequeo_electron
+'''
+
+
+def _correr_chequeo_electron(tmp_path):
+    script = tmp_path / "chequeo_electron.sh"
+    script.write_text(_BLOQUE_ELECTRON_BASH, encoding="utf-8")
+    script.chmod(0o755)
+    return subprocess.run(["bash", str(script)], capture_output=True, text=True,
+                          timeout=30)
+
+
+def _esperar_proceso(patron, timeout=15.0):
+    """Espera a que pgrep -f encuentre `patron` y devuelve su primer pid.
+
+    Sincroniza contra el fork+exec real en vez de confiar en un sleep fijo:
+    el hijo backgrounded existe tras el fork, pero su cmdline no lleva el
+    marcador hasta que su propio exec -a termina.
+    """
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        r = subprocess.run(["pgrep", "-f", patron], capture_output=True, text=True)
+        pids = r.stdout.split()
+        if pids:
+            return pids[0]
+        time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- sin el, el bucle quema un nucleo entero re-consultando pgrep sin ceder CPU -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.0 -- nuevo el 2026-09-28, mismo commit que lo introduce
+    raise AssertionError(f"ningun proceso con {patron!r} aparecio en {timeout}s")
+
+
+def _lanzar_electron_falso(con_renderer):
+    """Lanza un 'main' REAL (bash) con un hijo 'zygote' REAL marcado
+    --type=zygote y, si con_renderer, un hijo HERMANO (no del zygote: del
+    main, igual que en el incidente real) marcado --type=renderer.
+
+    No son mocks de funciones de shell: son procesos de verdad que pgrep/ps/
+    /proc pueden encontrar, porque el bloque bajo prueba llama a esos
+    comandos directamente sobre el sistema real.
+    """
+    # los marcadores llevan la subcadena LITERAL que busca el bloque bajo
+    # prueba ('type=zygote' / 'type=renderer', via pgrep -f) mas un sufijo
+    # unico para poder esperarlos/matarlos sin tocar procesos reales del
+    # sistema (p.ej. un claude-desktop real corriendo en la misma maquina).
+    zyg_marca = "type=zygote-DEBT-EL-GATE-FALSO"
+    rend_marca = "type=renderer-DEBT-EL-GATE-FALSO"
+    lanzar_zyg = f'exec -a "{zyg_marca}" sleep 300 &\n'
+    lanzar_rend = f'exec -a "{rend_marca}" sleep 300 &\n' if con_renderer else ""
+    script = f'{lanzar_zyg}{lanzar_rend}wait\n'
+    # start_new_session=True: el bash principal y sus hijos backgrounded
+    # quedan en un pgid propio = proc.pid, para poder matarlos a los tres de
+    # un solo killpg sin arrastrar a ningun otro proceso del sistema.
+    proc = subprocess.Popen(["bash", "-c", script], start_new_session=True)
+    zyg_pid = _esperar_proceso(zyg_marca)
+    rend_pid = _esperar_proceso(rend_marca) if con_renderer else None
+    marcadores = [zyg_marca] + ([rend_marca] if con_renderer else [])
+    return proc, marcadores, zyg_pid, rend_pid
+
+
+def _matar_electron_falso(proc, marcadores, timeout=5.0):
+    """Mata el arbol completo y prueba, no argumenta, que no queda huerfano:
+    negativo real sobre pgrep, no solo `proc.wait()` del padre inmediato."""
+    try:
+        os.killpg(proc.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    try:
+        proc.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait(timeout=timeout)
+    deadline = time.time() + timeout
+    for patron in marcadores:
+        while True:
+            r = subprocess.run(["pgrep", "-f", patron], capture_output=True, text=True)
+            if not r.stdout.strip():
+                break
+            assert time.time() < deadline, (
+                f"proceso huerfano con {patron!r} sigue vivo tras matar el arbol")
+            time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- confirma que un huerfano de verdad muere, no solo lo asume -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.0 -- nuevo el 2026-09-28, mismo commit que lo introduce
+
+
+def test_electron_ui_muerta_con_hermano_vivo_pasa_limpio(tmp_path):
+    """El caso de HOY (2026-09-28): documenta el LIMITE, no lo arregla.
+
+    Un 'main' con un renderer HERMANO vivo (de otra ventana) no se marca
+    SOSPECHOSO, aunque conceptualmente la ventana de ESTE renderer muerto
+    podria seguir sin pintar -- porque el chequeo cuenta renderers por
+    proceso zygote/main, no por ventana individual. Esto es una LIMITACION
+    CONOCIDA y documentada en DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA,
+    no un comportamiento que este test valide como correcto: pasar limpio es
+    justo lo que dejo pasar el incidente real sin avisar.
+    """
+    # el "main" real es el propio proceso bash lanzado: pgrep -P lo
+    # encuentra por ppid, exactamente como lo hace el bloque bajo prueba.
+    proc, marcadores, _zyg_pid, _rend_pid = _lanzar_electron_falso(con_renderer=True)
+    try:
+        r = _correr_chequeo_electron(tmp_path)
+        assert r.returncode == 0, r.stderr
+        linea_sospechosa = f"(pid {proc.pid}):"
+        assert linea_sospechosa not in r.stdout, (
+            "el gate SI marco SOSPECHOSO a un main con un renderer hermano "
+            f"vivo -- eso contradice el limite documentado:\n{r.stdout}")
+    finally:
+        _matar_electron_falso(proc, marcadores)
+
+
+def test_electron_ui_muerta_CERO_renderers_SI_dispara_SOSPECHOSO(tmp_path):
+    """El control negativo real que la ficha dice que NUNCA se corrio: el
+    mismo 'main', pero sin ningun renderer vivo (ni propio ni hermano).
+
+    Sin este test, el de arriba (pasa limpio con un hermano vivo) no prueba
+    nada: podria estar pasando limpio porque la rama `-eq 0` esta rota, no
+    porque el hermano la evite. Este es el caso que la ficha describe como
+    "nunca antes probado" -- un gate con cero capturas tras muchas corridas
+    es un defecto del instrumento, no evidencia de que el sujeto este limpio.
+    """
+    proc, marcadores, _zyg_pid, _rend_pid = _lanzar_electron_falso(con_renderer=False)
+    try:
+        r = _correr_chequeo_electron(tmp_path)
+        assert r.returncode == 0, r.stderr
+        linea_sospechosa = f"(pid {proc.pid}): 0 renderers"
+        assert linea_sospechosa in r.stdout, (
+            f"el gate NO marco SOSPECHOSO a un main sin ningun renderer "
+            f"vivo -- la rama '-eq 0' nunca se habia probado y esta es "
+            f"la prueba de que SI dispara:\n{r.stdout}")
+        assert "apps sin renderer:" in r.stdout
+        conteo = int(r.stdout.split("apps sin renderer:")[1].split()[0])
+        assert conteo >= 1, (
+            f"SOSPECHOSO salio en el detalle pero el conteo no lo reflejo: {r.stdout}")
+    finally:
+        _matar_electron_falso(proc, marcadores)
