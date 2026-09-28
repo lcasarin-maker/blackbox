@@ -62,7 +62,14 @@ RUNTIME = RAIZ / ".simplecode" / "runtime.zip"
 UNITS = ["user@1000.service", "org.gnome.Shell@x11.service", "getty@tty1.service"]
 
 # Direcciones de verdad, para el otro lado del control.
-CORREOS = ["alguien@ejemplo.com", "nombre.apellido@empresa.com.mx"]
+# example.com/.net/.org son los dominios que RFC 2606 reserva para
+# documentacion, y el UNICO patron que pii_scan.RESERVADO reconoce --
+# desde el 2026-09-27 declarar "fixture" ya no basta, el gate exige que el
+# dominio sea PROVABLEMENTE sintetico. "ejemplo.com" (el mismo fixture en
+# espanol) no lo es para el patron, que solo lee ingles, y eso convirtio
+# estos dos valores en un falso positivo de pii-scan sobre este mismo
+# fichero -- medido el 2026-09-28, cazado por el propio gate en push.
+CORREOS = ["alguien@example.com", "nombre.apellido@empresa.example.com"]
 
 # El techo de espera del subproceso se DERIVA de lo que tarda, no se escribe
 # redondo. Medido el 2026-09-26, tres corridas del gate sobre un arbol con un
@@ -118,7 +125,7 @@ def test_control_negativo_una_direccion_de_verdad_NO_pasa_por_unit(correo):
     m = pii.CORREO.search(correo)
     assert m is not None, f"{correo!r} es una direccion y tiene que cazarse"
     # Y cazada ENTERA. `is not None` solo dice que algo caso: un patron roto que
-    # atrapara `n@e.co` de `nombre.apellido@empresa.com.mx` pasaria ese control y
+    # atrapara `n@e.co` de `nombre.apellido@empresa.example.com` pasaria ese control y
     # enmascararia mal el hallazgo, que es lo unico que el gate imprime. Lo pidio
     # zero-debt con `weak_existence_assert`, y tenia razon.
     assert m.group(0) == correo, (
