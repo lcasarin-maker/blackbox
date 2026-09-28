@@ -107,8 +107,9 @@ INCIDENTES = [
     # (`journalctl --list-boots`).
     #
     # LIMITE DECLARADO, y es nuevo: `bb sample` DEJA DE ESCRIBIR muestras a las
-    # 03:28:58 -- 11 de los 11 minutos que faltan hasta el reinicio no tienen
-    # ni una sola linea en samples/2026-09-28.jsonl. Por eso el clasificador de
+    # 03:29:02 (su ultima linea real es un burst_fin, no la muestra con datos
+    # de las 03:28:58 que cierra la rafaga) -- de ahi al reinicio no hay ni
+    # una sola linea mas en samples/2026-09-28.jsonl. Por eso el clasificador de
     # ESTE modulo (que solo lee ese fichero) NO corrobora esta ventana como
     # COLAPSO por su cuenta -- `calibra()` la marca `no_detectados`, y es
     # correcto que lo haga: es la verdad sobre el propio instrumento, no un
