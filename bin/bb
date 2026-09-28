@@ -2140,9 +2140,18 @@ EOF
         "vigila a PID 1, que estuvo sano las 17h45m y las 5h55m; arma bb-usable: sudo ./enable-privileged.sh"
   ;; esac
 
-  systemctl is-active bb-usable.service >/dev/null 2>&1; ok=$?
-  chk "bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)" "$ok" \
-    "corre: sudo ./enable-privileged.sh"
+  # bb-usable por su LATIDO, no por estar `active`: cada vuelta del bucle (30s)
+  # imprime "latencia del escritorio". 120s = 4 vueltas: holgura para jitter y
+  # una sonda lenta, y un bucle colgado deja de verse en 2 min. Sin tuberia (ver earlyoom).
+  local bbu bbu_desde bbu_det="inactiva: sudo ./enable-privileged.sh"
+  ok=1
+  if systemctl is-active bb-usable.service >/dev/null 2>&1; then
+    bbu_det="activa pero sin latido en 120s -- viva no es lo mismo que midiendo: journalctl -u bb-usable"
+    bbu_desde=$(date -d '120 seconds ago' '+%Y-%m-%d %H:%M:%S')
+    bbu=$($JOURNALCTL -u bb-usable.service -S "$bbu_desde" --no-pager -o cat 2>/dev/null)
+    case "$bbu" in *"[bb-usable] latencia del escritorio:"*) ok=0 ;; esac
+  fi
+  chk "bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)" "$ok" "$bbu_det"
 
   [ -n "$(gateway_modelo)" ]; ok=$?
   chk "motor de inferencia sirviendo" "$ok" "el gateway no responde en $GATEWAY_URL"

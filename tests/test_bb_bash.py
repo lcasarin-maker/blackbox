@@ -504,6 +504,70 @@ esac
     assert "FALTA" in _fila(correr(["status"], datos, env), "earlyoom con la punteria")
 
 
+# --- bb-usable: su LATIDO, no su `is-active` ------------------------------
+
+
+LATIDO = ("[bb-usable] latencia del escritorio: 6 ms "
+          "(observacion, no actua -- DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA)")
+ARRANQUE = ("[bb-usable] sonda sana de referencia: 12 ms para 64 MiB "
+            "-- plazo 300s (25000x ese valor)")
+
+
+def _bb_usable(tmp_path, edad_s, linea=LATIDO):
+    """Un journal con UNA linea de bb-usable escrita hace `edad_s` segundos, que
+    honra `-S` como el de verdad. Si bb no pasara la ventana, la linea vieja
+    saldria igual y el caso rancio daria ARMADO: por eso el stub filtra y no
+    decide el veredicto por su cuenta.
+
+    `is-active` se fija con un `systemctl` delante en el PATH, para que los casos
+    negativos no pasen por la razon equivocada (una unit inactiva en la maquina
+    que corre la suite) y el positivo no dependa de ella. Todo lo demas va al
+    systemctl real."""
+    cuerpo = f"""case "$*" in *bb-usable*) ;; *) exit 0 ;; esac
+desde=""
+while [ $# -gt 0 ]; do case "$1" in -S|--since) desde=$2; shift ;; esac; shift; done
+escrita=$(( $(date +%s) - {edad_s} ))
+if [ -z "$desde" ] || [ "$escrita" -ge "$(date -d "$desde" +%s)" ]; then
+  echo '{linea}'
+fi
+"""
+    env = _journal_falso(tmp_path, f"bb_usable_{edad_s}", cuerpo)
+    real = subprocess.run(["bash", "-c", "command -v systemctl"],
+                          capture_output=True, text=True).stdout.strip()
+    bin_falso = tmp_path / "bin_falso"
+    bin_falso.mkdir(exist_ok=True)
+    s = bin_falso / "systemctl"
+    s.write_text('#!/usr/bin/env bash\n'
+                 'case "$*" in "is-active bb-usable.service") exit 0 ;; esac\n'
+                 f'exec {real or "/bin/false"} "$@"\n', encoding="utf-8")
+    s.chmod(0o755)
+    env["PATH"] = f"{bin_falso}:{os.environ['PATH']}"
+    return env
+
+
+def test_bb_usable_con_latido_fresco_SI_cuenta(datos, tmp_path):
+    """El caso positivo: activa y con una vuelta del bucle hace 10 s."""
+    r = correr(["status"], datos, _bb_usable(tmp_path, 10))
+    assert "ARMADO" in _fila(r, "bb-usable (vigilante"), r.stdout
+
+
+def test_control_negativo_bb_usable_activa_con_latido_RANCIO(datos, tmp_path):
+    """El caso que motiva el chequeo: la unit sigue `active` pero el bucle dejo
+    de dar vueltas hace 10 minutos. `is-active` solo decia ARMADO aqui."""
+    r = correr(["status"], datos, _bb_usable(tmp_path, 600))
+    assert "FALTA" in _fila(r, "bb-usable (vigilante"), r.stdout
+    assert "sin latido" in _fila(r, "bb-usable (vigilante"), r.stdout
+
+
+@pytest.mark.parametrize("linea", ["", ARRANQUE], ids=["journal_vacio", "solo_arranque"])
+def test_control_negativo_bb_usable_activa_sin_latido(datos, tmp_path, linea):
+    """Sin latido no hay ARMADO, ni con el journal vacio ni con una linea FRESCA
+    de bb-usable que no es el latido -- la de arranque, que sale una sola vez:
+    lo que se lee es la marca que se repite."""
+    r = correr(["status"], datos, _bb_usable(tmp_path, 10, linea))
+    assert "FALTA" in _fila(r, "bb-usable (vigilante"), r.stdout
+
+
 def _arbol_cgroup(tmp_path, low=2 * 1024**3, con_scope=True, con_ventana=True, roto=None):
     """Monta un arbol de cgroups de mentira con la cadena de 7 eslabones.
 
