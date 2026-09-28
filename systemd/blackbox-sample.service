@@ -7,3 +7,9 @@ Type=oneshot
 ExecStart=%h/projects/blackbox/bin/bb sample
 Nice=19
 IOSchedulingClass=idle
+# Sin techo, una muestra colgada apagaba el instrumento hasta el reinicio --
+# medido el 2026-09-28: 03:28:09 arranco, nunca "Finished", el timer no
+# reintenta mientras la unit sigue activa. Ver DEBT-BB-SAMPLE-SIN-TECHO-DE-
+# TIEMPO-SE-QUEDO-COLGADO-EN-EL-COLAPSO. 45s es generoso sobre el 1-7s normal
+# medido y deja margen antes del proximo disparo a los 60s.
+TimeoutStartSec=45
