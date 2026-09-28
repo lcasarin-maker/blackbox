@@ -1,0 +1,13 @@
+# Este directorio tiene que EXISTIR aunque este vacio.
+#
+# Medido el 2026-09-28: al cerrar la ultima ficha, `tasks/backlog/` se quedo sin
+# ficheros, git no versiona directorios vacios, y el directorio desaparecio del
+# arbol. `ship-freeze` no leyo eso como "cero deuda" sino como COULD_NOT_RUN, y
+# bloqueo el push diciendo por que:
+#
+#   SPEC.md declares `debt: tasks/` but tasks/backlog does not exist, so the
+#   declared corpus has no shelf this gate can read
+#
+# Tiene razon: un corpus que el gate no puede abrir no es un corpus vacio. Este
+# fichero es lo que mantiene el estante en pie para que ese cero sea un cero
+# medido y no un silencio.
