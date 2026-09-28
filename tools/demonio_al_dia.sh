@@ -20,8 +20,21 @@
 #   2  COULD_NOT_RUN -- no se pudo leer. No es "esta al dia" ni "esta viejo".
 set -u
 
-unit="${1:?uso: demonio_al_dia.sh <unit> <fichero-de-codigo>}"
-codigo="${2:?uso: demonio_al_dia.sh <unit> <fichero-de-codigo>}"
+# --user opcional, ANTES de los posicionales: la unit vive en el gestor de
+# systemd del USUARIO (~/.config/systemd/user/), no en el del sistema, y
+# systemctl los trata como namespaces distintos -- sin este flag, consultar
+# una unit de usuario devuelve vacio (COULD_NOT_RUN), no un error que lo diga.
+# Anadido para bb-guardia-proceso.service (DEBT-PROCESO-SIN-TECHO...), que es
+# unit de usuario a proposito: matar un proceso del mismo usuario no necesita
+# root.
+alcance=()
+if [ "${1:-}" = "--user" ]; then
+    alcance=(--user)
+    shift
+fi
+
+unit="${1:?uso: demonio_al_dia.sh [--user] <unit> <fichero-de-codigo>}"
+codigo="${2:?uso: demonio_al_dia.sh [--user] <unit> <fichero-de-codigo>}"
 
 if ! command -v systemctl >/dev/null 2>&1; then
     echo "COULD_NOT_RUN: sin systemctl en esta maquina" >&2
@@ -32,7 +45,7 @@ if [ ! -f "$codigo" ]; then
     exit 2
 fi
 
-arranque=$(systemctl show "$unit" -p ExecMainStartTimestamp --value 2>/dev/null)
+arranque=$(systemctl "${alcance[@]}" show "$unit" -p ExecMainStartTimestamp --value 2>/dev/null)
 if [ -z "$arranque" ]; then
     # Unit parada, inexistente, o un systemd que no publica la propiedad. Una
     # cadena vacia leida como numero da 0 y el veredicto saldria "viejo" por

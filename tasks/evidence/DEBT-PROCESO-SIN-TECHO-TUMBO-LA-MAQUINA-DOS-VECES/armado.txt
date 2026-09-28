@@ -1,0 +1,29 @@
+$ # ------------------------------------------- ARMADO, 2026-09-28 07:07:52
+$ mkdir -p ~/.config/systemd/user
+$ cp systemd/bb-guardia-proceso.service ~/.config/systemd/user/
+$ systemctl --user daemon-reload && systemctl --user enable --now bb-guardia-proceso.service
+
+$ systemctl --user is-active bb-guardia-proceso.service
+active
+rc=0
+
+$ # Log del primer arranque: la escalada corrio de verdad sobre los pids
+$ # HISTORICOS de los dos incidentes (ya no existen -- la maquina se reinicio
+$ # dos veces desde entonces) y el reflejo de seguridad se negó a tocarlos,
+$ # en vez de adivinar:
+sep 28 07:07:52 aitopatom-41f1 bb-guardia-proceso[883539]: [bb-guardia-proceso] armado: tasa >= 4 GiB/muestra, techo >= 16 GiB, escalada aviso=2 term=3 kill=4 muestras, poll cada 15s
+sep 28 07:07:52 aitopatom-41f1 bb-guardia-proceso[883539]: [bb-guardia-proceso] AVISO pid=1410728 comm=python3 rss=20.4 GiB -- crecio 7.3 GiB desde la muestra anterior (>= 4 GiB), racha 2. Si sigue asi, el siguiente paso es SIGTERM.
+sep 28 07:07:52 aitopatom-41f1 bb-guardia-proceso[883539]: [bb-guardia-proceso] NO SE TOCA pid=1410728 comm=python3: no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca (motivo del disparo: crecio 9.1 GiB desde la muestra anterior (>= 4 GiB), racha 3)
+sep 28 07:07:52 aitopatom-41f1 bb-guardia-proceso[883539]: [bb-guardia-proceso] AVISO pid=320489 comm=python3 rss=29.0 GiB -- crecio 8.4 GiB desde la muestra anterior (>= 4 GiB), racha 2. Si sigue asi, el siguiente paso es SIGTERM.
+sep 28 07:07:52 aitopatom-41f1 bb-guardia-proceso[883539]: [bb-guardia-proceso] NO SE TOCA pid=320489 comm=python3: no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca (motivo del disparo: crecio 5.1 GiB desde la muestra anterior (>= 4 GiB), racha 3)
+sep 28 07:07:52 aitopatom-41f1 bb-guardia-proceso[883539]: [bb-guardia-proceso] NO SE TOCA pid=320489 comm=python3: no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca (motivo del disparo: 34.1 GiB >= techo de 16 GiB, racha 4)
+sep 28 07:07:52 aitopatom-41f1 bb-guardia-proceso[883539]: [bb-guardia-proceso] AVISO pid=320489 comm=python3 rss=34.2 GiB -- 34.2 GiB >= techo de 16 GiB, racha 2. Si sigue asi, el siguiente paso es SIGTERM.
+sep 28 07:07:52 aitopatom-41f1 bb-guardia-proceso[883539]: [bb-guardia-proceso] NO SE TOCA pid=320489 comm=python3: no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca (motivo del disparo: 34.3 GiB >= techo de 16 GiB, racha 3)
+
+$ # Estado de la maquina en el instante de armar, para que quede el antes:
+$ free -h
+               total       usado       libre  compartido   búf/caché  disponible
+Mem:           121Gi        66Gi        22Gi       810Mi        39Gi        54Gi
+$ cat /proc/pressure/memory
+some avg10=0.00 avg60=0.00 avg300=0.00 total=952452
+full avg10=0.00 avg60=0.00 avg300=0.00 total=877628
