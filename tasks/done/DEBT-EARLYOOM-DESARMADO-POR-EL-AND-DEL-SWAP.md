@@ -2,18 +2,21 @@
 id: DEBT-EARLYOOM-DESARMADO-POR-EL-AND-DEL-SWAP
 kind: debt
 title: "earlyoom no dispara con la RAM al 0.19% porque el swap libre bloquea su AND"
-status: open
+status: done
+closure_type: relocated_prior_verification
+closed_at: 2026-09-28
 severity: P1
-origin: measured
+origin: asserted
 satd_family: MISSING_INSTRUMENT
 created: 2026-09-28
 close_check: {"cmd": "grep -qE \"^EARLYOOM_ARGS=.*-s 100,100\" /etc/default/earlyoom", "expect": "exit_zero", "porque": "la compuerta vive en el fichero desplegado, no en el repo; el cierre exige que el SIGKILL tambien quede abierto (-s 100 a secas lo deja en 50%)."}
-evidence: {"medicion": "tasks/evidence/DEBT-EARLYOOM-DESARMADO-POR-EL-AND-DEL-SWAP/medicion-2026-09-28.txt"}
+evidence: {"medicion": "tasks/evidence/DEBT-EARLYOOM-DESARMADO-POR-EL-AND-DEL-SWAP/medicion-2026-09-28.txt", "e2e": "tasks/evidence/DEBT-EARLYOOM-DESARMADO-POR-EL-AND-DEL-SWAP/e2e.txt"}
+reason: "CERRADO 2026-09-28. Preparado en d3d7980 (sed en enable-privileged.sh), desplegado por Luis con sudo ./enable-privileged.sh a las 12:59:14 -- DESPUES del incidente de las 11:28, confirmando que el AND quedo abierto en el proceso vivo, no solo en el fichero. close_check: grep -qE sobre /etc/default/earlyoom, rc=0. Ver Verification Evidence para el e2e completo."
 ---
 
 # Technical Debt: earlyoom desarmado por el AND del swap
 
-## Finding
+## Root Cause
 
 El 2026-09-28 a las 11:28:27 el OOM killer del kernel mato el renderer de
 `claude-desktop` (PID 137261, SIGTRAP, core truncado de 166.1M) y el usuario
@@ -111,3 +114,33 @@ justo esto -- el sujeto, no el repo -- por eso sigue en `status: open`.
 Es la misma familia de error que `tools/config_entregable.sh` ya documenta:
 editar `adopted/` (o aqui, el instalador) y asumir que correr el script
 alguna vez basta, sin verificar que se corrio DESPUES del cambio.
+
+## Verification Evidence
+
+```
+$ grep -o 'EARLYOOM_ARGS=.*' /etc/default/earlyoom
+EARLYOOM_ARGS="-r 60 -m 10 -s 100,100 --avoid '(...)' --prefer '(pytest|python3|triton)'"
+
+$ systemctl show earlyoom -p ActiveEnterTimestamp --value
+Mon 2026-09-28 12:59:14 CST
+
+$ journalctl -u earlyoom | grep -E "SIGTERM when|SIGKILL when" | tail -2
+sep 28 12:59:14 aitopatom-41f1 earlyoom[3055182]: sending SIGTERM when mem <= 10.00% and swap <= 100.00%,
+sep 28 12:59:14 aitopatom-41f1 earlyoom[3055182]:         SIGKILL when mem <=  5.00% and swap <= 100.00%
+```
+
+Desplegado con `sudo ./enable-privileged.sh` a las 12:59:14, después del
+incidente de las 11:28: el demonio vivo confirma "swap <= 100.00%" -- un
+umbral que siempre se cumple, así que de aquí en adelante SOLO la memoria
+decide. Ver `tasks/evidence/.../e2e.txt` para la evidencia completa.
+
+## Regression Test
+
+`close_check` (`grep -qE "^EARLYOOM_ARGS=.*-s 100,100" /etc/default/earlyoom`)
+es el propio guardián de la regresión: mide el fichero desplegado, no el
+repo, así que si un futuro `enable-privileged.sh` se edita sin el `sed`
+correspondiente, o si alguien restaura `/etc/default/earlyoom` desde un
+backup viejo, el comando vuelve a dar `rc=1` de inmediato. No hay test de
+pytest aquí porque el sujeto es un fichero de sistema, no código del repo
+-- el mismo patrón que `tools/config_entregable.sh` ya usa para otros
+ficheros desplegados.
