@@ -1,0 +1,84 @@
+# Adoptados que NINGUN script de este repo instala, y por que. Un fichero aqui
+# es una decision escrita con su motivo; uno que no este ni aqui ni en un
+# instalador es un hueco, y `tools/config_entregable.sh` lo bloquea.
+#
+# Lo que estar aqui NO significa: que el fichero no importe. Los cuatro se
+# siguen comparando con `bb drift`, que es exactamente para lo que se guardan.
+# Lo que se declara es otra cosa: que el remedio de una divergencia NO es
+# correr `enable-privileged.sh`, sino lo que diga su entrada.
+
+
+etc_security_limits.d_nv-limits.conf
+    Lo instala un paquete del fabricante. Medido el 2026-09-28:
+
+      $ dpkg -S /etc/security/limits.d/nv-limits.conf
+      nv-limits: /etc/security/limits.d/nv-limits.conf
+
+    Copiarlo desde el repo pisaria un fichero que dpkg cree suyo: la siguiente
+    actualizacion del paquete abriria un conflicto de conffile, y un `--revert`
+    no sabria devolver el estado que dpkg esperaba. La copia se guarda para
+    poder ver si una actualizacion se lleva por delante `nofile 500000`, que es
+    lo que sostiene los arneses con muchos ficheros abiertos.
+    Remedio de una divergencia: `apt install --reinstall nv-limits`, o aceptar
+    el valor nuevo y re-adoptar la copia.
+
+
+etc_security_limits.d_99-nv-spark-limits.conf
+    Mismo caso, otro paquete. Medido el 2026-09-28:
+
+      $ dpkg -S /etc/security/limits.d/99-nv-spark-limits.conf
+      nvidia-spark-limits: /etc/security/limits.d/99-nv-spark-limits.conf
+
+    Sostiene `memlock unlimited`, sin el cual CUDA no puede fijar la memoria
+    que pagina contra la GPU.
+    Remedio de una divergencia: `apt install --reinstall nvidia-spark-limits`.
+
+
+etc_systemd_system_bb-usable.service
+    SI tiene camino a la maquina, y por eso no es un hueco -- lo que no tiene
+    es un `cp` desde `adopted/`. La seccion 5 de `enable-privileged.sh` lo
+    escribe desde `systemd/bb-usable.service`, sustituyendo la ruta del repo
+    para que la unit apunte al checkout de quien la instala. La copia adoptada
+    es el RESULTADO de esa sustitucion en esta maquina, guardada para que
+    `bb drift` compare la unit instalada y no la plantilla.
+
+    Verificado el 2026-09-28 que las dos son el mismo fichero aqui (la
+    sustitucion es identidad cuando el checkout esta en su sitio):
+
+      $ sed "s|/home/lcasarin/projects/blackbox|/home/lcasarin/projects/blackbox|g" \
+            systemd/bb-usable.service > <scratch>/bb-usable-producido.txt
+      $ diff <scratch>/bb-usable-producido.txt \
+             adopted/system-config/etc_systemd_system_bb-usable.service
+      $ echo $?
+      0
+
+    Con su control negativo, porque un `diff` que no pueda salir 1 no verifica
+    nada: `diff otro.txt <el adoptado>` sale 1.
+    Remedio de una divergencia: editar `systemd/bb-usable.service` -- NUNCA la
+    copia adoptada, que se regenera al re-adoptar.
+
+
+etc_default_kdump-tools
+    Es la plantilla del paquete `kdump-tools` (1:1.10.3ubuntu2) mas UNA
+    decision local. Medido el 2026-09-28:
+
+      $ diff /usr/share/kdump-tools/kdump-tools.conf adopted/system-config/etc_default_kdump-tools
+      103a104,107
+      > 
+      > # ---------------------------------------------------------------------------
+      > #Option below will skip dump of vmcore allowing only dmesg dump
+      > KDUMP_SKIP_VMCORE=1
+      $ echo $?
+      1
+
+    Las otras 103 lineas son del paquete. Copiar el fichero entero desde el
+    repo revertiria en silencio cualquier mejora que una actualizacion traiga a
+    esa plantilla, y el repo no tiene forma de notarlo: `bb drift` compararia
+    su propia copia contra si misma y diria "igual".
+    El precedente del repo para un fichero de `/etc/default` que viene de un
+    paquete es editar en sitio, no copiar -- es lo que hace la seccion 6 con
+    `/etc/default/earlyoom`, con copia de seguridad y entrada en `--revert`.
+    `dpkg -S` no lo reclama (sale 1), asi que no hay conflicto de conffile: lo
+    que hay es riesgo de pisar una plantilla que evoluciona.
+    Remedio de una divergencia: mirar si la diferencia es la linea local o una
+    plantilla nueva, y en el segundo caso re-adoptar en vez de restaurar.

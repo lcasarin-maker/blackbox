@@ -125,6 +125,49 @@ if [ "$REVERT" = 1 ]; then
     echo "  proteccion de memoria del escritorio retirada (vuelve a memory.low=0"
     echo "  en toda la cadena: el reclamo deja de distinguir tu ventana de un arnes)"
   fi
+  if [ -f /etc/systemd/system/sysstat-collect.timer.d/override.conf ]; then
+    run rm -f /etc/systemd/system/sysstat-collect.timer.d/override.conf
+    run rmdir --ignore-fail-on-non-empty /etc/systemd/system/sysstat-collect.timer.d
+    echo "  drop-in de sysstat-collect retirado (con ENABLED=false, sar deja de recolectar)"
+  fi
+  if [ -f /etc/systemd/system/atom-clock-lock.service ]; then
+    run systemctl disable atom-clock-lock.service
+    run rm -f /etc/systemd/system/atom-clock-lock.service
+    echo "  atom-clock-lock retirado (el clock de la GPU vuelve a arrancar sin tope)"
+  fi
+  if [ -f /etc/systemd/system/nvrm-watch.timer ]; then
+    run systemctl disable --now nvrm-watch.timer
+    run rm -f /etc/systemd/system/nvrm-watch.timer \
+              /etc/systemd/system/nvrm-watch.service \
+              /usr/local/bin/nvrm-watch.sh
+    echo "  nvrm-watch retirado (el precursor NVRM OOM deja de vigilarse)"
+  fi
+  if [ -f /etc/systemd/system/earlyoom.service.d/override.conf ]; then
+    run rm -f /etc/systemd/system/earlyoom.service.d/override.conf
+    run rmdir --ignore-fail-on-non-empty /etc/systemd/system/earlyoom.service.d
+    echo "  drop-in de earlyoom retirado (vuelve a ser matable antes que sus victimas)"
+  fi
+  if [ -f /etc/sysctl.d/99-nvidia-unified-memory.conf ]; then
+    run rm -f /etc/sysctl.d/99-nvidia-unified-memory.conf
+    echo "  afinado de memoria unificada retirado -- los valores EN CALIENTE siguen"
+    echo "  puestos hasta el proximo arranque"
+  fi
+  if [ -f /etc/sysctl.d/99-freeze-panic.conf ]; then
+    run rm -f /etc/sysctl.d/99-freeze-panic.conf
+    echo "  99-freeze-panic retirado: hung_task, softlockup y hardlockup dejan de"
+    echo "  entrar en panic tras el proximo arranque (en caliente siguen armados)"
+  fi
+  if [ -f /etc/sysctl.d/99-sysrq.conf ]; then
+    run rm -f /etc/sysctl.d/99-sysrq.conf
+    echo "  99-sysrq retirado (Alt+SysRq deja de responder tras reiniciar)"
+  fi
+  DESK_BASE_TECHO="$(getent passwd "$DUENO" | cut -d: -f6)/.config/systemd/user"
+  if [ -f "$DESK_BASE_TECHO/app.slice.d/99-blackbox.conf" ]; then
+    run rm -f "$DESK_BASE_TECHO/app.slice.d/99-blackbox.conf"
+    run rmdir --ignore-fail-on-non-empty "$DESK_BASE_TECHO/app.slice.d"
+    echo "  techo de app.slice retirado -- REQUIERE: systemctl --user daemon-reload"
+    echo "  (vuelve a MemoryMax=infinity: nada limita las sesiones de agente)"
+  fi
   if [ -f /etc/systemd/system.conf.d/99-blackbox-watchdog.conf ]; then
     run rm -f /etc/systemd/system.conf.d/99-blackbox-watchdog.conf
     run rmdir --ignore-fail-on-non-empty /etc/systemd/system.conf.d
@@ -215,6 +258,15 @@ else
   echo "    systemctl list-timers sysstat-collect.timer"
   echo "    cat /etc/systemd/system/sysstat-collect.timer.d/override.conf"
 fi
+# El drop-in que hace que recolecte cada minuto SI es de este repo, y hasta el
+# 2026-09-28 vivia solo en la maquina y en `adopted/`: un clon no tenia con que
+# reponerlo. Es el que sostiene la frase de arriba -- "dispara la recoleccion
+# cada minuto igualmente" --, asi que sin el gana ENABLED="false" y sar se
+# queda sin datos.
+run mkdir -p /etc/systemd/system/sysstat-collect.timer.d
+run cp adopted/system-config/etc_systemd_system_sysstat-collect.timer.d_override.conf \
+       /etc/systemd/system/sysstat-collect.timer.d/override.conf
+echo "  drop-in de sysstat-collect puesto (OnCalendar=*:00/01, precision 1 s)"
 
 # --- 4. accounting mode de GPU -------------------------------------------
 # `bb scan` solo veia procesos de GPU VIVOS via --query-compute-apps: el que
@@ -240,6 +292,38 @@ if command -v nvidia-smi >/dev/null 2>&1; then
 else
   echo "  nvidia-smi no disponible, se omite"
 fi
+
+# --- 4b. los vigilantes de la GPU que solo vivian en la maquina -----------
+# Los tres ficheros de este bloque se adoptaron el 2026-09-24 y hasta el
+# 2026-09-28 ningun script los instalaba: eran un retrato. `bb drift` los
+# comparaba igual, o sea que podia reportar una divergencia cuyo remedio no
+# existia en el repo.
+echo
+echo "-- 4b. clock de la GPU y vigilante de NVRM OOM --"
+# `atom-clock-lock` fija -lgc 300,2800 en cada arranque para evitar los
+# transitorios de boost que confluyen con el limite termico (DGX-342/344/345).
+run cp adopted/system-config/etc_systemd_system_atom-clock-lock.service \
+       /etc/systemd/system/atom-clock-lock.service
+# `nvrm-watch` mira el journal del kernel cada 5 min buscando
+# "NVRM: ... Out of memory", que es el precursor de los congelamientos del
+# 2026-09-22 y el 2026-09-24 -- la misma firma del bug NVIDIA #1358 de la
+# seccion 8. Deja rastro en el syslog y en /var/log/nvrm-watch.log.
+run cp adopted/system-config/usr_local_bin_nvrm-watch.sh /usr/local/bin/nvrm-watch.sh
+run chmod 0755 /usr/local/bin/nvrm-watch.sh
+run cp adopted/system-config/etc_systemd_system_nvrm-watch.service \
+       /etc/systemd/system/nvrm-watch.service
+run cp adopted/system-config/etc_systemd_system_nvrm-watch.timer \
+       /etc/systemd/system/nvrm-watch.timer
+run systemctl daemon-reload
+run systemctl enable atom-clock-lock.service
+run systemctl enable --now nvrm-watch.timer
+echo "  atom-clock-lock armado (oneshot tras nvidia-persistenced)"
+echo "  nvrm-watch armado (cada 5 min, 2 min tras el arranque)"
+echo
+echo "  CONTROL NEGATIVO -- mira el sujeto, no este informe:"
+echo "    systemctl is-enabled atom-clock-lock.service   # espera: enabled"
+echo "    systemctl is-active nvrm-watch.timer           # espera: active"
+echo "    nvidia-smi -q -d CLOCK | grep -A1 'Applications Clocks'"
 
 # --- 5. vigilante de usabilidad (bb-usable) ------------------------------
 echo
@@ -285,6 +369,15 @@ if [ -f /etc/default/earlyoom ]; then
   else
     echo "  [dry-run] quitaria vllm de --prefer y anadiria pytest"
   fi
+  # El drop-in que le da CAP_KILL y lo saca de la mira del OOM killer tambien
+  # era solo-maquina hasta el 2026-09-28. Sin el, el vigilante es matable antes
+  # que sus victimas, que es lo mismo que no tenerlo.
+  run mkdir -p /etc/systemd/system/earlyoom.service.d
+  run cp adopted/system-config/etc_systemd_system_earlyoom.service.d_override.conf \
+         /etc/systemd/system/earlyoom.service.d/override.conf
+  run systemctl daemon-reload
+  run systemctl restart earlyoom.service
+  echo "  drop-in puesto: OOMScoreAdjust=-1000, CAP_IPC_LOCK/SYS_NICE/KILL"
 else
   echo "  /etc/default/earlyoom no existe, se omite"
 fi
@@ -392,19 +485,31 @@ echo "-- 8. mitigaciones del cuelgue por memoria unificada (NVIDIA #1358) --"
 # puso a 0: el cuelgue silencioso IRRECUPERABLE paso a un OOM global
 # RECUPERABLE. Sigue barriendo procesos ajenos (vio morir sshd,
 # NetworkManager, contenedores) -- protege la caja, no lo que corre en ella.
-if [ "$DRY" = 0 ]; then
-  cat >/etc/modprobe.d/99-blackbox-uvm.conf <<'CONF'
-# blackbox: NVIDIA/open-gpu-kernel-modules#1358 -- sin esto, una peticion de
-# memoria unificada por encima de lo disponible cuelga el host entero en vez
-# de fallar. Con esto, el kernel puede al menos matar y sobrevivir.
-options nvidia_uvm uvm_global_oversubscription=0
-CONF
-  echo "  /etc/modprobe.d/99-blackbox-uvm.conf escrito"
-else
-  echo "  [dry-run] escribiria /etc/modprobe.d/99-blackbox-uvm.conf"
-fi
+# El contenido sale de `adopted/`, no de aqui dentro. Hasta el 2026-09-28 este
+# bloque lo escribia con un heredoc IDENTICO al fichero adoptado: dos fuentes
+# de verdad para los mismos cuatro renglones, y `bb drift` vigilando justo la
+# copia que el script NO usaba. Verificado byte a byte antes de cambiarlo --
+# `diff` del heredoc contra el adoptado dio 0, y 1 contra otro fichero.
+run cp adopted/system-config/etc_modprobe.d_99-blackbox-uvm.conf \
+       /etc/modprobe.d/99-blackbox-uvm.conf
+echo "  /etc/modprobe.d/99-blackbox-uvm.conf escrito desde adopted/"
 echo "  valor EN CALIENTE (no cambia hasta recargar el modulo o reiniciar):"
 echo "    $(cat /sys/module/nvidia_uvm/parameters/uvm_global_oversubscription 2>/dev/null || echo '?')"
+
+# --- 8c. afinado de memoria del kernel para memoria unificada -------------
+# vm.min_free_kbytes = 1 GiB (reserva atomica de emergencia),
+# vfs_cache_pressure = 150 (desaloja page cache antes de fragmentar el espacio
+# contiguo que pide la GPU) y swappiness = 15. La cabecera del fichero cita
+# `knowledge/hardware/ai_top_atom_unified_memory_oom_mitigation.md`, que NO
+# esta en este repo -- la referencia queda como esta, sin fingir que se puede
+# abrir desde aqui. Los tres valores estan en la maquina desde antes de
+# adoptarlo; lo que faltaba era poder reponerlos.
+run cp adopted/system-config/etc_sysctl.d_99-nvidia-unified-memory.conf \
+       /etc/sysctl.d/99-nvidia-unified-memory.conf
+run sysctl -q -p /etc/sysctl.d/99-nvidia-unified-memory.conf
+echo "  afinado puesto. CONTROL NEGATIVO, sobre el sujeto:"
+echo "    sysctl -n vm.min_free_kbytes vm.vfs_cache_pressure vm.swappiness"
+echo "      espera: 1048576 / 150 / 15"
 
 # --- 8b. volver al kernel 6.17.0-1032-nvidia ------------------------------
 # Un reportero con 2 Sparks: 7 de 7 arranques fallidos en 7.0.0-1019-nvidia y
@@ -560,6 +665,19 @@ echo "  crashkernel=1G-:512M), asi que un panic ya reinicia por kexec."
 echo "  Lo que kernel.panic=$PANIC_ANTES deja sin cubrir es el caso en que kdump FALLA:"
 echo "  si __crash_kexec() no arranca el kernel de captura, panic() honra"
 echo "  panic_timeout, y con 0 se queda parada para siempre."
+# El fichero del que habla el parrafo de arriba tambien se instala desde aqui
+# desde el 2026-09-28. No es de este repo -- sale del hilo del foro-- pero
+# estaba adoptado sin que nada pudiera reponerlo, y es la mitad de la que
+# depende la otra: sin `99-freeze-panic` no hay panic que `kernel.panic` pueda
+# temporizar. Ordenacion comprobada: "99-blackbox-panic" va ANTES que
+# "99-freeze-panic" y no hay clave compartida, asi que el orden no decide nada.
+run cp adopted/system-config/etc_sysctl.d_99-freeze-panic.conf \
+       /etc/sysctl.d/99-freeze-panic.conf
+run sysctl -q -p /etc/sysctl.d/99-freeze-panic.conf
+# Y el SysRq, que es la unica via de recuperacion manual cuando el escritorio
+# ya no responde pero el kernel todavia lee el teclado.
+run cp adopted/system-config/etc_sysctl.d_99-sysrq.conf /etc/sysctl.d/99-sysrq.conf
+run sysctl -q -p /etc/sysctl.d/99-sysrq.conf
 run cp adopted/system-config/etc_sysctl.d_99-blackbox-panic.conf \
        /etc/sysctl.d/99-blackbox-panic.conf
 run sysctl -q -p /etc/sysctl.d/99-blackbox-panic.conf
@@ -633,7 +751,31 @@ do
   run mkdir -p "$DESK_BASE/${par%%:*}"
   run cp "adopted/system-config/${par#*:}" "$DESK_BASE/${par%%:*}/99-blackbox-escritorio.conf"
 done
+# El TECHO de app.slice (MemoryMax=42G) es otro fichero y otra cosa que la
+# proteccion de arriba: aquel reparte prioridad de reclamo, este pone el limite
+# duro. Vive en el mismo sitio y por eso se instala aqui.
+#
+# ESTE ES EL FICHERO QUE COSTO LA FICHA. El 2026-09-28 se voto bajarlo de 48G a
+# 42G, se edito dentro de `adopted/` y se corrio `sudo ./enable-privileged.sh`
+# DOS VECES sin que el techo se moviera, porque ningun script lo copiaba.
+# Docker bajo a 14 y system entro en 12, asi que los compromisos pasaron de
+# 121.8 GiB sobre 121.1 a 124.1 sobre 121.1: el estado intermedio quedo PEOR
+# que el de partida, y desde el repo no habia forma de verlo. Se cerro
+# copiandolo a mano, fuera de todo script.
+run mkdir -p "$DESK_BASE/app.slice.d"
+run cp adopted/system-config/home_lcasarin_.config_systemd_user_app.slice.d_99-blackbox.conf \
+       "$DESK_BASE/app.slice.d/99-blackbox.conf"
 run chown -R "$DUENO": "$DESK_BASE"
+echo "  techo de app.slice puesto: MemoryMax=42G"
+echo "  NO SURTE EFECTO HASTA:  systemctl --user daemon-reload   (como $DUENO,"
+echo "  no como root: es el gestor de usuario quien lo lee)"
+echo "  CONTROL NEGATIVO -- sobre el cgroup, no sobre este informe:"
+echo "    cat /sys/fs/cgroup/user.slice/user-\$(id -u $DUENO).slice/user@\$(id -u $DUENO).service/app.slice/memory.max"
+echo "      espera:  45097156608                            (NO 51539607552 ni 'max')"
+echo "  OJO con la ruta: /sys/fs/cgroup/app.slice NO existe -- app.slice es del"
+echo "  gestor de usuario y cuelga de user@<uid>.service. Medirlo en la ruta"
+echo "  equivocada el 2026-09-28 casi hizo registrar 'app.slice sin techo'."
+echo
 echo "  siete niveles puestos:"
 echo "    user.slice 8G . user-<uid>.slice 8G . session-<N>.scope 2G (Xorg)"
 echo "    user@.service 6G . session.slice 2G (gnome-shell, dbus, pipewire)"

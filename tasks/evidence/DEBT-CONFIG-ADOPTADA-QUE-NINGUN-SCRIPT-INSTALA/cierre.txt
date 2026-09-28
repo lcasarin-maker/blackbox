@@ -1,0 +1,30 @@
+$ # ------------------------------------------- CIERRE, 2026-09-28
+$ bash tools/config_entregable.sh
+adoptados: 27   sin camino a la maquina ni declaracion: 0
+OK: cada adoptado se instala o esta declarado solo-registro.
+rc=0
+
+$ # El comprobador busca el NOMBRE. El SUJETO es lo que el instalador HACE,
+$ # y eso lo dice su dry-run, que no necesita root:
+$ ./enable-privileged.sh --dry-run | grep -c "cp adopted/system-config/"
+23
+
+$ # Los 11 que pasaron a instalarse, uno por uno, buscados en esa salida:
+  etc_modprobe.d_99-blackbox-uvm.conf                                    1
+  etc_sysctl.d_99-freeze-panic.conf                                      1
+  etc_sysctl.d_99-nvidia-unified-memory.conf                             1
+  etc_sysctl.d_99-sysrq.conf                                             1
+  etc_systemd_system_atom-clock-lock.service                             1
+  etc_systemd_system_earlyoom.service.d_override.conf                    1
+  etc_systemd_system_nvrm-watch.service                                  1
+  etc_systemd_system_nvrm-watch.timer                                    1
+  etc_systemd_system_sysstat-collect.timer.d_override.conf               1
+  home_lcasarin_.config_systemd_user_app.slice.d_99-blackbox.conf        1
+  usr_local_bin_nvrm-watch.sh                                            1
+
+$ # CONTROL NEGATIVO del propio instrumento: los 4 declarados solo-registro
+$ # NO salen copiados, o sea que ese grep sabe decir que no.
+  etc_default_kdump-tools                            0
+  etc_systemd_system_bb-usable.service               0
+  etc_security_limits.d_nv-limits.conf               0
+  etc_security_limits.d_99-nv-spark-limits.conf      0
