@@ -220,7 +220,16 @@ def test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado(datos):
     try:
         assert quieto.stdout is not None and quieto.stdout.readline().strip() == "listo"
         correr(["sample"], datos)
-        time.sleep(2)  # blocking-sleep: separa las dos muestras -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.9 -- SE QUEDA: CONTROL NEGATIVO, y en 1.9 sigue SIN prueba propia. Quitarle la espera lo deja pasar VACIO (1 passed in 1.78s), no lo hace fallar. Y su positivo emparejado -- test_pidio_NOMBRA_a_quien_pide_memoria -- NO tiene sleep de test, asi que el argumento de pareja que sostiene a las lineas 329 y 715 aqui NO aplica. Se queda solo con el argumento estructural (la espera separa dos muestras) y esa debilidad se dice en vez de presentarse como medida. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.9-sleeps.txt
+        # Sin sleep desde el 2026-09-28: DEBT-ACCEPTED-SLEEP-TESTS-BB cerro aqui.
+        # Leido bin/bb (topvsz, `prev_vsz`): la deteccion de crecimiento diffea
+        # dos snapshots de `ps -eo vsz` SIN ninguna puerta de tiempo -- a
+        # diferencia de cputop/swap (mas abajo), que SI dependen de `dt` con
+        # resolucion de segundo entero (ver L342). No habia nada que la espera
+        # sostuviera: 10/10 corridas con sleep(0) dieron el mismo resultado
+        # (pidio vacio, la asercion pasa) que con sleep(2). La debilidad que la
+        # exencion 1.9 declaraba ("pasa VACIO, no falla") sigue existiendo --
+        # es un limite del propio mecanismo de pidio en esta ventana, no algo
+        # que el sleep tapara. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sin-sleep-2026-09-28.txt
         correr(["sample"], datos)
         nombrados = {x["pid"] for x in muestras(datos)[-1]["pidio"]}
         assert quieto.pid not in nombrados, \
@@ -339,7 +348,7 @@ def test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo(datos, tmp_path)
     muestra despues de un arranque emitiria un ritmo negativo -- un numero que
     no significa nada y que cualquier grafica leeria como dato."""
     correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 900000, 900000)})
-    time.sleep(2)  # blocking-sleep: dos muestras separadas -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.9 -- SE QUEDA con la MISMA debilidad que en 1.8: pasa sin la espera (1 passed in 1.58s) y NO es un control emparejado -- prueba que un contador que RETROCEDE no da ritmo negativo, asi que no hay positivo cuyo fallo lo respalde. Argumento estructural solo. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.9-sleeps.txt
+    time.sleep(2)  # blocking-sleep: dt de bin/bb tiene resolucion de SEGUNDO ENTERO (`date +%s`) -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.9 -- SE QUEDA, y con razon MAS FUERTE que antes: instrumentado bin/bb directamente el 2026-09-28 (`dt=$(( ahora_s - antes_s ))` en la seccion de swap/cputop), sleep(0) dio dt=0 en 3 de 6 corridas -- exactamente esos 3 saltan el bloque `[ "$dt" -gt 0 ]` entero y dejan swpin_s/swpout_s en su default 0 SIN pasar por el clamp `(v>0?v:0)` que el test dice verificar. O sea que sin la espera, la mitad de las corridas pasarian por el camino EQUIVOCADO -- vacuamente, no por el mecanismo. Ya no es "argumento estructural solo": es una puerta de tiempo medida y su fallo reproducido. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/dt-resolucion-entera-2026-09-28.txt
     correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 12, 34)})
     s = muestras(datos)[-1]["swap"]
     assert float(s["in_pag_s"]) == 0.0, s

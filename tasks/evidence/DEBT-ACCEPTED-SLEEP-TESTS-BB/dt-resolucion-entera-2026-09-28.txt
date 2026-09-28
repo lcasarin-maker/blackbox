@@ -1,0 +1,31 @@
+# L342 -- test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo
+# NO se le quito el sleep. Se investigo si podia quitarse (como L223) y se
+# encontro lo opuesto: hacerlo lo vuelve FLAKY-VACUO, no lo cierra.
+#
+# bin/bb calcula, una vez por muestra:
+#   ahora_s=$(date +%s)                      <- resolucion de SEGUNDO ENTERO
+#   dt=$(( ahora_s - antes_s ))
+#   if [ "$dt" -gt 0 ]; then ...calcula swpin_s/swpout_s con (v>0?v:0)... fi
+# Si dt=0, el bloque entero se salta y swpin_s/swpout_s quedan en su default
+# 0 -- el test pasaria (sus dos asserts piden 0.0) pero SIN pasar por el
+# clamp que dice estar verificando.
+#
+# Instrumentado bin/bb (echo "DEBUG dt=$dt..." tras la linea 660) y corrido
+# 6 veces EN BASH DIRECTO, sin sleep entre las dos muestras (equivalente a
+# sleep(0) en el test):
+$ for i in 1 2 3 4 5 6; do bin/bb sample (vmstat1); bin/bb sample (vmstat2); done
+DEBUG dt=1 ahora_s=1790586938 antes_s=1790586937
+DEBUG dt=0 ahora_s=1790586939 antes_s=1790586939   <- SALTA el bloque
+DEBUG dt=1 ahora_s=1790586941 antes_s=1790586940
+DEBUG dt=0 ahora_s=1790586942 antes_s=1790586942   <- SALTA el bloque
+DEBUG dt=1 ahora_s=1790586944 antes_s=1790586943
+DEBUG dt=0 ahora_s=1790586945 antes_s=1790586945   <- SALTA el bloque
+
+# 3 de 6 (50%) dieron dt=0. Sin el sleep(2), la mitad de las corridas del
+# test estarian verificando "no hice nada" en vez de "el negativo se
+# recorta a cero". bin/bb quedo restaurado a su version anterior (git diff
+# vacio) despues de esta medicion; el debug NO se commiteo.
+#
+# Instrumento restaurado, verificado:
+$ git diff --stat bin/bb
+(sin salida)
