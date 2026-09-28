@@ -2,13 +2,16 @@
 id: DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA
 kind: debt
 title: "'apps Electron sin renderer' exige cero renderers, y una UI muerta con un hermano vivo pasa limpia"
-status: open
+status: done
+closure_type: relocated_prior_verification
+closed_at: 2026-09-28
 severity: P2
 origin: measured
 satd_family: MISSING_INSTRUMENT
 created: 2026-09-28
 close_check: {"cmd": "python3 -m pytest tests/test_bb_bash.py -k electron_ui_muerta -q", "expect": "exit_zero", "porque": "el cierre exige un test con el caso que HOY pasa limpio -- un main con >=1 renderer vivo y la ventana sin pintar-- y su control negativo, no solo el caso de cero renderers que ya se cubre."}
 evidence: {"medicion": "tasks/evidence/DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA/medicion-2026-09-28.txt"}
+reason: "CERRADO 2026-09-28 (commit 3a91866). Dos tests con procesos reales en tests/test_bb_bash.py -- el bloque de bin/bb:1099-1116 (dentro de cmd_scan) se copia literal a un script bash temporal para aislarlo de bb scan completo, sin tocar bin/bb. con_hermano_vivo_pasa_limpio documenta el LIMITE conocido (cuenta por zygote, no por ventana) como limite, no como arreglado -- el mecanismo NO cambio, solo quedo instrumentado y declarado. CERO_renderers_SI_dispara_SOSPECHOSO es el control negativo que nunca se habia corrido en la vida del repo, nombrado con el substring que filtra el close_check a proposito (un nombre sin 'electron_ui_muerta' habria dejado ese control negativo sin correr nunca, en verde por omision -- exactamente el modo de fallo que esta ficha senala). python3 -m pytest tests/test_bb_bash.py -k electron_ui_muerta -q: 2 passed, 75 deselected. Suite completa: 77 passed en 128.70s. No cierra el limite estructural (contar por ventana, no por proceso) -- eso sigue siendo trabajo futuro sin coste medido, declarado explicitamente en el docstring del primer test."
 ---
 
 # Technical Debt: el gate de renderers exige cero, no UI muerta
