@@ -1,0 +1,18 @@
+# E2E -- extremo a extremo, sujeto real, no el repo. 2026-09-28.
+
+$ grep -o 'EARLYOOM_ARGS=.*' /etc/default/earlyoom
+EARLYOOM_ARGS="-r 60 -m 10 -s 100,100 --avoid '(...)' --prefer '(pytest|python3|triton)'"
+
+$ systemctl show earlyoom -p ActiveEnterTimestamp --value
+Mon 2026-09-28 12:59:14 CST
+
+$ journalctl -u earlyoom | grep -E "SIGTERM when|SIGKILL when" | tail -2
+sep 28 12:59:14 aitopatom-41f1 earlyoom[3055182]: sending SIGTERM when mem <= 10.00% and swap <= 100.00%,
+sep 28 12:59:14 aitopatom-41f1 earlyoom[3055182]:         SIGKILL when mem <=  5.00% and swap <= 100.00%
+
+El demonio se reinicio a las 12:59:14 con sudo ./enable-privileged.sh, DESPUES
+de que el fix se preparara (d3d7980) y DESPUES del incidente de las 11:28 --
+confirma que el AND queda genuinamente abierto en el proceso vivo, no solo
+en el fichero: swap <= 100% es un umbral que siempre se cumple, asi que de
+aqui en adelante SOLO la memoria decide, igual que antes del hallazgo de hoy
+la memoria sola ya habia llegado a 0.19% sin disparar nada.
