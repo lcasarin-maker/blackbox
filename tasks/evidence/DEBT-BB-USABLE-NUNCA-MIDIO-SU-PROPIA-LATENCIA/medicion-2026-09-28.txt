@@ -1,0 +1,75 @@
+Medido el 2026-09-28 en AI TOP ATOM (aitopatom-41f1).
+
+=== EL CANAL DE LATENCIA DE bb-usable NUNCA PRODUJO UN NUMERO ===
+
+$ journalctl -u bb-usable | grep -c 'latencia del escritorio'
+5339
+$ journalctl -u bb-usable | grep -c 'latencia del escritorio.*sin DISPLAY'
+5339
+$ journalctl -u bb-usable | grep 'latencia del escritorio' | grep -cE '[0-9]+ ?ms'
+0
+
+5339 intentos. 5339 "sin DISPLAY". Cero mediciones.
+
+Linea literal, repetida cada 30 s:
+sep 28 12:13:03 aitopatom-41f1 bb-usable[5525]: [bb-usable] latencia del escritorio: sin DISPLAY (observacion, no actua -- DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA)
+
+=== CONTROL NEGATIVO: EL DEMONIO SI SABE EMITIR NUMEROS ===
+
+Si el journal de bb-usable no pudiera llevar numeros, el 0 de arriba seria un
+artefacto del instrumento y no un hecho sobre el sujeto. No lo es:
+
+$ journalctl -u bb-usable | grep -oE 'sonda [0-9]+ ms|avg10=[0-9.]+' | sort | uniq -c | sort -rn | head -5
+    451 avg10=99.0
+    197 sonda 17 ms
+    167 sonda 18 ms
+    131 sonda 20 ms
+    128 avg10=98.9
+
+Los otros dos canales del mismo demonio (la sonda de 64 MiB y la PSI) escriben
+numeros sin problema. El que no escribe ninguno es el de latencia.
+
+=== LA CAUSA: LA UNIT NO DECLARA DISPLAY ===
+
+$ systemctl show bb-usable -p Environment --no-pager
+Environment=
+
+$ systemctl status bb-usable | head -3
+● bb-usable.service - blackbox: vigila si la maquina SIRVE (no si systemd sigue vivo)
+     Loaded: loaded (/etc/systemd/system/bb-usable.service; enabled; preset: enabled)
+     Active: active (running) since Mon 2026-09-28 04:29:39 CST; 7h ago
+
+Es una unit de SISTEMA (WantedBy=multi-user.target) y no hereda el entorno de la
+sesion grafica. La sesion viva esta en :1:
+
+$ echo "XDG_SESSION_TYPE=$XDG_SESSION_TYPE DISPLAY=$DISPLAY"
+XDG_SESSION_TYPE=x11 DISPLAY=:1
+$ loginctl show-session <id> -p Type -p Active
+Type=x11
+Active=yes
+
+=== POR QUE ESTO NO ES LO QUE LA FICHA CERRADA YA DICE ===
+
+tasks/done/DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA.md declara el PASO 1 (observar)
+como HECHO el 2026-09-25, y su evidencia de cierre es:
+
+  "grep -c '\"x\":{\"estado\"' bin/bb da 1: el muestreador escribe el canal en
+   cada muestra (bin/bb:761), y el corpus tiene 2389 muestras con los dos
+   canales OK."
+
+Esas 2389 muestras son de `bin/bb` -- el muestreador de USUARIO, que corre bajo
+systemd --user y si tiene DISPLAY. bb-usable es otro proceso, es unit de
+sistema, y su propio canal lleva 5339 ceros.
+
+La ficha cerrada tiene la frase exacta de este defecto en su propio texto:
+  "Una fila ARMADO sobre un demonio que corre codigo viejo es la forma mas
+   silenciosa de este defecto."
+Aqui el codigo no es viejo: corre, y devuelve None cada vez.
+
+=== EL CASO QUE LO HIZO VISIBLE ===
+
+El 2026-09-28 11:28 el OOM killer mato el renderer de claude-desktop y la
+interfaz grafica murio 59 minutos. bb-usable no actuo, y por su diseno tenia
+razon: sus dos caminos que SI actuan son memoria (sonda de 64 MiB) y PSI
+sostenida, y la maquina si servia memoria. El canal que habria sabido decir que
+el escritorio no respondia es justo el que lleva 5339 "sin DISPLAY".

@@ -1,0 +1,63 @@
+Medido el 2026-09-28 en AI TOP ATOM (aitopatom-41f1).
+
+=== EL SUJETO: UI MUERTA, VENTANA VIVA ===
+
+A las 11:28:28 el OOM killer mato el renderer PID 137261 de claude-desktop.
+El usuario perdio la interfaz grafica y la ventana siguio en el servidor X:
+
+$ DISPLAY=:1 xwininfo -root -children | grep -i anthropic
+   0x4200004 "Claude": ("com.anthropic.claude" "com.anthropic.Claude")  1284x1090+40+22
+$ DISPLAY=:1 xwininfo -id 0x4200004 | grep -i 'map state'
+  Map State: IsViewable
+
+$ coredumpctl info 137261 | grep -E 'Signal|Command Line'
+     Signal: 5 (TRAP)
+Command Line: /usr/lib/claude-desktop/claude-desktop --type=renderer ... --renderer-client-id=8 ...
+
+Sobrevivio UN renderer hermano, vacio:
+  renderer 137241  RSS 49 MB   (el muerto tenia ~164 MB anon)
+
+=== EL GATE DIO FILA LIMPIA SOBRE ESO ===
+
+$ ./bin/bb scan "3 hours ago" | grep -A2 'apps Electron sin renderer'
+-- apps Electron sin renderer (proceso vivo, UI muerta) --
+  apps sin renderer:           0
+
+=== LA CAUSA, EN EL CODIGO ===
+
+bin/bb:1100-1120
+
+  # --- 5. apps Electron: viva pero sin renderer ---
+  # La firma exacta del cuelgue del 2026-09-07: proceso principal vivo,
+  # ventana mapeada, cero procesos --type=renderer.
+  ...
+    nrend=$(pgrep -P "$main" -f 'type=renderer' 2>/dev/null | wc -l)
+    [ "$nrend" -eq 0 ] && nrend=$(ps -eo args= | grep -c "^$exe.*--type=renderer")
+    if [ "$nrend" -eq 0 ]; then
+      echo "  SOSPECHOSO  $name (pid $main): 0 renderers"
+
+La condicion es `-eq 0`, cero estricto. Codifica literalmente la firma de
+2026-09-07. La variante del 28 -- el OOM killer se lleva UN renderer, el de la
+ventana, y deja un hermano vivo -- pasa por debajo: 1 != 0, fila limpia.
+
+=== EL MISMO ESCANEO SI CAPTURO EL EVENTO POR OTRA FILA ===
+
+Esto importa porque el instrumento no fallo entero, fallo una fila:
+
+$ ./bin/bb scan "3 hours ago" | grep -A4 'core dumps'
+-- core dumps --
+  volcados capturados:         1
+         1 x /usr/lib/claude-desktop/claude-desktop
+  espacio ocupado:             927M
+
+El hueco de 2026-09-07 (ulimit -c 0, sin systemd-coredump) esta cerrado de
+verdad: el volcado existe. Lo que no funciono es la fila que se llama
+"proceso vivo, UI muerta".
+
+=== CONTROL NEGATIVO: EL GATE SI SABE DECIR "SOSPECHOSO" ===
+
+No se corrio. Queda declarado como pendiente en la ficha: el gate nunca ha
+emitido "SOSPECHOSO" en este corpus, y un gate con cero capturas tras muchas
+corridas es un defecto del instrumento, no evidencia de que el sujeto este
+limpio. Montar el caso positivo (una app Electron con 0 renderers) es barato
+--lanzar un Electron y matarle todos los renderers-- y no se hizo aqui.
