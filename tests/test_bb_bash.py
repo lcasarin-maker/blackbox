@@ -220,7 +220,7 @@ def test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado(datos):
     try:
         assert quieto.stdout is not None and quieto.stdout.readline().strip() == "listo"
         correr(["sample"], datos)
-        time.sleep(2)  # blocking-sleep: separa las dos muestras -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.8 -- SE QUEDA: CONTROL NEGATIVO. Quitarle la espera lo deja pasar VACIO, no lo hace fallar, asi que la prueba es que su positivo emparejado FALLA sin su propio sleep. Re-corrido el 2026-09-27: test_swap_mide_el_RITMO da '1 failed' sin el suyo. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.8-verificado.txt
+        time.sleep(2)  # blocking-sleep: separa las dos muestras -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.9 -- SE QUEDA: CONTROL NEGATIVO, y en 1.9 sigue SIN prueba propia. Quitarle la espera lo deja pasar VACIO (1 passed in 1.78s), no lo hace fallar. Y su positivo emparejado -- test_pidio_NOMBRA_a_quien_pide_memoria -- NO tiene sleep de test, asi que el argumento de pareja que sostiene a las lineas 329 y 715 aqui NO aplica. Se queda solo con el argumento estructural (la espera separa dos muestras) y esa debilidad se dice en vez de presentarse como medida. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.9-sleeps.txt
         correr(["sample"], datos)
         nombrados = {x["pid"] for x in muestras(datos)[-1]["pidio"]}
         assert quieto.pid not in nombrados, \
@@ -309,7 +309,7 @@ def test_swap_mide_el_RITMO_no_solo_el_nivel(datos, tmp_path):
     lo que informa es el delta por segundo.
     """
     correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 1000, 2000)})
-    time.sleep(4)  # blocking-sleep: el ritmo es un delta y necesita dos instantes separados -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.8 -- SE QUEDA, VERIFICADO POR RETIRADA: sin este sleep SU PROPIO test FALLA. Re-corrido el 2026-09-27 para 1.8: '1 failed, 69 deselected'. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.8-verificado.txt
+    time.sleep(4)  # blocking-sleep: el ritmo es un delta y necesita dos instantes separados -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.9 -- SE QUEDA, y AHORA CON PRUEBA PROPIA: sin la espera su test FALLA (1 failed in 1.64s), asi que no necesita el argumento de pareja. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.9-sleeps.txt
     correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 5000, 2400)})
     s = muestras(datos)[-1]["swap"]
     # 4000 paginas en ~4-6 s; el intervalo exacto lo pone el reloj, asi que se
@@ -326,7 +326,7 @@ def test_control_negativo_sin_trafico_de_swap_el_ritmo_es_cero(datos, tmp_path):
     cero, no un residuo."""
     v = _vmstat(tmp_path, 1000, 2000)
     correr(["sample"], datos, {"BB_VMSTAT": v})
-    time.sleep(2)  # blocking-sleep: dos muestras separadas, mismos contadores -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.8 -- SE QUEDA: CONTROL NEGATIVO. Quitarle la espera lo deja pasar VACIO, no lo hace fallar, asi que la prueba es que su positivo emparejado FALLA sin su propio sleep. Re-corrido el 2026-09-27: test_swap_mide_el_RITMO da '1 failed' sin el suyo. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.8-verificado.txt
+    time.sleep(2)  # blocking-sleep: dos muestras separadas, mismos contadores -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.9 -- SE QUEDA: CONTROL NEGATIVO cuya prueba es que su POSITIVO emparejado falle sin la suya -- y la linea 312 FALLA. Sostenida por pareja, medido 2026-09-28. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.9-sleeps.txt
     correr(["sample"], datos, {"BB_VMSTAT": v})
     s = muestras(datos)[-1]["swap"]
     assert float(s["in_pag_s"]) == 0.0, s
@@ -339,7 +339,7 @@ def test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo(datos, tmp_path)
     muestra despues de un arranque emitiria un ritmo negativo -- un numero que
     no significa nada y que cualquier grafica leeria como dato."""
     correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 900000, 900000)})
-    time.sleep(2)  # blocking-sleep: dos muestras separadas -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.8 -- SE QUEDA: CONTROL NEGATIVO. Quitarle la espera lo deja pasar VACIO, no lo hace fallar, asi que la prueba es que su positivo emparejado FALLA sin su propio sleep. Re-corrido el 2026-09-27: test_swap_mide_el_RITMO da '1 failed' sin el suyo. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.8-verificado.txt
+    time.sleep(2)  # blocking-sleep: dos muestras separadas -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.9 -- SE QUEDA con la MISMA debilidad que en 1.8: pasa sin la espera (1 passed in 1.58s) y NO es un control emparejado -- prueba que un contador que RETROCEDE no da ritmo negativo, asi que no hay positivo cuyo fallo lo respalde. Argumento estructural solo. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.9-sleeps.txt
     correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 12, 34)})
     s = muestras(datos)[-1]["swap"]
     assert float(s["in_pag_s"]) == 0.0, s
@@ -676,7 +676,7 @@ def test_cpu_top_NOMBRA_a_quien_quema_cpu(datos):
         assert quemador.stdout.readline().strip() == "listo"
         cpu_antes = _cpu_segundos(quemador.pid)
         correr(["sample"], datos)                  # muestra 1: linea base
-        time.sleep(4)  # blocking-sleep: `ps -o times=` da segundos ENTEROS; hacen falta varios para que el delta sea legible -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.8 -- SE QUEDA, PERO SU JUSTIFICACION ES MAS DEBIL QUE EN 1.7 y por eso se dice: sin este sleep el test PASA ('1 passed in 1.61s'), asi que la afirmacion de 1.7 -- 'sin este sleep SU PROPIO test FALLA' -- es FALSA hoy. NO es la rama de escape, que fue mi primera hipotesis y la medi: las dos corridas toman RAMA=DIRECTA. Es que `bb sample` tarda 0.75 s (6 corridas: 0.74-0.78), el test lo llama dos veces, y `ps -o times=` ya ve 1 s entero de delta sin dormir nada. Se queda porque esos 1.5 s son una propiedad INCIDENTAL del muestreador: si baja de 0.5 s las dos muestras caen en el mismo segundo y el test dejaria de medir el RITMO SIN FALLAR. Disparador para 1.9: que `bb sample` baje de 0.5 s. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.8-verificado.txt
+        time.sleep(4)  # blocking-sleep: `ps -o times=` da segundos ENTEROS; hacen falta varios para que el delta sea legible -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.9 -- SE QUEDA, y su justificacion MEJORO desde 1.8. Entonces se anoto que el test PASABA sin este sleep y que por eso la afirmacion de 1.7 era falsa; en 1.9 FALLA (1 failed in 1.59s). El disparador que 1.8 dejo escrito -- que `bb sample` bajara de 0.5 s -- se midio y NO se cumple: mediana 1.21 s en 6 corridas frente a 0.75 en 1.8, o sea que se ALEJO. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.9-sleeps.txt
         correr(["sample"], datos)                  # muestra 2: ya quemo
         mio = _cpu_segundos(quemador.pid) - cpu_antes
         d = muestras(datos)[-1]
@@ -712,7 +712,7 @@ def test_control_negativo_un_proceso_dormido_no_sale_como_que_quema(datos):
         assert dormido.stdout is not None
         assert dormido.stdout.readline().strip() == "listo"
         correr(["sample"], datos)
-        time.sleep(4)  # blocking-sleep: mismo intervalo que el caso positivo, para que la comparacion valga -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.8 -- SE QUEDA: CONTROL NEGATIVO, y HEREDA la debilidad de su positivo (linea 679). Quitarle la espera lo deja pasar VACIO, no lo hace fallar, asi que su prueba es que su positivo emparejado falle sin la suya -- y el de cpu_top ya NO falla, por el motivo incidental documentado en la 679. Se etiqueta con esa debilidad y no con la afirmacion vieja. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.8-verificado.txt
+        time.sleep(4)  # blocking-sleep: mismo intervalo que el caso positivo, para que la comparacion valga -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 1.9 -- SE QUEDA, y su base MEJORO: es CONTROL NEGATIVO y su prueba es que su positivo emparejado (linea 679) falle sin la suya. En 1.8 ese positivo NO fallaba y esta exencion heredaba su debilidad; en 1.9 SI falla. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.9-sleeps.txt
         correr(["sample"], datos)
         nombrados = {x["pid"] for x in muestras(datos)[-1]["cpu_top"]}
         assert dormido.pid not in nombrados, \
