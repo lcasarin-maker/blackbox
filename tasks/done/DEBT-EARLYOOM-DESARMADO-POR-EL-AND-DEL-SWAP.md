@@ -10,7 +10,7 @@ origin: asserted
 satd_family: MISSING_INSTRUMENT
 created: 2026-09-28
 close_check: {"cmd": "grep -qE \"^EARLYOOM_ARGS=.*-s 100,100\" /etc/default/earlyoom", "expect": "exit_zero", "porque": "la compuerta vive en el fichero desplegado, no en el repo; el cierre exige que el SIGKILL tambien quede abierto (-s 100 a secas lo deja en 50%)."}
-evidence: {"medicion": "tasks/evidence/DEBT-EARLYOOM-DESARMADO-POR-EL-AND-DEL-SWAP/medicion-2026-09-28.txt", "e2e": "tasks/evidence/DEBT-EARLYOOM-DESARMADO-POR-EL-AND-DEL-SWAP/e2e.txt"}
+evidence: {"pass": "tasks/evidence/DEBT-EARLYOOM-DESARMADO-POR-EL-AND-DEL-SWAP/pass.txt", "fail": "tasks/evidence/DEBT-EARLYOOM-DESARMADO-POR-EL-AND-DEL-SWAP/fail.txt", "e2e": "tasks/evidence/DEBT-EARLYOOM-DESARMADO-POR-EL-AND-DEL-SWAP/e2e.txt"}
 reason: "CERRADO 2026-09-28. Preparado en d3d7980 (sed en enable-privileged.sh), desplegado por Luis con sudo ./enable-privileged.sh a las 12:59:14 -- DESPUES del incidente de las 11:28, confirmando que el AND quedo abierto en el proceso vivo, no solo en el fichero. close_check: grep -qE sobre /etc/default/earlyoom, rc=0. Ver Verification Evidence para el e2e completo."
 ---
 
