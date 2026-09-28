@@ -1,0 +1,23 @@
+$ # CONTROL NEGATIVO, corrido hoy con el MISMO comando en tres estados distintos.
+$ # El criterio distingue los tres, asi que no es un comando que siempre diga OK.
+
+$ # 1. sin firma y sin techo de system.slice:
+[presupuesto] FAIL:
+  - MITAD 2 -- nadie ha firmado el presupuesto de excursion: no existe tasks/presupuesto_gpu.json
+  - slice(s) sin techo: system.slice (servicios del sistema)
+rc=1
+
+$ # 2. CON firma, sin los techos nuevos aplicados:
+[presupuesto] FAIL:
+  - slice(s) sin techo: system.slice
+[presupuesto]   SUMA comprometida  121.8 GiB  sobre 121.1 -> holgura -0.8
+rc=1
+
+$ # 3. con docker=14 y system=12 aplicados pero app todavia en 48 -- el estado
+$ #    intermedio, que era PEOR que el de partida:
+[presupuesto]   SUMA comprometida  124.1 GiB  sobre 121.1 -> holgura -3.1
+[presupuesto]   umbral del abanico  47.1 GiB
+[presupuesto]   excursiones: 9936 de 18473 muestras (53.8 %)
+rc=1
+
+$ # 4. con los tres: rc=0. Las excursiones caen de 53.8 % a 0.4 %.

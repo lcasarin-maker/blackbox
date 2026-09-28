@@ -2,15 +2,23 @@
 id: DEBT-TECHOS-SIN-CALIBRAR
 kind: debt
 title: "El criterio de los techos no podia salir positivo: reservaba un transitorio de 4 min como si fuera un compromiso"
-status: open
+status: done
+closure_type: fixed
+closed_at: 2026-09-28
 severity: P1
 origin: asserted
 satd_family: UNCALIBRATED_THRESHOLD
 created: 2026-09-24
 close_check: {"cmd": "python3 -m tools.presupuesto_memoria --check", "expect": "exit_zero"}
+evidence:
+  pass: tasks/evidence/DEBT-TECHOS-SIN-CALIBRAR/pass.txt
+  fail: tasks/evidence/DEBT-TECHOS-SIN-CALIBRAR/fail.txt
+  e2e: tasks/evidence/DEBT-TECHOS-SIN-CALIBRAR/e2e.txt
+reason: "CERRADO 2026-09-28. Las dos mitades. MITAD 2: Luis firmo el presupuesto de excursion de GPU en 86 GiB (pico observado 85.4, margen 0.6 -- el numero mas ajustado que puede salir verde, elegido para que conserve la capacidad de volver a bloquear), con dueno y caducidad 2026-10-27. MITAD 1: los techos sumaban 121.8 GiB sobre 121.1 disponibles y ahora suman 118.1 con holgura 2.9, tras votar un reparto contra los picos medidos de 3489 muestras -- app 42 (pico 39.8), docker 14 (pico 12.7), system 12 (pico 10.8, y antes SIN TECHO, o sea que entraba en la cuenta por lo que usaba y no por lo que prometia). El umbral del abanico de GPU cae en 53.1 GiB y las excursiones pasan de 53.8 % a 0.4 % del tiempo."
 ---
+## Root Cause
 
-## Que pasa
+### Que pasa
 
 No es que los numeros sean flojos: es que **no caben**. Medido hoy en ATOM,
 `MemTotal = 121.1 GiB`:
@@ -43,7 +51,7 @@ Contraste deliberado: el umbral de PSI **si** esta calibrado contra los cuatro
 incidentes y sus controles sanos (`tools/calibra_psi.py`, `VEREDICTO: CALIBRADO`).
 Aqui se sabe como se hace y no se hizo.
 
-## Pasos 1, 2 y 4: HECHOS el 2026-09-25
+### Pasos 1, 2 y 4: HECHOS el 2026-09-25
 
 **(1) El gate existe**: `tools/presupuesto_memoria.py`, ocho tests. Lee
 `MemTotal`, los techos de cada slice desde la maquina, y la reserva de GPU.
@@ -78,7 +86,7 @@ de memoria unificada, sacados de las muestras que bb ya guardaba, lo superan
 09-12  74.2   09-15  50.1   09-18  49.1   09-21  85.4   09-24  67.0
 ```
 
-## EL HALLAZGO: el techo que falta no es el del vLLM
+### EL HALLAZGO: el techo que falta no es el del vLLM
 
 El pico de 85.4 GiB del 2026-09-21T00:33, abierto:
 
@@ -108,7 +116,7 @@ viene de fuera-- llevandose 48 GiB de memoria unificada que **ningun cgroup ve**
 
 Los techos de 48G y 32G se pusieron como si esa memoria no existiera.
 
-## La decision se tomo el 2026-09-25: VIGILAR, no cuadrar a la fuerza
+### La decision se tomo el 2026-09-25: VIGILAR, no cuadrar a la fuerza
 
 Boleta con las cuatro salidas y su coste. Elegida: **que bb vigile el agregado
 de GPU y se apriete lo que sale gratis**. Las otras tres, con lo que las
@@ -125,7 +133,7 @@ descarto:
   corrida de `pytest-xdist` de la suite de otro repo.
 - **void_wontfix** -- se descarto por ahora: el desborde es real y medible.
 
-## Lo que se hizo, y el numero que lo valida
+### Lo que se hizo, y el numero que lo valida
 
 **`docker.slice` baja de 32G a 16G.** Su pico agregado es 11.2 GiB, asi que el
 recorte no tiene coste observado. Pero no es margen: es lo que hace usable la
@@ -151,7 +159,7 @@ Y el fichero de `docker.slice` traia una holgura declarada que era FALSA:
 "dejando 41 GiB para el kernel, el resto de system.slice y la memoria unificada
 de GPU". La memoria unificada sola tiene mediana 49.0 y maximo 85.4. Nunca cupo.
 
-## 2026-09-25: el criterio no podia salir positivo, y eso se midio
+### 2026-09-25: el criterio no podia salir positivo, y eso se midio
 
 Se abrio el pico del 2026-09-21T00:33 y los ocho procesos tienen nombre:
 
@@ -178,7 +186,7 @@ p50 49.05 | p75 49.48 | p85 50.00 | p90 50.15 | p95 50.15 | p99 52.18 | max 85.4
 por encima de 55.3 GiB: 18 episodios, 67 min EN TOTAL, el mas largo 11 min
 ```
 
-### El muro
+#### El muro
 
 ```
 121.1 GiB (MemTotal) - 86.0 (reserva) = 35.1 GiB para TODOS los cgroups
@@ -195,7 +203,7 @@ por medicion.
 criterio.** Es el gemelo de la regla de la flota: una verificacion que no puede
 salir negativa no verifica, y una que no puede salir positiva tampoco.
 
-### Y un defecto en el instrumento, que era mio
+#### Y un defecto en el instrumento, que era mio
 
 La herramienta imprimia `SUMA declarada` sumando dos cosas distintas: los techos
 (48G, 16G) son **compromisos** que el kernel aplica; la reserva de 86.0 es un
@@ -203,7 +211,7 @@ La herramienta imprimia `SUMA declarada` sumando dos cosas distintas: los techos
 por exactamente eso -- "entra por lo que usa HOY y no por un compromiso"-- sobre
 1.9 GiB, mientras hacia lo mismo con 86.
 
-### Lo que se hizo: partir el criterio, sin aflojarlo
+#### Lo que se hizo: partir el criterio, sin aflojarlo
 
 - **MITAD 1, compromisos.** Los techos componen contra el SUELO comprometido de
   GPU: el p95 de la serie, **derivado y no elegido**. De p50 a p95 el suelo se
@@ -231,7 +239,7 @@ Seis mutaciones corridas contra el codigo real, en
 mano en 50.0-- y por eso existen ahora `test_el_suelo_es_la_MESETA_y_no_el_pico`
 y su control.
 
-### Lo que falta ahora, que ya no es imposible
+#### Lo que falta ahora, que ya no es imposible
 
 `system.slice` es el ultimo slice sin techo, y con la mitad 1 en 115.8 sobre
 121.1 hay 5.3 GiB de holgura: **ponerle un techo ahora hace que el presupuesto
@@ -248,7 +256,7 @@ OMITE en vez de entrar como 0 (un 0 se promediaria como medida, y un techo
 calibrado sobre ceros inventados mata procesos por un dato que nadie tomo), y un
 kernel sin `memory.peak` escribe `null` y no 0.
 
-### El calibrador, para que el numero no se elija a ojo el dia que toque
+#### El calibrador, para que el numero no se elija a ojo el dia que toque
 
 `tools/calibra_techo_slice.py`, 21 tests, 100 % cubierto. Lee la serie `slices` y
 propone el techo, o se NIEGA diciendo que le falta. Dos frenos:
@@ -285,7 +293,7 @@ Lo que el calibrador NO hace: tocar la maquina. Propone un numero con su
 derivacion delante. El drop-in y su aplicacion siguen viviendo en
 `adopted/system-config/` y `enable-privileged.sh`, que piden `sudo`.
 
-## Por que sigue ABIERTA
+### Por que sigue ABIERTA
 
 Porque vigilar no es cuadrar. El `close_check` sigue siendo
 `presupuesto_memoria --check`, que exige que la suma quepa, y hoy da
@@ -300,19 +308,19 @@ este repo. Mientras tanto:
   llegar a la maquina. Hasta entonces `bb drift` lo marca DIVERGENTE y el
   umbral real sigue siendo 39.6, no 53.
 
-## Limite declarado
+### Limite declarado
 
 El presupuesto resta el USO de los slices sin techo (`system.slice`), no un
 compromiso, porque no lo tienen. El umbral se mueve con ellos, y eso se imprime
 en cada corrida en vez de disimularse.
-## Limite declarado
+### Limite declarado
 
 Hasta que esto cierre, los 48G de `app.slice` no son un tope calibrado: son un
 tope que existe. Que exista ya cambia el desenlace -- mata un proceso en vez de
 congelar la maquina entera -- y eso es mas que nada. No se puede afirmar que sea
 el tope correcto, y esta ficha existe para que esa afirmacion no se cuele.
 
-## Una firma reconocible del abanico, aportada de fuera (2026-09-27)
+### Una firma reconocible del abanico, aportada de fuera (2026-09-27)
 
 La sesion `office2office` analizo por su cuenta el kernel panic del 2026-09-26 y
 aporto un dato que aqui no estaba: el herd deja una **firma de PIDs
@@ -342,3 +350,65 @@ como ya hace `bb cap`). Es la direccion correcta y es la CAUSA, no el dano: el
 arreglo de `bb-usable` del 2026-09-27 acota cuanto dura un colapso y no evita
 ninguno. No se toco nada fuera de este repo -- ni `pytest.ini` de nadie, ni
 `earlyoom`, ni sysctl -- porque el cambio es de los repos que lanzan las suites.
+
+## Verification Evidence
+
+### CERRADO 2026-09-28 -- las dos mitades, verificadas sobre el kernel
+
+```
+$ python3 -m tools.presupuesto_memoria --check
+[presupuesto]   SUMA comprometida     118.1 GiB  sobre 121.1 -> holgura 2.9
+[presupuesto]   presupuesto firmado    86.0 GiB  (firma Luis Casarin, caduca 2026-10-27)
+[presupuesto]   umbral del abanico     53.1 GiB
+[presupuesto]   excursiones: 65 de 18487 muestras (0.4 %) por encima del presupuesto
+[presupuesto] OK: lo declarado cabe en lo que hay.
+rc=0
+```
+
+Los techos, leidos de los cgroups vivos y no del repo:
+
+| slice | `memory.max` | GiB | pico medido |
+|---|---|---|---|
+| `app.slice` | 45097156608 | 42 | 39.8 |
+| `docker.slice` | 15032385536 | 14 | 12.7 |
+| `system.slice` | 12884901888 | 12 | 10.8 |
+
+### El numero que valida el reparto, y que nadie eligio
+
+El umbral del abanico es lo que queda para la GPU tras los techos: `121.1 - 68 =
+53.1`. El techo de `docker.slice` ya habia medido en 2026-09-24, sobre 18 944
+muestras, que **por encima de 37 GiB la GPU esta el 75.4 % del tiempo (ruido) y
+por encima de 53 el 0.9 % (senal)**. El reparto votado cae en 53.1 sin que se
+buscara, y la medida de hoy da 0.4 %. Dos derivaciones independientes que
+coinciden es lo que lo valida.
+
+### El error de esta pasada, registrado porque cambio el estado de la maquina
+
+Se editaron los tres techos y se dijo que `sudo ./enable-privileged.sh` los
+aplicaria. Falso: de los 27 ficheros de `adopted/system-config/` el script
+instala **10**, y el techo de `app.slice` no esta entre ellos. El script se
+corrio dos veces, docker bajo a 14 y system entro en 12, y `app` se quedo en 48
+-- dejando los compromisos en 124.1 sobre 121.1, **peor que los 121.8 de
+partida**. Se cerro copiando el fichero a mano. El hueco tiene ficha propia:
+DEBT-CONFIG-ADOPTADA-QUE-NINGUN-SCRIPT-INSTALA.
+
+## Regression Test
+
+### Trigger de reapertura
+
+1. **`python3 -m tools.presupuesto_memoria --check` vuelve a dar rc!=0.** Cubre
+   las dos mitades: la firma caducada o ausente, y la suma dejando de caber.
+2. **La firma caduca el 2026-10-27** y el gate bloquea entonces por diseno, para
+   que 86 GiB se discuta con datos nuevos en vez de envejecer callada.
+3. **Un cuarto slice aparece sin techo**: el criterio lo cuenta por lo que usa y
+   la suma vuelve a ser irreal.
+
+### Lo que sigue sin comprobarse
+
+Ningun cgroup contabiliza la memoria unificada de GPU -- medido el 2026-09-24,
+7 GiB de CUDA se cobraron como 15 MiB (0.2 %). Los tres techos acotan memoria
+ordinaria; la mitad 2 existe precisamente porque esa otra no la aplica nadie, y
+firmarla no la acota: la declara. Contra ese fallo actuan `bb-usable` sobre PSI
+y `uvm_global_oversubscription=0`, no estos techos. Y los margenes son
+estrechos por construccion (2.2, 1.3 y 1.2 GiB sobre sus picos): si la carga
+normal de esta caja crece, el primero en morir sera un proceso, no un aviso.

@@ -1,0 +1,25 @@
+$ # El criterio, sobre el KERNEL y no sobre el repo:
+$ python3 -m tools.presupuesto_memoria --check
+[presupuesto] MemTotal:               121.1 GiB
+[presupuesto] -- mitad 1: COMPROMISOS (lo que el kernel aplica) --
+[presupuesto]   suelo comprometido de GPU       50.1 GiB  (p95 de 18487 muestras; con el p50 serian 49.0 -- la meseta mueve 1.1)
+[presupuesto]   app.slice (escritorio y arneses)           42.0 GiB  (usa 27.2)
+[presupuesto]   docker.slice (contenedores)                14.0 GiB  (usa 5.1)
+[presupuesto]   system.slice (servicios del sistema)       12.0 GiB  (usa 7.7)
+[presupuesto]   SUMA comprometida              118.1 GiB  sobre 121.1 -> holgura 2.9
+[presupuesto] -- mitad 2: EXCURSION (lo que NADIE aplica, y por eso se firma) --
+[presupuesto]   maximo observado                85.4 GiB  (2026-09-21T00:33:00-0600)
+[presupuesto]   presupuesto firmado             86.0 GiB  (firma Luis Casarin (lcasarin-maker), caduca 2026-10-27)
+[presupuesto] -- vista de operacion: la alarma del abanico --
+[presupuesto]   umbral del abanico              53.1 GiB  (lo que le queda a la GPU si TODOS los techos se honran)
+[presupuesto]   excursiones: 65 de 18487 muestras (0.4 %) por encima del presupuesto
+                 2026-09-27T05:02:09-0600  60.1 GiB
+                 2026-09-27T05:03:09-0600  60.1 GiB
+                 2026-09-27T05:04:01-0600  60.1 GiB
+[presupuesto] OK: lo declarado cabe en lo que hay.
+rc=0
+
+$ # los tres techos, leidos de los cgroups vivos:
+app.slice    45097156608   = 42 GiB
+docker.slice 15032385536   = 14 GiB
+system.slice 12884901888   = 12 GiB

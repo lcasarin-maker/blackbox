@@ -1,0 +1,10 @@
+$ # EL COSTE MEDIDO, 2026-09-28. No es teorico: cambio el estado de la maquina.
+$ # Se edito el techo de app.slice en adopted/ (48G -> 42G) y se corrio
+$ # `sudo ./enable-privileged.sh` DOS veces. El techo no se movio.
+app.slice    memory.max = 51539607552   (48 GiB, votado 42)
+docker.slice memory.max = 15032385536   (14 GiB) <- si se aplico
+system.slice memory.max = 12884901888   (12 GiB) <- si se aplico
+$ # Resultado: los compromisos pasaron de 121.8 GiB sobre 121.1 (holgura -0.8)
+$ # a 124.1 sobre 121.1 (holgura -3.1). El estado intermedio quedo PEOR que el
+$ # de partida, porque dos techos bajaron y el tercero no pudo.
+$ # Se cerro copiando el fichero a mano, fuera de todo script.
