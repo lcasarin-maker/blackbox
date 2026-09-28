@@ -7,17 +7,24 @@
 # tabla con veinte RFC de clientes reales pegada en una ficha.
 #
 # Corrido el 2026-09-27 sobre el runtime 8.6.5, por subproceso y sobre un arbol
-# propio, para que el veredicto no dependa del contenido de este repo:
+# propio, para que el veredicto no dependa del contenido de este repo. Los
+# fixtures de CORREOS se re-escribieron el 2026-09-28 (ejemplo.com/empresa.com.mx
+# -> example.com/empresa.example.com): el kit se puso mas estricto ese mismo dia
+# y "ejemplo.com" (fixture en espanol) ya no es un dominio PROVABLEMENTE
+# sintetico para pii_scan.RESERVADO, que solo reconoce el ingles de RFC 2606 --
+# el propio pii-scan cazo estas dos lineas como PII de terceros en el push. Los
+# valores nuevos son el mismo fixture, solo con el dominio que el gate reconoce.
+# Re-corrido el 2026-09-28 con el runtime sincronizado ese dia, salida literal:
 
 PASSED tests/test_pii_scan_systemd.py::test_el_gate_NO_lee_una_unit_de_systemd_como_una_direccion[user@1000.service]
 PASSED tests/test_pii_scan_systemd.py::test_el_gate_NO_lee_una_unit_de_systemd_como_una_direccion[org.gnome.Shell@x11.service]
 PASSED tests/test_pii_scan_systemd.py::test_el_gate_NO_lee_una_unit_de_systemd_como_una_direccion[getty@tty1.service]
-PASSED tests/test_pii_scan_systemd.py::test_control_negativo_una_direccion_de_verdad_NO_pasa_por_unit[alguien@ejemplo.com]
-PASSED tests/test_pii_scan_systemd.py::test_control_negativo_una_direccion_de_verdad_NO_pasa_por_unit[nombre.apellido@empresa.com.mx]
+PASSED tests/test_pii_scan_systemd.py::test_control_negativo_una_direccion_de_verdad_NO_pasa_por_unit[alguien@example.com]
+PASSED tests/test_pii_scan_systemd.py::test_control_negativo_una_direccion_de_verdad_NO_pasa_por_unit[nombre.apellido@empresa.example.com]
 PASSED tests/test_pii_scan_systemd.py::test_control_negativo_sin_instancia_no_hay_arroba_que_confundir
 PASSED tests/test_pii_scan_systemd.py::test_el_gate_ENTERO_no_reporta_nada_sobre_una_unit
 PASSED tests/test_pii_scan_systemd.py::test_control_negativo_el_gate_ENTERO_SI_reporta_una_direccion
-8 passed in 0.21s
+8 passed in 0.15s
 
 # Y la medida historica, del dia anterior al arreglo (2026-09-25), cuando el
 # gate SI bloqueaba este repo:
