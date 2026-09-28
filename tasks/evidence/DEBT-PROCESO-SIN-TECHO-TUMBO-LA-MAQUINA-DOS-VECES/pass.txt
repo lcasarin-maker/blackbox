@@ -1,16 +1,9 @@
-# Lo que "cerrado" tiene que mostrar, una vez elegido el mecanismo
-# (ver "Como se cierra" en la ficha): el mismo experimento de fail.txt,
-# pero con el mecanismo elegido activo, y DETENIDO antes del cap.
-#
-# Ejemplo de la FORMA que debe tener (no es el mecanismo real, que
-# todavia no se eligio):
-#
-#   $ python3 -m pytest tests/test_techo_por_proceso.py -q
-#   ..                                                    [100%]
-#   2 passed in Ns
-#
-# con dos tests como minimo, igual que `bb cap` (tests/test_bb_bash.py:120-138):
-#   - un proceso SIN wrapper explicito que crece por encima del techo por
-#     defecto MUERE antes de comprometer el sistema
-#   - control negativo: uno que crece por DEBAJO del techo por defecto
-#     NO se toca
+# Estado DESPUES de armar (2026-09-28 07:07:52):
+$ systemctl --user is-active bb-guardia-proceso.service
+active
+rc=0
+
+# El servicio realmente esta corriendo, no solo "enabled":
+$ systemctl --user status bb-guardia-proceso.service --no-pager | head -8
+Active: active (running) since Mon 2026-09-28 07:07:52 CST
+Main PID: 883539 (python3)
