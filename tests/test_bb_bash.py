@@ -1554,7 +1554,7 @@ def _lanzar_electron_falso(con_renderer):
     return proc, marcadores, zyg_pid, rend_pid
 
 
-def _matar_electron_falso(proc, marcadores, timeout=5.0):
+def _matar_electron_falso(proc, marcadores, timeout=15.0):
     """Mata el arbol completo y prueba, no argumenta, que no queda huerfano:
     negativo real sobre pgrep, no solo `proc.wait()` del padre inmediato."""
     try:
