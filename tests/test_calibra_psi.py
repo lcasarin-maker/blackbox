@@ -93,21 +93,24 @@ def test_clasifica_colapso_gana_cuando_las_bandas_se_solapan():
 # --- ventanas / solapa -----------------------------------------------------
 
 def test_ventanas_por_defecto_son_los_congelamientos_reales():
-    """CUATRO desde el 2026-09-27. Este test existe para que anadir un incidente
+    """SEIS desde el 2026-09-28. Este test existe para que anadir un incidente
     sea un cambio DELIBERADO y no algo que se cuela: la lista es la verdad de
     referencia contra la que se mide el corte, y una lista rancia hace que el
     calibrador llame falso positivo a un colapso real.
 
-    Eso volvio a pasar, y es la razon del 4: el kernel panic del 2026-09-26
-    quedo fuera de la lista y el modulo dio `falsos positivos: 1` con VEREDICTO
-    CORTE INVALIDO, leyendo un colapso real de 13 min como una excursion sana.
-    La primera vez fue al aparecer el tercero. Es la segunda."""
+    Eso volvio a pasar tres veces. El kernel panic del 2026-09-26 quedo fuera
+    de la lista y el modulo dio `falsos positivos: 1` con VEREDICTO CORTE
+    INVALIDO, leyendo un colapso real de 13 min como una excursion sana (asi
+    llego a 4). Los dos reinicios del 2026-09-28 (DEBT-PROCESO-SIN-TECHO-TUMBO-
+    LA-MAQUINA-DOS-VECES) dejaron `test_el_gate_sale_0_sobre_el_corpus_real` en
+    rojo por la misma razon -- la muestra de las 04:24:02, dentro del sexto
+    incidente, salia FALSO POSITIVO (asi llego a 6)."""
     vs = ventanas()
-    assert len(vs) == 4
+    assert len(vs) == 6
     assert vs[0][0] == dt.datetime(2026, 9, 22, 5, 45)
-    assert vs[-1][0] == dt.datetime(2026, 9, 26, 15, 20), (
-        "el cuarto es el kernel panic, y es el unico que NO termino en reset por "
-        "el operador: la maquina se reinicio sola en 4 min")
+    assert vs[-1][0] == dt.datetime(2026, 9, 28, 4, 18), (
+        "el sexto es el segundo reinicio del 2026-09-28: un proceso ya estable "
+        "en 30+ GiB cuando aparecio en la telemetria, sin brotar rapido")
 
 
 def test_solapa_en_los_dos_bordes_y_fuera():

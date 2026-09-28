@@ -92,6 +92,45 @@ INCIDENTES = [
     # `falsos positivos: 1` y VEREDICTO CORTE INVALIDO, porque leia un colapso
     # real de 13 min como una excursion sana que el corte dispara.
     ("2026-09-26 15:20", "2026-09-26 15:42"),
+    # QUINTO y SEXTO, 2026-09-28, el mismo dia y con el mismo origen: un solo
+    # proceso `python3` bajo un scope de Claude Desktop creciendo sin freno
+    # hasta 30+ GiB de RSS (ver DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES).
+    # GPU y vLLM descartados con medida: atom_gpu_telemetry.jsonl da
+    # gpu_util_pct=0.0 en las dos ventanas enteras, en reposo de GPU.
+    #
+    # QUINTO. Corroborado por sar: kbavail cae de 52.2 GB (03:25) a 29.7 GB
+    # (03:29) y se queda ahi, %commit sube de 41.5 a 58.6 -- no fue
+    # agotamiento de RAM, el mismo patron de los cuatro anteriores. El inicio
+    # sale de las muestras de bin/bb: 03:28:28 es la primera con mem_full
+    # >= 10 (35.66). El fin es el reset: `bb-usable` declaro COLAPSO sostenido
+    # a las 03:34:51 y el watchdog de systemd forzo el reinicio a las 03:39:21
+    # (`journalctl --list-boots`).
+    #
+    # LIMITE DECLARADO, y es nuevo: `bb sample` DEJA DE ESCRIBIR muestras a las
+    # 03:28:58 -- 11 de los 11 minutos que faltan hasta el reinicio no tienen
+    # ni una sola linea en samples/2026-09-28.jsonl. Por eso el clasificador de
+    # ESTE modulo (que solo lee ese fichero) NO corrobora esta ventana como
+    # COLAPSO por su cuenta -- `calibra()` la marca `no_detectados`, y es
+    # correcto que lo haga: es la verdad sobre el propio instrumento, no un
+    # error de esta lista. El incidente SI esta corroborado, por TRES fuentes
+    # independientes de bb sample: sar (kbavail 52.2 -> 29.7 GB), el journal de
+    # `bb-usable` (que lee PSI directo de /proc/pressure/memory, no de este
+    # fichero, y vio el colapso entero), y `journalctl --list-boots` (el
+    # reinicio en si). Por que `bb sample` se quedo callado justo ahi no esta
+    # investigado aqui -- es su propio hallazgo, no el de este modulo.
+    ("2026-09-28 03:28", "2026-09-28 03:39"),
+    # SEXTO, en el arranque SIGUIENTE, 46 minutos despues -- la memoria nunca
+    # se recupero del quinto (kbavail se quedo en ~29 GB en vez de volver a
+    # los ~65 GB de antes). Corroborado por sar: kbavail 32.1 GB (04:16) baja
+    # y se estabiliza en ~29 GB, %commit sube de 48.0 a 54.8. El inicio sale
+    # de las muestras: 04:18:04 es la primera con mem_full >= 10 (25.95). El
+    # fin es el reset: COLAPSO sostenido declarado a las 04:21:58, watchdog
+    # fuerza el reinicio a las 04:27:29.
+    #
+    # Anadidas el 2026-09-28 porque `test_el_gate_sale_0_sobre_el_corpus_real`
+    # las leia como excursion sana sin estas ventanas: la muestra de las
+    # 04:24:02, DENTRO del sexto incidente, salia FALSO POSITIVO.
+    ("2026-09-28 04:18", "2026-09-28 04:27"),
 ]
 
 
