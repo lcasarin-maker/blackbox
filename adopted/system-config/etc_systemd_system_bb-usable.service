@@ -7,6 +7,16 @@ After=multi-user.target
 
 [Service]
 Type=notify
+# DEBT-BB-USABLE-NUNCA-MIDIO-SU-PROPIA-LATENCIA, medido 2026-09-28: esta unit
+# de SISTEMA no heredaba DISPLAY de la sesion grafica (:1, GDM), asi que
+# latencia_x_ms() en bin/bb-usable devolvia None en cada vuelta -- 5339
+# "sin DISPLAY" seguidos, cero mediciones reales, desde que la sonda existe.
+# XAUTHORITY apunta al fichero que el propio Xorg usa de verdad (`ps aux`:
+# `Xorg vt2 ... -auth /run/user/1000/gdm/Xauthority`), no a ~/.Xauthority.
+# LIMITE DECLARADO: esta ruta es la convencion de GDM para este usuario y
+# puede cambiar si cambia el display manager o el usuario de la sesion.
+Environment=DISPLAY=:1
+Environment=XAUTHORITY=/run/user/1000/gdm/Xauthority
 ExecStart=/home/lcasarin/projects/blackbox/bin/bb-usable
 
 # El plazo que cobra. bb-usable acaricia cada PROBE_INTERVAL (30s) y se niega
