@@ -1,0 +1,12 @@
+[Unit]
+Description=blackbox: compara repo vs maquina una vez al dia
+
+[Timer]
+# OnCalendar y no OnBootSec+OnUnitActiveSec, y Persistent=true: mismo patron
+# que blackbox-sample.timer, ver ese fichero para el porque medido.
+OnCalendar=daily
+Persistent=true
+AccuracySec=1h
+
+[Install]
+WantedBy=timers.target
