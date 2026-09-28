@@ -2195,10 +2195,14 @@ cmd_install() {
   mkdir -p "$unitdir"
   cp "$(dirname "$0")/../systemd/blackbox-sample.service" "$unitdir/"
   cp "$(dirname "$0")/../systemd/blackbox-sample.timer" "$unitdir/"
+  cp "$(dirname "$0")/../systemd/blackbox-drift.service" "$unitdir/"
+  cp "$(dirname "$0")/../systemd/blackbox-drift.timer" "$unitdir/"
   systemctl --user daemon-reload
   systemctl --user enable --now blackbox-sample.timer
-  echo "timer instalado. estado:"
+  systemctl --user enable --now blackbox-drift.timer
+  echo "timers instalados. estado:"
   systemctl --user status blackbox-sample.timer --no-pager 2>&1 | head -5
+  systemctl --user status blackbox-drift.timer --no-pager 2>&1 | head -5
 }
 
 # "Que procesos hay y QUIEN los llamo". El 2026-09-08 esa pregunta hubo que
@@ -2310,7 +2314,9 @@ cmd_protect() {
 # desplegada. Si divergen en silencio, el repo documenta una maquina que no
 # existe -- asi que la divergencia se mide, no se supone.
 cmd_drift() {
-  local root; root=$(cd "$(dirname "$0")/.." && pwd)
+  # BLACKBOX_DRIFT_ROOT: mismo patron que BLACKBOX_DATA -- deja a los tests
+  # apuntar a un repo y un HOME de mentira sin tocar los sujetos reales.
+  local root; root="${BLACKBOX_DRIFT_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
   local diverged=0 checked=0 missing=0 suspended=0
 
   suspension_caduca() { # ruta_desplegada -> imprime fecha de caducidad si esta suspendida
@@ -2377,8 +2383,15 @@ cmd_drift() {
 
   echo
   echo "  revisados: $checked   divergentes: $diverged   ausentes: $missing   suspendidos: $suspended"
-  [ $((diverged + missing)) -eq 0 ] && echo "  El repo describe la maquina que hay."
-  return 0
+  if [ $((diverged + missing)) -eq 0 ]; then
+    echo "  El repo describe la maquina que hay."
+    return 0
+  fi
+  # Antes de 2026-09-28 esta funcion devolvia 0 siempre, asi que un caller
+  # automatizado no podia distinguir divergencia de que todo estuviera bien
+  # -- el propio hallazgo de la auditoria H1 de ese dia. Suspendido NO cuenta:
+  # es un estado documentado y esperado, no un fallo.
+  return 1
 }
 
 # ------------------------------------------------------- DEBT-DGX-438
@@ -2735,12 +2748,12 @@ bb -- caja negra de la maquina
   bb scan ["hace X"]     informe de fallos en una ventana (def: "2 hours ago")
   bb hw                  inventario de hardware y limites aplicados
   bb status              que instrumento esta armado y cual no
-  bb drift               compara lo adoptado en el repo con lo desplegado
+  bb drift               compara lo adoptado en el repo con lo desplegado (exit != 0 si diverge)
   bb protect             sube el limite de core de las apps ya corriendo (prlimit)
   bb who [pid]           que procesos pesan y QUIEN los lanzo (unit, padre, cwd)
   bb sigterm ["hace X"]  QUIEN mando SIGTERM/SIGKILL a quien (DEBT-DGX-438)
   bb cap <GB> <cmd...>   lanza algo con techo de memoria propio (el kernel lo aplica)
-  bb install             instala el timer de usuario
+  bb install             instala los timers de usuario (muestreo cada minuto, drift diario)
 
 Datos propios en ~/.local/share/blackbox (retencion 14 dias).
 Fuentes de terceros que `bb scan` lee, no duplica:
