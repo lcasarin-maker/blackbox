@@ -57,11 +57,11 @@ bb status              which instrument is armed and which isn't
 bb scan ["since X"]    failure report over a time window (default: "2 hours ago")
 bb snapshot [reason]   full forensic dump, right now
 bb hw                  hardware inventory and applied limits
-bb drift               diff between what's adopted in the repo and what's deployed
+bb drift               diff between what's adopted in the repo and what's deployed (exit != 0 on drift; runs daily via blackbox-drift.timer)
 bb protect             raise the core-dump limit on processes already running (prlimit)
 bb who [pid]           which processes are heavy and WHO launched them (unit, parent, cwd)
 bb sample              one sample (fired by the per-minute timer)
-bb install             install the user timer
+bb install             install the user timers (per-minute sampling, daily drift check)
 ```
 
 Full install:
@@ -276,7 +276,7 @@ this specific box, instead of another anonymous forum report.
 ```bash
 git clone https://github.com/lcasarin-maker/blackbox.git
 cd blackbox
-./bin/bb install              # per-user sampling timer, no privileges
+./bin/bb install              # per-user timers: sampling (1 min) + drift check (daily), no privileges
 sudo ./enable-privileged.sh   # systemd-coredump + core-dump disk cap
 ```
 

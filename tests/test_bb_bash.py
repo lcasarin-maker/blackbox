@@ -1344,6 +1344,105 @@ def test_sigterm_ACUMULA_fuera_del_anillo_y_no_duplica(datos, tmp_path):
         "esta cortando, asi que el fichero crece por muestra y no por evento")
 
 
+# `cmd_drift` en `bin/bb` derivaba `root` de `$0` sin forma de apuntarlo a otro
+# sitio, asi que la unica manera de probar una divergencia REAL era escribir
+# sobre los 39 sujetos adoptados de la maquina de verdad -- inaceptable para
+# un test. BLACKBOX_DRIFT_ROOT (anadido junto con el arreglo del exit code,
+# 2026-09-28) sigue el mismo patron que BLACKBOX_DATA: un repo de mentira,
+# y HOME tambien de mentira para el lado desplegado, sin tocar la maquina.
+
+@pytest.fixture
+def raiz_drift(tmp_path):
+    raiz = tmp_path / "repo"
+    (raiz / "adopted" / "systemd-user").mkdir(parents=True)
+    home = tmp_path / "home"
+    (home / ".config" / "systemd" / "user").mkdir(parents=True)
+    return raiz, home
+
+
+def _correr_drift(raiz, home):
+    return correr(["drift"], extra_env={
+        "BLACKBOX_DRIFT_ROOT": str(raiz), "HOME": str(home)})
+
+
+def test_drift_SALE_0_cuando_el_repo_describe_la_maquina(raiz_drift):
+    raiz, home = raiz_drift
+    contenido = "[Unit]\nDescription=fake\n"
+    (raiz / "adopted" / "systemd-user" / "fake.timer").write_text(contenido, encoding="utf-8")
+    (home / ".config" / "systemd" / "user" / "fake.timer").write_text(contenido, encoding="utf-8")
+    r = _correr_drift(raiz, home)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "revisados: 1   divergentes: 0   ausentes: 0" in r.stdout
+
+
+def test_drift_SALE_DISTINTO_DE_0_cuando_diverge(raiz_drift):
+    """El control negativo del arreglo: antes del 2026-09-28 `cmd_drift`
+    terminaba con `return 0` sin condicion, asi que este mismo fixture --
+    una divergencia real, a proposito -- habria dado exit 0 igual. Si esta
+    asercion pasa contra el codigo VIEJO, el arreglo no esta probando nada;
+    contra `git stash` del cambio de `bin/bb` falla, que es la prueba de que
+    el control negativo puede salir negativo."""
+    raiz, home = raiz_drift
+    (raiz / "adopted" / "systemd-user" / "fake.timer").write_text(
+        "[Unit]\nDescription=repo\n", encoding="utf-8")
+    (home / ".config" / "systemd" / "user" / "fake.timer").write_text(
+        "[Unit]\nDescription=maquina\n", encoding="utf-8")
+    r = _correr_drift(raiz, home)
+    assert r.returncode != 0, f"diverge en el fixture y el exit code sigue en 0:\n{r.stdout}"
+    assert "DIVERGE" in r.stdout
+    assert "divergentes: 1" in r.stdout
+
+
+def test_drift_SALE_DISTINTO_DE_0_cuando_esta_ausente(raiz_drift):
+    raiz, home = raiz_drift
+    (raiz / "adopted" / "systemd-user" / "fake.timer").write_text("[Unit]\n", encoding="utf-8")
+    # no se crea el lado desplegado: ausente
+    r = _correr_drift(raiz, home)
+    assert r.returncode != 0, r.stdout
+    assert "AUSENTE" in r.stdout
+    assert "ausentes: 1" in r.stdout
+
+
+def test_drift_suspendido_VIGENTE_no_cuenta_como_fallo(raiz_drift):
+    """Suspendido es un estado documentado y esperado (ADR 0004, `suspended/
+    MANIFIESTO.md`): no puede tumbar el exit code o cada suspension legitima
+    rompe el chequeo diario contra su propio proposito."""
+    raiz, home = raiz_drift
+    destino = home / ".config" / "systemd" / "user" / "fake.timer"
+    (raiz / "adopted" / "systemd-user" / "fake.timer").write_text("[Unit]\n", encoding="utf-8")
+    manifest = raiz / "suspended" / "MANIFIESTO.md"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text(
+        "## fake.timer -- suspendido de mentira\n\n"
+        "| | |\n|---|---|\n"
+        f"| **Ruta original** | `{destino}` |\n"
+        "| **Caduca** | **2099-01-01** -- nunca en este test |\n",
+        encoding="utf-8")
+    r = _correr_drift(raiz, home)
+    assert r.returncode == 0, f"suspendido vigente y el exit code no es 0:\n{r.stdout}"
+    assert "SUSPENDIDO" in r.stdout
+
+
+def test_drift_suspension_VENCIDA_SI_cuenta_como_fallo(raiz_drift):
+    """El control negativo del anterior: la MISMA suspension, con `Caduca` en
+    el pasado, tiene que volver a contar -- si no, una suspension vieja se
+    vuelve invisible para siempre en vez de pedir revision."""
+    raiz, home = raiz_drift
+    destino = home / ".config" / "systemd" / "user" / "fake.timer"
+    (raiz / "adopted" / "systemd-user" / "fake.timer").write_text("[Unit]\n", encoding="utf-8")
+    manifest = raiz / "suspended" / "MANIFIESTO.md"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text(
+        "## fake.timer -- suspendido de mentira\n\n"
+        "| | |\n|---|---|\n"
+        f"| **Ruta original** | `{destino}` |\n"
+        "| **Caduca** | **2020-01-01** -- vencida a proposito |\n",
+        encoding="utf-8")
+    r = _correr_drift(raiz, home)
+    assert r.returncode != 0, f"suspension vencida y el exit code sigue en 0:\n{r.stdout}"
+    assert "VENCIDA" in r.stdout
+
+
 # =====================================================================
 # bb scan -- "apps Electron sin renderer" (proceso vivo, UI muerta)
 # =====================================================================
