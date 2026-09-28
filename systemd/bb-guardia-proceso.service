@@ -1,0 +1,21 @@
+[Unit]
+Description=blackbox: frena a UN proceso individual antes de que tumbe la maquina
+Documentation=file:%h/projects/blackbox/bin/bb-guardia-proceso
+# Depende de que blackbox-sample.timer ya este escribiendo -- lee su stream,
+# no muestrea por su cuenta. Si ese timer no corre, este demonio no tiene
+# que leer y se queda esperando sin hacer nada (no es un fallo, es ceguera
+# declarada: ver `bb status`).
+After=blackbox-sample.timer
+
+[Service]
+Type=simple
+ExecStart=%h/projects/blackbox/bin/bb-guardia-proceso
+Restart=on-failure
+RestartSec=10
+# No necesita privilegios de root: matar un proceso del MISMO usuario no
+# requiere mas permiso que el que este unit ya tiene. Deliberadamente NO es
+# un system.slice unit como bb-usable, que si necesita reiniciar la maquina.
+Nice=10
+
+[Install]
+WantedBy=default.target

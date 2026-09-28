@@ -7,7 +7,7 @@ severity: P1
 origin: detected
 satd_family: MISSING_COVERAGE
 created: 2026-09-28
-close_check: {"cmd": "python3 -m pytest tests/test_techo_por_proceso.py -q", "expect": "exit_zero", "porque": "el fichero no existe todavia -- a proposito. Esta ficha necesita una decision de Luis sobre QUE mecanismo anadir (boleta pendiente, ver el cuerpo), y el test que sostenga esa decision no se puede escribir antes de saber cual de las opciones se eligio. Hasta entonces el close_check falla por ausencia, que es honesto: no hay nada que verificar todavia."}
+close_check: {"cmd": "systemctl --user is-active bb-guardia-proceso.service", "expect": "exit_zero", "porque": "el mecanismo elegido (boleta 2026-09-28: vigilante hermano de bb-usable) esta escrito, probado (20 tests en tests/test_bb_guardia_proceso.py, incluido el replay de los DOS incidentes reales) y validado en dry-run contra la telemetria de produccion -- pero NO esta armado. Un guardian sin armar no protege nada: es un borrador. El close_check mira si el SERVICIO esta vivo, no si el codigo existe, siguiendo el mismo patron que DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO -- codigo correcto en disco no es lo mismo que la proteccion corriendo."}
 evidence:
   pass: tasks/evidence/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES/pass.txt
   fail: tasks/evidence/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES/fail.txt
@@ -125,6 +125,51 @@ patron medido aqui (un proceso creciendo sin `bb cap`, en un cap MODESTO y
 seguro de correr en CI -- no los 30 GiB reales) y verifica que el mecanismo
 elegido lo frena antes del cap, con su control negativo (uno que cabe en el
 cap no se toca).
+
+### Progreso, 2026-09-28 (misma sesion)
+
+Boleta votada: **vigilante hermano de bb-usable** (opcion 1). Refinamiento
+pedido por Luis tras la boleta: nunca SIGKILL directo -- escalada de tres
+pasos (AVISO -> SIGTERM -> SIGKILL), dandole al proceso una ventana para
+pararse solo antes del ultimo recurso. `bin/bb-guardia-proceso` esta escrito
+siguiendo exactamente esa escalada, reusando `top_rss[0]` que `bb sample` ya
+calcula (sin sampleo propio), con seguridad explicita (nunca uid 0, nunca
+PID 1, nunca su propio pid, lista de `comm` intocables).
+
+**Probado contra los DOS incidentes reales**, no solo contra fixtures
+sinteticos: `tests/test_bb_guardia_proceso.py::test_reproduce_el_colapso_1_*`
+y `test_reproduce_el_colapso_2_*` reproducen los numeros literales de esta
+ficha y verifican que la escalada dispara donde debe. 20/20 tests, pyright y
+ruff limpios.
+
+**Validado en dry-run contra la telemetria REAL de produccion** (no solo
+tests aislados): `BB_GUARDIA_DRY_RUN=1 ./bin/bb-guardia-proceso` leyendo
+`~/.local/share/blackbox/samples/2026-09-28.jsonl` completo reproduce los
+mismos disparos sobre los pids reales 1410728 y 320489, y no genera NINGUNA
+alerta sobre el resto del dia -- incluida la hora actual, que esta sana.
+
+**Lo que falta, y es deliberado que falte todavia**: armarlo. `systemd/bb-guardia-proceso.service`
+esta escrito (unit de usuario, sin privilegios de root -- matar un proceso
+del mismo usuario no los necesita). No se instalo ni se activo: es un
+mecanismo nuevo de auto-matar procesos, recien construido despues de dos
+incidentes reales, y "lo irreversible se pregunta" aplica -- se deja para que
+Luis lo arme cuando decida, con el comando exacto:
+
+```
+mkdir -p ~/.config/systemd/user
+cp systemd/bb-guardia-proceso.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now bb-guardia-proceso.service
+```
+
+**Hallazgo colateral, sin tocar**: `tests/test_control_racha.py::test_el_gate_sale_0_sobre_el_corpus_real`
+ahora falla -- confirmado que YA fallaba antes de este trabajo (negative
+control: `git stash` y falla igual). Clasifica las 04:24:02 de hoy como
+FALSO POSITIVO cuando en realidad cae DENTRO del colapso 2 real: la
+calibracion de `tools/control_racha.py` no conoce todavia los dos incidentes
+de hoy. Es el mismo instrumento que sostiene `BAJAS_PARA_CORTAR` en
+bb-usable, y merece el mismo rigor de calibracion que ya tiene -- no se toca
+aqui, de paso, con prisa.
 
 ## Verification Evidence
 
