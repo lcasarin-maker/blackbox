@@ -29,7 +29,7 @@ A las 05:08:01, veinticinco segundos antes del reinicio:
 
 ```
 load1        0.95  sobre 20 nucleos
-mem_avail    65.8 GB de 121
+mem_avail    64.3 GiB de 121
 PSI          io 0.00 · cpu 0.00 · mem_full 0.00
 nvidia-smi   OK en 22 ms
 GPU          util 0-4 %, sin throttle, 39-48 C
