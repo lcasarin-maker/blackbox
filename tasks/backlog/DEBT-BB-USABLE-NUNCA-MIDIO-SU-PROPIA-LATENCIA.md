@@ -4,10 +4,10 @@ kind: debt
 title: "el canal de latencia de bb-usable lleva 5339 'sin DISPLAY' y cero mediciones"
 status: open
 severity: P2
-origin: measured
+origin: asserted
 satd_family: MISSING_INSTRUMENT
 created: 2026-09-28
-close_check: {"cmd": "systemctl show bb-usable -p Environment --no-pager | grep -q 'DISPLAY='", "expect": "exit_zero", "porque": "el defecto es que la unit de sistema no declara DISPLAY, asi que la sonda devuelve None en cada llamada; el cierre exige que la unit lo declare."}
+close_check: {"cmd": "bash tools/verifica_bb_usable_mide_latencia.sh", "expect": "exit_zero", "porque": "mide COMPORTAMIENTO (la ultima linea real del journal trae un numero, no 'sin DISPLAY'), no solo declaracion: systemctl show -p Environment refleja el fichero de la unit tras un daemon-reload, pero el PROCESO ya arrancado sigue respirando el entorno con el que se lanzo -- un cierre que solo mirara la declaracion se habria podido cerrar en falso mientras el proceso vivo seguia ciego. Envuelto en un script (no bash -c inline, no tuberia en el verification_command) porque backlog_verifier prohibe las dos formas."}
 evidence: {"medicion": "tasks/evidence/DEBT-BB-USABLE-NUNCA-MIDIO-SU-PROPIA-LATENCIA/medicion-2026-09-28.txt"}
 ---
 
@@ -90,3 +90,42 @@ numero de display, la sonda vuelve a devolver `None` en silencio -- el mismo
 fallo con otra causa. No se midio cual es la forma robusta (leer de
 `loginctl`, o un drop-in generado). Un `Environment=DISPLAY=:1` sin un gate que
 compruebe que el canal produce numeros reproduce este ticket entero.
+
+## Progreso -- el fichero ya tiene DISPLAY, el proceso vivo todavia no (2026-09-28)
+
+`systemd/bb-usable.service` (repo) tiene `Environment=DISPLAY=:1` y
+`Environment=XAUTHORITY=...` desde `d3d7980`, y `sudo ./enable-privileged.sh`
+ya copio ese fichero a `/etc/systemd/system/bb-usable.service` -- confirmado:
+
+```
+$ systemctl show bb-usable -p Environment --value
+DISPLAY=:1 XAUTHORITY=/run/user/1000/gdm/Xauthority
+```
+
+Pero el PROCESO vivo (`Main PID: 5525`) sigue arrancado desde las
+`04:29:39`, antes del cambio, y `Environment=` de una unit no se aplica a
+un proceso ya corriendo -- solo a la PROXIMA vez que arranque. Medido a las
+13:30, DESPUES del despliegue:
+
+```
+$ journalctl -u bb-usable --since "13:00:00" | grep "latencia del escritorio" | tail -1
+sep 28 13:30:38 ... [bb-usable] latencia del escritorio: sin DISPLAY (...)
+```
+
+Sigue en `sin DISPLAY`. El close_check original de esta ficha
+(`systemctl show -p Environment | grep DISPLAY=`) habria dado `rc=0` en este
+mismo instante -- un cierre falso, verde sobre la declaración mientras el
+proceso real seguía ciego. Corregido a un chequeo de comportamiento
+(`tools/verifica_bb_usable_mide_latencia.sh`, lee la última línea real del
+journal), que hoy da `rc=1` correctamente.
+
+**Falta un solo paso, y no me toca a mí ejecutarlo**: `bb-usable` es una
+unit de SISTEMA (`/etc/systemd/system/bb-usable.service`), reiniciarla
+necesita sudo.
+
+```bash
+sudo systemctl restart bb-usable.service
+```
+
+`enable-privileged.sh` no lo hace por si solo -- su paso 5 es
+`systemctl enable --now`, que no reinicia una unit ya activa.
