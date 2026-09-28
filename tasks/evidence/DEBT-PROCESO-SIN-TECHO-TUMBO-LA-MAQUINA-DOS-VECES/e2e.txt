@@ -1,0 +1,13 @@
+# El incidente real que motiva esta ficha, con sus comandos literales.
+# Ver "Root Cause" y "Verification Evidence" en el cuerpo de la ficha
+# para la reconstruccion completa. Resumen:
+#
+#   Colapso 1: pid 1410728 (python3, app-com.anthropic.Claude-562574.scope)
+#     4.8 GiB (03:25:09) -> 31.0 GiB (03:28:09), reinicio forzado 03:39:21
+#   Colapso 2: pid 320489 (python3, app-com.anthropic.Claude-47169.scope)
+#     30-36 GiB estable todo el arranque, reinicio forzado 04:27:29
+#
+# Los dos reiniciaron TODA la maquina -- 7 sesiones de Claude corriendo en
+# paralelo cayeron por la culpa de un solo proceso cada vez. Ninguna capa
+# existente (app.slice, earlyoom, memory.low) esta disenada para frenar UN
+# proceso individual; solo bb-usable reacciona, y tarda ~11 minutos por diseno.
