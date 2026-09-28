@@ -9,7 +9,7 @@ origin: asserted
 satd_family: INCOMPLETE_MITIGATION
 created: 2026-09-24
 closed_at: 2026-09-24
-close_check: {"cmd": "grep -qx 17179869184 /sys/fs/cgroup/docker.slice/memory.max", "expect": "exit_zero", "porque": "mide el SUJETO -- el techo puesto en la maquina -- no el fichero que lo propone. Control negativo: el mismo comando contra system.slice (memory.max = max) devuelve 1. El numero se fija a proposito en vez de comprobar solo que NO es `max`: un techo que se afloja en silencio tiene que romper este criterio, y por eso rompio cuando 7061336 lo bajo de 32G a 16G. Ver la seccion `Por que el numero de este criterio cambio`."}
+close_check: {"cmd": "grep -qx 15032385536 /sys/fs/cgroup/docker.slice/memory.max", "expect": "exit_zero", "porque": "mide el SUJETO -- el techo puesto en la maquina -- no el fichero que lo propone. Control negativo: el mismo comando contra system.slice (memory.max = max) devuelve 1. El numero se fija a proposito en vez de comprobar solo que NO es `max`: un techo que se afloja en silencio tiene que romper este criterio, y por eso ha roto DOS veces: cuando 7061336 lo bajo de 32G a 16G, y el 2026-09-28 cuando el reparto votado por Luis lo bajo de 16G a 14G. Las dos veces rompio por hacer su trabajo, no por estar mal. Ver la seccion `Por que el numero de este criterio cambio`."}
 evidence: {"pass": "tasks/evidence/DEBT-DOCKER-FUERA-DEL-TECHO/despues.txt", "fail": "tasks/evidence/DEBT-DOCKER-FUERA-DEL-TECHO/antes.txt", "e2e": "tasks/evidence/DEBT-DOCKER-FUERA-DEL-TECHO/mezcla-daemon-json.txt", "pass_recalibrado": "tasks/evidence/DEBT-DOCKER-FUERA-DEL-TECHO/despues-16g.txt"}
 reason: "relocated_prior_verification: el arreglo -- el drop-in de docker.slice, la seccion 9 de enable-privileged.sh y su revert -- aterrizo en a16b551, un commit anterior. Este commit solo mueve la ficha y anade la evidencia de que el techo quedo puesto: Luis corrio sudo ./enable-privileged.sh y reinicio el demonio el 2026-09-24, y verificado sobre la maquina docker.slice/memory.max = 34359738368, los 5 contenedores cuelgan de /docker.slice/, cero quedan en system.slice, y el runtime de nvidia sobrevivio a la mezcla de daemon.json. (Ese 34359738368 es lo que se midio el 2026-09-24 y se deja como esta: es el registro. Hoy el techo son 16G por 7061336, y el criterio de cierre se recalibro a 17179869184 -- ver la seccion `Por que el numero de este criterio cambio`.)"
 ---
@@ -69,7 +69,7 @@ HERMANOS del demonio, bajo `system.slice/docker-<id>.scope`. Un drop-in sobre
 ## Regression Test
 
 ```
-grep -qx 17179869184 /sys/fs/cgroup/docker.slice/memory.max
+grep -qx 15032385536 /sys/fs/cgroup/docker.slice/memory.max
 ```
 
 Lee la maquina, no el fichero que propone el techo. Control negativo corrido:
@@ -105,6 +105,24 @@ y con eso el reparto de hoy (48G + 16G = 64G) sigue sin componer. Eso es lo que
 [[DEBT-TECHOS-SIN-CALIBRAR]] sigue abierta.
 
 ## Por que el numero de este criterio cambio
+
+**2026-09-28: 16G -> 14G (17179869184 -> 15032385536).** Lo bajo el reparto que
+Luis voto para cerrar DEBT-TECHOS-SIN-CALIBRAR: los techos comprometian 121.8 GiB
+sobre 121.1 disponibles -- holgura NEGATIVA -- y restando el suelo de GPU (50.1,
+p95 de 19 901 muestras) quedaban 71.0 para los tres slices. Con `app` en 42,
+`docker` en 14 y `system` en 12 (techo NUEVO; antes entraba en la cuenta por lo
+que usaba y no por lo que prometia) la suma queda en 118.1 con holgura 2.9.
+
+El pico agregado de los contenedores medido sobre 3489 muestras es **12.7 GiB**,
+asi que 14 deja 1.3 de margen. Es mas estrecho que el 1.4x que justificaba los 16,
+y esa estrechez esta votada a sabiendas.
+
+**Este criterio ROMPIO el push cuando el techo bajo, y eso es lo que tiene que
+hacer.** `backlog-verifier` lo reporto como FRAUD DETECTED sobre una ficha
+cerrada, que es la unica forma de que un techo aflojado en silencio no pase
+inadvertido. La primera reaccion fue aflojar el criterio a "comprueba solo que no
+sea `max`"; el propio `porque` de este close_check ya lo prohibe por escrito, y
+por eso se recalibro el numero en vez de debilitar la prueba.
 
 El 2026-09-25, `backlog-verifier` bloqueo un push con
 `FRAUD DETECTED: Found 1 closed tasks whose findings still reproduce` sobre
