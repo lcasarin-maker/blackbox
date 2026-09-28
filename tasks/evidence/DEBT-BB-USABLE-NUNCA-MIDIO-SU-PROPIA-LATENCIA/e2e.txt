@@ -1,0 +1,14 @@
+# E2E -- extremo a extremo, el proceso real reiniciado por Luis a mano. 2026-09-28.
+
+Reiniciado con `sudo systemctl restart bb-usable.service` a las 13:54:24,
+DESPUES de que el fichero ya declarara DISPLAY (desde el despliegue de
+enable-privileged.sh a las 12:59:14). El PID cambio de 5525 a 224411,
+confirmando que es un proceso nuevo, no el mismo con env recargado en
+caliente. 4 ms es el valor sano de referencia -- coincide con los otros
+canales del mismo demonio (avg10, sonda de memoria), que nunca estuvieron
+ciegos.
+
+Esto cierra el PASO 1 (observar) de verdad para bb-usable, distinto de
+bin/bb (ya cerrado en DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA). Los PASOS 2 y 3
+(derivar un corte, actuar) siguen abiertos -- ver "Limite declarado" en el
+cuerpo de esta ficha.

@@ -2,18 +2,21 @@
 id: DEBT-BB-USABLE-NUNCA-MIDIO-SU-PROPIA-LATENCIA
 kind: debt
 title: "el canal de latencia de bb-usable lleva 5339 'sin DISPLAY' y cero mediciones"
-status: open
+status: done
+closure_type: relocated_prior_verification
+closed_at: 2026-09-28
 severity: P2
 origin: asserted
 satd_family: MISSING_INSTRUMENT
 created: 2026-09-28
 close_check: {"cmd": "bash tools/verifica_bb_usable_mide_latencia.sh", "expect": "exit_zero", "porque": "mide COMPORTAMIENTO (la ultima linea real del journal trae un numero, no 'sin DISPLAY'), no solo declaracion: systemctl show -p Environment refleja el fichero de la unit tras un daemon-reload, pero el PROCESO ya arrancado sigue respirando el entorno con el que se lanzo -- un cierre que solo mirara la declaracion se habria podido cerrar en falso mientras el proceso vivo seguia ciego. Envuelto en un script (no bash -c inline, no tuberia en el verification_command) porque backlog_verifier prohibe las dos formas."}
-evidence: {"medicion": "tasks/evidence/DEBT-BB-USABLE-NUNCA-MIDIO-SU-PROPIA-LATENCIA/medicion-2026-09-28.txt"}
+evidence: {"pass": "tasks/evidence/DEBT-BB-USABLE-NUNCA-MIDIO-SU-PROPIA-LATENCIA/pass.txt", "fail": "tasks/evidence/DEBT-BB-USABLE-NUNCA-MIDIO-SU-PROPIA-LATENCIA/fail.txt", "e2e": "tasks/evidence/DEBT-BB-USABLE-NUNCA-MIDIO-SU-PROPIA-LATENCIA/e2e.txt"}
+reason: "CERRADO 2026-09-28 13:54:24. Luis corrio sudo systemctl restart bb-usable.service a mano -- el unico paso que faltaba, unit de sistema, no me tocaba ejecutarlo. PID nuevo (224411, antes 5525), close_check rc=0, journal midiendo 4 ms reales. Cierra el PASO 1 (observar) de esta ficha; los PASOS 2 y 3 (derivar un corte, actuar) siguen abiertos, ver Limite declarado."
 ---
 
 # Technical Debt: bb-usable nunca midio la latencia que dice observar
 
-## Finding
+## Root Cause
 
 ```
 $ journalctl -u bb-usable | grep -c 'latencia del escritorio'              -> 5339
@@ -129,3 +132,34 @@ sudo systemctl restart bb-usable.service
 
 `enable-privileged.sh` no lo hace por si solo -- su paso 5 es
 `systemctl enable --now`, que no reinicia una unit ya activa.
+
+## Verification Evidence
+
+```
+$ systemctl show bb-usable -p ActiveEnterTimestamp,MainPID --value
+224411
+Mon 2026-09-28 13:54:24 CST
+
+$ bash tools/verifica_bb_usable_mide_latencia.sh; echo $?
+0
+
+$ journalctl -u bb-usable --since "13:54:24" | grep "latencia del escritorio" | tail -3
+sep 28 13:54:54 ... [bb-usable] latencia del escritorio: 4 ms (...)
+sep 28 13:55:24 ... [bb-usable] latencia del escritorio: 4 ms (...)
+sep 28 13:55:54 ... [bb-usable] latencia del escritorio: 4 ms (...)
+```
+
+Luis reinició `bb-usable.service` a mano. El PID cambió de 5525 a 224411 --
+proceso nuevo, no el mismo con entorno recargado en caliente. 4 ms coincide
+con el valor sano de los otros canales del mismo demonio. Ver
+`tasks/evidence/.../e2e.txt` para el detalle completo.
+
+## Regression Test
+
+El propio `close_check` (`tools/verifica_bb_usable_mide_latencia.sh`) es el
+guardián de la regresión, y mide comportamiento, no declaración -- si un
+futuro reinicio de `bb-usable` pierde `DISPLAY` (sesión gráfica caída,
+número de display distinto), la última línea real del journal vuelve a
+decir "sin DISPLAY" y el script da `rc=1` de inmediato. No hay test de
+pytest porque el sujeto es un proceso de sistema en vivo, no código del
+repo.
