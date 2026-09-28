@@ -1,0 +1,7 @@
+# PASS -- el close_check corrido hoy, sobre el sujeto real.
+
+$ grep -qE "^EARLYOOM_ARGS=.*-s 100,100" /etc/default/earlyoom; echo $?
+0
+
+$ grep -o 'EARLYOOM_ARGS=.*' /etc/default/earlyoom
+EARLYOOM_ARGS="-r 60 -m 10 -s 100,100 --avoid '(...)' --prefer '(pytest|python3|triton)'"
