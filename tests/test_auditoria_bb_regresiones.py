@@ -11,6 +11,7 @@ import sys
 import datetime as dt
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -18,10 +19,11 @@ from tools import atom_gpu_telemetry as agt
 from tools import scan_samples
 
 
-def _cargar_guardia():
+def _cargar_guardia() -> Any:
     ruta = Path(__file__).resolve().parents[1] / "bin/bb-guardia-proceso"
     loader = importlib.machinery.SourceFileLoader("bb_guardia_auditoria", str(ruta))
     spec = importlib.util.spec_from_loader("bb_guardia_auditoria", loader)
+    assert spec is not None
     modulo = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = modulo
     try:
@@ -31,10 +33,11 @@ def _cargar_guardia():
     return modulo
 
 
-def _cargar_watchdog():
+def _cargar_watchdog() -> Any:
     ruta = Path(__file__).resolve().parents[1] / "bin/bb-usable"
     loader = importlib.machinery.SourceFileLoader("bb_usable_auditoria", str(ruta))
     spec = importlib.util.spec_from_loader("bb_usable_auditoria", loader)
+    assert spec is not None
     modulo = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = modulo
     try:
@@ -44,7 +47,8 @@ def _cargar_watchdog():
     return modulo
 
 
-def _bb_scan(tmp_path, filas, ventana="1 minute ago", termica_filas=None):
+def _bb_scan(tmp_path, filas, ventana="1 minute ago", termica_filas=None,
+             fieldiag_root=None):
     repo = Path(__file__).resolve().parents[1]
     datos_dir = tmp_path / "bb-data"
     samples_dir = datos_dir / "samples"
@@ -72,6 +76,8 @@ def _bb_scan(tmp_path, filas, ventana="1 minute ago", termica_filas=None):
     env.update({"BLACKBOX_DATA": str(datos_dir),
                 "ATOM_TELEMETRY_JSONL": str(termica),
                 "PATH": str(mockbin) + os.pathsep + env["PATH"]})
+    if fieldiag_root is not None:
+        env["BB_FIELDDIAG_ROOT"] = str(fieldiag_root)
     return subprocess.run([str(repo / "bin/bb"), "scan", ventana],
                           capture_output=True, text=True, env=env, timeout=25)
 
@@ -161,19 +167,16 @@ def test_guardia_archivo_tardio(monkeypatch, tmp_path):
     fecha = ["2026-09-29"]
     monkeypatch.setattr(g.time, "strftime", lambda _fmt: fecha[0])
     monkeypatch.setattr(g, "_muestra_fresca", lambda _muestra: True)
-    procesadas = []
-
-    def procesar(top0, estado):
-        procesadas.append(top0["id"])
-        return estado
-
-    monkeypatch.setattr(g, "procesar_muestra", procesar)
-    monkeypatch.setattr(g, "_escribir_estado", lambda _estado: None)
+    monkeypatch.setattr(g, "CEILING_KB", 1)
+    monkeypatch.setattr(g, "UMBRAL_AVISO", 1)
     ruta1 = g.SAMPLES_DIR / "2026-09-29.jsonl"
     ruta2 = g.SAMPLES_DIR / "2026-09-30.jsonl"
 
     def linea(id_):
-        return json.dumps({"top_rss": [{"id": id_}]}) + "\n"
+        pids = {"A": 101, "B": 102, "C": 103, "D": 104}
+        pid = pids.get(id_, 999)
+        return json.dumps({"top_rss": [{"pid": pid, "comm": "python3",
+                                         "rss_kb": 10}]}) + "\n"
 
     paso = [0]
 
@@ -207,7 +210,10 @@ def test_guardia_archivo_tardio(monkeypatch, tmp_path):
     with pytest.raises(KeyboardInterrupt):
         g.main()
 
-    assert procesadas == ["A", "B", "C", "D"]
+    eventos = [json.loads(line) for line in g.EVIDENCIA.read_text(encoding="utf-8").splitlines()]
+    assert [evento["pid"] for evento in eventos] == [101, 102, 103, 104]
+    assert all(evento["dry_run"] and evento["accion"] == "ninguna"
+               for evento in eventos)
 
 
 def test_watchdog_colapso_psi_ilegible(monkeypatch):
@@ -221,11 +227,11 @@ def test_watchdog_colapso_psi_ilegible(monkeypatch):
     monkeypatch.setattr(bbu, "latencia_x_ms", lambda: None)
     monkeypatch.setattr(bbu, "PROBE_INTERVAL", 0)
     monkeypatch.setattr(bbu, "PSI_ACT_SONDAS", 2)
+    llamadas = [0]
     def sleep_tercero(_s):
-        sleep_tercero.llamadas += 1
-        if sleep_tercero.llamadas == 4:
+        llamadas[0] += 1
+        if llamadas[0] == 4:
             raise KeyboardInterrupt
-    sleep_tercero.llamadas = 0
 
     monkeypatch.setattr(bbu.time, "sleep", sleep_tercero)
     with pytest.raises(KeyboardInterrupt):
@@ -367,6 +373,51 @@ def test_scan_cnr_analisis_fallido(tmp_path):
     assert "muestras en ventana:         1" in scan.stdout
     assert "JSONL inválidas" in scan.stdout
     assert "NO esta limpio" in scan.stdout
+
+
+def test_scan_fielddiag_summary_invalido_incrementa_cnr(tmp_path):
+    """El JSON roto de un Field Diagnostic encontrado impide informe limpio."""
+    root = tmp_path / "fielddiag" / "dgx"
+    run = root / f"logs-{dt.datetime.now().astimezone().strftime('%Y%m%d-%H%M%S')}"
+    run.mkdir(parents=True)
+    summary = run / "summary.json"
+    summary.write_text("{invalido", encoding="utf-8")
+    now = dt.datetime.now(dt.timezone.utc)
+    filas = [{"ts": (now-dt.timedelta(seconds=15*i)).isoformat(),
+              "boot_id": "B", "mem_free_kb": 100, "zombies": 0,
+              "apps": [], "psi": {"mem_full": 0}, "gateway": "OK",
+              "gw_salud": "1,2,3,4,5,6,7", "py_bg": [], "top_rss": []}
+             for i in range(3)]
+    scan = _bb_scan(tmp_path / "invalid", filas, "5 minutes ago",
+                    fieldiag_root=root)
+    assert scan.returncode == 0
+    assert "COULD_NOT_RUN" in scan.stdout
+    assert "resumen Field Diagnostic: COULD_NOT_RUN" in scan.stdout
+    assert "no se pudo leer summary.json" in scan.stdout
+    assert "NO esta limpio" in scan.stdout
+
+    for idx, invalid_rows in enumerate((
+        [{"Test": "GPU", "Notes": "falta código"}],
+        [{"Test": "GPU", "Error Code": []}],
+        [{"Test": "GPU", "Error Code": ""}],
+        [{"Test": "GPU", "Error Code": "-"}],
+        [{"Test": "GPU", "Error Code": "error-"}],
+    )):
+        summary.write_text(json.dumps(invalid_rows), encoding="utf-8")
+        incompleto = _bb_scan(tmp_path / f"schema-{idx}", filas,
+                              "5 minutes ago", fieldiag_root=root)
+        assert "resumen Field Diagnostic: COULD_NOT_RUN" in incompleto.stdout
+        assert "NO esta limpio" in incompleto.stdout
+
+    summary.write_text(json.dumps([
+        {"Test": "GPU", "Error Code": "000000000000", "Notes": "ok"},
+        {"Test": "CPU", "Error Code": "123", "Notes": "failure"},
+    ]), encoding="utf-8")
+    valido = _bb_scan(tmp_path / "valid", filas, "5 minutes ago",
+                      fieldiag_root=root)
+    assert "tests en el resultado: 2" in valido.stdout
+    assert "tests con error:       1" in valido.stdout
+    assert "no se pudo leer summary.json" not in valido.stdout
 
 
 def test_scan_no_cruza_contadores_entre_boots(tmp_path):

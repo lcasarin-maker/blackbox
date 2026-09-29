@@ -1,6 +1,6 @@
 ---
-id: "DEBT-WATCHDOG-PSI-ILEGIBLE-REARMA"
-kind: "debt"
+id: DEBT-WATCHDOG-PSI-ILEGIBLE-REARMA
+kind: debt
 title: "PSI ilegible alimenta el watchdog durante un colapso declarado"
 status: done
 closed_at: 2026-09-29
@@ -9,11 +9,11 @@ evidence:
   pass: tasks/evidence/DEBT-WATCHDOG-PSI-ILEGIBLE-REARMA/pass.txt
   fail: tasks/evidence/DEBT-WATCHDOG-PSI-ILEGIBLE-REARMA/fail.txt
   e2e: tasks/evidence/DEBT-WATCHDOG-PSI-ILEGIBLE-REARMA/e2e.txt
-severity: "P1"
-origin: "detected"
+severity: P1
+origin: detected
 detector: {"rule": "adversarial-audit/DEBT-WATCHDOG-PSI-ILEGIBLE-REARMA", "confidence": 1.0}
-satd_family: "BLIND_INSTRUMENT"
-created: "2026-09-29"
+satd_family: BLIND_INSTRUMENT
+created: 2026-09-29
 close_check: {"cmd": "python3 -m pytest tests/test_auditoria_bb_regresiones.py::test_watchdog_colapso_psi_ilegible -q", "expect": "exit_zero"}
 ---
 
@@ -44,3 +44,16 @@ Orden y dependencias: `docs/PLAN-REMEDIACION-BB-2026-09-29.md`. Esta ficha queda
 Cuando PSI no se puede leer antes del umbral, el watchdog conserva su caricia y la racha alta continúa. Una vez declarado el colapso, PSI ilegible ya no devuelve el latido: solo dos lecturas bajas consecutivas limpian la racha, según la política existente. La ausencia inicial sigue sin inventar colapso.
 
 H3 mostró 11 latidos antes del cambio. El `close_check` pasó. La suite `test_bb_usable.py` junto con la regresión dio 26 passed y 2 fallidas por `PermissionError: [Errno 1] Operation not permitted` al enlazar sockets Unix en el sandbox; están anotadas como `could_not_run`, no como fallas del producto. Sin despliegue del servicio.
+
+
+## Root Cause
+
+Tras declarar colapso, una lectura PSI ilegible podía volver a enviar el latido del watchdog sin evidencia de recuperación.
+
+## Regression Test
+
+`python3 -m pytest tests/test_auditoria_bb_regresiones.py::test_watchdog_colapso_psi_ilegible -q`: La prueba invoca `main` tras colapso y PSI ilegible y cuenta los mensajes watchdog enviados.
+
+## Verification Evidence
+
+Resultados reproducibles: tasks/evidence/DEBT-WATCHDOG-PSI-ILEGIBLE-REARMA/e2e.txt. La salida del `close_check` está en el archivo `pass.txt` de la misma ficha de evidencia; el control previo está en `fail.txt`.

@@ -745,6 +745,7 @@ cmd_sample() {
   local gpu
   gpu=$(gpu_procs 2>/dev/null | while IFS=, read -r p n m; do
       p=$(echo "$p" | tr -d ' '); m=$(echo "$m" | tr -d ' ')
+      [[ "$p" =~ ^[0-9]+$ ]] || continue
       [ -d "/proc/$p" ] || continue
       u=$(sed -n 's/^0::\///p' "/proc/$p/cgroup" 2>/dev/null | sed 's/.*\///')
       printf '{"pid":%s,"mib":%s,"unit":"%s"},' "$p" "${m:-0}" "${u:-?}"
@@ -1001,7 +1002,7 @@ cmd_scan() {
   # dgx/logs-<yyyymmdd-hhnnss>/summary.json, un array con "Error Code"
   # (000000000000 = sin error), "Test", "Virtual ID" y "Notes" por prueba.
   echo "-- NVIDIA Field Diagnostic (dgx-spark-fieldiag), si corrio en la ventana --"
-  local fdroot="/opt/nvidia/dgx-spark-fieldiag/dgx"
+  local fdroot="${BB_FIELDDIAG_ROOT:-/opt/nvidia/dgx-spark-fieldiag/dgx}"
   if [ -d "$fdroot" ]; then
     local fdsince fdrun
     fdsince=$(date -d "$since" +%Y%m%d-%H%M%S 2>/dev/null)
@@ -1009,21 +1010,34 @@ cmd_scan() {
       awk -F'logs-' -v s="$fdsince" '{if ($2 >= s) print}' | sort | tail -1)
     if [ -n "$fdrun" ] && [ -f "$fdrun/summary.json" ]; then
       echo "  corrida encontrada: $fdrun"
-      python3 -c '
+      if python3 -c '
 import json, sys
 try:
-    with open(sys.argv[1]) as f:
+    with open(sys.argv[1], encoding="utf-8") as f:
         data = json.load(f)
 except Exception as e:
     print("  (no se pudo leer summary.json: %s)" % e)
-    sys.exit(0)
+    sys.exit(2)
+if not isinstance(data, list) or not all(isinstance(d, dict) for d in data):
+    print("  (summary.json no contiene una lista de resultados valida)")
+    sys.exit(2)
+if not all(isinstance(d.get("Error Code"), str)
+           and d["Error Code"].strip().split("-")[-1].strip()
+           for d in data):
+    print("  (summary.json contiene resultados sin Error Code utilizable)")
+    sys.exit(2)
 fallos = [d for d in data
           if str(d.get("Error Code", "")).split("-")[-1] not in ("000000000000", "")]
 print("  tests en el resultado: %d" % len(data))
 print("  tests con error:       %d" % len(fallos))
 for d in fallos[:5]:
     print("    %s (%s): %s" % (d.get("Test"), d.get("Virtual ID"), d.get("Notes")))
-' "$fdrun/summary.json"
+' "$fdrun/summary.json"; then
+        :
+      else
+        cannot_run "NVIDIA Field Diagnostic" "summary.json no legible o con formato invalido"
+        echo "  resumen Field Diagnostic: COULD_NOT_RUN"
+      fi
     else
       echo "  ninguna corrida dentro de esta ventana"
     fi

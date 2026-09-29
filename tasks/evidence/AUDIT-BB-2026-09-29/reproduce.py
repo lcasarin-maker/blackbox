@@ -1,8 +1,9 @@
 import importlib.machinery as m, importlib.util as u, sys, tempfile, pathlib, json, subprocess, io, contextlib
+from typing import Any
 from unittest.mock import patch
 R=pathlib.Path(__file__).resolve().parents[3]
-def load(name,path):
- l=m.SourceFileLoader(name,str(R/path)); s=u.spec_from_loader(name,l); x=u.module_from_spec(s);sys.modules[name]=x;l.exec_module(x);return x
+def load(name,path) -> Any:
+ l=m.SourceFileLoader(name,str(R/path)); s=u.spec_from_loader(name,l); assert s is not None; x: Any=u.module_from_spec(s);sys.modules[name]=x;l.exec_module(x);return x
 class Stop(Exception): pass
 with tempfile.TemporaryDirectory() as d:
  g=load('guard_audit','bin/bb-guardia-proceso'); g.SAMPLES_DIR=pathlib.Path(d);g.ESTADO=pathlib.Path(d)/'state';g.EVIDENCIA=pathlib.Path(d)/'events';g.DRY_RUN=True;g.log=lambda *a:None

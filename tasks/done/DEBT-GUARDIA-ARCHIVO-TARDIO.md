@@ -1,6 +1,6 @@
 ---
-id: "DEBT-GUARDIA-ARCHIVO-TARDIO"
-kind: "debt"
+id: DEBT-GUARDIA-ARCHIVO-TARDIO
+kind: debt
 title: "El guardian no reintenta abrir el archivo del dia tras un fallo"
 status: done
 closed_at: 2026-09-29
@@ -9,11 +9,11 @@ evidence:
   pass: tasks/evidence/DEBT-GUARDIA-ARCHIVO-TARDIO/pass.txt
   fail: tasks/evidence/DEBT-GUARDIA-ARCHIVO-TARDIO/fail.txt
   e2e: tasks/evidence/DEBT-GUARDIA-ARCHIVO-TARDIO/e2e.txt
-severity: "P1"
-origin: "detected"
+severity: P1
+origin: detected
 detector: {"rule": "adversarial-audit/DEBT-GUARDIA-ARCHIVO-TARDIO", "confidence": 1.0}
-satd_family: "BLIND_INSTRUMENT"
-created: "2026-09-29"
+satd_family: BLIND_INSTRUMENT
+created: 2026-09-29
 close_check: {"cmd": "python3 -m pytest tests/test_auditoria_bb_regresiones.py::test_guardia_archivo_tardio -q", "expect": "exit_zero"}
 ---
 
@@ -44,3 +44,16 @@ Orden y dependencias: `docs/PLAN-REMEDIACION-BB-2026-09-29.md`. Esta ficha queda
 El guardián reintenta abrir el archivo hasta que aparece, vuelve a abrir al cambiar de fecha, y detecta truncado y reemplazo por identidad de inode. En cada nueva generación comienza al final para evitar replay. La lectura binaria conserva offsets por byte y espera líneas completas antes de parsear. Los logs registran espera, conexión y reemplazo. Frescura, boot id e identidad PID siguen filtrando cada muestra procesable.
 
 H2 reproduce tres polls sin eventos antes del arreglo. El `close_check` pasó; conjunto de regresión guardián: 22 passed. `py_compile`, `bash -n` e `inventario --check` pasaron. Sin despliegue del servicio.
+
+
+## Root Cause
+
+El guardián avanzaba la ruta activa aunque fallara la apertura, así que no reintentaba el archivo del día; tampoco distinguía rotación, truncado y reemplazo.
+
+## Regression Test
+
+`python3 -m pytest tests/test_auditoria_bb_regresiones.py::test_guardia_archivo_tardio -q`: La prueba ejecuta `main` con archivo ausente y creación tardía, cambio de fecha, truncado y reemplazo; verifica que solo se consumen filas nuevas.
+
+## Verification Evidence
+
+Resultados reproducibles: tasks/evidence/DEBT-GUARDIA-ARCHIVO-TARDIO/e2e.txt. La salida del `close_check` está en el archivo `pass.txt` de la misma ficha de evidencia; el control previo está en `fail.txt`.

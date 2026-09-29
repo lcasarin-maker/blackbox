@@ -1,6 +1,6 @@
 ---
-id: "DEBT-GUARDIA-REPLAY-HISTORICO"
-kind: "debt"
+id: DEBT-GUARDIA-REPLAY-HISTORICO
+kind: debt
 title: "El guardian escala sobre muestras historicas sin validar identidad"
 status: done
 closed_at: 2026-09-29
@@ -9,11 +9,11 @@ evidence:
   pass: tasks/evidence/DEBT-GUARDIA-REPLAY-HISTORICO/pass.txt
   fail: tasks/evidence/DEBT-GUARDIA-REPLAY-HISTORICO/fail.txt
   e2e: tasks/evidence/DEBT-GUARDIA-REPLAY-HISTORICO/e2e.txt
-severity: "P1"
-origin: "detected"
+severity: P1
+origin: detected
 detector: {"rule": "adversarial-audit/DEBT-GUARDIA-REPLAY-HISTORICO", "confidence": 1.0}
-satd_family: "BLIND_INSTRUMENT"
-created: "2026-09-29"
+satd_family: BLIND_INSTRUMENT
+created: 2026-09-29
 close_check: {"cmd": "python3 -m pytest tests/test_auditoria_bb_regresiones.py::test_guardia_replay_no_actua -q", "expect": "exit_zero"}
 ---
 
@@ -44,3 +44,16 @@ Orden y dependencias: `docs/PLAN-REMEDIACION-BB-2026-09-29.md`. Esta ficha queda
 Al conectar el guardian a un archivo, salta todo lo que ya estaba escrito. Reinicia la racha de escalada, solo procesa la muestra nueva más reciente por sondeo, y descarta muestras viejas, de otro boot, duplicadas o fuera de secuencia. Las muestras de `bb sample` incluyen boot id y `starttime_ticks`; se coteja identidad con `/proc` al evaluar y otra vez antes de cada señal.
 
 H1 reprodujo el avance histórico hasta SIGTERM/SIGKILL antes del cambio. El `close_check` pasó; el conjunto de regresión del guardián dio 21 passed. `bash -n bin/bb` e `inventario --check` pasaron. El test intercepta señales. No se desplegó ni reinició el servicio; la unidad activa verificada en 2026-09-28 todavía requiere actualización en producción.
+
+
+## Root Cause
+
+Al conectar, el guardián procesaba la cola histórica sin exigir frescura, boot actual e identidad estable del PID, permitiendo escalar por eventos antiguos.
+
+## Regression Test
+
+`python3 -m pytest tests/test_auditoria_bb_regresiones.py::test_guardia_replay_no_actua -q`: La prueba ejecuta `main` con historia vieja y luego comprueba frescura, boot y `starttime_ticks`, interceptando señales.
+
+## Verification Evidence
+
+Resultados reproducibles: tasks/evidence/DEBT-GUARDIA-REPLAY-HISTORICO/e2e.txt. La salida del `close_check` está en el archivo `pass.txt` de la misma ficha de evidencia; el control previo está en `fail.txt`.

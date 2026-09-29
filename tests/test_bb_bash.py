@@ -1029,6 +1029,18 @@ def _smi_de_la_ultima_muestra(datos):
     return json.loads(f.read_text(encoding="utf-8").strip().splitlines()[-1])["smi"]
 
 
+def test_sample_ignora_fila_gpu_sin_pid_y_conserva_json_valido(datos, tmp_path):
+    env = _con_smi_falso(
+        tmp_path,
+        'if [[ "$*" == *query-compute-apps* ]]; then printf ",N/A,0\\n"; fi\n'
+        'exit 0\n',
+    )
+    r = correr(["sample"], datos=datos, extra_env=env)
+    assert r.returncode == 0, r.stderr
+    muestra = muestras(datos)[-1]
+    assert muestra["gpu"] == [], muestra["gpu"]
+
+
 def test_smi_dice_OK_cuando_el_driver_responde(datos, tmp_path):
     env = _con_smi_falso(tmp_path, "exit 0\n")
     correr(["sample"], datos=datos, extra_env=env)

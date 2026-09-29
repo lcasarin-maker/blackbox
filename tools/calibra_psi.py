@@ -215,15 +215,26 @@ def solapa(exc, ventana) -> bool:
 
 def calibra(serie, incidentes=None, umbral=UMBRAL_PCT, sostenido=SOSTENIDO_MIN,
             pico_max=PICO_MAX_MIN) -> dict:
-    """Aplica el corte y separa lo que cae DENTRO de un incidente etiquetado de
-    lo que cae fuera. Lo segundo son los falsos positivos: el control negativo."""
+    """Aplica el corte y coteja el instante medido de disparo con las etiquetas.
+
+    Una excursión que solo empieza dentro de un incidente, pero alcanza la
+    duración exigida después de su fin, no demuestra que el corte lo detectó.
+    """
     vs = ventanas(incidentes)
     colapsos, picos, sin_observar = [], [], []
     for exc in excursiones(serie, umbral):
         veredicto = clasifica(duracion_min(exc), pico_max, sostenido)
         {"COLAPSO": colapsos, "PICO": picos, "SIN OBSERVAR": sin_observar}[veredicto].append(exc)
 
-    falsos_positivos = [e for e in colapsos if not any(solapa(e, v) for v in vs)]
+    disparos = [
+        (exc, next((ts for ts, _ in exc
+                    if (ts - exc[0][0]).total_seconds() / 60.0 >= sostenido), None))
+        for exc in colapsos
+    ]
+    falsos_positivos = [
+        exc for exc, disparo in disparos
+        if disparo is None or not any(a <= disparo <= b for a, b in vs)
+    ]
     # Una ventana FUERA del rango del corpus no esta "sin detectar": esta sin
     # OBSERVAR, y son cosas distintas. Contarla como no detectada mide la lista
     # INCIDENTES contra un corpus que no llega hasta ella -- el instrumento en
@@ -237,8 +248,11 @@ def calibra(serie, incidentes=None, umbral=UMBRAL_PCT, sostenido=SOSTENIDO_MIN,
     else:
         observadas = []
     fuera_del_corpus = [v for v in vs if v not in observadas]
-    no_detectados = [v for v in observadas
-                     if not any(solapa(e, v) for e in colapsos)]
+    no_detectados = [
+        v for v in observadas
+        if not any(disparo is not None and v[0] <= disparo <= v[1]
+                   for _, disparo in disparos)
+    ]
     return {
         "rango": (serie[0][0].strftime("%Y-%m-%d %H:%M"),
                   serie[-1][0].strftime("%Y-%m-%d %H:%M")) if serie else ("", ""),
