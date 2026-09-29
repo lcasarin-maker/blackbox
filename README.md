@@ -64,6 +64,12 @@ bb sample              one sample (fired by the per-minute timer)
 bb install             install the user timers (per-minute sampling, daily drift check)
 ```
 
+`bb scan` applies its requested time bounds to JSONL evidence before analysis.
+It validates timestamps and fields, orders records, and does not derive CPU or
+network rates across boots or counter resets. Corrupt or insufficient input and
+failed analyzers appear in `could_not_run`, so the report states when a section
+could not reach a result.
+
 Full install:
 
 ```bash
@@ -88,7 +94,7 @@ signals that a stock install doesn't produce on its own:
 | PCIe power/AER events | Cross-referenced against OOM and thermal so a hard power-off gets one verdict instead of three unrelated logs |
 | PCIe replay counters | NVML-level link retransmit counts, from `nvidia-smi -q`'s PCI section — a replay can happen without the kernel ever writing an AER log line, so this is a second, independent signal, not a duplicate of the AER grep above |
 | GPU clock/pstate vs. throttle | Clock and pstate are cheap to sample every few seconds; almost nothing correlates them with the thermal trip point |
-| GPU 0% with active load | Correlates reserved GPU memory with sustained 0% utilization — the signature of a silent fallback to CPU |
+| GPU 0% with active load | Flags a possible CPU fallback only when requests are running and the same GPU process has positive CPU work in the same boot; missing correlation is reported as inconclusive, and an idle GPU is not called a fallback |
 | Boot stuck in GDM | `journalctl -b -1` for "gdm started, no login followed" — a layer below the desktop-app checks |
 | Kernel vs. userspace GUI hang | Two-probe check: is the NVIDIA kernel module loaded, is the display manager actually up |
 | OCI/nvidia-container-runtime prestart hook | Catches the silent fallback to "legacy" mode with no real GPU, where the container still reports "Up" |

@@ -1,0 +1,459 @@
+........................................................................ [ 14%]
+.............................................F.FFFFFFFFFFFFFF........... [ 28%]
+...............FFFFFFF.F.......FFF......FF.............................. [ 42%]
+..............FF........................................................ [ 56%]
+........................................................................ [ 70%]
+..ss...ss............................................................... [ 84%]
+........................................................................ [ 99%]
+.....                                                                    [100%]
+=================================== FAILURES ===================================
+_______________ test_control_negativo_cap_deja_pasar_lo_que_cabe _______________
+tests/test_bb_bash.py:137: in test_control_negativo_cap_deja_pasar_lo_que_cabe
+    assert r.returncode == 0, f"2 GiB bajo techo de 6G deberia caber: {r.stderr[-400:]}"
+E   AssertionError: 2 GiB bajo techo de 6G deberia caber: [bb cap] /opt/miniforge3/bin/python3 bajo techo de 6G (scope bb-cap-python3-112)
+E     [bb cap] si lo toca, el kernel mata SOLO lo que corre aqui dentro
+E     Failed to connect to bus: Operation not permitted
+E     [bb cap] pico: no disponible (el scope ya se recogio)
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'cap', '6', '/opt/miniforge3/bin/python3', '-c', "im...ui dentro\nFailed to connect to bus: Operation not permitted\n[bb cap] pico: no disponible (el scope ya se recogio)\n').returncode
+__________ test_sample_escribe_json_valido_con_los_campos_que_decide ___________
+tests/test_bb_bash.py:155: in test_sample_escribe_json_valido_con_los_campos_que_decide
+    m = muestras(datos)
+        ^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+             ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 583 (char 582)
+__________ test_commit_pct_es_un_porcentaje_real_no_un_cero_de_adorno __________
+tests/test_bb_bash.py:169: in test_commit_pct_es_un_porcentaje_real_no_un_cero_de_adorno
+    v = float(muestras(datos)[0]["commit_pct"])
+              ^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+             ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 583 (char 582)
+____________________ test_pidio_NOMBRA_a_quien_pide_memoria ____________________
+tests/test_bb_bash.py:190: in test_pidio_NOMBRA_a_quien_pide_memoria
+    d = muestras(datos)[-1]
+        ^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+             ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 583 (char 582)
+________ test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado _________
+tests/test_bb_bash.py:235: in test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado
+    nombrados = {x["pid"] for x in muestras(datos)[-1]["pidio"]}
+                                   ^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+             ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 589 (char 588)
+____________ test_latencia_x_dice_OK_cuando_el_escritorio_contesta _____________
+tests/test_bb_bash.py:267: in test_latencia_x_dice_OK_cuando_el_escritorio_contesta
+    x = _x_de_la_ultima_muestra(datos)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:259: in _x_de_la_ultima_muestra
+    return json.loads(f.read_text(encoding="utf-8").strip().splitlines()[-1])["x"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 586 (char 585)
+__ test_control_negativo_latencia_x_dice_TIMEOUT_si_el_escritorio_no_contesta __
+tests/test_bb_bash.py:280: in test_control_negativo_latencia_x_dice_TIMEOUT_si_el_escritorio_no_contesta
+    x = _x_de_la_ultima_muestra(datos)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:259: in _x_de_la_ultima_muestra
+    return json.loads(f.read_text(encoding="utf-8").strip().splitlines()[-1])["x"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 586 (char 585)
+______ test_control_negativo_latencia_x_dice_ERROR_si_el_servidor_rechaza ______
+tests/test_bb_bash.py:287: in test_control_negativo_latencia_x_dice_ERROR_si_el_servidor_rechaza
+    assert _x_de_la_ultima_muestra(datos)["estado"] == "ERROR"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:259: in _x_de_la_ultima_muestra
+    return json.loads(f.read_text(encoding="utf-8").strip().splitlines()[-1])["x"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 586 (char 585)
+____________ test_control_negativo_sin_DISPLAY_dice_AUSENTE_y_no_OK ____________
+tests/test_bb_bash.py:296: in test_control_negativo_sin_DISPLAY_dice_AUSENTE_y_no_OK
+    assert _x_de_la_ultima_muestra(datos)["estado"] == "AUSENTE"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:259: in _x_de_la_ultima_muestra
+    return json.loads(f.read_text(encoding="utf-8").strip().splitlines()[-1])["x"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 586 (char 585)
+___________________ test_swap_mide_el_RITMO_no_solo_el_nivel ___________________
+tests/test_bb_bash.py:324: in test_swap_mide_el_RITMO_no_solo_el_nivel
+    s = muestras(datos)[-1]["swap"]
+        ^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+             ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 586 (char 585)
+__________ test_control_negativo_sin_trafico_de_swap_el_ritmo_es_cero __________
+tests/test_bb_bash.py:341: in test_control_negativo_sin_trafico_de_swap_el_ritmo_es_cero
+    s = muestras(datos)[-1]["swap"]
+        ^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+             ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 586 (char 585)
+_________ test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo __________
+tests/test_bb_bash.py:354: in test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo
+    s = muestras(datos)[-1]["swap"]
+        ^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+             ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 586 (char 585)
+___________ test_swap_por_proceso_NOMBRA_a_quien_tiene_memoria_fuera ___________
+tests/test_bb_bash.py:392: in test_swap_por_proceso_NOMBRA_a_quien_tiene_memoria_fuera
+    top = muestras(datos)[-1]["swap"]["top"]
+          ^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+             ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 586 (char 585)
+__________ test_control_negativo_un_proceso_SIN_swap_no_sale_nombrado __________
+tests/test_bb_bash.py:403: in test_control_negativo_un_proceso_SIN_swap_no_sale_nombrado
+    pids = {x["pid"] for x in muestras(datos)[-1]["swap"]["top"]}
+                              ^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+             ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 586 (char 585)
+__________ test_control_negativo_sin_nadie_en_swap_la_lista_va_vacia ___________
+tests/test_bb_bash.py:412: in test_control_negativo_sin_nadie_en_swap_la_lista_va_vacia
+    assert muestras(datos)[-1]["swap"]["top"] == []
+           ^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+             ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 586 (char 585)
+____________________ test_cpu_top_NOMBRA_a_quien_quema_cpu _____________________
+tests/test_bb_bash.py:756: in test_cpu_top_NOMBRA_a_quien_quema_cpu
+    d = muestras(datos)[-1]
+        ^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+             ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 588 (char 587)
+_______ test_control_negativo_un_proceso_dormido_no_sale_como_que_quema ________
+tests/test_bb_bash.py:791: in test_control_negativo_un_proceso_dormido_no_sale_como_que_quema
+    nombrados = {x["pid"] for x in muestras(datos)[-1]["cpu_top"]}
+                                   ^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+             ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 594 (char 593)
+___________ test_cpu_top_va_vacio_en_la_primera_muestra_y_no_inventa ___________
+tests/test_bb_bash.py:803: in test_cpu_top_va_vacio_en_la_primera_muestra_y_no_inventa
+    d = muestras(datos)[-1]
+        ^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+             ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 591 (char 590)
+________________ test_residuo_es_un_numero_y_CABE_en_la_maquina ________________
+tests/test_bb_bash.py:842: in test_residuo_es_un_numero_y_CABE_en_la_maquina
+    residuo = int(muestras(datos)[-1]["residuo_mb"])
+                  ^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+             ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 591 (char 590)
+____________ test_la_rafaga_dispara_con_la_caida_real_del_incidente ____________
+tests/test_bb_bash.py:883: in test_la_rafaga_dispara_con_la_caida_real_del_incidente
+    lineas = _leer(datos / "samples" / (time.strftime("%Y-%m-%d") + ".jsonl"))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:870: in _leer
+    return [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+            ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 591 (char 590)
+_____________ test_control_negativo_la_rafaga_NO_dispara_en_reposo _____________
+tests/test_bb_bash.py:896: in test_control_negativo_la_rafaga_NO_dispara_en_reposo
+    lineas = _leer(datos / "samples" / (time.strftime("%Y-%m-%d") + ".jsonl"))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:870: in _leer
+    return [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+            ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 591 (char 590)
+_________ test_la_rafaga_dispara_con_el_salto_de_commit_del_incidente __________
+tests/test_bb_bash.py:907: in test_la_rafaga_dispara_con_el_salto_de_commit_del_incidente
+    lineas = _leer(datos / "samples" / (time.strftime("%Y-%m-%d") + ".jsonl"))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:870: in _leer
+    return [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+            ^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 590 (char 589)
+__________________ test_sigterm_distingue_armado_de_no_armado __________________
+tests/test_bb_bash.py:961: in test_sigterm_distingue_armado_de_no_armado
+    assert "regla de auditoria: armado" in r.stdout
+E   assert 'regla de auditoria: armado' in "== emisores de SIGTERM/SIGKILL desde 30 minutes ago ==\n\n  0 senales registradas en la ventana\n\n-- estado del inst...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n"
+E    +  where "== emisores de SIGTERM/SIGKILL desde 30 minutes ago ==\n\n  0 senales registradas en la ventana\n\n-- estado del inst...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'sigterm', '30 minutes ago'], returncode=0, stdout="...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
+_______________ test_la_muestra_guarda_la_memoria_de_CADA_slice ________________
+tests/test_bb_bash.py:1095: in test_la_muestra_guarda_la_memoria_de_CADA_slice
+    s = _slices_de_la_muestra(datos)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:1082: in _slices_de_la_muestra
+    return json.loads(f.read_text(encoding="utf-8").splitlines()[-1])["slices"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 591 (char 590)
+_______ test_un_slice_que_NO_se_puede_leer_se_OMITE_y_no_entra_como_cero _______
+tests/test_bb_bash.py:1105: in test_un_slice_que_NO_se_puede_leer_se_OMITE_y_no_entra_como_cero
+    s = _slices_de_la_muestra(datos)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:1082: in _slices_de_la_muestra
+    return json.loads(f.read_text(encoding="utf-8").splitlines()[-1])["slices"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 591 (char 590)
+_________ test_sin_memory_peak_en_el_kernel_se_escribe_null_y_no_cero __________
+tests/test_bb_bash.py:1114: in test_sin_memory_peak_en_el_kernel_se_escribe_null_y_no_cero
+    s = _slices_de_la_muestra(datos)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_bb_bash.py:1082: in _slices_de_la_muestra
+    return json.loads(f.read_text(encoding="utf-8").splitlines()[-1])["slices"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/json/decoder.py:356: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 591 (char 590)
+_____________ test_sigterm_DECLARA_la_ventana_que_el_anillo_cubre ______________
+tests/test_bb_bash.py:1234: in test_sigterm_DECLARA_la_ventana_que_el_anillo_cubre
+    assert "could_not_run: 1" in r.stdout, (
+E   AssertionError: pedir 120 min contra un anillo de 2 no puede salir con could_not_run 0
+E   assert 'could_not_run: 1' in "== emisores de SIGTERM/SIGKILL desde 2 hours ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VICTI...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n"
+E    +  where "== emisores de SIGTERM/SIGKILL desde 2 hours ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VICTI...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'sigterm', '2 hours ago'], returncode=0, stdout="== ...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
+________ test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso ________
+tests/test_bb_bash.py:1255: in test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso
+    assert "could_not_run: 0" in r.stdout
+E   assert 'could_not_run: 0' in "== emisores de SIGTERM/SIGKILL desde 5 minutes ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VIC...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n"
+E    +  where "== emisores de SIGTERM/SIGKILL desde 5 minutes ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VIC...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'sigterm', '5 minutes ago'], returncode=0, stdout="=...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
+__________________ test_notify_manda_de_verdad_por_el_socket ___________________
+tests/test_bb_usable.py:226: in test_notify_manda_de_verdad_por_el_socket
+    srv.bind(str(ruta))
+E   PermissionError: [Errno 1] Operation not permitted
+______________ test_notify_sin_socket_no_manda_nada_y_no_revienta ______________
+tests/test_bb_usable.py:244: in test_notify_sin_socket_no_manda_nada_y_no_revienta
+    srv.bind(str(ruta))
+E   PermissionError: [Errno 1] Operation not permitted
+=========================== short test summary info ============================
+FAILED tests/test_bb_bash.py::test_control_negativo_cap_deja_pasar_lo_que_cabe
+FAILED tests/test_bb_bash.py::test_sample_escribe_json_valido_con_los_campos_que_decide
+FAILED tests/test_bb_bash.py::test_commit_pct_es_un_porcentaje_real_no_un_cero_de_adorno
+FAILED tests/test_bb_bash.py::test_pidio_NOMBRA_a_quien_pide_memoria - json.d...
+FAILED tests/test_bb_bash.py::test_control_negativo_un_proceso_que_NO_pide_no_sale_nombrado
+FAILED tests/test_bb_bash.py::test_latencia_x_dice_OK_cuando_el_escritorio_contesta
+FAILED tests/test_bb_bash.py::test_control_negativo_latencia_x_dice_TIMEOUT_si_el_escritorio_no_contesta
+FAILED tests/test_bb_bash.py::test_control_negativo_latencia_x_dice_ERROR_si_el_servidor_rechaza
+FAILED tests/test_bb_bash.py::test_control_negativo_sin_DISPLAY_dice_AUSENTE_y_no_OK
+FAILED tests/test_bb_bash.py::test_swap_mide_el_RITMO_no_solo_el_nivel - json...
+FAILED tests/test_bb_bash.py::test_control_negativo_sin_trafico_de_swap_el_ritmo_es_cero
+FAILED tests/test_bb_bash.py::test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo
+FAILED tests/test_bb_bash.py::test_swap_por_proceso_NOMBRA_a_quien_tiene_memoria_fuera
+FAILED tests/test_bb_bash.py::test_control_negativo_un_proceso_SIN_swap_no_sale_nombrado
+FAILED tests/test_bb_bash.py::test_control_negativo_sin_nadie_en_swap_la_lista_va_vacia
+FAILED tests/test_bb_bash.py::test_cpu_top_NOMBRA_a_quien_quema_cpu - json.de...
+FAILED tests/test_bb_bash.py::test_control_negativo_un_proceso_dormido_no_sale_como_que_quema
+FAILED tests/test_bb_bash.py::test_cpu_top_va_vacio_en_la_primera_muestra_y_no_inventa
+FAILED tests/test_bb_bash.py::test_residuo_es_un_numero_y_CABE_en_la_maquina
+FAILED tests/test_bb_bash.py::test_la_rafaga_dispara_con_la_caida_real_del_incidente
+FAILED tests/test_bb_bash.py::test_control_negativo_la_rafaga_NO_dispara_en_reposo
+FAILED tests/test_bb_bash.py::test_la_rafaga_dispara_con_el_salto_de_commit_del_incidente
+FAILED tests/test_bb_bash.py::test_sigterm_distingue_armado_de_no_armado - as...
+FAILED tests/test_bb_bash.py::test_la_muestra_guarda_la_memoria_de_CADA_slice
+FAILED tests/test_bb_bash.py::test_un_slice_que_NO_se_puede_leer_se_OMITE_y_no_entra_como_cero
+FAILED tests/test_bb_bash.py::test_sin_memory_peak_en_el_kernel_se_escribe_null_y_no_cero
+FAILED tests/test_bb_bash.py::test_sigterm_DECLARA_la_ventana_que_el_anillo_cubre
+FAILED tests/test_bb_bash.py::test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso
+FAILED tests/test_bb_usable.py::test_notify_manda_de_verdad_por_el_socket - P...
+FAILED tests/test_bb_usable.py::test_notify_sin_socket_no_manda_nada_y_no_revienta
+30 failed, 475 passed, 4 skipped in 169.83s (0:02:49)

@@ -282,6 +282,10 @@ def main() -> int:
         if psi is None:
             log("[bb-usable] PSI ILEGIBLE -- no cuenta ni para actuar ni para "
                 f"absolver (racha sigue en {sostenido}/{PSI_ACT_SONDAS})")
+            if sostenido >= PSI_ACT_SONDAS:
+                log("[bb-usable] el colapso sigue declarado y PSI no permite "
+                    "confirmar recuperacion -- no se acaricia el watchdog")
+                continue
             notify("WATCHDOG=1")
             continue
 

@@ -90,6 +90,7 @@ REPO = Path(__file__).resolve().parent.parent
 # 2026-09-24). Se respeta BLACKBOX_DATA, igual que el resto de esta caja.
 DATA_DIR = Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox"))
 JSONL_PATH = Path(os.environ.get("ATOM_TELEMETRY_JSONL", DATA_DIR / "atom_gpu_telemetry.jsonl"))
+MITIGACION_STATE_PATH = DATA_DIR / "atom_gpu_mitigacion.json"
 THERMAL_DIR = Path("/sys/class/thermal")
 
 INTERVALO_DEFAULT_S = 5.0
@@ -197,6 +198,85 @@ PROCESOS_MITIGABLES = ("remine_harvest_lens.py", "build_incremental.py",
 # dentro de la función para que el test pueda apuntarla a un /proc de mentira y
 # no dependa de qué corra en la máquina.
 PROC_DIR = Path("/proc")
+BOOT_ID_PATH = Path("/proc/sys/kernel/random/boot_id")
+
+
+def _identidad_proceso(pid: int) -> tuple[int, str] | None:
+    """Devuelve starttime y estado de /proc/stat; el comm puede contener ')' ."""
+    try:
+        raw = (PROC_DIR / str(pid) / "stat").read_text(encoding="ascii")
+        campos = raw[raw.rfind(")") + 2:].split()
+        return int(campos[19]), campos[0]
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+def _boot_id() -> str | None:
+    try:
+        return BOOT_ID_PATH.read_text(encoding="ascii").strip() or None
+    except OSError:
+        return None
+
+
+def _guardar_estado_mitigacion(estado: dict, ruta: Path | None = None) -> None:
+    """Escribe intención y propiedad atómicamente antes/después de señales."""
+    ruta = ruta or MITIGACION_STATE_PATH
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    dato = {
+        "version": 1,
+        "boot_id": _boot_id(),
+        "mitigados": sorted(estado.get("mitigados", set())),
+        "identidades": {str(pid): inicio for pid, inicio
+                        in estado.get("identidades", {}).items()},
+        "intentos": {str(pid): inicio for pid, inicio
+                    in estado.get("intentos", {}).items()},
+        "en_alarma": sorted(estado.get("en_alarma", set())),
+        "inicio": estado.get("inicio", {}),
+    }
+    temporal = ruta.with_suffix(ruta.suffix + ".tmp")
+    temporal.write_text(json.dumps(dato), encoding="utf-8")
+    temporal.chmod(0o600)
+    temporal.replace(ruta)
+
+
+def _cargar_estado_mitigacion(*, enviar_senal=None, ruta: Path | None = None) -> dict:
+    """Recupera pausas del mismo boot y limpia intentos interrumpidos."""
+    try:
+        dato = json.loads((ruta or MITIGACION_STATE_PATH).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {"mitigados": set(), "identidades": {}, "intentos": {},
+                "en_alarma": set(), "inicio": {}}
+    vacio = {"mitigados": set(), "identidades": {}, "intentos": {},
+             "en_alarma": set(), "inicio": {}}
+    if dato.get("version") != 1 or dato.get("boot_id") != _boot_id():
+        return vacio
+    estado = {"mitigados": set(), "identidades": {}, "intentos": {},
+              "en_alarma": set(dato.get("en_alarma", [])),
+              "inicio": dato.get("inicio", {})}
+    for pid_txt, inicio in dato.get("identidades", {}).items():
+        try:
+            pid = int(pid_txt)
+        except (ValueError, TypeError):
+            continue
+        actual = _identidad_proceso(pid)
+        if actual and actual[0] == inicio:
+            estado["mitigados"].add(pid)
+            estado["identidades"][pid] = inicio
+    enviar_senal = enviar_senal or os.kill
+    for pid_txt, inicio in dato.get("intentos", {}).items():
+        try:
+            pid = int(pid_txt)
+        except (ValueError, TypeError):
+            continue
+        actual = _identidad_proceso(pid)
+        if actual and actual[0] == inicio and actual[1] in ("T", "t"):
+            try:
+                enviar_senal(pid, signal.SIGCONT)
+            except ProcessLookupError:
+                pass
+        # Un intento interrumpido se reconcilia; nunca queda como propiedad.
+    _guardar_estado_mitigacion(estado, ruta)
+    return estado
 
 # Ventana de deduplicación de alertas de journal, en segundos de RELOJ DE LA
 # ENTRADA (no del muestreo). Sale de la ráfaga real del 2026-08-30 07:38:47 en
@@ -668,6 +748,7 @@ def _escribir(evento: dict) -> None:
     del sampler es sobrevivir a una muerte dura de la máquina, y lo que quede
     en el page cache muere con ella. Son ~400 bytes cada 5 s."""
     JSONL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    evento = {**evento, "boot_id": _boot_id()}
     with JSONL_PATH.open("a", encoding="utf-8") as f:
         f.write(json.dumps(evento, ensure_ascii=False) + "\n")
         f.flush()
@@ -1189,7 +1270,8 @@ def pids_mitigables(patrones: tuple[str, ...] = PROCESOS_MITIGABLES) -> list[int
 
 
 def mitigar(eventos: list[dict], estado: dict, *,
-           listar_pids=None, enviar_senal=None) -> list[dict]:
+           listar_pids=None, enviar_senal=None,
+           actuar: bool = True, persistir_estado=None) -> list[dict]:
     """DGX-342: `temp_critica` hasta ahora sólo se logueaba -- el quinto crash
     del día tuvo 6 cruces en 27 min y murió 8s después del último. Pausa
     (SIGSTOP) los procesos de `PROCESOS_MITIGABLES` mientras haya una zona en
@@ -1244,6 +1326,10 @@ def mitigar(eventos: list[dict], estado: dict, *,
     listar_pids = listar_pids or pids_mitigables
     enviar_senal = enviar_senal or os.kill
     mitigados: set[int] = estado.setdefault("mitigados", set())
+    identidades: dict[int, int] = estado.setdefault("identidades", {})
+    intentos: dict[int, int] = estado.setdefault("intentos", {})
+    durable = persistir_estado is not None
+    persistir_estado = persistir_estado or (lambda _estado: None)
     criticas = [e for e in eventos if e.get("evento") == "temp_critica"]
     con_carga = [e for e in criticas if e.get("carga_gpu") == "con_carga"]
     # `None` (evento anterior a DGX-396) y `"sin_datos"` (sampler sin
@@ -1256,27 +1342,63 @@ def mitigar(eventos: list[dict], estado: dict, *,
 
     if con_carga and not mitigados:
         objetivo = sorted(listar_pids())
+        if not actuar:
+            resultado.append({"ts": _ahora(), "evento": "mitigacion_simulada",
+                              "accion": "pausa", "pids": objetivo,
+                              "patrones": list(PROCESOS_MITIGABLES)})
         pausados: list[int] = []
-        for pid in objetivo:
-            try:
-                enviar_senal(pid, signal.SIGSTOP)
-                pausados.append(pid)
-            except ProcessLookupError:
-                continue  # murió entre el listado y el kill -- no es un pid que pausar
+        if actuar:
+            for pid in objetivo:
+                identidad = _identidad_proceso(pid) if durable else None
+                if durable and identidad is None:
+                    continue
+                if identidad:
+                    # Durable antes de SIGSTOP: el reinicio puede distinguir
+                    # una caída en la ventana señal/confirmación.
+                    intentos[pid] = identidad[0]
+                    persistir_estado(estado)
+                try:
+                    enviar_senal(pid, signal.SIGSTOP)
+                    pausados.append(pid)
+                    if identidad:
+                        identidades[pid] = identidad[0]
+                        mitigados.add(pid)
+                        persistir_estado(estado)
+                except ProcessLookupError:
+                    intentos.pop(pid, None)
+                    continue  # murió entre el listado y el kill -- no es un pid que pausar
+                    intentos.pop(pid, None)
+                else:
+                    intentos.pop(pid, None)
+                finally:
+                    persistir_estado(estado)
         if pausados:
             mitigados.update(pausados)
+            persistir_estado(estado)
             resultado.append({"ts": _ahora(), "evento": "mitigacion_pausa",
                               "pids": pausados, "patrones": list(PROCESOS_MITIGABLES)})
+
+    elif mitigados and not estado.get("en_alarma") and not actuar:
+        resultado.append({"ts": _ahora(), "evento": "mitigacion_simulada",
+                          "accion": "reanuda", "pids": sorted(mitigados)})
 
     elif mitigados and not estado.get("en_alarma"):
         reanudados: list[int] = []
         for pid in sorted(mitigados):
+            identidad = identidades.get(pid)
+            actual = _identidad_proceso(pid) if identidad is not None else None
+            if identidad is not None and (actual is None or actual[0] != identidad):
+                reanudados.append(pid)  # desapareció o el PID ya pertenece a otro
+                identidades.pop(pid, None)
+                continue
             try:
                 enviar_senal(pid, signal.SIGCONT)
                 reanudados.append(pid)
             except ProcessLookupError:
                 continue  # murió mientras estaba pausado -- nada que reanudar
         mitigados.clear()
+        identidades.clear()
+        persistir_estado(estado)
         resultado.append({"ts": _ahora(), "evento": "mitigacion_reanuda",
                           "pids": reanudados})
 
@@ -1300,7 +1422,8 @@ def mitigar(eventos: list[dict], estado: dict, *,
     return resultado
 
 
-def muestrear(umbrales: dict, estado: dict, *, escribir: bool = True) -> list[dict]:
+def muestrear(umbrales: dict, estado: dict, *, escribir: bool = True,
+              actuar: bool = True, persistir_estado=None) -> list[dict]:
     """Una iteración: la muestra siempre, más las alarmas que hayan cambiado
     de estado, más la mitigación si corresponde. Devuelve todo lo emitido
     para que los tests lo inspeccionen."""
@@ -1319,7 +1442,11 @@ def muestrear(umbrales: dict, estado: dict, *, escribir: bool = True) -> list[di
     if journal_ausente:
         muestra["journal_ausente"] = journal_ausente
     alarmas = _alarmas(zonas, umbrales, estado)
-    eventos = [muestra, *alarmas, *alertas, *mitigar(alarmas, estado)]
+    eventos = [muestra, *alarmas, *alertas,
+               *mitigar(alarmas, estado, actuar=actuar,
+                        persistir_estado=persistir_estado)]
+    if persistir_estado is not None:
+        persistir_estado(estado)
     if escribir:
         for evento in eventos:
             _escribir(evento)
@@ -1369,8 +1496,13 @@ def main() -> int:
     escribir = not args.dry_run
     recortadas = rotar_si_hace_falta() if escribir else None
     umbrales = leer_umbrales()
-    estado: dict = {"en_alarma": set(), "inicio": {},
-                    "cursor": None, "anclas": {}}
+    ruta_estado_mitigacion = JSONL_PATH.parent / "atom_gpu_mitigacion.json"
+    estado: dict = (_cargar_estado_mitigacion(ruta=ruta_estado_mitigacion)
+                    if escribir else {})
+    estado.setdefault("en_alarma", set())
+    estado.setdefault("inicio", {})
+    estado.setdefault("cursor", None)
+    estado.setdefault("anclas", {})
 
     arranque = {"ts": _ahora(), "evento": "arranque",
                 "intervalo_s": args.interval_seconds,
@@ -1388,7 +1520,12 @@ def main() -> int:
     try:
         desde_revision = 0
         while True:
-            eventos = muestrear(umbrales, estado, escribir=escribir)
+            eventos = muestrear(umbrales, estado, escribir=escribir,
+                                actuar=not args.dry_run,
+                                persistir_estado=(
+                                    (lambda dato: _guardar_estado_mitigacion(
+                                        dato, ruta_estado_mitigacion))
+                                    if escribir else None))
             # El anillo, también en caliente. Sin esto el recorte sólo ocurre al
             # arrancar el proceso, que en este servicio significa "al reiniciar
             # la máquina": el hueco que abre DEBT-TELEMETRIA-GPU-SIN-COTA-EN-CALIENTE.
