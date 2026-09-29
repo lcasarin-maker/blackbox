@@ -395,6 +395,19 @@ def test_swap_por_proceso_NOMBRA_a_quien_tiene_memoria_fuera(datos, tmp_path):
     assert top[0]["unit"] == "prueba-gordo.scope", "sin la unit no se sabe quien lo lanzo"
 
 
+def test_sample_escapa_backslash_de_la_unit_en_json(datos, tmp_path):
+    """DEBT-SAMPLE-JSON-ESCAPE-SYSTEMD-UNIT: cgroup escaping stays valid JSONL."""
+    env = _proc_falso(tmp_path, [(555, 1024, "proceso")])
+    proc = Path(env["BB_PROC"])
+    (proc / "555" / "cgroup").write_text(
+        r"0::/user.slice/app-gnome-google\x2dchrome.scope" + "\n",
+        encoding="utf-8",
+    )
+    correr(["sample"], datos, env)
+    swap_top = muestras(datos)[-1]["swap"]["top"]
+    assert swap_top[0]["unit"] == r"app-gnome-google\x2dchrome.scope"
+
+
 def test_control_negativo_un_proceso_SIN_swap_no_sale_nombrado(datos, tmp_path):
     """Sin esto el test de arriba no distingue "atribuye" de "lista a todo el
     mundo". Un proceso con VmSwap 0 existe, se lee, y no puede aparecer."""

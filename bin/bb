@@ -76,6 +76,20 @@ cannot_run() { CNR=$((CNR + 1)); CNR_LIST="${CNR_LIST}  - $1: $2"$'\n'; }
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
+# Escape dynamic text before embedding it in the JSONL sample. systemd encodes
+# punctuation in cgroup names as literal `\xNN`; a raw backslash invalidates JSON.
+json_escape() {
+  local s=$1
+  s=${s//\\/\\\\}
+  s=${s//\"/\\\"}
+  s=${s//$'\b'/\\b}
+  s=${s//$'\f'/\\f}
+  s=${s//$'\n'/\\n}
+  s=${s//$'\r'/\\r}
+  s=${s//$'\t'/\\t}
+  printf '%s' "$s"
+}
+
 # ------------------------------------------------------------ fuentes de dato
 
 # Memoria GPU. En el GB10 de esta maquina `--query-gpu=memory.used` devuelve
@@ -589,7 +603,8 @@ cmd_sample() {
       u=$(sed -n 's/^0::\///p' "/proc/$pid/cgroup" 2>/dev/null | sed 's/.*\///')
       inicio=$(awk '{sub(/^.*\) /, ""); print $20}' "/proc/$pid/stat" 2>/dev/null)
       [ -n "$inicio" ] || continue
-      printf '{"rss_kb":%s,"pid":%s,"comm":"%s","unit":"%s","starttime_ticks":%s},' "$rss" "$pid" "$comm" "${u:-?}" "$inicio"
+      comm_json=$(json_escape "$comm"); unit_json=$(json_escape "${u:-?}")
+      printf '{"rss_kb":%s,"pid":%s,"comm":"%s","unit":"%s","starttime_ticks":%s},' "$rss" "$pid" "$comm_json" "$unit_json" "$inicio"
     done | sed 's/,$//')
 
   # QUIEN pidio memoria desde la muestra anterior. Anadido el 2026-09-24
@@ -621,8 +636,9 @@ cmd_sample() {
              "$prev_vsz" "$prev_vsz.new" 2>/dev/null | sort -k2 -rn | head -5 |
       while read -r pid crec comm nuevo; do
         u=$(sed -n 's/^0::\///p' "/proc/$pid/cgroup" 2>/dev/null | sed 's/.*\///')
+        comm_json=$(json_escape "$comm"); unit_json=$(json_escape "${u:-?}")
         printf '{"pid":%s,"crecio_kb":%s,"comm":"%s","unit":"%s","nuevo":%s},' \
-          "$pid" "$crec" "$comm" "${u:-?}" "$([ "${nuevo:-0}" = 1 ] && echo true || echo false)"
+          "$pid" "$crec" "$comm_json" "$unit_json" "$([ "${nuevo:-0}" = 1 ] && echo true || echo false)"
       done | sed 's/,$//')
   fi
   mv -f "$prev_vsz.new" "$prev_vsz" 2>/dev/null
@@ -671,9 +687,10 @@ cmd_sample() {
                "$prev_cpu" "$prev_cpu.new" 2>/dev/null | sort -k2 -rn | head -5 |
         while read -r pid seg comm nuevo; do
           u=$(sed -n 's/^0::\///p' "/proc/$pid/cgroup" 2>/dev/null | sed 's/.*\///')
+          comm_json=$(json_escape "$comm"); unit_json=$(json_escape "${u:-?}")
           printf '{"pid":%s,"cpu_s":%s,"pct_nucleo":%s,"comm":"%s","unit":"%s","nuevo":%s},' \
             "$pid" "$seg" "$(awk -v a="$seg" -v b="$dt" 'BEGIN{printf "%.1f", 100*a/b}')" \
-            "$comm" "${u:-?}" "$([ "${nuevo:-0}" = 1 ] && echo true || echo false)"
+            "$comm_json" "$unit_json" "$([ "${nuevo:-0}" = 1 ] && echo true || echo false)"
         done | sed 's/,$//')
     fi
   fi
@@ -730,7 +747,8 @@ cmd_sample() {
     sort -k2 -rn | head -5 |
     while read -r pid kb comm; do
       u=$(sed -n 's/^0::\///p' "$PROC/$pid/cgroup" 2>/dev/null | sed 's/.*\///')
-      printf '{"pid":%s,"swap_kb":%s,"comm":"%s","unit":"%s"},' "$pid" "$kb" "$comm" "${u:-?}"
+      comm_json=$(json_escape "$comm"); unit_json=$(json_escape "${u:-?}")
+      printf '{"pid":%s,"swap_kb":%s,"comm":"%s","unit":"%s"},' "$pid" "$kb" "$comm_json" "$unit_json"
     done | sed 's/,$//')
 
   # El relevo del estado va AQUI, despues del ultimo lector. Estuvo dos
@@ -748,7 +766,8 @@ cmd_sample() {
       [[ "$p" =~ ^[0-9]+$ ]] || continue
       [ -d "/proc/$p" ] || continue
       u=$(sed -n 's/^0::\///p' "/proc/$p/cgroup" 2>/dev/null | sed 's/.*\///')
-      printf '{"pid":%s,"mib":%s,"unit":"%s"},' "$p" "${m:-0}" "${u:-?}"
+      unit_json=$(json_escape "${u:-?}")
+      printf '{"pid":%s,"mib":%s,"unit":"%s"},' "$p" "${m:-0}" "$unit_json"
     done | sed 's/,$//')
 
   # DGX-438: algo mata procesos python de fondo cada 10-15 min con rc=143
