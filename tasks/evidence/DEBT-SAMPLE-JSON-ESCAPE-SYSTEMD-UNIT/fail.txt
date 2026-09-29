@@ -1,0 +1,22 @@
+DEBT-SAMPLE-JSON-ESCAPE-SYSTEMD-UNIT — control rojo antes del arreglo
+
+Comando:
+`python3 -m pytest -p no:cacheprovider -p no:randomly tests/test_bb_bash.py::test_sample_escapa_backslash_de_la_unit_en_json -q`
+
+Resultado literal relevante:
+```
+F                                                                        [100%]
+_______________ test_sample_escapa_backslash_de_la_unit_en_json ________________
+tests/test_bb_bash.py:406: in test_sample_escapa_backslash_de_la_unit_en_json
+    swap_top = muestras(datos)[-1]["swap"]["top"]
+tests/test_bb_bash.py:103: in muestras
+    todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
+/opt/miniforge3/lib/python3.12/json/__init__.py:354: in raw_decode
+    obj, end = self.scan_once(s, idx)
+E   json.decoder.JSONDecodeError: Invalid \\escape: line 1 column 1044 (char 1043)
+=========================== short test summary info ============================
+FAILED tests/test_bb_bash.py::test_sample_escapa_backslash_de_la_unit_en_json - json.decoder.JSONDecodeError
+1 failed in 1.45s
+```
+
+El cgroup temporal contenía el literal `app-gnome-google\\x2dchrome.scope`.

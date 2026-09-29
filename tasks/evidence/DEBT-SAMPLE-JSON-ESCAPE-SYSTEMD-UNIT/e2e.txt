@@ -1,0 +1,9 @@
+DEBT-SAMPLE-JSON-ESCAPE-SYSTEMD-UNIT — evidencia de extremo a extremo
+
+El `close_check` ejecuta `test_sample_escapa_backslash_de_la_unit_en_json`, que llama al binario `bin/bb sample` con un `BB_PROC` temporal y luego parsea la línea escrita por `muestras()`. El cgroup trae `app-gnome-google\\x2dchrome.scope`; el JSON decodificado conserva ese nombre y la prueba pasa.
+
+Comando: `python3 -m pytest tests/test_bb_bash.py::test_sample_escapa_backslash_de_la_unit_en_json -q`
+
+Salida: `1 passed in 0.79s`.
+
+Comprobación de despliegue: una ejecución aislada posterior de `bin/bb sample` produjo exactamente una fila JSONL parseable, con `swap` presente y sin PID GPU inválido. `./bin/bb drift` reportó `revisados: 41   divergentes: 0   ausentes: 0   suspendidos: 1`.
