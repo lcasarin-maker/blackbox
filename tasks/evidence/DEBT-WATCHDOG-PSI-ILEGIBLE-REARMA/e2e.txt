@@ -1,0 +1,16 @@
+$ python3 -m pytest tests/test_auditoria_bb_regresiones.py::test_watchdog_colapso_psi_ilegible tests/test_bb_usable.py -q
+..............FF............                                             [100%]
+=================================== FAILURES ===================================
+__________________ test_notify_manda_de_verdad_por_el_socket ___________________
+tests/test_bb_usable.py:226: in test_notify_manda_de_verdad_por_el_socket
+    srv.bind(str(ruta))
+E   PermissionError: [Errno 1] Operation not permitted
+______________ test_notify_sin_socket_no_manda_nada_y_no_revienta ______________
+tests/test_bb_usable.py:244: in test_notify_sin_socket_no_manda_nada_y_no_revienta
+    srv.bind(str(ruta))
+E   PermissionError: [Errno 1] Operation not permitted
+=========================== short test summary info ============================
+FAILED tests/test_bb_usable.py::test_notify_manda_de_verdad_por_el_socket - P...
+FAILED tests/test_bb_usable.py::test_notify_sin_socket_no_manda_nada_y_no_revienta
+2 failed, 26 passed in 1.28s
+exit_code: 1

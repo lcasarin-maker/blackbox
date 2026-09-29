@@ -97,12 +97,16 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 DATA = Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox"))
 SAMPLES_DIR = DATA / "samples"
 ESTADO = DATA / "guardia_proceso_estado.json"
 EVIDENCIA = DATA / "guardia_proceso.jsonl"
+BOOT_ID_PATH = Path("/proc/sys/kernel/random/boot_id")
+MUESTRA_MAX_AGE_S = 120
+MUESTRA_MIN_INTERVAL_S = 45
 
 # Cada cuanto se revisa si hay linea nueva en el fichero de hoy. Mas corto que
 # el minuto al que escribe blackbox-sample.timer, para no perderse una.
@@ -154,6 +158,43 @@ def _uid_de(pid: int) -> int | None:
     return None
 
 
+def _starttime_ticks(pid: int) -> int | None:
+    """Lee el campo 22 de proc stat sin romperse por espacios en comm."""
+    try:
+        stat = Path(f"/proc/{pid}/stat").read_text(encoding="ascii")
+        resto = stat[stat.rfind(")") + 2:].split()
+        return int(resto[19])
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+def _ts_muestra(muestra: dict) -> float | None:
+    try:
+        return datetime.fromisoformat(muestra["ts"]).timestamp()
+    except (KeyError, ValueError, OverflowError):
+        return None
+
+
+def _muestra_fresca(muestra: dict, ahora: float | None = None) -> bool:
+    """Acepta solo telemetría reciente del boot y de procesos identificados."""
+    try:
+        ts = _ts_muestra(muestra)
+        if ts is None:
+            return False
+        edad = (time.time() if ahora is None else ahora) - ts
+        boot_id = BOOT_ID_PATH.read_text(encoding="ascii").strip()
+    except (OSError, ValueError, OverflowError):
+        return False
+    if not boot_id or muestra.get("boot_id") != boot_id:
+        return False
+    if edad < -5 or edad > MUESTRA_MAX_AGE_S:
+        return False
+    top = muestra.get("top_rss") or []
+    if not top or not isinstance(top[0].get("starttime_ticks"), int):
+        return False
+    return _starttime_ticks(int(top[0].get("pid", -1))) == top[0]["starttime_ticks"]
+
+
 def _es_intocable(pid: int, comm: str) -> str | None:
     """Devuelve el motivo si NO se puede tocar, o None si es seguro matarlo."""
     if pid in (1, os.getpid()):
@@ -175,6 +216,7 @@ class Proceso:
     pid: int
     comm: str
     rss_kb: int
+    starttime_ticks: int | None = None
 
 
 def _registrar(p: Proceso, motivo: str, etapa: str, accion: str) -> None:
@@ -202,6 +244,11 @@ def _enviar_senal(p: Proceso, motivo: str, etapa: str, sig: signal.Signals) -> N
             f"rss={p.rss_kb/1048576:.1f} GiB -- {motivo}")
         _registrar(p, motivo, etapa, f"[dry-run] {sig.name}")
         return
+    if p.starttime_ticks is not None and _starttime_ticks(p.pid) != p.starttime_ticks:
+        razon = "la identidad del PID cambio desde la muestra"
+        log(f"NO SE TOCA pid={p.pid} comm={p.comm}: {razon}")
+        _registrar(p, motivo, etapa, f"bloqueado: {razon}")
+        return
     bloqueo = _es_intocable(p.pid, p.comm)
     if bloqueo:
         log(f"NO SE TOCA pid={p.pid} comm={p.comm}: {bloqueo} (motivo del disparo: {motivo})")
@@ -220,7 +267,25 @@ def _enviar_senal(p: Proceso, motivo: str, etapa: str, sig: signal.Signals) -> N
 def _lineas_nuevas(fh, offset: int) -> tuple[list[str], int]:
     fh.seek(offset)
     contenido = fh.read()
-    return contenido.splitlines(), offset + len(contenido)
+    if isinstance(contenido, str):
+        contenido = contenido.encode("utf-8")
+    fin = contenido.rfind(b"\n") + 1
+    if not fin:
+        return [], offset
+    lineas = [linea.decode("utf-8", errors="replace")
+              for linea in contenido[:fin].splitlines()]
+    return lineas, offset + fin
+
+
+def _abrir_al_final(ruta: Path):
+    """Abre una generación de archivo y evita consumir su historia previa."""
+    try:
+        fh = open(ruta, "rb")
+    except OSError:
+        return None, 0, None
+    stat = os.fstat(fh.fileno())
+    fh.seek(0, os.SEEK_END)
+    return fh, fh.tell(), (stat.st_dev, stat.st_ino)
 
 
 def procesar_muestra(top0: dict, estado: dict) -> dict:
@@ -267,7 +332,8 @@ def procesar_muestra(top0: dict, estado: dict) -> dict:
             motivo = (f"{rss/1048576:.1f} GiB >= techo de "
                       f"{CEILING_KB/1048576:.0f} GiB, racha {racha}")
 
-        p = Proceso(pid=pid, comm=comm, rss_kb=rss)
+        p = Proceso(pid=pid, comm=comm, rss_kb=rss,
+                    starttime_ticks=top0.get("starttime_ticks"))
         if racha >= UMBRAL_KILL and etapa != "matado":
             # Solo llega aqui si SIGTERM (paso anterior) no lo paro: sigue
             # vivo y sigue disparando. Ultimo recurso.
@@ -292,25 +358,56 @@ def main() -> int:
         f"term={UMBRAL_TERM} kill={UMBRAL_KILL} muestras, "
         f"poll cada {POLL_INTERVAL:.0f}s"
         f"{' -- DRY-RUN, no mata nada de verdad' if DRY_RUN else ''}")
-    estado = _leer_estado()
+    # No se recupera una racha a través de un reinicio: durante la parada no
+    # hubo observación continua que autorice una escalada.
+    estado = {}
     ruta_actual = None
     fh = None
     offset = 0
+    identidad_archivo = None
+    aviso_ausente = False
 
     while True:
         ruta_hoy = SAMPLES_DIR / f"{time.strftime('%Y-%m-%d')}.jsonl"
         if ruta_hoy != ruta_actual:
             if fh:
                 fh.close()
-            try:
-                fh = open(ruta_hoy, encoding="utf-8")
-            except OSError:
-                fh = None
+            fh = None
+            identidad_archivo = None
             ruta_actual = ruta_hoy
             offset = 0
 
+        if fh is None:
+            fh, offset, identidad_archivo = _abrir_al_final(ruta_hoy)
+            if fh:
+                log(f"leyendo muestras nuevas de {ruta_hoy}")
+                aviso_ausente = False
+            elif not aviso_ausente:
+                log(f"esperando archivo de muestras {ruta_hoy}")
+                aviso_ausente = True
+
+        if fh:
+            try:
+                stat_ruta = ruta_hoy.stat()
+                identidad_ruta = (stat_ruta.st_dev, stat_ruta.st_ino)
+                if identidad_ruta != identidad_archivo:
+                    fh.close()
+                    fh, offset, identidad_archivo = _abrir_al_final(ruta_hoy)
+                    if fh:
+                        log(f"archivo de muestras reemplazado: {ruta_hoy}")
+                elif stat_ruta.st_size < offset:
+                    # Truncado en el mismo inode: vuelve al inicio; frescura,
+                    # boot id e identidad impiden replay de contenido viejo.
+                    fh.seek(0)
+                    offset = 0
+            except OSError:
+                fh.close()
+                fh = None
+                identidad_archivo = None
+
         if fh:
             lineas, offset = _lineas_nuevas(fh, offset)
+            nuevas = []
             for linea in lineas:
                 linea = linea.strip()
                 if not linea:
@@ -319,11 +416,20 @@ def main() -> int:
                     muestra = json.loads(linea)
                 except ValueError:
                     continue
+                nuevas.append(muestra)
+            # Si se acumularon varias filas entre sondeos, solo la mas reciente
+            # cuenta. No se permite completar aviso/TERM/KILL en un mismo poll.
+            if nuevas:
+                muestra = nuevas[-1]
                 top_rss = muestra.get("top_rss") or []
-                if not top_rss:
-                    continue
-                estado = procesar_muestra(top_rss[0], estado)
-                _escribir_estado(estado)
+                ts_muestra = _ts_muestra(muestra)
+                ultima = estado.get("last_sample_ts")
+                intervalo_ok = (ultima is None or ts_muestra is not None
+                                and ts_muestra - ultima >= MUESTRA_MIN_INTERVAL_S)
+                if top_rss and intervalo_ok and _muestra_fresca(muestra):
+                    estado = procesar_muestra(top_rss[0], estado)
+                    estado["last_sample_ts"] = ts_muestra
+                    _escribir_estado(estado)
 
         time.sleep(POLL_INTERVAL)
 

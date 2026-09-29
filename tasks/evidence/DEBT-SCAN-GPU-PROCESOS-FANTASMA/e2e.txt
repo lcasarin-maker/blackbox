@@ -1,0 +1,3 @@
+Integración: el close_check ejecuta `bin/bb scan "5 minutes ago"` con JSONL temporales y `journalctl` simulado. Asegura que una lista GPU vacía invalida el PID en caché, la ausencia del campo sigue siendo distinta, tres muestras idle no avisan, carga activa sin correlación CPU queda inconclusa, y tres muestras con trabajo CPU positivo para el mismo PID/boot sí avisan.
+
+`python3 -m pytest tests/test_auditoria_bb_regresiones.py::test_scan_gpu_vacia_invalida -q`: 1 passed. Suites relacionadas: regresiones 10 passed; telemetría térmica 121 passed. `bash -n bin/bb`, `py_compile` e `inventario --check` pasaron. El journal del smoke está simulado; el servicio y la telemetría en vivo aún requieren despliegue/verificación.
