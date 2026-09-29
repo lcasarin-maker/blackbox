@@ -1,6 +1,6 @@
 ---
-id: "DEBT-TERMICA-PAUSAS-PERDIDAS"
-kind: "debt"
+id: DEBT-TERMICA-PAUSAS-PERDIDAS
+kind: debt
 title: "Reiniciar la telemetria pierde los procesos que dejo pausados"
 status: done
 closed_at: 2026-09-29
@@ -9,11 +9,11 @@ evidence:
   pass: tasks/evidence/DEBT-TERMICA-PAUSAS-PERDIDAS/pass.txt
   fail: tasks/evidence/DEBT-TERMICA-PAUSAS-PERDIDAS/fail.txt
   e2e: tasks/evidence/DEBT-TERMICA-PAUSAS-PERDIDAS/e2e.txt
-severity: "P1"
-origin: "detected"
+severity: P1
+origin: detected
 detector: {"rule": "adversarial-audit/DEBT-TERMICA-PAUSAS-PERDIDAS", "confidence": 1.0}
-satd_family: "BLIND_INSTRUMENT"
-created: "2026-09-29"
+satd_family: BLIND_INSTRUMENT
+created: 2026-09-29
 close_check: {"cmd": "python3 -m pytest tests/test_auditoria_bb_regresiones.py::test_termica_recupera_pausas -q", "expect": "exit_zero"}
 ---
 
@@ -44,3 +44,16 @@ Orden y dependencias: `docs/PLAN-REMEDIACION-BB-2026-09-29.md`. Esta ficha queda
 La telemetría guarda atómicamente el boot id, PID, `starttime_ticks`, pausas propias e intención de señal antes de actuar. Tras reiniciar, recupera procesos solo si coinciden boot y starttime; al enfriarse los reanuda después de revalidar identidad. Si el proceso cae entre SIGSTOP y confirmación, la intención durable permite enviar SIGCONT únicamente cuando el mismo proceso sigue en estado detenido. PIDs reutilizados y boots anteriores se descartan sin señal.
 
 H7 reprodujo la pausa sin reanudación antes del cambio. El `close_check` pasó; suites térmicas relacionadas: 122 passed. La prueba intercepta SIGSTOP/SIGCONT y simula estado de `/proc`; no envió señales reales. El servicio no se desplegó ni reinició.
+
+
+## Root Cause
+
+La lista de procesos pausados vivía solo en memoria; reiniciar el productor borraba la propiedad y podía dejar procesos detenidos.
+
+## Regression Test
+
+`python3 -m pytest tests/test_auditoria_bb_regresiones.py::test_termica_recupera_pausas -q`: La prueba simula reinicio, cambio de identidad y caída entre intención y señal con `/proc` y señales falsos.
+
+## Verification Evidence
+
+Resultados reproducibles: tasks/evidence/DEBT-TERMICA-PAUSAS-PERDIDAS/e2e.txt. La salida del `close_check` está en el archivo `pass.txt` de la misma ficha de evidencia; el control previo está en `fail.txt`.

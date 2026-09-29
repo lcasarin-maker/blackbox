@@ -151,6 +151,16 @@ def test_calibra_cuenta_falso_positivo_fuera_de_ventana():
     assert len(r["fuera_del_corpus"]) == 1
 
 
+def test_control_negativo_excursion_solapa_incidente_pero_dispara_despues(tmp_path, capsys):
+    """El solape no cuenta si la racha cruza el corte después del incidente."""
+    pares = [(f"2026-09-22 23:{m:02d}", 90) for m in range(28, 37)]
+    assert main(["--muestras", str(_corpus(tmp_path, pares))]) == 1
+    salida = capsys.readouterr().out
+    assert "falsos positivos:          1" in salida
+    assert "incidentes no detectados:  1" in salida
+    assert "VEREDICTO: CORTE INVALIDO" in salida
+
+
 def test_calibra_marca_la_banda_sin_observar():
     r = calibra(serie((5, 90), (9, 90)), incidentes=VENTANA)
     assert len(r["sin_observar"]) == 1

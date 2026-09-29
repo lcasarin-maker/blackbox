@@ -1,6 +1,6 @@
 ---
-id: "DEBT-TERMICA-DRY-RUN-ACTUA"
-kind: "debt"
+id: DEBT-TERMICA-DRY-RUN-ACTUA
+kind: debt
 title: "La simulacion termica puede pausar procesos y salir"
 status: done
 closed_at: 2026-09-29
@@ -9,11 +9,11 @@ evidence:
   pass: tasks/evidence/DEBT-TERMICA-DRY-RUN-ACTUA/pass.txt
   fail: tasks/evidence/DEBT-TERMICA-DRY-RUN-ACTUA/fail.txt
   e2e: tasks/evidence/DEBT-TERMICA-DRY-RUN-ACTUA/e2e.txt
-severity: "P1"
-origin: "detected"
+severity: P1
+origin: detected
 detector: {"rule": "adversarial-audit/DEBT-TERMICA-DRY-RUN-ACTUA", "confidence": 1.0}
-satd_family: "BLIND_INSTRUMENT"
-created: "2026-09-29"
+satd_family: BLIND_INSTRUMENT
+created: 2026-09-29
 close_check: {"cmd": "python3 -m pytest tests/test_auditoria_bb_regresiones.py::test_termica_dry_run_sin_senales -q", "expect": "exit_zero"}
 ---
 
@@ -44,3 +44,16 @@ Orden y dependencias: `docs/PLAN-REMEDIACION-BB-2026-09-29.md`. Esta ficha queda
 `muestrear` separa ahora el permiso de actuar del de escribir. En `--dry-run`, la mitigación emite `mitigacion_simulada` con la acción y los PIDs previstos, sin enviar señales ni modificar el conjunto de procesos pausados. El modo normal mantiene la pausa y reanudación reales.
 
 Prueba roja: ambas variantes reprodujeron `SIGSTOP` antes del arreglo. `close_check` verde: 2 pruebas aprobadas. Suite térmica relacionada: 121 pruebas aprobadas. El test sustituye `os.kill`; ninguna señal se envió a procesos reales. No se desplegó la unidad del servicio en este cierre.
+
+
+## Root Cause
+
+El modo `--dry-run` podía llamar a la mitigación activa y enviar SIGSTOP aunque se solicitara observación.
+
+## Regression Test
+
+`python3 -m pytest tests/test_auditoria_bb_regresiones.py::test_termica_dry_run_sin_senales -q`: La prueba invoca `main` con alarma simulada para `--dry-run`, con y sin `--once`, e intercepta `os.kill`.
+
+## Verification Evidence
+
+Resultados reproducibles: tasks/evidence/DEBT-TERMICA-DRY-RUN-ACTUA/e2e.txt. La salida del `close_check` está en el archivo `pass.txt` de la misma ficha de evidencia; el control previo está en `fail.txt`.

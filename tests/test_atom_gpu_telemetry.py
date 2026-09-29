@@ -888,6 +888,86 @@ def test_muestrear_pausa_y_reanuda_de_punta_a_punta(thermal, gpu_cargado,
     assert senal.llamadas == [(111, agt.signal.SIGSTOP), (111, agt.signal.SIGCONT)]
 
 
+def test_identidad_y_boot_id_ilegibles_se_tratan_como_dato_ausente(monkeypatch, tmp_path):
+    monkeypatch.setattr(agt, "PROC_DIR", tmp_path)
+    monkeypatch.setattr(agt, "BOOT_ID_PATH", tmp_path / "boot")
+    assert agt._identidad_proceso(11) is None
+    assert agt._boot_id() is None
+
+    proc = tmp_path / "12"
+    proc.mkdir()
+    (proc / "stat").write_text("12 (proc) R 0", encoding="ascii")
+    assert agt._identidad_proceso(12) is None
+    fields = "R " + " ".join(["0"] * 18 + ["123"])
+    (proc / "stat").write_text(f"12 (worker) {fields}", encoding="ascii")
+    assert agt._identidad_proceso(12) == (123, "R")
+    (tmp_path / "boot").write_text("boot-test\n", encoding="ascii")
+    assert agt._boot_id() == "boot-test"
+
+
+def test_estado_durable_filtra_boot_pid_y_reconcilia_intento(monkeypatch, tmp_path):
+    path = tmp_path / "mitigacion.json"
+    state = {"version": 1, "boot_id": "boot-current",
+             "mitigados": [12], "identidades": {"12": 123, "13": 999,
+                                                   "mal": 1},
+             "intentos": {"14": 456, "15": 789, "bad": 1},
+             "en_alarma": ["thermal_zone0"], "inicio": {}}
+    path.write_text(json.dumps(state), encoding="utf-8")
+    monkeypatch.setattr(agt, "BOOT_ID_PATH", tmp_path / "boot")
+    (tmp_path / "boot").write_text("boot-current\n", encoding="ascii")
+    identidades = {12: (123, "R"), 13: (1000, "R"),
+                   14: (456, "T"), 15: (789, "T")}
+    monkeypatch.setattr(agt, "_identidad_proceso", lambda pid: identidades.get(pid))
+    senal = _senal_falsa()
+    def reanudar(pid: int, sig: int) -> None:
+        if pid == 15:
+            raise ProcessLookupError()
+        senal(pid, sig)
+
+    recovered = agt._cargar_estado_mitigacion(enviar_senal=reanudar, ruta=path)
+
+    assert recovered["mitigados"] == {12}
+    assert recovered["identidades"] == {12: 123}
+    assert senal.llamadas == [(14, agt.signal.SIGCONT)]
+    assert path.stat().st_mode & 0o777 == 0o600
+
+    state["boot_id"] = "old-boot"
+    path.write_text(json.dumps(state), encoding="utf-8")
+    assert agt._cargar_estado_mitigacion(ruta=path)["mitigados"] == set()
+
+
+def test_mitigacion_durable_omite_pid_sin_identidad_y_simula_reanudacion(monkeypatch):
+    senal = _senal_falsa()
+    alarma = [{"evento": "temp_critica", "zona": "thermal_zone0",
+               "carga_gpu": "con_carga"}]
+    monkeypatch.setattr(agt, "_identidad_proceso", lambda _pid: None)
+    estado = {"en_alarma": {"thermal_zone0"}, "mitigados": set()}
+    assert agt.mitigar(alarma, estado, listar_pids=lambda: [111], enviar_senal=senal,
+                       persistir_estado=lambda _s: None) == []
+    assert senal.llamadas == []
+
+    estado = {"en_alarma": set(), "mitigados": {222}}
+    simulada = agt.mitigar([{"evento": "muestra"}], estado, actuar=False,
+                           enviar_senal=senal)
+    assert simulada[0]["evento"] == "mitigacion_simulada"
+    assert simulada[0]["accion"] == "reanuda"
+    assert senal.llamadas == []
+
+
+def test_mitigacion_no_reanuda_pid_con_identidad_reemplazada(monkeypatch):
+    monkeypatch.setattr(agt, "_identidad_proceso", lambda _pid: (999, "R"))
+    senal = _senal_falsa()
+    estado = {"en_alarma": set(), "mitigados": {111},
+              "identidades": {111: 123}}
+
+    resultado = agt.mitigar([{"evento": "muestra"}], estado, enviar_senal=senal)
+
+    assert resultado[0]["evento"] == "mitigacion_reanuda"
+    assert resultado[0]["pids"] == [111]
+    assert estado["mitigados"] == set()
+    assert senal.llamadas == []
+
+
 # ---------------------------------------------------------------------------
 # DGX-335: scrape de métricas vLLM desde /metrics
 # ---------------------------------------------------------------------------

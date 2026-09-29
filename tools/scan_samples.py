@@ -185,9 +185,7 @@ def preparar(rutas: list[Path], inicio: float, fin: float,
                 boot = d.get("boot_id")
                 if boot:
                     por_boot.setdefault(boot, []).append(d)
-            if len(candidatos) >= 2 and not por_boot:
-                razones.append(f"{campo}: no se puede cruzar boot sin boot_id")
-            elif not any(len(grupo) >= 2 for grupo in por_boot.values()):
+            if not any(len(grupo) >= 2 for grupo in por_boot.values()):
                 razones.append(f"{campo}: faltan dos muestras utilizables del mismo boot")
             grupo = por_boot.get(boot_actual or "", [])
             for anterior, actual in zip(grupo, grupo[1:]):
