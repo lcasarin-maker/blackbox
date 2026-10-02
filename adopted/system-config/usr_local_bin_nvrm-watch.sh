@@ -1,5 +1,5 @@
 #!/bin/bash
-if journalctl -k --since "-6min" --no-pager 2>/dev/null | grep -q "NVRM:.*Out of memory"; then
-    logger -p daemon.warning -t nvrm-watch "NVRM Out-of-memory detectado — posible precursor de freeze de GPU"
-    echo "$(date -Is) NVRM OOM detectado" >> /var/log/nvrm-watch.log
+if journalctl -k --since "-6min" --no-pager 2>/dev/null | grep -Eq 'NVRM:.*(Out of memory|NV_ERR_NO_MEMORY)'; then
+    logger -p daemon.warning -t nvrm-watch "NVRM allocation error observed — evidence only; not a sufficient freeze predictor"
+    echo "$(date -Is) NVRM allocation error observed (evidence only)" >> /var/log/nvrm-watch.log
 fi

@@ -1,0 +1,16 @@
+[
+ {
+  "id": "FEATURE-1358-A2-EXPORTACION-EXTERNA",
+  "path": "tasks/backlog/FEATURE-1358-A2-EXPORTACION-EXTERNA.md",
+  "title": "Exportación opcional de telemetría fuera del host",
+  "scope": "Reutilizar productor tools/atom_gpu_telemetry.py. Exportar datagrama UDP opcional a destino configurado, sin inventar receptor ni destino y sin habilitar transmisión por defecto. Fallo de exportación visible y no detiene muestreo; tamaño acotado.",
+  "test": "tests/test_1358_telemetria.py"
+ },
+ {
+  "id": "FEATURE-1358-B2-CAPTURA-TRANSICION",
+  "path": "tasks/backlog/FEATURE-1358-B2-CAPTURA-TRANSICION.md",
+  "title": "PSI en telemetría rápida existente",
+  "scope": "Reutilizar cadencia5s y ráfaga existente antes de nueva captura. Añadir PSI memory some/full al productor GPU si faltan, sin duplicar nvidia-smi ni procesos caros. Determinar por datos si1Hz aporta; si carece evidencia, mantener5s y registrar limitación y trigger.",
+  "test": "tests/test_1358_telemetria.py"
+ }
+]

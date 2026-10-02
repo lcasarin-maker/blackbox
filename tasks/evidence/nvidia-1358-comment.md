@@ -167,13 +167,16 @@ same host, same kernel 7.0.0-1019, before the kernel/regkey change:
 13:59:05  PSI mem_full 0.04   36.9 GB available   load 24.9    3 GPU procs
 13:59:34  [bb-usable] PSI 12.1 >= 10 -- streak 1/10
 14:00:04  [bb-usable] PSI 92.8 >= 10 -- streak 2/10
-14:06:04  [bb-usable] COLLAPSE: sustained 300s -- withholding the watchdog ping
+14:04:04  [bb-usable] COLLAPSE: sustained 300s -- withholding the watchdog ping
 14:09:34  systemd: bb-usable.service: Watchdog timeout (limit 6min)!
-14:09:38  systemd: Failed with result 'watchdog' -> Rebooting.
+14:09:38  systemd: Failed with result 'watchdog'.
+14:11:37  next boot begins (journalctl --list-boots)
 ```
 
-Onset 13:59:04 to automatic reboot 14:09:38: **10.6 minutes, no human
-involved.** The operator was on another continent at the time; wedges 1-3 had
+Onset sample 13:59:04 to watchdog failure 14:09:38: **10.6 minutes**.
+The next boot began at 14:11:37: **12 minutes 33 seconds** after that onset
+sample, with no human involved. Timings rechecked against the journal on
+2026-10-02; watchdog action and restored boot are distinct. The operator was on another continent at the time; wedges 1-3 had
 each required someone physically present.
 
 Worth noting for anyone reproducing: this fourth one had only **3** processes

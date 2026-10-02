@@ -1,0 +1,44 @@
+[
+  {
+    "id": "FEATURE-1358-A1-SERVICIO-REAL",
+    "path": "tasks/backlog/FEATURE-1358-A1-SERVICIO-REAL.md",
+    "title": "Respuesta útil del servicio frente a TCP abierto",
+    "scope": "Añadir comprobación opcional y acotada de banner SSH o reutilizar endpoint con respuesta útil. Solo observación; sin activar reinicios por señal sin calibrar. Integrar en bb sample y declarar ausencias/error/timeout.",
+    "test": "tests/test_1358_servicio_clock.py"
+  },
+  {
+    "id": "FEATURE-1358-A2-EXPORTACION-EXTERNA",
+    "path": "tasks/backlog/FEATURE-1358-A2-EXPORTACION-EXTERNA.md",
+    "title": "Exportación opcional de telemetría fuera del host",
+    "scope": "Reutilizar productor tools/atom_gpu_telemetry.py. Exportar datagrama UDP opcional a destino configurado, sin inventar receptor ni destino y sin habilitar transmisión por defecto. Fallo de exportación visible y no detiene muestreo; tamaño acotado.",
+    "test": "tests/test_1358_telemetria.py"
+  },
+  {
+    "id": "FEATURE-1358-A3-HITOS-INCIDENTE",
+    "path": "tasks/backlog/FEATURE-1358-A3-HITOS-INCIDENTE.md",
+    "title": "Hitos temporales separados del incidente",
+    "scope": "Crear análisis mínimo stdlib de registros aportados: NVRM, señal de colapso PSI, pérdida/recuperación de servicio, acción watchdog y próximo boot. Preservar zona/boot, incertidumbre y campos ausentes; no inferir inicio físico desde detección. CLI documentada y fixtures control negativos.",
+    "test": "tests/test_1358_hitos_nvrm.py"
+  },
+  {
+    "id": "FEATURE-1358-B1-CLOCK-EFECTIVO",
+    "path": "tasks/backlog/FEATURE-1358-B1-CLOCK-EFECTIVO.md",
+    "title": "Verificar límite GPU aplicado y evidencia de ejecución",
+    "scope": "Revisar chequeo existente bb status clock lock: reutilizarlo, asegurar ausencia o confirmación vieja/discrepante declarada y distinguir clock actual de límite. No desplegar ni cambiar frecuencia.",
+    "test": "tests/test_1358_servicio_clock.py"
+  },
+  {
+    "id": "FEATURE-1358-B2-CAPTURA-TRANSICION",
+    "path": "tasks/backlog/FEATURE-1358-B2-CAPTURA-TRANSICION.md",
+    "title": "PSI en telemetría rápida existente",
+    "scope": "Reutilizar cadencia5s y ráfaga existente antes de nueva captura. Añadir PSI memory some/full al productor GPU si faltan, sin duplicar nvidia-smi ni procesos caros. Determinar por datos si1Hz aporta; si carece evidencia, mantener5s y registrar limitación y trigger.",
+    "test": "tests/test_1358_telemetria.py"
+  },
+  {
+    "id": "FEATURE-1358-B3-FIRMA-ALLOCATOR",
+    "path": "tasks/backlog/FEATURE-1358-B3-FIRMA-ALLOCATOR.md",
+    "title": "Firma de allocator independiente de número de línea",
+    "scope": "Verificar detección NV_ERR_NO_MEMORY con mem_desc.c:1359 y1361, error sin cuelgue y cuelgue sin error; corregir watcher que etiqueta predictor suficiente. No actuar por NVRM solo. Reusar patrones existentes y controles.",
+    "test": "tests/test_1358_hitos_nvrm.py"
+  }
+]
