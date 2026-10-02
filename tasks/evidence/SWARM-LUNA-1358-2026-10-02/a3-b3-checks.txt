@@ -1,8 +1,22 @@
 2026-10-02 — validación local, sin despliegue
 
 $ python3 -m pytest -q tests/test_1358_hitos_nvrm.py
-...........                                                              [100%]
-11 passed in 0.12s
+............................                                             [100%]
+28 passed in 0.19s
+
+$ pyright tools/hitos_incidente.py tests/test_1358_hitos_nvrm.py
+0 errors, 0 warnings, 0 informations
+
+$ python3 -m coverage run --data-file=/tmp/coverage-hitos --source=tools.hitos_incidente -m pytest -q tests/test_1358_hitos_nvrm.py
+............................                                             [100%]
+28 passed in 0.19s
+
+$ python3 -m coverage report --data-file=/tmp/coverage-hitos -m tools/hitos_incidente.py
+Name                       Stmts   Miss  Cover   Missing
+--------------------------------------------------------
+tools/hitos_incidente.py     181      0   100%
+--------------------------------------------------------
+TOTAL                       181      0   100%
 
 $ python3 -m ruff check tools/hitos_incidente.py tests/test_1358_hitos_nvrm.py
 All checks passed!
