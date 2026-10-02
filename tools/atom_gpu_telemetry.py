@@ -47,9 +47,12 @@ Diseño:
    más después de perder el video.
 """
 import argparse
+import ipaddress
+import math
 import json
 import os
 import re
+import socket
 import signal
 import subprocess
 import sys
@@ -92,6 +95,7 @@ DATA_DIR = Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blac
 JSONL_PATH = Path(os.environ.get("ATOM_TELEMETRY_JSONL", DATA_DIR / "atom_gpu_telemetry.jsonl"))
 MITIGACION_STATE_PATH = DATA_DIR / "atom_gpu_mitigacion.json"
 THERMAL_DIR = Path("/sys/class/thermal")
+MEMORY_PRESSURE_PATH = Path("/proc/pressure/memory")
 
 INTERVALO_DEFAULT_S = 5.0
 MARGEN_TRIP_C = 10.0
@@ -123,6 +127,8 @@ MAX_BYTES = 192 * 1024 * 1024
 MUESTRAS_ENTRE_REVISIONES = 720
 VLLM_METRICS_URL_DEFAULT = "http://127.0.0.1:8000/metrics"
 VLLM_METRICS_TIMEOUT_S = 1.0
+UDP_DATAGRAM_MAX_BYTES = 1200
+UDP_SEND_TIMEOUT_S = 0.1
 
 # DGX-383 (2026-09-01): `presupuesto_termico()` decidía con UNA muestra
 # instantánea -- sin debounce ni compuerta de carga-- y frena trabajo real en
@@ -491,6 +497,120 @@ def leer_memoria_sistema() -> dict:
     return campos
 
 
+def _leer_grupo_psi(linea: str) -> tuple[str | None, dict, list[str]]:
+    partes = linea.split()
+    if not partes or partes[0] not in ("some", "full"):
+        return None, {}, []
+    grupo, valores, errores = partes[0], {}, []
+    for campo in partes[1:]:
+        if "=" not in campo:
+            continue
+        clave, valor = campo.split("=", 1)
+        if clave not in ("avg10", "avg60", "avg300", "total"):
+            continue
+        try:
+            numero = int(valor) if clave == "total" and valor.isdecimal() else float(valor)
+            if (clave == "total" and not valor.isdecimal()) or (
+                    clave != "total" and
+                    (not math.isfinite(numero) or not 0 <= numero <= 100)):
+                raise ValueError
+            valores[clave] = numero
+        except ValueError:
+            errores.append(f"{grupo}.{clave} inválido")
+    return grupo, valores, errores
+
+
+def leer_psi_memoria(ruta: Path | None = None) -> dict:
+    """Lee PSI memory sin subproceso; conserva some/full aunque falte un campo.
+
+    Kernels sin PSI full producen ``None`` para ese grupo y dejan el motivo en
+    ``psi_mem_ausente``. Valores malformados invalidan solo la métrica afectada.
+    """
+    ruta = ruta or MEMORY_PRESSURE_PATH
+    campos = ("avg10", "avg60", "avg300", "total")
+    resultado = {f"psi_mem_{grupo}_{campo}": None
+                 for grupo in ("some", "full") for campo in campos}
+    try:
+        lineas = ruta.read_text(encoding="ascii").splitlines()
+    except (OSError, UnicodeError) as exc:
+        return {**resultado, "psi_mem_ausente": f"{ruta}: {exc}"}
+    vistos, errores = set(), []
+    for linea in lineas:
+        grupo, valores, problemas = _leer_grupo_psi(linea)
+        if grupo is None:
+            continue
+        if grupo in vistos:
+            errores.append(f"grupo duplicado: {grupo}")
+            continue
+        vistos.add(grupo)
+        errores.extend(problemas)
+        for clave, valor in valores.items():
+            resultado[f"psi_mem_{grupo}_{clave}"] = valor
+    faltantes = [g for g in ("some", "full") if g not in vistos]
+    motivos = [f"grupo ausente: {g}" for g in faltantes] + errores
+    for grupo in vistos:
+        motivos.extend(f"campo ausente: {grupo}.{campo}"
+                       for campo in ("avg10", "avg60", "avg300", "total")
+                       if f"psi_mem_{grupo}_{campo}" not in resultado or
+                       resultado[f"psi_mem_{grupo}_{campo}"] is None)
+    if motivos:
+        resultado["psi_mem_ausente"] = "; ".join(motivos)
+    return resultado
+
+
+def _udp_payload(evento: dict) -> bytes:
+    """Serializa solo señales acotadas; excluye hostname, PIDs y listas procs."""
+    claves = ("ts", "evento", "boot_id", "gpu_temp_c", "gpu_util_pct", "gpu_power_w",
+              "sm_clk_mhz", "pstate", "throttle", "mem_free_mb",
+              "mem_avail_mb", "psi_mem_some_avg10", "psi_mem_some_avg60",
+              "psi_mem_some_avg300", "psi_mem_some_total",
+              "psi_mem_full_avg10", "psi_mem_full_avg60",
+              "psi_mem_full_avg300", "psi_mem_full_total", "psi_mem_ausente")
+    dato = {k: evento[k] for k in claves if k in evento}
+    zonas = evento.get("zonas", [])
+    dato["zonas"] = [{"zona": z.get("zona"), "temp_c": z.get("temp_c")}
+                      for z in zonas[:8]]
+    if isinstance(dato.get("psi_mem_ausente"), str):
+        dato["psi_mem_ausente"] = dato["psi_mem_ausente"][:96]
+    serializado = json.dumps(dato, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    if len(serializado) > UDP_DATAGRAM_MAX_BYTES:
+        dato.pop("psi_mem_ausente", None)
+        dato.pop("throttle", None)
+        dato.pop("zonas", None)
+        serializado = json.dumps(dato, ensure_ascii=False,
+                                 separators=(",", ":")).encode("utf-8")
+    if len(serializado) > UDP_DATAGRAM_MAX_BYTES:
+        raise ValueError(f"payload supera {UDP_DATAGRAM_MAX_BYTES} bytes")
+    return serializado
+
+
+def exportar_udp(eventos: list[dict], destino: str | None) -> None:
+    """Exporta muestras si el operador configuró host:puerto; falla en modo best effort."""
+    if not destino:
+        return
+    try:
+        if destino.startswith("["):
+            host, resto = destino[1:].split("]:", 1)
+        else:
+            host, resto = destino.rsplit(":", 1)
+        ipaddress.ip_address(host)  # literal only: avoid DNS stalls in sampler
+        puerto_txt = resto
+        puerto = int(puerto_txt)
+        if not host or not 1 <= puerto <= 65535:
+            raise ValueError("destino debe ser host:puerto con puerto 1..65535")
+        muestra = next((e for e in eventos if e.get("evento") == "muestra"), None)
+        if muestra is None:
+            return
+        payload = _udp_payload(muestra)
+        with socket.socket(socket.AF_INET6 if ":" in host else socket.AF_INET,
+                            socket.SOCK_DGRAM) as sock:
+            sock.settimeout(UDP_SEND_TIMEOUT_S)
+            sock.sendto(payload, (host, puerto))
+    except (OSError, TypeError, ValueError) as exc:
+        print(f"atom_gpu_telemetry: exportación UDP falló ({destino}): {exc}",
+              file=sys.stderr, flush=True)
+
+
 # Los procesos de cómputo son una invocación aparte de `nvidia-smi`, así que no
 # se piden en cada muestra de 5 s: 1 de cada 3 deja la misma cadencia de 15 s
 # que tenía `gpu_sampler.sh`, cuyo trabajo absorbe.
@@ -747,8 +867,10 @@ def _escribir(evento: dict) -> None:
     """`flush` + `fsync` en cada línea, y no es paranoia: el propósito entero
     del sampler es sobrevivir a una muerte dura de la máquina, y lo que quede
     en el page cache muere con ella. Son ~400 bytes cada 5 s."""
-    JSONL_PATH.parent.mkdir(parents=True, exist_ok=True)
     evento = {**evento, "boot_id": _boot_id()}
+    if evento.get("evento") == "muestra":
+        exportar_udp([evento], os.environ.get("BLACKBOX_UDP_DESTINATION"))
+    JSONL_PATH.parent.mkdir(parents=True, exist_ok=True)
     with JSONL_PATH.open("a", encoding="utf-8") as f:
         f.write(json.dumps(evento, ensure_ascii=False) + "\n")
         f.flush()
@@ -1428,8 +1550,10 @@ def muestrear(umbrales: dict, estado: dict, *, escribir: bool = True,
     de estado, más la mitigación si corresponde. Devuelve todo lo emitido
     para que los tests lo inspeccionen."""
     zonas = leer_zonas()
-    muestra = {"ts": _ahora(), "evento": "muestra", **leer_gpu(),
-               **leer_memoria_sistema(), **leer_vllm_metrics(), "zonas": zonas}
+    muestra = {"ts": _ahora(), "evento": "muestra", "boot_id": _boot_id(),
+               **leer_gpu(),
+               **leer_memoria_sistema(), **leer_psi_memoria(),
+               **leer_vllm_metrics(), "zonas": zonas}
     # Los procesos de GPU cuestan una invocación extra de nvidia-smi: 1 de
     # cada PROCESOS_GPU_CADA muestras, no todas.
     ciclo = estado.get("ciclo_procs_gpu", 0)

@@ -227,6 +227,24 @@ latencia_x() { # imprime: <estado> <ms>
   esac
 }
 
+# Comprobación opcional de una respuesta SSH útil. No se conecta a ningún
+# destino salvo que el operador configure explícitamente BB_SSH_PROBE_HOST y
+# BB_SSH_PROBE_PORT. El helper usa socket/timeout de Python stdlib; TCP abierto
+# sin banner se registra como TIMEOUT, no como servicio sano.
+servicio_ssh_probe() {
+  if [ -z "${BB_SSH_PROBE_PORT:-}" ]; then
+    printf '{"estado":"DESACTIVADO","motivo":"BB_SSH_PROBE_PORT no configurado"}'
+    return 0
+  fi
+  local resultado
+  resultado=$(python3 "$(dirname "$(readlink -f "$0")")/../tools/service_probe.py" \
+    "${BB_SSH_PROBE_HOST:-127.0.0.1}" "$BB_SSH_PROBE_PORT" "${BB_SSH_PROBE_TIMEOUT_S:-2}" 2>/dev/null) || {
+      printf '{"estado":"ERROR","motivo":"probe no disponible o configuración inválida"}'
+      return 0
+    }
+  printf '%s' "$resultado"
+}
+
 gpu_stat() { # temp,util,power
   have nvidia-smi || { echo ",,"; return 1; }
   nvidia-smi --query-gpu=temperature.gpu,utilization.gpu,power.draw \
@@ -571,6 +589,8 @@ cmd_sample() {
   read -r smi_estado smi_ms <<<"$(smi_salud)"
   local x_estado x_ms
   read -r x_estado x_ms <<<"$(latencia_x)"
+  local servicio_probe
+  servicio_probe=$(servicio_ssh_probe)
   zc=$(zombie_count)
   la=$(awk '{print $1}' /proc/loadavg)
   local commit_pct residuo
@@ -780,14 +800,14 @@ cmd_sample() {
 
   local slices; slices=$(slices_mem 2>/dev/null)
 
-  printf '{"ts":"%s","boot_id":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":[%s],"slices":[%s],"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s,"top":[%s]},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s}}\n' \
+  printf '{"ts":"%s","boot_id":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":[%s],"slices":[%s],"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s,"top":[%s]},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s},"servicio_ssh":%s}\n' \
     "$ts" "$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || true)" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$topvsz" "$cputop" "$pybg" "$gpu" "$slices" \
     "${commit_pct:-0}" "${residuo:-0}" \
     "${swap_free:-0}" "${swap_total:-0}" "${swpin_s:-0}" "${swpout_s:-0}" "$swaptop" \
     "${psi_m_some:-0}" "${psi_m_full:-0}" "${psi_io_some:-0}" "${psi_cpu_some:-0}" \
     "${gw:-CAIDO}" "${dk:-?}" "${salud:-}" "${disco:-}" "${red:-}" "${cpuj:-}" \
     "${smi_estado:-DESCONOCIDO}" "${smi_ms:-0}" \
-    "${x_estado:-DESCONOCIDO}" "${x_ms:-0}" >>"$f"
+    "${x_estado:-DESCONOCIDO}" "${x_ms:-0}" "$servicio_probe" >>"$f"
 
   # --- muestreo adaptativo, anadido el 2026-09-24 -------------------------
   # El cuarto congelamiento entero -- de maquina sana a memoria agotada --
@@ -2066,7 +2086,48 @@ cmd_hw() {
 
 # -------------------------------------------------------------------- status
 
+clock_lock_evaluate() {
+  CLOCK_DECL=$(systemctl show atom-clock-lock.service -p ExecStart 2>/dev/null |
+    grep -o '\-lgc [0-9]*,[0-9]*' | head -1 | tr -d ' ' | sed 's/-lgc//')
+  CLOCK_START=$(systemctl show atom-clock-lock.service -p ExecMainStartTimestamp --value 2>/dev/null)
+  local journal
+  journal=$($JOURNALCTL -b 0 -u atom-clock-lock.service --no-pager -o short-unix 2>/dev/null)
+  CLOCK_CONFIRMED=$(printf '%s\n' "$journal" |
+    sed -n 's/^[0-9.][0-9.]* .*gpuClkMin \([0-9]*\), gpuClkMax \([0-9]*\).*$/\1,\2/p' | tail -1)
+  CLOCK_CONFIRM_TS=$(printf '%s\n' "$journal" |
+    sed -n 's/^\([0-9.][0-9.]*\) .*gpuClkMin [0-9]*, gpuClkMax [0-9]*.*$/\1/p' | tail -1)
+  CLOCK_REASON=""
+  if [ -z "$CLOCK_DECL" ] || [ -z "$CLOCK_CONFIRMED" ]; then
+    CLOCK_REASON="sin declaración o confirmación en el journal del arranque actual"
+  elif [ "$CLOCK_DECL" != "$CLOCK_CONFIRMED" ]; then
+    CLOCK_REASON="declarado '$CLOCK_DECL', confirmado '$CLOCK_CONFIRMED'"
+  elif [ -z "$CLOCK_START" ] || [ -z "$CLOCK_CONFIRM_TS" ]; then
+    CLOCK_REASON="no se pudo fechar inicio y confirmación del servicio"
+  else
+    local start_epoch
+    start_epoch=$(date -d "$CLOCK_START" +%s 2>/dev/null || true)
+    if [ -z "$start_epoch" ] || ! awk -v c="$CLOCK_CONFIRM_TS" -v s="$start_epoch" \
+         'BEGIN{exit !(c+0 >= s+0)}'; then
+      CLOCK_REASON="confirmación anterior al inicio actual del servicio"
+    fi
+  fi
+  [ -z "$CLOCK_REASON" ]
+}
+
+cmd_status_clock_lock() {
+  if clock_lock_evaluate; then
+    echo "ARMADO: rango $CLOCK_DECL MHz confirmado por el driver tras el inicio del servicio; no mide el clock actual"
+    return 0
+  fi
+  echo "FALTA: clock lock ($CLOCK_REASON; rango declarado '${CLOCK_DECL:-nada}', confirmado '${CLOCK_CONFIRMED:-nada}')"
+  return 1
+}
+
 cmd_status() {
+  if [ "${1:-}" = clock ] && [ "${2:-}" = lock ]; then
+    cmd_status_clock_lock
+    return $?
+  fi
   echo "== estado de la instrumentacion =="
   local armed=0 missing=0 ciego=0 ok
 
@@ -2195,15 +2256,9 @@ EOF
   # que no baste con que alguna vez se aplicara algun rango: tiene que ser el
   # rango de esta unit. Si manana el drop-in cambia a 300,2600 y el driver sigue
   # confirmando 2800, esto lo caza.
-  local lgc_decl lgc_vist
-  lgc_decl=$(systemctl show atom-clock-lock.service -p ExecStart 2>/dev/null |
-    grep -o '\-lgc [0-9]*,[0-9]*' | head -1 | tr -d ' ' | sed 's/-lgc//')
-  lgc_vist=$($JOURNALCTL -b 0 -u atom-clock-lock.service --no-pager -o cat 2>/dev/null |
-    grep -o 'gpuClkMin [0-9]*, gpuClkMax [0-9]*' | tail -1 |
-    sed 's/gpuClkMin //; s/, gpuClkMax /,/')
-  [ -n "$lgc_decl" ] && [ "$lgc_decl" = "$lgc_vist" ]; ok=$?
-  chk "clock lock de GPU (declarado ${lgc_decl:-?} MHz, confirmado por el driver)" "$ok" \
-      "declarado '${lgc_decl:-nada}' y el driver confirmo '${lgc_vist:-nada}' -- limite termico DGX-342/344/345 sin aplicar"
+  clock_lock_evaluate; ok=$?
+  chk "clock lock (rango ${CLOCK_DECL:-?} MHz confirmado tras inicio del servicio; no mide clock actual)" "$ok" \
+      "${CLOCK_REASON:-confirmación no disponible}"
 
   # earlyoom por su PUNTERIA, no por estar vivo. Un earlyoom de serie tambien
   # esta `active` y mata lo que le parece: el 2026-09-08 eso fue caro en esta
@@ -2869,6 +2924,7 @@ bb -- caja negra de la maquina
   bb scan ["hace X"]     informe de fallos en una ventana (def: "2 hours ago")
   bb hw                  inventario de hardware y limites aplicados
   bb status              que instrumento esta armado y cual no
+  bb status clock lock   comprobar declaracion y confirmacion reciente del rango GPU
   bb drift               compara lo adoptado en el repo con lo desplegado (exit != 0 si diverge)
   bb protect             sube el limite de core de las apps ya corriendo (prlimit)
   bb who [pid]           que procesos pesan y QUIEN los lanzo (unit, padre, cwd)

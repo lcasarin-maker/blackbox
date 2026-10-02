@@ -1,0 +1,19 @@
+Read-only verification on 2026-10-02; telemetry used --dry-run, no actions or UDP transmission.
+
+$ python3 tools/service_probe.py 127.0.0.1 22 2
+{"estado":"OK","ms":44}
+
+$ ./bin/bb status clock lock
+ARMADO: rango 300,2800 MHz confirmado por el driver tras el inicio del servicio; no mide el clock actual
+
+$ python3 tools/atom_gpu_telemetry.py --once --dry-run > /tmp/blackbox-1358-telemetry-dry.jsonl
+$ python3 - <<'PYFILTER'
+import json
+from pathlib import Path
+rows=[json.loads(x) for x in Path('/tmp/blackbox-1358-telemetry-dry.jsonl').read_text().splitlines()]
+m=next(x for x in rows if x.get('evento')=='muestra')
+print(json.dumps({k:v for k,v in m.items() if k.startswith('psi_mem_')},ensure_ascii=False))
+PYFILTER
+{"psi_mem_some_avg10": 0.0, "psi_mem_some_avg60": 0.0, "psi_mem_some_avg300": 0.0, "psi_mem_some_total": 20681070, "psi_mem_full_avg10": 0.0, "psi_mem_full_avg60": 0.0, "psi_mem_full_avg300": 0.0, "psi_mem_full_total": 20445091}
+
+Limits: a successful banner checks only SSH's identification response. Clock output verifies historical application in the current boot, not the current limit after arbitrary subsequent changes. Reading PSI now does not calibrate new failure modes. No external receiver or crash campaign was run.

@@ -305,9 +305,9 @@ echo "-- 4b. clock de la GPU y vigilante de NVRM OOM --"
 run cp adopted/system-config/etc_systemd_system_atom-clock-lock.service \
        /etc/systemd/system/atom-clock-lock.service
 # `nvrm-watch` mira el journal del kernel cada 5 min buscando
-# "NVRM: ... Out of memory", que es el precursor de los congelamientos del
-# 2026-09-22 y el 2026-09-24 -- la misma firma del bug NVIDIA #1358 de la
-# seccion 8. Deja rastro en el syslog y en /var/log/nvrm-watch.log.
+# "NVRM: ... Out of memory", una señal asociada a algunos reportes de NVIDIA
+# #1358. Puede aparecer sin cuelgue, y hay cuelgues sin esa señal; se registra
+# como evidencia y no como predictor suficiente.
 run cp adopted/system-config/usr_local_bin_nvrm-watch.sh /usr/local/bin/nvrm-watch.sh
 run chmod 0755 /usr/local/bin/nvrm-watch.sh
 run cp adopted/system-config/etc_systemd_system_nvrm-watch.service \
@@ -491,12 +491,12 @@ echo "-- 8. mitigaciones del cuelgue por memoria unificada (NVIDIA #1358) --"
 # congelarse no sabremos cual de las dos lo arreglo.
 
 # --- 8a. uvm_global_oversubscription -------------------------------------
-# El asignador UVM admite peticiones por encima de lo disponible fisicamente
-# esperando reconciliarlas despues, y eso es lo que convierte un fallo de
-# asignacion que deberia ser limpio en un cuelgue. Un reportero del hilo lo
-# puso a 0: el cuelgue silencioso IRRECUPERABLE paso a un OOM global
-# RECUPERABLE. Sigue barriendo procesos ajenos (vio morir sshd,
-# NetworkManager, contenedores) -- protege la caja, no lo que corre en ella.
+# Mitigacion parcial, no causa raíz demostrada. Un reportero del hilo lo puso
+# a 0 y observó que un cuelgue silencioso pasó a OOM global recuperable; otros
+# resultados muestran que no evita todos los fallos: hashcat produjo OOM
+# recuperable y el prefill siguió colgándose con el parámetro en 0. El OOM
+# global todavía puede matar procesos ajenos (sshd, NetworkManager,
+# contenedores); el valor no garantiza que el host sobreviva.
 # El contenido sale de `adopted/`, no de aqui dentro. Hasta el 2026-09-28 este
 # bloque lo escribia con un heredoc IDENTICO al fichero adoptado: dos fuentes
 # de verdad para los mismos cuatro renglones, y `bb drift` vigilando justo la

@@ -1,0 +1,25 @@
+2026-10-02 — validación local, sin despliegue
+
+$ python3 -m pytest -q tests/test_1358_hitos_nvrm.py
+...........                                                              [100%]
+11 passed in 0.12s
+
+$ python3 -m ruff check tools/hitos_incidente.py tests/test_1358_hitos_nvrm.py
+All checks passed!
+
+$ bash -n adopted/system-config/usr_local_bin_nvrm-watch.sh
+(sin salida; exit 0)
+
+$ git diff --check
+(sin salida; exit 0)
+
+La prueba de CLI contra tasks/evidence/SWARM-LUNA-1358-2026-10-02/journal-watchdog.jsonl
+conserva los timestamps UTC del journal y verifica PSI 2026-09-24 20:04:04Z,
+timeout 20:09:34Z y servicio iniciado en el boot siguiente 20:11:52Z. En UTC−06,
+los hitos observados son 14:04:04, 14:09:34 y 14:11:52. La primera muestra PSI
+por encima del umbral está 13:59:34; no se presenta como inicio físico exacto.
+
+Los controles negativos cubren NVRM sin señal PSI, PSI sin NVRM, configuración
+FailureAction sin acción de watchdog, mención normal de no acariciar el watchdog,
+fuente ausente, línea JSON inválida y ausencia de NVRM para el watcher. El watcher
+solo registra evidencia; no activa reinicios ante NVRM.

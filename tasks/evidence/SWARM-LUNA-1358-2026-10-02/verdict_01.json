@@ -1,0 +1,12 @@
+[
+  {
+    "id": "FEATURE-1358-A2-EXPORTACION-EXTERNA",
+    "status": "done",
+    "evidence": "Implementado BLACKBOX_UDP_DESTINATION opcional con IP literal, payload JSON compacto <=1200 bytes sin hostname/PID/procesos, boot_id y temperaturas zonales acotadas; timeout 100 ms, fallas reportadas a stderr, exportación antes del JSONL y tras mitigación. --dry-run no escribe ni exporta. Pruebas: tests/test_1358_telemetria.py y regresión tests/test_atom_gpu_telemetry.py tests/test_atom_gpu_telemetry_bb.py tests/test_auditoria_bb_regresiones.py: 136 passed. Validación usa mocks/loopback como dirección parseada; sin receptor ni paquetes externos. Despliegue y desempeño ante incidente real sin validar."
+  },
+  {
+    "id": "FEATURE-1358-B2-CAPTURA-TRANSICION",
+    "status": "done",
+    "evidence": "Agregado PSI memory some/full (avg10/avg60/avg300/total) a muestra GPU existente de 5 s mediante lectura directa de /proc/pressure/memory; no crea subprocesos. Ausencias, campos faltantes, valores inválidos, Unicode y lecturas fallidas quedan explícitos. Se mantiene 5 s; bin/bb ya tiene ráfaga ligera de 2 s durante 50 s al detectar PSI/RAM. Sin evidencia comparativa para justificar 1 Hz; reabrir si reproducción demuestra pérdida de hitos dentro del intervalo efectivo de 2 s. Pruebas nuevas y regresión: 136 passed. Cuélgue real y eficacia diagnóstica añadida siguen sin medir."
+  }
+]

@@ -81,6 +81,51 @@ sudo ./enable-privileged.sh   # core dumps (see below)
 
 ---
 
+## Evidence for GB10 allocation failures
+
+The follow-up to [NVIDIA #1358](https://github.com/NVIDIA/open-gpu-kernel-modules/issues/1358)
+adds optional observations. None of these new signals triggers a reboot.
+
+- `BB_SSH_PROBE_PORT=22 ./bin/bb sample` records `servicio_ssh`: a complete SSH
+  identification line, an error, or a timeout. The probe is disabled by default,
+  accepts loopback IPs only, and has a total deadline (`BB_SSH_PROBE_TIMEOUT_S`,
+  default 2 seconds). A banner confirms that part of SSH responds, rather than
+  the usability of the whole host.
+- `./bin/bb status clock lock` checks the declared clock range against the
+  driver's confirmation in the current boot and after the unit's last start.
+  It verifies a recorded application of the range; later changes made elsewhere
+  remain outside that evidence.
+- GPU telemetry now records memory PSI alongside its existing five-second
+  samples. The existing lightweight `bb sample` burst still provides two-second
+  observations when its pressure trigger fires. A one-second GPU sampler
+  requires incident measurements before changing the default cadence.
+- Optional UDP export uses `BLACKBOX_UDP_DESTINATION=IP:PORT` on
+  `tools/atom_gpu_telemetry.py`. IPv6 destinations
+  can use `[IP]:PORT`. The operator supplies a receiver; export stays off by
+  default. Packets contain selected signals, boot identity and up to eight
+  thermal zones, with a 1,200-byte ceiling and a 100-ms send timeout. They omit
+  hostnames and process lists. UDP delivery is unacknowledged and unencrypted;
+  export errors are reported to stderr. `--dry-run` sends nothing. Export
+  precedes the sample's local JSONL append, but earlier collection or mitigation
+  work can still stall.
+
+To examine separate incident milestones, export a journal window **including
+systemd messages**, then pass it with the recorded samples:
+
+```bash
+journalctl --since '2026-09-24 13:50' --until '2026-09-24 14:15' -o json > /tmp/incident-journal.jsonl
+python3 -m tools.hitos_incidente --journal /tmp/incident-journal.jsonl --samples /path/to/samples.jsonl
+```
+
+The report separates allocator errors, PSI observations, service observations,
+watchdog actions and boot observations. It preserves boot identity and declares
+missing evidence through `could_not_run` (exit 2). Observation timestamps do not
+establish the physical onset of a failure or its cause. Allocator errors are
+recognized independently of the source line number, and alone do not establish
+that the host wedged.
+
+---
+
 ## What it watches
 
 `blackbox` doesn't duplicate telemetry that already exists on a healthy

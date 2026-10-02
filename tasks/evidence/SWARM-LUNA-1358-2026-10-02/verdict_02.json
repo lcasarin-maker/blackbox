@@ -1,0 +1,12 @@
+[
+  {
+    "id": "FEATURE-1358-A3-HITOS-INCIDENTE",
+    "status": "done",
+    "evidence": "tools/hitos_incidente.py analiza journalctl -o json y muestras bb JSONL con stdlib; informa por separado NVRM, firma allocator, PSI registrado/señal explícita del servicio, respuesta SSH, pérdida/recuperación observada, timeout watchdog y boot. Timestamps conservan UTC del journal y offset original de muestras; identidad boot se conserva y las entradas ausentes/ilegibles quedan en could_not_run. CLI contra journal real verifica PSI 14:04:04, watchdog 14:09:34 y servicio en boot siguiente 14:11:52 (UTC−06). python3 -m pytest -q tests/test_1358_hitos_nvrm.py: 11 passed. Sin inferencia de causa/inicio físico ni despliegue. Ficha: tasks/done/FEATURE-1358-A3-HITOS-INCIDENTE.md"
+  },
+  {
+    "id": "FEATURE-1358-B3-FIRMA-ALLOCATOR",
+    "status": "done",
+    "evidence": "El detector identifica NV_ERR_NO_MEMORY junto a mem_desc.c:<línea> o _memdescAllocInternal, incluidos 1359/1361, sin fijarse a una línea exacta. El watcher reconoce Out of memory o NV_ERR_NO_MEMORY y solo registra evidencia; ya no lo llama precursor y no acciona recovery. Controles cubren error sin PSI, PSI sin NVRM, config/mención de watchdog que no es timeout y watcher sin NVRM. python3 -m pytest -q tests/test_1358_hitos_nvrm.py: 11 passed. No se reprodujo OOM real ni se desplegó. Ficha: tasks/done/FEATURE-1358-B3-FIRMA-ALLOCATOR.md"
+  }
+]
