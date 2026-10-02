@@ -79,3 +79,7 @@ cuda_malloc_managed: PID=1850908 before=76734464 held=110288896 delta=33554432 r
 pytorch_empty: PID=1850943 before=376504320 held=376504320 delta=0 rc=0
 
 These are cgroup snapshots, not a kernel call trace. Six per-scope dmem.current observations could not run. CUDA library initialization is a separate baseline. The allocator flags, active owner memcg and worker context still require tracing; the task remains open.
+
+## Probe preparatorio añadido 2026-10-02
+
+`tools/kernel_charges.bt` targets the 6.17 header ABI for `__memcg_kmem_charge_page(page,gfp,order)` and `__memcg_kmem_uncharge_page(page,order)`. It filters charge entry by numeric executor task cgroup ID, carries the page-address ledger through uncharge even if the freeing task differs, and prints charge/uncharge/failure/duplicate/order-mismatch maps, live aggregations and outstanding page addresses at snapshots and exit. It labels owner `unknown`; executor cgroup is not active memcg identity. Runtime existence, parser validation, attachment, stack, actual active memcg, flags for a specific allocation and worker transition remain unobserved. `bpftrace -d` exits at the root gate, recorded in `tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt`. No runtime claims are made.

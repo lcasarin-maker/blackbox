@@ -132,3 +132,19 @@ def test_module_entrypoint_executes(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     with pytest.raises(SystemExit) as exit_info:
         runpy.run_path(str(Path(preflight.__file__)), run_name="__main__")
     assert exit_info.value.code == 0
+
+
+def test_fallback_rejects_unknown_and_empty_providers():
+    from tools.preflight import check_fallback
+    for requested, observed in [("gpu", ""), ("", "cpu"), ("gpu", "mystery")]:
+        result = check_fallback(dict(requests=1, requested_provider=requested,
+                                    observed_provider=observed, worker_restarted=False, evidence_id="fixture"))
+        assert result["status"] == "unknown"
+
+
+def test_cli_invalid_utf8_is_unknown(tmp_path, capsys):
+    from tools.preflight import main
+    path = tmp_path / "snapshot.json"
+    path.write_bytes(b"\xff")
+    assert main(["fallback", str(path)]) == 2
+    assert __import__("json").loads(capsys.readouterr().out)["status"] == "unknown"

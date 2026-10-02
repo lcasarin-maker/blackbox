@@ -1,0 +1,140 @@
+[
+  {
+    "command": [
+      "python3",
+      "-m",
+      "coverage",
+      "run",
+      "--branch",
+      "--source=tools.verify_cgroup_repro,tools.provider_trace,tools.read_integrity,tools.preflight",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_verify_cgroup_repro.py",
+      "tests/test_provider_trace.py",
+      "tests/test_read_integrity.py",
+      "tests/test_preflight.py"
+    ],
+    "rc": 0,
+    "stdout": "........................................................................ [ 76%]\n......................                                                   [100%]\n94 passed in 0.16s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "coverage",
+      "report",
+      "--fail-under=100"
+    ],
+    "rc": 0,
+    "stdout": "Name                           Stmts   Miss Branch BrPart  Cover\n----------------------------------------------------------------\ntools/preflight.py               143      0     74      0   100%\ntools/provider_trace.py          147      0     64      0   100%\ntools/read_integrity.py          112      0     30      0   100%\ntools/verify_cgroup_repro.py     107      0     52      0   100%\n----------------------------------------------------------------\nTOTAL                            509      0    220      0   100%\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "ruff",
+      "check",
+      "tools/verify_cgroup_repro.py",
+      "tools/provider_trace.py",
+      "tools/read_integrity.py",
+      "tools/preflight.py",
+      "tests/test_verify_cgroup_repro.py",
+      "tests/test_provider_trace.py",
+      "tests/test_read_integrity.py",
+      "tests/test_preflight.py"
+    ],
+    "rc": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pyright",
+      "tools/verify_cgroup_repro.py",
+      "tools/provider_trace.py",
+      "tools/read_integrity.py",
+      "tools/preflight.py"
+    ],
+    "rc": 0,
+    "stdout": "0 errors, 0 warnings, 0 informations\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "tools.inventario",
+      "--check"
+    ],
+    "rc": 0,
+    "stdout": "[inventario] HALLAZGOS: 0\n[inventario] OK: los dos inventarios describen el repo y la maquina.\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "rc": 2,
+    "stdout": "tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md:60: new blank line at EOF.\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check",
+      "--",
+      "SPEC.md",
+      "tools/preflight.py",
+      "tests/test_preflight.py",
+      "tools/verify_cgroup_repro.py",
+      "tests/test_verify_cgroup_repro.py",
+      "tools/provider_trace.py",
+      "tests/test_provider_trace.py",
+      "tools/read_integrity.py",
+      "tests/test_read_integrity.py",
+      "tools/kernel_charges.bt",
+      "tasks/backlog/FEATURE-1358-CGROUP-01-REPRO.md",
+      "tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md",
+      "tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md",
+      "tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md",
+      "tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md"
+    ],
+    "rc": 2,
+    "stdout": "tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md:43: new blank line at EOF.\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check",
+      "--",
+      "SPEC.md",
+      "tools/preflight.py",
+      "tests/test_preflight.py",
+      "tools/verify_cgroup_repro.py",
+      "tests/test_verify_cgroup_repro.py",
+      "tools/provider_trace.py",
+      "tests/test_provider_trace.py",
+      "tools/read_integrity.py",
+      "tests/test_read_integrity.py",
+      "tools/kernel_charges.bt",
+      "tasks/backlog/FEATURE-1358-CGROUP-01-REPRO.md",
+      "tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md",
+      "tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md",
+      "tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md",
+      "tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

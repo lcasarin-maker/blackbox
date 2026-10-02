@@ -118,6 +118,8 @@ def check_fallback(snapshot: dict[str, Any]) -> dict[str, Any]:
         return {"status": "unknown", "findings": [f"missing observation: {key}" for key in missing]}
     if type(snapshot["requests"]) is not int or type(snapshot["worker_restarted"]) is not bool or not isinstance(snapshot["requested_provider"], str) or not isinstance(snapshot["observed_provider"], str) or not isinstance(snapshot["evidence_id"], str) or not snapshot["evidence_id"].strip():
         return _unknown("fallback observation has invalid field types or empty evidence_id")
+    if snapshot["requested_provider"] not in ("gpu", "cpu") or snapshot["observed_provider"] not in ("gpu", "cpu"):
+        return _unknown("fallback provider must be gpu or cpu")
     if snapshot["requests"] < 0:
         return _result(["request count is invalid"])
     if snapshot["requests"] == 0:
@@ -181,7 +183,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         document = json.loads(args.snapshot.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         print(json.dumps({"status": "unknown", "findings": [str(exc)]}, sort_keys=True))
         return 2
     if not isinstance(document, dict):

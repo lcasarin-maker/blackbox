@@ -8,7 +8,7 @@ severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m tools.verify_cgroup_plan --phase 01-repro --evidence tasks/evidence/FEATURE-1358-CGROUP-01-REPRO", "expect": "exit_zero", "porque": "Verificador específico pendiente: debe evaluar resultados reales y controles negativos descritos en esta ficha, no su mera existencia."}
+close_check: {"cmd": "python3 -m tools.verify_cgroup_repro tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json", "expect": "exit_zero", "porque": "Recalcula fases, scopes, deltas y calibración CPU desde stdout crudo; fail por control fallido y unknown por observación ilegible. No acredita contención GPU ni autenticidad del origen."}
 ---
 
 ## Contexto y dependencias
@@ -27,7 +27,7 @@ Control positivo: asignación CPU anónima tocada que sí incremente memory.curr
 
 El arnés identifica cada API y su cgroup; el control CPU demuestra que el instrumento detecta cargos. Publicar las medidas originales y la repetición, incluida cualquier diferencia. Liberación y sincronización deben quedar observadas. Un resultado sin hueco también cierra la investigación si delimita exactamente la pila donde ocurre y donde no ocurre.
 
-El comando close_check queda especificado para su implementación con el trabajo. Hoy el verificador y sus evidencias están pendientes; esta ficha registra el plan, no resultados ejecutados. Debe rechazar evidencias ausentes y datos fabricados, y tener un control negativo que pruebe que detecta el defecto de su sujeto.
+El close_check ejecuta el verificador de observaciones implementado. Rechaza entradas ausentes, inconsistentes e incompletas y tiene controles negativos de calibración CPU. La autenticidad del origen exige conservar los comandos y las capturas; la consistencia de un JSON por sí sola no la demuestra. La ficha conserva el ensayo completo como criterio de cierre.
 
 ## Avance del swarm — 2026-10-02
 
@@ -46,3 +46,9 @@ La reproducción histórica de 7 GiB se conserva como entrada y no se repitió
 a ese tamaño. La ficha permanece abierta para completar observación y cierre.
 
 Verificación final del arnés: 32 tests y 100% de sentencias/ramas; Ruff y Pyright pasan. Salidas y control negativo en `tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/verification.txt`.
+
+## Verificador de observaciones — 2026-10-02
+
+Implementado `tools/verify_cgroup_repro.py`: ignora el veredicto guardado y recalcula las seis APIs desde stdout JSONL, exige fases ordenadas, PID/scope estable y scopes independientes, comprueba tamaño solicitado y control CPU frente al ruido sin asignación y liberación. Retorna pass=0, fail=1 y unknown=2. Los controles negativos eliminan fases, duplican scopes, alteran lecturas y neutralizan el incremento/liberación CPU. El fixture positivo es sintético y no se presenta como captura real.
+
+La captura histórica retorna unknown y conserva los deltas legibles. Cuenta 23 lecturas dmem.current ilegibles por fase, repartidas en seis scopes; este conteo por observación difiere del conteo anterior de seis scopes. El verificador verifica consistencia, no puede autenticar un JSON fabricado ni afirmar ownership/contención. Continúa abierta.

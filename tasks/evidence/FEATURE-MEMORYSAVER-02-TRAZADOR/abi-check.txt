@@ -1,0 +1,40 @@
+# FEATURE-MEMORYSAVER-02-TRAZADOR — ABI and offline negatives
+Date: 2026-10-02
+
+Host: `Linux aitopatom-41f1 6.17.0-1032-nvidia ... aarch64`; `bpftrace v0.20.2`.
+
+Positive static ABI evidence:
+
+- `/usr/src/linux-nvidia-6.17-headers-6.17.0-1032/include/linux/memcontrol.h:1695-1696` declares `int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order)` and `void __memcg_kmem_uncharge_page(struct page *page, int order)`.
+- The same header at 1735-1747 confirms these wrappers call the two exported-looking implementation names when `memcg_kmem_online()` is true. This supports argument positions/signatures for kernel 6.17 headers, not the existence of attachable runtime kprobes.
+- Existing NVIDIA 580.178.04 UVM source uses `set_active_memcg()` with an `mm` context (see `tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt`). Therefore `cgroup`/comm at a charge probe labels the executing task only. It does not identify the active memcg, and the script reports owner=unknown.
+
+Offline negative checks:
+
+```text
+$ bpftrace --version
+bpftrace v0.20.2
+
+$ bpftrace -d tools/kernel_charges.bt 4096 0
+[DEBUG] libbpf: loading kernel BTF '/sys/kernel/btf/vmlinux': 0
+WARNING: BTF: failed to iterate modules BTF objects
+ERROR: bpftrace currently only supports running as the root user.
+(exit 1; could_not_run: parser/attach validation blocked before compilation)
+
+$ rg '__memcg_kmem_(un)?charge_page|memcg_kmem_(un)?charge_page' /usr/src/linux-nvidia-6.17-headers-6.17.0-1032/include/linux/memcontrol.h
+1695:int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order);
+1696:void __memcg_kmem_uncharge_page(struct page *page, int order);
+1735:static inline int memcg_kmem_charge_page(struct page *page, gfp_t gfp,
+1739:        return __memcg_kmem_charge_page(page, gfp, order);
+1746:        __memcg_kmem_uncharge_page(page, order);
+(exit 0)
+```
+
+`bpftrace -d` is an explicit failed offline validation: root gating prevents any claim that this script compiles or that probes exist. `/boot/System.map-6.17.0-1032-nvidia` was permission denied; no module/System.map symbol verification, trace attachment, privileged run, CUDA run, or runtime output was obtained.
+
+The script scopes entry charge events to the requested numeric *executor task cgroup ID* (`$2`) and uses the same page identity through uncharge regardless of the freeing task's cgroup. Its maps are emitted in snapshots and again at exit before process teardown. `@page_bytes` is an outstanding page-address ledger; it is not proof of active memcg owner. Charges from worker tasks outside the selected task cgroup are missed. No exact owner attribution or balanced scoped-owner result is claimed. This is instrumentation preparation only; both backlog cards remain open.
+
+Additional readonly compile attempt:
+$ sudo -n bpftrace -d tools/kernel_charges.bt 4096 1
+sudo: a password is required
+(exit 1; could_not_run: sudo requires a password; parser still not executed)

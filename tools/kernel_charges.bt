@@ -1,0 +1,78 @@
+// Linux 6.17 memcontrol.h ABI: __memcg_kmem_charge_page(page,gfp,order)
+// and __memcg_kmem_uncharge_page(page,order). $1 is host PAGE_SIZE;
+// $2 is the numeric cgroup ID to scope charge-event capture.
+// `cgroup` is the executing task's cgroup, never proof of active memcg owner.
+BEGIN
+{
+    @page_size = $1;
+    printf("READY abi=linux-6.17-kmem-page-charge page_size=%d scope_cgroup_id=%llu attribution=executor-cgroup-only owner=unknown\n", $1, $2);
+}
+kprobe:__memcg_kmem_charge_page /cgroup == $2/
+{
+    @pending_page[tid] = arg0;
+    @pending_bytes[tid] = ((uint64)1 << arg2) * $1;
+    @pending_executor_cgroup[tid] = cgroup;
+    @pending_comm[tid] = comm;
+}
+kretprobe:__memcg_kmem_charge_page /@pending_page[tid]/
+{
+    $page = @pending_page[tid];
+    if (retval == 0) {
+        if (@page_bytes[$page]) {
+            @duplicate_charge = count();
+            @replaced_bytes[@page_bytes[$page]] = count();
+            @live_bytes_by_executor[@page_cgroup[$page], @page_comm[$page]] = sum(-((int64)@page_bytes[$page]));
+            @live_pages_by_executor[@page_cgroup[$page], @page_comm[$page]] = sum(-1);
+        }
+        @page_bytes[$page] = @pending_bytes[tid];
+        @page_cgroup[$page] = @pending_executor_cgroup[tid];
+        @page_comm[$page] = @pending_comm[tid];
+        @charge_events[@page_cgroup[$page], @page_comm[$page]] = count();
+        @live_bytes_by_executor[@page_cgroup[$page], @page_comm[$page]] = sum((int64)@page_bytes[$page]);
+        @live_pages_by_executor[@page_cgroup[$page], @page_comm[$page]] = sum(1);
+    } else {
+        @charge_failures = count();
+    }
+    delete(@pending_page[tid]);
+    delete(@pending_bytes[tid]);
+    delete(@pending_executor_cgroup[tid]);
+    delete(@pending_comm[tid]);
+}
+kprobe:__memcg_kmem_uncharge_page /@page_bytes[arg0]/
+{
+    $page = arg0;
+    if (@page_bytes[$page] != (((uint64)1 << arg1) * $1)) {
+        @order_mismatch = count();
+    }
+    @live_bytes_by_executor[@page_cgroup[$page], @page_comm[$page]] = sum(-((int64)@page_bytes[$page]));
+    @live_pages_by_executor[@page_cgroup[$page], @page_comm[$page]] = sum(-1);
+    @uncharge_events[@page_cgroup[$page], @page_comm[$page]] = count();
+    delete(@page_bytes[$page]);
+    delete(@page_cgroup[$page]);
+    delete(@page_comm[$page]);
+}
+interval:s:1
+{
+    printf("SNAPSHOT t=%llu owner=unknown attribution=executor-task-cgroup\n", elapsed / 1000000000);
+    print(@live_bytes_by_executor);
+    print(@live_pages_by_executor);
+    print(@charge_events);
+    print(@uncharge_events);
+    print(@charge_failures);
+    print(@duplicate_charge);
+    print(@order_mismatch);
+    print(@page_bytes);
+}
+END
+{
+    printf("FINAL owner=unknown attribution=executor-task-cgroup\n");
+    print(@live_bytes_by_executor);
+    print(@live_pages_by_executor);
+    print(@charge_events);
+    print(@uncharge_events);
+    print(@charge_failures);
+    print(@duplicate_charge);
+    print(@order_mismatch);
+    print(@page_bytes);
+    print(@pending_page);
+}
