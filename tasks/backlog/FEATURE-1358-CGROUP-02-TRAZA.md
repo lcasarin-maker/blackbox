@@ -1,0 +1,30 @@
+---
+id: FEATURE-1358-CGROUP-02-TRAZA
+kind: task
+domain: GPU
+title: "Identificar el camino de asignación y el propietario del cargo"
+status: open
+severity: P2
+origin: asserted
+satd_family: BLIND_INSTRUMENT
+created: 2026-10-02
+close_check: {"cmd": "python3 -m tools.verify_cgroup_plan --phase 02-traza --evidence tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA", "expect": "exit_zero", "porque": "Verificador específico pendiente: debe evaluar resultados reales y controles negativos descritos en esta ficha, no su mera existencia."}
+---
+
+## Contexto y dependencias
+
+Plan derivado de [la corrección del README](../../README.md#a-measured-cgroup-accounting-gap-on-this-gb10-stack) y [el informe histórico corregido](../evidence/nvidia-1358-comment.md). Fuente de colaboración: [NVIDIA #1358](https://github.com/NVIDIA/open-gpu-kernel-modules/issues/1358).
+
+Dependencias: FEATURE-1358-CGROUP-01-REPRO.
+
+## Alcance
+
+Sobre la pila de la reproducción, localizar la entrada CUDA y su camino por RM/UVM/allocador del kernel. Reutilizar fuentes y herramientas de trazado disponibles; registrar símbolos, versión y límites de observabilidad. Verificar qué memcg está activo, qué flags se usan y cuándo el trabajo cambia de contexto o pasa a un worker.
+
+Comparar los helpers memcg y __GFP_ACCOUNT existentes en 580.178.04 con la ruta realmente observada. Separar NV_ALLOC_PAGES_NODE_SKIP_RECLAIM y RmNumaAllocSkipReclaimPercent del mecanismo de cargo. Una interpretación de ensamblador debe quedar identificada como inferencia.
+
+## Criterio de cierre
+
+Mapa respaldado por trazas de la asignación real, con archivos/líneas de la versión correspondiente y dueño del cargo. Contrastar una asignación CPU contabilizada y una ejecución sin la llamada GPU. Declarar lo que no pudo trazarse. La mera presencia de helpers en el código no demuestra que la ruta los ejecute.
+
+El comando close_check queda especificado para su implementación con el trabajo. Hoy el verificador y sus evidencias están pendientes; esta ficha registra el plan, no resultados ejecutados. Debe rechazar evidencias ausentes y datos fabricados, y tener un control negativo que pruebe que detecta el defecto de su sujeto.

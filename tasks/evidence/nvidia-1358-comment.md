@@ -5,6 +5,21 @@ maquina; ninguno es estimado. **Lo publica Luis, no el agente.**
 
 URL: https://github.com/NVIDIA/open-gpu-kernel-modules/issues/1358
 
+**Correction note, 2026-10-02:** the body below preserves the earlier report
+and its interpretations. Current scope and source findings are documented in
+[README.md](../../README.md#a-measured-cgroup-accounting-gap-on-this-gb10-stack).
+Linux has a device-memory cgroup controller (`dmem`), and NVIDIA 580 already
+uses memcg accounting in some UVM paths. NVIDIA 615.71.09 adds explicit `dmem`
+integration; its coverage of our GB10 CUDA allocation remains untested.
+The 7 GiB / 15 MiB measurement establishes a gap on the tested path. Sustained
+PSI establishes stalls; the reclaim-loop explanation and the interpretation
+of `RmNumaAllocSkipReclaimPercent` remain hypotheses. Registering a region and
+correctly charging allocations could provide containment; whether that would
+prevent the reported wedges requires separate testing. The statement below
+that the RM path is locally unpatchable describes the installed DKMS source
+bundle, which includes `nv-kernel.o_binary`; the upstream open-module repository
+also publishes RM source.
+
 ---
 
 Fourth independent reproduction, on a workload unlike the three already

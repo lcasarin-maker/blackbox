@@ -262,63 +262,79 @@ If you maintain a tool in this space and it belongs here, open a PR.
 
 ---
 
-## A platform gap that makes this harder than it should be: no cgroup accounting for GPU/unified memory
+## A measured cgroup accounting gap on this GB10 stack
 
-A good chunk of the OOM-adjacent failures above trace back to one thing:
-**Linux cgroups have no concept of GPU memory**, and on unified-memory
-hardware like GB10 that's worse than on a discrete-GPU box. The system
-`memory` controller (`memory.max`, `memory.events`, PSI's
-`/proc/pressure/memory`) only ever sees host RSS. A process that maps 15 GB
-of *unified* memory through the NVIDIA driver can starve every other process
-on the machine — GPU or not, because it's the same physical pool — without
-that memory ever showing up against any cgroup's accounting, and without
-tripping the cgroup OOM killer the way a plain RSS overrun would.
+On our tested GB10 stack, a CUDA allocation escaped the workload's ordinary
+memory accounting: holding 7 GiB through PyTorch increased the same process's
+`memory.current` by only 15 MiB. The reproduction and original measurements
+are in [our incident report](tasks/evidence/nvidia-1358-comment.md#the-cgroup-accounting-gap-measured).
+That result establishes a containment gap for that allocation path and stack.
+Identifying the responsible driver path remains part of the investigation.
 
-The practical result, measured on this hardware: the only way we found to
-cap an interactive process before it takes the desktop down with it is a
-userspace wrapper (`systemd-run --scope -p MemoryMax=...`) that limits host
-RSS — which is not what unified memory actually consumes, so it's a
-best-effort fence, not a real limit. There is no kernel-level primitive
-equivalent to `cpu.max` for GPU compute share, no `gpu.pressure` file
-alongside `/proc/pressure/memory`, and no cgroup-visible OOM event when a
-process gets killed or aborts because it couldn't get unified memory instead
-of RAM. See the full write-up in the forum post linked from this repo's
-issues, or the [Contributing](#contributing) section if you have data from
-other GB10 boxes that confirms or contradicts this.
+Linux already provides two relevant mechanisms:
 
-### A community hypothesis worth testing: UVM page-migration livelock
+- The [`memory` controller](https://www.kernel.org/doc/html/v6.17/admin-guide/cgroup-v2.html#memory)
+  accounts anonymous memory, page cache and supported kernel allocations.
+  `MemoryMax=` / `memory.max` limits those charged allocations; its coverage
+  extends beyond RSS. `/proc/pressure/memory` reports host task stalls and is
+  distinct from a workload cgroup's memory accounting and pressure files.
+- The [`dmem` controller](https://www.kernel.org/doc/html/v6.17/admin-guide/cgroup-v2.html#dmem)
+  accounts and limits device-memory regions registered by participating drivers.
+  On our host, kernel `6.17.0-1032-nvidia` exposes `dmem` and has
+  `CONFIG_CGROUP_DMEM=y`. With NVIDIA `580.178.04`, the root
+  `dmem.capacity` file was empty on 2026-10-02: no regions were registered.
 
-**Unverified — this is a third-party forum claim, not something confirmed
-on this hardware.** One report on the NVIDIA developer forum, describing
-the same "dies under sustained load, fine at idle, no warning, no log"
-pattern documented above, proposes a specific mechanism: on GB10, weights +
-KV cache + CUDA workspace share the same 128 GB unified pool, and if total
-allocation creeps too close to the ceiling during a long-running job, the
-result isn't a clean OOM — it's a UVM (Unified Virtual Memory) page-migration
-livelock that hard-locks the machine with no warning and no log, because the
-OOM-killer never fires. That would explain why this failure class evades
-every log-based detector, including this repo's own DGX-438 (the
-still-unexplained periodic SIGTERM killer, see `tasks/backlog/`): a livelock
-during page migration wouldn't route through the kernel OOM path, the
-cgroup OOM path, or PSI at all, since none of those instrument UVM directly.
+The installed 580.178.04 source already has UVM memory-cgroup context helpers
+and optional `__GFP_ACCOUNT` charging, used in some UVM allocation paths.
+For example, `uvm_linux.c::uvm_memcg_context_start()` selects the address-space
+owner's memcg, and `uvm_pmm_sysmem.c` selects accounting flags when requested.
+The measured gap calls for tracing the allocation that bypasses accounting;
+it does not establish that every NVIDIA allocation bypasses cgroups.
 
-The mitigation the same report credits, in order: cap the memory a server
-actually claims (in vLLM, `--gpu-memory-utilization` at 0.85–0.92 rather than
-0.94+, leaving 10–15 GB of headroom) and update platform firmware (BIOS/BMC,
-separate from OS/driver packages). Two more items commonly paired with it —
-locking GPU clocks and capping GPU power draw via `nvidia-smi -pl` — are
-worth a hardware-specific gut check before following blindly: on this box,
-clock locking (`nvidia-smi -lgc 300,2800`) is already applied via a boot-time
-systemd unit, but `-pl` power capping is **not supported at all** —
-`nvidia-smi -q -d POWER` returns `N/A` for every power-limit field
-(current/requested/default/min/max) on this GB10. If you're on different
-GB10 hardware and `-pl` works for you, that's useful data in itself — open
-an issue.
+NVIDIA's open source release **615.71.09** includes
+[`dmem` registration, charging and uncharging](https://github.com/NVIDIA/open-gpu-kernel-modules/blob/615.71.09/kernel-open/nvidia/os-interface.c#L3028),
+with a charge call in
+[`VideoMemory` construction](https://github.com/NVIDIA/open-gpu-kernel-modules/blob/615.71.09/src/nvidia/src/kernel/mem_mgr/video_mem.c#L626).
+It also adds `__GFP_ACCOUNT` in
+[`nv-vm.c`](https://github.com/NVIDIA/open-gpu-kernel-modules/blob/615.71.09/kernel-open/nvidia/nv-vm.c#L287).
+These source observations establish existing mechanisms to investigate.
+Their coverage of our GB10 CUDA allocations, and the behavior of this release
+on our host, remain untested. The host measurements above used 580.178.04.
 
-If `bb scan`/`bb sample` ever catch a hang with this exact fingerprint —
-unified memory near its ceiling, no kernel OOM, no thermal event, no Xid —
-that would be the first real evidence either for or against this theory on
-this specific box, instead of another anonymous forum report.
+Blackbox owns the reproductions, captures and comparisons. A driver change
+belongs in a fork of NVIDIA's module source, with an upstream patch and its
+validation results. The investigation should distinguish `cudaMalloc`,
+`cudaMallocManaged` and the allocation API actually used by PyTorch, then
+check charging, limit rejection, sharing and release with two isolated cgroups.
+Correct accounting and controlled allocation failure are separate acceptance
+criteria from preventing the silent host wedges reported in issue #1358.
+
+### Reclaim and page migration remain hypotheses
+
+Our sustained-PSI incidents establish prolonged task stalls. Reclaim and UVM
+page-migration livelock are candidate mechanisms; attributing the stalls to
+one of them requires allocation-path evidence. Other operators in
+[NVIDIA issue #1358](https://github.com/NVIDIA/open-gpu-kernel-modules/issues/1358)
+report silent prefill failures with available host memory and no allocator
+error in their captures. Treat these as distinct observed failure patterns
+while testing for a shared cause. Host `MemAvailable`, cgroup charges and PSI
+measure different properties; together they help describe an incident.
+
+The installed driver exposes `NV_ALLOC_PAGES_NODE_SKIP_RECLAIM` in
+`os_alloc_pages_node()`. Our earlier report linked that branch to
+`RmNumaAllocSkipReclaimPercent` through a disassembly-based interpretation.
+The parameter's supported use, units and default on GB10 still require
+confirmation from NVIDIA. Skipping reclaim changes allocation behavior;
+charging an allocation to its owner is a separate mechanism.
+
+Operator reports describe workload limits and clock caps as partial
+mitigations. Their effects depend on the workload and platform. On this host,
+a boot-time systemd unit applies `nvidia-smi -lgc 300,2800`; its driver
+confirmation is checked by `bb status clock lock`, separately from the
+current clock reading. The recorded power-limit query on this GB10 returned
+`N/A` for current, requested, default, minimum and maximum limits. Captures
+from other units should preserve their actual configuration, measurements
+and observation windows rather than treating these settings as universal fixes.
 
 ---
 
