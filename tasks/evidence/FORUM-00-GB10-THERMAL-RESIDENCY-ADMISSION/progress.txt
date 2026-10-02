@@ -1,0 +1,5 @@
+Avance de ejecución 2026-10-02
+Revisión de _corroboracion confirma que historial caliente sostenido con carga GPU ociosa devuelve descarta. No existe medición local que calibre reemplazo seguro para CPU/idle; 0 cambios de compuerta, 0 A/B y 0 claims de throughput. Falta medir sensores independientes/CPU y fan con controles antispike antes de automatizar pausa.
+
+Comandos/output: ../SWARM-OPEN-2026-10-02/capture-commands.json y recovery-host.json. Informe recovery partial, could_not_run=1; consultas externas10, could_not_run=0.
+Implementación: tools/recovery_profile.py, tests/test_recovery_profile.py:7 passed;42 statements6 branches100%;ruffPASS;pyright0errores. Estas pruebas verifican el instrumento, no la intervención experimental.

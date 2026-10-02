@@ -1,0 +1,28 @@
+{
+  "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+  "commands": [
+    {
+      "cmd": "uname -a",
+      "exit": 0,
+      "stdout": "Linux aitopatom-41f1 6.17.0-1032-nvidia #32-Ubuntu SMP PREEMPT_DYNAMIC Wed Aug 19 17:40:46 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n"
+    },
+    {
+      "cmd": "rg -n 'nvidia[-_]drm.*modeset|modeset=[01]' /etc/modprobe.d /lib/modprobe.d",
+      "exit": 0,
+      "stdout": "/etc/modprobe.d/zz-nvidia-drm-override.conf:1:options nvidia-drm modeset=0\n/etc/modprobe.d/nvidia-graphics-drivers-kms.conf:3:options nvidia_drm modeset=1\n"
+    },
+    {
+      "cmd": "cat /sys/module/nvidia_drm/parameters/modeset",
+      "exit": 1,
+      "stdout": "",
+      "stderr": "cat: /sys/module/nvidia_drm/parameters/modeset: Permission denied\n",
+      "could_not_run": true
+    },
+    {
+      "cmd": "mokutil --sb-state",
+      "exit": 0,
+      "stdout": "SecureBoot enabled\n"
+    }
+  ],
+  "could_not_run_count": 1
+}

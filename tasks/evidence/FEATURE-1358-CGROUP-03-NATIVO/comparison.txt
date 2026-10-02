@@ -1,0 +1,82 @@
+# FEATURE-1358-CGROUP-03-NATIVO — evaluación parcial
+
+Fecha de inspección: 2026-10-02. El objetivo fue cotejar soporte, kernel y mecanismos; no se cambió el driver ni el cgroup del host.
+
+## Resultado de soporte
+
+La fuente local `/tmp/blackbox-nvidia-615-source` declara NVIDIA 615.71.09, incluye GB10 con PCI ID `2E12 10DE 21EC`, y contiene las rutas nativas de registro/cargo dmem. El host enumera GB10 `10de:2e12`, por lo que el producto está en la tabla de dispositivos de esa fuente. En `kernel-open/nvidia/os-interface.c`, el driver 615 llama a `dmem_cgroup_register_region`, `dmem_cgroup_try_charge`, `dmem_cgroup_uncharge` y unregister; cuando `try_charge` devuelve `-EAGAIN`, transforma el límite excedido a `NV_ERR_RESOURCE_ACCOUNTING_HARD_LIMIT_EXCEEDED`. `src/nvidia/src/kernel/mem_mgr/memacct.c` registra región por GPU y precarga el uso ya ocupado. `video_mem.c` pasa por `memacctTryCharge` antes de construir una asignación de VideoMemory. Esto demuestra un mecanismo para las asignaciones que pasan por ese gestor; no demuestra que CUDA/PyTorch GB10 recorra esa ruta ni resuelve uso compartido, migración o doble contabilización.
+
+El kernel local es 6.17.0-1032-nvidia, `CONFIG_CGROUP_DMEM=y`, y exporta las funciones requeridas en `Module.symvers`. La fuente 615 incluye el compile test `dmem_cgrp_id`; esa ruta permite detectar disponibilidad del ABI, pero no certifica comportamiento runtime. La versión instalada 580.178.04 presenta cero referencias a `dmem_cgroup`/`os_dmem` en `/usr/src/nvidia-580.178.04`; sí contiene helpers memcg de UVM, un mecanismo diferente y parcial.
+
+615.71.09 exige que módulos abiertos, firmware GSP y componentes userspace provengan de la misma versión. La fuente pública solo trae los módulos, no un conjunto intercambiable de userspace/GSP. NVIDIA lista 615.71.09 como release aarch64 y la fuente declara aarch64 como arquitectura admitida. Así, la combinación kernel 6.17 + arm64 + GB10 tiene compatibilidad indicada por ABI/arquitectura/ID de producto, pero NVIDIA no publica aquí validación funcional de este modelo concreto ni de Ubuntu Noble con esa combinación. El runtime 615 sigue sin probar.
+
+## Captura literal de inspección
+
+Comando de host (lecturas solamente):
+
+```sh
+printf 'host='; hostname
+printf 'uname='; uname -r
+printf 'os='; . /etc/os-release; printf '%s %s\n' "$PRETTY_NAME" "$VERSION_ID"
+printf 'kernel_driver='; modinfo -F version nvidia
+printf 'smi='; nvidia-smi --query-gpu=name,driver_version,pci.device_id --format=csv,noheader
+printf 'controllers='; cat /sys/fs/cgroup/cgroup.controllers
+printf 'capacity_bytes='; wc -c < /sys/fs/cgroup/dmem.capacity
+printf 'root_current_bytes='; wc -c < /sys/fs/cgroup/dmem.current
+printf 'gpu_processes='; nvidia-smi --query-compute-apps=pid,used_memory --format=csv,noheader | wc -l
+```
+
+Salida literal relevante:
+
+```text
+host=aitopatom-41f1
+uname=6.17.0-1032-nvidia
+os=Ubuntu 24.04.5 LTS 24.04
+kernel_driver=580.178.04
+smi=NVIDIA GB10, 580.178.04, 0x2E1210DE
+controllers=cpuset cpu io memory hugetlb pids rdma misc dmem
+capacity_bytes=0
+root_current_bytes=0
+gpu_processes=2
+```
+
+Lectura de `/proc/self/cgroup` dio `/user.slice/user-1000.slice/user@1000.service/app.slice/app-org.chromium.Chromium-3655057.scope`; en ese cgroup `dmem.current` y `dmem.max` no existen. `/sys/fs/cgroup/dmem.capacity` y `dmem.current` tienen cero bytes de contenido. `nvidia-smi -q` informa GSP firmware 580.178.04, y muestra dos procesos GPU activos. Esto es contexto de interferencia global; por sí solo no impide atribuir una futura medición a un cgroup aislado. No inicié allocations ni cambié límites durante esta inspección de solo lectura.
+
+Control negativo de inspección del fuente:
+
+```sh
+rg -n 'NVIDIA GB10.*2E12 10DE 21EC' /tmp/blackbox-nvidia-615-source/README.md
+rg -l 'dmem_cgroup|os_dmem' /usr/src/nvidia-580.178.04 | wc -l
+```
+
+Salida literal:
+
+```text
+1024:| NVIDIA GB10                                             | 2E12 10DE 21EC |
+0
+```
+
+El identificador GB10 consultado en el host (`10de:2e12`) concuerda con la fila de fuente `2E12 10DE 21EC`. La primera búsqueda funciona como control positivo de la inspección de compatibilidad; el cero en la segunda búsqueda distingue la instalación 580, sin integración dmem explícita, de la fuente 615. Esto prueba la inspección del código; no prueba el runtime.
+
+## Comparación ejecutable y retorno seguro
+
+El arnés existente es `tools/cgroup_repro.py`; registra versión/boot/cgroup y snapshots antes, durante y tras liberar para `none`, `cpu_touch`, `cuda_malloc`, `cuda_malloc_managed` y `pytorch_empty`. Limita el tamaño a 32 MiB y usa `systemd-run --user --scope` con `MemoryMax=512M`. Correrlo crea scopes y ejecuta allocations CUDA; no lo ejecuté en esta captura porque el host ya tenía dos workloads GPU activos y el alcance aquí era de solo lectura. La comparación válida necesita el mismo kernel, boot/árbol de cgroups, arnés y pasos, primero 580.178.04 y después el stack 615 completo fijado. El criterio requiere controlar carga compartida y registrar también CPU positivo, GPU vacío negativo, rechazo bajo el límite, dos cgroups, liberación y sharing.
+
+Procedimiento preparado, aún no ejecutado: conservar la selección y versiones de paquetes del host y los `.deb` 580 instalados; preparar artefactos del módulo 615 compilados contra headers exactos `6.17.0-1032-nvidia`; instalar en una ventana de mantenimiento solamente el paquete/runtime completo 615.71.09 arm64 (módulo, userspace y GSP alineados), y reiniciar para que módulo y firmware coincidan. Repetir la captura inicial y luego el arnés 01 bajo el protocolo de sus dependencias. Retorno: restaurar los paquetes/artefactos 580.178.04 guardados y el firmware 580 correspondiente, ejecutar `depmod`/actualizar initramfs según el paquete y reiniciar; confirmar con `modinfo`, `nvidia-smi` y el GSP. No instalar 615 junto al userspace 580 ni mezclar firmware, y no desplegar hasta tener autorización concreta y aprobación operacional. Estos pasos son un plan, no evidencia de instalación/rollback comprobados.
+
+## Pendiente / could_not_run
+
+- Runtime del driver 615.71.09 en GB10 y API de PyTorch: could_not_run; el host ejecuta 580 y hay workloads GPU activos.
+- Registro efectivo de región en 615, capacidad/cargo, dos cgroups, sharing, rechazo independiente de `memory.max` y `dmem.max`, liberación/rollback: could_not_run; requieren el driver en ejecución y arnés 01.
+- No hay `dmem` region actualmente: capacidad raíz vacía y archivos dmem ausentes en el cgroup inspeccionado. Eso caracteriza la pila 580 observada, no el comportamiento esperado después del cambio.
+- El informe no cierra FEATURE-1358-CGROUP-03-NATIVO: faltan resultados del arnés y sus controles; la ficha permanece abierta.
+
+Fuentes primarias: [NVIDIA 615.71.09 source README](https://github.com/NVIDIA/open-gpu-kernel-modules/tree/615.71.09), [NVIDIA Linux aarch64 615.71.09](https://www.nvidia.com/en-us/drivers/details/278540/), [NVIDIA source compatibility notice](https://github.com/NVIDIA/open-gpu-kernel-modules/blob/615.71.09/README.md), [Linux cgroup v2 dmem docs](https://www.kernel.org/doc/html/v6.17/admin-guide/cgroup-v2.html#dmem).
+
+The supplied source directory has no `.git`, so its exact upstream commit cannot be proven locally (`git -C /tmp/blackbox-nvidia-615-source rev-parse HEAD` returned `fatal: not a git repository`). File pins for inspected code: `version.mk` SHA-256 `40c9cf4415acd13c8e87e17e15c2fe7ceb1ee0d8a449c52f615ab5d844adda73`; `kernel-open/nvidia/os-interface.c` `ef23dfe456481ea07c926d5929991807666e6796ac07b72e9c4ea96e224adf62`; `src/nvidia/src/kernel/mem_mgr/memacct.c` `bb33f008cafa41842e393edb7571d0f61c3e6f690b4a41235d45e42676683a58`; `src/nvidia/src/kernel/mem_mgr/video_mem.c` `92248044cb241097cb03e6b5151df2eaffc7aad765d35506039f14e48217401c`.
+
+### Related UVM memory-saver scope
+
+The separately pinned Memory Saver design (`christopherowen/dgx-spark-memory-saver`, commit `55816f0b5c88bbab3c0641f9d6f1d9fd36e5854d`, `docs/design.md`) packs eligible 256-byte UVM user leaf tables into 4 KiB slots backed by CPU pages of exactly 64 KiB. It keeps the original physical allocator for backing pages, preserving its existing memcg context and DMA/mapping accounting. This addresses page-table packing overhead; it does not change CUDA allocation charging. The current host's `getconf PAGE_SIZE` is `4096`, so the design's 64 KiB page-size guard is false and the optimization is inapplicable on this stack. The related R610 note (`docs/driver-610.md`) reports stock R610's large DMA transfer failure, reproduced with the patch removed; an independent RM alignment correction was needed for its tested setup. That result complicates driver-version selection and does not validate R610 as a safe substitute here. The coordinator's 43 hardware-free checks are software checks, not hardware/runtime evidence. These related findings do not change the open 615 runtime criteria.
+
+Actualización de compilación 2026-10-02: make modules -j2 rc0 sobre headers6.17.0-1032; CONFIG_CGROUP_DMEM=y. Cinco módulos615.71.09 con vermagiccompatible; nvidia.ko referencia dmem_cgroup_register_region/try_charge/uncharge y otros exports; nvidia-uvm.ko int_active_memcg. Firmas vacías,7 warninglines,5 BTF omitidos(vmlinuxausente). No instalación/carga/pruebaCUDA615. Literalcomandoyoutputenbuild-615.json/build-modules.json.

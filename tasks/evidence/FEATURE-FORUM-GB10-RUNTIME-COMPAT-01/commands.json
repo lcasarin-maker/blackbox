@@ -1,0 +1,51 @@
+{
+  "id": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+  "commands": [
+    {
+      "cmd": "uname -a",
+      "exit": 0,
+      "stdout": "Linux aitopatom-41f1 6.17.0-1032-nvidia #32-Ubuntu SMP PREEMPT_DYNAMIC Wed Aug 19 17:40:46 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n"
+    },
+    {
+      "cmd": "nvidia-smi --query-gpu=name,uuid,pci.bus_id,driver_version,compute_cap --format=csv,noheader",
+      "exit": 0,
+      "stdout": "NVIDIA GB10, GPU-42b7575d-056e-d788-7367-7e538af60a3a, 0000000F:01:00.0, 580.178.04, 12.1\n"
+    },
+    {
+      "cmd": "docker inspect nemotron-server --format '{{.Config.Image}} {{.Image}} {{.State.Status}} {{.RestartCount}}'",
+      "exit": 0,
+      "stdout": "vllm/vllm-openai:v0.27.1 sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d running 0\n"
+    },
+    {
+      "cmd": "docker image inspect vllm/vllm-openai:v0.27.1 --format '{{.Id}} {{json .RepoDigests}} {{.Os}}/{{.Architecture}}'",
+      "exit": 0,
+      "stdout": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d [\"vllm/vllm-openai@sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967\"] linux/arm64\n"
+    },
+    {
+      "cmd": "docker inspect nemotron-server --format '{{range .Config.Env}}{{println .}}{{end}}' | rg '^(CUDA_VERSION|NVIDIA_DISABLE_REQUIRE|NVIDIA_REQUIRE_[A-Z]+|TORCH_CUDA_ARCH_LIST)='",
+      "exit": 0,
+      "stdout": "NVIDIA_REQUIRE_CUDA=cuda>=13.0 brand=unknown,driver>=535,driver<536 brand=grid,driver>=535,driver<536 brand=tesla,driver>=535,driver<536 brand=nvidia,driver>=535,driver<536 brand=quadro,driver>=535,driver<536 brand=quadrortx,driver>=535,driver<536 brand=nvidiartx,driver>=535,driver<536 brand=vapps,driver>=535,driver<536 brand=vpc,driver>=535,driver<536 brand=vcs,driver>=535,driver<536 brand=vws,driver>=535,driver<536 brand=cloudgaming,driver>=535,driver<536 brand=unknown,driver>=550,driver<551 brand=grid,driver>=550,driver<551 brand=tesla,driver>=550,driver<551 brand=nvidia,driver>=550,driver<551 brand=quadro,driver>=550,driver<551 brand=quadrortx,driver>=550,driver<551 brand=nvidiartx,driver>=550,driver<551 brand=vapps,driver>=550,driver<551 brand=vpc,driver>=550,driver<551 brand=vcs,driver>=550,driver<551 brand=vws,driver>=550,driver<551 brand=cloudgaming,driver>=550,driver<551 brand=unknown,driver>=565,driver<566 brand=grid,driver>=565,driver<566 brand=tesla,driver>=565,driver<566 brand=nvidia,driver>=565,driver<566 brand=quadro,driver>=565,driver<566 brand=quadrortx,driver>=565,driver<566 brand=nvidiartx,driver>=565,driver<566 brand=vapps,driver>=565,driver<566 brand=vpc,driver>=565,driver<566 brand=vcs,driver>=565,driver<566 brand=vws,driver>=565,driver<566 brand=cloudgaming,driver>=565,driver<566 brand=unknown,driver>=570,driver<571 brand=grid,driver>=570,driver<571 brand=tesla,driver>=570,driver<571 brand=nvidia,driver>=570,driver<571 brand=quadro,driver>=570,driver<571 brand=quadrortx,driver>=570,driver<571 brand=nvidiartx,driver>=570,driver<571 brand=vapps,driver>=570,driver<571 brand=vpc,driver>=570,driver<571 brand=vcs,driver>=570,driver<571 brand=vws,driver>=570,driver<571 brand=cloudgaming,driver>=570,driver<571 brand=unknown,driver>=575,driver<576 brand=grid,driver>=575,driver<576 brand=tesla,driver>=575,driver<576 brand=nvidia,driver>=575,driver<576 brand=quadro,driver>=575,driver<576 brand=quadrortx,driver>=575,driver<576 brand=nvidiartx,driver>=575,driver<576 brand=vapps,driver>=575,driver<576 brand=vpc,driver>=575,driver<576 brand=vcs,driver>=575,driver<576 brand=vws,driver>=575,driver<576 brand=cloudgaming,driver>=575,driver<576\nCUDA_VERSION=13.0.2\nTORCH_CUDA_ARCH_LIST=8.0 8.7 8.9 9.0 10.0 11.0 12.0\n"
+    },
+    {
+      "cmd": "python3 -c 'import torch; print({\"available\": torch.cuda.is_available(), \"count\": torch.cuda.device_count(), \"name\": torch.cuda.get_device_name(0), \"capability\": torch.cuda.get_device_capability(0)})'",
+      "exit": 0,
+      "stdout": "{'available': True, 'count': 1, 'name': 'NVIDIA GB10', 'capability': (12, 1)}\n"
+    },
+    {
+      "cmd": "nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv,noheader",
+      "exit": 0,
+      "stdout": "27381, VLLM::EngineCore, 36063 MiB\n"
+    },
+    {
+      "cmd": "nvidia-container-cli info",
+      "exit": 0,
+      "stdout": "NVRM version:   580.178.04\nCUDA version:   13.0\n\nDevice Index:   0\nDevice Minor:   0\nModel:          NVIDIA GB10\nBrand:          NvidiaRTX\nGPU UUID:       GPU-42b7575d-056e-d788-7367-7e538af60a3a\nBus Location:   0000000f:01:00.0\nArchitecture:   12.1\n"
+    },
+    {
+      "cmd": "nvidia-container-cli --help",
+      "exit": 0,
+      "stdout": "Usage: nvidia-container-cli [OPTION...] COMMAND [ARG...]\n\n Commands:\n  configure                  Configure a container with GPU support\n  info                       Report information about the driver and devices\n  list                       List driver components\n\n Options:\n  -?, --help                 Give this help list\n  -d, --debug=FILE           Log debug information\n  -k, --load-kmods           Load kernel modules\n  -l, --ldcache=FILE         Path to the driver root directory\n"
+    }
+  ],
+  "could_not_run_count": 0
+}

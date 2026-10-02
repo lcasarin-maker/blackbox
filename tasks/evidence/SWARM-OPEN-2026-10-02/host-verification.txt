@@ -1,0 +1,18 @@
+Commands and literal results
+
+`python -m tools.host_diagnostics > tasks/evidence/SWARM-OPEN-2026-10-02/host-diagnostics.json` (bounded read-only capture under coordinator-authorized elevation)
+Exit status: 2; report status `partial`; `could_not_run`: 1. The sole unavailable leaf is `/sys/module/mt7925e/version` (`FileNotFoundError`).
+
+`COVERAGE_FILE=/tmp/coverage_host_diagnostics_20261002 coverage run --branch --source=tools.host_diagnostics -m pytest tests/test_host_diagnostics.py -q`
+`21 passed in 0.34s`
+
+`COVERAGE_FILE=/tmp/coverage_host_diagnostics_20261002 coverage report -m`
+`tools/host_diagnostics.py 176 statements, 0 missed; 58 branches, 0 partial; 100%`
+
+`ruff check tools/host_diagnostics.py tests/test_host_diagnostics.py`
+`All checks passed!`
+
+`pyright tools/host_diagnostics.py tests/test_host_diagnostics.py`
+`0 errors, 0 warnings, 0 informations`
+
+The separate `host-diagnostics-sandbox.json` preserves the sandbox capture. The elevated capture remained read-only and made no host state changes.

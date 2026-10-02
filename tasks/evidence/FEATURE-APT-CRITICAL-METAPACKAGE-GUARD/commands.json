@@ -1,0 +1,48 @@
+{
+  "id": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+  "commands": [
+    {
+      "cmd": "uname -a",
+      "exit": 0,
+      "stdout": "Linux aitopatom-41f1 6.17.0-1032-nvidia #32-Ubuntu SMP PREEMPT_DYNAMIC Wed Aug 19 17:40:46 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n"
+    },
+    {
+      "cmd": "LC_ALL=C apt-get -s autoremove",
+      "exit": 0,
+      "stdout": "NOTE: This is only a simulation!\n      apt-get needs root privileges for real execution.\n      Keep also in mind that locking is deactivated,\n      so don't depend on the relevance to the real current situation!\nReading package lists...\nBuilding dependency tree...\nReading state information...\nThe following packages will be REMOVED:\n  nvidia-firmware-580-580.173.02\n0 upgraded, 0 newly installed, 1 to remove and 15 not upgraded.\nRemv nvidia-firmware-580-580.173.02 [580.173.02-0ubuntu0.24.04.1]\n"
+    },
+    {
+      "cmd": "dpkg --audit",
+      "exit": 0,
+      "stdout": ""
+    },
+    {
+      "cmd": "apt-get check",
+      "exit": 100,
+      "stdout": "",
+      "stderr": "E: Could not open lock file /var/lib/dpkg/lock-frontend - open (13: Permission denied)\nE: Unable to acquire the dpkg frontend lock (/var/lib/dpkg/lock-frontend), are you root?\n",
+      "could_not_run": true
+    },
+    {
+      "cmd": "dpkg-query -W -f='${binary:Package}\\t${Version}\\t${db:Status-Abbrev}\\n' nvidia-system-core nvidia-system-station nvidia-drm-options-modeset0 nvidia-kernel-common-580 nvidia-firmware-580-580.173.02 nvidia-firmware-580-580.178.04",
+      "exit": 0,
+      "stdout": "nvidia-drm-options-modeset0\t25.07-1\tii \nnvidia-firmware-580-580.173.02\t580.173.02-0ubuntu0.24.04.1\tii \nnvidia-firmware-580-580.178.04\t580.178.04-0ubuntu0.24.04.1\tii \nnvidia-kernel-common-580\t580.178.04-0ubuntu0.24.04.1\tii \nnvidia-system-core\t2404.26.01-1\tii \nnvidia-system-station\t2404.26.01-1\tii \n"
+    },
+    {
+      "cmd": "modinfo -F firmware nvidia",
+      "exit": 0,
+      "stdout": "nvidia/580.178.04/gsp_tu10x.bin\nnvidia/580.178.04/gsp_ga10x.bin\n"
+    },
+    {
+      "cmd": "dpkg-query -S /lib/firmware/nvidia/580.178.04/gsp_tu10x.bin /lib/firmware/nvidia/580.178.04/gsp_ga10x.bin",
+      "exit": 0,
+      "stdout": "nvidia-firmware-580-580.178.04: /lib/firmware/nvidia/580.178.04/gsp_tu10x.bin\nnvidia-firmware-580-580.178.04: /lib/firmware/nvidia/580.178.04/gsp_ga10x.bin\n"
+    },
+    {
+      "cmd": "apt-cache depends nvidia-kernel-common-580",
+      "exit": 0,
+      "stdout": "nvidia-kernel-common-580\n  Depends: libc6\n  Depends: libpciaccess0\n  Depends: nvidia-firmware-580-580.178.04\n  Conflicts: nvidia-kernel-common\n    nvidia-kernel-common-550\n    nvidia-kernel-common-555\n    nvidia-kernel-common-560\n    nvidia-kernel-common-565\n    nvidia-kernel-common-565-server\n    nvidia-kernel-common-580-server\n    nvidia-kernel-common-595\n    nvidia-kernel-common-595-server\n    nvidia-kernel-common-610\n  Replaces: nvidia-kernel-common\n    nvidia-kernel-common-550\n    nvidia-kernel-common-555\n    nvidia-kernel-common-560\n    nvidia-kernel-common-565\n    nvidia-kernel-common-565-server\n    nvidia-kernel-common-580\n    nvidia-kernel-common-580-server\n    nvidia-kernel-common-595\n    nvidia-kernel-common-595-server\n    nvidia-kernel-common-610\n"
+    }
+  ],
+  "could_not_run_count": 1
+}

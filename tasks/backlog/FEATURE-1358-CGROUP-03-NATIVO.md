@@ -28,3 +28,15 @@ Reutilizar el arnés de 01. Comprobar registro de región, cargos por propietari
 Informe comparativo respaldado por resultados reales del arnés y controles negativos: límite inferior a una asignación, segundo cgroup independiente y liberación. Demostrar el mecanismo que contiene cada API o delimitar el hueco que persiste. could_not_run debe imprimirse junto a los resultados; una evaluación incompleta conserva la ficha abierta. El despliegue del driver queda como acción separada que requiere autorización concreta.
 
 El comando close_check queda especificado para su implementación con el trabajo. Hoy el verificador y sus evidencias están pendientes; esta ficha registra el plan, no resultados ejecutados. Debe rechazar evidencias ausentes y datos fabricados, y tener un control negativo que pruebe que detecta el defecto de su sujeto.
+
+## Avance del swarm — 2026-10-02
+
+Ejecutor: Luna; coordinación: Codex. Preparado: inspección de soporte, ABI e integración dmem.
+Evidencia: `tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/comparison.txt`.
+Pendiente para cierre: driver 615 ejecutado con stack alineado; cargos, límites, compartición y liberación.
+La ficha conserva status open; el informe distingue observaciones estáticas
+y resultados runtime. El verificador de cierre permanece pendiente.
+
+## Compatibilidad de compilación — 2026-10-02
+
+NVIDIA 615.71.09 compiló contra headers 6.17.0-1032-nvidia (`make modules -j2`, rc0) dentro de scope limitado. Cinco módulos producidos, sin instalar/cargar. Metadatos, SHA256, advertencias y BTF omitido: `tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-615.json` y `build-modules.json`. Los módulos locales carecen de firma; con Secure Boot activo el ensayo exige firma/trust y stack GSP/userspace alineado. La compilación deja pendiente runtime, límites, ownership y rollback, por lo que conserva open.

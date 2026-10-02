@@ -1,0 +1,14 @@
+$ bpftrace --version
+bpftrace v0.20.2
+
+$ bpftrace -l 'kprobe:__memcg_kmem_charge_page'
+ERROR: bpftrace currently only supports running as the root user.
+exit 1
+
+El script de referencia `/tmp/bb-memory-saver/tools/kernel-charges.bt` declara
+Linux 7.0 `__memcg_kmem_charge_page(page,gfp,order)`. El host corre
+6.17.0-1032-nvidia. Esta sesión no puede validar la existencia/firma del probe
+contra símbolos cargados. No se adjuntó el trazador ni se infirió dueño del cargo.
+La fuente del mismo snapshot tampoco guarda identidad memcg/cgroup: registra
+comm/stack y limpia mapas sin imprimir la atribución viva. La salida de lista de
+probes es could_not_run; tarea abierta.

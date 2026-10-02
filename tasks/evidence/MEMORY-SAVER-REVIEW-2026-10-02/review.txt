@@ -1,0 +1,75 @@
+# Memory Saver y Blackbox — revisión 2026-10-02
+
+Repositorio: https://github.com/christopherowen/dgx-spark-memory-saver
+Commit inspeccionado: 55816f0b5c88bbab3c0641f9d6f1d9fd36e5854d.
+Anuncio: https://forums.developer.nvidia.com/t/384884
+
+## Alcance real
+
+El parche empaqueta tablas hoja de GPU de 256 bytes en slots de 4 KiB dentro de
+páginas CPU de 64 KiB. Sus predicados limitan el camino a árboles de usuario,
+DMA coherente y GPU integrada sin VRAM separada. Conserva el asignador original
+para los demás casos. `getconf PAGE_SIZE` en nuestro host devolvió `4096`: la
+pila actual queda fuera del predicado de 64 KiB.
+
+La documentación publica resultados comparativos de tablas de páginas y carga
+real, con JSON de ensayos, identidad de fuentes y artefactos. Distingue la
+comparación stock 64 KiB frente a empaquetado de la comparación neta con 4 KiB.
+No reproducimos esos ensayos GPU. El informe identifica diferencias de THP y
+reserva libre, excluye una comparación previa con cliente distinto y declara
+pendiente el soak largo. Los hashes de trazas están disponibles; las capturas
+crudas completas del host quedan fuera del repositorio.
+
+## Relación con nuestras fichas
+
+Reduce un componente de memoria del driver. Su diseño preserva el contexto memcg
+del asignador original y no agrega cobertura general de cudaMalloc/PyTorch.
+Mejor aprovechamiento de RAM, cargo al propietario y rechazo por límite son
+sujetos diferentes. Su trazador `tools/kernel-charges.bt` ayuda a localizar cargos
+de kernel por pila; necesita privilegios y adaptación al ABI del kernel 6.17,
+y no observa por sí solo todas las asignaciones GPU no cargadas.
+
+Referencia útil para 02: atribuir cargos por stack y diferenciar tablas UVM de
+buffers CUDA. Para 03: incluir tamaño de página real entre versiones comparadas.
+Para 04: conservar las rutas nativas de cargo al reutilizar memoria y comprobar
+dueño/lifetime/compartición. Para 05: reutilizar readback completo, concurrencia,
+reutilización de huecos y controles stock/patch como referencia de aceptación;
+nuestro ensayo inicial es pequeño y no equivale a la matriz de hardware publicada.
+
+## Compatibilidad que cambia el plan
+
+R580 es el perfil probado. R610 se documenta como condicional: en la configuración
+64 KiB publicada, stock R610 falló transferencias grandes con Xid31/FAULT_PTE.
+La combinación que pasó requirió una corrección RM independiente y desactivar
+system memory pools. Memory Saver instala solo UVM; estas condiciones exigen
+separar las variables antes de usar R610 como comparación de contabilidad.
+Esto aporta un caso de asignador reteniendo memoria después de liberar, que el
+arnés debe distinguir de cargos permanentes o fugas.
+
+## Hilo completo
+
+Se leyeron cuatro posts vía JSON del foro. El autor presentó el proyecto; otro
+operador preguntó por upstream y el coste de MOK/Secure Boot sin BMC. El autor
+explicó la operación con KVM remoto y el interlocutor manifestó intención de
+probarlo. Esos replies no aportan validación independiente ejecutada ni una
+respuesta de NVIDIA confirmando incorporación upstream.
+
+## Verificación local
+
+`cd /tmp/bb-memory-saver && bash scripts/check`: 43 tests, OK, rc=0.
+La salida literal completa está en `checks.txt`; incluye controles negativos de
+perfil no admitido, fuente alterada, identidades incompatibles y fallos de lectura.
+Son checks de empaquetado y operaciones simuladas/disposables, no compilación ni
+validación GPU local. Instalaciones locales del parche: 0. Ensayos GPU del parche
+ejecutados aquí: 0. Comparaciones de memoria/performance propias: 0.
+
+## Transferencia de la idea a páginas de 4 KiB
+
+La idea de subasignar sí se puede estudiar. El parche actual fija slots de 4096
+bytes, con guard PAGE_SIZE==65536, y calcula PAGE_SIZE/4096; en 4 KiB resultaría
+un solo slot y hoy retorna al asignador original. Reducir slots, por ejemplo a
+256 bytes, constituye otro diseño: necesita probar alineación de la tabla GPU,
+líneas de caché, DMA coherente, offsets de CPU mapping, unmap de la página madre
+y espera del tracker antes de reutilizar. La evidencia publicada valida slots
+de 4 KiB bajo páginas de 64 KiB. Cambiar a kernel 64 KiB también cambia la pila
+completa ensayada; merece una comparación separada de nuestra contabilidad.

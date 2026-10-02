@@ -1,0 +1,9 @@
+FORUM-02-GX10-READ-INTEGRITY — host observation
+
+NVMe inventory succeeded; `/` and `/boot/efi` are read-write in this view. No known-reference dataset or model weights were read; no buffered/O_DIRECT comparison, cache control, external digest, SMART/error log, or firmware A/B was run. Integrity remains unproven.
+
+Read-only host snapshot: `tasks/evidence/SWARM-OPEN-2026-10-02/host-diagnostics.json`. The elevated bounded capture returned exit 2; profile status `partial`, with 1 unavailable check(s). `host-diagnostics-sandbox.json` preserves the earlier sandbox-restricted capture separately. The collector now inventories interfaces explicitly and queries EEE only on sysfs device-backed, non-wireless interfaces, including USB Ethernet. Bridges, veths, docker0, and Wi-Fi are excluded from EEE. Current `enP7s7` is the queried physical Ethernet and reports EEE enabled but inactive; link-partner EEE modes are not reported. Current `wlP9s9` is Wi-Fi and its `mt7925e` module version file is unavailable.
+
+Verification: `COVERAGE_FILE=/tmp/coverage_host_diagnostics_20261002 coverage run --branch --source=tools.host_diagnostics -m pytest tests/test_host_diagnostics.py -q` → 21 passed; branch coverage 100% (176 statements, 58 branches). `ruff check tools/host_diagnostics.py tests/test_host_diagnostics.py` → All checks passed. `pyright tools/host_diagnostics.py tests/test_host_diagnostics.py` → 0 errors, 0 warnings, 0 informations. No service, network, module, boot configuration, or block-device state was changed.
+
+Disposition: open_partial. The evidence does not satisfy the task close check.

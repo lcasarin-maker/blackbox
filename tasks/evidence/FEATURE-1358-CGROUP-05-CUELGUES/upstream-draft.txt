@@ -1,0 +1,20 @@
+Draft — not published. Fill measured results before posting.
+
+Blackbox is our GB10 incident recorder: it collects host pressure, GPU allocator
+messages and useful service responses to reconstruct the timeline of a failure.
+We are investigating cgroup accounting as a separate containment question.
+
+Our experiment distinguishes CPU allocations, cudaMalloc, cudaMallocManaged and
+the API used by PyTorch, with two isolated cgroups and explicit free/sync steps.
+We will report driver/kernel/CUDA/GSP versions, actual controller charges,
+limit rejection and observation windows. NVIDIA already has memcg paths and
+newer source includes dmem integration; applicability to our stack needs testing.
+
+Results pending: tested stacks, APIs, sizes, charge/release deltas, limit outcomes,
+trial counts, exposure and unavailable captures. We will distinguish containment
+results from evidence about silent wedges.
+
+Collaboration sought: GB10 operators who can run the same bounded protocol and
+NVIDIA guidance on which allocation paths participate in memcg/dmem accounting.
+Please include raw commands, timestamps/boot IDs and collection errors; keep host
+MemAvailable, cgroup charges and PSI as separate fields.

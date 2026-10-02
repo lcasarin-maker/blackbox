@@ -17,21 +17,29 @@ gate_level: legacy-baseline
 
 ## 0. Objective
 
-**Mission**: Que un fallo de esta máquina —cuelgue, crash, OOM, servicio caído—
-deje evidencia suficiente para diagnosticarlo **después**, y que la ausencia de
-un instrumento se vea antes del fallo y no durante la autopsia.
+**Mission**: Prevenir y resolver los crashes y hangs de esta máquina, preservar
+su usabilidad y recuperar el servicio cuando falle. La captura forense y la
+comprobación de instrumentos permiten encontrar causas, elegir correcciones y
+verificar que funcionan; son parte del esfuerzo preventivo y correctivo.
+
+Este objetivo guía el trabajo pendiente. Cada capacidad de protección se
+declara con su alcance y evidencia: un presupuesto firmado registra una
+política, un límite protege las asignaciones que efectivamente controla y un
+watchdog aporta recuperación. La eficacia de cada mecanismo requiere prueba.
 
 ## Purpose
 
-Caja negra de la AI TOP ATOM (NVIDIA GB10, 20 núcleos aarch64, 121 GB de memoria
-unificada). Registra continuamente lo que ninguna otra fuente de la máquina
-cubre, lee las que sí existen en vez de duplicarlas, y declara qué comprobación
-no pudo correr.
+Protección, diagnóstico y resolución de fallos de la AI TOP ATOM (NVIDIA GB10,
+20 núcleos aarch64, 121 GB de memoria unificada). Reutiliza los mecanismos de la
+plataforma y las fuentes existentes; añade los controles y registros que hagan
+falta y declara qué comprobación no pudo correr.
 
 Nace del incidente del 2026-09-07: la app de escritorio de Claude quedó colgada
 con el proceso vivo, la ventana en pantalla y cero renderizadores. El
 diagnóstico descartó OOM, segfault, throttle y térmica, y **no llegó a causa
-raíz**, porque `ulimit -c` era 0 y `systemd-coredump` no estaba instalado.
+raíz**, porque `ulimit -c` era 0 y `systemd-coredump` no estaba instalado. Nace
+como respuesta a crashes y hangs para prevenir su repetición y solucionarlos;
+ese primer hueco de evidencia determinó el comienzo de la implementación.
 
 ## Why now
 
@@ -48,6 +56,16 @@ trabajan en ella y compiten por su memoria unificada.
 
 ## In scope
 
+- Prevención y corrección de crashes, hangs y agotamiento de recursos mediante
+  contención, presupuestos de admisión, configuración de kernel y runtime,
+  ajustes de cargas y correcciones de drivers o firmware cuando corresponda.
+  Incluye investigar y proponer parches, fixes y recomendaciones externas,
+  contrastándolos con el código y la máquina antes de adoptarlos.
+- Cada propuesta preventiva o correctiva especifica el fallo que aborda,
+  versiones y OEM compatibles, evidencia y grado de certeza, riesgos,
+  validación y rollback. Las intervenciones automáticas tienen blancos,
+  disparadores y recuperación explícitos. Las pruebas distinguen prevención,
+  mitigación, diagnóstico y recuperación, y registran fallos de colección.
 - Muestreo de lo no cubierto: renderizadores por app Electron, zombis, PSI,
   linaje de procesos (unit de cgroup), estado del motor de inferencia.
 - Informe forense por ventana temporal (`bb scan`) que cruza todas las fuentes,
@@ -58,26 +76,32 @@ trabajan en ella y compiten por su memoria unificada.
 - Captura de core dumps y protección en caliente de procesos ya arrancados.
 - Custodia de la instrumentación adoptada, con detección de divergencia.
 - `tools/check_harvest_accepted.py`: close_check reutilizable de las fichas de
-  evaluación de mecanismos cosechados por Atlas, con su propia suite (`tests/`,
-  100% de cobertura -- la única pieza de Python de este repo).
+  evaluación de mecanismos cosechados por Atlas, con su suite en `tests/` y
+  controles de evidencia por mecanismo. Los inventarios siguientes describen
+  también las otras herramientas Python del repo.
 
 - **Actuar sobre lo que mide, donde la inacción cuesta la máquina entera.** Esto
   dejó de estar fuera de alcance el 2026-09-23/24, después de cuatro
   congelamientos: `bb-usable` retira el latido del watchdog ante presión
   sostenida y systemd reinicia (medido: 2026-09-24 14:09:38, 10 min 34 s desde
   el inicio del colapso, sin nadie delante); `bb cap` lanza con techo de
-  memoria; y los techos de `app.slice` y `docker.slice` matan un proceso en vez
-  de dejar caer la máquina. `bb protect` ya no es la excepción: es el caso menor.
+  memoria; los techos de `app.slice` y `docker.slice` contienen memoria
+  contabilizada por sus cgroups. La cobertura de asignaciones CUDA se investiga
+  en `FEATURE-1358-CGROUP-*`: el hueco medido impide extender esa protección a
+  toda la memoria unificada. `bb protect` es una de las capas existentes.
 - Custodia de la instrumentación de la máquina relativa a **monitoreo y cuelgue**,
   venga de donde venga. Ver "Inventario de propiedad".
 
 ## Out of scope
 
 - Interfaz gráfica o dashboard: esto se lee desde una terminal o desde un agente.
-- Monitoreo multi-máquina o por SSH: hay una sola unidad.
-- Actuar sobre lo que mide **cuando el fallo no cuesta la máquina**: bb informa,
-  no repara servicios, no reinicia unidades, no borra nada.
-- Duplicar telemetría de GPU y térmica: la produce `Atlas/tools/atom_gpu_telemetry.py`.
+- Administración general de una flota: el sujeto protegido es esta unidad.
+  La captura externa y las sondas de servicio complementan su protección.
+- Reparación genérica de aplicaciones ajenas al objetivo de crashes, hangs y
+  usabilidad; cada intervención de BB responde a un fallo dentro de ese alcance.
+- Duplicar fuentes o mecanismos que ya cubren el problema. La telemetría de GPU
+  y térmica adoptada vive en `tools/atom_gpu_telemetry.py` de este repo; Atlas
+  consume su salida según el contrato siguiente.
 
 ## Contrato con Atlas
 
@@ -135,6 +159,7 @@ efectos de esta spec, y `tools/inventario.py --check` lo bloquea en el commit.
 | `bb snapshot [razón]` | volcado forense completo AHORA: `/proc`, journal, `lsmod` de nvidia, estado de GDM | `tests/test_bb_bash.py` |
 | `bb scan ["hace X"]` | informe desde el inicio solicitado hasta ahora; filtra JSONL por timestamps, valida registros y conserva `could_not_run` para datos corruptos, faltantes o análisis fallidos | `tests/test_bb_bash.py` + `tests/test_auditoria_bb_regresiones.py` |
 | `bb hw` | inventario de hardware y de los límites aplicados | `bash -n` |
+| `bb recovery` | Consulta readonly de RCU, watchdog y pstore, devuelve 2 cuando hay `could_not_run` | `tests/test_recovery_profile.py` |
 | `bb status` | qué instrumento está armado y cuál no, por sus DATOS donde hay artefacto | `tests/test_bb_bash.py` |
 | `bb drift` | compara los 41 sujetos adoptados contra la máquina; distingue igual, divergente, ausente, suspendido y suspensión vencida. Hasta el 2026-09-28 volvía `return 0` sin condición pase lo que pase, y ningún hook ni timer lo llamaba nunca — divergente y ausente sólo se veían si alguien corría el comando a mano. Ahora sale distinto de 0 si diverge o falta algo (suspendido vigente no cuenta), y corre solo una vez al día vía `blackbox-drift.timer` | `tests/test_bb_bash.py` (`BLACKBOX_DRIFT_ROOT` aísla el repo/máquina de mentira de los 41 sujetos reales; control negativo corrido contra el `return 0` de antes: 3 de 5 tests fallan) |
 | `bb protect` | sube el límite de core de procesos YA corriendo (`prlimit`) | `bash -n` |
@@ -164,9 +189,16 @@ efectos de esta spec, y `tools/inventario.py --check` lo bloquea en el commit.
 | `tools/hitos_incidente.py` | separa hitos de allocator, PSI, servicio, watchdog y boot en journal/muestras aportados; declara evidencia ausente y no atribuye causalidad | `tests/test_1358_hitos_nvrm.py` |
 | `tools/scan_samples.py` | lector stdlib de JSONL para `bb scan`: ordena timestamps, recorta al intervalo pedido, separa boots en contadores, y correlaciona fallback GPU solo con solicitudes activas y trabajo CPU del mismo PID/boot; incertidumbre queda en `could_not_run` | `tests/test_auditoria_bb_regresiones.py` |
 | `tools/mutacion_alcanza.py` | guarda que el runner de mutación del kit encuentre qué mutar aquí. Llegó vendorizado sin poder resolver un solo test (0 de 9, medido) porque suponía una disposición `src/`; se arregló aguas arriba y esto impide que se pierda en la próxima sincronización | `tests/test_mutacion_alcanza.py`, 23 sentencias al 100 %, con un repo montado a propósito para que NO alcance |
-| `tools/presupuesto_memoria.py` | comprueba el presupuesto de memoria en DOS mitades, porque mezclarlas hacia que el criterio no pudiera salir positivo. **Mitad 1, compromisos**: los techos de cada slice (que el kernel aplica) tienen que componer contra el SUELO comprometido de memoria unificada de GPU -- el p95 de la serie, derivado y no elegido: de p50 a p95 se mueve 1.10 GiB sobre 121.1, es una meseta. **Mitad 2, excursion**: el maximo observado (85.4 GiB, un transitorio de 4 min de ocho workers de `pytest-xdist`) tiene que caber en un presupuesto FIRMADO en `tasks/presupuesto_gpu.json`, con `owner`, `expires` y `reason` -- sin firma es ROJO, y no se incluye plantilla porque una plantilla que el gate acepte es el agujero. Ningun cgroup ve esa memoria (medido: 7 GiB de CUDA -> 15 MiB contabilizados), asi que no se puede presupuestar: solo firmar | `tests/test_presupuesto_memoria.py`, 39 casos. Seis mutaciones corridas contra el codigo real, de las que DOS no cazaba nadie (volver el suelo al maximo; fijarlo a mano en 50.0): `tasks/evidence/DEBT-TECHOS-SIN-CALIBRAR/controles-negativos-2026-09-25.txt` |
+| `tools/presupuesto_memoria.py` | comprueba el presupuesto de memoria en DOS mitades, porque mezclarlas hacia que el criterio no pudiera salir positivo. **Mitad 1, compromisos**: los techos de cada slice (que el kernel aplica) tienen que componer contra el SUELO comprometido de memoria unificada de GPU -- el p95 de la serie, derivado y no elegido: de p50 a p95 se mueve 1.10 GiB sobre 121.1, es una meseta. **Mitad 2, excursion**: el maximo observado (85.4 GiB, un transitorio de 4 min de ocho workers de `pytest-xdist`) tiene que caber en un presupuesto FIRMADO en `tasks/presupuesto_gpu.json`, con `owner`, `expires` y `reason` -- sin firma es ROJO, y no se incluye plantilla porque una plantilla que el gate acepte es el agujero. La ruta CUDA de la medicion historica presento un hueco (7 GiB asignados -> 15 MiB adicionales en memory.current); ese resultado delimita la pila y API ensayadas. El presupuesto firmado es una politica operativa mientras se investiga su contencion | `tests/test_presupuesto_memoria.py`, 39 casos. Seis mutaciones corridas contra el codigo real, de las que DOS no cazaba nadie (volver el suelo al maximo; fijarlo a mano en 50.0): `tasks/evidence/DEBT-TECHOS-SIN-CALIBRAR/controles-negativos-2026-09-25.txt` |
 | `tools/calibra_techo_slice.py` | propone el techo de un slice a partir de la serie `slices` que `bb sample` guarda, o se NIEGA diciendo que le falta. Dos frenos: un minimo de 18 944 muestras (PRECEDENTE declarado, el liston que fijo `docker.slice`, no una derivacion) y que el maximo haya DEJADO DE CRECER -- el maximo del ultimo tercio de la ventana contra el de los dos primeros. El segundo es el que de verdad protege: puede decir "todavia no" con 100 000 muestras, porque una serie que aun sube no ha visto el peor caso y un techo puesto ahi se queda corto por construccion. Factor 1.4 por precedente explicito, y se comprueba: sobre `docker` da 11.24 x 1.4 = 15.7 y el techo puesto a mano fue 16G. NO toca la maquina | `tests/test_calibra_techo_slice.py`, 21 casos al 100 %: cada freno en las dos direcciones, mas el que impide que todo pase con un numero fijo (el techo SIGUE al maximo en 2.8->3.9, 5.0->7.0, 11.2->15.7) |
 | `tools/inventario.py` | comprueba que estas dos tablas describen el repo y la máquina, no lo que alguien recordaba | él mismo, con `--check` sobre un sujeto mutado |
+
+| `tools/cgroup_repro.py` | arnés acotado para comparar cargos CPU, cudaMalloc, cudaMallocManaged y PyTorch en scopes separados; separa inicialización, asignación tocada y liberación, preservando errores de colección | `tests/test_cgroup_repro.py`; resultados y límites en `tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/` |
+| `tools/recovery_profile.py` | `bb recovery`: estado readonly de RCU/watchdog y firmas separadas de pstore; errores contados, sin abrir dispositivos watchdog ni alterar configuración | `tests/test_recovery_profile.py`, controles de permisos/ausencia y archivo vacío |
+| `tools/memory_profile.py` | Perfil páginas/UVM/THP/reservas integrado en el arnés cgroup, preservando ausencia y errores | `tests/test_memory_capture_and_cuda_integrity.py` |
+| `tools/cuda_integrity.py` | Matriz CUDA acotada de readback completo, concurrencia y reutilización en scope temporal | `tests/test_memory_capture_and_cuda_integrity.py` |
+| `tools/preflight.py` | Valida snapshots de simulación APT, runtime, GSP, provider, DRM y kernel; sin instalar cambios | `tests/test_preflight.py` |
+| `tools/host_diagnostics.py` | Captura readonly de sesiones, almacenamiento, red y USB con fallos explícitos | `tests/test_host_diagnostics.py` |
 
 ## Inventario de propiedad
 

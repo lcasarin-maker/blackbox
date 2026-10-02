@@ -1,0 +1,53 @@
+{
+  "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+  "commands": [
+    {
+      "cmd": "uname -a",
+      "exit": 0,
+      "stdout": "Linux aitopatom-41f1 6.17.0-1032-nvidia #32-Ubuntu SMP PREEMPT_DYNAMIC Wed Aug 19 17:40:46 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n"
+    },
+    {
+      "cmd": "dpkg --audit",
+      "exit": 0,
+      "stdout": ""
+    },
+    {
+      "cmd": "apt-get check",
+      "exit": 100,
+      "stdout": "",
+      "stderr": "E: Could not open lock file /var/lib/dpkg/lock-frontend - open (13: Permission denied)\nE: Unable to acquire the dpkg frontend lock (/var/lib/dpkg/lock-frontend), are you root?\n",
+      "could_not_run": true
+    },
+    {
+      "cmd": "find /boot -maxdepth 1 -type f \\( -name 'vmlinuz-*' -o -name 'initrd.img-*' \\) -printf '%f %s bytes\\n' | sort",
+      "exit": 0,
+      "stdout": "initrd.img-6.11.0-1016-nvidia 80554084 bytes\ninitrd.img-6.17.0-1032-nvidia 84189487 bytes\ninitrd.img-7.0.0-1019-nvidia 86335715 bytes\nvmlinuz-6.11.0-1016-nvidia 18884628 bytes\nvmlinuz-6.17.0-1032-nvidia 20896063 bytes\nvmlinuz-7.0.0-1019-nvidia 21675307 bytes\n"
+    },
+    {
+      "cmd": "dpkg-query -W -f='${binary:Package}\\t${Version}\\t${db:Status-Abbrev}\\n' 'linux-image-*' 'linux-modules-nvidia-*' 'nvidia-dkms-*'",
+      "exit": 0,
+      "stdout": "linux-image-6.11.0-1016-nvidia\t6.11.0-1016.16\tii \nlinux-image-6.17.0-1026-nvidia\t6.17.0-1026.26\trc \nlinux-image-6.17.0-1029-nvidia\t6.17.0-1029.29\trc \nlinux-image-6.17.0-1031-nvidia\t6.17.0-1031.31\trc \nlinux-image-6.17.0-1032-nvidia\t6.17.0-1032.32\tii \nlinux-image-7.0.0-1019-nvidia\t7.0.0-1019.19~24.04.2\tii \nlinux-image-nvidia-hwe-24.04\t7.0.0-1019.19~24.04.2\tii \nlinux-modules-nvidia-580-open-6.17.0-1032-nvidia\t6.17.0-1032.32+1\tii \nlinux-modules-nvidia-580-open-7.0.0-1019-nvidia\t7.0.0-1019.19~24.04.2+1\tii \nlinux-modules-nvidia-580-open-nvidia-hwe-24.04\t7.0.0-1019.19~24.04.2+1\tii \nnvidia-dkms-580-open\t\tun \n"
+    },
+    {
+      "cmd": "mokutil --sb-state",
+      "exit": 0,
+      "stdout": "SecureBoot enabled\n"
+    },
+    {
+      "cmd": "modinfo -k 7.0.0-1019-nvidia -F filename nvidia",
+      "exit": 0,
+      "stdout": "/lib/modules/7.0.0-1019-nvidia/kernel/nvidia-580-open/nvidia.ko\n"
+    },
+    {
+      "cmd": "modinfo -k 7.0.0-1019-nvidia -F signer nvidia",
+      "exit": 0,
+      "stdout": "Canonical Ltd. Kernel Module Signing\n"
+    },
+    {
+      "cmd": "modinfo -k 7.0.0-1019-nvidia -F vermagic nvidia",
+      "exit": 0,
+      "stdout": "7.0.0-1019-nvidia SMP preempt mod_unload modversions aarch64\n"
+    }
+  ],
+  "could_not_run_count": 1
+}

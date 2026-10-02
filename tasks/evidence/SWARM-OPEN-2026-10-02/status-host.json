@@ -1,0 +1,9 @@
+{
+  "command": [
+    "bin/bb",
+    "status"
+  ],
+  "rc": 0,
+  "stdout": "== estado de la instrumentacion ==\n  ARMADO    blackbox: muestreo de apps/zombis (dato de hace <2 min)\n  ARMADO    journald persistente\n  ARMADO    journal del kernel legible\n  ARMADO    systemd-coredump\n  ARMADO    limite de core > 0\n  ARMADO    sar recolectando (datos de hace <10 min)\n  ARMADO    monitor de memoria (<10 min)\n  ARMADO    termica de la GPU (atom_gpu_telemetry, <2 min)\n  ARMADO    memoria del escritorio protegida del reclamo (7 eslabones)\n  ARMADO    clock lock (rango 300,2800 MHz confirmado tras inicio del servicio; no mide clock actual)\n  ARMADO    earlyoom con la punteria puesta (prefiere y evita)\n  CIEGO     earlyoom ante agotamiento de memoria unificada\n            su umbral lee MemAvailable, que marco 56% durante los congelamientos del 2026-09-22/23\n  ARMADO    bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)\n  ARMADO    motor de inferencia sirviendo\n  ARMADO    nvidia-smi\n  ARMADO    kdump (volcado de kernel ante panic, no ante corte de energia)\n\n  armado: 15    falta: 0    ciego: 1\ncould_not_run: 0\n  OJO: 'ciego' no es 'armado'. Un instrumento ciego no deja el sujeto\n       limpio: deja el informe sin esa fila.\n  muestras acumuladas: 24291\n  datos en: /home/lcasarin/.local/share/blackbox\n",
+  "stderr": ""
+}

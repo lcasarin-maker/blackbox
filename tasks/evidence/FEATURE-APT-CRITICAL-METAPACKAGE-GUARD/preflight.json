@@ -1,0 +1,36 @@
+{
+  "id": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+  "kind": "apt",
+  "host": "aitopatom-41f1",
+  "observed_at": "2026-10-02",
+  "read_only": true,
+  "snapshot": {
+    "plan": "NOTE: This is only a simulation!\n      apt-get needs root privileges for real execution.\n      Keep also in mind that locking is deactivated,\n      so don't depend on the relevance to the real current situation!\nReading package lists...\nBuilding dependency tree...\nReading state information...\nThe following packages will be REMOVED:\n  nvidia-firmware-580-580.173.02\n0 upgraded, 0 newly installed, 1 to remove and 15 not upgraded.\nRemv nvidia-firmware-580-580.173.02 [580.173.02-0ubuntu0.24.04.1]\n",
+    "critical_packages": [
+      "nvidia-system-core",
+      "nvidia-system-station",
+      "linux-image-6.17.0-1032-nvidia",
+      "linux-modules-nvidia-580-open-6.17.0-1032-nvidia",
+      "nvidia-firmware-580-580.178.04",
+      "nvidia-kernel-common-580",
+      "ubuntu-desktop",
+      "grub-efi-arm64",
+      "network-manager"
+    ],
+    "exit_code": 0,
+    "stderr": ""
+  },
+  "preflight_result": {
+    "findings": [],
+    "status": "pass"
+  },
+  "could_not_run": [
+    "apt-get check"
+  ],
+  "could_not_run_count": 1,
+  "open_blockers": [
+    "Cannot reproduce the source-thread `apt remove aisleriot` plan because aisleriot is absent. The package-manager consistency check could not acquire the dpkg lock. No integrated APT invocation guard exists, and cross-OEM vendor confirmation remains unverified."
+  ],
+  "closure": "open",
+  "unverified": []
+}

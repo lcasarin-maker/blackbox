@@ -1,0 +1,14 @@
+Comando literal:
+python3 -m tools.memory_profile --output tasks/evidence/FEATURE-MEMORYSAVER-01-PERFIL/profile.json
+Resultado: exit 0; captura serializada en profile.json.
+
+Observado en esta pila: `getconf PAGE_SIZE` = 4096; kernel 6.17.0-1032-nvidia;
+UVM cargado = 580.178.04; `modinfo -F version nvidia_uvm` = 580.178.04;
+`uvm_pack_sysmem_leaf_tables` = unsupported/absent en el módulo stock;
+THP enabled = `always [madvise] never`; THP defrag = `always defer defer+madvise [madvise] never`.
+La captura conserva MemAvailable, cmdline y cada error/status de lectura.
+
+Fixtures: perfil 64 KiB, parámetro presente, UVM stock sin parámetro, identidades
+cargada/disco diferentes y lectura denegada. Las pruebas se registran en
+`tasks/evidence/FEATURE-MEMORYSAVER-03-INTEGRIDAD/verification.txt` porque usan
+el mismo módulo de fixtures y suite.

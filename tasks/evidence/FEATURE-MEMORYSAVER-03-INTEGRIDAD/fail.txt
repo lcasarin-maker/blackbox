@@ -1,0 +1,8 @@
+$ python3 -m pytest -q tests/test_memory_capture_and_cuda_integrity.py -k 'detects_mutated_byte or detects_truncation or failed_hole_free or preserves_primary_error'
+....                                                                     [100%]
+4 passed, 26 deselected in 0.04s
+
+The controls inject changed/truncated bytes, a failed allocation cleanup and a
+failed hole free. They assert the verifier fails the bad readback, preserves
+the primary CUDA error, attempts cleanup of every other live buffer, and never
+retries a free whose device state is uncertain.

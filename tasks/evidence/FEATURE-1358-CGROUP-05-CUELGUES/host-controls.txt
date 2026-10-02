@@ -1,0 +1,42 @@
+2026-10-02T18:11:06.476610+00:00
+$ nvidia-smi --query-gpu=driver_version,name,memory.used,memory.total --format=csv,noheader
+580.178.04, NVIDIA GB10, [N/A], [N/A]
+rc=0
+
+2026-10-02T18:11:06.477797+00:00
+$ cat /proc/pressure/memory
+some avg10=0.00 avg60=0.00 avg300=0.00 total=23676627
+full avg10=0.00 avg60=0.00 avg300=0.00 total=23426022
+rc=0
+
+2026-10-02T18:11:06.482339+00:00
+$ systemctl show bb-usable.service -p ActiveState -p WatchdogUSec -p NRestarts
+WatchdogUSec=6min
+NRestarts=0
+ActiveState=active
+rc=0
+
+2026-10-02T18:11:06.485220+00:00
+$ systemctl show -p RuntimeWatchdogUSec
+RuntimeWatchdogUSec=1min
+rc=0
+
+2026-10-02T18:11:06.507045+00:00
+$ python3 -m tools.hitos_incidente --journal /tmp/bb-cgroup-missing-journal --samples /tmp/bb-cgroup-missing-samples
+{
+  "nvrm": [],
+  "psi_observations": [],
+  "psi_signal": [],
+  "service_observations": [],
+  "service_loss": [],
+  "service_recovery": [],
+  "watchdog": [],
+  "boot": [],
+  "could_not_run": [
+    "journal: falta /tmp/bb-cgroup-missing-journal",
+    "muestras: falta /tmp/bb-cgroup-missing-samples"
+  ],
+  "interpretation": "Hitos observados; sin inferencia de causalidad ni inicio físico."
+}
+rc=2
+

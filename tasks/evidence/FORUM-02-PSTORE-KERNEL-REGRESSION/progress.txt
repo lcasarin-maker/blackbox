@@ -1,0 +1,5 @@
+Avance de ejecución 2026-10-02
+bb recovery conserva boot/kernel/sysctl, fingerprints de pstore y firmas FPAC/PSCI/NMI/SBSA/DOE/RCU independientes si son legibles. Lectura local pstore denegada: 0 registros inspeccionados, could_not_run=1 para ese interfaz. Falta confirmación vendor aplicable y prueba persistente, no pinnear kernel ni recomendar versión corregida sin fuente.
+
+Comandos/output: ../SWARM-OPEN-2026-10-02/capture-commands.json y recovery-host.json. Informe recovery partial, could_not_run=1; consultas externas10, could_not_run=0.
+Implementación: tools/recovery_profile.py, tests/test_recovery_profile.py:7 passed;42 statements6 branches100%;ruffPASS;pyright0errores. Estas pruebas verifican el instrumento, no la intervención experimental.

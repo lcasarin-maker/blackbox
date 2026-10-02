@@ -1,0 +1,41 @@
+{
+  "id": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+  "kind": "runtime",
+  "host": "aitopatom-41f1",
+  "observed_at": "2026-10-02",
+  "read_only": true,
+  "snapshot": {
+    "host_arch": "aarch64",
+    "image_arch": "arm64",
+    "image_digest": "sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+    "driver_version": "580.178.04",
+    "gpu_arch": "12.1",
+    "backend_arches": [
+      "8.0",
+      "8.7",
+      "8.9",
+      "9.0",
+      "10.0",
+      "11.0",
+      "12.0"
+    ],
+    "image_driver_constraint": "cuda>=13.0 brand=unknown,driver>=535,driver<536 … brand=cloudgaming,driver>=575,driver<576",
+    "driver_compatibility": "pass",
+    "backend_manifest_complete": false
+  },
+  "preflight_result": {
+    "findings": [
+      "backend kernel/PTX architecture manifest is incomplete"
+    ],
+    "status": "unknown"
+  },
+  "could_not_run": [],
+  "could_not_run_count": 0,
+  "open_blockers": [
+    "The active image CUDA constraint has a satisfied cuda>=13.0 OR clause according to NVIDIA constraint semantics and nvidia-container-cli info. TORCH_CUDA_ARCH_LIST is only a partial build declaration; no complete backend cubin/PTX manifest or tested model-kernel result was supplied. No OEM support/soak/output comparison/rollback evidence."
+  ],
+  "closure": "open",
+  "unverified": [
+    "Complete backend cubin/PTX manifest and tested model-kernel result are unavailable; native driver constraint evaluation was supplied from nvidia-container-cli info plus documented OR semantics."
+  ]
+}

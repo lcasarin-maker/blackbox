@@ -1,0 +1,301 @@
+{
+  "schema": 1,
+  "script_sha256": "39711f1b10b2a6ff6d9de37fc0432e8854ec1295f3c7976d2a7160f27a42d913",
+  "host": {
+    "uname": {
+      "system": "Linux",
+      "node": "aitopatom-41f1",
+      "release": "6.17.0-1032-nvidia",
+      "version": "#32-Ubuntu SMP PREEMPT_DYNAMIC Wed Aug 19 17:40:46 UTC 2026",
+      "machine": "aarch64",
+      "processor": "aarch64"
+    },
+    "python": "3.12.11 | packaged by conda-forge | (main, Jun  4 2025, 14:34:08) [GCC 13.3.0]",
+    "boot_id": "3c61716a-72c1-46d2-8f25-c0aaef0cc067",
+    "controllers": "cpuset cpu io memory hugetlb pids rdma misc dmem",
+    "dmem_capacity": "",
+    "nvidia_smi": {
+      "command": [
+        "/usr/bin/nvidia-smi"
+      ],
+      "returncode": 0,
+      "stdout": "Fri Oct  2 13:46:33 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 580.178.04             Driver Version: 580.178.04     CUDA Version: 13.0     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GB10                    On  |   0000000F:01:00.0  On |                  N/A |\n| N/A   39C    P0             11W /  N/A  | Not Supported          |      3%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A           27381      C   VLLM::EngineCore                      36063MiB |\n|    0   N/A  N/A          114809      G   /usr/lib/xorg/Xorg                       96MiB |\n|    0   N/A  N/A          115200      G   /usr/bin/gnome-shell                    124MiB |\n|    0   N/A  N/A         3655106      G   ...rack-uuid=3190708988185955192        137MiB |\n+-----------------------------------------------------------------------------------------+\n",
+      "stderr": ""
+    },
+    "memory_profile": {
+      "schema": 1,
+      "kernel": {
+        "release": "6.17.0-1032-nvidia",
+        "page_size_bytes": 4096,
+        "page_size_source": "os.sysconf(SC_PAGE_SIZE)"
+      },
+      "uvm": {
+        "loaded": true,
+        "loaded_version": {
+          "status": "ok",
+          "value": "580.178.04",
+          "error": null
+        },
+        "loaded_srcversion": {
+          "status": "ok",
+          "value": "09F2A78862D06017E9324B6",
+          "error": null
+        },
+        "disk_version": {
+          "status": "ok",
+          "command": [
+            "modinfo",
+            "-F",
+            "version",
+            "nvidia_uvm"
+          ],
+          "returncode": 0,
+          "value": "580.178.04",
+          "stderr": null
+        },
+        "disk_srcversion": {
+          "status": "ok",
+          "command": [
+            "modinfo",
+            "-F",
+            "srcversion",
+            "nvidia_uvm"
+          ],
+          "returncode": 0,
+          "value": "09F2A78862D06017E9324B6",
+          "stderr": null
+        },
+        "packing_parameter": {
+          "status": "unsupported",
+          "value": null,
+          "error": "[Errno 2] No such file or directory: '/sys/module/nvidia_uvm/parameters/uvm_pack_sysmem_leaf_tables'"
+        },
+        "packing_parameter_source": "/sys/module/nvidia_uvm/parameters/uvm_pack_sysmem_leaf_tables"
+      },
+      "thp": {
+        "enabled": {
+          "status": "ok",
+          "value": "always [madvise] never",
+          "error": null
+        },
+        "defrag": {
+          "status": "ok",
+          "value": "always defer defer+madvise [madvise] never",
+          "error": null
+        }
+      },
+      "host_reserve_context": {
+        "meminfo": {
+          "status": "ok",
+          "value": "MemTotal:       126943144 kB\nMemFree:        36675152 kB\nMemAvailable:   66300232 kB\nBuffers:         3821536 kB\nCached:         30978900 kB\nSwapCached:       228020 kB\nActive:         15283012 kB\nInactive:       31055784 kB\nActive(anon):    7475608 kB\nInactive(anon):  4935540 kB\nActive(file):    7807404 kB\nInactive(file): 26120244 kB\nUnevictable:       28508 kB\nMlocked:           23388 kB\nSwapTotal:      16777212 kB\nSwapFree:        8450496 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:             11644 kB\nWriteback:             0 kB\nAnonPages:      11424816 kB\nMapped:          2218236 kB\nShmem:            868628 kB\nKReclaimable:    2847092 kB\nSlab:            3932096 kB\nSReclaimable:    2847092 kB\nSUnreclaim:      1085004 kB\nKernelStack:       67376 kB\nShadowCallStack:   16936 kB\nPageTables:       217716 kB\nSecPageTables:     96176 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    80248784 kB\nCommitted_AS:   85740056 kB\nVmallocTotal:   135288315904 kB\nVmallocUsed:      382528 kB\nVmallocChunk:          0 kB\nPercpu:            57520 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:     57344 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:    299008 kB\nFilePmdMapped:         0 kB\nCmaTotal:         131072 kB\nCmaFree:           69320 kB\nBalloon:               0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB",
+          "error": null
+        },
+        "cmdline": {
+          "status": "ok",
+          "value": "BOOT_IMAGE=/boot/vmlinuz-6.17.0-1032-nvidia root=UUID=14775751-e6a7-4614-8ee1-e3aedc5d7ada ro init_on_alloc=0 iommu.passthrough=0 console=tty0 plymouth.ignore-serial-consoles plymouth.use-simpledrm earlycon=uart,mmio32,0x16A00000 console=tty0 console=ttyS0,921600 crashkernel=1G-:512M quiet splash initcall_blacklist=tegra234_cbb_init kho=off pci=pcie_bus_safe vt.handoff=7",
+          "error": null
+        }
+      }
+    },
+    "dmem_registration": "capacity file empty; no regions registered"
+  },
+  "runs": [
+    {
+      "api": "none",
+      "worker_api": "none",
+      "requested_mib": 32,
+      "unit": "bb-cgroup-repro-78589624fb17",
+      "command": [
+        "systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--unit",
+        "bb-cgroup-repro-78589624fb17",
+        "--property=MemoryMax=512M",
+        "--property=CPUQuota=50%",
+        "--property=RuntimeMaxSec=60s",
+        "/opt/miniforge3/bin/python3",
+        "/home/lcasarin/projects/blackbox/tools/cgroup_repro.py",
+        "--worker",
+        "none",
+        "--mib",
+        "32"
+      ],
+      "returncode": 0,
+      "stdout": "{\"phase\": \"before\", \"pid\": 2087685, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope\", \"files\": {\"memory.current\": {\"value\": \"10067968\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 22848\\nuser_usec 16888\\nsystem_usec 5960\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 0\\nnr_throttled 0\\nthrottled_usec 0\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66276256 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169633312712897}\n{\"phase\": \"held\", \"api\": \"none\", \"requested_bytes\": 0, \"pid\": 2087685, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope\", \"files\": {\"memory.current\": {\"value\": \"10067968\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 22848\\nuser_usec 16888\\nsystem_usec 5960\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 0\\nnr_throttled 0\\nthrottled_usec 0\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66276256 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169633312856689}\n{\"phase\": \"after_release\", \"pid\": 2087685, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope\", \"files\": {\"memory.current\": {\"value\": \"10067968\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 23718\\nuser_usec 17530\\nsystem_usec 6187\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 2\\nnr_throttled 0\\nthrottled_usec 0\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66265568 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169635313435876}\n",
+      "stderr": "",
+      "could_not_run": [
+        "dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'"
+      ],
+      "started_monotonic_ns": 169633260492543,
+      "finished_monotonic_ns": 169635319811936
+    },
+    {
+      "api": "cpu_touch",
+      "worker_api": "cpu_touch",
+      "requested_mib": 32,
+      "unit": "bb-cgroup-repro-4a761b5a126d",
+      "command": [
+        "systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--unit",
+        "bb-cgroup-repro-4a761b5a126d",
+        "--property=MemoryMax=512M",
+        "--property=CPUQuota=50%",
+        "--property=RuntimeMaxSec=60s",
+        "/opt/miniforge3/bin/python3",
+        "/home/lcasarin/projects/blackbox/tools/cgroup_repro.py",
+        "--worker",
+        "cpu_touch",
+        "--mib",
+        "32"
+      ],
+      "returncode": 0,
+      "stdout": "{\"phase\": \"before\", \"pid\": 2087722, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope\", \"files\": {\"memory.current\": {\"value\": \"10342400\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 24506\\nuser_usec 21442\\nsystem_usec 3063\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 0\\nnr_throttled 0\\nthrottled_usec 0\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66266456 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169635407781365}\n{\"phase\": \"held\", \"api\": \"cpu_touch\", \"requested_bytes\": 33554432, \"pid\": 2087722, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope\", \"files\": {\"memory.current\": {\"value\": \"43896832\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 33504\\nuser_usec 21442\\nsystem_usec 12061\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 0\\nnr_throttled 0\\nthrottled_usec 0\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66266012 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169635416168612}\n{\"phase\": \"after_release\", \"pid\": 2087722, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope\", \"files\": {\"memory.current\": {\"value\": \"10104832\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 37143\\nuser_usec 21442\\nsystem_usec 15700\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 2\\nnr_throttled 0\\nthrottled_usec 0\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66268860 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169637420612287}\n",
+      "stderr": "",
+      "could_not_run": [
+        "dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'"
+      ],
+      "started_monotonic_ns": 169635319834015,
+      "finished_monotonic_ns": 169637427064890
+    },
+    {
+      "api": "cuda_malloc",
+      "worker_api": "cuda_malloc",
+      "requested_mib": 32,
+      "unit": "bb-cgroup-repro-8c17e2a10ccb",
+      "command": [
+        "systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--unit",
+        "bb-cgroup-repro-8c17e2a10ccb",
+        "--property=MemoryMax=512M",
+        "--property=CPUQuota=50%",
+        "--property=RuntimeMaxSec=60s",
+        "/opt/miniforge3/bin/python3",
+        "/home/lcasarin/projects/blackbox/tools/cgroup_repro.py",
+        "--worker",
+        "cuda_malloc",
+        "--mib",
+        "32"
+      ],
+      "returncode": 0,
+      "stdout": "{\"phase\": \"before\", \"pid\": 2087772, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope\", \"files\": {\"memory.current\": {\"value\": \"10326016\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 46059\\nuser_usec 38048\\nsystem_usec 8010\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 1\\nnr_throttled 0\\nthrottled_usec 0\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66277496 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169637528983615}\n{\"phase\": \"before_allocation\", \"api\": \"cuda_malloc\", \"requested_bytes\": 33554432, \"touch\": \"cudaMemset byte pattern 1 over full allocation\", \"pid\": 2087772, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope\", \"files\": {\"memory.current\": {\"value\": \"76464128\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 243697\\nuser_usec 48939\\nsystem_usec 194758\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 5\\nnr_throttled 4\\nthrottled_usec 199173\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66045916 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169637927437419}\n{\"phase\": \"held\", \"api\": \"cuda_malloc\", \"requested_bytes\": 33554432, \"cuda_runtime\": \"libcudart.so.13\", \"touch\": \"cudaMemset byte pattern 1 over full allocation; synchronized\", \"pid\": 2087772, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope\", \"files\": {\"memory.current\": {\"value\": \"76464128\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 245705\\nuser_usec 49940\\nsystem_usec 195765\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 5\\nnr_throttled 4\\nthrottled_usec 199173\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66012260 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169637929321696}\n{\"phase\": \"after_release\", \"pid\": 2087772, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope\", \"files\": {\"memory.current\": {\"value\": \"76103680\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 256651\\nuser_usec 52356\\nsystem_usec 204294\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 20\\nnr_throttled 4\\nthrottled_usec 199173\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66028316 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169639930699965}\n",
+      "stderr": "",
+      "could_not_run": [
+        "dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'"
+      ],
+      "started_monotonic_ns": 169637427089978,
+      "finished_monotonic_ns": 169640088567154
+    },
+    {
+      "api": "cuda_malloc_repeat",
+      "worker_api": "cuda_malloc",
+      "requested_mib": 32,
+      "unit": "bb-cgroup-repro-777e1366100b",
+      "command": [
+        "systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--unit",
+        "bb-cgroup-repro-777e1366100b",
+        "--property=MemoryMax=512M",
+        "--property=CPUQuota=50%",
+        "--property=RuntimeMaxSec=60s",
+        "/opt/miniforge3/bin/python3",
+        "/home/lcasarin/projects/blackbox/tools/cgroup_repro.py",
+        "--worker",
+        "cuda_malloc",
+        "--mib",
+        "32"
+      ],
+      "returncode": 0,
+      "stdout": "{\"phase\": \"before\", \"pid\": 2087849, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope\", \"files\": {\"memory.current\": {\"value\": \"10059776\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 24591\\nuser_usec 20656\\nsystem_usec 3934\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 0\\nnr_throttled 0\\nthrottled_usec 0\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66281604 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169640176797815}\n{\"phase\": \"before_allocation\", \"api\": \"cuda_malloc\", \"requested_bytes\": 33554432, \"touch\": \"cudaMemset byte pattern 1 over full allocation\", \"pid\": 2087849, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope\", \"files\": {\"memory.current\": {\"value\": \"76365824\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 228165\\nuser_usec 29148\\nsystem_usec 199016\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 4\\nnr_throttled 4\\nthrottled_usec 162081\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66072688 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169640542297811}\n{\"phase\": \"held\", \"api\": \"cuda_malloc\", \"requested_bytes\": 33554432, \"cuda_runtime\": \"libcudart.so.13\", \"touch\": \"cudaMemset byte pattern 1 over full allocation; synchronized\", \"pid\": 2087849, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope\", \"files\": {\"memory.current\": {\"value\": \"76365824\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 230167\\nuser_usec 30152\\nsystem_usec 200014\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 4\\nnr_throttled 4\\nthrottled_usec 162081\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66035476 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169640544344199}\n{\"phase\": \"after_release\", \"pid\": 2087849, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope\", \"files\": {\"memory.current\": {\"value\": \"76365824\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 241177\\nuser_usec 31680\\nsystem_usec 209497\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 22\\nnr_throttled 4\\nthrottled_usec 162081\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66077596 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169642546173938}\n",
+      "stderr": "",
+      "could_not_run": [
+        "dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'"
+      ],
+      "started_monotonic_ns": 169640088597665,
+      "finished_monotonic_ns": 169642710571123
+    },
+    {
+      "api": "cuda_malloc_managed",
+      "worker_api": "cuda_malloc_managed",
+      "requested_mib": 32,
+      "unit": "bb-cgroup-repro-0f521604f417",
+      "command": [
+        "systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--unit",
+        "bb-cgroup-repro-0f521604f417",
+        "--property=MemoryMax=512M",
+        "--property=CPUQuota=50%",
+        "--property=RuntimeMaxSec=60s",
+        "/opt/miniforge3/bin/python3",
+        "/home/lcasarin/projects/blackbox/tools/cgroup_repro.py",
+        "--worker",
+        "cuda_malloc_managed",
+        "--mib",
+        "32"
+      ],
+      "returncode": 0,
+      "stdout": "{\"phase\": \"before\", \"pid\": 2087924, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope\", \"files\": {\"memory.current\": {\"value\": \"10338304\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 24103\\nuser_usec 17354\\nsystem_usec 6748\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 0\\nnr_throttled 0\\nthrottled_usec 0\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66338392 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169642755557152}\n{\"phase\": \"before_allocation\", \"api\": \"cuda_malloc_managed\", \"requested_bytes\": 33554432, \"touch\": \"cudaMemset byte pattern 1 over full allocation\", \"pid\": 2087924, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope\", \"files\": {\"memory.current\": {\"value\": \"76152832\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 227056\\nuser_usec 29875\\nsystem_usec 197180\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 4\\nnr_throttled 3\\nthrottled_usec 147844\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66083928 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169643106712194}\n{\"phase\": \"held\", \"api\": \"cuda_malloc_managed\", \"requested_bytes\": 33554432, \"cuda_runtime\": \"libcudart.so.13\", \"touch\": \"cudaMemset byte pattern 1 over full allocation; synchronized\", \"pid\": 2087924, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope\", \"files\": {\"memory.current\": {\"value\": \"109969408\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 236790\\nuser_usec 39610\\nsystem_usec 197180\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 4\\nnr_throttled 3\\nthrottled_usec 147844\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66051160 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.07 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169643116285979}\n{\"phase\": \"after_release\", \"pid\": 2087924, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope\", \"files\": {\"memory.current\": {\"value\": \"76087296\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 249086\\nuser_usec 43539\\nsystem_usec 205546\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 20\\nnr_throttled 3\\nthrottled_usec 147844\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66033368 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.06 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169645118121925}\n",
+      "stderr": "",
+      "could_not_run": [
+        "dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'"
+      ],
+      "started_monotonic_ns": 169642710600082,
+      "finished_monotonic_ns": 169645283828736
+    },
+    {
+      "api": "pytorch_empty",
+      "worker_api": "pytorch_empty",
+      "requested_mib": 32,
+      "unit": "bb-cgroup-repro-400c13f0c617",
+      "command": [
+        "systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        "--unit",
+        "bb-cgroup-repro-400c13f0c617",
+        "--property=MemoryMax=512M",
+        "--property=CPUQuota=50%",
+        "--property=RuntimeMaxSec=60s",
+        "/opt/miniforge3/bin/python3",
+        "/home/lcasarin/projects/blackbox/tools/cgroup_repro.py",
+        "--worker",
+        "pytorch_empty",
+        "--mib",
+        "32"
+      ],
+      "returncode": 0,
+      "stdout": "{\"phase\": \"before\", \"pid\": 2087994, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope\", \"files\": {\"memory.current\": {\"value\": \"10063872\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 23779\\nuser_usec 18825\\nsystem_usec 4953\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 1\\nnr_throttled 0\\nthrottled_usec 0\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   66294612 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.06 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169645360806343}\n{\"phase\": \"before_allocation\", \"api\": \"torch.empty\", \"torch_version\": \"2.13.0+cu130\", \"allocator\": \"PyTorch CUDA caching allocator\", \"pid\": 2087994, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope\", \"files\": {\"memory.current\": {\"value\": \"376684544\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 965325\\nuser_usec 653390\\nsystem_usec 311934\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 20\\nnr_throttled 19\\nthrottled_usec 2243015\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   65773568 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.06 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169647261885585}\n{\"phase\": \"held\", \"api\": \"torch.empty\", \"requested_bytes\": 33554432, \"pytorch_version\": \"2.13.0+cu130\", \"allocator\": \"PyTorch CUDA caching allocator\", \"touch\": \"tensor.fill_(1); torch.cuda.synchronize()\", \"pid\": 2087994, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope\", \"files\": {\"memory.current\": {\"value\": \"376684544\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 967170\\nuser_usec 653390\\nsystem_usec 313779\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 20\\nnr_throttled 19\\nthrottled_usec 2243015\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   65740864 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.06 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169647264074404}\n{\"phase\": \"allocator_cache_released\", \"pid\": 2087994, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope\", \"files\": {\"memory.current\": {\"value\": \"374894592\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 976972\\nuser_usec 656912\\nsystem_usec 320059\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 36\\nnr_throttled 19\\nthrottled_usec 2243015\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   65826936 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.06 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169649265686427}\n{\"phase\": \"after_release\", \"pid\": 2087994, \"proc_cgroup\": \"0::/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope\", \"proc_cgroup_error\": null, \"cgroup_path\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope\", \"files\": {\"memory.current\": {\"value\": \"374894592\", \"error\": null}, \"memory.events\": {\"value\": \"low 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\noom_group_kill 0\", \"error\": null}, \"memory.pressure\": {\"value\": \"some avg10=0.00 avg60=0.00 avg300=0.00 total=0\\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\", \"error\": null}, \"dmem.capacity\": {\"value\": \"\", \"error\": null}, \"dmem.current\": {\"value\": null, \"error\": \"FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\"}, \"cpu.stat\": {\"value\": \"usage_usec 976972\\nuser_usec 656912\\nsystem_usec 320059\\nnice_usec 0\\ncore_sched.force_idle_usec 0\\nnr_periods 36\\nnr_throttled 19\\nthrottled_usec 2243015\\nnr_bursts 0\\nburst_usec 0\", \"error\": null}}, \"mem_available\": \"MemAvailable:   65826936 kB\", \"mem_available_error\": null, \"host_memory_pressure\": \"some avg10=0.00 avg60=0.00 avg300=0.06 total=28544934\\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=28262040\", \"host_memory_pressure_error\": null, \"monotonic_ns\": 169649265843978}\n",
+      "stderr": "",
+      "could_not_run": [
+        "dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'"
+      ],
+      "started_monotonic_ns": 169645283854320,
+      "finished_monotonic_ns": 169649906385324
+    }
+  ],
+  "started_monotonic_ns": 169633221329936,
+  "finished_monotonic_ns": 169649906459980,
+  "could_not_run": [
+    "dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'",
+    "dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'",
+    "dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'",
+    "dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'",
+    "dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'",
+    "dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'"
+  ],
+  "status": "partial"
+}

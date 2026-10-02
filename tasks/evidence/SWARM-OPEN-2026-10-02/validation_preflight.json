@@ -1,0 +1,46 @@
+{
+  "checks": [
+    {
+      "cmd": "COVERAGE_FILE=/tmp/bb-preflight.coverage pytest -q tests/test_preflight.py --cov=tools.preflight --cov-branch --cov-report=term-missing --cov-fail-under=100",
+      "exit": 0,
+      "stdout": ".............                                                            [100%]\n================================ tests coverage ================================\n_______________ coverage: platform linux, python 3.12.11-final-0 _______________\n\nName                 Stmts   Miss Branch BrPart  Cover   Missing\n----------------------------------------------------------------\ntools/preflight.py     141      0     72      0   100%\n----------------------------------------------------------------\nTOTAL                  141      0     72      0   100%\nRequired test coverage of 100% reached. Total coverage: 100.00%\n13 passed in 0.08s\n"
+    },
+    {
+      "cmd": "ruff check tools/preflight.py tests/test_preflight.py",
+      "exit": 0,
+      "stdout": "All checks passed!\n"
+    },
+    {
+      "cmd": "pyright tools/preflight.py tests/test_preflight.py",
+      "exit": 0,
+      "stdout": "0 errors, 0 warnings, 0 informations\n"
+    },
+    {
+      "cmd": "git diff --check -- tools/preflight.py tests/test_preflight.py and six assigned task/evidence paths",
+      "exit": 0,
+      "stdout": ""
+    }
+  ],
+  "task_probe_could_not_run_counts": {
+    "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD": 1,
+    "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01": 0,
+    "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01": 0,
+    "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01": 0,
+    "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT": 1,
+    "FORUM-00-KERNEL-INITRD-UPDATE-GATE": 1
+  },
+  "totals": {
+    "assigned_ids": 6,
+    "could_not_run_count": 3,
+    "zero_could_not_run_tasks": 3,
+    "preflight_pass": 2,
+    "preflight_unknown": 4,
+    "preflight_block": 0
+  },
+  "note": "Six assigned fichas remain open. Three host probes could not run (APT dependency check, effective DRM sysfs read, and kernel APT dependency check). Runtime compatibility remains unknown because the backend kernel/PTX manifest is incomplete. Unknown is an evidence gap, not a pass.",
+  "unverified": {
+    "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01": [
+      "Complete backend cubin/PTX manifest and tested model-kernel result unavailable; preflight unknown."
+    ]
+  }
+}

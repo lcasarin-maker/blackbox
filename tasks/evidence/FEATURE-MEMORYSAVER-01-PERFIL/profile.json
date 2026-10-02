@@ -1,0 +1,75 @@
+{
+  "host_reserve_context": {
+    "cmdline": {
+      "error": null,
+      "status": "ok",
+      "value": "BOOT_IMAGE=/boot/vmlinuz-6.17.0-1032-nvidia root=UUID=14775751-e6a7-4614-8ee1-e3aedc5d7ada ro init_on_alloc=0 iommu.passthrough=0 console=tty0 plymouth.ignore-serial-consoles plymouth.use-simpledrm earlycon=uart,mmio32,0x16A00000 console=tty0 console=ttyS0,921600 crashkernel=1G-:512M quiet splash initcall_blacklist=tegra234_cbb_init kho=off pci=pcie_bus_safe vt.handoff=7"
+    },
+    "meminfo": {
+      "error": null,
+      "status": "ok",
+      "value": "MemTotal:       126943144 kB\nMemFree:        36587028 kB\nMemAvailable:   66211144 kB\nBuffers:         3821272 kB\nCached:         30977032 kB\nSwapCached:       227920 kB\nActive:         15530472 kB\nInactive:       31053932 kB\nActive(anon):    7723260 kB\nInactive(anon):  4935580 kB\nActive(file):    7807212 kB\nInactive(file): 26118352 kB\nUnevictable:       28508 kB\nMlocked:           23388 kB\nSwapTotal:      16777212 kB\nSwapFree:        8449508 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:             18084 kB\nWriteback:             0 kB\nAnonPages:      11672996 kB\nMapped:          2223392 kB\nShmem:            868584 kB\nKReclaimable:    2849332 kB\nSlab:            3935088 kB\nSReclaimable:    2849332 kB\nSUnreclaim:      1085756 kB\nKernelStack:       67696 kB\nShadowCallStack:   17016 kB\nPageTables:       225080 kB\nSecPageTables:     96176 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    80248784 kB\nCommitted_AS:   85915660 kB\nVmallocTotal:   135288315904 kB\nVmallocUsed:      382880 kB\nVmallocChunk:          0 kB\nPercpu:            57520 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:     57344 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:    299008 kB\nFilePmdMapped:         0 kB\nCmaTotal:         131072 kB\nCmaFree:           69320 kB\nBalloon:               0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB"
+    }
+  },
+  "kernel": {
+    "page_size_bytes": 4096,
+    "page_size_source": "os.sysconf(SC_PAGE_SIZE)",
+    "release": "6.17.0-1032-nvidia"
+  },
+  "schema": 1,
+  "thp": {
+    "defrag": {
+      "error": null,
+      "status": "ok",
+      "value": "always defer defer+madvise [madvise] never"
+    },
+    "enabled": {
+      "error": null,
+      "status": "ok",
+      "value": "always [madvise] never"
+    }
+  },
+  "uvm": {
+    "disk_srcversion": {
+      "command": [
+        "modinfo",
+        "-F",
+        "srcversion",
+        "nvidia_uvm"
+      ],
+      "returncode": 0,
+      "status": "ok",
+      "stderr": null,
+      "value": "09F2A78862D06017E9324B6"
+    },
+    "disk_version": {
+      "command": [
+        "modinfo",
+        "-F",
+        "version",
+        "nvidia_uvm"
+      ],
+      "returncode": 0,
+      "status": "ok",
+      "stderr": null,
+      "value": "580.178.04"
+    },
+    "loaded": true,
+    "loaded_srcversion": {
+      "error": null,
+      "status": "ok",
+      "value": "09F2A78862D06017E9324B6"
+    },
+    "loaded_version": {
+      "error": null,
+      "status": "ok",
+      "value": "580.178.04"
+    },
+    "packing_parameter": {
+      "error": "[Errno 2] No such file or directory: '/sys/module/nvidia_uvm/parameters/uvm_pack_sysmem_leaf_tables'",
+      "status": "unsupported",
+      "value": null
+    },
+    "packing_parameter_source": "/sys/module/nvidia_uvm/parameters/uvm_pack_sysmem_leaf_tables"
+  }
+}

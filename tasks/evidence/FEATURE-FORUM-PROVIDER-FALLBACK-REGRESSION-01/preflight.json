@@ -1,0 +1,31 @@
+{
+  "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+  "kind": "fallback",
+  "host": "aitopatom-41f1",
+  "observed_at": "2026-10-02",
+  "read_only": true,
+  "snapshot": {
+    "requests": null,
+    "requested_provider": null,
+    "observed_provider": null,
+    "worker_restarted": null,
+    "evidence_id": null
+  },
+  "preflight_result": {
+    "findings": [
+      "missing observation: requests",
+      "missing observation: requested_provider",
+      "missing observation: observed_provider",
+      "missing observation: worker_restarted",
+      "missing observation: evidence_id"
+    ],
+    "status": "unknown"
+  },
+  "could_not_run": [],
+  "could_not_run_count": 0,
+  "open_blockers": [
+    "The current GPU process does not prove per-request provider selection after worker respawn. No request/worker/provider/latency trace or intentional CPU-only negative control was provided; no driver/OEM update comparison or rollback evidence."
+  ],
+  "closure": "open",
+  "unverified": []
+}

@@ -1,0 +1,25 @@
+FEATURE-1358-CGROUP-01-REPRO — bounded run notes
+
+Invocation:
+python3 tools/cgroup_repro.py --mib 32 --output tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json
+The literal per-scope commands, complete stdout/stderr, PIDs, cgroup paths, timestamps, snapshots, versions, script SHA-256, and collection errors are in run.json. The wrapper reported status partial, six runs, exit code 2.
+
+Boot ID: 3c61716a-72c1-46d2-8f25-c0aaef0cc067
+Kernel: 6.17.0-1032-nvidia
+NVIDIA-SMI: NVIDIA-SMI 580.178.04; driver 580.178.04; CUDA 13.0; NVIDIA GB10.
+Root dmem.capacity was empty, indicating no registered regions. Kernel dmem.capacity is a root-only file and was read there. Each tested scope lacked dmem.current; the six per-scope read errors are listed in could_not_run.
+Every scope used MemoryMax=512M, CPUQuota=50%, RuntimeMaxSec=60s; each allocation request was at most 32 MiB and held for 2 seconds.
+
+Observed memory.current (before-allocation → held; bytes; derived from raw snapshots):
+none: held 10067968; PID 1850584; scope bb-cgroup-repro-d6214f142b62.scope
+cpu_touch: held 43892736; PID 1850663; scope bb-cgroup-repro-5670e3223444.scope
+cuda_malloc: 76312576 → 76312576; delta 0; PID 1850751; scope bb-cgroup-repro-ee0cdb1a05e5.scope
+cuda_malloc_repeat: 76914688 → 76914688; delta 0; PID 1850834; scope bb-cgroup-repro-2aa431bf221f.scope
+cuda_malloc_managed: 76734464 → 110288896; delta 33554432; PID 1850908; scope bb-cgroup-repro-184ff4d27296.scope
+pytorch_empty: 376504320 → 376504320; delta 0; PID 1850943; scope bb-cgroup-repro-d2f3d0a29621.scope
+
+Negative control: no GPU allocation (api=none); memory.current during held was 10067968 bytes.
+Positive control: 32 MiB anonymous CPU memory was touched; memory.current rose from 10338304 to 43892736 bytes while held, then fell to 10260480 bytes after release.
+Original source measurement retained in tasks/evidence/nvidia-1358-comment.md: PyTorch 7 GiB held with a 15 MiB memory.current increase. This run requested 32 MiB, so it is a bounded path comparison and does not repeat that size.
+
+Interpretation: the raw source contains this final run against the final harness revision (script hash is recorded). Results are stack- and size-specific. Per-scope dmem.current observations could not run, so this report remains partial and does not close the task.

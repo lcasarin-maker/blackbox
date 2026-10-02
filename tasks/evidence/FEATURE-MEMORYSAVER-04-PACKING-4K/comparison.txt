@@ -1,0 +1,16 @@
+Hechos medidos y acotados:
+- `getconf PAGE_SIZE` en el host: 4096.
+- El parche 580 suministrado usa `UVM_SYSMEM_TABLE_SLOT_SIZE 4096` y opt-in solo
+  cuando `PAGE_SIZE == 65536`; con PAGE_SIZE 4096 toma el asignador original.
+- Por tanto, el slot actual de 4 KiB no subasigna páginas de 4 KiB. Un slot menor
+  sería un diseño nuevo.
+
+El snapshot fuente de `/tmp/bb-memory-saver` y el informe
+`tasks/evidence/MEMORY-SAVER-REVIEW-2026-10-02/code-review.txt` revisan DMA
+coherente, mapeo, espera de tracker, lifetime de backing y descriptor. El
+revisor no encontró defecto confirmado en la ruta 64 KiB; documentó que el
+descriptor del pool se reserva fuera de la asignación memcg del backing.
+
+Could_not_run: 1 — coste real por carga de tablas hoja en esta pila 4 KiB no
+medido. Sin esa medida y sin requisitos de alineación para slots menores no se
+propone diff ni se afirma ahorro. Tarea abierta.

@@ -1,0 +1,30 @@
+{
+  "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+  "kind": "drm",
+  "host": "aitopatom-41f1",
+  "observed_at": "2026-10-02",
+  "read_only": true,
+  "snapshot": {
+    "effective_modeset": null,
+    "target_requires_kms": null,
+    "override_present": true,
+    "recovery_accessible": null
+  },
+  "preflight_result": {
+    "findings": [
+      "missing observation: effective_modeset",
+      "missing observation: target_requires_kms",
+      "missing observation: recovery_accessible"
+    ],
+    "status": "unknown"
+  },
+  "could_not_run": [
+    "cat /sys/module/nvidia_drm/parameters/modeset"
+  ],
+  "could_not_run_count": 1,
+  "open_blockers": [
+    "Effective sysfs modeset read is permission-denied. Target OTA compatibility declaration, HDMI/USB-C paths, SSH recovery, and rollback were not exercised."
+  ],
+  "closure": "open",
+  "unverified": []
+}

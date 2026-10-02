@@ -1,0 +1,31 @@
+{
+  "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+  "kind": "kernel",
+  "host": "aitopatom-41f1",
+  "observed_at": "2026-10-02",
+  "read_only": true,
+  "snapshot": {
+    "dpkg_clean": true,
+    "apt_check": null,
+    "vmlinuz_present": true,
+    "initrd_present": true,
+    "module_ready": null,
+    "previous_kernel_bootable": true
+  },
+  "preflight_result": {
+    "findings": [
+      "missing observation: apt_check",
+      "missing observation: module_ready"
+    ],
+    "status": "unknown"
+  },
+  "could_not_run": [
+    "apt-get check"
+  ],
+  "could_not_run_count": 1,
+  "open_blockers": [
+    "APT dependency check could not acquire the dpkg lock. `modinfo` reports the target module signer as Canonical, but signature trust/enrollment was not independently checked. The active 6.17 kernel has booted, but recovery selection/rollback has not been exercised in an OEM lab; no firmware-history comparison or OEM update trial."
+  ],
+  "closure": "open",
+  "unverified": []
+}

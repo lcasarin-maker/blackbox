@@ -1,0 +1,81 @@
+# FEATURE-1358-CGROUP-02-TRAZA — trace map (partial)
+
+Date: 2026-10-02. This records static source inspection and trace feasibility. Static source presence does not prove a bounded CUDA call executed a path.
+
+## Versions and runtime identity
+
+- Installed and loaded NVIDIA modules report `580.178.04` (`modinfo nvidia_uvm`: `version: 580.178.04`; `/sys/module/nvidia_uvm/version`: `580.178.04`; `/sys/module/nvidia/version`: `580.178.04`). `modinfo` reports `vermagic: 6.17.0-1032-nvidia ... aarch64`.
+- The installed source is `/usr/src/nvidia-580.178.04`.
+- Comparison source is `/tmp/blackbox-nvidia-615-source`; it contains `NV_ALLOC_PAGES_NODE_DO_ACCOUNT` and guarded accounting in `os_alloc_pages_node` (line references below). This directory's `version.mk` was not used to identify a complete RM implementation; RM allocation internals remain proprietary/opaque in these source trees.
+- Host: `Linux aitopatom-41f1 6.17.0-1032-nvidia #32-Ubuntu SMP PREEMPT_DYNAMIC Wed Aug 19 17:40:46 UTC 2026 aarch64`.
+- Current task cgroup from `/proc/self/cgroup`: `0::/user.slice/user-1000.slice/user@1000.service/app.slice/app-org.chromium.Chromium-3655057.scope`.
+
+## Static call and accounting map
+
+1. CUDA enters the driver through device ioctls; for UVM-managed allocations/faults, the open `nvidia-uvm` code provides the UVM path. Proprietary RM allocation internals are outside the open source. In the visible bridge, `nvidia/nv_uvm_interface.c:355-376` calls `rm_gpu_ops_memory_alloc_sys(...)`; `:450-474` calls `rm_gpu_ops_pma_alloc_pages(...)`. The declarations are `common/inc/rm-gpu-ops.h:45,52`. These show the boundary, not what the proprietary RM does after entry.
+2. The open UVM code has explicit memcg context helpers: `nvidia-uvm/uvm_linux.c:37-55` obtains the memcg from an `mm`, activates it with `set_active_memcg`, and restores the previous active memcg at end. The compile-time guard is `nvidia-uvm/uvm_linux.h:169-208`: if `NV_IS_EXPORT_SYMBOL_PRESENT_int_active_memcg`, `UVM_CGROUP_ACCOUNTING_SUPPORTED()` is 1 and `NV_UVM_GFP_FLAGS_ACCOUNT` includes `__GFP_ACCOUNT`; otherwise helpers are no-ops and that macro omits the flag.
+3. Two concrete UVM call sites in 580.178.04:
+   - `nvidia-uvm/uvm_mem.c:572-594`: sysmem chunk allocations add account flags when support is compiled and `mm` is non-NULL, activate the context, allocate sysmem chunks, then restore context.
+   - `nvidia-uvm/uvm_mmu.c:103-135`: user page-table sysmem allocation retains the VA-space `mm`, activates that memcg, adds `NV_UVM_GFP_FLAGS_ACCOUNT`, calls `alloc_pages`, then restores/releases the context.
+   - `nvidia-uvm/uvm_va_block.c:3126-3129` activates `block_context->mm` around CPU population. This covers a CPU population stage, which may be reached while a GPU destination operation stages through CPU memory; source inspection alone does not prove that a specific CUDA API/run took it.
+4. Static build evidence for the loaded 580 module: `/proc/kallsyms` contains `uvm_memcg_context_start [nvidia_uvm]` and `uvm_memcg_context_end [nvidia_uvm]`. Since those functions are inside `#if UVM_CGROUP_ACCOUNTING_SUPPORTED()` in `uvm_linux.c:37`, this supports that the loaded build compiled the context helpers. It does not establish which cgroup pointer was active in a specific execution or that a specific allocation reached these helpers.
+5. Separate NVIDIA RM NUMA allocation path: `nvidia/os-interface.c:1664-1765` builds `gfp_mask` and calls `alloc_pages_node(nid, gfp_mask, order)` at line 1742. `NV_ALLOC_PAGES_NODE_SKIP_RECLAIM` is only the reclaim branch at lines 1735-1740; its constant is `common/inc/nv.h:805-807`. In 580 this function contains no `__GFP_ACCOUNT` branch. Thus this flag changes reclaim behavior and is not, by itself, a memcg accounting flag. The source tree does not expose proprietary caller decisions or `RmNumaAllocSkipReclaimPercent` implementation, so whether a given allocation enters this path remains unobserved.
+6. The 615 comparison adds `NV_ALLOC_PAGES_NODE_DO_ACCOUNT` (`common/inc/nv.h:862-865`); `nvidia/os-interface.c:1874-1879` conditionally adds `__GFP_ACCOUNT` for that flag on Linux >= 5.14. The skip-reclaim branch remains separate at `:1881-1888`, modifying `__GFP_RECLAIM` and for high-order requests `__GFP_NOMEMALLOC`. The registry header `src/nvidia/interface/nvrm_registry.h:1200-1208` describes `RmNumaAllocSkipReclaimPercent` as the free-memory threshold for dropping `GFP_RECLAIM`; this is a reclaim policy, not proof of accounting ownership. This header is in the 615 comparison tree, not the installed 580 source.
+7. Assembly interpretation: none used.
+
+## Dynamic trace feasibility and evidence limits
+
+Read-only checks found `bpftrace`, `trace-cmd`, and `perf` installed and tracefs mounted at `/sys/kernel/tracing`. The `kmem:mm_page_alloc` tracepoint is listed. The shell runs as `uid=1000`; bpftrace says it only supports root. `sudo -n` says a password is required. `/proc/sys/kernel/perf_event_paranoid` is `4`; reading `/sys/kernel/tracing/tracing_on` returned `Permission denied`; `/sys/kernel/debug/tracing` returned `Permission denied`. No trace probe was attached and no host settings were changed.
+
+Literal feasibility commands, exit codes, and outputs:
+
+```text
+$ id -u
+1000
+
+$ bpftrace -l 'kprobe:uvm_memcg_context_start'
+ERROR: bpftrace currently only supports running as the root user.
+(exit 1)
+
+$ sudo -n bpftrace -l 'kprobe:uvm_memcg_context_start'
+sudo: a password is required
+(exit 1)
+
+$ cat /proc/sys/kernel/perf_event_paranoid
+4
+(exit 0)
+
+$ cat /sys/kernel/tracing/tracing_on
+cat: /sys/kernel/tracing/tracing_on: Permission denied
+(exit 1)
+
+$ ls /sys/kernel/debug/tracing
+ls: cannot access '/sys/kernel/debug/tracing': Permission denied
+(exit 2)
+```
+
+A probe listing attempt first used invalid bpftrace syntax with multiple positional filters and produced usage text; it is excluded as evidence. No CUDA run was traced. The dynamic owner of a real allocation and whether work passed to a worker remain unknown.
+
+## Required completion evidence still missing
+
+- Correlate the reproduction harness's bounded API cases (`cpu_touch`, `none`, `cuda_malloc`, `cuda_malloc_managed`, `pytorch_empty`) with exact PID, cgroup path and monotonic time window, while recording `memory.current`/`memory.stat` before, held and after.
+- Capture a CPU-accounted allocation and the negative control with no GPU call; preserve exact commands and output.
+- Trace the relevant loaded module functions and allocator entry, including current/active memcg identity and allocation flags, or explain which required observation is inaccessible. Dynamic attach currently requires privileged tracing access unavailable to this process.
+- Establish whether an execution context changed to a worker and the memcg used there; static UVM helpers document the context switch but do not prove a given runtime path.
+
+Status: open_partial. Source map is useful for probe targeting, but the close criterion requires real bounded traces and positive/negative controls.
+
+## Bounded reproduction correlation (cgroup snapshots, not kernel call trace)
+
+Final warmed-up run: tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json. Source SHA-256: f89d5b27e8c638c40e7f3511bf5c1cd6d69dda4c1d8b0a3af7829412fa11aa67.
+
+The original pre-warmup extraction is preserved separately in initial-correlation.txt. Final deltas use before_allocation for CUDA/PyTorch and before for CPU/no-allocation.
+
+none: PID=1850584 before=10067968 held=10067968 delta=0 rc=0
+cpu_touch: PID=1850663 before=10338304 held=43892736 delta=33554432 rc=0
+cuda_malloc: PID=1850751 before=76312576 held=76312576 delta=0 rc=0
+cuda_malloc_repeat: PID=1850834 before=76914688 held=76914688 delta=0 rc=0
+cuda_malloc_managed: PID=1850908 before=76734464 held=110288896 delta=33554432 rc=0
+pytorch_empty: PID=1850943 before=376504320 held=376504320 delta=0 rc=0
+
+These are cgroup snapshots, not a kernel call trace. Six per-scope dmem.current observations could not run. CUDA library initialization is a separate baseline. The allocator flags, active owner memcg and worker context still require tracing; the task remains open.

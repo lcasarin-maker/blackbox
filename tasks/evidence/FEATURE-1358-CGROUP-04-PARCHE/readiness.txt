@@ -1,0 +1,31 @@
+# FEATURE-1358-CGROUP-04-PARCHE — readiness, no patch justified yet
+
+Date: 2026-10-02. This records the dependency decision and source-grounded next step; it does not close the task.
+
+## Decision from available evidence
+
+No code diff is prepared. FEATURE-1358-CGROUP-02-TRAZA's current `trace-map.txt` says the runtime owner/context is unknown and dynamic probes could not run with current permissions. FEATURE-1358-CGROUP-03-NATIVO finds that 615.71.09 already contains an OS dmem region, charge, uncharge and `memacct` path, but the GB10 runtime behavior is untested. These facts do not establish a remaining defect in a proposed 615 stack, nor identify the specific allocation whose owner needs changing. A patch now could double charge `VideoMemory`, omit shared/faulted allocations, or choose an incorrect memcg context.
+
+The 615 native source path to validate first is `memacctAddGpu` region registration/precharge in `src/nvidia/src/kernel/mem_mgr/memacct.c`, then `memacctTryCharge` from `video_mem.c` for physical nonvirtual VideoMemory, followed by the OS dmem wrapper in `kernel-open/nvidia/os-interface.c`. The charge code passes an allocation to the GPU region manager; the cgroup that `dmem_cgroup_try_charge` charges depends on kernel dmem semantics and should be measured per worker cgroup. This source path is scoped to that manager and cannot be assumed to cover the observed PyTorch/UVM request.
+
+## Conditional patch decision tree
+
+1. Run FEATURE-1358-CGROUP-01's bounded CPU-positive, no-GPU-call negative, CUDA and PyTorch cases on the exact 580 baseline and the exact 615 stack; retain cgroup and dmem snapshots through release.
+2. If 615 `dmem.current` tracks the target allocation, `dmem.max` rejects it, sharing charges match documented policy, and release returns current usage, write no driver patch; task 04 can close as unnecessary after recorded measurements.
+3. If a 615 API still escapes charge, correlate its actual allocation and free path with FEATURE-1358-CGROUP-02's dynamic trace and the open source boundary. Determine whether it is VideoMemory, UVM sysmem, managed-memory migration, or worker work, and record the owner cgroup and charge flags.
+4. Only then draft the smallest applicable change in a separately pinned NVIDIA source checkout. Potential mechanisms are existing dmem registration/charge for a device-memory region or `__GFP_ACCOUNT` inside the observed sysmem allocation's existing memcg context. Do not combine them for one allocation. For sharing, migration and partial failure, model a single owner/refcount and matched charge/uncharge before implementation.
+5. Build modules against the exact target kernel headers with GSP/userspace all 615.71.09; verify limit rejection, error unwind, concurrent sharing, migration, release and two-cgroup behavior against 580 before/after evidence. Keep publication as separately authorized work.
+
+## Blockers and negative checks
+
+- Missing dependency evidence: FEATURE-1358-CGROUP-02 dynamic owner trace and API-specific allocation map.
+- Missing native runtime evidence: 615.71.09 on GB10 with version-matched GSP and userspace, including separate `memory.max` and `dmem.max` controls and two cgroups.
+- Missing patch justification: current data establishes a 580 allocation gap and source-level 615 mechanisms, not a 615 residual gap.
+- Negative source control: `rg -l 'dmem_cgroup|os_dmem' /usr/src/nvidia-580.178.04 | wc -l` returns `0`, while the same search in 615 `kernel-open/nvidia/os-interface.c` finds register/charge/uncharge calls. This validates that the source inspection can separate 580 from the 615 mechanism. It does not validate runtime charging.
+- No code has been changed in `/tmp/blackbox-nvidia-615-source`; no driver was installed, loaded or rebooted.
+
+Verdict: `open_partial`. This is the safe stop point under the task's condition that a patch only follows a demonstrated residual gap. Revisit after tasks 01–03 provide API-specific runtime and owner evidence.
+
+## Related Memory Saver result
+
+The separately pinned `christopherowen/dgx-spark-memory-saver` design at commit `55816f0b5c88bbab3c0641f9d6f1d9fd36e5854d` packs 256-byte UVM user leaf tables into 4 KiB slots on 64 KiB CPU pages. It retains the original page allocator and therefore its existing memcg context; this is a page-table memory-efficiency change, not a CUDA allocation-charge fix. The current host reports `getconf PAGE_SIZE` = `4096`, so the 64 KiB page-size predicate is false and this conditional path does not apply. Its R610 notes describe a stock large-DMA transfer failure that required a separate RM alignment correction, so moving to R610 adds a driver compatibility risk rather than resolving the present accounting question. The reported 43 hardware-free checks are not evidence of GPU runtime behavior. These findings leave the patch decision blocked on 615 runtime coverage and Task 02's allocation-owner trace.
