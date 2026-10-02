@@ -1,0 +1,37 @@
+[
+  {
+    "id": "SPEC-L94",
+    "section": "Contrato con Atlas",
+    "text": "Atlas no importa codigo de blackbox, ni al reves. Consume su salida:",
+    "why": "changed: tools/atom_gpu_telemetry.py",
+    "cited": []
+  },
+  {
+    "id": "SPEC-L269",
+    "section": "Risks",
+    "text": "Un instrumento deja de escribir en silencio | Alta | `bb status` mira la antigüedad de los datos sólo donde hay un artefacto que revisar (sar, memory-monitor, telemetría térmica de este repo: \"por sus datos, no por la unit\" — y el 2026-09-25 ese mismo chequeo se midió mintiendo al revés, declarando FALTA sobre un instrumento activo porque leía la ruta que Atlas ya había borrado); los cuatro que quedaban leyendo `systemctl is-active` se cerraron —tres el 2026-09-25, el de bb-usable el 2026-09-28— y ahora leen también su artefacto: la muestra más fresca del día, la confirmación que el driver imprimió al aplicar el clock lock contrastada con los argumentos que la unit declara, las dos regex de puntería que earlyoom imprimió al arrancar, y el latido que el bucle de `bin/bb-usable` imprime en cada vuelta de 30 s (\"latencia del escritorio\"), exigido dentro de los últimos 120 s (`bin/bb`, `journalctl -S`). Los cuatro pueden ahora salir mal por el motivo que vigilan, con cinco controles negativos corridos de los tres originales en `tests/test_bb_bash.py` -- `test_control_negativo_sin_muestra_fresca_el_muestreo_esta_FALTA`, `test_control_negativo_clock_lock_con_OTRO_rango_que_el_declarado`, `test_control_negativo_clock_lock_sin_confirmacion_del_driver`, `test_control_negativo_earlyoom_de_serie_no_cuenta_como_armado`, `test_control_negativo_earlyoom_con_UNA_sola_regex_no_basta` (citados por nombre, no por línea, porque el fichero se mueve con cada test que se añade -- la cifra de \"cuatro\" venía mal desde el commit `37ccd7d`, corregida el 2026-09-28) -- más tres del latido de bb-usable (rancio, journal vacío, sólo la línea de arranque). Queda declarado lo que sigue sin comprobarse: que el contenido sea correcto, no sólo fresco",
+    "why": "changed: tests/test_bb_bash.py",
+    "cited": [
+      "tests/test_bb_bash.py"
+    ]
+  },
+  {
+    "id": "SPEC-L272",
+    "section": "Risks",
+    "text": "Los umbrales de PSI vienen de otra máquina | Baja | Calibrados 2026-09-23 contra los dos congelamientos propios del 2026-09-22/23 sobre 19 804 muestras (2026-09-08 07:57 -> 2026-09-23 10:53): el corte pasó de nivel instantáneo a duración sostenida (≥10 % durante ≥5 min), porque el nivel se equivoca en las dos direcciones — seis excursiones sanas llegaron a 98.53 % y un congelamiento real bajó a 48.80 %. `tools/calibra_psi.py` re-deriva los cortes y sale 1 si dejan pasar un incidente o si el instante en que se completa la duración sostenida cae fuera de una ventana etiquetada; una excursión que sólo se solapa con un incidente no cuenta como detección (`tests/test_calibra_psi.py::test_control_negativo_excursion_solapa_incidente_pero_dispara_despues`). Sigue abierto: n=6 del lado positivo -- dos ventanas del 2026-09-28 se sumaron el mismo día que ocurrieron -- y sólo el canal de memoria está calibrado — `io_some`/`cpu_some` se imprimen sin etiqueta a propósito. Corrido el 2026-09-28: `python3 -m tools.calibra_psi` sale rc=1, VEREDICTO CORTE INVALIDO, porque `bb sample` dejó de escribir entre las 03:29:02 y las 03:39:21 de ese mismo día (corregido el 2026-09-28: la última línea real es un `burst_fin` a las 03:29:02, no la muestra con datos de las 03:28:58 que la cerró -- la ráfaga sí terminó limpia; la misma invocación, la de las 03:28:09, se colgó después de escribir ese `burst_fin` -- `Type=oneshot` no deja arrancar una invocación siguiente mientras la anterior sigue activa) -- un hueco del propio instrumento que ninguna clasificación automática puede corroborar, declarado, no corregido aquí",
+    "why": "changed: adopted/system-config/usr_local_bin_nvrm-watch.sh, enable-privileged.sh, tests/test_calibra_psi.py, tools/calibra_psi.py",
+    "cited": [
+      "tests/test_calibra_psi.py",
+      "tools/calibra_psi.py"
+    ]
+  },
+  {
+    "id": "SPEC-L275",
+    "section": "Risks",
+    "text": "Un instrumento de cuelgue vive en la máquina y en ningún repo | Ocurrió | Pasó con `/usr/local/bin/nvrm-watch.sh`, que existía sólo en disco. El commit `1ec66b3` añadió 12 rutas a `adopted/` (no 11 -- `git diff --diff-filter=A --name-only 1ec66b3^ 1ec66b3 -- adopted/` da 12; sin el filtro da 13, porque ese mismo commit tambien MODIFICA `atom-gpu-telemetry.service`, no sólo añade), pero las 12 no son 12 casos del mismo hallazgo: la auditoría H1 del 2026-09-28 encontró que sólo 4 siguen de verdad el foro de NVIDIA #358951 (los nacidos el 09-09, ver abajo); tres (`bb-usable.service`, `blackbox-sample.service`, `blackbox-sample.timer`) ya estaban versionados, idénticos byte a byte, en `systemd/` desde antes de `1ec66b3`, y los 5 restantes tienen cada uno su propia historia (corregido el 2026-09-28, la ronda anterior decía \"el resto salía de un heredoc\" y sólo era cierto para uno): `99-blackbox-uvm.conf` sí salía de un heredoc de `enable-privileged.sh`; `99-blackbox-panic.conf` y `99-blackbox-watchdog.conf` entraron en el propio `1ec66b3` desplegados con `cp adopted/...`; `99-sysrq.conf` (nacido el 08-28) y `/etc/default/kdump-tools` (instalado fuera de blackbox) no tenían ningún escritor en el repo. La fila anterior generalizaba la historia de los 4 a los 12. Esos 4 nacieron el 2026-09-09 entre las 15:39 y las 15:40 (`99-freeze-panic.conf` y los tres `nvrm-watch`, confirmado con `stat -c %w`), no 8 -- la verificación H1 del 2026-09-28 probó con un control negativo que la fecha de creación SÍ sobrevive a un re-despliegue en este filesystem (`bb-usable.service`, creado 09-23, re-copiado 09-27, sin cambiar su `%w`), así que la cifra vieja de \"8\" no era indemostrable, estaba mal. Adoptados el 2026-09-24 (commit `1ec66b3`); `bb drift` vigila 41 sujetos, antes 30 (no 19 -- ese \"antes 19\" viene del propio mensaje de `1ec66b3`, que ya contaba mal: `git ls-tree` sobre el commit anterior da 18 sujetos, no 19; corregido el 2026-09-28). El 39º es `system.slice.d_99-blackbox.conf`, sumado en el commit `e4cb0e2` del 2026-09-28; los sujetos 40 y 41 son `blackbox-drift.service`/`.timer`, el propio instrumento que el arreglo de `bb drift` añadió el mismo día. Corrido el 2026-09-28: `./bin/bb drift` imprime `revisados: 41 divergentes: 0 ausentes: 0 suspendidos: 1`, exit 0",
+    "why": "unaudited",
+    "cited": [
+      "enable-privileged.sh"
+    ]
+  }
+]

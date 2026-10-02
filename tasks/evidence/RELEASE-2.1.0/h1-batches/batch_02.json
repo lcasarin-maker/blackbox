@@ -1,0 +1,35 @@
+[
+  {
+    "id": "SPEC-L110",
+    "section": "Contrato con Atlas",
+    "text": "Ninguna pieza fisica depende de que alguien inicie sesion. Es lo que",
+    "why": "changed: enable-privileged.sh",
+    "cited": []
+  },
+  {
+    "id": "SPEC-L271",
+    "section": "Risks",
+    "text": "El propio muestreo compite por la memoria unificada | Media | La adquisición de muestras lee `/proc`, sysfs, el journal, `nvidia-smi` y endpoints existentes. El muestreador térmico también escribe telemetría, persiste su estado y puede pausar y reanudar procesos mediante `SIGSTOP`/`SIGCONT` bajo sus condiciones de alarma y carga; `Nice=19` e `IOSchedulingClass=idle` en los dos muestreadores que blackbox escribe y gobierna (`blackbox-sample`, `atom-gpu-telemetry` -- corregido el 2026-09-28, corría en `Nice=10`, ver `adopted/systemd-user/atom-gpu-telemetry.service`; ambos confirmados en vivo con `systemctl --user show ... -p Nice`). La auditoría H1 del 2026-09-28 encontró que la fila decía \"los tres\" sin nombrar un tercero: `ai-memory-monitor` (activo, cada 5 min, `Nice=0`) y `ai-gpu-telemetry` (deshabilitado, `Nice=10`) también muestrean, pero son instrumentos adoptados de `/srv/ai/gpu_governance/`, no escritos ni gobernados por blackbox -- misma frontera que Atlas: se les hace custodia de deriva, no se les impone la convención de prioridad de blackbox. `bb-guardia-proceso` queda fuera a propósito: no muestrea, sólo lee lo que ya existe (y escribe su propio `guardia_proceso.jsonl`), y corre a `Nice=10` (no 19, corregido el 2026-09-28 tras la verificación H1: \"prioridad normal\" era impreciso) -- más alto que los DOS muestreadores de blackbox (`Nice=19`), pero no que `ai-memory-monitor` (`Nice=0`, la auditoría H1 del 2026-09-28 encontró la frase anterior contradiciendo la fila que la precede) -- para poder actuar bajo presión de memoria en vez de esperar su turno",
+    "why": "claim text changed",
+    "cited": []
+  },
+  {
+    "id": "SPEC-L274",
+    "section": "Risks",
+    "text": "Esta spec envejece y pasa a describir lo que alguien recordaba | Ocurrió | Pasó: declaraba \"Out of scope: actuar sobre lo que mide\" mientras `bb-usable` reiniciaba la máquina. `tools/inventario.py --check` corre en `pre-commit` y ata las dos tablas a `bin/bb`, `tools/` y `adopted/`; cazó 6 desajustes en su primera corrida, 2 de ellos defectos del propio instrumento",
+    "why": "changed: tools/inventario.py",
+    "cited": [
+      "tools/inventario.py"
+    ]
+  },
+  {
+    "id": "SPEC-L277",
+    "section": "Risks",
+    "text": "`bin/bb` ronda el 67% del bash del repo (2768 de 4111 líneas trackeadas al commit `d3d7980`, todo `*.sh` más `bin/bb`, sin excluir nada -- la verificación H1 del 2026-09-28 encontró que el \"71%\" anterior excluía `adopted/` y `tests/fixtures/` sin decirlo, y que el total mismo se mueve con cualquier commit a un `.sh`, así que no se cita como cifra viva) y ningún gate medía su cobertura | Ocurrió | `coverage.py` no instrumenta bash, así que `coverage-target` pasaba sin mirarlo. `tools/cobertura_bash.sh` lo mide y `bb-cobertura-piso` (pre-push) impide que baje del piso de 32.8 — 35.3% al commit `3e381eb`, 39.7% al commit `09deb5b` (la verificación H1 del 2026-09-28 encontró que el salto de 4.4 puntos no es carga de máquina, como decía la fila anterior, sino los cinco tests de `bb drift` que añadió `09deb5b` -- su padre, `57ae066`, mide 35.3%; `3a91866` no está en esa historia de commits y no mueve la cifra -- más test, más cobertura real; no se cita como cifra viva porque cambia con cada test que se añade), contra el 33.1% que dejó el arreglo del medidor el 2026-09-25. El salto desde 27.0 no fue cobertura ganada: el medidor ponía `PS4='+${BASH_SOURCE}:${LINENO}:'` y buscaba las líneas con un patrón anclado en UN solo `+`, y bash repite ese carácter según la profundidad de anidamiento, así que lo que corría dentro de una sustitución `$(...)` cuya traza llevaba varios `+` se contaba SIN CUBRIR; una tubería o un subshell con traza de un solo `+` sí se contaba — en `bin/bb` es casi todo, porque cada bloque de la muestra se arma con `x=$(funcion)`. Sobre 947 líneas candidatas, las cubiertas pasaron de 256 a 313: 57 líneas siempre estuvieron cubiertas y el instrumento no las veía; nadie escribió un test entre las dos cifras. El piso de 32.8 sale del mínimo de tres corridas (33.1) menos el vaivén medido de 0.2-0.3 entre reposo y carga. El número sigue siendo bajo y es el hallazgo, no la solución. (El docstring de `tests/test_cobertura_bash.py` decía 33.3%/59 líneas para la misma corrida; se eligió el 2026-09-28 contra la medida que el propio commit `2a228fa` guarda — 256 cubiertas de 947 antes, 313 después: 313−256 = 57 y 313/947 = 33.1%, y el piso de 32.8 se derivó de 33.1, no de 33.3. El docstring quedó corregido)",
+    "why": "unaudited",
+    "cited": [
+      "tests/test_cobertura_bash.py",
+      "tools/cobertura_bash.sh"
+    ]
+  }
+]

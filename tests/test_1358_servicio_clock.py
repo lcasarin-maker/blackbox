@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import json
 import os
+import runpy
 import socket
 import subprocess
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
+
+import pytest
 
 from tools.service_probe import probe
 
@@ -42,9 +45,11 @@ class _SocketFalso:
 
     def recv(self, _size):
         if self.drip:
+            assert self.clock is not None
             self.clock[0] += min(0.08, self.timeout / 2)
             return b"x"
         if self.wait:
+            assert self.clock is not None
             self.clock[0] += self.timeout
             raise socket.timeout("no banner")
         if self.chunks:
@@ -93,10 +98,14 @@ def test_prefijo_ssh_sin_terminador_no_se_acepta(monkeypatch):
 def test_destino_externo_se_rechaza_antes_de_conectar():
     result = probe("192.0.2.1", "22", "1")
     assert result["estado"] == "ERROR"
-    assert "loopback" in result["motivo"]
+    motivo = result.get("motivo")
+    assert isinstance(motivo, str)
+    assert "loopback" in motivo
 
 
 def test_configuracion_no_finita_o_fuera_de_rango_se_rechaza():
+    assert probe("localhost", "22", "1")["estado"] == "ERROR"
+    assert probe("127.0.0.1", "no-puerto", "1")["estado"] == "ERROR"
     assert probe("127.0.0.1", "22", "nan")["estado"] == "ERROR"
     assert probe("127.0.0.1", "22", "inf")["estado"] == "ERROR"
     assert probe("127.0.0.1", "65536", "1")["estado"] == "ERROR"
@@ -193,3 +202,19 @@ def test_bb_sample_symlink_resolves_probe_from_real_repository(tmp_path):
                          capture_output=True, timeout=30)
     assert run.returncode == 0, run.stderr
     assert _muestra_con_sonda(tmp_path)["servicio_ssh"]["motivo"] == "dirección, puerto o timeout inválido"
+
+
+def test_cli_rechaza_argumentos_incompletos(monkeypatch):
+    script = str(ROOT / "tools" / "service_probe.py")
+    monkeypatch.setattr(sys, "argv", [script])
+    with pytest.raises(SystemExit) as exc:
+        runpy.run_path(script, run_name="__main__")
+    assert exc.value.code == 2
+
+
+def test_cli_emite_json_para_configuracion_invalida(monkeypatch, capsys):
+    script = str(ROOT / "tools" / "service_probe.py")
+    monkeypatch.setattr(sys, "argv", [script, "localhost", "22", "1"])
+    runpy.run_path(script, run_name="__main__")
+    assert json.loads(capsys.readouterr().out) == {
+        "estado": "ERROR", "motivo": "dirección, puerto o timeout inválido"}

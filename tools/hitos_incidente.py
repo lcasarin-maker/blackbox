@@ -186,17 +186,18 @@ def _service_samples(rows: list[dict[str, Any]], out: dict[str, Any]) -> None:
             previous = None
             previous_boot = boot_id
         service = row.get("servicio_ssh")
-        state = service.get("estado") if isinstance(service, dict) else None
+        service_data = service if isinstance(service, dict) else {}
+        state = service_data.get("estado")
         if state:
             saw_service_field = True
             state = str(state).upper()
             out["service_observations"].append(_milestone(
                 "bb_sample", row, row.get("ts"), service_state=state,
-                reason=service.get("motivo"), note="estado observado por la sonda SSH configurada"))
+                reason=service_data.get("motivo"), note="estado observado por la sonda SSH configurada"))
             if state in {"ERROR", "TIMEOUT"} and state != previous:
                 out["service_loss"].append(_milestone(
                     "bb_sample", row, row.get("ts"), service_state=state,
-                    reason=service.get("motivo"),
+                    reason=service_data.get("motivo"),
                     note="falló la sonda SSH configurada; no equivale a caída de todo el servicio"))
             elif state == "OK" and previous in {"ERROR", "TIMEOUT"}:
                 out["service_recovery"].append(_milestone(
