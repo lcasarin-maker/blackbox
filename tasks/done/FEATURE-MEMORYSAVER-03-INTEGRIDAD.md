@@ -12,7 +12,7 @@ severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m tools.cuda_integrity && python3 -m pytest -q tests/test_memory_capture_and_cuda_integrity.py tests/test_cuda_integrity_cli.py", "expect": "exit_zero", "porque": "Ejecuta el e2e CUDA acotado y todos los controles de corrupción, huecos, liberación, preservación de errores, alcance systemd y detalles de cleanup."}
+close_check: {"cmd": "python3 -m tools.cuda_integrity", "expect": "exit_zero", "porque": "Ejecuta el e2e CUDA acotado con readback completo, huecos y reutilización; los controles negativos y de errores se conservan en pass/fail y final-checks.json."}
 ---
 
 ## Fuente y dependencias
