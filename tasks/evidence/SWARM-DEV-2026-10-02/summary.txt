@@ -1,0 +1,17 @@
+Desarrollo de fichas — 2026-10-02
+
+5 fichas con avance de código; 0 cierres experimentales. Continúan 30 abiertas.
+
+- tools/verify_cgroup_repro.py recalcula observaciones crudas; negativo CPU neutralizado => fail/rc1; captura histórica => unknown/rc2 por 23 lecturas dmem.current ilegibles (seis scopes). No autentica procedencia ni verifica contención GPU.
+- tools/provider_trace.py conserva proveedor por request/worker; CPU observado no se borra por una observación GPU posterior; requiere transición explícita al cambiar worker/PID. Fixtures GPU sano, CPU intencional y fallback respawn => pass/pass/block; captura workload real pendiente.
+- tools/read_integrity.py compara dos descriptores separados buffered/O_DIRECT; región <=1MiB y <=5 repeticiones; valida identidad y estabilidad; digest caller-supplied de procedencia desconocida. Control de archivo temporal sano => pass; digest incorrecto => fail. Referencia externa y incidente reales pendientes.
+- tools/kernel_charges.bt: borrador de ABI kmem Linux6.17 y ledger de páginas/cargo/descargo; cgroup del task ejecutor identificado, owner=unknown. bpftrace parser/probes no pudieron validar por requerir root; could_not_run=3 comandos (dos bpftrace sin root y sudo -n que exige contraseña). No se afirma compilación ni captura exitosa.
+- tools/preflight.py rechaza proveedores vacíos/desconocidos como unknown y conserva error de UTF-8 en CLI.
+
+Verificación focal: 94 passed; Python509 statements220 branches100%; Ruff y Pyright del cambio pasan; could_not_run=0 para esos checks. Scope git diff --check rc0 tras corregir EOF de ficha compartida; la comprobación global detectó EOF en documentación de otra sesión (registrada).
+
+El trazador necesita permisos y comprobar probes/ABI efectivos. Integridad necesita referencia externa; provider necesita instrumentación/traza del backend real; cgroup conserva lecturas faltantes. Fixtures pasan pero estas condiciones experimentales siguen pendientes.
+
+Suite completa: python3 -m pytest -q => 813 passed in 174.57s (0:02:54), rc0.
+Schema: 145 checked145 passed0 failed74 warnings0 could_not_run.
+Triage: returned5 of5; control con un id omitido => rc1.

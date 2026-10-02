@@ -36,3 +36,14 @@ Evidencia: `tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt`.
 Pendiente para cierre: traza dinámica de memcg/flags/worker; el acceso a probes requiere privilegios root.
 La ficha conserva status open; el informe distingue observaciones estáticas
 y resultados runtime. El verificador de cierre permanece pendiente.
+
+## Avance de instrumentación — 2026-10-02
+
+Disponible un probe preparatorio en `tools/kernel_charges.bt`, con firmas que
+coinciden con los headers 6.17 instalados. El mapa y el control negativo offline
+están en `tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt` y
+`tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt`. El probe etiqueta
+cgroup del ejecutor y reporta el owner como desconocido; `set_active_memcg(mm)`
+impide equiparar ambas identidades. No hubo parse/attach/captura por la barrera
+de root. Dueño real, flags observados y transición a worker siguen pendientes;
+esta ficha conserva status open.

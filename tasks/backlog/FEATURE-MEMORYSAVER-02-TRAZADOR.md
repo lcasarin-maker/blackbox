@@ -24,3 +24,20 @@ Revisar tools/kernel-charges.bt del proyecto como referencia y adaptar sus punto
 Traza real del control CPU y de una ejecución sin asignación, más una asignación CUDA acotada cuando haya permiso. Cargos/descargos, dueño y pilas disponibles con comandos y salida literales. El control debe detectar pérdida del registro de atribución; probe inexistente o acceso denegado se reporta como could_not_run. Las asignaciones no cobradas al memcg quedan fuera de la observación de ese probe, límite que debe declararse.
 
 El close_check queda especificado para implementarse junto al trabajo. Verificador y evidencia de esta ficha pendientes. Registrar la ficha conserva status open y no demuestra portabilidad ni resultados GPU.
+
+## Avance — 2026-10-02
+
+Preparado `tools/kernel_charges.bt` para los prototipos 6.17 presentes en los
+headers del host. Emite cargos/descargos, fallos, duplicados, órdenes discordantes,
+páginas aún vivas y mapas agregados tanto en snapshots como al salir. Filtra los
+eventos de cargo por cgroup numérico del task ejecutor. La identidad del dueño
+real queda `unknown`: UVM puede activar un memcg a partir de un `mm`, y el cgroup
+del task ejecutor no acredita ese memcg. El ledger por dirección de página tampoco
+prueba ownership.
+
+Evidencia ABI y control negativo offline:
+`tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt` y
+`probe-list.txt`. Los headers confirman firmas, pero bpftrace exige root incluso
+para `-d`/listar probes; parser, símbolos en ejecución, captura runtime y CUDA
+quedan `could_not_run`. No se afirma que el script compile o que los probes estén
+disponibles. Esta ficha sigue abierta.

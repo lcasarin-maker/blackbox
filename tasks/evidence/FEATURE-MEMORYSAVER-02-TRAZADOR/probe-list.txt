@@ -3,12 +3,10 @@ bpftrace v0.20.2
 
 $ bpftrace -l 'kprobe:__memcg_kmem_charge_page'
 ERROR: bpftrace currently only supports running as the root user.
-exit 1
+exit 1; could_not_run
 
-El script de referencia `/tmp/bb-memory-saver/tools/kernel-charges.bt` declara
-Linux 7.0 `__memcg_kmem_charge_page(page,gfp,order)`. El host corre
-6.17.0-1032-nvidia. Esta sesión no puede validar la existencia/firma del probe
-contra símbolos cargados. No se adjuntó el trazador ni se infirió dueño del cargo.
-La fuente del mismo snapshot tampoco guarda identidad memcg/cgroup: registra
-comm/stack y limpia mapas sin imprimir la atribución viva. La salida de lista de
-probes es could_not_run; tarea abierta.
+Static ABI: /usr/src/linux-nvidia-6.17-headers-6.17.0-1032/include/linux/memcontrol.h:1695-1696 declares __memcg_kmem_charge_page(page,gfp,order) and __memcg_kmem_uncharge_page(page,order). The host kernel is 6.17.0-1032-nvidia; this replaces the old reference's Linux 7.0 assumptions. Header declarations do not prove runtime probe availability.
+
+`tools/kernel_charges.bt` records page charge/uncharge events, failures, duplicates, order mismatches, current live page addresses/bytes and final aggregation maps. The requested scope is a numeric task cgroup ID. Script output labels this as executor-task-cgroup and explicitly reports owner=unknown: UVM can switch active memcg with set_active_memcg(mm), so current task cgroup/comm do not establish charge owner. Charges executed by workers outside the scope are missed. The outstanding-page map is an observation ledger, not owner attribution.
+
+`bpftrace -d tools/kernel_charges.bt 4096 0` also exits 1 at the root gate, before parser/ABI validation. Runtime probe listing, compilation, capture and CUDA trace are could_not_run. See `abi-check.txt` and `tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt`.

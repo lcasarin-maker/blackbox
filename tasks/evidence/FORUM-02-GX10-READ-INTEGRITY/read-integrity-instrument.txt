@@ -1,0 +1,82 @@
+FORUM-02-GX10-READ-INTEGRITY — instrument evidence
+
+`tools/read_integrity.py` opens the selected regular file twice: once buffered and once
+with `O_DIRECT`. It checks both descriptors against the non-following path identity
+before reading, then checks descriptor and path identities again after reading. A path
+replacement between opens yields `could_not_run`. If opening `O_DIRECT` fails, the
+buffered descriptor is closed before returning. Every result includes
+`could_not_run_count` (zero for pass/fail and one for an unavailable check).
+
+Each invocation reads one caller-selected region no larger than 1,048,576 bytes. Offset,
+length, memory, and direct-I/O requests use 4,096-byte alignment. SHA-256 digests from
+both modes are compared with the supplied reference; output labels it
+`caller-supplied; provenance unverified`. Reads are read-only. No cache drop, global cache
+control, telemetry or firmware collection is performed.
+
+Positive and negative controls used a disposable 4,096-byte file containing `a` repeated
+4,096 times. Python generated the reference from this fixture; it is a plumbing control,
+not an independent trust anchor. Literal command:
+
+```sh
+python3 - <<'PY'
+import hashlib, subprocess, sys, tempfile
+from pathlib import Path
+with tempfile.TemporaryDirectory(prefix='bb-read-integrity-') as directory:
+    path = Path(directory) / 'region.bin'
+    region = b'a' * 4096
+    path.write_bytes(region)
+    digest = hashlib.sha256(region).hexdigest()
+    for label, reference in [('healthy-control', digest), ('corrupted-reference-control', '0' * 64)]:
+        result = subprocess.run([sys.executable, '-m', 'tools.read_integrity', str(path), '--offset', '0', '--length', '4096', '--sha256', reference, '--repeats', '1'], text=True, capture_output=True, check=False)
+        print(label, 'exit=', result.returncode)
+        print(result.stdout.strip())
+PY
+```
+
+Literal output:
+
+```text
+healthy-control exit= 0
+{"alignment": 4096, "buffered_sha256": ["c93eee2d0db02f10acc7460d9576e122dcf8cd53c4bf8dfcae1b3e74ebcfff5a"], "could_not_run_count": 0, "direct_sha256": ["c93eee2d0db02f10acc7460d9576e122dcf8cd53c4bf8dfcae1b3e74ebcfff5a"], "file_stable": true, "length": 4096, "max_region_bytes": 1048576, "modes_consistent": true, "offset": 0, "path": "/tmp/bb-read-integrity-34nkwfcd/region.bin", "reference_match": true, "reference_sha256": "c93eee2d0db02f10acc7460d9576e122dcf8cd53c4bf8dfcae1b3e74ebcfff5a", "reference_source": "caller-supplied; provenance unverified", "repeats": 1, "status": "pass", "writes_performed": false}
+corrupted-reference-control exit= 1
+{"alignment": 4096, "buffered_sha256": ["c93eee2d0db02f10acc7460d9576e122dcf8cd53c4bf8dfcae1b3e74ebcfff5a"], "could_not_run_count": 0, "direct_sha256": ["c93eee2d0db02f10acc7460d9576e122dcf8cd53c4bf8dfcae1b3e74ebcfff5a"], "file_stable": true, "length": 4096, "max_region_bytes": 1048576, "modes_consistent": true, "offset": 0, "path": "/tmp/bb-read-integrity-34nkwfcd/region.bin", "reference_match": false, "reference_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "reference_source": "caller-supplied; provenance unverified", "repeats": 1, "status": "fail", "writes_performed": false}
+```
+
+Coverage and test command:
+
+```sh
+COVERAGE_FILE=/tmp/coverage_read_integrity_20261002 coverage run --branch --source=tools.read_integrity -m pytest tests/test_read_integrity.py -q
+COVERAGE_FILE=/tmp/coverage_read_integrity_20261002 coverage report -m
+```
+
+```text
+..........................                                               [100%]
+26 passed in 0.11s
+Name                      Stmts   Miss Branch BrPart  Cover   Missing
+---------------------------------------------------------------------
+tools/read_integrity.py     112      0     30      0   100%
+---------------------------------------------------------------------
+TOTAL                       112      0     30      0   100%
+```
+
+```sh
+ruff check tools/read_integrity.py tests/test_read_integrity.py
+```
+
+```text
+All checks passed!
+```
+
+```sh
+pyright tools/read_integrity.py tests/test_read_integrity.py
+```
+
+```text
+0 errors, 0 warnings, 0 informations
+```
+
+Limits: the reference's provenance is unverified, the digest does not identify the
+changed byte, and only the selected region is read. This instrument does not measure
+NVMe health, RAS/EDAC/BERT signals, firmware, or a full model. No result attributes a
+problem to cache, RAM, storage, kernel, driver, or firmware. The finding remains
+experimental and open.

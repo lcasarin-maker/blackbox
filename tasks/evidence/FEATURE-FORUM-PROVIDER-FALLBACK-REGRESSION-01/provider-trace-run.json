@@ -1,0 +1,44 @@
+{
+  "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+  "tool": "tools/provider_trace.py",
+  "input_kind": "synthetic JSONL fixtures; no workload was generated",
+  "commands": [
+    {
+      "cmd": "python3 -m tools.provider_trace tests/fixtures/provider_trace/gpu-healthy.jsonl",
+      "exit_code": 0,
+      "stdout": "{\"could_not_run_count\": 0, \"findings\": [], \"status\": \"pass\", \"unknowns\": []}\n"
+    },
+    {
+      "cmd": "python3 -m tools.provider_trace tests/fixtures/provider_trace/cpu-only.jsonl",
+      "exit_code": 0,
+      "stdout": "{\"could_not_run_count\": 0, \"findings\": [], \"status\": \"pass\", \"unknowns\": []}\n"
+    },
+    {
+      "cmd": "python3 -m tools.provider_trace tests/fixtures/provider_trace/gpu-to-cpu-respawn.jsonl",
+      "exit_code": 2,
+      "stdout": "{\"could_not_run_count\": 0, \"findings\": [\"request gpu-after-restart: GPU request was served by CPU on worker worker-after\"], \"status\": \"block\", \"unknowns\": []}\n"
+    },
+    {
+      "cmd": "python3 -m pytest tests/test_provider_trace.py -q --cov=tools.provider_trace --cov-report=term-missing --cov-fail-under=100",
+      "exit_code": 0,
+      "stdout": "12 passed in 0.07s; tools/provider_trace.py: 147 statements, 0 missed, 100% coverage."
+    },
+    {
+      "cmd": "ruff check tools/provider_trace.py tests/test_provider_trace.py",
+      "exit_code": 0,
+      "stdout": "All checks passed!"
+    },
+    {
+      "cmd": "pyright tools/provider_trace.py tests/test_provider_trace.py",
+      "exit_code": 0,
+      "stdout": "0 errors, 0 warnings, 0 informations"
+    },
+    {
+      "cmd": "python3 -m tools.provider_trace /tmp/no-such-provider-trace.jsonl",
+      "exit_code": 2,
+      "stdout": "{\"could_not_run_count\": 1, \"findings\": [], \"status\": \"unknown\", \"unknowns\": [\"cannot read trace: [Errno 2] No such file or directory: '/tmp/no-such-provider-trace.jsonl'\"]}\n"
+    }
+  ],
+  "could_not_run_count": 0,
+  "real_workload_trace": "not available; task remains open"
+}
