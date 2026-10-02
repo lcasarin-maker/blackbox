@@ -1,0 +1,34 @@
+[
+  {
+    "id": "SPEC-L98",
+    "section": "Contrato con Atlas",
+    "text": "Lo que decide sobre el hardware vive aqui, aunque su salida acabe en la",
+    "why": "changed: enable-privileged.sh",
+    "cited": []
+  },
+  {
+    "id": "SPEC-L270",
+    "section": "Risks",
+    "text": "Una comprobación que no puede fallar da falsa confianza | Alta | Cada gate propio de este repo que puede bloquear se verifica con control negativo -- incluido `bash-sintaxis`, que se encontró desnudo el 2026-09-28 (auditoría H1) y ahora lo tiene: `tests/test_bash_sintaxis.py`, 2 passed. La misma auditoría encontró que la fila decía \"cada gate\" sin excepción mientras `ruff` y `gitleaks` (los dos de terceros, ambos bloquean en pre-commit) no tenían ninguno -- corregido el 2026-09-28: `tests/test_ruff_gitleaks_controles_negativos.py`, 4 passed (pasa con código/archivo limpio, falla con un nombre no definido / una clave PEM). `telemetry-bound` queda fuera de esa cuenta a propósito: su propio nombre de hook dice \"(advisory)\" y su entry corre `--gate \\|\\| true`, así que no puede bloquear el push por diseño, no por descuido. Declarado, no arreglado: `spec-check` y `no-perder-lineas` sí bloquearon -- 1 y 3 veces respectivamente, las cuatro por `could_not_run` el 2026-09-08 (`.simplecode/evidence/telemetry.jsonl`), no por un hallazgo real. El total de corridas sube con cada commit -- ya subió dos veces mientras se escribía esta fila -- así que no se cita, sólo el de bloqueos, que es histórico y no cambia. La cifra corregida el 2026-09-28 (verificación H1) es 0 hallazgos, no \"0 bloqueos\": son cosas distintas, y decir \"bloqueos\" escondía que sí dispararon. Cero hallazgos reales en cientos de corridas tampoco prueba que el sujeto esté limpio, según esta misma casa. `bb scan` registra como `could_not_run` un resumen de Field Diagnostic ilegible o con esquema inválido (`tests/test_auditoria_bb_regresiones.py::test_scan_fielddiag_summary_invalido_incrementa_cnr`); un resumen válido con errores de hardware sigue siendo un resultado analizado",
+    "why": "changed: tests/test_auditoria_bb_regresiones.py, tests/test_bash_sintaxis.py, tests/test_ruff_gitleaks_controles_negativos.py",
+    "cited": [
+      "tests/test_auditoria_bb_regresiones.py",
+      "tests/test_bash_sintaxis.py",
+      "tests/test_ruff_gitleaks_controles_negativos.py"
+    ]
+  },
+  {
+    "id": "SPEC-L273",
+    "section": "Risks",
+    "text": "Un repo adoptado diverge de lo desplegado sin avisar | Media | `bb drift` compara repo contra máquina y se verificó en ambos sentidos. Hasta el 2026-09-28 esto era verdad a medias: el comando comparaba bien, pero volvía `return 0` sin condición y nada lo llamaba nunca — un hallazgo de la auditoría H1 de ese mismo día, fuera de las afirmaciones que esa auditoría estaba revisando. Corregido: exit distinto de 0 si diverge o falta algo, y `blackbox-drift.timer` lo corre una vez al día sin que nadie tenga que acordarse",
+    "why": "claim text changed",
+    "cited": []
+  },
+  {
+    "id": "SPEC-L276",
+    "section": "Risks",
+    "text": "La máquina es inusable mientras todos los totales leen sanos | Ocurrió | Pasó el 2026-09-25: el dueño reinició a mano porque \"casi no se podía escribir\" y veinticinco segundos antes bb medía load1 0.95 sobre 20 núcleos, 64.3 GiB disponibles de 121, PSI en cero y nvidia-smi en 22 ms. Medido después en el journal: el scope de antigravity consumió 2 h 37 min de CPU en 2 h 15 min de reloj (116.5 % de UN núcleo) y el de Claude 15 h 09 min 54 s de CPU en las 9 h 08 min que el scope vivió de verdad (20:00:33 -> 05:08:27, no el arranque entero) — 166 % de otro núcleo. Entre los dos, el 14 % de una máquina de 20 núcleos (no el 11 % que decía esta fila antes de que la auditoría H1 del 2026-09-28 encontrara el denominador equivocado; el mismo error estaba en `tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md:52`, corregido igual), que no mueve ningún total. Se añadieron `cpu_top` (quién quema CPU, con su unit), `x.{estado,ms}` (ida y vuelta contra el servidor X) y `swap.{free_kb,total_kb,in_pag_s,out_pag_s}`. Medido hacia las 00:36 del 2026-09-28 sobre 3563 muestras con `x.estado` OK (la cifra que el propio SPEC.md de ese momento registró, commit `2460f20`; el CUERPO de ese mismo commit da 3568, una re-medición de las 00:41 con la misma distribución -- ambas cifras conviven en la historia, se cita la del texto que quedó escrito): mediana 4 ms, p75 5, p95 8 -- corpus que crece con cada muestra y rota con `RETAIN_DAYS=14`, así que no se cita como cifra viva (verificación H1 del 2026-09-28: horas después ya eran 4138 muestras con p95 9) — y ningún corte sano de `x.ms` está calibrado, porque no hay episodio etiquetado con muestras (`python3 -m tools.calibra_latencia_x` sale rc=2). La causa del episodio nunca se probó y la ficha `DEBT-SLUGGISH-SIN-CAUSA-PROBADA` se cerró el 2026-09-27 como `void_wontfix`, con la objeción escrita en el cuerpo: la sonda empezó a grabar 32 minutos después de que acabara el único episodio etiquetado, así que no existe lado positivo contra el que calibrar. Se reabre con `bb snapshot \"el escritorio no responde\"` durante el próximo episodio",
+    "why": "unaudited",
+    "cited": []
+  }
+]

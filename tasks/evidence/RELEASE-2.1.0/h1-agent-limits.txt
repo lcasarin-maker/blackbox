@@ -1,0 +1,39 @@
+H1 lote batch2 — solo lectura, 2026-10-02
+
+Veredictos
+
+E2-L110 — SPEC-L110
+Ancla única: SPEC.md:110-112: “Ninguna pieza fisica depende de que alguien inicie sesion. Es lo que costo 4 h 21 min de stack caido el 2026-09-24, y por eso el linger esta en enable-privileged.sh.”
+Ancla de mecanismo: enable-privileged.sh:635-664. El bloque explica el boot a las 14:11:31 y el inicio de `user@1000.service` y `ai-nemotron.service` a las 18:33:07; condiciona `loginctl enable-linger` al estado previo y explica que habilita las unidades de usuario sin login.
+Git histórico: `git show --format=fuller --no-patch 1ec66b3` conserva esa observación como 4 h 21 min 36 s y el motivo de habilitar linger.
+Estado del marcador: `stat /var/lib/systemd/linger/lcasarin` -> existe, archivo vacío, mtime 2026-09-24 22:12:28.763666418 -0600.
+Límite de verificación: `loginctl show-user lcasarin -p Linger -p State -p Sessions` y `systemctl --user show ...` -> `Failed to connect to bus: Operation not permitted`. El coordinador sí aportó su lectura viva `Linger=yes`; desde este proceso solo confirmé el marcador persistente. No pude comprobar un boot actual sin login.
+
+E2-L271 — SPEC-L271
+Ancla única: SPEC.md:271. La redacción distingue instrumentos gobernados de blackbox, adoptados externos y el lector de muestras `bb-guardia-proceso`.
+Configuración fuente: `adopted/systemd-user/blackbox-sample.service:8-9` -> Nice=19 e IOSchedulingClass=idle; `adopted/systemd-user/atom-gpu-telemetry.service:14-15` -> lo mismo. `adopted/systemd-user/ai-memory-monitor.service:4-6` no declara Nice; `ai-memory-monitor.timer:4-11` declara OnCalendar cada cinco minutos. `adopted/systemd-user/ai-gpu-telemetry.service:10-14` -> Nice=10 e IOSchedulingClass=idle. `systemd/bb-guardia-proceso.service:4-8,18` declara After blackbox-sample.timer y Nice=10; `bin/bb-guardia-proceso:30-32,105-112,424-430` lee su JSONL en vez de tomar esas muestras por sí mismo.
+Consulta del estado cargado, no disponible aquí: `systemctl --user show blackbox-sample.service atom-gpu-telemetry.service bb-guardia-proceso.service ai-memory-monitor.service ai-gpu-telemetry.service -p Id -p ActiveState -p UnitFileState -p Nice -p IOSchedulingClass --no-pager` -> `Failed to connect to bus: Operation not permitted`. El coordinador reportó una captura viva con Nice 19,19,0,10,10 y linger=yes; queda atribuida a esa captura.
+
+E2-L274 — SPEC-L274
+Ancla única: SPEC.md:274: el inventario ata las dos tablas al sujeto y declara seis hallazgos históricos, dos del instrumento.
+Fuente actual: `tools/inventario.py:47-67,106-123` implementa mapeo limitado a tres destinos, devuelve None fuera de ellos y compara inventarios ejecutables y adoptados.
+Control negativo actual: `tests/test_inventario.py:73-100,112-115` incluye sujeto sano, archivos/subcomandos/adoptados omitidos, fila fantasma y sección ausente. Resultado: `python3 -m pytest -q tests/test_inventario.py` -> `19 passed in 0.03s`.
+Chequeo actual: `python3 -m tools.inventario --check` -> `[inventario] HALLAZGOS: 0` / `[inventario] OK: los dos inventarios describen el repo y la maquina.`
+Registro histórico: mensaje de `git show --format=fuller --no-patch 1ec66b3` afirma 6 desajustes iniciales, 2 defectos del instrumento, 73 statements al 100%, 11 tests. `tools/inventario.py:78-82,93-99` conserva los dos defectos que se encontraron y corrigieron: normalización de subcomandos con argumentos y no interpretar prosa como filas.
+
+E2-L277 — SPEC-L277
+Ancla única: SPEC.md:277. La línea separa explícitamente medida histórica de conteos vivos y corrige 71% a 67% tras incorporar `adopted/` y `tests/fixtures/`.
+Recuento reproducido desde Git (solo lectura): el script Python que enumera `git ls-tree -r d3d7980`, cuenta todos los `*.sh` y `bin/bb`, y lee blobs con `git show` produjo `d3d7980: paths=13 lines=4111 bin/bb=2768`; 2768/4111 = 67.33%.
+Evidencia original: `git show 2a228fa` registra `antes del arreglo 947 lineas, 256 cubiertas, 27.0%` y `despues 947 lineas, 313 cubiertas, 33.1%`; muestra trazas `+` y `++` que prueban el defecto del ancla. `git show 6913a1f` corrige el registro discrepante: 313-256=57 y 313/947=33.1%; refiere tres corridas de 33.1% y piso 32.8.
+Control actual: `tools/cobertura_bash.sh:23-46` usa ancla multinivel; `tests/test_cobertura_bash.py:75-98` contiene controles de llamada directa, dentro de sustitución y no llamada. `python3 -m pytest -q tests/test_cobertura_bash.py tests/test_inventario.py` -> 22 passed. El 32.8 también está en `tests/cobertura_bb.piso`.
+
+Controles relacionados y límites de corrida
+
+- `/tmp/blackbox-h1-controls.txt`: 79 passed.
+- `/tmp/blackbox-h1-status.txt`: 16 passed, 68 deselected.
+- `/tmp/blackbox-h1-mitigation.txt`: 3 passed, 62 deselected.
+- `python3 -m tools.calibra_latencia_x`: rc=2, COULD_NOT_RUN; hay una etiqueta declarada y cero utilizables porque no hay muestras x.ms en el episodio.
+- `python3 -m tools.calibra_psi`: rc=1, CORTE INVALIDO; falsos positivos=0, incidentes no detectados=1.
+- Lecturas directas de systemd/loginctl: COULD_NOT_RUN en el sandbox (`Failed to connect to bus: Operation not permitted`); queda impresa arriba junto a los valores de configuración y la observación del coordinador.
+- Corrida amplia local de pytest: 151 passed, 4 failed, 8 deselected. Los fallos host-dependientes reportaron `Failed to connect to bus: Operation not permitted` (bb cap) o no encontraron la regla/anillo de auditoría esperado (tres tests de sigterm). No se usan como evidencia positiva para estas cuatro afirmaciones.
+- `bash tools/piso_cobertura.sh` no produjo salida en 90 s y se interrumpió; resultado COULD_NOT_RUN. No se usa como evidencia de gate limpio.

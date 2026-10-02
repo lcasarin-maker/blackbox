@@ -1,0 +1,30 @@
+[
+  {
+    "id": "SPEC-L110",
+    "claim_id": "SPEC-L110",
+    "verdict": "PASS",
+    "evidence": "E2-L110: SPEC.md:110-112 y enable-privileged.sh:635-664 declaran el propósito de linger, el desfase histórico de 4 h 21 min 36 s y la ejecución de loginctl enable-linger; `stat /var/lib/systemd/linger/lcasarin` confirma que el marcador de linger existe ahora. No pude leer el estado del user manager: `systemctl --user show ...` y `loginctl show-user ...` terminaron con `Failed to connect to bus: Operation not permitted`. La evidencia sostiene el mecanismo configurado, no una comprobación observacional de cada unidad tras un boot sin login. El coordinador resolvió la denegación con lectura escalada: loginctl show-user lcasarin -p Linger produjo Linger=yes. journalctl --list-boots identifica boot1764ed418a9b438aa138ab74a5e97f77 a Sep24 14:11:37; journalctl -b1764ed418a9b438aa138ab74a5e97f77 _PID=1 muestra Started user@1000.service a18:33:07: 4h21m30s desde primer journal y 4h21m36s desde arranque14:11:31 citado en enable-privileged.sh. En bootactual user@1000 empieza Sep30 14:40:12 y sesión12 Sep30 15:45:29, confirmando arranque previo al login. Consultas H1 vivas pendientes0 tras repetirlas con permiso.",
+    "fix": null
+  },
+  {
+    "id": "SPEC-L271",
+    "claim_id": "SPEC-L271",
+    "verdict": "PASS",
+    "evidence": "E2-L271: La fila coincide con las units y el código: `blackbox-sample.service:8-9` y `atom-gpu-telemetry.service:14-15` fijan Nice=19 e IOSchedulingClass=idle; `ai-memory-monitor.service` omite Nice (predeterminado 0), `ai-gpu-telemetry.service:11-12` fija Nice=10, y `systemd/bb-guardia-proceso.service:18` fija Nice=10. `bin/bb-guardia-proceso:30-32,105-112,424-430` consume el JSONL de blackbox-sample y produce su propio registro; no crea una adquisición paralela. La consulta viva de systemd en este sandbox no pudo conectar al bus. El coordinador informó una lectura en vivo de Nice 19,19,0,10,10 y Linger=yes; no la presento como salida reproducida aquí. Ver controles generales en evidence2.txt. El coordinador repitió systemctl --user show atom-gpu-telemetry.service blackbox-sample.service ai-memory-monitor.service ai-gpu-telemetry.service bb-guardia-proceso.service -p Id -p Nice y obtuvo Nice19,19,0,10,10 con los cinco Id correspondientes. tools/atom_gpu_telemetry.py:1478-1483 persiste estado antes de SIGSTOP y :1517 envía SIGCONT; python3 -m pytest -q tests/test_atom_gpu_telemetry.py -k \"mitigar_pausa_los_pids or mitigar_control_negativo_sin_alarma or mitigar_reanuda_solo\" produjo 3 passed, 62 deselected in0.03s. Consulta H1 de prioridades pendiente0 tras repetición autorizada; evidencia de pruebas en tasks/evidence/RELEASE-2.1.0/h1-mitigation.txt.",
+    "fix": null
+  },
+  {
+    "id": "SPEC-L274",
+    "claim_id": "SPEC-L274",
+    "verdict": "PASS",
+    "evidence": "E2-L274: `tools/inventario.py:47-67,106-123` mapea sólo los tres directorios desplegados y coteja los inventarios; `tests/test_inventario.py:73-100,112-115` cubre sujeto sano, omisión del sujeto nuevo, fila fantasma y sección ausente. `python3 -m tools.inventario --check` produce `[inventario] HALLAZGOS: 0` y `OK`; `python3 -m pytest -q tests/test_inventario.py` da 19 passed. El mensaje conservado de `git show 1ec66b3` registra seis desajustes en la primera corrida, dos defectos del medidor, y 73 statements al 100% con 11 tests. Los dos defectos también quedan descritos en los docstrings de `tools/inventario.py:78-82,93-99`.",
+    "fix": null
+  },
+  {
+    "id": "SPEC-L277",
+    "claim_id": "SPEC-L277",
+    "verdict": "PASS",
+    "evidence": "E2-L277: Conteo directo de objetos Git en `d3d7980` (todos los paths `*.sh` más `bin/bb`) devuelve 13 archivos, 4111 líneas y 2768 líneas de `bin/bb` (67.33%). `git show 2a228fa` conserva la salida histórica: 947 candidatas, 256 cubiertas/27.0% antes, 313/33.1% después; `git show 6913a1f` corrige 313-256=57 y documenta tres lecturas consecutivas de 33.1% y el piso 32.8. `tools/cobertura_bash.sh:23-46` contiene la traza multinivel y el patrón que admite uno o más `+`; `tests/test_cobertura_bash.py:75-98` controla llamada directa, substitución y función no llamada. El estado presente ya tiene ese gate; la frase auditada describe el hueco histórico, no el estado actual.",
+    "fix": null
+  }
+]

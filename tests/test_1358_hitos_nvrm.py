@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import json
 import os
+import runpy
 import subprocess
 import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+import pytest
+
+from tools import hitos_incidente as hi
 from tools.hitos_incidente import analyze
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -124,8 +128,12 @@ def test_cli_sobre_journal_real_emite_hitos_y_conserva_utc(tmp_path):
     assert payload["could_not_run"] == []
 
 
-def test_journal_sin_timestamp_marca_incertidumbre():
-    result = analyze([{"MESSAGE": "NVRM: Out of memory"}], [])
+@pytest.mark.parametrize("stamp", [None, "bad", ["1789999200000000"], "9" * 1000])
+def test_journal_sin_timestamp_valido_marca_incertidumbre(stamp):
+    row = {"MESSAGE": "NVRM: Out of memory"}
+    if stamp is not None:
+        row["__REALTIME_TIMESTAMP"] = stamp
+    result = analyze([row], [])
     assert result["nvrm"][0]["timestamp"] is None
     assert result["nvrm"][0]["timestamp_status"].startswith("could_not_run:")
 
@@ -209,7 +217,9 @@ def test_systemd_watchdog_target_is_unit_not_pid1_scope():
 def test_malformed_boot_identity_is_unknown_instead_of_crashing(tmp_path):
     journal_path = tmp_path / "journal.jsonl"
     sample_path = tmp_path / "sample.jsonl"
-    journal_path.write_text(json.dumps(journal("NVRM: NV_ERR_NO_MEMORY", boot=["bad"])) + "\n", encoding="utf-8")
+    bad_journal_row = journal("NVRM: NV_ERR_NO_MEMORY")
+    bad_journal_row["_BOOT_ID"] = ["bad"]
+    journal_path.write_text(json.dumps(bad_journal_row) + "\n", encoding="utf-8")
     sample_path.write_text(json.dumps({"ts": "2026-10-02T12:00:00-06:00",
                                       "boot_id": ["bad"], "psi": {"mem_full": 0.0},
                                       "servicio_ssh": {"estado": "OK"}}) + "\n", encoding="utf-8")
@@ -219,3 +229,102 @@ def test_malformed_boot_identity_is_unknown_instead_of_crashing(tmp_path):
     payload = json.loads(result.stdout)
     assert payload["nvrm"][0]["boot_id"] is None
     assert len(payload["could_not_run"]) == 2
+
+
+@pytest.mark.parametrize("raw", [None, 42, "bad", "2026-10-02T12:00:00"])
+def test_sample_timestamp_must_be_iso_con_zona(raw):
+    assert hi._sample_time({"ts": raw}) is None
+
+
+def test_journal_time_parsea_microsegundos_utc():
+    assert hi._journal_time({"__REALTIME_TIMESTAMP": "1790002800000000"}) == \
+        "2026-09-21T15:00:00.000000+00:00"
+
+
+def test_read_jsonl_salta_lineas_invalidas_y_conserva_registros_validos(tmp_path):
+    path = tmp_path / "mixed.jsonl"
+    path.write_text('{"a":1}\n\n{broken}\n[]\n{"b":2}\n', encoding="utf-8")
+    reasons = []
+    assert hi._read_jsonl(path, "fixture", reasons) == [{"a": 1}, {"b": 2}]
+    assert any("JSON inválido" in reason for reason in reasons)
+    assert any("no es un objeto" in reason for reason in reasons)
+
+
+def test_read_jsonl_missing_empty_bad_utf8_and_io_errors(tmp_path, monkeypatch):
+    missing = []
+    assert hi._read_jsonl(tmp_path / "missing", "missing", missing) == []
+    assert "falta" in missing[0]
+    empty = tmp_path / "empty.jsonl"
+    empty.touch()
+    missing = []
+    assert hi._read_jsonl(empty, "empty", missing) == []
+    assert any("sin registros" in reason for reason in missing)
+    bad_utf8 = tmp_path / "bad-utf8.jsonl"
+    bad_utf8.write_bytes(b"\xff")
+    missing = []
+    assert hi._read_jsonl(bad_utf8, "utf8", missing) == []
+    assert any("no se pudo leer" in reason for reason in missing)
+    io_path = tmp_path / "io.jsonl"
+    io_path.write_text("{}\n", encoding="utf-8")
+    original_open = Path.open
+
+    def failing_open(path, *args, **kwargs):
+        if path == io_path:
+            raise PermissionError("denied fixture")
+        return original_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", failing_open)
+    missing = []
+    assert hi._read_jsonl(io_path, "io", missing) == []
+    assert any("denied fixture" in reason for reason in missing)
+
+
+def test_psi_invalid_missing_and_root_export_are_reported():
+    result = analyze([], [
+        {"ts": "2026-10-02T12:00:00-06:00", "boot_id": "b1", "psi_mem_full_avg10": 3},
+        {"ts": "2026-10-02T12:00:01-06:00", "boot_id": "b1", "psi": {"mem_full": "bad"}},
+        {"ts": "2026-10-02T12:00:02-06:00", "boot_id": "b1"},
+    ])
+    assert result["psi_observations"][0]["mem_full"] == 3.0
+    assert sum("psi memory full inválido" in reason for reason in result["could_not_run"]) == 1
+    assert not any("no hay ninguna observación válida" in reason for reason in result["could_not_run"])
+
+
+def test_psi_sin_ninguna_observacion_valida_es_could_not_run():
+    result = analyze([], [{"ts": "2026-10-02T12:00:00-06:00", "boot_id": "b1"}])
+    assert any("no hay ninguna observación válida" in reason for reason in result["could_not_run"])
+
+
+def test_sonda_ssh_ausente_o_desactivada_es_could_not_run():
+    for row in ({"ts": "2026-10-02T12:00:00-06:00", "boot_id": "b1",
+                 "psi": {"mem_full": 0}},
+                {"ts": "2026-10-02T12:00:00-06:00", "boot_id": "b1",
+                 "psi": {"mem_full": 0}, "servicio_ssh": {"estado": "DESACTIVADO"}}):
+        result = analyze([], [row])
+        assert any("sonda" in reason or "DESACTIVADO" in reason
+                   for reason in result["could_not_run"])
+
+
+def test_main_valido_imprime_resultado_y_devuelve_cero(tmp_path, capsys):
+    journal_path = tmp_path / "journal.jsonl"
+    sample_path = tmp_path / "sample.jsonl"
+    journal_path.write_text(json.dumps(journal("Started bb-usable.service", unit="bb-usable.service")) + "\n",
+                            encoding="utf-8")
+    sample_path.write_text(json.dumps({"ts": "2026-10-02T12:00:00-06:00", "boot_id": "b1",
+                                      "psi": {"mem_full": 0},
+                                      "servicio_ssh": {"estado": "OK"}}) + "\n",
+                           encoding="utf-8")
+    assert hi.main(["--journal", str(journal_path), "--samples", str(sample_path)]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["could_not_run"] == []
+
+
+def test_script_guard_main_termina_con_codigo_dos_si_falta_fuente(tmp_path, monkeypatch):
+    journal_path = tmp_path / "missing.jsonl"
+    sample_path = tmp_path / "samples.jsonl"
+    sample_path.write_text("{}\n", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", [str(CLI), "--journal", str(journal_path),
+                                       "--samples", str(sample_path)])
+    with pytest.raises(SystemExit) as exc:
+        runpy.run_path(str(CLI), run_name="__main__")
+    assert exc.value.code == 2

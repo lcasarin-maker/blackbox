@@ -1,0 +1,26 @@
+[
+  {
+    "id": "SPEC-L98",
+    "claim_id": "SPEC-L98",
+    "verdict": "PASS",
+    "evidence": "Relectura 2026-10-02: enable-privileged.sh:305-315 despliega clock lock y watcher NVRM, :362-391 gobierna earlyoom, :505-519 configura UVM; las decisiones físicas siguen en blackbox. Consulta literal git -C /home/lcasarin/projects/Atlas show ec9b4288a --stat confirmó tools/{ => _retired}/instalar_earlyoom.sh y tasks/done/DGX-604.md; /home/lcasarin/projects/Atlas/tools/detect_atom_crash.py:76 importa tools.durable_log y :82 fija docs/agent_findings, verificando la distinción de conocimiento frente a gobierno. Atlas tools/bb_consulta.py:50-53 consulta el gate con subprocess en vez de importar código; la excepción histórica se cerró como el texto describe."
+  },
+  {
+    "id": "SPEC-L270",
+    "claim_id": "SPEC-L270",
+    "verdict": "PASS",
+    "evidence": "Revisé tests/test_bash_sintaxis.py:13-23 y tests/test_ruff_gitleaks_controles_negativos.py:18-65: positivos y negativos invocan los instrumentos reales, incluidos nombre indefinido y PEM sintética. Comando literal python3 -m pytest -q -p no:randomly tests/test_bash_sintaxis.py tests/test_ruff_gitleaks_controles_negativos.py tests/test_calibra_psi.py tests/test_calibra_latencia_x.py tests/test_cobertura_bash.py tests/test_inventario.py tests/test_auditoria_bb_regresiones.py::test_scan_fielddiag_summary_invalido_incrementa_cnr produjo 79 passed in 4.20s; salida guardada en tasks/evidence/RELEASE-2.1.0/h1-controls.txt. tests/test_auditoria_bb_regresiones.py:378-420 exige COULD_NOT_RUN para JSON inválido y datos sin Error Code y conserva análisis de hardware válido; .simplecode/local_hooks.yaml:205-210 y .pre-commit-config.yaml:253-258 mantienen telemetry-bound advisory con || true. Los cuatro bloqueos históricos permanecen documentados en .simplecode/local_hooks.yaml:44-46 y el ledger previo con timestamps de telemetry.jsonl; son 0 hallazgos históricos reales, sin interpretarlos como limpieza del sujeto."
+  },
+  {
+    "id": "SPEC-L273",
+    "claim_id": "SPEC-L273",
+    "verdict": "PASS",
+    "evidence": "bin/bb:2561-2570 imprime conteos y retorna 1 cuando diverge o falta algún sujeto; systemd/blackbox-drift.timer:7-9 declara OnCalendar=daily y Persistent=true, y adopted/systemd-user/blackbox-drift.service:7 ejecuta el comando. Comando python3 -m pytest -q -p no:randomly tests/test_bb_bash.py -k \"drift or sin_muestra_fresca or clock_lock or earlyoom or bb_usable or status_ve_el_muestreo\" devolvió 16 passed, 68 deselected in 2.89s (tasks/evidence/RELEASE-2.1.0/h1-status.txt), con controles negativos para divergencia, ausencia y suspensión vencida. systemctl --user show blackbox-drift.timer -p ActiveState -p UnitFileState -p LastTriggerUSec devolvió active, enabled y Fri 2026-10-02 00:00:00 CST; journalctl --user -u blackbox-drift.service --since 2026-10-02 mostró la ejecución de medianoche con 41 revisados, 0 divergentes, 0 ausentes, 1 suspendido. ./bin/bb drift actual devuelve divergentes2 por los cambios locales UVM/NVRM aún sin desplegar: demuestra que el instrumento distingue ambos desenlaces y no refuta la afirmación del mecanismo."
+  },
+  {
+    "id": "SPEC-L276",
+    "claim_id": "SPEC-L276",
+    "verdict": "PASS",
+    "evidence": "tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md:18 conserva void_wontfix, ventana 04:08-05:08, primera muestra 05:40 y trigger de reapertura; :49-57 conserva reloj real de los scopes y CPU consumida. Recalculé 909m54s/547m54s = 166.07%, y (116.5+166.07)/20 = 14.13%, concordando con las cifras redondeadas del texto; git show 2460f20:SPEC.md confirma 3563 y git show 2460f20 -s --format=%B confirma 3568, ambas cifras históricas y no vivas. python3 -m tools.calibra_latencia_x devolvió rc2, COULD_NOT_RUN, etiquetas declaradas1 y utilizables0 (episodio SIN muestras); los tests del calibrador están incluidos en las 79 pruebas de tasks/evidence/RELEASE-2.1.0/h1-controls.txt. Esto confirma el límite explícito: falta la etiqueta positiva, la causa del episodio sigue sin probarse; el informe de calibración no se presenta como limpio."
+  }
+]
