@@ -1,0 +1,46 @@
+Feature 1358 cgroup reproduction verification
+
+Command:
+ruff check tools/cgroup_repro.py tests/test_cgroup_repro.py
+Output:
+All checks passed!
+
+Command:
+python3 -m pytest -q tests/test_cgroup_repro.py
+Output:
+................................                                         [100%]
+32 passed in 0.07s
+
+Command:
+pyright tools/cgroup_repro.py tests/test_cgroup_repro.py
+Output:
+0 errors, 0 warnings, 0 informations
+
+Command:
+coverage run --branch --source=tools.cgroup_repro -m pytest -q tests/test_cgroup_repro.py
+Output:
+................................                                         [100%]
+32 passed in 0.09s
+
+Command:
+coverage report -m tools/cgroup_repro.py
+Output:
+Name                    Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------
+tools/cgroup_repro.py     227      0     60      0   100%
+-------------------------------------------------------------------
+TOTAL                     227      0     60      0   100%
+
+Negative-control command:
+python3 - <<'PY'
+import json
+from tools.cgroup_repro import parse_worker_output
+bad = parse_worker_output("not-json\n", "none")
+good_stdout = "\n".join(json.dumps({"phase": phase}) for phase in ("before", "held", "after_release"))
+good = parse_worker_output(good_stdout, "none")
+print("BAD:", bad)
+print("GOOD:", good)
+PY
+Output:
+BAD: ['invalid JSON worker output: not-json', 'missing observation phase: after_release', 'missing observation phase: before', 'missing observation phase: held']
+GOOD: []

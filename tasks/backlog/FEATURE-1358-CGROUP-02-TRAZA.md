@@ -28,3 +28,11 @@ Comparar los helpers memcg y __GFP_ACCOUNT existentes en 580.178.04 con la ruta 
 Mapa respaldado por trazas de la asignación real, con archivos/líneas de la versión correspondiente y dueño del cargo. Contrastar una asignación CPU contabilizada y una ejecución sin la llamada GPU. Declarar lo que no pudo trazarse. La mera presencia de helpers en el código no demuestra que la ruta los ejecute.
 
 El comando close_check queda especificado para su implementación con el trabajo. Hoy el verificador y sus evidencias están pendientes; esta ficha registra el plan, no resultados ejecutados. Debe rechazar evidencias ausentes y datos fabricados, y tener un control negativo que pruebe que detecta el defecto de su sujeto.
+
+## Avance del swarm — 2026-10-02
+
+Ejecutor: Luna; coordinación: Codex. Preparado: mapa estático y comprobación de símbolos.
+Evidencia: `tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt`.
+Pendiente para cierre: traza dinámica de memcg/flags/worker; el acceso a probes requiere privilegios root.
+La ficha conserva status open; el informe distingue observaciones estáticas
+y resultados runtime. El verificador de cierre permanece pendiente.

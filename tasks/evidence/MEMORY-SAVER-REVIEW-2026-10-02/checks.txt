@@ -1,0 +1,75 @@
+$ cd /tmp/bb-memory-saver && bash scripts/check
+8665871fb4a6ed02587460b94c176e09de6e8b92d773594f29ae281337e445fb /tmp/tmpll867ddr/.work/build/nvidia-uvm.ko
+Built only; signing, installation and loading are separate.
+8665871fb4a6ed02587460b94c176e09de6e8b92d773594f29ae281337e445fb /tmp/tmpll867ddr/.work/build/nvidia-uvm.ko
+Built only; signing, installation and loading are separate.
+8665871fb4a6ed02587460b94c176e09de6e8b92d773594f29ae281337e445fb /tmp/tmp5044sdz2/.work/build/nvidia-uvm.ko
+Built only; signing, installation and loading are separate.
+No initramfs for 7.0.0-1019-nvidia-64k (possibly being removed); no archive created.
+Manual override removed and stock UVM selected; not loaded.
+Installed /tmp/tmpal11qhrd/lib/modules/updates/memory-saver/nvidia-uvm.ko; not loaded. Run ./scripts/status before loading.
+Manual override removed and stock UVM selected; not loaded.
+Installed /tmp/tmp5uzdepgk/lib/modules/updates/memory-saver/nvidia-uvm.ko; not loaded. Run ./scripts/status before loading.
+Manual override removed and stock UVM selected; not loaded.
+Installed /tmp/tmpfo4slj9m/lib/modules/updates/memory-saver/nvidia-uvm.ko; not loaded. Run ./scripts/status before loading.
+Manual override removed and stock UVM selected; not loaded.
+Installed /tmp/tmp7fcy4xaz/lib/modules/updates/memory-saver/nvidia-uvm.ko; not loaded. Run ./scripts/status before loading.
+Installed /tmp/tmpu5awii0g/lib/modules/updates/memory-saver/nvidia-uvm.ko; not loaded. Run ./scripts/status before loading.
+Generated /tmp/tmpvxiz4g7r/keys/MOK.priv and /tmp/tmpvxiz4g7r/keys/MOK.der; not enrolled.
+subject=CN=DGX Spark local module signing
+sha256 Fingerprint=22:5E:57:0F:8E:28:28:65:CA:58:A6:9B:D9:8C:19:89:36:55:10:1B:95:33:C5:BA:4A:5F:B0:E5:A1:E2:5F:AD
+Signed for 7.0.0-1019-nvidia-64k by Local test signer; not installed or loaded.
+Generated /tmp/tmpcecyd4u3/MOK.priv and /tmp/tmpcecyd4u3/MOK.der; not enrolled.
+subject=CN=DGX Spark local module signing
+sha256 Fingerprint=84:9B:73:CF:50:A3:E8:45:78:8F:A3:61:A0:AB:00:6C:F7:B7:38:E0:17:CA:BD:F2:F3:FE:B1:89:D2:7A:82:2B
+test_cached_dkms_artifact_must_match_current_driver (test_dkms.BuildChecks.test_cached_dkms_artifact_must_match_current_driver) ... ok
+test_cached_install_rechecks_driver_and_packages (test_dkms.BuildChecks.test_cached_install_rechecks_driver_and_packages) ... ok
+test_changed_source_is_rejected (test_dkms.BuildChecks.test_changed_source_is_rejected) ... ok
+test_competing_nvidia_dkms_is_rejected (test_dkms.BuildChecks.test_competing_nvidia_dkms_is_rejected) ... ok
+test_header_release_and_page_configuration_are_checked (test_dkms.BuildChecks.test_header_release_and_page_configuration_are_checked) ... ok
+test_install_requires_intact_stock_module_and_no_other_override (test_dkms.BuildChecks.test_install_requires_intact_stock_module_and_no_other_override) ... ok
+test_manual_and_dkms_builds_preserve_packaged_source (test_dkms.BuildChecks.test_manual_and_dkms_builds_preserve_packaged_source) ... ok
+test_other_kernels_are_rejected (test_dkms.BuildChecks.test_other_kernels_are_rejected) ... ok
+test_second_driver_selects_its_patch_and_receipt (test_dkms.BuildChecks.test_second_driver_selects_its_patch_and_receipt) ... Compatibility note: Stock R610 faults on large DMA mappings with 64 KiB pages. Hardware checks passed only with a separate RM alignment correction; serving also required system pools disabled. This package installs neither correction. See docs/driver-610.md.
+ok
+test_unreviewed_patch_is_rejected_before_build (test_dkms.BuildChecks.test_unreviewed_patch_is_rejected_before_build) ... ok
+test_workspace_reuse_and_symlink_cleanup_are_rejected (test_dkms.BuildChecks.test_workspace_reuse_and_symlink_cleanup_are_rejected) ... ok
+test_wrong_platform_is_rejected (test_dkms.BuildChecks.test_wrong_platform_is_rejected) ... ok
+test_dkms_default_patch_applies_to_historical_patch_content (test_dkms.PackagingChecks.test_dkms_default_patch_applies_to_historical_patch_content) ... ok
+test_dkms_registers_only_uvm_with_exact_kernel_and_arch (test_dkms.PackagingChecks.test_dkms_registers_only_uvm_with_exact_kernel_and_arch) ... ok
+test_initramfs_hook_refuses_other_kernels_before_commands (test_dkms.PackagingChecks.test_initramfs_hook_refuses_other_kernels_before_commands) ... ok
+test_initramfs_refresh_order_missing_image_and_failure (test_dkms.PackagingChecks.test_initramfs_refresh_order_missing_image_and_failure) ... ok
+test_active_module_blocks_install_without_writes (test_operations.ManualTests.test_active_module_blocks_install_without_writes) ... ok
+test_changed_artifact_and_default_off_builds_rejected (test_operations.ManualTests.test_changed_artifact_and_default_off_builds_rejected) ... ok
+test_dkms_registration_blocks_manual_install (test_operations.ManualTests.test_dkms_registration_blocks_manual_install) ... ok
+test_failed_refresh_is_recoverable_through_remove (test_operations.ManualTests.test_failed_refresh_is_recoverable_through_remove) ... ok
+test_failed_removal_keeps_receipt_for_retry (test_operations.ManualTests.test_failed_removal_keeps_receipt_for_retry) ... ok
+test_full_install_remove_preserves_stock_and_clears_receipt (test_operations.ManualTests.test_full_install_remove_preserves_stock_and_clears_receipt) ... ok
+test_removal_can_restore_current_driver_after_package_change (test_operations.ManualTests.test_removal_can_restore_current_driver_after_package_change) ... ok
+test_removal_refuses_file_replaced_by_someone_else (test_operations.ManualTests.test_removal_refuses_file_replaced_by_someone_else) ... ok
+test_secure_boot_signed_install_requires_matching_enrolled_certificate (test_operations.ManualTests.test_secure_boot_signed_install_requires_matching_enrolled_certificate) ... ok
+test_unsigned_module_is_rejected_when_secure_boot_enabled (test_operations.ManualTests.test_unsigned_module_is_rejected_when_secure_boot_enabled) ... ok
+test_build_sign_records_signed_artifact_and_public_certificate (test_operations.SigningTests.test_build_sign_records_signed_artifact_and_public_certificate) ... ok
+test_enrollment_requires_exact_positive_text_including_exit_one (test_operations.SigningTests.test_enrollment_requires_exact_positive_text_including_exit_one) ... ok
+test_generation_never_overwrites_existing_pair (test_operations.SigningTests.test_generation_never_overwrites_existing_pair) ... ok
+test_insecure_key_mode_rejected_before_build (test_operations.SigningTests.test_insecure_key_mode_rejected_before_build) ... ok
+test_key_certificate_mismatch_rejected (test_operations.SigningTests.test_key_certificate_mismatch_rejected) ... ok
+test_real_key_generation_pair_permissions_and_module_signing_oid (test_operations.SigningTests.test_real_key_generation_pair_permissions_and_module_signing_oid) ... ok
+test_collect_uses_only_read_only_commands (test_operations.StatusTests.test_collect_uses_only_read_only_commands) ... ok
+test_healthy_parameter_state_without_savings_claim (test_operations.StatusTests.test_healthy_parameter_state_without_savings_claim) ... ok
+test_incomplete_install_and_dual_registration (test_operations.StatusTests.test_incomplete_install_and_dual_registration) ... ok
+test_loaded_disk_mismatch_and_driver_drift (test_operations.StatusTests.test_loaded_disk_mismatch_and_driver_drift) ... ok
+test_second_driver_is_reported_as_conditional (test_operations.StatusTests.test_second_driver_is_reported_as_conditional) ... ok
+test_unreadable_identity_is_unknown_not_success (test_operations.StatusTests.test_unreadable_identity_is_unknown_not_success) ... ok
+test_historical_artifact_hashes (test_repository.RepositoryChecks.test_historical_artifact_hashes) ... ok
+test_json_and_python_syntax_without_execution (test_repository.RepositoryChecks.test_json_and_python_syntax_without_execution) ... ok
+test_local_documentation_links (test_repository.RepositoryChecks.test_local_documentation_links) ... ok
+test_patch_parses (test_repository.RepositoryChecks.test_patch_parses) ... ok
+test_profile_manifests_hashes_and_allocator_equivalence (test_repository.RepositoryChecks.test_profile_manifests_hashes_and_allocator_equivalence) ... ok
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.844s
+
+OK
+
+rc=0

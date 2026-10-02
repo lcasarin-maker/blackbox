@@ -1,0 +1,26 @@
+........................................................................ [ 10%]
+........................................................................ [ 20%]
+........................................................................ [ 31%]
+........................................................................ [ 41%]
+........................................................................ [ 51%]
+...........................................................F............ [ 62%]
+........................................................................ [ 72%]
+........................................................................ [ 82%]
+........................................................................ [ 93%]
+...............................................                          [100%]
+=================================== FAILURES ===================================
+_________________ test_running_file_executes_script_entrypoint _________________
+tests/test_cgroup_repro.py:372: in test_running_file_executes_script_entrypoint
+    runpy.run_path(str(Path(__file__).parents[1] / "tools" / "cgroup_repro.py"), run_name="__main__")
+<frozen runpy>:287: in run_path
+    ???
+<frozen runpy>:98: in _run_module_code
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+tools/cgroup_repro.py:23: in <module>
+    from memory_profile import capture as capture_memory_profile
+E   ModuleNotFoundError: No module named 'memory_profile'
+=========================== short test summary info ============================
+FAILED tests/test_cgroup_repro.py::test_running_file_executes_script_entrypoint
+1 failed, 694 passed in 197.48s (0:03:17)

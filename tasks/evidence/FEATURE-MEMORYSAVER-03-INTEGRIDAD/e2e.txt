@@ -1,0 +1,12 @@
+$ python3 -m tools.cuda_integrity && python3 -m pytest -q tests/test_memory_capture_and_cuda_integrity.py tests/test_cuda_integrity_cli.py
+{"allocations": 96, "full_buffer_readback": true, "library": "libcudart.so.13", "max_aggregate_allocation_bytes": 16777216, "release_between_rounds": true, "rounds_per_worker": 4, "seconds": 0.48757750500226393, "status": "pass", "workers": 4}
+................................................                         [100%]
+48 passed in 0.10s
+
+The command runs in a user systemd scope with MemoryMax=512M, CPUQuota=50%,
+RuntimeMaxSec=60s. Four workers keep at most 16 MiB allocated together. Every
+buffer receives a byte pattern and full device-to-host readback; alternating
+slots are freed/reused while adjacent slots stay live, then all live contents
+are read again before cleanup.
+
+Coordinación añadió detección de puntero vivo duplicado antes de sobrescribir ownership. Negativo unitario conserva el buffer anterior y no escribe el alias. Repetición real del sujeto final: final-runtime.json (incluye SHA256 del script).

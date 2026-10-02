@@ -2087,11 +2087,27 @@ cmd_hw() {
 # -------------------------------------------------------------------- status
 
 clock_lock_evaluate() {
-  CLOCK_DECL=$(systemctl show atom-clock-lock.service -p ExecStart 2>/dev/null |
+  CLOCK_DECL="" CLOCK_START="" CLOCK_CONFIRMED="" CLOCK_CONFIRM_TS=""
+  CLOCK_UNREAD=0 CLOCK_REASON=""
+  local raw rc journal
+  raw=$(systemctl show atom-clock-lock.service -p ExecStart 2>&1); rc=$?
+  if [ "$rc" -ne 0 ]; then
+    CLOCK_UNREAD=1 CLOCK_REASON="systemctl ExecStart rc=$rc: $raw"
+    return 1
+  fi
+  CLOCK_DECL=$(printf '%s\n' "$raw" |
     grep -o '\-lgc [0-9]*,[0-9]*' | head -1 | tr -d ' ' | sed 's/-lgc//')
-  CLOCK_START=$(systemctl show atom-clock-lock.service -p ExecMainStartTimestamp --value 2>/dev/null)
-  local journal
-  journal=$($JOURNALCTL -b 0 -u atom-clock-lock.service --no-pager -o short-unix 2>/dev/null)
+  raw=$(systemctl show atom-clock-lock.service -p ExecMainStartTimestamp --value 2>&1); rc=$?
+  if [ "$rc" -ne 0 ]; then
+    CLOCK_UNREAD=1 CLOCK_REASON="systemctl ExecMainStartTimestamp rc=$rc: $raw"
+    return 1
+  fi
+  CLOCK_START=$raw
+  journal=$(LC_ALL=C $JOURNALCTL -b 0 -u atom-clock-lock.service --no-pager -o short-unix 2>&1); rc=$?
+  if [ "$rc" -ne 0 ] || [[ "$journal" == *"not seeing messages"* ]]; then
+    CLOCK_UNREAD=1 CLOCK_REASON="journalctl atom-clock-lock rc=$rc: $journal"
+    return 1
+  fi
   CLOCK_CONFIRMED=$(printf '%s\n' "$journal" |
     sed -n 's/^[0-9.][0-9.]* .*gpuClkMin \([0-9]*\), gpuClkMax \([0-9]*\).*$/\1,\2/p' | tail -1)
   CLOCK_CONFIRM_TS=$(printf '%s\n' "$journal" |
@@ -2117,10 +2133,47 @@ clock_lock_evaluate() {
 cmd_status_clock_lock() {
   if clock_lock_evaluate; then
     echo "ARMADO: rango $CLOCK_DECL MHz confirmado por el driver tras el inicio del servicio; no mide el clock actual"
+    printf "could_not_run: %d\n" "$CNR"
     return 0
   fi
+  if [ "$CLOCK_UNREAD" -eq 1 ]; then
+    cannot_run "clock lock" "$CLOCK_REASON"
+    echo "CIEGO: clock lock ($CLOCK_REASON)"
+    printf "could_not_run: %d\n%s" "$CNR" "$CNR_LIST"
+    return 2
+  fi
+  printf "could_not_run: %d\n" "$CNR"
   echo "FALTA: clock lock ($CLOCK_REASON; rango declarado '${CLOCK_DECL:-nada}', confirmado '${CLOCK_CONFIRMED:-nada}')"
   return 1
+}
+
+# Consultar propiedades permite separar una unidad ausente de un bus ilegible.
+status_usable() {
+  local query rc load active heartbeat since name
+  name="bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)"
+  query=$(systemctl show bb-usable.service -p LoadState -p ActiveState 2>&1); rc=$?
+  load=$(printf '%s\n' "$query" | sed -n 's/^LoadState=//p')
+  active=$(printf '%s\n' "$query" | sed -n 's/^ActiveState=//p')
+  if [ "$rc" -ne 0 ] || [ -z "$load" ] || [ -z "$active" ]; then
+    cannot_run "systemctl show bb-usable.service" "rc=$rc: $query"
+    ciego "$name" "consulta systemd ilegible (rc=$rc): $query"
+    return
+  fi
+  if [ "$load" = not-found ] || [ "$active" != active ]; then
+    chk "$name" 1 "LoadState=$load ActiveState=$active: sudo ./enable-privileged.sh"
+    return
+  fi
+  since=$(date -d '120 seconds ago' '+%Y-%m-%d %H:%M:%S')
+  heartbeat=$(LC_ALL=C $JOURNALCTL -u bb-usable.service -S "$since" --no-pager -o cat 2>&1); rc=$?
+  if [ "$rc" -ne 0 ] || [[ "$heartbeat" == *"not seeing messages"* ]]; then
+    cannot_run "journalctl -u bb-usable.service desde $since" "rc=$rc: $heartbeat"
+    ciego "$name" "latido ilegible desde $since (rc=$rc): $heartbeat"
+    return
+  fi
+  case "$heartbeat" in
+    *"[bb-usable] latencia del escritorio:"*) chk "$name" 0 "" ;;
+    *) chk "$name" 1 "activa pero sin latido desde $since: journalctl -u bb-usable" ;;
+  esac
 }
 
 cmd_status() {
@@ -2257,8 +2310,13 @@ EOF
   # rango de esta unit. Si manana el drop-in cambia a 300,2600 y el driver sigue
   # confirmando 2800, esto lo caza.
   clock_lock_evaluate; ok=$?
-  chk "clock lock (rango ${CLOCK_DECL:-?} MHz confirmado tras inicio del servicio; no mide clock actual)" "$ok" \
-      "${CLOCK_REASON:-confirmación no disponible}"
+  if [ "$CLOCK_UNREAD" -eq 1 ]; then
+    cannot_run "clock lock" "$CLOCK_REASON"
+    ciego "clock lock de GPU" "$CLOCK_REASON"
+  else
+    chk "clock lock (rango ${CLOCK_DECL:-?} MHz confirmado tras inicio del servicio; no mide clock actual)" "$ok" \
+        "${CLOCK_REASON:-confirmación no disponible}"
+  fi
 
   # earlyoom por su PUNTERIA, no por estar vivo. Un earlyoom de serie tambien
   # esta `active` y mata lo que le parece: el 2026-09-08 eso fue caro en esta
@@ -2309,8 +2367,13 @@ EOF
   # armado (60s) y no disparo ninguna vez: PID 1 estaba sano, escribiendo
   # entre 570 y 1578 lineas de journal por hora. Quien cubre esto es
   # bb-usable, que mide si la maquina SIRVE.
-  wdsec=$(systemctl show -p RuntimeWatchdogUSec --value 2>/dev/null)
-  case "$wdsec" in ""|0|"0"|infinity) : ;; *)
+  wdsec=$(systemctl show -p RuntimeWatchdogUSec --value 2>&1); ok=$?
+  if [ "$ok" -ne 0 ]; then
+    cannot_run "systemctl show RuntimeWatchdogUSec" "rc=$ok: $wdsec"
+    ciego "configuracion del watchdog de hardware" "consulta systemd ilegible (rc=$ok): $wdsec"
+    wdsec=""
+  fi
+  case "$wdsec" in ""|0|infinity) : ;; *)
     systemctl is-active bb-usable.service >/dev/null 2>&1 || \
       ciego "watchdog de hardware ($wdsec) ante una maquina inservible" \
         "vigila a PID 1, que estuvo sano las 17h45m y las 5h55m; arma bb-usable: sudo ./enable-privileged.sh"
@@ -2319,15 +2382,7 @@ EOF
   # bb-usable por su LATIDO, no por estar `active`: cada vuelta del bucle (30s)
   # imprime "latencia del escritorio". 120s = 4 vueltas: holgura para jitter y
   # una sonda lenta, y un bucle colgado deja de verse en 2 min. Sin tuberia (ver earlyoom).
-  local bbu bbu_desde bbu_det="inactiva: sudo ./enable-privileged.sh"
-  ok=1
-  if systemctl is-active bb-usable.service >/dev/null 2>&1; then
-    bbu_det="activa pero sin latido en 120s -- viva no es lo mismo que midiendo: journalctl -u bb-usable"
-    bbu_desde=$(date -d '120 seconds ago' '+%Y-%m-%d %H:%M:%S')
-    bbu=$($JOURNALCTL -u bb-usable.service -S "$bbu_desde" --no-pager -o cat 2>/dev/null)
-    case "$bbu" in *"[bb-usable] latencia del escritorio:"*) ok=0 ;; esac
-  fi
-  chk "bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)" "$ok" "$bbu_det"
+  status_usable
 
   [ -n "$(gateway_modelo)" ]; ok=$?
   chk "motor de inferencia sirviendo" "$ok" "el gateway no responde en $GATEWAY_URL"
@@ -2355,6 +2410,7 @@ EOF
 
   echo
   echo "  armado: $armed    falta: $missing    ciego: $ciego"
+  printf "could_not_run: %d\n%s" "$CNR" "$CNR_LIST"
   if [ "$ciego" -gt 0 ]; then
     echo "  OJO: 'ciego' no es 'armado'. Un instrumento ciego no deja el sujeto"
     echo "       limpio: deja el informe sin esa fila."
@@ -2923,6 +2979,7 @@ bb -- caja negra de la maquina
   bb snapshot [razon]    volcado forense completo AHORA
   bb scan ["hace X"]     informe de fallos en una ventana (def: "2 hours ago")
   bb hw                  inventario de hardware y limites aplicados
+  bb recovery            estado de RCU, watchdog y pstore, solo lectura
   bb status              que instrumento esta armado y cual no
   bb status clock lock   comprobar declaracion y confirmacion reciente del rango GPU
   bb drift               compara lo adoptado en el repo con lo desplegado (exit != 0 si diverge)
@@ -2946,6 +3003,7 @@ case "${1:-}" in
   snapshot) shift; cmd_snapshot "$@" ;;
   scan)     shift; cmd_scan "$@" ;;
   hw)       shift; cmd_hw "$@" ;;
+  recovery) python3 "$(dirname "$(readlink -f "$0")")/../tools/recovery_profile.py" ;;
   status)   shift; cmd_status "$@" ;;
   drift)    shift; cmd_drift "$@" ;;
   protect)  shift; cmd_protect "$@" ;;

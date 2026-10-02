@@ -1,0 +1,48 @@
+Ejecución de fichas abiertas — 2026-10-02
+
+33 identificadores asignados; 33 retornados exactamente una vez. Control negativo: 24 ausentes => rc1.
+3 cierres; 30 fichas abiertas con evidencia de avance y criterios pendientes.
+
+Cierres: BUG-FORUM-STATUS-BUS-UNKNOWN-01, FEATURE-MEMORYSAVER-01-PERFIL, FEATURE-MEMORYSAVER-03-INTEGRIDAD.
+Implementación: diagnóstico de memoria, integridad CUDA acotada, reproducción por cgroup, diagnóstico de host, preflight de actualizaciones/runtime y perfil de recuperación bb recovery.
+Suite completa antes de ajustes de logging/encoding exigidos por hooks: python3 -m pytest -q => 732 passed in 170.06s (0:02:50), rc0.
+Verificación focal: 138 passed; seis módulos, 820 statements y 248 branches, 100% cobertura; ruff del cambio y pyright pasan; could_not_run=0 en estos checks.
+Ruff global conserva 21 hallazgos previos; ver ruff-baseline.json.
+Driver615: build rc0, cinco módulos; siete líneas de warnings de compilador y cinco omisiones BTF; módulos sin firma, sin instalar ni cargar.
+Lecturas reales pendientes: cgroup dmem.current ausente en seis casos; recovery pstore denegado (could_not_run=1); host versión mt7925e ausente (could_not_run=1). Preflight: dos pass, cuatro unknown, cero block; tres consultas could_not_run distribuidas entre las seis fichas.
+Experimentos pendientes: instalación/rollback del driver, atribución BPF, packing4K, canarios de recuperación, receptor netconsole, matrices de integridad y pruebas A/B térmicas/red/reloj. Los fixtures prueban los instrumentos; cada ficha conserva su close_check experimental.
+
+Detalle de fichas:
+tasks/backlog/FEATURE-1358-CGROUP-01-REPRO.md
+tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md
+tasks/backlog/FEATURE-1358-CGROUP-03-NATIVO.md
+tasks/backlog/FEATURE-1358-CGROUP-04-PARCHE.md
+tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md
+tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md
+tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md
+tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md
+tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md
+tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md
+tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md
+tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md
+tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md
+tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md
+tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md
+tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md
+tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md
+tasks/done/FEATURE-MEMORYSAVER-01-PERFIL.md
+tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md
+tasks/done/FEATURE-MEMORYSAVER-03-INTEGRIDAD.md
+tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md
+tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md
+tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md
+tasks/backlog/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT.md
+tasks/backlog/FORUM-00-DOCKER-OOM-RESTART-LOOP.md
+tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md
+tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md
+tasks/backlog/FORUM-00-REALTEK-EEE-DIRECT-LINK.md
+tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md
+tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md
+tasks/backlog/FORUM-02-USB-UVC-EP0.md
+tasks/done/BUG-FORUM-STATUS-BUS-UNKNOWN-01.md
+tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md

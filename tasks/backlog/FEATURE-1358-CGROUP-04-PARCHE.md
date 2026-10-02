@@ -28,3 +28,11 @@ Validar cargos y descargos en éxito, fallo parcial y rollback; contexto de work
 Si hace falta parche: diff revisable en el fork, compilación real y resultados de 01/03 contra antes y después, con controles que fallen ante pérdida de cargo, doble cargo o liberación omitida. Si la integración nativa cubre el caso: cerrar por la vía legal de tarea innecesaria, enlazando las medidas de 03; no fabricar un parche para cumplir el plan. El cierre debe distinguir preparación de publicación.
 
 El comando close_check queda especificado para su implementación con el trabajo. Hoy el verificador y sus evidencias están pendientes; esta ficha registra el plan, no resultados ejecutados. Debe rechazar evidencias ausentes y datos fabricados, y tener un control negativo que pruebe que detecta el defecto de su sujeto.
+
+## Avance del swarm — 2026-10-02
+
+Ejecutor: Luna; coordinación: Codex. Preparado: diseño condicionado y criterios para justificar un diff.
+Evidencia: `tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/readiness.txt`.
+Pendiente para cierre: ruta responsable y hueco residual bajo la integración nativa.
+La ficha conserva status open; el informe distingue observaciones estáticas
+y resultados runtime. El verificador de cierre permanece pendiente.

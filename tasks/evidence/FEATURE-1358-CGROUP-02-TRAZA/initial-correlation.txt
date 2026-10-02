@@ -1,0 +1,31 @@
+Historical extraction from the first harness iteration; the current run.json has been replaced by the final warmed-up run. These observations are preserved as history, not the final comparison.
+## Bounded reproduction correlation (cgroup snapshots, not kernel call trace)
+
+The first harness results are recorded in `tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json`. The harness labels, exact commands, PID, cgroup path, before/held/after-release snapshots, API, and return code are in that file. For the two required controls, its recorded held minus before `memory.current` is:
+
+- `none`, PID 1612935, no GPU call: 8,376,320 to 8,376,320 bytes; delta 0.
+- `cpu_touch`, PID 1613028, 32 MiB CPU touch: 8,368,128 to 41,922,560 bytes; delta 33,554,432.
+
+Literal extraction command and output:
+
+```text
+$ python3 - <<'PY'
+import json
+p='tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json'
+d=json.load(open(p))
+for r in d['runs']:
+    phases=[json.loads(s) for s in r['stdout'].splitlines() if s.strip()]
+    by={x['phase']:x for x in phases}
+    before=by.get('before',{}).get('files',{}).get('memory.current',{}).get('value')
+    held=by.get('held',{}).get('files',{}).get('memory.current',{}).get('value')
+    helddata=by.get('held',{})
+    print(r['api'], 'pid=',helddata.get('pid'), 'before=',before,'held=',held,'delta=',int(held)-int(before) if before and held else None,'ret=',r['returncode'],'could_not_run=',r.get('could_not_run'))
+PY
+none pid= 1612935 before= 8376320 held= 8376320 delta= 0 ret= 0 could_not_run= []
+cpu_touch pid= 1613028 before= 8368128 held= 41922560 delta= 33554432 ret= 0 could_not_run= []
+cuda_malloc pid= 1613397 before= 8646656 held= 78491648 delta= 69844992 ret= 0 could_not_run= []
+cuda_malloc_managed pid= 1613501 before= 8368128 held= 74448896 delta= 66080768 ret= 0 could_not_run= []
+pytorch_empty pid= 1613616 before= 8372224 held= 363388928 delta= 355016704 ret= 0 could_not_run= []
+```
+
+This demonstrates the harness can observe the CPU control and the no-call negative control, and shows positive cgroup memory deltas in the reported CUDA-labeled cases. It does not establish which driver allocation produced those bytes: CUDA runtime/library initialization can add CPU-side memory, and the kernel call path was not traced. GPU physical-memory ownership, the active memcg pointer, GFP flags at the allocator, and any worker context remain unproven. Some non-CUDA host allocations may contribute to the reported GPU-case deltas.

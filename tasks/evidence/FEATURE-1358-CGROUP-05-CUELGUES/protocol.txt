@@ -1,0 +1,50 @@
+# Comparación de contención e incidentes — 2026-10-02
+
+Estado: protocolo preparado; comparación de driver pendiente de 03 y, si aplica, 04.
+
+## Sujeto y controles
+
+Reutilizar `tools.cgroup_repro` para carga de asignación acotada y
+`tools.hitos_incidente` para ordenar capturas reales. Evitar un segundo detector.
+La unidad de ensayo es un proceso en un cgroup aislado, con API y bytes solicitados
+identificados. Registrar versión de kernel, módulo, bibliotecas CUDA y GSP,
+boot ID, clocks solicitados/aplicados, watchdog de servicio y runtime por separado.
+
+Comparar la pila base contra la solución validada en 03 con idénticos tamaños,
+secuencia de operaciones y duración. La liberación y sincronización son parte del
+ensayo. Aplicar los mismos casos: sin asignación, CPU tocada, cudaMalloc,
+cudaMallocManaged y PyTorch. Dos cgroups comprueban independencia y cargo al dueño;
+el límite inferior a la solicitud comprueba rechazo controlado. Registrar el errno
+real y la supervivencia del servicio. La prueba de límites requiere capacidad y
+soporte previamente demostrados, más la revisión del cambio de driver.
+
+## Captura
+
+Conservar original JSONL de bb y journal (`journalctl -o json`) para la ventana de
+cada ensayo. Registrar intervalos UTC y monotónicos, reloj/boot de cada fuente,
+memoria disponible, cargos y eventos de cada controller, PSI host y cgroup,
+NVRM/Xid, respuesta útil del servicio y eventos de ambos watchdogs.
+La exportación UDP existente es best effort; ausencia de un datagrama significa
+captura ausente. La colección debe declarar códigos de salida y errores de lectura.
+
+Analizar mediante `python3 -m tools.hitos_incidente --journal JOURNAL --samples SAMPLES`.
+Control negativo: ejecutar el mismo comando con rutas inexistentes; debe retornar
+2 y nombrar las fuentes que faltan. Fuentes vacías tampoco prueban cero incidentes.
+
+## Criterios de interpretación
+
+Por ensayo, imprimir API, bytes solicitados, cargo inicial/pico/final, resultado de
+asignación y liberación, duración observada, respuesta útil y captura disponible.
+Por pila, imprimir ensayos ejecutados, rechazados de forma controlada, fallidos,
+no ejecutados y segundos reales de exposición. Preservar filas sin resultados.
+Un cargo correcto mide contención; un rechazo acotado mide el límite. La relación
+con cuelgues requiere ensayos comparables y capturas antes/después. Una ventana
+sin cuelgues describe su exposición; no establece una solución universal.
+
+## Pendientes para cerrar
+
+Solución evaluada en 03; comparación A/B real; límite, compartición y liberación;
+servicio con endpoint útil documentado; conteos/exposición por ensayo; análisis
+con control negativo y post final respaldado por los resultados. Hoy estos
+resultados permanecen pendientes. El ensayo busca comparación acotada: cualquier
+reproducción deliberada de un cuelgue necesita su propia revisión de impacto.

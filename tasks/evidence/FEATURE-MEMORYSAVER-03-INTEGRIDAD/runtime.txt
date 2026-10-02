@@ -1,0 +1,24 @@
+Comando literal de cierre:
+python3 -m tools.cuda_integrity
+
+Salida literal:
+{"allocations": 96, "full_buffer_readback": true, "library": "libcudart.so.13", "max_aggregate_allocation_bytes": 16777216, "release_between_rounds": true, "rounds_per_worker": 4, "seconds": 1.4884506250091363, "status": "pass", "workers": 4}
+
+El sujeto asignó cuatro buffers de 1 MiB por worker, llenó cada byte con un
+patrón conocido, sincronizó y leyó cada buffer completo de device a host. Cada
+ronda liberó slots alternos mientras los vecinos permanecían vivos, reasignó los
+huecos y volvió a leer todos los buffers vivos. Cuatro workers ejecutaron cuatro
+rondas. Pico solicitado
+agregado: 16,777,216 bytes; scope limitado a 512 MiB y 60 s.
+
+Controles negativos literales:
+`python3 -m pytest -q tests/test_memory_capture_and_cuda_integrity.py::test_cuda_readback_detects_mutated_byte tests/test_memory_capture_and_cuda_integrity.py::test_cuda_readback_detects_truncation`
+Salida: `2 passed`. Inyección adicional probó fallo de cudaFree, ninguna repetición
+del free incierto y limpieza de otros buffers conservando el error primario.
+`tools.cuda_integrity` lanza su worker mediante systemd-run con MemoryMax=512M,
+CPUQuota=50% y RuntimeMaxSec=60s.
+incorrecto es detectado por el comparador.
+
+La matriz GPU de 4.5 GiB, CUDA graphs y BF16 del proyecto de referencia no se
+ejecutó. Este resultado prueba readback/reuso pequeño en el dispositivo presente,
+no califica el parche Memory Saver ni la estabilidad prolongada.

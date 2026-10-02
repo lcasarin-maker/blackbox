@@ -1,0 +1,12 @@
+$ python3 -m tools.memory_profile --output tasks/evidence/FEATURE-MEMORYSAVER-01-PERFIL/profile.json
+exit 0
+
+Valores de la salida capturada: PAGE_SIZE 4096; kernel 6.17.0-1032-nvidia;
+UVM cargado 580.178.04, srcversion 09F2A78862D06017E9324B6; UVM en disco
+580.178.04, srcversion 09F2A78862D06017E9324B6; packing parameter
+unsupported/absent en el módulo stock.
+
+El mismo perfil forma parte de `host.memory_profile` en
+`tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json`.
+Esa repetición mantuvo `script_sha256` alineado con `tools/cgroup_repro.py` y
+registró could_not_run=6 por ausencia de `dmem.current` en seis scopes.

@@ -1,0 +1,80 @@
+[
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "tests/test_status_bus_unknown.py",
+      "tests/test_recovery_profile.py",
+      "tests/test_1358_servicio_clock.py",
+      "tests/test_auditoria_bb_regresiones.py",
+      "-q"
+    ],
+    "rc": 0,
+    "stdout": "............................................                             [100%]\n44 passed in 8.38s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "coverage",
+      "run",
+      "--branch",
+      "--source=tools.recovery_profile",
+      "-m",
+      "pytest",
+      "tests/test_recovery_profile.py",
+      "-q"
+    ],
+    "rc": 0,
+    "stdout": ".......                                                                  [100%]\n7 passed in 0.05s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "coverage",
+      "report"
+    ],
+    "rc": 0,
+    "stdout": "Name                        Stmts   Miss Branch BrPart  Cover\n-------------------------------------------------------------\ntools/recovery_profile.py      42      0      6      0   100%\n-------------------------------------------------------------\nTOTAL                          42      0      6      0   100%\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "ruff",
+      "check",
+      "tools/recovery_profile.py",
+      "tests/test_recovery_profile.py",
+      "tests/test_status_bus_unknown.py"
+    ],
+    "rc": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pyright",
+      "tools/recovery_profile.py"
+    ],
+    "rc": 0,
+    "stdout": "0 errors, 0 warnings, 0 informations\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "bash",
+      "-n",
+      "bin/bb"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]
