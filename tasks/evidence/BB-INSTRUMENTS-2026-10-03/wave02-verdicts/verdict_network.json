@@ -1,0 +1,32 @@
+[
+  {
+    "id": "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+    "status": "developed",
+    "evidence": "tasks/evidence/BB-INSTRUMENTS-2026-10-03/network.capture.json; tools/host_diagnostics.py network_inventory; tests/test_network_inventory.py",
+    "reason": "Interface MTU, state, PCI/driver binding and optional RDMA metadata are captured; this host's ip netlink query was inaccessible, and no container/NCCL rank or first-request validation was run."
+  },
+  {
+    "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+    "status": "developed",
+    "evidence": "tasks/evidence/BB-INSTRUMENTS-2026-10-03/network.capture.json; ip_link_inventory and sysfs MTU records",
+    "reason": "The inventory reads MTU without a universal threshold; local sysfs observed enP7s7 MTU 1500, while ip -j link could_not_run and no eight-node comparison or NCCL test was available."
+  },
+  {
+    "id": "DELTA-FORUM-CX7-FW-UPDATE-GUARD-01",
+    "status": "developed",
+    "evidence": "infiniband_inventory in tools/host_diagnostics.py; tests/test_network_inventory.py; local capture",
+    "reason": "The implementation reads RDMA fw_ver only when the documented sysfs field exists; this host enumerated zero HCA devices and exposes no generic interface firmware field, so no effective CX7 firmware or update guard was verified."
+  },
+  {
+    "id": "DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01",
+    "status": "reused",
+    "evidence": "Existing pci_binding reused by network_inventory; local enP7s7 BDF capture in tasks/evidence/BB-INSTRUMENTS-2026-10-03/network.capture.json",
+    "reason": "PCI BDF/vendor/device and driver are observable, but the physical attachment is UNKNOWN and no disconnect, connector, alias, peer-traffic, or NCCL control was performed."
+  },
+  {
+    "id": "DELTA-FORUM-CX7-POSTHOTPLUG-01",
+    "status": "developed",
+    "evidence": "network_inventory link/sysfs records; tests/test_network_inventory.py; docs/evidence/BB-INSTRUMENTS-network.md",
+    "reason": "Current MTU, carrier, operstate, driver binding and optional RDMA GID data are collected; no hotplug, throughput, recovery, or workload validation was performed."
+  }
+]
