@@ -1,0 +1,43 @@
+ERROR: not found: /tmp/bb-zero-pyright/tests/test_scan_samples.py::test_scan_samples_malformed_boot_ids_preserve_valid_counters
+(no match in any of [<Module test_scan_samples.py>])
+
+
+no tests ran in 0.02s
+Before repair, selector command (expected failure: no test existed):
+$ python3 -m pytest -q tests/test_scan_samples.py::test_scan_samples_malformed_boot_ids_preserve_valid_counters
+ERROR: not found: /tmp/bb-zero-pyright/tests/test_scan_samples.py::test_scan_samples_malformed_boot_ids_preserve_valid_counters
+(no match in any of [<Module test_scan_samples.py>])
+
+
+no tests ran in 0.02s
+
+Before repair, Pyright baseline (original source restored from HEAD):
+$ python3 -m pyright tools/scan_samples.py
+/tmp/bb-zero-pyright/tools/scan_samples.py
+  /tmp/bb-zero-pyright/tools/scan_samples.py:203:29 - error: Argument of type "Unknown | None" cannot be assigned to parameter "key" of type "str" in function "setdefault"
+    Type "Unknown | None" is not assignable to type "str"
+      "None" is not assignable to "str" (reportArgumentType)
+1 error, 0 warnings, 0 informations
+RC=1
+
+Negative mutation: original implementation with malformed boot list reaches dict.setdefault and fails:
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_scan_samples_malformed_boot_ids_preserve_valid_counters _________
+tests/test_scan_samples.py:119: in test_scan_samples_malformed_boot_ids_preserve_valid_counters
+    datos, razones = scan.preparar([path], 0, 8)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/scan_samples.py:261: in preparar
+    razones.extend(_validar_muestras(datos))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+tools/scan_samples.py:234: in _validar_muestras
+    razones.extend(_validar_contadores(datos, campo, ancho, boot_actual))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/scan_samples.py:203: in _validar_contadores
+    por_boot.setdefault(boot, []).append(dato)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: unhashable type: 'list'
+=========================== short test summary info ============================
+FAILED tests/test_scan_samples.py::test_scan_samples_malformed_boot_ids_preserve_valid_counters
+1 failed in 0.05s
+NEGATIVE_RC=1
