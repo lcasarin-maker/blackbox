@@ -32,3 +32,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+### Evidencia de instrumento (2026-10-03)
+
+Estado: parcial, con preflight offline desarrollado para comparar una respuesta guardada GET `/v1/models`, modelo primario/configurado OpenClaw y límite explícitamente ligado al checkpoint. Calcula headroom a partir del cap configurado; presupuesto de una petición concreta permanece unknown sin conteo tokenizado/usage capturado y ligado a modelo/checkpoint. Las entradas se marcan `caller_supplied_unverified`. No hay captura local GET `/v1/models`, config OpenClaw ni token usage; no se lanzó petición. La ficha sigue abierta y el `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-contracts.md`.
