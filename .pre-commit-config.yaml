@@ -15,6 +15,10 @@ repos:
         name: "gitleaks (secrets staged)"
         args: [--no-banner, --redact]
         stages: [pre-commit, pre-merge-commit]
+      - id: gitleaks
+        name: "gitleaks (full history, CI)"
+        args: [--no-banner, --redact, --pre-commit=false, --staged=false, --log-opts=--all]
+        stages: [pre-push]
 
   - repo: local
     hooks:
@@ -80,6 +84,7 @@ repos:
         types: [python]
         stages: [pre-push]
         pass_filenames: false
+        priority: 1
 
       - id: coverage-floor
         name: "coverage target (ratchet: never below watermark)"
@@ -92,6 +97,7 @@ repos:
         types: [python]
         stages: [pre-push]
         pass_filenames: false
+        priority: 2
 
       - id: pyright
         name: "pyright (type checking)"
@@ -103,6 +109,7 @@ repos:
         types: [python]
         stages: [pre-push]
         pass_filenames: false
+        priority: 3
 
       - id: pii-scan
         name: "no third-party PII (RFC/CURP) in tasks/ or docs/"
@@ -113,6 +120,7 @@ repos:
         language: system
         stages: [pre-push]
         pass_filenames: false
+        priority: 1
 
       - id: adversarial-judge
         name: "Judge-Zero forensic auditor"
@@ -124,6 +132,7 @@ repos:
         language: system
         stages: [pre-push]
         pass_filenames: false
+        priority: 1
       - id: bash-sintaxis
         name: sintaxis de los scripts bash
         entry: >-

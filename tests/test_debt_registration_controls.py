@@ -674,33 +674,19 @@ def _simplecode_runner(tmp_path: Path) -> Path:
     return target / "run.py"
 
 
-def test_debt_exception_backlog_md_freeze_01(tmp_path: Path) -> None:
-    """The current repo opts out; a declared frozen backlog blocks staged additions."""
-    runner = _simplecode_runner(tmp_path)
-    current = subprocess.run(
-        [sys.executable, str(runner), "simplecode.verification.backlog_md_freeze", "--root", str(Path(__file__).resolve().parent.parent)],
-        capture_output=True, text=True, check=False,
-    )
-    assert current.returncode == 0, current.stdout + current.stderr
-    assert "not declared -- nothing frozen" in current.stdout
+def test_debt_exception_backlog_md_freeze_01() -> None:
+    """Simplecode retired the organ; BB retains neither its subject nor exemption."""
+    from zipfile import ZipFile
 
-    root = tmp_path / "subject"
-    (root / ".simplecode").mkdir(parents=True)
-    (root / ".simplecode" / "backlog_md_frozen.json").write_text(
-        '{"path":"BACKLOG.md","owner":"test","date":"2026-10-02","reason":"synthetic subject"}\n', encoding="utf-8")
-    backlog = root / "BACKLOG.md"
-    backlog.write_text("existing\n", encoding="utf-8")
-    subprocess.run(["git", "init", "-q", str(root)], check=True)
-    subprocess.run(["git", "-C", str(root), "add", "BACKLOG.md"], check=True)
-    subprocess.run(["git", "-C", str(root), "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-qm", "base"], check=True)
-    backlog.write_text("existing\nnew debt\n", encoding="utf-8")
-    subprocess.run(["git", "-C", str(root), "add", "BACKLOG.md"], check=True)
-    negative = subprocess.run(
-        [sys.executable, str(runner), "simplecode.verification.backlog_md_freeze", "--root", str(root)],
-        capture_output=True, text=True, check=False,
-    )
-    assert negative.returncode == 1, negative.stdout + negative.stderr
-    assert "adds 1 new line(s)" in negative.stdout
+    repo = Path(__file__).resolve().parent.parent
+    with ZipFile(repo / ".simplecode" / "runtime.zip") as runtime:
+        assert "simplecode/verification/backlog_md_freeze.py" not in runtime.namelist()
+    config = (repo / ".pre-commit-config.yaml").read_text(encoding="utf-8")
+    assert "backlog_md_freeze" not in config
+    exemptions = json.loads((repo / ".simplecode" / "organ_inapplicable.json").read_text(encoding="utf-8"))
+    assert "backlog_md_freeze" not in exemptions["entries"]
+    assert not (repo / "BACKLOG.md").exists()
+    assert not (repo / ".simplecode" / "backlog_md_frozen.json").exists()
 
 
 def test_debt_exception_lockfile_parity_01(tmp_path: Path) -> None:

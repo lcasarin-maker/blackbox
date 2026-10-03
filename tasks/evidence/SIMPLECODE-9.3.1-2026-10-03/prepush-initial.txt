@@ -1,0 +1,213 @@
+[WARNING] Unexpected key(s) present on local => zero-debt-repo: priority
+[WARNING] Unexpected key(s) present on local => coverage-floor: priority
+[WARNING] Unexpected key(s) present on local => pyright: priority
+[WARNING] Unexpected key(s) present on local => pii-scan: priority
+[WARNING] Unexpected key(s) present on local => adversarial-judge: priority
+gitleaks (full history, CI)...............................................................Passed
+zero debt (repo-wide ship freeze).........................................................Passed
+coverage target (ratchet: never below watermark)..........................................Failed
+- hook id: coverage-floor
+- exit code: 1
+- files were modified by this hook
+
+[gate-runner] kit: zip:runtime.zip:c2af7cae6777
+[gate-runner] coverage-100: tracked path(s) changed during this gate's own window (attribution evidence, not a verdict by itself): .simplecode/audit_ledger.json
+[gate-runner] FAIL: coverage-100 exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=476880ee220e
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [  6%]
+........................................................................ [ 13%]
+........................................................................ [ 19%]
+........................................................................ [ 26%]
+........................................................................ [ 32%]
+........................................................................ [ 39%]
+........................................................................ [ 45%]
+........................................................................ [ 52%]
+........................................................................ [ 59%]
+........................................................................ [ 65%]
+........................................................................ [ 72%]
+........................................................................ [ 78%]
+........................................................................ [ 85%]
+.................................F...................................... [ 91%]
+........................................................................ [ 98%]
+................                                                         [100%]
+=================================== FAILURES ===================================
+___________________ test_debt_exception_backlog_md_freeze_01 ___________________
+[gw3] linux -- Python 3.12.11 /opt/miniforge3/bin/python
+tests/test_debt_registration_controls.py:684: in test_debt_exception_backlog_md_freeze_01
+    assert current.returncode == 0, current.stdout + current.stderr
+E   AssertionError: Traceback (most recent call last):
+E       File "/tmp/pytest-of-lcasarin/pytest-4367/popen-gw3/test_debt_exception_backlog_md0/.simplecode/run.py", line 51, in <module>
+E         runpy.run_module(module, run_name="__main__")
+E       File "<frozen runpy>", line 222, in run_module
+E       File "<frozen runpy>", line 142, in _get_module_details
+E     ImportError: No module named simplecode.verification.backlog_md_freeze
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['/opt/miniforge3/bin/python', '/tmp/pytest-of-lcasarin/pytest-4367/popen-gw3/test_debt_exceptio...n runpy>", line 142, in _get_module_details\nImportError: No module named simplecode.verification.backlog_md_freeze\n').returncode
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.11-final-0 _______________
+
+Coverage JSON written to file /home/lcasarin/projects/blackbox/.simplecode/coverage.json
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_debt_exception_backlog_md_freeze_01
+1 failed, 1095 passed in 106.13s (0:01:46)
+[coverage] interpreter: /opt/miniforge3/bin/python (python 3.12.11)
+/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+  warner(PytestBenchmarkWarning(text))
+/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+  warner(PytestBenchmarkWarning(text))
+/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+  warner(PytestBenchmarkWarning(text))
+/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+  warner(PytestBenchmarkWarning(text))
+/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+  warner(PytestBenchmarkWarning(text))
+/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+  warner(PytestBenchmarkWarning(text))
+/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+  warner(PytestBenchmarkWarning(text))
+
+pyright (type checking)...................................................................Passed
+no third-party PII (RFC/CURP) in tasks/ or docs/..........................................Passed
+Judge-Zero forensic auditor...............................................................Passed
+sintaxis de los scripts bash..............................................................Passed
+cobertura de bin/bb no baja del piso......................................................Failed
+- hook id: bb-cobertura-piso
+- files were modified by this hook
+
+[gate-runner] kit: zip:runtime.zip:c2af7cae6777
+[gate-runner] bb-cobertura-piso: tracked path(s) changed during this gate's own window (attribution evidence, not a verdict by itself): .simplecode/organ_inapplicable.json, tasks/done/DEBT-EXCEPTION-BACKLOG-MD-FREEZE-01.md, tests/test_debt_registration_controls.py
+[bb-cobertura] bin/bb al 40.1% (piso 32.8%)
+
+SPEC.md inventaria lo que el repo ejecuta y posee.........................................Passed
+version reflects what shipped (semver from Conventional Commits)..........................Failed
+- hook id: version-bump
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:c2af7cae6777
+[gate-runner] FAIL: version-bump exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=57581bd59ea6
+[sunset-audit] version=2.4.0 (20 exemption(s) found)
+[sunset-audit] stale: 20 of 20 versioned exemption(s), compared against 2.4
+  STALE(2.3)  /home/lcasarin/projects/blackbox/.gitignore:8  [gitignore]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/.gitignore:15  [gitignore]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/.gitignore:21  [gitignore]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/.gitignore:26  [gitignore]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/.gitignore:30  [gitignore]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/.gitignore:35  [gitignore]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/.gitignore:50  [gitignore]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/.gitignore:60  [gitignore]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/.gitignore:65  [gitignore]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/.gitignore:67  [gitignore]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/.gitignore:69  [gitignore]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/.gitignore:71  [gitignore]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/tools/atom_gpu_telemetry.py:1693  [blocking-sleep-override]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:92  [blocking-sleep-override]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:189  [blocking-sleep-override]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:226  [blocking-sleep-override]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:806  [blocking-sleep-override]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:842  [blocking-sleep-override]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:1601  [blocking-sleep-override]  (current: 2.4)
+  STALE(2.3)  /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:1655  [blocking-sleep-override]  (current: 2.4)
+[sunset-audit] FAIL — 20 exemption(s) require review.
+[version-bump] HALLAZGOS: 20
+[version-bump] MINOR bump due: 55 commit(s) since 2.3.0 include a feat/fix/breaking change with no version bump yet.
+[version-bump] BLOCKED: sunset-audit would fail after the pending minor bump (2.3.0 -> 2.4.0).
+  20 exemption(s) need a review before this bump can land. They are listed above, each with its file and line.
+  A REVIEW is a question with a real answer: has this line CHANGED since anyone last looked at it? Answer it, do not stamp it -- `git show <sha>:<file>` and compare the line.
+  Then re-date it to the version being cut:  # sunset-reviewed: 2.4 -- <why it is still correct>
+  There is no way to retire the clock: TODA exencion caduca (decision de Luis, 2026-09-15). `permanent` fue abolido porque dejo a la mitad `stale` de la compuerta sin un solo sujeto -- 86 de 86 exenciones de este repo lo llevaban, y el gate devolvia PASS contra cualquier version futura. Si la razon de verdad no depende de la version, sigue re-fechandola cada minor: ese roce es el precio de que alguien la relea.
+
+task schema is typed and closed tasks carry evidence......................................Passed
+gate effectiveness: no organ with many runs and zero catches..............................Passed
+ship freeze (no open backlog).............................................................Failed
+- hook id: ship-freeze
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:c2af7cae6777
+[gate-runner] FAIL: ship-freeze exited 1; failure propagated; see child diagnostics; redacted output sha256=81b05117cc99
+[backlog] corpus: declared `debt: tasks/`; every task file in it is judged by its `status:` field, with no prefix filter
+[backlog] open debt: 98 (of 98 entries: 0 from ledger/, 98 from tasks/; 0 file(s) with another prefix NOT evaluated)
+  - DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01.md
+  - DEBT-HOST-DEPLOYED-DRIFT-01.md
+  - DEBT-JUDGE-THREAT-SWEEP-TOOLS-01.md
+  - DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES.md
+  - DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01.md
+  - DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md
+  - DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01.md
+  - DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md
+  - DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md
+  - DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md
+  - DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01.md
+  - DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md
+  - DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01.md
+  ... and 78 more
+[backlog] accepted (deuda ABIERTA, no bloquea el envio, SI cuenta): 0
+[backlog] deferred: 23 (sunset: 20, suspended: 0, organ_inapplicable: 2, signed_budgets: 1) -- deuda ABIERTA diferida por escrito, no bloquea el envio, SI cuenta
+  sunset: 20 -- nearest expiry: version 2.3 (expires with the next minor, not by date)
+  suspended: 0 -- nearest expiry: none
+  organ_inapplicable: 2 -- nearest expiry: 2026-10-13 (10 day(s))
+  !! EXPIRES IN 10 DAY(S): organ_inapplicable lockfile_parity (2026-10-13)
+  !! EXPIRES IN 10 DAY(S): organ_inapplicable red_team_corpus (2026-10-13)
+  signed_budgets: 1 -- nearest expiry: 2026-10-27 (24 day(s))
+[backlog] .simplecode/backlog_baseline.json declares no owner or no entries; no baseline applies; covered by it: 0; still blocking: 98
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-HOST-DEPLOYED-DRIFT-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-JUDGE-THREAT-SWEEP-TOOLS-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES.md
+  !! NOT COVERED BY THE BASELINE: DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01.md
+[backlog] could_not_run: 0 open file(s) the globs never opened; outside the baseline: 0; blocking
+[ship-freeze] HALLAZGOS: 98
+BLOCKED [backlog] - zero-debt policy: debt cannot be bypassed with renaming.
+Every finding must either be fixed in code or verified with status: closed.
+[ship-freeze] FAIL: 98 finding(s) of open debt not covered by the baseline; first DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01.md
+
+telemetry disposition: blocked rows after the cutoff need a verdict.......................Failed
+- hook id: telemetry-disposition
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:c2af7cae6777
+[gate-runner] FAIL: telemetry-disposition exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=1be247c09507
+[telemetry-disposition] auto-disposed by evidence: 0
+[telemetry-disposition] HALLAZGOS: 2
+[telemetry-disposition] blocked rows classified: 402
+[telemetry-disposition]   confirmed_defect: 288
+[telemetry-disposition]   false_positive: 0
+[telemetry-disposition]   controlled_canary: 6
+[telemetry-disposition]   legacy_migrated: 0
+[telemetry-disposition]   could_not_dispose: 2
+[telemetry-disposition]   historical_undisposed: 3
+[telemetry-disposition]   pending_grace: 3
+[telemetry-disposition]   self_referential: 100
+[telemetry-disposition]   same_run: 0
+  UNDISPOSED abedf207b89fd73e (ship-freeze, 2026-10-03T15:51:58.557711+00:00)
+  UNDISPOSED 8e952805d8c2ef3a (backlog-verifier, 2026-10-03T15:52:40.948306+00:00)
+[telemetry-disposition] NOT CLEAN: could_not_dispose=2 (blocked telemetry with no recorded verdict).
+
+hook receipts: no unverified commits reaching push........................................Passed
+closed debt has executable evidence.......................................................Passed
+telemetry stays under the 10 MiB horizon SPEC declares (advisory).........................Passed
+no tracked task entry loses lines vs HEAD.................................................Passed
