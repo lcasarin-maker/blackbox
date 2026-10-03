@@ -33,3 +33,5 @@ El barrido de amenazas del kit lee 0 archivos porque su lista fija omite tools/.
 `ship-freeze` bloquea las 97 fichas abiertas: baseline aplicable=0. `backlog-verifier` detectó un cierre que reproduce: DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES. bb-guardia-proceso.service arrancó el 2026-09-30 14:40:12 CST, antes de la modificación actual del archivo. El cierre histórico conserva su evidencia; la comprobación actual queda fallida. La configuración apunta a bin/bb-guardia-proceso y sus 20 pruebas pasaron. Reiniciar esa protección activa requiere una decisión operativa separada y sigue pendiente.
 
 La versión 2.3.0 queda comiteada localmente, con el árbol limpio; el remoto conserva su estado anterior porque el push fue rechazado por los gates.
+
+Tras registrar la discrepancia, la ficha del vigilante se reabrió conservando toda su evidencia histórica. Estado final: 98 abiertas y 185 done, 283 fichas en total. El reinicio autorizado y un close_check vivo satisfactorio permitirían cerrarla de nuevo.
