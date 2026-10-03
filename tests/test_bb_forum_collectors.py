@@ -113,13 +113,35 @@ def test_inventory_pages_deduplicates_and_rejects_repeated_page(tmp_path):
         inventory.inventory(tmp_path / "negative", opener=lambda *_args, **_kwargs: Response(json.dumps(repeated).encode()), sleep=lambda _: None)
 
 
-def test_collectors_import_without_filesystem_or_network(monkeypatch):
-    def forbidden(*_args, **_kwargs):
-        raise AssertionError("module import performed IO")
+def test_collectors_import_without_filesystem_or_network(monkeypatch, tmp_path):
+    actions = []
 
-    monkeypatch.setattr(Path, "mkdir", forbidden)
-    monkeypatch.setattr(Path, "write_text", forbidden)
-    monkeypatch.setattr(Path, "read_text", forbidden)
-    monkeypatch.setattr("urllib.request.urlopen", forbidden)
-    _load("bb_forum_fetch")
-    _load("bb_forum_inventory")
+    def observe(action, result):
+        def record(*_args, **_kwargs):
+            actions.append(action)
+            return result
+
+        return record
+
+    with monkeypatch.context() as patcher:
+        patcher.setattr(Path, "mkdir", observe("mkdir", None))
+        patcher.setattr(Path, "write_text", observe("write_text", 0))
+        patcher.setattr(Path, "read_text", observe("read_text", "{}"))
+        patcher.setattr("urllib.request.urlopen", observe("urlopen", Response(b"{}")))
+        fetcher = _load("bb_forum_fetch")
+        inventory = _load("bb_forum_inventory")
+
+    assert actions == []
+    assert fetcher.ROOT.resolve() == BASE.resolve()
+    assert inventory.ROOT.resolve() == BASE.resolve()
+    assert callable(fetcher.get) and callable(fetcher.fetch) and callable(fetcher.main)
+    assert callable(inventory.inventory) and callable(inventory.main)
+
+    item = {"id": 9, "title": "fixture", "url": "https://fixture.invalid/t/9"}
+    payload = {"post_stream": {"stream": [1], "posts": [{
+        "id": 1, "post_number": 1, "username": "fixture", "created_at": "now", "cooked": "valid"
+    }]}}
+    result = fetcher.fetch(item, tmp_path / "portable-output", getter=lambda _: payload, sleep=lambda _: None)
+    assert result["status"] == "fetched"
+    assert (tmp_path / "portable-output/threads/9.json").is_file()
+    assert (tmp_path / "portable-output/threads/9.txt").is_file()
