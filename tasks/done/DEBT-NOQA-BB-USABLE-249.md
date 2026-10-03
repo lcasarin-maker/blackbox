@@ -3,7 +3,11 @@ id: DEBT-NOQA-BB-USABLE-249
 kind: task
 domain: VERDICT
 title: "Revisar noqa en bb-usable:249"
-status: open
+status: done
+closed_at: 2026-10-02
+closure_type: fixed
+reason: "Función local explícita preserva logging y elimina supresión E731."
+evidence: {"pass": "tasks/evidence/DEBT-NOQA-BB-USABLE-249.pass.txt", "fail": "tasks/evidence/DEBT-NOQA-BB-USABLE-249.fail.txt", "e2e": "tasks/evidence/DEBT-NOQA-BB-USABLE-249.e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -36,3 +40,7 @@ Comprobar alcance y necesidad de la excepción del linter contra el sujeto real,
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Verificación realizada
+
+El close_check ejecuta Ruff E731 contra el ejecutable real con --ignore-noqa y el primer log de main con interrupción antes de medir. Fallaba con la lambda; pasa con def. Suite de bb-usable conserva decisiones de watchdog y controles negativos.
