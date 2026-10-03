@@ -33,3 +33,7 @@ Fixtures de errores NVMe/I/O, remount read-only, permisos insuficientes, disposi
 ## Índice de propuestas registradas del swarm NVIDIA categoría 721
 
 - **`BB-NVME-PRESENCE-RMA-TRIAGE`** — One reported Spark could not find its NVMe in UEFI or recovery and was referred to RMA; a second report had inconsistent local EFI boot-path visibility/recovery, despite short and extended NVMe self-tests passing, and also ended in RMA.… Fuente: [354724](https://forums.developer.nvidia.com/t/dgx-spark-not-detecting-nvme-drive-not-booting-system-recovery-fails/354724/1).
+
+## Avance de ejecución 2026-10-03
+
+Se añadió `tools/nvme_readonly.py`: exige inventario NVMe con ruta y serial, una sola observación válida de `/`, y señal de error NVMe asociada en la misma línea; separa fail de consultas inaccesibles. La exportación de archivo regular a otro filesystem verifica dev/inode/size/mtime/ctime y SHA-256, rechaza overwrite y detecta cambios de ruta aun cuando el reemplazo conserva bytes y mtime. Un inventario y log sin error se informa como observación, no como prueba de salud física. Las pruebas validan el instrumento; el ensayo de exportación y recuperación sobre copia/dispositivo NVMe de laboratorio sigue pendiente. Estado permanece `open`.
