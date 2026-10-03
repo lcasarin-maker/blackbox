@@ -27,3 +27,8 @@ El blacklist global puede desconectar otra Realtek o dejar el equipo sin módulo
 ## Índice de propuestas registradas del swarm NVIDIA categoría 721
 
 - **`BB-REALTEK-DRIVER-BINDING-ALT-OS-CORROBORATION`** — On community Fedora 43/NixOS installs, Realtek 8127 was bound to r8169; users reported Ethernet unavailable after warm reboot and hardware absent until full power-off/on. A community NVIDIA-kernel build enabling r8127 plus… Fuente: [349124](https://forums.developer.nvidia.com/t/has-anyone-tried-an-alternative-linux-distro/349124/5).
+
+
+## Avance de instrumentación 2026-10-03
+
+Se reutilizó `pci_binding` existente; la captura observó `enP7s7` enlazada a `r8127`, versión `11.014.00-NAPI`. No se observaron entradas HID, y este dato no verifica compatibilidad del paquete ni comportamiento tras warm/cold reboot. Evidencia y límites: [BB-INSTRUMENTS-devices](../../docs/evidence/BB-INSTRUMENTS-devices.md). La ficha sigue abierta y el close_check original permanece pendiente.

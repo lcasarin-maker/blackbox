@@ -32,3 +32,8 @@ El verificador de close_check todavía debe implementarse; ejecutar esta ficha e
 Sysfs informa SBSA Generic Watchdog, active, timeout=60, nowayout=0; systemd RuntimeWatchdogUSec=1min. No se abrió /dev/watchdog. Sysfs no acredita PID propietario; queda lectura de ownership y validación OEM/recuperación.
 
 Evidencia y pendientes: `tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/progress.txt`. Conserva `open`; la captura de estado verifica el instrumento y deja pendiente el ensayo de recuperación/prevención requerido.
+
+
+## Avance de instrumentación 2026-10-03
+
+`tools.host_diagnostics` ahora recoge identidad, estado, timeout y nowayout desde sysfs; propietario queda `UNKNOWN` porque el inventario no acredita PID y no abre `/dev/watchdog`. No se observaron entradas HID en esta captura. Evidencia y alcance: [BB-INSTRUMENTS-devices](../../docs/evidence/BB-INSTRUMENTS-devices.md). La ficha sigue abierta y el close_check original permanece pendiente.
