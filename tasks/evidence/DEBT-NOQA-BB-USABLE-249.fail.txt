@@ -1,0 +1,25 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________________ test_debt_noqa_bb_usable_249 _________________________
+tests/test_debt_registration_controls.py:37: in test_debt_noqa_bb_usable_249
+    assert lint.returncode == 0, lint.stdout + lint.stderr
+E   AssertionError: E731 Do not assign a `lambda` expression, use a `def`
+E        --> bin/bb-usable:249:5
+E         |
+E     247 | def main() -> int:
+E     248 |     notify("READY=1")
+E     249 |     log = lambda m: (print(m, file=sys.stderr, flush=True))  # noqa: E731
+E         |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     250 |
+E     251 |     first = probe()
+E         |
+E     help: Rewrite `log` as a `def`
+E     
+E     Found 1 error.
+E     No fixes available (1 hidden fix can be enabled with the `--unsafe-fixes` option).
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['python3', '-m', 'ruff', 'check', '--select', 'E731', '--ignore-noqa', '/tmp/bb-zero-provider/b...f`\n\nFound 1 error.\nNo fixes available (1 hidden fix can be enabled with the `--unsafe-fixes` option).\n', stderr='').returncode
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_debt_noqa_bb_usable_249
+1 failed in 0.08s
