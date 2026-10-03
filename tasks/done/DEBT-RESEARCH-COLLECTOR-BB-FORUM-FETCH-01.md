@@ -95,7 +95,7 @@ Sujeto `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py`. 9 hallazg
 
 ## Criterio y responsable
 
-Responsable coordinación BB/Luis. Si se archiva, conservar bytes/modos/SHA-256 y captura de hallazgos en registro; comprobar control negativo que reintroduce el sujeto. El archivo histórico no acredita código corregido. Si se mantiene, portar sin nueva supresión, ejecutar contra fixtures y preservar límites/reintentos medidos. La ficha sigue abierta mientras el voto esté pendiente.
+Responsable coordinación BB/Luis. Al registrar esta ficha, la decisión aún estaba pendiente; cierre y evidencia final constan en la sección siguiente. Si se archiva, conservar bytes/modos/SHA-256 y captura de hallazgos en registro; comprobar control negativo que reintroduce el sujeto. El archivo histórico no acredita código corregido. Si se mantiene, portar sin nueva supresión, ejecutar contra fixtures y preservar límites/reintentos medidos.
 
 ## Cierre (decisión derivada 2026-10-03)
 
@@ -105,6 +105,6 @@ RootCause: la herramienta de investigación usaba una ruta absoluta del host, IO
 
 RegressionTest: `python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_research_collector_bb_forum_fetch_01` cubre respuesta válida, datos incompletos, errores, 429/Retry-After, timeout agotado, pacing y salida a ruta temporal ajena al checkout.
 
-VerificationEvidence: `2 passed in 0.04s` para ambos selectores de recolector; `ruff check ...` reportó `All checks passed!`; `pyright` sobre los dos recolectores reportó `0 errors, 0 warnings, 0 informations`. Fixtures offline; ninguna petición de red real.
+VerificationEvidence: `tasks/evidence/DEBT-RESEARCH-COLLECTOR-BB-FORUM-FETCH-01/fail.txt`, `pass.txt` y `e2e.txt`. Incluyen controles negativos, resultado positivo, fixtures de payload válido/malformado/incompleto, reintentos, Retry-After, timeout, pacing y serialización. El close check conjunto reportó `5 passed in 0.04s`; Ruff reportó `All checks passed!`; Pyright sobre ambos recolectores reportó `0 errors, 0 warnings, 0 informations`. Fixtures offline; ninguna petición de red real.
 
 closed_at: 2026-10-03
