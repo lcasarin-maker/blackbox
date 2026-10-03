@@ -25,3 +25,11 @@ El commit histórico del foro fue verificado con el productor nativo: 12 control
 Quedan 97 fichas abiertas y 186 done. El detector zero-debt reportó 0 condenas, 0 could_not_run y 0 violaciones; ese resultado describe sus detectores, mientras las fichas abiertas conservan sus requisitos.
 
 El barrido de amenazas del kit lee 0 archivos porque su lista fija omite tools/. Se registró DEBT-JUDGE-THREAT-SWEEP-TOOLS-01 con un control positivo y otro negativo exigidos para su cierre. El auditor de mocks sí detectó un control insuficiente, que fue corregido. Los cambios operativos que esperan decisión del usuario conservan ese estado.
+
+## Resultado de publicación
+
+`git push origin master` terminó con exit 1. Gitleaks de los commits salientes pasó. En la etapa pre-push pasaron 15 controles y fallaron 2; could_not_run=0. Tipos, cobertura Python, cobertura Bash, esquema, versión, integridad de líneas, recibos y los otros controles terminaron en PASS. El defecto de alcance del barrido de amenazas descrito arriba limita la interpretación de su PASS.
+
+`ship-freeze` bloquea las 97 fichas abiertas: baseline aplicable=0. `backlog-verifier` detectó un cierre que reproduce: DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES. bb-guardia-proceso.service arrancó el 2026-09-30 14:40:12 CST, antes de la modificación actual del archivo. El cierre histórico conserva su evidencia; la comprobación actual queda fallida. La configuración apunta a bin/bb-guardia-proceso y sus 20 pruebas pasaron. Reiniciar esa protección activa requiere una decisión operativa separada y sigue pendiente.
+
+La versión 2.3.0 queda comiteada localmente, con el árbol limpio; el remoto conserva su estado anterior porque el push fue rechazado por los gates.
