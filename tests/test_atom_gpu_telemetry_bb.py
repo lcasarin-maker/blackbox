@@ -82,7 +82,6 @@ def test_linea_vllm_de_una_sola_palabra_se_ignora():
 def test_vllm_con_status_distinto_de_200_lo_DECLARA(monkeypatch):
     class _Resp:
         status = 503
-        def read(self): return b""            # pragma: no cover - no se llega
         def __enter__(self): return self
         def __exit__(self, *a): return False
 
