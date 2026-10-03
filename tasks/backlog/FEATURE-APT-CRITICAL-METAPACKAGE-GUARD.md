@@ -64,3 +64,7 @@ Como segundo disparador de la misma ficha: En MSI EdgeXpert, la actualización a
 
 - `FORUM-00-FIELDDIAG-DOCA-OFED-SPARK-GATE` — [Block FieldDiag DOCA-OFED prerequisites that replace the Spark inbox ConnectX-7 driver stack](https://forums.developer.nvidia.com/t/381767); detalle, confidence y close check en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.
 - `FORUM-00-METAPACKAGE-REMOVE-AUTOREMOVE` — [DGX OS removal simulation for metapackage dependency cascades](https://forums.developer.nvidia.com/t/dgx-spark-dont-remove-games/348170); detalle, confidence y close check en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.
+
+## Revisión de reutilización — 2026-10-03
+
+El nuevo `tools/apt_sources.py` se limita a identidad de fuentes y tuples de índices; el preflight y su verificador existentes siguen siendo los instrumentos para clasificar planes benignos y remociones críticas. La nueva captura no sustituye evidencia de planes, y no se aplicó transacción. Se conserva el estado abierto que ya documenta la falta de guard APT integrado y de cobertura OEM.
