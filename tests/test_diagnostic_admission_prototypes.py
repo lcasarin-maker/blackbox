@@ -120,7 +120,9 @@ def test_thermal_cli_emits_capture_json(monkeypatch, tmp_path: Path, capsys) -> 
     assert json.loads(capsys.readouterr().out)["thermal_zone_scan"]["status"] == "no_thermal_zones"
 
 
-def test_thermal_cli_entrypoint_preserves_incomplete_exit(monkeypatch, tmp_path: Path) -> None:
+def test_thermal_cli_entrypoint_preserves_incomplete_exit(
+    monkeypatch, tmp_path: Path, capsys
+) -> None:
     (tmp_path / "sys/class/thermal").mkdir(parents=True)
     (tmp_path / "sys/class/hwmon").mkdir(parents=True)
     monkeypatch.setattr("sys.argv", ["thermal_coverage", "--root", str(tmp_path)])
@@ -130,6 +132,13 @@ def test_thermal_cli_entrypoint_preserves_incomplete_exit(monkeypatch, tmp_path:
         assert exc.code == 2
     else:
         raise AssertionError("CLI entrypoint did not exit")
+    emitted = json.loads(capsys.readouterr().out)
+    assert emitted["thermal_zone_scan"]["status"] == "no_thermal_zones"
+    assert emitted["hwmon_scan"]["status"] == "no_hwmon_devices"
+    assert emitted["no_sensor_detected"] is True
+    assert emitted["could_not_run"] > 0
+    assert emitted["status"] == "partial"
+    assert emitted["assessment"] == "coverage_only; no thermal safety conclusion"
 
 
 def test_thermal_coverage_malformed_channel_is_counted(monkeypatch, tmp_path: Path) -> None:

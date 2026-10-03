@@ -186,3 +186,80 @@ def test_copy_detects_path_replaced_with_same_bytes_and_timestamp(
         nvme_readonly._copy_file(source, target, expected)
     assert source.read_bytes() == original.read_bytes() == b"same bytes"
     assert not target.exists()
+
+
+@pytest.mark.parametrize("record", [None, "not a record", []])
+def test_capture_text_rejects_non_mapping_records(record: object) -> None:
+    assert nvme_readonly._capture_text(record) == (None, "capture record malformed")
+
+
+@pytest.mark.parametrize("record", [
+    {"status": "error", "stdout": "ignored"},
+    {"status": "ok", "stdout": None},
+])
+def test_capture_text_rejects_unavailable_status_or_output(record: dict) -> None:
+    assert nvme_readonly._capture_text(record) == (None, "query status or output unavailable")
+
+
+@pytest.mark.parametrize("document", ["", "42", "{\"Devices\":\"not-a-list\"}"])
+def test_nvme_inventory_distinguishes_empty_from_malformed(document: str) -> None:
+    observed = nvme_readonly._has_inventory_device(document)
+    assert observed is (False if document == "" else None)
+
+
+def test_kernel_signal_query_unavailable_stays_unknown() -> None:
+    report = nvme_readonly.classify(_snapshot(signals={"status": "could_not_run"}))
+    assert report["status"] == "could_not_run"
+    assert report["could_not_run"] >= 1
+    assert "kernel signal query query unavailable" in report["unknowns"]
+
+
+def test_classify_reports_missing_checks_as_could_not_run() -> None:
+    report = nvme_readonly.classify({"snapshot": "without checks"})
+    assert report == {
+        "status": "could_not_run", "fail": 0, "could_not_run": 1,
+        "findings": ["snapshot checks missing"],
+    }
+
+
+def test_copy_rejects_source_changed_between_inventory_and_open(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    source = tmp_path / "source-copy"
+    source.write_bytes(b"identified bytes")
+    expected = source.stat()
+    target = tmp_path / "recovery-copy"
+    real_open = os.open
+
+    def replace_before_open(path, flags, *args, **kwargs):
+        if Path(path) == source:
+            source.write_bytes(b"replacement bytes")
+        return real_open(path, flags, *args, **kwargs)
+
+    monkeypatch.setattr(nvme_readonly.os, "open", replace_before_open)
+    with pytest.raises(OSError, match="source identity changed before copy"):
+        nvme_readonly._copy_file(source, target, expected)
+    assert source.read_bytes() == b"replacement bytes"
+    assert not target.exists()
+
+
+def test_copy_detects_destination_digest_mismatch_and_removes_copy(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    source = tmp_path / "source-copy"
+    source.write_bytes(b"original bytes")
+    target = tmp_path / "recovery-copy"
+    monkeypatch.setattr(nvme_readonly, "_hash_file", lambda _path: "wrong-digest")
+    with pytest.raises(OSError, match="destination copy digest mismatch"):
+        nvme_readonly._copy_file(source, target, source.stat())
+    assert source.read_bytes() == b"original bytes"
+    assert not target.exists()
+
+
+def test_export_refuses_symlink_source_without_touching_target(tmp_path: Path) -> None:
+    original = tmp_path / "original"
+    original.write_bytes(b"keep original")
+    link = tmp_path / "suspect-link"
+    link.symlink_to(original)
+    result = nvme_readonly.export_copy(link, tmp_path / "elsewhere")
+    assert result["status"] == "could_not_run"
+    assert "regular file" in result["error"]
+    assert original.read_bytes() == b"keep original"

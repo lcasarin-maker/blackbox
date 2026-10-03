@@ -1,0 +1,57 @@
+[
+  {
+    "id": "DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01.txt",
+    "reason": "Requiere build/toolchain, kernel prebuilt y primera inferencia sobre SM121 con salida finita y control incompatible; no hay GPU SM121 ni artefactos fijados disponibles. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_nemotron_sm121_prebuilt_kernel_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01.txt",
+    "reason": "La ficha cubre model ID, presupuesto de contexto y tools en integración OpenClaw↔vLLM. No hay contrato de config/endpoint de OpenClaw en el repo; inventar uno sería una API ficticia. preflight sólo cubre identidad/arquitectura de imagen. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_openclaw_vllm_request_contract_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01.txt",
+    "reason": "Reproducir el cold compile puede agotar memoria y perder acceso remoto, y requiere dos Spark más stack exacto. No se autoriza inducir OOM; las capturas no contienen los logs originales. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_cold_compile_oom_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-LONG-AGENT-STOP-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01.txt",
+    "reason": "Requiere soak largo real del agente con checkpoints distintos y turn boundary para medir falsos positivos sin duplicar efectos de herramienta. No hay agente/checkpoints ni se deben emitir acciones de prueba mutantes. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_long_agent_stop_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01.txt",
+    "reason": "Requiere servidor Qwen/vLLM por digest y matriz parser×MTP×cancelación mid-stream seguida de tool call en el mismo proceso. El entorno no ofrece ese proceso; un parser fixture no demuestra recuperación runtime. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  }
+]

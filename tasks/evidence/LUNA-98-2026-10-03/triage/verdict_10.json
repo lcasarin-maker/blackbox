@@ -1,0 +1,57 @@
+[
+  {
+    "id": "DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01.txt",
+    "reason": "La evidencia trata presión real/oomd sobre Studio y Hermes. No se debe provocar presión, desactivar oomd ni reiniciar servicios; falta sujeto y log original. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_service_oomd_cache_fail_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01.txt",
+    "reason": "La ficha exige bundle antes de reinicio para un wedge vivo con etapa MTP/tool y progreso por rank. No existe incidente observable; reiniciar o reproducir el wedge no está autorizado. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_toolcall_wedge_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01.txt",
+    "reason": "La falla reportada solo se valida en primera inferencia del modelo/backend NVFP4 exacto sobre SM121 y comparación semántica del fallback. No se dispone del modelo/runtime/GPU. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01.txt",
+    "reason": "Requiere canario JSON largo repetido y comparación de checkpoint/backend/KV/MTP fijados; no hay modelo/harness para evaluar degradación de contenido. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen38_long_run_json_correctness_canary_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01.txt",
+    "reason": "La regresión depende de Torch/Ray/vLLM/CUDA y TP multi-node fijados; requiere dos Spark y progreso rank por collectives. No se puede validar con chequeo estático ni sin canary. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_ray_torch_graph_hang_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "FEATURE-1358-CGROUP-04-PARCHE",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-1358-CGROUP-04-PARCHE.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Falta parche upstream revisado y vinculado al hueco medido por la fase nativa; la fase de plan no tiene verificador disponible.",
+    "before_cmd": "python3 -m tools.verify_cgroup_plan --phase 04-parche --evidence tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-05-CUELGUES",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-1358-CGROUP-05-CUELGUES.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Falta A/B real de allocations, rechazo al exceder el límite, endpoint útil y captura sin cuelgues; la fase de soak no tiene verificador.",
+    "before_cmd": "python3 -m tools.verify_cgroup_plan --phase 05-cuelgues --evidence tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+    "status": "already_passed",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.txt (captura previa; cmd rc=0; could_not_run=0)",
+    "reason": "Instrumento pasó los dos casos capturados (upgrade pass, remoción crítica block; CNR=0), pero la salida deja closure=open porque faltan cobertura OEM y guard instalado/integrado. No ejecutar transacción real.",
+    "before_cmd": "python3 -m tools.verify_apt_critical_removals --evidence tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+    "before_rc": 0,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Falta reproducir post-update en OEM/desktop fijado, demostrar sesión y dispositivos utilizables y rollback del paquete/kernel; el verificador de ficha no está instalado.",
+    "before_cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01 --evidence tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Falta manifiesto completo de cubin/PTX por backend y prueba de kernels/modelo en GB10, además de soporte OEM/soak/rollback; el preflight previo dejó estado unknown.",
+    "before_cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 --evidence tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  }
+]

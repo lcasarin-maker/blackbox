@@ -1,0 +1,57 @@
+[
+  {
+    "id": "DELTA-FORUM-RECOVERY-APT-UPDATE-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-RECOVERY-APT-UPDATE-01.txt",
+    "reason": "La ficha pide runbook ante recovery OEM/apt con captura preservable previa, consola externa y medio de recuperación. La runbook existente aporta observación, pero no hay canary de hardware/recovery para comprobar esos pasos; no se instalará ni reseteará. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_recovery_apt_update_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01.txt",
+    "reason": "atom_gpu_telemetry ya recolecta temperatura/clocks; cerrar exige A/B OEM con airflow/cap, potencia y throughput pareados. Ningún dato comunitario acredita el equipo local ni autoriza alterar cooling/clocks. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.txt",
+    "reason": "host_diagnostics puede observar inventario USB, pero el gate pedido debe proteger mdadm assemble/mount por identidad y velocidad de cada miembro. No hay integración mdadm segura ni contrato umbral/identidad acordado; no se inventa el guard ni se toca el array. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_usb_raid_link_admission_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01.txt",
+    "reason": "preflight ya comprueba identidad/arquitectura del runtime y manifest del backend, pero el cierre requiere matriz de toolchain/ruedas y build/import/model load/primera inferencia por digest sobre SM121. No hay artefactos ni hardware exactos. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_vllm_gb10_arch_and_build_matrix_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01.txt",
+    "reason": "La ficha es regresión por tag: debe capturar resource map Ray por nodo más smoke real. No existe cluster Ray/GB10 y el estado histórico 25.11 o el reporte 26.01 no sustituye el caso positivo/negativo del digest elegido. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_vllm_ray_gb10_resource_fix_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  }
+]

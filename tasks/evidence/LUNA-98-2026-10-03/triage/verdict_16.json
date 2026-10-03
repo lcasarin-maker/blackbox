@@ -1,0 +1,62 @@
+[
+  {
+    "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Falta ensayo A/B de carga emparejada con cap, clocks/temperaturas observados y rollback; la evidencia previa es solo lectura y no modificó clocks.",
+    "before_cmd": "python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Falta reproducer real o fault-injection soportada para validar salud GSP y rechazo de firma, con matriz OEM; no hay evidencia que justifique provocar fallo.",
+    "before_cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01 --evidence tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FEATURE-FORUM-NETCONSOLE-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-FORUM-NETCONSOLE-01.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Falta carga/captura real de netconsole y definir receptor, destino, retención y rollback; modinfo/vermagic no demuestran recepción.",
+    "before_cmd": "python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Fixtures cubren selectores, pero falta traza de request tras respawn del worker que demuestre provider efectivo y control CPU-only del runtime real.",
+    "before_cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01 --evidence tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-FORUM-RCU-PANIC-PSTORE-01.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Pstore devolvió permiso denegado y no hubo panics/reboots de prueba; faltan captura post-reinicio, identificación vendor y canario OEM. No inducir panic.",
+    "before_cmd": "python3 -m tools.verify_rcu_panic_pstore --evidence tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  }
+]

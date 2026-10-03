@@ -1,0 +1,57 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01",
+    "status": "blocked",
+    "evidence": "tasks/evidence/LUNA-98-2026-10-03/batch-02/before-close-checks.txt; tasks/evidence/LUNA-98-2026-10-03/batch-02/after-close-checks.txt; tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/progress.txt",
+    "reason": "Selector close_check ausente (rc=4). Captura previa registra pstore inaccesible, y faltan canary panic/reboot/pstore y recuperación natural RCU; el lote prohíbe esos ensayos.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01",
+    "before_rc": 4,
+    "after_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01",
+    "after_rc": 4,
+    "commit": "0d852126abf818287bd3dcfefe0593b1e88721cd"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+    "status": "blocked",
+    "evidence": "tasks/evidence/LUNA-98-2026-10-03/batch-02/before-close-checks.txt; tasks/evidence/LUNA-98-2026-10-03/batch-02/after-close-checks.txt; tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK/host-observation.txt",
+    "reason": "Selector close_check ausente (rc=4). Captura real muestra módulos HID cargados y directorio sin dispositivos; no acredita teclado, acceso remoto ni una transacción post-update. Ensayo de actualización y acceso real pendiente.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_usb_hid_postupdate_01",
+    "before_rc": 4,
+    "after_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_usb_hid_postupdate_01",
+    "after_rc": 4,
+    "commit": "0d852126abf818287bd3dcfefe0593b1e88721cd"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01",
+    "status": "blocked",
+    "evidence": "tasks/evidence/LUNA-98-2026-10-03/batch-02/before-close-checks.txt; tasks/evidence/LUNA-98-2026-10-03/batch-02/after-close-checks.txt; tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/host-observation.txt",
+    "reason": "Selector close_check ausente (rc=4). Captura real muestra Wi-Fi DOWN y Ethernet activa, no la secuencia WRONG_KEY/no-secrets ni un control de host freeze. Roam A/B, rollback y stack OEM siguen sin validación.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_wifi_isolation_01",
+    "before_rc": 4,
+    "after_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_wifi_isolation_01",
+    "after_rc": 4,
+    "commit": "0d852126abf818287bd3dcfefe0593b1e88721cd"
+  },
+  {
+    "id": "FEATURE-FORUM-NVME-READONLY-01",
+    "status": "developed",
+    "evidence": "tasks/evidence/LUNA-98-2026-10-03/batch-02/before-close-checks.txt; tasks/evidence/LUNA-98-2026-10-03/batch-02/after-close-checks.txt; tasks/evidence/LUNA-98-2026-10-03/batch-02/implementation-checks.txt; tools/nvme_readonly.py; tests/test_nvme_readonly.py",
+    "reason": "Implementa clasificador fail/could_not_run que exige DevicePath+SerialNumber, raíz única válida y correlación error/dispositivo same-line; inventario/log limpio declara expresamente que salud física no está probada. Exportación verifica dev/inode/size/mtime/ctime, SHA-256, filesystem distinto, no overwrite y cambios de path con bytes/mtime iguales. Focal statements: 145/145. El close_check pasa con tests sintéticos; exportación/recuperación de copia NVMe real de laboratorio pendiente, ficha open.",
+    "before_cmd": "python3 -m pytest tests/test_nvme_readonly.py -q",
+    "before_rc": 4,
+    "after_cmd": "python3 -m pytest tests/test_nvme_readonly.py -q",
+    "after_rc": 0,
+    "commit": "0d852126abf818287bd3dcfefe0593b1e88721cd"
+  },
+  {
+    "id": "FORUM-00-DOCKER-OOM-RESTART-LOOP",
+    "status": "developed",
+    "evidence": "tasks/evidence/LUNA-98-2026-10-03/batch-02/before-close-checks.txt; tasks/evidence/LUNA-98-2026-10-03/batch-02/after-close-checks.txt; tasks/evidence/LUNA-98-2026-10-03/batch-02/implementation-checks.txt; tools/workload_restart_policy.py; tests/test_workload_restart_containment.py",
+    "reason": "Presupuesto persistente por workload con flock en sidecar estable, estado atómico, CNR con contadores explícitos y rechazo de reloj regresado/now bool inválido; test concurrente demuestra 3 grants y 7 bloqueos de 10. No controla runtime ni host, no atribuye reboot a OOM. Focal statements: 82/82. El close_check pasa; integración y ensayo de reboot recuperable/conservación datos pendientes, ficha open.",
+    "before_cmd": "python3 -m pytest tests/test_workload_restart_containment.py -q",
+    "before_rc": 4,
+    "after_cmd": "python3 -m pytest tests/test_workload_restart_containment.py -q",
+    "after_rc": 0,
+    "commit": "0d852126abf818287bd3dcfefe0593b1e88721cd"
+  }
+]

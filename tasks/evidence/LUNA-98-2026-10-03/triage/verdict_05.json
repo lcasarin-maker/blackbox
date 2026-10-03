@@ -1,0 +1,57 @@
+[
+  {
+    "id": "DELTA-FORUM-CX7-FW-UPDATE-GUARD-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.txt",
+    "reason": "La evidencia exige validar updater/CX7 con PSID, BME/DMA y canal OEM firmado en hardware reemplazable; actualizar firmware está fuera de alcance. La ficha permanece abierta. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_fw_update_guard_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01.txt",
+    "reason": "Mapear PCI BDF a conector requiere CX7, cableado y control de desconexión/loopback en topología exacta. Inventariar netdev no prueba la conectividad física. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_physical_topology_alias_check_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-CX7-POSTHOTPLUG-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-CX7-POSTHOTPLUG-01.txt",
+    "reason": "El cierre requiere observación posterior a hotplug de RDMA/NCCL, PCIe/AER y FieldDiag en nodo canary. El hotplug/reboot de red no está autorizado y no hay NIC sujeto. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_posthotplug_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01.txt",
+    "reason": "Requiere dos GX10/CX7 y pruebas direccionales repetidas por frío, reboot individual y hotplug con cable/firmware fijados. No hay sujeto ni autorización para esos ciclos. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_rdma_asymmetry_retest_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  },
+  {
+    "id": "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01.txt",
+    "reason": "Requiere inspección del estado DCP/MTP por rank y A/B de referencia en 4×GB10, además de cold-load/headroom; el stack/patch externos no están disponibles ni auditados. Captura previa: selector inexistente (`no tests ran`, `ERROR: not found`), sin prueba del sujeto; no se repite el comando sin cambios. La investigación original queda abierta.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_dcp_mtp_draft_correctness_and_pretrim_oom_01",
+    "before_rc": 4,
+    "after_cmd": null,
+    "after_rc": null,
+    "commit": null
+  }
+]

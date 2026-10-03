@@ -1,0 +1,62 @@
+[
+  {
+    "id": "FEATURE-FORUM-RESCUE-RUNBOOK-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-FORUM-RESCUE-RUNBOOK-01.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Falta validación de rescate/rollback con medio externo protegido y matriz de arranque OEM; solo existe observación del estado actual, sin transición de servicios.",
+    "before_cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-RESCUE-RUNBOOK-01 --evidence tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Sysfs informa watchdog SBSA activo timeout 60s, pero falta identificar propietario real del dispositivo y confirmar recuperación OEM; fuser vacío no acredita ausencia de owner.",
+    "before_cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-SBSA-WATCHDOG-STATE-01 --evidence tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-FORUM-WIFI-ISOLATION-01.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "La interfaz Wi-Fi aparece unavailable/DOWN y Ethernet está activo; falta reproducir fallo AP/supplicant y demostrar recuperación acotada/rollback sin perder acceso.",
+    "before_cmd": "python3 -m tools.verify_wifi_isolation --evidence tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-MEMORYSAVER-02-TRAZADOR.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "No se compilaron/capturaron probes porque bpftrace requiere root; falta atribución de eventos de memoria al driver/proceso con owner confirmado.",
+    "before_cmd": "python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FEATURE-MEMORYSAVER-04-PACKING-4K.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Faltan coste real del backing, alineación/HAL aplicable y matriz stock/candidate de integridad con cobros/descobros y controles de fallo.",
+    "before_cmd": "python3 -m tools.verify_memory_saver --phase 04-packing-4k --evidence tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  }
+]

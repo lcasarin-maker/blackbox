@@ -100,3 +100,50 @@ def test_restart_policy_main_emits_allowed_and_denied_verdicts(tmp_path: Path,
     output.truncate(0)
     assert workload_restart_policy.main(args) == 1
     assert json.loads(output.getvalue())["status"] == "blocked"
+
+
+def test_state_directory_creation_error_is_could_not_run(tmp_path: Path, monkeypatch) -> None:
+    state = tmp_path / "unavailable" / "state.json"
+
+    def fail_mkdir(*_args, **_kwargs):
+        raise OSError("directory denied")
+
+    monkeypatch.setattr(Path, "mkdir", fail_mkdir)
+    report = decide(state, "owned", now=10)
+    assert report["status"] == "could_not_run"
+    assert report["allow"] is False
+    assert report["could_not_run"] == 1
+    assert "directory denied" in report["reason"]
+
+
+def test_state_lock_error_is_could_not_run(tmp_path: Path, monkeypatch) -> None:
+    state = tmp_path / "state.json"
+
+    def fail_flock(_fd: int, _operation: int) -> None:
+        raise OSError("lock denied")
+
+    monkeypatch.setattr(workload_restart_policy.fcntl, "flock", fail_flock)
+    report = decide(state, "owned", now=10)
+    assert report["status"] == "could_not_run"
+    assert report["allow"] is False
+    assert report["could_not_run"] == 1
+    assert report["unknowns"] == [report["reason"]]
+    assert "lock denied" in report["reason"]
+    assert not state.exists()
+
+
+def test_state_schema_and_per_workload_attempt_records_fail_closed(tmp_path: Path) -> None:
+    state = tmp_path / "state.json"
+    state.write_text(json.dumps({"schema": 2, "workloads": {}}), encoding="utf-8")
+    bad_schema = decide(state, "owned", now=10)
+    assert bad_schema["status"] == "could_not_run"
+    assert bad_schema["could_not_run"] == 1
+    assert "invalid state schema" in bad_schema["reason"]
+
+    state.write_text(json.dumps({"schema": 1, "workloads": {"owned": [True]}}),
+                     encoding="utf-8")
+    malformed_attempts = decide(state, "owned", now=10)
+    assert malformed_attempts["status"] == "could_not_run"
+    assert malformed_attempts["could_not_run"] == 1
+    assert malformed_attempts["reason"] == "workload state malformed"
+    assert json.loads(state.read_text(encoding="utf-8"))["workloads"]["owned"] == [True]

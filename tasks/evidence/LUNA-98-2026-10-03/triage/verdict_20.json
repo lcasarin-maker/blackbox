@@ -1,0 +1,38 @@
+[
+  {
+    "id": "DEBT-HOST-DEPLOYED-DRIFT-01",
+    "status": "needs_decision",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DEBT-HOST-DEPLOYED-DRIFT-01.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Comparador devuelve 2 divergencias en 41 sujetos (0 faltantes, 1 suspensión); resolver el comentario desactualizado y el script desplegado requiere la decisión pendiente de sincronización host. No tocar el host.",
+    "before_cmd": "bash bin/bb drift",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "DEBT-JUDGE-THREAT-SWEEP-TOOLS-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DEBT-JUDGE-THREAT-SWEEP-TOOLS-01.txt (captura previa; cmd rc=4; could_not_run=0)",
+    "reason": "Falta corregir/verificar el runtime upstream para leer tools/, PASS con archivos reales y rechazo de homoglyph/invisible; el repositorio upstream está dirty y el patch preparado no se debe tocar.",
+    "before_cmd": "python3 -m pytest -q tests/test_adversarial_product_scope.py::test_threat_sweep_reads_tools_and_rejects_injected_case",
+    "before_rc": 4,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES",
+    "status": "needs_decision",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES.txt (captura previa; cmd rc=2; could_not_run=1); guardian-readonly-recheck.txt: rc=1, could_not_run=0; captura inicial rc=2, could_not_run=1 conservada.",
+    "reason": "La revalidación con acceso de lectura al bus confirma código vivo anterior al archivo actual. El reinicio requiere la decisión pendiente.",
+    "before_cmd": "bash tools/demonio_al_dia.sh --user bb-guardia-proceso.service bin/bb-guardia-proceso",
+    "before_rc": 2,
+    "after_cmd": "bash tools/demonio_al_dia.sh --user bb-guardia-proceso.service bin/bb-guardia-proceso",
+    "after_rc": 1,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  }
+]

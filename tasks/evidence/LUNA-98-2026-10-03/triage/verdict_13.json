@@ -1,0 +1,62 @@
+[
+  {
+    "id": "DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01.txt (captura previa; cmd rc=4; could_not_run=0)",
+    "reason": "Falta separar cambios SoC/EC y medir soak, lectura EEPROM y NO-CARRIER con el tuple GX10/switch exacto; FieldDiag PASS no sustituye esos resultados.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_gx10_soc_ec_cable_recovery_candidate_01",
+    "before_rc": 4,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01.txt (captura previa; cmd rc=4; could_not_run=0)",
+    "reason": "Faltan manifiesto efectivo de overlay/modelo y ensayo concurrente que capture OOM de load_model y starvation/reprocess prefill por petición.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_mimo_overlay_and_prefill_fairness_01",
+    "before_rc": 4,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01.txt (captura previa; cmd rc=4; could_not_run=0)",
+    "reason": "Falta validar el parche por versión upstream y comportamiento real CUTLASS/Triton, MTP/EAGLE y audio; los datos publicados incluyen parche obsoleto y regresión ABI.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_mimo_patch_supersession_gate_01",
+    "before_rc": 4,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01.txt (captura previa; cmd rc=4; could_not_run=0)",
+    "reason": "Falta ensayo multi-engine real que pruebe progreso/rank y fallo negativo, con versiones/stack y resultados por motor.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_ray_multiengine_rank_progress_01",
+    "before_rc": 4,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01.txt (captura previa; cmd rc=4; could_not_run=0)",
+    "reason": "Falta evaluación OEM y canario térmico/UMA en el sistema de refrigeración objetivo; no se puede inferir seguridad de funcionamiento bajo ambiente subcero.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_subambient_cooling_and_uma_canary_01",
+    "before_rc": 4,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  }
+]

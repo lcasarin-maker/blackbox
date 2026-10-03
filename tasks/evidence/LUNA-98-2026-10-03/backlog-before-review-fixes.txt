@@ -1,0 +1,15 @@
+[backlog-verifier] persistent verify cache: 178 cached verdict(s) on file, oldest recorded 23.9d ago
+[31m[backlog-verifier] FRAUD DETECTED: Found 2 closed tasks whose findings still reproduce:[0m
+  🔴 DEBT-H1-RELEASE-CLAIMS-01.md:
+Task is marked as done, but 1 finding(s) still reproduce:
+  - close_check 'python3 .simplecode/run.py simplecode.cli audit --root . --gate' failed with exit code 1 -- output: 'sts/test_ruff_gitleaks_controles_negativos.py); SPEC-L315 (changed: enable-privileged.sh); SPEC-L316 (changed: tests/test_calibra_psi.py, tools/calibra_psi.py); SPEC-L317 (changed: tests/test_cobertura_bash.py)\n  - 4 unaudited claim(s): SPEC-L318, SPEC-L319, SPEC-L320, SPEC-L321\n[audit] tree provenance (informative, does not gate): verdicts recorded against tree 291226fd0b76 at 2026-10-03T15:31:36Z; 23 commit(s) since\n[audit] NOT CLEAN: no complete green ledger for the current claims (blocking).'
+  🔴 DEBT-PREPUSH-TEST-OBSERVABILITY-BOOT-TYPES-01.md:
+Task is marked as done, but 1 finding(s) still reproduce:
+  - close_check 'python3 .simplecode/run.py simplecode.verification.adversarial_judge --root . --gate' failed with exit code 1 -- output: ') this run:\n  🔴 Mock Theater (GS2-216) in test_diagnostic_admission_prototypes.py::test_thermal_cli_entrypoint_preserves_incomplete_exit: Assertions do not observe a call result or mocked behavior.\n[adversarial-judge] FAIL: 1 condemned finding(s) (mock-theater/source-disguise); first: Mock Theater (GS2-216) in test_diagnostic_admission_prototypes.py::test_thermal_cli_entrypoint_preserves_incomplete_exit: Assertions do not observe a call result or mocked behavior.\n[adversarial-judge] HALLAZGOS: 1'
+[backlog-verifier] the fields above are what THIS gate reads; a ficha may reconcile them in its own body -- read it before concluding its declaration is wrong
+[backlog-verifier] could_not_run baseline: no .simplecode/could_not_run_baseline.json declared
+[backlog-verifier] task cohorts (no .simplecode/task_contract_cutoff.json declared: everything is governed) -> governed: 283 · legacy pre-cut-off, contract shape NOT evaluated: 0 · undatable by git, contract shape NOT evaluated: 0 · declared `done_unverified`, contract shape NOT evaluated: 0
+[backlog-verifier] done-tasks whose status is outside this repo's closing vocabulary (reported, NOT blocking): 0
+[backlog-verifier] DETECTORES: {"closure_reproduces":2,"contract_breach":0,"could_not_run":0,"unverified_task":0}
+[backlog-verifier] HALLAZGOS: 2
+[backlog-verifier] NOT CLEAN (counts -> frauds: 2 · could_not_run: 0 (0 undeclared) · contract_breaches: 0 · unverified: 0).

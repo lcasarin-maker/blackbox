@@ -1,0 +1,62 @@
+[
+  {
+    "id": "FORUM-00-REALTEK-EEE-DIRECT-LINK",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FORUM-00-REALTEK-EEE-DIRECT-LINK.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Falta A/B EEE con el link partner Intel I225-V y tuple kernel/driver exacto, tráfico prolongado y control de topología con switch; no aplicar workaround global.",
+    "before_cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-REALTEK-EEE-DIRECT-LINK --evidence tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FORUM-02-GX10-READ-INTEGRITY",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FORUM-02-GX10-READ-INTEGRITY.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Herramienta de lectura ya está desarrollada y discrimina hash de fixture buena frente a alterada, pero falta referencia independiente y correlación con RAS/NVMe/firmware para resolver el evento real sin leer/modificar producción.",
+    "before_cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-GX10-READ-INTEGRITY --evidence tasks/evidence/FORUM-02-GX10-READ-INTEGRITY",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FORUM-02-PSTORE-KERNEL-REGRESSION",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FORUM-02-PSTORE-KERNEL-REGRESSION.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Falta captura pstore local accesible, identidad de firmware/kernel y resolución/corrección confirmada por vendor; la captura local previa tuvo permiso denegado.",
+    "before_cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-PSTORE-KERNEL-REGRESSION --evidence tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FORUM-02-USB-UVC-EP0",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FORUM-02-USB-UVC-EP0.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Falta identificar versión corregida exacta y reproducción A/B en la pila OEM/cámara, más validación post-update/rollback; la afirmación de julio no identifica build.",
+    "before_cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-USB-UVC-EP0 --evidence tasks/evidence/FORUM-02-USB-UVC-EP0",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  },
+  {
+    "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+    "status": "blocked",
+    "evidence": "/home/lcasarin/projects/blackbox/tasks/evidence/LUNA-98-2026-10-03/remaining-before/FORUM-REALTEK-DRIVER-BINDING-01.txt (captura previa; cmd rc=1; could_not_run=0)",
+    "reason": "Binding actual r8127 está observado, pero faltan procedencia del paquete/firma y cold/warm reboot A/B más controles de NIC distinta, módulo ausente, consulta fallida y rollback.",
+    "before_cmd": "python3 -m tools.verify_forum_finding --id FORUM-REALTEK-DRIVER-BINDING-01 --evidence tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01",
+    "before_rc": 1,
+    "after_cmd": "No repetido; se reutiliza el resultado de baseline sin cambios.",
+    "after_rc": null,
+    "commit": "78af6d230dbd43146699bd658f9cab0c2472d87a",
+    "could_not_run": 0
+  }
+]
