@@ -17,7 +17,7 @@ def _ts(epoch: float) -> str:
     return dt.datetime.fromtimestamp(epoch, dt.timezone.utc).isoformat()
 
 
-def _fila(epoch: float, boot: str = "A", **extra) -> dict:
+def _fila(epoch: float, boot: object = "A", **extra) -> dict:
     return {"ts": _ts(epoch), "boot_id": boot, **extra}
 
 
