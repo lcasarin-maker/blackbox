@@ -2,9 +2,7 @@
 id: DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES
 kind: debt
 title: "Ningun guardrail limita a UN proceso individual, y eso tumbo la maquina dos veces en 50 minutos"
-status: done
-closure_type: fixed
-closed_at: 2026-09-28
+status: open
 severity: P1
 origin: asserted
 satd_family: MISSING_COVERAGE
@@ -243,3 +241,9 @@ porque `tools/control_racha.py` no conoce los dos incidentes de hoy como
 ventanas de incidente legitimas -- clasifica una muestra de las 04:24:02
 (dentro del colapso 2 real) como FALSO POSITIVO. Confirmado con `git stash`
 que ya fallaba antes de este trabajo. Merece su propio ciclo de calibracion.
+
+## Reapertura — 2026-10-03
+
+El gate pre-push reejecutó el close_check y obtuvo exit 1: bb-guardia-proceso.service arrancó Wed 2026-09-30 14:40:12 CST, antes de la modificación actual de bin/bb-guardia-proceso. La evidencia histórica de septiembre permanece; el estado actual vuelve a abierto porque el control vivo falla.
+
+La configuración de usuario apunta al archivo de este repo. `python3 -m pytest -q tests/test_bb_guardia_proceso.py` produjo `20 passed in 0.04s`, exit 0. El reinicio del servicio está pendiente de decisión operativa del usuario. Cerrar de nuevo exige el close_check vivo con exit 0 tras cargar el archivo actual; las pruebas offline por sí solas no satisfacen ese requisito.
