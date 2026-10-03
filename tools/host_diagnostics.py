@@ -183,6 +183,167 @@ def read_optional_text(path: Path) -> dict[str, Any]:
     return result
 
 
+def _sysfs_text(root: Path, path: Path, *, optional: bool = False) -> dict[str, Any]:
+    target, error = _sysfs_target(root, path)
+    if error:
+        if optional and error.startswith("FileNotFoundError:"):
+            return {"status": "unknown", "reason": "sysfs attribute absent"}
+        return {"status": "could_not_run", "error": error}
+    target = cast(Path, target)
+    return read_optional_text(target) if optional else read_text(target)
+
+
+def ip_link_inventory(runner: RUNNER = subprocess.run) -> dict[str, Any]:
+    """Capture selected interface state from native ip JSON output."""
+    query = run_readonly(["ip", "-j", "link", "show"], runner)
+    if query["status"] != "ok":
+        return query
+    try:
+        records = json.loads(query["stdout"])
+    except (json.JSONDecodeError, TypeError) as exc:
+        return {"status": "could_not_run", "command": query["command"],
+                "error": f"{type(exc).__name__}: {exc}"}
+    if not isinstance(records, list):
+        return {"status": "could_not_run", "command": query["command"],
+                "error": "ip JSON root is not a list"}
+    links: dict[str, dict[str, Any]] = {}
+    errors: dict[str, str] = {}
+    for index, record in enumerate(records):
+        if not isinstance(record, dict):
+            errors[str(index)] = "link entry is not an object"
+            continue
+        name = record.get("ifname")
+        if not isinstance(name, str) or not INTERFACE_RE.fullmatch(name) or name in links:
+            errors[str(index)] = "missing, invalid, or duplicate interface name"
+            continue
+        fields = {key: ({"status": "ok", "value": record[key]} if key in record else
+                        {"status": "unknown", "reason": "field absent from ip JSON"})
+                  for key in ("ifindex", "mtu", "operstate", "link_type")}
+        links[name] = {"status": "partial" if any(value["status"] == "unknown"
+                                                       for value in fields.values()) else "ok",
+                       **fields}
+    return {"status": "could_not_run" if errors else "ok",
+            "command": query["command"], "links": links, "errors": errors}
+
+
+def _infiniband_port(root: Path, path: Path) -> dict[str, Any]:
+    port_path, error = _sysfs_target(root, path)
+    if error:
+        return {"status": "could_not_run", "error": error, "gids": {}}
+    port_path = cast(Path, port_path)
+    gids_path, error = _sysfs_target(root, port_path / "gids")
+    gids = ({"status": "could_not_run", "error": error} if error else
+            read_names(cast(Path, gids_path)))
+    gid_records: dict[str, Any] = {}
+    if gids["status"] == "ok":
+        for index in gids["value"]:
+            if not re.fullmatch(r"[0-9]+", index):
+                gid_records[index] = {"status": "could_not_run", "error": "invalid GID index"}
+                continue
+            values = {
+                "gid": _sysfs_text(root, port_path / "gids" / index),
+                "type": _sysfs_text(root, port_path / "gid_attrs/types" / index),
+                "netdev": _sysfs_text(root, port_path / "gid_attrs/ndevs" / index),
+            }
+            netdev = values["netdev"].get("value")
+            if values["netdev"]["status"] == "ok" and isinstance(netdev, str):
+                values["pci_binding"] = pci_binding(root, netdev)
+            gid_records[index] = {"status": "could_not_run" if any(
+                value["status"] == "could_not_run" for value in values.values()
+                if isinstance(value, dict) and "status" in value) else "ok", **values}
+    link_layer = _sysfs_text(root, port_path / "link_layer")
+    state = _sysfs_text(root, port_path / "state")
+    return {"status": "could_not_run" if gids["status"] != "ok" or
+            link_layer["status"] == "could_not_run" or
+            state["status"] == "could_not_run" or any(
+                gid["status"] == "could_not_run" for gid in gid_records.values()) else "ok",
+            "gids": gid_records, "link_layer": link_layer, "state": state}
+
+
+def _infiniband_device(root: Path, name: str) -> dict[str, Any]:
+    base = root / "sys/class/infiniband" / name
+    base, error = _sysfs_target(root, base)
+    if error:
+        return {"status": "could_not_run", "error": error}
+    base = cast(Path, base)
+    pci_target, error = _sysfs_target(root, base / "device")
+    pci: dict[str, Any] = {"status": "unknown", "pci_address": None}
+    if error:
+        pci = {"status": "could_not_run", "error": error}
+    else:
+        pci_target = cast(Path, pci_target)
+        pci_address = pci_target.name
+        ids = _device_attributes(root, root / "sys/bus/pci/devices" / pci_address,
+                                 ("vendor", "device"))
+        pci = {"status": ids["status"], "pci_address": pci_address,
+               "pci_vendor": ids.get("vendor"), "pci_device": ids.get("device")}
+    ports_path, error = _sysfs_target(root, base / "ports")
+    port_names = ({"status": "could_not_run", "error": error} if error else
+                  read_names(cast(Path, ports_path)))
+    ports: dict[str, Any] = {}
+    if port_names["status"] == "ok":
+        for port in port_names["value"]:
+            ports[port] = (_infiniband_port(root, base / "ports" / port)
+                           if re.fullmatch(r"[0-9]+", port) else
+                           {"status": "could_not_run", "error": "invalid port name"})
+    fields = {"firmware_version": _sysfs_text(root, base / "fw_ver", optional=True),
+              "node_guid": _sysfs_text(root, base / "node_guid", optional=True),
+              "system_image_guid": _sysfs_text(root, base / "sys_image_guid", optional=True)}
+    return {"status": "could_not_run" if pci["status"] == "could_not_run" or
+            port_names["status"] != "ok" or
+            any(port["status"] == "could_not_run" for port in ports.values()) or
+            any(field["status"] == "could_not_run" for field in fields.values()) else "ok",
+            "pci": pci, **fields, "ports": ports}
+
+
+def infiniband_inventory(root: Path) -> dict[str, Any]:
+    """Read available RDMA GID, netdev, PCI, and firmware sysfs metadata."""
+    directory, error = _sysfs_target(root, root / "sys/class/infiniband")
+    if error:
+        return {"status": "could_not_run", "error": error, "devices": {}}
+    devices = read_names(cast(Path, directory))
+    if devices["status"] != "ok":
+        return {**devices, "devices": {}}
+    result = {name: _infiniband_device(root, name) for name in devices["value"]}
+    return {"status": "could_not_run" if any(item["status"] == "could_not_run"
+                                               for item in result.values()) else "ok",
+            "devices": result}
+
+
+def network_inventory(root: Path, runner: RUNNER = subprocess.run) -> dict[str, Any]:
+    """Join native link records with sysfs identity and optional RDMA metadata."""
+    interfaces = _interfaces(root)
+    links = ip_link_inventory(runner)
+    link_records = links.get("links", {})
+    unmatched = [name for name in interfaces.get("interfaces", []) if name not in link_records]
+    profiles: dict[str, Any] = {}
+    for name in interfaces.get("interfaces", []):
+        base = root / "sys/class/net" / name
+        profiles[name] = {
+            "ip_link": link_records.get(name, {"status": "unknown",
+                                                 "reason": "interface absent from ip JSON"}),
+            "mtu_sysfs": _sysfs_text(root, base / "mtu"),
+            "carrier": _sysfs_text(root, base / "carrier"),
+            "operstate": _sysfs_text(root, base / "operstate"),
+            "pci_binding": pci_binding(root, name),
+            "firmware_version": {"status": "unknown",
+                                  "reason": "no generic interface sysfs firmware field"},
+        }
+        profile = profiles[name]
+        profile["status"] = "could_not_run" if any(
+            profile[key]["status"] == "could_not_run"
+            for key in ("mtu_sysfs", "carrier", "operstate", "pci_binding")) else "ok"
+    infiniband = infiniband_inventory(root)
+    return {"status": "could_not_run" if interfaces["status"] != "ok" or
+            links["status"] == "could_not_run" or
+            bool(unmatched) or
+            any(profile["status"] == "could_not_run" for profile in profiles.values()) or
+            infiniband["status"] == "could_not_run" else "ok",
+            "physical_attachment": "UNKNOWN", "transport_validation": "not_run",
+            "links": links, "interfaces": profiles, "interfaces_missing_from_ip": unmatched,
+            "infiniband": infiniband}
+
+
 def usb_inventory(root: Path) -> dict[str, Any]:
     """Read USB identity/speed and correlate HID interfaces through sysfs ancestry."""
     entries = read_names(root / "sys/bus/usb/devices")
@@ -319,7 +480,7 @@ def module_state(root: Path, name: str) -> dict[str, Any]:
 
 
 def could_not_run_count(value: Any) -> int:
-    """Count unavailable leaf checks so partial reports cannot look clean."""
+    """Count nodes carrying an unavailable status in a diagnostics report."""
     if isinstance(value, dict):
         own = int(value.get("status") == "could_not_run")
         return own + sum(could_not_run_count(child) for child in value.values())
@@ -429,6 +590,7 @@ def capture(root: Path = Path("/"), runner: RUNNER = subprocess.run) -> dict[str
             "default_routes": run_readonly(["ip", "route", "show", "default"], runner),
             "wireless_interfaces": run_readonly(["iw", "dev"], runner),
             "interface_inventory": interfaces,
+            "inventory": network_inventory(root, runner),
             "pci_bindings": {name: pci_binding(root, name)
                              for name in interfaces.get("interfaces", [])},
             "eee": {name: run_readonly(["ethtool", "--show-eee", name], runner)

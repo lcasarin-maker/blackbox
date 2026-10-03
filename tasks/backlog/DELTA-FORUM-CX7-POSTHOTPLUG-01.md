@@ -32,3 +32,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Avance de instrumentación 2026-10-03
+
+`tools.host_diagnostics` captura MTU, carrier, operstate, binding PCI/driver y, si hay sysfs RDMA, GID/netdev/firmware por puerto. No provoca hotplug ni valida throughput, recovery o NCCL; la captura actual no expuso dispositivos RDMA y `ip -j link` quedó inaccesible. Evidencia: [BB-INSTRUMENTS-network](../../docs/evidence/BB-INSTRUMENTS-network.md). La ficha permanece abierta; `close_check` y `status` no cambiaron.
