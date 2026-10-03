@@ -3,12 +3,16 @@ id: DEBT-RUFF-TEST-PRESUPUESTO-MEMORIA-01
 kind: task
 domain: VERDICT
 title: "Resolver infracciones Ruff en test_presupuesto_memoria.py"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
+closed_at: 2026-10-02
+closure_type: fixed
 close_check: {"cmd": "python3 -m ruff check tests/test_presupuesto_memoria.py", "expect": "exit_zero", "porque": "Ruff del archivo retorna cero con las reglas actuales y las pruebas del sujeto pasan. Reducir complejidad sin debilitar validación, seguridad ni controles negativos. No silenciar reglas ni añadir noqa para conseguir verde. Control negativo: variante temporal que exceda la regla vuelve a fallar."}
+evidence: {"pass": "tasks/evidence/DEBT-RUFF-TEST-PRESUPUESTO-MEMORIA-01/pass.txt", "fail": "tasks/evidence/DEBT-RUFF-TEST-PRESUPUESTO-MEMORIA-01/fail.txt", "e2e": "tasks/evidence/DEBT-RUFF-TEST-PRESUPUESTO-MEMORIA-01/e2e.txt"}
+reason: "La validación parametrizada agrupa el caso de entrada en un único parámetro para quedar dentro del límite de argumentos Ruff conservando sus dos casos y asserts. Ruff y ambos casos de pytest pasan. El control negativo temporal de seis parámetros produce PLR0913."
 ---
 
 ## Registro y responsable

@@ -1,0 +1,9 @@
+$ python3 -m ruff check tests/test_bb_bash.py  # HEAD original 511a172
+PLR0913 Too many arguments in function definition (8 > 5)
+Found 1 error.
+exit_code=1
+
+$ python3 -m pytest tests/test_bb_bash.py::test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso tests/test_bb_bash.py::test_sigterm_DECLARA_la_ventana_que_el_anillo_cubre  # HEAD original, sandbox
+2 failed in 0.18s
+Ambos fallos por `could_not_run` ausente; `bb` imprime que rustdesk no corre y el
+proxy no tiene sujeto.

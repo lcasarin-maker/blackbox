@@ -3,12 +3,16 @@ id: DEBT-RUFF-TEST-BB-BASH-01
 kind: task
 domain: VERDICT
 title: "Resolver infracciones Ruff en test_bb_bash.py"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
+closed_at: 2026-10-02
+closure_type: fixed
 close_check: {"cmd": "python3 -m ruff check tests/test_bb_bash.py", "expect": "exit_zero", "porque": "Ruff del archivo retorna cero con las reglas actuales y las pruebas del sujeto pasan. Reducir complejidad sin debilitar validación, seguridad ni controles negativos. No silenciar reglas ni añadir noqa para conseguir verde. Control negativo: variante temporal que exceda la regla vuelve a fallar."}
+evidence: {"pass": "tasks/evidence/DEBT-RUFF-TEST-BB-BASH-01/pass.txt", "fail": "tasks/evidence/DEBT-RUFF-TEST-BB-BASH-01/fail.txt", "e2e": "tasks/evidence/DEBT-RUFF-TEST-BB-BASH-01/e2e.txt"}
+reason: "La función auxiliar de registros agrupa sus opciones en campos nombrados para cumplir PLR0913 sin perder valores por defecto. Ruff y los tests sigterm pasan con acceso de host al proceso rustdesk. El fallo observado en sandbox es específico de visibilidad del sujeto: bin/bb declara could_not_run; el mismo HEAD original pasa con permisos del host. Control negativo temporal confirma que Ruff sigue rechazando seis parámetros."
 ---
 
 ## Registro y responsable
