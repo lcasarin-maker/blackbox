@@ -1,0 +1,57 @@
+[
+  {
+    "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "path": "tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md",
+    "title": "\"Validate lower GPU clock caps as an opt-in defense against silent power-offs\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+      "expect": "exit_zero",
+      "porque": "Must compare a lower cap against the currently applied cap on an identified OEM/driver stack, preserve stability and performance results, and prove restoration of the original clock policy."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "path": "tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md",
+    "title": "\"Validar fallback a CPU tras respawn y el fix reportado del stack NVIDIA\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01 --evidence tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+    "path": "tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md",
+    "title": "\"Detect and recover Wi-Fi isolation without misclassifying a live host as frozen\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_wifi_isolation --evidence tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01",
+      "expect": "exit_zero",
+      "porque": "Must prove the recorded NetworkManager and supplicant failure is distinguished from a host freeze, test a bounded recovery policy on the cited stack, and preserve rollback evidence."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "path": "tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md",
+    "title": "\"Adaptar trazador de cargos kernel con atribuci\u00f3n a cgroup\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR",
+      "expect": "exit_zero",
+      "porque": "Verificaci\u00f3n espec\u00edfica pendiente: ejecutar el sujeto y sus controles, no comprobar solo que el informe exista."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "path": "tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md",
+    "title": "\"Evaluar subasignaci\u00f3n de tablas UVM bajo p\u00e1ginas de 4 KiB\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_memory_saver --phase 04-packing-4k --evidence tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K",
+      "expect": "exit_zero",
+      "porque": "Verificaci\u00f3n espec\u00edfica pendiente: ejecutar el sujeto y sus controles, no comprobar solo que el informe exista."
+    },
+    "dependencies": []
+  }
+]

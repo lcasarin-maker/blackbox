@@ -1,0 +1,35 @@
+[
+  {
+    "id": "DEBT-HOST-DEPLOYED-DRIFT-01",
+    "path": "tasks/backlog/DEBT-HOST-DEPLOYED-DRIFT-01.md",
+    "title": "Sincronizar dos archivos desplegados que difieren del repo",
+    "close_check": {
+      "cmd": "bash bin/bb drift",
+      "expect": "exit_zero",
+      "porque": "El comparador debe observar archivos reales iguales al repo; su control negativo de divergencia ya existe en tests/test_bb_bash.py. No rebajar el detector ni copiar comentarios antiguos al repo para absolver el despliegue."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "DEBT-JUDGE-THREAT-SWEEP-TOOLS-01",
+    "path": "tasks/backlog/DEBT-JUDGE-THREAT-SWEEP-TOOLS-01.md",
+    "title": "El barrido de amenazas omite los m\u00f3dulos de tools",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_adversarial_product_scope.py::test_threat_sweep_reads_tools_and_rejects_injected_case",
+      "expect": "exit_zero",
+      "porque": "El control futuro debe demostrar lectura real de tools/, PASS del sujeto limpio y rechazo de un homoglyph/invisible inyectado en un m\u00f3dulo de esa ruta; la salida PASS con cero archivos no satisface el criterio."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES",
+    "path": "tasks/backlog/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES.md",
+    "title": "\"Ningun guardrail limita a UN proceso individual, y eso tumbo la maquina dos veces en 50 minutos\"",
+    "close_check": {
+      "cmd": "bash tools/demonio_al_dia.sh --user bb-guardia-proceso.service bin/bb-guardia-proceso",
+      "expect": "exit_zero",
+      "porque": "`systemctl` no esta en .simplecode/build_tools.txt (solo grep y bash), asi que llamarlo directo en el close_check es un CONTRACT BREACH que backlog-verifier cazo en la practica. Se envuelve en demonio_al_dia.sh -- YA existente, YA con suite, extendido con --user en este mismo commit -- que ademas comprueba algo mas fuerte que is-active: que el PROCESO VIVO arranco DESPUES de la ultima modificacion del codigo, el mismo patron que ya usa DEBT-UNA-BAJADA-MOMENTANEA. Se invoca via bash porque es lo que build_tools.txt declara y backlog-verifier solo confia en esa lista."
+    },
+    "dependencies": []
+  }
+]
