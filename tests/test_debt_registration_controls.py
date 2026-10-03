@@ -4,9 +4,10 @@ import json
 import os
 import subprocess
 import sys
+import time
 
 from test_bb_usable import _cargar
-from test_bb_bash import _arbol_cgroup, _fila_escritorio, correr
+from test_bb_bash import _arbol_cgroup, _fila_escritorio, _syscall, correr
 from pathlib import Path
 
 import pytest
@@ -416,3 +417,21 @@ def test_debt_no_cover_nombra_victimas_271(tmp_path):
 
 def test_debt_no_cover_presupuesto_memoria_497(tmp_path):
     _assert_no_cover_entrypoint("presupuesto_memoria.py", tmp_path)
+
+
+def test_debt_shellcheck_bb_subject_01(tmp_path: Path) -> None:
+    data = tmp_path / "data"
+    audit = tmp_path / "audit with spaces"
+    audit.mkdir()
+    now = int(time.time())
+    (audit / "audit.log.1").write_text(_syscall(now - 300, 9101, pid=1111, comm='"old"'), encoding="utf-8")
+    (audit / "audit.log").write_text(_syscall(now - 10, 9102, pid=2222, comm='"new"'), encoding="utf-8")
+    result = correr(["sigterm", "10 minutes ago"], data, {"BLACKBOX_AUDIT_DIR": str(audit)})
+    assert "old[1111]" in result.stdout, result.stdout + result.stderr
+    assert "new[2222]" in result.stdout, result.stdout + result.stderr
+    assert "el registro cubre:" in result.stdout
+    for path in audit.iterdir():
+        path.write_text(_syscall(now - 10, 9103, pid=3333, key="unrelated"), encoding="utf-8")
+    negative = correr(["sigterm", "10 minutes ago"], data, {"BLACKBOX_AUDIT_DIR": str(audit)})
+    assert "0 senales registradas" in negative.stdout
+    assert "3333" not in negative.stdout
