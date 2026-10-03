@@ -50,7 +50,10 @@ def _hay_unit():
 
 
 necesita_unit = pytest.mark.skipif(
-    not _hay_unit(), reason=f"{UNIT} no esta corriendo en esta maquina")
+    not _hay_unit(),
+    reason=(f"COULD_NOT_RUN: {UNIT} no esta accesible; "
+            "owner=Blackbox; trigger=ejecutar con acceso al systemd del host"),
+)
 
 
 # ------------------------------------ las tres salidas
