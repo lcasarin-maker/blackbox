@@ -99,3 +99,7 @@ Propuesta: Antes del respaldo y del restore, verificar UUID, dispositivo esperad
 Riesgo: Reenumerar USB durante escritura puede perder datos; cable o firmware como causa permanece hipótesis.
 
 Cierre: Fixture con disco ausente y mountpoint existente bloquea escritura; prueba tras reinicio valida identidad y lectura del respaldo. Recuperación conserva datos y requiere resultado verificable.
+
+## Nota de instrumentación readonly (2026-10-03)
+
+Se reutilizó la captura existente de sesiones/servicios; no se entró a rescue.target ni se probó reversión de servicios. La ficha sigue abierta. Evidencia y límites: `docs/evidence/BB-INSTRUMENTS-boot.md`.

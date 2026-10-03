@@ -100,6 +100,126 @@ def mount_summary(root: Path) -> dict[str, Any]:
     return {"status": "ok", "value": mounts}
 
 
+def _backup_mountpoint_state(root: Path, mountpoint: str) -> dict[str, str]:
+    target = Path(mountpoint)
+    if not target.is_absolute() or ".." in target.parts:
+        return {"status": "unknown", "reason": "mountpoint must be an absolute normalized path"}
+    rooted_target = root / target.relative_to("/")
+    try:
+        resolved_root = root.resolve(strict=True)
+        resolved_target = rooted_target.resolve(strict=True)
+        resolved_target.relative_to(resolved_root)
+        if not resolved_target.is_dir():
+            return {"status": "block", "reason": "mountpoint directory absent"}
+    except FileNotFoundError:
+        return {"status": "block", "reason": "mountpoint directory absent"}
+    except (OSError, RuntimeError, ValueError) as exc:
+        return {"status": "unknown", "reason": f"mountpoint inspection failed: {type(exc).__name__}: {exc}"}
+    return {"status": "ok"}
+
+
+def _findmnt_identity(query: dict[str, Any]) -> dict[str, Any]:
+    if query["status"] != "ok":
+        if query.get("returncode") == 1 and not query.get("stderr"):
+            return {"status": "block", "reason": "exact mountpoint is not mounted",
+                    "query": query}
+        return {"status": "unknown", "reason": "findmnt could not inspect mount identity",
+                "query": query}
+    try:
+        filesystems = json.loads(query["stdout"])["filesystems"]
+    except (json.JSONDecodeError, KeyError, TypeError) as exc:
+        return {"status": "unknown", "reason": f"invalid findmnt JSON: {type(exc).__name__}: {exc}"}
+    if not isinstance(filesystems, list) or not filesystems:
+        return {"status": "block", "reason": "exact mountpoint has no mounted filesystem"}
+    if len(filesystems) != 1 or not isinstance(filesystems[0], dict):
+        return {"status": "unknown", "reason": "findmnt returned ambiguous mount identity"}
+    observed = {"target": filesystems[0].get("target"),
+                "source": filesystems[0].get("source"), "uuid": filesystems[0].get("uuid")}
+    if not all(isinstance(value, str) and value for value in observed.values()):
+        return {"status": "unknown", "reason": "findmnt identity fields absent or unreadable",
+                "observed": observed}
+    return {"status": "ok", "observed": observed}
+
+
+def backup_destination_check(root: Path, mountpoint: str | None,
+                             expected_source: str | None, expected_uuid: str | None,
+                             runner: RUNNER | None = None) -> dict[str, Any]:
+    """Require an exact mounted destination and caller-supplied device identity."""
+    if not all(isinstance(value, str) and value.strip() for value in
+               (mountpoint, expected_source, expected_uuid)):
+        return {"status": "unknown", "reason": "explicit mountpoint, source, and UUID required"}
+    mountpoint = cast(str, mountpoint)
+    expected_source = cast(str, expected_source)
+    expected_uuid = cast(str, expected_uuid)
+    selected_runner = runner or subprocess.run
+    if root != Path("/") and selected_runner is subprocess.run:
+        return {"status": "unknown",
+                "reason": "fixture roots require an injected findmnt runner"}
+    mount_state = _backup_mountpoint_state(root, mountpoint)
+    if mount_state["status"] != "ok":
+        return mount_state
+    query = run_readonly(["findmnt", "--json", "--mountpoint", mountpoint,
+                          "--output", "TARGET,SOURCE,UUID"], selected_runner)
+    identity = _findmnt_identity(query)
+    if identity["status"] != "ok":
+        return identity
+    observed = identity["observed"]
+    expected = {"target": mountpoint, "source": expected_source, "uuid": expected_uuid}
+    mismatches = [key for key, value in expected.items() if observed[key] != value]
+    return {"status": "block" if mismatches else "pass", "expected": expected,
+            "observed": identity, "mismatches": mismatches}
+
+
+def boot_state_inventory(root: Path, kernel_release: str | None = None) -> dict[str, Any]:
+    """Record current kernel/DRM/initrd observations without asserting bootability."""
+    release_record = ({"status": "ok", "value": kernel_release, "source": "explicit input"}
+                      if kernel_release is not None else
+                      _sysfs_text(root, root / "proc/sys/kernel/osrelease"))
+    if kernel_release is None and release_record["status"] == "ok":
+        release_record["source"] = "proc/sys/kernel/osrelease"
+    if release_record["status"] != "ok":
+        return {"status": "could_not_run", "running_kernel_release": release_record,
+                "bootability": "not_verified"}
+    release = release_record["value"]
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,127}", release) or ".." in release:
+        return {"status": "could_not_run", "running_kernel_release": release_record,
+                "reason": "invalid kernel release token",
+                "bootability": "not_verified"}
+    modeset = _sysfs_text(root, root / "sys/module/nvidia_drm/parameters/modeset",
+                          optional=True)
+    command_line = _sysfs_text(root, root / "proc/cmdline")
+    overrides: dict[str, Any] = {"status": command_line["status"]}
+    if command_line["status"] == "ok":
+        observed: list[str] = []
+        for token in command_line["value"].split():
+            key, separator, value = token.partition("=")
+            if key in ("nvidia-drm.modeset", "nvidia_drm.modeset") and separator:
+                allowed = {"0", "1", "Y", "N", "y", "n", "true", "false", "on", "off"}
+                observed.append(value if value in allowed else "unknown")
+        overrides.update({"observed_modeset_overrides": observed})
+    else:
+        overrides["error"] = command_line.get("error")
+    artifacts: dict[str, Any] = {}
+    for name in (f"vmlinuz-{release}", f"initrd.img-{release}"):
+        path = root / "boot" / name
+        try:
+            resolved_root = root.resolve(strict=True)
+            resolved_path = path.resolve(strict=True)
+            resolved_path.relative_to(resolved_root)
+            resolved_path.stat()
+            artifacts[name] = {"status": "observed", "present": resolved_path.is_file()}
+        except FileNotFoundError:
+            artifacts[name] = {"status": "observed", "present": False}
+        except (OSError, RuntimeError, ValueError) as exc:
+            artifacts[name] = {"status": "could_not_run",
+                               "error": f"{type(exc).__name__}: {exc}"}
+    release_record["status"] = "observed"
+    return {"running_kernel_release": release_record, "drm_command_line_overrides": overrides,
+            "nvidia_drm_modeset_effective": modeset,
+            "current_kernel_artifact_presence_only": artifacts,
+            "bootability": "not_verified"}
+
+
 def _interfaces(root: Path) -> dict[str, Any]:
     result = read_names(root / "sys/class/net")
     if result["status"] != "ok":
@@ -582,6 +702,7 @@ def capture(root: Path = Path("/"), runner: RUNNER = subprocess.run) -> dict[str
                 ["lsblk", "--json", "--output", "NAME,TYPE,RO,MODEL,MOUNTPOINT"], runner),
             "nvme_inventory": run_readonly(["nvme", "list", "--output-format=json"], runner),
         },
+        "boot_state": boot_state_inventory(root),
         "gpu_runtime": gpu_runtime_capture(runner),
         "network": {
             "nm_devices": run_readonly(
@@ -619,7 +740,10 @@ def capture(root: Path = Path("/"), runner: RUNNER = subprocess.run) -> dict[str
         "could_not_run": unavailable,
         "identity": {"kernel_release": platform.uname().release,
                      "architecture": platform.machine(),
-                     "page_size_bytes": os.sysconf("SC_PAGE_SIZE")},
+                     "page_size_bytes": os.sysconf("SC_PAGE_SIZE"),
+                     "source": "host"},
+        "filesystem_root": str(root),
+        "command_scope": "host" if runner is subprocess.run else "caller_supplied",
         "safety": {"mode": "read_only", "shell": False,
                    "services_changed": False, "network_changed": False,
                    "modules_changed": False, "block_device_written": False},
@@ -631,7 +755,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path("/"),
                         help="filesystem root for fixture-based checks")
+    parser.add_argument("--check-backup-destination", action="store_true",
+                        help="verify an exact mounted destination using explicit identity")
+    parser.add_argument("--backup-mountpoint")
+    parser.add_argument("--backup-source")
+    parser.add_argument("--backup-uuid")
     args = parser.parse_args(argv)
+    backup_values = (args.backup_mountpoint, args.backup_source, args.backup_uuid)
+    if args.check_backup_destination:
+        if args.root != Path("/"):
+            parser.error("backup destination check always queries the live mount namespace")
+        report = backup_destination_check(Path("/"), *backup_values)
+        sys.stdout.write(json.dumps(report, indent=2, sort_keys=True) + "\n")
+        return {"pass": 0, "block": 1, "unknown": 2}[report["status"]]
+    if any(value is not None for value in backup_values):
+        parser.error("backup identity arguments require --check-backup-destination")
     report = capture(args.root)
     sys.stdout.write(json.dumps(report, indent=2, sort_keys=True) + "\n")
     return 2 if report["could_not_run"] else 0

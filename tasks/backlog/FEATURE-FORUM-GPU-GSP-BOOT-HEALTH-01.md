@@ -43,3 +43,7 @@ La ficha sigue abierta: falta un incidente fallido con versiones/boot preservado
 
 - `FORUM-00-GSP-BOOT-FAILURE-RECOVERY-BLOCKED` — [Preserve a GSP-failure escalation path when display, UEFI and FieldDiag are unavailable](https://forums.developer.nvidia.com/t/373394/1); detalle, confidence y close check en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.
 - `FORUM-00-FIELDDIAG-DRM-UNLOAD-BLOCK` — [Diagnose FieldDiag refusal when nvidia_drm remains busy](https://forums.developer.nvidia.com/t/dgx-spark-mini-connectx-7-qsfp-ports-not-powering-diagnostic-tool-unavailable/363311); detalle, confidence y close check en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.
+
+## Nota de instrumentación readonly (2026-10-03)
+
+Se reutilizó `gpu_runtime_capture` y se preservó resultado `could_not_run` de `nvidia-smi`; la telemetría existente no prueba un incidente GSP/SEC2 ni recuperación. Evidencia: `tasks/evidence/BB-INSTRUMENTS-2026-10-03/boot.capture.json` y `docs/evidence/BB-INSTRUMENTS-boot.md`.
