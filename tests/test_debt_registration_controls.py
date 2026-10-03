@@ -11,6 +11,8 @@ import types
 from test_bb_usable import _cargar
 from test_bb_bash import _arbol_cgroup, _fila_escritorio, _syscall, correr
 import test_bb_bash as bash_tests
+import test_atom_gpu_telemetry_bb as atom_tests
+import test_bb_usable as bb_usable_tests
 from pathlib import Path
 
 import pytest
@@ -614,6 +616,60 @@ def test_debt_sunset_test_bb_bash_802(tmp_path: Path) -> None:
 
 
 
+def test_debt_coverage_targets_bin_usable_01(tmp_path, monkeypatch):
+    root = Path(__file__).resolve().parent.parent
+    executable = root / "bin" / "bb-usable"
+    env = os.environ.copy()
+    env["COVERAGE_FILE"] = str(tmp_path / ".coverage")
+    loaded = bb_usable_tests._cargar()
+    assert executable.suffix == "" and Path(loaded.__file__).resolve() == executable
+
+    measured = subprocess.run(
+        ["coverage", "run", "--branch", "--source=bin", "-m", "pytest", "-q",
+         "tests/test_bb_usable.py"],
+        capture_output=True, text=True, cwd=root, env=env, timeout=120, check=False,
+    )
+    assert measured.returncode == 0, measured.stdout + measured.stderr
+    assert " passed" in measured.stdout, measured.stdout + measured.stderr
+    assert "skipped" not in measured.stdout and "could_not_run" not in measured.stdout
+    report = subprocess.run(
+        ["coverage", "report"], capture_output=True, text=True, cwd=root, env=env,
+        timeout=30, check=False,
+    )
+    assert report.returncode == 0, report.stdout + report.stderr
+    row = next((line for line in report.stdout.splitlines()
+                if line.split()[:1] == ["bin/bb-usable"]), "")
+    assert row and int(row.split()[1]) > 0, report.stdout
+
+    original = executable.read_text(encoding="utf-8")
+    mutated = original.replace(
+        'return float(field.split("=", 1)[1])', "return -1.0", 1)
+    assert mutated != original
+    mutant = tmp_path / "bb-usable-mutant"
+    mutant.write_text(mutated, encoding="utf-8")
+    run_dir = tmp_path / "mutated-test"
+    run_dir.mkdir()
+    monkeypatch.setattr(bb_usable_tests, "RUTA", mutant)
+    with pytest.raises(AssertionError):
+        bb_usable_tests.test_lee_el_full_avg10(
+            bb_usable_tests._cargar(), run_dir, monkeypatch)
+
+
+def test_debt_no_cover_test_atom_gpu_telemetry_bb_85(monkeypatch):
+    subject = atom_tests.agt
+    atom_tests.test_vllm_con_status_distinto_de_200_lo_DECLARA(monkeypatch)
+
+    def reads_non_200_body(url, timeout_s=subject.VLLM_METRICS_TIMEOUT_S):
+        req = subject.urllib.request.Request(
+            url, headers={"User-Agent": "Atlas-Telemetry/1.0"})
+        with subject.urllib.request.urlopen(req, timeout=timeout_s) as response:
+            response.read()
+
+    monkeypatch.setattr(subject, "leer_vllm_metrics", reads_non_200_body)
+    with pytest.raises(AttributeError, match="read"):
+        atom_tests.test_vllm_con_status_distinto_de_200_lo_DECLARA(monkeypatch)
+
+
 def test_bug_provider_trace_latency_overflow_01(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     fixture = Path(__file__).parent / "fixtures" / "provider_trace" / "gpu-healthy.jsonl"
     records = [json.loads(line) for line in fixture.read_text(encoding="utf-8").splitlines()]
@@ -638,7 +694,7 @@ def test_debt_noqa_bb_usable_249(monkeypatch: pytest.MonkeyPatch, capsys: pytest
     lint = subprocess.run(["python3", "-m", "ruff", "check", "--select", "E731", "--ignore-noqa", str(executable)],
                           capture_output=True, text=True, check=False)
     assert lint.returncode == 0, lint.stdout + lint.stderr
-    module = _cargar()
+    module = bb_usable_tests._cargar()
     monkeypatch.setattr(module, "notify", lambda message: None)
     monkeypatch.setattr(module, "probe", lambda: 0.001)
 
