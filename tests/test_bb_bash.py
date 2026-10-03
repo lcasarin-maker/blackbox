@@ -1212,9 +1212,14 @@ def test_control_negativo_sin_rafagas_NO_se_filtra_nada(datos):
 # =====================================================================
 
 
-def _syscall(ts, serial, *, pid, comm='"x"', exe='"/usr/bin/x"', a0="4d2",
-             auid="4294967295", key="blackbox_sigterm"):
+def _syscall(ts, serial, **campos):
     """Una linea SYSCALL de auditd. `a0` es la VICTIMA, en hexadecimal."""
+    pid = campos["pid"]
+    comm = campos.get("comm", '"x"')
+    exe = campos.get("exe", '"/usr/bin/x"')
+    a0 = campos.get("a0", "4d2")
+    auid = campos.get("auid", "4294967295")
+    key = campos.get("key", "blackbox_sigterm")
     c = f"comm={comm} " if comm else ""
     e = f"exe={exe} " if exe else ""
     return (f'type=SYSCALL msg=audit({ts}.1:{serial}): arch=c00000b7 syscall=129 '

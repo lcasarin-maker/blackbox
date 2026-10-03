@@ -556,14 +556,15 @@ def test_una_declaracion_ILEGIBLE_dice_por_que(monkeypatch, tmp_path, capsys,
     assert espera in capsys.readouterr().err
 
 
-@pytest.mark.parametrize("campo,valor,espera", [
+@pytest.mark.parametrize("caso", [
     ("excursion_gib", "ochenta", "no es un numero"),
     ("expires", "el mes que viene", "no es una fecha ISO"),
 ])
 def test_un_campo_con_la_forma_MAL_dice_cual_y_que_traia(
-        monkeypatch, tmp_path, capsys, campo, valor, espera):
+        monkeypatch, tmp_path, capsys, caso):
     """Y nombra el valor que encontro. Sin eso, quien firmo no sabe que
     corregir de las cuatro lineas que escribio."""
+    campo, valor, espera = caso
     f = _firma()
     f[campo] = valor
     _montar(monkeypatch, tmp_path, app_max=str(1024**3), docker_max=str(1024**3),

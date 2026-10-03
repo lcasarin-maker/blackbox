@@ -1,0 +1,32 @@
+Comparación literal con worktree temporal en HEAD original 511a172:
+
+1. Sandbox:
+$ python3 -m pytest tests/test_bb_bash.py::test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso tests/test_bb_bash.py::test_sigterm_DECLARA_la_ventana_que_el_anillo_cubre
+2 failed in 0.18s
+Los dos fallos esperaban could_not_run: 0/1. `bb` tomó la rama de no sujeto,
+porque `bin/bb` usa `pgrep -f rustdesk` y el sandbox no ve el proceso del host.
+
+2. HEAD original con permisos del host:
+$ python3 -m pytest tests/test_bb_bash.py::test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso tests/test_bb_bash.py::test_sigterm_DECLARA_la_ventana_que_el_anillo_cubre
+2 passed in 0.18s
+exit_code=0
+
+3. HEAD actual con permisos del host:
+$ python3 -m pytest tests/test_bb_bash.py -k sigterm
+7 passed, 77 deselected in 1.47s
+exit_code=0
+
+Confirmación del sujeto, con visibilidad del host:
+$ pgrep -af rustdesk
+334645 /usr/bin/rustdesk --service
+3487100 sudo -E XDG_RUNTIME_DIR=/run/user/1000 -u lcasarin /usr/share/rustdesk/rustdesk --server
+3487101 /usr/share/rustdesk/rustdesk --server
+3487108 /usr/share/rustdesk/rustdesk --tray
+3490734 /usr/share/rustdesk/rustdesk --cm
+
+El comportamiento del sujeto bin/bb es consistente: reporta could_not_run cuando
+no puede observar el proxy y evalúa armado/ventana cuando el proceso es visible.
+La variante Ruff temporal de seis parámetros falla PLR0913 (control negativo):
+PLR0913 Too many arguments in function definition (6 > 5)
+Found 1 error.
+negative_exit_code=1
