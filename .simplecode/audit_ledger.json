@@ -1,19 +1,20 @@
 {
   "claims_fingerprint": "be145180f01976cb8ec559219e5caf5f54f5c630652578898174d03ffb8e5cfd",
-  "panel": "Un auditor gpt-6-luna, 2026-10-03; refutaci\u00f3n SPEC-L309 con c\u00f3digo, once controles y contraste systemd legible/ilegible",
+  "panel": "Un auditor gpt-6-luna, 2026-10-03: revalidaci\u00f3n contrato Atlas y freshness tras renovar comentarios; AST 72/1152 m\u00f3dulos y 13 controles",
   "profile": "general",
   "results": [
     {
       "cited": {
-        "tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json": "7195ba4af224006754f4f75f33f12e1b7c407ae06c1031afc627dcd80621db3d",
-        "tools/atom_gpu_telemetry.py": "f54d702c3bdce31539fe4e1e894d48c782661138166078fa094968242320a19d"
+        "tools/atom_gpu_telemetry.py": "c88ee66c21761117c3f2c0ea8f74c2f0e9e3e023c372b3970429151fc0f45f7e"
       },
       "claim_id": "SPEC-L118",
-      "claim_sha256": "9b0d0fdd103616ca780d2448b069fa90413e4384e271de338c612df5c39942dc",
-      "claim_text": "Atlas no importa codigo de blackbox, ni al reves. Consume su salida:",
-      "evidence": "En `/home/lcasarin/projects/Atlas/tools/bb_consulta.py:39-53`, Atlas llama la telemetr\u00eda de Blackbox mediante `subprocess.run`; `Atlas/tools/atom_degradacion_resuelta.py:65-70` consume el JSONL usando `$BLACKBOX_DATA`. La b\u00fasqueda rec\u00edproca `rg -n '(^|[[:space:]])(from|import)[[:space:]]+blackbox|blackbox\\.[A-Za-z_]' /home/lcasarin/projects/Atlas --glob '*.py' --glob '*.sh' --glob '!docs/archive/**'` y la b\u00fasqueda de imports Atlas en Blackbox no encontraron imports cruzados; el helper `_argv_tokens` est\u00e1 copiado localmente en `tools/atom_gpu_telemetry.py:67-85`.",
-      "seal": "80706c971a02f626611ddec691fc93652ba5468ec15c71d98b02f020237061a0",
-      "verdict": "PASS"
+      "evidence": [
+        "SPEC.md:118-121 fija el contrato de intercambio mediante salida JSONL. `tools/atom_gpu_telemetry.py:96-97` deriva JSONL_PATH de BLACKBOX_DATA/ATOM_TELEMETRY_JSONL y `:870-880` serializa cada evento y lo escribe como una l\u00ednea; el consumidor est\u00e1 implementado por archivo compartido.",
+        "`/home/lcasarin/projects/Atlas/tools/atom_degradacion_resuelta.py:60-61,65-70` importa m\u00f3dulos `tools.*` propios de Atlas y resuelve TELEMETRIA_PATH desde BLACKBOX_DATA/ATOM_TELEMETRY_JSONL, con el mismo nombre de archivo que escribe blackbox. La inspecci\u00f3n AST de los \u00e1rboles actuales registr\u00f3 72 archivos Python de blackbox y 1,152 de Atlas, con `cross_repo_imports []` en ambos sentidos; la b\u00fasqueda complementaria de importlib/__import__/runpy/exec no encontr\u00f3 import din\u00e1mico entre repositorios."
+      ],
+      "fix": null,
+      "seal": "5db6be0c459e2a90b0a7ed5b513be1ccadd48f5e9473e5c6dd65ac06b6d6b149",
+      "verdict": "confirmed"
     },
     {
       "cited": {},
@@ -37,12 +38,17 @@
     },
     {
       "cited": {
-        "tests/test_bb_bash.py": "e27161e843f24d15d47791d74b0dc26bbf0a278704e59fdc2c9992e5edfbbdd4"
+        "tests/test_bb_bash.py": "384c35d5c56eae17d19127054253e8cd7602b469fef95175e1eea5af96104f7f"
       },
       "claim_id": "SPEC-L309",
-      "evidence": "`SPEC.md:309` limits the claim to freshness of artifacts and explicitly leaves correctness of their contents unverified. The implementation matches those bounds: `bin/bb:2210-2212` checks for a sample modified within two minutes; `bin/bb:2304-2310` compares the driver-confirmed clock-lock result with its declared range; `bin/bb:2341-2347` requires both earlyoom startup regex lines; `bin/bb:2146-2167` checks bb-usable systemd state, reads its journal since 120 seconds ago, and only accepts the repeating latency heartbeat. The named controls and positive counterparts are present at `tests/test_bb_bash.py:470-473,503-520,532-558,602-622`. Sandbox attempt: the heartbeat cases could not access systemd (`Failed to connect to bus: Operation not permitted`), producing `7 passed, 4 failed`; this is an environment limitation, so I reran the same named controls with read-only host access. Command `python3 -m pytest -q tests/test_bb_bash.py -k 'test_control_negativo_sin_muestra_fresca_el_muestreo_esta_FALTA or test_control_negativo_clock_lock_con_OTRO_rango_que_el_declarado or test_control_negativo_clock_lock_sin_confirmacion_del_driver or test_control_negativo_earlyoom_de_serie_no_cuenta_como_armado or test_control_negativo_earlyoom_con_UNA_sola_regex_no_basta or test_clock_lock_confirmado_con_rango_declarado_esta_ARMADO or test_earlyoom_con_las_dos_regex_SI_cuenta or test_control_negativo_bb_usable_activa_con_latido_RANCIO or test_control_negativo_bb_usable_activa_sin_latido or test_bb_usable_con_latido_fresco_SI_cuenta'` then returned `11 passed, 74 deselected in 1.90s`, rc=0. These controls establish failure detection for the named synthetic cases; they do not establish that artifact contents are correct, consistent with the row's stated limit.",
-      "seal": "203dd87e8ebaa524b432f134ad5b37cc996b60eae75b10150a8e5cb9056c14c5",
-      "verdict": "PASS"
+      "evidence": [
+        "SPEC.md:309 describe las se\u00f1ales que el estado observa. `bin/bb:2226-2242` comprueba edad de datos para SAR, monitor de memoria y JSONL t\u00e9rmico; `:2081-2118` contrasta el `-lgc` declarado en systemd con la confirmaci\u00f3n fechada del driver; `:2341-2347` exige ambas l\u00edneas de punter\u00eda de earlyoom; `:2144-2168` exige que bb-usable est\u00e9 activa y tenga latido del journal dentro de 120 s.",
+        "`pytest -q tests/test_bb_bash.py -k 'control_negativo_sin_muestra_fresca or status_ve_el_muestreo or clock_lock or earlyoom or bb_usable or telemetria_termica'` termin\u00f3 con stdout `13 passed, 72 deselected in 3.31s`, rc=0. Los controles citados por SPEC est\u00e1n en `tests/test_bb_bash.py:470,503,516,532,550,608,617`; las pruebas positivas est\u00e1n en `:463,523,543,602`, y controles de ausencia/antig\u00fcedad t\u00e9rmica en `:734-771`.",
+        "La primera ejecuci\u00f3n en sandbox dej\u00f3 cuatro casos de bb-usable como CIEGO porque `systemctl show` no pudo conectar al bus (`Operation not permitted`, rc=1); despu\u00e9s de la autorizaci\u00f3n expl\u00edcita para lecturas del bus, la repetici\u00f3n termin\u00f3 `4 passed in 0.67s`, rc=0, y la selecci\u00f3n focal completa pas\u00f3. Los fixtures prueban journal vac\u00edo, l\u00ednea de arranque sola, latido rancio y latido fresco, sin ejecutar cargas CUDA."
+      ],
+      "fix": null,
+      "seal": "087fbc5c243d6ccfd646a337c361f4b3b181e1ae45dd1f1a0a475dc450918b80",
+      "verdict": "confirmed"
     },
     {
       "cited": {
@@ -139,7 +145,35 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-03T14:26:15Z",
-  "tree_fingerprint": "09eb94fdc8e7c9924ad38322c886ab0f11ec5614b80a3fb7e368cd75ca0eb12f",
-  "violations": []
+  "timestamp": "2026-10-03T15:29:19Z",
+  "tree_fingerprint": "291226fd0b76eceb6167a711e9b4ed43777b80189438e6966ef5f277cf133ca5",
+  "violations": [
+    {
+      "cited": {
+        "tools/atom_gpu_telemetry.py": "c88ee66c21761117c3f2c0ea8f74c2f0e9e3e023c372b3970429151fc0f45f7e"
+      },
+      "claim_id": "SPEC-L118",
+      "evidence": [
+        "SPEC.md:118-121 fija el contrato de intercambio mediante salida JSONL. `tools/atom_gpu_telemetry.py:96-97` deriva JSONL_PATH de BLACKBOX_DATA/ATOM_TELEMETRY_JSONL y `:870-880` serializa cada evento y lo escribe como una l\u00ednea; el consumidor est\u00e1 implementado por archivo compartido.",
+        "`/home/lcasarin/projects/Atlas/tools/atom_degradacion_resuelta.py:60-61,65-70` importa m\u00f3dulos `tools.*` propios de Atlas y resuelve TELEMETRIA_PATH desde BLACKBOX_DATA/ATOM_TELEMETRY_JSONL, con el mismo nombre de archivo que escribe blackbox. La inspecci\u00f3n AST de los \u00e1rboles actuales registr\u00f3 72 archivos Python de blackbox y 1,152 de Atlas, con `cross_repo_imports []` en ambos sentidos; la b\u00fasqueda complementaria de importlib/__import__/runpy/exec no encontr\u00f3 import din\u00e1mico entre repositorios."
+      ],
+      "fix": null,
+      "seal": "5db6be0c459e2a90b0a7ed5b513be1ccadd48f5e9473e5c6dd65ac06b6d6b149",
+      "verdict": "confirmed"
+    },
+    {
+      "cited": {
+        "tests/test_bb_bash.py": "384c35d5c56eae17d19127054253e8cd7602b469fef95175e1eea5af96104f7f"
+      },
+      "claim_id": "SPEC-L309",
+      "evidence": [
+        "SPEC.md:309 describe las se\u00f1ales que el estado observa. `bin/bb:2226-2242` comprueba edad de datos para SAR, monitor de memoria y JSONL t\u00e9rmico; `:2081-2118` contrasta el `-lgc` declarado en systemd con la confirmaci\u00f3n fechada del driver; `:2341-2347` exige ambas l\u00edneas de punter\u00eda de earlyoom; `:2144-2168` exige que bb-usable est\u00e9 activa y tenga latido del journal dentro de 120 s.",
+        "`pytest -q tests/test_bb_bash.py -k 'control_negativo_sin_muestra_fresca or status_ve_el_muestreo or clock_lock or earlyoom or bb_usable or telemetria_termica'` termin\u00f3 con stdout `13 passed, 72 deselected in 3.31s`, rc=0. Los controles citados por SPEC est\u00e1n en `tests/test_bb_bash.py:470,503,516,532,550,608,617`; las pruebas positivas est\u00e1n en `:463,523,543,602`, y controles de ausencia/antig\u00fcedad t\u00e9rmica en `:734-771`.",
+        "La primera ejecuci\u00f3n en sandbox dej\u00f3 cuatro casos de bb-usable como CIEGO porque `systemctl show` no pudo conectar al bus (`Operation not permitted`, rc=1); despu\u00e9s de la autorizaci\u00f3n expl\u00edcita para lecturas del bus, la repetici\u00f3n termin\u00f3 `4 passed in 0.67s`, rc=0, y la selecci\u00f3n focal completa pas\u00f3. Los fixtures prueban journal vac\u00edo, l\u00ednea de arranque sola, latido rancio y latido fresco, sin ejecutar cargas CUDA."
+      ],
+      "fix": null,
+      "seal": "087fbc5c243d6ccfd646a337c361f4b3b181e1ae45dd1f1a0a475dc450918b80",
+      "verdict": "confirmed"
+    }
+  ]
 }
