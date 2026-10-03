@@ -1,0 +1,12 @@
+$ python3 -m ruff check tests/test_atom_gpu_telemetry_bb.py
+PLR0913 Too many arguments in function definition (6 > 5)
+   --> tests/test_atom_gpu_telemetry_bb.py:419:5
+    |
+419 | def _gate(monkeypatch, capsys, zonas, umbrales, historial_en_disco, tmp_path):
+    |     ^^^^^
+420 |     ruta = tmp_path / "t.jsonl"
+421 |     ruta.write_text("\\n".join(json.dumps(m | {"evento": "muestra"})
+    |
+
+Found 1 error.
+EXIT=1

@@ -416,7 +416,8 @@ def test_el_bucle_sale_limpio_con_Ctrl_C(monkeypatch, tmp_path, capsys):
 # maquina se desacuerdan en silencio.
 
 
-def _gate(monkeypatch, capsys, zonas, umbrales, historial_en_disco, tmp_path):
+def _gate(monkeypatch, capsys, tmp_path, entradas):
+    zonas, umbrales, historial_en_disco = entradas
     ruta = tmp_path / "t.jsonl"
     ruta.write_text("\n".join(json.dumps(m | {"evento": "muestra"})
                               for m in historial_en_disco) + "\n", encoding="utf-8")
@@ -429,8 +430,8 @@ def _gate(monkeypatch, capsys, zonas, umbrales, historial_en_disco, tmp_path):
 
 
 def test_gate_termico_como_comando_BLOQUEA_y_sale_1(monkeypatch, capsys, tmp_path):
-    rc, salida = _gate(monkeypatch, capsys, ZONA_CALIENTE, UMBRALES,
-                       _historial(10, 96.0, 90.0), tmp_path)
+    rc, salida = _gate(monkeypatch, capsys, tmp_path,
+                       (ZONA_CALIENTE, UMBRALES, _historial(10, 96.0, 90.0)))
     assert rc == 1, salida
     assert salida["bloquea"] is True
     assert "se espera a que baje" in salida["motivo"], salida
@@ -438,8 +439,8 @@ def test_gate_termico_como_comando_BLOQUEA_y_sale_1(monkeypatch, capsys, tmp_pat
 
 def test_control_negativo_gate_termico_DEJA_PASAR_una_maquina_fria(monkeypatch, capsys, tmp_path):
     fria = [{"zona": "thermal_zone0", "temp_c": 45.0, "type": "gpu"}]
-    rc, salida = _gate(monkeypatch, capsys, fria, UMBRALES,
-                       _historial(10, 45.0, 90.0), tmp_path)
+    rc, salida = _gate(monkeypatch, capsys, tmp_path,
+                       (fria, UMBRALES, _historial(10, 45.0, 90.0)))
     assert rc == 0, salida
     assert salida["bloquea"] is False and salida["motivo"] == ""
 
@@ -450,7 +451,8 @@ def test_el_gate_por_comando_NO_se_relaja_sin_telemetria_fresca(monkeypatch, cap
     viejo = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
     rancio = [{"ts": viejo, "gpu_power_w": 90.0,
                "zonas": [{"zona": "thermal_zone0", "temp_c": 96.0}]} for _ in range(10)]
-    rc, salida = _gate(monkeypatch, capsys, ZONA_CALIENTE, UMBRALES, rancio, tmp_path)
+    rc, salida = _gate(monkeypatch, capsys, tmp_path,
+                       (ZONA_CALIENTE, UMBRALES, rancio))
     assert rc == 1 and "el gate NO se relaja" in salida["motivo"], salida
 
 
