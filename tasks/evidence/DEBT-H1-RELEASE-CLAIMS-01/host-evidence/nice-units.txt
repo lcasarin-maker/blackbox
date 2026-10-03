@@ -1,0 +1,36 @@
+$ systemctl --user show atom-gpu-telemetry.service -p Id -p ActiveState -p UnitFileState -p MainPID -p Nice -p IOSchedulingClass
+MainPID=1633058
+Nice=19
+IOSchedulingClass=3
+Id=atom-gpu-telemetry.service
+ActiveState=active
+UnitFileState=enabled
+
+$ systemctl --user show blackbox-sample.service -p Id -p ActiveState -p UnitFileState -p MainPID -p Nice -p IOSchedulingClass
+MainPID=0
+Nice=19
+IOSchedulingClass=3
+Id=blackbox-sample.service
+ActiveState=inactive
+UnitFileState=static
+
+$ systemctl --user show ai-memory-monitor.service -p Id -p ActiveState -p UnitFileState -p Nice -p IOSchedulingClass
+Nice=0
+IOSchedulingClass=2
+Id=ai-memory-monitor.service
+ActiveState=inactive
+UnitFileState=static
+
+$ systemctl --user show ai-gpu-telemetry.service -p Id -p ActiveState -p UnitFileState -p Nice -p IOSchedulingClass
+Nice=10
+IOSchedulingClass=3
+Id=ai-gpu-telemetry.service
+ActiveState=inactive
+UnitFileState=disabled
+
+$ systemctl --user show bb-guardia-proceso.service -p Id -p ActiveState -p UnitFileState -p Nice -p IOSchedulingClass
+Nice=10
+IOSchedulingClass=2
+Id=bb-guardia-proceso.service
+ActiveState=inactive
+UnitFileState=enabled

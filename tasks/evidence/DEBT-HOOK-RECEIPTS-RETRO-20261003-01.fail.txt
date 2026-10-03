@@ -1,0 +1,33 @@
+Initial native detection before reconciliation.
+
+Source command: `python3 .simplecode/run.py simplecode.verification.hook_receipts --root . --audit` (captured before retro-verification; output preserved in receipts-retro/audit.txt and outside-window.json). The audit named a456d8e8 as missing and listed 18 outside-window commits without verdict, including the twelve October items and six September items.
+
+Original pre-push raw gate output for the same receipt cohort:
+```text
+[hook-receipts] Audited 10 recent commit(s) (3 unverified: 0 declared, 3 blocking).
+[hook-receipts] HALLAZGOS: 3
+[hook-receipts] receipt baseline: 2 declared commit(s), owner Luis, cutoff 2026-09-15, expires 2026-10-08 (5 day(s) left)
+[hook-receipts] baseline reason: Two commits from the hook-receipts rollout window (2026-09-11/12) were made with --no-verify before receipt verification was consistently enforced in this repo. Both reviewed now: substantive, legitimate content, not a same-day bypass. Amnestied as pre-existing debt, not a live escape hatch -- cutoff is 3 days before this declaration and does not reach today's commits.
+  🔴 Unverified commit (missing receipt): e3a6e627 - Cover remaining Atom telemetry branches
+  🔴 Unverified commit (missing receipt): bae5802e - docs: reconcile forum research without replacing implementation progress
+  🔴 Unverified commit (missing receipt): 08e88eb8 - Retain measured sunset controls and evidence
+[hook-receipts] verified RETROACTIVELY (gate re-run against historical content, not a receipt written at commit time): 0
+[hook-receipts] unverified commits that left the 10-commit window without a verdict (reported, NOT blocking): 18 (2 of them still named by the baseline)
+  ~ 7be0ed93 recorded unverified at 2026-09-12T06:34:02Z [declared -- the baseline still pays for a commit the window no longer charges for]
+  ~ 89b09057 recorded unverified at 2026-09-13T01:46:19Z [declared -- the baseline still pays for a commit the window no longer charges for]
+  ~ b75cef58 recorded unverified at 2026-09-11T17:22:30Z
+  ~ dabbde50 recorded unverified at 2026-09-11T17:32:14Z
+  ~ 77840c73 recorded unverified at 2026-09-11T17:50:32Z
+  ~ edcb39a6 recorded unverified at 2026-09-11T17:58:22Z
+  ~ 50a174b9 recorded unverified at 2026-10-03T05:26:54Z
+  ~ 725285a7 recorded unverified at 2026-10-03T05:26:55Z
+  ~ 9aa3310d recorded unverified at 2026-10-03T05:31:32Z
+  ~ e24586b7 recorded unverified at 2026-10-03T05:31:33Z
+  ~ 550f78bb recorded unverified at 2026-10-03T05:31:33Z
+  ~ 5e6eb0ca recorded unverified at 2026-10-03T05:42:34Z
+  ~ ... and 6 more that left the window unverified
+[hook-receipts] FAIL: 3 unverified commit(s) missing a pre-commit receipt; first e3a6e627 - Cover remaining Atom telemetry branches
+
+```
+
+Later audit before verifying 053cfd01 also showed it as the sole blocking recent commit; all six September hashes remained outside-window with no verdict.

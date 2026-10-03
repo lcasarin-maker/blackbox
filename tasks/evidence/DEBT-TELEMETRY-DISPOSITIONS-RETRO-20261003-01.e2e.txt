@@ -1,0 +1,5 @@
+Nine concrete blocked rawcollector events now have evidence-backed confirmed_defect verdicts: 29ac411d67e0c8e7, 72cac1e581e4c2ad, bad62df306de815c, 8aebe7815048e5ad, 694e380f85c05252, f95c29dcff8be347, be8bb3f2adada251, 19e221b050ec8938, ad175dcf781b890c. No item was classified as controlled_canary or false_positive. The eight-item raw output excerpts, event JSON records, run IDs, and disposition stdout are under tasks/evidence/ZERO-2026-10-02/telemetry-undisposed-8-*.txt/json and receipts-retro/telemetry-record-*.txt; the 29ac raw output is telemetry-29ac-rawcollector.txt.
+
+Native check: python3 .simplecode/run.py simplecode.verification.telemetry_dispositions --root . --gate
+Exit: 0. Report: could_not_dispose=0, confirmed_defect=279, historical_undisposed=3. The three pre-cutoff events remain explicitly outside the gate and are not counted as resolved.
+Ficha DEBT-TELEMETRY-DISPOSITIONS-RETRO-20261003-01. Verificación del sujeto mediante `python3 .simplecode/run.py simplecode.verification.telemetry_dispositions --root . --gate`.

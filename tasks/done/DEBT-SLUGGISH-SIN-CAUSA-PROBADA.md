@@ -32,15 +32,30 @@ load1        0.95  sobre 20 nucleos
 mem_avail    64.3 GiB de 121
 PSI          io 0.00 · cpu 0.00 · mem_full 0.00
 nvidia-smi   OK en 22 ms
-GPU          util 0-4 %, sin throttle, 39-48 C
-journal      sin un solo warning entre las 03:00 y el reinicio
+GPU          lectura cercana 2.68 s después: util 1 %, 42 C, sin throttle
+journal      hubo warnings y OOM-kills de cgroups bb-cap-python; sin OOM global observado
 ```
 
-Y sobre las 686 muestras del arranque entero: `cpu_some >= 10 %` en el **3.2 %**
-de ellas, con la racha mas larga de **3 minutos**. No hubo arrastre de maquina.
+La lectura GPU se compara tras normalizar ambos timestamps a UTC: muestra
+`2026-09-25T11:08:01Z`, telemetría `11:08:03.682680Z`. La captura
+`gpu-near-snapshot-2026-09-25.txt` conserva la diferencia y sus valores;
+esta lectura cercana no demuestra un rango para todo el episodio.
 
-El reinicio fue limpio y pedido (`systemd-logind: System is rebooting.`): no
-hubo cuelgue, ni OOM, ni panic, ni watchdog.
+Recalculado el 2026-10-03 sobre el corpus retenido del arranque
+2026-09-24 14:11:37 → 2026-09-25 05:08:33: 1,070 registros crudos,
+661 con `psi.cpu_some`; 22 alcanzan el 10 % (**3.33 %** de las 661).
+La racha mayor observada tiene cuatro puntos, separados por **181 s**
+entre el primero y el último; esas muestras acotan observaciones,
+sin demostrar presión continua entre ellas. Comando y salida literal en
+`tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/host-evidence/boot-pressure-current-recalc.txt`.
+
+El reinicio fue pedido (`systemd-logind: System is rebooting.`). La revisión
+del journal del 2026-10-03 encontró OOM-kills de procesos limitados en cgroups
+`bb-cap-python*` y warnings de GDM/UFW/RustDesk. Estos eventos deben distinguirse
+de un OOM global: el registro revisado del episodio carece de OOM global,
+panic o disparo del watchdog. Las capturas primarias están en
+`tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/host-evidence/`. La causa de la
+inusabilidad del escritorio sigue sin demostrarse.
 
 ### Lo que SI se midio, y por que no basta
 

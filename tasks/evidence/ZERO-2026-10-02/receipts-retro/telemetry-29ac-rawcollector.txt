@@ -1,0 +1,38 @@
+zero debt (repo-wide ship freeze).........................................................Failed
+- hook id: zero-debt-repo
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: zero-debt-repo exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=ce6a62d0b222
+[zero-debt] mode: zero  lane: repo-wide
+[zero-debt] files scanned: 64  findings: 6  files with findings: 2
+[zero-debt] HALLAZGOS: 6
+[zero-debt] DETECTORES: {"blocking_sleep":2,"hardcoded_path":2,"unencoded_file_io":2}
+[zero-debt] .py left OUTSIDE this scan: 1 (git-ignored (.gitignore); not part of the product)
+[zero-debt] dispositions (Acta 83): PASSED=62 CONVICTED=2 EXEMPT_CORPUS=0 EXEMPT_FIXTURE=0 EXEMPT_VENDORED=0 COULD_NOT_RUN=0
+[zero-debt] detectors judged (GATE_DETECTORS): 24
+[zero-debt] detectors excluded by volume: 0 ()
+[zero-debt] could_not_run: 0
+[zero-debt] corpus declarado (no juzgado): 0
+[zero-debt] violations: 2
+  - tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py (3 findings: hardcoded_path, unencoded_file_io, unencoded_file_io, unencoded_file_io, unencoded_file_io, unencoded_file_io, blocking_sleep, blocking_sleep, blocking_sleep)
+  - tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py (3 findings: hardcoded_path, unencoded_file_io, unencoded_file_io, unencoded_file_io, unencoded_file_io, blocking_sleep)
+[zero-debt] findings (JSONL): 15
+  {"detector_id": "hardcoded_path", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 3, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:3: hardcoded_path: hardcoded absolute path '<repo>/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02'", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 46, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:46: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 49, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:49: unencoded_file_io: .read_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 36, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:36: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 42, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:42: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 21, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:21: unencoded_file_io: .read_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 48, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:48: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
+  {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 32, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:32: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
+  {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 16, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:16: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
+  {"detector_id": "hardcoded_path", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 3, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:3: hardcoded_path: hardcoded absolute path '<repo>/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02'", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 36, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:36: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 17, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:17: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 26, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:26: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 15, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:15: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 35, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:35: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
+BLOCKED [zero-debt] - policy is zero debt, with no grandfathering.
+[zero-debt] FAIL: 2 violation(es); primera tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:3 (hardcoded_path)
+
