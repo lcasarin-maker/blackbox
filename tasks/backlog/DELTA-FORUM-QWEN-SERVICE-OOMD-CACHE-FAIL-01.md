@@ -32,3 +32,6 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+## Evaluación de instrumentos 2026-10-03
+
+Reusa telemetría general para memoria/swap/PSI, pero no captura OOMD kill de systemd, servicio dependiente, ni estado de cache ligado al cambio de tarea. No hay logs/versions locales. Estado `deferred_lab`: canario de larga duración con versión fija, PSI/UMA/swap, eventos OOMD/servicio/dependencias redactados y recovery medido; no desactivar OOMD ni actuar durante presión.

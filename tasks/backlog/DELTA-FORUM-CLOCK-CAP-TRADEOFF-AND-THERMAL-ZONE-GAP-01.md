@@ -32,3 +32,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+### Evidencia de instrumento (2026-10-03)
+
+Estado: `deferred_lab`. Se reutilizó el inventario térmico existente y su captura de 7 thermal zones/11 canales hwmon, CNR=0, pero 8 labels hwmon faltan y la captura no relaciona esos sensores con un perfil OEM validado ni mide clocks/performance bajo cap. Falta ensayo pareado controlado, clocks efectivamente aplicados y rollback. La ficha sigue abierta y `close_check` intacto. Informe: `docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md`.

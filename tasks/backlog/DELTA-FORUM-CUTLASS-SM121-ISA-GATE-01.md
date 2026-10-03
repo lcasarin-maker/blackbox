@@ -32,3 +32,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+### Evidencia de instrumento (2026-10-03)
+
+Estado: `needs_contract`. Antes del gate se debe fijar revisión CUTLASS/CuTe/backend, operación exacta y arquitectura compilada, y definir cómo source/build evidencia que ISA requerido está soportado o bloqueado antes del primer request. No se crea allowlist por nombre SM ni compatibilidad supuesta. Luego requiere canario SM121 con control de logits/exactitud. La ficha sigue abierta y `close_check` intacto. Informe: `docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md`.

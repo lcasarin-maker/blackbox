@@ -32,3 +32,6 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+## Evaluación de instrumentos 2026-10-03
+
+Reusa `tools/memory_profile.py`/`tools/atom_gpu_telemetry.py` como muestreo general de memoria/PSI, no como evidencia de RPC server PID, transporte efectivo, validez de salida ni orden de teardown. No hay captura local llama.cpp/RPC del stack o incidente. Estado `deferred_lab`: stack/commit/RPC fijados, endpoint y salida/KV válidos, memoria/cgroup/PSI atribuibles al servidor y A/B de orden de cierre con control TCP/RDMA solo si el backend lo reporta. No se inició ni detuvo procesos.

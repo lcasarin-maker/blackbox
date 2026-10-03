@@ -32,3 +32,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+### Evidencia de instrumento (2026-10-03)
+
+Estado: `needs_contract`. Falta contrato source/image-bound para mapear DCP rank↔shard, observar gather/LSE merge y parcial no-cero, fijar tolerancia/oráculo contra DCP1, salida determinista y acceptance por posición. El caso pre-trim OOM requiere subensayo de headroom separado con trigger y criterio seguro. No hay capturas de rank/draft/acceptance/memoria pre-trim. La ficha sigue abierta y `close_check` intacto. Informe: `docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md`.
