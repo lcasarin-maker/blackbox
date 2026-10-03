@@ -11,7 +11,7 @@ created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_766", "expect": "exit_zero", "porque": "Revalidar la justificación y el alcance exacto de la excepción sunset antes de su vencimiento, con comando literal y control negativo. Si es pausa de arnés/sampler, medir timeout/bounded scope/cancelación; si es test, conservar sensibilidad al delta observado. Retirar la excepción innecesaria o registrar revisión válida con responsable y expiración concreta, sin suspensión permanente."}
 closed_at: 2026-10-03
 closure_type: fixed
-reason: "Se retiró la espera fija de 4 s: la variante sin espera pasó la aserción funcional con las dos muestras reales y el proceso hijo medido. Las dos invocaciones de sample ya proporcionan observaciones separadas suficientes en el entorno actual."
+reason: "Se conserva la ventana fija de 4 s porque la medición de CPU exporta segundos enteros: al quitarla, la corrida conjunta obtuvo 13 pass y un fallo con cpu_top vacío (0 de 5), mientras el selector aislado pasó; el delta quedaba sujeto a intermitencia. La ventana permite medir el objetivo real y conserva el alcance del control positivo."
 evidence: {"pass":"tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-766/pass.txt","fail":"tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-766/fail.txt","e2e":"tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-766/e2e.txt"}
 ---
 
@@ -43,8 +43,8 @@ La ficha registraba una exclusión/sunset pendiente de revalidación. Se inspecc
 
 `python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_766`
 
-Control negativo incluido en el selector: Se retiró la espera fija de 4 s: la variante sin espera pasó la aserción funcional con las dos muestras reales y el proceso hijo medido. Las dos invocaciones de sample ya proporcionan observaciones separadas suficientes en el entorno actual.
+Control negativo incluido en el selector: el sujeto sin espera produjo un fallo intermitente (corrida completa: 13 passed, 1 failed; `cpu_top` 0/5); aislado pasó. Se conserva la ventana de 4 s para obtener un delta de CPU entero repetible.
 
 ## Verification Evidence
 
-Pass: selector `DEBT-SUNSET-TEST-BB-BASH-766` pasa junto con los 13 selectores de esta ola; resultado `14 passed`, `could_not_run=0`. Fail previo: selector ausente, pytest exit 4; registrado solo como estado anterior de la instrumentación. El detalle y el alcance del control negativo constan en `tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-766/e2e.txt`.
+Pass: selector `DEBT-SUNSET-TEST-BB-BASH-766` pasa junto con los 13 selectores de esta ola; resultado `14 passed`, `could_not_run=0`. La variante sin espera falló en ejecución conjunta por lista CPU vacía (0 de 5), aunque el selector aislado pasó; se conservó el intervalo fijo por el delta entero. El detalle consta en `tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-766/e2e.txt`.

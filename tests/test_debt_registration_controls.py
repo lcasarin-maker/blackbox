@@ -487,19 +487,37 @@ def test_debt_sunset_atom_gpu_telemetry_1671(monkeypatch: pytest.MonkeyPatch, ca
 
     calls: list[float] = []
     samples = [0]
+    elapsed = [0.0]
+    observed: list[float] = []
+    monkeypatch.setattr(telemetry.time, "monotonic", lambda: elapsed[0])
     def one_sample_then_stop(*_args, **_kwargs):
         if samples[0]:
+            observed.append(elapsed[0])
+            assert observed[-1] - observed[-2] == 0.25
             raise KeyboardInterrupt
+        observed.append(elapsed[0])
         samples[0] += 1
         return []
     monkeypatch.setattr(telemetry, "leer_umbrales", lambda: {})
     monkeypatch.setattr(telemetry, "muestrear", one_sample_then_stop)
-    monkeypatch.setattr(telemetry.time, "sleep", lambda seconds: calls.append(seconds))
+    def advance(seconds: float) -> None:
+        calls.append(seconds)
+        elapsed[0] += seconds
+    monkeypatch.setattr(telemetry.time, "sleep", advance)
     monkeypatch.setattr(sys, "argv", ["atom_gpu_telemetry", "--dry-run", "--interval-seconds", "0.25"])
     assert telemetry.main() == 0
     capsys.readouterr()
     assert calls == [0.25]
     assert samples[0] == 1
+
+    calls.clear()
+    elapsed[0] = 0.0
+    samples[0] = 0
+    observed.clear()
+    with monkeypatch.context() as neutralized:
+        neutralized.setattr(telemetry.time, "sleep", lambda _seconds: None)
+        with pytest.raises(AssertionError):
+            telemetry.main()
 
 
 def test_debt_sunset_test_bb_bash_1550(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -542,36 +560,57 @@ def _fresh_bb_data(tmp_path: Path, name: str) -> Path:
 
 def test_debt_sunset_test_bb_bash_322(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     bash_tests.test_swap_mide_el_RITMO_no_solo_el_nivel(_fresh_bb_data(tmp_path, "positive"), tmp_path)
-    with monkeypatch.context() as no_wait:
-        no_wait.setattr(bash_tests.time, "sleep", lambda _seconds: None)
+    source = bash_tests.BB.read_text(encoding="utf-8")
+    without_rate = source.replace('v=(a-b)/d', 'v=(a-b)')
+    assert without_rate != source
+    mutant = tmp_path / "bb-without-rate-normalization"
+    mutant.write_text(without_rate, encoding="utf-8")
+    mutant.chmod(0o755)
+    mutant_tmp = tmp_path / "rate-mutant-inputs"
+    mutant_tmp.mkdir()
+    with monkeypatch.context() as sourcecopy:
+        sourcecopy.setattr(bash_tests, "BB", mutant)
         with pytest.raises(AssertionError):
-            bash_tests.test_swap_mide_el_RITMO_no_solo_el_nivel(_fresh_bb_data(tmp_path, "neutralized"), tmp_path)
+            bash_tests.test_swap_mide_el_RITMO_no_solo_el_nivel(
+                _fresh_bb_data(tmp_path, "rate-mutant"), mutant_tmp)
 
 
 def test_debt_sunset_test_bb_bash_339(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    bash_tests.test_control_negativo_sin_trafico_de_swap_el_ritmo_es_cero(_fresh_bb_data(tmp_path, "negative"), tmp_path)
-    # The paired positive loses sensitivity when its interval is neutralized.
-    with monkeypatch.context() as no_wait:
-        no_wait.setattr(bash_tests.time, "sleep", lambda _seconds: None)
-        with pytest.raises(AssertionError):
-            bash_tests.test_swap_mide_el_RITMO_no_solo_el_nivel(_fresh_bb_data(tmp_path, "paired-positive"), tmp_path)
+    data = _fresh_bb_data(tmp_path, "negative")
+    bash_tests.test_control_negativo_sin_trafico_de_swap_el_ritmo_es_cero(data, tmp_path)
+    assert bash_tests.muestras(data)[-1]["swap"]["in_pag_s"] == 0.0
 
 
 def test_debt_sunset_test_bb_bash_352(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     bash_tests.test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo(
         _fresh_bb_data(tmp_path, "negative-counter"), tmp_path)
-    assert "time.sleep" not in bash_tests.test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo.__code__.co_names
+    original = bash_tests.BB.read_text(encoding="utf-8")
+    vulnerable = original.replace('printf "%.1f", (v>0?v:0)', 'printf "%.1f", v')
+    assert vulnerable != original
+    mutant = tmp_path / "bb-without-swap-clamp"
+    mutant.write_text(vulnerable, encoding="utf-8")
+    mutant.chmod(0o755)
+    mutant_data = _fresh_bb_data(tmp_path, "mutant-counter")
+    mutant_tmp = tmp_path / "mutant-inputs"
+    mutant_tmp.mkdir()
+    (tmp_path / "date-count").unlink(missing_ok=True)
+    with monkeypatch.context() as sourcecopy:
+        sourcecopy.setattr(bash_tests, "BB", mutant)
+        with pytest.raises(AssertionError) as mutant_failure:
+            bash_tests.test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo(mutant_data, mutant_tmp)
+    assert "-899988.0" in str(mutant_failure.value)
 
 
 def test_debt_sunset_test_bb_bash_766(tmp_path: Path) -> None:
-    bash_tests.test_cpu_top_NOMBRA_a_quien_quema_cpu(_fresh_bb_data(tmp_path, "cpu-positive"))
-    assert "sleep" not in bash_tests.test_cpu_top_NOMBRA_a_quien_quema_cpu.__code__.co_names
+    data = _fresh_bb_data(tmp_path, "cpu-positive")
+    bash_tests.test_cpu_top_NOMBRA_a_quien_quema_cpu(data)
+    assert "cpu_top" in bash_tests.muestras(data)[-1]
 
 
 def test_debt_sunset_test_bb_bash_802(tmp_path: Path) -> None:
-    bash_tests.test_control_negativo_un_proceso_dormido_no_sale_como_que_quema(
-        _fresh_bb_data(tmp_path, "cpu-negative"))
-    assert "sleep" not in bash_tests.test_control_negativo_un_proceso_dormido_no_sale_como_que_quema.__code__.co_names
+    data = _fresh_bb_data(tmp_path, "cpu-negative")
+    bash_tests.test_control_negativo_un_proceso_dormido_no_sale_como_que_quema(data)
+    assert "cpu_top" in bash_tests.muestras(data)[-1]
 
 
 
