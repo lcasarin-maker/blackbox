@@ -207,7 +207,6 @@ efectos de esta spec, y `tools/inventario.py --check` lo bloquea en el commit.
 | `tools/read_integrity.py` | Compara hashes buffered/O_DIRECT de una región acotada con digest suministrado; preserva fallos y verifica estabilidad del archivo | `tests/test_read_integrity.py`; caso GX10 conserva validación experimental pendiente |
 | `tools/provider_trace.py` | Evalúa selección efectiva de proveedor por petición y transición de worker en JSONL; conserva fallback e incompletitud | `tests/test_provider_trace.py`; fixtures declarados y traza real pendiente |
 | `tools/kernel_charges.bt` | Borrador de probes de cargo/descargo kmem 6.17 con mapas por cgroup ejecutor; dueño real desconocido | Headers de ABI y limitación de validación bpftrace sin root en `tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt`; compilación y captura pendientes |
-| `tools/kernel_charge_observations.py` | Parsea READY/SNAPSHOT/FINAL de stdout literal de `kernel_charges.bt`, deriva mapas/counts y contrasta bytes/páginas vivos con el ledger; reporta siempre propietario memcg desconocido y nunca cierra la investigación | `tests/test_kernel_charge_observations.py`; formato/control sintético y captura real ausente en `tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/` |
 
 ## Inventario de propiedad
 
