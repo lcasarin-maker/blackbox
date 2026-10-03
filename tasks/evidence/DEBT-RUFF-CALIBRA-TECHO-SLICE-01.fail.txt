@@ -1,0 +1,11 @@
+$ python3 -m ruff check tools/calibra_techo_slice.py
+C901 `serie` is too complex (11 > 10)
+  --> tools/calibra_techo_slice.py:82:5
+   |
+82 | def serie(nombre: str, samples: Path | None = None) -> list[tuple[str, float, float | None]]:
+   |     ^^^^^
+83 |     """(ts, cur_gib, peak_gib) de un slice, en orden. Lista vacia si no aparece.
+   |
+
+Found 1 error.
+EXIT=1

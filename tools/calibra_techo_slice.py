@@ -103,21 +103,27 @@ def serie(nombre: str, samples: Path | None = None) -> list[tuple[str, float, fl
         for linea in texto.splitlines():
             if '"slices"' not in linea:
                 continue
-            try:
-                o = json.loads(linea)
-            except ValueError:
-                continue
-            for s in o.get("slices") or []:
-                if not isinstance(s, dict) or s.get("slice") != nombre:
-                    continue
-                cur = s.get("cur_kb")
-                if cur is None:
-                    continue
-                pk = s.get("peak_kb")
-                out.append((str(o.get("ts", "?")), cur / 1024 ** 2,
-                            None if pk is None else pk / 1024 ** 2))
+            out.extend(_muestras_de_linea(linea, nombre))
     out.sort()
     return out
+
+
+def _muestras_de_linea(linea: str, nombre: str):
+    try:
+        objeto = json.loads(linea)
+    except ValueError:
+        return []
+    filas = []
+    for muestra in objeto.get("slices") or []:
+        if not isinstance(muestra, dict) or muestra.get("slice") != nombre:
+            continue
+        actual = muestra.get("cur_kb")
+        if actual is None:
+            continue
+        pico = muestra.get("peak_kb")
+        filas.append((str(objeto.get("ts", "?")), actual / 1024 ** 2,
+                      None if pico is None else pico / 1024 ** 2))
+    return filas
 
 
 def maximo_ya_se_estabilizo(v: list[float]) -> tuple[bool, dict]:

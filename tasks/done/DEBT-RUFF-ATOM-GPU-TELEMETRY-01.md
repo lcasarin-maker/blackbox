@@ -3,12 +3,19 @@ id: DEBT-RUFF-ATOM-GPU-TELEMETRY-01
 kind: task
 domain: VERDICT
 title: "Resolver infracciones Ruff en atom_gpu_telemetry.py"
-status: open
+status: done
+closure_type: fixed
+closed_at: 2026-10-02
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m ruff check tools/atom_gpu_telemetry.py", "expect": "exit_zero", "porque": "Ruff del archivo retorna cero con las reglas actuales y las pruebas del sujeto pasan. Reducir complejidad sin debilitar validación, seguridad ni controles negativos. No silenciar reglas ni añadir noqa para conseguir verde. Control negativo: variante temporal que exceda la regla vuelve a fallar."}
+evidence:
+  fail: tasks/evidence/DEBT-RUFF-ATOM-GPU-TELEMETRY-01.fail.txt
+  pass: tasks/evidence/DEBT-RUFF-ATOM-GPU-TELEMETRY-01.pass.txt
+  e2e: tasks/evidence/DEBT-RUFF-ATOM-GPU-TELEMETRY-01.e2e.txt
+reason: "CERRADO: se extrajeron pausa, reanudación y CLI sin cambiar las compuertas, persistencia, identidades ni eventos. Las seis suites dieron 173 passed; las ramas nuevas quedaron cubiertas. El subconjunto conserva 99% de cobertura, igual al baseline, con los mismos seis arcos parciales preexistentes."
 ---
 
 ## Registro y responsable
@@ -33,6 +40,16 @@ Ruff del archivo retorna cero con las reglas actuales y las pruebas del sujeto p
 
 ## Estado del verificador
 
-La ficha permanece abierta. El comando ya existe; se conserva el fallo actual y falta resolver el sujeto.
+Ficha cerrada; el close_check existente pasa en el archivo sujeto.
 
-Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+## Root Cause
+
+La función mitigar mezclaba selección, pausa, persistencia, reconciliación de PID y eventos; main reunía dos modos CLI. Ruff detectó C901, PLR0913, PLR0912 y PLR0915.
+
+## Regression Test
+
+Las seis suites atom verifican carga real, ausencia de datos, señales, identidad y persistencia. Se añadió un control para conservar TypeError ante una opción desconocida.
+
+## Verification Evidence
+
+Ruff del archivo pasa. Las seis suites: 173 passed. Cobertura: 99%, cero statements omitidos, 6 arcos parciales; el baseline original también dio 99% y los mismos 6 arcos equivalentes. El gate --fail-under=100 sigue fallando como en baseline. Ver e2e.

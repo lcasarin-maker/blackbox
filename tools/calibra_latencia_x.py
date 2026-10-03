@@ -239,6 +239,55 @@ def evalua(serie, vs, corte_ms: float, sostenido: int = 1,
     return fp, no_detectados
 
 
+def _imprime_calibracion(serie, vs, utiles, smi_sano):
+    print(f"corpus: {len(serie)} muestras con los dos canales OK  "
+          f"{serie[0][0]} -> {serie[-1][0]}")
+    print(f"corte de muestreador sano: smi.ms <= {smi_sano:.0f}")
+    print()
+    print(f"etiquetas declaradas:        {len(vs)}")
+    for x0, x1, q in vs:
+        tiene = "CON muestras" if (x0, x1, q) in utiles else "SIN muestras"
+        print(f"  {x0} -> {x1}  [{tiene}]  {q}")
+    print(f"etiquetas utilizables:       {len(utiles)}")
+    print()
+
+    if not utiles:
+        print("COULD_NOT_RUN: no hay un solo episodio ETIQUETADO con muestras de",
+              file=sys.stderr)
+        print("  x.ms, asi que no existe lado positivo contra el que calibrar.",
+              file=sys.stderr)
+        print("  Un corte derivado solo de 'muestras con latencia alta' mide el",
+              file=sys.stderr)
+        print("  filtro que uno elige, no el escritorio.", file=sys.stderr)
+        print("  COMO SE CONSIGUE UNA: durante el proximo episodio, correr")
+        print('    bb snapshot "el escritorio no responde"')
+        print("  Eso graba reason.txt + when.txt y este modulo lo lee como etiqueta.")
+        return 2
+
+    print(f"{'corte x.ms':>11} {'sostenido':>10} {'falsos+':>8} "
+          f"{'no detectados':>14}  veredicto")
+    mejor = None
+    for sostenido in (1, 2, 3, 5):
+        for corte in (50, 100, 150, 200, 300, 500, 800):
+            fp, nd = evalua(serie, utiles, corte, sostenido, smi_sano)
+            ok = not fp and not nd
+            if ok and mejor is None:
+                mejor = (corte, sostenido)
+            print(f"{corte:>11} {sostenido:>10} {len(fp):>8} {len(nd):>14}  "
+                  f"{'CALIBRADO' if ok else 'INVALIDO'}")
+    print()
+    if mejor is None:
+        print("VEREDICTO: NINGUN CORTE SEPARA -- ni una combinacion de nivel y")
+        print("duracion de las probadas deja falsos positivos y no detectados")
+        print("en cero. Con UNA etiqueta eso no es raro: una ventana no fija dos")
+        print("parametros. Hacen falta mas episodios etiquetados.")
+        return 1
+    corte, sostenido = mejor
+    print(f"VEREDICTO: CALIBRADO con x.ms >= {corte} durante {sostenido} "
+          f"muestra(s) seguidas y smi.ms <= {smi_sano:.0f}")
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     ap.add_argument("--muestras", type=Path, default=MUESTRAS)
@@ -282,52 +331,7 @@ def main(argv=None) -> int:
                     f"negativo, no es un episodio real")]
 
     utiles = con_muestras(vs, serie)
-    print(f"corpus: {len(serie)} muestras con los dos canales OK  "
-          f"{serie[0][0]} -> {serie[-1][0]}")
-    print(f"corte de muestreador sano: smi.ms <= {a.smi_sano:.0f}")
-    print()
-    print(f"etiquetas declaradas:        {len(vs)}")
-    for i, (x0, x1, q) in enumerate(vs):
-        tiene = "CON muestras" if (x0, x1, q) in utiles else "SIN muestras"
-        print(f"  {x0} -> {x1}  [{tiene}]  {q}")
-    print(f"etiquetas utilizables:       {len(utiles)}")
-    print()
-
-    if not utiles:
-        print("COULD_NOT_RUN: no hay un solo episodio ETIQUETADO con muestras de",
-              file=sys.stderr)
-        print("  x.ms, asi que no existe lado positivo contra el que calibrar.",
-              file=sys.stderr)
-        print("  Un corte derivado solo de 'muestras con latencia alta' mide el",
-              file=sys.stderr)
-        print("  filtro que uno elige, no el escritorio.", file=sys.stderr)
-        print("  COMO SE CONSIGUE UNA: durante el proximo episodio, correr")
-        print("    bb snapshot \"el escritorio no responde\"")
-        print("  Eso graba reason.txt + when.txt y este modulo lo lee como etiqueta.")
-        return 2
-
-    print(f"{'corte x.ms':>11} {'sostenido':>10} {'falsos+':>8} "
-          f"{'no detectados':>14}  veredicto")
-    mejor = None
-    for sostenido in (1, 2, 3, 5):
-        for corte in (50, 100, 150, 200, 300, 500, 800):
-            fp, nd = evalua(serie, utiles, corte, sostenido, a.smi_sano)
-            ok = not fp and not nd
-            if ok and mejor is None:
-                mejor = (corte, sostenido)
-            print(f"{corte:>11} {sostenido:>10} {len(fp):>8} {len(nd):>14}  "
-                  f"{'CALIBRADO' if ok else 'INVALIDO'}")
-    print()
-    if mejor is None:
-        print("VEREDICTO: NINGUN CORTE SEPARA -- ni una combinacion de nivel y")
-        print("duracion de las probadas deja falsos positivos y no detectados")
-        print("en cero. Con UNA etiqueta eso no es raro: una ventana no fija dos")
-        print("parametros. Hacen falta mas episodios etiquetados.")
-        return 1
-    corte, sostenido = mejor
-    print(f"VEREDICTO: CALIBRADO con x.ms >= {corte} durante {sostenido} "
-          f"muestra(s) seguidas y smi.ms <= {a.smi_sano:.0f}")
-    return 0
+    return _imprime_calibracion(serie, vs, utiles, a.smi_sano)
 
 
 if __name__ == "__main__":  # pragma: no cover -- entry point, ejercitado via main()

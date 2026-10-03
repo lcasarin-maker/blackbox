@@ -59,6 +59,8 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -1393,9 +1395,116 @@ def pids_mitigables(patrones: tuple[str, ...] = PROCESOS_MITIGABLES) -> list[int
     return sorted(pids)
 
 
-def mitigar(eventos: list[dict], estado: dict, *,
-           listar_pids=None, enviar_senal=None,
-           actuar: bool = True, persistir_estado=None) -> list[dict]:
+@dataclass
+class _ContextoMitigacion:
+    estado: dict
+    mitigados: set[int]
+    identidades: dict[int, int]
+    intentos: dict[int, int]
+    durable: bool
+    listar_pids: Callable[[], list[int]]
+    enviar_senal: Callable[[int, int], None]
+    actuar: bool
+    persistir_estado: Callable[[dict], None]
+
+
+def _contexto_mitigacion(estado, opciones):
+    permitidas = {"listar_pids", "enviar_senal", "actuar", "persistir_estado"}
+    nombre = next((opcion for opcion in opciones if opcion not in permitidas), None)
+    if nombre is not None:
+        raise TypeError(f"mitigar() got an unexpected keyword argument '{nombre}'")
+    guardar = opciones.get("persistir_estado")
+    return _ContextoMitigacion(
+        estado=estado,
+        mitigados=estado.setdefault("mitigados", set()),
+        identidades=estado.setdefault("identidades", {}),
+        intentos=estado.setdefault("intentos", {}),
+        durable=guardar is not None,
+        listar_pids=opciones.get("listar_pids") or pids_mitigables,
+        enviar_senal=opciones.get("enviar_senal") or os.kill,
+        actuar=opciones.get("actuar", True),
+        persistir_estado=guardar or (lambda _estado: None),
+    )
+
+
+def _pausar_pid(ctx, pid, pausados):
+    identidad = _identidad_proceso(pid) if ctx.durable else None
+    if ctx.durable and identidad is None:
+        return
+    if identidad:
+        # Durable antes de SIGSTOP: el reinicio puede distinguir una caída en
+        # la ventana señal/confirmación.
+        ctx.intentos[pid] = identidad[0]
+        ctx.persistir_estado(ctx.estado)
+    try:
+        ctx.enviar_senal(pid, signal.SIGSTOP)
+        pausados.append(pid)
+        if identidad:
+            ctx.identidades[pid] = identidad[0]
+            ctx.mitigados.add(pid)
+            ctx.persistir_estado(ctx.estado)
+    except ProcessLookupError:
+        ctx.intentos.pop(pid, None)
+    else:
+        ctx.intentos.pop(pid, None)
+    finally:
+        ctx.persistir_estado(ctx.estado)
+
+
+def _pausar_con_carga(ctx, resultado):
+    objetivo = sorted(ctx.listar_pids())
+    if not ctx.actuar:
+        resultado.append({"ts": _ahora(), "evento": "mitigacion_simulada",
+                          "accion": "pausa", "pids": objetivo,
+                          "patrones": list(PROCESOS_MITIGABLES)})
+    pausados = []
+    if ctx.actuar:
+        for pid in objetivo:
+            _pausar_pid(ctx, pid, pausados)
+    if pausados:
+        ctx.mitigados.update(pausados)
+        ctx.persistir_estado(ctx.estado)
+        resultado.append({"ts": _ahora(), "evento": "mitigacion_pausa",
+                          "pids": pausados, "patrones": list(PROCESOS_MITIGABLES)})
+
+
+def _reanudar_mitigados(ctx):
+    reanudados = []
+    for pid in sorted(ctx.mitigados):
+        identidad = ctx.identidades.get(pid)
+        actual = _identidad_proceso(pid) if identidad is not None else None
+        if identidad is not None and (actual is None or actual[0] != identidad):
+            reanudados.append(pid)  # desapareció o el PID ya pertenece a otro
+            ctx.identidades.pop(pid, None)
+            continue
+        try:
+            ctx.enviar_senal(pid, signal.SIGCONT)
+            reanudados.append(pid)
+        except ProcessLookupError:
+            continue  # murió mientras estaba pausado -- nada que reanudar
+    ctx.mitigados.clear()
+    ctx.identidades.clear()
+    ctx.persistir_estado(ctx.estado)
+    return {"ts": _ahora(), "evento": "mitigacion_reanuda", "pids": reanudados}
+
+
+def _reportar_alarmas_opacas(eventos, resultado):
+    for evento in eventos:
+        sin_dato = evento.get("carga_gpu")
+        resultado.append({
+            "ts": _ahora(), "evento": "mitigacion_sin_datos",
+            "zona": evento.get("zona"), "carga_gpu": sin_dato,
+            "motivo": ("el evento de alarma no trae `carga_gpu` (anterior a "
+                       "DGX-396): la compuerta de carga no puede decidir y no "
+                       "se pausó"
+                       if sin_dato is None else
+                       "`carga_gpu` es `sin_datos`: el sampler no dejó "
+                       "`gpu_power_w` fresco, la compuerta no puede decidir y "
+                       "no se pausó"),
+        })
+
+
+def mitigar(eventos: list[dict], estado: dict, **opciones) -> list[dict]:
     """DGX-342: `temp_critica` hasta ahora sólo se logueaba -- el quinto crash
     del día tuvo 6 cruces en 27 min y murió 8s después del último. Pausa
     (SIGSTOP) los procesos de `PROCESOS_MITIGABLES` mientras haya una zona en
@@ -1447,13 +1556,7 @@ def mitigar(eventos: list[dict], estado: dict, *,
     SIGSTOP repetido (inofensivo en sí, pero ensuciaría el jsonl con un evento
     por muestra en vez de uno por transición, rompiendo el mismo principio de
     debounce que ya tiene `_alarmas`)."""
-    listar_pids = listar_pids or pids_mitigables
-    enviar_senal = enviar_senal or os.kill
-    mitigados: set[int] = estado.setdefault("mitigados", set())
-    identidades: dict[int, int] = estado.setdefault("identidades", {})
-    intentos: dict[int, int] = estado.setdefault("intentos", {})
-    durable = persistir_estado is not None
-    persistir_estado = persistir_estado or (lambda _estado: None)
+    ctx = _contexto_mitigacion(estado, opciones)
     criticas = [e for e in eventos if e.get("evento") == "temp_critica"]
     con_carga = [e for e in criticas if e.get("carga_gpu") == "con_carga"]
     # `None` (evento anterior a DGX-396) y `"sin_datos"` (sampler sin
@@ -1464,84 +1567,19 @@ def mitigar(eventos: list[dict], estado: dict, *,
               if e.get("carga_gpu") in (None, "sin_datos")]
     resultado: list[dict] = []
 
-    if con_carga and not mitigados:
-        objetivo = sorted(listar_pids())
-        if not actuar:
-            resultado.append({"ts": _ahora(), "evento": "mitigacion_simulada",
-                              "accion": "pausa", "pids": objetivo,
-                              "patrones": list(PROCESOS_MITIGABLES)})
-        pausados: list[int] = []
-        if actuar:
-            for pid in objetivo:
-                identidad = _identidad_proceso(pid) if durable else None
-                if durable and identidad is None:
-                    continue
-                if identidad:
-                    # Durable antes de SIGSTOP: el reinicio puede distinguir
-                    # una caída en la ventana señal/confirmación.
-                    intentos[pid] = identidad[0]
-                    persistir_estado(estado)
-                try:
-                    enviar_senal(pid, signal.SIGSTOP)
-                    pausados.append(pid)
-                    if identidad:
-                        identidades[pid] = identidad[0]
-                        mitigados.add(pid)
-                        persistir_estado(estado)
-                except ProcessLookupError:
-                    intentos.pop(pid, None)
-                    continue  # murió entre el listado y el kill -- no es un pid que pausar
-                    intentos.pop(pid, None)
-                else:
-                    intentos.pop(pid, None)
-                finally:
-                    persistir_estado(estado)
-        if pausados:
-            mitigados.update(pausados)
-            persistir_estado(estado)
-            resultado.append({"ts": _ahora(), "evento": "mitigacion_pausa",
-                              "pids": pausados, "patrones": list(PROCESOS_MITIGABLES)})
-
-    elif mitigados and not estado.get("en_alarma") and not actuar:
+    if con_carga and not ctx.mitigados:
+        _pausar_con_carga(ctx, resultado)
+    elif ctx.mitigados and not estado.get("en_alarma") and not ctx.actuar:
         resultado.append({"ts": _ahora(), "evento": "mitigacion_simulada",
-                          "accion": "reanuda", "pids": sorted(mitigados)})
-
-    elif mitigados and not estado.get("en_alarma"):
-        reanudados: list[int] = []
-        for pid in sorted(mitigados):
-            identidad = identidades.get(pid)
-            actual = _identidad_proceso(pid) if identidad is not None else None
-            if identidad is not None and (actual is None or actual[0] != identidad):
-                reanudados.append(pid)  # desapareció o el PID ya pertenece a otro
-                identidades.pop(pid, None)
-                continue
-            try:
-                enviar_senal(pid, signal.SIGCONT)
-                reanudados.append(pid)
-            except ProcessLookupError:
-                continue  # murió mientras estaba pausado -- nada que reanudar
-        mitigados.clear()
-        identidades.clear()
-        persistir_estado(estado)
-        resultado.append({"ts": _ahora(), "evento": "mitigacion_reanuda",
-                          "pids": reanudados})
+                          "accion": "reanuda", "pids": sorted(ctx.mitigados)})
+    elif ctx.mitigados and not estado.get("en_alarma"):
+        resultado.append(_reanudar_mitigados(ctx))
 
     # Se emite AUNQUE otra zona sí haya pausado: lo que registra es que ESA
     # alarma quedó sin clasificar, no el desenlace global de la muestra. Y va
     # después de la pausa para que el jsonl lea primero la acción y luego los
     # huecos.
-    for evento in opacas:
-        resultado.append({
-            "ts": _ahora(), "evento": "mitigacion_sin_datos",
-            "zona": evento.get("zona"), "carga_gpu": evento.get("carga_gpu"),
-            "motivo": ("el evento de alarma no trae `carga_gpu` (anterior a "
-                       "DGX-396): la compuerta de carga no puede decidir y no "
-                       "se pausó"
-                       if evento.get("carga_gpu") is None else
-                       "`carga_gpu` es `sin_datos`: el sampler no dejó "
-                       "`gpu_power_w` fresco, la compuerta no puede decidir y "
-                       "no se pausó"),
-        })
+    _reportar_alarmas_opacas(opacas, resultado)
 
     return resultado
 
@@ -1579,46 +1617,30 @@ def muestrear(umbrales: dict, estado: dict, *, escribir: bool = True,
     return eventos
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--interval-seconds", type=float, default=INTERVALO_DEFAULT_S,
-                    help="segundos entre muestras (default: %(default)s)")
-    ap.add_argument("--once", action="store_true",
-                    help="una sola muestra y salir, sin loop")
-    ap.add_argument("--dry-run", action="store_true",
-                    help="imprime los eventos, no escribe el jsonl")
-    ap.add_argument("--procesos-gpu", action="store_true",
-                    help=("imprime quien tiene memoria de GPU ahora mismo, en "
-                          "JSON. Es el HECHO fisico; la politica de quien puede "
-                          "usarla es de quien encola trabajo (DGX-585)."))
-    ap.add_argument("--gate-termico", action="store_true",
-                    help=("imprime {bloquea, motivo} y sale 1 si NO se le debe "
-                          "sumar carga a la maquina. Es la via por la que Atlas "
-                          "consulta esta decision sin importar codigo de aqui "
-                          "(contrato de los dos repos, DGX-585)."))
-    args = ap.parse_args()
+def _comando_procesos_gpu() -> int:
+    # El HECHO fisico -- quien tiene memoria de GPU ahora mismo -- separado
+    # de la POLITICA, que es de quien encola trabajo. Atlas preguntaba esto
+    # invocando `nvidia-smi` por su cuenta; con la frontera de DGX-585 el
+    # driver lo interroga quien gobierna el hardware, y Atlas decide con la
+    # respuesta. Sale 1 si NO se pudo averiguar: quien no sabe, no pasa.
+    datos = leer_procesos_gpu()
+    print(json.dumps(datos, ensure_ascii=False))
+    return 1 if datos.get("gpu_procs") is None else 0
 
-    if args.procesos_gpu:
-        # El HECHO fisico -- quien tiene memoria de GPU ahora mismo -- separado
-        # de la POLITICA, que es de quien encola trabajo. Atlas preguntaba esto
-        # invocando `nvidia-smi` por su cuenta; con la frontera de DGX-585 el
-        # driver lo interroga quien gobierna el hardware, y Atlas decide con la
-        # respuesta. Sale 1 si NO se pudo averiguar: quien no sabe, no pasa.
-        datos = leer_procesos_gpu()
-        print(json.dumps(datos, ensure_ascii=False))
-        return 1 if datos.get("gpu_procs") is None else 0
 
-    if args.gate_termico:
-        # Una sola fuente para el 94.8 C. Atlas llamaba a `presupuesto_termico`
-        # por import; ahora llama a este proceso. El numero no se copia, y la
-        # ausencia de telemetria fresca sigue BLOQUEANDO (DGX-383): quien no
-        # sabe, no pasa.
-        umbrales = leer_umbrales()
-        motivo = presupuesto_termico(leer_zonas(), umbrales)
-        print(json.dumps({"bloquea": bool(motivo), "motivo": motivo},
-                         ensure_ascii=False))
-        return 1 if motivo else 0
+def _comando_gate_termico() -> int:
+    # Una sola fuente para el 94.8 C. Atlas llamaba a `presupuesto_termico`
+    # por import; ahora llama a este proceso. El numero no se copia, y la
+    # ausencia de telemetria fresca sigue BLOQUEANDO (DGX-383): quien no
+    # sabe, no pasa.
+    umbrales = leer_umbrales()
+    motivo = presupuesto_termico(leer_zonas(), umbrales)
+    print(json.dumps({"bloquea": bool(motivo), "motivo": motivo},
+                     ensure_ascii=False))
+    return 1 if motivo else 0
 
+
+def _run_sampler(args) -> int:
     escribir = not args.dry_run
     recortadas = rotar_si_hace_falta() if escribir else None
     umbrales = leer_umbrales()
@@ -1671,6 +1693,32 @@ def main() -> int:
             time.sleep(args.interval_seconds)  # blocking-sleep: intervalo del sampler de vida larga, no I/O a esperar -- DGX-334  # sunset-reviewed: 2.1 -- relectura 2026-10-02: objetivo y expresion sin cambios frente a git show 7049dce^:tools/atom_gpu_telemetry.py; El bucle de vida larga necesita su intervalo entre muestras. Comparacion por linea en tasks/evidence/RELEASE-2.1.0/sunset-review.json. Revision anterior 2.0: sin cambios desde la revision de 1.9 horas antes, mismo dia, mismas evidencias -- SE QUEDA con la misma razon de 1.8, re-verificada: es el intervalo del bucle de un sampler de vida larga y NO esta en el camino de los tests. Comprobado 2026-09-28 sobre los 466 tests recolectados: ninguno referencia `interval_seconds`, asi que ninguno entra en ese bucle. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.9-sleeps.txt
     except KeyboardInterrupt:
         return 0
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--interval-seconds", type=float, default=INTERVALO_DEFAULT_S,
+                    help="segundos entre muestras (default: %(default)s)")
+    ap.add_argument("--once", action="store_true",
+                    help="una sola muestra y salir, sin loop")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="imprime los eventos, no escribe el jsonl")
+    ap.add_argument("--procesos-gpu", action="store_true",
+                    help=("imprime quien tiene memoria de GPU ahora mismo, en "
+                          "JSON. Es el HECHO fisico; la politica de quien puede "
+                          "usarla es de quien encola trabajo (DGX-585)."))
+    ap.add_argument("--gate-termico", action="store_true",
+                    help=("imprime {bloquea, motivo} y sale 1 si NO se le debe "
+                          "sumar carga a la maquina. Es la via por la que Atlas "
+                          "consulta esta decision sin importar codigo de aqui "
+                          "(contrato de los dos repos, DGX-585)."))
+    args = ap.parse_args()
+
+    if args.procesos_gpu:
+        return _comando_procesos_gpu()
+    if args.gate_termico:
+        return _comando_gate_termico()
+    return _run_sampler(args)
 
 
 if __name__ == "__main__":  # pragma: no cover -- entry point, ejercitado via main()
