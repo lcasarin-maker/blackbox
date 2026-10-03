@@ -5,3 +5,35 @@ The four bash test waits preserve the ps whole-second CPU accounting window (two
 Regression command: python3 -m pytest -q tests/test_bb_bash.py::test_cpu_top_NOMBRA_a_quien_quema_cpu tests/test_bb_bash.py::test_control_negativo_un_proceso_dormido_no_sale_como_que_quema tests/test_atom_gpu_telemetry.py::test_nvidia_smi_ausente_no_tumba_el_sampler
 Result: 3 passed in 11.17s. An initial typo selector had exit 4 / no tests run; corrected selector above passed. This review had no other could_not_run.
 Review cost: native sunset audit 0.4s; focused pytest 11.17s; 17 source rows were read and hashed. Owner: Luis (release owner); follow-up review due next version bump.
+
+RELEASE-SUNSET-2-2-01: cierre real en primary tras version_bump --apply.
+Comando: python3 .simplecode/run.py simplecode.verification.sunset_audit --root . --gate
+[sunset-audit] scanned 90 file(s) under /home/lcasarin/projects/blackbox
+[sunset-audit] not scanned, git ignores them: 14 entry/entries (a pruned tree counts once)
+[sunset-audit] not scanned, vendored per corpus_exempt.yaml: 0 entry/entries (tracked, but not this repo's to edit)
+[sunset-audit] could not be read (dangling symlinks and the like): 0 file(s)
+
+=== blackbox ===
+[sunset-audit] version=2.2.0 (20 exemption(s) found)
+[sunset-audit] stale: 0 of 20 versioned exemption(s), compared against 2.2
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:8  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:15  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:21  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:26  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:30  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:35  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:50  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:60  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:65  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:67  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:69  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:71  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tools/atom_gpu_telemetry.py:1693  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:92  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:189  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:226  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:782  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:818  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:1577  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:1631  [blocking-sleep-override]
+[sunset-audit] PASS — all exemptions tagged for current version.

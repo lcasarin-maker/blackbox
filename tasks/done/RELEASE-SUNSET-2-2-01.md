@@ -3,7 +3,10 @@ id: RELEASE-SUNSET-2-2-01
 kind: task
 domain: VERDICT
 title: "Revisar 17 exenciones sunset antes de Blackbox 2.2.0"
-status: open
+status: done
+closed_at: 2026-10-03
+closure_type: relocated_prior_verification
+reason: Revisión de 17 fuentes integrada en 0e42e5f7; versión nativa aplicada a 2.2.0 tras ledger H1 vigente; el close_check real pasa con 0 de 20 exenciones vencidas.
 severity: P2
 origin: detected
 satd_family: BLIND_INSTRUMENT

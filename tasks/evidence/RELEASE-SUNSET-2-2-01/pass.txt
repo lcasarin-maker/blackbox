@@ -1,6 +1,29 @@
-Comando ejecutado en worktree con pyproject.toml temporalmente establecido a 2.2.0; archivo restaurado byte-por-byte al terminar:
-python3 .simplecode/run.py simplecode.verification.sunset_audit --root . --gate
+[sunset-audit] scanned 90 file(s) under /home/lcasarin/projects/blackbox
+[sunset-audit] not scanned, git ignores them: 14 entry/entries (a pruned tree counts once)
+[sunset-audit] not scanned, vendored per corpus_exempt.yaml: 0 entry/entries (tracked, but not this repo's to edit)
+[sunset-audit] could not be read (dangling symlinks and the like): 0 file(s)
+
+=== blackbox ===
 [sunset-audit] version=2.2.0 (20 exemption(s) found)
 [sunset-audit] stale: 0 of 20 versioned exemption(s), compared against 2.2
-12 gitignore rules + atom sampler + 4 bash test waits: OK(2.2); 3 cgroup waits already OK(2.2).
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:8  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:15  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:21  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:26  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:30  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:35  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:50  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:60  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:65  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:67  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:69  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/.gitignore:71  [gitignore]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tools/atom_gpu_telemetry.py:1693  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:92  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:189  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:226  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:782  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:818  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:1577  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:1631  [blocking-sleep-override]
 [sunset-audit] PASS — all exemptions tagged for current version.
