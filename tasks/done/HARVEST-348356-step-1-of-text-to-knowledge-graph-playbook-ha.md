@@ -1,7 +1,7 @@
 ---
 id: HARVEST-348356-step-1-of-text-to-knowledge-graph-playbook-ha
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (348356-step-1-of-text-to-knowledge-graph-playbook-has-an-error)"
+title: "Atlas: evaluar adopción — text-to-knowledge-graph playbook step has an error"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

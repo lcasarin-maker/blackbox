@@ -1,7 +1,7 @@
 ---
 id: HARVEST-366877-sparkview-gpu-monitor-tool-with-gb10-aware-un
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (366877-sparkview-gpu-monitor-tool-with-gb10-aware-unified-memory-handl)"
+title: "Atlas: evaluar adopción — Sparkview monitor needs GB10 unified-memory support"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

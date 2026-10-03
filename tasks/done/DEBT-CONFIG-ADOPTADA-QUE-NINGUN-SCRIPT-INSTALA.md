@@ -1,7 +1,7 @@
 ---
 id: DEBT-CONFIG-ADOPTADA-QUE-NINGUN-SCRIPT-INSTALA
 kind: debt
-title: "15 de 27 ficheros de configuracion adoptada no los instala ningun script, asi que editarlos no cambia la maquina"
+title: "15 configuraciones adoptadas carecían de instalador; editar esos archivos no cambiaba la máquina"
 status: done
 closure_type: fixed
 closed_at: 2026-09-28

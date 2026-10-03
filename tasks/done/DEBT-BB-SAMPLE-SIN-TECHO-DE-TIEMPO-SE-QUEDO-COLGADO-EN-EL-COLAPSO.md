@@ -1,7 +1,7 @@
 ---
 id: DEBT-BB-SAMPLE-SIN-TECHO-DE-TIEMPO-SE-QUEDO-COLGADO-EN-EL-COLAPSO
 kind: debt
-title: "blackbox-sample.service no tenia TimeoutStartSec: una sola muestra colgada apagaba el instrumento hasta el reinicio"
+title: "blackbox-sample: TimeoutStartSec evita que una muestra colgada apague el instrumento"
 status: done
 closure_type: fixed
 closed_at: 2026-09-28

@@ -1,7 +1,7 @@
 ---
 id: HARVEST-347951-dgx-spark-boot-failure-after-installing-llm-m
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (347951-dgx-spark-boot-failure-after-installing-llm-model)"
+title: "Atlas: evaluar adopción — LLM install leaves DGX Spark unable to boot"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

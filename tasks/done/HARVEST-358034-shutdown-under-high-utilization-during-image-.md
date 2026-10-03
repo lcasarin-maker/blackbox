@@ -1,7 +1,7 @@
 ---
 id: HARVEST-358034-shutdown-under-high-utilization-during-image-
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (358034-shutdown-under-high-utilization-during-image-generation-using-q)"
+title: "Atlas: evaluar adopción — shutdown during high-utilization image generation"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

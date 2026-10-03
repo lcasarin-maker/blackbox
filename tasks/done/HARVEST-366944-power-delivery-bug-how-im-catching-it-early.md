@@ -1,7 +1,7 @@
 ---
 id: HARVEST-366944-power-delivery-bug-how-im-catching-it-early
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (366944-power-delivery-bug-how-im-catching-it-early)"
+title: "Atlas: evaluar adopción — early detection of power-delivery bug"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

@@ -1,7 +1,7 @@
 ---
 id: HARVEST-355453-dgx-spark-xhci-controller-hc-died-crashes-wit
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (355453-dgx-spark-xhci-controller-hc-died-crashes-with-realsense-d435i-)"
+title: "Atlas: evaluar adopción — XHCI controller crashes with RealSense D435i"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

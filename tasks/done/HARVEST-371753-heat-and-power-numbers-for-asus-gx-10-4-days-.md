@@ -1,7 +1,7 @@
 ---
 id: HARVEST-371753-heat-and-power-numbers-for-asus-gx-10-4-days-
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (371753-heat-and-power-numbers-for-asus-gx-10-4-days-on-90-utilization)"
+title: "Atlas: evaluar adopción — ASUS GX10 heat and power after four days at 90%"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

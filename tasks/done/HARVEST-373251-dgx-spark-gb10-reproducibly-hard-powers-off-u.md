@@ -1,7 +1,7 @@
 ---
 id: HARVEST-373251-dgx-spark-gb10-reproducibly-hard-powers-off-u
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (373251-dgx-spark-gb10-reproducibly-hard-powers-off-under-gpu-load-full)"
+title: "Atlas: evaluar adopción — GB10 powers off under full GPU load reproducibly"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

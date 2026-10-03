@@ -1,7 +1,7 @@
 ---
 id: HARVEST-353218-lmstudio-error-cannot-obtain-free-vram-bytes-
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (353218-lmstudio-error-cannot-obtain-free-vram-bytes-for-gpu0-nvidia-gb)"
+title: "Atlas: evaluar adopción — LM Studio cannot obtain free GPU VRAM"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

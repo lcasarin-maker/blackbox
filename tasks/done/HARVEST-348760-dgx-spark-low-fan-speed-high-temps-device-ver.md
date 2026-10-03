@@ -1,7 +1,7 @@
 ---
 id: HARVEST-348760-dgx-spark-low-fan-speed-high-temps-device-ver
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (348760-dgx-spark-low-fan-speed-high-temps-device-very-hot)"
+title: "Atlas: evaluar adopción — DGX Spark fan runs slowly and device overheats"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

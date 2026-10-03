@@ -1,7 +1,7 @@
 ---
 id: HARVEST-362015-all-usb-connections-fall-back-to-480-mbps-usb
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (362015-all-usb-connections-fall-back-to-480-mbps-usb-2-0)"
+title: "Atlas: evaluar adopción — USB connections fall back to 480 Mbps USB 2.0"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

@@ -1,7 +1,7 @@
 ---
 id: HARVEST-354194-my-dgx-system-is-getting-shut-itself-down-whi
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (354194-my-dgx-system-is-getting-shut-itself-down-while-running-my-llm-)"
+title: "Atlas: evaluar adopción — DGX system shuts down while running an LLM"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

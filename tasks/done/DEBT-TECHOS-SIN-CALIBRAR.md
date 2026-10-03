@@ -1,7 +1,7 @@
 ---
 id: DEBT-TECHOS-SIN-CALIBRAR
 kind: debt
-title: "El criterio de los techos no podia salir positivo: reservaba un transitorio de 4 min como si fuera un compromiso"
+title: "Los techos contaban un pico transitorio de 4 min como compromiso permanente"
 status: done
 closure_type: fixed
 closed_at: 2026-09-28

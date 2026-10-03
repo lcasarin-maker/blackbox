@@ -1,7 +1,7 @@
 ---
 id: HARVEST-353683-dgx-spark-gpu-usage-0-after-24-hours-open-web
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (353683-dgx-spark-gpu-usage-0-after-24-hours-open-webui)"
+title: "Atlas: evaluar adopción — DGX Spark GPU usage falls to zero in Open WebUI"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

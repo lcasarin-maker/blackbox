@@ -1,7 +1,7 @@
 ---
 id: HARVEST-377044-dgx-spark-gb10-thermal-throttling-after-ec-ue
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (377044-dgx-spark-gb10-thermal-throttling-after-ec-uefi-updates-acpi-zo)"
+title: "Atlas: evaluar adopción — GB10 thermal throttling after EC/UEFI updates"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

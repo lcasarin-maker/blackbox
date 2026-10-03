@@ -1,7 +1,7 @@
 ---
 id: HARVEST-379303-severe-one-way-rdma-performance-regression-on
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (379303-severe-one-way-rdma-performance-regression-on-asus-ascent-gx10-)"
+title: "Atlas: evaluar adopción — one-way RDMA regression on ASUS Ascent GX10"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

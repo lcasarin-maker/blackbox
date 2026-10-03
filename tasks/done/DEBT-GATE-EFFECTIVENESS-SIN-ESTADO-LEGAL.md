@@ -1,7 +1,7 @@
 ---
 id: DEBT-GATE-EFFECTIVENESS-SIN-ESTADO-LEGAL
 kind: debt
-title: "`gate_effectiveness` bloquea a `telemetry_prune` esté declarado o no: sus dos mitades leen columnas distintas"
+title: "gate_effectiveness bloqueaba telemetry_prune por leer columnas distintas"
 status: done
 closed_at: 2026-09-27
 evidence:

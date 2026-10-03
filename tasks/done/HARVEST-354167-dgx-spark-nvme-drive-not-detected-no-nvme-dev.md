@@ -1,7 +1,7 @@
 ---
 id: HARVEST-354167-dgx-spark-nvme-drive-not-detected-no-nvme-dev
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (354167-dgx-spark-nvme-drive-not-detected-no-nvme-device-found)"
+title: "Atlas: evaluar adopción — DGX Spark does not detect NVMe drive"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

@@ -1,7 +1,7 @@
 ---
 id: DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP
 kind: debt
-title: "La ventana donde escribes y el arnes que la ahoga eran hermanos en app.slice sin prioridad relativa"
+title: "app.slice compartía cgroup entre la ventana y el arnés, sin prioridad relativa"
 status: done
 severity: P1
 origin: detected

@@ -1,7 +1,7 @@
 ---
 id: HARVEST-378500-dgx-spark-is-not-suitable-for-professional-wo
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (378500-dgx-spark-is-not-suitable-for-professional-workloads-due-to-the)"
+title: "Atlas: evaluar adopción — DGX Spark unsuitable for professional workloads"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

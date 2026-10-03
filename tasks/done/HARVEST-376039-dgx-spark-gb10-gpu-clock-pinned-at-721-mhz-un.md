@@ -1,7 +1,7 @@
 ---
 id: HARVEST-376039-dgx-spark-gb10-gpu-clock-pinned-at-721-mhz-un
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (376039-dgx-spark-gb10-gpu-clock-pinned-at-721-mhz-under-full-load-no-t)"
+title: "Atlas: evaluar adopción — GB10 GPU clock pinned at 721 MHz under full load"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23
