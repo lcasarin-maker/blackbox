@@ -24,3 +24,9 @@ Salida resumida literal del lector: `{"boot_parameter": {"present": false, "stat
 - `python3 -m pyright tools/kernel_capture.py tests/test_kernel_capture.py` → `0 errors, 0 warnings, 0 informations`.
 
 Los controles incluyen estado presente/ausente/denegado, parámetro de arranque, hashes sin endpoint, objetivo sin atributos legibles, lectura/listado denegados, symlinks de directorio y archivo que escapan del root, texto pstore no serializado y salida CLI. La cobertura cubre el módulo nuevo; no certifica entrega al receptor, firma de módulo, Secure Boot, compatibilidad OEM ni recuperación tras panic o freeze.
+
+## Control tardío de confinamiento de atributo — 2026-10-03
+
+Se añadió un control donde `remote_ip` en un target configfs apunta por symlink a un archivo fuera del root de captura. El resultado marca `could_not_run`, no abre el archivo externo y no serializa su contenido. Es un control de la rama de confinamiento; conserva la limitación documentada de que resolve+read no es atómico ante reemplazo concurrente.
+
+La ejecución focal conjunta, cobertura, Ruff, Pyright sobre producción y zero-debt gate quedan registrados en [el addendum APT/URI](BB-INSTRUMENTS-apt.md#controles-tardíos-de-rutas-de-uri--2026-10-03), porque esa misma corrida mide ambos módulos.
