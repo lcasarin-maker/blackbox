@@ -6,6 +6,7 @@ title: "Revisar 17 exenciones sunset antes de Blackbox 2.2.0"
 status: open
 severity: P2
 origin: detected
+satd_family: BLIND_INSTRUMENT
 detector: {"rule": "sunset-audit 2.2.0 stale exemption review", "confidence": 1.0}
 created: 2026-10-03
 close_check: {"cmd": "python3 .simplecode/run.py simplecode.verification.sunset_audit --root . --gate", "expect": "exit_zero", "porque": "Revalidar los 17 marcadores vencidos frente a la versión 2.2.0, manteniendo sus reglas y esperas solo si la revisión de fuente confirma que el comportamiento y control siguen vigentes."}
