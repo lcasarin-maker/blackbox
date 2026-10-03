@@ -178,7 +178,7 @@ def _type_line(line: str, number: int, state: Capture) -> None:
 
 
 def _help_line(line: str, number: int, state: Capture) -> None:
-    parts = line[2:].split(maxsplit=2)
+    parts = line[1:].lstrip().split(maxsplit=2)
     if len(parts) < 2 or parts[1] not in METRICS:
         return
     name = parts[1]
@@ -192,10 +192,11 @@ def _help_line(line: str, number: int, state: Capture) -> None:
 def _consume_line(line: str, number: int, capture_path: str, state: Capture) -> None:
     if not line:
         return
-    if line.startswith("# TYPE "):
+    comment_tokens = line[1:].lstrip().split(maxsplit=1) if line.startswith("#") else []
+    if comment_tokens[:1] == ["TYPE"]:
         _type_line(line, number, state)
         return
-    if line.startswith("# HELP "):
+    if comment_tokens[:1] == ["HELP"]:
         _help_line(line, number, state)
         return
     if line.startswith("#"):
