@@ -3,7 +3,7 @@ id: DEBT-RESEARCH-COLLECTOR-BB-FORUM-INVENTORY-01
 kind: task
 domain: VERDICT
 title: "Decidir alcance del recolector histórico bb_forum_inventory"
-status: open
+status: done
 severity: P2
 origin: detected
 detector: {"rule": "zero_debt: hardcoded_path, unencoded_file_io, blocking_sleep", "confidence": 1.0}
@@ -72,3 +72,15 @@ Sujeto `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py`. 6 hal
 ## Criterio y responsable
 
 Responsable coordinación BB/Luis. Si se archiva, conservar bytes/modos/SHA-256 y captura de hallazgos en registro; comprobar control negativo que reintroduce el sujeto. El archivo histórico no acredita código corregido. Si se mantiene, portar sin nueva supresión, ejecutar contra fixtures y preservar límites/reintentos medidos. La ficha sigue abierta mientras el voto esté pendiente.
+
+## Cierre (decisión derivada 2026-10-03)
+
+Se mantiene y repara el recolector. La instrucción vigente de reparar los 80 avisos y los 4 de pyright determina mantener estos recolectores de investigación. El voto anterior ya había decidido mantenerlos; este cierre registra que la decisión sigue aplicando.
+
+RootCause: la herramienta de inventario usaba una ruta absoluta del host, IO con encoding implícito y una pausa de paginación sin fixtures; además, la repetición de páginas requería verificación explícita para impedir ciclos.
+
+RegressionTest: `python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_research_collector_bb_forum_inventory_01` comprueba dos páginas, deduplicación, pacing y control negativo que rechaza una página repetida.
+
+VerificationEvidence: `2 passed in 0.04s` para ambos selectores de recolector; `ruff check ...` reportó `All checks passed!`; `pyright` sobre los dos recolectores reportó `0 errors, 0 warnings, 0 informations`. Fixtures offline; ninguna petición de red real.
+
+closed_at: 2026-10-03

@@ -1194,3 +1194,17 @@ def test_debt_shellcheck_bb_subject_01(tmp_path: Path) -> None:
     negative = correr(["sigterm", "10 minutes ago"], data, {"BLACKBOX_AUDIT_DIR": str(audit)})
     assert "0 senales registradas" in negative.stdout
     assert "3333" not in negative.stdout
+
+
+def test_debt_research_collector_bb_forum_fetch_01(tmp_path: Path) -> None:
+    """Close check: maintained fetcher passes offline positive and negative controls."""
+    from test_bb_forum_collectors import test_fetch_valid_incomplete_error_retry_timeout_and_io
+
+    assert test_fetch_valid_incomplete_error_retry_timeout_and_io(tmp_path) is None
+
+
+def test_debt_research_collector_bb_forum_inventory_01(tmp_path: Path) -> None:
+    """Close check: inventory pagination and duplicate-page controls pass offline."""
+    from test_bb_forum_collectors import test_inventory_pages_deduplicates_and_rejects_repeated_page
+
+    assert test_inventory_pages_deduplicates_and_rejects_repeated_page(tmp_path) is None
