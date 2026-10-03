@@ -12,3 +12,9 @@ COULD_NOT_RUN: bb-usable.service no publica ExecMainStartTimestamp (parada?)
 ```
 
 Reverificación actual, sólo lectura: `systemctl show bb-usable.service --property=MainPID,ExecMainStartTimestamp,ActiveState,SubState` -> `Failed to connect to bus: Operation not permitted`; `ps -p 4137024 -o pid=,lstart=,args=` no imprimió fila en este namespace; `stat -c '%y %n' bin/bb-usable` -> `2026-10-03 07:59:19.168552581 -0600 bin/bb-usable`. No es posible relacionar el PID 4137024 validado por root con el archivo desde este contenedor.
+
+Reverificacion root 2026-10-03 (host, lectura escalada):
+command: bash tools/demonio_al_dia.sh bb-usable.service bin/bb-usable
+bb-usable.service arranco Sat 2026-10-03 00:10:01 CST, despues de la ultima modificacion de bin/bb-usable
+exit_code: 0
+El CNR anterior corresponde al namespace restringido; se conserva como historial.
