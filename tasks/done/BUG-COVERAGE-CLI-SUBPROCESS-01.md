@@ -13,6 +13,7 @@ evidence:
   e2e: tasks/evidence/BUG-COVERAGE-CLI-SUBPROCESS-01/e2e.txt
 severity: P2
 origin: detected
+detector: {"rule": "coverage: missing child entrypoints and cleanup statements", "confidence": 1.0}
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-03
 close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_bug_coverage_cli_subprocess_01", "expect": "exit_zero", "porque": "Medir entrypoint real de inventario en proceso hijo; el mismo comando sin patch subprocess pierde esa línea. Mantener umbral y sujetos."}
