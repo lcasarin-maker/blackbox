@@ -1,0 +1,56 @@
+[
+  {
+    "id": "backup-antes-de-reescribir-2026-09-28",
+    "status": "passed",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/backup-review.json",
+    "reason": "The two backup commits contain only historical version bumps and review-marker text changes. Their 1.9/2.0 labels are superseded by the current 2.2.2 release and current 2.2 review markers; all 20 live exemptions pass the current sunset audit. Of d1\u2019s five test sleep exemptions, two remain and three swap waits were later replaced with a deterministic clock helper."
+  },
+  {
+    "id": "codex/gb10-forum-audit-2026-10-02",
+    "status": "passed",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/forum-review.json",
+    "reason": "26 fichas y sus propuestas conservadas; 18 artefactos byte-identical, cuatro migraciones hash/modo exactas, corpus preservado y documentaci\u00f3n de traslado corregida."
+  },
+  {
+    "id": "codex/zero-coverage-children",
+    "status": "passed",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/branch-review.json",
+    "reason": ".coveragerc del patch es id\u00e9ntico a master. BUG-COVERAGE-CLI-SUBPROCESS-01 est\u00e1 en tasks/done con close_check presente; cubre ejecuci\u00f3n de CLIs hijos y rutas de cleanup."
+  },
+  {
+    "id": "codex/zero-coverage-targets",
+    "status": "passed",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/branch-review.json",
+    "reason": ".simplecode/corpus_exempt.yaml del primer patch es id\u00e9ntico a master. Ambos objetivos est\u00e1n en tasks/done con selector registrado; coverage target bb-usable pasa al ejecutar con permiso de socket Unix."
+  },
+  {
+    "id": "codex/zero-no-cover",
+    "status": "passed",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/branch-review.json",
+    "reason": "Patch aplica entrada de CLI de proceso real quitando `pragma: no cover` y propagando SystemExit/sys.exit en 10 tools. Main conserva esa propagaci\u00f3n para los 10 entrypoints (algunos wrappers evolucionaron a Raise SystemExit); las diez fichas est\u00e1n done con selector y evidencia."
+  },
+  {
+    "id": "codex/zero-provider",
+    "status": "passed",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/branch-review.json",
+    "reason": "`bin/bb` en el commit es byte-id\u00e9ntico a master. DEBT-SHELLCHECK-BB-SUBJECT-01 se movi\u00f3 a done; close_check `shellcheck bin/bb` rc=0 y selector de registro pas\u00f3."
+  },
+  {
+    "id": "codex/zero-scan-samples",
+    "status": "passed",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/branch-review.json",
+    "reason": "`tools/scan_samples.py` en el commit es byte-id\u00e9ntico a master. Ficha done; selector de IDs de boot presente y pas\u00f3."
+  },
+  {
+    "id": "codex/zero-skips",
+    "status": "passed",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/branch-review.json",
+    "reason": "Las ocho fichas de control de skips se movieron a done; los tests requeridos est\u00e1n en master. El control que exige bb-usable.service pas\u00f3 con acceso de lectura al systemd host; los controles PII pasaron con runtime local completo."
+  },
+  {
+    "id": "codex/zero-sunsets",
+    "status": "passed",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/branch-review.json",
+    "reason": "Los 14 controles de excepciones/sleeps tienen fichas done y close_check selectores vigentes. El segundo commit preserva salidas/evidencia medidas; no hall\u00e9 selector faltante ni contenido \u00fatil ausente."
+  }
+]

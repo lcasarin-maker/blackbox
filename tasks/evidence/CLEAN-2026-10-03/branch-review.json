@@ -1,0 +1,427 @@
+{
+  "review": {
+    "main_ref": "master",
+    "main_sha": "f272d77712e4148dea99fadde7c1754968eb6051",
+    "worktree_base": "04c3225793ac7d2b1abd9b76b0cb98caf88b2334",
+    "diff_main_since_snapshot": "Solo ledger/evidencia del clean y recolectores del foro; no cambia rutas de las ramas revisadas.",
+    "source_manifests": [
+      "/tmp/bb-clean-branches.json",
+      "/tmp/bb-clean-branch-content.json"
+    ],
+    "method": "Leí diffs completos de los nueve commits únicos listados, cotejé código/fichas/selectores en master, extraje snapshot Git de master para correr close_check; luego suministré a ese snapshot los artefactos locales ignorados .simplecode/runtime.zip, run.py y kit.lock necesarios para que los tests reprodujeran el host."
+  },
+  "branches": [
+    {
+      "ref": "codex/zero-coverage-children",
+      "patch_shas": [
+        "6bac1917d191104b55c0aed89cec47b7136272f8"
+      ],
+      "assessment": "implemented_equivalently_or_superseded_on_master",
+      "differences_missing": [],
+      "comparison": ".coveragerc del patch es idéntico a master. BUG-COVERAGE-CLI-SUBPROCESS-01 está en tasks/done con close_check presente; cubre ejecución de CLIs hijos y rutas de cleanup.",
+      "subjects": [
+        {
+          "id": "BUG-COVERAGE-CLI-SUBPROCESS-01",
+          "main_path": "tasks/done/BUG-COVERAGE-CLI-SUBPROCESS-01.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_bug_coverage_cli_subprocess_01",
+          "evidence_e2e": "tasks/evidence/BUG-COVERAGE-CLI-SUBPROCESS-01/e2e.txt",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "ref": "codex/zero-coverage-targets",
+      "patch_shas": [
+        "6bf047e9363e9ac951788b68941cdb849df8c013",
+        "03666fae2b480b61357debf3fc66da531cb94a3c"
+      ],
+      "assessment": "implemented_equivalently_or_superseded_on_master",
+      "differences_missing": [],
+      "comparison": ".simplecode/corpus_exempt.yaml del primer patch es idéntico a master. Ambos objetivos están en tasks/done con selector registrado; coverage target bb-usable pasa al ejecutar con permiso de socket Unix.",
+      "subjects": [
+        {
+          "id": "DEBT-COVERAGE-TARGETS-BIN-USABLE-01",
+          "main_path": "tasks/done/DEBT-COVERAGE-TARGETS-BIN-USABLE-01.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_coverage_targets_bin_usable_01",
+          "evidence_e2e": "tasks/evidence/DEBT-COVERAGE-TARGETS-BIN-USABLE-01.e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-NO-COVER-TEST-ATOM-GPU-TELEMETRY-BB-85",
+          "main_path": "tasks/done/DEBT-NO-COVER-TEST-ATOM-GPU-TELEMETRY-BB-85.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_no_cover_test_atom_gpu_telemetry_bb_85",
+          "evidence_e2e": "tasks/evidence/DEBT-NO-COVER-TEST-ATOM-GPU-TELEMETRY-BB-85.e2e.txt",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "ref": "codex/zero-no-cover",
+      "patch_shas": [
+        "240a83dec920440ecd0b4aaa2e6ebb243c587486"
+      ],
+      "assessment": "implemented_equivalently_or_superseded_on_master",
+      "differences_missing": [],
+      "comparison": "Patch aplica entrada de CLI de proceso real quitando `pragma: no cover` y propagando SystemExit/sys.exit en 10 tools. Main conserva esa propagación para los 10 entrypoints (algunos wrappers evolucionaron a Raise SystemExit); las diez fichas están done con selector y evidencia.",
+      "subjects": [
+        {
+          "id": "DEBT-NO-COVER-ATOM-GPU-TELEMETRY-1676",
+          "main_path": "tasks/done/DEBT-NO-COVER-ATOM-GPU-TELEMETRY-1676.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_no_cover_atom_gpu_telemetry_1676",
+          "evidence_e2e": "tasks/evidence/DEBT-NO-COVER-ATOM-GPU-TELEMETRY-1676/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-NO-COVER-CALIBRA-LATENCIA-X-333",
+          "main_path": "tasks/done/DEBT-NO-COVER-CALIBRA-LATENCIA-X-333.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_no_cover_calibra_latencia_x_333",
+          "evidence_e2e": "tasks/evidence/DEBT-NO-COVER-CALIBRA-LATENCIA-X-333/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-NO-COVER-CALIBRA-PSI-322",
+          "main_path": "tasks/done/DEBT-NO-COVER-CALIBRA-PSI-322.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_no_cover_calibra_psi_322",
+          "evidence_e2e": "tasks/evidence/DEBT-NO-COVER-CALIBRA-PSI-322/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-NO-COVER-CALIBRA-TECHO-SLICE-226",
+          "main_path": "tasks/done/DEBT-NO-COVER-CALIBRA-TECHO-SLICE-226.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_no_cover_calibra_techo_slice_226",
+          "evidence_e2e": "tasks/evidence/DEBT-NO-COVER-CALIBRA-TECHO-SLICE-226/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-NO-COVER-CHECK-HARVEST-ACCEPTED-157",
+          "main_path": "tasks/done/DEBT-NO-COVER-CHECK-HARVEST-ACCEPTED-157.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_no_cover_check_harvest_accepted_157",
+          "evidence_e2e": "tasks/evidence/DEBT-NO-COVER-CHECK-HARVEST-ACCEPTED-157/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-NO-COVER-CONTROL-RACHA-160",
+          "main_path": "tasks/done/DEBT-NO-COVER-CONTROL-RACHA-160.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_no_cover_control_racha_160",
+          "evidence_e2e": "tasks/evidence/DEBT-NO-COVER-CONTROL-RACHA-160/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-NO-COVER-INVENTARIO-146",
+          "main_path": "tasks/done/DEBT-NO-COVER-INVENTARIO-146.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_no_cover_inventario_146",
+          "evidence_e2e": "tasks/evidence/DEBT-NO-COVER-INVENTARIO-146/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-NO-COVER-MUTACION-ALCANZA-66",
+          "main_path": "tasks/done/DEBT-NO-COVER-MUTACION-ALCANZA-66.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_no_cover_mutacion_alcanza_66",
+          "evidence_e2e": "tasks/evidence/DEBT-NO-COVER-MUTACION-ALCANZA-66/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-NO-COVER-NOMBRA-VICTIMAS-271",
+          "main_path": "tasks/done/DEBT-NO-COVER-NOMBRA-VICTIMAS-271.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_no_cover_nombra_victimas_271",
+          "evidence_e2e": "tasks/evidence/DEBT-NO-COVER-NOMBRA-VICTIMAS-271/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-NO-COVER-PRESUPUESTO-MEMORIA-497",
+          "main_path": "tasks/done/DEBT-NO-COVER-PRESUPUESTO-MEMORIA-497.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_no_cover_presupuesto_memoria_497",
+          "evidence_e2e": "tasks/evidence/DEBT-NO-COVER-PRESUPUESTO-MEMORIA-497/e2e.txt",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "ref": "codex/zero-provider",
+      "patch_shas": [
+        "293049482e2cfce28b54dbe9c151afe812ddb6cf"
+      ],
+      "assessment": "implemented_equivalently_or_superseded_on_master",
+      "differences_missing": [],
+      "comparison": "`bin/bb` en el commit es byte-idéntico a master. DEBT-SHELLCHECK-BB-SUBJECT-01 se movió a done; close_check `shellcheck bin/bb` rc=0 y selector de registro pasó.",
+      "subjects": [
+        {
+          "id": "DEBT-SHELLCHECK-BB-SUBJECT-01",
+          "main_path": "tasks/done/DEBT-SHELLCHECK-BB-SUBJECT-01.md",
+          "status": "done",
+          "close_check": "shellcheck bin/bb",
+          "evidence_e2e": "tasks/evidence/DEBT-SHELLCHECK-BB-SUBJECT-01.e2e.txt",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "ref": "codex/zero-scan-samples",
+      "patch_shas": [
+        "666821f00ec9230bc681e5c9b6c67dabfa505e14"
+      ],
+      "assessment": "implemented_equivalently_or_superseded_on_master",
+      "differences_missing": [],
+      "comparison": "`tools/scan_samples.py` en el commit es byte-idéntico a master. Ficha done; selector de IDs de boot presente y pasó.",
+      "subjects": [
+        {
+          "id": "DEBT-PYRIGHT-SCAN-SAMPLES-BOOT-ID-01",
+          "main_path": "tasks/done/DEBT-PYRIGHT-SCAN-SAMPLES-BOOT-ID-01.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_scan_samples.py::test_scan_samples_malformed_boot_ids_preserve_valid_counters",
+          "evidence_e2e": "tasks/evidence/DEBT-PYRIGHT-SCAN-SAMPLES-BOOT-ID-01/e2e.txt",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "ref": "codex/zero-skips",
+      "patch_shas": [
+        "fa3ca9452bba3eedc9fb1fbd72850c05f091be1b"
+      ],
+      "assessment": "implemented_equivalently_or_superseded_on_master",
+      "differences_missing": [],
+      "comparison": "Las ocho fichas de control de skips se movieron a done; los tests requeridos están en master. El control que exige bb-usable.service pasó con acceso de lectura al systemd host; los controles PII pasaron con runtime local completo.",
+      "subjects": [
+        {
+          "id": "DEBT-SKIP-TEST-CALIBRA-TECHO-SLICE-164",
+          "main_path": "tasks/done/DEBT-SKIP-TEST-CALIBRA-TECHO-SLICE-164.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_skip_test_calibra_techo_slice_164",
+          "evidence_e2e": "tasks/evidence/DEBT-SKIP-TEST-CALIBRA-TECHO-SLICE-164.e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SKIP-TEST-CALIBRA-TECHO-SLICE-263",
+          "main_path": "tasks/done/DEBT-SKIP-TEST-CALIBRA-TECHO-SLICE-263.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_skip_test_calibra_techo_slice_263",
+          "evidence_e2e": "tasks/evidence/DEBT-SKIP-TEST-CALIBRA-TECHO-SLICE-263.e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SKIP-TEST-CALIBRA-TECHO-SLICE-315",
+          "main_path": "tasks/done/DEBT-SKIP-TEST-CALIBRA-TECHO-SLICE-315.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_skip_test_calibra_techo_slice_315",
+          "evidence_e2e": "tasks/evidence/DEBT-SKIP-TEST-CALIBRA-TECHO-SLICE-315.e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SKIP-TEST-CONTROL-RACHA-118",
+          "main_path": "tasks/done/DEBT-SKIP-TEST-CONTROL-RACHA-118.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_skip_test_control_racha_118",
+          "evidence_e2e": "tasks/evidence/DEBT-SKIP-TEST-CONTROL-RACHA-118.e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SKIP-TEST-CONTROL-RACHA-130",
+          "main_path": "tasks/done/DEBT-SKIP-TEST-CONTROL-RACHA-130.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_skip_test_control_racha_130",
+          "evidence_e2e": "tasks/evidence/DEBT-SKIP-TEST-CONTROL-RACHA-130.e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SKIP-TEST-DEMONIO-AL-DIA-52",
+          "main_path": "tasks/done/DEBT-SKIP-TEST-DEMONIO-AL-DIA-52.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_skip_test_demonio_al_dia_52",
+          "evidence_e2e": "tasks/evidence/DEBT-SKIP-TEST-DEMONIO-AL-DIA-52.e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SKIP-TEST-PII-SCAN-SYSTEMD-167",
+          "main_path": "tasks/done/DEBT-SKIP-TEST-PII-SCAN-SYSTEMD-167.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_skip_test_pii_scan_systemd_167",
+          "evidence_e2e": "tasks/evidence/DEBT-SKIP-TEST-PII-SCAN-SYSTEMD-167.e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SKIP-TEST-PII-SCAN-SYSTEMD-86",
+          "main_path": "tasks/done/DEBT-SKIP-TEST-PII-SCAN-SYSTEMD-86.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_skip_test_pii_scan_systemd_86",
+          "evidence_e2e": "tasks/evidence/DEBT-SKIP-TEST-PII-SCAN-SYSTEMD-86.e2e.txt",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "ref": "codex/zero-sunsets",
+      "patch_shas": [
+        "03a0c973eaa4858d045b81f1ca2f074147804216",
+        "923cb485be953c7801ecd160d0f469bbdde96660"
+      ],
+      "assessment": "implemented_equivalently_or_superseded_on_master",
+      "differences_missing": [],
+      "comparison": "Los 14 controles de excepciones/sleeps tienen fichas done y close_check selectores vigentes. El segundo commit preserva salidas/evidencia medidas; no hallé selector faltante ni contenido útil ausente.",
+      "subjects": [
+        {
+          "id": "DEBT-EXCEPTION-BACKLOG-MD-FREEZE-01",
+          "main_path": "tasks/done/DEBT-EXCEPTION-BACKLOG-MD-FREEZE-01.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_exception_backlog_md_freeze_01",
+          "evidence_e2e": "tasks/evidence/DEBT-EXCEPTION-BACKLOG-MD-FREEZE-01/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-EXCEPTION-LOCKFILE-PARITY-01",
+          "main_path": "tasks/done/DEBT-EXCEPTION-LOCKFILE-PARITY-01.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_exception_lockfile_parity_01",
+          "evidence_e2e": "tasks/evidence/DEBT-EXCEPTION-LOCKFILE-PARITY-01/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-EXCEPTION-RED-TEAM-CORPUS-01",
+          "main_path": "tasks/done/DEBT-EXCEPTION-RED-TEAM-CORPUS-01.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_exception_red_team_corpus_01",
+          "evidence_e2e": "tasks/evidence/DEBT-EXCEPTION-RED-TEAM-CORPUS-01/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SUNSET-ATOM-GPU-TELEMETRY-1671",
+          "main_path": "tasks/done/DEBT-SUNSET-ATOM-GPU-TELEMETRY-1671.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_atom_gpu_telemetry_1671",
+          "evidence_e2e": "tasks/evidence/DEBT-SUNSET-ATOM-GPU-TELEMETRY-1671/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SUNSET-CGROUP-REPRO-107",
+          "main_path": "tasks/done/DEBT-SUNSET-CGROUP-REPRO-107.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_cgroup_repro_107",
+          "evidence_e2e": "tasks/evidence/DEBT-SUNSET-CGROUP-REPRO-107/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SUNSET-CGROUP-REPRO-149",
+          "main_path": "tasks/done/DEBT-SUNSET-CGROUP-REPRO-149.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_cgroup_repro_149",
+          "evidence_e2e": "tasks/evidence/DEBT-SUNSET-CGROUP-REPRO-149/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SUNSET-CGROUP-REPRO-167",
+          "main_path": "tasks/done/DEBT-SUNSET-CGROUP-REPRO-167.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_cgroup_repro_167",
+          "evidence_e2e": "tasks/evidence/DEBT-SUNSET-CGROUP-REPRO-167/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SUNSET-TEST-BB-BASH-1550",
+          "main_path": "tasks/done/DEBT-SUNSET-TEST-BB-BASH-1550.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_1550",
+          "evidence_e2e": "tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-1550/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SUNSET-TEST-BB-BASH-1602",
+          "main_path": "tasks/done/DEBT-SUNSET-TEST-BB-BASH-1602.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_1602",
+          "evidence_e2e": "tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-1602/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SUNSET-TEST-BB-BASH-322",
+          "main_path": "tasks/done/DEBT-SUNSET-TEST-BB-BASH-322.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_322",
+          "evidence_e2e": "tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-322/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SUNSET-TEST-BB-BASH-339",
+          "main_path": "tasks/done/DEBT-SUNSET-TEST-BB-BASH-339.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_339",
+          "evidence_e2e": "tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-339/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SUNSET-TEST-BB-BASH-352",
+          "main_path": "tasks/done/DEBT-SUNSET-TEST-BB-BASH-352.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_352",
+          "evidence_e2e": "tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-352/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SUNSET-TEST-BB-BASH-766",
+          "main_path": "tasks/done/DEBT-SUNSET-TEST-BB-BASH-766.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_766",
+          "evidence_e2e": "tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-766/e2e.txt",
+          "outcome": "passed"
+        },
+        {
+          "id": "DEBT-SUNSET-TEST-BB-BASH-802",
+          "main_path": "tasks/done/DEBT-SUNSET-TEST-BB-BASH-802.md",
+          "status": "done",
+          "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_802",
+          "evidence_e2e": "tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-802/e2e.txt",
+          "outcome": "passed"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "reported_subject_closechecks": 37,
+    "passed": 37,
+    "failed": 0,
+    "could_not_run": 0,
+    "aggregate_attempt": "36 close_check test selectors; tras completar los archivos locales ignorados faltantes quedaron 29 primeros PASS más 5 PASS de reejecución enfocada y 2 PASS escalados. Además el selector/shellcheck de zero-provider pasó.",
+    "final_escalated_commands": [
+      {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_coverage_targets_bin_usable_01",
+        "stdout": ".                                                                        [100%]\n1 passed in 4.87s",
+        "rc": 0,
+        "reason": "Escalada sólo para permitir socket Unix temporal."
+      },
+      {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_skip_test_demonio_al_dia_52",
+        "stdout": ".                                                                        [100%]\n1 passed in 0.68s",
+        "rc": 0,
+        "reason": "Escalada sólo para lectura de systemd host."
+      },
+      {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_shellcheck_bb_subject_01",
+        "stdout": ".                                                                        [100%]\n1 passed in 0.13s",
+        "rc": 0
+      },
+      {
+        "cmd": "shellcheck bin/bb",
+        "stdout": "(sin salida)",
+        "rc": 0
+      }
+    ],
+    "initial_environment_failures_resolved": [
+      "El primer aggregate usó un git archive sin .simplecode/run.py/runtime.zip/kit.lock ignorados; al copiar esos tres archivos desde el checkout local, los tres controles de excepciones y los dos selectores PII pasaron.",
+      "Permiso del sandbox denegó Unix-socket bind en dos tests bajo el coverage target; reejecución escalada pasó.",
+      "Namespace inicial sin systemd dio 4 skips en pruebas de demonio; reejecución escalada del selector pasó sin skips."
+    ]
+  },
+  "conclusion": "No queda diferencia útil sin equivalente en master entre estas ramas y los parches auditados. Mantener referencias/SHAs para preservar el historial append-only; no hace falta cherry-pick de estos parches."
+}
