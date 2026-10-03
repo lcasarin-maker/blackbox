@@ -1,0 +1,170 @@
+zero debt (repo-wide ship freeze).........................................................Failed
+- hook id: zero-debt-repo
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: zero-debt-repo exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=1452a450a7cc
+[zero-debt] mode: zero  lane: repo-wide
+[zero-debt] files scanned: 67  findings: 6  files with findings: 2
+[zero-debt] HALLAZGOS: 6
+[zero-debt] DETECTORES: {"blocking_sleep":2,"hardcoded_path":2,"unencoded_file_io":2}
+[zero-debt] .py left OUTSIDE this scan: 1 (git-ignored (.gitignore); not part of the product)
+[zero-debt] dispositions (Acta 83): PASSED=65 CONVICTED=2 EXEMPT_CORPUS=0 EXEMPT_FIXTURE=0 EXEMPT_VENDORED=0 COULD_NOT_RUN=0
+[zero-debt] detectors judged (GATE_DETECTORS): 24
+[zero-debt] detectors excluded by volume: 0 ()
+[zero-debt] could_not_run: 0
+[zero-debt] corpus declarado (no juzgado): 0
+[zero-debt] violations: 2
+  - tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py (3 findings: hardcoded_path, unencoded_file_io, unencoded_file_io, unencoded_file_io, unencoded_file_io, unencoded_file_io, blocking_sleep, blocking_sleep, blocking_sleep)
+  - tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py (3 findings: hardcoded_path, unencoded_file_io, unencoded_file_io, unencoded_file_io, unencoded_file_io, blocking_sleep)
+[zero-debt] findings (JSONL): 15
+  {"detector_id": "hardcoded_path", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 3, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:3: hardcoded_path: hardcoded absolute path '/home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02'", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 46, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:46: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 49, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:49: unencoded_file_io: .read_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 36, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:36: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 42, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:42: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 21, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:21: unencoded_file_io: .read_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 48, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:48: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
+  {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 32, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:32: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
+  {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 16, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:16: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
+  {"detector_id": "hardcoded_path", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 3, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:3: hardcoded_path: hardcoded absolute path '/home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02'", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 36, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:36: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 17, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:17: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 26, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:26: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 15, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:15: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 35, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:35: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
+BLOCKED [zero-debt] - policy is zero debt, with no grandfathering.
+[zero-debt] FAIL: 2 violation(es); primera tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:3 (hardcoded_path)
+
+coverage target (ratchet: never below watermark)..........................................Passed
+pyright (type checking)...................................................................Failed
+- hook id: pyright
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: pyright exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=847f7cf119f3
+/home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py
+  /home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:27:16 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+  /home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:32:26 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+  /home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:35:9 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+  /home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:38:18 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+4 errors, 0 warnings, 0 informations
+WARNING: there is a new pyright version available (v1.1.411 -> v1.1.414).
+Please install the new version or set PYRIGHT_PYTHON_FORCE_VERSION to `latest`
+
+no third-party PII (RFC/CURP) in tasks/ or docs/..........................................Passed
+Judge-Zero forensic auditor...............................................................Passed
+sintaxis de los scripts bash..............................................................Passed
+cobertura de bin/bb no baja del piso......................................................Passed
+SPEC.md inventaria lo que el repo ejecuta y posee.........................................Passed
+version reflects what shipped (semver from Conventional Commits)..........................Passed
+task schema is typed and closed tasks carry evidence......................................Passed
+gate effectiveness: no organ with many runs and zero catches..............................Passed
+ship freeze (no open backlog).............................................................Failed
+- hook id: ship-freeze
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: ship-freeze exited 1; failure propagated; see child diagnostics; redacted output sha256=d6e10c6f8189
+[backlog] corpus: declared `debt: tasks/`; every task file in it is judged by its `status:` field, with no prefix filter
+[backlog] open debt: 100 (of 100 entries: 0 from ledger/, 100 from tasks/; 0 file(s) with another prefix NOT evaluated)
+  - DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01.md
+  - DEBT-HOST-DEPLOYED-DRIFT-01.md
+  - DEBT-RESEARCH-COLLECTOR-BB-FORUM-FETCH-01.md
+  - DEBT-RESEARCH-COLLECTOR-BB-FORUM-INVENTORY-01.md
+  - DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01.md
+  - DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md
+  - DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01.md
+  - DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md
+  - DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md
+  - DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md
+  - DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01.md
+  - DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md
+  ... and 80 more
+[backlog] accepted (deuda ABIERTA, no bloquea el envio, SI cuenta): 0
+[backlog] deferred: 24 (sunset: 20, suspended: 0, organ_inapplicable: 3, signed_budgets: 1) -- deuda ABIERTA diferida por escrito, no bloquea el envio, SI cuenta
+  sunset: 20 -- nearest expiry: version 2.2 (expires with the next minor, not by date)
+  suspended: 0 -- nearest expiry: none
+  organ_inapplicable: 3 -- nearest expiry: 2026-10-13 (10 day(s))
+  !! EXPIRES IN 10 DAY(S): organ_inapplicable backlog_md_freeze (2026-10-13)
+  !! EXPIRES IN 10 DAY(S): organ_inapplicable lockfile_parity (2026-10-13)
+  !! EXPIRES IN 10 DAY(S): organ_inapplicable red_team_corpus (2026-10-13)
+  signed_budgets: 1 -- nearest expiry: 2026-10-27 (24 day(s))
+[backlog] .simplecode/backlog_baseline.json declares no owner or no entries; no baseline applies; covered by it: 0; still blocking: 100
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-HOST-DEPLOYED-DRIFT-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-RESEARCH-COLLECTOR-BB-FORUM-FETCH-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-RESEARCH-COLLECTOR-BB-FORUM-INVENTORY-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md
+[backlog] could_not_run: 0 open file(s) the globs never opened; outside the baseline: 0; blocking
+[ship-freeze] HALLAZGOS: 100
+BLOCKED [backlog] - zero-debt policy: debt cannot be bypassed with renaming.
+Every finding must either be fixed in code or verified with status: closed.
+[ship-freeze] FAIL: 100 finding(s) of open debt not covered by the baseline; first DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01.md
+
+telemetry disposition: blocked rows after the cutoff need a verdict.......................Failed
+- hook id: telemetry-disposition
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: telemetry-disposition exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=8ea1b036f2e7
+[telemetry-disposition] auto-disposed by evidence: 0
+[telemetry-disposition] HALLAZGOS: 1
+[telemetry-disposition] blocked rows classified: 389
+[telemetry-disposition]   confirmed_defect: 279
+[telemetry-disposition]   false_positive: 0
+[telemetry-disposition]   controlled_canary: 6
+[telemetry-disposition]   legacy_migrated: 0
+[telemetry-disposition]   could_not_dispose: 1
+[telemetry-disposition]   historical_undisposed: 3
+[telemetry-disposition]   pending_grace: 2
+[telemetry-disposition]   self_referential: 98
+[telemetry-disposition]   same_run: 0
+  UNDISPOSED d30f67865d038f37 (zero-debt-repo, 2026-10-03T08:56:09.079559+00:00)
+[telemetry-disposition] NOT CLEAN: could_not_dispose=1 (blocked telemetry with no recorded verdict).
+
+hook receipts: no unverified commits reaching push........................................Passed
+closed debt has executable evidence.......................................................Failed
+- hook id: backlog-verifier
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: backlog-verifier exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=5f9e2a40636e
+[backlog-verifier] persistent verify cache: 109 cached verdict(s) on file, oldest recorded 23.6d ago
+[31m[backlog-verifier] FRAUD DETECTED: Found 1 closed tasks whose findings still reproduce:[0m
+  🔴 DEBT-TELEMETRY-DISPOSITIONS-RETRO-20261003-01.md:
+Task is marked as done, but 1 finding(s) still reproduce:
+  - close_check 'python3 .simplecode/run.py simplecode.verification.telemetry_dispositions --root . --gate' failed with exit code 1 -- output: '\n[telemetry-disposition]   controlled_canary: 6\n[telemetry-disposition]   legacy_migrated: 0\n[telemetry-disposition]   could_not_dispose: 1\n[telemetry-disposition]   historical_undisposed: 3\n[telemetry-disposition]   pending_grace: 2\n[telemetry-disposition]   self_referential: 99\n[telemetry-disposition]   same_run: 0\n  UNDISPOSED d30f67865d038f37 (zero-debt-repo, 2026-10-03T08:56:09.079559+00:00)\n[telemetry-disposition] NOT CLEAN: could_not_dispose=1 (blocked telemetry with no recorded verdict).'
+[backlog-verifier] the fields above are what THIS gate reads; a ficha may reconcile them in its own body -- read it before concluding its declaration is wrong
+[backlog-verifier] could_not_run baseline: no .simplecode/could_not_run_baseline.json declared
+[backlog-verifier] task cohorts (no .simplecode/task_contract_cutoff.json declared: everything is governed) -> governed: 282 · legacy pre-cut-off, contract shape NOT evaluated: 0 · undatable by git, contract shape NOT evaluated: 0 · declared `done_unverified`, contract shape NOT evaluated: 0
+[backlog-verifier] done-tasks whose status is outside this repo's closing vocabulary (reported, NOT blocking): 0
+[backlog-verifier] DETECTORES: {"closure_reproduces":1,"contract_breach":0,"could_not_run":0,"unverified_task":0}
+[backlog-verifier] HALLAZGOS: 1
+[backlog-verifier] NOT CLEAN (counts -> frauds: 1 · could_not_run: 0 (0 undeclared) · contract_breaches: 0 · unverified: 0).
+
+telemetry stays under the 10 MiB horizon SPEC declares (advisory).........................Passed
+no tracked task entry loses lines vs HEAD.................................................Passed
