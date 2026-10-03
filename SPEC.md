@@ -197,10 +197,10 @@ efectos de esta spec, y `tools/inventario.py --check` lo bloquea en el commit.
 
 | `tools/cgroup_repro.py` | arnés acotado para comparar cargos CPU, cudaMalloc, cudaMallocManaged y PyTorch en scopes separados; separa inicialización, asignación tocada y liberación, preservando errores de colección | `tests/test_cgroup_repro.py`; resultados y límites en `tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/` |
 | `tools/recovery_profile.py` | `bb recovery`: estado readonly de RCU/watchdog y firmas separadas de pstore; errores contados, sin abrir dispositivos watchdog ni alterar configuración | `tests/test_recovery_profile.py`, controles de permisos/ausencia y archivo vacío |
-| `tools/memory_profile.py` | Perfil páginas/UVM/THP/reservas integrado en el arnés cgroup, preservando ausencia y errores | `tests/test_memory_capture_and_cuda_integrity.py` |
+| `tools/memory_profile.py` | Captura páginas/UVM/THP, DGX release declarado, MemAvailable/PSI y comparación de versiones NVIDIA cargada/en disco; preserva ausencia y errores, sin certificar soporte OEM | `tests/test_memory_capture_and_cuda_integrity.py` |
 | `tools/cuda_integrity.py` | Matriz CUDA acotada de readback completo, concurrencia y reutilización en scope temporal | `tests/test_memory_capture_and_cuda_integrity.py` |
 | `tools/preflight.py`, `tools/verify_apt_critical_removals.py` | `preflight` clasifica snapshots APT, runtime, GSP, provider, DRM y kernel; el verificador APT contrasta planes capturados y su integridad SHA-256; ninguno instala cambios ni un guard OEM | `tests/test_preflight.py`; `tests/test_debt_registration_controls.py::test_debt_close_check_verify_apt_critical_removals_01` |
-| `tools/host_diagnostics.py` | Captura readonly de sesiones, almacenamiento, red y USB con fallos explícitos | `tests/test_host_diagnostics.py` |
+| `tools/host_diagnostics.py` | Captura readonly de sesiones, almacenamiento, red, USB y estado GPU/runtime; conserva fallos y límites de cada fuente, sin validar inferencia ni compatibilidad | `tests/test_host_diagnostics.py` |
 
 | `tools/verify_cgroup_repro.py` | Recalcula fases, scopes y controles CPU desde stdout crudo del arnés; observaciones incompletas son unknown, sin acreditar contención GPU ni procedencia | `tests/test_verify_cgroup_repro.py`, controles de calibración, fases, scopes y lecturas alteradas |
 | `tools/verify_telemetry_dispositions.py` | Exige que cada evento solicitado tenga un estado de disposición válido en el ledger JSONL | `tests/test_verify_telemetry_dispositions.py`, ledger vacío, válido y estado pendiente |
