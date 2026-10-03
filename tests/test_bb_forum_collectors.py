@@ -43,6 +43,17 @@ def test_fetch_valid_incomplete_error_retry_timeout_and_io(tmp_path):
     assert tries == [45] * 5
     assert waits == [3, 6, 9, 12]
 
+    malformed_calls = []
+    malformed_waits = []
+    def malformed(_request, timeout):
+        malformed_calls.append(timeout)
+        return Response(b"[")
+
+    with pytest.raises(json.JSONDecodeError):
+        fetcher.get("https://fixture.invalid", opener=malformed, sleep=malformed_waits.append)
+    assert malformed_calls == [45] * 5
+    assert malformed_waits == [3, 6, 9, 12]
+
     rate_waits = []
     def rate_limit(_request, timeout):
         headers = Message()
@@ -76,7 +87,7 @@ def test_fetch_valid_incomplete_error_retry_timeout_and_io(tmp_path):
     assert (tmp_path / "threads/77.json").exists()
     assert "á" in (tmp_path / "threads/77.txt").read_text(encoding="utf-8")
     assert fetcher.fetch({**item, "id": 78}, tmp_path, getter=lambda _: {"post_stream": {"stream": [2], "posts": []}}, sleep=lambda _: None)["status"] == "could_not_run"
-    assert not (BASE / "threads").exists()
+    assert not (tmp_path / "unrelated" / "threads").exists()
 
 
 def test_inventory_pages_deduplicates_and_rejects_repeated_page(tmp_path):
@@ -100,3 +111,15 @@ def test_inventory_pages_deduplicates_and_rejects_repeated_page(tmp_path):
     repeated = {"topic_list": {"topics": [topic], "more_topics_url": "/again"}}
     with pytest.raises(RuntimeError, match="repeated"):
         inventory.inventory(tmp_path / "negative", opener=lambda *_args, **_kwargs: Response(json.dumps(repeated).encode()), sleep=lambda _: None)
+
+
+def test_collectors_import_without_filesystem_or_network(monkeypatch):
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError("module import performed IO")
+
+    monkeypatch.setattr(Path, "mkdir", forbidden)
+    monkeypatch.setattr(Path, "write_text", forbidden)
+    monkeypatch.setattr(Path, "read_text", forbidden)
+    monkeypatch.setattr("urllib.request.urlopen", forbidden)
+    _load("bb_forum_fetch")
+    _load("bb_forum_inventory")

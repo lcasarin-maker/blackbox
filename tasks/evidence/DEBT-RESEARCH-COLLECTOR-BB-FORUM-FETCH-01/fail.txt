@@ -1,0 +1,5 @@
+FAIL evidence: historical detector findings before repair
+Source: tasks/evidence/ZERO-2026-10-02/research-collectors-before.txt
+Subject: tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py
+Observed: 9 FAIL findings: hardcoded_path=1, unencoded_file_io=5, blocking_sleep=3. These findings motivated the repair. Original bytes and modes were preserved before editing. SHA-256/mode: fetch `38142cfca8e47ef6e9779655b9cb102741e53a45d038280f4383f24beabceae1` (664); inventory `ca04704ea48ec1b6e281f6df2d63184cbebe0aeb9678c4135bcce4d2c8b15eb0` (664).
+Negative controls are documented and executed in tests/test_bb_forum_collectors.py (malformed payload, incomplete payload, timeout exhaustion, HTTP 429 Retry-After).
