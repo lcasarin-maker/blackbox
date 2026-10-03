@@ -3,12 +3,14 @@ id: DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01
 kind: task
 domain: VERDICT
 title: "Implementar criterios ejecutables de tools.verify_apt_critical_removals"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_apt_critical_removals_01", "expect": "exit_zero", "porque": "Cada fase/id soportado evalúa su sujeto específico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo lógica realmente común; conservar comandos literales y demostrar discriminación entre fichas."}
+closed_at: 2026-10-03
+evidence: {"pass":"tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01.pass.txt","fail":"tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01.fail.txt","e2e":"tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01.e2e.txt"}
 ---
 
 ## Registro y responsable

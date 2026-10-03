@@ -6,6 +6,7 @@ import subprocess
 import sys
 import time
 import hashlib
+import shutil
 import types
 
 from test_bb_usable import _cargar
@@ -19,6 +20,95 @@ import pytest
 
 from tools import provider_trace
 from tools import cgroup_repro, cuda_integrity
+from tools import verify_apt_critical_removals
+
+
+def test_debt_close_check_verify_apt_critical_removals_01(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = Path(__file__).resolve().parent.parent
+    evidence = root / "tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01"
+    result = verify_apt_critical_removals.verify(evidence)
+    assert result["status"] == "pass", result
+    assert result["fail"] == 0
+    assert result["could_not_run"] == 0
+    assert result["checks"] == {"captured_upgrade": "pass", "captured_critical_removal": "block"}
+    assert result["evidence_sha256"] == (evidence / "apt-captures.sha256").read_text(encoding="ascii").strip()
+    assert result["closure"] == "open"
+
+    # Missing evidence and a dead command are unknown, not passes.
+    missing = verify_apt_critical_removals.verify(tmp_path)
+    assert missing["status"] == "unknown" and missing["could_not_run"] == 1
+    raw = (evidence / "apt-captures.json").read_bytes()
+    captures = json.loads(raw)
+    captures["commands"][1]["exit_code"] = 2
+    sandbox = tmp_path / "dead-command"
+    sandbox.mkdir()
+    serialized = json.dumps(captures).encode()
+    (sandbox / "apt-captures.json").write_bytes(serialized)
+    (sandbox / "apt-captures.sha256").write_text(hashlib.sha256(serialized).hexdigest(), encoding="ascii")
+    dead = verify_apt_critical_removals.verify(sandbox)
+    assert dead["status"] == "unknown" and dead["could_not_run"] == 1
+
+    # A verifier with its shared classifier neutralized must fail the dangerous capture.
+    monkeypatch.setattr(verify_apt_critical_removals, "check_apt",
+                        lambda _snapshot: {"status": "pass", "findings": []})
+    neutralized = verify_apt_critical_removals.verify(evidence)
+    assert neutralized["status"] == "fail" and neutralized["fail"] == 1
+    assert neutralized["could_not_run"] == 0
+
+
+def test_apt_critical_verifier_cli_and_evidence_controls(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parent.parent
+    source = root / "tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01"
+    evidence = tmp_path / "evidence"
+    shutil.copytree(source, evidence)
+    command = [sys.executable, "-m", "tools.verify_apt_critical_removals", "--evidence", str(evidence)]
+
+    def run(code: int, expected: str) -> None:
+        result = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=10)
+        assert result.returncode == code, result.stdout + result.stderr
+        report = json.loads(result.stdout)
+        assert report["status"] == expected
+        assert report["fail"] == (1 if expected == "fail" else 0)
+        assert report["could_not_run"] == (0 if expected != "unknown" else 1)
+
+    run(0, "pass")
+    captured = json.loads((evidence / "apt-captures.json").read_text(encoding="utf-8"))
+
+    def save(document: object) -> None:
+        raw = json.dumps(document).encode("utf-8")
+        (evidence / "apt-captures.json").write_bytes(raw)
+        (evidence / "apt-captures.sha256").write_text(hashlib.sha256(raw).hexdigest(), encoding="ascii")
+
+    for mutate, code, status in (
+        (lambda obj: obj["commands"].pop(), 2, "unknown"),
+        (lambda obj: obj["commands"].append(obj["commands"][0]), 2, "unknown"),
+        (lambda obj: obj["commands"][1].update(argv=["apt-get", "remove"]), 2, "unknown"),
+        (lambda obj: obj["commands"][1].update(argv="malformed"), 2, "unknown"),
+        (lambda obj: obj["commands"][1].update(stderr="warning"), 2, "unknown"),
+        (lambda obj: obj["commands"][1].update(exit_code=2), 2, "unknown"),
+        (lambda obj: obj["commands"][1].update(stdout="0 upgraded, 0 newly installed, 1 to remove and 0 not upgraded."), 2, "unknown"),
+        (lambda obj: obj["commands"][1].update(stdout=obj["commands"][1]["stdout"].replace("nvidia-system-station", "other-package")), 1, "fail"),
+        (lambda obj: obj["commands"][1].update(exit_code="0"), 2, "unknown"),
+        (lambda obj: obj["commands"][1].update(stdout=17), 2, "unknown"),
+        (lambda obj: obj["commands"][1].update(stderr=17), 2, "unknown"),
+        (lambda obj: obj["commands"].append("malformed extra record"), 2, "unknown"),
+    ):
+        altered = json.loads(json.dumps(captured))
+        mutate(altered)
+        save(altered)
+        run(code, status)
+
+    save(captured)
+    (evidence / "apt-captures.sha256").write_text("0" * 64, encoding="ascii")
+    run(2, "unknown")
+    save([])
+    run(2, "unknown")
+    save(captured)
+    (evidence / "apt-captures.json").write_bytes(b"\xff")
+    run(2, "unknown")
+
 
 
 def test_debt_schema_evidence_index_scope_01(tmp_path: Path) -> None:
