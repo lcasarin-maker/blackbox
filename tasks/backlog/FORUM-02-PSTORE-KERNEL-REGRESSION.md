@@ -45,3 +45,9 @@ Evidencia y pendientes: `tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION/progre
 ## Índice de propuestas del lote 00
 
 - `FORUM-00-ABRUPT-RESET-OFFBOX-TELEMETRY` — [Pair local reset evidence with durable receiver-side telemetry](https://forums.developer.nvidia.com/t/spark-abruptly-shuts-down/377478); detalle, confidence y close check en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.
+
+## Avance de ejecución 2026-10-03
+
+Se reutilizó el lector de firmas pstore existente y se vinculó a identidad kernel/boot readonly. El acceso local a `/sys/fs/pstore` fue denegado (`could_not_run=1`); no hay record observado ni prueba de regresión/corrección vendor. El verificador específico de cierre, resolución OEM y recomendación probada siguen pendientes.
+
+Evidencia: `docs/evidence/BB-INSTRUMENTS-kernel.md` y `tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json`. Sigue abierta.

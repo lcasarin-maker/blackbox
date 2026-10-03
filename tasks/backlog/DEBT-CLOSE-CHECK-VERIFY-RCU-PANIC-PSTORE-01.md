@@ -32,3 +32,9 @@ Cada fase/id soportado evalúa su sujeto específico con capturas reales y contr
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Avance de ejecución 2026-10-03
+
+Se reutilizó `tools.recovery_profile.pstore` para huellas y señales textuales y se añadieron observaciones kernel en `tools.kernel_capture`. No se lanzó panic, reboot ni ensayo RCU; el lector informa `could_not_run` de `/sys/fs/pstore` en la captura local. Configuración/sysctl y pstore vacío no demuestran captura persistente ni recuperación; el selector específico de cierre permanece pendiente.
+
+Evidencia: `docs/evidence/BB-INSTRUMENTS-kernel.md` y `tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json`. La ficha permanece abierta.

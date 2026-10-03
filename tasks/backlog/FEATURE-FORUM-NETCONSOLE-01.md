@@ -43,3 +43,9 @@ Evidencia y pendientes: `tasks/evidence/FEATURE-FORUM-NETCONSOLE-01/progress.txt
 
 [376882](https://forums.developer.nvidia.com/t/total-host-freeze-not-process-hang-during-multi-node-tp-2-vllm-prefill-on-2x-dgx-spark-gb10-zero-forensic-trace-across-kdump-watchdogs-netconsole/) reports five host freezes where both watchdog/kdump and off-host netconsole produced no record. A responding operator proposes checking for a sparse-MLA GPU livelock signature and a driver memdesc counter, but these are not confirmed on the affected host; archives attached to the source thread were not inspected. This is a strong negative control for the instrument: successful marker delivery still would not explain a silent total freeze, and receiver quietness must distinguish unavailable network, no emitted printk, missing receiver and host failure.
 
+
+## Avance de ejecución 2026-10-03
+
+La captura readonly detectó `netconsole` ausente y ausencia de parámetro de arranque. `/sys/fs/pstore` tuvo permiso denegado (`could_not_run=1`); no se configuró red ni módulo. El instrumento nuevo puede observar parámetros/targets cuando existan, pero no prueba recepción ni el marker off-host requerido por el cierre.
+
+Evidencia: `docs/evidence/BB-INSTRUMENTS-kernel.md` y `tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json`. Sigue abierta.

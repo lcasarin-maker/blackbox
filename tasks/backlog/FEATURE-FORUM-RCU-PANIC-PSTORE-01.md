@@ -40,3 +40,9 @@ An RCU panic causes an immediate machine-wide reboot after the configured timeou
 Captura readonly implementada en bb recovery. pstore denegado, no hay acceso root concedido; 0 panics forzados, 0 reboots y 0 ensayos naturales RCU. Faltan canary y lectura persistente tras reboot; preservar kdump y sysctl actuales.
 
 Evidencia y pendientes: `tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/progress.txt`. Conserva `open`; la captura de estado verifica el instrumento y deja pendiente el ensayo de recuperación/prevención requerido.
+
+## Avance de ejecución 2026-10-03
+
+Se capturó kernel release, boot ID y sysctls de forma readonly; pstore devolvió permiso denegado y por ello el resultado es parcial. No se alteraron sysctls ni se realizaron panic, reboot o inyección RCU. Esta observación no demuestra persistencia ni recuperación natural; canary, rollback y ensayo post-reboot permanecen pendientes.
+
+Evidencia: `docs/evidence/BB-INSTRUMENTS-kernel.md` y `tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json`. Sigue abierta.
