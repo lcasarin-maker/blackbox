@@ -32,3 +32,9 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Diagnóstico disponible
+
+`python3 -m tools.thermal_coverage` lista zonas thermal, entradas hwmon de temperatura y fan con ruta, identidad OEM disponible, valor raw, etiqueta y estado de lectura; una fuente ausente o ilegible incrementa `could_not_run`. Su estado `observed` solo significa que los canales enumerados se leyeron, no que el sistema esté seguro ni que la matriz OEM o el soak estén validados. No reemplaza los resultados reales requeridos arriba.
+
+La captura local y su comando literal están registrados en `tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/prototype-capture.json` y `tasks/evidence/LUNA-98-2026-10-03/batch-03-prototype-runs.json`. La lectura local tuvo `could_not_run=0`; sigue pendiente la validación del sujeto ASUS GX10 y del soak descrito en la ficha.

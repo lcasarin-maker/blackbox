@@ -1,0 +1,150 @@
+{
+  "assessment": {
+    "missing_fields": [
+      "weights",
+      "kv_cache",
+      "staging",
+      "graphs",
+      "draft",
+      "buffers",
+      "reserve"
+    ],
+    "status": "unknown"
+  },
+  "captured_at_utc": "2026-10-03T17:23:11.577185+00:00",
+  "component_provenance": "caller_supplied_unverified",
+  "host": {
+    "machine": "aarch64",
+    "release": "6.17.0-1032-nvidia",
+    "system": "Linux"
+  },
+  "host_memavailable": {
+    "kib": 59546932,
+    "status": "ok"
+  },
+  "raw_host_capture": {
+    "effective_stack": {
+      "dgx_release": {
+        "error": null,
+        "status": "ok",
+        "value": "DGX_NAME=\"DGX Spark\"\nDGX_PRETTY_NAME=\"NVIDIA DGX Spark\"\nDGX_SWBUILD_DATE=\"2025-10-04-06-28-28\"\nDGX_SWBUILD_VERSION=\"7.2.3\"\nDGX_COMMIT_ID=\"03dc741\"\nDGX_PLATFORM=\"AI TOP ATOM\"\nDGX_SERIAL_NUMBER=\"262246090183\"\n\nDGX_OTA_VERSION=\"7.5.0\"\nDGX_OTA_DATE=\"Sun Jul 12 15:35:32 CST 2026\"\n\nDGX_OTA_VERSION=\"7.6.0\"\nDGX_OTA_DATE=\"lun 14 sep 2026 21:53:15 CST\""
+      },
+      "disk_driver_version": {
+        "command": [
+          "modinfo",
+          "-F",
+          "version",
+          "nvidia"
+        ],
+        "returncode": 0,
+        "status": "ok",
+        "stderr": null,
+        "value": "580.178.04"
+      },
+      "driver_comparison": {
+        "disk_version": "580.178.04",
+        "loaded_version": "580.178.04",
+        "match": true,
+        "status": "compared"
+      },
+      "loaded_driver": {
+        "error": null,
+        "status": "ok",
+        "value": "NVRM version: NVIDIA UNIX Open Kernel Module for aarch64  580.178.04  Release Build  (dvs-builder@U22-I3-G08-04-4)  Tue Jul  7 13:36:23 UTC 2026\nGCC version:  gcc version 13.3.0 (Ubuntu 13.3.0-6ubuntu2~24.04.1)"
+      }
+    },
+    "host_reserve_context": {
+      "cmdline": {
+        "error": null,
+        "status": "ok",
+        "value": "BOOT_IMAGE=/boot/vmlinuz-6.17.0-1032-nvidia root=UUID=14775751-e6a7-4614-8ee1-e3aedc5d7ada ro init_on_alloc=0 iommu.passthrough=0 console=tty0 plymouth.ignore-serial-consoles plymouth.use-simpledrm earlycon=uart,mmio32,0x16A00000 console=tty0 console=ttyS0,921600 crashkernel=1G-:512M quiet splash initcall_blacklist=tegra234_cbb_init kho=off pci=pcie_bus_safe vt.handoff=7"
+      },
+      "memavailable": {
+        "kib": 59546932,
+        "status": "ok"
+      },
+      "meminfo": {
+        "error": null,
+        "status": "ok",
+        "value": "MemTotal:       126943144 kB\nMemFree:        21699344 kB\nMemAvailable:   59546932 kB\nBuffers:         3739452 kB\nCached:         35774020 kB\nSwapCached:       229560 kB\nActive:         22772896 kB\nInactive:       34581972 kB\nActive(anon):    8121868 kB\nInactive(anon): 10660956 kB\nActive(file):   14651028 kB\nInactive(file): 23921016 kB\nUnevictable:       28508 kB\nMlocked:           23388 kB\nSwapTotal:      16777212 kB\nSwapFree:        8231232 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:             11880 kB\nWriteback:            64 kB\nAnonPages:      17782924 kB\nMapped:          2428744 kB\nShmem:            937268 kB\nKReclaimable:    3963736 kB\nSlab:            5187800 kB\nSReclaimable:    3963736 kB\nSUnreclaim:      1224064 kB\nKernelStack:       70176 kB\nShadowCallStack:   17592 kB\nPageTables:       318176 kB\nSecPageTables:    102364 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    80248784 kB\nCommitted_AS:   93360028 kB\nVmallocTotal:   135288315904 kB\nVmallocUsed:      393308 kB\nVmallocChunk:          0 kB\nPercpu:            84080 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:     61440 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:    210944 kB\nFilePmdMapped:         0 kB\nCmaTotal:         131072 kB\nCmaFree:           69320 kB\nBalloon:               0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB"
+      },
+      "memory_pressure": {
+        "error": null,
+        "status": "ok",
+        "value": "some avg10=0.00 avg60=0.04 avg300=0.04 total=37499096\nfull avg10=0.00 avg60=0.04 avg300=0.04 total=37049532"
+      }
+    },
+    "kernel": {
+      "page_size_bytes": 4096,
+      "page_size_source": "os.sysconf(SC_PAGE_SIZE)",
+      "release": "6.17.0-1032-nvidia"
+    },
+    "schema": 1,
+    "thp": {
+      "defrag": {
+        "error": null,
+        "status": "ok",
+        "value": "always defer defer+madvise [madvise] never"
+      },
+      "enabled": {
+        "error": null,
+        "status": "ok",
+        "value": "always [madvise] never"
+      }
+    },
+    "uvm": {
+      "disk_srcversion": {
+        "command": [
+          "modinfo",
+          "-F",
+          "srcversion",
+          "nvidia_uvm"
+        ],
+        "returncode": 0,
+        "status": "ok",
+        "stderr": null,
+        "value": "09F2A78862D06017E9324B6"
+      },
+      "disk_version": {
+        "command": [
+          "modinfo",
+          "-F",
+          "version",
+          "nvidia_uvm"
+        ],
+        "returncode": 0,
+        "status": "ok",
+        "stderr": null,
+        "value": "580.178.04"
+      },
+      "loaded": true,
+      "loaded_srcversion": {
+        "error": null,
+        "status": "ok",
+        "value": "09F2A78862D06017E9324B6"
+      },
+      "loaded_version": {
+        "error": null,
+        "status": "ok",
+        "value": "580.178.04"
+      },
+      "packing_parameter": {
+        "error": "[Errno 2] No such file or directory: '/sys/module/nvidia_uvm/parameters/uvm_pack_sysmem_leaf_tables'",
+        "status": "unsupported",
+        "value": null
+      },
+      "packing_parameter_source": "/sys/module/nvidia_uvm/parameters/uvm_pack_sysmem_leaf_tables"
+    }
+  },
+  "recipe_components_bytes": {
+    "buffers": null,
+    "draft": null,
+    "graphs": null,
+    "kv_cache": null,
+    "staging": null,
+    "weights": null
+  },
+  "record_sha256": "10d8e81bc32c159527a5c7d3678dad392322c1eb357f0731d6e3b0cabaacf19e",
+  "schema": 1,
+  "source": "tools.memory_profile.capture"
+}
