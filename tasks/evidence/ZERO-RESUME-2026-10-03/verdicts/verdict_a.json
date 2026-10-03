@@ -1,0 +1,49 @@
+{
+  "verdicts": [
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01",
+      "status": "BLOQUEADA",
+      "evidence": [
+        "tasks/evidence/ZERO-RESUME-2026-10-03/before-a/1.fail.txt",
+        "tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt",
+        "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/comparison.txt",
+        "tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/readiness.txt",
+        "tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/protocol.txt",
+        "tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/host-controls.txt"
+      ],
+      "reason": "El close_check pytest no existe (rc=4). No hay base para un verificador por fase completo: 02 carece de attach/captura runtime y owner trace por gate root/permiso; 03 carece de ejecución GB10 con stack 615 alineado; 04 documenta que falta justificar parche con 02/03; 05 tiene 0 ensayos A/B y 0 segundos de exposición. Hacer que el selector pase con fixtures o informes existentes falsificaría criterio de hardware."
+    },
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01",
+      "status": "BLOQUEADA",
+      "evidence": [
+        "tasks/evidence/ZERO-RESUME-2026-10-03/before-a/2.fail.txt",
+        "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01.md",
+        "tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/host-observation.txt",
+        "tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/read-integrity-instrument.txt",
+        "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/validator-run.json"
+      ],
+      "reason": "El close_check pytest no existe (rc=4). La ficha agrupa 15 sujetos de hardware distintos (hotplug/fan, watchdog, storage integrity, runtime/OEM, firmware, recovery, UVC y otros); sus criterios exigen señales A/B y/o rollback específicas. Las capturas disponibles son observaciones parciales/preflight de algunos sujetos, no 15 controles positivos y negativos completos. No existe un contrato común sustentado por las capturas para implementar un verificador que cierre esta agrupación."
+    },
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01",
+      "status": "BLOQUEADA",
+      "evidence": [
+        "tasks/evidence/ZERO-RESUME-2026-10-03/before-a/3.fail.txt",
+        "tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt"
+      ],
+      "reason": "El close_check pytest no existe (rc=4). La captura local documenta 0 ensayos A/B y 0 cambios de clock; recovery conserva could_not_run=1. Falta stack OEM/driver identificado para una intervención local, workload/soak predeclarado, medición comparada de rendimiento/estabilidad y rollback a la política efectiva 300,2800. Sin el experimento no se puede validar el verificador contra el sujeto ni control negativo real."
+    },
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01",
+      "status": "BLOQUEADA",
+      "evidence": [
+        "tasks/evidence/ZERO-RESUME-2026-10-03/before-a/4.fail.txt",
+        "tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt",
+        "tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/probe-list.txt",
+        "tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K/comparison.txt"
+      ],
+      "reason": "El close_check pytest no existe (rc=4). 02 tiene ABI estático, pero bpftrace impide listar/compilar probes sin root; faltan control CPU, control sin asignación y traza CUDA runtime, y owner permanece unknown. 04 confirma PAGE_SIZE=4096, sin medición del coste real de tablas; no hay base para decidir ni medir subasignación. Fixtures locales no sustituyen estas capturas requeridas."
+    }
+  ]
+}
