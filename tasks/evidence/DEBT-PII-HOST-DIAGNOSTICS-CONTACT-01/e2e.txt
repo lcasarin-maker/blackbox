@@ -5,3 +5,5 @@ After: 0 findings, could_not_run=0, exit 0 (pass.txt).
 Regression exercises stdout and stderr, preserves systemd unit and return-code/failure status, and neutralizes the contact matcher to prove the assertion fails.
 Original diagnostic bytes and modes are preserved privately at manifest paths with original SHA256. Only the two contact addresses between angle brackets were replaced in captured stdout. Existing capture failure counts are preserved.
 Initial worktree Pyright could not resolve pytest with the primary-relative configuration; a derived config preserves all rules and resolves the same installed paths. Verified 2 actual source files, 0 errors (pyright.txt).
+
+Boundary controls: contacts crossing the original output limit are removed before truncation in both streams. All 24 host diagnostic tests pass; stdout/stderr limits apply to the redacted output.
