@@ -3,7 +3,10 @@ id: DEBT-H1-RELEASE-CLAIMS-01
 kind: debt
 domain: VERDICT
 title: Auditar las afirmaciones pendientes de SPEC antes del release
-status: open
+status: done
+closed_at: 2026-10-03
+closure_type: relocated_prior_verification
+reason: Correcciones factuales y controles integrados en 87759912; auditoría nativa registrada y gate actual pasa para las 12 afirmaciones antes de mover esta ficha.
 severity: P1
 origin: detected
 satd_family: BLIND_INSTRUMENT
@@ -11,6 +14,7 @@ detector: {"rule": "audit gate: 12 unaudited SPEC claims", "confidence": 1.0}
 created: 2026-10-03
 close_check: {"cmd": "python3 .simplecode/run.py simplecode.cli audit --root . --gate", "expect": "exit_zero", "porque": "El ledger exige evidencia específica y sellos actuales para cada afirmación; corregir código o alcance factual antes de registrar los veredictos."}
 owner: coordinación Blackbox
+evidence: {"pass": "tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/pass.txt", "fail": "tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/fail.txt", "e2e": "tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/e2e.txt"}
 ---
 
 ## Root Cause
@@ -23,7 +27,7 @@ Contrastar cada afirmación con código y controles negativos; los fallos por pe
 
 ## Verification Evidence
 
-Auditoría en curso. Se conservarán resultados por afirmación y salida del gate antes de cerrar. Un cero histórico sin artefacto tiene alcance limitado y una ejecución actual divergente exige fecha y salida literal.
+Resultados por afirmación y hashes de textos en final-results.json; fuente nativa en final-source.json. El gate actual devuelve exit=0 con not-clean reasons: 0; el ledger conserva 12 veredictos respaldados. Un cero histórico sin artefacto tiene alcance limitado y una ejecución actual divergente exige fecha y salida literal.
 
 ## Hallazgo adicional en evidencia citada
 
