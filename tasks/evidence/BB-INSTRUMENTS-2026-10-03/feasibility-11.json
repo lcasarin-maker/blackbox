@@ -1,0 +1,57 @@
+[
+  {
+    "id": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+    "path": "tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md",
+    "title": "\"Prevent idle fan stall after CX7 hotplug powers down on standalone DGX Spark\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-CX7-HOTPLUG-FAN-PROTECTION --evidence tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+      "expect": "exit_zero",
+      "porque": "Prove the reported hotplug/fan mechanism and validate a vendor-supported preventive fix or bounded reversible workaround with thermal safety, network controls, and rollback."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+    "path": "tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md",
+    "title": "\"Validar contenci\u00f3n t\u00e9rmica para residencia de modelos y calor CPU o idle\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION --evidence tasks/evidence/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-00-REALTEK-EEE-DIRECT-LINK",
+    "path": "tasks/backlog/FORUM-00-REALTEK-EEE-DIRECT-LINK.md",
+    "title": "\"Detect and validate EEE link stalls on DGX Spark direct Ethernet\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-REALTEK-EEE-DIRECT-LINK --evidence tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK",
+      "expect": "exit_zero",
+      "porque": "Confirm the exact link-partner/kernel/driver combination, reproduce EEE-related stalls, verify a bounded opt-in mitigation and prove rollback and unaffected-link controls."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-02-GX10-READ-INTEGRITY",
+    "path": "tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md",
+    "title": "\"Detectar lecturas corruptas en cach\u00e9 antes de confiar en pesos de modelos\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-GX10-READ-INTEGRITY --evidence tasks/evidence/FORUM-02-GX10-READ-INTEGRITY",
+      "expect": "exit_zero",
+      "porque": "Verificador espec\u00edfico pendiente: debe demostrar detecci\u00f3n de datos alterados con una referencia externa y diferenciar lecturas buffered, O_DIRECT, cach\u00e9, salud NVMe y evidencia de firmware."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-02-USB-UVC-EP0",
+    "path": "tasks/backlog/FORUM-02-USB-UVC-EP0.md",
+    "title": "\"Validar y prevenir el cuelgue xHCI por controles UVC EP0 durante streaming\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-USB-UVC-EP0 --evidence tasks/evidence/FORUM-02-USB-UVC-EP0",
+      "expect": "exit_zero",
+      "porque": "Verificador espec\u00edfico pendiente: debe comprobar la reproducci\u00f3n A/B, la versi\u00f3n corregida y la recomendaci\u00f3n preventiva para cada OEM probado."
+    },
+    "dependencies": []
+  }
+]
