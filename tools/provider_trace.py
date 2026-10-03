@@ -132,7 +132,7 @@ def _latency_event(record: dict[str, Any], state: dict[str, Any], errors: list[s
     latency = record.get("milliseconds")
     if not _worker_matches(state, worker_id):
         errors.append(f"request {request_id}: latency has missing or stale worker_id")
-    elif not isinstance(latency, (int, float)) or isinstance(latency, bool) or not math.isfinite(latency) or latency < 0:
+    elif not isinstance(latency, (int, float)) or isinstance(latency, bool) or latency < 0 or latency > sys.float_info.max or not math.isfinite(latency):
         errors.append(f"request {request_id}: invalid latency")
     else:
         state["latency"] = latency
