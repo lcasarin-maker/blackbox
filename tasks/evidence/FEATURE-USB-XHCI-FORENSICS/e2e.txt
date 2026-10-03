@@ -1,1 +1,31 @@
 El patron inicial `xhci_hcd.*(HC died|error|timeout|reset)` NO atrapaba 'xHCI host controller not responding, assuming dead' -- la frase REAL que el kernel emite cuando declara muerto al controlador (xhci_hc_died() en xhci-ring.c) no contiene ni 'HC died' literal ni 'error'. Se destapo probando el patron contra la frase real ANTES de darlo por bueno, no despues: rc=0 (sin match) con la frase real, rc=1 (match) solo con la variante 'HC died' que si estaba en el patron. Corregido agregando 'assum.*dead' y 'not responding'.
+
+
+## Reejecución posterior de HARVEST-362015-all-usb-connections-fall-back-to-480-mbps-usb — 2026-10-03
+
+Comando sujeto: `python -m tools.check_harvest_accepted tasks/done/HARVEST-362015-all-usb-connections-fall-back-to-480-mbps-usb.md`
+
+Salida literal (rc=0):
+```text
+cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-USB-XHCI-FORENSICS.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-USB-XHCI-FORENSICS.md corre y pasa.
+```
+
+
+## Reejecución posterior de HARVEST-365609-nvidia-dgx-spark-continuously-freezing-hangin — 2026-10-03
+
+Comando sujeto: `python -m tools.check_harvest_accepted tasks/done/HARVEST-365609-nvidia-dgx-spark-continuously-freezing-hangin.md`
+
+Salida literal (rc=0):
+```text
+cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-USB-XHCI-FORENSICS.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-USB-XHCI-FORENSICS.md corre y pasa.
+```
+
+
+## Reejecución posterior de HARVEST-380009-asm2464pd-usb-c-3-2-2x2-enclosure-always-fall — 2026-10-03
+
+Comando sujeto: `python -m tools.check_harvest_accepted tasks/done/HARVEST-380009-asm2464pd-usb-c-3-2-2x2-enclosure-always-fall.md`
+
+Salida literal (rc=0):
+```text
+cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-USB-XHCI-FORENSICS.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-USB-XHCI-FORENSICS.md corre y pasa.
+```

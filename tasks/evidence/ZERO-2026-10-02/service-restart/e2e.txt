@@ -1,2 +1,14 @@
 .........................................                                [100%]
 41 passed in 7.34s
+
+
+## Reejecución posterior de DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO — 2026-10-03
+
+Comando sujeto: `bash tools/demonio_al_dia.sh bb-usable.service bin/bb-usable`
+
+Salida literal (rc=2):
+```text
+COULD_NOT_RUN: bb-usable.service no publica ExecMainStartTimestamp (parada?)
+```
+
+Reverificación actual, sólo lectura: `systemctl show bb-usable.service --property=MainPID,ExecMainStartTimestamp,ActiveState,SubState` -> `Failed to connect to bus: Operation not permitted`; `ps -p 4137024 -o pid=,lstart=,args=` no imprimió fila en este namespace; `stat -c '%y %n' bin/bb-usable` -> `2026-10-03 07:59:19.168552581 -0600 bin/bb-usable`. No es posible relacionar el PID 4137024 validado por root con el archivo desde este contenedor.

@@ -3,3 +3,43 @@ $ ./bin/bb scan '5 minutes ago' | sed -n '/Xid del driver/,/^$/p'
   eventos Xid:                 0
   nvidia-smi responde ahora:   si
 (0 es la linea base real de esta maquina -- journalctl -k nunca vio un Xid historico)
+
+
+## Reejecución posterior de FEATURE-GPU-XID-DETECTION — 2026-10-03
+
+Comando sujeto: `grep -q 'Xid' tasks/done/FEATURE-GPU-XID-DETECTION.md`
+
+Salida literal (rc=0):
+```text
+
+```
+
+
+## Reejecución posterior de HARVEST-348223-dgx-spark-gpu-crash — 2026-10-03
+
+Comando sujeto: `python -m tools.check_harvest_accepted tasks/done/HARVEST-348223-dgx-spark-gpu-crash.md`
+
+Salida literal (rc=0):
+```text
+cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-GPU-XID-DETECTION.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-GPU-XID-DETECTION.md corre y pasa.
+```
+
+
+## Reejecución posterior de HARVEST-374016-dgx-spark-gb10-gpu-fails-to-initialize-gsp-fi — 2026-10-03
+
+Comando sujeto: `python -m tools.check_harvest_accepted tasks/done/HARVEST-374016-dgx-spark-gb10-gpu-fails-to-initialize-gsp-fi.md`
+
+Salida literal (rc=0):
+```text
+cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-GPU-XID-DETECTION.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-GPU-XID-DETECTION.md corre y pasa.
+```
+
+
+## Reejecución posterior de HARVEST-379959-gb10-spontaneous-reboots-after-july-2026-upda — 2026-10-03
+
+Comando sujeto: `python -m tools.check_harvest_accepted tasks/done/HARVEST-379959-gb10-spontaneous-reboots-after-july-2026-upda.md`
+
+Salida literal (rc=0):
+```text
+cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-GPU-XID-DETECTION.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-GPU-XID-DETECTION.md corre y pasa.
+```
