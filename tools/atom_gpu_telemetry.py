@@ -1690,7 +1690,7 @@ def _run_sampler(args) -> int:
                     print(json.dumps(evento, ensure_ascii=False))
             if args.once:
                 return 0
-            time.sleep(args.interval_seconds)  # blocking-sleep: intervalo del sampler de vida larga, no I/O a esperar -- DGX-334  # sunset-reviewed: 2.2 -- revisión 2026-10-03 contra release 2.1.0 commit 70d3078f0fb5c08ce62614720696f824385b15e9; relectura 2026-10-02: objetivo y expresion sin cambios frente a git show 7049dce^:tools/atom_gpu_telemetry.py; El bucle de vida larga necesita su intervalo entre muestras. Comparacion por linea en tasks/evidence/RELEASE-2.1.0/sunset-review.json. Revision anterior 2.0: sin cambios desde la revision de 1.9 horas antes, mismo dia, mismas evidencias -- SE QUEDA con la misma razon de 1.8, re-verificada: es el intervalo del bucle de un sampler de vida larga y NO esta en el camino de los tests. Comprobado 2026-09-28 sobre los 466 tests recolectados: ninguno referencia `interval_seconds`, asi que ninguno entra en ese bucle. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.9-sleeps.txt
+            time.sleep(args.interval_seconds)  # blocking-sleep: intervalo del sampler de vida larga, no I/O a esperar -- DGX-334  # sunset-reviewed: 2.3 -- el sampler de vida larga requiere su intervalo entre muestras; closecheck positivo y neutralizado prueba el parámetro y el control. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-13
     except KeyboardInterrupt:
         return 0
 
