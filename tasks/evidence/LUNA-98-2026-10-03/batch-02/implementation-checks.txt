@@ -1,0 +1,17 @@
+$ python3 -m pytest tests/test_nvme_readonly.py tests/test_workload_restart_containment.py -q
+rc=0
+....                                                                     [100%]
+4 passed in 0.07s
+
+$ ruff check tools/nvme_readonly.py tools/workload_restart_policy.py tests/test_nvme_readonly.py tests/test_workload_restart_containment.py
+rc=0
+All checks passed!
+
+$ pyright tools/nvme_readonly.py tools/workload_restart_policy.py tests/test_nvme_readonly.py tests/test_workload_restart_containment.py
+rc=0
+0 errors, 0 warnings, 0 informations
+
+$ python3 tools/inventario.py --check
+rc=0
+[inventario] HALLAZGOS: 0
+[inventario] OK: los dos inventarios describen el repo y la maquina.
