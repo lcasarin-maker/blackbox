@@ -3,7 +3,11 @@ id: DEBT-SHELLCHECK-BB-2
 kind: task
 domain: VERDICT
 title: "Revalidar excepción ShellCheck de bb:2"
-status: open
+status: done
+closed_at: 2026-10-02
+closure_type: fixed
+reason: "Condiciones de status registran éxito/fallo con if; se elimina la exclusión global SC2319."
+evidence: {"pass": "tasks/evidence/DEBT-SHELLCHECK-BB-2.pass.txt", "fail": "tasks/evidence/DEBT-SHELLCHECK-BB-2.fail.txt", "e2e": "tasks/evidence/DEBT-SHELLCHECK-BB-2.e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -30,3 +34,7 @@ Ejecutar ShellCheck del fragmento/sujeto y controles de retorno/quoting. Demostr
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Verificación realizada
+
+Close_check falla sobre el código anterior y pasa sobre el nuevo; status conserva ARMADO/FALTA con cadenas sanas y memory.low=0. La prueba de SC2086 usa la raíz de cgroups con espacios y detecta el fallo anterior. Las reglas SC2319/SC2086 y bash -n pasan; ShellCheck completo conserva hallazgos independientes preexistentes, registrados por separado. Pruebas existentes de status en evidencia e2e.

@@ -1,0 +1,43 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________________ test_debt_shellcheck_bb_2286 _________________________
+tests/test_debt_registration_controls.py:67: in test_debt_shellcheck_bb_2286
+    assert expected in _fila_escritorio(result), result.stdout + result.stderr
+E   AssertionError: == estado de la instrumentacion ==
+E       FALTA     blackbox: muestreo de apps/zombis (dato de hace <2 min) -- el timer puede estar activo y el muestreo caido: corre 'bb sample' a mano y mira el error
+E       ARMADO    journald persistente
+E       ARMADO    journal del kernel legible
+E       ARMADO    systemd-coredump
+E       ARMADO    limite de core > 0
+E       ARMADO    sar recolectando (datos de hace <10 min)
+E       ARMADO    monitor de memoria (<10 min)
+E       FALTA     termica de la GPU (atom_gpu_telemetry, <2 min) -- systemctl --user start atom-gpu-telemetry
+E       FALTA     memoria del escritorio protegida del reclamo (7 eslabones) -- 2 eslabon(es) en memory.low=0 -- sudo ./enable-privileged.sh (seccion 13)
+E       CIEGO     clock lock de GPU
+E                 systemctl ExecStart rc=1: Failed to connect to bus: Operation not permitted
+E       ARMADO    earlyoom con la punteria puesta (prefiere y evita)
+E       CIEGO     configuracion del watchdog de hardware
+E                 consulta systemd ilegible (rc=1): Failed to connect to bus: Operation not permitted
+E       CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)
+E                 consulta systemd ilegible (rc=1): Failed to connect to bus: Operation not permitted
+E       FALTA     motor de inferencia sirviendo -- el gateway no responde en http://127.0.0.1:8000/v1/models
+E       ARMADO    nvidia-smi
+E       ARMADO    kdump (volcado de kernel ante panic, no ante corte de energia)
+E     
+E       armado: 9    falta: 4    ciego: 3
+E     could_not_run: 3
+E       - clock lock: systemctl ExecStart rc=1: Failed to connect to bus: Operation not permitted
+E       - systemctl show RuntimeWatchdogUSec: rc=1: Failed to connect to bus: Operation not permitted
+E       - systemctl show bb-usable.service: rc=1: Failed to connect to bus: Operation not permitted
+E       OJO: 'ciego' no es 'armado'. Un instrumento ciego no deja el sujeto
+E            limpio: deja el informe sin esa fila.
+E       muestras acumuladas: 0
+E       datos en: /tmp/pytest-of-lcasarin/pytest-1472/test_debt_shellcheck_bb_22860/blackbox
+E     
+E       Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.
+E     
+E   assert 'ARMADO' in '  FALTA     memoria del escritorio protegida del reclamo (7 eslabones) -- 2 eslabon(es) en memory.low=0 -- sudo ./enable-privileged.sh (seccion 13)'
+E    +  where '  FALTA     memoria del escritorio protegida del reclamo (7 eslabones) -- 2 eslabon(es) en memory.low=0 -- sudo ./enable-privileged.sh (seccion 13)' = _fila_escritorio(CompletedProcess(args=['/tmp/bb-zero-provider/bin/bb', 'status'], returncode=0, stdout="== estado de la instrumentacio...t_shellcheck_bb_22860/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''))
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_debt_shellcheck_bb_2286
+1 failed in 0.28s

@@ -1,0 +1,53 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________________________ test_debt_shellcheck_bb_2 ___________________________
+tests/test_debt_registration_controls.py:58: in test_debt_shellcheck_bb_2
+    assert lint.returncode == 0, lint.stdout + lint.stderr
+E   AssertionError: 
+E     In /tmp/pytest-of-lcasarin/pytest-1471/test_debt_shellcheck_bb_20/status.sh line 2216:
+E       [ -n "$(find "$SAMPLES" -name "$(date +%Y-%m-%d).jsonl" -mmin -2 2>/dev/null)" ]; ok=$?
+E                                                                                            ^-- SC2319 (warning): This $? refers to a condition, not a command. Assign to a variable to avoid it being overwritten.
+E     
+E     
+E     In /tmp/pytest-of-lcasarin/pytest-1471/test_debt_shellcheck_bb_20/status.sh line 2220:
+E       [ -d /var/log/journal ]; ok=$?
+E                                   ^-- SC2319 (warning): This $? refers to a condition, not a command. Assign to a variable to avoid it being overwritten.
+E     
+E     
+E     In /tmp/pytest-of-lcasarin/pytest-1471/test_debt_shellcheck_bb_20/status.sh line 2229:
+E       [ "$(ulimit -c)" != "0" ]; ok=$?
+E                                     ^-- SC2319 (warning): This $? refers to a condition, not a command. Assign to a variable to avoid it being overwritten.
+E     
+E     
+E     In /tmp/pytest-of-lcasarin/pytest-1471/test_debt_shellcheck_bb_20/status.sh line 2236:
+E       [ -n "$(find /var/log/sysstat -name "sa$(date +%Y%m%d)" -mmin -10 2>/dev/null)" ]; ok=$?
+E                                                                                             ^-- SC2319 (warning): This $? refers to a condition, not a command. Assign to a variable to avoid it being overwritten.
+E     
+E     
+E     In /tmp/pytest-of-lcasarin/pytest-1471/test_debt_shellcheck_bb_20/status.sh line 2244:
+E       [ -n "$(find /srv/ai/logs -name 'memory_monitor.log' -mmin -10 2>/dev/null)" ]; ok=$?
+E                                                                                          ^-- SC2319 (warning): This $? refers to a condition, not a command. Assign to a variable to avoid it being overwritten.
+E     
+E     
+E     In /tmp/pytest-of-lcasarin/pytest-1471/test_debt_shellcheck_bb_20/status.sh line 2249:
+E       [ -n "$(find "$(dirname "$TELEMETRIA_GPU")" -name "$(basename "$TELEMETRIA_GPU")" -mmin -2 2>/dev/null)" ]; ok=$?
+E                                                                                                                      ^-- SC2319 (warning): This $? refers to a condition, not a command. Assign to a variable to avoid it being overwritten.
+E     
+E     
+E     In /tmp/pytest-of-lcasarin/pytest-1471/test_debt_shellcheck_bb_20/status.sh line 2294:
+E       [ "$rotos" -eq 0 ]; ok=$?
+E                              ^-- SC2319 (warning): This $? refers to a condition, not a command. Assign to a variable to avoid it being overwritten.
+E     
+E     
+E     In /tmp/pytest-of-lcasarin/pytest-1471/test_debt_shellcheck_bb_20/status.sh line 2386:
+E       [ -n "$(gateway_modelo)" ]; ok=$?
+E                                      ^-- SC2319 (warning): This $? refers to a condition, not a command. Assign to a variable to avoid it being overwritten.
+E     
+E     For more information:
+E       https://www.shellcheck.net/wiki/SC2319 -- This $? refers to a condition, no...
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['shellcheck', '--include=SC2319', '/tmp/pytest-of-lcasarin/pytest-1471/test_debt_shellcheck_bb_...nFor more information:\n  https://www.shellcheck.net/wiki/SC2319 -- This $? refers to a condition, no...\n', stderr='').returncode
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_debt_shellcheck_bb_2 - ...
+1 failed in 3.63s
