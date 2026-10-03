@@ -1,0 +1,971 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01",
+    "status": "BLOQUEADA",
+    "evidence": [
+      "tasks/evidence/ZERO-RESUME-2026-10-03/before-a/1.fail.txt",
+      "tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt",
+      "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/comparison.txt",
+      "tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/readiness.txt",
+      "tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/protocol.txt",
+      "tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/host-controls.txt"
+    ],
+    "reason": "El close_check pytest no existe (rc=4). No hay base para un verificador por fase completo: 02 carece de attach/captura runtime y owner trace por gate root/permiso; 03 carece de ejecuci\u00f3n GB10 con stack 615 alineado; 04 documenta que falta justificar parche con 02/03; 05 tiene 0 ensayos A/B y 0 segundos de exposici\u00f3n. Hacer que el selector pase con fixtures o informes existentes falsificar\u00eda criterio de hardware.",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01",
+    "status": "BLOQUEADA",
+    "evidence": [
+      "tasks/evidence/ZERO-RESUME-2026-10-03/before-a/2.fail.txt",
+      "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01.md",
+      "tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/host-observation.txt",
+      "tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/read-integrity-instrument.txt",
+      "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/validator-run.json"
+    ],
+    "reason": "El close_check pytest no existe (rc=4). La ficha agrupa 15 sujetos de hardware distintos (hotplug/fan, watchdog, storage integrity, runtime/OEM, firmware, recovery, UVC y otros); sus criterios exigen se\u00f1ales A/B y/o rollback espec\u00edficas. Las capturas disponibles son observaciones parciales/preflight de algunos sujetos, no 15 controles positivos y negativos completos. No existe un contrato com\u00fan sustentado por las capturas para implementar un verificador que cierre esta agrupaci\u00f3n.",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01",
+    "status": "BLOQUEADA",
+    "evidence": [
+      "tasks/evidence/ZERO-RESUME-2026-10-03/before-a/3.fail.txt",
+      "tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt"
+    ],
+    "reason": "El close_check pytest no existe (rc=4). La captura local documenta 0 ensayos A/B y 0 cambios de clock; recovery conserva could_not_run=1. Falta stack OEM/driver identificado para una intervenci\u00f3n local, workload/soak predeclarado, medici\u00f3n comparada de rendimiento/estabilidad y rollback a la pol\u00edtica efectiva 300,2800. Sin el experimento no se puede validar el verificador contra el sujeto ni control negativo real.",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01",
+    "status": "BLOQUEADA",
+    "evidence": [
+      "tasks/evidence/ZERO-RESUME-2026-10-03/before-a/4.fail.txt",
+      "tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt",
+      "tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/probe-list.txt",
+      "tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K/comparison.txt"
+    ],
+    "reason": "El close_check pytest no existe (rc=4). 02 tiene ABI est\u00e1tico, pero bpftrace impide listar/compilar probes sin root; faltan control CPU, control sin asignaci\u00f3n y traza CUDA runtime, y owner permanece unknown. 04 confirma PAGE_SIZE=4096, sin medici\u00f3n del coste real de tablas; no hay base para decidir ni medir subasignaci\u00f3n. Fixtures locales no sustituyen estas capturas requeridas.",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01",
+    "status": "BLOQUEADA",
+    "evidence": {
+      "close_check_before": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_netconsole_01",
+      "close_check_output": "tasks/evidence/ZERO-RESUME-2026-10-03/before-b/DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01.fail.txt",
+      "close_check_exit": 4,
+      "captured_parent_evidence": "FEATURE-FORUM-NETCONSOLE-01",
+      "parent_card": "tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md"
+    },
+    "reason": "No designated off-host receiver or approved target exists; the captured evidence records zero module loads and zero off-host markers. Secure Boot/signature metadata does not prove runtime acceptance, privacy boundaries, or rollback. The parent investigation is open and has no real capture to let a verifier test the required phases.",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01",
+    "status": "BLOQUEADA",
+    "evidence": {
+      "close_check_before": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01",
+      "close_check_output": "tasks/evidence/ZERO-RESUME-2026-10-03/before-b/DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.fail.txt",
+      "close_check_exit": 4,
+      "captured_parent_evidence": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+      "parent_card": "tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md"
+    },
+    "reason": "The captured read-only state reports pstore permission denied (could_not_run=1), zero forced panics/reboots/natural RCU tests, and no canary approval. A verifier cannot validate persistent capture/rollback phases from this evidence.",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+    "status": "BLOQUEADA",
+    "evidence": {
+      "close_check_before": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_usb_hid_postupdate_01",
+      "close_check_output": "tasks/evidence/ZERO-RESUME-2026-10-03/before-b/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.fail.txt",
+      "close_check_exit": 4,
+      "captured_parent_evidence": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+      "parent_card": "tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md"
+    },
+    "reason": "The read-only host observation has usbhid/hid_generic/xHCI loaded and an empty visible HID directory; it contains no connected keyboard, local input test, remote-access result, module-integrated case, or bounded upgrade/recovery test. That cannot support the required false-positive and actual-loss phases.",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01",
+    "status": "BLOQUEADA",
+    "evidence": {
+      "close_check_before": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_wifi_isolation_01",
+      "close_check_output": "tasks/evidence/ZERO-RESUME-2026-10-03/before-b/DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01.fail.txt",
+      "close_check_exit": 4,
+      "captured_parent_evidence": "FEATURE-FORUM-WIFI-ISOLATION-01",
+      "parent_card": "tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md"
+    },
+    "reason": "The captured snapshot shows wlP9s9 unavailable/DOWN and wired enP7s7 connected/UP; it does not include the cited WPA handshake/WRONG_KEY/no-secrets sequence, a local-host failure control, bounded roam A/B, or rollback evidence. Network recovery is therefore unmeasured.",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DEBT-HOST-DEPLOYED-DRIFT-01",
+    "path": "tasks/backlog/DEBT-HOST-DEPLOYED-DRIFT-01.md",
+    "status": "NECESITA DECISI\u00d3N",
+    "reason": "Decisi\u00f3n de Luis pendiente en la boleta previa; el pedido de olas no decide archivo de investigaci\u00f3n ni despliegue de archivos del host.",
+    "evidence": "La propia ficha declara dos rutas con costos distintos o una decisi\u00f3n expl\u00edcita; no elegir durante esta reevaluaci\u00f3n.",
+    "close_check": "bash bin/bb drift",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DEBT-RESEARCH-COLLECTOR-BB-FORUM-FETCH-01",
+    "path": "tasks/backlog/DEBT-RESEARCH-COLLECTOR-BB-FORUM-FETCH-01.md",
+    "status": "NECESITA DECISI\u00d3N",
+    "reason": "Decisi\u00f3n de Luis pendiente en la boleta previa; el pedido de olas no decide archivo de investigaci\u00f3n ni despliegue de archivos del host.",
+    "evidence": "La propia ficha declara dos rutas con costos distintos o una decisi\u00f3n expl\u00edcita; no elegir durante esta reevaluaci\u00f3n.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_research_collector_bb_forum_fetch_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DEBT-RESEARCH-COLLECTOR-BB-FORUM-INVENTORY-01",
+    "path": "tasks/backlog/DEBT-RESEARCH-COLLECTOR-BB-FORUM-INVENTORY-01.md",
+    "status": "NECESITA DECISI\u00d3N",
+    "reason": "Decisi\u00f3n de Luis pendiente en la boleta previa; el pedido de olas no decide archivo de investigaci\u00f3n ni despliegue de archivos del host.",
+    "evidence": "La propia ficha declara dos rutas con costos distintos o una decisi\u00f3n expl\u00edcita; no elegir durante esta reevaluaci\u00f3n.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_research_collector_bb_forum_inventory_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01",
+    "path": "tasks/backlog/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_telemetry_dispositions --event-id 92dc63137ae930f3 --event-id a50ae5e52c99c3ab --event-id 5437b44ce52501ee",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+    "path": "tasks/backlog/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_3node_nccl_image_and_first_request_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+    "path": "tasks/backlog/DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_8node_nccl_interface_mtu_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01",
+    "path": "tasks/backlog/DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01",
+    "path": "tasks/backlog/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cross_turn_sleeper_injection_regression_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01",
+    "path": "tasks/backlog/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cutlass_sm121_isa_gate_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-CX7-FW-UPDATE-GUARD-01",
+    "path": "tasks/backlog/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_fw_update_guard_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01",
+    "path": "tasks/backlog/DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_physical_topology_alias_check_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-CX7-POSTHOTPLUG-01",
+    "path": "tasks/backlog/DELTA-FORUM-CX7-POSTHOTPLUG-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_posthotplug_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01",
+    "path": "tasks/backlog/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_rdma_asymmetry_retest_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+    "path": "tasks/backlog/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_dcp_mtp_draft_correctness_and_pretrim_oom_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01",
+    "path": "tasks/backlog/DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_dcp4_decode_starvation_fair_scheduler_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01",
+    "path": "tasks/backlog/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_dflash_xgrammar_structured_output_regression_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01",
+    "path": "tasks/backlog/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_dsv41_nfs_stop_tag_pin_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01",
+    "path": "tasks/backlog/DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_dualspark_nccl_gid_twin_and_cold_recovery_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01",
+    "path": "tasks/backlog/DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_dualspark_power_reset_recovery_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01",
+    "path": "tasks/backlog/DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_glm52_multiturn_correctness_and_recipe_sensitivity_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01",
+    "path": "tasks/backlog/DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_gptoss_multinode_ray_channel_timeout_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01",
+    "path": "tasks/backlog/DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_kv_quant_metric_provenance_gate_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01",
+    "path": "tasks/backlog/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_llamacpp_rpc_uma_and_orderly_teardown_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01",
+    "path": "tasks/backlog/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_m2_compaction_state_validation_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-MEMORY-RECOVERY-SOAK-01",
+    "path": "tasks/backlog/DELTA-FORUM-MEMORY-RECOVERY-SOAK-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_memory_recovery_soak_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01",
+    "path": "tasks/backlog/DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_minimax_toolcall_functional_canary_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01",
+    "path": "tasks/backlog/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_mtp_acceptance_and_semantic_control_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01",
+    "path": "tasks/backlog/DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_muse_glimmer_dflash_max_seqs_gate_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01",
+    "path": "tasks/backlog/DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_nccl_tp_orchestration_correction_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01",
+    "path": "tasks/backlog/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_nemotron_sm121_prebuilt_kernel_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01",
+    "path": "tasks/backlog/DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_openclaw_vllm_request_contract_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01",
+    "path": "tasks/backlog/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_cold_compile_oom_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-LONG-AGENT-STOP-01",
+    "path": "tasks/backlog/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_long_agent_stop_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01",
+    "path": "tasks/backlog/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01",
+    "path": "tasks/backlog/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_service_oomd_cache_fail_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01",
+    "path": "tasks/backlog/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_toolcall_wedge_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01",
+    "path": "tasks/backlog/DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01",
+    "path": "tasks/backlog/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen38_long_run_json_correctness_canary_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01",
+    "path": "tasks/backlog/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_ray_torch_graph_hang_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01",
+    "path": "tasks/backlog/DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01",
+    "path": "tasks/backlog/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_telemetry_coverage_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+    "path": "tasks/backlog/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_usb_raid_link_admission_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01",
+    "path": "tasks/backlog/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_vllm_gb10_arch_and_build_matrix_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01",
+    "path": "tasks/backlog/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_vllm_ray_gb10_resource_fix_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+    "path": "tasks/backlog/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_backup_mount_boot_identity_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01",
+    "path": "tasks/backlog/DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_container_effective_build_and_offline_gate_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01",
+    "path": "tasks/backlog/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_display_carveout_oem_fix_gate_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01",
+    "path": "tasks/backlog/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_dsml_parser_recovery_boundary_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01",
+    "path": "tasks/backlog/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_glm53_queued_request_progress_gate_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01",
+    "path": "tasks/backlog/DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_gx10_soc_ec_cable_recovery_candidate_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01",
+    "path": "tasks/backlog/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_mimo_overlay_and_prefill_fairness_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01",
+    "path": "tasks/backlog/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_mimo_patch_supersession_gate_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01",
+    "path": "tasks/backlog/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_ray_multiengine_rank_progress_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01",
+    "path": "tasks/backlog/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_recipe_memory_unknown_and_raw_evidence_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01",
+    "path": "tasks/backlog/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_subambient_cooling_and_uma_canary_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01",
+    "path": "tasks/backlog/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_tokenizer_patch_semantic_gate_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01",
+    "path": "tasks/backlog/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_triton_allocator_patch_state_gate_01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-01-REPRO",
+    "path": "tasks/backlog/FEATURE-1358-CGROUP-01-REPRO.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_cgroup_repro tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-02-TRAZA",
+    "path": "tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_cgroup_plan --phase 02-traza --evidence tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-03-NATIVO",
+    "path": "tasks/backlog/FEATURE-1358-CGROUP-03-NATIVO.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_cgroup_plan --phase 03-nativo --evidence tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-04-PARCHE",
+    "path": "tasks/backlog/FEATURE-1358-CGROUP-04-PARCHE.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_cgroup_plan --phase 04-parche --evidence tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-05-CUELGUES",
+    "path": "tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_cgroup_plan --phase 05-cuelgues --evidence tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+    "path": "tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01 --evidence tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "path": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 --evidence tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "path": "tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "path": "tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01 --evidence tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-FORUM-NETCONSOLE-01",
+    "path": "tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-FORUM-NVME-READONLY-01",
+    "path": "tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest tests/test_nvme_readonly.py -q",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "path": "tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01 --evidence tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "path": "tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_rcu_panic_pstore --evidence tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-FORUM-RESCUE-RUNBOOK-01",
+    "path": "tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-RESCUE-RUNBOOK-01 --evidence tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "path": "tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-SBSA-WATCHDOG-STATE-01 --evidence tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+    "path": "tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_wifi_isolation --evidence tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "path": "tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "path": "tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_memory_saver --phase 04-packing-4k --evidence tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+    "path": "tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_usb_hid_postupdate --evidence tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+    "path": "tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FORUM-00-CX7-HOTPLUG-FAN-PROTECTION --evidence tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+    "path": "tasks/backlog/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT --evidence tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FORUM-00-DOCKER-OOM-RESTART-LOOP",
+    "path": "tasks/backlog/FORUM-00-DOCKER-OOM-RESTART-LOOP.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m pytest tests/test_workload_restart_containment.py -q",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+    "path": "tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION --evidence tasks/evidence/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+    "path": "tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FORUM-00-KERNEL-INITRD-UPDATE-GATE --evidence tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FORUM-00-REALTEK-EEE-DIRECT-LINK",
+    "path": "tasks/backlog/FORUM-00-REALTEK-EEE-DIRECT-LINK.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FORUM-00-REALTEK-EEE-DIRECT-LINK --evidence tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FORUM-02-GX10-READ-INTEGRITY",
+    "path": "tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FORUM-02-GX10-READ-INTEGRITY --evidence tasks/evidence/FORUM-02-GX10-READ-INTEGRITY",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FORUM-02-PSTORE-KERNEL-REGRESSION",
+    "path": "tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FORUM-02-PSTORE-KERNEL-REGRESSION --evidence tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FORUM-02-USB-UVC-EP0",
+    "path": "tasks/backlog/FORUM-02-USB-UVC-EP0.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FORUM-02-USB-UVC-EP0 --evidence tasks/evidence/FORUM-02-USB-UVC-EP0",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  },
+  {
+    "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+    "path": "tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md",
+    "status": "blocked",
+    "reason": "El close_check de la investigaci\u00f3n requiere evidencia del sujeto real, hardware/stack identificado, compatibilidad, permisos o captura hist\u00f3rica que no est\u00e1 presente en el checkout revisado. La implementaci\u00f3n de un verificador local por s\u00ed sola no demuestra el resultado del sujeto.",
+    "evidence": "La ficha describe requisito de sujeto real y control sano/negativo, rollback o datos crudos; no se encontr\u00f3 evidencia completa identificada por la ficha. Se conserva abierta hasta disponer de ese recurso/captura.",
+    "close_check": "python3 -m tools.verify_forum_finding --id FORUM-REALTEK-DRIVER-BINDING-01 --evidence tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01",
+    "inherited_from": "tasks/evidence/ZERO-RESUME-2026-10-03/verdicts",
+    "relaunch": false
+  }
+]
