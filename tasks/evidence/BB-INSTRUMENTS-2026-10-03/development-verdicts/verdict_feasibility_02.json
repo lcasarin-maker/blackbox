@@ -1,0 +1,32 @@
+[
+  {
+    "id": "FEATURE-FORUM-NVME-READONLY-01",
+    "status": "reused",
+    "evidence": "tools/nvme_readonly.py; tests/test_nvme_readonly.py; tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md",
+    "reason": "El clasificador actual separa error NVMe, root read-only, consulta ilegible, inventario no identificable y observación sana, y la copia de evidencia rechaza origen mutable, symlink, overwrite y mismo filesystem. Suite focal: 20 passed. Siguiente input no generado por fixtures: exportación y restauración en copia o unidad de laboratorio con captura raw y corroboración de identity/OEM; no leer, ejecutar SMART destructivo, repair o escribir medio sospechoso desde esta tanda."
+  },
+  {
+    "id": "FORUM-00-DOCKER-OOM-RESTART-LOOP",
+    "status": "deferred_lab",
+    "evidence": "tools/workload_restart_policy.py; tests/test_workload_restart_containment.py; tasks/backlog/FORUM-00-DOCKER-OOM-RESTART-LOOP.md",
+    "reason": "Existe una política atómica por workload, persistente entre boots, serializada y con reloj regresado como unknown; controla budgets sin actuar sobre containers. Suite focal: 10 passed, incluidos 10 procesos compitiendo, pero la política aún no está conectada a Docker/systemd ni probada con recovery. La integración y el ensayo de canario quedan diferidos hasta habilitar el laboratorio; entonces se eligen workload exacto, runtime/servicio y canario recuperable que preserve datos y management path; después comprobar reinicio sano, límite persistente a través de host reboot, reanudación y rollback. No ejecutar en el host compartido."
+  },
+  {
+    "id": "DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01",
+    "status": "needs_capture",
+    "evidence": "tools/verify_telemetry_dispositions.py; tests/test_verify_telemetry_dispositions.py; tasks/evidence/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01/recovered-event-metadata.json; tasks/evidence/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01.fail.txt",
+    "reason": "El verificador ya exige estado admitido y evidencia no vacía por ID, distingue faltante de ledger ilegible y tiene controles positivos/negativos; suite focal: 3 passed. La evidencia fuente confirma que las dos salidas pre-commit rc=1 y stderr/stdout original faltan; el bash -n fue repetido sobre commit pero no reconstruye staged bytes originales. Próxima entrada: captura/output original recuperable por cada event ID o una reproducción exacta que documente defecto por evento; no registrar disposiciones a partir del rc/metadata."
+  },
+  {
+    "id": "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01",
+    "status": "needs_capture",
+    "evidence": "tools/thermal_coverage.py; tests/test_diagnostic_admission_prototypes.py; tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/prototype-capture.json; tasks/backlog/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01.md",
+    "reason": "El instrumento readonly enumera sensores/trips/fans, conserva errores y no emite veredicto de seguridad; controles focales: 10 passed, 6 deselected. La captura local registró `could_not_run=0`, pero el cierre exige el sujeto ASUS GX10 identificado, channels/freshness correlacionados durante soak y controles sano/negativo. Los adjuntos del hilo siguen sin inspección; próxima entrada exacta son raw logs/adjuntos de la unidad o una captura/soak con firmware/UEFI, muestra temporal de cada canal, reloj/potencia y evento, sin fijar umbral universal."
+  },
+  {
+    "id": "DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01",
+    "status": "needs_capture",
+    "evidence": "tools/recipe_memory.py; tests/test_diagnostic_admission_prototypes.py; tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/prototype-capture.json; tasks/backlog/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01.md",
+    "reason": "La herramienta ya etiqueta cada término caller-supplied como unverified, deja faltantes en unknown, conserva la captura host y declara que comparación no es admisión. Pruebas recipe/thermal: 10 passed, 6 deselected. La captura sin términos fue unknown (rc=2); siguiente entrada: digest/versiones, medidas crudas por etapa del workload real incluyendo KV/staging/graphs/draft/buffers/reserva/headroom y control funcional/rollback. No convertir receta del foro ni cero declarado en medición."
+  }
+]

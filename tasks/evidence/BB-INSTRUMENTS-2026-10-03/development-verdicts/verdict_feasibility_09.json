@@ -1,0 +1,32 @@
+[
+  {
+    "id": "FEATURE-1358-CGROUP-01-REPRO",
+    "status": "reused",
+    "evidence": "tools/verify_cgroup_repro.py; tests/test_verify_cgroup_repro.py; tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json; tasks/backlog/FEATURE-1358-CGROUP-01-REPRO.md",
+    "reason": "The phase-01 parser recalculates rows/deltas and CPU positive/negative controls from raw worker stdout, and preserves unavailable dmem.current observations without claiming GPU containment or provenance. Exact close-check command ran read-only and returned unknown/rc=2: could_not_run_count=23 (dmem.current absent in the recorded scopes); CPU control delta is 33554432 bytes, CUDA malloc delta is 0, managed delta 33816576, PyTorch delta 0. Current instrument is useful/reused; complete dmem evidence on supported subject is the missing input, not a parser implementation."
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-02-TRAZA",
+    "status": "needs_capture",
+    "evidence": "tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md; tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt; tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt; tools/kernel_charges.bt",
+    "reason": "Static symbol/probe inventory exists, but the entry point, owner memcg, allocation flags, context switch/worker and positive CPU/no-GPU control are not observed. Next input is a timestamped privileged trace from the exact reproduction stack, paired with kernel/module symbols and API/control identities; without it a parser could only attest a caller-authored conclusion."
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-03-NATIVO",
+    "status": "needs_capture",
+    "evidence": "tasks/backlog/FEATURE-1358-CGROUP-03-NATIVO.md; tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-615.json; tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-modules.json",
+    "reason": "The 615.71.09 sources compiled against local headers, but the output modules were not signed, loaded or tested and GSP/userspace compatibility is unresolved. Next input is an owner-approved compatible disposable stack and raw 2-cgroup observations for registration, owner attribution, memory/dmem limits, sharing, bounded reject and release with 580 comparison and supported rollback."
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-04-PARCHE",
+    "status": "needs_capture",
+    "evidence": "tasks/backlog/FEATURE-1358-CGROUP-04-PARCHE.md; tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/readiness.txt",
+    "reason": "This phase is conditional on a residual gap from phases 02 and 03; current evidence is only patch readiness. First capture the trace and native A/B evidence that isolates an uncovered owner/API. Only then is a reviewable patch diff and before/after runtime test a meaningful verifier input; no patch schema or verdict can be chosen in advance."
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-05-CUELGUES",
+    "status": "needs_capture",
+    "evidence": "tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md; tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/host-controls.txt; tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/",
+    "reason": "Host controls/protocol exist, but A/B trials are 0 and exposure is 0 seconds. Next input is an approved exact-stack candidate and bounded workload run with versions, clocks/watchdogs, healthy controls, allocations/rejections, last useful service response, timestamps, raw host/NVRM/PSI and collection errors across both arms. Do not classify an uneventful preparation window as a stability result."
+  }
+]

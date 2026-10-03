@@ -1,0 +1,32 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01",
+    "status": "needs_capture",
+    "evidence": "tools/verify_cgroup_repro.py; tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md; tasks/backlog/FEATURE-1358-CGROUP-03-NATIVO.md; tasks/backlog/FEATURE-1358-CGROUP-04-PARCHE.md; tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md; tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt; tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-615.json; tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/readiness.txt; tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/host-controls.txt",
+    "reason": "Existe un verificador real de la reproducción fase 01, pero no `verify_cgroup_plan`. Las fases citadas sólo tienen preparación y no las observaciones que sus criterios requieren. Siguiente entrada: traza 02 con asignación GPU y control CPU/no-GPU más PID/cgroup/memcg/flags/build; 03 requiere stack 615/GSP/userspace compatible con lecturas de cargo/límites/compartición/liberación en dos cgroups; 04 requiere el diff y comparación runtime sólo si 02/03 prueban un hueco; 05 requiere ejecución A/B con versiones, exposición, controles, respuesta del servicio y registros literales. Con esas capturas se puede derivar un parser fase-específico; no inventar schema o aprobar por existencia."
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01",
+    "status": "needs_contract",
+    "evidence": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01.md; tools/verify_apt_critical_removals.py; tests/test_debt_registration_controls.py",
+    "reason": "La ficha agrupa 15 hallazgos de dominios y close checks distintos; los contratos existentes describen criterios por hallazgo, no un modelo común de captura. Antes de código hace falta contrato versionado con un adapter por ID: entradas crudas identificadas, evidencia positiva y control negativo ejecutable, verificaciones recalculables, reglas fail/unknown/could_not_run y IDs no soportados explícitos. No usar booleans declarados por caller ni admitir un informe no vacío como prueba."
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01",
+    "status": "needs_capture",
+    "evidence": "tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md; tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt; tools/atom_gpu_telemetry.py",
+    "reason": "La instrumentación existente puede muestrear clocks, potencia, temperatura y throttling; la evidencia local actual sólo registra declaración 300,2800 y cero ensayos. Entrada faltante: A/B pareado por OEM/kernel/driver identificado, lectura de clock realmente aplicado en base y cap, carga y control con duración/eventos/throughput, y lectura después del rollback que confirme política original. Después fijar el formato de registros crudos para que un verificador pueda recalcular las comparaciones; no ejecutar ni modificar clocks desde esta tarea."
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01",
+    "status": "needs_capture",
+    "evidence": "tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md; tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md; tools/kernel_charges.bt; tools/memory_profile.py; tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt; tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K/comparison.txt",
+    "reason": "Para fase 02 hay lista/ABI estática del probe, pero falta la traza de asignación real, dueño/memcg/flags y control CPU; esa captura necesita privileges/root que no se ejecutaron. Para fase 04 falta medir en el sujeto real bytes solicitados frente a backing/slots/page size y costo por carga, con comparación válida y liberación; el perfil de memoria agregado no mide ese objeto. Capturas crudas por fase permiten especificar parser y negativos concretos sin aceptar afirmaciones manuales como pass."
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01",
+    "status": "deferred_lab",
+    "evidence": "tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md; tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/host-observation.txt; tools/host_diagnostics.py",
+    "reason": "El instrumento readonly existente ve interfaces, gateway y estado de NetworkManager/Wi-Fi, y la captura actual registra Wi-Fi down con Ethernet conectado; no observa secuencia supplicant WRONG_KEY/no-secrets, pruebas local/remota sincronizadas ni recuperación. El close check exige además una política acotada, roam A/B y rollback sobre GX10/MT7925. El ensayo cambia configuración o servicios; queda diferido hasta habilitar el laboratorio bajo la decisión vigente de desarrollar instrumentos primero. Entrada posterior: journal+NM/supplicant, marca temporal de host local vivo, probe remoto fallido y estado de ruta/AP para el mismo incidente; luego A/B autorizado con timeout/reintentos limitados y rollback comprobado."
+  }
+]
