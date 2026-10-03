@@ -51,6 +51,37 @@ def test_profile_keeps_64k_page_size_from_fixture(tmp_path: Path) -> None:
     assert profile_value(result, "kernel", "page_size_bytes") == 65536
 
 
+def test_effective_tuple_captures_ota_memory_and_loaded_disk_driver_control(tmp_path: Path,
+                                                                           monkeypatch) -> None:
+    records = {
+        "etc/dgx-release": "DGX OS 7.4\nDGX_OTA_VERSION=7.4.1\n",
+        "proc/driver/nvidia/version": "NVIDIA UNIX Open Kernel Module 580.159.03 Release Build\n",
+        "proc/meminfo": "MemTotal: 900 kB\nMemAvailable: 123456 kB\n",
+        "proc/pressure/memory": "some avg10=0.10 avg60=0.20 avg300=0.30 total=4\n",
+    }
+    for relative, value in records.items():
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(value, encoding="utf-8")
+    monkeypatch.setattr(memory_profile, "command", lambda argv: {
+        "status": "ok", "command": argv, "value": "580.159.03"})
+    result = memory_profile.capture(tmp_path)
+    assert profile_value(result, "effective_stack", "dgx_release", "value").startswith("DGX OS 7.4")
+    assert profile_value(result, "effective_stack", "driver_comparison", "match") is True
+    assert profile_value(result, "host_reserve_context", "memavailable", "kib") == 123456
+    assert profile_value(result, "host_reserve_context", "memory_pressure", "status") == "ok"
+
+    monkeypatch.setattr(memory_profile, "command", lambda argv: {
+        "status": "ok", "command": argv, "value": "615.71.09"})
+    mismatch = memory_profile.capture(tmp_path)
+    assert profile_value(mismatch, "effective_stack", "driver_comparison", "match") is False
+    (tmp_path / "proc/meminfo").write_text("MemTotal: 900 kB\n", encoding="utf-8")
+    malformed = memory_profile.capture(tmp_path)
+    assert profile_value(malformed, "host_reserve_context", "memavailable", "status") == "collection_failed"
+    absent = memory_profile.capture(tmp_path / "empty")
+    assert profile_value(absent, "host_reserve_context", "memavailable", "status") == "absent"
+
+
 def test_live_profile_records_running_host_page_size() -> None:
     result = memory_profile.capture()
     assert profile_value(result, "kernel", "page_size_bytes") == os.sysconf("SC_PAGE_SIZE")
