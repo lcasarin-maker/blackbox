@@ -32,3 +32,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Avance de inventario — 2026-10-03
+
+`tools/apt_sources.py` reutiliza `tools.memory_profile.capture` para registrar el tuple local DGX SW build `7.2.3` / OTA `7.6.0` / kernel `6.17.0-1032-nvidia` / driver cargado y en disco `580.178.04`, con igualdad de versiones observada. Captura: `tasks/evidence/BB-INSTRUMENTS-2026-10-03/apt-sources-capture.json`; la salida marca procedencia no verificada y `support_verdict: not evaluated`. No compara contra release notes/OEM ni ejecuta canary, workload, recovery o rollback; el reporte de tuple no demuestra el hallazgo ni cierra la ficha.
