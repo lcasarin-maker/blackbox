@@ -32,3 +32,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+### Evidencia de instrumento (2026-10-03)
+
+Estado: `blocked` para exactitud JSON de tareas largas. `tools/chat_sse_capture.py` preserva deltas de texto, pero no reconstruye/valida la respuesta completa ni dispone de fixtures/captura nativa pareada; no aporta evidencia sobre deriva semántica. La ficha sigue abierta y su `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-contracts.md`.
