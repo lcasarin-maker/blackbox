@@ -1,0 +1,6 @@
+Fuente: SPEC.md en HEAD 0e42e5f7dce9648333da5267af15c4442269158f, línea 307:
+"Cada gate propio de este repo que puede bloquear se verifica con control negativo"
+
+La misma línea registraba que `spec-check` y `no-perder-lineas` sí bloquearon una vez y tres veces, respectivamente, pero las cuatro corridas fueron `could_not_run` el 2026-09-08, sin hallazgo real. La afirmación universal excedía esa evidencia: ninguno de esos dos hooks tenía un control negativo ejecutable en tests.
+
+Fuente corroborante: .simplecode/local_hooks.yaml en el mismo HEAD enumera ambos hooks como bloqueantes. No se encontró selector bajo tests para `spec_check` o `no_perder_lineas` antes de esta corrección.
