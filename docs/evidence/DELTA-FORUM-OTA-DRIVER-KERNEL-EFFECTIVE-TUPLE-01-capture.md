@@ -8,7 +8,7 @@ The prior `memory_profile` captured the running kernel and NVIDIA UVM module ide
 
 `python3 -m pytest -q tests/test_memory_capture_and_cuda_integrity.py`
 
-Literal result: `32 passed in 0.12s` (exit 0). Positive coverage exercises consistent loaded/on-disk driver versions and complete memory records. Negative coverage exercises a loaded/on-disk version mismatch and malformed `MemAvailable`.
+Literal result: `32 passed in 0.11s` (exit 0). Positive coverage exercises consistent loaded/on-disk driver versions and complete memory records. Negative coverage exercises a loaded/on-disk version mismatch, malformed `MemAvailable`, and successful reads with non-text values.
 
 ## Verification evidence
 
@@ -17,3 +17,5 @@ Literal result: `32 passed in 0.12s` (exit 0). Positive coverage exercises consi
 **fail:** The test's altered disk-driver version produces `driver_comparison.match=false`; malformed meminfo produces `memavailable.status=collection_failed`. A preceding read-only general diagnostics capture could not communicate with the NVIDIA driver using `nvidia-smi` in this execution context (return 9), so this evidence does not certify a CUDA workload.
 
 **e2e:** This host observation does not validate the DGX OEM-supported OTA/kernel/driver tuple, firmware/carveout adoption, a post-update workload, recovery boot, or OEM rollback. No package, module, firmware, OTA, reboot, or security setting was changed. The literal close-check selector was run before implementation and failed with pytest `not found` (exit 4); it remains a pending specification and this task stays open.
+
+**Static and schema checks:** Pyright on `tools/memory_profile.py` and `tests/test_memory_capture_and_cuda_integrity.py`: `0 errors, 0 warnings, 0 informations`. Ruff: `All checks passed!`. Ledger schema: `checked=282 passed=282 failed=0 unverified=0 ... avisos=80 could_not_run=0`; the 80 advisories remain printed and are not reported as a clean project-wide result.
