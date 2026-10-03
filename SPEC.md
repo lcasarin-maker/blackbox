@@ -17,21 +17,29 @@ gate_level: legacy-baseline
 
 ## 0. Objective
 
-**Mission**: Que un fallo de esta máquina —cuelgue, crash, OOM, servicio caído—
-deje evidencia suficiente para diagnosticarlo **después**, y que la ausencia de
-un instrumento se vea antes del fallo y no durante la autopsia.
+**Mission**: Prevenir y resolver los crashes y hangs de esta máquina, preservar
+su usabilidad y recuperar el servicio cuando falle. La captura forense y la
+comprobación de instrumentos permiten encontrar causas, elegir correcciones y
+verificar que funcionan; son parte del esfuerzo preventivo y correctivo.
+
+Este objetivo guía el trabajo pendiente. Cada capacidad de protección se
+declara con su alcance y evidencia: un presupuesto firmado registra una
+política, un límite protege las asignaciones que efectivamente controla y un
+watchdog aporta recuperación. La eficacia de cada mecanismo requiere prueba.
 
 ## Purpose
 
-Caja negra de la AI TOP ATOM (NVIDIA GB10, 20 núcleos aarch64, 121 GB de memoria
-unificada). Registra continuamente lo que ninguna otra fuente de la máquina
-cubre, lee las que sí existen en vez de duplicarlas, y declara qué comprobación
-no pudo correr.
+Protección, diagnóstico y resolución de fallos de la AI TOP ATOM (NVIDIA GB10,
+20 núcleos aarch64, 121 GB de memoria unificada). Reutiliza los mecanismos de la
+plataforma y las fuentes existentes; añade los controles y registros que hagan
+falta y declara qué comprobación no pudo correr.
 
 Nace del incidente del 2026-09-07: la app de escritorio de Claude quedó colgada
 con el proceso vivo, la ventana en pantalla y cero renderizadores. El
 diagnóstico descartó OOM, segfault, throttle y térmica, y **no llegó a causa
-raíz**, porque `ulimit -c` era 0 y `systemd-coredump` no estaba instalado.
+raíz**, porque `ulimit -c` era 0 y `systemd-coredump` no estaba instalado. Nace
+como respuesta a crashes y hangs para prevenir su repetición y solucionarlos;
+ese primer hueco de evidencia determinó el comienzo de la implementación.
 
 ## Why now
 
@@ -48,6 +56,16 @@ trabajan en ella y compiten por su memoria unificada.
 
 ## In scope
 
+- Prevención y corrección de crashes, hangs y agotamiento de recursos mediante
+  contención, presupuestos de admisión, configuración de kernel y runtime,
+  ajustes de cargas y correcciones de drivers o firmware cuando corresponda.
+  Incluye investigar y proponer parches, fixes y recomendaciones externas,
+  contrastándolos con el código y la máquina antes de adoptarlos.
+- Cada propuesta preventiva o correctiva especifica el fallo que aborda,
+  versiones y OEM compatibles, evidencia y grado de certeza, riesgos,
+  validación y rollback. Las intervenciones automáticas tienen blancos,
+  disparadores y recuperación explícitos. Las pruebas distinguen prevención,
+  mitigación, diagnóstico y recuperación, y registran fallos de colección.
 - Muestreo de lo no cubierto: renderizadores por app Electron, zombis, PSI,
   linaje de procesos (unit de cgroup), estado del motor de inferencia.
 - Informe forense por ventana temporal (`bb scan`) que cruza todas las fuentes,

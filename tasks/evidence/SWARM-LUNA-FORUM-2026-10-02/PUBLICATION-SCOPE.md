@@ -1,0 +1,5 @@
+# Alcance del commit de auditoría
+
+Rama creada desde origin/master (70d3078). Incluye el dive NVIDIA, la corrección del objetivo de BB, 26 fichas de investigación y la evidencia de esta investigación. Excluye los cinco commits de desarrollo/registro que estaban pendientes en la rama master local y sus avances de implementación. En fichas compartidas se publican los complementos de investigación, conservando el desarrollo concurrente en su rama original. Los verificadores de cierre permanecen pendientes en esta rama. Los resultados documentales realizados en el workspace original conservan ese contexto; no acreditan ejecución de mecanismos en esta rama de publicación.
+
+El corpus bruto, adjuntos y scripts auxiliares se conservan localmente en el workspace original; se publica RAW-CORPUS-MANIFEST.json con tamaños y SHA-256. La entrega Git incluye los resultados finales y el registro trazable, con enlaces a fuentes públicas. El primer commit fue rechazado por alertas del corpus y controles de los scripts; esta entrega documental evita publicar esos artefactos, conservando la evidencia local y los hooks activos.

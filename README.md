@@ -1,9 +1,12 @@
 # blackbox
 
-A black box for NVIDIA GB10-class AI workstations — DGX Spark, ASUS Ascent
-GX10, Gigabyte AI TOP ATOM, and the other partner boxes built on the same
-chip. It records what you need to diagnose a failure **after** it happens,
-and tells you which instrument isn't armed *before* the next one.
+Prevention, diagnosis and recovery for NVIDIA GB10-class AI workstations — DGX
+Spark, ASUS Ascent GX10, Gigabyte AI TOP ATOM, and the other partner boxes built
+on the same chip. Born in response to crashes and hangs, `blackbox` aims to
+prevent recurrence and resolve failures. It combines bounded interventions,
+forensic capture and checks that show which instruments are armed before the
+next incident. Each protection claim depends on the mechanism's verified
+coverage.
 
 This hardware class is new enough that a lot of the failure modes are still
 being figured out in public, one NVIDIA forum thread at a time: silent
