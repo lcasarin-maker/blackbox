@@ -28,3 +28,8 @@ Reutilizar el estado de DPKG/APT, journal del kernel y sysfs existentes para reg
 ## Riesgos y criterio de cierre
 
 Un host sin teclado (headless) puede ser normal; algunos kernels integran controladores en vez de exponerlos en `lsmod`. Una regla que exija siempre módulos visibles o teclado local produciría falsas alarmas. Prueba controlada en fixtures de módulo cargado, módulo integrado, módulo ausente, no hay dispositivo de entrada conectado, DPKG roto y kernel sano. Incluye una actualización segura en laboratorio y un caso negativo de xHCI vivo con HID ausente. Para cualquier corrección automática, registra disparador, escalada segura, rollback al kernel anterior y resultado del acceso local/remoto; no prueba la protección con interrupciones destructivas en el equipo de uso.
+
+
+## Avance de instrumentación 2026-10-03
+
+`tools.host_diagnostics` ahora relaciona entradas HID con el USB ancestro más cercano y conserva fallos de telemetría como `could_not_run`; la captura disponible no observó entradas HID. El avance y la limitación están documentados en [BB-INSTRUMENTS-devices](../../docs/evidence/BB-INSTRUMENTS-devices.md). La ficha sigue abierta y el close_check original permanece pendiente.
