@@ -1,0 +1,6 @@
+Captured: 2026-10-03T02:20:44-06:00
+
+$ journalctl --since 2026-09-25 02:30:00 --until 2026-09-25 05:15:00 --no-pager -o short-iso | rg -F -e "snap.antigravity.antigravity-1607e432-e2a9-4fac-b577-f7c55606a425.scope: Consumed" -e "app-com.anthropic.Claude-345364.scope: Consumed" -e "System is rebooting."
+2026-09-25T05:00:57-06:00 aitopatom-41f1 systemd[259773]: snap.antigravity.antigravity-1607e432-e2a9-4fac-b577-f7c55606a425.scope: Consumed 2h 37min 13.963s CPU time.
+2026-09-25T05:08:26-06:00 aitopatom-41f1 systemd-logind[2464]: System is rebooting.
+2026-09-25T05:08:27-06:00 aitopatom-41f1 systemd[259773]: app-com.anthropic.Claude-345364.scope: Consumed 15h 9min 54.203s CPU time, 29.6G memory peak, 1.3G memory swap peak.

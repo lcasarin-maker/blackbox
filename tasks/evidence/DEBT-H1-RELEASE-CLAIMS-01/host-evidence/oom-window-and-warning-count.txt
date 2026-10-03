@@ -1,0 +1,12 @@
+Captured: 2026-10-03T02:32:40-06:00
+
+$ journalctl --since 2026-09-25 02:55:00 --until 2026-09-25 05:08:33 --no-pager -o short-iso | rg "Memory cgroup out of memory: Killed process|System is rebooting|watchdog timeout|Kernel panic"
+2026-09-25T02:55:53-06:00 aitopatom-41f1 kernel: Memory cgroup out of memory: Killed process 376857 (python) total-vm:6321504kB, anon-rss:1044000kB, file-rss:6320kB, shmem-rss:0kB, UID:1000 pgtables:4188kB oom_score_adj:100
+2026-09-25T02:57:02-06:00 aitopatom-41f1 kernel: Memory cgroup out of memory: Killed process 381009 (python3) total-vm:6321504kB, anon-rss:1043840kB, file-rss:6320kB, shmem-rss:0kB, UID:1000 pgtables:4192kB oom_score_adj:100
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel: Memory cgroup out of memory: Killed process 412744 (python) total-vm:6321504kB, anon-rss:1044000kB, file-rss:6320kB, shmem-rss:0kB, UID:1000 pgtables:4188kB oom_score_adj:100
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel: Memory cgroup out of memory: Killed process 493478 (python3) total-vm:6321504kB, anon-rss:1042240kB, file-rss:6308kB, shmem-rss:0kB, UID:1000 pgtables:4180kB oom_score_adj:100
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel: Memory cgroup out of memory: Killed process 533701 (python3) total-vm:6321504kB, anon-rss:1044000kB, file-rss:6320kB, shmem-rss:0kB, UID:1000 pgtables:4184kB oom_score_adj:100
+2026-09-25T05:08:26-06:00 aitopatom-41f1 systemd-logind[2464]: System is rebooting.
+
+$ journalctl --since 2026-09-25 03:00:00 --until 2026-09-25 05:08:26 -p warning --no-pager -o short-iso | wc -l
+389

@@ -1,0 +1,523 @@
+zero debt (repo-wide ship freeze).........................................................Failed
+- hook id: zero-debt-repo
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: zero-debt-repo exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=ce6a62d0b222
+[zero-debt] mode: zero  lane: repo-wide
+[zero-debt] files scanned: 64  findings: 6  files with findings: 2
+[zero-debt] HALLAZGOS: 6
+[zero-debt] DETECTORES: {"blocking_sleep":2,"hardcoded_path":2,"unencoded_file_io":2}
+[zero-debt] .py left OUTSIDE this scan: 1 (git-ignored (.gitignore); not part of the product)
+[zero-debt] dispositions (Acta 83): PASSED=62 CONVICTED=2 EXEMPT_CORPUS=0 EXEMPT_FIXTURE=0 EXEMPT_VENDORED=0 COULD_NOT_RUN=0
+[zero-debt] detectors judged (GATE_DETECTORS): 24
+[zero-debt] detectors excluded by volume: 0 ()
+[zero-debt] could_not_run: 0
+[zero-debt] corpus declarado (no juzgado): 0
+[zero-debt] violations: 2
+  - tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py (3 findings: hardcoded_path, unencoded_file_io, unencoded_file_io, unencoded_file_io, unencoded_file_io, unencoded_file_io, blocking_sleep, blocking_sleep, blocking_sleep)
+  - tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py (3 findings: hardcoded_path, unencoded_file_io, unencoded_file_io, unencoded_file_io, unencoded_file_io, blocking_sleep)
+[zero-debt] findings (JSONL): 15
+  {"detector_id": "hardcoded_path", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 3, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:3: hardcoded_path: hardcoded absolute path '/home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02'", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 46, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:46: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 49, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:49: unencoded_file_io: .read_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 36, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:36: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 42, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:42: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 21, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:21: unencoded_file_io: .read_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 48, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:48: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
+  {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 32, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:32: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
+  {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 16, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:16: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
+  {"detector_id": "hardcoded_path", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 3, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:3: hardcoded_path: hardcoded absolute path '/home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02'", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 36, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:36: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 17, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:17: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 26, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:26: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 15, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:15: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 35, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:35: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
+BLOCKED [zero-debt] - policy is zero debt, with no grandfathering.
+[zero-debt] FAIL: 2 violation(es); primera tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:3 (hardcoded_path)
+
+coverage target (ratchet: never below watermark)..........................................Failed
+- hook id: coverage-floor
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [  8%]
+........................................................................ [ 16%]
+........................................................................ [ 24%]
+........................................................................ [ 32%]
+........................................................................ [ 40%]
+........................................................................ [ 49%]
+........................................................................ [ 57%]
+........................................................................ [ 65%]
+........................................................................ [ 73%]
+.............................................F.......................... [ 81%]
+........................................................................ [ 90%]
+........................................................................ [ 98%]
+...............                                                          [100%]
+=================================== FAILURES ===================================
+___________________ test_debt_schema_evidence_index_scope_01 ___________________
+[gw1] linux -- Python 3.12.11 /opt/miniforge3/bin/python
+tests/test_debt_registration_controls.py:36: in test_debt_schema_evidence_index_scope_01
+    assert positive.returncode == 0, positive.stdout + positive.stderr
+E   AssertionError: checked=274 passed=271 failed=1 unverified=0 (sin close_check enunciado: 0) avisos=80 could_not_run=2
+E       AVISO BUG-PROVIDER-TRACE-LATENCY-OVERFLOW-01.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO DEBT-BB-SAMPLE-SIN-TECHO-DE-TIEMPO-SE-QUEDO-COLGADO-EN-EL-COLAPSO.md: title de 117 chars, por encima de 100 recomendado
+E       AVISO DEBT-CONFIG-ADOPTADA-QUE-NINGUN-SCRIPT-INSTALA.md: title de 114 chars, por encima de 100 recomendado
+E       AVISO DEBT-DGX-438-SIN-CAUSA-RAIZ.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP.md: title de 101 chars, por encima de 100 recomendado
+E       AVISO DEBT-GATE-EFFECTIVENESS-SIN-ESTADO-LEGAL.md: title de 111 chars, por encima de 100 recomendado
+E       AVISO DEBT-NOQA-BB-USABLE-249.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO DEBT-RUFF-BB-USABLE-01.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO DEBT-SHELLCHECK-BB-2.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO DEBT-SHELLCHECK-BB-2286.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO DEBT-SHELLCHECK-BB-SUBJECT-01.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO DEBT-TECHOS-SIN-CALIBRAR.md: title de 114 chars, por encima de 100 recomendado
+E       AVISO DEBT-TECHOS-SIN-CALIBRAR.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO DEBT-TRES-CHEQUEOS-POR-IS-ACTIVE.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO.md: title de 109 chars, por encima de 100 recomendado
+E       AVISO DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO FEATURE-FAN-RPM.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO FEATURE-GPU-XID-DETECTION.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO FEATURE-KDUMP-PSTORE-PREAPAGADO.md: title de 111 chars, por encima de 100 recomendado
+E       AVISO FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-347951-dgx-spark-boot-failure-after-installing-llm-m.md: title de 108 chars, por encima de 100 recomendado
+E       AVISO HARVEST-348223-dgx-spark-gpu-crash.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-348356-step-1-of-text-to-knowledge-graph-playbook-ha.md: title de 114 chars, por encima de 100 recomendado
+E       AVISO HARVEST-348356-step-1-of-text-to-knowledge-graph-playbook-ha.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-348760-dgx-spark-low-fan-speed-high-temps-device-ver.md: title de 109 chars, por encima de 100 recomendado
+E       AVISO HARVEST-351340-weird-network-behaviour.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-351579-reinstalling-the-nvidia-driver-on-dgx-spark.md: title de 102 chars, por encima de 100 recomendado
+E       AVISO HARVEST-353218-lmstudio-error-cannot-obtain-free-vram-bytes-.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-353683-dgx-spark-gpu-usage-0-after-24-hours-open-web.md: title de 106 chars, por encima de 100 recomendado
+E       AVISO HARVEST-353683-dgx-spark-gpu-usage-0-after-24-hours-open-web.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-354167-dgx-spark-nvme-drive-not-detected-no-nvme-dev.md: title de 113 chars, por encima de 100 recomendado
+E       AVISO HARVEST-354194-my-dgx-system-is-getting-shut-itself-down-whi.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-354194-my-dgx-system-is-getting-shut-itself-down-whi.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-354764-dgx-spark-ethernet-connection-unstable-after-.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-354764-dgx-spark-ethernet-connection-unstable-after-.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-355453-dgx-spark-xhci-controller-hc-died-crashes-wit.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-355865-problem-with-simple-framebuffer.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-358034-shutdown-under-high-utilization-during-image-.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-362015-all-usb-connections-fall-back-to-480-mbps-usb.md: title de 108 chars, por encima de 100 recomendado
+E       AVISO HARVEST-362015-all-usb-connections-fall-back-to-480-mbps-usb.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-362964-vllm-100-cpu-usage-when-idle-again.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-363224-i-cannot-login-to-dgx-spark-i-cannot-ssh-into.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-364166-latest-update-20mar-2026-on-nvidia-spark-fe-c.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-364166-latest-update-20mar-2026-on-nvidia-spark-fe-c.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-364636-with-two-sparks-vllm-0-18-1rc0-still-hammerin.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-365609-nvidia-dgx-spark-continuously-freezing-hangin.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-365609-nvidia-dgx-spark-continuously-freezing-hangin.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-366125-ethernet-port-on-dgx-spark-is-not-working.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-366147-collective-operations-timeout-on-dual-spark-d.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-366211-my-gui-is-gone-and-nvidia-smi-is-not-working.md: title de 103 chars, por encima de 100 recomendado
+E       AVISO HARVEST-366211-my-gui-is-gone-and-nvidia-smi-is-not-working.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-366436-lm-studio-models-overload-freezes-spark.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-366877-sparkview-gpu-monitor-tool-with-gb10-aware-un.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-366944-power-delivery-bug-how-im-catching-it-early.md: title de 102 chars, por encima de 100 recomendado
+E       AVISO HARVEST-367765-dear-nvidia-nvidia-smi-is-broken-on-the-dgx-s.md: title de 108 chars, por encima de 100 recomendado
+E       AVISO HARVEST-369716-dgx-spark-shut-down-without-rebooting.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-370080-dgx-spark-gb10-fan-not-spinning-80-c-at-idle-.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-370080-dgx-spark-gb10-fan-not-spinning-80-c-at-idle-.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-371753-heat-and-power-numbers-for-asus-gx-10-4-days-.md: title de 121 chars, por encima de 100 recomendado
+E       AVISO HARVEST-372469-dgx-spark-shutting-down-under-load-mods-02000.md: title de 111 chars, por encima de 100 recomendado
+E       AVISO HARVEST-372642-my-spark-is-overheating-when-clustered-and-ru.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-372662-cooler-gb10-temps-almost-no-performance-lost.md: title de 103 chars, por encima de 100 recomendado
+E       AVISO HARVEST-373187-dgx-wont-boot-tried-all-documented-methods-fr.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-373251-dgx-spark-gb10-reproducibly-hard-powers-off-u.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-373251-dgx-spark-gb10-reproducibly-hard-powers-off-u.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-373655-ubuntu-26-04-drivers-610-cuda-toolkit-13-3-zf.md: title de 113 chars, por encima de 100 recomendado
+E       AVISO HARVEST-374016-dgx-spark-gb10-gpu-fails-to-initialize-gsp-fi.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-374016-dgx-spark-gb10-gpu-fails-to-initialize-gsp-fi.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-374274-suddenly-much-lower-gpu-performance-in-infere.md: title de 107 chars, por encima de 100 recomendado
+E       AVISO HARVEST-374274-suddenly-much-lower-gpu-performance-in-infere.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-376039-dgx-spark-gb10-gpu-clock-pinned-at-721-mhz-un.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-377044-dgx-spark-gb10-thermal-throttling-after-ec-ue.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-377375-what-are-normal-temps-under-load-is-94-6c-too.md: title de 108 chars, por encima de 100 recomendado
+E       AVISO HARVEST-378500-dgx-spark-is-not-suitable-for-professional-wo.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-379195-dgx-spark-hard-freezes-under-sustained-few-mi.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-379303-severe-one-way-rdma-performance-regression-on.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-379959-gb10-spontaneous-reboots-after-july-2026-upda.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-379959-gb10-spontaneous-reboots-after-july-2026-upda.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       AVISO HARVEST-380009-asm2464pd-usb-c-3-2-2x2-enclosure-always-fall.md: title de 122 chars, por encima de 100 recomendado
+E       AVISO HARVEST-380009-asm2464pd-usb-c-3-2-2x2-enclosure-always-fall.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+E       COULD_NOT_RUN DEBT-PYRIGHT-LOCAL-TEST-TYPES-01.md: campo detector deberia ser JSON y no lo es: '{rule: "pyright: reportIndexIssue, reportArgumentType y repo'
+E       COULD_NOT_RUN DEBT-PYRIGHT-SCAN-SAMPLES-BOOT-ID-01.md: campo detector deberia ser JSON y no lo es: '{rule: "pyright: reportArgumentType for boot_id dictionary k'
+E       FAIL DEBT-PII-HOST-DIAGNOSTICS-CONTACT-01.md
+E             - kind fuera de dominio: '"task"' no está en ['bug', 'debt', 'risk', 'task']
+E             - status fuera de dominio: '"done"' no está en ['done', 'done_unverified', 'open']
+E             - severity fuera de dominio: '"P2"' no está en ['P0', 'P1', 'P2', 'P3']
+E             - origin fuera de dominio: '"detected"' no está en ['asserted', 'detected']
+E             - satd_family fuera de patrón: '"BLIND_INSTRUMENT"'
+E             - created no es ISO-8601: '"2026-10-03"'
+E             - Prohibited inline code execution flag in verification_command: python3 -c 'import subprocess; subprocess.run(["python3", "-m", "pytest", "-q", "tests/test_host_diagnostics.py"], check=True); subprocess.run(["python3", ".simplecode/run.py", "simplecode.verification.pii_scan", "--root", "."], check=True)'
+E       mediciones compartidas: 1 artefacto(s) citado(s) por 34 ficha(s)
+E         shared:harvest-decision-registrada <- 34 ficha(s): HARVEST-348760-dgx-spark-low-fan-speed-high-temps-device-ver.md, HARVEST-352519-kernel-panic.md, HARVEST-353218-lmstudio-error-cannot-obtain-free-vram-bytes-.md, HARVEST-354167-dgx-spark-nvme-drive-not-detected-no-nvme-dev.md, HARVEST-354395-can-not-reset-spark-gpu.md, HARVEST-355625-dgx-spark-dashboard-modification.md, HARVEST-363224-i-cannot-login-to-dgx-spark-i-cannot-ssh-into.md, HARVEST-364636-with-two-sparks-vllm-0-18-1rc0-still-hammerin.md, HARVEST-365938-fabricmanager-will-not-run.md, HARVEST-366147-collective-operations-timeout-on-dual-spark-d.md, HARVEST-366877-sparkview-gpu-monitor-tool-with-gb10-aware-un.md, HARVEST-366944-power-delivery-bug-how-im-catching-it-early.md, HARVEST-367765-dear-nvidia-nvidia-smi-is-broken-on-the-dgx-s.md, HARVEST-371753-heat-and-power-numbers-for-asus-gx-10-4-days-.md, HARVEST-372469-dgx-spark-shutting-down-under-load-mods-02000.md, HARVEST-372642-my-spark-is-overheating-when-clustered-and-ru.md, HARVEST-372662-cooler-gb10-temps-almost-no-performance-lost.md, HARVEST-373187-dgx-wont-boot-tried-all-documented-methods-fr.md, HARVEST-373342-dgx-spark-failing-fieldiag-powerstress.md, HARVEST-373655-ubuntu-26-04-drivers-610-cuda-toolkit-13-3-zf.md, HARVEST-376103-sparks-have-recently-powered-off-randomly.md, HARVEST-377044-dgx-spark-gb10-thermal-throttling-after-ec-ue.md, HARVEST-377375-what-are-normal-temps-under-load-is-94-6c-too.md, HARVEST-378031-msi-edge-expert-nvme-devices-not-found.md, HARVEST-378500-dgx-spark-is-not-suitable-for-professional-wo.md, HARVEST-379195-dgx-spark-hard-freezes-under-sustained-few-mi.md, HARVEST-379303-severe-one-way-rdma-performance-regression-on.md, HARVEST-379778-what-is-your-power-management-solution.md, HARVEST-DanTup-dgx-dashboard.md, HARVEST-OyqXscpDRJo.md, HARVEST-grafana-grafana.md, HARVEST-niklasfrick-spark-dashboard.md, HARVEST-with-dgx-spark-enterprise.md, HARVEST-with-unified-memory-363137.md
+E       e2e que no nombran el sujeto de su ficha: 34 de 173 juzgados (0 sin artefacto legible que juzgar) -- avisados uno a uno solo los nacidos desde 2026-09-06
+E     [ledger-schema] HALLAZGOS: 1
+E     [ledger-schema] FAIL: 1 ficha(s) con esquema invalido; primera tasks/DEBT-PII-HOST-DIAGNOSTICS-CONTACT-01.md (kind fuera de dominio: '"task"' no está en ['bug', 'debt', 'risk', 'task'])
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['/opt/miniforge3/bin/python', '/home/lcasarin/projects/blackbox/.simplecode/run.py', 'simplecod...ICS-CONTACT-01.md (kind fuera de dominio: \'"task"\' no está en [\'bug\', \'debt\', \'risk\', \'task\'])\n', stderr='').returncode
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.11-final-0 _______________
+
+Coverage JSON written to file /home/lcasarin/projects/blackbox/.simplecode/coverage.json
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_debt_schema_evidence_index_scope_01
+1 failed, 878 passed in 113.03s (0:01:53)
+[coverage] interpreter: /opt/miniforge3/bin/python (python 3.12.11)
+/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+  warner(PytestBenchmarkWarning(text))
+/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+  warner(PytestBenchmarkWarning(text))
+/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+  warner(PytestBenchmarkWarning(text))
+/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+  warner(PytestBenchmarkWarning(text))
+/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+  warner(PytestBenchmarkWarning(text))
+/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+  warner(PytestBenchmarkWarning(text))
+/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+  warner(PytestBenchmarkWarning(text))
+[gate-runner] FAIL: coverage-100 exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=73fa35ab4cb7
+
+pyright (type checking)...................................................................Failed
+- hook id: pyright
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: pyright exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=69020127f9fa
+/home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py
+  /home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:27:16 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+  /home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:32:26 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+  /home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:35:9 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+  /home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:38:18 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+/home/lcasarin/projects/blackbox/tests/test_scan_samples.py
+  /home/lcasarin/projects/blackbox/tests/test_scan_samples.py:105:18 - error: Argument of type "None" cannot be assigned to parameter "boot" of type "str" in function "_fila"
+    "None" is not assignable to "str" (reportArgumentType)
+  /home/lcasarin/projects/blackbox/tests/test_scan_samples.py:106:18 - error: Argument of type "Literal[7]" cannot be assigned to parameter "boot" of type "str" in function "_fila"
+    "Literal[7]" is not assignable to "str" (reportArgumentType)
+  /home/lcasarin/projects/blackbox/tests/test_scan_samples.py:107:18 - error: Argument of type "dict[Any, Any]" cannot be assigned to parameter "boot" of type "str" in function "_fila" (reportArgumentType)
+  /home/lcasarin/projects/blackbox/tests/test_scan_samples.py:114:31 - error: Argument of type "list[str]" cannot be assigned to parameter "boot" of type "str" in function "_fila"
+    "list[str]" is not assignable to "str" (reportArgumentType)
+8 errors, 0 warnings, 0 informations
+WARNING: there is a new pyright version available (v1.1.411 -> v1.1.414).
+Please install the new version or set PYRIGHT_PYTHON_FORCE_VERSION to `latest`
+
+no third-party PII (RFC/CURP) in tasks/ or docs/..........................................Passed
+Judge-Zero forensic auditor...............................................................Failed
+- hook id: adversarial-judge
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: adversarial-judge exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=e121f803a592
+=== ADVERSARIAL RED-TEAM JUDGE (JUDGE-ZERO) ===
+[judge-zero] threat sweep read 0 file(s) across <no tree>
+[judge-zero] NOT swept (absent in this repo): src, scripts, daemon, central, installer
+[judge-zero] detected 4 finding(s) this run:
+  🔴 Mock Theater (GS2-216) in test_debt_registration_controls.py::test_debt_broad_except_cgroup_repro_150: Function mocks dependencies but contains no non-trivial asserts.
+  🔴 Mock Theater (GS2-216) in test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_1602: Assertions do not observe a call result or mocked behavior.
+  🔴 Mock Theater (GS2-216) in test_provider_trace.py::test_module_entrypoint: Assertions do not observe a call result or mocked behavior.
+  🔴 Mock Theater (GS2-216) in test_read_integrity.py::test_invalid_bounds_and_reference_rejected: pytest.raises context lacks exception match or exc_info assertions.
+[adversarial-judge] FAIL: 4 condemned finding(s) (mock-theater/source-disguise); first: Mock Theater (GS2-216) in test_debt_registration_controls.py::test_debt_broad_except_cgroup_repro_150: Function mocks dependencies but contains no non-trivial asserts.
+[adversarial-judge] HALLAZGOS: 4
+
+sintaxis de los scripts bash..............................................................Passed
+cobertura de bin/bb no baja del piso......................................................Passed
+SPEC.md inventaria lo que el repo ejecuta y posee.........................................Passed
+version reflects what shipped (semver from Conventional Commits)..........................Failed
+- hook id: version-bump
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: version-bump exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=41bb682e3ea4
+[sunset-audit] version=2.2.0 (20 exemption(s) found)
+[sunset-audit] stale: 17 of 20 versioned exemption(s), compared against 2.2
+  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:8  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:15  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:21  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:26  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:30  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:35  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:50  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:60  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:65  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:67  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:69  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:71  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/tools/atom_gpu_telemetry.py:1693  [blocking-sleep-override]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:782  [blocking-sleep-override]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:818  [blocking-sleep-override]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:1577  [blocking-sleep-override]  (current: 2.2)
+  STALE(2.1)  /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:1629  [blocking-sleep-override]  (current: 2.2)
+  OK(2.2)   /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:92  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:189  [blocking-sleep-override]
+  OK(2.2)   /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:226  [blocking-sleep-override]
+[sunset-audit] FAIL — 17 exemption(s) require review.
+[version-bump] HALLAZGOS: 17
+[version-bump] MINOR bump due: 36 commit(s) since 2.1.0 include a feat/fix/breaking change with no version bump yet.
+[version-bump] además, tras el bump el ledger H1 necesitará: 12 unaudited claim(s): SPEC-L118, SPEC-L122, SPEC-L134, SPEC-L306, SPEC-L307, SPEC-L308, SPEC-L309, SPEC-L310, SPEC-L311, SPEC-L312
+[version-bump] BLOCKED: sunset-audit would fail after the pending minor bump (2.1.0 -> 2.2.0).
+  17 exemption(s) need a review before this bump can land. They are listed above, each with its file and line.
+  A REVIEW is a question with a real answer: has this line CHANGED since anyone last looked at it? Answer it, do not stamp it -- `git show <sha>:<file>` and compare the line.
+  Then re-date it to the version being cut:  # sunset-reviewed: 2.2 -- <why it is still correct>
+  There is no way to retire the clock: TODA exencion caduca (decision de Luis, 2026-09-15). `permanent` fue abolido porque dejo a la mitad `stale` de la compuerta sin un solo sujeto -- 86 de 86 exenciones de este repo lo llevaban, y el gate devolvia PASS contra cualquier version futura. Si la razon de verdad no depende de la version, sigue re-fechandola cada minor: ese roce es el precio de que alguien la relea.
+
+task schema is typed and closed tasks carry evidence......................................Failed
+- hook id: ledger-schema
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+checked=274 passed=271 failed=1 unverified=0 (sin close_check enunciado: 0) avisos=80 could_not_run=2
+  AVISO BUG-PROVIDER-TRACE-LATENCY-OVERFLOW-01.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO DEBT-BB-SAMPLE-SIN-TECHO-DE-TIEMPO-SE-QUEDO-COLGADO-EN-EL-COLAPSO.md: title de 117 chars, por encima de 100 recomendado
+  AVISO DEBT-CONFIG-ADOPTADA-QUE-NINGUN-SCRIPT-INSTALA.md: title de 114 chars, por encima de 100 recomendado
+  AVISO DEBT-DGX-438-SIN-CAUSA-RAIZ.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP.md: title de 101 chars, por encima de 100 recomendado
+  AVISO DEBT-GATE-EFFECTIVENESS-SIN-ESTADO-LEGAL.md: title de 111 chars, por encima de 100 recomendado
+  AVISO DEBT-NOQA-BB-USABLE-249.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO DEBT-RUFF-BB-USABLE-01.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO DEBT-SHELLCHECK-BB-2.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO DEBT-SHELLCHECK-BB-2286.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO DEBT-SHELLCHECK-BB-SUBJECT-01.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO DEBT-TECHOS-SIN-CALIBRAR.md: title de 114 chars, por encima de 100 recomendado
+  AVISO DEBT-TECHOS-SIN-CALIBRAR.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO DEBT-TRES-CHEQUEOS-POR-IS-ACTIVE.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO.md: title de 109 chars, por encima de 100 recomendado
+  AVISO DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO FEATURE-FAN-RPM.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO FEATURE-GPU-XID-DETECTION.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO FEATURE-KDUMP-PSTORE-PREAPAGADO.md: title de 111 chars, por encima de 100 recomendado
+  AVISO FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-347951-dgx-spark-boot-failure-after-installing-llm-m.md: title de 108 chars, por encima de 100 recomendado
+  AVISO HARVEST-348223-dgx-spark-gpu-crash.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-348356-step-1-of-text-to-knowledge-graph-playbook-ha.md: title de 114 chars, por encima de 100 recomendado
+  AVISO HARVEST-348356-step-1-of-text-to-knowledge-graph-playbook-ha.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-348760-dgx-spark-low-fan-speed-high-temps-device-ver.md: title de 109 chars, por encima de 100 recomendado
+  AVISO HARVEST-351340-weird-network-behaviour.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-351579-reinstalling-the-nvidia-driver-on-dgx-spark.md: title de 102 chars, por encima de 100 recomendado
+  AVISO HARVEST-353218-lmstudio-error-cannot-obtain-free-vram-bytes-.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-353683-dgx-spark-gpu-usage-0-after-24-hours-open-web.md: title de 106 chars, por encima de 100 recomendado
+  AVISO HARVEST-353683-dgx-spark-gpu-usage-0-after-24-hours-open-web.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-354167-dgx-spark-nvme-drive-not-detected-no-nvme-dev.md: title de 113 chars, por encima de 100 recomendado
+  AVISO HARVEST-354194-my-dgx-system-is-getting-shut-itself-down-whi.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-354194-my-dgx-system-is-getting-shut-itself-down-whi.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-354764-dgx-spark-ethernet-connection-unstable-after-.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-354764-dgx-spark-ethernet-connection-unstable-after-.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-355453-dgx-spark-xhci-controller-hc-died-crashes-wit.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-355865-problem-with-simple-framebuffer.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-358034-shutdown-under-high-utilization-during-image-.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-362015-all-usb-connections-fall-back-to-480-mbps-usb.md: title de 108 chars, por encima de 100 recomendado
+  AVISO HARVEST-362015-all-usb-connections-fall-back-to-480-mbps-usb.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-362964-vllm-100-cpu-usage-when-idle-again.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-363224-i-cannot-login-to-dgx-spark-i-cannot-ssh-into.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-364166-latest-update-20mar-2026-on-nvidia-spark-fe-c.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-364166-latest-update-20mar-2026-on-nvidia-spark-fe-c.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-364636-with-two-sparks-vllm-0-18-1rc0-still-hammerin.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-365609-nvidia-dgx-spark-continuously-freezing-hangin.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-365609-nvidia-dgx-spark-continuously-freezing-hangin.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-366125-ethernet-port-on-dgx-spark-is-not-working.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-366147-collective-operations-timeout-on-dual-spark-d.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-366211-my-gui-is-gone-and-nvidia-smi-is-not-working.md: title de 103 chars, por encima de 100 recomendado
+  AVISO HARVEST-366211-my-gui-is-gone-and-nvidia-smi-is-not-working.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-366436-lm-studio-models-overload-freezes-spark.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-366877-sparkview-gpu-monitor-tool-with-gb10-aware-un.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-366944-power-delivery-bug-how-im-catching-it-early.md: title de 102 chars, por encima de 100 recomendado
+  AVISO HARVEST-367765-dear-nvidia-nvidia-smi-is-broken-on-the-dgx-s.md: title de 108 chars, por encima de 100 recomendado
+  AVISO HARVEST-369716-dgx-spark-shut-down-without-rebooting.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-370080-dgx-spark-gb10-fan-not-spinning-80-c-at-idle-.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-370080-dgx-spark-gb10-fan-not-spinning-80-c-at-idle-.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-371753-heat-and-power-numbers-for-asus-gx-10-4-days-.md: title de 121 chars, por encima de 100 recomendado
+  AVISO HARVEST-372469-dgx-spark-shutting-down-under-load-mods-02000.md: title de 111 chars, por encima de 100 recomendado
+  AVISO HARVEST-372642-my-spark-is-overheating-when-clustered-and-ru.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-372662-cooler-gb10-temps-almost-no-performance-lost.md: title de 103 chars, por encima de 100 recomendado
+  AVISO HARVEST-373187-dgx-wont-boot-tried-all-documented-methods-fr.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-373251-dgx-spark-gb10-reproducibly-hard-powers-off-u.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-373251-dgx-spark-gb10-reproducibly-hard-powers-off-u.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-373655-ubuntu-26-04-drivers-610-cuda-toolkit-13-3-zf.md: title de 113 chars, por encima de 100 recomendado
+  AVISO HARVEST-374016-dgx-spark-gb10-gpu-fails-to-initialize-gsp-fi.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-374016-dgx-spark-gb10-gpu-fails-to-initialize-gsp-fi.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-374274-suddenly-much-lower-gpu-performance-in-infere.md: title de 107 chars, por encima de 100 recomendado
+  AVISO HARVEST-374274-suddenly-much-lower-gpu-performance-in-infere.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-376039-dgx-spark-gb10-gpu-clock-pinned-at-721-mhz-un.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-377044-dgx-spark-gb10-thermal-throttling-after-ec-ue.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-377375-what-are-normal-temps-under-load-is-94-6c-too.md: title de 108 chars, por encima de 100 recomendado
+  AVISO HARVEST-378500-dgx-spark-is-not-suitable-for-professional-wo.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-379195-dgx-spark-hard-freezes-under-sustained-few-mi.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-379303-severe-one-way-rdma-performance-regression-on.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-379959-gb10-spontaneous-reboots-after-july-2026-upda.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-379959-gb10-spontaneous-reboots-after-july-2026-upda.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  AVISO HARVEST-380009-asm2464pd-usb-c-3-2-2x2-enclosure-always-fall.md: title de 122 chars, por encima de 100 recomendado
+  AVISO HARVEST-380009-asm2464pd-usb-c-3-2-2x2-enclosure-always-fall.md: e2e no nombra el sujeto de su ficha: el artefacto no menciona ni el `id` ni un argumento de su `close_check` -- si dice el estado del repo (ruff limpio, pytest verde) eso ya lo mide el pre-push, y no es evidencia de ESTA ficha
+  COULD_NOT_RUN DEBT-PYRIGHT-LOCAL-TEST-TYPES-01.md: campo detector deberia ser JSON y no lo es: '{rule: "pyright: reportIndexIssue, reportArgumentType y repo'
+  COULD_NOT_RUN DEBT-PYRIGHT-SCAN-SAMPLES-BOOT-ID-01.md: campo detector deberia ser JSON y no lo es: '{rule: "pyright: reportArgumentType for boot_id dictionary k'
+  FAIL DEBT-PII-HOST-DIAGNOSTICS-CONTACT-01.md
+        - kind fuera de dominio: '"task"' no está en ['bug', 'debt', 'risk', 'task']
+        - status fuera de dominio: '"done"' no está en ['done', 'done_unverified', 'open']
+        - severity fuera de dominio: '"P2"' no está en ['P0', 'P1', 'P2', 'P3']
+        - origin fuera de dominio: '"detected"' no está en ['asserted', 'detected']
+        - satd_family fuera de patrón: '"BLIND_INSTRUMENT"'
+        - created no es ISO-8601: '"2026-10-03"'
+        - Prohibited inline code execution flag in verification_command: python3 -c 'import subprocess; subprocess.run(["python3", "-m", "pytest", "-q", "tests/test_host_diagnostics.py"], check=True); subprocess.run(["python3", ".simplecode/run.py", "simplecode.verification.pii_scan", "--root", "."], check=True)'
+  mediciones compartidas: 1 artefacto(s) citado(s) por 34 ficha(s)
+    shared:harvest-decision-registrada <- 34 ficha(s): HARVEST-348760-dgx-spark-low-fan-speed-high-temps-device-ver.md, HARVEST-352519-kernel-panic.md, HARVEST-353218-lmstudio-error-cannot-obtain-free-vram-bytes-.md, HARVEST-354167-dgx-spark-nvme-drive-not-detected-no-nvme-dev.md, HARVEST-354395-can-not-reset-spark-gpu.md, HARVEST-355625-dgx-spark-dashboard-modification.md, HARVEST-363224-i-cannot-login-to-dgx-spark-i-cannot-ssh-into.md, HARVEST-364636-with-two-sparks-vllm-0-18-1rc0-still-hammerin.md, HARVEST-365938-fabricmanager-will-not-run.md, HARVEST-366147-collective-operations-timeout-on-dual-spark-d.md, HARVEST-366877-sparkview-gpu-monitor-tool-with-gb10-aware-un.md, HARVEST-366944-power-delivery-bug-how-im-catching-it-early.md, HARVEST-367765-dear-nvidia-nvidia-smi-is-broken-on-the-dgx-s.md, HARVEST-371753-heat-and-power-numbers-for-asus-gx-10-4-days-.md, HARVEST-372469-dgx-spark-shutting-down-under-load-mods-02000.md, HARVEST-372642-my-spark-is-overheating-when-clustered-and-ru.md, HARVEST-372662-cooler-gb10-temps-almost-no-performance-lost.md, HARVEST-373187-dgx-wont-boot-tried-all-documented-methods-fr.md, HARVEST-373342-dgx-spark-failing-fieldiag-powerstress.md, HARVEST-373655-ubuntu-26-04-drivers-610-cuda-toolkit-13-3-zf.md, HARVEST-376103-sparks-have-recently-powered-off-randomly.md, HARVEST-377044-dgx-spark-gb10-thermal-throttling-after-ec-ue.md, HARVEST-377375-what-are-normal-temps-under-load-is-94-6c-too.md, HARVEST-378031-msi-edge-expert-nvme-devices-not-found.md, HARVEST-378500-dgx-spark-is-not-suitable-for-professional-wo.md, HARVEST-379195-dgx-spark-hard-freezes-under-sustained-few-mi.md, HARVEST-379303-severe-one-way-rdma-performance-regression-on.md, HARVEST-379778-what-is-your-power-management-solution.md, HARVEST-DanTup-dgx-dashboard.md, HARVEST-OyqXscpDRJo.md, HARVEST-grafana-grafana.md, HARVEST-niklasfrick-spark-dashboard.md, HARVEST-with-dgx-spark-enterprise.md, HARVEST-with-unified-memory-363137.md
+  e2e que no nombran el sujeto de su ficha: 34 de 173 juzgados (0 sin artefacto legible que juzgar) -- avisados uno a uno solo los nacidos desde 2026-09-06
+[ledger-schema] HALLAZGOS: 1
+[ledger-schema] FAIL: 1 ficha(s) con esquema invalido; primera tasks/DEBT-PII-HOST-DIAGNOSTICS-CONTACT-01.md (kind fuera de dominio: '"task"' no está en ['bug', 'debt', 'risk', 'task'])
+[gate-runner] FAIL: ledger-schema exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=309709a8d27e
+
+gate effectiveness: no organ with many runs and zero catches..............................Passed
+ship freeze (no open backlog).............................................................Failed
+- hook id: ship-freeze
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: ship-freeze exited 1; failure propagated; see child diagnostics; redacted output sha256=d934106c73af
+[backlog] corpus: declared `debt: tasks/`; every task file in it is judged by its `status:` field, with no prefix filter
+[backlog] open debt: 98 (of 98 entries: 0 from ledger/, 98 from tasks/; 0 file(s) with another prefix NOT evaluated)
+  - DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.md
+  - DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01.md
+  - DEBT-RESEARCH-COLLECTOR-BB-FORUM-FETCH-01.md
+  - DEBT-RESEARCH-COLLECTOR-BB-FORUM-INVENTORY-01.md
+  - DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md
+  - DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01.md
+  - DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md
+  - DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md
+  - DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md
+  - DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01.md
+  - DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md
+  - DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01.md
+  - DELTA-FORUM-CX7-POSTHOTPLUG-01.md
+  ... and 78 more
+[backlog] accepted (deuda ABIERTA, no bloquea el envio, SI cuenta): 0
+[backlog] deferred: 24 (sunset: 20, suspended: 0, organ_inapplicable: 3, signed_budgets: 1) -- deuda ABIERTA diferida por escrito, no bloquea el envio, SI cuenta
+  sunset: 20 -- nearest expiry: version 2.1 (expires with the next minor, not by date)
+  suspended: 0 -- nearest expiry: none
+  organ_inapplicable: 3 -- nearest expiry: 2026-10-13 (10 day(s))
+  !! EXPIRES IN 10 DAY(S): organ_inapplicable backlog_md_freeze (2026-10-13)
+  !! EXPIRES IN 10 DAY(S): organ_inapplicable lockfile_parity (2026-10-13)
+  !! EXPIRES IN 10 DAY(S): organ_inapplicable red_team_corpus (2026-10-13)
+  signed_budgets: 1 -- nearest expiry: 2026-10-27 (24 day(s))
+[backlog] .simplecode/backlog_baseline.json declares no owner or no entries; no baseline applies; covered by it: 0; still blocking: 98
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-RESEARCH-COLLECTOR-BB-FORUM-FETCH-01.md
+  !! NOT COVERED BY THE BASELINE: DEBT-RESEARCH-COLLECTOR-BB-FORUM-INVENTORY-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01.md
+  !! NOT COVERED BY THE BASELINE: DELTA-FORUM-CX7-POSTHOTPLUG-01.md
+[backlog] could_not_run: 0 open file(s) the globs never opened; outside the baseline: 0; blocking
+[ship-freeze] HALLAZGOS: 98
+BLOCKED [backlog] - zero-debt policy: debt cannot be bypassed with renaming.
+Every finding must either be fixed in code or verified with status: closed.
+[ship-freeze] FAIL: 98 finding(s) of open debt not covered by the baseline; first DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01.md
+
+telemetry disposition: blocked rows after the cutoff need a verdict.......................Failed
+- hook id: telemetry-disposition
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: telemetry-disposition exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=76545d00c75a
+[telemetry-disposition] auto-disposed by evidence: 9
+  AUTO 81b0ada0d0e584fa -> confirmed_defect :: auto: later green row for check=angry-path subject_sha=26d2d7539e0ecf02d592cde9fb798684ac157d0b ts=2026-10-02T20:48:19.453071+00:00 supersedes blocked subject_sha=d6824506b4bc4dde667e498ac0f1cb3f0877cf66
+  AUTO a417fb7d64e34997 -> confirmed_defect :: auto: later green row for check=zero-debt-staged subject_sha=26d2d7539e0ecf02d592cde9fb798684ac157d0b ts=2026-10-02T20:48:20.497555+00:00 supersedes blocked subject_sha=d6824506b4bc4dde667e498ac0f1cb3f0877cf66
+  AUTO c8dcfd7aa4a65002 -> confirmed_defect :: auto: later green row for check=pre-commit subject_sha=da094a3164f51244d9c0b8a5bc3a2b009450c3b2 ts=2026-10-02T20:31:17.372400+00:00 supersedes blocked subject_sha=d6824506b4bc4dde667e498ac0f1cb3f0877cf66
+  AUTO 7b4fa51bf1b9c34b -> confirmed_defect :: auto: later green row for check=zero-debt-staged subject_sha=26d2d7539e0ecf02d592cde9fb798684ac157d0b ts=2026-10-02T20:48:20.497555+00:00 supersedes blocked subject_sha=d6824506b4bc4dde667e498ac0f1cb3f0877cf66
+  AUTO a4e18e2a1f9d0fe5 -> confirmed_defect :: auto: later green row for check=sunset-audit subject_sha=da094a3164f51244d9c0b8a5bc3a2b009450c3b2 ts=2026-10-02T20:31:17.132158+00:00 supersedes blocked subject_sha=d6824506b4bc4dde667e498ac0f1cb3f0877cf66
+  AUTO 2f5d008480c4ba2b -> confirmed_defect :: auto: later green row for check=pre-commit subject_sha=da094a3164f51244d9c0b8a5bc3a2b009450c3b2 ts=2026-10-02T20:31:17.372400+00:00 supersedes blocked subject_sha=d6824506b4bc4dde667e498ac0f1cb3f0877cf66
+  AUTO 4be471fa8f032673 -> confirmed_defect :: auto: later green row for check=pre-commit subject_sha=550f78bb180ac055c3db643177bc12cded8d6072 ts=2026-10-03T05:36:32.223488+00:00 supersedes blocked subject_sha=6c8bb135d7336cc76ba4afdf867e868649669492
+  AUTO d494fbe77ac07367 -> confirmed_defect :: auto: later green row for check=genuine-task-closure subject_sha=01eb04e98a1b33a91c805750f8caa9b87b65a275 ts=2026-10-03T06:32:10.024059+00:00 supersedes blocked subject_sha=783fe116dbe522479ff69f7196c44865c61e42cc
+  AUTO 65180e8aceef9b89 -> confirmed_defect :: auto: later green row for check=pre-commit subject_sha=01eb04e98a1b33a91c805750f8caa9b87b65a275 ts=2026-10-03T06:32:11.304565+00:00 supersedes blocked subject_sha=783fe116dbe522479ff69f7196c44865c61e42cc
+[telemetry-disposition] HALLAZGOS: 1
+[telemetry-disposition] blocked rows classified: 383
+[telemetry-disposition]   confirmed_defect: 270
+[telemetry-disposition]   false_positive: 0
+[telemetry-disposition]   controlled_canary: 6
+[telemetry-disposition]   legacy_migrated: 0
+[telemetry-disposition]   could_not_dispose: 1
+[telemetry-disposition]   historical_undisposed: 3
+[telemetry-disposition]   pending_grace: 6
+[telemetry-disposition]   self_referential: 97
+[telemetry-disposition]   same_run: 0
+  UNDISPOSED 29ac411d67e0c8e7 (zero-debt-repo, 2026-10-03T07:36:59.094954+00:00)
+[telemetry-disposition] NOT CLEAN: could_not_dispose=1 (blocked telemetry with no recorded verdict).
+
+hook receipts: no unverified commits reaching push........................................Failed
+- hook id: hook-receipts-gate
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: hook-receipts-gate exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=4821c3da3aef
+[hook-receipts] Audited 10 recent commit(s) (3 unverified: 0 declared, 3 blocking).
+[hook-receipts] HALLAZGOS: 3
+[hook-receipts] receipt baseline: 2 declared commit(s), owner Luis, cutoff 2026-09-15, expires 2026-10-08 (5 day(s) left)
+[hook-receipts] baseline reason: Two commits from the hook-receipts rollout window (2026-09-11/12) were made with --no-verify before receipt verification was consistently enforced in this repo. Both reviewed now: substantive, legitimate content, not a same-day bypass. Amnestied as pre-existing debt, not a live escape hatch -- cutoff is 3 days before this declaration and does not reach today's commits.
+  🔴 Unverified commit (missing receipt): e3a6e627 - Cover remaining Atom telemetry branches
+  🔴 Unverified commit (missing receipt): bae5802e - docs: reconcile forum research without replacing implementation progress
+  🔴 Unverified commit (missing receipt): 08e88eb8 - Retain measured sunset controls and evidence
+[hook-receipts] verified RETROACTIVELY (gate re-run against historical content, not a receipt written at commit time): 0
+[hook-receipts] unverified commits that left the 10-commit window without a verdict (reported, NOT blocking): 18 (2 of them still named by the baseline)
+  ~ 7be0ed93 recorded unverified at 2026-09-12T06:34:02Z [declared -- the baseline still pays for a commit the window no longer charges for]
+  ~ 89b09057 recorded unverified at 2026-09-13T01:46:19Z [declared -- the baseline still pays for a commit the window no longer charges for]
+  ~ b75cef58 recorded unverified at 2026-09-11T17:22:30Z
+  ~ dabbde50 recorded unverified at 2026-09-11T17:32:14Z
+  ~ 77840c73 recorded unverified at 2026-09-11T17:50:32Z
+  ~ edcb39a6 recorded unverified at 2026-09-11T17:58:22Z
+  ~ 50a174b9 recorded unverified at 2026-10-03T05:26:54Z
+  ~ 725285a7 recorded unverified at 2026-10-03T05:26:55Z
+  ~ 9aa3310d recorded unverified at 2026-10-03T05:31:32Z
+  ~ e24586b7 recorded unverified at 2026-10-03T05:31:33Z
+  ~ 550f78bb recorded unverified at 2026-10-03T05:31:33Z
+  ~ 5e6eb0ca recorded unverified at 2026-10-03T05:42:34Z
+  ~ ... and 6 more that left the window unverified
+[hook-receipts] FAIL: 3 unverified commit(s) missing a pre-commit receipt; first e3a6e627 - Cover remaining Atom telemetry branches
+
+closed debt has executable evidence.......................................................Failed
+- hook id: backlog-verifier
+- exit code: 1
+
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: backlog-verifier exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=66be1e60af8d
+[backlog-verifier] persistent verify cache: 109 cached verdict(s) on file, oldest recorded 23.5d ago
+[31m[backlog-verifier] CONTRACT BREACH: Found 2 tasks violating machine-executable standards:[0m
+  🔴 DEBT-PII-HOST-DIAGNOSTICS-CONTACT-01.md: Prohibited inline code execution flag in verification_command: python3 -c 'import subprocess; subprocess.run(["python3", "-m", "pytest", "-q", "tests/test_host_diagnostics.py"], check=True); subprocess.run(["python3", ".simplecode/run.py", "simplecode.verification.pii_scan", "--root", "."], check=True)'
+  🔴 DEBT-PYRIGHT-LOCAL-TEST-TYPES-01.md: Prohibited inline code execution flag in verification_command: python3 -c 'import subprocess; subprocess.run(["pyright", "tests/test_cgroup_repro.py", "tests/test_debt_registration_controls.py", "tests/test_memory_capture_and_cuda_integrity.py", "tests/test_cuda_integrity_cli.py", "tools/cuda_integrity.py"], check=True); subprocess.run(["python3", "-m", "pytest", "-q", "tests/test_memory_capture_and_cuda_integrity.py::test_profile_value_rejects_non_object_section"], check=True)'
+[33m[backlog-verifier] COULD_NOT_RUN: 1 closed task(s) whose verification could not execute here (instrument-down, NOT fraud):[0m
+  🟡 DEBT-SCHEMA-EVIDENCE-INDEX-SCOPE-01.md:
+Task is marked as done, but its verification COULD_NOT_RUN here (instrument-down, NOT the finding reproducing):
+  - close_check 'python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_schema_evidence_index_scope_01' COULD_NOT_RUN: its trusted verifier reported instrument/acquisition failure; this is not the finding reproducing
+[backlog-verifier] the fields above are what THIS gate reads; a ficha may reconcile them in its own body -- read it before concluding its declaration is wrong
+[backlog-verifier] could_not_run baseline: no .simplecode/could_not_run_baseline.json declared
+[backlog-verifier] task cohorts (no .simplecode/task_contract_cutoff.json declared: everything is governed) -> governed: 274 · legacy pre-cut-off, contract shape NOT evaluated: 0 · undatable by git, contract shape NOT evaluated: 0 · declared `done_unverified`, contract shape NOT evaluated: 0
+[backlog-verifier] done-tasks whose status is outside this repo's closing vocabulary (reported, NOT blocking): 1
+    ? DEBT-PII-HOST-DIAGNOSTICS-CONTACT-01.md: `status: "done"` is not in this repo's closing vocabulary
+[backlog-verifier] DETECTORES: {"closure_reproduces":0,"contract_breach":2,"could_not_run":1,"unverified_task":0}
+[backlog-verifier] HALLAZGOS: 3
+[backlog-verifier] NOT CLEAN (counts -> frauds: 0 · could_not_run: 1 (1 undeclared) · contract_breaches: 2 · unverified: 0).
+
+telemetry stays under the 10 MiB horizon SPEC declares (advisory).........................Passed
+no tracked task entry loses lines vs HEAD.................................................Passed

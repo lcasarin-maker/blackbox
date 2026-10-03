@@ -1,0 +1,32 @@
+Native hook receipt retro-verification summary (source project primary, 2026-10-03)
+
+Requested candidates: 12 outside-window commits dated 2026-10-02/03 per native ledger + current blocking commit a456d8e85b55dc91e819d07b64973f4e0ed2246d.
+Final native result: 13/13 GIT_VERIFIED_RETROACTIVE; 0 final REFUSED; 0 final COULD_NOT_RUN.
+
+Verified SHA list:
+50a174b937fe0ab64c267788cf3996b65aabb8f9
+725285a7efd1a985012e4fb95fb3601502918b7c
+9aa3310dc6eae5b8b5130cc8b57dc3ceee8217be
+e24586b72af332eaed463585a088fea065ab6344
+550f78bb180ac055c3db643177bc12cded8d6072
+5e6eb0cad0abd20cd5704cdd9077d3a096e33b03
+a852ff2f24fe8ddbf7e1ec0cbdbf1376b7966eb9
+3db81484e08436a289cbd23ca1a12192ac8b58b0
+84f76d3b887ac21c7cc3bc39ecddc475b4446409
+f7ee5eb122ab37e718b349bac1a7196e0086e71c
+7ae22716eeb5476bc0772150cfec952feea024cd
+f6b1f447e6cf6738a6ee91d32077da77aa1fdfca
+a456d8e85b55dc91e819d07b64973f4e0ed2246d
+
+Failed identification attempts preserved (not candidate outcomes):
+- --verify-historical a456d8e8 -> COULD_NOT_RUN: prefix is not a full 40-hex SHA (exit 2).
+- --verify-historical a456d8e8f9f279e31a2e46ca05172082ac4f5b82 -> COULD_NOT_RUN: not a commit object (exit 2; guessed SHA rejected).
+- git log --all identified the correct SHA a456d8e85b55dc91e819d07b64973f4e0ed2246d; its native verification passed (exit 0).
+Thus the final target verdict remains 13 verified, 0 refused, 0 CNR; the two invalid SHA lookups remain visible above.
+
+Gate applicability/no-applicable outputs:
+- 5e6eb0ca: 16 passed, 0 failed, 0 DID NOT RUN.
+- 10 commits skipped bash syntax as “no files to check”; the native gate runner counted these as DID NOT RUN but its COULD_NOT_RUN counter remained 0.
+- e24586b7 and a852ff2f also skipped Ruff, angry-path dominance and zero-debt for no matching staged paths. They still passed all applicable checks; raw per-SHA outputs preserve each skip.
+
+At completion of that round, native hook_receipts --audit reported 0 unverified recent, 0 blocking, with 6 older September commits still visible outside the window (2 already named in baseline). The current final audit and all per-SHA outputs are archived beside this file.

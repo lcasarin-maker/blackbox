@@ -1,0 +1,404 @@
+Captured: 2026-10-03T02:25:57-06:00
+
+$ journalctl --since 2026-09-24 19:55:00 --until 2026-09-25 05:10:00 --no-pager -o short-iso | rg -i "snap\.antigravity.*scope|app-com\.anthropic\.Claude-345364"
+2026-09-24T20:00:33-06:00 aitopatom-41f1 systemd[259773]: Started app-com.anthropic.Claude-345364.scope.
+2026-09-24T22:43:56-06:00 aitopatom-41f1 systemd[259773]: Reloading requested from client PID 1797444 ('systemctl') (unit app-com.anthropic.Claude-345364.scope)...
+2026-09-25T02:42:52-06:00 aitopatom-41f1 systemd[259773]: Started snap.antigravity.antigravity-edb9e70b-d3ce-4d2b-99d1-329afb3f46ee.scope.
+2026-09-25T02:45:00-06:00 aitopatom-41f1 systemd[259773]: snap.antigravity.antigravity-edb9e70b-d3ce-4d2b-99d1-329afb3f46ee.scope: Consumed 35.444s CPU time.
+2026-09-25T02:45:59-06:00 aitopatom-41f1 systemd[259773]: Started snap.antigravity.antigravity-1607e432-e2a9-4fac-b577-f7c55606a425.scope.
+2026-09-25T05:00:57-06:00 aitopatom-41f1 systemd[259773]: snap.antigravity.antigravity-1607e432-e2a9-4fac-b577-f7c55606a425.scope: Consumed 2h 37min 13.963s CPU time.
+2026-09-25T05:08:27-06:00 aitopatom-41f1 systemd[259773]: Stopping app-com.anthropic.Claude-345364.scope...
+2026-09-25T05:08:27-06:00 aitopatom-41f1 systemd[259773]: Stopped app-com.anthropic.Claude-345364.scope.
+2026-09-25T05:08:27-06:00 aitopatom-41f1 systemd[259773]: app-com.anthropic.Claude-345364.scope: Consumed 15h 9min 54.203s CPU time, 29.6G memory peak, 1.3G memory swap peak.
+
+$ journalctl --since 2026-09-25 03:00:00 --until 2026-09-25 05:08:26 -p warning --no-pager -o short-iso
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): connected
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): Internal TMDS
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): 600.0 MHz maximum pixel clock
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: disconnected
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: Internal DisplayPort
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: 2670.0 MHz maximum pixel clock
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: disconnected
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: Internal DisplayPort
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: 2670.0 MHz maximum pixel clock
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: disconnected
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: Internal DisplayPort
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: 2670.0 MHz maximum pixel clock
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: disconnected
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: Internal DisplayPort
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: 2670.0 MHz maximum pixel clock
+2026-09-25T03:00:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel: python invoked oom-killer: gfp_mask=0xcc0(GFP_KERNEL), order=0, oom_score_adj=100
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel: CPU: 6 UID: 1000 PID: 412744 Comm: python Kdump: loaded Tainted: G           O        6.17.0-1032-nvidia #32-Ubuntu PREEMPT(none) 
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel: Tainted: [O]=OOT_MODULE
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel: Hardware name: GIGABYTE AI TOP ATOM/P4242, BIOS 5.36_0ACUM08 07/02/2026
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel: Call trace:
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  show_stack+0x24/0x50 (C)
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  dump_stack_lvl+0x80/0x140
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  dump_stack+0x1c/0x38
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  dump_header+0x48/0x220
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  oom_kill_process+0x1f8/0x3f0
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  out_of_memory+0xe8/0x398
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  mem_cgroup_out_of_memory+0x100/0x148
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  try_charge_memcg+0x430/0x608
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  charge_memcg+0x50/0xa0
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  __mem_cgroup_charge+0x44/0x180
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  alloc_anon_folio+0x1c8/0x568
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  do_anonymous_page+0xe4/0x580
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  handle_pte_fault+0x230/0x248
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  __handle_mm_fault+0x258/0x430
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  handle_mm_fault+0xf8/0x260
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  do_page_fault+0x118/0x788
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  do_translation_fault+0x7c/0xd8
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  do_mem_abort+0x50/0xd0
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  el0_da+0x4c/0x190
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  el0t_64_sync_handler+0xf0/0x108
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel:  el0t_64_sync+0x1b8/0x1c0
+2026-09-25T03:00:04-06:00 aitopatom-41f1 kernel: Memory cgroup out of memory: Killed process 412744 (python) total-vm:6321504kB, anon-rss:1044000kB, file-rss:6320kB, shmem-rss:0kB, UID:1000 pgtables:4188kB oom_score_adj:100
+2026-09-25T03:00:04-06:00 aitopatom-41f1 systemd[259773]: bb-cap-python-412738.scope: Failed with result 'oom-kill'.
+2026-09-25T03:01:44-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:02:21-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel: python3 invoked oom-killer: gfp_mask=0xcc0(GFP_KERNEL), order=0, oom_score_adj=100
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel: CPU: 8 UID: 1000 PID: 493478 Comm: python3 Kdump: loaded Tainted: G           O        6.17.0-1032-nvidia #32-Ubuntu PREEMPT(none) 
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel: Tainted: [O]=OOT_MODULE
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel: Hardware name: GIGABYTE AI TOP ATOM/P4242, BIOS 5.36_0ACUM08 07/02/2026
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel: Call trace:
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  show_stack+0x24/0x50 (C)
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  dump_stack_lvl+0x80/0x140
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  dump_stack+0x1c/0x38
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  dump_header+0x48/0x220
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  oom_kill_process+0x1f8/0x3f0
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  out_of_memory+0xe8/0x398
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  mem_cgroup_out_of_memory+0x100/0x148
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  try_charge_memcg+0x430/0x608
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  charge_memcg+0x50/0xa0
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  __mem_cgroup_charge+0x44/0x180
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  alloc_anon_folio+0x1c8/0x568
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  do_anonymous_page+0xe4/0x580
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  handle_pte_fault+0x230/0x248
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  __handle_mm_fault+0x258/0x430
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  handle_mm_fault+0xf8/0x260
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  do_page_fault+0x118/0x788
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  do_translation_fault+0x7c/0xd8
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  do_mem_abort+0x50/0xd0
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  el0_da+0x4c/0x190
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  el0t_64_sync_handler+0xf0/0x108
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel:  el0t_64_sync+0x1b8/0x1c0
+2026-09-25T03:03:05-06:00 aitopatom-41f1 kernel: Memory cgroup out of memory: Killed process 493478 (python3) total-vm:6321504kB, anon-rss:1042240kB, file-rss:6308kB, shmem-rss:0kB, UID:1000 pgtables:4180kB oom_score_adj:100
+2026-09-25T03:03:05-06:00 aitopatom-41f1 systemd[259773]: bb-cap-python3-493470.scope: Failed with result 'oom-kill'.
+2026-09-25T03:03:29-06:00 aitopatom-41f1 rustdesk[413031]: gtk_widget_set_opacity: assertion 'GTK_IS_WIDGET (widget)' failed
+2026-09-25T03:03:29-06:00 aitopatom-41f1 rustdesk[413031]: gtk_window_get_position: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T03:03:29-06:00 aitopatom-41f1 rustdesk[413031]: gtk_window_get_size: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T03:03:29-06:00 aitopatom-41f1 rustdesk[413031]: gtk_widget_hide: assertion 'GTK_IS_WIDGET (widget)' failed
+2026-09-25T03:03:29-06:00 aitopatom-41f1 rustdesk[413031]: gtk_window_move: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T03:03:29-06:00 aitopatom-41f1 rustdesk[413031]: gtk_window_resize: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T03:03:29-06:00 aitopatom-41f1 rustdesk[413031]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T03:03:29-06:00 aitopatom-41f1 rustdesk[413031]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T03:03:29-06:00 aitopatom-41f1 rustdesk[413031]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): connected
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): Internal TMDS
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): 600.0 MHz maximum pixel clock
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: disconnected
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: Internal DisplayPort
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: 2670.0 MHz maximum pixel clock
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: disconnected
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: Internal DisplayPort
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: 2670.0 MHz maximum pixel clock
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: disconnected
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: Internal DisplayPort
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: 2670.0 MHz maximum pixel clock
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: disconnected
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: Internal DisplayPort
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: 2670.0 MHz maximum pixel clock
+2026-09-25T03:03:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:04:09-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:04:45-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel: python3 invoked oom-killer: gfp_mask=0xcc0(GFP_KERNEL), order=0, oom_score_adj=100
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel: CPU: 15 UID: 1000 PID: 533701 Comm: python3 Kdump: loaded Tainted: G           O        6.17.0-1032-nvidia #32-Ubuntu PREEMPT(none) 
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel: Tainted: [O]=OOT_MODULE
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel: Hardware name: GIGABYTE AI TOP ATOM/P4242, BIOS 5.36_0ACUM08 07/02/2026
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel: Call trace:
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  show_stack+0x24/0x50 (C)
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  dump_stack_lvl+0x80/0x140
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  dump_stack+0x1c/0x38
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  dump_header+0x48/0x220
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  oom_kill_process+0x1f8/0x3f0
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  out_of_memory+0xe8/0x398
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  mem_cgroup_out_of_memory+0x100/0x148
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  try_charge_memcg+0x430/0x608
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  charge_memcg+0x50/0xa0
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  __mem_cgroup_charge+0x44/0x180
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  alloc_anon_folio+0x1c8/0x568
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  do_anonymous_page+0xe4/0x580
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  handle_pte_fault+0x230/0x248
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  __handle_mm_fault+0x258/0x430
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  handle_mm_fault+0xf8/0x260
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  do_page_fault+0x118/0x788
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  do_translation_fault+0x7c/0xd8
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  do_mem_abort+0x50/0xd0
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  el0_da+0x4c/0x190
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  el0t_64_sync_handler+0xf0/0x108
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel:  el0t_64_sync+0x1b8/0x1c0
+2026-09-25T03:04:57-06:00 aitopatom-41f1 kernel: Memory cgroup out of memory: Killed process 533701 (python3) total-vm:6321504kB, anon-rss:1044000kB, file-rss:6320kB, shmem-rss:0kB, UID:1000 pgtables:4184kB oom_score_adj:100
+2026-09-25T03:04:57-06:00 aitopatom-41f1 systemd[259773]: bb-cap-python3-533695.scope: Failed with result 'oom-kill'.
+2026-09-25T03:04:59-06:00 aitopatom-41f1 rustdesk[517421]: gtk_widget_set_opacity: assertion 'GTK_IS_WIDGET (widget)' failed
+2026-09-25T03:04:59-06:00 aitopatom-41f1 rustdesk[517421]: gtk_window_get_position: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T03:04:59-06:00 aitopatom-41f1 rustdesk[517421]: gtk_window_get_size: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T03:04:59-06:00 aitopatom-41f1 rustdesk[517421]: gtk_widget_hide: assertion 'GTK_IS_WIDGET (widget)' failed
+2026-09-25T03:04:59-06:00 aitopatom-41f1 rustdesk[517421]: gtk_window_move: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T03:04:59-06:00 aitopatom-41f1 rustdesk[517421]: gtk_window_resize: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T03:04:59-06:00 aitopatom-41f1 rustdesk[517421]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T03:04:59-06:00 aitopatom-41f1 rustdesk[517421]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T03:04:59-06:00 aitopatom-41f1 rustdesk[517421]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): connected
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): Internal TMDS
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): 600.0 MHz maximum pixel clock
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: disconnected
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: Internal DisplayPort
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: 2670.0 MHz maximum pixel clock
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: disconnected
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: Internal DisplayPort
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: 2670.0 MHz maximum pixel clock
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: disconnected
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: Internal DisplayPort
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: 2670.0 MHz maximum pixel clock
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: disconnected
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: Internal DisplayPort
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: 2670.0 MHz maximum pixel clock
+2026-09-25T03:05:02-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T03:06:17-06:00 aitopatom-41f1 rustdesk[534999]: gtk_widget_set_opacity: assertion 'GTK_IS_WIDGET (widget)' failed
+2026-09-25T03:06:17-06:00 aitopatom-41f1 rustdesk[534999]: gtk_window_get_position: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T03:06:17-06:00 aitopatom-41f1 rustdesk[534999]: gtk_window_get_size: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T03:06:17-06:00 aitopatom-41f1 rustdesk[534999]: gtk_widget_hide: assertion 'GTK_IS_WIDGET (widget)' failed
+2026-09-25T03:06:17-06:00 aitopatom-41f1 rustdesk[534999]: gtk_window_move: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T03:06:17-06:00 aitopatom-41f1 rustdesk[534999]: gtk_window_resize: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T03:06:17-06:00 aitopatom-41f1 rustdesk[534999]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T03:06:17-06:00 aitopatom-41f1 rustdesk[534999]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T03:06:17-06:00 aitopatom-41f1 rustdesk[534999]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T03:06:33-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:07:10-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:08:58-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:09:35-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:11:23-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:12:00-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:13:48-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:14:25-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:16:13-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:16:50-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:18:39-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:19:16-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:21:04-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:21:40-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:23:28-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:24:05-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:25:53-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:26:30-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:28:18-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:28:55-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:30:43-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:31:20-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:33:08-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:33:45-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:35:34-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:36:11-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:37:58-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:38:00-06:00 aitopatom-41f1 gnome-keyring-daemon[259811]: asked to register item /org/freedesktop/secrets/collection/login/8, but it's already registered
+2026-09-25T03:38:00-06:00 aitopatom-41f1 gnome-keyring-d[259811]: asked to register item /org/freedesktop/secrets/collection/login/8, but it's already registered
+2026-09-25T03:38:35-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:40:23-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:41:00-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:42:48-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:43:25-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:45:13-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:45:50-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:47:24-06:00 aitopatom-41f1 antigravity[283383]: Running in confined mode, using Portal notifications. Some features and hints won't be supported
+2026-09-25T03:47:38-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:48:15-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:50:03-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:50:40-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:52:29-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:53:06-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:54:53-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:55:30-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:57:18-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:57:55-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T03:59:43-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:00:20-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:02:08-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:02:45-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:04:33-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:05:10-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:06:58-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:07:35-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:09:24-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:10:01-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:11:48-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:12:25-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:14:13-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:14:50-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:16:38-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:17:15-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:19:03-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:19:40-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:21:28-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:22:05-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:23:53-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:24:31-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:26:19-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:26:56-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:28:43-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:29:20-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:31:08-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:31:45-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:33:00-06:00 aitopatom-41f1 gnome-keyring-daemon[259811]: asked to register item /org/freedesktop/secrets/collection/login/8, but it's already registered
+2026-09-25T04:33:00-06:00 aitopatom-41f1 gnome-keyring-d[259811]: asked to register item /org/freedesktop/secrets/collection/login/8, but it's already registered
+2026-09-25T04:33:33-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:34:10-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:35:58-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:36:35-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:38:23-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:39:00-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:40:49-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:41:26-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:43:14-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:43:51-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:45:38-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:46:15-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:48:03-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:48:40-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:50:28-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:51:05-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:52:53-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:53:30-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:55:18-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:55:55-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): connected
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): Internal TMDS
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): 600.0 MHz maximum pixel clock
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: disconnected
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: Internal DisplayPort
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: 2670.0 MHz maximum pixel clock
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: disconnected
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: Internal DisplayPort
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: 2670.0 MHz maximum pixel clock
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: disconnected
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: Internal DisplayPort
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: 2670.0 MHz maximum pixel clock
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: disconnected
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: Internal DisplayPort
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: 2670.0 MHz maximum pixel clock
+2026-09-25T04:56:24-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T04:57:44-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:58:14-06:00 aitopatom-41f1 rustdesk[1061295]: gtk_widget_set_opacity: assertion 'GTK_IS_WIDGET (widget)' failed
+2026-09-25T04:58:14-06:00 aitopatom-41f1 rustdesk[1061295]: gtk_window_get_position: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T04:58:14-06:00 aitopatom-41f1 rustdesk[1061295]: gtk_window_get_size: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T04:58:14-06:00 aitopatom-41f1 rustdesk[1061295]: gtk_widget_hide: assertion 'GTK_IS_WIDGET (widget)' failed
+2026-09-25T04:58:14-06:00 aitopatom-41f1 rustdesk[1061295]: gtk_window_move: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T04:58:14-06:00 aitopatom-41f1 rustdesk[1061295]: gtk_window_resize: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T04:58:15-06:00 aitopatom-41f1 rustdesk[1061295]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T04:58:15-06:00 aitopatom-41f1 rustdesk[1061295]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T04:58:15-06:00 aitopatom-41f1 rustdesk[1061295]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T04:58:21-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): connected
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): Internal TMDS
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): 600.0 MHz maximum pixel clock
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: disconnected
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: Internal DisplayPort
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: 2670.0 MHz maximum pixel clock
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: disconnected
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: Internal DisplayPort
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: 2670.0 MHz maximum pixel clock
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: disconnected
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: Internal DisplayPort
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: 2670.0 MHz maximum pixel clock
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: disconnected
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: Internal DisplayPort
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: 2670.0 MHz maximum pixel clock
+2026-09-25T04:59:11-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T05:00:09-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T05:00:46-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T05:01:33-06:00 aitopatom-41f1 rustdesk[1076678]: gtk_widget_set_opacity: assertion 'GTK_IS_WIDGET (widget)' failed
+2026-09-25T05:01:33-06:00 aitopatom-41f1 rustdesk[1076678]: gtk_window_get_position: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T05:01:33-06:00 aitopatom-41f1 rustdesk[1076678]: gtk_window_get_size: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T05:01:33-06:00 aitopatom-41f1 rustdesk[1076678]: gtk_widget_hide: assertion 'GTK_IS_WIDGET (widget)' failed
+2026-09-25T05:01:33-06:00 aitopatom-41f1 rustdesk[1076678]: gtk_window_move: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T05:01:33-06:00 aitopatom-41f1 rustdesk[1076678]: gtk_window_resize: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T05:01:33-06:00 aitopatom-41f1 rustdesk[1076678]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T05:01:33-06:00 aitopatom-41f1 rustdesk[1076678]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T05:01:33-06:00 aitopatom-41f1 rustdesk[1076678]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): connected
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): Internal TMDS
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): 600.0 MHz maximum pixel clock
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: disconnected
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: Internal DisplayPort
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: 2670.0 MHz maximum pixel clock
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: disconnected
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: Internal DisplayPort
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: 2670.0 MHz maximum pixel clock
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: disconnected
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: Internal DisplayPort
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: 2670.0 MHz maximum pixel clock
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: disconnected
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: Internal DisplayPort
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: 2670.0 MHz maximum pixel clock
+2026-09-25T05:01:39-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T05:02:33-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T05:03:10-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T05:03:12-06:00 aitopatom-41f1 rustdesk[1124779]: gtk_widget_set_opacity: assertion 'GTK_IS_WIDGET (widget)' failed
+2026-09-25T05:03:12-06:00 aitopatom-41f1 rustdesk[1124779]: gtk_window_get_position: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T05:03:12-06:00 aitopatom-41f1 rustdesk[1124779]: gtk_window_get_size: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T05:03:12-06:00 aitopatom-41f1 rustdesk[1124779]: gtk_widget_hide: assertion 'GTK_IS_WIDGET (widget)' failed
+2026-09-25T05:03:12-06:00 aitopatom-41f1 rustdesk[1124779]: gtk_window_move: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T05:03:12-06:00 aitopatom-41f1 rustdesk[1124779]: gtk_window_resize: assertion 'GTK_IS_WINDOW (window)' failed
+2026-09-25T05:03:12-06:00 aitopatom-41f1 rustdesk[1124779]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T05:03:12-06:00 aitopatom-41f1 rustdesk[1124779]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T05:03:12-06:00 aitopatom-41f1 rustdesk[1124779]: Attempted to set message handler on an FlBinaryMessenger without an engine
+2026-09-25T05:04:58-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T05:05:35-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): connected
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): Internal TMDS
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): LG Electronics LG ULTRAWIDE (DFP-0): 600.0 MHz maximum pixel clock
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: disconnected
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: Internal DisplayPort
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-1: 2670.0 MHz maximum pixel clock
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: disconnected
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: Internal DisplayPort
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-2: 2670.0 MHz maximum pixel clock
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: disconnected
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: Internal DisplayPort
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-3: 2670.0 MHz maximum pixel clock
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: disconnected
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: Internal DisplayPort
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0): DFP-4: 2670.0 MHz maximum pixel clock
+2026-09-25T05:06:52-06:00 aitopatom-41f1 /usr/libexec/gdm-x-session[260156]: (--) NVIDIA(GPU-0):
+2026-09-25T05:07:23-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+2026-09-25T05:08:00-06:00 aitopatom-41f1 kernel: [UFW BLOCK] IN=enP7s7 OUT= MAC=01:00:5e:00:00:01:28:6d:da:57:8d:23:08:00 SRC=10.194.62.85 DST=224.0.0.1 LEN=36 TOS=0x00 PREC=0xC0 TTL=1 ID=0 PROTO=2 
+rc=0

@@ -203,6 +203,7 @@ efectos de esta spec, y `tools/inventario.py --check` lo bloquea en el commit.
 | `tools/host_diagnostics.py` | Captura readonly de sesiones, almacenamiento, red y USB con fallos explícitos | `tests/test_host_diagnostics.py` |
 
 | `tools/verify_cgroup_repro.py` | Recalcula fases, scopes y controles CPU desde stdout crudo del arnés; observaciones incompletas son unknown, sin acreditar contención GPU ni procedencia | `tests/test_verify_cgroup_repro.py`, controles de calibración, fases, scopes y lecturas alteradas |
+| `tools/verify_telemetry_dispositions.py` | Exige que cada evento solicitado tenga un estado de disposición válido en el ledger JSONL | `tests/test_verify_telemetry_dispositions.py`, ledger vacío, válido y estado pendiente |
 | `tools/read_integrity.py` | Compara hashes buffered/O_DIRECT de una región acotada con digest suministrado; preserva fallos y verifica estabilidad del archivo | `tests/test_read_integrity.py`; caso GX10 conserva validación experimental pendiente |
 | `tools/provider_trace.py` | Evalúa selección efectiva de proveedor por petición y transición de worker en JSONL; conserva fallback e incompletitud | `tests/test_provider_trace.py`; fixtures declarados y traza real pendiente |
 | `tools/kernel_charges.bt` | Borrador de probes de cargo/descargo kmem 6.17 con mapas por cgroup ejecutor; dueño real desconocido | Headers de ABI y limitación de validación bpftrace sin root en `tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt`; compilación y captura pendientes |

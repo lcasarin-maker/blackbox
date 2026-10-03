@@ -1,0 +1,26 @@
+Native close-check and retroverification records.
+
+Close-check: python3 .simplecode/run.py simplecode.verification.hook_receipts --root . --audit --gate
+Exit: 0. Native output reports 0 unverified recent and 0 blocking, and 0 commits outside the 10-commit window without verdict. The pre-existing two-entry declared receipt baseline remains explicit and unmodified.
+
+The 17 October 3 commits whose missing receipt findings were reconciled were verified by this repository's native historical gate. IDs:
+- e3a6e62729fdf1157c9e08bb7e4a7befb813bb69
+- bae5802e4d604195ce4dcd3d70b54b750af57db1
+- 08e88eb8199694f01394df4dea5e51e8fa81ad56
+- 50a174b937fe0ab64c267788cf3996b65aabb8f9
+- 725285a7efd1a985012e4fb95fb3601502918b7c
+- 9aa3310dc6eae5b8b5130cc8b57dc3ceee8217be
+- e24586b72af332eaed463585a088fea065ab6344
+- 550f78bb180ac055c3db643177bc12cded8d6072
+- 5e6eb0cad0abd20cd5704cdd9077d3a096e33b03
+- a852ff2f24fe8ddbf7e1ec0cbdbf1376b7966eb9
+- 3db81484e08436a289cbd23ca1a12192ac8b58b0
+- 84f76d3b887ac21c7cc3bc39ecddc475b4446409
+- f7ee5eb122ab37e718b349bac1a7196e0086e71c
+- 7ae22716eeb5476bc0772150cfec952feea024cd
+- f6b1f447e6cf6738a6ee91d32077da77aa1fdfca
+- a456d8e85b55dc91e819d07b64973f4e0ed2246d
+- 053cfd0181ddc6607b4c34c9c2760d4f1bcd4887
+
+The 13 executor-run logs, root verification rows, initial audit, full 18-row source list, and SHA lookup CNR attempts are archived at tasks/evidence/ZERO-2026-10-02/receipts-retro/. Two invalid a456 SHA lookups remain captured there; only the exact git-log SHA appears in the verified set.
+Ficha DEBT-HOOK-RECEIPTS-RETRO-20261003-01. Verificación del sujeto mediante `python3 .simplecode/run.py simplecode.verification.hook_receipts --root . --audit --gate`.

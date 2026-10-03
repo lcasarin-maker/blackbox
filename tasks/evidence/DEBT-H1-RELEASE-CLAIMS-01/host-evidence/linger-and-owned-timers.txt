@@ -1,0 +1,15 @@
+Captured: 2026-10-03T02:24:06-06:00
+
+$ loginctl show-user lcasarin -p Linger -p State -p Sessions
+State=active
+Sessions=12
+Linger=yes
+
+$ systemctl --user show atom-gpu-telemetry.timer blackbox-sample.timer -p Id -p ActiveState -p UnitFileState --no-pager
+Id=atom-gpu-telemetry.timer
+ActiveState=inactive
+UnitFileState=
+
+Id=blackbox-sample.timer
+ActiveState=active
+UnitFileState=enabled

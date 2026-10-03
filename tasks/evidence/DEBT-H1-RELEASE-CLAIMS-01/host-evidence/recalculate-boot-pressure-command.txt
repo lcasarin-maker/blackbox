@@ -1,0 +1,53 @@
+Comando ejecutado: python3 /tmp/bb-h1-host-evidence/recalculate-boot-pressure.py
+
+Código exacto usado en la medición:
+import datetime as dt
+import json
+from pathlib import Path
+
+start = dt.datetime.fromisoformat("2026-09-24T14:11:37-06:00")
+end = dt.datetime.fromisoformat("2026-09-25T05:08:33-06:00")
+files = [
+    Path("/home/lcasarin/.local/share/blackbox/samples/2026-09-24.jsonl"),
+    Path("/home/lcasarin/.local/share/blackbox/samples/2026-09-25.jsonl"),
+]
+rows = []
+for path in files:
+    for line in path.open(encoding="utf-8"):
+        record = json.loads(line)
+        timestamp = dt.datetime.fromisoformat(record["ts"])
+        if start <= timestamp <= end:
+            rows.append((timestamp, record))
+rows.sort(key=lambda item: item[0])
+measured = [
+    (timestamp, float(record["psi"]["cpu_some"]))
+    for timestamp, record in rows
+    if "cpu_some" in record.get("psi", {})
+]
+above = [(timestamp, value) for timestamp, value in measured if value >= 10]
+runs = []
+run = []
+previous = None
+for item in measured:
+    if item[1] >= 10:
+        if run and (item[0] - previous[0]).total_seconds() > 180:
+            runs.append(run)
+            run = []
+        run.append(item)
+    else:
+        if run:
+            runs.append(run)
+            run = []
+    previous = item
+if run:
+    runs.append(run)
+longest = max(runs, key=len, default=[])
+percent = 100 * len(above) / len(measured)
+print(f"boot window: {start.isoformat()} .. {end.isoformat()}")
+print(f"raw records: {len(rows)}")
+print(f"records with psi.cpu_some: {len(measured)}")
+print(f"cpu_some >= 10%: {len(above)} ({percent:.2f}%)")
+if longest:
+    elapsed = (longest[-1][0] - longest[0][0]).total_seconds()
+    print(f"longest run: {len(longest)} points, {elapsed:.0f}s between first and last")
+    print(f"run timestamps: {longest[0][0].isoformat()} .. {longest[-1][0].isoformat()}")

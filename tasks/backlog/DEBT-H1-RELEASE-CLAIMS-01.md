@@ -24,3 +24,7 @@ Contrastar cada afirmación con código y controles negativos; los fallos por pe
 ## Verification Evidence
 
 Auditoría en curso. Se conservarán resultados por afirmación y salida del gate antes de cerrar. Un cero histórico sin artefacto tiene alcance limitado y una ejecución actual divergente exige fecha y salida literal.
+
+## Hallazgo adicional en evidencia citada
+
+La relectura del journal del 2026-09-25 contradice dos frases de la ficha cerrada DEBT-SLUGGISH-SIN-CAUSA-PROBADA: hubo warnings y OOM-kills de cgroups limitados. Se corrigió su cuerpo para distinguirlos de OOM global y conservar la causa pendiente. Este hallazgo pertenece a la evidencia de la afirmación auditada sobre escritorio inusable.

@@ -1,0 +1,6 @@
+Observed during the earlier sandbox-only run of the systemd/journal-dependent negative controls:
+
+- The process reported `Failed to connect to bus: Operation not permitted`.
+- Summary was `5 failed, 13 passed`; the failures could not reach the user systemd bus under the sandbox.
+- Classification: COULD_NOT_RUN (sandbox permission boundary), not a code regression and not a clean pass.
+- Host rerun with authorized read-only escalation: seven SPEC-L308 controls plus SPEC-L309 controls, `17 passed in 17.29s`, rc=0. Exact stdout: current-negative-controls.txt.
