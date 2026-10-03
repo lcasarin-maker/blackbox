@@ -38,3 +38,15 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Verificación realizada
 
 Close_check falla sobre el código anterior y pasa sobre el nuevo; status conserva ARMADO/FALTA con cadenas sanas y memory.low=0. La prueba de SC2086 usa la raíz de cgroups con espacios y detecta el fallo anterior. Las reglas SC2319/SC2086 y bash -n pasan; ShellCheck completo conserva hallazgos independientes preexistentes, registrados por separado. Pruebas existentes de status en evidencia e2e.
+
+## Root Cause
+
+El patrón de cgroups se expandía sin comillas, separando rutas con espacios; compgen recibe el patrón completo.
+
+## Regression Test
+
+El selector del close_check evalúa el script real con cadenas protegidas/rotas. SC2319 se comprueba sin la exclusión, y SC2086 se controla con una raíz con espacios.
+
+## Verification Evidence
+
+Las tres rutas evidence guardan resultados literales antes/después y cinco pruebas existentes de status. ShellCheck del script completo tiene otros hallazgos documentados por separado.
