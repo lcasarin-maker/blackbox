@@ -65,6 +65,7 @@ def cleanup_slots(slots, free, sync) -> list[str]:
         try:
             check(free(ptr), "cudaFree cleanup")
         except Exception as exc:
+            # Continue cleanup for the remaining independent allocations.
             errors.append(f"pointer {ptr_key}: {exc}")
         finally:
             # A failed free has uncertain device state; never risk a double-free.
@@ -72,6 +73,7 @@ def cleanup_slots(slots, free, sync) -> list[str]:
     try:
         check(sync(), "cudaDeviceSynchronize cleanup")
     except Exception as exc:
+        # Keep synchronization failure in the same aggregate cleanup report.
         errors.append(str(exc))
     return errors
 
@@ -124,6 +126,7 @@ def run_worker(lib: C.CDLL, index: int, rounds: int, worker_bytes: int) -> int:
             release_slots(slots, list(slots), free, "round release")
             check(sync(), "cudaDeviceSynchronize after release")
             made += 6
+    # Cleanup runs for cancellation too; preserve the original exception and traceback.
     except BaseException as exc:
         primary_error = exc
         raise
@@ -206,6 +209,7 @@ def main() -> int:
             return 2
     try:
         result = run(args.rounds, args.workers)
+    # The bounded worker reports ordinary failures as structured JSON; cancellation escapes.
     except Exception as exc:
         result = {"status": "fail", "error": f"{type(exc).__name__}: {exc}",
                   "notes": getattr(exc, "__notes__", [])}

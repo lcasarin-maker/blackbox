@@ -12,6 +12,200 @@ from pathlib import Path
 import pytest
 
 from tools import provider_trace
+from tools import cgroup_repro, cuda_integrity
+
+
+def test_debt_broad_except_cuda_integrity_57() -> None:
+    import ctypes
+
+    slots = {7: (ctypes.c_void_p(7), 1, 1)}
+    attempts = []
+
+    def failed_free(pointer):
+        attempts.append(pointer.value)
+        return 8
+
+    with pytest.raises(RuntimeError, match="cudaFree hole returned CUDA error 8") as raised:
+        cuda_integrity.release_slots(slots, [7], failed_free, "hole")
+    assert slots == {}
+    assert attempts == [7]
+    assert any("uncertain device state" in note for note in raised.value.__notes__)
+
+
+def test_debt_broad_except_cuda_integrity_67() -> None:
+    import ctypes
+
+    slots = {7: (ctypes.c_void_p(7), 1, 1), 8: (ctypes.c_void_p(8), 1, 1)}
+    attempts = []
+
+    def free(pointer):
+        attempts.append(pointer.value)
+        return 8 if pointer.value == 7 else 0
+
+    assert cuda_integrity.cleanup_slots(slots, free, lambda: 0) == [
+        "pointer 7: cudaFree cleanup returned CUDA error 8"]
+    assert slots == {}
+    assert attempts == [7, 8]
+
+
+def test_debt_broad_except_cuda_integrity_74() -> None:
+    assert cuda_integrity.cleanup_slots({}, lambda _pointer: 0,
+                                        lambda: 19) == ["cudaDeviceSynchronize cleanup returned CUDA error 19"]
+
+
+def test_debt_broad_except_cuda_integrity_127() -> None:
+    from test_memory_capture_and_cuda_integrity import FakeCuda
+
+    fake = FakeCuda(fail_memset_after=3, fail_free_on_call=1)
+    with pytest.raises(RuntimeError, match="cudaMemset initial allocation returned CUDA error 9") as raised:
+        cuda_integrity.run_worker(fake, index=0, rounds=1, worker_bytes=4 * 1024 * 1024)
+    assert len(fake.free_attempts) == 3
+    assert len(set(fake.free_attempts)) == 3
+    assert len(fake.buffers) == 1
+    assert any("cleanup failures" in note for note in raised.value.__notes__)
+
+    fake = FakeCuda(fail_free_on_call=1)
+    memset_calls = 0
+    def cancel_during_fill(pointer, value, size):
+        nonlocal memset_calls
+        memset_calls += 1
+        if memset_calls == 3:
+            raise KeyboardInterrupt("cancel CUDA worker")
+        return fake.fill(pointer, value, size)
+    fake.cudaMemset.function = cancel_during_fill
+    with pytest.raises(KeyboardInterrupt, match="cancel CUDA worker") as cancelled:
+        cuda_integrity.run_worker(fake, index=0, rounds=1, worker_bytes=4 * 1024 * 1024)
+    assert len(fake.free_attempts) == 3
+    assert len(set(fake.free_attempts)) == 3
+    assert any("cleanup failures" in note for note in cancelled.value.__notes__)
+
+
+def test_debt_broad_except_cuda_integrity_209(monkeypatch: pytest.MonkeyPatch,
+                                              capsys: pytest.CaptureFixture[str]) -> None:
+    error = RuntimeError("primary CUDA failure")
+    error.add_note("cleanup failed for allocation 123")
+    monkeypatch.setattr("sys.argv", ["cuda_integrity.py", "--_bounded-worker"])
+    monkeypatch.setattr(cuda_integrity, "run", lambda *_args: (_ for _ in ()).throw(error))
+    assert cuda_integrity.main() == 1
+    result = json.loads(capsys.readouterr().out)
+    assert result == {"status": "fail", "error": "RuntimeError: primary CUDA failure",
+                      "notes": ["cleanup failed for allocation 123"]}
+    monkeypatch.setattr(cuda_integrity, "run", lambda *_args: (_ for _ in ()).throw(KeyboardInterrupt("cancel")))
+    with pytest.raises(KeyboardInterrupt, match="cancel"):
+        cuda_integrity.main()
+    capsys.readouterr()
+
+
+def test_debt_broad_except_cgroup_repro_113(monkeypatch: pytest.MonkeyPatch,
+                                           capsys: pytest.CaptureFixture[str]) -> None:
+    from test_cgroup_repro import cuda_runtime
+
+    runtime, events = cuda_runtime(monkeypatch, memset_result=17, fail_sync=3)
+    runtime.cudaFree.callback = lambda ptr: events.append("free") or (0 if ptr is None else 23)
+    assert cgroup_repro.cuda_worker("cuda_malloc", 1) == 33
+    result = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert result["phase"] == "error"
+    assert result["error"] == "RuntimeError: cudaMemset returned CUDA error 17"
+    assert any("cudaFree returned CUDA error 23" in note for note in result["notes"])
+    assert any("release cudaDeviceSynchronize returned CUDA error 44" in note for note in result["notes"])
+    assert events.count("free") == 2  # warmup plus the one allocation cleanup attempt
+    assert events.count("sync") == 3  # cleanup sync runs even after cudaFree reports failure
+
+    runtime, events = cuda_runtime(monkeypatch, fail_sync=3)
+    runtime.cudaMemset.callback = lambda *_args: (_ for _ in ()).throw(KeyboardInterrupt("cancel allocation"))
+    runtime.cudaFree.callback = lambda pointer: events.append("free") or (
+        0 if pointer is None else (_ for _ in ()).throw(RuntimeError("free teardown failed")))
+    with pytest.raises(KeyboardInterrupt, match="cancel allocation") as cancelled:
+        cgroup_repro.cuda_worker("cuda_malloc", 1)
+    assert events.count("sync") == 3
+    assert any("free teardown failed" in note for note in cancelled.value.__notes__)
+    assert any("CUDA error 44" in note for note in cancelled.value.__notes__)
+
+
+def test_debt_broad_except_cgroup_repro_150(monkeypatch: pytest.MonkeyPatch,
+                                           capsys: pytest.CaptureFixture[str]) -> None:
+    _assert_torch_primary_survives_cleanup(monkeypatch, capsys)
+    _assert_torch_cancellation_survives_cleanup(monkeypatch)
+
+
+def _assert_torch_primary_survives_cleanup(monkeypatch, capsys):
+    import sys
+    from test_cgroup_repro import fake_torch
+
+    events = []
+    torch = fake_torch(events, fail_fill=True)
+    sync_calls = 0
+
+    def failing_sync():
+        nonlocal sync_calls
+        sync_calls += 1
+        events.append("sync")
+        if sync_calls > 2:
+            raise RuntimeError(f"sync teardown {sync_calls} failed")
+
+    empty_cache_calls = 0
+
+    def failing_empty_cache():
+        nonlocal empty_cache_calls
+        empty_cache_calls += 1
+        events.append("empty_cache")
+        if empty_cache_calls > 1:
+            raise RuntimeError("empty_cache teardown failed")
+
+    torch.cuda.synchronize = failing_sync
+    torch.cuda.empty_cache = failing_empty_cache
+    monkeypatch.setitem(sys.modules, "torch", torch)
+    monkeypatch.setattr(cgroup_repro, "snapshot", lambda _pid: {"pid": 12})
+    monkeypatch.setattr(cgroup_repro.time, "sleep", lambda _seconds: None)
+    assert cgroup_repro.torch_worker(1) == 30
+    result = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert result["error"] == "RuntimeError: fill failed"
+    assert any("sync teardown 3 failed" in note for note in result["notes"])
+    assert any("empty_cache teardown failed" in note for note in result["notes"])
+    assert any("sync teardown 4 failed" in note for note in result["notes"])
+    assert events.count("empty_cache") == 2  # warmup plus one teardown attempt
+
+def _assert_torch_cancellation_survives_cleanup(monkeypatch):
+    import sys
+    from test_cgroup_repro import fake_torch
+
+    class CancelTensor:
+        def __init__(self, events, cancel):
+            self.events = events
+            self.cancel = cancel
+        def fill_(self, _value):
+            self.events.append("fill")
+            if self.cancel:
+                raise KeyboardInterrupt("cancel fill")
+
+    events = []
+    torch = fake_torch(events)
+    tensor_count = 0
+    original_empty = torch.empty
+
+    def cancel_second_fill(*args, **kwargs):
+        nonlocal tensor_count
+        tensor_count += 1
+        original_empty(*args, **kwargs)
+        return CancelTensor(events, tensor_count > 1)
+
+    torch.empty = cancel_second_fill
+    sync_calls = 0
+    def failing_cancel_sync():
+        nonlocal sync_calls
+        sync_calls += 1
+        events.append("sync")
+        if sync_calls > 2:
+            raise RuntimeError(f"cancel teardown sync {sync_calls}")
+
+    torch.cuda.synchronize = failing_cancel_sync
+    monkeypatch.setitem(sys.modules, "torch", torch)
+    with pytest.raises(KeyboardInterrupt, match="cancel fill") as cancelled:
+        cgroup_repro.torch_worker(1)
+    assert events.count("empty_cache") == 2
+    assert any("cancel teardown sync 3" in note for note in cancelled.value.__notes__)
+    assert any("cancel teardown sync 4" in note for note in cancelled.value.__notes__)
+
 
 
 def test_bug_provider_trace_latency_overflow_01(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
