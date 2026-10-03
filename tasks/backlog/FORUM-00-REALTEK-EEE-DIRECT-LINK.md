@@ -36,3 +36,8 @@ Cerrar con reproducción y A/B repetido en la topología reportada o con resulta
 ## Delta separado: deadlines de red tras actualización
 
 [382184](https://forums.developer.nvidia.com/t/382184) reporta OAI/USRP X310 en Spark FE, OS7.5/kernel6.17-1029/r8127: antes funcionaban20/40MHz, después hay late packets;10MHz aún funciona. Falta versión r8127 y respuesta ethtool pedida por NVIDIA; USB B210 es control de otro hardware. Separar deadline/loss de link flap y EEE. Reutilizar ethtool, drops/softnet stats y timestamps OAI, con carga/topología exactas y A/B de versión soportada o CX7; probar EEE solo si la evidencia lo relaciona. PREEMPT_RT o rollback driver exigen soporte OEM y recuperación. La detección existente de HARVEST354764 trata carga CPU de red; el delta preventivo EEE/deadlines permanece pendiente.
+
+
+## Índice de propuestas registradas del swarm NVIDIA categoría 721
+
+- **`FORUM-REALTIME-RTL8127-STREAM-DEADLINES`** — One user reports an OAI RAN workload with USRP X310 on RTL8127/r8127 stopped sustaining 20/40 MHz sample rates after DGX OS updates, producing late-packet warnings and eventual application failure; 10 MHz still works. Reported stack:… Fuente: [382184](https://forums.developer.nvidia.com/t/issues-with-real-time-sample-streaming-on-dgx-spark-rtl8127-nic/382184/1).

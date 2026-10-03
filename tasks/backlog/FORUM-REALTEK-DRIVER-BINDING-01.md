@@ -22,3 +22,8 @@ Leer identidad PCI/driver efectivo, alias, versión y proveedor del módulo y ke
 ## Riesgos y cierre
 
 El blacklist global puede desconectar otra Realtek o dejar el equipo sin módulo si r8127 falta/no carga por firma. Probar canary identificado y A/B warm/cold boots con binding, link, management SSH y paquetes/firma; conservar logs y fechas originales, controles NIC diferente y módulo ausente. Una pérdida de SSH deja estado unknown hasta corroborar host/PCI, sin powercycle automático. Registrar backup de GRUB/config y restauración verificada; suspensión de fichero usa rename/hash/modo/expiry/watcher. La ficha registra la propuesta y el test todavía pendiente; ningún cambio se aplica al host del coordinador.
+
+
+## Índice de propuestas registradas del swarm NVIDIA categoría 721
+
+- **`BB-REALTEK-DRIVER-BINDING-ALT-OS-CORROBORATION`** — On community Fedora 43/NixOS installs, Realtek 8127 was bound to r8169; users reported Ethernet unavailable after warm reboot and hardware absent until full power-off/on. A community NVIDIA-kernel build enabling r8127 plus… Fuente: [349124](https://forums.developer.nvidia.com/t/has-anyone-tried-an-alternative-linux-distro/349124/5).

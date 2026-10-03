@@ -41,3 +41,15 @@ Evidencia y pendientes: `tasks/evidence/FORUM-00-DOCKER-OOM-RESTART-LOOP/progres
 
 [357515](https://forums.developer.nvidia.com/t/new-machine-cat-etc-docker-daemon-json-no-such-file-or-directory/) reports Docker start failure and systemd start-limit on an ASUS GX10 after initial setup; absence of `/etc/docker/daemon.json` alone is not evidence of a defect. A reply points to a different case with `invalid database` under `/var/lib/docker/buildkit` and suggests confirming the journal signature before repairing/renaming that state. The original author does not confirm the cause or recovery, and one response's command is truncated in the capture. Extend the existing BuildKit-recovery test with exact signature and preservation/rollback; do not infer OOM or rename data blindly.
 
+
+
+## Índice de propuestas registradas del swarm NVIDIA categoría 721
+
+- **`BB-VLLM-GENERATION-LIVENESS-PROBE`** — A 24/7 GB10 vLLM author reports `/health` can return 200 while the engine has stopped serving. Their unauthenticated active probe received 401 with no `choices`, misclassified the healthy service as wedged and restarted it on a… Fuente: [380721](https://forums.developer.nvidia.com/t/playbook-submitted-keeping-vllm-up-as-a-long-lived-service-pr-104/380721/1).
+- **`BB-DOCKER-SSH-RESCUE-WINDOW`** — SGLang container with restart policy repeatedly consumes memory/swap after host reboot; disabling docker.service does not stop active container and docker.socket may reactivate it. SSH arrives earlier than model load, but proposed broad… Fuente: [382079](https://forums.developer.nvidia.com/t/remote-ssh-rescue-on-spark/382079/1).
+- **`BB-OOM-BOOT-RESCUE-USER-DATA`** — A DGX Spark desktop reportedly freezes during login after a user-started local model/container began autostarting; the owner eventually used a brief NVIDIA Sync/SSH window to disable Docker and retrieve data. NVIDIA says improved OOM… Fuente: [357004](https://forums.developer.nvidia.com/t/357004/1).
+
+
+## Índice de propuestas del lote 00
+
+- `FORUM-00-MODEL-CONTEXT-STARTUP-ADMISSION` — [Validate advertised model context and colocated UMA budget before auto-restarting model containers](https://forums.developer.nvidia.com/t/380700); detalle, confidence y close check en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.

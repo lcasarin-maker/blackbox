@@ -32,3 +32,14 @@ El verificador de close_check todavía debe implementarse; ejecutar esta ficha e
 Se implementó `python3 -m tools.preflight gsp <snapshot.json>` para separar presencia PCI, CUDA operativo y observación de timeout GSP. El control sano actual muestra GB10 en PCI, CUDA disponible con capacidad 12.1, GSP firmware 580.178.04, recuperación NVSMI `None` y ninguna entrada actual del kernel que coincida con GSP/SEC2/timeout. El resultado del control sano es `pass`; los controles negativos de PCI ausente, CUDA error y timeout se ejecutan en `tests/test_preflight.py`. Comandos y salidas literales: `tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/commands.json`; evaluación: `preflight.json` y `validator-run.json`.
 
 La ficha sigue abierta: falta un incidente fallido con versiones/boot preservados, una inyección de fallo soportada y compatibilidad OEM. El estado sano actual no prueba la cobertura del caso de campo.
+
+
+## Índice de hallazgos asociados
+
+- **`BB-GPU-SYS-PRI-POISON-REGISTER-DEGRADED-STATE`** — On a Spark and a separate HP ZGX Nano, authors report recurring NVRM `gpuHandleSanityCheckRegReadError_GH100` with register value `0xbadf5600` and `Unknown SYS_PRI_ERROR_CODE`, followed by NVML `GPU requires reset`; no Xid is reported.… Fuente: [364499](https://forums.developer.nvidia.com/t/364499/1).
+
+
+## Índice de propuestas del lote 00
+
+- `FORUM-00-GSP-BOOT-FAILURE-RECOVERY-BLOCKED` — [Preserve a GSP-failure escalation path when display, UEFI and FieldDiag are unavailable](https://forums.developer.nvidia.com/t/373394/1); detalle, confidence y close check en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.
+- `FORUM-00-FIELDDIAG-DRM-UNLOAD-BLOCK` — [Diagnose FieldDiag refusal when nvidia_drm remains busy](https://forums.developer.nvidia.com/t/dgx-spark-mini-connectx-7-qsfp-ports-not-powering-diagnostic-tool-unavailable/363311); detalle, confidence y close check en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.
