@@ -32,3 +32,8 @@ Cada fase/id soportado evalúa su sujeto específico con capturas reales y contr
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+
+## Avance de instrumentación 2026-10-03
+
+`tools.host_diagnostics` ahora relaciona entradas HID con el USB ancestro más cercano y conserva estados `could_not_run`; la captura disponible no observó entradas HID. El avance y la limitación están documentados en [BB-INSTRUMENTS-devices](../../docs/evidence/BB-INSTRUMENTS-devices.md). La ficha sigue abierta y el close_check original permanece pendiente.

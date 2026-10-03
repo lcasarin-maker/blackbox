@@ -11,7 +11,7 @@ import platform
 import re
 import subprocess
 import sys
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, Sequence, cast
 
 TIMEOUT_S = 4.0
 MAX_OUTPUT_CHARS = 16_384
@@ -142,6 +142,103 @@ def _pci_ids(device_path: Path) -> tuple[str | None, str | None, str | None]:
     except (FileNotFoundError, PermissionError, OSError) as exc:
         return None, None, f"{type(exc).__name__}: {exc}"
     return vendor, device, None
+
+
+def _sysfs_target(root: Path, path: Path) -> tuple[Path | None, str | None]:
+    """Resolve one sysfs entry only when it stays inside the supplied root."""
+    try:
+        target = path.resolve(strict=True)
+        target.relative_to(root.resolve())
+    except (FileNotFoundError, PermissionError, OSError, RuntimeError, ValueError) as exc:
+        return None, f"{type(exc).__name__}: {exc}"
+    return target, None
+
+
+def _device_attributes(root: Path, path: Path, names: Sequence[str]) -> dict[str, Any]:
+    target, error = _sysfs_target(root, path)
+    if error:
+        return {"status": "could_not_run", "error": error}
+    target = cast(Path, target)
+    values: dict[str, Any] = {}
+    for name in names:
+        attribute, error = _sysfs_target(root, target / name)
+        if error:
+            values[name] = ({"status": "unknown", "reason": "sysfs attribute absent"}
+                            if name == "serial" and error.startswith("FileNotFoundError:")
+                            else {"status": "could_not_run", "error": error})
+        else:
+            attribute = cast(Path, attribute)
+            values[name] = (read_optional_text(attribute) if name == "serial"
+                            else read_text(attribute))
+    return {"status": "could_not_run" if any(value["status"] == "could_not_run"
+                                                 for value in values.values()) else "ok",
+            **values}
+
+
+def read_optional_text(path: Path) -> dict[str, Any]:
+    """Read optional identity metadata, distinguishing absence from access failure."""
+    result = read_text(path)
+    if result.get("error", "").startswith("FileNotFoundError:"):
+        return {"status": "unknown", "reason": "sysfs attribute absent"}
+    return result
+
+
+def usb_inventory(root: Path) -> dict[str, Any]:
+    """Read USB identity/speed and correlate HID interfaces through sysfs ancestry."""
+    entries = read_names(root / "sys/bus/usb/devices")
+    if entries["status"] != "ok":
+        return entries
+    devices: dict[str, dict[str, Any]] = {}
+    targets: dict[str, Path] = {}
+    for name in entries["value"]:
+        path = root / "sys/bus/usb/devices" / name
+        target, error = _sysfs_target(root, path)
+        if error:
+            devices[name] = {"status": "could_not_run",
+                             "error": error}
+            continue
+        target = cast(Path, target)
+        targets[name] = target
+        if ":" in name:
+            continue
+        attrs = _device_attributes(root, path, (
+            "idVendor", "idProduct", "manufacturer", "product", "serial", "speed"))
+        devices[name] = attrs
+    hid_entries = read_names(root / "sys/bus/hid/devices")
+    hid: dict[str, Any] = {}
+    if hid_entries["status"] == "ok":
+        for name in hid_entries["value"]:
+            target, error = _sysfs_target(root, root / "sys/bus/hid/devices" / name)
+            if error:
+                hid[name] = {"status": "could_not_run",
+                             "error": error,
+                             "usb_device": None}
+                continue
+            target = cast(Path, target)
+            ancestors = [(usb_name, usb_path) for usb_name, usb_path in targets.items()
+                         if ":" not in usb_name and usb_path in target.parents]
+            matched = max(ancestors, key=lambda item: len(item[1].parts))[0] if ancestors else None
+            hid[name] = {"status": "ok" if matched else "unmatched",
+                         "usb_device": matched}
+    return {"status": "could_not_run" if entries["status"] != "ok" or
+            hid_entries["status"] != "ok" or any(v.get("status") == "could_not_run"
+                                                   for v in devices.values()) or
+            any(v.get("status") == "could_not_run" for v in hid.values()) else "ok",
+            "devices": devices, "hid_devices": hid,
+            "hid_inventory_status": hid_entries["status"]}
+
+
+def watchdog_inventory(root: Path) -> dict[str, Any]:
+    """Read watchdog sysfs metadata; never open a watchdog device node."""
+    entries = read_names(root / "sys/class/watchdog")
+    if entries["status"] != "ok":
+        return {**entries, "owner": "UNKNOWN"}
+    devices = {name: _device_attributes(root, root / "sys/class/watchdog" / name,
+                                        ("identity", "state", "timeout", "nowayout"))
+               for name in entries["value"]}
+    return {"status": "could_not_run" if any(v["status"] == "could_not_run"
+                                               for v in devices.values()) else "ok",
+            "owner": "UNKNOWN", "devices": devices}
 
 
 def pci_binding(root: Path, interface: str) -> dict[str, Any]:
@@ -340,11 +437,13 @@ def capture(root: Path = Path("/"), runner: RUNNER = subprocess.run) -> dict[str
         "usb": {
             "hid_devices": read_names(root / "sys/bus/hid/devices"),
             "usb_devices": read_names(root / "sys/bus/usb/devices"),
+            "inventory": usb_inventory(root),
             "usbhid_module": module_state(root, "usbhid"),
             "hid_generic_module": module_state(root, "hid_generic"),
             "xhci_hcd_module": module_state(root, "xhci_hcd"),
             "usb_tree": run_readonly(["lsusb", "-t"], runner),
         },
+        "watchdog": watchdog_inventory(root),
         "kernel_signals": run_readonly([
             "journalctl", "--no-pager", "--boot", "--dmesg", "--lines=500",
             "--grep=HC died|uvcvideo|xhci|nvme|read-only|I/O error|usbhid|no-secrets|WRONG_KEY|r8127",
