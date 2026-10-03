@@ -6,6 +6,7 @@ title: "Cerrar hallazgos de observabilidad y tipos en pruebas"
 status: done
 severity: P2
 origin: detected
+satd_family: BLIND_INSTRUMENT
 created: 2026-10-03
 closed_at: 2026-10-03
 closure_type: fixed
