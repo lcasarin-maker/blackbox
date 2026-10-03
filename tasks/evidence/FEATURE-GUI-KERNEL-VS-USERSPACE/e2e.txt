@@ -1,1 +1,11 @@
 Primer intento: `systemctl status gdm.service --no-pager 2>&1 >archivo` -- el orden de redirecciones esta al reves (2>&1 duplica stderr al stdout ORIGINAL antes de que este se redirija al archivo), asi que stderr se habria ido a la terminal y solo stdout al archivo. Corregido a `>archivo 2>&1`, mismo patron que el resto de cmd_snapshot.
+
+
+## Reejecución posterior de HARVEST-366211-my-gui-is-gone-and-nvidia-smi-is-not-working — 2026-10-03
+
+Comando sujeto: `python -m tools.check_harvest_accepted tasks/done/HARVEST-366211-my-gui-is-gone-and-nvidia-smi-is-not-working.md`
+
+Salida literal (rc=0):
+```text
+cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-GUI-KERNEL-VS-USERSPACE.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-GUI-KERNEL-VS-USERSPACE.md corre y pasa.
+```

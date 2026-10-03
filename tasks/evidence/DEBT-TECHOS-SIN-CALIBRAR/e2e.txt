@@ -1,2 +1,28 @@
 .......................................                                  [100%]
 39 passed in 0.06s
+
+
+## Reejecución posterior de DEBT-TECHOS-SIN-CALIBRAR — 2026-10-03
+
+Comando sujeto: `python3 -m tools.presupuesto_memoria --check`
+
+Salida literal (rc=0):
+```text
+[presupuesto] MemTotal:               121.1 GiB
+[presupuesto] -- mitad 1: COMPROMISOS (lo que el kernel aplica) --
+[presupuesto]   suelo comprometido de GPU       49.7 GiB  (p95 de 19804 muestras; con el p50 serian 39.1 -- la meseta mueve 10.6)
+[presupuesto]   app.slice (escritorio y arneses)           42.0 GiB  (usa 33.5)
+[presupuesto]   docker.slice (contenedores)                14.0 GiB  (usa 6.9)
+[presupuesto]   system.slice (servicios del sistema)       12.0 GiB  (usa 3.8)
+[presupuesto]   SUMA comprometida              117.7 GiB  sobre 121.1 -> holgura 3.4
+[presupuesto] -- mitad 2: EXCURSION (lo que NADIE aplica, y por eso se firma) --
+[presupuesto]   maximo observado                85.4 GiB  (2026-09-21T00:33:00-0600)
+[presupuesto]   presupuesto firmado             86.0 GiB  (firma Luis Casarin (lcasarin-maker), caduca 2026-10-27)
+[presupuesto] -- vista de operacion: la alarma del abanico --
+[presupuesto]   umbral del abanico              53.1 GiB  (lo que le queda a la GPU si TODOS los techos se honran)
+[presupuesto]   excursiones: 814 de 19804 muestras (4.1 %) por encima del presupuesto
+                 2026-10-02T12:17:00-0600  68.2 GiB
+                 2026-10-02T12:18:00-0600  58.6 GiB
+                 2026-10-02T12:19:00-0600  62.0 GiB
+[presupuesto] OK: lo declarado cabe en lo que hay.
+```

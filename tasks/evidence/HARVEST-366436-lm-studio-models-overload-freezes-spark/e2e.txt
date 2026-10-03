@@ -12,3 +12,13 @@ Required test coverage of 100.0% reached. Total coverage: 100.00%
 
 $ # el disparador medido de los dos congelamientos, ya topado
 simplecode/verification/backlog_verifier.py:2916:            ThreadPoolExecutor(max_workers=_slots) as pool:
+
+
+## Reejecución posterior de HARVEST-366436-lm-studio-models-overload-freezes-spark — 2026-10-03
+
+Comando sujeto: `python -m tools.check_harvest_accepted tasks/done/HARVEST-366436-lm-studio-models-overload-freezes-spark.md`
+
+Salida literal (rc=0):
+```text
+cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation -- el primer uso del closure_type que este caso obligo a crear (simplecode f66157a, publicado en 8.1.0). La adopcion se implemento con codigo real en commits ANTERIORES: bin/bb-usable (64d3daa) en este repo y UNIFIED_MEMORY_WORKER_CAP en simplecode (770a6ed). El hueco que esta misma ficha declaraba sin tapar -- 'nada cuenta globalmente los procesos que reservan memoria unificada' -- tambien se cerro el mismo dia con simplecode.utils.unified_memory_slots, que ademas consume PSI, que es la senal que las dos noches midio la verdad y nadie frenaba con ella.
+```
