@@ -389,6 +389,99 @@ def test_reanudar_un_proceso_que_ya_murio_no_revienta():
     assert any(e["evento"] == "mitigacion_reanuda" for e in resultado), resultado
 
 
+def test_reanudar_intento_no_reanuda_proceso_que_sigue_activo(tmp_path, monkeypatch):
+    """Un intento persistido no autoriza SIGCONT si el proceso no está parado."""
+    ruta = tmp_path / "estado.json"
+    ruta.write_text(json.dumps({
+        "version": 1,
+        "boot_id": "boot-actual",
+        "mitigados": [],
+        "identidades": {},
+        "intentos": {"101": 7, "102": 8},
+        "en_alarma": [],
+        "inicio": {},
+    }), encoding="utf-8")
+    monkeypatch.setattr(agt, "_boot_id", lambda: "boot-actual")
+    monkeypatch.setattr(agt, "_identidad_proceso",
+                        lambda pid: {101: (7, "R"), 102: (8, "T")}[pid])
+    señales = []
+
+    estado = agt._cargar_estado_mitigacion(
+        enviar_senal=lambda pid, sig: señales.append((pid, sig)), ruta=ruta)
+
+    assert señales == [(102, agt.signal.SIGCONT)], señales
+    assert estado["mitigados"] == set()
+    assert json.loads(ruta.read_text(encoding="utf-8"))["intentos"] == {}
+
+
+def test_gpu_process_con_memoria_no_numerica_no_suma_nan(monkeypatch):
+    monkeypatch.setattr(agt, "_correr", lambda *_: "101,worker,[N/A]\n")
+
+    resultado = agt.leer_procesos_gpu()
+
+    assert resultado == {
+        "gpu_procs": [{"pid": "101", "nombre": "worker", "mem_mib": None}],
+        "gpu_mem_total_mib": 0,
+    }
+
+
+def test_metric_waiting_by_reason_tolera_resultado_sin_dict():
+    resultado = {"vllm_num_requests_waiting_by_reason": None}
+
+    agt._procesar_linea_vllm(
+        'vllm:num_requests_waiting_by_reason{reason="capacity"} 3', resultado)
+
+    assert resultado["vllm_num_requests_waiting_by_reason"] is None
+
+
+def test_journal_suprime_ancla_vigente_de_una_lectura_anterior(monkeypatch):
+    clave = ("gpu_fuera_del_bus", None, None)
+    estado = {"cursor": "c0", "anclas": {clave: 1000.0}}
+    entrada = {"__CURSOR": "c1", "MESSAGE": "GPU has fallen off the bus",
+               "_TRANSPORT": "kernel", "__REALTIME_TIMESTAMP": "1001000000"}
+    monkeypatch.setattr(agt, "_correr_journalctl", lambda *a: json.dumps(entrada) + "\n")
+
+    eventos, motivo = agt.vigilar_journal(estado)
+
+    assert eventos == [], eventos
+    assert motivo is None
+    assert estado["cursor"] == "c1"
+    assert estado["anclas"][clave] == 1000.0
+
+
+def test_main_real_loop_sin_once_espera_y_sale_con_keyboard_interrupt(
+        tmp_path, monkeypatch):
+    """Ejecuta ambas vueltas del sampler real sin esperar ni modificar el host."""
+    ruta = tmp_path / "telemetria.jsonl"
+    monkeypatch.setattr(agt, "JSONL_PATH", ruta)
+    monkeypatch.setattr(agt, "rotar_si_hace_falta", lambda: None)
+    monkeypatch.setattr(agt, "leer_umbrales", lambda: {})
+    muestras = []
+    monkeypatch.setattr(agt, "leer_zonas", lambda: muestras.append("muestra") or [])
+    monkeypatch.setattr(agt, "leer_gpu", lambda: {})
+    monkeypatch.setattr(agt, "leer_memoria_sistema", lambda: {})
+    monkeypatch.setattr(agt, "leer_psi_memoria", lambda: {})
+    monkeypatch.setattr(agt, "leer_vllm_metrics", lambda: {})
+    monkeypatch.setattr(agt, "leer_procesos_gpu", lambda: {})
+    monkeypatch.setattr(agt, "vigilar_journal", lambda estado: ([], "fixture sin journal"))
+    monkeypatch.setattr(agt, "_boot_id", lambda: "boot-fixture")
+    monkeypatch.setattr(agt.sys, "argv", ["agt", "--interval-seconds", "0.01"])
+    intervalos = []
+
+    def interrumpir_tras_dos_muestras(segundos):
+        intervalos.append(segundos)
+        if len(intervalos) == 2:
+            raise KeyboardInterrupt
+
+    monkeypatch.setattr(agt.time, "sleep", interrumpir_tras_dos_muestras)
+
+    assert agt.main() == 0
+    assert intervalos == [0.01, 0.01], intervalos
+    assert len(muestras) == 2, muestras
+    eventos = [json.loads(linea) for linea in ruta.read_text(encoding="utf-8").splitlines()]
+    assert [evento["evento"] for evento in eventos] == ["arranque", "muestra", "muestra"]
+
+
 def test_mitigar_rechaza_opciones_desconocidas():
     with pytest.raises(TypeError, match="unexpected keyword argument 'inesperada'"):
         agt.mitigar([], {}, inesperada=True)
