@@ -246,7 +246,8 @@ def latencia_x_ms() -> float | None:
 
 def main() -> int:
     notify("READY=1")
-    log = lambda m: (print(m, file=sys.stderr, flush=True))  # noqa: E731
+    def log(message: str) -> None:
+        print(message, file=sys.stderr, flush=True)
 
     first = probe()
     log(f"[bb-usable] sonda sana de referencia: {first*1000:.0f} ms para "
