@@ -1,7 +1,7 @@
 ---
 id: HARVEST-373187-dgx-wont-boot-tried-all-documented-methods-fr
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (373187-dgx-wont-boot-tried-all-documented-methods-from-public-document)"
+title: "Atlas: evaluar adopción — DGX will not boot after documented methods tried"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

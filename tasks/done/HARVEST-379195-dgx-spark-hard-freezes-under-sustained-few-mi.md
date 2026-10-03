@@ -1,7 +1,7 @@
 ---
 id: HARVEST-379195-dgx-spark-hard-freezes-under-sustained-few-mi
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (379195-dgx-spark-hard-freezes-under-sustained-few-minutes-inference-po)"
+title: "Atlas: evaluar adopción — DGX Spark freezes during sustained inference"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

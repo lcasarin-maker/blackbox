@@ -1,7 +1,7 @@
 ---
 id: FEATURE-KDUMP-PSTORE-PREAPAGADO
 kind: task
-title: enable-privileged.sh solo arma coredump de userspace -- cero captura de estado de kernel ante un power-off duro
+title: kdump captura dmesg de kernel ante panic; coredump solo cubría userspace
 status: done
 severity: P1
 origin: asserted

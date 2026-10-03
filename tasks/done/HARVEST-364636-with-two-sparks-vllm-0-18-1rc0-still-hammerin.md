@@ -1,7 +1,7 @@
 ---
 id: HARVEST-364636-with-two-sparks-vllm-0-18-1rc0-still-hammerin
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (364636-with-two-sparks-vllm-0-18-1rc0-still-hammering-two-cores-at-100)"
+title: "Atlas: evaluar adopción — two-spark vLLM hammers two CPU cores at 100%"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

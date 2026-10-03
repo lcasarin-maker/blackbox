@@ -1,7 +1,7 @@
 ---
 id: HARVEST-351579-reinstalling-the-nvidia-driver-on-dgx-spark
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (351579-reinstalling-the-nvidia-driver-on-dgx-spark)"
+title: "Atlas: evaluar adopción — reinstalling NVIDIA driver on DGX Spark"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

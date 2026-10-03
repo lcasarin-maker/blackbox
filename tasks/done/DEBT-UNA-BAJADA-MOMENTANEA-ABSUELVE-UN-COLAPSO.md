@@ -1,7 +1,7 @@
 ---
 id: DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO
 kind: debt
-title: "Una sonda baja de 30 s absolvia un colapso entero: la maquina murio de kernel panic con el vigilante armado"
+title: "La sonda de 30 s absolvió un colapso pese al kernel panic"
 status: done
 closure_type: relocated_prior_verification
 closed_at: 2026-10-03

@@ -1,7 +1,7 @@
 ---
 id: HARVEST-379959-gb10-spontaneous-reboots-after-july-2026-upda
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (379959-gb10-spontaneous-reboots-after-july-2026-update-gsp-health-chec)"
+title: "Atlas: evaluar adopción — GB10 spontaneous reboots after July 2026 update"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

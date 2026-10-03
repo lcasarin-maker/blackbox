@@ -1,7 +1,7 @@
 ---
 id: HARVEST-354764-dgx-spark-ethernet-connection-unstable-after-
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (354764-dgx-spark-ethernet-connection-unstable-after-november-2025-upda)"
+title: "Atlas: evaluar adopción — DGX Spark Ethernet unstable after November 2025 update"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

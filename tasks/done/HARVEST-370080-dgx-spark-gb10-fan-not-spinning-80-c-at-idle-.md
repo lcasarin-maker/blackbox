@@ -1,7 +1,7 @@
 ---
 id: HARVEST-370080-dgx-spark-gb10-fan-not-spinning-80-c-at-idle-
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (370080-dgx-spark-gb10-fan-not-spinning-80-c-at-idle-with-0-gpu-utiliza)"
+title: "Atlas: evaluar adopción — GB10 fan stopped at 80°C idle with no GPU use"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

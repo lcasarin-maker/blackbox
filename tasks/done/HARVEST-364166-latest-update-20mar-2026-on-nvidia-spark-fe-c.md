@@ -1,7 +1,7 @@
 ---
 id: HARVEST-364166-latest-update-20mar-2026-on-nvidia-spark-fe-c
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (364166-latest-update-20mar-2026-on-nvidia-spark-fe-caps-gpu-performanc)"
+title: "Atlas: evaluar adopción — March 2026 update caps NVIDIA Spark GPU performance"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

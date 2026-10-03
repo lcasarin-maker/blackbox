@@ -1,7 +1,7 @@
 ---
 id: HARVEST-366211-my-gui-is-gone-and-nvidia-smi-is-not-working
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (366211-my-gui-is-gone-and-nvidia-smi-is-not-working)"
+title: "Atlas: evaluar adopción — GUI disappears and nvidia-smi stops working"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

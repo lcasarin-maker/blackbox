@@ -1,7 +1,7 @@
 ---
 id: HARVEST-373655-ubuntu-26-04-drivers-610-cuda-toolkit-13-3-zf
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (373655-ubuntu-26-04-drivers-610-cuda-toolkit-13-3-zfs-on-gx10)"
+title: "Atlas: evaluar adopción — Ubuntu, NVIDIA 610, CUDA 13.3, and ZFS on GX10"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

@@ -1,7 +1,7 @@
 ---
 id: HARVEST-372642-my-spark-is-overheating-when-clustered-and-ru
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (372642-my-spark-is-overheating-when-clustered-and-running-a-model-acro)"
+title: "Atlas: evaluar adopción — Spark overheats when clustered and running a model"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

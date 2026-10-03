@@ -1,7 +1,7 @@
 ---
 id: HARVEST-367765-dear-nvidia-nvidia-smi-is-broken-on-the-dgx-s
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (367765-dear-nvidia-nvidia-smi-is-broken-on-the-dgx-spark)"
+title: "Atlas: evaluar adopción — nvidia-smi broken on DGX Spark"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

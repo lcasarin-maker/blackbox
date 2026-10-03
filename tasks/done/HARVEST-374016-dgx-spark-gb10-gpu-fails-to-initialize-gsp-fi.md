@@ -1,7 +1,7 @@
 ---
 id: HARVEST-374016-dgx-spark-gb10-gpu-fails-to-initialize-gsp-fi
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (374016-dgx-spark-gb10-gpu-fails-to-initialize-gsp-firmware-sec2-secure)"
+title: "Atlas: evaluar adopción — GB10 GPU fails GSP firmware initialization"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

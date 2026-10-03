@@ -1,7 +1,7 @@
 ---
 id: HARVEST-374274-suddenly-much-lower-gpu-performance-in-infere
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (374274-suddenly-much-lower-gpu-performance-in-inference)"
+title: "Atlas: evaluar adopción — GPU inference performance suddenly drops"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

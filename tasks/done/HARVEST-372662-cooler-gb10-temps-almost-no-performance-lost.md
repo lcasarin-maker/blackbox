@@ -1,7 +1,7 @@
 ---
 id: HARVEST-372662-cooler-gb10-temps-almost-no-performance-lost
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (372662-cooler-gb10-temps-almost-no-performance-lost)"
+title: "Atlas: evaluar adopción — GB10 runs cooler with almost no performance loss"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

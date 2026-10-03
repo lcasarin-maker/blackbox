@@ -1,7 +1,7 @@
 ---
 id: HARVEST-380009-asm2464pd-usb-c-3-2-2x2-enclosure-always-fall
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (380009-asm2464pd-usb-c-3-2-2x2-enclosure-always-fall-back-to-usb2-0-48)"
+title: "Atlas: evaluar adopción — ASM2464PD USB-C enclosure falls back to USB 2.0"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23

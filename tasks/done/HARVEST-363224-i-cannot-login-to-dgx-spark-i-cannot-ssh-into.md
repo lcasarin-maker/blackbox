@@ -1,7 +1,7 @@
 ---
 id: HARVEST-363224-i-cannot-login-to-dgx-spark-i-cannot-ssh-into
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (363224-i-cannot-login-to-dgx-spark-i-cannot-ssh-into-it-from-my-macboo)"
+title: "Atlas: evaluar adopción — cannot log in or SSH to DGX Spark from MacBook"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

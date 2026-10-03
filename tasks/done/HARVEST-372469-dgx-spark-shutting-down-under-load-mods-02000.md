@@ -1,7 +1,7 @@
 ---
 id: HARVEST-372469-dgx-spark-shutting-down-under-load-mods-02000
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (372469-dgx-spark-shutting-down-under-load-mods-020000600139)"
+title: "Atlas: evaluar adopción — DGX Spark shuts down under load"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

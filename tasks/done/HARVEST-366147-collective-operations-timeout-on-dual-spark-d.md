@@ -1,7 +1,7 @@
 ---
 id: HARVEST-366147-collective-operations-timeout-on-dual-spark-d
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (366147-collective-operations-timeout-on-dual-spark-during-distributed-)"
+title: "Atlas: evaluar adopción — collective operations time out on dual-spark jobs"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

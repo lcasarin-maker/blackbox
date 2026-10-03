@@ -1,7 +1,7 @@
 ---
 id: HARVEST-377375-what-are-normal-temps-under-load-is-94-6c-too
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (377375-what-are-normal-temps-under-load-is-94-6c-too-hot)"
+title: "Atlas: evaluar adopción — is 94.6°C normal under load?"
 status: done
 closure_type: void_wontfix
 closed_at: 2026-09-26

@@ -1,7 +1,7 @@
 ---
 id: HARVEST-365609-nvidia-dgx-spark-continuously-freezing-hangin
 kind: task
-title: "Evaluar adopción: mecanismo cosechado por Atlas (365609-nvidia-dgx-spark-continuously-freezing-hanging-and-or-rebooting)"
+title: "Atlas: evaluar adopción — DGX Spark freezes, hangs, or reboots repeatedly"
 status: done
 closure_type: adopted_prior_implementation
 closed_at: 2026-09-23
