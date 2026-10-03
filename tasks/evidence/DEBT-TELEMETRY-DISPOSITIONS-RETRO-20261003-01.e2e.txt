@@ -3,3 +3,8 @@ Nine concrete blocked rawcollector events now have evidence-backed confirmed_def
 Native check: python3 .simplecode/run.py simplecode.verification.telemetry_dispositions --root . --gate
 Exit: 0. Report: could_not_dispose=0, confirmed_defect=279, historical_undisposed=3. The three pre-cutoff events remain explicitly outside the gate and are not counted as resolved.
 Ficha DEBT-TELEMETRY-DISPOSITIONS-RETRO-20261003-01. Verificación del sujeto mediante `python3 .simplecode/run.py simplecode.verification.telemetry_dispositions --root . --gate`.
+
+Corrección tras pre-push de b6ca7ba: criterio global confundía nuevos eventos con los nueve IDs del sujeto. DEBT-TELEMETRY-DISPOSITIONS-RETRO-20261003-01 ahora usa:
+python3 -m tools.verify_telemetry_dispositions --event-id 29ac411d67e0c8e7 --event-id 72cac1e581e4c2ad --event-id bad62df306de815c --event-id 8aebe7815048e5ad --event-id 694e380f85c05252 --event-id f95c29dcff8be347 --event-id be8bb3f2adada251 --event-id 19e221b050ec8938 --event-id ad175dcf781b890c
+[telemetry-dispositions] OK: 9 events have valid dispositions.
+El gate global sigue juzgando nuevos eventos; los tres históricos sin fuente conservan su ficha abierta.
