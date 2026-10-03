@@ -29,7 +29,9 @@ def test_debt_coverage_targets_bin_usable_01(tmp_path, monkeypatch):
         capture_output=True, text=True, cwd=root, env=env, timeout=120, check=False,
     )
     assert measured.returncode == 0, measured.stdout + measured.stderr
-    assert "27 passed" in measured.stdout, measured.stdout + measured.stderr
+    output = measured.stdout + measured.stderr
+    assert " skipped" not in output, output
+    assert "COULD_NOT_RUN" not in output, output
     report = subprocess.run(
         ["coverage", "report"], capture_output=True, text=True, cwd=root, env=env,
         timeout=30, check=False,
