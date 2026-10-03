@@ -1,0 +1,11 @@
+--- a/src/simplecode/verification/adversarial_judge.py
++++ b/src/simplecode/verification/adversarial_judge.py
+@@ -820,7 +820,7 @@
+ # are NOT an error (no satellite has all five) but they are not coverage either,
+ # so `sweep_coverage` returns them separately instead of letting a PASS imply a
+ # sweep that never happened.
+-AGENT_THREAT_TREES: tuple[str, ...] = ("src", "scripts", "daemon", "central", "installer")
++AGENT_THREAT_TREES: tuple[str, ...] = ("src", "scripts", "daemon", "central", "installer", "tools")
+ 
+ 
+ def sweep_coverage(root: Path) -> tuple[list[str], list[str]]:
