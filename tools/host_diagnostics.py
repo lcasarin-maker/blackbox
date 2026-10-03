@@ -228,6 +228,21 @@ def could_not_run_count(value: Any) -> int:
     return 0
 
 
+def gpu_runtime_capture(runner: RUNNER = subprocess.run) -> dict[str, Any]:
+    """Capture host and running-container runtime identities read-only."""
+    return {
+        "nvidia_smi_banner": run_readonly(["nvidia-smi"], runner),
+        "nvidia_gpu_state": run_readonly([
+            "nvidia-smi", "--query-gpu=name,driver_version,pci.bus_id,utilization.gpu,power.draw",
+            "--format=csv,noheader",
+        ], runner),
+        "container_runtime_version": run_readonly(
+            ["docker", "version", "--format", "{{.Server.Version}}"], runner),
+        "running_container_image_tags": run_readonly(
+            ["docker", "ps", "--no-trunc", "--format", "{{.ID}} {{.Image}}"], runner),
+    }
+
+
 def capture(root: Path = Path("/"), runner: RUNNER = subprocess.run) -> dict[str, Any]:
     """Capture local status only; do not change services, links, modules, or disks."""
     interfaces = _interfaces(root)
@@ -247,6 +262,7 @@ def capture(root: Path = Path("/"), runner: RUNNER = subprocess.run) -> dict[str
                 ["lsblk", "--json", "--output", "NAME,TYPE,RO,MODEL,MOUNTPOINT"], runner),
             "nvme_inventory": run_readonly(["nvme", "list", "--output-format=json"], runner),
         },
+        "gpu_runtime": gpu_runtime_capture(runner),
         "network": {
             "nm_devices": run_readonly(
                 ["nmcli", "--terse", "--fields", "DEVICE,TYPE,STATE", "device", "status"], runner),

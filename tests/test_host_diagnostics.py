@@ -92,6 +92,28 @@ def test_command_rc_output_caps_and_safe_invocation() -> None:
     assert failed["returncode"] == 3
 
 
+def test_gpu_runtime_capture_uses_bounded_readonly_queries_and_preserves_failures() -> None:
+    good = FakeRunner(subprocess.CompletedProcess([], 0, "observed-version-or-gpu-state\n", ""))
+    runtime = hd.gpu_runtime_capture(good)
+    assert set(runtime) == {"nvidia_smi_banner", "nvidia_gpu_state", "container_runtime_version",
+                            "running_container_image_tags"}
+    assert all(item["status"] == "ok" for item in runtime.values())
+    assert [call[0] for call in good.calls] == [
+        ["nvidia-smi"],
+        ["nvidia-smi", "--query-gpu=name,driver_version,pci.bus_id,utilization.gpu,power.draw",
+         "--format=csv,noheader"],
+        ["docker", "version", "--format", "{{.Server.Version}}"],
+        ["docker", "ps", "--no-trunc", "--format", "{{.ID}} {{.Image}}"],
+    ]
+    assert all(call[1]["timeout"] == hd.TIMEOUT_S and call[1]["stdin"] == subprocess.DEVNULL
+               and call[1].get("shell", False) is False for call in good.calls)
+
+    unavailable = FakeRunner(PermissionError("query unavailable"))
+    failed = hd.gpu_runtime_capture(unavailable)
+    assert all(item["status"] == "could_not_run" for item in failed.values())
+    assert hd.could_not_run_count(failed) == 4
+
+
 def test_mount_summary_ro_rw_and_malformed(tmp_path: Path) -> None:
     mountinfo = tmp_path / "proc/self/mountinfo"
     mountinfo.parent.mkdir(parents=True)
@@ -280,6 +302,8 @@ def test_capture_uses_fixed_read_only_queries_and_reports_signals(tmp_path: Path
                                 "services_changed": False, "network_changed": False,
                                 "modules_changed": False, "block_device_written": False}
     assert result["checks"]["network"]["eee"]["eth0"]["status"] == "ok"
+    assert result["checks"]["gpu_runtime"]["nvidia_smi_banner"]["status"] == "ok"
+    assert result["checks"]["gpu_runtime"]["running_container_image_tags"]["status"] == "ok"
     commands = [call[0] for call in runner.calls]
     assert ["ethtool", "--show-eee", "eth0"] in commands
     assert ["nvme", "list", "--output-format=json"] in commands
