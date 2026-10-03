@@ -2,7 +2,7 @@
 id: DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO
 kind: debt
 title: "Una sonda baja de 30 s absolvia un colapso entero: la maquina murio de kernel panic con el vigilante armado"
-status: done
+status: open
 closure_type: fixed
 closed_at: 2026-09-28
 severity: P1
@@ -182,3 +182,7 @@ Nada avisa automaticamente cuando el disco y la memoria divergen: el
 `close_check` lo detecta si alguien lo corre, y el pre-push no lo corre porque
 mira el repo. Un watcher que compare `ExecMainStartTimestamp` contra el mtime en
 cada `bb status` cerraria eso, y no esta escrito.
+
+## Reapertura /0 — 2026-10-02
+
+backlog_verifier detectó rc=1 en el close_check tras cambiar bin/bb-usable: el proceso vivo arrancó 2026-09-30 y el archivo fue modificado después. El arreglo de lógica sigue probado en disco; la condición explícita del proceso vivo requiere cargar la versión actual. Reinicio del vigilante pendiente de autorización/privilegios; no se debilita el criterio. Informe literal tasks/evidence/ZERO-2026-10-02/verifier-wave1.txt.
