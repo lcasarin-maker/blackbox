@@ -23,6 +23,7 @@ Los tres frenos, cada uno con su control en la direccion contraria:
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -150,22 +151,25 @@ def test_un_directorio_de_muestras_que_no_existe_se_registra(tmp_path):
     assert any("no es un directorio" in x for x in r["ilegibles"]), r
 
 
-def test_una_muestra_ILEGIBLE_no_se_traga_en_silencio(tmp_path):
+def test_una_muestra_ILEGIBLE_no_se_traga_en_silencio(tmp_path, monkeypatch):
     """Un maximo calculado sobre un conjunto incompleto sale MAS BAJO de lo
     real, y un techo bajo mata procesos. Lo mismo que `silent_io_loop_swallow`
     cazo en presupuesto_memoria."""
     d = _muestras(tmp_path, _plana(ct.MINIMO_MUESTRAS))
     roto = d / "ilegible.jsonl"
     roto.write_text("{}\n", encoding="utf-8")
-    roto.chmod(0o000)
-    try:
-        r = ct.calibra("system", d)
-        if not r["ilegibles"]:                      # root lee de todas formas
-            pytest.skip("este usuario puede leer un fichero con modo 000")
-        assert r["propuesto_gib"] is None, r
-        assert any("ilegibles" in x for x in r["faltas"]), r["faltas"]
-    finally:
-        roto.chmod(0o644)
+    read_text = Path.read_text
+
+    def read_with_permission_error(path, *args, **kwargs):
+        if path == roto:
+            raise PermissionError(f"fixture: {path}")
+        return read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_with_permission_error)
+    r = ct.calibra("system", d)
+    assert roto.name in " ".join(r["ilegibles"]), r["ilegibles"]
+    assert r["propuesto_gib"] is None, r
+    assert any("ilegibles" in x for x in r["faltas"]), r["faltas"]
 
 
 # =====================================================================
@@ -249,22 +253,24 @@ def test_el_json_sale_1_cuando_no_hay_techo_y_0_cuando_si(tmp_path, monkeypatch,
 # =====================================================================
 
 
-def test_un_directorio_SIN_PERMISO_se_registra_y_no_pasa_por_vacio(tmp_path):
+def test_un_directorio_SIN_PERMISO_se_registra_y_no_pasa_por_vacio(tmp_path, monkeypatch):
     """Un directorio ilegible que se leyera como "no hay muestras" haria que el
     calibrador dijera "el slice no aparece" -- una afirmacion sobre la maquina
     que nadie comprobo. Mismo fallo que `Path.glob` provoco en
     presupuesto_memoria: no lanza, devuelve vacio."""
     d = tmp_path / "samples"
     d.mkdir()
-    d.chmod(0o000)
-    try:
-        r = ct.calibra("system", d)
-        if not r["ilegibles"]:
-            pytest.skip("este usuario puede leer un directorio con modo 000")
-        assert any("sin permiso" in x for x in r["ilegibles"]), r
-        assert r["propuesto_gib"] is None
-    finally:
-        d.chmod(0o755)
+    access = ct.os.access
+
+    def access_without_directory_permission(path, mode):
+        if Path(path) == d:
+            return False
+        return access(path, mode)
+
+    monkeypatch.setattr(ct.os, "access", access_without_directory_permission)
+    r = ct.calibra("system", d)
+    assert any("sin permiso" in x for x in r["ilegibles"]), r
+    assert r["propuesto_gib"] is None
 
 
 def test_lineas_que_no_son_una_muestra_se_saltan_sin_ruido(tmp_path):
@@ -307,12 +313,14 @@ def test_el_informe_NOMBRA_los_ficheros_ilegibles(tmp_path, monkeypatch, capsys)
     d = _muestras(tmp_path, _plana(ct.MINIMO_MUESTRAS))
     roto = d / "ilegible.jsonl"
     roto.write_text("{}\n", encoding="utf-8")
-    roto.chmod(0o000)
-    try:
-        rc = ct.main([])
-        salida = capsys.readouterr()
-        if "ilegible:" not in salida.out:
-            pytest.skip("este usuario puede leer un fichero con modo 000")
-        assert rc == 1 and "ilegible.jsonl" in salida.out, salida.out
-    finally:
-        roto.chmod(0o644)
+    read_text = Path.read_text
+
+    def read_with_permission_error(path, *args, **kwargs):
+        if path == roto:
+            raise PermissionError(f"fixture: {path}")
+        return read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_with_permission_error)
+    rc = ct.main([])
+    salida = capsys.readouterr()
+    assert rc == 1 and "ilegible.jsonl" in salida.out, salida.out

@@ -83,11 +83,17 @@ TIMEOUT_S = int(SEGUNDOS_MEDIDOS * 100)
 
 def _pii_scan():
     if not RUNTIME.is_file():
-        pytest.skip(f"sin runtime del kit en {RUNTIME}")
+        raise AssertionError(f"COULD_NOT_RUN: runtime del kit ausente en {RUNTIME}")
     sys.path.insert(0, str(RUNTIME))
     from simplecode.verification import pii_scan
 
     return pii_scan
+
+
+def test_runtime_ausente_es_COULD_NOT_RUN_y_no_un_skip(monkeypatch, tmp_path):
+    monkeypatch.setattr(sys.modules[__name__], "RUNTIME", tmp_path / "runtime.zip")
+    with pytest.raises(AssertionError, match="COULD_NOT_RUN: runtime del kit ausente"):
+        _pii_scan()
 
 
 # =====================================================================
@@ -164,7 +170,18 @@ def _hallazgos(tmp_path, contenido):
             for campo in linea.split():
                 if campo.startswith("hallazgos="):
                     return int(campo.split("=", 1)[1])
-    pytest.skip(f"el gate no imprimio una cuenta de hallazgos: {r.stdout}{r.stderr}")
+    raise AssertionError(
+        f"COULD_NOT_RUN: el gate no imprimio una cuenta de hallazgos: {r.stdout}{r.stderr}"
+    )
+
+
+def test_cuenta_ausente_es_COULD_NOT_RUN(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        subprocess, "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, "sin cuenta\n", ""),
+    )
+    with pytest.raises(AssertionError, match="COULD_NOT_RUN: el gate no imprimio"):
+        _hallazgos(tmp_path, "texto de prueba")
 
 
 def test_el_gate_ENTERO_no_reporta_nada_sobre_una_unit(tmp_path):
