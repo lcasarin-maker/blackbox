@@ -1,0 +1,28 @@
+$ /opt/miniforge3/bin/python3 tools/control_racha.py --muestras /tmp/bb-zero-no-cover/control-samples
+exit=0
+corpus 1 muestras  2026-09-15 03:00:00 -> 2026-09-15 03:00:00
+ventanas de incidente excluidas: 6  corte de accion: 300s  umbral: 10%
+
+regla                                     max sostenido sano  veredicto
+  1 baja(s) para cortar (defecto)                 0 s        no dispara
+  2 baja(s) para cortar (ARREGLO)                 0 s        no dispara
+  3 baja(s) para cortar (mas flojo)               0 s        no dispara
+  6 baja(s) para cortar (mas flojo)               0 s        no dispara
+
+VEREDICTO: LIMPIO -- ninguna regla llega al corte. Margen del corte contra el peor caso sano: 300000000000.00x
+
+$ /opt/miniforge3/bin/python3 tools/control_racha.py --codex-invalid-argument
+exit=2
+usage: control_racha.py [-h] [--muestras MUESTRAS] [--corte CORTE]
+                        [--bajas BAJAS [BAJAS ...]]
+control_racha.py: error: unrecognized arguments: --codex-invalid-argument
+
+$ mutant /tmp/bb-zero-no-cover/mutants/control_racha.py --codex-invalid-argument
+exit=0
+
+
+Coverage report with pragma (launcher excluded):
+tools/control_racha.py               63     57     18      0     7%   65-157
+Coverage report after removal and direct CLI run:
+tools/control_racha.py               65      0     20      0   100%
+The test runs these real processes with a 10s timeout and asserts stdout/rc; mutation forces CLI success and is rejected against the expected error rc=2. No GPU workload or host mutation.

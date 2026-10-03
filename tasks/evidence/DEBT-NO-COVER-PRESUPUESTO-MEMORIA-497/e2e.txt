@@ -1,0 +1,48 @@
+$ /opt/miniforge3/bin/python3 tools/presupuesto_memoria.py --help
+exit=0
+usage: presupuesto_memoria.py [-h] [--check] [--json]
+
+Los techos de memoria de esta maquina COMPONEN, o no son una proteccion. ##
+Por que existe `DEBT-TECHOS-SIN-CALIBRAR`, abierta el 2026-09-24: los techos
+declarados sumaban 125G en una maquina de 121.1 GiB. No es que los numeros
+fueran flojos -- es que no caben. Un conjunto de techos que no compone no
+protege nada: si cada dueno reclamara lo suyo, la maquina se agota con todos
+los techos respetados. La ficha no se podia cerrar porque faltaba un numero:
+cuanta memoria unificada reserva de verdad la GPU, que **ningun cgroup ve**.
+Este modulo lo fija con medida y comprueba la suma. ## El numero que faltaba,
+medido `nvidia-smi` reporta la memoria unificada por proceso; el cgroup de ese
+mismo proceso no la contabiliza. Medido el 2026-09-25 en esta caja: pid 20687
+VLLM::EngineCore nvidia-smi 32837 MiB su cgroup 10.0 GB pid 3443 atlas-api
+nvidia-smi 4522 MiB su cgroup 5.9 GB Un punto no es una medida, asi que el
+techo sale del HISTORICO que bb ya guarda: el campo `gpu` de sus muestras
+lleva pid y MiB desde el 2026-09-08. Sobre **18 733 muestras con al menos un
+proceso de GPU**, el maximo agregado observado es **87 487 MiB = 85.4 GiB**,
+el 2026-09-21T00:33. Eso es lo que hay que restarle al presupuesto antes de
+repartir el resto. ## Lo que este gate NO dice, antes de que alguien lo
+suponga No dice que 85.4 GiB sea el maximo posible: dice que es el maximo
+OBSERVADO en la ventana que bb lleva grabada. Por eso el gate tambien
+comprueba lo contrario -- que las muestras no hayan superado ya la reserva
+declarada-- y falla si la cifra se quedo vieja. Una reserva fijada una vez y
+nunca releida es exactamente el techo sin calibrar que esta ficha vino a
+quitar. Y no mide fragmentacion, ni el kernel, ni el page cache: mide que la
+suma de lo DECLARADO quepa en lo que hay.
+
+options:
+  -h, --help  show this help message and exit
+  --check     sale 1 si los techos no componen o la reserva quedo vieja
+  --json      la cuenta en JSON
+
+$ /opt/miniforge3/bin/python3 tools/presupuesto_memoria.py --codex-invalid-argument
+exit=2
+usage: presupuesto_memoria.py [-h] [--check] [--json]
+presupuesto_memoria.py: error: unrecognized arguments: --codex-invalid-argument
+
+$ mutant /tmp/bb-zero-no-cover/mutants/presupuesto_memoria.py --codex-invalid-argument
+exit=0
+
+
+Coverage report with pragma (launcher excluded):
+tools/presupuesto_memoria.py        213    183     88      0    10%   129-130, 140-146, 153-162, 168-171, 188-225, 235-237, 266-274, 291-317, 323-365, 382-494
+Coverage report after removal and direct CLI run:
+tools/presupuesto_memoria.py        215      0     90      0   100%
+The test runs these real processes with a 10s timeout and asserts stdout/rc; mutation forces CLI success and is rejected against the expected error rc=2. No GPU workload or host mutation.

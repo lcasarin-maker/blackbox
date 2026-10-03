@@ -1,0 +1,28 @@
+$ /opt/miniforge3/bin/python3 tools/calibra_psi.py --help
+exit=0
+usage: calibra_psi.py [-h] [--muestras MUESTRAS] [--umbral UMBRAL]
+                      [--sostenido SOSTENIDO]
+
+calibra y verifica los cortes de PSI de bb scan
+
+options:
+  -h, --help            show this help message and exit
+  --muestras MUESTRAS
+  --umbral UMBRAL
+  --sostenido SOSTENIDO
+
+$ /opt/miniforge3/bin/python3 tools/calibra_psi.py --codex-invalid-argument
+exit=2
+usage: calibra_psi.py [-h] [--muestras MUESTRAS] [--umbral UMBRAL]
+                      [--sostenido SOSTENIDO]
+calibra_psi.py: error: unrecognized arguments: --codex-invalid-argument
+
+$ mutant /tmp/bb-zero-no-cover/mutants/calibra_psi.py --codex-invalid-argument
+exit=0
+
+
+Coverage report with pragma (launcher excluded):
+tools/calibra_psi.py                 95     70     28      0    20%   141, 148-164, 169-178, 187, 197-201, 205-206, 213, 223-256, 273-297, 307-319
+Coverage report after removal and direct CLI run:
+tools/calibra_psi.py                 97      0     30      0   100%
+The test runs these real processes with a 10s timeout and asserts stdout/rc; mutation forces CLI success and is rejected against the expected error rc=2. No GPU workload or host mutation.
