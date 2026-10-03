@@ -4,6 +4,10 @@ kind: task
 domain: VERDICT
 title: "Validar forum runtime version capture 01"
 status: done
+closed_at: 2026-10-03
+closure_type: relocated_prior_verification
+reason: "Source and semantic regression test landed in 37ea339ed6c76571cacfa1787c4b58a9ec6ffc68; root independently ran the literal close_check successfully. This commit completes evidence indexing and relocates the already-verified capture task."
+evidence: {"fail": "tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01.fail.txt", "pass": "tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01.pass.txt", "e2e": "tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01.e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -47,4 +51,4 @@ PASS: `python3 -m ruff check tools/host_diagnostics.py tests/test_host_diagnosti
 
 FAIL control: the selector mutates raw capture copies to represent missing capture, `could_not_run`, wrong GPU subject, changed boot identity, empty image identities and corrupted CUDA output; every mutation is rejected. It also proves that a status-only PASS does not validate as evidence.
 
-E2E: the independent elevated local-host capture is stored in `tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json`, with raw digest sidecar, exact collector command, and archived collector/implementation source snapshots plus hashes. It recorded DGX Spark, loaded driver 580.178.04, CUDA Runtime API version 13000, Docker 29.6.2, tagged vLLM container image identity, before/after host/runtime observations, and `python3 tools/cuda_integrity.py --workers 1 --rounds 1` returning pass with six 4 MiB allocations and full readback under 512 MiB / 50% CPU / 60 second wrapper limits. The negative byte-corruption control rejected byte 2. Root independently reran the literal close-check selector successfully after the archived evidence and controls were finalized (`1 passed`). This closes runtime capture only; forum serving-workload compatibility remains in the parent feature ficha.
+E2E: the independent elevated local-host capture is stored in `tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json`, with raw digest sidecar, exact collector command, and archived collector/implementation source snapshots plus hashes. It recorded DGX Spark, loaded driver 580.178.04, CUDA Runtime API version 13000, Docker 29.6.2, tagged vLLM container image identity, before/after host/runtime observations, and `python3 tools/cuda_integrity.py --workers 1 --rounds 1` returning pass with six allocations, with a maximum aggregate of 4 MiB and full readback under 512 MiB / 50% CPU / 60 second wrapper limits. The negative byte-corruption control rejected byte 2. Root independently reran the literal close-check selector successfully after the archived evidence and controls were finalized (`1 passed`). This closes runtime capture only; forum serving-workload compatibility remains in the parent feature ficha.
