@@ -1,0 +1,32 @@
+[
+  {
+    "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01",
+    "status": "developed",
+    "evidence": "tools/apt_sources.py; tests/test_apt_sources.py; tasks/evidence/BB-INSTRUMENTS-2026-10-03/apt-sources-capture.json; docs/evidence/BB-INSTRUMENTS-apt.md",
+    "reason": "Read-only Deb822/native architecture/effective index tuple capture and exact observed Ubuntu archive+arm64 diagnostic. The negative source condition is unit-tested; the forum failure is not reproduced on a canary, and signature/freshness/OEM policy remain unverified."
+  },
+  {
+    "id": "DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01",
+    "status": "developed",
+    "evidence": "tools/apt_sources.py effective_ota_tuple; tasks/evidence/BB-INSTRUMENTS-2026-10-03/apt-sources-capture.json; docs/evidence/BB-INSTRUMENTS-apt.md",
+    "reason": "Inventories the captured DGX SW build, OTA, kernel, loaded/on-disk driver and observed version equality; tuple provenance is unverified and compatibility/canary/rollback are unevaluated."
+  },
+  {
+    "id": "DELTA-FORUM-RECOVERY-APT-UPDATE-01",
+    "status": "reused",
+    "evidence": "tasks/evidence/BB-INSTRUMENTS-2026-10-03/apt-sources-capture.json; tasks/backlog/DELTA-FORUM-RECOVERY-APT-UPDATE-01.md",
+    "reason": "Reuses the APT input inventory only. No update, host failure, recovery console, OEM medium, rollback or RMA decision was exercised."
+  },
+  {
+    "id": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+    "status": "reused",
+    "evidence": "tools/preflight.py; tools/verify_apt_critical_removals.py; tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/; tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md",
+    "reason": "Existing simulation classifier and its captured benign/critical plans already provide this capability; no duplicate guard or package transaction was added. OEM scope remains open."
+  },
+  {
+    "id": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+    "status": "reused",
+    "evidence": "tools/host_diagnostics.py run_readonly; tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md",
+    "reason": "The new instrument reuses the bounded read-only runner only. It does not measure GDM/RDP or reproduce a post-update login failure."
+  }
+]
