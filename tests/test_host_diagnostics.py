@@ -348,3 +348,21 @@ def test_could_not_run_count_detects_nested_negative_control() -> None:
     assert hd.could_not_run_count({"check": {"status": "ok"}}) == 0
     assert hd.could_not_run_count({"check": {"status": "could_not_run"},
                                    "list": [{"status": "could_not_run"}]}) == 2
+
+
+def test_contact_emails_redacted_without_altering_systemd_units(monkeypatch):
+    contact = "<support@contact.invalid>"
+    unit = "modprobe@nvidia.service"
+    def verify():
+        runner = FakeRunner(subprocess.CompletedProcess([], 3,
+            f"Realtek team {contact}\n{unit} active", f"contact {contact}"))
+        result = hd.run_readonly(["journalctl", "--boot"], runner)
+        assert result["stdout"] == f"Realtek team <redacted-contact>\n{unit} active"
+        assert result["stderr"] == "contact <redacted-contact>"
+        assert result["contact_emails_redacted"] == 2
+        assert result["returncode"] == 3 and result["status"] == "could_not_run"
+        assert result["stdout_truncated"] is False
+    verify()
+    monkeypatch.setattr(hd, "CONTACT_EMAIL_RE", hd.re.compile(r"(?!)"))
+    with pytest.raises(AssertionError):
+        verify()

@@ -14,6 +14,7 @@ from typing import Any, Callable, Sequence
 TIMEOUT_S = 4.0
 MAX_OUTPUT_CHARS = 16_384
 INTERFACE_RE = re.compile(r"^[A-Za-z0-9_.:-]{1,15}$")
+CONTACT_EMAIL_RE = re.compile(r"<[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}>")
 RUNNER = Callable[..., subprocess.CompletedProcess[str]]
 
 
@@ -64,13 +65,16 @@ def run_readonly(argv: list[str], runner: RUNNER = subprocess.run,
 
     stdout = result.stdout.strip()
     stderr = result.stderr.strip()
+    stdout_safe, out_contacts = CONTACT_EMAIL_RE.subn("<redacted-contact>", stdout[:MAX_OUTPUT_CHARS])
+    stderr_safe, err_contacts = CONTACT_EMAIL_RE.subn("<redacted-contact>", stderr[:MAX_OUTPUT_CHARS])
     status = "ok" if result.returncode == 0 else (
         "observed" if result.returncode in accepted_exit_codes else "could_not_run")
     return {"status": status, "command": argv, "returncode": result.returncode,
-            "stdout": stdout[:MAX_OUTPUT_CHARS],
+            "stdout": stdout_safe,
             "stdout_truncated": len(stdout) > MAX_OUTPUT_CHARS,
-            "stderr": stderr[:MAX_OUTPUT_CHARS] or None,
-            "stderr_truncated": len(stderr) > MAX_OUTPUT_CHARS}
+            "stderr": stderr_safe or None,
+            "stderr_truncated": len(stderr) > MAX_OUTPUT_CHARS,
+            "contact_emails_redacted": out_contacts + err_contacts}
 
 
 def mount_summary(root: Path) -> dict[str, Any]:
