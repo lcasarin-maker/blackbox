@@ -12,15 +12,28 @@ from tools import cuda_integrity, memory_profile
 # This helper returns a classified record; it is not Path.read_text.
 read_profile_value = memory_profile.read_text
 
+
+def profile_value(value: object, *keys: str) -> object:
+    for key in keys:
+        assert isinstance(value, dict), f"profile section {key!r} must be an object"
+        value = value[key]
+    return value
+
+
+
+def test_profile_value_rejects_non_object_section() -> None:
+    with pytest.raises(AssertionError, match="must be an object"):
+        profile_value({"uvm": []}, "uvm", "loaded")
+
 def test_profile_marks_missing_parameter_unsupported(tmp_path: Path) -> None:
     module = tmp_path / "sys/module/nvidia_uvm"
     (module / "parameters").mkdir(parents=True)
     (module / "srcversion").write_text("loaded-id\n", encoding="utf-8")
     result = memory_profile.capture(tmp_path)
-    assert result["uvm"]["loaded"] is True
-    assert result["uvm"]["loaded_version"]["status"] == "absent"
-    assert result["uvm"]["loaded_srcversion"]["value"] == "loaded-id"
-    assert result["uvm"]["packing_parameter"]["status"] == "unsupported"
+    assert profile_value(result, "uvm", "loaded") is True
+    assert profile_value(result, "uvm", "loaded_version", "status") == "absent"
+    assert profile_value(result, "uvm", "loaded_srcversion", "value") == "loaded-id"
+    assert profile_value(result, "uvm", "packing_parameter", "status") == "unsupported"
 
 
 def test_profile_distinguishes_unloaded_module_from_unsupported_parameter(tmp_path: Path,
@@ -28,21 +41,21 @@ def test_profile_distinguishes_unloaded_module_from_unsupported_parameter(tmp_pa
     monkeypatch.setattr(memory_profile, "command", lambda argv: {
         "status": "ok", "command": argv, "value": "disk-only"})
     result = memory_profile.capture(tmp_path)
-    assert result["uvm"]["loaded"] is False
-    assert result["uvm"]["loaded_version"]["status"] == "module_not_loaded"
-    assert result["uvm"]["packing_parameter"]["status"] == "module_not_loaded"
+    assert profile_value(result, "uvm", "loaded") is False
+    assert profile_value(result, "uvm", "loaded_version", "status") == "module_not_loaded"
+    assert profile_value(result, "uvm", "packing_parameter", "status") == "module_not_loaded"
 
 
 def test_profile_keeps_64k_page_size_from_fixture(tmp_path: Path) -> None:
     result = memory_profile.capture(tmp_path, page_size_bytes=65536)
-    assert result["kernel"]["page_size_bytes"] == 65536
+    assert profile_value(result, "kernel", "page_size_bytes") == 65536
 
 
 def test_live_profile_records_running_host_page_size() -> None:
     result = memory_profile.capture()
-    assert result["kernel"]["page_size_bytes"] == os.sysconf("SC_PAGE_SIZE")
-    assert result["uvm"]["loaded"] is True
-    assert result["uvm"]["loaded_version"]["status"] == "ok"
+    assert profile_value(result, "kernel", "page_size_bytes") == os.sysconf("SC_PAGE_SIZE")
+    assert profile_value(result, "uvm", "loaded") is True
+    assert profile_value(result, "uvm", "loaded_version", "status") == "ok"
 
 
 def test_profile_distinguishes_loaded_and_disk_identity(tmp_path: Path, monkeypatch) -> None:
@@ -54,11 +67,11 @@ def test_profile_distinguishes_loaded_and_disk_identity(tmp_path: Path, monkeypa
     monkeypatch.setattr(memory_profile, "command", lambda argv: {
         "status": "ok", "command": argv, "value": "615.71.09"})
     result = memory_profile.capture(tmp_path)
-    assert result["uvm"]["loaded_version"]["value"] == "580.178.04"
-    assert result["uvm"]["disk_version"]["value"] == "615.71.09"
-    assert result["uvm"]["loaded_srcversion"]["value"] == "loaded-src"
-    assert result["uvm"]["disk_srcversion"]["value"] == "615.71.09"
-    assert result["uvm"]["packing_parameter"]["value"] == "Y"
+    assert profile_value(result, "uvm", "loaded_version", "value") == "580.178.04"
+    assert profile_value(result, "uvm", "disk_version", "value") == "615.71.09"
+    assert profile_value(result, "uvm", "loaded_srcversion", "value") == "loaded-src"
+    assert profile_value(result, "uvm", "disk_srcversion", "value") == "615.71.09"
+    assert profile_value(result, "uvm", "packing_parameter", "value") == "Y"
 
 
 def test_profile_preserves_read_failure_status(tmp_path: Path, monkeypatch) -> None:
@@ -73,7 +86,7 @@ def test_profile_preserves_read_failure_status(tmp_path: Path, monkeypatch) -> N
 
     monkeypatch.setattr(memory_profile, "read_text", denied)
     result = memory_profile.capture(tmp_path)
-    assert result["host_reserve_context"]["meminfo"]["status"] == "read_denied"
+    assert profile_value(result, "host_reserve_context", "meminfo", "status") == "read_denied"
 
 
 def test_read_text_separates_absent_and_invalid_utf8(tmp_path: Path) -> None:
@@ -192,7 +205,7 @@ class Callable:
     def __init__(self, function):
         self.function = function
 
-    def __call__(self, *args):
+    def __call__(self, *args: object) -> int:
         return self.function(*args)
 
 

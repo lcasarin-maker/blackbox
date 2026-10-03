@@ -10,11 +10,29 @@ import shutil
 import subprocess
 import sys
 import time
+from typing import Callable, Protocol, cast
 import uuid
 
 MAX_WORKERS = 4
 MAX_WORKER_BYTES = 4 * 1024 * 1024
 ROUNDS = 4
+
+
+class _CudaRuntime(Protocol):
+    @property
+    def cudaMalloc(self) -> Callable[[object, int], int]: ...
+
+    @property
+    def cudaFree(self) -> Callable[[C.c_void_p], int]: ...
+
+    @property
+    def cudaMemset(self) -> Callable[[C.c_void_p, int, int], int]: ...
+
+    @property
+    def cudaMemcpy(self) -> Callable[[C.c_void_p, C.c_void_p, int, int], int]: ...
+
+    @property
+    def cudaDeviceSynchronize(self) -> Callable[[], int]: ...
 
 
 def check(rc: int, operation: str) -> None:
@@ -96,7 +114,7 @@ def configure(lib: C.CDLL) -> None:
     sync.restype = C.c_int
 
 
-def run_worker(lib: C.CDLL, index: int, rounds: int, worker_bytes: int) -> int:
+def run_worker(lib: _CudaRuntime, index: int, rounds: int, worker_bytes: int) -> int:
     alloc = lib.cudaMalloc
     free = lib.cudaFree
     memset = lib.cudaMemset
@@ -162,7 +180,7 @@ def run(rounds: int = ROUNDS, workers: int = MAX_WORKERS,
     configure(lib)
     start = time.monotonic()
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = [pool.submit(run_worker, lib, index, rounds, worker_bytes)
+        futures = [pool.submit(run_worker, cast(_CudaRuntime, lib), index, rounds, worker_bytes)
                    for index in range(workers)]
         allocations = sum(future.result(timeout=30) for future in futures)
     return {"status": "pass", "library": libname, "workers": workers,

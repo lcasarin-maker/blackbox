@@ -151,7 +151,7 @@ def test_run_worker_reports_cleanup_sync_failure_without_primary_error() -> None
 
     library.cudaDeviceSynchronize = Function(sync)
     with pytest.raises(RuntimeError, match="CUDA cleanup failures: cudaDeviceSynchronize cleanup returned CUDA error 9"):
-        cuda_integrity.run_worker(cast(C.CDLL, library), index=0, rounds=1,
+        cuda_integrity.run_worker(cast(cuda_integrity._CudaRuntime, library), index=0, rounds=1,
                                   worker_bytes=cuda_integrity.MAX_WORKER_BYTES)
     assert sync_calls == 12
 
