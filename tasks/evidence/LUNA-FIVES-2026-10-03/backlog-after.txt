@@ -1,0 +1,15 @@
+[backlog-verifier] persistent verify cache: 109 cached verdict(s) on file, oldest recorded 23.7d ago
+[31m[backlog-verifier] FRAUD DETECTED: Found 2 closed tasks whose findings still reproduce:[0m
+  🔴 DEBT-HOOK-RECEIPTS-RETRO-20261003-01.md:
+Task is marked as done, but 1 finding(s) still reproduce:
+  - close_check 'python3 .simplecode/run.py simplecode.verification.hook_receipts --root . --audit --gate' failed with exit code 1 -- output: 'e - Close runtime version capture evidence check\n[hook-receipts] verified RETROACTIVELY (gate re-run against historical content, not a receipt written at commit time): 4 -- 51cbd2ec, efa5d386, 9519bdae, e381c892\n[hook-receipts] unverified commits that left the 10-commit window without a verdict (reported, NOT blocking): 0 (0 of them still named by the baseline)\n[hook-receipts] FAIL: 1 unverified commit(s) missing a pre-commit receipt; first 37ea339e - Close runtime version capture evidence check'
+  🔴 DEBT-SCHEMA-EVIDENCE-INDEX-SCOPE-01.md:
+Task is marked as done, but 1 finding(s) still reproduce:
+  - close_check 'python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_schema_evidence_index_scope_01' failed with exit code 1 -- output: "xige `evidence`)\nE     \nE   assert 1 == 0\nE    +  where 1 = CompletedProcess(args=['/opt/miniforge3/bin/python3', '/home/lcasarin/projects/blackbox/.simplecode/run.py', 'simpleco...esquema invalido; primera tasks/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01.md (status=done exige `evidence`)\\n', stderr='').returncode\n=========================== short test summary info ============================\nFAILED tests/test_debt_registration_controls.py::test_debt_schema_evidence_index_scope_01\n1 failed in 3.39s"
+[backlog-verifier] the fields above are what THIS gate reads; a ficha may reconcile them in its own body -- read it before concluding its declaration is wrong
+[backlog-verifier] could_not_run baseline: no .simplecode/could_not_run_baseline.json declared
+[backlog-verifier] task cohorts (no .simplecode/task_contract_cutoff.json declared: everything is governed) -> governed: 282 · legacy pre-cut-off, contract shape NOT evaluated: 0 · undatable by git, contract shape NOT evaluated: 0 · declared `done_unverified`, contract shape NOT evaluated: 0
+[backlog-verifier] done-tasks whose status is outside this repo's closing vocabulary (reported, NOT blocking): 0
+[backlog-verifier] DETECTORES: {"closure_reproduces":2,"contract_breach":0,"could_not_run":0,"unverified_task":0}
+[backlog-verifier] HALLAZGOS: 2
+[backlog-verifier] NOT CLEAN (counts -> frauds: 2 · could_not_run: 0 (0 undeclared) · contract_breaches: 0 · unverified: 0).

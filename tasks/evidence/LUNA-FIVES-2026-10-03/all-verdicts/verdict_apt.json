@@ -1,0 +1,26 @@
+[
+  {
+    "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01",
+    "path": "tasks/backlog/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md",
+    "status": "open",
+    "reason": "El close_check literal apunta a un selector inexistente. La observaci\u00f3n arm64 y el InRelease firmado local pasan; falta control negativo real del source Ubuntu incompatible reportado y no se debe borrar/cambiar sources para provocarlo.",
+    "evidence": "Literal: `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01` \u2192 selector no encontrado. Evidencia local: dpkg arch arm64, ubuntu.sources usa ports.ubuntu.com, apt indextargets muestra Noble arm64; gpgv en noble-updates InRelease da Good signature y el control temporal con Suite alterado da BAD signature/rc=1. apt-get -s upgrade rc=0, cero removals. Captura: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/commands.json. No apt update ni mutaci\u00f3n del host.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01"
+  },
+  {
+    "id": "DELTA-FORUM-RECOVERY-APT-UPDATE-01",
+    "path": "tasks/backlog/DELTA-FORUM-RECOVERY-APT-UPDATE-01.md",
+    "status": "blocked",
+    "reason": "No est\u00e1n los logs/adjuntos originales ni una captura preservada de un host afectado antes de reset; esta sesi\u00f3n solo dispone del relato de foro y de un host operativo. El selector de cierre tambi\u00e9n falta.",
+    "evidence": "Literal: `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_recovery_apt_update_01` \u2192 selector no encontrado. La ficha exige stack/OEM/versiones, sujeto real, caso sano y negativo, rollback si hay intervenci\u00f3n y preservaci\u00f3n de evidencia. El relato no atribuye causa de forma verificable. No se provoc\u00f3 fallo, se instalaron paquetes ni se reinici\u00f3.",
+    "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_recovery_apt_update_01"
+  },
+  {
+    "id": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+    "path": "tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md",
+    "status": "open",
+    "reason": "El verificador cierra la discriminaci\u00f3n de estos dos planes locales, pero el propio resultado deja `closure=open`: no acredita un guard APT instalado ni cobertura OEM; la ficha tambi\u00e9n documenta que aisleriot no est\u00e1 instalado para reproducir el caso de origen.",
+    "evidence": "Close_check literal: `python3 -m tools.verify_apt_critical_removals --evidence tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD` \u2192 status=pass, fail=0, could_not_run=0, upgrade=pass y critical removal=block. Capturas raw/hash en tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/apt-captures.json y .sha256. La simulaci\u00f3n expl\u00edcita quita nvidia-system-station; no se aplic\u00f3. No se cierra la protecci\u00f3n del host.",
+    "close_check": "python3 -m tools.verify_apt_critical_removals --evidence tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD"
+  }
+]
