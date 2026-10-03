@@ -1,0 +1,29 @@
+$ /opt/miniforge3/bin/python3 tools/nombra_victimas.py --help
+exit=0
+usage: nombra_victimas.py [-h] [--capturas CAPTURAS] [--muestras MUESTRAS]
+                          [--solo-demonios]
+
+Le pone NOMBRE a las victimas de las senales que `bb sample` acumula
+
+options:
+  -h, --help           show this help message and exit
+  --capturas CAPTURAS
+  --muestras MUESTRAS
+  --solo-demonios      solo los emisores con auid unset, que es el sujeto de
+                       DGX-438
+
+$ /opt/miniforge3/bin/python3 tools/nombra_victimas.py --codex-invalid-argument
+exit=2
+usage: nombra_victimas.py [-h] [--capturas CAPTURAS] [--muestras MUESTRAS]
+                          [--solo-demonios]
+nombra_victimas.py: error: unrecognized arguments: --codex-invalid-argument
+
+$ mutant /tmp/bb-zero-no-cover/mutants/nombra_victimas.py --codex-invalid-argument
+exit=0
+
+
+Coverage report with pragma (launcher excluded):
+tools/nombra_victimas.py            136    112     46      0    13%   62-66, 77-93, 97-107, 113-134, 160-184, 193-194, 205-268
+Coverage report after removal and direct CLI run:
+tools/nombra_victimas.py            138      0     48      0   100%
+The test runs these real processes with a 10s timeout and asserts stdout/rc; mutation forces CLI success and is rejected against the expected error rc=2. No GPU workload or host mutation.

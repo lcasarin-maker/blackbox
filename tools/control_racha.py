@@ -157,5 +157,5 @@ def main(argv=None) -> int:
     return rc
 
 
-if __name__ == "__main__":  # pragma: no cover -- entry point, ejercitado via main()
+if __name__ == "__main__":
     raise SystemExit(main())
