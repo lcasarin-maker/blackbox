@@ -1,0 +1,54 @@
+{
+  "reviewed_head": "1b789da3b2522995e0e0c400ce686167c46846a7",
+  "backup_branch": "backup-antes-de-reescribir-2026-09-28",
+  "patches": [
+    {
+      "commit": "01f69f6a434797db7dc8815aee073681a8732c62",
+      "subject": "chore(version): 1.9.2",
+      "paths": [
+        {
+          "path": "pyproject.toml",
+          "change": "Project version only: 1.9.1 -> 1.9.2.",
+          "current": "pyproject.toml declares 2.2.2 at reviewed HEAD; this patch's version value is superseded."
+        }
+      ]
+    },
+    {
+      "commit": "d1ae6c428d8acc226c655f0f534fcb4262a19fdf",
+      "subject": "chore(version): 2.0.0, las 18 exenciones re-fechadas sin re-derivarlas de cero",
+      "paths": [
+        {
+          "path": "pyproject.toml",
+          "change": "Project version only: 1.9.2 -> 2.0.0.",
+          "current": "pyproject.toml declares 2.2.2 at reviewed HEAD; the 2.0.0 value is superseded."
+        },
+        {
+          "path": ".gitignore",
+          "change": "12 sunset-reviewed comments change their review tag from 1.9 to 2.0. Every changed line retains the identical text before the sunset marker; no ignore pattern or negation changed.",
+          "current": "All 12 current entries are tagged 2.2 and passed sunset-audit at .gitignore lines 8, 15, 21, 26, 30, 35, 50, 60, 65, 67, 69, 71."
+        },
+        {
+          "path": "tests/test_bb_bash.py",
+          "change": "Five blocking-sleep exemption comments are re-tagged 1.9 -> 2.0. The Python statement prefix before each marker is byte-identical across the patch; no test body, assertion, sleep duration, or control flow changed in these hunks.",
+          "current": "Two of the five historically re-tagged sleeps remain as current 2.2 exemptions at lines 806 and 842. The three swap tests no longer sleep: current tests use `_fecha_falsa()` (tests/test_bb_bash.py:310-329, 350-370) to control sample timestamps deterministically. The other two current test-file exemptions at lines 1601 and 1655 concern a later renderer test and were added after d1."
+        },
+        {
+          "path": "tools/atom_gpu_telemetry.py",
+          "change": "One exemption comment is re-tagged 1.9 -> 2.0. `time.sleep(args.interval_seconds)` is byte-identical before the marker; no runtime behavior changed in this hunk.",
+          "current": "The retained exemption is tagged 2.2 and passed sunset-audit at line 1693."
+        }
+      ]
+    }
+  ],
+  "current_sunset_audit": {
+    "command": "python3 .simplecode/run.py simplecode.verification.sunset_audit --root . --gate",
+    "output": "scanned 91 file(s); not scanned because git ignores them: 14 entries; vendored not scanned: 0; unreadable: 0; version=2.2.2; 20 exemptions found; stale: 0 of 20 compared against 2.2; PASS — all exemptions tagged for current version.",
+    "return_code": 0,
+    "scope_note": "The audit reports 14 ignored entries outside its scan. It reports zero unreadable files and evaluates all 20 registered exemptions."
+  },
+  "native_controls": {
+    "evidence": "The native-controls SPEC row was introduced by commit 6fbf41c and remains in current SPEC.md at line 310, naming tests/test_hook_native_controls.py. Neither 01f69f6 nor d1ae6c4 touches SPEC.md, so these backup patches do not remove or revert that work.",
+    "action": "No code, version, exemption, or SPEC files changed during this review; no general suite was run."
+  },
+  "conclusion": "The two backup commits contain only historical version bumps and review-marker text changes. Their 1.9/2.0 labels are superseded by the current 2.2.2 release and current 2.2 review markers; all 20 live exemptions pass the current sunset audit. Of d1’s five test sleep exemptions, two remain and three swap waits were later replaced with a deterministic clock helper."
+}
