@@ -1,6 +1,9 @@
 """Regression controls for defects registered during the debt audit."""
 
 import json
+import csv
+import copy
+from datetime import datetime
 import os
 import subprocess
 import sys
@@ -15,12 +18,14 @@ import test_bb_bash as bash_tests
 import test_atom_gpu_telemetry_bb as atom_tests
 import test_bb_usable as bb_usable_tests
 from pathlib import Path
+import re
 
 import pytest
 
 from tools import provider_trace
 from tools import cgroup_repro, cuda_integrity
 from tools import verify_apt_critical_removals
+from tools import host_diagnostics
 
 
 def test_debt_close_check_verify_apt_critical_removals_01(
@@ -56,6 +61,244 @@ def test_debt_close_check_verify_apt_critical_removals_01(
     neutralized = verify_apt_critical_removals.verify(evidence)
     assert neutralized["status"] == "fail" and neutralized["fail"] == 1
     assert neutralized["could_not_run"] == 0
+
+
+def _capture_could_not_run(value) -> int:
+    if isinstance(value, dict):
+        return int(value.get("status") == "could_not_run") + sum(
+            _capture_could_not_run(child) for child in value.values())
+    if isinstance(value, list):
+        return sum(_capture_could_not_run(child) for child in value)
+    return 0
+
+
+class _CaptureUnknown(ValueError):
+    pass
+
+
+class _CaptureFailure(ValueError):
+    pass
+
+
+def _runtime_capture_provenance(document, evidence_dir: Path) -> None:
+    source_hashes = document["source_hashes"]
+    archive = {"bb-runtime-live.py": "runtime-collector-source.txt",
+               "host_diagnostics.py": "runtime-host-diagnostics.source.txt",
+               "cuda_integrity.py": "runtime-cuda-integrity.source.txt"}
+    if not isinstance(source_hashes, list) or len(source_hashes) != len(archive):
+        raise _CaptureUnknown("source hashes absent")
+    for row in source_hashes:
+        if row["status"] != "ok" or not re.fullmatch(r"[0-9a-f]{64}", row["sha256"]):
+            raise _CaptureUnknown("source hash malformed")
+        source = evidence_dir / archive[Path(row["path"]).name]
+        if hashlib.sha256(source.read_bytes()).hexdigest() != row["sha256"]:
+            raise _CaptureUnknown(f"archived source hash mismatch: {source.name}")
+    collector_hash = next(row["sha256"] for row in source_hashes
+                          if Path(row["path"]).name == "bb-runtime-live.py")
+    command_note = (evidence_dir / "runtime-collector-command.txt").read_text(encoding="utf-8")
+    if (f"Collector SHA-256: {collector_hash}" not in command_note
+            or "Command: python3 /tmp/bb-runtime-live.py > tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json" not in command_note):
+        raise _CaptureUnknown("collector command/source provenance mismatch")
+    cuda_source = (evidence_dir / archive["cuda_integrity.py"]).read_text(encoding="utf-8")
+    literals = ("--property=MemoryMax=512M", "--property=CPUQuota=50%",
+                "--property=RuntimeMaxSec=60s", "--_bounded-worker", "timeout=75")
+    if not all(value in cuda_source for value in literals):
+        raise _CaptureUnknown("bounded wrapper source literals absent")
+    run = document["cuda_test"]
+    if not run["wrapper_verified"] or document["wrapper_source_literals"] != list(literals):
+        raise _CaptureUnknown("bounded wrapper record differs from archived source")
+    expected_limits = {"MemoryMax": "512M", "CPUQuota": "50%", "RuntimeMaxSec": "60s"}
+    if run["wrapper_limits"] != expected_limits:
+        raise _CaptureFailure("wrapper limits mismatch")
+
+
+def _capture_host_identity(phase) -> tuple:
+    timestamp = datetime.fromisoformat(phase["timestamp_utc"])
+    if timestamp.tzinfo is None:
+        raise _CaptureUnknown("capture timestamp lacks timezone")
+    host = phase["host"]
+    if not all(host[key] for key in ("system", "kernel_release", "architecture")):
+        raise _CaptureUnknown("OS/kernel/architecture identity absent")
+    for key in ("boot_id", "nvidia_module", "os_release", "dgx_release", "memory"):
+        if host[key]["status"] != "ok":
+            raise _CaptureUnknown(f"host observation unavailable: {key}")
+    if host["memory"]["mem_available_bytes"] < 1024**3:
+        raise _CaptureUnknown("host headroom below 1 GiB")
+    dgx = host["dgx_release"]["values"]
+    if dgx["DGX_NAME"] != "DGX Spark":
+        raise _CaptureFailure("wrong OEM subject")
+    if not dgx["DGX_SWBUILD_VERSION"] or not dgx["DGX_OTA_VERSION"]:
+        raise _CaptureUnknown("DGX release versions absent")
+    return (timestamp, host["system"], host["kernel_release"], host["architecture"],
+            host["boot_id"]["value"], host["os_release"]["sha256"],
+            host["dgx_release"]["sha256"], dgx["DGX_SWBUILD_VERSION"], dgx["DGX_OTA_VERSION"],
+            host["nvidia_module"]["value"])
+
+
+def _capture_container_identity(runtime) -> tuple:
+    for key in ("container_runtime_version", "running_container_image_tags"):
+        if runtime[key]["status"] != "ok" or runtime[key]["returncode"] != 0:
+            raise _CaptureUnknown(f"container read unavailable: {key}")
+    images = runtime["running_container_image_ids"]
+    if images["status"] != "ok":
+        raise _CaptureUnknown("container image IDs unavailable")
+    rows = runtime["running_container_image_tags"]["stdout"].splitlines()
+    vllm_rows = {fields[0]: fields[1] for row in rows if len(fields := row.split(maxsplit=1)) == 2
+                 and "vllm" in fields[1].casefold()}
+    records = images["containers"]
+    ids = [record["container_id"] for record in records]
+    if (not vllm_rows or images["candidate_count"] != len(vllm_rows)
+            or len(records) != len(vllm_rows) or len(set(ids)) != len(records)):
+        raise _CaptureFailure("container candidate count mismatch")
+    for row in records:
+        if (row["status"] != "ok" or row["image_ref"] != vllm_rows.get(row["container_id"])
+                or not re.fullmatch(r"sha256:[0-9a-f]{64}", row["image_id"])):
+            raise _CaptureFailure("container image ID evidence mismatch")
+    return runtime["container_runtime_version"]["stdout"], records
+
+
+def _capture_runtime_identity(phase, document) -> tuple:
+    runtime = phase["runtime"]
+    for key in ("nvidia_smi_banner", "nvidia_gpu_state"):
+        if runtime[key]["status"] != "ok" or runtime[key]["returncode"] != 0:
+            raise _CaptureUnknown(f"GPU read unavailable: {key}")
+    query = next(csv.reader([runtime["nvidia_gpu_state"]["stdout"]]))
+    if len(query) != 5 or not all(value.strip() for value in query):
+        raise _CaptureUnknown("GPU state query malformed")
+    if "GB10" not in query[0]:
+        raise _CaptureFailure("wrong GPU subject")
+    driver = query[1].strip()
+    if driver != phase["host"]["nvidia_module"]["value"]:
+        raise _CaptureFailure("loaded module/driver version mismatch")
+    if f"Driver Version: {driver}" not in runtime["nvidia_smi_banner"]["stdout"]:
+        raise _CaptureFailure("nvidia-smi banner/query disagree")
+    cuda = runtime["cuda_runtime"]
+    if cuda["status"] != "ok" or type(cuda["runtime_version"]) is not int or cuda["runtime_version"] <= 0:
+        raise _CaptureUnknown("exact CUDA Runtime API version unavailable")
+    if (cuda["runtime_version"] // 1000 != cuda["major"]
+            or (cuda["runtime_version"] % 1000) // 10 != cuda["minor"]):
+        raise _CaptureFailure("CUDA runtime version fields disagree")
+    expected = {key: document["cuda_runtime_api_version"].get(key) for key in cuda}
+    if cuda != expected:
+        raise _CaptureFailure("CUDA Runtime API snapshots disagree")
+    return tuple(query[:3]), cuda["runtime_version"], _capture_container_identity(runtime)
+
+
+def _capture_cuda_outcome(document) -> None:
+    run = document["cuda_test"]
+    argv = run["argv"]
+    if (run["status"] != "pass" or run["returncode"] != 0 or run["stderr"]
+            or len(argv) < 6 or Path(argv[1]).name != "cuda_integrity.py"
+            or argv[-4:] != ["--workers", "1", "--rounds", "1"]
+            or "--_bounded-worker" in argv):
+        raise _CaptureFailure("raw CUDA command/exit is not the bounded entry point")
+    if len(run["stdout"].splitlines()) != 1:
+        raise _CaptureFailure("CUDA output is not one raw JSON result")
+    result = json.loads(run["stdout"])
+    if result != run["result"]:
+        raise _CaptureFailure("stored result differs from raw stdout")
+    valid = (result.get("status") == "pass" and result.get("workers") == 1
+             and result.get("rounds_per_worker") == 1 and result.get("allocations") == 6
+             and result.get("max_aggregate_allocation_bytes") == 4 * 1024 * 1024
+             and result.get("full_buffer_readback") is True
+             and result.get("release_between_rounds") is True
+             and result.get("library") == document["cuda_runtime_api_version"]["library"]
+             and type(result.get("seconds")) in (int, float)
+             and 0 < result["seconds"] <= 60)
+    if not valid:
+        raise _CaptureFailure("raw CUDA functional outcome invalid")
+    negative = document["negative_control"]
+    if (negative["status"] != "pass"
+            or "readback mismatch at byte 2" not in negative["status_message"]):
+        raise _CaptureFailure("corrupted-byte negative control absent")
+
+
+def _runtime_capture_verdict(document) -> dict:
+    try:
+        if document["schema"] != 1 or document["id"] != "DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01":
+            raise _CaptureUnknown("capture identity/schema absent")
+        phases = [document["before"], document["after"]]
+        run = document["cuda_test"]
+        unavailable = sum(_capture_could_not_run(phase["runtime"]) + sum(
+            _capture_could_not_run(phase["host"][key]) for key in (
+                "boot_id", "nvidia_module", "os_release", "dgx_release", "memory"))
+                          for phase in phases)
+        unavailable += sum(_capture_could_not_run(item) for item in document["source_hashes"])
+        unavailable += int(run.get("status") == "could_not_run") + int(not run.get("wrapper_verified"))
+        if document["could_not_run"] != unavailable:
+            raise _CaptureUnknown("could_not_run total differs from raw leaf statuses")
+        if unavailable:
+            raise _CaptureUnknown(f"capture has could_not_run={unavailable}")
+        evidence_dir = (Path(__file__).resolve().parent.parent
+                        / "tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01")
+        _runtime_capture_provenance(document, evidence_dir)
+        identities = []
+        for phase in phases:
+            host = _capture_host_identity(phase)
+            runtime = _capture_runtime_identity(phase, document)
+            identities.append((host, runtime))
+        before_host, after_host = identities[0][0], identities[1][0]
+        before_runtime, after_runtime = identities[0][1], identities[1][1]
+        if after_host[0] <= before_host[0] or (after_host[0] - before_host[0]).total_seconds() > 120:
+            raise _CaptureFailure("timestamps do not bracket a short run")
+        if before_host[1:] != after_host[1:] or before_runtime != after_runtime:
+            raise _CaptureFailure("host/runtime identity changed during the run")
+        _capture_cuda_outcome(document)
+        return {"status": "pass", "could_not_run": 0, "findings": []}
+    except _CaptureUnknown as exc:
+        return {"status": "unknown", "could_not_run": 1, "findings": [str(exc)]}
+    except _CaptureFailure as exc:
+        return {"status": "fail", "could_not_run": 0, "findings": [str(exc)]}
+    except (KeyError, TypeError, ValueError, IndexError, AttributeError, json.JSONDecodeError) as exc:
+        return {"status": "unknown", "could_not_run": 1,
+                "findings": [f"malformed or incomplete raw observation: {type(exc).__name__}: {exc}"]}
+
+
+def test_delta_forum_runtime_version_capture_01(monkeypatch: pytest.MonkeyPatch) -> None:
+    root = Path(__file__).resolve().parent.parent
+    evidence = root / "tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json"
+    sidecar = Path(str(evidence) + ".sha256")
+    raw = evidence.read_bytes()
+    expected_sha = sidecar.read_text(encoding="ascii").strip()
+    assert hashlib.sha256(raw).hexdigest() == expected_sha, "could_not_run=1: raw capture digest mismatch"
+    observed = json.loads(raw)
+    assert _runtime_capture_verdict(observed) == {"status": "pass", "could_not_run": 0, "findings": []}
+
+    # Incomplete, unavailable, wrong-subject and corrupted-output controls must not inherit stored PASS.
+    for mutate, expected in (
+        (lambda item: item.pop("before"), "unknown"),
+        (lambda item: item["before"]["runtime"]["cuda_runtime"].update(status="could_not_run"), "unknown"),
+        (lambda item: item["before"]["runtime"]["nvidia_gpu_state"].update(
+            stdout=item["before"]["runtime"]["nvidia_gpu_state"]["stdout"].replace("GB10", "Other GPU")), "fail"),
+        (lambda item: item["cuda_test"]["result"].update(full_buffer_readback=False), "fail"),
+        (lambda item: item["after"]["host"]["boot_id"].update(value="different-boot"), "fail"),
+        (lambda item: item["before"]["runtime"]["running_container_image_ids"].update(
+            containers=[]), "fail"),
+    ):
+        altered = copy.deepcopy(observed)
+        mutate(altered)
+        assert _runtime_capture_verdict(altered)["status"] == expected
+
+    status_only = {"schema": 1, "id": observed["id"], "status": "pass", "could_not_run": 0}
+    assert _runtime_capture_verdict(status_only)["status"] == "unknown"
+    unavailable_capture = copy.deepcopy(observed)
+    unavailable_capture["before"]["runtime"]["cuda_runtime"]["status"] = "could_not_run"
+    with monkeypatch.context() as neutralized_reader:
+        neutralized_reader.setattr(sys.modules[__name__], "_capture_could_not_run", lambda _value: 0)
+        assert _runtime_capture_verdict(unavailable_capture)["status"] != "pass"
+    assert cuda_integrity.verify_bytes(b"\x07" * 32, b"\x07" * 32) is None
+
+    def negative_detects(verifier) -> bool:
+        try:
+            verifier(b"abcd", b"abXd")
+        except ValueError as exc:
+            return "readback mismatch at byte 2" in str(exc)
+        return False
+
+    assert negative_detects(cuda_integrity.verify_bytes)
+    with monkeypatch.context() as neutralized:
+        neutralized.setattr(cuda_integrity, "verify_bytes", lambda *_args: None)
+        assert not negative_detects(cuda_integrity.verify_bytes)
 
 
 def test_apt_critical_verifier_cli_and_evidence_controls(tmp_path: Path) -> None:

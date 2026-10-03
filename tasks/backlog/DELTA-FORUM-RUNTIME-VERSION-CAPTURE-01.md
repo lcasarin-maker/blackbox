@@ -3,7 +3,7 @@ id: DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01
 kind: task
 domain: VERDICT
 title: "Validar forum runtime version capture 01"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -33,22 +33,18 @@ La ficha permanece abierta. El test selector del close_check es una especificaci
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
 
-## Root cause
+## Root Cause
 
-The existing `tools.host_diagnostics.capture` report did not include GPU/runtime version observations, so a host diagnostic could not preserve the effective NVIDIA driver/GPU state beside the container engine and running image tags. The named close-check selector is also absent from `tests/test_debt_registration_controls.py`. A bounded host CUDA buffer-readback check now passed, but the forum's container serving workload and exact vLLM image digest remain unverified.
+`tools.host_diagnostics.capture` omitted the effective CUDA Runtime API version and bounded runtime/container identity observations needed to preserve the host stack beside a short functional GPU check. The report now records host/runtime snapshots before and after the existing bounded CUDA integrity test, including exact CUDART version, loaded driver, OS/kernel/OEM releases, GPU state, Docker server version, tagged container candidates and image IDs when available. Container inspection reads only the image ID field, with a four-container cap and explicit incomplete status.
 
-## Regression test
+## Regression Test
 
-PASS: `python3 -m pytest -q tests/test_host_diagnostics.py::test_gpu_runtime_capture_uses_bounded_readonly_queries_and_preserves_failures tests/test_host_diagnostics.py::test_capture_uses_fixed_read_only_queries_and_reports_signals tests/test_host_diagnostics.py::test_command_failure_is_preserved` -> `6 passed in 0.03s`. The positive control checks query shape/integration and the negative control proves four unavailable reads remain `could_not_run`.
+PASS: `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_runtime_version_capture_01 tests/test_host_diagnostics.py::test_gpu_runtime_capture_uses_bounded_readonly_queries_and_preserves_failures tests/test_memory_capture_and_cuda_integrity.py::test_cuda_readback_accepts_known_bytes tests/test_memory_capture_and_cuda_integrity.py::test_cuda_readback_detects_mutated_byte tests/test_memory_capture_and_cuda_integrity.py::test_cuda_readback_detects_truncation` -> `5 passed in 0.11s`. The selector audits the saved real capture and rejects missing, unavailable, wrong-subject, changed-boot, mismatched-container, and corrupted-result evidence; a separately neutralized verifier fails the byte-corruption control.
 
-## Verification evidence
+## Verification Evidence
 
-PASS: `python3 -m ruff check tools/host_diagnostics.py tests/test_host_diagnostics.py` -> `All checks passed!`; `pyright tools/host_diagnostics.py` -> `0 errors, 0 warnings, 0 informations`.
+PASS: `python3 -m ruff check tools/host_diagnostics.py tests/test_host_diagnostics.py tests/test_debt_registration_controls.py` -> `All checks passed!`; `pyright tools/host_diagnostics.py` -> `0 errors, 0 warnings, 0 informations`; `git diff --check` -> exit 0.
 
-PASS: `python3 -m pytest -q tests/test_memory_capture_and_cuda_integrity.py::test_cuda_readback_accepts_known_bytes tests/test_memory_capture_and_cuda_integrity.py::test_cuda_readback_detects_mutated_byte tests/test_memory_capture_and_cuda_integrity.py::test_cuda_readback_detects_truncation` -> `3 passed in 0.04s`; `pyright tools/cuda_integrity.py` -> `0 errors, 0 warnings, 0 informations`; `python3 -m ruff check tools/cuda_integrity.py` -> `All checks passed!`. The negative control corrupts one expected byte and the verifier rejects it at byte 2; truncation is rejected at byte 3.
+FAIL control: the selector mutates raw capture copies to represent missing capture, `could_not_run`, wrong GPU subject, changed boot identity, empty image identities and corrupted CUDA output; every mutation is rejected. It also proves that a status-only PASS does not validate as evidence.
 
-FAIL: `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_runtime_version_capture_01` -> `no tests ran`, selector not found, exit 4. FAIL: complete `tests/test_host_diagnostics.py` -> `24 passed, 1 failed`; the unrelated existing contact-redaction test invokes missing `.simplecode/run.py` in this worktree (exit 2). Targeted affected subset passed as recorded above.
-
-E2E (read-only, elevated local host access): `nvidia-smi --query-gpu=name,driver_version,pci.bus_id,utilization.gpu,power.draw --format=csv,noheader` -> `NVIDIA GB10, 580.178.04, 0000000F:01:00.0, 3 %, 12.42 W`, rc=0. `nvidia-smi` banner reported Driver 580.178.04 and CUDA Version 13.0; that CUDA value is the driver's advertised maximum, not the installed CUDA runtime. `docker version --format '{{.Server.Version}}'` -> `29.6.2`, rc=0. `docker ps --no-trunc --format '{{.ID}} {{.Image}}'` showed active `vllm/vllm-openai:v0.27.1` by tag, with no digest supplied for that image. No inference request or container inspection was performed. The functional request path, exact vLLM image digest, before/after workload result and negative workload control remain unverified; ficha stays open.
-
-E2E (bounded host CUDA integrity test): before, `nvidia-smi` showed GB10, driver 580.178.04, driver-advertised CUDA 13.0, 5% GPU use, 12.81 W; `free -b` showed 58,255,551,616 bytes available and 8,424,747,008 bytes swap free. Memory total/used from the NVIDIA query were `[N/A]`, so UMA headroom is not exposed by that field; the existing tool's 4 MiB worker allocation was below its cgroup `MemoryMax=512M`, `CPUQuota=50%`, `RuntimeMaxSec=60s` bounds. Exact command: `python3 tools/cuda_integrity.py --workers 1 --rounds 1` -> `{"allocations": 6, "full_buffer_readback": true, "library": "libcudart.so.13", "max_aggregate_allocation_bytes": 4194304, "release_between_rounds": true, "rounds_per_worker": 1, "seconds": 0.40612861499539576, "status": "pass", "workers": 1}`, rc=0. Afterward, `nvidia-smi` showed the same GB10/driver, 6% GPU use, 12.98 W; `free -b` showed 58,339,807,232 bytes available and 8,424,749,296 bytes swap free. Active processes and the vLLM container remained separately observed; this CUDA run used host `libcudart.so.13` and does not validate or attribute behavior to the vLLM image. The named close-check still does not exist, so the ficha remains open.
+E2E: the independent elevated local-host capture is stored in `tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json`, with raw digest sidecar, exact collector command, and archived collector/implementation source snapshots plus hashes. It recorded DGX Spark, loaded driver 580.178.04, CUDA Runtime API version 13000, Docker 29.6.2, tagged vLLM container image identity, before/after host/runtime observations, and `python3 tools/cuda_integrity.py --workers 1 --rounds 1` returning pass with six 4 MiB allocations and full readback under 512 MiB / 50% CPU / 60 second wrapper limits. The negative byte-corruption control rejected byte 2. Root independently reran the literal close-check selector successfully after the archived evidence and controls were finalized (`1 passed`). This closes runtime capture only; forum serving-workload compatibility remains in the parent feature ficha.

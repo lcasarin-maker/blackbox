@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import ctypes as C
 from pathlib import Path
 import runpy
 import subprocess
 import sys
+import types
 from typing import Any
 
 import pytest
@@ -92,26 +94,97 @@ def test_command_rc_output_caps_and_safe_invocation() -> None:
     assert failed["returncode"] == 3
 
 
-def test_gpu_runtime_capture_uses_bounded_readonly_queries_and_preserves_failures() -> None:
-    good = FakeRunner(subprocess.CompletedProcess([], 0, "observed-version-or-gpu-state\n", ""))
+def test_gpu_runtime_capture_uses_bounded_readonly_queries_and_preserves_failures(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    container_id = "a" * 64
+    image_id = "sha256:" + "b" * 64
+
+    class RuntimeRunner(FakeRunner):
+        def __call__(self, argv: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+            self.calls.append((argv, kwargs))
+            if argv[:2] == ["docker", "ps"]:
+                return subprocess.CompletedProcess(argv, 0, f"{container_id} vllm:test\n", "")
+            if argv[:2] == ["docker", "inspect"]:
+                return subprocess.CompletedProcess(argv, 0, image_id + "\n", "")
+            return subprocess.CompletedProcess(argv, 0, "observed-version-or-gpu-state\n", "")
+
+    good = RuntimeRunner()
+    monkeypatch.setattr(hd, "cuda_runtime_version_capture", lambda: {
+        "status": "ok", "library": "libcudart.so.13", "runtime_version": 13000,
+        "major": 13, "minor": 0})
     runtime = hd.gpu_runtime_capture(good)
     assert set(runtime) == {"nvidia_smi_banner", "nvidia_gpu_state", "container_runtime_version",
-                            "running_container_image_tags"}
-    assert all(item["status"] == "ok" for item in runtime.values())
+                            "running_container_image_tags", "running_container_image_ids",
+                            "cuda_runtime"}
+    assert runtime["running_container_image_ids"]["status"] == "ok"
+    assert runtime["running_container_image_ids"]["containers"] == [{
+        "status": "ok", "container_id": container_id, "image_ref": "vllm:test",
+        "image_id": image_id}]
     assert [call[0] for call in good.calls] == [
+        ["docker", "ps", "--no-trunc", "--format", "{{.ID}} {{.Image}}"],
+        ["docker", "inspect", "--format", "{{.Image}}", container_id],
         ["nvidia-smi"],
         ["nvidia-smi", "--query-gpu=name,driver_version,pci.bus_id,utilization.gpu,power.draw",
          "--format=csv,noheader"],
         ["docker", "version", "--format", "{{.Server.Version}}"],
-        ["docker", "ps", "--no-trunc", "--format", "{{.ID}} {{.Image}}"],
     ]
     assert all(call[1]["timeout"] == hd.TIMEOUT_S and call[1]["stdin"] == subprocess.DEVNULL
                and call[1].get("shell", False) is False for call in good.calls)
 
+    monkeypatch.setattr(hd, "cuda_runtime_version_capture", lambda: {
+        "status": "could_not_run", "error": "libcudart unavailable"})
     unavailable = FakeRunner(PermissionError("query unavailable"))
     failed = hd.gpu_runtime_capture(unavailable)
-    assert all(item["status"] == "could_not_run" for item in failed.values())
-    assert hd.could_not_run_count(failed) == 4
+    assert failed["running_container_image_ids"]["status"] == "partial"
+    assert all(failed[key]["status"] == "could_not_run" for key in (
+        "nvidia_smi_banner", "nvidia_gpu_state", "cuda_runtime",
+        "container_runtime_version", "running_container_image_tags"))
+    assert hd.could_not_run_count(failed) == 5
+
+
+def test_container_image_id_capture_bounds_inspects_and_marks_incomplete() -> None:
+    ids = [f"{number:x}" * 64 for number in range(1, 6)]
+
+    class InspectRunner:
+        def __init__(self) -> None:
+            self.calls: list[list[str]] = []
+
+        def __call__(self, argv: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+            self.calls.append(argv)
+            return subprocess.CompletedProcess(argv, 0, "sha256:" + "b" * 64 + "\n", "")
+
+    runner = InspectRunner()
+    result = hd.running_container_image_ids(
+        {"status": "ok", "stdout": "".join(f"{item} vllm:test{i}\n" for i, item in enumerate(ids))},
+        runner)
+    assert result["status"] == "partial"
+    assert len(runner.calls) == hd.MAX_CONTAINER_IMAGE_INSPECTIONS
+    assert result["containers"][-1] == {
+        "status": "could_not_run", "reason": "inspection limit exceeded",
+        "container_count": 5, "uninspected_container_count": 1}
+    assert hd.could_not_run_count(result) == 1
+
+
+def test_cuda_runtime_version_capture_reads_exact_api_version_and_preserves_unknown(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    class VersionFunction:
+        argtypes: Any = None
+        restype: Any = None
+
+        def __call__(self, pointer: Any) -> int:
+            C.cast(pointer, C.POINTER(C.c_int))[0] = 13000
+            return 0
+
+    library = types.SimpleNamespace(cudaRuntimeGetVersion=VersionFunction())
+    monkeypatch.setattr("tools.host_diagnostics.ctypes.util.find_library", lambda _name: "libcudart.so.13")
+    monkeypatch.setattr(hd.C, "CDLL", lambda _name: library)
+    assert hd.cuda_runtime_version_capture() == {
+        "status": "ok", "library": "libcudart.so.13", "runtime_version": 13000,
+        "major": 13, "minor": 0}
+
+    monkeypatch.setattr("tools.host_diagnostics.ctypes.util.find_library", lambda _name: None)
+    assert hd.cuda_runtime_version_capture() == {
+        "status": "could_not_run", "error": "libcudart unavailable"}
 
 
 def test_mount_summary_ro_rw_and_malformed(tmp_path: Path) -> None:
@@ -304,6 +377,8 @@ def test_capture_uses_fixed_read_only_queries_and_reports_signals(tmp_path: Path
     assert result["checks"]["network"]["eee"]["eth0"]["status"] == "ok"
     assert result["checks"]["gpu_runtime"]["nvidia_smi_banner"]["status"] == "ok"
     assert result["checks"]["gpu_runtime"]["running_container_image_tags"]["status"] == "ok"
+    assert result["checks"]["gpu_runtime"]["running_container_image_ids"]["status"] == "partial"
+    assert result["could_not_run"] > 0
     commands = [call[0] for call in runner.calls]
     assert ["ethtool", "--show-eee", "eth0"] in commands
     assert ["nvme", "list", "--output-format=json"] in commands

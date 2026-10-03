@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+"""Capture one bounded, read-only host CUDA runtime observation for the DELTA task."""
+import ctypes.util
+import csv
+from datetime import datetime, timezone
+import hashlib
+import json
+import os
+from pathlib import Path
+import platform
+import shlex
+import subprocess
+import sys
+import time
+
+ROOT = Path.cwd()
+sys.path.insert(0, str(ROOT))
+from tools import cuda_integrity, host_diagnostics
+
+CUDA_TOOL = ROOT / "tools/cuda_integrity.py"
+HOST_TOOL = ROOT / "tools/host_diagnostics.py"
+COLLECTOR = Path(__file__)
+COMMAND = [sys.executable, str(CUDA_TOOL), "--workers", "1", "--rounds", "1"]
+REQUIRED_WRAPPER_LITERALS = (
+    "--property=MemoryMax=512M", "--property=CPUQuota=50%", "--property=RuntimeMaxSec=60s",
+    "--_bounded-worker", "timeout=75",
+)
+DGX_FIELDS = ("DGX_NAME", "DGX_PRETTY_NAME", "DGX_SWBUILD_VERSION", "DGX_OTA_VERSION", "DGX_PLATFORM")
+OS_FIELDS = ("ID", "VERSION_ID", "PRETTY_NAME")
+
+
+def now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def source_hash(path: Path) -> dict:
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        return {"status": "could_not_run", "path": str(path),
+                "error": f"{type(exc).__name__}: {exc}"}
+    return {"status": "ok", "path": str(path), "sha256": hashlib.sha256(raw).hexdigest()}
+
+
+def selected_release(path: Path, keys: tuple[str, ...]) -> dict:
+    try:
+        raw = path.read_bytes()
+        rows = {}
+        for line in raw.decode("utf-8").splitlines():
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            if key in keys:
+                rows[key] = shlex.split(value, comments=False)[0]
+        missing = [key for key in keys if key not in rows]
+        if missing:
+            return {"status": "could_not_run", "path": str(path), "missing": missing}
+        return {"status": "ok", "path": str(path), "sha256": hashlib.sha256(raw).hexdigest(),
+                "values": rows}
+    except (OSError, UnicodeError, ValueError, IndexError) as exc:
+        return {"status": "could_not_run", "path": str(path),
+                "error": f"{type(exc).__name__}: {exc}"}
+
+
+def host_memory() -> dict:
+    try:
+        content = Path("/proc/meminfo").read_text(encoding="ascii")
+        available_kib = next(int(line.split()[1]) for line in content.splitlines()
+                             if line.startswith("MemAvailable:"))
+        return {"status": "ok", "mem_available_bytes": available_kib * 1024}
+    except (OSError, StopIteration, ValueError, IndexError) as exc:
+        return {"status": "could_not_run", "error": f"{type(exc).__name__}: {exc}"}
+
+
+def local_text(path: Path) -> dict:
+    try:
+        value = path.read_text(encoding="ascii").strip()
+        return {"status": "ok", "value": value} if value else {
+            "status": "could_not_run", "error": "empty value"}
+    except (OSError, UnicodeError) as exc:
+        return {"status": "could_not_run", "error": f"{type(exc).__name__}: {exc}"}
+
+
+def host_snapshot() -> dict:
+    gpu = host_diagnostics.gpu_runtime_capture()
+    host = {"system": platform.system(), "kernel_release": platform.release(),
+            "architecture": platform.machine(),
+            "boot_id": local_text(Path("/proc/sys/kernel/random/boot_id")),
+            "nvidia_module": local_text(Path("/sys/module/nvidia/version")),
+            "os_release": selected_release(Path("/etc/os-release"), OS_FIELDS),
+            "dgx_release": selected_release(Path("/etc/dgx-release"), DGX_FIELDS),
+            "memory": host_memory()}
+    metadata_checks = (host["boot_id"], host["nvidia_module"], host["os_release"],
+                       host["dgx_release"], host["memory"])
+    metadata_could_not_run = sum(item.get("status") != "ok" for item in metadata_checks)
+    return {"timestamp_utc": now(), "host": host, "runtime": gpu,
+            "could_not_run": host_diagnostics.could_not_run_count(gpu) + metadata_could_not_run}
+
+
+def main() -> int:
+    started = time.monotonic()
+    source_files = [source_hash(COLLECTOR), source_hash(HOST_TOOL), source_hash(CUDA_TOOL)]
+    wrapper_text = CUDA_TOOL.read_text(encoding="utf-8")
+    wrapper_ok = all(token in wrapper_text for token in REQUIRED_WRAPPER_LITERALS)
+    source_could_not_run = sum(row["status"] != "ok" for row in source_files) + int(not wrapper_ok)
+    before = host_snapshot()
+    available = before["host"]["memory"].get("mem_available_bytes")
+    safe_to_run = (before["could_not_run"] == 0 and available is not None
+                   and available >= 1024 * 1024 * 1024 and source_could_not_run == 0)
+    run = {"argv": COMMAND, "wrapper_verified": wrapper_ok,
+           "wrapper_limits": {"MemoryMax": "512M", "CPUQuota": "50%", "RuntimeMaxSec": "60s"}}
+    after = None
+    if safe_to_run:
+        try:
+            proc = subprocess.run(COMMAND, cwd=ROOT, text=True, capture_output=True,
+                                  timeout=75, check=False)
+            run.update({"status": "pass" if proc.returncode == 0 else "fail",
+                        "returncode": proc.returncode, "stdout": proc.stdout,
+                        "stderr": proc.stderr})
+            try:
+                run["result"] = json.loads(proc.stdout.splitlines()[-1])
+            except (json.JSONDecodeError, IndexError):
+                run["status"] = "could_not_run"
+                run["parse_error"] = "CUDA tool did not emit one JSON result"
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            run.update({"status": "could_not_run", "error": f"{type(exc).__name__}: {exc}"})
+        after = host_snapshot()
+    else:
+        run.update({"status": "could_not_run", "reason": "preflight incomplete or host headroom below 1 GiB"})
+    try:
+        cuda_integrity.verify_bytes(b"abcd", b"abXd")
+        negative = {"status": "fail", "reason": "corrupted expected pattern was accepted"}
+    except ValueError as exc:
+        negative = {"status": "pass", "status_message": f"{type(exc).__name__}: {exc}"}
+    runtime = before["runtime"].get("cuda_runtime", {})
+    runtime_exact = {key: runtime.get(key) for key in ("status", "library", "runtime_version", "major", "minor")}
+    capture_could_not_run = (before["could_not_run"] + source_could_not_run
+                             + int(run["status"] == "could_not_run"))
+    if after is not None:
+        capture_could_not_run += after["could_not_run"]
+    status = ("could_not_run" if capture_could_not_run else
+              "fail" if run["status"] != "pass" or negative["status"] != "pass" else "pass")
+    result = {
+        "schema": 1,
+        "id": "DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01",
+        "status": status,
+        "could_not_run": capture_could_not_run,
+        "source_hashes": source_files,
+        "wrapper_source_literals": list(REQUIRED_WRAPPER_LITERALS),
+        "cuda_runtime_api_version": runtime_exact,
+        "before": before,
+        "cuda_test": run,
+        "after": after,
+        "negative_control": negative,
+        "elapsed_seconds": time.monotonic() - started,
+    }
+    sys.stdout.write(json.dumps(result, sort_keys=True) + "\n")
+    return {"pass": 0, "fail": 1, "could_not_run": 2}[result["status"]]
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
