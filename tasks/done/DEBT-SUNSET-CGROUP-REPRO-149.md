@@ -3,12 +3,16 @@ id: DEBT-SUNSET-CGROUP-REPRO-149
 kind: task
 domain: VERDICT
 title: "Revisar sunset en cgroup_repro.py:149"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_cgroup_repro_149", "expect": "exit_zero", "porque": "Revalidar la justificación y el alcance exacto de la excepción sunset antes de su vencimiento, con comando literal y control negativo. Si es pausa de arnés/sampler, medir timeout/bounded scope/cancelación; si es test, conservar sensibilidad al delta observado. Retirar la excepción innecesaria o registrar revisión válida con responsable y expiración concreta, sin suspensión permanente."}
+closed_at: 2026-10-03
+closure_type: void_wontfix
+reason: "Se conserva la ventana de observación de la asignación PyTorch. Prueba con objeto torch simulado: held y after_release quedan separados por 2 s de reloj controlado; con sleep neutralizado la ventana es cero. No se ejecutó CUDA."
+evidence: {"pass":"tasks/evidence/DEBT-SUNSET-CGROUP-REPRO-149/pass.txt","fail":"tasks/evidence/DEBT-SUNSET-CGROUP-REPRO-149/fail.txt","e2e":"tasks/evidence/DEBT-SUNSET-CGROUP-REPRO-149/e2e.txt"}
 ---
 
 ## Registro y responsable
@@ -31,8 +35,16 @@ Fuentes: tools/cgroup_repro.py:149.
 
 Revalidar la justificación y el alcance exacto de la excepción sunset antes de su vencimiento, con comando literal y control negativo. Si es pausa de arnés/sampler, medir timeout/bounded scope/cancelación; si es test, conservar sensibilidad al delta observado. Retirar la excepción innecesaria o registrar revisión válida con responsable y expiración concreta, sin suspensión permanente.
 
-## Estado del verificador
+## Root Cause
 
-La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
+La ficha registraba una exclusión/sunset pendiente de revalidación. Se inspeccionó el sitio exacto y se contrastó la razón de la excepción con el control que la sostiene.
 
-Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+## Regression Test
+
+`python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_cgroup_repro_149`
+
+Control negativo incluido en el selector: Se conserva la ventana de observación de la asignación PyTorch. Prueba con objeto torch simulado: held y after_release quedan separados por 2 s de reloj controlado; con sleep neutralizado la ventana es cero. No se ejecutó CUDA.
+
+## Verification Evidence
+
+Pass: selector `DEBT-SUNSET-CGROUP-REPRO-149` pasa junto con los 13 selectores de esta ola; resultado `14 passed`, `could_not_run=0`. Fail previo: selector ausente, pytest exit 4; registrado solo como estado anterior de la instrumentación. El detalle y el alcance del control negativo constan en `tasks/evidence/DEBT-SUNSET-CGROUP-REPRO-149/e2e.txt`.
