@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import time
+import hashlib
 
 from test_bb_usable import _cargar
 from test_bb_bash import _arbol_cgroup, _fila_escritorio, _syscall, correr
@@ -14,6 +15,33 @@ import pytest
 
 from tools import provider_trace
 from tools import cgroup_repro, cuda_integrity
+
+
+def test_debt_schema_evidence_index_scope_01(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parent.parent
+    manifest = root / "tasks/evidence/DEBT-SCHEMA-EVIDENCE-INDEX-SCOPE-01/migration.json"
+    rows = json.loads(manifest.read_text(encoding="utf-8"))["files"]
+    assert len(rows) == 4
+    for row in rows:
+        assert not (root / row["old"]).exists()
+        assert hashlib.sha256((root / row["new"]).read_bytes()).hexdigest() == row["sha256"]
+    runner = root / ".simplecode/run.py"
+    positive = subprocess.run(
+        [sys.executable, str(runner), "simplecode.verification.ledger_schema", "--root", str(root), "--check"],
+        capture_output=True, text=True, timeout=60)
+    assert positive.returncode == 0, positive.stdout + positive.stderr
+    assert "could_not_run=0" in positive.stdout, positive.stdout
+    # A genuine task placed outside governed folders must remain visible to the gate.
+    misplaced = tmp_path / "tasks" / "misplaced"
+    misplaced.mkdir(parents=True)
+    card = root / "tasks/done/DEBT-RUFF-BB-USABLE-01.md"
+    (misplaced / card.name).write_bytes(card.read_bytes())
+    negative = subprocess.run(
+        [sys.executable, str(runner), "simplecode.verification.ledger_schema", "--root", str(tmp_path), "--check"],
+        capture_output=True, text=True, timeout=60)
+    assert negative.returncode != 0, negative.stdout + negative.stderr
+    assert card.name in negative.stdout + negative.stderr
+    assert "could_not_run=1" in negative.stdout, negative.stdout
 
 
 def test_debt_broad_except_cuda_integrity_57() -> None:
