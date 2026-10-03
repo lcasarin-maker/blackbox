@@ -1,0 +1,8 @@
+El runtime real del kit está presente (.simplecode/runtime.zip, .simplecode/run.py y kit.lock). La suite incluye negativos explícitos: runtime ausente y salida sin contador de hallazgos deben lanzar AssertionError COULD_NOT_RUN. El selector ejecuta toda la suite PII y falla ante cualquier skip/CNR.
+
+$ python3 -m pytest -q -rs tests/test_pii_scan_systemd.py
+..........                                                               [100%]
+10 passed in 0.15s
+EXIT=0
+
+La ausencia de contador se ejercita con un subprocess falso que termina sin `hallazgos=` y tiene que producir AssertionError COULD_NOT_RUN; la suite final dio 10 passed, 0 skipped.

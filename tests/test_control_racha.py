@@ -115,7 +115,10 @@ def test_el_gate_sale_0_sobre_el_corpus_real(capsys):
     se dice -- no se llama limpio a lo que no se pudo medir."""
     rc = cr.main([])
     if rc == 2:
-        pytest.skip("sin corpus de muestras en esta maquina")
+        pytest.skip(
+            f"COULD_NOT_RUN: corpus real ausente en {cr.MUESTRAS}; "
+            "owner=Blackbox; trigger=restaurar el corpus registrado"
+        )
     salida = capsys.readouterr().out
     assert rc == 0, f"el control reporta falsos positivos:\n{salida}"
     assert "VEREDICTO: LIMPIO" in salida
@@ -127,7 +130,10 @@ def test_control_negativo_el_gate_SI_sale_1_con_el_corte_bajado(capsys):
     tiene que volver rojo."""
     rc = cr.main(["--corte", "180"])
     if rc == 2:
-        pytest.skip("sin corpus de muestras en esta maquina")
+        pytest.skip(
+            f"COULD_NOT_RUN: corpus real ausente en {cr.MUESTRAS}; "
+            "owner=Blackbox; trigger=restaurar el corpus registrado"
+        )
     salida = capsys.readouterr().out
     assert rc == 1, (
         "el control no puede salir negativo, asi que su 'LIMPIO' no verifica "

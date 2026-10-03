@@ -1,0 +1,8 @@
+Ejecución elevada requerida por systemd del host; no se reinició el servicio. El selector ejecuta el módulo completo y falla si aparece un skip/CNR.
+
+$ python3 -m pytest -q -rs tests/test_demonio_al_dia.py
+........                                                                 [100%]
+8 passed in 0.08s
+EXIT=0
+
+Prerequisito no disponible en sandbox: `$ systemctl show bb-usable.service -p ExecMainStartTimestamp --value` devolvió `Failed to connect to bus: Operation not permitted` (EXIT=1, COULD_NOT_RUN=1). Con acceso al host: `$ systemctl show bb-usable.service -p ExecMainStartTimestamp --value` devolvió `Wed 2026-09-30 14:40:15 CST` (EXIT=0); la suite elevada pasó 8 pruebas. No se reinició el servicio.
