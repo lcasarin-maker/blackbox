@@ -1,0 +1,6 @@
+El test inyecta el error solo en el sujeto bajo prueba y mantiene la delegación al resto de lecturas. Los asserts detectan la eliminación/silenciamiento del tratamiento de ilegibles.
+
+$ python3 -m pytest -q -rs tests/test_calibra_techo_slice.py::test_una_muestra_ILEGIBLE_no_se_traga_en_silencio tests/test_calibra_techo_slice.py::test_un_directorio_SIN_PERMISO_se_registra_y_no_pasa_por_vacio tests/test_calibra_techo_slice.py::test_el_informe_NOMBRA_los_ficheros_ilegibles
+...                                                                      [100%]
+3 passed in 0.18s
+EXIT=0

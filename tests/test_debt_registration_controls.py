@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+import sys
 
 from test_bb_usable import _cargar
 from test_bb_bash import _arbol_cgroup, _fila_escritorio, correr
@@ -10,6 +11,60 @@ from pathlib import Path
 import pytest
 
 from tools import provider_trace
+
+
+def _run_without_skips(selection: str) -> int:
+    root = Path(__file__).resolve().parent.parent
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-rs", selection],
+        capture_output=True, text=True, cwd=root, timeout=60,
+    )
+    output = result.stdout + result.stderr
+    assert " skipped" not in output, output
+    assert "COULD_NOT_RUN" not in output, output
+    return result.returncode
+
+
+def test_debt_skip_test_calibra_techo_slice_164():
+    assert _run_without_skips(
+        "tests/test_calibra_techo_slice.py::test_una_muestra_ILEGIBLE_no_se_traga_en_silencio"
+    ) == 0
+
+
+def test_debt_skip_test_calibra_techo_slice_263():
+    assert _run_without_skips(
+        "tests/test_calibra_techo_slice.py::test_un_directorio_SIN_PERMISO_se_registra_y_no_pasa_por_vacio"
+    ) == 0
+
+
+def test_debt_skip_test_calibra_techo_slice_315():
+    assert _run_without_skips(
+        "tests/test_calibra_techo_slice.py::test_el_informe_NOMBRA_los_ficheros_ilegibles"
+    ) == 0
+
+
+def test_debt_skip_test_control_racha_118():
+    assert _run_without_skips(
+        "tests/test_control_racha.py::test_el_gate_sale_0_sobre_el_corpus_real"
+    ) == 0
+
+
+def test_debt_skip_test_control_racha_130():
+    assert _run_without_skips(
+        "tests/test_control_racha.py::test_control_negativo_el_gate_SI_sale_1_con_el_corte_bajado"
+    ) == 0
+
+
+def test_debt_skip_test_demonio_al_dia_52():
+    assert _run_without_skips("tests/test_demonio_al_dia.py") == 0
+
+
+def test_debt_skip_test_pii_scan_systemd_167():
+    assert _run_without_skips("tests/test_pii_scan_systemd.py") == 0
+
+
+def test_debt_skip_test_pii_scan_systemd_86():
+    assert _run_without_skips("tests/test_pii_scan_systemd.py") == 0
 
 
 def test_bug_provider_trace_latency_overflow_01(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
