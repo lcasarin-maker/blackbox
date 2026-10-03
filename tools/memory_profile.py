@@ -55,22 +55,35 @@ def capture(root: Path = Path("/"), page_size_bytes: int | None = None) -> dict[
     dgx_release = read_text(root / "etc/dgx-release")
     meminfo = read_text(root / "proc/meminfo")
     available: dict[str, object]
-    if meminfo["status"] == "ok":
-        match = re.search(r"^MemAvailable:\s+(\d+)\s+kB\s*$", meminfo["value"], re.MULTILINE)
+    meminfo_value = meminfo.get("value")
+    if meminfo["status"] == "ok" and isinstance(meminfo_value, str):
+        match = re.search(r"^MemAvailable:\s+(\d+)\s+kB\s*$", meminfo_value, re.MULTILINE)
         available = ({"status": "ok", "kib": int(match.group(1))} if match else
                      {"status": "collection_failed", "value": None,
                       "error": "MemAvailable record missing or malformed"})
+    elif meminfo["status"] == "ok":
+        available = {"status": "collection_failed", "value": None,
+                     "error": "meminfo value is not text"}
     else:
         available = {"status": meminfo["status"], "value": None,
                      "error": meminfo["error"]}
     loaded_driver = read_text(root / "proc/driver/nvidia/version")
     disk_driver = command(["modinfo", "-F", "version", "nvidia"])
-    loaded_match = (re.search(r"\b(\d{3}\.\d{2,3}\.\d{2})\b", loaded_driver["value"])
-                    if loaded_driver["status"] == "ok" else None)
-    disk_match = (re.fullmatch(r"\s*(\d{3}\.\d{2,3}\.\d{2})\s*", str(disk_driver.get("value")))
-                  if disk_driver["status"] == "ok" else None)
+    loaded_driver_value = loaded_driver.get("value")
+    disk_driver_value = disk_driver.get("value")
+    loaded_match = (re.search(r"\b(\d{3}\.\d{2,3}\.\d{2})\b", loaded_driver_value)
+                    if loaded_driver["status"] == "ok" and isinstance(loaded_driver_value, str)
+                    else None)
+    disk_match = (re.fullmatch(r"\s*(\d{3}\.\d{2,3}\.\d{2})\s*", disk_driver_value)
+                  if disk_driver["status"] == "ok" and isinstance(disk_driver_value, str)
+                  else None)
     driver_comparison = {
-        "status": "compared" if loaded_match and disk_match else "could_not_run",
+        "status": ("compared" if loaded_match and disk_match else
+                   "collection_failed" if (loaded_driver["status"] == "ok"
+                                            and not isinstance(loaded_driver_value, str)
+                                            or disk_driver["status"] == "ok"
+                                            and not isinstance(disk_driver_value, str))
+                   else "could_not_run"),
         "loaded_version": loaded_match.group(1) if loaded_match else None,
         "disk_version": disk_match.group(1) if disk_match else None,
         "match": loaded_match.group(1) == disk_match.group(1) if loaded_match and disk_match else None,

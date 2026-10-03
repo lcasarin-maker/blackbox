@@ -66,7 +66,8 @@ def test_effective_tuple_captures_ota_memory_and_loaded_disk_driver_control(tmp_
     monkeypatch.setattr(memory_profile, "command", lambda argv: {
         "status": "ok", "command": argv, "value": "580.159.03"})
     result = memory_profile.capture(tmp_path)
-    assert profile_value(result, "effective_stack", "dgx_release", "value").startswith("DGX OS 7.4")
+    release = profile_value(result, "effective_stack", "dgx_release", "value")
+    assert isinstance(release, str) and release.startswith("DGX OS 7.4")
     assert profile_value(result, "effective_stack", "driver_comparison", "match") is True
     assert profile_value(result, "host_reserve_context", "memavailable", "kib") == 123456
     assert profile_value(result, "host_reserve_context", "memory_pressure", "status") == "ok"
@@ -80,6 +81,18 @@ def test_effective_tuple_captures_ota_memory_and_loaded_disk_driver_control(tmp_
     assert profile_value(malformed, "host_reserve_context", "memavailable", "status") == "collection_failed"
     absent = memory_profile.capture(tmp_path / "empty")
     assert profile_value(absent, "host_reserve_context", "memavailable", "status") == "absent"
+
+    original_read = memory_profile.read_text
+
+    def invalid_ok_value(path: Path):
+        if path == tmp_path / "proc/meminfo" or path == tmp_path / "proc/driver/nvidia/version":
+            return {"status": "ok", "value": None, "error": None}
+        return original_read(path)
+
+    monkeypatch.setattr(memory_profile, "read_text", invalid_ok_value)
+    invalid = memory_profile.capture(tmp_path)
+    assert profile_value(invalid, "host_reserve_context", "memavailable", "status") == "collection_failed"
+    assert profile_value(invalid, "effective_stack", "driver_comparison", "status") == "collection_failed"
 
 
 def test_live_profile_records_running_host_page_size() -> None:
