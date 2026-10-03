@@ -117,7 +117,8 @@ def test_prepare_missing_fields_and_thermal_validation(tmp_path):
 def test_associate_cpu_work_handles_correlations_and_bad_sources(tmp_path):
     cpu_path = tmp_path / "cpu.jsonl"
     cpu_path.write_text(
-        "{bad}\n[]\n" + json.dumps(_fila(95, cpu_top=[{"pid": 7, "cpu_s": 1}])) + "\n",
+        "{bad}\n[]\n" + json.dumps(_fila(95, cpu_top=[{"pid": 7, "cpu_s": 1}])) + "\n"
+        + json.dumps({"ts": _ts(96), "cpu_top": []}) + "\n",
         encoding="utf-8",
     )
     gpu = {"ts": _ts(100), "boot_id": "A", "gpu_util_pct": 0,

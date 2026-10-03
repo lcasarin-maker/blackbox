@@ -372,38 +372,27 @@ def presupuesto() -> dict:
             "muestras_ilegibles": list(_ILEGIBLES)}
 
 
-def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--check", action="store_true",
-                    help="sale 1 si los techos no componen o la reserva quedo vieja")
-    ap.add_argument("--json", action="store_true", help="la cuenta en JSON")
-    args = ap.parse_args(argv)
-
-    p = presupuesto()
-    if args.json:
-        print(json.dumps(p, ensure_ascii=False, indent=1))
-        return 0
-
+def _mostrar_compromisos(p: dict) -> None:
     total = p["mem_total_gib"]
     print(f"[presupuesto] MemTotal:            {total:8.1f} GiB"
           if total is not None else "[presupuesto] MemTotal:            COULD_NOT_RUN")
     print("[presupuesto] -- mitad 1: COMPROMISOS (lo que el kernel aplica) --")
-    s = p["suelo_gpu"]
-    if s is None:
+    suelo = p["suelo_gpu"]
+    if suelo is None:
         print("[presupuesto]   suelo comprometido de GPU        COULD_NOT_RUN (serie vacia)")
     else:
-        print(f"[presupuesto]   suelo comprometido de GPU   {s['gib']:8.1f} GiB"
-              f"  (p95 de {s['muestras']} muestras; con el p50 serian"
-              f" {s['p50']:.1f} -- la meseta mueve {s['p95'] - s['p50']:.1f})")
-    for f in p["slices"]:
-        if not f["existe"]:
-            print(f"[presupuesto]   {f['nombre']:<38} AUSENTE")
-        elif f["techo_gib"] is None:
-            print(f"[presupuesto]   {f['nombre']:<38} SIN TECHO"
-                  f"  (usa {f['uso_gib']:.1f} GiB ahora, y eso es una observacion)")
+        print(f"[presupuesto]   suelo comprometido de GPU   {suelo['gib']:8.1f} GiB"
+              f"  (p95 de {suelo['muestras']} muestras; con el p50 serian"
+              f" {suelo['p50']:.1f} -- la meseta mueve {suelo['p95'] - suelo['p50']:.1f})")
+    for fila in p["slices"]:
+        if not fila["existe"]:
+            print(f"[presupuesto]   {fila['nombre']:<38} AUSENTE")
+        elif fila["techo_gib"] is None:
+            print(f"[presupuesto]   {fila['nombre']:<38} SIN TECHO"
+                  f"  (usa {fila['uso_gib']:.1f} GiB ahora, y eso es una observacion)")
         else:
-            print(f"[presupuesto]   {f['nombre']:<38} {f['techo_gib']:8.1f} GiB"
-                  f"  (usa {f['uso_gib']:.1f})")
+            print(f"[presupuesto]   {fila['nombre']:<38} {fila['techo_gib']:8.1f} GiB"
+                  f"  (usa {fila['uso_gib']:.1f})")
     if p["gasto_gib"] is None:
         print("[presupuesto]   SUMA comprometida           COULD_NOT_RUN")
     else:
@@ -411,50 +400,64 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[presupuesto]   SUMA comprometida           {p['gasto_gib']:8.1f} GiB"
               + ("" if holgura is None else
                  f"  sobre {total:.1f} -> holgura {holgura:.1f}"))
+
+
+def _mostrar_excursion(p: dict) -> None:
     print("[presupuesto] -- mitad 2: EXCURSION (lo que NADIE aplica, y por eso se firma) --")
     if p["pico_gpu_observado_mib"] is None:
         print("[presupuesto]   maximo observado             COULD_NOT_RUN (sin muestras)")
     else:
         print(f"[presupuesto]   maximo observado            "
               f"{p['pico_gpu_observado_mib'] / 1024:8.1f} GiB  ({p['pico_gpu_ts']})")
-    d = p["declaracion"]
-    if d is None:
-        print(f"[presupuesto]   presupuesto firmado          SIN FIRMAR"
+    declaracion = p["declaracion"]
+    if declaracion is None:
+        print("[presupuesto]   presupuesto firmado          SIN FIRMAR"
               f"  ({p['declaracion_motivo']})")
     else:
-        print(f"[presupuesto]   presupuesto firmado         {d['excursion_gib']:8.1f} GiB"
-              f"  (firma {d['owner']}, caduca {d['expires']})")
-    if p["presupuesto_gpu_gib"] is not None:
-        print("[presupuesto] -- vista de operacion: la alarma del abanico --")
-        print(f"[presupuesto]   umbral del abanico          {p['presupuesto_gpu_gib']:8.1f} GiB"
-              f"  (lo que le queda a la GPU si TODOS los techos se honran)")
-        ex = excursiones_gpu(p["presupuesto_gpu_gib"])
-        if ex["muestras"] == 0:
-            print("[presupuesto] excursiones del abanico: COULD_NOT_RUN (serie vacia)")
-        else:
-            print(f"[presupuesto]   excursiones: {ex['por_encima']} de "
-                  f"{ex['muestras']} muestras ({ex['pct']:.1f} %) por encima del presupuesto")
-            for ts, m in ex["ultimas"]:
-                print(f"                 {ts}  {m/1024:.1f} GiB")
+        print(f"[presupuesto]   presupuesto firmado         {declaracion['excursion_gib']:8.1f} GiB"
+              f"  (firma {declaracion['owner']}, caduca {declaracion['expires']})")
 
-    if not args.check:
-        return 0
 
-    if p["muestras_ilegibles"]:
-        print(f"[presupuesto] could_not_run: {len(p['muestras_ilegibles'])} fichero(s) "
-              f"de muestras ilegibles -- el pico puede salir MAS BAJO de lo real:")
-        for x in p["muestras_ilegibles"]:
-            print(f"                 {x}")
+def _mostrar_abanico(p: dict) -> None:
+    presupuesto_gpu = p["presupuesto_gpu_gib"]
+    if presupuesto_gpu is None:
+        return
+    print("[presupuesto] -- vista de operacion: la alarma del abanico --")
+    print(f"[presupuesto]   umbral del abanico          {presupuesto_gpu:8.1f} GiB"
+          "  (lo que le queda a la GPU si TODOS los techos se honran)")
+    excursiones = excursiones_gpu(presupuesto_gpu)
+    if excursiones["muestras"] == 0:
+        print("[presupuesto] excursiones del abanico: COULD_NOT_RUN (serie vacia)")
+        return
+    print(f"[presupuesto]   excursiones: {excursiones['por_encima']} de "
+          f"{excursiones['muestras']} muestras ({excursiones['pct']:.1f} %) por encima del presupuesto")
+    for ts, mib in excursiones["ultimas"]:
+        print(f"                 {ts}  {mib/1024:.1f} GiB")
 
+
+def _mostrar_informe(p: dict) -> None:
+    _mostrar_compromisos(p)
+    _mostrar_excursion(p)
+    _mostrar_abanico(p)
+
+
+def _problemas_check(p: dict) -> list[str] | None:
+    """Devuelve los defectos del gate; None señala una lectura indispensable ausente."""
+    total = p["mem_total_gib"]
     problemas = []
-    if p["muestras_ilegibles"]:
+    ilegibles = p["muestras_ilegibles"]
+    if ilegibles:
+        print(f"[presupuesto] could_not_run: {len(ilegibles)} fichero(s) de muestras ilegibles "
+              "-- el pico puede salir MAS BAJO de lo real:")
+        for muestra in ilegibles:
+            print(f"                 {muestra}")
         problemas.append(
-            f"{len(p['muestras_ilegibles'])} fichero(s) de muestras ilegibles: el pico "
+            f"{len(ilegibles)} fichero(s) de muestras ilegibles: el pico "
             "de GPU esta calculado sobre un conjunto incompleto y no puede sostener "
             "la reserva declarada")
     if total is None:
         print("[presupuesto] COULD_NOT_RUN: no se pudo leer MemTotal", file=sys.stderr)
-        return 2
+        return None
     if p["gasto_gib"] is None:
         problemas.append(
             "COULD_NOT_RUN: sin serie de GPU no hay suelo comprometido que restar, "
@@ -463,9 +466,6 @@ def main(argv: list[str] | None = None) -> int:
         problemas.append(
             f"MITAD 1 -- los compromisos NO componen: {p['gasto_gib']:.1f} GiB sobre "
             f"{total:.1f} GiB de maquina, {p['gasto_gib'] - total:.1f} GiB de mas")
-    # MITAD 2. La excursion no la acota ningun cgroup, asi que no se puede
-    # presupuestar: solo se puede FIRMAR. Sin firma es rojo, y eso es el estado
-    # por defecto a proposito -- ver `DECLARACION`.
     if p["declaracion"] is None:
         problemas.append(f"MITAD 2 -- {p['declaracion_motivo']}")
     elif p["pico_gpu_observado_mib"] is not None:
@@ -476,22 +476,44 @@ def main(argv: list[str] | None = None) -> int:
                 f"MITAD 2 -- la excursion se PASO de lo firmado: se observaron "
                 f"{pico_gib:.1f} GiB ({p['pico_gpu_ts']}) y la firma autoriza "
                 f"{firmado:.1f} GiB. Se vuelve a firmar con el numero nuevo delante, "
-                f"o se acota el abanico")
+                "o se acota el abanico")
     if p["sin_techo"]:
         problemas.append(
             "slice(s) sin techo, que entran en la cuenta por lo que usan HOY y no "
             "por un compromiso: " + ", ".join(p["sin_techo"]))
+    return problemas
 
+
+def _mostrar_veredicto(problemas: list[str]) -> int:
     if problemas:
         print("[presupuesto] FAIL:", file=sys.stderr)
-        for x in problemas:
-            print(f"  - {x}", file=sys.stderr)
+        for problema in problemas:
+            print(f"  - {problema}", file=sys.stderr)
         print("[presupuesto] Un conjunto de techos que no compone no es una proteccion: "
               "es aritmetica que nadie hizo. Y una excursion que nadie firma no es "
               "un riesgo aceptado: es uno que nadie miro.", file=sys.stderr)
         return 1
     print("[presupuesto] OK: lo declarado cabe en lo que hay.")
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--check", action="store_true",
+                    help="sale 1 si los techos no componen o la reserva quedo vieja")
+    ap.add_argument("--json", action="store_true", help="la cuenta en JSON")
+    args = ap.parse_args(argv)
+    p = presupuesto()
+    if args.json:
+        print(json.dumps(p, ensure_ascii=False, indent=1))
+        return 0
+    _mostrar_informe(p)
+    if not args.check:
+        return 0
+    problemas = _problemas_check(p)
+    if problemas is None:
+        return 2
+    return _mostrar_veredicto(problemas)
 
 
 if __name__ == "__main__":  # pragma: no cover -- entry point, ejercitado via main()
