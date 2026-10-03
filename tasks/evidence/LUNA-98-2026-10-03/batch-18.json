@@ -1,0 +1,57 @@
+[
+  {
+    "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+    "path": "tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md",
+    "title": "\"Detect USB-HID perdido tras actualización de kernel o driver\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_usb_hid_postupdate --evidence tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK",
+      "expect": "exit_zero",
+      "porque": "El cierre debe separar fallo USB-HID real, máquina headless, módulo integrado en kernel y telemetría inaccesible; comprobar que el servicio sigue activo no demuestra que el teclado ni el acceso remoto funcionen."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+    "path": "tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md",
+    "title": "\"Prevent idle fan stall after CX7 hotplug powers down on standalone DGX Spark\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-CX7-HOTPLUG-FAN-PROTECTION --evidence tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+      "expect": "exit_zero",
+      "porque": "Prove the reported hotplug/fan mechanism and validate a vendor-supported preventive fix or bounded reversible workaround with thermal safety, network controls, and rollback."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+    "path": "tasks/backlog/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT.md",
+    "title": "\"Detect unsupported nvidia-drm modeset override before DGX OS OTA\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT --evidence tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+      "expect": "exit_zero",
+      "porque": "Show that OTA compatibility checks detect a conflicting DRM modeset override before update, with safe recovery and a clean-system negative control."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+    "path": "tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md",
+    "title": "\"Validar contención térmica para residencia de modelos y calor CPU o idle\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION --evidence tasks/evidence/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+    "path": "tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md",
+    "title": "\"Validar módulos e initramfs antes de reiniciar tras una actualización DGX OS\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-KERNEL-INITRD-UPDATE-GATE --evidence tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "expect": "exit_zero",
+      "porque": "Demostrar un gate previo al reboot que detecta estado dpkg/DKMS incoherente, ausencia de initrd/módulo para el kernel objetivo y una recuperación arrancable; incluir negativos de kernel sano y rollback."
+    },
+    "dependencies": []
+  }
+]

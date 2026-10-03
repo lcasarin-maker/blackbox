@@ -1,0 +1,57 @@
+[
+  {
+    "id": "FEATURE-FORUM-RESCUE-RUNBOOK-01",
+    "path": "tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md",
+    "title": "\"Preparar acceso rescue.target y reversión de un servicio que impide arrancar\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-RESCUE-RUNBOOK-01 --evidence tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "path": "tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md",
+    "title": "\"Verificar disponibilidad y propietario del watchdog en lugar de inferirlos\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-SBSA-WATCHDOG-STATE-01 --evidence tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+    "path": "tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md",
+    "title": "\"Detect and recover Wi-Fi isolation without misclassifying a live host as frozen\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_wifi_isolation --evidence tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01",
+      "expect": "exit_zero",
+      "porque": "Must prove the recorded NetworkManager and supplicant failure is distinguished from a host freeze, test a bounded recovery policy on the cited stack, and preserve rollback evidence."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "path": "tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md",
+    "title": "\"Adaptar trazador de cargos kernel con atribución a cgroup\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR",
+      "expect": "exit_zero",
+      "porque": "Verificación específica pendiente: ejecutar el sujeto y sus controles, no comprobar solo que el informe exista."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "path": "tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md",
+    "title": "\"Evaluar subasignación de tablas UVM bajo páginas de 4 KiB\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_memory_saver --phase 04-packing-4k --evidence tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K",
+      "expect": "exit_zero",
+      "porque": "Verificación específica pendiente: ejecutar el sujeto y sus controles, no comprobar solo que el informe exista."
+    },
+    "dependencies": []
+  }
+]
