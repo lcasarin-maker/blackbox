@@ -55,3 +55,7 @@ Riesgos: la reserva reduce memoria disponible para las cargas; atribuir el fallo
 372173: la captura de recovery muestra OOBE/cloud-init y `Started gdm.service`; ningún error explícito. Separar arranque, disponibilidad de sesión y resultado del recovery antes de recomendar reinicio/reimagen. El borrado correcto no quedó confirmado.
 
 362204: seis TXT leídos y log inspeccionado en 79/79 snapshots (0 no parseados), todos P8, GPU 35–55 °C y sin remote-desktop en lista. Los TXT atribuyen causa a GDM/RDP y proponen llvmpipe, pero sus propios relatos declaran persistencia o verificación pendiente tras reboot. Mantener canario pre-login/post-login del mismo stack y conservar RDP; ni editar Wayland ni apagar RDP constituye fix demostrado por estos adjuntos. Evidencia con sha256 en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/attachments-root/manifest.json`.
+
+## Avance de reutilización — 2026-10-03
+
+La captura APT reutiliza `tools.host_diagnostics.run_readonly` para ejecutar consultas fijas acotadas; no se modificó `host_diagnostics.py` ni se añadió detección de sesión gráfica. El nuevo reporte no mide GDM, RDP o resultado de login post-update. No hay reproducción del fallo de escritorio; la ficha sigue abierta.
