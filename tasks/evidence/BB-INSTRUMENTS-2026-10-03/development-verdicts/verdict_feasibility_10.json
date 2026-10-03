@@ -1,0 +1,32 @@
+[
+  {
+    "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "status": "needs_capture",
+    "evidence": "tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md; tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt; tools/atom_gpu_telemetry.py",
+    "reason": "The local record confirms the declared 300,2800 policy and zero A/B trials or clock changes; telemetry already supplies several required read-only signals. Missing input: named OEM/firmware/kernel/driver and matching baseline-vs-lower-cap workload/load-unload/control runs, applied range readback, duration/failures/latency/throughput/power/temperature/throttle/collection failures, then post-rollback policy readback. No clock or workload was changed here; parser format should follow real raw records, not a synthetic schema."
+  },
+  {
+    "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "status": "needs_capture",
+    "evidence": "tools/provider_trace.py; tools/preflight.py; tests/test_provider_trace.py; tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/provider-trace-run.json; tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/validator-run.json",
+    "reason": "Request-scoped analyzer has healthy GPU, intentional CPU and GPU-to-CPU after-respawn fixtures plus unknown controls; `python3 -m pytest tests/test_provider_trace.py -q` returned 12 passed. Existing host preflight is unknown because observations for requests/provider/restart/evidence are missing; synthetic JSONL is not a real workload trace. Next input: trace for exact OEM/driver/container capturing requests, requested/effective provider, active worker/PID and respawn, latency, GPU/CPU activity, plus GPU idle/no-request, intentional CPU and healthy-GPU controls, support identity and bounded recovery/rollback results. No inference request was generated."
+  },
+  {
+    "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+    "status": "deferred_lab",
+    "evidence": "tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md; tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/host-observation.txt; tools/host_diagnostics.py",
+    "reason": "The read-only host snapshot identifies WLAN down and wired Ethernet up but lacks the cited WRONG_KEY/no-secrets sequence, timestamp-matched local alive/remote failed probes and AP state. The close contract also requires bounded roam/recovery A/B and rollback, which changes network settings or services on a live headless GX10. Next, the owner must select/authorize an isolated canary, management path and recovery window; capture the exact journal/supplicant/NM/probe/route/AP sequence, then test one reversible policy at a time with reconnect duration, recurrence and verified rollback. No network writes or service actions here."
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "status": "needs_capture",
+    "evidence": "tools/kernel_charges.bt; tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt; tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/probe-list.txt; tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md",
+    "reason": "The probe source and ABI/control inventory are preparatory only. Its own report leaves parser/probe availability, owner memcg, runtime symbols and CUDA trace unknown; bpftrace probe inspection required root and was not run. Next input: exact-stack raw CPU positive, no-allocation negative and bounded CUDA allocation trace with charged/uncharged/uncharge/failure/duplicate ordering, thread cgroup and actual memcg identity, exact symbols/kernel build and permissions. No claim can come from executor cgroup alone."
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "status": "needs_capture",
+    "evidence": "tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md; tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K/comparison.txt; FEATURE-MEMORYSAVER-01-PERFIL; FEATURE-MEMORYSAVER-03-INTEGRIDAD",
+    "reason": "The design comparison describes 4 KiB slots as one slot per 4 KiB system page on the observed kernel, so it currently falls back to stock allocation; aggregate memory profile and integrity tests do not measure UVM page-table backing or eligible leaf tables. Next input: raw exact-build source/HAL alignment constraints and measured table/backing bytes per real workload/allocation, sharing/teardown and charge/release results, with stock comparison. Only a measured residual cost can justify a fork patch; no GPU allocation or kernel experiments were run."
+  }
+]
