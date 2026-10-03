@@ -149,6 +149,19 @@ def test_help_without_docstring_and_escaped_help_are_preserved() -> None:
     assert escaped["samples"][0]["observed_help"] == r"raw\nhelp\\tail"
 
 
+def test_metadata_allows_whitespace_between_comment_token_and_kind() -> None:
+    result = rp.parse_capture(
+        '#\tTYPE\tvllm:kv_cache_usage_perc\tgauge\n'
+        '#   HELP   vllm:kv_cache_usage_perc   usage text\n'
+        'vllm:kv_cache_usage_perc 0.5\n',
+        "capture.prom",
+    )
+    assert result["status"] == "observed"
+    sample = result["samples"][0]
+    assert sample["observed_type"] == "gauge"
+    assert sample["observed_help"] == "usage text"
+
+
 def test_malformed_type_declarations_are_retained() -> None:
     result = rp.parse_capture(
         '# TYPE vllm:kv_cache_usage_perc wrong\n'
