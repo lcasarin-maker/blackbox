@@ -48,3 +48,18 @@ FAILED tests/test_bb_bash.py::test_control_negativo_clock_lock_con_OTRO_rango_qu
 FAILED tests/test_bb_bash.py::test_control_negativo_clock_lock_sin_confirmacion_del_driver
 2 failed, 1 passed, 81 deselected in 1.51s
 ```
+
+## Reejecución posterior tras corregir el aislamiento del control — 2026-10-03
+
+Causa del fallo anterior: los dos controles negativos de clock lock dependían del `systemctl` del host sin fijarlo. En este namespace, el bus devuelve `Operation not permitted`; el código clasifica correctamente esa imposibilidad como `CIEGO` (COULD_NOT_RUN). Las aserciones esperaban `FALTA`, que sólo corresponde cuando se pudieron leer servicio y journal y sus datos contradicen el rango. Ahora los tests fijan ExecStart y hora de inicio mediante un stub `systemctl`, manteniendo el journal como sujeto; un caso positivo exige la confirmación correcta y los dos controles negativos cubren rango distinto y confirmación ausente.
+
+Comando de close_check:
+```text
+python3 -m pytest tests/test_bb_bash.py -k 'muestreo_por_su_dato or clock_lock or punteria' -q
+```
+
+Salida literal (rc=0):
+```text
+....                                                                     [100%]
+4 passed, 81 deselected in 1.50s
+```

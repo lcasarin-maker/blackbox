@@ -477,11 +477,27 @@ def test_control_negativo_sin_muestra_fresca_el_muestreo_esta_FALTA(datos):
 
 
 CLOCK_OK = """case "$*" in
-  *atom-clock-lock*) echo 'GPU clocks set to "(gpuClkMin 300, gpuClkMax 2800)" for GPU 0' ;;
+  *atom-clock-lock*) printf '%s host atom-clock-lock: GPU clocks set to "(gpuClkMin 300, gpuClkMax 2800)" for GPU 0\\n' "$(date +%s).000" ;;
   *earlyoom*) echo "Preferring to kill process names that match regex '(pytest)'"
               echo "Will avoid killing process names that match regex '(Xorg)'" ;;
 esac
 """
+
+
+def _clock_lock_systemctl_falso(tmp_path):
+    """Fija datos del servicio para no depender del systemd del host."""
+    bindir = tmp_path / "clock_lock_bin"
+    bindir.mkdir(exist_ok=True)
+    systemctl = bindir / "systemctl"
+    systemctl.write_text(
+        "#!/usr/bin/env bash\ncase \"$*\" in\n"
+        "  *ExecStart*) echo 'ExecStart=/usr/bin/nvidia-smi -lgc 300,2800' ;;\n"
+        "  *ExecMainStartTimestamp*) date '+%a %Y-%m-%d %H:%M:%S %Z' ;;\n"
+        "  *) exit 1 ;;\nesac\n",
+        encoding="utf-8",
+    )
+    systemctl.chmod(0o755)
+    return {"PATH": f"{bindir}:{os.environ['PATH']}"}
 
 
 def test_control_negativo_clock_lock_con_OTRO_rango_que_el_declarado(datos, tmp_path):
@@ -493,13 +509,21 @@ def test_control_negativo_clock_lock_con_OTRO_rango_que_el_declarado(datos, tmp_
     ALGUN rango.
     """
     env = _journal_falso(tmp_path, "rango_distinto", CLOCK_OK.replace("2800", "2600"))
+    env.update(_clock_lock_systemctl_falso(tmp_path))
     assert "FALTA" in _fila(correr(["status"], datos, env), "clock lock")
 
 
 def test_control_negativo_clock_lock_sin_confirmacion_del_driver(datos, tmp_path):
     """La unit puede quedar `active` habiendo fallado en aplicar el limite."""
     env = _journal_falso(tmp_path, "mudo", "exit 0\n")
+    env.update(_clock_lock_systemctl_falso(tmp_path))
     assert "FALTA" in _fila(correr(["status"], datos, env), "clock lock")
+
+
+def test_clock_lock_confirmado_con_rango_declarado_esta_ARMADO(datos, tmp_path):
+    env = _journal_falso(tmp_path, "rango_correcto", CLOCK_OK)
+    env.update(_clock_lock_systemctl_falso(tmp_path))
+    assert "ARMADO" in _fila(correr(["status"], datos, env), "clock lock")
 
 
 # --- earlyoom: su PUNTERIA, dicha por el mismo ----------------------------
