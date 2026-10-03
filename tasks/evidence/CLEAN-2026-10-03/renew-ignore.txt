@@ -1,0 +1,216 @@
+Revalidación de las 12 reglas de `.gitignore` para la renovación 2.3.0.
+Método: para cada ID se inicializó un repositorio temporal con una copia íntegra del `.gitignore` actual, se creó solo un sentinel de prueba, y se ejecutó `git check-ignore --no-index --quiet` con la regla y tras retirar únicamente esa regla. Para las siete negaciones, además se consultó el archivo real trackeado del worktree. `--no-index` obliga a evaluar reglas aunque el archivo ya esté en el índice. `.gitignore` no se usó como sujeto ni se midió ningún delta de `git status`.
+
+## RENEW-01 — .gitignore rule `.simplecode/*`; probe `.simplecode/runtime.zip`
+
+# sunset-reviewed: 2.3 -- `.simplecode/runtime.zip` queda ignorado (rc=0); al retirar `.simplecode/*` deja de estarlo (rc=1). La regla conserva estado generado de simplecode, mientras las declaraciones versionadas se reactivan con sus excepciones. Evidencia: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-01)
+
+Repositorio aislado: `/tmp/ignore-renew-tjr8um6q`.
+
+$ (cwd del repositorio aislado) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/runtime.zip
+stdout: ''; stderr: ''; rc=0
+
+$ (misma copia, después de retirar solo `.simplecode/*`) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/runtime.zip
+stdout: ''; stderr: ''; rc=1
+
+Verbose con la regla: `$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/runtime.zip` -> stdout `.gitignore:8:.simplecode/*	.simplecode/runtime.zip`, rc=0. Verbose tras retirarla: stdout ``, rc=1.
+
+## RENEW-02 — .gitignore rule `!.simplecode/local_hooks.yaml`; probe `.simplecode/local_hooks.yaml`
+
+# sunset-reviewed: 2.3 -- `local_hooks.yaml` está trackeado; `check-ignore --no-index --quiet` da rc=1 y al retirar su excepción rc=0 por `.simplecode/*`. La excepción mantiene versionada la configuración de gates nativos en clones nuevos. Evidencia: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-02)
+
+Repositorio aislado: `/tmp/ignore-renew-layxvnvz`.
+
+$ (cwd del repositorio aislado) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/local_hooks.yaml
+stdout: ''; stderr: ''; rc=1
+
+$ (misma copia, después de retirar solo `!.simplecode/local_hooks.yaml`) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/local_hooks.yaml
+stdout: ''; stderr: ''; rc=0
+
+Verbose con la regla: `$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/local_hooks.yaml` -> stdout `.gitignore:15:!.simplecode/local_hooks.yaml	.simplecode/local_hooks.yaml`, rc=0. Verbose tras retirarla: stdout `.gitignore:8:.simplecode/*	.simplecode/local_hooks.yaml`, rc=0.
+
+Archivo real en `/tmp/bb-clean-titles`: `git ls-files --error-unmatch -- .simplecode/local_hooks.yaml` devolvió stdout `.simplecode/local_hooks.yaml`, rc=0.
+$ git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/local_hooks.yaml
+stdout: ''; stderr: ''; rc=1 (no ignorado).
+$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/local_hooks.yaml
+stdout: `.gitignore:15:!.simplecode/local_hooks.yaml	.simplecode/local_hooks.yaml`, rc=0 (la excepción `!` es el patrón ganador).
+
+## RENEW-03 — .gitignore rule `!.simplecode/backlog_baseline.json`; probe `.simplecode/backlog_baseline.json`
+
+# sunset-reviewed: 2.3 -- `backlog_baseline.json` está trackeado; `check-ignore --no-index --quiet` da rc=1 y al retirar su excepción rc=0 por `.simplecode/*`. La excepción conserva la línea base de deuda como estado revisable del repositorio. Evidencia: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-03)
+
+Repositorio aislado: `/tmp/ignore-renew-hv1jl557`.
+
+$ (cwd del repositorio aislado) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/backlog_baseline.json
+stdout: ''; stderr: ''; rc=1
+
+$ (misma copia, después de retirar solo `!.simplecode/backlog_baseline.json`) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/backlog_baseline.json
+stdout: ''; stderr: ''; rc=0
+
+Verbose con la regla: `$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/backlog_baseline.json` -> stdout `.gitignore:21:!.simplecode/backlog_baseline.json	.simplecode/backlog_baseline.json`, rc=0. Verbose tras retirarla: stdout `.gitignore:8:.simplecode/*	.simplecode/backlog_baseline.json`, rc=0.
+
+Archivo real en `/tmp/bb-clean-titles`: `git ls-files --error-unmatch -- .simplecode/backlog_baseline.json` devolvió stdout `.simplecode/backlog_baseline.json`, rc=0.
+$ git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/backlog_baseline.json
+stdout: ''; stderr: ''; rc=1 (no ignorado).
+$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/backlog_baseline.json
+stdout: `.gitignore:21:!.simplecode/backlog_baseline.json	.simplecode/backlog_baseline.json`, rc=0 (la excepción `!` es el patrón ganador).
+
+## RENEW-04 — .gitignore rule `!.simplecode/build_tools.txt`; probe `.simplecode/build_tools.txt`
+
+# sunset-reviewed: 2.3 -- `build_tools.txt` está trackeado; `check-ignore --no-index --quiet` da rc=1 y al retirar su excepción rc=0 por `.simplecode/*`. La excepción conserva en el clon la lista de herramientas admitidas por los verificadores. Evidencia: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-04)
+
+Repositorio aislado: `/tmp/ignore-renew-3dfouwjl`.
+
+$ (cwd del repositorio aislado) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/build_tools.txt
+stdout: ''; stderr: ''; rc=1
+
+$ (misma copia, después de retirar solo `!.simplecode/build_tools.txt`) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/build_tools.txt
+stdout: ''; stderr: ''; rc=0
+
+Verbose con la regla: `$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/build_tools.txt` -> stdout `.gitignore:26:!.simplecode/build_tools.txt	.simplecode/build_tools.txt`, rc=0. Verbose tras retirarla: stdout `.gitignore:8:.simplecode/*	.simplecode/build_tools.txt`, rc=0.
+
+Archivo real en `/tmp/bb-clean-titles`: `git ls-files --error-unmatch -- .simplecode/build_tools.txt` devolvió stdout `.simplecode/build_tools.txt`, rc=0.
+$ git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/build_tools.txt
+stdout: ''; stderr: ''; rc=1 (no ignorado).
+$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/build_tools.txt
+stdout: `.gitignore:26:!.simplecode/build_tools.txt	.simplecode/build_tools.txt`, rc=0 (la excepción `!` es el patrón ganador).
+
+## RENEW-05 — .gitignore rule `!.simplecode/hook_receipt_baseline.json`; probe `.simplecode/hook_receipt_baseline.json`
+
+# sunset-reviewed: 2.3 -- `hook_receipt_baseline.json` está trackeado; `check-ignore --no-index --quiet` da rc=1 y al retirar su excepción rc=0 por `.simplecode/*`. La excepción conserva revisables las autorizaciones de recibos de hooks. Evidencia: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-05)
+
+Repositorio aislado: `/tmp/ignore-renew-g1u1uy69`.
+
+$ (cwd del repositorio aislado) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/hook_receipt_baseline.json
+stdout: ''; stderr: ''; rc=1
+
+$ (misma copia, después de retirar solo `!.simplecode/hook_receipt_baseline.json`) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/hook_receipt_baseline.json
+stdout: ''; stderr: ''; rc=0
+
+Verbose con la regla: `$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/hook_receipt_baseline.json` -> stdout `.gitignore:30:!.simplecode/hook_receipt_baseline.json	.simplecode/hook_receipt_baseline.json`, rc=0. Verbose tras retirarla: stdout `.gitignore:8:.simplecode/*	.simplecode/hook_receipt_baseline.json`, rc=0.
+
+Archivo real en `/tmp/bb-clean-titles`: `git ls-files --error-unmatch -- .simplecode/hook_receipt_baseline.json` devolvió stdout `.simplecode/hook_receipt_baseline.json`, rc=0.
+$ git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/hook_receipt_baseline.json
+stdout: ''; stderr: ''; rc=1 (no ignorado).
+$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/hook_receipt_baseline.json
+stdout: `.gitignore:30:!.simplecode/hook_receipt_baseline.json	.simplecode/hook_receipt_baseline.json`, rc=0 (la excepción `!` es el patrón ganador).
+
+## RENEW-06 — .gitignore rule `!.simplecode/organ_inapplicable.json`; probe `.simplecode/organ_inapplicable.json`
+
+# sunset-reviewed: 2.3 -- `organ_inapplicable.json` está trackeado; `check-ignore --no-index --quiet` da rc=1 y al retirar su excepción rc=0 por `.simplecode/*`. La excepción mantiene versionadas las declaraciones de alcance de los órganos verificadores. Evidencia: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-06)
+
+Repositorio aislado: `/tmp/ignore-renew-oylit8_d`.
+
+$ (cwd del repositorio aislado) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/organ_inapplicable.json
+stdout: ''; stderr: ''; rc=1
+
+$ (misma copia, después de retirar solo `!.simplecode/organ_inapplicable.json`) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/organ_inapplicable.json
+stdout: ''; stderr: ''; rc=0
+
+Verbose con la regla: `$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/organ_inapplicable.json` -> stdout `.gitignore:35:!.simplecode/organ_inapplicable.json	.simplecode/organ_inapplicable.json`, rc=0. Verbose tras retirarla: stdout `.gitignore:8:.simplecode/*	.simplecode/organ_inapplicable.json`, rc=0.
+
+Archivo real en `/tmp/bb-clean-titles`: `git ls-files --error-unmatch -- .simplecode/organ_inapplicable.json` devolvió stdout `.simplecode/organ_inapplicable.json`, rc=0.
+$ git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/organ_inapplicable.json
+stdout: ''; stderr: ''; rc=1 (no ignorado).
+$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/organ_inapplicable.json
+stdout: `.gitignore:35:!.simplecode/organ_inapplicable.json	.simplecode/organ_inapplicable.json`, rc=0 (la excepción `!` es el patrón ganador).
+
+## RENEW-07 — .gitignore rule `!.simplecode/corpus_exempt.yaml`; probe `.simplecode/corpus_exempt.yaml`
+
+# sunset-reviewed: 2.3 -- `corpus_exempt.yaml` está trackeado; `check-ignore --no-index --quiet` da rc=1 y al retirar su excepción rc=0 por `.simplecode/*`. La excepción conserva el manifiesto versionado que define el corpus ajeno al repo. Evidencia: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-07)
+
+Repositorio aislado: `/tmp/ignore-renew-gp_7q83d`.
+
+$ (cwd del repositorio aislado) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/corpus_exempt.yaml
+stdout: ''; stderr: ''; rc=1
+
+$ (misma copia, después de retirar solo `!.simplecode/corpus_exempt.yaml`) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/corpus_exempt.yaml
+stdout: ''; stderr: ''; rc=0
+
+Verbose con la regla: `$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/corpus_exempt.yaml` -> stdout `.gitignore:50:!.simplecode/corpus_exempt.yaml	.simplecode/corpus_exempt.yaml`, rc=0. Verbose tras retirarla: stdout `.gitignore:8:.simplecode/*	.simplecode/corpus_exempt.yaml`, rc=0.
+
+Archivo real en `/tmp/bb-clean-titles`: `git ls-files --error-unmatch -- .simplecode/corpus_exempt.yaml` devolvió stdout `.simplecode/corpus_exempt.yaml`, rc=0.
+$ git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/corpus_exempt.yaml
+stdout: ''; stderr: ''; rc=1 (no ignorado).
+$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/corpus_exempt.yaml
+stdout: `.gitignore:50:!.simplecode/corpus_exempt.yaml	.simplecode/corpus_exempt.yaml`, rc=0 (la excepción `!` es el patrón ganador).
+
+## RENEW-08 — .gitignore rule `!.simplecode/audit_ledger.json`; probe `.simplecode/audit_ledger.json`
+
+# sunset-reviewed: 2.3 -- `audit_ledger.json` está trackeado; `check-ignore --no-index --quiet` da rc=1 y al retirar su excepción rc=0 por `.simplecode/*`. La excepción permite que cada commit conserve el ledger que verifica su frescura. Evidencia: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-08)
+
+Repositorio aislado: `/tmp/ignore-renew-79xoddr5`.
+
+$ (cwd del repositorio aislado) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/audit_ledger.json
+stdout: ''; stderr: ''; rc=1
+
+$ (misma copia, después de retirar solo `!.simplecode/audit_ledger.json`) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/audit_ledger.json
+stdout: ''; stderr: ''; rc=0
+
+Verbose con la regla: `$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/audit_ledger.json` -> stdout `.gitignore:60:!.simplecode/audit_ledger.json	.simplecode/audit_ledger.json`, rc=0. Verbose tras retirarla: stdout `.gitignore:8:.simplecode/*	.simplecode/audit_ledger.json`, rc=0.
+
+Archivo real en `/tmp/bb-clean-titles`: `git ls-files --error-unmatch -- .simplecode/audit_ledger.json` devolvió stdout `.simplecode/audit_ledger.json`, rc=0.
+$ git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .simplecode/audit_ledger.json
+stdout: ''; stderr: ''; rc=1 (no ignorado).
+$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .simplecode/audit_ledger.json
+stdout: `.gitignore:60:!.simplecode/audit_ledger.json	.simplecode/audit_ledger.json`, rc=0 (la excepción `!` es el patrón ganador).
+
+## RENEW-09 — .gitignore rule `__pycache__/`; probe `probe/__pycache__/sentinel.txt`
+
+# sunset-reviewed: 2.3 -- `probe/__pycache__/sentinel.txt` queda ignorado (rc=0); al retirar `__pycache__/` deja de estarlo (rc=1). Se conserva el descarte de directorios de bytecode generados por Python. Evidencia: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-09)
+
+Repositorio aislado: `/tmp/ignore-renew-wvhj4mjt`.
+
+$ (cwd del repositorio aislado) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- probe/__pycache__/sentinel.txt
+stdout: ''; stderr: ''; rc=0
+
+$ (misma copia, después de retirar solo `__pycache__/`) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- probe/__pycache__/sentinel.txt
+stdout: ''; stderr: ''; rc=1
+
+Verbose con la regla: `$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- probe/__pycache__/sentinel.txt` -> stdout `.gitignore:65:__pycache__/	probe/__pycache__/sentinel.txt`, rc=0. Verbose tras retirarla: stdout ``, rc=1.
+
+## RENEW-10 — .gitignore rule `*.pyc`; probe `sentinel.pyc`
+
+# sunset-reviewed: 2.3 -- `sentinel.pyc` fuera de `__pycache__` queda ignorado (rc=0); al retirar `*.pyc` deja de estarlo (rc=1). Se conserva el descarte de bytecode Python generado. Evidencia: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-10)
+
+Repositorio aislado: `/tmp/ignore-renew-9_q9ufi1`.
+
+$ (cwd del repositorio aislado) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- sentinel.pyc
+stdout: ''; stderr: ''; rc=0
+
+$ (misma copia, después de retirar solo `*.pyc`) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- sentinel.pyc
+stdout: ''; stderr: ''; rc=1
+
+Verbose con la regla: `$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- sentinel.pyc` -> stdout `.gitignore:67:*.pyc	sentinel.pyc`, rc=0. Verbose tras retirarla: stdout ``, rc=1.
+
+## RENEW-11 — .gitignore rule `.pytest_cache/`; probe `.pytest_cache/sentinel.txt`
+
+# sunset-reviewed: 2.3 -- `.pytest_cache/sentinel.txt` queda ignorado (rc=0); al retirar `.pytest_cache/` deja de estarlo (rc=1). Se conserva el descarte del caché generado por pytest. Evidencia: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-11)
+
+Repositorio aislado: `/tmp/ignore-renew-9rwgies3`.
+
+$ (cwd del repositorio aislado) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .pytest_cache/sentinel.txt
+stdout: ''; stderr: ''; rc=0
+
+$ (misma copia, después de retirar solo `.pytest_cache/`) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .pytest_cache/sentinel.txt
+stdout: ''; stderr: ''; rc=1
+
+Verbose con la regla: `$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .pytest_cache/sentinel.txt` -> stdout `.gitignore:69:.pytest_cache/	.pytest_cache/sentinel.txt`, rc=0. Verbose tras retirarla: stdout ``, rc=1.
+
+## RENEW-12 — .gitignore rule `.coverage`; probe `.coverage`
+
+# sunset-reviewed: 2.3 -- `.coverage` queda ignorado (rc=0); al retirar `.coverage` deja de estarlo (rc=1). Se conserva el descarte de la base de datos generada por coverage.py. Evidencia: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-12)
+
+Repositorio aislado: `/tmp/ignore-renew-5msi591s`.
+
+$ (cwd del repositorio aislado) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .coverage
+stdout: ''; stderr: ''; rc=0
+
+$ (misma copia, después de retirar solo `.coverage`) git -c core.excludesFile=/dev/null check-ignore --no-index --quiet -- .coverage
+stdout: ''; stderr: ''; rc=1
+
+Verbose con la regla: `$ git -c core.excludesFile=/dev/null check-ignore --no-index --verbose -- .coverage` -> stdout `.gitignore:71:.coverage	.coverage`, rc=0. Verbose tras retirarla: stdout ``, rc=1.
+
+## Control del instrumento
+
+`git check-ignore --no-index` sobre el propio `.gitignore` devuelve rc=1 y stdout ``. No se cuenta ese archivo como efecto de ninguna regla; cada regla se midió por su propio probe.
