@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+import ctypes as C
+import ctypes.util
 import json
 import os
 from pathlib import Path
@@ -13,6 +15,7 @@ from typing import Any, Callable, Sequence
 
 TIMEOUT_S = 4.0
 MAX_OUTPUT_CHARS = 16_384
+MAX_CONTAINER_IMAGE_INSPECTIONS = 4
 INTERFACE_RE = re.compile(r"^[A-Za-z0-9_.:-]{1,15}$")
 CONTACT_EMAIL_RE = re.compile(r"<[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}>")
 RUNNER = Callable[..., subprocess.CompletedProcess[str]]
@@ -230,17 +233,76 @@ def could_not_run_count(value: Any) -> int:
 
 def gpu_runtime_capture(runner: RUNNER = subprocess.run) -> dict[str, Any]:
     """Capture host and running-container runtime identities read-only."""
+    containers = run_readonly(
+        ["docker", "ps", "--no-trunc", "--format", "{{.ID}} {{.Image}}"], runner)
+    image_ids = running_container_image_ids(containers, runner)
     return {
         "nvidia_smi_banner": run_readonly(["nvidia-smi"], runner),
         "nvidia_gpu_state": run_readonly([
             "nvidia-smi", "--query-gpu=name,driver_version,pci.bus_id,utilization.gpu,power.draw",
             "--format=csv,noheader",
         ], runner),
+        "cuda_runtime": cuda_runtime_version_capture(),
         "container_runtime_version": run_readonly(
             ["docker", "version", "--format", "{{.Server.Version}}"], runner),
-        "running_container_image_tags": run_readonly(
-            ["docker", "ps", "--no-trunc", "--format", "{{.ID}} {{.Image}}"], runner),
+        "running_container_image_tags": containers,
+        "running_container_image_ids": image_ids,
     }
+
+
+def running_container_image_ids(containers: dict[str, Any], runner: RUNNER) -> dict[str, Any]:
+    """Inspect up to four vLLM candidates' image IDs; never read container config or environment."""
+    if containers["status"] != "ok":
+        return {"status": "partial", "source_key": "running_container_image_tags"}
+    rows = containers["stdout"].splitlines()
+    parsed: list[tuple[str, str]] = []
+    for row in rows:
+        fields = row.split(maxsplit=1)
+        if len(fields) != 2 or not re.fullmatch(r"[0-9a-f]{64}", fields[0]):
+            return {"status": "partial", "containers": [
+                {"status": "could_not_run", "reason": "malformed container image list"}]}
+        parsed.append((fields[0], fields[1]))
+    candidates = [(container_id, image_ref) for container_id, image_ref in parsed
+                  if "vllm" in image_ref.casefold()]
+    observed = []
+    for container_id, image_ref in candidates[:MAX_CONTAINER_IMAGE_INSPECTIONS]:
+        image = run_readonly(["docker", "inspect", "--format", "{{.Image}}", container_id], runner)
+        value = image.get("stdout")
+        if image["status"] != "ok" or not isinstance(value, str) or not re.fullmatch(
+                r"sha256:[0-9a-f]{64}", value):
+            observed.append({"status": "could_not_run", "container_id": container_id,
+                             "image_ref": image_ref, "inspect_status": image["status"]})
+        else:
+            observed.append({"status": "ok", "container_id": container_id,
+                             "image_ref": image_ref, "image_id": value})
+    if len(candidates) > MAX_CONTAINER_IMAGE_INSPECTIONS:
+        observed.append({"status": "could_not_run", "reason": "inspection limit exceeded",
+                         "container_count": len(candidates),
+                         "uninspected_container_count": len(candidates) - MAX_CONTAINER_IMAGE_INSPECTIONS})
+    return {"status": "partial" if any(item["status"] == "could_not_run" for item in observed)
+            else "ok", "candidate_count": len(candidates), "containers": observed}
+
+
+def cuda_runtime_version_capture() -> dict[str, Any]:
+    """Read CUDA Runtime API version without initializing a device or allocating memory."""
+    library_name = ctypes.util.find_library("cudart")
+    if not library_name:
+        return {"status": "could_not_run", "error": "libcudart unavailable"}
+    try:
+        library = C.CDLL(library_name)
+        get_version = library.cudaRuntimeGetVersion
+    except (OSError, AttributeError) as exc:
+        return {"status": "could_not_run", "library": library_name,
+                "error": f"{type(exc).__name__}: {exc}"}
+    get_version.argtypes = [C.POINTER(C.c_int)]
+    get_version.restype = C.c_int
+    value = C.c_int()
+    result = get_version(C.byref(value))
+    if result != 0 or value.value <= 0:
+        return {"status": "could_not_run", "library": library_name,
+                "returncode": result, "runtime_version": value.value}
+    return {"status": "ok", "library": library_name, "runtime_version": value.value,
+            "major": value.value // 1000, "minor": (value.value % 1000) // 10}
 
 
 def capture(root: Path = Path("/"), runner: RUNNER = subprocess.run) -> dict[str, Any]:
