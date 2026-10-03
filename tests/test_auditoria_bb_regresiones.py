@@ -196,14 +196,14 @@ def _simular_archivo_tardio(g, fecha, ruta1, ruta2):
         if n == 1:
             ruta1.write_text(linea("historia-inicial"), encoding="utf-8")
         elif n == 2:
-            ruta1.write_text(ruta1.read_text(encoding="utf-8") + linea("A"),
-                             encoding="utf-8")
+            with ruta1.open("a", encoding="utf-8") as fh:
+                fh.write(linea("A"))
         elif n == 3:
             fecha[0] = "2026-09-30"
             ruta2.write_text(linea("historia-dia-nuevo"), encoding="utf-8")
         elif n == 4:
-            ruta2.write_text(ruta2.read_text(encoding="utf-8") + linea("B"),
-                             encoding="utf-8")
+            with ruta2.open("a", encoding="utf-8") as fh:
+                fh.write(linea("B"))
         elif n == 5:
             ruta2.write_text(linea("C"), encoding="utf-8")
         elif n == 6:
@@ -211,8 +211,8 @@ def _simular_archivo_tardio(g, fecha, ruta1, ruta2):
             reemplazo.write_text(linea("historia-reemplazo"), encoding="utf-8")
             reemplazo.replace(ruta2)
         elif n == 7:
-            ruta2.write_text(ruta2.read_text(encoding="utf-8") + linea("D"),
-                             encoding="utf-8")
+            with ruta2.open("a", encoding="utf-8") as fh:
+                fh.write(linea("D"))
         else:
             raise KeyboardInterrupt
 
