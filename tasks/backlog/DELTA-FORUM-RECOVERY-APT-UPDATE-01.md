@@ -32,3 +32,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Avance de instrumentación APT — 2026-10-03
+
+Se reutilizó la captura local de fuentes, arquitectura e índices APT para exponer los inputs del host en `tasks/evidence/BB-INSTRUMENTS-2026-10-03/apt-sources-capture.json`. No se ejecutó `apt update`, no hubo fallo/recovery del host ni se probó una consola, medio OEM, rollback o RMA. La captura no discrimina las causas APT/Docker/workload del relato; la ficha permanece abierta.
