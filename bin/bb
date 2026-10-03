@@ -461,7 +461,7 @@ cpu_jiffies() { # -> "core:idle:total,..." el idle y el total por nucleo
       printf "%s%s:%s:%s", (n++?",":""), $1, $5, t }' /proc/stat 2>/dev/null
 }
 
-zombie_count() { ps -eo stat= 2>/dev/null | grep -c '^Z'; }
+zombie_count() { pgrep -rc Z . 2>/dev/null; }
 
 # Procesos con hijos zombi: en el incidente el zygote dejo de cosechar, y eso
 # fue visible mucho antes que el sintoma.
@@ -1163,7 +1163,7 @@ for d in fallos[:5]:
     echo "    Heredaron el limite viejo. Se arregla relanzandolas desde una"
     echo "    sesion con el limite nuevo, no reinstalando nada."
   fi
-  echo "  crashes de apport en /var/crash: $(ls /var/crash/*.crash 2>/dev/null | wc -l)"
+  echo "  crashes de apport en /var/crash: $(find /var/crash -maxdepth 1 -type f -name '*.crash' 2>/dev/null | wc -l)"
   # Volcados de KERNEL via kdump-tools (KDUMP_SKIP_VMCORE=1 en esta maquina:
   # no guarda el vmcore completo -- 121 GB seria impracticable -- pero SI
   # guarda el dmesg del kernel al momento del panic en cada subdirectorio con
@@ -1173,7 +1173,7 @@ for d in fallos[:5]:
   echo "  volcados de kernel (kdump) en /var/crash: ${nkdump:-0}"
   if [ "${nkdump:-0}" -gt 0 ]; then
     find /var/crash -mindepth 1 -maxdepth 1 -type d -name '[0-9]*' 2>/dev/null | sort | tail -3 |
-      while read -r d; do echo "    $d/$(ls "$d" 2>/dev/null | tr '\n' ' ')"; done
+      while read -r d; do echo "    $d/$(find "$d" -mindepth 1 -maxdepth 1 ! -name '.*' -printf '%f\n' 2>/dev/null | sort | tr '\n' ' ')"; done
   fi
   echo
 
@@ -1203,7 +1203,7 @@ for d in fallos[:5]:
     name=$(basename "$exe")
     nrend=$(pgrep -P "$main" -f 'type=renderer' 2>/dev/null | wc -l)
     # los renderers pueden colgar del zygote, no solo del main
-    [ "$nrend" -eq 0 ] && nrend=$(ps -eo args= 2>/dev/null | grep -c "^$exe.*--type=renderer")
+    [ "$nrend" -eq 0 ] && nrend=$(pgrep -fc "^$exe.*--type=renderer" 2>/dev/null)
     if [ "$nrend" -eq 0 ]; then
       echo "  SOSPECHOSO  $name (pid $main): 0 renderers"
       found=$((found + 1))
@@ -2016,13 +2016,13 @@ cmd_hw() {
   echo "== inventario de hardware =="
   echo "modelo:  $(cat /sys/devices/virtual/dmi/id/product_name 2>/dev/null || echo '?')"
   echo "kernel:  $(uname -r)"
-  echo "so:      $(. /etc/os-release 2>/dev/null && echo "$PRETTY_NAME")"
+  echo "so:      $(python3 -c 'import platform; print(platform.freedesktop_os_release().get("PRETTY_NAME", ""))' 2>/dev/null)"
   echo
   echo "-- CPU --"; lscpu 2>/dev/null | grep -E 'Arquitectura|Architecture|Model name|Nombre del modelo|^CPU\(s\)|Thread|N.cleo' | sed 's/^/  /'
   echo
   echo "-- memoria --"
   awk '/MemTotal|MemFree|MemAvailable|SwapTotal/{printf "  %-14s %8.1f GB\n", $1, $2/1048576}' /proc/meminfo
-  echo "  nodos NUMA:  $(ls -d /sys/devices/system/node/node[0-9]* 2>/dev/null | wc -l)"
+  echo "  nodos NUMA:  $(find /sys/devices/system/node -maxdepth 1 -type d -name 'node[0-9]*' 2>/dev/null | wc -l)"
   echo
   echo "-- GPU --"
   if have nvidia-smi; then
@@ -2632,6 +2632,11 @@ cmd_drift() {
 # kill en las 4 h 08 min que cubria el anillo.
 AUDIT_DIR="${BLACKBOX_AUDIT_DIR:-/var/log/audit}"
 
+_audit_files_sorted() {
+  find -L "$AUDIT_DIR" -maxdepth 1 -type f -name 'audit.log*' -printf '%T@ %p\0' 2>/dev/null |
+    sort -z -k1,1n -k2r | cut -z -d ' ' -f2-
+}
+
 # Lee el anillo de auditoria y emite una fila TSV por senal capturada:
 #   ts.serial \t SIGNAL \t pid \t comm \t exe \t auid \t vpid \t vcomm
 #
@@ -2642,6 +2647,9 @@ AUDIT_DIR="${BLACKBOX_AUDIT_DIR:-/var/log/audit}"
 # rotaciones, asi que veia 10 min de los 135 que el anillo cubria.
 _sig_eventos() {
   local corte="$1"
+  local -a archivos
+  mapfile -d '' -t archivos < <(_audit_files_sorted)
+  [ "${#archivos[@]}" -gt 0 ] || return 0
   awk -v c="$corte" '
     # Une el SYSCALL (emisor: pid/comm/exe/auid) con el OBJ_PID (victima:
     # opid/ocomm) por el id de evento audit(TS:SERIAL), que es lo unico que
@@ -2699,7 +2707,7 @@ _sig_eventos() {
       for (id in s_ts) {
         sig = (s_key[id] == "blackbox_sigkill") ? "SIGKILL" : "SIGTERM"
         # Ningun campo sale VACIO, y no es cosmetica: quien lee esto usa
-        # `IFS=$'\t' read`, y el tabulador es espacio en blanco para IFS, asi
+        # IFS con tabulador y read: el tabulador es espacio en blanco para IFS, asi
         # que bash COLAPSA tabuladores consecutivos y un campo vacio desplaza
         # todos los de su derecha. Medido el 2026-09-27: la fila salia
         # `python3.12[1841782] humano auid=? -> [?]` con `exe: 1000`, o sea el
@@ -2715,7 +2723,7 @@ _sig_eventos() {
                (v_pid[id] != "" ? v_pid[id] : (s_vic[id] != "" ? s_vic[id] : "?")),
                (v_comm[id] == "" ? "?" : v_comm[id]), s_ppid[id]
       }
-    }' $(ls -1tr "$AUDIT_DIR"/audit.log* 2>/dev/null) 2>/dev/null | sort -n
+    }' "${archivos[@]}" 2>/dev/null | sort -n
 }
 
 # Acumula las senales capturadas FUERA del anillo de auditoria.
@@ -2839,8 +2847,10 @@ cmd_sigterm() {
   # DEBT-DGX-438 planeaba dejar el instrumento un mes acumulando evidencia.
   # Acumulaba diez minutos.
   local cubre_desde cubre_hasta
+  local -a archivos
+  mapfile -d '' -t archivos < <(_audit_files_sorted)
   cubre_desde=$(awk 'match($0,/audit\(([0-9]+)/,m){print m[1]; exit}' \
-                $(ls -1tr "$AUDIT_DIR"/audit.log* 2>/dev/null | head -1) 2>/dev/null)
+                "${archivos[0]:-/dev/null}" 2>/dev/null)
   cubre_hasta=$(awk 'match($0,/audit\(([0-9]+)/,m){t=m[1]} END{print t}' \
                 "$AUDIT_DIR"/audit.log 2>/dev/null)
 
@@ -2856,7 +2866,7 @@ cmd_sigterm() {
       [ "$sauid" != "4294967295" ] && quien="humano auid=$sauid"
       printf "  %-19s %-8s %-22s -> %s\n" \
         "$(date -d "@$ts" '+%Y-%m-%d %H:%M:%S')" "$sig" \
-        "$scomm[$spid] $quien" "$vcomm[$vpid]"
+        "${scomm}[$spid] $quien" "${vcomm}[$vpid]"
       printf "  %-19s %-8s   exe: %s\n" "" "" "$sexe"
     done
     echo

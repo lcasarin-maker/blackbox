@@ -1,0 +1,24 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________________ test_debt_shellcheck_bb_subject_01 ______________________
+tests/test_debt_registration_controls.py:81: in test_debt_shellcheck_bb_subject_01
+    assert "old[1111]" in result.stdout, result.stdout + result.stderr
+E   AssertionError: == emisores de SIGTERM/SIGKILL desde 10 minutes ago ==
+E     
+E       0 senales registradas en la ventana
+E     
+E     -- estado del instrumento --
+E       regla de auditoria: NO SE PUDO DETERMINAR
+E                 rustdesk no corre, asi que nadie genera el ruido que la regla
+E                 calla y este cero no distingue 'regla puesta' de 'nada que callar'.
+E                 Comprobalo directo:  sudo auditctl -l | grep blackbox_sig
+E     
+E     could_not_run: 2
+E       - ventana de auditoria: no se pudo leer ningun timestamp del anillo, asi que no se sabe cuanto cubre lo que se acaba de leer
+E       - regla de auditoria de senales: rustdesk no corre, asi que el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad
+E     
+E   assert 'old[1111]' in "== emisores de SIGTERM/SIGKILL desde 10 minutes ago ==\n\n  0 senales registradas en la ventana\n\n-- estado del inst...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n"
+E    +  where "== emisores de SIGTERM/SIGKILL desde 10 minutes ago ==\n\n  0 senales registradas en la ventana\n\n-- estado del inst...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/tmp/bb-zero-provider/bin/bb', 'sigterm', '10 minutes ago'], returncode=0, stdout="== emisores...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_debt_shellcheck_bb_subject_01
+1 failed in 0.09s
