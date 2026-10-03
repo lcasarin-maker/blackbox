@@ -44,6 +44,33 @@ def test_debt_schema_evidence_index_scope_01(tmp_path: Path) -> None:
     assert "could_not_run=1" in negative.stdout, negative.stdout
 
 
+def test_bug_coverage_cli_subprocess_01(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parent.parent
+    target = root / "tools/inventario.py"
+    entrypoint = len(target.read_text(encoding="utf-8").splitlines())
+    for patch_children in (True, False):
+        config = root / ".coveragerc" if patch_children else tmp_path / "without-patch.ini"
+        if not patch_children:
+            config.write_text("[run]\n", encoding="utf-8")
+        data = tmp_path / ("with-patch" if patch_children else "without-patch")
+        report = data.with_suffix(".json")
+        # This is an independent measurement, including its deliberately broken control.
+        env = {key: value for key, value in os.environ.items()
+               if not key.startswith(("COVERAGE_", "COV_CORE_"))}
+        env.update(COVERAGE_FILE=str(data), COVERAGE_RCFILE=str(config))
+        run = subprocess.run(
+            [sys.executable, "-m", "coverage", "run", "--source=tools", "-m", "pytest", "-q",
+             "tests/test_debt_registration_controls.py::test_debt_no_cover_inventario_146"],
+            cwd=root, env=env, capture_output=True, text=True, timeout=60)
+        assert run.returncode == 0, run.stdout + run.stderr
+        exported = subprocess.run(
+            [sys.executable, "-m", "coverage", "json", "-o", str(report)],
+            cwd=root, env=env, capture_output=True, text=True, timeout=20)
+        assert exported.returncode == 0, exported.stdout + exported.stderr
+        measured = json.loads(report.read_text(encoding="utf-8"))["files"]["tools/inventario.py"]
+        assert (entrypoint in measured["executed_lines"]) is patch_children, measured
+
+
 def test_debt_broad_except_cuda_integrity_57() -> None:
     import ctypes
 

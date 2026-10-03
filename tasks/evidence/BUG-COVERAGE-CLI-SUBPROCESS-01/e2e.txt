@@ -1,0 +1,13 @@
+$ pytest -q tests/test_cgroup_repro.py tests/test_debt_registration_controls.py -k 'cgroup or broad_except or bug_coverage or no_cover' --cov=tools.cgroup_repro --cov-branch --cov-report=term-missing --cov-fail-under=100
+BUG-COVERAGE-CLI-SUBPROCESS-01
+.........................................................                [100%]
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.11-final-0 _______________
+
+Name                    Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------
+tools/cgroup_repro.py     283      0     88      0   100%
+-------------------------------------------------------------------
+TOTAL                     283      0     88      0   100%
+Required test coverage of 100% reached. Total coverage: 100.00%
+57 passed, 13 deselected in 10.37s

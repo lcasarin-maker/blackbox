@@ -133,6 +133,76 @@ def cuda_runtime(monkeypatch, *, cuda_result=0, memset_result=0, fail_sync=0, fr
     return runtime, events
 
 
+def test_cuda_initial_sync_failure_still_releases_once(monkeypatch, capsys):
+    _runtime, events = cuda_runtime(monkeypatch, fail_sync=2)
+    assert repro.cuda_worker("cuda_malloc", 1) == 33
+    result = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert result["error"] == "RuntimeError: cudaDeviceSynchronize returned CUDA error 44"
+    assert events.count("free") == 2  # context warmup and one allocation release
+    assert events.count("sync") == 3  # release synchronization still attempted
+
+
+def test_cuda_teardown_cancellation_propagates_after_remaining_cleanup(monkeypatch, capsys):
+    runtime, events = cuda_runtime(monkeypatch)
+
+    def cancel_free(pointer):
+        events.append("free")
+        if pointer is not None:
+            raise KeyboardInterrupt("cancel CUDA release")
+        return 0
+
+    runtime.cudaFree.callback = cancel_free
+    with pytest.raises(KeyboardInterrupt, match="cancel CUDA release") as caught:
+        repro.cuda_worker("cuda_malloc", 1)
+    assert events.count("free") == 2
+    assert events.count("sync") == 4
+    assert "uncertain" in caught.value.__notes__[0]
+    assert "after_release" not in capsys.readouterr().out
+
+
+def test_cuda_sync_exception_is_collected_after_single_free(monkeypatch):
+    runtime, events = cuda_runtime(monkeypatch)
+    failure = RuntimeError("sync transport failed")
+
+    def failed_sync():
+        events.append("sync")
+        raise failure
+
+    runtime.cudaDeviceSynchronize.callback = failed_sync
+    assert repro._release_cuda_allocation(runtime, object()) == [failure]
+    assert events == ["free", "sync"]
+
+
+@pytest.mark.parametrize("cancel", [False, True])
+def test_torch_teardown_failures_never_report_success(cancel, monkeypatch, capsys):
+    events = []
+    torch = fake_torch(events)
+    failure = KeyboardInterrupt("cancel torch release") if cancel else RuntimeError("torch release failed")
+    attempts = [0]
+
+    def release():
+        attempts[0] += 1
+        events.append("empty_cache")
+        if attempts[0] == 2:  # permit context warmup, fail only real allocation cleanup
+            raise failure
+
+    torch.cuda.empty_cache = release
+    monkeypatch.setitem(sys.modules, "torch", torch)
+    monkeypatch.setattr(repro, "snapshot", lambda _pid: {"pid": 12})
+    monkeypatch.setattr(repro.time, "sleep", lambda _seconds: None)
+    if cancel:
+        with pytest.raises(KeyboardInterrupt, match="cancel torch release"):
+            repro.torch_worker(1)
+    else:
+        assert repro.torch_worker(1) == 30
+    output = capsys.readouterr().out
+    assert "after_release" not in output
+    assert events[-1] == "sync"
+    assert attempts[0] == 2
+    if not cancel:
+        assert "torch release failed" in json.loads(output.splitlines()[-1])["error"]
+
+
 @pytest.mark.parametrize("fail_free,fail_sync", [(True, False), (False, True)])
 def test_cuda_context_warmup_errors_are_recorded(fail_free, fail_sync, monkeypatch, capsys):
     runtime, _events = cuda_runtime(monkeypatch, fail_sync=1 if fail_sync else 0)
