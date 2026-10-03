@@ -279,6 +279,24 @@ def test_uri_credentials_are_redacted_and_malformed_uris_are_unknown() -> None:
                (*archive_credentials, *mirror_credentials))
 
 
+def test_index_targets_reject_uris_without_endpoint_identity_and_redact_secrets() -> None:
+    username = secrets.token_urlsafe(12)
+    password = secrets.token_urlsafe(16)
+    query_secret = secrets.token_urlsafe(16)
+    ipv6_uri = urlunsplit(("https", f"{username}:{password}@[2001:db8::7]:8443",
+                           "/ubuntu", urlencode({"token": query_secret}), ""))
+    rows, errors = apt_sources.parse_index_targets(
+        "https:///ubuntu|noble|arm64|Packages\n"
+        "ports.ubuntu.com/ubuntu-ports|noble|arm64|Packages\n"
+        f"{ipv6_uri}|noble|arm64|Packages\n")
+    assert rows == [{"uri": "https://[2001:db8::7]:8443/ubuntu", "suite": "noble",
+                     "architecture": "arm64", "identifier": "Packages"}]
+    assert errors == ["line 1: malformed index target URI",
+                      "line 2: malformed index target URI"]
+    serialized = json.dumps({"rows": rows, "errors": errors})
+    assert all(secret not in serialized for secret in (username, password, query_secret))
+
+
 def test_main_prints_json_and_returns_status_code(monkeypatch: pytest.MonkeyPatch,
                                                  capsys: pytest.CaptureFixture[str]) -> None:
     monkeypatch.setattr(apt_sources, "capture", lambda: {"status": "block", "findings": ["bad"]})

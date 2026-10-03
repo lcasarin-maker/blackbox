@@ -1,0 +1,32 @@
+[
+  {
+    "id": "DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01",
+    "status": "deferred_lab",
+    "evidence": "Reusa `tools/chat_sse_capture.py` para conservar deltas/finish del cliente, pero no valida resolución de draft class, límite de concurrencia, presión de recursos ni semántica/inyección de tools. No existe captura local de los tags/PR citados ni del borde 32/33. Estado `deferred_lab`: fijar imagen/modelo/parser/template, probar carga acotada en 32 y 33 y controles semánticos/negativos antes de proponer un límite específico; sin universalizar el cap del hilo.",
+    "reason": "Faltan captura del stack fijado y prueba del borde reportado; requiere canario de concurrencia y semántica en laboratorio."
+  },
+  {
+    "id": "DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01",
+    "status": "deferred_lab",
+    "evidence": "Reusa `tools/provider_trace.py` solo para worker/proveedor; no observa el launcher por nodo, variables/interfaz efectiva, NCCL microtest ni CUDA Graph. No hay captura local de launcher/logs por rango; el registro existente `root-qwen-image-review.json` corresponde a otras imágenes y declara casos sin A/B, por lo que no cubre esta ficha. Estado `deferred_lab`: stack dual fijado, microtest y comparación receta/manual con logs por nodo y control de salida, antes de atribuir causalidad a NCCL/Ray.",
+    "reason": "Los instrumentos locales no atribuyen launcher, variables ni NCCL por nodo; requiere A/B multi-node con logs por rango."
+  },
+  {
+    "id": "DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01",
+    "status": "deferred_lab",
+    "evidence": "Reuso disponible: perfiles de runtime/host existentes no asocian una arquitectura SM121 con kernels compilados por operación y salida correcta. No hay evidencia local de builds/tags del hilo ni control de logits/salida. Estado `deferred_lab`: fijar modelo/backend/build y operaciones requeridas; canario de load, primera inferencia y referencia de salida contra build/control SM121, preservando el resultado. “CUDA available” o ready no son admisión.",
+    "reason": "Falta build/operación fuente-fijada y control de salida SM121; requiere compilar y probar backend en laboratorio."
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01",
+    "status": "deferred_lab",
+    "evidence": "Reusa `tools/memory_profile.py`/`tools/atom_gpu_telemetry.py` para observación de memoria/PSI del host, pero no hay series por etapa/rank ni logs de compilación adjuntos de esta reproducción; tampoco se correlaciona pérdida de acceso remoto. Estado `deferred_lab`: cold-start del stack exacto con captura externa por nodo/rank, headroom y control eager en el mismo stack. No se compiló ni se provocó presión/OOM.",
+    "reason": "Faltan trazas locales de cold compile por rank y control eager; se necesita el workload de dos nodos para medir headroom."
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01",
+    "status": "deferred_lab",
+    "evidence": "Reusa telemetría general para memoria/swap/PSI, pero no captura OOMD kill de systemd, servicio dependiente, ni estado de cache ligado al cambio de tarea. No hay logs/versions locales. Estado `deferred_lab`: canario de larga duración con versión fija, PSI/UMA/swap, eventos OOMD/servicio/dependencias redactados y recovery medido; no desactivar OOMD ni actuar durante presión.",
+    "reason": "Faltan eventos de servicio/OOMD y serie larga atribuidos al stack; validar exige soak controlado, no perturbación del host."
+  }
+]

@@ -32,3 +32,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+### Evidencia de instrumento (2026-10-03)
+
+Estado: `deferred_lab`. El inventario de red existente informa cero HCA RDMA, `ip link` inaccesible, conexión física `UNKNOWN` y transporte no probado. Falta retest bidireccional `ib_write_bw` entre ambos hosts fijados antes/después de reboot individual/secuencial y hotplug, con cable PN, CX7 fw y comandos/resultados. No se alteró host ni se generó tráfico. La ficha sigue abierta y `close_check` intacto. Informe: `docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md`.

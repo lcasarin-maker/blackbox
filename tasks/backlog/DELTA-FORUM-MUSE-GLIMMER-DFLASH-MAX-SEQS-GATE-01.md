@@ -32,3 +32,6 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+## Evaluación de instrumentos 2026-10-03
+
+Reusa `tools/chat_sse_capture.py` para conservar deltas/finish del cliente, pero no valida resolución de draft class, límite de concurrencia, presión de recursos ni semántica/inyección de tools. No existe captura local de los tags/PR citados ni del borde 32/33. Estado `deferred_lab`: fijar imagen/modelo/parser/template, probar carga acotada en 32 y 33 y controles semánticos/negativos antes de proponer un límite específico; sin universalizar el cap del hilo.

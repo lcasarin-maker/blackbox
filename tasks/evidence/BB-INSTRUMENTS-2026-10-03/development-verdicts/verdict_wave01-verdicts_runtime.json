@@ -1,0 +1,32 @@
+[
+  {
+    "id": "DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01",
+    "status": "developed",
+    "evidence": "tools/runtime_provenance.py adds an offline parser for the exact existing vLLM metric names and preserves raw sample, TYPE/HELP, labels, optional timestamp, and unverified caller path. 17 tests pass with 100% statement coverage; Ruff and Pyright pass.",
+    "reason": "No raw runtime Prometheus capture is available (native parse: could_not_run_count=1); exact-stack KV-byte comparison and the functional negative hardware control remain could_not_run. Card stays open."
+  },
+  {
+    "id": "DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01",
+    "status": "reused",
+    "evidence": "The existing runtime capture already records architecture, driver/CUDA, and image ref/ID; no new parser evidence is attributed to this card.",
+    "reason": "Compiler/PTXAS flags, pinned build matrix, model load/generation, and mismatch control remain could_not_run. Card stays open."
+  },
+  {
+    "id": "DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01",
+    "status": "reused",
+    "evidence": "The existing runtime capture already records running image refs and image IDs; no new parser evidence is attributed to this card.",
+    "reason": "Ray per-node resource map and positive/negative admission result remain could_not_run. Card stays open."
+  },
+  {
+    "id": "DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01",
+    "status": "reused",
+    "evidence": "The existing runtime capture already records container runtime version and image ref/ID; no new parser evidence is attributed to this card.",
+    "reason": "Effective build artifacts, offline build result, and rollback remain could_not_run. Card stays open."
+  },
+  {
+    "id": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "status": "reused",
+    "evidence": "The existing runtime capture already supplies a partial architecture, driver/CUDA, and image identity tuple; no new parser evidence is attributed to this card.",
+    "reason": "Pinned model/backend compatibility, functional generation, and semantic negative control remain could_not_run. Card stays open."
+  }
+]

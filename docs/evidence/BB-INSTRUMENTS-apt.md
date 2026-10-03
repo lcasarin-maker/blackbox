@@ -39,3 +39,15 @@ TOTAL                    186      0     76      0   100%
 `could_not_run > 0` remains non-clean by construction: file access, architecture, command failures, incomplete tuples, malformed URIs, and truncated command output stay visible and increment the printed count. Unit controls cover malformed Deb822, an exact arm64 endpoint mismatch, a URL-host spoof, disabled/source-only stanzas, credentials, malformed URIs and tuples, inaccessible reads, failed commands, and truncation.
 
 The five cards retain `status: open` and their existing `close_check` values. The instrument work does not reproduce an actual source failure, an OTA compatibility failure, an APT recovery path, or a desktop-login failure.
+
+## Controles tardíos de rutas de URI — 2026-10-03
+
+Se añadieron controles de `apt-get indextargets` para URI HTTPS sin hostname, URI sin esquema y endpoint IPv6 con puerto, credenciales y query efímeras. Las dos URI inválidas producen errores sin conservar la URI; la URI válida retiene `https://[2001:db8::7]:8443/ubuntu` y descarta usuario, password y query. No se cambió código de producción.
+
+Comando focal conjunto literal: `python3 -m coverage run --branch --source=tools.apt_sources,tools.kernel_capture -m pytest -q tests/test_apt_sources.py tests/test_kernel_capture.py` → `32 passed in 0.23s`.
+
+Cobertura literal: `python3 -m coverage report -m --include='tools/apt_sources.py,tools/kernel_capture.py'` → `tools/apt_sources.py 186 0 76 0 100%`; `tools/kernel_capture.py 96 0 26 0 100%`; total `282 statements, 0 missed, 102 branches, 0 partial, 100%`.
+
+`python3 -m ruff check tools/apt_sources.py tests/test_apt_sources.py tools/kernel_capture.py tests/test_kernel_capture.py` → `All checks passed!`. `python3 -m pyright tools/apt_sources.py tools/kernel_capture.py` → `0 errors, 0 warnings, 0 informations`. Intentar incluir tests en Pyright: `python3 -m pyright tools/apt_sources.py tests/test_apt_sources.py tools/kernel_capture.py tests/test_kernel_capture.py` → error explícito `Import "pytest" could not be resolved` en `tests/test_apt_sources.py:9`; Pyright sí pasa para los dos módulos de producción. No se ocultó ni excluyó el resultado fallido.
+
+Gate literal: `python .simplecode/run.py simplecode.worktree.zero_debt --root . --mode zero --gate` → `[zero-debt] files scanned: 86 findings: 0 files with findings: 0`; `PASSED=86 CONVICTED=0 EXEMPT_CORPUS=0 EXEMPT_FIXTURE=0 EXEMPT_VENDORED=0 COULD_NOT_RUN=0`; `could_not_run: 0`; `violations: 0`; exit `0`.

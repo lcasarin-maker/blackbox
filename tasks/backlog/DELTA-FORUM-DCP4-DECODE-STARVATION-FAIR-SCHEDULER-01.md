@@ -32,3 +32,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Evaluación de instrumentos 2026-10-03
+
+Reusa `tools/provider_trace.py` únicamente para la ruta request/provider/worker; no observa cola por paso, scheduler DCP4 ni equidad entre decode largo y prefill. No existe traza local de la carga descrita. Siguiente paso `deferred_lab`: stack TP8/DCP4 fijado, secuencia con decode largo y cuatro prefills concurrentes, orden/espera por cola, tokens/s, throughput, stalls, errores, completitud y corrección, con control stock y rollback. No se ejecutó workload.

@@ -116,6 +116,34 @@ def test_external_symlinked_target_is_rejected(monkeypatch, tmp_path):
     assert result["netconsole"]["targets"][0]["status"] == "could_not_run"
 
 
+def test_external_symlinked_attribute_is_rejected_without_reading_target(monkeypatch, tmp_path):
+    _base(tmp_path)
+    monkeypatch.setattr(capture, "module_state", lambda *_: {"status": "loaded"})
+    target = tmp_path / "sys/kernel/config/netconsole/target0"
+    for name in capture.NETCONSOLE_ATTRIBUTES:
+        _write(tmp_path, f"sys/kernel/config/netconsole/target0/{name}", "0")
+    outside = tmp_path.parent / f"{tmp_path.name}-remote-address"
+    outside.write_text("2001:db8::feed", encoding="utf-8")
+    (target / "remote_ip").unlink()
+    (target / "remote_ip").symlink_to(outside)
+    original = Path.read_text
+    external_reads: list[Path] = []
+
+    def track_reads(path: Path, *args, **kwargs):
+        if path == outside:
+            external_reads.append(path)
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", track_reads)
+    result = capture.capture(tmp_path)
+    row = result["netconsole"]["targets"][0]
+    assert result["status"] == "partial"
+    assert row["status"] == "could_not_run"
+    assert row["attribute_status"]["remote_ip"] == "could_not_run"
+    assert external_reads == []
+    assert "2001:db8::feed" not in str(result)
+
+
 def test_external_symlinked_pstore_is_rejected(monkeypatch, tmp_path):
     _base(tmp_path)
     monkeypatch.setattr(capture, "module_state", lambda *_: {"status": "absent"})

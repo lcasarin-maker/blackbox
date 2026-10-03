@@ -48,3 +48,7 @@ BrPart, 100%`.
 
 The five related cards remain open with their original status and `close_check`.
 No host network, RDMA, firmware, or link state was changed.
+
+## Comprobación nativa posterior por coordinación
+
+`tasks/evidence/BB-INSTRUMENTS-2026-10-03/native-readonly-capture.json` conserva una captura posterior fuera de las restricciones de IPC/dispositivos del sandbox, con el mismo UID de usuario. `ip -j link show` y `nvidia-smi` devolvieron rc 0: se observó NVIDIA GB10 con driver 580.178.04 y CUDA anunciada 13.0. Esto distingue las restricciones de la captura inicial de la presencia del dispositivo; no acredita generación, NCCL, compatibilidad de otro driver ni canarios. Se enumeraron cero HCA RDMA. Persisten cinco nodos `could_not_run`: modeset DRM denegado y los nodos de inventario/Wi-Fi anidados por carrier inaccesible y ausencia de versión opcional del módulo. Los cinco son nodos JSON, con agregados incluidos; no se suman a la captura inicial. No hubo workloads, escrituras de host ni cambios de servicio.

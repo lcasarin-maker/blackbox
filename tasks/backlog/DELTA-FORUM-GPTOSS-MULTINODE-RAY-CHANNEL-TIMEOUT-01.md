@@ -32,3 +32,6 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+## Evaluación de instrumentos 2026-10-03
+
+Reusa `tools/provider_trace.py` solo para identidad/latencia provider-worker, sin observar placement groups, asignación TP/GPU por nodo ni estados de Ray. No hay Ray trace ni carga multi-node adjunta. Estado `deferred_lab`: necesitaría dos nodos fijados, placement/resource snapshot por rank/nodo, request acotado con actividad/finish por nodo y control negativo del timeout, conservando digests y rollback; no se ejecutó carga ni se cambió imagen.

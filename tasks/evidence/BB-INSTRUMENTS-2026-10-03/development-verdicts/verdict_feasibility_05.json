@@ -1,0 +1,32 @@
+[
+  {
+    "id": "DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01",
+    "status": "deferred_lab",
+    "evidence": "Reuso y límite registrados en docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md y en la ficha; sin captura/canario local del sujeto.",
+    "reason": "Reutilizar SSE solo preserva la vista del cliente; faltan reproducción multivuelta y control de formato/razonamiento sobre stack fijado. Requiere canario con workload."
+  },
+  {
+    "id": "DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01",
+    "status": "deferred_lab",
+    "evidence": "Reuso y límite registrados en docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md y en la ficha; sin captura/canario local del sujeto.",
+    "reason": "Provider trace no captura placement groups ni asignación Ray por nodo; falta carga en dos nodos y captura por rank. Requiere laboratorio multi-node."
+  },
+  {
+    "id": "DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01",
+    "status": "deferred_lab",
+    "evidence": "Reuso y límite registrados en docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md y en la ficha; sin captura/canario local del sujeto.",
+    "reason": "Perfiles host existentes no atribuyen memoria/transporte/teardown al llama.cpp RPC server ni verifican salida. Requiere stack y A/B de cierre en laboratorio."
+  },
+  {
+    "id": "DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01",
+    "status": "deferred_lab",
+    "evidence": "Reuso y límite registrados en docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md y en la ficha; sin captura/canario local del sujeto.",
+    "reason": "SSE no captura compaction/cache reset ni semántica posterior; faltan logs/versiones y secuencia reproducible con control sin compaction."
+  },
+  {
+    "id": "DELTA-FORUM-MEMORY-RECOVERY-SOAK-01",
+    "status": "deferred_lab",
+    "evidence": "Reuso y límite registrados en docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md y en la ficha; sin captura/canario local del sujeto.",
+    "reason": "Telemetría existente es puntual/general; no hay series de soak ni proceso RPC/recuperación atribuibles. Requiere soak fijado; no se mutaron procesos."
+  }
+]

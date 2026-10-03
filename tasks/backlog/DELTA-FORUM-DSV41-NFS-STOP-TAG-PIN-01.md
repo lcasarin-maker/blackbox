@@ -32,3 +32,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Evaluación de instrumentos 2026-10-03
+
+La evidencia local `docs/evidence/LUNA-98-2026-10-03-queue-04-11.md` señala que el script stop/export y el contrato externo no están en el repo; no existe captura local segura del procedimiento/stack. Estado `needs_capture`: obtener el stop.sh e invocación exacta, dependencias/orden, tag→digest y los campos mínimos de montaje/export necesarios; excluir Env/secretos. No se ejecutó Docker ni se leyó inspect.
