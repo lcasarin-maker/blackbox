@@ -1,0 +1,11 @@
+PASS evidence
+Command: python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_research_collector_bb_forum_fetch_01
+Output: . [100%]
+1 passed in 0.03s
+Command: python3 -m pytest -q tests/test_bb_forum_collectors.py
+Output: ... [100%]
+3 passed in 0.02s
+Command: ruff check tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py tests/test_bb_forum_collectors.py tests/test_debt_registration_controls.py
+Output: All checks passed!
+Command: pyright tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py
+Output: 0 errors, 0 warnings, 0 informations
