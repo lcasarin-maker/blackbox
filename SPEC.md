@@ -199,7 +199,7 @@ efectos de esta spec, y `tools/inventario.py --check` lo bloquea en el commit.
 | `tools/recovery_profile.py` | `bb recovery`: estado readonly de RCU/watchdog y firmas separadas de pstore; errores contados, sin abrir dispositivos watchdog ni alterar configuración | `tests/test_recovery_profile.py`, controles de permisos/ausencia y archivo vacío |
 | `tools/memory_profile.py` | Perfil páginas/UVM/THP/reservas integrado en el arnés cgroup, preservando ausencia y errores | `tests/test_memory_capture_and_cuda_integrity.py` |
 | `tools/cuda_integrity.py` | Matriz CUDA acotada de readback completo, concurrencia y reutilización en scope temporal | `tests/test_memory_capture_and_cuda_integrity.py` |
-| `tools/preflight.py` | Valida snapshots de simulación APT, runtime, GSP, provider, DRM y kernel; sin instalar cambios | `tests/test_preflight.py` |
+| `tools/preflight.py`, `tools/verify_apt_critical_removals.py` | `preflight` clasifica snapshots APT, runtime, GSP, provider, DRM y kernel; el verificador APT contrasta planes capturados y su integridad SHA-256; ninguno instala cambios ni un guard OEM | `tests/test_preflight.py`; `tests/test_debt_registration_controls.py::test_debt_close_check_verify_apt_critical_removals_01` |
 | `tools/host_diagnostics.py` | Captura readonly de sesiones, almacenamiento, red y USB con fallos explícitos | `tests/test_host_diagnostics.py` |
 
 | `tools/verify_cgroup_repro.py` | Recalcula fases, scopes y controles CPU desde stdout crudo del arnés; observaciones incompletas son unknown, sin acreditar contención GPU ni procedencia | `tests/test_verify_cgroup_repro.py`, controles de calibración, fases, scopes y lecturas alteradas |

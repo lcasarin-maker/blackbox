@@ -1,0 +1,54 @@
+$ python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_apt_critical_removals_01 tests/test_debt_registration_controls.py::test_apt_critical_verifier_cli_and_evidence_controls
+..                                                                       [100%]
+2 passed in 0.45s
+exit_code=0
+fail=0
+could_not_run=0
+
+$ ruff check tools/verify_apt_critical_removals.py tests/test_debt_registration_controls.py
+All checks passed!
+exit_code=0
+fail=0
+could_not_run=0
+
+$ COVERAGE_FILE=/tmp/apt-verify.coverage python3 -m coverage run --branch --source=tools.verify_apt_critical_removals -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_apt_critical_removals_01 tests/test_debt_registration_controls.py::test_apt_critical_verifier_cli_and_evidence_controls
+..                                                                       [100%]
+2 passed in 1.63s
+$ COVERAGE_FILE=/tmp/apt-verify.coverage python3 -m coverage report -m
+Combined 13 files, skipped 4
+Name                                    Stmts   Miss Branch BrPart  Cover   Missing
+-----------------------------------------------------------------------------------
+tools/verify_apt_critical_removals.py      65      0     30      0   100%
+-----------------------------------------------------------------------------------
+TOTAL                                      65      0     30      0   100%
+exit_code=0
+fail=0
+could_not_run=0
+
+$ python3 -m tools.verify_apt_critical_removals --evidence tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01
+{"checks": {"captured_critical_removal": "block", "captured_upgrade": "pass"}, "closure": "open", "could_not_run": 0, "evidence_sha256": "018d8932bb86dbb0bb60920ff184cb699fd9bb7c64c11e812610497412daadc2", "fail": 0, "findings": [], "meaning": "instrument discriminates these host simulations; OEM protection and installed APT guard are unverified", "open_blockers": ["OEM coverage and installed APT guard remain unverified"], "status": "pass"}
+exit_code=0
+fail=0
+could_not_run=0
+
+$ git commit -m 'DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01 implement APT evidence verifier' (first attempt, before fixes)
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] pre-commit: 1 check(s) DID NOT RUN: sintaxis de los scripts bash
+[gate-runner] FAIL: pre-commit exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=974392927642
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: inventario-spec exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=f34ea35b4ff3
+  funcion sin inventariar en SPEC.md: tools/verify_apt_critical_removals.py
+[inventario] HALLAZGOS: 1
+[inventario] FAIL: SPEC.md y el sujeto no coinciden.
+[gate-runner] kit: zip:runtime.zip:b556a108901d
+[gate-runner] FAIL: zero-debt-staged exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=30f3415bbd35
+[zero-debt] mode: zero  lane: staged
+[zero-debt] files scanned: 2  findings: 1  files with findings: 1
+[zero-debt] HALLAZGOS: 1
+[zero-debt] DETECTORES: {"unencoded_file_io":1}
+[zero-debt] could_not_run: 0
+[zero-debt] violations: 1
+[zero-debt] tests/test_debt_registration_controls.py line 49 read_text without encoding; line 35 read_text without encoding
+exit_code=1
+fail=1
+could_not_run=0
