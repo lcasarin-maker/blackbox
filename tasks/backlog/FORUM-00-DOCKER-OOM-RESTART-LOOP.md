@@ -53,3 +53,7 @@ Evidencia y pendientes: `tasks/evidence/FORUM-00-DOCKER-OOM-RESTART-LOOP/progres
 ## Índice de propuestas del lote 00
 
 - `FORUM-00-MODEL-CONTEXT-STARTUP-ADMISSION` — [Validate advertised model context and colocated UMA budget before auto-restarting model containers](https://forums.developer.nvidia.com/t/380700); detalle, confidence y close check en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.
+
+## Avance de ejecución 2026-10-03
+
+Se añadió `tools/workload_restart_policy.py`: registra atómicamente intentos por identidad de workload en un archivo persistente, serializa reclamaciones concurrentes, rechaza un reloj retrocedido, permite workloads sanos independientes y limita la reincidencia en una ventana. Los fallos de estado producen `could_not_run` con contadores explícitos. La política no atribuye reboots a OOM ni inicia o detiene contenedores. Falta integrarla con el runtime y validar identidad, conservación de datos, servicio de gestión y recuperación en un entorno con reboot controlado. Estado permanece `open`.

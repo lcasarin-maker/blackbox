@@ -1,0 +1,35 @@
+$ python3 -m pytest tests/test_nvme_readonly.py tests/test_workload_restart_containment.py -q
+rc=0
+..............                                                           [100%]
+14 passed in 0.44s
+
+$ ruff check tools/nvme_readonly.py tools/workload_restart_policy.py tests/test_nvme_readonly.py tests/test_workload_restart_containment.py
+rc=0
+All checks passed!
+
+$ pyright tools/nvme_readonly.py tools/workload_restart_policy.py
+rc=0
+0 errors, 0 warnings, 0 informations
+
+$ COVERAGE_FILE=/tmp/bb-luna98-batch02.coverage coverage run --branch --source=tools.nvme_readonly,tools.workload_restart_policy -m pytest tests/test_nvme_readonly.py tests/test_workload_restart_containment.py -q
+rc=0
+..............                                                           [100%]
+14 passed in 1.16s
+
+$ COVERAGE_FILE=/tmp/bb-luna98-batch02.coverage coverage report -m tools/nvme_readonly.py tools/workload_restart_policy.py
+rc=0
+Combined 9 files, skipped 10
+Name                               Stmts   Miss Branch BrPart  Cover   Missing
+------------------------------------------------------------------------------
+tools/nvme_readonly.py               145      0     56      4    98%   20->21, 24->25, 35->36, 42->43
+tools/workload_restart_policy.py      82      0     12      0   100%
+------------------------------------------------------------------------------
+TOTAL                                227      0     68      4    99%
+
+$ python3 tools/inventario.py --check
+rc=0
+[inventario] HALLAZGOS: 0
+[inventario] OK: los dos inventarios describen el repo y la maquina.
+
+$ git diff --check
+rc=0
