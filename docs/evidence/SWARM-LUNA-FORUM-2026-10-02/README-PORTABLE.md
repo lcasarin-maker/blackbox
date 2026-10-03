@@ -18,7 +18,7 @@ Verificación documental: `python3 tools/inventario.py --check` imprime `[invent
 
 ## Capturas crudas locales
 
-El snapshot de hilos, adjuntos y metadatos permanece local y no forma parte de esta publicación. Al terminar la curación, se prevé trasladarlo a `.simplecode/evidence/research/SWARM-LUNA-FORUM-2026-10-02/`; hasta que ese traslado se verifique, la ruta sigue siendo un destino propuesto. El inventario curado conserva rutas, hashes y límites de revisión. Para volver a capturar, consultar la categoría 721 en el foro NVIDIA y recuperar cada `post_stream.stream`, registrando fecha, paginación, cuerpo completo y SHA-256. El endpoint listado no garantiza que el snapshot siga idéntico. Los adjuntos no revisados, repositorios enlazados y binarios siguen con cobertura parcial; no afirmamos inspección total.
+El snapshot de hilos, adjuntos y metadatos permanece local y no forma parte de esta publicación. El 2026-10-03 se preservaron los 6732 archivos brutos sin seguimiento en `.simplecode/evidence/research/SWARM-LUNA-FORUM-2026-10-02/`, con SHA-256, tamaño y modo verificados antes y después: 0 discrepancias. El [manifiesto de cosecha](../../../tasks/evidence/CLEAN-2026-10-03/raw-manifest.json) registra origen y destino. Los dos recolectores se mantienen versionados con pruebas offline. El inventario curado conserva rutas, hashes y límites de revisión. Para volver a capturar, consultar la categoría 721 en el foro NVIDIA y recuperar cada `post_stream.stream`, registrando fecha, paginación, cuerpo completo y SHA-256. El endpoint listado no garantiza que el snapshot siga idéntico. Los adjuntos no revisados, repositorios enlazados y binarios siguen con cobertura parcial; no afirmamos inspección total.
 
 ## Alcance ampliado por Luis
 
