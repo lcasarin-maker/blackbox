@@ -36,3 +36,15 @@ Ruff del archivo retorna cero con las reglas actuales y las pruebas del sujeto p
 La ficha permanece abierta. El comando ya existe; se conserva el fallo actual y falta resolver el sujeto.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Root Cause
+
+La función indicada en evidencia excedía la regla de complejidad o parámetros seleccionada por Ruff. La extracción/agrupación mantiene los controles originales.
+
+## Regression Test
+
+El close_check original pasa con las reglas actuales; las pruebas del sujeto conservan sus controles sanos y negativos. La variante temporal de Ruff registra el fallo de la regla sin cambiar configuración.
+
+## Verification Evidence
+
+Salidas literales antes/después y del subconjunto en las tres rutas evidence del frontmatter. Re-chequeo del coordinador y triage por ID registrados en tasks/evidence/ZERO-2026-10-02. La revisión Bash del hook carecía de archivos candidatos y se reporta como could_not_run.

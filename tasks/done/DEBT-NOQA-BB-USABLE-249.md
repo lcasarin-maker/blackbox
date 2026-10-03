@@ -44,3 +44,15 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Verificación realizada
 
 El close_check ejecuta Ruff E731 contra el ejecutable real con --ignore-noqa y el primer log de main con interrupción antes de medir. Fallaba con la lambda; pasa con def. Suite de bb-usable conserva decisiones de watchdog y controles negativos.
+
+## Root Cause
+
+Una lambda asignada requería la supresión E731. La función explícita conserva print a stderr con flush=True.
+
+## Regression Test
+
+El close_check original pasa con las reglas actuales; las pruebas del sujeto conservan sus controles sanos y negativos. La variante temporal de Ruff registra el fallo de la regla sin cambiar configuración.
+
+## Verification Evidence
+
+Salidas literales antes/después y del subconjunto en las tres rutas evidence del frontmatter. Re-chequeo del coordinador y triage por ID registrados en tasks/evidence/ZERO-2026-10-02. La revisión Bash del hook carecía de archivos candidatos y se reporta como could_not_run.
