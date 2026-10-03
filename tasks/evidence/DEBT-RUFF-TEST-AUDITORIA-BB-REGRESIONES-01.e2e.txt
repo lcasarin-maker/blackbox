@@ -1,0 +1,14 @@
+$ python3 -m pytest tests/test_atom_gpu_telemetry_bb.py tests/test_auditoria_bb_regresiones.py -q
+...............................................................          [100%]
+63 passed in 6.36s
+EXIT=0
+
+Control negativo temporal; los archivos fueron eliminados después de la ejecución:
+$ python3 -m ruff check tests/.zero_negative_plr0913.py
+PLR0913 Too many arguments in function definition (6 > 5)
+Found 1 error.
+EXIT=1
+$ python3 -m ruff check tests/.zero_negative_plr0915.py
+PLR0915 Too many statements (51 > 50)
+Found 1 error.
+EXIT=1
