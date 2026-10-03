@@ -1,0 +1,32 @@
+---
+id: DEBT-SHELLCHECK-BB-2286
+kind: task
+domain: VERDICT
+title: "Revalidar excepción ShellCheck de bb:2286"
+status: open
+severity: P2
+origin: asserted
+satd_family: BLIND_INSTRUMENT
+created: 2026-10-02
+close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_shellcheck_bb_2286", "expect": "exit_zero", "porque": "Ejecutar ShellCheck del fragmento/sujeto y controles de retorno/quoting. Demostrar la advertencia sin excepción y su relación con el comportamiento real. Retirar el disable innecesario o conservar justificación específica, vigía y revisión fechada. No desactivar reglas globales ni debilitar las pruebas para obtener verde."}
+---
+
+## Registro y responsable
+
+Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
+
+## Evidencia y alcance
+
+Exclusión activa: `# shellcheck disable=SC2086`. Sitio `bin/bb:2286`. Revisar la razón existente; un disable no implica defecto por sí solo.
+
+Fuentes: bin/bb:2286.
+
+## Criterio de cierre y control negativo
+
+Ejecutar ShellCheck del fragmento/sujeto y controles de retorno/quoting. Demostrar la advertencia sin excepción y su relación con el comportamiento real. Retirar el disable innecesario o conservar justificación específica, vigía y revisión fechada. No desactivar reglas globales ni debilitar las pruebas para obtener verde.
+
+## Estado del verificador
+
+La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
+
+Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
