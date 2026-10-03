@@ -1,6 +1,6 @@
 {
   "claims_fingerprint": "67d4919b641cbc5b5357f36aa59ef5a8d498f95212b32bd3b6861241325ef1be",
-  "panel": "Coordinaci\u00f3n: revisi\u00f3n de texto y hashes nativos tras inventario nuevo",
+  "panel": "Root, 2026-10-03: reauditor\u00eda de configuraci\u00f3n Simplecode 9.3.1 y controles negativos",
   "profile": "general",
   "results": [
     {
@@ -45,16 +45,15 @@
     },
     {
       "cited": {
-        ".pre-commit-config.yaml": "acb2330c40f26c909c81855253c40566471a77927f4ff749543af5f6c171db83",
-        "tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json": "bf21ab712d95c541f1a45e7c934cd98a1a7ce89394a1305c1d9fd9dbae829190",
+        ".pre-commit-config.yaml": "0b182c7c6bc0a5fd2d5e51264b87142b53f6a15501b598534d566ae89e406432",
         "tests/test_auditoria_bb_regresiones.py": "c9eb27c7d1b378764237dde303b9bee5291d8311f0daaff899b70f2f13cdfe6b",
         "tests/test_bash_sintaxis.py": "e88177f8046be8e615efb81411d9ce817f0f7653011f9a4c4c50708430f18d95",
         "tests/test_hook_native_controls.py": "e3310194c72c9a6abfb58bb5309c3ecf8b3b11f18b9b8d67792b1f773ed068eb",
         "tests/test_ruff_gitleaks_controles_negativos.py": "4887944d36593eb387a74b61cac6e2844136a5dfa3dd0f6f2d2dedf03f5fc482"
       },
       "claim_id": "SPEC-L319",
-      "evidence": "Current reruns: `python3 -m pytest -q tests/test_bash_sintaxis.py tests/test_ruff_gitleaks_controles_negativos.py` -> 6 passed, rc=0; `python3 -m pytest -q tests/test_hook_native_controls.py` -> 2 passed, rc=0, each test exercises a valid case and an injected failure; `python3 -m pytest -q tests/test_auditoria_bb_regresiones.py::test_scan_fielddiag_summary_invalido_incrementa_cnr` -> 1 passed, rc=0. `.pre-commit-config.yaml` leaves telemetry-bound outside scope because it ends in `|| true`; historical telemetry has four could_not_run, not findings. Revisi\u00f3n 2026-10-03: el texto de esta afirmaci\u00f3n y todos los hashes nativos de sus archivos citados permanecen iguales al ledger previo; solo cambi\u00f3 la l\u00ednea por nuevas filas de inventario. Prueba literal: tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json. Esta revisi\u00f3n preserva la atribuci\u00f3n y l\u00edmites de la evidencia hist\u00f3rica; no aporta una medida nueva del host.",
-      "seal": "becfd3ee3c99f7ed72617a661c4a5f64eb623ad91d29c609cf95e59fb2b0957c",
+      "evidence": "La configuraci\u00f3n .pre-commit-config.yaml mantiene bash-sintaxis, ruff, gitleaks, spec-check y no-perder-lineas; telemetry-bound conserva || true en la l\u00ednea 267. El comando python3 -m pytest -q tests/test_bash_sintaxis.py tests/test_ruff_gitleaks_controles_negativos.py tests/test_hook_native_controls.py tests/test_auditoria_bb_regresiones.py devuelve 19 passed in 26.61s: incluye controles negativos de sintaxis, nombre indefinido, clave PEM, objetivo ausente, eliminaci\u00f3n de l\u00edneas y Field Diagnostic inv\u00e1lido; el cambio can\u00f3nico a\u00f1ade gitleaks de historial y priority sin retirar estos controles.",
+      "seal": "9cc38291a86c84ca1a45ba76b3ca7420af329839f2616fb4e209a70b9280bcb7",
       "verdict": "PASS"
     },
     {
@@ -131,7 +130,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-03T20:11:53Z",
-  "tree_fingerprint": "8fbd9ff03637b6c12458838be7b3e1b229525984afba87156f79ea9211dee544",
+  "timestamp": "2026-10-03T20:39:24Z",
+  "tree_fingerprint": "94b40ee730a0b097dab340cbfec9339735cffe8d59a70e6c17dbbde60f8de476",
   "violations": []
 }

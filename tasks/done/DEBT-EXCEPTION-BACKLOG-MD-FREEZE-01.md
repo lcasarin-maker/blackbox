@@ -48,3 +48,7 @@ Control negativo incluido en el selector: La revisión confirma que BACKLOG.md y
 ## Verification Evidence
 
 Pass: selector `DEBT-EXCEPTION-BACKLOG-MD-FREEZE-01` pasa junto con los 13 selectores de esta ola; resultado `14 passed`, `could_not_run=0`. Fail previo: selector ausente, pytest exit 4; registrado solo como estado anterior de la instrumentación. El detalle y el alcance del control negativo constan en `tasks/evidence/DEBT-EXCEPTION-BACKLOG-MD-FREEZE-01/e2e.txt`.
+
+## Cambio del productor: Simplecode 9.3.1, 2026-10-03
+
+El commit canónico c1e09060 retiró `simplecode.verification.backlog_md_freeze`. La evidencia anterior describe el kit 8.9.6. BB elimina ahora la excepción de este órgano retirado; la regresión comprueba su ausencia en el runtime fijado y en los hooks, la ausencia de la excepción y la ausencia de BACKLOG.md y de la declaración frozen. El close_check conserva su comando, y devuelve `1 passed in 0.10s`. Evidencia de actualización: `docs/evidence/SIMPLECODE-9.3.1-2026-10-03.md`.
