@@ -3,7 +3,14 @@ id: DEBT-SHELLCHECK-BB-SUBJECT-01
 kind: task
 domain: VERDICT
 title: "Resolver hallazgos del ejecutable completo fuera del alcance previo"
-status: open
+status: done
+closed_at: 2026-10-03
+closure_type: fixed
+closure_reason: "ShellCheck completo pasa; rutas de auditoría con espacios conservan señales y cobertura."
+evidence:
+  fail: tasks/evidence/DEBT-SHELLCHECK-BB-SUBJECT-01.fail.txt
+  pass: tasks/evidence/DEBT-SHELLCHECK-BB-SUBJECT-01.pass.txt
+  e2e: tasks/evidence/DEBT-SHELLCHECK-BB-SUBJECT-01.e2e.txt
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -166,3 +173,15 @@ Hallazgos derivados de la salida JSON literal, no transcritos a mano. Fuente: ta
 ## Criterio
 
 Refactor mínimo y pruebas sobre el ejecutable real. Mantener quoting y estados could_not_run; variantes negativas deben fallar.
+
+## Root Cause
+
+El alcance anterior dejó trece diagnósticos del ejecutable completo. La expansión sin comillas de los logs separaba rutas con espacios y perdía señales. Se reutilizan pgrep/find y arrays Bash con delimitador NUL; no se desactivan reglas. ShellCheck se declara como ejecutable de confianza para comprobar el sujeto directamente.
+
+## Regression Test
+
+`test_debt_shellcheck_bb_subject_01` ejecuta el comando real con dos rotaciones en una ruta con espacios, comprueba ambas atribuciones y la ventana; después reemplaza eventos por una clave ajena y comprueba cero señales. Falló antes del arreglo (regression-before.txt).
+
+## Verification Evidence
+
+`shellcheck bin/bb` y `bash -n bin/bb` salen 0. Las pruebas de Bash y controles se registran en e2e.txt. La prueba no afirma que auditctl del host esté accesible: conserva los estados could_not_run del CLI.
