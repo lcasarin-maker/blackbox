@@ -142,6 +142,7 @@ def test_collectors_import_without_filesystem_or_network(monkeypatch, tmp_path):
         "id": 1, "post_number": 1, "username": "fixture", "created_at": "now", "cooked": "valid"
     }]}}
     result = fetcher.fetch(item, tmp_path / "portable-output", getter=lambda _: payload, sleep=lambda _: None)
+    assert isinstance(result, dict)
     assert result["status"] == "fetched"
     assert (tmp_path / "portable-output/threads/9.json").is_file()
     assert (tmp_path / "portable-output/threads/9.txt").is_file()

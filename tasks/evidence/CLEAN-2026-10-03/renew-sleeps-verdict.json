@@ -1,0 +1,50 @@
+[
+  {
+    "id": "RENEW-13",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt (RENEW-13)",
+    "reason": "El sampler persistente requiere intervalo entre muestras. El closecheck pasa con intervalo positivo y rechaza el control neutralizado; el marker documenta esa cadencia."
+  },
+  {
+    "id": "RENEW-14",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt (RENEW-14)",
+    "reason": "El worker CUDA mantiene la asignación durante la ventana de observación del cgroup; el closecheck positivo retiene 2 s y la neutralización ya no alcanza el umbral."
+  },
+  {
+    "id": "RENEW-15",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt (RENEW-15)",
+    "reason": "La ruta Torch conserva sus tensores durante la ventana de observación; el closecheck positivo retiene 2 s y la neutralización ya no alcanza el umbral."
+  },
+  {
+    "id": "RENEW-16",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt (RENEW-16)",
+    "reason": "La reproducción de memoria CPU mantiene la asignación durante la ventana de observación; el closecheck positivo retiene 2 s y la neutralización ya no alcanza el umbral."
+  },
+  {
+    "id": "RENEW-17",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt (RENEW-17)",
+    "reason": "El positivo de cpu_top pasó 3/3 con la ventana real y falló 3/3 al neutralizarla, reportando 0/5 filas; queda probado el requisito de muestreo por segundos enteros."
+  },
+  {
+    "id": "RENEW-18",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt (RENEW-18)",
+    "reason": "El sleep empareja el control negativo con la ventana del positivo para que ambos midan el mismo intervalo; el closecheck conserva el control dormido sin confundirlo con el requisito positivo de RENEW-17."
+  },
+  {
+    "id": "RENEW-19",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt (RENEW-19)",
+    "reason": "El mismo patrón ausente agotó el deadline en 0.210 s con pausa y 0.201 s neutralizada; las consultas pgrep subieron de 4 a 130, prueba del coste de busy polling."
+  },
+  {
+    "id": "RENEW-20",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt (RENEW-20)",
+    "reason": "Las pruebas con procesos renderer reales conservaron resultados positivos y negativos; el closecheck de cleanup confirma dos verificaciones antes de SIGKILL y el sondeo conserva margen para detectar desaparición del huérfano."
+  }
+]

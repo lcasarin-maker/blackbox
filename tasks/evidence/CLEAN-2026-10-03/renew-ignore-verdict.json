@@ -1,0 +1,74 @@
+[
+  {
+    "id": "RENEW-01",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-01)",
+    "reason": "`.simplecode/runtime.zip` queda ignorado (rc=0); al retirar `.simplecode/*` deja de estarlo (rc=1). La regla conserva estado generado de simplecode, mientras las declaraciones versionadas se reactivan con sus excepciones."
+  },
+  {
+    "id": "RENEW-02",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-02)",
+    "reason": "`local_hooks.yaml` está trackeado; `check-ignore --no-index --quiet` da rc=1 y al retirar su excepción rc=0 por `.simplecode/*`. La excepción mantiene versionada la configuración de gates nativos en clones nuevos."
+  },
+  {
+    "id": "RENEW-03",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-03)",
+    "reason": "`backlog_baseline.json` está trackeado; `check-ignore --no-index --quiet` da rc=1 y al retirar su excepción rc=0 por `.simplecode/*`. La excepción conserva la línea base de deuda como estado revisable del repositorio."
+  },
+  {
+    "id": "RENEW-04",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-04)",
+    "reason": "`build_tools.txt` está trackeado; `check-ignore --no-index --quiet` da rc=1 y al retirar su excepción rc=0 por `.simplecode/*`. La excepción conserva en el clon la lista de herramientas admitidas por los verificadores."
+  },
+  {
+    "id": "RENEW-05",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-05)",
+    "reason": "`hook_receipt_baseline.json` está trackeado; `check-ignore --no-index --quiet` da rc=1 y al retirar su excepción rc=0 por `.simplecode/*`. La excepción conserva revisables las autorizaciones de recibos de hooks."
+  },
+  {
+    "id": "RENEW-06",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-06)",
+    "reason": "`organ_inapplicable.json` está trackeado; `check-ignore --no-index --quiet` da rc=1 y al retirar su excepción rc=0 por `.simplecode/*`. La excepción mantiene versionadas las declaraciones de alcance de los órganos verificadores."
+  },
+  {
+    "id": "RENEW-07",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-07)",
+    "reason": "`corpus_exempt.yaml` está trackeado; `check-ignore --no-index --quiet` da rc=1 y al retirar su excepción rc=0 por `.simplecode/*`. La excepción conserva el manifiesto versionado que define el corpus ajeno al repo."
+  },
+  {
+    "id": "RENEW-08",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-08)",
+    "reason": "`audit_ledger.json` está trackeado; `check-ignore --no-index --quiet` da rc=1 y al retirar su excepción rc=0 por `.simplecode/*`. La excepción permite que cada commit conserve el ledger que verifica su frescura."
+  },
+  {
+    "id": "RENEW-09",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-09)",
+    "reason": "`probe/__pycache__/sentinel.txt` queda ignorado (rc=0); al retirar `__pycache__/` deja de estarlo (rc=1). Se conserva el descarte de directorios de bytecode generados por Python."
+  },
+  {
+    "id": "RENEW-10",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-10)",
+    "reason": "`sentinel.pyc` fuera de `__pycache__` queda ignorado (rc=0); al retirar `*.pyc` deja de estarlo (rc=1). Se conserva el descarte de bytecode Python generado."
+  },
+  {
+    "id": "RENEW-11",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-11)",
+    "reason": "`.pytest_cache/sentinel.txt` queda ignorado (rc=0); al retirar `.pytest_cache/` deja de estarlo (rc=1). Se conserva el descarte del caché generado por pytest."
+  },
+  {
+    "id": "RENEW-12",
+    "status": "pass",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-12)",
+    "reason": "`.coverage` queda ignorado (rc=0); al retirar `.coverage` deja de estarlo (rc=1). Se conserva el descarte de la base de datos generada por coverage.py."
+  }
+]
