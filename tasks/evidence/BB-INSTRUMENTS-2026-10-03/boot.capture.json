@@ -1,0 +1,117 @@
+{
+  "backup_destination": {
+    "reason": "explicit mountpoint, source, and UUID required",
+    "status": "unknown"
+  },
+  "boot_state": {
+    "bootability": "not_verified",
+    "current_kernel_artifact_presence_only": {
+      "initrd.img-6.17.0-1032-nvidia": {
+        "present": true,
+        "status": "observed"
+      },
+      "vmlinuz-6.17.0-1032-nvidia": {
+        "present": true,
+        "status": "observed"
+      }
+    },
+    "drm_command_line_overrides": {
+      "observed_modeset_overrides": [],
+      "status": "ok"
+    },
+    "nvidia_drm_modeset_effective": {
+      "error": "PermissionError: [Errno 13] Permission denied: '/sys/module/nvidia_drm/parameters/modeset'",
+      "status": "could_not_run"
+    },
+    "running_kernel_release": {
+      "source": "proc/sys/kernel/osrelease",
+      "status": "observed",
+      "value": "6.17.0-1032-nvidia"
+    }
+  },
+  "gpu_runtime_existing": {
+    "container_runtime_version": {
+      "command": [
+        "docker",
+        "version",
+        "--format",
+        "{{.Server.Version}}"
+      ],
+      "contact_emails_redacted": 0,
+      "returncode": 1,
+      "status": "could_not_run",
+      "stderr": "permission denied while trying to connect to the docker API at unix:///var/run/docker.sock",
+      "stderr_truncated": false,
+      "stdout": "",
+      "stdout_truncated": false
+    },
+    "cuda_runtime": {
+      "library": "libcudart.so.13",
+      "major": 13,
+      "minor": 0,
+      "runtime_version": 13000,
+      "status": "ok"
+    },
+    "nvidia_gpu_state": {
+      "command": [
+        "nvidia-smi",
+        "--query-gpu=name,driver_version,pci.bus_id,utilization.gpu,power.draw",
+        "--format=csv,noheader"
+      ],
+      "contact_emails_redacted": 0,
+      "returncode": 9,
+      "status": "could_not_run",
+      "stderr": null,
+      "stderr_truncated": false,
+      "stdout": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.",
+      "stdout_truncated": false
+    },
+    "nvidia_smi_banner": {
+      "command": [
+        "nvidia-smi"
+      ],
+      "contact_emails_redacted": 0,
+      "returncode": 9,
+      "status": "could_not_run",
+      "stderr": null,
+      "stderr_truncated": false,
+      "stdout": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.",
+      "stdout_truncated": false
+    },
+    "running_container_image_ids": {
+      "source_key": "running_container_image_tags",
+      "status": "partial"
+    },
+    "running_container_image_tags": {
+      "command": [
+        "docker",
+        "ps",
+        "--no-trunc",
+        "--format",
+        "{{.ID}} {{.Image}}"
+      ],
+      "contact_emails_redacted": 0,
+      "returncode": 1,
+      "status": "could_not_run",
+      "stderr": "permission denied while trying to connect to the docker API at unix:///var/run/docker.sock",
+      "stderr_truncated": false,
+      "stdout": "",
+      "stdout_truncated": false
+    }
+  },
+  "root_mount_summary": {
+    "status": "ok",
+    "value": [
+      {
+        "options": "ro,nosuid,nodev,relatime",
+        "read_only": true,
+        "target": "/"
+      },
+      {
+        "options": "ro,nosuid,nodev,relatime",
+        "read_only": true,
+        "target": "/boot/efi"
+      }
+    ]
+  }
+}
