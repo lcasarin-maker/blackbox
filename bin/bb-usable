@@ -244,11 +244,20 @@ def latencia_x_ms() -> float | None:
     return (time.monotonic() - ini) * 1000.0 if r.returncode == 0 else None
 
 
+def log(message: str) -> None:
+    print(message, file=sys.stderr, flush=True)
+
+
+def log_recovery(psi: float, bajas: int, sostenido: int) -> None:
+    if sostenido:
+        log(f"[bb-usable] PSI bajo a {psi:.1f} en "
+            f"{bajas} sondas seguidas ({bajas * PROBE_INTERVAL:.0f}s): "
+            f"la racha de {sostenido * PROBE_INTERVAL:.0f}s se corta. "
+            f"Era un pico, no un colapso")
+
+
 def main() -> int:
     notify("READY=1")
-    def log(message: str) -> None:
-        print(message, file=sys.stderr, flush=True)
-
     first = probe()
     log(f"[bb-usable] sonda sana de referencia: {first*1000:.0f} ms para "
         f"{PROBE_BYTES // (1024*1024)} MiB -- plazo {PROBE_DEADLINE:.0f}s "
@@ -314,11 +323,7 @@ def main() -> int:
             # demonio es la DURACION, y una duracion que cualquier muestra
             # suelta puede poner a cero no es una duracion.
             if bajas >= BAJAS_PARA_CORTAR:
-                if sostenido:
-                    log(f"[bb-usable] PSI bajo a {psi:.1f} en "
-                        f"{bajas} sondas seguidas ({bajas * PROBE_INTERVAL:.0f}s): "
-                        f"la racha de {sostenido * PROBE_INTERVAL:.0f}s se corta. "
-                        f"Era un pico, no un colapso")
+                log_recovery(psi, bajas, sostenido)
                 sostenido = 0
                 bajas = 0
             elif sostenido:
