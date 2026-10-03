@@ -1,0 +1,32 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01",
+    "status": "developed",
+    "evidence": "tools/kernel_capture.py; tests/test_kernel_capture.py; docs/evidence/BB-INSTRUMENTS-kernel.md",
+    "reason": "Nueva captura readonly de estado/targets y controles negativos; el close_check espec\u00edfico sigue abierto porque no se observ\u00f3 entrega a receptor."
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01",
+    "status": "developed",
+    "evidence": "tools/kernel_capture.py reutiliza tools/recovery_profile.py; tests/test_kernel_capture.py; tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json",
+    "reason": "Identidad kernel/sysctls/pstore quedan observables con permiso denegado expl\u00edcito; no hubo panic/reboot ni prueba de recuperaci\u00f3n y el close_check sigue abierto."
+  },
+  {
+    "id": "FEATURE-FORUM-NETCONSOLE-01",
+    "status": "reused",
+    "evidence": "tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json; docs/evidence/BB-INSTRUMENTS-kernel.md",
+    "reason": "La captura registra m\u00f3dulo ausente, par\u00e1metro ausente y cero entrega observada; no se ensay\u00f3 un receiver ni el marker requerido por el cierre."
+  },
+  {
+    "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "status": "reused",
+    "evidence": "tools/recovery_profile.py; tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json",
+    "reason": "Se reutiliz\u00f3 lectura pstore/estado y se a\u00f1adi\u00f3 identidad kernel; acceso pstore denegado, sin canary, rollback, panic o prueba de reboot."
+  },
+  {
+    "id": "FORUM-02-PSTORE-KERNEL-REGRESSION",
+    "status": "reused",
+    "evidence": "tools/recovery_profile.py; tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json; docs/evidence/BB-INSTRUMENTS-kernel.md",
+    "reason": "Se reutiliza la observaci\u00f3n de firmas pstore; el acceso est\u00e1 denegado y no hay evidencia de regresi\u00f3n/correcci\u00f3n vendor ni verificador espec\u00edfico."
+  }
+]
