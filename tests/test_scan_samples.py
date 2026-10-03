@@ -99,6 +99,35 @@ def test_prepare_reports_counter_uncertainty(tmp_path, rows, reason):
     assert any(reason in r for r in razones)
 
 
+def test_scan_samples_malformed_boot_ids_preserve_valid_counters(tmp_path):
+    path = tmp_path / "malformed-boot.jsonl"
+    malformed = [
+        _fila(1, None, cpu_jiffies="cpu0:1:2", red="eth0:1:2"),
+        _fila(2, 7, cpu_jiffies="cpu0:1:2", red="eth0:1:2"),
+        _fila(3, {}, cpu_jiffies="cpu0:1:2", red="eth0:1:2"),
+        _fila(4, "", cpu_jiffies="cpu0:1:2", red="eth0:1:2"),
+    ]
+    valid = [
+        _fila(5, "A", cpu_jiffies="cpu0:10:20", red="eth0:100:200"),
+        _fila(6, "A", cpu_jiffies="cpu0:20:40", red="eth0:200:400"),
+    ]
+    malformed.append(_fila(7, ["invalid"], cpu_jiffies="cpu0:1:2",
+                           red="eth0:1:2"))
+    path.write_text("\n".join(json.dumps(row) for row in malformed + valid),
+                    encoding="utf-8")
+
+    datos, razones = scan.preparar([path], 0, 8)
+
+    assert len(datos) == 7
+    assert all("cpu_jiffies" not in row and "red" not in row
+               for row in datos if not isinstance(row.get("boot_id"), str)
+               or not row["boot_id"])
+    filas_validas = [row for row in datos if row.get("boot_id") == "A"]
+    assert [row["cpu_jiffies"] for row in filas_validas] == [
+        "cpu0:10:20", "cpu0:20:40"]
+    assert not any("faltan dos muestras" in reason for reason in razones)
+
+
 def test_prepare_missing_fields_and_thermal_validation(tmp_path):
     path = tmp_path / "thermal.jsonl"
     good = {"evento": "muestra", "gpu_temp_c": 50, "sm_clk_mhz": 900,
