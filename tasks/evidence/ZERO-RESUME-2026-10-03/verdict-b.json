@@ -1,0 +1,50 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01",
+    "status": "BLOQUEADA",
+    "evidence": {
+      "close_check_before": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_netconsole_01",
+      "close_check_output": "/tmp/bb-zero-resume-verifiers-b-before/DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01.fail.txt",
+      "close_check_exit": 4,
+      "captured_parent_evidence": "FEATURE-FORUM-NETCONSOLE-01",
+      "parent_card": "tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md"
+    },
+    "reason": "No designated off-host receiver or approved target exists; the captured evidence records zero module loads and zero off-host markers. Secure Boot/signature metadata does not prove runtime acceptance, privacy boundaries, or rollback. The parent investigation is open and has no real capture to let a verifier test the required phases."
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01",
+    "status": "BLOQUEADA",
+    "evidence": {
+      "close_check_before": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01",
+      "close_check_output": "/tmp/bb-zero-resume-verifiers-b-before/DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.fail.txt",
+      "close_check_exit": 4,
+      "captured_parent_evidence": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+      "parent_card": "tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md"
+    },
+    "reason": "The captured read-only state reports pstore permission denied (could_not_run=1), zero forced panics/reboots/natural RCU tests, and no canary approval. A verifier cannot validate persistent capture/rollback phases from this evidence."
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+    "status": "BLOQUEADA",
+    "evidence": {
+      "close_check_before": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_usb_hid_postupdate_01",
+      "close_check_output": "/tmp/bb-zero-resume-verifiers-b-before/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.fail.txt",
+      "close_check_exit": 4,
+      "captured_parent_evidence": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+      "parent_card": "tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md"
+    },
+    "reason": "The read-only host observation has usbhid/hid_generic/xHCI loaded and an empty visible HID directory; it contains no connected keyboard, local input test, remote-access result, module-integrated case, or bounded upgrade/recovery test. That cannot support the required false-positive and actual-loss phases."
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01",
+    "status": "BLOQUEADA",
+    "evidence": {
+      "close_check_before": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_wifi_isolation_01",
+      "close_check_output": "/tmp/bb-zero-resume-verifiers-b-before/DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01.fail.txt",
+      "close_check_exit": 4,
+      "captured_parent_evidence": "FEATURE-FORUM-WIFI-ISOLATION-01",
+      "parent_card": "tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md"
+    },
+    "reason": "The captured snapshot shows wlP9s9 unavailable/DOWN and wired enP7s7 connected/UP; it does not include the cited WPA handshake/WRONG_KEY/no-secrets sequence, a local-host failure control, bounded roam A/B, or rollback evidence. Network recovery is therefore unmeasured."
+  }
+]
