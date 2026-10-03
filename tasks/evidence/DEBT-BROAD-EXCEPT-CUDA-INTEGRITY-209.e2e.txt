@@ -1,0 +1,28 @@
+$ python3 -m ruff check tools/cgroup_repro.py tools/cuda_integrity.py tests/test_debt_registration_controls.py
+exit=0
+All checks passed!
+
+$ python3 -m pytest -q tests/test_debt_registration_controls.py
+exit=0
+...........                                                              [100%]
+11 passed in 4.53s
+
+$ python3 -m pytest -q tests/test_cgroup_repro.py tests/test_memory_capture_and_cuda_integrity.py tests/test_cuda_integrity_cli.py
+exit=0
+........................................................................ [ 86%]
+...........                                                              [100%]
+83 passed in 0.13s
+
+Control negativo: el mutante silencioso fue rechazado (fallo esperado).
+$ python3 /tmp/bb-zero-results/cgroup_silenced_cleanup_control.py
+exit=1
+ERROR:root:Allocation worker failed: cudaMemset returned CUDA error 17
+Traceback (most recent call last):
+  File "/tmp/bb-zero-results/cgroup_silenced_cleanup_control.py", line 18, in <module>
+    assert any('cudaFree returned CUDA error 23' in note for note in result['notes']), result
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'phase': 'error', 'error': 'RuntimeError: cudaMemset returned CUDA error 17', 'notes': []}
+
+COULD_NOT_RUN (verificador del repo ausente):
+python3 .simplecode/run.py simplecode.verification.backlog_verifier --root . --gate
+python3: can't open file '/tmp/bb-zero-cleanup/.simplecode/run.py': [Errno 2] No such file or directory

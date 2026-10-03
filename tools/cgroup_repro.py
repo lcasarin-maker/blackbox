@@ -78,6 +78,32 @@ def cuda_allocate(rt, api: str, size: int):
     if rc: raise RuntimeError(f"allocation returned CUDA error {rc}")
     return ptr
 
+
+def cuda_use_allocation(rt: Any, ptr: Any, api: str, size: int, name: str) -> None:
+    try:
+        rc = rt.cudaDeviceSynchronize()
+        if rc: raise RuntimeError(f"cudaDeviceSynchronize returned CUDA error {rc}")
+        rc = rt.cudaMemset(ptr, 1, ctypes.c_size_t(size))
+        if rc: raise RuntimeError(f"cudaMemset returned CUDA error {rc}")
+        rc = rt.cudaDeviceSynchronize()
+        if rc: raise RuntimeError(f"allocation synchronize returned CUDA error {rc}")
+        print(json.dumps({"phase": "held", "api": api, "requested_bytes": size, "cuda_runtime": name,
+                          "touch": "cudaMemset byte pattern 1 over full allocation; synchronized", **snapshot(os.getpid())}), flush=True)
+        time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.2 -- isolated bounded worker retains allocation for observation; review sampling window
+    except BaseException as primary:
+        # Keep teardown secondary to the allocation failure, including cancellation.
+        cleanup_errors = _release_cuda_allocation(rt, ptr)
+        if cleanup_errors:
+            primary.add_note("CUDA cleanup failures: " + "; ".join(map(str, cleanup_errors)))
+        raise
+    else:
+        cleanup_errors = _release_cuda_allocation(rt, ptr)
+        if cleanup_errors:
+            cancellation = next((error for error in cleanup_errors if not isinstance(error, Exception)), None)
+            if cancellation is not None:
+                raise cancellation.with_traceback(cancellation.__traceback__)
+            raise RuntimeError("CUDA cleanup failures: " + "; ".join(map(str, cleanup_errors)))
+
 def cuda_worker(api: str, mib: int) -> int:
     name = ctypes.util.find_library("cudart")
     if not name:
@@ -95,35 +121,49 @@ def cuda_worker(api: str, mib: int) -> int:
                           "touch": "cudaMemset byte pattern 1 over full allocation", **snapshot(os.getpid())}), flush=True)
         size = mib * 1024 * 1024
         ptr = cuda_allocate(rt, api, size)
-        try:
-            rc = rt.cudaDeviceSynchronize()
-            if rc: raise RuntimeError(f"cudaDeviceSynchronize returned CUDA error {rc}")
-            rc = rt.cudaMemset(ptr, 1, ctypes.c_size_t(size))
-            if rc: raise RuntimeError(f"cudaMemset returned CUDA error {rc}")
-            rc = rt.cudaDeviceSynchronize()
-            if rc: raise RuntimeError(f"allocation synchronize returned CUDA error {rc}")
-            print(json.dumps({"phase": "held", "api": api, "requested_bytes": size, "cuda_runtime": name,
-                              "touch": "cudaMemset byte pattern 1 over full allocation; synchronized", **snapshot(os.getpid())}), flush=True)
-            time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.2 -- isolated bounded worker retains allocation for observation; review sampling window
-        finally:
-            rc = rt.cudaFree(ptr)
-            if rc: raise RuntimeError(f"cudaFree returned CUDA error {rc}")
-            rc = rt.cudaDeviceSynchronize()
-            if rc: raise RuntimeError(f"release cudaDeviceSynchronize returned CUDA error {rc}")
+        cuda_use_allocation(rt, ptr, api, size, name)
     except Exception as exc:
         logging.error("Allocation worker failed: %s", exc)
-        print(json.dumps({"phase": "error", "error": f"{type(exc).__name__}: {exc}"}), flush=True)
+        print(json.dumps({"phase": "error", "error": f"{type(exc).__name__}: {exc}",
+                          "notes": getattr(exc, "__notes__", [])}), flush=True)
         return 33
     print(json.dumps({"phase": "after_release", **snapshot(os.getpid())}), flush=True)
     return 0
 
-def release_torch_allocation(torch: Any, allocated: bool) -> None:
+def _release_cuda_allocation(rt: Any, ptr: Any) -> list[BaseException]:
+    errors: list[BaseException] = []
+    try:
+        rc = rt.cudaFree(ptr)
+        if rc:
+            errors.append(RuntimeError(f"cudaFree returned CUDA error {rc}; pointer state is uncertain and will not be retried"))
+    except BaseException as exc:
+        # The pointer state is unknown after a free failure; still synchronize, never retry.
+        exc.add_note("pointer state is uncertain; cleanup will not retry cudaFree")
+        errors.append(exc)
+    try:
+        rc = rt.cudaDeviceSynchronize()
+        if rc:
+            errors.append(RuntimeError(f"release cudaDeviceSynchronize returned CUDA error {rc}"))
+    except BaseException as exc:
+        errors.append(exc)
+    return errors
+
+
+def release_torch_allocation(torch: Any, allocated: bool, *, report: bool = True) -> list[BaseException]:
     if not allocated or torch is None:
-        return
-    torch.cuda.synchronize()
-    torch.cuda.empty_cache()
-    torch.cuda.synchronize()
-    print(json.dumps({"phase": "allocator_cache_released", **snapshot(os.getpid())}), flush=True)
+        return []
+    errors: list[BaseException] = []
+    for label, cleanup in (("synchronize before empty_cache", torch.cuda.synchronize),
+                           ("empty_cache", torch.cuda.empty_cache),
+                           ("synchronize after empty_cache", torch.cuda.synchronize)):
+        try:
+            cleanup()
+        except BaseException as exc:
+            # Attempt every allocator cleanup phase and report all failures together.
+            errors.append(exc)
+    if not errors and report:
+        print(json.dumps({"phase": "allocator_cache_released", **snapshot(os.getpid())}), flush=True)
+    return errors
 
 def torch_worker(mib: int) -> int:
     torch: Any = None
@@ -147,14 +187,33 @@ def torch_worker(mib: int) -> int:
                           "pytorch_version": torch.__version__, "allocator": "PyTorch CUDA caching allocator",
                           "touch": "tensor.fill_(1); torch.cuda.synchronize()", **snapshot(os.getpid())}), flush=True)
         time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.2 -- isolated bounded worker retains allocation for observation; review sampling window
-    except Exception as exc:
-        logging.error("Allocation worker failed: %s", exc)
-        print(json.dumps({"phase": "error", "error": f"{type(exc).__name__}: {exc}"}), flush=True)
-        return 30
-    finally:
+    # Preserve worker failures and cancellation while attaching teardown failures.
+    except BaseException as primary:
         allocated = tensor is not None
         tensor = None
-        release_torch_allocation(torch, allocated)
+        cleanup_errors = release_torch_allocation(torch, allocated, report=False)
+        if cleanup_errors:
+            primary.add_note("PyTorch cleanup failures: " + "; ".join(map(str, cleanup_errors)))
+        if isinstance(primary, Exception):
+            logging.error("Allocation worker failed: %s", primary)
+            print(json.dumps({"phase": "error", "error": f"{type(primary).__name__}: {primary}",
+                              "notes": getattr(primary, "__notes__", [])}), flush=True)
+            if allocated and not cleanup_errors:
+                print(json.dumps({"phase": "allocator_cache_released", **snapshot(os.getpid())}), flush=True)
+            return 30
+        raise
+    else:
+        allocated = tensor is not None
+        tensor = None
+        cleanup_errors = release_torch_allocation(torch, allocated)
+        if cleanup_errors:
+            cancellation = next((error for error in cleanup_errors if not isinstance(error, Exception)), None)
+            if cancellation is not None:
+                raise cancellation.with_traceback(cancellation.__traceback__)
+            exc = RuntimeError("PyTorch cleanup failures: " + "; ".join(map(str, cleanup_errors)))
+            logging.error("Allocation worker failed: %s", exc)
+            print(json.dumps({"phase": "error", "error": f"{type(exc).__name__}: {exc}", "notes": []}), flush=True)
+            return 30
     print(json.dumps({"phase": "after_release", **snapshot(os.getpid())}), flush=True)
     return 0
 
