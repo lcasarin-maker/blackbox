@@ -307,7 +307,25 @@ def _vmstat(tmp_path, pin, pout):
     return str(f)
 
 
-@pytest.mark.sleeps_aceptados
+def _fecha_falsa(tmp_path, delta_s):
+    """`bin/bb sample` reads date +%s once per sample; deterministic 1 Hz clock."""
+    reloj = tmp_path / "clock"
+    reloj.mkdir(exist_ok=True)
+    contador = tmp_path / "date-count"
+    fecha = reloj / "date"
+    fecha.write_text(
+        "#!/bin/sh\n"
+        "case \"$1\" in\n"
+        "  +%s%3N) echo 100000 ;;\n"
+        "  +%Y-%m-%d) echo 2026-10-03 ;;\n"
+        "  +%Y-%m-%dT%H:%M:%S%z) echo 2026-10-03T00:00:00+0000 ;;\n"
+        f"  +%s) if [ -e '{contador}' ]; then echo {100 + delta_s}; else touch '{contador}'; echo 100; fi ;;\n"
+        "  *) exit 2 ;;\n"
+        "esac\n", encoding="utf-8")
+    fecha.chmod(0o755)
+    return {"PATH": f"{reloj}:{os.environ['PATH']}"}
+
+
 def test_swap_mide_el_RITMO_no_solo_el_nivel(datos, tmp_path):
     """La noche del 2026-09-24 al 25 el swap fue la unica magnitud que se movio
     en una sola direccion -- 4.3 GB expulsados entre las 20:51 y las 03:28, con
@@ -318,9 +336,9 @@ def test_swap_mide_el_RITMO_no_solo_el_nivel(datos, tmp_path):
     `pswpin`, un contador acumulado desde el arranque. Como nivel no dice nada;
     lo que informa es el delta por segundo.
     """
-    correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 1000, 2000)})
-    time.sleep(4)  # blocking-sleep: el ritmo es un delta y necesita dos instantes separados -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.1 -- relectura 2026-10-02: objetivo y expresion sin cambios frente a git show 7049dce^:tests/test_bb_bash.py; Las razones de delta entero y sondeo con deadline que siguen conservan su sujeto. Comparacion por linea en tasks/evidence/RELEASE-2.1.0/sunset-review.json. Revision anterior 2.0: sin cambios desde la revision de 1.9 horas antes, mismo dia, mismas evidencias -- SE QUEDA, y AHORA CON PRUEBA PROPIA: sin la espera su test FALLA (1 failed in 1.64s), asi que no necesita el argumento de pareja. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.9-sleeps.txt
-    correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 5000, 2400)})
+    env = _fecha_falsa(tmp_path, 4)
+    correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 1000, 2000), **env})
+    correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 5000, 2400), **env})
     s = muestras(datos)[-1]["swap"]
     # 4000 paginas en ~4-6 s; el intervalo exacto lo pone el reloj, asi que se
     # asierta el orden de magnitud y el signo, no una cifra al decimal.
@@ -329,15 +347,14 @@ def test_swap_mide_el_RITMO_no_solo_el_nivel(datos, tmp_path):
     assert s["total_kb"] > 0, "SwapTotal real de la maquina"
 
 
-@pytest.mark.sleeps_aceptados
 def test_control_negativo_sin_trafico_de_swap_el_ritmo_es_cero(datos, tmp_path):
     """Sin esto, el test de arriba no distingue "mide el ritmo" de "escupe un
     numero grande". Los mismos contadores en las dos muestras tienen que dar
     cero, no un residuo."""
     v = _vmstat(tmp_path, 1000, 2000)
-    correr(["sample"], datos, {"BB_VMSTAT": v})
-    time.sleep(2)  # blocking-sleep: dos muestras separadas, mismos contadores -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.1 -- relectura 2026-10-02: objetivo y expresion sin cambios frente a git show 7049dce^:tests/test_bb_bash.py; Las razones de delta entero y sondeo con deadline que siguen conservan su sujeto. Comparacion por linea en tasks/evidence/RELEASE-2.1.0/sunset-review.json. Revision anterior 2.0: sin cambios desde la revision de 1.9 horas antes, mismo dia, mismas evidencias -- SE QUEDA: CONTROL NEGATIVO cuya prueba es que su POSITIVO emparejado falle sin la suya -- y la linea 312 FALLA. Sostenida por pareja, medido 2026-09-28. Evidencia: tasks/evidence/DEBT-ACCEPTED-SLEEP-TESTS-BB/sunset-1.9-sleeps.txt
-    correr(["sample"], datos, {"BB_VMSTAT": v})
+    env = _fecha_falsa(tmp_path, 4)
+    correr(["sample"], datos, {"BB_VMSTAT": v, **env})
+    correr(["sample"], datos, {"BB_VMSTAT": v, **env})
     s = muestras(datos)[-1]["swap"]
     assert float(s["in_pag_s"]) == 0.0, s
     assert float(s["out_pag_s"]) == 0.0, s
@@ -347,21 +364,9 @@ def test_un_contador_que_RETROCEDE_no_produce_un_ritmo_negativo(datos, tmp_path)
     """`pswpin` se reinicia con la maquina. Si bb restara sin mas, la primera
     muestra despues de un arranque emitiria un ritmo negativo -- un numero que
     no significa nada y que cualquier grafica leeria como dato."""
-    reloj = tmp_path / "clock"
-    reloj.mkdir()
-    contador = tmp_path / "date-count"
-    fecha = reloj / "date"
-    fecha.write_text(
-        "#!/bin/sh\n"
-        "case \"$1\" in\n"
-        "  +%s%3N) echo 100000 ;;\n"
-        f"  +%s) if [ -e '{contador}' ]; then echo 101; else touch '{contador}'; echo 100; fi ;;\n"
-        "  *) exit 2 ;;\n"
-        "esac\n", encoding="utf-8")
-    fecha.chmod(0o755)
-    env = {"BB_VMSTAT": _vmstat(tmp_path, 900000, 900000), "PATH": f"{reloj}:{os.environ['PATH']}"}
-    correr(["sample"], datos, env)
-    correr(["sample"], datos, env)
+    env = _fecha_falsa(tmp_path, 1)
+    correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 900000, 900000), **env})
+    correr(["sample"], datos, {"BB_VMSTAT": _vmstat(tmp_path, 12, 34), **env})
     s = muestras(datos)[-1]["swap"]
     assert float(s["in_pag_s"]) == 0.0, s
     assert float(s["out_pag_s"]) == 0.0, s
@@ -752,6 +757,7 @@ def test_control_negativo_status_DICE_falta_si_la_telemetria_esta_rancia(datos):
 # =====================================================================
 
 
+@pytest.mark.sleeps_aceptados
 def test_cpu_top_NOMBRA_a_quien_quema_cpu(datos):
     """El hueco que `psi.cpu_some` y `load1` no cierran: dicen cuanto sufre la
     maquina, no quien la hace sufrir.
@@ -773,6 +779,7 @@ def test_cpu_top_NOMBRA_a_quien_quema_cpu(datos):
         assert quemador.stdout.readline().strip() == "listo"
         cpu_antes = _cpu_segundos(quemador.pid)
         correr(["sample"], datos)                  # muestra 1: linea base
+        time.sleep(4)  # blocking-sleep: ps reports whole CPU seconds; window needed for delta -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.1 -- retained after no-wait run intermittently emitted cpu_top with 0 of 5 rows.
         correr(["sample"], datos)                  # muestra 2: ya quemo
         mio = _cpu_segundos(quemador.pid) - cpu_antes
         d = muestras(datos)[-1]
@@ -791,6 +798,7 @@ def test_cpu_top_NOMBRA_a_quien_quema_cpu(datos):
         quemador.kill(); quemador.wait()
 
 
+@pytest.mark.sleeps_aceptados
 def test_control_negativo_un_proceso_dormido_no_sale_como_que_quema(datos):
     """Sin esto, el test de arriba no distingue "atribuye" de "lista a todo el
     mundo".
@@ -807,6 +815,7 @@ def test_control_negativo_un_proceso_dormido_no_sale_como_que_quema(datos):
         assert dormido.stdout is not None
         assert dormido.stdout.readline().strip() == "listo"
         correr(["sample"], datos)
+        time.sleep(4)  # blocking-sleep: match positive CPU-delta observation window -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.1 -- matched observation window prevents negative control from sampling at a different interval.
         correr(["sample"], datos)
         nombrados = {x["pid"] for x in muestras(datos)[-1]["cpu_top"]}
         assert dormido.pid not in nombrados, \

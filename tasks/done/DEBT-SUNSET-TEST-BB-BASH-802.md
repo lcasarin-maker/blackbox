@@ -11,7 +11,7 @@ created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_802", "expect": "exit_zero", "porque": "Revalidar la justificación y el alcance exacto de la excepción sunset antes de su vencimiento, con comando literal y control negativo. Si es pausa de arnés/sampler, medir timeout/bounded scope/cancelación; si es test, conservar sensibilidad al delta observado. Retirar la excepción innecesaria o registrar revisión válida con responsable y expiración concreta, sin suspensión permanente."}
 closed_at: 2026-10-03
 closure_type: fixed
-reason: "Se retiró la espera fija de 4 s: el negativo de proceso dormido pasó sin ella y el positivo emparejado también pasó sin su espera en la medición actual; ambos conservan dos muestras reales y sus aserciones de atribución."
+reason: "El proceso dormido se mantiene vivo durante la misma ventana fija de 4 s del control positivo, para que ambos sujetos tengan dos observaciones espaciadas de igual forma. El control no concluye a partir de una lista global vacía: comprueba que el PID dormido no aparece."
 evidence: {"pass":"tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-802/pass.txt","fail":"tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-802/fail.txt","e2e":"tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-802/e2e.txt"}
 ---
 
@@ -43,8 +43,8 @@ La ficha registraba una exclusión/sunset pendiente de revalidación. Se inspecc
 
 `python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_802`
 
-Control negativo incluido en el selector: Se retiró la espera fija de 4 s: el negativo de proceso dormido pasó sin ella y el positivo emparejado también pasó sin su espera en la medición actual; ambos conservan dos muestras reales y sus aserciones de atribución.
+Control negativo incluido en el selector: un proceso dormido permanece vivo durante la ventana de 4 s usada por el control positivo; luego se comprueba directamente que su PID no aparece en `cpu_top`.
 
 ## Verification Evidence
 
-Pass: selector `DEBT-SUNSET-TEST-BB-BASH-802` pasa junto con los 13 selectores de esta ola; resultado `14 passed`, `could_not_run=0`. Fail previo: selector ausente, pytest exit 4; registrado solo como estado anterior de la instrumentación. El detalle y el alcance del control negativo constan en `tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-802/e2e.txt`.
+Pass: selector `DEBT-SUNSET-TEST-BB-BASH-802` pasa junto con los 13 selectores de esta ola; resultado `14 passed`, `could_not_run=0`. La ventana de 4 s está emparejada con el control positivo. El detalle consta en `tasks/evidence/DEBT-SUNSET-TEST-BB-BASH-802/e2e.txt`.
