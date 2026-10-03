@@ -1,0 +1,56 @@
+$ /opt/miniforge3/bin/python3 tools/calibra_techo_slice.py --help
+exit=0
+usage: calibra_techo_slice.py [-h] [--json] [{app,docker,system}]
+
+Un techo de cgroup sale de una SERIE, o no sale. ## Por que existe `DEBT-
+TECHOS-SIN-CALIBRAR` se quedo trabada el 2026-09-25 en su ultimo eslabon:
+`system.slice` es el unico slice sin techo, ponerle uno hace que el
+presupuesto componga -- hay 5.3 GiB de holgura en la mitad 1-- y no habia con
+que elegir el numero. Lo unico disponible era su `memory.peak` de UN arranque:
+2.8 GiB en 8 h 19 min. Un techo sacado de un arranque es exactamente el techo
+sin calibrar que esa ficha vino a quitar. El de `docker.slice` salio de 18 944
+muestras, y ese es el liston. Asi que `bb sample` guarda un bloque `slices`, y
+esto es lo que lo lee. **El unico que impedia que el numero se eligiera a ojo
+el dia que hubiera serie era la buena voluntad de quien lo hiciera.** Este
+modulo lo impide: se NIEGA a emitir un techo mientras la serie no lo sostenga,
+y dice exactamente que le falta. ## Las DOS condiciones, y por que la segunda
+es la que vale 1. **Un minimo de muestras.** 18 944, el liston que fijo
+`docker.slice`. Es un PRECEDENTE, no una derivacion: nadie ha demostrado que
+18 944 sea el numero correcto, solo que un techo sacado de esa serie se acepto
+y uno sacado de un arranque se rechazo. Se declara como lo que es. 2. **Que el
+maximo haya DEJADO DE CRECER.** Esta si sale del sujeto. Un maximo que sigue
+subiendo dice que la serie todavia no ha visto el peor caso, y un techo puesto
+sobre un maximo que crece se queda corto por construccion -- mata procesos la
+primera vez que el slice hace lo que siempre iba a hacer. Se mide comparando
+el maximo del ultimo tercio de la ventana contra el de los dos primeros: si el
+ultimo tercio trae un maximo nuevo, la serie aun no esta madura. La segunda es
+la que puede decir "todavia no" con 100 000 muestras, y por eso es la que de
+verdad protege. La primera solo evita el caso burdo. ## El factor, y de donde
+sale `docker.slice` quedo en 16G sobre un pico agregado de 11.2 GiB: **1.4x**.
+Se reutiliza ese factor por precedente explicito del propio repo, no porque
+1.4 tenga nada de especial. Queda declarado para que se pueda discutir. ## Lo
+que este modulo NO hace No escribe el drop-in ni toca la maquina: eso pide
+`sudo` y vive en `enable-privileged.sh`. Propone un numero con su derivacion
+delante, o se niega.
+
+positional arguments:
+  {app,docker,system}  el slice a calibrar (por defecto system, el que falta)
+
+options:
+  -h, --help           show this help message and exit
+  --json
+
+$ /opt/miniforge3/bin/python3 tools/calibra_techo_slice.py --codex-invalid-argument
+exit=2
+usage: calibra_techo_slice.py [-h] [--json] [{app,docker,system}]
+calibra_techo_slice.py: error: unrecognized arguments: --codex-invalid-argument
+
+$ mutant /tmp/bb-zero-no-cover/mutants/calibra_techo_slice.py --codex-invalid-argument
+exit=0
+
+
+Coverage report with pragma (launcher excluded):
+tools/calibra_techo_slice.py        105     83     42      0    15%   88-120, 130-138, 144-178, 190-223
+Coverage report after removal and direct CLI run:
+tools/calibra_techo_slice.py        107      0     44      0   100%
+The test runs these real processes with a 10s timeout and asserts stdout/rc; mutation forces CLI success and is rejected against the expected error rc=2. No GPU workload or host mutation.

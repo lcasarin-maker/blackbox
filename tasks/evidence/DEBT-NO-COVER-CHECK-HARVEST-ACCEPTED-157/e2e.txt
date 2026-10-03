@@ -1,0 +1,17 @@
+$ /opt/miniforge3/bin/python3 tools/check_harvest_accepted.py /tmp/bb-zero-no-cover/accepted.md
+exit=0
+accepted completo
+
+$ /opt/miniforge3/bin/python3 tools/check_harvest_accepted.py
+exit=2
+uso: check_harvest_accepted.py <ruta-a-la-ficha.md>
+
+$ mutant /tmp/bb-zero-no-cover/mutants/check_harvest_accepted.py
+exit=0
+
+
+Coverage report with pragma (launcher excluded):
+tools/check_harvest_accepted.py      56     20     26      9    57%   101-114, 119, 124, 128, 133, 138, 140, 143, 150-151
+Coverage report after removal and direct CLI run:
+tools/check_harvest_accepted.py      58      0     28      0   100%
+The test runs these real processes with a 10s timeout and asserts stdout/rc; mutation forces CLI success and is rejected against the expected error rc=2. No GPU workload or host mutation.

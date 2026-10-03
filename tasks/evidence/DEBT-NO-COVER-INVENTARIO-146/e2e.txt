@@ -1,0 +1,31 @@
+$ /opt/miniforge3/bin/python3 tools/inventario.py --help
+exit=0
+usage: inventario.py [-h] [--root ROOT] [--check]
+
+Comprueba que los inventarios de SPEC.md describen el repo y la maquina. Una
+tabla escrita a mano envejece en silencio: se anade un subcomando, nadie toca
+la spec, y a partir de ahi la spec es lo que alguien recordaba. Esto la ata al
+sujeto -- `bin/bb`, `tools/`, `adopted/` -- y bloquea el commit cuando
+divergen. Lo que NO hace: juzgar la prosa. Comprueba COBERTURA (que cada
+sujeto real aparezca, y que ninguna fila describa algo que no existe), nunca
+si la descripcion es buena.
+
+options:
+  -h, --help   show this help message and exit
+  --root ROOT  raiz del repo
+  --check      sale 1 si hay hallazgos
+
+$ /opt/miniforge3/bin/python3 tools/inventario.py --codex-invalid-argument
+exit=2
+usage: inventario.py [-h] [--root ROOT] [--check]
+inventario.py: error: unrecognized arguments: --codex-invalid-argument
+
+$ mutant /tmp/bb-zero-no-cover/mutants/inventario.py --codex-invalid-argument
+exit=0
+
+
+Coverage report with pragma (launcher excluded):
+tools/inventario.py                  76     56     34      0    18%   27-32, 37-44, 61-67, 71-73, 84-90, 100, 108-125, 134-143
+Coverage report after removal and direct CLI run:
+tools/inventario.py                  78      0     36      0   100%
+The test runs these real processes with a 10s timeout and asserts stdout/rc; mutation forces CLI success and is rejected against the expected error rc=2. No GPU workload or host mutation.
