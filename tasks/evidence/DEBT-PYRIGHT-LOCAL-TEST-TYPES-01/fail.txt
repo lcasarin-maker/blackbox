@@ -1,0 +1,55 @@
+$ pyright --project /tmp/pyright-bb-negative-selected.json
+/tmp/bb-pyright-negative/tests/test_cgroup_repro.py
+  /tmp/bb-pyright-negative/tests/test_cgroup_repro.py:154:22 - error: Cannot assign to attribute "callback" for class "Function"
+    Expression of type "(pointer: Unknown) -> Literal[0]" cannot be assigned to attribute "callback" of class "Function"
+      Type "(pointer: Unknown) -> Literal[0]" is not assignable to type "(ptr: Unknown) -> int"
+        Parameter name mismatch: "ptr" versus "pointer" (reportAttributeAccessIssue)
+/tmp/bb-pyright-negative/tests/test_debt_registration_controls.py
+  /tmp/bb-pyright-negative/tests/test_debt_registration_controls.py:121:35 - error: Argument of type "FakeCuda" cannot be assigned to parameter "lib" of type "CDLL" in function "run_worker"
+    "FakeCuda" is not assignable to "CDLL" (reportArgumentType)
+  /tmp/bb-pyright-negative/tests/test_debt_registration_controls.py:137:35 - error: Argument of type "FakeCuda" cannot be assigned to parameter "lib" of type "CDLL" in function "run_worker"
+    "FakeCuda" is not assignable to "CDLL" (reportArgumentType)
+  /tmp/bb-pyright-negative/tests/test_debt_registration_controls.py:176:22 - error: Cannot assign to attribute "callback" for class "Function"
+    Expression of type "(pointer: Unknown) -> Literal[0]" cannot be assigned to attribute "callback" of class "Function"
+      Type "(pointer: Unknown) -> Literal[0]" is not assignable to type "(ptr: Unknown) -> int"
+        Parameter name mismatch: "ptr" versus "pointer" (reportAttributeAccessIssue)
+  /tmp/bb-pyright-negative/tests/test_debt_registration_controls.py:252:11 - error: Cannot assign to attribute "empty" for class "ModuleType"
+    Attribute "empty" is unknown (reportAttributeAccessIssue)
+  /tmp/bb-pyright-negative/tests/test_debt_registration_controls.py:625:45 - error: Argument of type "str | None" cannot be assigned to parameter "args" of type "StrPath" in function "__new__"
+    Type "str | None" is not assignable to type "StrPath"
+      Type "None" is not assignable to type "StrPath"
+        "None" is not assignable to "str"
+        "None" is incompatible with protocol "PathLike[str]"
+          "__fspath__" is not present (reportArgumentType)
+  /tmp/bb-pyright-negative/tests/test_debt_registration_controls.py:625:45 - error: Argument of type "str | None" cannot be assigned to parameter "args" of type "StrPath" in function "__init__"
+    Type "str | None" is not assignable to type "StrPath"
+      Type "None" is not assignable to type "StrPath"
+        "None" is not assignable to "str"
+        "None" is incompatible with protocol "PathLike[str]"
+          "__fspath__" is not present (reportArgumentType)
+/tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:20:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:21:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:22:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:23:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:31:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:32:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:33:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:38:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:43:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:44:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:45:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:57:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:58:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:59:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:60:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:61:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:76:12 - error: "__getitem__" method not defined on type "object" (reportIndexIssue)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:243:43 - error: Argument of type "FakeCuda" cannot be assigned to parameter "lib" of type "CDLL" in function "run_worker"
+    "FakeCuda" is not assignable to "CDLL" (reportArgumentType)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:252:35 - error: Argument of type "FakeCuda" cannot be assigned to parameter "lib" of type "CDLL" in function "run_worker"
+    "FakeCuda" is not assignable to "CDLL" (reportArgumentType)
+  /tmp/bb-pyright-negative/tests/test_memory_capture_and_cuda_integrity.py:261:35 - error: Argument of type "FakeCuda" cannot be assigned to parameter "lib" of type "CDLL" in function "run_worker"
+    "FakeCuda" is not assignable to "CDLL" (reportArgumentType)
+27 errors, 0 warnings, 0 informations
+exit=1

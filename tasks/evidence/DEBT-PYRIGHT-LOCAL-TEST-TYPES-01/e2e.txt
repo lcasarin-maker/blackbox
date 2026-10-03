@@ -1,0 +1,16 @@
+$ python3 -m pytest -q tests/test_cgroup_repro.py tests/test_debt_registration_controls.py tests/test_memory_capture_and_cuda_integrity.py tests/test_cuda_integrity_cli.py
+........................................................................ [ 52%]
+................................................................         [100%]
+136 passed in 116.80s (0:01:56)
+
+exit=0
+
+
+$ python3 -m pytest -q tests/test_memory_capture_and_cuda_integrity.py
+...............................                                          [100%]
+31 passed in 0.09s
+exit=0
+
+Environmental first attempt: `python3 -m pytest -q tests/test_cgroup_repro.py tests/test_debt_registration_controls.py tests/test_memory_capture_and_cuda_integrity.py tests/test_cuda_integrity_cli.py` printed `8 failed, 128 passed in 114.37s`: missing ignored `.simplecode/run.py`/`runtime.zip`, four unavailable systemd cases, and two Unix-socket `PermissionError: [Errno 1] Operation not permitted` nested in the coverage test. After copying `run.py`, `runtime.zip`, and `kit.lock` byte-identically from the source project and rerunning with host permissions, the same subset printed `136 passed in 116.80s` with no skips.
+
+Control negative: exact original HEAD `274f6351c60592bca7969e84f6d461e4e9282f1e` reports 27 errors over the selected files; see `fail.txt`. The separately observed scan_samples error is outside this card and was fixed in root commit e11b23f; four rawforum findings remain outside this card pending decision.

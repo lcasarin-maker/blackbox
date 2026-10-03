@@ -173,8 +173,8 @@ def test_debt_broad_except_cgroup_repro_113(monkeypatch: pytest.MonkeyPatch,
 
     runtime, events = cuda_runtime(monkeypatch, fail_sync=3)
     runtime.cudaMemset.callback = lambda *_args: (_ for _ in ()).throw(KeyboardInterrupt("cancel allocation"))
-    runtime.cudaFree.callback = lambda pointer: events.append("free") or (
-        0 if pointer is None else (_ for _ in ()).throw(RuntimeError("free teardown failed")))
+    runtime.cudaFree.callback = lambda ptr: events.append("free") or (
+        0 if ptr is None else (_ for _ in ()).throw(RuntimeError("free teardown failed")))
     with pytest.raises(KeyboardInterrupt, match="cancel allocation") as cancelled:
         cgroup_repro.cuda_worker("cuda_malloc", 1)
     assert events.count("sync") == 3
@@ -213,7 +213,7 @@ def _assert_torch_primary_survives_cleanup(monkeypatch, capsys):
             raise RuntimeError("empty_cache teardown failed")
 
     torch.cuda.synchronize = failing_sync
-    torch.cuda.empty_cache = failing_empty_cache
+    setattr(torch.cuda, "empty_cache", failing_empty_cache)
     monkeypatch.setitem(sys.modules, "torch", torch)
     monkeypatch.setattr(cgroup_repro, "snapshot", lambda _pid: {"pid": 12})
     monkeypatch.setattr(cgroup_repro.time, "sleep", lambda _seconds: None)
@@ -249,7 +249,7 @@ def _assert_torch_cancellation_survives_cleanup(monkeypatch):
         original_empty(*args, **kwargs)
         return CancelTensor(events, tensor_count > 1)
 
-    torch.empty = cancel_second_fill
+    setattr(torch, "empty", cancel_second_fill)
     sync_calls = 0
     def failing_cancel_sync():
         nonlocal sync_calls
@@ -622,7 +622,9 @@ def test_debt_coverage_targets_bin_usable_01(tmp_path, monkeypatch):
     env = os.environ.copy()
     env["COVERAGE_FILE"] = str(tmp_path / ".coverage")
     loaded = bb_usable_tests._cargar()
-    assert executable.suffix == "" and Path(loaded.__file__).resolve() == executable
+    loaded_path = loaded.__dict__.get("__file__")
+    assert isinstance(loaded_path, str)
+    assert executable.suffix == "" and Path(loaded_path).resolve() == executable
 
     measured = subprocess.run(
         ["coverage", "run", "--branch", "--source=bin", "-m", "pytest", "-q",

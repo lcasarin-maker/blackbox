@@ -1,0 +1,12 @@
+$ pyright --project /tmp/pyright-bb-local-selected.json
+0 errors, 0 warnings, 0 informations
+exit=0
+
+$ ruff check tests/test_cgroup_repro.py tests/test_debt_registration_controls.py tests/test_memory_capture_and_cuda_integrity.py tests/test_cuda_integrity_cli.py tools/cuda_integrity.py
+All checks passed!
+exit=0
+
+$ python3 -m pytest -q tests/test_memory_capture_and_cuda_integrity.py::test_profile_value_rejects_non_object_section
+.                                                                        [100%]
+1 passed in 0.02s
+exit=0

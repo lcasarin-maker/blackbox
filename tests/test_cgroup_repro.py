@@ -145,9 +145,9 @@ def test_cuda_initial_sync_failure_still_releases_once(monkeypatch, capsys):
 def test_cuda_teardown_cancellation_propagates_after_remaining_cleanup(monkeypatch, capsys):
     runtime, events = cuda_runtime(monkeypatch)
 
-    def cancel_free(pointer):
+    def cancel_free(ptr):
         events.append("free")
-        if pointer is not None:
+        if ptr is not None:
             raise KeyboardInterrupt("cancel CUDA release")
         return 0
 
