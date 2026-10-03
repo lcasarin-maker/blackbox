@@ -1,1 +1,41 @@
 Fixture con una linea de conexion USB en las ultimas 30 del boot: `printf '...\nkernel: usb 1-2: new high-speed USB device...\n...' | tail -30 | grep -icE 'usb|bluetooth|btusb'` -> 1 (dispara la linea de coincidencia). Control negativo real: boot -1 de esta maquina no tiene ningun evento USB/BT en sus ultimas 30 lineas -- la linea de coincidencia NO aparece en el scan real, correctamente.
+
+
+## Reejecución posterior de FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR — 2026-10-03
+
+Comando sujeto: `grep -q 'clasificador de causa' tasks/done/FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md`
+
+Salida literal (rc=0):
+```text
+
+```
+
+
+## Reejecución posterior de HARVEST-354194-my-dgx-system-is-getting-shut-itself-down-whi — 2026-10-03
+
+Comando sujeto: `python -m tools.check_harvest_accepted tasks/done/HARVEST-354194-my-dgx-system-is-getting-shut-itself-down-whi.md`
+
+Salida literal (rc=0):
+```text
+cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md corre y pasa.
+```
+
+
+## Reejecución posterior de HARVEST-355865-problem-with-simple-framebuffer — 2026-10-03
+
+Comando sujeto: `python -m tools.check_harvest_accepted tasks/done/HARVEST-355865-problem-with-simple-framebuffer.md`
+
+Salida literal (rc=0):
+```text
+cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md corre y pasa.
+```
+
+
+## Reejecución posterior de HARVEST-369716-dgx-spark-shut-down-without-rebooting — 2026-10-03
+
+Comando sujeto: `python -m tools.check_harvest_accepted tasks/done/HARVEST-369716-dgx-spark-shut-down-without-rebooting.md`
+
+Salida literal (rc=0):
+```text
+cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md corre y pasa.
+```

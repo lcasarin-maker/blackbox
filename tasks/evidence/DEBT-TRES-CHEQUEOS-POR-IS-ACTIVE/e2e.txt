@@ -21,3 +21,30 @@
        limpio: deja el informe sin esa fila.
   muestras acumuladas: 20041
   datos en: /home/lcasarin/.local/share/blackbox
+
+
+## Reejecución posterior de DEBT-TRES-CHEQUEOS-POR-IS-ACTIVE — 2026-10-03
+
+Comando sujeto: `python3 -m pytest tests/test_bb_bash.py -k 'muestreo_por_su_dato or clock_lock or punteria' -q`
+
+Salida literal (rc=1):
+```text
+.FF                                                                      [100%]
+=================================== FAILURES ===================================
+_______ test_control_negativo_clock_lock_con_OTRO_rango_que_el_declarado _______
+tests/test_bb_bash.py:496: in test_control_negativo_clock_lock_con_OTRO_rango_que_el_declarado
+    assert "FALTA" in _fila(correr(["status"], datos, env), "clock lock")
+E   assert 'FALTA' in '  CIEGO     clock lock de GPU'
+E    +  where '  CIEGO     clock lock de GPU' = _fila(CompletedProcess(args=['/tmp/bb-clean-evidence/bin/bb', 'status'], returncode=0, stdout="== estado de la instrumentaci...ol_negativo_clock_lo0/blackbox\n\n  Con 3 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''), 'clock lock')
+E    +    where CompletedProcess(args=['/tmp/bb-clean-evidence/bin/bb', 'status'], returncode=0, stdout="== estado de la instrumentaci...ol_negativo_clock_lo0/blackbox\n\n  Con 3 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr='') = correr(['status'], PosixPath('/tmp/pytest-of-lcasarin/pytest-3102/test_control_negativo_clock_lo0/blackbox'), {'BB_JOURNALCTL': '/tmp/pytest-of-lcasarin/pytest-3102/test_control_negativo_clock_lo0/journalctl_rango_distinto'})
+_________ test_control_negativo_clock_lock_sin_confirmacion_del_driver _________
+tests/test_bb_bash.py:502: in test_control_negativo_clock_lock_sin_confirmacion_del_driver
+    assert "FALTA" in _fila(correr(["status"], datos, env), "clock lock")
+E   assert 'FALTA' in '  CIEGO     clock lock de GPU'
+E    +  where '  CIEGO     clock lock de GPU' = _fila(CompletedProcess(args=['/tmp/bb-clean-evidence/bin/bb', 'status'], returncode=0, stdout="== estado de la instrumentaci...ol_negativo_clock_lo1/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''), 'clock lock')
+E    +    where CompletedProcess(args=['/tmp/bb-clean-evidence/bin/bb', 'status'], returncode=0, stdout="== estado de la instrumentaci...ol_negativo_clock_lo1/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr='') = correr(['status'], PosixPath('/tmp/pytest-of-lcasarin/pytest-3102/test_control_negativo_clock_lo1/blackbox'), {'BB_JOURNALCTL': '/tmp/pytest-of-lcasarin/pytest-3102/test_control_negativo_clock_lo1/journalctl_mudo'})
+=========================== short test summary info ============================
+FAILED tests/test_bb_bash.py::test_control_negativo_clock_lock_con_OTRO_rango_que_el_declarado
+FAILED tests/test_bb_bash.py::test_control_negativo_clock_lock_sin_confirmacion_del_driver
+2 failed, 1 passed, 81 deselected in 1.51s
+```
