@@ -6,7 +6,7 @@ title: "Validar boot_id antes de agrupar contadores de muestras"
 status: done
 severity: P2
 origin: detected
-detector: {rule: "pyright: reportArgumentType for boot_id dictionary key", confidence: 1.0}
+detector: {"rule": "pyright: reportArgumentType for boot_id dictionary key", "confidence": 1.0}
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-03
 closed_at: 2026-10-03
