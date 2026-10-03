@@ -47,3 +47,5 @@ cgroup del ejecutor y reporta el owner como desconocido; `set_active_memcg(mm)`
 impide equiparar ambas identidades. No hubo parse/attach/captura por la barrera
 de root. Dueño real, flags observados y transición a worker siguen pendientes;
 esta ficha conserva status open.
+
+**FEATURE-FORUM-UVM-TRACE-CAPABILITY-01 (delta del foro 357848).** En GB10/SM121 con driver 580.95.05, CUDA 13.1 y Nsight Systems 2026.1.1, un operador no pudo capturar page faults/migraciones UVM y NVIDIA respondió que el perfilado UVM no está soportado en Spark en esa combinación ([357848](https://forums.developer.nvidia.com/t/357848)). Reusar el mapa de traza de esta ficha para anotar capacidad/no-capacidad por versión; no inferir migraciones UVM a partir de memoria host, faults CPU agregados o `nvidia-smi`, ni abrir un probe separado que Blackbox no usa. Una alternativa solo se admite tras soporte del proveedor y una prueba conocida de UVM contra control host.

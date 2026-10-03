@@ -38,3 +38,8 @@ Evidence is one owner's report and one identified hardware/software stack. The W
 [364326](https://forums.developer.nvidia.com/t/364326) añade recovery1.120.38 en OOBE Wi-Fi loop incluso con Ethernet; NVIDIA lo relaciona con caída del connectivity-check Canonical el21-Mar. Distinguir dependencia externa del chequeo frente a NIC/ruta/host; comprobar consola y alternativa local antes de reimage o reset de red.
 
 [354604](https://forums.developer.nvidia.com/t/354604) reports a Netplan/NetworkManager YAML file with NUL corruption; applying a QSFP network update removed management SSH, and renaming the damaged file restored access. NVIDIA asks for port references, with no final fix in the thread. Add a recoverable network configuration path: preserve original bytes/mode, validate before apply, use a separate management channel, and schedule a timed rollback that the operator cancels only after connectivity is verified. Do not replace or rewrite files automatically based on this report.
+
+
+## Índice de propuestas del lote 00
+
+- `FORUM-00-MT7925-PTK-AND-5GHZ-FAILURE-DIAGNOSTIC` — [Distinguish MT7925 pairwise-key installation failure and 5 GHz roam loops from wrong-password or host failure](https://forums.developer.nvidia.com/t/374231); detalle, confidence y close check en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.

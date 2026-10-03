@@ -41,3 +41,8 @@ Evidencia ABI y control negativo offline:
 para `-d`/listar probes; parser, símbolos en ejecución, captura runtime y CUDA
 quedan `could_not_run`. No se afirma que el script compile o que los probes estén
 disponibles. Esta ficha sigue abierta.
+
+
+## Índice de propuestas registradas del swarm NVIDIA categoría 721
+
+- **`BB-UMA-GPU-ALLOCATABLE-HEADROOM-SEMANTICS`** — On GB10 UMA, general system allocations reduce the pool available for GPU allocation. Forum users say nvtop displays GPU memory but excludes CPU allocations, while some released versions fail on Spark. This can hide reduced… Fuente: [351284](https://forums.developer.nvidia.com/t/nvtop-with-dgx-spark-unified-memory-support/351284/1).

@@ -52,3 +52,9 @@ Verificación final del arnés: 32 tests y 100% de sentencias/ramas; Ruff y Pyri
 Implementado `tools/verify_cgroup_repro.py`: ignora el veredicto guardado y recalcula las seis APIs desde stdout JSONL, exige fases ordenadas, PID/scope estable y scopes independientes, comprueba tamaño solicitado y control CPU frente al ruido sin asignación y liberación. Retorna pass=0, fail=1 y unknown=2. Los controles negativos eliminan fases, duplican scopes, alteran lecturas y neutralizan el incremento/liberación CPU. El fixture positivo es sintético y no se presenta como captura real.
 
 La captura histórica retorna unknown y conserva los deltas legibles. Cuenta 23 lecturas dmem.current ilegibles por fase, repartidas en seis scopes; este conteo por observación difiere del conteo anterior de seis scopes. El verificador verifica consistencia, no puede autenticar un JSON fabricado ni afirmar ownership/contención. Continúa abierta.
+
+
+## Índice de propuestas registradas del swarm NVIDIA categoría 721
+
+- **`BB-DASHBOARD-MEMORY-UNIT-CALIBRATION`** — DGX Spark users report that dashboard memory usage disagrees with `free`/`/proc/meminfo`, potentially mixing GiB and GB; one reply says an update fixed it while a later user says the mismatch persists. In a separate report, a vLLM model… Fuente: [350359](https://forums.developer.nvidia.com/t/350359/1).
+- **`BB-RAY-UMA-OBJECT-STORE-MONITOR-GATE`** — On a reported TP=3 MiniMax-M3 workload, Ray reserves roughly 30% (~36GB) of per-node RAM for an object store the author says TP does not use; head also loads ~84GB shard plus KV, triggering driver OOM during weight load. After warmup,… Fuente: [373387](https://forums.developer.nvidia.com/t/373387/1).

@@ -1,0 +1,220 @@
+[
+  {
+    "id": "DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01",
+    "title": "Admitir correcciones exactas de tokenizer y parches con control semántico",
+    "source_threads": [
+      "380244",
+      "362824"
+    ],
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "evidence_level": "Texto íntegro capturado; resultado reportado por propietarios; PRs y binarios sin auditar",
+    "failure": "Truncación silenciosa de texto a2048 y fallo visual; parche MXFP4 carga pero posteriores pruebas muestran corrupción Harmony y regresión funcional.",
+    "gap_or_complement": "Guardar hashes/revisión y cambio mínimo; centinelas al principio/fin, imagen y herramientas, pruebas largas de salida; cada candidato conserva imagen conocida para rollback.",
+    "risks": [
+      "Cambiar tokenizer completo altera contrato fuera del campo corregido",
+      "TPS/HTTP200 ocultan corrupción semántica"
+    ],
+    "closure": "Fixture reproduce truncación y verifica preservación con corrección; soak del parche reporta errores y duraciones; restauración exacta probada.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md"
+  },
+  {
+    "id": "DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01",
+    "title": "Probar reserva de display OEM frente a fallo scanout con UMA libre",
+    "source_threads": [
+      "370458"
+    ],
+    "merge_into": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md",
+    "failure": "Terminales Sway congeladas por NV_ERR_NO_MEMORY scanoutcarveout con109GiB libres; driver580.159.03 y4K tampoco resuelven.",
+    "current_coverage": "Presupuestos UMA generales y smoke de sesión no distinguen carveout de display.",
+    "gap_or_complement": "NVIDIA propone releaseJulio con AdjustableDisplayReservedMemory y manejoUMA; verificar soporte ATOM/OEM, valor efectivo y reproducir ventanas6K/4K sin confundir generalOOM.",
+    "evidence_level": "Propuesta oficial en foro; dueño no registra retest, gist completo/capturas no inspeccionados.",
+    "risks": [
+      "Reserva de display reduce memoria disponible para cargas",
+      "Asumir displayOOM como presión global puede matar workloads ajenos"
+    ],
+    "closure": "Registrar versiónOEM/driver/reserva y reproducir fixture con aperturas/cierres y presióncache; preservarcanalSSH comprobar arreglocanario y rollbackvalorprevio."
+  },
+  {
+    "id": "DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01",
+    "title": "Validar límites de recuperación DSML antes de admitir parche/proxy",
+    "source_threads": [
+      "378784"
+    ],
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "failure": "DSML se filtra desde60K; dueño sigue con estado roto150K tras PR49117, aunque suiteparser ybenchcorto pasan.",
+    "gap_or_complement": "Canario con historial que reproduce, streaming/no-stream, reasoning inconcluso, argumentos truncados, tool_choice none y marcador citado idéntico; conservar fallo no cubierto y parche/proxy como candidato.",
+    "evidence_level": "Texto íntegro y descripciónPR incrustada; source/proxy sin auditar; confirmación posterior del dueño contradice reparación completa.",
+    "risks": [
+      "Recuperar marcador escrito como prosa puede convertir contenido en herramienta declarada",
+      "Agregar proxy cambia contrato y superficie de fallo"
+    ],
+    "closure": "Fixture realguardado y soaklargocontexto deben demostrar recuperación sin invocaciones espurias y sin pérdida de texto; rollback digest/parser/proxy al stackconocido."
+  },
+  {
+    "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+    "title": "Validar el destino de respaldo tras reinicio",
+    "source_threads": [
+      "375954"
+    ],
+    "merge_into": "FEATURE-FORUM-RESCUE-RUNBOOK-01",
+    "evidence_level": "Cuerpos capturados leídos; resultados de owners; sin validación local ni auditoría externa",
+    "failure": "SanDisk Extreme 55DD 8 TB desaparece tras reinicio en kernel 6.17-1026: EPROTO -71 antes de enumerar UAS. Replug restaura el disco; OTA, autosuspend y varios cables no resuelven. Un ASM2464 distinto monta a USB2 y negocia Gen2x2 tras replug. NVIDIA sigue investigando; causa y parche permanecen pendientes.",
+    "gap_or_complement": "Antes del respaldo y del restore, verificar UUID, dispositivo esperado, mountpoint real y disponibilidad; ante ausencia, abortar con evidencia y conservar datos. Evitar escribir al directorio vacío sobre el filesystem raíz. Capturar estado antes/después de replug y distinguir enumeración, montaje y permisos.",
+    "risks": [
+      "Reenumerar USB durante escritura puede perder datos; cable o firmware como causa permanece hipótesis."
+    ],
+    "closure": "Fixture con disco ausente y mountpoint existente bloquea escritura; prueba tras reinicio valida identidad y lectura del respaldo. Recuperación conserva datos y requiere resultado verificable.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md"
+  },
+  {
+    "id": "DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01",
+    "title": "Admitir parches según versión y validar modalidades",
+    "source_threads": [
+      "368097"
+    ],
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "evidence_level": "Cuerpos capturados leídos; resultados de owners; sin validación local ni auditoría externa",
+    "failure": "MiMo FP8 sobre GB10: PR41834 evita crash de MTP en 0.20.1rc1, pero su función fue refactorizada en 0.21.1rc1.dev30+g4db300e95 y el owner declara innecesario el parche. CUTLASS block FP8 pasa el gate de capability y falla can_implement; un bypass a Triton reporta éxito. Torchcodec ABI incompatible fue reemplazado por stub text-only, que bloquea audio. MTP/EAGLE producen OOM locks; primer inicio _load_w2 puede quedarse detenido y owner reinicia contenedor.",
+    "gap_or_complement": "Gate por digest/revisión y símbolo objetivo: rechazar parche obsoleto, probar backend real SM121 con primera petición y modalidades anunciadas. Registrar carga fría y memoria de draft por rank; recuperación de contenedor propia y acotada. Conservar imagen conocida y rollback exacto. Los repos externos y estado upstream siguen sin auditar.",
+    "risks": [
+      "Stub oculta capacidad audio; copiar swapoff, apagar GUI/servicios o asumir umbral universal amenaza disponibilidad."
+    ],
+    "closure": "Reproducir crash en versión afectada y comprobar que versión refactorizada rechaza parche obsoleto; canarios de texto, herramientas y modalidades habilitadas; medir soak con errores y contexto real. Benchmark máximo 100K en el hilo queda separado de configuración 1M.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md"
+  },
+  {
+    "id": "DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01",
+    "title": "Candidato GX10 SoC/EC para reconocimiento de cables",
+    "source_threads": [
+      "367221"
+    ],
+    "merge_into": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+    "failure": "En varios GX10, desactivar hotplug o forzar plug-in restaura las funciones PCI, pero permanece NO-CARRIER y error EIO al leer EEPROM. FieldDiag PASS coexistió con el fallo. El propietario reporta reconocimiento de cables persistente tras reinicios/reconfiguración con SoC 3000007 + EC 20000006 de LVFS testing y switch CRS804. Cambió dos componentes juntos; falta auditoría de los bundles y duración de soak.",
+    "gap_or_complement": "Registrar ese tuple como candidato específico GX10 y canal testing. Comparar firmware efectivo antes/después, estado nativo hotplug, presencia/EEPROM del cable, negociación y tráfico funcional tras arranque frío/caliente. Conservar recuperación OEM y versiones anteriores verificables; evaluar componentes separados cuando sea viable. La hipótesis de direcciones iomem ausentes/DOE no demuestra causa. No trasladar firmware GX10 a ATOM ni suspender handlers sin manifest, expiry y vigía.",
+    "risks": [
+      "Firmware testing y tuple OEM; dos componentes modificados juntos"
+    ],
+    "closure": "Fixture distingue PCI visible, módulo presente y enlace/tráfico operativo. A/B con tuple exacto y regresiones tras reboot; rollback probado. Adjuntos centrales nvidia-bug-report y dumps siguen sin inspeccionar: could_not_run.",
+    "backlog_card": "tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md",
+    "evidence_level": "Texto leído; owner resultado; bundles centrales unread"
+  },
+  {
+    "id": "DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01",
+    "title": "Detectar inanición de peticiones aunque otras sigan decodificando",
+    "source_threads": [
+      "382939"
+    ],
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "failure": "Posts 178/181: tras más de 40 horas, una petición decodifica mientras hasta siete quedan sin prefill durante 14 minutos. Reducir max_num_seqs de 8 a 4 reproduce antes; segundo episodio declara KV máximo 37%, frente a 99% del primero. Endpoint vivo y porcentaje KV por sí solos omiten este hang parcial.",
+    "gap_or_complement": "Canario por petición y etapa: antigüedad de cola, inicio/progreso de prefill, tokens decodificados, concurrencia real y terminación/cancelación. Retención de prefix cache y recompilación se validan con prompts reales repetidos; TTFT largo esperado se distingue por progreso. Cuotas de concurrencia y recuperación acotada deben preservar otras peticiones y registrar causa desconocida.",
+    "risks": [
+      "Un solo propietario; recetas cambiantes y logs externos sin auditoría"
+    ],
+    "closure": "Soak multiusuario por digest/commit/modelo con fixture de una petición activa y otras bloqueadas. Detectar bloqueo con KV bajo, permitir prefill lento que progresa, limitar reintentos y probar rollback. Benchmarks breves o TEB no cierran estabilidad del host.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "evidence_level": "178 cuerpos capturados leídos; reportes de propietarios; diagnóstico externo central pendiente"
+  },
+  {
+    "id": "DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01",
+    "title": "Verificar imagen efectiva, aislamiento de instancias y artefactos offline",
+    "source_threads": [
+      "362721",
+      "375945"
+    ],
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "failure": "362721: repo y wheel actualizados coexistieron con imagen efectiva experimental vieja, falta de kernels NVFP4/no-act-and-mul y MXFP4 roto; nombre por defecto reutilizó contenedor al intentar segundo modelo. Rebuild y cambio de cuota ayudaron a un propietario; otro seguía fallando, luego carga FP4/8 tras limpieza completa sin causa aislada. HEAD a HF bloquea inicio por timeouts. 375945: 1M real requiere TTFT 2524584ms; bucle de thinking es fallo de contenido y ocurre también fuera de la receta, mientras DCP aceleración inicial fue explícitamente desmentida.",
+    "gap_or_complement": "Preflight y canario comprueban digest y build efectivos dentro de cada contenedor, modelo/checkpoint/patches, nombre y puerto reales y reserva conjunta de memoria. Probar carga e inferencia real de la arquitectura, no inferir compatibilidad de presencia de torch.ops antes de importar extensiones. Precachear artefactos completos por revisión y verificar arranque sin red antes de activar modo offline. Conservar imagen anterior y aislar cache mediante rename+manifest con sha/mode/expiry/vigía, sin copiar purgas globales de volúmenes.",
+    "risks": [
+      "Tests nightly declarados por mantenedor no auditan cada carga del usuario; PR/código externo sin revisar",
+      "Offline con caché incompleta impide arrancar; bucles semánticos y prefill largo requieren clasificación distinta"
+    ],
+    "closure": "Fixture wheel nuevo/imagen vieja detectada; dos instancias nombres/puertos distintos y presupuesto agregado. Canary por modelo carga y genera; rollback a digest previo. Arranque sin red completo y fallo explícito por archivo faltante. Permitir prefill largo con progreso; detener bucle de contenido con presupuesto y error específico.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "evidence_level": "Todos los cuerpos capturados leídos; resultados por propietario, patches externos sin auditoría"
+  },
+  {
+    "id": "DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01",
+    "title": "Canario de motores simultáneos dentro de Ray",
+    "source_threads": [
+      "377396"
+    ],
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "failure": "Post101 relata dos vLLM dentro del mismo cluster Ray con NCCL atascado, sin logs ni versión; Distributed mp se propone, sin A/B demostrado.",
+    "gap_or_complement": "Antes de admitir segundo motor, verificar identidades, presupuesto agregado y progreso real de cada rank en ambos motores; medir colectivo y petición real, no solo disponibilidad Ray. Fijar digest y configuración; aislar recursos y recuperación al motor afectado.",
+    "closure": "Fixture un motor sano y otro sin progreso colectivo; detectar el afectado y mantener al primero. A/B efectivo y rollback de cambios de executor.",
+    "risks": [
+      "Relato único sin versión; mp es propuesta, no fix confirmado"
+    ],
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "evidence_level": "104 cuerpos capturados íntegros; adjuntos no inspeccionados"
+  },
+  {
+    "id": "DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01",
+    "title": "Validar overlays de checkpoint y evitar inanición entre prefill/decode",
+    "source_threads": [
+      "373669"
+    ],
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "failure": "Post132 modelo cargado sin errores emite ASCII aleatorio y acceptance de draft casi cero; overlay ausente publicado después permite funcionar (135–139), sin causa kernel aislada. Posts161/163 sesión350K segunda petición reprocess prompt/stall y prefill de una detiene decode de otra. Load_model OOM antecede KV(40/44); bajar utilización KV omite ese pico.",
+    "gap_or_complement": "Manifiesto efectivo por nodo de imagen, checkpoint, overlay, draft, tokenizer y mods con hashes; resolver symlinks en mounts y probar artefactos antes de cargar. Canary semántico real y por modalidad, per-rank y etapas. Admisión incluye coldload/draft previo KV. Escenario concurrente con prefill largo y decode corto, progreso y límites de espera; comparar chunked-prefill/batch como candidatos con riesgo de memoria, sin umbral universal.",
+    "closure": "Fixture overlay ausente/symlink roto falla antes de servir. Respuesta semántica real y error específico en modalidad no validada. Soak prefill/decode simultáneo mide espera por petición y recuperación acotada; retorno a digest/config anterior probado.",
+    "risks": [
+      "Mods publicados tarde y recetas contradicen eager/Ray/comando; código externo no auditado",
+      "Éxito de un owner no resuelve todos los OOM ni demuestra calidad omnimodal"
+    ],
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "evidence_level": "166 cuerpos capturados íntegros; rectificaciones incluidas, código externo no auditado"
+  },
+  {
+    "id": "DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01",
+    "title": "Admitir patch de allocator por estado efectivo y petición real",
+    "source_threads": [
+      "359571"
+    ],
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "failure": "Ray TP2 falla con allocator Triton; eager permite cargar pero degrada. Post38 propone NullAllocator.__call__ global via .pth y torch.cuda.caching_allocator_alloc con except Exception:pass. Mantenedor confirma funcionar en50, pero necesita commit previo13397841ab469cecf1ed425c3f52a9ffc38139b5 además, pues el fix de arranque solo deja 1–2 tok/s. Patches crash/performance después upstream integrados/revertidos fallan hunks y se ignoran(57–63). El cambio de imagen base causa torch._opaque_base ausente(87–88); el autor del post 92 recupera con un build nuevo.",
+    "gap_or_complement": "Catalogar patch como candidato específico por commit/Triton/Ray; detectar estado ausente/aplicado/supersedido/incompatible y verificar extensión efectiva en cada rank/hilo. Excepción silenciosa y omitir parches no certifican corrección. Probar carga, primera petición fría, generación semántica, warmup y prefix hit repetido. Preservar digest previo; rollback no toca otras imágenes.",
+    "closure": "Fixture patch falla silenciosamente o fue supersedido identifica estado real; canary distingue startup arreglado de regresión y calentamiento inicial de hang con progreso. Auditoría de código y propiedad de memoria/alignment/stream antes de recomendar monkeypatch global; rollback probado.",
+    "risks": [
+      "Modifica allocator global y se ejecuta por .pth; fragmento no prueba gestión/lifetime de memoria",
+      "Casos posteriores contradicen recetas anteriores; commits y wheel efectivo deben fijarse"
+    ],
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "evidence_level": "93 cuerpos capturados leídos íntegros; código externo no auditado"
+  },
+  {
+    "id": "DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01",
+    "title": "Admisión de receta exige presupuesto completo y evidencia reproducible",
+    "source_threads": [
+      "360319"
+    ],
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "failure": "Ejemplo llama.cpp post50 imprime DGX Spark fit:YES usando solo 1.58 GB de pesos, pero inmediatamente dice arquitectura ausente y estimación de KV unavailable; log real agrega 896 MiB de KV y buffers. Posts14–22 crash/hang de caché de prefijos en vLLM tras actualización admite commit previo y mod posterior; throughput positivo de otras máquinas no prueba este workflow.",
+    "gap_or_complement": "Presupuesto de admisión incluye weights, KV, staging, graphs, draft, buffers y reserva del host por etapa y runtime. Campos desconocidos impiden afirmar seguro; exigir canario funcional efectivo o perfil medido compatible. Reusar exportación consolidada de receta/comando/resultados de sparkrun como evidencia candidata con versión y digest, no crear otro launcher. Evitar pip upgrade sin fijar versiones en cada arranque; validar imagen base efectiva y rollback.",
+    "closure": "Fixture pesos que caben con KV desconocido reporta unknown y no promete protección. Comparación por hardware/topología/digests/checkpoint/params y resultados crudos con workload real posterior a warmup; cambio de backend validado funcionalmente y rollback disponible.",
+    "risks": [
+      "Estimaciones y tests de comunidad no sustituyen admisión/soak del host",
+      "Exportador/código externo sin auditoría"
+    ],
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "evidence_level": "130 cuerpos capturados íntegros; adjuntos/repos externos sin inspeccionar"
+  },
+  {
+    "id": "DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01",
+    "title": "Refrigeración subambiente exige límites físicos y canario bajo presión UMA",
+    "source_threads": [
+      "375158"
+    ],
+    "merge_into": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+    "failure": "El montaje ducta aire acondicionado a dos GB10. Su captura aislada tiene GPU65C pero CPU74C y RAM95.8%; ninguna evidencia A/B de prevención de shutdowns.",
+    "gap_or_complement": "Para evaluar intervenciones subambiente registrar humedad, temperatura ambiente y punto de rocío, flujo sin obstrucción, CPU/SoC/GPU y presión UMA; la admisión debe conservar escritorio/SSH además de temperatura. Reusar ficha térmica y admisión existentes.",
+    "closure": "Canario prolongado con stack y workload exactos, baseline comparable y raw logs; rechazar condiciones físicas desconocidas y restaurar montaje/params previos.",
+    "risks": [
+      "Condensación y obstrucción del flujo requieren evaluación física",
+      "Captura instantánea y relato del autor no prueban eficacia"
+    ],
+    "backlog_card": "tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md",
+    "evidence_level": "7 cuerpos y5 imágenes centrales inspeccionados; eficacia independiente pendiente"
+  }
+]

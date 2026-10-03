@@ -38,3 +38,10 @@ Cerrar solo después de leer evidencia real de pstore, comprobar la identidad co
 bb recovery conserva boot/kernel/sysctl, fingerprints de pstore y firmas FPAC/PSCI/NMI/SBSA/DOE/RCU independientes si son legibles. Lectura local pstore denegada: 0 registros inspeccionados, could_not_run=1 para ese interfaz. Falta confirmación vendor aplicable y prueba persistente, no pinnear kernel ni recomendar versión corregida sin fuente.
 
 Evidencia y pendientes: `tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION/progress.txt`. Conserva `open`; la captura de estado verifica el instrumento y deja pendiente el ensayo de recuperación/prevención requerido.
+
+**Correlación del hallazgo `BB-FIELDDIAG-REAL-WORKLOAD-COVERAGE-GAP`.** En el hilo [354205, posts 43–47](https://forums.developer.nvidia.com/t/random-reboots-and-00-screen/354205/43), hay texto pstore pegado en post45 para kernel `6.17.0-1014-nvidia`: registros separados de FPAC/PSCI/NMI y `SBSA Generic Watchdog timeout`; una lectura del participante relaciona DOE/mailbox y PCIe x0 con GPU sin cargar. NVIDIA no confirma el análisis y al final deriva el caso a RMA. Se probaron updates, reinicio en frío y binding `r8127`, pero persiste el fallo. Adjuntos SOS, pstore y journal del hilo no se inspeccionaron; no presentar como root cause confirmada ni como bug universal.
+
+
+## Índice de propuestas del lote 00
+
+- `FORUM-00-ABRUPT-RESET-OFFBOX-TELEMETRY` — [Pair local reset evidence with durable receiver-side telemetry](https://forums.developer.nvidia.com/t/spark-abruptly-shuts-down/377478); detalle, confidence y close check en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.
