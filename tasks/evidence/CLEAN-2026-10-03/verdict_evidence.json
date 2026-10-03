@@ -1,0 +1,206 @@
+[
+  {
+    "id": "WARN-001",
+    "status": "passed",
+    "evidence": "tasks/evidence/BUG-PROVIDER-TRACE-LATENCY-OVERFLOW-01.e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python3 -m pytest -q tests/test_debt_registration_controls.py::test_bug_provider_trace_latency_overflow_01'; rc=0; salida='.                                                                        [100%]\\n1 passed in 0.05s'"
+  },
+  {
+    "id": "WARN-004",
+    "status": "passed",
+    "evidence": "tasks/evidence/DEBT-DGX-438-SIN-CAUSA-RAIZ/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando=\"grep -q 'CERRADO' tasks/done/DEBT-DGX-438-SIN-CAUSA-RAIZ.md\"; rc=0; salida=''"
+  },
+  {
+    "id": "WARN-007",
+    "status": "passed",
+    "evidence": "tasks/evidence/DEBT-NOQA-BB-USABLE-249.e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_noqa_bb_usable_249'; rc=0; salida='.                                                                        [100%]\\n1 passed in 0.06s'"
+  },
+  {
+    "id": "WARN-008",
+    "status": "passed",
+    "evidence": "tasks/evidence/DEBT-RUFF-BB-USABLE-01.e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python3 -m ruff check bin/bb-usable'; rc=0; salida='All checks passed!'"
+  },
+  {
+    "id": "WARN-009",
+    "status": "passed",
+    "evidence": "tasks/evidence/DEBT-SHELLCHECK-BB-2.e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_shellcheck_bb_2'; rc=0; salida='.                                                                        [100%]\\n1 passed in 4.03s'"
+  },
+  {
+    "id": "WARN-010",
+    "status": "passed",
+    "evidence": "tasks/evidence/DEBT-SHELLCHECK-BB-2286.e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_shellcheck_bb_2286'; rc=0; salida='.                                                                        [100%]\\n1 passed in 0.55s'"
+  },
+  {
+    "id": "WARN-011",
+    "status": "passed",
+    "evidence": "tasks/evidence/DEBT-SHELLCHECK-BB-SUBJECT-01.e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='shellcheck bin/bb'; rc=0; salida=''"
+  },
+  {
+    "id": "WARN-013",
+    "status": "passed",
+    "evidence": "tasks/evidence/DEBT-TECHOS-SIN-CALIBRAR/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python3 -m tools.presupuesto_memoria --check'; rc=0; salida='[presupuesto] MemTotal:               121.1 GiB\\n[presupuesto] -- mitad 1: COMPROMISOS (lo que el kernel aplica) --\\n[presupuesto]   suelo comprometido de GPU       49.7 GiB  (p95 de 19804 muestras; con el p50 serian 39.1 -- la meseta mueve 10.6)\\n[presupuesto]   app.slice (escritorio y arneses)           42.0 GiB  (usa 33.5)\\n[presupuesto]   docker.slice (contenedores)                14.0 GiB  (usa 6.9)\\n[presupuesto]   system.slice (servicios del sistema)       12.0 GiB  (usa 3.8)\\n[presupuesto]   SUMA comprometida              117.7 GiB  sobre 121.1 -> holgura 3.4\\n[presupuesto] -- mitad 2: EXCURSION (lo que NADIE aplica, y por eso se firma) --\\n[presupuesto]   maximo observado                85.4 GiB  (2026-09-21T00:33:00-0600)\\n[presupuesto]   presupuesto firmado             86.0 GiB  (firma Luis Casarin (lcasarin-maker), caduca 2026-10-27)\\n[presupuesto] -- vista de operacion: la alarma del abanico --\\n[presupuesto]   umbral del abanico              53.1 GiB  (lo que le queda a la GPU si TODOS los techos se honran)\\n[presupuesto]   excursiones: 814 de 19804 muestras (4.1 %) por encima del presupuesto\\n                 2026-10-02T12:17:00-0600  68.2 GiB\\n                 2026-10-02T12:18:00-0600  58.6 GiB\\n                 2026-10-02T12:19:00-0600  62.0 GiB\\n[presupuesto] OK: lo declarado cabe en lo que hay.'"
+  },
+  {
+    "id": "WARN-014",
+    "status": "passed",
+    "evidence": "tasks/evidence/DEBT-TRES-CHEQUEOS-POR-IS-ACTIVE/e2e.txt",
+    "reason": "Close_check reejecutado tras estabilizar el systemctl del sujeto: `python3 -m pytest tests/test_bb_bash.py -k 'muestreo_por_su_dato or clock_lock or punteria' -q`; 4 passed, 81 deselected, rc=0. Los controles negativos ahora ejecutan frente a servicio legible y contrastan discrepancia/confirmación ausente; se añadió positivo de rango confirmado. CIEGO sigue reservado para bus ilegible."
+  },
+  {
+    "id": "WARN-016",
+    "status": "passed",
+    "evidence": "tasks/evidence/ZERO-2026-10-02/service-restart/e2e.txt",
+    "reason": "Root ejecutó el close_check real en host con permiso de lectura; rc=0. CNR anterior conservado."
+  },
+  {
+    "id": "WARN-017",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-FAN-RPM/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando=\"grep -q 'RPM\\\\|fan.*speed\\\\|rpm' tasks/done/FEATURE-FAN-RPM.md\"; rc=0; salida=''"
+  },
+  {
+    "id": "WARN-018",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-GPU-XID-DETECTION/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando=\"grep -q 'Xid' tasks/done/FEATURE-GPU-XID-DETECTION.md\"; rc=0; salida=''"
+  },
+  {
+    "id": "WARN-020",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando=\"grep -q 'clasificador de causa' tasks/done/FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md\"; rc=0; salida=''"
+  },
+  {
+    "id": "WARN-022",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-GPU-XID-DETECTION/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-348223-dgx-spark-gpu-crash.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-GPU-XID-DETECTION.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-GPU-XID-DETECTION.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-024",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-GPU-UTIL-CERO-FALLBACK-CPU/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-348356-step-1-of-text-to-knowledge-graph-playbook-ha.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-GPU-UTIL-CERO-FALLBACK-CPU.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-GPU-UTIL-CERO-FALLBACK-CPU.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-026",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-RED-CPU-SCAN/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-351340-weird-network-behaviour.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-RED-CPU-SCAN.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-RED-CPU-SCAN.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-030",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-GPU-UTIL-CERO-FALLBACK-CPU/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-353683-dgx-spark-gpu-usage-0-after-24-hours-open-web.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-GPU-UTIL-CERO-FALLBACK-CPU.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-GPU-UTIL-CERO-FALLBACK-CPU.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-033",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-354194-my-dgx-system-is-getting-shut-itself-down-whi.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-035",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-RED-CPU-SCAN/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-354764-dgx-spark-ethernet-connection-unstable-after-.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-RED-CPU-SCAN.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-RED-CPU-SCAN.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-037",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-355865-problem-with-simple-framebuffer.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-040",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-USB-XHCI-FORENSICS/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-362015-all-usb-connections-fall-back-to-480-mbps-usb.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-USB-XHCI-FORENSICS.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-USB-XHCI-FORENSICS.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-041",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-RED-CPU-SCAN/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-362964-vllm-100-cpu-usage-when-idle-again.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-RED-CPU-SCAN.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-RED-CPU-SCAN.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-044",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-CLOCK-THROTTLE-CRUZADO/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-364166-latest-update-20mar-2026-on-nvidia-spark-fe-c.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-CLOCK-THROTTLE-CRUZADO.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-CLOCK-THROTTLE-CRUZADO.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-047",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-USB-XHCI-FORENSICS/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-365609-nvidia-dgx-spark-continuously-freezing-hangin.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-USB-XHCI-FORENSICS.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-USB-XHCI-FORENSICS.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-048",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-RED-CPU-SCAN/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-366125-ethernet-port-on-dgx-spark-is-not-working.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-RED-CPU-SCAN.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-RED-CPU-SCAN.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-051",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-GUI-KERNEL-VS-USERSPACE/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-366211-my-gui-is-gone-and-nvidia-smi-is-not-working.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-GUI-KERNEL-VS-USERSPACE.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-GUI-KERNEL-VS-USERSPACE.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-052",
+    "status": "passed",
+    "evidence": "tasks/evidence/HARVEST-366436-lm-studio-models-overload-freezes-spark/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-366436-lm-studio-models-overload-freezes-spark.md'; rc=0; salida=\"cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation -- el primer uso del closure_type que este caso obligo a crear (simplecode f66157a, publicado en 8.1.0). La adopcion se implemento con codigo real en commits ANTERIORES: bin/bb-usable (64d3daa) en este repo y UNIFIED_MEMORY_WORKER_CAP en simplecode (770a6ed). El hueco que esta misma ficha declaraba sin tapar -- 'nada cuenta globalmente los procesos que reservan memoria unificada' -- tambien se cerro el mismo dia con simplecode.utils.unified_memory_slots, que ademas consume PSI, que es la senal que las dos noches midio la verdad y nadie frenaba con ella.\""
+  },
+  {
+    "id": "WARN-056",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-369716-dgx-spark-shut-down-without-rebooting.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-058",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-FAN-RPM/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-370080-dgx-spark-gb10-fan-not-spinning-80-c-at-idle-.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-FAN-RPM.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-FAN-RPM.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-065",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-KDUMP-PSTORE-PREAPAGADO/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-373251-dgx-spark-gb10-reproducibly-hard-powers-off-u.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-KDUMP-PSTORE-PREAPAGADO.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-KDUMP-PSTORE-PREAPAGADO.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-068",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-GPU-XID-DETECTION/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-374016-dgx-spark-gb10-gpu-fails-to-initialize-gsp-fi.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-GPU-XID-DETECTION.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-GPU-XID-DETECTION.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-070",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-CLOCK-THROTTLE-CRUZADO/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-374274-suddenly-much-lower-gpu-performance-in-infere.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-CLOCK-THROTTLE-CRUZADO.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-CLOCK-THROTTLE-CRUZADO.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-078",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-GPU-XID-DETECTION/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-379959-gb10-spontaneous-reboots-after-july-2026-upda.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-GPU-XID-DETECTION.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-GPU-XID-DETECTION.md corre y pasa.'"
+  },
+  {
+    "id": "WARN-080",
+    "status": "passed",
+    "evidence": "tasks/evidence/FEATURE-USB-XHCI-FORENSICS/e2e.txt",
+    "reason": "Reejecución posterior del close_check; comando='python -m tools.check_harvest_accepted tasks/done/HARVEST-380009-asm2464pd-usb-c-3-2-2x2-enclosure-always-fall.md'; rc=0; salida='cerrada por closure_type=adopted_prior_implementation: CERRADA 2026-09-23 como adopted_prior_implementation. La adopcion de esta sugerencia se implemento con codigo real en un commit ANTERIOR y ese trabajo vive en tasks/done/FEATURE-USB-XHCI-FORENSICS.md, cerrada con su propia evidencia (3 ficheros, los 3 presentes). Esta ficha era la EVALUACION, no el trabajo: su trigger era un puntero a trabajo ya terminado, no una vigilancia, asi que cerrarla no apaga nada. Verificado antes de cerrar: el close_check de FEATURE-USB-XHCI-FORENSICS.md corre y pasa.'"
+  }
+]
