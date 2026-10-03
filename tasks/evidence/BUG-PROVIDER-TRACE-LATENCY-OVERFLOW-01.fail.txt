@@ -1,0 +1,23 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________ test_bug_provider_trace_latency_overflow_01 __________________
+tests/test_debt_registration_controls.py:18: in test_bug_provider_trace_latency_overflow_01
+    assert provider_trace.main([str(path)]) == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/provider_trace.py:200: in main
+    result = analyze_file(args.trace)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+tools/provider_trace.py:193: in analyze_file
+    return analyze_lines(content.splitlines())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/provider_trace.py:61: in analyze_lines
+    _consume(record, requests, errors, line_number)
+tools/provider_trace.py:99: in _consume
+    _latency_event(record, state, errors, request_id)
+tools/provider_trace.py:135: in _latency_event
+    elif not isinstance(latency, (int, float)) or isinstance(latency, bool) or not math.isfinite(latency) or latency < 0:
+                                                                                   ^^^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_bug_provider_trace_latency_overflow_01
+1 failed in 0.05s

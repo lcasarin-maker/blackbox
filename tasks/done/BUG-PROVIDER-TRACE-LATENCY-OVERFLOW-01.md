@@ -3,7 +3,11 @@ id: BUG-PROVIDER-TRACE-LATENCY-OVERFLOW-01
 kind: task
 domain: VERDICT
 title: "Latencia entera enorme debe producir unknown y no OverflowError"
-status: open
+status: done
+closed_at: 2026-10-02
+closure_type: fixed
+reason: "Validación acotada previa a conversión flotante; JSON enorme produce unknown."
+evidence: {"pass": "tasks/evidence/BUG-PROVIDER-TRACE-LATENCY-OVERFLOW-01.pass.txt", "fail": "tasks/evidence/BUG-PROVIDER-TRACE-LATENCY-OVERFLOW-01.fail.txt", "e2e": "tasks/evidence/BUG-PROVIDER-TRACE-LATENCY-OVERFLOW-01.e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -30,3 +34,15 @@ La entrada enorme produce unknown, una latencia negativa o no finita también, u
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Root Cause
+
+math.isfinite convierte los enteros a float antes de comprobar el rango y lanza OverflowError sobre 10**400.
+
+## Regression Test
+
+El selector declarado ejecuta CLI JSON sobre enteros enormes de ambos signos, bool, valores negativos, infinito y NaN; valida unknown y could_not_run=0. Valores válidos conservan pass y la fixture de respawn GPU→CPU conserva block.
+
+## Verification Evidence
+
+La prueba nueva falla con OverflowError sobre el código anterior y pasa después. El subconjunto del proveedor también pasa; salidas literales en evidence.
