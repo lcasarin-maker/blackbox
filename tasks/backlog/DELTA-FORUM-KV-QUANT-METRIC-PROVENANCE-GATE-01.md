@@ -36,3 +36,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+### Evidencia de instrumento (2026-10-03)
+
+Estado: parcial, con lector offline desarrollado para nombre exacto, TYPE/HELP, etiquetas, valor crudo y timestamp Prometheus; path indicado por el llamador queda sin autenticar. La captura runtime disponible no incluye texto crudo `/metrics`, así que su parseo nativo, comparación KV en el stack fijado, control negativo y cierre funcional quedan `could_not_run`. La ficha sigue abierta; su `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-runtime.md`.
