@@ -1,0 +1,45 @@
+$ python3 -m pytest tests/test_atom_gpu_telemetry.py tests/test_atom_gpu_telemetry_bb.py tests/test_1358_telemetria.py tests/test_presupuesto_termico.py tests/test_auditoria_bb_regresiones.py tests/test_mitigacion_solo_con_carga.py tests/test_calibra_latencia_x.py tests/test_calibra_techo_slice.py -q
+........................................................................ [ 32%]
+........................................................................ [ 65%]
+........................................................................ [ 98%]
+....                                                                     [100%]
+220 passed in 7.01s
+EXIT=0
+
+$ python3 -m ruff check tools/.zero-negative-atom.py
+PLR0913 Too many arguments in function definition (6 > 5)
+ --> tools/.zero-negative-atom.py:1:5
+  |
+1 | def too_many(a, b, c, d, e, f):
+  |     ^^^^^^^^
+2 |     return a
+  |
+
+Found 1 error.
+EXIT=1
+
+--- coverage current and original baseline ---
+$ COVERAGE_FILE=/tmp/bb-zero-atom-final.coverage python3 -m coverage run --branch --source=tools.atom_gpu_telemetry -m pytest tests/test_atom_gpu_telemetry.py tests/test_atom_gpu_telemetry_bb.py tests/test_1358_telemetria.py tests/test_presupuesto_termico.py tests/test_auditoria_bb_regresiones.py tests/test_mitigacion_solo_con_carga.py -q
+........................................................................ [ 41%]
+........................................................................ [ 83%]
+.............................                                            [100%]
+173 passed in 6.20s
+EXIT=0
+
+$ COVERAGE_FILE=/tmp/bb-zero-atom-final.coverage python3 -m coverage report --fail-under=100 -m
+Name                          Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------
+tools/atom_gpu_telemetry.py     695      0    264      6    99%   280->274, 646->637, 667->exit, 673->exit, 849->851, 1688->1691
+-------------------------------------------------------------------------
+TOTAL                           695      0    264      6    99%
+Coverage failure: total of 99 is less than fail-under=100
+EXIT=2
+
+Original baseline (same six targeted suites; source restored from HEAD before measurement):
+173 passed in 6.37s
+Name                          Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------
+tools/atom_gpu_telemetry.py     667      0    262      6    99%   278->272, 644->635, 665->exit, 671->exit, 847->849, 1666->1669
+-------------------------------------------------------------------------
+TOTAL                           667      0    262      6    99%
+Coverage failure: total of 99 is less than fail-under=100

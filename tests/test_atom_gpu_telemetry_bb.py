@@ -390,6 +390,11 @@ def test_reanudar_un_proceso_que_ya_murio_no_revienta():
     assert any(e["evento"] == "mitigacion_reanuda" for e in resultado), resultado
 
 
+def test_mitigar_rechaza_opciones_desconocidas():
+    with pytest.raises(TypeError, match="unexpected keyword argument 'inesperada'"):
+        agt.mitigar([], {}, inesperada=True)
+
+
 def test_solo_banderas_hacia_atras_no_basta_para_ser_el_script():
     """Se agotan los tokens sin hallar interprete: no se puede afirmar que lo sea."""
     assert agt._es_el_script_invocado(["-u", "x.py"], 1) is False

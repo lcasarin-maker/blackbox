@@ -1,0 +1,48 @@
+$ python3 -m ruff check tools/atom_gpu_telemetry.py
+C901 `mitigar` is too complex (17 > 10)
+    --> tools/atom_gpu_telemetry.py:1396:5
+     |
+1396 | def mitigar(eventos: list[dict], estado: dict, *,
+     |     ^^^^^^^
+1397 |            listar_pids=None, enviar_senal=None,
+1398 |            actuar: bool = True, persistir_estado=None) -> list[dict]:
+     |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+    --> tools/atom_gpu_telemetry.py:1396:5
+     |
+1396 | def mitigar(eventos: list[dict], estado: dict, *,
+     |     ^^^^^^^
+1397 |            listar_pids=None, enviar_senal=None,
+1398 |            actuar: bool = True, persistir_estado=None) -> list[dict]:
+     |
+
+PLR0912 Too many branches (17 > 12)
+    --> tools/atom_gpu_telemetry.py:1396:5
+     |
+1396 | def mitigar(eventos: list[dict], estado: dict, *,
+     |     ^^^^^^^
+1397 |            listar_pids=None, enviar_senal=None,
+1398 |            actuar: bool = True, persistir_estado=None) -> list[dict]:
+     |
+
+PLR0915 Too many statements (64 > 50)
+    --> tools/atom_gpu_telemetry.py:1396:5
+     |
+1396 | def mitigar(eventos: list[dict], estado: dict, *,
+     |     ^^^^^^^
+1397 |            listar_pids=None, enviar_senal=None,
+1398 |            actuar: bool = True, persistir_estado=None) -> list[dict]:
+     |
+
+C901 `main` is too complex (12 > 10)
+    --> tools/atom_gpu_telemetry.py:1582:5
+     |
+1582 | def main() -> int:
+     |     ^^^^
+1583 |     ap = argparse.ArgumentParser(description=__doc__)
+1584 |     ap.add_argument("--interval-seconds", type=float, default=INTERVALO_DEFAULT_S,
+     |
+
+Found 5 errors.
+EXIT=1

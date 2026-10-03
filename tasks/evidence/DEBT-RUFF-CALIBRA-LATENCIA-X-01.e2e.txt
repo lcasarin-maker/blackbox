@@ -1,0 +1,35 @@
+$ python3 -m pytest tests/test_atom_gpu_telemetry.py tests/test_atom_gpu_telemetry_bb.py tests/test_1358_telemetria.py tests/test_presupuesto_termico.py tests/test_auditoria_bb_regresiones.py tests/test_mitigacion_solo_con_carga.py tests/test_calibra_latencia_x.py tests/test_calibra_techo_slice.py -q
+........................................................................ [ 32%]
+........................................................................ [ 65%]
+........................................................................ [ 98%]
+....                                                                     [100%]
+220 passed in 7.01s
+EXIT=0
+
+$ python3 -m ruff check tools/.zero-negative-latencia.py
+C901 `too_complex` is too complex (12 > 10)
+ --> tools/.zero-negative-latencia.py:1:5
+  |
+1 | def too_complex(value):
+  |     ^^^^^^^^^^^
+2 |     if value == 0:
+3 |         return 0
+  |
+
+Found 1 error.
+EXIT=1
+
+--- focused coverage ---
+$ COVERAGE_FILE=/tmp/bb-zero-cal-final.coverage python3 -m coverage run --branch --source=tools.calibra_latencia_x,tools.calibra_techo_slice -m pytest tests/test_calibra_latencia_x.py tests/test_calibra_techo_slice.py -q
+...............................................                          [100%]
+47 passed in 1.90s
+EXIT=0
+
+$ COVERAGE_FILE=/tmp/bb-zero-cal-final.coverage python3 -m coverage report --fail-under=100 -m
+Name                           Stmts   Miss Branch BrPart  Cover   Missing
+--------------------------------------------------------------------------
+tools/calibra_latencia_x.py      150      0     56      0   100%
+tools/calibra_techo_slice.py     109      0     42      0   100%
+--------------------------------------------------------------------------
+TOTAL                            259      0     98      0   100%
+EXIT=0

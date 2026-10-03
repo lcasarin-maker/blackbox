@@ -1,0 +1,21 @@
+$ python3 -m ruff check tools/calibra_latencia_x.py
+C901 `main` is too complex (11 > 10)
+   --> tools/calibra_latencia_x.py:242:5
+    |
+242 | def main(argv=None) -> int:
+    |     ^^^^
+243 |     ap = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
+244 |     ap.add_argument("--muestras", type=Path, default=MUESTRAS)
+    |
+
+PLR0915 Too many statements (51 > 50)
+   --> tools/calibra_latencia_x.py:242:5
+    |
+242 | def main(argv=None) -> int:
+    |     ^^^^
+243 |     ap = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
+244 |     ap.add_argument("--muestras", type=Path, default=MUESTRAS)
+    |
+
+Found 2 errors.
+EXIT=1
