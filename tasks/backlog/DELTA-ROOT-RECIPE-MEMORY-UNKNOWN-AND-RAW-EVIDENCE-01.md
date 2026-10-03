@@ -42,3 +42,9 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Diagnóstico disponible
+
+`python3 -m tools.recipe_memory` reutiliza `tools.memory_profile.capture` y conserva la captura host completa, sus estados de lectura y un digest del registro que no autentica el origen. Los términos de receta vienen del invocador y se etiquetan `caller_supplied_unverified`; faltantes o desconocidos producen `unknown`, nunca cero. `comparison_only` compara esos valores declarados con MemAvailable, sin afirmar admisión ni protección real, y no prueba workload, canario funcional, compatibilidad, soak ni rollback.
+
+La ejecución local sin términos declarados quedó como `unknown`, rc=2, preservando la captura raw en `tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/prototype-capture.json`; el comando y hash están en `tasks/evidence/LUNA-98-2026-10-03/batch-03-prototype-runs.json`. No se atribuye una cifra de memoria a la receta comunitaria sin workload real.

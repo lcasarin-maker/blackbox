@@ -14,7 +14,8 @@ evidence:
   fail: tasks/evidence/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01.fail.txt
   pass: tasks/evidence/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01.pass.txt
   e2e: tasks/evidence/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01.e2e.txt
-reason: "Abierta: sin salida raw no hay base para confirmed_defect, false_positive ni controlled_canary; no se usa el cutoff actual para amnistiar eventos viejos."
+  recovered_metadata: tasks/evidence/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01/recovered-event-metadata.json
+reason: "Abierta: se recuperaron las tres filas originales de telemetría con comando, rc e identidad, pero no stdout/stderr; falta evidencia raw para dictaminar cada evento."
 ---
 
 ## Registro y responsable
@@ -23,7 +24,7 @@ Hallazgo detectado por `telemetry-disposition --report --no-auto-dispose` el 202
 
 ## Evidencia y alcance
 
-Tres eventos bloqueados anteriores al cutoff vigente permanecen en `historical_undisposed`: `92dc63137ae930f3` (pre-commit, rc=1), `a50ae5e52c99c3ab` (pre-commit, rc=1) y `5437b44ce52501ee` (bash-sintaxis, `bash -n bin/bb`, rc=2). Las filas no guardan `run_id`, `could_not_run` ni stdout/stderr; no hay evidencia concreta para elegir uno de los tres estados. La repetición actual del último comando contra el blob de `71ceaef...` pasó, pero no reconstruye los bytes staged del evento original.
+Tres eventos bloqueados anteriores al cutoff vigente permanecen en `historical_undisposed`: `92dc63137ae930f3` (pre-commit, rc=1), `a50ae5e52c99c3ab` (pre-commit, rc=1) y `5437b44ce52501ee` (bash-sintaxis, `bash -n bin/bb`, rc=2). Las filas originales no guardan stdout/stderr, y no hay evidencia concreta para elegir uno de los tres estados. El metadata raw recuperado desde el ledger host, con hash del archivo y de cada línea, está en `tasks/evidence/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01/recovered-event-metadata.json`; no incluye output de los comandos. La repetición actual del último comando contra el blob de `71ceaef...` pasó, pero no reconstruye los bytes staged del evento original.
 
 ## Criterio de cierre
 
