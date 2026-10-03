@@ -1,0 +1,20 @@
+El fake de HTTP 503 ya no implementa `read()`: el resultado exige `vllm_ausente == 'HTTP status 503'`. El selector ejecuta el test real y después instala un mutante que intenta leer el cuerpo no-200; al fake le falta ese método y el `AttributeError` debe ser capturado por `pytest.raises`, demostrando que leer esa respuesta invalida la prueba.
+
+$ python3 -m pytest -q tests/test_atom_gpu_telemetry_bb.py::test_vllm_con_status_distinto_de_200_lo_DECLARA
+.                                                                        [100%]
+1 passed in 0.07s
+EXIT=0
+
+$ python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_no_cover_test_atom_gpu_telemetry_bb_85
+.                                                                        [100%]
+1 passed in 0.03s
+EXIT=0
+
+$ python3 -m ruff check tests/test_atom_gpu_telemetry_bb.py tests/test_debt_registration_controls.py
+All checks passed!
+EXIT=0
+
+$ python3 -m pytest -q -rs tests/test_atom_gpu_telemetry_bb.py
+.....................................................                    [100%]
+53 passed in 0.37s
+EXIT=0

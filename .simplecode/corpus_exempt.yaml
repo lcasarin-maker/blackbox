@@ -1,14 +1,13 @@
 # Declaraciones de alcance para gates que asumen un layout de paquete Python.
 #
-# blackbox es casi todo bash (bin/bb es el grueso del codigo ejecutable, ver
-# .simplecode/local_hooks.yaml sobre bash-sintaxis). El Python son TRES ficheros,
-# y esta declaracion cubre dos:
-#   - tools/check_harvest_accepted.py
-#   - tools/calibra_psi.py  (2026-09-23, ficha DEBT-PSI-UMBRALES-SIN-CALIBRAR)
-#   - bin/bb-usable  (64d3daa, 2026-09-23) -- FUERA de coverage_targets: es un
-#     ejecutable Python sin extension .py, asi que ninguna autodeteccion lo ve
-#     NI lo veria aunque este fichero no existiera. Se dice aqui para que la
-#     ausencia sea declarada y no inadvertida.
+# El alcance fijado abajo contiene los 23 módulos Python trackeados en tools/.
+# `bin/bb-usable` es un ejecutable Python extensionless y no forma parte de ese
+# target: se mide por separado con:
+#   coverage run --branch --source=bin -m pytest tests/test_bb_usable.py
+#   coverage report
+# Medición 2026-10-03, Coverage.py 7.15.4: bin/bb-usable, 103 statements,
+# 4 missed, 36 branches, 4 partial, 94%. La suite lo carga con SourceFileLoader;
+# la extensión ausente no lo deja fuera de esta medición específica.
 #
 # Correccion 2026-09-23 sobre lo que este comentario venia afirmando: decia que
 # sin esta declaracion `coverage_target.py` "no encuentra nada y sale
