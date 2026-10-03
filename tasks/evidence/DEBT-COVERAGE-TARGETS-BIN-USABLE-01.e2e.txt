@@ -1,0 +1,28 @@
+La suite existente carga el ejecutable extensionless mediante SourceFileLoader. El selector corre el instrumento independiente, comprueba que el reporte enumere `bin/bb-usable` y asigna `COVERAGE_FILE=tmp_path/.coverage` para aislar el artefacto; no cambia `.coveragerc`. Una copia mutante (`avg10 -> -1.0`) hace fallar el control PSI positivo. No se modificó `bin/bb-usable` ni se cambió `coverage_targets`.
+
+$ git ls-files 'tools/*.py' | wc -l
+23
+EXIT=0
+
+$ coverage --version
+Coverage.py, version 7.15.4 with C extension
+
+$ coverage run --branch --source=bin -m pytest tests/test_bb_usable.py [sandbox]
+FAILED test_notify_manda_de_verdad_por_el_socket: PermissionError: [Errno 1] Operation not permitted
+FAILED test_notify_sin_socket_no_manda_nada_y_no_revienta: PermissionError: [Errno 1] Operation not permitted
+========================= 2 failed, 25 passed in 1.33s =========================
+EXIT=1 (los binds Unix quedaron bloqueados por sandbox)
+
+$ env COVERAGE_FILE=/tmp/bb-zero-results/coverage-wave/bb-usable.coverage coverage run --branch --source=bin -m pytest tests/test_bb_usable.py [acceso host]
+collected 27 items
+tests/test_bb_usable.py ...........................                      [100%]
+============================== 27 passed in 1.61s ==============================
+EXIT=0
+
+$ env COVERAGE_FILE=/tmp/bb-zero-results/coverage-wave/bb-usable.coverage coverage report
+Name            Stmts   Miss Branch BrPart  Cover
+-------------------------------------------------
+bin/bb-usable     103      4     36      4    94%
+-------------------------------------------------
+TOTAL             103      4     36      4    94%
+EXIT=0
