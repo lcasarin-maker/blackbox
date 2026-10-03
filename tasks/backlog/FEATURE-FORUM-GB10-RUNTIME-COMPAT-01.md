@@ -424,3 +424,7 @@ El hilo de DSV4 Vision Exp añade un caso distinto: en vLLM 0.29-b12x con DSpark
 ### Captura NCCL revisada — 350367
 
 Fuente: https://forums.developer.nvidia.com/t/350367. La captura de `all_gather_perf` usa dos GB10, 1 GiB, nccl-tests 2.17.6 y NCCL 22803: algbw 1.56/1.55 GB/s, busbw 0.78 GB/s, wrong=0. Orden MPI declara IPs link-local y NIC; no prueba transporte efectivo de NCCL ni cable averiado. El canario debe conservar comando, collective, payload, algbw/busbw, transporte efectivo, NIC y corrección; la respuesta con guía oficial carece de resultado del autor.
+
+### Evidencia de instrumento (2026-10-03)
+
+Estado: parcial, reutilizando la tupla de identidad existente de arquitectura, driver/CUDA e imagen. El parser de métricas KV es un instrumento aparte y no prueba compatibilidad, generación ni canario semántico; esos sujetos quedan `could_not_run`. La ficha sigue abierta y su `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-runtime.md`.
