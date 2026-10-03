@@ -366,6 +366,14 @@ def test_contact_emails_redacted_without_altering_systemd_units(monkeypatch):
     monkeypatch.setattr(hd, "CONTACT_EMAIL_RE", hd.re.compile(r"(?!)"))
     with pytest.raises(AssertionError):
         verify()
+    root = Path(__file__).resolve().parent.parent
+    checked = subprocess.run(
+        [sys.executable, str(root / ".simplecode/run.py"),
+         "simplecode.verification.pii_scan", "--root", str(root)],
+        capture_output=True, text=True, timeout=30, check=False,
+    )
+    assert checked.returncode == 0, checked.stdout + checked.stderr
+    assert "hallazgos=0 could_not_run=0" in checked.stdout
 
 
 @pytest.mark.parametrize("stream", ["stdout", "stderr"])
