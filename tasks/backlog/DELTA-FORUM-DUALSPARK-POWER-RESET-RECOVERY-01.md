@@ -36,3 +36,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Evaluación de instrumentos 2026-10-03
+
+No existe evidencia local del par Spark aislado, del perfil OEM de power reset ni de observaciones previas/posteriores; inventario/hostdiag no prueba recuperación causal. Estado `deferred_lab`: requiere procedimiento OEM aprobado, series externas antes/después y controles repetidos que separen power/CX7/clocks/workload, con rollback/criterio seguro. No se efectuó power cycle ni se alteró estado del host.

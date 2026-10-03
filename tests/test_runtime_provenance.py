@@ -1,6 +1,10 @@
 from pathlib import Path
+import json
+from importlib import import_module
 import runpy
 import sys
+
+pytest = import_module("pytest")
 
 from tools import runtime_provenance as rp
 
@@ -244,13 +248,14 @@ def test_cli_observed_and_unknown_exit_codes(tmp_path: Path, capsys) -> None:
     assert '"status": "unknown"' in capsys.readouterr().out
 
 
-def test_module_entry_point_exits_with_cli_status(tmp_path: Path, monkeypatch) -> None:
+def test_module_entry_point_exits_with_cli_status(tmp_path: Path, monkeypatch, capsys) -> None:
     capture = tmp_path / "empty.prom"
-    capture.write_text("other 1\n", encoding="utf-8")
+    capture.write_text("", encoding="utf-8")
     monkeypatch.setattr(sys, "argv", [str(rp.__file__), str(capture)])
-    try:
+    with pytest.raises(SystemExit) as exc:
         runpy.run_path(str(rp.__file__), run_name="__main__")
-    except SystemExit as exc:
-        assert exc.code == 2
-    else:
-        raise AssertionError("module entry point did not exit")
+    assert exc.value.code == 2
+    output = json.loads(capsys.readouterr().out)
+    assert output["status"] == "unknown"
+    assert output["samples"] == []
+    assert output["could_not_run_count"] == 1

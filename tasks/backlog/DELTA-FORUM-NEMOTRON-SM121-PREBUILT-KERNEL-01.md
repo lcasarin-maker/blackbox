@@ -32,3 +32,6 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+## Evaluación de instrumentos 2026-10-03
+
+Reuso disponible: perfiles de runtime/host existentes no asocian una arquitectura SM121 con kernels compilados por operación y salida correcta. No hay evidencia local de builds/tags del hilo ni control de logits/salida. Estado `deferred_lab`: fijar modelo/backend/build y operaciones requeridas; canario de load, primera inferencia y referencia de salida contra build/control SM121, preservando el resultado. “CUDA available” o ready no son admisión.
