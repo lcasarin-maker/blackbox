@@ -9,7 +9,7 @@ origin: detected
 satd_family: BLIND_INSTRUMENT
 detector: {"rule": "bb drift: two deployed files differ", "confidence": 1.0}
 created: 2026-10-03
-close_check: {"cmd": "./bin/bb drift", "expect": "exit_zero", "porque": "El comparador debe observar archivos reales iguales al repo; su control negativo de divergencia ya existe en tests/test_bb_bash.py. No rebajar el detector ni copiar comentarios antiguos al repo para absolver el despliegue."}
+close_check: {"cmd": "bash bin/bb drift", "expect": "exit_zero", "porque": "El comparador debe observar archivos reales iguales al repo; su control negativo de divergencia ya existe en tests/test_bb_bash.py. No rebajar el detector ni copiar comentarios antiguos al repo para absolver el despliegue."}
 owner: Luis; sincronización del host pendiente de autorización
 ---
 
