@@ -1214,6 +1214,12 @@ def test_control_negativo_sin_rafagas_NO_se_filtra_nada(datos):
 
 def _syscall(ts, serial, **campos):
     """Una linea SYSCALL de auditd. `a0` es la VICTIMA, en hexadecimal."""
+    permitidos = {"pid", "comm", "exe", "a0", "auid", "key"}
+    desconocido = next((campo for campo in campos if campo not in permitidos), None)
+    if desconocido is not None:
+        raise TypeError(f"_syscall() got an unexpected keyword argument {desconocido!r}")
+    if "pid" not in campos:
+        raise TypeError("_syscall() missing required keyword-only argument: 'pid'")
     pid = campos["pid"]
     comm = campos.get("comm", '"x"')
     exe = campos.get("exe", '"/usr/bin/x"')
