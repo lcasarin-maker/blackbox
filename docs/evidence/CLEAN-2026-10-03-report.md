@@ -35,3 +35,5 @@ El barrido de amenazas del kit lee 0 archivos porque su lista fija omite tools/.
 La versión 2.3.0 queda comiteada localmente, con el árbol limpio; el remoto conserva su estado anterior porque el push fue rechazado por los gates.
 
 Tras registrar la discrepancia, la ficha del vigilante se reabrió conservando toda su evidencia histórica. Estado final: 98 abiertas y 185 done, 283 fichas en total. El reinicio autorizado y un close_check vivo satisfactorio permitirían cerrarla de nuevo.
+
+La reejecución de `backlog_verifier --root . --gate` después de la reapertura terminó exit 0: frauds=0, could_not_run=0, contract_breaches=0, unverified=0. Su salida está en backlog-after-reopen.txt. El bloqueo restante de publicación es ship-freeze por las 98 fichas abiertas.
