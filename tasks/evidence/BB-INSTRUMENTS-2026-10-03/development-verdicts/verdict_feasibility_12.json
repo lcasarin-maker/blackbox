@@ -1,0 +1,22 @@
+[
+  {
+    "id": "DEBT-HOST-DEPLOYED-DRIFT-01",
+    "status": "needs_decision",
+    "evidence": "tasks/backlog/DEBT-HOST-DEPLOYED-DRIFT-01.md; tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/source.json; tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/fail.txt",
+    "reason": "The recorded drift instrument found two deployed-file divergences and already has equal/divergent/missing controls. The owner field says host synchronization is pending authorization; no deployed files were read or changed during this pass."
+  },
+  {
+    "id": "DEBT-JUDGE-THREAT-SWEEP-TOOLS-01",
+    "status": "needs_upstream",
+    "evidence": "tasks/evidence/CLEAN-2026-10-03/judge-scope-review.json; .simplecode/kit.lock; simplecode/verification/adversarial_judge.py:AGENT_THREAT_TREES",
+    "reason": "The pinned Simplecode 8.9.6 runtime (artifact SHA-256 b556a108901d051bf05cb940f350f741f4dcf412a37ce2dc10814a6aea38fe2d) omits tools/ from AGENT_THREAT_TREES. The precise external dependency is the already-proposed upstream source patch to AGENT_THREAT_TREES/collect_threat_sources, then producer-generated runtime and matching kit.lock plus a tools/ homoglyph negative-control gate. Do not edit the generated bundle or the dirty upstream checkout here.",
+    "original_status": "needs_contract",
+    "classification_review": "El contrato y el parche est\u00e1n definidos; falta integrar y producir el runtime upstream, no definir el contrato."
+  },
+  {
+    "id": "DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES",
+    "status": "needs_decision",
+    "evidence": "tasks/backlog/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES.md; tests/test_bb_guardia_proceso.py; tasks/evidence/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES/armado.txt",
+    "reason": "The guardian implementation and 20 offline tests already exist; the live close check is open because the service process predates the latest source. The card says restart awaits the previously pending operational decision. No service state was queried, restarted, or changed."
+  }
+]

@@ -1,0 +1,7 @@
+python3 - <<'PY' > /tmp/bb-inst-native-readonly.json
+import json
+from pathlib import Path
+from tools.host_diagnostics import network_inventory,boot_state_inventory,could_not_run_count,gpu_runtime_capture
+x={'network_inventory':network_inventory(Path('/')),'boot_state':boot_state_inventory(Path('/')),'gpu_runtime_identity':gpu_runtime_capture()};print(json.dumps({'scope':'read-only identity/configuration, no workload or host writes','could_not_run_status_nodes':could_not_run_count(x),'observations':x},indent=2,sort_keys=True))
+PY
+exit_code=0

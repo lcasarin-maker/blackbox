@@ -1,0 +1,32 @@
+[
+  {
+    "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+    "status": "developed",
+    "evidence": "tools/host_diagnostics.py --check-backup-destination; tests/test_boot_storage_inventory.py; tasks/evidence/BB-INSTRUMENTS-2026-10-03/boot.capture.json",
+    "reason": "A read-only CLI guard now requires an explicit exact mountpoint, source, and UUID and blocks absent or mismatched targets. Local host evidence remains unknown because no trusted expected identity was supplied; no backup or restore was run."
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "status": "reused",
+    "evidence": "Existing gpu_runtime_capture in tools/host_diagnostics.py; tasks/evidence/BB-INSTRUMENTS-2026-10-03/boot.capture.json",
+    "reason": "Existing nvidia-smi capture returned code 9 because it could not communicate with the NVIDIA driver. No GSP incident signature or recovery behavior was established."
+  },
+  {
+    "id": "FEATURE-FORUM-RESCUE-RUNBOOK-01",
+    "status": "reused",
+    "evidence": "Existing session/service diagnostics in tools/host_diagnostics.py; docs/evidence/BB-INSTRUMENTS-boot.md",
+    "reason": "Existing session and service queries remain available, but no rescue.target boot, service reversal, or recovery path was exercised."
+  },
+  {
+    "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+    "status": "developed",
+    "evidence": "boot_state_inventory in tools/host_diagnostics.py; tests/test_boot_storage_inventory.py; tasks/evidence/BB-INSTRUMENTS-2026-10-03/boot.capture.json",
+    "reason": "Effective nvidia_drm modeset and filtered command-line overrides are observed read-only; the local effective sysfs read was denied. The implementation does not decide OTA/OEM compatibility or alter preflight snapshots."
+  },
+  {
+    "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+    "status": "developed",
+    "evidence": "boot_state_inventory in tools/host_diagnostics.py; tests/test_boot_storage_inventory.py; tasks/evidence/BB-INSTRUMENTS-2026-10-03/boot.capture.json",
+    "reason": "The current kernel release and its vmlinuz/initrd artifact presence are recorded. Presence does not establish package consistency, target-kernel coverage, bootability, or rollback."
+  }
+]

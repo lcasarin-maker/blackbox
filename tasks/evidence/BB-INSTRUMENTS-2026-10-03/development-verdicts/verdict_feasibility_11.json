@@ -1,0 +1,32 @@
+[
+  {
+    "id": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+    "status": "deferred_lab",
+    "evidence": "tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION/progress.txt; tools/host_diagnostics.py:usb_inventory,network_inventory; tools/atom_gpu_telemetry.py",
+    "reason": "Existing PCI, kernel-signal, firmware, and thermal instruments cover parts of the event; the progress record states zero fan/CX7 A/B trials and no supported RPM signal. The causal thermal/hotplug test and reversible vendor-approved behavior require an identified lab unit; no hotplug, fan, or firmware intervention was run."
+  },
+  {
+    "id": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+    "status": "reused",
+    "evidence": "tools/atom_gpu_telemetry.py; tools/thermal_coverage.py; tests/test_atom_gpu_telemetry.py; tasks/evidence/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION/progress.txt",
+    "reason": "Thermal zones, trip points, GPU state, and existing corroboration are already instrumented. The recorded progress explicitly leaves CPU/idle and model-residency calibration open with zero A/B trials; this pass adds no thresholds or process actions."
+  },
+  {
+    "id": "FORUM-00-REALTEK-EEE-DIRECT-LINK",
+    "status": "reused",
+    "evidence": "tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK/host-observation.txt; tasks/evidence/SWARM-OPEN-2026-10-02/host-diagnostics.json; tools/host_diagnostics.py",
+    "reason": "The existing collector already queries EEE on the device-backed Ethernet and recorded enabled/inactive on enP7s7; it does not report partner modes or prove direct-link stalls. No network setting, peer link, or rollback test was run."
+  },
+  {
+    "id": "FORUM-02-GX10-READ-INTEGRITY",
+    "status": "reused",
+    "evidence": "tools/read_integrity.py; tests/test_read_integrity.py; tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/read-integrity-instrument.txt",
+    "reason": "The bounded read-only buffered/O_DIRECT checker and its positive, bad-reference, error, and path-stability controls already exist. Its fixture reference is caller-generated and untrusted; an external trusted digest, affected data, and RAS/NVMe/firmware correlation remain uncaptured, so the reported incident is not validated."
+  },
+  {
+    "id": "FORUM-02-USB-UVC-EP0",
+    "status": "reused",
+    "evidence": "tasks/evidence/FORUM-02-USB-UVC-EP0/host-observation.txt; tools/host_diagnostics.py:usb_inventory; tasks/done/FEATURE-USB-XHCI-FORENSICS.md",
+    "reason": "Existing USB inventory and xHCI signature capture detect the aftermath; the recorded host observation has no UVC EP0 stream reproduction, fixed driver version, or prevention test. No camera stream or USB control sequence was exercised."
+  }
+]

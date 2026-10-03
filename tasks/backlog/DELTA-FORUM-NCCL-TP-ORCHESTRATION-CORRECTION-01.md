@@ -32,3 +32,6 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+## Evaluación de instrumentos 2026-10-03
+
+Reusa `tools/provider_trace.py` solo para worker/proveedor; no observa el launcher por nodo, variables/interfaz efectiva, NCCL microtest ni CUDA Graph. No hay captura local de launcher/logs por rango; el registro existente `root-qwen-image-review.json` corresponde a otras imágenes y declara casos sin A/B, por lo que no cubre esta ficha. Estado `deferred_lab`: stack dual fijado, microtest y comparación receta/manual con logs por nodo y control de salida, antes de atribuir causalidad a NCCL/Ray.

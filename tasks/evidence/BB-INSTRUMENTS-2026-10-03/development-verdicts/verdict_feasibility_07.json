@@ -1,0 +1,32 @@
+[
+  {
+    "id": "DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01",
+    "status": "deferred_lab",
+    "evidence": "tools/preflight.py; tests/test_preflight.py; tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_01.json",
+    "reason": "Runtime architecture compatibility preflight exists, but it does not execute the first real request or verify exact Qwen3.5 model/build/backend semantics. The required NVFP4 CUDA failure and any fallback comparison need the pinned workload in a recoverable lab; no model/GPU workload was run."
+  },
+  {
+    "id": "DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01",
+    "status": "deferred_lab",
+    "evidence": "tasks/backlog/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01.md; tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "reason": "The report needs a two-node Ray/vLLM first-prompt reproduction with pinned Torch/CUDA/Ray/NCCL versions and per-rank progress. No such stack or safe lab was supplied, and GPU/model tests were outside this pass."
+  },
+  {
+    "id": "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01",
+    "status": "deferred_lab",
+    "evidence": "tools/atom_gpu_telemetry.py; tests/test_atom_gpu_telemetry.py; tasks/backlog/DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01.md",
+    "reason": "Existing telemetry observes thermal zones and GPU state, but no matched OEM/workload baseline measures the proposed cooling or clock-cap tradeoff. Physical cooling and clock changes require the specified reversible lab A/B; no host or clock changes were made."
+  },
+  {
+    "id": "DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01",
+    "status": "needs_contract",
+    "evidence": "tools/preflight.py:check_drm; tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/preflight.json; tasks/backlog/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01.md",
+    "reason": "The current DRM preflight requires an effective modeset and target KMS/recovery declaration; the capture is unknown for missing OEM/target facts. It does not observe Adjustable Display Reserved Memory or its supported OEM value. A vendor/OEM compatibility contract is needed before implementing an admission rule or changing memory reservation."
+  },
+  {
+    "id": "DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01",
+    "status": "needs_contract",
+    "evidence": "tasks/backlog/DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01.md; tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_root.json; tools/host_diagnostics.py:network_inventory",
+    "reason": "The reported tuple and PCI/EEPROM symptoms are recorded, and network inventory can observe current PCI/driver/RDMA metadata. A vendor-supported SoC/EC sequence, separated component effect, effective hotplug state, and recoverable rollback are not established. Firmware/hotplug trials remain out of scope."
+  }
+]

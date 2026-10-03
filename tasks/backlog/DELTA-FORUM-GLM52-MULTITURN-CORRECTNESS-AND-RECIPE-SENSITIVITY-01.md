@@ -32,3 +32,6 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+## Evaluación de instrumentos 2026-10-03
+
+Instrumentación local reutilizable: `tools/chat_sse_capture.py` conserva deltas y finish visibles al cliente, pero no mide corrección multivuelta ni prueba tokenizer/logprobs, cache, reasoning on/off o límite de iteraciones de tools. No hay captura local del stack GLM/FP8/MXFP4 ni reproducciones. Estado `deferred_lab`: canario acotado y controlado sobre digest/tokenizer/params fijados, con prompt único vs prefijo creciente y controles separados de formato/razonamiento; comparar finish y resultados literales sin enviar prompts en este informe.

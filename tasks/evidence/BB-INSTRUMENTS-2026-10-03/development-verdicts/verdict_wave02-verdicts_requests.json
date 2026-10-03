@@ -1,0 +1,32 @@
+[
+  {
+    "id": "DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01",
+    "status": "developed",
+    "evidence": "tools/chat_sse_capture.py; tests/test_chat_sse_capture.py (10 passed; 100% statement coverage); no native SSE capture",
+    "reason": "Implemented an offline documented SSE reader that preserves fragmented tool-call deltas and finish_reason. Functional canary, tool execution, process health, and rollback remain unobserved; card stays open."
+  },
+  {
+    "id": "DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01",
+    "status": "blocked",
+    "evidence": "OpenAI Chat Completions SSE format documentation; no native backend acceptance trace or paired semantic A/B capture found",
+    "reason": "Client-visible Chat Completions chunks do not expose per-position MTP acceptance. No supported backend metric or trace was available; card stays open."
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01",
+    "status": "developed",
+    "evidence": "tools/chat_sse_capture.py distinguishes observed [DONE] from incomplete EOF and preserves partial tool-call deltas; tests/test_chat_sse_capture.py (10 passed; 100% statement coverage)",
+    "reason": "Offline capture reader now preserves relevant stream evidence, but missing [DONE] has unknown termination cause and does not prove cancellation, parser recovery, follow-up, or restart behavior; card stays open."
+  },
+  {
+    "id": "DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01",
+    "status": "blocked",
+    "evidence": "No backend queue/prefill/decode progress capture found; available runtime-capture.json is host/runtime identity evidence only",
+    "reason": "Client SSE has no internal queue age or engine progress signal, and no native backend capture exists; card stays open."
+  },
+  {
+    "id": "DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01",
+    "status": "reused",
+    "evidence": "tools/provider_trace.py existing JSONL request/worker/provider/latency/restart contract; gpu-healthy.jsonl fixture passes, gpu-to-cpu-respawn.jsonl fixture blocks",
+    "reason": "Existing reader covers its declared provider/worker/restart scope. Fixtures are synthetic and contain no Ray engine/rank/collective progress, so that subject remains unobserved and the card stays open."
+  }
+]

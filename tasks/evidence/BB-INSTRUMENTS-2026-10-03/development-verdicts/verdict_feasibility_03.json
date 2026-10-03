@@ -1,0 +1,32 @@
+[
+  {
+    "id": "DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01",
+    "status": "deferred_lab",
+    "evidence": "thermal_coverage.py + prototype-capture.json: 7 zones, 11 hwmon temperature channels, CNR=0; no cap A/B, OEM mapping incomplete",
+    "reason": "A clock-cap tradeoff claim requires a pinned OEM workload canary with observed applied clocks, matched workload metrics and rollback; current development vote does not cover this lab intervention."
+  },
+  {
+    "id": "DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01",
+    "status": "deferred_lab",
+    "evidence": "No captured multi-turn reproducer, mock-tool effects, or positive control found",
+    "reason": "Requires a fixed-stack security canary that replays untrusted tool output across turns and verifies no unauthorized mail-field/tool mutation, plus fixture-positive control; no prior SSE evidence proves safety."
+  },
+  {
+    "id": "DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01",
+    "status": "needs_contract",
+    "evidence": "No repository source/build capture pins CUTLASS/CuTe revision, backend operation, or compiled architecture",
+    "reason": "Define a source-bound ISA/architecture pre-build oracle and exact negative control before implementing a gate; a name-based architecture allowlist would assume compatibility."
+  },
+  {
+    "id": "DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01",
+    "status": "deferred_lab",
+    "evidence": "Existing network.capture.json: zero RDMA HCAs, ip-link query could_not_run, physical attachment UNKNOWN, transport not_run",
+    "reason": "Requires two fixed endpoints and bidirectional ib_write_bw across individual/sequential reboot and controlled hotplug, with cable PN, CX7 firmware, OEM kernels and literal results; no host intervention or traffic was run."
+  },
+  {
+    "id": "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+    "status": "needs_contract",
+    "evidence": "No pinned DCP/MTP source capture or rank/draft/acceptance/pre-trim memory trace found",
+    "reason": "Specify rank-shard mapping, gather/LSE observations, DCP1 comparison tolerances, deterministic output and per-position acceptance oracle; define separate safe pre-trim OOM headroom criterion before a GPU trial."
+  }
+]

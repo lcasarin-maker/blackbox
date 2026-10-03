@@ -1,0 +1,32 @@
+[
+  {
+    "id": "DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01",
+    "status": "needs_contract",
+    "evidence": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_root.json; tasks/backlog/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01.md",
+    "reason": "The proposal requires an effective per-node manifest for image/checkpoint/overlay/draft/tokenizer plus a semantic oracle and per-rank progress contract. Existing runtime compatibility checks do not define those artifacts or the canary oracle. Adding a speculative manifest/schema would invent product inputs, so implementation waits for that contract."
+  },
+  {
+    "id": "DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01",
+    "status": "needs_contract",
+    "evidence": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_root.json; tasks/backlog/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01.md",
+    "reason": "The cited patches and refactors span external commits, symbols, draft modes, modalities, and image branches that were not audited. A trusted mapping from exact patch identity to effective code state and supported modes is missing; no status detector or canary rules should be invented before that contract."
+  },
+  {
+    "id": "DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01",
+    "status": "deferred_lab",
+    "evidence": "tools/atom_gpu_telemetry.py; tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_root.json; tasks/backlog/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01.md",
+    "reason": "The local telemetry instrument does not establish dew point, airflow, condensation risk, or a comparable workload baseline. This requires controlled physical cooling and long-soak work with OEM limits; no cooling or workload intervention was performed."
+  },
+  {
+    "id": "DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01",
+    "status": "needs_capture",
+    "evidence": "tasks/backlog/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01.md; tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_root.json",
+    "reason": "The report names tokenizer/checkpoint/patch failure modes, but the exact affected and corrected artifacts, digest, expected token sentinels, and modality inputs are not available as a trusted local capture. Existing runtime preflight does not inspect tokenizer behavior; no tokenizer/model tests were run."
+  },
+  {
+    "id": "DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01",
+    "status": "needs_contract",
+    "evidence": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_root.json; tasks/backlog/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01.md",
+    "reason": "The candidate is a global allocator monkeypatch loaded via .pth, with a required prior commit and later patch-supersession reports. External code, wheel/image identity, symbol scope, and memory lifetime semantics are unaudited. A source-of-truth patch-state contract is needed before a detector can safely classify it."
+  }
+]

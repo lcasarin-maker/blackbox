@@ -1,0 +1,32 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+    "status": "developed",
+    "evidence": "tools/host_diagnostics.py usb_inventory; tests/test_device_inventory.py; docs/evidence/BB-INSTRUMENTS-devices.md",
+    "reason": "USB/HID enumeration and sysfs correlation are instrumented and tested; post-update real-device evidence and the original close-check verifier remain open."
+  },
+  {
+    "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+    "status": "developed",
+    "evidence": "Local capture /tmp/bb-inst-devices-capture.json; USB identity and speed inventory in tools/host_diagnostics.py",
+    "reason": "USB identity and speed are observable; no subject-specific admission test, compatibility evidence, or rollback evidence was available, so the card remains open."
+  },
+  {
+    "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "status": "developed",
+    "evidence": "Local capture /tmp/bb-inst-devices-capture.json; watchdog_inventory in tools/host_diagnostics.py",
+    "reason": "Sysfs metadata reports SBSA Generic Watchdog active with timeout 60 and nowayout 0; ownership is UNKNOWN and recovery/OEM evidence remains open."
+  },
+  {
+    "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+    "status": "developed",
+    "evidence": "Local capture /tmp/bb-inst-devices-capture.json; tests/test_device_inventory.py",
+    "reason": "The capture had zero HID entries, so it provides no real HID or post-update functional evidence; the implemented inventory and correlation are partial."
+  },
+  {
+    "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+    "status": "reused",
+    "evidence": "Local capture /tmp/bb-inst-devices-capture.json; existing pci_binding in tools/host_diagnostics.py",
+    "reason": "Existing instrumentation observed enP7s7 bound to r8127 version 11.014.00-NAPI; it does not establish package compatibility or warm/cold reboot behavior."
+  }
+]

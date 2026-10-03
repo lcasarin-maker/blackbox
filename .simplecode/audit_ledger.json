@@ -1,6 +1,6 @@
 {
-  "claims_fingerprint": "808219a56c632097af1ca6f0161e36f25dabcb315c57a8deb363cd453ce02439",
-  "panel": "Luna revisi\u00f3n de nueve afirmaciones y coordinador controles host",
+  "claims_fingerprint": "67d4919b641cbc5b5357f36aa59ef5a8d498f95212b32bd3b6861241325ef1be",
+  "panel": "Coordinaci\u00f3n: revisi\u00f3n de texto y hashes nativos tras inventario nuevo",
   "profile": "general",
   "results": [
     {
@@ -35,92 +35,103 @@
     },
     {
       "cited": {
+        "tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json": "bf21ab712d95c541f1a45e7c934cd98a1a7ce89394a1305c1d9fd9dbae829190",
         "tests/test_bb_bash.py": "384c35d5c56eae17d19127054253e8cd7602b469fef95175e1eea5af96104f7f"
       },
-      "claim_id": "SPEC-L313",
-      "evidence": "Freshness control rerun is recorded literally at `/tmp/bb-luna98-freshness.txt`: `............. [100%]` then `13 passed, 72 deselected in 3.44s`, rc=0. Current master code tests include the named positive/negative cases. My earlier scoped run yielded 9 passed and 4 failed because the sandbox denied the systemd bus (`Operation not permitted`); those four are `could_not_run`, not failures of the detector. Current test run supplies the bus-authorized evidence requested by root.",
-      "seal": "3c1ee9defc48afebc6e83382b49106cdceaf132c8cafe9b198d36908078a4b60",
+      "claim_id": "SPEC-L318",
+      "evidence": "Freshness control rerun is recorded literally at `/tmp/bb-luna98-freshness.txt`: `............. [100%]` then `13 passed, 72 deselected in 3.44s`, rc=0. Current master code tests include the named positive/negative cases. My earlier scoped run yielded 9 passed and 4 failed because the sandbox denied the systemd bus (`Operation not permitted`); those four are `could_not_run`, not failures of the detector. Current test run supplies the bus-authorized evidence requested by root. Revisi\u00f3n 2026-10-03: el texto de esta afirmaci\u00f3n y todos los hashes nativos de sus archivos citados permanecen iguales al ledger previo; solo cambi\u00f3 la l\u00ednea por nuevas filas de inventario. Prueba literal: tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json. Esta revisi\u00f3n preserva la atribuci\u00f3n y l\u00edmites de la evidencia hist\u00f3rica; no aporta una medida nueva del host.",
+      "seal": "e752f7af1a53711ae27b4e4282d7eab8ca0d0711bb0345dad60bce736946d8de",
       "verdict": "PASS"
     },
     {
       "cited": {
         ".pre-commit-config.yaml": "acb2330c40f26c909c81855253c40566471a77927f4ff749543af5f6c171db83",
+        "tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json": "bf21ab712d95c541f1a45e7c934cd98a1a7ce89394a1305c1d9fd9dbae829190",
         "tests/test_auditoria_bb_regresiones.py": "c9eb27c7d1b378764237dde303b9bee5291d8311f0daaff899b70f2f13cdfe6b",
         "tests/test_bash_sintaxis.py": "e88177f8046be8e615efb81411d9ce817f0f7653011f9a4c4c50708430f18d95",
         "tests/test_hook_native_controls.py": "e3310194c72c9a6abfb58bb5309c3ecf8b3b11f18b9b8d67792b1f773ed068eb",
         "tests/test_ruff_gitleaks_controles_negativos.py": "4887944d36593eb387a74b61cac6e2844136a5dfa3dd0f6f2d2dedf03f5fc482"
       },
-      "claim_id": "SPEC-L314",
-      "evidence": "Current reruns: `python3 -m pytest -q tests/test_bash_sintaxis.py tests/test_ruff_gitleaks_controles_negativos.py` -> 6 passed, rc=0; `python3 -m pytest -q tests/test_hook_native_controls.py` -> 2 passed, rc=0, each test exercises a valid case and an injected failure; `python3 -m pytest -q tests/test_auditoria_bb_regresiones.py::test_scan_fielddiag_summary_invalido_incrementa_cnr` -> 1 passed, rc=0. `.pre-commit-config.yaml` leaves telemetry-bound outside scope because it ends in `|| true`; historical telemetry has four could_not_run, not findings.",
-      "seal": "21a5bc68997d74df0682bac5cdedaca2caf219b730496f6941ed3943fbda31be",
-      "verdict": "PASS"
-    },
-    {
-      "cited": {},
-      "claim_id": "SPEC-L315",
-      "evidence": "The archived `host-evidence/nice-current.txt` and `nice-units.txt` contain 2026-10-03 output for systemctl and ionice: Blackbox services Nice=19/19, adopted ai-memory-monitor/ai-gpu-telemetry Nice=0/10, bb-guardia-proceso Nice=10. Unit contents and `bin/bb-guardia-proceso` show the stated ownership boundary. No new host query was required for this textual claim.",
-      "seal": "71c4fe108d75435b9e5cfc82fc4200411505c75fada2ae7a3366019ea26ea2ff",
+      "claim_id": "SPEC-L319",
+      "evidence": "Current reruns: `python3 -m pytest -q tests/test_bash_sintaxis.py tests/test_ruff_gitleaks_controles_negativos.py` -> 6 passed, rc=0; `python3 -m pytest -q tests/test_hook_native_controls.py` -> 2 passed, rc=0, each test exercises a valid case and an injected failure; `python3 -m pytest -q tests/test_auditoria_bb_regresiones.py::test_scan_fielddiag_summary_invalido_incrementa_cnr` -> 1 passed, rc=0. `.pre-commit-config.yaml` leaves telemetry-bound outside scope because it ends in `|| true`; historical telemetry has four could_not_run, not findings. Revisi\u00f3n 2026-10-03: el texto de esta afirmaci\u00f3n y todos los hashes nativos de sus archivos citados permanecen iguales al ledger previo; solo cambi\u00f3 la l\u00ednea por nuevas filas de inventario. Prueba literal: tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json. Esta revisi\u00f3n preserva la atribuci\u00f3n y l\u00edmites de la evidencia hist\u00f3rica; no aporta una medida nueva del host.",
+      "seal": "becfd3ee3c99f7ed72617a661c4a5f64eb623ad91d29c609cf95e59fb2b0957c",
       "verdict": "PASS"
     },
     {
       "cited": {
+        "tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json": "bf21ab712d95c541f1a45e7c934cd98a1a7ce89394a1305c1d9fd9dbae829190"
+      },
+      "claim_id": "SPEC-L320",
+      "evidence": "The archived `host-evidence/nice-current.txt` and `nice-units.txt` contain 2026-10-03 output for systemctl and ionice: Blackbox services Nice=19/19, adopted ai-memory-monitor/ai-gpu-telemetry Nice=0/10, bb-guardia-proceso Nice=10. Unit contents and `bin/bb-guardia-proceso` show the stated ownership boundary. No new host query was required for this textual claim. Revisi\u00f3n 2026-10-03: el texto de esta afirmaci\u00f3n y todos los hashes nativos de sus archivos citados permanecen iguales al ledger previo; solo cambi\u00f3 la l\u00ednea por nuevas filas de inventario. Prueba literal: tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json. Esta revisi\u00f3n preserva la atribuci\u00f3n y l\u00edmites de la evidencia hist\u00f3rica; no aporta una medida nueva del host.",
+      "seal": "740d1ff71ee6017d199f18c58299ddd91b88e20ec20610923a03ac0d96ff8867",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {
+        "tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json": "bf21ab712d95c541f1a45e7c934cd98a1a7ce89394a1305c1d9fd9dbae829190",
         "tests/test_calibra_psi.py": "0d933d4fd985a38407edee0f59836aceaaaf09188160afc13ad2f37e2a9c0b48",
         "tools/calibra_psi.py": "8254b6296b36d06e1bc84c34a3f8001b132c90da5965edabf6489fba94f18c87"
       },
-      "claim_id": "SPEC-L316",
-      "evidence": "`python3 -m pytest -q tests/test_calibra_psi.py` -> 24 passed, rc=0. `test_control_negativo_excursion_solapa_incidente_pero_dispara_despues` is present and exercises delayed detection. Archived `tasks/evidence/DEBT-PSI-UMBRALES-SIN-CALIBRAR/pass.txt` and `fail.txt` preserve the historic calibration corpus and the 2026-09-28 invalid-cut result caused by the 03:29:02\u201303:39:21 sampling gap. The SPEC keeps n=6 and io/cpu channels explicitly open/unlabeled.",
-      "seal": "022526848b4aedf9db4f8b19e4958d659466934c524fb71d1642a1be396028ea",
+      "claim_id": "SPEC-L321",
+      "evidence": "`python3 -m pytest -q tests/test_calibra_psi.py` -> 24 passed, rc=0. `test_control_negativo_excursion_solapa_incidente_pero_dispara_despues` is present and exercises delayed detection. Archived `tasks/evidence/DEBT-PSI-UMBRALES-SIN-CALIBRAR/pass.txt` and `fail.txt` preserve the historic calibration corpus and the 2026-09-28 invalid-cut result caused by the 03:29:02\u201303:39:21 sampling gap. The SPEC keeps n=6 and io/cpu channels explicitly open/unlabeled. Revisi\u00f3n 2026-10-03: el texto de esta afirmaci\u00f3n y todos los hashes nativos de sus archivos citados permanecen iguales al ledger previo; solo cambi\u00f3 la l\u00ednea por nuevas filas de inventario. Prueba literal: tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json. Esta revisi\u00f3n preserva la atribuci\u00f3n y l\u00edmites de la evidencia hist\u00f3rica; no aporta una medida nueva del host.",
+      "seal": "fce7286ffd559af593760204060ffb1d90e0e93539f57f8d5674c75056046502",
       "verdict": "PASS"
     },
     {
       "cited": {
+        "tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json": "bf21ab712d95c541f1a45e7c934cd98a1a7ce89394a1305c1d9fd9dbae829190",
         "tests/test_bb_bash.py": "384c35d5c56eae17d19127054253e8cd7602b469fef95175e1eea5af96104f7f"
       },
-      "claim_id": "SPEC-L317",
-      "evidence": "`python3 -m pytest -q tests/test_bb_bash.py -k 'drift_SALE or drift_suspendido or drift_suspension'` -> 5 passed, 80 deselected, rc=0. `systemd/blackbox-drift.timer` says OnCalendar=daily/Persistent=true. Archived `tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/drift-current.txt` records exit=1 and `revisados: 41 divergentes: 2 ausentes: 0 suspendidos: 1`, including DIVERGE entries. No host drift measurement was repeated here.",
-      "seal": "0048401c7bd256aaf6c8331f525d2f034d5eef650d370b4c610f1284ece04631",
+      "claim_id": "SPEC-L322",
+      "evidence": "`python3 -m pytest -q tests/test_bb_bash.py -k 'drift_SALE or drift_suspendido or drift_suspension'` -> 5 passed, 80 deselected, rc=0. `systemd/blackbox-drift.timer` says OnCalendar=daily/Persistent=true. Archived `tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/drift-current.txt` records exit=1 and `revisados: 41 divergentes: 2 ausentes: 0 suspendidos: 1`, including DIVERGE entries. No host drift measurement was repeated here. Revisi\u00f3n 2026-10-03: el texto de esta afirmaci\u00f3n y todos los hashes nativos de sus archivos citados permanecen iguales al ledger previo; solo cambi\u00f3 la l\u00ednea por nuevas filas de inventario. Prueba literal: tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json. Esta revisi\u00f3n preserva la atribuci\u00f3n y l\u00edmites de la evidencia hist\u00f3rica; no aporta una medida nueva del host.",
+      "seal": "45f21a4e7cd242435b6c45a983169d58ef7fa2b9a07dd685775e0d755522b4a5",
       "verdict": "PASS"
     },
     {
       "cited": {
+        "tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json": "bf21ab712d95c541f1a45e7c934cd98a1a7ce89394a1305c1d9fd9dbae829190",
         "tools/inventario.py": "10e3fa08fc51010767c70a8d605d9302efcd53d0b1347c58042a8ec45cb62931"
       },
-      "claim_id": "SPEC-L318",
-      "evidence": "`python3 -m tools.inventario --check` -> `[inventario] HALLAZGOS: 0` and `OK: los dos inventarios describen el repo y la maquina.`, rc=0. The versioned 1ec66b3 commit message records six initial inventory mismatches and two instrument defects; the SPEC explicitly attributes six to that message and says its original stdout was not preserved. Thus the limitation itself is represented accurately.",
-      "seal": "7b6696a8062c434d4ccd36204578d95dcbf117b6e075a3b9c11d3c0f31efc3a6",
+      "claim_id": "SPEC-L323",
+      "evidence": "`python3 -m tools.inventario --check` -> `[inventario] HALLAZGOS: 0` and `OK: los dos inventarios describen el repo y la maquina.`, rc=0. The versioned 1ec66b3 commit message records six initial inventory mismatches and two instrument defects; the SPEC explicitly attributes six to that message and says its original stdout was not preserved. Thus the limitation itself is represented accurately. Revisi\u00f3n 2026-10-03: el texto de esta afirmaci\u00f3n y todos los hashes nativos de sus archivos citados permanecen iguales al ledger previo; solo cambi\u00f3 la l\u00ednea por nuevas filas de inventario. Prueba literal: tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json. Esta revisi\u00f3n preserva la atribuci\u00f3n y l\u00edmites de la evidencia hist\u00f3rica; no aporta una medida nueva del host.",
+      "seal": "7aa7ecc67f4342172a1e6f671c2523f5ebcc540b905ad8c5aebcc299609740ae",
       "verdict": "PASS"
     },
     {
       "cited": {
         "enable-privileged.sh": "d7ca9d1129ead39cf03eaa22cd622c8ebbe51dfe99b2099062432c072998b638",
+        "tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json": "bf21ab712d95c541f1a45e7c934cd98a1a7ce89394a1305c1d9fd9dbae829190",
         "tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/final-results.json": "59b94b52905091a668b58889f1ab0c59067304ba6d7dc47c77825f73f78cf597",
         "tasks/evidence/RELEASE-2.1.0/h1-items.json": "f83de679f314740d5cad19814f28d06a0234afd29f45642b69be8fa8a29145c5"
       },
-      "claim_id": "SPEC-L319",
-      "evidence": "The revised sentence now says four items are identified by the archived H1 classification (`tasks/evidence/RELEASE-2.1.0/h1-items.json`) as born 2026-09-09 15:39\u201315:40, and explicitly says this evidence package has no raw `stat -c %w` stdout. Within `tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01`, `find ... -type f` lists no timestamp transcript; `final-results.json` contains the archived classification, not raw stat output. The previous `unverified` verdict is preserved in `/tmp/bb-luna98-h1-reviewed.json`; the corrected claim is about what the archive classifies, not a reproduced timestamp measurement.",
-      "seal": "000e73f981298490e1dd035fae0d1c3ab693d1b43a07f46a58d38353c00d9309",
-      "verdict": "PASS"
-    },
-    {
-      "cited": {},
-      "claim_id": "SPEC-L320",
-      "evidence": "Archived primary files `host-evidence/snapshot-2026-09-25-050801.txt`, `gpu-near-snapshot-2026-09-25.txt`, `journal-2026-09-25.txt`, and `scope-cpu-ratios.txt` preserve the sample, nearby GPU read, journald scope durations/CPU, and calculation: 116.5%, 166.1%, 14.1% combined over 20 CPUs. `host-evidence/calibra-latencia-current.txt` records rc=2/zero usable labels. The row states that the incident cause remains unproven, rather than inferring one.",
-      "seal": "c506d786dcfa1dce8e8e39157fcb3d3647d4baa6502f32ce353fee69c2b534d6",
+      "claim_id": "SPEC-L324",
+      "evidence": "The revised sentence now says four items are identified by the archived H1 classification (`tasks/evidence/RELEASE-2.1.0/h1-items.json`) as born 2026-09-09 15:39\u201315:40, and explicitly says this evidence package has no raw `stat -c %w` stdout. Within `tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01`, `find ... -type f` lists no timestamp transcript; `final-results.json` contains the archived classification, not raw stat output. The previous `unverified` verdict is preserved in `/tmp/bb-luna98-h1-reviewed.json`; the corrected claim is about what the archive classifies, not a reproduced timestamp measurement. Revisi\u00f3n 2026-10-03: el texto de esta afirmaci\u00f3n y todos los hashes nativos de sus archivos citados permanecen iguales al ledger previo; solo cambi\u00f3 la l\u00ednea por nuevas filas de inventario. Prueba literal: tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json. Esta revisi\u00f3n preserva la atribuci\u00f3n y l\u00edmites de la evidencia hist\u00f3rica; no aporta una medida nueva del host.",
+      "seal": "15e8b24bc2689244c7235c7ff681f8887e52285577d100152a3b36ed876ba9a9",
       "verdict": "PASS"
     },
     {
       "cited": {
+        "tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json": "bf21ab712d95c541f1a45e7c934cd98a1a7ce89394a1305c1d9fd9dbae829190"
+      },
+      "claim_id": "SPEC-L325",
+      "evidence": "Archived primary files `host-evidence/snapshot-2026-09-25-050801.txt`, `gpu-near-snapshot-2026-09-25.txt`, `journal-2026-09-25.txt`, and `scope-cpu-ratios.txt` preserve the sample, nearby GPU read, journald scope durations/CPU, and calculation: 116.5%, 166.1%, 14.1% combined over 20 CPUs. `host-evidence/calibra-latencia-current.txt` records rc=2/zero usable labels. The row states that the incident cause remains unproven, rather than inferring one. Revisi\u00f3n 2026-10-03: el texto de esta afirmaci\u00f3n y todos los hashes nativos de sus archivos citados permanecen iguales al ledger previo; solo cambi\u00f3 la l\u00ednea por nuevas filas de inventario. Prueba literal: tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json. Esta revisi\u00f3n preserva la atribuci\u00f3n y l\u00edmites de la evidencia hist\u00f3rica; no aporta una medida nueva del host.",
+      "seal": "5ff220c02db8e9279c795ab5edd2304f0fb26e0be0de73b54d35a94d44be6602",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {
+        "tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json": "bf21ab712d95c541f1a45e7c934cd98a1a7ce89394a1305c1d9fd9dbae829190",
         "tests/test_cobertura_bash.py": "8572e932e7df72e542aadfda447e12f633f3294fb136656968888cc0c8fb125d",
         "tools/cobertura_bash.sh": "8077450089861794b37b9a4b92ec68b7342c26e80b00cbb0e2418218f709ae80",
         "tools/piso_cobertura.sh": "4577ade3c8c7066373d7781d348cf500ee7715843263779f7c3fc84ca680e076"
       },
-      "claim_id": "SPEC-L321",
-      "evidence": "Read-only source checks: `rg -n '39\\.7|39\\.8|stat -c %w|2026-09-09|15:39|15:40|35\\.3|cobertura' tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01` found no raw coverage stdout; `git show 09deb5b --format=%B` contains `tools/piso_cobertura.sh (39.8%, piso 32.8%).`; the versioned message for `57ae066` records `35.0%-35.3%`. SPEC now attributes those exact figures to those commit messages and states the H1 package lacks original stdout. The 4.5-point difference is arithmetic from the reported maxima (39.8\u221235.3); commit `09deb5b` adds the five drift tests. Previous `false` verdict is preserved in `/tmp/bb-luna98-h1-reviewed.json`; the corrected source attribution is confirmed.",
-      "seal": "13365d2b5b8bd7e3bfb6f616924a1ba1a304599edf0469e2b1df65fb05736639",
+      "claim_id": "SPEC-L326",
+      "evidence": "Read-only source checks: `rg -n '39\\.7|39\\.8|stat -c %w|2026-09-09|15:39|15:40|35\\.3|cobertura' tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01` found no raw coverage stdout; `git show 09deb5b --format=%B` contains `tools/piso_cobertura.sh (39.8%, piso 32.8%).`; the versioned message for `57ae066` records `35.0%-35.3%`. SPEC now attributes those exact figures to those commit messages and states the H1 package lacks original stdout. The 4.5-point difference is arithmetic from the reported maxima (39.8\u221235.3); commit `09deb5b` adds the five drift tests. Previous `false` verdict is preserved in `/tmp/bb-luna98-h1-reviewed.json`; the corrected source attribution is confirmed. Revisi\u00f3n 2026-10-03: el texto de esta afirmaci\u00f3n y todos los hashes nativos de sus archivos citados permanecen iguales al ledger previo; solo cambi\u00f3 la l\u00ednea por nuevas filas de inventario. Prueba literal: tasks/evidence/BB-INSTRUMENTS-2026-10-03/h1-movement-proof.json. Esta revisi\u00f3n preserva la atribuci\u00f3n y l\u00edmites de la evidencia hist\u00f3rica; no aporta una medida nueva del host.",
+      "seal": "a0c8eeaa1cfef1dd870706570382d0152ee03ea18118b4394cbfd8dea8f6b404",
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-03T17:59:09Z",
-  "tree_fingerprint": "9b61c418cec9f8a2517f3dfacbf382bfb4fc46869000bc30053785052d2b6df5",
+  "timestamp": "2026-10-03T20:11:53Z",
+  "tree_fingerprint": "8fbd9ff03637b6c12458838be7b3e1b229525984afba87156f79ea9211dee544",
   "violations": []
 }
