@@ -1,0 +1,1036 @@
+{
+  "checks": {
+    "desktop": {
+      "default_target": {
+        "command": [
+          "systemctl",
+          "get-default"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 1,
+        "status": "could_not_run",
+        "stderr": "Failed to connect to bus: Operation not permitted",
+        "stderr_truncated": false,
+        "stdout": "",
+        "stdout_truncated": false
+      },
+      "display_manager": {
+        "command": [
+          "systemctl",
+          "is-active",
+          "display-manager.service"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 1,
+        "status": "could_not_run",
+        "stderr": "Failed to connect to bus: Operation not permitted",
+        "stderr_truncated": false,
+        "stdout": "",
+        "stdout_truncated": false
+      },
+      "gdm": {
+        "command": [
+          "systemctl",
+          "is-active",
+          "gdm.service"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 1,
+        "status": "could_not_run",
+        "stderr": "Failed to connect to bus: Operation not permitted",
+        "stderr_truncated": false,
+        "stdout": "",
+        "stdout_truncated": false
+      },
+      "sessions": {
+        "command": [
+          "loginctl",
+          "list-sessions",
+          "--no-pager",
+          "--no-legend"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 1,
+        "status": "could_not_run",
+        "stderr": "Failed to connect to bus: Operation not permitted",
+        "stderr_truncated": false,
+        "stdout": "",
+        "stdout_truncated": false
+      },
+      "ssh": {
+        "command": [
+          "systemctl",
+          "is-active",
+          "ssh.service"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 1,
+        "status": "could_not_run",
+        "stderr": "Failed to connect to bus: Operation not permitted",
+        "stderr_truncated": false,
+        "stdout": "",
+        "stdout_truncated": false
+      }
+    },
+    "gpu_runtime": {
+      "container_runtime_version": {
+        "command": [
+          "docker",
+          "version",
+          "--format",
+          "{{.Server.Version}}"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 1,
+        "status": "could_not_run",
+        "stderr": "permission denied while trying to connect to the docker API at unix:///var/run/docker.sock",
+        "stderr_truncated": false,
+        "stdout": "",
+        "stdout_truncated": false
+      },
+      "cuda_runtime": {
+        "library": "libcudart.so.13",
+        "major": 13,
+        "minor": 0,
+        "runtime_version": 13000,
+        "status": "ok"
+      },
+      "nvidia_gpu_state": {
+        "command": [
+          "nvidia-smi",
+          "--query-gpu=name,driver_version,pci.bus_id,utilization.gpu,power.draw",
+          "--format=csv,noheader"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 9,
+        "status": "could_not_run",
+        "stderr": null,
+        "stderr_truncated": false,
+        "stdout": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.",
+        "stdout_truncated": false
+      },
+      "nvidia_smi_banner": {
+        "command": [
+          "nvidia-smi"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 9,
+        "status": "could_not_run",
+        "stderr": null,
+        "stderr_truncated": false,
+        "stdout": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.",
+        "stdout_truncated": false
+      },
+      "running_container_image_ids": {
+        "source_key": "running_container_image_tags",
+        "status": "partial"
+      },
+      "running_container_image_tags": {
+        "command": [
+          "docker",
+          "ps",
+          "--no-trunc",
+          "--format",
+          "{{.ID}} {{.Image}}"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 1,
+        "status": "could_not_run",
+        "stderr": "permission denied while trying to connect to the docker API at unix:///var/run/docker.sock",
+        "stderr_truncated": false,
+        "stdout": "",
+        "stdout_truncated": false
+      }
+    },
+    "kernel_signals": {
+      "command": [
+        "journalctl",
+        "--no-pager",
+        "--boot",
+        "--dmesg",
+        "--lines=500",
+        "--grep=HC died|uvcvideo|xhci|nvme|read-only|I/O error|usbhid|no-secrets|WRONG_KEY|r8127"
+      ],
+      "contact_emails_redacted": 1,
+      "returncode": 0,
+      "status": "ok",
+      "stderr": null,
+      "stderr_truncated": false,
+      "stdout": "Oct 01 13:32:54 aitopatom-41f1 kernel: usb 1-1.2.3: reset full-speed USB device number 54 using xhci-hcd\nOct 01 13:32:54 aitopatom-41f1 kernel: usbhid 1-1.4.1:1.1: probe with driver usbhid failed with error -71\nOct 01 13:32:54 aitopatom-41f1 kernel: usbhid 1-1.4.1:1.1: can't add hid device: -71\nOct 01 13:32:54 aitopatom-41f1 kernel: usbhid 1-1.4.1:1.0: probe with driver usbhid failed with error -71\nOct 01 13:32:54 aitopatom-41f1 kernel: usbhid 1-1.4.1:1.0: can't add hid device: -71\nOct 01 13:32:53 aitopatom-41f1 kernel: usb 1-1.4.1: reset full-speed USB device number 53 using xhci-hcd\nOct 01 13:32:53 aitopatom-41f1 kernel: usb 1-1.4.1: reset full-speed USB device number 53 using xhci-hcd\nOct 01 13:32:44 aitopatom-41f1 kernel: usb 1-1.2.2: reset high-speed USB device number 51 using xhci-hcd\nOct 01 13:32:43 aitopatom-41f1 kernel: usb 1-1.3: reset full-speed USB device number 49 using xhci-hcd\nOct 01 13:32:43 aitopatom-41f1 kernel: usb 1-1.2.3: reset full-speed USB device number 54 using xhci-hcd\nOct 01 13:32:43 aitopatom-41f1 kernel: usb 1-1.4.1: reset full-speed USB device number 53 using xhci-hcd\nOct 01 13:32:42 aitopatom-41f1 kernel: usb 1-1.4.1: reset full-speed USB device number 53 using xhci-hcd\nOct 01 11:30:41 aitopatom-41f1 kernel: usb 1-1.2.3: new full-speed USB device number 54 using xhci-hcd\nOct 01 11:30:39 aitopatom-41f1 kernel: usb 1-1.4.1: new full-speed USB device number 53 using xhci-hcd\nOct 01 11:30:38 aitopatom-41f1 kernel: usb 1-1.4: new high-speed USB device number 52 using xhci-hcd\nOct 01 11:30:38 aitopatom-41f1 kernel: usb 1-1.2.2: new high-speed USB device number 51 using xhci-hcd\nOct 01 11:30:38 aitopatom-41f1 kernel: usb 1-1.1.1: new high-speed USB device number 50 using xhci-hcd\nOct 01 11:30:38 aitopatom-41f1 kernel: usb 1-1.3: new full-speed USB device number 49 using xhci-hcd\nOct 01 11:30:37 aitopatom-41f1 kernel: usb 1-1.2: new high-speed USB device number 48 using xhci-hcd\nOct 01 11:30:37 aitopatom-41f1 kernel: usb 1-1.1: new high-speed USB device number 47 using xhci-hcd\nOct 01 11:30:37 aitopatom-41f1 kernel: usb 1-1: new high-speed USB device number 46 using xhci-hcd\nSep 30 17:50:19 aitopatom-41f1 systemd[1]: Stopped nvidia-nvme-interrupt-coalescing.service - Configure NVMe Interrupt Coalescing.\nSep 30 17:50:19 aitopatom-41f1 systemd[1]: nvidia-nvme-interrupt-coalescing.service: Deactivated successfully.\nSep 30 17:50:19 aitopatom-41f1 systemd[1]: Stopping nvidia-nvme-interrupt-coalescing.service - Configure NVMe Interrupt Coalescing...\nSep 30 17:41:54 aitopatom-41f1 kernel: usb 1-1.2.2: reset high-speed USB device number 44 using xhci-hcd\nSep 30 17:36:34 aitopatom-41f1 kernel: usb 1-1.2.3: new full-speed USB device number 45 using xhci-hcd\nSep 30 17:36:32 aitopatom-41f1 kernel: usb 1-1.2.2: new high-speed USB device number 44 using xhci-hcd\nSep 30 17:36:31 aitopatom-41f1 kernel: usb 1-1.2: new high-speed USB device number 43 using xhci-hcd\nSep 30 17:05:20 aitopatom-41f1 kernel: usb 1-1.4.1: reset full-speed USB device number 41 using xhci-hcd\nSep 30 17:03:18 aitopatom-41f1 kernel: usb 1-1.2.3: new full-speed USB device number 42 using xhci-hcd\nSep 30 17:03:16 aitopatom-41f1 kernel: usb 1-1.4.1: new full-speed USB device number 41 using xhci-hcd\nSep 30 17:03:16 aitopatom-41f1 kernel: usb 1-1.4: new high-speed USB device number 40 using xhci-hcd\nSep 30 17:03:16 aitopatom-41f1 kernel: usb 1-1.2.2: new high-speed USB device number 39 using xhci-hcd\nSep 30 17:03:15 aitopatom-41f1 kernel: usb 1-1.2: new high-speed USB device number 38 using xhci-hcd\nSep 30 17:03:09 aitopatom-41f1 kernel: usb 1-1.2.3: new full-speed USB device number 37 using xhci-hcd\nSep 30 17:03:07 aitopatom-41f1 kernel: usb 1-1.4.1: new full-speed USB device number 36 using xhci-hcd\nSep 30 17:03:06 aitopatom-41f1 kernel: usb 1-1.4: new high-speed USB device number 35 using xhci-hcd\nSep 30 17:03:06 aitopatom-41f1 kernel: usb 1-1.2.2: new high-speed USB device number 34 using xhci-hcd\nSep 30 17:03:06 aitopatom-41f1 kernel: usb 1-1.2: new high-speed USB device number 33 using xhci-hcd\nSep 30 17:03:00 aitopatom-41f1 kernel: usb 1-1.2.3: new full-speed USB device number 32 using xhci-hcd\nSep 30 17:02:58 aitopatom-41f1 kernel: usb 1-1.4.1: new full-speed USB device number 31 using xhci-hcd\nSep 30 17:02:58 aitopatom-41f1 kernel: usb 1-1.4: new high-speed USB device number 30 using xhci-hcd\nSep 30 17:02:58 aitopatom-41f1 kernel: usb 1-1.2.2: new high-speed USB device number 29 using xhci-hcd\nSep 30 17:02:58 aitopatom-41f1 kernel: usb 1-1.3: new full-speed USB device number 28 using xhci-hcd\nSep 30 17:02:57 aitopatom-41f1 kernel: usb 1-1.1.1: new high-speed USB device number 27 using xhci-hcd\nSep 30 17:02:57 aitopatom-41f1 kernel: usb 1-1.2: new high-speed USB device number 26 using xhci-hcd\nSep 30 17:02:57 aitopatom-41f1 kernel: usb 1-1.1: new high-speed USB device number 25 using xhci-hcd\nSep 30 17:02:56 aitopatom-41f1 kernel: usb 1-1: new high-speed USB device number 24 using xhci-hcd\nSep 30 16:56:59 aitopatom-41f1 kernel: usb 1-1.2.3: new full-speed USB device number 23 using xhci-hcd\nSep 30 16:56:57 aitopatom-41f1 kernel: usb 1-1.4.1: new full-speed USB device number 22 using xhci-hcd\nSep 30 16:56:56 aitopatom-41f1 kernel: usb 1-1.4: new high-speed USB device number 21 using xhci-hcd\nSep 30 16:56:56 aitopatom-41f1 kernel: usb 1-1.2.2: new high-speed USB device number 20 using xhci-hcd\nSep 30 16:56:56 aitopatom-41f1 kernel: usb 1-1.3: new full-speed USB device number 19 using xhci-hcd\nSep 30 16:56:56 aitopatom-41f1 kernel: usb 1-1.1.1: new high-speed USB device number 18 using xhci-hcd\nSep 30 16:56:56 aitopatom-41f1 kernel: usb 1-1.2: new high-speed USB device number 17 using xhci-hcd\nSep 30 16:56:55 aitopatom-41f1 kernel: usb 1-1.1: new high-speed USB device number 16 using xhci-hcd\nSep 30 16:56:55 aitopatom-41f1 kernel: usb 1-1: new high-speed USB device number 15 using xhci-hcd\nSep 30 16:53:46 aitopatom-41f1 kernel: usb 1-1: new high-speed USB device number 11 using xhci-hcd\nSep 30 15:45:30 aitopatom-41f1 kernel: usb 1-1.2.2: reset high-speed USB device number 7 using xhci-hcd\nSep 30 15:45:10 aitopatom-41f1 kernel: usbcore: registered new interface driver uvcvideo\nSep 30 15:45:10 aitopatom-41f1 kernel: usb 1-1.2.3: new full-speed USB device number 10 using xhci-hcd\nSep 30 15:45:08 aitopatom-41f1 kernel: usb 1-1.4.1: new full-speed USB device number 9 using xhci-hcd\nSep 30 15:45:08 aitopatom-41f1 kernel: usbhid: USB HID core driver\nSep 30 15:45:08 aitopatom-41f1 kernel: usbcore: registered new interface driver usbhid\nSep 30 15:45:08 aitopatom-41f1 kernel: usb 1-1.4: new high-speed USB device number 8 using xhci-hcd\nSep 30 15:45:08 aitopatom-41f1 kernel: usb 1-1.2.2: new high-speed USB device number 7 using xhci-hcd\nSep 30 15:45:07 aitopatom-41f1 kernel: usb 1-1.3: new full-speed USB device number 6 using xhci-hcd\nSep 30 15:45:07 aitopatom-41f1 kernel: usb 1-1.1.1: new high-speed USB device number 5 using xhci-hcd\nSep 30 15:45:07 aitopatom-41f1 kernel: usb 1-1.2: new high-speed USB device number 4 using xhci-hcd\nSep 30 15:45:07 aitopatom-41f1 kernel: usb 1-1.1: new high-speed USB device number 3 using xhci-hcd\nSep 30 15:45:06 aitopatom-41f1 kernel: usb 1-1: new high-speed USB device number 2 using xhci-hcd\nSep 30 14:40:16 aitopatom-41f1 kernel: r8127: enP7s7: link up\nSep 30 14:39:24 aitopatom-41f1 kernel: nvme nvme0: using unchecked data buffer\nSep 30 14:39:24 aitopatom-41f1 kernel: EXT4-fs (nvme0n1p2): re-mounted 14775751-e6a7-4614-8ee1-e3aedc5d7ada r/w.\nSep 30 14:39:24 aitopatom-41f1 systemd[1]: Finished modprobe@nvme_fabrics.service - Load Kernel Module nvme_fabrics.\nSep 30 14:39:24 aitopatom-41f1 systemd[1]: modprobe@nvme_fabrics.service: Deactivated successfully.\nSep 30 14:39:24 aitopatom-41f1 systemd[1]: Starting modprobe@nvme_fabrics.service - Load Kernel Module nvme_fabrics...\nSep 30 14:39:24 aitopatom-41f1 kernel: EXT4-fs (nvme0n1p2): mounted filesystem 14775751-e6a7-4614-8ee1-e3aedc5d7ada ro with ordered data mode. Quota mode: none.\nSep 30 14:39:24 aitopatom-41f1 kernel: usb 11-2: new high-speed USB device number 2 using xhci-hcd\nSep 30 14:39:24 aitopatom-41f1 kernel: r8127 0007:01:00.0 enP7s7: renamed from eth0\nSep 30 14:39:24 aitopatom-41f1 kernel:  nvme0n1: p1 p2\nSep 30 14:39:24 aitopatom-41f1 kernel: nvme nvme0: 15/0/0 default/read/poll queues\nSep 30 14:39:24 aitopatom-41f1 kernel: nvme nvme0: D3 entry latency set to 10 seconds\nSep 30 14:39:24 aitopatom-41f1 kernel: nvme nvme0: pci function 0004:01:00.0\nSep 30 14:39:24 aitopatom-41f1 kernel: r8127  Copyright (C) 2025 Realtek NIC software team <redacted-contact> \n                                        This program comes with ABSOLUTELY NO WARRANTY; for details, please see <http://www.gnu.org/licenses/>. \n                                        This is free software, and you are welcome to redistribute it under certain conditions; see <http://www.gnu.org/licenses/>. \nSep 30 14:39:24 aitopatom-41f1 kernel: r8127: This product is covered by one or more of the following patents: US6,570,884, US6,115,776, and US6,327,625.\nSep 30 14:39:24 aitopatom-41f1 kernel: usb usb12: Manufacturer: Linux 6.17.0-1032-nvidia xhci-hcd\nSep 30 14:39:24 aitopatom-41f1 kernel: usb usb11: Manufacturer: Linux 6.17.0-1032-nvidia xhci-hcd\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:04: Host supports USB 3.2 Enhanced SuperSpeed\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:04: new USB bus registered, assigned bus number 12\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:04: xHCI Host Controller\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:04: irq 53, io mem 0x1d870000\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:04: hcc params 0x01844f91 hci version 0x120 quirks 0x0008000000000010\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:04: new USB bus registered, assigned bus number 11\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:04: xHCI Host Controller\nSep 30 14:39:24 aitopatom-41f1 kernel: usb usb10: Manufacturer: Linux 6.17.0-1032-nvidia xhci-hcd\nSep 30 14:39:24 aitopatom-41f1 kernel: usb usb9: Manufacturer: Linux 6.17.0-1032-nvidia xhci-hcd\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8001:00: Host supports USB 3.2 Enhanced SuperSpeed\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8001:00: new USB bus registered, assigned bus number 10\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8001:00: xHCI Host Controller\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8001:00: irq 52, io mem 0x1d860000\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8001:00: hcc params 0x01844f91 hci version 0x120 quirks 0x0008000000000010\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8001:00: new USB bus registered, assigned bus number 9\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8001:00: xHCI Host Controller\nSep 30 14:39:24 aitopatom-41f1 kernel: r8127 Ethernet controller driver 11.014.00-NAPI loaded\nSep 30 14:39:24 aitopatom-41f1 kernel: usb usb8: Manufacturer: Linux 6.17.0-1032-nvidia xhci-hcd\nSep 30 14:39:24 aitopatom-41f1 kernel: usb usb7: Manufacturer: Linux 6.17.0-1032-nvidia xhci-hcd\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:03: Host supports USB 3.2 Enhanced SuperSpeed\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:03: new USB bus registered, assigned bus number 8\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:03: xHCI Host Controller\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:03: irq 51, io mem 0x1de10000\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:03: hcc params 0x01844f91 hci version 0x120 quirks 0x0008000000000010\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:03: new USB bus registered, assigned bus number 7\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:03: xHCI Host Controller\nSep 30 14:39:24 aitopatom-41f1 kernel: usb usb6: Manufacturer: Linux 6.17.0-1032-nvidia xhci-hcd\nSep 30 14:39:24 aitopatom-41f1 kernel: usb usb5: Manufacturer: Linux 6.17.0-1032-nvidia xhci-hcd\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:02: Host supports USB 3.2 Enhanced SuperSpeed\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:02: new USB bus registered, assigned bus number 6\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:02: xHCI Host Controller\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:02: irq 50, io mem 0x1dde0000\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:02: hcc params 0x01844f91 hci version 0x120 quirks 0x0008000000000010\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:02: new USB bus registered, assigned bus number 5\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:02: xHCI Host Controller\nSep 30 14:39:24 aitopatom-41f1 kernel: usb usb4: Manufacturer: Linux 6.17.0-1032-nvidia xhci-hcd\nSep 30 14:39:24 aitopatom-41f1 kernel: usb usb3: Manufacturer: Linux 6.17.0-1032-nvidia xhci-hcd\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:01: Host supports USB 3.2 Enhanced SuperSpeed\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:01: new USB bus registered, assigned bus number 4\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:01: xHCI Host Controller\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:01: irq 49, io mem 0x1db90000\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:01: hcc params 0x01844f91 hci version 0x120 quirks 0x0008000000000010\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:01: new USB bus registered, assigned bus number 3\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:01: xHCI Host Controller\nSep 30 14:39:24 aitopatom-41f1 kernel: usb usb2: Manufacturer: Linux 6.17.0-1032-nvidia xhci-hcd\nSep 30 14:39:24 aitopatom-41f1 kernel: usb usb1: Manufacturer: Linux 6.17.0-1032-nvidia xhci-hcd\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:00: Host supports USB 3.2 Enhanced SuperSpeed\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:00: new USB bus registered, assigned bus number 2\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:00: xHCI Host Controller\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:00: irq 48, io mem 0x1db60000\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:00: hcc params 0x01844f91 hci version 0x120 quirks 0x0008000000000010\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:00: new USB bus registered, assigned bus number 1\nSep 30 14:39:24 aitopatom-41f1 kernel: xhci-hcd NVDA8000:00: xHCI Host Controller",
+      "stdout_truncated": false
+    },
+    "network": {
+      "default_routes": {
+        "command": [
+          "ip",
+          "route",
+          "show",
+          "default"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 1,
+        "status": "could_not_run",
+        "stderr": "Cannot open netlink socket: Operation not permitted",
+        "stderr_truncated": false,
+        "stdout": "",
+        "stdout_truncated": false
+      },
+      "eee": {
+        "enP7s7": {
+          "command": [
+            "ethtool",
+            "--show-eee",
+            "enP7s7"
+          ],
+          "contact_emails_redacted": 0,
+          "returncode": 70,
+          "status": "could_not_run",
+          "stderr": "Cannot get control socket: Operation not permitted",
+          "stderr_truncated": false,
+          "stdout": "",
+          "stdout_truncated": false
+        }
+      },
+      "interface_inventory": {
+        "errors": {},
+        "ethernet": [
+          "enP7s7"
+        ],
+        "excluded": {
+          "br-3d679de7306e": "no sysfs device link (virtual or non-device interface)",
+          "br-420d1def4d77": "no sysfs device link (virtual or non-device interface)",
+          "br-cf071280853a": "no sysfs device link (virtual or non-device interface)",
+          "br-f4146d0c48e9": "no sysfs device link (virtual or non-device interface)",
+          "docker0": "no sysfs device link (virtual or non-device interface)",
+          "veth129f2c8": "no sysfs device link (virtual or non-device interface)",
+          "veth278d546": "no sysfs device link (virtual or non-device interface)",
+          "veth2ab6fe0": "no sysfs device link (virtual or non-device interface)",
+          "veth309ef76": "no sysfs device link (virtual or non-device interface)",
+          "veth34fbe5b": "no sysfs device link (virtual or non-device interface)",
+          "veth4997893": "no sysfs device link (virtual or non-device interface)",
+          "veth6ad8894": "no sysfs device link (virtual or non-device interface)",
+          "vethf802b8f": "no sysfs device link (virtual or non-device interface)",
+          "vethf843cc8": "no sysfs device link (virtual or non-device interface)",
+          "wlP9s9": "wireless interface"
+        },
+        "interfaces": [
+          "br-3d679de7306e",
+          "br-420d1def4d77",
+          "br-cf071280853a",
+          "br-f4146d0c48e9",
+          "docker0",
+          "enP7s7",
+          "veth129f2c8",
+          "veth278d546",
+          "veth2ab6fe0",
+          "veth309ef76",
+          "veth34fbe5b",
+          "veth4997893",
+          "veth6ad8894",
+          "vethf802b8f",
+          "vethf843cc8",
+          "wlP9s9"
+        ],
+        "status": "ok"
+      },
+      "links": {
+        "command": [
+          "ip",
+          "-brief",
+          "link"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 1,
+        "status": "could_not_run",
+        "stderr": "Cannot open netlink socket: Operation not permitted",
+        "stderr_truncated": false,
+        "stdout": "",
+        "stdout_truncated": false
+      },
+      "nm_devices": {
+        "command": [
+          "nmcli",
+          "--terse",
+          "--fields",
+          "DEVICE,TYPE,STATE",
+          "device",
+          "status"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 1,
+        "status": "could_not_run",
+        "stderr": "Error: Could not create NMClient object: Could not connect: Operation not permitted.",
+        "stderr_truncated": false,
+        "stdout": "",
+        "stdout_truncated": false
+      },
+      "pci_bindings": {
+        "br-3d679de7306e": {
+          "driver": null,
+          "module": null,
+          "module_version": null,
+          "pci_address": null,
+          "pci_device": null,
+          "pci_vendor": null,
+          "status": "not_pci"
+        },
+        "br-420d1def4d77": {
+          "driver": null,
+          "module": null,
+          "module_version": null,
+          "pci_address": null,
+          "pci_device": null,
+          "pci_vendor": null,
+          "status": "not_pci"
+        },
+        "br-cf071280853a": {
+          "driver": null,
+          "module": null,
+          "module_version": null,
+          "pci_address": null,
+          "pci_device": null,
+          "pci_vendor": null,
+          "status": "not_pci"
+        },
+        "br-f4146d0c48e9": {
+          "driver": null,
+          "module": null,
+          "module_version": null,
+          "pci_address": null,
+          "pci_device": null,
+          "pci_vendor": null,
+          "status": "not_pci"
+        },
+        "docker0": {
+          "driver": null,
+          "module": null,
+          "module_version": null,
+          "pci_address": null,
+          "pci_device": null,
+          "pci_vendor": null,
+          "status": "not_pci"
+        },
+        "enP7s7": {
+          "driver": "r8127",
+          "module": "r8127",
+          "module_version": {
+            "status": "ok",
+            "value": "11.014.00-NAPI"
+          },
+          "module_version_status": "ok",
+          "pci_address": "0007:01:00.0",
+          "pci_device": "0x8127",
+          "pci_vendor": "0x10ec",
+          "status": "bound"
+        },
+        "veth129f2c8": {
+          "driver": null,
+          "module": null,
+          "module_version": null,
+          "pci_address": null,
+          "pci_device": null,
+          "pci_vendor": null,
+          "status": "not_pci"
+        },
+        "veth278d546": {
+          "driver": null,
+          "module": null,
+          "module_version": null,
+          "pci_address": null,
+          "pci_device": null,
+          "pci_vendor": null,
+          "status": "not_pci"
+        },
+        "veth2ab6fe0": {
+          "driver": null,
+          "module": null,
+          "module_version": null,
+          "pci_address": null,
+          "pci_device": null,
+          "pci_vendor": null,
+          "status": "not_pci"
+        },
+        "veth309ef76": {
+          "driver": null,
+          "module": null,
+          "module_version": null,
+          "pci_address": null,
+          "pci_device": null,
+          "pci_vendor": null,
+          "status": "not_pci"
+        },
+        "veth34fbe5b": {
+          "driver": null,
+          "module": null,
+          "module_version": null,
+          "pci_address": null,
+          "pci_device": null,
+          "pci_vendor": null,
+          "status": "not_pci"
+        },
+        "veth4997893": {
+          "driver": null,
+          "module": null,
+          "module_version": null,
+          "pci_address": null,
+          "pci_device": null,
+          "pci_vendor": null,
+          "status": "not_pci"
+        },
+        "veth6ad8894": {
+          "driver": null,
+          "module": null,
+          "module_version": null,
+          "pci_address": null,
+          "pci_device": null,
+          "pci_vendor": null,
+          "status": "not_pci"
+        },
+        "vethf802b8f": {
+          "driver": null,
+          "module": null,
+          "module_version": null,
+          "pci_address": null,
+          "pci_device": null,
+          "pci_vendor": null,
+          "status": "not_pci"
+        },
+        "vethf843cc8": {
+          "driver": null,
+          "module": null,
+          "module_version": null,
+          "pci_address": null,
+          "pci_device": null,
+          "pci_vendor": null,
+          "status": "not_pci"
+        },
+        "wlP9s9": {
+          "driver": "mt7925e",
+          "module": "mt7925e",
+          "module_version": {
+            "error": "FileNotFoundError: [Errno 2] No such file or directory: '/sys/module/mt7925e/version'",
+            "status": "could_not_run"
+          },
+          "module_version_status": "could_not_run",
+          "pci_address": "0009:01:00.0",
+          "pci_device": "0x7925",
+          "pci_vendor": "0x14c3",
+          "status": "bound"
+        }
+      },
+      "wireless_interfaces": {
+        "command": [
+          "iw",
+          "dev"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 1,
+        "status": "could_not_run",
+        "stderr": "Failed to connect to generic netlink.",
+        "stderr_truncated": false,
+        "stdout": "",
+        "stdout_truncated": false
+      }
+    },
+    "storage": {
+      "block_devices": {
+        "command": [
+          "lsblk",
+          "--json",
+          "--output",
+          "NAME,TYPE,RO,MODEL,MOUNTPOINT"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": null,
+        "stderr_truncated": false,
+        "stdout": "{\n   \"blockdevices\": [\n      {\n         \"name\": \"loop0\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/antigravity/40\"\n      },{\n         \"name\": \"loop1\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/thunderbird/1278\"\n      },{\n         \"name\": \"loop2\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/bare/5\"\n      },{\n         \"name\": \"loop3\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/core22/2438\"\n      },{\n         \"name\": \"loop4\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/core22/2956\"\n      },{\n         \"name\": \"loop5\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/core24/1644\"\n      },{\n         \"name\": \"loop6\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/core24/2125\"\n      },{\n         \"name\": \"loop7\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/cups/1237\"\n      },{\n         \"name\": \"loop8\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/cups/1261\"\n      },{\n         \"name\": \"loop9\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/core26/463\"\n      },{\n         \"name\": \"loop10\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/firmware-updater/259\"\n      },{\n         \"name\": \"loop11\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/firmware-updater/227\"\n      },{\n         \"name\": \"loop12\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/ghidra/38\"\n      },{\n         \"name\": \"loop13\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/ghidra/48\"\n      },{\n         \"name\": \"loop14\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/gnome-46-2404/154\"\n      },{\n         \"name\": \"loop15\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/gnome-42-2204/264\"\n      },{\n         \"name\": \"loop16\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/gnome-46-2404/169\"\n      },{\n         \"name\": \"loop17\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/gtk-common-themes/1535\"\n      },{\n         \"name\": \"loop18\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/mesa-2404/1836\"\n      },{\n         \"name\": \"loop19\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/mesa-2404/1166\"\n      },{\n         \"name\": \"loop20\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/ollama/135\"\n      },{\n         \"name\": \"loop21\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/ollama/136\"\n      },{\n         \"name\": \"loop22\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/opencode/215\"\n      },{\n         \"name\": \"loop23\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/opencode/236\"\n      },{\n         \"name\": \"loop24\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/opencode/components/mnt/desktop/177\"\n      },{\n         \"name\": \"loop25\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/opencode/components/mnt/desktop/158\"\n      },{\n         \"name\": \"loop26\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/openshell/1635\"\n      },{\n         \"name\": \"loop27\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/openshell/1618\"\n      },{\n         \"name\": \"loop28\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/pycharm/116\"\n      },{\n         \"name\": \"loop29\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/snap-store/1217\"\n      },{\n         \"name\": \"loop30\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/pycharm/120\"\n      },{\n         \"name\": \"loop31\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/snapd/27740\"\n      },{\n         \"name\": \"loop32\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/snap-store/1428\"\n      },{\n         \"name\": \"loop34\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/snapd/28255\"\n      },{\n         \"name\": \"loop35\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/snapd-desktop-integration/396\"\n      },{\n         \"name\": \"loop36\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/thunderbird/1275\"\n      },{\n         \"name\": \"loop37\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/snapd-desktop-integration/316\"\n      },{\n         \"name\": \"loop38\",\n         \"type\": \"loop\",\n         \"ro\": true,\n         \"model\": null,\n         \"mountpoint\": \"/snap/antigravity/41\"\n      },{\n         \"name\": \"nvme0n1\",\n         \"type\": \"disk\",\n         \"ro\": false,\n         \"model\": \"SAMSUNG MZALC4T0HBL1-00B07\",\n         \"mountpoint\": null,\n         \"children\": [\n            {\n               \"name\": \"nvme0n1p1\",\n               \"type\": \"part\",\n               \"ro\": false,\n               \"model\": null,\n               \"mountpoint\": \"/boot/efi\"\n            },{\n               \"name\": \"nvme0n1p2\",\n               \"type\": \"part\",\n               \"ro\": false,\n               \"model\": null,\n               \"mountpoint\": \"/\"\n            }\n         ]\n      }\n   ]\n}",
+        "stdout_truncated": false
+      },
+      "nvme_inventory": {
+        "command": [
+          "nvme",
+          "list",
+          "--output-format=json"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": null,
+        "stderr_truncated": false,
+        "stdout": "{\n  \"Devices\":[\n    {\n      \"NameSpace\":1,\n      \"DevicePath\":\"nvme0n1\",\n      \"GenericPath\":\"ng0n1\",\n      \"Firmware\":\"NXHB202Q\",\n      \"ModelNumber\":\"SAMSUNG MZALC4T0HBL1-00B07\",\n      \"SerialNumber\":\"S8C2NG0Y901729\",\n      \"UsedBytes\":1340988260352,\n      \"MaximumLBA\":8001573552,\n      \"PhysicalSize\":4096805658624,\n      \"SectorSize\":512\n    }\n  ]\n}",
+        "stdout_truncated": false
+      },
+      "root_mounts": {
+        "status": "ok",
+        "value": [
+          {
+            "options": "ro,nosuid,nodev,relatime",
+            "read_only": true,
+            "target": "/"
+          },
+          {
+            "options": "ro,nosuid,nodev,relatime",
+            "read_only": true,
+            "target": "/boot/efi"
+          }
+        ]
+      }
+    },
+    "usb": {
+      "hid_devices": {
+        "status": "ok",
+        "value": []
+      },
+      "hid_generic_module": {
+        "built_in": false,
+        "loaded": true,
+        "status": "loaded"
+      },
+      "inventory": {
+        "devices": {
+          "1-1": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0610"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "05e3"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "GenesysLogic"
+            },
+            "product": {
+              "status": "ok",
+              "value": "USB2.1 Hub"
+            },
+            "serial": {
+              "reason": "sysfs attribute absent",
+              "status": "unknown"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "480"
+            },
+            "status": "ok"
+          },
+          "1-1.1": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0610"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "05e3"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "GenesysLogic"
+            },
+            "product": {
+              "status": "ok",
+              "value": "USB2.1 Hub"
+            },
+            "serial": {
+              "reason": "sysfs attribute absent",
+              "status": "unknown"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "480"
+            },
+            "status": "ok"
+          },
+          "1-1.1.1": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0610"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "05e3"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "GenesysLogic"
+            },
+            "product": {
+              "status": "ok",
+              "value": "USB2.1 Hub"
+            },
+            "serial": {
+              "reason": "sysfs attribute absent",
+              "status": "unknown"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "480"
+            },
+            "status": "ok"
+          },
+          "11-2": {
+            "idProduct": {
+              "status": "ok",
+              "value": "3630"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "13d3"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "MediaTek Inc."
+            },
+            "product": {
+              "status": "ok",
+              "value": "Wireless_Device"
+            },
+            "serial": {
+              "status": "ok",
+              "value": "000000000"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "480"
+            },
+            "status": "ok"
+          },
+          "usb1": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0002"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "1d6b"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "Linux 6.17.0-1032-nvidia xhci-hcd"
+            },
+            "product": {
+              "status": "ok",
+              "value": "xHCI Host Controller"
+            },
+            "serial": {
+              "status": "ok",
+              "value": "NVDA8000:00"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "480"
+            },
+            "status": "ok"
+          },
+          "usb10": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0003"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "1d6b"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "Linux 6.17.0-1032-nvidia xhci-hcd"
+            },
+            "product": {
+              "status": "ok",
+              "value": "xHCI Host Controller"
+            },
+            "serial": {
+              "status": "ok",
+              "value": "NVDA8001:00"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "20000"
+            },
+            "status": "ok"
+          },
+          "usb11": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0002"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "1d6b"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "Linux 6.17.0-1032-nvidia xhci-hcd"
+            },
+            "product": {
+              "status": "ok",
+              "value": "xHCI Host Controller"
+            },
+            "serial": {
+              "status": "ok",
+              "value": "NVDA8000:04"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "480"
+            },
+            "status": "ok"
+          },
+          "usb12": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0003"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "1d6b"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "Linux 6.17.0-1032-nvidia xhci-hcd"
+            },
+            "product": {
+              "status": "ok",
+              "value": "xHCI Host Controller"
+            },
+            "serial": {
+              "status": "ok",
+              "value": "NVDA8000:04"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "20000"
+            },
+            "status": "ok"
+          },
+          "usb2": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0003"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "1d6b"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "Linux 6.17.0-1032-nvidia xhci-hcd"
+            },
+            "product": {
+              "status": "ok",
+              "value": "xHCI Host Controller"
+            },
+            "serial": {
+              "status": "ok",
+              "value": "NVDA8000:00"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "20000"
+            },
+            "status": "ok"
+          },
+          "usb3": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0002"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "1d6b"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "Linux 6.17.0-1032-nvidia xhci-hcd"
+            },
+            "product": {
+              "status": "ok",
+              "value": "xHCI Host Controller"
+            },
+            "serial": {
+              "status": "ok",
+              "value": "NVDA8000:01"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "480"
+            },
+            "status": "ok"
+          },
+          "usb4": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0003"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "1d6b"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "Linux 6.17.0-1032-nvidia xhci-hcd"
+            },
+            "product": {
+              "status": "ok",
+              "value": "xHCI Host Controller"
+            },
+            "serial": {
+              "status": "ok",
+              "value": "NVDA8000:01"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "20000"
+            },
+            "status": "ok"
+          },
+          "usb5": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0002"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "1d6b"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "Linux 6.17.0-1032-nvidia xhci-hcd"
+            },
+            "product": {
+              "status": "ok",
+              "value": "xHCI Host Controller"
+            },
+            "serial": {
+              "status": "ok",
+              "value": "NVDA8000:02"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "480"
+            },
+            "status": "ok"
+          },
+          "usb6": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0003"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "1d6b"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "Linux 6.17.0-1032-nvidia xhci-hcd"
+            },
+            "product": {
+              "status": "ok",
+              "value": "xHCI Host Controller"
+            },
+            "serial": {
+              "status": "ok",
+              "value": "NVDA8000:02"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "20000"
+            },
+            "status": "ok"
+          },
+          "usb7": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0002"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "1d6b"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "Linux 6.17.0-1032-nvidia xhci-hcd"
+            },
+            "product": {
+              "status": "ok",
+              "value": "xHCI Host Controller"
+            },
+            "serial": {
+              "status": "ok",
+              "value": "NVDA8000:03"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "480"
+            },
+            "status": "ok"
+          },
+          "usb8": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0003"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "1d6b"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "Linux 6.17.0-1032-nvidia xhci-hcd"
+            },
+            "product": {
+              "status": "ok",
+              "value": "xHCI Host Controller"
+            },
+            "serial": {
+              "status": "ok",
+              "value": "NVDA8000:03"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "20000"
+            },
+            "status": "ok"
+          },
+          "usb9": {
+            "idProduct": {
+              "status": "ok",
+              "value": "0002"
+            },
+            "idVendor": {
+              "status": "ok",
+              "value": "1d6b"
+            },
+            "manufacturer": {
+              "status": "ok",
+              "value": "Linux 6.17.0-1032-nvidia xhci-hcd"
+            },
+            "product": {
+              "status": "ok",
+              "value": "xHCI Host Controller"
+            },
+            "serial": {
+              "status": "ok",
+              "value": "NVDA8001:00"
+            },
+            "speed": {
+              "status": "ok",
+              "value": "480"
+            },
+            "status": "ok"
+          }
+        },
+        "hid_devices": {},
+        "hid_inventory_status": "ok",
+        "status": "ok"
+      },
+      "usb_devices": {
+        "status": "ok",
+        "value": [
+          "1-0:1.0",
+          "1-1",
+          "1-1.1",
+          "1-1.1.1",
+          "1-1.1.1:1.0",
+          "1-1.1:1.0",
+          "1-1:1.0",
+          "10-0:1.0",
+          "11-0:1.0",
+          "11-2",
+          "11-2:1.0",
+          "11-2:1.1",
+          "11-2:1.2",
+          "12-0:1.0",
+          "2-0:1.0",
+          "3-0:1.0",
+          "4-0:1.0",
+          "5-0:1.0",
+          "6-0:1.0",
+          "7-0:1.0",
+          "8-0:1.0",
+          "9-0:1.0",
+          "usb1",
+          "usb10",
+          "usb11",
+          "usb12",
+          "usb2",
+          "usb3",
+          "usb4",
+          "usb5",
+          "usb6",
+          "usb7",
+          "usb8",
+          "usb9"
+        ]
+      },
+      "usb_tree": {
+        "command": [
+          "lsusb",
+          "-t"
+        ],
+        "contact_emails_redacted": 0,
+        "returncode": 0,
+        "status": "ok",
+        "stderr": null,
+        "stderr_truncated": false,
+        "stdout": "/:  Bus 001.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 480M\n    |__ Port 001: Dev 046, If 0, Class=Hub, Driver=hub/4p, 480M\n        |__ Port 001: Dev 047, If 0, Class=Hub, Driver=hub/4p, 480M\n            |__ Port 001: Dev 050, If 0, Class=Hub, Driver=hub/4p, 480M\n/:  Bus 002.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 20000M/x2\n/:  Bus 003.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 480M\n/:  Bus 004.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 20000M/x2\n/:  Bus 005.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 480M\n/:  Bus 006.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 20000M/x2\n/:  Bus 007.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 480M\n/:  Bus 008.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 20000M/x2\n/:  Bus 009.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 480M\n/:  Bus 010.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 20000M/x2\n/:  Bus 011.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/2p, 480M\n    |__ Port 002: Dev 002, If 0, Class=Wireless, Driver=btusb, 480M\n    |__ Port 002: Dev 002, If 1, Class=Wireless, Driver=btusb, 480M\n    |__ Port 002: Dev 002, If 2, Class=Wireless, Driver=btusb, 480M\n/:  Bus 012.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 20000M/x2",
+        "stdout_truncated": false
+      },
+      "usbhid_module": {
+        "built_in": false,
+        "loaded": true,
+        "status": "loaded"
+      },
+      "xhci_hcd_module": {
+        "built_in": false,
+        "loaded": true,
+        "status": "loaded"
+      }
+    },
+    "watchdog": {
+      "devices": {
+        "watchdog0": {
+          "identity": {
+            "status": "ok",
+            "value": "SBSA Generic Watchdog"
+          },
+          "nowayout": {
+            "status": "ok",
+            "value": "0"
+          },
+          "state": {
+            "status": "ok",
+            "value": "active"
+          },
+          "status": "ok",
+          "timeout": {
+            "status": "ok",
+            "value": "60"
+          }
+        }
+      },
+      "owner": "UNKNOWN",
+      "status": "ok"
+    }
+  },
+  "could_not_run": 15,
+  "identity": {
+    "architecture": "aarch64",
+    "kernel_release": "6.17.0-1032-nvidia",
+    "page_size_bytes": 4096
+  },
+  "report_status": "partial",
+  "safety": {
+    "block_device_written": false,
+    "mode": "read_only",
+    "modules_changed": false,
+    "network_changed": false,
+    "services_changed": false,
+    "shell": false
+  },
+  "schema": 1,
+  "status": "partial"
+}
