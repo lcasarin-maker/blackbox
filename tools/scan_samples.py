@@ -194,17 +194,18 @@ def _validar_campos_muestras(datos: list[dict]) -> list[str]:
 
 def _validar_contadores(datos: list[dict], campo: str, ancho: int,
                         boot_actual: str | None) -> list[str]:
+    if not boot_actual:
+        return [f"{campo}: faltan dos muestras utilizables del mismo boot"]
     candidatos = [dato for dato in datos
-                  if boot_actual and dato.get("boot_id") == boot_actual and
+                  if dato.get("boot_id") == boot_actual and
                   _pares(dato.get(campo), ancho)]
     por_boot: dict[str, list[dict]] = {}
     for dato in candidatos:
-        boot = dato.get("boot_id")
-        por_boot.setdefault(boot, []).append(dato)
+        por_boot.setdefault(boot_actual, []).append(dato)
     razones = []
     if not any(len(grupo) >= 2 for grupo in por_boot.values()):
         razones.append(f"{campo}: faltan dos muestras utilizables del mismo boot")
-    grupo = por_boot.get(boot_actual or "", [])
+    grupo = por_boot.get(boot_actual, [])
     for anterior, actual in zip(grupo, grupo[1:]):
         a = _pares(anterior.get(campo), ancho)
         b = _pares(actual.get(campo), ancho)
@@ -219,7 +220,8 @@ def _validar_contadores(datos: list[dict], campo: str, ancho: int,
 
 def _validar_muestras(datos: list[dict]) -> list[str]:
     razones = _validar_campos_muestras(datos)
-    boots = [dato.get("boot_id") for dato in datos if dato.get("boot_id")]
+    boots = [dato["boot_id"] for dato in datos
+             if isinstance(dato.get("boot_id"), str) and dato["boot_id"]]
     boot_actual = boots[-1] if boots else None
     if boots:
         for dato in datos:
