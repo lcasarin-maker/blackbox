@@ -1,0 +1,6 @@
+Ficha: DEBT-SUNSET-CGROUP-REPRO-167
+Close check: python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_cgroup_repro_167
+
+Se conserva la ventana de observación de memoria CPU: el worker emite held y after_release separados por 2 s de reloj controlado; con sleep neutralizado la ventana es cero.
+
+Comando de cierre ejecutado como parte de la corrida de 14 selectores; salida: `14 passed in 33.81s`; `could_not_run=0`.

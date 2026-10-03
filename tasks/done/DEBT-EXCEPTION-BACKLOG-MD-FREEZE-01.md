@@ -3,12 +3,16 @@ id: DEBT-EXCEPTION-BACKLOG-MD-FREEZE-01
 kind: task
 domain: VERDICT
 title: "Revalidar no aplicabilidad de backlog_md_freeze"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_exception_backlog_md_freeze_01", "expect": "exit_zero", "porque": "Comprobar el supuesto de no aplicabilidad contra el repo actual y ejecutar el órgano en su contexto. Si el sujeto existe, reactivar el control; si permanece ausente, conservar NO APLICA explícito y justificar canaria o su imposibilidad sin fabricar un sujeto falso. Renovar caducidad y vigía concretos solo con evidencia; una excepción vencida debe bloquear, no desaparecer."}
+closed_at: 2026-10-03
+closure_type: void_wontfix
+reason: "La revisión confirma que BACKLOG.md y la declaración .simplecode/backlog_md_frozen.json siguen ausentes. Se conserva la excepción explícita y el vigía `the maintainer`, con caducidad existente 2026-10-13. El órgano se probó en un repo temporal declarado frozen: una línea staged nueva bloquea."
+evidence: {"pass":"tasks/evidence/DEBT-EXCEPTION-BACKLOG-MD-FREEZE-01/pass.txt","fail":"tasks/evidence/DEBT-EXCEPTION-BACKLOG-MD-FREEZE-01/fail.txt","e2e":"tasks/evidence/DEBT-EXCEPTION-BACKLOG-MD-FREEZE-01/e2e.txt"}
 ---
 
 ## Registro y responsable
@@ -31,8 +35,16 @@ Fuentes: .simplecode/organ_inapplicable.json.
 
 Comprobar el supuesto de no aplicabilidad contra el repo actual y ejecutar el órgano en su contexto. Si el sujeto existe, reactivar el control; si permanece ausente, conservar NO APLICA explícito y justificar canaria o su imposibilidad sin fabricar un sujeto falso. Renovar caducidad y vigía concretos solo con evidencia; una excepción vencida debe bloquear, no desaparecer.
 
-## Estado del verificador
+## Root Cause
 
-La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
+La ficha registraba una exclusión/sunset pendiente de revalidación. Se inspeccionó el sitio exacto y se contrastó la razón de la excepción con el control que la sostiene.
 
-Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+## Regression Test
+
+`python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_exception_backlog_md_freeze_01`
+
+Control negativo incluido en el selector: La revisión confirma que BACKLOG.md y la declaración .simplecode/backlog_md_frozen.json siguen ausentes. Se conserva la excepción explícita y el vigía `the maintainer`, con caducidad existente 2026-10-13. El órgano se probó en un repo temporal declarado frozen: una línea staged nueva bloquea.
+
+## Verification Evidence
+
+Pass: selector `DEBT-EXCEPTION-BACKLOG-MD-FREEZE-01` pasa junto con los 13 selectores de esta ola; resultado `14 passed`, `could_not_run=0`. Fail previo: selector ausente, pytest exit 4; registrado solo como estado anterior de la instrumentación. El detalle y el alcance del control negativo constan en `tasks/evidence/DEBT-EXCEPTION-BACKLOG-MD-FREEZE-01/e2e.txt`.
