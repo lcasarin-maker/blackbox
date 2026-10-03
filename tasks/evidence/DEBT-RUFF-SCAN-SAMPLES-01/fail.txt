@@ -1,0 +1,57 @@
+$ python3 -m ruff check tools/scan_samples.py  # antes
+C901 `asociar_cpu_gpu` is too complex (17 > 10)
+  --> tools/scan_samples.py:39:5
+   |
+39 | def asociar_cpu_gpu(thermal: list[dict], sample_paths: list[Path],
+   |     ^^^^^^^^^^^^^^^
+40 |                     inicio: float, fin: float) -> list[str]:
+41 |     """Anota actividad CPU del PID GPU solo si boot y tiempo coinciden."""
+   |
+
+PLR0912 Too many branches (18 > 12)
+  --> tools/scan_samples.py:39:5
+   |
+39 | def asociar_cpu_gpu(thermal: list[dict], sample_paths: list[Path],
+   |     ^^^^^^^^^^^^^^^
+40 |                     inicio: float, fin: float) -> list[str]:
+41 |     """Anota actividad CPU del PID GPU solo si boot y tiempo coinciden."""
+   |
+
+PLR0915 Too many statements (57 > 50)
+  --> tools/scan_samples.py:39:5
+   |
+39 | def asociar_cpu_gpu(thermal: list[dict], sample_paths: list[Path],
+   |     ^^^^^^^^^^^^^^^
+40 |                     inicio: float, fin: float) -> list[str]:
+41 |     """Anota actividad CPU del PID GPU solo si boot y tiempo coinciden."""
+   |
+
+C901 `preparar` is too complex (29 > 10)
+   --> tools/scan_samples.py:112:5
+    |
+112 | def preparar(rutas: list[Path], inicio: float, fin: float,
+    |     ^^^^^^^^
+113 |              tipo: str = "muestras") -> tuple[list[dict], list[str]]:
+114 |     filas: list[tuple[float, dict]] = []
+    |
+
+PLR0912 Too many branches (30 > 12)
+   --> tools/scan_samples.py:112:5
+    |
+112 | def preparar(rutas: list[Path], inicio: float, fin: float,
+    |     ^^^^^^^^
+113 |              tipo: str = "muestras") -> tuple[list[dict], list[str]]:
+114 |     filas: list[tuple[float, dict]] = []
+    |
+
+PLR0915 Too many statements (68 > 50)
+   --> tools/scan_samples.py:112:5
+    |
+112 | def preparar(rutas: list[Path], inicio: float, fin: float,
+    |     ^^^^^^^^
+113 |              tipo: str = "muestras") -> tuple[list[dict], list[str]]:
+114 |     filas: list[tuple[float, dict]] = []
+    |
+
+Found 6 errors.
+exit_code=1

@@ -1,0 +1,26 @@
+$ python3 -m ruff check tools/.ruff-negative-presupuesto.py
+C901 `negativa` is too complex (14 > 10)
+ --> tools/.ruff-negative-presupuesto.py:1:5
+  |
+1 | def negativa(valor):
+  |     ^^^^^^^^
+2 |     if valor == 0:
+3 |         return 0
+  |
+
+PLR0912 Too many branches (13 > 12)
+ --> tools/.ruff-negative-presupuesto.py:1:5
+  |
+1 | def negativa(valor):
+  |     ^^^^^^^^
+2 |     if valor == 0:
+3 |         return 0
+  |
+
+Found 2 errors.
+negative_exit_code=1
+
+El control temporal de 13 ramas falla por C901 (14 > 10) y PLR0912 (13 > 12).
+Los 39 tests de la suite incluyen `test_sin_serie_de_GPU_no_hay_suelo_y_eso_es_COULD_NOT_RUN`
+y `test_control_negativo_CON_serie_no_sale_ese_COULD_NOT_RUN`; ambos conservan la
+diferencia entre datos ilegibles/ausentes y una serie disponible.

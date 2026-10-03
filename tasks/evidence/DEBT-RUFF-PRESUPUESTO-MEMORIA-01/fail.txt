@@ -1,0 +1,30 @@
+$ python3 -m ruff check tools/presupuesto_memoria.py  # antes
+C901 `main` is too complex (25 > 10)
+   --> tools/presupuesto_memoria.py:375:5
+    |
+375 | def main(argv: list[str] | None = None) -> int:
+    |     ^^^^
+376 |     ap = argparse.ArgumentParser(description=__doc__)
+377 |     ap.add_argument("--check", action="store_true",
+    |
+
+PLR0912 Too many branches (30 > 12)
+   --> tools/presupuesto_memoria.py:375:5
+    |
+375 | def main(argv: list[str] | None = None) -> int:
+    |     ^^^^
+376 |     ap = argparse.ArgumentParser(description=__doc__)
+377 |     ap.add_argument("--check", action="store_true",
+    |
+
+PLR0915 Too many statements (72 > 50)
+   --> tools/presupuesto_memoria.py:375:5
+    |
+375 | def main(argv: list[str] | None = None) -> int:
+    |     ^^^^
+376 |     ap = argparse.ArgumentParser(description=__doc__)
+377 |     ap.add_argument("--check", action="store_true",
+    |
+
+Found 3 errors.
+exit_code=1

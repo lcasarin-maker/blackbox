@@ -36,10 +36,9 @@ def _pares(valor: Any, ancho: int) -> dict[str, tuple[int, ...]]:
     return salida
 
 
-def asociar_cpu_gpu(thermal: list[dict], sample_paths: list[Path],
-                    inicio: float, fin: float) -> list[str]:
-    """Anota actividad CPU del PID GPU solo si boot y tiempo coinciden."""
-    muestras_cpu = []
+def _leer_muestras_cpu(sample_paths: list[Path], inicio: float,
+                        fin: float) -> tuple[list[tuple[float, dict]], list[str]]:
+    muestras = []
     razones = []
     for ruta in sample_paths:
         try:
@@ -58,86 +57,112 @@ def asociar_cpu_gpu(thermal: list[dict], sample_paths: list[Path],
                 continue
             marca = _epoch(dato.get("ts"))
             if marca is not None and inicio <= marca <= fin and dato.get("boot_id"):
-                muestras_cpu.append((marca, dato))
+                muestras.append((marca, dato))
         if invalidas:
             razones.append(f"correlación GPU/CPU: {invalidas} línea(s) JSONL inválidas en {ruta}")
-    muestras_cpu.sort(key=lambda par: par[0])
+    muestras.sort(key=lambda par: par[0])
+    return muestras, razones
+
+
+def _procesos_gpu_actuales(dato: dict, marca: float | None,
+                           cache: list | None, cache_ts: float | None
+                           ) -> tuple[list | None, list | None, float | None]:
+    if "gpu_procs" in dato:
+        procesos = dato["gpu_procs"]
+        if isinstance(procesos, list) and procesos:
+            return procesos, procesos, marca
+        return procesos, None, None
+    if (marca is not None and cache_ts is not None and
+            marca - cache_ts <= 30):
+        return cache, cache, cache_ts
+    return None, None, None
+
+
+def _atribuir_procesos_cpu(dato: dict, marca: float | None,
+                           procesos: list | None,
+                           muestras_cpu: list[tuple[float, dict]]) -> bool:
+    dato["scan_cpu_work_pids"] = []
+    if (dato.get("gpu_util_pct") != 0 or
+            not isinstance(dato.get("vllm_num_requests_running"), (int, float)) or
+            dato.get("vllm_num_requests_running", 0) <= 0 or not procesos):
+        return False
+    boot = dato.get("boot_id")
+    if marca is None or not boot:
+        return True
+    candidato = next((m for t, m in reversed(muestras_cpu)
+                      if m.get("boot_id") == boot and 0 <= marca - t <= 90), None)
+    if candidato is None:
+        return True
+    cpu_pids = {str(proceso.get("pid")) for proceso in candidato.get("cpu_top", [])
+                if isinstance(proceso, dict) and
+                isinstance(proceso.get("cpu_s"), (int, float)) and
+                proceso["cpu_s"] > 0}
+    dato["scan_cpu_work_pids"] = sorted(
+        str(proceso.get("pid")) for proceso in procesos
+        if isinstance(proceso, dict) and str(proceso.get("pid")) in cpu_pids)
+    return not dato["scan_cpu_work_pids"]
+
+
+def asociar_cpu_gpu(thermal: list[dict], sample_paths: list[Path],
+                    inicio: float, fin: float) -> list[str]:
+    """Anota actividad CPU del PID GPU solo si boot y tiempo coinciden."""
+    muestras_cpu, razones = _leer_muestras_cpu(sample_paths, inicio, fin)
     sin_correlacion = False
     procesos_cache = None
     procesos_cache_ts = None
     for dato in thermal:
-        dato["scan_cpu_work_pids"] = []
         marca = _epoch(dato.get("ts"))
-        if "gpu_procs" in dato:
-            procesos = dato["gpu_procs"]
-            if isinstance(procesos, list) and procesos:
-                procesos_cache = procesos
-                procesos_cache_ts = marca
-            else:
-                procesos_cache = None
-                procesos_cache_ts = None
-        elif (marca is not None and procesos_cache_ts is not None and
-              marca - procesos_cache_ts <= 30):
-            procesos = procesos_cache
-        else:
-            procesos_cache = None
-            procesos_cache_ts = None
-            procesos = None
-        if (dato.get("gpu_util_pct") != 0 or
-                not isinstance(dato.get("vllm_num_requests_running"), (int, float)) or
-                dato.get("vllm_num_requests_running", 0) <= 0 or not procesos):
-            continue
-        boot = dato.get("boot_id")
-        if marca is None or not boot:
-            sin_correlacion = True
-            continue
-        candidato = next((m for t, m in reversed(muestras_cpu)
-                          if m.get("boot_id") == boot and 0 <= marca - t <= 90), None)
-        if candidato is None:
-            sin_correlacion = True
-            continue
-        cpu_pids = {str(p.get("pid")) for p in candidato.get("cpu_top", [])
-                    if isinstance(p, dict) and isinstance(p.get("cpu_s"), (int, float))
-                    and p["cpu_s"] > 0}
-        dato["scan_cpu_work_pids"] = sorted(
-            str(p.get("pid")) for p in procesos
-            if isinstance(p, dict) and str(p.get("pid")) in cpu_pids)
-        if not dato["scan_cpu_work_pids"]:
+        procesos, procesos_cache, procesos_cache_ts = _procesos_gpu_actuales(
+            dato, marca, procesos_cache, procesos_cache_ts)
+        if _atribuir_procesos_cpu(dato, marca, procesos, muestras_cpu):
             sin_correlacion = True
     if sin_correlacion:
         razones.append("fallback GPU/CPU: carga GPU presente sin atribución CPU temporal y por PID")
     return razones
 
 
-def preparar(rutas: list[Path], inicio: float, fin: float,
-             tipo: str = "muestras") -> tuple[list[dict], list[str]]:
+def _leer_archivo_ventana(ruta: Path, inicio: float, fin: float
+                         ) -> tuple[list[tuple[float, dict]], str | None, int, int]:
+    try:
+        lineas = ruta.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeError) as exc:
+        return [], f"{ruta}: no se pudo leer: {exc}", 0, 0
+    filas = []
+    invalidas = 0
+    ts_invalidos = 0
+    for linea in lineas:
+        if not linea.strip():
+            continue
+        try:
+            dato = json.loads(linea)
+        except (json.JSONDecodeError, UnicodeError):
+            invalidas += 1
+            continue
+        if not isinstance(dato, dict):
+            invalidas += 1
+            continue
+        marca = _epoch(dato.get("ts"))
+        if marca is None:
+            ts_invalidos += 1
+        elif inicio <= marca <= fin:
+            filas.append((marca, dato))
+    return filas, None, invalidas, ts_invalidos
+
+
+def _leer_ventana(rutas: list[Path], inicio: float, fin: float
+                  ) -> tuple[list[dict], list[str]]:
     filas: list[tuple[float, dict]] = []
-    razones: list[str] = []
+    razones = []
     invalidas = 0
     ts_invalidos = 0
     for ruta in rutas:
-        try:
-            lineas = ruta.read_text(encoding="utf-8").splitlines()
-        except (OSError, UnicodeError) as exc:
-            razones.append(f"{ruta}: no se pudo leer: {exc}")
-            continue
-        for n, linea in enumerate(lineas, 1):
-            if not linea.strip():
-                continue
-            try:
-                dato = json.loads(linea)
-            except (json.JSONDecodeError, UnicodeError):
-                invalidas += 1
-                continue
-            if not isinstance(dato, dict):
-                invalidas += 1
-                continue
-            marca = _epoch(dato.get("ts"))
-            if marca is None:
-                ts_invalidos += 1
-                continue
-            if inicio <= marca <= fin:
-                filas.append((marca, dato))
+        del_archivo, error, invalidas_archivo, ts_archivo = _leer_archivo_ventana(
+            ruta, inicio, fin)
+        filas.extend(del_archivo)
+        invalidas += invalidas_archivo
+        ts_invalidos += ts_archivo
+        if error:
+            razones.append(error)
     filas.sort(key=lambda par: par[0])
     if invalidas:
         razones.append(f"{invalidas} línea(s) JSONL inválidas")
@@ -146,73 +171,96 @@ def preparar(rutas: list[Path], inicio: float, fin: float,
     datos = [dato for _, dato in filas]
     if not datos:
         razones.append("ninguna muestra JSON válida dentro de la ventana")
-        return datos, razones
+    return datos, razones
 
-    if tipo == "muestras":
-        campos_validos = {
-            "mem_free_kb": lambda v: isinstance(v, (int, float)),
-            "zombies": lambda v: isinstance(v, int),
-            "apps": lambda v: isinstance(v, list),
-            "psi": lambda v: isinstance(v, dict) and any(
-                isinstance(v.get(k), (int, float))
-                for k in ("mem_full", "mem_some", "cpu_some", "io_some")),
-            "gateway": lambda v: isinstance(v, str) and bool(v),
-            "gw_salud": lambda v: isinstance(v, str) and len(v.split(",")) >= 7,
-            "py_bg": lambda v: isinstance(v, list),
-            "top_rss": lambda v: isinstance(v, list),
-        }
-        for campo, valida in campos_validos.items():
-            if not any(valida(dato.get(campo)) for dato in datos):
-                razones.append(f"{campo}: ninguna muestra trae dato utilizable")
-        boots = [d.get("boot_id") for d in datos if d.get("boot_id")]
-        boot_actual = boots[-1] if boots else None
-        if boots:
-            # Tasas acumulativas solo se calculan dentro del boot más reciente.
-            for dato in datos:
-                if dato.get("boot_id") != boot_actual:
-                    dato.pop("cpu_jiffies", None)
-                    dato.pop("red", None)
-        else:
-            for dato in datos:
+
+def _validar_campos_muestras(datos: list[dict]) -> list[str]:
+    campos_validos = {
+        "mem_free_kb": lambda valor: isinstance(valor, (int, float)),
+        "zombies": lambda valor: isinstance(valor, int),
+        "apps": lambda valor: isinstance(valor, list),
+        "psi": lambda valor: isinstance(valor, dict) and any(
+            isinstance(valor.get(k), (int, float))
+            for k in ("mem_full", "mem_some", "cpu_some", "io_some")),
+        "gateway": lambda valor: isinstance(valor, str) and bool(valor),
+        "gw_salud": lambda valor: isinstance(valor, str) and len(valor.split(",")) >= 7,
+        "py_bg": lambda valor: isinstance(valor, list),
+        "top_rss": lambda valor: isinstance(valor, list),
+    }
+    return [f"{campo}: ninguna muestra trae dato utilizable"
+            for campo, valida in campos_validos.items()
+            if not any(valida(dato.get(campo)) for dato in datos)]
+
+
+def _validar_contadores(datos: list[dict], campo: str, ancho: int,
+                        boot_actual: str | None) -> list[str]:
+    candidatos = [dato for dato in datos
+                  if boot_actual and dato.get("boot_id") == boot_actual and
+                  _pares(dato.get(campo), ancho)]
+    por_boot: dict[str, list[dict]] = {}
+    for dato in candidatos:
+        boot = dato.get("boot_id")
+        por_boot.setdefault(boot, []).append(dato)
+    razones = []
+    if not any(len(grupo) >= 2 for grupo in por_boot.values()):
+        razones.append(f"{campo}: faltan dos muestras utilizables del mismo boot")
+    grupo = por_boot.get(boot_actual or "", [])
+    for anterior, actual in zip(grupo, grupo[1:]):
+        a = _pares(anterior.get(campo), ancho)
+        b = _pares(actual.get(campo), ancho)
+        if _epoch(actual.get("ts")) == _epoch(anterior.get("ts")):
+            razones.append(f"{campo}: timestamps duplicados; tasa no calculable")
+            break
+        if any(k in a and any(x < y for x, y in zip(b[k], a[k])) for k in b):
+            razones.append(f"{campo}: contador retrocedió; tasa no calculable")
+            break
+    return razones
+
+
+def _validar_muestras(datos: list[dict]) -> list[str]:
+    razones = _validar_campos_muestras(datos)
+    boots = [dato.get("boot_id") for dato in datos if dato.get("boot_id")]
+    boot_actual = boots[-1] if boots else None
+    if boots:
+        for dato in datos:
+            if dato.get("boot_id") != boot_actual:
                 dato.pop("cpu_jiffies", None)
                 dato.pop("red", None)
-        for campo, ancho in (("cpu_jiffies", 3), ("red", 3)):
-            candidatos = [d for d in datos
-                          if d.get("boot_id") == boot_actual and
-                          _pares(d.get(campo), ancho)]
-            por_boot: dict[str, list[dict]] = {}
-            for d in candidatos:
-                boot = d.get("boot_id")
-                if boot:
-                    por_boot.setdefault(boot, []).append(d)
-            if not any(len(grupo) >= 2 for grupo in por_boot.values()):
-                razones.append(f"{campo}: faltan dos muestras utilizables del mismo boot")
-            grupo = por_boot.get(boot_actual or "", [])
-            for anterior, actual in zip(grupo, grupo[1:]):
-                a = _pares(anterior.get(campo), ancho)
-                b = _pares(actual.get(campo), ancho)
-                if _epoch(actual.get("ts")) == _epoch(anterior.get("ts")):
-                    razones.append(f"{campo}: timestamps duplicados; tasa no calculable")
-                    break
-                if any(k in a and any(x < y for x, y in zip(b[k], a[k])) for k in b):
-                    razones.append(f"{campo}: contador retrocedió; tasa no calculable")
-                    break
-        if not boots:
-            razones.append("tasas CPU/red: el histórico no registra boot_id")
     else:
-        validadores = {
-            "evento": lambda v: isinstance(v, str) and bool(v),
-            "gpu_temp_c": lambda v: isinstance(v, (int, float)),
-            "sm_clk_mhz": lambda v: isinstance(v, (int, float)),
-            "gpu_util_pct": lambda v: isinstance(v, (int, float)),
-            "throttle": lambda v: isinstance(v, str) and bool(v),
-            "gpu_procs": lambda v: isinstance(v, list),
-            "vllm_num_requests_running": lambda v: isinstance(v, (int, float)),
-        }
-        for campo, valida in validadores.items():
-            if not any(valida(dato.get(campo)) for dato in datos):
-                razones.append(f"termica/{campo}: falta dato utilizable para el análisis")
+        for dato in datos:
+            dato.pop("cpu_jiffies", None)
+            dato.pop("red", None)
+    for campo, ancho in (("cpu_jiffies", 3), ("red", 3)):
+        razones.extend(_validar_contadores(datos, campo, ancho, boot_actual))
+    if not boots:
+        razones.append("tasas CPU/red: el histórico no registra boot_id")
+    return razones
 
+
+def _validar_termica(datos: list[dict]) -> list[str]:
+    validadores = {
+        "evento": lambda valor: isinstance(valor, str) and bool(valor),
+        "gpu_temp_c": lambda valor: isinstance(valor, (int, float)),
+        "sm_clk_mhz": lambda valor: isinstance(valor, (int, float)),
+        "gpu_util_pct": lambda valor: isinstance(valor, (int, float)),
+        "throttle": lambda valor: isinstance(valor, str) and bool(valor),
+        "gpu_procs": lambda valor: isinstance(valor, list),
+        "vllm_num_requests_running": lambda valor: isinstance(valor, (int, float)),
+    }
+    return [f"termica/{campo}: falta dato utilizable para el análisis"
+            for campo, valida in validadores.items()
+            if not any(valida(dato.get(campo)) for dato in datos)]
+
+
+def preparar(rutas: list[Path], inicio: float, fin: float,
+             tipo: str = "muestras") -> tuple[list[dict], list[str]]:
+    datos, razones = _leer_ventana(rutas, inicio, fin)
+    if not datos:
+        return datos, razones
+    if tipo == "muestras":
+        razones.extend(_validar_muestras(datos))
+    else:
+        razones.extend(_validar_termica(datos))
     return datos, razones
 
 
