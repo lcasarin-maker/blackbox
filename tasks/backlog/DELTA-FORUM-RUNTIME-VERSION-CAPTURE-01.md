@@ -32,3 +32,19 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Root cause
+
+The existing `tools.host_diagnostics.capture` report did not include GPU/runtime version observations, so a host diagnostic could not preserve the effective NVIDIA driver/GPU state beside the container engine and running image tags. The named close-check selector is also absent from `tests/test_debt_registration_controls.py`; this implementation does not substitute a passing capture for the missing functional workload proof.
+
+## Regression test
+
+PASS: `python3 -m pytest -q tests/test_host_diagnostics.py::test_gpu_runtime_capture_uses_bounded_readonly_queries_and_preserves_failures tests/test_host_diagnostics.py::test_capture_uses_fixed_read_only_queries_and_reports_signals tests/test_host_diagnostics.py::test_command_failure_is_preserved` -> `6 passed in 0.03s`. The positive control checks query shape/integration and the negative control proves four unavailable reads remain `could_not_run`.
+
+## Verification evidence
+
+PASS: `python3 -m ruff check tools/host_diagnostics.py tests/test_host_diagnostics.py` -> `All checks passed!`; `pyright tools/host_diagnostics.py` -> `0 errors, 0 warnings, 0 informations`.
+
+FAIL: `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_runtime_version_capture_01` -> `no tests ran`, selector not found, exit 4. FAIL: complete `tests/test_host_diagnostics.py` -> `24 passed, 1 failed`; the unrelated existing contact-redaction test invokes missing `.simplecode/run.py` in this worktree (exit 2). Targeted affected subset passed as recorded above.
+
+E2E (read-only, elevated local host access): `nvidia-smi --query-gpu=name,driver_version,pci.bus_id,utilization.gpu,power.draw --format=csv,noheader` -> `NVIDIA GB10, 580.178.04, 0000000F:01:00.0, 3 %, 12.42 W`, rc=0. `nvidia-smi` banner reported Driver 580.178.04 and CUDA Version 13.0; that CUDA value is the driver's advertised maximum, not the installed CUDA runtime. `docker version --format '{{.Server.Version}}'` -> `29.6.2`, rc=0. `docker ps --no-trunc --format '{{.ID}} {{.Image}}'` showed active `vllm/vllm-openai:v0.27.1` by tag, with no digest supplied for that image. No inference request or container inspection was performed. The functional request path, exact vLLM image digest, before/after workload result and negative workload control remain unverified; ficha stays open.
