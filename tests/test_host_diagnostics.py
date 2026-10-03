@@ -165,6 +165,31 @@ def test_container_image_id_capture_bounds_inspects_and_marks_incomplete() -> No
     assert hd.could_not_run_count(result) == 1
 
 
+@pytest.mark.parametrize("inspection", [
+    subprocess.CompletedProcess([], 0, "not-an-image-id\n", ""),
+    PermissionError("docker inspect denied"),
+])
+def test_container_image_id_invalid_or_denied_inspection_is_unknown(inspection: Any) -> None:
+    container_id = "a" * 64
+
+    class InspectRunner:
+        def __call__(self, argv: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+            assert argv == ["docker", "inspect", "--format", "{{.Image}}", container_id]
+            if isinstance(inspection, Exception):
+                raise inspection
+            return inspection
+
+    result = hd.running_container_image_ids(
+        {"status": "ok", "stdout": f"{container_id} vllm:test\n"}, InspectRunner())
+    assert result["status"] == "partial"
+    assert result["containers"] == [{
+        "status": "could_not_run", "container_id": container_id,
+        "image_ref": "vllm:test",
+        "inspect_status": "could_not_run" if isinstance(inspection, Exception) else "ok",
+    }]
+    assert hd.could_not_run_count(result) == 1
+
+
 def test_cuda_runtime_version_capture_reads_exact_api_version_and_preserves_unknown(
         monkeypatch: pytest.MonkeyPatch) -> None:
     class VersionFunction:
@@ -185,6 +210,40 @@ def test_cuda_runtime_version_capture_reads_exact_api_version_and_preserves_unkn
     monkeypatch.setattr("tools.host_diagnostics.ctypes.util.find_library", lambda _name: None)
     assert hd.cuda_runtime_version_capture() == {
         "status": "could_not_run", "error": "libcudart unavailable"}
+
+
+@pytest.mark.parametrize("library,error", [
+    (OSError("bad shared object"), "OSError: bad shared object"),
+    (types.SimpleNamespace(), "AttributeError: 'types.SimpleNamespace' object has no attribute 'cudaRuntimeGetVersion'"),
+])
+def test_cuda_runtime_library_or_symbol_failure_is_unknown(
+        monkeypatch: pytest.MonkeyPatch, library: Any, error: str) -> None:
+    monkeypatch.setattr("tools.host_diagnostics.ctypes.util.find_library", lambda _name: "libcudart.so.13")
+
+    def load(_name: str) -> Any:
+        if isinstance(library, Exception):
+            raise library
+        return library
+
+    monkeypatch.setattr(hd.C, "CDLL", load)
+    assert hd.cuda_runtime_version_capture() == {
+        "status": "could_not_run", "library": "libcudart.so.13", "error": error}
+
+
+@pytest.mark.parametrize(("returncode", "version"), [(35, 13000), (0, 0)])
+def test_cuda_runtime_api_failure_or_zero_version_is_unknown(
+        monkeypatch: pytest.MonkeyPatch, returncode: int, version: int) -> None:
+    class VersionFunction:
+        def __call__(self, pointer: Any) -> int:
+            C.cast(pointer, C.POINTER(C.c_int))[0] = version
+            return returncode
+
+    function = VersionFunction()
+    monkeypatch.setattr("tools.host_diagnostics.ctypes.util.find_library", lambda _name: "libcudart.so.13")
+    monkeypatch.setattr(hd.C, "CDLL", lambda _name: types.SimpleNamespace(cudaRuntimeGetVersion=function))
+    result = hd.cuda_runtime_version_capture()
+    assert result == {"status": "could_not_run", "library": "libcudart.so.13",
+                      "returncode": returncode, "runtime_version": version}
 
 
 def test_mount_summary_ro_rw_and_malformed(tmp_path: Path) -> None:
