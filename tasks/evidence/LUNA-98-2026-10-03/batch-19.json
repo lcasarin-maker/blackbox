@@ -1,0 +1,57 @@
+[
+  {
+    "id": "FORUM-00-REALTEK-EEE-DIRECT-LINK",
+    "path": "tasks/backlog/FORUM-00-REALTEK-EEE-DIRECT-LINK.md",
+    "title": "\"Detect and validate EEE link stalls on DGX Spark direct Ethernet\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-REALTEK-EEE-DIRECT-LINK --evidence tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK",
+      "expect": "exit_zero",
+      "porque": "Confirm the exact link-partner/kernel/driver combination, reproduce EEE-related stalls, verify a bounded opt-in mitigation and prove rollback and unaffected-link controls."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-02-GX10-READ-INTEGRITY",
+    "path": "tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md",
+    "title": "\"Detectar lecturas corruptas en caché antes de confiar en pesos de modelos\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-GX10-READ-INTEGRITY --evidence tasks/evidence/FORUM-02-GX10-READ-INTEGRITY",
+      "expect": "exit_zero",
+      "porque": "Verificador específico pendiente: debe demostrar detección de datos alterados con una referencia externa y diferenciar lecturas buffered, O_DIRECT, caché, salud NVMe y evidencia de firmware."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-02-PSTORE-KERNEL-REGRESSION",
+    "path": "tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md",
+    "title": "\"Leer pstore y validar una corrección de kernel para reinicios FPAC/PSCI en GB10\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-PSTORE-KERNEL-REGRESSION --evidence tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION",
+      "expect": "exit_zero",
+      "porque": "Verificador específico pendiente: debe validar captura pstore, identidad de la pila, resolución del vendor y recomendación de rollback/actualización con control."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-02-USB-UVC-EP0",
+    "path": "tasks/backlog/FORUM-02-USB-UVC-EP0.md",
+    "title": "\"Validar y prevenir el cuelgue xHCI por controles UVC EP0 durante streaming\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-USB-UVC-EP0 --evidence tasks/evidence/FORUM-02-USB-UVC-EP0",
+      "expect": "exit_zero",
+      "porque": "Verificador específico pendiente: debe comprobar la reproducción A/B, la versión corregida y la recomendación preventiva para cada OEM probado."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+    "path": "tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md",
+    "title": "\"Evitar pérdida de Realtek tras warm reboot por binding al driver equivocado\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-REALTEK-DRIVER-BINDING-01 --evidence tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01",
+      "expect": "exit_zero",
+      "porque": "Verificador pendiente: prueba binding PCI efectivo y paquete/módulo compatible; warm/cold reboot A/B y rollback con controles de otra NIC, driver ausente y consulta fallida."
+    },
+    "dependencies": []
+  }
+]

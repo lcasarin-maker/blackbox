@@ -1,0 +1,57 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01",
+    "path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.md",
+    "title": "\"Implementar criterios ejecutables de tools.verify_rcu_panic_pstore\"",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01",
+      "expect": "exit_zero",
+      "porque": "Cada fase/id soportado evalúa su sujeto específico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo lógica realmente común; conservar comandos literales y demostrar discriminación entre fichas."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+    "path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.md",
+    "title": "\"Implementar criterios ejecutables de tools.verify_usb_hid_postupdate\"",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_usb_hid_postupdate_01",
+      "expect": "exit_zero",
+      "porque": "Cada fase/id soportado evalúa su sujeto específico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo lógica realmente común; conservar comandos literales y demostrar discriminación entre fichas."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01",
+    "path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01.md",
+    "title": "\"Implementar criterios ejecutables de tools.verify_wifi_isolation\"",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_wifi_isolation_01",
+      "expect": "exit_zero",
+      "porque": "Cada fase/id soportado evalúa su sujeto específico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo lógica realmente común; conservar comandos literales y demostrar discriminación entre fichas."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-FORUM-NVME-READONLY-01",
+    "path": "tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md",
+    "title": "\"Detectar pérdida de escritura y preservar evidencia antes de recuperar un NVMe\"",
+    "close_check": {
+      "cmd": "python3 -m pytest tests/test_nvme_readonly.py -q",
+      "expect": "exit_zero",
+      "porque": "Prueba específica pendiente: debe distinguir errores de medio, remount read-only, consultas ilegibles y un dispositivo sano, con salida de evidencia utilizable sin escribir al medio sospechoso."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-00-DOCKER-OOM-RESTART-LOOP",
+    "path": "tasks/backlog/FORUM-00-DOCKER-OOM-RESTART-LOOP.md",
+    "title": "\"Contener reinicios de workloads que vuelven a dejar inservible el host\"",
+    "close_check": {
+      "cmd": "python3 -m pytest tests/test_workload_restart_containment.py -q",
+      "expect": "exit_zero",
+      "porque": "Prueba pendiente: debe limitar la reincidencia de un workload identificado y permitir recuperación conservando datos, sin bloquear un reinicio sano ni atribuir todo reboot a OOM."
+    },
+    "dependencies": []
+  }
+]

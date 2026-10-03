@@ -1,0 +1,57 @@
+[
+  {
+    "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "path": "tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md",
+    "title": "\"Validate lower GPU clock caps as an opt-in defense against silent power-offs\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+      "expect": "exit_zero",
+      "porque": "Must compare a lower cap against the currently applied cap on an identified OEM/driver stack, preserve stability and performance results, and prove restoration of the original clock policy."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "path": "tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md",
+    "title": "\"Validar disponibilidad GPU ante PCI presente y GSP inaccesible\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01 --evidence tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-FORUM-NETCONSOLE-01",
+    "path": "tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md",
+    "title": "\"Evaluate signed netconsole capture for GB10 kernel output before silent freezes\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01",
+      "expect": "exit_zero",
+      "porque": "Must prove the module and receiver path work with the target kernel and Secure Boot state, capture a kernel marker off-host, and verify privacy boundaries and rollback."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "path": "tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md",
+    "title": "\"Validar fallback a CPU tras respawn y el fix reportado del stack NVIDIA\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01 --evidence tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "path": "tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md",
+    "title": "\"Validate RCU-stall panic and persistent capture as a GB10 recovery path\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_rcu_panic_pstore --evidence tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+      "expect": "exit_zero",
+      "porque": "Must verify the active RCU sysctl and persistent capture path on the target stack, prove rollback, and distinguish a tested panic path from an unobserved natural RCU recovery."
+    },
+    "dependencies": []
+  }
+]
