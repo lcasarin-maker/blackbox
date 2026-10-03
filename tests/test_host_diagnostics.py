@@ -366,3 +366,15 @@ def test_contact_emails_redacted_without_altering_systemd_units(monkeypatch):
     monkeypatch.setattr(hd, "CONTACT_EMAIL_RE", hd.re.compile(r"(?!)"))
     with pytest.raises(AssertionError):
         verify()
+
+
+@pytest.mark.parametrize("stream", ["stdout", "stderr"])
+def test_contact_redaction_precedes_output_truncation(stream, monkeypatch):
+    raw = "abcd<support@contact.invalid>"
+    monkeypatch.setattr(hd, "MAX_OUTPUT_CHARS", len(raw) - 1)
+    values = {"stdout": "", "stderr": "", stream: raw}
+    result = hd.run_readonly(["journalctl"], FakeRunner(
+        subprocess.CompletedProcess([], 0, **values)))
+    assert result[stream] == "abcd<redacted-contact>"
+    assert result[f"{stream}_truncated"] is False
+    assert result["contact_emails_redacted"] == 1

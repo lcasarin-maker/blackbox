@@ -65,15 +65,15 @@ def run_readonly(argv: list[str], runner: RUNNER = subprocess.run,
 
     stdout = result.stdout.strip()
     stderr = result.stderr.strip()
-    stdout_safe, out_contacts = CONTACT_EMAIL_RE.subn("<redacted-contact>", stdout[:MAX_OUTPUT_CHARS])
-    stderr_safe, err_contacts = CONTACT_EMAIL_RE.subn("<redacted-contact>", stderr[:MAX_OUTPUT_CHARS])
+    stdout_safe, out_contacts = CONTACT_EMAIL_RE.subn("<redacted-contact>", stdout)
+    stderr_safe, err_contacts = CONTACT_EMAIL_RE.subn("<redacted-contact>", stderr)
     status = "ok" if result.returncode == 0 else (
         "observed" if result.returncode in accepted_exit_codes else "could_not_run")
     return {"status": status, "command": argv, "returncode": result.returncode,
-            "stdout": stdout_safe,
-            "stdout_truncated": len(stdout) > MAX_OUTPUT_CHARS,
-            "stderr": stderr_safe or None,
-            "stderr_truncated": len(stderr) > MAX_OUTPUT_CHARS,
+            "stdout": stdout_safe[:MAX_OUTPUT_CHARS],
+            "stdout_truncated": len(stdout_safe) > MAX_OUTPUT_CHARS,
+            "stderr": stderr_safe[:MAX_OUTPUT_CHARS] or None,
+            "stderr_truncated": len(stderr_safe) > MAX_OUTPUT_CHARS,
             "contact_emails_redacted": out_contacts + err_contacts}
 
 
