@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2319
-# SC2319 sigue disparando en cmd_status incluso capturando "$?" en la MISMA
-# linea que la condicion ("[ ... ]; ok=$?") -- shellcheck no distingue esa
-# forma seria de la version bare que de verdad era fragil (chk "..." $?,
-# corregida 2026-09-11 tras un hallazgo real de shellcheck). No hay comando
-# intermedio que pueda pisar "$ok" entre la condicion y su captura: es un
-# falso positivo del lint sobre un patron ya endurecido, no una desactivacion
-# para esconder el problema original.
 # blackbox -- caja negra de esta maquina.
 # Registra continuamente lo que hace falta para diagnosticar DESPUES de un fallo:
 # cuelgues, crashes, OOM (RAM y GPU), procesos que desaparecen.
@@ -2202,8 +2194,9 @@ cmd_status() {
     ciego=$((ciego + 1))
   }
 
-  # Cada chequeo captura su $? en "$ok" EN LA MISMA LINEA que la condicion,
-  # nunca como argumento bare ($?) en la linea de chk: un $? bare depende de
+  # Cada condición registra éxito o fallo explícitamente en "$ok"; los comandos
+  # conservan su código de retorno en la misma línea de su ejecución.
+  # Usar "$ok" en chk preserva el resultado: un $? bare depende de
   # que nada se ejecute entre la condicion y la llamada, y una insercion tan
   # inocente como un echo de depuracion lo pisa en silencio -- el chequeo
   # seguiria corriendo, sin error, mintiendo sobre CUALQUIER instrumento.
@@ -2214,11 +2207,11 @@ cmd_status() {
   # silencioso que este repo existe para cazar, aplicado a su propio muestreo.
   # El intervalo declarado es de un minuto, asi que dos minutos de margen dan
   # una corrida perdida antes de avisar.
-  [ -n "$(find "$SAMPLES" -name "$(date +%Y-%m-%d).jsonl" -mmin -2 2>/dev/null)" ]; ok=$?
+  if [ -n "$(find "$SAMPLES" -name "$(date +%Y-%m-%d).jsonl" -mmin -2 2>/dev/null)" ]; then ok=0; else ok=1; fi
   chk "blackbox: muestreo de apps/zombis (dato de hace <2 min)" "$ok" \
       "el timer puede estar activo y el muestreo caido: corre 'bb sample' a mano y mira el error"
 
-  [ -d /var/log/journal ]; ok=$?
+  if [ -d /var/log/journal ]; then ok=0; else ok=1; fi
   chk "journald persistente" "$ok" "los logs se pierden al reiniciar"
 
   journalctl -k -n1 >/dev/null 2>&1; ok=$?
@@ -2227,14 +2220,14 @@ cmd_status() {
   have coredumpctl; ok=$?
   chk "systemd-coredump" "$ok" "corre: sudo ./enable-privileged.sh"
 
-  [ "$(ulimit -c)" != "0" ]; ok=$?
+  if [ "$(ulimit -c)" != "0" ]; then ok=0; else ok=1; fi
   chk "limite de core > 0" "$ok" "ulimit -c = 0, no se guardan volcados"
 
   # sysstat se comprueba por SUS DATOS, no por la variable ENABLED de
   # /etc/default/sysstat: aqui ENABLED="false" y sin embargo el override
   # sysstat-collect.timer.d dispara la recoleccion cada minuto. Leer la
   # variable daba un falso negativo (comprobado 2026-09-07).
-  [ -n "$(find /var/log/sysstat -name "sa$(date +%Y%m%d)" -mmin -10 2>/dev/null)" ]; ok=$?
+  if [ -n "$(find /var/log/sysstat -name "sa$(date +%Y%m%d)" -mmin -10 2>/dev/null)" ]; then ok=0; else ok=1; fi
   chk "sar recolectando (datos de hace <10 min)" "$ok" "sin historico de CPU/mem/IO"
 
   # gpu_sampler.sh NO se comprueba: esta suspendido a proposito desde el
@@ -2242,12 +2235,12 @@ cmd_status() {
   # suspended/MANIFIESTO.md). Mantener la comprobacion pedia rearmar justo lo
   # que se acababa de consolidar -- un FALTA que mentia.
 
-  [ -n "$(find /srv/ai/logs -name 'memory_monitor.log' -mmin -10 2>/dev/null)" ]; ok=$?
+  if [ -n "$(find /srv/ai/logs -name 'memory_monitor.log' -mmin -10 2>/dev/null)" ]; then ok=0; else ok=1; fi
   chk "monitor de memoria (<10 min)" "$ok" "systemctl --user start ai-memory-monitor.timer"
 
   # Por sus datos, no por la unit: una unit "active" cuyo proceso dejo de
   # escribir es exactamente el fallo silencioso que buscamos.
-  [ -n "$(find "$(dirname "$TELEMETRIA_GPU")" -name "$(basename "$TELEMETRIA_GPU")" -mmin -2 2>/dev/null)" ]; ok=$?
+  if [ -n "$(find "$(dirname "$TELEMETRIA_GPU")" -name "$(basename "$TELEMETRIA_GPU")" -mmin -2 2>/dev/null)" ]; then ok=0; else ok=1; fi
   chk "termica de la GPU (atom_gpu_telemetry, <2 min)" "$ok" "systemctl --user start atom-gpu-telemetry"
 
   # La proteccion del escritorio, POR EL DATO y no por el fichero: se leen los
@@ -2283,8 +2276,7 @@ EOF
   local sc
   for patron in "$cg/user.slice/user-$uid.slice/session-*.scope" \
                 "$cg/user.slice/user-$uid.slice/user@$uid.service/app.slice/app-gnome-*.scope"; do
-    # shellcheck disable=SC2086
-    sc=$(ls -d $patron 2>/dev/null | head -1)
+    sc=$(compgen -G "$patron" | sort | head -1)
     if [ -n "$sc" ]; then
       v=$(cat "$sc/memory.low" 2>/dev/null)
       [ -n "$v" ] && [ "$v" != "0" ] || rotos=$((rotos + 1))
@@ -2292,7 +2284,7 @@ EOF
       rotos=$((rotos + 1))
     fi
   done
-  [ "$rotos" -eq 0 ]; ok=$?
+  if [ "$rotos" -eq 0 ]; then ok=0; else ok=1; fi
   chk "memoria del escritorio protegida del reclamo (7 eslabones)" "$ok" \
       "$rotos eslabon(es) en memory.low=0 -- sudo ./enable-privileged.sh (seccion 13)"
 
@@ -2384,7 +2376,7 @@ EOF
   # una sonda lenta, y un bucle colgado deja de verse en 2 min. Sin tuberia (ver earlyoom).
   status_usable
 
-  [ -n "$(gateway_modelo)" ]; ok=$?
+  if [ -n "$(gateway_modelo)" ]; then ok=0; else ok=1; fi
   chk "motor de inferencia sirviendo" "$ok" "el gateway no responde en $GATEWAY_URL"
 
   have nvidia-smi; ok=$?
