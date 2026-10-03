@@ -32,3 +32,7 @@ Probar en un equipo de laboratorio con la misma OEM/BIOS/OTA: KMS habilitado, ov
 Se implementó `python3 -m tools.preflight drm <snapshot.json>` para requerir valor KMS efectivo, requisito del OTA y camino de recuperación. Los archivos locales contienen opciones simultáneas `modeset=0` y `modeset=1`; leer `/sys/module/nvidia_drm/parameters/modeset` terminó con permiso denegado incluso en la consulta autorizada. El resultado queda `unknown`. Comandos y salidas literales: `tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/commands.json`; evaluación: `preflight.json` y `validator-run.json`.
 
 La ficha sigue abierta: falta leer el valor efectivo, una declaración de compatibilidad del OTA objetivo y una prueba de HDMI/USB-C/SSH/rollback en equipo OEM correspondiente. No se retiró el override ni se reinició el host.
+
+## Nota de instrumentación readonly (2026-10-03)
+
+Se añadió observación readonly del parámetro efectivo `nvidia_drm.modeset` y de overrides DRM permitidos en cmdline, sin guardar el cmdline crudo; el atributo efectivo local quedó `could_not_run` por permisos. No se infiere compatibilidad OTA. Evidencia: `tasks/evidence/BB-INSTRUMENTS-2026-10-03/boot.capture.json`.
