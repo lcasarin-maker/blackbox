@@ -1,0 +1,33 @@
+$ /opt/miniforge3/bin/python3 tools/calibra_latencia_x.py --help
+exit=0
+usage: calibra_latencia_x.py [-h] [--muestras MUESTRAS]
+                             [--snapshots SNAPSHOTS] [--smi-sano SMI_SANO]
+                             [--etiqueta-de-prueba]
+
+Calibra el corte de latencia del escritorio contra episodios ETIQUETADOS.
+
+options:
+  -h, --help            show this help message and exit
+  --muestras MUESTRAS
+  --snapshots SNAPSHOTS
+  --smi-sano SMI_SANO
+  --etiqueta-de-prueba  control negativo: inyecta un episodio sintetico sobre
+                        la ventana mas lenta del corpus, para comprobar que
+                        este modulo PUEDE producir un veredicto
+
+$ /opt/miniforge3/bin/python3 tools/calibra_latencia_x.py --codex-invalid-argument
+exit=2
+usage: calibra_latencia_x.py [-h] [--muestras MUESTRAS]
+                             [--snapshots SNAPSHOTS] [--smi-sano SMI_SANO]
+                             [--etiqueta-de-prueba]
+calibra_latencia_x.py: error: unrecognized arguments: --codex-invalid-argument
+
+$ mutant /tmp/bb-zero-no-cover/mutants/calibra_latencia_x.py --codex-invalid-argument
+exit=0
+
+
+Coverage report with pragma (launcher excluded):
+tools/calibra_latencia_x.py         148    122     56      0    13%   103-106, 118-154, 160-164, 172-186, 190, 197, 222-239, 253-330
+Coverage report after removal and direct CLI run:
+tools/calibra_latencia_x.py         150      0     58      0   100%
+The test runs these real processes with a 10s timeout and asserts stdout/rc; mutation forces CLI success and is rejected against the expected error rc=2. No GPU workload or host mutation.

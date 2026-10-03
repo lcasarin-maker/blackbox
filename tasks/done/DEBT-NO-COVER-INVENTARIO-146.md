@@ -3,7 +3,11 @@ id: DEBT-NO-COVER-INVENTARIO-146
 kind: task
 domain: VERDICT
 title: "Revisar no-cover en inventario.py:146"
-status: open
+status: done
+closed_at: 2026-10-02
+closure_type: fixed
+reason: "Quité la exclusión de cobertura y el close check ejecuta el launcher __main__ real con caso válido, error CLI y control negativo mutado."
+evidence: {"pass": "tasks/evidence/DEBT-NO-COVER-INVENTARIO-146/pass.txt", "fail": "tasks/evidence/DEBT-NO-COVER-INVENTARIO-146/fail.txt", "e2e": "tasks/evidence/DEBT-NO-COVER-INVENTARIO-146/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -36,3 +40,18 @@ Medir el camino excluido sin depender de la marca no cover. Si es entrypoint, ej
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+
+## Root Cause
+
+The `DEBT-NO-COVER-INVENTARIO-146` suppression excluded the script's `__main__` launcher from coverage, while imported-function tests did not prove the CLI process, its output, or its exit status. The entrypoint is reachable and safe to invoke with bounded CLI inputs.
+
+## Regression Test
+
+`python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_no_cover_inventario_146` starts the real script in a subprocess. It checks a successful CLI path, the invalid-argument/usage path with exit code 2, and a temporary mutant that forces launcher success and must violate that expected error code. The accepted-fiche script uses a valid temporary Markdown fixture. No GPU workload or host mutation is performed.
+
+## Verification Evidence
+
+- `tasks/evidence/DEBT-NO-COVER-INVENTARIO-146/fail.txt` records the pre-fix missing-selector result and the report with the suppression active.
+- `tasks/evidence/DEBT-NO-COVER-INVENTARIO-146/pass.txt` records this ID's close check after implementation.
+- `tasks/evidence/DEBT-NO-COVER-INVENTARIO-146/e2e.txt` records the real process invocation and mutation control.

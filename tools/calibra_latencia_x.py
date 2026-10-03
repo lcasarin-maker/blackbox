@@ -334,5 +334,5 @@ def main(argv=None) -> int:
     return _imprime_calibracion(serie, vs, utiles, a.smi_sano)
 
 
-if __name__ == "__main__":  # pragma: no cover -- entry point, ejercitado via main()
+if __name__ == "__main__":
     raise SystemExit(main())

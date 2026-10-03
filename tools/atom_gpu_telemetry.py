@@ -1721,5 +1721,5 @@ def main() -> int:
     return _run_sampler(args)
 
 
-if __name__ == "__main__":  # pragma: no cover -- entry point, ejercitado via main()
+if __name__ == "__main__":
     sys.exit(main())
