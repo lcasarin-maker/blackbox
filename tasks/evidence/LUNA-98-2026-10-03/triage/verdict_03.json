@@ -1,0 +1,57 @@
+[
+  {
+    "id": "DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01",
+    "status": "blocked",
+    "evidence": "Fila original recuperada y payload literal preservado con hash por evento en tasks/evidence/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01/recovered-event-metadata.json. El ledger original de dispositions, copiado al checkout de forma aislada con SHA idéntico c6c547881053d6bb40af579a21833a6ff5a845746c3ff3fe519e69f2b4cf47ae, no contiene los IDs; falta stdout/stderr del comando original para dictaminar.\nBefore stdout: [telemetry-dispositions] COULD_NOT_RUN: cannot read disposition ledger (no isolated checkout ledger before original copy)\nBefore rc: 2.\nAfter stdout: [telemetry-dispositions] MISSING: 5437b44ce52501ee, 92dc63137ae930f3, a50ae5e52c99c3ab\nAfter rc: 1.",
+    "reason": "Fila original recuperada y payload literal preservado con hash por evento en tasks/evidence/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01/recovered-event-metadata.",
+    "before_cmd": "python3 -m tools.verify_telemetry_dispositions --event-id 92dc63137ae930f3 --event-id a50ae5e52c99c3ab --event-id 5437b44ce52501ee",
+    "before_rc": 2,
+    "after_cmd": "python3 -m tools.verify_telemetry_dispositions --event-id 92dc63137ae930f3 --event-id a50ae5e52c99c3ab --event-id 5437b44ce52501ee",
+    "after_rc": 1,
+    "commit": "793079d1e61aa0a1e1aa241a56d8ddd2ebf5ea6f"
+  },
+  {
+    "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01",
+    "status": "blocked",
+    "evidence": "commands.json documenta arm64/Noble, ports.ubuntu.com, firma válida y control BAD signature al alterar Suite. Falta reproducir el negative control de source Ubuntu incompatible y fijar la matriz de repositorios/OEM; la simulación de upgrade no prueba esa condición.\nBefore stdout: ERROR: not found selector; no tests ran\nBefore rc: 4.\nAfter stdout: no tests ran in 0.02s\nAfter stderr: ERROR: not found: /tmp/bb-luna98-03/tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01\n(no match in any of [<Module test_debt_registration_controls.py>])\nAfter rc: 4.",
+    "reason": "commands.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01",
+    "before_rc": 4,
+    "after_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01",
+    "after_rc": 4,
+    "commit": "793079d1e61aa0a1e1aa241a56d8ddd2ebf5ea6f"
+  },
+  {
+    "id": "DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01",
+    "status": "blocked",
+    "evidence": "capture-summary.json contiene un snapshot read-only de kernel/driver/OTA y explícitamente carece de matriz OEM release notes, canario funcional y rollback. No se cambió kernel/driver.\nBefore stdout: ERROR: not found selector; no tests ran\nBefore rc: 4.\nAfter stdout: no tests ran in 0.02s\nAfter stderr: ERROR: not found: /tmp/bb-luna98-03/tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01\n(no match in any of [<Module test_debt_registration_controls.py>])\nAfter rc: 4.",
+    "reason": "capture-summary.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01",
+    "before_rc": 4,
+    "after_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01",
+    "after_rc": 4,
+    "commit": "793079d1e61aa0a1e1aa241a56d8ddd2ebf5ea6f"
+  },
+  {
+    "id": "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01",
+    "status": "developed",
+    "evidence": "Añadidos tools/thermal_coverage.py y tests/test_diagnostic_admission_prototypes.py. El capturador local observó 7 thermal zones y 3 dispositivos hwmon con lecturas térmicas disponibles, could_not_run=0; estado observado solo cubre canales actuales, no acredita ASUS GX10, fan/thermal OEM mapping ni soak. Tests focales: 16 pasaron; statement coverage de módulo: thermal_coverage.py 88/88 (100%).\nBefore stdout: ERROR: not found selector; no tests ran\nBefore rc: 4.\nAfter stdout: no tests ran in 0.02s\nAfter stderr: ERROR: not found: /tmp/bb-luna98-03/tests/test_debt_registration_controls.py::test_delta_forum_thermal_telemetry_coverage_01\n(no match in any of [<Module test_debt_registration_controls.py>])\nAfter rc: 4.",
+    "reason": "Añadidos tools/thermal_coverage.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_telemetry_coverage_01",
+    "before_rc": 4,
+    "after_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_telemetry_coverage_01",
+    "after_rc": 4,
+    "commit": "793079d1e61aa0a1e1aa241a56d8ddd2ebf5ea6f"
+  },
+  {
+    "id": "DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01",
+    "status": "developed",
+    "evidence": "Añadidos tools/recipe_memory.py y tests/test_diagnostic_admission_prototypes.py. Los términos se etiquetan caller_supplied_unverified; unknown si faltan; el resultado completo es comparison_only, sin afirmar admisión. Captura raw preservada; ejecución sin términos: unknown/rc=2. No hay resultado raw de workload/canario real. Tests focales: 16 pasaron; statement coverage: recipe_memory.py 57/57 (100%).\nBefore stdout: ERROR: not found selector; no tests ran\nBefore rc: 4.\nAfter stdout: no tests ran in 0.02s\nAfter stderr: ERROR: not found: /tmp/bb-luna98-03/tests/test_debt_registration_controls.py::test_delta_root_recipe_memory_unknown_and_raw_evidence_01\n(no match in any of [<Module test_debt_registration_controls.py>])\nAfter rc: 4.",
+    "reason": "Añadidos tools/recipe_memory.",
+    "before_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_recipe_memory_unknown_and_raw_evidence_01",
+    "before_rc": 4,
+    "after_cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_recipe_memory_unknown_and_raw_evidence_01",
+    "after_rc": 4,
+    "commit": "793079d1e61aa0a1e1aa241a56d8ddd2ebf5ea6f"
+  }
+]
