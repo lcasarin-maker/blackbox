@@ -1,6 +1,6 @@
 {
   "claims_fingerprint": "be145180f01976cb8ec559219e5caf5f54f5c630652578898174d03ffb8e5cfd",
-  "panel": "Luna readonly + revisi\u00f3n independiente de root; 2026-10-03; c\u00f3digo, negativos host, journal y l\u00edmites hist\u00f3ricos",
+  "panel": "Un auditor gpt-6-luna, 2026-10-03; refutaci\u00f3n SPEC-L309 con c\u00f3digo, once controles y contraste systemd legible/ilegible",
   "profile": "general",
   "results": [
     {
@@ -37,13 +37,11 @@
     },
     {
       "cited": {
-        "tests/test_bb_bash.py": "e9e9fa31e877ffa9791dfc1777a76d75c20ebe53b8d46156733eb8887a3ae299"
+        "tests/test_bb_bash.py": "e27161e843f24d15d47791d74b0dc26bbf0a278704e59fdc2c9992e5edfbbdd4"
       },
       "claim_id": "SPEC-L309",
-      "claim_sha256": "a75ec912cf4eafaf29dfb651e95a908b1eebd7336630fce2fe96c68b971c40c0",
-      "claim_text": "Un instrumento deja de escribir en silencio | Alta | `bb status` mira la antig\u00fcedad de los datos s\u00f3lo donde hay un artefacto que revisar (sar, memory-monitor, telemetr\u00eda t\u00e9rmica de este repo: \"por sus datos, no por la unit\" \u2014 y el 2026-09-25 ese mismo chequeo se midi\u00f3 mintiendo al rev\u00e9s, declarando FALTA sobre un instrumento activo porque le\u00eda la ruta que Atlas ya hab\u00eda borrado); los cuatro que quedaban leyendo `systemctl is-active` se cerraron \u2014tres el 2026-09-25, el de bb-usable el 2026-09-28\u2014 y ahora leen tambi\u00e9n su artefacto: la muestra m\u00e1s fresca del d\u00eda, la confirmaci\u00f3n que el driver imprimi\u00f3 al aplicar el clock lock contrastada con los argumentos que la unit declara, las dos regex de punter\u00eda que earlyoom imprimi\u00f3 al arrancar, y el latido que el bucle de `bin/bb-usable` imprime en cada vuelta de 30 s (\"latencia del escritorio\"), exigido dentro de los \u00faltimos 120 s (`bin/bb`, `journalctl -S`). Los cuatro pueden ahora salir mal por el motivo que vigilan, con cinco controles negativos corridos de los tres originales en `tests/test_bb_bash.py` -- `test_control_negativo_sin_muestra_fresca_el_muestreo_esta_FALTA`, `test_control_negativo_clock_lock_con_OTRO_rango_que_el_declarado`, `test_control_negativo_clock_lock_sin_confirmacion_del_driver`, `test_control_negativo_earlyoom_de_serie_no_cuenta_como_armado`, `test_control_negativo_earlyoom_con_UNA_sola_regex_no_basta` (citados por nombre, no por l\u00ednea, porque el fichero se mueve con cada test que se a\u00f1ade -- la cifra de \"cuatro\" ven\u00eda mal desde el commit `37ccd7d`, corregida el 2026-09-28) -- m\u00e1s tres del latido de bb-usable (rancio, journal vac\u00edo, s\u00f3lo la l\u00ednea de arranque). Queda declarado lo que sigue sin comprobarse: que el contenido sea correcto, no s\u00f3lo fresco",
-      "evidence": "`bin/bb` comprueba antig\u00fcedad de artefactos, confirmaci\u00f3n/argumentos del clock lock, regex de earlyoom y el latido de `bb-usable`; la fila declara que el contenido correcto sigue sin comprobarse (`SPEC.md:309`). El lote de controles del host dio `17 passed in 17.29s`, rc=0, incluyendo los cinco controles negativos nombrados y los tres casos de heartbeat; `tests/test_bb_bash.py:592-595` parametriza journal vac\u00edo y una l\u00ednea de arranque sola como dos de esos tres casos.",
-      "seal": "97d89016084ba7e8e3574a80be2107806d5a0577ac45d5af46aa39c7db1990ee",
+      "evidence": "`SPEC.md:309` limits the claim to freshness of artifacts and explicitly leaves correctness of their contents unverified. The implementation matches those bounds: `bin/bb:2210-2212` checks for a sample modified within two minutes; `bin/bb:2304-2310` compares the driver-confirmed clock-lock result with its declared range; `bin/bb:2341-2347` requires both earlyoom startup regex lines; `bin/bb:2146-2167` checks bb-usable systemd state, reads its journal since 120 seconds ago, and only accepts the repeating latency heartbeat. The named controls and positive counterparts are present at `tests/test_bb_bash.py:470-473,503-520,532-558,602-622`. Sandbox attempt: the heartbeat cases could not access systemd (`Failed to connect to bus: Operation not permitted`), producing `7 passed, 4 failed`; this is an environment limitation, so I reran the same named controls with read-only host access. Command `python3 -m pytest -q tests/test_bb_bash.py -k 'test_control_negativo_sin_muestra_fresca_el_muestreo_esta_FALTA or test_control_negativo_clock_lock_con_OTRO_rango_que_el_declarado or test_control_negativo_clock_lock_sin_confirmacion_del_driver or test_control_negativo_earlyoom_de_serie_no_cuenta_como_armado or test_control_negativo_earlyoom_con_UNA_sola_regex_no_basta or test_clock_lock_confirmado_con_rango_declarado_esta_ARMADO or test_earlyoom_con_las_dos_regex_SI_cuenta or test_control_negativo_bb_usable_activa_con_latido_RANCIO or test_control_negativo_bb_usable_activa_sin_latido or test_bb_usable_con_latido_fresco_SI_cuenta'` then returned `11 passed, 74 deselected in 1.90s`, rc=0. These controls establish failure detection for the named synthetic cases; they do not establish that artifact contents are correct, consistent with the row's stated limit.",
+      "seal": "203dd87e8ebaa524b432f134ad5b37cc996b60eae75b10150a8e5cb9056c14c5",
       "verdict": "PASS"
     },
     {
@@ -141,7 +139,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-03T08:50:45Z",
-  "tree_fingerprint": "329b6c3720aa73a9ff94266b98c4f5126b1235a020704923c746c0af4ad287c7",
+  "timestamp": "2026-10-03T14:26:15Z",
+  "tree_fingerprint": "09eb94fdc8e7c9924ad38322c886ab0f11ec5614b80a3fb7e368cd75ca0eb12f",
   "violations": []
 }
