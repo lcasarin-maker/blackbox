@@ -1619,14 +1619,17 @@ def _matar_electron_falso(proc, marcadores, timeout=15.0):
         proc.kill()
         proc.wait(timeout=timeout)
     deadline = time.time() + timeout
+    remaining = []
     for patron in marcadores:
         while True:
             r = subprocess.run(["pgrep", "-f", patron], capture_output=True, text=True)
             if not r.stdout.strip():
+                remaining.append(r.stdout.strip())
                 break
             assert time.time() < deadline, (
                 f"proceso huerfano con {patron!r} sigue vivo tras matar el arbol")
             time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- confirma que un huerfano de verdad muere, no solo lo asume -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.1 -- relectura 2026-10-02: objetivo y expresion sin cambios frente a git show 7049dce^:tests/test_bb_bash.py; Las razones de delta entero y sondeo con deadline que siguen conservan su sujeto. Comparacion por linea en tasks/evidence/RELEASE-2.1.0/sunset-review.json. Revision anterior 2.0: nuevo el 2026-09-28, mismo commit que lo introduce
+    return remaining
 
 
 def test_electron_ui_muerta_con_hermano_vivo_pasa_limpio(tmp_path):

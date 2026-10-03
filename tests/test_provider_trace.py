@@ -122,14 +122,17 @@ def test_cli_reports_status_and_read_errors(tmp_path: Path, capsys: pytest.Captu
     assert unreadable["could_not_run_count"] == 1
 
 
-def test_module_entrypoint(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_module_entrypoint(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                           capsys: pytest.CaptureFixture[str]) -> None:
     trace = tmp_path / "trace.jsonl"
     trace.write_text((FIXTURES / "cpu-only.jsonl").read_text(encoding="utf-8"), encoding="utf-8")
     monkeypatch.setattr("sys.argv", ["tools.provider_trace", str(trace)])
-    try:
+    with pytest.raises(SystemExit) as exit_info:
         runpy.run_path(str(Path(provider_trace.__file__)), run_name="__main__")
-    except SystemExit as exc:
-        assert exc.code == 0
+    assert exit_info.value.code == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["status"] == "pass"
+    assert result["could_not_run_count"] == 0
 
 
 def test_invalid_utf8_is_captured_as_unknown(tmp_path: Path) -> None:

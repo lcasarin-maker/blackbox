@@ -184,11 +184,22 @@ def test_debt_broad_except_cgroup_repro_113(monkeypatch: pytest.MonkeyPatch,
 
 def test_debt_broad_except_cgroup_repro_150(monkeypatch: pytest.MonkeyPatch,
                                            capsys: pytest.CaptureFixture[str]) -> None:
-    _assert_torch_primary_survives_cleanup(monkeypatch, capsys)
-    _assert_torch_cancellation_survives_cleanup(monkeypatch)
+    worker_result, result, events = _observe_torch_primary_cleanup(monkeypatch, capsys)
+    cancellation, cancel_events = _observe_torch_cancellation_cleanup(monkeypatch)
+    assert worker_result == 30
+    assert result["error"] == "RuntimeError: fill failed"
+    assert any("sync teardown 3 failed" in note for note in result["notes"])
+    assert any("empty_cache teardown failed" in note for note in result["notes"])
+    assert any("sync teardown 4 failed" in note for note in result["notes"])
+    assert events.count("empty_cache") == 2
+    assert cancellation["exception"] == "KeyboardInterrupt"
+    assert cancellation["message"] == "cancel fill"
+    assert any("cancel teardown sync 3" in note for note in cancellation["notes"])
+    assert any("cancel teardown sync 4" in note for note in cancellation["notes"])
+    assert cancel_events.count("empty_cache") == 2
 
 
-def _assert_torch_primary_survives_cleanup(monkeypatch, capsys):
+def _observe_torch_primary_cleanup(monkeypatch, capsys):
     import sys
     from test_cgroup_repro import fake_torch
 
@@ -217,15 +228,12 @@ def _assert_torch_primary_survives_cleanup(monkeypatch, capsys):
     monkeypatch.setitem(sys.modules, "torch", torch)
     monkeypatch.setattr(cgroup_repro, "snapshot", lambda _pid: {"pid": 12})
     monkeypatch.setattr(cgroup_repro.time, "sleep", lambda _seconds: None)
-    assert cgroup_repro.torch_worker(1) == 30
+    worker_result = cgroup_repro.torch_worker(1)
     result = json.loads(capsys.readouterr().out.splitlines()[-1])
-    assert result["error"] == "RuntimeError: fill failed"
-    assert any("sync teardown 3 failed" in note for note in result["notes"])
-    assert any("empty_cache teardown failed" in note for note in result["notes"])
-    assert any("sync teardown 4 failed" in note for note in result["notes"])
-    assert events.count("empty_cache") == 2  # warmup plus one teardown attempt
+    return worker_result, result, events
 
-def _assert_torch_cancellation_survives_cleanup(monkeypatch):
+
+def _observe_torch_cancellation_cleanup(monkeypatch):
     import sys
     from test_cgroup_repro import fake_torch
 
@@ -262,9 +270,10 @@ def _assert_torch_cancellation_survives_cleanup(monkeypatch):
     monkeypatch.setitem(sys.modules, "torch", torch)
     with pytest.raises(KeyboardInterrupt, match="cancel fill") as cancelled:
         cgroup_repro.torch_worker(1)
-    assert events.count("empty_cache") == 2
-    assert any("cancel teardown sync 3" in note for note in cancelled.value.__notes__)
-    assert any("cancel teardown sync 4" in note for note in cancelled.value.__notes__)
+    observation = {"exception": type(cancelled.value).__name__,
+                   "message": str(cancelled.value),
+                   "notes": cancelled.value.__notes__}
+    return observation, events
 
 
 
@@ -539,6 +548,8 @@ def test_debt_sunset_test_bb_bash_1550(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_debt_sunset_test_bb_bash_1602(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[float] = []
     counter = [0]
+    killpg_calls = []
+    wait_calls = []
     class Result:
         def __init__(self, stdout): self.stdout = stdout
     def pgrep_until_absent(*_args, **_kwargs):
@@ -546,11 +557,17 @@ def test_debt_sunset_test_bb_bash_1602(monkeypatch: pytest.MonkeyPatch) -> None:
         return Result("4242\n") if counter[0] < 3 else Result("")
     monkeypatch.setattr(bash_tests.subprocess, "run", pgrep_until_absent)
     monkeypatch.setattr(bash_tests.time, "sleep", lambda seconds: calls.append(seconds))
-    monkeypatch.setattr(bash_tests.os, "killpg", lambda *_a: None)
+    monkeypatch.setattr(bash_tests.os, "killpg",
+                        lambda pid, sig: killpg_calls.append((pid, sig)))
     class Parent:
         pid = 4242
-        def wait(self, **_kwargs): pass
-    bash_tests._matar_electron_falso(Parent(), ["synthetic-renderer"], timeout=1)
+        def wait(self, **kwargs): wait_calls.append(kwargs)
+    remaining = bash_tests._matar_electron_falso(
+        Parent(), ["synthetic-renderer"], timeout=1)
+    assert remaining == [""]
+    assert counter[0] == 3
+    assert killpg_calls == [(4242, bash_tests.signal.SIGKILL)]
+    assert wait_calls == [{"timeout": 1}]
     assert calls == [0.05, 0.05]
 
 

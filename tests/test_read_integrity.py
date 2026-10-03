@@ -52,19 +52,21 @@ def test_mode_disagreement_is_detected(tmp_path: Path, monkeypatch: pytest.Monke
     assert result["modes_consistent"] is False
 
 
-@pytest.mark.parametrize(("offset", "length", "digest", "repeats"), [
-    (-1, 4096, "0" * 64, 1),
-    (0, 0, "0" * 64, 1),
-    (0, read_integrity.MAX_REGION_BYTES + 4096, "0" * 64, 1),
-    (1, 4096, "0" * 64, 1),
-    (0, 4097, "0" * 64, 1),
-    (0, 4096, "bad", 1),
-    (0, 4096, "0" * 64, 6),
+@pytest.mark.parametrize("case", [
+    (-1, 4096, "0" * 64, 1, "length must be"),
+    (0, 0, "0" * 64, 1, "length must be"),
+    (0, read_integrity.MAX_REGION_BYTES + 4096, "0" * 64, 1, "length must be"),
+    (1, 4096, "0" * 64, 1, "offset and length"),
+    (0, 4097, "0" * 64, 1, "offset and length"),
+    (0, 4096, "bad", 1, "expected_sha256"),
+    (0, 4096, "0" * 64, 6, "repeats must be between"),
 ])
-def test_invalid_bounds_and_reference_rejected(tmp_path: Path, offset: int, length: int,
-                                               digest: str, repeats: int) -> None:
+def test_invalid_bounds_and_reference_rejected(
+    tmp_path: Path, case: tuple[int, int, str, int, str],
+) -> None:
+    offset, length, digest, repeats, message = case
     path = make_file(tmp_path)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=message):
         read_integrity.inspect(str(path), offset, length, digest, repeats)
 
 

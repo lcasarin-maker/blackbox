@@ -1,0 +1,40 @@
+$ pyright --project /tmp/bb-pyrightconfig-prepush.json /tmp/bb-prepush-assertions/tests/test_scan_samples.py
+0 errors, 0 warnings, 0 informations
+RC=0
+
+$ python3 -m ruff check tests/test_debt_registration_controls.py tests/test_provider_trace.py tests/test_read_integrity.py tests/test_scan_samples.py tests/test_bb_bash.py
+All checks passed!
+RC=0
+
+$ python3 -m compileall -q tests/test_debt_registration_controls.py tests/test_provider_trace.py tests/test_read_integrity.py tests/test_scan_samples.py tests/test_bb_bash.py
+RC=0
+
+$ python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_broad_except_cgroup_repro_150 tests/test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_1602 tests/test_provider_trace.py tests/test_read_integrity.py tests/test_scan_samples.py tests/test_bb_bash.py::test_electron_ui_muerta_con_hermano_vivo_pasa_limpio tests/test_bb_bash.py::test_electron_ui_muerta_CERO_renderers_SI_dispara_SOSPECHOSO
+......................................................                   [100%]
+54 passed in 0.15s
+RC=0
+
+Negative control: restore original test sources from HEAD; native judge expected to report all four defects.
+=== ADVERSARIAL RED-TEAM JUDGE (JUDGE-ZERO) ===
+[judge-zero] threat sweep read 0 file(s) across <no tree>
+[judge-zero] NOT swept (absent in this repo): src, scripts, daemon, central, installer
+[judge-zero] detected 4 finding(s) this run:
+  🔴 Mock Theater (GS2-216) in test_debt_registration_controls.py::test_debt_broad_except_cgroup_repro_150: Function mocks dependencies but contains no non-trivial asserts.
+  🔴 Mock Theater (GS2-216) in test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_1602: Assertions do not observe a call result or mocked behavior.
+  🔴 Mock Theater (GS2-216) in test_provider_trace.py::test_module_entrypoint: Assertions do not observe a call result or mocked behavior.
+  🔴 Mock Theater (GS2-216) in test_read_integrity.py::test_invalid_bounds_and_reference_rejected: pytest.raises context lacks exception match or exc_info assertions.
+[adversarial-judge] FAIL: 4 condemned finding(s) (mock-theater/source-disguise); first: Mock Theater (GS2-216) in test_debt_registration_controls.py::test_debt_broad_except_cgroup_repro_150: Function mocks dependencies but contains no non-trivial asserts.
+[adversarial-judge] HALLAZGOS: 4
+NEGATIVE_JUDGE_RC=1
+
+Negative control: restore original _fila(boot: str); heterogeneous JSON values expected to fail Pyright.
+/tmp/bb-prepush-assertions/tests/test_scan_samples.py
+  /tmp/bb-prepush-assertions/tests/test_scan_samples.py:105:18 - error: Argument of type "None" cannot be assigned to parameter "boot" of type "str" in function "_fila"
+    "None" is not assignable to "str" (reportArgumentType)
+  /tmp/bb-prepush-assertions/tests/test_scan_samples.py:106:18 - error: Argument of type "Literal[7]" cannot be assigned to parameter "boot" of type "str" in function "_fila"
+    "Literal[7]" is not assignable to "str" (reportArgumentType)
+  /tmp/bb-prepush-assertions/tests/test_scan_samples.py:107:18 - error: Argument of type "dict[Any, Any]" cannot be assigned to parameter "boot" of type "str" in function "_fila" (reportArgumentType)
+  /tmp/bb-prepush-assertions/tests/test_scan_samples.py:114:31 - error: Argument of type "list[str]" cannot be assigned to parameter "boot" of type "str" in function "_fila"
+    "list[str]" is not assignable to "str" (reportArgumentType)
+4 errors, 0 warnings, 0 informations
+NEGATIVE_PYRIGHT_RC=1
