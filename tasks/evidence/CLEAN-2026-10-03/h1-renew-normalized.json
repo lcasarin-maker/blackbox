@@ -1,0 +1,14 @@
+[
+  {
+    "claim_id": "SPEC-L118",
+    "verdict": "confirmed",
+    "evidence": "SPEC.md:118-121 fija el contrato de intercambio mediante salida JSONL. `tools/atom_gpu_telemetry.py:96-97` deriva JSONL_PATH de BLACKBOX_DATA/ATOM_TELEMETRY_JSONL y `:870-880` serializa cada evento y lo escribe como una línea; el consumidor está implementado por archivo compartido. `/home/lcasarin/projects/Atlas/tools/atom_degradacion_resuelta.py:60-61,65-70` importa módulos `tools.*` propios de Atlas y resuelve TELEMETRIA_PATH desde BLACKBOX_DATA/ATOM_TELEMETRY_JSONL, con el mismo nombre de archivo que escribe blackbox. La inspección AST de los árboles actuales registró 72 archivos Python de blackbox y 1,152 de Atlas, con `cross_repo_imports []` en ambos sentidos; la búsqueda complementaria de importlib/__import__/runpy/exec no encontró import dinámico entre repositorios.",
+    "fix": null
+  },
+  {
+    "claim_id": "SPEC-L309",
+    "verdict": "confirmed",
+    "evidence": "SPEC.md:309 describe las señales que el estado observa. `bin/bb:2226-2242` comprueba edad de datos para SAR, monitor de memoria y JSONL térmico; `:2081-2118` contrasta el `-lgc` declarado en systemd con la confirmación fechada del driver; `:2341-2347` exige ambas líneas de puntería de earlyoom; `:2144-2168` exige que bb-usable esté activa y tenga latido del journal dentro de 120 s. `pytest -q tests/test_bb_bash.py -k 'control_negativo_sin_muestra_fresca or status_ve_el_muestreo or clock_lock or earlyoom or bb_usable or telemetria_termica'` terminó con stdout `13 passed, 72 deselected in 3.31s`, rc=0. Los controles citados por SPEC están en `tests/test_bb_bash.py:470,503,516,532,550,608,617`; las pruebas positivas están en `:463,523,543,602`, y controles de ausencia/antigüedad térmica en `:734-771`. La primera ejecución en sandbox dejó cuatro casos de bb-usable como CIEGO porque `systemctl show` no pudo conectar al bus (`Operation not permitted`, rc=1); después de la autorización explícita para lecturas del bus, la repetición terminó `4 passed in 0.67s`, rc=0, y la selección focal completa pasó. Los fixtures prueban journal vacío, línea de arranque sola, latido rancio y latido fresco, sin ejecutar cargas CUDA.",
+    "fix": null
+  }
+]

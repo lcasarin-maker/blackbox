@@ -1,0 +1,33 @@
+{
+  "verdict": "fixed_scope_excludes_tools",
+  "runtime_zip": {
+    "path": "/home/lcasarin/projects/blackbox/.simplecode/runtime.zip",
+    "sha256": "b556a108901d051bf05cb940f350f741f4dcf412a37ce2dc10814a6aea38fe2d",
+    "member": "simplecode/verification/adversarial_judge.py"
+  },
+  "evidence": [
+    {
+      "claim": "The sweep scope is a hard-coded tuple; tools is absent and no CLI scope flag exists.",
+      "anchor": "simplecode/verification/adversarial_judge.py:818-844, 922-929",
+      "detail": "AGENT_THREAT_TREES is ('src', 'scripts', 'daemon', 'central', 'installer'); sweep_coverage selects only existing members of that tuple, and collect_threat_sources rglob-scans only those trees. The CLI accepts --root, --gate, --run-tests, --prompt, and --ingest-report; no tree/include-tools option exists."
+    },
+    {
+      "claim": "Current report's zero is an empty-scope PASS, while this repository has Python sources under tools/.",
+      "anchor": "tasks/evidence/ZERO-2026-10-02/final-adversarial.txt; repository tree at review time",
+      "detail": "The recorded output says 'threat sweep read 0 file(s) across <no tree>' and lists src, scripts, daemon, central, installer as absent, then reports OK and HALLAZGOS: 0. The repository has tools/ and 25 *.py files there, but tools is outside AGENT_THREAT_TREES."
+    },
+    {
+      "claim": "The pre-push gate invokes the same module without a scope override.",
+      "anchor": ".pre-commit-config.yaml:117-123",
+      "detail": "The adversarial-judge hook launches simplecode.verification.adversarial_judge with --root . --gate only; no native configuration in this invocation widens the tree list."
+    }
+  ],
+  "recommendation": {
+    "upstream": "Create or reopen a debt ficha for tools/ threat coverage; do not count the current adversarial-judge PASS as a security audit of repository sources.",
+    "target": "AGENT_THREAT_TREES and collect_threat_sources in simplecode/verification/adversarial_judge.py",
+    "acceptance": "Add tools/ to the explicit threat sweep scope (or another deliberate configured scope), then use a negative-control test that plants a homoglyph/invisible-character sample under tools/ and proves the sweep convicts it; report swept/absent trees and actual file count."
+  },
+  "limitations": [
+    "Read-only inspection; no code, tests, kit files, or repository metadata changed by this review."
+  ]
+}
