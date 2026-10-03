@@ -1,0 +1,954 @@
+[
+  {
+    "id": "FEATURE-FORUM-NETCONSOLE-01",
+    "title": "Evaluate signed netconsole capture for GB10 kernel output before silent freezes",
+    "source_threads": [
+      "383624",
+      "381655"
+    ],
+    "failure": "A DGX Spark Founders Edition (DGX OS, kernel 7.0.0-1019-nvidia, open driver 580.173.02, BIOS 5.36_0ACUM018) reportedly hard-froze with off-host 10-second telemetry still available up to the last sample but no Xid, NVRM, OOM, hung_task, panic, or pstore record. A different Spark owner reports netconsole loaded and emitted its start message with Secure Boot enabled using the signed build-time module; no real freeze was captured by it.",
+    "current_coverage": "The optional UDP exporter sends selected telemetry fields; it does not send kernel printk. Local journal/pstore analysis cannot recover messages that never reached those sources.",
+    "gap_or_complement": "Evaluate persistent signed netconsole to an operator-controlled receiver as an independent kernel-message path, with Secure Boot intact, timestamp/boot correlation and receiver-freshness reporting. This augments diagnosis; it does not recover the host or prove a cause when no printk is emitted.",
+    "evidence_level": "medium: one detailed silent-freeze report plus another Spark owner's Secure Boot module-load confirmation; exact target-kernel persistence and incident capture remain untested.",
+    "risks": [
+      "UDP netconsole is unencrypted and unacknowledged; kernel logs can expose host details.",
+      "The remote receiver or route can fail with the host's network path.",
+      "No message during a freeze cannot distinguish absent kernel output from failure of the logging path."
+    ],
+    "closure": "With Secure Boot enabled on a named GB10 OEM/kernel/driver, prove module signature and receiver path, capture a kernel marker off-host, test no receiver/broken route controls, correlate boot identity/timestamps, and verify module/config removal. Mark real-freeze capture unverified absent an incident.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md",
+    "merge_into": "FEATURE-FORUM-NETCONSOLE-01"
+  },
+  {
+    "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "title": "Validate RCU-stall panic and persistent capture as a GB10 recovery path",
+    "source_threads": [
+      "381655"
+    ],
+    "failure": "On an ASUS/NVIDIA DGX Spark (BIOS GX10DGX.0103, Ubuntu 24.04, kernel 6.17.0-1008-nvidia, driver 580.142), the author reports an RCU-related hard freeze lasting 2h16m under mixed load, with 44 RCU stalls and an SBSA watchdog path that did not recover the lockup. kdump failed for the reported path. A manual panic test after enabling panic_on_rcu_stall and EFI pstore wrote pstore evidence; no later natural RCU incident demonstrated that the trigger recovered the host.",
+    "current_coverage": "Adopted sysctl config declares hung_task_panic, softlockup_panic, hardlockup_panic and kernel.panic, but not panic_on_rcu_stall. FEATURE-KDUMP-PSTORE-PREAPAGADO checks kdump and reads dmesg captures; it explicitly leaves pstore support unverified.",
+    "gap_or_complement": "Check whether RCU-stall panic can turn this specific kernel failure into reboot and preserve evidence through EFI pstore while keeping the existing kdump path valid. Treat forced-panic validation as proof of pstore arrival only, not recovery of a natural RCU stall or power interruption.",
+    "evidence_level": "medium: one detailed owner report with exact OEM/kernel/driver and a manual panic-to-pstore test; causal mechanics for the failed kdump/watchdog path are partly hypothesized and no post-change natural RCU event is reported.",
+    "risks": [
+      "A panic policy intentionally reboots the whole host and may lose unsaved work.",
+      "EFI pstore, kdump, crash-kernel, Secure Boot and watchdog behavior vary by OEM and kernel.",
+      "A CPU lockup may prevent the RCU panic path from executing; a power cut cannot be repaired by a software panic policy."
+    ],
+    "closure": "On a canary GB10 stack, inventory active sysctl/boot/pstore/kdump state, test a controlled panic and verify pstore survives and bb scan reads it, preserve or justify changes to kdump, and prove rollback. Explicitly leave natural RCU-stall recovery unverified until an event or controlled RCU-specific fault injection exercises it.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md",
+    "merge_into": "FEATURE-FORUM-RCU-PANIC-PSTORE-01"
+  },
+  {
+    "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+    "title": "Detect and recover Wi-Fi isolation without misclassifying a live host as frozen",
+    "source_threads": [
+      "350465",
+      "356577",
+      "358951"
+    ],
+    "failure": "On one ASUS Ascent GX10 / GB10 with DGX OS 7.5.0, driver 580.173.02, kernel 6.17.0-1029-nvidia, and MediaTek MT7925/mt7925e, an AP band-steer roam was followed by a WPA timeout misreported as WRONG_KEY; NetworkManager entered failed/no-secrets and made no further reconnect attempt. The host remained locally healthy during a roughly 90-minute remote-access outage.",
+    "current_coverage": "bb sample records traffic counters and gateway observations; bb scan analyzes rates; optional SSH probing targets loopback. No current record distinguishes a local host failure from a healthy host whose Wi-Fi association and management path failed.",
+    "gap_or_complement": "Record local-versus-remote probe results, Wi-Fi association, supplicant authentication reason, NetworkManager state, and route freshness; define opt-in recovery for headless Wi-Fi. Test wired fallback and the reported BSSID/band-steering/autoconnect suggestions before recommending them as fixes. Other reports identify band selection and static DHCP as environment-specific workarounds; collect AP/SSID/security/adapter state and keep link association separate from DNS/mDNS management discovery.",
+    "evidence_level": "medium: one detailed ASUS/MT7925 WPA-to-NetworkManager terminal-state report plus two separate network-path reports: arbitrary Wi-Fi disconnects reportedly mitigated by forcing 2.4 GHz (#356577), and campus PEAP/mDNS remote discovery reportedly solved by static DHCP (#350465). Those mitigations are owner reports without controlled A/B; they represent different causes and must not be conflated.",
+    "risks": [
+      "A remote endpoint failure can be mistaken for local Wi-Fi failure unless local probes remain separate.",
+      "Automatic reconnection or connection changes can disrupt a valid link; opt-in configuration and verified rollback are required.",
+      "Evidence covers one OEM, adapter, driver, AP behavior, and software stack."
+    ],
+    "closure": "Fixture the cited WPA timeout -> WRONG_KEY -> NetworkManager no-secrets transition while local probes remain healthy, plus a control host failure. Verify bb scan separates both and does not trigger a host reboot for network-only isolation. Run a bounded A/B roam/soak on the cited stack for each proposed recovery, report reconnect time and recurrence with literal commands/output, and verify rollback.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md",
+    "merge_into": "FEATURE-FORUM-WIFI-ISOLATION-01"
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "title": "Validate lower GPU clock caps as an opt-in defense against silent power-offs",
+    "source_threads": [
+      "364259",
+      "365325",
+      "378300",
+      "380669",
+      "383624",
+      "384492"
+    ],
+    "failure": "Three forum reports describe GB10 power-offs/freezes with different stacks. The strongest evidence is thread 383624: three identical Founders Edition units, two with 14–15 days and zero stops, one with 14 stops in four days; 79,100 one-second samples showed temperature or low memory alone did not predict incidents, while hot+tight memory coincided with two of eight episodes, and four timestamped stops occurred during model load/unload. A 300,2100 cap lowered temperature in matched work and a 13-minute escalating test had zero failures. A separate HP ZGX Nano (580.178.04/kernel 7.0.0-1019) reports over 96h stable at 300,2200. Root cause remains unproven and the 13-minute test is not a sustained-stability demonstration. A separate DGX Spark owner (#364259) reports overheating and that `nvidia-smi -gtt 85` did not change it; NVIDIA states fan control is unavailable on Spark. The attached image was not inspected, and no stack/workload/temperature series is available, so this is a separate unverified thermal concern rather than proof that a lower GPU clock cap fixes it. A separate owner says CPU/GPU throttle settings disappeared after reboot/update and the crash returned; another user recommended `nvidia-smi -lgc 0,2000` and reports lower power under heavy prefill, without a controlled run. No OEM/driver/firmware or causal diagnosis is supplied, and no report confirms the setting persists. A two-node A/B report (#365325) shows a persistent idle vLLM process can hold one GB10 near 2.4 GHz/10–11 W with near-zero GPU utilization while an otherwise matched node downclocks; stopping vLLM immediately restores low clock/power only on the affected node. Multiple config changes/reboots did not fix it, and the thread has no root cause.",
+    "current_coverage": "The adopted atom-clock-lock unit declares 300,2800 at boot; this review did not verify the live driver's effective range. Blackbox records GPU clocks, temperature, power and throttle state. No local A/B tests whether a lower cap prevents silent power loss.",
+    "gap_or_complement": "Perform a matched OEM/driver-specific A/B and soak before recommending a lower cap; capture performance cost and rollback to the actual Blackbox range. Keep the lower cap opt-in and per OEM until the mechanism and repeatability are established. Include reboot/update persistence and read-back of the effective cap in the canary experiment; forum commands are anecdotes, not a validated default. Include idle-model-loaded vs stopped baselines and a test for unexpected sustained clocks/power with zero utilization; avoid masking this behavior by capping clocks before the idle power-state cause is identified.",
+    "evidence_level": "medium: multiple owner reports, including a same-hardware three-unit control group and one 96-hour post-change run; the only stated escalated zero-failure test after capping lasted 13 minutes, no local A/B exists, and no causal mechanism is confirmed.",
+    "risks": [
+      "Peak performance and inference latency may worsen.",
+      "A lower clock may not address an adapter, board power, or airflow fault.",
+      "-rgc restores the driver maximum rather than Blackbox's 300,2800 policy; rollback must account for the persistent clock-lock unit."
+    ],
+    "closure": "Matched baseline/capped runs on a named GB10 OEM with sustained inference, model load/unload and idle control, exact soak/failure counts, throughput/latency and sensor coverage; use identical units as controls where possible. Confirm effective clocks and demonstrate restoration of the declared 300,2800 policy. Predeclare soak and repeat; short runs do not close the stability claim.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md",
+    "merge_into": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01"
+  },
+  {
+    "id": "FEATURE-FORUM-NVME-READONLY-01",
+    "title": "Detect NVMe and filesystem failure before the GB10 becomes unbootable",
+    "source_threads": [
+      "354576",
+      "356091",
+      "369758",
+      "371868"
+    ],
+    "failure": "A DGX Spark owner reports a read-only filesystem and failed boot; the 4 TB NVMe remained visible in BIOS but GRUB could not write sectors. Official recovery image v1.91.51-1 ran about 10 hours, then reported filesystem checksum errors and a read-only transition; the unit remained unbootable and support called it an RMA candidate. Exact NVMe model/firmware, OEM/BIOS, kernel, SMART/NVMe health and kernel logs are absent, so physical drive failure is not established. A separate backup discussion (#369758) confirms owner concern about full-device backups on ARM64 and contains unverified community advice to boot a live USB, clone to an external SSD with ddrescue, then replace the internal drive; the claimed bootability of that clone has not been tested. A second Spark owner (#371868) reports that support’s NVMe test failed and was advised to request RMA; the post’s diagnostic photos were not inspected, so this corroborates an NVMe/RMA path without adding device state or cause. In another Spark (#356091), support reviewed BIOS/NVMe/recovery screenshots and called the machine an RMA candidate; those screenshots were not inspectable in this pass, so no state or cause is inferred.",
+    "current_coverage": "Repository search across BB tools, bin, README and SPEC found no explicit NVMe health/SMART, kernel media-error threshold, or read-only filesystem transition monitor. Generic journal/evidence collection may preserve messages that exist, but no pre-failure disk-health signal is documented.",
+    "gap_or_complement": "Evaluate a read-only monitor that records NVMe identity/firmware and available health/media-error counters, kernel I/O errors, mount read-only transitions, boot/device status and timestamped last-known-good data. On alert, preserve logs and health data and direct the operator to verified backup/recovery/RMA steps before repeated recovery writes. Use OEM-supported interfaces; do not run destructive self-tests or remediation writes against suspect media. Evaluate an independently tested backup/restore path for this architecture as part of data-preservation closure; treat the forum ddrescue/replacement suggestion as unvalidated until OEM boot/recovery behavior is proven.",
+    "evidence_level": "medium-low: one detailed owner report with failure sequence and support RMA guidance, but no logs or NVMe diagnostic output. The report is consistent with storage failure, not proof of its cause.",
+    "risks": [
+      "Health counters may be unavailable or differ by NVMe OEM and firmware.",
+      "Repeated SMART tests or recovery writes could add load or destroy evidence on failing media.",
+      "A read-only state can originate above the physical device; alerts must not label the SSD defective without corroboration."
+    ],
+    "closure": "On a named recoverable Spark/OEM stack, fixture NVMe media errors, filesystem remount-read-only, unavailable SMART permission/device and a healthy control. Verify BB records identity, values, event time, missing-data status and last-known-good samples without writing to the device; then rehearse backup/RMA evidence export and document recovery rollback. A live device-specific diagnosis remains unverified until matched to the reported OEM/firmware.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md",
+    "status": "registered_to_existing",
+    "merge_into": "FEATURE-FORUM-NVME-READONLY-01"
+  },
+  {
+    "id": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+    "title": "Separate desktop-session failures from a healthy remote GB10 host after updates",
+    "source_threads": [
+      "356359",
+      "357519",
+      "359973"
+    ],
+    "failure": "A DGX Spark Founders Edition owner reports that after a Dashboard update one of two units repeatedly returns to the local login screen, while SSH and NVIDIA Sync remain functional. Reinstalling the desktop and applying another update did not fix the reported unit. NVIDIA requested a bug report; no report/result or exact package/kernel/OEM stack is present. A second user reports a similar login/credential symptom and changing a password helped that separate case, but cause and similarity are unverified. Related display reports include a Spark losing its display after the OS handoff and recovering after the owner disabled Wayland/restarted GDM (#356359), plus a black screen after overnight HDMI-switch use while SSH remained alive (#357519), reportedly improved by disabling screen blanking/lock. These owner-reported workarounds are not controlled, the latter reduces security, and neither proves a host freeze.",
+    "current_coverage": "BB health/readiness uses host and service/network signals, including an optional loopback SSH banner probe. No explicit graphical login/session probe was found in the checked BB tools/docs; a healthy SSH path does not prove the local desktop login works.",
+    "gap_or_complement": "Evaluate a low-impact desktop-session usability signal that records display-manager state, active user session and last login failure while keeping SSH/local host health separate. Preserve exact update package versions and journal evidence. A failed greeter must not trigger automatic host reboot or desktop package reinstall; collect state and offer a recoverable operator action first. Keep monitor/GDM/Wayland/blanking state separate from host/SSH health; capture a black-display incident without turning off security controls or restarting GDM automatically.",
+    "evidence_level": "medium-low: one detailed post-update login-loop report with surviving SSH and failed reinstall attempts, plus one less-specific reply. No logs, exact update versions, or confirmed root cause.",
+    "risks": [
+      "A headless system may intentionally have no graphical session, so absence alone cannot mean failure.",
+      "Restarting a display manager may terminate active desktop work or erase useful diagnostic context.",
+      "The reported password workaround came from another user and was not verified for the original case."
+    ],
+    "closure": "Use fixtures for an intentionally headless system, a healthy desktop with working SSH, a greeter/login loop with healthy SSH, and a host-wide failure. Confirm the classification preserves the distinction and keeps all failed data collection as could_not_run. On a named recoverable Spark stack, capture a genuine post-update desktop session failure and verify no automatic reboot or package mutation occurs before a documented operator-approved recovery and rollback.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md",
+    "status": "registered_to_existing",
+    "merge_into": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01"
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "title": "Detect a GB10 GPU that remains on PCIe but fails GSP initialization after boot",
+    "source_threads": [
+      "373171"
+    ],
+    "failure": "After a subsequent boot, one Spark owner reports that `nvidia-smi` could not find the GB10 although PCI enumerated device `000f:01:00.0`, modules and `/dev/nvidia*` existed. CUDA initialization returned error 999 and the kernel logged repeated `RmInitAdapter: Cannot initialize GSP firmware RM`, `SEC2 secure boot partition timed out`, and `NV_ERR_TIMEOUT`. Field Diagnostics passed the previous day; NVIDIA requested a bug report and a second diagnostic run in the failed state. No report or exact stack was posted.",
+    "current_coverage": "BB has GPU utilization/telemetry paths, but no explicit evidence in the cited forum of handling the split state “PCI device present, nodes/modules exist, GSP initialization failed and nvidia-smi has no devices.” A previous passing field diagnostic did not predict the next-boot state.",
+    "gap_or_complement": "Evaluate an explicit GPU-ready probe that records NVML/nvidia-smi device enumeration and distinguishes PCI presence from usable CUDA/GSP state. Preserve the GSP/SEC2 kernel messages, boot identity, kernel/driver/GSP versions, Secure Boot state and field-diagnostic output when the probe fails. Report `GPU_UNAVAILABLE` and collection failures separately; do not auto-reload modules or power-cycle before capturing the failed-state evidence.",
+    "evidence_level": "medium: one detailed symptom with exact device path and kernel messages; failed-state bug report/diagnostic and full software versions are missing, so root cause is undetermined.",
+    "risks": [
+      "A GSP timeout may be transient or stack-specific; blanket module reloads can destroy evidence or worsen recovery.",
+      "nvidia-smi output and NVML availability differ with driver versions and permissions; probe must distinguish no GPU from command failure.",
+      "A prior field diagnostic passing does not establish device health after reboot."
+    ],
+    "closure": "Build fixtures for healthy GPU, PCI visible but NVML/GSP unavailable, PCI missing, Secure Boot/module rejection, and permission/command failure. Verify BB preserves raw messages and versions, reports GPU unavailability without calling it a whole-host freeze, and never resets the host automatically. On a named Spark/OEM stack, validate against a naturally failed state or a vendor-approved fault injection and rerun Field Diagnostics before/after without erasing evidence.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md",
+    "status": "registered_to_existing",
+    "merge_into": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01"
+  },
+  {
+    "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "title": "Verify SBSA watchdog availability before interpreting repeated GB10 reboots",
+    "source_threads": [
+      "360564"
+    ],
+    "failure": "A Spark owner reports repeated crashes/reboots every few minutes despite trying kernels 6.14 and 6.17 and current firmware; Field Diagnostics crashed at varying points. Another poster suggested checking `lsmod | grep sbsa_gwdt`; the owner confirmed the module was not running and said the machine was stable “for now”, but did not state an action or duration. A separate answer reports `wdctl` showing an SBSA watchdog with a 10-second timeout and another participant suggested disabling watchdog during debugging. Causation is unproven.",
+    "current_coverage": "BB already uses systemd/hardware watchdog recovery and separates watchdog from panic/pstore observations; repository search found no explicit boot-time check recording SBSA watchdog device/module availability together with BIOS watchdog enablement. Absence from `lsmod` alone may be valid if driver is built-in.",
+    "gap_or_complement": "Evaluate a read-only boot health record for watchdog capability and ownership: `/dev/watchdog*`, `/sys/class/watchdog`, systemd watchdog logs/status, kernel built-in/module state, BIOS setting if exposed, and `wdctl` timeout. On repeated resets, correlate boot ID and pstore before changing watchdog policy. Never treat disabling the watchdog as a production fix; preserve current policy and require OEM support before changing it.",
+    "evidence_level": "low-medium: repeated failures and a reported absent module are described, but the author never states what action preceded stability, no exact OEM/BIOS/driver is supplied, and no pstore/diagnostic output is included.",
+    "risks": [
+      "A missing `lsmod` entry may indicate built-in driver rather than missing support.",
+      "Disabling the hardware watchdog can turn recoverable lockups into permanent outages and remove evidence of reset cause.",
+      "Watchdog ownership and firmware controls differ across OEMs and kernel builds."
+    ],
+    "closure": "On a named, recoverable Spark stack, fixture loaded-module, built-in driver, no device, BIOS-disabled, permission-denied and healthy states; prove read-only detection and no policy mutation. For an actual repeated-reset case, correlate exact boot/BIOS/kernel/driver, `/sys/class/watchdog`, `wdctl`, journal and pstore before/after; reproduce only with OEM-approved fault injection and verify rollback. Do not claim that module absence caused a reboot from this forum report alone.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md",
+    "status": "registered_to_existing",
+    "merge_into": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01"
+  },
+  {
+    "id": "FEATURE-FORUM-UVM-TRACE-CAPABILITY-01",
+    "title": "Make GB10 unified-memory profiling blind spots explicit and evaluate a supported alternative",
+    "source_threads": [
+      "357848"
+    ],
+    "failure": "A GB10/SM121 owner using driver 580.95.05, CUDA 13.1 and Nsight Systems 2026.1.1 cannot trace UVM CPU/GPU page faults or migrations; explicit tracing flags produce the same unsupported message. NVIDIA confirms UVM profiling is unsupported on Spark and says it is being worked on.",
+    "current_coverage": "Blackbox captures host memory pressure and GPU-level signals, but the forum confirms Nsight Systems cannot provide UVM attribution on this platform/stack. Aggregate counters cannot prove a specific GPU page migration or fault caused an incident.",
+    "gap_or_complement": "Record whether the exact GB10 driver/tool combination supports UVM trace before relying on it. Evaluate a vendor-supported replacement when available; until then label UVM migration attribution unavailable rather than infer it from host counters.",
+    "evidence_level": "high that UVM tracing is unsupported on the cited stack (NVIDIA forum response); low on availability/date of a future replacement.",
+    "risks": [
+      "A capability probe can go stale with driver/tool releases.",
+      "Host page-fault totals are not GPU UVM trace and may misattribute activity.",
+      "Adding unsupported profiler flags can alter workload behavior."
+    ],
+    "closure": "On the named GB10 driver/tool versions, reproduce the unsupported response, ensure Blackbox records the capability gap once with versions, then test the first vendor-supported replacement against an ordinary host-memory control and known UVM workload. Do not mark page migration attribution available until traces are verified.",
+    "backlog_card": "tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md",
+    "status": "registered_to_existing",
+    "merge_into": "FEATURE-1358-CGROUP-02-TRAZA"
+  },
+  {
+    "id": "DELTA-FORUM-CX7-POSTHOTPLUG-01",
+    "title": "Prove ConnectX-7 data-plane recovery after link re-enumeration",
+    "source_threads": [
+      "371031",
+      "363193"
+    ],
+    "failure": "A four-node GB10 cluster reports NCCL all_gather falling 192→25 Gbps after a live cable replug while mlxlink still reports Active/200G; another node reports PCIe bridge retraining failure and missing NIC. Similar E-Switch removal is expected when no cable is attached, so these cases need separate states.",
+    "current_coverage": "Existing CX7 hotplug card addresses hotplug behavior and service signals; link presence alone does not establish collective health. One Field Diagnostics run reportedly passed while CX7 was nonfunctional.",
+    "gap_or_complement": "Track supported-cable presence, PCIe endpoint/retraining, mlx5 bind, firmware/BDF and representative NCCL throughput as separate readiness dimensions. Persist AER and power warnings with workload throughput. Treat missing interface as expected only when no supported cable is connected; require post-relink collective A/B before marking recovery.",
+    "evidence_level": "medium-high for reported performance regression and false-green link state; low for root cause/cable qualification (one attached bug report unread).",
+    "risks": [
+      "27W PCIe warning also appears on a healthy 200G node and cannot identify cause alone.",
+      "Disabling hotplug can remove intended function and must be OEM-validated with rollback."
+    ],
+    "closure": "On exact GB10/OEM/firmware/kernel/driver/cable/switch, repeat baseline and cable transition; show detector fails when NCCL degrades despite 200G link, passes after real recovery, and ignores expected no-cable E-Switch teardown. Preserve crash bundle/RMA path for retraining failure.",
+    "backlog_card": "tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md",
+    "merge_into": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION"
+  },
+  {
+    "id": "DELTA-FORUM-CX7-FW-UPDATE-GUARD-01",
+    "title": "Block unapproved unattended ConnectX firmware writes",
+    "source_threads": [
+      "373900",
+      "371799"
+    ],
+    "failure": "One ASUS GX10 owner reports dpkg --configure triggering mlnx-fw-updater 25.10-1.7.1.0 from DOCA baseos8-latest, changing CX7 PSID NVD0000000087 from 28.45.4028 to 28.47.1088 despite a BME/DMA prerequisite warning; both devices then stayed in pre-init timeout -110 through OS reinstalls. NVIDIA says engineering had not reproduced. Separately, NVIDIA explicitly says driver 595 is unsupported on Spark after users report kernel/driver loss and failed boot during apt transitions.",
+    "current_coverage": "APT critical package guard and kernel/initrd gate cover package graph and module presence; the reported DOCA firmware updater could flash firmware during generic package configuration, before users approve an OEM-specific update.",
+    "gap_or_complement": "Fail closed on firmware writes invoked by general apt/dpkg/unattended upgrades. Allow only exact OEM/PSID/version/source combinations, enforce BME/DMA/driver readiness, block on any prerequisite warning, verify flash target and recovery bundle, and stage a tested fallback. Apply the same supported-version allowlist to driver series and require matching modules for next boot.",
+    "evidence_level": "High that apt kernel/driver mismatch can remove nvidia.ko and NVIDIA stated 595 unsupported; low-to-medium for CX7 flash-to-brick causality until unread mstdump/nvidia-bug-report and engineering reproduction.",
+    "risks": [
+      "A firmware guard that blocks valid signed OEM updates can delay security/reliability fixes.",
+      "Unofficial manual flash or package-purge recipes can strand device or void warranty."
+    ],
+    "closure": "Simulate apt/dpkg transactions with unsupported driver and firmware package; verify no firmware write starts, target kernel has matching supported module, unsupported OEM/PSID/version and BME-not-ready cases fail closed, approved transaction writes exact signed image, and recovery/RMA evidence is retained.",
+    "backlog_card": "tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md",
+    "merge_into": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD"
+  },
+  {
+    "id": "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01",
+    "title": "Expose thermal and platform sensor blind spots by OEM",
+    "source_threads": [
+      "377044",
+      "371614"
+    ],
+    "failure": "ASUS GX10 user reports sustained inference with ACPI zones 0/5 at 96.6C, GPU thermal slowdown active and fan telemetry N/A; later posts contain distinct hard cutoffs, including one at reported 79C with power loss and OOM lines preceding some outages. Retail Spark audit reports DCGM energy fields cover GPU but no CPU/SoC/powercap energy; community sensor module is blocked by Secure Boot on retail. NVIDIA says FE did not reproduce the OEM case.",
+    "current_coverage": "Thermal readiness tracks GPU temp/throttle and platform thermal signals; fan RPM/PWM and CPU/SoC energy channels may be unavailable and coverage differs by OEM/firmware.",
+    "gap_or_complement": "Report per-source sensor capability, staleness and absent fan/rail coverage; capture synchronized GPU/ACPI/clock/counter/workload/journal/firmware versions. Keep thermal throttling, OOM, and abrupt power loss as distinct event classes; do not claim fan curve or firmware root cause from correlation. Use only stable signed OEM firmware unless vendor gives test channel procedure and rollback.",
+    "evidence_level": "High for user-reported synchronized ASUS thermal telemetry; medium for cross-firmware relationship; low for causal fan/thermal diagnosis because attached archives were not inspected and NVIDIA could not reproduce on FE.",
+    "risks": [
+      "No Linux fan PWM/RPM makes fan attribution inferential.",
+      "Cross-OEM capsule testing or downgrade can brick or void warranty.",
+      "Missing CPU energy data must not be presented as total system energy."
+    ],
+    "closure": "On exact OEM SKU, run controlled inference soak with synchronized sensor coverage/clock/throttle/journal receipt, prove gaps are visible, compare stable vendor firmware only under approved A/B and rollback, test power-loss and OOM classifiers separately, and retain independent power-cut evidence.",
+    "backlog_card": "tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md",
+    "merge_into": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION"
+  },
+  {
+    "id": "DELTA-FORUM-RECOVERY-APT-UPDATE-01",
+    "title": "Preserve official recovery path before updates or boot changes",
+    "source_threads": [
+      "359198"
+    ],
+    "failure": "Forum user reports freeze after apt upgrade and a later Docker vLLM container with restart-always; after forced resets he could not reliably reach UEFI/recovery/SSH. NVIDIA recommended the official DGX recovery/reimage path, then seller/RMA when input/access recovery remained unavailable. Logs do not establish whether apt, workload, GRUB edits or another factor caused failure.",
+    "current_coverage": "Rescue runbook covers no-boot, official reimage and RMA escalation; apt guard protects critical packages.",
+    "gap_or_complement": "Before system upgrades or bootloader/driver changes, verify OEM-specific recovery media/UEFI entry and preserve user data. Track restart-on-boot workloads and put reversible admission bounds on resource-heavy services; after access loss follow vendor recovery rather than stacking unverified GRUB flags.",
+    "evidence_level": "Medium for a severe recovery-path failure report; low for causal attribution and any suggested workload/memory fix.",
+    "risks": [
+      "Reimage can destroy user data; confirm preservation before destructive recovery.",
+      "Unverified boot arguments may reduce recovery access or undermine Secure Boot."
+    ],
+    "closure": "On each OEM model, rehearse official recovery media/UEFI access with data-preservation checkpoint, bounded rebooting workload, and documented support/RMA cutoff; simulate interrupted update without damaging production data.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md",
+    "merge_into": "FEATURE-FORUM-RESCUE-RUNBOOK-01"
+  },
+  {
+    "id": "DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01",
+    "title": "Classify low GPU power only against a supported runtime baseline",
+    "source_threads": [
+      "356426"
+    ],
+    "failure": "A thread initially reports GPU stuck at ~5W/0% under workload, then its author says the cause was old Driver 550.54.15/CUDA12.4; after GPU-burn installed Driver 580.95.05/CUDA13.0, GPU reached 96%/28W and power scaled normally. The mlx5 PCIe 27W message also appears on healthy idle Spark, so it is a false standalone indicator for GPU cap.",
+    "current_coverage": "Runtime compatibility diagnostics capture active driver/CUDA stack; CX7 diagnostics capture PCIe slot power warning.",
+    "gap_or_complement": "Before labeling platform power fault, record effective host/container driver+CUDA and run a known-good supported GPU load; keep mlx5 27W warning separate from GPU-side utilization/power/clock measurements.",
+    "evidence_level": "Medium: forum author reports fix but diagnostic zip shared by DM was inaccessible.",
+    "risks": [
+      "Initial setup was called stock before final post disclosed old driver/CUDA, showing provenance can be incomplete.",
+      "A single workload may fail for a model/kernel issue rather than power delivery."
+    ],
+    "closure": "Reproduce on exact supported host/container stack; show healthy idle can emit mlx5 27W, stale runtime is rejected as unsupported, and supported GPU-burn plus inference correlate load/utilization/power correctly.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-MEMORY-RECOVERY-SOAK-01",
+    "title": "Test memory release and hard-failure evidence under long distributed inference",
+    "source_threads": [
+      "361862",
+      "370007"
+    ],
+    "failure": "Two posts report retained llama.cpp RPC memory reaching OOM and remote server memory requiring process kill/restart. Another ASUS GX10 author reports hard poweroff on long vLLM request while short torch/smoke passes; logs include failed CDI injection and later NV_ERR_NO_MEMORY, but no pstore and no evidence that memory caused the power loss.",
+    "current_coverage": "Cgroup trace/soak and OOM attribution cover memory pressure; rescue/thermal receipts cover sudden unclean termination.",
+    "gap_or_complement": "Add peer-attributed long-run/cross-node inference soak with RSS/PSS, cgroup events, UMA pressure, CDI state and GPU allocation errors, compare client disconnect/server stop for retained memory, and preserve last-good telemetry off-host before hard power loss. Do not automatically reboot or kill GPU workloads based on an OOM-like signal.",
+    "evidence_level": "Medium for reported failures; low for true memory leak, memory causality, and poweroff mechanism.",
+    "risks": [
+      "No exact runtime versions or per-process memory time series in these reports.",
+      "Hard power cut may be board/power/thermal failure, not OOM."
+    ],
+    "closure": "On named model/backend/version, demonstrate baseline and sustained load, record process/cgroup/system counters, validate memory reclamation after server/client teardown, inject workload exhaustion in isolated test, and keep poweroff and OOM conclusions separate.",
+    "backlog_card": "tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md",
+    "merge_into": "FEATURE-1358-CGROUP-05-CUELGUES"
+  },
+  {
+    "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+    "title": "Fail closed before mounting external RAID below link-speed floor",
+    "source_threads": [
+      "349121"
+    ],
+    "failure": "Owners report external USB NVMe enclosures renegotiating from 20Gbps to 480Mbps/~40MB/s, including after boot. An mdadm owner warns assembly at USB2 is unsafe after timeouts/resets and reports avoiding corruption by leaving the array unassembled/unmounted below 5000Mbps.",
+    "current_coverage": "GX10 read-integrity probe covers checksums on file reads and internal NVMe/RAS evidence; it does not gate removable USB array assembly on current link speed.",
+    "gap_or_complement": "Before mdadm assemble/mount, resolve member devices by stable identity, read effective per-device speed from sysfs, and keep all members unmounted if any fall below an OEM/operator-declared floor. Preserve state and require an explicit operator recovery action. Test UAS quirks only for exact VID/PID/enclosure with A/B; do not infer thermal cause from throughput alone.",
+    "evidence_level": "Medium for observed USB renegotiation and safe-mount workaround; low for UAS/thermal/root-cause isolation (single owner reports, incomplete controlled A/B).",
+    "risks": [
+      "Incorrect stable-device mapping or speed units can block healthy storage or mount the wrong device.",
+      "Disabling UAS can affect performance and device compatibility; kernel/module changes can impair boot.",
+      "External USB downgrade is not proof of internal GX10 NVMe corruption."
+    ],
+    "closure": "On an isolated GB10 with named enclosure/drive/kernel/firmware, reproduce good and 480Mbps link states across cold boots, prove the array remains stopped and unmounted below threshold, prove it assembles after verified healthy negotiation, inject missing/stale sysfs readings and confirm fail-closed, measure boot/mount delay, and document config rollback.",
+    "backlog_card": "tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md",
+    "merge_into": "FORUM-02-GX10-READ-INTEGRITY"
+  },
+  {
+    "id": "DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01",
+    "title": "Gate exact Ray/vLLM/Torch tensor-parallel stack and detect rank-progress stalls",
+    "source_threads": [
+      "358755"
+    ],
+    "failure": "Two-Spark owner reports vLLM TP=2 lost one node after first prompt while peer GPU stayed at 100%; `--enforce-eager` changed symptom and owner later reported fixing their setup by using torch 2.9.1 instead of 2.10.0.",
+    "current_coverage": "Runtime compatibility card captures supported versions; host hang capture does not necessarily distinguish dead distributed rank from GPU-busy/no-progress.",
+    "gap_or_complement": "Track exact container digest/Torch/CUDA/vLLM/Ray/NCCL and TP/PP config. Validate known-good combinations; export per-rank request and collective progress/heartbeat alongside GPU busy/power. Bound request timeout and retain logs before process kill. Keep eager mode as A/B diagnostic only.",
+    "evidence_level": "Medium for operator-reported loss and version change; low-to-medium for causality (single setup, no complete logs or repeated controlled A/B).",
+    "risks": [
+      "Torch version may be confounded with build, CUDA kernels, or stack changes.",
+      "A generic GPU-100% alarm can misclassify productive prefill as a wedge.",
+      "Eager mode may lower performance without fixing underlying stack incompatibility."
+    ],
+    "closure": "On two named GB10s, exact supported container/kernel/driver/Torch/CUDA/Ray/NCCL, compare 2.9.1 and target version under same model/prompt; capture rank and collective progress; verify detector catches no-progress while allowing long prefill, then verify bounded stop/recovery and rollback.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01",
+    "title": "Validate Noble arm64 APT sources and repository freshness before upgrades",
+    "source_threads": [
+      "355471"
+    ],
+    "failure": "DGX Spark Noble arm64 owners report archive.ubuntu.com arm64 404 from a mixed source file and NVIDIA PPA mirror size/hash mismatch during sync. NVIDIA support says expected Ubuntu source is ports.ubuntu.com/ubuntu-ports; owner reports apt update recovered after removing the bad sources file, while another success occurred after mirror state changed.",
+    "current_coverage": "APT guard checks critical package removal and package graph; it does not verify distro-architecture source identity or repository-index freshness before upgrade.",
+    "gap_or_complement": "Check approved OEM source profile for Ubuntu Noble arm64 and `ports.ubuntu.com/ubuntu-ports`, verify signed Release/index freshness and fail closed on hash/size mismatch; surface transient mirror sync separately from wrong source URI. Never auto-delete/replace sources or proceed with stale indexes.",
+    "evidence_level": "High for quoted source mismatch and apt update errors; medium for recovery association, because repository sync and source removal are confounded. No package installation failure was shown.",
+    "risks": [
+      "Overly strict allowlist can block valid OEM/NVIDIA repositories or delay security fixes.",
+      "Automatically rewriting sources could remove essential NVIDIA/ESM/other approved repositories."
+    ],
+    "closure": "Test exact Noble arm64 source profile on OEM canary; malformed archive URI, stale index, mirror size mismatch, invalid signature and normal transient recovery must all be distinct. Verify apt upgrade is blocked while indexes are inconsistent, approved repos remain intact, and rollback restores the prior source snapshot.",
+    "backlog_card": "tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md",
+    "merge_into": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD"
+  },
+  {
+    "id": "DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01",
+    "title": "Protect NFS worker mounts and pin container digest during stack cleanup",
+    "source_threads": [
+      "382725"
+    ],
+    "failure": "A 4× Spark operator migrating DeepSeek stack reports `stop.sh` wildcard-deletes all dsv41-* containers including the NFS exporter; workers with persistent NFS mounts then hang in health/doctor on next serve. Floating `dev-dsv41` tag also moved to a different base than the pinned digest. Other recipe reports include 12 failed boot attempts after topology changes, with no verified root cause.",
+    "current_coverage": "Runtime compatibility captures host/container versions; rescue runbook covers recovery after unavailable nodes, but cleanup script behavior and NFS dependency ordering are not gated.",
+    "gap_or_complement": "Use explicit container allowlist and dependency graph; preserve exporter while worker mounts exist, check mount/export health before stopping and before relaunch. Pin immutable image digest and record recipe commit. Apply network/share changes in a canary after config backup; validate exact TP topology.",
+    "evidence_level": "Medium for owner-reported NFS hang and floating-tag drift; low for causal hardware impact and failed-boot attribution (forum report without diagnostic logs).",
+    "risks": [
+      "A broad cleanup can remove a shared service and strand remote workers on hard NFS mounts.",
+      "Reconfiguring network or shares cluster-wide can cause loss of remote access and requires rollback path.",
+      "Digest pinning can preserve vulnerable/outdated images unless updates are reviewed."
+    ],
+    "closure": "On disposable 4-node test, reproduce hard-mounted worker + exporter, run stop/upgrade/rollback and prove exporter stays reachable or workers unmount cleanly; fail on missing exporter before launching model, pin and report exact image digest, exercise config restore. No production NFS mount required.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01",
+    "title": "Gate cold model compile on measured UMA headroom and preserve host recovery",
+    "source_threads": [
+      "381228"
+    ],
+    "failure": "Owner reports official vLLM Qwen3.8 FP8 TP2 first compile (Torch Inductor) exhausted memory on both GB10 nodes, dropped SSH/ICMP and required power-cycle. Eager + compilation mode 0 reportedly starts, slower. No exact kernel/driver/torch version or diagnostic bundle reviewed yet.",
+    "current_coverage": "Long-run hang/memory capture handles memory pressure and GPU wedge; it does not state a first-start compile admission gate or distinguish long JIT from memory collapse.",
+    "gap_or_complement": "On exact container/kernel/driver/torch/TP stack, canary cold start with non-GPU memory/UMA headroom sampled and remote liveness; abort before starting second rank if available budget is insufficient. Preserve off-host boot/compile logs. Evaluate eager/no-compile as exact-version fallback; do not generalize the reported 0.82 utilization value.",
+    "evidence_level": "Medium for operator-reported total host responsiveness loss and recovery; low-to-medium for causal Inductor OOM until full logs and exact versions are checked.",
+    "risks": [
+      "Eager fallback sacrifices throughput and may not fit other stack versions.",
+      "A headroom threshold derived from one node/workload can falsely block a valid start or admit a dangerous one.",
+      "Automatic power-cycle can erase evidence and risk writes; recovery needs capture first."
+    ],
+    "closure": "On isolated two-node canary, reproduce cold start with same image digest/version, capture UMA/PSI/swap, rank progress and SSH from off-host; show low-headroom gate stops before wedge, eager fallback starts within an explicit performance budget, and normal later start remains available. Preserve rollback and vendor-supported recovery.",
+    "backlog_card": "tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md",
+    "merge_into": "FEATURE-1358-CGROUP-05-CUELGUES"
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01",
+    "title": "Preserve service-OOM and prompt-cache corruption evidence under UMA pressure",
+    "source_threads": [
+      "381228"
+    ],
+    "failure": "Single-Spark Qwen3.8 agent operator reports a multi-hour run shifted mid-thought to an unrelated task when prompt cache approached 95%; service pressure also caused systemd-oomd to kill Spark Studio and bring Hermes down. Owner says a model-specific cache guard and service hardening mitigated; exact versions/logs and independent validation absent.",
+    "current_coverage": "Cgroup/oomd capture monitors memory pressure and process loss; prompt-cache semantic corruption and user-service kill impact are not linked into one receipt.",
+    "gap_or_complement": "Capture effective model/container/cache config, prompt/session identifiers, prefix-cache occupancy, PSI/swap/UMA, systemd-oomd kill journal and dependent service state before restart. Keep model cache guard model/version scoped; restart only after headroom returns with bounded attempts.",
+    "evidence_level": "Medium for owner-reported task-switch and service termination; low for cache contamination causality and mitigation efficacy.",
+    "risks": [
+      "Prompt/cache content may contain sensitive user data; record identifiers and hashes rather than raw prompt by default.",
+      "Disabling systemd-oomd can turn a service kill into host-wide OOM; do not disable globally.",
+      "Automatic restart during sustained low headroom can amplify pressure."
+    ],
+    "closure": "On isolated Spark with exact model/runtime/service, run controlled cache-pressure and systemd-oomd scenarios, verify receipt links kill reason to dependents without logging sensitive prompt, validate recovery waits for headroom and bounded restart, and demonstrate ordinary cache reuse remains functional.",
+    "backlog_card": "tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md",
+    "merge_into": "FEATURE-1358-CGROUP-05-CUELGUES"
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01",
+    "title": "Capture distributed inference progress before agent restarts a tool-call wedge",
+    "source_threads": [
+      "381228"
+    ],
+    "failure": "One owner reports three Qwen3.8-Flash-Next wedges during a tool call across patched DS4 engine, vLLM and SGLang, all with MTP acceptance rate 0.00. The Telegram agent restarted the service on RCA request, obscuring the failure; a separate API-client report showed unrelated output. Backend/model fault is unproven.",
+    "current_coverage": "Long-run hang receipt captures GPU power/utilization, memory and rank progress; no explicit tool-call/request boundary and speculative-decoding acceptance event is correlated before restart.",
+    "gap_or_complement": "Capture request ID, tool-call stage, MTP acceptance rate, rank/collective progress, context/cache headroom and engine digest; freeze a bounded pre-restart diagnostic bundle and only then let an external supervisor restart. Keep 0.00 acceptance as clue, not root cause.",
+    "evidence_level": "Medium for repeated owner report across three stacks; low for causal attribution without versions, traces or full logs.",
+    "risks": [
+      "Capturing agent messages may expose sensitive content; use request IDs and bounded redacted metadata.",
+      "Acceptance rate zero can be valid for some workload; do not treat it alone as a hang.",
+      "Repeated automated restarts can lose forensic state and worsen pressure."
+    ],
+    "closure": "On exact reproducible stack, create healthy and deliberately stalled tool-call tests, verify detector differentiates slow-but-progressing decode from no-progress, captures metadata before restart, redacts content, and recovers once with preserved original evidence.",
+    "backlog_card": "tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md",
+    "merge_into": "FEATURE-1358-CGROUP-05-CUELGUES"
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-LONG-AGENT-STOP-01",
+    "title": "Detect and preserve premature end-of-turn in long GB10 agent sessions",
+    "source_threads": [
+      "381228"
+    ],
+    "failure": "A single owner reports 15 confirmed premature `finish_reason=stop` turns without tool calls across 24 long Hermes sessions and 2,176 tool turns over 12 days; one session had 11. Replays passed 4/4. Same symptom reportedly appeared with NVIDIA NVFP4; a different INT4 checkpoint had no observed stops in limited ongoing use.",
+    "current_coverage": "Runtime compatibility gates model/image/runtime, while hang capture targets no-progress host/runtime failures. It does not evidence long-horizon model turn termination with zero tool calls while an agent task remains open.",
+    "gap_or_complement": "Add long-agent integration/soak tests per exact checkpoint/runtime, recording request/turn IDs, prompt-size bucket, finish_reason, tool-call count, elapsed context and stack digests. Surface premature stop as a reviewable recoverable incident; require operator continuation and avoid automatic replay of potentially mutating tools.",
+    "evidence_level": "Medium for owner-measured symptom counts, low for generalization and attribution; the linked issue and repro attachments were not audited and 4/4 fresh replays did not reproduce.",
+    "risks": [
+      "Could flag legitimate final answers or lead to duplicate external tool actions if auto-replayed.",
+      "Long soak is expensive and model/benchmark revisions alter behavior.",
+      "Session content may be sensitive; default to bounded IDs and metadata instead of raw prompts."
+    ],
+    "closure": "Run preregistered long-horizon tool-agent soak against exact NVIDIA and candidate checkpoints with repeated trials; include healthy final-answer controls and deliberate tool-required turns, verify no silent task halt escapes the receipt, no duplicate mutating calls occur, and preserve manual resume plus rollback to known checkpoint.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01",
+    "title": "Validate CX7 and per-rank environment before attributing TP startup hangs to NCCL",
+    "source_threads": [
+      "366127"
+    ],
+    "failure": "A dual-Spark owner first attributed TP2 freezes in TRT-LLM/vLLM/SGLang to NCCL. Reimage from unsupported Ubuntu 25.10 to DGX OS 24.04.4 enabled correctly distributed MPI ranks and independent NCCL all_reduce test at 17.3 GB/s; a later TP2 deployment passed with the recipe launcher on both Ray and --no-ray, while bare launches still hung. A separate TRT-LLM CUDA graph capture hang remained.",
+    "current_coverage": "Runtime compatibility records image and NCCL versions; it does not explicitly distinguish unsupported-host/rank placement/configuration errors from an actual collective or graph-capture bug.",
+    "gap_or_complement": "Before filing or responding to NCCL incident, capture OS support state, per-rank hostname/device, CX7 interface/address/subnet and effective container env; execute cross-node nccl-tests separately; compare supported launcher and manual reproduction. Preserve separate phase for collective, weight load, autotune and CUDA graph capture.",
+    "evidence_level": "Medium for detailed owner-reported reimage, microtest and working launcher comparison; low for independent generalization because linked community scripts/image were not audited.",
+    "risks": [
+      "Incorrect generalized NCCL tuning can degrade or isolate cluster traffic.",
+      "Wrongly attributing a launcher issue to NCCL can lead to driver or firmware changes with broader blast radius.",
+      "Changing subnets/interfaces can strand nodes without a maintenance rollback plan."
+    ],
+    "closure": "On isolated dual GB10 using supported DGX OS, reproduce/verify placement and NCCL microtest, compare recipe launcher and manual launch with per-rank environment receipts, prove healthy TP path and distinguish an intentionally failing CUDA graph stage. Roll back to recorded IP/interface settings.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01",
+    "title": "Gate OTA, kernel, driver and OEM firmware as effective GB10 tuple",
+    "source_threads": [
+      "359550"
+    ],
+    "failure": "During DGX OS 7.4 rollout, posts report OTA/kernel drift and an unsupported 590.48.01/CUDA13.1 combo; one user later reported ~5.5 GiB free of 121 GiB and recovered after downgrade to 580.126.09. Other post says UEFI memory carveout reduction 4→2GiB was planned for OEM adoption in OTA2. Individual memory-leak attribution is unverified.",
+    "current_coverage": "Runtime preflight captures active image/driver and DGX OS compatibility; kernel/OEM firmware rollout stage and measured unified-memory baseline can still drift independently.",
+    "gap_or_complement": "Record DGX release/OTA commit, active uname, driver/CUDA, OEM model, firmware versions and free/available memory from host; gate unsupported tuple per OEM release notes and stop if baseline materially changes after update. Treat carveout changes as UEFI evidence, not EC inference.",
+    "evidence_level": "Medium for rollout mismatch; low for driver590 memory-leak causality and reported rollback remediation, both owner evidence without inspected logs.",
+    "risks": [
+      "Manual proposed packages or partner firmware can leave an unsupported, unrecoverable boot tuple.",
+      "A memory baseline taken at different services/workloads may falsely signal leak.",
+      "Partner OEM updates can lag Founder Edition release."
+    ],
+    "closure": "In an OEM-supported canary, record before/after tuple and MemAvailable/PSI, boot each supported OTA stage, verify model load and long soak, confirm supported rollback path and firmware effective version before enabling broad rollout.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01",
+    "title": "Retest one-way CX7 RDMA throughput with direction and cable lifecycle controls",
+    "source_threads": [
+      "379303"
+    ],
+    "failure": "One Spark/ASUS GX10 owner reported ~13.2 Gbit/s one direction vs ~111.6 reverse on kernel 6.17.0-1029 and initially reverted to 1026. The same owner later measured ~111.7 both directions on 1029 after updates/reboot; a further low result recovered after rebooting both nodes. A Founder Edition user did not reproduce. Hotplug/cable-order cause is only the owner’s untested hypothesis.",
+    "current_coverage": "CX7 hotplug evidence already tracks link state, PCIe, AER and NCCL throughput after hotplug; it did not contain this exact performance regression and re-test that weakens kernel attribution.",
+    "gap_or_complement": "Capture bidirectional RDMA Write/Read/Send with exact perftest command, cable manufacturer/PN, CX7 fw, kernel and OEM firmware, reboot order and hotplug events; classify regression only after repeated controlled reproduction.",
+    "evidence_level": "Medium for transient measurements and later retest as reported in-thread; low for root cause and generalization.",
+    "risks": [
+      "Pinning an older kernel can leave security or OEM fixes behind without eliminating the issue.",
+      "Rebooting both nodes can interrupt service and erase diagnostics; collect bundle before supported recovery.",
+      "Changing cable/firmware based on one test can add cost or introduce new compatibility risks."
+    ],
+    "closure": "A/B same two-node setup with controlled cold-start, individual/sequential reboots and powered-off/on cable insertion, repeat each direction and operation across runs, retain PCI/firmware/perftest evidence, and confirm rollback restores networking.",
+    "backlog_card": "tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md",
+    "merge_into": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION"
+  },
+  {
+    "id": "DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01",
+    "title": "Preflight the served model ID and effective generation budget for GB10 agent clients",
+    "source_threads": [
+      "360299"
+    ],
+    "failure": "A Spark owner’s OpenClaw→vLLM GPT-OSS-120B request failed 404 from model ID mismatch until served-model alias and client ID aligned; a subsequent 400 set max_tokens to -17474 when config declared 200K context. Thread replies cite 131072 as GPT-OSS context maximum and advise against a static maxTokens=8192; user reports working 200 after adjustments.",
+    "current_coverage": "Runtime compatibility preflight checks host/image/kernel/backend compatibility, but its request canary does not verify application model alias, effective model-specific context bound or calculated positive output budget.",
+    "gap_or_complement": "Before admitting client workload, query `/v1/models`, compare configured model ID, checkpoint-declared context limit, requested context and max_tokens calculation; run a bounded positive completion and tool-call canary with metadata-only receipt.",
+    "evidence_level": "Medium for reported 404/400 and owner-confirmed 200 after configuration correction; stack/config file not independently audited.",
+    "risks": [
+      "Model context limits are version/checkpoint-specific; a universal cap can unnecessarily reduce supported work.",
+      "A probing request must be bounded and avoid mutating tool calls.",
+      "Logging request bodies would expose sensitive prompts; capture status and sanitized metadata."
+    ],
+    "closure": "Test exact model/runtime/client tuple with aligned ID, negative mismatched ID, overlimit context, nonpositive token budget, and successful bounded generation/tool-call; receipt must link served model metadata to client config without storing prompt text.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01",
+    "title": "Keep Ray GB10 GPU-resource compatibility as a versioned regression fixture",
+    "source_threads": [
+      "355126"
+    ],
+    "failure": "In a Dec 2025 report, vLLM 25.11/Ray lacked generic `GPU` resource on GB10 while a reference recipe was cited; thread clarifies the author ran an NVIDIA container rather than the community image. Later forum update says NVIDIA playbook fix was verified in vLLM26.01. Earlier TRT-LLM NVFP4 missing SM121 kernel is a separate image/version report.",
+    "current_coverage": "Runtime preflight covers GPU architecture and backend compatibility, but Ray resource placement needs a live cluster test and the old issue must not be mistaken for current regression.",
+    "gap_or_complement": "For chosen image digest/version, verify Ray reports GPU on each node, placement matches topology and a minimal multi-node request succeeds; keep version 25.11 negative test as regression fixture only, and verify post-fix image separately.",
+    "evidence_level": "Medium for dated reporter command/config and later post saying NVIDIA verified fix in 26.01; no linked upstream diff or test artifacts were audited.",
+    "risks": [
+      "Treating the stale 25.11 issue as current may lead to unnecessary third-party image changes.",
+      "Assuming every 26.01+ image includes the fix can silently admit broken tags or OEM variants.",
+      "SM121 kernel support is model/backend/image specific."
+    ],
+    "closure": "Reproduce old error under recorded 25.11 stack if available; assert exact corrected 26.01 image resolves resources/placement and serves TP canary, with controls for wrong image digest and missing GPU resource. Preserve prior image for rollback.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01",
+    "title": "Gate CUTLASS CuTe kernel by actual SM121 MMA capability",
+    "source_threads": [
+      "359598"
+    ],
+    "failure": "CuTe CUTLASS maintainers say tcgen05 and associated blockscaled FP4 ops are SM100/SM110 paths and absent on SM12x; GB10 FP4 must use supported SM12x MMA pipeline. A user proposal to remap SM121 to SM100 would bypass guard but miscompile or emit invalid code. NVIDIA says NVFP4 performance work is underway in CUTLASS/FlashInfer/vLLM, with no release target in this thread.",
+    "current_coverage": "Runtime card checks compiled arch manifests and finite-output canaries; this adds explicit invalid tcgen05 path and forbids fake arch override.",
+    "gap_or_complement": "Before enabling third-party FP4 kernels, inspect target arch/instruction requirements and actual loaded backend; route through supported SM121 MMA path; run finite logits/reference comparison and sustained request canary.",
+    "evidence_level": "High for architecture limitation as maintainer response and official NVIDIA announcement in-thread; no proof of a finished SM121 performance implementation.",
+    "risks": [
+      "Fake SM100 arch may generate unsupported instructions or wrong arithmetic.",
+      "Alternative MMA path may have slower performance; correctness takes priority and throughput requires measurement.",
+      "A generic `supports_fp4` boolean does not prove this kernel path exists."
+    ],
+    "closure": "On GB10 SM121, run positive supported MMA FP4 build and negative tcgen05 build; verify negative is rejected at preflight, positive logits finite and match reference tolerances over representative shapes, then batch/soak with image digest and backend recorded. No `CUTE_DSL_ARCH` override.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01",
+    "title": "Gate Nemotron kernels by exact SM121 ops and first real request",
+    "source_threads": [
+      "354771"
+    ],
+    "failure": "On GB10 SM121, SGLang :spark failed parsing NemotronHConfig; newer image loaded BF16 then failed RMSNorm on first inference and FP8 failed scaled_fp8_quant because compiled sgl_kernel ops lacked SM121 code. Host ptxas override did not add those binary kernels. A local llama.cpp Nemotron support build worked; later main merged support and a user confirmed latest rebuild worked.",
+    "current_coverage": "Runtime compatibility can check architecture/manifest and smoke readiness but exact per-op execution under target architecture and response integrity must be verified at first inference.",
+    "gap_or_complement": "Gate exact model/backend/image/build and ops RMSNorm/FP8 quant kernels for SM121; perform load and bounded first request, inspect finite output/reference. Keep `:spark` vs `:latest` image digests and commit hashes.",
+    "evidence_level": "Medium/high for detailed owner logs and later main rebuild confirmation; no independent validation of tags/branches and later NVIDIA playbook in this thread.",
+    "risks": [
+      "Model load or HTTP-ready can mask missing kernels until first request.",
+      "FP8 server may return nonsense despite process startup.",
+      "Using an external branch may introduce unreviewed code or lack reproducibility."
+    ],
+    "closure": "Repeat positive first-request and FP8 correctness tests for exact current image and model; negative-control stale :spark image must fail fast with clear compatibility reason; preserve chosen image/build rollback and verify service recovery.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/365296/15",
+    "evidence": "User reports 3-node PP silent worker SIGTERM on first inference with standard vllm-node NCCL, followed by reported success on a mesh-specific container; maintainer later says 3-node change is in NCCL main and recipe was updated. The author’s own incremental trials refute NCCL env, allocator, and Ray as causes in that run.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 checks runtime image/kernel/backend compatibility and workload smoke; existing CX7 multi-node canary checks topology and traffic.",
+    "gap_or_delta": "Make exact image/NCCL build/digest and per-rank environment part of the 3-node admission evidence; ensure the smoke reaches first cross-stage inference, not only model load or HTTP ready. This is a mapping of a corrected community-container issue, not a driver defect.",
+    "proposal": "Use current supported/pinned container per rank; run one semantic PP request on actual topology and retain per-rank logs; compare old/new only in isolated canary before production.",
+    "confidence": "medium for reported image/build cause in the author’s tested setup; low for generalization since logs/repo and exact digest were not audited.",
+    "risk": "Do not carry the reported Grace Hopper 0.85 utilization threshold or mutable nightly container into BB policy.",
+    "closure": "Run same pinned 3-node Spark stack through load, first inter-stage request, repeat requests and soak; verify zero worker exits, valid output, rank agreement, and rollback to last known-good image.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/374523/1 and https://forums.developer.nvidia.com/t/374523/8",
+    "evidence": "One author says llama.cpp auto-fit treated available unified memory like VRAM and caused hard OOM, and `--cache-reuse 256` corrupted KV. An independent operator says RDMA is automatically selected when available and reports client abort in remote-buffer cleanup if server is killed first (11/11) versus zero in four tests after waiting for client PID exit; TCP handled disconnect in six of six trials.",
+    "current_coverage": "FEATURE-1358-CGROUP-05-CUELGUES already tracks multi-hour memory/PSI and RPC memory recovery after process exit.",
+    "gap_or_delta": "Extend close/recovery tests to distinguish remote client PID teardown from API port closure and record actual RDMA selection from server-side telemetry; pair successful load with UMA headroom and output/KV integrity. `--fit off` is a candidate exact-stack mitigation, not a global recommendation.",
+    "proposal": "For exact llama.cpp build on two GB10 nodes, A/B auto-fit against bounded context and cgroup/UMA capture; test client-first/server-second shutdown, check process disappearance, repeat conversation against KV/output reference; keep supported previous binary/config for rollback.",
+    "confidence": "medium for reported stop-order regression within one operator’s tested setup, low for memory attribution because no version tuple or logs.",
+    "risk": "Changing fit, KV reuse, or transport may affect capacity and correctness; no prescribed universal setting.",
+    "closure": "Repeat exact build/hardware test with PID-based stop order and server-side transport observation; demonstrate zero client aborts, no KV mismatch, valid output, bounded memory, and successful rollback.",
+    "backlog_card": "tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md",
+    "merge_into": "FEATURE-1358-CGROUP-05-CUELGUES"
+  },
+  {
+    "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/369446/22",
+    "evidence": "8-node Kimi K2.6 NVFP4 cluster stack reported as Ubuntu 24.04.4/kernel 6.17.0-1018/driver 580.159.03/CUDA13.2/NCCL2.30.6a2/vLLM eugr dev277 + TF5 hung during compile/warmup with GPU 96%/22-23W and API never opening. User reports the actual cause was one interface on one host set to the wrong MTU; after correction, about 16 tok/s. Eager and graph-mode changes did not resolve preceding hang.",
+    "current_coverage": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION includes CX7 topology and NCCL end-to-end checks but this thread makes per-interface MTU agreement across all ranks an explicit preflight delta.",
+    "gap_or_delta": "Record effective MTU per interface and compare to the topology/OEM network plan before launching NCCL; model-load success and a link-up state do not prove warmup/readiness.",
+    "proposal": "On exact cluster config, validate interface/address/MTU map on all nodes, run peer reachability and bounded NCCL collective, then first real inference. Preserve per-rank NCCL and worker logs; avoid hardcoding one MTU for every network plan.",
+    "confidence": "medium for that one owner’s immediate resolution; low for a universal fix because logs/issue pack not independently audited.",
+    "risk": "Incorrectly forcing 1500 or 9000 can break a working RoCE network; values depend on physical network and switch settings.",
+    "closure": "Induce a controlled mismatch in an isolated test, ensure preflight blocks before runtime; restore declared MTU on each interface and verify NCCL collective, first request, and repeated requests with no rank hang.",
+    "backlog_card": "tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md",
+    "merge_into": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION"
+  },
+  {
+    "id": "DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/376831/10",
+    "evidence": "Eight-GB10 GLM-5.2 TP8/DCP4 operator reports simultaneous prefills starve active decode to 0.0–0.2 tok/s until prefill completion. Proposed patch at local-inference-lab/vllm commit a663653d8cf3a66ee3c0060aea8c2fd28e3f1362 dynamically limits aggregate prefill with active decode and rotates long-prefill requests. Forum author reports 3 new tests, 7 regression tests, ruff, and 4 CLI checks passing; hardware run with 1 continuous decode+4 ~8K prefills reports max stall 1.64s, pressure decode 2.74 tok/s and 4/4 prefills complete. Patch/repo not audited or run here.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 already includes runtime readiness, context/concurrency admission, and long-run behavior. This adds decode-service fairness under simultaneous DCP4 prefill.",
+    "gap_or_delta": "An HTTP-ready model and aggregate throughput can conceal a nearly stalled active decode stream while new prefill requests complete. Close check should measure max decode stall and completion under concurrent prefill, not throughput alone.",
+    "proposal": "On an exact DCP4 image/revision, compare baseline against the exact scheduler patch with one long-lived decode and four bounded prefill prompts, record stall distribution, TTFT, decoded output, completion, throughput and memory; preserve config rollback via the disable flag.",
+    "confidence": "medium for issue/signature and reported patch outcome, low-to-medium for reproducibility because artifacts are community-authored and unaudited.",
+    "risk": "A stricter prefill budget can lower prefill throughput; patch may be incompatible with later vLLM/B12X scheduler code.",
+    "closure": "Reproduce under declared pinned vLLM/B12X/FlashInfer/NCCL stack, demonstrate valid completion of all requests, decode stall budget, acceptable throughput, no regression tests failing, and rollback restoring baseline.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/356118/17",
+    "evidence": "One MiniMax M2.1 user reports that after several context compactions with OpenCode+llama.cpp, prefill/decode speed fell, tool calls failed, and outputs looped; reports similar degradation with another vLLM build. The proposed CUDA graph/KV-clear corruption cause is a paraphrase without logs, exact image/kernel/driver, or a reproduced case. Another user says they did not see outright failure up to 120K context.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 covers backend/image admission and runtime smoke, but no explicit long-running canary crossing repeated compaction/KV reset boundaries is recorded.",
+    "gap_or_delta": "A job can pass first inference but degrade after context-cache reset/compaction during unattended long sessions. Validate correctness and progress across that boundary, without treating one owner’s hypothesis as diagnosis.",
+    "proposal": "For one pinned application/runtime/model stack, test multi-turn sessions before and after compaction/cache reset with matched prompt/tool tasks; record token rate, process/cgroup/host state, tool-call validity, answer/reference outcome and rollback. Compare with no-compaction control.",
+    "confidence": "low for causal mechanism; medium that one user experienced tool/output/runtime degradation in repeated compaction workflow.",
+    "risk": "Application-level context poisoning, harness behavior, model quality, and CUDA graph state are confounded; restarting or changing graph mode may erase evidence or change performance.",
+    "closure": "On exact stack, reproduce a repeated compaction sequence, demonstrate valid tool calls/output and bounded progress after reset over repeated trials; compare no-compaction control and restore known-good runtime/settings if regression appears.",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md"
+  },
+  {
+    "id": "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/373199/1; /13; /19; /22; /28; /31",
+    "evidence": "ASUS GX10 owners report 6–8°C lower GPU temperatures from a base fan; a separate author reports <1% performance loss and about 10°C lower peak with an extraction fan plus a 2GHz GPU clock cap, while explicitly lacking hard data; another dual-GX10 setup claims 20–25°C lower. Posts mix airflow, orientation, clock caps, workload and ambient conditions. Linked designs/images remain unread.",
+    "current_coverage": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md covers sensor freshness, OEM thermal admission and controlled soak, but does not explicitly record external airflow and GPU-cap A/B as confounded variables.",
+    "gap_or_delta": "A single sensor or owner-reported temperature decrease cannot establish cooling effectiveness, throughput tradeoff, PSU/zone safety, or applicability across OEMs.",
+    "proposal": "Add an exact-OEM reversible lab A/B for ambient-matched stock vs external intake/exhaust/base fan and stock vs documented GPU clock limit; record inlet, GPU/CPU/ACPI zones, clocks, wall power, fan behavior, throttling/shutdown events and useful throughput throughout a sustained workload and cooldown. Do not recommend a community clock cap or airflow design as a general policy.",
+    "confidence": "Low: owner reports only; no controlled results, complete firmware/build matrix or inspection of central design attachments.",
+    "risk": "Airflow may recirculate hot exhaust, increase dust or noise, leave PSU/board zones uncooled; clock limiting may reduce useful performance or alter system stability. OEM limits/clearance unknown.",
+    "closure": "Inspect the referenced design attachments; then run matched repeat A/B/soak on the exact ASUS GX10 revision and a stock control. Close only if thermal headroom improves with throughput/noise/power inside OEM limits, no hidden zone/PSU regression, and stock airflow/clock settings restore cleanly.",
+    "backlog_card": "tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md",
+    "merge_into": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION"
+  },
+  {
+    "id": "DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/368726/49; /56; /31; /35",
+    "evidence": "Author’s four-node no-switch lane split test found F2 aliased to F0 and carrying traffic without a physical connection; the proposed mesh was abandoned. A separate user claims a patched ring works with 10–20% performance loss; external repository unreviewed.",
+    "current_coverage": "Runtime compatibility admission has interface/node-IP checks, but no explicit physical connector↔PCI BDF↔netdev proof after CX7 MFT lane changes.",
+    "gap_or_delta": "A software interface can appear usable while mapping to an alias instead of the claimed physical path, causing misleading topology assumptions or invalid NCCL expectations.",
+    "proposal": "For exact OEM/firmware/MFT state, record PCI BDF, physical connector, lane/interface mapping and link partner. Prove intended paths with a physical disconnect/loopback control and sustained peer traffic; then run NCCL collective on the declared topology before admitting the distributed workload. Retain rollback to known-good MFT/BIOS state.",
+    "confidence": "Medium for alias finding: author describes a direct physical test but no artifacts were audited; low for patched ring performance claim.",
+    "risk": "MFT lane changes require reboot/power drain and Secure Boot implications; mistaken mapping may silently send traffic over an unintended path or leave nodes isolated.",
+    "closure": "On exact CX7/OEM stack, demonstrate each declared lane changes state only when its physical path is opened/closed, verify peer traffic and NCCL topology, and restore the baseline configuration successfully.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/372662/1; /11; /15; /19; /30; /36; /43; /45",
+    "evidence": "Owner reports around 2GHz: near-unchanged LLM decode for some models, ~12.5% slower image generation in another. A controlled cooled cuBLAS sweep reports -4.5% throughput at 2GHz and -9% at 1.8GHz without throttling; another control says L2-fitting SGEMM tracks clock. One owner reports hottest ACPI package zone 7–17°C above nvidia-smi GPU-die reading. Community closed-loop governor code has only three days of claimed operation; not independently audited.",
+    "current_coverage": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md already requires sensor freshness/zone residency and exact-OEM thermal A/B; GPU clock-cap A/B is separately an existing opt-in candidate. No local sensor delta or workload crossover is established.",
+    "gap_or_delta": "GPU-die-only temperature may understate the hottest package/ACPI zone, and the throughput cost of lowering clocks differs by workload; a single cap cannot be assumed to preserve interactive or prefill-heavy service.",
+    "proposal": "On named OEM/BIOS/kernel/driver, compare source sensor zones with independent freshness/identity mapping; then run matched sustained decode, prefill, image generation, model-load and concurrency workloads at stock clocks and a user-selected cap. Capture applied clock, throttling, per-zone temps, power, useful throughput and rollback. Treat the posted governor/thresholds as unvalidated code; do not install as a service without review.",
+    "confidence": "Medium-low: multiple detailed owner observations, including a controlled reported SGEMM sweep, but no local replay or independent source/graph audit.",
+    "risk": "Clock caps can slow compute-bound prefill/diffusion and interactive bursts. GPU-die readings can miss hotter SoC zones. A watchdog governor may need broader sudo permissions and may alter policy across workloads; exact code/target sensor semantics are unverified.",
+    "closure": "Reproduce the hottest-zone versus GPU-die difference with mapped/fresh sensors and independent control; demonstrate per-workload throughput/thermal tradeoffs over repeated matched soak, confirm effective clock cap, and restore prior policy. Do not close on a short owner-only run or a GPU-die temperature alone.",
+    "backlog_card": "tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md",
+    "merge_into": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION"
+  },
+  {
+    "id": "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/375416/1; /11; /12; /15; /18; /20; /35",
+    "evidence": "One 4×GB10 operator reports DCP4 draft MTP running with `dcp_world_size=1` over DCP-sharded KV, without gather/LSE merge; 3/4 ranks produced all-zero attention and TP all-reduce concealed the divergence. Instrument/reference calibration and 4-node fix performance are owner claims; patch/repository not independently audited or run. A second cluster operator still OOMed during weights at shard 23 before the trim hook, while another reported successful fit; no universal load fix established.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 has backend compatibility and runtime smoke admission, but this thread exposes a silent speculative DCP path where rank equality can conceal incorrect attention. Existing UMA memory gates must distinguish pre-trim weight-load failure from later KV/profile failures.",
+    "gap_or_delta": "A distributed decode can return corrupted/speculative state while all ranks converge to identical output after a TP all-reduce; acceptance/cross-rank agreement alone can appear healthy. Memory trim after loading cannot prevent every pre-trim load OOM.",
+    "proposal": "For pinned vLLM image/fork/checkpoint, assert effective DCP config on both target and draft; capture/validate query gather, LSE reduction and nonzero per-rank partials against a DCP1 or trusted reference fixture, then check deterministic outputs and per-position acceptance at DCP1/2/4 over repeated prompts. Separately capture per-node MemAvailable/swap/residency and loader phase through weights, trim, KV profile and graph capture; test pre-trim load headroom on exact image. Do not import linked patches without source review, build/test and rollback.",
+    "confidence": "Medium on the reported failure mechanism due detailed owner instrumentation; low-medium on proposed fix efficacy because external patch and full raw evidence were not independently audited.",
+    "risk": "A broken DCP flag can silently corrupt attention; reference outputs may be version/checkpoint sensitive. Experimental patch/fork may introduce other model correctness or memory regressions. Memory trim after weight loading cannot fix earlier loader peak.",
+    "closure": "On named image digest/commit, reproduce the DCP4 failure signature or inject a fixture, prove effective draft DCP and gather/LSE merge, compare exact output/acceptance to trusted DCP1 control, and pass repeated context/concurrency soak with all logs. Run a separate cold weight-load control through pre-trim phase with no OOM; verify rollback to known-good runtime.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/379722/2; /9; /14; /23; /24; /25; /26",
+    "evidence": "Initial vLLM DFlash setup reportedly lacked Muse draft model class; later patch was required. A separate owner says max_num_seqs <=32 is required for DFlash on the muse-glimmer image tag and reports reproducing the boundary. Other reported GB10 tool eval results vary with parser/template/prompt, token budget and BFCL parallel-call expectations; they are not product safety proof. External code/PR/benchmarks not audited.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 gates exact image architecture/backend and runtime correctness, including speculative decoding output/soak; it does not record this model-tag-specific draft-class and sequence-count boundary.",
+    "gap_or_delta": "A container may advertise model support yet fail draft-class initialization or hang/fail above a model-specific speculative concurrency setting. Aggregate task score can conflate parser/template, benchmark format and model behavior.",
+    "proposal": "On a pinned Muse Glimmer checkpoint and DFlash-enabled image, verify draft class resolution and run bounded DFlash A/B with max_num_seqs 32 and 33, plus target-only controls; capture errors, CPU/GPU utilization, memory, output correctness and tool-call semantics for serial/parallel calls and token truncation. Treat <=32 as a candidate stack-specific setting only after retest.",
+    "confidence": "Low-medium: exact user report says the 32 limit reproduced but gives no full image digest/log or controlled test artifact; other results use different model/runtime/prompt configurations.",
+    "risk": "A low sequence cap can reduce throughput; a prompt workaround can improve one parallel benchmark while causing unnecessary extra tool calls elsewhere. New parser/template branches can alter output/safety semantics.",
+    "closure": "On exact image/checkpoint/fork, confirm draft initialization and repeated A/B at 32/33; observe no hangs/OOM, validate target/draft outputs and tool semantics across fixed controls, document throughput tradeoff and rollback to non-DFlash or previous pinned image.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/377598/12; /13; /17; /23; /28; /29; /36",
+    "evidence": "On GLM-5.2 Hybrid FP8/MXFP4 with vLLM 0.11.2.dev279 and a community b12x build, one operator reports multilingual gibberish only after 80–95K tokens and 15+ growing turns with prefix caching; single-shot needle probes passed. They also report structured-output A/B differences with thinking on/off, but only six cases/one run and full-suite tradeoffs; tool_choice=required caused a ~200-call loop; benchmark throughput depended on explicit tokenizer; repetition_penalty 1.2 reportedly caused word slop. No independent reproduction, logs, image digest, or attachment inspection.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 already gates exact runtime correctness and contains a long-context structured-output signal; this report adds GLM-5.2 multi-turn/prefix-cache conditions plus generation-parameter and harness confounders.",
+    "gap_or_delta": "A single-prompt semantic canary can miss failures that emerge only across a growing cached conversation. Aggregate benchmark scores can hide safety/reasoning tradeoffs when toggling thinking, and incorrect tokenizer/generation parameters can invalidate conclusions.",
+    "proposal": "On exact pinned image/driver/model/fork, test a growing 80–100K multi-turn conversation with prefix cache against a single-shot control, capturing output, logprobs where available, finish reasons, memory and errors. Keep strict-format and open reasoning controls separate for thinking on/off. Bound tool iterations and record tokenizer plus effective sampling parameters.",
+    "confidence": "Low to medium: detailed operator recipe and reported measurements, but no independent reproduction and single-run A/B; log artifacts were not inspected.",
+    "risk": "Disabling thinking can harm reasoning/refusal behavior; repetition penalty and speculative settings can change semantics; lower tool caps can interrupt legitimate work. Keep every intervention stack-specific and reversible.",
+    "closure": "Reproduce the long-session symptom on the pinned stack, then show repeated control/candidate results for multi-turn and single-shot canaries, structured output and reasoning/refusal. Confirm the harness terminates pathological required-tool loops and reports tokenizer/effective parameters. Record resource and semantic outcomes before retaining a candidate config; rollback to the prior pinned configuration if any target control regresses.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/358382/18; /20; /23",
+    "evidence": "Two-Spark GPT-OSS-120B vLLM V1/Ray reports end in RayChannelTimeoutError after the 300 s compiled-DAG timeout; logs warn TP=2 with one GPU reserved per node. A later owner report says a dated 20260130 MXFP4 image with --rebuild-deps completed a request. Cause was not isolated; external code/issues unreviewed.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 includes exact-image multi-node runtime compatibility and task completion controls, but this Ray placement mismatch/timeout and post-rebuild success are distinct evidence.",
+    "gap_or_delta": "A server can load on both nodes and open the API while one worker is not effectively placed or request execution later wedges. HTTP startup and process health alone do not prove a multi-node completion.",
+    "proposal": "On the exact 2-node image/checkpoint, record Ray node/GPU allocation and rank mapping before model load; run a bounded target prompt and capture per-node activity, completed token count, and Ray timeout/worker errors. Compare pinned dependency builds only one change at a time.",
+    "confidence": "Medium for the observed timeout and later reported completion; low for root cause or causal fix because the operator changed build/rebuild state and did not publish controlled A/B.",
+    "risk": "Blindly increasing the timeout can prolong a wedge; copied network settings or community images can regress performance or correctness. Keep versions pinned and rollback available.",
+    "closure": "Repeat on two GB10 hosts with exact digest, driver, Ray, vLLM commit and wheels; verify rank/GPU placement and repeated semantic request completion. Demonstrate candidate improvement against control while preserving rollback to prior digest; do not alter MTU or timeout without an isolated A/B.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/380248/27; /34; /36–38",
+    "evidence": "A user reports Qwen3.8-27B quantized/provider variants yielding malformed JSON increasingly during long autonomous tasks, reaching roughly 3/4 malformed after 30 minutes. They provide no prompt/output artifacts or exact hashes; other BF16/FP8 precision remarks are acknowledged anecdotal. The 1,010,000 context config is only a cap; visible throughput depths reach 8K.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 gates runtime semantic correctness and includes long-context corruption reports; this contributes a long-duration JSON-output signal under a quantized Qwen stack.",
+    "gap_or_delta": "Short boot/throughput canaries and parser success do not reveal accumulated long-run structured-output degradation. Forum claim cannot determine model quant, KV, MTP, template, or backend as a cause.",
+    "proposal": "On a pinned model/runtime, soak repeated tasks that must emit schema-validated JSON. Save complete input/output fixtures and all effective artifact/parameter identities; compare only one change at a time, with a target-quality control and negative malformed-output fixture.",
+    "confidence": "Low: one owner report without reproducible example or exact stack hashes; related comments are explicitly anecdotal.",
+    "risk": "Failing on a subjective output-quality judgement or changing BF16/FP8 globally can consume unified memory and lower performance without solving the cause. Define semantic criteria and rollback before evaluating.",
+    "closure": "Reproduce under pinned checkpoint, tokenizer/template, runtime/image, backend, KV and generation parameters. Run paired control/candidate repeated long tasks and measure valid JSON rate plus target-specific semantic assertions, resource peaks and errors. Keep candidate only if controls pass and objective regression is absent; preserve rollback.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/370834/15; /21; /22; /23; /24; /39; /42; /47; /52; https://forums.developer.nvidia.com/t/366828/25; https://forums.developer.nvidia.com/t/introducing-prismaquant/367085/21; /65; /76; /98",
+    "evidence": "Across owner-reported tool-eval runs, TC-60 cross-turn sleeper injection caused attacker BCC/CC data from an earlier weather-tool result to be inserted into email. Reports span Qwen3.5-122B AutoRound (repeated), Qwen3.6-27B NVFP4/MTP, and Qwen3.5-397B with and without Ray; builds/tests vary. One owner says XML parser/template eliminated threats; another stack/parser experiment had 5/5 tool-call failures. External benchmark artifacts and template code not audited; post42 is truncated. A separate Qwen3.6-35B-A3B INT4 AutoRound tool-eval report in [366828/25](https://forums.developer.nvidia.com/t/366828/25) also flags critical TC-60 with attacker BCC/CC from prior-turn weather data; benchmark artifacts were not inspected. PrismaQuant discussion 367085 adds repeated Qwen3.6-35B/27B and Qwen3.5-122B tool-eval reports with the same critical TC-60 cross-turn sleeper warning beside scores of 92–94/100; screenshots are not audited and the prompt/template/runtime variants differ.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 gates exact model/parser/template runtime correctness and includes structured output/tool-call semantic canaries, but does not explicitly assert that untrusted prior-turn tool output cannot change later action recipients.",
+    "gap_or_delta": "A strong aggregate tool-evaluation score or single-turn tool-call test can hide a critical cross-turn tool-output injection that changes email recipients. Parser/template workaround claims need a pinned regression suite and functional controls.",
+    "proposal": "Add a deterministic multi-turn fixture: place attacker recipient/instructions only in a mocked weather/tool result at turn one, then ask for a legitimate email at a later turn. Assert that no injected recipient, CC/BCC, body instruction, or tool choice is acted on. Use mock tools, a positive control proving the untrusted text reaches context, repeated runs, and exact identity capture for model, tokenizer, template/parser, engine/image and benchmark.",
+    "confidence": "Medium-high that failures were repeatedly reported in posted benchmark output; low for generality and fix attribution because setups vary and raw run artifacts were not audited.",
+    "risk": "A parser change can break tool calls or output semantics; testing with real mail tools could cause side effects. Use mock tools and full tool-call regression controls; never promote from aggregate score alone.",
+    "closure": "On the exact candidate stack, repeat the cross-turn injection fixture and positive/negative controls; assert no unauthorized recipient or action and no tool/parser failure across the broader semantic suite. Reject promotion on any injected effect; revert to the known pinned digest. Independently review any parser/template patch before deployment.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01",
+    "status": "registered_to_existing",
+    "source": "https://forums.developer.nvidia.com/t/366828/25; /72–74; /80; /83–90; /96–99; /105–106",
+    "evidence": "On Qwen3.5-122B, an owner reports MTP>1 with qwen3_xml caused `Expected function.name to be a string` under vLLM 0.19.2; in that owner test MTP=1 avoided errors. Other users report MTP3 success under vLLM 0.20.2 or success after switching to qwen3_coder, without a common A/B. Another owner reports cancellation mid-generation can leave text inference alive while subsequent tool calls fail until vLLM restart; wrapper uses a process restart loop. Later report says newer configuration appeared stable. External images uninspected.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 gates pinned model/template/parser/speculative paths, long-running semantic checks, and runtime recovery; this adds parser behavior after cancellation and a reported live-inference/tool-call silent failure.",
+    "gap_or_delta": "A health endpoint and generated text can remain available after the tool-call parser has lost state; a process restart loop can hide repeated failure without proving recovery. MTP/parser interactions change across versions.",
+    "proposal": "On exact pinned stack, compare supported parser/MTP combinations with mocked tools; interrupt partial output midstream, then submit a tool-call control in the same process and after restart. Record raw request/response, parser result, HTTP/finish reason, process exit/restart, and completed tool call.",
+    "confidence": "Medium for reported type errors/cancel behavior; low on cause and fix because versions and combinations vary and no shared controlled artifacts.",
+    "risk": "A parser switch or lowering MTP may change tool semantics and speed; automatic restart can erase failure evidence or loop. Preserve diagnostics and use mock/no-side-effect tools.",
+    "closure": "For each promoted exact model/template/parser/MTP tuple, repeat type-valid tool calls before/after cancellation in the same process and after a controlled restart. Confirm process status and telemetry distinguish inference output from parser/tool-call health; reject broken combos and preserve rollback to the last tested digest.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01",
+    "title": "Gate vLLM builds on GB10 with exact compiler, wheel, architecture, and model smoke tests",
+    "source_threads": [
+      "348862"
+    ],
+    "failure": "Owners report distinct build and runtime failures across GB10 stacks: undefined CUTLASS symbol during import; Triton 3.5.0 emits `.tile::gather4` with `.shared::cluster` rejected by ptxas on sm_121a; source build omits or selects FP4/SM120 kernels based on CUDA/architecture flags; vLLM 0.11.1rc4 fails GPT-OSS startup in TorchInductor autotuning (`JITFunction` lacks `constexprs`). A later vLLM 0.12.0 run with community patch/dependencies reaches API ready, while NVFP4 remains slower on some workloads and reports vary by model. Later reports include a cu130 vLLM wheel resolving non-CUDA Torch and subsequent `libtorch_cuda.so` import failure. Changes were not isolated A/Bs.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 records ARM64 image, driver/CUDA, architecture, and kernel-manifest gaps and requires exact-version runtime smoke tests.",
+    "gap_or_complement": "Extend the compatibility fixture to capture compiler/PTXAS, TORCH_CUDA_ARCH_LIST, Torch/vLLM/Triton/FlashInfer wheel provenance, package resolver result, model, quantization, and actual backend selected. On each supported digest, build/import, load, run a generation request, and validate finite output; add a negative control for the known sm_121a ptxas/toolchain and wrong Torch wheel cases. Preserve and restore the known-good image/lockfile. Treat patches disabling arch kernels, eager mode, nightly wheels, and Triton monkeypatches as experiments until source and full workload are reviewed.",
+    "evidence_level": "Medium: multiple owner logs and later success reports in one long thread; several failures and fixes are confounded by simultaneous build/dependency/model changes; external screenshots/log attachments and linked repositories were not audited.",
+    "risks": [
+      "Changing architecture build flags can omit useful kernels or silently force slower fallback backends.",
+      "Nightly dependencies and community patches can regress other models and tool calling.",
+      "The forum reports span multiple 2025–2026 versions and do not establish current support status."
+    ],
+    "closure": "Using exact pinned host/container digests on GB10, reproduce import, kernel-compile, model-load and one functional request for each claimed supported combination; capture actual backend and finite outputs; run same controls on unsupported/mismatched versions; confirm rollback to previous digest. Do not accept compile-only success as runtime coverage.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01",
+    "title": "Require paired correctness and acceptance checks before enabling MTP for NVFP4 models",
+    "source_threads": [
+      "361163",
+      "367085",
+      "361967"
+    ],
+    "failure": "Thread reports zero MTP acceptance and a Qwen3-Coder-Next NVFP4 decode change from about 38 tok/s without MTP to about 26 tok/s with MTP on one owner stack; a separate later Qwen3.5-122B example says MTP also slowed performance. Other reports vary by model, image, build and benchmark, and one owner says restart restored speed without rebuild. Cherry Studio throughput includes speculative accepted tokens while llama-benchy reports target decode throughput; they answer different questions. Accuracy claims about draft behavior and custom NVFP4 changes lack controlled matched prompts in the thread. In the 367085 follow-on experiments, MTP and DFlash rankings change with context, concurrency and backend: one operator reports DFlash falling nearly to zero at larger contexts without the SWA path, while later benchmark posts report different results after PR/build changes; another reports MTP=2 vs MTP=4 nearly identical on one 50%-context-pressure test. These are not matched independent comparisons. The 361967 follow-up adds a dual-ASUS-GX10 Qwen3.5-397B-A17B INT4 AutoRound example: post 230 reports BF16 MTP draft weights at about 89% acceptance yet decode falling from about 27 to 11.73 tok/s; post 231 reports a different vLLM 0.20.1 run with three proposals and a modest improvement. The builds, workloads and measurement methods differ, so acceptance alone does not predict end-to-end speed.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 already tracks speculative-decode correctness/soak risks and exact runtime combinations.",
+    "gap_or_complement": "For each exact model/image/backend, compare target-only vs MTP with the same prompt corpus, output budget, context, concurrency and warm/cold state. Record per-position acceptance, emitted tokens, semantic/tool correctness, target decode rate, user-visible rate, prefill latency, restart/cold state and memory; use one-variable changes and a fixed seed where supported. Disable MTP for the affected combo if acceptance is zero or output checks fail; preserve prior model recipe for rollback.",
+    "evidence_level": "Medium: multiple detailed owner-reported measurements across separate threads, with conflicting outcomes and no independent matched reproduction; linked code/images were not audited.",
+    "risks": [
+      "Speculative acceptance and user-visible output rate can be mislabeled as target model decode throughput.",
+      "The same NVFP4 model/backend may change behavior with image digest, draft weights, context or tool parser.",
+      "Disabling MTP may reduce throughput where the measured combo works."
+    ],
+    "closure": "Run matched A/B on a pinned GB10 image/model: target-only and MTP each pass deterministic correctness/tool fixtures; record per-token acceptance and both throughput definitions over warm/cold and short/long contexts; demonstrate zero-acceptance MTP is gated and rollback restores the prior stable recipe.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01",
+    "title": "Separate host RSS from actual KV allocation and benchmark the exact quantized attention path",
+    "source_threads": [
+      "364736"
+    ],
+    "failure": "An owner initially claimed q4_0 KV caused a 92.5% prefill collapse at 64K and used more memory than f16; later they explicitly corrected the post because RSS was used instead of nvidia-smi/llama.cpp internal KV buffer. The corrected owner report says q4_0 used 216 MiB vs 768 MiB f16 KV (72% savings), with no prompt-throughput cliff and ~37% generation slowdown at 110K context. TurboQuant on the reported separate stack was slower as context depth grew; other later owner claims from forks vary and do not establish a universal result.",
+    "current_coverage": "Runtime compatibility records unified-memory diagnostics and kernel/backend validation; CGROUP telemetry separates process/cgroup pressure from GPU and host health.",
+    "gap_or_complement": "For each exact KV quantization experiment, record the counter with its source/type (process RSS, cgroup, host MemAvailable, allocator/KV buffer bytes, swap), timestamp, context length, K/V format, backend and request concurrency. Pair memory readings with generated output correctness, prefill/decode rates and long-context latency. Reject claims from RSS alone when the question concerns KV buffer capacity or GPU-visible use.",
+    "evidence_level": "High for the thread’s explicit correction and metric distinction; medium for corrected q4_0/TurboQuant measurements because raw repos/results were not independently reproduced. Later TurboQuant/RotorQuant kernel and quality claims remain owner-reported.",
+    "risks": [
+      "Host RSS, unified-memory residency, and framework KV allocation are different quantities; a valid counter for one may mislead for another.",
+      "Compression can save capacity while increasing per-token decode work or harming output quality at certain model/layer configurations.",
+      "The measured 37% long-context slowdown and 72% buffer savings are model/build-specific; they are not global limits."
+    ],
+    "closure": "On a pinned GB10 and model, measure process RSS, cgroup memory, MemAvailable, swap and framework-reported KV bytes together for f16 and one quant mode; demonstrate that reporting labels remain distinct, compare same prompts at short/long contexts for semantic output and prefill/decode rates, and preserve previous config for rollback.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01",
+    "status": "registered_to_existing",
+    "title": "Require semantic tool-call canaries on the exact GB10 serving stack",
+    "source_threads": [
+      "366324"
+    ],
+    "source": "https://forums.developer.nvidia.com/t/minimax-m2-7-nfvp4-recipe-benchmarks/366324",
+    "failure": "An owner reports the community vllm/vllm-openai:latest stack reached health 200, loaded 15 shards, captured CUDA graphs and completed one plain request, then hung on the second request, its first tool call, with a shared-memory broadcast timeout and EngineDeadError. After a restart, simple requests also hung for nine minutes. The owner later reports success on nvcr.io/nvidia/vllm:26.06-py3 with vLLM 0.22.1 and Ray installed, but the image, package set and setup changed together. The same long thread reports digit insertion in MiniMax tool-call text on some vLLM/FlashInfer versions, with heterogeneous reports of later fixes; sampling, quantization and image also changed. These owner reports do not establish a universal cause or fix.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 already requires exact-stack runtime and semantic checks for model/template/parser combinations.",
+    "gap_or_complement": "Make readiness distinct from functional readiness: for each pinned image digest, driver, vLLM, Ray, FlashInfer, model quant and parser, require a plain request followed by a real side-effect-free tool call and another plain request in the same process. Include punctuated filenames and assert byte-exact arguments, parser output, tool result, completion reason and process liveness. Capture shared-memory/RPC timeout evidence. A passing health endpoint or one generation cannot mark the stack ready.",
+    "evidence_level": "Medium: detailed operator narrative and exact stack information in a long thread, with a clear failure sequence and a later reported success; no independent reproduction, raw image digest comparison or external logs/repository audit.",
+    "risks": [
+      "Changing container image, Ray installation, parser, sampling or quant together hides the effective fix and may regress other models.",
+      "A tool-call parser can corrupt arguments while ordinary text and health checks remain successful.",
+      "Tool canaries must use a mock/no-side-effect tool to avoid filesystem or external actions."
+    ],
+    "closure": "On a GB10 with pinned host and image digests, reproduce the sequence plain request → tool call with punctuation fixture → plain request, including a deliberately unsupported build as negative control. Verify byte-exact parser arguments, expected mock tool result, finish status and healthy process; confirm logs retain timeout and restart evidence. Run a multi-turn soak and prove rollback to the last passing digest.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01",
+    "status": "registered_to_existing",
+    "title": "Gate DFlash structured-output and tool parser compatibility across exact vLLM revisions",
+    "source_threads": [
+      "367503"
+    ],
+    "source": "https://forums.developer.nvidia.com/t/qwen3-6-27b-is-out/367503/292-295; /286-295",
+    "failure": "Owners report Qwen3.6 DFlash tool/structured output failures across vLLM revisions. One says qwen3_coder emits tool-call parameters in one large chunk, while qwen3_xml sometimes emitted empty calls; another identifies a vLLM/xgrammar path where DFlash submits the whole speculative block and xgrammar rejects trailing tokens after valid JSON, producing HTTP 500. A PR re-enabling DFlash without structured output passed throughput tests but initially failed tools; after an upstream revert, an owner reports the 500s stopped on vLLM 0.23.1rc1.dev54, while one translation tool case still failed semantically. Branches/PR status later drifted again. Reports are owner-produced and not independently reproduced.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 gates exact parser/template/MTP combinations with functional tool and structured-output canaries; this adds DFlash block parsing and xgrammar failure cases.",
+    "gap_or_complement": "For every pinned DFlash/vLLM/parser tuple, exercise constrained JSON ending at the accepted output and speculative tokens beyond it, streaming and non-streaming single/parallel tool calls, and a tool-result follow-up. Capture HTTP status/body, parser result, finish reason, emitted chunk sizes and process health. Treat compile/throughput passing as insufficient. Record effective PR commit and upstream merge/revert state in the image manifest.",
+    "evidence_level": "Medium: multiple detailed owner reports, failure mode and a later owner-reported recovery are described with vLLM commit versions; external patch source and raw logs were not audited, and failure/fix are not independently reproduced.",
+    "risks": [
+      "Parser or xgrammar changes can fix one output mode while breaking tool streams or normal constrained JSON.",
+      "PRs in the thread moved between conflicts, forks, reverts and upstream status; applying old patch IDs blindly may break builds.",
+      "A passing throughput benchmark can hide HTTP 500 or tool semantic failures."
+    ],
+    "closure": "On the exact candidate digest, pass a matrix of normal JSON, schema-constrained DFlash, single/parallel tool calls and follow-up tool results, with positive and negative structured-output controls. Assert expected HTTP completion, valid JSON, correctly streamed and typed tool arguments, process liveness, and zero unintended side effects over repeat runs. Verify a deliberately incompatible revision fails visibly; record rollback to the last passing image.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01",
+    "title": "Gate multi-node NCCL on the selected HCA twin and its effective GID",
+    "source_threads": [
+      "361967"
+    ],
+    "failure": "On two ASUS GX10 systems, an owner reports NCCL allReduce failing for Qwen3.5-397B-A17B INT4 AutoRound although all four RoCE interfaces were UP, IPv4-mapped GIDs existed somewhere in the table, and `ib_write_bw` reached 108 Gbit/s on rocep1s0f1. In post 190 the owner reduced IB_IF from `rocep1s0f1,roceP2p1s0f1` to `rocep1s0f1` after finding GID index 3 null on the twin with no IPv4, and reports the run proceeded. That attempt also included shutdown and unplug/replug of both power bricks, so no single change is proven causal.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 has existing multi-node NCCL transport, HCA, MTU and peer validation entries; this report makes selected twin-to-IP/GID alignment a concrete negative control.",
+    "gap_or_complement": "Record effective HCA/twin, IPv4, selected GID index/address, MTU and NCCL interface per rank/node. Require a collective and first inference on the same selection used by serving. Exercise a twin lacking IPv4/GID at the configured index as a rejection control. Retain pre-recovery logs and compare one variable at a time.",
+    "evidence_level": "Medium-low: detailed owner report plus attached NCCL logs from the related 361639 thread, but the 361967 fix changed network selection and power state together and is not independently reproduced.",
+    "risks": [
+      "Automatically removing interfaces can break another supported topology or reduce bandwidth.",
+      "A successful raw verbs benchmark does not validate NCCL collective initialization or serving.",
+      "Physical power cycling can erase diagnostic state and confound the network comparison."
+    ],
+    "closure": "On a named two-node GB10 OEM/firmware/kernel/driver/NCCL image, prove selected RoCE twin has the configured GID on each node, run verbs per peer and NCCL collective plus first inference; verify a null/mismatched GID blocks admission, then restore the known-good network config and prove rollback.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01",
+    "title": "Run a real first-request smoke test for Qwen3.5 NVFP4 backend compatibility",
+    "source_threads": [
+      "361639"
+    ],
+    "failure": "An owner reports a Qwen3.5 NVFP4 model reaching server-ready and then failing on the first chat request with a CUDA illegal instruction. The owner says multiple Qwen3.5 NVFP4 variants using CUTLASS showed this symptom; setting `VLLM_NVFP4_GEMM_BACKEND=marlin` and `VLLM_TEST_FORCE_FP8_MARLIN=1` reportedly enabled a GPQA run on Qwen3.5-35B-A3B-NVFP4. Model/build/backend/driver details and independent reproduction are incomplete.",
+    "current_coverage": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 covers SM121 kernel/backend compatibility and first-inference functional smoke checks.",
+    "gap_or_complement": "Add the exact reported first-request failure and a per-model/backend smoke to the existing compatibility matrix. Preserve CUDA/Xid and kernel-selection logs. Treat the Marlin variables as an experiment for the exact pinned tuple, not a global default.",
+    "evidence_level": "Medium-low: concrete owner-reported error and workaround, without a matched run, audited patch or full pinned-stack provenance.",
+    "risks": [
+      "A backend change can alter output correctness and throughput.",
+      "A server-ready health check can pass before the failing kernel path is exercised."
+    ],
+    "closure": "For a pinned GB10 stack and model digest, exercise load and first generation under each supported backend, compare deterministic output against a validated reference, soak the candidate, and demonstrate return to the prior image/configuration.",
+    "backlog_card": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "merge_into": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01"
+  },
+  {
+    "id": "DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01",
+    "title": "Separate power-state recovery from network and workload changes",
+    "source_threads": [
+      "361639"
+    ],
+    "failure": "A Qwen3.5-122B-FP8 operator reports that shutting down and disconnecting USB-C power restored ConnectX SCP above 700 MB/s, system responsiveness, and llama-benchy throughput (post 293). No repeated A/B or measurements isolate power delivery, CX7, clocks, cables or workload state.",
+    "current_coverage": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION tracks low-power/low-performance and post-crash power residency reports.",
+    "gap_or_complement": "Retain this as a recovery signature: collect off-host power/clocks/link/throughput and logs before a clean OEM shutdown; on a canary, compare the approved power-reset procedure and verify the same signals afterward. Keep network and workload unchanged where safe; separate cable changes into another trial.",
+    "evidence_level": "Low-medium: detailed before/after owner narrative and benchmark figures, but no controlled or repeated intervention.",
+    "risks": [
+      "Disconnecting power during writes can damage data or lose incident evidence.",
+      "A reset may clear diagnostic state and hide the underlying condition."
+    ],
+    "closure": "Document OEM-approved clean shutdown and power handling; on a canary, retain evidence off-host, repeat a bounded before/after benchmark and link check, and verify rollback/recovery. Do not automate or recommend power cycling as prevention absent controlled results.",
+    "backlog_card": "tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md",
+    "merge_into": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION"
+  }
+]
