@@ -1,0 +1,6 @@
+Ficha: DEBT-SUNSET-TEST-BB-BASH-352
+Close check: python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_sunset_test_bb_bash_352
+
+Se sustituyó el sleep por un reloj `date` temporal y determinista que produce dt=1 s entre muestras. El contador retrocedido ahora recorre el camino de clamp sin esperar tiempo real; el test verifica el mismo resultado funcional.
+
+Comando de cierre ejecutado como parte de la corrida de 14 selectores; salida: `14 passed in 33.81s`; `could_not_run=0`.
