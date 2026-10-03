@@ -4,6 +4,7 @@ import json
 import subprocess
 
 from test_bb_usable import _cargar
+from test_bb_bash import _arbol_cgroup, _fila_escritorio, correr
 from pathlib import Path
 
 import pytest
@@ -46,3 +47,23 @@ def test_debt_noqa_bb_usable_249(monkeypatch: pytest.MonkeyPatch, capsys: pytest
     with pytest.raises(RuntimeError, match="stop before sampling"):
         module.main()
     assert "[bb-usable] sonda sana de referencia:" in capsys.readouterr().err
+
+
+def test_debt_shellcheck_bb_2(tmp_path: Path) -> None:
+    datos = tmp_path / "blackbox"
+    executable = Path(__file__).resolve().parent.parent / "bin" / "bb"
+    source = executable.read_text(encoding="utf-8").replace("# shellcheck disable=SC2319\n", "")
+    candidate = tmp_path / "status.sh"
+    candidate.write_text(source, encoding="utf-8")
+    lint = subprocess.run(["shellcheck", "--include=SC2319", str(candidate)], capture_output=True, text=True, check=False)
+    assert lint.returncode == 0, lint.stdout + lint.stderr
+    for low, expected in ((2 * 1024**3, "ARMADO"), (0, "FALTA")):
+        result = correr(["status"], datos, _arbol_cgroup(tmp_path, low=low))
+        assert expected in _fila_escritorio(result)
+
+
+def test_debt_shellcheck_bb_2286(tmp_path: Path) -> None:
+    datos = tmp_path / "blackbox"
+    for low, expected in ((2 * 1024**3, "ARMADO"), (0, "FALTA")):
+        result = correr(["status"], datos, _arbol_cgroup(tmp_path / "cgroups with spaces", low=low))
+        assert expected in _fila_escritorio(result), result.stdout + result.stderr
