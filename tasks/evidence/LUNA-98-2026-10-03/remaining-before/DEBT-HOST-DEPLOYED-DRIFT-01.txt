@@ -1,0 +1,69 @@
+Command: bash bin/bb drift
+exit_code: 1
+could_not_run: 0
+== divergencia repo vs maquina ==
+  igual       /srv/ai/gpu_governance/admission_check.sh
+  igual       /srv/ai/gpu_governance/gpu_lock.sh
+  SUSPENDIDO  /srv/ai/gpu_governance/gpu_sampler.sh (documentado en suspended/MANIFIESTO.md, vence 2026-10-07)
+  igual       /srv/ai/gpu_governance/monitor_memory.sh
+  igual       /home/lcasarin/.config/systemd/user/ai-gpu-telemetry.service
+  igual       /home/lcasarin/.config/systemd/user/ai-memory-monitor.service
+  igual       /home/lcasarin/.config/systemd/user/ai-memory-monitor.timer
+  igual       /home/lcasarin/.config/systemd/user/atom-crash-detector.service
+  igual       /home/lcasarin/.config/systemd/user/atom-crash-detector.timer
+  igual       /home/lcasarin/.config/systemd/user/atom-gpu-telemetry.service
+  igual       /home/lcasarin/.config/systemd/user/blackbox-drift.service
+  igual       /home/lcasarin/.config/systemd/user/blackbox-drift.timer
+  igual       /home/lcasarin/.config/systemd/user/blackbox-sample.service
+  igual       /home/lcasarin/.config/systemd/user/blackbox-sample.timer
+  igual       /etc/default/kdump-tools
+  DIVERGE     /etc/modprobe.d/99-blackbox-uvm.conf
+                --- /home/lcasarin/projects/blackbox/adopted/system-config/etc_modprobe.d_99-blackbox-uvm.conf	2026-10-02 06:36:39.554002968 -0600
+                +++ /etc/modprobe.d/99-blackbox-uvm.conf	2026-09-28 12:59:14.055265930 -0600
+                @@ -1,5 +1,4 @@
+                -# blackbox: mitigación parcial para NVIDIA/open-gpu-kernel-modules#1358.
+                -# Limita la oversubscription global de UVM; algunos OOM resultan recuperables,
+                -# pero hashcat todavía produjo OOM recuperable y el prefill siguió colgándose
+                -# con este parámetro en 0. No garantiza que el host sobreviva.
+                +# blackbox: NVIDIA/open-gpu-kernel-modules#1358 -- sin esto, una peticion de
+                +# memoria unificada por encima de lo disponible cuelga el host entero en vez
+                +# de fallar. Con esto, el kernel puede al menos matar y sobrevivir.
+                 options nvidia_uvm uvm_global_oversubscription=0
+  igual       /etc/security/limits.d/99-nv-spark-limits.conf
+  igual       /etc/security/limits.d/nv-limits.conf
+  igual       /etc/sysctl.d/99-blackbox-panic.conf
+  igual       /etc/sysctl.d/99-freeze-panic.conf
+  igual       /etc/sysctl.d/99-nvidia-unified-memory.conf
+  igual       /etc/sysctl.d/99-sysrq.conf
+  igual       /etc/systemd/system.conf.d/99-blackbox-watchdog.conf
+  igual       /etc/systemd/system/atom-clock-lock.service
+  igual       /etc/systemd/system/bb-usable.service
+  igual       /etc/systemd/system/docker.slice.d/99-blackbox.conf
+  igual       /etc/systemd/system/earlyoom.service.d/override.conf
+  igual       /etc/systemd/system/nvrm-watch.service
+  igual       /etc/systemd/system/nvrm-watch.timer
+  igual       /etc/systemd/system/session-.scope.d/99-blackbox-escritorio.conf
+  igual       /etc/systemd/system/sysstat-collect.timer.d/override.conf
+  igual       /etc/systemd/system/system.slice.d/99-blackbox.conf
+  igual       /etc/systemd/system/user-.slice.d/99-blackbox-escritorio.conf
+  igual       /etc/systemd/system/user.slice.d/99-blackbox-escritorio.conf
+  igual       /etc/systemd/system/user@.service.d/99-blackbox-escritorio.conf
+  igual       /home/lcasarin/.config/systemd/user/app-gnome-.scope.d/99-blackbox-escritorio.conf
+  igual       /home/lcasarin/.config/systemd/user/app.slice.d/99-blackbox-escritorio.conf
+  igual       /home/lcasarin/.config/systemd/user/app.slice.d/99-blackbox.conf
+  igual       /home/lcasarin/.config/systemd/user/session.slice.d/99-blackbox-escritorio.conf
+  igual       /home/lcasarin/.config/systemd/user/snap.antigravity.antigravity-.scope.d/99-blackbox-escritorio.conf
+  DIVERGE     /usr/local/bin/nvrm-watch.sh
+                --- /home/lcasarin/projects/blackbox/adopted/system-config/usr_local_bin_nvrm-watch.sh	2026-10-02 07:40:47.022166209 -0600
+                +++ /usr/local/bin/nvrm-watch.sh	2026-09-28 12:59:11.918670237 -0600
+                @@ -1,5 +1,5 @@
+                 #!/bin/bash
+                -if journalctl -k --since "-6min" --no-pager 2>/dev/null | grep -Eq 'NVRM:.*(Out of memory|NV_ERR_NO_MEMORY)'; then
+                -    logger -p daemon.warning -t nvrm-watch "NVRM allocation error observed — evidence only; not a sufficient freeze predictor"
+                -    echo "$(date -Is) NVRM allocation error observed (evidence only)" >> /var/log/nvrm-watch.log
+                +if journalctl -k --since "-6min" --no-pager 2>/dev/null | grep -q "NVRM:.*Out of memory"; then
+                +    logger -p daemon.warning -t nvrm-watch "NVRM Out-of-memory detectado — posible precursor de freeze de GPU"
+                +    echo "$(date -Is) NVRM OOM detectado" >> /var/log/nvrm-watch.log
+                 fi
+
+  revisados: 41   divergentes: 2   ausentes: 0   suspendidos: 1
