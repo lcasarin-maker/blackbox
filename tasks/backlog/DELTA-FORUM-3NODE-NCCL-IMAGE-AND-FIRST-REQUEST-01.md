@@ -1,0 +1,34 @@
+---
+id: DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01
+kind: task
+domain: VERDICT
+title: "Validar forum 3node nccl image and first request 01"
+status: open
+severity: P2
+origin: asserted
+satd_family: BLIND_INSTRUMENT
+created: 2026-10-02
+close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_3node_nccl_image_and_first_request_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+---
+
+## Registro y responsable
+
+Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
+
+## Evidencia y alcance
+
+Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
+
+**DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.** En una malla de tres Spark con PP, un operador reporta SIGTERM silencioso del worker en la primera inferencia usando el contenedor `vllm-node` con NCCL estándar; en el ensayo incremental, varias variables NCCL, Ray, allocator y loader no cambiaron el fallo. El operador reporta éxito posterior con imagen TF5 que llevaba NCCL de mesh; el mantenedor responde que la funcionalidad ya se integró en NCCL main y que la receta se actualizó ([365296, posts 15–16](https://forums.developer.nvidia.com/t/365296/15)). Validar build/image digest/NCCL por rank y una inferencia PP entre etapas en el topology real; load/HTTP ready no basta. Las fuentes externas no fueron auditadas y la corrección es declarada por usuarios; no tratar el caso como bug driver ni trasladar el umbral 0.85 de Grace Hopper a Spark.
+
+Fuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.
+
+## Criterio de cierre y control negativo
+
+Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha.
+
+## Estado del verificador
+
+La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
+
+Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
