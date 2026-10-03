@@ -1,0 +1,31 @@
+{
+  "command": "git push origin master",
+  "exit_code": 1,
+  "outgoing_gitleaks": "passed",
+  "pre_push": {
+    "passed": 15,
+    "failed": 2,
+    "could_not_run": 0
+  },
+  "blockers": {
+    "ship-freeze": {
+      "open": 97,
+      "covered_by_baseline": 0
+    },
+    "backlog-verifier": {
+      "frauds": 1,
+      "could_not_run": 0,
+      "contract_breaches": 0,
+      "unverified": 0,
+      "id": "DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES",
+      "reason": "Live service start precedes current source modification"
+    }
+  },
+  "guardian_tests": {
+    "command": "python3 -m pytest -q tests/test_bb_guardia_proceso.py",
+    "passed": 20,
+    "exit_code": 0
+  },
+  "host_restart": "awaiting_user_decision",
+  "published": false
+}
