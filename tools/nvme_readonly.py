@@ -8,9 +8,12 @@ from pathlib import Path
 import re
 import shutil
 import stat
+import sys
+import argparse
 from typing import Any
 
 IO_RE = re.compile(r"(?:I/O error|medium error|critical medium error|uncorrectable|Buffer I/O error)", re.I)
+NVME_DEVICE_RE = re.compile(r"\bnvme\d+(?:n\d+)?\b", re.I)
 
 
 def _capture_text(record: Any) -> tuple[str | None, str | None]:
@@ -38,27 +41,45 @@ def _has_inventory_device(text: str | None) -> bool | None:
     devices = document.get("Devices") if isinstance(document, dict) else document
     if not isinstance(devices, list):
         return None
-    return bool(devices)
+    if not devices:
+        return False
+    if any(not isinstance(device, dict) or not isinstance(device.get("DevicePath"), str)
+           or not isinstance(device.get("SerialNumber"), str)
+           or not device["DevicePath"].startswith("/dev/nvme")
+           or not device["SerialNumber"].strip() for device in devices):
+        return None
+    return True
+
+
+def _nvme_io_error(text: str) -> bool:
+    return any(IO_RE.search(line) and NVME_DEVICE_RE.search(line)
+               for line in text.splitlines())
 
 
 def _classify_records(mounts: Any, devices: Any, signals: Any) -> dict[str, Any]:
     unknown: list[str] = []
     findings: list[str] = []
     mount_value = mounts.get("value") if isinstance(mounts, dict) else None
-    if not isinstance(mounts, dict) or mounts.get("status") != "ok" or not isinstance(mount_value, list):
+    root_mounts = ([row for row in mount_value if isinstance(row, dict) and row.get("target") == "/"]
+                   if isinstance(mount_value, list) else [])
+    if (not isinstance(mounts, dict) or mounts.get("status") != "ok"
+            or not isinstance(mount_value, list) or not mount_value
+            or any(not isinstance(row, dict) or not isinstance(row.get("target"), str)
+                   or not isinstance(row.get("options"), str)
+                   or type(row.get("read_only")) is not bool for row in mount_value)
+            or len(root_mounts) != 1):
         unknown.append("root mount state unavailable")
     else:
-        findings.extend(f"read-only mount: {mount.get('target', 'unknown')}"
-                        for mount in mount_value
-                        if isinstance(mount, dict) and mount.get("read_only") is True)
+        findings.extend("read-only root mount"
+                        for mount in root_mounts if mount.get("read_only") is True)
     device_text, device_error = _capture_text(devices)
     if device_error:
         unknown.append(f"NVMe inventory {device_error}")
     signal_text, signal_error = _capture_text(signals)
     if signal_error:
         unknown.append(f"kernel signal query {signal_error}")
-    elif IO_RE.search(signal_text or ""):
-        findings.append("kernel log contains an NVMe or block I/O error")
+    elif _nvme_io_error(signal_text or ""):
+        findings.append("kernel log contains a device-specific NVMe I/O error")
     if findings:
         status = "fail"
     elif unknown or _has_inventory_device(device_text) is not True:
@@ -69,7 +90,9 @@ def _classify_records(mounts: Any, devices: Any, signals: Any) -> dict[str, Any]
         status = "pass"
     return {"status": status, "fail": int(status == "fail"),
             "could_not_run": len(unknown), "findings": findings,
-            "unknowns": unknown, "writes_performed": False}
+            "unknowns": unknown, "writes_performed": False,
+            "claim": "no recorded failure signal; physical device health remains unproven"
+            if status == "pass" else None}
 
 
 def classify(snapshot: dict[str, Any]) -> dict[str, Any]:
@@ -97,7 +120,9 @@ def _copy_file(source: Path, target: Path, expected: os.stat_result) -> tuple[in
     created = False
     try:
         opened = os.fstat(fd_in)
-        if (opened.st_dev, opened.st_ino, opened.st_size) != (expected.st_dev, expected.st_ino, expected.st_size):
+        if (opened.st_dev, opened.st_ino, opened.st_size, opened.st_mtime_ns, opened.st_ctime_ns) != (
+                expected.st_dev, expected.st_ino, expected.st_size,
+                expected.st_mtime_ns, expected.st_ctime_ns):
             raise OSError("source identity changed before copy")
         fd_out = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC, 0o600)
         created = True
@@ -109,12 +134,18 @@ def _copy_file(source: Path, target: Path, expected: os.stat_result) -> tuple[in
                 writer.flush()
                 os.fsync(fd_out)
             after = os.fstat(fd_in)
-            identity_before = (opened.st_dev, opened.st_ino, opened.st_size, opened.st_mtime_ns)
-            identity_after = (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)
+            identity_before = (opened.st_dev, opened.st_ino, opened.st_size,
+                               opened.st_mtime_ns, opened.st_ctime_ns)
+            identity_after = (after.st_dev, after.st_ino, after.st_size,
+                              after.st_mtime_ns, after.st_ctime_ns)
             if identity_before != identity_after:
                 raise OSError("source changed during copy")
             if _hash_file(target) != digest.hexdigest():
                 raise OSError("destination copy digest mismatch")
+            path_after = source.stat(follow_symlinks=False)
+            if (path_after.st_dev, path_after.st_ino, path_after.st_size,
+                    path_after.st_mtime_ns, path_after.st_ctime_ns) != identity_before:
+                raise OSError("source path changed during copy")
         finally:
             os.close(fd_out)
         return expected.st_dev, digest.hexdigest()
@@ -146,3 +177,29 @@ def export_copy(source: Path, destination_dir: Path) -> dict[str, Any]:
     except (OSError, ValueError) as exc:
         return {"status": "could_not_run", "could_not_run": 1,
                 "error": f"{type(exc).__name__}: {exc}", "source_written": False}
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--snapshot", type=Path, help="read-only host_diagnostics JSON snapshot")
+    mode.add_argument("--export-source", type=Path, help="identified regular file to copy")
+    parser.add_argument("--destination-dir", type=Path,
+                        help="existing or new directory on a separate filesystem")
+    args = parser.parse_args(argv)
+    if args.snapshot:
+        try:
+            report = classify(json.loads(args.snapshot.read_text(encoding="utf-8")))
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            report = {"status": "could_not_run", "fail": 0, "could_not_run": 1,
+                      "error": f"{type(exc).__name__}: {exc}", "writes_performed": False}
+    elif args.destination_dir and args.export_source:
+        report = export_copy(args.export_source, args.destination_dir)
+    else:
+        parser.error("--destination-dir is required with --export-source")
+    sys.stdout.write(json.dumps(report, sort_keys=True) + "\n")
+    return 0 if report["status"] == "pass" else 1 if report["status"] == "fail" else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
