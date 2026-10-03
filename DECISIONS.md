@@ -200,3 +200,11 @@ verificable — el patrón en sí es indistinguible de un bypass real visto desd
 afuera. También descarta dejar el push bloqueado indefinidamente: cuando existe
 un camino para producir verificación GENUINA (no una excusa documentada), ese
 camino es el que se toma, aunque cueste más pasos.
+
+## 2026-10-03 · Desarrollar instrumentos sin fingir cierres experimentales
+
+**La decisión.** Luis eligió «desarroll» en la boleta que contrapuso desarrollar instrumentos de BB y preparar primero un canario de laboratorio. Coordinación de Blackbox dirige; agentes Luna ejecutan tandas generadas de cinco fichas. Se priorizan capturas locales y contratos existentes, reutilizando recolectores y verificadores del repo.
+
+**Motivo.** Las 91 etiquetas `blocked` mezclaban desarrollo pendiente con impedimentos para cerrar investigaciones: 63 close_check citan selectores ausentes. Un instrumento se puede implementar y verificar mientras su investigación mantiene pendientes los ensayos de hardware, OEM o rollback.
+
+**Qué descarta.** No se prioriza ahora el canario de laboratorio sobre el resto del desarrollo. Este voto no autoriza firmware, reinicios, presión de memoria, cambios de red ni intervenciones del host. No se cierran fichas por fixtures ni se debilitan sus close_check para fabricar progreso. Se mide el avance por desarrollo verificado, separadamente de los cierres experimentales.

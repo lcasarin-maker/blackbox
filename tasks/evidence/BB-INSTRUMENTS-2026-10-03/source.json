@@ -1,0 +1,167 @@
+[
+  {
+    "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01",
+    "path": "tasks/backlog/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md",
+    "title": "\"Validar forum apt arm64 source validation 01\"",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01",
+    "path": "tasks/backlog/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01.md",
+    "title": "\"Validar forum ota driver kernel effective tuple 01\"",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "DELTA-FORUM-RECOVERY-APT-UPDATE-01",
+    "path": "tasks/backlog/DELTA-FORUM-RECOVERY-APT-UPDATE-01.md",
+    "title": "\"Validar forum recovery apt update 01\"",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_recovery_apt_update_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+    "path": "tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md",
+    "title": "\"Validar protección frente a autoremove de paquetes críticos\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_apt_critical_removals --evidence tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+      "expect": "exit_zero",
+      "porque": "El cierre requiere demostrar que una remoción simulada peligrosa se bloquea o se declara antes de aplicar cambios, y que una transacción inocua sigue disponible; un inventario estático de paquetes no demuestra protección."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+    "path": "tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md",
+    "title": "\"Distinguir login gráfico roto de host accesible y ofrecer recuperación acotada\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01 --evidence tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+    "path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.md",
+    "title": "\"Implementar criterios ejecutables de tools.verify_usb_hid_postupdate\"",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_usb_hid_postupdate_01",
+      "expect": "exit_zero",
+      "porque": "Cada fase/id soportado evalúa su sujeto específico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo lógica realmente común; conservar comandos literales y demostrar discriminación entre fichas."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+    "path": "tasks/backlog/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.md",
+    "title": "\"Validar forum usb raid link admission 01\"",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_usb_raid_link_admission_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "path": "tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md",
+    "title": "\"Verificar disponibilidad y propietario del watchdog en lugar de inferirlos\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-SBSA-WATCHDOG-STATE-01 --evidence tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+    "path": "tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md",
+    "title": "\"Detect USB-HID perdido tras actualización de kernel o driver\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_usb_hid_postupdate --evidence tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK",
+      "expect": "exit_zero",
+      "porque": "El cierre debe separar fallo USB-HID real, máquina headless, módulo integrado en kernel y telemetría inaccesible; comprobar que el servicio sigue activo no demuestra que el teclado ni el acceso remoto funcionen."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+    "path": "tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md",
+    "title": "\"Evitar pérdida de Realtek tras warm reboot por binding al driver equivocado\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-REALTEK-DRIVER-BINDING-01 --evidence tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01",
+      "expect": "exit_zero",
+      "porque": "Verificador pendiente: prueba binding PCI efectivo y paquete/módulo compatible; warm/cold reboot A/B y rollback con controles de otra NIC, driver ausente y consulta fallida."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01",
+    "path": "tasks/backlog/DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01.md",
+    "title": "\"Validar forum kv quant metric provenance gate 01\"",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_kv_quant_metric_provenance_gate_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01",
+    "path": "tasks/backlog/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01.md",
+    "title": "\"Validar forum vllm gb10 arch and build matrix 01\"",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_vllm_gb10_arch_and_build_matrix_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01",
+    "path": "tasks/backlog/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01.md",
+    "title": "\"Validar forum vllm ray gb10 resource fix 01\"",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_vllm_ray_gb10_resource_fix_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01",
+    "path": "tasks/backlog/DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01.md",
+    "title": "\"Validar root container effective build and offline gate 01\"",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_container_effective_build_and_offline_gate_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "path": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "title": "\"Verificar compatibilidad GB10 de imagen, toolchain y backend antes de admitir cargas\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 --evidence tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+      "expect": "exit_zero",
+      "porque": "Verificador pendiente: demostrar preflight mínimo con imágenes soportadas, arquitectura/cubin y controles negativos; ninguna recomendación de backend sin validar salida/estabilidad y rollback."
+    },
+    "dependencies": []
+  }
+]

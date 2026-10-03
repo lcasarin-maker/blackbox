@@ -1,0 +1,57 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+    "path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.md",
+    "title": "\"Implementar criterios ejecutables de tools.verify_usb_hid_postupdate\"",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_usb_hid_postupdate_01",
+      "expect": "exit_zero",
+      "porque": "Cada fase/id soportado evalúa su sujeto específico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo lógica realmente común; conservar comandos literales y demostrar discriminación entre fichas."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+    "path": "tasks/backlog/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.md",
+    "title": "\"Validar forum usb raid link admission 01\"",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_usb_raid_link_admission_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "path": "tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md",
+    "title": "\"Verificar disponibilidad y propietario del watchdog en lugar de inferirlos\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-SBSA-WATCHDOG-STATE-01 --evidence tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+    "path": "tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md",
+    "title": "\"Detect USB-HID perdido tras actualización de kernel o driver\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_usb_hid_postupdate --evidence tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK",
+      "expect": "exit_zero",
+      "porque": "El cierre debe separar fallo USB-HID real, máquina headless, módulo integrado en kernel y telemetría inaccesible; comprobar que el servicio sigue activo no demuestra que el teclado ni el acceso remoto funcionen."
+    },
+    "dependencies": []
+  },
+  {
+    "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+    "path": "tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md",
+    "title": "\"Evitar pérdida de Realtek tras warm reboot por binding al driver equivocado\"",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-REALTEK-DRIVER-BINDING-01 --evidence tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01",
+      "expect": "exit_zero",
+      "porque": "Verificador pendiente: prueba binding PCI efectivo y paquete/módulo compatible; warm/cold reboot A/B y rollback con controles de otra NIC, driver ausente y consulta fallida."
+    },
+    "dependencies": []
+  }
+]
