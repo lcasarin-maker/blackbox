@@ -4,6 +4,8 @@ kind: task
 domain: VERDICT
 title: "Decidir alcance del recolector histórico bb_forum_inventory"
 status: done
+closed_at: 2026-10-03
+evidence: {"pass": "tasks/evidence/DEBT-RESEARCH-COLLECTOR-BB-FORUM-INVENTORY-01/pass.txt", "fail": "tasks/evidence/DEBT-RESEARCH-COLLECTOR-BB-FORUM-INVENTORY-01/fail.txt", "e2e": "tasks/evidence/DEBT-RESEARCH-COLLECTOR-BB-FORUM-INVENTORY-01/e2e.txt"}
 severity: P2
 origin: detected
 detector: {"rule": "zero_debt: hardcoded_path, unencoded_file_io, blocking_sleep", "confidence": 1.0}
@@ -75,12 +77,16 @@ Responsable coordinación BB/Luis. Al registrar esta ficha, la decisión aún es
 
 ## Cierre (decisión derivada 2026-10-03)
 
-Se mantiene y repara el recolector. La instrucción vigente de reparar los 80 avisos y los 4 de pyright determina mantener estos recolectores de investigación. El voto anterior ya había decidido mantenerlos; este cierre registra que la decisión sigue aplicando.
+Se mantiene y repara el recolector. La instrucción vigente de reparar los 80 avisos y los 4 de pyright determina mantener estos recolectores de investigación. Esta instrucción resuelve el alcance de los recolectores; la boleta anterior seguía pendiente.
 
-RootCause: la herramienta de inventario usaba una ruta absoluta del host, IO con encoding implícito y una pausa de paginación sin fixtures; además, la repetición de páginas requería verificación explícita para impedir ciclos.
+## Root Cause
 
-RegressionTest: `python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_research_collector_bb_forum_inventory_01` comprueba dos páginas, deduplicación, pacing y control negativo que rechaza una página repetida.
+ la herramienta de inventario usaba una ruta absoluta del host, IO con encoding implícito y una pausa de paginación sin fixtures; además, la repetición de páginas requería verificación explícita para impedir ciclos.
 
-VerificationEvidence: `tasks/evidence/DEBT-RESEARCH-COLLECTOR-BB-FORUM-INVENTORY-01/fail.txt`, `pass.txt` y `e2e.txt`. Incluyen control negativo de página repetida, deduplicación de temas, avance de página, IO y pacing observados. El close check conjunto reportó `5 passed in 0.04s`; Ruff reportó `All checks passed!`; Pyright sobre ambos recolectores reportó `0 errors, 0 warnings, 0 informations`. Fixtures offline; ninguna petición de red real.
+## Regression Test
 
-closed_at: 2026-10-03
+ `python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_research_collector_bb_forum_inventory_01` comprueba dos páginas, deduplicación, pacing y control negativo que rechaza una página repetida.
+
+## Verification Evidence
+
+ `tasks/evidence/DEBT-RESEARCH-COLLECTOR-BB-FORUM-INVENTORY-01/fail.txt`, `pass.txt` y `e2e.txt`. Incluyen control negativo de página repetida, deduplicación de temas, avance de página, IO y pacing observados. El close check conjunto reportó `5 passed in 0.04s`; Ruff reportó `All checks passed!`; Pyright sobre ambos recolectores reportó `0 errors, 0 warnings, 0 informations`. Fixtures offline; ninguna petición de red real.
