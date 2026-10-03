@@ -2,9 +2,9 @@
 id: DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO
 kind: debt
 title: "Una sonda baja de 30 s absolvia un colapso entero: la maquina murio de kernel panic con el vigilante armado"
-status: open
-closure_type: fixed
-closed_at: 2026-09-28
+status: done
+closure_type: relocated_prior_verification
+closed_at: 2026-10-03
 severity: P1
 origin: detected
 detector: {"rule": "kernel panic 2026-09-26 15:38:26 hung_task", "confidence": 1.0}
@@ -12,10 +12,10 @@ satd_family: BLIND_INSTRUMENT
 created: 2026-09-27
 close_check: {"cmd": "bash tools/demonio_al_dia.sh bb-usable.service bin/bb-usable", "expect": "exit_zero", "porque": "es la unica condicion que NO se puede fingir desde el repo: que el PROCESO VIVO haya arrancado despues de la ultima modificacion de bin/bb-usable. Codigo correcto en disco con el defecto todavia en memoria es exactamente el estado en que la maquina murio el 2026-09-26, y un criterio que solo mirara los tests cerraria la ficha ahi. Las otras dos condiciones -- control de falsos positivos limpio y suite verde-- ya las aplica el pre-push en cada commit, asi que repetirlas aqui seria una copia peor de un gate ya cableado; `backlog-verifier` prohibe encadenarlas con && de todas formas. El script distingue COULD_NOT_RUN (rc=2) de codigo viejo (rc=1), y los cuatro caminos estan corridos en tests/test_demonio_al_dia.py. Se invoca via `bash` porque es lo que este repo declara en .simplecode/build_tools.txt y backlog-verifier solo confia en esa lista."}
 evidence:
-  pass: tasks/evidence/DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO/pass.txt
-  fail: tasks/evidence/DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO/fail.txt
-  e2e: tasks/evidence/DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO/e2e.txt
-reason: "CERRADO 2026-09-28. El arreglo estaba escrito, medido y pusheado desde el 2026-09-27; lo que faltaba era que el PROCESO VIVO lo cargara. Luis reinicio bb-usable a las 23:48:05 y el close_check -- que mira el proceso, no el fichero -- pasa de rc=1 a rc=0. Durante 24 h el codigo correcto estuvo en disco con el defecto todavia en memoria, que es exactamente el estado en que la maquina murio el 2026-09-26 15:38:26, y desde el repo las dos cosas se veian iguales."
+  pass: tasks/evidence/ZERO-2026-10-02/service-restart/pass.txt
+  fail: tasks/evidence/ZERO-2026-10-02/service-restart/fail.txt
+  e2e: tasks/evidence/ZERO-2026-10-02/service-restart/e2e.txt
+reason: "Recierre 2026-10-03: 41 pruebas pasan y Luis reinició bb-usable.service; proceso vivo posterior al código, active/running, close_check rc=0. Historial anterior conservado abajo."
 ---
 ## Root Cause
 
@@ -186,3 +186,7 @@ cada `bb status` cerraria eso, y no esta escrito.
 ## Reapertura /0 — 2026-10-02
 
 backlog_verifier detectó rc=1 en el close_check tras cambiar bin/bb-usable: el proceso vivo arrancó 2026-09-30 y el archivo fue modificado después. El arreglo de lógica sigue probado en disco; la condición explícita del proceso vivo requiere cargar la versión actual. Reinicio del vigilante pendiente de autorización/privilegios; no se debilita el criterio. Informe literal tasks/evidence/ZERO-2026-10-02/verifier-wave1.txt.
+
+## Recierre verificado — 2026-10-03
+
+Luis reinició el servicio tras 41 pruebas aprobadas. El close_check real da rc=0: el proceso arrancó a las 00:10:01 después del mtime del ejecutable. active/running y journal muestran la sonda de memoria y lectura posterior del escritorio. Se conserva el historial anterior; este cierre acredita carga del código actual, no un nuevo ensayo de colapso.

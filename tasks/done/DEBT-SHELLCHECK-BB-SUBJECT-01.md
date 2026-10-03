@@ -4,8 +4,9 @@ kind: task
 domain: VERDICT
 title: "Resolver hallazgos del ejecutable completo fuera del alcance previo"
 status: done
+reason: "Arreglo y 89 pruebas ya comiteados en 783fe11; movimiento administrativo después de close_check rc=0."
 closed_at: 2026-10-03
-closure_type: fixed
+closure_type: relocated_prior_verification
 closure_reason: "ShellCheck completo pasa; rutas de auditoría con espacios conservan señales y cobertura."
 evidence:
   fail: tasks/evidence/DEBT-SHELLCHECK-BB-SUBJECT-01.fail.txt
