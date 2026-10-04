@@ -1,0 +1,74 @@
+[
+  {
+    "id": "FORUM-00-DOCKER-OOM-RESTART-LOOP",
+    "path": "tasks/backlog/FORUM-00-DOCKER-OOM-RESTART-LOOP.md",
+    "close_check": {
+      "cmd": "python3 -m pytest tests/test_workload_restart_containment.py -q",
+      "expect": "exit_zero",
+      "porque": "Prueba pendiente: debe limitar la reincidencia de un workload identificado y permitir recuperaci\u00f3n conservando datos, sin bloquear un reinicio sano ni atribuir todo reboot a OOM."
+    }
+  },
+  {
+    "id": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+    "path": "tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION --evidence tasks/evidence/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    }
+  },
+  {
+    "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+    "path": "tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-KERNEL-INITRD-UPDATE-GATE --evidence tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "expect": "exit_zero",
+      "porque": "Demostrar un gate previo al reboot que detecta estado dpkg/DKMS incoherente, ausencia de initrd/m\u00f3dulo para el kernel objetivo y una recuperaci\u00f3n arrancable; incluir negativos de kernel sano y rollback."
+    }
+  },
+  {
+    "id": "FORUM-00-REALTEK-EEE-DIRECT-LINK",
+    "path": "tasks/backlog/FORUM-00-REALTEK-EEE-DIRECT-LINK.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-REALTEK-EEE-DIRECT-LINK --evidence tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK",
+      "expect": "exit_zero",
+      "porque": "Confirm the exact link-partner/kernel/driver combination, reproduce EEE-related stalls, verify a bounded opt-in mitigation and prove rollback and unaffected-link controls."
+    }
+  },
+  {
+    "id": "FORUM-02-GX10-READ-INTEGRITY",
+    "path": "tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-GX10-READ-INTEGRITY --evidence tasks/evidence/FORUM-02-GX10-READ-INTEGRITY",
+      "expect": "exit_zero",
+      "porque": "Verificador espec\u00edfico pendiente: debe demostrar detecci\u00f3n de datos alterados con una referencia externa y diferenciar lecturas buffered, O_DIRECT, cach\u00e9, salud NVMe y evidencia de firmware."
+    }
+  },
+  {
+    "id": "FORUM-02-PSTORE-KERNEL-REGRESSION",
+    "path": "tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-PSTORE-KERNEL-REGRESSION --evidence tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION",
+      "expect": "exit_zero",
+      "porque": "Verificador espec\u00edfico pendiente: debe validar captura pstore, identidad de la pila, resoluci\u00f3n del vendor y recomendaci\u00f3n de rollback/actualizaci\u00f3n con control."
+    }
+  },
+  {
+    "id": "FORUM-02-USB-UVC-EP0",
+    "path": "tasks/backlog/FORUM-02-USB-UVC-EP0.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-USB-UVC-EP0 --evidence tasks/evidence/FORUM-02-USB-UVC-EP0",
+      "expect": "exit_zero",
+      "porque": "Verificador espec\u00edfico pendiente: debe comprobar la reproducci\u00f3n A/B, la versi\u00f3n corregida y la recomendaci\u00f3n preventiva para cada OEM probado."
+    }
+  },
+  {
+    "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+    "path": "tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-REALTEK-DRIVER-BINDING-01 --evidence tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01",
+      "expect": "exit_zero",
+      "porque": "Verificador pendiente: prueba binding PCI efectivo y paquete/m\u00f3dulo compatible; warm/cold reboot A/B y rollback con controles de otra NIC, driver ausente y consulta fallida."
+    }
+  }
+]

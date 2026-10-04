@@ -1,0 +1,139 @@
+[
+  {
+    "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "status": "could_not_run",
+    "reason": "capture.json with raw capture inventory is unavailable",
+    "files": [
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/validator-run.json",
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/provider-trace-run.json",
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/preflight.json",
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/commands.json"
+    ],
+    "control_command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01 --evidence tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "evidence_needed": "capture.json with raw capture inventory is unavailable",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "status": "unknown",
+    "reason": "Verifier implemented; local pstore access is denied, and no canary forced-panic/post-reboot test or rollback evidence exists.",
+    "files": [
+      "tools/verify_rcu_panic_pstore.py",
+      "tools/kernel_capture.py",
+      "tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json"
+    ],
+    "control_command": "python3 -m tools.verify_rcu_panic_pstore --evidence tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "evidence_needed": [
+      "Owner-approved canary forced marker persisted through new boot, active sysctls/backend, kdump armed, rollback restored; natural RCU recovery remains separately unobserved"
+    ],
+    "agent_family": "kernel",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-FORUM-RESCUE-RUNBOOK-01",
+    "status": "could_not_run",
+    "reason": "capture.json with raw capture inventory is unavailable",
+    "files": [
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01/host-observation.txt"
+    ],
+    "control_command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-RESCUE-RUNBOOK-01 --evidence tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01",
+    "evidence_needed": "capture.json with raw capture inventory is unavailable",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "status": "could_not_run",
+    "reason": "capture.json with raw capture inventory is unavailable",
+    "files": [
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/owner-query.json",
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/progress.txt"
+    ],
+    "control_command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-SBSA-WATCHDOG-STATE-01 --evidence tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "evidence_needed": "capture.json with raw capture inventory is unavailable",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+    "status": "could_not_run",
+    "reason": "capture.json with raw capture inventory is unavailable",
+    "files": [
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/host-observation.txt"
+    ],
+    "control_command": "python3 -m tools.verify_wifi_isolation --evidence tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01",
+    "evidence_needed": "capture.json with raw capture inventory is unavailable",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "status": "unknown",
+    "reason": "Phase verifier implemented; bpftrace parser/attach and kernel symbols were blocked by root permissions; no runtime event rows.",
+    "files": [
+      "tools/verify_memory_saver.py",
+      "tools/kernel_charges.bt",
+      "tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt"
+    ],
+    "control_command": "python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "evidence_needed": [
+      "Verified runtime symbols and raw CPU/no-allocation/bounded-CUDA events with charge/uncharge/failure/duplicate counts and owner memcg"
+    ],
+    "agent_family": "kernel",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "status": "unknown",
+    "reason": "Phase verifier implemented; existing report states page-table backing cost was not measured on this 4 KiB stack.",
+    "files": [
+      "tools/verify_memory_saver.py",
+      "tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K/comparison.txt"
+    ],
+    "control_command": "python3 -m tools.verify_memory_saver --phase 04-packing-4k --evidence tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "evidence_needed": [
+      "Raw per-load backing-byte measurements, pinned source and HAL alignment requirements, evidence-backed decision; candidate matrix only if patch justified"
+    ],
+    "agent_family": "kernel",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+    "status": "could_not_run",
+    "reason": "capture.json with raw capture inventory is unavailable",
+    "files": [
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK/host-observation.txt"
+    ],
+    "control_command": "python3 -m tools.verify_usb_hid_postupdate --evidence tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK",
+    "evidence_needed": "capture.json with raw capture inventory is unavailable",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+    "status": "could_not_run",
+    "reason": "capture.json with raw capture inventory is unavailable",
+    "files": [
+      "/tmp/bb-controls-hardware/tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION/progress.txt"
+    ],
+    "control_command": "python3 -m tools.verify_forum_finding --id FORUM-00-CX7-HOTPLUG-FAN-PROTECTION --evidence tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+    "evidence_needed": "capture.json with raw capture inventory is unavailable",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+    "status": "could_not_run",
+    "reason": "capture.json with raw capture inventory is unavailable",
+    "files": [
+      "/tmp/bb-controls-hardware/tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/validator-run.json",
+      "/tmp/bb-controls-hardware/tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/preflight.json",
+      "/tmp/bb-controls-hardware/tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/commands.json"
+    ],
+    "control_command": "python3 -m tools.verify_forum_finding --id FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT --evidence tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+    "evidence_needed": "capture.json with raw capture inventory is unavailable",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  }
+]

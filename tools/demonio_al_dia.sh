@@ -45,7 +45,25 @@ if [ ! -f "$codigo" ]; then
     exit 2
 fi
 
-arranque=$(systemctl "${alcance[@]}" show "$unit" -p ExecMainStartTimestamp --value 2>/dev/null)
+if ! observacion=$(systemctl "${alcance[@]}" show "$unit" \
+    -p ActiveState -p SubState -p MainPID -p ExecMainStartTimestamp 2>/dev/null); then
+    echo "COULD_NOT_RUN: no se pudo consultar $unit" >&2
+    exit 2
+fi
+activo="" subestado="" pid="" arranque=""
+while IFS='=' read -r clave valor; do
+    case "$clave" in
+        ActiveState) activo="$valor" ;;
+        SubState) subestado="$valor" ;;
+        MainPID) pid="$valor" ;;
+        ExecMainStartTimestamp) arranque="$valor" ;;
+    esac
+done <<< "$observacion"
+if [ "$activo" != active ] || [ "$subestado" != running ] \
+    || [[ ! "$pid" =~ ^[1-9][0-9]*$ ]] || [ ! -d "/proc/$pid" ]; then
+    echo "COULD_NOT_RUN: $unit carece de proceso vivo verificable (estado=$activo/$subestado pid=$pid)" >&2
+    exit 2
+fi
 if [ -z "$arranque" ]; then
     # Unit parada, inexistente, o un systemd que no publica la propiedad. Una
     # cadena vacia leida como numero da 0 y el veredicto saldria "viejo" por
@@ -66,5 +84,9 @@ if [ "$vivo" -gt "$mod" ]; then
     exit 0
 fi
 echo "$unit arranco $arranque y $codigo se modifico despues"
-echo "el proceso vivo corre codigo VIEJO. Lo arregla:  sudo systemctl restart $unit"
+if [ "${#alcance[@]}" -gt 0 ]; then
+    echo "el proceso vivo corre codigo VIEJO. Lo arregla: systemctl --user restart $unit"
+else
+    echo "el proceso vivo corre codigo VIEJO. Lo arregla: sudo systemctl restart $unit"
+fi
 exit 1

@@ -1,0 +1,126 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01",
+    "status": "pass",
+    "reason": "Phase-specific verifier implemented with strict task/phase checks and computed predicates; focused positive and negative controls pass.",
+    "files": [
+      "tools/verify_cgroup_plan.py",
+      "tests/test_closure_kernel.py"
+    ],
+    "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_cgroup_plan_01",
+    "evidence_needed": [],
+    "agent_family": "kernel",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01",
+    "status": "could_not_run",
+    "reason": "missing evidence directory: /tmp/bb-controls-hardware/tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01",
+    "files": [],
+    "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_forum_finding_01",
+    "evidence_needed": "missing evidence directory: /tmp/bb-controls-hardware/tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01",
+    "status": "could_not_run",
+    "reason": "missing evidence directory: /tmp/bb-controls-hardware/tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01",
+    "files": [],
+    "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_gpu_clock_cap_ab_01",
+    "evidence_needed": "missing evidence directory: /tmp/bb-controls-hardware/tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01",
+    "status": "could_not_run",
+    "reason": "missing evidence directory: /tmp/bb-controls-hardware/tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01",
+    "files": [],
+    "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_memory_saver_01",
+    "evidence_needed": "missing evidence directory: /tmp/bb-controls-hardware/tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01",
+    "status": "pass",
+    "reason": "CLI evaluates current raw kernel capture, receiver marker bytes, boot correlation, Secure Boot/signature/privacy and rollback fields; focused suite and Ruff/Pyright pass.",
+    "files": [
+      "tools/verify_netconsole.py",
+      "tools/netconsole_marker.py",
+      "tools/kernel_capture.py",
+      "tests/test_closure_kernel.py"
+    ],
+    "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_netconsole_01",
+    "evidence_needed": [],
+    "agent_family": "kernel",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01",
+    "status": "pass",
+    "reason": "Verifier checks active policy, forced-test marker persisted across a boot change, kdump and rollback; explicitly keeps natural RCU recovery unobserved.",
+    "files": [
+      "tools/verify_rcu_panic_pstore.py",
+      "tools/kernel_capture.py",
+      "tools/recovery_profile.py",
+      "tests/test_closure_kernel.py"
+    ],
+    "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01",
+    "evidence_needed": [],
+    "agent_family": "kernel",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+    "status": "could_not_run",
+    "reason": "missing evidence directory: /tmp/bb-controls-hardware/tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+    "files": [],
+    "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_usb_hid_postupdate_01",
+    "evidence_needed": "missing evidence directory: /tmp/bb-controls-hardware/tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01",
+    "status": "could_not_run",
+    "reason": "missing evidence directory: /tmp/bb-controls-hardware/tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01",
+    "files": [],
+    "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_wifi_isolation_01",
+    "evidence_needed": "missing evidence directory: /tmp/bb-controls-hardware/tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "DEBT-HOST-DEPLOYED-DRIFT-01",
+    "status": "could_not_run",
+    "reason": "capture.json with raw capture inventory is unavailable",
+    "files": [
+      "/tmp/bb-controls-hardware/tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/source.json",
+      "/tmp/bb-controls-hardware/tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/fail.txt"
+    ],
+    "control_command": "bash bin/bb drift",
+    "evidence_needed": "capture.json with raw capture inventory is unavailable",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "DEBT-JUDGE-THREAT-SWEEP-TOOLS-01",
+    "status": "fail",
+    "reason": "pinned threat sweep excludes existing tools/ tree",
+    "files": [
+      "/tmp/bb-controls-runtime/.simplecode/runtime.zip",
+      "/tmp/bb-controls-runtime/tools"
+    ],
+    "control_command": "python3 -m pytest -q tests/test_adversarial_product_scope.py::test_threat_sweep_reads_tools_and_rejects_injected_case",
+    "evidence_needed": [
+      "subject",
+      "clean_sweep",
+      "injected_homoglyph_rejected",
+      "tools_path_read"
+    ],
+    "agent_family": "runtime",
+    "review_status": "draft_control_not_accepted"
+  }
+]

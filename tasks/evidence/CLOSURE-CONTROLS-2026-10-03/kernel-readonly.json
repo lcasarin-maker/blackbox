@@ -1,0 +1,54 @@
+{
+  "boot_parameter_netconsole": {
+    "present": false,
+    "status": "read"
+  },
+  "could_not_run": 1,
+  "kernel": {
+    "boot_id": {
+      "status": "read",
+      "value": "3c61716a-72c1-46d2-8f25-c0aaef0cc067"
+    },
+    "panic": {
+      "status": "read",
+      "value": "10"
+    },
+    "panic_on_rcu_stall": {
+      "status": "read",
+      "value": "0"
+    },
+    "release": {
+      "status": "read",
+      "value": "6.17.0-1032-nvidia"
+    }
+  },
+  "limitations": [
+    "pstore reads are not size-bounded; symlink checks and reads are not atomic against path replacement",
+    "an empty pstore does not prove that persistent capture or recovery works",
+    "netconsole configuration does not prove packets reached a receiver",
+    "no panic, reboot, module load, or receiver test was performed"
+  ],
+  "netconsole": {
+    "boot_parameter_present": false,
+    "dynamic_targets_status": {
+      "status": "not_applicable"
+    },
+    "module": {
+      "built_in": false,
+      "loaded": false,
+      "status": "absent"
+    },
+    "receiver_receipt": "not observed",
+    "static_parameter": {
+      "status": "not_applicable"
+    },
+    "targets": []
+  },
+  "pstore": {
+    "error": "PermissionError: [Errno 13] Permission denied: '/sys/fs/pstore'",
+    "record_count": 0,
+    "records": [],
+    "status": "could_not_run"
+  },
+  "status": "partial"
+}

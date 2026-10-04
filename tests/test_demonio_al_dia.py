@@ -143,3 +143,45 @@ def test_sin_flag_uso_menciona_el_flag_opcional():
     r = _correr()
     assert r.returncode != 0
     assert "--user" in (r.stdout + r.stderr)
+
+
+@pytest.mark.parametrize("state,substate,pid", [
+    ("inactive", "dead", "0"),
+    ("active", "exited", "0"),
+    ("active", "running", "invalid"),
+])
+def test_timestamp_historico_sin_proceso_vivo_no_absuelve(
+    tmp_path, monkeypatch, state, substate, pid,
+):
+    _systemctl_control(tmp_path, monkeypatch, state, substate, pid)
+    old = tmp_path / "old.sh"
+    old.write_text("#!/bin/sh\n", encoding="utf-8")
+    os.utime(old, (0, 0))
+    result = _correr("--user", "fixture.service", str(old))
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "COULD_NOT_RUN" in result.stderr
+
+
+def _systemctl_control(tmp_path, monkeypatch, state, substate, pid):
+    """A retained timestamp must not substitute for a live service snapshot."""
+    executable = tmp_path / "systemctl"
+    executable.write_text(
+        "#!/bin/sh\ncat <<'SNAPSHOT'\n"
+        f"ActiveState={state}\nSubState={substate}\nMainPID={pid}\n"
+        "ExecMainStartTimestamp=2020-01-01 00:00:00 UTC\nSNAPSHOT\n",
+        encoding="utf-8",
+    )
+    executable.chmod(0o755)
+    monkeypatch.setenv("PATH", str(tmp_path) + os.pathsep + os.environ["PATH"])
+
+
+def test_snapshot_vivo_distingue_codigo_viejo_y_actual(tmp_path, monkeypatch):
+    _systemctl_control(tmp_path, monkeypatch, "active", "running", str(os.getpid()))
+    code = tmp_path / "code.sh"
+    code.write_text("#!/bin/sh\n", encoding="utf-8")
+    result = _correr("--user", "fixture.service", str(code))
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "systemctl --user restart fixture.service" in result.stdout
+    os.utime(code, (0, 0))
+    result = _correr("--user", "fixture.service", str(code))
+    assert result.returncode == 0, result.stdout + result.stderr

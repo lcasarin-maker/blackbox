@@ -1,0 +1,11 @@
+python3 -m pytest -q tests/test_demonio_al_dia.py tests/test_bb_guardia_proceso.py
+................................                                         [100%]
+32 passed in 0.25s
+exit_code=0; skipped=0
+
+systemctl --user restart bb-guardia-proceso.service
+exit_code=0
+
+bash tools/demonio_al_dia.sh --user bb-guardia-proceso.service bin/bb-guardia-proceso
+bb-guardia-proceso.service arranco Sat 2026-10-03 22:09:18 CST, despues de la ultima modificacion de bin/bb-guardia-proceso
+exit_code=0
