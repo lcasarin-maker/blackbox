@@ -1,0 +1,30 @@
+{
+  "scope": "Root review of uncommitted Luna prototype; unit fixtures only, no real runtime evidence",
+  "worktree": "/tmp/bb-controls-runtime",
+  "module": "tools/runtime_batch02_controls.py",
+  "source_hash": "not recorded at execution; findings require regression verification against delivered code",
+  "provenance": "Transcript of actual root tool output, not a model workload capture",
+  "cases": [
+    {
+      "name": "missing-live-process-identity",
+      "mutation": "_minimax(): remove subject.process_pid and every sequence event process_pid",
+      "observed": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw batch-02 measurements satisfy domain predicate"
+      },
+      "expected": "unknown with could_not_run=1; process identity and lifetime unobserved"
+    },
+    {
+      "name": "missing-decode-process-host-and-clean-reset",
+      "mutation": "_m2(): replace rawmetrics with two prefill_tokens_per_second rows, timestamp t0/t1, value 1",
+      "observed": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw batch-02 measurements satisfy domain predicate"
+      },
+      "expected": "unknown with could_not_run=1; full metric modes, reset control and native timestamps absent"
+    }
+  ],
+  "accepted_for_integration": false
+}
