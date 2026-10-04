@@ -1,0 +1,65 @@
+{
+  "observed_at": "2026-10-04T07:49:11.118280+00:00",
+  "scope": "Current host APT/OEM/kernel identity; read-only. Does not establish all previous receipt host identity, approved source profile or freshness.",
+  "commands": [
+    {
+      "command": [
+        "uname",
+        "-r"
+      ],
+      "returncode": 0,
+      "stdout": "6.17.0-1032-nvidia\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "dpkg",
+        "--print-architecture"
+      ],
+      "returncode": 0,
+      "stdout": "arm64\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "dpkg-query",
+        "-W",
+        "-f=${Package}|${Version}|${Architecture}\n",
+        "apt",
+        "gpgv",
+        "ubuntu-keyring"
+      ],
+      "returncode": 0,
+      "stdout": "apt|2.8.3|arm64\ngpgv|2.4.4-2ubuntu17.6|arm64\nubuntu-keyring|2023.11.28.1|all\n",
+      "stderr": ""
+    }
+  ],
+  "dmi": {
+    "sys_vendor": {
+      "status": "observed",
+      "value": "GIGABYTE",
+      "sha256": "fb1f7cbc6d000d25ddd1dbeee139f8270fb8177edaeb712e3d5dec2dac6652d9"
+    },
+    "product_name": {
+      "status": "observed",
+      "value": "AI TOP ATOM",
+      "sha256": "53117632c0af7d416e3d3748deeccb2c1e0e798da01303e0d22c24fc0019ec28"
+    },
+    "product_version": {
+      "status": "observed",
+      "value": "B.1",
+      "sha256": "4746ed1ce4a2e3e64f6acc69e5e76b18cca812a4504b742f53877752d6398641"
+    },
+    "board_name": {
+      "status": "observed",
+      "value": "P4242",
+      "sha256": "5903c178c2a3b210e863a999bb0f9f1c33e09535de7dd27bde4f3422f19e3436"
+    },
+    "bios_version": {
+      "status": "observed",
+      "value": "5.36_0ACUM08",
+      "sha256": "7f502bf17dcb58cf3b90ad3f432dd43c9a9c6073aac9a0699f187b7edac9c22e"
+    }
+  },
+  "could_not_run_count": 0
+}

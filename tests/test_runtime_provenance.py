@@ -9,6 +9,16 @@ pytest = import_module("pytest")
 from tools import runtime_provenance as rp
 
 
+def test_missing_label_name_stays_unknown_after_valid_metric_baseline() -> None:
+    baseline = 'vllm:num_requests_running{engine="0",model_name="m"} 1\n'
+    healthy = rp.parse_capture(baseline, "capture.prom")
+    assert healthy["status"] == "observed" and healthy["could_not_run_count"] == 0
+    for malformed in ("{,}", "{   }", '{engine="0",= "m"}'):
+        negative = rp.parse_capture('vllm:num_requests_running' + malformed + ' 1\n', "capture.prom")
+        assert negative["status"] == "unknown" and negative["could_not_run_count"] == 1
+        assert negative["samples"] == []
+
+
 def test_capture_preserves_observed_kv_series_and_exact_mapping() -> None:
     result = rp.parse_capture(
         '# HELP vllm:kv_cache_usage_perc KV-cache usage. 1 means 100 percent usage.\n'

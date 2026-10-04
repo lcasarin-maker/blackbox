@@ -1,0 +1,2116 @@
+{
+  "source_open": 96,
+  "returned": 96,
+  "missing": 0,
+  "unknown": 0,
+  "duplicated": 0,
+  "malformed": 0,
+  "categories": {
+    "workload_or_lab": 50,
+    "hardware_or_peer": 22,
+    "privileged_access": 10,
+    "missing_history": 3,
+    "external_oem": 8,
+    "user_decision": 3
+  },
+  "actionable_for_complete_closure_now": 0,
+  "preparation_coordinable": 67,
+  "could_not_run_inspection": 14,
+  "close_check_changes": 0,
+  "subject_closed": false,
+  "rows": [
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "El selector y tools.verify_cgroup_plan ya existen. Su close_check agrega fase 01 y las fases 02–05; 02 carece de capture.json, 03 requiere ejecución del driver 615/GPU runtime con dos cgroups y binding 02, 04 no tiene diff/gap demostrado, y 05 requiere evidencia real de cuelgues. El recibo root 2026-10-04 confirma controller dmem disponible pero root dmem.capacity/current vacíos (CNR=0), no sujeto GPU registrado."
+      ],
+      "missing_evidence": [
+        "Raw phase capture.json bound to exact id/phase/boot/kernel/driver for 02–05; phase 03 paired 580/615 stack runs and bound trace; 04 evidence of residual defect or proof native path covers it; safe real hang reproduction/control for 05. Root summary native-cgroup-capability-root-summary-20261004.json is host capability only."
+      ],
+      "next_action": "Coordinación BB: primero revisar tools/verify_cgroup_plan.py y tests/test_closure_kernel_selectors.py::closure_selector_cgroup_plan_01; preparar dossier 02–05 con los esquemas exactos. Operador Luis: sólo en canario GPU/lab, capturar fases 02/03 y 05 con salida raw; no inventar el dmem vacío como ausencia de controller. Revaluar si 04 necesita parche cuando 03 confirme el stack. Ref: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json; tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-02-TRAZA-direct-close-current.log; tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/comparison.txt; tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/readiness.txt; tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/host-controls.txt.",
+      "responsible": "Coordinación BB; para recuperación de históricos, custodio del artifact store si corresponde.",
+      "evidence": [
+        "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tools/verify_cgroup_plan.py",
+        "tests/test_closure_kernel_selectors.py",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-02-TRAZA-direct-close-current.log",
+        "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/comparison.txt",
+        "tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/readiness.txt",
+        "tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/host-controls.txt",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de las rutas citadas: 0. La captura nativa root actual observó controller dmem y contadores root vacíos con could_not_run=0; eso no prueba registro GPU. El selector ejecutable falla mientras falten capturas por fase; por tanto, preparación sí, cierre íntegro hoy no.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "Falta sujeto real de tres nodos, digest/image y NCCL por rank, primera inferencia PP, control sano/negativo y salida literal; inventario local solo vio MTU/link y reportó CNR=19."
+      ],
+      "missing_evidence": [
+        "Falta sujeto real de tres nodos, digest/image y NCCL por rank, primera inferencia PP, control sano/negativo y salida literal; inventario local solo vio MTU/link y reportó CNR=19."
+      ],
+      "next_action": "Coordinación BB: preparar protocolo y captura rank/image-bound; operador Luis: aportar canario Spark de tres nodos y ejecutar primera inferencia con rollback. Ref explícita: tasks/backlog/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01-original-selector-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md",
+        "docs/evidence/BB-INSTRUMENTS-network.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Falta sujeto real de tres nodos, digest/image y NCCL por rank, primera inferencia PP, control sano/negativo y salida literal; inventario local solo vio MTU/link y reportó CNR=19.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "Falta stack/image fijado y captura real de mapeo DCP, gather/LSE, parcial no cero, oráculo DCP1 y acceptance; el ensayo de pre-trim OOM requiere headroom seguro por separado."
+      ],
+      "missing_evidence": [
+        "Falta stack/image fijado y captura real de mapeo DCP, gather/LSE, parcial no cero, oráculo DCP1 y acceptance; el ensayo de pre-trim OOM requiere headroom seguro por separado."
+      ],
+      "next_action": "Coordinación BB: concretar schema/oráculo y secuencia de captura; operador Luis: ejecutar canario compatible y ensayo separado de carga/headroom. Ref explícita: tasks/backlog/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01-original-selector-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01.md",
+        "docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Falta stack/image fijado y captura real de mapeo DCP, gather/LSE, parcial no cero, oráculo DCP1 y acceptance; el ensayo de pre-trim OOM requiere headroom seguro por separado.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "No hay log local con stack/modelo fijados, límite de compaction/KV reset, control sin compaction ni tool-call/calidad y métricas posteriores."
+      ],
+      "missing_evidence": [
+        "No hay log local con stack/modelo fijados, límite de compaction/KV reset, control sin compaction ni tool-call/calidad y métricas posteriores."
+      ],
+      "next_action": "Coordinación BB: preparar harness y esquema de observación; operador Luis: capturar sesiones canary con/sin compaction sobre sujeto disponible. Ref explícita: tasks/backlog/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01-original-selector-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. No hay log local con stack/modelo fijados, límite de compaction/KV reset, control sin compaction ni tool-call/calidad y métricas posteriores.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-QWEN-LONG-AGENT-STOP-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "No hay captura SSE local que pruebe tarea aún pendiente, stop prematuro recuperable ni ausencia de llamadas mutantes repetidas; el hilo externo no audita adjuntos."
+      ],
+      "missing_evidence": [
+        "No hay captura SSE local que pruebe tarea aún pendiente, stop prematuro recuperable ni ausencia de llamadas mutantes repetidas; el hilo externo no audita adjuntos."
+      ],
+      "next_action": "Coordinación BB: definir replay de sesión, condición de parada y deduplicación; operador Luis: ejecutar soak/replay comparativo y conservar turn-boundary/finish/tool calls. Ref explícita: tasks/backlog/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01-original-selector-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. No hay captura SSE local que pruebe tarea aún pendiente, stop prematuro recuperable ni ausencia de llamadas mutantes repetidas; el hilo externo no audita adjuntos.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "Selector reportó UNKNOWN, fail=0, could_not_run=1; falta captura del enlace/velocidad y matriz/ensamblado sobre los dispositivos NVMe USB reales con control sano y negativo."
+      ],
+      "missing_evidence": [
+        "Selector reportó UNKNOWN, fail=0, could_not_run=1; falta captura del enlace/velocidad y matriz/ensamblado sobre los dispositivos NVMe USB reales con control sano y negativo."
+      ],
+      "next_action": "Coordinación BB: completar contrato de captura por dispositivo; operador Luis: conectar el arreglo canary y aportar capturas pre/post reinicio sin escribir datos productivos. Ref explícita: tasks/backlog/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.md y tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.md",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-batch02-03-primary-coverage.json",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Selector reportó UNKNOWN, fail=0, could_not_run=1; falta captura del enlace/velocidad y matriz/ensamblado sobre los dispositivos NVMe USB reales con control sano y negativo.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "El gate de obsolescencia/revisión, símbolo objetivo y rechazo de parche se puede implementar y verificar localmente; la primera inferencia SM121 sigue siendo validación posterior de runtime."
+      ],
+      "missing_evidence": [
+        "El gate de obsolescencia/revisión, símbolo objetivo y rechazo de parche se puede implementar y verificar localmente; la primera inferencia SM121 sigue siendo validación posterior de runtime."
+      ],
+      "next_action": "Coordinación BB: implementar gate determinista de digest/revisión/símbolo con parche obsoleto negativo y dejar canario real como evidencia separada. Ref explícita: tasks/backlog/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01-original-selector-current.log.",
+      "responsible": "Coordinación BB; para recuperación de históricos, custodio del artifact store si corresponde.",
+      "evidence": [
+        "tasks/backlog/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. El gate de obsolescencia/revisión, símbolo objetivo y rechazo de parche se puede implementar y verificar localmente; la primera inferencia SM121 sigue siendo validación posterior de runtime.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-05-CUELGUES",
+      "category": "workload_or_lab",
+      "blockers": [
+        "La ficha madre compila varios incidentes/workloads; faltan reproducciones locales fijadas, memoria/host-headroom y controles que separen OOM de hang; relatos externos no prueban el sujeto."
+      ],
+      "missing_evidence": [
+        "La ficha madre compila varios incidentes/workloads; faltan reproducciones locales fijadas, memoria/host-headroom y controles que separen OOM de hang; relatos externos no prueban el sujeto."
+      ],
+      "next_action": "Coordinación BB: aislar escenarios seguros reproducibles y definir telemetría; operador Luis: aportar captura de workload canary con límites y rollback. Ref explícita: tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-05-CUELGUES-direct-close-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-05-CUELGUES-direct-close-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. La ficha madre compila varios incidentes/workloads; faltan reproducciones locales fijadas, memoria/host-headroom y controles que separen OOM de hang; relatos externos no prueban el sujeto.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FEATURE-FORUM-RESCUE-RUNBOOK-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "La barrera protectora de destino vacío/UUID y fixtures de disco ausente se puede completar localmente; los casos OEM concretos quedan etiquetados aparte."
+      ],
+      "missing_evidence": [
+        "La barrera protectora de destino vacío/UUID y fixtures de disco ausente se puede completar localmente; los casos OEM concretos quedan etiquetados aparte."
+      ],
+      "next_action": "Coordinación BB: implementar/verificar las guardas de mountpoint, identidad UUID y abort seguro usando fixture ausente/incorrecto. Ref explícita: tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-RESCUE-RUNBOOK-01-direct-close-current.log.",
+      "responsible": "Coordinación BB; para recuperación de históricos, custodio del artifact store si corresponde.",
+      "evidence": [
+        "tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-RESCUE-RUNBOOK-01-direct-close-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. La barrera protectora de destino vacío/UUID y fixtures de disco ausente se puede completar localmente; los casos OEM concretos quedan etiquetados aparte.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "category": "privileged_access",
+      "blockers": [
+        "La ficha declara pendientes apt-get check con privilegio válido y ensayo de actualización/selección de recuperación/rollback; no hay autorización/acceso root ni laboratorio OEM para esos pasos."
+      ],
+      "missing_evidence": [
+        "La ficha declara pendientes apt-get check con privilegio válido y ensayo de actualización/selección de recuperación/rollback; no hay autorización/acceso root ni laboratorio OEM para esos pasos."
+      ],
+      "next_action": "Coordinación BB: preparar el protocolo y recopilar fuente de compatibilidad OEM; operador Luis: habilitar ventana/lab y ejecutar con privilegio y rollback comprobado. Ref explícita: tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-KERNEL-INITRD-UPDATE-GATE-direct-close-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-KERNEL-INITRD-UPDATE-GATE-direct-close-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. La ficha declara pendientes apt-get check con privilegio válido y ensayo de actualización/selección de recuperación/rollback; no hay autorización/acceso root ni laboratorio OEM para esos pasos.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01",
+      "category": "missing_history",
+      "blockers": [
+        "Los selectores y el router existen. La ficha cita recibo con UNKNOWN/CNR y cobertura parcial, sin un defecto concreto del router reproducido."
+      ],
+      "missing_evidence": [
+        "Evidencia cruda y controles negativos aceptados por cada ID soportado; resultados literales y conteos PASS/FAIL/UNKNOWN/CNR."
+      ],
+      "next_action": "Leer el recibo por ID y convertir cada UNKNOWN/CNR en una solicitud de captura cruda específica; corregir solo una predicado si un caso raw identifica un fallo actual del evaluador. No recrear selector/router.",
+      "responsible": "BB",
+      "evidence": [
+        "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01.md",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/forum-original-selector-primary-run.json",
+        "tools/forum_finding.py",
+        "tools/hardware_evidence.py",
+        "tests/test_debt_registration_controls.py",
+        "tools/verify_forum_finding.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "La captura de red actual lee MTU sysfs de un solo netdev y netlink no disponible; no representa ocho nodos."
+      ],
+      "missing_evidence": [
+        "MTU por interfaz y nodo contra topología/OEM; corrida NCCL sana y negativa; primera inferencia, endpoint/logs por rank, stack y rollback."
+      ],
+      "next_action": "Solicitar al operador del clúster mapa OEM de ocho nodos y capturas MTU por interfaz; después correr NCCL y primera inferencia con endpoint/log por rank, caso sano y rollback.",
+      "responsible": "BB; operador Luis para hardware/peer",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01.md",
+        "docs/evidence/BB-INSTRUMENTS-network.md",
+        "tools/runtime_batch01_controls.py",
+        "tools/host_diagnostics.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "La ficha dice que provider_trace no observa cola por paso/scheduler; no hay traza de la carga TP8 descrita."
+      ],
+      "missing_evidence": [
+        "Stack TP8/DCP4 y digest fijados; decode largo + cuatro prefills; orden/espera, throughput, stalls, errores/completitud/corrección; control stock y rollback."
+      ],
+      "next_action": "Preparar una captura temporal de cola por paso solo si el runtime fijado la expone; de lo contrario, solicitar corrida de decode largo + cuatro prefills, stock vs flag de rollback y registros de stalls/throughput en laboratorio.",
+      "responsible": "BB; operador Luis para workload/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01.md",
+        "tools/provider_trace.py",
+        "tools/runtime_batch01_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-FORUM-MEMORY-RECOVERY-SOAK-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "La ficha documenta solo telemetría puntual; falta serie temporal y PID/vida del RPC remoto."
+      ],
+      "missing_evidence": [
+        "Stack/servidor/versiones; series UMA/swap/PSI/RSS y PID RPC; cierre ordenado cliente/servidor con medidas antes/después y control sano."
+      ],
+      "next_action": "Pedir al operador soak en stack fijado con serie UMA/swap/PSI/RSS atribuida a PID y cierre cliente/servidor ordenado, midiendo recuperación contra control sano.",
+      "responsible": "BB; operador Luis para workload/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-MEMORY-RECOVERY-SOAK-01.md",
+        "tools/atom_gpu_telemetry.py",
+        "tools/memory_profile.py",
+        "tools/hardware_batch02_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "La evidencia actual etiqueta lector offline parcial: conserva fragmentos y [DONE], pero no demuestra siguiente tool call post-cancelación en runtime."
+      ],
+      "missing_evidence": [
+        "Matriz parser×MTP×cancelación, llamada mock tipada antes/después de cancelación, finish reason/exit/restart y control de recuperación tras reinicio."
+      ],
+      "next_action": "Completar solo los campos faltantes del recibo cancelación/finish reason si el selector los señala; luego pedir corrida fijada con mock tool, cancel mid-stream y llamada siguiente en mismo proceso.",
+      "responsible": "BB; operador Luis para workload/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01.md",
+        "tools/runtime_batch03_controls.py",
+        "tests/test_debt_registration_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01",
+      "category": "external_oem",
+      "blockers": [
+        "Builds y fallos descritos son versiones comunitarias no auditadas; no hay artefacto reproducible identificado en BB."
+      ],
+      "missing_evidence": [
+        "Identidad exacta GB10/CUDA/driver/vLLM/Torch/image; build reproducible y offline; rutas CUTLASS/Triton/Inductor y controles positivos/negativos."
+      ],
+      "next_action": "Solicitar al autor/OEM imagen/digest, logs y build manifests de las combinaciones reportadas; en cuanto lleguen, evaluarlos con el selector/matriz existentes en GB10 compatible.",
+      "responsible": "BB; coordinación solicita OEM/proveedor",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01.md",
+        "tools/runtime_batch03_controls.py",
+        "tests/test_debt_registration_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "La evidencia dice que provider_trace observa request/worker/restart, pero no progreso de rank ni agregado entre dos motores; no hay captura multinodo."
+      ],
+      "missing_evidence": [
+        "Digest/config; identidad y recursos de ambos motores/ranks; colectivo y petición real con progreso, control negativo y aislamiento/recuperación."
+      ],
+      "next_action": "Solicitar corrida de dos motores Ray con digest/config fijos, recursos por rank, colectivo y petición real; completar campos solo si el recibo actual los reporta faltantes.",
+      "responsible": "BB; operador Luis para workload/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01.md",
+        "tools/provider_trace.py",
+        "tools/runtime_batch04_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+      "category": "missing_history",
+      "blockers": [
+        "El recibo declara que el paquete aisleriot del caso fuente está ausente, apt-get check no pudo correr y no hay recibo de la simulación crítica del caso sujeto; también falta el guard de invocación APT en el repo."
+      ],
+      "missing_evidence": [
+        "Transacción APT peligrosa simulada con remoción crítica interceptada antes de aplicar y transacción inocua permitida, ambas capturadas con salida literal; el simulador usa el estado de paquete/índices pertinente."
+      ],
+      "next_action": "Completar el guard de invocación APT en el punto de transacción existente para bloquear/declarar remoción crítica; demostrar con simulación segura del plan peligroso y transacción inocua, conservando evidencia cruda y sin aplicar cambios.",
+      "responsible": "BB",
+      "evidence": [
+        "tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md",
+        "tools/preflight.py",
+        "tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+        "tools/verify_apt_critical_removals.py",
+        "tests/test_debt_registration_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+      "category": "privileged_access",
+      "blockers": [
+        "La captura actual obtiene estado/timeout/nowayout por sysfs pero owner es UNKNOWN; el procedimiento excluye abrir /dev/watchdog."
+      ],
+      "missing_evidence": [
+        "Propietario real, boot/pstore correlacionado, compatibilidad OEM y control de recuperación con timeout/nowayout."
+      ],
+      "next_action": "Preparar captura readonly acotada de ownership y pstore/journal correlacionados; solicitar al operador ejecución con privilegios y recibo de recuperación OEM sin tocar política.",
+      "responsible": "BB; operador Luis para acceso root/lab",
+      "evidence": [
+        "tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md",
+        "tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/progress.txt",
+        "docs/evidence/BB-INSTRUMENTS-devices.md",
+        "tools/forum_finding.py",
+        "tools/forum_hardware_subjects.py",
+        "tools/host_diagnostics.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "FORUM-00-REALTEK-EEE-DIRECT-LINK",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "La captura local muestra EEE activo/inactivo, pero no anuncia partner EEE y excluye un A/B con enlace directo/peer."
+      ],
+      "missing_evidence": [
+        "Tupla OEM/kernel/driver/peer; múltiples repeticiones EEE on/off; control switch/no-EEE; stalls, SSH/tráfico y rollback."
+      ],
+      "next_action": "Solicitar a dueño NIC/peer capturas del stack exacto y ensayos repetidos EEE activado/desactivado/control switch, con estado de tráfico/SSH y rollback documentado.",
+      "responsible": "BB; operador Luis para hardware/peer",
+      "evidence": [
+        "tasks/backlog/FORUM-00-REALTEK-EEE-DIRECT-LINK.md",
+        "docs/evidence/BB-INSTRUMENTS-network.md",
+        "tools/forum_finding.py",
+        "tools/forum_hardware_subjects.py",
+        "tools/host_diagnostics.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "El close_check es implementado y el selector actual usa el verificador existente; el recibo más reciente del 2026-10-04 devuelve status=unknown, fail=0, could_not_run=1 porque falta la captura cruda de comandos con timestamp del ensayo GPU. El sujeto no tiene A/B de clocks, soak, telemetría ni rollback."
+      ],
+      "missing_evidence": [
+        "captura nativa completa commands.json con plan predeclarado, identidad de host/driver/firmware, cap stock y capped, muestras telemetry/workload positivas y comparación; rollback medido"
+      ],
+      "next_action": "Conservar UNKNOWN y el criterio abierto hasta que el operador prepare y ejecute el A/B físico en GPU canary con timestamps, workload, rollback y capturas crudas; después volver a correr el selector original.",
+      "responsible": "coordinación BB prepara el protocolo; operador Luis ejecuta el ensayo en GPU/lab",
+      "evidence": [
+        "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01.md",
+        "tools/verify_gpu_clock_cap_ab.py",
+        "tests/test_debt_registration_controls.py::test_debt_close_check_verify_gpu_clock_cap_ab_01",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/three-hardware-original-selectors-primary-run.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01-current-selector.log",
+        "tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt"
+      ],
+      "actionable_now": false,
+      "rationale": "El instrumento está presente y puede clasificar una captura válida; sus fixtures prueban parsing y controles. El recibo real del selector sigue unknown por falta de commands.json, y cerrar el criterio requiere una comparación física que no es seguro inventar ni inferir de fixtures.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01",
+      "category": "user_decision",
+      "blockers": [
+        "El perfil aprobado de repositorios externos y la política de frescura siguen pendientes de decisión; la evidencia de APT local no aprueba terceros."
+      ],
+      "missing_evidence": [
+        "decisión registrada de URLs/suites/arquitecturas/keyrings admitidos y cutoff de frescura; ensamblaje/verificación completa posterior"
+      ],
+      "next_action": "Aplicar la decisión de perfil ya abierta en la boleta y después integrar el verificador con cobertura de fuentes, firmas y frescura.",
+      "responsible": "Luis para decisión; coordinación BB para implementación",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+        "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-effective-index-hashes-collector.txt",
+        "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-effective-index-hashes.json",
+        "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-effective-package-hashes-collector.txt",
+        "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-effective-package-hashes-with-sha512-collector.txt"
+      ],
+      "actionable_now": false,
+      "rationale": "Hay evidencia amplia de positivos y negativos APT aislados y parser probado; la selección de perfil/edad afecta qué upgrades permite el guard.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "No hay canario funcional real en la combinación DFlash/xgrammar/vLLM fijada; requiere runtime y replay negativo controlado."
+      ],
+      "missing_evidence": [
+        "digest/commits efectivos y capturas HTTP/parser/chunks/finish reason; casos stream/no-stream/tool/parallel/follow-up; rollback"
+      ],
+      "next_action": "Preparar una matriz reproducible en canario GPU con stack fijado, ejecutar positivo y revisión incompatible como negativo, y guardar respuestas/logs y rollback.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+        "tasks/evidence/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01/ (directorio ausente al inspeccionar)"
+      ],
+      "actionable_now": false,
+      "rationale": "La evidencia fuente externa y el close_check pendiente describen semántica de runtime que no se acredita con fixtures ni benchmarks.",
+      "could_not_run_inspection": 1
+    },
+    {
+      "id": "DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "No hay captura SSE nativa ni ejecución observada del mock, salud del proceso o rollback para digest de imagen fijado."
+      ],
+      "missing_evidence": [
+        "respuesta HTTP/SSE cruda; argumentos byte-exactos; resultado mock; finish reason; continuidad del proceso y rollback"
+      ],
+      "next_action": "Ejecutar en canario GPU el ciclo texto→tool mock→texto en digest fijado y control negativo; conservar SSE y logs de RPC/timeout.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+        "tasks/evidence/DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01/ (directorio ausente al inspeccionar)"
+      ],
+      "actionable_now": false,
+      "rationale": "Solo existe lector offline parcial; la conducta de tool call requiere proceso de inferencia real.",
+      "could_not_run_inspection": 1
+    },
+    {
+      "id": "DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "Relato externo sin versiones, logs ni A/B; provocar presión/OOMD local conlleva ensayo de workload no disponible en lectura segura."
+      ],
+      "missing_evidence": [
+        "versiones e imágenes efectivas; PSI/swap/UMA; journal de oomd y dependientes; positivo/negativo A/B en canario; recuperación"
+      ],
+      "next_action": "Fijar modelo/stack y diseñar canario recuperable con captura redactada de presión y oomd; comprobar rollback sin desactivar oomd global.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+        "tasks/evidence/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01/ (directorio ausente al inspeccionar)"
+      ],
+      "actionable_now": false,
+      "rationale": "El criterio depende de causalidad y recuperación bajo presión en el servicio real; desactivar OOMD globalmente queda excluido.",
+      "could_not_run_inspection": 1
+    },
+    {
+      "id": "DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "No hay mapa Ray por nodo ni admisión positiva/negativa con imagen y backend fijados."
+      ],
+      "missing_evidence": [
+        "image digest; mapa de recursos Ray/node; backend/SM/kernel; smoke positivo y negativo; rollback"
+      ],
+      "next_action": "Ejecutar smoke de admisión y generación en canario GB10 con los tags fijados y guardar recursos Ray, kernel y resultado; comparar control sin GPU genérica.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+        "tasks/evidence/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01/ (directorio ausente al inspeccionar)"
+      ],
+      "actionable_now": false,
+      "rationale": "La evidencia de instrumento es parcial y el fallo descrito depende del stack y el nodo GB10 real.",
+      "could_not_run_inspection": 1
+    },
+    {
+      "id": "DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "El prototipo de captura no acredita presupuesto KV/staging/graphs ni corrección/soak real posterior a warmup."
+      ],
+      "missing_evidence": [
+        "captura consolidada de receta con digest/params y raw results de workload real; perfil por topología; rollback funcional"
+      ],
+      "next_action": "Usar exportación existente de receta/sparkrun en canario compatible y medir presupuesto por etapa más corrección/soak; dejar unknown ante campos faltantes.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+        "tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/prototype-capture.json"
+      ],
+      "actionable_now": false,
+      "rationale": "El único prototype-capture no sustituye workload medido ni presupuesto completo; la ficha prohíbe inferir seguridad desde weights-fit.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "La observación local no prueba sesión gráfica funcional tras actualización ni recuperación/rollback en el OEM citado."
+      ],
+      "missing_evidence": [
+        "stack/OEM y versiones; caso positivo y negativo post-update; sesión/telemetría y rollback capturados"
+      ],
+      "next_action": "Diseñar un canario de actualización reversible con sesión local/remota verificada y recuperación; recoger stack exacto y controles negativos.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+        "tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01/host-observation.txt"
+      ],
+      "actionable_now": false,
+      "rationale": "La evidencia existente es solo host-observation; validación requiere el stack y ciclo de sesión/recovery.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "La observación del host no acredita aislamiento de fallos NM/supplicant frente a freeze ni política recuperable sobre stack citado."
+      ],
+      "missing_evidence": [
+        "capturas de fallo y host liveness; versiones NM/supplicant/kernel; recuperación acotada y rollback"
+      ],
+      "next_action": "Ejecutar en canario con acceso de rescate un fallo acotado de NM/supplicant, distinguirlo de freeze y demostrar recuperación/rollback.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+        "tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/host-observation.txt"
+      ],
+      "actionable_now": false,
+      "rationale": "La ficha exige ensayo runtime y rollback; no puede inferirse de estado de servicio.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FORUM-02-GX10-READ-INTEGRITY",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "La lectura local de instrumento no contrasta bytes de storage con referencia externa ni separa modos de caché/NVMe/firmware."
+      ],
+      "missing_evidence": [
+        "referencia externa confiable y bytes esperados; resultados buffered/O_DIRECT/cache; salud NVMe y evidencia firmware; control corrupto"
+      ],
+      "next_action": "Preparar ensayo no destructivo con datos de referencia y comparación buffered/O_DIRECT en el GX10, documentando cache/NVMe/firmware y control negativo.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+        "tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/host-observation.txt",
+        "tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/read-integrity-instrument.txt"
+      ],
+      "actionable_now": false,
+      "rationale": "Existe instrumento textual, pero integridad requiere sujeto de almacenamiento y referencia independiente.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01",
+      "category": "privileged_access",
+      "blockers": [
+        "Selector ya implementado; recibo registra 0 PASS, 0 FAIL, 2 UNKNOWN, 2 could_not_run por captura ausente. Evidencia experimental runtime/cuda requiere bpftrace root y probes accesibles."
+      ],
+      "missing_evidence": [
+        "Selector ya implementado; recibo registra 0 PASS, 0 FAIL, 2 UNKNOWN, 2 could_not_run por captura ausente. Evidencia experimental runtime/cuda requiere bpftrace root y probes accesibles."
+      ],
+      "next_action": "Coordinación BB: preservar/verificar el recibo y especificar schema; operador Luis: aportar captura autorizada de runtime/probes sin alterar el host. Ref explícita: tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md y tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/memory-original-selector-primary-run.json",
+        "tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Selector ya implementado; recibo registra 0 PASS, 0 FAIL, 2 UNKNOWN, 2 could_not_run por captura ausente. Evidencia experimental runtime/cuda requiere bpftrace root y probes accesibles.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "Inventario lee zonas, pero faltan labels/relación OEM validada y A/B del workload real con cap, clocks efectivos, throughput, frescura y rollback."
+      ],
+      "missing_evidence": [
+        "Inventario lee zonas, pero faltan labels/relación OEM validada y A/B del workload real con cap, clocks efectivos, throughput, frescura y rollback."
+      ],
+      "next_action": "Coordinación BB: completar mapeo/captura de fuentes disponibles; operador Luis: aportar perfil OEM y ejecutar A/B canary seleccionado con rollback. Ref explícita: tasks/backlog/DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md y tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Inventario lee zonas, pero faltan labels/relación OEM validada y A/B del workload real con cap, clocks efectivos, throughput, frescura y rollback.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01",
+      "category": "external_oem",
+      "blockers": [
+        "La inspección local confirma que stop.sh y contrato externo no están en repo; falta invocación exacta, orden/dependencias y tag→digest, sin exponer secretos."
+      ],
+      "missing_evidence": [
+        "La inspección local confirma que stop.sh y contrato externo no están en repo; falta invocación exacta, orden/dependencias y tag→digest, sin exponer secretos."
+      ],
+      "next_action": "Coordinación BB: solicitar al OEM/autor el stop.sh, contrato y pin tag→digest saneado; después implementar verificación con fixture. Ref explícita: tasks/backlog/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01-original-selector-current.log.",
+      "responsible": "Coordinación BB solicita al OEM/autor y obtiene el contrato faltante; después implementa la verificación.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. La inspección local confirma que stop.sh y contrato externo no están en repo; falta invocación exacta, orden/dependencias y tag→digest, sin exponer secretos.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "No existe captura local fijada de MTP/model/tokenizer/prompt con resultado semántico y aceptación por posición frente a referencia; readiness o score agregado no cubren el criterio."
+      ],
+      "missing_evidence": [
+        "No existe captura local fijada de MTP/model/tokenizer/prompt con resultado semántico y aceptación por posición frente a referencia; readiness o score agregado no cubren el criterio."
+      ],
+      "next_action": "Coordinación BB: definir criterios semánticos y salida por posición; operador Luis: ejecutar el canario MTP fijado y aportar resultados sanos/negativos. Ref explícita: tasks/backlog/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01-original-selector-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. No existe captura local fijada de MTP/model/tokenizer/prompt con resultado semántico y aceptación por posición frente a referencia; readiness o score agregado no cubren el criterio.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "SSE capture reutilizable solo conserva deltas visibles; falta captura del wedge real, progreso engine/rank/collective y aceptación MTP en imagen/prompt fijados."
+      ],
+      "missing_evidence": [
+        "SSE capture reutilizable solo conserva deltas visibles; falta captura del wedge real, progreso engine/rank/collective y aceptación MTP en imagen/prompt fijados."
+      ],
+      "next_action": "Coordinación BB: especificar caso reproducible y telemetría; operador Luis: ejecutar replay controlado sobre stack real y guardar salida/ranks. Ref explícita: tasks/backlog/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01-original-selector-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. SSE capture reutilizable solo conserva deltas visibles; falta captura del wedge real, progreso engine/rank/collective y aceptación MTP en imagen/prompt fijados.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+      "category": "user_decision",
+      "blockers": [
+        "Selector dio UNKNOWN/fail=0/CNR=1 y la guard local necesita UUID/source esperados; no existe identidad de destino esperada autorizada, y ningún backup/restore fue corrido."
+      ],
+      "missing_evidence": [
+        "Selector dio UNKNOWN/fail=0/CNR=1 y la guard local necesita UUID/source esperados; no existe identidad de destino esperada autorizada, y ningún backup/restore fue corrido."
+      ],
+      "next_action": "Luis: declarar el UUID y origen esperados del destino de respaldo; coordinación BB: entonces ejecutar guard de sólo lectura y fixture de discrepancia, sin iniciar backup. Ref explícita: tasks/backlog/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01.md y tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json.",
+      "responsible": "Luis decide/aporta la identidad esperada del recurso antes de validar.",
+      "evidence": [
+        "tasks/backlog/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01.md",
+        "docs/evidence/BB-INSTRUMENTS-boot.md",
+        "tests/test_boot_storage_inventory.py",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Selector dio UNKNOWN/fail=0/CNR=1 y la guard local necesita UUID/source esperados; no existe identidad de destino esperada autorizada, y ningún backup/restore fue corrido.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "La inspección fotográfica prueba montaje reportado, no humedad/punto de rocío, presión UMA, carga sostenida ni baseline matched; falta canario comparable con rollback."
+      ],
+      "missing_evidence": [
+        "La inspección fotográfica prueba montaje reportado, no humedad/punto de rocío, presión UMA, carga sostenida ni baseline matched; falta canario comparable con rollback."
+      ],
+      "next_action": "Coordinación BB: fijar protocolo de ambiente/UMA/performance; operador Luis: aportar lecturas de ambiente y ejecutar canario reversible bajo carga previamente aprobada. Ref explícita: tasks/backlog/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01.md y tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. La inspección fotográfica prueba montaje reportado, no humedad/punto de rocío, presión UMA, carga sostenida ni baseline matched; falta canario comparable con rollback.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "La identidad de arquitectura/driver/CUDA/imagen se reutiliza parcialmente, pero no hay logs locales ni canario de carga, primera inferencia, salida semántica y soak con rollback."
+      ],
+      "missing_evidence": [
+        "La identidad de arquitectura/driver/CUDA/imagen se reutiliza parcialmente, pero no hay logs locales ni canario de carga, primera inferencia, salida semántica y soak con rollback."
+      ],
+      "next_action": "Coordinación BB: cerrar contrato de admisión y controles negativos; operador Luis: correr canario en runtime/OEM compatible con digest fijado. Ref explícita: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01-direct-close-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01-direct-close-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. La identidad de arquitectura/driver/CUDA/imagen se reutiliza parcialmente, pero no hay logs locales ni canario de carga, primera inferencia, salida semántica y soak con rollback.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+      "category": "privileged_access",
+      "blockers": [
+        "ABI y controles offline existen; bpftrace exige root incluso para listar/compilar probes y el host no produjo símbolos/captura runtime/CUDA."
+      ],
+      "missing_evidence": [
+        "ABI y controles offline existen; bpftrace exige root incluso para listar/compilar probes y el host no produjo símbolos/captura runtime/CUDA."
+      ],
+      "next_action": "Coordinación BB: dejar comandos/output acotados listos y validar parser con fixtures; operador Luis: autorizar y capturar probes en host canary con root. Ref explícita: tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-MEMORYSAVER-02-TRAZADOR-direct-close-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-MEMORYSAVER-02-TRAZADOR-direct-close-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. ABI y controles offline existen; bpftrace exige root incluso para listar/compilar probes y el host no produjo símbolos/captura runtime/CUDA.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FORUM-02-PSTORE-KERNEL-REGRESSION",
+      "category": "privileged_access",
+      "blockers": [
+        "Lector local reportó /sys/fs/pstore denegado (CNR=1), cero registros observados; falta lectura real tras reboot y fuente vendor aplicable a la pila exacta."
+      ],
+      "missing_evidence": [
+        "Lector local reportó /sys/fs/pstore denegado (CNR=1), cero registros observados; falta lectura real tras reboot y fuente vendor aplicable a la pila exacta."
+      ],
+      "next_action": "Coordinación BB: recopilar fuente OEM/versiones y preparar lector; operador Luis: habilitar captura autorizada de pstore en canary y entregar identidad completa. Ref explícita: tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-02-PSTORE-KERNEL-REGRESSION-direct-close-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-02-PSTORE-KERNEL-REGRESSION-direct-close-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Lector local reportó /sys/fs/pstore denegado (CNR=1), cero registros observados; falta lectura real tras reboot y fuente vendor aplicable a la pila exacta.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "El selector existe; la captura kernel actual marca explícitamente que la entrega al receptor no fue observada."
+      ],
+      "missing_evidence": [
+        "Prueba focal por configuración estática/target y receptor real; control negativo; salida literal del selector."
+      ],
+      "next_action": "Con el operador, ejecutar una captura de entrega netconsole hacia receptor de laboratorio y registrar el mensaje recibido, control negativo y configuración/rollback; conservar el selector focal existente.",
+      "responsible": "BB",
+      "evidence": [
+        "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01.md",
+        "tools/kernel_capture.py",
+        "docs/evidence/BB-INSTRUMENTS-kernel.md",
+        "tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json",
+        "tests/test_debt_registration_controls.py",
+        "tests/test_closure_kernel_selectors.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "La evidencia registra que no existe conversación multi-turno capturada ni recibo de efectos tool mock."
+      ],
+      "missing_evidence": [
+        "Stack/modelo/template fijados; canario aislado; salida tool mocked por turno; controles limpios/positivos; registro de side effects."
+      ],
+      "next_action": "Solicitar corrida canario en sandbox aislado con modelo/template/digest fijos, tool mock sin efectos externos y registro por turno; usar el evaluador actual sobre el recibo.",
+      "responsible": "BB; operador Luis para workload/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md",
+        "tools/runtime_batch01_controls.py",
+        "tests/test_debt_registration_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "No hay captura actual de dos nodos ni prueba real de twin GID, NCCL y recuperación fría."
+      ],
+      "missing_evidence": [
+        "Identidad de dos nodos/NIC/firmware/driver; GID por puerto; NCCL sano/fallido; cold recovery y rollback con logs."
+      ],
+      "next_action": "Solicitar al operador DualSpark capturas de identidad/topología/GID, caso NCCL positivo/negativo y recuperación fría con rollback; evaluar con el selector existente.",
+      "responsible": "BB; operador Luis para hardware/peer",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01.md",
+        "tools/runtime_batch01_controls.py",
+        "tools/hardware_batch02_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "No hay captura de concurrency sweep del build/modelo Glimmer/dFlash con max_seqs efectivo."
+      ],
+      "missing_evidence": [
+        "Build y modelo exactos; concurrency sweep; latencia/throughput/memoria/calidad; control sin dFlash y rollback."
+      ],
+      "next_action": "Solicitar benchmark en stack fijado con sweep de secuencias, medidas de latencia/throughput/calidad y control sin dFlash; usar selector actual al recibir recibos.",
+      "responsible": "BB; operador Luis para workload/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01.md",
+        "tools/runtime_batch02_controls.py",
+        "tests/test_debt_registration_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "Falta evidencia de build efectivo y primera request NVFP4/CUTLASS en el sujeto GB10."
+      ],
+      "missing_evidence": [
+        "Digest/arquitectura/deps fijados; primera solicitud y rutas CUTLASS; control de fallo/fallback; outputs/latencia y rollback."
+      ],
+      "next_action": "Solicitar corrida primera-request en GB10 con digest y dependencias fijados, ruta CUTLASS más fallback/control; capturar logs raw para el evaluador actual.",
+      "responsible": "BB; operador Luis para workload/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01.md",
+        "tools/runtime_batch03_controls.py",
+        "tests/test_debt_registration_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "No hay recibo de build efectivo ni ejecución offline del contenedor con digest fijado."
+      ],
+      "missing_evidence": [
+        "Digest/arquitectura de contenedor; dependencias y artefactos; build efectivo; corrida offline y control con red; logs reproducibles."
+      ],
+      "next_action": "Solicitar o preparar ejecución aislada del contenedor fijado con inventario de build/artefactos y red deshabilitada, conservando comparación con control online; evaluar con selector existente.",
+      "responsible": "BB; operador Luis para workload/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01.md",
+        "tools/runtime_batch03_controls.py",
+        "tests/test_debt_registration_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01",
+      "category": "external_oem",
+      "blockers": [
+        "No se aportó patch/build exacto del proveedor ni corpus/resultados semánticos reproducibles."
+      ],
+      "missing_evidence": [
+        "Versiones/digest del tokenizer y patch; corpus boundary/texto-imagen; semántica, precisión, negativos y reversión por build."
+      ],
+      "next_action": "Solicitar al proveedor patch, build digests y reproducer; revisar con evaluador actual y pedir corrida del corpus de límites text/image con control y rollback.",
+      "responsible": "BB; coordinación solicita OEM/proveedor",
+      "evidence": [
+        "tasks/backlog/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01.md",
+        "tools/runtime_batch04_controls.py",
+        "tests/test_debt_registration_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "El recibo del host dice 0 ensayos A/B y 0 cambios de clock; no contiene workload, soak ni rollback."
+      ],
+      "missing_evidence": [
+        "GPU/OEM/driver; cap actual/aplicado; carga y soak preregistrados; throughput/estabilidad/temperaturas antes/después; rollback verificado."
+      ],
+      "next_action": "Solicitar ensayo A/B opt-in en GPU de laboratorio con identidad/cap original, workload y umbrales preregistrados, estabilidad/throughput/temp antes/después y restauración verificada.",
+      "responsible": "BB; operador Luis para workload/lab",
+      "evidence": [
+        "tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md",
+        "tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt",
+        "tools/verify_gpu_clock_cap_ab.py",
+        "tools/hardware_evidence.py",
+        "tests/test_debt_registration_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+      "category": "workload_or_lab",
+      "blockers": [
+        "No hay captura de sujeto para fase 04-packing-4k; el verificador de fase ya existe."
+      ],
+      "missing_evidence": [
+        "Captura cruda de packing 4K, stack/hardware fijados, costo/beneficio y negativos/controles exigidos por fase."
+      ],
+      "next_action": "Solicitar captura real de packing 4K y control de referencia en hardware/runtime fijado, con los campos requeridos por verify_memory_saver; ejecutar el selector focal sobre esos recibos.",
+      "responsible": "BB; operador Luis para workload/lab",
+      "evidence": [
+        "tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md",
+        "tools/verify_memory_saver.py",
+        "tools/hardware_evidence.py",
+        "tests/test_closure_kernel.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "FORUM-02-USB-UVC-EP0",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "No existe traza UVC EP0 en combinación cámara/xHCI afectada ni captura de versión corregida."
+      ],
+      "missing_evidence": [
+        "USB/UVC/firmware/kernel exactos; reproducción A/B, versión corregida, control sin EP0 afectado y rollback."
+      ],
+      "next_action": "Solicitar al dueño de hardware captura usbmon/trace de reproducción y versión corregida, control sin EP0 y rollback sobre MT8901/cámara compatibles.",
+      "responsible": "BB; operador Luis para hardware/peer",
+      "evidence": [
+        "tasks/backlog/FORUM-02-USB-UVC-EP0.md",
+        "tools/forum_hardware_subjects.py",
+        "tools/forum_finding.py",
+        "tests/test_debt_registration_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01",
+      "category": "privileged_access",
+      "blockers": [
+        "El verificador y el selector ya existen. El close_check original exige evidencia real de una intervención de panic/reboot con backend pstore registrado, ajuste activo y rollback exacto; no hay recovery.json y el operador no tiene acceso root concedido."
+      ],
+      "missing_evidence": [
+        "recovery.json con boot IDs, sysctl/cmdline/backend pstore crudos, marca de panic y captura post-reboot; sysctl original/restaurado iguales; salida systemctl show de kdump active/loaded"
+      ],
+      "next_action": "Conservar UNKNOWN y el criterio abierto. Cuando exista un canary con acceso root y recuperación aprobada, el operador debe recolectar la evidencia y verificar el ciclo pstore/rollback antes de ejecutar el selector original; no inducir panic en el host actual.",
+      "responsible": "coordinación BB prepara el canary; operador Luis gestiona acceso root/lab y ejecuta el ciclo",
+      "evidence": [
+        "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.md",
+        "tools/verify_rcu_panic_pstore.py",
+        "tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-RCU-PANIC-PSTORE-01-direct-close-current.log",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/pstore-root-negative.json",
+        "tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/progress.txt"
+      ],
+      "actionable_now": false,
+      "rationale": "El verificador ya comprueba captura cruda, backend pstore, IDs de arranque y rollback exacto. El recibo actual devuelve UNKNOWN por recovery.json ausente; el progreso documenta cero ensayos y que pstore requiere acceso root. Fixtures no pueden cerrar el criterio de recuperación real.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "No hay build/smoke real para el target SM121 y stack/imagen fijados; el kernel faltante es específico de GPU/runtime."
+      ],
+      "missing_evidence": [
+        "digest/tag, GPU/SM efectiva, versión Cutlass/DSL y salida literal de kernel sano y control incompatible"
+      ],
+      "next_action": "Ejecutar matriz mínima de compilación y canario funcional en nodo SM121 con versión fijada, usando target incompatible como negativo y guardando rollback.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+        "tasks/evidence/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01/ (directorio ausente al inspeccionar)"
+      ],
+      "actionable_now": false,
+      "rationale": "La compatibilidad ISA solo queda probada con el hardware y el runtime reales.",
+      "could_not_run_inspection": 1
+    },
+    {
+      "id": "DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "No se puede demostrar ciclo de corte/reset y recuperación de dos unidades sin lab físico y participación del operador."
+      ],
+      "missing_evidence": [
+        "modelos/OEM/firmware exactos; estados antes/después de power reset; tráfico sano/negativo y rollback"
+      ],
+      "next_action": "Ejecutar ciclo A/B en dos nodos canary aprobados, capturar estado de energía/enlace y tráfico y demostrar rollback OEM.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+        "tasks/evidence/DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01/ (directorio ausente al inspeccionar)"
+      ],
+      "actionable_now": false,
+      "rationale": "El asunto depende de recuperación física de doble equipo; UNKNOWN sobre inventario no demuestra ausencia de hardware.",
+      "could_not_run_inspection": 1
+    },
+    {
+      "id": "DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "La corrección de orquestación requiere jobs NCCL/TP reales y control de fallo del coordinador; no se halló resultado local en la evidencia específica."
+      ],
+      "missing_evidence": [
+        "stack/digests; logs rank/node/collective; positivo multi-GPU y negativo de orquestación; rollback"
+      ],
+      "next_action": "Preparar job NCCL/TP en canario multi-GPU con topología y digests fijados; probar coordinación sana y negativa y archivar trazas completas.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+        "tasks/evidence/DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01/ (directorio ausente al inspeccionar)"
+      ],
+      "actionable_now": false,
+      "rationale": "Un fixture local no acredita comunicación entre nodos ni corrección de colectivas.",
+      "could_not_run_inspection": 1
+    },
+    {
+      "id": "DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "No hay long-run del modelo/stack fijado que pruebe JSON correcto bajo carga y recuperación."
+      ],
+      "missing_evidence": [
+        "modelo/digest/runtime exactos; prompt suite; JSON/semántica; métricas de proceso y memoria; control negativo y rollback"
+      ],
+      "next_action": "Ejecutar canario Qwen3.8 con prompts deterministas durante la duración predeclarada, validando JSON y control negativo; preservar logs y rollback.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+        "tasks/evidence/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01/ (directorio ausente al inspeccionar)"
+      ],
+      "actionable_now": false,
+      "rationale": "La ficha requiere workload prolongado que no se deriva de benchmarks ni health checks.",
+      "could_not_run_inspection": 1
+    },
+    {
+      "id": "DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01",
+      "category": "external_oem",
+      "blockers": [
+        "Falta matriz OEM autorizada y ensayo reversible para ajuste de carveout; modificar firmware/UEFI puede comprometer arranque."
+      ],
+      "missing_evidence": [
+        "release notes del OEM/modelo; tuple EC/UEFI/OTA; baseline de memoria; canario y rollback OEM"
+      ],
+      "next_action": "Solicitar a coordinación BB que obtenga matriz/release notes y ventana de canario del OEM; ejecutar solo con rollback confirmado.",
+      "responsible": "coordinación BB gestiona OEM",
+      "evidence": [
+        "tasks/backlog/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+        "tasks/evidence/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01/ (directorio ausente al inspeccionar)"
+      ],
+      "actionable_now": false,
+      "rationale": "El gate depende de adopción OEM y recuperación de firmware; la ficha requiere compatibilidad específica.",
+      "could_not_run_inspection": 1
+    },
+    {
+      "id": "DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "El estado de patch/allocator no se valida por existencia de archivos; faltan replay funcional y control negativo en runtime compatible."
+      ],
+      "missing_evidence": [
+        "commit/digest del parche; stack GPU; asignación sana y caso de allocator defectuoso; salida y rollback"
+      ],
+      "next_action": "Fijar revisión Triton/driver/modelo y ejecutar canario funcional más negativo de estado de patch; archivar diff efectivo y recuperación.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+        "tasks/evidence/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01/ (directorio ausente al inspeccionar)"
+      ],
+      "actionable_now": false,
+      "rationale": "La afirmación se refiere a efecto runtime de parche; no basta inspección estática.",
+      "could_not_run_inspection": 1
+    },
+    {
+      "id": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "Preflight y estado de host no demuestran salud GSP durante boot ni recuperación OEM; selector reporta evidencia incompleta."
+      ],
+      "missing_evidence": [
+        "log crudo de boot/GSP con versión firmware/driver; control de fallo; boot/recovery y rollback OEM"
+      ],
+      "next_action": "Capturar arranque sano y control negativo en GX10 canary con telemetría persistente y rollback probado.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+        "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/commands.json",
+        "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/preflight.json",
+        "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/validator-run.json"
+      ],
+      "actionable_now": false,
+      "rationale": "La evidencia actual incluye preflight, commands y validator pero falta el ciclo boot/GSP del sujeto.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "El estado de host no demuestra teclado/HID operativo post-update ni distingue módulo integrado/headless/telemetría inaccesible."
+      ],
+      "missing_evidence": [
+        "dispositivo HID conectado/descriptor; interacción local/remota; kernel/module binding; estado headless y rollback"
+      ],
+      "next_action": "En un nodo canary con acceso alternativo, probar HID sano y controles headless/módulo/telemetría después de update y guardar recuperación.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+        "tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK/host-observation.txt"
+      ],
+      "actionable_now": false,
+      "rationale": "Se requiere verificar dispositivo físico y acceso de recuperación; una unidad systemd activa no acredita entrada HID.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "Observación local no prueba binding PCI del sujeto Realtek ni warm/cold boot y rollback."
+      ],
+      "missing_evidence": [
+        "PCI ID y driver bound; paquete/módulo compatible; A/B cold/warm; NIC de control y driver ausente; rollback"
+      ],
+      "next_action": "Capturar PCI ID, paquete y módulo efectivos y ejecutar A/B warm/cold en canario con NIC control y recuperación.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+        "tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01/host-observation.txt"
+      ],
+      "actionable_now": false,
+      "rationale": "La prueba exige hardware PCI sujeto y reboot controlado; estado del host actual no confirma su presencia.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "Selector original reportó unknown/fail=0/CNR=1 porque falta captura raw pareada de comandos USB post-update; herramienta hostdiag no observó entradas HID."
+      ],
+      "missing_evidence": [
+        "Selector original reportó unknown/fail=0/CNR=1 porque falta captura raw pareada de comandos USB post-update; herramienta hostdiag no observó entradas HID."
+      ],
+      "next_action": "Coordinación BB: completar contrato de parser/selector con fixtures; operador Luis: proporcionar captura pareada de HID/USB antes y después de actualizar firmware en dispositivo real. Ref explícita: tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01-current-selector.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.md",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/three-hardware-original-selectors-primary-run.json",
+        "docs/evidence/BB-INSTRUMENTS-devices.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01-current-selector.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Selector original reportó unknown/fail=0/CNR=1 porque falta captura raw pareada de comandos USB post-update; herramienta hostdiag no observó entradas HID.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-CX7-FW-UPDATE-GUARD-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "Inventario local no expuso HCA RDMA; fw_ver de interfaz queda UNKNOWN y no hubo actualización/guard validado sobre hardware CX7."
+      ],
+      "missing_evidence": [
+        "Inventario local no expuso HCA RDMA; fw_ver de interfaz queda UNKNOWN y no hubo actualización/guard validado sobre hardware CX7."
+      ],
+      "next_action": "Coordinación BB: definir lectura/guard según interfaz soportada; operador Luis: aportar inventario de CX7 y firmware/OEM, y ejecutar canario de actualización sólo con rollback documentado. Ref explícita: tasks/backlog/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01-original-selector-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Inventario local no expuso HCA RDMA; fw_ver de interfaz queda UNKNOWN y no hubo actualización/guard validado sobre hardware CX7.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "SSE conserva salida visible, pero no hay captura local del stack GLM52/FP8/MXFP4 ni comparación multivuelta con tokenizer/cache/reasoning/iteración de herramientas fijados."
+      ],
+      "missing_evidence": [
+        "SSE conserva salida visible, pero no hay captura local del stack GLM52/FP8/MXFP4 ni comparación multivuelta con tokenizer/cache/reasoning/iteración de herramientas fijados."
+      ],
+      "next_action": "Coordinación BB: definir canario y salida comparable; operador Luis: ejecutar replay con digest/tokenizer/params fijados y controles de prefijo/formato. Ref explícita: tasks/backlog/DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01-original-selector-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. SSE conserva salida visible, pero no hay captura local del stack GLM52/FP8/MXFP4 ni comparación multivuelta con tokenizer/cache/reasoning/iteración de herramientas fijados.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "No hay builds/tags SM121 ni salida local por operación; los perfiles actuales no acreditan kernel compilado ni corrección."
+      ],
+      "missing_evidence": [
+        "No hay builds/tags SM121 ni salida local por operación; los perfiles actuales no acreditan kernel compilado ni corrección."
+      ],
+      "next_action": "Coordinación BB: preparar matriz de operaciones/oráculo y captura de build; operador Luis: proporcionar hardware/runtime SM121 y ejecutar carga/primera inferencia con control. Ref explícita: tasks/backlog/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01-original-selector-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. No hay builds/tags SM121 ni salida local por operación; los perfiles actuales no acreditan kernel compilado ni corrección.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "Falta reproducción local con stack/model/versión Ray-Torch fijados, comparación graph/eager y telemetría de hang; el reporte de foro no acredita causa."
+      ],
+      "missing_evidence": [
+        "Falta reproducción local con stack/model/versión Ray-Torch fijados, comparación graph/eager y telemetría de hang; el reporte de foro no acredita causa."
+      ],
+      "next_action": "Coordinación BB: preparar caso mínimo, watchdog seguro y logging; operador Luis: ejecutar workload canary y entregar capturas comparativas, sin provocar fallos del host. Ref explícita: tasks/backlog/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01-original-selector-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Falta reproducción local con stack/model/versión Ray-Torch fijados, comparación graph/eager y telemetría de hang; el reporte de foro no acredita causa.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "La ficha describe entradas de parser recuperables y exclusiones; pueden codificarse hoy como pruebas de regresión locales sobre historial/corpus ya conservado, sin hardware ni carga."
+      ],
+      "missing_evidence": [
+        "La ficha describe entradas de parser recuperables y exclusiones; pueden codificarse hoy como pruebas de regresión locales sobre historial/corpus ya conservado, sin hardware ni carga."
+      ],
+      "next_action": "Coordinación BB: implementar pruebas de streaming/completo, truncamiento, reasoning, tool_choice=none y marcadores citados contra historial conservado; reportar límite de recuperación. Ref explícita: tasks/backlog/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01-original-selector-current.log.",
+      "responsible": "Coordinación BB; para recuperación de históricos, custodio del artifact store si corresponde.",
+      "evidence": [
+        "tasks/backlog/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. La ficha describe entradas de parser recuperables y exclusiones; pueden codificarse hoy como pruebas de regresión locales sobre historial/corpus ya conservado, sin hardware ni carga.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-01-REPRO",
+      "category": "workload_or_lab",
+      "blockers": [
+        "El informe histórico 2026-10-02 muestra 6 lecturas dmem.current CNR en scopes de reproducción, pero la captura nativa root del 2026-10-04 observa controller dmem y root counters vacíos con CNR=0; la lectura del host y la de sandbox no son equivalentes. No hay medición a 7 GiB que autorice repetir esa carga."
+      ],
+      "missing_evidence": [
+        "Aclaración/evidencia actual del scope dmem.current por cgroup de los casos registrados, o declaración del ABI/runtime de que el contador está expuesto pero vacío; mantener la reproducción histórica de 7 GiB sin repetirla."
+      ],
+      "next_action": "Coordinación BB: cotejar run.json/verification.txt con native-cgroup-capability-root-summary-20261004.json y corregir el alcance de CNR por scope; conservar los deltas memory.current como tales. Operador Luis: sólo si el runtime ofrece un canario acotado, capturar read-only del scope pertinente con identidad; no repetir la carga histórica de 7 GiB. Ref: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json; tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json; tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/verification.txt.",
+      "responsible": "Coordinación BB; para recuperación de históricos, custodio del artifact store si corresponde.",
+      "evidence": [
+        "tasks/backlog/FEATURE-1358-CGROUP-01-REPRO.md",
+        "tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/verification.txt",
+        "tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-01-REPRO-direct-close-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de las rutas citadas: 0. No presento los seis CNR históricos como estado actual: recibo root 2026-10-04 registra controller dmem y root counters vacíos, CNR=0. El close_check histórico mantiene mediciones sin prueba GPU/7GiB concluyente; hace falta reconciliar scopes antes de cierre.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FEATURE-FORUM-NETCONSOLE-01",
+      "category": "privileged_access",
+      "blockers": [
+        "Captura readonly encontró netconsole/boot parameter ausentes, pstore denegado (CNR=1); faltan receptor off-host, destino/retención y prueba de marker/rollback."
+      ],
+      "missing_evidence": [
+        "Captura readonly encontró netconsole/boot parameter ausentes, pstore denegado (CNR=1); faltan receptor off-host, destino/retención y prueba de marker/rollback."
+      ],
+      "next_action": "Coordinación BB: documentar configuración receptora y prueba negativa; operador Luis: aportar autorización, receptor de gestión y ventana de canary para validar recepción/persistencia. Ref explícita: tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-NETCONSOLE-01-direct-close-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-NETCONSOLE-01-direct-close-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Captura readonly encontró netconsole/boot parameter ausentes, pstore denegado (CNR=1); faltan receptor off-host, destino/retención y prueba de marker/rollback.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "No hay canal local de RPM/fan validado ni A/B de hotplug/DPMS/CX7 sobre la tupla OEM; evidencia del foro parcialmente inspeccionada no acredita mitigación."
+      ],
+      "missing_evidence": [
+        "No hay canal local de RPM/fan validado ni A/B de hotplug/DPMS/CX7 sobre la tupla OEM; evidencia del foro parcialmente inspeccionada no acredita mitigación."
+      ],
+      "next_action": "Coordinación BB: precisar sensores/fixtures y guardas de admisión; operador Luis: capturar tuple OEM y ejecutar A/B reversible sólo en unidad canary con medida fan externa/OEM. Ref explícita: tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION-direct-close-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION-direct-close-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. No hay canal local de RPM/fan validado ni A/B de hotplug/DPMS/CX7 sobre la tupla OEM; evidencia del foro parcialmente inspeccionada no acredita mitigación.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "El selector existe; el recibo disponible declara captura cruda de comando ausente/malformada y no acredita una secuencia roam."
+      ],
+      "missing_evidence": [
+        "Captura raw de identidad/asociación/rutas/DNS/conectividad positiva y aislamiento negativo/rollback; selector focal passing."
+      ],
+      "next_action": "Solicitar al operador una secuencia roam con interfaz/AP identificados, asociación/ruta/DNS/conectividad e intento aislado negativo; correr el selector Wi-Fi existente sobre el recibo crudo.",
+      "responsible": "BB",
+      "evidence": [
+        "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01.md",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/three-hardware-original-selectors-primary-run.json",
+        "tools/verify_wifi_isolation.py",
+        "tests/test_debt_registration_controls.py",
+        "tools/hardware_evidence.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "Sysfs correlaciona netdev/BDF pero la conexión física sigue UNKNOWN; netlink no se pudo consultar y PCI no prueba cable/alias."
+      ],
+      "missing_evidence": [
+        "OEM/NIC/topología y firmware; identificación física de lanes/puertos; tráfico por cada ruta y control desconectado; rollback."
+      ],
+      "next_action": "Solicitar al dueño del CX7 mapa de lanes/puertos, captura de tráfico por puerto y control físico desconectado/reconectado sobre topología de cuatro nodos.",
+      "responsible": "BB; operador Luis para hardware/peer",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01.md",
+        "docs/evidence/BB-INSTRUMENTS-network.md",
+        "tools/hardware_batch02_controls.py",
+        "tools/host_diagnostics.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "La evidencia actual dice que provider_trace no observa placement groups ni recursos TP por nodo; no hay Ray trace de dos nodos."
+      ],
+      "missing_evidence": [
+        "Dos nodos y digests fijados; placement/resource snapshot por nodo/rank; request con progreso por nodo; negativo del timeout y rollback."
+      ],
+      "next_action": "Solicitar corrida Ray de dos nodos con snapshot placement/resource por nodo/rank y request de progreso, incluyendo control del timeout sin aumentarlo; usar evaluador existente.",
+      "responsible": "BB; operador Luis para workload/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01.md",
+        "tools/provider_trace.py",
+        "tools/runtime_batch02_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "El preflight offline es parcial y solo contrasta respuestas guardadas; no se adjunta ejecución OpenClaw/vLLM con requests válidas/negativas fijadas."
+      ],
+      "missing_evidence": [
+        "GET /v1/models capturado, alias servido/configuración cliente, límite de contexto real, requests válidas/negativas y respuestas raw vinculadas a versiones."
+      ],
+      "next_action": "Solicitar recibo de GET /v1/models y requests reales con alias correcto/incorrecto y límite contexto válido/inválido en versiones fijadas; mantener respuestas raw para selector actual.",
+      "responsible": "BB",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01.md",
+        "tools/runtime_batch02_controls.py",
+        "tests/test_debt_registration_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-FORUM-RECOVERY-APT-UPDATE-01",
+      "category": "user_decision",
+      "blockers": [
+        "No hay captura pre-reset, recovery media/rollback ni base para decidir recovery/RMA del sujeto afectado."
+      ],
+      "missing_evidence": [
+        "Logs pre-reset, último kernel/paquetes, ruta recovery y medios OEM, rollback; reproducción controlada que distinga APT/Docker/workload."
+      ],
+      "next_action": "Completar solo la runbook de preservación pre-reset y solicitar al operador logs previos; pedir al OEM ruta oficial de recovery/RMA antes de cualquier acción sobre el dispositivo.",
+      "responsible": "BB; operador Luis decide recuperación del sujeto",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-RECOVERY-APT-UPDATE-01.md",
+        "tasks/evidence/BB-INSTRUMENTS-2026-10-03/apt-sources-capture.json",
+        "tools/hardware_batch02_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "El documento dice que SSE no expone estado interno de cola/prefill y no hay captura temporal por solicitud."
+      ],
+      "missing_evidence": [
+        "Runtime/digest y carga fijados; progreso/ETA por solicitud, colas, counters KV; control sano y negativo; salida literal y rollback."
+      ],
+      "next_action": "Solicitar traza interna por petición en runtime fijado bajo una activa + siete queued y control max_num_seqs, registrando progreso, cola, KV y salida final.",
+      "responsible": "BB; operador Luis para workload/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01.md",
+        "tools/runtime_batch04_controls.py",
+        "tests/test_debt_registration_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-02-TRAZA",
+      "category": "privileged_access",
+      "blockers": [
+        "El mapa estático y ABI probe están disponibles; la captura dinámica quedó sin ejecutar por barrera root."
+      ],
+      "missing_evidence": [
+        "Traza memcg/flags/worker con dueño real, transición observada y control negativo en kernel 6.17; identidad del stack."
+      ],
+      "next_action": "Solicitar al operador captura acotada del probe en lab con privilegios root, identidad kernel, owner/flags/transición worker y control negativo; preservar stderr y resultado de attach.",
+      "responsible": "BB; operador Luis para acceso root/lab",
+      "evidence": [
+        "tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md",
+        "tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt",
+        "tools/kernel_charges.bt",
+        "tools/verify_cgroup_plan.py",
+        "tests/test_closure_kernel_selectors.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "FEATURE-FORUM-NVME-READONLY-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "El ensayo existente es copia/restauración de archivo regular; el selector requiere evidencia de incidente NVMe y recovery ligado al dispositivo."
+      ],
+      "missing_evidence": [
+        "Identidad serial/model/firmware, SMART, journal correlacionado, transición mount, backup/export+restore, recuperación/rollback y ruta OEM."
+      ],
+      "next_action": "Solicitar capturas readonly de identidad/SMART/journal/mount y backup a filesystem externo ante incidente; reservar prueba de recovery/rollback para NVMe de laboratorio sano, sin escribir medio sospechoso.",
+      "responsible": "BB; operador Luis para hardware/peer",
+      "evidence": [
+        "tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md",
+        "tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/export-copy-lab/run.json",
+        "tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/host-observation.txt",
+        "tools/nvme_readonly.py",
+        "tools/forum_hardware_subjects.py",
+        "tests/test_nvme_readonly.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+      "category": "external_oem",
+      "blockers": [
+        "La lectura effective_modeset quedó permission-denied y no hay declaración OEM del OTA target ni recuperación/rollback validada."
+      ],
+      "missing_evidence": [
+        "Valor efectivo KMS ligado a host; declaración OEM para OTA; HDMI/USB-C/SSH recovery y rollback en equipo compatible."
+      ],
+      "next_action": "Solicitar a NVIDIA/OEM matriz oficial de compatibilidad de la combinación y coordinar captura readonly autorizada más HDMI/USB-C/SSH/rollback en equipo DGX compatible.",
+      "responsible": "BB; coordinación solicita OEM/proveedor",
+      "evidence": [
+        "tasks/backlog/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT.md",
+        "tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/commands.json",
+        "tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/preflight.json",
+        "tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/validator-run.json",
+        "tools/forum_finding.py",
+        "tools/preflight.py",
+        "tools/forum_hardware_subjects.py",
+        "tests/test_debt_registration_controls.py"
+      ],
+      "actionable_now": false,
+      "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+      "could_not_run_inspection": 0,
+      "preparation_actionable_now": true
+    },
+    {
+      "id": "DEBT-HOST-DEPLOYED-DRIFT-01",
+      "category": "privileged_access",
+      "blockers": [
+        "La inspección documenta divergencia real en dos archivos de /etc y /usr/local/bin; cierre requiere comparar/remediar despliegue del host y preservar el origen."
+      ],
+      "missing_evidence": [
+        "salida actual íntegra de `bash bin/bb drift` y plan de reconciliación aprobado para hashes/modos divergentes"
+      ],
+      "next_action": "Preparar reconciliación verificable de los dos archivos divergentes y volver a capturar el comparador bajo acceso de operador; conservar archivos desplegados hasta acordar origen.",
+      "responsible": "operador Luis (host); coordinación BB (comparador/código)",
+      "evidence": [
+        "tasks/backlog/DEBT-HOST-DEPLOYED-DRIFT-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+        "tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/fail.txt",
+        "tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/source.json"
+      ],
+      "actionable_now": false,
+      "rationale": "El informe literal marca 2 divergencias/41 revisados y un archivo suspendido; se requiere acceso host para resolver la diferencia, sin copiar comentarios para absolverla.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-CX7-POSTHOTPLUG-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "No hay ensayo PCIe/CX7 post-hotplug; estado Active/200G o FieldDiag no prueba tráfico extremo a extremo."
+      ],
+      "missing_evidence": [
+        "stack/cable/firmware; tráfico RDMA/NCCL antes/después; endpoint PCIe/AER; FieldDiag fresco y rollback"
+      ],
+      "next_action": "Ejecutar hotplug en nodo CX7 canary con tráfico funcional, capturar endpoint/AER y diagnóstico nuevo, y verificar rollback OEM.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-CX7-POSTHOTPLUG-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+        "tasks/evidence/DELTA-FORUM-CX7-POSTHOTPLUG-01/ (directorio ausente al inspeccionar)"
+      ],
+      "actionable_now": false,
+      "rationale": "El control requiere hardware CX7 y evento hotplug real; adjuntos de la ficha no pueden sustituirlo.",
+      "could_not_run_inspection": 1
+    },
+    {
+      "id": "DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "Lector de métricas parcial; la captura runtime carece de /metrics crudo y comparación de KV/corrección en stack fijado."
+      ],
+      "missing_evidence": [
+        "texto raw Prometheus /metrics; mode K/V, backend/model/context/concurrency; bytes KV, output correctness, prefill/decode y control negativo"
+      ],
+      "next_action": "Recolectar /metrics crudo y ejecutar comparación f16/cuanti en workload fijado con correctness; separar RSS/cgroup/host/KV y archivar resultados.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+        "tasks/evidence/DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01/ (directorio ausente al inspeccionar)"
+      ],
+      "actionable_now": false,
+      "rationale": "Las métricas necesitan inferencia real y provenance completa; el instrumento no prueba comportamiento de modelo.",
+      "could_not_run_inspection": 1
+    },
+    {
+      "id": "DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01",
+      "category": "external_oem",
+      "blockers": [
+        "La observación local fija tuple activo, pero falta matriz release/OEM, soporte y ensayo reversible post-OTA."
+      ],
+      "missing_evidence": [
+        "release notes OEM para plataforma exacta; canario de update/recovery; baseline memoria y workload; rollback"
+      ],
+      "next_action": "Obtener matriz de soporte de DGX OS/OEM y reservar canario reversible para comparar tuple pre/post OTA; no instalar paquetes manuales como sustituto.",
+      "responsible": "coordinación BB gestiona OEM; operador Luis ejecuta canario",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+        "tasks/evidence/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01/capture-summary.json"
+      ],
+      "actionable_now": false,
+      "rationale": "La captura muestra DGX Spark/AI TOP ATOM con driver/kernel coincidente; nvidia-smi falló y no hubo workload/rollback. Eso no valida compatibilidad OEM.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "Selector ya informa UNKNOWN/CNR=1 por captura del sujeto ausente/incompleta; faltan controles térmicos comparables."
+      ],
+      "missing_evidence": [
+        "temperatura ambiente/entrada/GPU/CPU; clocks, watts, fans y throughput en A/B; límites OEM y rollback"
+      ],
+      "next_action": "Medir soak A/B con carga repetible y ambiente controlado en GX10 canary, sin imponer cap universal; guardar telemetría completa y recuperación.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+        "tasks/evidence/DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01/ (directorio ausente al inspeccionar)"
+      ],
+      "actionable_now": false,
+      "rationale": "El selector corre, pero el reporte de ventiladores no fija ambiente/carga y carece de datos crudos; requiere hardware.",
+      "could_not_run_inspection": 1
+    },
+    {
+      "id": "DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01",
+      "category": "external_oem",
+      "blockers": [
+        "El selector reporta UNKNOWN/CNR=1; el candidato usa firmware/canal testing, sin A/B aislado ni soak y con riesgo de red/boot."
+      ],
+      "missing_evidence": [
+        "tuple SoC/EC/OEM aprobado y paquetes auditados; estado cable/EEPROM/link/tráfico; reboot A/B y rollback probado"
+      ],
+      "next_action": "Coordinar con OEM la matriz/paquetes y método de recuperación; después ensayar cold/warm boot y tráfico en GX10 canary con rollback disponible.",
+      "responsible": "coordinación BB gestiona OEM; operador Luis ejecuta canario",
+      "evidence": [
+        "tasks/backlog/DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+        "tasks/evidence/DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01/ (directorio ausente al inspeccionar)"
+      ],
+      "actionable_now": false,
+      "rationale": "Hay lectura parcial de adjuntos y selector integrado, pero falta validación del firmware de prueba en el sujeto.",
+      "could_not_run_inspection": 1
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-03-NATIVO",
+      "category": "workload_or_lab",
+      "blockers": [
+        "La compilación de módulos pasó, pero runtime de driver 615, límites, ownership, cgroup independiente y liberación no se han probado."
+      ],
+      "missing_evidence": [
+        "runtime con stack alineado; cgroup secundario; caso bajo límite y negativo; liberación; firma/trust y rollback"
+      ],
+      "next_action": "Ejecutar arnés runtime en lab con stack firmado/alineado y cgroup canary; comprobar límite, aislamiento/liberación y rollback sin instalar en host de producción.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/FEATURE-1358-CGROUP-03-NATIVO.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+        "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-615.json",
+        "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-modules.json",
+        "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/comparison.txt"
+      ],
+      "actionable_now": false,
+      "rationale": "Los recibos solo acreditan compilación sin instalar/cargar; la ficha condiciona cierre a resultados runtime reales.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "Analizador tiene controles de fixtures, pero no hay traza real request/provider/PID/respawn/latencia ni validación OEM/rollback; hay defecto de JSON duplicado pendiente."
+      ],
+      "missing_evidence": [
+        "corrección/negative tests de JSON estricto y lector acotado; trace real tras respawn; control CPU intencional, GPU sana y OEM/rollback"
+      ],
+      "next_action": "Cerrar primero la ambigüedad del parser/lectura con controles requeridos; después capturar trace real de request y proveedor en canario sin generar fallback por downgrade.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+        "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/commands.json",
+        "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/preflight.json",
+        "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/provider-trace-run.json",
+        "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/validator-run.json"
+      ],
+      "actionable_now": false,
+      "rationale": "La evidencia reporta cobertura de fixtures, además de un duplicado JSON que pasa incorrectamente; la investigación principal requiere traza runtime y el defecto instrumental es accionable dentro de la preparación BB.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FORUM-00-DOCKER-OOM-RESTART-LOOP",
+      "category": "workload_or_lab",
+      "blockers": [
+        "El selector integrado falla por ausencia del bundle físico restart-cycle; la política unitaria no prueba integración ni recuperación real."
+      ],
+      "missing_evidence": [
+        "bundle crudo ligado a container ID/digest/PID, unit/gate, boot IDs, OOM/PSI, SSH, datos preservados, decisión policy y rollback"
+      ],
+      "next_action": "Preparar ciclo recuperable para un único workload identificado y reproducir reincidencia, reboot ajeno y reinicio sano; recopilar bundle requerido y salida del selector.",
+      "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+      "evidence": [
+        "tasks/backlog/FORUM-00-DOCKER-OOM-RESTART-LOOP.md",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+        "tasks/evidence/FORUM-00-DOCKER-OOM-RESTART-LOOP/progress.txt"
+      ],
+      "actionable_now": false,
+      "rationale": "La ejecución primaria registra 1 failed/20 passed por bundle ausente; no se reinició host/container/servicio. El cierre depende de ciclo real.",
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01",
+      "category": "missing_history",
+      "blockers": [
+        "El close_check actual falla porque las tres IDs siguen sin dictamen en el ledger. El metadata recuperado conserva evento, comando, rc e identidad, pero no stdout/stderr original; la repetición del comando Bash sobre el blob actual no restituye la entrada staged histórica. Un negativo adicional detectó claves JSON duplicadas aceptadas indebidamente por el verificador, por lo que el instrumento debe endurecerse antes de confiar en el ledger."
+      ],
+      "missing_evidence": [
+        "Dictámenes con evidencia verificable para 92dc63137ae930f3, a50ae5e52c99c3ab y 5437b44ce52501ee; raw output original o reproducción que identifique el defecto por evento; corrección/verificación de rechazo de claves duplicadas en el lector."
+      ],
+      "next_action": "Coordinación BB: recuperar artifacts/logs históricos y, si no existen, reproducir de forma aislada cada comando sobre su kit/subject SHA identificado para respaldar un dictamen (no convertir metadatos solos en evidencia); endurecer JSON duplicado y volver a evaluar el lector. Operador/custodio del artifact store: buscar stdout/stderr y staged blob SHA de los eventos. Ref: tasks/evidence/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01/recovered-event-metadata.json; tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01-direct-close-current.log; tasks/evidence/CLOSURE-CONTROLS-2026-10-03/telemetry-duplicate-ledger-root-negative.json; tools/verify_telemetry_dispositions.py.",
+      "responsible": "Coordinación BB; para recuperación de históricos, custodio del artifact store si corresponde.",
+      "evidence": [
+        "tasks/backlog/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01.md",
+        "tasks/evidence/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01/recovered-event-metadata.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01-direct-close-current.log",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/telemetry-duplicate-ledger-root-negative.json",
+        "tools/verify_telemetry_dispositions.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0. El recibo corriente registra los tres IDs como MISSING (close_check rc=1); el historial aporta metadata pero no salida para dictamen. Además, el lector actual aceptó claves duplicadas en el negativo root, así que no se puede cerrar hoy sin recuperación/reproducción y corrección/verificación del instrumento.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01",
+      "category": "hardware_or_peer",
+      "blockers": [
+        "Inventario informa cero HCA RDMA, ip link inaccesible y enlace físico UNKNOWN; falta retest bidireccional ib_write_bw en ambos hosts con reboot individual/secuencial."
+      ],
+      "missing_evidence": [
+        "Inventario informa cero HCA RDMA, ip link inaccesible y enlace físico UNKNOWN; falta retest bidireccional ib_write_bw en ambos hosts con reboot individual/secuencial."
+      ],
+      "next_action": "Coordinación BB: preparar captura/criterio de simetría; operador Luis: aportar ambos hosts CX7 y correr prueba bidireccional/reboots seguros con resultados literales. Ref explícita: tasks/backlog/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01.md y tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01.md",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01-original-selector-current.log",
+        "docs/evidence/BB-INSTRUMENTS-network.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Inventario informa cero HCA RDMA, ip link inaccesible y enlace físico UNKNOWN; falta retest bidireccional ib_write_bw en ambos hosts con reboot individual/secuencial.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "Herramientas de memoria/PSI no observan PID RPC, transporte, salida válida ni orden de teardown; no hay captura local del stack llama.cpp/RPC."
+      ],
+      "missing_evidence": [
+        "Herramientas de memoria/PSI no observan PID RPC, transporte, salida válida ni orden de teardown; no hay captura local del stack llama.cpp/RPC."
+      ],
+      "next_action": "Coordinación BB: definir lifecycle/health/output contract y negativos offline; operador Luis: ejecutar workload fijado en hosts canary y conservar logs de RPC/teardown. Ref explícita: tasks/backlog/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01-original-selector-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Herramientas de memoria/PSI no observan PID RPC, transporte, salida válida ni orden de teardown; no hay captura local del stack llama.cpp/RPC.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "Muestreo general de memoria/PSI no contiene series por etapa/rank ni logs de compilación de la reproducción; pérdida de acceso remoto tampoco está correlacionada."
+      ],
+      "missing_evidence": [
+        "Muestreo general de memoria/PSI no contiene series por etapa/rank ni logs de compilación de la reproducción; pérdida de acceso remoto tampoco está correlacionada."
+      ],
+      "next_action": "Coordinación BB: preparar límites y telemetría preflight; operador Luis: ejecutar compilación fría acotada sólo en lab canary con captura externa y rollback. Ref explícita: tasks/backlog/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01-original-selector-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Muestreo general de memoria/PSI no contiene series por etapa/rank ni logs de compilación de la reproducción; pérdida de acceso remoto tampoco está correlacionada.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01",
+      "category": "external_oem",
+      "blockers": [
+        "Herramienta native thermal_coverage y captura real disponibles con CNR=0; el selector da CNR=1 por schema/card ID incompleto. La enumeración no prueba significado OEM, pero se puede corregir el contrato/selector hoy."
+      ],
+      "missing_evidence": [
+        "Herramienta native thermal_coverage y captura real disponibles con CNR=0; el selector da CNR=1 por schema/card ID incompleto. La enumeración no prueba significado OEM, pero se puede corregir el contrato/selector hoy."
+      ],
+      "next_action": "Coordinación BB: completar schema/card-ID exactos, diferenciar observed de cobertura semántica y comprobar canales faltantes; dejar A/B workload/OEM como evidencia separada. Ref explícita: tasks/backlog/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01.md y tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json.",
+      "responsible": "Coordinación BB; para recuperación de históricos, custodio del artifact store si corresponde.",
+      "evidence": [
+        "tasks/backlog/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01.md",
+        "tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/current-native-observation-summary.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-batch02-03-primary-coverage.json",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Herramienta native thermal_coverage y captura real disponibles con CNR=0; el selector da CNR=1 por schema/card ID incompleto. La enumeración no prueba significado OEM, pero se puede corregir el contrato/selector hoy.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01",
+      "category": "workload_or_lab",
+      "blockers": [
+        "Close check requiere overlay malo bloqueado antes de servir, resultado semántico, error de modalidad no validada y soak de prefill/decode concurrente; sin stack sujeto/captura real."
+      ],
+      "missing_evidence": [
+        "Close check requiere overlay malo bloqueado antes de servir, resultado semántico, error de modalidad no validada y soak de prefill/decode concurrente; sin stack sujeto/captura real."
+      ],
+      "next_action": "Coordinación BB: preparar negativos offline de overlay y contrato de observabilidad; operador Luis: correr soak de runtime sobre digest fijado y demostrar rollback. Ref explícita: tasks/backlog/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01-original-selector-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01-original-selector-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Close check requiere overlay malo bloqueado antes de servir, resultado semántico, error de modalidad no validada y soak de prefill/decode concurrente; sin stack sujeto/captura real.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-04-PARCHE",
+      "category": "workload_or_lab",
+      "blockers": [
+        "No diff está preparado, y la evidencia 03-nativo señala que GB10 runtime 615 y la integración real siguen sin probarse; todavía no se ha demostrado una regresión residual que justifique aplicar parche. El close_check exige capturas raw sujetas por fase."
+      ],
+      "missing_evidence": [
+        "Capturas raw ligadas de 02-traza y 03-nativo que indiquen asignación/propietario faltante y comportamiento native; sólo entonces diff/compilación más comparaciones antes/después de 01/03 o prueba de redundancia nativa que satisfaga el contrato."
+      ],
+      "next_action": "Preparación coordinable: inspeccionar readiness.txt y comparación 03-nativo contra ruta nativa; no escribir parche hasta identificar caso específico de doble cargo, pérdida o liberación. Cierre condicionado: obtener trace 02 y runtime 615 en sujeto GB10 con comparación antes/después o evidencia de cierre por vía nativa aceptada por el selector. Ref: tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/readiness.txt; tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/comparison.txt; tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-04-PARCHE-direct-close-current.log. Ref explícita: tasks/backlog/FEATURE-1358-CGROUP-04-PARCHE.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-04-PARCHE-direct-close-current.log.",
+      "responsible": "Coordinación BB; para recuperación de históricos, custodio del artifact store si corresponde.",
+      "evidence": [
+        "tasks/backlog/FEATURE-1358-CGROUP-04-PARCHE.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-04-PARCHE-direct-close-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0. close_check actual da UNKNOWN/CNR=1 por capture.json ausente. La ruta nativa 615 existe en fuente/build, pero falta ejecución sobre GB10; no se puede determinar hoy si hace falta parche o si aplica vía nativa.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+      "category": "privileged_access",
+      "blockers": [
+        "Captura readonly implementada, pero pstore fue denegado y no hubo prueba tras reboot; requiere privilegio/canary y fuente OEM para la versión exacta."
+      ],
+      "missing_evidence": [
+        "Captura readonly implementada, pero pstore fue denegado y no hubo prueba tras reboot; requiere privilegio/canary y fuente OEM para la versión exacta."
+      ],
+      "next_action": "Coordinación BB: completar contrato de captura y rollback; operador Luis: proveer ventana canary y acceso root para ensayo autorizado con persistencia tras reboot. Ref explícita: tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-RCU-PANIC-PSTORE-01-direct-close-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-RCU-PANIC-PSTORE-01-direct-close-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. Captura readonly implementada, pero pstore fue denegado y no hubo prueba tras reboot; requiere privilegio/canary y fuente OEM para la versión exacta.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    },
+    {
+      "id": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+      "category": "workload_or_lab",
+      "blockers": [
+        "No hay calibración local de sensores independientes/criterios OEM ni A/B/soak del workload térmico; reportes externos y un montaje existente no cuantifican estabilidad o throughput."
+      ],
+      "missing_evidence": [
+        "No hay calibración local de sensores independientes/criterios OEM ni A/B/soak del workload térmico; reportes externos y un montaje existente no cuantifican estabilidad o throughput."
+      ],
+      "next_action": "Coordinación BB: fijar perfiles OEM/workload y reglas para unknown/stale; operador Luis: ejecutar medición pareada de residencia/load con captura externa y rollback. Ref explícita: tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION-direct-close-current.log.",
+      "responsible": "Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado.",
+      "evidence": [
+        "tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION-direct-close-current.log"
+      ],
+      "actionable_now": false,
+      "rationale": "CNR de inspección de rutas citadas: 0; el close_check original y su evidencia existente se inspeccionaron; no hay evidencia suficiente para declarar cierre íntegro hoy. No hay calibración local de sensores independientes/criterios OEM ni A/B/soak del workload térmico; reportes externos y un montaje existente no cuantifican estabilidad o throughput.",
+      "preparation_actionable_now": true,
+      "could_not_run_inspection": 0
+    }
+  ]
+}

@@ -47,3 +47,14 @@ La ficha sigue abierta: falta un incidente fallido con versiones/boot preservado
 ## Nota de instrumentación readonly (2026-10-03)
 
 Se reutilizó `gpu_runtime_capture` y se preservó resultado `could_not_run` de `nvidia-smi`; la telemetría existente no prueba un incidente GSP/SEC2 ni recuperación. Evidencia: `tasks/evidence/BB-INSTRUMENTS-2026-10-03/boot.capture.json` y `docs/evidence/BB-INSTRUMENTS-boot.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: Preflight y estado de host no demuestran salud GSP durante boot ni recuperación OEM; selector reporta evidencia incompleta.
+- Evidencia faltante para cierre: log crudo de boot/GSP con versión firmware/driver; control de fallo; boot/recovery y rollback OEM
+- Siguiente acción: Capturar arranque sano y control negativo en GX10 canary con telemetría persistente y rollback probado.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json`, `tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/commands.json`, `tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/preflight.json`, `tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/validator-run.json`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

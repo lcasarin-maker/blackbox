@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Avance de instrumentación APT — 2026-10-03
 
 Se reutilizó la captura local de fuentes, arquitectura e índices APT para exponer los inputs del host en `tasks/evidence/BB-INSTRUMENTS-2026-10-03/apt-sources-capture.json`. No se ejecutó `apt update`, no hubo fallo/recovery del host ni se probó una consola, medio OEM, rollback o RMA. La captura no discrimina las causas APT/Docker/workload del relato; la ficha permanece abierta.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `user_decision`.
+- Impedimento: No hay captura pre-reset, recovery media/rollback ni base para decidir recovery/RMA del sujeto afectado.
+- Evidencia faltante para cierre: Logs pre-reset, último kernel/paquetes, ruta recovery y medios OEM, rollback; reproducción controlada que distinga APT/Docker/workload.
+- Siguiente acción: Completar solo la runbook de preservación pre-reset y solicitar al operador logs previos; pedir al OEM ruta oficial de recovery/RMA antes de cualquier acción sobre el dispositivo.
+- Responsable del siguiente paso: BB; operador Luis decide recuperación del sujeto.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-RECOVERY-APT-UPDATE-01.md`, `tasks/evidence/BB-INSTRUMENTS-2026-10-03/apt-sources-capture.json`, `tools/hardware_batch02_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

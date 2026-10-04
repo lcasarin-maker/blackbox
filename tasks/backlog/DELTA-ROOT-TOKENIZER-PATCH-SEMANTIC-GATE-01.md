@@ -36,3 +36,14 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `external_oem`.
+- Impedimento: No se aportó patch/build exacto del proveedor ni corpus/resultados semánticos reproducibles.
+- Evidencia faltante para cierre: Versiones/digest del tokenizer y patch; corpus boundary/texto-imagen; semántica, precisión, negativos y reversión por build.
+- Siguiente acción: Solicitar al proveedor patch, build digests y reproducer; revisar con evaluador actual y pedir corrida del corpus de límites text/image con control y rollback.
+- Responsable del siguiente paso: BB; coordinación solicita OEM/proveedor.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01.md`, `tools/runtime_batch04_controls.py`, `tests/test_debt_registration_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

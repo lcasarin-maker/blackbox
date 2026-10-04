@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Avance de instrumentación 2026-10-03
 
 `tools.host_diagnostics` ahora captura MTU de interfaz, estado de enlace disponible y binding PCI/driver con consultas nativas y sysfs. El inventario no observa imagen NCCL por rank ni ejecuta primera inferencia; la captura real tuvo `could_not_run=19` y `ip -j link` quedó inaccesible. Evidencia: [BB-INSTRUMENTS-network](../../docs/evidence/BB-INSTRUMENTS-network.md). La ficha permanece abierta; `close_check` y `status` no cambiaron.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: Falta sujeto real de tres nodos, digest/image y NCCL por rank, primera inferencia PP, control sano/negativo y salida literal; inventario local solo vio MTU/link y reportó CNR=19.
+- Evidencia faltante para cierre: Falta sujeto real de tres nodos, digest/image y NCCL por rank, primera inferencia PP, control sano/negativo y salida literal; inventario local solo vio MTU/link y reportó CNR=19.
+- Siguiente acción: Coordinación BB: preparar protocolo y captura rank/image-bound; operador Luis: aportar canario Spark de tres nodos y ejecutar primera inferencia con rollback. Ref explícita: tasks/backlog/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01-original-selector-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md`, `docs/evidence/BB-INSTRUMENTS-network.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01-original-selector-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

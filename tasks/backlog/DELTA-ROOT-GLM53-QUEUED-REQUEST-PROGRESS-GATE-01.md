@@ -46,3 +46,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: `blocked` para progreso de cola/prefill/decode: SSE de Chat Completions describe chunks visibles al cliente, no estado interno por petición ni progreso temporal, y no existe captura backend de engine progress. La ficha sigue abierta y el `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-requests.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: El documento dice que SSE no expone estado interno de cola/prefill y no hay captura temporal por solicitud.
+- Evidencia faltante para cierre: Runtime/digest y carga fijados; progreso/ETA por solicitud, colas, counters KV; control sano y negativo; salida literal y rollback.
+- Siguiente acción: Solicitar traza interna por petición en runtime fijado bajo una activa + siete queued y control max_num_seqs, registrando progreso, cola, KV y salida final.
+- Responsable del siguiente paso: BB; operador Luis para workload/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01.md`, `tools/runtime_batch04_controls.py`, `tests/test_debt_registration_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

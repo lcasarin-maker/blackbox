@@ -1,0 +1,12 @@
+{
+  "scope": "Public phase04 baseline then missing post-build capture; synthetic only, no driver action or experiment closure",
+  "command": "COVERAGE_FILE=/tmp/bb-cgroup-root-postbuild.coverage python3 -m pytest -q tests/test_closure_kernel.py --cov=tools.verify_cgroup_plan --cov-branch --cov-fail-under=100",
+  "output": "87 passed in 1.21s;609 statements,0 missing,310 branches,0 partial,100%",
+  "returncode": 0,
+  "could_not_run_count": 0,
+  "expected_negative_unknown_count": 1,
+  "change": "Removed redundant post-build type guard after _patch_build_integrity already validates candidate_after_stack; public missing-capture regression remains UNKNOWN",
+  "module_sha256": "14a784fc4a6119a140a9fb2ada4204c7d94db1cafff0d42635a04ca16ebf9218",
+  "tests_sha256": "3fa7b9840f3af781714a8e43cce55ce44da20cdf7cc6a7e724e7fec4fd47f020",
+  "ruff_output": "All checks passed!"
+}

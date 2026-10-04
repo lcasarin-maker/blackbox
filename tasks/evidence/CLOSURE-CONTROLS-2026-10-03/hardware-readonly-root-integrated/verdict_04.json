@@ -1,0 +1,312 @@
+[
+  {
+    "source_order": 31,
+    "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "card_path": "tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+      "expect": "exit_zero",
+      "porque": "Must compare a lower cap against the currently applied cap on an identified OEM/driver stack, preserve stability and performance results, and prove restoration of the original clock policy."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt",
+        "sha256": "e571466acb8ff131ade953fcd6952cb390980096c68cbee2901bd8e04db38907",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/readonly-clock-capability-current.json",
+        "sha256": "61481811dbb751f8fb95d20141d2f60eb33d253f0c40306c3535ede8b1e575df",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Readonly receipt shows current/max clocks, policy service declaration, and N/A supported-clock query. It does not show policy readback, A/B, soak, telemetry association or rollback.",
+    "useful_readonly_action": "No further query justified; changing clocks/workload is prohibited.",
+    "prerequisite_or_blocker": "Approved workload-bound A/B, soak and policy rollback.",
+    "generated_batch": 4,
+    "status": "unknown",
+    "reason": "Readonly receipt shows current/max clocks, policy service declaration, and N/A supported-clock query. It does not show policy readback, A/B, soak, telemetry association or rollback.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 32,
+    "id": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "card_path": "tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01 --evidence tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/commands.json",
+        "sha256": "7d0a1b10d935f43b3018b267a7e9c38d692f57199c688baf0daa819fd99a1a81",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/preflight.json",
+        "sha256": "df06ac8cdd12f075a7a8e4dc2a11f37b191867e384f66f12dcfc9b2a9b1cde0c",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/validator-run.json",
+        "sha256": "be510cec715d844f5512ce46361baecc41cab443f1b3289a937e0eeaa8ba9350",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Current healthy GPU identity is not a GSP boot failure or recovery.",
+    "useful_readonly_action": "No read-only query reproduces GSP boot failure.",
+    "prerequisite_or_blocker": "A known GSP incident/candidate and approved boot/recovery test.",
+    "generated_batch": 4,
+    "status": "unknown",
+    "reason": "Current healthy GPU identity is not a GSP boot failure or recovery.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 33,
+    "id": "FEATURE-FORUM-NVME-READONLY-01",
+    "card_path": "tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest tests/test_nvme_readonly.py -q",
+      "expect": "exit_zero",
+      "porque": "Prueba espec\u00edfica pendiente: debe distinguir errores de medio, remount read-only, consultas ilegibles y un dispositivo sano, con salida de evidencia utilizable sin escribir al medio sospechoso."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/export-copy-lab/run.json",
+        "sha256": "94fc5515e341be770b694c80ee107a69a87d8ad224b36cd7f74bbfb682b34654",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/host-observation.txt",
+        "sha256": "5ffe08162951a7396c53eb6c72f44a2d21a36e5a1d1f0d8fbb4f2662d137bc9e",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "The test file has no original selector for a real subject check. Existing instrument lab and /tmp-to-/dev/shm regular-file copy are signals-only; OEM/failing-NVMe/device-recovery evidence remains absent.",
+    "useful_readonly_action": "Development is required: add a real source-generated selector/assertion to tests/test_nvme_readonly.py before treating the existing instrument test as a card gate. For subject evidence, an external trusted digest and read-only comparison can help; no device writes.",
+    "prerequisite_or_blocker": "Known independent reference data, target NVMe/OEM recovery evidence, and separately authorized device fault/recovery case.",
+    "generated_batch": 4,
+    "status": "unknown",
+    "reason": "The test file has no original selector for a real subject check. Existing instrument lab and /tmp-to-/dev/shm regular-file copy are signals-only; OEM/failing-NVMe/device-recovery evidence remains absent.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 34,
+    "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "card_path": "tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01 --evidence tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/commands.json",
+        "sha256": "65e1966a19c52a20043a2fa1f2b7015945e02be9db892542c4d609ab81bf3313",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/preflight.json",
+        "sha256": "fe528831b284c437ad8c36f28079a81584db247dd28cc5885255ad2fa3864348",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/provider-trace-run.json",
+        "sha256": "22d6b6f422085ee337b06062ef6c770601a5ad55d0c123177517e298e760e509",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/validator-run.json",
+        "sha256": "dfb858642ff55aaf0d524c7ebc46e5806b9d8a4e4c1ae00098feacb7bbf551cd",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Provider trace/preflight artifacts exist, but no real post-respawn request, fallback result or CPU-only negative control.",
+    "useful_readonly_action": "No read-only inventory can validate request handling.",
+    "prerequisite_or_blocker": "Approved service request trace and controlled fallback test.",
+    "generated_batch": 4,
+    "status": "unknown",
+    "reason": "Provider trace/preflight artifacts exist, but no real post-respawn request, fallback result or CPU-only negative control.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 35,
+    "id": "FEATURE-FORUM-RESCUE-RUNBOOK-01",
+    "card_path": "tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-RESCUE-RUNBOOK-01 --evidence tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01/host-observation.txt",
+        "sha256": "5ecbda44e0e190f337b43c70b0e5e815390faab24452e95e2ef0702b0e06df59",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Current systemd state does not demonstrate rescue.target entry, recovery, or rollback.",
+    "useful_readonly_action": "No read-only query can establish a rescue transition.",
+    "prerequisite_or_blocker": "Approved rescue/rollback test window.",
+    "generated_batch": 4,
+    "status": "unknown",
+    "reason": "Current systemd state does not demonstrate rescue.target entry, recovery, or rollback.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 36,
+    "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "card_path": "tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-SBSA-WATCHDOG-STATE-01 --evidence tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/owner-query.json",
+        "sha256": "b23f641b3da6c55840eabb3239f15b5f3cb9dc067c9ec6b42bc3567bbfe2a2f0",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/progress.txt",
+        "sha256": "65b3c1fd0bf7f6b29e34d9d13994be218708ada1f97c028a22099364dd1813ac",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Owner query is unprivileged fuser rc1/empty; sysfs reports active/timeout60/nowayout0 and systemd runtime watchdog 1min. Device owner attribution remains unknown.",
+    "useful_readonly_action": "A privileged read-only lsof/fuser attribution of /dev/watchdog0 could reduce owner uncertainty; do not repeat the unprivileged query.",
+    "prerequisite_or_blocker": "Permission for read-only device-owner attribution; OEM recovery policy still required.",
+    "generated_batch": 4,
+    "status": "unknown",
+    "reason": "Owner query is unprivileged fuser rc1/empty; sysfs reports active/timeout60/nowayout0 and systemd runtime watchdog 1min. Device owner attribution remains unknown.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 37,
+    "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+    "card_path": "tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_wifi_isolation --evidence tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01",
+      "expect": "exit_zero",
+      "porque": "Must prove the recorded NetworkManager and supplicant failure is distinguished from a host freeze, test a bounded recovery policy on the cited stack, and preserve rollback evidence."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/host-observation.txt",
+        "sha256": "aee0effc2813909e655a8bbbd632e3ae321e891380450e34a21fd4b87300c91f",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Current Wi-Fi observation has no active wireless endpoint or isolated peer; the selector is CNR for raw subject commands.",
+    "useful_readonly_action": "No network probe authorized; no new host query.",
+    "prerequisite_or_blocker": "Approved isolated AP/peer, endpoint policy and recovery.",
+    "generated_batch": 4,
+    "status": "unknown",
+    "reason": "Current Wi-Fi observation has no active wireless endpoint or isolated peer; the selector is CNR for raw subject commands.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 38,
+    "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+    "card_path": "tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_usb_hid_postupdate --evidence tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK",
+      "expect": "exit_zero",
+      "porque": "El cierre debe separar fallo USB-HID real, m\u00e1quina headless, m\u00f3dulo integrado en kernel y telemetr\u00eda inaccesible; comprobar que el servicio sigue activo no demuestra que el teclado ni el acceso remoto funcionen."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK/host-observation.txt",
+        "sha256": "2bf74c3fa483e0487dbce97622aacc2034a7c8bdcd03e0dae8a0b210bd2f3f9a",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "No visible HID device in current observation; no keyboard/update/recovery sequence.",
+    "useful_readonly_action": "No useful host-only query while no HID is attached.",
+    "prerequisite_or_blocker": "Real HID peripheral and approved update/recovery case.",
+    "generated_batch": 4,
+    "status": "unknown",
+    "reason": "No visible HID device in current observation; no keyboard/update/recovery sequence.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 39,
+    "id": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+    "card_path": "tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-CX7-HOTPLUG-FAN-PROTECTION --evidence tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+      "expect": "exit_zero",
+      "porque": "Prove the reported hotplug/fan mechanism and validate a vendor-supported preventive fix or bounded reversible workaround with thermal safety, network controls, and rollback."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION/progress.txt",
+        "sha256": "fe736748e6a97b076c9c493cca9cd1cd371ff8b2f02c67b8da4aaca2b9419a98",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Progress evidence records no fan RPM input and no CX7/fan A/B; no blacklist or test is authorized.",
+    "useful_readonly_action": "No read-only action can prove protection without an observable fan or CX7 load condition.",
+    "prerequisite_or_blocker": "CX7 hardware, external tachometer/meter and approved hotplug/canary plan.",
+    "generated_batch": 4,
+    "status": "unknown",
+    "reason": "Progress evidence records no fan RPM input and no CX7/fan A/B; no blacklist or test is authorized.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 40,
+    "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+    "card_path": "tasks/backlog/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT --evidence tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+      "expect": "exit_zero",
+      "porque": "Show that OTA compatibility checks detect a conflicting DRM modeset override before update, with safe recovery and a clean-system negative control."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/commands.json",
+        "sha256": "b3bbfe546e350ebe8b013466fa8934c888a60ec33fb3efe7f0e530c9be80d878",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/preflight.json",
+        "sha256": "1deb0bce63a0efbc28cbb03178c5360c46a6fd7d9cc1affe2b03a63eac11c6c0",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/validator-run.json",
+        "sha256": "09bf330ed5faea4e85e34258be7e8ce72ba3e55ecdfcb8c22a6353442c4eb83d",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Existing preflight has cmdline data but effective nvidia_drm modeset read was permission-denied/CNR.",
+    "useful_readonly_action": "One privileged read-only read of /sys/module/nvidia_drm/parameters/modeset would close that specific observation gap; does not close OTA compatibility.",
+    "prerequisite_or_blocker": "Read permission; OTA target/recovery evidence remains external.",
+    "generated_batch": 4,
+    "status": "unknown",
+    "reason": "Existing preflight has cmdline data but effective nvidia_drm modeset read was permission-denied/CNR.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  }
+]

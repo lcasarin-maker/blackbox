@@ -46,3 +46,14 @@ disponibles. Esta ficha sigue abierta.
 ## Índice de propuestas registradas del swarm NVIDIA categoría 721
 
 - **`BB-UMA-GPU-ALLOCATABLE-HEADROOM-SEMANTICS`** — On GB10 UMA, general system allocations reduce the pool available for GPU allocation. Forum users say nvtop displays GPU memory but excludes CPU allocations, while some released versions fail on Spark. This can hide reduced… Fuente: [351284](https://forums.developer.nvidia.com/t/nvtop-with-dgx-spark-unified-memory-support/351284/1).
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `privileged_access`.
+- Impedimento: ABI y controles offline existen; bpftrace exige root incluso para listar/compilar probes y el host no produjo símbolos/captura runtime/CUDA.
+- Evidencia faltante para cierre: ABI y controles offline existen; bpftrace exige root incluso para listar/compilar probes y el host no produjo símbolos/captura runtime/CUDA.
+- Siguiente acción: Coordinación BB: dejar comandos/output acotados listos y validar parser con fixtures; operador Luis: autorizar y capturar probes en host canary con root. Ref explícita: tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-MEMORYSAVER-02-TRAZADOR-direct-close-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-MEMORYSAVER-02-TRAZADOR-direct-close-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

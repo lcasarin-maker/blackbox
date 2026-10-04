@@ -35,3 +35,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Evaluación de instrumentos 2026-10-03
 
 Reusa `tools/memory_profile.py`/`tools/atom_gpu_telemetry.py` como muestreo general de memoria/PSI, no como evidencia de RPC server PID, transporte efectivo, validez de salida ni orden de teardown. No hay captura local llama.cpp/RPC del stack o incidente. Estado `deferred_lab`: stack/commit/RPC fijados, endpoint y salida/KV válidos, memoria/cgroup/PSI atribuibles al servidor y A/B de orden de cierre con control TCP/RDMA solo si el backend lo reporta. No se inició ni detuvo procesos.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: Herramientas de memoria/PSI no observan PID RPC, transporte, salida válida ni orden de teardown; no hay captura local del stack llama.cpp/RPC.
+- Evidencia faltante para cierre: Herramientas de memoria/PSI no observan PID RPC, transporte, salida válida ni orden de teardown; no hay captura local del stack llama.cpp/RPC.
+- Siguiente acción: Coordinación BB: definir lifecycle/health/output contract y negativos offline; operador Luis: ejecutar workload fijado en hosts canary y conservar logs de RPC/teardown. Ref explícita: tasks/backlog/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01-original-selector-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01-original-selector-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

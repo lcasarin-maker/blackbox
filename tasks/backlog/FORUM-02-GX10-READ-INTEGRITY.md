@@ -40,3 +40,14 @@ Controles de fixture: flags separados, cambio de archivo entre aperturas, O_DIRE
 ### Delta de integridad operativa en almacenamiento USB externo
 
 **DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.** En un Dell GB10 con dos unidades NVMe USB, el dueño describe renegociación intermitente a USB 2 de 480Mbps tras reinicios y una matriz mdadm que no se ensambla/monta si cualquiera de sus miembros queda por debajo de 5000Mbps; advierte riesgo de timeouts/corrupción al montar en ese estado. Otro usuario informa varios meses estable con UAS deshabilitado para VID:PID concretos y ventilación adicional, pero su A/B térmico quedó pendiente ([349121](https://forums.developer.nvidia.com/t/349121)). Proteger primero el montaje: comprobar link speed efectivo por identidad estable antes de assemble/mount y mantener array detenido si falta o queda bajo el piso acordado. Validar cualquier quirk UAS solo en canary del mismo enclosure/kernel con reversión. Esta observación corresponde a medios USB externos, no demuestra fallo del NVMe interno ni su causa.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: La lectura local de instrumento no contrasta bytes de storage con referencia externa ni separa modos de caché/NVMe/firmware.
+- Evidencia faltante para cierre: referencia externa confiable y bytes esperados; resultados buffered/O_DIRECT/cache; salud NVMe y evidencia firmware; control corrupto
+- Siguiente acción: Preparar ensayo no destructivo con datos de referencia y comparación buffered/O_DIRECT en el GX10, documentando cache/NVMe/firmware y control negativo.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json`, `tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/host-observation.txt`, `tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/read-integrity-instrument.txt`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

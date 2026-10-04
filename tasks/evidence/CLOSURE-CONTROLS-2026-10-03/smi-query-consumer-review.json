@@ -1,0 +1,30 @@
+{
+  "scope": "Repository search for changed sample fields gpu/residuo_mb; external consumers not inspected",
+  "findings": [
+    {
+      "path": "tools/presupuesto_memoria.py",
+      "function": "pico_gpu_observado_mib",
+      "observed": "g=d_.get(gpu); if not g: continue; null safely ignored as absent, without iterating it",
+      "limit": "Existing empty-list handling also skips successful zero-process observations; no change claimed"
+    },
+    {
+      "path": "bin/bb",
+      "function": "who",
+      "observed": "Failed GPU total still rendered using default0; failure message labels missing query as no processes",
+      "action": "Correct display after current full Bash suite ends"
+    },
+    {
+      "path": "bin/bb",
+      "function": "linaje GPU overview",
+      "observed": "Direct query-compute-apps pid/used_memory still has no timeout",
+      "action": "Reuse existing SMI timeout and report query failure after current suite"
+    }
+  ],
+  "could_not_run_count": 0,
+  "source_sha256": {
+    "bin/bb": "b0ed2b4518e52c526c8e99920e447e14356eea8aeade47e8e30752f0d1c7bd48",
+    "tools/presupuesto_memoria.py": "c98a811984c03abcfd6f0bd58e654e6fac87e28d0a20c80e83254523c0a6d97b"
+  },
+  "status": "changes_required",
+  "experimental_closures": 0
+}

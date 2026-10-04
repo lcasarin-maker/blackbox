@@ -1,0 +1,39 @@
+{
+  "old_sha256": "0d94898c674619d98a215ec3ec02e8194ea824613aea21559d9dee74c15d0186",
+  "new_sha256": "d0d07ccec1762bbb725a2fd4819c259459ef7e8cc20318dfe9b4ac7618a718f9",
+  "changes": [
+    "explicit optional-result narrowing",
+    "fixture value and datetime tuple types",
+    "real oversized file negative",
+    "actual ENAMETOOLONG path negative for previously uncovered OSError rethrow"
+  ],
+  "validation": {
+    "command": "COVERAGE_FILE=/tmp/bb-hardware02-fixed-20261004.coverage python3 -m pytest -q tests/test_hardware_batch02_controls.py tests/test_hardware_batch03_controls.py --cov=tools.hardware_batch02_controls --cov=tools.hardware_batch03_controls --cov=tools.capture_io --cov-branch --cov-report=term-missing",
+    "exit_code": 0,
+    "output": "171 passed in 1.77s",
+    "statements": 2556,
+    "missing_statements": 0,
+    "branches": 1364,
+    "partial_branches": 0,
+    "coverage_percent": 100,
+    "could_not_run": 0,
+    "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-batch02-03-fixed-primary-coverage.log",
+    "log_sha256": "6eee802a93aea85bb0fdf552fe4507dd34c960bdbf598fa245644b755487f7d5"
+  },
+  "canonical_pyright": {
+    "command": "python3 .simplecode/run.py pyright",
+    "exit_code": 0,
+    "output": "0 errors, 0 warnings, 0 informations",
+    "could_not_run": 0
+  },
+  "logs": [
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/bb-hardware02-canonical-pyright-fixed-20261004.log",
+      "sha256": "6d88a1b220adb7a3d62092b6e38431f0b3fe8babe9864fab90e5849766260332"
+    },
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/bb-apt-integral-scope-coverage-20261004.log",
+      "sha256": "19691f56d50e74721fbc0573ac6ac2f60508c880b7b7dc20847114b50f6f43ca"
+    }
+  ]
+}

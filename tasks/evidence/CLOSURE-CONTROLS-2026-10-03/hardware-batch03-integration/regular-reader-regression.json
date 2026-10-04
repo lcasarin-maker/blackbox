@@ -1,0 +1,19 @@
+{
+  "scope": "FIFO envelopes and referenced raw artifacts return UNKNOWN without a writer; no host intervention",
+  "initial_test_attempt": {
+    "returncode": 1,
+    "summary": "1 failed,37 passed in0.58s",
+    "reason": "New test omitted required vendor/product fixture arguments; corrected before final run"
+  },
+  "command": "COVERAGE_FILE=/tmp/bb-hardware-regular-reader-final.coverage python3 -m pytest -q tests/test_hardware_batch03_controls.py --cov=tools --cov-branch --cov-report=",
+  "output": "38 passed in0.78s",
+  "returncode": 0,
+  "scoped_coverage_command": "python3 -m coverage report --data-file=/tmp/bb-hardware-regular-reader-final.coverage --include=tools/hardware_batch03_controls.py -m",
+  "scoped_coverage_output": "1065 statements,0 missing,566 branches,0 partial,100%",
+  "could_not_run_count": 0,
+  "expected_negative_unknown_count": 2,
+  "reader_guarantee": "Regular-file fstat on opened descriptor, bounded read, O_NONBLOCK, final-component O_NOFOLLOW; does not establish provenance or protect all ancestor path components",
+  "ruff_output": "All checks passed!",
+  "source_sha256": "b4a17378eabd22e3f67838d94870654aafc36c7c0740f9c9bd4dba3817d21ea5",
+  "tests_sha256": "4be4727939042c24a589b10c5094da8b260a65f7551b58738224bc2bea182e53"
+}

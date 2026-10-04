@@ -1,0 +1,16 @@
+{
+  "reviewer": "controls_runtime (Luna)",
+  "source_sha256": "6d78656c9435d12ba0255aef71a30458af00f9b4a00d1f69ff6b6fb3c8adcd76",
+  "source": "/tmp/bb-controls-kernel/tests/test_workload_restart_containment.py",
+  "scope": "Read-only review of in-progress reader, no full physical bundle; only interpreter helper exploit independently replayed by root",
+  "confirmed_root_reproduction": "restart-policy-interpreter-root-negative.json",
+  "additional_findings_from_source": [
+    "reboot token membership does not establish systemctl invocation",
+    "unit text mentions do not establish effective executable start gate",
+    "management SSH command and remote host are not fully bound",
+    "service response does not bind URL/model/auth/budget",
+    "container PID/start identity absent",
+    "reboot trigger ordering and OOM boot association incomplete"
+  ],
+  "action": "Returned to executor; controls remain unintegrated; original card remains open"
+}

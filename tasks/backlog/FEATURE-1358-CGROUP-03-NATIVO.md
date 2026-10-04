@@ -40,3 +40,14 @@ y resultados runtime. El verificador de cierre permanece pendiente.
 ## Compatibilidad de compilación — 2026-10-02
 
 NVIDIA 615.71.09 compiló contra headers 6.17.0-1032-nvidia (`make modules -j2`, rc0) dentro de scope limitado. Cinco módulos producidos, sin instalar/cargar. Metadatos, SHA256, advertencias y BTF omitido: `tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-615.json` y `build-modules.json`. Los módulos locales carecen de firma; con Secure Boot activo el ensayo exige firma/trust y stack GSP/userspace alineado. La compilación deja pendiente runtime, límites, ownership y rollback, por lo que conserva open.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: La compilación de módulos pasó, pero runtime de driver 615, límites, ownership, cgroup independiente y liberación no se han probado.
+- Evidencia faltante para cierre: runtime con stack alineado; cgroup secundario; caso bajo límite y negativo; liberación; firma/trust y rollback
+- Siguiente acción: Ejecutar arnés runtime en lab con stack firmado/alineado y cgroup canary; comprobar límite, aislamiento/liberación y rollback sin instalar en host de producción.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-1358-CGROUP-03-NATIVO.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json`, `tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-615.json`, `tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-modules.json`, `tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/comparison.txt`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

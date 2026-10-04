@@ -1,0 +1,28 @@
+{
+  "command": "stat -Lc '%a %u %g %n' /sys/module/nvidia_drm/parameters/modeset /dev/watchdog0",
+  "sandbox": {
+    "exit_code": 1,
+    "modeset": {
+      "mode": "400",
+      "uid": 65534,
+      "gid": 65534
+    },
+    "watchdog0": "not visible in sandbox"
+  },
+  "native": {
+    "exit_code": 0,
+    "modeset": {
+      "mode": "400",
+      "uid": 0,
+      "gid": 0
+    },
+    "watchdog0": {
+      "mode": "600",
+      "uid": 0,
+      "gid": 0
+    }
+  },
+  "could_not_run_native_stat": 0,
+  "scope_limit": "Native stat proves file/device existence and access modes, not DRM value or watchdog process ownership. Reading DRM value and attributing root processes still requires privilege. Sandbox absence does not establish host absence.",
+  "changes_performed": false
+}

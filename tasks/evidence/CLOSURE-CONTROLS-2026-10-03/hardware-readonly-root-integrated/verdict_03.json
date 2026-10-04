@@ -1,0 +1,261 @@
+[
+  {
+    "source_order": 21,
+    "id": "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01",
+    "card_path": "tasks/backlog/DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "evidence_files": [],
+    "current_assessment": "Thermal inventory exists but has no fan inputs; clock capability receipt has N/A supported clocks. No auxiliary-cooling A/B.",
+    "useful_readonly_action": "No generic sensor reread; target-specific controller/fan readback would help only with the actual target hardware.",
+    "prerequisite_or_blocker": "External cooling/hardware and authorized clock/cooling A/B.",
+    "generated_batch": 3,
+    "status": "unknown",
+    "reason": "Thermal inventory exists but has no fan inputs; clock capability receipt has N/A supported clocks. No auxiliary-cooling A/B.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 22,
+    "id": "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01",
+    "card_path": "tasks/backlog/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_telemetry_coverage_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/current-native-observation-summary.json",
+        "sha256": "628910d78930dc14519ad711c0c94edb254c0ffa800515223bd7f02c425c6cdc",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/prototype-capture.json",
+        "sha256": "011a1c8bcd465ab447cd1ac0285a6c9455ff5120203b53f738862a4f29ddcc18",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Current native thermal summary records 7 zones, 3 hwmon, 11 temperature inputs, 0 fan inputs; this is a completed observation of coverage, not proof of adequate telemetry.",
+    "useful_readonly_action": "No repeat inventory; retain summary as actual coverage evidence.",
+    "prerequisite_or_blocker": "Any claim about fan coverage needs a platform with observable fan inputs or external measurement.",
+    "generated_batch": 3,
+    "status": "unknown",
+    "reason": "Current native thermal summary records 7 zones, 3 hwmon, 11 temperature inputs, 0 fan inputs; this is a completed observation of coverage, not proof of adequate telemetry.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 23,
+    "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+    "card_path": "tasks/backlog/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_usb_raid_link_admission_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "evidence_files": [],
+    "current_assessment": "No USB RAID subject/link capture.",
+    "useful_readonly_action": "If the enclosure is already attached, read-only USB/SCSI link identity/speed could establish current negotiation; no such target appears in evidence.",
+    "prerequisite_or_blocker": "USB RAID enclosure, expected identity and link-speed contract.",
+    "generated_batch": 3,
+    "status": "unknown",
+    "reason": "No USB RAID subject/link capture.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 24,
+    "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+    "card_path": "tasks/backlog/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_backup_mount_boot_identity_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "evidence_files": [],
+    "current_assessment": "No external backup mount or expected boot identity in card evidence.",
+    "useful_readonly_action": "After the intended backup device is attached, read-only findmnt/lsblk/UUID plus current boot_id could bind the actual mount; no target is presently known.",
+    "prerequisite_or_blocker": "Known backup device/expected UUID and boot identity.",
+    "generated_batch": 3,
+    "status": "unknown",
+    "reason": "No external backup mount or expected boot identity in card evidence.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 25,
+    "id": "DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01",
+    "card_path": "tasks/backlog/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_display_carveout_oem_fix_gate_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "evidence_files": [],
+    "current_assessment": "No display-carveout OEM fix or recovery evidence.",
+    "useful_readonly_action": "Current GPU identity does not establish OEM-supported carveout settings.",
+    "prerequisite_or_blocker": "Exact platform/OEM release and approved configuration/recovery.",
+    "generated_batch": 3,
+    "status": "unknown",
+    "reason": "No display-carveout OEM fix or recovery evidence.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 26,
+    "id": "DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01",
+    "card_path": "tasks/backlog/DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_gx10_soc_ec_cable_recovery_candidate_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "evidence_files": [],
+    "current_assessment": "No GX10/EC/cable subject; current thermal host is a different board.",
+    "useful_readonly_action": "No useful host query without target GX10 and cable/EC identity.",
+    "prerequisite_or_blocker": "GX10 hardware, OEM compatibility record, cable and approved recovery plan.",
+    "generated_batch": 3,
+    "status": "unknown",
+    "reason": "No GX10/EC/cable subject; current thermal host is a different board.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 27,
+    "id": "DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01",
+    "card_path": "tasks/backlog/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_subambient_cooling_and_uma_canary_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    },
+    "evidence_files": [],
+    "current_assessment": "No subambient/UMA canary. No cooling hardware intervention is authorized.",
+    "useful_readonly_action": "None; ambient/thermal snapshot cannot validate subambient safety or UMA behavior.",
+    "prerequisite_or_blocker": "Approved test plan, compatible cooling instrumentation and target hardware.",
+    "generated_batch": 3,
+    "status": "unknown",
+    "reason": "No subambient/UMA canary. No cooling hardware intervention is authorized.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 28,
+    "id": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+    "card_path": "tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_apt_critical_removals --evidence tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+      "expect": "exit_zero",
+      "porque": "El cierre requiere demostrar que una remoci\u00f3n simulada peligrosa se bloquea o se declara antes de aplicar cambios, y que una transacci\u00f3n inocua sigue disponible; un inventario est\u00e1tico de paquetes no demuestra protecci\u00f3n."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/apt-captures.json",
+        "sha256": "10c4b042ee56de970ef0d96a91ea352a80313a9780171f3e076af37385a7689d",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/apt-captures.sha256",
+        "sha256": "d07a67e4588d86b00a3df0821c0b2e1950d8c0075394b7b1d29aed738fca87fa",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/commands.json",
+        "sha256": "a7674abc018612f93ee696d97adcc8f198849a3e16e3d85692f4a97cd1b71e0a",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/preflight.json",
+        "sha256": "d32457a299c96477cc54002ea35af3d044e97ee403c4cb1788847f8ff0fa4e9f",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/validator-run.json",
+        "sha256": "d8f822c3ff3459f007094cfd70b4118e9fce844a8bbf569b4e98b5af46e3162c",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Existing APT captures show lock denial and absent aisleriot; no integrated removal-guard execution on the actual package subject.",
+    "useful_readonly_action": "No additional host probe for absent package; isolated apt-root negative canary belongs to separate guarded harness.",
+    "prerequisite_or_blocker": "Reproducible isolated package-state fixture, not host package removal.",
+    "generated_batch": 3,
+    "status": "unknown",
+    "reason": "Existing APT captures show lock denial and absent aisleriot; no integrated removal-guard execution on the actual package subject.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 29,
+    "id": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+    "card_path": "tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01 --evidence tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01/host-observation.txt",
+        "sha256": "34e00c6451e7d48f3d3fcede4564c502589a10b3c03cdf348b42d930efe0d346",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Current graphical target/GDM/seat0 and SSH are observed healthy; no post-update black-screen/recovery/rollback event.",
+    "useful_readonly_action": "No read-only action can recreate the post-update failure.",
+    "prerequisite_or_blocker": "Target update and approved session recovery/rollback case.",
+    "generated_batch": 3,
+    "status": "unknown",
+    "reason": "Current graphical target/GDM/seat0 and SSH are observed healthy; no post-update black-screen/recovery/rollback event.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 30,
+    "id": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "card_path": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 --evidence tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+      "expect": "exit_zero",
+      "porque": "Verificador pendiente: demostrar preflight m\u00ednimo con im\u00e1genes soportadas, arquitectura/cubin y controles negativos; ninguna recomendaci\u00f3n de backend sin validar salida/estabilidad y rollback."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/commands.json",
+        "sha256": "efafa141008a4e7518e4b669e0ec3a9dad8f51bf43fef155db86e3a7fc09f94c",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/preflight.json",
+        "sha256": "0855505ba5d0e896a14c79186a9eab4c1f4d49978098e7a0fbcf42ce1f2ff0cc",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/validator-run.json",
+        "sha256": "ba525d2fb42d2103661b42557f2e9b9b8ef292b2bbc221c205f07160325853cb",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Native GB10/driver/CUDA identity and container preflight exist; functional workload result is missing.",
+    "useful_readonly_action": "No extra version query needed; bind current native NVIDIA receipt. A runtime workload would exceed this read-only assignment.",
+    "prerequisite_or_blocker": "Approved minimal functional workload and image digest contract.",
+    "generated_batch": 3,
+    "status": "unknown",
+    "reason": "Native GB10/driver/CUDA identity and container preflight exist; functional workload result is missing.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  }
+]

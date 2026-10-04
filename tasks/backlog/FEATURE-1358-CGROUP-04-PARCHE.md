@@ -36,3 +36,14 @@ Evidencia: `tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/readiness.txt`.
 Pendiente para cierre: ruta responsable y hueco residual bajo la integración nativa.
 La ficha conserva status open; el informe distingue observaciones estáticas
 y resultados runtime. El verificador de cierre permanece pendiente.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: No diff está preparado, y la evidencia 03-nativo señala que GB10 runtime 615 y la integración real siguen sin probarse; todavía no se ha demostrado una regresión residual que justifique aplicar parche. El close_check exige capturas raw sujetas por fase.
+- Evidencia faltante para cierre: Capturas raw ligadas de 02-traza y 03-nativo que indiquen asignación/propietario faltante y comportamiento native; sólo entonces diff/compilación más comparaciones antes/después de 01/03 o prueba de redundancia nativa que satisfaga el contrato.
+- Siguiente acción: Preparación coordinable: inspeccionar readiness.txt y comparación 03-nativo contra ruta nativa; no escribir parche hasta identificar caso específico de doble cargo, pérdida o liberación. Cierre condicionado: obtener trace 02 y runtime 615 en sujeto GB10 con comparación antes/después o evidencia de cierre por vía nativa aceptada por el selector. Ref: tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/readiness.txt; tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/comparison.txt; tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-04-PARCHE-direct-close-current.log. Ref explícita: tasks/backlog/FEATURE-1358-CGROUP-04-PARCHE.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-04-PARCHE-direct-close-current.log.
+- Responsable del siguiente paso: Coordinación BB; para recuperación de históricos, custodio del artifact store si corresponde..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-1358-CGROUP-04-PARCHE.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-04-PARCHE-direct-close-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -1,0 +1,392 @@
+{
+  "observed_at": "2026-10-04T07:46:56.324638+00:00",
+  "scope": "Synthetic root adversarial verifier test only, not host firmware or hardware result.",
+  "baseline": {
+    "status": "pass",
+    "reason": "PSID/firmware, PCI bus-master and active RDMA-driver state, maintainer-script scan, signed source and indirect-writer negative were parsed",
+    "files": [
+      "/tmp/bb-fw-device-review-ka214ovn/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01/commands.json"
+    ],
+    "fail": 0,
+    "could_not_run": 0
+  },
+  "mutant": {
+    "status": "pass",
+    "reason": "PSID/firmware, PCI bus-master and active RDMA-driver state, maintainer-script scan, signed source and indirect-writer negative were parsed",
+    "files": [
+      "/tmp/bb-fw-device-review-ka214ovn/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01/commands.json"
+    ],
+    "fail": 0,
+    "could_not_run": 0
+  },
+  "baseline_capture": {
+    "schema": 1,
+    "id": "DELTA-FORUM-CX7-FW-UPDATE-GUARD-01",
+    "experiment_plan": {
+      "package_path": "/tmp/mlx-cx7.deb",
+      "package_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "package_name": "mlx-fw-updater",
+      "package_origin": "repo.nvidia.com",
+      "script_extract_dir": "/tmp/cx7-controls"
+    },
+    "vendor_sources": [
+      {
+        "url": "https://nvidia.com/cx7/firmware",
+        "text": "NVIDIA CX7 package compatibility PSID NVD0000000087 firmware 28.45.1. Verify exact product and recovery channel.",
+        "sha256": "db3bf25feb6ee2dd37af1ddb776c0c1a67c67c1d7368a81269dbb3d4d660d56d"
+      }
+    ],
+    "commands": [
+      {
+        "argv": [
+          "cat",
+          "experiment-plan.json"
+        ],
+        "exit": 0,
+        "stdout": "{\"package_path\": \"/tmp/mlx-cx7.deb\", \"package_sha256\": \"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\", \"package_name\": \"mlx-fw-updater\", \"package_origin\": \"repo.nvidia.com\", \"script_extract_dir\": \"/tmp/cx7-controls\"}",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:00:00Z"
+      },
+      {
+        "argv": [
+          "dmidecode",
+          "-t",
+          "system"
+        ],
+        "exit": 0,
+        "stdout": "Manufacturer: ASUSTeK COMPUTER INC.\nProduct Name: GX10\nBIOS Version: 1.0\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:01:00Z"
+      },
+      {
+        "argv": [
+          "uname",
+          "-r"
+        ],
+        "exit": 0,
+        "stdout": "6.17.0-1029\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:02:00Z"
+      },
+      {
+        "argv": [
+          "mstflint",
+          "-d",
+          "03:00.0",
+          "q"
+        ],
+        "exit": 0,
+        "stdout": "PSID: NVD0000000087\nFW Version: 28.45.1\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:03:00Z"
+      },
+      {
+        "argv": [
+          "lspci",
+          "-vv",
+          "-s",
+          "03:00.0"
+        ],
+        "exit": 0,
+        "stdout": "BusMaster+\nKernel driver in use: mlx5_core\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:04:00Z"
+      },
+      {
+        "argv": [
+          "ibv_devinfo",
+          "-v"
+        ],
+        "exit": 0,
+        "stdout": "hca_id: mlx5_0\nstate: PORT_ACTIVE\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:05:00Z"
+      },
+      {
+        "argv": [
+          "sha256sum",
+          "/tmp/mlx-cx7.deb"
+        ],
+        "exit": 0,
+        "stdout": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff  /tmp/mlx-cx7.deb\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:06:00Z"
+      },
+      {
+        "argv": [
+          "dpkg-deb",
+          "--control",
+          "/tmp/mlx-cx7.deb",
+          "/tmp/cx7-controls"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:07:00Z"
+      },
+      {
+        "argv": [
+          "cat",
+          "/tmp/cx7-controls/preinst"
+        ],
+        "exit": 0,
+        "stdout": "#!/bin/sh\nexit 0\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:08:00Z",
+        "phase": "maintainer-script"
+      },
+      {
+        "argv": [
+          "cat",
+          "/tmp/cx7-controls/postinst"
+        ],
+        "exit": 0,
+        "stdout": "#!/bin/sh\nexit 0\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:09:00Z",
+        "phase": "maintainer-script"
+      },
+      {
+        "argv": [
+          "cat",
+          "/tmp/cx7-controls/prerm"
+        ],
+        "exit": 0,
+        "stdout": "#!/bin/sh\nexit 0\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:10:00Z",
+        "phase": "maintainer-script"
+      },
+      {
+        "argv": [
+          "cat",
+          "/tmp/cx7-controls/postrm"
+        ],
+        "exit": 0,
+        "stdout": "#!/bin/sh\nexit 0\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:11:00Z",
+        "phase": "maintainer-script"
+      },
+      {
+        "argv": [
+          "apt-cache",
+          "policy",
+          "mlx-fw-updater"
+        ],
+        "exit": 0,
+        "stdout": "500 https://repo.nvidia.com/apt noble/main arm64 Packages\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:12:00Z"
+      },
+      {
+        "argv": [
+          "dpkg-sig",
+          "--verify",
+          "/tmp/mlx-cx7.deb"
+        ],
+        "exit": 0,
+        "stdout": "GOOD signature\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:13:00Z"
+      },
+      {
+        "argv": [
+          "cat",
+          "recovery-runbook.md"
+        ],
+        "exit": 0,
+        "stdout": "NVIDIA CX7 recovery instructions\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:14:00Z",
+        "phase": "recovery-procedure"
+      }
+    ]
+  },
+  "mutated_capture": {
+    "schema": 1,
+    "id": "DELTA-FORUM-CX7-FW-UPDATE-GUARD-01",
+    "experiment_plan": {
+      "package_path": "/tmp/mlx-cx7.deb",
+      "package_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "package_name": "mlx-fw-updater",
+      "package_origin": "repo.nvidia.com",
+      "script_extract_dir": "/tmp/cx7-controls"
+    },
+    "vendor_sources": [
+      {
+        "url": "https://nvidia.com/cx7/firmware",
+        "text": "NVIDIA CX7 package compatibility PSID NVD0000000087 firmware 28.45.1. Verify exact product and recovery channel.",
+        "sha256": "db3bf25feb6ee2dd37af1ddb776c0c1a67c67c1d7368a81269dbb3d4d660d56d"
+      }
+    ],
+    "commands": [
+      {
+        "argv": [
+          "cat",
+          "experiment-plan.json"
+        ],
+        "exit": 0,
+        "stdout": "{\"package_path\": \"/tmp/mlx-cx7.deb\", \"package_sha256\": \"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\", \"package_name\": \"mlx-fw-updater\", \"package_origin\": \"repo.nvidia.com\", \"script_extract_dir\": \"/tmp/cx7-controls\"}",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:00:00Z"
+      },
+      {
+        "argv": [
+          "dmidecode",
+          "-t",
+          "system"
+        ],
+        "exit": 0,
+        "stdout": "Manufacturer: ASUSTeK COMPUTER INC.\nProduct Name: GX10\nBIOS Version: 1.0\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:01:00Z"
+      },
+      {
+        "argv": [
+          "uname",
+          "-r"
+        ],
+        "exit": 0,
+        "stdout": "6.17.0-1029\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:02:00Z"
+      },
+      {
+        "argv": [
+          "mstflint",
+          "-d",
+          "03:00.0",
+          "q"
+        ],
+        "exit": 0,
+        "stdout": "PSID: NVD0000000087\nFW Version: 28.45.1\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:03:00Z"
+      },
+      {
+        "argv": [
+          "lspci",
+          "-vv",
+          "-s",
+          "04:00.0"
+        ],
+        "exit": 0,
+        "stdout": "BusMaster+\nKernel driver in use: mlx5_core\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:04:00Z"
+      },
+      {
+        "argv": [
+          "ibv_devinfo",
+          "-v"
+        ],
+        "exit": 0,
+        "stdout": "hca_id: mlx5_0\nstate: PORT_ACTIVE\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:05:00Z"
+      },
+      {
+        "argv": [
+          "sha256sum",
+          "/tmp/mlx-cx7.deb"
+        ],
+        "exit": 0,
+        "stdout": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff  /tmp/mlx-cx7.deb\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:06:00Z"
+      },
+      {
+        "argv": [
+          "dpkg-deb",
+          "--control",
+          "/tmp/mlx-cx7.deb",
+          "/tmp/cx7-controls"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:07:00Z"
+      },
+      {
+        "argv": [
+          "cat",
+          "/tmp/cx7-controls/preinst"
+        ],
+        "exit": 0,
+        "stdout": "#!/bin/sh\nexit 0\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:08:00Z",
+        "phase": "maintainer-script"
+      },
+      {
+        "argv": [
+          "cat",
+          "/tmp/cx7-controls/postinst"
+        ],
+        "exit": 0,
+        "stdout": "#!/bin/sh\nexit 0\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:09:00Z",
+        "phase": "maintainer-script"
+      },
+      {
+        "argv": [
+          "cat",
+          "/tmp/cx7-controls/prerm"
+        ],
+        "exit": 0,
+        "stdout": "#!/bin/sh\nexit 0\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:10:00Z",
+        "phase": "maintainer-script"
+      },
+      {
+        "argv": [
+          "cat",
+          "/tmp/cx7-controls/postrm"
+        ],
+        "exit": 0,
+        "stdout": "#!/bin/sh\nexit 0\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:11:00Z",
+        "phase": "maintainer-script"
+      },
+      {
+        "argv": [
+          "apt-cache",
+          "policy",
+          "mlx-fw-updater"
+        ],
+        "exit": 0,
+        "stdout": "500 https://repo.nvidia.com/apt noble/main arm64 Packages\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:12:00Z"
+      },
+      {
+        "argv": [
+          "dpkg-sig",
+          "--verify",
+          "/tmp/mlx-cx7.deb"
+        ],
+        "exit": 0,
+        "stdout": "GOOD signature\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:13:00Z"
+      },
+      {
+        "argv": [
+          "cat",
+          "recovery-runbook.md"
+        ],
+        "exit": 0,
+        "stdout": "NVIDIA CX7 recovery instructions\n",
+        "stderr": "",
+        "captured_at": "2026-10-03T12:14:00Z",
+        "phase": "recovery-procedure"
+      }
+    ]
+  },
+  "mutation": "flint queries03:00.0 but lspci busmaster receipt targets04:00.0",
+  "source_sha256": "c4be90b82853f1eeb00cd906ddc99277d276b2badebb01630bc44c8724523dbc"
+}

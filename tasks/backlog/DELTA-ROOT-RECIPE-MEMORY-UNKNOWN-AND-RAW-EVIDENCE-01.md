@@ -48,3 +48,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 `python3 -m tools.recipe_memory` reutiliza `tools.memory_profile.capture` y conserva la captura host completa, sus estados de lectura y un digest del registro que no autentica el origen. Los términos de receta vienen del invocador y se etiquetan `caller_supplied_unverified`; faltantes o desconocidos producen `unknown`, nunca cero. `comparison_only` compara esos valores declarados con MemAvailable, sin afirmar admisión ni protección real, y no prueba workload, canario funcional, compatibilidad, soak ni rollback.
 
 La ejecución local sin términos declarados quedó como `unknown`, rc=2, preservando la captura raw en `tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/prototype-capture.json`; el comando y hash están en `tasks/evidence/LUNA-98-2026-10-03/batch-03-prototype-runs.json`. No se atribuye una cifra de memoria a la receta comunitaria sin workload real.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: El prototipo de captura no acredita presupuesto KV/staging/graphs ni corrección/soak real posterior a warmup.
+- Evidencia faltante para cierre: captura consolidada de receta con digest/params y raw results de workload real; perfil por topología; rollback funcional
+- Siguiente acción: Usar exportación existente de receta/sparkrun en canario compatible y medir presupuesto por etapa más corrección/soak; dejar unknown ante campos faltantes.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json`, `tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/prototype-capture.json`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

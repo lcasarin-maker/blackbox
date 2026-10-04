@@ -46,3 +46,14 @@ Evidencia y pendientes: `tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/progre
 Se capturó kernel release, boot ID y sysctls de forma readonly; pstore devolvió permiso denegado y por ello el resultado es parcial. No se alteraron sysctls ni se realizaron panic, reboot o inyección RCU. Esta observación no demuestra persistencia ni recuperación natural; canary, rollback y ensayo post-reboot permanecen pendientes.
 
 Evidencia: `docs/evidence/BB-INSTRUMENTS-kernel.md` y `tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json`. Sigue abierta.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `privileged_access`.
+- Impedimento: Captura readonly implementada, pero pstore fue denegado y no hubo prueba tras reboot; requiere privilegio/canary y fuente OEM para la versión exacta.
+- Evidencia faltante para cierre: Captura readonly implementada, pero pstore fue denegado y no hubo prueba tras reboot; requiere privilegio/canary y fuente OEM para la versión exacta.
+- Siguiente acción: Coordinación BB: completar contrato de captura y rollback; operador Luis: proveer ventana canary y acceso root para ensayo autorizado con persistencia tras reboot. Ref explícita: tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-RCU-PANIC-PSTORE-01-direct-close-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-RCU-PANIC-PSTORE-01-direct-close-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -46,3 +46,14 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: El gate de obsolescencia/revisión, símbolo objetivo y rechazo de parche se puede implementar y verificar localmente; la primera inferencia SM121 sigue siendo validación posterior de runtime.
+- Evidencia faltante para cierre: El gate de obsolescencia/revisión, símbolo objetivo y rechazo de parche se puede implementar y verificar localmente; la primera inferencia SM121 sigue siendo validación posterior de runtime.
+- Siguiente acción: Coordinación BB: implementar gate determinista de digest/revisión/símbolo con parche obsoleto negativo y dejar canario real como evidencia separada. Ref explícita: tasks/backlog/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01-original-selector-current.log.
+- Responsable del siguiente paso: Coordinación BB; para recuperación de históricos, custodio del artifact store si corresponde..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01-original-selector-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

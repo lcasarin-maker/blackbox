@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: `blocked` para exactitud JSON de tareas largas. `tools/chat_sse_capture.py` preserva deltas de texto, pero no reconstruye/valida la respuesta completa ni dispone de fixtures/captura nativa pareada; no aporta evidencia sobre deriva semántica. La ficha sigue abierta y su `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-contracts.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: No hay long-run del modelo/stack fijado que pruebe JSON correcto bajo carga y recuperación.
+- Evidencia faltante para cierre: modelo/digest/runtime exactos; prompt suite; JSON/semántica; métricas de proceso y memoria; control negativo y rollback
+- Siguiente acción: Ejecutar canario Qwen3.8 con prompts deterministas durante la duración predeclarada, validando JSON y control negativo; preservar logs y rollback.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json`, `tasks/evidence/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01/ (directorio ausente al inspeccionar)`.
+- Impedimentos de inspección: 1. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

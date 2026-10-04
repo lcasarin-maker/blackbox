@@ -1,0 +1,40 @@
+{
+  "scope": "Interpret the single absent effective Ubuntu Packages target using exact archived signed manifest; not whole-source closure or freshness approval.",
+  "source_observation": "ubuntu-component-coverage.json",
+  "manifest": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/ports.ubuntu.com_ubuntu-ports_dists_noble-backports_InRelease",
+  "manifest_sha256": "a739a62d6f9008e01b2b0f639a4976b24f669f693a7f82b230df7e82d24d5715",
+  "signature": {
+    "status": "pass",
+    "could_not_run_count": 0,
+    "fail": 0,
+    "validsig_records": [
+      "[GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2026-10-03 1791017574 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C"
+    ],
+    "scope": "Exact archived bytes against supplied keys; approval and freshness separate.",
+    "manifest_sha256": "a739a62d6f9008e01b2b0f639a4976b24f669f693a7f82b230df7e82d24d5715",
+    "keyring_sha256": [
+      "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31"
+    ],
+    "command": [
+      "gpgv",
+      "--homedir",
+      "/tmp/bb-apt-signature-99hsq725",
+      "--status-fd=1",
+      "--keyring",
+      "/tmp/bb-apt-signature-99hsq725/key-0.gpg",
+      "/tmp/bb-apt-signature-99hsq725/InRelease"
+    ],
+    "returncode": 0
+  },
+  "manifest_matches_archive_receipt": true,
+  "meta_key": "restricted/binary-arm64/Packages",
+  "digest_and_size": [
+    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    0
+  ],
+  "authenticated_empty_index": true,
+  "interpretation": "Signed manifest declares a zero-byte index, so effective target absence alone does not prove corruption.",
+  "could_not_run_count": 0,
+  "fail": 0,
+  "parse_errors": []
+}

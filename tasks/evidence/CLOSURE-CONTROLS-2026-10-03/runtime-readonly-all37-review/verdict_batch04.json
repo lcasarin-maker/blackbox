@@ -1,0 +1,721 @@
+[
+  {
+    "id": "DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01",
+    "source_path": "tasks/backlog/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01.md",
+    "source_sha256": "6f7f3259df63655a3eae653dbf04d4f51b40bd21cf7900a457f840f067c1fbf0",
+    "source_batch": "runtime-batch-04.json",
+    "batch_sha256": "770b18b3f71526f94f818557916fa68b53becee79ddef2fc78aa9960831af164",
+    "close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_dsml_parser_recovery_boundary_01",
+    "full_original_scope": "## Evidencia y alcance\n\nTrabajo separado del \u00e1mbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validaci\u00f3n local y no se convierten en recomendaciones autom\u00e1ticas.\n\n## DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01\n\n[Hilo 378784](https://forums.developer.nvidia.com/t/378784): el due\u00f1o reporta filtraciones DSML desde 60K de contexto y un estado roto a 150K despu\u00e9s de aplicar PR #49117. La descripci\u00f3n incrustada del PR declara validaci\u00f3n del parser, sin ensayo de servicio con el modelo; tambi\u00e9n reconoce que un marcador citado como prosa, id\u00e9ntico a una herramienta declarada, puede convertirse en una invocaci\u00f3n. Otro due\u00f1o reporta un proxy saludable con una imagen diferente: esa comparaci\u00f3n requiere controlar el resto del stack.\n\nPropuesta: conservar el historial que reproduce el fallo y probar streaming y respuestas completas, reasoning inconcluso, argumentos truncados, `tool_choice=none` y marcadores citados. Registrar qu\u00e9 queda fuera de la recuperaci\u00f3n. El parche y el proxy siguen como candidatos; sus fuentes enlazadas quedaron sin auditar.\n\nRiesgos: invocaciones espurias al interpretar prosa como herramienta y una nueva superficie de fallo al a\u00f1adir un proxy. Close check: fixture del historial real y ensayo prolongado con contexto largo demuestran recuperaci\u00f3n sin llamadas espurias ni p\u00e9rdida de texto. El rollback restaura los digests y la configuraci\u00f3n previa del parser y del proxy.\n\n[368726](https://forums.developer.nvidia.com/t/368726) records a failed four-node switchless ConnectX-7 lane-split experiment: after MFT/MFT firmware configuration created an additional interface, the author found F2 aliased to F0 and able to pass traffic despite no physical connection; the mesh proposal was abandoned. A separate owner later says a four-node ring worked with custom networking/vLLM patches at a 10\u201320% performance cost, but the repository was not audited. Add an exact-OEM preflight after any CX7 lane/MFT changes that maps PCI BDF \u2194 physical connector \u2194 netdev and proves each intended link by disconnect/loopback control and sustained peer traffic, then runs NCCL collectives on the intended topology before workload admission. Preserve BIOS/MFT state, Secure Boot implications and recovery path; never infer physical paths from visible interfaces or adopt the community split commands as a supported fix. **DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01**.\n\nFuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.",
+    "predicate_checks": [
+      "parser case set incomplete",
+      "raw streaming/full response or independent oracle absent",
+      "independent parser oracle malformed",
+      "complete tool response was lost by parser"
+    ],
+    "selector_result": {
+      "could_not_run": 1,
+      "source": "root original close-check run; raw capture path unavailable",
+      "status": "unknown"
+    },
+    "expected_capture_path": "tasks/evidence/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01/runtime-capture.json",
+    "capture_present": false,
+    "card_evidence_files": [],
+    "current_selector_log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01-original-selector-current.log",
+    "blocker_class": "peer_topology_or_fabric_not_observed_in_session",
+    "observed_gap": "The local capture shows one accessible host and no visible InfiniBand on that host. Peer hosts/fabric were not observed in this session; this does not assert that they are physically absent.",
+    "native_context": {
+      "host_diagnostics": {
+        "architecture": "aarch64",
+        "kernel": "6.17.0-1032-nvidia",
+        "gpu": "NVIDIA GB10, 580.178.04, 0000000F:01:00.0, 5 %, 12.20 W",
+        "container_runtime": "29.6.2",
+        "running_images": {
+          "candidate_count": 1,
+          "containers": [
+            {
+              "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+              "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+              "image_ref": "vllm/vllm-openai:v0.27.1",
+              "status": "ok"
+            }
+          ],
+          "status": "ok"
+        },
+        "net_interfaces": 16,
+        "usb_inventory_status": "ok",
+        "capture_time_local": "Sun Oct  4 03:20:15 2026       "
+      },
+      "sysfs": {
+        "status": "partial",
+        "could_not_run": 2,
+        "pci_functions": 10,
+        "interfaces": 16,
+        "infiniband_devices": 0,
+        "scope": "present local sysfs only"
+      },
+      "thermal": {
+        "assessment": "coverage_only; no thermal safety conclusion",
+        "could_not_run": 0,
+        "captured_at_utc": "2026-10-04T09:20:16.458781+00:00"
+      },
+      "gpu_telemetry": {
+        "sample_utc": "2026-10-04T09:39:34.935469+00:00",
+        "requests_running": 0.0,
+        "requests_waiting": 0.0,
+        "scope": "snapshot; contains no completed inference, response, correctness, or checkpoint record"
+      }
+    },
+    "next_command": "When peer-node access is available, run the existing read-only identity command `python3 -m tools.host_diagnostics --sysfs-only` separately on each node and preserve the card-required rank/build/request outputs; then run exactly: python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_dsml_parser_recovery_boundary_01",
+    "evidence_missing_predicates": [
+      "No runtime capture: /tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01/runtime-capture.json",
+      "parser case set incomplete",
+      "raw streaming/full response or independent oracle absent",
+      "independent parser oracle malformed",
+      "complete tool response was lost by parser",
+      "No runtime criteria are credited by the synthetic unit fixtures."
+    ],
+    "original_close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_dsml_parser_recovery_boundary_01",
+    "status": "unknown"
+  },
+  {
+    "id": "DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01",
+    "source_path": "tasks/backlog/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01.md",
+    "source_sha256": "2dffa58e425fa260d0d5da06585da352b77240e9cff4c51b30faa9d61de6bb5d",
+    "source_batch": "runtime-batch-04.json",
+    "batch_sha256": "770b18b3f71526f94f818557916fa68b53becee79ddef2fc78aa9960831af164",
+    "close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_glm53_queued_request_progress_gate_01",
+    "full_original_scope": "## Evidencia y alcance\n\nTrabajo separado del \u00e1mbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validaci\u00f3n local y no se convierten en recomendaciones autom\u00e1ticas.\n\n### DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01\n\nFuente: https://forums.developer.nvidia.com/t/382939/178 y https://forums.developer.nvidia.com/t/382939/181.\n\nPosts 178/181: tras m\u00e1s de 40 horas, una petici\u00f3n decodifica mientras hasta siete quedan sin prefill durante 14 minutos. Reducir max_num_seqs de 8 a 4 reproduce antes; segundo episodio declara KV m\u00e1ximo 37%, frente a 99% del primero. Endpoint vivo y porcentaje KV por s\u00ed solos omiten este hang parcial.\n\nAcci\u00f3n preventiva/correctiva: Canario por petici\u00f3n y etapa: antig\u00fcedad de cola, inicio/progreso de prefill, tokens decodificados, concurrencia real y terminaci\u00f3n/cancelaci\u00f3n. Retenci\u00f3n de prefix cache y recompilaci\u00f3n se validan con prompts reales repetidos; TTFT largo esperado se distingue por progreso. Cuotas de concurrencia y recuperaci\u00f3n acotada deben preservar otras peticiones y registrar causa desconocida.\n\nCierre: Soak multiusuario por digest/commit/modelo con fixture de una petici\u00f3n activa y otras bloqueadas. Detectar bloqueo con KV bajo, permitir prefill lento que progresa, limitar reintentos y probar rollback. Benchmarks breves o TEB no cierran estabilidad del host.\n\nRiesgo y l\u00edmites: Un solo propietario; recetas cambiantes y logs externos sin auditor\u00eda. Diagn\u00f3stico externo central sobre freezes de driver permanece `could_not_run`; ausencia de causa aislada impide convertir una versi\u00f3n de driver en fix universal.\n\nFuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.",
+    "predicate_checks": [
+      "no independently progressing active request observed",
+      "bounded queue stall threshold absent",
+      "queue stall detector exceeds the bounded request deadline",
+      "did not distinguish a blocked queued request from slow progress at low KV use",
+      "per-request stage/counter/KV observation malformed",
+      "token counters must be nonnegative"
+    ],
+    "selector_result": {
+      "could_not_run": 1,
+      "source": "root original close-check run; raw capture path unavailable",
+      "status": "unknown"
+    },
+    "expected_capture_path": "tasks/evidence/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01/runtime-capture.json",
+    "capture_present": false,
+    "card_evidence_files": [],
+    "current_selector_log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01-original-selector-current.log",
+    "blocker_class": "stateful_or_failure_injection_lab_required",
+    "observed_gap": "Card requires a particular mounted device or deliberate failure/restart/update/cancel and rollback; no such intervention is permitted or captured here.",
+    "native_context": {
+      "host_diagnostics": {
+        "architecture": "aarch64",
+        "kernel": "6.17.0-1032-nvidia",
+        "gpu": "NVIDIA GB10, 580.178.04, 0000000F:01:00.0, 5 %, 12.20 W",
+        "container_runtime": "29.6.2",
+        "running_images": {
+          "candidate_count": 1,
+          "containers": [
+            {
+              "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+              "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+              "image_ref": "vllm/vllm-openai:v0.27.1",
+              "status": "ok"
+            }
+          ],
+          "status": "ok"
+        },
+        "net_interfaces": 16,
+        "usb_inventory_status": "ok",
+        "capture_time_local": "Sun Oct  4 03:20:15 2026       "
+      },
+      "sysfs": {
+        "status": "partial",
+        "could_not_run": 2,
+        "pci_functions": 10,
+        "interfaces": 16,
+        "infiniband_devices": 0,
+        "scope": "present local sysfs only"
+      },
+      "thermal": {
+        "assessment": "coverage_only; no thermal safety conclusion",
+        "could_not_run": 0,
+        "captured_at_utc": "2026-10-04T09:20:16.458781+00:00"
+      },
+      "gpu_telemetry": {
+        "sample_utc": "2026-10-04T09:39:34.935469+00:00",
+        "requests_running": 0.0,
+        "requests_waiting": 0.0,
+        "scope": "snapshot; contains no completed inference, response, correctness, or checkpoint record"
+      }
+    },
+    "next_command": "Collect the card-specific raw capture at `tasks/evidence/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01/runtime-capture.json` through the already documented owner/scope; do not use fixture data as evidence. Then run exactly: python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_glm53_queued_request_progress_gate_01",
+    "evidence_missing_predicates": [
+      "No runtime capture: /tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01/runtime-capture.json",
+      "no independently progressing active request observed",
+      "bounded queue stall threshold absent",
+      "queue stall detector exceeds the bounded request deadline",
+      "did not distinguish a blocked queued request from slow progress at low KV use",
+      "per-request stage/counter/KV observation malformed",
+      "token counters must be nonnegative",
+      "No runtime criteria are credited by the synthetic unit fixtures."
+    ],
+    "original_close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_glm53_queued_request_progress_gate_01",
+    "status": "unknown"
+  },
+  {
+    "id": "DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01",
+    "source_path": "tasks/backlog/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01.md",
+    "source_sha256": "86af96c31a9d81239c04864abeb6c9671ca665418bc62eea2a561ed53a10d2a6",
+    "source_batch": "runtime-batch-04.json",
+    "batch_sha256": "770b18b3f71526f94f818557916fa68b53becee79ddef2fc78aa9960831af164",
+    "close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_mimo_overlay_and_prefill_fairness_01",
+    "full_original_scope": "## Evidencia y alcance\n\nTrabajo separado del \u00e1mbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validaci\u00f3n local y no se convierten en recomendaciones autom\u00e1ticas.\n\n### DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01\n\nFuentes: https://forums.developer.nvidia.com/t/373669.\n\nPost132 modelo cargado sin errores emite ASCII aleatorio y acceptance de draft casi cero; overlay ausente publicado despu\u00e9s permite funcionar (135\u2013139), sin causa kernel aislada. Posts161/163 sesi\u00f3n350K segunda petici\u00f3n reprocess prompt/stall y prefill de una detiene decode de otra. Load_model OOM antecede KV(40/44); bajar utilizaci\u00f3n KV omite ese pico.\n\nAcci\u00f3n: Manifiesto efectivo por nodo de imagen, checkpoint, overlay, draft, tokenizer y mods con hashes; resolver symlinks en mounts y probar artefactos antes de cargar. Canary sem\u00e1ntico real y por modalidad, per-rank y etapas. Admisi\u00f3n incluye coldload/draft previo KV. Escenario concurrente con prefill largo y decode corto, progreso y l\u00edmites de espera; comparar chunked-prefill/batch como candidatos con riesgo de memoria, sin umbral universal.\n\nCierre: Fixture overlay ausente/symlink roto falla antes de servir. Respuesta sem\u00e1ntica real y error espec\u00edfico en modalidad no validada. Soak prefill/decode simult\u00e1neo mide espera por petici\u00f3n y recuperaci\u00f3n acotada; retorno a digest/config anterior probado.\n\nRiesgos: Mods publicados tarde y recetas contradicen eager/Ray/comando; c\u00f3digo externo no auditado; \u00c9xito de un owner no resuelve todos los OOM ni demuestra calidad omnimodal.\n\n**`BB-DSPARK-DRAFT-QUANTIZATION-FAIL-CLOSED`.** [371652, post 49](https://forums.developer.nvidia.com/t/step-3-7-flash-is-supported-in-community-docker-on-dgx-spark/371652/49) aporta un caso distinto al de DeepSeek: en Step-3.7 Flash NVFP4, un operador de 2\u00d7Spark TP=2 reporta que el cargador MTP intenta copiar el vocabulario completo de ancho 4096 a un shard local de ancho 2048 y aborta; el serving sin MTP funciona en el mismo montaje. La causa observada es incompatibilidad de forma/sharding al cargar el draft, sin parche ni correcci\u00f3n posterior auditados. A\u00f1adir un test de carga distribuida TP=2 que compruebe cada tensor contra la forma local por rank y falle antes de activar MTP, con nombre, formas y rank en el error; TP=8 no cubre TP=2. La conversaci\u00f3n tambi\u00e9n contiene informes contradictorios sobre `libtorch_cuda.so` en rebuilds comunitarios (posts 42, 44\u201345), as\u00ed que sirven para probar la matriz exacta de imagen/runtime, sin atribuir una regresi\u00f3n general. No se auditaron contenedores, c\u00f3digo ni artefactos enlazados. Hallazgo literal: `BB-DSPARK-DRAFT-QUANTIZATION-FAIL-CLOSED`.\n\nFuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.",
+    "predicate_checks": [
+      "pinned runtime/draft/tokenizer/overlay tuple and bounded request identity",
+      "at least two distinct target nodes have one resolved row each for image/checkpoint/overlay/draft/tokenizer/modifications",
+      "image/checkpoint digests exactly match request subject; every row has raw logical-to-resolved path output",
+      "overlay/draft/tokenizer/modification SHA-256 is recomputed from bounded per-card artifact bytes; path traversal and oversized/missing data are rejected or CNR",
+      "missing-overlay control has literal failing command output before serving; unsupported modality is explicitly rejected",
+      "semantic canary output matches independent SHA-verified oracle sidecar",
+      "long-prefill and short-decode request observations are strictly time-increasing, overlap concurrently, and both token counters progress",
+      "rollback record binds known-good/candidate and restored-state hashes"
+    ],
+    "selector_result": {
+      "could_not_run": 1,
+      "source": "root original close-check run; raw capture path unavailable",
+      "status": "unknown"
+    },
+    "expected_capture_path": "tasks/evidence/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01/runtime-capture.json",
+    "capture_present": false,
+    "card_evidence_files": [],
+    "current_selector_log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01-original-selector-current.log",
+    "blocker_class": "stateful_or_failure_injection_lab_required",
+    "observed_gap": "Card requires a particular mounted device or deliberate failure/restart/update/cancel and rollback; no such intervention is permitted or captured here.",
+    "native_context": {
+      "host_diagnostics": {
+        "architecture": "aarch64",
+        "kernel": "6.17.0-1032-nvidia",
+        "gpu": "NVIDIA GB10, 580.178.04, 0000000F:01:00.0, 5 %, 12.20 W",
+        "container_runtime": "29.6.2",
+        "running_images": {
+          "candidate_count": 1,
+          "containers": [
+            {
+              "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+              "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+              "image_ref": "vllm/vllm-openai:v0.27.1",
+              "status": "ok"
+            }
+          ],
+          "status": "ok"
+        },
+        "net_interfaces": 16,
+        "usb_inventory_status": "ok",
+        "capture_time_local": "Sun Oct  4 03:20:15 2026       "
+      },
+      "sysfs": {
+        "status": "partial",
+        "could_not_run": 2,
+        "pci_functions": 10,
+        "interfaces": 16,
+        "infiniband_devices": 0,
+        "scope": "present local sysfs only"
+      },
+      "thermal": {
+        "assessment": "coverage_only; no thermal safety conclusion",
+        "could_not_run": 0,
+        "captured_at_utc": "2026-10-04T09:20:16.458781+00:00"
+      },
+      "gpu_telemetry": {
+        "sample_utc": "2026-10-04T09:39:34.935469+00:00",
+        "requests_running": 0.0,
+        "requests_waiting": 0.0,
+        "scope": "snapshot; contains no completed inference, response, correctness, or checkpoint record"
+      }
+    },
+    "next_command": "Collect the card-specific raw capture at `tasks/evidence/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01/runtime-capture.json` through the already documented owner/scope; do not use fixture data as evidence. Then run exactly: python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_mimo_overlay_and_prefill_fairness_01",
+    "evidence_missing_predicates": [
+      "No runtime capture: /tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01/runtime-capture.json",
+      "actual per-node target image/checkpoint/overlay/draft/tokenizer/modification manifest and path-resolution outputs",
+      "bounded artifact bytes for overlay/draft/tokenizer/modifications plus independent OEM/image/checkpoint identities",
+      "literal missing-overlay and unsupported-modality negative commands",
+      "real semantic modality output with independent oracle",
+      "measured concurrent long-prefill/short-decode progress under exact runtime and model",
+      "actual rollback execution/result if an intervention is made",
+      "Synthetic fixtures do not count toward closure."
+    ],
+    "original_close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_mimo_overlay_and_prefill_fairness_01",
+    "status": "unknown"
+  },
+  {
+    "id": "DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01",
+    "source_path": "tasks/backlog/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01.md",
+    "source_sha256": "0875b5d3c959aa12aa6314078a9460fb836c0374d08d861298b4aa565277de20",
+    "source_batch": "runtime-batch-04.json",
+    "batch_sha256": "770b18b3f71526f94f818557916fa68b53becee79ddef2fc78aa9960831af164",
+    "close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_mimo_patch_supersession_gate_01",
+    "full_original_scope": "## Evidencia y alcance\n\nTrabajo separado del \u00e1mbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validaci\u00f3n local y no se convierten en recomendaciones autom\u00e1ticas.\n\n### DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01 \u2014 Admitir parches seg\u00fan versi\u00f3n y validar modalidades\n\nFuente: [hilo 368097](https://forums.developer.nvidia.com/t/368097); cuerpos capturados le\u00eddos, sin auditor\u00eda de binarios ni repos externos.\n\nMiMo FP8 sobre GB10: PR41834 evita crash de MTP en 0.20.1rc1, pero su funci\u00f3n fue refactorizada en 0.21.1rc1.dev30+g4db300e95 y el owner declara innecesario el parche. CUTLASS block FP8 pasa el gate de capability y falla can_implement; un bypass a Triton reporta \u00e9xito. Torchcodec ABI incompatible fue reemplazado por stub text-only, que bloquea audio. MTP/EAGLE producen OOM locks; primer inicio _load_w2 puede quedarse detenido y owner reinicia contenedor.\n\nPropuesta: Gate por digest/revisi\u00f3n y s\u00edmbolo objetivo: rechazar parche obsoleto, probar backend real SM121 con primera petici\u00f3n y modalidades anunciadas. Registrar carga fr\u00eda y memoria de draft por rank; recuperaci\u00f3n de contenedor propia y acotada. Conservar imagen conocida y rollback exacto. Los repos externos y estado upstream siguen sin auditar.\n\nRiesgo: Stub oculta capacidad audio; copiar swapoff, apagar GUI/servicios o asumir umbral universal amenaza disponibilidad.\n\nCierre: Reproducir crash en versi\u00f3n afectada y comprobar que versi\u00f3n refactorizada rechaza parche obsoleto; canarios de texto, herramientas y modalidades habilitadas; medir soak con errores y contexto real. Benchmark m\u00e1ximo 100K en el hilo queda separado de configuraci\u00f3n 1M.\n\n[375416](https://forums.developer.nvidia.com/t/375416) reports a correctness failure in a community vLLM V1 speculative/MTP path under DCP4: draft parallel configuration reportedly omitted `decode_context_parallel_size`, leaving draft attention in DCP1 while KV/metadata were DCP-sharded. The operator\u2019s tensor-level probe reportedly found no q all-gather/LSE merge and all-zero attention on 3/4 ranks; TP all-reduce then made corrupted state identical across ranks, so a cross-rank equality check passed. The operator reports a code fix and stronger GLM-5.2 MTP3/4 acceptance/throughput on 4\u00d7GB10, but the patch/repositories were not audited or run in BB. Add a pinned-image regression that asserts draft effective DCP size, verifies gather/merge and nonzero partial outputs against a DCP1/reference control, then checks coherent deterministic output and per-position acceptance across repeated prompts; do not rely on rank consensus or acceptance alone. The same thread contains a second operator\u2019s NV_ERR_NO_MEMORY before an after-load trim hook; first operator\u2019s memory advice did not resolve that case, so preserve a separate pre-trim load/host-headroom test and do not generalize one configuration\u2019s 128K success. **DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01**.\n\n[379722](https://forums.developer.nvidia.com/t/379722) adds Muse-Glimmer/DFlash admission details. An initial NVIDIA/vLLM image reportedly failed because the draft class was missing; a later owner says their DFlash-enabled vLLM muse-glimmer tag only worked with `max_num_seqs <= 32`, reproduced on their setup. A GB10 report says a patched stack completed an 84-scenario tool eval but still had prompt-injection/hallucination and long-horizon failures; other BFCL measurements swung sharply when the prompt required parallel same-turn calls. Repositories, PRs and benchmark captures were not audited. For the pinned image/model/parser/template, preflight draft class resolution and run an A/B at the reported 32/33 sequence boundary, including bounded resource/CPU/GPU tests and semantic canaries for single-tool, parallel calls, token truncation and untrusted tool output. Treat this as a candidate compatibility limit for the exact branch; never set a universal DFlash concurrency cap or infer product safety from an aggregate benchmark score. **DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01**.\n\nFuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.",
+    "predicate_checks": [
+      "affected and superseded revisions required",
+      "patch does not apply to the pinned affected symbol",
+      "superseded patch was not rejected against refactored source",
+      "text/audio capability canaries absent",
+      "patch/source applicability capture incomplete",
+      "duplicate patch case",
+      "modality canary result/oracle absent"
+    ],
+    "selector_result": {
+      "could_not_run": 1,
+      "source": "root original close-check run; raw capture path unavailable",
+      "status": "unknown"
+    },
+    "expected_capture_path": "tasks/evidence/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01/runtime-capture.json",
+    "capture_present": false,
+    "card_evidence_files": [],
+    "current_selector_log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01-original-selector-current.log",
+    "blocker_class": "stateful_or_failure_injection_lab_required",
+    "observed_gap": "Card requires a particular mounted device or deliberate failure/restart/update/cancel and rollback; no such intervention is permitted or captured here.",
+    "native_context": {
+      "host_diagnostics": {
+        "architecture": "aarch64",
+        "kernel": "6.17.0-1032-nvidia",
+        "gpu": "NVIDIA GB10, 580.178.04, 0000000F:01:00.0, 5 %, 12.20 W",
+        "container_runtime": "29.6.2",
+        "running_images": {
+          "candidate_count": 1,
+          "containers": [
+            {
+              "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+              "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+              "image_ref": "vllm/vllm-openai:v0.27.1",
+              "status": "ok"
+            }
+          ],
+          "status": "ok"
+        },
+        "net_interfaces": 16,
+        "usb_inventory_status": "ok",
+        "capture_time_local": "Sun Oct  4 03:20:15 2026       "
+      },
+      "sysfs": {
+        "status": "partial",
+        "could_not_run": 2,
+        "pci_functions": 10,
+        "interfaces": 16,
+        "infiniband_devices": 0,
+        "scope": "present local sysfs only"
+      },
+      "thermal": {
+        "assessment": "coverage_only; no thermal safety conclusion",
+        "could_not_run": 0,
+        "captured_at_utc": "2026-10-04T09:20:16.458781+00:00"
+      },
+      "gpu_telemetry": {
+        "sample_utc": "2026-10-04T09:39:34.935469+00:00",
+        "requests_running": 0.0,
+        "requests_waiting": 0.0,
+        "scope": "snapshot; contains no completed inference, response, correctness, or checkpoint record"
+      }
+    },
+    "next_command": "Collect the card-specific raw capture at `tasks/evidence/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01/runtime-capture.json` through the already documented owner/scope; do not use fixture data as evidence. Then run exactly: python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_mimo_patch_supersession_gate_01",
+    "evidence_missing_predicates": [
+      "No runtime capture: /tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01/runtime-capture.json",
+      "affected and superseded revisions required",
+      "patch does not apply to the pinned affected symbol",
+      "superseded patch was not rejected against refactored source",
+      "text/audio capability canaries absent",
+      "patch/source applicability capture incomplete",
+      "duplicate patch case",
+      "modality canary result/oracle absent",
+      "No runtime criteria are credited by the synthetic unit fixtures."
+    ],
+    "original_close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_mimo_patch_supersession_gate_01",
+    "status": "unknown"
+  },
+  {
+    "id": "DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01",
+    "source_path": "tasks/backlog/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01.md",
+    "source_sha256": "f504bdb79e164f06e1fccedc5993d814c15d82fe3a2bf56ca1780c774e6d9a1f",
+    "source_batch": "runtime-batch-04.json",
+    "batch_sha256": "770b18b3f71526f94f818557916fa68b53becee79ddef2fc78aa9960831af164",
+    "close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_ray_multiengine_rank_progress_01",
+    "full_original_scope": "## Evidencia y alcance\n\nTrabajo separado del \u00e1mbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validaci\u00f3n local y no se convierten en recomendaciones autom\u00e1ticas.\n\n### DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01\n\nFuentes: https://forums.developer.nvidia.com/t/377396.\n\nPost101 relata dos vLLM dentro del mismo cluster Ray con NCCL atascado, sin logs ni versi\u00f3n; Distributed mp se propone, sin A/B demostrado.\n\nAcci\u00f3n: Antes de admitir segundo motor, verificar identidades, presupuesto agregado y progreso real de cada rank en ambos motores; medir colectivo y petici\u00f3n real, no solo disponibilidad Ray. Fijar digest y configuraci\u00f3n; aislar recursos y recuperaci\u00f3n al motor afectado.\n\nCierre: Fixture un motor sano y otro sin progreso colectivo; detectar el afectado y mantener al primero. A/B efectivo y rollback de cambios de executor.\n\nRiesgos: Relato \u00fanico sin versi\u00f3n; mp es propuesta, no fix confirmado.\n\nFuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.",
+    "predicate_checks": [
+      "engine identities collide",
+      "fixture must identify exactly one progressing and one stalled engine",
+      "A/B executor modes absent",
+      "engine effective image/resource tuple absent",
+      "rank observations absent",
+      "executor A/B request/result/rank capture incomplete",
+      "executor A/B failed",
+      "collective rank/sequence malformed"
+    ],
+    "selector_result": {
+      "could_not_run": 1,
+      "source": "root original close-check run; raw capture path unavailable",
+      "status": "unknown"
+    },
+    "expected_capture_path": "tasks/evidence/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01/runtime-capture.json",
+    "capture_present": false,
+    "card_evidence_files": [],
+    "current_selector_log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01-original-selector-current.log",
+    "blocker_class": "peer_topology_or_fabric_not_observed_in_session",
+    "observed_gap": "The local capture shows one accessible host and no visible InfiniBand on that host. Peer hosts/fabric were not observed in this session; this does not assert that they are physically absent.",
+    "native_context": {
+      "host_diagnostics": {
+        "architecture": "aarch64",
+        "kernel": "6.17.0-1032-nvidia",
+        "gpu": "NVIDIA GB10, 580.178.04, 0000000F:01:00.0, 5 %, 12.20 W",
+        "container_runtime": "29.6.2",
+        "running_images": {
+          "candidate_count": 1,
+          "containers": [
+            {
+              "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+              "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+              "image_ref": "vllm/vllm-openai:v0.27.1",
+              "status": "ok"
+            }
+          ],
+          "status": "ok"
+        },
+        "net_interfaces": 16,
+        "usb_inventory_status": "ok",
+        "capture_time_local": "Sun Oct  4 03:20:15 2026       "
+      },
+      "sysfs": {
+        "status": "partial",
+        "could_not_run": 2,
+        "pci_functions": 10,
+        "interfaces": 16,
+        "infiniband_devices": 0,
+        "scope": "present local sysfs only"
+      },
+      "thermal": {
+        "assessment": "coverage_only; no thermal safety conclusion",
+        "could_not_run": 0,
+        "captured_at_utc": "2026-10-04T09:20:16.458781+00:00"
+      },
+      "gpu_telemetry": {
+        "sample_utc": "2026-10-04T09:39:34.935469+00:00",
+        "requests_running": 0.0,
+        "requests_waiting": 0.0,
+        "scope": "snapshot; contains no completed inference, response, correctness, or checkpoint record"
+      }
+    },
+    "next_command": "When peer-node access is available, run the existing read-only identity command `python3 -m tools.host_diagnostics --sysfs-only` separately on each node and preserve the card-required rank/build/request outputs; then run exactly: python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_ray_multiengine_rank_progress_01",
+    "evidence_missing_predicates": [
+      "No runtime capture: /tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01/runtime-capture.json",
+      "engine identities collide",
+      "fixture must identify exactly one progressing and one stalled engine",
+      "A/B executor modes absent",
+      "engine effective image/resource tuple absent",
+      "rank observations absent",
+      "executor A/B request/result/rank capture incomplete",
+      "executor A/B failed",
+      "collective rank/sequence malformed",
+      "No runtime criteria are credited by the synthetic unit fixtures."
+    ],
+    "original_close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_ray_multiengine_rank_progress_01",
+    "status": "unknown"
+  },
+  {
+    "id": "DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01",
+    "source_path": "tasks/backlog/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01.md",
+    "source_sha256": "1789aff05f7d813b23ce6fe4f745153151833efd9fdb159f49fa1b159eba55dc",
+    "source_batch": "runtime-batch-04.json",
+    "batch_sha256": "770b18b3f71526f94f818557916fa68b53becee79ddef2fc78aa9960831af164",
+    "close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_recipe_memory_unknown_and_raw_evidence_01",
+    "full_original_scope": "## Evidencia y alcance\n\nTrabajo separado del \u00e1mbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validaci\u00f3n local y no se convierten en recomendaciones autom\u00e1ticas.\n\n### DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01\n\nFuentes: https://forums.developer.nvidia.com/t/360319/50 y /14\u201322, /118.\n\nEjemplo llama.cpp post50 imprime DGX Spark fit:YES usando solo1.58GBweights, pero inmediatamente dice arquitectura ausente y estimaci\u00f3nKV unavailable; log real agrega896MiBKV y buffers. Posts14\u201322 vLLMprefixcachecrash/hang tras actualizaci\u00f3n admite commit previo y mod posterior; throughput positivo de otras m\u00e1quinas no prueba este workflow.\n\nAcci\u00f3n: Presupuesto de admisi\u00f3n incluye weights, KV, staging, graphs, draft, buffers y reservahost por etapa y runtime. Campos desconocidos impiden afirmar seguro; exigir canario funcional efectivo o perfil medido compatible. Reusar exportaci\u00f3nconsolidada de receta/comando/resultados de sparkrun como evidencia candidata con versi\u00f3n y digest, no crear otro launcher. Evitar pipupgrade sinpin en cada arranque; validar baseimageefectiva y rollback.\n\nCierre: Fixture weightsfitperoKVdesconocido reporta unknown y no promete protecci\u00f3n. Comparaci\u00f3n por hardware/topolog\u00eda/digests/checkpoint/params y rawresults con workload real posterior a warmup; cambio de backend validado funcionalmente y rollback disponible.\n\nRiesgos: Estimaciones y tests de comunidad no sustituyen admisi\u00f3n/soak del host; Exportador/c\u00f3digo externo sin auditor\u00eda.\n\nFuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.",
+    "predicate_checks": [
+      "unknown-KV and measured-fit cases required",
+      "workload must contain warmup then measured inference",
+      "post-warmup workload has no causal token progress",
+      "memory profile malformed",
+      "memory profile component vector incomplete",
+      "workload request/token/output capture incomplete",
+      "unknown memory component was reported as safely fitting",
+      "unknown memory reason absent",
+      "memory component measurement invalid",
+      "available memory measurement absent",
+      "memory admission disagrees with measured components"
+    ],
+    "selector_result": {
+      "could_not_run": 1,
+      "source": "root original close-check run; raw capture path unavailable",
+      "status": "unknown"
+    },
+    "expected_capture_path": "tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/runtime-capture.json",
+    "capture_present": false,
+    "card_evidence_files": [
+      {
+        "path": "tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/prototype-capture.json",
+        "sha256": "7d9f064b2ec2a4523543c72fabdc8069e79aefc791be5b54bff936c3d05edec2",
+        "size": 6078,
+        "role": "prototype/unverified capture; not accepted as runtime evidence"
+      }
+    ],
+    "current_selector_log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01-original-selector-current.log",
+    "blocker_class": "stateful_or_failure_injection_lab_required",
+    "observed_gap": "Card requires a particular mounted device or deliberate failure/restart/update/cancel and rollback; no such intervention is permitted or captured here.",
+    "native_context": {
+      "host_diagnostics": {
+        "architecture": "aarch64",
+        "kernel": "6.17.0-1032-nvidia",
+        "gpu": "NVIDIA GB10, 580.178.04, 0000000F:01:00.0, 5 %, 12.20 W",
+        "container_runtime": "29.6.2",
+        "running_images": {
+          "candidate_count": 1,
+          "containers": [
+            {
+              "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+              "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+              "image_ref": "vllm/vllm-openai:v0.27.1",
+              "status": "ok"
+            }
+          ],
+          "status": "ok"
+        },
+        "net_interfaces": 16,
+        "usb_inventory_status": "ok",
+        "capture_time_local": "Sun Oct  4 03:20:15 2026       "
+      },
+      "sysfs": {
+        "status": "partial",
+        "could_not_run": 2,
+        "pci_functions": 10,
+        "interfaces": 16,
+        "infiniband_devices": 0,
+        "scope": "present local sysfs only"
+      },
+      "thermal": {
+        "assessment": "coverage_only; no thermal safety conclusion",
+        "could_not_run": 0,
+        "captured_at_utc": "2026-10-04T09:20:16.458781+00:00"
+      },
+      "gpu_telemetry": {
+        "sample_utc": "2026-10-04T09:39:34.935469+00:00",
+        "requests_running": 0.0,
+        "requests_waiting": 0.0,
+        "scope": "snapshot; contains no completed inference, response, correctness, or checkpoint record"
+      }
+    },
+    "next_command": "Collect the card-specific raw capture at `tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/runtime-capture.json` through the already documented owner/scope; do not use fixture data as evidence. Then run exactly: python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_recipe_memory_unknown_and_raw_evidence_01",
+    "evidence_missing_predicates": [
+      "No runtime capture: /tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/runtime-capture.json",
+      "unknown-KV and measured-fit cases required",
+      "workload must contain warmup then measured inference",
+      "post-warmup workload has no causal token progress",
+      "memory profile malformed",
+      "memory profile component vector incomplete",
+      "workload request/token/output capture incomplete",
+      "unknown memory component was reported as safely fitting",
+      "unknown memory reason absent",
+      "memory component measurement invalid",
+      "available memory measurement absent",
+      "memory admission disagrees with measured components",
+      "No runtime criteria are credited by the synthetic unit fixtures."
+    ],
+    "original_close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_recipe_memory_unknown_and_raw_evidence_01",
+    "status": "unknown"
+  },
+  {
+    "id": "DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01",
+    "source_path": "tasks/backlog/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01.md",
+    "source_sha256": "e86894c8ce77c5b291b4f7c21d425f7feed6fd61a133ad58f469b80fd5082f40",
+    "source_batch": "runtime-batch-04.json",
+    "batch_sha256": "770b18b3f71526f94f818557916fa68b53becee79ddef2fc78aa9960831af164",
+    "close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_tokenizer_patch_semantic_gate_01",
+    "full_original_scope": "## Evidencia y alcance\n\nTrabajo separado del \u00e1mbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validaci\u00f3n local y no se convierten en recomendaciones autom\u00e1ticas.\n\n### DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01\n\nFuentes: https://forums.developer.nvidia.com/t/380244 (26 cuerpos capturados), https://forums.developer.nvidia.com/t/362824 (33 cuerpos). En 380244 el tokenizer limitaba silenciosamente texto a 2048 tokens y rechazaba im\u00e1genes de 2280 tokens; el due\u00f1o confirma despu\u00e9s el fix del proveedor id\u00e9ntico al cambio de `truncation` a `null`. En 362824 el patch MXFP4 pasa por retractaciones, reparaci\u00f3n declarada de una carrera Marlin y cambios de precisi\u00f3n por capa; el \u00faltimo ensayo independiente conserva regresiones de calidad y timeouts. Throughput y arranque exitoso requieren un canary funcional adicional.\n\nPropuesta: registrar revision/hash efectivos de tokenizer, checkpoint, imagen y patch; probar recepci\u00f3n completa de un prompt largo con centinelas verificables, im\u00e1genes por encima y debajo del antiguo l\u00edmite, herramientas/Harmony y generaci\u00f3n sostenida. Ante p\u00e9rdida sem\u00e1ntica, rechazar la promoci\u00f3n del candidato y conservar el runtime conocido. Riesgo: cambiar tokenizer completo altera otras reglas; preferir artefacto corregido del proveedor y comparar el delta exacto. Rollback: retirar overlay identificado y restaurar el snapshot/digest previo; verificar el mismo canary. `close_check`: fixture afectado reproduce truncamiento; fixture corregido conserva todos los centinelas y el conteo esperado; patch MXFP4 candidato pasa casos funcionales y soak con resultados/errores expl\u00edcitos. Parches externos y ensayos en host siguen pendientes; esta ficha registra investigaci\u00f3n.\n\nFuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.",
+    "predicate_checks": [
+      "tokenizer control cases incomplete",
+      "tokenizer cases are not bound to request",
+      "tokenizer raw sentinel capture incomplete",
+      "candidate MXFP4 raw generation result incomplete",
+      "candidate MXFP4 soak request failed",
+      "affected tokenizer negative did not reproduce sentinel truncation",
+      "fixed tokenizer lost prompt sentinel"
+    ],
+    "selector_result": {
+      "could_not_run": 1,
+      "source": "root original close-check run; raw capture path unavailable",
+      "status": "unknown"
+    },
+    "expected_capture_path": "tasks/evidence/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01/runtime-capture.json",
+    "capture_present": false,
+    "card_evidence_files": [],
+    "current_selector_log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01-original-selector-current.log",
+    "blocker_class": "model_workload_trace_absent",
+    "observed_gap": "No card-specific request/checkpoint/output trace exists. This pass permits no new GPU inference, service contact, network request, or paid API call.",
+    "native_context": {
+      "host_diagnostics": {
+        "architecture": "aarch64",
+        "kernel": "6.17.0-1032-nvidia",
+        "gpu": "NVIDIA GB10, 580.178.04, 0000000F:01:00.0, 5 %, 12.20 W",
+        "container_runtime": "29.6.2",
+        "running_images": {
+          "candidate_count": 1,
+          "containers": [
+            {
+              "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+              "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+              "image_ref": "vllm/vllm-openai:v0.27.1",
+              "status": "ok"
+            }
+          ],
+          "status": "ok"
+        },
+        "net_interfaces": 16,
+        "usb_inventory_status": "ok",
+        "capture_time_local": "Sun Oct  4 03:20:15 2026       "
+      },
+      "sysfs": {
+        "status": "partial",
+        "could_not_run": 2,
+        "pci_functions": 10,
+        "interfaces": 16,
+        "infiniband_devices": 0,
+        "scope": "present local sysfs only"
+      },
+      "thermal": {
+        "assessment": "coverage_only; no thermal safety conclusion",
+        "could_not_run": 0,
+        "captured_at_utc": "2026-10-04T09:20:16.458781+00:00"
+      },
+      "gpu_telemetry": {
+        "sample_utc": "2026-10-04T09:39:34.935469+00:00",
+        "requests_running": 0.0,
+        "requests_waiting": 0.0,
+        "scope": "snapshot; contains no completed inference, response, correctness, or checkpoint record"
+      }
+    },
+    "next_command": "Collect the card-specific raw capture at `tasks/evidence/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01/runtime-capture.json` through the already documented owner/scope; do not use fixture data as evidence. Then run exactly: python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_tokenizer_patch_semantic_gate_01",
+    "evidence_missing_predicates": [
+      "No runtime capture: /tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01/runtime-capture.json",
+      "tokenizer control cases incomplete",
+      "tokenizer cases are not bound to request",
+      "tokenizer raw sentinel capture incomplete",
+      "candidate MXFP4 raw generation result incomplete",
+      "candidate MXFP4 soak request failed",
+      "affected tokenizer negative did not reproduce sentinel truncation",
+      "fixed tokenizer lost prompt sentinel",
+      "No runtime criteria are credited by the synthetic unit fixtures."
+    ],
+    "original_close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_tokenizer_patch_semantic_gate_01",
+    "status": "unknown"
+  },
+  {
+    "id": "DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01",
+    "source_path": "tasks/backlog/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01.md",
+    "source_sha256": "012e8b12a6562481aadb036781fea6ab2c383a33593c5a96ba12cfe508311ffe",
+    "source_batch": "runtime-batch-04.json",
+    "batch_sha256": "770b18b3f71526f94f818557916fa68b53becee79ddef2fc78aa9960831af164",
+    "close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_triton_allocator_patch_state_gate_01",
+    "full_original_scope": "## Evidencia y alcance\n\nTrabajo separado del \u00e1mbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validaci\u00f3n local y no se convierten en recomendaciones autom\u00e1ticas.\n\n### DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01\n\nFuente: https://forums.developer.nvidia.com/t/359571/38 y /50\u201363, /87\u201392.\n\nRay TP2 falla con allocator Triton; eager permite cargar pero degrada. Post38 propone NullAllocator.__call__ global via .pth y torch.cuda.caching_allocator_alloc con except Exception:pass. Mantenedor confirma funcionar en50, pero necesita commit previo13397841ab469cecf1ed425c3f52a9ffc38139b5 adem\u00e1s, pues startupfix solo deja1\u20132tok/s. Patches crash/performance despu\u00e9s upstream integrados/revertidos fallan hunks y se ignoran(57\u201363). Baseimagebump causa torch._opaque_base ausente(87\u201388); freshbuildowner92recupera.\n\nAcci\u00f3n: Catalogar patch como candidato espec\u00edfico por commit/Triton/Ray; detectar estado ausente/aplicado/supersedido/incompatible y verificar extensi\u00f3n efectiva en cada rank/hilo. Excepci\u00f3n silenciosa y patchskipping no certifican correcci\u00f3n. Probar carga, primera petici\u00f3n fr\u00eda, generaci\u00f3n sem\u00e1ntica, warmup y prefix hit repetido. Preservar digest previo; rollback no toca otras im\u00e1genes.\n\nCierre: Fixture patch falla silenciosamente o fue supersedido identifica estado real; canary distingue startup arreglado de regresi\u00f3n y coldwarmup de hang con progreso. Auditor\u00eda de c\u00f3digo y propiedad de memoria/alignment/stream antes de recomendar monkeypatch global; rollback probado.\n\nRiesgos: Modifica allocatorglobal y se ejecuta por .pth; fragmento no prueba gesti\u00f3n/lifetime de memoria; Casos posteriores contradicen recetas anteriores; commits y wheel efectivo deben fijarse.\n\nFuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.",
+    "predicate_checks": [
+      "all patch state controls required",
+      "stream/lifetime evidence lacks each target rank/thread pair",
+      "allocator source audit hash mismatch",
+      "allocator patch hides failures with broad silent exception",
+      "effective source has no executable NullAllocator implementation",
+      "NullAllocator has no executable allocation implementation",
+      "allocator does not allocate on the caller's explicit stream",
+      "allocator does not retain live storage through asynchronous consumers",
+      "allocator source revision is not pinned",
+      "allocator patch state record malformed",
+      "rank/thread lifetime canary record incomplete",
+      "allocator candidate failed cold/warm canary",
+      "lifetime trace must capture allocation, enqueue, consumer completion, and release",
+      "allocator lifetime events are not strictly causal",
+      "storage lifetime/stream ownership failed before async consumer completion",
+      "cold and warm allocator requests are both required",
+      "warm prefix hit changed answer or was not measured against a cold run",
+      "raw allocation/stream/lifetime counters malformed",
+      "negative live-reference/allocation counter",
+      "cold/warm semantic request record malformed",
+      "duplicate cold/warm request mode",
+      "cold/warm allocator generation differs from independent semantic oracle"
+    ],
+    "selector_result": {
+      "could_not_run": 1,
+      "source": "root original close-check run; raw capture path unavailable",
+      "status": "unknown"
+    },
+    "expected_capture_path": "tasks/evidence/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01/runtime-capture.json",
+    "capture_present": false,
+    "card_evidence_files": [],
+    "current_selector_log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01-original-selector-current.log",
+    "blocker_class": "stateful_or_failure_injection_lab_required",
+    "observed_gap": "Card requires a particular mounted device or deliberate failure/restart/update/cancel and rollback; no such intervention is permitted or captured here.",
+    "native_context": {
+      "host_diagnostics": {
+        "architecture": "aarch64",
+        "kernel": "6.17.0-1032-nvidia",
+        "gpu": "NVIDIA GB10, 580.178.04, 0000000F:01:00.0, 5 %, 12.20 W",
+        "container_runtime": "29.6.2",
+        "running_images": {
+          "candidate_count": 1,
+          "containers": [
+            {
+              "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+              "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+              "image_ref": "vllm/vllm-openai:v0.27.1",
+              "status": "ok"
+            }
+          ],
+          "status": "ok"
+        },
+        "net_interfaces": 16,
+        "usb_inventory_status": "ok",
+        "capture_time_local": "Sun Oct  4 03:20:15 2026       "
+      },
+      "sysfs": {
+        "status": "partial",
+        "could_not_run": 2,
+        "pci_functions": 10,
+        "interfaces": 16,
+        "infiniband_devices": 0,
+        "scope": "present local sysfs only"
+      },
+      "thermal": {
+        "assessment": "coverage_only; no thermal safety conclusion",
+        "could_not_run": 0,
+        "captured_at_utc": "2026-10-04T09:20:16.458781+00:00"
+      },
+      "gpu_telemetry": {
+        "sample_utc": "2026-10-04T09:39:34.935469+00:00",
+        "requests_running": 0.0,
+        "requests_waiting": 0.0,
+        "scope": "snapshot; contains no completed inference, response, correctness, or checkpoint record"
+      }
+    },
+    "next_command": "Collect the card-specific raw capture at `tasks/evidence/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01/runtime-capture.json` through the already documented owner/scope; do not use fixture data as evidence. Then run exactly: python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_triton_allocator_patch_state_gate_01",
+    "evidence_missing_predicates": [
+      "No runtime capture: /tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01/runtime-capture.json",
+      "all patch state controls required",
+      "stream/lifetime evidence lacks each target rank/thread pair",
+      "allocator source audit hash mismatch",
+      "allocator patch hides failures with broad silent exception",
+      "effective source has no executable NullAllocator implementation",
+      "NullAllocator has no executable allocation implementation",
+      "allocator does not allocate on the caller's explicit stream",
+      "allocator does not retain live storage through asynchronous consumers",
+      "allocator source revision is not pinned",
+      "allocator patch state record malformed",
+      "rank/thread lifetime canary record incomplete",
+      "allocator candidate failed cold/warm canary",
+      "lifetime trace must capture allocation, enqueue, consumer completion, and release",
+      "allocator lifetime events are not strictly causal",
+      "storage lifetime/stream ownership failed before async consumer completion",
+      "cold and warm allocator requests are both required",
+      "warm prefix hit changed answer or was not measured against a cold run",
+      "raw allocation/stream/lifetime counters malformed",
+      "negative live-reference/allocation counter",
+      "cold/warm semantic request record malformed",
+      "duplicate cold/warm request mode",
+      "cold/warm allocator generation differs from independent semantic oracle",
+      "No runtime criteria are credited by the synthetic unit fixtures."
+    ],
+    "original_close_check_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_triton_allocator_patch_state_gate_01",
+    "status": "unknown"
+  }
+]

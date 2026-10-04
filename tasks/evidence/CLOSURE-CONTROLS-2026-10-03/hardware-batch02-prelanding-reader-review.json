@@ -1,0 +1,18 @@
+{
+  "module_sha256": "fd35818e5c0e341e4efb643b277dad3892449d9edb101d9edc4e39fd1e87ad4f",
+  "landing_status": "held_for_reader_fix",
+  "findings": [
+    {
+      "location": "_load",
+      "finding": "JSON duplicate keys accepted by json.loads; ambiguous captures must be rejected",
+      "required_action": "reuse capture_io.strict_json_loads and add negative fixture"
+    },
+    {
+      "location": "_read_bounded_regular",
+      "finding": "ancestor symlink precheck followed by pathname open permits ancestor replacement between check and open",
+      "required_action": "reuse capture_io.read_regular_bytes with descriptor traversal"
+    }
+  ],
+  "constant_ids": "generated literal present; equality with source must remain tested",
+  "subject_closed": false
+}

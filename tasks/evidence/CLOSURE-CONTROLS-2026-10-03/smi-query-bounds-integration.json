@@ -1,0 +1,29 @@
+{
+  "scope": "Bound sample GPU queries and represent failed dependent measurements as null",
+  "files": [
+    {
+      "path": "bin/bb",
+      "before_sha256": "bb2114cdbc3657d1bc96d6196498927ebc2b1cc05bf1962eb7ec6e643a7d3d0d",
+      "after_sha256": "b0ed2b4518e52c526c8e99920e447e14356eea8aeade47e8e30752f0d1c7bd48"
+    },
+    {
+      "path": "tests/test_bb_bash.py",
+      "before_sha256": "ed1e25f8eb831efef664a00eedb06d7511a59aa3d6506736d0180afd5fe72925",
+      "after_sha256": "580dec5fb49d33246e29d7d25f630b16c5d8f592d328967f9db3bc15282de161"
+    }
+  ],
+  "backup": "/tmp/bb-smi-primary-before-integration",
+  "original_negative": "New selector on original bin:1failed2.38s",
+  "candidate_positive": "New selector candidate:1passed4.94s",
+  "candidate_existing_regressions": "3passed7.46s",
+  "scratch_warnings": "Four unregistered existing pytest marks due absent scratch pytest.ini; primary validation pending",
+  "primary_validation": {
+    "command": "python3 -m pytest -q tests/test_bb_bash.py::test_sample_all_smi_queries_are_bounded tests/test_bb_bash.py::test_control_negativo_smi_dice_TIMEOUT_cuando_el_driver_se_cuelga tests/test_bb_bash.py::test_smi_dice_OK_cuando_el_driver_responde tests/test_bb_bash.py::test_sample_ignora_fila_gpu_sin_pid_y_conserva_json_valido",
+    "returncode": 0,
+    "output": "4 passed in12.40s",
+    "syntax_command": "bash -n bin/bb",
+    "syntax_returncode": 0
+  },
+  "could_not_run_count": 0,
+  "remaining": "Run complete Bash suite and review all consumers of nullable gpu/residuo before closing new debt"
+}

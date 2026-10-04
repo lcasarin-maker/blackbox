@@ -1,0 +1,48 @@
+{
+  "files": [
+    {
+      "path": "tools/verify_wifi_isolation.py",
+      "before_sha256": "226ec324e55209edc8b04941b746390fdded252457acbe598a4b2e82661da495",
+      "after_sha256": "9c36e870196261e14ab23e3bc2f5a51dfebc0d693b932b55fc0cbc9c36b8f3c6"
+    },
+    {
+      "path": "tools/verify_gpu_clock_cap_ab.py",
+      "before_sha256": "961efdf5ed6ce0b54a098fbf66c17855aed3e5c3b109e74a66f645e0877301c8",
+      "after_sha256": "40ed9d0d6577da988d4a656e963a41a46e30b454384b6bd93bc732b5dc413009"
+    },
+    {
+      "path": "tools/verify_usb_hid_postupdate.py",
+      "before_sha256": "579483d47e9432c7248832c8e7272eaf321abfe6dadde19f0206ae643f572411",
+      "after_sha256": "e7a03f5ebb8a585a255f8e787342d6a474427b9d3afcbd3235d0811ed66a7f58"
+    },
+    {
+      "path": "tests/test_hardware_reader_command_ownership.py",
+      "before_sha256": null,
+      "after_sha256": "cd23865add98eff3799449c6c6e4f5c2b06826dd0d5798e489ef15da326b11ca"
+    },
+    {
+      "path": "tests/test_hardware_cli_entrypoints.py",
+      "before_sha256": "270df60072fe6b7c51c3842ce6d4f19c62ff5dccc09e7c4624ae59ce27b2bad6",
+      "after_sha256": "15fe0f2bc48d147c44b2c4c05478ddf41a318c6ab545ac84ad362955bebbdea4"
+    },
+    {
+      "path": "tests/test_gpu_capture_invariants.py",
+      "before_sha256": "1a1b9f5a2014e0c2fbb3ee2c961e1a1c6b189c1ec720c5bc6452419101eb58d8",
+      "after_sha256": "a55ca70b5e944236f9fd7c3ed5bc613be5f94daf91fbc8458b1fd77bfdb2bcbb"
+    }
+  ],
+  "validation": {
+    "exit_code": 1,
+    "tests_passed": 108,
+    "tests_failed": 2,
+    "log": "bb-hardware-command-reader-primary-tests.log",
+    "17_helper_cases_reproduced": true,
+    "remaining_regressions": [
+      "NVIDIA driver CSV name+driver_version query rejected",
+      "WiFi positive fixture generic SSH error lacks explicit native diagnostic"
+    ],
+    "known_followup": "SSH grouped local options and valid remote command options"
+  },
+  "followup": "SSH grouped options review remains in agent worktree",
+  "physical_closed": false
+}

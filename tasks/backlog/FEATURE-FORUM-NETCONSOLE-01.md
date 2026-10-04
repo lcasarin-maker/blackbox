@@ -49,3 +49,14 @@ Evidencia y pendientes: `tasks/evidence/FEATURE-FORUM-NETCONSOLE-01/progress.txt
 La captura readonly detectó `netconsole` ausente y ausencia de parámetro de arranque. `/sys/fs/pstore` tuvo permiso denegado (`could_not_run=1`); no se configuró red ni módulo. El instrumento nuevo puede observar parámetros/targets cuando existan, pero no prueba recepción ni el marker off-host requerido por el cierre.
 
 Evidencia: `docs/evidence/BB-INSTRUMENTS-kernel.md` y `tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json`. Sigue abierta.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `privileged_access`.
+- Impedimento: Captura readonly encontró netconsole/boot parameter ausentes, pstore denegado (CNR=1); faltan receptor off-host, destino/retención y prueba de marker/rollback.
+- Evidencia faltante para cierre: Captura readonly encontró netconsole/boot parameter ausentes, pstore denegado (CNR=1); faltan receptor off-host, destino/retención y prueba de marker/rollback.
+- Siguiente acción: Coordinación BB: documentar configuración receptora y prueba negativa; operador Luis: aportar autorización, receptor de gestión y ventana de canary para validar recepción/persistencia. Ref explícita: tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-NETCONSOLE-01-direct-close-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-NETCONSOLE-01-direct-close-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

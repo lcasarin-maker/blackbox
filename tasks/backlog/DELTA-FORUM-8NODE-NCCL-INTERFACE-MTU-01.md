@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Avance de instrumentación 2026-10-03
 
 `tools.host_diagnostics` ahora registra MTU reportado por `ip -j link` y sysfs sin fijar un umbral universal. Esta captura local leyó MTU 1500 de `enP7s7` por sysfs, pero `ip -j link` no pudo abrir netlink; no compara ocho nodos ni valida NCCL/primera inferencia. Evidencia: [BB-INSTRUMENTS-network](../../docs/evidence/BB-INSTRUMENTS-network.md). La ficha permanece abierta; `close_check` y `status` no cambiaron.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: La captura de red actual lee MTU sysfs de un solo netdev y netlink no disponible; no representa ocho nodos.
+- Evidencia faltante para cierre: MTU por interfaz y nodo contra topología/OEM; corrida NCCL sana y negativa; primera inferencia, endpoint/logs por rank, stack y rollback.
+- Siguiente acción: Solicitar al operador del clúster mapa OEM de ocho nodos y capturas MTU por interfaz; después correr NCCL y primera inferencia con endpoint/log por rank, caso sano y rollback.
+- Responsable del siguiente paso: BB; operador Luis para hardware/peer.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01.md`, `docs/evidence/BB-INSTRUMENTS-network.md`, `tools/runtime_batch01_controls.py`, `tools/host_diagnostics.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -33,3 +33,21 @@ Un host sin teclado (headless) puede ser normal; algunos kernels integran contro
 ## Avance de instrumentación 2026-10-03
 
 `tools.host_diagnostics` ahora relaciona entradas HID con el USB ancestro más cercano y conserva fallos de telemetría como `could_not_run`; la captura disponible no observó entradas HID. El avance y la limitación están documentados en [BB-INSTRUMENTS-devices](../../docs/evidence/BB-INSTRUMENTS-devices.md). La ficha sigue abierta y el close_check original permanece pendiente.
+
+
+## Defecto de entrada CLI detectado (2026-10-04)
+
+La ejecución literal del close_check termina con código 0 y stdout vacío porque el módulo tiene API `verify` pero carece de entrada `main/__main__`. La llamada API sobre la misma captura devuelve UNKNOWN; el código de salida actual no acredita cierre. Recibo: `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/direct-29-original-close-current-run.json`.
+
+El agente hardware tiene asignada la entrada CLI con JSON literal y códigos 0/1/2 para PASS/FAIL/UNKNOWN, respectivamente; el código 0 exige could_not_run=0. Se requieren pruebas de proceso real para la captura ausente, argumentos y controles positivos/negativos. El close_check se conserva y la ficha sigue abierta.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: El estado de host no demuestra teclado/HID operativo post-update ni distingue módulo integrado/headless/telemetría inaccesible.
+- Evidencia faltante para cierre: dispositivo HID conectado/descriptor; interacción local/remota; kernel/module binding; estado headless y rollback
+- Siguiente acción: En un nodo canary con acceso alternativo, probar HID sano y controles headless/módulo/telemetría después de update y guardar recuperación.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json`, `tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK/host-observation.txt`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

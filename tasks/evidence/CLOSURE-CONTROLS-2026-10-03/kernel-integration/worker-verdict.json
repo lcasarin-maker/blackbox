@@ -1,0 +1,185 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01",
+    "status": "unknown",
+    "reason": "UNKNOWN/CNR=23 on live phase01 reproduction: dmem.current is unavailable for all captured scopes; exact selector exists and ran. Phase02–05 raw captures are also absent.",
+    "files": [
+      "tools/verify_cgroup_plan.py",
+      "tests/test_closure_kernel.py",
+      "tests/test_closure_kernel_selectors.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_cgroup_plan_01",
+    "evidence_needed": [
+      "Exported exact close selector against actual phase/id evidence; positive real capture and discriminating negative control; no fixture-derived closure"
+    ]
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01",
+    "status": "unknown",
+    "reason": "UNKNOWN/CNR=1: target kernel-capture.json and receiver evidence absent; exact selector exists and ran against the production verifier.",
+    "files": [
+      "tools/verify_netconsole.py",
+      "tools/kernel_capture.py",
+      "tools/netconsole_marker.py",
+      "tests/test_closure_netconsole_edges.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_netconsole_01",
+    "evidence_needed": [
+      "Exported exact close selector against actual phase/id evidence; positive real capture and discriminating negative control; no fixture-derived closure"
+    ]
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01",
+    "status": "unknown",
+    "reason": "UNKNOWN/CNR=1: recovery.json absent; exact selector exists and ran against the production verifier. No panic/reboot was performed.",
+    "files": [
+      "tools/verify_rcu_panic_pstore.py",
+      "tools/kernel_capture.py",
+      "tests/test_closure_kernel.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01",
+    "evidence_needed": [
+      "Exported exact close selector against actual phase/id evidence; positive real capture and discriminating negative control; no fixture-derived closure"
+    ]
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-01-REPRO",
+    "status": "unknown",
+    "reason": "Raw observations and CPU calibration parse; dmem.current was unavailable for 23 phase observations, so status is unknown.",
+    "files": [
+      "tools/verify_cgroup_repro.py",
+      "tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "control_command": "python3 -m tools.verify_cgroup_repro tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json",
+    "evidence_needed": [
+      "Readable dmem.current for each required phase/scope; preserve command and raw output"
+    ]
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-02-TRAZA",
+    "status": "unknown",
+    "reason": "Phase verifier implemented; only static maps and cgroup snapshots exist, with no dynamic trace rows.",
+    "files": [
+      "tools/verify_cgroup_plan.py",
+      "tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "control_command": "python3 -m tools.verify_cgroup_plan --phase 02-traza --evidence tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA",
+    "evidence_needed": [
+      "Raw per-API dynamic rows with PID, cgroup, monotonic interval, active memcg, flags and charge/free bytes"
+    ]
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-03-NATIVO",
+    "status": "unknown",
+    "reason": "Phase 03 compares paired raw 580/615 stack identity and dmem measurements, requires phase-02 owner trace bound to 580 boot/kernel/driver/GSP, raw allocation/residency/migration observations per API, per-API memory/dmem accounting and causal limits, plus a hash-verified return plan for the compatible original stack. Real evidence is absent; synthetic unit fixtures do not close this investigation.",
+    "files": [
+      "tools/verify_cgroup_plan.py",
+      "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/comparison.txt",
+      "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-615.json",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "control_command": "python3 -m tools.verify_cgroup_plan --phase 03-nativo --evidence tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO",
+    "evidence_needed": [
+      "Readable exact 580/615 raw stack captures and per-phase counters; phase-02 dynamic owner rows with raw allocation/residency/migration observations and code/source references; per-API memory/dmem limit attempts and controls; original-stack restoration plan matched to captured modules/kernel/GSP."
+    ]
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-04-PARCHE",
+    "status": "unknown",
+    "reason": "Phase 04 derives no_patch_needed or patch_required from phase-02/03 owner and per-domain accounting/enforcement evidence. Residual-gap path checks hash-verified diff/source, successful module build, raw after-build 615 capture and charge/release/sharing/migration/concurrency controls. Required before/after target captures are absent.",
+    "files": [
+      "tools/verify_cgroup_plan.py",
+      "tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/readiness.txt",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "control_command": "python3 -m tools.verify_cgroup_plan --phase 04-parche --evidence tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE",
+    "evidence_needed": [
+      "Bound phase-02/03 evidence with per-API accounting and causal domain-limit results; if gap remains, reviewable fork diff/source, real successful build artifacts, raw before/after candidate runs and charge-loss/double-charge/release/sharing/migration/concurrency/teardown controls."
+    ]
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-05-CUELGUES",
+    "status": "unknown",
+    "reason": "Verifier validates paired raw baseline/candidate API/size sets, increasing samples, interval-bounded journal records and service responses. Comparable incident captures absent.",
+    "files": [
+      "tools/verify_cgroup_plan.py",
+      "tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/protocol.txt",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "control_command": "python3 -m tools.verify_cgroup_plan --phase 05-cuelgues --evidence tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES",
+    "evidence_needed": [
+      "At least two comparable raw samples+journal+service-response bundles with positive exposure durations"
+    ]
+  },
+  {
+    "id": "FEATURE-FORUM-NETCONSOLE-01",
+    "status": "unknown",
+    "reason": "UNKNOWN/CNR=1: kernel-capture.json absent. Persistent config checks hash/mode/symlink before/during/after, exact active netconsole parameter binding, and exact rollback; selector ran against live evidence.",
+    "files": [
+      "tools/verify_netconsole.py",
+      "tests/test_closure_netconsole_edges.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "control_command": "python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01",
+    "evidence_needed": [
+      "Target netconsole state and Secure Boot/signature evidence, actual receiver marker correlated by boot ID, privacy review and verified rollback"
+    ]
+  },
+  {
+    "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "status": "unknown",
+    "reason": "Actual CLI reports unknown/CNR=1 because recovery.json is absent; target pstore access was denied in the earlier readonly capture.",
+    "files": [
+      "tools/verify_rcu_panic_pstore.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "control_command": "python3 -m tools.verify_rcu_panic_pstore --evidence tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "evidence_needed": [
+      "Owner-approved canary forced marker persisted through new boot, active sysctls/backend, kdump armed, rollback restored; natural RCU recovery remains separately unobserved"
+    ]
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "status": "unknown",
+    "reason": "Unknown/CNR=1: actual runtime probe/CUDA captures absent. Evaluator binds raw typed events to boot/PID/cgroup/owner, bounded raw BTF and current symbol/kernel captures, checks zero loss and full charge/free balance; empty-window heartbeat and CPU control evidence are required.",
+    "files": [
+      "tools/verify_memory_saver.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "control_command": "python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "evidence_needed": [
+      "Verified runtime symbols and raw CPU/no-allocation/bounded-CUDA events with charge/uncharge/failure/duplicate counts and owner memcg"
+    ]
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "status": "unknown",
+    "reason": "UNKNOWN/CNR=1: raw capture.json absent. Stock/packed comparisons now bind logical allocation, API/request/alignment/owner and per-row corpus/protocol/stack/exposure; measured costs sum per API, so cost trades with no net per-API saving take the no-port path.",
+    "files": [
+      "tools/verify_memory_saver.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "control_command": "python3 -m tools.verify_memory_saver --phase 04-packing-4k --evidence tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "evidence_needed": [
+      "Same-workload stock/packed raw per-allocation captures with owner, sharing, migration and teardown measurements; if measured saving exists, candidate diff/build/phase03 and full controls."
+    ]
+  },
+  {
+    "id": "FORUM-02-PSTORE-KERNEL-REGRESSION",
+    "status": "unknown",
+    "reason": "UNKNOWN/CNR: literal close command exits rc=1 because tools.verify_forum_finding is absent from this isolated worktree; hardware owns that shared CLI. This worktree does not duplicate or replace it.",
+    "files": [
+      "tools/verify_forum_pstore.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "control_command": "python3 -m tools.verify_forum_finding --id FORUM-02-PSTORE-KERNEL-REGRESSION --evidence tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION",
+    "evidence_needed": [
+      "Integrate the hardware-owned tools.verify_forum_finding module and its existing pstore router into primary, then run the literal close command; actual pstore evidence remains unreadable/absent."
+    ]
+  }
+]

@@ -1,0 +1,69 @@
+{
+  "source_sha256": "6d78656c9435d12ba0255aef71a30458af00f9b4a00d1f69ff6b6fb3c8adcd76",
+  "source_path": "/tmp/bb-controls-kernel/tests/test_workload_restart_containment.py",
+  "input": {
+    "argv": [
+      "/bin/echo",
+      "-m",
+      "tools.workload_restart_policy",
+      "--state",
+      "/tmp/state.json",
+      "--workload-id",
+      "w",
+      "--limit",
+      "1",
+      "--window-seconds",
+      "60"
+    ],
+    "returncode": 0,
+    "stdout": "{\"status\": \"allow\", \"workload_id\": \"w\", \"attempts\": 1, \"limit\": 1, \"window_seconds\": 60}",
+    "started_at": "2026-10-04T00:00:01+00:00",
+    "finished_at": "2026-10-04T00:00:02+00:00"
+  },
+  "output": {
+    "accepted": true,
+    "result": [
+      true,
+      [
+        [
+          "w",
+          {
+            "status": "allow",
+            "workload_id": "w",
+            "attempts": 1,
+            "limit": 1,
+            "window_seconds": 60
+          },
+          {
+            "argv": [
+              "/bin/echo",
+              "-m",
+              "tools.workload_restart_policy",
+              "--state",
+              "/tmp/state.json",
+              "--workload-id",
+              "w",
+              "--limit",
+              "1",
+              "--window-seconds",
+              "60"
+            ],
+            "returncode": 0,
+            "stdout": "{\"status\": \"allow\", \"workload_id\": \"w\", \"attempts\": 1, \"limit\": 1, \"window_seconds\": 60}",
+            "started_at": "2026-10-04T00:00:01+00:00",
+            "finished_at": "2026-10-04T00:00:02+00:00"
+          }
+        ]
+      ],
+      {
+        "schema": 1,
+        "workloads": {
+          "w": [
+            1791072001
+          ]
+        }
+      }
+    ]
+  },
+  "scope": "Helper replay only, not full physical closure; no host changes"
+}

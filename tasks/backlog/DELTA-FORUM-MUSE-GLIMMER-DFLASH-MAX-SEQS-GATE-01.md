@@ -35,3 +35,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Evaluación de instrumentos 2026-10-03
 
 Reusa `tools/chat_sse_capture.py` para conservar deltas/finish del cliente, pero no valida resolución de draft class, límite de concurrencia, presión de recursos ni semántica/inyección de tools. No existe captura local de los tags/PR citados ni del borde 32/33. Estado `deferred_lab`: fijar imagen/modelo/parser/template, probar carga acotada en 32 y 33 y controles semánticos/negativos antes de proponer un límite específico; sin universalizar el cap del hilo.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: No hay captura de concurrency sweep del build/modelo Glimmer/dFlash con max_seqs efectivo.
+- Evidencia faltante para cierre: Build y modelo exactos; concurrency sweep; latencia/throughput/memoria/calidad; control sin dFlash y rollback.
+- Siguiente acción: Solicitar benchmark en stack fijado con sweep de secuencias, medidas de latencia/throughput/calidad y control sin dFlash; usar selector actual al recibir recibos.
+- Responsable del siguiente paso: BB; operador Luis para workload/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01.md`, `tools/runtime_batch02_controls.py`, `tests/test_debt_registration_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

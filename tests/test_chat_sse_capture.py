@@ -9,6 +9,30 @@ from tools import chat_sse_capture as sse
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_completed_text_with_nonfinite_json_remains_invalid_syntax() -> None:
+    def assessment(content: str):
+        chunk = {"choices": [{"index": 0, "delta": {"content": content}, "finish_reason": "stop"}]}
+        capture = "data: " + json.dumps(chunk) + "\n\ndata: [DONE]\n\n"
+        return sse.parse_capture(capture, "capture.sse")["json_text_assessments"][0]
+
+    assert assessment('{"value":1}')["json_syntax_status"] == "valid_json"
+    for content in ('{"value":NaN}', '{"value":Infinity}', '{"value":-Infinity}'):
+        negative = assessment(content)
+        assert negative["completion_status"] == "complete"
+        assert negative["json_syntax_status"] == "invalid_json"
+        assert negative["json_error"] == "ValueError"
+        assert "json_error_line" not in negative
+
+
+def test_empty_bare_data_frame_cannot_hide_behind_later_valid_chunks() -> None:
+    baseline = 'data: {"choices":[]}\n\ndata: [DONE]\n\n'
+    healthy = sse.parse_capture(baseline, "capture.sse")
+    assert healthy["status"] == "observed" and healthy["could_not_run_count"] == 0
+    negative = sse.parse_capture("data\n\n" + baseline, "capture.sse")
+    assert negative["status"] == "partial" and negative["could_not_run_count"] == 1
+    assert len(negative["chunks"]) == 1
+
+
 def test_text_tool_call_fragments_and_finish_reasons_are_preserved() -> None:
     result = sse.parse_capture(
         'data: {"id":"chat-1","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"content":"hello"},"finish_reason":null}]}\n\n'

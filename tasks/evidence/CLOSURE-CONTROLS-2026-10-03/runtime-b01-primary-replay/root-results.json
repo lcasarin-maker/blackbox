@@ -1,0 +1,326 @@
+[
+  {
+    "id": "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+    "mutation_index": 0,
+    "field_path": [
+      "nodes",
+      1,
+      "ranks",
+      0,
+      "rank"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "unknown",
+      "could_not_run": 1,
+      "reason": "rank-local NCCL/image observations incomplete"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+    "mutation_index": 1,
+    "field_path": [
+      "pp_first_request",
+      "output_tokens"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "unknown",
+      "could_not_run": 1,
+      "reason": "first request output/finish observation absent"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+    "mutation_index": 2,
+    "field_path": [
+      "first_request",
+      "output_tokens"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "unknown",
+      "could_not_run": 1,
+      "reason": "first inference lacks output or rank logs"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+    "mutation_index": 3,
+    "field_path": [
+      "nccl_operation",
+      "rank_results",
+      0,
+      "exit_code"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "unknown",
+      "could_not_run": 1,
+      "reason": "collective rank exit-code observations are malformed"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+    "mutation_index": 4,
+    "field_path": [
+      "negative_control",
+      "planned_mtu"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "unknown",
+      "could_not_run": 1,
+      "reason": "negative MTU plan-mismatch control absent"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+    "mutation_index": 5,
+    "field_path": [
+      "acceptance_by_position",
+      0,
+      "position"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "unknown",
+      "could_not_run": 1,
+      "reason": "acceptance-by-position raw tokens absent"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+    "mutation_index": 6,
+    "field_path": [
+      "pretrim_headroom_case",
+      "peak_bytes"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "unknown",
+      "could_not_run": 1,
+      "reason": "pre-trim headroom case lacks separate raw memory/load evidence"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01",
+    "mutation_index": 7,
+    "field_path": [
+      "scheduler_runs",
+      1,
+      "decode_samples",
+      0,
+      "generated_tokens"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "unknown",
+      "could_not_run": 1,
+      "reason": "decode progress lacks raw token-count/time samples"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01",
+    "mutation_index": 8,
+    "field_path": [
+      "stop_capture",
+      "exit_code"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "unknown",
+      "could_not_run": 1,
+      "reason": "stop invocation/output is not auditable"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01",
+    "mutation_index": 9,
+    "field_path": [
+      "selected_paths",
+      0,
+      "gid_index"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "unknown",
+      "could_not_run": 1,
+      "reason": "HCA/RoCE twin/IPv4/GID/MTU selection incomplete"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01",
+    "mutation_index": 10,
+    "field_path": [
+      "collective",
+      "rank_exit_codes",
+      0
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "unknown",
+      "could_not_run": 1,
+      "reason": "collective rank exit-code observations are malformed"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01",
+    "mutation_index": 11,
+    "field_path": [
+      "first_inference",
+      "output_tokens"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "unknown",
+      "could_not_run": 1,
+      "reason": "first inference not tied to verified NCCL paths"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01",
+    "mutation_index": 12,
+    "field_path": [
+      "conversation_cases",
+      6,
+      "tool_iterations"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "unknown",
+      "could_not_run": 1,
+      "reason": "required-tool iteration bound absent"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01",
+    "mutation_index": 13,
+    "field_path": [
+      "conversation_cases",
+      0,
+      "turns",
+      0,
+      "prompt_tokens"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "unknown",
+      "could_not_run": 1,
+      "reason": "turn trace lacks raw SSE/token count observations"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+    "mutation_index": 14,
+    "field_path": [
+      "negative_control",
+      "planned_mtu"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "fail",
+      "could_not_run": 0,
+      "reason": "negative MTU control contains a nonpositive interface MTU"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+    "mutation_index": 15,
+    "field_path": [
+      "pretrim_headroom_case",
+      "peak_bytes"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "fail",
+      "could_not_run": 0,
+      "reason": "pre-trim memory byte measurements are negative"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+    "mutation_index": 16,
+    "field_path": [
+      "nodes",
+      0,
+      "ranks",
+      0,
+      "rank"
+    ],
+    "baseline": {
+      "status": "pass",
+      "could_not_run": 0,
+      "reason": "raw domain measurements satisfy card predicates"
+    },
+    "after": {
+      "status": "fail",
+      "could_not_run": 0,
+      "reason": "rank identity contains a negative rank number"
+    }
+  }
+]

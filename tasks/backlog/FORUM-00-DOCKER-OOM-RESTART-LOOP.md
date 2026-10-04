@@ -57,3 +57,23 @@ Evidencia y pendientes: `tasks/evidence/FORUM-00-DOCKER-OOM-RESTART-LOOP/progres
 ## Avance de ejecución 2026-10-03
 
 Se añadió `tools/workload_restart_policy.py`: registra atómicamente intentos por identidad de workload en un archivo persistente, serializa reclamaciones concurrentes, rechaza un reloj retrocedido, permite workloads sanos independientes y limita la reincidencia en una ventana. Los fallos de estado producen `could_not_run` con contadores explícitos. La política no atribuye reboots a OOM ni inicia o detiene contenedores. Falta integrarla con el runtime y validar identidad, conservación de datos, servicio de gestión y recuperación en un entorno con reboot controlado. Estado permanece `open`.
+
+
+## Control de cierre real integrado — 2026-10-04
+
+El comando original conserva su texto e incluye `test_restart_recovery_close_check_uses_real_cycle_evidence`. El lector liga capturas crudas al ID/digest/PID del contenedor, unidades y gate de inicio, estado persistente y decisiones de política reproducidas, boot IDs y eventos ordenados, acceso de gestión remoto, request/respuesta del servicio, datos preservados y rollback. Rechaza los marcadores de comandos falsos detectados; OOM se conserva como observación, con atribución causal pendiente. El caso sintético completo y su mutación de ruta comprueban el lector en `tmp_path`.
+
+Primary: `python3 -m pytest tests/test_workload_restart_containment.py -q` → `1 failed, 20 passed in 0.47s`. El único fallo es UNKNOWN/CNR por ausencia del bundle físico `tasks/evidence/FORUM-00-DOCKER-OOM-RESTART-LOOP/restart-cycle`. No se reinició el host, contenedor ni servicio. Los 10 tests originales conservaron su AST; la ficha permanece `open`.
+
+Recibo y logs: `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/docker-real-selector-primary-integration.json`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: El selector integrado falla por ausencia del bundle físico restart-cycle; la política unitaria no prueba integración ni recuperación real.
+- Evidencia faltante para cierre: bundle crudo ligado a container ID/digest/PID, unit/gate, boot IDs, OOM/PSI, SSH, datos preservados, decisión policy y rollback
+- Siguiente acción: Preparar ciclo recuperable para un único workload identificado y reproducir reincidencia, reboot ajeno y reinicio sano; recopilar bundle requerido y salida del selector.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/FORUM-00-DOCKER-OOM-RESTART-LOOP.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json`, `tasks/evidence/FORUM-00-DOCKER-OOM-RESTART-LOOP/progress.txt`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

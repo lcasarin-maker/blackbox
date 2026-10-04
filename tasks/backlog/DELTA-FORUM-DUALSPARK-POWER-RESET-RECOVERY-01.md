@@ -40,3 +40,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Evaluación de instrumentos 2026-10-03
 
 No existe evidencia local del par Spark aislado, del perfil OEM de power reset ni de observaciones previas/posteriores; inventario/hostdiag no prueba recuperación causal. Estado `deferred_lab`: requiere procedimiento OEM aprobado, series externas antes/después y controles repetidos que separen power/CX7/clocks/workload, con rollback/criterio seguro. No se efectuó power cycle ni se alteró estado del host.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: No se puede demostrar ciclo de corte/reset y recuperación de dos unidades sin lab físico y participación del operador.
+- Evidencia faltante para cierre: modelos/OEM/firmware exactos; estados antes/después de power reset; tráfico sano/negativo y rollback
+- Siguiente acción: Ejecutar ciclo A/B en dos nodos canary aprobados, capturar estado de energía/enlace y tráfico y demostrar rollback OEM.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json`, `tasks/evidence/DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01/ (directorio ausente al inspeccionar)`.
+- Impedimentos de inspección: 1. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

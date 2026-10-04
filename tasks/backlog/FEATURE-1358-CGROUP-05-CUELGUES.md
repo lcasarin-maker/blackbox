@@ -151,3 +151,14 @@ Un segundo caso del mismo hilo es distinto: cuatro Spark/TP4, `vllm/vllm-openai:
 
 
 **BB-QWEN35-SECONDARY-MODEL-LOAD-ADMISSION** — [365639, posts 410 y 427](https://forums.developer.nvidia.com/t/qwen3-5-122b-a10b-on-single-spark-up-to-51-tok-s-v2-1-patches-quick-start-benchmark/365639/427): un usuario reporta crashes al intentar el stack Qwen3.5-122B a contexto 262K sin traza; otro dice que cargar un modelo pequeño de enriquecimiento mientras el modelo 122B ya carga causa crashes frecuentes, y que esperar ~1 min después del init los evitó en su equipo. Falta timeline/UMA/OOM/CUDA, así que son dos firmas posiblemente distintas y el delay es candidato, no fix. Extender la admisión existente con prueba de solapamiento cold-load primary + secondary y un stagger medido; recolectar MemAvailable, PSI/swap, cgroup, RSS/PSS, health y errores CUDA/OOM fuera del host. Permitir co-load solo dentro de headroom reproducible; no fijar un sleep universal. ID literal: `BB-QWEN35-SECONDARY-MODEL-LOAD-ADMISSION`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: La ficha madre compila varios incidentes/workloads; faltan reproducciones locales fijadas, memoria/host-headroom y controles que separen OOM de hang; relatos externos no prueban el sujeto.
+- Evidencia faltante para cierre: La ficha madre compila varios incidentes/workloads; faltan reproducciones locales fijadas, memoria/host-headroom y controles que separen OOM de hang; relatos externos no prueban el sujeto.
+- Siguiente acción: Coordinación BB: aislar escenarios seguros reproducibles y definir telemetría; operador Luis: aportar captura de workload canary con límites y rollback. Ref explícita: tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-05-CUELGUES-direct-close-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-05-CUELGUES-direct-close-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -1,0 +1,802 @@
+diff --git a/.pre-commit-config.yaml b/.pre-commit-config.yaml
+index 7d81c71c..6553b859 100644
+--- a/.pre-commit-config.yaml
++++ b/.pre-commit-config.yaml
+@@ -33,7 +33,6 @@ repos:
+         pass_filenames: false
+         always_run: true
+         stages: [pre-push]
+-        priority: 1
+ 
+   - repo: https://github.com/gitleaks/gitleaks
+     rev: v8.30.1
+@@ -46,7 +45,6 @@ repos:
+         name: "gitleaks (full history, local)"
+         args: [--no-banner, --redact, --pre-commit=false, --staged=false, --log-opts=--all]
+         stages: [pre-push]
+-        priority: 1
+ 
+   - repo: local
+     hooks:
+@@ -112,7 +110,6 @@ repos:
+         types: [python]
+         stages: [pre-push]
+         pass_filenames: false
+-        priority: 1
+ 
+       - id: coverage-floor
+         name: "coverage target (100%)"
+@@ -125,7 +122,6 @@ repos:
+         types: [python]
+         stages: [pre-push]
+         pass_filenames: false
+-        priority: 2
+ 
+       # Re-wired 2026-09-27 (Luis: "arregla h1, ligalo al push"), kit only. It
+       # blocks a push that carries a release commit whose H1 ledger is not green
+@@ -141,7 +137,6 @@ repos:
+         language: system
+         stages: [pre-push]
+         pass_filenames: false
+-        priority: 1
+ 
+       - id: pyright
+         name: "pyright (type checking)"
+@@ -158,7 +153,6 @@ repos:
+         types: [python]
+         stages: [pre-push]
+         pass_filenames: false
+-        priority: 3
+ 
+ 
+       - id: adversarial-judge
+@@ -171,7 +165,6 @@ repos:
+         language: system
+         stages: [pre-push]
+         pass_filenames: false
+-        priority: 1
+ 
+       - id: pii-scan
+         name: "no third-party PII (RFC/CURP) in tasks/ or docs/"
+@@ -182,4 +175,3 @@ repos:
+         language: system
+         stages: [pre-push]
+         pass_filenames: false
+-        priority: 1
+diff --git a/src/simplecode/cli_new.py b/src/simplecode/cli_new.py
+index 6e76ff74..161ad493 100644
+--- a/src/simplecode/cli_new.py
++++ b/src/simplecode/cli_new.py
+@@ -181,7 +181,6 @@ def pre_commit_config(portable: bool = True) -> str:
+                 types: [python]
+                 stages: [pre-push]
+                 pass_filenames: false
+-                priority: 1
+ 
+               - id: coverage-floor
+                 name: "coverage target (ratchet: never below watermark)"
+@@ -194,7 +193,6 @@ def pre_commit_config(portable: bool = True) -> str:
+                 types: [python]
+                 stages: [pre-push]
+                 pass_filenames: false
+-                priority: 2
+ 
+               - id: pyright
+                 name: "pyright (type checking)"
+@@ -206,7 +204,6 @@ def pre_commit_config(portable: bool = True) -> str:
+                 types: [python]
+                 stages: [pre-push]
+                 pass_filenames: false
+-                priority: 3
+ 
+               - id: pii-scan
+                 name: "no third-party PII (RFC/CURP) in tasks/ or docs/"
+@@ -217,7 +214,6 @@ def pre_commit_config(portable: bool = True) -> str:
+                 language: system
+                 stages: [pre-push]
+                 pass_filenames: false
+-                priority: 1
+ 
+               - id: adversarial-judge
+                 name: "Judge-Zero forensic auditor"
+@@ -229,7 +225,6 @@ def pre_commit_config(portable: bool = True) -> str:
+                 language: system
+                 stages: [pre-push]
+                 pass_filenames: false
+-                priority: 1
+         '''
+     )
+     if portable:
+diff --git a/src/simplecode/guards/pattern_detectors.py b/src/simplecode/guards/pattern_detectors.py
+index e68a3d7e..31897f8e 100644
+--- a/src/simplecode/guards/pattern_detectors.py
++++ b/src/simplecode/guards/pattern_detectors.py
+@@ -1113,8 +1113,10 @@ def optimistic_config_findings(code: str, path: str | None = None) -> list[tuple
+     # The docstring's calibration survives, and it was re-measured rather than
+     # assumed: the one true positive it cites (`app.run(debug=True, port=5000)`)
+     # is CODE, so prose-blanking leaves it untouched.
++    debug_code = code_without_string_literals(code_without_prose(code)).splitlines()
+     for numero, line in enumerate(_prose_blanked_lines(code), start=1):
+-        debug_m = _OPTIMISTIC_DEBUG.search(line)
++        debug_line = debug_code[numero - 1] if numero <= len(debug_code) else ""
++        debug_m = _OPTIMISTIC_DEBUG.search(debug_line)
+         if debug_m:
+             hits.append((numero,
+                          f"debug/testing flag left on: `{debug_m.group(0).strip()}`"))
+@@ -1261,73 +1263,77 @@ def multi_agent_without_protocol(code: str) -> bool:
+     return False
+ 
+ 
+-# flota 2026-08-17: 0 hits. Es RESIDUAL, no capturas: mide lo que
+-# convictaría hoy, no lo que atrapó y ya se arregló. Sin hits no hay
+-def _mask_multiline_test_string_literals(tree: ast.AST, code: str) -> str:
+-    """Like `_mask_adversarial_test_literals` with no real-executor carve-out
+-    (every string literal inside a `def test_*` is exempt, unconditionally),
+-    but ALSO blanks multi-line spans -- `_mask_ast_spans` deliberately skips
+-    those ("conservative: stays subject to the original check rather than
+-    risking a masking bug silencing real code"), which is the right call for
+-    detectors sharing it, but leaves a triple-quoted fixture string fully
+-    exposed. Safe here specifically: nothing this function's one caller
+-    (`insecure_defaults`) hunts can mean anything as prose inside a string,
+-    on any number of lines, so there is no "real code hidden mid-string" risk
+-    to be conservative about.
+-
+-    Line-terminator-preserving blank, same technique as `code_without_prose`.
+-    """
+-    exempt_ids = _adversarial_test_data_ids(tree, frozenset(), frozenset())
+-    lines = code.splitlines(keepends=True)
+-    for node in _walk(tree):
+-        if not (isinstance(node, ast.Constant) and isinstance(node.value, str)
+-                and id(node) in exempt_ids):
+-            continue
+-        lineno = getattr(node, "lineno", None)
+-        end_lineno = getattr(node, "end_lineno", None)
+-        col = getattr(node, "col_offset", None)
+-        end_col = getattr(node, "end_col_offset", None)
+-        if lineno is None or end_lineno is None or col is None or end_col is None:
+-            continue
+-        if not (1 <= lineno <= len(lines)):
+-            continue
+-        for row in range(lineno, min(end_lineno, len(lines)) + 1):
+-            line = lines[row - 1]
+-            cuerpo = line.rstrip("\r\n")
+-            term = line[len(cuerpo):]
+-            a = min(col if row == lineno else 0, len(cuerpo))
+-            b = min(end_col if row == end_lineno else len(cuerpo), len(cuerpo))
+-            lines[row - 1] = cuerpo[:a] + " " * max(0, b - a) + cuerpo[b:] + term
+-    return "".join(lines)
+-
+-
+ def insecure_defaults(code: str) -> bool:
+     """Insecure default: verify=False, CORS '*', md5, bind-all.
+ 
+     `debug=True` deliberately excluded -- see the comment on
+     `_INSECURE_DEFAULT`; `optimistic_config` owns that finding.
+ 
+-    A match inside a string-literal Constant within a `def test_*` function is
+-    exempt -- prose/fixture data describing the vice (e.g. a sample finding
+-    message a report-formatting test asserts against), not the vice itself.
+-    `_INSECURE_DEFAULT` only ever means something as literal Python syntax
+-    (`verify=False` as a real keyword argument, `hashlib.md5(` as a real
+-    call), never as text a test happens to quote, so every such literal is
+-    exempt unconditionally, single-line or multi-line (see
+-    `_mask_multiline_test_string_literals`). Measured:
+-    `tests/test_backlog_behavior.py::test_extract_findings_from_task_folds_
+-    detector_tag_continuation_line` builds a multi-line triple-quoted fixture
+-    body containing the line `- [SEGURIDAD] api/server.py:221 --
+-    host="0.0.0.0" without auth.` to feed a finding-extraction parser under
+-    test, then separately asserts the extracted, single-line finding string
+-    verbatim -- neither is a server binding to 0.0.0.0, and both fired.
++    Parsed Python code is inspected as syntax nodes, so registry strings,
++    comments, and documentation prose do not count as executable settings.
++    When parsing fails, the legacy pattern check remains available.
+     """
+     try:
+         tree = _parse(code)
+-        masked = _mask_multiline_test_string_literals(tree, code)
+     except UnparseableSource:
+-        masked = code
+-    return bool(_INSECURE_DEFAULT.search(masked))
++        return bool(_INSECURE_DEFAULT.search(code))
++    return _insecure_defaults_ast(tree)
++
++
++def _insecure_defaults_ast(tree: ast.AST) -> bool:
++    for node in _walk(tree):
++        if isinstance(node, ast.Call):
++            func = node.func
++            if (
++                isinstance(func, ast.Attribute)
++                and func.attr == "md5"
++                and isinstance(func.value, ast.Name)
++                and func.value.id == "hashlib"
++            ):
++                return True
++            for keyword in node.keywords:
++                if _insecure_keyword(keyword.arg, keyword.value):
++                    return True
++        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
++            positional = [*node.args.posonlyargs, *node.args.args]
++            positional_defaults: list[ast.expr | None] = [
++                None
++            ] * (len(positional) - len(node.args.defaults))
++            positional_defaults.extend(node.args.defaults)
++            if any(
++                default is not None and _insecure_keyword(arg.arg, default)
++                for arg, default in zip(positional, positional_defaults)
++            ) or any(
++                default is not None and _insecure_keyword(arg.arg, default)
++                for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults)
++            ):
++                return True
++        if isinstance(node, (ast.Assign, ast.AnnAssign)):
++            value = node.value
++            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
++            if value is not None and any(
++                _insecure_keyword(_insecure_target_name(target), value)
++                for target in targets
++            ):
++                return True
++    return False
++
++
++def _insecure_keyword(name: str | None, value: ast.expr) -> bool:
++    """Classify insecure setting syntax from AST nodes, never from embedded prose."""
++    return (
++        name == "verify" and isinstance(value, ast.Constant) and value.value is False
++        or name == "origins" and isinstance(value, ast.Constant) and value.value == "*"
++        or name == "host" and isinstance(value, ast.Constant) and value.value == "0.0.0.0"
++    )
++
++
++def _insecure_target_name(target: ast.expr) -> str | None:
++    if isinstance(target, ast.Name):
++        return target.id
++    if isinstance(target, ast.Attribute):
++        return target.attr
++    return None
+ 
+ 
+ def _is_llm_generate_call(node: ast.AST) -> bool:
+@@ -1832,9 +1838,22 @@ def unsafe_eval(code: str) -> bool:  # noqa: C901 -- eval shadow resolution, DEB
+ 
+ # flota 2026-08-17: 5 hits (Atlas 3, simplecode 1, aequitas_os 1). Primero: Atlas/tools/verify_dgx08_recovery.py.
+ # Es RESIDUAL, no capturas: mide lo que convictaría hoy.
+-def test_without_assert(code: str) -> bool:
++def _is_test_source_path(path: str) -> bool:
++    normalized = path.replace("\\", "/").lower()
++    parts = normalized.split("/")
++    name = parts[-1]
++    return (
++        "tests" in parts
++        or name.startswith("test_")
++        or name.endswith("_test.py")
++        or "control" in name
++        or "fixture" in name
++    )
++
++
++def test_without_assert(code: str, path: str | None = None) -> bool:
+     """A test function with no assert and no `with` block (e.g. pytest.raises)."""
+-    return bool(test_without_assert_findings(code))
++    return bool(test_without_assert_findings(code, path))
+ 
+ 
+ def test_without_assert_findings(code: str, path: str | None = None) -> list[tuple[int, str]]:
+@@ -1843,6 +1862,8 @@ def test_without_assert_findings(code: str, path: str | None = None) -> list[tup
+     ever collapsed to one bool; this names each one so the caller knows
+     which test to fix without grepping.
+     """
++    if path is not None and not _is_test_source_path(path):
++        return []
+     tree = _parse(code)
+     hits: list[tuple[int, str]] = []
+     for fn in _test_funcs(tree):
+@@ -4804,7 +4825,7 @@ def test_atrophy_detector(code: str, path: str | None = None) -> bool:
+ 
+ def test_atrophy_detector_findings(code: str, path: str | None = None) -> list[tuple[int, str]]:
+     """Every test function hollowed out to pass or ellipsis, as (line, reason)."""
+-    if path and not any(k in path.lower() for k in ("test", "control", "fixture")):
++    if path is not None and not _is_test_source_path(path):
+         return []
+     tree = _parse(code)
+     hits: list[tuple[int, str]] = []
+diff --git a/src/simplecode/verification/pii_scan.py b/src/simplecode/verification/pii_scan.py
+index 44503cd7..3db3a50a 100644
+--- a/src/simplecode/verification/pii_scan.py
++++ b/src/simplecode/verification/pii_scan.py
+@@ -41,6 +41,7 @@ viaja en runtime.zip y ningun satelite vuelve a tener su propia copia que pueda
+ from __future__ import annotations
+ 
+ import argparse
++import json
+ import os
+ import re
+ import subprocess
+@@ -108,6 +109,45 @@ _UNIDAD_SYSTEMD = re.compile(
+     r"\A[A-Za-z0-9._%+-]+@[A-Za-z0-9.:-]+\."
+     r"(?:service|socket|target|timer|mount|automount|slice|scope|swap|device|path)\Z"
+ )
++_APT_RELEASE_DEP11_ROW = re.compile(
++    r"\A\s*(?:[0-9a-f]{32}|[0-9a-f]{40}|[0-9a-f]{64}|[0-9a-f]{96}|[0-9a-f]{128})"
++    r"\s+(?:0|[1-9][0-9]{0,19})\s+"
++    r"(?:main|restricted|universe|multiverse)/dep11/"
++    r"(?P<archive>icons-(?P<size>48|64|128)x(?P=size)@2\.tar(?:\.gz)?)\s*\Z"
++)
++_APT_INDEX_DEP11_ROW = re.compile(
++    r"/var/lib/apt/lists/ports\.ubuntu\.com_ubuntu-ports_dists_"
++    r"(?P<suite>[a-z0-9-]+)_(?P<section>main|restricted|universe|multiverse)_"
++    r"dep11_icons-64x64%402\.tar\.gz\|(?P=section)/dep11/"
++    r"(?P<archive>icons-64x64@2\.tar)\|http://ports\.ubuntu\.com/ubuntu-ports/dists/"
++    r"(?P=suite)/\|(?P=suite)\|\$\(ARCHITECTURE\)\|DEP-11-icons-hidpi"
++)
++_APT_INDEX_DEP11_SIX_FIELDS = re.compile(
++    r"/var/lib/apt/lists/ports\.ubuntu\.com_ubuntu-ports_dists_"
++    r"(?P<suite>[a-z0-9-]+)_(?P<section>main|restricted|universe|multiverse)_"
++    r"dep11_icons-64x64%402\.tar\.gz\|(?P=section)/dep11/"
++    r"(?P<archive>icons-64x64@2\.tar)\|http://ports\.ubuntu\.com/ubuntu-ports\|"
++    r"(?P=suite)\|DEP-11-icons-hidpi\|\$\(ARCHITECTURE\)"
++)
++_APT_INDEX_DEP11_JSON_META_KEY = re.compile(
++    r'\A\s*"meta_key": "(?P<section>main|restricted|universe|multiverse)'
++    r'/dep11/icons-64x64@2\.tar",?\s*\Z'
++)
++_APT_INDEX_DEP11_JSON_FILENAME = re.compile(
++    r"/var/lib/apt/lists/ports\.ubuntu\.com_ubuntu-ports_dists_"
++    r"(?P<suite>[a-z0-9-]+)_(?P<section>main|restricted|universe|multiverse)_"
++    r"dep11_icons-64x64%402\.tar\.gz\Z"
++)
++_NVIDIA_SIGNED_LABEL = re.compile(
++    r"\ALabel: NVIDIA CORPORATION <(?P<address>cudatools@nvidia\.com)>\Z"
++)
++_NVIDIA_SIGNED_ORIGIN = "Origin: https://nvidia.github.io/libnvidia-container/stable"
++_UBUNTU_ARCHIVE_GPGV = re.compile(
++    r"gpgv: Signature made .*?\\ngpgv:\s+using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C"
++    r"\\ngpgv:\s+Good signature from "
++    r"\\?\"Ubuntu Archive Automatic Signing Key \(2018\) <(?P<address>ftpmaster@ubuntu\.com)>\\?\"",
++    re.DOTALL,
++)
+ _GIT_ENV = {k: v for k, v in os.environ.items()
+             if k not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_CEILING_DIRECTORIES"}}
+ 
+@@ -129,6 +169,98 @@ def es_unidad_systemd(valor: str) -> bool:
+     return bool(_UNIDAD_SYSTEMD.match(valor))
+ 
+ 
++def es_ruta_dep11_release(linea: str, inicio: int) -> bool:
++    """Only recognize the DEP-11 HiDPI archive as a path in a hash/size Release row."""
++    match = _APT_RELEASE_DEP11_ROW.fullmatch(linea)
++    if match is not None:
++        return match.start("archive") <= inicio < match.end("archive")
++    return any(
++        match.start("archive") <= inicio < match.end("archive")
++        for pattern in (_APT_INDEX_DEP11_ROW, _APT_INDEX_DEP11_SIX_FIELDS)
++        for match in pattern.finditer(linea)
++    )
++
++
++def _json_objects(value: object) -> Iterator[dict[str, object]]:
++    if isinstance(value, dict):
++        yield value
++        for child in value.values():
++            yield from _json_objects(child)
++    elif isinstance(value, list):
++        for child in value:
++            yield from _json_objects(child)
++
++
++def es_meta_key_dep11_json(lineas: list[str], numero: int, valor: str) -> bool:
++    """Recognize only a JSON row whose sibling fields form the exact DEP-11 identity."""
++    if not 1 <= numero <= len(lineas):
++        return False
++    meta = _APT_INDEX_DEP11_JSON_META_KEY.fullmatch(lineas[numero - 1])
++    if meta is None or valor != "icons-64x64@2.tar":
++        return False
++    try:
++        document = json.loads("\n".join(lineas))
++    except (json.JSONDecodeError, RecursionError):
++        return False
++    for record in _json_objects(document):
++        filename = record.get("filename")
++        filename_match = (
++            _APT_INDEX_DEP11_JSON_FILENAME.fullmatch(filename)
++            if isinstance(filename, str) else None
++        )
++        if (
++            filename_match is not None
++            and filename_match.group("suite") == record.get("suite")
++            and filename_match.group("section") == meta.group("section")
++            and record.get("meta_key") == f"{meta.group('section')}/dep11/{valor}"
++            and record.get("site") == "http://ports.ubuntu.com/ubuntu-ports"
++            and record.get("architecture") == "$(ARCHITECTURE)"
++            and record.get("identifier") == "DEP-11-icons-hidpi"
++        ):
++            return True
++    return False
++
++
++def es_contacto_firmante_ubuntu(valor: str, linea: str, inicio: int) -> bool:
++    """Recognize only Ubuntu's published archive-key contact in its exact gpgv transcript."""
++    match = _UBUNTU_ARCHIVE_GPGV.search(linea)
++    return (valor == "ftpmaster@ubuntu.com" and match is not None
++            and match.start("address") <= inicio < match.end("address"))
++
++
++def es_contacto_etiqueta_nvidia(
++    valor: str, lineas: list[str], numero: int, inicio: int
++) -> bool:
++    """Classify NVIDIA's public role contact in the exact Release-header shape.
++
++    This is structural classification of a known institutional address, not
++    cryptographic signature verification.
++    """
++    if valor != "cudatools@nvidia.com" or not 1 <= numero <= len(lineas):
++        return False
++    label = _NVIDIA_SIGNED_LABEL.fullmatch(lineas[numero - 1])
++    return (
++        label is not None
++        and label.start("address") <= inicio < label.end("address")
++        and lineas[:1] == ["-----BEGIN PGP SIGNED MESSAGE-----"]
++        and _NVIDIA_SIGNED_ORIGIN in lineas
++        and "-----BEGIN PGP SIGNATURE-----" in lineas
++        and "-----END PGP SIGNATURE-----" in lineas
++    )
++
++
++def _correo_exento_por_contexto(
++    valor: str, lineas: list[str], linea: str, numero: int, inicio: int
++) -> bool:
++    return (
++        es_unidad_systemd(valor)
++        or es_ruta_dep11_release(linea, inicio)
++        or es_meta_key_dep11_json(lineas, numero, valor)
++        or es_contacto_firmante_ubuntu(valor, linea, inicio)
++        or es_contacto_etiqueta_nvidia(valor, lineas, numero, inicio)
++    )
++
++
+ def rfc_verificador_cuadra(valor: str) -> bool:
+     """True si el ultimo caracter del RFC es el digito verificador del SAT (modulo 11).
+ 
+@@ -274,7 +406,9 @@ def hallazgos_en_lineas(
+                     continue
+                 if es_identificador_compuesto(l, match.start()):
+                     continue
+-                if patron is CORREO and es_unidad_systemd(valor):
++                if patron is CORREO and _correo_exento_por_contexto(
++                    valor, lineas, l, n, match.start()
++                ):
+                     continue
+                 encontrados.append((n, valor))
+     return encontrados
+diff --git a/src/simplecode/worktree/zero_debt.py b/src/simplecode/worktree/zero_debt.py
+index d656b108..5050f6ab 100644
+--- a/src/simplecode/worktree/zero_debt.py
++++ b/src/simplecode/worktree/zero_debt.py
+@@ -278,12 +278,9 @@ AUTHORIZED_CORPUS_PREFIXES = (
+ CORPUS_COLLIDING_DETECTORS = frozenset({
+     "blanket_filterwarnings",
+     "gate_relaxation_tamper",
+-    "insecure_defaults",
+     "invisible_debt",
+-    "optimistic_config",
+     "prompt_injection",
+     "simulated_or_stub_implementation",
+-    "test_without_assert",
+     "tool_poisoning_homoglyph",
+     "tool_poisoning_invisible",
+     "tool_poisoning_mixed_script",
+diff --git a/tests/test_detector_behavior.py b/tests/test_detector_behavior.py
+index 3e84cb67..02d9b4aa 100644
+--- a/tests/test_detector_behavior.py
++++ b/tests/test_detector_behavior.py
+@@ -378,37 +378,52 @@ def test_debug_true_fires_only_optimistic_config_not_insecure_defaults():
+     assert not pattern_detectors.insecure_defaults(code)
+ 
+ 
+-def test_mask_multiline_test_string_literals_skips_a_node_missing_position_info():
+-    """Defensive branch, same shape `_mask_ast_spans` already guards: a
+-    Constant node with no position attributes at all (a synthetic AST a
+-    codemod could hand this function, never one `ast.parse` itself
+-    produces) must be skipped, not crash the mask."""
+-    code = 'def test_x():\n    "s"\n'
+-    tree = ast.parse(code)
+-    for node in ast.walk(tree):
+-        if isinstance(node, ast.Constant) and node.value == "s":
+-            del node.lineno
+-            break
+-    assert pattern_detectors._mask_multiline_test_string_literals(tree, code) == code
+-
+-
+-def test_mask_multiline_test_string_literals_skips_a_node_with_an_out_of_range_lineno():
+-    """Same defensive family: a reported `lineno` beyond the file's own line
+-    count (again, a synthetic-AST shape) must be skipped rather than index
+-    past the end of `lines`."""
+-    code = 'def test_x():\n    "s"\n'
+-    tree = ast.parse(code)
+-    for node in ast.walk(tree):
+-        if isinstance(node, ast.Constant) and node.value == "s":
+-            node.lineno = 999
+-            node.end_lineno = 999
+-            break
+-    assert pattern_detectors._mask_multiline_test_string_literals(tree, code) == code
+-    # The other insecure_defaults members are untouched by this change.
+-    assert pattern_detectors.insecure_defaults('requests.get(url, verify=False)')
+-    assert pattern_detectors.insecure_defaults('CORS(app, origins="*")')
+-    assert pattern_detectors.insecure_defaults('hashlib.md5(data)')
+-    assert pattern_detectors.insecure_defaults('app.run(host="0.0.0.0")')
++def test_security_detectors_do_not_treat_registry_string_values_as_executable_code():
++    source = (
++        'rules = ("TESTING=True", "verify=False", "origins=\\\"*\\\"", '
++        '"hashlib.md5(data)", "host=\\\"0.0.0.0\\\"")\n'
++    )
++    assert not pattern_detectors.optimistic_config(source)
++    assert not pattern_detectors.insecure_defaults(source)
++    assert pattern_detectors.optimistic_config("DEBUG = True\n")
++    assert pattern_detectors.optimistic_config("app.run(debug=True)\n")
++
++
++def test_insecure_defaults_classifies_assignment_ast_and_keeps_parse_fallback():
++    for source in (
++        "verify = False\n",
++        'origins = "*"\n',
++        'host = "0.0.0.0"\n',
++    ):
++        assert pattern_detectors.insecure_defaults(source), source
++    assert not pattern_detectors.insecure_defaults("verify = True\n")
++    assert pattern_detectors.insecure_defaults("def incomplete(\nverify=False")
++    for source in (
++        "client.verify = False\n",
++        'settings.host = "0.0.0.0"\n',
++        'client.origins: str = "*"\n',
++        "def request(*, verify=False):\n    pass\n",
++        "def request(verify: bool = False):\n    pass\n",
++        'requests.get(url, verify=False)\n',
++        'CORS(app, origins="*")\n',
++        "hashlib.md5(data)\n",
++        'app.run(host="0.0.0.0")\n',
++    ):
++        assert pattern_detectors.insecure_defaults(source), source
++    assert not pattern_detectors.insecure_defaults('rules = ("verify=False",)\n')
++
++
++def test_test_function_detectors_require_a_python_test_module_path_when_scanning_files():
++    source = "def test_detector_helper(code):\n    return findings(code)\n"
++    assert pattern_detectors.test_without_assert_findings(
++        source, "src/simplecode/guards/pattern_detectors.py"
++    ) == []
++    assert pattern_detectors.test_atrophy_detector_findings(
++        source, "src/simplecode/guards/pattern_detectors.py"
++    ) == []
++    assert pattern_detectors.test_without_assert_findings(
++        "def test_example():\n    call()\n", "tests/test_example.py"
++    )
+ 
+ 
+ def test_detector_red_cases_cover_protocol_and_test_theater():
+diff --git a/tests/test_pii_scan.py b/tests/test_pii_scan.py
+index 55b9c6cc..814824cc 100644
+--- a/tests/test_pii_scan.py
++++ b/tests/test_pii_scan.py
+@@ -297,6 +297,10 @@ def _correos(linea: str) -> list[str]:
+     return [v for _, v in pii_scan.hallazgos_en_lineas([linea], set(), [])]
+ 
+ 
++def _correos_documento(texto: str) -> list[str]:
++    return [v for _, v in pii_scan.hallazgos_en_lineas(texto.splitlines(), set(), [])]
++
++
+ def test_a_systemd_instance_unit_is_not_read_as_an_email_address():
+     for unit in ("user@1000.service", "org.gnome.Shell@x11.service", "getty@tty1.service",
+                  "systemd-fsck@dev-disk-by-uuid.service"):
+@@ -318,3 +322,154 @@ def test_a_unit_type_is_only_exempt_at_the_end_of_the_whole_match():
+ 
+ def test_a_real_address_next_to_a_unit_is_still_caught():
+     assert _correos("user@1000.service y maria.lopez@despacho.mx") == ["maria.lopez@despacho.mx"]
++
++
++def test_dep11_archive_path_is_not_an_email_inside_an_exact_release_hash_size_row():
++    for path in (
++        "main/dep11/icons-48x48@2.tar",
++        "universe/dep11/icons-64x64@2.tar.gz",
++        "restricted/dep11/icons-128x128@2.tar.gz",
++    ):
++        row = f"{'a' * 64} 29 {path}"
++        assert _correos(row) == [], row
++
++
++def test_dep11_inventory_path_needs_matching_apt_fields_and_hidpi_identifier():
++    row = ("/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_noble_main_"
++           "dep11_icons-64x64%402.tar.gz|main/dep11/icons-64x64@2.tar|"
++           "http://ports.ubuntu.com/ubuntu-ports/dists/noble/|noble|"
++           "$(ARCHITECTURE)|DEP-11-icons-hidpi")
++    assert _correos(row) == []
++
++
++def test_dep11_six_field_current_apt_inventory_row_is_recognized_by_all_fields():
++    row = (
++        "/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_noble-updates_"
++        "restricted_dep11_icons-64x64%402.tar.gz|restricted/dep11/icons-64x64@2.tar|"
++        "http://ports.ubuntu.com/ubuntu-ports|noble-updates|DEP-11-icons-hidpi|"
++        "$(ARCHITECTURE)"
++    )
++    assert _correos(row) == []
++    for invalid in (
++        row.replace("DEP-11-icons-hidpi", "Packages"),
++        row.replace("$(ARCHITECTURE)", "arm64"),
++        row.replace("noble-updates", "noble-security", 1),
++        row.replace("http://ports.ubuntu.com/ubuntu-ports", "https://attacker.example"),
++    ):
++        assert _correos(invalid) == ["icons-64x64@2.tar"], invalid
++    assert _correos(row + "|victim@example.com") == ["victim@example.com"]
++
++
++def test_dep11_json_index_row_requires_matching_filename_and_sibling_identity_fields():
++    import json
++
++    record = {
++        "filename": "/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_noble_main_"
++        "dep11_icons-64x64%402.tar.gz",
++        "meta_key": "main/dep11/icons-64x64@2.tar",
++        "site": "http://ports.ubuntu.com/ubuntu-ports",
++        "suite": "noble",
++        "architecture": "$(ARCHITECTURE)",
++        "identifier": "DEP-11-icons-hidpi",
++    }
++    text = json.dumps({"rows": [record]}, indent=2)
++    assert _correos_documento(text) == []
++    for key, value in (
++        ("site", "https://attacker.example"),
++        ("architecture", "arm64"),
++        ("identifier", "Packages"),
++        ("suite", "noble-security"),
++        ("filename", record["filename"].replace("%402", "")),
++    ):
++        changed = dict(record)
++        changed[key] = value
++        assert "icons-64x64@2.tar" in _correos_documento(
++            json.dumps({"rows": [changed]}, indent=2)
++        )
++    extra_contact = text.replace(
++        '"identifier": "DEP-11-icons-hidpi"',
++        '"identifier": "DEP-11-icons-hidpi",\n        "contact": "victim@example.com"',
++    )
++    assert "victim@example.com" in _correos_documento(extra_contact)
++
++
++def test_dep11_json_context_fails_closed_for_missing_line_and_malformed_json():
++    from simplecode.verification.pii_scan import es_meta_key_dep11_json
++
++    meta_line = '"meta_key": "main/dep11/icons-64x64@2.tar",'
++    assert not es_meta_key_dep11_json([meta_line], 0, "icons-64x64@2.tar")
++    assert not es_meta_key_dep11_json([meta_line], 2, "icons-64x64@2.tar")
++    assert not es_meta_key_dep11_json([meta_line], 1, "icons-64x64@2.tar")
++    assert _correos_documento(meta_line) == ["icons-64x64@2.tar"]
++
++
++def test_real_email_in_or_near_a_malformed_release_manifest_is_still_caught():
++    email = "victim@example.com"
++    well_shaped_but_extra_field = f"{'a' * 64} 29 main/dep11/icons-64x64@2.tar.gz {email}"
++    bad_hash = f"not-a-hash 29 main/dep11/icons-64x64@2.tar.gz {email}"
++    wrong_inventory_role = (
++        "/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_noble_main_"
++        "dep11_icons-64x64%402.tar.gz|main/dep11/icons-64x64@2.tar|"
++        "http://ports.ubuntu.com/ubuntu-ports/dists/noble/|noble|"
++        "$(ARCHITECTURE)|Packages " + email
++    )
++    for line in (well_shaped_but_extra_field, bad_hash, wrong_inventory_role):
++        assert email in _correos(line), line
++
++
++def test_release_archive_email_shaped_path_without_hash_size_structure_is_caught():
++    assert _correos("prose mentions main/dep11/icons-64x64@2.tar.gz") == ["icons-64x64@2.tar.gz"]
++
++
++_UBUNTU_SIGNER_OUTPUT = (
++    'gpgv: Signature made Sat Oct 3 19:14:42 2026 CST\\n'
++    'gpgv:                using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C\\n'
++    'gpgv: Good signature from \\"Ubuntu Archive Automatic Signing Key (2018) '
++    '<ftpmaster@ubuntu.com>\\"'
++)
++
++
++def test_ubuntu_archive_contact_is_recognized_only_in_its_exact_gpgv_key_transcript():
++    assert _correos(_UBUNTU_SIGNER_OUTPUT) == []
++    assert _correos(_UBUNTU_SIGNER_OUTPUT.replace(
++        "F6ECB3762474EDA9D21B7022871920D1991BC93C", "0" * 40
++    )) == ["ftpmaster@ubuntu.com"]
++    assert _correos(_UBUNTU_SIGNER_OUTPUT + " victim@example.com") == ["victim@example.com"]
++    assert _correos("public contact ftpmaster@ubuntu.com") == ["ftpmaster@ubuntu.com"]
++
++
++_NVIDIA_RELEASE_LABEL = "Label: NVIDIA CORPORATION <cudatools@nvidia.com>"
++_NVIDIA_SIGNED_RELEASE = "\n".join(
++    (
++        "-----BEGIN PGP SIGNED MESSAGE-----",
++        "Hash: SHA512",
++        "",
++        "Architectures: arm64",
++        "Codename: stable",
++        "Components: main",
++        _NVIDIA_RELEASE_LABEL,
++        "Origin: https://nvidia.github.io/libnvidia-container/stable",
++        "-----BEGIN PGP SIGNATURE-----",
++        "verified signature bytes omitted from this scanner fixture",
++        "-----END PGP SIGNATURE-----",
++    )
++)
++
++
++def test_nvidia_contact_is_exempt_only_as_label_in_the_exact_signed_release_identity():
++    assert _correos_documento(_NVIDIA_SIGNED_RELEASE) == []
++    for malformed in (
++        _NVIDIA_SIGNED_RELEASE.replace("-----BEGIN PGP SIGNATURE-----\n", ""),
++        _NVIDIA_SIGNED_RELEASE.replace(
++            "Origin: https://nvidia.github.io/libnvidia-container/stable",
++            "Origin: https://attacker.example",
++        ),
++        _NVIDIA_SIGNED_RELEASE.replace(
++            _NVIDIA_RELEASE_LABEL, "Description: " + _NVIDIA_RELEASE_LABEL.removeprefix("Label: ")
++        ),
++        _NVIDIA_SIGNED_RELEASE.replace(
++            "cudatools@nvidia.com", "victim@example.com"
++        ),
++        _NVIDIA_SIGNED_RELEASE + "\nDescription: cudatools@nvidia.com",
++    ):
++        assert _correos_documento(malformed), malformed
+diff --git a/tests/test_remediation_prek_parallel.py b/tests/test_remediation_prek_parallel.py
+index 3305696c..8f608e40 100644
+--- a/tests/test_remediation_prek_parallel.py
++++ b/tests/test_remediation_prek_parallel.py
+@@ -15,30 +15,37 @@ ROOT = Path(__file__).resolve().parents[1]
+ PREK = ROOT / ".simplecode" / "bin" / "prek"
+ 
+ 
+-def _prepush_priorities(config_text: str) -> dict[str, int]:
++def _prepush_hooks(config_text: str) -> dict[str, dict[str, object]]:
+     config = yaml.safe_load(config_text)
+     return {
+-        hook["id"]: hook["priority"]
++        hook["id"]: hook
+         for repo in config["repos"]
+         for hook in repo["hooks"]
+-        if "pre-push" in hook.get("stages", []) and "priority" in hook
++        if "pre-push" in hook.get("stages", [])
+     }
+ 
+ 
+-def test_canonical_and_generated_configs_keep_heavy_gates_serialized():
+-    priorities = _prepush_priorities(
+-        Path(ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")
++def test_canonical_and_generated_configs_use_only_supported_hook_fields(tmp_path: Path):
++    configs = (
++        ("canonical", Path(ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")),
++        ("generated", cli_new.pre_commit_config()),
+     )
+-    generated = _prepush_priorities(cli_new.pre_commit_config())
++    for name, config_text in configs:
++        hooks = _prepush_hooks(config_text)
++        assert {"coverage-floor", "pyright", "zero-debt-repo", "pii-scan"} <= hooks.keys()
++        assert all("priority" not in hook for hook in hooks.values())
++        config_path = tmp_path / f"{name}.yaml"
++        config_path.write_text(config_text, encoding="utf-8")
++        result = subprocess.run(
++            [sys.executable, "-m", "pre_commit", "validate-config", str(config_path)],
++            capture_output=True,
++            check=False,
++            text=True,
++        )
++        assert result.returncode == 0, result.stdout + result.stderr
+ 
+-    assert priorities["coverage-floor"] == generated["coverage-floor"] == 2
+-    assert priorities["pyright"] == generated["pyright"] == 3
+-    for hook_id in ("ruff", "gitleaks", "zero-debt-repo", "version-bump",
+-                    "adversarial-judge", "pii-scan"):
+-        assert priorities[hook_id] == 1
+ 
+-
+-def test_real_prek_overlaps_same_priority_and_keeps_failure_blocking(tmp_path: Path):
++def test_real_prek_priority_extension_runs_peers_concurrently_and_keeps_failures_blocking(tmp_path: Path):
+     assert PREK.is_file(), f"vendored prek missing: {PREK}"
+     script = tmp_path / "probe.py"
+     script.write_text(textwrap.dedent("""\

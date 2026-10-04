@@ -1,0 +1,38 @@
+{
+  "source_receipt_sha256": "86248d20d828549286e83b8f97cb652fb6570af73d90da9eb9d0ede0c19ce63e",
+  "actions": [
+    {
+      "case": "baseline_languages_en",
+      "argv": [
+        "/usr/bin/apt-get",
+        "indextargets",
+        "--no-release-info",
+        "--format=$(IDENTIFIER)|$(METAKEY)|$(DEFAULTENABLED)"
+      ],
+      "config_text": "Dir::Etc::sourcelist \"/tmp/bb-root-apt-target-9cod4joa/test.sources\";\nDir::Etc::sourceparts \"-\";\nDir::Etc::parts \"/tmp/bb-root-apt-target-9cod4joa/apt.conf.d\";\nDir::State::lists \"/tmp/bb-root-apt-target-9cod4joa/lists\";\nAPT::Architecture \"arm64\";\nAPT::Architectures { \"arm64\"; };\nAcquire::IndexTargets::deb::Packages::MetaKey \"$(COMPONENT)/binary-$(ARCHITECTURE)/Packages\";\nAcquire::IndexTargets::deb::Translations::MetaKey \"$(COMPONENT)/i18n/Translation-$(LANGUAGE)\";\nAcquire::IndexTargets::deb::DEP-11::MetaKey \"$(COMPONENT)/dep11/Components-$(NATIVE_ARCHITECTURE).yml\";\nAcquire::IndexTargets::deb::DEP-11::DefaultEnabled \"false\";\nAcquire::Languages \"en\";\nDir::Etc::main \"-\";\n",
+      "source_bytes": "Types: deb\nURIs: file:/repo\nSuites: stable\nComponents: main\n",
+      "exit_code": 0,
+      "stdout": "Packages|main/binary-arm64/Packages|yes\nPackages|main/binary-all/Packages|yes\nTranslations|main/i18n/Translation-en|yes\n",
+      "stderr": "",
+      "translation_rows": 1
+    },
+    {
+      "case": "add_remove_languages_en",
+      "argv": [
+        "/usr/bin/apt-get",
+        "indextargets",
+        "--no-release-info",
+        "--format=$(IDENTIFIER)|$(METAKEY)|$(DEFAULTENABLED)"
+      ],
+      "config_text": "Dir::Etc::sourcelist \"/tmp/bb-root-apt-target-e2zbsgp9/test.sources\";\nDir::Etc::sourceparts \"-\";\nDir::Etc::parts \"/tmp/bb-root-apt-target-e2zbsgp9/apt.conf.d\";\nDir::State::lists \"/tmp/bb-root-apt-target-e2zbsgp9/lists\";\nAPT::Architecture \"arm64\";\nAPT::Architectures { \"arm64\"; };\nAcquire::IndexTargets::deb::Packages::MetaKey \"$(COMPONENT)/binary-$(ARCHITECTURE)/Packages\";\nAcquire::IndexTargets::deb::Translations::MetaKey \"$(COMPONENT)/i18n/Translation-$(LANGUAGE)\";\nAcquire::IndexTargets::deb::DEP-11::MetaKey \"$(COMPONENT)/dep11/Components-$(NATIVE_ARCHITECTURE).yml\";\nAcquire::IndexTargets::deb::DEP-11::DefaultEnabled \"false\";\nAcquire::Languages \"en\";\nDir::Etc::main \"-\";\n",
+      "source_bytes": "Types: deb\nURIs: file:/repo\nSuites: stable\nComponents: main\nTargets-Add: DEP-11\nTargets-Remove: Translations\n",
+      "exit_code": 0,
+      "stdout": "Packages|main/binary-arm64/Packages|yes\nPackages|main/binary-all/Packages|yes\nDEP-11|main/dep11/Components-arm64.yml|no\nDEP-11|main/dep11/Components-all.yml|no\n",
+      "stderr": "",
+      "translation_rows": 0
+    }
+  ],
+  "host_sources_modified": false,
+  "network_acquisition": false,
+  "physical_closure": false
+}

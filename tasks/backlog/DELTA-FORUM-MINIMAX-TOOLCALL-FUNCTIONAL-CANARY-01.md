@@ -46,3 +46,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: parcial, con lector offline desarrollado para chunks Chat Completions SSE; conserva deltas de texto/tool call y finish reason. No existe captura SSE nativa del stack fijado ni ejecución observada del mock, vida del proceso o rollback; el canario funcional queda `could_not_run`. La ficha sigue abierta y el `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-requests.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: No hay captura SSE nativa ni ejecución observada del mock, salud del proceso o rollback para digest de imagen fijado.
+- Evidencia faltante para cierre: respuesta HTTP/SSE cruda; argumentos byte-exactos; resultado mock; finish reason; continuidad del proceso y rollback
+- Siguiente acción: Ejecutar en canario GPU el ciclo texto→tool mock→texto en digest fijado y control negativo; conservar SSE y logs de RPC/timeout.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json`, `tasks/evidence/DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01/ (directorio ausente al inspeccionar)`.
+- Impedimentos de inspección: 1. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

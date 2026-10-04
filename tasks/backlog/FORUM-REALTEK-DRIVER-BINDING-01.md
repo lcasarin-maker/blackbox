@@ -32,3 +32,14 @@ El blacklist global puede desconectar otra Realtek o dejar el equipo sin módulo
 ## Avance de instrumentación 2026-10-03
 
 Se reutilizó `pci_binding` existente; la captura observó `enP7s7` enlazada a `r8127`, versión `11.014.00-NAPI`. No se observaron entradas HID, y este dato no verifica compatibilidad del paquete ni comportamiento tras warm/cold reboot. Evidencia y límites: [BB-INSTRUMENTS-devices](../../docs/evidence/BB-INSTRUMENTS-devices.md). La ficha sigue abierta y el close_check original permanece pendiente.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: Observación local no prueba binding PCI del sujeto Realtek ni warm/cold boot y rollback.
+- Evidencia faltante para cierre: PCI ID y driver bound; paquete/módulo compatible; A/B cold/warm; NIC de control y driver ausente; rollback
+- Siguiente acción: Capturar PCI ID, paquete y módulo efectivos y ejecutar A/B warm/cold en canario con NIC control y recuperación.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json`, `tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01/host-observation.txt`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -68,3 +68,14 @@ Como segundo disparador de la misma ficha: En MSI EdgeXpert, la actualización a
 ## Revisión de reutilización — 2026-10-03
 
 El nuevo `tools/apt_sources.py` se limita a identidad de fuentes y tuples de índices; el preflight y su verificador existentes siguen siendo los instrumentos para clasificar planes benignos y remociones críticas. La nueva captura no sustituye evidencia de planes, y no se aplicó transacción. Se conserva el estado abierto que ya documenta la falta de guard APT integrado y de cobertura OEM.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `missing_history`.
+- Impedimento: El recibo declara que el paquete aisleriot del caso fuente está ausente, apt-get check no pudo correr y no hay recibo de la simulación crítica del caso sujeto; también falta el guard de invocación APT en el repo.
+- Evidencia faltante para cierre: Transacción APT peligrosa simulada con remoción crítica interceptada antes de aplicar y transacción inocua permitida, ambas capturadas con salida literal; el simulador usa el estado de paquete/índices pertinente.
+- Siguiente acción: Completar el guard de invocación APT en el punto de transacción existente para bloquear/declarar remoción crítica; demostrar con simulación segura del plan peligroso y transacción inocua, conservando evidencia cruda y sin aplicar cambios.
+- Responsable del siguiente paso: BB.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md`, `tools/preflight.py`, `tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD`, `tools/verify_apt_critical_removals.py`, `tests/test_debt_registration_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

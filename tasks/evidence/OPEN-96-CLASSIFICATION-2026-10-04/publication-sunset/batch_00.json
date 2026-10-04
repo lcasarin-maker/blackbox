@@ -1,0 +1,82 @@
+[
+ {
+  "path": "tests/test_bb_bash.py",
+  "line_number": 1601,
+  "line_content": "        time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- sin el, el bucle quema un nucleo entero re-consultando pgrep sin ceder CPU -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.3 -- el sondeo acotado cede CPU hasta detectar el proceso o agotar deadline; neutralizarlo eleva pgrep de 4 a 109 en 0.2 s. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-19",
+  "kind": "blocking-sleep-override",
+  "version_reviewed": "2.3",
+  "id": "blocking-sleep-override:tests/test_bb_bash.py:1601"
+ },
+ {
+  "path": "tests/test_bb_bash.py",
+  "line_number": 806,
+  "line_content": "        time.sleep(4)  # blocking-sleep: ps reports whole CPU seconds; window needed for delta -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.3 -- `ps` informa segundos enteros; neutralizar la ventana hace fallar el positivo 3/3 veces con cpu_top 0/5. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-17",
+  "kind": "blocking-sleep-override",
+  "version_reviewed": "2.3",
+  "id": "blocking-sleep-override:tests/test_bb_bash.py:806"
+ },
+ {
+  "path": "tools/atom_gpu_telemetry.py",
+  "line_number": 1708,
+  "line_content": "            time.sleep(args.interval_seconds)  # blocking-sleep: intervalo del sampler de vida larga, no I/O a esperar -- DGX-334  # sunset-reviewed: 2.3 -- el sampler de vida larga requiere su intervalo entre muestras; closecheck positivo y neutralizado prueba el parámetro y el control. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-13",
+  "kind": "blocking-sleep-override",
+  "version_reviewed": "2.3",
+  "id": "blocking-sleep-override:tools/atom_gpu_telemetry.py:1708"
+ },
+ {
+  "path": "tools/cgroup_repro.py",
+  "line_number": 226,
+  "line_content": "    time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.3 -- el worker acotado retiene la asignación durante la ventana de observación; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16",
+  "kind": "blocking-sleep-override",
+  "version_reviewed": "2.3",
+  "id": "blocking-sleep-override:tools/cgroup_repro.py:226"
+ },
+ {
+  "path": ".gitignore",
+  "line_number": 15,
+  "line_content": "!.simplecode/local_hooks.yaml",
+  "kind": "gitignore",
+  "version_reviewed": "2.3",
+  "id": "gitignore:.gitignore:15"
+ },
+ {
+  "path": ".gitignore",
+  "line_number": 26,
+  "line_content": "!.simplecode/build_tools.txt",
+  "kind": "gitignore",
+  "version_reviewed": "2.3",
+  "id": "gitignore:.gitignore:26"
+ },
+ {
+  "path": ".gitignore",
+  "line_number": 35,
+  "line_content": "!.simplecode/organ_inapplicable.json",
+  "kind": "gitignore",
+  "version_reviewed": "2.3",
+  "id": "gitignore:.gitignore:35"
+ },
+ {
+  "path": ".gitignore",
+  "line_number": 60,
+  "line_content": "!.simplecode/audit_ledger.json",
+  "kind": "gitignore",
+  "version_reviewed": "2.3",
+  "id": "gitignore:.gitignore:60"
+ },
+ {
+  "path": ".gitignore",
+  "line_number": 67,
+  "line_content": "*.pyc",
+  "kind": "gitignore",
+  "version_reviewed": "2.3",
+  "id": "gitignore:.gitignore:67"
+ },
+ {
+  "path": ".gitignore",
+  "line_number": 71,
+  "line_content": ".coverage",
+  "kind": "gitignore",
+  "version_reviewed": "2.3",
+  "id": "gitignore:.gitignore:71"
+ }
+]

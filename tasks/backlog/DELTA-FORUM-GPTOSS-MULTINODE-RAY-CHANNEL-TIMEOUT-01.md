@@ -35,3 +35,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Evaluación de instrumentos 2026-10-03
 
 Reusa `tools/provider_trace.py` solo para identidad/latencia provider-worker, sin observar placement groups, asignación TP/GPU por nodo ni estados de Ray. No hay Ray trace ni carga multi-node adjunta. Estado `deferred_lab`: necesitaría dos nodos fijados, placement/resource snapshot por rank/nodo, request acotado con actividad/finish por nodo y control negativo del timeout, conservando digests y rollback; no se ejecutó carga ni se cambió imagen.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: La evidencia actual dice que provider_trace no observa placement groups ni recursos TP por nodo; no hay Ray trace de dos nodos.
+- Evidencia faltante para cierre: Dos nodos y digests fijados; placement/resource snapshot por nodo/rank; request con progreso por nodo; negativo del timeout y rollback.
+- Siguiente acción: Solicitar corrida Ray de dos nodos con snapshot placement/resource por nodo/rank y request de progreso, incluyendo control del timeout sin aumentarlo; usar evaluador existente.
+- Responsable del siguiente paso: BB; operador Luis para workload/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01.md`, `tools/provider_trace.py`, `tools/runtime_batch02_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

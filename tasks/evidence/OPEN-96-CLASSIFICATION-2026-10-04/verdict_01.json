@@ -1,0 +1,224 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01",
+    "category": "missing_history",
+    "blockers": [
+      "Los selectores y el router existen. La ficha cita recibo con UNKNOWN/CNR y cobertura parcial, sin un defecto concreto del router reproducido."
+    ],
+    "missing_evidence": [
+      "Evidencia cruda y controles negativos aceptados por cada ID soportado; resultados literales y conteos PASS/FAIL/UNKNOWN/CNR."
+    ],
+    "next_action": "Leer el recibo por ID y convertir cada UNKNOWN/CNR en una solicitud de captura cruda específica; corregir solo una predicado si un caso raw identifica un fallo actual del evaluador. No recrear selector/router.",
+    "responsible": "BB",
+    "evidence": [
+      "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01.md",
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/forum-original-selector-primary-run.json",
+      "tools/forum_finding.py",
+      "tools/hardware_evidence.py",
+      "tests/test_debt_registration_controls.py",
+      "tools/verify_forum_finding.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "La captura de red actual lee MTU sysfs de un solo netdev y netlink no disponible; no representa ocho nodos."
+    ],
+    "missing_evidence": [
+      "MTU por interfaz y nodo contra topología/OEM; corrida NCCL sana y negativa; primera inferencia, endpoint/logs por rank, stack y rollback."
+    ],
+    "next_action": "Solicitar al operador del clúster mapa OEM de ocho nodos y capturas MTU por interfaz; después correr NCCL y primera inferencia con endpoint/log por rank, caso sano y rollback.",
+    "responsible": "BB; operador Luis para hardware/peer",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01.md",
+      "docs/evidence/BB-INSTRUMENTS-network.md",
+      "tools/runtime_batch01_controls.py",
+      "tools/host_diagnostics.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "La ficha dice que provider_trace no observa cola por paso/scheduler; no hay traza de la carga TP8 descrita."
+    ],
+    "missing_evidence": [
+      "Stack TP8/DCP4 y digest fijados; decode largo + cuatro prefills; orden/espera, throughput, stalls, errores/completitud/corrección; control stock y rollback."
+    ],
+    "next_action": "Preparar una captura temporal de cola por paso solo si el runtime fijado la expone; de lo contrario, solicitar corrida de decode largo + cuatro prefills, stock vs flag de rollback y registros de stalls/throughput en laboratorio.",
+    "responsible": "BB; operador Luis para workload/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01.md",
+      "tools/provider_trace.py",
+      "tools/runtime_batch01_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-FORUM-MEMORY-RECOVERY-SOAK-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "La ficha documenta solo telemetría puntual; falta serie temporal y PID/vida del RPC remoto."
+    ],
+    "missing_evidence": [
+      "Stack/servidor/versiones; series UMA/swap/PSI/RSS y PID RPC; cierre ordenado cliente/servidor con medidas antes/después y control sano."
+    ],
+    "next_action": "Pedir al operador soak en stack fijado con serie UMA/swap/PSI/RSS atribuida a PID y cierre cliente/servidor ordenado, midiendo recuperación contra control sano.",
+    "responsible": "BB; operador Luis para workload/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-MEMORY-RECOVERY-SOAK-01.md",
+      "tools/atom_gpu_telemetry.py",
+      "tools/memory_profile.py",
+      "tools/hardware_batch02_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "La evidencia actual etiqueta lector offline parcial: conserva fragmentos y [DONE], pero no demuestra siguiente tool call post-cancelación en runtime."
+    ],
+    "missing_evidence": [
+      "Matriz parser×MTP×cancelación, llamada mock tipada antes/después de cancelación, finish reason/exit/restart y control de recuperación tras reinicio."
+    ],
+    "next_action": "Completar solo los campos faltantes del recibo cancelación/finish reason si el selector los señala; luego pedir corrida fijada con mock tool, cancel mid-stream y llamada siguiente en mismo proceso.",
+    "responsible": "BB; operador Luis para workload/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01.md",
+      "tools/runtime_batch03_controls.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01",
+    "category": "external_oem",
+    "blockers": [
+      "Builds y fallos descritos son versiones comunitarias no auditadas; no hay artefacto reproducible identificado en BB."
+    ],
+    "missing_evidence": [
+      "Identidad exacta GB10/CUDA/driver/vLLM/Torch/image; build reproducible y offline; rutas CUTLASS/Triton/Inductor y controles positivos/negativos."
+    ],
+    "next_action": "Solicitar al autor/OEM imagen/digest, logs y build manifests de las combinaciones reportadas; en cuanto lleguen, evaluarlos con el selector/matriz existentes en GB10 compatible.",
+    "responsible": "BB; coordinación solicita OEM/proveedor",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01.md",
+      "tools/runtime_batch03_controls.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "La evidencia dice que provider_trace observa request/worker/restart, pero no progreso de rank ni agregado entre dos motores; no hay captura multinodo."
+    ],
+    "missing_evidence": [
+      "Digest/config; identidad y recursos de ambos motores/ranks; colectivo y petición real con progreso, control negativo y aislamiento/recuperación."
+    ],
+    "next_action": "Solicitar corrida de dos motores Ray con digest/config fijos, recursos por rank, colectivo y petición real; completar campos solo si el recibo actual los reporta faltantes.",
+    "responsible": "BB; operador Luis para workload/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01.md",
+      "tools/provider_trace.py",
+      "tools/runtime_batch04_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+    "category": "missing_history",
+    "blockers": [
+      "El recibo declara que el paquete aisleriot del caso fuente está ausente, apt-get check no pudo correr y no hay recibo de la simulación crítica del caso sujeto; también falta el guard de invocación APT en el repo."
+    ],
+    "missing_evidence": [
+      "Transacción APT peligrosa simulada con remoción crítica interceptada antes de aplicar y transacción inocua permitida, ambas capturadas con salida literal; el simulador usa el estado de paquete/índices pertinente."
+    ],
+    "next_action": "Completar el guard de invocación APT en el punto de transacción existente para bloquear/declarar remoción crítica; demostrar con simulación segura del plan peligroso y transacción inocua, conservando evidencia cruda y sin aplicar cambios.",
+    "responsible": "BB",
+    "evidence": [
+      "tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md",
+      "tools/preflight.py",
+      "tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+      "tools/verify_apt_critical_removals.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "category": "privileged_access",
+    "blockers": [
+      "La captura actual obtiene estado/timeout/nowayout por sysfs pero owner es UNKNOWN; el procedimiento excluye abrir /dev/watchdog."
+    ],
+    "missing_evidence": [
+      "Propietario real, boot/pstore correlacionado, compatibilidad OEM y control de recuperación con timeout/nowayout."
+    ],
+    "next_action": "Preparar captura readonly acotada de ownership y pstore/journal correlacionados; solicitar al operador ejecución con privilegios y recibo de recuperación OEM sin tocar política.",
+    "responsible": "BB; operador Luis para acceso root/lab",
+    "evidence": [
+      "tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md",
+      "tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/progress.txt",
+      "docs/evidence/BB-INSTRUMENTS-devices.md",
+      "tools/forum_finding.py",
+      "tools/forum_hardware_subjects.py",
+      "tools/host_diagnostics.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "FORUM-00-REALTEK-EEE-DIRECT-LINK",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "La captura local muestra EEE activo/inactivo, pero no anuncia partner EEE y excluye un A/B con enlace directo/peer."
+    ],
+    "missing_evidence": [
+      "Tupla OEM/kernel/driver/peer; múltiples repeticiones EEE on/off; control switch/no-EEE; stalls, SSH/tráfico y rollback."
+    ],
+    "next_action": "Solicitar a dueño NIC/peer capturas del stack exacto y ensayos repetidos EEE activado/desactivado/control switch, con estado de tráfico/SSH y rollback documentado.",
+    "responsible": "BB; operador Luis para hardware/peer",
+    "evidence": [
+      "tasks/backlog/FORUM-00-REALTEK-EEE-DIRECT-LINK.md",
+      "docs/evidence/BB-INSTRUMENTS-network.md",
+      "tools/forum_finding.py",
+      "tools/forum_hardware_subjects.py",
+      "tools/host_diagnostics.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  }
+]

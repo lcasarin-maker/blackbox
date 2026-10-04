@@ -1,0 +1,219 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "El selector existe; la captura kernel actual marca explícitamente que la entrega al receptor no fue observada."
+    ],
+    "missing_evidence": [
+      "Prueba focal por configuración estática/target y receptor real; control negativo; salida literal del selector."
+    ],
+    "next_action": "Con el operador, ejecutar una captura de entrega netconsole hacia receptor de laboratorio y registrar el mensaje recibido, control negativo y configuración/rollback; conservar el selector focal existente.",
+    "responsible": "BB",
+    "evidence": [
+      "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01.md",
+      "tools/kernel_capture.py",
+      "docs/evidence/BB-INSTRUMENTS-kernel.md",
+      "tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json",
+      "tests/test_debt_registration_controls.py",
+      "tests/test_closure_kernel_selectors.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "La evidencia registra que no existe conversación multi-turno capturada ni recibo de efectos tool mock."
+    ],
+    "missing_evidence": [
+      "Stack/modelo/template fijados; canario aislado; salida tool mocked por turno; controles limpios/positivos; registro de side effects."
+    ],
+    "next_action": "Solicitar corrida canario en sandbox aislado con modelo/template/digest fijos, tool mock sin efectos externos y registro por turno; usar el evaluador actual sobre el recibo.",
+    "responsible": "BB; operador Luis para workload/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md",
+      "tools/runtime_batch01_controls.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "No hay captura actual de dos nodos ni prueba real de twin GID, NCCL y recuperación fría."
+    ],
+    "missing_evidence": [
+      "Identidad de dos nodos/NIC/firmware/driver; GID por puerto; NCCL sano/fallido; cold recovery y rollback con logs."
+    ],
+    "next_action": "Solicitar al operador DualSpark capturas de identidad/topología/GID, caso NCCL positivo/negativo y recuperación fría con rollback; evaluar con el selector existente.",
+    "responsible": "BB; operador Luis para hardware/peer",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01.md",
+      "tools/runtime_batch01_controls.py",
+      "tools/hardware_batch02_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "No hay captura de concurrency sweep del build/modelo Glimmer/dFlash con max_seqs efectivo."
+    ],
+    "missing_evidence": [
+      "Build y modelo exactos; concurrency sweep; latencia/throughput/memoria/calidad; control sin dFlash y rollback."
+    ],
+    "next_action": "Solicitar benchmark en stack fijado con sweep de secuencias, medidas de latencia/throughput/calidad y control sin dFlash; usar selector actual al recibir recibos.",
+    "responsible": "BB; operador Luis para workload/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01.md",
+      "tools/runtime_batch02_controls.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "Falta evidencia de build efectivo y primera request NVFP4/CUTLASS en el sujeto GB10."
+    ],
+    "missing_evidence": [
+      "Digest/arquitectura/deps fijados; primera solicitud y rutas CUTLASS; control de fallo/fallback; outputs/latencia y rollback."
+    ],
+    "next_action": "Solicitar corrida primera-request en GB10 con digest y dependencias fijados, ruta CUTLASS más fallback/control; capturar logs raw para el evaluador actual.",
+    "responsible": "BB; operador Luis para workload/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01.md",
+      "tools/runtime_batch03_controls.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "No hay recibo de build efectivo ni ejecución offline del contenedor con digest fijado."
+    ],
+    "missing_evidence": [
+      "Digest/arquitectura de contenedor; dependencias y artefactos; build efectivo; corrida offline y control con red; logs reproducibles."
+    ],
+    "next_action": "Solicitar o preparar ejecución aislada del contenedor fijado con inventario de build/artefactos y red deshabilitada, conservando comparación con control online; evaluar con selector existente.",
+    "responsible": "BB; operador Luis para workload/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01.md",
+      "tools/runtime_batch03_controls.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01",
+    "category": "external_oem",
+    "blockers": [
+      "No se aportó patch/build exacto del proveedor ni corpus/resultados semánticos reproducibles."
+    ],
+    "missing_evidence": [
+      "Versiones/digest del tokenizer y patch; corpus boundary/texto-imagen; semántica, precisión, negativos y reversión por build."
+    ],
+    "next_action": "Solicitar al proveedor patch, build digests y reproducer; revisar con evaluador actual y pedir corrida del corpus de límites text/image con control y rollback.",
+    "responsible": "BB; coordinación solicita OEM/proveedor",
+    "evidence": [
+      "tasks/backlog/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01.md",
+      "tools/runtime_batch04_controls.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "El recibo del host dice 0 ensayos A/B y 0 cambios de clock; no contiene workload, soak ni rollback."
+    ],
+    "missing_evidence": [
+      "GPU/OEM/driver; cap actual/aplicado; carga y soak preregistrados; throughput/estabilidad/temperaturas antes/después; rollback verificado."
+    ],
+    "next_action": "Solicitar ensayo A/B opt-in en GPU de laboratorio con identidad/cap original, workload y umbrales preregistrados, estabilidad/throughput/temp antes/después y restauración verificada.",
+    "responsible": "BB; operador Luis para workload/lab",
+    "evidence": [
+      "tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md",
+      "tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt",
+      "tools/verify_gpu_clock_cap_ab.py",
+      "tools/hardware_evidence.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "category": "workload_or_lab",
+    "blockers": [
+      "No hay captura de sujeto para fase 04-packing-4k; el verificador de fase ya existe."
+    ],
+    "missing_evidence": [
+      "Captura cruda de packing 4K, stack/hardware fijados, costo/beneficio y negativos/controles exigidos por fase."
+    ],
+    "next_action": "Solicitar captura real de packing 4K y control de referencia en hardware/runtime fijado, con los campos requeridos por verify_memory_saver; ejecutar el selector focal sobre esos recibos.",
+    "responsible": "BB; operador Luis para workload/lab",
+    "evidence": [
+      "tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md",
+      "tools/verify_memory_saver.py",
+      "tools/hardware_evidence.py",
+      "tests/test_closure_kernel.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "FORUM-02-USB-UVC-EP0",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "No existe traza UVC EP0 en combinación cámara/xHCI afectada ni captura de versión corregida."
+    ],
+    "missing_evidence": [
+      "USB/UVC/firmware/kernel exactos; reproducción A/B, versión corregida, control sin EP0 afectado y rollback."
+    ],
+    "next_action": "Solicitar al dueño de hardware captura usbmon/trace de reproducción y versión corregida, control sin EP0 y rollback sobre MT8901/cámara compatibles.",
+    "responsible": "BB; operador Luis para hardware/peer",
+    "evidence": [
+      "tasks/backlog/FORUM-02-USB-UVC-EP0.md",
+      "tools/forum_hardware_subjects.py",
+      "tools/forum_finding.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  }
+]

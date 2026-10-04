@@ -1,0 +1,445 @@
+{
+  "batch_path": "/tmp/bb-hw-readonly-evidence-map/readonly-action-batch.json",
+  "batch_sha256": "e90cd5b381950b3defe66875f9b77cb1b1039e41ebf506b53dce11ba7a04b980",
+  "captured_at_utc": "2026-10-04T11:50:03.493774+00:00",
+  "commands": [
+    {
+      "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+      "label": "effective_modeset",
+      "argv": [
+        "cat",
+        "/sys/module/nvidia_drm/parameters/modeset"
+      ],
+      "started_utc": "2026-10-04T11:49:31.364420+00:00",
+      "completed_utc": "2026-10-04T11:49:31.365359+00:00",
+      "timeout_s": 4,
+      "returncode": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 66,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5368b0189459437e5f8f87a925ef5e4400b3eb6b55a660527d85bd8fa6d7e580",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT--effective_modeset.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT--effective_modeset.stderr.raw",
+      "summary": "",
+      "stderr_summary": "cat: /sys/module/nvidia_drm/parameters/modeset: Permission denied",
+      "command": "cat /sys/module/nvidia_drm/parameters/modeset"
+    },
+    {
+      "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "label": "nvidia_module_file",
+      "argv": [
+        "modinfo",
+        "-n",
+        "nvidia"
+      ],
+      "started_utc": "2026-10-04T11:49:31.365395+00:00",
+      "completed_utc": "2026-10-04T11:49:31.366773+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 65,
+      "stderr_bytes": 0,
+      "stdout_sha256": "fd9d6bc0f8ce61a9e0372e6546f534bbb39fb5035054cbe67052889130322ac0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--nvidia_module_file.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--nvidia_module_file.stderr.raw",
+      "summary": "/lib/modules/6.17.0-1032-nvidia/kernel/nvidia-580-open/nvidia.ko",
+      "stderr_summary": "",
+      "command": "modinfo -n nvidia"
+    },
+    {
+      "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "label": "nvidia_module_version",
+      "argv": [
+        "modinfo",
+        "-F",
+        "version",
+        "nvidia"
+      ],
+      "started_utc": "2026-10-04T11:49:31.366798+00:00",
+      "completed_utc": "2026-10-04T11:49:31.369198+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 11,
+      "stderr_bytes": 0,
+      "stdout_sha256": "cda1cb491ce1306f5220ff52711e55e73818f0834d5752fe150048363712509f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--nvidia_module_version.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--nvidia_module_version.stderr.raw",
+      "summary": "580.178.04",
+      "stderr_summary": "",
+      "command": "modinfo -F version nvidia"
+    },
+    {
+      "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "label": "nvidia_module_signer",
+      "argv": [
+        "modinfo",
+        "-F",
+        "signer",
+        "nvidia"
+      ],
+      "started_utc": "2026-10-04T11:49:31.369228+00:00",
+      "completed_utc": "2026-10-04T11:49:31.370818+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 37,
+      "stderr_bytes": 0,
+      "stdout_sha256": "d3bea2da8f0b8fd33e3a5cd9f2a9d010a723337f8eb40ecb11d145318ca9986c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--nvidia_module_signer.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--nvidia_module_signer.stderr.raw",
+      "summary": "Canonical Ltd. Kernel Module Signing",
+      "stderr_summary": "",
+      "command": "modinfo -F signer nvidia"
+    },
+    {
+      "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+      "label": "r8127_module_file",
+      "argv": [
+        "modinfo",
+        "-n",
+        "r8127"
+      ],
+      "started_utc": "2026-10-04T11:49:31.370835+00:00",
+      "completed_utc": "2026-10-04T11:49:31.381507+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 87,
+      "stderr_bytes": 0,
+      "stdout_sha256": "084eaa9185760b3c9467ce69c9812a4b15b2c0e01e1cef23440a1a94cbc343c6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--r8127_module_file.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--r8127_module_file.stderr.raw",
+      "summary": "/lib/modules/6.17.0-1032-nvidia/kernel/drivers/net/ethernet/realtek/r8127/r8127.ko.zst",
+      "stderr_summary": "",
+      "command": "modinfo -n r8127"
+    },
+    {
+      "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+      "label": "r8127_module_version",
+      "argv": [
+        "modinfo",
+        "-F",
+        "version",
+        "r8127"
+      ],
+      "started_utc": "2026-10-04T11:49:31.381520+00:00",
+      "completed_utc": "2026-10-04T11:49:31.386960+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 15,
+      "stderr_bytes": 0,
+      "stdout_sha256": "29edccb8166eba8baa9383f2166cf21c60d8d1cf8c1d47df876751d7828b1746",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--r8127_module_version.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--r8127_module_version.stderr.raw",
+      "summary": "11.014.00-NAPI",
+      "stderr_summary": "",
+      "command": "modinfo -F version r8127"
+    },
+    {
+      "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+      "label": "r8127_module_signer",
+      "argv": [
+        "modinfo",
+        "-F",
+        "signer",
+        "r8127"
+      ],
+      "started_utc": "2026-10-04T11:49:31.386981+00:00",
+      "completed_utc": "2026-10-04T11:49:31.389411+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 36,
+      "stderr_bytes": 0,
+      "stdout_sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--r8127_module_signer.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--r8127_module_signer.stderr.raw",
+      "summary": "Build time autogenerated kernel key",
+      "stderr_summary": "",
+      "command": "modinfo -F signer r8127"
+    },
+    {
+      "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "label": "nvidia_package_owner",
+      "argv": [
+        "dpkg-query",
+        "-S",
+        "/lib/modules/6.17.0-1032-nvidia/kernel/nvidia-580-open/nvidia.ko"
+      ],
+      "started_utc": "2026-10-04T11:49:31.389438+00:00",
+      "completed_utc": "2026-10-04T11:49:32.328590+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 115,
+      "stderr_bytes": 0,
+      "stdout_sha256": "3941c712dd67a9541aa9c7b3ff6ba0c0199a0699757aaf6640a6a3e4b718f54b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--nvidia_package_owner.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--nvidia_package_owner.stderr.raw",
+      "summary": "linux-modules-nvidia-580-open-6.17.0-1032-nvidia: /lib/modules/6.17.0-1032-nvidia/kernel/nvidia-580-open/nvidia.ko",
+      "stderr_summary": "",
+      "command": "dpkg-query -S /lib/modules/6.17.0-1032-nvidia/kernel/nvidia-580-open/nvidia.ko"
+    },
+    {
+      "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+      "label": "r8127_package_owner",
+      "argv": [
+        "dpkg-query",
+        "-S",
+        "/lib/modules/6.17.0-1032-nvidia/kernel/drivers/net/ethernet/realtek/r8127/r8127.ko.zst"
+      ],
+      "started_utc": "2026-10-04T11:49:32.328638+00:00",
+      "completed_utc": "2026-10-04T11:49:32.464573+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 121,
+      "stderr_bytes": 0,
+      "stdout_sha256": "5f7d0d72a279370606cdae22cfab6fd94e6bae2f0abece3325ec000e889a5f7c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--r8127_package_owner.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--r8127_package_owner.stderr.raw",
+      "summary": "linux-modules-6.17.0-1032-nvidia: /lib/modules/6.17.0-1032-nvidia/kernel/drivers/net/ethernet/realtek/r8127/r8127.ko.zst",
+      "stderr_summary": "",
+      "command": "dpkg-query -S /lib/modules/6.17.0-1032-nvidia/kernel/drivers/net/ethernet/realtek/r8127/r8127.ko.zst"
+    },
+    {
+      "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "label": "module_signature_metadata",
+      "argv": [
+        "modinfo",
+        "-F",
+        "sig_id",
+        "nvidia"
+      ],
+      "started_utc": "2026-10-04T11:50:03.433884+00:00",
+      "completed_utc": "2026-10-04T11:50:03.435420+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 7,
+      "stderr_bytes": 0,
+      "stdout_sha256": "ab9e69600456afa741f6c84ff55a2f355b5f7cfc0bd4a6aeeb74b875ac4ba03b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--module_signature_metadata.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--module_signature_metadata.stderr.raw",
+      "summary": "PKCS#7",
+      "stderr_summary": "",
+      "command": "modinfo -F sig_id nvidia"
+    },
+    {
+      "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "label": "module_signature_key_id",
+      "argv": [
+        "modinfo",
+        "-F",
+        "sig_key",
+        "nvidia"
+      ],
+      "started_utc": "2026-10-04T11:50:03.435448+00:00",
+      "completed_utc": "2026-10-04T11:50:03.437273+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 24,
+      "stderr_bytes": 0,
+      "stdout_sha256": "3468fcdea3e88ec51b38f0f01b6e4e58a36ae8f90e55ebd7c61ffa2a0d526ff4",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--module_signature_key_id.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--module_signature_key_id.stderr.raw",
+      "summary": "[captured in raw stdout; minimized from report]",
+      "stderr_summary": "",
+      "command": "modinfo -F sig_key nvidia"
+    },
+    {
+      "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "label": "module_signature_hash_algorithm",
+      "argv": [
+        "modinfo",
+        "-F",
+        "sig_hashalgo",
+        "nvidia"
+      ],
+      "started_utc": "2026-10-04T11:50:03.437313+00:00",
+      "completed_utc": "2026-10-04T11:50:03.440656+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 7,
+      "stderr_bytes": 0,
+      "stdout_sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--module_signature_hash_algorithm.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--module_signature_hash_algorithm.stderr.raw",
+      "summary": "sha512",
+      "stderr_summary": "",
+      "command": "modinfo -F sig_hashalgo nvidia"
+    },
+    {
+      "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "label": "owning_package_version",
+      "argv": [
+        "dpkg-query",
+        "-W",
+        "-f=${binary:Package} ${Version} ${db:Status-Abbrev}\n",
+        "linux-modules-nvidia-580-open-6.17.0-1032-nvidia"
+      ],
+      "started_utc": "2026-10-04T11:50:03.440670+00:00",
+      "completed_utc": "2026-10-04T11:50:03.465021+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 70,
+      "stderr_bytes": 0,
+      "stdout_sha256": "a5e7070d10b73268f781a988a947a7991d0713b5d7468f3b1a211dbf399f9a68",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--owning_package_version.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-00-KERNEL-INITRD-UPDATE-GATE--owning_package_version.stderr.raw",
+      "summary": "linux-modules-nvidia-580-open-6.17.0-1032-nvidia 6.17.0-1032.32+1 ii",
+      "stderr_summary": "",
+      "command": "dpkg-query -W '-f=${binary:Package} ${Version} ${db:Status-Abbrev}\n' linux-modules-nvidia-580-open-6.17.0-1032-nvidia"
+    },
+    {
+      "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+      "label": "module_signature_metadata",
+      "argv": [
+        "modinfo",
+        "-F",
+        "sig_id",
+        "r8127"
+      ],
+      "started_utc": "2026-10-04T11:50:03.465049+00:00",
+      "completed_utc": "2026-10-04T11:50:03.469441+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 7,
+      "stderr_bytes": 0,
+      "stdout_sha256": "ab9e69600456afa741f6c84ff55a2f355b5f7cfc0bd4a6aeeb74b875ac4ba03b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--module_signature_metadata.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--module_signature_metadata.stderr.raw",
+      "summary": "PKCS#7",
+      "stderr_summary": "",
+      "command": "modinfo -F sig_id r8127"
+    },
+    {
+      "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+      "label": "module_signature_key_id",
+      "argv": [
+        "modinfo",
+        "-F",
+        "sig_key",
+        "r8127"
+      ],
+      "started_utc": "2026-10-04T11:50:03.469457+00:00",
+      "completed_utc": "2026-10-04T11:50:03.473486+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 60,
+      "stderr_bytes": 0,
+      "stdout_sha256": "0c9c50396fcaa28438f2a39b9d356344ee12a4642c3078e5d05b012e9974dd2f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--module_signature_key_id.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--module_signature_key_id.stderr.raw",
+      "summary": "[captured in raw stdout; minimized from report]",
+      "stderr_summary": "",
+      "command": "modinfo -F sig_key r8127"
+    },
+    {
+      "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+      "label": "module_signature_hash_algorithm",
+      "argv": [
+        "modinfo",
+        "-F",
+        "sig_hashalgo",
+        "r8127"
+      ],
+      "started_utc": "2026-10-04T11:50:03.473499+00:00",
+      "completed_utc": "2026-10-04T11:50:03.475699+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 7,
+      "stderr_bytes": 0,
+      "stdout_sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--module_signature_hash_algorithm.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--module_signature_hash_algorithm.stderr.raw",
+      "summary": "sha512",
+      "stderr_summary": "",
+      "command": "modinfo -F sig_hashalgo r8127"
+    },
+    {
+      "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+      "label": "owning_package_version",
+      "argv": [
+        "dpkg-query",
+        "-W",
+        "-f=${binary:Package} ${Version} ${db:Status-Abbrev}\n",
+        "linux-modules-6.17.0-1032-nvidia"
+      ],
+      "started_utc": "2026-10-04T11:50:03.475710+00:00",
+      "completed_utc": "2026-10-04T11:50:03.493756+00:00",
+      "timeout_s": 4,
+      "returncode": 0,
+      "stdout_bytes": 52,
+      "stderr_bytes": 0,
+      "stdout_sha256": "87204f55dcb08acd6c3afc1407e6b625d01951b54b5b9da5675bbcc8e94361ea",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--owning_package_version.stdout.raw",
+      "stderr_path": "/tmp/bb-hw-readonly-evidence-map/readonly-captures-20261004/FORUM-REALTEK-DRIVER-BINDING-01--owning_package_version.stderr.raw",
+      "summary": "linux-modules-6.17.0-1032-nvidia 6.17.0-1032.32 ii",
+      "stderr_summary": "",
+      "command": "dpkg-query -W '-f=${binary:Package} ${Version} ${db:Status-Abbrev}\n' linux-modules-6.17.0-1032-nvidia"
+    }
+  ],
+  "skipped": [
+    {
+      "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+      "status": "could_not_run",
+      "reason": "No intended backup device/UUID is identified or evidenced; broad findmnt/lsblk would repeat inventory and cannot bind the intended target."
+    },
+    {
+      "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+      "status": "could_not_run",
+      "reason": "Owner attribution requires privilege; no sudo action is authorized. Existing unprivileged fuser result is already rc1/empty, so it was not repeated."
+    }
+  ],
+  "limitations": "Read-only commands only; no sudo, network, package operations, service changes, workload, boot, firmware, or device writes. stdout/stderr raw bytes retained in /tmp; excerpts are minimized. Output is a local observation, not authenticated OEM or update evidence.",
+  "per_card": {
+    "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01": {
+      "status": "could_not_run",
+      "predicate_strengthened": "None. The predicate binds the intended external backup mount source/UUID across boot; no intended device or expected UUID is identified.",
+      "why": "Skipped rather than repeat broad mount inventory."
+    },
+    "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01": {
+      "status": "could_not_run",
+      "predicate_strengthened": "None. Current process ownership for /dev/watchdog0 remains unknown.",
+      "why": "The only useful attribution requires privilege; the existing unprivileged fuser result was not repeated."
+    },
+    "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT": {
+      "status": "could_not_run",
+      "predicate_strengthened": "None. Effective nvidia_drm modeset remains unreadable.",
+      "why": "Narrow read-only cat returned permission denied; retained as a new negative receipt. It does not establish OTA compatibility."
+    },
+    "FORUM-00-KERNEL-INITRD-UPDATE-GATE": {
+      "status": "partial_observation",
+      "predicate_strengthened": "Current running nvidia module path/version/signer metadata and dpkg package owner/version; this adds package/module provenance for the currently loaded-stack candidate.",
+      "why": "modinfo reports module 580.178.04, PKCS#7 signature metadata, sha512; dpkg-query maps the module to linux-modules-nvidia-580-open-6.17.0-1032-nvidia version 6.17.0-1032.32+1. It does not cryptographically validate signer trust, validate initrd contents, or prove update/reboot/rollback."
+    },
+    "FORUM-REALTEK-DRIVER-BINDING-01": {
+      "status": "partial_observation",
+      "predicate_strengthened": "Current r8127 module/package provenance beyond the existing PCI binding/version observation.",
+      "why": "modinfo reports 11.014.00-NAPI and PKCS#7/sha512 metadata; dpkg-query maps it to linux-modules-6.17.0-1032-nvidia version 6.17.0-1032.32. The signer field says Build time autogenerated kernel key and does not establish OEM trust. No warm/cold reboot A/B, alternate-NIC control, or rollback was tested."
+    }
+  },
+  "exact_once": {
+    "source_generated_batch_rows": 5,
+    "unique_ids": 5,
+    "results_ids": [
+      "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+      "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+      "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+      "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "FORUM-REALTEK-DRIVER-BINDING-01"
+    ],
+    "assertion": "Each of the five generated source rows appears exactly once in per_card; commands can have multiple rows per card.",
+    "items_each_have_one_per_card_assessment": true
+  }
+}

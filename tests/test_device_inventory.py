@@ -149,14 +149,14 @@ def test_serial_permission_failure_stays_could_not_run(
                         "product": "Device", "serial": "unit-01", "speed": "480"}.items():
         (device / name).write_text(value, encoding="ascii")
     _link(tmp_path, "bus/usb/devices/1-1", device)
-    original = Path.read_text
+    original = hd.capture_io.read_regular_bytes
 
-    def read_text(path: Path, *args, **kwargs):
+    def read_bytes(path: Path, max_bytes: int) -> bytes:
         if path.name == "serial":
             raise PermissionError("serial denied")
-        return original(path, *args, **kwargs)
+        return original(path, max_bytes)
 
-    monkeypatch.setattr(Path, "read_text", read_text)
+    monkeypatch.setattr(hd.capture_io, "read_regular_bytes", read_bytes)
     result = hd.usb_inventory(tmp_path)
 
     assert result["status"] == "could_not_run"

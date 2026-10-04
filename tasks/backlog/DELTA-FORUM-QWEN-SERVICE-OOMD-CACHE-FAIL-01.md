@@ -35,3 +35,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Evaluación de instrumentos 2026-10-03
 
 Reusa telemetría general para memoria/swap/PSI, pero no captura OOMD kill de systemd, servicio dependiente, ni estado de cache ligado al cambio de tarea. No hay logs/versions locales. Estado `deferred_lab`: canario de larga duración con versión fija, PSI/UMA/swap, eventos OOMD/servicio/dependencias redactados y recovery medido; no desactivar OOMD ni actuar durante presión.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: Relato externo sin versiones, logs ni A/B; provocar presión/OOMD local conlleva ensayo de workload no disponible en lectura segura.
+- Evidencia faltante para cierre: versiones e imágenes efectivas; PSI/swap/UMA; journal de oomd y dependientes; positivo/negativo A/B en canario; recuperación
+- Siguiente acción: Fijar modelo/stack y diseñar canario recuperable con captura redactada de presión y oomd; comprobar rollback sin desactivar oomd global.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json`, `tasks/evidence/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01/ (directorio ausente al inspeccionar)`.
+- Impedimentos de inspección: 1. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

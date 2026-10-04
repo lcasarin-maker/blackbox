@@ -1,0 +1,76 @@
+{
+  "rows": [
+    {
+      "id": "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+      "field_path": [
+        "pretrim_headroom_case",
+        "peak_bytes"
+      ],
+      "before": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw domain measurements satisfy card predicates"
+      },
+      "after": {
+        "status": "fail",
+        "could_not_run": 0,
+        "reason": "pre-trim memory byte measurements are negative"
+      }
+    },
+    {
+      "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+      "field_path": [
+        "negative_control",
+        "planned_mtu"
+      ],
+      "before": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw domain measurements satisfy card predicates"
+      },
+      "after": {
+        "status": "fail",
+        "could_not_run": 0,
+        "reason": "negative MTU control contains a nonpositive interface MTU"
+      }
+    },
+    {
+      "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+      "field_path": [
+        "negative_control",
+        "observed_mtu"
+      ],
+      "before": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw domain measurements satisfy card predicates"
+      },
+      "after": {
+        "status": "fail",
+        "could_not_run": 0,
+        "reason": "negative MTU control contains a nonpositive interface MTU"
+      }
+    },
+    {
+      "id": "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+      "field_path": [
+        "nodes",
+        0,
+        "ranks",
+        0,
+        "rank"
+      ],
+      "before": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw domain measurements satisfy card predicates"
+      },
+      "after": {
+        "status": "fail",
+        "could_not_run": 0,
+        "reason": "rank identity contains a negative rank number"
+      }
+    }
+  ],
+  "physical_closures": 0
+}

@@ -456,6 +456,18 @@ def test_gpu_process_con_memoria_no_numerica_no_suma_nan(monkeypatch):
     }
 
 
+def test_gpu_process_fallo_sin_stderr_no_se_confunde_con_cero_procesos(monkeypatch):
+    proceso = agt.subprocess.CompletedProcess(
+        args=["nvidia-smi"], returncode=0, stdout="", stderr="")
+    monkeypatch.setattr(agt, "_correr_resultado", lambda *_: proceso)
+    sano = agt.leer_procesos_gpu()
+    assert sano["gpu_procs"] == [] and sano["gpu_mem_total_mib"] == 0
+    proceso.returncode = 1
+    fallido = agt.leer_procesos_gpu()
+    assert fallido["gpu_procs"] is None and fallido["gpu_mem_total_mib"] is None
+    assert fallido["gpu_procs_ausente"] == "nvidia-smi falló (rc=1)"
+
+
 def test_metric_waiting_by_reason_tolera_resultado_sin_dict():
     resultado = {"vllm_num_requests_waiting_by_reason": None}
 

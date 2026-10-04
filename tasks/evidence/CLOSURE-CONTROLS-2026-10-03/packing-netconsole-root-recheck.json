@@ -1,0 +1,82 @@
+{
+  "scope": "Replay of root synthetic regression cases only; no experiment closure",
+  "packing_original_replay": {
+    "status": "unknown",
+    "findings": [
+      "comparable corpus, protocol, stack and exposure metadata required"
+    ],
+    "could_not_run": 1,
+    "could_not_run_count": 1,
+    "fail": 0
+  },
+  "netconsole_updated_fixture_baseline_issue": null,
+  "netconsole_nonsense_with_coherent_hash_issue": {
+    "status": "fail",
+    "findings": [
+      "persistent configuration /etc/modprobe.d/blackbox-netconsole.conf lacks the active netconsole entry"
+    ],
+    "could_not_run": 0,
+    "could_not_run_count": 0,
+    "fail": 1
+  },
+  "source_hashes": {
+    "verify_memory_saver.py": "12e7648a93f75ea5e5f5e66752dda8960b5026add3182f916058e207bdc1dc82",
+    "verify_netconsole.py": "087c78c9c0a977c2ed28c69610f8f059798e0177934db734ba6dd9023f1e0b13"
+  },
+  "packing_baseline_first": {
+    "baseline": {
+      "status": "pass",
+      "findings": [],
+      "could_not_run": 0,
+      "could_not_run_count": 0,
+      "fail": 0
+    },
+    "request_mutant": {
+      "status": "unknown",
+      "findings": [
+        "stock/packed workload mismatch for logical allocation logical-a"
+      ],
+      "could_not_run": 1,
+      "could_not_run_count": 1,
+      "fail": 0
+    },
+    "baseline_rows": [
+      {
+        "corpus_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "protocol_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "stack_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "exposure": "same-protocol-run",
+        "logical_allocation_id": "logical-a",
+        "api": "cuda",
+        "page_size": 4096,
+        "requested_bytes": 4096,
+        "backing_bytes": 4096,
+        "descriptor_bytes": 0,
+        "dma_alignment_bytes": 4096,
+        "owner_memcg": "owner",
+        "allocator": "stock"
+      },
+      {
+        "corpus_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "protocol_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "stack_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "exposure": "same-protocol-run",
+        "logical_allocation_id": "logical-a",
+        "api": "cuda",
+        "page_size": 4096,
+        "requested_bytes": 4096,
+        "backing_bytes": 4096,
+        "descriptor_bytes": 0,
+        "dma_alignment_bytes": 4096,
+        "owner_memcg": "owner",
+        "allocator": "packed"
+      }
+    ],
+    "comparison": {
+      "corpus_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "protocol_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "stack_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "exposure": "same-protocol-run"
+    }
+  }
+}

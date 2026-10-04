@@ -131,3 +131,14 @@ La ficha sigue abierta: falta `apt-get check` con privilegio válido y un ensayo
 ## Nota de instrumentación readonly (2026-10-03)
 
 Se registró el kernel en ejecución y presencia de sus archivos vmlinuz/initrd; presencia no acredita paquete coherente ni bootability y no se evaluó kernel objetivo de actualización. Evidencia: `tasks/evidence/BB-INSTRUMENTS-2026-10-03/boot.capture.json` y `docs/evidence/BB-INSTRUMENTS-boot.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `privileged_access`.
+- Impedimento: La ficha declara pendientes apt-get check con privilegio válido y ensayo de actualización/selección de recuperación/rollback; no hay autorización/acceso root ni laboratorio OEM para esos pasos.
+- Evidencia faltante para cierre: La ficha declara pendientes apt-get check con privilegio válido y ensayo de actualización/selección de recuperación/rollback; no hay autorización/acceso root ni laboratorio OEM para esos pasos.
+- Siguiente acción: Coordinación BB: preparar el protocolo y recopilar fuente de compatibilidad OEM; operador Luis: habilitar ventana/lab y ejecutar con privilegio y rollback comprobado. Ref explícita: tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-KERNEL-INITRD-UPDATE-GATE-direct-close-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-KERNEL-INITRD-UPDATE-GATE-direct-close-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

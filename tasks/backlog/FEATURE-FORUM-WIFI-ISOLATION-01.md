@@ -43,3 +43,21 @@ Evidence is one owner's report and one identified hardware/software stack. The W
 ## Índice de propuestas del lote 00
 
 - `FORUM-00-MT7925-PTK-AND-5GHZ-FAILURE-DIAGNOSTIC` — [Distinguish MT7925 pairwise-key installation failure and 5 GHz roam loops from wrong-password or host failure](https://forums.developer.nvidia.com/t/374231); detalle, confidence y close check en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.
+
+
+## Defecto de entrada CLI detectado (2026-10-04)
+
+La ejecución literal del close_check termina con código 0 y stdout vacío porque el módulo tiene API `verify` pero carece de entrada `main/__main__`. La llamada API sobre la misma captura devuelve UNKNOWN; el código de salida actual no acredita cierre. Recibo: `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/direct-29-original-close-current-run.json`.
+
+El agente hardware tiene asignada la entrada CLI con JSON literal y códigos 0/1/2 para PASS/FAIL/UNKNOWN, respectivamente; el código 0 exige could_not_run=0. Se requieren pruebas de proceso real para la captura ausente, argumentos y controles positivos/negativos. El close_check se conserva y la ficha sigue abierta.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: La observación del host no acredita aislamiento de fallos NM/supplicant frente a freeze ni política recuperable sobre stack citado.
+- Evidencia faltante para cierre: capturas de fallo y host liveness; versiones NM/supplicant/kernel; recuperación acotada y rollback
+- Siguiente acción: Ejecutar en canario con acceso de rescate un fallo acotado de NM/supplicant, distinguirlo de freeze y demostrar recuperación/rollback.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json`, `tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/host-observation.txt`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

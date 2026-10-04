@@ -428,3 +428,14 @@ Fuente: https://forums.developer.nvidia.com/t/350367. La captura de `all_gather_
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: parcial, reutilizando la tupla de identidad existente de arquitectura, driver/CUDA e imagen. El parser de métricas KV es un instrumento aparte y no prueba compatibilidad, generación ni canario semántico; esos sujetos quedan `could_not_run`. La ficha sigue abierta y su `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-runtime.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: La identidad de arquitectura/driver/CUDA/imagen se reutiliza parcialmente, pero no hay logs locales ni canario de carga, primera inferencia, salida semántica y soak con rollback.
+- Evidencia faltante para cierre: La identidad de arquitectura/driver/CUDA/imagen se reutiliza parcialmente, pero no hay logs locales ni canario de carga, primera inferencia, salida semántica y soak con rollback.
+- Siguiente acción: Coordinación BB: cerrar contrato de admisión y controles negativos; operador Luis: correr canario en runtime/OEM compatible con digest fijado. Ref explícita: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01-direct-close-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01-direct-close-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

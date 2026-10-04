@@ -43,3 +43,23 @@ Se añadió `tools/nvme_readonly.py`: exige inventario NVMe con ruta y serial, u
 Ejecutado `python3 -m tools.nvme_readonly --export-source <archivo-controlado> --destination-dir <destino>` entre dos filesystems reales: origen `/tmp` (`st_dev=66306`) y destino `/dev/shm` (`st_dev=31`). Archivo sintético de 4096 bytes; exportación y retorno pasan con SHA-256 idéntico (`c8f5d0341d54d951a71b136e6e2afcb14d11ed8489a7ae126a8fee0df6ecf193`). Inode, tamaño, mtime y ctime del origen conservados. Dos controles negativos rechazan sobrescritura y destino en el mismo filesystem: ambos devuelven rc2/`could_not_run`, preservados como tales. Conteos: pass=2, fail=0, could_not_run=2 (negativos intencionales), resultados inesperados=0.
 
 Los comandos literales, timestamps, stdout/stderr y códigos están en `tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/export-copy-lab/run.json`. Se eliminaron solamente los directorios temporales creados por este ensayo después de leer y verificar el retorno. El ensayo acredita copia/retorno de archivo regular; la identidad OEM, capturas de fallo NVMe y recuperación de un dispositivo siguen pendientes. La ficha conserva `open`.
+
+
+## Control de cierre real integrado — 2026-10-04
+
+El comando original conserva su texto y ahora incluye el selector `test_nvme_real_incident_close_check_requires_raw_device_and_recovery_evidence`. El lector exige recibos crudos acotados, identidad de namespace/serial/modelo/firmware, contadores SMART con tipos exactos, journal asociado al dispositivo y boot, observaciones de mounts ordenadas, copia/retorno con hashes y filesystem, y ruta OEM ligada al sujeto. Los casos sintéticos completos y sus mutaciones comprueban el lector; la copia regular existente conserva su alcance de laboratorio.
+
+Revalidación en primary: `python3 -m pytest tests/test_nvme_readonly.py -q` → `1 failed, 28 passed in 0.22s`. El único fallo es `UNKNOWN/CNR` por siete capturas ausentes bajo `incident/`: `device-identity.json`, `smart-health.json`, `kernel-journal.json`, `mount-transitions.json`, `recovery-and-rollback.json`, `backup.json` y `rollback.json`. Es un ensayo físico pendiente; el reporte de cierre sigue incompleto. No se ejecutaron consultas privilegiadas ni escrituras al NVMe.
+
+Recibo de integración y logs: `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/nvme-real-selector-primary-integration.json`. Los contraejemplos y rechecks de archivos vacíos están en el mismo directorio. Estado `open`; el criterio original permanece intacto.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: El ensayo existente es copia/restauración de archivo regular; el selector requiere evidencia de incidente NVMe y recovery ligado al dispositivo.
+- Evidencia faltante para cierre: Identidad serial/model/firmware, SMART, journal correlacionado, transición mount, backup/export+restore, recuperación/rollback y ruta OEM.
+- Siguiente acción: Solicitar capturas readonly de identidad/SMART/journal/mount y backup a filesystem externo ante incidente; reservar prueba de recovery/rollback para NVMe de laboratorio sano, sin escribir medio sospechoso.
+- Responsable del siguiente paso: BB; operador Luis para hardware/peer.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md`, `tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/export-copy-lab/run.json`, `tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/host-observation.txt`, `tools/nvme_readonly.py`, `tools/forum_hardware_subjects.py`, `tests/test_nvme_readonly.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

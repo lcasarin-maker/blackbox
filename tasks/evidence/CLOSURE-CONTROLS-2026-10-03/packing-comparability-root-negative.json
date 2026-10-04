@@ -1,0 +1,31 @@
+{
+  "scope": "Synthetic adversarial test of cost-decision helper; no measured saving or host experiment",
+  "module": "/tmp/bb-controls-kernel/tools/verify_memory_saver.py",
+  "module_sha256": "65e91d1efbe3a1f584685e07bdeccaa4ff80244ab16c9864e4b7c475951fee2f",
+  "rows": [
+    {
+      "api": "cuda",
+      "allocator": "stock",
+      "page_size": 4096,
+      "requested_bytes": 4096,
+      "backing_bytes": 4096,
+      "descriptor_bytes": 0
+    },
+    {
+      "api": "cuda",
+      "allocator": "packed",
+      "page_size": 4096,
+      "requested_bytes": 8192,
+      "backing_bytes": 8192,
+      "descriptor_bytes": 0
+    }
+  ],
+  "result": {
+    "status": "pass",
+    "findings": [],
+    "could_not_run": 0,
+    "could_not_run_count": 0,
+    "fail": 0
+  },
+  "defect": "Stock and packed requested workload differ; helper returns pass/no-port without requiring comparable workload."
+}

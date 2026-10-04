@@ -51,3 +51,14 @@ Evidencia y pendientes: `tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION/progre
 Se reutilizó el lector de firmas pstore existente y se vinculó a identidad kernel/boot readonly. El acceso local a `/sys/fs/pstore` fue denegado (`could_not_run=1`); no hay record observado ni prueba de regresión/corrección vendor. El verificador específico de cierre, resolución OEM y recomendación probada siguen pendientes.
 
 Evidencia: `docs/evidence/BB-INSTRUMENTS-kernel.md` y `tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json`. Sigue abierta.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `privileged_access`.
+- Impedimento: Lector local reportó /sys/fs/pstore denegado (CNR=1), cero registros observados; falta lectura real tras reboot y fuente vendor aplicable a la pila exacta.
+- Evidencia faltante para cierre: Lector local reportó /sys/fs/pstore denegado (CNR=1), cero registros observados; falta lectura real tras reboot y fuente vendor aplicable a la pila exacta.
+- Siguiente acción: Coordinación BB: recopilar fuente OEM/versiones y preparar lector; operador Luis: habilitar captura autorizada de pstore en canary y entregar identidad completa. Ref explícita: tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-02-PSTORE-KERNEL-REGRESSION-direct-close-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-02-PSTORE-KERNEL-REGRESSION-direct-close-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -1,0 +1,55 @@
+{
+  "observed_at": "2026-10-04T08:09:37.706269+00:00",
+  "scope": "Root synthetic firmware verifier recheck; no actual firmware operation, signature authentication or card closure.",
+  "cases": [
+    {
+      "case": "baseline",
+      "result": {
+        "status": "pass",
+        "reason": "PSID/firmware, PCI bus-master and active RDMA-driver state, maintainer-script scan, signed source and indirect-writer negative were parsed",
+        "files": [
+          "/tmp/bb-fw-repaired-review-db10rpxh/baseline/commands.json"
+        ],
+        "fail": 0,
+        "could_not_run": 0
+      }
+    },
+    {
+      "case": "wrong_bdf_argv",
+      "result": {
+        "status": "unknown",
+        "reason": "required raw command missing: targeted PCI identity/BME/driver query",
+        "files": [
+          "/tmp/bb-fw-repaired-review-db10rpxh/wrong_bdf_argv/commands.json"
+        ],
+        "fail": 0,
+        "could_not_run": 1
+      }
+    },
+    {
+      "case": "missing_helper",
+      "result": {
+        "status": "unknown",
+        "reason": "bytes for invoked maintainer helper are missing: /usr/lib/vendor/fw-helper.sh",
+        "files": [
+          "/tmp/bb-fw-repaired-review-db10rpxh/missing_helper/commands.json"
+        ],
+        "fail": 0,
+        "could_not_run": 1
+      }
+    },
+    {
+      "case": "helper_flash",
+      "result": {
+        "status": "fail",
+        "reason": "invoked helper contains a CX7 firmware writer: /usr/lib/vendor/fw-helper.sh",
+        "files": [
+          "/tmp/bb-fw-repaired-review-db10rpxh/helper_flash/commands.json"
+        ],
+        "fail": 1,
+        "could_not_run": 0
+      }
+    }
+  ],
+  "source_sha256": "39db71910ae28206d8713210564652c8711f0894fa6977040c4bf1f4ae46aeeb"
+}

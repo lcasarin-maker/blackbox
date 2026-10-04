@@ -1,0 +1,54 @@
+{
+  "files": [
+    {
+      "path": "tools/verify_gpu_clock_cap_ab.py",
+      "before_sha256": "647d0f7f0a713c68d87e31d96cccee57eb098e43fcf91b59ca3a42534daa4c63",
+      "after_sha256": "961efdf5ed6ce0b54a098fbf66c17855aed3e5c3b109e74a66f645e0877301c8"
+    },
+    {
+      "path": "tools/verify_wifi_isolation.py",
+      "before_sha256": "0781b9065992fd2f924d43ce7938d20f79543c28a639de714443cfa5d9a12e6a",
+      "after_sha256": "226ec324e55209edc8b04941b746390fdded252457acbe598a4b2e82661da495"
+    },
+    {
+      "path": "tools/verify_usb_hid_postupdate.py",
+      "before_sha256": "388b71ce8b08b596f5962c07a156bdb66291a5ee72c33867bafbf6f1436d96de",
+      "after_sha256": "579483d47e9432c7248832c8e7272eaf321abfe6dadde19f0206ae643f572411"
+    },
+    {
+      "path": "tests/test_hardware_cli_entrypoints.py",
+      "before_sha256": null,
+      "after_sha256": "270df60072fe6b7c51c3842ce6d4f19c62ff5dccc09e7c4624ae59ce27b2bad6"
+    },
+    {
+      "path": "tests/test_gpu_capture_invariants.py",
+      "before_sha256": null,
+      "after_sha256": "1a1b9f5a2014e0c2fbb3ee2c961e1a1c6b189c1ec720c5bc6452419101eb58d8"
+    },
+    {
+      "path": "tests/test_wifi_trial_invariants.py",
+      "before_sha256": null,
+      "after_sha256": "7d21351bb33f82e85d3371138d19658d05029a26e20d45e12d15f3d9eb8b5b57"
+    },
+    {
+      "path": "tests/test_usb_hid_admission_invariants.py",
+      "before_sha256": null,
+      "after_sha256": "f78f874c2fd68f8cc2659c269451965bd12ea3e1facbf8e9e9dfa4075123dfff"
+    },
+    {
+      "path": "tests/test_clock_tradeoff_observation_semantics.py",
+      "before_sha256": null,
+      "after_sha256": "13c0d573c7576c8a629028c03081404dd2304479f3ca1493f806c4357c1fad2e"
+    }
+  ],
+  "validation": {
+    "command": "python3 -m pytest -q tests/test_hardware_cli_entrypoints.py tests/test_gpu_capture_invariants.py tests/test_wifi_trial_invariants.py tests/test_usb_hid_admission_invariants.py tests/test_clock_tradeoff_observation_semantics.py",
+    "exit_code": 0,
+    "output": "..................................                                       [100%]\n34 passed in 0.38s\n",
+    "real_close_checks": {
+      "pass": 0,
+      "fail": 0,
+      "unknown": 3
+    }
+  }
+}

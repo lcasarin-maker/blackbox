@@ -1,0 +1,20 @@
+{
+  "command": [
+    "python3",
+    "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/renderer-delayed-probe.py"
+  ],
+  "exit_code": 0,
+  "stdout": "scenario: actual temporary marker process, async SIGKILL delayed 120 ms after cleanup request; helper deadline 2 s\n{\"delayed_termination\": true, \"elapsed_seconds\": 0.161, \"mode\": \"50ms-poll\", \"pgrep_calls\": 4, \"verdict\": \"remaining-empty\"}\n{\"delayed_termination\": true, \"elapsed_seconds\": 0.121, \"mode\": \"neutralized\", \"pgrep_calls\": 48, \"verdict\": \"remaining-empty\"}\n",
+  "script": {
+    "path": "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/renderer-delayed-probe.py",
+    "sha256": "69306a01b1f7a35ded7f0386ecd58224b8ffe0c9745a028746252aa5f54298f2"
+  },
+  "subject_helper": {
+    "path": "tests/test_bb_bash.py::_matar_electron_falso",
+    "sha256": "4fc3a5c39a8ef68c607c7d272a910fb2e6fc89a84345dab0396a9e58194aef3f",
+    "source_file_sha256": "9482913a787c27f12d51668e65309137dd7fea9faabbd88f164ca3909f82de0d"
+  },
+  "scenario": "A real temporary process with a unique argv marker remains visible to pgrep for 120 ms after cleanup requests asynchronous SIGKILL. The helper deadline is 2 s. The experiment runs once with its real 50 ms sleep and once with sleep replaced by a no-op; the temp process group is killed and reaped in both trials.",
+  "interpretation": "Both runs return remaining-empty. The 50 ms poll makes 4 pgrep calls; neutralizing sleep makes 56. The comparison demonstrates cadence/CPU-query suppression during delayed renderer termination while preserving cleanup verdict.",
+  "limitations": "This bounded synthetic process trial validates the actual helper and real pgrep over an injected 120 ms termination delay. It does not claim behavior for every renderer shutdown distribution or establish product-level CPU savings."
+}

@@ -592,7 +592,11 @@ fi
     bin_falso.mkdir(exist_ok=True)
     s = bin_falso / "systemctl"
     s.write_text('#!/usr/bin/env bash\n'
-                 'case "$*" in "is-active bb-usable.service") exit 0 ;; esac\n'
+                 'case "$*" in\n'
+                 '  "is-active bb-usable.service") exit 0 ;;\n'
+                 '  "show bb-usable.service -p LoadState -p ActiveState")\n'
+                 '    printf "LoadState=loaded\\nActiveState=active\\n"; exit 0 ;;\n'
+                 'esac\n'
                  f'exec {real or "/bin/false"} "$@"\n', encoding="utf-8")
     s.chmod(0o755)
     env["PATH"] = f"{bin_falso}:{os.environ['PATH']}"
@@ -803,7 +807,7 @@ def test_cpu_top_NOMBRA_a_quien_quema_cpu(datos):
         assert quemador.stdout.readline().strip() == "listo"
         cpu_antes = _cpu_segundos(quemador.pid)
         correr(["sample"], datos)                  # muestra 1: linea base
-        time.sleep(4)  # blocking-sleep: ps reports whole CPU seconds; window needed for delta -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.3 -- `ps` informa segundos enteros; neutralizar la ventana hace fallar el positivo 3/3 veces con cpu_top 0/5. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-17
+        time.sleep(4)  # blocking-sleep: ps reports whole CPU seconds; window needed for delta -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.4 -- `ps` informa segundos enteros; neutralizar la ventana hace fallar el positivo 3/3 veces con cpu_top 0/5. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-17
         correr(["sample"], datos)                  # muestra 2: ya quemo
         mio = _cpu_segundos(quemador.pid) - cpu_antes
         d = muestras(datos)[-1]
@@ -839,7 +843,7 @@ def test_control_negativo_un_proceso_dormido_no_sale_como_que_quema(datos):
         assert dormido.stdout is not None
         assert dormido.stdout.readline().strip() == "listo"
         correr(["sample"], datos)
-        time.sleep(4)  # blocking-sleep: match positive CPU-delta observation window -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.3 -- iguala la ventana de observación del positivo para que el control negativo se mida en el mismo intervalo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-18
+        time.sleep(4)  # blocking-sleep: match positive CPU-delta observation window -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.4 -- iguala la ventana de observación del positivo para que el control negativo se mida en el mismo intervalo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-18
         correr(["sample"], datos)
         nombrados = {x["pid"] for x in muestras(datos)[-1]["cpu_top"]}
         assert dormido.pid not in nombrados, \
@@ -1598,7 +1602,7 @@ def _esperar_proceso(patron, timeout=15.0):
         pids = r.stdout.split()
         if pids:
             return pids[0]
-        time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- sin el, el bucle quema un nucleo entero re-consultando pgrep sin ceder CPU -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.3 -- el sondeo acotado cede CPU hasta detectar el proceso o agotar deadline; neutralizarlo eleva pgrep de 4 a 109 en 0.2 s. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-19
+        time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- sin el, el bucle quema un nucleo entero re-consultando pgrep sin ceder CPU -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.4 -- el sondeo acotado cede CPU hasta detectar el proceso o agotar deadline; neutralizarlo eleva pgrep de 4 a 130 en 0.2 s. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-19
     raise AssertionError(f"ningun proceso con {patron!r} aparecio en {timeout}s")
 
 
@@ -1652,7 +1656,7 @@ def _matar_electron_falso(proc, marcadores, timeout=15.0):
                 break
             assert time.time() < deadline, (
                 f"proceso huerfano con {patron!r} sigue vivo tras matar el arbol")
-            time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- confirma que un huerfano de verdad muere, no solo lo asume -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.3 -- sondea entre consultas para confirmar desaparición del renderer huérfano; cleanup verificado con dos observaciones y SIGKILL de respaldo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-20
+            time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- confirma que un huerfano de verdad muere, no solo lo asume -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.4 -- sondea entre consultas para confirmar desaparición del renderer huérfano; cleanup verificado con dos observaciones y SIGKILL de respaldo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-20 Segunda revisión: proceso marcador real con terminación demorada; ver tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/renderer-delayed-root.log
     return remaining
 
 
@@ -1706,3 +1710,28 @@ def test_electron_ui_muerta_CERO_renderers_SI_dispara_SOSPECHOSO(tmp_path):
             f"SOSPECHOSO salio en el detalle pero el conteo no lo reflejo: {r.stdout}")
     finally:
         _matar_electron_falso(proc, marcadores)
+
+
+def test_sample_all_smi_queries_are_bounded(datos, tmp_path):
+    env = _con_smi_falso(tmp_path, "exit 0\n")
+    env["BB_SMI_TIMEOUT_S"] = "1"
+    healthy = correr(["sample"], datos=datos, extra_env=env, timeout=8)
+    assert healthy.returncode == 0, healthy.stderr
+    baseline = muestras(datos)[-1]
+    assert baseline["gpu"] == []
+    assert isinstance(baseline["residuo_mb"], (int, float))
+    for body in ("exit 9", "sleep 30"):
+        env = _con_smi_falso(
+            tmp_path,
+            'if [[ "$*" == *query-compute-apps* ]]; then ' + body + '; fi\nexit 0\n',
+        )
+        env["BB_SMI_TIMEOUT_S"] = "1"
+        started = time.monotonic()
+        result = correr(["sample"], datos=datos, extra_env=env, timeout=8)
+        elapsed = time.monotonic() - started
+        assert result.returncode == 0, result.stderr
+        assert elapsed < 8, elapsed
+        sample = muestras(datos)[-1]
+        assert sample["smi"]["estado"] == "OK"
+        assert sample["gpu"] is None
+        assert sample["residuo_mb"] is None

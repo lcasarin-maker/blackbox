@@ -1,0 +1,95 @@
+{
+  "observed_at": "2026-10-04T07:43:19.755569+00:00",
+  "scope": "Production component recomputation of archived native receipts; no new apt updates or installations, no authentication of receipt authors. Original whole-card check still pending.",
+  "rows": [
+    {
+      "source": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/healthy-source-canary/run.json",
+      "source_sha256": "d0f23da60fc3e6f9e387c4c13e17bce5f7c9b36ad155781a91ebbe7efbec17d5",
+      "command_indices": [
+        0,
+        1,
+        2
+      ],
+      "outcome": "healthy",
+      "result": {
+        "status": "pass",
+        "could_not_run_count": 0,
+        "fail": 0,
+        "outcome": "healthy",
+        "scope": "Caller-supplied isolated APT process receipts only; source and trust gates separate."
+      }
+    },
+    {
+      "source": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/wrong-source-canary/run.json",
+      "source_sha256": "829db40b194eb4dba69ef385da07ff848708d2d0b827e4c6bdff5502f41c2e15",
+      "command_indices": [
+        0,
+        1,
+        2
+      ],
+      "outcome": "wrong_arm64_source",
+      "result": {
+        "status": "pass",
+        "could_not_run_count": 0,
+        "fail": 0,
+        "outcome": "wrong_arm64_source",
+        "scope": "Caller-supplied isolated APT process receipts only; source and trust gates separate."
+      }
+    },
+    {
+      "source": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary/run.json",
+      "source_sha256": "365131997c0e383d0ca44f225812fcb0f06664a5417948e0f5ea81c9833b321e",
+      "command_indices": [
+        3,
+        4,
+        5
+      ],
+      "outcome": "healthy",
+      "result": {
+        "status": "pass",
+        "could_not_run_count": 0,
+        "fail": 0,
+        "outcome": "healthy",
+        "scope": "Caller-supplied isolated APT process receipts only; source and trust gates separate."
+      }
+    },
+    {
+      "source": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary/run.json",
+      "source_sha256": "365131997c0e383d0ca44f225812fcb0f06664a5417948e0f5ea81c9833b321e",
+      "command_indices": [
+        6,
+        7,
+        8
+      ],
+      "outcome": "bad_package_hash",
+      "result": {
+        "status": "pass",
+        "could_not_run_count": 0,
+        "fail": 0,
+        "outcome": "bad_package_hash",
+        "scope": "Caller-supplied isolated APT process receipts only; source and trust gates separate."
+      }
+    },
+    {
+      "source": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary/run.json",
+      "source_sha256": "365131997c0e383d0ca44f225812fcb0f06664a5417948e0f5ea81c9833b321e",
+      "command_indices": [
+        9,
+        10,
+        11
+      ],
+      "outcome": "bad_release_signature",
+      "result": {
+        "status": "pass",
+        "could_not_run_count": 0,
+        "fail": 0,
+        "outcome": "bad_release_signature",
+        "scope": "Caller-supplied isolated APT process receipts only; source and trust gates separate."
+      }
+    }
+  ],
+  "pass": 5,
+  "fail": 0,
+  "could_not_run_count": 0,
+  "production_sha256": "9a355ab693deb2f5bd9e9c2414080a86917f84841a867f1bd87848b452259230"
+}

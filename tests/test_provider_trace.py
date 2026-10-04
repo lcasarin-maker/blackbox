@@ -3,6 +3,8 @@
 import json
 from pathlib import Path
 import runpy
+import subprocess
+import sys
 
 import pytest
 
@@ -19,6 +21,76 @@ def test_trace_controls() -> None:
     respawn = provider_trace.analyze_file(FIXTURES / "gpu-to-cpu-respawn.jsonl")
     assert respawn["status"] == "block"
     assert "request gpu-after-restart: GPU request was served by CPU on worker worker-after" in respawn["findings"]
+
+
+def test_duplicate_provider_key_never_overwrites_a_fallback_observation() -> None:
+    healthy = (FIXTURES / "gpu-healthy.jsonl").read_text(encoding="utf-8").splitlines()
+    assert provider_trace.analyze_lines(healthy)["status"] == "pass"
+    lines = list(healthy)
+    index = next(i for i, line in enumerate(lines) if '"event":"provider"' in line)
+    lines[index] = lines[index].replace(
+        '"provider":"CUDAExecutionProvider"',
+        '"provider":"CPUExecutionProvider","provider":"CUDAExecutionProvider"',
+    )
+    result = provider_trace.analyze_lines(lines)
+    assert result["status"] == "unknown"
+    assert any("malformed or truncated JSON" in item for item in result["unknowns"])
+
+
+@pytest.mark.parametrize("bad_number", ["NaN", "Infinity", "1e999"])
+def test_nonfinite_provider_trace_json_is_unknown(bad_number: str) -> None:
+    lines = [
+        '{"event":"request","request_id":"r","requested_provider":"gpu"}',
+        '{"event":"worker","request_id":"r","worker_id":"w","pid":1}',
+        '{"event":"provider","request_id":"r","worker_id":"w","provider":"gpu"}',
+        '{"event":"latency","request_id":"r","worker_id":"w","milliseconds":1,"extra":'
+        + bad_number
+        + "}",
+    ]
+    result = provider_trace.analyze_lines(lines)
+    assert result["status"] == "unknown"
+    assert any("malformed or truncated JSON" in item for item in result["unknowns"])
+
+
+def test_trace_file_reader_rejects_ancestor_symlink_fifo_and_oversize(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    target = tmp_path / "target"
+    target.mkdir()
+    (target / "trace.jsonl").write_text(
+        (FIXTURES / "gpu-healthy.jsonl").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    alias = tmp_path / "alias"
+    alias.symlink_to(target, target_is_directory=True)
+    alias_result = provider_trace.analyze_file(alias / "trace.jsonl")
+    assert alias_result["status"] == "unknown"
+    assert alias_result["could_not_run_count"] == 1
+
+    fifo = tmp_path / "trace.fifo"
+    import os
+
+    os.mkfifo(fifo)
+    script = (
+        "from pathlib import Path; from tools.provider_trace import analyze_file; "
+        f"print(analyze_file(Path({str(fifo)!r})))"
+    )
+    child = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=Path(provider_trace.__file__).parents[1],
+        capture_output=True,
+        text=True,
+        timeout=2,
+        check=False,
+    )
+    assert child.returncode == 0, child.stderr
+    assert "could_not_run_count': 1" in child.stdout
+
+    monkeypatch.setattr(provider_trace, "MAX_TRACE_BYTES", 8)
+    large = target / "large.jsonl"
+    large.write_bytes(b"123456789")
+    large_result = provider_trace.analyze_file(large)
+    assert large_result["status"] == "unknown"
+    assert large_result["could_not_run_count"] == 1
 
 
 def test_request_scope_prevents_aggregate_mixing() -> None:

@@ -1,0 +1,82 @@
+[
+ {
+  "path": "tests/test_bb_bash.py",
+  "line_number": 1655,
+  "line_content": "            time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- confirma que un huerfano de verdad muere, no solo lo asume -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.3 -- sondea entre consultas para confirmar desaparición del renderer huérfano; cleanup verificado con dos observaciones y SIGKILL de respaldo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-20",
+  "kind": "blocking-sleep-override",
+  "version_reviewed": "2.3",
+  "id": "blocking-sleep-override:tests/test_bb_bash.py:1655"
+ },
+ {
+  "path": "tests/test_bb_bash.py",
+  "line_number": 842,
+  "line_content": "        time.sleep(4)  # blocking-sleep: match positive CPU-delta observation window -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.3 -- iguala la ventana de observación del positivo para que el control negativo se mida en el mismo intervalo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-18",
+  "kind": "blocking-sleep-override",
+  "version_reviewed": "2.3",
+  "id": "blocking-sleep-override:tests/test_bb_bash.py:842"
+ },
+ {
+  "path": "tools/cgroup_repro.py",
+  "line_number": 189,
+  "line_content": "        time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.3 -- el worker acotado retiene la asignación durante la ventana de observación; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16",
+  "kind": "blocking-sleep-override",
+  "version_reviewed": "2.3",
+  "id": "blocking-sleep-override:tools/cgroup_repro.py:189"
+ },
+ {
+  "path": "tools/cgroup_repro.py",
+  "line_number": 92,
+  "line_content": "        time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.3 -- el worker acotado retiene la asignación durante la ventana de observación; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16",
+  "kind": "blocking-sleep-override",
+  "version_reviewed": "2.3",
+  "id": "blocking-sleep-override:tools/cgroup_repro.py:92"
+ },
+ {
+  "path": ".gitignore",
+  "line_number": 21,
+  "line_content": "!.simplecode/backlog_baseline.json",
+  "kind": "gitignore",
+  "version_reviewed": "2.3",
+  "id": "gitignore:.gitignore:21"
+ },
+ {
+  "path": ".gitignore",
+  "line_number": 30,
+  "line_content": "!.simplecode/hook_receipt_baseline.json",
+  "kind": "gitignore",
+  "version_reviewed": "2.3",
+  "id": "gitignore:.gitignore:30"
+ },
+ {
+  "path": ".gitignore",
+  "line_number": 50,
+  "line_content": "!.simplecode/corpus_exempt.yaml",
+  "kind": "gitignore",
+  "version_reviewed": "2.3",
+  "id": "gitignore:.gitignore:50"
+ },
+ {
+  "path": ".gitignore",
+  "line_number": 65,
+  "line_content": "__pycache__/",
+  "kind": "gitignore",
+  "version_reviewed": "2.3",
+  "id": "gitignore:.gitignore:65"
+ },
+ {
+  "path": ".gitignore",
+  "line_number": 69,
+  "line_content": ".pytest_cache/",
+  "kind": "gitignore",
+  "version_reviewed": "2.3",
+  "id": "gitignore:.gitignore:69"
+ },
+ {
+  "path": ".gitignore",
+  "line_number": 8,
+  "line_content": ".simplecode/*",
+  "kind": "gitignore",
+  "version_reviewed": "2.3",
+  "id": "gitignore:.gitignore:8"
+ }
+]

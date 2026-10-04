@@ -13,10 +13,16 @@ import subprocess
 import sys
 from typing import Any, Callable, Sequence, cast
 
+from tools import capture_io
+
 TIMEOUT_S = 4.0
 MAX_OUTPUT_CHARS = 16_384
 MAX_CONTAINER_IMAGE_INSPECTIONS = 4
+MAX_PCI_DEVICE_INSPECTIONS = 256
+MAX_NETWORK_INTERFACE_INSPECTIONS = 256
+MAX_SYSFS_TEXT_BYTES = 65_536
 INTERFACE_RE = re.compile(r"^[A-Za-z0-9_.:-]{1,15}$")
+PCI_ADDRESS_RE = re.compile(r"^(?:[0-9a-f]{4}:)?[0-9a-f]{2}:[0-9a-f]{2}\.[0-7]$")
 CONTACT_EMAIL_RE = re.compile(r"<[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}>")
 RUNNER = Callable[..., subprocess.CompletedProcess[str]]
 
@@ -221,10 +227,21 @@ def boot_state_inventory(root: Path, kernel_release: str | None = None) -> dict[
 
 
 def _interfaces(root: Path) -> dict[str, Any]:
-    result = read_names(root / "sys/class/net")
-    if result["status"] != "ok":
-        return result
-    names = [name for name in result["value"]
+    path, error = _sysfs_target(root, root / "sys/class/net")
+    if error:
+        return {"status": "could_not_run", "error": error}
+    try:
+        with os.scandir(cast(Path, path)) as entries:
+            names = []
+            for entry in entries:
+                names.append(entry.name)
+                if len(names) > MAX_NETWORK_INTERFACE_INSPECTIONS:
+                    break
+    except OSError as exc:
+        return {"status": "could_not_run", "error": f"{type(exc).__name__}: {exc}"}
+    truncated = len(names) > MAX_NETWORK_INTERFACE_INSPECTIONS
+    names = sorted(names[:MAX_NETWORK_INTERFACE_INSPECTIONS])
+    names = [name for name in names
              if name != "lo" and INTERFACE_RE.fullmatch(name)]
     ethernet: list[str] = []
     excluded: dict[str, str] = {}
@@ -240,9 +257,13 @@ def _interfaces(root: Path) -> dict[str, Any]:
             excluded[name] = "wireless interface"
         else:
             ethernet.append(name)
-    return {"status": "could_not_run" if errors else "ok",
-            "ethernet": ethernet, "excluded": excluded,
-            "errors": errors, "interfaces": names}
+    result = {"status": "could_not_run" if errors or truncated else "ok",
+              "ethernet": ethernet, "excluded": excluded,
+              "errors": errors, "interfaces": names}
+    if truncated:
+        result.update({"truncated": True,
+                       "inspected_count": len(names)})
+    return result
 
 
 def _link_name(path: Path) -> tuple[str | None, str | None]:
@@ -253,15 +274,6 @@ def _link_name(path: Path) -> tuple[str | None, str | None]:
         return None, None
     except OSError as exc:
         return None, f"{type(exc).__name__}: {exc}"
-
-
-def _pci_ids(device_path: Path) -> tuple[str | None, str | None, str | None]:
-    try:
-        vendor = (device_path / "vendor").read_text(encoding="ascii").strip()
-        device = (device_path / "device").read_text(encoding="ascii").strip()
-    except (FileNotFoundError, PermissionError, OSError) as exc:
-        return None, None, f"{type(exc).__name__}: {exc}"
-    return vendor, device, None
 
 
 def _sysfs_target(root: Path, path: Path) -> tuple[Path | None, str | None]:
@@ -288,8 +300,10 @@ def _device_attributes(root: Path, path: Path, names: Sequence[str]) -> dict[str
                             else {"status": "could_not_run", "error": error})
         else:
             attribute = cast(Path, attribute)
-            values[name] = (read_optional_text(attribute) if name == "serial"
-                            else read_text(attribute))
+            values[name] = _bounded_sysfs_text(attribute)
+            if name == "serial" and values[name].get("error", "").startswith(
+                    "FileNotFoundError:"):
+                values[name] = {"status": "unknown", "reason": "sysfs attribute absent"}
     return {"status": "could_not_run" if any(value["status"] == "could_not_run"
                                                  for value in values.values()) else "ok",
             **values}
@@ -309,8 +323,22 @@ def _sysfs_text(root: Path, path: Path, *, optional: bool = False) -> dict[str, 
         if optional and error.startswith("FileNotFoundError:"):
             return {"status": "unknown", "reason": "sysfs attribute absent"}
         return {"status": "could_not_run", "error": error}
-    target = cast(Path, target)
-    return read_optional_text(target) if optional else read_text(target)
+    result = _bounded_sysfs_text(cast(Path, target))
+    if optional and result.get("error", "").startswith("FileNotFoundError:"):
+        return {"status": "unknown", "reason": "sysfs attribute absent"}
+    return result
+
+
+def _bounded_sysfs_text(path: Path) -> dict[str, Any]:
+    """Read a resolved, root-confined sysfs/proc file with a strict byte ceiling."""
+    try:
+        raw = capture_io.read_regular_bytes(path, MAX_SYSFS_TEXT_BYTES)
+        if len(raw) > MAX_SYSFS_TEXT_BYTES:
+            return {"status": "could_not_run", "error": "sysfs text exceeds byte limit",
+                    "truncated": True}
+        return {"status": "ok", "value": raw.decode("utf-8").strip()}
+    except (OSError, UnicodeError, RecursionError) as exc:
+        return {"status": "could_not_run", "error": f"{type(exc).__name__}: {exc}"}
 
 
 def ip_link_inventory(runner: RUNNER = subprocess.run) -> dict[str, Any]:
@@ -534,27 +562,157 @@ def pci_binding(root: Path, interface: str) -> dict[str, Any]:
         return {"status": "not_pci", "pci_vendor": None, "pci_device": None,
                 "pci_address": None, "driver": None, "module": None,
                 "module_version": None}
-    vendor, device, error = _pci_ids(device_path)
+    return _pci_binding_target(root, device_path, device_link)
+
+
+def _pci_binding_target(root: Path, device_path: Path,
+                        device_link: str) -> dict[str, Any]:
+    resolved_device, error = _sysfs_target(root, device_path)
     if error:
         return {"status": "could_not_run", "error": error}
-    driver, error = _link_name(device_path / "driver")
+    resolved_device = cast(Path, resolved_device)
+    vendor = _sysfs_text(root, resolved_device / "vendor")
+    device = _sysfs_text(root, resolved_device / "device")
+    if vendor["status"] != "ok" or device["status"] != "ok":
+        return {"status": "could_not_run", "error": {
+            "vendor": vendor.get("error"), "device": device.get("error")}}
+    driver_link = resolved_device / "driver"
+    driver, error = _link_name(driver_link)
     if error:
         return {"status": "could_not_run", "error": error}
     if driver is None:
-        return {"status": "unbound", "pci_vendor": vendor, "pci_device": device,
+        return {"status": "unbound", "pci_vendor": vendor["value"],
+                "pci_device": device["value"],
                 "pci_address": device_link,
                 "driver": None, "module": None, "module_version": None}
-    module, error = _link_name(device_path / "driver/module")
+    resolved_driver, error = _sysfs_target(root, driver_link)
+    if error:
+        return {"status": "could_not_run", "error": error}
+    resolved_driver = cast(Path, resolved_driver)
+    driver = resolved_driver.name
+    module_link = resolved_driver / "module"
+    module, error = _link_name(module_link)
     if error:
         return {"status": "could_not_run", "error": error}
     if module is None:
         module = driver
-    version = read_text(root / "sys/module" / module / "version")
-    return {"status": "bound", "pci_vendor": vendor, "pci_device": device,
+    else:
+        resolved_module, error = _sysfs_target(root, module_link)
+        if error:
+            return {"status": "could_not_run", "error": error}
+        module = cast(Path, resolved_module).name
+    version = _sysfs_text(root, root / "sys/module" / module / "version")
+    return {"status": "bound", "pci_vendor": vendor["value"],
+            "pci_device": device["value"],
             "pci_address": device_link,
             "driver": driver, "module": module,
             "module_version": version,
             "module_version_status": version["status"]}
+
+
+def _pci_device_inventory(root: Path) -> dict[str, Any]:
+    """Read PCI identity and driver bindings from sysfs without invoking tools."""
+    directory, error = _sysfs_target(root, root / "sys/bus/pci/devices")
+    if error:
+        return {"status": "could_not_run", "error": error, "devices": {}}
+    try:
+        with os.scandir(cast(Path, directory)) as entries:
+            names: list[str] = []
+            for entry in entries:
+                names.append(entry.name)
+                if len(names) > MAX_PCI_DEVICE_INSPECTIONS:
+                    break
+    except OSError as exc:
+        return {"status": "could_not_run",
+                "error": f"{type(exc).__name__}: {exc}", "devices": {}}
+    truncated = len(names) > MAX_PCI_DEVICE_INSPECTIONS
+    names = sorted(names[:MAX_PCI_DEVICE_INSPECTIONS])
+    devices: dict[str, Any] = {}
+    errors: dict[str, str] = {}
+    for address in names[:MAX_PCI_DEVICE_INSPECTIONS]:
+        if not PCI_ADDRESS_RE.fullmatch(address):
+            errors[address] = "invalid PCI address"
+            continue
+        device_path, error = _sysfs_target(root, root / "sys/bus/pci/devices" / address)
+        if error:
+            devices[address] = {"status": "could_not_run", "error": error}
+            continue
+        device_path = cast(Path, device_path)
+        fields = {
+            name: _sysfs_text(root, device_path / name)
+            for name in ("vendor", "device", "class")
+        }
+        driver_path, driver_error = _sysfs_target(root, device_path / "driver")
+        if driver_error and not driver_error.startswith("FileNotFoundError:"):
+            driver = {"status": "could_not_run", "error": driver_error}
+        elif driver_error:
+            driver = {"status": "unbound", "name": None}
+        else:
+            driver = {"status": "bound", "name": cast(Path, driver_path).name}
+        status = "could_not_run" if any(
+            value["status"] == "could_not_run" for value in fields.values()
+        ) or driver["status"] == "could_not_run" else "observed"
+        devices[address] = {"status": status, "address": address,
+                            "vendor": fields["vendor"], "device": fields["device"],
+                            "class": fields["class"], "driver": driver}
+    return {
+        "status": "could_not_run" if errors or truncated or any(
+            row.get("status") == "could_not_run" for row in devices.values()
+        ) else "observed",
+        "devices": devices,
+        "errors": errors,
+        "device_count": None if truncated else len(names),
+        "observed_entry_count": len(names),
+        "inspected_count": len(devices),
+        "truncated": truncated,
+    }
+
+
+def sysfs_hardware_capture(root: Path = Path("/")) -> dict[str, Any]:
+    """Collect present-time host identity and physical buses without service calls."""
+    interfaces = _interfaces(root)
+    network: dict[str, Any] = {}
+    for name in interfaces.get("interfaces", []):
+        base = root / "sys/class/net" / name
+        network[name] = {
+            "mtu": _sysfs_text(root, base / "mtu"),
+            "carrier": _sysfs_text(root, base / "carrier"),
+            "operstate": _sysfs_text(root, base / "operstate"),
+            "pci_binding": pci_binding(root, name),
+        }
+    observations = {
+        "boot_id": _sysfs_text(root, root / "proc/sys/kernel/random/boot_id"),
+        "kernel_release": _sysfs_text(root, root / "proc/sys/kernel/osrelease"),
+        "network_interfaces": interfaces,
+        "network": network,
+        "pci_devices": _pci_device_inventory(root),
+        "infiniband": infiniband_inventory(root),
+    }
+    pci_inventory = observations["pci_devices"]
+    unavailable = (
+        could_not_run_count(observations)
+        + len(pci_inventory.get("errors", {}))
+        + int(pci_inventory.get("truncated", False))
+    )
+    return {
+        "schema": 1,
+        "status": "partial" if unavailable else "observed",
+        "could_not_run": unavailable,
+        "scope": "current local sysfs snapshot; historical and remote workloads are unverified",
+        "safety": {
+            "commands_executed": False,
+            "services_contacted": False,
+            "services_changed": False,
+            "network_changed": False,
+            "modules_changed": False,
+            "block_device_written": False,
+        },
+        "identity": {
+            "architecture": platform.machine(),
+            "kernel_release": platform.uname().release,
+        },
+        "observations": observations,
+    }
 
 
 def _module_loaded(path: Path) -> tuple[bool | None, str | None]:
@@ -755,12 +913,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path("/"),
                         help="filesystem root for fixture-based checks")
+    parser.add_argument("--sysfs-only", action="store_true",
+                        help="collect local proc/sysfs identity without commands or service calls")
     parser.add_argument("--check-backup-destination", action="store_true",
                         help="verify an exact mounted destination using explicit identity")
     parser.add_argument("--backup-mountpoint")
     parser.add_argument("--backup-source")
     parser.add_argument("--backup-uuid")
     args = parser.parse_args(argv)
+    if args.sysfs_only:
+        if args.check_backup_destination or any(value is not None for value in
+                                                 (args.backup_mountpoint, args.backup_source,
+                                                  args.backup_uuid)):
+            parser.error("--sysfs-only cannot be combined with backup destination checks")
+        report = sysfs_hardware_capture(args.root)
+        sys.stdout.write(json.dumps(report, indent=2, sort_keys=True) + "\n")
+        return 2 if report["could_not_run"] else 0
     backup_values = (args.backup_mountpoint, args.backup_source, args.backup_uuid)
     if args.check_backup_destination:
         if args.root != Path("/"):

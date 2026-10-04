@@ -1,0 +1,69 @@
+{
+  "schema": "bb.runtime.raw.v1",
+  "card_id": "DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01",
+  "capture_id": "unit-capture",
+  "captured_at": "2026-10-03T00:00:00Z",
+  "contradictions": [],
+  "subject": {
+    "oem": "OEM-X",
+    "host_id": "host-a",
+    "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "model": "model-x",
+    "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "software_versions": {
+      "engine": "engine-1"
+    }
+  },
+  "request_bounds": {
+    "request_id": "req-1",
+    "model": "model-x",
+    "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "max_tokens": 16,
+    "max_context_tokens": 128,
+    "deadline_seconds": 10,
+    "started_at": "2026-10-03T00:00:00Z",
+    "finished_at": "2026-10-03T00:00:01Z"
+  },
+  "rollback_record": {
+    "known_good_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "candidate_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "procedure_ref": "rollback.md",
+    "before_state_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "after_restore_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  },
+  "stop_capture": {
+    "script_sha256": "script",
+    "argv": [
+      "stop"
+    ],
+    "stdout_sha256": "out",
+    "exit_code": false
+  },
+  "containers_before": {
+    "nfs_exporter_ids": [
+      "exporter"
+    ]
+  },
+  "containers_after": {
+    "running_ids": [
+      "exporter"
+    ]
+  },
+  "mount_checks": [
+    {
+      "mount_id": "m1",
+      "source": "nfs:/export",
+      "mounted": true
+    }
+  ],
+  "image_pin": {
+    "tag": "dev-dsv41",
+    "expected_digest": "sha256:pinned",
+    "observed_digest": "sha256:pinned"
+  },
+  "negative_control": {
+    "kind": "tag_drift",
+    "observed_digest": "sha256:drift",
+    "gate_result": "blocked"
+  }
+}

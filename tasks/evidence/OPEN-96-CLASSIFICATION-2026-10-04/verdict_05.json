@@ -1,0 +1,207 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01",
+    "category": "privileged_access",
+    "blockers": [
+      "El verificador y el selector ya existen. El close_check original exige evidencia real de una intervención de panic/reboot con backend pstore registrado, ajuste activo y rollback exacto; no hay recovery.json y el operador no tiene acceso root concedido."
+    ],
+    "missing_evidence": [
+      "recovery.json con boot IDs, sysctl/cmdline/backend pstore crudos, marca de panic y captura post-reboot; sysctl original/restaurado iguales; salida systemctl show de kdump active/loaded"
+    ],
+    "next_action": "Conservar UNKNOWN y el criterio abierto. Cuando exista un canary con acceso root y recuperación aprobada, el operador debe recolectar la evidencia y verificar el ciclo pstore/rollback antes de ejecutar el selector original; no inducir panic en el host actual.",
+    "responsible": "coordinación BB prepara el canary; operador Luis gestiona acceso root/lab y ejecuta el ciclo",
+    "evidence": [
+      "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.md",
+      "tools/verify_rcu_panic_pstore.py",
+      "tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01",
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-RCU-PANIC-PSTORE-01-direct-close-current.log",
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/pstore-root-negative.json",
+      "tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/progress.txt"
+    ],
+    "actionable_now": false,
+    "rationale": "El verificador ya comprueba captura cruda, backend pstore, IDs de arranque y rollback exacto. El recibo actual devuelve UNKNOWN por recovery.json ausente; el progreso documenta cero ensayos y que pstore requiere acceso root. Fixtures no pueden cerrar el criterio de recuperación real.",
+    "could_not_run_inspection": 0
+  },
+  {
+    "id": "DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "No hay build/smoke real para el target SM121 y stack/imagen fijados; el kernel faltante es específico de GPU/runtime."
+    ],
+    "missing_evidence": [
+      "digest/tag, GPU/SM efectiva, versión Cutlass/DSL y salida literal de kernel sano y control incompatible"
+    ],
+    "next_action": "Ejecutar matriz mínima de compilación y canario funcional en nodo SM121 con versión fijada, usando target incompatible como negativo y guardando rollback.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+      "tasks/evidence/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01/ (directorio ausente al inspeccionar)"
+    ],
+    "actionable_now": false,
+    "rationale": "La compatibilidad ISA solo queda probada con el hardware y el runtime reales.",
+    "could_not_run_inspection": 1
+  },
+  {
+    "id": "DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "No se puede demostrar ciclo de corte/reset y recuperación de dos unidades sin lab físico y participación del operador."
+    ],
+    "missing_evidence": [
+      "modelos/OEM/firmware exactos; estados antes/después de power reset; tráfico sano/negativo y rollback"
+    ],
+    "next_action": "Ejecutar ciclo A/B en dos nodos canary aprobados, capturar estado de energía/enlace y tráfico y demostrar rollback OEM.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+      "tasks/evidence/DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01/ (directorio ausente al inspeccionar)"
+    ],
+    "actionable_now": false,
+    "rationale": "El asunto depende de recuperación física de doble equipo; UNKNOWN sobre inventario no demuestra ausencia de hardware.",
+    "could_not_run_inspection": 1
+  },
+  {
+    "id": "DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "La corrección de orquestación requiere jobs NCCL/TP reales y control de fallo del coordinador; no se halló resultado local en la evidencia específica."
+    ],
+    "missing_evidence": [
+      "stack/digests; logs rank/node/collective; positivo multi-GPU y negativo de orquestación; rollback"
+    ],
+    "next_action": "Preparar job NCCL/TP en canario multi-GPU con topología y digests fijados; probar coordinación sana y negativa y archivar trazas completas.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+      "tasks/evidence/DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01/ (directorio ausente al inspeccionar)"
+    ],
+    "actionable_now": false,
+    "rationale": "Un fixture local no acredita comunicación entre nodos ni corrección de colectivas.",
+    "could_not_run_inspection": 1
+  },
+  {
+    "id": "DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "No hay long-run del modelo/stack fijado que pruebe JSON correcto bajo carga y recuperación."
+    ],
+    "missing_evidence": [
+      "modelo/digest/runtime exactos; prompt suite; JSON/semántica; métricas de proceso y memoria; control negativo y rollback"
+    ],
+    "next_action": "Ejecutar canario Qwen3.8 con prompts deterministas durante la duración predeclarada, validando JSON y control negativo; preservar logs y rollback.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+      "tasks/evidence/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01/ (directorio ausente al inspeccionar)"
+    ],
+    "actionable_now": false,
+    "rationale": "La ficha requiere workload prolongado que no se deriva de benchmarks ni health checks.",
+    "could_not_run_inspection": 1
+  },
+  {
+    "id": "DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01",
+    "category": "external_oem",
+    "blockers": [
+      "Falta matriz OEM autorizada y ensayo reversible para ajuste de carveout; modificar firmware/UEFI puede comprometer arranque."
+    ],
+    "missing_evidence": [
+      "release notes del OEM/modelo; tuple EC/UEFI/OTA; baseline de memoria; canario y rollback OEM"
+    ],
+    "next_action": "Solicitar a coordinación BB que obtenga matriz/release notes y ventana de canario del OEM; ejecutar solo con rollback confirmado.",
+    "responsible": "coordinación BB gestiona OEM",
+    "evidence": [
+      "tasks/backlog/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+      "tasks/evidence/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01/ (directorio ausente al inspeccionar)"
+    ],
+    "actionable_now": false,
+    "rationale": "El gate depende de adopción OEM y recuperación de firmware; la ficha requiere compatibilidad específica.",
+    "could_not_run_inspection": 1
+  },
+  {
+    "id": "DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "El estado de patch/allocator no se valida por existencia de archivos; faltan replay funcional y control negativo en runtime compatible."
+    ],
+    "missing_evidence": [
+      "commit/digest del parche; stack GPU; asignación sana y caso de allocator defectuoso; salida y rollback"
+    ],
+    "next_action": "Fijar revisión Triton/driver/modelo y ejecutar canario funcional más negativo de estado de patch; archivar diff efectivo y recuperación.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+      "tasks/evidence/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01/ (directorio ausente al inspeccionar)"
+    ],
+    "actionable_now": false,
+    "rationale": "La afirmación se refiere a efecto runtime de parche; no basta inspección estática.",
+    "could_not_run_inspection": 1
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "Preflight y estado de host no demuestran salud GSP durante boot ni recuperación OEM; selector reporta evidencia incompleta."
+    ],
+    "missing_evidence": [
+      "log crudo de boot/GSP con versión firmware/driver; control de fallo; boot/recovery y rollback OEM"
+    ],
+    "next_action": "Capturar arranque sano y control negativo en GX10 canary con telemetría persistente y rollback probado.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+      "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/commands.json",
+      "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/preflight.json",
+      "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/validator-run.json"
+    ],
+    "actionable_now": false,
+    "rationale": "La evidencia actual incluye preflight, commands y validator pero falta el ciclo boot/GSP del sujeto.",
+    "could_not_run_inspection": 0
+  },
+  {
+    "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "El estado de host no demuestra teclado/HID operativo post-update ni distingue módulo integrado/headless/telemetría inaccesible."
+    ],
+    "missing_evidence": [
+      "dispositivo HID conectado/descriptor; interacción local/remota; kernel/module binding; estado headless y rollback"
+    ],
+    "next_action": "En un nodo canary con acceso alternativo, probar HID sano y controles headless/módulo/telemetría después de update y guardar recuperación.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+      "tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK/host-observation.txt"
+    ],
+    "actionable_now": false,
+    "rationale": "Se requiere verificar dispositivo físico y acceso de recuperación; una unidad systemd activa no acredita entrada HID.",
+    "could_not_run_inspection": 0
+  },
+  {
+    "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "Observación local no prueba binding PCI del sujeto Realtek ni warm/cold boot y rollback."
+    ],
+    "missing_evidence": [
+      "PCI ID y driver bound; paquete/módulo compatible; A/B cold/warm; NIC de control y driver ausente; rollback"
+    ],
+    "next_action": "Capturar PCI ID, paquete y módulo efectivos y ejecutar A/B warm/cold en canario con NIC control y recuperación.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json",
+      "tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01/host-observation.txt"
+    ],
+    "actionable_now": false,
+    "rationale": "La prueba exige hardware PCI sujeto y reboot controlado; estado del host actual no confirma su presencia.",
+    "could_not_run_inspection": 0
+  }
+]

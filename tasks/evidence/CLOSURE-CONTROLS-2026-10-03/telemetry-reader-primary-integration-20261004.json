@@ -1,0 +1,28 @@
+{
+  "files": [
+    {
+      "path": "tools/verify_telemetry_dispositions.py",
+      "before_sha256": "1613d94973b1d2b4035cb2d4a5cf66e8fd22f0a01afcdcdc4724b8a9bebd459e",
+      "after_sha256": "6be9642f02081a0995d311268cf8d287da3452f435f4270dbea6ae7fdea6de6c"
+    },
+    {
+      "path": "tests/test_verify_telemetry_dispositions.py",
+      "before_sha256": "1ad69cbcd51e87a28c31d924915ba2827ef5bd74a053f421b9ad9bc6cef2d983",
+      "after_sha256": "5b553db22c579b8890b23a7b4e23bb43ce6df607fd6d6e92b668df99608b875e"
+    }
+  ],
+  "validation": {
+    "unit_command": "python3 -m pytest -q tests/test_verify_telemetry_dispositions.py",
+    "unit_output": ".........                                                                [100%]\n9 passed in 0.10s\n",
+    "unit_exit_code": 0,
+    "original_close_check": {
+      "command": "python3 -m tools.verify_telemetry_dispositions --event-id 92dc63137ae930f3 --event-id a50ae5e52c99c3ab --event-id 5437b44ce52501ee",
+      "exit_code": 1,
+      "output": "[telemetry-dispositions] MISSING: 5437b44ce52501ee, 92dc63137ae930f3, a50ae5e52c99c3ab\n",
+      "stderr": ""
+    },
+    "ledger_before_sha256": "c6c547881053d6bb40af579a21833a6ff5a845746c3ff3fe519e69f2b4cf47ae",
+    "ledger_after_sha256": "c6c547881053d6bb40af579a21833a6ff5a845746c3ff3fe519e69f2b4cf47ae"
+  },
+  "ledger_modified": false
+}

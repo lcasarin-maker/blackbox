@@ -1,0 +1,42 @@
+{
+  "cases": [
+    {
+      "schema": {
+        "type": "integer",
+        "enum": [
+          true
+        ]
+      },
+      "value": 1,
+      "matched": true,
+      "expected": false
+    },
+    {
+      "schema": {
+        "type": "boolean",
+        "enum": [
+          1
+        ]
+      },
+      "value": true,
+      "matched": true,
+      "expected": false
+    },
+    {
+      "schema": {
+        "type": "object",
+        "enum": [
+          {
+            "value": true
+          }
+        ]
+      },
+      "value": {
+        "value": 1
+      },
+      "matched": true,
+      "expected": false
+    }
+  ],
+  "subject_closed": false
+}

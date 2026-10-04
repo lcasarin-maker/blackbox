@@ -1,0 +1,66 @@
+{
+  "schema": "bb.readonly-review.v1",
+  "review": "batch-02 exact integer validation for all consumed process return codes",
+  "date": "2026-10-04",
+  "changes": {
+    "tools/runtime_batch02_controls.py": [
+      {
+        "lines": [
+          371,
+          372
+        ],
+        "change": "Require exact integer types for SM121 load_exit_code and first_inference_exit_code before testing for zero."
+      },
+      {
+        "lines": [
+          461,
+          462
+        ],
+        "change": "Require exact integer types for every cold-compile rank compile_exit_code before testing for zero."
+      },
+      {
+        "scope_audit": "Other exit-code fields consumed in this file already use _integer before equality/nonzero checks: teardown trial codes, NCCL rank codes, architecture-negative code, and remote SSH/ICMP codes."
+      }
+    ],
+    "tests/test_runtime_batch02_controls.py": [
+      {
+        "lines": [
+          318,
+          336
+        ],
+        "change": "Added regressions for both false and true booleans in each SM121 success code and in cold-compile success codes; malformed booleans must return unknown."
+      }
+    ]
+  },
+  "hashes": {
+    "tools/runtime_batch02_controls.py": "60fe153ba7049702a5da8390dfdff3091134f6b240411122babdd1248afbe6ab",
+    "tests/test_runtime_batch02_controls.py": "e77e4489f037f6d2a5bb8a34c0d58e0dfb32a303fa34dbfeb102bbc5825cd100"
+  },
+  "verification": [
+    {
+      "command": "pytest -q tests/test_runtime_batch02_controls.py -k 'not real_capture_close_gate_requires_raw_capture'",
+      "exit_code": 0,
+      "output": "25 passed, 10 deselected in 0.08s",
+      "interpretation": "Includes the positive synthetic controls with exact integer zero and the six boolean regressions (false/true on both SM121 fields and cold compile)."
+    },
+    {
+      "command": "python /tmp/bb-runtime-b02-bool-root-reproduction.py",
+      "exit_code": 1,
+      "output": "ModuleNotFoundError: No module named 'tools'",
+      "cnr": "Harness invocation omitted PYTHONPATH=. and ran outside the repository import context; rerun with PYTHONPATH=. succeeded and is recorded next."
+    },
+    {
+      "command": "PYTHONPATH=. python /tmp/bb-runtime-b02-bool-root-reproduction.py",
+      "exit_code": 0,
+      "output": "{'status': 'unknown', 'could_not_run': 1, 'reason': 'SM121 kernel return codes must be integers'}"
+    },
+    {
+      "command": "pytest -q tests/test_runtime_batch02_controls.py",
+      "exit_code": 1,
+      "output": "25 passed, 10 failed in 0.22s",
+      "cnr": "All ten failures are test_real_capture_close_gate_requires_raw_capture cases: the ten real runtime-capture.json files are absent. Error is ENOENT; these are CNR for physical evidence, not predicate failures."
+    }
+  ],
+  "cnr": 11,
+  "notes": "No hardware was invented or exercised. No close-check/floor/skip code changed. No commit or staging performed."
+}

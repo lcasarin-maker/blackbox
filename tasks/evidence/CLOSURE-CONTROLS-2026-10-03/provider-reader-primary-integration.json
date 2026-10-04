@@ -1,0 +1,37 @@
+{
+  "files": [
+    {
+      "path": "tools/provider_trace.py",
+      "old_sha256": "e26609097ff603b4ec6e43412ab8b3c20083c0e9d1ba0f0ac58bf4c21c3e0c92",
+      "new_sha256": "fbfcf148d9c39066824b1e4930d2ac32c72a0df1ec00d46e3e749807f12eba7d"
+    },
+    {
+      "path": "tests/test_provider_trace.py",
+      "old_sha256": "f594d5306619a858e13ee39962597195154fc651ef2399e29aa17251b8008a27",
+      "new_sha256": "50136d21a24d51e7e86679cfd36d1d835bc2e7db12a06ae6204ed5fdea7801e5"
+    }
+  ],
+  "validation": {
+    "initial": "3 failed,73 passed; old provider reader preserved initially",
+    "after_reader_copy": "1 failed,92 passed; malformed JSON had UNKNOWN but could_not_run_count=0",
+    "fix": "malformed record errors increment could_not_run_count while retaining block/unknown classification",
+    "final_command": "python3 -m pytest -q tests/test_provider_trace.py tests/test_hardware_reader_safety.py tests/test_hardware_batch_routes.py tests/test_hardware_apt_route.py tests/test_hardware_hid_wifi_readers.py tests/test_hardware_missing_selectors.py tests/test_forum_hardware_subjects.py",
+    "exit_code": 0,
+    "logs": [
+      {
+        "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/bb-hardware-router-primary-integration.log",
+        "sha256": "7e847f2f48e058b61494bbde1b504104d71aa6f266bb7556e4cd19016a9c434b"
+      },
+      {
+        "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/bb-hardware-router-provider-fixed.log",
+        "sha256": "641457865ab0cca5fb27b2f0648709d76ad3e4ca78d4a4a9c45065acf481ca06"
+      },
+      {
+        "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/bb-router-provider-counter-fixed.log",
+        "sha256": "990543cf5765539e675712261dc0c6dd365624c381266fd20615654b8307822e"
+      }
+    ]
+  },
+  "subject_closed": false,
+  "current_source_sha256": "b2ebeba043061ae4fe637d947e1ba8c6965b0cf6533bc723ce464abbdf0bf06b"
+}

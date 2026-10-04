@@ -1,0 +1,40 @@
+[
+  {
+    "id": "SPEC-L346",
+    "claim_id": "SPEC-L346",
+    "verdict": "FAIL",
+    "evidence": "`bin/bb:2150-2171` exige `systemctl show bb-usable.service -p LoadState -p ActiveState` antes de leer el latido; antes del arreglo, `tests/test_bb_bash.py` en `_bb_usable` decía que todo salvo `is-active` iba al `systemctl` real. Corrida literal pre-fix `python3 -m pytest -q tests/test_bb_bash.py -k 'test_control_negativo_sin_muestra_fresca_el_muestreo_esta_FALTA or test_control_negativo_clock_lock_con_OTRO_rango_que_el_declarado or test_control_negativo_clock_lock_sin_confirmacion_del_driver or test_control_negativo_earlyoom_de_serie_no_cuenta_como_armado or test_control_negativo_earlyoom_con_UNA_sola_regex_no_basta or bb_usable'` → `4 failed, 5 passed, 77 deselected`; las cuatro trazas muestran `Failed to connect to bus: Operation not permitted` y `CIEGO`, así que son CNR del test en sandbox, no defectos del detector en host. Apliqué solo un stub exacto de `systemctl show` en `tests/test_bb_bash.py`; la misma corrida pos-fix dio `9 passed, 77 deselected`, rc=0, y los positivos de clock-lock/earlyoom dieron `2 passed`. Hash antes `580dec5fb49d33246e29d7d25f630b16c5d8f592d328967f9db3bc15282de161`; después `d3cd91b5e801118c622f5d51e074dc253fea5ae350092d53a686fd79bc4ecefd`; las salidas completas están en `/tmp/h1-l346-before.out` y `/tmp/h1-l346-after.out`.",
+    "fix": "CODE: Se corrigió `_bb_usable` en `tests/test_bb_bash.py` para que su stub responda `LoadState=loaded` y `ActiveState=active` a la consulta exacta de `bb-usable.service`, sin consultar el bus real; el test focal pos-fix ya pasa. Mantengo FAIL porque el control previo dependía del bus y produjo cuatro CNR antes de la corrección.",
+    "could_not_run": 4
+  },
+  {
+    "id": "SPEC-L348",
+    "claim_id": "SPEC-L348",
+    "verdict": "PASS",
+    "evidence": "`adopted/systemd-user/blackbox-sample.service:8-9` y `adopted/systemd-user/atom-gpu-telemetry.service:14-15` declaran `Nice=19`/`IOSchedulingClass=idle`; el recibo `tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/host-evidence/nice-current.txt` registra ambos con Nice 19/IOSchedulingClass 3 el 2026-10-03, ai-memory-monitor Nice 0 y ai-gpu-telemetry Nice 10. `tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/host-evidence/timers-current.txt` registra el timer ai-memory-monitor activo, habilitado y con cadencia próxima de cinco minutos; `systemd/bb-guardia-proceso.service:18` declara Nice 10 y el recibo lo encontró enabled/inactive en la consulta fechada. La política térmica es ejecutable: `tests/test_atom_gpu_telemetry.py::test_mitigar_pausa_los_pids_mitigables_al_entrar_en_alarma` y su control negativo más el control de reanudación dieron `4 passed` junto con `test_absorbe_clocks_pstate_y_throttle_de_gpu_sampler`.",
+    "could_not_run": 0
+  },
+  {
+    "id": "SPEC-L350",
+    "claim_id": "SPEC-L350",
+    "verdict": "COULD_NOT_RUN",
+    "evidence": "`bin/bb:2544-2618` compara cada sujeto y devuelve exit 1 si hay divergencias o ausencias; los controles positivo/negativo de `tests/test_bb_bash.py::test_drift_SALE_0_cuando_el_repo_describe_la_maquina`, `::test_drift_SALE_DISTINTO_DE_0_cuando_diverge` y los controles de ausencia/suspensión dieron `5 passed, 81 deselected`. Corrida literal `./bin/bb drift` → `revisados: 41 divergentes: 2 ausentes: 0 suspendidos: 1`, exit 1; las dos diferencias actuales aparecen como `DIVERGE`. `systemd/blackbox-drift.timer:4` fija `OnCalendar=daily`/`Persistent=true`, y el recibo de host `tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/host-evidence/timers-current.txt` registró el timer active/enabled con próxima ejecución 2026-10-04 00:00 CST. No pude verificar el estado actual en vivo: `systemctl --user show blackbox-drift.timer -p LoadState -p ActiveState -p UnitFileState` → `Failed to connect to bus: Operation not permitted`, exit 1; por eso el hecho actual de que el timer siga armado queda COULD_NOT_RUN, no falsado.",
+    "could_not_run": 1
+  },
+  {
+    "id": "SPEC-L352",
+    "claim_id": "SPEC-L352",
+    "verdict": "FAIL",
+    "evidence": "Los conteos de commit son reproducibles: `git show --diff-filter=A --format= --name-only 1ec66b3 -- adopted/` → 12 paths; `git show --format= --name-status 1ec66b3 -- adopted/` lista 12 A y una M; `git ls-tree -r --name-only 1ec66b3^ -- adopted/` y el commit dan 18 y 30 paths. Las tres unidades declaradas duplicadas son idénticas byte a byte en los blobs del padre/adopted del commit; el `./bin/bb drift` actual informa 41 sujetos, 2 divergentes, 0 ausentes, 1 suspendido, exit 1. Sin embargo, `tasks/evidence/RELEASE-2.1.0/h1-items.json:79` solo archiva la conclusión de que los cuatro sujetos nacieron entre 15:39 y 15:40; el paquete no contiene salida cruda de `stat -c %w` ni el control negativo citado, así que la fecha/origen cuatro-vs-ocho no se puede revalidar independientemente con las evidencias actuales.",
+    "fix": "TEXT: Reemplazar el tramo que afirma que los cuatro nacieron el 2026-09-09 entre 15:39 y 15:40, que `stat -c %w` lo confirmó y que el conteo anterior de ocho estaba mal por: “La clasificación archivada de la revisión H1 (`tasks/evidence/RELEASE-2.1.0/h1-items.json`) atribuye cuatro sujetos (`99-freeze-panic.conf` y los tres `nvrm-watch`) a esa ventana de creación; esta copia no conserva el stdout de `stat -c %w` ni el control negativo de re-despliegue, por lo que no permite revalidar la fecha ni resolver aquí la cifra anterior de ocho.”",
+    "could_not_run": 0
+  },
+  {
+    "id": "SPEC-L354",
+    "claim_id": "SPEC-L354",
+    "verdict": "FAIL",
+    "evidence": "Medición histórica del alcance reproduce: el script Python sobre `git ls-tree -r --name-only d3d7980` y `git show d3d7980:<path>` dio `files=13 total_lines=4111 bin_bb_lines=2768 pct=67.332%`. El instrumento sigue instalado: `tools/cobertura_bash.sh:4-7` documenta por qué coverage.py no ve Bash, `.pre-commit-config.yaml:139-147` conecta `bb-cobertura-piso` en pre-push, `tests/cobertura_bb.piso` contiene `32.8`, y `python3 -m pytest -q tests/test_cobertura_bash.py` → `3 passed`. Las métricas de 256/947→313/947→33.1% están en el mensaje de `2a228fa`; el mensaje de `09deb5b` registra 39.8%/piso 32.8%. El fallo es la atribución: `git show -s --format='%h %s%n%b' 57ae066` no contiene 35.0%-35.3%, mientras `git show 57ae066:SPEC.md` sí contiene esa cifra; además `git show 09deb5b^` identifica a 57ae066 como padre, cuyo mensaje tampoco la registra. El artefacto anterior `tasks/evidence/LUNA-98-2026-10-03/h1-first-review.json` señala que la medición de 35.0%-35.3% está en `3e381eb`, no en el cuerpo del mensaje de 57ae066.",
+    "fix": "TEXT: Reemplazar “35.0%-35.3% según el mensaje versionado de `57ae066`” por “35.0%-35.3% según el estado versionado de `SPEC.md` en `57ae066`”; reemplazar “el mensaje de su padre, `57ae066`, registra 35.0%-35.3%” por “el `SPEC.md` de su padre, `57ae066`, registra 35.0%-35.3%”.",
+    "could_not_run": 0
+  }
+]

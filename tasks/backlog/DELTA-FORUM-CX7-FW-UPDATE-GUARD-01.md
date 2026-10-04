@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Avance de instrumentación 2026-10-03
 
 El inventario usa PCI/sysfs para identidad y binding; firmware RDMA se leería de `fw_ver` solo cuando sysfs exponga ese dispositivo. Este host no expuso HCA RDMA, y el firmware de `enP7s7` queda `UNKNOWN` porque no hay atributo genérico disponible; no se ejecutó ni validó ninguna actualización/guard. Evidencia: [BB-INSTRUMENTS-network](../../docs/evidence/BB-INSTRUMENTS-network.md). La ficha permanece abierta; `close_check` y `status` no cambiaron.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: Inventario local no expuso HCA RDMA; fw_ver de interfaz queda UNKNOWN y no hubo actualización/guard validado sobre hardware CX7.
+- Evidencia faltante para cierre: Inventario local no expuso HCA RDMA; fw_ver de interfaz queda UNKNOWN y no hubo actualización/guard validado sobre hardware CX7.
+- Siguiente acción: Coordinación BB: definir lectura/guard según interfaz soportada; operador Luis: aportar inventario de CX7 y firmware/OEM, y ejecutar canario de actualización sólo con rollback documentado. Ref explícita: tasks/backlog/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01-original-selector-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01-original-selector-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -1,0 +1,65 @@
+{
+  "source_sha256": "e3020e1ab7b7959843bc91dc90d4785eae57d02a4da8e41cc9e2d83fb6b39c88",
+  "queries": [
+    {
+      "line": 94,
+      "text": "raw=$(timeout \"$SMI_TIMEOUT_S\" nvidia-smi --query-compute-apps=used_memory --format=csv,noheader,nounits 2>/dev/null) || return $?"
+    },
+    {
+      "line": 100,
+      "text": "timeout \"$SMI_TIMEOUT_S\" nvidia-smi --query-compute-apps=pid,process_name,used_memory \\"
+    },
+    {
+      "line": 165,
+      "text": "timeout \"$SMI_TIMEOUT_S\" nvidia-smi --query-gpu=pstate --format=csv,noheader >/dev/null 2>&1"
+    },
+    {
+      "line": 254,
+      "text": "timeout 5 nvidia-smi -q -d PERFORMANCE 2>/dev/null"
+    },
+    {
+      "line": 842,
+      "text": "have nvidia-smi && timeout \"$SMI_TIMEOUT_S\" nvidia-smi -q >\"$d/nvidia-smi-q.txt\" 2>&1"
+    },
+    {
+      "line": 973,
+      "text": "if timeout 5 nvidia-smi >/dev/null 2>&1; then"
+    },
+    {
+      "line": 1003,
+      "text": "am=$(timeout 5 nvidia-smi -q -d ACCOUNTING 2>/dev/null |"
+    },
+    {
+      "line": 1007,
+      "text": "if ! acc=$(timeout \"$SMI_TIMEOUT_S\" nvidia-smi --query-accounted-apps=pid,gpu_utilization,mem_utilization,max_memory_usage,time \\"
+    },
+    {
+      "line": 1965,
+      "text": "pciraw=$(timeout 5 nvidia-smi -q 2>/dev/null)"
+    },
+    {
+      "line": 2029,
+      "text": "timeout \"$SMI_TIMEOUT_S\" nvidia-smi --query-gpu=name,driver_version,temperature.gpu,utilization.gpu,power.draw \\"
+    },
+    {
+      "line": 2482,
+      "text": "timeout \"$SMI_TIMEOUT_S\" nvidia-smi --query-compute-apps=pid,used_memory --format=csv,noheader,nounits 2>/dev/null |"
+    }
+  ],
+  "unbounded_queries": 0,
+  "removed_unused_function": "gpu_stat (definition only; no caller in bin/bb or test suite)",
+  "changes": [
+    "snapshot query bounded",
+    "accounting query bounded and failure exposed as could_not_run"
+  ],
+  "validation": {
+    "bash_n_exit_code": 0,
+    "coverage_floor_session": 1839,
+    "status": "terminal",
+    "coverage_floor_exit_code": 0,
+    "output": "[bb-cobertura] bin/bb al 40.2% (piso 32.8%)",
+    "could_not_run": 0,
+    "log_sha256": "7547cd744afd90155f8aadc2ed8a585fd72ef82f753311b60cda2725fedfe410"
+  },
+  "subject_closed": false
+}

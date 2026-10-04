@@ -30,7 +30,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 
 ## Estado del verificador
 
-La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
+La ficha permanece abierta. El selector original ya está integrado y llama a `tools.hardware_batch03_controls.verify` para este ID exacto. La ejecución del 2026-10-04 devolvió UNKNOWN, fail=0, could_not_run=1 por captura requerida ausente o contrato incompleto. El comando literal y su salida están registrados en `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-batch03-integration/original-selectors-after-reader-hardening.json`. Los tests de fixtures verifican el control; el cierre requiere el sujeto real y su evidencia específica.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
 
@@ -38,3 +38,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Avance de instrumentación 2026-10-03
 
 `tools.host_diagnostics` ahora recoge identidad USB disponible, serial opcional y velocidad sysfs. Esta captura no evalúa admisión de enlaces RAID ni demuestra una UUID estable; no se observaron entradas HID en el host. Detalle y límites: [BB-INSTRUMENTS-devices](../../docs/evidence/BB-INSTRUMENTS-devices.md). La ficha sigue abierta y el close_check original permanece pendiente.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: Selector reportó UNKNOWN, fail=0, could_not_run=1; falta captura del enlace/velocidad y matriz/ensamblado sobre los dispositivos NVMe USB reales con control sano y negativo.
+- Evidencia faltante para cierre: Selector reportó UNKNOWN, fail=0, could_not_run=1; falta captura del enlace/velocidad y matriz/ensamblado sobre los dispositivos NVMe USB reales con control sano y negativo.
+- Siguiente acción: Coordinación BB: completar contrato de captura por dispositivo; operador Luis: conectar el arreglo canary y aportar capturas pre/post reinicio sin escribir datos productivos. Ref explícita: tasks/backlog/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.md y tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.md`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-batch02-03-primary-coverage.json`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

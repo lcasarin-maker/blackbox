@@ -32,3 +32,14 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: Falta evidencia de build efectivo y primera request NVFP4/CUTLASS en el sujeto GB10.
+- Evidencia faltante para cierre: Digest/arquitectura/deps fijados; primera solicitud y rutas CUTLASS; control de fallo/fallback; outputs/latencia y rollback.
+- Siguiente acción: Solicitar corrida primera-request en GB10 con digest y dependencias fijados, ruta CUTLASS más fallback/control; capturar logs raw para el evaluador actual.
+- Responsable del siguiente paso: BB; operador Luis para workload/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01.md`, `tools/runtime_batch03_controls.py`, `tests/test_debt_registration_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

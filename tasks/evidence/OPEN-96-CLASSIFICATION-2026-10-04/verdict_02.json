@@ -1,0 +1,209 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "El close_check es implementado y el selector actual usa el verificador existente; el recibo más reciente del 2026-10-04 devuelve status=unknown, fail=0, could_not_run=1 porque falta la captura cruda de comandos con timestamp del ensayo GPU. El sujeto no tiene A/B de clocks, soak, telemetría ni rollback."
+    ],
+    "missing_evidence": [
+      "captura nativa completa commands.json con plan predeclarado, identidad de host/driver/firmware, cap stock y capped, muestras telemetry/workload positivas y comparación; rollback medido"
+    ],
+    "next_action": "Conservar UNKNOWN y el criterio abierto hasta que el operador prepare y ejecute el A/B físico en GPU canary con timestamps, workload, rollback y capturas crudas; después volver a correr el selector original.",
+    "responsible": "coordinación BB prepara el protocolo; operador Luis ejecuta el ensayo en GPU/lab",
+    "evidence": [
+      "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01.md",
+      "tools/verify_gpu_clock_cap_ab.py",
+      "tests/test_debt_registration_controls.py::test_debt_close_check_verify_gpu_clock_cap_ab_01",
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/three-hardware-original-selectors-primary-run.json",
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01-current-selector.log",
+      "tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt"
+    ],
+    "actionable_now": false,
+    "rationale": "El instrumento está presente y puede clasificar una captura válida; sus fixtures prueban parsing y controles. El recibo real del selector sigue unknown por falta de commands.json, y cerrar el criterio requiere una comparación física que no es seguro inventar ni inferir de fixtures.",
+    "could_not_run_inspection": 0
+  },
+  {
+    "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01",
+    "category": "user_decision",
+    "blockers": [
+      "El perfil aprobado de repositorios externos y la política de frescura siguen pendientes de decisión; la evidencia de APT local no aprueba terceros."
+    ],
+    "missing_evidence": [
+      "decisión registrada de URLs/suites/arquitecturas/keyrings admitidos y cutoff de frescura; ensamblaje/verificación completa posterior"
+    ],
+    "next_action": "Aplicar la decisión de perfil ya abierta en la boleta y después integrar el verificador con cobertura de fuentes, firmas y frescura.",
+    "responsible": "Luis para decisión; coordinación BB para implementación",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+      "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-effective-index-hashes-collector.txt",
+      "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-effective-index-hashes.json",
+      "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-effective-package-hashes-collector.txt",
+      "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-effective-package-hashes-with-sha512-collector.txt"
+    ],
+    "actionable_now": false,
+    "rationale": "Hay evidencia amplia de positivos y negativos APT aislados y parser probado; la selección de perfil/edad afecta qué upgrades permite el guard.",
+    "could_not_run_inspection": 0
+  },
+  {
+    "id": "DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "No hay canario funcional real en la combinación DFlash/xgrammar/vLLM fijada; requiere runtime y replay negativo controlado."
+    ],
+    "missing_evidence": [
+      "digest/commits efectivos y capturas HTTP/parser/chunks/finish reason; casos stream/no-stream/tool/parallel/follow-up; rollback"
+    ],
+    "next_action": "Preparar una matriz reproducible en canario GPU con stack fijado, ejecutar positivo y revisión incompatible como negativo, y guardar respuestas/logs y rollback.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+      "tasks/evidence/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01/ (directorio ausente al inspeccionar)"
+    ],
+    "actionable_now": false,
+    "rationale": "La evidencia fuente externa y el close_check pendiente describen semántica de runtime que no se acredita con fixtures ni benchmarks.",
+    "could_not_run_inspection": 1
+  },
+  {
+    "id": "DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "No hay captura SSE nativa ni ejecución observada del mock, salud del proceso o rollback para digest de imagen fijado."
+    ],
+    "missing_evidence": [
+      "respuesta HTTP/SSE cruda; argumentos byte-exactos; resultado mock; finish reason; continuidad del proceso y rollback"
+    ],
+    "next_action": "Ejecutar en canario GPU el ciclo texto→tool mock→texto en digest fijado y control negativo; conservar SSE y logs de RPC/timeout.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+      "tasks/evidence/DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01/ (directorio ausente al inspeccionar)"
+    ],
+    "actionable_now": false,
+    "rationale": "Solo existe lector offline parcial; la conducta de tool call requiere proceso de inferencia real.",
+    "could_not_run_inspection": 1
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "Relato externo sin versiones, logs ni A/B; provocar presión/OOMD local conlleva ensayo de workload no disponible en lectura segura."
+    ],
+    "missing_evidence": [
+      "versiones e imágenes efectivas; PSI/swap/UMA; journal de oomd y dependientes; positivo/negativo A/B en canario; recuperación"
+    ],
+    "next_action": "Fijar modelo/stack y diseñar canario recuperable con captura redactada de presión y oomd; comprobar rollback sin desactivar oomd global.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+      "tasks/evidence/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01/ (directorio ausente al inspeccionar)"
+    ],
+    "actionable_now": false,
+    "rationale": "El criterio depende de causalidad y recuperación bajo presión en el servicio real; desactivar OOMD globalmente queda excluido.",
+    "could_not_run_inspection": 1
+  },
+  {
+    "id": "DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "No hay mapa Ray por nodo ni admisión positiva/negativa con imagen y backend fijados."
+    ],
+    "missing_evidence": [
+      "image digest; mapa de recursos Ray/node; backend/SM/kernel; smoke positivo y negativo; rollback"
+    ],
+    "next_action": "Ejecutar smoke de admisión y generación en canario GB10 con los tags fijados y guardar recursos Ray, kernel y resultado; comparar control sin GPU genérica.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+      "tasks/evidence/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01/ (directorio ausente al inspeccionar)"
+    ],
+    "actionable_now": false,
+    "rationale": "La evidencia de instrumento es parcial y el fallo descrito depende del stack y el nodo GB10 real.",
+    "could_not_run_inspection": 1
+  },
+  {
+    "id": "DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "El prototipo de captura no acredita presupuesto KV/staging/graphs ni corrección/soak real posterior a warmup."
+    ],
+    "missing_evidence": [
+      "captura consolidada de receta con digest/params y raw results de workload real; perfil por topología; rollback funcional"
+    ],
+    "next_action": "Usar exportación existente de receta/sparkrun en canario compatible y medir presupuesto por etapa más corrección/soak; dejar unknown ante campos faltantes.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+      "tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/prototype-capture.json"
+    ],
+    "actionable_now": false,
+    "rationale": "El único prototype-capture no sustituye workload medido ni presupuesto completo; la ficha prohíbe inferir seguridad desde weights-fit.",
+    "could_not_run_inspection": 0
+  },
+  {
+    "id": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "La observación local no prueba sesión gráfica funcional tras actualización ni recuperación/rollback en el OEM citado."
+    ],
+    "missing_evidence": [
+      "stack/OEM y versiones; caso positivo y negativo post-update; sesión/telemetría y rollback capturados"
+    ],
+    "next_action": "Diseñar un canario de actualización reversible con sesión local/remota verificada y recuperación; recoger stack exacto y controles negativos.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+      "tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01/host-observation.txt"
+    ],
+    "actionable_now": false,
+    "rationale": "La evidencia existente es solo host-observation; validación requiere el stack y ciclo de sesión/recovery.",
+    "could_not_run_inspection": 0
+  },
+  {
+    "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "La observación del host no acredita aislamiento de fallos NM/supplicant frente a freeze ni política recuperable sobre stack citado."
+    ],
+    "missing_evidence": [
+      "capturas de fallo y host liveness; versiones NM/supplicant/kernel; recuperación acotada y rollback"
+    ],
+    "next_action": "Ejecutar en canario con acceso de rescate un fallo acotado de NM/supplicant, distinguirlo de freeze y demostrar recuperación/rollback.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+      "tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/host-observation.txt"
+    ],
+    "actionable_now": false,
+    "rationale": "La ficha exige ensayo runtime y rollback; no puede inferirse de estado de servicio.",
+    "could_not_run_inspection": 0
+  },
+  {
+    "id": "FORUM-02-GX10-READ-INTEGRITY",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "La lectura local de instrumento no contrasta bytes de storage con referencia externa ni separa modos de caché/NVMe/firmware."
+    ],
+    "missing_evidence": [
+      "referencia externa confiable y bytes esperados; resultados buffered/O_DIRECT/cache; salud NVMe y evidencia firmware; control corrupto"
+    ],
+    "next_action": "Preparar ensayo no destructivo con datos de referencia y comparación buffered/O_DIRECT en el GX10, documentando cache/NVMe/firmware y control negativo.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json",
+      "tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/host-observation.txt",
+      "tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/read-integrity-instrument.txt"
+    ],
+    "actionable_now": false,
+    "rationale": "Existe instrumento textual, pero integridad requiere sujeto de almacenamiento y referencia independiente.",
+    "could_not_run_inspection": 0
+  }
+]

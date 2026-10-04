@@ -1,0 +1,20 @@
+{
+  "captured_at": "2026-10-04T09:23:24.155741+00:00",
+  "scope": "Evidence retention defect; not a test result or gate waiver",
+  "status": "gap",
+  "lost_artifacts": [
+    "/tmp/simplecode-pii-apt-inner-owner-final-pytest.log (prior failed run)",
+    "/tmp/simplecode-pii-apt-inner-owner-final.coverage (prior failed run)"
+  ],
+  "cause": "Executor reused output paths for the next full run, truncating prior artifacts",
+  "confirmed_by": "controls_runtime explicitly confirmed no full historical copies in its inventory",
+  "surviving_evidence": [
+    "inner-owner-full-gate-observed.json with log SHA and literal22682/8miss99.96% summary",
+    "/tmp/simplecode-pii-apt-inner-owner-scoped.json (scoped analysis; distinct from prior full coverage)"
+  ],
+  "prior_terminal_result": "exit1; coverage floor100 not reached; no prior full PASS claimed",
+  "remedy": "Keep current97742 process; archive terminal log and coverage under unique names and SHA before any subsequent run",
+  "could_not_run_count": 2,
+  "could_not_run_reason": "Prior full raw stdout and coverage cannot be re-read after overwrite",
+  "report_clean": false
+}

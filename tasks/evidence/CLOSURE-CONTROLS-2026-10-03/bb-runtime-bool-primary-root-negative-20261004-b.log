@@ -1,0 +1,67 @@
+B1 3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01:('output_tokens',) | pass | pass | 0 | raw domain measurements satisfy card predicates
+B1 3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01:('stage_count',) | pass | unknown | 1 | first request lacks bound multi-stage trace
+B1 8NODE-NCCL-INTERFACE-MTU-01:('mtu',) | pass | fail | 0 | effective MTU differs from corresponding OEM plan
+B1 8NODE-NCCL-INTERFACE-MTU-01:('effective_mtu',) | pass | fail | 0 | effective MTU differs from corresponding OEM plan
+B1 DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01:('position',) | pass | pass | 0 | raw domain measurements satisfy card predicates
+B1 DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01:('peak_bytes', 'available_before_load_bytes') | pass | pass | 0 | raw domain measurements satisfy card predicates
+B1 DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01:('generated_tokens',) | pass | pass | 0 | raw domain measurements satisfy card predicates
+B2 Ray bool gpu_count | pass | unknown | 1 | rank lacks node/GPU/TP resource data
+B2 Ray bool output_tokens | pass | unknown | 1 | request output count absent
+B4 GLM bool prefill counter | pass | unknown | 1 | per-request stage/counter/KV observation malformed
+--- exhaustive B1 integral fields replaced by bool in each baseline-pass fixture ---
+DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01 ('nodes', 1, 'ranks', 0, 'rank') 1 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01 ('pp_first_request', 'output_tokens') 2 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01 ('first_request', 'output_tokens') 3 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01 ('negative_control', 'planned_mtu') 9000 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01 ('negative_control', 'observed_mtu') 1500 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01 ('acceptance_by_position', 0, 'position') 0 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01 ('pretrim_headroom_case', 'peak_bytes') 8 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01 ('scheduler_runs', 0, 'decode_samples', 0, 'generated_tokens') 1 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01 ('scheduler_runs', 0, 'decode_samples', 1, 'generated_tokens') 1 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01 ('scheduler_runs', 0, 'decode_samples', 2, 'generated_tokens') 1 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01 ('scheduler_runs', 1, 'decode_samples', 0, 'generated_tokens') 10 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01 ('scheduler_runs', 1, 'decode_samples', 1, 'generated_tokens') 10 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01 ('scheduler_runs', 1, 'decode_samples', 2, 'generated_tokens') 10 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01 ('request_bounds', 'max_tokens') 16 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01 ('request_bounds', 'max_context_tokens') 128 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01 ('request_bounds', 'deadline_seconds') 10 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01 ('stop_capture', 'exit_code') 0 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01 ('selected_paths', 0, 'gid_index') 3 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01 ('selected_paths', 0, 'mtu') 9000 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01 ('selected_paths', 1, 'gid_index') 3 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01 ('selected_paths', 1, 'mtu') 9000 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01 ('first_inference', 'output_tokens') 2 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 0, 'tool_iterations') 2 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 0, 'configured_limit') 4 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 0, 'turns', 0, 'turn_index') 0 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 0, 'turns', 0, 'prompt_tokens') 16 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 0, 'turns', 0, 'completion_tokens') 1 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 1, 'tool_iterations') 2 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 1, 'configured_limit') 4 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 1, 'turns', 0, 'turn_index') 0 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 1, 'turns', 0, 'prompt_tokens') 16 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 1, 'turns', 0, 'completion_tokens') 1 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 2, 'tool_iterations') 2 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 2, 'configured_limit') 4 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 2, 'turns', 0, 'turn_index') 0 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 2, 'turns', 0, 'prompt_tokens') 16 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 2, 'turns', 0, 'completion_tokens') 1 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 3, 'tool_iterations') 2 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 3, 'configured_limit') 4 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 3, 'turns', 0, 'turn_index') 0 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 3, 'turns', 0, 'prompt_tokens') 16 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 3, 'turns', 0, 'completion_tokens') 1 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 4, 'tool_iterations') 2 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 4, 'configured_limit') 4 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 4, 'turns', 0, 'turn_index') 0 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 4, 'turns', 0, 'prompt_tokens') 16 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 4, 'turns', 0, 'completion_tokens') 1 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 5, 'tool_iterations') 2 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 5, 'configured_limit') 4 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 5, 'turns', 0, 'turn_index') 0 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 5, 'turns', 0, 'prompt_tokens') 16 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 5, 'turns', 0, 'completion_tokens') 1 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 6, 'tool_iterations') 2 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 6, 'turns', 0, 'turn_index') 0 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 6, 'turns', 0, 'prompt_tokens') 16 => True raw domain measurements satisfy card predicates
+DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 ('conversation_cases', 6, 'turns', 0, 'completion_tokens') 1 => True raw domain measurements satisfy card predicates

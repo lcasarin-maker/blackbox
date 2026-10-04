@@ -1,0 +1,19 @@
+{
+  "source_sha256": "dc17722b1bded2cb1bd8d2ff92b3a46410d5fb1ab52e20123541c94d00969cf1",
+  "input": {
+    "existing_lab_receipt": "tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/export-copy-lab/run.json",
+    "incident_files": {
+      "device-identity.json": "{}\n",
+      "smart-health.json": "{}\n",
+      "kernel-journal.json": "{}\n",
+      "mount-transitions.json": "{}\n",
+      "recovery-and-rollback.json": "{}\n"
+    }
+  },
+  "output": {
+    "accepted": false,
+    "exception": "Failed",
+    "reason": "FAIL: physical NVMe capture contradicts or malforms required data: raw command receipt is malformed: device-identity.json"
+  },
+  "scope": "WT in-progress selector recheck over same isolated evidence; no device changes or primary integration"
+}

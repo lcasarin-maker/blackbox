@@ -1,0 +1,44 @@
+{
+  "files": [
+    {
+      "path": "tools/verify_gpu_clock_cap_ab.py",
+      "before_sha256": "40ed9d0d6577da988d4a656e963a41a46e30b454384b6bd93bc732b5dc413009",
+      "after_sha256": "7d5618cbb66cfbfd8d0b5b188da77d91b9184aa02185fe85d3024929aa162eee"
+    },
+    {
+      "path": "tools/verify_wifi_isolation.py",
+      "before_sha256": "9c36e870196261e14ab23e3bc2f5a51dfebc0d693b932b55fc0cbc9c36b8f3c6",
+      "after_sha256": "ff934c5160f4e0325be536912a0f0d9c67be9bf508d7aaf325e2ad8a1717b8f7"
+    },
+    {
+      "path": "tools/verify_usb_hid_postupdate.py",
+      "before_sha256": "e7a03f5ebb8a585a255f8e787342d6a474427b9d3afcbd3235d0811ed66a7f58",
+      "after_sha256": "405a4a84b417ad3a6cd571fc34d140fbe32493867b498829ac8a9c21a254f1a7"
+    },
+    {
+      "path": "tests/test_hardware_missing_selectors.py",
+      "before_sha256": "f011d3213caa7a9cf34c770535d96a38dc9fa3ef367fd01044bc8edeafecedfd",
+      "after_sha256": "da324fe1577c79ec85ed5361421e12d6d68adbe0f195660b3362c480b8afb321"
+    },
+    {
+      "path": "tests/test_gpu_capture_invariants.py",
+      "before_sha256": "a55ca70b5e944236f9fd7c3ed5bc613be5f94daf91fbc8458b1fd77bfdb2bcbb",
+      "after_sha256": "1ff2a52d0ae6157bcfd641ccfb4bede272d44a6797c7cb306cee2eff44a2e171"
+    },
+    {
+      "path": "tests/test_hardware_reader_command_ownership.py",
+      "before_sha256": "cd23865add98eff3799449c6c6e4f5c2b06826dd0d5798e489ef15da326b11ca",
+      "after_sha256": "aeb5d7c4a585dbefa38f32765ecbf9617c3c74b6f0d948f17a52b03d06333486"
+    }
+  ],
+  "validation": {
+    "command": "python3 -m pytest -q tests/test_hardware_reader_command_ownership.py tests/test_hardware_cli_entrypoints.py tests/test_gpu_capture_invariants.py tests/test_wifi_trial_invariants.py tests/test_usb_hid_admission_invariants.py tests/test_hardware_hid_wifi_readers.py tests/test_hardware_missing_selectors.py tests/test_hardware_reader_safety.py tests/test_hardware_batch_routes.py tests/test_forum_hardware_subjects.py",
+    "exit_code": 0,
+    "passed": 110,
+    "failed": 0,
+    "could_not_run": 0,
+    "output": "110 passed in 0.54s",
+    "log": "bb-hardware-csv-ssh-followup-primary-tests.log"
+  },
+  "physical_closed": false
+}

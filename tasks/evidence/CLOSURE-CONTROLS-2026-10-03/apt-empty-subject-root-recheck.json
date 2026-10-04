@@ -1,0 +1,40 @@
+{
+  "scope": "Independent synthetic adversarial recheck, not host authorization/evidence",
+  "baseline": {
+    "gate": "subject_stack",
+    "status": "pass",
+    "reason": "native stack bytes and exact subject fields match",
+    "observed": {
+      "manufacturer": "synthetic-unit-only",
+      "product": "synthetic-unit-only",
+      "bios": "synthetic-unit-only",
+      "kernel": "synthetic-unit-only",
+      "apt_version": "synthetic-unit-only",
+      "gpgv_version": "synthetic-unit-only",
+      "architecture": "arm64"
+    }
+  },
+  "empty_subject": {
+    "gate": "subject_stack",
+    "status": "could_not_run",
+    "reason": "trusted decision lacks complete fixed subject tuple"
+  },
+  "missing_external_decision": {
+    "gate": "subject_stack",
+    "status": "could_not_run",
+    "reason": "external exact subject/version decision unavailable"
+  },
+  "expected": [
+    "pass",
+    "could_not_run",
+    "could_not_run"
+  ],
+  "actual": [
+    "pass",
+    "could_not_run",
+    "could_not_run"
+  ],
+  "could_not_run_count": 0,
+  "source_sha256": "d1c815c92afb2f940235dfb5b7ab76e833d04a5fbed2f5c6ce6d9ac917c78f37",
+  "status": "pass"
+}

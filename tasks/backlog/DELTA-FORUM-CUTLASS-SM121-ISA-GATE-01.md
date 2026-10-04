@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: `needs_contract`. Antes del gate se debe fijar revisión CUTLASS/CuTe/backend, operación exacta y arquitectura compilada, y definir cómo source/build evidencia que ISA requerido está soportado o bloqueado antes del primer request. No se crea allowlist por nombre SM ni compatibilidad supuesta. Luego requiere canario SM121 con control de logits/exactitud. La ficha sigue abierta y `close_check` intacto. Informe: `docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: No hay build/smoke real para el target SM121 y stack/imagen fijados; el kernel faltante es específico de GPU/runtime.
+- Evidencia faltante para cierre: digest/tag, GPU/SM efectiva, versión Cutlass/DSL y salida literal de kernel sano y control incompatible
+- Siguiente acción: Ejecutar matriz mínima de compilación y canario funcional en nodo SM121 con versión fijada, usando target incompatible como negativo y guardando rollback.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json`, `tasks/evidence/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01/ (directorio ausente al inspeccionar)`.
+- Impedimentos de inspección: 1. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -103,3 +103,14 @@ Cierre: Fixture con disco ausente y mountpoint existente bloquea escritura; prue
 ## Nota de instrumentación readonly (2026-10-03)
 
 Se reutilizó la captura existente de sesiones/servicios; no se entró a rescue.target ni se probó reversión de servicios. La ficha sigue abierta. Evidencia y límites: `docs/evidence/BB-INSTRUMENTS-boot.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: La barrera protectora de destino vacío/UUID y fixtures de disco ausente se puede completar localmente; los casos OEM concretos quedan etiquetados aparte.
+- Evidencia faltante para cierre: La barrera protectora de destino vacío/UUID y fixtures de disco ausente se puede completar localmente; los casos OEM concretos quedan etiquetados aparte.
+- Siguiente acción: Coordinación BB: implementar/verificar las guardas de mountpoint, identidad UUID y abort seguro usando fixture ausente/incorrecto. Ref explícita: tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-RESCUE-RUNBOOK-01-direct-close-current.log.
+- Responsable del siguiente paso: Coordinación BB; para recuperación de históricos, custodio del artifact store si corresponde..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-RESCUE-RUNBOOK-01-direct-close-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

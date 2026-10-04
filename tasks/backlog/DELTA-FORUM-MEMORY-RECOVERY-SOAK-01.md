@@ -35,3 +35,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Evaluación de instrumentos 2026-10-03
 
 Reusa `tools/atom_gpu_telemetry.py` y `tools/memory_profile.py` para observaciones puntuales del host; no hay serie temporal, identidad de proceso RPC remoto ni recuperación atribuible adjunta. Estado `deferred_lab`: soak multihora en stack/servidor fijado, series UMA/swap/PSI/RSS y PID/vida del RPC server, cliente y servidor cerrados en orden con medición pre/post y control sano. No se mató proceso ni reinició nodo; no se convirtió memoria desconocida en cero.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: La ficha documenta solo telemetría puntual; falta serie temporal y PID/vida del RPC remoto.
+- Evidencia faltante para cierre: Stack/servidor/versiones; series UMA/swap/PSI/RSS y PID RPC; cierre ordenado cliente/servidor con medidas antes/después y control sano.
+- Siguiente acción: Pedir al operador soak en stack fijado con serie UMA/swap/PSI/RSS atribuida a PID y cierre cliente/servidor ordenado, midiendo recuperación contra control sano.
+- Responsable del siguiente paso: BB; operador Luis para workload/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-MEMORY-RECOVERY-SOAK-01.md`, `tools/atom_gpu_telemetry.py`, `tools/memory_profile.py`, `tools/hardware_batch02_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

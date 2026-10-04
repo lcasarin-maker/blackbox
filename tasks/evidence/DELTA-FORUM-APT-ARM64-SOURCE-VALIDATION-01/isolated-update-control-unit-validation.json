@@ -1,0 +1,23 @@
+{
+  "observed_at": "2026-10-04T07:43:45.359339+00:00",
+  "scope": "Isolated update control component unit validation; not full original closure.",
+  "command": [
+    "python3",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_apt_sources.py",
+    "--cov=tools.apt_sources",
+    "--cov-branch",
+    "--cov-fail-under=100"
+  ],
+  "returncode": 0,
+  "stdout": "95 passed in 0.31s\ntools/apt_sources.py 377 statements, 0 missing, 162 branches, 0 partial, 100%\n",
+  "ruff_stdout": "All checks passed!\n",
+  "could_not_run_count": 0,
+  "initial_failure": "Ruff C901 in mutation test (11 > 10), repaired by separating root-path cases from receipt/config cases; no ignore.",
+  "source_sha256": {
+    "tools/apt_sources.py": "9a355ab693deb2f5bd9e9c2414080a86917f84841a867f1bd87848b452259230",
+    "tests/test_apt_sources.py": "245ba77901e5c3a2880f01893c12302f514d52fc0f225785c0be9cdcd4b8f24c"
+  }
+}

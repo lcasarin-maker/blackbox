@@ -1,0 +1,96 @@
+{
+  "schema": "bb.runtime.raw.v1",
+  "card_id": "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+  "capture_id": "unit-capture",
+  "captured_at": "2026-10-03T00:00:00Z",
+  "contradictions": [],
+  "subject": {
+    "oem": "OEM-X",
+    "host_id": "host-a",
+    "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "model": "model-x",
+    "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "software_versions": {
+      "engine": "engine-1"
+    }
+  },
+  "request_bounds": {
+    "request_id": "req-1",
+    "model": "model-x",
+    "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "max_tokens": 16,
+    "max_context_tokens": 128,
+    "deadline_seconds": 10,
+    "started_at": "2026-10-03T00:00:00Z",
+    "finished_at": "2026-10-03T00:00:01Z"
+  },
+  "rollback_record": {
+    "known_good_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "candidate_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "procedure_ref": "rollback.md",
+    "before_state_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "after_restore_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  },
+  "nodes": [
+    {
+      "node_id": "n0",
+      "oem_model": "OEM-X",
+      "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "nccl_version": "2.30",
+      "ranks": [
+        {
+          "rank": -1,
+          "nccl_version": "2.30",
+          "loaded_image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ]
+    },
+    {
+      "node_id": "n1",
+      "oem_model": "OEM-X",
+      "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "nccl_version": "2.30",
+      "ranks": [
+        {
+          "rank": 1,
+          "nccl_version": "2.30",
+          "loaded_image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ]
+    },
+    {
+      "node_id": "n2",
+      "oem_model": "OEM-X",
+      "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "nccl_version": "2.30",
+      "ranks": [
+        {
+          "rank": 2,
+          "nccl_version": "2.30",
+          "loaded_image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ]
+    }
+  ],
+  "pp_first_request": {
+    "request_id": "req-1",
+    "stage_count": 2,
+    "stage_events": [
+      {
+        "event": "stage_complete",
+        "rank": "r0"
+      },
+      {
+        "event": "stage_complete",
+        "rank": "r1"
+      }
+    ],
+    "output_tokens": 2,
+    "finish_reason": "stop"
+  },
+  "negative_control": {
+    "kind": "wrong_image_digest",
+    "observed_digest": "sha256:wrong",
+    "gate_result": "rejected"
+  }
+}
