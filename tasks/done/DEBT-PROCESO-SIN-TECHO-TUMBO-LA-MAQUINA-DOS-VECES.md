@@ -2,7 +2,9 @@
 id: DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES
 kind: debt
 title: "Ningun guardrail limita a UN proceso individual, y eso tumbo la maquina dos veces en 50 minutos"
-status: open
+status: done
+closure_type: verified
+closed_at: 2026-10-03
 severity: P1
 origin: asserted
 satd_family: MISSING_COVERAGE
@@ -247,3 +249,9 @@ que ya fallaba antes de este trabajo. Merece su propio ciclo de calibracion.
 El gate pre-push reejecutó el close_check y obtuvo exit 1: bb-guardia-proceso.service arrancó Wed 2026-09-30 14:40:12 CST, antes de la modificación actual de bin/bb-guardia-proceso. La evidencia histórica de septiembre permanece; el estado actual vuelve a abierto porque el control vivo falla.
 
 La configuración de usuario apunta al archivo de este repo. `python3 -m pytest -q tests/test_bb_guardia_proceso.py` produjo `20 passed in 0.04s`, exit 0. El reinicio del servicio está pendiente de decisión operativa del usuario. Cerrar de nuevo exige el close_check vivo con exit 0 tras cargar el archivo actual; las pruebas offline por sí solas no satisfacen ese requisito.
+
+## Recierre vivo — 2026-10-03
+
+Objetivo autorizado: ejecutar acciones y evidencias necesarias con swarm Luna. Se validó el guardián y su control con 32 pruebas, 0 omitidas; el control ahora rechaza timestamps históricos de servicios inactivos y exige active/running con PID existente. Se inició `systemctl --user restart bb-guardia-proceso.service` con exit 0. El close_check original devolvió exit 0: arranque Sat 2026-10-03 22:09:18 CST posterior al código. Este cierre acredita la carga del proceso vivo; los replays offline conservan su alcance histórico.
+
+Evidencia actual: tasks/evidence/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES/recierre-2026-10-03.txt.

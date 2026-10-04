@@ -1,0 +1,145 @@
+[
+  {
+    "id": "FEATURE-1358-CGROUP-03-NATIVO",
+    "status": "unknown",
+    "reason": "Phase verifier implemented; native source/build evidence exists, but no complete matched 615 runtime test.",
+    "files": [
+      "tools/verify_cgroup_plan.py",
+      "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/comparison.txt",
+      "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-615.json"
+    ],
+    "control_command": "python3 -m tools.verify_cgroup_plan --phase 03-nativo --evidence tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO",
+    "evidence_needed": [
+      "Paired bounded 580/complete 615 runtime captures, matched GSP/userspace/boot, CPU positive and no-allocation negative controls"
+    ],
+    "agent_family": "kernel",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-04-PARCHE",
+    "status": "unknown",
+    "reason": "Phase verifier implemented; current readiness report has no paired runtime basis for a no-patch or patch decision.",
+    "files": [
+      "tools/verify_cgroup_plan.py",
+      "tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/readiness.txt"
+    ],
+    "control_command": "python3 -m tools.verify_cgroup_plan --phase 04-parche --evidence tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE",
+    "evidence_needed": [
+      "Paired runtime evidence from phases 01\u201303 and derived patch/no-patch decision; if patch, diff/build/integrity/accounting evidence"
+    ],
+    "agent_family": "kernel",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-05-CUELGUES",
+    "status": "unknown",
+    "reason": "Phase verifier implemented; protocol exists, but no comparable raw baseline/candidate incident captures.",
+    "files": [
+      "tools/verify_cgroup_plan.py",
+      "tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/protocol.txt"
+    ],
+    "control_command": "python3 -m tools.verify_cgroup_plan --phase 05-cuelgues --evidence tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES",
+    "evidence_needed": [
+      "At least two comparable raw samples+journal+service-response bundles with positive exposure durations"
+    ],
+    "agent_family": "kernel",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+    "status": "could_not_run",
+    "reason": "capture.json with raw capture inventory is unavailable",
+    "files": [
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/validator-run.json",
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/apt-captures.sha256",
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/preflight.json",
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/apt-captures.json",
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/commands.json"
+    ],
+    "control_command": "python3 -m tools.verify_apt_critical_removals --evidence tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+    "evidence_needed": "capture.json with raw capture inventory is unavailable",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+    "status": "could_not_run",
+    "reason": "capture.json with raw capture inventory is unavailable",
+    "files": [
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01/host-observation.txt"
+    ],
+    "control_command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01 --evidence tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+    "evidence_needed": "capture.json with raw capture inventory is unavailable",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "status": "could_not_run",
+    "reason": "capture.json with raw capture inventory is unavailable",
+    "files": [
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/validator-run.json",
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/preflight.json",
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/commands.json"
+    ],
+    "control_command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 --evidence tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "evidence_needed": "capture.json with raw capture inventory is unavailable",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "status": "could_not_run",
+    "reason": "capture.json with raw capture inventory is unavailable",
+    "files": [
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt"
+    ],
+    "control_command": "python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "evidence_needed": "capture.json with raw capture inventory is unavailable",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "status": "could_not_run",
+    "reason": "capture.json with raw capture inventory is unavailable",
+    "files": [
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/validator-run.json",
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/preflight.json",
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/commands.json"
+    ],
+    "control_command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01 --evidence tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "evidence_needed": "capture.json with raw capture inventory is unavailable",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-FORUM-NETCONSOLE-01",
+    "status": "unknown",
+    "reason": "Verifier and receiver marker integration implemented; module is absent on the observed host and no receiver receipt/rollback exists.",
+    "files": [
+      "tools/verify_netconsole.py",
+      "tools/kernel_capture.py",
+      "tools/netconsole_marker.py",
+      "tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json"
+    ],
+    "control_command": "python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01",
+    "evidence_needed": [
+      "Target netconsole state and Secure Boot/signature evidence, actual receiver marker correlated by boot ID, privacy review and verified rollback"
+    ],
+    "agent_family": "kernel",
+    "review_status": "draft_control_not_accepted"
+  },
+  {
+    "id": "FEATURE-FORUM-NVME-READONLY-01",
+    "status": "could_not_run",
+    "reason": "capture.json with raw capture inventory is unavailable",
+    "files": [
+      "/tmp/bb-controls-hardware/tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/host-observation.txt"
+    ],
+    "control_command": "python3 -m pytest tests/test_nvme_readonly.py -q",
+    "evidence_needed": "capture.json with raw capture inventory is unavailable",
+    "agent_family": "hardware",
+    "review_status": "draft_control_not_accepted"
+  }
+]

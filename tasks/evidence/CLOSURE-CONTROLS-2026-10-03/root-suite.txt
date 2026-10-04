@@ -1,0 +1,256 @@
+........................................................................ [  6%]
+........................................................................ [ 12%]
+.......................................................................F [ 19%]
+........................FFFF.......................F.................FF. [ 25%]
+..............................................FF........................ [ 32%]
+........................................................................ [ 38%]
+........................................................................ [ 44%]
+........................................................................ [ 51%]
+.......................F................F..................ss...ss...... [ 57%]
+........................................................................ [ 64%]
+........................................................................ [ 70%]
+........................................................................ [ 77%]
+........................................................................ [ 83%]
+........................................................................ [ 89%]
+........................................................................ [ 96%]
+..........................................                               [100%]
+=================================== FAILURES ===================================
+_______________ test_control_negativo_cap_deja_pasar_lo_que_cabe _______________
+tests/test_bb_bash.py:137: in test_control_negativo_cap_deja_pasar_lo_que_cabe
+    assert r.returncode == 0, f"2 GiB bajo techo de 6G deberia caber: {r.stderr[-400:]}"
+E   AssertionError: 2 GiB bajo techo de 6G deberia caber: [bb cap] /opt/miniforge3/bin/python3 bajo techo de 6G (scope bb-cap-python3-4151)
+E     [bb cap] si lo toca, el kernel mata SOLO lo que corre aqui dentro
+E     Failed to connect to bus: Operation not permitted
+E     [bb cap] pico: no disponible (el scope ya se recogio)
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'cap', '6', '/opt/miniforge3/bin/python3', '-c', "im...ui dentro\nFailed to connect to bus: Operation not permitted\n[bb cap] pico: no disponible (el scope ya se recogio)\n').returncode
+__________________ test_bb_usable_con_latido_fresco_SI_cuenta __________________
+tests/test_bb_bash.py:605: in test_bb_usable_con_latido_fresco_SI_cuenta
+    assert "ARMADO" in _fila(r, "bb-usable (vigilante"), r.stdout
+E   AssertionError: == estado de la instrumentacion ==
+E       FALTA     blackbox: muestreo de apps/zombis (dato de hace <2 min) -- el timer puede estar activo y el muestreo caido: corre 'bb sample' a mano y mira el error
+E       ARMADO    journald persistente
+E       ARMADO    journal del kernel legible
+E       ARMADO    systemd-coredump
+E       ARMADO    limite de core > 0
+E       ARMADO    sar recolectando (datos de hace <10 min)
+E       ARMADO    monitor de memoria (<10 min)
+E       FALTA     termica de la GPU (atom_gpu_telemetry, <2 min) -- systemctl --user start atom-gpu-telemetry
+E       ARMADO    memoria del escritorio protegida del reclamo (7 eslabones)
+E       CIEGO     clock lock de GPU
+E                 systemctl ExecStart rc=1: Failed to connect to bus: Operation not permitted
+E       FALTA     earlyoom con la punteria puesta (prefiere y evita) -- activo no es lo mismo que apuntando: sudo ./enable-privileged.sh (seccion 6)
+E       CIEGO     configuracion del watchdog de hardware
+E                 consulta systemd ilegible (rc=1): Failed to connect to bus: Operation not permitted
+E       CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)
+E                 consulta systemd ilegible (rc=1): Failed to connect to bus: Operation not permitted
+E       FALTA     motor de inferencia sirviendo -- el gateway no responde en http://127.0.0.1:8000/v1/models
+E       ARMADO    nvidia-smi
+E       ARMADO    kdump (volcado de kernel ante panic, no ante corte de energia)
+E     
+E       armado: 9    falta: 4    ciego: 3
+E     could_not_run: 3
+E       - clock lock: systemctl ExecStart rc=1: Failed to connect to bus: Operation not permitted
+E       - systemctl show RuntimeWatchdogUSec: rc=1: Failed to connect to bus: Operation not permitted
+E       - systemctl show bb-usable.service: rc=1: Failed to connect to bus: Operation not permitted
+E       OJO: 'ciego' no es 'armado'. Un instrumento ciego no deja el sujeto
+E            limpio: deja el informe sin esa fila.
+E       muestras acumuladas: 0
+E       datos en: /tmp/pytest-of-lcasarin/pytest-4767/test_bb_usable_con_latido_fres0/blackbox
+E     
+E       Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.
+E     
+E   assert 'ARMADO' in '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)'
+E    +  where '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)' = _fila(CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'status'], returncode=0, stdout="== estado de la ins...able_con_latido_fres0/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''), 'bb-usable (vigilante')
+___________ test_control_negativo_bb_usable_activa_con_latido_RANCIO ___________
+tests/test_bb_bash.py:612: in test_control_negativo_bb_usable_activa_con_latido_RANCIO
+    assert "FALTA" in _fila(r, "bb-usable (vigilante"), r.stdout
+E   AssertionError: == estado de la instrumentacion ==
+E       FALTA     blackbox: muestreo de apps/zombis (dato de hace <2 min) -- el timer puede estar activo y el muestreo caido: corre 'bb sample' a mano y mira el error
+E       ARMADO    journald persistente
+E       ARMADO    journal del kernel legible
+E       ARMADO    systemd-coredump
+E       ARMADO    limite de core > 0
+E       ARMADO    sar recolectando (datos de hace <10 min)
+E       ARMADO    monitor de memoria (<10 min)
+E       FALTA     termica de la GPU (atom_gpu_telemetry, <2 min) -- systemctl --user start atom-gpu-telemetry
+E       ARMADO    memoria del escritorio protegida del reclamo (7 eslabones)
+E       CIEGO     clock lock de GPU
+E                 systemctl ExecStart rc=1: Failed to connect to bus: Operation not permitted
+E       FALTA     earlyoom con la punteria puesta (prefiere y evita) -- activo no es lo mismo que apuntando: sudo ./enable-privileged.sh (seccion 6)
+E       CIEGO     configuracion del watchdog de hardware
+E                 consulta systemd ilegible (rc=1): Failed to connect to bus: Operation not permitted
+E       CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)
+E                 consulta systemd ilegible (rc=1): Failed to connect to bus: Operation not permitted
+E       FALTA     motor de inferencia sirviendo -- el gateway no responde en http://127.0.0.1:8000/v1/models
+E       ARMADO    nvidia-smi
+E       ARMADO    kdump (volcado de kernel ante panic, no ante corte de energia)
+E     
+E       armado: 9    falta: 4    ciego: 3
+E     could_not_run: 3
+E       - clock lock: systemctl ExecStart rc=1: Failed to connect to bus: Operation not permitted
+E       - systemctl show RuntimeWatchdogUSec: rc=1: Failed to connect to bus: Operation not permitted
+E       - systemctl show bb-usable.service: rc=1: Failed to connect to bus: Operation not permitted
+E       OJO: 'ciego' no es 'armado'. Un instrumento ciego no deja el sujeto
+E            limpio: deja el informe sin esa fila.
+E       muestras acumuladas: 0
+E       datos en: /tmp/pytest-of-lcasarin/pytest-4767/test_control_negativo_bb_usabl0/blackbox
+E     
+E       Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.
+E     
+E   assert 'FALTA' in '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)'
+E    +  where '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)' = _fila(CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'status'], returncode=0, stdout="== estado de la ins...ol_negativo_bb_usabl0/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''), 'bb-usable (vigilante')
+_______ test_control_negativo_bb_usable_activa_sin_latido[journal_vacio] _______
+tests/test_bb_bash.py:622: in test_control_negativo_bb_usable_activa_sin_latido
+    assert "FALTA" in _fila(r, "bb-usable (vigilante"), r.stdout
+E   AssertionError: == estado de la instrumentacion ==
+E       FALTA     blackbox: muestreo de apps/zombis (dato de hace <2 min) -- el timer puede estar activo y el muestreo caido: corre 'bb sample' a mano y mira el error
+E       ARMADO    journald persistente
+E       ARMADO    journal del kernel legible
+E       ARMADO    systemd-coredump
+E       ARMADO    limite de core > 0
+E       ARMADO    sar recolectando (datos de hace <10 min)
+E       ARMADO    monitor de memoria (<10 min)
+E       FALTA     termica de la GPU (atom_gpu_telemetry, <2 min) -- systemctl --user start atom-gpu-telemetry
+E       ARMADO    memoria del escritorio protegida del reclamo (7 eslabones)
+E       CIEGO     clock lock de GPU
+E                 systemctl ExecStart rc=1: Failed to connect to bus: Operation not permitted
+E       FALTA     earlyoom con la punteria puesta (prefiere y evita) -- activo no es lo mismo que apuntando: sudo ./enable-privileged.sh (seccion 6)
+E       CIEGO     configuracion del watchdog de hardware
+E                 consulta systemd ilegible (rc=1): Failed to connect to bus: Operation not permitted
+E       CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)
+E                 consulta systemd ilegible (rc=1): Failed to connect to bus: Operation not permitted
+E       FALTA     motor de inferencia sirviendo -- el gateway no responde en http://127.0.0.1:8000/v1/models
+E       ARMADO    nvidia-smi
+E       ARMADO    kdump (volcado de kernel ante panic, no ante corte de energia)
+E     
+E       armado: 9    falta: 4    ciego: 3
+E     could_not_run: 3
+E       - clock lock: systemctl ExecStart rc=1: Failed to connect to bus: Operation not permitted
+E       - systemctl show RuntimeWatchdogUSec: rc=1: Failed to connect to bus: Operation not permitted
+E       - systemctl show bb-usable.service: rc=1: Failed to connect to bus: Operation not permitted
+E       OJO: 'ciego' no es 'armado'. Un instrumento ciego no deja el sujeto
+E            limpio: deja el informe sin esa fila.
+E       muestras acumuladas: 0
+E       datos en: /tmp/pytest-of-lcasarin/pytest-4767/test_control_negativo_bb_usabl1/blackbox
+E     
+E       Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.
+E     
+E   assert 'FALTA' in '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)'
+E    +  where '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)' = _fila(CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'status'], returncode=0, stdout="== estado de la ins...ol_negativo_bb_usabl1/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''), 'bb-usable (vigilante')
+_______ test_control_negativo_bb_usable_activa_sin_latido[solo_arranque] _______
+tests/test_bb_bash.py:622: in test_control_negativo_bb_usable_activa_sin_latido
+    assert "FALTA" in _fila(r, "bb-usable (vigilante"), r.stdout
+E   AssertionError: == estado de la instrumentacion ==
+E       FALTA     blackbox: muestreo de apps/zombis (dato de hace <2 min) -- el timer puede estar activo y el muestreo caido: corre 'bb sample' a mano y mira el error
+E       ARMADO    journald persistente
+E       ARMADO    journal del kernel legible
+E       ARMADO    systemd-coredump
+E       ARMADO    limite de core > 0
+E       ARMADO    sar recolectando (datos de hace <10 min)
+E       ARMADO    monitor de memoria (<10 min)
+E       FALTA     termica de la GPU (atom_gpu_telemetry, <2 min) -- systemctl --user start atom-gpu-telemetry
+E       ARMADO    memoria del escritorio protegida del reclamo (7 eslabones)
+E       CIEGO     clock lock de GPU
+E                 systemctl ExecStart rc=1: Failed to connect to bus: Operation not permitted
+E       FALTA     earlyoom con la punteria puesta (prefiere y evita) -- activo no es lo mismo que apuntando: sudo ./enable-privileged.sh (seccion 6)
+E       CIEGO     configuracion del watchdog de hardware
+E                 consulta systemd ilegible (rc=1): Failed to connect to bus: Operation not permitted
+E       CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)
+E                 consulta systemd ilegible (rc=1): Failed to connect to bus: Operation not permitted
+E       FALTA     motor de inferencia sirviendo -- el gateway no responde en http://127.0.0.1:8000/v1/models
+E       ARMADO    nvidia-smi
+E       ARMADO    kdump (volcado de kernel ante panic, no ante corte de energia)
+E     
+E       armado: 9    falta: 4    ciego: 3
+E     could_not_run: 3
+E       - clock lock: systemctl ExecStart rc=1: Failed to connect to bus: Operation not permitted
+E       - systemctl show RuntimeWatchdogUSec: rc=1: Failed to connect to bus: Operation not permitted
+E       - systemctl show bb-usable.service: rc=1: Failed to connect to bus: Operation not permitted
+E       OJO: 'ciego' no es 'armado'. Un instrumento ciego no deja el sujeto
+E            limpio: deja el informe sin esa fila.
+E       muestras acumuladas: 0
+E       datos en: /tmp/pytest-of-lcasarin/pytest-4767/test_control_negativo_bb_usabl2/blackbox
+E     
+E       Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.
+E     
+E   assert 'FALTA' in '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)'
+E    +  where '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)' = _fila(CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'status'], returncode=0, stdout="== estado de la ins...ol_negativo_bb_usabl2/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''), 'bb-usable (vigilante')
+__________________ test_sigterm_distingue_armado_de_no_armado __________________
+tests/test_bb_bash.py:1014: in test_sigterm_distingue_armado_de_no_armado
+    assert "regla de auditoria: armado" in r.stdout
+E   assert 'regla de auditoria: armado' in "== emisores de SIGTERM/SIGKILL desde 30 minutes ago ==\n\n  0 senales registradas en la ventana\n\n-- estado del inst...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n"
+E    +  where "== emisores de SIGTERM/SIGKILL desde 30 minutes ago ==\n\n  0 senales registradas en la ventana\n\n-- estado del inst...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'sigterm', '30 minutes ago'], returncode=0, stdout="...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
+_____________ test_sigterm_DECLARA_la_ventana_que_el_anillo_cubre ______________
+tests/test_bb_bash.py:1310: in test_sigterm_DECLARA_la_ventana_que_el_anillo_cubre
+    assert "could_not_run: 1" in r.stdout, (
+E   AssertionError: pedir 120 min contra un anillo de 2 no puede salir con could_not_run 0
+E   assert 'could_not_run: 1' in "== emisores de SIGTERM/SIGKILL desde 2 hours ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VICTI...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n"
+E    +  where "== emisores de SIGTERM/SIGKILL desde 2 hours ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VICTI...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'sigterm', '2 hours ago'], returncode=0, stdout="== ...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
+________ test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso ________
+tests/test_bb_bash.py:1331: in test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso
+    assert "could_not_run: 0" in r.stdout
+E   assert 'could_not_run: 0' in "== emisores de SIGTERM/SIGKILL desde 5 minutes ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VIC...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n"
+E    +  where "== emisores de SIGTERM/SIGKILL desde 5 minutes ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VIC...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'sigterm', '5 minutes ago'], returncode=0, stdout="=...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
+__________________ test_notify_manda_de_verdad_por_el_socket ___________________
+tests/test_bb_usable.py:226: in test_notify_manda_de_verdad_por_el_socket
+    srv.bind(str(ruta))
+E   PermissionError: [Errno 1] Operation not permitted
+______________ test_notify_sin_socket_no_manda_nada_y_no_revienta ______________
+tests/test_bb_usable.py:244: in test_notify_sin_socket_no_manda_nada_y_no_revienta
+    srv.bind(str(ruta))
+E   PermissionError: [Errno 1] Operation not permitted
+____________________ test_debt_skip_test_demonio_al_dia_52 _____________________
+tests/test_debt_registration_controls.py:656: in test_debt_skip_test_demonio_al_dia_52
+    assert _run_without_skips("tests/test_demonio_al_dia.py") == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_debt_registration_controls.py:620: in _run_without_skips
+    assert " skipped" not in output, output
+E   AssertionError: ss...ss.....                                                             [100%]
+E     =========================== short test summary info ============================
+E     SKIPPED [1] tests/test_demonio_al_dia.py:62: COULD_NOT_RUN: bb-usable.service no esta accesible; owner=Blackbox; trigger=ejecutar con acceso al systemd del host
+E     SKIPPED [1] tests/test_demonio_al_dia.py:79: COULD_NOT_RUN: bb-usable.service no esta accesible; owner=Blackbox; trigger=ejecutar con acceso al systemd del host
+E     SKIPPED [1] tests/test_demonio_al_dia.py:117: COULD_NOT_RUN: bb-usable.service no esta accesible; owner=Blackbox; trigger=ejecutar con acceso al systemd del host
+E     SKIPPED [1] tests/test_demonio_al_dia.py:131: COULD_NOT_RUN: bb-usable.service no esta accesible; owner=Blackbox; trigger=ejecutar con acceso al systemd del host
+E     8 passed, 4 skipped in 0.07s
+E     
+E   assert ' skipped' not in 'ss...ss.......d in 0.07s\n'
+E     
+E     ' skipped' is contained here:
+E       passed, 4 skipped in 0.07s
+E     ?          ++++++++
+___________________ test_debt_coverage_targets_bin_usable_01 ___________________
+tests/test_debt_registration_controls.py:970: in test_debt_coverage_targets_bin_usable_01
+    assert measured.returncode == 0, measured.stdout + measured.stderr
+E   AssertionError: .............FF............                                              [100%]
+E     =================================== FAILURES ===================================
+E     __________________ test_notify_manda_de_verdad_por_el_socket ___________________
+E     tests/test_bb_usable.py:226: in test_notify_manda_de_verdad_por_el_socket
+E         srv.bind(str(ruta))
+E     E   PermissionError: [Errno 1] Operation not permitted
+E     ______________ test_notify_sin_socket_no_manda_nada_y_no_revienta ______________
+E     tests/test_bb_usable.py:244: in test_notify_sin_socket_no_manda_nada_y_no_revienta
+E         srv.bind(str(ruta))
+E     E   PermissionError: [Errno 1] Operation not permitted
+E     =========================== short test summary info ============================
+E     FAILED tests/test_bb_usable.py::test_notify_manda_de_verdad_por_el_socket - P...
+E     FAILED tests/test_bb_usable.py::test_notify_sin_socket_no_manda_nada_y_no_revienta
+E     2 failed, 25 passed in 1.33s
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['coverage', 'run', '--branch', '--source=bin', '-m', 'pytest', '-q', 'tests/test_bb_usable.py']...ests/test_bb_usable.py::test_notify_sin_socket_no_manda_nada_y_no_revienta\n2 failed, 25 passed in 1.33s\n', stderr='').returncode
+=========================== short test summary info ============================
+FAILED tests/test_bb_bash.py::test_control_negativo_cap_deja_pasar_lo_que_cabe
+FAILED tests/test_bb_bash.py::test_bb_usable_con_latido_fresco_SI_cuenta - As...
+FAILED tests/test_bb_bash.py::test_control_negativo_bb_usable_activa_con_latido_RANCIO
+FAILED tests/test_bb_bash.py::test_control_negativo_bb_usable_activa_sin_latido[journal_vacio]
+FAILED tests/test_bb_bash.py::test_control_negativo_bb_usable_activa_sin_latido[solo_arranque]
+FAILED tests/test_bb_bash.py::test_sigterm_distingue_armado_de_no_armado - as...
+FAILED tests/test_bb_bash.py::test_sigterm_DECLARA_la_ventana_que_el_anillo_cubre
+FAILED tests/test_bb_bash.py::test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso
+FAILED tests/test_bb_usable.py::test_notify_manda_de_verdad_por_el_socket - P...
+FAILED tests/test_bb_usable.py::test_notify_sin_socket_no_manda_nada_y_no_revienta
+FAILED tests/test_debt_registration_controls.py::test_debt_skip_test_demonio_al_dia_52
+FAILED tests/test_debt_registration_controls.py::test_debt_coverage_targets_bin_usable_01
+12 failed, 1106 passed, 4 skipped in 195.14s (0:03:15)
