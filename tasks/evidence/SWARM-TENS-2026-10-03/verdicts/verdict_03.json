@@ -1,0 +1,82 @@
+[
+  {
+    "id": "DELTA-FORUM-CX7-POSTHOTPLUG-01",
+    "status": "open",
+    "reason": "Requiere nodo CX7 canary con versiones fijadas, caso sano y prueba NCCL/RDMA antes/después de hotplug, endpoint PCIe/AER y FieldDiag fresco. La captura nativa local observó NVIDIA GB10/driver 580.178.04, `ip -j link` rc 0 con 17 entradas/16 interfaces sysfs y 0 HCA RDMA; esto describe solo el host capturado y no prueba compatibilidad del sujeto del foro. Input habilitante: canary CX7 objetivo, versiones OEM y resultados/comandos del caso sano y negativo.",
+    "files": "none",
+    "close_check_before": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_cx7_posthotplug_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s",
+    "close_check_after": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_cx7_posthotplug_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s"
+  },
+  {
+    "id": "DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01",
+    "status": "open",
+    "reason": "Requiere ambos GX10/CX7, cables PN identificados y retest ib_write_bw bidireccional en frío y tras reboot individual/secuencial/hotplug. La captura local más reciente describe un GB10 y 0 HCA RDMA; no aporta los dos sujetos ni sus cables/configuración y no prueba compatibilidad de otro stack. Input: dos sujetos accesibles, stack/cable exactos y capturas antes/después.",
+    "files": "none",
+    "close_check_before": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_cx7_rdma_asymmetry_retest_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s",
+    "close_check_after": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_cx7_rdma_asymmetry_retest_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s"
+  },
+  {
+    "id": "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+    "status": "open",
+    "reason": "Instrumentos existentes no definen el contrato ligado a imagen para rank↔shard, gather/LSE, parcial no-cero, tolerancia frente a DCP1 y acceptance por posición; OOM pre-trim es subensayo separado. Input: imagen/repo fuente fijados, contrato del runtime y captura/oráculo de referencia, más criterio de headroom seguro.",
+    "files": "none",
+    "close_check_before": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_dcp_mtp_draft_correctness_and_pretrim_oom_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s",
+    "close_check_after": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_dcp_mtp_draft_correctness_and_pretrim_oom_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s"
+  },
+  {
+    "id": "DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01",
+    "status": "open",
+    "reason": "provider_trace no observa orden de cola, fairness DCP4 ni stall/throughput bajo concurrencia. Requiere canario TP8/DCP4 con decode largo y cuatro prefills concurrentes contra control stock, mediciones de corrección y rollback. Input: stack y carga canaria aprobados; no ejecutar workload de modelo.",
+    "files": "none",
+    "close_check_before": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_dcp4_decode_starvation_fair_scheduler_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s",
+    "close_check_after": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_dcp4_decode_starvation_fair_scheduler_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s"
+  },
+  {
+    "id": "DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01",
+    "status": "open",
+    "reason": "chat_sse_capture recoge fragmentación y finish del cliente, pero falta runtime fijado para probar DFlash+xgrammar, llamadas tool streamed/no-streamed/paralelas y follow-up, y control negativo incompatible. Input: imagen/digest, commit vLLM, fixtures deterministas y acceso a canario offline autorizado.",
+    "files": "none",
+    "close_check_before": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_dflash_xgrammar_structured_output_regression_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s",
+    "close_check_after": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_dflash_xgrammar_structured_output_regression_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s"
+  },
+  {
+    "id": "DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01",
+    "status": "open",
+    "reason": "Falta el stop/export script e invocación exacta, dependencias/orden y contrato de tag→digest/montaje/export; host_diagnostics no establece ese contrato y no hay captura local. Input: script, stack y campos no secretos de procedimiento/export. No ejecutar Docker ni inspect.",
+    "files": "none",
+    "close_check_before": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_dsv41_nfs_stop_tag_pin_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s",
+    "close_check_after": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_dsv41_nfs_stop_tag_pin_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s"
+  },
+  {
+    "id": "DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01",
+    "status": "open",
+    "reason": "host_diagnostics puede inventariar HCA/GID. La captura más reciente es de un GB10 con 0 HCA RDMA, y no contiene los dos nodos/twin, GID/IP efectivo, collective ni primera inferencia. Input: capturas de ambos nodos y salida del collective más control twin/GID nulo. No generar tráfico ni recuperar host.",
+    "files": "none",
+    "close_check_before": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_dualspark_nccl_gid_twin_and_cold_recovery_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s",
+    "close_check_after": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_dualspark_nccl_gid_twin_and_cold_recovery_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s"
+  },
+  {
+    "id": "DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01",
+    "status": "open",
+    "reason": "Falta sujeto dual GB10 y series OEM de potencia/clocks/CX7/rendimiento antes/después con controles repetidos. El experimento implica apagado y desconexión; no está autorizado y no se puede simular. Input: protocolo OEM aprobado y capturas canarias repetidas almacenadas externamente.",
+    "files": "none",
+    "close_check_before": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_dualspark_power_reset_recovery_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s",
+    "close_check_after": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_dualspark_power_reset_recovery_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s"
+  },
+  {
+    "id": "DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01",
+    "status": "open",
+    "reason": "chat_sse_capture observa salida visible pero no prueba corrección GLM-5.2, tokenizer/logprobs, prefix cache ni recipe on/off. Input: digest/runtime/model/tokenizer fijados y resultados de canario acotado con conversación creciente vs prompt único, controles de formato/razonamiento y límites de tools.",
+    "files": "none",
+    "close_check_before": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_glm52_multiturn_correctness_and_recipe_sensitivity_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s",
+    "close_check_after": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_glm52_multiturn_correctness_and_recipe_sensitivity_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s"
+  },
+  {
+    "id": "DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01",
+    "status": "open",
+    "reason": "provider_trace observa identidad/latencia provider-worker, no placement groups, GPU/TP por nodo, ni estados Ray. Input: dos nodos y capturas de asignación por rank/nodo más request acotado con finish/actividad y control negativo bajo imágenes fijadas.",
+    "files": "none",
+    "close_check_before": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_gptoss_multinode_ray_channel_timeout_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s",
+    "close_check_after": "exit=4; stdout=ERROR: not found: /tmp/bb-tens-c/tests/test_debt_registration_controls.py::test_delta_forum_gptoss_multinode_ray_channel_timeout_01 | (no match in any of [<Module test_debt_registration_controls.py>]) |  |  | no tests ran in 0.02s"
+  }
+]

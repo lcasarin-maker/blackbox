@@ -1,8 +1,12 @@
 from pathlib import Path
+import json
 import runpy
+import subprocess
 import sys
 
 from tools import chat_sse_capture as sse
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_text_tool_call_fragments_and_finish_reasons_are_preserved() -> None:
@@ -23,7 +27,139 @@ def test_text_tool_call_fragments_and_finish_reasons_are_preserved() -> None:
     assert choices[1]["tool_calls_delta"] == []
     assert choices[2]["tool_calls_delta"][0]["function"]["arguments"] == '{"q":'
     assert choices[3]["finish_reason"] == "tool_calls"
-    assert result["done_marker_seen"] is True
+
+
+def test_json_syntax_reconstructed_per_choice_from_content_fragments():
+    capture = (
+        'data: {"choices":[{"index":0,"delta":{"content":"{\\\"ok\\\":"},"finish_reason":null}]}\n\n'
+        'data: {"choices":[{"index":0,"delta":{"content":"true}"},"finish_reason":null}]}\n\n'
+        'data: {"choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}\n\n'
+        'data: [DONE]\n\n')
+    result = sse.parse_capture(capture, "capture.sse")
+    assessment = result["json_text_assessments"][0]
+    assert assessment["completion_status"] == "complete"
+    assert assessment["json_syntax_status"] == "valid_json"
+    assert assessment["finish_reason"] == "stop"
+    assert assessment["character_count"] == len('{"ok":true}')
+    assert "schema" in assessment["scope"]
+
+
+def test_invalid_json_is_separated_from_valid_json_schema_or_semantics():
+    capture = (
+        'data: {"choices":[{"index":0,"delta":{"content":"{\\\"ok\\\":}"},"finish_reason":null}]}\n\n'
+        'data: {"choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}\n\n'
+        'data: [DONE]\n\n')
+    assessment = sse.parse_capture(capture, "capture.sse")["json_text_assessments"][0]
+    assert assessment["completion_status"] == "complete"
+    assert assessment["json_syntax_status"] == "invalid_json"
+    assert assessment["json_error"] == "JSONDecodeError"
+    assert "semantic" in assessment["scope"]
+
+
+def test_length_refusal_content_filter_tool_calls_and_missing_done_stay_distinct():
+    def single(delta, finish, done="data: [DONE]\n\n"):
+        chunk = json.dumps({"choices": [{"index": 0, "delta": delta,
+                                          "finish_reason": finish}]})
+        return f"data: {chunk}\n\n{done}"
+
+    def result(capture):
+        return sse.parse_capture(capture, "capture.sse")["json_text_assessments"][0]
+
+    assert result(single({"content": "{}"}, "length"))["completion_status"] == "incomplete"
+    refused = result(single({"refusal": "sensitive response"}, "stop"))
+    assert refused["completion_status"] == "refusal"
+    assert refused["json_syntax_status"] == "not_assessed"
+    filtered = result(single({"content": "{}"}, "content_filter"))
+    assert filtered["completion_status"] == "content_filtered"
+    tool_call = result(single({"tool_calls": [{"index": 0}]}, "tool_calls"))
+    assert tool_call["completion_status"] == "tool_calls"
+    missing_done = result(single({"content": "{}"}, "stop", done=""))
+    assert missing_done["completion_status"] == "incomplete"
+    assert missing_done["json_syntax_status"] == "not_assessed"
+
+
+def test_json_summary_cli_never_prints_response_text(tmp_path):
+    capture = tmp_path / "capture.sse"
+    capture.write_text(
+        'data: {"choices":[{"index":0,"delta":{"content":"{\\\"value\\\":\\\"secret-content\\\"}"},"finish_reason":null}]}\n\n'
+        'data: {"choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}\n\n'
+        'data: [DONE]\n\n', encoding="utf-8")
+    result = subprocess.run([sys.executable, str(ROOT / "tools" / "chat_sse_capture.py"),
+                             "--json-summary-only", str(capture)],
+                            capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert "secret-content" not in result.stdout
+    payload = json.loads(result.stdout)
+    assert payload["json_text_assessments"][0]["completion_status"] == "complete"
+    assert len(payload["json_text_assessments"][0]["sha256"]) == 64
+    assert "status" in payload and "issues" in payload
+    assert "could_not_run_count" in payload
+
+
+def test_json_assessment_stops_at_finish_per_choice_and_rejects_negative_index():
+    frames = [
+        {"choices": [{"index": 0, "delta": {"content": "{}"}, "finish_reason": None},
+                      {"index": 1, "delta": {"content": "{bad"}, "finish_reason": None}]},
+        {"choices": [{"index": 0, "delta": {}, "finish_reason": "stop"},
+                      {"index": 1, "delta": {}, "finish_reason": "stop"}]},
+        {"choices": [{"index": 0, "delta": {"content": "late"}, "finish_reason": None}]},
+        {"choices": [{"index": -1, "delta": {"content": "{}"}, "finish_reason": "stop"}]},
+    ]
+    capture = "".join(f"data: {json.dumps(frame)}\n\n" for frame in frames) + "data: [DONE]\n\n"
+    assessments = sse.parse_capture(capture, "capture.sse")["json_text_assessments"]
+    by_index = {item["choice_index"]: item for item in assessments if "choice_index" in item}
+    assert by_index[0]["completion_status"] == "could_not_run"
+    assert "follows terminal finish_reason" in by_index[0]["reason"]
+    assert by_index[1]["json_syntax_status"] == "invalid_json"
+    assert any(item["completion_status"] == "could_not_run" and
+               "index" in item["reason"] for item in assessments if "choice_index" not in item)
+
+
+def test_json_assessment_surrogate_and_deep_nesting_are_could_not_run():
+    def capture_for(content):
+        first = json.dumps({"choices": [{"index": 0, "delta": {"content": content},
+                                          "finish_reason": None}]})
+        end = json.dumps({"choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}]})
+        return f"data: {first}\n\ndata: {end}\n\ndata: [DONE]\n\n"
+
+    lone_surrogate = sse.parse_capture(capture_for("\ud800"), "capture.sse")
+    assert lone_surrogate["json_text_assessments"][0]["completion_status"] == "could_not_run"
+    deeply_nested = sse.parse_capture(capture_for("[" * 10000 + "]" * 10000), "capture.sse")
+    assessment = deeply_nested["json_text_assessments"][0]
+    assert assessment["completion_status"] == "could_not_run"
+    assert "recursion limit" in assessment["reason"]
+
+
+def test_json_summary_cli_exit_codes_invalid_incomplete_and_empty(tmp_path):
+    def run(name, content, finish, choices=True):
+        capture = tmp_path / name
+        frames = []
+        if choices:
+            frames.append({"choices": [{"index": 0, "delta": {"content": content},
+                                         "finish_reason": None}]})
+            frames.append({"choices": [{"index": 0, "delta": {}, "finish_reason": finish}]})
+        else:
+            frames.append({"choices": []})
+        raw = "".join(f"data: {json.dumps(frame)}\n\n" for frame in frames)
+        capture.write_text(raw + "data: [DONE]\n\n", encoding="utf-8")
+        return subprocess.run([sys.executable, str(ROOT / "tools" / "chat_sse_capture.py"),
+                               "--json-summary-only", str(capture)],
+                              capture_output=True, text=True)
+
+    invalid = run("invalid.sse", "{bad", "stop")
+    assert invalid.returncode == 1
+    assert json.loads(invalid.stdout)["json_assessment_counts"]["invalid_json"] == 1
+    incomplete = run("incomplete.sse", "{}", "length")
+    assert incomplete.returncode == 2
+    assert json.loads(incomplete.stdout)["json_assessment_counts"]["incomplete"] == 1
+    empty = run("empty.sse", "", "stop", choices=False)
+    assert empty.returncode == 2
+    payload = json.loads(empty.stdout)
+    assert payload["json_assessment_counts"]["could_not_run"] == 1
+    assert payload["json_text_assessments"][0]["reason"] == \
+        "capture contains no choice response to assess"
+    assert "status" in payload and "issues" in payload
+    assert payload["could_not_run_count"] == 0
 
 
 def test_usage_only_chunk_and_multiline_data_frame_are_preserved() -> None:
@@ -162,3 +298,18 @@ def test_cli_statuses_and_module_entrypoint(tmp_path: Path, capsys, monkeypatch)
         assert exc.code == 2
     else:
         raise AssertionError("module entry point did not exit")
+
+
+def test_json_assessment_rejects_non_text_empty_output_and_missing_finish():
+    for delta, finish, completion in [
+        ({"content": {"text": "{}"}}, "stop", "could_not_run"),
+        ({"content": None}, "stop", "could_not_run"),
+        ({"content": ""}, "stop", "could_not_run"),
+        ({"content": "{}"}, None, "incomplete"),
+    ]:
+        chunk = {"choices": [{"index": 0, "delta": delta, "finish_reason": finish}]}
+        capture = "data: " + json.dumps(chunk) + "\n\ndata: [DONE]\n\n"
+        row = sse.parse_capture(capture, "fixture.sse")
+        assert row["json_text_assessments"][0]["completion_status"] == completion
+        assert row["json_assessment_counts"]["could_not_run"] == 1
+        assert row["json_assessment_counts"]["valid_json"] == 0

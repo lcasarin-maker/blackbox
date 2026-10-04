@@ -45,6 +45,45 @@ def test_error_nvrm_sin_wedge_se_registra_como_hito_independiente():
     assert result["psi_observations"] == []
 
 
+def test_oomd_mark_de_presion_conserva_cgroup_y_limites_observados():
+    result = analyze([journal(
+        "Marked /user.slice/user-1000.slice/app.slice/model.service for killing "
+        "due to memory pressure for /user.slice/user-1000.slice being 63.30% > "
+        "50.00% for > 20s with reclaim activity",
+        _COMM="systemd-oomd")], [])
+    event = result["oomd_actions"][0]
+    assert event["event_type"] == "marked_for_killing"
+    assert event["victim_cgroup"].endswith("model.service")
+    assert event["pressure_cgroup"] == "/user.slice/user-1000.slice"
+    assert event["observed_usage"] == "63.30%"
+    assert event["observed_threshold"] == "50.00%"
+    assert event["observed_duration"] == "20s"
+    assert "unauthenticated" in event["identity_provenance"]
+    assert result["could_not_run"] == []
+
+
+def test_oomd_syslog_identifier_solo_no_se_trata_como_origen_confiable():
+    result = analyze([journal(
+        "Marked /x for killing due to memory pressure for /x being 63.30% > "
+        "50.00% for > 20s with reclaim activity",
+        SYSLOG_IDENTIFIER="systemd-oomd")], [])
+    assert result["oomd_actions"] == []
+    assert any("untrusted SYSLOG_IDENTIFIER" in item for item in result["could_not_run"])
+
+
+def test_oomd_mensaje_desconocido_y_timestamp_ausente_quedan_could_not_run():
+    result = analyze([journal("Killed foo", _COMM="systemd-oomd", stamp="bad")], [])
+    assert result["oomd_actions"] == []
+    assert any("format unrecognized" in item for item in result["could_not_run"])
+    event = journal(
+        "Marked /x for killing due to memory pressure for /x being 63.30% > "
+        "50.00% for > 20s with reclaim activity", _COMM="systemd-oomd", stamp="bad")
+    result = analyze([event], [])
+    assert len(result["oomd_actions"]) == 1
+    assert result["oomd_actions"][0]["timestamp"] is None
+    assert any("timestamp missing or invalid" in item for item in result["could_not_run"])
+
+
 def test_wedge_psi_sin_nvrm_no_inventa_evento_de_allocator():
     rows = [journal("bb-usable: COLAPSO PSI mem_full=99.0", unit="bb-usable.service")]
     samples = [{"ts": "2026-09-24T14:00:00-06:00", "boot_id": "boot-b",
@@ -328,3 +367,29 @@ def test_script_guard_main_termina_con_codigo_dos_si_falta_fuente(tmp_path, monk
     with pytest.raises(SystemExit) as exc:
         runpy.run_path(str(CLI), run_name="__main__")
     assert exc.value.code == 2
+
+
+def test_oomd_v255_killed_and_newer_marked_remain_distinct():
+    suffix = " due to memory pressure for /user.slice being 60.00% > 50.00% for > 20s with reclaim activity"
+    for prefix, expected in [("Killed /user.slice/model.service", "kill_reported"),
+                             ("Marked /user.slice/model.service for killing", "marked_for_killing")]:
+        result = analyze([journal(prefix + suffix, _COMM="systemd-oomd")], [])
+        action = result["oomd_actions"][0]
+        assert action["event_type"] == expected
+        assert action["victim_cgroup"] == "/user.slice/model.service"
+        assert "completion" in action["note"]
+        assert result["could_not_run"] == []
+
+
+def test_oomd_non_action_message_is_ignored_and_conflicting_identity_is_unknown():
+    row = journal("Monitoring memory pressure", _COMM="systemd-oomd")
+    assert analyze([row], [])["oomd_actions"] == []
+    assert analyze([row], [])["could_not_run"] == []
+    for identity in [
+        {"_COMM": "systemd-oomd", "_SYSTEMD_UNIT": "other.service"},
+        {"_COMM": ["systemd-oomd"]},
+    ]:
+        result = analyze([journal("Killed /x", **identity)], [])
+        assert result["oomd_actions"] == []
+        assert len(result["could_not_run"]) == 1
+        assert "identity fields" in result["could_not_run"][0]

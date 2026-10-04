@@ -1,0 +1,92 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01",
+    "status": "open",
+    "reason": "Existe verify_cgroup_repro para fase 01, pero faltan capturas reales para fases 02–05 y el adapter plan específico. Contrato: lectura por fase/ID con fail vs could_not_run. Bloqueo: no hay capturas experimentales genuinas para fijar/verificar el criterio y no se pueden inventar; requiere la captura concreta descrita, sin bajar contrato.",
+    "files": "tools/verify_cgroup_repro.py; tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt; tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-615.json; tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/readiness.txt; tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/host-controls.txt",
+    "close_check_before": "Close check literal de la ficha ejecutado antes: pytest selector => not found / no tests ran; criterio no ejecutado.",
+    "close_check_after": "Selector pytest literal repetido después del avance: ERROR not found/no tests ran; ningún cierre experimental pasa.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01",
+    "status": "open",
+    "reason": "Agrupa 15 dominios con criterios dispares. Falta contrato versionado/adapters por ID y capturas identificadas; un verificador genérico de informes no satisface la ficha. Bloqueo: no hay capturas experimentales genuinas para fijar/verificar el criterio y no se pueden inventar; requiere la captura concreta descrita, sin bajar contrato.",
+    "files": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01.md; tools/verify_apt_critical_removals.py",
+    "close_check_before": "Close check literal de la ficha ejecutado antes: pytest selector => not found / no tests ran; criterio no ejecutado.",
+    "close_check_after": "Selector pytest literal repetido después del avance: ERROR not found/no tests ran; ningún cierre experimental pasa.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01",
+    "status": "open",
+    "reason": "Faltan A/B pareado con OEM/kernel/driver, reloj aplicado bajo carga y control, throughput/eventos, y rollback medido. Sin registros crudos no se puede fijar parser específico; no cambiar clocks. Bloqueo: no hay capturas experimentales genuinas para fijar/verificar el criterio y no se pueden inventar; requiere la captura concreta descrita, sin bajar contrato.",
+    "files": "tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md; tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt; tools/atom_gpu_telemetry.py",
+    "close_check_before": "Close check literal de la ficha ejecutado antes: pytest selector => not found / no tests ran; criterio no ejecutado.",
+    "close_check_after": "Selector pytest literal repetido después del avance: ERROR not found/no tests ran; ningún cierre experimental pasa.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01",
+    "status": "open",
+    "reason": "Faltan traza real de asignación/dueño/memcg/flags y control CPU; además medición del objeto bytes/backing/slots/page size/costo/liberación. Captura fase 02 requeriría privilegios/root y no se ejecutó. Bloqueo: no hay capturas experimentales genuinas para fijar/verificar el criterio y no se pueden inventar; requiere la captura concreta descrita, sin bajar contrato.",
+    "files": "tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md; tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md; tools/kernel_charges.bt; tools/memory_profile.py",
+    "close_check_before": "Close check literal de la ficha ejecutado antes: pytest selector => not found / no tests ran; criterio no ejecutado.",
+    "close_check_after": "Selector pytest literal repetido después del avance: ERROR not found/no tests ran; ningún cierre experimental pasa.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01",
+    "status": "open",
+    "reason": "Avance parcial implementada para revisión raíz: lector offline de marcador literal con estados present/incomplete/absent/unknown, procedencia caller_supplied_unverified, y cierre siempre open. Tests de lector: 3 passed; Ruff: All checks passed!; Pyright: 0 errors, 0 warnings, 0 informations. No hay log real del receptor y faltan firma/Secure Boot, route/receiver negativos, persistencia, correlación y rollback. La captura readonly reporta módulo y boot parameter ausentes; no hay marker recibido off-host. Criterio además requiere firma/Secure Boot, controles ruta/receptor, persistencia, correlación y rollback. Esos datos reales deben preceder schema/adapter. Bloqueo: no hay capturas experimentales genuinas para fijar/verificar el criterio y no se pueden inventar; requiere la captura concreta descrita, sin bajar contrato.",
+    "files": "tools/kernel_capture.py; tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json; docs/evidence/BB-INSTRUMENTS-kernel.md; tasks/evidence/FEATURE-FORUM-NETCONSOLE-01/progress.txt; tools/verify_netconsole.py; tests/test_verify_netconsole.py",
+    "close_check_before": "Close check literal de la ficha ejecutado antes: pytest selector => not found / no tests ran; criterio no ejecutado.",
+    "close_check_after": "Selector pytest literal repetido después del avance: ERROR not found/no tests ran; ningún cierre experimental pasa.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01",
+    "status": "open",
+    "reason": "Reutilización existente observa configuración/pstore pero pstore devuelve PermissionError; sin ensayo RCU/panic/reboot/rollback no hay captura para discriminar corrección/recuperación. No disparar panic/reboot. Bloqueo: no hay capturas experimentales genuinas para fijar/verificar el criterio y no se pueden inventar; requiere la captura concreta descrita, sin bajar contrato.",
+    "files": "tools/recovery_profile.py; tools/kernel_capture.py; tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json",
+    "close_check_before": "Close check literal de la ficha ejecutado antes: pytest selector => not found / no tests ran; criterio no ejecutado.",
+    "close_check_after": "Selector pytest literal repetido después del avance: ERROR not found/no tests ran; ningún cierre experimental pasa.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+    "status": "open",
+    "reason": "La enumeración readonly está instrumentada, pero la captura tuvo cero entradas HID. Falta identidad real del dispositivo y función post-update; no existe selector de verificador específico. Bloqueo: no hay capturas experimentales genuinas para fijar/verificar el criterio y no se pueden inventar; requiere la captura concreta descrita, sin bajar contrato.",
+    "files": "tools/host_diagnostics.py; tests/test_device_inventory.py; docs/evidence/BB-INSTRUMENTS-devices.md",
+    "close_check_before": "Close check literal de la ficha ejecutado antes: pytest selector => not found / no tests ran; criterio no ejecutado.",
+    "close_check_after": "Selector pytest literal repetido después del avance: ERROR not found/no tests ran; ningún cierre experimental pasa.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01",
+    "status": "open",
+    "reason": "Observación muestra Wi-Fi down y Ethernet activo; falta secuencia NM/supplicant, pruebas local/remota sincronizadas y ensayo A/B/rollback en GX10/MT7925. Cambios de config/servicios quedan diferidos al laboratorio. Bloqueo: no hay capturas experimentales genuinas para fijar/verificar el criterio y no se pueden inventar; requiere la captura concreta descrita, sin bajar contrato.",
+    "files": "tools/host_diagnostics.py; tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/host-observation.txt",
+    "close_check_before": "Close check literal de la ficha ejecutado antes: pytest selector => not found / no tests ran; criterio no ejecutado.",
+    "close_check_after": "Selector pytest literal repetido después del avance: ERROR not found/no tests ran; ningún cierre experimental pasa.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DEBT-HOST-DEPLOYED-DRIFT-01",
+    "status": "open",
+    "reason": "Close check ejecutó y reportó 41 revisados, 2 divergentes, 0 ausentes, 1 suspendido. Archivos divergentes son /etc/modprobe.d/99-blackbox-uvm.conf y /usr/local/bin/nvrm-watch.sh. La ficha asigna sincronización a Luis pendiente autorización; no modificar host. Bloqueo: no hay capturas experimentales genuinas para fijar/verificar el criterio y no se pueden inventar; requiere la captura concreta descrita, sin bajar contrato.",
+    "files": "tasks/backlog/DEBT-HOST-DEPLOYED-DRIFT-01.md; tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/source.json; tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/fail.txt",
+    "close_check_before": "Close check literal de la ficha ejecutado antes: bash bin/bb drift => 41 revisados; 2 divergentes; 0 ausentes; 1 suspendido.",
+    "close_check_after": "bash bin/bb drift => 41 revisados, 2 divergentes, 0 ausentes, 1 suspendido; close check sigue fallando con hallazgos existentes.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DEBT-JUDGE-THREAT-SWEEP-TOOLS-01",
+    "status": "open",
+    "reason": "Selector test file no existe. Parche debe entrar por productor upstream Simplecode y reconstrucción del runtime fijado; tarea prohíbe editar checkout upstream/producto generado. No editar este repo para fingir productor. Bloqueo: no hay capturas experimentales genuinas para fijar/verificar el criterio y no se pueden inventar; requiere la captura concreta descrita, sin bajar contrato.",
+    "files": "tasks/evidence/CLEAN-2026-10-03/judge-scope-review.json; .simplecode/kit.lock; simplecode/verification/adversarial_judge.py",
+    "close_check_before": "Close check literal de la ficha ejecutado antes: pytest selector => not found / no tests ran; criterio no ejecutado.",
+    "close_check_after": "python3 -m pytest -q tests/test_adversarial_product_scope.py::test_threat_sweep_reads_tools_and_rejects_injected_case => ERROR file or directory not found; 0 tests ran.",
+    "worker_status": "ABIERTA"
+  }
+]

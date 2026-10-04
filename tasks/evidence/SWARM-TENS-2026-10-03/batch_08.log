@@ -1,0 +1,46 @@
+Batch 08 close-check execution log (before / after)
+Worktree: /tmp/bb-tens-a
+
+FEATURE-1358-CGROUP-03-NATIVO
+Command: python3 -m tools.verify_cgroup_plan --phase 03-nativo --evidence tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO
+Output: /opt/miniforge3/bin/python3: No module named tools.verify_cgroup_plan
+
+FEATURE-1358-CGROUP-04-PARCHE
+Command: python3 -m tools.verify_cgroup_plan --phase 04-parche --evidence tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE
+Output: /opt/miniforge3/bin/python3: No module named tools.verify_cgroup_plan
+
+FEATURE-1358-CGROUP-05-CUELGUES
+Command: python3 -m tools.verify_cgroup_plan --phase 05-cuelgues --evidence tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES
+Output: /opt/miniforge3/bin/python3: No module named tools.verify_cgroup_plan
+
+FEATURE-APT-CRITICAL-METAPACKAGE-GUARD
+Command: python3 -m tools.verify_apt_critical_removals --evidence tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD
+Output: {"checks":{"captured_critical_removal":"block","captured_upgrade":"pass"},"closure":"open","could_not_run":0,"evidence_sha256":"10c4b042ee56de970ef0d96a91ea352a80313a9780171f3e076af37385a7689d","fail":0,"findings":[],"meaning":"instrument discriminates these host simulations; OEM protection and installed APT guard are unverified","open_blockers":["OEM coverage and installed APT guard remain unverified"],"status":"pass"}
+
+FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01
+Command: python3 -m tools.verify_forum_finding --id FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01 --evidence tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01
+Output: /opt/miniforge3/bin/python3: No module named tools.verify_forum_finding
+
+FEATURE-FORUM-GB10-RUNTIME-COMPAT-01
+Command: python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 --evidence tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01
+Output: /opt/miniforge3/bin/python3: No module named tools.verify_forum_finding
+
+FEATURE-FORUM-GPU-CLOCK-CAP-AB-01
+Command: python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01
+Output: /opt/miniforge3/bin/python3: No module named tools.verify_gpu_clock_cap_ab
+
+FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01
+Command: python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01 --evidence tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01
+Output: /opt/miniforge3/bin/python3: No module named tools.verify_forum_finding
+
+FEATURE-FORUM-NETCONSOLE-01
+Command: python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01
+Output: usage: verify_netconsole.py [-h] --log LOG --marker MARKER; error: required --log and --marker arguments (exit 2). Root owns this tool; unchanged.
+
+FEATURE-FORUM-NVME-READONLY-01
+Command: python3 -m pytest tests/test_nvme_readonly.py -q
+Before: 20 passed in 0.24s
+After: 20 passed in 0.16s
+Interpretation: fixture/instrument and temp-file export controls pass; laboratory NVMe recovery evidence remains absent.
+
+Repository mutation: no batch-08 code or card edits. Existing root-owned netconsole edits left untouched.

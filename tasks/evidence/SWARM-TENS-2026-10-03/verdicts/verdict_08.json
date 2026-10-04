@@ -1,0 +1,92 @@
+[
+  {
+    "id": "FEATURE-1358-CGROUP-03-NATIVO",
+    "status": "open",
+    "reason": "El close check pide tools.verify_cgroup_plan, que no existe. Falta traza real del stack compatible, captura GPU/dmem con cgroup/memcg, lecturas de cargo/límites/compartición/liberación por dos cgroups y control CPU/no-GPU; no lanzar workload GPU. Estado: evidencia o verificador experimental requerido sigue pendiente; conservar open/could_not_run y el contrato original.",
+    "files": "tasks/backlog/FEATURE-1358-CGROUP-03-NATIVO.md; tools/verify_cgroup_repro.py; tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO",
+    "close_check_before": "Close check literal ejecutado antes: `python3 -m tools.verify_cgroup_plan --phase 03-nativo` => No module named verifier.",
+    "close_check_after": "Close check literal repetido después: `python3 -m tools.verify_cgroup_plan --phase 03-nativo` => No module named verifier; no evidence/parser changes.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-04-PARCHE",
+    "status": "open",
+    "reason": "El selector verify_cgroup_plan no existe. El contrato supedita el diff de parche a que fases 02/03 demuestren hueco; no hay captura que justifique candidato ni ensayo de runtime/control. No aplicar parche NVIDIA. Estado: evidencia o verificador experimental requerido sigue pendiente; conservar open/could_not_run y el contrato original.",
+    "files": "tasks/backlog/FEATURE-1358-CGROUP-04-PARCHE.md; tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE; tools/verify_cgroup_repro.py",
+    "close_check_before": "Close check literal ejecutado antes: `python3 -m tools.verify_cgroup_plan --phase 04-parche` => No module named verifier.",
+    "close_check_after": "Close check literal repetido después: `python3 -m tools.verify_cgroup_plan --phase 04-parche` => No module named verifier; no evidence/parser changes.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-05-CUELGUES",
+    "status": "open",
+    "reason": "El selector verify_cgroup_plan no existe. Falta ensayo A/B de carga/cuota con stack/versión, exposición, servicio, registros y respuesta; requiere workload GPU/LLM y posibles cuelgues, prohibidos en esta tanda. Estado: evidencia o verificador experimental requerido sigue pendiente; conservar open/could_not_run y el contrato original.",
+    "files": "tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md; tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES; tools/verify_cgroup_repro.py",
+    "close_check_before": "Close check literal ejecutado antes: `python3 -m tools.verify_cgroup_plan --phase 05-cuelgues` => No module named verifier.",
+    "close_check_after": "Close check literal repetido después: `python3 -m tools.verify_cgroup_plan --phase 05-cuelgues` => No module named verifier; no evidence/parser changes.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+    "status": "open",
+    "reason": "Verificador actual devuelve PASS, fail=0, could_not_run=0: simulación de actualización inocua=pass y remoción crítica=block, SHA-256 10c4b042ee56de970ef0d96a91ea352a80313a9780171f3e076af37385a7689d. Mantener abierta: `apt remove aisleriot` del caso fuente no se pudo reproducir (aisleriot ausente), falta cobertura OEM/versión arreglada; preflight clasifica planes pero no hay guard integrado. No se aplicó transacción. Estado: evidencia o verificador experimental requerido sigue pendiente; conservar open/could_not_run y el contrato original.",
+    "files": "tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md; tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/apt-captures.json; tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/validator-run.json; tools/verify_apt_critical_removals.py",
+    "close_check_before": "Close check literal ejecutado antes: verifier status=pass, fail=0, could_not_run=0; captured_upgrade=pass, captured_critical_removal=block; close remains open per missing source scenario/OEM scope.",
+    "close_check_after": "Close check literal repetido después: verifier status=pass, fail=0, could_not_run=0; captured_upgrade=pass, captured_critical_removal=block; same hash; no package transaction applied.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+    "status": "open",
+    "reason": "tools.verify_forum_finding no existe. Falta secuencia real de login gráfico fallido con host/SSH vivo, control de host inaccesible y recuperación/rollback OEM; no reiniciar servicios ni tocar sesión. Estado: evidencia o verificador experimental requerido sigue pendiente; conservar open/could_not_run y el contrato original.",
+    "files": "tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md; tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01; tools/host_diagnostics.py",
+    "close_check_before": "Close check literal ejecutado antes: `python3 -m tools.verify_forum_finding --id FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01` => No module named verifier.",
+    "close_check_after": "Close check literal repetido después: `python3 -m tools.verify_forum_finding --id FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01` => No module named verifier; no evidence/parser changes.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "status": "open",
+    "reason": "tools.verify_forum_finding no existe. Preflight capturado permanece unknown por manifest cubin/PTX incompleto; no hay matriz exacta de wheel/toolchain/modelo con salida funcional/estabilidad/control negativo/rollback. No ejecutar workload GPU/LLM. Estado: evidencia o verificador experimental requerido sigue pendiente; conservar open/could_not_run y el contrato original.",
+    "files": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md; tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/preflight.json; tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/commands.json; tools/preflight.py",
+    "close_check_before": "Close check literal ejecutado antes: `python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GB10-RUNTIME-COMPAT-01` => No module named verifier.",
+    "close_check_after": "Close check literal repetido después: `python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GB10-RUNTIME-COMPAT-01` => No module named verifier; no evidence/parser changes.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "status": "open",
+    "reason": "tools.verify_gpu_clock_cap_ab no existe. Faltan comparación pareada de clock aplicado bajo carga, estabilidad/performance y restauración de política original para OEM/driver identificados. No cambiar clocks ni correr workload. Estado: evidencia o verificador experimental requerido sigue pendiente; conservar open/could_not_run y el contrato original.",
+    "files": "tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md; tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01; tools/atom_gpu_telemetry.py",
+    "close_check_before": "Close check literal ejecutado antes: `python3 -m tools.verify_gpu_clock_cap_ab` => No module named verifier.",
+    "close_check_after": "Close check literal repetido después: `python3 -m tools.verify_gpu_clock_cap_ab` => No module named verifier; no evidence/parser changes.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "status": "open",
+    "reason": "tools.verify_forum_finding no existe. Falta caso real PCI-presente/GSP-inaccesible, control funcional y recuperación/rollback por OEM; no reiniciar ni ejecutar carga GPU. Estado: evidencia o verificador experimental requerido sigue pendiente; conservar open/could_not_run y el contrato original.",
+    "files": "tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md; tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01; tools/host_diagnostics.py",
+    "close_check_before": "Close check literal ejecutado antes: `python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01` => No module named verifier.",
+    "close_check_after": "Close check literal repetido después: `python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01` => No module named verifier; no evidence/parser changes.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-FORUM-NETCONSOLE-01",
+    "status": "open",
+    "reason": "Close check actual falla en argparse: CLI requiere --log y --marker, mientras ficha pide --evidence. No cambiar módulo por indicación del propietario raíz. Aun con lector, faltan log real del receptor, Secure Boot/firma, ruta/receptor, persistencia, correlación y rollback; no hay ensayo nativo. Estado: evidencia o verificador experimental requerido sigue pendiente; conservar open/could_not_run y el contrato original.",
+    "files": "tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md; tasks/evidence/FEATURE-FORUM-NETCONSOLE-01; tools/verify_netconsole.py",
+    "close_check_before": "Close check literal ejecutado antes: `python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01` => argparse exit 2; required --log and --marker.",
+    "close_check_after": "Close check literal repetido después: same literal => argparse exit 2; required --log and --marker. Tool is root-owned; no edits made.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-FORUM-NVME-READONLY-01",
+    "status": "open",
+    "reason": "Close check pasa: 20 tests passed. Fixtures distinguen I/O NVMe, root read-only, consulta inaccesible y sujeto sano; copia temporal verifica hash/identidad/FS separado y no escribe fuente. Ficha sigue abierta porque falta prueba de recuperación/export sobre copia/dispositivo de laboratorio con OEM/ruta de retorno y captura de identidad/firmware/logs real; el test sintético no acredita estado físico. Estado: evidencia o verificador experimental requerido sigue pendiente; conservar open/could_not_run y el contrato original.",
+    "files": "tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md; tools/nvme_readonly.py; tests/test_nvme_readonly.py; tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/host-observation.txt",
+    "close_check_before": "Close check literal ejecutado antes: `python3 -m pytest tests/test_nvme_readonly.py -q` => 20 passed in 0.24s; experimental recovery remains absent.",
+    "close_check_after": "Close check literal repetido después: `python3 -m pytest tests/test_nvme_readonly.py -q` => 20 passed in 0.16s; experimental recovery remains absent.",
+    "worker_status": "ABIERTA"
+  }
+]

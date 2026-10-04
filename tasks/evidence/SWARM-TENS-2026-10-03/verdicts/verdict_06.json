@@ -1,0 +1,92 @@
+[
+  {
+    "id": "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01",
+    "status": "open",
+    "reason": "No se midió un A/B térmico pareado GX10 con OEM/firmware/ambiente/carga, throughput, clocks, potencia, curvas de fan y rollback. Los STL/imágenes vinculados siguen sin inspección; no instalar ni imponer cap. Bloqueo vigente: falta la evidencia funcional indicada por el contrato y el selector del close check no existe; mantener open/could_not_run.",
+    "files": "tasks/backlog/DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01.md; tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md",
+    "close_check_before": "Close check literal ejecutado antes del trabajo: selector pytest no encontrado; `no tests ran`, `ERROR: not found`.",
+    "close_check_after": "Close check literal repetido después: selector pytest no encontrado; `no tests ran`, `ERROR: not found`. No se alteró ningún selector ni se afirmó cierre.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01",
+    "status": "open",
+    "reason": "La captura local del lector tuvo could_not_run=0 y enumera canales. Falta sujeto ASUS GX10, frescura/ cobertura efectiva de canales y soak/control sano-negativo con apagado funcional; el estado observed sólo significa lecturas enumeradas. Bloqueo vigente: falta la evidencia funcional indicada por el contrato y el selector del close check no existe; mantener open/could_not_run.",
+    "files": "tasks/backlog/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01.md; tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/prototype-capture.json; tools/thermal_coverage.py",
+    "close_check_before": "Close check literal ejecutado antes del trabajo: selector pytest no encontrado; `no tests ran`, `ERROR: not found`.",
+    "close_check_after": "Close check literal repetido después: selector pytest no encontrado; `no tests ran`, `ERROR: not found`. No se alteró ningún selector ni se afirmó cierre.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+    "status": "open",
+    "reason": "La enumeración reutilizada ve velocidad e identidad USB local; no hay par de discos RAID del caso, regla de piso acordada ni control que mantenga array detenido si link baja/falta. No se probó montaje ni quirk UAS. Bloqueo vigente: falta la evidencia funcional indicada por el contrato y el selector del close check no existe; mantener open/could_not_run.",
+    "files": "tasks/backlog/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.md; tools/host_diagnostics.py; docs/evidence/BB-INSTRUMENTS-devices.md",
+    "close_check_before": "Close check literal ejecutado antes del trabajo: selector pytest no encontrado; `no tests ran`, `ERROR: not found`.",
+    "close_check_after": "Close check literal repetido después: selector pytest no encontrado; `no tests ran`, `ERROR: not found`. No se alteró ningún selector ni se afirmó cierre.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01",
+    "status": "open",
+    "reason": "La captura observa imagen, driver, CUDA y arquitectura; falta PTXAS/compiler, wheel y build efectivo, backend/kernel matrix, modelo real, generación correcta/control negativo y rollback. No ejecutar workloads GPU/LLM. Bloqueo vigente: falta la evidencia funcional indicada por el contrato y el selector del close check no existe; mantener open/could_not_run.",
+    "files": "tasks/backlog/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01.md; tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json; tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/commands.json",
+    "close_check_before": "Close check literal ejecutado antes del trabajo: selector pytest no encontrado; `no tests ran`, `ERROR: not found`.",
+    "close_check_after": "Close check literal repetido después: selector pytest no encontrado; `no tests ran`, `ERROR: not found`. No se alteró ningún selector ni se afirmó cierre.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01",
+    "status": "open",
+    "reason": "La identificación de imagen/contenedor no observa mapa Ray de recursos por nodo ni admisión/canario. Faltan stack/modelo y caso real con control; probarlos requiere workload GPU/LLM prohibido. Bloqueo vigente: falta la evidencia funcional indicada por el contrato y el selector del close check no existe; mantener open/could_not_run.",
+    "files": "tasks/backlog/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01.md; tasks/evidence/BB-INSTRUMENTS-runtime.md; tools/host_diagnostics.py",
+    "close_check_before": "Close check literal ejecutado antes del trabajo: selector pytest no encontrado; `no tests ran`, `ERROR: not found`.",
+    "close_check_after": "Close check literal repetido después: selector pytest no encontrado; `no tests ran`, `ERROR: not found`. No se alteró ningún selector ni se afirmó cierre.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+    "status": "open",
+    "reason": "El inventario readonly ya observa identidad/mountpoint/UUID, pero no hay ensayo de backup, identidad comprobada durante operación, restore y boot efectivo. No escribir host ni desmontar/alterar volúmenes. Bloqueo vigente: falta la evidencia funcional indicada por el contrato y el selector del close check no existe; mantener open/could_not_run.",
+    "files": "tasks/backlog/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01.md; tasks/evidence/BB-INSTRUMENTS-2026-10-03/boot_storage.json; tools/boot_storage.py",
+    "close_check_before": "Close check literal ejecutado antes del trabajo: selector pytest no encontrado; `no tests ran`, `ERROR: not found`.",
+    "close_check_after": "Close check literal repetido después: selector pytest no encontrado; `no tests ran`, `ERROR: not found`. No se alteró ningún selector ni se afirmó cierre.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01",
+    "status": "open",
+    "reason": "Revisé entradas existentes: runtime-capture conserva container_id/image_ref/image_id; commands.json usa {cmd, exit, stdout} y docker inspect con estado/arquitectura/CUDA. No existe salida capturada dentro del contenedor que identifique wheel/build efectivo, comparación con artifact esperado, manifiesto/hash de offline cache ni arranque sin red. Registré esta revisión en la ficha. No añadí un parser que confunda image ID con build ni inventé otro esquema. Bloqueo vigente: falta la evidencia funcional indicada por el contrato y el selector del close check no existe; mantener open/could_not_run.",
+    "files": "tasks/backlog/DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01.md; tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json; tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/commands.json",
+    "close_check_before": "Close check literal ejecutado antes del trabajo: selector pytest no encontrado; `no tests ran`, `ERROR: not found`.",
+    "close_check_after": "Close check literal repetido después: selector pytest no encontrado; `no tests ran`, `ERROR: not found`. No se alteró ningún selector ni se afirmó cierre.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01",
+    "status": "open",
+    "reason": "Falta reproducer 6K/4K por OEM/driver, lectura de carveout efectivo, sesión local/SSH sana y fallo controlado con rollback. El ensayo con presión gráfica es riesgo host y carga GPU prohibida. Bloqueo vigente: falta la evidencia funcional indicada por el contrato y el selector del close check no existe; mantener open/could_not_run.",
+    "files": "tasks/backlog/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01.md; tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md; tasks/evidence/BB-INSTRUMENTS-2026-10-03/boot_storage.json",
+    "close_check_before": "Close check literal ejecutado antes del trabajo: selector pytest no encontrado; `no tests ran`, `ERROR: not found`.",
+    "close_check_after": "Close check literal repetido después: selector pytest no encontrado; `no tests ran`, `ERROR: not found`. No se alteró ningún selector ni se afirmó cierre.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01",
+    "status": "open",
+    "reason": "El parser de captura SSE conserva deltas visibles, pero no hay historial real reproducible ni observa parser/recovery del servidor, llamadas espurias o contexto largo. Sin input real no hay contrato específico comprobable; workload LLM está prohibido. Bloqueo vigente: falta la evidencia funcional indicada por el contrato y el selector del close check no existe; mantener open/could_not_run.",
+    "files": "tasks/backlog/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01.md; tools/chat_sse_capture.py; docs/evidence/BB-INSTRUMENTS-contracts.md",
+    "close_check_before": "Close check literal ejecutado antes del trabajo: selector pytest no encontrado; `no tests ran`, `ERROR: not found`.",
+    "close_check_after": "Close check literal repetido después: selector pytest no encontrado; `no tests ran`, `ERROR: not found`. No se alteró ningún selector ni se afirmó cierre.",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01",
+    "status": "open",
+    "reason": "Prometheus/SSE no muestra progreso interno por solicitud de engine. Falta telemetría backend de antigüedad de cola, inicio/progreso prefill, decode y terminación/cancelación; laboratorio multiusuario sería workload LLM prohibido. Bloqueo vigente: falta la evidencia funcional indicada por el contrato y el selector del close check no existe; mantener open/could_not_run.",
+    "files": "tasks/backlog/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01.md; tools/runtime_provenance.py; docs/evidence/BB-INSTRUMENTS-requests.md",
+    "close_check_before": "Close check literal ejecutado antes del trabajo: selector pytest no encontrado; `no tests ran`, `ERROR: not found`.",
+    "close_check_after": "Close check literal repetido después: selector pytest no encontrado; `no tests ran`, `ERROR: not found`. No se alteró ningún selector ni se afirmó cierre.",
+    "worker_status": "ABIERTA"
+  }
+]

@@ -1,0 +1,182 @@
+[
+  {
+    "id": "DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01",
+    "status": "open",
+    "reason": "OPEN. El selector del close_check no existe en este worktree (pytest rc=4, no tests ran). apt_sources ya captura el tuple local DGX build/OTA/kernel/driver y la captura nativa confirma GPU GB10/driver presente; falta release-note y matriz OEM de soporte, rollout canary, baseline/soak y rollback. Inventario no equivale a compatibilidad.",
+    "files": "tasks/backlog/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01.md; tools/apt_sources.py; tasks/evidence/BB-INSTRUMENTS-2026-10-03/apt-sources-capture.json; docs/evidence/BB-INSTRUMENTS-apt.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    },
+    "close_check_after": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (rc=4). memory_profile/atom_gpu_telemetry observan memoria y PSI general; no hay logs locales de compile frío por rank/etapa ni serie para comparar eager. Captura nativa sí confirma GB10 disponible (nvidia-smi rc=0, driver 580.178.04); este lote no ejecutó workload, presión u OOM.",
+    "files": "tasks/backlog/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01.md; tools/memory_profile.py; tools/atom_gpu_telemetry.py; docs/evidence/BB-INSTRUMENTS-2026-10-03-report.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_cold_compile_oom_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_qwen_cold_compile_oom_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    },
+    "close_check_after": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_cold_compile_oom_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_qwen_cold_compile_oom_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-LONG-AGENT-STOP-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (rc=4). SSE ahora extrae finish_reason y deltas visibles, pero no existe captura local de sesión larga ni estado de tarea abierta para probar parada prematura, repetición de acciones o recuperación; requiere soak/harness fijado.",
+    "files": "tasks/backlog/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01.md; tools/chat_sse_capture.py; docs/evidence/BB-INSTRUMENTS-contracts.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_long_agent_stop_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_qwen_long_agent_stop_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    },
+    "close_check_after": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_long_agent_stop_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_qwen_long_agent_stop_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (rc=4). El parser SSE agrega evaluación offline del texto JSON y preserva finish/tool-call/refusal, pero faltan stack/parser/MTP fijados, cancelación real y llamada posterior en el mismo proceso; no se invocaron modelos ni herramientas.",
+    "files": "tasks/backlog/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01.md; tools/chat_sse_capture.py; tests/test_chat_sse_capture.py; docs/evidence/SWARM-TENS-2026-10-03-batch05.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    },
+    "close_check_after": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (rc=4). Añadí en hitos_incidente un lector offline del evento de systemd-oomd “Marked … for killing …”, validado contra systemd/src/oom/oomd-manager.c líneas 3198–3207 (referencia main; versión local de systemd no aparece en captura). Solo marca intención; no prueba terminación ni vincula a cache/servicio. No se aportó journal nativo OOMD, stack o serie larga; fixtures no son evidencia experimental.",
+    "files": "tasks/backlog/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01.md; tools/hitos_incidente.py; tests/test_1358_hitos_nvrm.py; docs/evidence/SWARM-TENS-2026-10-03-batch05.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_service_oomd_cache_fail_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_qwen_service_oomd_cache_fail_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    },
+    "close_check_after": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_service_oomd_cache_fail_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_qwen_service_oomd_cache_fail_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (rc=4). SSE conserva deltas parciales de tool call, pero no mide acceptance MTP, progreso de engine/collective/rank ni request-id runtime; no existe captura nativa del wedge y no se hizo carga.",
+    "files": "tasks/backlog/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01.md; tools/chat_sse_capture.py; docs/evidence/BB-INSTRUMENTS-contracts.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_toolcall_wedge_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_qwen_toolcall_wedge_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    },
+    "close_check_after": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_toolcall_wedge_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_qwen_toolcall_wedge_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (rc=4). Preflight/identidad capturada y GPU nativa visible, pero el requisito es primer request real del modelo/build/backend NVFP4 con referencia y fallback pareado. No se hicieron requests ni workloads GPU/LLM.",
+    "files": "tasks/backlog/DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01.md; tools/preflight.py; docs/evidence/BB-INSTRUMENTS-2026-10-03-report.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    },
+    "close_check_after": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (rc=4). SSE puede recomponer por choice y medir hash/sintaxis JSON; refusal, filter, length, tool calls e incompletitud quedan separados, salida resumen no incluye texto crudo. Esto no evalúa schema/semántica ni deriva de 30 minutos; falta captura longa pareada y stack fijado.",
+    "files": "tasks/backlog/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01.md; tools/chat_sse_capture.py; tests/test_chat_sse_capture.py; docs/evidence/SWARM-TENS-2026-10-03-batch05.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen38_long_run_json_correctness_canary_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_qwen38_long_run_json_correctness_canary_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    },
+    "close_check_after": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen38_long_run_json_correctness_canary_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_qwen38_long_run_json_correctness_canary_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (rc=4). Captura confirma GB10 disponible; falta laboratorio de dos nodos y tuple host/container Torch-CUDA-vLLM-Ray-NCCL fijada con progreso por rank/collective y control sano. GPU-util sola no prueba cuelgue; no se lanzó workload.",
+    "files": "tasks/backlog/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01.md; docs/evidence/BB-INSTRUMENTS-2026-10-03-report.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_ray_torch_graph_hang_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_ray_torch_graph_hang_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    },
+    "close_check_after": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_ray_torch_graph_hang_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_ray_torch_graph_hang_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    }
+  },
+  {
+    "id": "DELTA-FORUM-RECOVERY-APT-UPDATE-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (rc=4). El inventario APT existente expone fuentes/índices/tuple, pero no reproduce causalidad ni prueba consola externa, medio OEM, rollback o decisión RMA. No se ejecutó actualización, fallo o recovery.",
+    "files": "tasks/backlog/DELTA-FORUM-RECOVERY-APT-UPDATE-01.md; tools/apt_sources.py; tasks/evidence/BB-INSTRUMENTS-2026-10-03/apt-sources-capture.json",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_recovery_apt_update_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_recovery_apt_update_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    },
+    "close_check_after": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_recovery_apt_update_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_recovery_apt_update_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n",
+      "scope": "/tmp/bb-tens-b; selector ausente en este worktree"
+    }
+  }
+]

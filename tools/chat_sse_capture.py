@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import io
 import json
 import sys
@@ -22,6 +23,122 @@ class Capture:
 
 def _reject_json_constant(value: str) -> None:
     raise ValueError(f"invalid JSON constant: {value}")
+
+
+def _collect_json_responses(chunks: list[dict[str, Any]]) -> tuple[dict[int, dict[str, Any]], list[str]]:
+    responses: dict[int, dict[str, Any]] = {}
+    malformed: list[str] = []
+    for chunk in chunks:
+        for choice in chunk.get("choices", []):
+            index = choice.get("index")
+            if not isinstance(index, int) or isinstance(index, bool) or index < 0:
+                malformed.append("choice index is missing or invalid")
+                continue
+            response = responses.setdefault(index, {
+                "parts": [], "finish_reasons": [], "issues": [],
+                "tool_calls_observed": False, "refusal_observed": False})
+            # _chunk admits only choices with a dictionary delta.
+            delta = choice["delta"]
+            if response["finish_reasons"]:
+                response["issues"].append("choice data follows terminal finish_reason")
+            if "content" in delta:
+                content = delta["content"]
+                if isinstance(content, str):
+                    response["parts"].append(content)
+                elif content is not None:
+                    response["issues"].append("content delta is not plain text")
+            response["tool_calls_observed"] |= bool(delta.get("tool_calls"))
+            response["refusal_observed"] |= bool(delta.get("refusal"))
+            finish_reason = choice.get("finish_reason")
+            if finish_reason is not None:
+                response["finish_reasons"].append(finish_reason)
+    return responses, malformed
+
+
+def _json_assessment_state(response: dict[str, Any], encoded: bytes | None, text: str,
+                           done_marker_seen: bool, issues: list[str]) -> tuple[str, str, str | None]:
+    finish_reasons = response["finish_reasons"]
+    finish = finish_reasons[0] if len(finish_reasons) == 1 else None
+    if response["issues"]:
+        return "could_not_run", "could_not_run", "; ".join(response["issues"])
+    if encoded is None:
+        return "could_not_run", "could_not_run", "response contains a lone Unicode surrogate"
+    if issues or not done_marker_seen:
+        return "incomplete", "not_assessed", "SSE capture has protocol issues or lacks [DONE]"
+    if finish == "content_filter":
+        return "content_filtered", "not_assessed", None
+    if response["refusal_observed"]:
+        return "refusal", "not_assessed", None
+    if finish == "tool_calls" or response["tool_calls_observed"]:
+        return "tool_calls", "not_assessed", None
+    if finish == "length":
+        return "incomplete", "not_assessed", None
+    if finish != "stop":
+        return "incomplete", "could_not_run", "choice lacks one supported terminal finish_reason"
+    if not text:
+        return "could_not_run", "could_not_run", "choice has no plain-text content"
+    return "complete", "pending", None
+
+
+def _assess_json_syntax(text: str, assessment: dict[str, Any]) -> None:
+    try:
+        json.loads(text, parse_constant=_reject_json_constant)
+    except RecursionError:
+        assessment["completion_status"] = "could_not_run"
+        assessment["json_syntax_status"] = "could_not_run"
+        assessment["reason"] = "JSON nesting exceeded the parser recursion limit"
+    except (json.JSONDecodeError, ValueError) as exc:
+        assessment["json_syntax_status"] = "invalid_json"
+        assessment["json_error"] = type(exc).__name__
+        if isinstance(exc, json.JSONDecodeError):
+            assessment["json_error_line"] = exc.lineno
+            assessment["json_error_column"] = exc.colno
+    else:
+        assessment["json_syntax_status"] = "valid_json"
+
+
+def _json_text_assessments(chunks: list[dict[str, Any]], done_marker_seen: bool,
+                           issues: list[str]) -> list[dict[str, Any]]:
+    responses, malformed = _collect_json_responses(chunks)
+    result = []
+    for index, response in sorted(responses.items()):
+        text = "".join(response["parts"])
+        try:
+            encoded = text.encode("utf-8")
+        except UnicodeEncodeError:
+            encoded = None
+        finish_reasons = response["finish_reasons"]
+        completion, syntax, reason = _json_assessment_state(
+            response, encoded, text, done_marker_seen, issues)
+        assessment: dict[str, Any] = {
+            "choice_index": index,
+            "finish_reason": finish_reasons[0] if len(finish_reasons) == 1 else None,
+            "tool_calls_observed": response["tool_calls_observed"],
+            "refusal_observed": response["refusal_observed"],
+            "character_count": len(text),
+            "sha256": hashlib.sha256(encoded).hexdigest() if encoded is not None else None,
+            "completion_status": completion,
+            "json_syntax_status": syntax,
+            "provenance": "caller-supplied SSE capture; response text omitted from this assessment",
+            "scope": "JSON syntax only; no schema, semantic, or model-safety claim",
+        }
+        if reason:
+            assessment["reason"] = reason
+        if syntax == "pending":
+            assessment["json_syntax_status"] = "pending"
+            _assess_json_syntax(text, assessment)
+        result.append(assessment)
+    if malformed:
+        result.append({"completion_status": "could_not_run",
+                       "json_syntax_status": "could_not_run",
+                       "reason": "; ".join(malformed),
+                       "scope": "JSON syntax only; no schema, semantic, or model-safety claim"})
+    if not responses and not malformed:
+        result.append({"completion_status": "could_not_run",
+                       "json_syntax_status": "could_not_run",
+                       "reason": "capture contains no choice response to assess",
+                       "scope": "JSON syntax only; no schema, semantic, or model-safety claim"})
+    return result
 
 
 def _chunk(raw: str, event_number: int, state: Capture) -> None:
@@ -119,7 +236,7 @@ def parse_capture(text: str, capture_path: str) -> dict[str, Any]:
     else:
         status = "observed"
         could_not_run_count = 0
-    return {
+    result = {
         "status": status,
         "capture_path": capture_path,
         "capture_path_provenance": "caller_supplied_unverified",
@@ -131,6 +248,27 @@ def parse_capture(text: str, capture_path: str) -> dict[str, Any]:
         "unreadable_observation_count": state.unreadable_observation_count,
         "could_not_run_count": could_not_run_count,
     }
+    result["json_text_assessments"] = _json_text_assessments(
+        state.chunks, state.done_marker_seen, state.issues)
+    assessments = result["json_text_assessments"]
+    result["json_assessment_counts"] = {
+        "valid_json": sum(a.get("json_syntax_status") == "valid_json" for a in assessments),
+        "invalid_json": sum(a.get("json_syntax_status") == "invalid_json" for a in assessments),
+        "incomplete": sum(a.get("completion_status") == "incomplete" for a in assessments),
+        "not_assessed": sum(a.get("json_syntax_status") == "not_assessed" for a in assessments),
+        "could_not_run": sum(
+            a.get("completion_status") == "could_not_run"
+            or a.get("json_syntax_status") == "could_not_run" for a in assessments),
+    }
+    return result
+
+
+def _json_summary_exit_code(counts: dict[str, int]) -> int:
+    if counts.get("incomplete", 0) or counts.get("not_assessed", 0) or counts.get("could_not_run", 0):
+        return 2
+    if counts.get("invalid_json", 0):
+        return 1
+    return 0 if counts.get("valid_json", 0) else 2
 
 
 def analyze_file(path: Path) -> dict[str, Any]:
@@ -149,10 +287,27 @@ def analyze_file(path: Path) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("capture", type=Path, help="saved Chat Completions SSE text")
+    parser.add_argument("--json-summary-only", action="store_true",
+                        help="print completion and JSON-syntax metadata without response chunks")
     args = parser.parse_args(argv)
     result = analyze_file(args.capture)
+    exit_code = 0 if result["status"] == "observed" else 2
+    if args.json_summary_only:
+        counts = result.get("json_assessment_counts", {
+            "valid_json": 0, "invalid_json": 0, "incomplete": 0,
+            "not_assessed": 0, "could_not_run": 1})
+        exit_code = _json_summary_exit_code(counts)
+        result = {
+            "status": result["status"],
+            "capture_path": result["capture_path"],
+            "capture_path_provenance": result["capture_path_provenance"],
+            "issues": result.get("issues", []),
+            "could_not_run_count": result.get("could_not_run_count", 1),
+            "json_assessment_counts": counts,
+            "json_text_assessments": result.get("json_text_assessments", []),
+        }
     print(json.dumps(result, sort_keys=True))
-    return 0 if result["status"] == "observed" else 2
+    return exit_code
 
 
 if __name__ == "__main__":
