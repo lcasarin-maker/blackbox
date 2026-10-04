@@ -1,0 +1,143 @@
+{
+  "files": [
+    {
+      "path": "tools/verify_apt_sources_closure.py",
+      "sha256": "a2537133f6064ea39622b0b8e13d67360ca705370995c75eefbccd88f30e9b3d"
+    },
+    {
+      "path": "tests/test_verify_apt_sources_closure.py",
+      "sha256": "64799c29b5ced83ddf67a8a0e65c5ddd83af6f3eabaf67b19765db659c11ce20"
+    },
+    {
+      "path": "tests/fixtures/apt_closure_synthetic/InRelease",
+      "sha256": "3241331399ec0b0db2e029e17a3dba021f1575ad9627c7087e5e0000dc2c33f3"
+    },
+    {
+      "path": "tests/fixtures/apt_closure_synthetic/Packages",
+      "sha256": "5e3080fe2a4283b812fa21112d060a71e2c7248ed9ab12954cc622d857f69e07"
+    },
+    {
+      "path": "tests/fixtures/apt_closure_synthetic/Release",
+      "sha256": "bc5c87eeed4c0acd8f1e0ca14d2377ca440660d37f12410a2532222edc5ee22a"
+    },
+    {
+      "path": "tests/fixtures/apt_closure_synthetic/closure-keyring.gpg",
+      "sha256": "87dbdb2184cd8ef6ace5800560c047b49b71b74227f3a40e5c96d70e5b86cc23"
+    },
+    {
+      "path": "tests/fixtures/apt_closure_synthetic/provenance.json",
+      "sha256": "8a5c5d3c1716e3cb9d3b5f0242c296ded8ce526771b9a2ebab4555140523aa77"
+    }
+  ],
+  "subject_closed": false,
+  "unit_fixture": "synthetic signed repository; public key only, no physical-host approval",
+  "validation": {
+    "command": "python3 -m pytest -q tests/test_apt_sources.py tests/test_verify_apt_sources_closure.py",
+    "exit_code": 0,
+    "output": "128 passed in 0.36s",
+    "could_not_run": 0
+  },
+  "canonical_pyright": {
+    "command": "python3 .simplecode/run.py pyright",
+    "exit_code": 1,
+    "output": "68 errors, 0 warnings, 0 informations",
+    "scope": "entire primary tree",
+    "errors_in": "tests/test_hardware_batch02_controls.py",
+    "report_clean": false
+  },
+  "real_capture_replay": {
+    "exit_code": 2,
+    "result": {
+      "complete": true,
+      "could_not_run": 12,
+      "criteria_unimplemented": [
+        "The external decision SHA must come from the recorded human approval channel; the CLI verifies that supplied digest but cannot authenticate the person or approval system supplying it.",
+        "Canary source/config transcripts are caller-supplied and hash-bound; no trusted host attestation proves the isolated APT process consumed those exact bytes.",
+        "The native subject stack capture is caller-supplied; no attestation binds BIOS/stack fields to a measured physical host.",
+        "Native UTC command and package-list mtimes are caller-supplied receipts; the verifier binds them but has no external trusted clock authority.",
+        "APT source-level Targets-Add/Targets-Remove and explicit re-enabling of DefaultEnabled=false targets remain could_not_run pending a native semantic capture."
+      ],
+      "fail": 0,
+      "gates": [
+        {
+          "gate": "subject_stack",
+          "reason": "capture schema version 1 is required",
+          "status": "could_not_run"
+        },
+        {
+          "gate": "approved_profile_and_freshness_policy",
+          "reason": "capture schema version 1 is required",
+          "status": "could_not_run"
+        },
+        {
+          "gate": "configured_source_coverage",
+          "reason": "capture schema version 1 is required",
+          "status": "could_not_run"
+        },
+        {
+          "gate": "signature_key_and_source_binding",
+          "reason": "capture schema version 1 is required",
+          "status": "could_not_run"
+        },
+        {
+          "gate": "effective_index_integrity_and_coverage",
+          "reason": "capture schema version 1 is required",
+          "status": "could_not_run"
+        },
+        {
+          "gate": "signed_release_freshness",
+          "reason": "capture schema version 1 is required",
+          "status": "could_not_run"
+        },
+        {
+          "gate": "fresh_isolated_update",
+          "reason": "capture schema version 1 is required",
+          "status": "could_not_run"
+        },
+        {
+          "gate": "wrong_source_negative",
+          "reason": "capture schema version 1 is required",
+          "status": "could_not_run"
+        },
+        {
+          "gate": "integrity_negatives",
+          "reason": "capture schema version 1 is required",
+          "status": "could_not_run"
+        },
+        {
+          "gate": "safety_and_input_binding",
+          "reason": "capture schema version 1 is required",
+          "status": "could_not_run"
+        },
+        {
+          "gate": "rollback_and_cleanup",
+          "reason": "capture schema version 1 is required",
+          "status": "could_not_run"
+        },
+        {
+          "gate": "aggregate_selector",
+          "gate_count": 11,
+          "reason": "capture schema unavailable",
+          "status": "could_not_run"
+        }
+      ],
+      "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01",
+      "provenance": "caller-supplied evidence; hashes do not authenticate host or command origin",
+      "status": "unknown"
+    }
+  },
+  "logs": [
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/bb-apt-integral-primary-20261004.log",
+      "sha256": "c0e1cc6bda08835183fe66e43271ae32a49fb20e904892257c4e63061a17fbbe"
+    },
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/bb-apt-integral-host-replay-20261004.json",
+      "sha256": "1b473eaa6b3225ed0ff91f0bf2a49b41df9751e594b615d706bc2e25056de3d2"
+    },
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/bb-apt-integral-pyright-20261004.log",
+      "sha256": "efee5275f43916b7e315ae1e521c48581ab856b906fb98e38dbd56504b3eccd0"
+    }
+  ]
+}

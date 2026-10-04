@@ -1,0 +1,501 @@
+{
+  "cases": [
+    {
+      "after": false,
+      "before": true,
+      "case": 1,
+      "criterion": "actual executable position",
+      "function": "_has_program",
+      "input": {
+        "cmd": "echo iw dev wlan0 link",
+        "exit": 0,
+        "stderr": "",
+        "stdout": "Connected to AA:BB:CC:DD:EE:FF\nSSID: lab\nfreq: 5180"
+      },
+      "scope": "wifi",
+      "source_id": "FEATURE-FORUM-WIFI-ISOLATION-01"
+    },
+    {
+      "after": false,
+      "before": true,
+      "case": 2,
+      "criterion": "successful actual iw result",
+      "function": "_wifi_connected",
+      "input": {
+        "cmd": "iw dev wlan0 link",
+        "exit": 2,
+        "stderr": "",
+        "stdout": "Connected to AA:BB:CC:DD:EE:FF\nSSID: lab\nfreq: 5180"
+      },
+      "scope": "wifi",
+      "source_id": "FEATURE-FORUM-WIFI-ISOLATION-01"
+    },
+    {
+      "after": null,
+      "before": [
+        "AA:BB:CC:DD:EE:FF",
+        "lab",
+        5180
+      ],
+      "case": 3,
+      "criterion": "successful association output",
+      "function": "_link_details",
+      "input": {
+        "cmd": "iw dev wlan0 link",
+        "exit": 2,
+        "stderr": "",
+        "stdout": "Connected to AA:BB:CC:DD:EE:FF\nSSID: lab\nfreq: 5180"
+      },
+      "scope": "wifi",
+      "source_id": "FEATURE-FORUM-WIFI-ISOLATION-01"
+    },
+    {
+      "after": false,
+      "before": true,
+      "case": 4,
+      "criterion": "successful actual ip route",
+      "function": "_default_route",
+      "input": {
+        "cmd": "ip route show default",
+        "exit": 2,
+        "stderr": "",
+        "stdout": "default via 192.0.2.1 dev wlan0"
+      },
+      "scope": "wifi",
+      "source_id": "FEATURE-FORUM-WIFI-ISOLATION-01"
+    },
+    {
+      "after": {},
+      "before": {
+        "802-11-wireless.ssid": "lab"
+      },
+      "case": 5,
+      "criterion": "successful nmcli readback",
+      "function": "_connection_snapshot",
+      "input": {
+        "cmd": "nmcli connection show lab",
+        "exit": 1,
+        "stderr": "",
+        "stdout": "802-11-wireless.ssid: lab"
+      },
+      "scope": "wifi",
+      "source_id": "FEATURE-FORUM-WIFI-ISOLATION-01"
+    },
+    {
+      "after": null,
+      "before": "bg",
+      "case": 6,
+      "criterion": "successful nmcli mutation",
+      "function": "_modified_value",
+      "input": {
+        "cmd": "nmcli connection modify lab 802-11-wireless.band bg",
+        "exit": 10,
+        "stderr": "",
+        "stdout": ""
+      },
+      "scope": "wifi",
+      "source_id": "FEATURE-FORUM-WIFI-ISOLATION-01"
+    },
+    {
+      "after": false,
+      "before": true,
+      "case": 7,
+      "criterion": "nmcli state must come from device show, not generic version output",
+      "function": "_wifi_connected",
+      "input": {
+        "cmd": "nmcli --version",
+        "exit": 0,
+        "stderr": "",
+        "stdout": "GENERAL.STATE: 100 (connected)"
+      },
+      "scope": "wifi",
+      "source_id": "FEATURE-FORUM-WIFI-ISOLATION-01"
+    },
+    {
+      "after": null,
+      "before": false,
+      "case": 8,
+      "criterion": "absence of bounded successful remote endpoint/timestamp is CNR",
+      "function": "_recovered_trial",
+      "input": [
+        {
+          "cmd": "nmcli connection modify lab 802-11-wireless.band bg",
+          "exit": 0,
+          "stderr": "",
+          "stdout": ""
+        },
+        {
+          "cmd": "nmcli connection up lab --timeout 20",
+          "exit": 0,
+          "stderr": "",
+          "stdout": "activated"
+        },
+        {
+          "cmd": "iw dev wlan0 link",
+          "exit": 0,
+          "stderr": "",
+          "stdout": "Connected to AA:BB:CC:DD:EE:FF\nSSID: lab\nfreq: 2412"
+        },
+        {
+          "cmd": "ip route show default",
+          "exit": 0,
+          "stderr": "",
+          "stdout": "default via 192.0.2.1 dev wlan0"
+        },
+        {
+          "cmd": "ssh operator@management true",
+          "exit": 0,
+          "stderr": "",
+          "stdout": "reachable"
+        }
+      ],
+      "scope": "wifi",
+      "source_id": "FEATURE-FORUM-WIFI-ISOLATION-01"
+    },
+    {
+      "after": false,
+      "before": true,
+      "case": 9,
+      "criterion": "actual lsmod executable",
+      "function": "_has",
+      "input": {
+        "cmd": "echo lsmod",
+        "exit": 0,
+        "stderr": "",
+        "stdout": "usbhid 1 0"
+      },
+      "scope": "usb",
+      "source_id": "FEATURE-USB-HID-POSTUPDATE-CHECK"
+    },
+    {
+      "after": null,
+      "before": true,
+      "case": 10,
+      "criterion": "config must be read from kernel config file",
+      "function": "_integrated",
+      "input": [
+        {
+          "capture_phase": "affected",
+          "cmd": "echo CONFIG_USB_HID=y",
+          "exit": 0,
+          "stderr": "",
+          "stdout": "CONFIG_USB_HID=y\nCONFIG_USB_HID_GENERIC=y"
+        }
+      ],
+      "scope": "usb",
+      "source_id": "FEATURE-USB-HID-POSTUPDATE-CHECK"
+    },
+    {
+      "after": false,
+      "before": true,
+      "case": 11,
+      "criterion": "complete identity via actual native utilities",
+      "function": "_identity",
+      "input": [
+        {
+          "cmd": "echo dmidecode -t system",
+          "exit": 0,
+          "stderr": "",
+          "stdout": "Manufacturer: OEM\nProduct Name: GB10\nBIOS Version: 1.0"
+        },
+        {
+          "cmd": "echo uname -r",
+          "exit": 0,
+          "stderr": "",
+          "stdout": "6.17-test"
+        },
+        {
+          "cmd": "echo cat /etc/os-release",
+          "exit": 0,
+          "stderr": "",
+          "stdout": "PRETTY_NAME=Test"
+        },
+        {
+          "cmd": "echo modinfo nvidia",
+          "exit": 0,
+          "stderr": "",
+          "stdout": "version: 580"
+        },
+        {
+          "cmd": "echo nvidia-smi --query-gpu=driver_version",
+          "exit": 0,
+          "stderr": "",
+          "stdout": "driver_version, 580.1"
+        },
+        {
+          "cmd": "echo fwupdmgr get-devices",
+          "exit": 0,
+          "stderr": "",
+          "stdout": "Firmware version: 1.0"
+        }
+      ],
+      "scope": "gpu",
+      "source_id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01"
+    },
+    {
+      "after": "set()",
+      "before": "{2100}",
+      "case": 12,
+      "criterion": "supported clock query from actual nvidia-smi",
+      "function": "_supported_graphics_clocks",
+      "input": [
+        {
+          "cmd": "echo nvidia-smi -q -d SUPPORTED_CLOCKS",
+          "exit": 0,
+          "stderr": "",
+          "stdout": "Graphics : 2100 MHz"
+        }
+      ],
+      "scope": "gpu",
+      "source_id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01"
+    },
+    {
+      "after": null,
+      "before": {
+        "clock_mhz": 1800.0,
+        "power_w": 200.0,
+        "temperature_c": 60.0,
+        "throttle_reason": "0",
+        "utilization_pct": 70.0
+      },
+      "case": 13,
+      "criterion": "metrics from actual nvidia-smi",
+      "function": "_telemetry",
+      "input": {
+        "cmd": "echo nvidia-smi --query-gpu=clocks.current.graphics,power.draw,temperature.gpu,utilization.gpu,clocks_throttle_reasons.active --format=csv",
+        "exit": 0,
+        "stderr": "",
+        "stdout": "1800, 200, 60, 70, 0"
+      },
+      "scope": "gpu",
+      "source_id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01"
+    },
+    {
+      "after": [
+        null,
+        {
+          "could_not_run": 1,
+          "fail": 0,
+          "files": [
+            "/tmp/capture.json"
+          ],
+          "reason": "literal plan-file capture is missing",
+          "status": "unknown"
+        }
+      ],
+      "before": [
+        {
+          "capped_policy": [
+            300,
+            2100
+          ],
+          "max_sample_gap_seconds": 60,
+          "soak_seconds": 600,
+          "stock_policy": [
+            300,
+            2800
+          ]
+        },
+        null
+      ],
+      "case": 14,
+      "criterion": "plan capture via cat of named file",
+      "function": "_plan",
+      "input": {
+        "data": {
+          "experiment_plan": {
+            "capped_policy": [
+              300,
+              2100
+            ],
+            "max_sample_gap_seconds": 60,
+            "soak_seconds": 600,
+            "stock_policy": [
+              300,
+              2800
+            ]
+          }
+        },
+        "rows": [
+          {
+            "cmd": "echo cat clock-cap-plan.json",
+            "exit": 0,
+            "stderr": "",
+            "stdout": "{\"stock_policy\": [300, 2800], \"capped_policy\": [300, 2100], \"soak_seconds\": 600, \"max_sample_gap_seconds\": 60}"
+          }
+        ]
+      },
+      "scope": "gpu",
+      "source_id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01"
+    },
+    {
+      "after": {
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "/tmp/capture.json"
+        ],
+        "reason": "native stock/cap application and effective readbacks are incomplete",
+        "status": "unknown"
+      },
+      "before": {
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "/tmp/capture.json"
+        ],
+        "reason": "native stock/cap application and effective readbacks are incomplete",
+        "status": "unknown"
+      },
+      "case": 15,
+      "criterion": "effective policy has real readback",
+      "function": "_policy_window",
+      "input": {
+        "plan": {
+          "capped_policy": [
+            300,
+            2100
+          ],
+          "max_sample_gap_seconds": 60,
+          "soak_seconds": 600,
+          "stock_policy": [
+            300,
+            2800
+          ]
+        },
+        "rows": [
+          {
+            "cmd": "nvidia-smi -lgc 300,2100",
+            "exit": 0,
+            "stderr": "",
+            "stdout": ""
+          }
+        ]
+      },
+      "scope": "gpu",
+      "source_id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01"
+    },
+    {
+      "after": {
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "/tmp/capture.json"
+        ],
+        "reason": "baseline workload command does not identify a native benchmark/inference runner",
+        "status": "unknown"
+      },
+      "before": null,
+      "case": 16,
+      "criterion": "native recognized workload runner and successful metrics",
+      "function": "_consume_measurement",
+      "input": {
+        "spec": {
+          "path": "/tmp/capture.json",
+          "phase": "baseline",
+          "plan": {
+            "capped_policy": [
+              300,
+              2100
+            ],
+            "max_sample_gap_seconds": 60,
+            "soak_seconds": 600,
+            "stock_policy": [
+              300,
+              2800
+            ]
+          },
+          "row": {
+            "captured_at": "2026-10-04T00:00:00+00:00",
+            "cmd": "echo benchmark --json",
+            "exit": 0,
+            "stderr": "",
+            "stdout": "{\"duration_seconds\": 10, \"tokens_per_second\": 20, \"completed_requests\": 1, \"failed_requests\": 0, \"p50_latency_ms\": 5, \"p99_latency_ms\": 8, \"model_sha256\": \"model\", \"image_digest\": \"image\", \"input_sha256\": \"input\", \"concurrency\": 1, \"max_new_tokens\": 20}"
+          },
+          "runs": [
+            {
+              "completed_requests": 1.0,
+              "concurrency": 1,
+              "duration_seconds": 10.0,
+              "failed_requests": 0.0,
+              "image_digest": "image",
+              "input_sha256": "input",
+              "max_new_tokens": 20,
+              "model_sha256": "model",
+              "p50_latency_ms": 5.0,
+              "p99_latency_ms": 8.0,
+              "tokens_per_second": 20.0
+            }
+          ],
+          "samples": []
+        }
+      },
+      "scope": "gpu",
+      "source_id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01"
+    },
+    {
+      "after": {
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "/tmp/capture.json"
+        ],
+        "reason": "OEM, BIOS, OS, kernel, driver/module and firmware tuple incomplete",
+        "status": "unknown"
+      },
+      "before": {
+        "could_not_run": 0,
+        "fail": 1,
+        "files": [
+          "/tmp/capture.json"
+        ],
+        "reason": "captured NVIDIA command returned nonzero",
+        "status": "fail"
+      },
+      "case": 17,
+      "criterion": "only actual NVIDIA command can be driver failure",
+      "function": "_verify",
+      "input": {
+        "data": {},
+        "path": "/tmp/capture.json",
+        "rows": [
+          {
+            "cmd": "echo nvidia-smi -q",
+            "exit": 1,
+            "stderr": "",
+            "stdout": ""
+          }
+        ]
+      },
+      "scope": "gpu",
+      "source_id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01"
+    }
+  ],
+  "generated_from": "/home/lcasarin/projects/blackbox/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware.json",
+  "source_expected": [
+    {
+      "close_check": {
+        "cmd": "python3 -m tools.verify_wifi_isolation --evidence tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01",
+        "expect": "exit_zero",
+        "porque": "Must prove the recorded NetworkManager and supplicant failure is distinguished from a host freeze, test a bounded recovery policy on the cited stack, and preserve rollback evidence."
+      },
+      "id": "FEATURE-FORUM-WIFI-ISOLATION-01"
+    },
+    {
+      "close_check": {
+        "cmd": "python3 -m tools.verify_usb_hid_postupdate --evidence tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK",
+        "expect": "exit_zero",
+        "porque": "El cierre debe separar fallo USB-HID real, m\u00e1quina headless, m\u00f3dulo integrado en kernel y telemetr\u00eda inaccesible; comprobar que el servicio sigue activo no demuestra que el teclado ni el acceso remoto funcionen."
+      },
+      "id": "FEATURE-USB-HID-POSTUPDATE-CHECK"
+    },
+    {
+      "close_check": {
+        "cmd": "python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+        "expect": "exit_zero",
+        "porque": "Must compare a lower cap against the currently applied cap on an identified OEM/driver stack, preserve stability and performance results, and prove restoration of the original clock policy."
+      },
+      "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01"
+    }
+  ]
+}

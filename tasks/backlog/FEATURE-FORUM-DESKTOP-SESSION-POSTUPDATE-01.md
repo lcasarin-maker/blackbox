@@ -59,3 +59,14 @@ Riesgos: la reserva reduce memoria disponible para las cargas; atribuir el fallo
 ## Avance de reutilización — 2026-10-03
 
 La captura APT reutiliza `tools.host_diagnostics.run_readonly` para ejecutar consultas fijas acotadas; no se modificó `host_diagnostics.py` ni se añadió detección de sesión gráfica. El nuevo reporte no mide GDM, RDP o resultado de login post-update. No hay reproducción del fallo de escritorio; la ficha sigue abierta.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: La observación local no prueba sesión gráfica funcional tras actualización ni recuperación/rollback en el OEM citado.
+- Evidencia faltante para cierre: stack/OEM y versiones; caso positivo y negativo post-update; sesión/telemetría y rollback capturados
+- Siguiente acción: Diseñar un canario de actualización reversible con sesión local/remota verificada y recuperación; recoger stack exacto y controles negativos.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json`, `tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01/host-observation.txt`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

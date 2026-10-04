@@ -1,0 +1,185 @@
+[
+  {
+    "id": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01 --evidence tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "exit_code": 2,
+    "verdict": {
+      "could_not_run": 1,
+      "fail": 0,
+      "files": [
+        "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/preflight.json",
+        "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/commands.json"
+      ],
+      "reason": "healthy preflight matches raw commands; incident negative and recovery/rollback controls are missing",
+      "status": "unknown"
+    },
+    "timed_out": false,
+    "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/direct-29-final-exact-once/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.log",
+    "sha256": "2a46560cfcd17055d2460b9379032d9993f4b554c118960f1d449da0ae17a015",
+    "status": "observed"
+  },
+  {
+    "id": "FEATURE-FORUM-NETCONSOLE-01",
+    "command": "python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01",
+    "exit_code": 2,
+    "verdict": {
+      "could_not_run": 1,
+      "could_not_run_count": 1,
+      "fail": 0,
+      "findings": [
+        "required raw capture unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-FORUM-NETCONSOLE-01/kernel-capture.json'"
+      ],
+      "status": "unknown"
+    },
+    "timed_out": false,
+    "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/direct-29-final-exact-once/FEATURE-FORUM-NETCONSOLE-01.log",
+    "sha256": "88f7dbc28c51511aa3525d6dd491f3c81050f9a30842e753e658fca1649909c8",
+    "status": "observed"
+  },
+  {
+    "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01 --evidence tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "exit_code": 2,
+    "verdict": {
+      "could_not_run": 1,
+      "fail": 0,
+      "files": [
+        "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/provider-trace-run.json"
+      ],
+      "reason": "fixture controls recompute correctly; no real workload trace, OEM validation, or recovery/rollback was captured",
+      "status": "unknown"
+    },
+    "timed_out": false,
+    "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/direct-29-final-exact-once/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.log",
+    "sha256": "de17a237286ab48cc8c074b6fb0be8eebcea3ecd24e78bf3078372aabca80c39",
+    "status": "observed"
+  },
+  {
+    "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "command": "python3 -m tools.verify_rcu_panic_pstore --evidence tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "exit_code": 2,
+    "verdict": {
+      "could_not_run": 1,
+      "could_not_run_count": 1,
+      "fail": 0,
+      "findings": [
+        "raw recovery evidence unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/recovery.json'"
+      ],
+      "status": "unknown"
+    },
+    "timed_out": false,
+    "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/direct-29-final-exact-once/FEATURE-FORUM-RCU-PANIC-PSTORE-01.log",
+    "sha256": "664b13005890135889c7abea7009d46c9eb50760cb0a6349e0a27b0a9460a5a8",
+    "status": "observed"
+  },
+  {
+    "id": "FEATURE-FORUM-RESCUE-RUNBOOK-01",
+    "command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-RESCUE-RUNBOOK-01 --evidence tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01",
+    "exit_code": 2,
+    "verdict": {
+      "checks": {},
+      "could_not_run": 1,
+      "fail": 0,
+      "files": [
+        "tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01/capture.json"
+      ],
+      "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'",
+      "status": "unknown"
+    },
+    "timed_out": false,
+    "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/direct-29-final-exact-once/FEATURE-FORUM-RESCUE-RUNBOOK-01.log",
+    "sha256": "3ab789f19d68a20c8b19dcd8c89cfaf981f9810a32e12ed907f1608163b44f3d",
+    "status": "observed"
+  },
+  {
+    "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-SBSA-WATCHDOG-STATE-01 --evidence tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "exit_code": 2,
+    "verdict": {
+      "checks": {},
+      "could_not_run": 1,
+      "fail": 0,
+      "files": [
+        "tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/capture.json"
+      ],
+      "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'",
+      "status": "unknown"
+    },
+    "timed_out": false,
+    "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/direct-29-final-exact-once/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.log",
+    "sha256": "8920858750e2c2c6829e9f501ae3a515f1f1fa9dff0ac94c89ac16243c15771e",
+    "status": "observed"
+  },
+  {
+    "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+    "command": "python3 -m tools.verify_wifi_isolation --evidence tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01",
+    "exit_code": 2,
+    "verdict": {
+      "could_not_run": 1,
+      "fail": 0,
+      "files": [
+        "tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/commands.json"
+      ],
+      "reason": "raw command capture missing or malformed; current snapshot cannot prove a roam sequence",
+      "status": "unknown"
+    },
+    "timed_out": false,
+    "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/direct-29-final-exact-once/FEATURE-FORUM-WIFI-ISOLATION-01.log",
+    "sha256": "48796ffa73e7ab4a70cba3564dd35a3806006798e51a3df37f04b1729d595910",
+    "status": "observed"
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "command": "python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "exit_code": 2,
+    "verdict": {
+      "could_not_run": 1,
+      "could_not_run_count": 1,
+      "fail": 0,
+      "findings": [
+        "raw phase capture unavailable: [Errno 2] No such file or directory: 'capture.json'"
+      ],
+      "status": "unknown"
+    },
+    "timed_out": false,
+    "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/direct-29-final-exact-once/FEATURE-MEMORYSAVER-02-TRAZADOR.log",
+    "sha256": "4add54d8ed7d97d20a25d4305c7114006a0f6436f16d577d5fa09114522cedd6",
+    "status": "observed"
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "command": "python3 -m tools.verify_memory_saver --phase 04-packing-4k --evidence tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "exit_code": 2,
+    "verdict": {
+      "could_not_run": 1,
+      "could_not_run_count": 1,
+      "fail": 0,
+      "findings": [
+        "raw phase capture unavailable: [Errno 2] No such file or directory: 'capture.json'"
+      ],
+      "status": "unknown"
+    },
+    "timed_out": false,
+    "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/direct-29-final-exact-once/FEATURE-MEMORYSAVER-04-PACKING-4K.log",
+    "sha256": "4add54d8ed7d97d20a25d4305c7114006a0f6436f16d577d5fa09114522cedd6",
+    "status": "observed"
+  },
+  {
+    "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+    "command": "python3 -m tools.verify_usb_hid_postupdate --evidence tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK",
+    "exit_code": 2,
+    "verdict": {
+      "could_not_run": 1,
+      "fail": 0,
+      "files": [
+        "tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK/commands.json"
+      ],
+      "reason": "paired raw post-update USB command capture is missing",
+      "status": "unknown"
+    },
+    "timed_out": false,
+    "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/direct-29-final-exact-once/FEATURE-USB-HID-POSTUPDATE-CHECK.log",
+    "sha256": "b67b6ea391572fcaa4a241426b71e473a6f6277315d28892008d1dfb96b66b0a",
+    "status": "observed"
+  }
+]

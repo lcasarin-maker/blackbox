@@ -1,6 +1,7 @@
 """Regression controls for defects registered during the debt audit."""
 
 import json
+import math
 import csv
 import copy
 from datetime import datetime
@@ -26,6 +27,23 @@ from tools import provider_trace
 from tools import cgroup_repro, cuda_integrity
 from tools import verify_apt_critical_removals
 from tools import host_diagnostics
+from test_closure_kernel_selectors import (
+    closure_selector_cgroup_plan_01 as _assert_cgroup_plan_01,
+    closure_selector_netconsole_01 as _assert_netconsole_01,
+    closure_selector_rcu_panic_pstore_01 as _assert_rcu_panic_pstore_01,
+)
+
+
+def test_debt_close_check_verify_cgroup_plan_01() -> None:
+    _assert_cgroup_plan_01()
+
+
+def test_debt_close_check_verify_netconsole_01() -> None:
+    _assert_netconsole_01()
+
+
+def test_debt_close_check_verify_rcu_panic_pstore_01() -> None:
+    _assert_rcu_panic_pstore_01()
 
 
 def test_debt_close_check_verify_apt_critical_removals_01(
@@ -1018,8 +1036,9 @@ def test_bug_provider_trace_latency_overflow_01(tmp_path: Path, capsys: pytest.C
         assert provider_trace.main([str(path)]) == 2
         result = json.loads(capsys.readouterr().out)
         assert result["status"] == "unknown"
-        assert result["could_not_run_count"] == 0
-        assert any("invalid latency" in item for item in result["unknowns"])
+        assert result["could_not_run_count"] == 1
+        expected = "malformed or truncated JSON" if isinstance(latency, float) and not math.isfinite(latency) else "invalid latency"
+        assert any(expected in item for item in result["unknowns"])
     for latency in (0, 1, 1.5):
         trace = [json.dumps(dict(record, milliseconds=latency) if record["event"] == "latency" else record) for record in records]
         assert provider_trace.analyze_lines(trace)["status"] == "pass"
@@ -1194,3 +1213,350 @@ def test_debt_research_collector_bb_forum_inventory_01(tmp_path: Path) -> None:
     from test_bb_forum_collectors import test_inventory_pages_deduplicates_and_rejects_repeated_page
 
     assert test_inventory_pages_deduplicates_and_rejects_repeated_page(tmp_path) is None
+
+
+def _assert_hardware_batch03_closure(card_id: str) -> None:
+    from tools.hardware_batch03_controls import verify
+    from test_closure_kernel_selectors import _require_pass as _assert_pass
+
+    evidence = Path(__file__).resolve().parents[1] / "tasks" / "evidence" / card_id
+    result = verify(card_id, evidence)
+    print(json.dumps(result, sort_keys=True))
+    _assert_pass(card_id, result)
+
+
+def test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01() -> None:
+    _assert_hardware_batch03_closure('DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01')
+
+
+def test_delta_forum_thermal_telemetry_coverage_01() -> None:
+    _assert_hardware_batch03_closure('DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01')
+
+
+def test_delta_forum_usb_raid_link_admission_01() -> None:
+    _assert_hardware_batch03_closure('DELTA-FORUM-USB-RAID-LINK-ADMISSION-01')
+
+
+def test_delta_root_backup_mount_boot_identity_01() -> None:
+    _assert_hardware_batch03_closure('DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01')
+
+
+def test_delta_root_display_carveout_oem_fix_gate_01() -> None:
+    _assert_hardware_batch03_closure('DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01')
+
+
+def test_delta_root_gx10_soc_ec_cable_recovery_candidate_01() -> None:
+    _assert_hardware_batch03_closure('DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01')
+
+
+def test_delta_root_subambient_cooling_and_uma_canary_01() -> None:
+    _assert_hardware_batch03_closure('DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01')
+
+
+def _assert_hardware_batch02_closure(card_id: str) -> None:
+    from tools.hardware_batch02_controls import verify
+    from test_closure_kernel_selectors import _require_pass as _assert_pass
+
+    evidence = Path(__file__).resolve().parents[1] / "tasks" / "evidence" / card_id
+    result = verify(card_id, evidence)
+    print(json.dumps(result, sort_keys=True))
+    _assert_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+
+
+def test_delta_forum_cutlass_sm121_isa_gate_01() -> None:
+    _assert_hardware_batch02_closure('DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01')
+
+
+def test_delta_forum_cx7_fw_update_guard_01() -> None:
+    _assert_hardware_batch02_closure('DELTA-FORUM-CX7-FW-UPDATE-GUARD-01')
+
+
+def test_delta_forum_cx7_physical_topology_alias_check_01() -> None:
+    _assert_hardware_batch02_closure('DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01')
+
+
+def test_delta_forum_cx7_posthotplug_01() -> None:
+    _assert_hardware_batch02_closure('DELTA-FORUM-CX7-POSTHOTPLUG-01')
+
+
+def test_delta_forum_cx7_rdma_asymmetry_retest_01() -> None:
+    _assert_hardware_batch02_closure('DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01')
+
+
+def test_delta_forum_dualspark_power_reset_recovery_01() -> None:
+    _assert_hardware_batch02_closure('DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01')
+
+
+def test_delta_forum_kv_quant_metric_provenance_gate_01() -> None:
+    _assert_hardware_batch02_closure('DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01')
+
+
+def test_delta_forum_memory_recovery_soak_01() -> None:
+    _assert_hardware_batch02_closure('DELTA-FORUM-MEMORY-RECOVERY-SOAK-01')
+
+
+def test_delta_forum_ota_driver_kernel_effective_tuple_01() -> None:
+    _assert_hardware_batch02_closure('DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01')
+
+
+def test_delta_forum_recovery_apt_update_01() -> None:
+    _assert_hardware_batch02_closure('DELTA-FORUM-RECOVERY-APT-UPDATE-01')
+
+
+def _assert_runtime_batch01_closure(card_id: str) -> None:
+    from tools.runtime_batch01_controls import verify
+    from test_closure_kernel_selectors import _require_pass as _assert_pass
+
+    result = verify(card_id)
+    print(json.dumps(result, sort_keys=True))
+    _assert_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+
+
+def test_delta_forum_3node_nccl_image_and_first_request_01() -> None:
+    _assert_runtime_batch01_closure('DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01')
+
+
+def test_delta_forum_8node_nccl_interface_mtu_01() -> None:
+    _assert_runtime_batch01_closure('DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01')
+
+
+def test_delta_forum_cross_turn_sleeper_injection_regression_01() -> None:
+    _assert_runtime_batch01_closure('DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01')
+
+
+def test_delta_forum_dcp_mtp_draft_correctness_and_pretrim_oom_01() -> None:
+    _assert_runtime_batch01_closure('DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01')
+
+
+def test_delta_forum_dcp4_decode_starvation_fair_scheduler_01() -> None:
+    _assert_runtime_batch01_closure('DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01')
+
+
+def test_delta_forum_dflash_xgrammar_structured_output_regression_01() -> None:
+    _assert_runtime_batch01_closure('DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01')
+
+
+def test_delta_forum_dsv41_nfs_stop_tag_pin_01() -> None:
+    _assert_runtime_batch01_closure('DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01')
+
+
+def test_delta_forum_dualspark_nccl_gid_twin_and_cold_recovery_01() -> None:
+    _assert_runtime_batch01_closure('DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01')
+
+
+def test_delta_forum_glm52_multiturn_correctness_and_recipe_sensitivity_01() -> None:
+    _assert_runtime_batch01_closure('DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01')
+
+
+def _assert_runtime_batch02_closure(card_id: str) -> None:
+    from tools.runtime_batch02_controls import verify
+    from test_closure_kernel_selectors import _require_pass as _assert_pass
+
+    result = verify(card_id)
+    print(json.dumps(result, sort_keys=True))
+    _assert_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+
+
+def test_delta_forum_gptoss_multinode_ray_channel_timeout_01() -> None:
+    _assert_runtime_batch02_closure('DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01')
+
+
+def test_delta_forum_llamacpp_rpc_uma_and_orderly_teardown_01() -> None:
+    _assert_runtime_batch02_closure('DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01')
+
+
+def test_delta_forum_m2_compaction_state_validation_01() -> None:
+    _assert_runtime_batch02_closure('DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01')
+
+
+def test_delta_forum_minimax_toolcall_functional_canary_01() -> None:
+    _assert_runtime_batch02_closure('DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01')
+
+
+def test_delta_forum_mtp_acceptance_and_semantic_control_01() -> None:
+    _assert_runtime_batch02_closure('DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01')
+
+
+def test_delta_forum_muse_glimmer_dflash_max_seqs_gate_01() -> None:
+    _assert_runtime_batch02_closure('DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01')
+
+
+def test_delta_forum_nccl_tp_orchestration_correction_01() -> None:
+    _assert_runtime_batch02_closure('DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01')
+
+
+def test_delta_forum_nemotron_sm121_prebuilt_kernel_01() -> None:
+    _assert_runtime_batch02_closure('DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01')
+
+
+def test_delta_forum_openclaw_vllm_request_contract_01() -> None:
+    _assert_runtime_batch02_closure('DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01')
+
+
+def test_delta_forum_qwen_cold_compile_oom_01() -> None:
+    _assert_runtime_batch02_closure('DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01')
+
+
+def _assert_runtime_batch03_closure(card_id: str) -> None:
+    from tools.runtime_batch03_controls import verify
+    from test_closure_kernel_selectors import _require_pass as _assert_pass
+
+    result = verify(card_id)
+    print(json.dumps(result, sort_keys=True))
+    _assert_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+
+
+def test_delta_forum_qwen_long_agent_stop_01() -> None:
+    _assert_runtime_batch03_closure('DELTA-FORUM-QWEN-LONG-AGENT-STOP-01')
+
+
+def test_delta_forum_qwen_mtp_parser_cancel_state_check_01() -> None:
+    _assert_runtime_batch03_closure('DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01')
+
+
+def test_delta_forum_qwen_service_oomd_cache_fail_01() -> None:
+    _assert_runtime_batch03_closure('DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01')
+
+
+def test_delta_forum_qwen_toolcall_wedge_01() -> None:
+    _assert_runtime_batch03_closure('DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01')
+
+
+def test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01() -> None:
+    _assert_runtime_batch03_closure('DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01')
+
+
+def test_delta_forum_qwen38_long_run_json_correctness_canary_01() -> None:
+    _assert_runtime_batch03_closure('DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01')
+
+
+def test_delta_forum_ray_torch_graph_hang_01() -> None:
+    _assert_runtime_batch03_closure('DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01')
+
+
+def test_delta_forum_vllm_gb10_arch_and_build_matrix_01() -> None:
+    _assert_runtime_batch03_closure('DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01')
+
+
+def test_delta_forum_vllm_ray_gb10_resource_fix_01() -> None:
+    _assert_runtime_batch03_closure('DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01')
+
+
+def test_delta_root_container_effective_build_and_offline_gate_01() -> None:
+    _assert_runtime_batch03_closure('DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01')
+
+
+def _assert_runtime_batch04_closure(card_id: str) -> None:
+    from tools.runtime_batch04_controls import verify
+    from test_closure_kernel_selectors import _require_pass as _assert_pass
+
+    result = verify(card_id)
+    print(json.dumps(result, sort_keys=True))
+    _assert_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+
+
+def test_delta_root_dsml_parser_recovery_boundary_01() -> None:
+    _assert_runtime_batch04_closure('DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01')
+
+
+def test_delta_root_glm53_queued_request_progress_gate_01() -> None:
+    _assert_runtime_batch04_closure('DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01')
+
+
+def test_delta_root_mimo_overlay_and_prefill_fairness_01() -> None:
+    _assert_runtime_batch04_closure('DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01')
+
+
+def test_delta_root_mimo_patch_supersession_gate_01() -> None:
+    _assert_runtime_batch04_closure('DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01')
+
+
+def test_delta_root_ray_multiengine_rank_progress_01() -> None:
+    _assert_runtime_batch04_closure('DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01')
+
+
+def test_delta_root_recipe_memory_unknown_and_raw_evidence_01() -> None:
+    _assert_runtime_batch04_closure('DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01')
+
+
+def test_delta_root_tokenizer_patch_semantic_gate_01() -> None:
+    _assert_runtime_batch04_closure('DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01')
+
+
+def test_delta_root_triton_allocator_patch_state_gate_01() -> None:
+    _assert_runtime_batch04_closure('DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01')
+
+
+def test_delta_forum_apt_arm64_source_validation_01() -> None:
+    from tools.verify_apt_sources_closure import verify
+    from test_closure_kernel_selectors import _require_pass as _assert_pass
+
+    evidence = Path(__file__).resolve().parents[1] / "tasks" / "evidence" / 'DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01' / "commands.json"
+    result = verify(evidence, os.environ.get("BB_APT_APPROVED_DECISION_SHA256"))
+    print(json.dumps(result, sort_keys=True))
+    _assert_pass('DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01', {**result, "could_not_run_count": result["could_not_run"]})
+
+
+def test_debt_close_check_verify_memory_saver_01() -> None:
+    from tools.verify_memory_saver import PHASES, IDS, verify
+    from test_closure_kernel_selectors import _require_pass as _assert_pass
+
+    root = Path(__file__).resolve().parents[1] / "tasks" / "evidence"
+    results = {phase: verify(phase, root / IDS[phase]) for phase in PHASES}
+    print(json.dumps(results, sort_keys=True))
+    for phase, result in results.items():
+        _assert_pass(IDS[phase], result)
+
+
+def test_debt_close_check_verify_gpu_clock_cap_ab_01() -> None:
+    from tools.verify_gpu_clock_cap_ab import verify
+    from test_closure_kernel_selectors import _require_pass as _assert_pass
+
+    evidence = Path(__file__).resolve().parents[1] / "tasks" / "evidence" / 'FEATURE-FORUM-GPU-CLOCK-CAP-AB-01'
+    result = verify(evidence)
+    print(json.dumps(result, sort_keys=True))
+    _assert_pass('FEATURE-FORUM-GPU-CLOCK-CAP-AB-01', {**result, "could_not_run_count": result["could_not_run"]})
+
+
+def test_debt_close_check_verify_wifi_isolation_01() -> None:
+    from tools.verify_wifi_isolation import verify
+    from test_closure_kernel_selectors import _require_pass as _assert_pass
+
+    evidence = Path(__file__).resolve().parents[1] / "tasks" / "evidence" / 'FEATURE-FORUM-WIFI-ISOLATION-01'
+    result = verify(evidence)
+    print(json.dumps(result, sort_keys=True))
+    _assert_pass('FEATURE-FORUM-WIFI-ISOLATION-01', {**result, "could_not_run_count": result["could_not_run"]})
+
+
+def test_debt_close_check_verify_usb_hid_postupdate_01() -> None:
+    from tools.verify_usb_hid_postupdate import verify
+    from test_closure_kernel_selectors import _require_pass as _assert_pass
+
+    evidence = Path(__file__).resolve().parents[1] / "tasks" / "evidence" / 'FEATURE-USB-HID-POSTUPDATE-CHECK'
+    result = verify(evidence)
+    print(json.dumps(result, sort_keys=True))
+    _assert_pass('FEATURE-USB-HID-POSTUPDATE-CHECK', {**result, "could_not_run_count": result["could_not_run"]})
+
+
+def test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01() -> None:
+    from tools.verify_clock_cap_tradeoff import verify
+    from test_closure_kernel_selectors import _require_pass as _assert_pass
+
+    result = verify()
+    print(json.dumps(result, sort_keys=True))
+    _assert_pass('DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01', {**result, "could_not_run_count": result["could_not_run"]})
+
+
+def test_debt_close_check_verify_forum_finding_01() -> None:
+    from tools.forum_finding import SUPPORTED
+    from tools.hardware_batch02_controls import IDS as BATCH02_IDS
+    from tools.hardware_batch03_controls import CARD_IDS as BATCH03_IDS
+    from tools.verify_forum_finding import verify_forum_finding
+    from test_closure_kernel_selectors import _require_pass as _assert_pass
+
+    root = Path(__file__).resolve().parents[1] / "tasks" / "evidence"
+    ids = sorted(set(SUPPORTED) | set(BATCH02_IDS) | set(BATCH03_IDS))
+    results = {card: verify_forum_finding(card, root / card) for card in ids}
+    print(json.dumps(results, sort_keys=True))
+    for card, result in results.items():
+        _assert_pass(card, {**result, "could_not_run_count": result["could_not_run"]})

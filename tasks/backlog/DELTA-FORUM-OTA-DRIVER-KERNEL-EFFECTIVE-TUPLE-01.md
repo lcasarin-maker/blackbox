@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Avance de inventario — 2026-10-03
 
 `tools/apt_sources.py` reutiliza `tools.memory_profile.capture` para registrar el tuple local DGX SW build `7.2.3` / OTA `7.6.0` / kernel `6.17.0-1032-nvidia` / driver cargado y en disco `580.178.04`, con igualdad de versiones observada. Captura: `tasks/evidence/BB-INSTRUMENTS-2026-10-03/apt-sources-capture.json`; la salida marca procedencia no verificada y `support_verdict: not evaluated`. No compara contra release notes/OEM ni ejecuta canary, workload, recovery o rollback; el reporte de tuple no demuestra el hallazgo ni cierra la ficha.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `external_oem`.
+- Impedimento: La observación local fija tuple activo, pero falta matriz release/OEM, soporte y ensayo reversible post-OTA.
+- Evidencia faltante para cierre: release notes OEM para plataforma exacta; canario de update/recovery; baseline memoria y workload; rollback
+- Siguiente acción: Obtener matriz de soporte de DGX OS/OEM y reservar canario reversible para comparar tuple pre/post OTA; no instalar paquetes manuales como sustituto.
+- Responsable del siguiente paso: coordinación BB gestiona OEM; operador Luis ejecuta canario.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json`, `tasks/evidence/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01/capture-summary.json`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

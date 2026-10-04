@@ -77,7 +77,8 @@ def _labels(raw: str | None) -> dict[str, str] | None:
         return {}
     labels: dict[str, str] = {}
     position = 0
-    while position < len(raw):
+    # Empty input returned above; both end positions below terminate explicitly.
+    while True:
         label = _label_at(raw, position)
         if label is None or label[0] in labels:
             return None

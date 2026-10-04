@@ -1,0 +1,19 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________________ test_delta_forum_memory_recovery_soak_01 ___________________
+tests/test_debt_registration_controls.py:1293: in test_delta_forum_memory_recovery_soak_01
+    _require_hardware_batch02_closure('DELTA-FORUM-MEMORY-RECOVERY-SOAK-01')
+tests/test_debt_registration_controls.py:1261: in _require_hardware_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-MEMORY-RECOVERY-SOAK-01 closure remains open: {'status': 'unknown', 'reason': "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-MEMORY-RECOVERY-SOAK-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-MEMORY-RECOVERY-SOAK-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-MEMORY-RECOVERY-SOAK-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-MEMORY-RECOVERY-SOAK-01'", "status": "unknown"}
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_memory_recovery_soak_01
+1 failed in 0.08s

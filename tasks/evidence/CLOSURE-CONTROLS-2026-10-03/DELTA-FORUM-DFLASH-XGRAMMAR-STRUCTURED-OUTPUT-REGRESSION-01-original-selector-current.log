@@ -1,0 +1,19 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_delta_forum_dflash_xgrammar_structured_output_regression_01 _______
+tests/test_debt_registration_controls.py:1334: in test_delta_forum_dflash_xgrammar_structured_output_regression_01
+    _require_runtime_batch01_closure('DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01')
+tests/test_debt_registration_controls.py:1310: in _require_runtime_batch01_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01'", "status": "unknown"}
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_dflash_xgrammar_structured_output_regression_01
+1 failed in 0.09s

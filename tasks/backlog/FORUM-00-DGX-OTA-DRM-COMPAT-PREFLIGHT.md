@@ -36,3 +36,14 @@ La ficha sigue abierta: falta leer el valor efectivo, una declaración de compat
 ## Nota de instrumentación readonly (2026-10-03)
 
 Se añadió observación readonly del parámetro efectivo `nvidia_drm.modeset` y de overrides DRM permitidos en cmdline, sin guardar el cmdline crudo; el atributo efectivo local quedó `could_not_run` por permisos. No se infiere compatibilidad OTA. Evidencia: `tasks/evidence/BB-INSTRUMENTS-2026-10-03/boot.capture.json`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `external_oem`.
+- Impedimento: La lectura effective_modeset quedó permission-denied y no hay declaración OEM del OTA target ni recuperación/rollback validada.
+- Evidencia faltante para cierre: Valor efectivo KMS ligado a host; declaración OEM para OTA; HDMI/USB-C/SSH recovery y rollback en equipo compatible.
+- Siguiente acción: Solicitar a NVIDIA/OEM matriz oficial de compatibilidad de la combinación y coordinar captura readonly autorizada más HDMI/USB-C/SSH/rollback en equipo DGX compatible.
+- Responsable del siguiente paso: BB; coordinación solicita OEM/proveedor.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT.md`, `tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/commands.json`, `tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/preflight.json`, `tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/validator-run.json`, `tools/forum_finding.py`, `tools/preflight.py`, `tools/forum_hardware_subjects.py`, `tests/test_debt_registration_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

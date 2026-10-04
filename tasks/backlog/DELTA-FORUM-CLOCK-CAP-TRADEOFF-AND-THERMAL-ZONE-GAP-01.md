@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: `deferred_lab`. Se reutilizó el inventario térmico existente y su captura de 7 thermal zones/11 canales hwmon, CNR=0, pero 8 labels hwmon faltan y la captura no relaciona esos sensores con un perfil OEM validado ni mide clocks/performance bajo cap. Falta ensayo pareado controlado, clocks efectivamente aplicados y rollback. La ficha sigue abierta y `close_check` intacto. Informe: `docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: Inventario lee zonas, pero faltan labels/relación OEM validada y A/B del workload real con cap, clocks efectivos, throughput, frescura y rollback.
+- Evidencia faltante para cierre: Inventario lee zonas, pero faltan labels/relación OEM validada y A/B del workload real con cap, clocks efectivos, throughput, frescura y rollback.
+- Siguiente acción: Coordinación BB: completar mapeo/captura de fuentes disponibles; operador Luis: aportar perfil OEM y ejecutar A/B canary seleccionado con rollback. Ref explícita: tasks/backlog/DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md y tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

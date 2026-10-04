@@ -1,0 +1,37 @@
+[
+  {
+    "id": "SPEC-L118",
+    "claim_id": "SPEC-L118",
+    "verdict": "PASS",
+    "evidence": "`tools/atom_gpu_telemetry.py:67-85` documenta y contiene una copia local del helper que antes acoplaba este archivo a Atlas; `tools/atom_gpu_telemetry.py:92-97` define el JSONL de blackbox que Atlas consume. En Atlas, `tests/test_dgx483_blackbox_telemetry_ownership.py:198-214` comprueba que no haya imports de blackbox y que la v\u00eda de consumo sea un proceso; `tools/bb_consulta.py:45-53` ejecuta el gate de blackbox v\u00eda subprocess. Corr\u00ed las tres pruebas focales de propiedad/frontera/control negativo: `3 passed in 6.67s`.",
+    "could_not_run": 0
+  },
+  {
+    "id": "SPEC-L347",
+    "claim_id": "SPEC-L347",
+    "verdict": "PASS",
+    "evidence": "Corr\u00ed `python3 -m pytest -q tests/test_bash_sintaxis.py` (2 passed), `python3 -m pytest -q tests/test_hook_native_controls.py` (2 passed) y `python3 -m pytest -q tests/test_ruff_gitleaks_controles_negativos.py` (4 passed); `tests/test_hook_native_controls.py:24-76,79-98` incluye aceptaci\u00f3n de contenido v\u00e1lido y controles inyectados que deben fallar. `tests/test_auditoria_bb_regresiones.py::test_scan_fielddiag_summary_invalido_incrementa_cnr` pas\u00f3 (1 passed), y `tests/test_auditoria_bb_regresiones.py:381-423` prueba que un resumen ilegible/inv\u00e1lido produce COULD_NOT_RUN y que un resumen v\u00e1lido con error de hardware se analiza. `.pre-commit-config.yaml:257-264` mantiene `telemetry-bound` en pre-push y termina el comando de pruning con `|| true`; `.simplecode/evidence/telemetry.jsonl:3,31,48,72` registra los cuatro CNR hist\u00f3ricos de `spec-check`/`no-perder-lineas` con cero hallazgos.",
+    "could_not_run": 0
+  },
+  {
+    "id": "SPEC-L349",
+    "claim_id": "SPEC-L349",
+    "verdict": "PASS",
+    "evidence": "`tasks/done/DEBT-PSI-UMBRALES-SIN-CALIBRAR.md:24-40` conserva la calibraci\u00f3n hist\u00f3rica contra dos congelamientos del 2026-09-22/23 y las 19 804 muestras, incluyendo la excursi\u00f3n sana de 98.53 % y el m\u00ednimo sostenido hist\u00f3rico de 48.80 %; `tools/calibra_psi.py:57-94` separa incidentes posteriores, incluido el episodio del 2026-09-26, por fechas. La observaci\u00f3n actual, que no reescribe aquella historia, est\u00e1 fijada en `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-h1/calibra-psi-current-root.json`: comando `python3 -m tools.calibra_psi`, corpus rotatorio hasta 2026-10-04 07:55, 23 305 muestras, cero falsos positivos, un incidente no detectado, retorno 1; el log adjunto atribuye el miss al hueco de muestreo del incidente 2026-09-28. El c\u00f3digo `tools/calibra_psi.py:109-122` declara ese hueco, y `tests/test_calibra_psi.py::test_control_negativo_excursion_solapa_incidente_pero_dispara_despues` pas\u00f3; la fila de SPEC reporta adem\u00e1s su resultado fechado del 2026-09-28 y la limitaci\u00f3n de n=6/canal, no presenta el 48.80 % como m\u00ednimo de todos los episodios futuros.",
+    "could_not_run": 0
+  },
+  {
+    "id": "SPEC-L351",
+    "claim_id": "SPEC-L351",
+    "verdict": "PASS",
+    "evidence": "`tools/inventario.py:76-143` documents the initial instrument defects and checks current inventory; `python3 -m tools.inventario --check` produced HALLAZGOS: 0 and its nineteen focused tests passed. Root executed `git show -s --format=%H%n%B 1ec66b3`: the exact commit message records six mismatches, two instrument defects, 73 statements and eleven tests; the archived raw message is `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-h1/SPEC-L351-commit-root.txt`. SPEC explicitly discloses the original stdout is absent, so this verifies its historical attribution and current behavior, not a recovered measurement.",
+    "could_not_run": 0
+  },
+  {
+    "id": "SPEC-L353",
+    "claim_id": "SPEC-L353",
+    "verdict": "PASS",
+    "evidence": "`tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md:24-42` contiene la captura hist\u00f3rica del episodio del 2026-09-25 (load 0.95/20, 64.3 GiB libres, PSI cero, nvidia-smi 22 ms) y limita expl\u00edcitamente la observaci\u00f3n GPU a una lectura cercana; `:64-75` conserva los c\u00f3mputos de CPU de los scopes con las duraciones y porcentajes citados por SPEC. El mismo registro, `tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md:170-195`, explica que el calibrador no puede demostrar la causa retrospectivamente por un hueco de 32 minutos, y documenta `python3 -m tools.calibra_latencia_x` con rc=2; `SPEC.md:177` tambi\u00e9n describe esa salida actual sin tratar las m\u00e9tricas fechadas de septiembre como vivas. La rec\u00e1lculo de 2026-10-03 de la ficha (`tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md:44-58`) agrega evidencia reciente sin establecer la causa del episodio, as\u00ed que no contradice la afirmaci\u00f3n hist\u00f3rica ni su l\u00edmite declarado.",
+    "could_not_run": 0
+  }
+]

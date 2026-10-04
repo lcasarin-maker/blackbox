@@ -45,8 +45,6 @@ Evidencia y pendientes: `tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progre
 
 [363323](https://forums.developer.nvidia.com/t/363323) reporta apagado sinjournal tras8h conQwen122BQ6 y posteriormente vLLM Q4, mientras GLMFP8 era estable. Autor afirma dos días con rango2300–2300 y~18→17tok/s; responde permitir idle con200–2300. TemperaturaGPU<70 y porcentaje nominal80% dejan otras zonas/presión/PSU pendientes. A/B actual debe medir costo/idle, no adoptar floor2300 ni presentar estos números del autor como resultado local.
 
-[376039](https://forums.developer.nvidia.com/t/376039) reports a different degraded-live condition: DGX Spark FE, OS 7.5/kernel 6.17.0-1026/driver 580.159.03 remains at 721 MHz under 96% GPU utilization with 55°C, ~10 W and no reported throttle reason; a microbenchmark supports a real throughput constraint. The owner says disconnecting AC/USB restored clocks, then recalls an OOM freeze immediately before the condition. Another owner says the same clock cap survived an eight-hour power removal. Cause remains unknown; PSU power-safety comments are speculation. Add a control to measure applied clock and workload throughput before/after recovery, and do not treat power cycling or a clock cap as a universal fix.
-
 [376039](https://forums.developer.nvidia.com/t/376039) reports a different degraded-live condition: DGX Spark FE, OS 7.5/kernel 6.17.0-1026/driver 580.159.03 remains at 721 MHz under 96% GPU utilization with 55°C, ~10 W and no reported throttle reason; a microbenchmark supports a real clock/throughput constraint. The owner says disconnecting AC/USB restored clocks, then recalls an OOM freeze immediately before the condition. Another owner says the same clock cap survived an eight-hour power removal. Cause remains unknown; PSU power-safety comments are speculation. Add a control to measure applied clock and workload throughput before/after recovery, and do not treat power cycling or a clock cap as a universal fix.
 
 [371037](https://forums.developer.nvidia.com/t/371037) reports GPU clock at 565 MHz during load after driver 580.159.03 update, despite 2021 MHz at idle; the owner reports normal clocks after a 30-second AC unplug. This is a separate unit/report and another temporal association, not a validated driver regression or power-negotiation cause. Include it as a reproduction candidate with exact update history, effective clock, throughput, telemetry and safe restoration; never turn the unplug workaround into automatic BB recovery.
@@ -63,3 +61,25 @@ Evidencia y pendientes: `tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progre
 
 
 **Señal relacionada para `BB-GLM52-LOW-CLOCK-UNPLUG-RECOVERY-CANARY`.** Otro dueño reportó Gemma4 con GPU PD throttle a 611 MHz y menos de 10 W, tras lo que reconectar PSU mejoró la velocidad de benchmark; una persona distinta dice que una receta de 26B dejó el Spark sin respuesta hasta retirar alimentación ([365490, posts 64, 82, 111](https://forums.developer.nvidia.com/t/gemma-4-models-which-vllm-version-any-prs-spotted/365490/64)). Sin telemetría, identidad exacta o A/B, no vincular las dos quejas ni atribuirlas a PD. Registrar clock/power/throttle y captura previa a cualquier ciclo eléctrico.
+
+## Consulta nativa de capacidades 2026-10-04
+
+`readonly-clock-capability-current.json` conserva comandos de solo lectura. Driver 580.178.04 sobre GB10/kernel 6.17.0-1032-nvidia: `clocks.min.graphics` se rechaza con rc2; `--query-supported-clocks=memory,graphics` retorna rc0 pero `[N/A], [N/A]`, por lo que permanece semánticamente could_not_run. Total could_not_run=2, fail=0. Consulta válida de current/max devuelve 2418/3003 MHz, 11.20 W, 41 °C, 2% utilización; max no prueba rango bloqueado. El servicio declara 300,2800 y aparece active/exited; esa declaración tampoco es readback del rango efectivo. No hubo cambio de clocks, workload A/B, reinicio ni rollback. La falta de consulta nativa requerida se conserva como pendiente del verificador.
+
+
+## Defecto de entrada CLI detectado (2026-10-04)
+
+La ejecución literal del close_check termina con código 0 y stdout vacío porque el módulo tiene API `verify` pero carece de entrada `main/__main__`. La llamada API sobre la misma captura devuelve UNKNOWN; el código de salida actual no acredita cierre. Recibo: `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/direct-29-original-close-current-run.json`.
+
+El agente hardware tiene asignada la entrada CLI con JSON literal y códigos 0/1/2 para PASS/FAIL/UNKNOWN, respectivamente; el código 0 exige could_not_run=0. Se requieren pruebas de proceso real para la captura ausente, argumentos y controles positivos/negativos. El close_check se conserva y la ficha sigue abierta.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: El recibo del host dice 0 ensayos A/B y 0 cambios de clock; no contiene workload, soak ni rollback.
+- Evidencia faltante para cierre: GPU/OEM/driver; cap actual/aplicado; carga y soak preregistrados; throughput/estabilidad/temperaturas antes/después; rollback verificado.
+- Siguiente acción: Solicitar ensayo A/B opt-in en GPU de laboratorio con identidad/cap original, workload y umbrales preregistrados, estabilidad/throughput/temp antes/después y restauración verificada.
+- Responsable del siguiente paso: BB; operador Luis para workload/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md`, `tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt`, `tools/verify_gpu_clock_cap_ab.py`, `tools/hardware_evidence.py`, `tests/test_debt_registration_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

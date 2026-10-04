@@ -1,0 +1,566 @@
+{
+  "rows": [
+    {
+      "id": "DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01",
+      "command": "python3 -m tools.verify_telemetry_dispositions --event-id 92dc63137ae930f3 --event-id a50ae5e52c99c3ab --event-id 5437b44ce52501ee",
+      "exit_code": 1,
+      "timed_out": false,
+      "verdict": null,
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01-direct-close-current.log",
+      "sha256": "e041a9a68bbed564fba4efe6b76b1344e81a359abb9ff3f9e4b851c05f79921c"
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-01-REPRO",
+      "command": "python3 -m tools.verify_cgroup_repro tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": [
+          "none/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'",
+          "none/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'",
+          "none/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'",
+          "cpu_touch/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'",
+          "cpu_touch/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'",
+          "cpu_touch/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'",
+          "cuda_malloc/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'",
+          "cuda_malloc/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'",
+          "cuda_malloc/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'",
+          "cuda_malloc/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'",
+          "cuda_malloc_repeat/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'",
+          "cuda_malloc_repeat/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'",
+          "cuda_malloc_repeat/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'",
+          "cuda_malloc_repeat/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'",
+          "cuda_malloc_managed/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'",
+          "cuda_malloc_managed/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'",
+          "cuda_malloc_managed/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'",
+          "cuda_malloc_managed/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'",
+          "pytorch_empty/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'",
+          "pytorch_empty/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'",
+          "pytorch_empty/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'",
+          "pytorch_empty/allocator_cache_released/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'",
+          "pytorch_empty/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'"
+        ],
+        "could_not_run_count": 23,
+        "findings": [],
+        "rows": [
+          {
+            "api": "none",
+            "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope",
+            "held_delta_bytes": 0,
+            "release_delta_bytes": 0,
+            "requested_bytes": 0
+          },
+          {
+            "api": "cpu_touch",
+            "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope",
+            "held_delta_bytes": 33554432,
+            "release_delta_bytes": -237568,
+            "requested_bytes": 33554432
+          },
+          {
+            "api": "cuda_malloc",
+            "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope",
+            "held_delta_bytes": 0,
+            "release_delta_bytes": -360448,
+            "requested_bytes": 33554432
+          },
+          {
+            "api": "cuda_malloc_repeat",
+            "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope",
+            "held_delta_bytes": 0,
+            "release_delta_bytes": 0,
+            "requested_bytes": 33554432
+          },
+          {
+            "api": "cuda_malloc_managed",
+            "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope",
+            "held_delta_bytes": 33816576,
+            "release_delta_bytes": -65536,
+            "requested_bytes": 33554432
+          },
+          {
+            "api": "pytorch_empty",
+            "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope",
+            "held_delta_bytes": 0,
+            "release_delta_bytes": -1789952,
+            "requested_bytes": 33554432
+          }
+        ],
+        "scope": "observation consistency and CPU calibration; no native GPU containment or provenance proof",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-01-REPRO-direct-close-current.log",
+      "sha256": "54c94c48d8e38e6fc46893c925d0f7550a0aa978832a65c5679d86418a487c9f"
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-02-TRAZA",
+      "command": "python3 -m tools.verify_cgroup_plan --phase 02-traza --evidence tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "raw capture unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/capture.json'"
+        ],
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-02-TRAZA-direct-close-current.log",
+      "sha256": "6b7e0c045840c167c5db6b5cf14937051d535a1ccc3b831318b6c971de6059b7"
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-03-NATIVO",
+      "command": "python3 -m tools.verify_cgroup_plan --phase 03-nativo --evidence tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "raw capture unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/capture.json'"
+        ],
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-03-NATIVO-direct-close-current.log",
+      "sha256": "214129e4a2105219cfc62c11180bc9e2a77789f1d351fe3653a502060ff74f2e"
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-04-PARCHE",
+      "command": "python3 -m tools.verify_cgroup_plan --phase 04-parche --evidence tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "raw capture unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/capture.json'"
+        ],
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-04-PARCHE-direct-close-current.log",
+      "sha256": "e7e08aa6d6256c268d312be01449e2cf1b339713a205ae1e297c9a543d042925"
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-05-CUELGUES",
+      "command": "python3 -m tools.verify_cgroup_plan --phase 05-cuelgues --evidence tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "raw capture unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/capture.json'"
+        ],
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-05-CUELGUES-direct-close-current.log",
+      "sha256": "f5bb904cc26ad7c55d723ce36c2470e94dc23342cefe268c175f97b40325c665"
+    },
+    {
+      "id": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+      "command": "python3 -m tools.verify_apt_critical_removals --evidence tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+      "exit_code": 0,
+      "timed_out": false,
+      "verdict": {
+        "checks": {
+          "captured_critical_removal": "block",
+          "captured_upgrade": "pass"
+        },
+        "closure": "open",
+        "could_not_run": 0,
+        "evidence_sha256": "10c4b042ee56de970ef0d96a91ea352a80313a9780171f3e076af37385a7689d",
+        "fail": 0,
+        "findings": [],
+        "meaning": "instrument discriminates these host simulations; OEM protection and installed APT guard are unverified",
+        "open_blockers": [
+          "OEM coverage and installed APT guard remain unverified"
+        ],
+        "status": "pass"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD-direct-close-current.log",
+      "sha256": "dbd77279f7cbe08b208143ef73ea83ae0d9f9cf39aa3c87148207abe920a7102"
+    },
+    {
+      "id": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+      "command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01 --evidence tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "checks": {},
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01/capture.json"
+        ],
+        "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01-direct-close-current.log",
+      "sha256": "3668c04313aea3132537f8c36fa328e0e9792a77af73ef8a8e10ff818b50196f"
+    },
+    {
+      "id": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+      "command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 --evidence tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/preflight.json",
+          "tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/commands.json"
+        ],
+        "reason": "backend kernel/PTX architecture manifest is incomplete",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01-direct-close-current.log",
+      "sha256": "a6f814d2a1df6b10a5379aba4c1e257f44f1c579d0c5473c62b1c47b9a5c4428"
+    },
+    {
+      "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+      "command": "python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+      "exit_code": 0,
+      "timed_out": false,
+      "verdict": null,
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01-direct-close-current.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+      "command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01 --evidence tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/preflight.json",
+          "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/commands.json"
+        ],
+        "reason": "healthy preflight matches raw commands; incident negative and recovery/rollback controls are missing",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01-direct-close-current.log",
+      "sha256": "201bcf94ee8b1e6cad264c44954ece6b3c7f7d78fe53494ab601758b20116d60"
+    },
+    {
+      "id": "FEATURE-FORUM-NETCONSOLE-01",
+      "command": "python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "required raw capture unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-FORUM-NETCONSOLE-01/kernel-capture.json'"
+        ],
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-NETCONSOLE-01-direct-close-current.log",
+      "sha256": "8f3dd974110dae41b8679304f04c11561e5a19f9f412eb998d32467915194930"
+    },
+    {
+      "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+      "command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01 --evidence tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/provider-trace-run.json"
+        ],
+        "reason": "fixture controls recompute correctly; no real workload trace, OEM validation, or recovery/rollback was captured",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01-direct-close-current.log",
+      "sha256": "d36c4f60b913487d7cf3edce039a6c78185a9480ca89718779e890e52c89e8e0"
+    },
+    {
+      "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+      "command": "python3 -m tools.verify_rcu_panic_pstore --evidence tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "raw recovery evidence unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/recovery.json'"
+        ],
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-RCU-PANIC-PSTORE-01-direct-close-current.log",
+      "sha256": "72bf7756a43f5b8606b26a11e93c97139932b3fda5e19e241288594aaef55120"
+    },
+    {
+      "id": "FEATURE-FORUM-RESCUE-RUNBOOK-01",
+      "command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-RESCUE-RUNBOOK-01 --evidence tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "checks": {},
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01/capture.json"
+        ],
+        "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-RESCUE-RUNBOOK-01-direct-close-current.log",
+      "sha256": "bbf6359a5579b998ea59bdd224b341bf9af69805b49cd50ff4ddb5509208b51e"
+    },
+    {
+      "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+      "command": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-SBSA-WATCHDOG-STATE-01 --evidence tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "checks": {},
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/capture.json"
+        ],
+        "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01-direct-close-current.log",
+      "sha256": "da8a9055f635b7c27858513887790dbea29aa9aa430e7ddca8a57c2cfb80e9d9"
+    },
+    {
+      "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+      "command": "python3 -m tools.verify_wifi_isolation --evidence tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01",
+      "exit_code": 0,
+      "timed_out": false,
+      "verdict": null,
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-WIFI-ISOLATION-01-direct-close-current.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+      "command": "python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "raw phase capture unavailable: [Errno 2] No such file or directory: 'capture.json'"
+        ],
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-MEMORYSAVER-02-TRAZADOR-direct-close-current.log",
+      "sha256": "f293a1fe0c9f7f11511ab141a5072cfb454dedec2a95a938419e6e8df12469bb"
+    },
+    {
+      "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+      "command": "python3 -m tools.verify_memory_saver --phase 04-packing-4k --evidence tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "raw phase capture unavailable: [Errno 2] No such file or directory: 'capture.json'"
+        ],
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-MEMORYSAVER-04-PACKING-4K-direct-close-current.log",
+      "sha256": "f293a1fe0c9f7f11511ab141a5072cfb454dedec2a95a938419e6e8df12469bb"
+    },
+    {
+      "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+      "command": "python3 -m tools.verify_usb_hid_postupdate --evidence tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK",
+      "exit_code": 0,
+      "timed_out": false,
+      "verdict": null,
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-USB-HID-POSTUPDATE-CHECK-direct-close-current.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+      "command": "python3 -m tools.verify_forum_finding --id FORUM-00-CX7-HOTPLUG-FAN-PROTECTION --evidence tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "checks": {},
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION/capture.json"
+        ],
+        "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION-direct-close-current.log",
+      "sha256": "116ab1b3baa3a34f640bc4184084531cb90827762f1fd717c32f8a77cfcf2507"
+    },
+    {
+      "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+      "command": "python3 -m tools.verify_forum_finding --id FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT --evidence tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/preflight.json",
+          "tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/commands.json"
+        ],
+        "reason": "missing observation: effective_modeset; missing observation: target_requires_kms; missing observation: recovery_accessible",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT-direct-close-current.log",
+      "sha256": "d3c3022bdf847f1afadebaaf64af32f02ce964822a218aed1a660c854ff42973"
+    },
+    {
+      "id": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+      "command": "python3 -m tools.verify_forum_finding --id FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION --evidence tasks/evidence/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "checks": {},
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION/capture.json"
+        ],
+        "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION-direct-close-current.log",
+      "sha256": "3f635126ee707581defe28f8630aca9f3843933ac02730b7fae4709c3d9bbe21"
+    },
+    {
+      "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "command": "python3 -m tools.verify_forum_finding --id FORUM-00-KERNEL-INITRD-UPDATE-GATE --evidence tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE/preflight.json",
+          "tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE/commands.json"
+        ],
+        "reason": "missing observation: apt_check; missing observation: module_ready",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-KERNEL-INITRD-UPDATE-GATE-direct-close-current.log",
+      "sha256": "43c727212e4067f3e3a1d1ad17720c6dc4e323d0b4ffbf8146d270528a3e1778"
+    },
+    {
+      "id": "FORUM-00-REALTEK-EEE-DIRECT-LINK",
+      "command": "python3 -m tools.verify_forum_finding --id FORUM-00-REALTEK-EEE-DIRECT-LINK --evidence tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "checks": {},
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK/capture.json"
+        ],
+        "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-REALTEK-EEE-DIRECT-LINK-direct-close-current.log",
+      "sha256": "ab13599195a43be3d98736144954c51670227ef5d40c1373b33b0c87691193a7"
+    },
+    {
+      "id": "FORUM-02-GX10-READ-INTEGRITY",
+      "command": "python3 -m tools.verify_forum_finding --id FORUM-02-GX10-READ-INTEGRITY --evidence tasks/evidence/FORUM-02-GX10-READ-INTEGRITY",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "checks": {},
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/capture.json"
+        ],
+        "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-02-GX10-READ-INTEGRITY-direct-close-current.log",
+      "sha256": "9682c27273d6cc590c8c6324d6b16a226bc9328da82f9c3148c8cf845ebc4d1e"
+    },
+    {
+      "id": "FORUM-02-PSTORE-KERNEL-REGRESSION",
+      "command": "python3 -m tools.verify_forum_finding --id FORUM-02-PSTORE-KERNEL-REGRESSION --evidence tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION/finding.json"
+        ],
+        "reason": "raw finding evidence unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION/finding.json'",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-02-PSTORE-KERNEL-REGRESSION-direct-close-current.log",
+      "sha256": "8fd4528d87452e5776b39407c3fdbe81a6da7047fc5ab11f1da19be0f3df5231"
+    },
+    {
+      "id": "FORUM-02-USB-UVC-EP0",
+      "command": "python3 -m tools.verify_forum_finding --id FORUM-02-USB-UVC-EP0 --evidence tasks/evidence/FORUM-02-USB-UVC-EP0",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "checks": {},
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FORUM-02-USB-UVC-EP0/capture.json"
+        ],
+        "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-02-USB-UVC-EP0-direct-close-current.log",
+      "sha256": "5bc677d09f45a9a64be6541feafac9a58eeb355e3d5e7111171b71a50e35fa9b"
+    },
+    {
+      "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+      "command": "python3 -m tools.verify_forum_finding --id FORUM-REALTEK-DRIVER-BINDING-01 --evidence tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01",
+      "exit_code": 2,
+      "timed_out": false,
+      "verdict": {
+        "checks": {},
+        "could_not_run": 1,
+        "fail": 0,
+        "files": [
+          "tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01/capture.json"
+        ],
+        "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'",
+        "status": "unknown"
+      },
+      "log": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-REALTEK-DRIVER-BINDING-01-direct-close-current.log",
+      "sha256": "8c7b3ac96de41145a72c16ac2cc999e50dd08e108c7518181680e913baf9d9ec"
+    }
+  ],
+  "scope": 29,
+  "subject_closed": false,
+  "report_clean": false,
+  "verdict_status_counts": {
+    "unclassified": 4,
+    "unknown": 24,
+    "pass": 1
+  },
+  "observations_timeout_count": 0,
+  "closure_audit_pending": [
+    "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+    "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "FEATURE-FORUM-WIFI-ISOLATION-01",
+    "FEATURE-USB-HID-POSTUPDATE-CHECK"
+  ]
+}

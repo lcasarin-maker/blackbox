@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: `deferred_lab`. El inventario de red existente informa cero HCA RDMA, `ip link` inaccesible, conexión física `UNKNOWN` y transporte no probado. Falta retest bidireccional `ib_write_bw` entre ambos hosts fijados antes/después de reboot individual/secuencial y hotplug, con cable PN, CX7 fw y comandos/resultados. No se alteró host ni se generó tráfico. La ficha sigue abierta y `close_check` intacto. Informe: `docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: Inventario informa cero HCA RDMA, ip link inaccesible y enlace físico UNKNOWN; falta retest bidireccional ib_write_bw en ambos hosts con reboot individual/secuencial.
+- Evidencia faltante para cierre: Inventario informa cero HCA RDMA, ip link inaccesible y enlace físico UNKNOWN; falta retest bidireccional ib_write_bw en ambos hosts con reboot individual/secuencial.
+- Siguiente acción: Coordinación BB: preparar captura/criterio de simetría; operador Luis: aportar ambos hosts CX7 y correr prueba bidireccional/reboots seguros con resultados literales. Ref explícita: tasks/backlog/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01.md y tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01.md`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01-original-selector-current.log`, `docs/evidence/BB-INSTRUMENTS-network.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

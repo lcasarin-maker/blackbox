@@ -1,0 +1,17 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01 __________
+tests/test_debt_registration_controls.py:1545: in test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01
+    _require_pass('DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01', {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01 closure remains open: {'status': 'unknown', 'reason': 'thermal inventory is observational only; matched clock-cap/workload runs, OEM-safe threshold, and applied-policy rollback readback are missing', 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/prototype-capture.json'], 'checks': {'thermal_inventory': 'pass', 'oem_identity': 'pass', 'sensor_labels': 'unknown', 'matched_clock_runs': 'unknown', 'rollback': 'unknown'}, 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"checks": {"matched_clock_runs": "unknown", "oem_identity": "pass", "rollback": "unknown", "sensor_labels": "unknown", "thermal_inventory": "pass"}, "could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/prototype-capture.json"], "reason": "thermal inventory is observational only; matched clock-cap/workload runs, OEM-safe threshold, and applied-policy rollback readback are missing", "status": "unknown"}
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01
+1 failed in 0.24s

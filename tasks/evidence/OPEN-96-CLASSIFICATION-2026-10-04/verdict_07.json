@@ -1,0 +1,204 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "El selector existe; el recibo disponible declara captura cruda de comando ausente/malformada y no acredita una secuencia roam."
+    ],
+    "missing_evidence": [
+      "Captura raw de identidad/asociación/rutas/DNS/conectividad positiva y aislamiento negativo/rollback; selector focal passing."
+    ],
+    "next_action": "Solicitar al operador una secuencia roam con interfaz/AP identificados, asociación/ruta/DNS/conectividad e intento aislado negativo; correr el selector Wi-Fi existente sobre el recibo crudo.",
+    "responsible": "BB",
+    "evidence": [
+      "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01.md",
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/three-hardware-original-selectors-primary-run.json",
+      "tools/verify_wifi_isolation.py",
+      "tests/test_debt_registration_controls.py",
+      "tools/hardware_evidence.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "Sysfs correlaciona netdev/BDF pero la conexión física sigue UNKNOWN; netlink no se pudo consultar y PCI no prueba cable/alias."
+    ],
+    "missing_evidence": [
+      "OEM/NIC/topología y firmware; identificación física de lanes/puertos; tráfico por cada ruta y control desconectado; rollback."
+    ],
+    "next_action": "Solicitar al dueño del CX7 mapa de lanes/puertos, captura de tráfico por puerto y control físico desconectado/reconectado sobre topología de cuatro nodos.",
+    "responsible": "BB; operador Luis para hardware/peer",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01.md",
+      "docs/evidence/BB-INSTRUMENTS-network.md",
+      "tools/hardware_batch02_controls.py",
+      "tools/host_diagnostics.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "La evidencia actual dice que provider_trace no observa placement groups ni recursos TP por nodo; no hay Ray trace de dos nodos."
+    ],
+    "missing_evidence": [
+      "Dos nodos y digests fijados; placement/resource snapshot por nodo/rank; request con progreso por nodo; negativo del timeout y rollback."
+    ],
+    "next_action": "Solicitar corrida Ray de dos nodos con snapshot placement/resource por nodo/rank y request de progreso, incluyendo control del timeout sin aumentarlo; usar evaluador existente.",
+    "responsible": "BB; operador Luis para workload/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01.md",
+      "tools/provider_trace.py",
+      "tools/runtime_batch02_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "El preflight offline es parcial y solo contrasta respuestas guardadas; no se adjunta ejecución OpenClaw/vLLM con requests válidas/negativas fijadas."
+    ],
+    "missing_evidence": [
+      "GET /v1/models capturado, alias servido/configuración cliente, límite de contexto real, requests válidas/negativas y respuestas raw vinculadas a versiones."
+    ],
+    "next_action": "Solicitar recibo de GET /v1/models y requests reales con alias correcto/incorrecto y límite contexto válido/inválido en versiones fijadas; mantener respuestas raw para selector actual.",
+    "responsible": "BB",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01.md",
+      "tools/runtime_batch02_controls.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-FORUM-RECOVERY-APT-UPDATE-01",
+    "category": "user_decision",
+    "blockers": [
+      "No hay captura pre-reset, recovery media/rollback ni base para decidir recovery/RMA del sujeto afectado."
+    ],
+    "missing_evidence": [
+      "Logs pre-reset, último kernel/paquetes, ruta recovery y medios OEM, rollback; reproducción controlada que distinga APT/Docker/workload."
+    ],
+    "next_action": "Completar solo la runbook de preservación pre-reset y solicitar al operador logs previos; pedir al OEM ruta oficial de recovery/RMA antes de cualquier acción sobre el dispositivo.",
+    "responsible": "BB; operador Luis decide recuperación del sujeto",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-RECOVERY-APT-UPDATE-01.md",
+      "tasks/evidence/BB-INSTRUMENTS-2026-10-03/apt-sources-capture.json",
+      "tools/hardware_batch02_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "El documento dice que SSE no expone estado interno de cola/prefill y no hay captura temporal por solicitud."
+    ],
+    "missing_evidence": [
+      "Runtime/digest y carga fijados; progreso/ETA por solicitud, colas, counters KV; control sano y negativo; salida literal y rollback."
+    ],
+    "next_action": "Solicitar traza interna por petición en runtime fijado bajo una activa + siete queued y control max_num_seqs, registrando progreso, cola, KV y salida final.",
+    "responsible": "BB; operador Luis para workload/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01.md",
+      "tools/runtime_batch04_controls.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-02-TRAZA",
+    "category": "privileged_access",
+    "blockers": [
+      "El mapa estático y ABI probe están disponibles; la captura dinámica quedó sin ejecutar por barrera root."
+    ],
+    "missing_evidence": [
+      "Traza memcg/flags/worker con dueño real, transición observada y control negativo en kernel 6.17; identidad del stack."
+    ],
+    "next_action": "Solicitar al operador captura acotada del probe en lab con privilegios root, identidad kernel, owner/flags/transición worker y control negativo; preservar stderr y resultado de attach.",
+    "responsible": "BB; operador Luis para acceso root/lab",
+    "evidence": [
+      "tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md",
+      "tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt",
+      "tools/kernel_charges.bt",
+      "tools/verify_cgroup_plan.py",
+      "tests/test_closure_kernel_selectors.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "FEATURE-FORUM-NVME-READONLY-01",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "El ensayo existente es copia/restauración de archivo regular; el selector requiere evidencia de incidente NVMe y recovery ligado al dispositivo."
+    ],
+    "missing_evidence": [
+      "Identidad serial/model/firmware, SMART, journal correlacionado, transición mount, backup/export+restore, recuperación/rollback y ruta OEM."
+    ],
+    "next_action": "Solicitar capturas readonly de identidad/SMART/journal/mount y backup a filesystem externo ante incidente; reservar prueba de recovery/rollback para NVMe de laboratorio sano, sin escribir medio sospechoso.",
+    "responsible": "BB; operador Luis para hardware/peer",
+    "evidence": [
+      "tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md",
+      "tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/export-copy-lab/run.json",
+      "tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/host-observation.txt",
+      "tools/nvme_readonly.py",
+      "tools/forum_hardware_subjects.py",
+      "tests/test_nvme_readonly.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  },
+  {
+    "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+    "category": "external_oem",
+    "blockers": [
+      "La lectura effective_modeset quedó permission-denied y no hay declaración OEM del OTA target ni recuperación/rollback validada."
+    ],
+    "missing_evidence": [
+      "Valor efectivo KMS ligado a host; declaración OEM para OTA; HDMI/USB-C/SSH recovery y rollback en equipo compatible."
+    ],
+    "next_action": "Solicitar a NVIDIA/OEM matriz oficial de compatibilidad de la combinación y coordinar captura readonly autorizada más HDMI/USB-C/SSH/rollback en equipo DGX compatible.",
+    "responsible": "BB; coordinación solicita OEM/proveedor",
+    "evidence": [
+      "tasks/backlog/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT.md",
+      "tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/commands.json",
+      "tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/preflight.json",
+      "tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/validator-run.json",
+      "tools/forum_finding.py",
+      "tools/preflight.py",
+      "tools/forum_hardware_subjects.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "actionable_now": false,
+    "rationale": "Cierre no accionable hoy: falta la evidencia descrita; la evidencia técnica citada permite una preparación concreta, pero no acredita el sujeto ni sus controles funcionales.",
+    "could_not_run_inspection": 0,
+    "preparation_actionable_now": true
+  }
+]

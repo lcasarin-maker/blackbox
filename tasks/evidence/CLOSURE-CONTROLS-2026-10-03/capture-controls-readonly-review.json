@@ -1,0 +1,51 @@
+{
+  "schema": "bb.readonly-review.v1",
+  "review": "capture_io and runtime batch 01-04 control readers",
+  "date": "2026-10-04",
+  "scope": [
+    "tools/capture_io.py",
+    "tools/runtime_batch01_controls.py",
+    "tools/runtime_batch02_controls.py",
+    "tools/runtime_batch03_controls.py",
+    "tools/runtime_batch04_controls.py"
+  ],
+  "scope_state": "all five paths are currently untracked; no tracked diff is available as a baseline",
+  "hashes": {
+    "tools/capture_io.py": "bfd4ed34ccff13c190da9b0f258c53a75e84df237b1c2b9a0739f503475ac370",
+    "tools/runtime_batch01_controls.py": "836836dd89c97c306d20b67df1f47a08bd183555808be0de0c65586f8fd87e36",
+    "tools/runtime_batch02_controls.py": "bbc0b95cf43903b393b850b1b5a450d4f0cf13ec920af0bae6c36a8cf3a767e4",
+    "tools/runtime_batch03_controls.py": "0e82285e0229a3482b26d890dc416c304e9cd1866132eb1d2088a88f973c7d6a",
+    "tools/runtime_batch04_controls.py": "da06a8ec634739df68a24a8e1b7e3625b89b462302099dcbabafa9cd1c497c9d"
+  },
+  "findings": [
+    {
+      "id": "RC-BOOL-IS-ZERO-01",
+      "severity": "high",
+      "file": "tools/runtime_batch02_controls.py",
+      "lines": [
+        371,
+        372,
+        459
+      ],
+      "issue": "The SM121 kernel matrix accepts JSON booleans false for load_exit_code and first_inference_exit_code because bool is equal to integer zero in Python. Unlike neighboring checks, these fields have no exact-int validation.",
+      "impact": "A capture can assert a successful kernel load and first inference with boolean values rather than recorded process return codes, then satisfy this check.",
+      "minimal_reproduction": {
+        "command": "python - <<'PY'\nfrom tools.runtime_batch02_controls import assess\ncard='DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01'\nD='sha256:'+'a'*64\nx={'schema':'bb.runtime.raw.v1','card_id':card,'capture_id':'x','captured_at':'2026-10-04T00:00:00Z','subject':{'oem':'x','host_id':'h','model':'m','software_versions':{'sglang':'1','sgl_kernel':'2','cuda':'3','driver':'4'},'image_digest':D,'checkpoint_digest':D,'sm_arch':'sm_121'},'request_bounds':{'request_id':'r','model':'m','checkpoint_digest':D,'max_tokens':10,'max_context_tokens':100,'deadline_seconds':10,'started_at':'2026-10-04T00:00:00Z','finished_at':'2026-10-04T00:00:01Z'},'required_operations':['gemm'],'architecture_kernel_matrix':[{'sm_arch':'sm_121','operation':'gemm','kernel_name':'k','load_exit_code':False,'first_inference_exit_code':False,'raw_output':'ok'}],'reference_output':{'request_id':'r','observed':'ok','expected':'ok'},'architecture_negative':{'sm_arch':'sm_90','required_op':'gemm','argv_sha256':'abc','exit_code':1,'stderr_raw':'unsupported'}}\nprint(assess(card,x))\nPY",
+        "output": "{'status': 'pass', 'could_not_run': 0, 'reason': 'raw batch-02 measurements satisfy domain predicate'}"
+      },
+      "suggested_fix": "Require type(value) is int for both positive exit-code fields before comparing them to zero.",
+      "additional_affected_predicate": "tools/runtime_batch02_controls.py:_cold_compile also compares compile_exit_code == 0 at line 459 without an exact-int guard; the same Python bool/int equality lets false satisfy it. The executable minimal reproduction exercises the SM121 matrix branch."
+    }
+  ],
+  "capture_io_review": {
+    "read_regular_bytes": "Static inspection found component-wise O_NOFOLLOW traversal, fstat regular-file enforcement, nonblocking open, bounded max_bytes+1 read, and parent-traversal rejection. No concrete unsafe-read or accepted-oversize finding reproduced in this review.",
+    "strict_json_loads": "Rejects duplicate object keys and non-finite constants."
+  },
+  "checks": {
+    "targeted_reproduction": "pass: synthetic batch-02 capture returned status=pass with both positive return-code fields set to JSON false",
+    "general_suites": "not run, per task scope"
+  },
+  "cnr": [
+    "No positive runtime-capture.json files were present under the Nemotron, Qwen cold-compile, vLLM architecture-matrix, or Ray resource-fix card evidence directories, so no claim was tested against those real captures."
+  ]
+}

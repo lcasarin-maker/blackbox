@@ -1,0 +1,222 @@
+{
+  "scope": "Full configured BB suite before runtime/APT new integration and SMI fix",
+  "command": "COVERAGE_FILE=/tmp/bb-primary-shared-reader-20261004.coverage python3 -m pytest -q --cov=tools --cov-branch",
+  "session_id": 95192,
+  "returncode": 1,
+  "summary": "10 failed,1365 passed in437.21s",
+  "coverage_totals": [
+    "TOTAL                                     8004      0   3414      0   100%"
+  ],
+  "subject_verdict_count": 10,
+  "subject_unknown_count": 10,
+  "subject_fail_count": 0,
+  "could_not_run_count": 32,
+  "changed_sources": [],
+  "artifacts": [
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/primary-shared-reader-full-suite/bb-primary-shared-reader-20261004-pytest.log",
+      "sha256": "e5bfa5b031a9374004fbae7ad7e5c03522eb2c37c2816a89d01bf5cca01f7340"
+    },
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/primary-shared-reader-full-suite/bb-primary-shared-reader-20261004.coverage",
+      "sha256": "9d8b936670f28a21611ceaad7d50efa0637cc5d03a217c92d75696b5ad49ad59"
+    }
+  ],
+  "subject_verdicts": [
+    {
+      "id": "FEATURE-1358-CGROUP-01-REPRO",
+      "result": {
+        "status": "unknown",
+        "rows": [
+          {
+            "api": "none",
+            "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope",
+            "requested_bytes": 0,
+            "held_delta_bytes": 0,
+            "release_delta_bytes": 0
+          },
+          {
+            "api": "cpu_touch",
+            "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope",
+            "requested_bytes": 33554432,
+            "held_delta_bytes": 33554432,
+            "release_delta_bytes": -237568
+          },
+          {
+            "api": "cuda_malloc",
+            "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope",
+            "requested_bytes": 33554432,
+            "held_delta_bytes": 0,
+            "release_delta_bytes": -360448
+          },
+          {
+            "api": "cuda_malloc_repeat",
+            "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope",
+            "requested_bytes": 33554432,
+            "held_delta_bytes": 0,
+            "release_delta_bytes": 0
+          },
+          {
+            "api": "cuda_malloc_managed",
+            "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope",
+            "requested_bytes": 33554432,
+            "held_delta_bytes": 33816576,
+            "release_delta_bytes": -65536
+          },
+          {
+            "api": "pytorch_empty",
+            "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope",
+            "requested_bytes": 33554432,
+            "held_delta_bytes": 0,
+            "release_delta_bytes": -1789952
+          }
+        ],
+        "findings": [],
+        "could_not_run": [
+          "none/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'",
+          "none/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'",
+          "none/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'",
+          "cpu_touch/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'",
+          "cpu_touch/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'",
+          "cpu_touch/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'",
+          "cuda_malloc/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'",
+          "cuda_malloc/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'",
+          "cuda_malloc/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'",
+          "cuda_malloc/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'",
+          "cuda_malloc_repeat/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'",
+          "cuda_malloc_repeat/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'",
+          "cuda_malloc_repeat/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'",
+          "cuda_malloc_repeat/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'",
+          "cuda_malloc_managed/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'",
+          "cuda_malloc_managed/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'",
+          "cuda_malloc_managed/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'",
+          "cuda_malloc_managed/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'",
+          "pytorch_empty/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'",
+          "pytorch_empty/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'",
+          "pytorch_empty/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'",
+          "pytorch_empty/allocator_cache_released/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'",
+          "pytorch_empty/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'"
+        ],
+        "could_not_run_count": 23,
+        "scope": "observation consistency and CPU calibration; no native GPU containment or provenance proof"
+      }
+    },
+    {
+      "id": "FEATURE-FORUM-NETCONSOLE-01",
+      "result": {
+        "status": "unknown",
+        "findings": [
+          "required raw capture unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-NETCONSOLE-01/kernel-capture.json'"
+        ],
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0
+      }
+    },
+    {
+      "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+      "result": {
+        "status": "unknown",
+        "findings": [
+          "raw recovery evidence unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/recovery.json'"
+        ],
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0
+      }
+    },
+    {
+      "id": "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01",
+      "result": {
+        "status": "unknown",
+        "findings": [
+          "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01'"
+        ],
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "provenance": "caller-supplied; hashes establish consistency, not authenticity"
+      }
+    },
+    {
+      "id": "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01",
+      "result": {
+        "status": "unknown",
+        "findings": [
+          "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'capture.json'"
+        ],
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "provenance": "caller-supplied; hashes establish consistency, not authenticity"
+      }
+    },
+    {
+      "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+      "result": {
+        "status": "unknown",
+        "findings": [
+          "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-USB-RAID-LINK-ADMISSION-01'"
+        ],
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "provenance": "caller-supplied; hashes establish consistency, not authenticity"
+      }
+    },
+    {
+      "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+      "result": {
+        "status": "unknown",
+        "findings": [
+          "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01'"
+        ],
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "provenance": "caller-supplied; hashes establish consistency, not authenticity"
+      }
+    },
+    {
+      "id": "DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01",
+      "result": {
+        "status": "unknown",
+        "findings": [
+          "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01'"
+        ],
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "provenance": "caller-supplied; hashes establish consistency, not authenticity"
+      }
+    },
+    {
+      "id": "DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01",
+      "result": {
+        "status": "unknown",
+        "findings": [
+          "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01'"
+        ],
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "provenance": "caller-supplied; hashes establish consistency, not authenticity"
+      }
+    },
+    {
+      "id": "DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01",
+      "result": {
+        "status": "unknown",
+        "findings": [
+          "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01'"
+        ],
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "provenance": "caller-supplied; hashes establish consistency, not authenticity"
+      }
+    }
+  ],
+  "report_clean": false,
+  "classification_scope": "All10literalclosure assertion records; no uncategorized pytest failures"
+}

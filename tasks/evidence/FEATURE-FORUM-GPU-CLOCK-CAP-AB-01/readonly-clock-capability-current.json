@@ -1,0 +1,80 @@
+{
+  "scope": "Native read-only capability and installed policy queries only. No clock changes, workload, prevention claim, or rollback trial. Unsupported/missing queries remain could_not_run.",
+  "commands": [
+    {
+      "command": [
+        "nvidia-smi",
+        "--query-gpu=name,driver_version,pci.bus_id,clocks.current.graphics,clocks.min.graphics,clocks.max.graphics,power.draw,temperature.gpu,utilization.gpu",
+        "--format=csv,noheader,nounits"
+      ],
+      "started_at": "2026-10-04T06:43:58.338029+00:00",
+      "finished_at": "2026-10-04T06:43:58.356344+00:00",
+      "returncode": 2,
+      "stdout": "Field \"clocks.min.graphics\" is not a valid field to query.\n\n",
+      "stderr": "",
+      "could_not_run_count": 1,
+      "command_could_not_run_count": 1
+    },
+    {
+      "command": [
+        "nvidia-smi",
+        "--query-supported-clocks=memory,graphics",
+        "--format=csv,noheader,nounits"
+      ],
+      "started_at": "2026-10-04T06:43:58.356355+00:00",
+      "finished_at": "2026-10-04T06:43:58.378300+00:00",
+      "returncode": 0,
+      "stdout": "[N/A], [N/A]\n",
+      "stderr": "",
+      "could_not_run_count": 1,
+      "command_could_not_run_count": 0,
+      "semantic_status": "could_not_run",
+      "reason": "Driver returned N/A for supported clock values; successful process exit does not provide capability evidence."
+    },
+    {
+      "command": [
+        "systemctl",
+        "show",
+        "atom-clock-lock.service",
+        "--property=ActiveState,SubState,FragmentPath,ExecStart"
+      ],
+      "started_at": "2026-10-04T06:43:58.378310+00:00",
+      "finished_at": "2026-10-04T06:43:58.381885+00:00",
+      "returncode": 0,
+      "stdout": "ExecStart={ path=/usr/bin/nvidia-smi ; argv[]=/usr/bin/nvidia-smi -lgc 300,2800 ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\nActiveState=active\nSubState=exited\nFragmentPath=/etc/systemd/system/atom-clock-lock.service\n",
+      "stderr": "",
+      "could_not_run_count": 0,
+      "command_could_not_run_count": 0
+    },
+    {
+      "command": [
+        "uname",
+        "-r"
+      ],
+      "started_at": "2026-10-04T06:43:58.381896+00:00",
+      "finished_at": "2026-10-04T06:43:58.382528+00:00",
+      "returncode": 0,
+      "stdout": "6.17.0-1032-nvidia\n",
+      "stderr": "",
+      "could_not_run_count": 0,
+      "command_could_not_run_count": 0
+    },
+    {
+      "command": [
+        "nvidia-smi",
+        "--query-gpu=name,driver_version,pci.bus_id,clocks.current.graphics,clocks.max.graphics,power.draw,temperature.gpu,utilization.gpu",
+        "--format=csv,noheader,nounits"
+      ],
+      "started_at": "2026-10-04T06:44:38.459388+00:00",
+      "finished_at": "2026-10-04T06:44:38.490442+00:00",
+      "returncode": 0,
+      "stdout": "NVIDIA GB10, 580.178.04, 0000000F:01:00.0, 2418, 3003, 11.20, 41, 2\n",
+      "stderr": "",
+      "could_not_run_count": 0,
+      "scope": "Supported read-only fields; max graphics is not locked range/readback."
+    }
+  ],
+  "could_not_run_count": 2,
+  "fail": 0,
+  "status": "could_not_run"
+}

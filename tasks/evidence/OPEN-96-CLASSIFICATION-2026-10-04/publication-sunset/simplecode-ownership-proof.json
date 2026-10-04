@@ -1,0 +1,104 @@
+{
+  "captured_at": "2026-10-04",
+  "hashes": {
+    "blackbox_helper": {
+      "path": "tests/test_bb_bash.py",
+      "sha256": "9482913a787c27f12d51668e65309137dd7fea9faabbd88f164ca3909f82de0d",
+      "bytes": 82646
+    },
+    "satellite_sync": {
+      "path": "/home/lcasarin/projects/simplecode/src/simplecode/satellite/satellite_sync.py",
+      "sha256": "f531005bed923beec138f8a8ceb5d856a78bf5c2304f1ee8cf3176054c1c0640",
+      "bytes": 81354
+    },
+    "simplecode_cli_new": {
+      "path": "/home/lcasarin/projects/simplecode/src/simplecode/cli_new.py",
+      "sha256": "0cb9720094dd1c4c476f6b951614e2bcca2bc8de874e25a1c9a6d7d359bb048b",
+      "bytes": 43065
+    },
+    "prek_vendor": {
+      "path": "/home/lcasarin/projects/simplecode/src/simplecode/verification/prek_vendor.py",
+      "sha256": "5ecd4a90b1bba82c95331ab600b7cdf4ebff8cfffdd7656fbc01e1118db3c1ad",
+      "bytes": 8950
+    },
+    "hook_install": {
+      "path": "/home/lcasarin/projects/simplecode/src/simplecode/verification/hook_install.py",
+      "sha256": "9684ce95f9c64a6ee1f1bc97a0cfdb15b208d5d6c2925cf2bbac835c51371fed",
+      "bytes": 23213
+    },
+    "runner": {
+      "path": ".simplecode/run.py",
+      "sha256": "1e6e13ce169c7461fa5e6d1e762b0b3bc2b54d46467f03c2a38713ebe7d07882",
+      "bytes": 2186
+    },
+    "kit_lock": {
+      "path": ".simplecode/kit.lock",
+      "sha256": "86723f569843f20be5b1b3d9cfb2d52d304133f19ce894e2cd33a32596a12069",
+      "bytes": 315
+    },
+    "runtime_bundle": {
+      "path": ".simplecode/runtime.zip",
+      "sha256": "8000efb4ca1fdab9b0a30fc2eb75a106f1587af72deb6b00ef2f5f902d678fe2",
+      "bytes": 959259
+    },
+    "prek_binary": {
+      "path": ".simplecode/bin/prek",
+      "sha256": "97c6afdd9ada5d3af4cb952aef3c56972f7bfb9db2f0a9a2ef6ea91c7578aa68",
+      "bytes": 12008984
+    },
+    "prek_version": {
+      "path": ".simplecode/bin/prek.version",
+      "sha256": "455c4ec91ff500969a549c5a4dff08b691bd429ace5d73b51282b926458b9f28",
+      "bytes": 6
+    },
+    "blackbox_cleanup_helper": {
+      "path": "tests/test_bb_bash.py::_matar_electron_falso",
+      "sha256": "4fc3a5c39a8ef68c607c7d272a910fb2e6fc89a84345dab0396a9e58194aef3f",
+      "bytes": 1382
+    }
+  },
+  "runtime_lock_consistency": {
+    "runner_actual_sha256": "1e6e13ce169c7461fa5e6d1e762b0b3bc2b54d46467f03c2a38713ebe7d07882",
+    "runner_locked_sha256": "1e6e13ce169c7461fa5e6d1e762b0b3bc2b54d46467f03c2a38713ebe7d07882",
+    "runner_matches": true,
+    "runtime_actual_sha256": "8000efb4ca1fdab9b0a30fc2eb75a106f1587af72deb6b00ef2f5f902d678fe2",
+    "runtime_locked_sha256": "8000efb4ca1fdab9b0a30fc2eb75a106f1587af72deb6b00ef2f5f902d678fe2",
+    "runtime_matches": true,
+    "simplecode_version": "9.3.4"
+  },
+  "gitignore_probe": {
+    "command": "git check-ignore -v -- .simplecode/run.py .simplecode/runtime.zip .simplecode/kit.lock .simplecode/bin/prek .simplecode/bin/prek.version .simplecode/evidence/gate_failures.jsonl .simplecode/claims.json .simplecode/backlog_verify_cache.json .simplecode/coverage.json",
+    "exit_code": 0,
+    "stdout": ".gitignore:7:!.simplecode/run.py\t.simplecode/run.py\n.gitignore:8:!.simplecode/runtime.zip\t.simplecode/runtime.zip\n.gitignore:9:!.simplecode/kit.lock\t.simplecode/kit.lock\n.gitignore:6:.simplecode/*\t.simplecode/bin/prek\n.gitignore:6:.simplecode/*\t.simplecode/bin/prek.version\n.gitignore:6:.simplecode/*\t.simplecode/evidence/gate_failures.jsonl\n.gitignore:6:.simplecode/*\t.simplecode/claims.json\n.gitignore:6:.simplecode/*\t.simplecode/backlog_verify_cache.json\n.gitignore:6:.simplecode/*\t.simplecode/coverage.json\n",
+    "stderr": ""
+  },
+  "authoritative_lifecycle": [
+    {
+      "path": "/home/lcasarin/projects/simplecode/src/simplecode/satellite/satellite_sync.py",
+      "anchors": "_sync_runtime lines 1016-1044 writes run.py/runtime.zip from canonical producer on explicit apply; _sync_kit_lock lines 1047-1071 writes lock only after identity check; lines 1084-1087 say a blanket .simplecode/* swallows kit.lock/run.py/runtime.zip and a satellite must be able to git add them; sync_satellite lines 1416-1452 says sync manages runtime files and fresh scaffolds track runtime files."
+    },
+    {
+      "path": "/home/lcasarin/projects/simplecode/src/simplecode/cli_new.py",
+      "anchors": "portable runner and scaffold generation for runner/runtime/kit.lock; see source functions _portable_runner, _write_project, kit_lock_bytes."
+    },
+    {
+      "path": "/home/lcasarin/projects/simplecode/src/simplecode/verification/prek_vendor.py",
+      "anchors": "lines 87-88 define .simplecode/bin/prek and version marker; ensure_prek lines 154-184 validates or downloads/checksums/smoke-tests cache; it is a generated cache, distinct from canonical runtime files."
+    },
+    {
+      "path": "/home/lcasarin/projects/simplecode/src/simplecode/verification/hook_install.py",
+      "anchors": "lines 229-238 call prek_vendor --print-path and use verified binary opportunistically, with pre-commit fallback."
+    }
+  ],
+  "conclusion": "The authoritative sync contract says run.py, runtime.zip and kit.lock are generated managed files that must remain addable to Git. The earlier probe showed the broad wildcard hiding them; the current worktree now has explicit negations for all three and check-ignore selects those negations. The generated prek cache, claims, evidence and caches remain ignored. The scope defect is corrected in the current worktree; no verdict file was edited by this follow-up.",
+  "gitignore_probe_current": {
+    "command": "git check-ignore -v -- .simplecode/run.py .simplecode/runtime.zip .simplecode/kit.lock .simplecode/bin/prek .simplecode/bin/prek.version .simplecode/evidence/gate_failures.jsonl .simplecode/claims.json .simplecode/backlog_verify_cache.json .simplecode/coverage.json",
+    "exit_code": 0,
+    "stdout": ".gitignore:7:!.simplecode/run.py\t.simplecode/run.py\n.gitignore:8:!.simplecode/runtime.zip\t.simplecode/runtime.zip\n.gitignore:9:!.simplecode/kit.lock\t.simplecode/kit.lock\n.gitignore:6:.simplecode/*\t.simplecode/bin/prek\n.gitignore:6:.simplecode/*\t.simplecode/bin/prek.version\n.gitignore:6:.simplecode/*\t.simplecode/evidence/gate_failures.jsonl\n.gitignore:6:.simplecode/*\t.simplecode/claims.json\n.gitignore:6:.simplecode/*\t.simplecode/backlog_verify_cache.json\n.gitignore:6:.simplecode/*\t.simplecode/coverage.json\n"
+  },
+  "historical_before_correction": {
+    "source": "simplecode-ignore-before-root-fix.stdout",
+    "note": "Captured earlier in this review before the root-owned .gitignore update; it showed the wildcard hiding runner, bundle and lock."
+  },
+  "current_gitignore_sha256": "49e40cdbe60eca94b4df689d2739c344a7dbaccb3c82958724538624c6bc2cea"
+}

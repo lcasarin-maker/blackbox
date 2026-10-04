@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Avance de instrumentación 2026-10-03
 
 `tools.host_diagnostics` captura MTU, carrier, operstate, binding PCI/driver y, si hay sysfs RDMA, GID/netdev/firmware por puerto. No provoca hotplug ni valida throughput, recovery o NCCL; la captura actual no expuso dispositivos RDMA y `ip -j link` quedó inaccesible. Evidencia: [BB-INSTRUMENTS-network](../../docs/evidence/BB-INSTRUMENTS-network.md). La ficha permanece abierta; `close_check` y `status` no cambiaron.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: No hay ensayo PCIe/CX7 post-hotplug; estado Active/200G o FieldDiag no prueba tráfico extremo a extremo.
+- Evidencia faltante para cierre: stack/cable/firmware; tráfico RDMA/NCCL antes/después; endpoint PCIe/AER; FieldDiag fresco y rollback
+- Siguiente acción: Ejecutar hotplug en nodo CX7 canary con tráfico funcional, capturar endpoint/AER y diagnóstico nuevo, y verificar rollback OEM.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-CX7-POSTHOTPLUG-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json`, `tasks/evidence/DELTA-FORUM-CX7-POSTHOTPLUG-01/ (directorio ausente al inspeccionar)`.
+- Impedimentos de inspección: 1. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

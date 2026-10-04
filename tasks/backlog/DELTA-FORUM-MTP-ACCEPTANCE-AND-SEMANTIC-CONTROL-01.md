@@ -40,3 +40,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: `blocked` para aceptación MTP: los chunks Chat Completions no exponen aceptación por posición, y no hay captura backend nativa ni A/B semántico pareado. El lector SSE solo conserva evidencia de salida del cliente y no aporta esa señal. La ficha sigue abierta y el `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-requests.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: No existe captura local fijada de MTP/model/tokenizer/prompt con resultado semántico y aceptación por posición frente a referencia; readiness o score agregado no cubren el criterio.
+- Evidencia faltante para cierre: No existe captura local fijada de MTP/model/tokenizer/prompt con resultado semántico y aceptación por posición frente a referencia; readiness o score agregado no cubren el criterio.
+- Siguiente acción: Coordinación BB: definir criterios semánticos y salida por posición; operador Luis: ejecutar el canario MTP fijado y aportar resultados sanos/negativos. Ref explícita: tasks/backlog/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01-original-selector-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01-original-selector-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

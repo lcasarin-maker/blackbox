@@ -1,0 +1,45 @@
+import copy, runpy, sys
+sys.path.insert(0, 'tests')
+t1=runpy.run_path('tests/test_runtime_batch01_controls.py')
+t2=runpy.run_path('tests/test_runtime_batch02_controls.py')
+t3=runpy.run_path('tests/test_runtime_batch03_controls.py')
+t4=runpy.run_path('tests/test_runtime_batch04_controls.py')
+from tools import runtime_batch01_controls as b1, runtime_batch02_controls as b2, runtime_batch03_controls as b3, runtime_batch04_controls as b4
+checks=[]
+def check(label, assess, doc, mutate):
+  base=assess(doc['card_id'],doc)['status']; bad=copy.deepcopy(doc); mutate(bad); res=assess(bad['card_id'],bad); checks.append((label,base,res['status'],res['could_not_run'],res['reason']))
+
+# Batch 01 complete fabricated contract; mutations target JSON numeric fields that Python treats bool as int.
+for suffix, mutate in [
+ ('3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01', lambda d: d['pp_first_request'].update(output_tokens=True)),
+ ('3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01', lambda d: d['pp_first_request'].update(stage_count=True)),
+ ('8NODE-NCCL-INTERFACE-MTU-01', lambda d: d['network_plan']['interfaces'][0].update(mtu=True)),
+ ('8NODE-NCCL-INTERFACE-MTU-01', lambda d: d['interfaces'][0].update(effective_mtu=True)),
+ ('DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01', lambda d: d['acceptance_by_position'][0].update(position=True)),
+ ('DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01', lambda d: d['pretrim_headroom_case'].update(peak_bytes=True,available_before_load_bytes=True)),
+ ('DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01', lambda d: d['scheduler_runs'][0]['decode_samples'][0].update(generated_tokens=True)),
+]:
+ card=next(x for x in b1.IDS if x.endswith(suffix)); check('B1 '+suffix+':'+mutate.__code__.co_consts[-1].__str__(),b1.assess,t1['_record'](card),mutate)
+# Batch 02 simple Ray integer mutation; cardinality and stack remain otherwise valid.
+ray=t2['_ray'](); check('B2 Ray bool gpu_count',b2.assess,ray,lambda d:d['ranks'][0].update(gpu_count=True))
+check('B2 Ray bool output_tokens',b2.assess,ray,lambda d:d['request_trace'].update(output_tokens=True))
+# Batch 04 GLM runtime capture; booleans in counters must remain invalid.
+glm=t4['_glm'](); check('B4 GLM bool prefill counter',b4.assess,glm,lambda d:d['request_stage_samples'][0].update(prefill_tokens_total=True))
+for row in checks: print(*row,sep=' | ')
+print('--- exhaustive B1 integral fields replaced by bool in each baseline-pass fixture ---')
+def walk(x,path=()):
+ if isinstance(x,dict):
+  for k,v in x.items(): yield from walk(v,path+(k,))
+ elif isinstance(x,list):
+  for i,v in enumerate(x): yield from walk(v,path+(i,))
+ elif type(x) is int: yield path,x
+for card in sorted(b1.IDS):
+ base_doc=t1['_record'](card)
+ if base_doc['card_id'].endswith('DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01'): continue
+ if b1.assess(card,base_doc)['status']!='pass': continue
+ for path,value in walk(base_doc):
+  bad=copy.deepcopy(base_doc); cur=bad
+  for key in path[:-1]: cur=cur[key]
+  cur[path[-1]]=True
+  out=b1.assess(card,bad)
+  if out['status']=='pass': print(card,repr(path),value,'=>',repr(cur[path[-1]]),out['reason'])

@@ -1,0 +1,53 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________________ test_sample_all_smi_queries_are_bounded ____________________
+
+datos = PosixPath('/tmp/pytest-of-lcasarin/pytest-6473/test_sample_all_smi_queries_ar0/blackbox')
+tmp_path = PosixPath('/tmp/pytest-of-lcasarin/pytest-6473/test_sample_all_smi_queries_ar0')
+
+    def test_sample_all_smi_queries_are_bounded(datos, tmp_path):
+        env = _con_smi_falso(tmp_path, "exit 0\n")
+        env["BB_SMI_TIMEOUT_S"] = "1"
+        healthy = correr(["sample"], datos=datos, extra_env=env, timeout=8)
+        assert healthy.returncode == 0, healthy.stderr
+        baseline = muestras(datos)[-1]
+        assert baseline["gpu"] == []
+        assert isinstance(baseline["residuo_mb"], (int, float))
+        for body in ("exit 9", "sleep 30"):
+            env = _con_smi_falso(
+                tmp_path,
+                'if [[ "$*" == *query-compute-apps* ]]; then ' + body + '; fi\nexit 0\n',
+            )
+            env["BB_SMI_TIMEOUT_S"] = "1"
+            started = time.monotonic()
+            result = correr(["sample"], datos=datos, extra_env=env, timeout=8)
+            elapsed = time.monotonic() - started
+            assert result.returncode == 0, result.stderr
+            assert elapsed < 8, elapsed
+            sample = muestras(datos)[-1]
+            assert sample["smi"]["estado"] == "OK"
+>           assert sample["gpu"] is None
+E           assert [] is None
+
+tests/test_bb_bash.py:1732: AssertionError
+=============================== warnings summary ===============================
+tests/test_bb_bash.py:173
+  /tmp/bb-smi-original-control/tests/test_bb_bash.py:173: PytestUnknownMarkWarning: Unknown pytest.mark.sleeps_aceptados - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.sleeps_aceptados
+
+tests/test_bb_bash.py:203
+  /tmp/bb-smi-original-control/tests/test_bb_bash.py:203: PytestUnknownMarkWarning: Unknown pytest.mark.sleeps_aceptados - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.sleeps_aceptados
+
+tests/test_bb_bash.py:784
+  /tmp/bb-smi-original-control/tests/test_bb_bash.py:784: PytestUnknownMarkWarning: Unknown pytest.mark.sleeps_aceptados - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.sleeps_aceptados
+
+tests/test_bb_bash.py:825
+  /tmp/bb-smi-original-control/tests/test_bb_bash.py:825: PytestUnknownMarkWarning: Unknown pytest.mark.sleeps_aceptados - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.sleeps_aceptados
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_bb_bash.py::test_sample_all_smi_queries_are_bounded - asser...
+1 failed, 4 warnings in 2.38s

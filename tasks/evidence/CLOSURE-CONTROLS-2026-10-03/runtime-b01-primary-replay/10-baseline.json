@@ -1,0 +1,92 @@
+{
+  "schema": "bb.runtime.raw.v1",
+  "card_id": "DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01",
+  "capture_id": "unit-capture",
+  "captured_at": "2026-10-03T00:00:00Z",
+  "contradictions": [],
+  "subject": {
+    "oem": "OEM-X",
+    "host_id": "host-a",
+    "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "model": "model-x",
+    "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "software_versions": {
+      "engine": "engine-1"
+    }
+  },
+  "request_bounds": {
+    "request_id": "req-1",
+    "model": "model-x",
+    "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "max_tokens": 16,
+    "max_context_tokens": 128,
+    "deadline_seconds": 10,
+    "started_at": "2026-10-03T00:00:00Z",
+    "finished_at": "2026-10-03T00:00:01Z"
+  },
+  "rollback_record": {
+    "known_good_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "candidate_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "procedure_ref": "rollback.md",
+    "before_state_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "after_restore_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  },
+  "hosts": [
+    {
+      "node_id": "n0",
+      "oem_model": "OEM-X",
+      "serial_hash": "serial-0"
+    },
+    {
+      "node_id": "n1",
+      "oem_model": "OEM-X",
+      "serial_hash": "serial-1"
+    }
+  ],
+  "selected_paths": [
+    {
+      "node_id": "n0",
+      "hca": "roce0",
+      "interface": "eth0",
+      "ipv4": "10.0.0.1",
+      "gid_index": 3,
+      "gid_value": "fe80::1",
+      "mtu": 9000,
+      "nccl_env_sha256": "env-0"
+    },
+    {
+      "node_id": "n1",
+      "hca": "roce0",
+      "interface": "eth0",
+      "ipv4": "10.0.0.2",
+      "gid_index": 3,
+      "gid_value": "fe80::2",
+      "mtu": 9000,
+      "nccl_env_sha256": "env-1"
+    }
+  ],
+  "selected_paths_sha256": "paths",
+  "collective": {
+    "request_id": "req-1",
+    "selected_path_hash": "paths",
+    "rank_exit_codes": [
+      0,
+      0
+    ]
+  },
+  "first_inference": {
+    "request_id": "req-1",
+    "selected_path_hash": "paths",
+    "output_tokens": 2
+  },
+  "cold_recovery": {
+    "before_state_sha256": "before",
+    "after_state_sha256": "after",
+    "no_power_cycle": true
+  },
+  "negative_control": {
+    "kind": "null_gid_twin",
+    "gid_value": "null",
+    "preflight_result": "rejected"
+  }
+}

@@ -1,0 +1,1192 @@
+{
+  "action_groups": {
+    "model_workload_trace_absent": {
+      "classification": "model artifact and workload proof required; no model load/download/API call performed.",
+      "count": 8,
+      "dependency": "Exact model/checkpoint artifact and authorized execution path, or complete archived request/result capture.",
+      "ids": [
+        "DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01",
+        "DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01",
+        "DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01",
+        "DELTA-FORUM-QWEN-LONG-AGENT-STOP-01",
+        "DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01",
+        "DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01",
+        "DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01",
+        "DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01"
+      ],
+      "next": "Supply the matching build/kernel/backend, readiness and first-request trace, bounded raw request/output, oracle/correctness and failure/negative-control results; then run the original selector."
+    },
+    "peer_topology_or_fabric_not_observed_in_session": {
+      "classification": "host/peer access required; no credential or workload assumption is made.",
+      "count": 8,
+      "dependency": "Authorized read-only access to every named peer plus the interconnect/NIC configuration and rank logs.",
+      "ids": [
+        "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+        "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+        "DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01",
+        "DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01",
+        "DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01",
+        "DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01",
+        "DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01",
+        "DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01"
+      ],
+      "next": "On each available peer run `python3 -m tools.host_diagnostics --sysfs-only`; capture host/OEM, HCA/interface/GID/MTU, effective image digest, rank topology and literal NCCL/Ray/RPC/first-request output. The local host capture cannot establish peer existence or absence."
+    },
+    "physical_state_or_intervention_evidence_missing": {
+      "classification": "external procedure + privileged/service state validation required.",
+      "count": 1,
+      "dependency": "Owner-provided stop script and exact argv, exporter/mount ownership, service maintenance window and safe rollback.",
+      "ids": [
+        "DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01"
+      ],
+      "next": "Preserve the stop command/script digest, before/after container and NFS export/mount state, pinned tag\u2192digest check, negative tag-drift control, and restored state; do not run stop or inspect service now."
+    },
+    "stateful_or_failure_injection_lab_required": {
+      "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+      "count": 15,
+      "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+      "ids": [
+        "DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01",
+        "DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01",
+        "DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01",
+        "DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01",
+        "DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01",
+        "DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01",
+        "DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01",
+        "DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01",
+        "DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01",
+        "DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01",
+        "DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01",
+        "DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01",
+        "DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01",
+        "DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01",
+        "DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01"
+      ],
+      "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+    },
+    "workload_trace_and_scope_forbidden": {
+      "classification": "evidence recovery first; new inference/service activity requires separately authorized scope.",
+      "count": 5,
+      "dependency": "Preserved raw trace from the original run, or explicit authorization and a bounded run plan if historical bytes do not exist.",
+      "ids": [
+        "DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01",
+        "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+        "DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01",
+        "DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01",
+        "DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01"
+      ],
+      "next": "Provide request body/hash, model and checkpoint digests, effective stack/process identity, raw response/SSE/tool events, independent oracle and measured token/context bounds; then run the original selector. Do not call a model/service under the present instruction."
+    }
+  },
+  "batch_sizes": [
+    10,
+    10,
+    10,
+    7
+  ],
+  "batches": [
+    {
+      "batch": 1,
+      "count": 10,
+      "ids": [
+        "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+        "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+        "DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01",
+        "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+        "DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01",
+        "DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01",
+        "DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01",
+        "DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01",
+        "DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01",
+        "DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01"
+      ],
+      "rows": [
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "host/peer access required; no credential or workload assumption is made.",
+            "dependency": "Authorized read-only access to every named peer plus the interconnect/NIC configuration and rank logs.",
+            "next": "On each available peer run `python3 -m tools.host_diagnostics --sysfs-only`; capture host/OEM, HCA/interface/GID/MTU, effective image digest, rank topology and literal NCCL/Ray/RPC/first-request output. The local host capture cannot establish peer existence or absence."
+          },
+          "id": "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+          "prior_blocker_class": "peer_topology_or_fabric_not_observed_in_session",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch01-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md",
+          "source_card_sha256": "bc0899f1536e90ba38d522e9866d24bc476385edf27781b5b1e691ca83188fb1",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "host/peer access required; no credential or workload assumption is made.",
+            "dependency": "Authorized read-only access to every named peer plus the interconnect/NIC configuration and rank logs.",
+            "next": "On each available peer run `python3 -m tools.host_diagnostics --sysfs-only`; capture host/OEM, HCA/interface/GID/MTU, effective image digest, rank topology and literal NCCL/Ray/RPC/first-request output. The local host capture cannot establish peer existence or absence."
+          },
+          "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+          "prior_blocker_class": "peer_topology_or_fabric_not_observed_in_session",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch01-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01.md",
+          "source_card_sha256": "296c204b10012ef0799b9e39b113a915e8002b6c2a99e958f528991f1afdf4ce",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "evidence recovery first; new inference/service activity requires separately authorized scope.",
+            "dependency": "Preserved raw trace from the original run, or explicit authorization and a bounded run plan if historical bytes do not exist.",
+            "next": "Provide request body/hash, model and checkpoint digests, effective stack/process identity, raw response/SSE/tool events, independent oracle and measured token/context bounds; then run the original selector. Do not call a model/service under the present instruction."
+          },
+          "id": "DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01",
+          "prior_blocker_class": "workload_trace_and_scope_forbidden",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch01-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md",
+          "source_card_sha256": "cab6bdc717ad76d85935faca2acbf94ea4efef7c8199bd5c2a82a02402d2e3a5",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "evidence recovery first; new inference/service activity requires separately authorized scope.",
+            "dependency": "Preserved raw trace from the original run, or explicit authorization and a bounded run plan if historical bytes do not exist.",
+            "next": "Provide request body/hash, model and checkpoint digests, effective stack/process identity, raw response/SSE/tool events, independent oracle and measured token/context bounds; then run the original selector. Do not call a model/service under the present instruction."
+          },
+          "id": "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+          "prior_blocker_class": "workload_trace_and_scope_forbidden",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch01-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01.md",
+          "source_card_sha256": "cab3c7a453f8b19f781c321b55d450338790ec6870196857ba78893cdb6170cb",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "evidence recovery first; new inference/service activity requires separately authorized scope.",
+            "dependency": "Preserved raw trace from the original run, or explicit authorization and a bounded run plan if historical bytes do not exist.",
+            "next": "Provide request body/hash, model and checkpoint digests, effective stack/process identity, raw response/SSE/tool events, independent oracle and measured token/context bounds; then run the original selector. Do not call a model/service under the present instruction."
+          },
+          "id": "DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01",
+          "prior_blocker_class": "workload_trace_and_scope_forbidden",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch01-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01.md",
+          "source_card_sha256": "3d7dda194081451c48304061f7a0faf1303b4da43bde1fe1fafee41b398d4095",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "evidence recovery first; new inference/service activity requires separately authorized scope.",
+            "dependency": "Preserved raw trace from the original run, or explicit authorization and a bounded run plan if historical bytes do not exist.",
+            "next": "Provide request body/hash, model and checkpoint digests, effective stack/process identity, raw response/SSE/tool events, independent oracle and measured token/context bounds; then run the original selector. Do not call a model/service under the present instruction."
+          },
+          "id": "DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01",
+          "prior_blocker_class": "workload_trace_and_scope_forbidden",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch01-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01.md",
+          "source_card_sha256": "b888831670366a6ea7674df72b7e7d635a4f5e11d0695b01fe59da7fae81fd28",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "external procedure + privileged/service state validation required.",
+            "dependency": "Owner-provided stop script and exact argv, exporter/mount ownership, service maintenance window and safe rollback.",
+            "next": "Preserve the stop command/script digest, before/after container and NFS export/mount state, pinned tag\u2192digest check, negative tag-drift control, and restored state; do not run stop or inspect service now."
+          },
+          "id": "DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01",
+          "prior_blocker_class": "physical_state_or_intervention_evidence_missing",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch01-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01.md",
+          "source_card_sha256": "8935dbd0972934748f2207b03515803fd593c19cac1ce0bcbeafbe7160db6651",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "host/peer access required; no credential or workload assumption is made.",
+            "dependency": "Authorized read-only access to every named peer plus the interconnect/NIC configuration and rank logs.",
+            "next": "On each available peer run `python3 -m tools.host_diagnostics --sysfs-only`; capture host/OEM, HCA/interface/GID/MTU, effective image digest, rank topology and literal NCCL/Ray/RPC/first-request output. The local host capture cannot establish peer existence or absence."
+          },
+          "id": "DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01",
+          "prior_blocker_class": "peer_topology_or_fabric_not_observed_in_session",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch01-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01.md",
+          "source_card_sha256": "b5de9b3ae46025e9ddec7d0a2b30220230a6cf05882d0e93eaf3ffb25b945f9c",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "evidence recovery first; new inference/service activity requires separately authorized scope.",
+            "dependency": "Preserved raw trace from the original run, or explicit authorization and a bounded run plan if historical bytes do not exist.",
+            "next": "Provide request body/hash, model and checkpoint digests, effective stack/process identity, raw response/SSE/tool events, independent oracle and measured token/context bounds; then run the original selector. Do not call a model/service under the present instruction."
+          },
+          "id": "DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01",
+          "prior_blocker_class": "workload_trace_and_scope_forbidden",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch01-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01.md",
+          "source_card_sha256": "a93d7984d85106ff2b7f4c56c3aa5ee2568eec19141144363bd5646cd143ad40",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "host/peer access required; no credential or workload assumption is made.",
+            "dependency": "Authorized read-only access to every named peer plus the interconnect/NIC configuration and rank logs.",
+            "next": "On each available peer run `python3 -m tools.host_diagnostics --sysfs-only`; capture host/OEM, HCA/interface/GID/MTU, effective image digest, rank topology and literal NCCL/Ray/RPC/first-request output. The local host capture cannot establish peer existence or absence."
+          },
+          "id": "DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01",
+          "prior_blocker_class": "peer_topology_or_fabric_not_observed_in_session",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch02-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01.md",
+          "source_card_sha256": "722eeaa3178587e0f554ead5068a9f053b88de5ea7f16e0598f976faf5169e32",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        }
+      ],
+      "source_index_range": [
+        0,
+        10
+      ]
+    },
+    {
+      "batch": 2,
+      "count": 10,
+      "ids": [
+        "DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01",
+        "DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01",
+        "DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01",
+        "DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01",
+        "DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01",
+        "DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01",
+        "DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01",
+        "DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01",
+        "DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01",
+        "DELTA-FORUM-QWEN-LONG-AGENT-STOP-01"
+      ],
+      "rows": [
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "host/peer access required; no credential or workload assumption is made.",
+            "dependency": "Authorized read-only access to every named peer plus the interconnect/NIC configuration and rank logs.",
+            "next": "On each available peer run `python3 -m tools.host_diagnostics --sysfs-only`; capture host/OEM, HCA/interface/GID/MTU, effective image digest, rank topology and literal NCCL/Ray/RPC/first-request output. The local host capture cannot establish peer existence or absence."
+          },
+          "id": "DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01",
+          "prior_blocker_class": "peer_topology_or_fabric_not_observed_in_session",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch02-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01.md",
+          "source_card_sha256": "27669ae0f950f4d15a25cbd62cfd123d6713b00bb1a8a9128036db0e4df1ee7f",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch02-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01.md",
+          "source_card_sha256": "9f792d035c69aa33cc86435ee971cbed6aa8f6434aa04856b9e04a6c7709cf7c",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "host/peer access required; no credential or workload assumption is made.",
+            "dependency": "Authorized read-only access to every named peer plus the interconnect/NIC configuration and rank logs.",
+            "next": "On each available peer run `python3 -m tools.host_diagnostics --sysfs-only`; capture host/OEM, HCA/interface/GID/MTU, effective image digest, rank topology and literal NCCL/Ray/RPC/first-request output. The local host capture cannot establish peer existence or absence."
+          },
+          "id": "DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01",
+          "prior_blocker_class": "peer_topology_or_fabric_not_observed_in_session",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch02-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01.md",
+          "source_card_sha256": "6eceb27d663473cbaa98c32f105df080573b9e62ae3016ac0b027b1765aee958",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch02-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01.md",
+          "source_card_sha256": "aac168843dd5cce5d3eab75c8a11b6a4d517e47f56bd4722efd6be1025f4a11e",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "model artifact and workload proof required; no model load/download/API call performed.",
+            "dependency": "Exact model/checkpoint artifact and authorized execution path, or complete archived request/result capture.",
+            "next": "Supply the matching build/kernel/backend, readiness and first-request trace, bounded raw request/output, oracle/correctness and failure/negative-control results; then run the original selector."
+          },
+          "id": "DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01",
+          "prior_blocker_class": "model_workload_trace_absent",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch02-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01.md",
+          "source_card_sha256": "2d5d993970a87e0156ba2212c4c6441b15573eb32d6ee9d38654e05bdf4061f4",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch02-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01.md",
+          "source_card_sha256": "555fbd129df1afb90199c80fe8ddbf33663fb5818fca2270ed084d4c13071bab",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "model artifact and workload proof required; no model load/download/API call performed.",
+            "dependency": "Exact model/checkpoint artifact and authorized execution path, or complete archived request/result capture.",
+            "next": "Supply the matching build/kernel/backend, readiness and first-request trace, bounded raw request/output, oracle/correctness and failure/negative-control results; then run the original selector."
+          },
+          "id": "DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01",
+          "prior_blocker_class": "model_workload_trace_absent",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch02-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01.md",
+          "source_card_sha256": "e221aa7ba226dbc97b1a62fd86786929c54d27c89fae8ebc578cc64333bbc633",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "partial_only",
+          "existing_evidence_candidates": [
+            {
+              "key": "runtime_version_capture",
+              "path": "/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json",
+              "relationship": {
+                "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+                "cross_capture_match": true,
+                "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+                "image_ref": "vllm/vllm-openai:v0.27.1",
+                "interpretation": "same observed container/image identity in two separated read-only host captures; no inference about continuous uptime, loaded model/checkpoint, effective server command or request behavior"
+              },
+              "role": "Real host/runtime evidence for another card. Records same running container ID/image digest before/after at 2026-10-03T11:52Z; contributes only local hardware/runtime/image identity.",
+              "sha256": "7c16e083aca95e13f42f8007ec47f5a47f7750717a327d59b6a5611556cd4796",
+              "size": 12607
+            },
+            {
+              "key": "host_diagnostics",
+              "path": "/tmp/bb-native-observation-20261004/host_diagnostics.json",
+              "relationship": {
+                "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+                "cross_capture_match": true,
+                "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+                "image_ref": "vllm/vllm-openai:v0.27.1",
+                "interpretation": "same observed container/image identity in two separated read-only host captures; no inference about continuous uptime, loaded model/checkpoint, effective server command or request behavior"
+              },
+              "role": "Current native local-host inventory only; partial/CNR=6. No peer, request, model/checkpoint, response or successful operation evidence.",
+              "sha256": "f1840ade109b6bdd91bfeb17c19900266f9d6e20c665889dd06461b2c620748e",
+              "size": 88077
+            }
+          ],
+          "external_dependency": {
+            "classification": "model artifact and workload proof required; no model load/download/API call performed.",
+            "dependency": "Exact model/checkpoint artifact and authorized execution path, or complete archived request/result capture.",
+            "next": "Supply the matching build/kernel/backend, readiness and first-request trace, bounded raw request/output, oracle/correctness and failure/negative-control results; then run the original selector."
+          },
+          "id": "DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01",
+          "prior_blocker_class": "model_workload_trace_absent",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch02-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01.md",
+          "source_card_sha256": "149325852a130b4f78e1356bb1de2ec2a524e07de87ded2026167c1eafc0a350",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch02-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01.md",
+          "source_card_sha256": "162b5df006925f9c0c8be6022e4adcd6b68e7004c09bbb0b9faa84897919a5fb",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "model artifact and workload proof required; no model load/download/API call performed.",
+            "dependency": "Exact model/checkpoint artifact and authorized execution path, or complete archived request/result capture.",
+            "next": "Supply the matching build/kernel/backend, readiness and first-request trace, bounded raw request/output, oracle/correctness and failure/negative-control results; then run the original selector."
+          },
+          "id": "DELTA-FORUM-QWEN-LONG-AGENT-STOP-01",
+          "prior_blocker_class": "model_workload_trace_absent",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch03-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01.md",
+          "source_card_sha256": "6040d09ce4ed604b4593ad1155cdc03c97b62c54979d807d0df3687b3bda6768",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        }
+      ],
+      "source_index_range": [
+        10,
+        20
+      ]
+    },
+    {
+      "batch": 3,
+      "count": 10,
+      "ids": [
+        "DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01",
+        "DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01",
+        "DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01",
+        "DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01",
+        "DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01",
+        "DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01",
+        "DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01",
+        "DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01",
+        "DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01",
+        "DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01"
+      ],
+      "rows": [
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch03-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01.md",
+          "source_card_sha256": "57cda12103efaef0be2643d1067543c99d0964ffd9e6bc32d3859a178ee5b968",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch03-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01.md",
+          "source_card_sha256": "4514b574127841eae0c748fbfb2ebecf31561f20732e321d83ba8d08d8472787",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch03-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01.md",
+          "source_card_sha256": "3a36b7a215965f16797ba180a55599161a5ea80af64e19b10bade4a0ec8e2081",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "partial_only",
+          "existing_evidence_candidates": [
+            {
+              "key": "runtime_version_capture",
+              "path": "/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json",
+              "relationship": {
+                "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+                "cross_capture_match": true,
+                "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+                "image_ref": "vllm/vllm-openai:v0.27.1",
+                "interpretation": "same observed container/image identity in two separated read-only host captures; no inference about continuous uptime, loaded model/checkpoint, effective server command or request behavior"
+              },
+              "role": "Real host/runtime evidence for another card. Records same running container ID/image digest before/after at 2026-10-03T11:52Z; contributes only local hardware/runtime/image identity.",
+              "sha256": "7c16e083aca95e13f42f8007ec47f5a47f7750717a327d59b6a5611556cd4796",
+              "size": 12607
+            },
+            {
+              "key": "host_diagnostics",
+              "path": "/tmp/bb-native-observation-20261004/host_diagnostics.json",
+              "relationship": {
+                "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+                "cross_capture_match": true,
+                "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+                "image_ref": "vllm/vllm-openai:v0.27.1",
+                "interpretation": "same observed container/image identity in two separated read-only host captures; no inference about continuous uptime, loaded model/checkpoint, effective server command or request behavior"
+              },
+              "role": "Current native local-host inventory only; partial/CNR=6. No peer, request, model/checkpoint, response or successful operation evidence.",
+              "sha256": "f1840ade109b6bdd91bfeb17c19900266f9d6e20c665889dd06461b2c620748e",
+              "size": 88077
+            }
+          ],
+          "external_dependency": {
+            "classification": "model artifact and workload proof required; no model load/download/API call performed.",
+            "dependency": "Exact model/checkpoint artifact and authorized execution path, or complete archived request/result capture.",
+            "next": "Supply the matching build/kernel/backend, readiness and first-request trace, bounded raw request/output, oracle/correctness and failure/negative-control results; then run the original selector."
+          },
+          "id": "DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01",
+          "prior_blocker_class": "model_workload_trace_absent",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch03-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01.md",
+          "source_card_sha256": "2008aaaa079514cbc8a1e48d7b7238e70d8350607a0921ca17e2c6fb32c81910",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "model artifact and workload proof required; no model load/download/API call performed.",
+            "dependency": "Exact model/checkpoint artifact and authorized execution path, or complete archived request/result capture.",
+            "next": "Supply the matching build/kernel/backend, readiness and first-request trace, bounded raw request/output, oracle/correctness and failure/negative-control results; then run the original selector."
+          },
+          "id": "DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01",
+          "prior_blocker_class": "model_workload_trace_absent",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch03-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01.md",
+          "source_card_sha256": "c4ef2654633b715c7e2bde3367545795907110a754a40f11c6433f148d4d5a48",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch03-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01.md",
+          "source_card_sha256": "ba493b69fad76760c7c7457a62596a0002c54397bc6f507e1a1d4706375a2e81",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "partial_only",
+          "existing_evidence_candidates": [
+            {
+              "key": "runtime_version_capture",
+              "path": "/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json",
+              "relationship": {
+                "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+                "cross_capture_match": true,
+                "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+                "image_ref": "vllm/vllm-openai:v0.27.1",
+                "interpretation": "same observed container/image identity in two separated read-only host captures; no inference about continuous uptime, loaded model/checkpoint, effective server command or request behavior"
+              },
+              "role": "Real host/runtime evidence for another card. Records same running container ID/image digest before/after at 2026-10-03T11:52Z; contributes only local hardware/runtime/image identity.",
+              "sha256": "7c16e083aca95e13f42f8007ec47f5a47f7750717a327d59b6a5611556cd4796",
+              "size": 12607
+            },
+            {
+              "key": "host_diagnostics",
+              "path": "/tmp/bb-native-observation-20261004/host_diagnostics.json",
+              "relationship": {
+                "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+                "cross_capture_match": true,
+                "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+                "image_ref": "vllm/vllm-openai:v0.27.1",
+                "interpretation": "same observed container/image identity in two separated read-only host captures; no inference about continuous uptime, loaded model/checkpoint, effective server command or request behavior"
+              },
+              "role": "Current native local-host inventory only; partial/CNR=6. No peer, request, model/checkpoint, response or successful operation evidence.",
+              "sha256": "f1840ade109b6bdd91bfeb17c19900266f9d6e20c665889dd06461b2c620748e",
+              "size": 88077
+            }
+          ],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch03-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01.md",
+          "source_card_sha256": "d2db35df1c13d47c3f9019d2abeb2d5ca684372e2fcec48b61e5e324c5b75ffc",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "partial_only",
+          "existing_evidence_candidates": [
+            {
+              "key": "runtime_version_capture",
+              "path": "/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json",
+              "relationship": {
+                "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+                "cross_capture_match": true,
+                "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+                "image_ref": "vllm/vllm-openai:v0.27.1",
+                "interpretation": "same observed container/image identity in two separated read-only host captures; no inference about continuous uptime, loaded model/checkpoint, effective server command or request behavior"
+              },
+              "role": "Real host/runtime evidence for another card. Records same running container ID/image digest before/after at 2026-10-03T11:52Z; contributes only local hardware/runtime/image identity.",
+              "sha256": "7c16e083aca95e13f42f8007ec47f5a47f7750717a327d59b6a5611556cd4796",
+              "size": 12607
+            },
+            {
+              "key": "host_diagnostics",
+              "path": "/tmp/bb-native-observation-20261004/host_diagnostics.json",
+              "relationship": {
+                "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+                "cross_capture_match": true,
+                "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+                "image_ref": "vllm/vllm-openai:v0.27.1",
+                "interpretation": "same observed container/image identity in two separated read-only host captures; no inference about continuous uptime, loaded model/checkpoint, effective server command or request behavior"
+              },
+              "role": "Current native local-host inventory only; partial/CNR=6. No peer, request, model/checkpoint, response or successful operation evidence.",
+              "sha256": "f1840ade109b6bdd91bfeb17c19900266f9d6e20c665889dd06461b2c620748e",
+              "size": 88077
+            }
+          ],
+          "external_dependency": {
+            "classification": "model artifact and workload proof required; no model load/download/API call performed.",
+            "dependency": "Exact model/checkpoint artifact and authorized execution path, or complete archived request/result capture.",
+            "next": "Supply the matching build/kernel/backend, readiness and first-request trace, bounded raw request/output, oracle/correctness and failure/negative-control results; then run the original selector."
+          },
+          "id": "DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01",
+          "prior_blocker_class": "model_workload_trace_absent",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch03-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01.md",
+          "source_card_sha256": "9c6a6657e434030fbced9228848b7b6d54b5b467c71aad6d562d07282e8848e6",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "partial_only",
+          "existing_evidence_candidates": [
+            {
+              "key": "runtime_version_capture",
+              "path": "/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json",
+              "relationship": {
+                "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+                "cross_capture_match": true,
+                "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+                "image_ref": "vllm/vllm-openai:v0.27.1",
+                "interpretation": "same observed container/image identity in two separated read-only host captures; no inference about continuous uptime, loaded model/checkpoint, effective server command or request behavior"
+              },
+              "role": "Real host/runtime evidence for another card. Records same running container ID/image digest before/after at 2026-10-03T11:52Z; contributes only local hardware/runtime/image identity.",
+              "sha256": "7c16e083aca95e13f42f8007ec47f5a47f7750717a327d59b6a5611556cd4796",
+              "size": 12607
+            },
+            {
+              "key": "host_diagnostics",
+              "path": "/tmp/bb-native-observation-20261004/host_diagnostics.json",
+              "relationship": {
+                "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+                "cross_capture_match": true,
+                "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+                "image_ref": "vllm/vllm-openai:v0.27.1",
+                "interpretation": "same observed container/image identity in two separated read-only host captures; no inference about continuous uptime, loaded model/checkpoint, effective server command or request behavior"
+              },
+              "role": "Current native local-host inventory only; partial/CNR=6. No peer, request, model/checkpoint, response or successful operation evidence.",
+              "sha256": "f1840ade109b6bdd91bfeb17c19900266f9d6e20c665889dd06461b2c620748e",
+              "size": 88077
+            }
+          ],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch03-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01.md",
+          "source_card_sha256": "2882dbc92c36fa78f42f5af63803b9c3997e299a7df68f9863958c91ee7df42f",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "host/peer access required; no credential or workload assumption is made.",
+            "dependency": "Authorized read-only access to every named peer plus the interconnect/NIC configuration and rank logs.",
+            "next": "On each available peer run `python3 -m tools.host_diagnostics --sysfs-only`; capture host/OEM, HCA/interface/GID/MTU, effective image digest, rank topology and literal NCCL/Ray/RPC/first-request output. The local host capture cannot establish peer existence or absence."
+          },
+          "id": "DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01",
+          "prior_blocker_class": "peer_topology_or_fabric_not_observed_in_session",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch04-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01.md",
+          "source_card_sha256": "6f7f3259df63655a3eae653dbf04d4f51b40bd21cf7900a457f840f067c1fbf0",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        }
+      ],
+      "source_index_range": [
+        20,
+        30
+      ]
+    },
+    {
+      "batch": 4,
+      "count": 7,
+      "ids": [
+        "DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01",
+        "DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01",
+        "DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01",
+        "DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01",
+        "DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01",
+        "DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01",
+        "DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01"
+      ],
+      "rows": [
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch04-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01.md",
+          "source_card_sha256": "2dffa58e425fa260d0d5da06585da352b77240e9cff4c51b30faa9d61de6bb5d",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch04-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01.md",
+          "source_card_sha256": "86af96c31a9d81239c04864abeb6c9671ca665418bc62eea2a561ed53a10d2a6",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch04-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01.md",
+          "source_card_sha256": "0875b5d3c959aa12aa6314078a9460fb836c0374d08d861298b4aa565277de20",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "host/peer access required; no credential or workload assumption is made.",
+            "dependency": "Authorized read-only access to every named peer plus the interconnect/NIC configuration and rank logs.",
+            "next": "On each available peer run `python3 -m tools.host_diagnostics --sysfs-only`; capture host/OEM, HCA/interface/GID/MTU, effective image digest, rank topology and literal NCCL/Ray/RPC/first-request output. The local host capture cannot establish peer existence or absence."
+          },
+          "id": "DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01",
+          "prior_blocker_class": "peer_topology_or_fabric_not_observed_in_session",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch04-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01.md",
+          "source_card_sha256": "f504bdb79e164f06e1fccedc5993d814c15d82fe3a2bf56ca1780c774e6d9a1f",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "partial_only",
+          "existing_evidence_candidates": [
+            {
+              "key": "recipe_memory_prototype",
+              "path": "/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/prototype-capture.json",
+              "role": "Existing same-card prototype: real host memory snapshot; recipe components caller-supplied/unverified and missing, so cannot prove workload fit.",
+              "sha256": "7d9f064b2ec2a4523543c72fabdc8069e79aefc791be5b54bff936c3d05edec2",
+              "size": 6078
+            }
+          ],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch04-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01.md",
+          "source_card_sha256": "1789aff05f7d813b23ce6fe4f745153151833efd9fdb159f49fa1b159eba55dc",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "model artifact and workload proof required; no model load/download/API call performed.",
+            "dependency": "Exact model/checkpoint artifact and authorized execution path, or complete archived request/result capture.",
+            "next": "Supply the matching build/kernel/backend, readiness and first-request trace, bounded raw request/output, oracle/correctness and failure/negative-control results; then run the original selector."
+          },
+          "id": "DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01",
+          "prior_blocker_class": "model_workload_trace_absent",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch04-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01.md",
+          "source_card_sha256": "e86894c8ce77c5b291b4f7c21d425f7feed6fd61a133ad58f469b80fd5082f40",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        },
+        {
+          "developable_now": "No remaining collector/control implementation has been identified as sufficient to close this card. Preserve/replay existing raw data when supplied; otherwise the missing experiment or peer/service capture is external to this authorized audit.",
+          "evidence_sufficiency": "no new card-linked runtime evidence found",
+          "existing_evidence_candidates": [],
+          "external_dependency": {
+            "classification": "stateful validation; destructive/interruption experiments remain approval-gated.",
+            "dependency": "Card-specific lab/device/service access, maintenance approval, pre-state capture, bounded intervention, rollback artifact and post-restore verification.",
+            "next": "Use the exact card procedure; record before/during/after process, state, raw metrics/events and command results, include the required control, then prove restoration and run selector."
+          },
+          "id": "DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01",
+          "prior_blocker_class": "stateful_or_failure_injection_lab_required",
+          "prior_review": "/tmp/bb-runtime37-readonly-batch04-20261004.json",
+          "prior_selector_result": {
+            "could_not_run": 1,
+            "source": "root original close-check run; raw capture path unavailable",
+            "status": "unknown"
+          },
+          "source_card": "tasks/backlog/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01.md",
+          "source_card_sha256": "012e8b12a6562481aadb036781fea6ab2c383a33593c5a96ba12cfe508311ffe",
+          "source_list_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d"
+        }
+      ],
+      "source_index_range": [
+        30,
+        37
+      ]
+    }
+  ],
+  "candidate_resources": {
+    "gpu_telemetry_snapshot": {
+      "key": "gpu_telemetry_snapshot",
+      "path": "/tmp/bb-native-observation-20261004/atom_gpu_telemetry-dry-once.jsonl",
+      "role": "Single telemetry snapshot; zero active/waiting requests, no completed response/correctness/checkpoint trace.",
+      "sha256": "c8e97b6e7ef95ffd586a4bd5737c423d3b75be20b2f32f7fc680501981a2180a",
+      "size": 2133
+    },
+    "host_diagnostics": {
+      "key": "host_diagnostics",
+      "path": "/tmp/bb-native-observation-20261004/host_diagnostics.json",
+      "role": "Current native local-host inventory only; partial/CNR=6. No peer, request, model/checkpoint, response or successful operation evidence.",
+      "sha256": "f1840ade109b6bdd91bfeb17c19900266f9d6e20c665889dd06461b2c620748e",
+      "size": 88077
+    },
+    "recipe_memory_prototype": {
+      "key": "recipe_memory_prototype",
+      "path": "/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/prototype-capture.json",
+      "role": "Existing same-card prototype: real host memory snapshot; recipe components caller-supplied/unverified and missing, so cannot prove workload fit.",
+      "sha256": "7d9f064b2ec2a4523543c72fabdc8069e79aefc791be5b54bff936c3d05edec2",
+      "size": 6078
+    },
+    "runtime_version_capture": {
+      "key": "runtime_version_capture",
+      "path": "/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json",
+      "role": "Real host/runtime evidence for another card. Records same running container ID/image digest before/after at 2026-10-03T11:52Z; contributes only local hardware/runtime/image identity.",
+      "sha256": "7c16e083aca95e13f42f8007ec47f5a47f7750717a327d59b6a5611556cd4796",
+      "size": 12607
+    },
+    "thermal_native": {
+      "key": "thermal_native",
+      "path": "/tmp/bb-native-observation-20261004/thermal_coverage.json",
+      "role": "One-shot local thermal coverage, not a tested model/runtime criterion.",
+      "sha256": "7af186882f20a9094b4ab4b09d6c327a5e6c1032a51669a60383bb6ce06bbb6c",
+      "size": 13577
+    },
+    "thermal_prototype": {
+      "key": "thermal_prototype",
+      "path": "/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/prototype-capture.json",
+      "role": "Different thermal-coverage card and GIGABYTE host; not evidence for these 37 cards.",
+      "sha256": "011a1c8bcd465ab447cd1ac0285a6c9455ff5120203b53f738862a4f29ddcc18",
+      "size": 13577
+    }
+  },
+  "credential_scope": "No vendor API or remote service credentials were used. Host/peer/lab/service credentials are only potential prerequisites for owner-authorized execution; never include secret values in evidence.",
+  "developable_vs_external_validation": "Current code/control work is present. A card can close only with its original raw local/peer/model/state evidence; adding more synthetic fixtures would not change that. Work that remains developable without external access is evidence packaging for owner-provided raw captures.",
+  "excluded_completed_id": "DEBT-JUDGE-THREAT-SWEEP-TOOLS-01",
+  "new_discovery": {
+    "cards_with_partial_runtime_image_identity": [
+      "DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01",
+      "DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01",
+      "DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01",
+      "DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01",
+      "DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01"
+    ],
+    "recipe_card_partial_existing_capture": "DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01",
+    "same_container_identity": {
+      "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+      "cross_capture_match": true,
+      "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+      "image_ref": "vllm/vllm-openai:v0.27.1",
+      "interpretation": "same observed container/image identity in two separated read-only host captures; no inference about continuous uptime, loaded model/checkpoint, effective server command or request behavior"
+    }
+  },
+  "previous_review_manifest": {
+    "path": "/tmp/bb-runtime37-readonly-manifest-20261004.json",
+    "sha256": "794a46f004627f1c7a836d99f32f92a85ff4f4563d03dde64f4c37f9c093fe37"
+  },
+  "remaining_source_ids": 37,
+  "schema": "bb.runtime.external-actions.v1",
+  "scope_limit": "No recursive scan of private /tmp service directories; system denied access. No network, service, model, or workload calls were made.",
+  "search_scope": [
+    "repo tasks/evidence and the 37 card evidence directories",
+    "/tmp/bb-native-observation-20261004",
+    "existing local runtime-version capture",
+    "existing same-card recipe/thermal captures"
+  ],
+  "source_path": "/home/lcasarin/projects/blackbox/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/runtime.json",
+  "source_sha256": "3430e00e2c66567b5b7be917ebad6004008d14af7b5ec179c43f1c23326d272d",
+  "summary": {
+    "additional_existing_artifacts_that_satisfy_a_full_runtime_predicate": 0,
+    "complete_card_runtime_captures_found": 0,
+    "could_not_run_selector_count": 37,
+    "partial_container_identity_links": 5,
+    "remote_peer_physical_existence": "unknown",
+    "same_card_memory_prototype": 1
+  },
+  "unique_ids": 37
+}

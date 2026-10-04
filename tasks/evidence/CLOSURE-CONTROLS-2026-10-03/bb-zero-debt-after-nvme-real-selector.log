@@ -1,0 +1,21 @@
+[zero-debt] mode: zero  lane: repo-wide
+[zero-debt] files scanned: 140  findings: 3  files with findings: 2
+[zero-debt] HALLAZGOS: 3
+[zero-debt] DETECTORES: {"hardcoded_path":1,"test_without_assert":1,"unencoded_file_io":1}
+[zero-debt] .py left OUTSIDE this scan: 3 (git-ignored (.gitignore); not part of the product)
+[zero-debt] dispositions (Acta 83): PASSED=138 CONVICTED=2 EXEMPT_CORPUS=0 EXEMPT_FIXTURE=0 EXEMPT_VENDORED=0 COULD_NOT_RUN=0
+[zero-debt] detectors judged (GATE_DETECTORS): 24
+[zero-debt] detectors excluded by volume: 0 ()
+[zero-debt] could_not_run: 0
+[zero-debt] corpus declarado (no juzgado): 0
+[zero-debt] violations: 2
+  - tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/build_map.py (2 findings: hardcoded_path, unencoded_file_io, unencoded_file_io, unencoded_file_io)
+  - tests/test_nvme_readonly.py (1 findings: test_without_assert)
+[zero-debt] findings (JSONL): 5
+  {"detector_id": "test_without_assert", "file_path": "tests/test_nvme_readonly.py", "line": 748, "message": "tests/test_nvme_readonly.py:748: test_without_assert: test_nvme_incident_reader_accepts_complete_unit_fixture_only() has no assert/with/assert-call/fail oracle", "severity": "FAIL", "would_block": true}
+  {"detector_id": "hardcoded_path", "file_path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/build_map.py", "line": 3, "message": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/build_map.py:3: hardcoded_path: hardcoded absolute path '/home/lcasarin/projects/blackbox'", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/build_map.py", "line": 76, "message": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/build_map.py:76: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/build_map.py", "line": 5, "message": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/build_map.py:5: unencoded_file_io: .read_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+  {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/build_map.py", "line": 64, "message": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/build_map.py:64: unencoded_file_io: .read_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
+BLOCKED [zero-debt] - policy is zero debt, with no grandfathering.
+[zero-debt] FAIL: 2 violation(es); primera tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/build_map.py:3 (hardcoded_path)

@@ -46,3 +46,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: `reused` únicamente para el contrato existente de `provider_trace.py`: request, worker, proveedor observado, latencia y transición de restart en fixtures declarados. No hay captura nativa con engine/rank/collective progress; la validación multi-engine queda `could_not_run`. La ficha sigue abierta y el `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-requests.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: La evidencia dice que provider_trace observa request/worker/restart, pero no progreso de rank ni agregado entre dos motores; no hay captura multinodo.
+- Evidencia faltante para cierre: Digest/config; identidad y recursos de ambos motores/ranks; colectivo y petición real con progreso, control negativo y aislamiento/recuperación.
+- Siguiente acción: Solicitar corrida de dos motores Ray con digest/config fijos, recursos por rank, colectivo y petición real; completar campos solo si el recibo actual los reporta faltantes.
+- Responsable del siguiente paso: BB; operador Luis para workload/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01.md`, `tools/provider_trace.py`, `tools/runtime_batch04_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import ctypes as C
+import os
 from pathlib import Path
 import runpy
 import subprocess
@@ -280,6 +281,280 @@ def test_interfaces_filter_invalid_names(tmp_path: Path) -> None:
     assert hd._interfaces(tmp_path / "missing")["status"] == "could_not_run"
 
 
+def test_sysfs_hardware_capture_reads_physical_bindings_without_commands(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    proc = tmp_path / "proc/sys/kernel/random"
+    proc.mkdir(parents=True)
+    (proc / "boot_id").write_text("boot-test\n", encoding="utf-8")
+    (tmp_path / "proc/sys/kernel/osrelease").write_text("6.1-test\n", encoding="utf-8")
+
+    pci = tmp_path / "sys/devices/pci0000:00/0000:01:00.0"
+    pci.mkdir(parents=True)
+    (pci / "vendor").write_text("0x10de\n", encoding="ascii")
+    (pci / "device").write_text("0x2342\n", encoding="ascii")
+    (pci / "class").write_text("0x030000\n", encoding="ascii")
+    driver = tmp_path / "sys/bus/pci/drivers/nvidia"
+    driver.mkdir(parents=True)
+    module = tmp_path / "sys/module/nvidia"
+    module.mkdir(parents=True)
+    (module / "version").write_text("580-test\n", encoding="ascii")
+    (pci / "driver").symlink_to(driver, target_is_directory=True)
+    pci_links = tmp_path / "sys/bus/pci/devices"
+    pci_links.mkdir(parents=True)
+    (pci_links / pci.name).symlink_to(pci, target_is_directory=True)
+
+    net = pci / "net/eth0"
+    net.mkdir(parents=True)
+    (net / "mtu").write_text("9000\n", encoding="ascii")
+    (net / "carrier").write_text("1\n", encoding="ascii")
+    (net / "operstate").write_text("up\n", encoding="ascii")
+    (net / "device").symlink_to(pci, target_is_directory=True)
+    net_class = tmp_path / "sys/class/net"
+    net_class.mkdir(parents=True)
+    (net_class / "eth0").symlink_to(net, target_is_directory=True)
+    (tmp_path / "sys/class/infiniband").mkdir(parents=True)
+
+    def forbidden_command(*_args: Any, **_kwargs: Any) -> Any:
+        raise AssertionError("sysfs-only collector invoked a command")
+
+    monkeypatch.setattr(hd, "run_readonly", forbidden_command)
+    report = hd.sysfs_hardware_capture(tmp_path)
+    assert report["status"] == "observed"
+    assert report["could_not_run"] == 0
+    assert report["safety"]["commands_executed"] is False
+    observed_net = report["observations"]["network"]["eth0"]
+    assert observed_net["mtu"] == {"status": "ok", "value": "9000"}
+    assert observed_net["pci_binding"]["pci_address"] == pci.name
+    observed_pci = report["observations"]["pci_devices"]["devices"][pci.name]
+    assert observed_pci["vendor"] == {"status": "ok", "value": "0x10de"}
+    assert observed_pci["class"]["value"] == "0x030000"
+
+
+def test_sysfs_hardware_capture_marks_unreadable_paths_and_pci_truncation(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    (tmp_path / "proc/sys/kernel/random").mkdir(parents=True)
+    (tmp_path / "proc/sys/kernel/osrelease").parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / "proc/sys/kernel/osrelease").write_text("6.1-test\n", encoding="utf-8")
+    (tmp_path / "proc/sys/kernel/random/boot_id").write_text("boot-test\n", encoding="utf-8")
+    (tmp_path / "sys/class/net").mkdir(parents=True)
+    (tmp_path / "sys/class/infiniband").mkdir(parents=True)
+    pci = tmp_path / "sys/bus/pci/devices"
+    pci.mkdir(parents=True)
+    (pci / "0000:01:00.0").mkdir()
+    (pci / "0000:02:00.0").mkdir()
+    monkeypatch.setattr(hd, "MAX_PCI_DEVICE_INSPECTIONS", 1)
+
+    report = hd.sysfs_hardware_capture(tmp_path)
+    assert report["status"] == "partial"
+    assert report["could_not_run"] > 0
+    inventory = report["observations"]["pci_devices"]
+    assert inventory["truncated"] is True
+    assert inventory["inspected_count"] == 1
+
+
+def test_pci_directory_scan_is_bounded_and_total_count_stays_unknown(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    devices = tmp_path / "sys/bus/pci/devices"
+    devices.mkdir(parents=True)
+    for index in range(4):
+        (devices / f"0000:00:0{index}.0").mkdir()
+    monkeypatch.setattr(hd, "MAX_PCI_DEVICE_INSPECTIONS", 2)
+    original_scandir = os.scandir
+    consumed = 0
+
+    class CountedEntries:
+        def __init__(self, entries: Any):
+            self.entries = entries
+
+        def __enter__(self) -> CountedEntries:
+            return self
+
+        def __exit__(self, *_args: Any) -> None:
+            self.entries.close()
+
+        def __iter__(self) -> Any:
+            nonlocal consumed
+            for entry in self.entries:
+                consumed += 1
+                yield entry
+
+    def counted_scandir(path: Path) -> Any:
+        return CountedEntries(original_scandir(path))
+
+    monkeypatch.setattr(hd.os, "scandir", counted_scandir)
+    inventory = hd._pci_device_inventory(tmp_path)
+    assert consumed == 3
+    assert inventory["status"] == "could_not_run"
+    assert inventory["truncated"] is True
+    assert inventory["device_count"] is None
+    assert inventory["observed_entry_count"] == 2
+    assert inventory["inspected_count"] == 2
+
+
+def test_pci_directory_scan_errors_are_could_not_run(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    (tmp_path / "sys/bus/pci/devices").mkdir(parents=True)
+
+    def denied(_path: Path) -> Any:
+        raise PermissionError("PCI directory denied")
+
+    monkeypatch.setattr(hd.os, "scandir", denied)
+    inventory = hd._pci_device_inventory(tmp_path)
+    assert inventory["status"] == "could_not_run"
+    assert inventory["devices"] == {}
+    assert "PermissionError" in inventory["error"]
+
+
+def test_sysfs_text_rejects_oversize_and_interface_inventory_truncates(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    kernel = tmp_path / "proc/sys/kernel/osrelease"
+    kernel.parent.mkdir(parents=True)
+    kernel.write_bytes(b"x" * (hd.MAX_SYSFS_TEXT_BYTES + 1))
+    assert hd._sysfs_text(tmp_path, kernel)["truncated"] is True
+
+    net = tmp_path / "sys/class/net"
+    net.mkdir(parents=True)
+    for index in range(3):
+        (net / f"eth{index}").mkdir()
+    monkeypatch.setattr(hd, "MAX_NETWORK_INTERFACE_INSPECTIONS", 2)
+    interfaces = hd._interfaces(tmp_path)
+    assert interfaces["status"] == "could_not_run"
+    assert interfaces["truncated"] is True
+    assert interfaces["inspected_count"] == 2
+
+
+def test_sysfs_fifo_read_returns_could_not_run_without_blocking(tmp_path: Path) -> None:
+    fifo = tmp_path / "proc/sys/kernel/osrelease"
+    fifo.parent.mkdir(parents=True)
+    os.mkfifo(fifo)
+    result = subprocess.run(
+        [sys.executable, "-c",
+         "from pathlib import Path; from tools import host_diagnostics as h; "
+         f"print(h._sysfs_text(Path({str(tmp_path)!r}), "
+         "Path('proc/sys/kernel/osrelease')))"],
+        capture_output=True, text=True, timeout=2, check=False,
+    )
+    assert result.returncode == 0
+    assert "could_not_run" in result.stdout
+
+
+def test_sysfs_confined_resolved_ancestor_remains_bounded(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    (root / "sys/kernel").mkdir(parents=True)
+    (root / "sys/kernel/release").write_text("6.1\n", encoding="utf-8")
+    (root / "sys/alias").symlink_to(root / "sys/kernel", target_is_directory=True)
+    assert hd._sysfs_text(root, root / "sys/alias/release") == {
+        "status": "ok", "value": "6.1"}
+    outside = tmp_path / "outside"
+    outside.write_text("escape", encoding="utf-8")
+    (root / "sys/kernel/escape").symlink_to(outside)
+    assert hd._sysfs_text(root, root / "sys/kernel/escape")["status"] == "could_not_run"
+    (root / "sys/escape-dir").symlink_to(outside.parent, target_is_directory=True)
+    assert hd._sysfs_text(root, root / "sys/escape-dir/outside")["status"] == "could_not_run"
+
+
+def test_sysfs_interface_scandir_error_is_reported(tmp_path: Path,
+                                                    monkeypatch: pytest.MonkeyPatch) -> None:
+    net = tmp_path / "sys/class/net"
+    net.mkdir(parents=True)
+
+    def denied(_path: Path) -> Any:
+        raise PermissionError("net directory denied")
+
+    monkeypatch.setattr(hd.os, "scandir", denied)
+    result = hd._interfaces(tmp_path)
+    assert result["status"] == "could_not_run"
+    assert "PermissionError" in result["error"]
+
+
+def test_optional_sysfs_disappearance_after_resolution_stays_unknown(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    serial = tmp_path / "sys/devices/usb1/1-1/serial"
+    serial.parent.mkdir(parents=True)
+    serial.write_text("unit-01", encoding="ascii")
+
+    def raced(_path: Path) -> dict[str, str]:
+        return {"status": "could_not_run", "error": "FileNotFoundError: raced"}
+
+    monkeypatch.setattr(hd, "_bounded_sysfs_text", raced)
+    assert hd._device_attributes(tmp_path, serial.parent, ("serial",))["serial"] == {
+        "status": "unknown", "reason": "sysfs attribute absent"}
+    assert hd._sysfs_text(tmp_path, serial, optional=True) == {
+        "status": "unknown", "reason": "sysfs attribute absent"}
+
+
+def test_optional_text_distinguishes_success_and_raced_absence(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    value = tmp_path / "optional"
+    value.write_text("present", encoding="utf-8")
+    assert hd.read_optional_text(value) == {"status": "ok", "value": "present"}
+
+    def raced(_path: Path) -> dict[str, str]:
+        return {"status": "could_not_run", "error": "FileNotFoundError: raced"}
+
+    monkeypatch.setattr(hd, "read_text", raced)
+    assert hd.read_optional_text(value) == {
+        "status": "unknown", "reason": "sysfs attribute absent"}
+
+
+def test_pci_binding_reports_escaping_driver_and_module_targets(tmp_path: Path) -> None:
+    outside = tmp_path.parent / f"{tmp_path.name}-outside-links"
+    outside.mkdir()
+    pci = tmp_path / "sys/devices/0000:00:01.0"
+    pci.mkdir(parents=True)
+    (pci / "vendor").write_text("0x10ec", encoding="ascii")
+    (pci / "device").write_text("0x8127", encoding="ascii")
+    interface = tmp_path / "sys/class/net/eth0"
+    interface.mkdir(parents=True)
+    (interface / "device").symlink_to(os.path.relpath(pci, interface))
+    drivers = tmp_path / "sys/bus/pci/drivers"
+    drivers.mkdir(parents=True)
+    (pci / "driver").symlink_to(outside, target_is_directory=True)
+    assert hd.pci_binding(tmp_path, "eth0")["status"] == "could_not_run"
+
+    driver = drivers / "test-driver"
+    driver.mkdir()
+    (pci / "driver").unlink()
+    (pci / "driver").symlink_to(os.path.relpath(driver, pci), target_is_directory=True)
+    (driver / "module").symlink_to(outside, target_is_directory=True)
+    result = hd.pci_binding(tmp_path, "eth0")
+    assert result["status"] == "could_not_run"
+    assert "outside" in result["error"].lower()
+
+
+def test_pci_inventory_reports_unavailable_list_invalid_name_and_driver_escape(
+        tmp_path: Path) -> None:
+    assert hd._pci_device_inventory(tmp_path)["status"] == "could_not_run"
+    devices = tmp_path / "sys/bus/pci/devices"
+    devices.mkdir(parents=True)
+    (devices / "not-a-pci-address").mkdir()
+    inventory = hd._pci_device_inventory(tmp_path)
+    assert inventory["errors"] == {"not-a-pci-address": "invalid PCI address"}
+
+    pci = tmp_path / "sys/devices/0000:00:01.0"
+    pci.mkdir(parents=True)
+    for name, value in {"vendor": "0x10ec", "device": "0x8127", "class": "0x020000"}.items():
+        (pci / name).write_text(value, encoding="ascii")
+    (devices / "0000:00:01.0").symlink_to(pci, target_is_directory=True)
+    outside = tmp_path.parent / f"{tmp_path.name}-outside-pci-driver"
+    outside.mkdir()
+    (pci / "driver").symlink_to(outside, target_is_directory=True)
+    inventory = hd._pci_device_inventory(tmp_path)
+    assert inventory["devices"]["0000:00:01.0"]["driver"]["status"] == "could_not_run"
+
+
+def test_sysfs_cli_report_and_incompatible_backup_flags(tmp_path: Path,
+                                                       capsys: pytest.CaptureFixture[str]) -> None:
+    result = hd.main(["--sysfs-only", "--root", str(tmp_path)])
+    assert result == 2
+    report = json.loads(capsys.readouterr().out)
+    assert report["status"] == "partial"
+
+    with pytest.raises(SystemExit, match="2"):
+        hd.main(["--sysfs-only", "--backup-source", "disk"])
+    assert "cannot be combined" in capsys.readouterr().err
+
+
 def test_module_state_distinguishes_loaded_builtin_absent_and_missing(tmp_path: Path) -> None:
     release = tmp_path / "proc/sys/kernel"
     release.mkdir(parents=True)
@@ -333,8 +608,8 @@ def test_pci_binding_reports_bound_unbound_non_pci_and_unreadable(tmp_path: Path
     (pci_device / "device").write_text("0x8127\n", encoding="ascii")
     drivers = sysfs / "bus/pci/drivers/r8127"
     drivers.mkdir(parents=True)
-    (pci_device / "driver").symlink_to("/sys/bus/pci/drivers/r8127")
-    (drivers / "module").symlink_to("/sys/module/r8127")
+    (pci_device / "driver").symlink_to(os.path.relpath(drivers, pci_device))
+    (drivers / "module").symlink_to(os.path.relpath(sysfs / "module/r8127", drivers))
     module = sysfs / "module/r8127"
     module.mkdir(parents=True)
     (module / "version").write_text("11.014.00-NAPI\n", encoding="ascii")
@@ -348,7 +623,9 @@ def test_pci_binding_reports_bound_unbound_non_pci_and_unreadable(tmp_path: Path
 
     (pci_device / "driver").unlink()
     assert hd.pci_binding(tmp_path, "enp1s0")["status"] == "unbound"
-    (pci_device / "driver").symlink_to("/sys/bus/pci/drivers/r8169")
+    r8169 = sysfs / "bus/pci/drivers/r8169"
+    r8169.mkdir(parents=True)
+    (pci_device / "driver").symlink_to(os.path.relpath(r8169, pci_device))
     assert hd.pci_binding(tmp_path, "enp1s0")["driver"] == "r8169"
 
     virtual = tmp_path / "sys/class/net/docker0"
@@ -356,10 +633,8 @@ def test_pci_binding_reports_bound_unbound_non_pci_and_unreadable(tmp_path: Path
     assert hd.pci_binding(tmp_path, "docker0")["status"] == "not_pci"
     assert hd.pci_binding(tmp_path, "../bad")["status"] == "could_not_run"
 
-    def denied(*args: Any, **kwargs: Any) -> str:
-        raise PermissionError("denied")
-
-    monkeypatch.setattr(Path, "read_text", denied)
+    (pci_device / "vendor").unlink()
+    os.mkfifo(pci_device / "vendor")
     assert hd.pci_binding(tmp_path, "enp1s0")["status"] == "could_not_run"
 
 
@@ -382,7 +657,7 @@ def test_pci_binding_preserves_driver_and_module_link_errors(tmp_path: Path,
     pci_device = tmp_path / "sys/devices/0000:00:01.0"
     pci_device.mkdir(parents=True)
     (interface_dir).mkdir(parents=True)
-    (interface_dir / "device").symlink_to("../../../devices/0000:00:01.0")
+    (interface_dir / "device").symlink_to(os.path.relpath(pci_device, interface_dir))
     (pci_device / "vendor").write_text("0x10ec", encoding="ascii")
     (pci_device / "device").write_text("0x8127", encoding="ascii")
     original = Path.readlink
@@ -395,7 +670,9 @@ def test_pci_binding_preserves_driver_and_module_link_errors(tmp_path: Path,
     monkeypatch.setattr(Path, "readlink", failed_driver_link)
     assert hd.pci_binding(tmp_path, "eth0")["error"] == "OSError: driver link unavailable"
     monkeypatch.setattr(Path, "readlink", original)
-    (pci_device / "driver").symlink_to("/sys/bus/pci/drivers/example")
+    example_driver = tmp_path / "sys/bus/pci/drivers/example"
+    example_driver.mkdir(parents=True)
+    (pci_device / "driver").symlink_to(os.path.relpath(example_driver, pci_device))
 
     def failed_module_link(path: Path) -> Path:
         if path.name == "module":
@@ -404,6 +681,37 @@ def test_pci_binding_preserves_driver_and_module_link_errors(tmp_path: Path,
 
     monkeypatch.setattr(Path, "readlink", failed_module_link)
     assert hd.pci_binding(tmp_path, "eth0")["error"] == "OSError: module link unavailable"
+
+
+def test_pci_sysfs_readers_reject_symlinks_that_escape_fixture_root(
+        tmp_path: Path) -> None:
+    outside = tmp_path.parent / f"{tmp_path.name}-outside-device"
+    outside.mkdir()
+    (outside / "vendor").write_text("secret-vendor", encoding="ascii")
+    (outside / "device").write_text("secret-device", encoding="ascii")
+    interface = tmp_path / "sys/class/net/eth0"
+    interface.mkdir(parents=True)
+    (interface / "device").symlink_to(outside, target_is_directory=True)
+    binding = hd.pci_binding(tmp_path, "eth0")
+    assert binding["status"] == "could_not_run"
+    assert "outside" in binding["error"].lower()
+
+    internal = tmp_path / "sys/devices/0000:02:00.0"
+    internal.mkdir(parents=True)
+    (internal / "vendor").symlink_to(outside / "vendor")
+    (internal / "device").write_text("0x1234", encoding="ascii")
+    (interface / "device").unlink()
+    (interface / "device").symlink_to(internal, target_is_directory=True)
+    attribute_binding = hd.pci_binding(tmp_path, "eth0")
+    assert attribute_binding["status"] == "could_not_run"
+    assert "outside" in str(attribute_binding["error"]).lower()
+
+    devices = tmp_path / "sys/bus/pci/devices"
+    devices.mkdir(parents=True)
+    (devices / "0000:01:00.0").symlink_to(outside, target_is_directory=True)
+    inventory = hd._pci_device_inventory(tmp_path)
+    assert inventory["status"] == "could_not_run"
+    assert inventory["devices"]["0000:01:00.0"]["status"] == "could_not_run"
 
 
 def test_module_state_preserves_sysfs_stat_error(tmp_path: Path,

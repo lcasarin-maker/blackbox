@@ -54,3 +54,14 @@ Estado: parcial, reutilizando la versión del runtime y la identidad ref/ID de i
 Se inspeccionaron `tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json` y `tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/commands.json`. El primero contiene runtime/host y `running_container_image_ids` con `container_id`, `image_ref` e `image_id`; el segundo conserva `{cmd, exit, stdout}` para `docker inspect`, arquitectura/CUDA y estado del contenedor. No hay salida capturada desde el entorno activo que identifique wheel instalado, build/commit importado, ni comparación entre éstos y el artefacto previsto. Tampoco existe una entrada de manifiesto de offline cache con nombres/rutas y hashes esperados, ni resultado de arranque sin red.
 
 Por eso no se añadió un parser que convierta la identidad de imagen en identidad de build ni un esquema de cache especulativo. La entrada mínima pendiente debe venir primero de una captura real con los campos crudos del wheel/build esperado y efectivo dentro del mismo contenedor, más un manifiesto verificable de los artefactos offline y el resultado literal del arranque aislado. Después puede fijarse un parser y controles negativos sobre el formato efectivamente producido. El close check sigue abierto.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: No hay recibo de build efectivo ni ejecución offline del contenedor con digest fijado.
+- Evidencia faltante para cierre: Digest/arquitectura de contenedor; dependencias y artefactos; build efectivo; corrida offline y control con red; logs reproducibles.
+- Siguiente acción: Solicitar o preparar ejecución aislada del contenedor fijado con inventario de build/artefactos y red deshabilitada, conservando comparación con control online; evaluar con selector existente.
+- Responsable del siguiente paso: BB; operador Luis para workload/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01.md`, `tools/runtime_batch03_controls.py`, `tests/test_debt_registration_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

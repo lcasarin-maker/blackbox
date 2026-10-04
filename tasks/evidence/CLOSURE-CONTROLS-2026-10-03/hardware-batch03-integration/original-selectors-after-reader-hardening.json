@@ -1,0 +1,133 @@
+{
+  "captured_at": "2026-10-04T09:19:01.793538+00:00",
+  "scope": "All seven original batch03 close selectors after reader/JSON hardening; absent evidence expected to reject",
+  "selector_count": 7,
+  "exit_zero": 0,
+  "exit_nonzero": 7,
+  "rows": [
+    {
+      "id": "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01",
+      "command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01",
+      "returncode": 1,
+      "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_________ test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01 __________\ntests/test_debt_registration_controls.py:1227: in test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01\n    _require_hardware_batch03_closure('DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01')\ntests/test_debt_registration_controls.py:1223: in _require_hardware_batch03_closure\n    _require_pass(card_id, result)\ntests/test_closure_kernel_selectors.py:21: in _require_pass\n    assert result.get(\"status\") == \"pass\" and result.get(\"could_not_run_count\") == 0, (\nE   AssertionError: DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01 closure remains open: {'status': 'unknown', 'findings': [\"raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01'\"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0, 'provenance': 'caller-supplied; hashes establish consistency, not authenticity'}\nE   assert ('unknown' == 'pass'\nE     \nE     - pass\nE     + unknown)\n----------------------------- Captured stdout call -----------------------------\n{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01'\"], \"provenance\": \"caller-supplied; hashes establish consistency, not authenticity\", \"status\": \"unknown\"}\n=========================== short test summary info ============================\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01\n1 failed in 0.08s\n",
+      "stderr": "",
+      "subject_verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01'"
+        ],
+        "provenance": "caller-supplied; hashes establish consistency, not authenticity",
+        "status": "unknown"
+      }
+    },
+    {
+      "id": "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01",
+      "command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_telemetry_coverage_01",
+      "returncode": 1,
+      "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n________________ test_delta_forum_thermal_telemetry_coverage_01 ________________\ntests/test_debt_registration_controls.py:1231: in test_delta_forum_thermal_telemetry_coverage_01\n    _require_hardware_batch03_closure('DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01')\ntests/test_debt_registration_controls.py:1223: in _require_hardware_batch03_closure\n    _require_pass(card_id, result)\ntests/test_closure_kernel_selectors.py:21: in _require_pass\n    assert result.get(\"status\") == \"pass\" and result.get(\"could_not_run_count\") == 0, (\nE   AssertionError: DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01 closure remains open: {'status': 'unknown', 'findings': [\"raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'capture.json'\"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0, 'provenance': 'caller-supplied; hashes establish consistency, not authenticity'}\nE   assert ('unknown' == 'pass'\nE     \nE     - pass\nE     + unknown)\n----------------------------- Captured stdout call -----------------------------\n{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'capture.json'\"], \"provenance\": \"caller-supplied; hashes establish consistency, not authenticity\", \"status\": \"unknown\"}\n=========================== short test summary info ============================\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_thermal_telemetry_coverage_01\n1 failed in 0.08s\n",
+      "stderr": "",
+      "subject_verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'capture.json'"
+        ],
+        "provenance": "caller-supplied; hashes establish consistency, not authenticity",
+        "status": "unknown"
+      }
+    },
+    {
+      "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+      "command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_usb_raid_link_admission_01",
+      "returncode": 1,
+      "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_________________ test_delta_forum_usb_raid_link_admission_01 __________________\ntests/test_debt_registration_controls.py:1235: in test_delta_forum_usb_raid_link_admission_01\n    _require_hardware_batch03_closure('DELTA-FORUM-USB-RAID-LINK-ADMISSION-01')\ntests/test_debt_registration_controls.py:1223: in _require_hardware_batch03_closure\n    _require_pass(card_id, result)\ntests/test_closure_kernel_selectors.py:21: in _require_pass\n    assert result.get(\"status\") == \"pass\" and result.get(\"could_not_run_count\") == 0, (\nE   AssertionError: DELTA-FORUM-USB-RAID-LINK-ADMISSION-01 closure remains open: {'status': 'unknown', 'findings': [\"raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-USB-RAID-LINK-ADMISSION-01'\"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0, 'provenance': 'caller-supplied; hashes establish consistency, not authenticity'}\nE   assert ('unknown' == 'pass'\nE     \nE     - pass\nE     + unknown)\n----------------------------- Captured stdout call -----------------------------\n{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-USB-RAID-LINK-ADMISSION-01'\"], \"provenance\": \"caller-supplied; hashes establish consistency, not authenticity\", \"status\": \"unknown\"}\n=========================== short test summary info ============================\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_usb_raid_link_admission_01\n1 failed in 0.08s\n",
+      "stderr": "",
+      "subject_verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-USB-RAID-LINK-ADMISSION-01'"
+        ],
+        "provenance": "caller-supplied; hashes establish consistency, not authenticity",
+        "status": "unknown"
+      }
+    },
+    {
+      "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+      "command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_backup_mount_boot_identity_01",
+      "returncode": 1,
+      "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n________________ test_delta_root_backup_mount_boot_identity_01 _________________\ntests/test_debt_registration_controls.py:1239: in test_delta_root_backup_mount_boot_identity_01\n    _require_hardware_batch03_closure('DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01')\ntests/test_debt_registration_controls.py:1223: in _require_hardware_batch03_closure\n    _require_pass(card_id, result)\ntests/test_closure_kernel_selectors.py:21: in _require_pass\n    assert result.get(\"status\") == \"pass\" and result.get(\"could_not_run_count\") == 0, (\nE   AssertionError: DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01 closure remains open: {'status': 'unknown', 'findings': [\"raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01'\"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0, 'provenance': 'caller-supplied; hashes establish consistency, not authenticity'}\nE   assert ('unknown' == 'pass'\nE     \nE     - pass\nE     + unknown)\n----------------------------- Captured stdout call -----------------------------\n{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01'\"], \"provenance\": \"caller-supplied; hashes establish consistency, not authenticity\", \"status\": \"unknown\"}\n=========================== short test summary info ============================\nFAILED tests/test_debt_registration_controls.py::test_delta_root_backup_mount_boot_identity_01\n1 failed in 0.08s\n",
+      "stderr": "",
+      "subject_verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01'"
+        ],
+        "provenance": "caller-supplied; hashes establish consistency, not authenticity",
+        "status": "unknown"
+      }
+    },
+    {
+      "id": "DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01",
+      "command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_display_carveout_oem_fix_gate_01",
+      "returncode": 1,
+      "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_______________ test_delta_root_display_carveout_oem_fix_gate_01 _______________\ntests/test_debt_registration_controls.py:1243: in test_delta_root_display_carveout_oem_fix_gate_01\n    _require_hardware_batch03_closure('DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01')\ntests/test_debt_registration_controls.py:1223: in _require_hardware_batch03_closure\n    _require_pass(card_id, result)\ntests/test_closure_kernel_selectors.py:21: in _require_pass\n    assert result.get(\"status\") == \"pass\" and result.get(\"could_not_run_count\") == 0, (\nE   AssertionError: DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01 closure remains open: {'status': 'unknown', 'findings': [\"raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01'\"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0, 'provenance': 'caller-supplied; hashes establish consistency, not authenticity'}\nE   assert ('unknown' == 'pass'\nE     \nE     - pass\nE     + unknown)\n----------------------------- Captured stdout call -----------------------------\n{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01'\"], \"provenance\": \"caller-supplied; hashes establish consistency, not authenticity\", \"status\": \"unknown\"}\n=========================== short test summary info ============================\nFAILED tests/test_debt_registration_controls.py::test_delta_root_display_carveout_oem_fix_gate_01\n1 failed in 0.08s\n",
+      "stderr": "",
+      "subject_verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01'"
+        ],
+        "provenance": "caller-supplied; hashes establish consistency, not authenticity",
+        "status": "unknown"
+      }
+    },
+    {
+      "id": "DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01",
+      "command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_gx10_soc_ec_cable_recovery_candidate_01",
+      "returncode": 1,
+      "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________ test_delta_root_gx10_soc_ec_cable_recovery_candidate_01 ____________\ntests/test_debt_registration_controls.py:1247: in test_delta_root_gx10_soc_ec_cable_recovery_candidate_01\n    _require_hardware_batch03_closure('DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01')\ntests/test_debt_registration_controls.py:1223: in _require_hardware_batch03_closure\n    _require_pass(card_id, result)\ntests/test_closure_kernel_selectors.py:21: in _require_pass\n    assert result.get(\"status\") == \"pass\" and result.get(\"could_not_run_count\") == 0, (\nE   AssertionError: DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01 closure remains open: {'status': 'unknown', 'findings': [\"raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01'\"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0, 'provenance': 'caller-supplied; hashes establish consistency, not authenticity'}\nE   assert ('unknown' == 'pass'\nE     \nE     - pass\nE     + unknown)\n----------------------------- Captured stdout call -----------------------------\n{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01'\"], \"provenance\": \"caller-supplied; hashes establish consistency, not authenticity\", \"status\": \"unknown\"}\n=========================== short test summary info ============================\nFAILED tests/test_debt_registration_controls.py::test_delta_root_gx10_soc_ec_cable_recovery_candidate_01\n1 failed in 0.08s\n",
+      "stderr": "",
+      "subject_verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01'"
+        ],
+        "provenance": "caller-supplied; hashes establish consistency, not authenticity",
+        "status": "unknown"
+      }
+    },
+    {
+      "id": "DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01",
+      "command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_subambient_cooling_and_uma_canary_01",
+      "returncode": 1,
+      "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_____________ test_delta_root_subambient_cooling_and_uma_canary_01 _____________\ntests/test_debt_registration_controls.py:1251: in test_delta_root_subambient_cooling_and_uma_canary_01\n    _require_hardware_batch03_closure('DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01')\ntests/test_debt_registration_controls.py:1223: in _require_hardware_batch03_closure\n    _require_pass(card_id, result)\ntests/test_closure_kernel_selectors.py:21: in _require_pass\n    assert result.get(\"status\") == \"pass\" and result.get(\"could_not_run_count\") == 0, (\nE   AssertionError: DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01 closure remains open: {'status': 'unknown', 'findings': [\"raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01'\"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0, 'provenance': 'caller-supplied; hashes establish consistency, not authenticity'}\nE   assert ('unknown' == 'pass'\nE     \nE     - pass\nE     + unknown)\n----------------------------- Captured stdout call -----------------------------\n{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01'\"], \"provenance\": \"caller-supplied; hashes establish consistency, not authenticity\", \"status\": \"unknown\"}\n=========================== short test summary info ============================\nFAILED tests/test_debt_registration_controls.py::test_delta_root_subambient_cooling_and_uma_canary_01\n1 failed in 0.08s\n",
+      "stderr": "",
+      "subject_verdict": {
+        "could_not_run": 1,
+        "could_not_run_count": 1,
+        "fail": 0,
+        "findings": [
+          "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01'"
+        ],
+        "provenance": "caller-supplied; hashes establish consistency, not authenticity",
+        "status": "unknown"
+      }
+    }
+  ],
+  "subject_pass": 0,
+  "subject_fail": 0,
+  "subject_unknown": 7,
+  "could_not_run_count": 7,
+  "report_clean": false
+}

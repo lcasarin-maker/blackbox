@@ -50,3 +50,14 @@ El lector sólo cubre clasificación textual. El close check de esta ficha sigue
 Revisión raíz: el lector se nombra `netconsole_marker` para separar su alcance del verificador completo ausente. Lee hasta 1 MiB y admite marcadores de 1..1024 caracteres; entradas mayores quedan unknown/could_not_run. Conserva hashes exactos de captura y marcador sin imprimir el contenido. Los controles ampliados CLI/UTF-8/límites/hash pasan: `7 passed in 0.04s`. El cierre original y su interfaz --evidence siguen pendientes.
 
 Resultado final del lector: ocho pruebas, incluidas CLI/entrypoint y recibo sin contenido. La suite completa pasa 1118 pruebas con 5060/5060 sentencias Python; ver `docs/evidence/SWARM-TENS-2026-10-03.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: El selector existe; la captura kernel actual marca explícitamente que la entrega al receptor no fue observada.
+- Evidencia faltante para cierre: Prueba focal por configuración estática/target y receptor real; control negativo; salida literal del selector.
+- Siguiente acción: Con el operador, ejecutar una captura de entrega netconsole hacia receptor de laboratorio y registrar el mensaje recibido, control negativo y configuración/rollback; conservar el selector focal existente.
+- Responsable del siguiente paso: BB.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01.md`, `tools/kernel_capture.py`, `docs/evidence/BB-INSTRUMENTS-kernel.md`, `tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json`, `tests/test_debt_registration_controls.py`, `tests/test_closure_kernel_selectors.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

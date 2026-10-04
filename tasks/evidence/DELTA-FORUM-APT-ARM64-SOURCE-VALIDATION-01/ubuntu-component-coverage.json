@@ -1,0 +1,119 @@
+{
+  "captured_at": "2026-10-04T08:23:10.420168+00:00",
+  "scope": "Only Ubuntu deb distribution stanzas, each configured component/suite at native arm64. Other repos, deb-src, optional targets, approval, signatures, freshness and fresh update remain separate.",
+  "source": "/etc/apt/sources.list.d/ubuntu.sources",
+  "source_sha256": "1c792c57a500b2a2582c63c80bd02ab2c2fe78444edfcbb2b3af10e0ad9f14bf",
+  "architecture_query": {
+    "command": [
+      "dpkg",
+      "--print-architecture"
+    ],
+    "returncode": 0,
+    "stdout": "arm64\n",
+    "stderr": ""
+  },
+  "index_query": {
+    "command": [
+      "apt-get",
+      "indextargets",
+      "--format=$(SITE)|$(RELEASE)|$(METAKEY)|$(IDENTIFIER)"
+    ],
+    "returncode": 0,
+    "stdout": "https://workbench.download.nvidia.com/stable/linux/debian|default|proprietary/binary-arm64/Packages|Packages\nhttps://us-central1-apt.pkg.dev/projects/antigravity-auto-updater-dev|antigravity-debian|main/binary-arm64/Packages|Packages\nhttps://snapshot.ppa.launchpadcontent.net/canonical-nvidia/nvidia-desktop-edge/ubuntu|noble|main/binary-arm64/Packages|Packages\nhttps://snapshot.ppa.launchpadcontent.net/canonical-nvidia/nvidia-desktop-edge/ubuntu|noble|main/i18n/Translation-en|Translations\nhttps://persistent.oaistatic.com/codex-app-prod/linux/deb|stable|main/binary-arm64/Packages|Packages\nhttps://downloads.claude.ai/claude-desktop/apt/stable|stable|main/binary-amd64/Packages|Packages\nhttps://downloads.claude.ai/claude-desktop/apt/stable|stable|main/binary-arm64/Packages|Packages\nhttps://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/sbsa||Packages|Packages\nhttps://downloads.cursor.com/aptrepo|stable|main/binary-amd64/Packages|Packages\nhttps://downloads.cursor.com/aptrepo|stable|main/binary-arm64/Packages|Packages\nhttps://downloads.cursor.com/aptrepo|stable|main/binary-all/Packages|Packages\nhttps://repo.download.nvidia.com/baseos/ubuntu/noble/arm64|noble|common/binary-arm64/Packages|Packages\nhttps://repo.download.nvidia.com/baseos/ubuntu/noble/arm64|noble-updates|common/binary-arm64/Packages|Packages\nhttps://repo.download.nvidia.com/baseos/ubuntu/noble/arm64|noble-updates|dgx/binary-arm64/Packages|Packages\nhttps://dl.google.com/linux/chrome-stable/deb|stable|main/binary-arm64/Packages|Packages\nhttps://snapshot.ppa.launchpadcontent.net/canonical-nvidia/vulkan-packages-nv-desktop/ubuntu|noble|main/binary-arm64/Packages|Packages\nhttps://snapshot.ppa.launchpadcontent.net/canonical-nvidia/vulkan-packages-nv-desktop/ubuntu|noble|main/i18n/Translation-en|Translations\nhttps://developer.download.nvidia.com/hpc-sdk/ubuntu/arm64||Packages|Packages\nhttps://nvidia.github.io/libnvidia-container/stable/deb/arm64||Packages|Packages\nhttps://repo.download.nvidia.com/spark/ubuntu/arm64|noble-updates|common/binary-arm64/Packages|Packages\nhttps://aquasecurity.github.io/trivy-repo/deb|noble|main/binary-arm64/Packages|Packages\nhttps://esm.ubuntu.com/cis/ubuntu|noble|main/binary-arm64/Packages|Packages\nhttps://esm.ubuntu.com/apps/ubuntu|noble-apps-security|main/binary-arm64/Packages|Packages\nhttps://esm.ubuntu.com/apps/ubuntu|noble-apps-updates|main/binary-arm64/Packages|Packages\nhttps://esm.ubuntu.com/infra/ubuntu|noble-infra-security|main/binary-arm64/Packages|Packages\nhttps://esm.ubuntu.com/infra/ubuntu|noble-infra-updates|main/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble|main/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble|main/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble|main/i18n/Translation-es|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble|main/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble|main/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble|main/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble|main/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble|main/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble|restricted/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble|restricted/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble|restricted/i18n/Translation-es|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble|restricted/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble|universe/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble|universe/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble|universe/i18n/Translation-es|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble|universe/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble|universe/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble|universe/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble|universe/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble|universe/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble|multiverse/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble|multiverse/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble|multiverse/i18n/Translation-es|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble|multiverse/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble|multiverse/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble|multiverse/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble|multiverse/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble|multiverse/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|main/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|main/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|main/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|main/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|main/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|main/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|main/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|restricted/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|restricted/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|restricted/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|restricted/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|restricted/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|restricted/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|restricted/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|universe/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|universe/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|universe/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|universe/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|universe/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|universe/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|universe/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|multiverse/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|multiverse/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|multiverse/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|multiverse/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|multiverse/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|multiverse/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble-updates|multiverse/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|main/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|main/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|main/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|main/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|main/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|main/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|main/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|restricted/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|restricted/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|restricted/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|restricted/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|restricted/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|universe/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|universe/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|universe/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|universe/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|universe/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|universe/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|universe/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|multiverse/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|multiverse/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|multiverse/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|multiverse/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|multiverse/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|multiverse/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble-backports|multiverse/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|main/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|main/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|main/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|main/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|main/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|main/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|main/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|restricted/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|restricted/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|restricted/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|restricted/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|restricted/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|restricted/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|restricted/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|universe/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|universe/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|universe/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|universe/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|universe/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|universe/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|universe/cnf/Commands-arm64|CNF\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|multiverse/binary-arm64/Packages|Packages\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|multiverse/i18n/Translation-en|Translations\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|multiverse/dep11/Components-arm64.yml|DEP-11\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|multiverse/dep11/icons-48x48.tar|DEP-11-icons-small\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|multiverse/dep11/icons-64x64.tar|DEP-11-icons\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|multiverse/dep11/icons-64x64@2.tar|DEP-11-icons-hidpi\nhttp://ports.ubuntu.com/ubuntu-ports|noble-security|multiverse/cnf/Commands-arm64|CNF\nhttps://packages.microsoft.com/repos/code|stable|main/binary-arm64/Packages|Packages\n",
+    "stderr": ""
+  },
+  "expected": [
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble",
+      "main/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble",
+      "multiverse/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble",
+      "restricted/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble",
+      "universe/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble-backports",
+      "main/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble-backports",
+      "multiverse/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble-backports",
+      "restricted/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble-backports",
+      "universe/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble-security",
+      "main/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble-security",
+      "multiverse/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble-security",
+      "restricted/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble-security",
+      "universe/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble-updates",
+      "main/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble-updates",
+      "multiverse/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble-updates",
+      "restricted/binary-arm64/Packages"
+    ],
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble-updates",
+      "universe/binary-arm64/Packages"
+    ]
+  ],
+  "missing": [
+    [
+      "http://ports.ubuntu.com/ubuntu-ports",
+      "noble-backports",
+      "restricted/binary-arm64/Packages"
+    ]
+  ],
+  "present": 15,
+  "fail": 1,
+  "could_not_run_count": 0,
+  "errors": [],
+  "collector_sha256": "9ccac68264c7f02abbfc1f3eb7f4734d506d9c1bffcbcb0f335f1c5812b551a9"
+}

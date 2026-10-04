@@ -1,0 +1,17 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______________ test_debt_close_check_verify_gpu_clock_cap_ab_01 _______________
+tests/test_debt_registration_controls.py:1516: in test_debt_close_check_verify_gpu_clock_cap_ab_01
+    _require_pass('FEATURE-FORUM-GPU-CLOCK-CAP-AB-01', {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: FEATURE-FORUM-GPU-CLOCK-CAP-AB-01 closure remains open: {'status': 'unknown', 'reason': 'raw timestamped GPU clock-cap command capture missing or malformed', 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/commands.json"], "reason": "raw timestamped GPU clock-cap command capture missing or malformed", "status": "unknown"}
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_debt_close_check_verify_gpu_clock_cap_ab_01
+1 failed in 0.15s

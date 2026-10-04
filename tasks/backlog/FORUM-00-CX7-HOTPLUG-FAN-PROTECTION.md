@@ -99,3 +99,14 @@ Cierre: Fixture distingue PCI visible, módulo presente y enlace/tráfico operat
 373900: bugreport y 9 TXT revisados, incluidos 6 dumps comparados estructuralmente (233842 pares por archivo, 0 inválidos y 0 duplicados). Logs de kernels 6.17-1021 y 6.17-1029 confirman CX7 enumerado, firmware 28.47.1088, pre-init 120000 ms y probe -110 en ambos BDF, sin interfaces CX7. Firmware EC/UEFI y marcador hotplug están presentes. Confirma síntoma persistente; la causa de actualización DOCA y la interpretación de registros propietarios siguen abiertas.
 
 Validación propuesta: OEM/PSID/repositorio y actualizador exactos antes de admisión; después exigir binding, carrier y canario de red, además de enumeración, manteniendo gestión independiente y rollback soportado. Manifest y firmas: `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/attachments-root/`. Fuentes: https://forums.developer.nvidia.com/t/363193 y https://forums.developer.nvidia.com/t/373900.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: No hay canal local de RPM/fan validado ni A/B de hotplug/DPMS/CX7 sobre la tupla OEM; evidencia del foro parcialmente inspeccionada no acredita mitigación.
+- Evidencia faltante para cierre: No hay canal local de RPM/fan validado ni A/B de hotplug/DPMS/CX7 sobre la tupla OEM; evidencia del foro parcialmente inspeccionada no acredita mitigación.
+- Siguiente acción: Coordinación BB: precisar sensores/fixtures y guardas de admisión; operador Luis: capturar tuple OEM y ejecutar A/B reversible sólo en unidad canary con medida fan externa/OEM. Ref explícita: tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION-direct-close-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION-direct-close-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: `deferred_lab`. No existe historial multi-turno capturado ni receipt de efectos con tool mock. Falta canario aislado sobre stack/model/template fijados con salida de herramienta no confiable, turno posterior de correo controlado, comprobación de todos los campos sensibles y control positivo del fixture. Ninguna captura SSE previa demuestra corrección o seguridad. La ficha sigue abierta y `close_check` intacto. Informe: `docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: La evidencia registra que no existe conversación multi-turno capturada ni recibo de efectos tool mock.
+- Evidencia faltante para cierre: Stack/modelo/template fijados; canario aislado; salida tool mocked por turno; controles limpios/positivos; registro de side effects.
+- Siguiente acción: Solicitar corrida canario en sandbox aislado con modelo/template/digest fijos, tool mock sin efectos externos y registro por turno; usar el evaluador actual sobre el recibo.
+- Responsable del siguiente paso: BB; operador Luis para workload/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md`, `tools/runtime_batch01_controls.py`, `tests/test_debt_registration_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

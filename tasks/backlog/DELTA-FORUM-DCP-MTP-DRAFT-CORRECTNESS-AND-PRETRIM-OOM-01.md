@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: `needs_contract`. Falta contrato source/image-bound para mapear DCP rank↔shard, observar gather/LSE merge y parcial no-cero, fijar tolerancia/oráculo contra DCP1, salida determinista y acceptance por posición. El caso pre-trim OOM requiere subensayo de headroom separado con trigger y criterio seguro. No hay capturas de rank/draft/acceptance/memoria pre-trim. La ficha sigue abierta y `close_check` intacto. Informe: `docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: Falta stack/image fijado y captura real de mapeo DCP, gather/LSE, parcial no cero, oráculo DCP1 y acceptance; el ensayo de pre-trim OOM requiere headroom seguro por separado.
+- Evidencia faltante para cierre: Falta stack/image fijado y captura real de mapeo DCP, gather/LSE, parcial no cero, oráculo DCP1 y acceptance; el ensayo de pre-trim OOM requiere headroom seguro por separado.
+- Siguiente acción: Coordinación BB: concretar schema/oráculo y secuencia de captura; operador Luis: ejecutar canario compatible y ensayo separado de carga/headroom. Ref explícita: tasks/backlog/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01-original-selector-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01.md`, `docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01-original-selector-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

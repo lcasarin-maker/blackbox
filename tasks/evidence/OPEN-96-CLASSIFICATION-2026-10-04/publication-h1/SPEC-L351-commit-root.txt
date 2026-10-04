@@ -1,0 +1,44 @@
+1ec66b365d0e767efc6cda457599c69df599f540
+feat(owns): monitoreo y cuelgue son de bb -- 11 sujetos adoptados y SPEC atada por un gate
+
+"Todo lo relativo a monitoreo y cuelgue es de bb, de nadie mas" (Luis,
+2026-09-24). El barrido encontro 11 sujetos sin dueno, 8 creados el
+2026-09-09 entre las 15:39 y las 15:40 siguiendo el hilo del foro de NVIDIA
+#358951, ninguno versionado en ningun sitio -- entre ellos
+/usr/local/bin/nvrm-watch.sh, detector de precursores del cuelgue que corre
+cada 5 minutos, ha cazado 17 NVRM Out-of-memory, y existia solo en disco.
+
+bb drift vigila ahora 30 sujetos, antes 19.
+
+Tres capas nuevas en enable-privileged.sh, las tres medidas antes de
+escribirlas:
+
+- LINGER (10). En el arranque del 14:11:31, user@1000.service y
+  ai-nemotron.service arrancaron LOS DOS a las 18:33:07, al entrar al
+  escritorio: 4 h 21 min 36 s sin stack de inferencia. Importa porque
+  bb-usable lleva FailureAction=reboot-immediate y ya actuo una vez -- el
+  arranque anterior termino a las 14:09:38 con "systemd[1]: Rebooting." tras
+  "Watchdog timeout (limit 6min)".
+- KERNEL.PANIC (11). 99-freeze-panic.conf obliga al panic con proposito
+  DIAGNOSTICO. kdump si esta armado, asi que un panic ya reinicia por kexec:
+  mi afirmacion "se queda colgada para siempre", dicha antes de medir, era
+  FALSA y queda corregida en el fichero. Lo que kernel.panic=0 deja sin
+  cubrir es que kdump FALLE.
+- WATCHDOG SBSA (12). RuntimeWatchdogSec=60 vive en system.conf:34 y el
+  paquete systemd reescribe ese fichero; el drop-in sobrevive. Armado
+  verificado por el journal, NO por timeleft, que aqui reporta ~40 anos y no
+  discrimina.
+
+Y SPEC.md ya mentia: declaraba "Out of scope: actuar sobre lo que mide,
+bb protect es la unica excepcion" mientras bb-usable reiniciaba la maquina y
+bb cap ponia techos. Corregido y atado: tools/inventario.py --check corre en
+pre-commit y exige que las dos tablas nombren cada subcomando, cada fichero de
+bin/ y tools/, y cada sujeto de adopted/ -- y que ninguna fila describa algo
+que no existe. Cazo 6 desajustes en su primera corrida; 2 eran defectos del
+propio instrumento y quedaron arreglados con test. 73 stmts, 100%, 11 tests.
+
+Ademas se define $DUENO, que la seccion 10 usaba sin que existiera --
+encontrado corriendo el --dry-run, no leyendo el diff.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+

@@ -1,0 +1,17 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________ test_debt_close_check_verify_wifi_isolation_01 ________________
+tests/test_debt_registration_controls.py:1526: in test_debt_close_check_verify_wifi_isolation_01
+    _require_pass('FEATURE-FORUM-WIFI-ISOLATION-01', {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: FEATURE-FORUM-WIFI-ISOLATION-01 closure remains open: {'status': 'unknown', 'reason': 'raw command capture missing or malformed; current snapshot cannot prove a roam sequence', 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/commands.json"], "reason": "raw command capture missing or malformed; current snapshot cannot prove a roam sequence", "status": "unknown"}
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_debt_close_check_verify_wifi_isolation_01
+1 failed in 0.08s

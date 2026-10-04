@@ -1,0 +1,42 @@
+{
+  "scope": "Official runtime-only Simplecode update to blackbox; no commit or push",
+  "command": "PYTHONPATH=src .venv/bin/python -m simplecode.cli sync-satellites --apply --runtime-only --target /home/lcasarin/projects/blackbox",
+  "returncode": 0,
+  "stdout": "[blackbox] RUNTIME_INSTALLED (9.3.2 -> 9.3.3), KIT_LOCK_INSTALLED, MAKEFILE_ABSENT (no GNUmakefile, makefile or Makefile -- no subject to compare)",
+  "post_plan_returncode": 0,
+  "post_plan_stdout": "[blackbox] MAKEFILE_ABSENT (no GNUmakefile, makefile or Makefile -- no subject to compare)",
+  "managed_files": [
+    {
+      "path": ".simplecode/run.py",
+      "sha256": "1e6e13ce169c7461fa5e6d1e762b0b3bc2b54d46467f03c2a38713ebe7d07882"
+    },
+    {
+      "path": ".simplecode/runtime.zip",
+      "sha256": "713a35d3ff0bf38dabf65a4d8829637bc13dc4663ff8862f3bba297ca813a42a"
+    },
+    {
+      "path": ".simplecode/kit.lock",
+      "sha256": "4dcaad96518ee7c74bb8a49256a3ae4cc23fa2e5b438b44c0744e3fbf50f40ea"
+    }
+  ],
+  "kit_lock": {
+    "artifact_sha256": "713a35d3ff0bf38dabf65a4d8829637bc13dc4663ff8862f3bba297ca813a42a",
+    "content_sha256": "445510af4abd5a1572585d151f1cc5be2c02541e08d77f73ae0afe22d3641336",
+    "format": 1,
+    "runner_sha256": "1e6e13ce169c7461fa5e6d1e762b0b3bc2b54d46467f03c2a38713ebe7d07882",
+    "simplecode_version": "9.3.3"
+  },
+  "publication_artifact_findings_last_scan": 43,
+  "publication_clean": false,
+  "post_sync_tracked_pii": {
+    "command": "python3 .simplecode/run.py simplecode.verification.pii_scan --root .",
+    "returncode": 0,
+    "stdout": "revisados=1645 hallazgos=0 could_not_run=0\n[pii-scan] HALLAZGOS: 0",
+    "scope": "Tracked docs/tasks only; new artifacts remain outside this scan"
+  },
+  "post_sync_pyright": {
+    "command": "python3 .simplecode/run.py simplecode.verification.pyright_gate --root .",
+    "returncode": 0,
+    "stdout": "0 errors, 0 warnings, 0 informations"
+  }
+}

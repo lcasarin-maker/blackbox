@@ -1,0 +1,19 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_delta_forum_ota_driver_kernel_effective_tuple_01 _____________
+tests/test_debt_registration_controls.py:1297: in test_delta_forum_ota_driver_kernel_effective_tuple_01
+    _require_hardware_batch02_closure('DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01')
+tests/test_debt_registration_controls.py:1261: in _require_hardware_batch02_closure
+    _require_pass(card_id, result)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01 closure remains open: {'status': 'unknown', 'reason': "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'commands.json'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01/commands.json'], 'fail': 0, 'could_not_run': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'commands.json'", "status": "unknown"}
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01
+1 failed in 0.08s

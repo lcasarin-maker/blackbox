@@ -1,0 +1,1584 @@
+{
+  "review_kind": "follow-up source-provenance classification for the 47 previously indeterminate current-scan findings; raw scanner report and source artifacts unchanged",
+  "scanner": "official pinned Simplecode runtime 9.3.4",
+  "source_report": {
+    "path": "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-current.json",
+    "sha256": "15f7435004977bf80300882f55a56324107ae4297a8deafdb779347453699afa",
+    "indeterminate_input_rows": 47
+  },
+  "triage": {
+    "items_path": "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-items.json",
+    "batch_dir": "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches",
+    "batch_count": 5,
+    "max_batch_size": 10,
+    "split_command": "python3 /home/lcasarin/.Codex/tools/triage.py split --items tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-items.json --out tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches --batches 5",
+    "split_output": "5 batches, 47 items -> tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches",
+    "merge_command": "python3 /home/lcasarin/.Codex/tools/triage.py merge --dir tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches --expected tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-items.json --require classification,evidence,supporting_artifacts",
+    "merge_output": "returned: 47 of 47",
+    "merge_exit_code": 0,
+    "returned_exactly_once": true
+  },
+  "classification_counts": {
+    "public_apt_signing_contact": 18,
+    "tar_filename_false_email": 21,
+    "synthetic_canary": 8
+  },
+  "unique_hash_cases": 8,
+  "classified_finding_ids": 47,
+  "indeterminate_remaining": 0,
+  "canonical_validation": {
+    "receipt_path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+    "receipt": "canonical_focal_tests: 41 passed",
+    "dep11_live_contexts_confirmed": 2,
+    "ubuntu_signature_pass": 4,
+    "ubuntu_signature_fail": 0,
+    "nvidia_signature_verified": true,
+    "reserved_domain_canary_confirmed": true
+  },
+  "findings": [
+    {
+      "id": "PVT-96-001",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+      "line": 350,
+      "type": "email",
+      "sha256": "af93ba382f257328d263e1c391bdc6dd3fa49e28a6c3ef8286c65d81f2556a4f",
+      "source_sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d",
+      "line_sha256": "d2814c033a5ce6a8f39f12c4ea5e470d9738cef7be0512da5f7d2bf514b53369",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public NVIDIA repository signing contact in the signed Release Label; source card tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:350 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/nvidia.github.io_libnvidia-container_stable_deb_arm64_InRelease. Its SHA matches composite-status.json and signature_verified=true; canonical patch test reviewed-producer.redacted.patch:711-744.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/nvidia.github.io_libnvidia-container_stable_deb_arm64_InRelease",
+          "sha256": "c1f71ac3e6deb22c83046c2fd96549b9f35a0b84efaeac4e9df065b2490a3f04"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/composite-status.json",
+          "sha256": "d16bb45b39dfa855beab7a0f2640a80327a7f966a62ef4c5eb17d8661e211350"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-002",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+      "line": 498,
+      "type": "email",
+      "sha256": "c257b20f7f62df91426ee7e9cf60018cd3c7df2116b455f17ccab557eddb9c3a",
+      "source_sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d",
+      "line_sha256": "2178abe507b1fabb97a09c29ae1e849420b472b60da26e6600575e2fdf4ad095",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-003",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+      "line": 498,
+      "type": "email",
+      "sha256": "aadc2913d869f44e6f850932a1d3830b45da01c601e38798f0a9eb48941b6aa6",
+      "source_sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d",
+      "line_sha256": "2178abe507b1fabb97a09c29ae1e849420b472b60da26e6600575e2fdf4ad095",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-004",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+      "line": 679,
+      "type": "email",
+      "sha256": "85bb02c10d42a4d107b3fb3714511453e814e544ca8ee24e58cb68bf61f80d81",
+      "source_sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d",
+      "line_sha256": "2f6454bf3fd74f4a37f9e2f2508f068e9837818718ac739f8f9c44b66e91316c",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public Ubuntu archive signer contact inside successful gpgv transcript; source-card capture tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:679,716 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json (4 signatures pass, 0 fail; scanner context API true at rows 20,45,70,95). Canonical patch test: reviewed-producer.redacted.patch:695-709.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json",
+          "sha256": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/archived-run.json",
+          "sha256": "89e69a4d3dc24c114ede3ee84c986bc4ea7fdba16cb0d3c84d7cb54891f8ee93"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-005",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+      "line": 679,
+      "type": "email",
+      "sha256": "85bb02c10d42a4d107b3fb3714511453e814e544ca8ee24e58cb68bf61f80d81",
+      "source_sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d",
+      "line_sha256": "2f6454bf3fd74f4a37f9e2f2508f068e9837818718ac739f8f9c44b66e91316c",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public Ubuntu archive signer contact inside successful gpgv transcript; source-card capture tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:679,716 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json (4 signatures pass, 0 fail; scanner context API true at rows 20,45,70,95). Canonical patch test: reviewed-producer.redacted.patch:695-709.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json",
+          "sha256": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/archived-run.json",
+          "sha256": "89e69a4d3dc24c114ede3ee84c986bc4ea7fdba16cb0d3c84d7cb54891f8ee93"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-006",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+      "line": 679,
+      "type": "email",
+      "sha256": "85bb02c10d42a4d107b3fb3714511453e814e544ca8ee24e58cb68bf61f80d81",
+      "source_sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d",
+      "line_sha256": "2f6454bf3fd74f4a37f9e2f2508f068e9837818718ac739f8f9c44b66e91316c",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public Ubuntu archive signer contact inside successful gpgv transcript; source-card capture tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:679,716 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json (4 signatures pass, 0 fail; scanner context API true at rows 20,45,70,95). Canonical patch test: reviewed-producer.redacted.patch:695-709.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json",
+          "sha256": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/archived-run.json",
+          "sha256": "89e69a4d3dc24c114ede3ee84c986bc4ea7fdba16cb0d3c84d7cb54891f8ee93"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-007",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+      "line": 679,
+      "type": "email",
+      "sha256": "85bb02c10d42a4d107b3fb3714511453e814e544ca8ee24e58cb68bf61f80d81",
+      "source_sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d",
+      "line_sha256": "2f6454bf3fd74f4a37f9e2f2508f068e9837818718ac739f8f9c44b66e91316c",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public Ubuntu archive signer contact inside successful gpgv transcript; source-card capture tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:679,716 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json (4 signatures pass, 0 fail; scanner context API true at rows 20,45,70,95). Canonical patch test: reviewed-producer.redacted.patch:695-709.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json",
+          "sha256": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/archived-run.json",
+          "sha256": "89e69a4d3dc24c114ede3ee84c986bc4ea7fdba16cb0d3c84d7cb54891f8ee93"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-008",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+      "line": 716,
+      "type": "email",
+      "sha256": "85bb02c10d42a4d107b3fb3714511453e814e544ca8ee24e58cb68bf61f80d81",
+      "source_sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d",
+      "line_sha256": "57822c3a30f28997399640fa97e8bf0b56f3cd433221d33051a488bc688dfb29",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public Ubuntu archive signer contact inside successful gpgv transcript; source-card capture tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:679,716 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json (4 signatures pass, 0 fail; scanner context API true at rows 20,45,70,95). Canonical patch test: reviewed-producer.redacted.patch:695-709.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json",
+          "sha256": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/archived-run.json",
+          "sha256": "89e69a4d3dc24c114ede3ee84c986bc4ea7fdba16cb0d3c84d7cb54891f8ee93"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-009",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+      "line": 716,
+      "type": "email",
+      "sha256": "85bb02c10d42a4d107b3fb3714511453e814e544ca8ee24e58cb68bf61f80d81",
+      "source_sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d",
+      "line_sha256": "57822c3a30f28997399640fa97e8bf0b56f3cd433221d33051a488bc688dfb29",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public Ubuntu archive signer contact inside successful gpgv transcript; source-card capture tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:679,716 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json (4 signatures pass, 0 fail; scanner context API true at rows 20,45,70,95). Canonical patch test: reviewed-producer.redacted.patch:695-709.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json",
+          "sha256": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/archived-run.json",
+          "sha256": "89e69a4d3dc24c114ede3ee84c986bc4ea7fdba16cb0d3c84d7cb54891f8ee93"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-010",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+      "line": 716,
+      "type": "email",
+      "sha256": "85bb02c10d42a4d107b3fb3714511453e814e544ca8ee24e58cb68bf61f80d81",
+      "source_sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d",
+      "line_sha256": "57822c3a30f28997399640fa97e8bf0b56f3cd433221d33051a488bc688dfb29",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public Ubuntu archive signer contact inside successful gpgv transcript; source-card capture tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:679,716 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json (4 signatures pass, 0 fail; scanner context API true at rows 20,45,70,95). Canonical patch test: reviewed-producer.redacted.patch:695-709.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json",
+          "sha256": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/archived-run.json",
+          "sha256": "89e69a4d3dc24c114ede3ee84c986bc4ea7fdba16cb0d3c84d7cb54891f8ee93"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-011",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+      "line": 716,
+      "type": "email",
+      "sha256": "85bb02c10d42a4d107b3fb3714511453e814e544ca8ee24e58cb68bf61f80d81",
+      "source_sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d",
+      "line_sha256": "57822c3a30f28997399640fa97e8bf0b56f3cd433221d33051a488bc688dfb29",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public Ubuntu archive signer contact inside successful gpgv transcript; source-card capture tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:679,716 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json (4 signatures pass, 0 fail; scanner context API true at rows 20,45,70,95). Canonical patch test: reviewed-producer.redacted.patch:695-709.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json",
+          "sha256": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/archived-run.json",
+          "sha256": "89e69a4d3dc24c114ede3ee84c986bc4ea7fdba16cb0d3c84d7cb54891f8ee93"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-012",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 393,
+      "type": "email",
+      "sha256": "c257b20f7f62df91426ee7e9cf60018cd3c7df2116b455f17ccab557eddb9c3a",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "bfe3684df99b54ec4ade30fd6149a703b43449ec87aa011f8cf62fcf37eadc52",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-013",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 421,
+      "type": "email",
+      "sha256": "85bb02c10d42a4d107b3fb3714511453e814e544ca8ee24e58cb68bf61f80d81",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "c725d071218e43e413d69c5f8fc65fc78fcc6b513bf0981b3037937c63e5a495",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public Ubuntu archive signer contact inside successful gpgv transcript; source-card capture tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:679,716 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json (4 signatures pass, 0 fail; scanner context API true at rows 20,45,70,95). Canonical patch test: reviewed-producer.redacted.patch:695-709.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json",
+          "sha256": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/archived-run.json",
+          "sha256": "89e69a4d3dc24c114ede3ee84c986bc4ea7fdba16cb0d3c84d7cb54891f8ee93"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-014",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 433,
+      "type": "email",
+      "sha256": "af93ba382f257328d263e1c391bdc6dd3fa49e28a6c3ef8286c65d81f2556a4f",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "622dced754cad9d6032056da3fe0ca8ffaacc9b9ecf66a674881421b830a0867",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public NVIDIA repository signing contact in the signed Release Label; source card tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:350 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/nvidia.github.io_libnvidia-container_stable_deb_arm64_InRelease. Its SHA matches composite-status.json and signature_verified=true; canonical patch test reviewed-producer.redacted.patch:711-744.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/nvidia.github.io_libnvidia-container_stable_deb_arm64_InRelease",
+          "sha256": "c1f71ac3e6deb22c83046c2fd96549b9f35a0b84efaeac4e9df065b2490a3f04"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/composite-status.json",
+          "sha256": "d16bb45b39dfa855beab7a0f2640a80327a7f966a62ef4c5eb17d8661e211350"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-015",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 600,
+      "type": "email",
+      "sha256": "6e36f89469044190171c70f96ed5671be5e1e8ac34be5ff1ad56ca664f9276bb",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "e67a4aff5ce8b8bbaa938fc46ad51c7248b1b51bfacac496bb23029317d9b72c",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-016",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 601,
+      "type": "email",
+      "sha256": "0558f1699d38d2cbb73baf2c0907c8eb641db765efdfe9ebf3d46d492f551e80",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "c0f0a326ea5cf01eec239f1497921adad7de3e543f7ad7b088b304a51c18762a",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-017",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 602,
+      "type": "email",
+      "sha256": "80f79b5dc8894e480a4655b77a81d773a2d94a03fe8b8b171165d237b157af0a",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "6466a495c743a8333b989fa5acd003d29aa7aac6a409ed0d457ef034555883f7",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-018",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 610,
+      "type": "email",
+      "sha256": "c257b20f7f62df91426ee7e9cf60018cd3c7df2116b455f17ccab557eddb9c3a",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "2ace8129326b64f47dd8021937bee9dd7a45f429925702d1bbce7dc6bc6bf0bd",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-019",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 619,
+      "type": "email",
+      "sha256": "c257b20f7f62df91426ee7e9cf60018cd3c7df2116b455f17ccab557eddb9c3a",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "fa27bf9b0a479a3f9ded43730c182f03faf786cf86edb7f99cc43c10ffb073ae",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-020",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 630,
+      "type": "email",
+      "sha256": "c257b20f7f62df91426ee7e9cf60018cd3c7df2116b455f17ccab557eddb9c3a",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "ebdc46c30b50ccb4d1b2b836260adadfe45e727ea95d715d103e960da63defd5",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-021",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 631,
+      "type": "email",
+      "sha256": "ffbe8cff4f9f8d8b109460f975c343e942cd4c3ed191323eb83374ae2ea4de5f",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "6220247c7c2b2ee4f7c694be2320c23872732a32142d0d7ca59592ac043eea4a",
+      "classification": "synthetic_canary",
+      "evidence": "Synthetic canary in test-only contact/negative-control vectors; source tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:661-664,677-680,707-709. Pinned scanner no_puede_ser_real(CORREO, value) returned true because the address uses a reserved example domain; the value itself is omitted.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-022",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 631,
+      "type": "email",
+      "sha256": "ffbe8cff4f9f8d8b109460f975c343e942cd4c3ed191323eb83374ae2ea4de5f",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "6220247c7c2b2ee4f7c694be2320c23872732a32142d0d7ca59592ac043eea4a",
+      "classification": "synthetic_canary",
+      "evidence": "Synthetic canary in test-only contact/negative-control vectors; source tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:661-664,677-680,707-709. Pinned scanner no_puede_ser_real(CORREO, value) returned true because the address uses a reserved example domain; the value itself is omitted.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-023",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 640,
+      "type": "email",
+      "sha256": "c257b20f7f62df91426ee7e9cf60018cd3c7df2116b455f17ccab557eddb9c3a",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "ae97d9a1d6bb4897de6ccbc733b173b5bf55319b5d28c640d28636ef839e60b1",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-024",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 657,
+      "type": "email",
+      "sha256": "c257b20f7f62df91426ee7e9cf60018cd3c7df2116b455f17ccab557eddb9c3a",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "9e46187c8a296d3f6e15149ee3d79cf6443d89b208c4b845828bd6bc3966738a",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-025",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 662,
+      "type": "email",
+      "sha256": "ffbe8cff4f9f8d8b109460f975c343e942cd4c3ed191323eb83374ae2ea4de5f",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "5a27541b36f77efbab42853595809d17001a05001a348a40ce4618d3ed99fadf",
+      "classification": "synthetic_canary",
+      "evidence": "Synthetic canary in test-only contact/negative-control vectors; source tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:661-664,677-680,707-709. Pinned scanner no_puede_ser_real(CORREO, value) returned true because the address uses a reserved example domain; the value itself is omitted.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-026",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 664,
+      "type": "email",
+      "sha256": "ffbe8cff4f9f8d8b109460f975c343e942cd4c3ed191323eb83374ae2ea4de5f",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "f43963c49dc94e78dc2f62e2e35a53d7195449bdedf8217e573a7aece475c54e",
+      "classification": "synthetic_canary",
+      "evidence": "Synthetic canary in test-only contact/negative-control vectors; source tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:661-664,677-680,707-709. Pinned scanner no_puede_ser_real(CORREO, value) returned true because the address uses a reserved example domain; the value itself is omitted.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-027",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 670,
+      "type": "email",
+      "sha256": "c257b20f7f62df91426ee7e9cf60018cd3c7df2116b455f17ccab557eddb9c3a",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "8e436587eccd987dfb04e21e7b6de3075eea2e8e732e95bd2cea285fb5224115",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-028",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 671,
+      "type": "email",
+      "sha256": "c257b20f7f62df91426ee7e9cf60018cd3c7df2116b455f17ccab557eddb9c3a",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "d86dc8e693b4dc34c355ca8d4acc7256e319d68ab8cad82fd0b3d666839d9279",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-029",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 672,
+      "type": "email",
+      "sha256": "c257b20f7f62df91426ee7e9cf60018cd3c7df2116b455f17ccab557eddb9c3a",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "b38a52254be91b2f6515558b9341982dc107243b9206767b515ec0aa69754238",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-030",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 673,
+      "type": "email",
+      "sha256": "c257b20f7f62df91426ee7e9cf60018cd3c7df2116b455f17ccab557eddb9c3a",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "11d0f09b8a9e86de1bf986da041294f6194928a10a56175078d456c7d44957f4",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-031",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 674,
+      "type": "email",
+      "sha256": "c257b20f7f62df91426ee7e9cf60018cd3c7df2116b455f17ccab557eddb9c3a",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "245ea3c8b3701e1c7d834697b3345c6266e579e96f15f1399f4d76a1a9886267",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-032",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 678,
+      "type": "email",
+      "sha256": "ffbe8cff4f9f8d8b109460f975c343e942cd4c3ed191323eb83374ae2ea4de5f",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "7d1077d92af54051fe8157e7b7f27169e55d51e9647fdf7fb93f4bea6e05dbd4",
+      "classification": "synthetic_canary",
+      "evidence": "Synthetic canary in test-only contact/negative-control vectors; source tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:661-664,677-680,707-709. Pinned scanner no_puede_ser_real(CORREO, value) returned true because the address uses a reserved example domain; the value itself is omitted.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-033",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 679,
+      "type": "email",
+      "sha256": "0558f1699d38d2cbb73baf2c0907c8eb641db765efdfe9ebf3d46d492f551e80",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "6ae47c519c70c391a190650e2c89aa5994e7d423acde4f228b2fe105ae3d7d4f",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-034",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 680,
+      "type": "email",
+      "sha256": "0558f1699d38d2cbb73baf2c0907c8eb641db765efdfe9ebf3d46d492f551e80",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "fd1be4183bfb0e8dd04803f855b76bd0155c6483d5207187321d7fbdea10b9b9",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-035",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 683,
+      "type": "email",
+      "sha256": "c257b20f7f62df91426ee7e9cf60018cd3c7df2116b455f17ccab557eddb9c3a",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "14a733167685d4b2c57f84e3a8442ffc378f1e5a41d9fadcf99915c1af379260",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-036",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 692,
+      "type": "email",
+      "sha256": "0558f1699d38d2cbb73baf2c0907c8eb641db765efdfe9ebf3d46d492f551e80",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "39c0eabcac185281b72c9dd80de3249755fb0a0c5623cecbbe702c31825325a5",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-037",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 692,
+      "type": "email",
+      "sha256": "0558f1699d38d2cbb73baf2c0907c8eb641db765efdfe9ebf3d46d492f551e80",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "39c0eabcac185281b72c9dd80de3249755fb0a0c5623cecbbe702c31825325a5",
+      "classification": "tar_filename_false_email",
+      "evidence": "DEP-11 archive/meta-key path, not a mailbox; canonical patch vectors: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:598-605,608-647,667-675,691-692. Current effective configuration: tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json:62,76; pinned scanner _correo_exento_por_contexto returned true for both live meta-key matches.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-038",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 699,
+      "type": "email",
+      "sha256": "85bb02c10d42a4d107b3fb3714511453e814e544ca8ee24e58cb68bf61f80d81",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "51e0c15e70284528a8bf66aad7df91d85c90807a148c3c99926828dbc8882f5c",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public Ubuntu archive signer contact inside successful gpgv transcript; source-card capture tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:679,716 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json (4 signatures pass, 0 fail; scanner context API true at rows 20,45,70,95). Canonical patch test: reviewed-producer.redacted.patch:695-709.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json",
+          "sha256": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/archived-run.json",
+          "sha256": "89e69a4d3dc24c114ede3ee84c986bc4ea7fdba16cb0d3c84d7cb54891f8ee93"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-039",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 707,
+      "type": "email",
+      "sha256": "85bb02c10d42a4d107b3fb3714511453e814e544ca8ee24e58cb68bf61f80d81",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "78e97e5125851cc4f7d030588ee2967fc64a538586fcbfb7e3054c9dab24de41",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public Ubuntu archive signer contact inside successful gpgv transcript; source-card capture tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:679,716 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json (4 signatures pass, 0 fail; scanner context API true at rows 20,45,70,95). Canonical patch test: reviewed-producer.redacted.patch:695-709.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json",
+          "sha256": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/archived-run.json",
+          "sha256": "89e69a4d3dc24c114ede3ee84c986bc4ea7fdba16cb0d3c84d7cb54891f8ee93"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-040",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 708,
+      "type": "email",
+      "sha256": "ffbe8cff4f9f8d8b109460f975c343e942cd4c3ed191323eb83374ae2ea4de5f",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "9aaeaa1418c4f0c96606ab31ca5c3ef1dde3d494055f56f9f874b2ef9b157f8a",
+      "classification": "synthetic_canary",
+      "evidence": "Synthetic canary in test-only contact/negative-control vectors; source tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:661-664,677-680,707-709. Pinned scanner no_puede_ser_real(CORREO, value) returned true because the address uses a reserved example domain; the value itself is omitted.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-041",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 708,
+      "type": "email",
+      "sha256": "ffbe8cff4f9f8d8b109460f975c343e942cd4c3ed191323eb83374ae2ea4de5f",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "9aaeaa1418c4f0c96606ab31ca5c3ef1dde3d494055f56f9f874b2ef9b157f8a",
+      "classification": "synthetic_canary",
+      "evidence": "Synthetic canary in test-only contact/negative-control vectors; source tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:661-664,677-680,707-709. Pinned scanner no_puede_ser_real(CORREO, value) returned true because the address uses a reserved example domain; the value itself is omitted.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-042",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 709,
+      "type": "email",
+      "sha256": "85bb02c10d42a4d107b3fb3714511453e814e544ca8ee24e58cb68bf61f80d81",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "da375568fa8fcbcd0ca8a2a4778abcc4e3b03fc0f945be8b76498c198b1bfb68",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public Ubuntu archive signer contact inside successful gpgv transcript; source-card capture tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:679,716 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json (4 signatures pass, 0 fail; scanner context API true at rows 20,45,70,95). Canonical patch test: reviewed-producer.redacted.patch:695-709.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json",
+          "sha256": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/archived-run.json",
+          "sha256": "89e69a4d3dc24c114ede3ee84c986bc4ea7fdba16cb0d3c84d7cb54891f8ee93"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-043",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 709,
+      "type": "email",
+      "sha256": "85bb02c10d42a4d107b3fb3714511453e814e544ca8ee24e58cb68bf61f80d81",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "da375568fa8fcbcd0ca8a2a4778abcc4e3b03fc0f945be8b76498c198b1bfb68",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public Ubuntu archive signer contact inside successful gpgv transcript; source-card capture tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:679,716 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json (4 signatures pass, 0 fail; scanner context API true at rows 20,45,70,95). Canonical patch test: reviewed-producer.redacted.patch:695-709.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json",
+          "sha256": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/archived-run.json",
+          "sha256": "89e69a4d3dc24c114ede3ee84c986bc4ea7fdba16cb0d3c84d7cb54891f8ee93"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-044",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 712,
+      "type": "email",
+      "sha256": "af93ba382f257328d263e1c391bdc6dd3fa49e28a6c3ef8286c65d81f2556a4f",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "dcac378967da49fa02ab7cb7304eb38db60594aac725baa34b7d3ed2d8d402ec",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public NVIDIA repository signing contact in the signed Release Label; source card tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:350 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/nvidia.github.io_libnvidia-container_stable_deb_arm64_InRelease. Its SHA matches composite-status.json and signature_verified=true; canonical patch test reviewed-producer.redacted.patch:711-744.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/nvidia.github.io_libnvidia-container_stable_deb_arm64_InRelease",
+          "sha256": "c1f71ac3e6deb22c83046c2fd96549b9f35a0b84efaeac4e9df065b2490a3f04"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/composite-status.json",
+          "sha256": "d16bb45b39dfa855beab7a0f2640a80327a7f966a62ef4c5eb17d8661e211350"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-045",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 742,
+      "type": "email",
+      "sha256": "af93ba382f257328d263e1c391bdc6dd3fa49e28a6c3ef8286c65d81f2556a4f",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "7bad7aed9392d6ac46167204d46ded170adf09445eeb111b4d04d9940c922ddf",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public NVIDIA repository signing contact in the signed Release Label; source card tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:350 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/nvidia.github.io_libnvidia-container_stable_deb_arm64_InRelease. Its SHA matches composite-status.json and signature_verified=true; canonical patch test reviewed-producer.redacted.patch:711-744.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/nvidia.github.io_libnvidia-container_stable_deb_arm64_InRelease",
+          "sha256": "c1f71ac3e6deb22c83046c2fd96549b9f35a0b84efaeac4e9df065b2490a3f04"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/composite-status.json",
+          "sha256": "d16bb45b39dfa855beab7a0f2640a80327a7f966a62ef4c5eb17d8661e211350"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-046",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 742,
+      "type": "email",
+      "sha256": "ffbe8cff4f9f8d8b109460f975c343e942cd4c3ed191323eb83374ae2ea4de5f",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "7bad7aed9392d6ac46167204d46ded170adf09445eeb111b4d04d9940c922ddf",
+      "classification": "synthetic_canary",
+      "evidence": "Synthetic canary in test-only contact/negative-control vectors; source tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch:661-664,677-680,707-709. Pinned scanner no_puede_ser_real(CORREO, value) returned true because the address uses a reserved example domain; the value itself is omitted.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        }
+      ]
+    },
+    {
+      "id": "PVT-96-047",
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+      "line": 744,
+      "type": "email",
+      "sha256": "af93ba382f257328d263e1c391bdc6dd3fa49e28a6c3ef8286c65d81f2556a4f",
+      "source_sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb",
+      "line_sha256": "f993ef1b8cfe9ab92093815a0ac753d43238744a20851746921f6b4d9984f7bb",
+      "classification": "public_apt_signing_contact",
+      "evidence": "Public NVIDIA repository signing contact in the signed Release Label; source card tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json:350 maps to tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/nvidia.github.io_libnvidia-container_stable_deb_arm64_InRelease. Its SHA matches composite-status.json and signature_verified=true; canonical patch test reviewed-producer.redacted.patch:711-744.",
+      "supporting_artifacts": [
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch",
+          "sha256": "4a9700e8ce6c868768464634602bcf8c022f036c06feb32a243f60c3e12507bb"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/blackbox-runtime-9.3.4-sync.json",
+          "sha256": "2a520f4252bed555b16c1101f858996d15e1de60ad9a567183f3acc4b52b0e95"
+        },
+        {
+          "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/batch-01.json",
+          "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/nvidia.github.io_libnvidia-container_stable_deb_arm64_InRelease",
+          "sha256": "c1f71ac3e6deb22c83046c2fd96549b9f35a0b84efaeac4e9df065b2490a3f04"
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/composite-status.json",
+          "sha256": "d16bb45b39dfa855beab7a0f2640a80327a7f966a62ef4c5eb17d8661e211350"
+        }
+      ]
+    }
+  ],
+  "binary_could_not_run_count": 28,
+  "could_not_run_count": 28,
+  "binary_could_not_run": [
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/bb-all-controls-global-20261004-a.coverage",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "62d59856a586ca69ff4b094b34403d6263eee280f3319ae4e34e3ba722ab8cb2"
+    },
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/bb-all-controls-global-20261004-b.coverage",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "cfb6dbd0732c2f36519abe645dd78413ecbe463433d74006e3728a30fd98c646"
+    },
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/bb-all-controls-global-20261004-c.coverage",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "938724955d815ae66711a1ab511c12887acf15fd0251181ea00bd80397dcc049"
+    },
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/post-kit-9.3.3-validation/bb-post-kit-9.3.3.coverage",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "3462aacb40b8ea26e50feaee5d8b972695b7662c22bcd34ebb5b5f767a2717f9"
+    },
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/primary-shared-reader-full-suite/bb-primary-shared-reader-20261004.coverage",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "9d8b936670f28a21611ceaad7d50efa0637cc5d03a217c92d75696b5ad49ad59"
+    },
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/inner-owner-current-full-100.coverage",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "cbf14a679131e4747f0e785ffa98372416152b548b09a15aad6f63f7da0f3545"
+    },
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/simplecode-pii-worktree-quality.coverage",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "e032969214cb0a1b6a93c50a9036ca903626c21b11cbbe07d53b17cbd60ce593"
+    },
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/simplecode-pii-worktree-release.coverage",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "dc3b91d035f859abdf402e5611d7657e8c0d91ff220bcb21ab6fd84fefbfd0e8"
+    },
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/simplecode-pii-worktree-row-binding-final.coverage",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "6feb27c5511ad9b0729e41d5cd24384c7294dfb6074987c17bd4868cd07a917f"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/00-antigravity-repo-key.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "a22e1a7885381e4005b61884a5205892c39d15f5c262555e38b4fe5402ca8895"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/01-ai-workbench-desktop-key.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "e2d8269adf4417edb281b2f6f647486c9283a8a0bc3bd320aee7a4a152ce3628"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/02-anysphere.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "0504fa8c1fdb830025bce4110cc741e5f725473c4564220a0663bdeaa0aef567"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/03-chatgpt-archive-keyring.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "23e2cfbdef6afe95505f9e95a2cb63585da7ffe9b06a51ec08a32407c847d596"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/04-claude-desktop-archive-keyring.asc.dearmored.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "0e122272125dd4bed96be0034cd95c84e9db07b4cf9bcddbe7c3ae01f3580646"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/05-cuda_debian_prod.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "f33f420db24f66928c56b41715d9d5f55c9493201f949439e8ef58ca065ce5ce"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/06-dgx_debian_prod.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "5fb5c807c302b5ff490d0a48581dfb270ff8fb0742e44931529f86168e8e6478"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/07-google-chrome.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "5279f80f139fcf962ac44abc4b79b67d14807c8f5a6d9ec8e9e3f7023532961d"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/08-microsoft.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "098f10efd65c0d0a856a980144b5f37c05374eaa575a208d46913fd8f7eae951"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/09-nvidia-container-toolkit-keyring.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "425822bb25bfa7f5ce96e598a7bbd27db128649e4113017b3ff765b98b43b166"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/10-nvidia-hpcsdk-archive-keyring.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "34d5891741b51d8c8f7d9aa4705e031ce369bde8b7ccf9ae41409da15bc7673b"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/11-nvidia-spark-repo.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "877cc93ff7a2c472bc2f82ac9c157e39675d82bbccbb448c43aaa5665c0e10f3"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/12-trivy.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "a8a7d6813fca8191be418edd323b2bdf61852f7a870673e431d34245281313d9"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/13-ubuntu-archive-keyring.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/14-ubuntu-pro-cis.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "9600efb6081353ebacafa7619beaa220dbed24cf264bf1011f9560ddb0fa9b56"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/15-ubuntu-pro-esm-apps.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "ed9df9acf98c9e400e20bc84a44b06f0aac61731c69f347349ed53c6cc4107c9"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/16-ubuntu-pro-esm-infra.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "4f9db26dc8ce2e4a7a367947ac53b51b0aa85fe43af32a523ba4a5bf8f5c2a4c"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/canonical-nvidia-ubuntu-nvidia-desktop-edge-noble-embedded.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "49d5b15f4205839b36ec5f77a4d1212845c3cccd28555ffbf7ece2ff8f3aa0d5"
+    },
+    {
+      "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/nv-vulkan-desktop-ppa-embedded.gpg",
+      "line": null,
+      "type": "binary_could_not_run",
+      "sha256": "49d5b15f4205839b36ec5f77a4d1212845c3cccd28555ffbf7ece2ff8f3aa0d5"
+    }
+  ],
+  "report_clean": false
+}

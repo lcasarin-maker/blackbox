@@ -1,0 +1,28 @@
+{
+  "command": "python3 -m tools.host_diagnostics --sysfs-only",
+  "exit_code": 2,
+  "status": "partial",
+  "could_not_run": 2,
+  "pci_device_count": 10,
+  "network_interface_count": 16,
+  "safety": {
+    "block_device_written": false,
+    "commands_executed": false,
+    "modules_changed": false,
+    "network_changed": false,
+    "services_changed": false,
+    "services_contacted": false
+  },
+  "input_sha256": "6da8a1067961ce084ea0a3794bfe1b2c50738a329d8f71f0a0c736407ac8d363",
+  "unavailable": [
+    {
+      "field": "wifi carrier",
+      "reason": "OSError EINVAL"
+    },
+    {
+      "field": "wifi module version",
+      "reason": "sysfs module version attribute absent"
+    }
+  ],
+  "scope": "present local topology only; historical or remote workload criteria remain unverified"
+}

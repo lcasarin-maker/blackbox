@@ -34,3 +34,14 @@ El post 11 reportó un stream limpio de 37 minutos como una observación de ese 
 El cuerpo completo del hilo confirma el alcance de la falla y que sigue habiendo incertidumbre de versión: el reporte inicial del RealSense D435i puede disparar el controlador al alternar RGB/depth; otro usuario vio la misma firma en una capturadora UVC USB 3 y en el propio acceso de escritorio, mientras USB 2 funcionaba a menor resolución. La observación detallada del post 11 separa control EP0 de ancho de banda/alimentación: una transferencia después de `STREAMON` no completa, expira el Stop Endpoint y el controlador desmonta todos sus dispositivos. El autor dice que un reset eléctrico del dispositivo USB permitió volver a abrir stream, pero eso no recupera necesariamente el host ni demuestra recuperación general. Un powered hub no eliminó el caso de USB3 para ese usuario.
 
 La confirmación NVIDIA del “July update” todavía no identifica versión/paket; un usuario volvió a reproducirlo tras reinstalar DGX OS 7.5.0-2 y `apt full-upgrade`. La respuesta posterior requiere actualizar por Dashboard, distinguir FE/OEM y capturar `nvidia-bug-report`; por tanto no marcar corregido por OS release string o apt success. Conservar `usbmon`/tracepoints detallados del post 11 como reproducción de referencia comunitaria, con bug report adjunto pendiente de lectura.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: No existe traza UVC EP0 en combinación cámara/xHCI afectada ni captura de versión corregida.
+- Evidencia faltante para cierre: USB/UVC/firmware/kernel exactos; reproducción A/B, versión corregida, control sin EP0 afectado y rollback.
+- Siguiente acción: Solicitar al dueño de hardware captura usbmon/trace de reproducción y versión corregida, control sin EP0 y rollback sobre MT8901/cámara compatibles.
+- Responsable del siguiente paso: BB; operador Luis para hardware/peer.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FORUM-02-USB-UVC-EP0.md`, `tools/forum_hardware_subjects.py`, `tools/forum_finding.py`, `tests/test_debt_registration_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -80,3 +80,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Evaluación de instrumentos 2026-10-03
 
 Reusa `tools/chat_sse_capture.py` para preservar chunks, finish y fragmentos de tool calls visibles al cliente; no valida JSON/argumentos, excepciones de xgrammar, HTTP, salud del proceso ni follow-up. Pruebas existentes del lector: `python3 -m pytest -q tests/test_chat_sse_capture.py` → 13 passed; eso valida el lector, no la regresión. Siguiente paso `deferred_lab`: imagen/model/parser/patch fijados, casos streaming y no-streaming para JSON y tool calls (incluido paralelo/follow-up), y control negativo de revisión/rollback. No hubo request ni tool execution.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: No hay canario funcional real en la combinación DFlash/xgrammar/vLLM fijada; requiere runtime y replay negativo controlado.
+- Evidencia faltante para cierre: digest/commits efectivos y capturas HTTP/parser/chunks/finish reason; casos stream/no-stream/tool/parallel/follow-up; rollback
+- Siguiente acción: Preparar una matriz reproducible en canario GPU con stack fijado, ejecutar positivo y revisión incompatible como negativo, y guardar respuestas/logs y rollback.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json`, `tasks/evidence/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01/ (directorio ausente al inspeccionar)`.
+- Impedimentos de inspección: 1. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

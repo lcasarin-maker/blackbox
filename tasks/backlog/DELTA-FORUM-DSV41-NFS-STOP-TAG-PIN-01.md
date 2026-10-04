@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Evaluación de instrumentos 2026-10-03
 
 La evidencia local `docs/evidence/LUNA-98-2026-10-03-queue-04-11.md` señala que el script stop/export y el contrato externo no están en el repo; no existe captura local segura del procedimiento/stack. Estado `needs_capture`: obtener el stop.sh e invocación exacta, dependencias/orden, tag→digest y los campos mínimos de montaje/export necesarios; excluir Env/secretos. No se ejecutó Docker ni se leyó inspect.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `external_oem`.
+- Impedimento: La inspección local confirma que stop.sh y contrato externo no están en repo; falta invocación exacta, orden/dependencias y tag→digest, sin exponer secretos.
+- Evidencia faltante para cierre: La inspección local confirma que stop.sh y contrato externo no están en repo; falta invocación exacta, orden/dependencias y tag→digest, sin exponer secretos.
+- Siguiente acción: Coordinación BB: solicitar al OEM/autor el stop.sh, contrato y pin tag→digest saneado; después implementar verificación con fixture. Ref explícita: tasks/backlog/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01-original-selector-current.log.
+- Responsable del siguiente paso: Coordinación BB solicita al OEM/autor y obtiene el contrato faltante; después implementa la verificación..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01-original-selector-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

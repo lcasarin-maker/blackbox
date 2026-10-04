@@ -121,3 +121,14 @@ Cierre: prueba reproducible bajo carga sostenida con criterios de rendimiento y 
 ## Revisión Atlas de fronteras de potencia — 2026-10-03
 
 La [revisión de la nota Atlas](../../docs/evidence/GB10-POWER-BOUNDARIES-ATLAS-REVIEW-2026-10-03.md) contrasta 140 W TDP SoC, 240 W fuente y 233,2 W Maximum Power del ensayo regulatorio NVIDIA P4242. Rechaza atribuir 233,2−140 a auxiliares por mezclar TDP y medición, corrige 240−140−100=0 W y conserva desconocida la frontera de ~164 W. Reutiliza BB-POWER-TELEMETRY-BOUNDARY: registrar contador/dominio, AC/DC, intervalo, OEM/workload y errores; ninguna resta sustituye medidas pareadas. Ensayo eléctrico local: 0; validación externa ~164 W: could_not_run=1. Status y close_check permanecen abiertos.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: No hay calibración local de sensores independientes/criterios OEM ni A/B/soak del workload térmico; reportes externos y un montaje existente no cuantifican estabilidad o throughput.
+- Evidencia faltante para cierre: No hay calibración local de sensores independientes/criterios OEM ni A/B/soak del workload térmico; reportes externos y un montaje existente no cuantifican estabilidad o throughput.
+- Siguiente acción: Coordinación BB: fijar perfiles OEM/workload y reglas para unknown/stale; operador Luis: ejecutar medición pareada de residencia/load con captura externa y rollback. Ref explícita: tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION-direct-close-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION-direct-close-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

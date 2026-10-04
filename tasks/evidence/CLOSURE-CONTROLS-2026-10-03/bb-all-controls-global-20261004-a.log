@@ -1,0 +1,1389 @@
+........................................................................ [  3%]
+........................................................................ [  7%]
+........................................................................ [ 11%]
+........................................................................ [ 15%]
+........................................................................ [ 19%]
+........................................................................ [ 22%]
+........................................................................ [ 26%]
+........................................................................ [ 30%]
+........................................................................ [ 34%]
+........................................................................ [ 38%]
+.............................................................FFF...F.... [ 41%]
+............................F................FFFFFFFFFFFFFFFFFFFFFFFFFFF [ 45%]
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF...................................... [ 49%]
+........................................................................ [ 53%]
+........................................................................ [ 57%]
+........................................................................ [ 60%]
+........................................................................ [ 64%]
+........................................................................ [ 68%]
+........................................................................ [ 72%]
+........................................................................ [ 76%]
+........................................................................ [ 79%]
+........................................................................ [ 83%]
+....................................................FFFFFFFFF........... [ 87%]
+........FFFFFFFFFF..................................FFFFFFFFFF.......... [ 91%]
+..........FFFFFFFF...................................................... [ 95%]
+........................................................................ [ 98%]
+....................                                                     [100%]
+=================================== FAILURES ===================================
+_________________ test_debt_close_check_verify_cgroup_plan_01 __________________
+tests/test_debt_registration_controls.py:37: in test_debt_close_check_verify_cgroup_plan_01
+    closure_selector_cgroup_plan_01()
+tests/test_closure_kernel_selectors.py:29: in closure_selector_cgroup_plan_01
+    _require_pass("FEATURE-1358-CGROUP-01-REPRO", repro)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: FEATURE-1358-CGROUP-01-REPRO closure remains open: {'status': 'unknown', 'rows': [{'api': 'none', 'cgroup': '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope', 'requested_bytes': 0, 'held_delta_bytes': 0, 'release_delta_bytes': 0}, {'api': 'cpu_touch', 'cgroup': '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope', 'requested_bytes': 33554432, 'held_delta_bytes': 33554432, 'release_delta_bytes': -237568}, {'api': 'cuda_malloc', 'cgroup': '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope', 'requested_bytes': 33554432, 'held_delta_bytes': 0, 'release_delta_bytes': -360448}, {'api': 'cuda_malloc_repeat', 'cgroup': '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope', 'requested_bytes': 33554432, 'held_delta_bytes': 0, 'release_delta_bytes': 0}, {'api': 'cuda_malloc_managed', 'cgroup': '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope', 'requested_bytes': 33554432, 'held_delta_bytes': 33816576, 'release_delta_bytes': -65536}, {'api': 'pytorch_empty', 'cgroup': '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope', 'requested_bytes': 33554432, 'held_delta_bytes': 0, 'release_delta_bytes': -1789952}], 'findings': [], 'could_not_run': ["none/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'", "none/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'", "none/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'", "cpu_touch/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'", "cpu_touch/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'", "cpu_touch/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'", "cuda_malloc/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'", "cuda_malloc/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'", "cuda_malloc/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'", "cuda_malloc/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'", "cuda_malloc_repeat/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'", "cuda_malloc_repeat/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'", "cuda_malloc_repeat/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'", "cuda_malloc_repeat/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'", "cuda_malloc_managed/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'", "cuda_malloc_managed/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'", "cuda_malloc_managed/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'", "cuda_malloc_managed/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'", "pytorch_empty/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'", "pytorch_empty/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'", "pytorch_empty/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'", "pytorch_empty/allocator_cache_released/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'", "pytorch_empty/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'"], 'could_not_run_count': 23, 'scope': 'observation consistency and CPU calibration; no native GPU containment or provenance proof'}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+__________________ test_debt_close_check_verify_netconsole_01 __________________
+tests/test_debt_registration_controls.py:41: in test_debt_close_check_verify_netconsole_01
+    closure_selector_netconsole_01()
+tests/test_closure_kernel_selectors.py:43: in closure_selector_netconsole_01
+    _require_pass("FEATURE-FORUM-NETCONSOLE-01", result)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: FEATURE-FORUM-NETCONSOLE-01 closure remains open: {'status': 'unknown', 'findings': ["required raw capture unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-NETCONSOLE-01/kernel-capture.json'"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+_______________ test_debt_close_check_verify_rcu_panic_pstore_01 _______________
+tests/test_debt_registration_controls.py:45: in test_debt_close_check_verify_rcu_panic_pstore_01
+    closure_selector_rcu_panic_pstore_01()
+tests/test_closure_kernel_selectors.py:48: in closure_selector_rcu_panic_pstore_01
+    _require_pass("FEATURE-FORUM-RCU-PANIC-PSTORE-01", result)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: FEATURE-FORUM-RCU-PANIC-PSTORE-01 closure remains open: {'status': 'unknown', 'findings': ["raw recovery evidence unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/recovery.json'"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+___________________ test_debt_schema_evidence_index_scope_01 ___________________
+tests/test_debt_registration_controls.py:386: in test_debt_schema_evidence_index_scope_01
+    assert positive.returncode == 0, positive.stdout + positive.stderr
+E   AssertionError: checked=284 passed=283 failed=1 unverified=0 (sin close_check enunciado: 0) avisos=0 could_not_run=0
+E       FAIL DEBT-BB-SAMPLE-SMI-QUERIES-WITHOUT-TIMEOUT-01.md
+E             - origin fuera de dominio: 'observed' no está en ['asserted', 'detected']
+E             - status=done exige `evidence`
+E             - Task DEBT-BB-SAMPLE-SMI-QUERIES-WITHOUT-TIMEOUT-01.md is closed but missing required resolution section(s): Root Cause, Regression Test, Verification Evidence.
+E       mediciones compartidas: 1 artefacto(s) citado(s) por 34 ficha(s)
+E         shared:harvest-decision-registrada <- 34 ficha(s): HARVEST-348760-dgx-spark-low-fan-speed-high-temps-device-ver.md, HARVEST-352519-kernel-panic.md, HARVEST-353218-lmstudio-error-cannot-obtain-free-vram-bytes-.md, HARVEST-354167-dgx-spark-nvme-drive-not-detected-no-nvme-dev.md, HARVEST-354395-can-not-reset-spark-gpu.md, HARVEST-355625-dgx-spark-dashboard-modification.md, HARVEST-363224-i-cannot-login-to-dgx-spark-i-cannot-ssh-into.md, HARVEST-364636-with-two-sparks-vllm-0-18-1rc0-still-hammerin.md, HARVEST-365938-fabricmanager-will-not-run.md, HARVEST-366147-collective-operations-timeout-on-dual-spark-d.md, HARVEST-366877-sparkview-gpu-monitor-tool-with-gb10-aware-un.md, HARVEST-366944-power-delivery-bug-how-im-catching-it-early.md, HARVEST-367765-dear-nvidia-nvidia-smi-is-broken-on-the-dgx-s.md, HARVEST-371753-heat-and-power-numbers-for-asus-gx-10-4-days-.md, HARVEST-372469-dgx-spark-shutting-down-under-load-mods-02000.md, HARVEST-372642-my-spark-is-overheating-when-clustered-and-ru.md, HARVEST-372662-cooler-gb10-temps-almost-no-performance-lost.md, HARVEST-373187-dgx-wont-boot-tried-all-documented-methods-fr.md, HARVEST-373342-dgx-spark-failing-fieldiag-powerstress.md, HARVEST-373655-ubuntu-26-04-drivers-610-cuda-toolkit-13-3-zf.md, HARVEST-376103-sparks-have-recently-powered-off-randomly.md, HARVEST-377044-dgx-spark-gb10-thermal-throttling-after-ec-ue.md, HARVEST-377375-what-are-normal-temps-under-load-is-94-6c-too.md, HARVEST-378031-msi-edge-expert-nvme-devices-not-found.md, HARVEST-378500-dgx-spark-is-not-suitable-for-professional-wo.md, HARVEST-379195-dgx-spark-hard-freezes-under-sustained-few-mi.md, HARVEST-379303-severe-one-way-rdma-performance-regression-on.md, HARVEST-379778-what-is-your-power-management-solution.md, HARVEST-DanTup-dgx-dashboard.md, HARVEST-OyqXscpDRJo.md, HARVEST-grafana-grafana.md, HARVEST-niklasfrick-spark-dashboard.md, HARVEST-with-dgx-spark-enterprise.md, HARVEST-with-unified-memory-363137.md
+E       e2e que no nombran el sujeto de su ficha: 0 de 187 juzgados (1 sin artefacto legible que juzgar) -- avisados uno a uno solo los nacidos desde 2026-09-06
+E     [ledger-schema] HALLAZGOS: 1
+E     [ledger-schema] FAIL: 1 ficha(s) con esquema invalido; primera tasks/DEBT-BB-SAMPLE-SMI-QUERIES-WITHOUT-TIMEOUT-01.md (origin fuera de dominio: 'observed' no está en ['asserted', 'detected'])
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['/opt/miniforge3/bin/python3', '/home/lcasarin/projects/blackbox/.simplecode/run.py', 'simpleco...-QUERIES-WITHOUT-TIMEOUT-01.md (origin fuera de dominio: 'observed' no está en ['asserted', 'detected'])\n", stderr='').returncode
+_________________ test_bug_provider_trace_latency_overflow_01 __________________
+tests/test_debt_registration_controls.py:1038: in test_bug_provider_trace_latency_overflow_01
+    assert result["could_not_run_count"] == 0
+E   assert 1 == 0
+_________ test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01 __________
+tests/test_debt_registration_controls.py:1227: in test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01
+    _require_hardware_batch03_closure('DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01')
+tests/test_debt_registration_controls.py:1223: in _require_hardware_batch03_closure
+    _require_pass(card_id, result)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01 closure remains open: {'status': 'unknown', 'findings': ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01'"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0, 'provenance': 'caller-supplied; hashes establish consistency, not authenticity'}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "findings": ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01'"], "provenance": "caller-supplied; hashes establish consistency, not authenticity", "status": "unknown"}
+________________ test_delta_forum_thermal_telemetry_coverage_01 ________________
+tests/test_debt_registration_controls.py:1231: in test_delta_forum_thermal_telemetry_coverage_01
+    _require_hardware_batch03_closure('DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01')
+tests/test_debt_registration_controls.py:1223: in _require_hardware_batch03_closure
+    _require_pass(card_id, result)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01 closure remains open: {'status': 'unknown', 'findings': ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'capture.json'"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0, 'provenance': 'caller-supplied; hashes establish consistency, not authenticity'}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "findings": ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'capture.json'"], "provenance": "caller-supplied; hashes establish consistency, not authenticity", "status": "unknown"}
+_________________ test_delta_forum_usb_raid_link_admission_01 __________________
+tests/test_debt_registration_controls.py:1235: in test_delta_forum_usb_raid_link_admission_01
+    _require_hardware_batch03_closure('DELTA-FORUM-USB-RAID-LINK-ADMISSION-01')
+tests/test_debt_registration_controls.py:1223: in _require_hardware_batch03_closure
+    _require_pass(card_id, result)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-USB-RAID-LINK-ADMISSION-01 closure remains open: {'status': 'unknown', 'findings': ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-USB-RAID-LINK-ADMISSION-01'"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0, 'provenance': 'caller-supplied; hashes establish consistency, not authenticity'}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "findings": ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-USB-RAID-LINK-ADMISSION-01'"], "provenance": "caller-supplied; hashes establish consistency, not authenticity", "status": "unknown"}
+________________ test_delta_root_backup_mount_boot_identity_01 _________________
+tests/test_debt_registration_controls.py:1239: in test_delta_root_backup_mount_boot_identity_01
+    _require_hardware_batch03_closure('DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01')
+tests/test_debt_registration_controls.py:1223: in _require_hardware_batch03_closure
+    _require_pass(card_id, result)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01 closure remains open: {'status': 'unknown', 'findings': ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01'"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0, 'provenance': 'caller-supplied; hashes establish consistency, not authenticity'}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "findings": ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01'"], "provenance": "caller-supplied; hashes establish consistency, not authenticity", "status": "unknown"}
+_______________ test_delta_root_display_carveout_oem_fix_gate_01 _______________
+tests/test_debt_registration_controls.py:1243: in test_delta_root_display_carveout_oem_fix_gate_01
+    _require_hardware_batch03_closure('DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01')
+tests/test_debt_registration_controls.py:1223: in _require_hardware_batch03_closure
+    _require_pass(card_id, result)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01 closure remains open: {'status': 'unknown', 'findings': ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01'"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0, 'provenance': 'caller-supplied; hashes establish consistency, not authenticity'}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "findings": ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01'"], "provenance": "caller-supplied; hashes establish consistency, not authenticity", "status": "unknown"}
+___________ test_delta_root_gx10_soc_ec_cable_recovery_candidate_01 ____________
+tests/test_debt_registration_controls.py:1247: in test_delta_root_gx10_soc_ec_cable_recovery_candidate_01
+    _require_hardware_batch03_closure('DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01')
+tests/test_debt_registration_controls.py:1223: in _require_hardware_batch03_closure
+    _require_pass(card_id, result)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01 closure remains open: {'status': 'unknown', 'findings': ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01'"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0, 'provenance': 'caller-supplied; hashes establish consistency, not authenticity'}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "findings": ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01'"], "provenance": "caller-supplied; hashes establish consistency, not authenticity", "status": "unknown"}
+_____________ test_delta_root_subambient_cooling_and_uma_canary_01 _____________
+tests/test_debt_registration_controls.py:1251: in test_delta_root_subambient_cooling_and_uma_canary_01
+    _require_hardware_batch03_closure('DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01')
+tests/test_debt_registration_controls.py:1223: in _require_hardware_batch03_closure
+    _require_pass(card_id, result)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01 closure remains open: {'status': 'unknown', 'findings': ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01'"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0, 'provenance': 'caller-supplied; hashes establish consistency, not authenticity'}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "findings": ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01'"], "provenance": "caller-supplied; hashes establish consistency, not authenticity", "status": "unknown"}
+__________________ test_delta_forum_cutlass_sm121_isa_gate_01 __________________
+tests/test_debt_registration_controls.py:1265: in test_delta_forum_cutlass_sm121_isa_gate_01
+    _require_hardware_batch02_closure('DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01')
+tests/test_debt_registration_controls.py:1261: in _require_hardware_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01 closure remains open: {'status': 'unknown', 'reason': "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01'", "status": "unknown"}
+___________________ test_delta_forum_cx7_fw_update_guard_01 ____________________
+tests/test_debt_registration_controls.py:1269: in test_delta_forum_cx7_fw_update_guard_01
+    _require_hardware_batch02_closure('DELTA-FORUM-CX7-FW-UPDATE-GUARD-01')
+tests/test_debt_registration_controls.py:1261: in _require_hardware_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-CX7-FW-UPDATE-GUARD-01 closure remains open: {'status': 'unknown', 'reason': "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CX7-FW-UPDATE-GUARD-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CX7-FW-UPDATE-GUARD-01'", "status": "unknown"}
+____________ test_delta_forum_cx7_physical_topology_alias_check_01 _____________
+tests/test_debt_registration_controls.py:1273: in test_delta_forum_cx7_physical_topology_alias_check_01
+    _require_hardware_batch02_closure('DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01')
+tests/test_debt_registration_controls.py:1261: in _require_hardware_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01 closure remains open: {'status': 'unknown', 'reason': "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01'", "status": "unknown"}
+_____________________ test_delta_forum_cx7_posthotplug_01 ______________________
+tests/test_debt_registration_controls.py:1277: in test_delta_forum_cx7_posthotplug_01
+    _require_hardware_batch02_closure('DELTA-FORUM-CX7-POSTHOTPLUG-01')
+tests/test_debt_registration_controls.py:1261: in _require_hardware_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-CX7-POSTHOTPLUG-01 closure remains open: {'status': 'unknown', 'reason': "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CX7-POSTHOTPLUG-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CX7-POSTHOTPLUG-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CX7-POSTHOTPLUG-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CX7-POSTHOTPLUG-01'", "status": "unknown"}
+________________ test_delta_forum_cx7_rdma_asymmetry_retest_01 _________________
+tests/test_debt_registration_controls.py:1281: in test_delta_forum_cx7_rdma_asymmetry_retest_01
+    _require_hardware_batch02_closure('DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01')
+tests/test_debt_registration_controls.py:1261: in _require_hardware_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01 closure remains open: {'status': 'unknown', 'reason': "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01'", "status": "unknown"}
+______________ test_delta_forum_dualspark_power_reset_recovery_01 ______________
+tests/test_debt_registration_controls.py:1285: in test_delta_forum_dualspark_power_reset_recovery_01
+    _require_hardware_batch02_closure('DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01')
+tests/test_debt_registration_controls.py:1261: in _require_hardware_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01 closure remains open: {'status': 'unknown', 'reason': "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01'", "status": "unknown"}
+_____________ test_delta_forum_kv_quant_metric_provenance_gate_01 ______________
+tests/test_debt_registration_controls.py:1289: in test_delta_forum_kv_quant_metric_provenance_gate_01
+    _require_hardware_batch02_closure('DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01')
+tests/test_debt_registration_controls.py:1261: in _require_hardware_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01 closure remains open: {'status': 'unknown', 'reason': "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01'", "status": "unknown"}
+___________________ test_delta_forum_memory_recovery_soak_01 ___________________
+tests/test_debt_registration_controls.py:1293: in test_delta_forum_memory_recovery_soak_01
+    _require_hardware_batch02_closure('DELTA-FORUM-MEMORY-RECOVERY-SOAK-01')
+tests/test_debt_registration_controls.py:1261: in _require_hardware_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-MEMORY-RECOVERY-SOAK-01 closure remains open: {'status': 'unknown', 'reason': "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-MEMORY-RECOVERY-SOAK-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-MEMORY-RECOVERY-SOAK-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-MEMORY-RECOVERY-SOAK-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-MEMORY-RECOVERY-SOAK-01'", "status": "unknown"}
+____________ test_delta_forum_ota_driver_kernel_effective_tuple_01 _____________
+tests/test_debt_registration_controls.py:1297: in test_delta_forum_ota_driver_kernel_effective_tuple_01
+    _require_hardware_batch02_closure('DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01')
+tests/test_debt_registration_controls.py:1261: in _require_hardware_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01 closure remains open: {'status': 'unknown', 'reason': "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'commands.json'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'commands.json'", "status": "unknown"}
+___________________ test_delta_forum_recovery_apt_update_01 ____________________
+tests/test_debt_registration_controls.py:1301: in test_delta_forum_recovery_apt_update_01
+    _require_hardware_batch02_closure('DELTA-FORUM-RECOVERY-APT-UPDATE-01')
+tests/test_debt_registration_controls.py:1261: in _require_hardware_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-RECOVERY-APT-UPDATE-01 closure remains open: {'status': 'unknown', 'reason': "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-RECOVERY-APT-UPDATE-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-RECOVERY-APT-UPDATE-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-RECOVERY-APT-UPDATE-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-RECOVERY-APT-UPDATE-01'", "status": "unknown"}
+____________ test_delta_forum_3node_nccl_image_and_first_request_01 ____________
+tests/test_debt_registration_controls.py:1314: in test_delta_forum_3node_nccl_image_and_first_request_01
+    _require_runtime_batch01_closure('DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01')
+tests/test_debt_registration_controls.py:1310: in _require_runtime_batch01_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01'", "status": "unknown"}
+_________________ test_delta_forum_8node_nccl_interface_mtu_01 _________________
+tests/test_debt_registration_controls.py:1318: in test_delta_forum_8node_nccl_interface_mtu_01
+    _require_runtime_batch01_closure('DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01')
+tests/test_debt_registration_controls.py:1310: in _require_runtime_batch01_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01'", "status": "unknown"}
+_________ test_delta_forum_cross_turn_sleeper_injection_regression_01 __________
+tests/test_debt_registration_controls.py:1322: in test_delta_forum_cross_turn_sleeper_injection_regression_01
+    _require_runtime_batch01_closure('DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01')
+tests/test_debt_registration_controls.py:1310: in _require_runtime_batch01_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01'", "status": "unknown"}
+________ test_delta_forum_dcp_mtp_draft_correctness_and_pretrim_oom_01 _________
+tests/test_debt_registration_controls.py:1326: in test_delta_forum_dcp_mtp_draft_correctness_and_pretrim_oom_01
+    _require_runtime_batch01_closure('DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01')
+tests/test_debt_registration_controls.py:1310: in _require_runtime_batch01_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01'", "status": "unknown"}
+__________ test_delta_forum_dcp4_decode_starvation_fair_scheduler_01 ___________
+tests/test_debt_registration_controls.py:1330: in test_delta_forum_dcp4_decode_starvation_fair_scheduler_01
+    _require_runtime_batch01_closure('DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01')
+tests/test_debt_registration_controls.py:1310: in _require_runtime_batch01_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01'", "status": "unknown"}
+_______ test_delta_forum_dflash_xgrammar_structured_output_regression_01 _______
+tests/test_debt_registration_controls.py:1334: in test_delta_forum_dflash_xgrammar_structured_output_regression_01
+    _require_runtime_batch01_closure('DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01')
+tests/test_debt_registration_controls.py:1310: in _require_runtime_batch01_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01'", "status": "unknown"}
+__________________ test_delta_forum_dsv41_nfs_stop_tag_pin_01 __________________
+tests/test_debt_registration_controls.py:1338: in test_delta_forum_dsv41_nfs_stop_tag_pin_01
+    _require_runtime_batch01_closure('DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01')
+tests/test_debt_registration_controls.py:1310: in _require_runtime_batch01_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01'", "status": "unknown"}
+________ test_delta_forum_dualspark_nccl_gid_twin_and_cold_recovery_01 _________
+tests/test_debt_registration_controls.py:1342: in test_delta_forum_dualspark_nccl_gid_twin_and_cold_recovery_01
+    _require_runtime_batch01_closure('DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01')
+tests/test_debt_registration_controls.py:1310: in _require_runtime_batch01_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01'", "status": "unknown"}
+____ test_delta_forum_glm52_multiturn_correctness_and_recipe_sensitivity_01 ____
+tests/test_debt_registration_controls.py:1346: in test_delta_forum_glm52_multiturn_correctness_and_recipe_sensitivity_01
+    _require_runtime_batch01_closure('DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01')
+tests/test_debt_registration_controls.py:1310: in _require_runtime_batch01_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01'", "status": "unknown"}
+___________ test_delta_forum_gptoss_multinode_ray_channel_timeout_01 ___________
+tests/test_debt_registration_controls.py:1359: in test_delta_forum_gptoss_multinode_ray_channel_timeout_01
+    _require_runtime_batch02_closure('DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01')
+tests/test_debt_registration_controls.py:1355: in _require_runtime_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01'", "status": "unknown"}
+__________ test_delta_forum_llamacpp_rpc_uma_and_orderly_teardown_01 ___________
+tests/test_debt_registration_controls.py:1363: in test_delta_forum_llamacpp_rpc_uma_and_orderly_teardown_01
+    _require_runtime_batch02_closure('DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01')
+tests/test_debt_registration_controls.py:1355: in _require_runtime_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01'", "status": "unknown"}
+______________ test_delta_forum_m2_compaction_state_validation_01 ______________
+tests/test_debt_registration_controls.py:1367: in test_delta_forum_m2_compaction_state_validation_01
+    _require_runtime_batch02_closure('DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01')
+tests/test_debt_registration_controls.py:1355: in _require_runtime_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01'", "status": "unknown"}
+____________ test_delta_forum_minimax_toolcall_functional_canary_01 ____________
+tests/test_debt_registration_controls.py:1371: in test_delta_forum_minimax_toolcall_functional_canary_01
+    _require_runtime_batch02_closure('DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01')
+tests/test_debt_registration_controls.py:1355: in _require_runtime_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01'", "status": "unknown"}
+___________ test_delta_forum_mtp_acceptance_and_semantic_control_01 ____________
+tests/test_debt_registration_controls.py:1375: in test_delta_forum_mtp_acceptance_and_semantic_control_01
+    _require_runtime_batch02_closure('DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01')
+tests/test_debt_registration_controls.py:1355: in _require_runtime_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01'", "status": "unknown"}
+____________ test_delta_forum_muse_glimmer_dflash_max_seqs_gate_01 _____________
+tests/test_debt_registration_controls.py:1379: in test_delta_forum_muse_glimmer_dflash_max_seqs_gate_01
+    _require_runtime_batch02_closure('DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01')
+tests/test_debt_registration_controls.py:1355: in _require_runtime_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01'", "status": "unknown"}
+_____________ test_delta_forum_nccl_tp_orchestration_correction_01 _____________
+tests/test_debt_registration_controls.py:1383: in test_delta_forum_nccl_tp_orchestration_correction_01
+    _require_runtime_batch02_closure('DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01')
+tests/test_debt_registration_controls.py:1355: in _require_runtime_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01'", "status": "unknown"}
+______________ test_delta_forum_nemotron_sm121_prebuilt_kernel_01 ______________
+tests/test_debt_registration_controls.py:1387: in test_delta_forum_nemotron_sm121_prebuilt_kernel_01
+    _require_runtime_batch02_closure('DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01')
+tests/test_debt_registration_controls.py:1355: in _require_runtime_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01'", "status": "unknown"}
+______________ test_delta_forum_openclaw_vllm_request_contract_01 ______________
+tests/test_debt_registration_controls.py:1391: in test_delta_forum_openclaw_vllm_request_contract_01
+    _require_runtime_batch02_closure('DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01')
+tests/test_debt_registration_controls.py:1355: in _require_runtime_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01'", "status": "unknown"}
+__________________ test_delta_forum_qwen_cold_compile_oom_01 ___________________
+tests/test_debt_registration_controls.py:1395: in test_delta_forum_qwen_cold_compile_oom_01
+    _require_runtime_batch02_closure('DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01')
+tests/test_debt_registration_controls.py:1355: in _require_runtime_batch02_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01'", "status": "unknown"}
+___________________ test_delta_forum_qwen_long_agent_stop_01 ___________________
+tests/test_debt_registration_controls.py:1408: in test_delta_forum_qwen_long_agent_stop_01
+    _require_runtime_batch03_closure('DELTA-FORUM-QWEN-LONG-AGENT-STOP-01')
+tests/test_debt_registration_controls.py:1404: in _require_runtime_batch03_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-QWEN-LONG-AGENT-STOP-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-LONG-AGENT-STOP-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-LONG-AGENT-STOP-01'", "status": "unknown"}
+____________ test_delta_forum_qwen_mtp_parser_cancel_state_check_01 ____________
+tests/test_debt_registration_controls.py:1412: in test_delta_forum_qwen_mtp_parser_cancel_state_check_01
+    _require_runtime_batch03_closure('DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01')
+tests/test_debt_registration_controls.py:1404: in _require_runtime_batch03_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01'", "status": "unknown"}
+_______________ test_delta_forum_qwen_service_oomd_cache_fail_01 _______________
+tests/test_debt_registration_controls.py:1416: in test_delta_forum_qwen_service_oomd_cache_fail_01
+    _require_runtime_batch03_closure('DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01')
+tests/test_debt_registration_controls.py:1404: in _require_runtime_batch03_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01'", "status": "unknown"}
+___________________ test_delta_forum_qwen_toolcall_wedge_01 ____________________
+tests/test_debt_registration_controls.py:1420: in test_delta_forum_qwen_toolcall_wedge_01
+    _require_runtime_batch03_closure('DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01')
+tests/test_debt_registration_controls.py:1404: in _require_runtime_batch03_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01'", "status": "unknown"}
+_________ test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01 __________
+tests/test_debt_registration_controls.py:1424: in test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01
+    _require_runtime_batch03_closure('DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01')
+tests/test_debt_registration_controls.py:1404: in _require_runtime_batch03_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01'", "status": "unknown"}
+_________ test_delta_forum_qwen38_long_run_json_correctness_canary_01 __________
+tests/test_debt_registration_controls.py:1428: in test_delta_forum_qwen38_long_run_json_correctness_canary_01
+    _require_runtime_batch03_closure('DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01')
+tests/test_debt_registration_controls.py:1404: in _require_runtime_batch03_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01'", "status": "unknown"}
+___________________ test_delta_forum_ray_torch_graph_hang_01 ___________________
+tests/test_debt_registration_controls.py:1432: in test_delta_forum_ray_torch_graph_hang_01
+    _require_runtime_batch03_closure('DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01')
+tests/test_debt_registration_controls.py:1404: in _require_runtime_batch03_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01'", "status": "unknown"}
+_____________ test_delta_forum_vllm_gb10_arch_and_build_matrix_01 ______________
+tests/test_debt_registration_controls.py:1436: in test_delta_forum_vllm_gb10_arch_and_build_matrix_01
+    _require_runtime_batch03_closure('DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01')
+tests/test_debt_registration_controls.py:1404: in _require_runtime_batch03_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01'", "status": "unknown"}
+________________ test_delta_forum_vllm_ray_gb10_resource_fix_01 ________________
+tests/test_debt_registration_controls.py:1440: in test_delta_forum_vllm_ray_gb10_resource_fix_01
+    _require_runtime_batch03_closure('DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01')
+tests/test_debt_registration_controls.py:1404: in _require_runtime_batch03_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01'", "status": "unknown"}
+________ test_delta_root_container_effective_build_and_offline_gate_01 _________
+tests/test_debt_registration_controls.py:1444: in test_delta_root_container_effective_build_and_offline_gate_01
+    _require_runtime_batch03_closure('DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01')
+tests/test_debt_registration_controls.py:1404: in _require_runtime_batch03_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01'", "status": "unknown"}
+_______________ test_delta_root_dsml_parser_recovery_boundary_01 _______________
+tests/test_debt_registration_controls.py:1457: in test_delta_root_dsml_parser_recovery_boundary_01
+    _require_runtime_batch04_closure('DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01')
+tests/test_debt_registration_controls.py:1453: in _require_runtime_batch04_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01'", "status": "unknown"}
+____________ test_delta_root_glm53_queued_request_progress_gate_01 _____________
+tests/test_debt_registration_controls.py:1461: in test_delta_root_glm53_queued_request_progress_gate_01
+    _require_runtime_batch04_closure('DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01')
+tests/test_debt_registration_controls.py:1453: in _require_runtime_batch04_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01'", "status": "unknown"}
+_____________ test_delta_root_mimo_overlay_and_prefill_fairness_01 _____________
+tests/test_debt_registration_controls.py:1465: in test_delta_root_mimo_overlay_and_prefill_fairness_01
+    _require_runtime_batch04_closure('DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01')
+tests/test_debt_registration_controls.py:1453: in _require_runtime_batch04_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01'", "status": "unknown"}
+_______________ test_delta_root_mimo_patch_supersession_gate_01 ________________
+tests/test_debt_registration_controls.py:1469: in test_delta_root_mimo_patch_supersession_gate_01
+    _require_runtime_batch04_closure('DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01')
+tests/test_debt_registration_controls.py:1453: in _require_runtime_batch04_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01'", "status": "unknown"}
+_______________ test_delta_root_ray_multiengine_rank_progress_01 _______________
+tests/test_debt_registration_controls.py:1473: in test_delta_root_ray_multiengine_rank_progress_01
+    _require_runtime_batch04_closure('DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01')
+tests/test_debt_registration_controls.py:1453: in _require_runtime_batch04_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01'", "status": "unknown"}
+__________ test_delta_root_recipe_memory_unknown_and_raw_evidence_01 ___________
+tests/test_debt_registration_controls.py:1477: in test_delta_root_recipe_memory_unknown_and_raw_evidence_01
+    _require_runtime_batch04_closure('DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01')
+tests/test_debt_registration_controls.py:1453: in _require_runtime_batch04_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'runtime-capture.json'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'runtime-capture.json'", "status": "unknown"}
+_______________ test_delta_root_tokenizer_patch_semantic_gate_01 _______________
+tests/test_debt_registration_controls.py:1481: in test_delta_root_tokenizer_patch_semantic_gate_01
+    _require_runtime_batch04_closure('DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01')
+tests/test_debt_registration_controls.py:1453: in _require_runtime_batch04_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01'", "status": "unknown"}
+_____________ test_delta_root_triton_allocator_patch_state_gate_01 _____________
+tests/test_debt_registration_controls.py:1485: in test_delta_root_triton_allocator_patch_state_gate_01
+    _require_runtime_batch04_closure('DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01')
+tests/test_debt_registration_controls.py:1453: in _require_runtime_batch04_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01'", "status": "unknown"}
+_______________ test_delta_forum_apt_arm64_source_validation_01 ________________
+tests/test_debt_registration_controls.py:1495: in test_delta_forum_apt_arm64_source_validation_01
+    _require_pass('DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01', {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01 closure remains open: {'id': 'DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01', 'status': 'unknown', 'could_not_run': 12, 'fail': 0, 'gates': [{'gate': 'subject_stack', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'approved_profile_and_freshness_policy', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'configured_source_coverage', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'signature_key_and_source_binding', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'effective_index_integrity_and_coverage', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'signed_release_freshness', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'fresh_isolated_update', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'wrong_source_negative', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'integrity_negatives', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'safety_and_input_binding', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'rollback_and_cleanup', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'aggregate_selector', 'status': 'could_not_run', 'reason': 'capture schema unavailable', 'gate_count': 11}], 'complete': True, 'provenance': 'caller-supplied evidence; hashes do not authenticate host or command origin', 'criteria_unimplemented': ['The external decision SHA must come from the recorded human approval channel; the CLI verifies that supplied digest but cannot authenticate the person or approval system supplying it.', 'Canary source/config transcripts are caller-supplied and hash-bound; no trusted host attestation proves the isolated APT process consumed those exact bytes.', 'The native subject stack capture is caller-supplied; no attestation binds BIOS/stack fields to a measured physical host.', 'Native UTC command and package-list mtimes are caller-supplied receipts; the verifier binds them but has no external trusted clock authority.', 'APT source-level Targets-Add/Targets-Remove and explicit re-enabling of DefaultEnabled=false targets remain could_not_run pending a native semantic capture.'], 'could_not_run_count': 12}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"complete": true, "could_not_run": 12, "criteria_unimplemented": ["The external decision SHA must come from the recorded human approval channel; the CLI verifies that supplied digest but cannot authenticate the person or approval system supplying it.", "Canary source/config transcripts are caller-supplied and hash-bound; no trusted host attestation proves the isolated APT process consumed those exact bytes.", "The native subject stack capture is caller-supplied; no attestation binds BIOS/stack fields to a measured physical host.", "Native UTC command and package-list mtimes are caller-supplied receipts; the verifier binds them but has no external trusted clock authority.", "APT source-level Targets-Add/Targets-Remove and explicit re-enabling of DefaultEnabled=false targets remain could_not_run pending a native semantic capture."], "fail": 0, "gates": [{"gate": "subject_stack", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "approved_profile_and_freshness_policy", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "configured_source_coverage", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "signature_key_and_source_binding", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "effective_index_integrity_and_coverage", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "signed_release_freshness", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "fresh_isolated_update", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "wrong_source_negative", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "integrity_negatives", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "safety_and_input_binding", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "rollback_and_cleanup", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "aggregate_selector", "gate_count": 11, "reason": "capture schema unavailable", "status": "could_not_run"}], "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01", "provenance": "caller-supplied evidence; hashes do not authenticate host or command origin", "status": "unknown"}
+_________________ test_debt_close_check_verify_memory_saver_01 _________________
+tests/test_debt_registration_controls.py:1506: in test_debt_close_check_verify_memory_saver_01
+    _require_pass(IDS[phase], result)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: FEATURE-MEMORYSAVER-02-TRAZADOR closure remains open: {'status': 'unknown', 'findings': ["raw phase capture unavailable: [Errno 2] No such file or directory: 'capture.json'"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"02-trazador": {"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "findings": ["raw phase capture unavailable: [Errno 2] No such file or directory: 'capture.json'"], "status": "unknown"}, "04-packing-4k": {"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "findings": ["raw phase capture unavailable: [Errno 2] No such file or directory: 'capture.json'"], "status": "unknown"}}
+_______________ test_debt_close_check_verify_gpu_clock_cap_ab_01 _______________
+tests/test_debt_registration_controls.py:1516: in test_debt_close_check_verify_gpu_clock_cap_ab_01
+    _require_pass('FEATURE-FORUM-GPU-CLOCK-CAP-AB-01', {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: FEATURE-FORUM-GPU-CLOCK-CAP-AB-01 closure remains open: {'status': 'unknown', 'reason': 'raw timestamped GPU clock-cap command capture missing or malformed', 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/commands.json"], "reason": "raw timestamped GPU clock-cap command capture missing or malformed", "status": "unknown"}
+________________ test_debt_close_check_verify_wifi_isolation_01 ________________
+tests/test_debt_registration_controls.py:1526: in test_debt_close_check_verify_wifi_isolation_01
+    _require_pass('FEATURE-FORUM-WIFI-ISOLATION-01', {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: FEATURE-FORUM-WIFI-ISOLATION-01 closure remains open: {'status': 'unknown', 'reason': 'raw command capture missing or malformed; current snapshot cannot prove a roam sequence', 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/commands.json"], "reason": "raw command capture missing or malformed; current snapshot cannot prove a roam sequence", "status": "unknown"}
+______________ test_debt_close_check_verify_usb_hid_postupdate_01 ______________
+tests/test_debt_registration_controls.py:1536: in test_debt_close_check_verify_usb_hid_postupdate_01
+    _require_pass('FEATURE-USB-HID-POSTUPDATE-CHECK', {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: FEATURE-USB-HID-POSTUPDATE-CHECK closure remains open: {'status': 'unknown', 'reason': 'paired raw post-update USB command capture is missing', 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK/commands.json'], 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK/commands.json"], "reason": "paired raw post-update USB command capture is missing", "status": "unknown"}
+_________ test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01 __________
+tests/test_debt_registration_controls.py:1545: in test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01
+    _require_pass('DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01', {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01 closure remains open: {'status': 'unknown', 'reason': 'thermal inventory is observational only; matched clock-cap/workload runs, OEM-safe threshold, and applied-policy rollback readback are missing', 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/prototype-capture.json'], 'checks': {'thermal_inventory': 'pass', 'oem_identity': 'pass', 'sensor_labels': 'unknown', 'matched_clock_runs': 'unknown', 'rollback': 'unknown'}, 'fail': 0, 'could_not_run': 1, 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"checks": {"matched_clock_runs": "unknown", "oem_identity": "pass", "rollback": "unknown", "sensor_labels": "unknown", "thermal_inventory": "pass"}, "could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/prototype-capture.json"], "reason": "thermal inventory is observational only; matched clock-cap/workload runs, OEM-safe threshold, and applied-policy rollback readback are missing", "status": "unknown"}
+________________ test_debt_close_check_verify_forum_finding_01 _________________
+tests/test_debt_registration_controls.py:1560: in test_debt_close_check_verify_forum_finding_01
+    _require_pass(card, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01 closure remains open: {'id': 'DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01', 'status': 'unknown', 'could_not_run': 12, 'fail': 0, 'gates': [{'gate': 'subject_stack', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'approved_profile_and_freshness_policy', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'configured_source_coverage', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'signature_key_and_source_binding', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'effective_index_integrity_and_coverage', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'signed_release_freshness', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'fresh_isolated_update', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'wrong_source_negative', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'integrity_negatives', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'safety_and_input_binding', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'rollback_and_cleanup', 'status': 'could_not_run', 'reason': 'capture schema version 1 is required'}, {'gate': 'aggregate_selector', 'status': 'could_not_run', 'reason': 'capture schema unavailable', 'gate_count': 11}], 'complete': True, 'provenance': 'caller-supplied evidence; hashes do not authenticate host or command origin', 'criteria_unimplemented': ['The external decision SHA must come from the recorded human approval channel; the CLI verifies that supplied digest but cannot authenticate the person or approval system supplying it.', 'Canary source/config transcripts are caller-supplied and hash-bound; no trusted host attestation proves the isolated APT process consumed those exact bytes.', 'The native subject stack capture is caller-supplied; no attestation binds BIOS/stack fields to a measured physical host.', 'Native UTC command and package-list mtimes are caller-supplied receipts; the verifier binds them but has no external trusted clock authority.', 'APT source-level Targets-Add/Targets-Remove and explicit re-enabling of DefaultEnabled=false targets remain could_not_run pending a native semantic capture.'], 'reason': 'subject_stack=could_not_run: capture schema version 1 is required; approved_profile_and_freshness_policy=could_not_run: capture schema version 1 is required; configured_source_coverage=could_not_run: capture schema version 1 is required; signature_key_and_source_binding=could_not_run: capture schema version 1 is required; effective_index_integrity_and_coverage=could_not_run: capture schema version 1 is required; signed_release_freshness=could_not_run: capture schema version 1 is required; fresh_isolated_update=could_not_run: capture schema version 1 is required; wrong_source_negative=could_not_run: capture schema version 1 is required; integrity_negatives=could_not_run: capture schema version 1 is required; safety_and_input_binding=could_not_run: capture schema version 1 is required; rollback_and_cleanup=could_not_run: capture schema version 1 is required; aggregate_selector=could_not_run: capture schema unavailable', 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/commands.json'], 'could_not_run_count': 12}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01": {"complete": true, "could_not_run": 12, "criteria_unimplemented": ["The external decision SHA must come from the recorded human approval channel; the CLI verifies that supplied digest but cannot authenticate the person or approval system supplying it.", "Canary source/config transcripts are caller-supplied and hash-bound; no trusted host attestation proves the isolated APT process consumed those exact bytes.", "The native subject stack capture is caller-supplied; no attestation binds BIOS/stack fields to a measured physical host.", "Native UTC command and package-list mtimes are caller-supplied receipts; the verifier binds them but has no external trusted clock authority.", "APT source-level Targets-Add/Targets-Remove and explicit re-enabling of DefaultEnabled=false targets remain could_not_run pending a native semantic capture."], "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/commands.json"], "gates": [{"gate": "subject_stack", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "approved_profile_and_freshness_policy", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "configured_source_coverage", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "signature_key_and_source_binding", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "effective_index_integrity_and_coverage", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "signed_release_freshness", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "fresh_isolated_update", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "wrong_source_negative", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "integrity_negatives", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "safety_and_input_binding", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "rollback_and_cleanup", "reason": "capture schema version 1 is required", "status": "could_not_run"}, {"gate": "aggregate_selector", "gate_count": 11, "reason": "capture schema unavailable", "status": "could_not_run"}], "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01", "provenance": "caller-supplied evidence; hashes do not authenticate host or command origin", "reason": "subject_stack=could_not_run: capture schema version 1 is required; approved_profile_and_freshness_policy=could_not_run: capture schema version 1 is required; configured_source_coverage=could_not_run: capture schema version 1 is required; signature_key_and_source_binding=could_not_run: capture schema version 1 is required; effective_index_integrity_and_coverage=could_not_run: capture schema version 1 is required; signed_release_freshness=could_not_run: capture schema version 1 is required; fresh_isolated_update=could_not_run: capture schema version 1 is required; wrong_source_negative=could_not_run: capture schema version 1 is required; integrity_negatives=could_not_run: capture schema version 1 is required; safety_and_input_binding=could_not_run: capture schema version 1 is required; rollback_and_cleanup=could_not_run: capture schema version 1 is required; aggregate_selector=could_not_run: capture schema unavailable", "status": "unknown"}, "DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01'", "status": "unknown"}, "DELTA-FORUM-CX7-FW-UPDATE-GUARD-01": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CX7-FW-UPDATE-GUARD-01'", "status": "unknown"}, "DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01'", "status": "unknown"}, "DELTA-FORUM-CX7-POSTHOTPLUG-01": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CX7-POSTHOTPLUG-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CX7-POSTHOTPLUG-01'", "status": "unknown"}, "DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01'", "status": "unknown"}, "DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01'", "status": "unknown"}, "DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01'", "status": "unknown"}, "DELTA-FORUM-MEMORY-RECOVERY-SOAK-01": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-MEMORY-RECOVERY-SOAK-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-MEMORY-RECOVERY-SOAK-01'", "status": "unknown"}, "DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'commands.json'", "status": "unknown"}, "DELTA-FORUM-RECOVERY-APT-UPDATE-01": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-RECOVERY-APT-UPDATE-01/commands.json"], "reason": "raw command capture unavailable or malformed: [Errno 2] No such file or directory: 'DELTA-FORUM-RECOVERY-APT-UPDATE-01'", "status": "unknown"}, "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01": {"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01/capture.json"], "findings": ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01'"], "provenance": "caller-supplied; hashes establish consistency, not authenticity", "reason": "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01'", "status": "unknown"}, "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01": {"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/capture.json"], "findings": ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'capture.json'"], "provenance": "caller-supplied; hashes establish consistency, not authenticity", "reason": "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'capture.json'", "status": "unknown"}, "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01": {"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01/capture.json"], "findings": ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-USB-RAID-LINK-ADMISSION-01'"], "provenance": "caller-supplied; hashes establish consistency, not authenticity", "reason": "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-FORUM-USB-RAID-LINK-ADMISSION-01'", "status": "unknown"}, "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01": {"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01/capture.json"], "findings": ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01'"], "provenance": "caller-supplied; hashes establish consistency, not authenticity", "reason": "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01'", "status": "unknown"}, "DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01": {"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01/capture.json"], "findings": ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01'"], "provenance": "caller-supplied; hashes establish consistency, not authenticity", "reason": "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01'", "status": "unknown"}, "DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01": {"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01/capture.json"], "findings": ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01'"], "provenance": "caller-supplied; hashes establish consistency, not authenticity", "reason": "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01'", "status": "unknown"}, "DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01": {"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01/capture.json"], "findings": ["raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01'"], "provenance": "caller-supplied; hashes establish consistency, not authenticity", "reason": "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01'", "status": "unknown"}, "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01": {"checks": {}, "could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01/capture.json"], "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'", "status": "unknown"}, "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/preflight.json", "/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/commands.json"], "reason": "backend kernel/PTX architecture manifest is incomplete", "status": "unknown"}, "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/preflight.json", "/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/commands.json"], "reason": "healthy preflight matches raw commands; incident negative and recovery/rollback controls are missing", "status": "unknown"}, "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/provider-trace-run.json"], "reason": "fixture controls recompute correctly; no real workload trace, OEM validation, or recovery/rollback was captured", "status": "unknown"}, "FEATURE-FORUM-RESCUE-RUNBOOK-01": {"checks": {}, "could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01/capture.json"], "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'", "status": "unknown"}, "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01": {"checks": {}, "could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/capture.json"], "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'", "status": "unknown"}, "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION": {"checks": {}, "could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION/capture.json"], "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'", "status": "unknown"}, "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/preflight.json", "/home/lcasarin/projects/blackbox/tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/commands.json"], "reason": "missing observation: effective_modeset; missing observation: target_requires_kms; missing observation: recovery_accessible", "status": "unknown"}, "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION": {"checks": {}, "could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION/capture.json"], "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'", "status": "unknown"}, "FORUM-00-KERNEL-INITRD-UPDATE-GATE": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE/preflight.json", "/home/lcasarin/projects/blackbox/tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE/commands.json"], "reason": "missing observation: apt_check; missing observation: module_ready", "status": "unknown"}, "FORUM-00-REALTEK-EEE-DIRECT-LINK": {"checks": {}, "could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK/capture.json"], "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'", "status": "unknown"}, "FORUM-02-GX10-READ-INTEGRITY": {"checks": {}, "could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/capture.json"], "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'", "status": "unknown"}, "FORUM-02-PSTORE-KERNEL-REGRESSION": {"could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION/finding.json"], "reason": "raw finding evidence unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION/finding.json'", "status": "unknown"}, "FORUM-02-USB-UVC-EP0": {"checks": {}, "could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FORUM-02-USB-UVC-EP0/capture.json"], "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'", "status": "unknown"}, "FORUM-REALTEK-DRIVER-BINDING-01": {"checks": {}, "could_not_run": 1, "fail": 0, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01/capture.json"], "reason": "raw case capture unavailable: [Errno 2] No such file or directory: 'capture.json'", "status": "unknown"}}
+_ test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01] _
+tests/test_runtime_batch01_controls.py:945: in test_real_capture_close_gate_requires_actual_capture
+    assert result["status"] == "pass", (
+E   AssertionError: real evidence required: DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01 status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01] _
+tests/test_runtime_batch01_controls.py:945: in test_real_capture_close_gate_requires_actual_capture
+    assert result["status"] == "pass", (
+E   AssertionError: real evidence required: DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01 status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01] _
+tests/test_runtime_batch01_controls.py:945: in test_real_capture_close_gate_requires_actual_capture
+    assert result["status"] == "pass", (
+E   AssertionError: real evidence required: DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01 status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01] _
+tests/test_runtime_batch01_controls.py:945: in test_real_capture_close_gate_requires_actual_capture
+    assert result["status"] == "pass", (
+E   AssertionError: real evidence required: DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01 status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01] _
+tests/test_runtime_batch01_controls.py:945: in test_real_capture_close_gate_requires_actual_capture
+    assert result["status"] == "pass", (
+E   AssertionError: real evidence required: DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01 status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01] _
+tests/test_runtime_batch01_controls.py:945: in test_real_capture_close_gate_requires_actual_capture
+    assert result["status"] == "pass", (
+E   AssertionError: real evidence required: DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01 status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01] _
+tests/test_runtime_batch01_controls.py:945: in test_real_capture_close_gate_requires_actual_capture
+    assert result["status"] == "pass", (
+E   AssertionError: real evidence required: DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01 status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01] _
+tests/test_runtime_batch01_controls.py:945: in test_real_capture_close_gate_requires_actual_capture
+    assert result["status"] == "pass", (
+E   AssertionError: real evidence required: DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01 status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01] _
+tests/test_runtime_batch01_controls.py:945: in test_real_capture_close_gate_requires_actual_capture
+    assert result["status"] == "pass", (
+E   AssertionError: real evidence required: DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01 status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01] _
+tests/test_runtime_batch02_controls.py:452: in test_real_capture_close_gate_requires_raw_capture
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01] _
+tests/test_runtime_batch02_controls.py:452: in test_real_capture_close_gate_requires_raw_capture
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01] _
+tests/test_runtime_batch02_controls.py:452: in test_real_capture_close_gate_requires_raw_capture
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01] _
+tests/test_runtime_batch02_controls.py:452: in test_real_capture_close_gate_requires_raw_capture
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01] _
+tests/test_runtime_batch02_controls.py:452: in test_real_capture_close_gate_requires_raw_capture
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01] _
+tests/test_runtime_batch02_controls.py:452: in test_real_capture_close_gate_requires_raw_capture
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01] _
+tests/test_runtime_batch02_controls.py:452: in test_real_capture_close_gate_requires_raw_capture
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01] _
+tests/test_runtime_batch02_controls.py:452: in test_real_capture_close_gate_requires_raw_capture
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01] _
+tests/test_runtime_batch02_controls.py:452: in test_real_capture_close_gate_requires_raw_capture
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01] _
+tests/test_runtime_batch02_controls.py:452: in test_real_capture_close_gate_requires_raw_capture
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-QWEN-LONG-AGENT-STOP-01] _
+tests/test_runtime_batch03_controls.py:897: in test_real_capture_close_gate_needs_actual_runtime_record
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-QWEN-LONG-AGENT-STOP-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-LONG-AGENT-STOP-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01] _
+tests/test_runtime_batch03_controls.py:897: in test_real_capture_close_gate_needs_actual_runtime_record
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01] _
+tests/test_runtime_batch03_controls.py:897: in test_real_capture_close_gate_needs_actual_runtime_record
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01] _
+tests/test_runtime_batch03_controls.py:897: in test_real_capture_close_gate_needs_actual_runtime_record
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01] _
+tests/test_runtime_batch03_controls.py:897: in test_real_capture_close_gate_needs_actual_runtime_record
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01] _
+tests/test_runtime_batch03_controls.py:897: in test_real_capture_close_gate_needs_actual_runtime_record
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01] _
+tests/test_runtime_batch03_controls.py:897: in test_real_capture_close_gate_needs_actual_runtime_record
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01] _
+tests/test_runtime_batch03_controls.py:897: in test_real_capture_close_gate_needs_actual_runtime_record
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01] _
+tests/test_runtime_batch03_controls.py:897: in test_real_capture_close_gate_needs_actual_runtime_record
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_needs_actual_runtime_record[DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01] _
+tests/test_runtime_batch03_controls.py:897: in test_real_capture_close_gate_needs_actual_runtime_record
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01] _
+tests/test_runtime_batch04_controls.py:732: in test_real_capture_close_gate_requires_runtime_evidence
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01] _
+tests/test_runtime_batch04_controls.py:732: in test_real_capture_close_gate_requires_runtime_evidence
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01] _
+tests/test_runtime_batch04_controls.py:732: in test_real_capture_close_gate_requires_runtime_evidence
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01] _
+tests/test_runtime_batch04_controls.py:732: in test_real_capture_close_gate_requires_runtime_evidence
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01] _
+tests/test_runtime_batch04_controls.py:732: in test_real_capture_close_gate_requires_runtime_evidence
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01] _
+tests/test_runtime_batch04_controls.py:732: in test_real_capture_close_gate_requires_runtime_evidence
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'runtime-capture.json' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01] _
+tests/test_runtime_batch04_controls.py:732: in test_real_capture_close_gate_requires_runtime_evidence
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+_ test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01] _
+tests/test_runtime_batch04_controls.py:732: in test_real_capture_close_gate_requires_runtime_evidence
+    assert result["status"] == "pass", (
+E   AssertionError: DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01' files=['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01/runtime-capture.json']
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.11-final-0 _______________
+
+Name                                     Stmts   Miss Branch BrPart  Cover
+--------------------------------------------------------------------------
+tools/__init__.py                            0      0      0      0   100%
+tools/apt_sources.py                       389      0    166      0   100%
+tools/atom_gpu_telemetry.py                707      0    270      0   100%
+tools/calibra_latencia_x.py                152      0     58      0   100%
+tools/calibra_psi.py                        97      0     30      0   100%
+tools/calibra_techo_slice.py               111      0     44      0   100%
+tools/capture_io.py                         37      0     12      0   100%
+tools/cgroup_repro.py                      283      0     88      0   100%
+tools/chat_sse_capture.py                  205      0     88      0   100%
+tools/check_harvest_accepted.py             58      0     28      0   100%
+tools/control_racha.py                      65      0     20      0   100%
+tools/cuda_integrity.py                    172      0     44      0   100%
+tools/forum_finding.py                     143     27     64     24    75%
+tools/forum_hardware_subjects.py          1197    221    660    199    77%
+tools/hardware_batch02_controls.py        1461      0    788      0   100%
+tools/hardware_batch03_controls.py        1058      0    564      0   100%
+tools/hardware_evidence.py                 120     38     48     10    63%
+tools/hitos_incidente.py                   211      0     90      0   100%
+tools/host_diagnostics.py                  483      0    178      0   100%
+tools/inventario.py                         78      0     36      0   100%
+tools/json_schema_subset.py                100      0     68      0   100%
+tools/kernel_capture.py                     96      0     26      0   100%
+tools/memory_profile.py                     72      0     10      0   100%
+tools/mutacion_alcanza.py                   25      0      4      0   100%
+tools/netconsole_marker.py                  43      0     14      0   100%
+tools/nombra_victimas.py                   138      0     48      0   100%
+tools/nvme_readonly.py                     150      0     58      0   100%
+tools/openclaw_contract.py                 172      0     60      0   100%
+tools/preflight.py                         143      0     74      0   100%
+tools/presupuesto_memoria.py               234      0     90      0   100%
+tools/provider_trace.py                    162      0     74      0   100%
+tools/read_integrity.py                    112      0     30      0   100%
+tools/recipe_memory.py                      57      0     16      0   100%
+tools/recovery_profile.py                   42      0      6      0   100%
+tools/runtime_batch01_controls.py          479      0     90      0   100%
+tools/runtime_batch02_controls.py          352      0     46      0   100%
+tools/runtime_batch03_controls.py          475      0     74      0   100%
+tools/runtime_batch04_controls.py          329      0     58      0   100%
+tools/runtime_provenance.py                198      0     90      0   100%
+tools/scan_samples.py                      208      0     92      0   100%
+tools/service_probe.py                      47      0     16      0   100%
+tools/thermal_coverage.py                   88      0     22      0   100%
+tools/verify_apt_critical_removals.py       65      0     30      0   100%
+tools/verify_apt_sources_closure.py        863    172    396    141    75%
+tools/verify_cgroup_plan.py                609      0    310      0   100%
+tools/verify_cgroup_repro.py               107      0     52      0   100%
+tools/verify_clock_cap_tradeoff.py          44      5     14      5    83%
+tools/verify_forum_finding.py               24      8      6      1    70%
+tools/verify_forum_pstore.py               115      0     60      0   100%
+tools/verify_gpu_clock_cap_ab.py           240    145    104     15    34%
+tools/verify_memory_saver.py               355      0    214      0   100%
+tools/verify_netconsole.py                 432      0    228      0   100%
+tools/verify_rcu_panic_pstore.py           125      0     56      0   100%
+tools/verify_telemetry_dispositions.py      41      0     18      0   100%
+tools/verify_usb_hid_postupdate.py         150     26     66     24    77%
+tools/verify_wifi_isolation.py             256     43    106     33    78%
+tools/workload_restart_policy.py            82      0     12      0   100%
+--------------------------------------------------------------------------
+TOTAL                                    14257    685   6014    452    94%
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_debt_close_check_verify_cgroup_plan_01
+FAILED tests/test_debt_registration_controls.py::test_debt_close_check_verify_netconsole_01
+FAILED tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01
+FAILED tests/test_debt_registration_controls.py::test_debt_schema_evidence_index_scope_01
+FAILED tests/test_debt_registration_controls.py::test_bug_provider_trace_latency_overflow_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_thermal_telemetry_coverage_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_usb_raid_link_admission_01
+FAILED tests/test_debt_registration_controls.py::test_delta_root_backup_mount_boot_identity_01
+FAILED tests/test_debt_registration_controls.py::test_delta_root_display_carveout_oem_fix_gate_01
+FAILED tests/test_debt_registration_controls.py::test_delta_root_gx10_soc_ec_cable_recovery_candidate_01
+FAILED tests/test_debt_registration_controls.py::test_delta_root_subambient_cooling_and_uma_canary_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_cutlass_sm121_isa_gate_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_cx7_fw_update_guard_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_cx7_physical_topology_alias_check_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_cx7_posthotplug_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_cx7_rdma_asymmetry_retest_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_dualspark_power_reset_recovery_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_kv_quant_metric_provenance_gate_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_memory_recovery_soak_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_recovery_apt_update_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_3node_nccl_image_and_first_request_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_8node_nccl_interface_mtu_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_cross_turn_sleeper_injection_regression_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_dcp_mtp_draft_correctness_and_pretrim_oom_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_dcp4_decode_starvation_fair_scheduler_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_dflash_xgrammar_structured_output_regression_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_dsv41_nfs_stop_tag_pin_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_dualspark_nccl_gid_twin_and_cold_recovery_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_glm52_multiturn_correctness_and_recipe_sensitivity_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_gptoss_multinode_ray_channel_timeout_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_llamacpp_rpc_uma_and_orderly_teardown_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_m2_compaction_state_validation_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_minimax_toolcall_functional_canary_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_mtp_acceptance_and_semantic_control_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_muse_glimmer_dflash_max_seqs_gate_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_nccl_tp_orchestration_correction_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_nemotron_sm121_prebuilt_kernel_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_openclaw_vllm_request_contract_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen_cold_compile_oom_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen_long_agent_stop_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen_service_oomd_cache_fail_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen_toolcall_wedge_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen38_long_run_json_correctness_canary_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_ray_torch_graph_hang_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_vllm_gb10_arch_and_build_matrix_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_vllm_ray_gb10_resource_fix_01
+FAILED tests/test_debt_registration_controls.py::test_delta_root_container_effective_build_and_offline_gate_01
+FAILED tests/test_debt_registration_controls.py::test_delta_root_dsml_parser_recovery_boundary_01
+FAILED tests/test_debt_registration_controls.py::test_delta_root_glm53_queued_request_progress_gate_01
+FAILED tests/test_debt_registration_controls.py::test_delta_root_mimo_overlay_and_prefill_fairness_01
+FAILED tests/test_debt_registration_controls.py::test_delta_root_mimo_patch_supersession_gate_01
+FAILED tests/test_debt_registration_controls.py::test_delta_root_ray_multiengine_rank_progress_01
+FAILED tests/test_debt_registration_controls.py::test_delta_root_recipe_memory_unknown_and_raw_evidence_01
+FAILED tests/test_debt_registration_controls.py::test_delta_root_tokenizer_patch_semantic_gate_01
+FAILED tests/test_debt_registration_controls.py::test_delta_root_triton_allocator_patch_state_gate_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01
+FAILED tests/test_debt_registration_controls.py::test_debt_close_check_verify_memory_saver_01
+FAILED tests/test_debt_registration_controls.py::test_debt_close_check_verify_gpu_clock_cap_ab_01
+FAILED tests/test_debt_registration_controls.py::test_debt_close_check_verify_wifi_isolation_01
+FAILED tests/test_debt_registration_controls.py::test_debt_close_check_verify_usb_hid_postupdate_01
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01
+FAILED tests/test_debt_registration_controls.py::test_debt_close_check_verify_forum_finding_01
+FAILED tests/test_runtime_batch01_controls.py::test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01]
+FAILED tests/test_runtime_batch01_controls.py::test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01]
+FAILED tests/test_runtime_batch01_controls.py::test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01]
+FAILED tests/test_runtime_batch01_controls.py::test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01]
+FAILED tests/test_runtime_batch01_controls.py::test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01]
+FAILED tests/test_runtime_batch01_controls.py::test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01]
+FAILED tests/test_runtime_batch01_controls.py::test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01]
+FAILED tests/test_runtime_batch01_controls.py::test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01]
+FAILED tests/test_runtime_batch01_controls.py::test_real_capture_close_gate_requires_actual_capture[DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01]
+FAILED tests/test_runtime_batch02_controls.py::test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01]
+FAILED tests/test_runtime_batch02_controls.py::test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01]
+FAILED tests/test_runtime_batch02_controls.py::test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01]
+FAILED tests/test_runtime_batch02_controls.py::test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01]
+FAILED tests/test_runtime_batch02_controls.py::test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01]
+FAILED tests/test_runtime_batch02_controls.py::test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01]
+FAILED tests/test_runtime_batch02_controls.py::test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01]
+FAILED tests/test_runtime_batch02_controls.py::test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01]
+FAILED tests/test_runtime_batch02_controls.py::test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01]
+FAILED tests/test_runtime_batch02_controls.py::test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01]
+FAILED tests/test_runtime_batch03_controls.py::test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-QWEN-LONG-AGENT-STOP-01]
+FAILED tests/test_runtime_batch03_controls.py::test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01]
+FAILED tests/test_runtime_batch03_controls.py::test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01]
+FAILED tests/test_runtime_batch03_controls.py::test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01]
+FAILED tests/test_runtime_batch03_controls.py::test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01]
+FAILED tests/test_runtime_batch03_controls.py::test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01]
+FAILED tests/test_runtime_batch03_controls.py::test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01]
+FAILED tests/test_runtime_batch03_controls.py::test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01]
+FAILED tests/test_runtime_batch03_controls.py::test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01]
+FAILED tests/test_runtime_batch03_controls.py::test_real_capture_close_gate_needs_actual_runtime_record[DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01]
+FAILED tests/test_runtime_batch04_controls.py::test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01]
+FAILED tests/test_runtime_batch04_controls.py::test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01]
+FAILED tests/test_runtime_batch04_controls.py::test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01]
+FAILED tests/test_runtime_batch04_controls.py::test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01]
+FAILED tests/test_runtime_batch04_controls.py::test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01]
+FAILED tests/test_runtime_batch04_controls.py::test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01]
+FAILED tests/test_runtime_batch04_controls.py::test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01]
+FAILED tests/test_runtime_batch04_controls.py::test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01]
+103 failed, 1789 passed in 454.87s (0:07:34)

@@ -35,3 +35,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Evaluación de instrumentos 2026-10-03
 
 Reusa `tools/chat_sse_capture.py` para deltas/finish visibles, pero no identifica compaction/reset del KV, métricas prefill/decode o calidad de tool calls después del límite. No hay log de sesión/versions ni captura local. Estado `deferred_lab`: secuencia fijada que cruce compaction/cache reset, control sin compaction, y observaciones semánticas/finish/pre-fill/decode/proceso con tool calls; la causa CUDA-graph reportada permanece hipótesis.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: No hay log local con stack/modelo fijados, límite de compaction/KV reset, control sin compaction ni tool-call/calidad y métricas posteriores.
+- Evidencia faltante para cierre: No hay log local con stack/modelo fijados, límite de compaction/KV reset, control sin compaction ni tool-call/calidad y métricas posteriores.
+- Siguiente acción: Coordinación BB: preparar harness y esquema de observación; operador Luis: capturar sesiones canary con/sin compaction sobre sujeto disponible. Ref explícita: tasks/backlog/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01-original-selector-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01-original-selector-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

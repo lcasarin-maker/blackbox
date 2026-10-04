@@ -1,0 +1,25 @@
+...............FFF...................................................... [ 94%]
+....                                                                     [100%]
+=================================== FAILURES ===================================
+________ test_all_file_readers_reject_duplicate_keys_and_nonfinite_json ________
+tests/test_hardware_reader_safety.py:42: in test_all_file_readers_reject_duplicate_keys_and_nonfinite_json
+    assert _rejected(kind, duplicate)
+E   AssertionError: assert False
+E    +  where False = _rejected('provider', PosixPath('/tmp/pytest-of-lcasarin/pytest-6636/test_all_file_readers_reject_d0/duplicate-5.json'))
+_____________ test_all_file_readers_reject_symlink_and_fifo_inputs _____________
+tests/test_hardware_reader_safety.py:55: in test_all_file_readers_reject_symlink_and_fifo_inputs
+    assert _rejected(kind, symlink), kind
+E   AssertionError: provider
+E   assert False
+E    +  where False = _rejected('provider', PosixPath('/tmp/pytest-of-lcasarin/pytest-6636/test_all_file_readers_reject_s0/linked.json'))
+_______________ test_all_file_readers_reject_symlinked_ancestor ________________
+tests/test_hardware_reader_safety.py:69: in test_all_file_readers_reject_symlinked_ancestor
+    assert _rejected(kind, alias / "capture.json"), kind
+E   AssertionError: provider
+E   assert False
+E    +  where False = _rejected('provider', (PosixPath('/tmp/pytest-of-lcasarin/pytest-6636/test_all_file_readers_reject_s1/alias') / 'capture.json'))
+=========================== short test summary info ============================
+FAILED tests/test_hardware_reader_safety.py::test_all_file_readers_reject_duplicate_keys_and_nonfinite_json
+FAILED tests/test_hardware_reader_safety.py::test_all_file_readers_reject_symlink_and_fifo_inputs
+FAILED tests/test_hardware_reader_safety.py::test_all_file_readers_reject_symlinked_ancestor
+3 failed, 73 passed in 0.26s

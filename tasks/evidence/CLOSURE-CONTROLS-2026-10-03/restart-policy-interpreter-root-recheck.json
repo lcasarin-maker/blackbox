@@ -1,0 +1,29 @@
+{
+  "source_sha256": "5cdb77cb45154021df2ec41cc274d507bb92ee7963e6cec70ef996625a745cec",
+  "source_path": "/tmp/bb-controls-kernel/tests/test_workload_restart_containment.py",
+  "input": {
+    "argv": [
+      "/bin/echo",
+      "-m",
+      "tools.workload_restart_policy",
+      "--state",
+      "/tmp/state.json",
+      "--workload-id",
+      "w",
+      "--limit",
+      "1",
+      "--window-seconds",
+      "60"
+    ],
+    "returncode": 0,
+    "stdout": "{\"status\": \"allow\", \"workload_id\": \"w\", \"attempts\": 1, \"limit\": 1, \"window_seconds\": 60}",
+    "started_at": "2026-10-04T00:00:01+00:00",
+    "finished_at": "2026-10-04T00:00:02+00:00"
+  },
+  "output": {
+    "accepted": false,
+    "exception": "ValueError",
+    "reason": "policy decision did not invoke the production CLI: decision"
+  },
+  "scope": "In-progress WT helper recheck only; not integrated or full-reader validated"
+}

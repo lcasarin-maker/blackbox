@@ -90,13 +90,14 @@ json_escape() {
 # vLLM 33813 MiB, aequitas_os 10251 MiB, rustdesk 237 MiB.
 gpu_mem_mib() {
   have nvidia-smi || { echo ""; return 1; }
-  nvidia-smi --query-compute-apps=used_memory --format=csv,noheader,nounits 2>/dev/null |
-    awk '{s+=$1} END{if(NR==0) print 0; else print s}'
+  local raw
+  raw=$(timeout "$SMI_TIMEOUT_S" nvidia-smi --query-compute-apps=used_memory --format=csv,noheader,nounits 2>/dev/null) || return $?
+  printf "%s\n" "$raw" | awk '{s+=$1} END{if(NR==0) print 0; else print s}'
 }
 
 gpu_procs() {
   have nvidia-smi || return 1
-  nvidia-smi --query-compute-apps=pid,process_name,used_memory \
+  timeout "$SMI_TIMEOUT_S" nvidia-smi --query-compute-apps=pid,process_name,used_memory \
     --format=csv,noheader,nounits 2>/dev/null
 }
 
@@ -237,11 +238,6 @@ servicio_ssh_probe() {
   printf '%s' "$resultado"
 }
 
-gpu_stat() { # temp,util,power
-  have nvidia-smi || { echo ",,"; return 1; }
-  nvidia-smi --query-gpu=temperature.gpu,utilization.gpu,power.draw \
-    --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' '
-}
 
 # Razones de throttle CON NOMBRE, mas sus contadores acumulados de por vida.
 # Verificado 2026-09-11 en este GB10 (nvidia-smi 580.173.02): `-q -d
@@ -341,7 +337,7 @@ compromiso_pct() { # imprime el % de RAM+swap ya comprometido
 residuo_mb() { # MemTotal - todo lo reclamado, en MiB
   local rss gpu
   rss=$(ps -eo rss= 2>/dev/null | awk '{s+=$1} END{print s+0}')
-  gpu=$(gpu_mem_mib 2>/dev/null); gpu=$(( ${gpu:-0} * 1024 ))
+  gpu=$(gpu_mem_mib 2>/dev/null) || return $?; gpu=$(( ${gpu:-0} * 1024 ))
   awk -v rss="$rss" -v gpu="$gpu" '
     /^MemTotal:/{mt=$2} /^MemFree:/{mf=$2} /^Buffers:/{bu=$2} /^Cached:/{ca=$2}
     /^SwapCached:/{sc=$2} /^Slab:/{sl=$2} /^KernelStack:/{ks=$2} /^PageTables:/{pt=$2}
@@ -772,7 +768,7 @@ cmd_sample() {
   # Procesos con memoria de GPU y quien los lanzo. En memoria unificada esto es
   # lo que decide si el gateway puede arrancar: el 2026-09-08 sumaban ~91 GB de
   # los 121 y `admission_check.sh` rechazo los 85 GB que pedia el gateway.
-  local gpu
+  local gpu gpu_rc=0 gpu_json
   gpu=$(gpu_procs 2>/dev/null | while IFS=, read -r p n m; do
       p=$(echo "$p" | tr -d ' '); m=$(echo "$m" | tr -d ' ')
       [[ "$p" =~ ^[0-9]+$ ]] || continue
@@ -780,7 +776,9 @@ cmd_sample() {
       u=$(sed -n 's/^0::\///p' "/proc/$p/cgroup" 2>/dev/null | sed 's/.*\///')
       unit_json=$(json_escape "${u:-?}")
       printf '{"pid":%s,"mib":%s,"unit":"%s"},' "$p" "${m:-0}" "$unit_json"
-    done | sed 's/,$//')
+    done | sed 's/,$//') || gpu_rc=$?
+  gpu_json="[$gpu]"
+  [ "$gpu_rc" -eq 0 ] || gpu_json=null
 
   # DGX-438: algo mata procesos python de fondo cada 10-15 min con rc=143
   # (SIGTERM) y no se sabe qué. Un SIGTERM ajeno no deja linea en el journal ni
@@ -792,9 +790,9 @@ cmd_sample() {
 
   local slices; slices=$(slices_mem 2>/dev/null)
 
-  printf '{"ts":"%s","boot_id":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":[%s],"slices":[%s],"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s,"top":[%s]},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s},"servicio_ssh":%s}\n' \
-    "$ts" "$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || true)" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$topvsz" "$cputop" "$pybg" "$gpu" "$slices" \
-    "${commit_pct:-0}" "${residuo:-0}" \
+  printf '{"ts":"%s","boot_id":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":%s,"slices":[%s],"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s,"top":[%s]},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s},"servicio_ssh":%s}\n' \
+    "$ts" "$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || true)" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$topvsz" "$cputop" "$pybg" "$gpu_json" "$slices" \
+    "${commit_pct:-0}" "${residuo:-null}" \
     "${swap_free:-0}" "${swap_total:-0}" "${swpin_s:-0}" "${swpout_s:-0}" "$swaptop" \
     "${psi_m_some:-0}" "${psi_m_full:-0}" "${psi_io_some:-0}" "${psi_cpu_some:-0}" \
     "${gw:-CAIDO}" "${dk:-?}" "${salud:-}" "${disco:-}" "${red:-}" "${cpuj:-}" \
@@ -841,7 +839,7 @@ cmd_snapshot() {
 
   zombie_parents >"$d/zombie-parents.txt" 2>&1
   gpu_procs >"$d/gpu-procs.txt" 2>&1 || echo "nvidia-smi no disponible" >"$d/gpu-procs.txt"
-  have nvidia-smi && nvidia-smi -q >"$d/nvidia-smi-q.txt" 2>&1
+  have nvidia-smi && timeout "$SMI_TIMEOUT_S" nvidia-smi -q >"$d/nvidia-smi-q.txt" 2>&1
   have sensors && sensors >"$d/sensors.txt" 2>&1
 
   # Distingue fallo de MODULO DE KERNEL de fallo de ESPACIO DE USUARIO en un
@@ -1006,9 +1004,11 @@ cmd_scan() {
       awk -F': *' '/Accounting Mode/{print $2; exit}')
     if [ "$am" = "Enabled" ]; then
       local acc
-      acc=$(nvidia-smi --query-accounted-apps=pid,gpu_utilization,mem_utilization,max_memory_usage,time \
-        --format=csv,noheader 2>/dev/null)
-      if [ -n "$acc" ]; then
+      if ! acc=$(timeout "$SMI_TIMEOUT_S" nvidia-smi --query-accounted-apps=pid,gpu_utilization,mem_utilization,max_memory_usage,time \
+        --format=csv,noheader 2>/dev/null); then
+        cannot_run "accounting de GPU" "consulta fallida o fuera del presupuesto"
+        echo "  accounting mode:             COULD_NOT_RUN (consulta fallida)"
+      elif [ -n "$acc" ]; then
         echo "  pid, gpu_util%, mem_util%, memoria_max_MiB, tiempo_ms"
         printf '%s\n' "$acc" | sed 's/^/    /'
       else
@@ -2026,12 +2026,16 @@ cmd_hw() {
   echo
   echo "-- GPU --"
   if have nvidia-smi; then
-    nvidia-smi --query-gpu=name,driver_version,temperature.gpu,utilization.gpu,power.draw \
+    timeout "$SMI_TIMEOUT_S" nvidia-smi --query-gpu=name,driver_version,temperature.gpu,utilization.gpu,power.draw \
       --format=csv 2>&1 | sed 's/^/  /'
     echo "  memoria por proceso (unica via fiable en GB10):"
-    gpu_procs | sed 's/^/    /' || echo "    (sin procesos de computo)"
-    local tot; tot=$(gpu_mem_mib)
-    echo "    TOTAL: ${tot:-0} MiB de la RAM unificada"
+    gpu_procs | sed 's/^/    /' || echo "    (consulta de procesos GPU no disponible)"
+    local tot
+    if tot=$(gpu_mem_mib); then
+      echo "    TOTAL: $tot MiB de la RAM unificada"
+    else
+      echo "    TOTAL: desconocido (consulta GPU no disponible)"
+    fi
     echo "  contadores de throttle (acumulado desde el ultimo reinicio del driver):"
     local perf contadores; perf=$(gpu_perf_raw)
     if [ -n "$perf" ]; then
@@ -2475,7 +2479,7 @@ cmd_who() {
   echo
   echo "-- procesos con memoria de GPU --"
   if have nvidia-smi; then
-    nvidia-smi --query-compute-apps=pid,used_memory --format=csv,noheader,nounits 2>/dev/null |
+    timeout "$SMI_TIMEOUT_S" nvidia-smi --query-compute-apps=pid,used_memory --format=csv,noheader,nounits 2>/dev/null |
       while IFS=, read -r p mib; do
         p=$(echo "$p" | tr -d ' '); mib=$(echo "$mib" | tr -d ' ')
         [ -d "/proc/$p" ] || { echo "  $p (ya no existe) $mib MiB"; continue; }

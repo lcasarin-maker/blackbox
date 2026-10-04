@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: parcial, reutilizando del capture runtime los image refs e image IDs ya recolectados. No hay mapa de recursos Ray por nodo ni resultado de admisión positivo/negativo, por lo que la prueba funcional queda `could_not_run`. La ficha sigue abierta y su `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-runtime.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: No hay mapa Ray por nodo ni admisión positiva/negativa con imagen y backend fijados.
+- Evidencia faltante para cierre: image digest; mapa de recursos Ray/node; backend/SM/kernel; smoke positivo y negativo; rollback
+- Siguiente acción: Ejecutar smoke de admisión y generación en canario GB10 con los tags fijados y guardar recursos Ray, kernel y resultado; comparar control sin GPU genérica.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json`, `tasks/evidence/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01/ (directorio ausente al inspeccionar)`.
+- Impedimentos de inspección: 1. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

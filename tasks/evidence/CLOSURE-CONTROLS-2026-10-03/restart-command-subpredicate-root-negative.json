@@ -1,0 +1,30 @@
+{
+  "source_path": "/tmp/bb-controls-kernel/tests/test_workload_restart_containment.py",
+  "source_sha256": "6d78656c9435d12ba0255aef71a30458af00f9b4a00d1f69ff6b6fb3c8adcd76",
+  "subject_closure": false,
+  "rows": [
+    {
+      "check": "unrelated_reboot_trigger command subpredicate",
+      "argv": [
+        "echo",
+        "systemctl",
+        "reboot"
+      ],
+      "accepted": true,
+      "scope": "Command subpredicate only, not full evidence bundle PASS",
+      "problem": "echo prints text; does not reboot host"
+    },
+    {
+      "check": "docker inspect command subpredicate",
+      "argv": [
+        "/tmp/notdocker",
+        "inspect",
+        "owned-container"
+      ],
+      "accepted": true,
+      "scope": "Command subpredicate only, not full evidence bundle PASS",
+      "problem": "Executable basename is not docker"
+    }
+  ],
+  "action": "Returned to executor for exact command and target binding; independent full-reader review in progress."
+}

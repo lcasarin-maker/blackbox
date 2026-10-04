@@ -1,0 +1,30 @@
+{
+  "files": [
+    {
+      "path": "tools/host_diagnostics.py",
+      "before_sha256": "57b05373061d9219012533b4c6e1412384202c746210731f3bd6e9539e807cf6",
+      "after_sha256": "9ab773dff8b7ddc167f11b2db889c913dbbd54aa0e4e30d30c1dbc06aa1de21d"
+    },
+    {
+      "path": "tests/test_host_diagnostics.py",
+      "before_sha256": "9ed045d732a86c495e18ce254790130ff9f9b7d292ca0ea170b124deba4739f6",
+      "after_sha256": "ccb173353840735190c3adedff4e49b13e70bed871767ec97dcb6d8f5e9735e2"
+    },
+    {
+      "path": "tests/test_device_inventory.py",
+      "before_sha256": "a47ad39ed1156de38f0d9a4157cc65c5704d960ff6d46afcd6c2d6cef8735d4d",
+      "after_sha256": "c185076f48a35882e44b3fce31849ae68367c110dadf69b26dbec7ca0ae741e6"
+    },
+    {
+      "path": "tests/test_network_inventory.py",
+      "before_sha256": "f406e5d63328a3b2ede9fd8470dc6efe2c8055a77334594e402f7db32776d06b",
+      "after_sha256": "53c89cb0b0060093f18a81f3f3e6fa90900455dd7557625324da68f50cc9fbc4"
+    }
+  ],
+  "validation": {
+    "command": "COVERAGE_FILE=/tmp/bb-hostdiag-primary-20261004.coverage python3 -m pytest -q tests/test_boot_storage_inventory.py tests/test_device_inventory.py tests/test_host_diagnostics.py tests/test_kernel_capture.py tests/test_network_inventory.py --cov=tools.host_diagnostics --cov-branch",
+    "exit_code": 0,
+    "literal_output": "........................................................................ [ 54%]\n............................................................             [100%]\n================================ tests coverage ================================\n_______________ coverage: platform linux, python 3.12.11-final-0 _______________\n\nName                        Stmts   Miss Branch BrPart  Cover\n-------------------------------------------------------------\ntools/host_diagnostics.py     578      0    218      0   100%\n-------------------------------------------------------------\nTOTAL                         578      0    218      0   100%\n132 passed in 2.66s\n",
+    "native_summary": "native-sysfs-primary-summary-20261004.json"
+  }
+}

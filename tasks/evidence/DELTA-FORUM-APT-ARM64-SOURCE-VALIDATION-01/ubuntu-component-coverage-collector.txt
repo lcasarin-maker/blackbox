@@ -1,0 +1,65 @@
+"""Read-only Ubuntu Packages component coverage; other sources remain separate."""
+from pathlib import Path
+import datetime
+import hashlib
+import json
+import subprocess
+import sys
+
+sys.path.insert(0, str(Path.cwd()))
+from tools.apt_sources import parse_deb822
+
+source = Path('/etc/apt/sources.list.d/ubuntu.sources')
+before = source.read_bytes()
+stanzas, errors = parse_deb822(before.decode())
+architecture_command = ['dpkg', '--print-architecture']
+architecture = subprocess.run(architecture_command, capture_output=True, text=True, timeout=15)
+command = ['apt-get', 'indextargets', '--format=$(SITE)|$(RELEASE)|$(METAKEY)|$(IDENTIFIER)']
+targets = subprocess.run(command, capture_output=True, text=True, timeout=20)
+arch = architecture.stdout.strip()
+if architecture.returncode or arch != 'arm64':
+    errors.append('native arm64 architecture unavailable')
+if targets.returncode:
+    errors.append('native index target enumeration failed')
+expected = set()
+for stanza in stanzas:
+    if stanza.get('enabled', 'yes').lower() == 'no':
+        continue
+    if stanza.get('types') != 'deb' or any(s.endswith('/') for s in stanza['suites'].split()):
+        errors.append('source type or suite outside this Ubuntu distribution-only check')
+        continue
+    if any(k.startswith('architectures') or k.startswith('targets') for k in stanza):
+        errors.append('per-source architecture/target override requires separate derivation')
+        continue
+    for uri in stanza['uris'].split():
+        for suite in stanza['suites'].split():
+            for component in stanza['components'].split():
+                expected.add((uri.rstrip('/'), suite, f'{component}/binary-{arch}/Packages'))
+observed = set()
+for line in targets.stdout.splitlines():
+    fields = line.split('|')
+    if len(fields) != 4:
+        errors.append('malformed index target tuple')
+        continue
+    site, suite, meta, identifier = fields
+    if identifier == 'Packages':
+        observed.add((site.rstrip('/'), suite, meta))
+if source.read_bytes() != before:
+    errors.append('source bytes changed during capture')
+if not expected:
+    errors.append('no configured Ubuntu Packages targets derived')
+missing = sorted(expected - observed)
+result = {
+    'captured_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    'scope': 'Only Ubuntu deb distribution stanzas, each configured component/suite at native arm64. Other repos, deb-src, optional targets, approval, signatures, freshness and fresh update remain separate.',
+    'source': str(source), 'source_sha256': hashlib.sha256(before).hexdigest(),
+    'architecture_query': {'command': architecture_command, 'returncode': architecture.returncode, 'stdout': architecture.stdout, 'stderr': architecture.stderr},
+    'index_query': {'command': command, 'returncode': targets.returncode, 'stdout': targets.stdout, 'stderr': targets.stderr},
+    'expected': sorted(expected), 'missing': missing,
+    'present': len(expected & observed), 'fail': int(bool(missing)),
+    'could_not_run_count': int(bool(errors)), 'errors': errors,
+    'collector_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+}
+output = Path(__file__).with_name('ubuntu-component-coverage.json')
+output.write_text(json.dumps(result, indent=2) + '\n')
+print(json.dumps({k: result[k] for k in ('present', 'missing', 'fail', 'could_not_run_count')}))

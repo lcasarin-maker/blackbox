@@ -1,0 +1,37 @@
+[
+  {
+    "id": "SPEC-L346",
+    "claim_id": "SPEC-L346",
+    "verdict": "PASS",
+    "evidence": "`SPEC.md:346` enumera cinco controles negativos de muestra/clock-lock/earlyoom y tres de latido bb-usable; el recibo `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/heartbeat-and-sunset-correction-root.json` registra el comando focal de `tests/test_bb_bash.py` con salida literal `9 passed, 77 deselected in 1.29s`, cubriendo esos ocho controles y el caso heartbeat. La ejecuci\u00f3n previa con el stub incompleto produjo cuatro CNR por `Failed to connect to bus: Operation not permitted`; tras corregir el stub exacto del test, el recibo final marca `could_not_run: 0`, as\u00ed que esa limitaci\u00f3n del harness ya no refuta la claim actual.",
+    "could_not_run": 0
+  },
+  {
+    "id": "SPEC-L348",
+    "claim_id": "SPEC-L348",
+    "verdict": "PASS",
+    "evidence": "`adopted/systemd-user/blackbox-sample.service:8-9` y `adopted/systemd-user/atom-gpu-telemetry.service:14-15` declaran `Nice=19` e `IOSchedulingClass=idle`; el recibo fechado `tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/host-evidence/nice-current.txt` registra esos valores en vivo y distingue los muestreadores adoptados con `ai-memory-monitor Nice=0` y `ai-gpu-telemetry Nice=10`. La unit `systemd/bb-guardia-proceso.service:18` declara `Nice=10`; la prueba `tests/test_atom_gpu_telemetry.py::test_mitigar_pausa_los_pids_mitigables_al_entrar_en_alarma` junto a controles de no-alarma/reanudaci\u00f3n y sampler dio `4 passed in 0.04s`, respaldando la descripci\u00f3n de la conducta t\u00e9rmica.",
+    "could_not_run": 0
+  },
+  {
+    "id": "SPEC-L350",
+    "claim_id": "SPEC-L350",
+    "verdict": "PASS",
+    "evidence": "`bin/bb:2544-2618` compara sujetos y retorna distinto de cero ante divergencias o ausencias; los tests positivo y negativos de drift dieron `5 passed, 81 deselected`, y `./bin/bb drift` produjo `revisados: 41 divergentes: 2 ausentes: 0 suspendidos: 1`, exit 1. La ejecuci\u00f3n nativa de solo lectura est\u00e1 registrada en `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-h1/drift-timer-native-root.log`: `systemctl --user show blackbox-drift.timer -p LoadState -p ActiveState -p UnitFileState` devolvi\u00f3 `LoadState=loaded`, `ActiveState=active`, `UnitFileState=enabled`; `systemd/blackbox-drift.timer:4` declara `OnCalendar=daily` y `Persistent=true`.",
+    "could_not_run": 0
+  },
+  {
+    "id": "SPEC-L352",
+    "claim_id": "SPEC-L352",
+    "verdict": "PASS",
+    "evidence": "`SPEC.md:352` limita la atribuci\u00f3n de los cuatro sujetos a lo que afirma la clasificaci\u00f3n H1 archivada y declara expl\u00edcitamente pendiente revalidar la fecha y la discrepancia cuatro-frente-a-ocho; `tasks/evidence/RELEASE-2.1.0/h1-items.json:79` es la referencia archivada de esa atribuci\u00f3n, mientras esta copia reconoce que carece del stdout de `stat -c %w` y del control negativo. Los conteos comprobables siguen reproduci\u00e9ndose: `git show --diff-filter=A --format= --name-only 1ec66b3 -- adopted/` da 12 paths a\u00f1adidos, y `./bin/bb drift` actual da `revisados: 41 divergentes: 2 ausentes: 0 suspendidos: 1`, exit 1; la redacci\u00f3n actual no presenta la fecha hist\u00f3rica como verificada independientemente.",
+    "could_not_run": 0
+  },
+  {
+    "id": "SPEC-L354",
+    "claim_id": "SPEC-L354",
+    "verdict": "PASS",
+    "evidence": "`SPEC.md:354` atribuye 35.0%-35.3% al estado versionado de `SPEC.md` en `57ae066` y al `SPEC.md` de su padre, en vez de al mensaje del commit; `git show 57ae066:SPEC.md` contiene ese dato, mientras el cuerpo del mensaje no lo contiene. La reconstrucci\u00f3n de `d3d7980` produjo `files=13 total_lines=4111 bin_bb_lines=2768 pct=67.332%`; `tools/cobertura_bash.sh:4-7`, `.pre-commit-config.yaml:139-147` y `tests/cobertura_bb.piso` documentan instrumento/gate/piso, y `python3 -m pytest -q tests/test_cobertura_bash.py` devolvi\u00f3 `3 passed`.",
+    "could_not_run": 0
+  }
+]

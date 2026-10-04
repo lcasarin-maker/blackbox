@@ -1,0 +1,23 @@
+{
+  "observed_at": "2026-10-04T08:05:12.765102+00:00",
+  "scope": "Read-only proposed producer sync plan, no application or distribution.",
+  "cwd": "/tmp/simplecode-pii-worktree",
+  "command": [
+    ".venv/bin/python",
+    "-m",
+    "simplecode.cli",
+    "sync-satellites",
+    "--plan",
+    "--target",
+    "/home/lcasarin/projects/blackbox"
+  ],
+  "environment": {
+    "PYTHONPATH": "src"
+  },
+  "returncode": 1,
+  "stdout": "[blackbox] RUNTIME_DRIFTED (satellite=9.3.2, mother=9.3.2, differs: runtime.zip -- SAME VERSION, DIFFERENT CONTENT: the version number did not move with the code), KIT_LOCK_DRIFTED (.simplecode/kit.lock), MAKEFILE_ABSENT (no GNUmakefile, makefile or Makefile -- no subject to compare)\n",
+  "stderr": "",
+  "decision": "Await final producer gate; bump canonical version before distribution. Select runtime-only BB rollout, existing project config/product tasks retained; full template sync would additionally require resolving absent optional Makefile.",
+  "applied": false,
+  "landing_status": "Held after root JSON row-binding false-negative; canonical producer unchanged, version bump/sync not applied."
+}

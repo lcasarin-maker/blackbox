@@ -1,0 +1,48 @@
+{
+  "observed_at": "2026-10-04T07:36:11.373391+00:00",
+  "scope": "Signature component plus previous APT component unit validation; original closure remains pending.",
+  "commands": [
+    {
+      "command": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_apt_sources.py",
+        "--cov=tools.apt_sources",
+        "--cov-branch",
+        "--cov-fail-under=100"
+      ],
+      "returncode": 0,
+      "stdout": "75 passed in 0.27s\ntools/apt_sources.py 337 statements, 0 missing, 138 branches, 0 partial, 100%\n"
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "ruff",
+        "check",
+        "tools/apt_sources.py",
+        "tests/test_apt_sources.py"
+      ],
+      "returncode": 0,
+      "stdout": "All checks passed!\n"
+    },
+    {
+      "command": [
+        "python",
+        ".simplecode/run.py",
+        "simplecode.verification.pyright_gate",
+        "--root",
+        "."
+      ],
+      "returncode": 0,
+      "stdout": "0 errors, 0 warnings, 0 informations\n"
+    }
+  ],
+  "could_not_run_count": 0,
+  "source_sha256": {
+    "tools/apt_sources.py": "c2264e3b88a633a3267fc523de7b90af1c163eabe7466a2eb9b41cc13d772b17",
+    "tests/test_apt_sources.py": "7aa971a3dd755146061fa83950eb9beff1768d94fb5a8a73720ba98994bbb703"
+  }
+}

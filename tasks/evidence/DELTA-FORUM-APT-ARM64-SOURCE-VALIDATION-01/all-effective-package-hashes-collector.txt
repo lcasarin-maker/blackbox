@@ -1,0 +1,40 @@
+from pathlib import Path
+import json,hashlib,subprocess,datetime,sys
+sys.path.insert(0,str(Path.cwd()))
+from tools.apt_sources import parse_release_sha256,check_release_index
+base=Path('tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01')
+signed=json.loads((base/'all-cached-release-signatures/source-specific-signatures.json').read_text())
+lookup={(x['binding'].get('effective_uri',x['binding'].get('uri')).rstrip('/'),x['binding']['suite'].strip('/')):x for x in signed['rows']}
+command=['apt-get','indextargets','--format=$(FILENAME)|$(METAKEY)|$(SITE)|$(RELEASE)|$(IDENTIFIER)|$(ARCHITECTURE)']
+p=subprocess.run(command,capture_output=True,text=True,timeout=20,check=False)
+rows=[];seen=set()
+for line in p.stdout.splitlines():
+ fields=line.split('|')
+ if len(fields)!=6 or fields[4]!='Packages':continue
+ filename,meta,site,suite,identifier,arch=fields
+ if tuple(fields) in seen:continue
+ seen.add(tuple(fields));row={'filename':filename,'meta_key':meta,'site':site,'suite':suite,'architecture':arch}
+ try:
+  record=lookup.get((site.rstrip('/'),suite.strip('/')))
+  if record is None:raise ValueError('no verified source-specific manifest binding')
+  manifest=Path(record['manifest']);payload=manifest.read_bytes()
+  if hashlib.sha256(payload).hexdigest()!=record['manifest_sha256']:raise ValueError('archived manifest changed')
+  text=payload.decode();entries,errors=parse_release_sha256(text)
+  if errors:raise ValueError('manifest parse failed: '+'; '.join(errors[:3]))
+  expected=entries.get(meta)
+  if expected is None:raise ValueError('METAKEY absent from signed manifest')
+  if expected[1]>128*1024*1024:raise ValueError('expected index exceeds 128MiB declared ceiling')
+  path=Path(filename);before=path.stat();query=['/usr/lib/apt/apt-helper','cat-file',filename]
+  r=subprocess.run(query,capture_output=True,timeout=30,check=False)
+  if r.returncode:raise ValueError('apt-helper could not read effective index')
+  after=path.stat();stable=(before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns,before.st_ctime_ns)==(after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns,after.st_ctime_ns)
+  result=check_release_index(text,meta,r.stdout)
+  if not stable:result={'status':'could_not_run','could_not_run_count':1,'fail':0,'errors':['index changed during read']}
+  row.update(result,manifest=str(manifest),manifest_sha256=record['manifest_sha256'],command=query,returncode=r.returncode,stderr=r.stderr.decode('utf-8','replace'),index_stable_during_read=stable)
+ except (OSError,ValueError,subprocess.TimeoutExpired) as error:row.update(status='could_not_run',could_not_run_count=1,fail=0,reason=str(error))
+ rows.append(row)
+result={'captured_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'scope':'Distinct current effective Packages indices against exact archived source-specific signature-verified SHA256 manifests. All observed architectures included. No approval/freshness/update/install or configured-source coverage claim. Raw Packages omitted; native command, length/SHA retained.','index_query':{'command':command,'returncode':p.returncode,'stdout':p.stdout,'stderr':p.stderr},'rows':rows,'pass':sum(x['status']=='pass' for x in rows),'fail':sum(x['fail'] for x in rows),'could_not_run_count':sum(x['could_not_run_count'] for x in rows)+int(p.returncode!=0)}
+(base/'all-effective-package-hashes.json').write_text(json.dumps(result,indent=2)+'\n')
+print(json.dumps({'indices':len(rows),**{k:result[k] for k in ('pass','fail','could_not_run_count')}}))
+for row in rows:
+ if row['status']!='pass':print(row['site'],row.get('reason',row.get('errors','hash mismatch')))

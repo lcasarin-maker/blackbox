@@ -1,0 +1,84 @@
+{
+  "command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01",
+  "exit_code": 1,
+  "result": {
+    "complete": true,
+    "could_not_run": 12,
+    "criteria_unimplemented": [
+      "The external decision SHA must come from the recorded human approval channel; the CLI verifies that supplied digest but cannot authenticate the person or approval system supplying it.",
+      "Canary source/config transcripts are caller-supplied and hash-bound; no trusted host attestation proves the isolated APT process consumed those exact bytes.",
+      "The native subject stack capture is caller-supplied; no attestation binds BIOS/stack fields to a measured physical host.",
+      "Native UTC command and package-list mtimes are caller-supplied receipts; the verifier binds them but has no external trusted clock authority.",
+      "APT source-level Targets-Add/Targets-Remove and explicit re-enabling of DefaultEnabled=false targets remain could_not_run pending a native semantic capture."
+    ],
+    "fail": 0,
+    "gates": [
+      {
+        "gate": "subject_stack",
+        "reason": "capture schema version 1 is required",
+        "status": "could_not_run"
+      },
+      {
+        "gate": "approved_profile_and_freshness_policy",
+        "reason": "capture schema version 1 is required",
+        "status": "could_not_run"
+      },
+      {
+        "gate": "configured_source_coverage",
+        "reason": "capture schema version 1 is required",
+        "status": "could_not_run"
+      },
+      {
+        "gate": "signature_key_and_source_binding",
+        "reason": "capture schema version 1 is required",
+        "status": "could_not_run"
+      },
+      {
+        "gate": "effective_index_integrity_and_coverage",
+        "reason": "capture schema version 1 is required",
+        "status": "could_not_run"
+      },
+      {
+        "gate": "signed_release_freshness",
+        "reason": "capture schema version 1 is required",
+        "status": "could_not_run"
+      },
+      {
+        "gate": "fresh_isolated_update",
+        "reason": "capture schema version 1 is required",
+        "status": "could_not_run"
+      },
+      {
+        "gate": "wrong_source_negative",
+        "reason": "capture schema version 1 is required",
+        "status": "could_not_run"
+      },
+      {
+        "gate": "integrity_negatives",
+        "reason": "capture schema version 1 is required",
+        "status": "could_not_run"
+      },
+      {
+        "gate": "safety_and_input_binding",
+        "reason": "capture schema version 1 is required",
+        "status": "could_not_run"
+      },
+      {
+        "gate": "rollback_and_cleanup",
+        "reason": "capture schema version 1 is required",
+        "status": "could_not_run"
+      },
+      {
+        "gate": "aggregate_selector",
+        "gate_count": 11,
+        "reason": "capture schema unavailable",
+        "status": "could_not_run"
+      }
+    ],
+    "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01",
+    "provenance": "caller-supplied evidence; hashes do not authenticate host or command origin",
+    "status": "unknown"
+  },
+  "log_sha256": "863547c6d7b59394fc2e3fb7d313f7c58dd81cc510de9a3ae237f6492a3f6bbb",
+  "subject_closed": false
+}

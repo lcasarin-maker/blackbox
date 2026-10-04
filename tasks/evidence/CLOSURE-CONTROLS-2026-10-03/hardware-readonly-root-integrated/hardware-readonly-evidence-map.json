@@ -1,0 +1,1542 @@
+{
+  "source": "/home/lcasarin/projects/blackbox/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware.json",
+  "source_sha256": "1894059c90079e614cceae0d7630ac98081dcba0e93942e69ec482a42763a96f",
+  "count": 47,
+  "batch_size_max": 10,
+  "batches": [
+    {
+      "path": "/tmp/bb-hw-readonly-evidence-map/batch-01.json",
+      "sha256": "5866df0741fe4106698be95d38692bf2160ac207d8601104e9338a2c046efd4d",
+      "bytes": 253372
+    },
+    {
+      "path": "/tmp/bb-hw-readonly-evidence-map/batch-02.json",
+      "sha256": "82387faf997bbbaa125e61eb1bd7a486b6372664219b5429fab68bd2a4595a4f",
+      "bytes": 51463
+    },
+    {
+      "path": "/tmp/bb-hw-readonly-evidence-map/batch-03.json",
+      "sha256": "e91df86da2979887e4e45312251f362290732424b0a074cac1c7c80e89e9f70e",
+      "bytes": 211582
+    },
+    {
+      "path": "/tmp/bb-hw-readonly-evidence-map/batch-04.json",
+      "sha256": "949c679355d78624983024a30d4c62b522c8b0a03e2d1aa56bb3df97a9c36ce1",
+      "bytes": 129344
+    },
+    {
+      "path": "/tmp/bb-hw-readonly-evidence-map/batch-05.json",
+      "sha256": "703c4f171206bf6fbb9efb5d4610617ec3e3a7cb82a4912daed7e69de5515517",
+      "bytes": 109894
+    }
+  ],
+  "items": [
+    {
+      "source_order": 1,
+      "id": "DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01",
+      "card_path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_forum_finding_01",
+        "expect": "exit_zero",
+        "porque": "Cada fase/id soportado evalúa su sujeto específico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo lógica realmente común; conservar comandos literales y demostrar discriminación entre fichas."
+      },
+      "evidence_files": [],
+      "current_assessment": "No new host read can satisfy this implementation aggregate; the original selectors remain CNR for missing subject captures.",
+      "useful_readonly_action": "No additional capture; use the original per-card controls and evidence.",
+      "prerequisite_or_blocker": "No host prereq; closure depends on per-ID real captures.",
+      "generated_batch": 1
+    },
+    {
+      "source_order": 2,
+      "id": "DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01",
+      "card_path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_gpu_clock_cap_ab_01",
+        "expect": "exit_zero",
+        "porque": "Cada fase/id soportado evalúa su sujeto específico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo lógica realmente común; conservar comandos literales y demostrar discriminación entre fichas."
+      },
+      "evidence_files": [],
+      "current_assessment": "Native read-only capability receipt exists; supported-clock output is N/A and current/max are observed, but no policy A/B or rollback is evidenced.",
+      "useful_readonly_action": "No further clock query resolves A/B; only preserve the existing capability receipt.",
+      "prerequisite_or_blocker": "Controlled clock-policy A/B, workload, soak and rollback need explicit authorization.",
+      "generated_batch": 1
+    },
+    {
+      "source_order": 3,
+      "id": "DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01",
+      "card_path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_memory_saver_01",
+        "expect": "exit_zero",
+        "porque": "Cada fase/id soportado evalúa su sujeto específico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo lógica realmente común; conservar comandos literales y demostrar discriminación entre fichas."
+      },
+      "evidence_files": [],
+      "current_assessment": "Current telemetry snapshot exists, not a recovery soak or causal memory-pressure event.",
+      "useful_readonly_action": "No read-only action closes it; existing telemetry dry observation is the baseline.",
+      "prerequisite_or_blocker": "Approved workload/soak and recovery event required.",
+      "generated_batch": 1
+    },
+    {
+      "source_order": 4,
+      "id": "DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+      "card_path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_usb_hid_postupdate_01",
+        "expect": "exit_zero",
+        "porque": "Cada fase/id soportado evalúa su sujeto específico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo lógica realmente común; conservar comandos literales y demostrar discriminación entre fichas."
+      },
+      "evidence_files": [],
+      "current_assessment": "Current observation has no attached HID subject and no post-update failure/recovery sequence.",
+      "useful_readonly_action": "No additional host-only query; a real keyboard/peripheral and update case are prerequisites.",
+      "prerequisite_or_blocker": "Peripheral plus authorized update/recovery sequence.",
+      "generated_batch": 1
+    },
+    {
+      "source_order": 5,
+      "id": "DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01",
+      "card_path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_wifi_isolation_01",
+        "expect": "exit_zero",
+        "porque": "Cada fase/id soportado evalúa su sujeto específico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo lógica realmente común; conservar comandos literales y demostrar discriminación entre fichas."
+      },
+      "evidence_files": [],
+      "current_assessment": "Current wireless interface is unavailable/down; wired link is present. No isolated endpoint/control or recovery sequence.",
+      "useful_readonly_action": "No networking probe authorized; preserve current read-only observation.",
+      "prerequisite_or_blocker": "Approved isolated peer/network test and rollback.",
+      "generated_batch": 1
+    },
+    {
+      "source_order": 6,
+      "id": "DEBT-HOST-DEPLOYED-DRIFT-01",
+      "card_path": "tasks/backlog/DEBT-HOST-DEPLOYED-DRIFT-01.md",
+      "close_check": {
+        "cmd": "bash bin/bb drift",
+        "expect": "exit_zero",
+        "porque": "El comparador debe observar archivos reales iguales al repo; su control negativo de divergencia ya existe en tests/test_bb_bash.py. No rebajar el detector ni copiar comentarios antiguos al repo para absolver el despliegue."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/fail.txt",
+          "sha256": "0415e419187464bbe2b5f08c3b5755d8fa60f6b44400bf34816e561de5b29171",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/source.json",
+          "sha256": "5da716cc1d018aff385a482a7e605c012c35c70968c5f03c9973a95b35ad35b9",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Existing comparison records two deployed-file divergences. Read-only reinspection cannot reconcile bytes.",
+      "useful_readonly_action": "None; the captured drift is already explicit.",
+      "prerequisite_or_blocker": "Owner authorization to synchronize the two host files.",
+      "generated_batch": 1
+    },
+    {
+      "source_order": 7,
+      "id": "DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES",
+      "card_path": "tasks/backlog/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES.md",
+      "close_check": {
+        "cmd": "bash tools/demonio_al_dia.sh --user bb-guardia-proceso.service bin/bb-guardia-proceso",
+        "expect": "exit_zero",
+        "porque": "`systemctl` no esta en .simplecode/build_tools.txt (solo grep y bash), asi que llamarlo directo en el close_check es un CONTRACT BREACH que backlog-verifier cazo en la practica. Se envuelve en demonio_al_dia.sh -- YA existente, YA con suite, extendido con --user en este mismo commit -- que ademas comprueba algo mas fuerte que is-active: que el PROCESO VIVO arranco DESPUES de la ultima modificacion del codigo, el mismo patron que ya usa DEBT-UNA-BAJADA-MOMENTANEA. Se invoca via bash porque es lo que build_tools.txt declara y backlog-verifier solo confia en esa lista."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES/armado.txt",
+          "sha256": "cb6b6f98051a07c9afdb771f48e1323ad2272a39f2f8518a6333af1bcb238e4e",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES/e2e.txt",
+          "sha256": "7f23cda0f8164b9add9a9f108d6e9f9ddcdd9a52e599366ab5b75f918b837d82",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES/fail.txt",
+          "sha256": "5ed2be7b4c9edfec937c5aa013600765b5895de5b2e3a8f895b8b231eca4c734",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES/pass.txt",
+          "sha256": "6f53ebde3a5f1eb97f91f80cd0cea84fb23a99e21af65dbc901b5ba9bf34c10e",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES/recierre-2026-10-03.txt",
+          "sha256": "738074716f410b66cad83de77b0d581298bb531e92c80c198ee0cb5638b5a19f",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Card is in tasks/done with recierre evidence; no pending read-only action.",
+      "useful_readonly_action": "None.",
+      "prerequisite_or_blocker": "None indicated; already done.",
+      "generated_batch": 1
+    },
+    {
+      "source_order": 8,
+      "id": "DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01",
+      "card_path": "tasks/backlog/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_telemetry_dispositions --event-id 92dc63137ae930f3 --event-id a50ae5e52c99c3ab --event-id 5437b44ce52501ee",
+        "expect": "exit_zero",
+        "porque": "Comprueba que cada evento histórico tenga un estado admitido y evidencia no vacía; falla hasta recuperar evidencia y registrar cada dictamen."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01/recovered-event-metadata.json",
+          "sha256": "ef9026fd56e3edaecf40f3ced4fedd2de7dad35d0da1c90366889ad6f1157f13",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Recovered metadata exists; three historical events still need explicit disposition/source/evidence.",
+      "useful_readonly_action": "No system read can supply owner disposition.",
+      "prerequisite_or_blocker": "Human decision per event.",
+      "generated_batch": 1
+    },
+    {
+      "source_order": 9,
+      "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/aquasecurity.github.io_trivy-repo_deb_dists_noble_InRelease",
+          "sha256": "3d7a326c511c10e460bdf1dcad12258ea16867379287136d6b0d359cf10b44ae",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/composite-status.json",
+          "sha256": "d16bb45b39dfa855beab7a0f2640a80327a7f966a62ef4c5eb17d8661e211350",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/developer.download.nvidia.com_compute_cuda_repos_ubuntu2404_sbsa_InRelease",
+          "sha256": "2dfd24afc496d552c87c0d0c58d8de743e7911b355a59c93f5d5cfb2ad0093e3",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/developer.download.nvidia.com_hpc-sdk_ubuntu_arm64_InRelease",
+          "sha256": "c00942eb95d11d8d2e608e2fbd6ed9c0cd6b90b540f918dc926b8c08ee441fc0",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/dl.google.com_linux_chrome-stable_deb_dists_stable_InRelease",
+          "sha256": "b8266e41d6d544781c183d65c01ad1142d167ff15a3ece2cbc7862711c396ae7",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/downloads.claude.ai_claude-desktop_apt_stable_dists_stable_InRelease",
+          "sha256": "e069dbd2896b7b3aa4ba1043fc94382a498a860a073f9ec9e0721d2e93f11721",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/downloads.cursor.com_aptrepo_dists_stable_InRelease",
+          "sha256": "af0242140fd6a76de7a9c2fe3696a36a214714920d77e40351a4631e0da06984",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/embedded-key-recheck.json",
+          "sha256": "efee41839fa5cae093ef083b18a5109397985610dff4eefdf2f457f989ae8876",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/esm.ubuntu.com_apps_ubuntu_dists_noble-apps-security_InRelease",
+          "sha256": "67eac170c19d3b54004109bb87fa5d1f7308344a5693cfb81177f33534c561aa",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/esm.ubuntu.com_apps_ubuntu_dists_noble-apps-updates_InRelease",
+          "sha256": "7710701d0f4b2fcf04ea97ec9ef14f171fd82d3fc0b455e411f1126858091e86",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/esm.ubuntu.com_cis_ubuntu_dists_noble_InRelease",
+          "sha256": "aa9ef7867ca893a59830ef30e9353cd764b3060b0d30aa8ce51425a1a69d2527",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/esm.ubuntu.com_infra_ubuntu_dists_noble-infra-security_InRelease",
+          "sha256": "e1c207064df664744c75e485abfb5046465fa5b99b88e8c831de101028b7ec9b",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/esm.ubuntu.com_infra_ubuntu_dists_noble-infra-updates_InRelease",
+          "sha256": "e8cd18f06396796ee518edd8c6a6022dd1cc0831988da92586e208a376429ba1",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/00-antigravity-repo-key.gpg",
+          "sha256": "a22e1a7885381e4005b61884a5205892c39d15f5c262555e38b4fe5402ca8895",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/01-ai-workbench-desktop-key.gpg",
+          "sha256": "e2d8269adf4417edb281b2f6f647486c9283a8a0bc3bd320aee7a4a152ce3628",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/02-anysphere.gpg",
+          "sha256": "0504fa8c1fdb830025bce4110cc741e5f725473c4564220a0663bdeaa0aef567",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/03-chatgpt-archive-keyring.gpg",
+          "sha256": "23e2cfbdef6afe95505f9e95a2cb63585da7ffe9b06a51ec08a32407c847d596",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/04-claude-desktop-archive-keyring.asc",
+          "sha256": "bd70a5e4a268002704024ceba7f8446024114e94f3f0bdd11c23a9e592be81c6",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/04-claude-desktop-archive-keyring.asc.dearmored.gpg",
+          "sha256": "0e122272125dd4bed96be0034cd95c84e9db07b4cf9bcddbe7c3ae01f3580646",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/05-cuda_debian_prod.gpg",
+          "sha256": "f33f420db24f66928c56b41715d9d5f55c9493201f949439e8ef58ca065ce5ce",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/06-dgx_debian_prod.gpg",
+          "sha256": "5fb5c807c302b5ff490d0a48581dfb270ff8fb0742e44931529f86168e8e6478",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/07-google-chrome.gpg",
+          "sha256": "5279f80f139fcf962ac44abc4b79b67d14807c8f5a6d9ec8e9e3f7023532961d",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/08-microsoft.gpg",
+          "sha256": "098f10efd65c0d0a856a980144b5f37c05374eaa575a208d46913fd8f7eae951",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/09-nvidia-container-toolkit-keyring.gpg",
+          "sha256": "425822bb25bfa7f5ce96e598a7bbd27db128649e4113017b3ff765b98b43b166",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/10-nvidia-hpcsdk-archive-keyring.gpg",
+          "sha256": "34d5891741b51d8c8f7d9aa4705e031ce369bde8b7ccf9ae41409da15bc7673b",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/11-nvidia-spark-repo.gpg",
+          "sha256": "877cc93ff7a2c472bc2f82ac9c157e39675d82bbccbb448c43aaa5665c0e10f3",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/12-trivy.gpg",
+          "sha256": "a8a7d6813fca8191be418edd323b2bdf61852f7a870673e431d34245281313d9",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/13-ubuntu-archive-keyring.gpg",
+          "sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/14-ubuntu-pro-cis.gpg",
+          "sha256": "9600efb6081353ebacafa7619beaa220dbed24cf264bf1011f9560ddb0fa9b56",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/15-ubuntu-pro-esm-apps.gpg",
+          "sha256": "ed9df9acf98c9e400e20bc84a44b06f0aac61731c69f347349ed53c6cc4107c9",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/16-ubuntu-pro-esm-infra.gpg",
+          "sha256": "4f9db26dc8ce2e4a7a367947ac53b51b0aa85fe43af32a523ba4a5bf8f5c2a4c",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/canonical-nvidia-ubuntu-nvidia-desktop-edge-noble-embedded.asc",
+          "sha256": "752b87cb552b3bbc1d1fb3cda000fdcea795538658d3bbb550c6ad0f9714b6a3",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/canonical-nvidia-ubuntu-nvidia-desktop-edge-noble-embedded.gpg",
+          "sha256": "49d5b15f4205839b36ec5f77a4d1212845c3cccd28555ffbf7ece2ff8f3aa0d5",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/nv-vulkan-desktop-ppa-embedded.asc",
+          "sha256": "752b87cb552b3bbc1d1fb3cda000fdcea795538658d3bbb550c6ad0f9714b6a3",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/keyrings/nv-vulkan-desktop-ppa-embedded.gpg",
+          "sha256": "49d5b15f4205839b36ec5f77a4d1212845c3cccd28555ffbf7ece2ff8f3aa0d5",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/nvidia.github.io_libnvidia-container_stable_deb_arm64_InRelease",
+          "sha256": "c1f71ac3e6deb22c83046c2fd96549b9f35a0b84efaeac4e9df065b2490a3f04",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/packages.microsoft.com_repos_code_dists_stable_InRelease",
+          "sha256": "2c036c6b74c71dbf291556ed836c14b79b84f5ce57926e47102f7f9b6b96de78",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/persistent.oaistatic.com_codex-app-prod_linux_deb_dists_stable_InRelease",
+          "sha256": "aeeb1671c5b8c6fec2923384217351c03caf0abfefe6aa41e9fcc85dd58d0e0e",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/ports.ubuntu.com_ubuntu-ports_dists_noble-backports_InRelease",
+          "sha256": "a739a62d6f9008e01b2b0f639a4976b24f669f693a7f82b230df7e82d24d5715",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/ports.ubuntu.com_ubuntu-ports_dists_noble-security_InRelease",
+          "sha256": "a7ed9f9b84a70795e01c3763cd8fbcaf678a5683b14074fcd880f442f379e19a",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/ports.ubuntu.com_ubuntu-ports_dists_noble-updates_InRelease",
+          "sha256": "da1cdfa3f8ddfbbc9f9e7dfedfde41bd2d80ceaa9992f8a96b61526dfe05fb1a",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/ports.ubuntu.com_ubuntu-ports_dists_noble_InRelease",
+          "sha256": "cdb2f31d809f589719a53c6ad15f255b27569c4059542ada282aaa21b8e164b0",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/repo.download.nvidia.com_baseos_ubuntu_noble_arm64_dists_noble-updates_InRelease",
+          "sha256": "4d6eee611a64df4275a70d16b030813b0e13d98a248955ee18fa80ea33173d81",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/repo.download.nvidia.com_baseos_ubuntu_noble_arm64_dists_noble_InRelease",
+          "sha256": "8aaa90fc42cb1a2e092bb499a3616d601f49a01f2e59605d34e37990b21f95cc",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/repo.download.nvidia.com_spark_ubuntu_arm64_dists_noble-updates_InRelease",
+          "sha256": "7ccb602d603a0615011c37aaadd6894ccb0cb6289352a5511ed4c8cfe2f66fe8",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/run.json",
+          "sha256": "085b2944c2ee8434e115f93ce28edf79af912c73942c0744e6ac66d297c66077",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/snapshot.ppa.launchpadcontent.net_canonical-nvidia_nvidia-desktop-edge_ubuntu_dists_noble_InRelease",
+          "sha256": "037238ae60901f88e862fc7dbb7c7956e018b7d1aa7cecdd9f0b5bd794a9a602",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/snapshot.ppa.launchpadcontent.net_canonical-nvidia_vulkan-packages-nv-desktop_ubuntu_dists_noble_InRelease",
+          "sha256": "e00686f50470f162fe349651559c7608a34dc3dc050a31ed424401d58f7626cf",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/source-specific-signatures.json",
+          "sha256": "fc9b3ad2ac3e5fed88ece0d742f55a4c8c616c242c9f56b5a4eb80b7b97db6b0",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/us-central1-apt.pkg.dev_projects_antigravity-auto-updater-dev_dists_antigravity-debian_InRelease",
+          "sha256": "52f611338126259a69e6376bec709b3b1690960935371a9c8b394277034f83fe",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/workbench.download.nvidia.com_stable_linux_debian_dists_default_InRelease",
+          "sha256": "4447bf96fe04d062d9baaaa059db9478f3b8ecbb151e19d9809ccd59546892f6",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-effective-index-hashes-collector.txt",
+          "sha256": "7f75f88c2675acb691a7efdbbd1d5af244f16314c61b292c857249eb65960254",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-effective-index-hashes.json",
+          "sha256": "49107c4400c7ea0e3959cbf0f761111570e1df5d3b55b27662a97004976d2c13",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-effective-package-hashes-collector.txt",
+          "sha256": "1feab643062b9dbc2239a420a2e7191f2ebf47f80830a543078fd2ea3e858699",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-effective-package-hashes-with-sha512-collector.txt",
+          "sha256": "13a74f51ad8562ec98e294bef4fef5e654d2c0e1153b537d18c012a8387bb531",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-effective-package-hashes-with-sha512.json",
+          "sha256": "4ec9ac0a602b8ae73998325a13bfcadd88f265e576085c68e90ff20b86e4812f",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-effective-package-hashes.json",
+          "sha256": "5cc5b5deed25d6a399421afca484ba019e5123f493189de80817c8bbf5bb9ab4",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/commands.json",
+          "sha256": "e1bee1254c8e8bace0b304306795ec079be8a532e5b97c049d9f0ab137a6ae34",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/configured-source-manifest-coverage.json",
+          "sha256": "ced62aa4d19ae610d1121ae4bc6874cf6dd9517254341fbee36787183e1b4b8c",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/current-upgrade-simulation.json",
+          "sha256": "6fc87ac8ad37018cedca9f2e7ccbd214e9713bdb4b12b51a6a9f921c5c2f07c9",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/deb822-exact-path-unit-validation.json",
+          "sha256": "2ac0013c236ca2683c6a4b4a0daa758b778da76da2528b7e042f35eb417c7061",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/declared-keyring-fingerprints.json",
+          "sha256": "c020afac9ca7cf8aaa7fd94c439012ef293aeda5e6ecfd530712b8e0ec003da5",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-index-target-configuration.json",
+          "sha256": "da5c6fa32c14acfc85d2c6a9cc70125bfd7714ec3e39932d66d9d71c7e0042eb",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/effective-profile-for-decision.json",
+          "sha256": "9e9c435d62f2a9a26d4ae660e87cca167d883a9d6c4d6e604e6d2bc8eb05eb81",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/empty-index-coverage-unit-validation.json",
+          "sha256": "aa20b08940009bf344ac8d41d0c921f6fd0ffe2e7f2c5c9b40ff50faca858a4a",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/healthy-source-canary/canary.sources",
+          "sha256": "7bd2235530ae83c39033f7b3df2469e54731af1e846257b622b9e4a12ca578fc",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/healthy-source-canary/collector-source.txt",
+          "sha256": "b56c9d583ca1e140f5c55d7e00c19fc4f0d500805f9df5f73a1877bd8cd634a0",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/healthy-source-canary/isolated.conf",
+          "sha256": "2a3b01884fcf53941907a6e8972eb925e21d564c99cc0391d81f3a98ec6cf332",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/healthy-source-canary/ports.ubuntu.com_ubuntu-ports_dists_noble-updates_InRelease",
+          "sha256": "da1cdfa3f8ddfbbc9f9e7dfedfde41bd2d80ceaa9992f8a96b61526dfe05fb1a",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/healthy-source-canary/run.json",
+          "sha256": "d0f23da60fc3e6f9e387c4c13e17bce5f7c9b36ad155781a91ebbe7efbec17d5",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/index-identity-unit-validation.json",
+          "sha256": "dc4322a66ea8f423e81d4e80d410a852338fbb5ebc539896673c24c633502ff4",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/isolated-update-control-replay.json",
+          "sha256": "a7cdf53c7f0b882a49a72b090ece927ea164556d3c685426f60dbb0ded87974f",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/isolated-update-control-unit-validation.json",
+          "sha256": "31863e8dfa0801e719c848009bc91a87a89d5c0fa03eede87c917da2033335d1",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/isolated-update-truncation-unit-validation.json",
+          "sha256": "f872f720a257fba7d5e7903006e1a6fc6d759e64cdce289ad3438a894e3f5d66",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/native-subject-stack.json",
+          "sha256": "d5b872db3fd9ac13bcdff308bce87b05e3a0ea040df49f83deac5ea8c18fdc6b",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/native-suite-parser-validation.json",
+          "sha256": "eb009a82cdc01c5c392a68729d4c1d0d7bac26656d92027b5e4da0a4bec316b3",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/release-freshness-unit-validation.json",
+          "sha256": "bcebb7c19fd2cf99f3ad322c64a123736097c1163ff10ce86feebd0442c84fd1",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/release-parser-unit-validation.json",
+          "sha256": "986d2a8d8934bdaad639c0cd4dea8662f065961deabca3e23fee9374012773b8",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/sha512-unit-validation.json",
+          "sha256": "c101fd847ebc1f8a9fade3348816174441e021718f1a5708427dd06dae0417ba",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signature-component-native-replay.json",
+          "sha256": "b4ebc0468d52977661e95b88387404cc4d73edb1c82415f769079cd05d193d24",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signature-component-unit-validation.json",
+          "sha256": "fe3954cc5ce765620a9d73399ff25ed40562cfae4f9eab9a5756d1970d23efcd",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signature-isolated-trust-native-replay.json",
+          "sha256": "0dc19085105cba7aa317cc84c3f9ecc527738e74b72a7ef245ec067c2ac12b01",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signature-isolated-trust-unit-validation.json",
+          "sha256": "7fb30621bf534e1da6afd5640ea7be8646b3aee373c4adee2b9c4b2062e9a9e9",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-date-policy-observation.json",
+          "sha256": "2c2590f24bbe98caaded7e504d7405ad2858e394352694736ba94ea368b67cbb",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary/baseline.InRelease",
+          "sha256": "e0f1cc3d39f077df555da76d2d71a4491edd6b481d48945beffd5e7fbe236ef8",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary/baseline.Packages",
+          "sha256": "6fcb527e4801f5bbd087a16a82bef1e091213cc22bdd5c59aa0a97c96988e591",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary/canary-public-keyring.gpg",
+          "sha256": "69aae313ca35db5e524697ac72e26e6970eed357e3a0be2899ab470989312775",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary/collector-source.txt",
+          "sha256": "e1a25692f77d4ce7a95475158660e58e410999d53457c214311d72c3955f3f74",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary/run.json",
+          "sha256": "365131997c0e383d0ca44f225812fcb0f06664a5417948e0f5ea81c9833b321e",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/source-keyring-file-state.json",
+          "sha256": "3095b9719f7ae84c1f2000856c6985e213c6c944c62fda8d76f4c3a538fee7b6",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-component-coverage-collector.txt",
+          "sha256": "9ccac68264c7f02abbfc1f3eb7f4734d506d9c1bffcbcb0f335f1c5812b551a9",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-component-coverage-recomputed.json",
+          "sha256": "9fe94c4ad310c047a4e991baba737517e18a91057892162a6255ae733b3008cd",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-component-coverage.json",
+          "sha256": "c4ab34ef272a094a840b1fed3eef1596d11776a87ac862c4a4e32174ee2f2c04",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-component-empty-index-interpretation.json",
+          "sha256": "8500d30aca00a382aee79f7b063e23139f0829d1837d530f9268b3deb1ad1733",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/archived-run.json",
+          "sha256": "89e69a4d3dc24c114ede3ee84c986bc4ea7fdba16cb0d3c84d7cb54891f8ee93",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/package-hash-negative.json",
+          "sha256": "95fc00a16f8a777669c0d91e79670fe8d78ed068537505426ce6f02be11414c6",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/package-index-hashes.json",
+          "sha256": "ac0457785fb5bdb0e122af06468330258a543446c996372aec6fc533f24fa2ee",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/ports.ubuntu.com_ubuntu-ports_dists_noble-backports_InRelease",
+          "sha256": "a739a62d6f9008e01b2b0f639a4976b24f669f693a7f82b230df7e82d24d5715",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/ports.ubuntu.com_ubuntu-ports_dists_noble-security_InRelease",
+          "sha256": "a7ed9f9b84a70795e01c3763cd8fbcaf678a5683b14074fcd880f442f379e19a",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/ports.ubuntu.com_ubuntu-ports_dists_noble-updates_InRelease",
+          "sha256": "da1cdfa3f8ddfbbc9f9e7dfedfde41bd2d80ceaa9992f8a96b61526dfe05fb1a",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/ports.ubuntu.com_ubuntu-ports_dists_noble_InRelease",
+          "sha256": "cdb2f31d809f589719a53c6ad15f255b27569c4059542ada282aaa21b8e164b0",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json",
+          "sha256": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/wrong-source-canary/canary.sources",
+          "sha256": "79ceb5b1472ad0a7470ad86ed81fec90f034016b6d9f1a938150f469c1f41523",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/wrong-source-canary/isolated.conf",
+          "sha256": "aa7dc3963e7bf0ff4dfc15322cde4889625c84f577469e8d283b9bd5418c70e5",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/wrong-source-canary/run.json",
+          "sha256": "829db40b194eb4dba69ef385da07ff848708d2d0b827e4c6bdff5502f41c2e15",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Archived canaries include signed metadata, package index hashes and mutation negative. The package-manager source decision remains external and source/target scope is not a host-read question.",
+      "useful_readonly_action": "No new host query; use archived signed canary and exact external decision binding already in evidence set.",
+      "prerequisite_or_blocker": "Human/external trust decision and target source scope.",
+      "generated_batch": 1
+    },
+    {
+      "source_order": 10,
+      "id": "DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "Existing clock capability and thermal inventory are snapshots; current board is GIGABYTE AI TOP ATOM, not the ASUS target in the gap.",
+      "useful_readonly_action": "No further generic sensor inventory; target-specific platform/OEM docs and an approved experiment are needed.",
+      "prerequisite_or_blocker": "Exact target board/firmware and approved A/B.",
+      "generated_batch": 1
+    },
+    {
+      "source_order": 11,
+      "id": "DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cutlass_sm121_isa_gate_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "No card evidence. Existing native GB10/driver observation can anchor environment only, not SM121 ISA/build/runtime support.",
+      "useful_readonly_action": "A read-only version query could record compiler/CUDA/CUTLASS already installed, if present; it cannot prove kernel execution.",
+      "prerequisite_or_blocker": "Installed toolchain and authorized non-installing build/runtime validation.",
+      "generated_batch": 2
+    },
+    {
+      "source_order": 12,
+      "id": "DELTA-FORUM-CX7-FW-UPDATE-GUARD-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_fw_update_guard_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "No CX7 subject evidence; no firmware change is allowed.",
+      "useful_readonly_action": "None useful without CX7 adapter and exact OEM firmware release/candidate.",
+      "prerequisite_or_blocker": "CX7 hardware, OEM release evidence and separately approved update/rollback.",
+      "generated_batch": 2
+    },
+    {
+      "source_order": 13,
+      "id": "DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_physical_topology_alias_check_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "No CX7 paired topology capture.",
+      "useful_readonly_action": "If the adapter is attached, one read-only PCI/HCA identity capture can bind BDF/PSID; current evidence does not show the subject.",
+      "prerequisite_or_blocker": "CX7 hardware and known port/cable map.",
+      "generated_batch": 2
+    },
+    {
+      "source_order": 14,
+      "id": "DELTA-FORUM-CX7-POSTHOTPLUG-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-CX7-POSTHOTPLUG-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_posthotplug_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "No post-hotplug sequence; hotplug is prohibited in this task.",
+      "useful_readonly_action": "None under current authorization.",
+      "prerequisite_or_blocker": "Human-approved hotplug/recovery sequence on CX7.",
+      "generated_batch": 2
+    },
+    {
+      "source_order": 15,
+      "id": "DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_rdma_asymmetry_retest_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "No paired direction, cold/sequential reboot, or hotplug samples.",
+      "useful_readonly_action": "Current PCI inventory cannot substitute for per-scenario RDMA transfer records.",
+      "prerequisite_or_blocker": "CX7 pair, approved reboot/hotplug plan, cable topology and OEM stack.",
+      "generated_batch": 2
+    },
+    {
+      "source_order": 16,
+      "id": "DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_dualspark_power_reset_recovery_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "No repeated A/B power-reset recovery observations.",
+      "useful_readonly_action": "No read-only action can induce the required recovery case.",
+      "prerequisite_or_blocker": "DualSpark hardware and approved repeated reset/recovery plan.",
+      "generated_batch": 2
+    },
+    {
+      "source_order": 17,
+      "id": "DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_kv_quant_metric_provenance_gate_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "No model/workload outputs or metric provenance.",
+      "useful_readonly_action": "No read-only system inventory closes the comparison; preserve exact model/tokenizer/workload artifacts when available.",
+      "prerequisite_or_blocker": "Authorized inference comparison and trusted reference metrics.",
+      "generated_batch": 2
+    },
+    {
+      "source_order": 18,
+      "id": "DELTA-FORUM-MEMORY-RECOVERY-SOAK-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-MEMORY-RECOVERY-SOAK-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_memory_recovery_soak_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "Dry-run telemetry is a short snapshot; no multi-hour PID-bound workload/client/server termination chronology.",
+      "useful_readonly_action": "No further one-shot reading adds meaningful coverage.",
+      "prerequisite_or_blocker": "Predeclared workload, cadence/soak and approved termination/recovery test.",
+      "generated_batch": 2
+    },
+    {
+      "source_order": 19,
+      "id": "DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01/capture-summary.json",
+          "sha256": "852bb4116bad3616589ee969b4596087e1f8589fdc522317941593efbff4bc42",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Current native GPU read confirms GB10/580.178.04; kernel release is separately observed. This improves the current tuple but says nothing about post-OTA reboot/effective tuple.",
+      "useful_readonly_action": "Bind the existing native NVIDIA receipt to the card evidence; no new probe needed.",
+      "prerequisite_or_blocker": "OTA image/candidate and approved reboot/rollback.",
+      "generated_batch": 2
+    },
+    {
+      "source_order": 20,
+      "id": "DELTA-FORUM-RECOVERY-APT-UPDATE-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-RECOVERY-APT-UPDATE-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_recovery_apt_update_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "No recovery update canary. Existing signed APT evidence is a different source-validation case.",
+      "useful_readonly_action": "None; read-only host checks cannot demonstrate recovery path.",
+      "prerequisite_or_blocker": "Recovery environment, approved update and rollback.",
+      "generated_batch": 2
+    },
+    {
+      "source_order": 21,
+      "id": "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "Thermal inventory exists but has no fan inputs; clock capability receipt has N/A supported clocks. No auxiliary-cooling A/B.",
+      "useful_readonly_action": "No generic sensor reread; target-specific controller/fan readback would help only with the actual target hardware.",
+      "prerequisite_or_blocker": "External cooling/hardware and authorized clock/cooling A/B.",
+      "generated_batch": 3
+    },
+    {
+      "source_order": 22,
+      "id": "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_telemetry_coverage_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/current-native-observation-summary.json",
+          "sha256": "628910d78930dc14519ad711c0c94edb254c0ffa800515223bd7f02c425c6cdc",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/prototype-capture.json",
+          "sha256": "011a1c8bcd465ab447cd1ac0285a6c9455ff5120203b53f738862a4f29ddcc18",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Current native thermal summary records 7 zones, 3 hwmon, 11 temperature inputs, 0 fan inputs; this is a completed observation of coverage, not proof of adequate telemetry.",
+      "useful_readonly_action": "No repeat inventory; retain summary as actual coverage evidence.",
+      "prerequisite_or_blocker": "Any claim about fan coverage needs a platform with observable fan inputs or external measurement.",
+      "generated_batch": 3
+    },
+    {
+      "source_order": 23,
+      "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+      "card_path": "tasks/backlog/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_usb_raid_link_admission_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "No USB RAID subject/link capture.",
+      "useful_readonly_action": "If the enclosure is already attached, read-only USB/SCSI link identity/speed could establish current negotiation; no such target appears in evidence.",
+      "prerequisite_or_blocker": "USB RAID enclosure, expected identity and link-speed contract.",
+      "generated_batch": 3
+    },
+    {
+      "source_order": 24,
+      "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+      "card_path": "tasks/backlog/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_backup_mount_boot_identity_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "No external backup mount or expected boot identity in card evidence.",
+      "useful_readonly_action": "After the intended backup device is attached, read-only findmnt/lsblk/UUID plus current boot_id could bind the actual mount; no target is presently known.",
+      "prerequisite_or_blocker": "Known backup device/expected UUID and boot identity.",
+      "generated_batch": 3
+    },
+    {
+      "source_order": 25,
+      "id": "DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01",
+      "card_path": "tasks/backlog/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_display_carveout_oem_fix_gate_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "No display-carveout OEM fix or recovery evidence.",
+      "useful_readonly_action": "Current GPU identity does not establish OEM-supported carveout settings.",
+      "prerequisite_or_blocker": "Exact platform/OEM release and approved configuration/recovery.",
+      "generated_batch": 3
+    },
+    {
+      "source_order": 26,
+      "id": "DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01",
+      "card_path": "tasks/backlog/DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_gx10_soc_ec_cable_recovery_candidate_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "No GX10/EC/cable subject; current thermal host is a different board.",
+      "useful_readonly_action": "No useful host query without target GX10 and cable/EC identity.",
+      "prerequisite_or_blocker": "GX10 hardware, OEM compatibility record, cable and approved recovery plan.",
+      "generated_batch": 3
+    },
+    {
+      "source_order": 27,
+      "id": "DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01",
+      "card_path": "tasks/backlog/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_subambient_cooling_and_uma_canary_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "evidence_files": [],
+      "current_assessment": "No subambient/UMA canary. No cooling hardware intervention is authorized.",
+      "useful_readonly_action": "None; ambient/thermal snapshot cannot validate subambient safety or UMA behavior.",
+      "prerequisite_or_blocker": "Approved test plan, compatible cooling instrumentation and target hardware.",
+      "generated_batch": 3
+    },
+    {
+      "source_order": 28,
+      "id": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+      "card_path": "tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_apt_critical_removals --evidence tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+        "expect": "exit_zero",
+        "porque": "El cierre requiere demostrar que una remoción simulada peligrosa se bloquea o se declara antes de aplicar cambios, y que una transacción inocua sigue disponible; un inventario estático de paquetes no demuestra protección."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/apt-captures.json",
+          "sha256": "10c4b042ee56de970ef0d96a91ea352a80313a9780171f3e076af37385a7689d",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/apt-captures.sha256",
+          "sha256": "d07a67e4588d86b00a3df0821c0b2e1950d8c0075394b7b1d29aed738fca87fa",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/commands.json",
+          "sha256": "a7674abc018612f93ee696d97adcc8f198849a3e16e3d85692f4a97cd1b71e0a",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/preflight.json",
+          "sha256": "d32457a299c96477cc54002ea35af3d044e97ee403c4cb1788847f8ff0fa4e9f",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/validator-run.json",
+          "sha256": "d8f822c3ff3459f007094cfd70b4118e9fce844a8bbf569b4e98b5af46e3162c",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Existing APT captures show lock denial and absent aisleriot; no integrated removal-guard execution on the actual package subject.",
+      "useful_readonly_action": "No additional host probe for absent package; isolated apt-root negative canary belongs to separate guarded harness.",
+      "prerequisite_or_blocker": "Reproducible isolated package-state fixture, not host package removal.",
+      "generated_batch": 3
+    },
+    {
+      "source_order": 29,
+      "id": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+      "card_path": "tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01 --evidence tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+        "expect": "exit_zero",
+        "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01/host-observation.txt",
+          "sha256": "34e00c6451e7d48f3d3fcede4564c502589a10b3c03cdf348b42d930efe0d346",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Current graphical target/GDM/seat0 and SSH are observed healthy; no post-update black-screen/recovery/rollback event.",
+      "useful_readonly_action": "No read-only action can recreate the post-update failure.",
+      "prerequisite_or_blocker": "Target update and approved session recovery/rollback case.",
+      "generated_batch": 3
+    },
+    {
+      "source_order": 30,
+      "id": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+      "card_path": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 --evidence tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+        "expect": "exit_zero",
+        "porque": "Verificador pendiente: demostrar preflight mínimo con imágenes soportadas, arquitectura/cubin y controles negativos; ninguna recomendación de backend sin validar salida/estabilidad y rollback."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/commands.json",
+          "sha256": "efafa141008a4e7518e4b669e0ec3a9dad8f51bf43fef155db86e3a7fc09f94c",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/preflight.json",
+          "sha256": "0855505ba5d0e896a14c79186a9eab4c1f4d49978098e7a0fbcf42ce1f2ff0cc",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/validator-run.json",
+          "sha256": "ba525d2fb42d2103661b42557f2e9b9b8ef292b2bbc221c205f07160325853cb",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Native GB10/driver/CUDA identity and container preflight exist; functional workload result is missing.",
+      "useful_readonly_action": "No extra version query needed; bind current native NVIDIA receipt. A runtime workload would exceed this read-only assignment.",
+      "prerequisite_or_blocker": "Approved minimal functional workload and image digest contract.",
+      "generated_batch": 3
+    },
+    {
+      "source_order": 31,
+      "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+      "card_path": "tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+        "expect": "exit_zero",
+        "porque": "Must compare a lower cap against the currently applied cap on an identified OEM/driver stack, preserve stability and performance results, and prove restoration of the original clock policy."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt",
+          "sha256": "e571466acb8ff131ade953fcd6952cb390980096c68cbee2901bd8e04db38907",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/readonly-clock-capability-current.json",
+          "sha256": "61481811dbb751f8fb95d20141d2f60eb33d253f0c40306c3535ede8b1e575df",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Readonly receipt shows current/max clocks, policy service declaration, and N/A supported-clock query. It does not show policy readback, A/B, soak, telemetry association or rollback.",
+      "useful_readonly_action": "No further query justified; changing clocks/workload is prohibited.",
+      "prerequisite_or_blocker": "Approved workload-bound A/B, soak and policy rollback.",
+      "generated_batch": 4
+    },
+    {
+      "source_order": 32,
+      "id": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+      "card_path": "tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01 --evidence tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+        "expect": "exit_zero",
+        "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/commands.json",
+          "sha256": "7d0a1b10d935f43b3018b267a7e9c38d692f57199c688baf0daa819fd99a1a81",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/preflight.json",
+          "sha256": "df06ac8cdd12f075a7a8e4dc2a11f37b191867e384f66f12dcfc9b2a9b1cde0c",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/validator-run.json",
+          "sha256": "be510cec715d844f5512ce46361baecc41cab443f1b3289a937e0eeaa8ba9350",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Current healthy GPU identity is not a GSP boot failure or recovery.",
+      "useful_readonly_action": "No read-only query reproduces GSP boot failure.",
+      "prerequisite_or_blocker": "A known GSP incident/candidate and approved boot/recovery test.",
+      "generated_batch": 4
+    },
+    {
+      "source_order": 33,
+      "id": "FEATURE-FORUM-NVME-READONLY-01",
+      "card_path": "tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest tests/test_nvme_readonly.py -q",
+        "expect": "exit_zero",
+        "porque": "Prueba específica pendiente: debe distinguir errores de medio, remount read-only, consultas ilegibles y un dispositivo sano, con salida de evidencia utilizable sin escribir al medio sospechoso."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/export-copy-lab/run.json",
+          "sha256": "94fc5515e341be770b694c80ee107a69a87d8ad224b36cd7f74bbfb682b34654",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/host-observation.txt",
+          "sha256": "5ffe08162951a7396c53eb6c72f44a2d21a36e5a1d1f0d8fbb4f2662d137bc9e",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "The test file has no original selector for a real subject check. Existing instrument lab and /tmp-to-/dev/shm regular-file copy are signals-only; OEM/failing-NVMe/device-recovery evidence remains absent.",
+      "useful_readonly_action": "Development is required: add a real source-generated selector/assertion to tests/test_nvme_readonly.py before treating the existing instrument test as a card gate. For subject evidence, an external trusted digest and read-only comparison can help; no device writes.",
+      "prerequisite_or_blocker": "Known independent reference data, target NVMe/OEM recovery evidence, and separately authorized device fault/recovery case.",
+      "generated_batch": 4
+    },
+    {
+      "source_order": 34,
+      "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+      "card_path": "tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01 --evidence tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+        "expect": "exit_zero",
+        "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/commands.json",
+          "sha256": "65e1966a19c52a20043a2fa1f2b7015945e02be9db892542c4d609ab81bf3313",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/preflight.json",
+          "sha256": "fe528831b284c437ad8c36f28079a81584db247dd28cc5885255ad2fa3864348",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/provider-trace-run.json",
+          "sha256": "22d6b6f422085ee337b06062ef6c770601a5ad55d0c123177517e298e760e509",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/validator-run.json",
+          "sha256": "dfb858642ff55aaf0d524c7ebc46e5806b9d8a4e4c1ae00098feacb7bbf551cd",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Provider trace/preflight artifacts exist, but no real post-respawn request, fallback result or CPU-only negative control.",
+      "useful_readonly_action": "No read-only inventory can validate request handling.",
+      "prerequisite_or_blocker": "Approved service request trace and controlled fallback test.",
+      "generated_batch": 4
+    },
+    {
+      "source_order": 35,
+      "id": "FEATURE-FORUM-RESCUE-RUNBOOK-01",
+      "card_path": "tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-RESCUE-RUNBOOK-01 --evidence tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01",
+        "expect": "exit_zero",
+        "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01/host-observation.txt",
+          "sha256": "5ecbda44e0e190f337b43c70b0e5e815390faab24452e95e2ef0702b0e06df59",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Current systemd state does not demonstrate rescue.target entry, recovery, or rollback.",
+      "useful_readonly_action": "No read-only query can establish a rescue transition.",
+      "prerequisite_or_blocker": "Approved rescue/rollback test window.",
+      "generated_batch": 4
+    },
+    {
+      "source_order": 36,
+      "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+      "card_path": "tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-SBSA-WATCHDOG-STATE-01 --evidence tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+        "expect": "exit_zero",
+        "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/owner-query.json",
+          "sha256": "b23f641b3da6c55840eabb3239f15b5f3cb9dc067c9ec6b42bc3567bbfe2a2f0",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/progress.txt",
+          "sha256": "65b3c1fd0bf7f6b29e34d9d13994be218708ada1f97c028a22099364dd1813ac",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Owner query is unprivileged fuser rc1/empty; sysfs reports active/timeout60/nowayout0 and systemd runtime watchdog 1min. Device owner attribution remains unknown.",
+      "useful_readonly_action": "A privileged read-only lsof/fuser attribution of /dev/watchdog0 could reduce owner uncertainty; do not repeat the unprivileged query.",
+      "prerequisite_or_blocker": "Permission for read-only device-owner attribution; OEM recovery policy still required.",
+      "generated_batch": 4
+    },
+    {
+      "source_order": 37,
+      "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+      "card_path": "tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_wifi_isolation --evidence tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01",
+        "expect": "exit_zero",
+        "porque": "Must prove the recorded NetworkManager and supplicant failure is distinguished from a host freeze, test a bounded recovery policy on the cited stack, and preserve rollback evidence."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/host-observation.txt",
+          "sha256": "aee0effc2813909e655a8bbbd632e3ae321e891380450e34a21fd4b87300c91f",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Current Wi-Fi observation has no active wireless endpoint or isolated peer; the selector is CNR for raw subject commands.",
+      "useful_readonly_action": "No network probe authorized; no new host query.",
+      "prerequisite_or_blocker": "Approved isolated AP/peer, endpoint policy and recovery.",
+      "generated_batch": 4
+    },
+    {
+      "source_order": 38,
+      "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+      "card_path": "tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_usb_hid_postupdate --evidence tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK",
+        "expect": "exit_zero",
+        "porque": "El cierre debe separar fallo USB-HID real, máquina headless, módulo integrado en kernel y telemetría inaccesible; comprobar que el servicio sigue activo no demuestra que el teclado ni el acceso remoto funcionen."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK/host-observation.txt",
+          "sha256": "2bf74c3fa483e0487dbce97622aacc2034a7c8bdcd03e0dae8a0b210bd2f3f9a",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "No visible HID device in current observation; no keyboard/update/recovery sequence.",
+      "useful_readonly_action": "No useful host-only query while no HID is attached.",
+      "prerequisite_or_blocker": "Real HID peripheral and approved update/recovery case.",
+      "generated_batch": 4
+    },
+    {
+      "source_order": 39,
+      "id": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+      "card_path": "tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-CX7-HOTPLUG-FAN-PROTECTION --evidence tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+        "expect": "exit_zero",
+        "porque": "Prove the reported hotplug/fan mechanism and validate a vendor-supported preventive fix or bounded reversible workaround with thermal safety, network controls, and rollback."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION/progress.txt",
+          "sha256": "fe736748e6a97b076c9c493cca9cd1cd371ff8b2f02c67b8da4aaca2b9419a98",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Progress evidence records no fan RPM input and no CX7/fan A/B; no blacklist or test is authorized.",
+      "useful_readonly_action": "No read-only action can prove protection without an observable fan or CX7 load condition.",
+      "prerequisite_or_blocker": "CX7 hardware, external tachometer/meter and approved hotplug/canary plan.",
+      "generated_batch": 4
+    },
+    {
+      "source_order": 40,
+      "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+      "card_path": "tasks/backlog/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT --evidence tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+        "expect": "exit_zero",
+        "porque": "Show that OTA compatibility checks detect a conflicting DRM modeset override before update, with safe recovery and a clean-system negative control."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/commands.json",
+          "sha256": "b3bbfe546e350ebe8b013466fa8934c888a60ec33fb3efe7f0e530c9be80d878",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/preflight.json",
+          "sha256": "1deb0bce63a0efbc28cbb03178c5360c46a6fd7d9cc1affe2b03a63eac11c6c0",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/validator-run.json",
+          "sha256": "09bf330ed5faea4e85e34258be7e8ce72ba3e55ecdfcb8c22a6353442c4eb83d",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Existing preflight has cmdline data but effective nvidia_drm modeset read was permission-denied/CNR.",
+      "useful_readonly_action": "One privileged read-only read of /sys/module/nvidia_drm/parameters/modeset would close that specific observation gap; does not close OTA compatibility.",
+      "prerequisite_or_blocker": "Read permission; OTA target/recovery evidence remains external.",
+      "generated_batch": 4
+    },
+    {
+      "source_order": 41,
+      "id": "FORUM-00-DOCKER-OOM-RESTART-LOOP",
+      "card_path": "tasks/backlog/FORUM-00-DOCKER-OOM-RESTART-LOOP.md",
+      "close_check": {
+        "cmd": "python3 -m pytest tests/test_workload_restart_containment.py -q",
+        "expect": "exit_zero",
+        "porque": "Prueba pendiente: debe limitar la reincidencia de un workload identificado y permitir recuperación conservando datos, sin bloquear un reinicio sano ni atribuir todo reboot a OOM."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FORUM-00-DOCKER-OOM-RESTART-LOOP/progress.txt",
+          "sha256": "52f1915b203171a52f9f9aa0999534531bb1852656a4decb992ec38dc6ddfd6c",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "The current close_check has a false-green gap: ten unit tests pass without a physical containment control. Docker inventory exists, but no OOM/restart/recovery chronology or bounded policy result.",
+      "useful_readonly_action": "Development is required first: add the real containment assertion to tests/test_workload_restart_containment.py and its source-generated registration; no host OOM experiment is permitted here.",
+      "prerequisite_or_blocker": "After the test gate is repaired, an explicitly approved controlled OOM/restart test and target service are still required for subject closure.",
+      "generated_batch": 5
+    },
+    {
+      "source_order": 42,
+      "id": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+      "card_path": "tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION --evidence tasks/evidence/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+        "expect": "exit_zero",
+        "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION/progress.txt",
+          "sha256": "52ee940f786dc65ca54fdaedf5f30abd783b6cee48c133169b0a3611e77b60ae",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Two-event dry-run telemetry is a snapshot, not independent-sensor residency/idle/load interval coverage.",
+      "useful_readonly_action": "No repeat thermal scan; it would duplicate existing coverage.",
+      "prerequisite_or_blocker": "Approved sustained workload/thermal soak and independent sensor interpretation.",
+      "generated_batch": 5
+    },
+    {
+      "source_order": 43,
+      "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "card_path": "tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-KERNEL-INITRD-UPDATE-GATE --evidence tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+        "expect": "exit_zero",
+        "porque": "Demostrar un gate previo al reboot que detecta estado dpkg/DKMS incoherente, ausencia de initrd/módulo para el kernel objetivo y una recuperación arrancable; incluir negativos de kernel sano y rollback."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE/commands.json",
+          "sha256": "80378ac8092bc04b5701bc58bfc14c128d063a3e3d611ade78d1e5d932b38ff9",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE/preflight.json",
+          "sha256": "a8d1e91dae3315207be3d80dfde2d69bd15e9034ac7b1028809648fc7b041289",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE/validator-run.json",
+          "sha256": "bab05ca6f5c6954b25fc8c2ae5e091ed5c18bc631f74d065281b905accab501c",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Current kernel/driver facts exist; package/module preflight reports missing apt_check/module_ready and APT lock permission denial.",
+      "useful_readonly_action": "A bounded read-only dpkg-query ownership/version and modinfo path/signature query may resolve current package/module provenance; do not run package operations.",
+      "prerequisite_or_blocker": "Root/read permissions for provenance; update/reboot A/B and recovery remain separately authorized.",
+      "generated_batch": 5
+    },
+    {
+      "source_order": 44,
+      "id": "FORUM-00-REALTEK-EEE-DIRECT-LINK",
+      "card_path": "tasks/backlog/FORUM-00-REALTEK-EEE-DIRECT-LINK.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-REALTEK-EEE-DIRECT-LINK --evidence tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK",
+        "expect": "exit_zero",
+        "porque": "Confirm the exact link-partner/kernel/driver combination, reproduce EEE-related stalls, verify a bounded opt-in mitigation and prove rollback and unaffected-link controls."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK/host-observation.txt",
+          "sha256": "580e6d6f3d991c42f5a763bd29c04f18b020da36048c64edaed993e157e95edb",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Current enP7s7 EEE enabled/inactive; partner modes unavailable. No peer, direct-link A/B, stall, mitigation or rollback.",
+      "useful_readonly_action": "No further local ethtool query adds a peer/direct-link test.",
+      "prerequisite_or_blocker": "Direct-link peer and approved controlled network A/B.",
+      "generated_batch": 5
+    },
+    {
+      "source_order": 45,
+      "id": "FORUM-02-GX10-READ-INTEGRITY",
+      "card_path": "tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-GX10-READ-INTEGRITY --evidence tasks/evidence/FORUM-02-GX10-READ-INTEGRITY",
+        "expect": "exit_zero",
+        "porque": "Verificador específico pendiente: debe demostrar detección de datos alterados con una referencia externa y diferenciar lecturas buffered, O_DIRECT, caché, salud NVMe y evidencia de firmware."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/host-observation.txt",
+          "sha256": "7dd3f337485c68d6f1b987639d633d3b3ea0eb6ddac3f555785254214cb02d42",
+          "bytes": null
+        },
+        {
+          "path": "tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/read-integrity-instrument.txt",
+          "sha256": "8c890dadfc3bc2a3b6a5d83b8689c925311debd30cb5e5299864a05d6a9a0ce5",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "NVMe inventory/read-integrity instrument evidence exists, but no independent known digest, copy comparison, cache-controlled read or GX10 target binding.",
+      "useful_readonly_action": "No meaningful extra scan without an independent reference dataset.",
+      "prerequisite_or_blocker": "Known external digest/dataset and GX10 target; read-only validation only.",
+      "generated_batch": 5
+    },
+    {
+      "source_order": 46,
+      "id": "FORUM-02-USB-UVC-EP0",
+      "card_path": "tasks/backlog/FORUM-02-USB-UVC-EP0.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-USB-UVC-EP0 --evidence tasks/evidence/FORUM-02-USB-UVC-EP0",
+        "expect": "exit_zero",
+        "porque": "Verificador específico pendiente: debe comprobar la reproducción A/B, la versión corregida y la recomendación preventiva para cada OEM probado."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FORUM-02-USB-UVC-EP0/host-observation.txt",
+          "sha256": "f3a49aa22a335b73bc1da06e931a535c0f4f0d2a23220082402a27664cc3a0d1",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "USB tree/kernel logs are observed; no UVC device/stream, EP0 sequence, regression/fix or rollback.",
+      "useful_readonly_action": "No useful query without camera streaming subject.",
+      "prerequisite_or_blocker": "UVC camera, approved streaming/recovery sequence and supported version matrix.",
+      "generated_batch": 5
+    },
+    {
+      "source_order": 47,
+      "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+      "card_path": "tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FORUM-REALTEK-DRIVER-BINDING-01 --evidence tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01",
+        "expect": "exit_zero",
+        "porque": "Verificador pendiente: prueba binding PCI efectivo y paquete/módulo compatible; warm/cold reboot A/B y rollback con controles de otra NIC, driver ausente y consulta fallida."
+      },
+      "evidence_files": [
+        {
+          "path": "tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01/host-observation.txt",
+          "sha256": "b924a04ec6d8e89826b7929b65e84acf50b543f550c3bb15dd065b377d6074e0",
+          "bytes": null
+        }
+      ],
+      "current_assessment": "Current enP7s7 binds r8127 v11.014.00-NAPI; package ownership/signature, boot A/B, alternate-driver control and rollback absent.",
+      "useful_readonly_action": "Read-only dpkg-query -S plus modinfo -n/version/signature can improve package provenance if available; avoid repeating current PCI/module version inventory.",
+      "prerequisite_or_blocker": "Permission for package/module provenance; reboot/A-B and rollback need approval.",
+      "generated_batch": 5
+    }
+  ],
+  "limitations": "Evidence map only. No host commands were run. Caller-supplied/archive hashes prove byte consistency, not provenance or OEM authority. CNR/UNKNOWN remains open until raw subject evidence satisfies each original close_check."
+}

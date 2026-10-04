@@ -1,0 +1,188 @@
+[
+  {
+    "id": "DEBT-HOST-DEPLOYED-DRIFT-01",
+    "category": "privileged_access",
+    "blockers": [
+      "La inspección documenta divergencia real en dos archivos de /etc y /usr/local/bin; cierre requiere comparar/remediar despliegue del host y preservar el origen."
+    ],
+    "missing_evidence": [
+      "salida actual íntegra de `bash bin/bb drift` y plan de reconciliación aprobado para hashes/modos divergentes"
+    ],
+    "next_action": "Preparar reconciliación verificable de los dos archivos divergentes y volver a capturar el comparador bajo acceso de operador; conservar archivos desplegados hasta acordar origen.",
+    "responsible": "operador Luis (host); coordinación BB (comparador/código)",
+    "evidence": [
+      "tasks/backlog/DEBT-HOST-DEPLOYED-DRIFT-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+      "tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/fail.txt",
+      "tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/source.json"
+    ],
+    "actionable_now": false,
+    "rationale": "El informe literal marca 2 divergencias/41 revisados y un archivo suspendido; se requiere acceso host para resolver la diferencia, sin copiar comentarios para absolverla.",
+    "could_not_run_inspection": 0
+  },
+  {
+    "id": "DELTA-FORUM-CX7-POSTHOTPLUG-01",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "No hay ensayo PCIe/CX7 post-hotplug; estado Active/200G o FieldDiag no prueba tráfico extremo a extremo."
+    ],
+    "missing_evidence": [
+      "stack/cable/firmware; tráfico RDMA/NCCL antes/después; endpoint PCIe/AER; FieldDiag fresco y rollback"
+    ],
+    "next_action": "Ejecutar hotplug en nodo CX7 canary con tráfico funcional, capturar endpoint/AER y diagnóstico nuevo, y verificar rollback OEM.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-CX7-POSTHOTPLUG-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+      "tasks/evidence/DELTA-FORUM-CX7-POSTHOTPLUG-01/ (directorio ausente al inspeccionar)"
+    ],
+    "actionable_now": false,
+    "rationale": "El control requiere hardware CX7 y evento hotplug real; adjuntos de la ficha no pueden sustituirlo.",
+    "could_not_run_inspection": 1
+  },
+  {
+    "id": "DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "Lector de métricas parcial; la captura runtime carece de /metrics crudo y comparación de KV/corrección en stack fijado."
+    ],
+    "missing_evidence": [
+      "texto raw Prometheus /metrics; mode K/V, backend/model/context/concurrency; bytes KV, output correctness, prefill/decode y control negativo"
+    ],
+    "next_action": "Recolectar /metrics crudo y ejecutar comparación f16/cuanti en workload fijado con correctness; separar RSS/cgroup/host/KV y archivar resultados.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+      "tasks/evidence/DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01/ (directorio ausente al inspeccionar)"
+    ],
+    "actionable_now": false,
+    "rationale": "Las métricas necesitan inferencia real y provenance completa; el instrumento no prueba comportamiento de modelo.",
+    "could_not_run_inspection": 1
+  },
+  {
+    "id": "DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01",
+    "category": "external_oem",
+    "blockers": [
+      "La observación local fija tuple activo, pero falta matriz release/OEM, soporte y ensayo reversible post-OTA."
+    ],
+    "missing_evidence": [
+      "release notes OEM para plataforma exacta; canario de update/recovery; baseline memoria y workload; rollback"
+    ],
+    "next_action": "Obtener matriz de soporte de DGX OS/OEM y reservar canario reversible para comparar tuple pre/post OTA; no instalar paquetes manuales como sustituto.",
+    "responsible": "coordinación BB gestiona OEM; operador Luis ejecuta canario",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+      "tasks/evidence/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01/capture-summary.json"
+    ],
+    "actionable_now": false,
+    "rationale": "La captura muestra DGX Spark/AI TOP ATOM con driver/kernel coincidente; nvidia-smi falló y no hubo workload/rollback. Eso no valida compatibilidad OEM.",
+    "could_not_run_inspection": 0
+  },
+  {
+    "id": "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01",
+    "category": "hardware_or_peer",
+    "blockers": [
+      "Selector ya informa UNKNOWN/CNR=1 por captura del sujeto ausente/incompleta; faltan controles térmicos comparables."
+    ],
+    "missing_evidence": [
+      "temperatura ambiente/entrada/GPU/CPU; clocks, watts, fans y throughput en A/B; límites OEM y rollback"
+    ],
+    "next_action": "Medir soak A/B con carga repetible y ambiente controlado en GX10 canary, sin imponer cap universal; guardar telemetría completa y recuperación.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+      "tasks/evidence/DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01/ (directorio ausente al inspeccionar)"
+    ],
+    "actionable_now": false,
+    "rationale": "El selector corre, pero el reporte de ventiladores no fija ambiente/carga y carece de datos crudos; requiere hardware.",
+    "could_not_run_inspection": 1
+  },
+  {
+    "id": "DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01",
+    "category": "external_oem",
+    "blockers": [
+      "El selector reporta UNKNOWN/CNR=1; el candidato usa firmware/canal testing, sin A/B aislado ni soak y con riesgo de red/boot."
+    ],
+    "missing_evidence": [
+      "tuple SoC/EC/OEM aprobado y paquetes auditados; estado cable/EEPROM/link/tráfico; reboot A/B y rollback probado"
+    ],
+    "next_action": "Coordinar con OEM la matriz/paquetes y método de recuperación; después ensayar cold/warm boot y tráfico en GX10 canary con rollback disponible.",
+    "responsible": "coordinación BB gestiona OEM; operador Luis ejecuta canario",
+    "evidence": [
+      "tasks/backlog/DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+      "tasks/evidence/DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01/ (directorio ausente al inspeccionar)"
+    ],
+    "actionable_now": false,
+    "rationale": "Hay lectura parcial de adjuntos y selector integrado, pero falta validación del firmware de prueba en el sujeto.",
+    "could_not_run_inspection": 1
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-03-NATIVO",
+    "category": "workload_or_lab",
+    "blockers": [
+      "La compilación de módulos pasó, pero runtime de driver 615, límites, ownership, cgroup independiente y liberación no se han probado."
+    ],
+    "missing_evidence": [
+      "runtime con stack alineado; cgroup secundario; caso bajo límite y negativo; liberación; firma/trust y rollback"
+    ],
+    "next_action": "Ejecutar arnés runtime en lab con stack firmado/alineado y cgroup canary; comprobar límite, aislamiento/liberación y rollback sin instalar en host de producción.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/FEATURE-1358-CGROUP-03-NATIVO.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+      "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-615.json",
+      "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-modules.json",
+      "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/comparison.txt"
+    ],
+    "actionable_now": false,
+    "rationale": "Los recibos solo acreditan compilación sin instalar/cargar; la ficha condiciona cierre a resultados runtime reales.",
+    "could_not_run_inspection": 0
+  },
+  {
+    "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "category": "workload_or_lab",
+    "blockers": [
+      "Analizador tiene controles de fixtures, pero no hay traza real request/provider/PID/respawn/latencia ni validación OEM/rollback; hay defecto de JSON duplicado pendiente."
+    ],
+    "missing_evidence": [
+      "corrección/negative tests de JSON estricto y lector acotado; trace real tras respawn; control CPU intencional, GPU sana y OEM/rollback"
+    ],
+    "next_action": "Cerrar primero la ambigüedad del parser/lectura con controles requeridos; después capturar trace real de request y proveedor en canario sin generar fallback por downgrade.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+      "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/commands.json",
+      "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/preflight.json",
+      "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/provider-trace-run.json",
+      "tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/validator-run.json"
+    ],
+    "actionable_now": false,
+    "rationale": "La evidencia reporta cobertura de fixtures, además de un duplicado JSON que pasa incorrectamente; la investigación principal requiere traza runtime y el defecto instrumental es accionable dentro de la preparación BB.",
+    "could_not_run_inspection": 0
+  },
+  {
+    "id": "FORUM-00-DOCKER-OOM-RESTART-LOOP",
+    "category": "workload_or_lab",
+    "blockers": [
+      "El selector integrado falla por ausencia del bundle físico restart-cycle; la política unitaria no prueba integración ni recuperación real."
+    ],
+    "missing_evidence": [
+      "bundle crudo ligado a container ID/digest/PID, unit/gate, boot IDs, OOM/PSI, SSH, datos preservados, decisión policy y rollback"
+    ],
+    "next_action": "Preparar ciclo recuperable para un único workload identificado y reproducir reincidencia, reboot ajeno y reinicio sano; recopilar bundle requerido y salida del selector.",
+    "responsible": "coordinación BB prepara; operador Luis ejecuta root/lab",
+    "evidence": [
+      "tasks/backlog/FORUM-00-DOCKER-OOM-RESTART-LOOP.md",
+      "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json",
+      "tasks/evidence/FORUM-00-DOCKER-OOM-RESTART-LOOP/progress.txt"
+    ],
+    "actionable_now": false,
+    "rationale": "La ejecución primaria registra 1 failed/20 passed por bundle ausente; no se reinició host/container/servicio. El cierre depende de ciclo real.",
+    "could_not_run_inspection": 0
+  }
+]

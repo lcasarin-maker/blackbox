@@ -35,3 +35,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Evaluación de instrumentos 2026-10-03
 
 Reuso disponible: perfiles de runtime/host existentes no asocian una arquitectura SM121 con kernels compilados por operación y salida correcta. No hay evidencia local de builds/tags del hilo ni control de logits/salida. Estado `deferred_lab`: fijar modelo/backend/build y operaciones requeridas; canario de load, primera inferencia y referencia de salida contra build/control SM121, preservando el resultado. “CUDA available” o ready no son admisión.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: No hay builds/tags SM121 ni salida local por operación; los perfiles actuales no acreditan kernel compilado ni corrección.
+- Evidencia faltante para cierre: No hay builds/tags SM121 ni salida local por operación; los perfiles actuales no acreditan kernel compilado ni corrección.
+- Siguiente acción: Coordinación BB: preparar matriz de operaciones/oráculo y captura de build; operador Luis: proporcionar hardware/runtime SM121 y ejecutar carga/primera inferencia con control. Ref explícita: tasks/backlog/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01-original-selector-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01-original-selector-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

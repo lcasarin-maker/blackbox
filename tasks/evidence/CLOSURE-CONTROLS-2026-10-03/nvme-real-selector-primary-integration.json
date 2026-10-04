@@ -1,0 +1,75 @@
+{
+  "file": "tests/test_nvme_readonly.py",
+  "before_sha256": "00b4c24bab5010da58564b8e12ea28f92108afb6bc4d06b5cb99364dce4cc8aa",
+  "after_sha256": "8ab683e86f0d1fe4422af1797735c4a4798900f34204fefdfc4c65dc9fb8dbf4",
+  "existing_test_functions_unchanged": 17,
+  "changed_existing_test_functions": [],
+  "added_test_functions": [
+    "test_nvme_incident_reader_accepts_complete_unit_fixture_only",
+    "test_nvme_incident_reader_rejects_boolean_smart_counters",
+    "test_nvme_incident_reader_rejects_empty_capture_placeholders",
+    "test_nvme_incident_reader_rejects_oem_artifact_for_another_device",
+    "test_nvme_incident_reader_rejects_rollback_digest_mismatch",
+    "test_nvme_real_incident_close_check_requires_raw_device_and_recovery_evidence"
+  ],
+  "validation": {
+    "unit": {
+      "passed": 28,
+      "deselected_physical_selector": 1,
+      "exit_code": 0,
+      "log": "bb-nvme-reader-primary-unit-after-assert-name.log"
+    },
+    "original_command": {
+      "passed": 28,
+      "failed": 1,
+      "exit_code": 1,
+      "reason": "UNKNOWN/CNR absent seven raw physical incident captures",
+      "log": "bb-nvme-original-with-real-selector-primary.log"
+    },
+    "pyright": {
+      "errors": 0,
+      "warnings": 0,
+      "informations": 0,
+      "exit_code": 0,
+      "log": "bb-primary-pyright-after-nvme-selector.log"
+    },
+    "zero_debt_after_hygiene": {
+      "passed_files": 140,
+      "violations": 0,
+      "could_not_run": 0,
+      "exit_code": 0,
+      "log": "bb-zero-debt-after-nvme-hygiene-fixed.log"
+    }
+  },
+  "physical_closed": false,
+  "final_sha256": "b110af256b40dd3f4a5606d745888e5503a4e757365f1ada11d82325e7600b27",
+  "helper_name_change": {
+    "from": "_validate_nvme_incident_bundle",
+    "to": "_assert_nvme_incident_bundle",
+    "normalized_AST_identical": true
+  },
+  "final_agent_hardening_sha256": "b110af256b40dd3f4a5606d745888e5503a4e757365f1ada11d82325e7600b27",
+  "final_hardening_validation": {
+    "original_command": {
+      "exit_code": 1,
+      "passed": 28,
+      "failed": 1,
+      "physical_could_not_run": 1,
+      "reason": "Seven raw incident files absent",
+      "log": "bb-nvme-original-final-b-primary.log"
+    },
+    "zero_debt": {
+      "exit_code": 0,
+      "violations": 0,
+      "could_not_run": 0,
+      "log": "bb-zero-debt-after-nvme-final-b.log"
+    },
+    "pyright": {
+      "exit_code": 0,
+      "errors": 0,
+      "warnings": 0,
+      "informations": 0,
+      "log": "bb-primary-pyright-nvme-final-b.log"
+    }
+  }
+}

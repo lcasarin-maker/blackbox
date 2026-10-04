@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: parcial, con preflight offline desarrollado para comparar una respuesta guardada GET `/v1/models`, modelo primario/configurado OpenClaw y límite explícitamente ligado al checkpoint. Calcula headroom a partir del cap configurado; presupuesto de una petición concreta permanece unknown sin conteo tokenizado/usage capturado y ligado a modelo/checkpoint. Las entradas se marcan `caller_supplied_unverified`. No hay captura local GET `/v1/models`, config OpenClaw ni token usage; no se lanzó petición. La ficha sigue abierta y el `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-contracts.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: El preflight offline es parcial y solo contrasta respuestas guardadas; no se adjunta ejecución OpenClaw/vLLM con requests válidas/negativas fijadas.
+- Evidencia faltante para cierre: GET /v1/models capturado, alias servido/configuración cliente, límite de contexto real, requests válidas/negativas y respuestas raw vinculadas a versiones.
+- Siguiente acción: Solicitar recibo de GET /v1/models y requests reales con alias correcto/incorrecto y límite contexto válido/inválido en versiones fijadas; mantener respuestas raw para selector actual.
+- Responsable del siguiente paso: BB.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01.md`, `tools/runtime_batch02_controls.py`, `tests/test_debt_registration_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

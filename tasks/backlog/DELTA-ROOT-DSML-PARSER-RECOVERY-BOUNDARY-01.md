@@ -44,3 +44,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: `reused` únicamente para retener deltas SSE client-visible con `tools/chat_sse_capture.py`. No hay historia reproducible local; una fuga de DSML puede aparecer en una captura, pero el lector no prueba recuperación del parser, límites de reparación, rechazo de invocaciones espurias ni contexto largo. La ficha sigue abierta y su `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-contracts.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: La ficha describe entradas de parser recuperables y exclusiones; pueden codificarse hoy como pruebas de regresión locales sobre historial/corpus ya conservado, sin hardware ni carga.
+- Evidencia faltante para cierre: La ficha describe entradas de parser recuperables y exclusiones; pueden codificarse hoy como pruebas de regresión locales sobre historial/corpus ya conservado, sin hardware ni carga.
+- Siguiente acción: Coordinación BB: implementar pruebas de streaming/completo, truncamiento, reasoning, tool_choice=none y marcadores citados contra historial conservado; reportar límite de recuperación. Ref explícita: tasks/backlog/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01-original-selector-current.log.
+- Responsable del siguiente paso: Coordinación BB; para recuperación de históricos, custodio del artifact store si corresponde..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01-original-selector-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -1,0 +1,24 @@
+{
+  "files": [
+    {
+      "path": "tools/verify_apt_sources_closure.py",
+      "before_sha256": "a2537133f6064ea39622b0b8e13d67360ca705370995c75eefbccd88f30e9b3d",
+      "after_sha256": "8cd9dee71bae3bf933d9951a3ba29bc98610ceb9633ddd46b3242dcc16645e06"
+    },
+    {
+      "path": "tests/test_verify_apt_sources_closure.py",
+      "before_sha256": "64799c29b5ced83ddf67a8a0e65c5ddd83af6f3eabaf67b19765db659c11ce20",
+      "after_sha256": "eef8a50ef312eeda2b88742349057a4937afce8d5cbd686ca664d47dd9813fbc"
+    }
+  ],
+  "validation": {
+    "unit_command": "COVERAGE_FILE=/tmp/bb-apt-final-primary-20261004.coverage python3 -m pytest -q tests/test_apt_sources.py tests/test_verify_apt_sources_closure.py --cov=tools.apt_sources --cov=tools.verify_apt_sources_closure --cov-branch",
+    "unit_exit_code": 0,
+    "unit_output": "........................................................................ [ 32%]\n........................................................................ [ 64%]\n........................................................................ [ 97%]\n......                                                                   [100%]\n================================ tests coverage ================================\n_______________ coverage: platform linux, python 3.12.11-final-0 _______________\n\nName                                  Stmts   Miss Branch BrPart  Cover\n-----------------------------------------------------------------------\ntools/apt_sources.py                    389      0    166      0   100%\ntools/verify_apt_sources_closure.py     890      0    412      0   100%\n-----------------------------------------------------------------------\nTOTAL                                  1279      0    578      0   100%\n222 passed in 1.10s\n",
+    "original_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01",
+    "original_exit_code": 1,
+    "original_log": "bb-apt-final-original-selector-20261004.log",
+    "physical_closed": false
+  },
+  "native_semantics_reproducibility": "additional source-byte and baseline capture requested"
+}

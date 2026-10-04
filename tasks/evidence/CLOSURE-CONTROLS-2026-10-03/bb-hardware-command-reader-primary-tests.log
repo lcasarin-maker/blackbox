@@ -1,0 +1,22 @@
+..........................................F.F........................... [ 65%]
+......................................                                   [100%]
+=================================== FAILURES ===================================
+____________ test_gpu_clock_cap_needs_native_locked_policy_readback ____________
+tests/test_hardware_missing_selectors.py:73: in test_gpu_clock_cap_needs_native_locked_policy_readback
+    assert result["status"] == "unknown" and "readbacks" in result["reason"], result
+E   AssertionError: {'could_not_run': 1, 'fail': 0, 'files': ['/tmp/pytest-of-lcasarin/pytest-6866/test_gpu_clock_cap_needs_nativ0/commands.json'], 'reason': 'OEM, BIOS, OS, kernel, driver/module and firmware tuple incomplete', ...}
+E   assert ('unknown' == 'unknown'
+E     
+E       unknown and 'readbacks' in 'OEM, BIOS, OS, kernel, driver/module and firmware tuple incomplete')
+______ test_wifi_distinguishes_live_host_and_recovers_bounded_roam_trials ______
+tests/test_hardware_missing_selectors.py:157: in test_wifi_distinguishes_live_host_and_recovers_bounded_roam_trials
+    assert result["status"] == "pass", result
+E   AssertionError: {'could_not_run': 1, 'fail': 0, 'files': ['/tmp/pytest-of-lcasarin/pytest-6866/test_wifi_distinguishes_live_h0/commands.json'], 'reason': 'management probe has no successful response or explicit native connection failure diagnostic', ...}
+E   assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+=========================== short test summary info ============================
+FAILED tests/test_hardware_missing_selectors.py::test_gpu_clock_cap_needs_native_locked_policy_readback
+FAILED tests/test_hardware_missing_selectors.py::test_wifi_distinguishes_live_host_and_recovers_bounded_roam_trials
+2 failed, 108 passed in 0.54s

@@ -1,0 +1,20 @@
+{
+  "scope": "SSE parser and CLI regression only; other tools and experimental closure are outside this unit validation",
+  "first_attempt": {
+    "command": "COVERAGE_FILE=/tmp/bb-sse-root-regression.coverage python3 -m pytest -q tests/test_chat_sse_capture.py --cov=tools.chat_sse_capture --cov-branch --cov-fail-under=100",
+    "returncode": 1,
+    "output": "23 passed in 0.60s;205 statements,8 missing,88 branches,1 partial,96%",
+    "measurement_limitation": "Dotted module source did not include the separately executed CLI script under __main__"
+  },
+  "subprocess_inclusive_attempt": {
+    "command": "COVERAGE_FILE=/tmp/bb-sse-root-subprocess.coverage python3 -m pytest -q tests/test_chat_sse_capture.py --cov=tools --cov-branch --cov-report=",
+    "returncode": 0,
+    "output": "23 passed in 0.48s"
+  },
+  "scoped_coverage_command": "python3 -m coverage report --data-file=/tmp/bb-sse-root-subprocess.coverage --include=tools/chat_sse_capture.py -m",
+  "scoped_coverage_output": "205 statements,0 missing,88 branches,0 partial,100%",
+  "could_not_run_count": 0,
+  "tests_sha256": "022e350695b747a78e037b95539eb9165e50aa6f91290af3cf32936ec9725c12",
+  "ruff_output": "All checks passed!",
+  "pyright_output": "0 errors, 0 warnings, 0 informations"
+}

@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "source_path": "/home/lcasarin/projects/blackbox/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/runtime.json",
+  "source_count": 38,
+  "remaining_runtime_count": 37,
+  "generated_batch_source": "/home/lcasarin/projects/blackbox/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/runtime-batch-01.json",
+  "generated_batch_size": 9,
+  "batch_ids": [
+    "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+    "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+    "DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01",
+    "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+    "DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01",
+    "DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01",
+    "DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01",
+    "DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01",
+    "DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01"
+  ],
+  "local_observation_refs": {
+    "thermal_coverage.stderr": {
+      "path": "/tmp/bb-native-observation-20261004/thermal_coverage.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "host_diagnostics.stderr": {
+      "path": "/tmp/bb-native-observation-20261004/host_diagnostics.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "thermal_coverage.json": {
+      "path": "/tmp/bb-native-observation-20261004/thermal_coverage.json",
+      "sha256": "7af186882f20a9094b4ab4b09d6c327a5e6c1032a51669a60383bb6ce06bbb6c"
+    },
+    "host_diagnostics.json": {
+      "path": "/tmp/bb-native-observation-20261004/host_diagnostics.json",
+      "sha256": "f1840ade109b6bdd91bfeb17c19900266f9d6e20c665889dd06461b2c620748e"
+    },
+    "atom_gpu_telemetry-dry-once.jsonl": {
+      "path": "/tmp/bb-native-observation-20261004/atom_gpu_telemetry-dry-once.jsonl",
+      "sha256": "c8e97b6e7ef95ffd586a4bd5737c423d3b75be20b2f32f7fc680501981a2180a"
+    },
+    "current_sysfs": {
+      "path": "/tmp/bb-local-sysfs-snapshot-bounded-20261004.json",
+      "sha256": "00ca3d98218e49f0268261cb3554c89e8e6709c9fbd35d5aa9976204497fe56b"
+    }
+  },
+  "native_context": {
+    "root_host_diagnostics": {
+      "architecture": "aarch64",
+      "kernel_release": "6.17.0-1032-nvidia",
+      "gpu_query_stdout": "NVIDIA GB10, 580.178.04, 0000000F:01:00.0, 5 %, 12.20 W",
+      "container_runtime_version": "29.6.2",
+      "running_container_image_capture": {
+        "candidate_count": 1,
+        "containers": [
+          {
+            "container_id": "dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3",
+            "image_id": "sha256:2c211a1273b48e8929f893b267aeb1509e6b84654cdbde1bad56d79e3964224d",
+            "image_ref": "vllm/vllm-openai:v0.27.1",
+            "status": "ok"
+          }
+        ],
+        "status": "ok"
+      },
+      "interface_inventory_status": "ok",
+      "interface_count": 16,
+      "usb_inventory_status": "ok",
+      "nvidia_smi_banner_timestamp_local": "Sun Oct 4 03:20:15 2026"
+    },
+    "current_local_sysfs": {
+      "status": "partial",
+      "could_not_run": 2,
+      "pci_functions_inspected": 10,
+      "network_interfaces": 16,
+      "infiniband_devices": 0,
+      "scope": "current local sysfs only"
+    },
+    "thermal_coverage": {
+      "assessment": "coverage_only; no thermal safety conclusion",
+      "could_not_run": 0,
+      "captured_at_utc": "2026-10-04T09:20:16.458781+00:00"
+    },
+    "atom_gpu_telemetry": {
+      "captured_sample": "2026-10-04T09:39:34.935469+00:00",
+      "vllm_num_requests_running": 0.0,
+      "vllm_num_requests_waiting": 0.0,
+      "interpretation": "Current sample has no in-flight/waiting request; no completion/correctness trace."
+    }
+  },
+  "limitation": "This is an evidence inventory, not a closure verdict. Native host state is context only; it does not authenticate historical events or model/request behavior."
+}

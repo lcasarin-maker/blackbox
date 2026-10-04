@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: `reused` para la capa visible de salida con `tools/chat_sse_capture.py`, que conserva `finish_reason` y presencia de deltas tool-call. No hay captura SSE local de sesión larga: ausencia de tool calls más `finish_reason=stop` por sí sola no establece que la tarea siguiera pendiente ni acredita recuperación. No se declara corrección del modelo/agente. La ficha sigue abierta y su `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-contracts.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: No hay captura SSE local que pruebe tarea aún pendiente, stop prematuro recuperable ni ausencia de llamadas mutantes repetidas; el hilo externo no audita adjuntos.
+- Evidencia faltante para cierre: No hay captura SSE local que pruebe tarea aún pendiente, stop prematuro recuperable ni ausencia de llamadas mutantes repetidas; el hilo externo no audita adjuntos.
+- Siguiente acción: Coordinación BB: definir replay de sesión, condición de parada y deduplicación; operador Luis: ejecutar soak/replay comparativo y conservar turn-boundary/finish/tool calls. Ref explícita: tasks/backlog/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01-original-selector-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01-original-selector-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

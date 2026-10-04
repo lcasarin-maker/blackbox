@@ -35,3 +35,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Evaluación de instrumentos 2026-10-03
 
 Reusa `tools/memory_profile.py`/`tools/atom_gpu_telemetry.py` para observación de memoria/PSI del host, pero no hay series por etapa/rank ni logs de compilación adjuntos de esta reproducción; tampoco se correlaciona pérdida de acceso remoto. Estado `deferred_lab`: cold-start del stack exacto con captura externa por nodo/rank, headroom y control eager en el mismo stack. No se compiló ni se provocó presión/OOM.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: Muestreo general de memoria/PSI no contiene series por etapa/rank ni logs de compilación de la reproducción; pérdida de acceso remoto tampoco está correlacionada.
+- Evidencia faltante para cierre: Muestreo general de memoria/PSI no contiene series por etapa/rank ni logs de compilación de la reproducción; pérdida de acceso remoto tampoco está correlacionada.
+- Siguiente acción: Coordinación BB: preparar límites y telemetría preflight; operador Luis: ejecutar compilación fría acotada sólo en lab canary con captura externa y rollback. Ref explícita: tasks/backlog/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01-original-selector-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01-original-selector-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

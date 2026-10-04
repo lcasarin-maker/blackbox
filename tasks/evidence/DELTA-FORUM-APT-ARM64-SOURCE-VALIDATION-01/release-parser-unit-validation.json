@@ -1,0 +1,46 @@
+{
+  "recorded_at": "2026-10-04T06:29:29.453735+00:00",
+  "source": "literal tool outputs captured by coordinator in this turn",
+  "tests": {
+    "argv": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_apt_sources.py",
+      "--cov=tools.apt_sources",
+      "--cov-branch",
+      "--cov-fail-under=100"
+    ],
+    "exit_code": 0,
+    "pass": 30,
+    "fail": 0,
+    "skip": 0,
+    "could_not_run": 0,
+    "literal_summary": "tools/apt_sources.py 227 statements, 0 miss, 96 branches, 0 partial, 100%; 30 passed in 0.19s"
+  },
+  "ruff": {
+    "argv": [
+      "python3",
+      "-m",
+      "ruff",
+      "check",
+      "tools/apt_sources.py",
+      "tests/test_apt_sources.py"
+    ],
+    "exit_code": 0,
+    "stdout": "All checks passed!\n"
+  },
+  "pyright": {
+    "argv": [
+      "python3",
+      ".simplecode/run.py",
+      "simplecode.verification.pyright_gate",
+      "--root",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "0 errors, 0 warnings, 0 informations\n"
+  },
+  "scope": "APT index consistency helper only. Does not satisfy full closure, source approval or freshness."
+}

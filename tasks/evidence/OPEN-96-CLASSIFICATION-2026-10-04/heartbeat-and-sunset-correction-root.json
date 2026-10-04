@@ -1,0 +1,15 @@
+{
+  "command": "python3 -m pytest -q tests/test_bb_bash.py -k <nine heartbeat and negative controls>",
+  "exit_code": 0,
+  "literal_output": ".........                                                                [100%]\n9 passed, 77 deselected in 1.29s\n",
+  "could_not_run": 0,
+  "correction": {
+    "file": "tests/test_bb_bash.py",
+    "before": "4 a 109",
+    "after": "4 a 130",
+    "source": "tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt",
+    "literal_output": "with_wait: timed out as expected; pgrep_calls=4; sleep_calls=4; elapsed_s=0.210\nno_wait: timed out as expected; pgrep_calls=130; sleep_calls=0; elapsed_s=0.201",
+    "historical_artifact_preserved": true
+  },
+  "test_file_sha256": "0dd5454a630746e36c10399e6d38728d77f1bc29f22a9dab0925025d7ffcc5df"
+}

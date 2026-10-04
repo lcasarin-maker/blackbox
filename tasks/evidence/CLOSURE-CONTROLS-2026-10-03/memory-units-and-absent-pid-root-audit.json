@@ -1,0 +1,21 @@
+{
+  "observed_at": "2026-10-04T07:52:01.399066+00:00",
+  "scope": "Synthetic parser unit audit plus native read-only ps on guaranteed out-of-range PID. No termination or workload performed.",
+  "free_bytes_input": 60000,
+  "parsed_available_bytes": 61440000,
+  "parser_error": null,
+  "native_absent_pid": {
+    "command": [
+      "ps",
+      "-p",
+      "4194305",
+      "-o",
+      "pid=,stat=,rss="
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "source_sha256": "5ddaf19d275febb165b0b62494767f883a77f6b3685893e88875a6329d22b612",
+  "finding": "free -b must stay bytes, while ps rss remains KiB; absent PID native ps returns1, fixture exit0 is inaccurate."
+}

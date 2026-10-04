@@ -41,3 +41,14 @@ Cerrar con reproducción y A/B repetido en la topología reportada o con resulta
 ## Índice de propuestas registradas del swarm NVIDIA categoría 721
 
 - **`FORUM-REALTIME-RTL8127-STREAM-DEADLINES`** — One user reports an OAI RAN workload with USRP X310 on RTL8127/r8127 stopped sustaining 20/40 MHz sample rates after DGX OS updates, producing late-packet warnings and eventual application failure; 10 MHz still works. Reported stack:… Fuente: [382184](https://forums.developer.nvidia.com/t/issues-with-real-time-sample-streaming-on-dgx-spark-rtl8127-nic/382184/1).
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: La captura local muestra EEE activo/inactivo, pero no anuncia partner EEE y excluye un A/B con enlace directo/peer.
+- Evidencia faltante para cierre: Tupla OEM/kernel/driver/peer; múltiples repeticiones EEE on/off; control switch/no-EEE; stalls, SSH/tráfico y rollback.
+- Siguiente acción: Solicitar a dueño NIC/peer capturas del stack exacto y ensayos repetidos EEE activado/desactivado/control switch, con estado de tráfico/SSH y rollback documentado.
+- Responsable del siguiente paso: BB; operador Luis para hardware/peer.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FORUM-00-REALTEK-EEE-DIRECT-LINK.md`, `docs/evidence/BB-INSTRUMENTS-network.md`, `tools/forum_finding.py`, `tools/forum_hardware_subjects.py`, `tools/host_diagnostics.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

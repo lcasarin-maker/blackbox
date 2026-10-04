@@ -1,0 +1,108 @@
+........................................................................ [  5%]
+........................................................................ [ 10%]
+........................................................................ [ 16%]
+........................................................................ [ 21%]
+........................................................................ [ 27%]
+........................................................................ [ 32%]
+........................................................................ [ 38%]
+........................................................................ [ 43%]
+........................................................................ [ 49%]
+........................................................................ [ 54%]
+......................................................FFF............... [ 60%]
+........................................................................ [ 65%]
+........................................................................ [ 71%]
+........................................................................ [ 76%]
+........................................................................ [ 82%]
+........................................................................ [ 87%]
+........................................................................ [ 92%]
+........................................................................ [ 98%]
+.....................                                                    [100%]
+=================================== FAILURES ===================================
+_________________ test_debt_close_check_verify_cgroup_plan_01 __________________
+tests/test_debt_registration_controls.py:37: in test_debt_close_check_verify_cgroup_plan_01
+    closure_selector_cgroup_plan_01()
+tests/test_closure_kernel_selectors.py:29: in closure_selector_cgroup_plan_01
+    _require_pass("FEATURE-1358-CGROUP-01-REPRO", repro)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: FEATURE-1358-CGROUP-01-REPRO closure remains open: {'status': 'unknown', 'rows': [{'api': 'none', 'cgroup': '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope', 'requested_bytes': 0, 'held_delta_bytes': 0, 'release_delta_bytes': 0}, {'api': 'cpu_touch', 'cgroup': '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope', 'requested_bytes': 33554432, 'held_delta_bytes': 33554432, 'release_delta_bytes': -237568}, {'api': 'cuda_malloc', 'cgroup': '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope', 'requested_bytes': 33554432, 'held_delta_bytes': 0, 'release_delta_bytes': -360448}, {'api': 'cuda_malloc_repeat', 'cgroup': '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope', 'requested_bytes': 33554432, 'held_delta_bytes': 0, 'release_delta_bytes': 0}, {'api': 'cuda_malloc_managed', 'cgroup': '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope', 'requested_bytes': 33554432, 'held_delta_bytes': 33816576, 'release_delta_bytes': -65536}, {'api': 'pytorch_empty', 'cgroup': '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope', 'requested_bytes': 33554432, 'held_delta_bytes': 0, 'release_delta_bytes': -1789952}], 'findings': [], 'could_not_run': ["none/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'", "none/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'", "none/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'", "cpu_touch/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'", "cpu_touch/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'", "cpu_touch/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'", "cuda_malloc/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'", "cuda_malloc/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'", "cuda_malloc/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'", "cuda_malloc/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'", "cuda_malloc_repeat/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'", "cuda_malloc_repeat/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'", "cuda_malloc_repeat/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'", "cuda_malloc_repeat/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'", "cuda_malloc_managed/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'", "cuda_malloc_managed/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'", "cuda_malloc_managed/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'", "cuda_malloc_managed/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'", "pytorch_empty/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'", "pytorch_empty/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'", "pytorch_empty/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'", "pytorch_empty/allocator_cache_released/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'", "pytorch_empty/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'"], 'could_not_run_count': 23, 'scope': 'observation consistency and CPU calibration; no native GPU containment or provenance proof'}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+__________________ test_debt_close_check_verify_netconsole_01 __________________
+tests/test_debt_registration_controls.py:41: in test_debt_close_check_verify_netconsole_01
+    closure_selector_netconsole_01()
+tests/test_closure_kernel_selectors.py:43: in closure_selector_netconsole_01
+    _require_pass("FEATURE-FORUM-NETCONSOLE-01", result)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: FEATURE-FORUM-NETCONSOLE-01 closure remains open: {'status': 'unknown', 'findings': ["required raw capture unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-NETCONSOLE-01/kernel-capture.json'"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+_______________ test_debt_close_check_verify_rcu_panic_pstore_01 _______________
+tests/test_debt_registration_controls.py:45: in test_debt_close_check_verify_rcu_panic_pstore_01
+    closure_selector_rcu_panic_pstore_01()
+tests/test_closure_kernel_selectors.py:48: in closure_selector_rcu_panic_pstore_01
+    _require_pass("FEATURE-FORUM-RCU-PANIC-PSTORE-01", result)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: FEATURE-FORUM-RCU-PANIC-PSTORE-01 closure remains open: {'status': 'unknown', 'findings': ["raw recovery evidence unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/recovery.json'"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.11-final-0 _______________
+
+Name                                     Stmts   Miss Branch BrPart  Cover
+--------------------------------------------------------------------------
+tools/__init__.py                            0      0      0      0   100%
+tools/apt_sources.py                       389      0    166      0   100%
+tools/atom_gpu_telemetry.py                707      0    270      1    99%
+tools/calibra_latencia_x.py                152      0     58      0   100%
+tools/calibra_psi.py                        97      0     30      0   100%
+tools/calibra_techo_slice.py               111      0     44      0   100%
+tools/cgroup_repro.py                      283      0     88      0   100%
+tools/chat_sse_capture.py                  205      0     88      2    99%
+tools/check_harvest_accepted.py             58      0     28      0   100%
+tools/control_racha.py                      65      0     20      0   100%
+tools/cuda_integrity.py                    172      0     44      0   100%
+tools/hitos_incidente.py                   211      0     90      0   100%
+tools/host_diagnostics.py                  483      0    178      0   100%
+tools/inventario.py                         78      0     36      0   100%
+tools/kernel_capture.py                     96      0     26      0   100%
+tools/memory_profile.py                     72      0     10      0   100%
+tools/mutacion_alcanza.py                   25      0      4      0   100%
+tools/netconsole_marker.py                  43      0     14      0   100%
+tools/nombra_victimas.py                   138      0     48      0   100%
+tools/nvme_readonly.py                     145      0     56      0   100%
+tools/openclaw_contract.py                 172      0     60      0   100%
+tools/preflight.py                         143      0     74      0   100%
+tools/presupuesto_memoria.py               234      0     90      0   100%
+tools/provider_trace.py                    147      0     64      0   100%
+tools/read_integrity.py                    112      0     30      0   100%
+tools/recipe_memory.py                      57      0     16      0   100%
+tools/recovery_profile.py                   42      0      6      0   100%
+tools/runtime_provenance.py                198      0     92      1    99%
+tools/scan_samples.py                      208      0     92      0   100%
+tools/service_probe.py                      47      0     16      0   100%
+tools/thermal_coverage.py                   88      0     22      0   100%
+tools/verify_apt_critical_removals.py       65      0     30      0   100%
+tools/verify_cgroup_plan.py                610      0    312      1    99%
+tools/verify_cgroup_repro.py               107      0     52      0   100%
+tools/verify_forum_pstore.py               115      0     60      0   100%
+tools/verify_memory_saver.py               355      0    214      0   100%
+tools/verify_netconsole.py                 432      0    228      2    99%
+tools/verify_rcu_panic_pstore.py           125      0     56      1    99%
+tools/verify_telemetry_dispositions.py      41      0     18      0   100%
+tools/workload_restart_policy.py            82      0     12      0   100%
+--------------------------------------------------------------------------
+TOTAL                                     6910      0   2842      8    99%
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_debt_close_check_verify_cgroup_plan_01
+FAILED tests/test_debt_registration_controls.py::test_debt_close_check_verify_netconsole_01
+FAILED tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01
+3 failed, 1314 passed in 388.66s (0:06:28)

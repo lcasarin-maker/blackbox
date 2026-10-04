@@ -1,0 +1,68 @@
+{
+  "source_map": "/tmp/bb-hw-readonly-evidence-map/hardware-readonly-evidence-map.json",
+  "source_map_sha256": "6a8eaadeceb20b05e0e6661147f3423f3228b9c0b8525373ec086028b2993533",
+  "selection_rule": "Regex match useful_readonly_action for read-only dpkg-query, privileged watchdog attribution, privileged modeset read, or attached backup-device mount identity; exclude Docker OOM and NVMe test-file implementation gaps.",
+  "count": 5,
+  "items": [
+    {
+      "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+      "source_order": 24,
+      "card_path": "tasks/backlog/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01.md",
+      "close_check": {
+        "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_backup_mount_boot_identity_01",
+        "expect": "exit_zero",
+        "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+      },
+      "useful_readonly_action": "After the intended backup device is attached, read-only findmnt/lsblk/UUID plus current boot_id could bind the actual mount; no target is presently known.",
+      "prerequisite_or_blocker": "Known backup device/expected UUID and boot identity."
+    },
+    {
+      "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+      "source_order": 36,
+      "card_path": "tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-SBSA-WATCHDOG-STATE-01 --evidence tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+        "expect": "exit_zero",
+        "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."
+      },
+      "useful_readonly_action": "A privileged read-only lsof/fuser attribution of /dev/watchdog0 could reduce owner uncertainty; do not repeat the unprivileged query.",
+      "prerequisite_or_blocker": "Permission for read-only device-owner attribution; OEM recovery policy still required."
+    },
+    {
+      "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+      "source_order": 40,
+      "card_path": "tasks/backlog/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT --evidence tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+        "expect": "exit_zero",
+        "porque": "Show that OTA compatibility checks detect a conflicting DRM modeset override before update, with safe recovery and a clean-system negative control."
+      },
+      "useful_readonly_action": "One privileged read-only read of /sys/module/nvidia_drm/parameters/modeset would close that specific observation gap; does not close OTA compatibility.",
+      "prerequisite_or_blocker": "Read permission; OTA target/recovery evidence remains external."
+    },
+    {
+      "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "source_order": 43,
+      "card_path": "tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-KERNEL-INITRD-UPDATE-GATE --evidence tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+        "expect": "exit_zero",
+        "porque": "Demostrar un gate previo al reboot que detecta estado dpkg/DKMS incoherente, ausencia de initrd/módulo para el kernel objetivo y una recuperación arrancable; incluir negativos de kernel sano y rollback."
+      },
+      "useful_readonly_action": "A bounded read-only dpkg-query ownership/version and modinfo path/signature query may resolve current package/module provenance; do not run package operations.",
+      "prerequisite_or_blocker": "Root/read permissions for provenance; update/reboot A/B and recovery remain separately authorized."
+    },
+    {
+      "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+      "source_order": 47,
+      "card_path": "tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md",
+      "close_check": {
+        "cmd": "python3 -m tools.verify_forum_finding --id FORUM-REALTEK-DRIVER-BINDING-01 --evidence tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01",
+        "expect": "exit_zero",
+        "porque": "Verificador pendiente: prueba binding PCI efectivo y paquete/módulo compatible; warm/cold reboot A/B y rollback con controles de otra NIC, driver ausente y consulta fallida."
+      },
+      "useful_readonly_action": "Read-only dpkg-query -S plus modinfo -n/version/signature can improve package provenance if available; avoid repeating current PCI/module version inventory.",
+      "prerequisite_or_blocker": "Permission for package/module provenance; reboot/A-B and rollback need approval."
+    }
+  ]
+}

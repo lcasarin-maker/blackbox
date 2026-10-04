@@ -1,0 +1,17 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________ test_debt_close_check_verify_memory_saver_01 _________________
+tests/test_debt_registration_controls.py:1506: in test_debt_close_check_verify_memory_saver_01
+    _require_pass(IDS[phase], result)
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: FEATURE-MEMORYSAVER-02-TRAZADOR closure remains open: {'status': 'unknown', 'findings': ["raw phase capture unavailable: [Errno 2] No such file or directory: 'capture.json'"], 'could_not_run': 1, 'could_not_run_count': 1, 'fail': 0}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"02-trazador": {"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "findings": ["raw phase capture unavailable: [Errno 2] No such file or directory: 'capture.json'"], "status": "unknown"}, "04-packing-4k": {"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "findings": ["raw phase capture unavailable: [Errno 2] No such file or directory: 'capture.json'"], "status": "unknown"}}
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_debt_close_check_verify_memory_saver_01
+1 failed in 0.14s

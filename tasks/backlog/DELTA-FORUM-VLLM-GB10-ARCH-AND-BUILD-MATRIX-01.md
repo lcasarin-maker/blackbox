@@ -42,3 +42,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: parcial, reutilizando los campos existentes de arquitectura, driver/CUDA e identidad de imagen en la captura runtime. Prometheus solo aporta evidencia del trabajo KV separado; no valida toolchain, PTXAS, matriz/build, carga del modelo ni control negativo. Esos sujetos quedan `could_not_run`; la ficha sigue abierta y su `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-runtime.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `external_oem`.
+- Impedimento: Builds y fallos descritos son versiones comunitarias no auditadas; no hay artefacto reproducible identificado en BB.
+- Evidencia faltante para cierre: Identidad exacta GB10/CUDA/driver/vLLM/Torch/image; build reproducible y offline; rutas CUTLASS/Triton/Inductor y controles positivos/negativos.
+- Siguiente acción: Solicitar al autor/OEM imagen/digest, logs y build manifests de las combinaciones reportadas; en cuanto lleguen, evaluarlos con el selector/matriz existentes en GB10 compatible.
+- Responsable del siguiente paso: BB; coordinación solicita OEM/proveedor.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01.md`, `tools/runtime_batch03_controls.py`, `tests/test_debt_registration_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

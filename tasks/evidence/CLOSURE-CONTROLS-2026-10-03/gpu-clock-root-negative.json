@@ -1,0 +1,153 @@
+{
+  "module_sha256": "1391a7b76672191119c935c793f5b2f142ae03454080dfefae527fb72f474ff9",
+  "fixture_positive": {
+    "capture": {
+      "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+      "commands": [
+        {
+          "cmd": "dmidecode -t system",
+          "exit": 0,
+          "stdout": "Manufacturer: HP\nProduct Name: ZGX Nano G1n",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:00+00:00"
+        },
+        {
+          "cmd": "uname -r",
+          "exit": 0,
+          "stdout": "7.0.0-1019-nvidia",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:00+00:00"
+        },
+        {
+          "cmd": "nvidia-smi --query-gpu=name,driver_version --format=csv",
+          "exit": 0,
+          "stdout": "GB10, 580.178.04",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:00+00:00"
+        },
+        {
+          "cmd": "modinfo nvidia",
+          "exit": 0,
+          "stdout": "version: 580.178.04",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:00+00:00"
+        },
+        {
+          "cmd": "vllm benchmark --bb-phase baseline --repeat 0",
+          "exit": 0,
+          "stdout": "{\"duration_seconds\": 360, \"tokens_per_second\": 20, \"completed_requests\": 100, \"failed_requests\": 0}",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:04+00:00"
+        },
+        {
+          "cmd": "nvidia-smi --bb-phase baseline --query-gpu=clocks.current.graphics,power.draw,temperature.gpu,utilization.gpu --format=csv,noheader,nounits",
+          "exit": 0,
+          "stdout": "2100, 70, 65, 90",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:05+00:00"
+        },
+        {
+          "cmd": "vllm benchmark --bb-phase baseline --repeat 1",
+          "exit": 0,
+          "stdout": "{\"duration_seconds\": 360, \"tokens_per_second\": 20, \"completed_requests\": 100, \"failed_requests\": 0}",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:06+00:00"
+        },
+        {
+          "cmd": "nvidia-smi --bb-phase baseline --query-gpu=clocks.current.graphics,power.draw,temperature.gpu,utilization.gpu --format=csv,noheader,nounits",
+          "exit": 0,
+          "stdout": "2100, 70, 65, 90",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:07+00:00"
+        },
+        {
+          "cmd": "vllm benchmark --bb-phase capped --repeat 0",
+          "exit": 0,
+          "stdout": "{\"duration_seconds\": 360, \"tokens_per_second\": 18, \"completed_requests\": 100, \"failed_requests\": 0}",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:08+00:00"
+        },
+        {
+          "cmd": "nvidia-smi --bb-phase capped --query-gpu=clocks.current.graphics,power.draw,temperature.gpu,utilization.gpu --format=csv,noheader,nounits",
+          "exit": 0,
+          "stdout": "2000, 70, 65, 90",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:09+00:00"
+        },
+        {
+          "cmd": "vllm benchmark --bb-phase capped --repeat 1",
+          "exit": 0,
+          "stdout": "{\"duration_seconds\": 360, \"tokens_per_second\": 18, \"completed_requests\": 100, \"failed_requests\": 0}",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:10+00:00"
+        },
+        {
+          "cmd": "nvidia-smi --bb-phase capped --query-gpu=clocks.current.graphics,power.draw,temperature.gpu,utilization.gpu --format=csv,noheader,nounits",
+          "exit": 0,
+          "stdout": "2000, 70, 65, 90",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:11+00:00"
+        },
+        {
+          "cmd": "nvidia-smi -lgc 300,2200",
+          "exit": 0,
+          "stdout": "Applications clocks set",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:12+00:00"
+        },
+        {
+          "cmd": "nvidia-smi -lgc 300,2800",
+          "exit": 0,
+          "stdout": "Applications clocks set",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:13+00:00"
+        },
+        {
+          "cmd": "nvidia-smi --bb-phase rollback --query-gpu=clocks.current.graphics,power.draw,temperature.gpu,utilization.gpu --format=csv,noheader,nounits",
+          "exit": 0,
+          "stdout": "2100, 20, 40, 0",
+          "stderr": "",
+          "captured_at": "2026-10-03T10:00:14+00:00"
+        }
+      ]
+    },
+    "result": {
+      "status": "pass",
+      "reason": "two or more sustained runs per phase; throughput stock=20.000, capped=18.000 tokens/s; rollback policy and effective clock readback verified",
+      "files": [
+        "/tmp/bb-clock-root-review-mwjoezqo/commands.json"
+      ],
+      "fail": 0,
+      "could_not_run": 0
+    }
+  },
+  "native_query": {
+    "argv": [
+      "nvidia-smi",
+      "--bb-phase",
+      "baseline",
+      "--query-gpu=clocks.current.graphics",
+      "--format=csv,noheader,nounits"
+    ],
+    "exit_code": 9,
+    "stdout": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.\n\n",
+    "stderr": "",
+    "scope": "Sandbox capture could not reach driver (rc9); does not verify CLI semantics.",
+    "could_not_run": 1
+  },
+  "scope": "Offline verifier counterexample plus read-only invalid-option query; no clock-cap setting command was executed",
+  "review_decision": "Reject PASS: invented --bb-phase CLI options and cap application after capped runs; missing predeclared soak/idle/load-unload/failure counts and exact policy readback",
+  "native_query_authorized_host": {
+    "argv": [
+      "nvidia-smi",
+      "--bb-phase",
+      "baseline",
+      "--query-gpu=clocks.current.graphics",
+      "--format=csv,noheader,nounits"
+    ],
+    "exit_code": 2,
+    "combined_output": "ERROR: Option --bb-phase is not recognized. Please run 'nvidia-smi -h' for help.\n\n",
+    "could_not_run": 0,
+    "scope": "Literal output of authorized host exec_command; tool reports combined output."
+  }
+}

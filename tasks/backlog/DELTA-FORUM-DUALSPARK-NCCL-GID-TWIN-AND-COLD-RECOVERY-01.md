@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Evaluación de instrumentos 2026-10-03
 
 Reusa host diagnostics/network inventory solo para enumeración HCA/GID; captura local reportada sin HCA, consulta de link inaccesible, transporte sin validar y adjunto físico desconocido. No hay evidencia de nodos gemelos o GID seleccionada. Siguiente paso `deferred_lab`: capturas de ambos nodos e identidad HCA/GID/IP, prueba del mismo collective e inferencia inicial, control nulo de GID/twin y preservación de logs antes de recovery. No hubo tráfico, reinicio ni recuperación.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: No hay captura actual de dos nodos ni prueba real de twin GID, NCCL y recuperación fría.
+- Evidencia faltante para cierre: Identidad de dos nodos/NIC/firmware/driver; GID por puerto; NCCL sano/fallido; cold recovery y rollback con logs.
+- Siguiente acción: Solicitar al operador DualSpark capturas de identidad/topología/GID, caso NCCL positivo/negativo y recuperación fría con rollback; evaluar con el selector existente.
+- Responsable del siguiente paso: BB; operador Luis para hardware/peer.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01.md`, `tools/runtime_batch01_controls.py`, `tools/hardware_batch02_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -1,0 +1,45 @@
+{
+  "file": "tests/test_workload_restart_containment.py",
+  "before_sha256": "38799a1f4d49c4376372e8319e817911accf4aa9ceb06a5cbc8ee96083ebbfb5",
+  "after_sha256": "5e38b399c32f1ac6c342cd8895909e5206a0a8fa7e05d0132c5a2cf5e386d904",
+  "existing_test_functions_unchanged": 10,
+  "changed_existing_test_functions": [],
+  "added_test_functions": [
+    "test_complete_synthetic_restart_cycle_passes_then_mutated_probe_fails",
+    "test_restart_application_probe_binds_request_route_and_container_port",
+    "test_restart_data_reader_hashes_actual_bytes_and_modes",
+    "test_restart_decision_replay_matches_real_policy_across_boot_ids",
+    "test_restart_decision_replay_rejects_echo_that_mimics_policy",
+    "test_restart_decision_replay_rejects_forged_block_status",
+    "test_restart_docker_and_unit_readers_bind_executable_target_and_directives",
+    "test_restart_management_ssh_requires_pinned_remote_target_and_exact_command",
+    "test_restart_reader_recomputes_container_identity_and_restart_policy",
+    "test_restart_reader_rejects_unpinned_image_or_wrong_identity",
+    "test_restart_recovery_close_check_uses_real_cycle_evidence"
+  ],
+  "validation": {
+    "original_command": {
+      "exit_code": 1,
+      "passed": 20,
+      "failed": 1,
+      "physical_could_not_run": 1,
+      "reason": "restart-cycle raw bundle absent",
+      "log": "bb-docker-original-real-selector-primary.log"
+    },
+    "pyright": {
+      "exit_code": 0,
+      "errors": 0,
+      "warnings": 0,
+      "informations": 0,
+      "log": "bb-primary-pyright-after-docker-real-selector.log"
+    },
+    "zero_debt": {
+      "exit_code": 0,
+      "passed_files": 140,
+      "violations": 0,
+      "could_not_run": 0,
+      "log": "bb-zero-debt-after-docker-real-selector.log"
+    }
+  },
+  "physical_closed": false
+}

@@ -37,3 +37,14 @@ Evidencia y pendientes: `tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/pro
 ## Avance de instrumentación 2026-10-03
 
 `tools.host_diagnostics` ahora recoge identidad, estado, timeout y nowayout desde sysfs; propietario queda `UNKNOWN` porque el inventario no acredita PID y no abre `/dev/watchdog`. No se observaron entradas HID en esta captura. Evidencia y alcance: [BB-INSTRUMENTS-devices](../../docs/evidence/BB-INSTRUMENTS-devices.md). La ficha sigue abierta y el close_check original permanece pendiente.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `privileged_access`.
+- Impedimento: La captura actual obtiene estado/timeout/nowayout por sysfs pero owner es UNKNOWN; el procedimiento excluye abrir /dev/watchdog.
+- Evidencia faltante para cierre: Propietario real, boot/pstore correlacionado, compatibilidad OEM y control de recuperación con timeout/nowayout.
+- Siguiente acción: Preparar captura readonly acotada de ownership y pstore/journal correlacionados; solicitar al operador ejecución con privilegios y recibo de recuperación OEM sin tocar política.
+- Responsable del siguiente paso: BB; operador Luis para acceso root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md`, `tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/progress.txt`, `docs/evidence/BB-INSTRUMENTS-devices.md`, `tools/forum_finding.py`, `tools/forum_hardware_subjects.py`, `tools/host_diagnostics.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

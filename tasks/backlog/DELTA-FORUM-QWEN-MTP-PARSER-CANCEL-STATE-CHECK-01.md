@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: parcial, con lector offline que preserva fragmentos de tool call y si se observó `[DONE]`. La ausencia del marcador queda como captura incompleta de causa desconocida; no prueba cancelación, recuperación del parser, tool call posterior ni recuperación tras restart. Esos sujetos quedan `could_not_run`; la ficha sigue abierta y el `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-requests.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: La evidencia actual etiqueta lector offline parcial: conserva fragmentos y [DONE], pero no demuestra siguiente tool call post-cancelación en runtime.
+- Evidencia faltante para cierre: Matriz parser×MTP×cancelación, llamada mock tipada antes/después de cancelación, finish reason/exit/restart y control de recuperación tras reinicio.
+- Siguiente acción: Completar solo los campos faltantes del recibo cancelación/finish reason si el selector los señala; luego pedir corrida fijada con mock tool, cancel mid-stream y llamada siguiente en mismo proceso.
+- Responsable del siguiente paso: BB; operador Luis para workload/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01.md`, `tools/runtime_batch03_controls.py`, `tests/test_debt_registration_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

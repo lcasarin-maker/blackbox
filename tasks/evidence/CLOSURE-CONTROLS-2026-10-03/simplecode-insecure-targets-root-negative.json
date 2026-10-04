@@ -1,0 +1,29 @@
+{
+  "scope": "Synthetic adversarial measurement-regression cases; no unsafe network request/binding executed. First two cases were caught by legacy detector and missed by proposed AST change; annotated third case is additional coverage, not a legacy regression.",
+  "producer_worktree": "/tmp/simplecode-pii-worktree",
+  "module_sha256": "efc4c7b707fbfd8e5db1494fb8772d5feadd319e20543ed33fe2acdeefc8d5c3",
+  "rows": [
+    {
+      "code": "client.verify = False",
+      "new_detector_caught": false,
+      "legacy_regex_caught": true
+    },
+    {
+      "code": "settings.host = \"0.0.0.0\"",
+      "new_detector_caught": false,
+      "legacy_regex_caught": true
+    },
+    {
+      "code": "client.verify: bool = False",
+      "new_detector_caught": false,
+      "legacy_regex_caught": false
+    },
+    {
+      "code": "client.configure(verify=False)",
+      "new_detector_caught": true,
+      "legacy_regex_caught": true
+    }
+  ],
+  "could_not_run_count": 0,
+  "review_status": "repair required before canonical application/sync"
+}

@@ -1,0 +1,19 @@
+{
+  "observed_at": "2026-10-04T07:32:47.597595+00:00",
+  "scope": "Collector schema compatibility audit; no thermal experiment or closure claimed.",
+  "collector_schema": 1,
+  "collector_status": "observed",
+  "top_level_system_present": false,
+  "actual_system_location": "host.system",
+  "actual_system": "Linux",
+  "collector_could_not_run": 0,
+  "proposed_reader_sha256": "eec864f67c9af81c9491e585506f144c6f77f5e942396248f1d9e15be6be8211",
+  "proposed_reader_expression": "thermal.get(\"system\") != \"Linux\"",
+  "finding": "Reader requires absent top-level system, so native collector is rejected while invented fixture passes.",
+  "review_status": "sent to owner for repair; not integrated",
+  "execution": {
+    "interpreter": "python3",
+    "callable": "tools.thermal_coverage.capture(Path(\"/\"))",
+    "mode": "read-only direct collector invocation; not CLI subprocess"
+  }
+}

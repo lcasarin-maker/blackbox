@@ -1,0 +1,27 @@
+{
+  "scope": "Synthetic root adversarial PII classifier test, not real personal-data sample. Each token must bind to its own JSON siblings.",
+  "observed_at": "2026-10-04T08:08:12.986254+00:00",
+  "cases": [
+    {
+      "case": "baseline",
+      "input": "{\n  \"rows\": [\n    {\n      \"filename\": \"/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_noble_main_dep11_icons-64x64%402.tar.gz\",\n      \"meta_key\": \"main/dep11/icons-64x64@2.tar\",\n      \"site\": \"http://ports.ubuntu.com/ubuntu-ports\",\n      \"suite\": \"noble\",\n      \"architecture\": \"$(ARCHITECTURE)\",\n      \"identifier\": \"DEP-11-icons-hidpi\"\n    }\n  ]\n}",
+      "findings": []
+    },
+    {
+      "case": "wrong_alone",
+      "input": "{\n  \"rows\": [\n    {\n      \"filename\": \"/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_noble_main_dep11_icons-64x64%402.tar.gz\",\n      \"meta_key\": \"main/dep11/icons-64x64@2.tar\",\n      \"site\": \"https://attacker.example\",\n      \"suite\": \"noble\",\n      \"architecture\": \"$(ARCHITECTURE)\",\n      \"identifier\": \"DEP-11-icons-hidpi\"\n    }\n  ]\n}",
+      "findings": [
+        [
+          5,
+          "icons-64x64@2.tar"
+        ]
+      ]
+    },
+    {
+      "case": "mixed",
+      "input": "{\n  \"rows\": [\n    {\n      \"filename\": \"/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_noble_main_dep11_icons-64x64%402.tar.gz\",\n      \"meta_key\": \"main/dep11/icons-64x64@2.tar\",\n      \"site\": \"http://ports.ubuntu.com/ubuntu-ports\",\n      \"suite\": \"noble\",\n      \"architecture\": \"$(ARCHITECTURE)\",\n      \"identifier\": \"DEP-11-icons-hidpi\"\n    },\n    {\n      \"filename\": \"/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_noble_main_dep11_icons-64x64%402.tar.gz\",\n      \"meta_key\": \"main/dep11/icons-64x64@2.tar\",\n      \"site\": \"https://attacker.example\",\n      \"suite\": \"noble\",\n      \"architecture\": \"$(ARCHITECTURE)\",\n      \"identifier\": \"DEP-11-icons-hidpi\"\n    }\n  ]\n}",
+      "findings": []
+    }
+  ],
+  "source_sha256": "045e5315a7bcfb2f0c04aca826958c6b48d8c5d3811fd89d94ef736d50c38cdd"
+}

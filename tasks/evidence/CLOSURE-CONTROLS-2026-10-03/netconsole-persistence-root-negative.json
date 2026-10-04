@@ -1,0 +1,75 @@
+{
+  "scope": "Synthetic helper negative only; no network configuration or marker emitted",
+  "module_sha256": "b0a0ea14bccc8723f1cdb0136a57be476656c526d7bb24f63c943c36007b5dad",
+  "baseline_issue": null,
+  "mutant_rows": [
+    {
+      "path": "/etc/modprobe.d/blackbox-netconsole.conf",
+      "phase": "before",
+      "command": [
+        "cat",
+        "/etc/modprobe.d/blackbox-netconsole.conf"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "cat: /etc/modprobe.d/blackbox-netconsole.conf: No such file or directory\n"
+    },
+    {
+      "path": "/etc/modprobe.d/blackbox-netconsole.conf",
+      "phase": "during",
+      "command": [
+        "cat",
+        "/etc/modprobe.d/blackbox-netconsole.conf"
+      ],
+      "returncode": 0,
+      "stdout": "options netconsole nonsense=1\n",
+      "stderr": ""
+    },
+    {
+      "path": "/etc/modprobe.d/blackbox-netconsole.conf",
+      "phase": "after",
+      "command": [
+        "cat",
+        "/etc/modprobe.d/blackbox-netconsole.conf"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "cat: /etc/modprobe.d/blackbox-netconsole.conf: No such file or directory\n"
+    },
+    {
+      "path": "/etc/modules-load.d/blackbox-netconsole.conf",
+      "phase": "before",
+      "command": [
+        "cat",
+        "/etc/modules-load.d/blackbox-netconsole.conf"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "cat: /etc/modules-load.d/blackbox-netconsole.conf: No such file or directory\n"
+    },
+    {
+      "path": "/etc/modules-load.d/blackbox-netconsole.conf",
+      "phase": "during",
+      "command": [
+        "cat",
+        "/etc/modules-load.d/blackbox-netconsole.conf"
+      ],
+      "returncode": 0,
+      "stdout": "netconsole\n",
+      "stderr": ""
+    },
+    {
+      "path": "/etc/modules-load.d/blackbox-netconsole.conf",
+      "phase": "after",
+      "command": [
+        "cat",
+        "/etc/modules-load.d/blackbox-netconsole.conf"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "cat: /etc/modules-load.d/blackbox-netconsole.conf: No such file or directory\n"
+    }
+  ],
+  "mutant_issue": null,
+  "defect": "Persistence accepts options netconsole nonsense=1 without configured target binding, and omits mode evidence."
+}

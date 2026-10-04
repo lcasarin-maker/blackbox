@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Evaluación de instrumentos 2026-10-03
 
 Reusa `tools/provider_trace.py` únicamente para la ruta request/provider/worker; no observa cola por paso, scheduler DCP4 ni equidad entre decode largo y prefill. No existe traza local de la carga descrita. Siguiente paso `deferred_lab`: stack TP8/DCP4 fijado, secuencia con decode largo y cuatro prefills concurrentes, orden/espera por cola, tokens/s, throughput, stalls, errores, completitud y corrección, con control stock y rollback. No se ejecutó workload.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: La ficha dice que provider_trace no observa cola por paso/scheduler; no hay traza de la carga TP8 descrita.
+- Evidencia faltante para cierre: Stack TP8/DCP4 y digest fijados; decode largo + cuatro prefills; orden/espera, throughput, stalls, errores/completitud/corrección; control stock y rollback.
+- Siguiente acción: Preparar una captura temporal de cola por paso solo si el runtime fijado la expone; de lo contrario, solicitar corrida de decode largo + cuatro prefills, stock vs flag de rollback y registros de stalls/throughput en laboratorio.
+- Responsable del siguiente paso: BB; operador Luis para workload/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01.md`, `tools/provider_trace.py`, `tools/runtime_batch01_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

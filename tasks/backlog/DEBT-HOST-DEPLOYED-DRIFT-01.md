@@ -24,3 +24,14 @@ El criterio ejecuta el comparador nativo sobre el host. Las pruebas positivas y 
 ## Verification Evidence
 
 Salida literal de 41 sujetos, 2 divergencias, 0 ausencias, 1 suspensión: tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/fail.txt. Hashes y modos de ambos lados en source.json. La autorización de reinicio de bb-usable se mantiene separada de esta sincronización.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `privileged_access`.
+- Impedimento: La inspección documenta divergencia real en dos archivos de /etc y /usr/local/bin; cierre requiere comparar/remediar despliegue del host y preservar el origen.
+- Evidencia faltante para cierre: salida actual íntegra de `bash bin/bb drift` y plan de reconciliación aprobado para hashes/modos divergentes
+- Siguiente acción: Preparar reconciliación verificable de los dos archivos divergentes y volver a capturar el comparador bajo acceso de operador; conservar archivos desplegados hasta acordar origen.
+- Responsable del siguiente paso: operador Luis (host); coordinación BB (comparador/código).
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/DEBT-HOST-DEPLOYED-DRIFT-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json`, `tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/fail.txt`, `tasks/evidence/DEBT-HOST-DEPLOYED-DRIFT-01/source.json`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

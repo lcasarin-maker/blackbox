@@ -1,0 +1,13 @@
+Subject ID: DEBT-BB-SAMPLE-SMI-QUERIES-WITHOUT-TIMEOUT-01
+Subject close_check: python3 -m pytest -q tests/test_bb_bash.py::test_sample_all_smi_queries_are_bounded
+Command: python3 -m pytest -q tests/test_bb_bash.py::test_sample_all_smi_queries_are_bounded
+.                                                                        [100%]
+1 passed in 4.81s
+exit=0
+
+Scope note (not pytest output): the selector invokes the real `bin/bb sample` path
+against an isolated temporary dataset and a fake `nvidia-smi` executable. It
+checks an empty successful query, exit status 9, and a blocked
+`query-compute-apps` query under `BB_SMI_TIMEOUT_S=1`. It does not invoke a
+physical NVIDIA driver, GPU, or hardware telemetry path; physical-hardware
+validation is COULD_NOT_RUN (CNR).

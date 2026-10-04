@@ -1,0 +1,19 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_delta_root_container_effective_build_and_offline_gate_01 _________
+tests/test_debt_registration_controls.py:1444: in test_delta_root_container_effective_build_and_offline_gate_01
+    _require_runtime_batch03_closure('DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01')
+tests/test_debt_registration_controls.py:1404: in _require_runtime_batch03_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01'", "status": "unknown"}
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_delta_root_container_effective_build_and_offline_gate_01
+1 failed in 0.08s

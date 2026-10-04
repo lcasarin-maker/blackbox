@@ -26,3 +26,14 @@ Revisar alineación de base de tabla GPU, DMA coherente, separación de líneas 
 Informe de coste literal del backing actual, requisitos de alineación extraídos de fuente/HAL y decisión respaldada por medidas. Si se justifica: diff mínimo revisable, compilación y matriz de integridad de 03 contra stock/candidato, más pruebas de cargo/descargo y fallos. Si los requisitos o el coste descartan el port: registrar evidencia y cerrar por la vía legal correspondiente. Evitar estimaciones de ahorro y promesas de corregir los cuelgues.
 
 El close_check queda especificado para implementarse junto al trabajo. Verificador y evidencia de esta ficha pendientes. Registrar la ficha conserva status open y no demuestra portabilidad ni resultados GPU.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: No hay captura de sujeto para fase 04-packing-4k; el verificador de fase ya existe.
+- Evidencia faltante para cierre: Captura cruda de packing 4K, stack/hardware fijados, costo/beneficio y negativos/controles exigidos por fase.
+- Siguiente acción: Solicitar captura real de packing 4K y control de referencia en hardware/runtime fijado, con los campos requeridos por verify_memory_saver; ejecutar el selector focal sobre esos recibos.
+- Responsable del siguiente paso: BB; operador Luis para workload/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md`, `tools/verify_memory_saver.py`, `tools/hardware_evidence.py`, `tests/test_closure_kernel.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

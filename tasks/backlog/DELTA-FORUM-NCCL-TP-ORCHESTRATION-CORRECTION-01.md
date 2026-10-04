@@ -35,3 +35,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Evaluación de instrumentos 2026-10-03
 
 Reusa `tools/provider_trace.py` solo para worker/proveedor; no observa el launcher por nodo, variables/interfaz efectiva, NCCL microtest ni CUDA Graph. No hay captura local de launcher/logs por rango; el registro existente `root-qwen-image-review.json` corresponde a otras imágenes y declara casos sin A/B, por lo que no cubre esta ficha. Estado `deferred_lab`: stack dual fijado, microtest y comparación receta/manual con logs por nodo y control de salida, antes de atribuir causalidad a NCCL/Ray.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: La corrección de orquestación requiere jobs NCCL/TP reales y control de fallo del coordinador; no se halló resultado local en la evidencia específica.
+- Evidencia faltante para cierre: stack/digests; logs rank/node/collective; positivo multi-GPU y negativo de orquestación; rollback
+- Siguiente acción: Preparar job NCCL/TP en canario multi-GPU con topología y digests fijados; probar coordinación sana y negativa y archivar trazas completas.
+- Responsable del siguiente paso: coordinación BB prepara; operador Luis ejecuta root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json`, `tasks/evidence/DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01/ (directorio ausente al inspeccionar)`.
+- Impedimentos de inspección: 1. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -49,3 +49,14 @@ de root. Dueño real, flags observados y transición a worker siguen pendientes;
 esta ficha conserva status open.
 
 **FEATURE-FORUM-UVM-TRACE-CAPABILITY-01 (delta del foro 357848).** En GB10/SM121 con driver 580.95.05, CUDA 13.1 y Nsight Systems 2026.1.1, un operador no pudo capturar page faults/migraciones UVM y NVIDIA respondió que el perfilado UVM no está soportado en Spark en esa combinación ([357848](https://forums.developer.nvidia.com/t/357848)). Reusar el mapa de traza de esta ficha para anotar capacidad/no-capacidad por versión; no inferir migraciones UVM a partir de memoria host, faults CPU agregados o `nvidia-smi`, ni abrir un probe separado que Blackbox no usa. Una alternativa solo se admite tras soporte del proveedor y una prueba conocida de UVM contra control host.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `privileged_access`.
+- Impedimento: El mapa estático y ABI probe están disponibles; la captura dinámica quedó sin ejecutar por barrera root.
+- Evidencia faltante para cierre: Traza memcg/flags/worker con dueño real, transición observada y control negativo en kernel 6.17; identidad del stack.
+- Siguiente acción: Solicitar al operador captura acotada del probe en lab con privilegios root, identidad kernel, owner/flags/transición worker y control negativo; preservar stderr y resultado de attach.
+- Responsable del siguiente paso: BB; operador Luis para acceso root/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md`, `tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt`, `tools/kernel_charges.bt`, `tools/verify_cgroup_plan.py`, `tests/test_closure_kernel_selectors.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

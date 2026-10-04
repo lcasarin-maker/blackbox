@@ -1,0 +1,43 @@
+{
+  "scope": "Adversarial review of proposed APT PII context rules; raw scratch inputs retained in /tmp, public report masks tokens",
+  "scanner_source_sha256": "38e9091894da36cd67e9c40a73f9d84a0368b7925700d29472d22d62427a19db",
+  "cases": [
+    {
+      "case": "query_object_clone",
+      "input_path": "/tmp/bb-pii-query_object_clone-root-negative.json",
+      "input_sha256": "4bc5c1bc2c90d335fea794b420aa4ee5bdd5710b9e7bf2ae1b105f849ff26102",
+      "observed_findings": 0,
+      "masked_findings": [],
+      "expected": "Clone tokens stay findings; only the actual source object/array may qualify",
+      "candidate_token_lines": [
+        9,
+        32
+      ],
+      "interpretation": "Full cloned query incorrectly exempted"
+    },
+    {
+      "case": "nested_config_array_clone",
+      "input_path": "/tmp/bb-pii-nested_config_array_clone-root-negative.json",
+      "input_sha256": "72d04d0a98ead2bac062fd3b42ea4a214b56b73869c028976ac0baed9987ae5d",
+      "observed_findings": 2,
+      "masked_findings": [
+        [
+          149,
+          "icon***********ar"
+        ],
+        [
+          163,
+          "icon*************ar"
+        ]
+      ],
+      "expected": "Clone tokens stay findings; only the actual source object/array may qualify",
+      "candidate_token_lines": [
+        55,
+        69,
+        149,
+        163
+      ],
+      "interpretation": "Nested clone exempted; actual root array incorrectly flagged, as demonstrated by reported source line numbers"
+    }
+  ]
+}

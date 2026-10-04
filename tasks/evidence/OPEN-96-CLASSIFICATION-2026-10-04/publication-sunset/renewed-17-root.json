@@ -1,0 +1,166 @@
+{
+  "count": 17,
+  "could_not_run": 0,
+  "scope": "17 KEEP only;FIX andCNR retained2.3",
+  "changes": [
+    {
+      "id": "blocking-sleep-override:tests/test_bb_bash.py:806",
+      "path": "tests/test_bb_bash.py",
+      "current_line": 810,
+      "before": "        time.sleep(4)  # blocking-sleep: ps reports whole CPU seconds; window needed for delta -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.3 -- `ps` informa segundos enteros; neutralizar la ventana hace fallar el positivo 3/3 veces con cpu_top 0/5. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-17",
+      "after": "        time.sleep(4)  # blocking-sleep: ps reports whole CPU seconds; window needed for delta -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.4 -- `ps` informa segundos enteros; neutralizar la ventana hace fallar el positivo 3/3 veces con cpu_top 0/5. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-17",
+      "evidence": "tests/test_bb_bash.py:806 in HEAD, current worktree line 810; SHA256=85cb81cb8d1c86845c33c9cb9be672c439e1c9bfde52e363473f48ebb8d984ce; line body/comment byte-identical to `git show HEAD:tests/test_bb_bash.py` at original line 806. Anchor RENEW-17 in tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt. Focused receipt RENEW-17; inspected test implementation and recorded result, did not rerun tests.",
+      "rationale": "El intervalo de 4 s permite que ps observe delta de CPU en segundos enteros: el positivo pas\u00f3 3/3 con espera y fall\u00f3 3/3 neutralizado; el negativo de proceso dormido pas\u00f3 3/3 en ambos modos."
+    },
+    {
+      "id": "blocking-sleep-override:tools/atom_gpu_telemetry.py:1708",
+      "path": "tools/atom_gpu_telemetry.py",
+      "current_line": 1708,
+      "before": "            time.sleep(args.interval_seconds)  # blocking-sleep: intervalo del sampler de vida larga, no I/O a esperar -- DGX-334  # sunset-reviewed: 2.3 -- el sampler de vida larga requiere su intervalo entre muestras; closecheck positivo y neutralizado prueba el par\u00e1metro y el control. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-13",
+      "after": "            time.sleep(args.interval_seconds)  # blocking-sleep: intervalo del sampler de vida larga, no I/O a esperar -- DGX-334  # sunset-reviewed: 2.4 -- el sampler de vida larga requiere su intervalo entre muestras; closecheck positivo y neutralizado prueba el par\u00e1metro y el control. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-13",
+      "evidence": "tools/atom_gpu_telemetry.py:1708 in HEAD, current worktree line 1708; SHA256=10adfc3262c46103e86ec604088b598d8f899b487bb1844984ea966cdf4727ef; line body/comment byte-identical to `git show HEAD:tools/atom_gpu_telemetry.py` at original line 1708. Anchor RENEW-13 in tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt. Focused receipt RENEW-13; inspected test implementation and recorded result, did not rerun tests.",
+      "rationale": "El sampler de larga vida duerme el intervalo configurado entre muestras. El close-check enfocado verifica cadencia de 0.25 s y falla al neutralizar sleep, as\u00ed que el intervalo controla la frecuencia del loop."
+    },
+    {
+      "id": "blocking-sleep-override:tools/cgroup_repro.py:226",
+      "path": "tools/cgroup_repro.py",
+      "current_line": 226,
+      "before": "    time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.3 -- el worker acotado retiene la asignaci\u00f3n durante la ventana de observaci\u00f3n; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16",
+      "after": "    time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.4 -- el worker acotado retiene la asignaci\u00f3n durante la ventana de observaci\u00f3n; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16",
+      "evidence": "tools/cgroup_repro.py:226 in HEAD, current worktree line 226; SHA256=b425a07bb6b71f91db4f3670a1ad206a9eb383f33121333b93f2e2a1e9736775; line body/comment byte-identical to `git show HEAD:tools/cgroup_repro.py` at original line 226. Anchor RENEW-14-16 in tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt. Focused receipt RENEW-14-16; inspected test implementation and recorded result, did not rerun tests.",
+      "rationale": "El worker CPU retiene la asignaci\u00f3n tocada por 2 s para observaci\u00f3n. Los controles positivo y neutralizado miden >=2 s y <2 s respectivamente; run_case mantiene un timeout de proceso de 90 s y cleanup acotado."
+    },
+    {
+      "id": "gitignore:.gitignore:15",
+      "path": ".gitignore",
+      "current_line": 14,
+      "before": "# sunset-reviewed: 2.3 -- local_hooks.yaml is tracked and the negation keeps the native gate configuration visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-02)",
+      "after": "# sunset-reviewed: 2.4 -- local_hooks.yaml is tracked and the negation keeps the native gate configuration visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-02)",
+      "evidence": ".gitignore:15 in HEAD, current worktree line 15; SHA256=9ef5b2a436326f5e68405cbcc379bf8ad2a08c515e58bfcbd5c083817589eaeb; line body/comment byte-identical to `git show HEAD:.gitignore` at original line 15. Anchor RENEW-02 in tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt. Scope probe `git check-ignore -v -- .simplecode/local_hooks.yaml`; inspected current `.simplecode` inventory with `git ls-files` and `git status --ignored`.",
+      "rationale": "La excepci\u00f3n rescata la configuraci\u00f3n nativa de hooks trackeada bajo `.simplecode/*`; `check-ignore --no-index --quiet` devuelve rc=1 con la excepci\u00f3n y rc=0 al quitarla. `git ls-files` confirma que el archivo est\u00e1 trackeado."
+    },
+    {
+      "id": "gitignore:.gitignore:26",
+      "path": ".gitignore",
+      "current_line": 25,
+      "before": "# sunset-reviewed: 2.3 -- build_tools.txt is tracked and the negation keeps the verifier's tool declaration visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-04)",
+      "after": "# sunset-reviewed: 2.4 -- build_tools.txt is tracked and the negation keeps the verifier's tool declaration visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-04)",
+      "evidence": ".gitignore:26 in HEAD, current worktree line 26; SHA256=762e00a122f94202b1a9225b5b19023a3b6ad5054c8fff9ae6cdf5e2c82e41e2; line body/comment byte-identical to `git show HEAD:.gitignore` at original line 26. Anchor RENEW-04 in tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt. Scope probe `git check-ignore -v -- .simplecode/build_tools.txt`; inspected current `.simplecode` inventory with `git ls-files` and `git status --ignored`.",
+      "rationale": "La excepci\u00f3n rescata la allowlist de herramientas del verificador trackeada bajo `.simplecode/*`; el probe da rc=1 con la excepci\u00f3n y rc=0 sin ella. El archivo est\u00e1 trackeado."
+    },
+    {
+      "id": "gitignore:.gitignore:35",
+      "path": ".gitignore",
+      "current_line": 34,
+      "before": "# sunset-reviewed: 2.3 -- organ_inapplicable.json is tracked and the negation keeps applicability declarations visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-06)",
+      "after": "# sunset-reviewed: 2.4 -- organ_inapplicable.json is tracked and the negation keeps applicability declarations visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-06)",
+      "evidence": ".gitignore:35 in HEAD, current worktree line 35; SHA256=a91cd20d5e558c2b6076d335642cd6ba05ceb37d49097802c0c834b98df16fa2; line body/comment byte-identical to `git show HEAD:.gitignore` at original line 35. Anchor RENEW-06 in tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt. Scope probe `git check-ignore -v -- .simplecode/organ_inapplicable.json`; inspected current `.simplecode` inventory with `git ls-files` and `git status --ignored`.",
+      "rationale": "La excepci\u00f3n rescata la declaraci\u00f3n trackeada de aplicabilidad de verificadores; el probe da rc=1 con la excepci\u00f3n y rc=0 sin ella."
+    },
+    {
+      "id": "gitignore:.gitignore:60",
+      "path": ".gitignore",
+      "current_line": 59,
+      "before": "# sunset-reviewed: 2.3 -- audit_ledger.json is tracked and the negation keeps the per-commit audit ledger visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-08)",
+      "after": "# sunset-reviewed: 2.4 -- audit_ledger.json is tracked and the negation keeps the per-commit audit ledger visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-08)",
+      "evidence": ".gitignore:60 in HEAD, current worktree line 60; SHA256=84f479f8572727b0a608dcea6517580fe83a7aaabab802be256783f62601a5fa; line body/comment byte-identical to `git show HEAD:.gitignore` at original line 60. Anchor RENEW-08 in tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt. Scope probe `git check-ignore -v -- .simplecode/audit_ledger.json`; inspected current `.simplecode` inventory with `git ls-files` and `git status --ignored`.",
+      "rationale": "La excepci\u00f3n rescata el ledger de auditor\u00eda por commit trackeado; el probe da rc=1 con la excepci\u00f3n y rc=0 sin ella."
+    },
+    {
+      "id": "gitignore:.gitignore:67",
+      "path": ".gitignore",
+      "current_line": 66,
+      "before": "# sunset-reviewed: 2.3 -- The standalone generated .pyc probe is ignored by this suffix rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-10)",
+      "after": "# sunset-reviewed: 2.4 -- The standalone generated .pyc probe is ignored by this suffix rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-10)",
+      "evidence": ".gitignore:67 in HEAD, current worktree line 67; SHA256=c7586350e75d4f16db42e8153d8746d41cda77d63964836a50549b47bb98a841; line body/comment byte-identical to `git show HEAD:.gitignore` at original line 67. Anchor RENEW-10 in tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt. Scope probe `git check-ignore -v -- sentinel.pyc`; inspected current `.simplecode` inventory with `git ls-files` and `git status --ignored`.",
+      "rationale": "El sentinel standalone `sentinel.pyc` se ignora (rc=0) y queda visible al retirar `*.pyc` (rc=1), confirmando alcance sobre bytecode generado."
+    },
+    {
+      "id": "gitignore:.gitignore:71",
+      "path": ".gitignore",
+      "current_line": 70,
+      "before": "# sunset-reviewed: 2.3 -- The generated .coverage probe is ignored by this rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-12)",
+      "after": "# sunset-reviewed: 2.4 -- The generated .coverage probe is ignored by this rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-12)",
+      "evidence": ".gitignore:71 in HEAD, current worktree line 71; SHA256=c430713f6c364c1c361115e6de06cba34b1f2fcaee006efb7cb796f23ed2662e; line body/comment byte-identical to `git show HEAD:.gitignore` at original line 71. Anchor RENEW-12 in tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt. Scope probe `git check-ignore -v -- .coverage`; inspected current `.simplecode` inventory with `git ls-files` and `git status --ignored`.",
+      "rationale": "El sentinel `.coverage` se ignora (rc=0) y queda visible al retirar la regla (rc=1); el reporte tambi\u00e9n verifica que la regla no sea su propio sujeto."
+    },
+    {
+      "id": "blocking-sleep-override:tests/test_bb_bash.py:842",
+      "path": "tests/test_bb_bash.py",
+      "current_line": 846,
+      "before": "        time.sleep(4)  # blocking-sleep: match positive CPU-delta observation window -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.3 -- iguala la ventana de observaci\u00f3n del positivo para que el control negativo se mida en el mismo intervalo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-18",
+      "after": "        time.sleep(4)  # blocking-sleep: match positive CPU-delta observation window -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.4 -- iguala la ventana de observaci\u00f3n del positivo para que el control negativo se mida en el mismo intervalo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-18",
+      "evidence": "tests/test_bb_bash.py:842 in HEAD, current worktree line 846; SHA256=e18fbdd026d6a6f274f742cf374568cf6220aa36a8be80d1338c95fc6152e2bb; line body/comment byte-identical to `git show HEAD:tests/test_bb_bash.py` at original line 842. Anchor RENEW-18 in tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt. Inspected focused receipt RENEW-18 and test implementation; no tests rerun.",
+      "rationale": "El negativo de CPU usa la misma ventana de 4 s que el positivo para igualar la contabilidad de segundos enteros de ps. El positivo pas\u00f3 3/3 con espera y fall\u00f3 3/3 sin ella; el negativo pas\u00f3 3/3 en ambos modos."
+    },
+    {
+      "id": "blocking-sleep-override:tools/cgroup_repro.py:189",
+      "path": "tools/cgroup_repro.py",
+      "current_line": 189,
+      "before": "        time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.3 -- el worker acotado retiene la asignaci\u00f3n durante la ventana de observaci\u00f3n; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16",
+      "after": "        time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.4 -- el worker acotado retiene la asignaci\u00f3n durante la ventana de observaci\u00f3n; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16",
+      "evidence": "tools/cgroup_repro.py:189 in HEAD, current worktree line 189; SHA256=e3435fc36ce5c43d39df876d8767b60b506d57d8d298e1607ef6decb4928b321; line body/comment byte-identical to `git show HEAD:tools/cgroup_repro.py` at original line 189. Anchor RENEW-14-16 in tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt. Inspected focused receipt RENEW-14-16 and test implementation; no tests rerun.",
+      "rationale": "El worker PyTorch retiene el tensor activo por la ventana de observaci\u00f3n de 2 s. Los controles positivo y neutralizado miden >=2 s y <2 s respectivamente; run_case mantiene timeout de 90 s y cleanup acotado."
+    },
+    {
+      "id": "blocking-sleep-override:tools/cgroup_repro.py:92",
+      "path": "tools/cgroup_repro.py",
+      "current_line": 92,
+      "before": "        time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.3 -- el worker acotado retiene la asignaci\u00f3n durante la ventana de observaci\u00f3n; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16",
+      "after": "        time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.4 -- el worker acotado retiene la asignaci\u00f3n durante la ventana de observaci\u00f3n; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16",
+      "evidence": "tools/cgroup_repro.py:92 in HEAD, current worktree line 92; SHA256=e3435fc36ce5c43d39df876d8767b60b506d57d8d298e1607ef6decb4928b321; line body/comment byte-identical to `git show HEAD:tools/cgroup_repro.py` at original line 92. Anchor RENEW-14-16 in tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt. Inspected focused receipt RENEW-14-16 and test implementation; no tests rerun.",
+      "rationale": "El worker CUDA retiene la asignaci\u00f3n activa por la ventana de observaci\u00f3n de 2 s. Los controles positivo y neutralizado miden >=2 s y <2 s respectivamente; run_case mantiene timeout de 90 s y cleanup acotado."
+    },
+    {
+      "id": "gitignore:.gitignore:21",
+      "path": ".gitignore",
+      "current_line": 20,
+      "before": "# sunset-reviewed: 2.3 -- backlog_baseline.json is tracked and the negation keeps its reviewed debt baseline visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-03)",
+      "after": "# sunset-reviewed: 2.4 -- backlog_baseline.json is tracked and the negation keeps its reviewed debt baseline visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-03)",
+      "evidence": ".gitignore:21 in HEAD, current worktree line 21; SHA256=decbcca6f7e25501c3ee7bc8dbebd3491b7cebdcde39dc30fa1fb565f225b247; line body/comment byte-identical to `git show HEAD:.gitignore` at original line 21. Anchor RENEW-03 in tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt. Probe `git check-ignore -v -- .simplecode/backlog_baseline.json`; inspected current `.simplecode` inventory with `git ls-files` and `git status --ignored`.",
+      "rationale": "La excepci\u00f3n rescata `backlog_baseline.json` trackeado bajo `.simplecode/*`; el probe da rc=1 con la excepci\u00f3n y rc=0 sin ella."
+    },
+    {
+      "id": "gitignore:.gitignore:30",
+      "path": ".gitignore",
+      "current_line": 29,
+      "before": "# sunset-reviewed: 2.3 -- hook_receipt_baseline.json is tracked and the negation keeps reviewed hook receipts visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-05)",
+      "after": "# sunset-reviewed: 2.4 -- hook_receipt_baseline.json is tracked and the negation keeps reviewed hook receipts visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-05)",
+      "evidence": ".gitignore:30 in HEAD, current worktree line 30; SHA256=b1c274d3ca94d8f370eb03c82d2feec5cb6795ffe55943b4139056582e649738; line body/comment byte-identical to `git show HEAD:.gitignore` at original line 30. Anchor RENEW-05 in tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt. Probe `git check-ignore -v -- .simplecode/hook_receipt_baseline.json`; inspected current `.simplecode` inventory with `git ls-files` and `git status --ignored`.",
+      "rationale": "La excepci\u00f3n rescata el baseline de recibos de hooks trackeado; el probe da rc=1 con la excepci\u00f3n y rc=0 sin ella."
+    },
+    {
+      "id": "gitignore:.gitignore:50",
+      "path": ".gitignore",
+      "current_line": 49,
+      "before": "# sunset-reviewed: 2.3 -- corpus_exempt.yaml is tracked and the negation keeps corpus exemption declarations visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-07)",
+      "after": "# sunset-reviewed: 2.4 -- corpus_exempt.yaml is tracked and the negation keeps corpus exemption declarations visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-07)",
+      "evidence": ".gitignore:50 in HEAD, current worktree line 50; SHA256=98db676c5e36e9f22cec8592c96ba55837a54f4a8ede16a818a7109af1d0d0c0; line body/comment byte-identical to `git show HEAD:.gitignore` at original line 50. Anchor RENEW-07 in tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt. Probe `git check-ignore -v -- .simplecode/corpus_exempt.yaml`; inspected current `.simplecode` inventory with `git ls-files` and `git status --ignored`.",
+      "rationale": "La excepci\u00f3n rescata el manifiesto de corpus-exempt trackeado; el probe da rc=1 con la excepci\u00f3n y rc=0 sin ella."
+    },
+    {
+      "id": "gitignore:.gitignore:65",
+      "path": ".gitignore",
+      "current_line": 64,
+      "before": "# sunset-reviewed: 2.3 -- The generated __pycache__ probe is ignored by this directory rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-09)",
+      "after": "# sunset-reviewed: 2.4 -- The generated __pycache__ probe is ignored by this directory rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-09)",
+      "evidence": ".gitignore:65 in HEAD, current worktree line 65; SHA256=7df69b0a8df4de51aa5750f952790b19a5c95b400a7ed5a2b03553467bebff52; line body/comment byte-identical to `git show HEAD:.gitignore` at original line 65. Anchor RENEW-09 in tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt. Probe `git check-ignore -v -- probe/__pycache__/sentinel.txt`; inspected current `.simplecode` inventory with `git ls-files` and `git status --ignored`.",
+      "rationale": "El nested sentinel `probe/__pycache__/sentinel.txt` se ignora (rc=0) y queda visible al retirar `__pycache__/` (rc=1), confirmando el descarte del directorio generado."
+    },
+    {
+      "id": "gitignore:.gitignore:69",
+      "path": ".gitignore",
+      "current_line": 68,
+      "before": "# sunset-reviewed: 2.3 -- The generated .pytest_cache probe is ignored by this directory rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-11)",
+      "after": "# sunset-reviewed: 2.4 -- The generated .pytest_cache probe is ignored by this directory rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-11)",
+      "evidence": ".gitignore:69 in HEAD, current worktree line 69; SHA256=71035a2b99fba5e4197873c8db2297090a84bcb2f634aa72a9e2d1d381227460; line body/comment byte-identical to `git show HEAD:.gitignore` at original line 69. Anchor RENEW-11 in tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt. Probe `git check-ignore -v -- .pytest_cache/sentinel.txt`; inspected current `.simplecode` inventory with `git ls-files` and `git status --ignored`.",
+      "rationale": "El probe `.pytest_cache/sentinel.txt` se ignora (rc=0) y queda visible al retirar `.pytest_cache/` (rc=1), confirmando el alcance del cache de pytest."
+    }
+  ],
+  "post_sha256": {
+    "tests/test_bb_bash.py": "9482913a787c27f12d51668e65309137dd7fea9faabbd88f164ca3909f82de0d",
+    "tools/atom_gpu_telemetry.py": "a5a6e2846c8e79c6a85b6cc9f99dec69576af40208befec7520f8ddb8104326a",
+    "tools/cgroup_repro.py": "c0106f08630a62fcbbc091bb1cf8a8a8b91234f32061ec0199ccbca9e1be84d2",
+    ".gitignore": "0ccfa7c6f1ce1c214d57c8c5fb7066876d05e269bb98d706ebc0c95feda4d0a7"
+  }
+}

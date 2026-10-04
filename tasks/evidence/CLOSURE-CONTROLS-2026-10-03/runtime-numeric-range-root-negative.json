@@ -1,0 +1,1169 @@
+{
+  "scope": "synthetic fixtures only; semantic range audit",
+  "module_sha256": "a568c12d17d2c111708249366ec7b6f09b14b91385db02dad6f89b9f53352dd7",
+  "rows": [
+    {
+      "id": "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+      "field_path": [
+        "pretrim_headroom_case",
+        "peak_bytes"
+      ],
+      "mutation": -1,
+      "baseline": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw domain measurements satisfy card predicates"
+      },
+      "mutated": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw domain measurements satisfy card predicates"
+      },
+      "baseline_input": {
+        "schema": "bb.runtime.raw.v1",
+        "card_id": "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+        "capture_id": "unit-capture",
+        "captured_at": "2026-10-03T00:00:00Z",
+        "contradictions": [],
+        "subject": {
+          "oem": "OEM-X",
+          "host_id": "host-a",
+          "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "software_versions": {
+            "engine": "engine-1"
+          }
+        },
+        "request_bounds": {
+          "request_id": "req-1",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "max_tokens": 16,
+          "max_context_tokens": 128,
+          "deadline_seconds": 10,
+          "started_at": "2026-10-03T00:00:00Z",
+          "finished_at": "2026-10-03T00:00:01Z"
+        },
+        "rollback_record": {
+          "known_good_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "candidate_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "procedure_ref": "rollback.md",
+          "before_state_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "after_restore_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "draft_ranks": [
+          {
+            "effective_dcp_size": 2,
+            "attention_ops": [
+              "all_gather_q",
+              "merge_lse"
+            ],
+            "partial_values": [
+              0.1,
+              0.2
+            ],
+            "request_id": "req-1"
+          },
+          {
+            "effective_dcp_size": 2,
+            "attention_ops": [
+              "all_gather_q",
+              "merge_lse"
+            ],
+            "partial_values": [
+              0.1,
+              0.2
+            ],
+            "request_id": "req-1"
+          }
+        ],
+        "dcp1_reference": {
+          "request_id": "req-1",
+          "atol": 0.01,
+          "pairs": [
+            {
+              "reference_values": [
+                1.0,
+                2.0
+              ],
+              "draft_values": [
+                1.001,
+                1.999
+              ]
+            }
+          ]
+        },
+        "acceptance_by_position": [
+          {
+            "position": 0,
+            "draft_token": "a",
+            "target_token": "a",
+            "accepted": true
+          }
+        ],
+        "pretrim_headroom_case": {
+          "separate_run": true,
+          "peak_bytes": 8,
+          "available_before_load_bytes": 16,
+          "load_log_sha256": "load"
+        }
+      },
+      "mutated_input": {
+        "schema": "bb.runtime.raw.v1",
+        "card_id": "DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01",
+        "capture_id": "unit-capture",
+        "captured_at": "2026-10-03T00:00:00Z",
+        "contradictions": [],
+        "subject": {
+          "oem": "OEM-X",
+          "host_id": "host-a",
+          "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "software_versions": {
+            "engine": "engine-1"
+          }
+        },
+        "request_bounds": {
+          "request_id": "req-1",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "max_tokens": 16,
+          "max_context_tokens": 128,
+          "deadline_seconds": 10,
+          "started_at": "2026-10-03T00:00:00Z",
+          "finished_at": "2026-10-03T00:00:01Z"
+        },
+        "rollback_record": {
+          "known_good_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "candidate_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "procedure_ref": "rollback.md",
+          "before_state_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "after_restore_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "draft_ranks": [
+          {
+            "effective_dcp_size": 2,
+            "attention_ops": [
+              "all_gather_q",
+              "merge_lse"
+            ],
+            "partial_values": [
+              0.1,
+              0.2
+            ],
+            "request_id": "req-1"
+          },
+          {
+            "effective_dcp_size": 2,
+            "attention_ops": [
+              "all_gather_q",
+              "merge_lse"
+            ],
+            "partial_values": [
+              0.1,
+              0.2
+            ],
+            "request_id": "req-1"
+          }
+        ],
+        "dcp1_reference": {
+          "request_id": "req-1",
+          "atol": 0.01,
+          "pairs": [
+            {
+              "reference_values": [
+                1.0,
+                2.0
+              ],
+              "draft_values": [
+                1.001,
+                1.999
+              ]
+            }
+          ]
+        },
+        "acceptance_by_position": [
+          {
+            "position": 0,
+            "draft_token": "a",
+            "target_token": "a",
+            "accepted": true
+          }
+        ],
+        "pretrim_headroom_case": {
+          "separate_run": true,
+          "peak_bytes": -1,
+          "available_before_load_bytes": 16,
+          "load_log_sha256": "load"
+        }
+      }
+    },
+    {
+      "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+      "field_path": [
+        "negative_control",
+        "planned_mtu"
+      ],
+      "mutation": 0,
+      "baseline": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw domain measurements satisfy card predicates"
+      },
+      "mutated": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw domain measurements satisfy card predicates"
+      },
+      "baseline_input": {
+        "schema": "bb.runtime.raw.v1",
+        "card_id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+        "capture_id": "unit-capture",
+        "captured_at": "2026-10-03T00:00:00Z",
+        "contradictions": [],
+        "subject": {
+          "oem": "OEM-X",
+          "host_id": "host-a",
+          "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "software_versions": {
+            "engine": "engine-1"
+          }
+        },
+        "request_bounds": {
+          "request_id": "req-1",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "max_tokens": 16,
+          "max_context_tokens": 128,
+          "deadline_seconds": 10,
+          "started_at": "2026-10-03T00:00:00Z",
+          "finished_at": "2026-10-03T00:00:01Z"
+        },
+        "rollback_record": {
+          "known_good_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "candidate_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "procedure_ref": "rollback.md",
+          "before_state_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "after_restore_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "network_plan": {
+          "source_ref": "oem-plan.json",
+          "interfaces": [
+            {
+              "node_id": "n0",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n1",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n2",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n3",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n4",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n5",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n6",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n7",
+              "interface": "eth0",
+              "mtu": 9000
+            }
+          ]
+        },
+        "interfaces": [
+          {
+            "node_id": "n0",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n1",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n2",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n3",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n4",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n5",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n6",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n7",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          }
+        ],
+        "nccl_operation": {
+          "request_id": "req-1",
+          "unique_nodes": 8,
+          "rank_results": [
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            }
+          ]
+        },
+        "first_request": {
+          "request_id": "req-1",
+          "output_tokens": 3,
+          "rank_logs": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        },
+        "negative_control": {
+          "kind": "plan_mismatch",
+          "planned_mtu": 9000,
+          "observed_mtu": 1500,
+          "preflight_result": "rejected"
+        }
+      },
+      "mutated_input": {
+        "schema": "bb.runtime.raw.v1",
+        "card_id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+        "capture_id": "unit-capture",
+        "captured_at": "2026-10-03T00:00:00Z",
+        "contradictions": [],
+        "subject": {
+          "oem": "OEM-X",
+          "host_id": "host-a",
+          "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "software_versions": {
+            "engine": "engine-1"
+          }
+        },
+        "request_bounds": {
+          "request_id": "req-1",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "max_tokens": 16,
+          "max_context_tokens": 128,
+          "deadline_seconds": 10,
+          "started_at": "2026-10-03T00:00:00Z",
+          "finished_at": "2026-10-03T00:00:01Z"
+        },
+        "rollback_record": {
+          "known_good_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "candidate_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "procedure_ref": "rollback.md",
+          "before_state_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "after_restore_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "network_plan": {
+          "source_ref": "oem-plan.json",
+          "interfaces": [
+            {
+              "node_id": "n0",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n1",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n2",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n3",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n4",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n5",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n6",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n7",
+              "interface": "eth0",
+              "mtu": 9000
+            }
+          ]
+        },
+        "interfaces": [
+          {
+            "node_id": "n0",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n1",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n2",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n3",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n4",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n5",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n6",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n7",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          }
+        ],
+        "nccl_operation": {
+          "request_id": "req-1",
+          "unique_nodes": 8,
+          "rank_results": [
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            }
+          ]
+        },
+        "first_request": {
+          "request_id": "req-1",
+          "output_tokens": 3,
+          "rank_logs": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        },
+        "negative_control": {
+          "kind": "plan_mismatch",
+          "planned_mtu": 0,
+          "observed_mtu": 1500,
+          "preflight_result": "rejected"
+        }
+      }
+    },
+    {
+      "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+      "field_path": [
+        "negative_control",
+        "observed_mtu"
+      ],
+      "mutation": -1,
+      "baseline": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw domain measurements satisfy card predicates"
+      },
+      "mutated": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw domain measurements satisfy card predicates"
+      },
+      "baseline_input": {
+        "schema": "bb.runtime.raw.v1",
+        "card_id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+        "capture_id": "unit-capture",
+        "captured_at": "2026-10-03T00:00:00Z",
+        "contradictions": [],
+        "subject": {
+          "oem": "OEM-X",
+          "host_id": "host-a",
+          "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "software_versions": {
+            "engine": "engine-1"
+          }
+        },
+        "request_bounds": {
+          "request_id": "req-1",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "max_tokens": 16,
+          "max_context_tokens": 128,
+          "deadline_seconds": 10,
+          "started_at": "2026-10-03T00:00:00Z",
+          "finished_at": "2026-10-03T00:00:01Z"
+        },
+        "rollback_record": {
+          "known_good_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "candidate_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "procedure_ref": "rollback.md",
+          "before_state_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "after_restore_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "network_plan": {
+          "source_ref": "oem-plan.json",
+          "interfaces": [
+            {
+              "node_id": "n0",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n1",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n2",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n3",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n4",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n5",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n6",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n7",
+              "interface": "eth0",
+              "mtu": 9000
+            }
+          ]
+        },
+        "interfaces": [
+          {
+            "node_id": "n0",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n1",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n2",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n3",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n4",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n5",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n6",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n7",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          }
+        ],
+        "nccl_operation": {
+          "request_id": "req-1",
+          "unique_nodes": 8,
+          "rank_results": [
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            }
+          ]
+        },
+        "first_request": {
+          "request_id": "req-1",
+          "output_tokens": 3,
+          "rank_logs": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        },
+        "negative_control": {
+          "kind": "plan_mismatch",
+          "planned_mtu": 9000,
+          "observed_mtu": 1500,
+          "preflight_result": "rejected"
+        }
+      },
+      "mutated_input": {
+        "schema": "bb.runtime.raw.v1",
+        "card_id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+        "capture_id": "unit-capture",
+        "captured_at": "2026-10-03T00:00:00Z",
+        "contradictions": [],
+        "subject": {
+          "oem": "OEM-X",
+          "host_id": "host-a",
+          "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "software_versions": {
+            "engine": "engine-1"
+          }
+        },
+        "request_bounds": {
+          "request_id": "req-1",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "max_tokens": 16,
+          "max_context_tokens": 128,
+          "deadline_seconds": 10,
+          "started_at": "2026-10-03T00:00:00Z",
+          "finished_at": "2026-10-03T00:00:01Z"
+        },
+        "rollback_record": {
+          "known_good_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "candidate_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "procedure_ref": "rollback.md",
+          "before_state_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "after_restore_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "network_plan": {
+          "source_ref": "oem-plan.json",
+          "interfaces": [
+            {
+              "node_id": "n0",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n1",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n2",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n3",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n4",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n5",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n6",
+              "interface": "eth0",
+              "mtu": 9000
+            },
+            {
+              "node_id": "n7",
+              "interface": "eth0",
+              "mtu": 9000
+            }
+          ]
+        },
+        "interfaces": [
+          {
+            "node_id": "n0",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n1",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n2",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n3",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n4",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n5",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n6",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          },
+          {
+            "node_id": "n7",
+            "interface": "eth0",
+            "effective_mtu": 9000,
+            "source": "ip-json"
+          }
+        ],
+        "nccl_operation": {
+          "request_id": "req-1",
+          "unique_nodes": 8,
+          "rank_results": [
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            },
+            {
+              "exit_code": 0
+            }
+          ]
+        },
+        "first_request": {
+          "request_id": "req-1",
+          "output_tokens": 3,
+          "rank_logs": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        },
+        "negative_control": {
+          "kind": "plan_mismatch",
+          "planned_mtu": 9000,
+          "observed_mtu": -1,
+          "preflight_result": "rejected"
+        }
+      }
+    },
+    {
+      "id": "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+      "field_path": [
+        "nodes",
+        0,
+        "ranks",
+        0,
+        "rank"
+      ],
+      "mutation": -1,
+      "baseline": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw domain measurements satisfy card predicates"
+      },
+      "mutated": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw domain measurements satisfy card predicates"
+      },
+      "baseline_input": {
+        "schema": "bb.runtime.raw.v1",
+        "card_id": "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+        "capture_id": "unit-capture",
+        "captured_at": "2026-10-03T00:00:00Z",
+        "contradictions": [],
+        "subject": {
+          "oem": "OEM-X",
+          "host_id": "host-a",
+          "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "software_versions": {
+            "engine": "engine-1"
+          }
+        },
+        "request_bounds": {
+          "request_id": "req-1",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "max_tokens": 16,
+          "max_context_tokens": 128,
+          "deadline_seconds": 10,
+          "started_at": "2026-10-03T00:00:00Z",
+          "finished_at": "2026-10-03T00:00:01Z"
+        },
+        "rollback_record": {
+          "known_good_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "candidate_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "procedure_ref": "rollback.md",
+          "before_state_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "after_restore_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "nodes": [
+          {
+            "node_id": "n0",
+            "oem_model": "OEM-X",
+            "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "nccl_version": "2.30",
+            "ranks": [
+              {
+                "rank": 0,
+                "nccl_version": "2.30",
+                "loaded_image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ]
+          },
+          {
+            "node_id": "n1",
+            "oem_model": "OEM-X",
+            "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "nccl_version": "2.30",
+            "ranks": [
+              {
+                "rank": 1,
+                "nccl_version": "2.30",
+                "loaded_image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ]
+          },
+          {
+            "node_id": "n2",
+            "oem_model": "OEM-X",
+            "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "nccl_version": "2.30",
+            "ranks": [
+              {
+                "rank": 2,
+                "nccl_version": "2.30",
+                "loaded_image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ]
+          }
+        ],
+        "pp_first_request": {
+          "request_id": "req-1",
+          "stage_count": 2,
+          "stage_events": [
+            {
+              "event": "stage_complete",
+              "rank": "r0"
+            },
+            {
+              "event": "stage_complete",
+              "rank": "r1"
+            }
+          ],
+          "output_tokens": 2,
+          "finish_reason": "stop"
+        },
+        "negative_control": {
+          "kind": "wrong_image_digest",
+          "observed_digest": "sha256:wrong",
+          "gate_result": "rejected"
+        }
+      },
+      "mutated_input": {
+        "schema": "bb.runtime.raw.v1",
+        "card_id": "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+        "capture_id": "unit-capture",
+        "captured_at": "2026-10-03T00:00:00Z",
+        "contradictions": [],
+        "subject": {
+          "oem": "OEM-X",
+          "host_id": "host-a",
+          "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "software_versions": {
+            "engine": "engine-1"
+          }
+        },
+        "request_bounds": {
+          "request_id": "req-1",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "max_tokens": 16,
+          "max_context_tokens": 128,
+          "deadline_seconds": 10,
+          "started_at": "2026-10-03T00:00:00Z",
+          "finished_at": "2026-10-03T00:00:01Z"
+        },
+        "rollback_record": {
+          "known_good_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "candidate_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "procedure_ref": "rollback.md",
+          "before_state_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "after_restore_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "nodes": [
+          {
+            "node_id": "n0",
+            "oem_model": "OEM-X",
+            "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "nccl_version": "2.30",
+            "ranks": [
+              {
+                "rank": -1,
+                "nccl_version": "2.30",
+                "loaded_image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ]
+          },
+          {
+            "node_id": "n1",
+            "oem_model": "OEM-X",
+            "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "nccl_version": "2.30",
+            "ranks": [
+              {
+                "rank": 1,
+                "nccl_version": "2.30",
+                "loaded_image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ]
+          },
+          {
+            "node_id": "n2",
+            "oem_model": "OEM-X",
+            "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "nccl_version": "2.30",
+            "ranks": [
+              {
+                "rank": 2,
+                "nccl_version": "2.30",
+                "loaded_image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ]
+          }
+        ],
+        "pp_first_request": {
+          "request_id": "req-1",
+          "stage_count": 2,
+          "stage_events": [
+            {
+              "event": "stage_complete",
+              "rank": "r0"
+            },
+            {
+              "event": "stage_complete",
+              "rank": "r1"
+            }
+          ],
+          "output_tokens": 2,
+          "finish_reason": "stop"
+        },
+        "negative_control": {
+          "kind": "wrong_image_digest",
+          "observed_digest": "sha256:wrong",
+          "gate_result": "rejected"
+        }
+      }
+    }
+  ]
+}

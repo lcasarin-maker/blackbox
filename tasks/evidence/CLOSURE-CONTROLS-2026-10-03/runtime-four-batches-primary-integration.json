@@ -1,0 +1,82 @@
+{
+  "files": [
+    {
+      "path": "tools/runtime_batch01_controls.py",
+      "sha256": "a568c12d17d2c111708249366ec7b6f09b14b91385db02dad6f89b9f53352dd7"
+    },
+    {
+      "path": "tools/runtime_batch02_controls.py",
+      "sha256": "bbc0b95cf43903b393b850b1b5a450d4f0cf13ec920af0bae6c36a8cf3a767e4"
+    },
+    {
+      "path": "tools/runtime_batch03_controls.py",
+      "sha256": "0e82285e0229a3482b26d890dc416c304e9cd1866132eb1d2088a88f973c7d6a"
+    },
+    {
+      "path": "tools/runtime_batch04_controls.py",
+      "sha256": "da06a8ec634739df68a24a8e1b7e3625b89b462302099dcbabafa9cd1c497c9d"
+    },
+    {
+      "path": "tools/json_schema_subset.py",
+      "sha256": "d7a73e74e8bcf33a99f71d5c18081c8bc5fbaeff231156c9271391ec98af028c"
+    },
+    {
+      "path": "tests/test_runtime_batch01_controls.py",
+      "sha256": "ed19681f92a586b5da95d243f1d9ffcd831265d9614d71d2201bc5c0f4ca12ec"
+    },
+    {
+      "path": "tests/test_runtime_batch02_controls.py",
+      "sha256": "773ca8414fc8527780747c288eef20df88a221e192588653a8170ee262f5bac6"
+    },
+    {
+      "path": "tests/test_runtime_batch03_controls.py",
+      "sha256": "56305fc02a72757351cce0b1f282528dad7c7dd4ef9beeb6fc60182b4965790e"
+    },
+    {
+      "path": "tests/test_runtime_batch04_controls.py",
+      "sha256": "b98ca69ad7a51eab941826593793247024a63b69f7ca9ed9cbd4919c2de7b5f6"
+    },
+    {
+      "path": "tests/test_runtime_capture_io.py",
+      "sha256": "cf160df049e49c425fa0425f3ad94698641cd4200daa216ff3137cfd3e0a3d5c"
+    },
+    {
+      "path": "tests/test_json_schema_subset.py",
+      "sha256": "a995642740e2cc60991bf23952e712ea102521c902d176276ebb3cdaebc6e7e2"
+    }
+  ],
+  "subject_closed": false,
+  "dependencies_equal": [
+    "tools/chat_sse_capture.py",
+    "tools/openclaw_contract.py",
+    "tools/capture_io.py"
+  ],
+  "validation": {
+    "unit_command": "python3 -m pytest ... -k not real_capture_close_gate --cov (six runtime modules) --cov-branch",
+    "unit_output": "183 passed, 37 deselected in 1.17s",
+    "unit_exit_code": 0,
+    "statements": 1772,
+    "branches": 348,
+    "missing_statements": 0,
+    "partial_branches": 0,
+    "unit_could_not_run": 0,
+    "real_selectors": {
+      "command_source": "runtime-batch-01..04.json original close_check (37 implemented IDs)",
+      "result": "0 PASS, 0 FAIL, 37 UNKNOWN, 37 could_not_run",
+      "receipt": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/runtime-original-selectors-primary-run.json"
+    },
+    "canonical_pyright_output": "0 errors, 0 warnings, 0 informations",
+    "canonical_pyright_exit_code": 0
+  },
+  "expected_real_captures_missing": 37,
+  "logs": [
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/bb-runtime-primary-unit-20261004.log",
+      "sha256": "4e4c996b587e72ef60067202e74ce1344524255058962d3051b85cf742abbee9"
+    },
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/bb-runtime-primary-pyright-20261004.log",
+      "sha256": "6d88a1b220adb7a3d62092b6e38431f0b3fe8babe9864fab90e5849766260332"
+    }
+  ]
+}

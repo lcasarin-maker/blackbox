@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Avance de instrumentación 2026-10-03
 
 El inventario correlaciona netdev con BDF/vendor/device/driver disponibles en sysfs. La conexión física permanece `UNKNOWN`: una ruta PCI no demuestra cable, conector ni alias bajo control de enlace. La consulta `ip -j link` no pudo abrir netlink en esta captura. Evidencia: [BB-INSTRUMENTS-network](../../docs/evidence/BB-INSTRUMENTS-network.md). La ficha permanece abierta; `close_check` y `status` no cambiaron.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `hardware_or_peer`.
+- Impedimento: Sysfs correlaciona netdev/BDF pero la conexión física sigue UNKNOWN; netlink no se pudo consultar y PCI no prueba cable/alias.
+- Evidencia faltante para cierre: OEM/NIC/topología y firmware; identificación física de lanes/puertos; tráfico por cada ruta y control desconectado; rollback.
+- Siguiente acción: Solicitar al dueño del CX7 mapa de lanes/puertos, captura de tráfico por puerto y control físico desconectado/reconectado sobre topología de cuatro nodos.
+- Responsable del siguiente paso: BB; operador Luis para hardware/peer.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01.md`, `docs/evidence/BB-INSTRUMENTS-network.md`, `tools/hardware_batch02_controls.py`, `tools/host_diagnostics.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

@@ -1,0 +1,458 @@
+{
+  "schema": 1,
+  "summary": {
+    "source": "kernel.json",
+    "source_sha256": "2e5636f0cbe30c55a37a6394a4ccecc569b200ccc223b20d91d901db21496369",
+    "source_rows": 13,
+    "generated_batches": [
+      7,
+      6
+    ],
+    "pass": 0,
+    "fail": 0,
+    "unknown": 13,
+    "could_not_run": 13,
+    "capture_mutations": 0,
+    "native_cgroup2_mount": "rw",
+    "native_dmem_controller": true,
+    "native_root_dmem_capacity": "empty",
+    "native_root_dmem_current": "empty",
+    "tool_default_cgroup_ro_is_sandbox_view": true,
+    "subject_closure_claim": "none"
+  },
+  "read_only_actions": [
+    {
+      "id": "tool-default-capture",
+      "source": "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+      "performed_before_this_batch": true,
+      "scope": "tool-default sandbox view",
+      "actions": 23,
+      "impact": "No host changes. Capture reports kernel identity/config, dmem controller visibility, tracer availability and permission failures."
+    },
+    {
+      "id": "native-cgroup-capability",
+      "source": "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+      "performed_by": "root, native require_escalated read-only",
+      "performed_before_this_batch": true,
+      "impact": "cgroup2 rw, dmem present, dmem capacity/current root files empty, page size 4096, no changes."
+    },
+    {
+      "id": "primary-existing-evidence-evaluators",
+      "source": "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json",
+      "performed_in_this_batch": true,
+      "scope": "primary checkout read-only evaluators; no capture or target mutation",
+      "actions": 10,
+      "returncodes": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "result": "all exit 2 unknown; cgroup01 CNR due dmem samples; other subjects lack required raw captures/finding."
+    }
+  ],
+  "rows": [
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01",
+      "status": "unknown",
+      "generated_batch": 0,
+      "source_path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01.md",
+      "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_cgroup_plan_01",
+      "close_check_expect": "exit_zero",
+      "criteria_credited": "Read-only phase verifiers are implemented and reject absent raw capture with unknown/CNR, rather than passing on report existence.",
+      "criteria_missing": "Raw capture and phase-specific complete predicates/control negatives are missing from all four cgroup-plan subject directories.",
+      "could_not_run": true,
+      "next_concrete_action": "No safe read can create dynamic API/trace/patch/hang captures. Owner-approved native collection is a prerequisite.",
+      "blocking_condition": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+      "evidence_refs": [
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+      ],
+      "observed_verifier": {
+        "note": "Registry umbrella controls the subject-specific CLI rows in this generated batch; not an additional hardware observation."
+      }
+    },
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01",
+      "status": "unknown",
+      "generated_batch": 1,
+      "source_path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01.md",
+      "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_netconsole_01",
+      "close_check_expect": "exit_zero",
+      "criteria_credited": "Kernel capture identifies netconsole absent and boot parameter absent.",
+      "criteria_missing": "Receiver delivery, route/reachability controls, privacy, time correlation, persistence and rollback.",
+      "could_not_run": true,
+      "next_concrete_action": "Requires an operator-designated receiver and an approved reversible network/configuration test; neither is present.",
+      "blocking_condition": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+      "evidence_refs": [
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+      ],
+      "observed_verifier": {
+        "note": "Registry umbrella controls the subject-specific CLI rows in this generated batch; not an additional hardware observation."
+      }
+    },
+    {
+      "id": "DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01",
+      "status": "unknown",
+      "generated_batch": 0,
+      "source_path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.md",
+      "close_check": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01",
+      "close_check_expect": "exit_zero",
+      "criteria_credited": "Kernel capture read panic=10, panic_on_rcu_stall=0, boot ID and kernel; tool-default pstore read returned PermissionError.",
+      "criteria_missing": "Persistent capture, rollback, and forced-panic path distinguished from natural RCU recovery.",
+      "could_not_run": true,
+      "next_concrete_action": "Native pstore access needs authorized scope; actual panic/reboot needs a disposable owner-approved canary, prohibited here.",
+      "blocking_condition": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+      "evidence_refs": [
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+      ],
+      "observed_verifier": {
+        "note": "Registry umbrella controls the subject-specific CLI rows in this generated batch; not an additional hardware observation."
+      }
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-01-REPRO",
+      "status": "unknown",
+      "generated_batch": 1,
+      "source_path": "tasks/backlog/FEATURE-1358-CGROUP-01-REPRO.md",
+      "close_check": "python3 -m tools.verify_cgroup_repro tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json",
+      "close_check_expect": "exit_zero",
+      "criteria_credited": "Verifier recalculated historical phases and CPU positive control (+33554432 bytes); no-allocation control was 0.",
+      "criteria_missing": "23 dmem.current samples are CNR; no present native GPU charge/limit evidence, and this verifier does not prove containment/authenticity.",
+      "could_not_run": true,
+      "next_concrete_action": "Requires bounded CUDA API captures across independent cgroups plus readable per-scope dmem counters; no CUDA workloads authorized.",
+      "blocking_condition": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+      "evidence_refs": [
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+      ],
+      "observed_verifier": {
+        "argv": [
+          "python3",
+          "-m",
+          "tools.verify_cgroup_repro",
+          "tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json"
+        ],
+        "cwd": "/home/lcasarin/projects/blackbox",
+        "returncode": 2,
+        "stdout": "{\"could_not_run\": [\"none/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'\", \"none/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'\", \"none/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'\", \"cpu_touch/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'\", \"cpu_touch/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'\", \"cpu_touch/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'\", \"cuda_malloc/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'\", \"cuda_malloc/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'\", \"cuda_malloc/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'\", \"cuda_malloc/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'\", \"cuda_malloc_repeat/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'\", \"cuda_malloc_repeat/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'\", \"cuda_malloc_repeat/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'\", \"cuda_malloc_repeat/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'\", \"cuda_malloc_managed/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'\", \"cuda_malloc_managed/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'\", \"cuda_malloc_managed/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'\", \"cuda_malloc_managed/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'\", \"pytorch_empty/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\", \"pytorch_empty/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\", \"pytorch_empty/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\", \"pytorch_empty/allocator_cache_released/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\", \"pytorch_empty/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\"], \"could_not_run_count\": 23, \"findings\": [], \"rows\": [{\"api\": \"none\", \"cgroup\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope\", \"held_delta_bytes\": 0, \"release_delta_bytes\": 0, \"requested_bytes\": 0}, {\"api\": \"cpu_touch\", \"cgroup\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope\", \"held_delta_bytes\": 33554432, \"release_delta_bytes\": -237568, \"requested_bytes\": 33554432}, {\"api\": \"cuda_malloc\", \"cgroup\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope\", \"held_delta_bytes\": 0, \"release_delta_bytes\": -360448, \"requested_bytes\": 33554432}, {\"api\": \"cuda_malloc_repeat\", \"cgroup\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope\", \"held_delta_bytes\": 0, \"release_delta_bytes\": 0, \"requested_bytes\": 33554432}, {\"api\": \"cuda_malloc_managed\", \"cgroup\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope\", \"held_delta_bytes\": 33816576, \"release_delta_bytes\": -65536, \"requested_bytes\": 33554432}, {\"api\": \"pytorch_empty\", \"cgroup\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope\", \"held_delta_bytes\": 0, \"release_delta_bytes\": -1789952, \"requested_bytes\": 33554432}], \"scope\": \"observation consistency and CPU calibration; no native GPU containment or provenance proof\", \"status\": \"unknown\"}\n",
+        "stderr": "",
+        "classification": "read-only verifier; no target changes"
+      }
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-02-TRAZA",
+      "status": "unknown",
+      "generated_batch": 0,
+      "source_path": "tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md",
+      "close_check": "python3 -m tools.verify_cgroup_plan --phase 02-traza --evidence tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA",
+      "close_check_expect": "exit_zero",
+      "criteria_credited": "Static source/header map exists; current kernel 6.17.0-1032-nvidia and loaded driver 580.178.04 observed; bpftrace 0.20.2 installed.",
+      "criteria_missing": "No runtime API-to-RM/UVM allocation path, real owner/memcg, flags, worker transition, stack or CPU/GPU controls. Listing/trace commands are permission-gated.",
+      "could_not_run": true,
+      "next_concrete_action": "Requires approved dynamic tracing access and a controlled allocation workload; root/tracefs permissions unavailable.",
+      "blocking_condition": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+      "evidence_refs": [
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+      ],
+      "observed_verifier": {
+        "argv": [
+          "python3",
+          "-m",
+          "tools.verify_cgroup_plan",
+          "--phase",
+          "02-traza",
+          "--evidence",
+          "tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA"
+        ],
+        "cwd": "/home/lcasarin/projects/blackbox",
+        "returncode": 2,
+        "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw capture unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/capture.json'\"], \"status\": \"unknown\"}\n",
+        "stderr": "",
+        "classification": "read-only verifier; no target changes"
+      }
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-03-NATIVO",
+      "status": "unknown",
+      "generated_batch": 1,
+      "source_path": "tasks/backlog/FEATURE-1358-CGROUP-03-NATIVO.md",
+      "close_check": "python3 -m tools.verify_cgroup_plan --phase 03-nativo --evidence tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO",
+      "close_check_expect": "exit_zero",
+      "criteria_credited": "A historical 615.71.09 module build against 6.17 headers succeeded but modules were not installed/loaded. Native receipt: cgroup2 rw, dmem controller present, root counters readable but empty; PAGE_SIZE=4096.",
+      "criteria_missing": "No runtime-aligned driver/GSP/userspace, per-API limits/charges, below-allocation limit test, independent cgroup/free or rollback.",
+      "could_not_run": true,
+      "next_concrete_action": "Empty native root counters add no allocation evidence; runtime requires driver load/controlled stack, both out of scope.",
+      "blocking_condition": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+      "evidence_refs": [
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+      ],
+      "observed_verifier": {
+        "argv": [
+          "python3",
+          "-m",
+          "tools.verify_cgroup_plan",
+          "--phase",
+          "03-nativo",
+          "--evidence",
+          "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO"
+        ],
+        "cwd": "/home/lcasarin/projects/blackbox",
+        "returncode": 2,
+        "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw capture unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/capture.json'\"], \"status\": \"unknown\"}\n",
+        "stderr": "",
+        "classification": "read-only verifier; no target changes"
+      }
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-04-PARCHE",
+      "status": "unknown",
+      "generated_batch": 0,
+      "source_path": "tasks/backlog/FEATURE-1358-CGROUP-04-PARCHE.md",
+      "close_check": "python3 -m tools.verify_cgroup_plan --phase 04-parche --evidence tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE",
+      "close_check_expect": "exit_zero",
+      "criteria_credited": "No patch decision evidence; native dmem root files are empty and prerequisite phases 02/03 lack raw captures.",
+      "criteria_missing": "Causal measured gap plus conditional patch diff/build/phase 01/03 before-after and double/lost/unreleased-charge controls, or measured legal no-patch decision.",
+      "could_not_run": true,
+      "next_concrete_action": "No read-only action can decide a patch absent phases 02/03 results; no driver changes allowed.",
+      "blocking_condition": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+      "evidence_refs": [
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+      ],
+      "observed_verifier": {
+        "argv": [
+          "python3",
+          "-m",
+          "tools.verify_cgroup_plan",
+          "--phase",
+          "04-parche",
+          "--evidence",
+          "tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE"
+        ],
+        "cwd": "/home/lcasarin/projects/blackbox",
+        "returncode": 2,
+        "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw capture unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/capture.json'\"], \"status\": \"unknown\"}\n",
+        "stderr": "",
+        "classification": "read-only verifier; no target changes"
+      }
+    },
+    {
+      "id": "FEATURE-1358-CGROUP-05-CUELGUES",
+      "status": "unknown",
+      "generated_batch": 1,
+      "source_path": "tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md",
+      "close_check": "python3 -m tools.verify_cgroup_plan --phase 05-cuelgues --evidence tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES",
+      "close_check_expect": "exit_zero",
+      "criteria_credited": "Read-only host/kernel state is available.",
+      "criteria_missing": "0 A/B trials and 0 seconds exposure; no hang/no-hang window or causal control.",
+      "could_not_run": true,
+      "next_concrete_action": "Requires long-duration host/GPU workload and externally retained telemetry; those workloads are prohibited.",
+      "blocking_condition": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+      "evidence_refs": [
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+      ],
+      "observed_verifier": {
+        "argv": [
+          "python3",
+          "-m",
+          "tools.verify_cgroup_plan",
+          "--phase",
+          "05-cuelgues",
+          "--evidence",
+          "tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES"
+        ],
+        "cwd": "/home/lcasarin/projects/blackbox",
+        "returncode": 2,
+        "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw capture unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/capture.json'\"], \"status\": \"unknown\"}\n",
+        "stderr": "",
+        "classification": "read-only verifier; no target changes"
+      }
+    },
+    {
+      "id": "FEATURE-FORUM-NETCONSOLE-01",
+      "status": "unknown",
+      "generated_batch": 0,
+      "source_path": "tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md",
+      "close_check": "python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01",
+      "close_check_expect": "exit_zero",
+      "criteria_credited": "Kernel capture reports module absent and no netconsole boot parameter; no receiver receipt.",
+      "criteria_missing": "Exact target kernel signature/trust, management route, receiver success/broken-path controls, marker, retention/privacy/time correlation and rollback.",
+      "could_not_run": true,
+      "next_concrete_action": "No receiver/route/retention owner configuration supplied; changing network/module config is not authorized.",
+      "blocking_condition": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+      "evidence_refs": [
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+      ],
+      "observed_verifier": {
+        "argv": [
+          "python3",
+          "-m",
+          "tools.verify_netconsole",
+          "--evidence",
+          "tasks/evidence/FEATURE-FORUM-NETCONSOLE-01"
+        ],
+        "cwd": "/home/lcasarin/projects/blackbox",
+        "returncode": 2,
+        "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"required raw capture unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-FORUM-NETCONSOLE-01/kernel-capture.json'\"], \"status\": \"unknown\"}\n",
+        "stderr": "",
+        "classification": "read-only verifier; no target changes"
+      }
+    },
+    {
+      "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+      "status": "unknown",
+      "generated_batch": 1,
+      "source_path": "tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md",
+      "close_check": "python3 -m tools.verify_rcu_panic_pstore --evidence tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+      "close_check_expect": "exit_zero",
+      "criteria_credited": "Kernel/boot and sysctl values observed: panic=10, panic_on_rcu_stall=0; pstore inaccessible to tool-default capture.",
+      "criteria_missing": "Pstore backend/content/persistence, reversible config rollback, tested panic-path/post-reboot retention and preserved kdump; natural RCU remains unobserved.",
+      "could_not_run": true,
+      "next_concrete_action": "Only an owner-approved disposable canary permits a forced panic/reboot; no panic/reboot on this host.",
+      "blocking_condition": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+      "evidence_refs": [
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+      ],
+      "observed_verifier": {
+        "argv": [
+          "python3",
+          "-m",
+          "tools.verify_rcu_panic_pstore",
+          "--evidence",
+          "tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01"
+        ],
+        "cwd": "/home/lcasarin/projects/blackbox",
+        "returncode": 2,
+        "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw recovery evidence unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/recovery.json'\"], \"status\": \"unknown\"}\n",
+        "stderr": "",
+        "classification": "read-only verifier; no target changes"
+      }
+    },
+    {
+      "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+      "status": "unknown",
+      "generated_batch": 0,
+      "source_path": "tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md",
+      "close_check": "python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR",
+      "close_check_expect": "exit_zero",
+      "criteria_credited": "Probe source and static ABI prep exist; bpftrace installed; perf_event_paranoid=4. Probe listing gave root-required and trace-cmd permission-denied.",
+      "criteria_missing": "No dynamic parser/symbol/CPU control/CUDA capture, charge-desc charge ledger, owner attribution, loss/order/liveness checks.",
+      "could_not_run": true,
+      "next_concrete_action": "Requires trace privileges and bounded controlled workloads; neither can be obtained by further permitted read-only commands.",
+      "blocking_condition": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+      "evidence_refs": [
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+      ],
+      "observed_verifier": {
+        "argv": [
+          "python3",
+          "-m",
+          "tools.verify_memory_saver",
+          "--phase",
+          "02-trazador",
+          "--evidence",
+          "tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR"
+        ],
+        "cwd": "/home/lcasarin/projects/blackbox",
+        "returncode": 2,
+        "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw phase capture unavailable: [Errno 2] No such file or directory: 'capture.json'\"], \"status\": \"unknown\"}\n",
+        "stderr": "",
+        "classification": "read-only verifier; no target changes"
+      }
+    },
+    {
+      "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+      "status": "unknown",
+      "generated_batch": 1,
+      "source_path": "tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md",
+      "close_check": "python3 -m tools.verify_memory_saver --phase 04-packing-4k --evidence tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K",
+      "close_check_expect": "exit_zero",
+      "criteria_credited": "PAGE_SIZE=4096 observed; historical 4KiB-slot design has a one-slot-per-page fallback statement.",
+      "criteria_missing": "No actual UVM table backing cost or eligible leaves, stock-vs-packed comparable workload, or HAL/DMA/cacheline/offset/unmap/tracker/sharing/migration/descriptors/teardown evidence.",
+      "could_not_run": true,
+      "next_concrete_action": "Requires measured GPU allocator workload and driver/source integration review; both outside permitted action set.",
+      "blocking_condition": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+      "evidence_refs": [
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+      ],
+      "observed_verifier": {
+        "argv": [
+          "python3",
+          "-m",
+          "tools.verify_memory_saver",
+          "--phase",
+          "04-packing-4k",
+          "--evidence",
+          "tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K"
+        ],
+        "cwd": "/home/lcasarin/projects/blackbox",
+        "returncode": 2,
+        "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw phase capture unavailable: [Errno 2] No such file or directory: 'capture.json'\"], \"status\": \"unknown\"}\n",
+        "stderr": "",
+        "classification": "read-only verifier; no target changes"
+      }
+    },
+    {
+      "id": "FORUM-02-PSTORE-KERNEL-REGRESSION",
+      "status": "unknown",
+      "generated_batch": 0,
+      "source_path": "tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md",
+      "close_check": "python3 -m tools.verify_forum_finding --id FORUM-02-PSTORE-KERNEL-REGRESSION --evidence tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION",
+      "close_check_expect": "exit_zero",
+      "criteria_credited": "Current identity read-only: GIGABYTE AI TOP ATOM, BIOS 5.36_0ACUM08, kernel 6.17.0-1032, driver 580.178.04. Local finding.json is missing.",
+      "criteria_missing": "No local pstore evidence; forum stack 6.17.0-1014 / BIOS 5.36_0ACUM018 differs; no applicable vendor fix/RMA proof for local stack.",
+      "could_not_run": true,
+      "next_concrete_action": "Requires authorized pstore read and vendor resolution for exact local OEM/BIOS/EC/kernel. Current forum mismatch prevents a fix/rollback inference.",
+      "blocking_condition": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+      "evidence_refs": [
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+        "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+      ],
+      "observed_verifier": {
+        "argv": [
+          "python3",
+          "-m",
+          "tools.verify_forum_finding",
+          "--id",
+          "FORUM-02-PSTORE-KERNEL-REGRESSION",
+          "--evidence",
+          "tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION"
+        ],
+        "cwd": "/home/lcasarin/projects/blackbox",
+        "returncode": 2,
+        "stdout": "{\"could_not_run\": 1, \"fail\": 0, \"files\": [\"tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION/finding.json\"], \"reason\": \"raw finding evidence unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION/finding.json'\", \"status\": \"unknown\"}\n",
+        "stderr": "",
+        "classification": "read-only verifier; no target changes"
+      }
+    }
+  ]
+}

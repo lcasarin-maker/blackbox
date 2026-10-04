@@ -1,0 +1,89 @@
+{
+  "command": "COVERAGE_FILE=/tmp/bb-post-kit-9.3.3.coverage python3 -m pytest -q --cov=tools --cov-branch",
+  "returncode": 1,
+  "summary": "3 failed, 1314 passed in 388.66s (0:06:28)",
+  "pytest_scope": "Default project selection excludes slow and e2e per unchanged pytest.ini",
+  "coverage_scope": "tools only; 6910 statements,0 missing,2842 branches,8 partial,99% branch-inclusive reported coverage",
+  "failures": [
+    {
+      "selector": "test_debt_close_check_verify_cgroup_plan_01",
+      "classification": "subject unknown",
+      "could_not_run_count": 23,
+      "reason": "dmem.current absent in native cgroup capture"
+    },
+    {
+      "selector": "test_debt_close_check_verify_netconsole_01",
+      "classification": "subject unknown",
+      "could_not_run_count": 1,
+      "reason": "kernel-capture.json absent"
+    },
+    {
+      "selector": "test_debt_close_check_verify_rcu_panic_pstore_01",
+      "classification": "subject unknown",
+      "could_not_run_count": 1,
+      "reason": "recovery.json absent"
+    }
+  ],
+  "could_not_run_count": 25,
+  "implementation_failures_observed": 0,
+  "report_clean": false,
+  "archives": [
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/post-kit-9.3.3-validation/bb-post-kit-9.3.3-pytest.log",
+      "sha256": "565ccc691e87069b5a79ee40db63905ae75441251d7fd0e21efeb78926d57769",
+      "bytes": 14493
+    },
+    {
+      "path": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/post-kit-9.3.3-validation/bb-post-kit-9.3.3.coverage",
+      "sha256": "3462aacb40b8ea26e50feaee5d8b972695b7662c22bcd34ebb5b5f767a2717f9",
+      "bytes": 430080
+    }
+  ],
+  "missing_branch_edges": {
+    "tools/atom_gpu_telemetry.py": [
+      [
+        644,
+        646
+      ]
+    ],
+    "tools/chat_sse_capture.py": [
+      [
+        93,
+        -83
+      ],
+      [
+        219,
+        221
+      ]
+    ],
+    "tools/runtime_provenance.py": [
+      [
+        80,
+        97
+      ]
+    ],
+    "tools/verify_cgroup_plan.py": [
+      [
+        366,
+        368
+      ]
+    ],
+    "tools/verify_netconsole.py": [
+      [
+        120,
+        119
+      ],
+      [
+        271,
+        275
+      ]
+    ],
+    "tools/verify_rcu_panic_pstore.py": [
+      [
+        134,
+        132
+      ]
+    ]
+  },
+  "coverage_json_sha256": "2aa2f1a74b51d54d4c28e46b409aedfdd3dfc8e2016a60f2d59471c3100efff1"
+}

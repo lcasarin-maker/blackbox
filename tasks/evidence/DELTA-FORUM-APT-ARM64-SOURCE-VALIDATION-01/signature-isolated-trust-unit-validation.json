@@ -1,0 +1,34 @@
+{
+  "observed_at": "2026-10-04T07:39:25.677705+00:00",
+  "scope": "Explicit keyring trust isolation and native wrong-key negative; unit proof only, not card closure.",
+  "unit_command": [
+    "python3",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_apt_sources.py",
+    "--cov=tools.apt_sources",
+    "--cov-branch",
+    "--cov-fail-under=100"
+  ],
+  "unit_returncode": 0,
+  "unit_stdout": "76 passed in 0.27s\ntools/apt_sources.py: 337 statements, 0 missing; 138 branches, 0 partial; 100%\n",
+  "wrong_key_expected": "could_not_run_count=1, fail=0, no VALIDSIG; unknown trust never becomes pass",
+  "unit_could_not_run_count": 0,
+  "source_sha256": {
+    "tools/apt_sources.py": "80a5ee1c68d9edf8c24704724cbc12eae9114c3b2fdf202ae75ce4ad2c363cfc",
+    "tests/test_apt_sources.py": "f429b899fe2a6616d0818522db896902bfd5c1a0a57db7404ac70c8abd7bc0e6"
+  },
+  "ruff": {
+    "command": [
+      "python3",
+      "-m",
+      "ruff",
+      "check",
+      "tools/apt_sources.py",
+      "tests/test_apt_sources.py"
+    ],
+    "returncode": 0,
+    "stdout": "All checks passed!\n"
+  }
+}

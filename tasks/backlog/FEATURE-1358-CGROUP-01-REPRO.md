@@ -58,3 +58,14 @@ La captura histórica retorna unknown y conserva los deltas legibles. Cuenta 23 
 
 - **`BB-DASHBOARD-MEMORY-UNIT-CALIBRATION`** — DGX Spark users report that dashboard memory usage disagrees with `free`/`/proc/meminfo`, potentially mixing GiB and GB; one reply says an update fixed it while a later user says the mismatch persists. In a separate report, a vLLM model… Fuente: [350359](https://forums.developer.nvidia.com/t/350359/1).
 - **`BB-RAY-UMA-OBJECT-STORE-MONITOR-GATE`** — On a reported TP=3 MiniMax-M3 workload, Ray reserves roughly 30% (~36GB) of per-node RAM for an object store the author says TP does not use; head also loads ~84GB shard plus KV, triggering driver OOM during weight load. After warmup,… Fuente: [373387](https://forums.developer.nvidia.com/t/373387/1).
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: El informe histórico 2026-10-02 muestra 6 lecturas dmem.current CNR en scopes de reproducción, pero la captura nativa root del 2026-10-04 observa controller dmem y root counters vacíos con CNR=0; la lectura del host y la de sandbox no son equivalentes. No hay medición a 7 GiB que autorice repetir esa carga.
+- Evidencia faltante para cierre: Aclaración/evidencia actual del scope dmem.current por cgroup de los casos registrados, o declaración del ABI/runtime de que el contador está expuesto pero vacío; mantener la reproducción histórica de 7 GiB sin repetirla.
+- Siguiente acción: Coordinación BB: cotejar run.json/verification.txt con native-cgroup-capability-root-summary-20261004.json y corregir el alcance de CNR por scope; conservar los deltas memory.current como tales. Operador Luis: sólo si el runtime ofrece un canario acotado, capturar read-only del scope pertinente con identidad; no repetir la carga histórica de 7 GiB. Ref: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json; tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json; tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/verification.txt.
+- Responsable del siguiente paso: Coordinación BB; para recuperación de históricos, custodio del artifact store si corresponde..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/FEATURE-1358-CGROUP-01-REPRO.md`, `tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/verification.txt`, `tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json`, `tests/test_debt_registration_controls.py`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-01-REPRO-direct-close-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.

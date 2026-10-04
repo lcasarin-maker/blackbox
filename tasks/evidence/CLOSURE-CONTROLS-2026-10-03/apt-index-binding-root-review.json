@@ -1,0 +1,25 @@
+{
+  "captured_at": "2026-10-04T09:13:17.061048+00:00",
+  "scope": "Source review of proposed isolated APT verifier; experimental closure not evaluated",
+  "source_sha256": "47ce9f1383cb23c3c2e89294f656c3179b3dc285f47a2c9d9b224eb46a4ee363",
+  "findings": [
+    {
+      "function": "_index_gate",
+      "problem": "observed_meta_keys is caller-provided, not derived from content rows actually verified",
+      "required_change": "derive verified observed keys per repository and enforce exact coverage identities"
+    },
+    {
+      "function": "_expected_packages/_index_gate",
+      "problem": "global expected Packages union reused for every repository; other configured index families not derived",
+      "required_change": "per-source effective configuration derivation; unsupported targets remain unknown"
+    },
+    {
+      "function": "_freshness_gate",
+      "problem": "observed_at caller metadata has no native observation binding",
+      "required_change": "bind observation timestamp to captured collection interval and explicit approved policy"
+    }
+  ],
+  "status": "changes_required",
+  "could_not_run_count": 0,
+  "experimental_close_count": 0
+}

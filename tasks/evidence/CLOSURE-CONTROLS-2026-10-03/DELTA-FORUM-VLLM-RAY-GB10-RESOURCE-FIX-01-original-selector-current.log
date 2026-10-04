@@ -1,0 +1,19 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________ test_delta_forum_vllm_ray_gb10_resource_fix_01 ________________
+tests/test_debt_registration_controls.py:1440: in test_delta_forum_vllm_ray_gb10_resource_fix_01
+    _require_runtime_batch03_closure('DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01')
+tests/test_debt_registration_controls.py:1404: in _require_runtime_batch03_closure
+    _require_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
+tests/test_closure_kernel_selectors.py:21: in _require_pass
+    assert result.get("status") == "pass" and result.get("could_not_run_count") == 0, (
+E   AssertionError: DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01 closure remains open: {'status': 'unknown', 'could_not_run': 1, 'reason': "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01'", 'files': ['/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01/runtime-capture.json'], 'could_not_run_count': 1}
+E   assert ('unknown' == 'pass'
+E     
+E     - pass
+E     + unknown)
+----------------------------- Captured stdout call -----------------------------
+{"could_not_run": 1, "files": ["/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01/runtime-capture.json"], "reason": "raw capture unavailable: [Errno 2] No such file or directory: 'DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01'", "status": "unknown"}
+=========================== short test summary info ============================
+FAILED tests/test_debt_registration_controls.py::test_delta_forum_vllm_ray_gb10_resource_fix_01
+1 failed in 0.08s

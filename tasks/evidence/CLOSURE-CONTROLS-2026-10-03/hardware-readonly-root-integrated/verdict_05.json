@@ -1,0 +1,199 @@
+[
+  {
+    "source_order": 41,
+    "id": "FORUM-00-DOCKER-OOM-RESTART-LOOP",
+    "card_path": "tasks/backlog/FORUM-00-DOCKER-OOM-RESTART-LOOP.md",
+    "close_check": {
+      "cmd": "python3 -m pytest tests/test_workload_restart_containment.py -q",
+      "expect": "exit_zero",
+      "porque": "Prueba pendiente: debe limitar la reincidencia de un workload identificado y permitir recuperaci\u00f3n conservando datos, sin bloquear un reinicio sano ni atribuir todo reboot a OOM."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FORUM-00-DOCKER-OOM-RESTART-LOOP/progress.txt",
+        "sha256": "52f1915b203171a52f9f9aa0999534531bb1852656a4decb992ec38dc6ddfd6c",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "The current close_check has a false-green gap: ten unit tests pass without a physical containment control. Docker inventory exists, but no OOM/restart/recovery chronology or bounded policy result.",
+    "useful_readonly_action": "Development is required first: add the real containment assertion to tests/test_workload_restart_containment.py and its source-generated registration; no host OOM experiment is permitted here.",
+    "prerequisite_or_blocker": "After the test gate is repaired, an explicitly approved controlled OOM/restart test and target service are still required for subject closure.",
+    "generated_batch": 5,
+    "status": "unknown",
+    "reason": "The current close_check has a false-green gap: ten unit tests pass without a physical containment control. Docker inventory exists, but no OOM/restart/recovery chronology or bounded policy result.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 42,
+    "id": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+    "card_path": "tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION --evidence tasks/evidence/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION/progress.txt",
+        "sha256": "52ee940f786dc65ca54fdaedf5f30abd783b6cee48c133169b0a3611e77b60ae",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Two-event dry-run telemetry is a snapshot, not independent-sensor residency/idle/load interval coverage.",
+    "useful_readonly_action": "No repeat thermal scan; it would duplicate existing coverage.",
+    "prerequisite_or_blocker": "Approved sustained workload/thermal soak and independent sensor interpretation.",
+    "generated_batch": 5,
+    "status": "unknown",
+    "reason": "Two-event dry-run telemetry is a snapshot, not independent-sensor residency/idle/load interval coverage.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 43,
+    "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+    "card_path": "tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-KERNEL-INITRD-UPDATE-GATE --evidence tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "expect": "exit_zero",
+      "porque": "Demostrar un gate previo al reboot que detecta estado dpkg/DKMS incoherente, ausencia de initrd/m\u00f3dulo para el kernel objetivo y una recuperaci\u00f3n arrancable; incluir negativos de kernel sano y rollback."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE/commands.json",
+        "sha256": "80378ac8092bc04b5701bc58bfc14c128d063a3e3d611ade78d1e5d932b38ff9",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE/preflight.json",
+        "sha256": "a8d1e91dae3315207be3d80dfde2d69bd15e9034ac7b1028809648fc7b041289",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE/validator-run.json",
+        "sha256": "bab05ca6f5c6954b25fc8c2ae5e091ed5c18bc631f74d065281b905accab501c",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Current kernel/driver facts exist; package/module preflight reports missing apt_check/module_ready and APT lock permission denial.",
+    "useful_readonly_action": "A bounded read-only dpkg-query ownership/version and modinfo path/signature query may resolve current package/module provenance; do not run package operations.",
+    "prerequisite_or_blocker": "Root/read permissions for provenance; update/reboot A/B and recovery remain separately authorized.",
+    "generated_batch": 5,
+    "status": "unknown",
+    "reason": "Current kernel/driver facts exist; package/module preflight reports missing apt_check/module_ready and APT lock permission denial.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 44,
+    "id": "FORUM-00-REALTEK-EEE-DIRECT-LINK",
+    "card_path": "tasks/backlog/FORUM-00-REALTEK-EEE-DIRECT-LINK.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-REALTEK-EEE-DIRECT-LINK --evidence tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK",
+      "expect": "exit_zero",
+      "porque": "Confirm the exact link-partner/kernel/driver combination, reproduce EEE-related stalls, verify a bounded opt-in mitigation and prove rollback and unaffected-link controls."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK/host-observation.txt",
+        "sha256": "580e6d6f3d991c42f5a763bd29c04f18b020da36048c64edaed993e157e95edb",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Current enP7s7 EEE enabled/inactive; partner modes unavailable. No peer, direct-link A/B, stall, mitigation or rollback.",
+    "useful_readonly_action": "No further local ethtool query adds a peer/direct-link test.",
+    "prerequisite_or_blocker": "Direct-link peer and approved controlled network A/B.",
+    "generated_batch": 5,
+    "status": "unknown",
+    "reason": "Current enP7s7 EEE enabled/inactive; partner modes unavailable. No peer, direct-link A/B, stall, mitigation or rollback.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 45,
+    "id": "FORUM-02-GX10-READ-INTEGRITY",
+    "card_path": "tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-GX10-READ-INTEGRITY --evidence tasks/evidence/FORUM-02-GX10-READ-INTEGRITY",
+      "expect": "exit_zero",
+      "porque": "Verificador espec\u00edfico pendiente: debe demostrar detecci\u00f3n de datos alterados con una referencia externa y diferenciar lecturas buffered, O_DIRECT, cach\u00e9, salud NVMe y evidencia de firmware."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/host-observation.txt",
+        "sha256": "7dd3f337485c68d6f1b987639d633d3b3ea0eb6ddac3f555785254214cb02d42",
+        "bytes": null
+      },
+      {
+        "path": "tasks/evidence/FORUM-02-GX10-READ-INTEGRITY/read-integrity-instrument.txt",
+        "sha256": "8c890dadfc3bc2a3b6a5d83b8689c925311debd30cb5e5299864a05d6a9a0ce5",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "NVMe inventory/read-integrity instrument evidence exists, but no independent known digest, copy comparison, cache-controlled read or GX10 target binding.",
+    "useful_readonly_action": "No meaningful extra scan without an independent reference dataset.",
+    "prerequisite_or_blocker": "Known external digest/dataset and GX10 target; read-only validation only.",
+    "generated_batch": 5,
+    "status": "unknown",
+    "reason": "NVMe inventory/read-integrity instrument evidence exists, but no independent known digest, copy comparison, cache-controlled read or GX10 target binding.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 46,
+    "id": "FORUM-02-USB-UVC-EP0",
+    "card_path": "tasks/backlog/FORUM-02-USB-UVC-EP0.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-USB-UVC-EP0 --evidence tasks/evidence/FORUM-02-USB-UVC-EP0",
+      "expect": "exit_zero",
+      "porque": "Verificador espec\u00edfico pendiente: debe comprobar la reproducci\u00f3n A/B, la versi\u00f3n corregida y la recomendaci\u00f3n preventiva para cada OEM probado."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FORUM-02-USB-UVC-EP0/host-observation.txt",
+        "sha256": "f3a49aa22a335b73bc1da06e931a535c0f4f0d2a23220082402a27664cc3a0d1",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "USB tree/kernel logs are observed; no UVC device/stream, EP0 sequence, regression/fix or rollback.",
+    "useful_readonly_action": "No useful query without camera streaming subject.",
+    "prerequisite_or_blocker": "UVC camera, approved streaming/recovery sequence and supported version matrix.",
+    "generated_batch": 5,
+    "status": "unknown",
+    "reason": "USB tree/kernel logs are observed; no UVC device/stream, EP0 sequence, regression/fix or rollback.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  },
+  {
+    "source_order": 47,
+    "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+    "card_path": "tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-REALTEK-DRIVER-BINDING-01 --evidence tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01",
+      "expect": "exit_zero",
+      "porque": "Verificador pendiente: prueba binding PCI efectivo y paquete/m\u00f3dulo compatible; warm/cold reboot A/B y rollback con controles de otra NIC, driver ausente y consulta fallida."
+    },
+    "evidence_files": [
+      {
+        "path": "tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01/host-observation.txt",
+        "sha256": "b924a04ec6d8e89826b7929b65e84acf50b543f550c3bb15dd065b377d6074e0",
+        "bytes": null
+      }
+    ],
+    "current_assessment": "Current enP7s7 binds r8127 v11.014.00-NAPI; package ownership/signature, boot A/B, alternate-driver control and rollback absent.",
+    "useful_readonly_action": "Read-only dpkg-query -S plus modinfo -n/version/signature can improve package provenance if available; avoid repeating current PCI/module version inventory.",
+    "prerequisite_or_blocker": "Permission for package/module provenance; reboot/A-B and rollback need approval.",
+    "generated_batch": 5,
+    "status": "unknown",
+    "reason": "Current enP7s7 binds r8127 v11.014.00-NAPI; package ownership/signature, boot A/B, alternate-driver control and rollback absent.",
+    "files": [
+      "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-readonly-root-integrated/hardware-readonly-evidence-map.json"
+    ]
+  }
+]

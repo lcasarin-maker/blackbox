@@ -36,3 +36,14 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: `reused` solo para conservar salida client-visible mediante `tools/chat_sse_capture.py`, incluidos fragmentos tool-call parciales. No hay captura local del wedge; SSE no mide progreso engine/rank/collective ni MTP acceptance y un último delta no prueba cuelgue o causa. La ficha sigue abierta y su `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-contracts.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: SSE capture reutilizable solo conserva deltas visibles; falta captura del wedge real, progreso engine/rank/collective y aceptación MTP en imagen/prompt fijados.
+- Evidencia faltante para cierre: SSE capture reutilizable solo conserva deltas visibles; falta captura del wedge real, progreso engine/rank/collective y aceptación MTP en imagen/prompt fijados.
+- Siguiente acción: Coordinación BB: especificar caso reproducible y telemetría; operador Luis: ejecutar replay controlado sobre stack real y guardar salida/ranks. Ref explícita: tasks/backlog/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01.md y tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01-original-selector-current.log.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01-original-selector-current.log`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
