@@ -69,3 +69,21 @@ El negativo APT ya se ejecutó con fuente Ubuntu incompatible arm64, configuraci
 ### Revisión adversarial runtime B04 — 2026-10-03
 
 El coordinador reprodujo PASS en el fixture positivo de Triton y PASS tras sustituir la fuente auditada del allocator por un comentario `# NullAllocator caching_allocator_alloc`, recalculando su hash. El hash demuestra consistencia de bytes, y el predicado por nombres admite fuente sin implementación. Se rechazó ese control para integración y se pidió evidencia del código efectivo y canaries de lifetime/stream según la ficha. Recibo con hash del módulo antes/después: `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/runtime-batch04-root-negative.json`. El segundo caso de fairness en ese recibo es inconcluso: su baseline devuelve unknown por falta de identidad/oracle y no acredita un falso PASS. Ninguna ficha fue cerrada con estos fixtures.
+
+### Revisión de continuidad netconsole — 2026-10-03
+
+El borrador del control exigía `bb telemetry --recent-jsonl`, subcomando ausente en bin/bb. La ejecución read-only `bash bin/bb telemetry --recent-jsonl` devolvió rc2 con `subcomando desconocido: telemetry`; recibo y SHA del módulo en `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/netconsole-continuity-command-negative.json`. Se pidió reutilizar la telemetría real de atom_gpu_telemetry.jsonl y vincular boot/reloj: __MONOTONIC_TIMESTAMP del journal no es comparable directamente con ts RFC3339. También se pidió comprobar rc de las capturas y admitir el diagnóstico de ip route get en stderr. El control conserva revisión pendiente pese a la cobertura de sus fixtures.
+
+### Revisión de packing 4 KiB — 2026-10-04
+
+El coordinador reprodujo PASS en verify_memory_saver para una asignación sin vínculo a workload de 4096 bytes de página y coste cero, texto arbitrario con SHA coherente y alignment_requirements=True. Recibo `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/memory-packing-root-negative.json`, con hashes del módulo antes/después. La matriz del agente citaba requisitos de HAL/DMA/cache/unmap/tracker/teardown, ownership y decisión medida que el predicado actual no comprobaba. Se rechazó el control y se pidió implementar el alcance íntegro de la ficha y corregir la matriz para distinguir comprobaciones ejecutables de requisitos pendientes. Tener PAGE_SIZE=4096 no satisface por sí solo el criterio de cierre.
+
+### Recheck Triton y simulación APT vigente — 2026-10-04
+
+Root reejecutó el mismo negativo de comentario-only contra el módulo runtime B04 corregido: baseline PASS y negativo FAIL por ausencia de implementación ejecutable. SHA del módulo idéntico antes/después; recibo `runtime-triton-root-recheck.json`. Esta aceptación cubre esa regresión y deja pendiente el cierre runtime íntegro.
+
+La simulación read-only APT vigente terminó rc0 con 14 upgrades propuestos, cero instalaciones nuevas, cero removidos y un paquete retenido, could_not_run=0. Los cuatro InRelease al final conservan los hashes archivados. Recibo `tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/current-upgrade-simulation.json`. No hubo upgrade real ni aprobación implícita de terceros.
+
+### Revisión de aplicabilidad pstore — 2026-10-04
+
+El verificador del borrador admitió PASS con OEM/BIOS/EC/driver desconocidos, un texto que solo enumera FPAC/PSCI/NMI y un supuesto documento vendor cuyo único contenido es el kernel local, recomendando RMA con motivo arbitrario. Evidencia `pstore-root-negative.json`, hash del módulo antes/después. Se rechazó el criterio por ausencia de identidad, diagnóstico/resolución aplicable y separación de las señales SBSA/DOE/link. Coincidencia de términos, URL o hash no acredita la recomendación. La revisión pidió soporte específico del OEM, sin exigir autenticación de origen imposible a las capturas suministradas.

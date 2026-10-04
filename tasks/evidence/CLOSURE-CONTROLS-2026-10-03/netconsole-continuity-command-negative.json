@@ -1,0 +1,14 @@
+{
+  "command": [
+    "bash",
+    "bin/bb",
+    "telemetry",
+    "--recent-jsonl"
+  ],
+  "exit_code": 2,
+  "stdout": "",
+  "stderr": "subcomando desconocido: telemetry\nbb -- caja negra de la maquina\n\n  bb sample              una muestra de lo que nada mas cubre (apps, zombis)\n  bb snapshot [razon]    volcado forense completo AHORA\n  bb scan [\"hace X\"]     informe de fallos en una ventana (def: \"2 hours ago\")\n  bb hw                  inventario de hardware y limites aplicados\n  bb recovery            estado de RCU, watchdog y pstore, solo lectura\n  bb status              que instrumento esta armado y cual no\n  bb status clock lock   comprobar declaracion y confirmacion reciente del rango GPU\n  bb drift               compara lo adoptado en el repo con lo desplegado (exit != 0 si diverge)\n  bb protect             sube el limite de core de las apps ya corriendo (prlimit)\n  bb who [pid]           que procesos pesan y QUIEN los lanzo (unit, padre, cwd)\n  bb sigterm [\"hace X\"]  QUIEN mando SIGTERM/SIGKILL a quien (DEBT-DGX-438)\n  bb cap <GB> <cmd...>   lanza algo con techo de memoria propio (el kernel lo aplica)\n  bb install             instala los timers de usuario (muestreo cada minuto, drift diario)\n\nDatos propios en ~/.local/share/blackbox (retencion 14 dias).\nFuentes de terceros que `bb scan` lee, no duplica:\n  /srv/ai/logs/gpu/       telemetria de GPU cada 15s (gpu_sampler.sh)\n  /srv/ai/logs/           memory_monitor.log cada 5 min\n  /var/log/sysstat/       sar cada minuto\n  journalctl              kernel, NVRM, segfaults\n",
+  "module_sha256": "498f22a7318b04825602d8bf3d0e3ae6a755897cd5bb08bbf9fa27410a00af76",
+  "scope": "Current draft continuity predicate requires a BB subcommand absent from actual CLI; read-only execution confirms rejection. No actual network trial performed.",
+  "review_decision": "Require existing native telemetry producer output and explicit shared clock/boot binding instead of invented bb telemetry command."
+}
