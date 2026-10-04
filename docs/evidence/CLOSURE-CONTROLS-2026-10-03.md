@@ -35,3 +35,11 @@ No se publicó esta ola. El objetivo permanece activo; el informe registra traba
 ## Continuación: control de scope incorporado
 
 Tras el commit 282833b se añadió el close_check faltante de DEBT-JUDGE. Sobre el kit oficial el selector produce `1 failed in 0.17s` (exit 1): compara 35 módulos reales con un scope que omite tools. Esta es evidencia negativa del defecto vigente, no un cierre. El resultado anterior de 1122 pruebas corresponde al checkout previo a este control; ahora este selector está rojo hasta reparar y sincronizar el productor. Ruff y Pyright del test nuevo pasan; could_not_run del selector: 0. El productor en worktree continúa en validación, sin release ni sync del principal.
+
+## Reparación oficial aterrizada
+
+Productor: commit local `9a19c8be`, fuente y artefactos canónicos 9.3.2, primario limpio tras fast-forward. BB recibió 9.3.2 por `sync-satellites --runtime-only --plan` y `--apply`, sin editar ZIP a mano. El selector original pasó; el gate lee 35 archivos reales de tools, y el selector condena los negativos homoglyph/invisible. DEBT-JUDGE se mueve a done; ahora hay 96 fichas abiertas (dos cierres desde la fuente inicial de 98).
+
+La suite nativa después del sync produjo `1123 passed in 145.43s (0:02:25)`; fallos 0, omitidas 0. El H1 de BB pasó con 0 stale. Pruebas y gate literales, lock, plan/aplicación en `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/scope-repair/`. El commit del productor pasó 6 hooks y emitió 8 avisos por priority desconocido; se mantienen esos avisos. Los controles kernel nuevos siguen en worktree: 125 pruebas enfocadas y cobertura explícita inicial 71 % sobre 872 sentencias, por lo que no se consideran listos para aterrizar ni cierran 13 investigaciones pendientes.
+
+El primer antifraude tras mover DEBT-JUDGE detectó 1 contract_breach por secciones faltantes y 1 fallo colateral de esquema. Se corrigieron Root Cause, Regression Test, Verification Evidence e índice evidence. El esquema requiere además que los artefactos citados estén en HEAD; esa condición se valida después del commit del cierre, sin excepciones al instrumento. Se conserva la salida inicial en `scope-repair/backlog-before-record-fix.txt`.
