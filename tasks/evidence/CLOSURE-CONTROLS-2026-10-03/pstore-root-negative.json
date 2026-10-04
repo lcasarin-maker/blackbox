@@ -1,0 +1,47 @@
+{
+  "module_sha256_before": "4bf4a3f42dd270d6f7ff0054186a17e6d4b7130aad68b93243879e4ee5fb4062",
+  "module_sha256_after": "4bf4a3f42dd270d6f7ff0054186a17e6d4b7130aad68b93243879e4ee5fb4062",
+  "capture": {
+    "schema": 1,
+    "id": "FORUM-02-PSTORE-KERNEL-REGRESSION",
+    "stack": {
+      "oem": "unknown",
+      "bios": "unknown",
+      "ec": "unknown",
+      "kernel": "6.17.0-1032-nvidia",
+      "driver": "unknown",
+      "boot_id": "unbound"
+    },
+    "pstore": {
+      "boot_id": "unbound",
+      "raw_records": [
+        {
+          "content": "FPAC PSCI NMI",
+          "sha256": "1d599c34c1cba336251c7d244a8a82a303b7d19c8dc390dac4ccecc2d3c9cd41"
+        }
+      ]
+    },
+    "vendor_resolution": {
+      "source_url": "https://docs.nvidia.com/irrelevant",
+      "source_text": "6.17.0-1032-nvidia",
+      "source_sha256": "625d0189650c66f321a40f51645de55d6fa3fbae00f0019075cbabb9f52c7d8f"
+    },
+    "recommendation": {
+      "action": "RMA",
+      "reason": "arbitrary"
+    },
+    "negative_control": {
+      "content": "healthy",
+      "sha256": "87695fdac81728b9d7f2d4a1335c2632bb5e6ba1bed21d2dff0254fba31c7d5b"
+    }
+  },
+  "result": {
+    "status": "pass",
+    "findings": [],
+    "could_not_run": 0,
+    "could_not_run_count": 0,
+    "fail": 0
+  },
+  "scope": "Synthetic counterexample of instrument, no real pstore or vendor evidence",
+  "review_decision": "Reject PASS: unknown stack fields, keyword-only crash record and arbitrary vendor/kernel text do not establish applicability or RMA diagnosis"
+}
