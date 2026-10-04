@@ -37,3 +37,9 @@ Fixtures de errores NVMe/I/O, remount read-only, permisos insuficientes, disposi
 ## Avance de ejecución 2026-10-03
 
 Se añadió `tools/nvme_readonly.py`: exige inventario NVMe con ruta y serial, una sola observación válida de `/`, y señal de error NVMe asociada en la misma línea; separa fail de consultas inaccesibles. La exportación de archivo regular a otro filesystem verifica dev/inode/size/mtime/ctime y SHA-256, rechaza overwrite y detecta cambios de ruta aun cuando el reemplazo conserva bytes y mtime. Un inventario y log sin error se informa como observación, no como prueba de salud física. Las pruebas validan el instrumento; el ensayo de exportación y recuperación sobre copia/dispositivo NVMe de laboratorio sigue pendiente. Estado permanece `open`.
+
+## Ensayo sobre copia regular — 2026-10-03
+
+Ejecutado `python3 -m tools.nvme_readonly --export-source <archivo-controlado> --destination-dir <destino>` entre dos filesystems reales: origen `/tmp` (`st_dev=66306`) y destino `/dev/shm` (`st_dev=31`). Archivo sintético de 4096 bytes; exportación y retorno pasan con SHA-256 idéntico (`c8f5d0341d54d951a71b136e6e2afcb14d11ed8489a7ae126a8fee0df6ecf193`). Inode, tamaño, mtime y ctime del origen conservados. Dos controles negativos rechazan sobrescritura y destino en el mismo filesystem: ambos devuelven rc2/`could_not_run`, preservados como tales. Conteos: pass=2, fail=0, could_not_run=2 (negativos intencionales), resultados inesperados=0.
+
+Los comandos literales, timestamps, stdout/stderr y códigos están en `tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/export-copy-lab/run.json`. Se eliminaron solamente los directorios temporales creados por este ensayo después de leer y verificar el retorno. El ensayo acredita copia/retorno de archivo regular; la identidad OEM, capturas de fallo NVMe y recuperación de un dispositivo siguen pendientes. La ficha conserva `open`.

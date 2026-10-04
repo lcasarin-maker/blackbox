@@ -62,6 +62,7 @@ def test_export_requires_separate_filesystem_and_never_overwrites(tmp_path: Path
     source.write_bytes(b"immutable test copy")
     same_filesystem = nvme_readonly.export_copy(source, tmp_path / "backup")
     assert same_filesystem["status"] == "could_not_run"
+    assert (same_filesystem["fail"], same_filesystem["could_not_run"]) == (0, 1)
     assert source.read_bytes() == b"immutable test copy"
 
     shm = Path("/dev/shm")
@@ -77,6 +78,7 @@ def test_export_requires_separate_filesystem_and_never_overwrites(tmp_path: Path
         assert completed.returncode == 0
         copied = json.loads(completed.stdout)
         assert copied["status"] == "pass" and copied["source_written"] is False
+        assert (copied["fail"], copied["could_not_run"]) == (0, 0)
         target = Path(copied["destination"])
         assert target.read_bytes() == source.read_bytes()
         duplicate = subprocess.run(command, cwd=root, capture_output=True, text=True, check=False)
