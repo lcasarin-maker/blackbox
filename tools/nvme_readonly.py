@@ -171,11 +171,12 @@ def export_copy(source: Path, destination_dir: Path) -> dict[str, Any]:
             raise OSError("insufficient destination space")
         target = destination_dir / f"{source.name}.{source_stat.st_ino}.recovery-copy"
         _source_device, digest = _copy_file(source, target, source_stat)
-        return {"status": "pass", "source": str(source), "source_device": source_stat.st_dev,
+        return {"status": "pass", "fail": 0, "could_not_run": 0,
+                "source": str(source), "source_device": source_stat.st_dev,
                 "destination": str(target), "destination_device": destination_stat.st_dev,
                 "bytes": source_stat.st_size, "sha256": digest, "source_written": False}
     except (OSError, ValueError) as exc:
-        return {"status": "could_not_run", "could_not_run": 1,
+        return {"status": "could_not_run", "fail": 0, "could_not_run": 1,
                 "error": f"{type(exc).__name__}: {exc}", "source_written": False}
 
 

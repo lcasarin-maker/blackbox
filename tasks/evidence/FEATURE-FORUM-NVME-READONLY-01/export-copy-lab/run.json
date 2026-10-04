@@ -1,0 +1,83 @@
+{
+  "scope": "Controlled regular-file copy across two real filesystems; no device recovery, NVMe health or OEM compatibility conclusion",
+  "bytes": 4096,
+  "source_sha256": "c8f5d0341d54d951a71b136e6e2afcb14d11ed8489a7ae126a8fee0df6ecf193",
+  "source_device": 66306,
+  "export_device": 31,
+  "source_metadata_unchanged": true,
+  "restored_sha256": "c8f5d0341d54d951a71b136e6e2afcb14d11ed8489a7ae126a8fee0df6ecf193",
+  "cases": [
+    {
+      "case": "export-to-separate-filesystem",
+      "command": [
+        "python3",
+        "-m",
+        "tools.nvme_readonly",
+        "--export-source",
+        "/tmp/bb-nvme-copy-aijs08ry/controlled-copy.bin",
+        "--destination-dir",
+        "/dev/shm/bb-nvme-copy-sy3by8f0"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"bytes\": 4096, \"destination\": \"/dev/shm/bb-nvme-copy-sy3by8f0/controlled-copy.bin.171976929.recovery-copy\", \"destination_device\": 31, \"sha256\": \"c8f5d0341d54d951a71b136e6e2afcb14d11ed8489a7ae126a8fee0df6ecf193\", \"source\": \"/tmp/bb-nvme-copy-aijs08ry/controlled-copy.bin\", \"source_device\": 66306, \"source_written\": false, \"status\": \"pass\"}\n",
+      "stderr": "",
+      "captured_at": "2026-10-04T05:09:44.804042+00:00"
+    },
+    {
+      "case": "overwrite-refused",
+      "command": [
+        "python3",
+        "-m",
+        "tools.nvme_readonly",
+        "--export-source",
+        "/tmp/bb-nvme-copy-aijs08ry/controlled-copy.bin",
+        "--destination-dir",
+        "/dev/shm/bb-nvme-copy-sy3by8f0"
+      ],
+      "exit_code": 2,
+      "stdout": "{\"could_not_run\": 1, \"error\": \"FileExistsError: [Errno 17] File exists: '/dev/shm/bb-nvme-copy-sy3by8f0/controlled-copy.bin.171976929.recovery-copy'\", \"source_written\": false, \"status\": \"could_not_run\"}\n",
+      "stderr": "",
+      "captured_at": "2026-10-04T05:09:44.827792+00:00"
+    },
+    {
+      "case": "same-filesystem-refused",
+      "command": [
+        "python3",
+        "-m",
+        "tools.nvme_readonly",
+        "--export-source",
+        "/tmp/bb-nvme-copy-aijs08ry/controlled-copy.bin",
+        "--destination-dir",
+        "/tmp/bb-nvme-copy-aijs08ry/samefs"
+      ],
+      "exit_code": 2,
+      "stdout": "{\"could_not_run\": 1, \"error\": \"OSError: destination must be on a different filesystem\", \"source_written\": false, \"status\": \"could_not_run\"}\n",
+      "stderr": "",
+      "captured_at": "2026-10-04T05:09:44.865284+00:00"
+    },
+    {
+      "case": "restore-copy-to-original-filesystem",
+      "command": [
+        "python3",
+        "-m",
+        "tools.nvme_readonly",
+        "--export-source",
+        "/dev/shm/bb-nvme-copy-sy3by8f0/controlled-copy.bin.171976929.recovery-copy",
+        "--destination-dir",
+        "/tmp/bb-nvme-copy-aijs08ry/restore"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"bytes\": 4096, \"destination\": \"/tmp/bb-nvme-copy-aijs08ry/restore/controlled-copy.bin.171976929.recovery-copy.39966.recovery-copy\", \"destination_device\": 66306, \"sha256\": \"c8f5d0341d54d951a71b136e6e2afcb14d11ed8489a7ae126a8fee0df6ecf193\", \"source\": \"/dev/shm/bb-nvme-copy-sy3by8f0/controlled-copy.bin.171976929.recovery-copy\", \"source_device\": 31, \"source_written\": false, \"status\": \"pass\"}\n",
+      "stderr": "",
+      "captured_at": "2026-10-04T05:09:44.902534+00:00"
+    }
+  ],
+  "pass": 2,
+  "negative_controls_observed": 2,
+  "unexpected_fail": 0,
+  "unexpected_could_not_run": 0,
+  "lab_files_cleanup": "TemporaryDirectory removes only this run owned paths after verified readback",
+  "fail": 0,
+  "could_not_run": 2,
+  "could_not_run_explanation": "Two intended negative controls: refusing overwrite and destination on same filesystem. Both retain their literal rc2 and could_not_run outputs."
+}
