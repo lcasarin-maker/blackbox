@@ -31,3 +31,7 @@ La reparación del scope de amenazas se probó en una copia aislada del producto
 El despliegue de dos archivos requiere contraseña sudo. El script revisado `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/deploy-drift-reviewed.sh` verifica los cuatro hashes originales, conserva backups con permisos y propietarios, instala exclusivamente los dos destinos y ejecuta drift. No se ejecutó este despliegue. El diagnóstico nativo de solo lectura contiene 6 could_not_run; el diagnóstico aislado contiene 21. La captura kernel aislada contiene 1 could_not_run por pstore sin acceso. Ninguna acredita ensayos de panic, recovery, firmware ni carga CUDA.
 
 No se publicó esta ola. El objetivo permanece activo; el informe registra trabajo comprobado y pendientes.
+
+## Continuación: control de scope incorporado
+
+Tras el commit 282833b se añadió el close_check faltante de DEBT-JUDGE. Sobre el kit oficial el selector produce `1 failed in 0.17s` (exit 1): compara 35 módulos reales con un scope que omite tools. Esta es evidencia negativa del defecto vigente, no un cierre. El resultado anterior de 1122 pruebas corresponde al checkout previo a este control; ahora este selector está rojo hasta reparar y sincronizar el productor. Ruff y Pyright del test nuevo pasan; could_not_run del selector: 0. El productor en worktree continúa en validación, sin release ni sync del principal.
