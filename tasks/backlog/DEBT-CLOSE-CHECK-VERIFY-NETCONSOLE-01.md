@@ -39,12 +39,14 @@ Se desarrolló `tools.kernel_capture` como captura readonly de identidad kernel,
 
 Evidencia: `docs/evidence/BB-INSTRUMENTS-kernel.md` y `tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json`. La ficha permanece abierta.
 
-## Propuesta de lector offline 2026-10-03 — pendiente de revisión raíz
+## Lector offline 2026-10-03 — revisión raíz integrada
 
 Se añadió `tools.netconsole_marker` como lector mínimo de un log de receptor y un marcador literal indicados por el operador. Clasifica `present`, `incomplete` (prefijo literal al final del log), `absent` y `unknown` (archivo ilegible); la procedencia de log y marcador queda `caller_supplied_unverified` y la salida conserva `closure: open`. El control positivo usa un fixture de test, no evidencia del host. No se ejecutó contra un log real del receptor.
 
 Comandos de validación: `python3 -m pytest -q tests/test_netconsole_marker.py` → `3 passed`; `python3 -m ruff check tools/netconsole_marker.py tests/test_netconsole_marker.py` → `All checks passed!`; `python3 -m pyright tools/netconsole_marker.py tests/test_netconsole_marker.py` → `0 errors, 0 warnings, 0 informations`.
 
-El lector sólo cubre clasificación textual. El close check de esta ficha sigue pendiente: falta integrar controles negativos de ruta/receptor, estado de Secure Boot y firma, persistencia, correlación y rollback, todos respaldados por evidencia real. Se deja esta instrumentación para revisión raíz; no equivale a entrega off-host ni cierra la investigación.
+El lector sólo cubre clasificación textual. El close check de esta ficha sigue pendiente: falta integrar controles negativos de ruta/receptor, estado de Secure Boot y firma, persistencia, correlación y rollback, todos respaldados por evidencia real. La revisión raíz se registra a continuación; el lector conserva alcance textual y la investigación abierta.
 
 Revisión raíz: el lector se nombra `netconsole_marker` para separar su alcance del verificador completo ausente. Lee hasta 1 MiB y admite marcadores de 1..1024 caracteres; entradas mayores quedan unknown/could_not_run. Conserva hashes exactos de captura y marcador sin imprimir el contenido. Los controles ampliados CLI/UTF-8/límites/hash pasan: `7 passed in 0.04s`. El cierre original y su interfaz --evidence siguen pendientes.
+
+Resultado final del lector: ocho pruebas, incluidas CLI/entrypoint y recibo sin contenido. La suite completa pasa 1118 pruebas con 5060/5060 sentencias Python; ver `docs/evidence/SWARM-TENS-2026-10-03.md`.
