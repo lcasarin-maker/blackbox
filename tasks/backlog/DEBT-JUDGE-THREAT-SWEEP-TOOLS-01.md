@@ -27,3 +27,7 @@ Reparar la selección de directorios en la fuente del kit upstream y reconstruir
 ## Límites
 
 Esta ficha no atribuye una vulnerabilidad a BB. Registra que ese barrido no inspeccionó su producto. Ruff, Pyright, cobertura, gitleaks y los controles de cierres conservan su alcance medido independiente.
+
+## Control implementado — 2026-10-03
+
+`tests/test_adversarial_product_scope.py` ahora ejecuta el juez fijado en un subproceso aislado, verifica el hash del artefacto contra kit.lock, compara la colección contra todos los archivos Python reales de tools y exige sujeto sano más detección de homoglyph e invisible inyectados. Contra el bundle oficial 9.3.1, el close_check devuelve exit 1 (`1 failed in 0.17s`): tools contiene 35 archivos y el scope del kit los omite; el negativo no devuelve hallazgos. Ruff y Pyright focales pasan (0 errores/advertencias/información). La reparación source y la sincronización oficial siguen pendientes, por lo que esta ficha conserva open. Evidencia literal: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/scope-repair/official-negative.txt.
