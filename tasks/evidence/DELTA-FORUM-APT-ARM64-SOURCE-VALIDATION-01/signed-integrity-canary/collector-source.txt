@@ -1,0 +1,42 @@
+from pathlib import Path
+import subprocess,tempfile,os,json,hashlib,datetime,email.utils
+out=Path('/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary');out.mkdir(exist_ok=True)
+rows=[];phases=[]
+with tempfile.TemporaryDirectory(prefix='bb-apt-integrity-canary-') as directory:
+ root=Path(directory);root.chmod(0o755);repo=root/'repo';repo.mkdir();home=root/'gpg';home.mkdir(mode=0o700)
+ def run(argv,env=None,timeout=45):
+  start=datetime.datetime.now(datetime.timezone.utc).isoformat();r=subprocess.run(argv,capture_output=True,text=True,env=env,timeout=timeout)
+  rows.append({'argv':argv,'started_at':start,'ended_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'exit_code':r.returncode,'stdout':r.stdout,'stderr':r.stderr})
+  (out/'run.json').write_text(json.dumps({'commands':rows,'phases':phases,'temporary_root':directory},indent=2)+'\n');return r
+ prefix=['gpg','--homedir',str(home),'--batch','--pinentry-mode','loopback','--passphrase','']
+ key=run(prefix+['--quick-generate-key','BB APT integrity canary','rsa2048','sign','1d']);assert key.returncode==0,key.stderr
+ keyring=root/'canary-keyring.gpg';export=run(prefix+['--output',str(keyring),'--export']);assert export.returncode==0
+ (out/'canary-public-keyring.gpg').write_bytes(keyring.read_bytes())
+ package=b'Package: bb-canary\nVersion: 1\nArchitecture: arm64\nMaintainer: BB canary\nDescription: isolated metadata integrity control\nFilename: bb-canary.deb\nSize: 0\nSHA256: '+b'0'*64+b'\n\n'
+ (repo/'Packages').write_bytes(package)
+ now=datetime.datetime.now(datetime.timezone.utc)
+ release='Origin: BB isolated canary\nLabel: BB isolated canary\nSuite: canary\nCodename: canary\nDate: '+email.utils.format_datetime(now,usegmt=True)+'\nValid-Until: '+email.utils.format_datetime(now+datetime.timedelta(days=1),usegmt=True)+'\nArchitectures: arm64\nSHA256:\n '+hashlib.sha256(package).hexdigest()+' '+str(len(package))+' Packages\n'
+ (repo/'Release').write_text(release)
+ signed=run(prefix+['--armor','--output',str(repo/'InRelease'),'--clearsign',str(repo/'Release')]);assert signed.returncode==0,signed.stderr
+ signedbytes=(repo/'InRelease').read_bytes();(out/'baseline.InRelease').write_bytes(signedbytes);(out/'baseline.Packages').write_bytes(package)
+ for phase in ('healthy','bad_package_hash','bad_release_signature'):
+  if phase=='bad_package_hash': (repo/'Packages').write_bytes(bytes([package[0]^1])+package[1:])
+  if phase=='bad_release_signature':
+   (repo/'Packages').write_bytes(package);(repo/'InRelease').write_bytes(signedbytes.replace(b'Origin: BB isolated canary',b'Origin: BX isolated canary',1))
+  part=root/phase
+  for name in ('etc/parts','etc/sources.d','state/lists/partial','cache/archives/partial','log'): (part/name).mkdir(parents=True)
+  (part/'etc/main.conf').write_text('');(part/'etc/sources.list').write_text('')
+  source=f'Types: deb\nURIs: file:{repo}\nSuites: ./\nArchitectures: arm64\nSigned-By: {keyring}\n';(part/'etc/sources.d/canary.sources').write_text(source)
+  values={'Dir::Etc':part/'etc','Dir::Etc::main':part/'etc/main.conf','Dir::Etc::parts':part/'etc/parts','Dir::Etc::sourcelist':part/'etc/sources.list','Dir::Etc::sourceparts':part/'etc/sources.d','Dir::State':part/'state','Dir::State::lists':part/'state/lists','Dir::State::status':'/var/lib/dpkg/status','Dir::Cache':part/'cache','Dir::Cache::archives':part/'cache/archives','Dir::Cache::pkgcache':part/'cache/pkgcache.bin','Dir::Cache::srcpkgcache':part/'cache/srcpkgcache.bin','Dir::Log':part/'log','APT::Architecture':'arm64','APT::Architectures::':'arm64','Acquire::Languages':'none','APT::Update::Error-Mode':'any','Acquire::AllowInsecureRepositories':'false'}
+  config='\n'.join(f'{k} "{v}";' for k,v in values.items())+'\n';conf=part/'isolated.conf';conf.write_text(config);env={**os.environ,'APT_CONFIG':str(conf)}
+  dump=run(['apt-config','dump'],env);assert dump.returncode==0 and not any('Pre-Invoke' in s or 'Post-Invoke' in s for s in dump.stdout.splitlines())
+  index=run(['apt-get','update'],env)
+  targets=run(['apt-get','indextargets','--format=$(FILENAME)|$(IDENTIFIER)'],env)
+  phases.append({'phase':phase,'update_exit_code':index.returncode,'index_target_stdout':targets.stdout,'package_sha256':hashlib.sha256((repo/'Packages').read_bytes()).hexdigest(),'release_sha256':hashlib.sha256((repo/'InRelease').read_bytes()).hexdigest(),'source':source,'config':config})
+ assert phases[0]['update_exit_code']==0
+ assert phases[1]['update_exit_code']==100 and phases[2]['update_exit_code']==100
+ assert any('Hash Sum mismatch' in r['stdout']+r['stderr'] for r in rows)
+ assert any('BADSIG' in r['stdout']+r['stderr'] for r in rows)
+ report={'scope':'Local file repository signed by a temporary canary key; explicit test-only Signed-By. No host trust/source/index mutation; no install/upgrade. Each phase uses fresh isolated lists/cache/config, no inherited hooks. Private key remains only in temporary GPG home and is removed.','commands':rows,'phases':phases,'temporary_root':directory,'could_not_run':0,'pass':3,'fail':0,'temporary_root_removed_after_capture':True,'public_keyring_sha256':hashlib.sha256(keyring.read_bytes()).hexdigest()}
+ (out/'run.json').write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps({'phase_exit_codes':[p['update_exit_code'] for p in phases],'pass':3,'fail':0,'could_not_run':0}))

@@ -1,0 +1,39 @@
+from pathlib import Path
+import subprocess, tempfile, os, json, hashlib, datetime
+out=Path('/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/healthy-source-canary')
+out.mkdir(exist_ok=True)
+source='Types: deb\nURIs: https://ports.ubuntu.com/ubuntu-ports\nSuites: noble-updates\nComponents: main\nArchitectures: arm64\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n'
+rows=[]
+with tempfile.TemporaryDirectory(prefix='bb-apt-healthy-canary-') as directory:
+ root=Path(directory)
+ for name in ('etc/empty-parts','etc/sources.list.d','state/lists/partial','cache/archives/partial','log'): (root/name).mkdir(parents=True)
+ (root/'etc/empty-main.conf').write_text('');(root/'etc/sources.list').write_text('')
+ (root/'etc/sources.list.d/canary.sources').write_text(source)
+ config='\n'.join(f'{key} "{value}";' for key,value in {
+ 'Dir::Etc':str(root/'etc'),'Dir::Etc::main':str(root/'etc/empty-main.conf'),'Dir::Etc::parts':str(root/'etc/empty-parts'),
+ 'Dir::Etc::sourcelist':str(root/'etc/sources.list'),'Dir::Etc::sourceparts':str(root/'etc/sources.list.d'),
+ 'Dir::State':str(root/'state'),'Dir::State::lists':str(root/'state/lists'),'Dir::State::status':'/var/lib/dpkg/status',
+ 'Dir::Cache':str(root/'cache'),'Dir::Cache::archives':str(root/'cache/archives'),'Dir::Cache::pkgcache':str(root/'cache/pkgcache.bin'),
+ 'Dir::Cache::srcpkgcache':str(root/'cache/srcpkgcache.bin'),'Dir::Log':str(root/'log'),'APT::Architecture':'arm64',
+ 'APT::Architectures::':'arm64','Acquire::Languages':'none','Acquire::Retries':'0','Acquire::http::Timeout':'10',
+ 'Acquire::https::Timeout':'10','APT::Update::Error-Mode':'any','Acquire::IndexTargets::deb::DEP-11::DefaultEnabled':'false'}.items())+'\n'
+ configpath=root/'isolated.conf';configpath.write_text(config)
+ env={**os.environ,'APT_CONFIG':str(configpath)}
+ def run(argv,timeout=60):
+  started=datetime.datetime.now(datetime.timezone.utc).isoformat()
+  r=subprocess.run(argv,capture_output=True,text=True,env=env,timeout=timeout)
+  row={'argv':argv,'started_at':started,'ended_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'exit_code':r.returncode,'stdout':r.stdout,'stderr':r.stderr};rows.append(row)
+  (out/'run.json').write_text(json.dumps({'scope':'Fresh isolated healthy Ubuntu ports arm64 source; no install/upgrade or host source change','commands':rows,'temporary_root':directory},indent=2)+'\n')
+  return r
+ dump=run(['apt-config','dump']);assert dump.returncode==0
+ assert not any('Pre-Invoke' in line or 'Post-Invoke' in line for line in dump.stdout.splitlines()),'inherited APT hooks'
+ update=run(['apt-get','update']);targets=run(['apt-get','indextargets','--format=$(FILENAME)|$(METAKEY)|$(RELEASE)|$(ARCHITECTURE)|$(IDENTIFIER)'])
+ signed=[]
+ for file in sorted((root/'state/lists').glob('*InRelease')):
+  archived=out/file.name;archived.write_bytes(file.read_bytes())
+  signature=run(['gpgv','--keyring','/usr/share/keyrings/ubuntu-archive-keyring.gpg',str(archived)])
+  signed.append({'path':str(archived),'sha256':hashlib.sha256(archived.read_bytes()).hexdigest(),'exit_code':signature.returncode})
+ (out/'canary.sources').write_text(source);(out/'isolated.conf').write_text(config)
+ report=json.loads((out/'run.json').read_text());report.update(update_pass=update.returncode==0,signature_rows=signed,effective_package_targets=[line for line in targets.stdout.splitlines() if line.endswith('|Packages')],could_not_run=0,temporary_root_removed_after_capture=True)
+ (out/'run.json').write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps({'update_exit_code':update.returncode,'signature_results':[x['exit_code'] for x in signed],'package_target_count':len(report['effective_package_targets']),'could_not_run':0}))

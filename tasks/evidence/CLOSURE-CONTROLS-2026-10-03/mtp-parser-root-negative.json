@@ -1,0 +1,243 @@
+{
+  "module_sha256_before": "311f685e9bcd479e7740a41f30a0a0b69bf2b3cae938e95796c9f49e4bc25858",
+  "module_sha256_after": "311f685e9bcd479e7740a41f30a0a0b69bf2b3cae938e95796c9f49e4bc25858",
+  "baseline": {
+    "status": "pass",
+    "could_not_run": 0,
+    "reason": "raw batch-03 measurements satisfy domain predicate"
+  },
+  "baseline_missing_fields": "No observed same-process PID, cancellation timestamp/response, exit/restart/finish_reason or repeat after restart",
+  "cases": [
+    {
+      "case": "changed_process_after_cancel",
+      "result": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw batch-03 measurements satisfy domain predicate"
+      },
+      "capture": {
+        "schema": "bb.runtime.raw.v1",
+        "card_id": "DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01",
+        "capture_id": "unit-only",
+        "captured_at": "2026-10-03T00:00:00Z",
+        "contradictions": [],
+        "subject": {
+          "oem": "OEM-X",
+          "host_id": "host-a",
+          "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "software_versions": {
+            "engine": "engine-1",
+            "ray": "ray-1",
+            "vllm": "vllm-1",
+            "torch": "torch-1",
+            "cuda": "cuda-1",
+            "nccl": "nccl-1",
+            "container_commit": "1111111111111111111111111111111111111111",
+            "llama_cpp_commit": "2222222222222222222222222222222222222222",
+            "os": "os-1",
+            "kernel": "kernel-1",
+            "driver": "driver-1",
+            "ggml_cuda": "ggml-1",
+            "harness": "harness-1",
+            "runtime": "runtime-1",
+            "runtime_commit": "3333333333333333333333333333333333333333",
+            "kv_cache_format": "kv-1",
+            "flashinfer": "flashinfer-1",
+            "quantization": "NVFP4",
+            "parser": "parser-1",
+            "mtp_tokens": "2",
+            "tokenizer": "tokenizer-1",
+            "image": "image-1",
+            "model": "model-x",
+            "backend": "backend-1",
+            "launcher_digest": "4444444444444444444444444444444444444444",
+            "sglang": "sglang-1",
+            "sgl_kernel": "sgl-1",
+            "openclaw": "openclaw-1",
+            "inductor": "inductor-1",
+            "systemd": "systemd-1",
+            "sampling": "sampling-1",
+            "template": "template-1",
+            "kv_cache": "kv-1",
+            "mtp": "mtp-1"
+          }
+        },
+        "request_bounds": {
+          "request_id": "req-1",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "max_tokens": 16,
+          "max_context_tokens": 128,
+          "deadline_seconds": 10,
+          "started_at": "2026-10-03T00:00:00Z",
+          "finished_at": "2026-10-03T00:00:10Z"
+        },
+        "rollback_record": {
+          "known_good_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "candidate_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "procedure_ref": "rollback.md",
+          "before_state_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "after_restore_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "matrix_runs": [
+          {
+            "parser": "xml",
+            "mtp_tokens": 2,
+            "cancel_midstream": false,
+            "request_id": "req-1",
+            "oracle_ref": "xml-False.json",
+            "oracle_sha256": "4ff733f56d9e85f362bc89d58801857dc19fc8e803485f7a7c49df0e1270d02a",
+            "events": [
+              {
+                "phase": "before_cancel",
+                "sse_raw": "data: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \"answer\", \"tool_calls\": [{\"index\": 0, \"id\": \"t\", \"type\": \"function\", \"function\": {\"name\": \"mock\", \"arguments\": \"{\\\"ok\\\":true}\"}}]}, \"finish_reason\": null}]}\n\ndata: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {}, \"finish_reason\": \"tool_calls\"}]}\n\ndata: [DONE]\n\n",
+                "server_pid": 100
+              },
+              {
+                "phase": "after_cancel",
+                "sse_raw": "data: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \"answer\", \"tool_calls\": [{\"index\": 0, \"id\": \"t\", \"type\": \"function\", \"function\": {\"name\": \"mock\", \"arguments\": \"{\\\"ok\\\":true}\"}}]}, \"finish_reason\": null}]}\n\ndata: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {}, \"finish_reason\": \"tool_calls\"}]}\n\ndata: [DONE]\n\n",
+                "server_pid": 200
+              }
+            ]
+          },
+          {
+            "parser": "xml",
+            "mtp_tokens": 2,
+            "cancel_midstream": true,
+            "request_id": "req-1",
+            "oracle_ref": "xml-True.json",
+            "oracle_sha256": "4ff733f56d9e85f362bc89d58801857dc19fc8e803485f7a7c49df0e1270d02a",
+            "events": [
+              {
+                "phase": "before_cancel",
+                "sse_raw": "data: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \"answer\", \"tool_calls\": [{\"index\": 0, \"id\": \"t\", \"type\": \"function\", \"function\": {\"name\": \"mock\", \"arguments\": \"{\\\"ok\\\":true}\"}}]}, \"finish_reason\": null}]}\n\ndata: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {}, \"finish_reason\": \"tool_calls\"}]}\n\ndata: [DONE]\n\n",
+                "server_pid": 100
+              },
+              {
+                "phase": "after_cancel",
+                "sse_raw": "data: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \"answer\", \"tool_calls\": [{\"index\": 0, \"id\": \"t\", \"type\": \"function\", \"function\": {\"name\": \"mock\", \"arguments\": \"{\\\"ok\\\":true}\"}}]}, \"finish_reason\": null}]}\n\ndata: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {}, \"finish_reason\": \"tool_calls\"}]}\n\ndata: [DONE]\n\n",
+                "server_pid": 200
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case": "negative_mtp_token_count",
+      "result": {
+        "status": "pass",
+        "could_not_run": 0,
+        "reason": "raw batch-03 measurements satisfy domain predicate"
+      },
+      "capture": {
+        "schema": "bb.runtime.raw.v1",
+        "card_id": "DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01",
+        "capture_id": "unit-only",
+        "captured_at": "2026-10-03T00:00:00Z",
+        "contradictions": [],
+        "subject": {
+          "oem": "OEM-X",
+          "host_id": "host-a",
+          "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "software_versions": {
+            "engine": "engine-1",
+            "ray": "ray-1",
+            "vllm": "vllm-1",
+            "torch": "torch-1",
+            "cuda": "cuda-1",
+            "nccl": "nccl-1",
+            "container_commit": "1111111111111111111111111111111111111111",
+            "llama_cpp_commit": "2222222222222222222222222222222222222222",
+            "os": "os-1",
+            "kernel": "kernel-1",
+            "driver": "driver-1",
+            "ggml_cuda": "ggml-1",
+            "harness": "harness-1",
+            "runtime": "runtime-1",
+            "runtime_commit": "3333333333333333333333333333333333333333",
+            "kv_cache_format": "kv-1",
+            "flashinfer": "flashinfer-1",
+            "quantization": "NVFP4",
+            "parser": "parser-1",
+            "mtp_tokens": "2",
+            "tokenizer": "tokenizer-1",
+            "image": "image-1",
+            "model": "model-x",
+            "backend": "backend-1",
+            "launcher_digest": "4444444444444444444444444444444444444444",
+            "sglang": "sglang-1",
+            "sgl_kernel": "sgl-1",
+            "openclaw": "openclaw-1",
+            "inductor": "inductor-1",
+            "systemd": "systemd-1",
+            "sampling": "sampling-1",
+            "template": "template-1",
+            "kv_cache": "kv-1",
+            "mtp": "mtp-1"
+          }
+        },
+        "request_bounds": {
+          "request_id": "req-1",
+          "model": "model-x",
+          "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "max_tokens": 16,
+          "max_context_tokens": 128,
+          "deadline_seconds": 10,
+          "started_at": "2026-10-03T00:00:00Z",
+          "finished_at": "2026-10-03T00:00:10Z"
+        },
+        "rollback_record": {
+          "known_good_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "candidate_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "procedure_ref": "rollback.md",
+          "before_state_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "after_restore_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "matrix_runs": [
+          {
+            "parser": "xml",
+            "mtp_tokens": -1,
+            "cancel_midstream": false,
+            "request_id": "req-1",
+            "oracle_ref": "xml-False.json",
+            "oracle_sha256": "4ff733f56d9e85f362bc89d58801857dc19fc8e803485f7a7c49df0e1270d02a",
+            "events": [
+              {
+                "phase": "before_cancel",
+                "sse_raw": "data: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \"answer\", \"tool_calls\": [{\"index\": 0, \"id\": \"t\", \"type\": \"function\", \"function\": {\"name\": \"mock\", \"arguments\": \"{\\\"ok\\\":true}\"}}]}, \"finish_reason\": null}]}\n\ndata: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {}, \"finish_reason\": \"tool_calls\"}]}\n\ndata: [DONE]\n\n"
+              },
+              {
+                "phase": "after_cancel",
+                "sse_raw": "data: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \"answer\", \"tool_calls\": [{\"index\": 0, \"id\": \"t\", \"type\": \"function\", \"function\": {\"name\": \"mock\", \"arguments\": \"{\\\"ok\\\":true}\"}}]}, \"finish_reason\": null}]}\n\ndata: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {}, \"finish_reason\": \"tool_calls\"}]}\n\ndata: [DONE]\n\n"
+              }
+            ]
+          },
+          {
+            "parser": "xml",
+            "mtp_tokens": -1,
+            "cancel_midstream": true,
+            "request_id": "req-1",
+            "oracle_ref": "xml-True.json",
+            "oracle_sha256": "4ff733f56d9e85f362bc89d58801857dc19fc8e803485f7a7c49df0e1270d02a",
+            "events": [
+              {
+                "phase": "before_cancel",
+                "sse_raw": "data: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \"answer\", \"tool_calls\": [{\"index\": 0, \"id\": \"t\", \"type\": \"function\", \"function\": {\"name\": \"mock\", \"arguments\": \"{\\\"ok\\\":true}\"}}]}, \"finish_reason\": null}]}\n\ndata: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {}, \"finish_reason\": \"tool_calls\"}]}\n\ndata: [DONE]\n\n"
+              },
+              {
+                "phase": "after_cancel",
+                "sse_raw": "data: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \"answer\", \"tool_calls\": [{\"index\": 0, \"id\": \"t\", \"type\": \"function\", \"function\": {\"name\": \"mock\", \"arguments\": \"{\\\"ok\\\":true}\"}}]}, \"finish_reason\": null}]}\n\ndata: {\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"choices\": [{\"index\": 0, \"delta\": {}, \"finish_reason\": \"tool_calls\"}]}\n\ndata: [DONE]\n\n"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "scope": "Synthetic oracle-bound parser fixtures prove instrument omissions, not real model behavior"
+}

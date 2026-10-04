@@ -87,3 +87,23 @@ La simulación read-only APT vigente terminó rc0 con 14 upgrades propuestos, ce
 ### Revisión de aplicabilidad pstore — 2026-10-04
 
 El verificador del borrador admitió PASS con OEM/BIOS/EC/driver desconocidos, un texto que solo enumera FPAC/PSCI/NMI y un supuesto documento vendor cuyo único contenido es el kernel local, recomendando RMA con motivo arbitrario. Evidencia `pstore-root-negative.json`, hash del módulo antes/después. Se rechazó el criterio por ausencia de identidad, diagnóstico/resolución aplicable y separación de las señales SBSA/DOE/link. Coincidencia de términos, URL o hash no acredita la recomendación. La revisión pidió soporte específico del OEM, sin exigir autenticación de origen imposible a las capturas suministradas.
+
+### Inventario y ejecución runtime generados — 2026-10-04
+
+La comparación de las 98 fichas contra source.json arroja 98 close_check intactos, cero cambiados, cero ausentes (`original-close-check-preservation.json`). El inventario AST de cuatro árboles (`selectors-current-trees.json`) es estructural: no prueba colección ni aceptación. Primary conserva 64 selectores ausentes; runtime define 38 incluyendo la ficha scope ya cerrada.
+
+Root ejecutó los 37 selectores runtime abiertos, generados de sus comandos originales, en el worktree runtime: pytest rc1, 37 fallos de aserción en 0.67s. Cada uno devuelve unknown/could_not_run=1 por ausencia de runtime-capture.json; resultados funcionales pass=0, fail=0, unknown=37, could_not_run=37, IDs duplicados/ausentes=0. Evidencia literal `runtime-root-close-check-run/{run.json,stdout.txt,stderr.json}`. No se omitió ningún selector abierto; la ficha scope cerrada se excluye explícitamente de esta corrida. Esto demuestra bloqueo por captura ausente, no cumplimiento del alcance de cada predicado.
+
+### Revisión de recuperación parser/MTP — 2026-10-04
+
+Root construyó los sidecars oracle del fixture MTP B03 y obtuvo baseline PASS. Cambiar los PID antes/después de cancelar de 100 a 200 sigue PASS; MTP=-1 también sigue PASS. Recibo `mtp-parser-root-negative.json`, hashes del módulo estables antes/después. El baseline carecía de prueba del mismo proceso, eventos temporales de cancelación, finish/exit/restart y repetición tras restart exigidos por la ficha. Se rechazó para integración y se pidió matriz admitida fijada, controles específicos y cobertura de todos esos criterios. El floor100 anterior describe líneas/ramas ejecutadas y deja pendiente ese alcance semántico.
+
+### Retorno exact-once runtime y APT canary — 2026-10-04
+
+La herramienta oficial `python3 /home/lcasarin/.Codex/tools/triage.py merge --dir tasks/evidence/CLOSURE-CONTROLS-2026-10-03/runtime-return-audit --expected tasks/evidence/CLOSURE-CONTROLS-2026-10-03/runtime.json --require status,reason,control_command` devuelve rc0, returned: 38 of 38. Ausentes=0, IDs desconocidos=0, duplicados=0, malformados=0. Los retornos se distribuyeron desde los batches originales, máximo diez IDs por archivo. Estados reportados: PASS=1, FAIL=0, UNKNOWN=37. Es prueba de retorno de estados del agente, no aceptación de predicados ni cierre del sujeto; snapshot de verdict con SHA en audit.json.
+
+APT real en un repositorio file firmado con clave exclusiva del canary acepta baseline (rc0) y rechaza el mismo Packages alterado con Hash Sum mismatch (rc100) y el InRelease alterado con BADSIG (rc100). Los dos negativos conservan indextargets vacío en estados frescos aislados. pass=3, fail=0, could_not_run=0. Se archivó solo clave pública; temporal/clave privada eliminados. La contraparte sana ports arm64 también terminó update/gpgv rc0. Receipts completos y collector archivados en la ficha APT.
+
+Los rechecks de los contraejemplos packing/pstore ahora devuelven UNKNOWN CNR1, en lugar del PASS anterior. `kernel-counterexamples-root-recheck.json` verifica únicamente esas regresiones y no declara completo el alcance de las fichas.
+
+Las salidas stderr vacías de triage y pytest se conservan como JSON con string vacío, tamaño literal cero y SHA256 de bytes vacíos, sin fabricar salida ni exceptuar el guard de truncación.
