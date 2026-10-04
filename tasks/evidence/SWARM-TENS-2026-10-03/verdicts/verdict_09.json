@@ -1,0 +1,92 @@
+[
+  {
+    "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "status": "open",
+    "reason": "Reutilización concreta: preflight y parser JSONL ya distinguen worker/PID/provider/latencia, con fixtures GPU sano, CPU intencional y GPU→CPU tras respawn. La evidencia local sólo cubre fixtures; falta traza de workload real con timeline request/provider/PID/respawn/latency, OEM/update validado y rollback. No generar carga nueva. Veredicto: la instrumentación parcial descrita no satisface el criterio experimental; faltan evidencia real y selector ejecutable. Mantener open.",
+    "files": "tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md; tools/provider_trace.py; tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/provider-trace-run.json; tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/commands.json",
+    "close_check_before": "Close check literal ejecutado antes: No module named tools.verify_forum_finding",
+    "close_check_after": "Close check literal repetido después: No module named tools.verify_forum_finding",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "status": "open",
+    "reason": "Captura readonly observa kernel/sysctl, pero /sys/fs/pstore fue PermissionError/could_not_run=1. Falta canary desechable, pstore tras reboot, kdump control y rollback; natural RCU queda aparte. No hacer panic/reboot. Veredicto: la instrumentación parcial descrita no satisface el criterio experimental; faltan evidencia real y selector ejecutable. Mantener open.",
+    "files": "tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md; tools/kernel_capture.py; tools/recovery_profile.py; tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json",
+    "close_check_before": "Close check literal ejecutado antes: No module named tools.verify_rcu_panic_pstore",
+    "close_check_after": "Close check literal repetido después: No module named tools.verify_rcu_panic_pstore",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-FORUM-RESCUE-RUNBOOK-01",
+    "status": "open",
+    "reason": "Runbook demanda entrada rescue y regreso validado en Dell y segundo OEM, unidad suspendida con manifest/sha/mode/expiry/watcher, más rollback. Ninguna prueba canary ni consola OEM adjunta. El protocolo de suspensión existente explica restore, no demuestra rescue access ni boot recuperado. Veredicto: la instrumentación parcial descrita no satisface el criterio experimental; faltan evidencia real y selector ejecutable. Mantener open.",
+    "files": "tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md; tasks/backlog/FEATURE-BOOT-RECOVERY-GATE.md; ~/.Codex/tools/restore_hooks_reference.py",
+    "close_check_before": "Close check literal ejecutado antes: No module named tools.verify_forum_finding",
+    "close_check_after": "Close check literal repetido después: No module named tools.verify_forum_finding",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "status": "open",
+    "reason": "Instrumento observa watchdog SBSA activo/timeout 60/nowayout 0, pero ownership queda UNKNOWN. Falta propietario/consumidor y evidencia OEM de disparo/recuperación; no probar watchdog porque puede reiniciar el host. Veredicto: la instrumentación parcial descrita no satisface el criterio experimental; faltan evidencia real y selector ejecutable. Mantener open.",
+    "files": "tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md; tools/host_diagnostics.py; docs/evidence/BB-INSTRUMENTS-devices.md",
+    "close_check_before": "Close check literal ejecutado antes: No module named tools.verify_forum_finding",
+    "close_check_after": "Close check literal repetido después: No module named tools.verify_forum_finding",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+    "status": "open",
+    "reason": "Captura existente vio Wi-Fi down y Ethernet conectado; no contiene WRONG_KEY→no-secrets ni pares sincronizados de host vivo/probe remoto fallido. Falta A/B de roaming/timeout/reintentos acotados y rollback GX10/MT7925. Cambios de servicio/configuración quedan fuera. Veredicto: la instrumentación parcial descrita no satisface el criterio experimental; faltan evidencia real y selector ejecutable. Mantener open.",
+    "files": "tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md; tools/host_diagnostics.py; tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/host-observation.txt",
+    "close_check_before": "Close check literal ejecutado antes: No module named tools.verify_wifi_isolation",
+    "close_check_after": "Close check literal repetido después: No module named tools.verify_wifi_isolation",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "status": "open",
+    "reason": "Probe/ABI estático ya existe; falta traza real de asignación con dueño, cgroup/memcg, flags y control CPU. Eso requiere permisos de tracing/root y asignaciones de laboratorio que no se ejecutaron; no disparar workloads GPU. Veredicto: la instrumentación parcial descrita no satisface el criterio experimental; faltan evidencia real y selector ejecutable. Mantener open.",
+    "files": "tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md; tools/kernel_charges.bt; tools/memory_profile.py; tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt",
+    "close_check_before": "Close check literal ejecutado antes: No module named tools.verify_memory_saver",
+    "close_check_after": "Close check literal repetido después: No module named tools.verify_memory_saver",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "status": "open",
+    "reason": "Perfil agregado no mide objetos: faltan bytes pedidos vs backing/slots/page size/costo por carga y liberación, con comparación reproducible. Requiere workload/captura real; no inferir packing correcto del perfil global. Veredicto: la instrumentación parcial descrita no satisface el criterio experimental; faltan evidencia real y selector ejecutable. Mantener open.",
+    "files": "tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md; tools/memory_profile.py; tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K/comparison.txt",
+    "close_check_before": "Close check literal ejecutado antes: No module named tools.verify_memory_saver",
+    "close_check_after": "Close check literal repetido después: No module named tools.verify_memory_saver",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+    "status": "open",
+    "reason": "Enumeración readonly correlaciona HID con ancestro USB, pero captura local tuvo cero HID. Falta caso post-update real y control que separe USB-HID perdido/headless/módulo built-in/lectura inaccesible y que demuestre teclado o acceso remoto funcional. Veredicto: la instrumentación parcial descrita no satisface el criterio experimental; faltan evidencia real y selector ejecutable. Mantener open.",
+    "files": "tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md; tools/host_diagnostics.py; tests/test_device_inventory.py; docs/evidence/BB-INSTRUMENTS-devices.md",
+    "close_check_before": "Close check literal ejecutado antes: No module named tools.verify_usb_hid_postupdate",
+    "close_check_after": "Close check literal repetido después: No module named tools.verify_usb_hid_postupdate",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+    "status": "open",
+    "reason": "Se capturó estado PCI/handler nativo; fan RPM carece de interfaz estándar soportada. Faltan explicación/corrección vendor para OEM exacto, canary hotplug/idle/DPMS/soak, potencia externa, temperatura, red y rollback. No cambiar marcador, hotplug, NIC ni ejercer carga. Veredicto: la instrumentación parcial descrita no satisface el criterio experimental; faltan evidencia real y selector ejecutable. Mantener open.",
+    "files": "tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md; tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION/progress.txt; tasks/evidence/BB-INSTRUMENTS-network.md",
+    "close_check_before": "Close check literal ejecutado antes: No module named tools.verify_forum_finding",
+    "close_check_after": "Close check literal repetido después: No module named tools.verify_forum_finding",
+    "worker_status": "ABIERTA"
+  },
+  {
+    "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+    "status": "open",
+    "reason": "Preflight existente y captura readonly dejan DRM modeset efectivo could_not_run por permisos; opciones contradictorias presentes. Faltan compatibilidad oficial de OTA objetivo y canary HDMI/USB-C/SSH/rollback. No tocar override, instalar OTA ni reiniciar. Veredicto: la instrumentación parcial descrita no satisface el criterio experimental; faltan evidencia real y selector ejecutable. Mantener open.",
+    "files": "tasks/backlog/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT.md; tools/preflight.py; tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/validator-run.json; tasks/evidence/BB-INSTRUMENTS-2026-10-03/boot.capture.json",
+    "close_check_before": "Close check literal ejecutado antes: No module named tools.verify_forum_finding",
+    "close_check_after": "Close check literal repetido después: No module named tools.verify_forum_finding",
+    "worker_status": "ABIERTA"
+  }
+]

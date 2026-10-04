@@ -26,6 +26,10 @@ from typing import Any, Iterable
 
 ALLOCATOR = re.compile(r"NVRM:.*(?:_memdescAllocInternal|mem_desc\.c:\d+)", re.I)
 OOM = re.compile(r"NVRM:.*(?:NV_ERR_NO_MEMORY|Out of memory)", re.IGNORECASE)
+OOMD_PRESSURE_MARK = re.compile(
+    r"^(?:Marked (?P<marked_victim>.+?) for killing|Killed (?P<killed_victim>.+?)) due to memory pressure for "
+    r"(?P<pressure>.+?) being (?P<usage>\d+\.\d+%) > "
+    r"(?P<threshold>\d+\.\d+%) for > (?P<duration>.+) with reclaim activity$")
 SERVICE_LOSS = re.compile(r"Main process exited|Failed with result", re.I)
 SERVICE_RECOVERY = re.compile(r"Started .+\.service", re.I)
 WATCHDOG = re.compile(
@@ -106,8 +110,55 @@ def _event_sort_time(event: dict[str, Any]) -> str:
 
 def _empty_result() -> dict[str, Any]:
     return {key: [] for key in (
-        "nvrm", "psi_observations", "psi_signal", "service_observations", "service_loss",
+        "nvrm", "oomd_actions", "psi_observations", "psi_signal", "service_observations", "service_loss",
         "service_recovery", "watchdog", "boot", "could_not_run")}
+
+
+def _trusted_oomd_identity(row: dict[str, Any]) -> str | None:
+    identities = [row[key] for key in ("_SYSTEMD_UNIT", "_COMM") if key in row]
+    allowed = {"systemd-oomd.service", "systemd-oomd"}
+    if identities and all(isinstance(identity, str) and identity in allowed for identity in identities):
+        return ",".join(identities)
+    return None
+
+
+def _classify_oomd_row(row: dict[str, Any], message: str,
+                       timestamp: str | None, out: dict[str, Any]) -> None:
+    identity = _trusted_oomd_identity(row)
+    candidate = message.startswith(("Marked ", "Killed "))
+    if not identity:
+        trusted_values = [row[key] for key in ("_SYSTEMD_UNIT", "_COMM") if key in row]
+        ambiguous = any(not isinstance(value, str) or value in {"systemd-oomd.service", "systemd-oomd"}
+                        for value in trusted_values)
+        if candidate and ambiguous:
+            out["could_not_run"].append("journal: systemd-oomd identity fields conflict or have invalid types")
+        elif candidate and row.get("SYSLOG_IDENTIFIER") == "systemd-oomd":
+            out["could_not_run"].append(
+                "journal: systemd-oomd sender appears only in untrusted SYSLOG_IDENTIFIER")
+        return
+    if not candidate:
+        return
+    match = OOMD_PRESSURE_MARK.fullmatch(message)
+    if not match:
+        out["could_not_run"].append(
+            "journal: systemd-oomd action message format unrecognized")
+        return
+    hit = _milestone(
+        "journal", row, timestamp,
+        event_type="marked_for_killing" if match.group("marked_victim") else "kill_reported",
+        source_identity=identity,
+        identity_provenance="trusted journal fields; source record itself remains unauthenticated",
+        victim_cgroup=match.group("marked_victim") or match.group("killed_victim"),
+        pressure_cgroup=match.group("pressure"),
+        observed_usage=match.group("usage"),
+        observed_threshold=match.group("threshold"),
+        observed_duration=match.group("duration"),
+        note="systemd-oomd logged an action; completion and application-level cause are unverified")
+    if timestamp is None:
+        hit["timestamp_status"] = "could_not_run: journal sin __REALTIME_TIMESTAMP válido"
+        out["could_not_run"].append(
+            "journal: systemd-oomd action timestamp missing or invalid")
+    out["oomd_actions"].append(hit)
 
 
 def _classify_journal_row(row: dict[str, Any], seen_boots: set[str], out: dict[str, Any]) -> None:
@@ -115,6 +166,7 @@ def _classify_journal_row(row: dict[str, Any], seen_boots: set[str], out: dict[s
     timestamp = _journal_time(row)
     unit = row.get("UNIT") or row.get("_SYSTEMD_UNIT")
     boot_id = _boot_id(row)
+    _classify_oomd_row(row, message, timestamp, out)
     if boot_id and boot_id not in seen_boots:
         seen_boots.add(str(boot_id))
         out["boot"].append(_milestone(

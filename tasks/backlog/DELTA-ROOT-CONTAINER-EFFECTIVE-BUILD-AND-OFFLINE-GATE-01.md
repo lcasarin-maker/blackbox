@@ -48,3 +48,9 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ### Evidencia de instrumento (2026-10-03)
 
 Estado: parcial, reutilizando la versión del runtime y la identidad ref/ID de imagen de la captura existente. No se suministró artefacto de build efectivo, corrida offline ni evidencia de rollback; esos sujetos quedan `could_not_run`. La ficha sigue abierta y su `close_check` original no cambió. Informe: `docs/evidence/BB-INSTRUMENTS-runtime.md`.
+
+### Revisión del formato de entrada — lote 06 (2026-10-03)
+
+Se inspeccionaron `tasks/evidence/DELTA-FORUM-RUNTIME-VERSION-CAPTURE-01/runtime-capture.json` y `tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/commands.json`. El primero contiene runtime/host y `running_container_image_ids` con `container_id`, `image_ref` e `image_id`; el segundo conserva `{cmd, exit, stdout}` para `docker inspect`, arquitectura/CUDA y estado del contenedor. No hay salida capturada desde el entorno activo que identifique wheel instalado, build/commit importado, ni comparación entre éstos y el artefacto previsto. Tampoco existe una entrada de manifiesto de offline cache con nombres/rutas y hashes esperados, ni resultado de arranque sin red.
+
+Por eso no se añadió un parser que convierta la identidad de imagen en identidad de build ni un esquema de cache especulativo. La entrada mínima pendiente debe venir primero de una captura real con los campos crudos del wheel/build esperado y efectivo dentro del mismo contenedor, más un manifiesto verificable de los artefactos offline y el resultado literal del arranque aislado. Después puede fijarse un parser y controles negativos sobre el formato efectivamente producido. El close check sigue abierto.

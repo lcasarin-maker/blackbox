@@ -1,0 +1,162 @@
+[
+  {
+    "id": "DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES",
+    "status": "open",
+    "reason": "OPEN. El close_check devuelve rc=2: COULD_NOT_RUN porque bb-guardia-proceso.service no publica ExecMainStartTimestamp. La ficha (sección Reapertura 2026-10-03) condiciona cierre a reiniciar el servicio; está expresamente prohibido aquí. Tests offline previos no sustituyen al control vivo.",
+    "files": "tasks/backlog/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES.md; tests/test_bb_guardia_proceso.py; systemd/bb-guardia-proceso.service",
+    "close_check_before": {
+      "cmd": "bash tools/demonio_al_dia.sh --user bb-guardia-proceso.service bin/bb-guardia-proceso",
+      "returncode": 2,
+      "output": "COULD_NOT_RUN: bb-guardia-proceso.service no publica ExecMainStartTimestamp (parada?)\n"
+    },
+    "close_check_after": {
+      "cmd": "none: sin cambio relevante de archivos; cierre no repetido",
+      "returncode": null,
+      "output": "No hubo cambios de código, contrato o evidencia; el estado de cierre permanece abierto."
+    }
+  },
+  {
+    "id": "DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01",
+    "status": "open",
+    "reason": "OPEN. El close_check devuelve rc=2 porque falta .simplecode/evidence/telemetry_dispositions.jsonl en este worktree. La ficha, sección Evidencia y alcance, confirma que stdout/stderr históricos no existen y prohíbe dictaminar a partir de rc/metadata; no se inventaron salidas.",
+    "files": "tasks/backlog/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01.md; tools/verify_telemetry_dispositions.py; tasks/evidence/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01/recovered-event-metadata.json",
+    "close_check_before": {
+      "cmd": "python3 -m tools.verify_telemetry_dispositions --event-id 92dc63137ae930f3 --event-id a50ae5e52c99c3ab --event-id 5437b44ce52501ee",
+      "returncode": 2,
+      "output": "[telemetry-dispositions] COULD_NOT_RUN: cannot read disposition ledger ([Errno 2] No such file or directory: '.simplecode/evidence/telemetry_dispositions.jsonl')\n"
+    },
+    "close_check_after": {
+      "cmd": "none: sin cambio relevante de archivos; cierre no repetido",
+      "returncode": null,
+      "output": "No hubo cambios de código, contrato o evidencia; el estado de cierre permanece abierto."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (pytest rc=4, no tests ran). El instrumento de host existente solo inventaría interfaz/PCI/RDMA; faltan imagen y stack fijados, 3 nodos, ranks NCCL y primer request funcional. No workload GPU/LLM autorizado.",
+    "files": "tasks/backlog/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md; tools/host_diagnostics.py; docs/evidence/BB-INSTRUMENTS-network.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_3node_nccl_image_and_first_request_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_3node_nccl_image_and_first_request_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.18s\n"
+    },
+    "close_check_after": {
+      "cmd": "none: sin cambio relevante de archivos; cierre no repetido",
+      "returncode": null,
+      "output": "No hubo cambios de código, contrato o evidencia; el estado de cierre permanece abierto."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (pytest rc=4, no tests ran). La evidencia de instrumento observa MTU local, pero ip netlink estuvo inaccesible en captura y no hay comparación de 8 nodos ni control NCCL; no hay sujeto de laboratorio disponible.",
+    "files": "tasks/backlog/DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01.md; tools/host_diagnostics.py; docs/evidence/BB-INSTRUMENTS-network.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_8node_nccl_interface_mtu_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_8node_nccl_interface_mtu_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n"
+    },
+    "close_check_after": {
+      "cmd": "none: sin cambio relevante de archivos; cierre no repetido",
+      "returncode": null,
+      "output": "No hubo cambios de código, contrato o evidencia; el estado de cierre permanece abierto."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (pytest rc=4, no tests ran). tools/apt_sources.py ya aporta captura Deb822/índices y detecta el par archive.ubuntu.com + /ubuntu + arm64, pero el informe APT explícitamente no acredita compatibilidad OEM, frescura ni reproducción del fallo. No falta otro instrumento genérico que desarrollar.",
+    "files": "tasks/backlog/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md; tools/apt_sources.py; docs/evidence/BB-INSTRUMENTS-apt.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n"
+    },
+    "close_check_after": {
+      "cmd": "none: sin cambio relevante de archivos; cierre no repetido",
+      "returncode": null,
+      "output": "No hubo cambios de código, contrato o evidencia; el estado de cierre permanece abierto."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (pytest rc=4, no tests ran). La ficha requiere canario OEM con A/B de clock-cap, carga emparejada, métricas observadas y rollback. La captura de sensores no define esa prueba y el desarrollo votado aplaza laboratorio.",
+    "files": "tasks/backlog/DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md; tools/thermal_coverage.py; docs/evidence/BB-INSTRUMENTS-2026-10-03-report.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n"
+    },
+    "close_check_after": {
+      "cmd": "none: sin cambio relevante de archivos; cierre no repetido",
+      "returncode": null,
+      "output": "No hubo cambios de código, contrato o evidencia; el estado de cierre permanece abierto."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (pytest rc=4, no tests ran). Falta reproducer multi-turn fijo, efectos mock y control positivo/negativo sobre no mutación de mail/tool; la captura SSE existente conserva deltas pero no ejecuta herramientas ni demuestra seguridad. Requiere canario de seguridad fijado.",
+    "files": "tasks/backlog/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md; tools/chat_sse_capture.py; docs/evidence/BB-INSTRUMENTS-runtime.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cross_turn_sleeper_injection_regression_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_cross_turn_sleeper_injection_regression_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n"
+    },
+    "close_check_after": {
+      "cmd": "none: sin cambio relevante de archivos; cierre no repetido",
+      "returncode": null,
+      "output": "No hubo cambios de código, contrato o evidencia; el estado de cierre permanece abierto."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (pytest rc=4, no tests ran). Ficha y feasibility_03 exigen fijar revisión CUTLASS/CuTe/backend, operación e ISA del binario antes de definir oracle. No existe fuente/build sujeto anclado; fabricar allowlist por nombre de SM asumiría compatibilidad.",
+    "files": "tasks/backlog/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01.md; docs/evidence/BB-INSTRUMENTS-runtime.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cutlass_sm121_isa_gate_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_cutlass_sm121_isa_gate_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n"
+    },
+    "close_check_after": {
+      "cmd": "none: sin cambio relevante de archivos; cierre no repetido",
+      "returncode": null,
+      "output": "No hubo cambios de código, contrato o evidencia; el estado de cierre permanece abierto."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-CX7-FW-UPDATE-GUARD-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (pytest rc=4, no tests ran). Host sin HCA RDMA; firmware CX7 desconocido y sin atributo genérico de interfaz. Un preflight seguro necesita OEM/PSID/versiones/prerequisitos y canal firmado; el protocolo prohíbe flashear/instalar.",
+    "files": "tasks/backlog/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md; tools/host_diagnostics.py; docs/evidence/BB-INSTRUMENTS-network.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_fw_update_guard_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_cx7_fw_update_guard_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n"
+    },
+    "close_check_after": {
+      "cmd": "none: sin cambio relevante de archivos; cierre no repetido",
+      "returncode": null,
+      "output": "No hubo cambios de código, contrato o evidencia; el estado de cierre permanece abierto."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01",
+    "status": "open",
+    "reason": "OPEN. Selector no encontrado (pytest rc=4, no tests ran). BDF/PCI binding existente no acredita conector físico ni alias; faltan controles de desconexión, tráfico peer y NCCL. El reporte registra cero HCA RDMA; hotplug/redes físicas están prohibidas.",
+    "files": "tasks/backlog/DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01.md; tools/host_diagnostics.py; docs/evidence/BB-INSTRUMENTS-network.md",
+    "close_check_before": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_physical_topology_alias_check_01",
+      "returncode": 4,
+      "output": "ERROR: not found: /tmp/bb-tens-b/tests/test_debt_registration_controls.py::test_delta_forum_cx7_physical_topology_alias_check_01\n(no match in any of [<Module test_debt_registration_controls.py>])\n\n\nno tests ran in 0.02s\n"
+    },
+    "close_check_after": {
+      "cmd": "none: sin cambio relevante de archivos; cierre no repetido",
+      "returncode": null,
+      "output": "No hubo cambios de código, contrato o evidencia; el estado de cierre permanece abierto."
+    }
+  }
+]

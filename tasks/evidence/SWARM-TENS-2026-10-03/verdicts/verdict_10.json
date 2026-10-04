@@ -1,0 +1,66 @@
+[
+  {
+    "id": "FORUM-00-DOCKER-OOM-RESTART-LOOP",
+    "status": "open",
+    "reason": "`workload_restart_policy.py` ya implementa rate limiting persistente por identidad y su close check pasa 10 tests, lo que valida solo política offline. Falta integración con owner/runtime, elegir un workload sano y uno reincidente, conservar datos/servicio de gestión y demostrar reboot/reanudación/rollback en entorno recuperable. La captura nativa local de GB10/580.178.04 no identifica el contenedor del incidente; no reiniciar ni detener servicios.",
+    "files": "tasks/evidence/SWARM-TENS-2026-10-03/batch-10/close-checks.txt",
+    "close_check_before": "exit=0; stdout=..........                                                               [100%] | 10 passed in 0.30s",
+    "close_check_after": "exit=0; stdout=..........                                                               [100%] | 10 passed in 0.30s"
+  },
+  {
+    "id": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+    "status": "open",
+    "reason": "Se reutilizan `atom_gpu_telemetry`/`thermal_coverage`; la captura nativa disponible es una lectura puntual de GB10 (44°C GPU, 6%, 12.42 W), no el soak con aplicación, sensores CPU/SoC, fan, residencia de modelo y controles antispike que exige el cierre. Input: OEM/stack/workload fijados, series sincronizadas con estado del servicio/CPU-idle y baseline/A-B; no cambiar compuerta ni aplicar umbrales.",
+    "files": "tasks/evidence/SWARM-TENS-2026-10-03/batch-10/close-checks.txt",
+    "close_check_before": "exit=1; stdout=/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding",
+    "close_check_after": "exit=1; stdout=/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding"
+  },
+  {
+    "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+    "status": "open",
+    "reason": "La captura nativa actual observa kernel activo 6.17.0-1032 y presencia de vmlinuz/initrd de ese kernel; su propio campo dice presencia solamente y bootability no verificada. Modeset queda could_not_run por permiso. Falta paquete/repo/candidato firmado y A/B de coherencia fuente→initrd→arranque/rollback en equipo recuperable. Input: target/OEM y actualización exactos más evidencia de arranque anterior/candidato; sin actualizar ni reboot aquí.",
+    "files": "tasks/evidence/SWARM-TENS-2026-10-03/batch-10/close-checks.txt",
+    "close_check_before": "exit=1; stdout=/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding",
+    "close_check_after": "exit=1; stdout=/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding"
+  },
+  {
+    "id": "FORUM-00-REALTEK-EEE-DIRECT-LINK",
+    "status": "open",
+    "reason": "La captura nativa de host registra interfaces/IP y enlace local; el informe de instrumentos registra `enP7s7`/r8127 11.014.00-NAPI, pero la medición EEE/partner modes y stalls del enlace directo no está presente en la captura actual. Input: dos extremos, NIC/cable/EEE partner modes, workload/topología y errores/drops con A/B/rollback soportado; no alterar EEE.",
+    "files": "tasks/evidence/SWARM-TENS-2026-10-03/batch-10/close-checks.txt",
+    "close_check_before": "exit=1; stdout=/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding",
+    "close_check_after": "exit=1; stdout=/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding"
+  },
+  {
+    "id": "FORUM-02-GX10-READ-INTEGRITY",
+    "status": "open",
+    "reason": "`tools/read_integrity.py` ya compara lecturas buffered/O_DIRECT contra digest suministrado, pero fixture no es un ancla confiable ni el resultado identifica los datos/firmware del GX10. La captura nativa disponible es de GB10, no ese target. Input: target GX10, manifiesto/hash confiable en otro medio, archivos inmutables, logs/RAS/NVMe/firmware y errores correlacionados; no stress-write ni invalidar cache.",
+    "files": "tasks/evidence/SWARM-TENS-2026-10-03/batch-10/close-checks.txt",
+    "close_check_before": "exit=1; stdout=/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding",
+    "close_check_after": "exit=1; stdout=/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding"
+  },
+  {
+    "id": "FORUM-02-PSTORE-KERNEL-REGRESSION",
+    "status": "open",
+    "reason": "Se reutiliza `kernel_capture`; la evidencia existente dice acceso a `/sys/fs/pstore` denegado, could_not_run=1 y 0 registros inspeccionados. La captura nativa actual no determina corrección de otro OEM/BIOS/EC ni confirma la hipótesis de DOE. Input: permisos/lectura pstore del target y fuente OEM aplicable que identifica versión corregida, luego A/B seguro con rollback; no modificar kernel ni watchdog.",
+    "files": "tasks/evidence/SWARM-TENS-2026-10-03/batch-10/close-checks.txt",
+    "close_check_before": "exit=1; stdout=/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding",
+    "close_check_after": "exit=1; stdout=/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding"
+  },
+  {
+    "id": "FORUM-02-USB-UVC-EP0",
+    "status": "open",
+    "reason": "Los lectores USB/xHCI existentes diagnostican identidad o aftermath; no existe stream UVC con control EP0 post-STREAMON ni versión corregida identificada. Capturas USB existentes no equivalen a esa secuencia. Input: OEM/board/kernel/driver/firmware/cámara exactos, revisión OEM del fix y ensayo A/B de stream/control con usbmon/tracepoints/journal en equipo canario; no abrir stream aquí.",
+    "files": "tasks/evidence/SWARM-TENS-2026-10-03/batch-10/close-checks.txt",
+    "close_check_before": "exit=1; stdout=/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding",
+    "close_check_after": "exit=1; stdout=/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding"
+  },
+  {
+    "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+    "status": "open",
+    "reason": "La lectura local existente observa `enP7s7` enlazada a r8127 11.014.00-NAPI; eso no comprueba paquete firmado/soportado ni retención tras reboot. La captura nativa es solo inventario puntual. Input: OEM/kernel/paquete exactos, A/B warm y cold en canario, control de otra NIC/módulo ausente, SSH y rollback probado; no reiniciar ni cambiar GRUB aquí.",
+    "files": "tasks/evidence/SWARM-TENS-2026-10-03/batch-10/close-checks.txt",
+    "close_check_before": "exit=1; stdout=/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding",
+    "close_check_after": "exit=1; stdout=/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding"
+  }
+]

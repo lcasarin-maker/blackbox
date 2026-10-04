@@ -150,9 +150,11 @@ def _request_budget(model: dict[str, Any], limit: int | None, binding: bool,
                      and request.get("model_id") == checkpoint.get("served_model_id")
                      and request.get("checkpoint_id") == checkpoint.get("checkpoint_id"))
     window = model.get("contextWindow")
-    if not request_bound or not _integer(prompt_tokens) or not _integer(requested_max) or not _integer(window):
+    configured_max = model.get("maxTokens")
+    if (not request_bound or not _integer(prompt_tokens) or not _integer(requested_max)
+            or not _integer(window) or not _integer(configured_max)):
         request_budget = {"status": "unknown", "output_budget_tokens": None}
-        issues.append("request-level budget unknown: bound tokenizer/usage counts and max_tokens were not supplied")
+        issues.append("request-level budget unknown: bound token counts, max_tokens, or configured output cap were not supplied")
     elif not binding or limit is None:
         request_budget = {"status": "mismatch", "output_budget_tokens": None}
         issues.append("request token counts or explicit checkpoint binding are invalid")
@@ -160,19 +162,24 @@ def _request_budget(model: dict[str, Any], limit: int | None, binding: bool,
         prompt_tokens = cast(int, prompt_tokens)
         requested_max = cast(int, requested_max)
         window = cast(int, window)
+        configured_max = cast(int, configured_max)
         limit = cast(int, limit)
-        if prompt_tokens < 0 or requested_max <= 0 or window <= 0 or limit <= 0:
+        if prompt_tokens < 0 or requested_max <= 0 or window <= 0 or limit <= 0 or configured_max <= 0:
             request_budget = {"status": "mismatch", "output_budget_tokens": None}
             issues.append("request token counts or explicit checkpoint binding are invalid")
         else:
             effective_limit = min(window, limit)
             remaining = effective_limit - prompt_tokens
-            state = "observed" if prompt_tokens <= effective_limit and requested_max <= remaining else "mismatch"
+            state = ("observed" if prompt_tokens <= effective_limit
+                     and requested_max <= remaining and requested_max <= configured_max else "mismatch")
             request_budget = {"status": state, "input_tokens": prompt_tokens,
                               "requested_max_tokens": requested_max,
-                              "output_budget_tokens": max(0, remaining)}
-            if state == "mismatch":
-                issues.append("request max_tokens exceeds available output headroom")
+                              "output_budget_tokens": max(0, remaining),
+                              "configured_output_cap_tokens": configured_max}
+            if requested_max > remaining:
+                issues.append("request max_tokens exceeds available context headroom")
+            if requested_max > configured_max:
+                issues.append("request max_tokens exceeds the configured OpenClaw output cap")
     request_budget["evidence_provenance"] = "caller_supplied_unverified"
     return request_budget, issues
 

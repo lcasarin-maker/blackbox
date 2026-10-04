@@ -133,6 +133,18 @@ def test_request_keeps_oversized_max_tokens_and_reports_headroom_suggestion() ->
     assert request_budget["output_budget_tokens"] == 100
 
 
+def test_request_budget_enforces_configured_openclaw_output_cap() -> None:
+    bundle = _bundle()
+    bundle["request_observation"]["prompt_tokens"] = 100000
+    bundle["request_observation"]["max_tokens"] = 9000
+    result = contract.analyze(bundle, "capture.json")
+    request_budget = result["checks"]["request_generation_budget"]
+    assert request_budget["output_budget_tokens"] == 31072
+    assert request_budget["configured_output_cap_tokens"] == 8192
+    assert request_budget["status"] == "mismatch"
+    assert "request max_tokens exceeds the configured OpenClaw output cap" in result["issues"]
+
+
 def test_negative_observed_request_token_count_blocks() -> None:
     bundle = _bundle()
     bundle["request_observation"]["prompt_tokens"] = -1
