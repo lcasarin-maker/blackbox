@@ -361,9 +361,13 @@ def _ahora() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _correr(*args: str) -> str:
+def _correr_resultado(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run(list(args), capture_output=True, text=True,
-                          check=False).stdout
+                          check=False)
+
+
+def _correr(*args: str) -> str:
+    return _correr_resultado(*args).stdout
 
 
 def _a_float(texto) -> float | None:
@@ -626,14 +630,25 @@ def leer_procesos_gpu() -> dict:
     `[N/A]`, pero `--query-compute-apps` sí reporta por proceso. Se suma para
     el agregado (medido 2026-09-07: vLLM 33813 MiB + aequitas_os 10251 MiB)."""
     try:
-        salida = _correr("nvidia-smi",
-                         "--query-compute-apps=pid,process_name,used_memory",
-                         "--format=csv,noheader,nounits")
+        resultado = _correr_resultado(
+            "nvidia-smi",
+            "--query-compute-apps=pid,process_name,used_memory",
+            "--format=csv,noheader,nounits",
+        )
     except OSError as exc:
         return {"gpu_procs": None, "gpu_mem_total_mib": None,
                 "gpu_procs_ausente": f"nvidia-smi no ejecutable: {exc}"}
+    if resultado.returncode != 0:
+        stderr = (resultado.stderr or "").strip()
+        detalle = f" (rc={resultado.returncode}"
+        if stderr:
+            detalle += f", stderr={stderr}"
+        detalle += ")"
+        return {"gpu_procs": None, "gpu_mem_total_mib": None,
+                "gpu_procs_ausente": f"nvidia-smi falló{detalle}"}
 
     procs, total = [], 0.0
+    salida = resultado.stdout
     for linea in salida.splitlines():
         if not linea.strip():
             continue
