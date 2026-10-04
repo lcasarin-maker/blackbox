@@ -38,6 +38,32 @@ def test_correr_devuelve_la_salida_del_proceso():
     assert agt._correr("echo", "hola").strip() == "hola"
 
 
+def test_correr_resultado_preserva_codigo_de_salida_y_stderr(monkeypatch):
+    esperado = agt.subprocess.CompletedProcess(
+        args=["nvidia-smi"], returncode=7, stdout="", stderr="driver caído")
+    monkeypatch.setattr(agt.subprocess, "run", lambda *a, **k: esperado)
+    assert agt._correr_resultado("nvidia-smi") is esperado
+
+
+def test_procesos_gpu_falla_cerrado_si_nvidia_smi_devuelve_error(monkeypatch):
+    resultado = agt.subprocess.CompletedProcess(
+        args=["nvidia-smi"], returncode=7, stdout="", stderr="driver caído")
+    monkeypatch.setattr(agt, "_correr_resultado", lambda *a: resultado)
+    datos = agt.leer_procesos_gpu()
+    assert datos["gpu_procs"] is None
+    assert datos["gpu_mem_total_mib"] is None
+    assert "rc=7" in datos["gpu_procs_ausente"]
+    assert "driver caído" in datos["gpu_procs_ausente"]
+
+
+def test_procesos_gpu_solo_declara_lista_vacia_con_comando_exitoso(monkeypatch):
+    resultado = agt.subprocess.CompletedProcess(
+        args=["nvidia-smi"], returncode=0, stdout="", stderr="")
+    monkeypatch.setattr(agt, "_correr_resultado", lambda *a: resultado)
+    assert agt.leer_procesos_gpu() == {
+        "gpu_procs": [], "gpu_mem_total_mib": 0}
+
+
 def test_leer_texto_de_una_ruta_que_no_existe_da_None():
     assert agt._leer_texto(Path("/no/existe/de/verdad")) is None
 
@@ -312,7 +338,10 @@ def test_zonas_ordenadas_ordena_el_10_despues_del_9(tmp_path, monkeypatch):
 
 
 def test_procesos_gpu_ignora_las_lineas_con_otro_numero_de_campos(monkeypatch):
-    monkeypatch.setattr(agt, "_correr", lambda *a: "1, python, 100\n2, roto\n\n")
+    resultado = agt.subprocess.CompletedProcess(
+        args=["nvidia-smi"], returncode=0,
+        stdout="1, python, 100\n2, roto\n\n", stderr="")
+    monkeypatch.setattr(agt, "_correr_resultado", lambda *a: resultado)
     res = agt.leer_procesos_gpu()
     assert res["gpu_mem_total_mib"] == 100, res
     assert len(res["gpu_procs"]) == 1, res
@@ -415,7 +444,9 @@ def test_reanudar_intento_no_reanuda_proceso_que_sigue_activo(tmp_path, monkeypa
 
 
 def test_gpu_process_con_memoria_no_numerica_no_suma_nan(monkeypatch):
-    monkeypatch.setattr(agt, "_correr", lambda *_: "101,worker,[N/A]\n")
+    resultado_proceso = agt.subprocess.CompletedProcess(
+        args=["nvidia-smi"], returncode=0, stdout="101,worker,[N/A]\n", stderr="")
+    monkeypatch.setattr(agt, "_correr_resultado", lambda *_: resultado_proceso)
 
     resultado = agt.leer_procesos_gpu()
 
@@ -560,7 +591,9 @@ def test_el_gate_por_comando_NO_se_relaja_sin_telemetria_fresca(monkeypatch, cap
 
 
 def test_procesos_gpu_como_comando_devuelve_el_hecho(monkeypatch, capsys):
-    monkeypatch.setattr(agt, "_correr", lambda *a: "1234, python3, 500\n")
+    resultado = agt.subprocess.CompletedProcess(
+        args=["nvidia-smi"], returncode=0, stdout="1234, python3, 500\n", stderr="")
+    monkeypatch.setattr(agt, "_correr_resultado", lambda *a: resultado)
     monkeypatch.setattr(agt.sys, "argv", ["agt", "--procesos-gpu"])
     rc = agt.main()
     salida = json.loads(capsys.readouterr().out)
@@ -576,7 +609,7 @@ def test_control_negativo_procesos_gpu_sale_1_si_no_pudo_averiguarlo(monkeypatch
     def _no_ejecutable(*_a):
         raise OSError("no existe")
 
-    monkeypatch.setattr(agt, "_correr", _no_ejecutable)
+    monkeypatch.setattr(agt, "_correr_resultado", _no_ejecutable)
     monkeypatch.setattr(agt.sys, "argv", ["agt", "--procesos-gpu"])
     rc = agt.main()
     salida = json.loads(capsys.readouterr().out)
@@ -588,7 +621,9 @@ def test_control_negativo_procesos_gpu_sale_1_si_no_pudo_averiguarlo(monkeypatch
 def test_una_gpu_de_verdad_ociosa_NO_es_lo_mismo_que_no_saber(monkeypatch, capsys):
     """Cero procesos es un dato valido; la diferencia con el caso de arriba es
     justo lo que el rc distingue."""
-    monkeypatch.setattr(agt, "_correr", lambda *a: "")
+    resultado = agt.subprocess.CompletedProcess(
+        args=["nvidia-smi"], returncode=0, stdout="", stderr="")
+    monkeypatch.setattr(agt, "_correr_resultado", lambda *a: resultado)
     monkeypatch.setattr(agt.sys, "argv", ["agt", "--procesos-gpu"])
     rc = agt.main()
     salida = json.loads(capsys.readouterr().out)
