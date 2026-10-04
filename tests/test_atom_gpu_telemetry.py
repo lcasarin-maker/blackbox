@@ -1,7 +1,7 @@
 """DGX-334: sampler de telemetría de GPU y térmica (tools/atom_gpu_telemetry.py).
 
-Todo lo que toca el sistema real se sustituye: `_correr` (el único punto que
-invoca a `nvidia-smi`) y `THERMAL_DIR` (el único punto que lee sysfs). Se
+Las consultas de `nvidia-smi` se sustituyen en `_correr_resultado`, conservando
+código, stdout y stderr; `THERMAL_DIR` apunta a una réplica de sysfs. Se
 construye un `/sys/class/thermal` falso en `tmp_path` con la misma forma que la
 ATOM real —7 zonas `acpitz`, un solo `trip_point_0_temp` de 104.8 °C— en vez de
 mockear `open`, para que la prueba ejercite el parseo de sysfs de verdad.
@@ -47,7 +47,10 @@ def thermal(tmp_path, monkeypatch):
 
 @pytest.fixture
 def gpu_ok(monkeypatch):
-    monkeypatch.setattr(agt, "_correr", lambda *args: SALIDA_NVIDIA_SMI)
+    monkeypatch.setattr(agt, "_correr_resultado", lambda *args:
+                        agt.subprocess.CompletedProcess(
+                            args, 0, SALIDA_NVIDIA_SMI if any(
+                                arg.startswith("--query-gpu=") for arg in args) else "", ""))
 
 
 # La muestra REAL de las 2026-09-01T02:42:16Z, uno de los 27 minutos previos al
@@ -60,7 +63,10 @@ SALIDA_NVIDIA_SMI_CARGADO = "83, 96, 87.05, 2502, P0, 0x0000000000000000\n"
 
 @pytest.fixture
 def gpu_cargado(monkeypatch):
-    monkeypatch.setattr(agt, "_correr", lambda *args: SALIDA_NVIDIA_SMI_CARGADO)
+    monkeypatch.setattr(agt, "_correr_resultado", lambda *args:
+                        agt.subprocess.CompletedProcess(
+                            args, 0, SALIDA_NVIDIA_SMI_CARGADO if any(
+                                arg.startswith("--query-gpu=") for arg in args) else "", ""))
 
 
 # --- DGX-336: vigilancia de pérdida de video ------------------------------
@@ -1111,10 +1117,12 @@ def test_procesos_gpu_suman_la_memoria_unificada(thermal, monkeypatch):
     `[N/A]`, `--query-compute-apps` sí reporta por proceso."""
     def _falso(*args):
         if "--query-compute-apps=pid,process_name,used_memory" in args:
-            return "53873, VLLM::EngineCore, 33813\n1218571, /ruta/larga/python, 10251\n"
-        return SALIDA_NVIDIA_SMI
+            salida = "53873, VLLM::EngineCore, 33813\n1218571, /ruta/larga/python, 10251\n"
+        else:
+            salida = SALIDA_NVIDIA_SMI
+        return agt.subprocess.CompletedProcess(args, 0, salida, "")
 
-    monkeypatch.setattr(agt, "_correr", _falso)
+    monkeypatch.setattr(agt, "_correr_resultado", _falso)
     muestra = agt.muestrear(agt.leer_umbrales(), _estado(), escribir=False)[0]
     assert muestra["gpu_mem_total_mib"] == 44064
     assert [p["nombre"] for p in muestra["gpu_procs"]] == ["VLLM::EngineCore", "python"]
