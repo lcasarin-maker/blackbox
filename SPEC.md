@@ -216,6 +216,12 @@ efectos de esta spec, y `tools/inventario.py --check` lo bloquea en el commit.
 | `tools/read_integrity.py` | Compara hashes buffered/O_DIRECT de una región acotada con digest suministrado; preserva fallos y verifica estabilidad del archivo | `tests/test_read_integrity.py`; caso GX10 conserva validación experimental pendiente |
 | `tools/provider_trace.py` | Evalúa selección efectiva de proveedor por petición y transición de worker en JSONL; conserva fallback e incompletitud | `tests/test_provider_trace.py`; fixtures declarados y traza real pendiente |
 | `tools/kernel_charges.bt` | Borrador de probes de cargo/descargo kmem 6.17 con mapas por cgroup ejecutor; dueño real desconocido | Headers de ABI y limitación de validación bpftrace sin root en `tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt`; compilación y captura pendientes |
+| `tools/capture_io.py` | Lectores acotados y fail-closed de capturas de evidencia: archivo regular con tope de bytes, sin seguir symlinks, y JSON estricto | `tests/test_runtime_capture_io.py`, archivos grandes, symlinks y JSON invalido |
+| `tools/json_schema_subset.py` | Subconjunto de JSON Schema para verificadores de salida runtime; cualquier palabra clave no soportada queda UNKNOWN en vez de relajar el contrato | `tests/test_json_schema_subset.py`, palabras soportadas y no soportadas |
+| `tools/runtime_batch01_controls.py` | Predicados sobre registros crudos de las nueve tarjetas no-seguridad del lote runtime 01; una captura ausente es CNR y no se lee como pass | `tests/test_runtime_batch01_controls.py`, capturas completas, ausentes y alteradas |
+| `tools/runtime_batch02_controls.py` | Predicados por tarjeta del lote runtime 02 sobre datos crudos, sin campos de estado escritos por el operador | `tests/test_runtime_batch02_controls.py`, casos positivos, negativos y CNR |
+| `tools/runtime_batch03_controls.py` | Predicados sobre logs y eventos crudos del lote runtime 03 | `tests/test_runtime_batch03_controls.py`, logs completos, ausentes y con eventos alterados |
+| `tools/runtime_batch04_controls.py` | Predicados de evidencia cruda por tarjeta del lote runtime 04 | `tests/test_runtime_batch04_controls.py`, evidencia por tarjeta completa, ausente y alterada |
 
 ## Inventario de propiedad
 

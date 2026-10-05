@@ -5,7 +5,11 @@ are request (request_id, requested_provider), worker (request_id, worker_id,
 pid), provider (request_id, worker_id, provider), latency (request_id,
 worker_id, milliseconds), and restart (request_id, old_worker_id,
 new_worker_id). Lines are chronological; a provider observation after a
-restart must belong to the replacement worker.
+restart must belong to the replacement worker. ``pass`` means the records are
+internally consistent; it does not authenticate their recorder or establish
+physical GPU execution. Closure evidence must separately bind this trace to
+the real host/process and its request workload. Unit fixtures exercise parsing
+only.
 """
 
 from __future__ import annotations
@@ -17,9 +21,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from tools.capture_io import read_regular_bytes, strict_json_loads
+
 
 GPU_PROVIDERS = {"gpu", "cuda", "cudaexecutionprovider", "tensorrtexecutionprovider"}
 CPU_PROVIDERS = {"cpu", "cpuexecutionprovider"}
+MAX_TRACE_BYTES = 16 * 1024 * 1024
 
 
 def _result(status: str, findings: list[str] | None = None, unknowns: list[str] | None = None,
@@ -51,8 +58,10 @@ def analyze_lines(lines: list[str]) -> dict[str, Any]:
         if not raw.strip():
             continue
         try:
-            record = json.loads(raw)
-        except json.JSONDecodeError:
+            record = strict_json_loads(raw)
+            if not _finite_json(record):
+                raise json.JSONDecodeError("non-finite numeric value", raw, 0)
+        except (json.JSONDecodeError, RecursionError):
             errors.append(f"line {line_number}: malformed or truncated JSON")
             continue
         if not isinstance(record, dict):
@@ -187,10 +196,24 @@ def _classify_request(request_id: str, state: dict[str, Any]) -> tuple[list[str]
 def analyze_file(path: Path) -> dict[str, Any]:
     """Read a UTF-8 JSONL trace, mapping I/O and decoding failures to unknown."""
     try:
-        content = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeError) as exc:
+        raw = read_regular_bytes(path, MAX_TRACE_BYTES)
+        if len(raw) > MAX_TRACE_BYTES:
+            return _unknown("trace exceeds the bounded input size",
+                            could_not_run_count=1)
+        content = raw.decode("utf-8")
+    except (OSError, UnicodeError, ValueError) as exc:
         return _unknown(f"cannot read trace: {exc}", could_not_run_count=1)
     return analyze_lines(content.splitlines())
+
+
+def _finite_json(value: Any) -> bool:
+    if isinstance(value, float):
+        return math.isfinite(value)
+    if isinstance(value, dict):
+        return all(_finite_json(item) for item in value.values())
+    if isinstance(value, list):
+        return all(_finite_json(item) for item in value)
+    return True
 
 
 def main(argv: list[str] | None = None) -> int:
