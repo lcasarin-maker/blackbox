@@ -1278,8 +1278,11 @@ Acquire::IndexTargets::deb::Packages::MetaKey "$(COMPONENT)/Packages";
 def test_effective_target_derivation_returns_cnr_when_source_record_is_unbound(tmp_path: Path) -> None:
     config=closure.TargetConfig({"deb":{"Packages":{"MetaKey":"main/Packages"}},"deb-src":{}},
                                 [],"arm64",["arm64"],False)
-    for record in (None,{"source_id":"repo"},{"source_id":"repo","path":"missing","sha256":"0"*64}):
-        with unittest.TestCase().assertRaises(closure.EvidenceMissing):
+    cases=((None,"source identity unavailable"),
+           ({"source_id":"repo"},"artifact path record missing"),
+           ({"source_id":"repo","path":"missing","sha256":"0"*64},"artifact unavailable"))
+    for record,expected in cases:
+        with unittest.TestCase().assertRaisesRegex(closure.EvidenceMissing,expected):
             closure._derive_source_target_rows(record,tmp_path,config)
 
 
