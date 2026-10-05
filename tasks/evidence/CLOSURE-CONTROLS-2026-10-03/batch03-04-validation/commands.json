@@ -1,0 +1,506 @@
+[
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_runtime_batch01_controls.py",
+      "tests/test_runtime_batch02_controls.py",
+      "tests/test_runtime_batch03_controls.py",
+      "tests/test_runtime_batch04_controls.py",
+      "-k",
+      "not real_capture_close_gate"
+    ],
+    "returncode": 0,
+    "stdout": "........................................................................ [ 82%]\n...............                                                          [100%]\n87 passed, 37 deselected in 0.10s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "--cov=tools.runtime_batch01_controls",
+      "--cov-branch",
+      "--cov-fail-under=100",
+      "-q",
+      "tests/test_runtime_batch01_controls.py",
+      "-k",
+      "not real_capture_close_gate"
+    ],
+    "returncode": 0,
+    "stdout": "........................................                                 [100%]\n================================ tests coverage ================================\n_______________ coverage: platform linux, python 3.12.11-final-0 _______________\n\nName                                Stmts   Miss Branch BrPart  Cover\n---------------------------------------------------------------------\ntools/runtime_batch01_controls.py     377      0     72      0   100%\n---------------------------------------------------------------------\nTOTAL                                 377      0     72      0   100%\nRequired test coverage of 100% reached. Total coverage: 100.00%\n40 passed, 9 deselected in 0.16s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "--cov=tools.runtime_batch02_controls",
+      "--cov-branch",
+      "--cov-fail-under=100",
+      "-q",
+      "tests/test_runtime_batch02_controls.py",
+      "-k",
+      "not real_capture_close_gate"
+    ],
+    "returncode": 0,
+    "stdout": "...................                                                      [100%]\n================================ tests coverage ================================\n_______________ coverage: platform linux, python 3.12.11-final-0 _______________\n\nName                                Stmts   Miss Branch BrPart  Cover\n---------------------------------------------------------------------\ntools/runtime_batch02_controls.py     348      0     44      0   100%\n---------------------------------------------------------------------\nTOTAL                                 348      0     44      0   100%\nRequired test coverage of 100% reached. Total coverage: 100.00%\n19 passed, 10 deselected in 0.14s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "--cov=tools.runtime_batch03_controls",
+      "--cov-branch",
+      "--cov-fail-under=100",
+      "-q",
+      "tests/test_runtime_batch03_controls.py",
+      "-k",
+      "not real_capture_close_gate"
+    ],
+    "returncode": 0,
+    "stdout": "...............                                                          [100%]\n================================ tests coverage ================================\n_______________ coverage: platform linux, python 3.12.11-final-0 _______________\n\nName                                Stmts   Miss Branch BrPart  Cover\n---------------------------------------------------------------------\ntools/runtime_batch03_controls.py     266      0     36      0   100%\n---------------------------------------------------------------------\nTOTAL                                 266      0     36      0   100%\nRequired test coverage of 100% reached. Total coverage: 100.00%\n15 passed, 10 deselected in 0.12s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "--cov=tools.runtime_batch04_controls",
+      "--cov-branch",
+      "--cov-fail-under=100",
+      "-q",
+      "tests/test_runtime_batch04_controls.py",
+      "-k",
+      "not real_capture_close_gate"
+    ],
+    "returncode": 0,
+    "stdout": ".............                                                            [100%]\n================================ tests coverage ================================\n_______________ coverage: platform linux, python 3.12.11-final-0 _______________\n\nName                                Stmts   Miss Branch BrPart  Cover\n---------------------------------------------------------------------\ntools/runtime_batch04_controls.py     295      0     52      0   100%\n---------------------------------------------------------------------\nTOTAL                                 295      0     52      0   100%\nRequired test coverage of 100% reached. Total coverage: 100.00%\n13 passed, 8 deselected in 0.14s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "ruff",
+      "check",
+      "tools/runtime_batch01_controls.py",
+      "tools/runtime_batch02_controls.py",
+      "tools/runtime_batch03_controls.py",
+      "tools/runtime_batch04_controls.py",
+      "tests/test_runtime_batch01_controls.py",
+      "tests/test_runtime_batch02_controls.py",
+      "tests/test_runtime_batch03_controls.py",
+      "tests/test_runtime_batch04_controls.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "returncode": 1,
+    "stdout": "PLR0915 Too many statements (54 > 50)\n   --> tools/runtime_batch04_controls.py:331:5\n    |\n331 | def _triton_allocator(doc: dict[str, Any]) -> None:\n    |     ^^^^^^^^^^^^^^^^^\n332 |     _request_binding(doc)\n333 |     _versions(doc, (\"runtime\", \"triton\", \"ray\", \"patch_commit\"))\n    |\n\nFound 1 error.\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pyright",
+      "--project",
+      "pyrightconfig.json",
+      "tools/runtime_batch01_controls.py",
+      "tools/runtime_batch02_controls.py",
+      "tools/runtime_batch03_controls.py",
+      "tools/runtime_batch04_controls.py",
+      "tests/test_runtime_batch01_controls.py",
+      "tests/test_runtime_batch02_controls.py",
+      "tests/test_runtime_batch03_controls.py",
+      "tests/test_runtime_batch04_controls.py"
+    ],
+    "returncode": 1,
+    "stdout": "/tmp/bb-controls-runtime/tests/test_runtime_batch01_controls.py\n  /tmp/bb-controls-runtime/tests/test_runtime_batch01_controls.py:12:8 - error: Import \"pytest\" could not be resolved (reportMissingImports)\n/tmp/bb-controls-runtime/tests/test_runtime_batch02_controls.py\n  /tmp/bb-controls-runtime/tests/test_runtime_batch02_controls.py:9:8 - error: Import \"pytest\" could not be resolved (reportMissingImports)\n/tmp/bb-controls-runtime/tests/test_runtime_batch03_controls.py\n  /tmp/bb-controls-runtime/tests/test_runtime_batch03_controls.py:9:8 - error: Import \"pytest\" could not be resolved (reportMissingImports)\n/tmp/bb-controls-runtime/tests/test_runtime_batch04_controls.py\n  /tmp/bb-controls-runtime/tests/test_runtime_batch04_controls.py:9:8 - error: Import \"pytest\" could not be resolved (reportMissingImports)\n4 errors, 0 warnings, 0 informations\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pyright",
+      "--project",
+      "/tmp/bb-runtime-pyrightconfig.json",
+      "tools/runtime_batch01_controls.py",
+      "tools/runtime_batch02_controls.py",
+      "tools/runtime_batch03_controls.py",
+      "tools/runtime_batch04_controls.py",
+      "tests/test_runtime_batch01_controls.py",
+      "tests/test_runtime_batch02_controls.py",
+      "tests/test_runtime_batch03_controls.py",
+      "tests/test_runtime_batch04_controls.py"
+    ],
+    "returncode": 0,
+    "stdout": "0 errors, 0 warnings, 0 informations\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_debt_registration_controls.py",
+      "-k",
+      "test_delta_"
+    ],
+    "returncode": 1,
+    "stdout": ".FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                                   [100%]\n=================================== FAILURES ===================================\n____________ test_delta_forum_3node_nccl_image_and_first_request_01 ____________\ntests/test_debt_registration_controls.py:1210: in test_delta_forum_3node_nccl_image_and_first_request_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n_________________ test_delta_forum_8node_nccl_interface_mtu_01 _________________\ntests/test_debt_registration_controls.py:1214: in test_delta_forum_8node_nccl_interface_mtu_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n_________ test_delta_forum_cross_turn_sleeper_injection_regression_01 __________\ntests/test_debt_registration_controls.py:1218: in test_delta_forum_cross_turn_sleeper_injection_regression_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n________ test_delta_forum_dcp_mtp_draft_correctness_and_pretrim_oom_01 _________\ntests/test_debt_registration_controls.py:1222: in test_delta_forum_dcp_mtp_draft_correctness_and_pretrim_oom_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n__________ test_delta_forum_dcp4_decode_starvation_fair_scheduler_01 ___________\ntests/test_debt_registration_controls.py:1226: in test_delta_forum_dcp4_decode_starvation_fair_scheduler_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n_______ test_delta_forum_dflash_xgrammar_structured_output_regression_01 _______\ntests/test_debt_registration_controls.py:1230: in test_delta_forum_dflash_xgrammar_structured_output_regression_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n__________________ test_delta_forum_dsv41_nfs_stop_tag_pin_01 __________________\ntests/test_debt_registration_controls.py:1234: in test_delta_forum_dsv41_nfs_stop_tag_pin_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n________ test_delta_forum_dualspark_nccl_gid_twin_and_cold_recovery_01 _________\ntests/test_debt_registration_controls.py:1238: in test_delta_forum_dualspark_nccl_gid_twin_and_cold_recovery_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n____ test_delta_forum_glm52_multiturn_correctness_and_recipe_sensitivity_01 ____\ntests/test_debt_registration_controls.py:1242: in test_delta_forum_glm52_multiturn_correctness_and_recipe_sensitivity_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n___________ test_delta_forum_gptoss_multinode_ray_channel_timeout_01 ___________\ntests/test_debt_registration_controls.py:1246: in test_delta_forum_gptoss_multinode_ray_channel_timeout_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n__________ test_delta_forum_llamacpp_rpc_uma_and_orderly_teardown_01 ___________\ntests/test_debt_registration_controls.py:1250: in test_delta_forum_llamacpp_rpc_uma_and_orderly_teardown_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n______________ test_delta_forum_m2_compaction_state_validation_01 ______________\ntests/test_debt_registration_controls.py:1254: in test_delta_forum_m2_compaction_state_validation_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n____________ test_delta_forum_minimax_toolcall_functional_canary_01 ____________\ntests/test_debt_registration_controls.py:1258: in test_delta_forum_minimax_toolcall_functional_canary_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n___________ test_delta_forum_mtp_acceptance_and_semantic_control_01 ____________\ntests/test_debt_registration_controls.py:1262: in test_delta_forum_mtp_acceptance_and_semantic_control_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n____________ test_delta_forum_muse_glimmer_dflash_max_seqs_gate_01 _____________\ntests/test_debt_registration_controls.py:1266: in test_delta_forum_muse_glimmer_dflash_max_seqs_gate_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n_____________ test_delta_forum_nccl_tp_orchestration_correction_01 _____________\ntests/test_debt_registration_controls.py:1270: in test_delta_forum_nccl_tp_orchestration_correction_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n______________ test_delta_forum_nemotron_sm121_prebuilt_kernel_01 ______________\ntests/test_debt_registration_controls.py:1274: in test_delta_forum_nemotron_sm121_prebuilt_kernel_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n______________ test_delta_forum_openclaw_vllm_request_contract_01 ______________\ntests/test_debt_registration_controls.py:1278: in test_delta_forum_openclaw_vllm_request_contract_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n__________________ test_delta_forum_qwen_cold_compile_oom_01 ___________________\ntests/test_debt_registration_controls.py:1282: in test_delta_forum_qwen_cold_compile_oom_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n___________________ test_delta_forum_qwen_long_agent_stop_01 ___________________\ntests/test_debt_registration_controls.py:1286: in test_delta_forum_qwen_long_agent_stop_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-QWEN-LONG-AGENT-STOP-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-QWEN-LONG-AGENT-STOP-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n____________ test_delta_forum_qwen_mtp_parser_cancel_state_check_01 ____________\ntests/test_debt_registration_controls.py:1290: in test_delta_forum_qwen_mtp_parser_cancel_state_check_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n_______________ test_delta_forum_qwen_service_oomd_cache_fail_01 _______________\ntests/test_debt_registration_controls.py:1294: in test_delta_forum_qwen_service_oomd_cache_fail_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n___________________ test_delta_forum_qwen_toolcall_wedge_01 ____________________\ntests/test_debt_registration_controls.py:1298: in test_delta_forum_qwen_toolcall_wedge_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n_________ test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01 __________\ntests/test_debt_registration_controls.py:1302: in test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n_________ test_delta_forum_qwen38_long_run_json_correctness_canary_01 __________\ntests/test_debt_registration_controls.py:1306: in test_delta_forum_qwen38_long_run_json_correctness_canary_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n___________________ test_delta_forum_ray_torch_graph_hang_01 ___________________\ntests/test_debt_registration_controls.py:1310: in test_delta_forum_ray_torch_graph_hang_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n_____________ test_delta_forum_vllm_gb10_arch_and_build_matrix_01 ______________\ntests/test_debt_registration_controls.py:1314: in test_delta_forum_vllm_gb10_arch_and_build_matrix_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n________________ test_delta_forum_vllm_ray_gb10_resource_fix_01 ________________\ntests/test_debt_registration_controls.py:1318: in test_delta_forum_vllm_ray_gb10_resource_fix_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n________ test_delta_root_container_effective_build_and_offline_gate_01 _________\ntests/test_debt_registration_controls.py:1322: in test_delta_root_container_effective_build_and_offline_gate_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n_______________ test_delta_root_dsml_parser_recovery_boundary_01 _______________\ntests/test_debt_registration_controls.py:1326: in test_delta_root_dsml_parser_recovery_boundary_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n____________ test_delta_root_glm53_queued_request_progress_gate_01 _____________\ntests/test_debt_registration_controls.py:1330: in test_delta_root_glm53_queued_request_progress_gate_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n_____________ test_delta_root_mimo_overlay_and_prefill_fairness_01 _____________\ntests/test_debt_registration_controls.py:1334: in test_delta_root_mimo_overlay_and_prefill_fairness_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n_______________ test_delta_root_mimo_patch_supersession_gate_01 ________________\ntests/test_debt_registration_controls.py:1338: in test_delta_root_mimo_patch_supersession_gate_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n_______________ test_delta_root_ray_multiengine_rank_progress_01 _______________\ntests/test_debt_registration_controls.py:1342: in test_delta_root_ray_multiengine_rank_progress_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n__________ test_delta_root_recipe_memory_unknown_and_raw_evidence_01 ___________\ntests/test_debt_registration_controls.py:1346: in test_delta_root_recipe_memory_unknown_and_raw_evidence_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n_______________ test_delta_root_tokenizer_patch_semantic_gate_01 _______________\ntests/test_debt_registration_controls.py:1350: in test_delta_root_tokenizer_patch_semantic_gate_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n_____________ test_delta_root_triton_allocator_patch_state_gate_01 _____________\ntests/test_debt_registration_controls.py:1354: in test_delta_root_triton_allocator_patch_state_gate_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n=========================== short test summary info ============================\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_3node_nccl_image_and_first_request_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_8node_nccl_interface_mtu_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_cross_turn_sleeper_injection_regression_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_dcp_mtp_draft_correctness_and_pretrim_oom_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_dcp4_decode_starvation_fair_scheduler_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_dflash_xgrammar_structured_output_regression_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_dsv41_nfs_stop_tag_pin_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_dualspark_nccl_gid_twin_and_cold_recovery_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_glm52_multiturn_correctness_and_recipe_sensitivity_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_gptoss_multinode_ray_channel_timeout_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_llamacpp_rpc_uma_and_orderly_teardown_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_m2_compaction_state_validation_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_minimax_toolcall_functional_canary_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_mtp_acceptance_and_semantic_control_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_muse_glimmer_dflash_max_seqs_gate_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_nccl_tp_orchestration_correction_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_nemotron_sm121_prebuilt_kernel_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_openclaw_vllm_request_contract_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen_cold_compile_oom_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen_long_agent_stop_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen_service_oomd_cache_fail_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen_toolcall_wedge_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen38_long_run_json_correctness_canary_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_ray_torch_graph_hang_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_vllm_gb10_arch_and_build_matrix_01\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_vllm_ray_gb10_resource_fix_01\nFAILED tests/test_debt_registration_controls.py::test_delta_root_container_effective_build_and_offline_gate_01\nFAILED tests/test_debt_registration_controls.py::test_delta_root_dsml_parser_recovery_boundary_01\nFAILED tests/test_debt_registration_controls.py::test_delta_root_glm53_queued_request_progress_gate_01\nFAILED tests/test_debt_registration_controls.py::test_delta_root_mimo_overlay_and_prefill_fairness_01\nFAILED tests/test_debt_registration_controls.py::test_delta_root_mimo_patch_supersession_gate_01\nFAILED tests/test_debt_registration_controls.py::test_delta_root_ray_multiengine_rank_progress_01\nFAILED tests/test_debt_registration_controls.py::test_delta_root_recipe_memory_unknown_and_raw_evidence_01\nFAILED tests/test_debt_registration_controls.py::test_delta_root_tokenizer_patch_semantic_gate_01\nFAILED tests/test_debt_registration_controls.py::test_delta_root_triton_allocator_patch_state_gate_01\n37 failed, 1 passed, 53 deselected in 0.65s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_debt_registration_controls.py::test_threat_sweep_reads_tools_and_rejects_injected_case"
+    ],
+    "returncode": 0,
+    "stdout": ".                                                                        [100%]\n1 passed in 0.18s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_runtime_batch03_controls.py",
+      "-k",
+      "not real_capture_close_gate"
+    ],
+    "returncode": 0,
+    "stdout": "...................                                                      [100%]\n19 passed, 10 deselected in 0.04s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "--cov=tools.runtime_batch03_controls",
+      "--cov-branch",
+      "--cov-report=term-missing",
+      "--cov-fail-under=100",
+      "tests/test_runtime_batch03_controls.py",
+      "-k",
+      "not real_capture_close_gate"
+    ],
+    "returncode": 0,
+    "stdout": "...................                                                      [100%]\n================================ tests coverage ================================\n_______________ coverage: platform linux, python 3.12.11-final-0 _______________\n\nName                                Stmts   Miss Branch BrPart  Cover   Missing\n-------------------------------------------------------------------------------\ntools/runtime_batch03_controls.py     303      0     44      0   100%\n-------------------------------------------------------------------------------\nTOTAL                                 303      0     44      0   100%\nRequired test coverage of 100% reached. Total coverage: 100.00%\n19 passed, 10 deselected in 0.14s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "ruff",
+      "check",
+      "tools/runtime_batch01_controls.py",
+      "tools/runtime_batch02_controls.py",
+      "tools/runtime_batch03_controls.py",
+      "tools/runtime_batch04_controls.py",
+      "tests/test_runtime_batch01_controls.py",
+      "tests/test_runtime_batch02_controls.py",
+      "tests/test_runtime_batch03_controls.py",
+      "tests/test_runtime_batch04_controls.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "returncode": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pyright",
+      "--project",
+      "pyrightconfig.json",
+      "tools/runtime_batch01_controls.py",
+      "tools/runtime_batch02_controls.py",
+      "tools/runtime_batch03_controls.py",
+      "tools/runtime_batch04_controls.py",
+      "tests/test_runtime_batch01_controls.py",
+      "tests/test_runtime_batch02_controls.py",
+      "tests/test_runtime_batch03_controls.py",
+      "tests/test_runtime_batch04_controls.py"
+    ],
+    "returncode": 1,
+    "stdout": "/tmp/bb-controls-runtime/tests/test_runtime_batch01_controls.py\n  /tmp/bb-controls-runtime/tests/test_runtime_batch01_controls.py:12:8 - error: Import \"pytest\" could not be resolved (reportMissingImports)\n/tmp/bb-controls-runtime/tests/test_runtime_batch02_controls.py\n  /tmp/bb-controls-runtime/tests/test_runtime_batch02_controls.py:9:8 - error: Import \"pytest\" could not be resolved (reportMissingImports)\n/tmp/bb-controls-runtime/tests/test_runtime_batch03_controls.py\n  /tmp/bb-controls-runtime/tests/test_runtime_batch03_controls.py:9:8 - error: Import \"pytest\" could not be resolved (reportMissingImports)\n/tmp/bb-controls-runtime/tests/test_runtime_batch04_controls.py\n  /tmp/bb-controls-runtime/tests/test_runtime_batch04_controls.py:9:8 - error: Import \"pytest\" could not be resolved (reportMissingImports)\n4 errors, 0 warnings, 0 informations\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pyright",
+      "--project",
+      "/tmp/bb-runtime-pyrightconfig.json",
+      "tools/runtime_batch01_controls.py",
+      "tools/runtime_batch02_controls.py",
+      "tools/runtime_batch03_controls.py",
+      "tools/runtime_batch04_controls.py",
+      "tests/test_runtime_batch01_controls.py",
+      "tests/test_runtime_batch02_controls.py",
+      "tests/test_runtime_batch03_controls.py",
+      "tests/test_runtime_batch04_controls.py"
+    ],
+    "returncode": 0,
+    "stdout": "0 errors, 0 warnings, 0 informations\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01"
+    ],
+    "returncode": 1,
+    "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n____________ test_delta_forum_qwen_mtp_parser_cancel_state_check_01 ____________\ntests/test_debt_registration_controls.py:1290: in test_delta_forum_qwen_mtp_parser_cancel_state_check_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n=========================== short test summary info ============================\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01\n1 failed in 0.07s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_runtime_batch03_controls.py",
+      "-k",
+      "not real_capture_close_gate"
+    ],
+    "returncode": 0,
+    "stdout": ".....................                                                    [100%]\n21 passed, 10 deselected in 0.05s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "--cov=tools.runtime_batch03_controls",
+      "--cov-branch",
+      "--cov-report=term-missing",
+      "--cov-fail-under=100",
+      "tests/test_runtime_batch03_controls.py",
+      "-k",
+      "not real_capture_close_gate"
+    ],
+    "returncode": 0,
+    "stdout": ".....................                                                    [100%]\n================================ tests coverage ================================\n_______________ coverage: platform linux, python 3.12.11-final-0 _______________\n\nName                                Stmts   Miss Branch BrPart  Cover   Missing\n-------------------------------------------------------------------------------\ntools/runtime_batch03_controls.py     345      0     48      0   100%\n-------------------------------------------------------------------------------\nTOTAL                                 345      0     48      0   100%\nRequired test coverage of 100% reached. Total coverage: 100.00%\n21 passed, 10 deselected in 0.15s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "ruff",
+      "check",
+      "tools/runtime_batch03_controls.py",
+      "tests/test_runtime_batch03_controls.py"
+    ],
+    "returncode": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "ruff",
+      "format",
+      "--check",
+      "tools/runtime_batch03_controls.py",
+      "tests/test_runtime_batch03_controls.py"
+    ],
+    "returncode": 0,
+    "stdout": "2 files already formatted\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pyright",
+      "--project",
+      "/tmp/bb-runtime-pyrightconfig.json",
+      "tools/runtime_batch03_controls.py",
+      "tests/test_runtime_batch03_controls.py"
+    ],
+    "returncode": 0,
+    "stdout": "0 errors, 0 warnings, 0 informations\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01"
+    ],
+    "returncode": 1,
+    "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n____________ test_delta_forum_qwen_mtp_parser_cancel_state_check_01 ____________\ntests/test_debt_registration_controls.py:1290: in test_delta_forum_qwen_mtp_parser_cancel_state_check_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n=========================== short test summary info ============================\nFAILED tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01\n1 failed in 0.07s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "--cov=tools.runtime_batch04_controls",
+      "--cov-branch",
+      "--cov-report=term-missing",
+      "--cov-fail-under=100",
+      "tests/test_runtime_batch04_controls.py",
+      "-k",
+      "not real_capture_close_gate"
+    ],
+    "returncode": 0,
+    "stdout": "...............                                                          [100%]\n================================ tests coverage ================================\n_______________ coverage: platform linux, python 3.12.11-final-0 _______________\n\nName                                Stmts   Miss Branch BrPart  Cover   Missing\n-------------------------------------------------------------------------------\ntools/runtime_batch04_controls.py     326      0     56      0   100%\n-------------------------------------------------------------------------------\nTOTAL                                 326      0     56      0   100%\nRequired test coverage of 100% reached. Total coverage: 100.00%\n15 passed, 8 deselected in 0.16s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "ruff",
+      "check",
+      "tools/runtime_batch04_controls.py",
+      "tests/test_runtime_batch04_controls.py"
+    ],
+    "returncode": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "ruff",
+      "format",
+      "--check",
+      "tools/runtime_batch04_controls.py",
+      "tests/test_runtime_batch04_controls.py"
+    ],
+    "returncode": 0,
+    "stdout": "2 files already formatted\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pyright",
+      "--project",
+      "/tmp/bb-runtime-pyrightconfig.json",
+      "tools/runtime_batch04_controls.py",
+      "tests/test_runtime_batch04_controls.py"
+    ],
+    "returncode": 0,
+    "stdout": "0 errors, 0 warnings, 0 informations\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_debt_registration_controls.py::test_delta_root_mimo_overlay_and_prefill_fairness_01"
+    ],
+    "returncode": 1,
+    "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_____________ test_delta_root_mimo_overlay_and_prefill_fairness_01 _____________\ntests/test_debt_registration_controls.py:1334: in test_delta_root_mimo_overlay_and_prefill_fairness_01\n    assert result[\"status\"] == \"pass\", f\"DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}\"\nE   AssertionError: DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01: status=unknown could_not_run=1 reason=raw capture unavailable: [Errno 2] No such file or directory: '/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01/runtime-capture.json' files=['/tmp/bb-controls-runtime/tasks/evidence/DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01/runtime-capture.json']\nE   assert 'unknown' == 'pass'\nE     \nE     - pass\nE     + unknown\n=========================== short test summary info ============================\nFAILED tests/test_debt_registration_controls.py::test_delta_root_mimo_overlay_and_prefill_fairness_01\n1 failed in 0.07s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_runtime_batch01_controls.py",
+      "tests/test_runtime_batch02_controls.py",
+      "tests/test_runtime_batch03_controls.py",
+      "tests/test_runtime_batch04_controls.py",
+      "-k",
+      "not real_capture"
+    ],
+    "returncode": 0,
+    "stdout": "........................................................................ [ 75%]\n.......................                                                  [100%]\n95 passed, 37 deselected in 0.12s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "ruff",
+      "check",
+      "tools/runtime_batch01_controls.py",
+      "tools/runtime_batch02_controls.py",
+      "tools/runtime_batch03_controls.py",
+      "tools/runtime_batch04_controls.py",
+      "tests/test_runtime_batch01_controls.py",
+      "tests/test_runtime_batch02_controls.py",
+      "tests/test_runtime_batch03_controls.py",
+      "tests/test_runtime_batch04_controls.py",
+      "tests/test_debt_registration_controls.py"
+    ],
+    "returncode": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "ruff",
+      "format",
+      "--check",
+      "tools/runtime_batch03_controls.py",
+      "tests/test_runtime_batch03_controls.py",
+      "tools/runtime_batch04_controls.py",
+      "tests/test_runtime_batch04_controls.py"
+    ],
+    "returncode": 0,
+    "stdout": "4 files already formatted\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "pyright",
+      "--project",
+      "/tmp/bb-runtime-pyrightconfig.json",
+      "tools/runtime_batch01_controls.py",
+      "tools/runtime_batch02_controls.py",
+      "tools/runtime_batch03_controls.py",
+      "tools/runtime_batch04_controls.py",
+      "tests/test_runtime_batch01_controls.py",
+      "tests/test_runtime_batch02_controls.py",
+      "tests/test_runtime_batch03_controls.py",
+      "tests/test_runtime_batch04_controls.py"
+    ],
+    "returncode": 0,
+    "stdout": "0 errors, 0 warnings, 0 informations\n",
+    "stderr": ""
+  }
+]
