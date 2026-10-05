@@ -199,16 +199,24 @@ def test_forum_pstore_requires_hash_verified_subject_and_negative_control(tmp_pa
     evidence.mkdir()
     subject = 'panic FPAC PSCI NMI kernel=6.17.0'
     negative = 'clean boot: no corrected-event markers present'
-    source = 'NVIDIA supports kernel 6.17.0 for this firmware tuple'
+    # SYNTHETIC fixture: no real vendor, advisory or host; .example is reserved (RFC 2606).
+    symptom = 'FPAC panic via PSCI NMI on this tuple: monitor until firmware fix'
+    source = f'SYNTHETIC advisory: OEM BIOS 1.0 EC 2.0 kernel 6.17.0 driver 570.0. {symptom}'
     (evidence / 'finding.json').write_text(json.dumps({
         'schema': 1, 'id': 'FORUM-02-PSTORE-KERNEL-REGRESSION',
         'stack': {'oem': 'OEM', 'bios': '1.0', 'ec': '2.0', 'kernel': '6.17.0',
                   'driver': '570.0', 'boot_id': 'boot-123'},
         'pstore': {'boot_id': 'boot-123', 'raw_records': [
-            {'content': subject, 'sha256': hashlib.sha256(subject.encode()).hexdigest()}]},
+            {'content': subject, 'sha256': hashlib.sha256(subject.encode()).hexdigest()}],
+            'classification': {'ras_signature': 'fpac', 'sbsa_assessment': 'not_in_record',
+                               'doe_link_assessment': 'not_in_record'}},
         'vendor_resolution': {'source_text': source,
             'source_sha256': hashlib.sha256(source.encode()).hexdigest(),
-            'source_url': 'https://docs.nvidia.com/example'},
+            'source_url': 'https://vendor.example/advisory/synthetic',
+            'publisher_domain': 'vendor.example',
+            'applicability': {'oem': 'OEM', 'bios': '1.0', 'ec': '2.0', 'kernel': '6.17.0',
+                              'driver': '570.0'},
+            'symptom_resolution': symptom},
         'recommendation': {'action': 'monitor', 'reason': 'matched vendor advisory'},
         'negative_control': {'content': negative,
             'sha256': hashlib.sha256(negative.encode()).hexdigest()},
@@ -218,6 +226,7 @@ def test_forum_pstore_requires_hash_verified_subject_and_negative_control(tmp_pa
 
     doc = json.loads((evidence / 'finding.json').read_text(encoding='utf-8'))
     doc['negative_control']['content'] += ' NMI'
+    doc['negative_control']['sha256'] = hashlib.sha256(doc['negative_control']['content'].encode()).hexdigest()
     (evidence / 'finding.json').write_text(json.dumps(doc), encoding='utf-8')
     rejected = evaluate_forum_finding('FORUM-02-PSTORE-KERNEL-REGRESSION', evidence)
     assert rejected['status'] == 'fail' and rejected['fail'] == 1, rejected
