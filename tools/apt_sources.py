@@ -1,15 +1,150 @@
 """Read-only APT source diagnostics with observed effective index tuples."""
 from __future__ import annotations
 
+import hashlib
+from datetime import datetime, timedelta
+from email.utils import parsedate_to_datetime
 import json
+import os
 from pathlib import Path
 import re
+import stat
 import sys
+import tempfile
 from typing import Any
 from urllib.parse import urlsplit
 
 from tools.host_diagnostics import could_not_run_count, run_readonly
 from tools.memory_profile import capture as capture_memory_profile
+
+
+def _signature_input(path: Path) -> bytes:
+    """Snapshot a regular input without following its final symlink or blocking on a FIFO."""
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(descriptor, "rb") as stream:
+        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+            raise ValueError("signature input must be a regular file")
+        raw = stream.read(8 * 1024 * 1024 + 1)
+    if not raw or len(raw) > 8 * 1024 * 1024:
+        raise ValueError("signature input must contain 1 byte through 8 MiB")
+    return raw
+
+
+def verify_release_signature(manifest: Path, keyrings: list[Path]) -> dict[str, Any]:
+    """Verify exact snapshot bytes against explicit keyrings, without granting source approval.
+
+    Keyring authorization, freshness and source coverage are separate gates.
+    Temporary input copies are removed on every exit; UID transcripts are omitted.
+    """
+    try:
+        if not keyrings:
+            raise ValueError("explicit keyrings are required")
+        payload = _signature_input(manifest)
+        keys = [_signature_input(path) for path in keyrings]
+        with tempfile.TemporaryDirectory(prefix="bb-apt-signature-") as directory:
+            root = Path(directory)
+            subject = root / "InRelease"
+            subject.write_bytes(payload)
+            argv = ["gpgv", "--homedir", str(root), "--status-fd=1"]
+            for index, raw in enumerate(keys):
+                key = root / f"key-{index}.gpg"
+                key.write_bytes(raw)
+                argv.extend(["--keyring", str(key)])
+            argv.append(str(subject))
+            capture = run_readonly(argv, accepted_exit_codes=(1, 2))
+        result = _signature_verdict(capture)
+        result.update(manifest_sha256=hashlib.sha256(payload).hexdigest(),
+                      keyring_sha256=[hashlib.sha256(raw).hexdigest() for raw in keys],
+                      command=capture.get("command"), returncode=capture.get("returncode"))
+        return result
+    except (OSError, ValueError) as exc:
+        return {"status": "could_not_run", "could_not_run_count": 1, "fail": 0,
+                "errors": [f"signature inputs unavailable: {type(exc).__name__}: {exc}"]}
+
+
+def _signature_verdict(capture: dict[str, Any]) -> dict[str, Any]:
+    stdout = capture.get("stdout", "")
+    lines = stdout.splitlines()
+    valid = [line for line in lines if re.fullmatch(
+        r"\[GNUPG:\] VALIDSIG [0-9A-F]{40,64} \S+(?: \S+){7,8}", line)]
+    negative = any(line.startswith(("[GNUPG:] BADSIG ", "[GNUPG:] REVKEYSIG ",
+                                   "[GNUPG:] EXPKEYSIG ", "[GNUPG:] EXPSIG ")) for line in lines)
+    incomplete = (capture.get("status") == "could_not_run" or
+                  capture.get("stdout_truncated") or capture.get("stderr_truncated"))
+    if incomplete:
+        status = "could_not_run"
+    elif negative:
+        status = "block"
+    elif capture.get("returncode") == 0 and valid:
+        status = "pass"
+    else:
+        status = "could_not_run"
+    return {"status": status, "could_not_run_count": int(status == "could_not_run"),
+            "fail": int(status == "block"), "validsig_records": valid,
+            "scope": "Exact archived bytes against supplied keys; approval and freshness separate."}
+
+
+def _isolated_config_errors(text: str, root: Path) -> list[str]:
+    """Check observed native APT directory and hook settings for a canary."""
+    errors: list[str] = []
+    if not root.is_absolute() or root.parent != Path("/tmp") or ".." in root.parts:
+        return ["canary root must be an explicit direct child of /tmp"]
+    for field in ("Dir::Etc", "Dir::State::lists", "Dir::Cache", "Dir::Log"):
+        values = re.findall(r"^" + re.escape(field) + r' "([^"]*)";$', text, re.MULTILINE)
+        if len(values) != 1 or not Path(values[0]).is_relative_to(root) or ".." in Path(values[0]).parts:
+            errors.append(f"{field} is absent, ambiguous or outside the isolated root")
+    if re.search(r"(?:Pre|Post)-Invoke", text):
+        errors.append("APT canary configuration contains invocation hooks")
+    if 'APT::Update::Error-Mode "any";' not in text:
+        errors.append("APT canary must fail on any update error")
+    insecure = re.findall(r'^Acquire::AllowInsecureRepositories "([^"]*)";$', text, re.MULTILINE)
+    if insecure not in (["0"], ["false"]):
+        errors.append("APT canary must explicitly reject insecure repositories")
+    architectures = re.findall(r'^APT::Architecture "([^"]*)";$', text, re.MULTILINE)
+    if architectures != ["arm64"]:
+        errors.append("APT canary native architecture must be exactly arm64")
+    return errors
+
+
+def check_isolated_update_control(config: dict[str, Any], update: dict[str, Any],
+                                  targets: dict[str, Any], root: Path,
+                                  outcome: str) -> dict[str, Any]:
+    """Reparse a canary's native receipts, without trusting asserted outcome flags.
+
+    Receipts remain caller supplied. Source bytes, signature verification,
+    timestamps, cleanup and host/profile applicability require separate checks.
+    This component classifies only update acceptance/rejection and empty lists.
+    """
+    expected = {"healthy": None, "wrong_arm64_source": "binary-arm64/Packages",
+                "bad_package_hash": "Hash Sum mismatch", "bad_release_signature": "BADSIG"}
+    if outcome not in expected:
+        raise ValueError("unsupported canary outcome")
+    rows = (config, update, targets)
+    malformed = any(type(row.get("exit_code")) is not int or
+                    not isinstance(row.get("stdout"), str) or not isinstance(row.get("stderr"), str) or
+                    row.get("stdout_truncated") or row.get("stderr_truncated")
+                    for row in rows)
+    commands_match = (config.get("argv") == ["apt-config", "dump"] and
+                      update.get("argv") == ["apt-get", "update"] and
+                      isinstance(targets.get("argv"), list) and
+                      targets["argv"][:2] == ["apt-get", "indextargets"])
+    errors = ["literal command/result receipts missing"] if malformed or not commands_match else []
+    if not errors:
+        errors.extend(_isolated_config_errors(config["stdout"], root))
+    if errors or config.get("exit_code") != 0 or targets.get("exit_code") != 0:
+        return {"status": "could_not_run", "could_not_run_count": 1, "fail": 0, "errors": errors}
+    output = update["stdout"] + "\n" + update["stderr"]
+    if outcome == "healthy":
+        matches = update["exit_code"] == 0 and bool(targets["stdout"].strip())
+    else:
+        marker = expected[outcome]
+        assert marker is not None
+        matches = update["exit_code"] == 100 and marker in output and not targets["stdout"].strip()
+        if outcome == "wrong_arm64_source":
+            matches = matches and "404" in output and "archive.ubuntu.com/ubuntu" in output
+    return {"status": "pass" if matches else "block", "could_not_run_count": 0,
+            "fail": int(not matches), "outcome": outcome,
+            "scope": "Caller-supplied isolated APT process receipts only; source and trust gates separate."}
 
 
 def _read_architecture() -> tuple[str | None, dict[str, Any] | None]:
@@ -42,6 +177,21 @@ def _field_value(line_number: int, line: str, current: dict[str, str],
     return normalized
 
 
+
+def _stanza_errors(stanza: dict[str, str], index: int) -> list[str]:
+    """Validate required fields for distribution suites and exact-path suites."""
+    errors: list[str] = []
+    suites = stanza.get("suites", "").split()
+    required = ("types", "uris", "suites")
+    if not suites or any(not suite.endswith("/") for suite in suites):
+        required += ("components",)
+    missing = [name for name in required if not stanza.get(name)]
+    if missing:
+        errors.append(f"stanza {index}: missing required fields: {', '.join(missing)}")
+    if stanza.get("components") and any(suite.endswith("/") for suite in suites):
+        errors.append(f"stanza {index}: exact-path suites must omit Components")
+    return errors
+
 def parse_deb822(text: str) -> tuple[list[dict[str, str]], list[str]]:
     """Parse the field/continuation subset used by deb822 .sources files."""
     stanzas: list[dict[str, str]] = []
@@ -68,10 +218,7 @@ def parse_deb822(text: str) -> tuple[list[dict[str, str]], list[str]]:
         stanzas.append(current)
 
     for index, stanza in enumerate(stanzas, 1):
-        missing = [name for name in ("types", "uris", "suites", "components")
-                   if not stanza.get(name)]
-        if missing:
-            errors.append(f"stanza {index}: missing required fields: {', '.join(missing)}")
+        errors.extend(_stanza_errors(stanza, index))
     return stanzas, errors
 
 
@@ -95,6 +242,166 @@ def parse_index_targets(text: str) -> tuple[list[dict[str, str]], list[str]]:
                      "identifier": identifier})
     return rows, errors
 
+
+
+def compare_index_identities(observed: str, approved: str) -> dict[str, Any]:
+    """Compare distinct effective tuples with an externally approved tuple list.
+
+    This component proves identity agreement only. Approval authority, configured
+    sources, signing keys, freshness and index integrity remain separate gates.
+    URI credentials are deliberately excluded by the existing diagnostic parser.
+    """
+    actual, actual_errors = parse_index_targets(observed)
+    expected, expected_errors = parse_index_targets(approved)
+    errors = [*actual_errors, *expected_errors]
+    if not actual or not expected:
+        errors.append("observed and approved effective tuple lists must be nonempty")
+    for row in [*actual, *expected]:
+        if (not row["identifier"] or not row["architecture"]
+                or (row["identifier"] == "Packages" and "$" in row["architecture"])):
+            errors.append("effective index identity is missing or unresolved")
+    if errors:
+        return {"status": "could_not_run", "could_not_run_count": 1,
+                "fail": 0, "errors": errors}
+    keys = ("uri", "suite", "architecture", "identifier")
+    actual_set = {tuple(row[key] for key in keys) for row in actual}
+    expected_set = {tuple(row[key] for key in keys) for row in expected}
+    unexpected = sorted(actual_set - expected_set)
+    missing = sorted(expected_set - actual_set)
+    matches = not unexpected and not missing
+    return {"status": "pass" if matches else "block", "could_not_run_count": 0,
+            "fail": int(not matches), "unexpected": unexpected, "missing": missing,
+            "observed_distinct": len(actual_set), "approved_distinct": len(expected_set)}
+
+def parse_release_digests(text: str, algorithm: str = "sha256") -> tuple[dict[str, tuple[str, int]], list[str]]:
+    """Parse SHA256/SHA512 entries; signature authentication is a separate gate."""
+    if algorithm not in ("sha256", "sha512"):
+        return {}, ["only SHA256 and SHA512 digest sections are supported"]
+    section = algorithm.upper()
+    digest_length = 64 if algorithm == "sha256" else 128
+    entries: dict[str, tuple[str, int]] = {}
+    errors: list[str] = []
+    active = False
+    sections = 0
+    for number, line in enumerate(text.splitlines(), 1):
+        if line == section + ":":
+            sections += 1
+            active = True
+            continue
+        if not active:
+            continue
+        if not line.startswith(" "):
+            active = False
+            continue
+        fields = line.split()
+        if len(fields) != 3:
+            errors.append(f"line {number}: malformed {section} entry")
+            continue
+        digest, size, name = fields
+        if (re.fullmatch(r"[0-9a-f]{" + str(digest_length) + r"}", digest) is None or not size.isascii()
+                or not size.isdecimal() or len(size) > 20 or name.startswith("/")
+                or any(part in ("", ".", "..") for part in name.split("/"))):
+            errors.append(f"line {number}: invalid {section} digest, size or relative path")
+            continue
+        if name in entries:
+            errors.append(f"line {number}: duplicate {section} path {name}")
+            continue
+        entries[name] = (digest, int(size))
+    if sections != 1 or not entries:
+        errors.append(f"exactly one nonempty {section} section required")
+    return entries, errors
+
+
+def parse_release_sha256(text: str) -> tuple[dict[str, tuple[str, int]], list[str]]:
+    """Retain the SHA256 parser API for callers that explicitly require SHA256."""
+    return parse_release_digests(text)
+
+
+def check_release_index(payload: str, meta_key: str, content: bytes,
+                        algorithm: str = "sha256") -> dict[str, Any]:
+    """Compare decompressed index bytes to a separately signature-verified Release.
+
+    PASS establishes digest and size consistency only. Signature verification,
+    repository approval, freshness and complete index coverage are separate gates.
+    """
+    entries, errors = parse_release_digests(payload, algorithm)
+    if errors:
+        return {"status": "could_not_run", "could_not_run_count": 1,
+                "fail": 0, "errors": errors}
+    expected = entries.get(meta_key)
+    if expected is None:
+        return {"status": "could_not_run", "could_not_run_count": 1,
+                "fail": 0, "errors": ["index path is absent from the SHA256 manifest"]}
+    digest = hashlib.new(algorithm, content).hexdigest()
+    matches = (digest, len(content)) == expected
+    return {"status": "pass" if matches else "block", "could_not_run_count": 0,
+            "fail": int(not matches), "algorithm": algorithm, "expected_" + algorithm: expected[0],
+            "expected_bytes": expected[1], "actual_" + algorithm: digest,
+            "actual_bytes": len(content)}
+
+
+
+def check_index_coverage(payload: str, expected_meta_keys: list[str],
+                         observed_meta_keys: list[str], algorithm: str = "sha256") -> dict[str, Any]:
+    """Resolve expected-but-absent indices against a separately verified Release.
+
+    Empty digest AND size must agree. This component does not authenticate the
+    manifest, derive the configured targets, or validate observed index bytes.
+    """
+    entries, errors = parse_release_digests(payload, algorithm)
+    if not expected_meta_keys or any(not key for key in expected_meta_keys):
+        errors.append("configured expected index paths must be nonempty")
+    if errors:
+        return {"status": "could_not_run", "could_not_run_count": 1,
+                "fail": 0, "errors": errors}
+    absent = sorted(set(expected_meta_keys) - set(observed_meta_keys))
+    unresolved = [key for key in absent if key not in entries]
+    empty_tuple = (hashlib.new(algorithm, b"").hexdigest(), 0)
+    empty = [key for key in absent if entries.get(key) == empty_tuple]
+    missing = [key for key in absent if key in entries and key not in empty]
+    return {"status": "block" if missing else "could_not_run" if unresolved else "pass",
+            "could_not_run_count": int(bool(unresolved)), "fail": int(bool(missing)),
+            "missing_nonempty": missing, "manifest_declared_empty": empty,
+            "unresolved_manifest_paths": unresolved}
+
+
+def check_release_freshness(payload: str, observed_at: datetime,
+                            max_age_seconds: int | None = None) -> dict[str, Any]:
+    """Check signed-payload dates against the caller's explicit freshness policy.
+
+    This component does not authenticate the payload or approve the policy. A
+    repository without Valid-Until requires a configured maximum age.
+    """
+    fields: dict[str, str] = {}
+    try:
+        if observed_at.tzinfo is None or observed_at.utcoffset() is None:
+            raise ValueError("observation time requires a timezone")
+        if max_age_seconds is not None and (type(max_age_seconds) is not int or max_age_seconds <= 0):
+            raise ValueError("maximum age must be a positive integer or absent")
+        for line in payload.splitlines():
+            name, separator, value = line.partition(":")
+            if separator and name.lower() in ("date", "valid-until"):
+                name = name.lower()
+                if name in fields:
+                    raise ValueError("duplicate Release date field")
+                fields[name] = value.strip()
+        issued = parsedate_to_datetime(fields["date"])
+        expires = parsedate_to_datetime(fields["valid-until"]) if "valid-until" in fields else None
+        if issued.utcoffset() is None or (expires is not None and expires.utcoffset() is None):
+            raise ValueError("Release dates require timezones")
+        if expires is None and max_age_seconds is None:
+            raise ValueError("Release without Valid-Until requires an explicit maximum age")
+        deadline = issued + timedelta(seconds=max_age_seconds) if max_age_seconds is not None else expires
+    except (KeyError, ValueError, OverflowError) as error:
+        return {"status": "could_not_run", "could_not_run_count": 1,
+                "fail": 0, "errors": [str(error)]}
+    assert deadline is not None
+    valid = (issued <= observed_at < deadline
+             and (expires is None or issued < expires and observed_at < expires))
+    return {"status": "pass" if valid else "block", "could_not_run_count": 0,
+            "fail": int(not valid), "issued_at": issued.isoformat(),
+            "valid_until": expires.isoformat() if expires is not None else None,
+            "policy_deadline": deadline.isoformat(), "observed_at": observed_at.isoformat()}
 
 def _safe_uri(uri: str) -> str | None:
     """Drop URI credentials and query material before retaining source identity."""

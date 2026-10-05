@@ -12,6 +12,10 @@ import sys
 import argparse
 from typing import Any
 
+from tools.capture_io import read_regular_bytes, strict_json_loads
+
+MAX_SNAPSHOT_BYTES = 16 * 1024 * 1024
+
 IO_RE = re.compile(r"(?:I/O error|medium error|critical medium error|uncorrectable|Buffer I/O error)", re.I)
 NVME_DEVICE_RE = re.compile(r"\bnvme\d+(?:n\d+)?\b", re.I)
 
@@ -35,7 +39,7 @@ def _has_inventory_device(text: str | None) -> bool | None:
     if not text:
         return False
     try:
-        document = json.loads(text)
+        document = strict_json_loads(text)
     except json.JSONDecodeError:
         return None
     devices = document.get("Devices") if isinstance(document, dict) else document
@@ -171,11 +175,12 @@ def export_copy(source: Path, destination_dir: Path) -> dict[str, Any]:
             raise OSError("insufficient destination space")
         target = destination_dir / f"{source.name}.{source_stat.st_ino}.recovery-copy"
         _source_device, digest = _copy_file(source, target, source_stat)
-        return {"status": "pass", "source": str(source), "source_device": source_stat.st_dev,
+        return {"status": "pass", "fail": 0, "could_not_run": 0,
+                "source": str(source), "source_device": source_stat.st_dev,
                 "destination": str(target), "destination_device": destination_stat.st_dev,
                 "bytes": source_stat.st_size, "sha256": digest, "source_written": False}
     except (OSError, ValueError) as exc:
-        return {"status": "could_not_run", "could_not_run": 1,
+        return {"status": "could_not_run", "fail": 0, "could_not_run": 1,
                 "error": f"{type(exc).__name__}: {exc}", "source_written": False}
 
 
@@ -189,8 +194,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.snapshot:
         try:
-            report = classify(json.loads(args.snapshot.read_text(encoding="utf-8")))
-        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            raw = read_regular_bytes(args.snapshot, MAX_SNAPSHOT_BYTES)
+            if len(raw) > MAX_SNAPSHOT_BYTES:
+                raise ValueError("snapshot exceeds bounded input size")
+            report = classify(strict_json_loads(raw.decode("utf-8")))
+        except (OSError, ValueError, json.JSONDecodeError, RecursionError) as exc:
             report = {"status": "could_not_run", "fail": 0, "could_not_run": 1,
                       "error": f"{type(exc).__name__}: {exc}", "writes_performed": False}
     elif args.destination_dir and args.export_source:

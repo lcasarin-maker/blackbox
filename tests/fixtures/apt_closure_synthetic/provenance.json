@@ -1,0 +1,40 @@
+{
+  "purpose": "synthetic-only unit fixture; it is not APT closure evidence or a decision authority",
+  "generation_command": [
+    "gpg",
+    "--batch",
+    "--homedir",
+    "/tmp/apt-closure-fixture-gpg-rfzv0brx",
+    "--pinentry-mode",
+    "loopback",
+    "--passphrase",
+    "",
+    "--quick-generate-key",
+    "Synthetic APT Closure Fixture <closure@example.invalid>",
+    "ed25519",
+    "sign",
+    "0"
+  ],
+  "signing_command": [
+    "gpg",
+    "--batch",
+    "--homedir",
+    "<temporary-private-homedir>",
+    "--pinentry-mode",
+    "loopback",
+    "--passphrase",
+    "",
+    "--clearsign",
+    "--output",
+    "InRelease",
+    "Release"
+  ],
+  "gpg_version": "gpg (GnuPG) 2.4.4",
+  "created_at_utc": "2026-10-04T09:52:07.788941+00:00",
+  "fingerprint": "F1E81E899C0C3F5D8C0FDB57FA13739308B35A32",
+  "public_keyring_sha256": "87dbdb2184cd8ef6ace5800560c047b49b71b74227f3a40e5c96d70e5b86cc23",
+  "inrelease_sha256": "3241331399ec0b0db2e029e17a3dba021f1575ad9627c7087e5e0000dc2c33f3",
+  "packages_sha256": "5e3080fe2a4283b812fa21112d060a71e2c7248ed9ab12954cc622d857f69e07",
+  "private_material_archived": false,
+  "private_homedir_cleanup": "gpgconf --homedir <temporary-private-homedir> --kill gpg-agent; recursive removal in finally"
+}
