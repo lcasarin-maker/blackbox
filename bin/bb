@@ -2116,9 +2116,16 @@ clock_lock_evaluate() {
   elif [ -z "$CLOCK_START" ] || [ -z "$CLOCK_CONFIRM_TS" ]; then
     CLOCK_REASON="no se pudo fechar inicio y confirmación del servicio"
   else
+    # Un inicio que `date` no sabe fechar es un fallo de LECTURA, no una
+    # medicion: no puede salir con el mismo motivo que una confirmacion que si
+    # se midio anterior al inicio. systemd emite el dia en ingles ("Wed ...
+    # CST"), que GNU date parsea con la zona local; lo que no parsea (p.ej. un
+    # dia localizado "dom ...") cae aqui y se dice tal cual.
     local start_epoch
     start_epoch=$(date -d "$CLOCK_START" +%s 2>/dev/null || true)
-    if [ -z "$start_epoch" ] || ! awk -v c="$CLOCK_CONFIRM_TS" -v s="$start_epoch" \
+    if [ -z "$start_epoch" ]; then
+      CLOCK_REASON="no se pudo fechar inicio del servicio ('$CLOCK_START')"
+    elif ! awk -v c="$CLOCK_CONFIRM_TS" -v s="$start_epoch" \
          'BEGIN{exit !(c+0 >= s+0)}'; then
       CLOCK_REASON="confirmación anterior al inicio actual del servicio"
     fi

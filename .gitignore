@@ -2,40 +2,40 @@
 # instalado se rescatan abajo. El contrato actual de satellite_sync permite
 # versionar run.py, runtime.zip y kit.lock para reproducir la revisión instalada.
 # La caché bin/prek, claims y evidence permanecen bajo la exclusión local.
-# sunset-reviewed: 2.4 -- Generated local state stays ignored; installed runner, bundle and lock remain addable via explicit negations, as required by satellite_sync. Evidence: tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/runtime-ignore-root.json
+# sunset-reviewed: 2.3 -- Generated local state stays ignored; installed runner, bundle and lock remain addable via explicit negations, as required by satellite_sync. Evidence: tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/runtime-ignore-root.json
 .simplecode/*
-# sunset-reviewed: 2.4 -- installed runner hash matches kit.lock; canonical satellite sync permits tracking. Evidence: tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/runtime-ignore-root.json
+# sunset-reviewed: 2.3 -- installed runner hash matches kit.lock; canonical satellite sync permits tracking. Evidence: tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/runtime-ignore-root.json
 !.simplecode/run.py
-# sunset-reviewed: 2.4 -- installed runtime bundle hash matches kit.lock; canonical satellite sync permits tracking. Evidence: tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/runtime-ignore-root.json
+# sunset-reviewed: 2.3 -- installed runtime bundle hash matches kit.lock; canonical satellite sync permits tracking. Evidence: tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/runtime-ignore-root.json
 !.simplecode/runtime.zip
-# sunset-reviewed: 2.4 -- release lock pins runner and bundle reproducibly; canonical satellite sync permits tracking. Evidence: tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/runtime-ignore-root.json
+# sunset-reviewed: 2.3 -- release lock pins runner and bundle reproducibly; canonical satellite sync permits tracking. Evidence: tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/runtime-ignore-root.json
 !.simplecode/kit.lock
 
 # Los hooks propios NO son estado: son la unica casa durable de `bash-sintaxis`,
 # porque `.pre-commit-config.yaml` es GENERADO y se reescribe entero en cada
 # `sync-satellites --fix`. Ignorado, ese gate no existiria en un clon -- y es el
 # unico que mira bin/bb, que es el grueso del codigo ejecutable de este repo.
-# sunset-reviewed: 2.4 -- local_hooks.yaml is tracked and the negation keeps the native gate configuration visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-02)
+# sunset-reviewed: 2.3 -- local_hooks.yaml is tracked and the negation keeps the native gate configuration visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-02)
 !.simplecode/local_hooks.yaml
 
 # La linea base de deuda va TRACKEADA a proposito: ignorada por git seria una
 # declaracion local y no una revisable, que es como un techo se convierte en
 # amnistia silenciosa.
-# sunset-reviewed: 2.4 -- backlog_baseline.json is tracked and the negation keeps its reviewed debt baseline visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-03)
+# sunset-reviewed: 2.3 -- backlog_baseline.json is tracked and the negation keeps its reviewed debt baseline visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-03)
 !.simplecode/backlog_baseline.json
 
 # Los ejecutables de confianza son parte del contrato de verificacion, no estado
 # local: un clon sin este fichero rechazaria los close_check de las fichas.
-# sunset-reviewed: 2.4 -- build_tools.txt is tracked and the negation keeps the verifier's tool declaration visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-04)
+# sunset-reviewed: 2.3 -- build_tools.txt is tracked and the negation keeps the verifier's tool declaration visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-04)
 !.simplecode/build_tools.txt
 
 # Amnistia de recibos por SHA explicito: ignorada seria una absolucion local.
-# sunset-reviewed: 2.4 -- hook_receipt_baseline.json is tracked and the negation keeps reviewed hook receipts visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-05)
+# sunset-reviewed: 2.3 -- hook_receipt_baseline.json is tracked and the negation keeps reviewed hook receipts visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-05)
 !.simplecode/hook_receipt_baseline.json
 
 # Declaracion de organos que no pueden disparar aqui: ignorada seria una excusa
 # local en vez de una afirmacion revisable con dueno y caducidad.
-# sunset-reviewed: 2.4 -- organ_inapplicable.json is tracked and the negation keeps applicability declarations visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-06)
+# sunset-reviewed: 2.3 -- organ_inapplicable.json is tracked and the negation keeps applicability declarations visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-06)
 !.simplecode/organ_inapplicable.json
 
 # Alcance de coverage_target.py. La premisa con la que nacio esta exencion es
@@ -50,7 +50,7 @@
 # renombre tools/), pero la razon queda dicha como es.
 # El alcance pineado `tools` cubre los modulos Python de tools/.
 # bin/bb-usable carece de extension .py y queda fuera de coverage_targets.
-# sunset-reviewed: 2.4 -- corpus_exempt.yaml is tracked and the negation keeps corpus exemption declarations visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-07)
+# sunset-reviewed: 2.3 -- corpus_exempt.yaml is tracked and the negation keeps corpus exemption declarations visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-07)
 !.simplecode/corpus_exempt.yaml
 
 # El ledger H1 va TRACKEADO a proposito, igual que backlog_baseline.json:
@@ -60,16 +60,16 @@
 # para siempre, sin importar cuantas auditorias se corran. Medido 2026-09-16:
 # faltaba esta linea y por eso el commit de bump 0.1.0->0.1.1 (d7f723d) salia
 # BLOCKED pese a tener un ledger fresco y verde en el arbol de trabajo.
-# sunset-reviewed: 2.4 -- audit_ledger.json is tracked and the negation keeps the per-commit audit ledger visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-08)
+# sunset-reviewed: 2.3 -- audit_ledger.json is tracked and the negation keeps the per-commit audit ledger visible; removing this exception makes the wildcard ignore it. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-08)
 !.simplecode/audit_ledger.json
 
 # Estado generado por pytest/coverage (tests/ existe desde que se agrego
 # tools/check_harvest_accepted.py -- ver corpus_exempt.yaml arriba).
-# sunset-reviewed: 2.4 -- The generated __pycache__ probe is ignored by this directory rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-09)
+# sunset-reviewed: 2.3 -- The generated __pycache__ probe is ignored by this directory rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-09)
 __pycache__/
-# sunset-reviewed: 2.4 -- The standalone generated .pyc probe is ignored by this suffix rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-10)
+# sunset-reviewed: 2.3 -- The standalone generated .pyc probe is ignored by this suffix rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-10)
 *.pyc
-# sunset-reviewed: 2.4 -- The generated .pytest_cache probe is ignored by this directory rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-11)
+# sunset-reviewed: 2.3 -- The generated .pytest_cache probe is ignored by this directory rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-11)
 .pytest_cache/
-# sunset-reviewed: 2.4 -- The generated .coverage probe is ignored by this rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-12)
+# sunset-reviewed: 2.3 -- The generated .coverage probe is ignored by this rule and becomes visible when the rule is removed. Evidence: tasks/evidence/CLEAN-2026-10-03/renew-ignore.txt (RENEW-12)
 .coverage

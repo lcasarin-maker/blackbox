@@ -484,15 +484,24 @@ esac
 """
 
 
-def _clock_lock_systemctl_falso(tmp_path):
-    """Fija datos del servicio para no depender del systemd del host."""
+def _clock_lock_systemctl_falso(tmp_path, inicio=None):
+    """Fija datos del servicio para no depender del systemd del host.
+
+    systemd emite ExecMainStartTimestamp con el dia en ingles sin importar el
+    locale (medido en systemd 255 con LC_TIME=es_MX: "Wed 2026-09-30 14:40:12
+    CST"), asi que el falso corre `date` en LC_ALL=C. Sin eso salia "dom ...",
+    que systemd nunca emite y GNU date no parsea. `inicio` fija un valor literal
+    para los controles negativos.
+    """
     bindir = tmp_path / "clock_lock_bin"
     bindir.mkdir(exist_ok=True)
     systemctl = bindir / "systemctl"
+    fecha = (f"echo '{inicio}'" if inicio is not None
+             else "LC_ALL=C date '+%a %Y-%m-%d %H:%M:%S %Z'")
     systemctl.write_text(
         "#!/usr/bin/env bash\ncase \"$*\" in\n"
         "  *ExecStart*) echo 'ExecStart=/usr/bin/nvidia-smi -lgc 300,2800' ;;\n"
-        "  *ExecMainStartTimestamp*) date '+%a %Y-%m-%d %H:%M:%S %Z' ;;\n"
+        f"  *ExecMainStartTimestamp*) {fecha} ;;\n"
         "  *) exit 1 ;;\nesac\n",
         encoding="utf-8",
     )
@@ -518,6 +527,26 @@ def test_control_negativo_clock_lock_sin_confirmacion_del_driver(datos, tmp_path
     env = _journal_falso(tmp_path, "mudo", "exit 0\n")
     env.update(_clock_lock_systemctl_falso(tmp_path))
     assert "FALTA" in _fila(correr(["status"], datos, env), "clock lock")
+
+
+def test_control_negativo_clock_lock_confirmacion_ANTERIOR_al_inicio(datos, tmp_path):
+    """Una confirmacion de un arranque previo del servicio no prueba que el
+    rango este puesto ahora: el servicio pudo reiniciarse y fallar."""
+    env = _journal_falso(tmp_path, "previa", CLOCK_OK.replace(
+        '"$(date +%s).000"', '"$(( $(date +%s) - 3600 )).000"'))
+    env.update(_clock_lock_systemctl_falso(tmp_path))
+    fila = _fila(correr(["status"], datos, env), "clock lock")
+    assert "FALTA" in fila and "anterior al inicio" in fila, fila
+
+
+def test_control_negativo_clock_lock_inicio_NO_FECHABLE_no_se_dice_anterior(datos, tmp_path):
+    """Un inicio que no se pudo fechar es un fallo de lectura: FALTA, pero con
+    su motivo, nunca con el de una confirmacion medida como anterior."""
+    env = _journal_falso(tmp_path, "rango_correcto", CLOCK_OK)
+    env.update(_clock_lock_systemctl_falso(tmp_path, inicio="dom 2026-10-04 22:54:15 CST"))
+    fila = _fila(correr(["status"], datos, env), "clock lock")
+    assert "FALTA" in fila and "no se pudo fechar inicio" in fila, fila
+    assert "anterior" not in fila, fila
 
 
 def test_clock_lock_confirmado_con_rango_declarado_esta_ARMADO(datos, tmp_path):
@@ -807,7 +836,7 @@ def test_cpu_top_NOMBRA_a_quien_quema_cpu(datos):
         assert quemador.stdout.readline().strip() == "listo"
         cpu_antes = _cpu_segundos(quemador.pid)
         correr(["sample"], datos)                  # muestra 1: linea base
-        time.sleep(4)  # blocking-sleep: ps reports whole CPU seconds; window needed for delta -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.4 -- `ps` informa segundos enteros; neutralizar la ventana hace fallar el positivo 3/3 veces con cpu_top 0/5. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-17
+        time.sleep(4)  # blocking-sleep: ps reports whole CPU seconds; window needed for delta -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.3 -- `ps` informa segundos enteros; neutralizar la ventana hace fallar el positivo 3/3 veces con cpu_top 0/5. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-17
         correr(["sample"], datos)                  # muestra 2: ya quemo
         mio = _cpu_segundos(quemador.pid) - cpu_antes
         d = muestras(datos)[-1]
@@ -843,7 +872,7 @@ def test_control_negativo_un_proceso_dormido_no_sale_como_que_quema(datos):
         assert dormido.stdout is not None
         assert dormido.stdout.readline().strip() == "listo"
         correr(["sample"], datos)
-        time.sleep(4)  # blocking-sleep: match positive CPU-delta observation window -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.4 -- iguala la ventana de observación del positivo para que el control negativo se mida en el mismo intervalo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-18
+        time.sleep(4)  # blocking-sleep: match positive CPU-delta observation window -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.3 -- iguala la ventana de observación del positivo para que el control negativo se mida en el mismo intervalo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-18
         correr(["sample"], datos)
         nombrados = {x["pid"] for x in muestras(datos)[-1]["cpu_top"]}
         assert dormido.pid not in nombrados, \
@@ -1602,7 +1631,7 @@ def _esperar_proceso(patron, timeout=15.0):
         pids = r.stdout.split()
         if pids:
             return pids[0]
-        time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- sin el, el bucle quema un nucleo entero re-consultando pgrep sin ceder CPU -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.4 -- el sondeo acotado cede CPU hasta detectar el proceso o agotar deadline; neutralizarlo eleva pgrep de 4 a 130 en 0.2 s. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-19
+        time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- sin el, el bucle quema un nucleo entero re-consultando pgrep sin ceder CPU -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.3 -- el sondeo acotado cede CPU hasta detectar el proceso o agotar deadline; neutralizarlo eleva pgrep de 4 a 130 en 0.2 s. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-19
     raise AssertionError(f"ningun proceso con {patron!r} aparecio en {timeout}s")
 
 
@@ -1656,7 +1685,7 @@ def _matar_electron_falso(proc, marcadores, timeout=15.0):
                 break
             assert time.time() < deadline, (
                 f"proceso huerfano con {patron!r} sigue vivo tras matar el arbol")
-            time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- confirma que un huerfano de verdad muere, no solo lo asume -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.4 -- sondea entre consultas para confirmar desaparición del renderer huérfano; cleanup verificado con dos observaciones y SIGKILL de respaldo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-20 Segunda revisión: proceso marcador real con terminación demorada; ver tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/renderer-delayed-root.log
+            time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- confirma que un huerfano de verdad muere, no solo lo asume -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.3 -- sondea entre consultas para confirmar desaparición del renderer huérfano; cleanup verificado con dos observaciones y SIGKILL de respaldo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-20 Segunda revisión: proceso marcador real con terminación demorada; ver tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/renderer-delayed-root.log
     return remaining
 
 
