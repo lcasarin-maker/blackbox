@@ -1,0 +1,425 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01",
+    "path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_forum_finding_01",
+      "expect": "exit_zero",
+      "porque": "Cada fase/id soportado eval\u00faa su sujeto espec\u00edfico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo l\u00f3gica realmente com\u00fan; conservar comandos literales y demostrar discriminaci\u00f3n entre fichas."
+    }
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01",
+    "path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_gpu_clock_cap_ab_01",
+      "expect": "exit_zero",
+      "porque": "Cada fase/id soportado eval\u00faa su sujeto espec\u00edfico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo l\u00f3gica realmente com\u00fan; conservar comandos literales y demostrar discriminaci\u00f3n entre fichas."
+    }
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01",
+    "path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_memory_saver_01",
+      "expect": "exit_zero",
+      "porque": "Cada fase/id soportado eval\u00faa su sujeto espec\u00edfico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo l\u00f3gica realmente com\u00fan; conservar comandos literales y demostrar discriminaci\u00f3n entre fichas."
+    }
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+    "path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_usb_hid_postupdate_01",
+      "expect": "exit_zero",
+      "porque": "Cada fase/id soportado eval\u00faa su sujeto espec\u00edfico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo l\u00f3gica realmente com\u00fan; conservar comandos literales y demostrar discriminaci\u00f3n entre fichas."
+    }
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01",
+    "path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_wifi_isolation_01",
+      "expect": "exit_zero",
+      "porque": "Cada fase/id soportado eval\u00faa su sujeto espec\u00edfico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo l\u00f3gica realmente com\u00fan; conservar comandos literales y demostrar discriminaci\u00f3n entre fichas."
+    }
+  },
+  {
+    "id": "DEBT-HOST-DEPLOYED-DRIFT-01",
+    "path": "tasks/backlog/DEBT-HOST-DEPLOYED-DRIFT-01.md",
+    "close_check": {
+      "cmd": "bash bin/bb drift",
+      "expect": "exit_zero",
+      "porque": "El comparador debe observar archivos reales iguales al repo; su control negativo de divergencia ya existe en tests/test_bb_bash.py. No rebajar el detector ni copiar comentarios antiguos al repo para absolver el despliegue."
+    }
+  },
+  {
+    "id": "DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES",
+    "path": "tasks/backlog/DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES.md",
+    "close_check": {
+      "cmd": "bash tools/demonio_al_dia.sh --user bb-guardia-proceso.service bin/bb-guardia-proceso",
+      "expect": "exit_zero",
+      "porque": "`systemctl` no esta en .simplecode/build_tools.txt (solo grep y bash), asi que llamarlo directo en el close_check es un CONTRACT BREACH que backlog-verifier cazo en la practica. Se envuelve en demonio_al_dia.sh -- YA existente, YA con suite, extendido con --user en este mismo commit -- que ademas comprueba algo mas fuerte que is-active: que el PROCESO VIVO arranco DESPUES de la ultima modificacion del codigo, el mismo patron que ya usa DEBT-UNA-BAJADA-MOMENTANEA. Se invoca via bash porque es lo que build_tools.txt declara y backlog-verifier solo confia en esa lista."
+    }
+  },
+  {
+    "id": "DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01",
+    "path": "tasks/backlog/DEBT-TELEMETRY-HISTORICAL-UNDISPOSED-20260908-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_telemetry_dispositions --event-id 92dc63137ae930f3 --event-id a50ae5e52c99c3ab --event-id 5437b44ce52501ee",
+      "expect": "exit_zero",
+      "porque": "Comprueba que cada evento hist\u00f3rico tenga un estado admitido y evidencia no vac\u00eda; falla hasta recuperar evidencia y registrar cada dictamen."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01",
+    "path": "tasks/backlog/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01",
+    "path": "tasks/backlog/DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01",
+    "path": "tasks/backlog/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cutlass_sm121_isa_gate_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-CX7-FW-UPDATE-GUARD-01",
+    "path": "tasks/backlog/DELTA-FORUM-CX7-FW-UPDATE-GUARD-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_fw_update_guard_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01",
+    "path": "tasks/backlog/DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_physical_topology_alias_check_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-CX7-POSTHOTPLUG-01",
+    "path": "tasks/backlog/DELTA-FORUM-CX7-POSTHOTPLUG-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_posthotplug_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01",
+    "path": "tasks/backlog/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cx7_rdma_asymmetry_retest_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01",
+    "path": "tasks/backlog/DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_dualspark_power_reset_recovery_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01",
+    "path": "tasks/backlog/DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_kv_quant_metric_provenance_gate_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-MEMORY-RECOVERY-SOAK-01",
+    "path": "tasks/backlog/DELTA-FORUM-MEMORY-RECOVERY-SOAK-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_memory_recovery_soak_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01",
+    "path": "tasks/backlog/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-RECOVERY-APT-UPDATE-01",
+    "path": "tasks/backlog/DELTA-FORUM-RECOVERY-APT-UPDATE-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_recovery_apt_update_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01",
+    "path": "tasks/backlog/DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01",
+    "path": "tasks/backlog/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_telemetry_coverage_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+    "path": "tasks/backlog/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_usb_raid_link_admission_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+    "path": "tasks/backlog/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_backup_mount_boot_identity_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01",
+    "path": "tasks/backlog/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_display_carveout_oem_fix_gate_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01",
+    "path": "tasks/backlog/DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_gx10_soc_ec_cable_recovery_candidate_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01",
+    "path": "tasks/backlog/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_subambient_cooling_and_uma_canary_01",
+      "expect": "exit_zero",
+      "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervenci\u00f3n. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."
+    }
+  },
+  {
+    "id": "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+    "path": "tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_apt_critical_removals --evidence tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD",
+      "expect": "exit_zero",
+      "porque": "El cierre requiere demostrar que una remoci\u00f3n simulada peligrosa se bloquea o se declara antes de aplicar cambios, y que una transacci\u00f3n inocua sigue disponible; un inventario est\u00e1tico de paquetes no demuestra protecci\u00f3n."
+    }
+  },
+  {
+    "id": "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+    "path": "tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01 --evidence tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    }
+  },
+  {
+    "id": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+    "path": "tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 --evidence tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+      "expect": "exit_zero",
+      "porque": "Verificador pendiente: demostrar preflight m\u00ednimo con im\u00e1genes soportadas, arquitectura/cubin y controles negativos; ninguna recomendaci\u00f3n de backend sin validar salida/estabilidad y rollback."
+    }
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+    "path": "tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+      "expect": "exit_zero",
+      "porque": "Must compare a lower cap against the currently applied cap on an identified OEM/driver stack, preserve stability and performance results, and prove restoration of the original clock policy."
+    }
+  },
+  {
+    "id": "FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+    "path": "tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01 --evidence tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    }
+  },
+  {
+    "id": "FEATURE-FORUM-NVME-READONLY-01",
+    "path": "tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest tests/test_nvme_readonly.py -q",
+      "expect": "exit_zero",
+      "porque": "Prueba espec\u00edfica pendiente: debe distinguir errores de medio, remount read-only, consultas ilegibles y un dispositivo sano, con salida de evidencia utilizable sin escribir al medio sospechoso."
+    }
+  },
+  {
+    "id": "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+    "path": "tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01 --evidence tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    }
+  },
+  {
+    "id": "FEATURE-FORUM-RESCUE-RUNBOOK-01",
+    "path": "tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-RESCUE-RUNBOOK-01 --evidence tasks/evidence/FEATURE-FORUM-RESCUE-RUNBOOK-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    }
+  },
+  {
+    "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+    "path": "tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-SBSA-WATCHDOG-STATE-01 --evidence tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    }
+  },
+  {
+    "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+    "path": "tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_wifi_isolation --evidence tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01",
+      "expect": "exit_zero",
+      "porque": "Must prove the recorded NetworkManager and supplicant failure is distinguished from a host freeze, test a bounded recovery policy on the cited stack, and preserve rollback evidence."
+    }
+  },
+  {
+    "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+    "path": "tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_usb_hid_postupdate --evidence tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK",
+      "expect": "exit_zero",
+      "porque": "El cierre debe separar fallo USB-HID real, m\u00e1quina headless, m\u00f3dulo integrado en kernel y telemetr\u00eda inaccesible; comprobar que el servicio sigue activo no demuestra que el teclado ni el acceso remoto funcionen."
+    }
+  },
+  {
+    "id": "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+    "path": "tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-CX7-HOTPLUG-FAN-PROTECTION --evidence tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION",
+      "expect": "exit_zero",
+      "porque": "Prove the reported hotplug/fan mechanism and validate a vendor-supported preventive fix or bounded reversible workaround with thermal safety, network controls, and rollback."
+    }
+  },
+  {
+    "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+    "path": "tasks/backlog/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT --evidence tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+      "expect": "exit_zero",
+      "porque": "Show that OTA compatibility checks detect a conflicting DRM modeset override before update, with safe recovery and a clean-system negative control."
+    }
+  },
+  {
+    "id": "FORUM-00-DOCKER-OOM-RESTART-LOOP",
+    "path": "tasks/backlog/FORUM-00-DOCKER-OOM-RESTART-LOOP.md",
+    "close_check": {
+      "cmd": "python3 -m pytest tests/test_workload_restart_containment.py -q",
+      "expect": "exit_zero",
+      "porque": "Prueba pendiente: debe limitar la reincidencia de un workload identificado y permitir recuperaci\u00f3n conservando datos, sin bloquear un reinicio sano ni atribuir todo reboot a OOM."
+    }
+  },
+  {
+    "id": "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+    "path": "tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION --evidence tasks/evidence/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION",
+      "expect": "exit_zero",
+      "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperaci\u00f3n/rollback; la ficha registra trabajo abierto."
+    }
+  },
+  {
+    "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+    "path": "tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-KERNEL-INITRD-UPDATE-GATE --evidence tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+      "expect": "exit_zero",
+      "porque": "Demostrar un gate previo al reboot que detecta estado dpkg/DKMS incoherente, ausencia de initrd/m\u00f3dulo para el kernel objetivo y una recuperaci\u00f3n arrancable; incluir negativos de kernel sano y rollback."
+    }
+  },
+  {
+    "id": "FORUM-00-REALTEK-EEE-DIRECT-LINK",
+    "path": "tasks/backlog/FORUM-00-REALTEK-EEE-DIRECT-LINK.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-REALTEK-EEE-DIRECT-LINK --evidence tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK",
+      "expect": "exit_zero",
+      "porque": "Confirm the exact link-partner/kernel/driver combination, reproduce EEE-related stalls, verify a bounded opt-in mitigation and prove rollback and unaffected-link controls."
+    }
+  },
+  {
+    "id": "FORUM-02-GX10-READ-INTEGRITY",
+    "path": "tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-GX10-READ-INTEGRITY --evidence tasks/evidence/FORUM-02-GX10-READ-INTEGRITY",
+      "expect": "exit_zero",
+      "porque": "Verificador espec\u00edfico pendiente: debe demostrar detecci\u00f3n de datos alterados con una referencia externa y diferenciar lecturas buffered, O_DIRECT, cach\u00e9, salud NVMe y evidencia de firmware."
+    }
+  },
+  {
+    "id": "FORUM-02-USB-UVC-EP0",
+    "path": "tasks/backlog/FORUM-02-USB-UVC-EP0.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-USB-UVC-EP0 --evidence tasks/evidence/FORUM-02-USB-UVC-EP0",
+      "expect": "exit_zero",
+      "porque": "Verificador espec\u00edfico pendiente: debe comprobar la reproducci\u00f3n A/B, la versi\u00f3n corregida y la recomendaci\u00f3n preventiva para cada OEM probado."
+    }
+  },
+  {
+    "id": "FORUM-REALTEK-DRIVER-BINDING-01",
+    "path": "tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-REALTEK-DRIVER-BINDING-01 --evidence tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01",
+      "expect": "exit_zero",
+      "porque": "Verificador pendiente: prueba binding PCI efectivo y paquete/m\u00f3dulo compatible; warm/cold reboot A/B y rollback con controles de otra NIC, driver ausente y consulta fallida."
+    }
+  }
+]

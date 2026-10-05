@@ -54,3 +54,10 @@ Se añadió `python3 -m tools.provider_trace <trace.jsonl>`, un analizador de so
 - **`BB-GPU-PROVIDER-SILENT-FALLBACK`** — A reported ONNX Runtime service crashed with cuDNN FE 11/cuBLAS internal errors on older GB10 stacks; a respawned worker then failed cudaGetDeviceCount and silently fell back to CPU, degrading inference by multiple times until container… Fuente: [380948](https://forums.developer.nvidia.com/t/gb10-dgx-spark-cudnn-fe-failure-11-and-cublas-status-internal-error-under-batch-load-fixed-by-driver-580-173/380948/1).
 
 [360785](https://forums.developer.nvidia.com/t/build-sglang-from-source-on-blackwell-pro-6000-dgx-spark/360785/8) is a negative control for health and provider telemetry: SGLang’s post-decode `pynvml.NVMLError_NotSupported` coincides with a saved image, and the author later confirms that the HTTP response succeeded with a corrected curl (post 14). The SGLang commit is not pinned. Keep request delivery, provider selection, and unsupported metric errors as separate observations; report provider `unknown` when native telemetry is unsupported. This does not establish CPU fallback.
+
+
+## Defecto de ambigüedad y lectura detectado (2026-10-04)
+
+El control sano JSONL devuelve `pass`. Al sustituir su observación de proveedor por un objeto con `provider: CPUExecutionProvider` seguido de otra clave `provider: CUDAExecutionProvider`, el analizador también devuelve `pass`: `json.loads` conserva el último valor y pierde la observación contradictoria. Reproducción literal: `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/provider-duplicate-key-root-negative.json`.
+
+La corrección requiere decodificación JSON estricta por línea y lectura regular acotada sin seguir symlinks, reutilizando `tools.capture_io`. El lector actual `read_text` carece de límite y puede bloquear sobre FIFO. El agente runtime tiene asignados controles negativos de duplicados, constantes no finitas, FIFO, ancestros y tamaño. El 100% histórico de cobertura no demuestra estas garantías. La ficha conserva su close_check y permanece abierta por este defecto y por la traza real/OEM/recuperación pendientes.

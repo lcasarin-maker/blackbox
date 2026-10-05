@@ -17,6 +17,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from tools.capture_io import read_regular_bytes, strict_json_loads
+
+MAX_TRACE_BYTES = 16 * 1024 * 1024
 
 GPU_PROVIDERS = {"gpu", "cuda", "cudaexecutionprovider", "tensorrtexecutionprovider"}
 CPU_PROVIDERS = {"cpu", "cpuexecutionprovider"}
@@ -51,8 +54,8 @@ def analyze_lines(lines: list[str]) -> dict[str, Any]:
         if not raw.strip():
             continue
         try:
-            record = json.loads(raw)
-        except json.JSONDecodeError:
+            record = strict_json_loads(raw)
+        except (json.JSONDecodeError, RecursionError):
             errors.append(f"line {line_number}: malformed or truncated JSON")
             continue
         if not isinstance(record, dict):
@@ -67,11 +70,12 @@ def analyze_lines(lines: list[str]) -> dict[str, Any]:
         blocks.extend(findings)
         unknowns.extend(unknown)
     if blocks:
-        return _result("block", findings=blocks, unknowns=unknowns)
+        return _result("block", findings=blocks, unknowns=unknowns,
+                       could_not_run_count=len(unknowns))
     if unknowns:
-        return _result("unknown", unknowns=unknowns)
+        return _result("unknown", unknowns=unknowns, could_not_run_count=len(unknowns))
     if not requests:
-        return _unknown("trace contains no request events")
+        return _unknown("trace contains no request events", could_not_run_count=1)
     return _result("pass")
 
 
@@ -187,8 +191,11 @@ def _classify_request(request_id: str, state: dict[str, Any]) -> tuple[list[str]
 def analyze_file(path: Path) -> dict[str, Any]:
     """Read a UTF-8 JSONL trace, mapping I/O and decoding failures to unknown."""
     try:
-        content = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeError) as exc:
+        raw = read_regular_bytes(path, MAX_TRACE_BYTES)
+        if len(raw) > MAX_TRACE_BYTES:
+            return _unknown(f"trace exceeds {MAX_TRACE_BYTES} byte input bound", could_not_run_count=1)
+        content = raw.decode("utf-8")
+    except (OSError, UnicodeError, RecursionError) as exc:
         return _unknown(f"cannot read trace: {exc}", could_not_run_count=1)
     return analyze_lines(content.splitlines())
 
