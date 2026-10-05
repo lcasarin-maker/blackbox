@@ -1,6 +1,7 @@
 """Batch 02 parser and adversarial-control tests; fixtures never represent host closure."""
 from __future__ import annotations
 
+import errno
 import hashlib
 import json
 import stat
@@ -342,8 +343,9 @@ def test_reader_detects_growth_past_bounded_read(tmp_path: Path, monkeypatch: py
 
 def test_reader_propagates_unclassified_os_error(tmp_path: Path) -> None:
     overlong_name = "x" * 300
-    with pytest.raises(OSError):
+    with pytest.raises(OSError) as excinfo:
         controls._read_bounded_regular(tmp_path / overlong_name)
+    assert excinfo.value.errno == errno.ENAMETOOLONG
 
 
 def test_raw_capture_truncation_and_row_count_are_explicit(tmp_path: Path) -> None:
