@@ -1194,3 +1194,161 @@ def test_debt_research_collector_bb_forum_inventory_01(tmp_path: Path) -> None:
     from test_bb_forum_collectors import test_inventory_pages_deduplicates_and_rejects_repeated_page
 
     assert test_inventory_pages_deduplicates_and_rejects_repeated_page(tmp_path) is None
+
+
+# Runtime closure selectors stay importable at the historical close_check path.
+from tools import runtime_batch02_controls as _runtime_batch02
+from tools import runtime_batch03_controls as _runtime_batch03
+from tools import runtime_batch04_controls as _runtime_batch04
+from tools import runtime_batch01_controls as _runtime_batch01
+
+from test_adversarial_product_scope import test_threat_sweep_reads_tools_and_rejects_injected_case
+
+
+def test_delta_forum_3node_nccl_image_and_first_request_01() -> None:
+    result = _runtime_batch01.verify('DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_8node_nccl_interface_mtu_01() -> None:
+    result = _runtime_batch01.verify('DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_cross_turn_sleeper_injection_regression_01() -> None:
+    result = _runtime_batch01.verify('DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_dcp_mtp_draft_correctness_and_pretrim_oom_01() -> None:
+    result = _runtime_batch01.verify('DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_dcp4_decode_starvation_fair_scheduler_01() -> None:
+    result = _runtime_batch01.verify('DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_dflash_xgrammar_structured_output_regression_01() -> None:
+    result = _runtime_batch01.verify('DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_dsv41_nfs_stop_tag_pin_01() -> None:
+    result = _runtime_batch01.verify('DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_dualspark_nccl_gid_twin_and_cold_recovery_01() -> None:
+    result = _runtime_batch01.verify('DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_glm52_multiturn_correctness_and_recipe_sensitivity_01() -> None:
+    result = _runtime_batch01.verify('DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_gptoss_multinode_ray_channel_timeout_01() -> None:
+    result = _runtime_batch02.verify('DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_llamacpp_rpc_uma_and_orderly_teardown_01() -> None:
+    result = _runtime_batch02.verify('DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_m2_compaction_state_validation_01() -> None:
+    result = _runtime_batch02.verify('DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_minimax_toolcall_functional_canary_01() -> None:
+    result = _runtime_batch02.verify('DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_mtp_acceptance_and_semantic_control_01() -> None:
+    result = _runtime_batch02.verify('DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_muse_glimmer_dflash_max_seqs_gate_01() -> None:
+    result = _runtime_batch02.verify('DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_nccl_tp_orchestration_correction_01() -> None:
+    result = _runtime_batch02.verify('DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_nemotron_sm121_prebuilt_kernel_01() -> None:
+    result = _runtime_batch02.verify('DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_openclaw_vllm_request_contract_01() -> None:
+    result = _runtime_batch02.verify('DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_qwen_cold_compile_oom_01() -> None:
+    result = _runtime_batch02.verify('DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_qwen_long_agent_stop_01() -> None:
+    result = _runtime_batch03.verify('DELTA-FORUM-QWEN-LONG-AGENT-STOP-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-QWEN-LONG-AGENT-STOP-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_qwen_mtp_parser_cancel_state_check_01() -> None:
+    result = _runtime_batch03.verify('DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_qwen_service_oomd_cache_fail_01() -> None:
+    result = _runtime_batch03.verify('DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_qwen_toolcall_wedge_01() -> None:
+    result = _runtime_batch03.verify('DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01() -> None:
+    result = _runtime_batch03.verify('DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_qwen38_long_run_json_correctness_canary_01() -> None:
+    result = _runtime_batch03.verify('DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_ray_torch_graph_hang_01() -> None:
+    result = _runtime_batch03.verify('DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_vllm_gb10_arch_and_build_matrix_01() -> None:
+    result = _runtime_batch03.verify('DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_forum_vllm_ray_gb10_resource_fix_01() -> None:
+    result = _runtime_batch03.verify('DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01')
+    assert result["status"] == "pass", f"DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_root_container_effective_build_and_offline_gate_01() -> None:
+    result = _runtime_batch03.verify('DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01')
+    assert result["status"] == "pass", f"DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_root_dsml_parser_recovery_boundary_01() -> None:
+    result = _runtime_batch04.verify('DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01')
+    assert result["status"] == "pass", f"DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_root_glm53_queued_request_progress_gate_01() -> None:
+    result = _runtime_batch04.verify('DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01')
+    assert result["status"] == "pass", f"DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_root_mimo_overlay_and_prefill_fairness_01() -> None:
+    result = _runtime_batch04.verify('DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01')
+    assert result["status"] == "pass", f"DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_root_mimo_patch_supersession_gate_01() -> None:
+    result = _runtime_batch04.verify('DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01')
+    assert result["status"] == "pass", f"DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_root_ray_multiengine_rank_progress_01() -> None:
+    result = _runtime_batch04.verify('DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01')
+    assert result["status"] == "pass", f"DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_root_recipe_memory_unknown_and_raw_evidence_01() -> None:
+    result = _runtime_batch04.verify('DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01')
+    assert result["status"] == "pass", f"DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_root_tokenizer_patch_semantic_gate_01() -> None:
+    result = _runtime_batch04.verify('DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01')
+    assert result["status"] == "pass", f"DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"
+
+def test_delta_root_triton_allocator_patch_state_gate_01() -> None:
+    result = _runtime_batch04.verify('DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01')
+    assert result["status"] == "pass", f"DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01: status={result['status']} could_not_run={result.get('could_not_run')} reason={result['reason']} files={result.get('files')}"

@@ -245,14 +245,14 @@ def test_network_inventory_marks_sysfs_interface_missing_from_ip_json(tmp_path: 
 def test_network_inventory_propagates_inaccessible_sysfs_fields(
         tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _network_tree(tmp_path)
-    original = Path.read_text
+    original = hd.capture_io.read_regular_bytes
 
-    def denied(path: Path, *args: Any, **kwargs: Any) -> str:
+    def denied(path: Path, max_bytes: int) -> bytes:
         if path.name == "mtu":
             raise PermissionError("mtu denied")
-        return original(path, *args, **kwargs)
+        return original(path, max_bytes)
 
-    monkeypatch.setattr(Path, "read_text", denied)
+    monkeypatch.setattr(hd.capture_io, "read_regular_bytes", denied)
     result = hd.network_inventory(tmp_path, Runner([
         {"ifname": "eth0", "ifindex": 2, "mtu": 9000, "operstate": "UP",
          "link_type": "ether"}]))
@@ -265,14 +265,14 @@ def test_network_inventory_propagates_inaccessible_sysfs_fields(
 def test_infiniband_inventory_propagates_unreadable_firmware(
         tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _network_tree(tmp_path)
-    original = Path.read_text
+    original = hd.capture_io.read_regular_bytes
 
-    def denied(path: Path, *args: Any, **kwargs: Any) -> str:
+    def denied(path: Path, max_bytes: int) -> bytes:
         if path.name == "fw_ver":
             raise PermissionError("firmware denied")
-        return original(path, *args, **kwargs)
+        return original(path, max_bytes)
 
-    monkeypatch.setattr(Path, "read_text", denied)
+    monkeypatch.setattr(hd.capture_io, "read_regular_bytes", denied)
     result = hd.infiniband_inventory(tmp_path)
 
     assert result["status"] == "could_not_run"
