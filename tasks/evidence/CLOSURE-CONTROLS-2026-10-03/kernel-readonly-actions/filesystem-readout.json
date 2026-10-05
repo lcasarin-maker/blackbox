@@ -1,0 +1,157 @@
+{
+  "cgroup_root": {
+    "cgroup.controllers": {
+      "bytes": 49,
+      "status": "read",
+      "truncated": false,
+      "value": "cpuset cpu io memory hugetlb pids rdma misc dmem"
+    },
+    "cgroup.subtree_control": {
+      "bytes": 49,
+      "status": "read",
+      "truncated": false,
+      "value": "cpuset cpu io memory hugetlb pids rdma misc dmem"
+    },
+    "dmem.capacity": {
+      "bytes": 0,
+      "status": "read",
+      "truncated": false,
+      "value": ""
+    },
+    "dmem.current": {
+      "bytes": 0,
+      "status": "read",
+      "truncated": false,
+      "value": ""
+    },
+    "memory.current": {
+      "error": "[Errno 2] No such file or directory: '/sys/fs/cgroup/memory.current'",
+      "status": "unavailable"
+    },
+    "memory.events": {
+      "error": "[Errno 2] No such file or directory: '/sys/fs/cgroup/memory.events'",
+      "status": "unavailable"
+    },
+    "memory.max": {
+      "error": "[Errno 2] No such file or directory: '/sys/fs/cgroup/memory.max'",
+      "status": "unavailable"
+    },
+    "memory.pressure": {
+      "bytes": 108,
+      "status": "read",
+      "truncated": false,
+      "value": "some avg10=0.00 avg60=0.01 avg300=0.00 total=65592068\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=64868899"
+    }
+  },
+  "dmi": {
+    "bios_version": {
+      "bytes": 13,
+      "status": "read",
+      "truncated": false,
+      "value": "5.36_0ACUM08"
+    },
+    "board_name": {
+      "bytes": 6,
+      "status": "read",
+      "truncated": false,
+      "value": "P4242"
+    },
+    "product_name": {
+      "bytes": 12,
+      "status": "read",
+      "truncated": false,
+      "value": "AI TOP ATOM"
+    },
+    "sys_vendor": {
+      "bytes": 9,
+      "status": "read",
+      "truncated": false,
+      "value": "GIGABYTE"
+    }
+  },
+  "kernel_config": {
+    "/boot/config-6.17.0-1032-nvidia": {
+      "file_bytes": 361867,
+      "file_sha256": "d7308f98799d0296b78f4f683794912385b028162712cd521f994af4f9cf7f3b",
+      "path": "/boot/config-6.17.0-1032-nvidia",
+      "selected_options": {
+        "CONFIG_BPF": "CONFIG_BPF=y",
+        "CONFIG_BPF_JIT": "CONFIG_BPF_JIT=y",
+        "CONFIG_BPF_SYSCALL": "CONFIG_BPF_SYSCALL=y",
+        "CONFIG_CGROUPS": "CONFIG_CGROUPS=y",
+        "CONFIG_CGROUP_DMEM": "CONFIG_CGROUP_DMEM=y",
+        "CONFIG_EFI_VARS_PSTORE": "CONFIG_EFI_VARS_PSTORE=m",
+        "CONFIG_FUNCTION_TRACER": "CONFIG_FUNCTION_TRACER=y",
+        "CONFIG_HZ": "CONFIG_HZ=1000",
+        "CONFIG_KPROBES": "CONFIG_KPROBES=y",
+        "CONFIG_MEMCG": "CONFIG_MEMCG=y",
+        "CONFIG_PERF_EVENTS": "CONFIG_PERF_EVENTS=y",
+        "CONFIG_PSTORE": "CONFIG_PSTORE=y",
+        "CONFIG_PSTORE_EFI": "absent from config",
+        "CONFIG_TRACEPOINTS": "CONFIG_TRACEPOINTS=y"
+      },
+      "status": "read"
+    },
+    "/proc/config.gz": {
+      "error": "[Errno 2] No such file or directory: '/proc/config.gz'",
+      "status": "unavailable"
+    }
+  },
+  "self_cgroup": {
+    "bytes": 99,
+    "status": "read",
+    "truncated": false,
+    "value": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/app-org.chromium.Chromium-3655057.scope"
+  },
+  "self_cgroup_files": {
+    "cpu.stat": {
+      "bytes": 118,
+      "status": "read",
+      "truncated": false,
+      "value": "usage_usec 135799938738\nuser_usec 97815336818\nsystem_usec 37984601920\nnice_usec 49790000\ncore_sched.force_idle_usec 0"
+    },
+    "dmem.capacity": {
+      "error": "[Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/app-org.chromium.Chromium-3655057.scope/dmem.capacity'",
+      "status": "unavailable"
+    },
+    "dmem.current": {
+      "error": "[Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/app-org.chromium.Chromium-3655057.scope/dmem.current'",
+      "status": "unavailable"
+    },
+    "memory.current": {
+      "bytes": 12,
+      "status": "read",
+      "truncated": false,
+      "value": "21507923968"
+    },
+    "memory.events": {
+      "bytes": 53,
+      "status": "read",
+      "truncated": false,
+      "value": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0"
+    },
+    "memory.max": {
+      "bytes": 4,
+      "status": "read",
+      "truncated": false,
+      "value": "max"
+    },
+    "memory.pressure": {
+      "bytes": 108,
+      "status": "read",
+      "truncated": false,
+      "value": "some avg10=0.00 avg60=0.00 avg300=0.00 total=10399865\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=10221770"
+    }
+  },
+  "self_cgroup_path": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/app-org.chromium.Chromium-3655057.scope",
+  "tracefs": {
+    "events/kmem/mm_page_alloc/id": {
+      "error": "PermissionError: [Errno 13] Permission denied: '/sys/kernel/tracing/events/kmem/mm_page_alloc/id'",
+      "status": "could_not_run"
+    },
+    "tracing_on": {
+      "error": "PermissionError: [Errno 13] Permission denied: '/sys/kernel/tracing/tracing_on'",
+      "status": "could_not_run"
+    }
+  }
+}

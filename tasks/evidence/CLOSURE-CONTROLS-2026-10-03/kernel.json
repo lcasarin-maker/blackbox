@@ -1,0 +1,119 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01",
+    "path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_cgroup_plan_01",
+      "expect": "exit_zero",
+      "porque": "Cada fase/id soportado eval\u00faa su sujeto espec\u00edfico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo l\u00f3gica realmente com\u00fan; conservar comandos literales y demostrar discriminaci\u00f3n entre fichas."
+    }
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01",
+    "path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_netconsole_01",
+      "expect": "exit_zero",
+      "porque": "Cada fase/id soportado eval\u00faa su sujeto espec\u00edfico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo l\u00f3gica realmente com\u00fan; conservar comandos literales y demostrar discriminaci\u00f3n entre fichas."
+    }
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01",
+    "path": "tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.md",
+    "close_check": {
+      "cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01",
+      "expect": "exit_zero",
+      "porque": "Cada fase/id soportado eval\u00faa su sujeto espec\u00edfico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo l\u00f3gica realmente com\u00fan; conservar comandos literales y demostrar discriminaci\u00f3n entre fichas."
+    }
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-01-REPRO",
+    "path": "tasks/backlog/FEATURE-1358-CGROUP-01-REPRO.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_cgroup_repro tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json",
+      "expect": "exit_zero",
+      "porque": "Recalcula fases, scopes, deltas y calibraci\u00f3n CPU desde stdout crudo; fail por control fallido y unknown por observaci\u00f3n ilegible. No acredita contenci\u00f3n GPU ni autenticidad del origen."
+    }
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-02-TRAZA",
+    "path": "tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_cgroup_plan --phase 02-traza --evidence tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA",
+      "expect": "exit_zero",
+      "porque": "Verificador espec\u00edfico pendiente: debe evaluar resultados reales y controles negativos descritos en esta ficha, no su mera existencia."
+    }
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-03-NATIVO",
+    "path": "tasks/backlog/FEATURE-1358-CGROUP-03-NATIVO.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_cgroup_plan --phase 03-nativo --evidence tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO",
+      "expect": "exit_zero",
+      "porque": "Verificador espec\u00edfico pendiente: debe evaluar resultados reales y controles negativos descritos en esta ficha, no su mera existencia."
+    }
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-04-PARCHE",
+    "path": "tasks/backlog/FEATURE-1358-CGROUP-04-PARCHE.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_cgroup_plan --phase 04-parche --evidence tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE",
+      "expect": "exit_zero",
+      "porque": "Verificador espec\u00edfico pendiente: debe evaluar resultados reales y controles negativos descritos en esta ficha, no su mera existencia."
+    }
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-05-CUELGUES",
+    "path": "tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_cgroup_plan --phase 05-cuelgues --evidence tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES",
+      "expect": "exit_zero",
+      "porque": "Verificador espec\u00edfico pendiente: debe evaluar resultados reales y controles negativos descritos en esta ficha, no su mera existencia."
+    }
+  },
+  {
+    "id": "FEATURE-FORUM-NETCONSOLE-01",
+    "path": "tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01",
+      "expect": "exit_zero",
+      "porque": "Must prove the module and receiver path work with the target kernel and Secure Boot state, capture a kernel marker off-host, and verify privacy boundaries and rollback."
+    }
+  },
+  {
+    "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "path": "tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_rcu_panic_pstore --evidence tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+      "expect": "exit_zero",
+      "porque": "Must verify the active RCU sysctl and persistent capture path on the target stack, prove rollback, and distinguish a tested panic path from an unobserved natural RCU recovery."
+    }
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "path": "tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR",
+      "expect": "exit_zero",
+      "porque": "Verificaci\u00f3n espec\u00edfica pendiente: ejecutar el sujeto y sus controles, no comprobar solo que el informe exista."
+    }
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "path": "tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_memory_saver --phase 04-packing-4k --evidence tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K",
+      "expect": "exit_zero",
+      "porque": "Verificaci\u00f3n espec\u00edfica pendiente: ejecutar el sujeto y sus controles, no comprobar solo que el informe exista."
+    }
+  },
+  {
+    "id": "FORUM-02-PSTORE-KERNEL-REGRESSION",
+    "path": "tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md",
+    "close_check": {
+      "cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-PSTORE-KERNEL-REGRESSION --evidence tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION",
+      "expect": "exit_zero",
+      "porque": "Verificador espec\u00edfico pendiente: debe validar captura pstore, identidad de la pila, resoluci\u00f3n del vendor y recomendaci\u00f3n de rollback/actualizaci\u00f3n con control."
+    }
+  }
+]

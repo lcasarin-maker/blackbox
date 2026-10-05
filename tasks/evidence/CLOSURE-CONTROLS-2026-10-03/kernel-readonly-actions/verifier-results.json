@@ -1,0 +1,145 @@
+[
+  {
+    "argv": [
+      "python3",
+      "-m",
+      "tools.verify_cgroup_repro",
+      "/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json"
+    ],
+    "exit_code": 2,
+    "name": "cgroup01-repro",
+    "stderr": "",
+    "stdout": "{\"could_not_run\": [\"none/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'\", \"none/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'\", \"none/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope/dmem.current'\", \"cpu_touch/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'\", \"cpu_touch/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'\", \"cpu_touch/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope/dmem.current'\", \"cuda_malloc/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'\", \"cuda_malloc/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'\", \"cuda_malloc/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'\", \"cuda_malloc/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope/dmem.current'\", \"cuda_malloc_repeat/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'\", \"cuda_malloc_repeat/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'\", \"cuda_malloc_repeat/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'\", \"cuda_malloc_repeat/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope/dmem.current'\", \"cuda_malloc_managed/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'\", \"cuda_malloc_managed/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'\", \"cuda_malloc_managed/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'\", \"cuda_malloc_managed/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope/dmem.current'\", \"pytorch_empty/before/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\", \"pytorch_empty/before_allocation/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\", \"pytorch_empty/held/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\", \"pytorch_empty/allocator_cache_released/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\", \"pytorch_empty/after_release/dmem.current: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope/dmem.current'\"], \"could_not_run_count\": 23, \"findings\": [], \"rows\": [{\"api\": \"none\", \"cgroup\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-78589624fb17.scope\", \"held_delta_bytes\": 0, \"release_delta_bytes\": 0, \"requested_bytes\": 0}, {\"api\": \"cpu_touch\", \"cgroup\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-4a761b5a126d.scope\", \"held_delta_bytes\": 33554432, \"release_delta_bytes\": -237568, \"requested_bytes\": 33554432}, {\"api\": \"cuda_malloc\", \"cgroup\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-8c17e2a10ccb.scope\", \"held_delta_bytes\": 0, \"release_delta_bytes\": -360448, \"requested_bytes\": 33554432}, {\"api\": \"cuda_malloc_repeat\", \"cgroup\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-777e1366100b.scope\", \"held_delta_bytes\": 0, \"release_delta_bytes\": 0, \"requested_bytes\": 33554432}, {\"api\": \"cuda_malloc_managed\", \"cgroup\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-0f521604f417.scope\", \"held_delta_bytes\": 33816576, \"release_delta_bytes\": -65536, \"requested_bytes\": 33554432}, {\"api\": \"pytorch_empty\", \"cgroup\": \"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-cgroup-repro-400c13f0c617.scope\", \"held_delta_bytes\": 0, \"release_delta_bytes\": -1789952, \"requested_bytes\": 33554432}], \"scope\": \"observation consistency and CPU calibration; no native GPU containment or provenance proof\", \"status\": \"unknown\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "-m",
+      "tools.verify_cgroup_plan",
+      "--phase",
+      "02-traza",
+      "--evidence",
+      "/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA"
+    ],
+    "exit_code": 2,
+    "name": "cgroup02-trace",
+    "stderr": "",
+    "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw capture unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/capture.json'\"], \"status\": \"unknown\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "-m",
+      "tools.verify_cgroup_plan",
+      "--phase",
+      "03-nativo",
+      "--evidence",
+      "/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO"
+    ],
+    "exit_code": 2,
+    "name": "cgroup03-native",
+    "stderr": "",
+    "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw capture unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/capture.json'\"], \"status\": \"unknown\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "-m",
+      "tools.verify_cgroup_plan",
+      "--phase",
+      "04-parche",
+      "--evidence",
+      "/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE"
+    ],
+    "exit_code": 2,
+    "name": "cgroup04-patch",
+    "stderr": "",
+    "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw capture unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/capture.json'\"], \"status\": \"unknown\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "-m",
+      "tools.verify_cgroup_plan",
+      "--phase",
+      "05-cuelgues",
+      "--evidence",
+      "/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES"
+    ],
+    "exit_code": 2,
+    "name": "cgroup05-hangs",
+    "stderr": "",
+    "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw capture unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/capture.json'\"], \"status\": \"unknown\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "-m",
+      "tools.verify_netconsole",
+      "--evidence",
+      "/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-NETCONSOLE-01"
+    ],
+    "exit_code": 2,
+    "name": "netconsole",
+    "stderr": "",
+    "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"required raw capture unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-NETCONSOLE-01/kernel-capture.json'\"], \"status\": \"unknown\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "-m",
+      "tools.verify_rcu_panic_pstore",
+      "--evidence",
+      "/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01"
+    ],
+    "exit_code": 2,
+    "name": "rcu-pstore",
+    "stderr": "",
+    "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw recovery evidence unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/recovery.json'\"], \"status\": \"unknown\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "-m",
+      "tools.verify_memory_saver",
+      "--phase",
+      "02-trazador",
+      "--evidence",
+      "/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR"
+    ],
+    "exit_code": 2,
+    "name": "memory-saver-trace",
+    "stderr": "",
+    "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw phase capture unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/capture.json'\"], \"status\": \"unknown\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "-m",
+      "tools.verify_memory_saver",
+      "--phase",
+      "04-packing-4k",
+      "--evidence",
+      "/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K"
+    ],
+    "exit_code": 2,
+    "name": "memory-saver-packing",
+    "stderr": "",
+    "stdout": "{\"could_not_run\": 1, \"could_not_run_count\": 1, \"fail\": 0, \"findings\": [\"raw phase capture unavailable: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K/capture.json'\"], \"status\": \"unknown\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "-m",
+      "tools.verify_forum_finding",
+      "--id",
+      "FORUM-02-PSTORE-KERNEL-REGRESSION",
+      "--evidence",
+      "/home/lcasarin/projects/blackbox/tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION"
+    ],
+    "exit_code": 1,
+    "name": "forum-pstore",
+    "stderr": "/opt/miniforge3/bin/python3: No module named tools.verify_forum_finding\n",
+    "stdout": ""
+  }
+]

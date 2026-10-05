@@ -1,0 +1,24 @@
+[
+  {
+    "id": "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01",
+    "criterion": "Exact ASUS GX10/EC/UEFI and stable signed firmware; per-source channel status/unit/freshness; synchronized soak and literal thermal/OOM/power-loss records; stale-sensor control.",
+    "implemented_predicate": "_thermal_coverage → _thermal_collector_state/_collector_header/_collector_raw_count, _collector_scan/_collector_channel/_trip_count, _bind_thermal_inventory/_collector_channel_index/_bind_thermal_source, _validate_sensor_sources, _validate_event_classes, _validate_stale_sensor; phase02 native journal: _journal_capture_rows, _journal_command_window, _journal_rows_in_run_window, _parse_utc_interval, _validate_soak_sample_window, _validate_native_event_classes, _power_loss_instrument",
+    "tests": [
+      "tests/test_hardware_batch03_controls.py::test_thermal_coverage_rejects_mixed_classifiers_and_accepts_explicit_sensor_gaps",
+      "tests/test_hardware_batch03_controls.py::test_thermal_coverage_rejects_bad_event_classifiers_and_stale_sensor",
+      "tests/test_hardware_batch03_controls.py::test_thermal_coverage_capture_uses_existing_collector_shape",
+      "tests/test_hardware_batch03_controls.py::test_thermal_coverage_event_sensor_and_staleness_predicates_are_distinct",
+      "tests/test_hardware_batch03_controls.py::test_thermal_collector_parser_rejects_malformed_or_contradictory_native_records",
+      "tests/test_hardware_batch03_controls.py::test_thermal_collector_inventory_and_trippoint_rows_are_recomputed",
+      "tests/test_hardware_batch03_controls.py::test_thermal_collector_trip_points_and_native_hwmon_scans_are_recomputed",
+      "tests/test_hardware_batch03_controls.py::test_thermal_collector_channel_values_and_source_bindings_match_capture",
+      "tests/test_hardware_batch03_controls.py::test_native_journal_json_rows_are_bound_to_boot_identity_and_capture_window",
+      "tests/test_hardware_batch03_controls.py::test_journal_query_bounds_and_independent_power_loss_recorder_fail_open_to_unknown",
+      "tests/test_hardware_batch03_controls.py::test_raw_journal_parser_and_window_reject_malformed_or_unbounded_capture",
+      "tests/test_hardware_batch03_controls.py::test_power_loss_recorder_is_separate_and_bound_to_run_boot_and_host"
+    ],
+    "test_evidence": "Phase02 synthetic fixtures exercise parsed journal JSONL timestamps, boot IDs, MESSAGE classification, command time bounds, same-host capture hash binding, ordered soak sample windows, and independent power-loss recorder binding. Fixtures prove evaluator behavior only and do not close the real target investigation.",
+    "real_capture_result": "CNR: existing prototype lacks required schema/card identity; no target GX10 soak capture.",
+    "remaining_contract_gaps": "Caller-supplied argv, artifact provenance, run identity hashes, and external-recorder JSON remain unauthenticated; no physical operator/device authentication is claimed. No real target evidence directory/capture exists. Per-channel time-series freshness, signed-firmware verification receipt, and live journal/power-recorder data from the target remain required for closure. Missing independent power-loss recorder is explicitly UNKNOWN/CNR; journal silence never indicates loss."
+  }
+]

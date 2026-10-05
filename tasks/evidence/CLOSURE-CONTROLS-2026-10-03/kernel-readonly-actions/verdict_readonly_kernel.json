@@ -1,0 +1,158 @@
+[
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01",
+    "status": "unknown",
+    "reason": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+    "files": [
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+    ],
+    "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_cgroup_plan_01",
+    "evidence_needed": "Raw capture and phase-specific complete predicates/control negatives are missing from all four cgroup-plan subject directories."
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01",
+    "status": "unknown",
+    "reason": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+    "files": [
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+    ],
+    "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_netconsole_01",
+    "evidence_needed": "Receiver delivery, route/reachability controls, privacy, time correlation, persistence and rollback."
+  },
+  {
+    "id": "DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01",
+    "status": "unknown",
+    "reason": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+    "files": [
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+    ],
+    "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01",
+    "evidence_needed": "Persistent capture, rollback, and forced-panic path distinguished from natural RCU recovery."
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-01-REPRO",
+    "status": "unknown",
+    "reason": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+    "files": [
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+    ],
+    "control_command": "python3 -m tools.verify_cgroup_repro tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json",
+    "evidence_needed": "23 dmem.current samples are CNR; no present native GPU charge/limit evidence, and this verifier does not prove containment/authenticity."
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-02-TRAZA",
+    "status": "unknown",
+    "reason": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+    "files": [
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+    ],
+    "control_command": "python3 -m tools.verify_cgroup_plan --phase 02-traza --evidence tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA",
+    "evidence_needed": "No runtime API-to-RM/UVM allocation path, real owner/memcg, flags, worker transition, stack or CPU/GPU controls. Listing/trace commands are permission-gated."
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-03-NATIVO",
+    "status": "unknown",
+    "reason": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+    "files": [
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+    ],
+    "control_command": "python3 -m tools.verify_cgroup_plan --phase 03-nativo --evidence tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO",
+    "evidence_needed": "No runtime-aligned driver/GSP/userspace, per-API limits/charges, below-allocation limit test, independent cgroup/free or rollback."
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-04-PARCHE",
+    "status": "unknown",
+    "reason": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+    "files": [
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+    ],
+    "control_command": "python3 -m tools.verify_cgroup_plan --phase 04-parche --evidence tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE",
+    "evidence_needed": "Causal measured gap plus conditional patch diff/build/phase 01/03 before-after and double/lost/unreleased-charge controls, or measured legal no-patch decision."
+  },
+  {
+    "id": "FEATURE-1358-CGROUP-05-CUELGUES",
+    "status": "unknown",
+    "reason": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+    "files": [
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+    ],
+    "control_command": "python3 -m tools.verify_cgroup_plan --phase 05-cuelgues --evidence tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES",
+    "evidence_needed": "0 A/B trials and 0 seconds exposure; no hang/no-hang window or causal control."
+  },
+  {
+    "id": "FEATURE-FORUM-NETCONSOLE-01",
+    "status": "unknown",
+    "reason": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+    "files": [
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+    ],
+    "control_command": "python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01",
+    "evidence_needed": "Exact target kernel signature/trust, management route, receiver success/broken-path controls, marker, retention/privacy/time correlation and rollback."
+  },
+  {
+    "id": "FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "status": "unknown",
+    "reason": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+    "files": [
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+    ],
+    "control_command": "python3 -m tools.verify_rcu_panic_pstore --evidence tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+    "evidence_needed": "Pstore backend/content/persistence, reversible config rollback, tested panic-path/post-reboot retention and preserved kdump; natural RCU remains unobserved."
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "status": "unknown",
+    "reason": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+    "files": [
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+    ],
+    "control_command": "python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR",
+    "evidence_needed": "No dynamic parser/symbol/CPU control/CUDA capture, charge-desc charge ledger, owner attribution, loss/order/liveness checks."
+  },
+  {
+    "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "status": "unknown",
+    "reason": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+    "files": [
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+    ],
+    "control_command": "python3 -m tools.verify_memory_saver --phase 04-packing-4k --evidence tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K",
+    "evidence_needed": "No actual UVM table backing cost or eligible leaves, stock-vs-packed comparable workload, or HAL/DMA/cacheline/offset/unmap/tracker/sharing/migration/descriptors/teardown evidence."
+  },
+  {
+    "id": "FORUM-02-PSTORE-KERNEL-REGRESSION",
+    "status": "unknown",
+    "reason": "Required dynamic, off-host, pstore, privilege-gated, or controlled-workload evidence is absent; read-only observations cannot supply it.",
+    "files": [
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/capture.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json",
+      "/tmp/bb-controls-kernel/tasks/evidence/CLOSURE-CONTROLS-2026-10-03/kernel-readonly-actions/verifier-results-primary-20261004.json"
+    ],
+    "control_command": "python3 -m tools.verify_forum_finding --id FORUM-02-PSTORE-KERNEL-REGRESSION --evidence tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION",
+    "evidence_needed": "No local pstore evidence; forum stack 6.17.0-1014 / BIOS 5.36_0ACUM018 differs; no applicable vendor fix/RMA proof for local stack."
+  }
+]
