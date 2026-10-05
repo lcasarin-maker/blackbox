@@ -28,22 +28,26 @@ from tools import cgroup_repro, cuda_integrity
 from tools import verify_apt_critical_removals
 from tools import host_diagnostics
 from test_closure_kernel_selectors import (
-    closure_selector_cgroup_plan_01 as _assert_cgroup_plan_01,
-    closure_selector_netconsole_01 as _assert_netconsole_01,
-    closure_selector_rcu_panic_pstore_01 as _assert_rcu_panic_pstore_01,
+    closure_selector_cgroup_plan_01,
+    closure_selector_netconsole_01,
+    closure_selector_rcu_panic_pstore_01,
+    open_closures,
 )
 
 
 def test_debt_close_check_verify_cgroup_plan_01() -> None:
-    _assert_cgroup_plan_01()
+    still_open = open_closures(closure_selector_cgroup_plan_01())
+    assert still_open == [], f"closure remains open: {still_open!r}"
 
 
 def test_debt_close_check_verify_netconsole_01() -> None:
-    _assert_netconsole_01()
+    still_open = open_closures(closure_selector_netconsole_01())
+    assert still_open == [], f"closure remains open: {still_open!r}"
 
 
 def test_debt_close_check_verify_rcu_panic_pstore_01() -> None:
-    _assert_rcu_panic_pstore_01()
+    still_open = open_closures(closure_selector_rcu_panic_pstore_01())
+    assert still_open == [], f"closure remains open: {still_open!r}"
 
 
 def test_debt_close_check_verify_apt_critical_removals_01(

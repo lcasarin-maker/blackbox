@@ -1,0 +1,32 @@
+$ python3 -m pytest -q tests/test_verify_apt_sources_closure.py
+rc=0
+........................................................................ [ 59%]
+.................................................                        [100%]
+121 passed in 0.45s
+
+$ ruff check tools/verify_apt_sources_closure.py tests/test_verify_apt_sources_closure.py
+rc=0
+All checks passed!
+
+$ pyright tools/verify_apt_sources_closure.py tests/test_verify_apt_sources_closure.py
+rc=0
+0 errors, 0 warnings, 0 informations
+
+$ python3 -m coverage run --branch --data-file=/tmp/bb-apt-luna.coverage -m pytest -q tests/test_apt_sources.py tests/test_verify_apt_sources_closure.py
+rc=0
+........................................................................ [ 52%]
+.................................................................        [100%]
+137 passed in 0.78s
+
+$ python3 -m coverage json --data-file=/tmp/bb-apt-luna.coverage -o /tmp/bb-apt-luna.json
+rc=0
+Combined 2 files
+Wrote JSON report to /tmp/bb-apt-luna.json
+
+$ python3 -m coverage report --data-file=/tmp/bb-apt-luna.coverage --include=tools/verify_apt_sources_closure.py
+rc=0
+Name                                  Stmts   Miss Branch BrPart  Cover
+-----------------------------------------------------------------------
+tools/verify_apt_sources_closure.py     890      0    412      0   100%
+-----------------------------------------------------------------------
+TOTAL                                   890      0    412      0   100%

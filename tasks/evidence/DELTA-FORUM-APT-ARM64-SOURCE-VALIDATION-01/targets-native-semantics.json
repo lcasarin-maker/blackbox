@@ -1,0 +1,113 @@
+{
+  "actions": [
+    {
+      "argv": [
+        "/usr/bin/apt-get",
+        "indextargets",
+        "--no-release-info",
+        "--format=$(IDENTIFIER)|$(METAKEY)|$(DEFAULTENABLED)"
+      ],
+      "case": "baseline_languages_en",
+      "config_sha256": "ccd285307ccfe32521a1f2206063039dc3d2f4b022668066c380dff635c4ea7c",
+      "config_text": "Dir::Etc::sourcelist \"/tmp/apt-target-replay-x74a7rw2/test.sources\";\nDir::Etc::sourceparts \"-\";\nDir::Etc::parts \"/tmp/apt-target-replay-x74a7rw2/apt.conf.d\";\nDir::State::lists \"/tmp/apt-target-replay-x74a7rw2/lists\";\nAPT::Architecture \"arm64\";\nAPT::Architectures { \"arm64\"; };\nAcquire::IndexTargets::deb::Packages::MetaKey \"$(COMPONENT)/binary-$(ARCHITECTURE)/Packages\";\nAcquire::IndexTargets::deb::Translations::MetaKey \"$(COMPONENT)/i18n/Translation-$(LANGUAGE)\";\nAcquire::IndexTargets::deb::DEP-11::MetaKey \"$(COMPONENT)/dep11/Components-$(NATIVE_ARCHITECTURE).yml\";\nAcquire::IndexTargets::deb::DEP-11::DefaultEnabled \"false\";\nAcquire::Languages \"en\";\n",
+      "environment": {
+        "APT_CONFIG": "/tmp/apt-target-replay-x74a7rw2/apt.conf"
+      },
+      "exit_code": 0,
+      "source_bytes": "Types: deb\nURIs: file:/repo\nSuites: stable\nComponents: main\n",
+      "source_bytes_sha256": "5f129abb922b2ea5a5b31b94aca018ece3473bf8f089173dce07bb5ff298eca6",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "Packages|main/binary-arm64/Packages|yes\nPackages|main/binary-all/Packages|yes\nTranslations|main/i18n/Translation-en|yes\n",
+      "stdout_sha256": "ae5bc81ba50ccff41020d6ae94f030c6673d07347d3eed2e5b0e309a83d86dee"
+    },
+    {
+      "argv": [
+        "/usr/bin/apt-get",
+        "indextargets",
+        "--no-release-info",
+        "--format=$(IDENTIFIER)|$(METAKEY)|$(DEFAULTENABLED)"
+      ],
+      "case": "add_remove_languages_en",
+      "config_sha256": "ccd285307ccfe32521a1f2206063039dc3d2f4b022668066c380dff635c4ea7c",
+      "config_text": "Dir::Etc::sourcelist \"/tmp/apt-target-replay-x74a7rw2/test.sources\";\nDir::Etc::sourceparts \"-\";\nDir::Etc::parts \"/tmp/apt-target-replay-x74a7rw2/apt.conf.d\";\nDir::State::lists \"/tmp/apt-target-replay-x74a7rw2/lists\";\nAPT::Architecture \"arm64\";\nAPT::Architectures { \"arm64\"; };\nAcquire::IndexTargets::deb::Packages::MetaKey \"$(COMPONENT)/binary-$(ARCHITECTURE)/Packages\";\nAcquire::IndexTargets::deb::Translations::MetaKey \"$(COMPONENT)/i18n/Translation-$(LANGUAGE)\";\nAcquire::IndexTargets::deb::DEP-11::MetaKey \"$(COMPONENT)/dep11/Components-$(NATIVE_ARCHITECTURE).yml\";\nAcquire::IndexTargets::deb::DEP-11::DefaultEnabled \"false\";\nAcquire::Languages \"en\";\n",
+      "environment": {
+        "APT_CONFIG": "/tmp/apt-target-replay-x74a7rw2/apt.conf"
+      },
+      "exit_code": 0,
+      "source_bytes": "Types: deb\nURIs: file:/repo\nSuites: stable\nComponents: main\nTargets-Add: DEP-11\nTargets-Remove: Translations\n",
+      "source_bytes_sha256": "6ecea99cc25ff255850348b6bb290373747eec5e5da228d4a28eec06d6d2e90e",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "Packages|main/binary-arm64/Packages|yes\nPackages|main/binary-all/Packages|yes\nDEP-11|main/dep11/Components-arm64.yml|no\nDEP-11|main/dep11/Components-all.yml|no\n",
+      "stdout_sha256": "9d8c82df134aae2f076ec92848d686657794422dcdf3d09f788691c3b876ec2d"
+    },
+    {
+      "argv": [
+        "/usr/bin/apt-get",
+        "indextargets",
+        "--no-release-info",
+        "--format=$(IDENTIFIER)|$(METAKEY)|$(DEFAULTENABLED)"
+      ],
+      "case": "explicit_reenable_disabled",
+      "config_sha256": "59d0af6a6946814b27f39e1e06fa9e164ca2a7a0dedfe494cf289e9d89669b21",
+      "config_text": "Dir::Etc::sourcelist \"/tmp/apt-target-replay-x74a7rw2/test.sources\";\nDir::Etc::sourceparts \"-\";\nDir::Etc::parts \"/tmp/apt-target-replay-x74a7rw2/apt.conf.d\";\nDir::State::lists \"/tmp/apt-target-replay-x74a7rw2/lists\";\nAPT::Architecture \"arm64\";\nAPT::Architectures { \"arm64\"; };\nAcquire::IndexTargets::deb::Packages::MetaKey \"$(COMPONENT)/binary-$(ARCHITECTURE)/Packages\";\nAcquire::IndexTargets::deb::Translations::MetaKey \"$(COMPONENT)/i18n/Translation-$(LANGUAGE)\";\nAcquire::IndexTargets::deb::DEP-11::MetaKey \"$(COMPONENT)/dep11/Components-$(NATIVE_ARCHITECTURE).yml\";\nAcquire::IndexTargets::deb::DEP-11::DefaultEnabled \"false\";\nAcquire::Languages \"none\";\n",
+      "environment": {
+        "APT_CONFIG": "/tmp/apt-target-replay-x74a7rw2/apt.conf"
+      },
+      "exit_code": 0,
+      "source_bytes": "Types: deb\nURIs: file:/repo\nSuites: stable\nComponents: main\nTargets: DEP-11\n",
+      "source_bytes_sha256": "b8f89966e731ba8e9ffd4bf90374553dd3be9c66eb05fc2609624f6ffc809d0a",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "DEP-11|main/dep11/Components-arm64.yml|no\nDEP-11|main/dep11/Components-all.yml|no\n",
+      "stdout_sha256": "d4b3fa5da475fb01629ff7ac2120fa9ee1bb7864ae0ec59e91d52f43eb72a746"
+    },
+    {
+      "argv": [
+        "/usr/bin/apt-get",
+        "indextargets",
+        "--no-release-info",
+        "--format=$(IDENTIFIER)|$(METAKEY)|$(DEFAULTENABLED)"
+      ],
+      "case": "explicit_wildcard_targets",
+      "config_sha256": "59d0af6a6946814b27f39e1e06fa9e164ca2a7a0dedfe494cf289e9d89669b21",
+      "config_text": "Dir::Etc::sourcelist \"/tmp/apt-target-replay-x74a7rw2/test.sources\";\nDir::Etc::sourceparts \"-\";\nDir::Etc::parts \"/tmp/apt-target-replay-x74a7rw2/apt.conf.d\";\nDir::State::lists \"/tmp/apt-target-replay-x74a7rw2/lists\";\nAPT::Architecture \"arm64\";\nAPT::Architectures { \"arm64\"; };\nAcquire::IndexTargets::deb::Packages::MetaKey \"$(COMPONENT)/binary-$(ARCHITECTURE)/Packages\";\nAcquire::IndexTargets::deb::Translations::MetaKey \"$(COMPONENT)/i18n/Translation-$(LANGUAGE)\";\nAcquire::IndexTargets::deb::DEP-11::MetaKey \"$(COMPONENT)/dep11/Components-$(NATIVE_ARCHITECTURE).yml\";\nAcquire::IndexTargets::deb::DEP-11::DefaultEnabled \"false\";\nAcquire::Languages \"none\";\n",
+      "environment": {
+        "APT_CONFIG": "/tmp/apt-target-replay-x74a7rw2/apt.conf"
+      },
+      "exit_code": 0,
+      "source_bytes": "Types: deb\nURIs: file:/repo\nSuites: stable\nComponents: main\nTargets: *\n",
+      "source_bytes_sha256": "e1d4db444f1475b70b858daaf2bdd2600bf766b3f48775d5a37a0277d3072888",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "apt_version_argv": [
+    "/usr/bin/apt-get",
+    "--version"
+  ],
+  "apt_version_returncode": 0,
+  "apt_version_stdout": "apt 2.8.3 (arm64)\nSupported modules:\n*Ver: Standard .deb\n Pkg:  Debian APT solver interface (Priority -1000)\n Pkg:  Debian APT planner interface (Priority -1000)\n*Pkg:  Debian dpkg interface (Priority 30)\n S.L: 'deb' Debian binary tree\n S.L: 'deb-src' Debian source tree\n Idx: EDSP scenario file\n Idx: EIPP scenario file\n Idx: Debian Source Index\n Idx: Debian Package Index\n Idx: Debian Translation Index\n Idx: Debian dpkg status file\n Idx: Debian deb file\n Idx: Debian dsc file\n Idx: Debian control file\n",
+  "capture_limits": "Caller can replay by recreating the recorded absolute paths, writing each action's source_bytes/config_text and running its argv with the recorded APT_CONFIG. Output bytes and inputs have SHA256 consistency fields; host authenticity is not attested.",
+  "interpretation": {
+    "add_remove_languages_en": "Same target definitions and language setting; source stanza adds DEP-11 and removes Translations.",
+    "baseline_languages_en": "Control run with configured English translations and no deb822 target selectors.",
+    "causal_comparison": "Only the source stanza selector differs between baseline_languages_en and add_remove_languages_en; both use Acquire::Languages en.",
+    "explicit_reenable_disabled": "Explicit Targets: DEP-11 selects a target whose config DefaultEnabled is false.",
+    "explicit_wildcard_targets": "APT's observed wildcard output is captured independently."
+  },
+  "isolation": "APT_CONFIG uses only a temporary config, one temporary source list, an empty temporary apt.conf.d, and empty temporary lists. Invoked only apt-get indextargets --no-release-info; no update, install, or network acquisition.",
+  "schema": 2,
+  "source_commands_json_sha256": "e1bee1254c8e8bace0b304306795ec079be8a532e5b97c049d9f0ab137a6ae34",
+  "subject_card_id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01",
+  "translation_remove_comparison": {
+    "after_targets_remove_translations": [],
+    "baseline_translations": [
+      "Translations|main/i18n/Translation-en|yes"
+    ],
+    "difference_observed": true
+  }
+}

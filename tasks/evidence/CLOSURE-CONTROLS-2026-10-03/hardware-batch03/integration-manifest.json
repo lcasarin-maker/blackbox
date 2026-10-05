@@ -1,0 +1,198 @@
+{
+  "kind": "review-only-integration-manifest",
+  "worktree": "/tmp/bb-controls-kernel",
+  "generated_batch": "hardware-batch03-kernel-executor.json subsetsourcehardware positions20:27",
+  "production_api": "tools.hardware_batch03_controls.verify(card_id: str, evidence_path: pathlib.Path) -> dict[str, Any]",
+  "dispatch_owner": "controls_hardware owns shared tools.verify_forum_finding dispatcher; this manifest proposes routes and changes no shared dispatcher.",
+  "dispatcher_routes": [
+    {
+      "id": "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01",
+      "call": "tools.hardware_batch03_controls.verify(finding_id, Path(evidence_path))"
+    },
+    {
+      "id": "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01",
+      "call": "tools.hardware_batch03_controls.verify(finding_id, Path(evidence_path))"
+    },
+    {
+      "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+      "call": "tools.hardware_batch03_controls.verify(finding_id, Path(evidence_path))"
+    },
+    {
+      "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+      "call": "tools.hardware_batch03_controls.verify(finding_id, Path(evidence_path))"
+    },
+    {
+      "id": "DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01",
+      "call": "tools.hardware_batch03_controls.verify(finding_id, Path(evidence_path))"
+    },
+    {
+      "id": "DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01",
+      "call": "tools.hardware_batch03_controls.verify(finding_id, Path(evidence_path))"
+    },
+    {
+      "id": "DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01",
+      "call": "tools.hardware_batch03_controls.verify(finding_id, Path(evidence_path))"
+    }
+  ],
+  "preservation_requirement": "Keep all existing shared dispatcher branches and the other 40 hardware IDs; add only these seven routes before generic fallback.",
+  "dependencies": {
+    "production": [
+      "Python standard library",
+      "tools.hitos_incidente._journal_time (existing; unchanged)"
+    ],
+    "tests": [
+      "pytest",
+      "coverage plugin for previously measured coverage"
+    ]
+  },
+  "copy_candidates": [
+    {
+      "path": "tools/hardware_batch03_controls.py",
+      "sha256": "6dab18311407139432822ec245cf00d1279bbf42665e3d134378acd0b93d22c6",
+      "role": "production"
+    },
+    {
+      "path": "tests/test_hardware_batch03_controls.py",
+      "sha256": "1304457af1b61ed23ce7e81f6a0240cbf42d1ddad64a736555ddfc496ce329d2",
+      "role": "tests"
+    }
+  ],
+  "explicitly_excluded": [
+    {
+      "path": "tools/hitos_incidente.py",
+      "reason": "existing dependency, unchanged; do not duplicate/copy"
+    },
+    {
+      "path": "tools/verify_forum_finding.py",
+      "reason": "shared dispatcher owned by controls_hardware/root; do not overwrite"
+    },
+    {
+      "path": "tools/forum_finding.py",
+      "reason": "shared registry/dispatcher owned elsewhere; do not overwrite"
+    },
+    {
+      "path": "tests/test_debt_registration_controls.py",
+      "reason": "root owns selector registration/integration in primary; no copy proposed"
+    }
+  ],
+  "tests_measured": "python3 -m pytest tests/test_hardware_batch03_controls.py --cov=tools.hardware_batch03_controls --cov-branch --cov-report=term-missing -q: 37 passed; 1057 statements and 564 branches, 100% statement/branch coverage (synthetic predicate fixtures only; not closure evidence).",
+  "validation": "Ruff passed. Scoped Pyright passed 0 errors, 0 warnings, 0 informations. No host intervention performed.",
+  "cards": [
+    {
+      "id": "DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01",
+      "criterion": "A/B ASUS GX10 stock/base-fan/extractor+2GHz; matched workload/ambient/software stack; measured GPU/CPU/inlet/PSU/wall power/throughput/clocks; raw OEM thermal/power limits; reversible config; mismatch negative.",
+      "predicate": "_thermal_aux → _thermal_run_metadata, _thermal_profile, _check_thermal_sample, _parse_oem_limits, _rollback_complete",
+      "unit_tests": [
+        "tests/test_hardware_batch03_controls.py::test_thermal_aux_measured_matched_ab_pass_and_mismatch_does_not_close",
+        "tests/test_hardware_batch03_controls.py::test_thermal_sample_limits_and_metadata_are_recomputed_from_numeric_values",
+        "tests/test_hardware_batch03_controls.py::test_thermal_profile_requires_bound_native_oem_document_bytes",
+        "tests/test_hardware_batch03_controls.py::test_oem_limit_document_parser_rejects_malformed_duplicate_and_nonfinite_values"
+      ],
+      "real_capture_status": "UNKNOWN",
+      "real_capture_reason": "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01'",
+      "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01",
+      "evidence_needed": "Real ASUS GX10 stack and matched stock/base-fan/extractor 2 GHz thermal-soak captures, native sample source/timestamps and raw OEM limits document; byte-identical airflow/clock rollback; baseline mismatch negative.",
+      "known_contract_gaps": "Study rows and the mismatch negative-control values remain caller supplied; no raw GX10 sensor/telemetry stream or independent guarded admission output binds the samples. OEM document hash proves bytes only; OEM provenance is caller supplied.",
+      "provenance_limit": "Caller-supplied command/host provenance; SHA receipts establish byte consistency, not authenticity."
+    },
+    {
+      "id": "DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01",
+      "criterion": "Exact ASUS GX10/EC/UEFI and stable signed firmware; per-source channel status/unit/freshness; synchronized soak and literal thermal/OOM/power-loss records; stale-sensor control.",
+      "predicate": "_thermal_coverage → _thermal_collector_state/_collector_header/_collector_raw_count, _collector_scan/_collector_channel/_trip_count, _bind_thermal_inventory/_collector_channel_index/_bind_thermal_source, _validate_sensor_sources, _validate_event_classes, _validate_stale_sensor",
+      "unit_tests": [
+        "tests/test_hardware_batch03_controls.py::test_thermal_coverage_rejects_mixed_classifiers_and_accepts_explicit_sensor_gaps",
+        "tests/test_hardware_batch03_controls.py::test_thermal_coverage_rejects_bad_event_classifiers_and_stale_sensor",
+        "tests/test_hardware_batch03_controls.py::test_thermal_coverage_capture_uses_existing_collector_shape",
+        "tests/test_hardware_batch03_controls.py::test_thermal_coverage_event_sensor_and_staleness_predicates_are_distinct",
+        "tests/test_hardware_batch03_controls.py::test_thermal_collector_parser_rejects_malformed_or_contradictory_native_records",
+        "tests/test_hardware_batch03_controls.py::test_thermal_collector_inventory_and_trippoint_rows_are_recomputed",
+        "tests/test_hardware_batch03_controls.py::test_thermal_collector_trip_points_and_native_hwmon_scans_are_recomputed",
+        "tests/test_hardware_batch03_controls.py::test_thermal_collector_channel_values_and_source_bindings_match_capture"
+      ],
+      "real_capture_status": "UNKNOWN",
+      "real_capture_reason": "UNKNOWN/CNR: the preserved dossier prototype lacks required schema/card identity binding; no complete real ASUS GX10 collector and synchronized soak capture was available.",
+      "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_telemetry_coverage_01",
+      "evidence_needed": "Schema/card-bound raw capture from the exact ASUS GX10 stack; complete thermal collector inventory with bound hash/time/status; per-channel synchronized freshness series; signed stable firmware verification receipt; literal thermal/OOM/power-loss journal evidence; independent power-loss recorder capture; stale-sensor negative control.",
+      "known_contract_gaps": "Native collector bytes, UTC capture timestamp, scan status/counts, channel statuses, parsed values, and could_not_run are verified and bound. Optional absent/unreadable source diagnostics remain separately reported. Per-channel time-series freshness, signature-verifier receipt, synchronized literal journal records, and independent power-loss capture remain caller-recorded study JSON rather than raw linked command captures; the inventory collector does not produce those streams or event receipts. Target capture is still absent, so this card remains UNKNOWN/CNR.",
+      "provenance_limit": "Caller-supplied command/host provenance; SHA receipts establish byte consistency, not authenticity."
+    },
+    {
+      "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+      "criterion": "Per-member UUID+serial+sysfs speed; recompute mdadm UUID and findmnt target/UUID; healthy on two boots; slow, missing-speed and identity-swap runs; >=5000 Mbps declared floor; rollback.",
+      "predicate": "_usb_raid → _usb_case_result, _usb_member_observations, _usb_case_policy, _findmnt_targets",
+      "unit_tests": [
+        "tests/test_hardware_batch03_controls.py::test_usb_raid_recomputes_speeds_identity_and_fail_closed_states",
+        "tests/test_hardware_batch03_controls.py::test_usb_member_identity_speed_and_decision_edges",
+        "tests/test_hardware_batch03_controls.py::test_raw_measurement_helpers_classify_malformed_values_and_policy_edges"
+      ],
+      "real_capture_status": "UNKNOWN",
+      "real_capture_reason": "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01'",
+      "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_usb_raid_link_admission_01",
+      "evidence_needed": "Real Dell external USB RAID member UUID/serial/sysfs speed before assembly, mdadm/findmnt raw outputs, >=5000 Mbps operator/OEM policy, two cold boots, slow/missing-speed/identity-swap blocked controls, rollback.",
+      "known_contract_gaps": "Study JSONL command receipts and sysfs speed strings are caller supplied rather than raw artifact-linked per-command captures. The floor source label is caller supplied; no external RAID device/canary/rollback capture exists.",
+      "provenance_limit": "Caller-supplied command/host provenance; SHA receipts establish byte consistency, not authenticity."
+    },
+    {
+      "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+      "criterion": "After boot, recompute findmnt target/source/UUID and compare expected identity plus read-back SHA; missing-device, wrong-UUID and mountpoint-only controls require zero write attempts and unchanged digest.",
+      "predicate": "_backup_mount → _backup_case, _findmnt_targets, _native_result",
+      "unit_tests": [
+        "tests/test_hardware_batch03_controls.py::test_backup_mount_checks_postboot_uuid_and_never_writes_on_negative_mount_cases",
+        "tests/test_hardware_batch03_controls.py::test_card_specific_case_sets_fail_closed_before_partial_studies_can_pass"
+      ],
+      "real_capture_status": "UNKNOWN",
+      "real_capture_reason": "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01'",
+      "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_backup_mount_boot_identity_01",
+      "evidence_needed": "Authorized expected backup source/UUID, real post-boot findmnt JSON, independent backup read digest; missing-device/wrong-UUID/mountpoint-only controls with auditable zero writes and unchanged bytes.",
+      "known_contract_gaps": "Backup digests and write_attempts are caller supplied fields without raw before/after byte captures or independently measured write audit. No target reboot/storage action was performed.",
+      "provenance_limit": "Caller-supplied command/host provenance; SHA receipts establish byte consistency, not authenticity."
+    },
+    {
+      "id": "DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01",
+      "criterion": "Exact Gigabyte AI TOP ATOM; reproduce 6K NV_ERR_NO_MEMORY with free UMA; capture effective AdjustableDisplayReservedMemory; candidate 6K/4K/cache-pressure runs; Sway/SSH/window continuity; rollback.",
+      "predicate": "_display_carveout → _display_candidate, _rollback_complete",
+      "unit_tests": [
+        "tests/test_hardware_batch03_controls.py::test_display_carveout_requires_reproduced_failure_candidate_stability_and_rollback",
+        "tests/test_hardware_batch03_controls.py::test_card_specific_case_sets_fail_closed_before_partial_studies_can_pass"
+      ],
+      "real_capture_status": "UNKNOWN",
+      "real_capture_reason": "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01'",
+      "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_display_carveout_oem_fix_gate_01",
+      "evidence_needed": "Real Gigabyte AI TOP ATOM 6K NV_ERR_NO_MEMORY reproduction/free UMA, effective AdjustableDisplayReservedMemory raw setting, candidate 6K/4K/cache-pressure outputs, Sway/SSH/window checks, rollback.",
+      "known_contract_gaps": "Baseline free-memory and driver version are caller fields; effective value is expected as journal text rather than verified from a current supported driver interface; Sway/SSH/window event command output is embedded in caller JSON. No carveout change or rollback was performed.",
+      "provenance_limit": "Caller-supplied command/host provenance; SHA receipts establish byte consistency, not authenticity."
+    },
+    {
+      "id": "DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01",
+      "criterion": "Exact ASUS GX10 original/candidate SoC+EC tuple and LVFS testing channel; stable bundle SHA; hotplug enabled; cold/warm distinct boots; PCI/module/carrier/EEPROM/link and increasing TX+RX counters; OEM procedure ref and rollback.",
+      "predicate": "_gx10_cable → _validate_cable_tuple, _validate_cable_candidate, _validate_cable_boot",
+      "unit_tests": [
+        "tests/test_hardware_batch03_controls.py::test_gx10_cable_candidate_requires_functional_link_not_pci_presence",
+        "tests/test_hardware_batch03_controls.py::_exercise_cable_adversarial_rows",
+        "tests/test_hardware_batch03_controls.py::_exercise_cable_tuple_and_rollback"
+      ],
+      "real_capture_status": "UNKNOWN",
+      "real_capture_reason": "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01'",
+      "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_gx10_soc_ec_cable_recovery_candidate_01",
+      "evidence_needed": "OEM-reviewed GX10 original/candidate SoC+EC bundle and testing channel evidence, native hotplug state; cold/warm boot PCI/module/carrier/EEPROM/link and TX/RX deltas; rollback.",
+      "known_contract_gaps": "SoC/EC tuple, channel, bundle digest, hotplug state and vendor approval ref are caller supplied, not read from a native firmware inventory receipt; command results remain embedded in study JSON. No firmware operation or hotplug was performed.",
+      "provenance_limit": "Caller-supplied command/host provenance; SHA receipts establish byte consistency, not authenticity."
+    },
+    {
+      "id": "DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01",
+      "criterion": "Exact GB10; same stack/workload baseline and canary; calculate dew point from ambient/RH and uncertainty; compare coldest surface, positive airflow, CPU/SoC/GPU/UMA/throughput, OOM journal, Sway/SSH and rollback.",
+      "predicate": "_subambient → _subambient_run, _subambient_sample_safety, _dew_point, _subambient_negative",
+      "unit_tests": [
+        "tests/test_hardware_batch03_controls.py::test_subambient_calculates_dewpoint_and_rejects_humidity_unknown",
+        "tests/test_hardware_batch03_controls.py::_exercise_subambient_trial_edges",
+        "tests/test_hardware_batch03_controls.py::test_subambient_safety_rejects_lost_airflow_oom_and_missing_probes"
+      ],
+      "real_capture_status": "UNKNOWN",
+      "real_capture_reason": "raw card capture unavailable: FileNotFoundError: [Errno 2] No such file or directory: '/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01'",
+      "control_command": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_subambient_cooling_and_uma_canary_01",
+      "evidence_needed": "Real GB10 matched workload/stack baseline and canary with synchronized temperature/humidity/surface/uncertainty/airflow, UMA/throughput, OOM journal, Sway/SSH and setup rollback.",
+      "known_contract_gaps": "Temperature/humidity/surface/airflow/source timestamps, OOM journal, and native continuity receipts are caller-supplied JSON, not raw linked command artifacts. Duct clearance is manual text. No canary or hardware intervention was performed.",
+      "provenance_limit": "Caller-supplied command/host provenance; SHA receipts establish byte consistency, not authenticity."
+    }
+  ]
+}

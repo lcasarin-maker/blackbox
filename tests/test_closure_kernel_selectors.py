@@ -23,10 +23,24 @@ def _require_pass(subject: str, result: dict[str, object]) -> None:
     )
 
 
-def closure_selector_cgroup_plan_01() -> None:
+Outcome = tuple[str, dict[str, object]]
+
+
+def open_closures(outcomes: list[Outcome]) -> list[Outcome]:
+    """The (subject, result) pairs that are not a clean pass with zero could_not_run."""
+    return [
+        (subject, result)
+        for subject, result in outcomes
+        if not (result.get("status") == "pass" and result.get("could_not_run_count") == 0)
+    ]
+
+
+def closure_selector_cgroup_plan_01() -> list[Outcome]:
     repro_path = ROOT / "tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json"
-    repro = verify_cgroup_repro(json.loads(repro_path.read_text(encoding="utf-8")))
-    _require_pass("FEATURE-1358-CGROUP-01-REPRO", repro)
+    outcomes: list[Outcome] = [
+        ("FEATURE-1358-CGROUP-01-REPRO",
+         verify_cgroup_repro(json.loads(repro_path.read_text(encoding="utf-8")))),
+    ]
     phases = (
         ("02-traza", "FEATURE-1358-CGROUP-02-TRAZA"),
         ("03-nativo", "FEATURE-1358-CGROUP-03-NATIVO"),
@@ -34,16 +48,17 @@ def closure_selector_cgroup_plan_01() -> None:
         ("05-cuelgues", "FEATURE-1358-CGROUP-05-CUELGUES"),
     )
     for phase, evidence_id in phases:
-        result = verify_cgroup(phase, ROOT / "tasks" / "evidence" / evidence_id)
-        _require_pass(f"{evidence_id}/{phase}", result)
+        outcomes.append((f"{evidence_id}/{phase}",
+                         verify_cgroup(phase, ROOT / "tasks" / "evidence" / evidence_id)))
+    return outcomes
 
 
-def closure_selector_netconsole_01() -> None:
-    result = verify_netconsole(ROOT / "tasks/evidence/FEATURE-FORUM-NETCONSOLE-01")
-    _require_pass("FEATURE-FORUM-NETCONSOLE-01", result)
+def closure_selector_netconsole_01() -> list[Outcome]:
+    return [("FEATURE-FORUM-NETCONSOLE-01",
+             verify_netconsole(ROOT / "tasks/evidence/FEATURE-FORUM-NETCONSOLE-01"))]
 
 
-def closure_selector_rcu_panic_pstore_01() -> None:
-    result = verify_rcu(ROOT / "tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01")
-    _require_pass("FEATURE-FORUM-RCU-PANIC-PSTORE-01", result)
+def closure_selector_rcu_panic_pstore_01() -> list[Outcome]:
+    return [("FEATURE-FORUM-RCU-PANIC-PSTORE-01",
+             verify_rcu(ROOT / "tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01"))]
 

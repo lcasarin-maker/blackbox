@@ -1,0 +1,48 @@
+{
+  "phase": "thermal journal raw-capture binding phase02",
+  "matrix_source": "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-batch03/matrix.json",
+  "generated_sublist": "thermal-coverage-sublist.json",
+  "generated_sublist_count": 1,
+  "real_capture_status": "UNKNOWN/CNR; no real target dossier was present",
+  "checks": [
+    {
+      "stdout_file": "tests.stdout",
+      "argv": [
+        "python3",
+        "-m",
+        "pytest",
+        "tests/test_hardware_batch03_controls.py",
+        "--cov=tools.hardware_batch03_controls",
+        "--cov-branch",
+        "--cov-report=term-missing",
+        "-q"
+      ],
+      "returncode": 0
+    },
+    {
+      "stdout_file": "ruff.stdout",
+      "argv": [
+        "ruff",
+        "check",
+        "tools/hardware_batch03_controls.py",
+        "tests/test_hardware_batch03_controls.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "stdout_file": "pyright.stdout",
+      "argv": [
+        "pyright",
+        "-p",
+        "pyrightconfig.batch03.json"
+      ],
+      "returncode": 0
+    }
+  ],
+  "known_remaining_gaps": [
+    "No live target captures: no real GX10 thermal/OOM journal, soak, or independent power recorder output.",
+    "Caller-supplied hashes/argv/run IDs do not authenticate operator, physical host, or recorder.",
+    "Per-channel freshness series and signed firmware verification receipt remain open.",
+    "Power-loss is accepted only from a separate captured recorder JSON event in its declared window; journal silence is never evidence."
+  ]
+}
