@@ -1,0 +1,27 @@
+# Config de gitleaks del repo: extiende las reglas por defecto y acota UNA excepcion.
+#
+# Decision de Luis (boleta 2026-10-05): los campos embedded_key_sha256 y
+# binary_key_sha256 de embedded-key-recheck.json son digests sha256 de claves,
+# no secretos. Se permiten SOLO en esa ruta y SOLO como 64 hex. Una allowlist de
+# alcance de archivo suprime el archivo entero en gitleaks 8.30, por eso la
+# excepcion va dentro de la regla generic-api-key (misma regex que la de fabrica)
+# y no como [[allowlists]] global.
+
+title = "blackbox gitleaks"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "generic-api-key"
+description = "Detected a Generic API Key, potentially exposing access to various services and sensitive operations."
+regex = '''(?i)[\w.-]{0,50}?(?:access|auth|(?-i:[Aa]pi|API)|credential|creds|key|passw(?:or)?d|secret|token)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([\w.=-]{10,150}|[a-z0-9][a-z0-9+/]{11,}={0,3})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3.5
+keywords = ["access", "auth", "api", "credential", "creds", "key", "passw", "secret", "token"]
+
+[[rules.allowlists]]
+description = "digests sha256 de claves en la evidencia de firmas APT (no secretos)"
+paths = ['''^tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/embedded-key-recheck\.json$''']
+regexTarget = "secret"
+regexes = ['''^[0-9a-f]{64}$''']
+condition = "AND"
