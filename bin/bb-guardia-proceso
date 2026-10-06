@@ -158,6 +158,15 @@ def _uid_de(pid: int) -> int | None:
     return None
 
 
+def _uid_por_stat(pid: int) -> int | None:
+    """Respaldo de `_uid_de`: dueno del directorio /proc/<pid>, sin leer status.
+    El kernel lo pone en el euid del proceso, o en root si no es dumpable."""
+    try:
+        return os.stat(f"/proc/{pid}").st_uid
+    except OSError:
+        return None
+
+
 def _starttime_ticks(pid: int) -> int | None:
     """Lee el campo 22 de proc stat sin romperse por espacios en comm."""
     try:
@@ -203,7 +212,16 @@ def _es_intocable(pid: int, comm: str) -> str | None:
         return f"comm '{comm}' esta en la lista de intocables"
     uid = _uid_de(pid)
     if uid is None:
-        return "no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca"
+        # DEBT-GUARDIA-PROCESO-NO-FRENA-SIN-UID-01: status ilegible no basta
+        # para negarse; el dueno sale del stat de /proc/<pid>. Por esta via
+        # solo se acepta el mismo usuario del guardian, el unico al que puede
+        # mandar senales sin EPERM.
+        uid = _uid_por_stat(pid)
+        if uid is None:
+            return ("no se pudo leer el dueno (ni /proc/<pid>/status/Uid ni stat de "
+                    "/proc/<pid>) -- por precaucion, no se toca")
+        if uid not in (0, os.getuid()):
+            return f"dueno uid {uid} (por stat de /proc/<pid>) no es el usuario del guardian"
     if uid == 0:
         return "corre como root (uid 0)"
     return None

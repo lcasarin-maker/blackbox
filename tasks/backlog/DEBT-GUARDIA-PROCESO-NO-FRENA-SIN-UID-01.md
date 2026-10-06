@@ -28,4 +28,9 @@ Con status ilegible y dueno legible por otra via, el guardia puede frenar a un p
 
 ## Estado
 
-Abierta. Trabajo pendiente para Opus: instrumento de proteccion que falla en silencio; cambiar su comportamiento con control negativo antes de cerrar.
+Abierta. 2026-10-06, parte del uid hecha, sin commit (lo revisa Luis):
+
+- `_es_intocable`: si `_uid_de` da None, el dueno sale de `os.stat("/proc/<pid>").st_uid` (`_uid_por_stat`). Por esa via solo se acepta uid 0 (sigue en "root") o el uid del guardian; otro usuario se rechaza (kill daria EPERM, y `_enviar_senal` solo atrapa ProcessLookupError). Sin status y sin stat sigue "no se toca".
+- La prueba de cierre fallaba por su cargador, no por el guardia: sin registrar el modulo en `sys.modules`, `@dataclass` revienta con AttributeError al importar. Su version de HEAD falla igual con el arreglo aplicado. Cargador corregido; entrada quitada de tests/known_failures.json.
+- Controles negativos en tests/test_guardia_proceso_uid.py (12 pruebas): root con y sin status (incluye pid 2 real), PID 1, el propio guardian, pid > pid_max sin mocks, otro usuario por stat. Seis mutantes de la funcion (respaldo neutralizado, respaldo permisivo, sin chequeo de otro usuario, de root, de PID 1, y el archivo de HEAD) hacen fallar al menos una prueba cada uno.
+- Pendiente para cerrar: la segunda mitad del criterio (reinicio automatico ante paradas distintas de SIGTERM limpio) no esta tocada; vive en systemd/bb-guardia-proceso.service, fuera de este cambio. El caso real con status ilegible no se reprodujo en la maquina; su causa del 2026-09-28 sigue sin probar.
