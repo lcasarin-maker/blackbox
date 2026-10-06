@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Diagnostico de paradas de una unit de usuario: se ejecuta desde ExecStopPost.
+#
+# Por que existe
+# --------------
+# bb-guardia-proceso se detuvo dos veces el 2026-10-06 (03:08 y 03:34 CST) y ningun
+# registro dijo quien mando la senal. systemd solo anota "code=killed, status=15/TERM"
+# o "status=9/KILL". El audit (regla senales_procesos: kill y tgkill) si registra el
+# emisor, pero sin este script nadie mira ese registro en el momento de la parada.
+#
+# Uso (lo llama systemd): bb-parada-diagnostico <unit> <EXIT_STATUS> <SERVICE_RESULT>
+# Escribe en $DATA/paradas.log. Sale 0 siempre: un diagnostico no debe cambiar la parada.
+set -u
+unidad="${1:?falta el nombre de la unit}"
+estado="${2:-?}"
+resultado="${3:-?}"
+data="${BLACKBOX_DATA:-$HOME/.local/share/blackbox}"
+mkdir -p "$data"
+log="$data/paradas.log"
+ahora=$(date '+%Y-%m-%d %H:%M:%S')
+desde=$(date -d '-3 min' '+%Y-%m-%d %H:%M:%S')
+
+{
+  echo "=== $ahora unit=$unidad exit_status=$estado service_result=$resultado"
+  echo "--- journal de la unit (3 min):"
+  journalctl --user -u "$unidad" --since "$desde" --no-pager 2>&1 | tail -n 15
+  echo "--- audit senales_procesos (ultimos 10 min, ausearch -ts recent), emisor y senal:"
+  ausearch -k senales_procesos -ts recent -i 2>/dev/null \
+    | grep -E 'type=SYSCALL' | grep -E 'SIGTERM|SIGKILL|a1=9|a1=15|a2=9|a2=15' | cut -c1-400 | tail -n 20
+  echo "--- kernel (3 min), OOM o kill:"
+  journalctl -k --since "$desde" --no-pager 2>&1 | grep -iE 'killed process|oom-kill|out of memory: kill' | tail -n 5
+  echo
+} >> "$log" 2>&1
+exit 0
