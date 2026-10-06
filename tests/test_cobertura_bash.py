@@ -8,9 +8,14 @@ tantas veces como profundidad de anidamiento tenga lo que ejecuta: `+` en el
 cuerpo principal, `++` dentro de una funcion llamada desde `$(...)`, `+++` un
 nivel mas adentro.
 
-Asi que todo lo que corria en una substitucion, una tuberia o un subshell se
-contaba como SIN CUBRIR. En `bin/bb` eso es casi todo, porque cada bloque de la
-muestra se arma con `x=$(funcion)`.
+Asi que todo lo que corria dentro de una substitucion `$(...)` se contaba como
+SIN CUBRIR. En `bin/bb` eso es casi todo, porque cada bloque de la muestra se
+arma con `x=$(funcion)`.
+
+Una correccion medida el 2026-10-06 con `bash -x`: una tuberia y un subshell
+llevan un solo `+`, asi que el ancla de un `+` los contaba bien; sólo la
+substitucion `$(...)` anida el prefijo (`++`). Lo que se corrigio es esa
+substitucion, no tuberias ni subshells.
 
 Medido el 2026-09-25: al arreglar el ancla, `bin/bb` paso de 27.0 % a 33.1 %.
 **Nadie escribio un test nuevo entre las dos cifras.** 57 lineas siempre
