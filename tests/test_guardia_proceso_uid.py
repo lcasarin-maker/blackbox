@@ -27,6 +27,7 @@ def _cargar():
     # AttributeError y la prueba falla por el cargador, no por el guardia.
     loader = importlib.machinery.SourceFileLoader("bb_guardia_proceso", str(GUARDIA))
     spec = importlib.util.spec_from_loader("bb_guardia_proceso", loader)
+    assert spec is not None
     modulo = importlib.util.module_from_spec(spec)
     sys.modules["bb_guardia_proceso"] = modulo
     try:
