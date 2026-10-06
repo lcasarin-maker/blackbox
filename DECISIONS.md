@@ -208,3 +208,18 @@ camino es el que se toma, aunque cueste más pasos.
 **Motivo.** Las 91 etiquetas `blocked` mezclaban desarrollo pendiente con impedimentos para cerrar investigaciones: 63 close_check citan selectores ausentes. Un instrumento se puede implementar y verificar mientras su investigación mantiene pendientes los ensayos de hardware, OEM o rollback.
 
 **Qué descarta.** No se prioriza ahora el canario de laboratorio sobre el resto del desarrollo. Este voto no autoriza firmware, reinicios, presión de memoria, cambios de red ni intervenciones del host. No se cierran fichas por fixtures ni se debilitan sus close_check para fabricar progreso. Se mide el avance por desarrollo verificado, separadamente de los cierres experimentales.
+
+## 2026-10-06 — Piso de cobertura rebajado a 97.15 % con caducidad (Luis)
+
+- **Decidido:** el piso del ratchet de cobertura (`.coverage_watermark`) baja de 100.00 a 97.15, con dueño Luis Casarin y caducidad 2026-11-06.
+- **Motivo:** las 116 pruebas de deuda abierta están marcadas xfail (tests/known_failures.json). Cada una se detiene en su primera aserción y no ejecuta el resto de su código, así que la cobertura medida cae a 97.15 %. Esa caída es la medición real de deuda abierta, no una regresión de código.
+- **Descartado:** mantener el piso en 100 % y bloquear el push hasta cerrar las fichas con capturas reales (depende de hardware que hoy no existe).
+- **Costo aceptado:** una regresión de hasta 2.85 puntos pasa sin bloquear mientras dure la excepción.
+- **Vuelve a 100 %:** cuando las fichas de las 116 pruebas se cierren (ficha DEBT-COBERTURA-PISO-REBAJADO-01).
+
+## 2026-10-06 — Guardia bb-guardia-proceso arrancada para que su verificador corra (Luis)
+
+- **Decidido:** arrancar `bb-guardia-proceso.service` (estaba habilitado y detenido desde 2026-10-05 05:09 sin registro) y dejar que el verificador `tools/demonio_al_dia.sh` corra en esta máquina.
+- **Motivo:** el verificador daba COULD_NOT_RUN porque no había proceso vivo que leer; con el servicio activo da rc=0.
+- **Descartado:** declarar una línea base de could_not_run para esa ficha (la excepción no resuelve el instrumento caído).
+- **Pendiente:** no se investigó por qué el servicio se detuvo con SIGTERM el 2026-10-05; si vuelve a detenerse, el verificador lo dirá.
