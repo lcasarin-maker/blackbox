@@ -27,4 +27,4 @@ Escaner y gate dan el mismo conteo de fraudes sobre el mismo repo, y un fraude s
 
 ## Estado
 
-Abierta. Pendiente de identificar la causa del parseo en `scan.py`.
+Abierta. La prueba tests/test_escaner_debt_fraudes.py llama a simplecode_backlog_verifier de scan.py y al gate, y falla: el escaner y el gate no cuentan igual (confirmado 2026-10-06). Costo: la prueba tarda ~13 min porque el escaner vuelve a correr el gate; decidir si se queda en la suite o pasa a una comprobacion manual.
