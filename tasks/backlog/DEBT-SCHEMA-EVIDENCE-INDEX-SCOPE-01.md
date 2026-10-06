@@ -3,7 +3,7 @@ id: DEBT-SCHEMA-EVIDENCE-INDEX-SCOPE-01
 kind: task
 domain: VERDICT
 title: "Índice Markdown de evidencias queda fuera del esquema gobernado"
-status: done
+status: open
 closed_at: 2026-10-03
 closure_type: fixed
 closure_reason: "Prosa archivada byte idéntica bajo docs; ledger conserva todos los sujetos y detecta ficha real fuera de alcance."

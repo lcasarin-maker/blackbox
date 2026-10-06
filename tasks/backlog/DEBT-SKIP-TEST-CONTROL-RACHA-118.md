@@ -8,7 +8,7 @@ origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_skip_test_control_racha_118", "expect": "exit_zero", "porque": "Ejecutar la rama del sujeto que hoy puede quedar skipped con fixture reproducible o entorno requerido identificado. Un informe con skip no se declara limpio. Control negativo: quitar la capacidad/fixture produce could_not_run visible; romper el comportamiento real hace fallar la prueba. Conservar el skip si corresponde, con razón, responsable y disparador revisables; no quitarlo para forzar éxito."}
-status: done
+status: open
 closed_at: 2026-10-03
 closure_type: fixed
 reason: "El corpus real de 22653 muestras está disponible y el control positivo devuelve LIMPIO; la ausencia queda como COULD_NOT_RUN con owner y trigger visibles."

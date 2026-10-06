@@ -47,7 +47,7 @@ def run_trial(neutralized: bool) -> dict[str, object]:
         )
         if ready.stdout.strip():
             break
-        real_sleep(0.01)  # blocking-sleep: intervalo de sondeo DENTRO del bucle con deadline explicito de 3 s (arriba) -- DEBT-RENDERER-PROBE-SLEEP-01  # sunset-reviewed: 2.3 -- sleep justificado por ficha DEBT-RENDERER-PROBE-SLEEP-01 (2026-10-05); revisar al cerrar la ficha
+        real_sleep(0.01)  # blocking-sleep: intervalo de sondeo DENTRO del bucle con deadline explicito de 3 s (arriba) -- DEBT-RENDERER-PROBE-SLEEP-01  # sunset-reviewed: 2.5 -- sleep justificado por ficha DEBT-RENDERER-PROBE-SLEEP-01 (2026-10-05); revisar al cerrar la ficha
     else:
         renderer.kill()
         renderer.wait()
@@ -61,7 +61,7 @@ def run_trial(neutralized: bool) -> dict[str, object]:
 
     def request_delayed_renderer_termination(_pgid: int, _sig: int) -> None:
         def terminate_after_delay() -> None:
-            real_sleep(0.12)  # blocking-sleep: el retraso de 120 ms ES el sujeto de la prueba (terminacion diferida del renderer), no una espera de sincronizacion -- DEBT-RENDERER-PROBE-SLEEP-01  # sunset-reviewed: 2.3 -- sleep justificado por ficha DEBT-RENDERER-PROBE-SLEEP-01 (2026-10-05); revisar al cerrar la ficha
+            real_sleep(0.12)  # blocking-sleep: el retraso de 120 ms ES el sujeto de la prueba (terminacion diferida del renderer), no una espera de sincronizacion -- DEBT-RENDERER-PROBE-SLEEP-01  # sunset-reviewed: 2.5 -- sleep justificado por ficha DEBT-RENDERER-PROBE-SLEEP-01 (2026-10-05); revisar al cerrar la ficha
             try:
                 real_killpg(renderer.pid, signal.SIGKILL)
             except ProcessLookupError:
