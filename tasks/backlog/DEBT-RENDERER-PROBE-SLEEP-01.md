@@ -8,7 +8,7 @@ severity: P3
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-05
-close_check: {"cmd": "python3 -c \"import sys; sys.exit(0 if 'time.sleep' not in open('tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/renderer-delayed-probe.py').read() and 'real_sleep(' not in open('tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/renderer-delayed-probe.py').read() else 1)\"", "expect": "exit_zero", "porque": "El probe espera la senal real (marcador de proceso visible, llamada killpg observada) en vez de tiempo fijo, y su control negativo sigue distinguiendo la terminacion diferida de la inmediata. Mientras haya sleeps, el cierre sigue pendiente."}
+close_check: {"cmd": "python3 -m pytest -q tests/test_renderer_probe_sleep.py", "expect": "exit_zero", "porque": "El probe espera la senal real (marcador de proceso visible, llamada killpg observada) en vez de tiempo fijo, y su control negativo sigue distinguiendo la terminacion diferida de la inmediata. Mientras haya sleeps, el cierre sigue pendiente."}
 ---
 
 ## Registro y responsable

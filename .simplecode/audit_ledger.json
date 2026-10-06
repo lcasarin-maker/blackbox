@@ -1,6 +1,6 @@
 {
-  "claims_fingerprint": "7dd9016f05b3421e5dbc6c76b3879273d6d5ca16f69550b7cc8347e8fab4d1ad",
-  "panel": "Two Luna auditors with root adversarial review, 2026-10-04; current controls, historical attribution, native drift timer, preserved evidence limits",
+  "claims_fingerprint": "002b902bde95866e75e9442af8d2800bbce6c17f1d82cb347682f6f6ba7ee799",
+  "panel": "Claude Opus, auditoria adversarial /clean 2026-10-06 (SPEC L350/L354 re-auditadas)",
   "profile": "general",
   "results": [
     {
@@ -8,139 +8,122 @@
         "tools/atom_gpu_telemetry.py": "50519f062b0d4cf314d631b41cc5a37d06e4dad8b7ddc7970322e569b1970e40"
       },
       "claim_id": "SPEC-L118",
-      "could_not_run": 0,
-      "evidence": "`tools/atom_gpu_telemetry.py:67-85` documenta y contiene una copia local del helper que antes acoplaba este archivo a Atlas; `tools/atom_gpu_telemetry.py:92-97` define el JSONL de blackbox que Atlas consume. En Atlas, `tests/test_dgx483_blackbox_telemetry_ownership.py:198-214` comprueba que no haya imports de blackbox y que la v\u00eda de consumo sea un proceso; `tools/bb_consulta.py:45-53` ejecuta el gate de blackbox v\u00eda subprocess. Corr\u00ed las tres pruebas focales de propiedad/frontera/control negativo: `3 passed in 6.67s`.",
-      "id": "SPEC-L118",
+      "evidence": "Afirmaciones: (a) Atlas no importa codigo de blackbox; (b) blackbox no importa codigo de Atlas; (c) Atlas consume el jsonl que escribe tools/atom_gpu_telemetry.py en $BLACKBOX_DATA/atom_gpu_telemetry.jsonl. (a)+(b) Escaner AST propio sobre `git ls-files '*.py'` de ambos repos (145 ficheros blackbox, 940 Atlas): imports cuyo modulo existe SOLO en el otro repo -> 'blackbox->Atlas-only module imports: 0 []', 'Atlas->blackbox-only module imports: 0 []'. Control negativo corrido: el mismo matcher sobre imports sinteticos ('tools.atom_degradacion_resuelta' en blackbox, 'tools.calibra_psi' en Atlas) -> detecta ambos. grep de carga dinamica (sys.path/importlib/runpy/SourceFileLoader) en ambos repos: ninguna linea apunta al otro repo (las de Atlas apuntan a su propio REPO; las de blackbox a sus propios ficheros). Test de Atlas `pytest tests/test_dgx483_blackbox_telemetry_ownership.py` -> 14 passed; nota: su test test_ningun_fichero_de_atlas_importa_codigo_de_blackbox solo busca la subcadena 'blackbox' y no detectaria `from tools.calibra_psi import x` con sys.path manipulado; por eso el veredicto descansa en el escaner AST, no en ese test. (c) blackbox tools/atom_gpu_telemetry.py:96-97: DATA_DIR = BLACKBOX_DATA o ~/.local/share/blackbox; JSONL_PATH = DATA_DIR/'atom_gpu_telemetry.jsonl'. Atlas tools/atom_degradacion_resuelta.py:72-74 lee _BB_DATA/'atom_gpu_telemetry.jsonl'. El fichero existe y esta vivo: `ls -l` -> 139965877 bytes, mtime 2026-10-06 00:29:11 (date 00:29:13). Atlas ya no versiona atom_gpu_telemetry.py (`git ls-files | grep atom_gpu_telemetry.py$` vacio).",
       "seal": "716c06dd43357d37831ce7c376c216d30a9ff945e649040abb9f6709d937b45b",
-      "verdict": "PASS"
+      "verdict": "pass"
     },
     {
-      "cited": {},
+      "cited": {
+        "tools/atom_gpu_telemetry.py": "50519f062b0d4cf314d631b41cc5a37d06e4dad8b7ddc7970322e569b1970e40"
+      },
       "claim_id": "SPEC-L122",
-      "claim_sha256": "6771042ad97917b31fb10e88313874859c4c6a8f4b33a6edc16651292b3561bd",
-      "claim_text": "Blackbox gobierna el estado f\u00edsico y expone telemetr\u00eda y gates.",
-      "evidence": "`SPEC.md:122-126` asigna a Blackbox estado f\u00edsico, telemetr\u00eda y gates, y a Atlas pol\u00edtica de admisi\u00f3n y conocimiento. `Atlas/tools/bb_consulta.py:74-85` consulta resultados GPU de Blackbox mientras conserva la pol\u00edtica Atlas; en el repo Atlas, `tests/test_dgx483_blackbox_telemetry_ownership.py` y `tests/test_bb_consulta.py` dieron `24 passed in 5.91s`.",
-      "seal": "e8348f22c84b196deba8dbe482b75d5056b61377caa138dc9b726fa31b8545fe",
-      "verdict": "PASS"
+      "evidence": "Afirmaciones: blackbox gobierna estado fisico y expone telemetria y gates; Atlas consulta esos resultados y conserva la admision; detect_atom_crash.py vive en Atlas, importa tools.durable_log y escribe en docs/agent_findings/; Atlas/tools/instalar_earlyoom.sh retirado a tools/_retired/ por DGX-604 mergeado a master en ec9b4288a con la colision de id con DGX-600 renumerada. Gate expuesto: `python3 ~/projects/blackbox/tools/atom_gpu_telemetry.py --gate-termico` -> {\"bloquea\": false, \"motivo\": \"\"} rc=0. Atlas tools/bb_consulta.py:30 GATE_POR_DEFECTO = ~/projects/blackbox/tools/atom_gpu_telemetry.py, invocado por subprocess con --gate-termico (l.51). Consulta real desde Atlas: motivo_termico() -> '' . Control negativo corrido: BB_GATE_TERMICO=<gate falso que imprime bloquea=true> -> motivo_termico() = 'FAKE caliente' (la consulta si cambia de veredicto). Gobierno fisico: tools/atom_gpu_telemetry.py:1455 ctx.enviar_senal(pid, signal.SIGSTOP); bb-usable.service enabled y active. Atlas detect_atom_crash.py:76 `from tools.durable_log import append_jsonl`, l.82 FINDINGS_DIR = REPO/'docs'/'agent_findings'. earlyoom: `ls tools/instalar_earlyoom.sh` -> No existe; tools/_retired/instalar_earlyoom.sh existe. `git log -1 ec9b4288a` -> 'Merge branch claude/eloquent-babbage-23bf8b', `git merge-base --is-ancestor ec9b4288a master` -> verdadero; su rama trae 558ea990c 'retire(DGX-600): tools/instalar_earlyoom.sh' (id previo a renumerar). tasks/done/DGX-604.md id DGX-604, titulo sobre instalar_earlyoom.sh, l.17 'Un audit H1 de blackbox/SPEC.md (2026-09-28...)', l.79 '## Aterrizada por /clean 2026-09-28: renumerada'; tasks/done/DGX-600.md es otra ficha (lote de cosecha) -> colision resuelta. `pytest tests/test_dgx604_earlyoom_retirado.py` -> 5 passed.",
+      "seal": "ed8ea928adc069fe09588575f07d74b2687bb7c3bb804f692bf684563b10f640",
+      "verdict": "pass"
     },
     {
       "cited": {
         "enable-privileged.sh": "d7ca9d1129ead39cf03eaa22cd622c8ebbe51dfe99b2099062432c072998b638"
       },
       "claim_id": "SPEC-L135",
-      "claim_sha256": "0a3582259b793a3f2dcfec2431cc38e57b6149058863bdc4bf71836e768aa51c",
-      "claim_text": "Las unidades de usuario que Blackbox instala pueden arrancar sin sesi\u00f3n",
-      "evidence": "`enable-privileged.sh:650` ejecuta `loginctl enable-linger` para el due\u00f1o, y `SPEC.md:135-138` circunscribe la afirmaci\u00f3n a unidades de usuario y se\u00f1ala que demostrar arranque sin sesi\u00f3n requiere observar una m\u00e1quina en ese estado. La consulta de host del 2026-10-03 `loginctl show-user lcasarin -p Linger -p State -p Sessions` devolvi\u00f3 `Linger=yes`, `State=active`, `Sessions=12`; esto confirma el mecanismo habilitado, no una prueba hist\u00f3rica de arranque sin sesi\u00f3n.",
+      "evidence": "Afirmaciones: las unidades de usuario que blackbox instala pueden arrancar sin sesion; enable-privileged.sh activa linger para el dueno; las unidades de sistema arrancan bajo systemd. enable-privileged.sh:650 `run loginctl enable-linger \"$DUENO\"` (seccion 10). `loginctl show-user lcasarin -p Linger` -> Linger=yes; /var/lib/systemd/linger/lcasarin existe. bin/bb cmd_install (l.2428-2437) copia blackbox-sample/drift .service/.timer a ~/.config/systemd/user y hace enable --now; los dos timers WantedBy=timers.target; `systemctl --user is-enabled` -> enabled (tambien atom-gpu-telemetry.service y ai-memory-monitor.timer). Prueba en el sujeto, arranque actual: `uptime -s` 2026-10-05 00:31:43; user@1000 ActiveEnterTimestamp 00:31:53; logind: unica sesion previa 'New session c1 of user gdm' 00:31:55, primera sesion de lcasarin 'New session 11' a las 01:35:15. `journalctl --user -b -u blackbox-sample.service --since 00:31:00 --until 01:35:15` -> 65 lineas Started/Finished, la primera 'Starting blackbox-sample.service' a las 00:31:53: la unidad corrio 63 min antes de cualquier login del dueno. Control negativo corrido: la misma consulta en la ventana 00:00:00-00:31:40 (antes del boot) -> 0. Unidades de sistema: `systemctl is-enabled bb-usable.service atom-clock-lock.service nvrm-watch.timer` -> enabled x3; bb-usable ActiveEnterTimestamp 2026-10-05 00:31:59.",
       "seal": "ff3fb894ebbc4e951b09b857b868e2b2b9e49c7b9a4a95708afcd77672f5cb20",
-      "verdict": "PASS"
+      "verdict": "pass"
     },
     {
       "cited": {
-        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/heartbeat-and-sunset-correction-root.json": "58a5fd2ad809e6d24fe6fbbbe409e8715ece5c7295018218079aa46063056b24",
-        "tests/test_bb_bash.py": "bb3aa3fe50d0ee7b78eebfd29ddc6e9cdb9f1eeb71225dc2dc8239193164f3a1"
+        "tests/test_bb_bash.py": "94310e1f36474a9e86a47e29f3627f6cb57ca76614819116d3a26f0f38231708"
       },
-      "claim_id": "SPEC-L346",
-      "could_not_run": 0,
-      "evidence": "`SPEC.md:346` enumera cinco controles negativos de muestra/clock-lock/earlyoom y tres de latido bb-usable; el recibo `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/heartbeat-and-sunset-correction-root.json` registra el comando focal de `tests/test_bb_bash.py` con salida literal `9 passed, 77 deselected in 1.29s`, cubriendo esos ocho controles y el caso heartbeat. La ejecuci\u00f3n previa con el stub incompleto produjo cuatro CNR por `Failed to connect to bus: Operation not permitted`; tras corregir el stub exacto del test, el recibo final marca `could_not_run: 0`, as\u00ed que esa limitaci\u00f3n del harness ya no refuta la claim actual.",
-      "id": "SPEC-L346",
-      "seal": "b5479b4b3e953d6b5147dd572262f2a88b4fdbf32482b977eda7352b4a903a43",
-      "verdict": "PASS"
+      "claim_id": "SPEC-L347",
+      "evidence": "HEAD 16d2089. (1) Los cinco nombres existen una vez cada uno: `grep -c \"def <nombre>\" tests/test_bb_bash.py` -> 1,1,1,1,1. (2) Los tres del latido de bb-usable: test_control_negativo_bb_usable_activa_con_latido_RANCIO (l.641) y test_control_negativo_bb_usable_activa_sin_latido parametrizado ids=[journal_vacio, solo_arranque] (l.649-650). (3) `python3 -m pytest -q tests/test_bb_bash.py -k \"control_negativo_sin_muestra_fresca or clock_lock_con_OTRO or clock_lock_sin_confirmacion or earlyoom_de_serie or earlyoom_con_UNA or bb_usable\"` -> 9 passed (5 + 1 positivo + 3 del latido). (4) bin/bb:2169 `since=$(date -d '120 seconds ago' ...)`, bin/bb:2170 `$JOURNALCTL -u bb-usable.service -S \"$since\"`, bin/bb:2177 patron `*\"[bb-usable] latencia del escritorio:\"*`; bin/bb-usable:91 PROBE_INTERVAL = 30.0 y l.277 imprime `[bb-usable] latencia del escritorio:`. (5) Fechas: `git log -S` da 37ccd7d 2026-09-25 para los cinco tests y 87168fb 2026-09-28 para el latido y sus dos tests; `git show 37ccd7d:SPEC.md` dice 'cuatro controles negativos corridos' y el mensaje de 37ccd7d l.36 tambien, mientras ese commit anadio cinco tests: el 'cuatro' estaba mal, como dice el claim. CONTROL NEGATIVO corrido en copia `git archive HEAD` en scratchpad: cambiar el patron a `*\"[bb-usable]\"*` y la ventana a 9000 s -> `pytest -k bb_usable` da 2 failed (latido_RANCIO, sin_latido[solo_arranque]), 2 passed; anadir `*\"Preferring\"*) ok=0` en el chequeo de earlyoom (bin/bb:2355) -> FAILED test_control_negativo_earlyoom_con_UNA_sola_regex_no_basta. Sin mutacion: 4 passed. Lo que el claim declara como no comprobado (correccion del contenido) sigue sin comprobarse, tal como dice.",
+      "seal": "c3eb09f9f7f67308e2f883e8135c8425e7fbeaa54e34f779358fc04851ac3115",
+      "verdict": "pass"
     },
     {
       "cited": {
         ".pre-commit-config.yaml": "233bc32e60b261b6e27de4ae2eb4ae1055edc4d7d46a26bc5dcfe87bfe3d97bb",
+        "tasks/evidence/SWARM-TENS-2026-10-03/summary.json": "d82c896ebc91b952ace69b0009c7b3def01101d2d948e05cdde70829773f06b4",
         "tests/test_auditoria_bb_regresiones.py": "c9eb27c7d1b378764237dde303b9bee5291d8311f0daaff899b70f2f13cdfe6b",
         "tests/test_bash_sintaxis.py": "e88177f8046be8e615efb81411d9ce817f0f7653011f9a4c4c50708430f18d95",
         "tests/test_hook_native_controls.py": "e3310194c72c9a6abfb58bb5309c3ecf8b3b11f18b9b8d67792b1f773ed068eb",
         "tests/test_ruff_gitleaks_controles_negativos.py": "4887944d36593eb387a74b61cac6e2844136a5dfa3dd0f6f2d2dedf03f5fc482"
       },
-      "claim_id": "SPEC-L347",
-      "could_not_run": 0,
-      "evidence": "Corr\u00ed `python3 -m pytest -q tests/test_bash_sintaxis.py` (2 passed), `python3 -m pytest -q tests/test_hook_native_controls.py` (2 passed) y `python3 -m pytest -q tests/test_ruff_gitleaks_controles_negativos.py` (4 passed); `tests/test_hook_native_controls.py:24-76,79-98` incluye aceptaci\u00f3n de contenido v\u00e1lido y controles inyectados que deben fallar. `tests/test_auditoria_bb_regresiones.py::test_scan_fielddiag_summary_invalido_incrementa_cnr` pas\u00f3 (1 passed), y `tests/test_auditoria_bb_regresiones.py:381-423` prueba que un resumen ilegible/inv\u00e1lido produce COULD_NOT_RUN y que un resumen v\u00e1lido con error de hardware se analiza. `.pre-commit-config.yaml:257-264` mantiene `telemetry-bound` en pre-push y termina el comando de pruning con `|| true`; `.simplecode/evidence/telemetry.jsonl:3,31,48,72` registra los cuatro CNR hist\u00f3ricos de `spec-check`/`no-perder-lineas` con cero hallazgos.",
-      "id": "SPEC-L347",
-      "seal": "e8b14fca826d8479d53bf16293352f73dd1e898eafc99d523dfeed6399bb234a",
-      "verdict": "PASS"
-    },
-    {
-      "cited": {
-        "tests/test_atom_gpu_telemetry.py": "f1d5fe069192ad2697351462d9f58836c51285787d9c0802c332b8e1533a0113"
-      },
       "claim_id": "SPEC-L348",
-      "could_not_run": 0,
-      "evidence": "`adopted/systemd-user/blackbox-sample.service:8-9` y `adopted/systemd-user/atom-gpu-telemetry.service:14-15` declaran `Nice=19` e `IOSchedulingClass=idle`; el recibo fechado `tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/host-evidence/nice-current.txt` registra esos valores en vivo y distingue los muestreadores adoptados con `ai-memory-monitor Nice=0` y `ai-gpu-telemetry Nice=10`. La unit `systemd/bb-guardia-proceso.service:18` declara `Nice=10`; la prueba `tests/test_atom_gpu_telemetry.py::test_mitigar_pausa_los_pids_mitigables_al_entrar_en_alarma` junto a controles de no-alarma/reanudaci\u00f3n y sampler dio `4 passed in 0.04s`, respaldando la descripci\u00f3n de la conducta t\u00e9rmica.",
-      "id": "SPEC-L348",
-      "seal": "ad8596a04631b5a12f108d1a15bab32e15d185cee274475d300a5935e78e80e0",
-      "verdict": "PASS"
+      "evidence": "`pytest -q tests/test_bash_sintaxis.py` -> 2 passed; `pytest -q tests/test_ruff_gitleaks_controles_negativos.py` -> 4 passed; `pytest -v tests/test_hook_native_controls.py` -> test_spec_check_passes_then_rejects_missing_objective PASSED, test_no_perder_lineas_passes_then_rejects_deleted_tracked_lines PASSED; las aserciones confirman aceptar lo valido (rc==0) y rechazar lo inyectado (rc==1, 'FAIL Objective', 'pierden=1'). `pytest -q tests/test_auditoria_bb_regresiones.py::test_scan_fielddiag_summary_invalido_incrementa_cnr` -> 1 passed; sus aserciones exigen 'resumen Field Diagnostic: COULD_NOT_RUN' para resumen ilegible/incompleto y 'tests con error: 1' sin error de lectura para el valido. `.pre-commit-config.yaml:257-263`: telemetry-bound en stage pre-push con `... telemetry_prune --root . --gate || true`. Telemetria (`python3` sobre .simplecode/evidence/telemetry.jsonl, 8550 lineas, 0 ilegibles, filtrando check in {spec-check,no-perder-lineas}): could_not_run = 3 (no-perder-lineas) + 1 (spec-check), todos 2026-09-08; ningun status distinto de ok/could_not_run en ninguna fecha. CONTROL NEGATIVO corrido en copia scratch: cambiar `sys.exit(2)` por `sys.exit(0)` tras 'no se pudo leer summary.json' (bin/bb:1051) -> el test falla con AssertionError 'resumen Field Diagnostic: COULD_NOT_RUN' not in stdout. Los otros tres ficheros contienen sus propios controles negativos (aserciones rc!=0 sobre fallas inyectadas), comprobados por lectura de las aserciones y por su paso.",
+      "seal": "2fe9edefb5cf9e7804e30b940d0f1f320b546ab98b58677a21a36df4cc37150a",
+      "verdict": "pass"
     },
     {
       "cited": {
-        "tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-h1/calibra-psi-current-root.json": "8a50555246da0814fc09067383b7aa10237e8e0ea540a0903abb9e915eb8f7b5",
+        "tools/atom_gpu_telemetry.py": "50519f062b0d4cf314d631b41cc5a37d06e4dad8b7ddc7970322e569b1970e40"
+      },
+      "claim_id": "SPEC-L349",
+      "evidence": "`grep -rn -E '^(Nice|IOSchedulingClass)=' systemd adopted`: systemd/blackbox-sample.service Nice=19/idle; adopted/systemd-user/atom-gpu-telemetry.service:14-15 Nice=19/idle; adopted/systemd-user/ai-gpu-telemetry.service Nice=10/idle; systemd/bb-guardia-proceso.service:18 Nice=10. En vivo `systemctl --user show <u> -p Nice -p IOSchedulingClass -p ActiveState -p UnitFileState`: blackbox-sample Nice=19 IOSchedulingClass=3(idle); atom-gpu-telemetry Nice=19 IOSchedulingClass=3 active enabled; bb-guardia-proceso Nice=10 inactive enabled; ai-memory-monitor Nice=0 (timer `OnCalendar=*:0/5`, ActiveState=active, enabled); ai-gpu-telemetry Nice=10 disabled. ExecStart de ai-memory-monitor y ai-gpu-telemetry en /srv/ai/gpu_governance/. `git log -p -- adopted/systemd-user/atom-gpu-telemetry.service` -> 2e05d38 2026-09-28 '-Nice=10 +Nice=19'. tools/atom_gpu_telemetry.py contiene 10 menciones SIGSTOP/SIGCONT (l.282 enviar_senal SIGCONT). bin/bb-guardia-proceso:29-31 'No muestrea nada por su cuenta: LEE ... samples/<hoy>.jsonl' y l.106 EVIDENCIA = DATA / 'guardia_proceso.jsonl'. `git log -G 'en los tres muestreadores' -- SPEC.md` -> 72a722d y 11e3cfb 2026-09-28. CONTROL NEGATIVO: el mismo instrumento `systemctl show -p Nice` devuelve valores distintos para otras units (0 y 10), asi que puede contradecir el 19 declarado.",
+      "seal": "338722c780cd248633db28af6679ebb223a48aff2a8a5c95db20da933c96e823",
+      "verdict": "pass"
+    },
+    {
+      "cited": {
         "tests/test_calibra_psi.py": "0d933d4fd985a38407edee0f59836aceaaaf09188160afc13ad2f37e2a9c0b48",
         "tools/calibra_psi.py": "8254b6296b36d06e1bc84c34a3f8001b132c90da5965edabf6489fba94f18c87"
       },
-      "claim_id": "SPEC-L349",
-      "could_not_run": 0,
-      "evidence": "`tasks/done/DEBT-PSI-UMBRALES-SIN-CALIBRAR.md:24-40` conserva la calibraci\u00f3n hist\u00f3rica contra dos congelamientos del 2026-09-22/23 y las 19 804 muestras, incluyendo la excursi\u00f3n sana de 98.53 % y el m\u00ednimo sostenido hist\u00f3rico de 48.80 %; `tools/calibra_psi.py:57-94` separa incidentes posteriores, incluido el episodio del 2026-09-26, por fechas. La observaci\u00f3n actual, que no reescribe aquella historia, est\u00e1 fijada en `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-h1/calibra-psi-current-root.json`: comando `python3 -m tools.calibra_psi`, corpus rotatorio hasta 2026-10-04 07:55, 23 305 muestras, cero falsos positivos, un incidente no detectado, retorno 1; el log adjunto atribuye el miss al hueco de muestreo del incidente 2026-09-28. El c\u00f3digo `tools/calibra_psi.py:109-122` declara ese hueco, y `tests/test_calibra_psi.py::test_control_negativo_excursion_solapa_incidente_pero_dispara_despues` pas\u00f3; la fila de SPEC reporta adem\u00e1s su resultado fechado del 2026-09-28 y la limitaci\u00f3n de n=6/canal, no presenta el 48.80 % como m\u00ednimo de todos los episodios futuros.",
-      "id": "SPEC-L349",
-      "seal": "8d66f5a1aab876cf4cc132715b7ea3b3d941a82981dec129683e53da73ebb2d1",
-      "verdict": "PASS"
-    },
-    {
-      "cited": {},
       "claim_id": "SPEC-L350",
-      "could_not_run": 0,
-      "evidence": "`bin/bb:2544-2618` compara sujetos y retorna distinto de cero ante divergencias o ausencias; los tests positivo y negativos de drift dieron `5 passed, 81 deselected`, y `./bin/bb drift` produjo `revisados: 41 divergentes: 2 ausentes: 0 suspendidos: 1`, exit 1. La ejecuci\u00f3n nativa de solo lectura est\u00e1 registrada en `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-h1/drift-timer-native-root.log`: `systemctl --user show blackbox-drift.timer -p LoadState -p ActiveState -p UnitFileState` devolvi\u00f3 `LoadState=loaded`, `ActiveState=active`, `UnitFileState=enabled`; `systemd/blackbox-drift.timer:4` declara `OnCalendar=daily` y `Persistent=true`.",
-      "id": "SPEC-L350",
-      "seal": "feb117d8c4c3706937709c41e5f15f78ac921c886dfee2cd81554d4c4cd44d1f",
-      "verdict": "PASS"
+      "evidence": "Texto leido con `python3 -m simplecode.cli audit --root . --stale` (why: claim text changed; cited tools/calibra_psi.py, tests/test_calibra_psi.py). (1) `python3 -m tools.calibra_psi` corrido 2026-10-06 01:12 CST: rc=1, 'corpus: 2026-09-21 00:00 -> 2026-10-06 01:12', 'muestras con PSI: 23777', 'falsos positivos: 1', 'incidentes no detectados: 1', 'incidentes fuera del corpus: 0', 'VEREDICTO: CORTE INVALIDO'. La diferencia 23777 frente a 23776 y 01:12 frente a 01:11 es una muestra nueva del corpus vivo (bb sample escribe una por minuto). Reproduccion exacta de la cifra fechada: `carga(MUESTRAS)` filtrada a ts < 2026-10-06 01:12 y pasada a `calibra()` da 23776 muestras, rango ('2026-09-21 00:00','2026-10-06 01:11'), 1 falso positivo, 1 no detectado: coincide literalmente con el texto. (2) `calibra(carga(MUESTRAS))['falsos_positivos']` = una excursion 2026-10-05 00:18:38 -> 2026-10-05 00:26:00, 7.37 min (texto: 7.4 min), max mem_full 78.3 %, 6 muestras; es tambien el septimo COLAPSO de la lista. (3) `['no_detectados']` = ventana (2026-09-28 03:28, 2026-09-28 03:39), el quinto incidente; coherente con la frase del 2026-09-28 del mismo texto. Comprobado ademas en samples/2026-09-28.jsonl: la ultima linea antes del reinicio es '03:29:02' con burst_fin; la siguiente es 03:41:52. (4) `journalctl --list-boots`: boot -1 7ee2ddd4... 'Sun 2026-10-04 23:55:25 CST Mon 2026-10-05 00:29:49 CST'; el falso positivo cae dentro de ese arranque. (5) Control negativo corrido: directorio temporal con symlinks a los 16 .jsonl del corpus (copia completa) y otro con 15, sin 2026-10-05.jsonl. Copia completa: 23777 muestras, falsos positivos 1, no detectados 1, rc=1. Sin 2026-10-05: 22035 muestras, COLAPSO 7 -> 6, falsos positivos 0, no detectados 1, rc=1. El falso positivo desaparece y el no detectado se queda, porque es del 09-28. (6) `git show 90847b3`: el mensaje contiene 'Medido sobre 19804 muestras (2026-09-08 07:57 -> 2026-09-23 10:53)', '98.53 %' y '48.80 %'. `grep -nE '19 ?804|98\\.53|48\\.80' tools/calibra_psi.py` encuentra las lineas 13, 14, 16 y 40 del docstring y de los comentarios. El texto atribuye esas cifras al commit y al docstring y dice que no se re-derivan; bin/bb:16 confirma RETAIN_DAYS=14 (el corpus vivo empieza en 2026-09-21). n=6 es un conteo de hoy, no una cifra historica: `len(INCIDENTES)` = 6, con dos ventanas del 2026-09-28 (03:28-03:39 y 04:18-04:27). El test citado existe (tests/test_calibra_psi.py:154) y `python3 -m pytest -q tests/test_calibra_psi.py` da '24 passed'.",
+      "seal": "96551ba546bbea8f7b5d1797c9ab8665417efc7660ae9259ea7d68dcd5c0853b",
+      "verdict": "pass"
     },
     {
       "cited": {
-        "tools/inventario.py": "10e3fa08fc51010767c70a8d605d9302efcd53d0b1347c58042a8ec45cb62931"
+        ".pre-commit-config.yaml": "233bc32e60b261b6e27de4ae2eb4ae1055edc4d7d46a26bc5dcfe87bfe3d97bb",
+        "tests/test_bb_bash.py": "94310e1f36474a9e86a47e29f3627f6cb57ca76614819116d3a26f0f38231708"
       },
       "claim_id": "SPEC-L351",
-      "could_not_run": 0,
-      "evidence": "`tools/inventario.py:76-143` documents the initial instrument defects and checks current inventory; `python3 -m tools.inventario --check` produced HALLAZGOS: 0 and its nineteen focused tests passed. Root executed `git show -s --format=%H%n%B 1ec66b3`: the exact commit message records six mismatches, two instrument defects, 73 statements and eleven tests; the archived raw message is `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-h1/SPEC-L351-commit-root.txt`. SPEC explicitly discloses the original stdout is absent, so this verifies its historical attribution and current behavior, not a recovered measurement.",
-      "id": "SPEC-L351",
-      "seal": "d6a0f0f13191516a3a1d2a24dc6f5891e52bb6dc24724d8520ca6d46f47fc170",
-      "verdict": "PASS"
+      "evidence": "`git show f8046fb^:bin/bb` (cmd_drift) termina en `return 0` incondicional; ningun fichero de systemd/ adopted/ ni .pre-commit-config.yaml en f8046fb^ invocaba `bb drift` (`git grep 'bb drift' f8046fb^ -- systemd adopted .pre-commit-config.yaml` solo da comentarios de adopted/solo-registro.txt). En HEAD cmd_drift devuelve 0 solo si diverged+missing==0, si no `return 1`. systemd/blackbox-drift.timer: OnCalendar=daily, Persistent=true; service ExecStart=%h/projects/blackbox/bin/bb drift; en vivo `systemctl --user show blackbox-drift.timer` -> ActiveState=active, UnitFileState=enabled, LastTriggerUSec=Mon 2026-10-05 00:00:07. Timer anadido en f8046fb 2026-09-28. `pytest -q tests/test_bb_bash.py -k test_drift_` -> 5 passed (SALE_0 sin divergencia, SALE_DISTINTO_DE_0 diverge/ausente, suspension vigente/vencida): verificado en ambos sentidos. Corrida real `./bin/bb drift` hoy -> rc=1, 'revisados: 41 divergentes: 2 ausentes: 0 suspendidos: 1'. CONTROL NEGATIVO corrido en copia scratch: cambiar el `return 1` final por `return 0` -> 3 failed (diverge, ausente, suspension_VENCIDA), 2 passed.",
+      "seal": "f6b87c627a94d941a74d7a49f9bf4b53cff7f334e8798504ef84b21337c23bbb",
+      "verdict": "pass"
+    },
+    {
+      "cited": {
+        ".pre-commit-config.yaml": "233bc32e60b261b6e27de4ae2eb4ae1055edc4d7d46a26bc5dcfe87bfe3d97bb",
+        "tools/inventario.py": "10e3fa08fc51010767c70a8d605d9302efcd53d0b1347c58042a8ec45cb62931"
+      },
+      "claim_id": "SPEC-L352",
+      "evidence": "`git show 1ec66b3^:SPEC.md` l.68: '- Actuar sobre lo que mide. `bb protect` es la unica excepcion'; `git show 1ec66b3^:systemd/bb-usable.service` l.16 WatchdogSec=360 y l.23 FailureAction=reboot-immediate: la spec declaraba fuera de alcance actuar mientras bb-usable reiniciaba. `.pre-commit-config.yaml:149-157` hook inventario-spec ejecuta `python3 -m tools.inventario --check` sin `stages` y sin default_stages, por lo que corre en pre-commit. tools/inventario.py:5 'ata al sujeto -- bin/bb, tools/, adopted/', l.37-43 lee bin/bb y bin/, tools/, l.72 adopted/. tools/inventario.py:76-99 contiene citados() ('defecto del instrumento, encontrado en su primera corrida') y filas_de_tabla() ('el segundo defecto del instrumento en su primera corrida'). Mensaje de 1ec66b3 l.36 'Cazo 6 desajustes en su primera corrida; 2 eran defectos del propio instrumento' y no incluye stdout. `python3 -m tools.inventario --check` hoy -> HALLAZGOS: 0, rc=0. CONTROL NEGATIVO corrido en copia scratch: crear tools/herramienta_fantasma.py -> 'funcion sin inventariar en SPEC.md: tools/herramienta_fantasma.py', HALLAZGOS: 1, FAIL, rc=1; al borrarlo vuelve a rc=0.",
+      "seal": "c127c1e3ac928be0257d83de7da91ae5b5ee0668d6aed07b255f8d2473a4d2fe",
+      "verdict": "pass"
     },
     {
       "cited": {
         "enable-privileged.sh": "d7ca9d1129ead39cf03eaa22cd622c8ebbe51dfe99b2099062432c072998b638",
         "tasks/evidence/RELEASE-2.1.0/h1-items.json": "f83de679f314740d5cad19814f28d06a0234afd29f45642b69be8fa8a29145c5"
       },
-      "claim_id": "SPEC-L352",
-      "could_not_run": 0,
-      "evidence": "`SPEC.md:352` limita la atribuci\u00f3n de los cuatro sujetos a lo que afirma la clasificaci\u00f3n H1 archivada y declara expl\u00edcitamente pendiente revalidar la fecha y la discrepancia cuatro-frente-a-ocho; `tasks/evidence/RELEASE-2.1.0/h1-items.json:79` es la referencia archivada de esa atribuci\u00f3n, mientras esta copia reconoce que carece del stdout de `stat -c %w` y del control negativo. Los conteos comprobables siguen reproduci\u00e9ndose: `git show --diff-filter=A --format= --name-only 1ec66b3 -- adopted/` da 12 paths a\u00f1adidos, y `./bin/bb drift` actual da `revisados: 41 divergentes: 2 ausentes: 0 suspendidos: 1`, exit 1; la redacci\u00f3n actual no presenta la fecha hist\u00f3rica como verificada independientemente.",
-      "id": "SPEC-L352",
-      "seal": "808110e28f7e52e648423c5e3d0cc203c478fc0be289a6a72dd60d63c06e6924",
-      "verdict": "PASS"
+      "claim_id": "SPEC-L353",
+      "evidence": "`git diff --diff-filter=A --name-only 1ec66b3^ 1ec66b3 -- adopted/ | wc -l` -> 12; sin filtro -> 13; el no-A es `M adopted/systemd-user/atom-gpu-telemetry.service`. Blobs identicos (`git rev-parse`): adopted/.../etc_systemd_system_bb-usable.service = systemd/bb-usable.service@1ec66b3^ = 44fc231; blackbox-sample.service = 085ad4a; blackbox-sample.timer = 08f16eb. `git show 1ec66b3^:enable-privileged.sh` l.351 `cat >/etc/modprobe.d/99-blackbox-uvm.conf <<'CONF'` (heredoc); `git show 1ec66b3:enable-privileged.sh` l.523 y l.544 `run cp adopted/...99-blackbox-panic.conf` y `...99-blackbox-watchdog.conf`; `git grep -E '99-sysrq|kdump-tools' 1ec66b3^` fuera de docs/SPEC/tasks -> sin salida (sin escritor). `stat -c %w`: 99-sysrq.conf 2026-08-28 07:34:41; kdump-tools 2026-08-28 07:35:01; 99-freeze-panic.conf 2026-09-09 15:39:20; nvrm-watch.sh 15:40:13; nvrm-watch.service 15:40:31; nvrm-watch.timer 15:40:37 (los cuatro en 15:39-15:40, con mtime 2026-09-28 12:59, o sea re-desplegados sin perder la fecha de nacimiento); control: 99-blackbox-uvm.conf nacio 2026-09-24, fuera de esa ventana. h1-items.json (12 items) contiene '#358951', '99-freeze-panic', '15:39' y '15:40' una vez. Primer alta de *nvrm-watch* en git: 1ec66b3. Conteo de sujetos (`git ls-tree -r --name-only <c> -- adopted/` sin solo-registro.txt): 1ec66b3^ = 18, 1ec66b3 = 30, 7146914 (09-25) = 38, e4cb0e2 (2026-09-28 00:19, anade etc_systemd_system_system.slice.d_99-blackbox.conf) = 39, f8046fb (anade blackbox-drift.service/.timer) = 41, HEAD = 41. Mensaje de 1ec66b3 l.10: 'vigila ahora 30 sujetos, antes 19'. Evidencias: DEBT-BB-SAMPLE-SIN-TECHO.../e2e.txt l.1 fechado 2026-09-28, l.10 'revisados: 41 divergentes: 0 ausentes: 0 suspendidos: 1'; DEBT-H1-RELEASE-CLAIMS-01/drift-current.txt l.1 'Captura del 2026-10-03; ... exit=1', l.67 'revisados: 41 divergentes: 2 ausentes: 0 suspendidos: 1'. Corrida de hoy `./bin/bb drift` -> rc=1, mismo resultado (DIVERGE 99-blackbox-uvm.conf y nvrm-watch.sh). Nota: el stat de esta auditoria aporta la fecha que el claim declara pendiente; el claim sigue siendo cierto sobre la copia archivada, que carece de ese stdout.",
+      "seal": "d6cb63eec00c56a4dbdc1bfd752fcfe95e581eaf9e42d1aed9124a57dc0b3062",
+      "verdict": "pass"
     },
     {
       "cited": {},
-      "claim_id": "SPEC-L353",
-      "could_not_run": 0,
-      "evidence": "`tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md:24-42` contiene la captura hist\u00f3rica del episodio del 2026-09-25 (load 0.95/20, 64.3 GiB libres, PSI cero, nvidia-smi 22 ms) y limita expl\u00edcitamente la observaci\u00f3n GPU a una lectura cercana; `:64-75` conserva los c\u00f3mputos de CPU de los scopes con las duraciones y porcentajes citados por SPEC. El mismo registro, `tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md:170-195`, explica que el calibrador no puede demostrar la causa retrospectivamente por un hueco de 32 minutos, y documenta `python3 -m tools.calibra_latencia_x` con rc=2; `SPEC.md:177` tambi\u00e9n describe esa salida actual sin tratar las m\u00e9tricas fechadas de septiembre como vivas. La rec\u00e1lculo de 2026-10-03 de la ficha (`tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md:44-58`) agrega evidencia reciente sin establecer la causa del episodio, as\u00ed que no contradice la afirmaci\u00f3n hist\u00f3rica ni su l\u00edmite declarado.",
-      "id": "SPEC-L353",
-      "seal": "93c74d34d50b010ab9e3de7c802e700a3c21bea6b587c7564c8ac537738d137f",
-      "verdict": "PASS"
+      "claim_id": "SPEC-L354",
+      "evidence": "Texto leido de `audit --stale`, identico en las dos lecturas (01:06 y 01:07 del 2026-10-06). (1) Lineas: `git show 11e3cfb -U0 -- tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md` -> hunks '@@ -52 +52 @@' (fila Claude: '101.4 % de un nucleo' -> '**166 % de un nucleo** -- corregido el 2026-09-28') y '@@ -57 +57 @@' ('el 11 % de la maquina' -> 'el 14 % de la maquina'); son las dos unicas lineas cambiadas. `git show 11e3cfb:... | grep -n` -> 52 (166 %), 57 (14 %). `grep -n` en HEAD -> 67 (166 %), 72 (14 %). `diff <(git show 11e3cfb:F | sed -n '52p;57p') <(sed -n '67p;72p' F)` -> sin diferencias. Control negativo: `git show 11e3cfb^:F | grep -n 'el 11 % de la m'` -> '57:...11 %...'; en HEAD `grep -c` -> 0: el grep distingue el estado viejo del nuevo. SPEC: 11e3cfb^ decia '101.4 % de otro \u2014 el 11 % de una maquina'; 11e3cfb dice '14 % ... (no el 11'. (2) Reinicio: `journalctl -b 1764ed41...` -> '2026-09-25T05:08:26 systemd-logind: The system will reboot now!'. Muestra previa en samples/2026-09-25.jsonl: '2026-09-25T05:08:01 load1 0.95 mem_avail 64.26 GiB psi mem/io/cpu 0.0 smi OK 22 ms' (25 s antes). `nproc` -> 20; MemTotal 126943148 kB = 121.1 GiB. (3) CPU: `journalctl --user -b 1764ed41...` -> antigravity-1607e432 'Started 02:45:59', 'Consumed 2h 37min 13.963s CPU time' a las 05:00:57 (reloj 2 h 14 min 58 s); Claude-345364 'Started 2026-09-24 20:00:33', 'Stopped 05:08:27', 'Consumed 15h 9min 54.203s CPU time' (reloj 9 h 07 min 54 s). python3 -> 116.5 %, 166.1 %, suma/20 = 14.1 %. Control negativo: el denominador viejo (arranque entero 14 h 57 min) da 101.4 %, la cifra que 11e3cfb corrigio: el calculo distingue los dos denominadores. (4) Recuento x.ms re-derivado del corpus vivo (todas las muestras x.estado OK siguen dentro: la primera es 2026-09-25T05:40:00): la muestra n.3563 es 2026-09-28T00:36:00 (mediana 4, p75 5, p95 8); la n.3568 es 00:41:09 (mediana 4, p75 5, p95 8); la n.4138 es 12:18:06 con p95 9. `git show 2460f20:SPEC.md` -> 'Medido el 2026-09-28 sobre 3563 muestras con x.estado OK: mediana 4 ms, p75 5, p95 8'; `git log -1 --format=%B 2460f20` l.17-18 y l.36 -> 3568 (commit 2026-09-28 00:44:09). 4138/p95 9: SPEC desde 61f9c7b/57ae066 y cuerpo l.15. (5) `python3 -m tools.calibra_latencia_x` -> rc=2, 'etiquetas utilizables: 0', ventana '2026-09-25 04:08:00 -> 05:08:00 [SIN muestras]'. (6) Ficha: frontmatter 'closure_type: void_wontfix', 'closed_at: 2026-09-27', seccion 'CERRADO 2026-09-27 -- y la objecion queda escrita', l.189-190 'corpus de x.ms: 2026-09-25 05:40:00 ...' '^ 32 minutos despues de que acabara el episodio' (05:08:00 -> 05:40:00 = 32 min). (7) Campos: bin/bb:793 imprime cpu_top, swap.{free_kb,total_kb,in_pag_s,out_pag_s,...} y x.{estado,ms}; primeras apariciones en samples/2026-09-25.jsonl: cpu_top 05:21:00, swap 05:34:00, x 05:40:00.",
+      "seal": "7c601f6967dec77b20a95cff7186895c7db2c10e8c6f171f04cd6afb01ece4e8",
+      "verdict": "pass"
     },
     {
       "cited": {
         ".pre-commit-config.yaml": "233bc32e60b261b6e27de4ae2eb4ae1055edc4d7d46a26bc5dcfe87bfe3d97bb",
+        "tests/test_bb_bash.py": "94310e1f36474a9e86a47e29f3627f6cb57ca76614819116d3a26f0f38231708",
         "tests/test_cobertura_bash.py": "8572e932e7df72e542aadfda447e12f633f3294fb136656968888cc0c8fb125d",
-        "tools/cobertura_bash.sh": "8077450089861794b37b9a4b92ec68b7342c26e80b00cbb0e2418218f709ae80"
+        "tools/cobertura_bash.sh": "8077450089861794b37b9a4b92ec68b7342c26e80b00cbb0e2418218f709ae80",
+        "tools/piso_cobertura.sh": "4577ade3c8c7066373d7781d348cf500ee7715843263779f7c3fc84ca680e076"
       },
-      "claim_id": "SPEC-L354",
-      "could_not_run": 0,
-      "evidence": "`SPEC.md:354` atribuye 35.0%-35.3% al estado versionado de `SPEC.md` en `57ae066` y al `SPEC.md` de su padre, en vez de al mensaje del commit; `git show 57ae066:SPEC.md` contiene ese dato, mientras el cuerpo del mensaje no lo contiene. La reconstrucci\u00f3n de `d3d7980` produjo `files=13 total_lines=4111 bin_bb_lines=2768 pct=67.332%`; `tools/cobertura_bash.sh:4-7`, `.pre-commit-config.yaml:139-147` y `tests/cobertura_bb.piso` documentan instrumento/gate/piso, y `python3 -m pytest -q tests/test_cobertura_bash.py` devolvi\u00f3 `3 passed`.",
-      "id": "SPEC-L354",
-      "seal": "d6077c9d0a7135309523d0c966492a432898d29029b422336a6ac4f1c251aaf2",
-      "verdict": "PASS"
+      "claim_id": "SPEC-L355",
+      "evidence": "Recuento en d3d7980 (`git ls-tree` + conteo de saltos de linea, todo *.sh mas bin/bb, 13 ficheros): bin/bb 2768, total 4111, 67.3 %. Control: excluyendo adopted/ y tests/fixtures/ el total es 3919 y da 70.6 %, cifra cercana al '71 %' anterior que el claim describe. tests/cobertura_bb.piso = 32.8; tools/piso_cobertura.sh en hook bb-cobertura-piso stage pre-push (.pre-commit-config.yaml:139-148). Mensaje de 2a228fa: '947 lineas 256 cubiertas 27.0 %' antes, '313 cubiertas 33.1 %' despues; 'tres corridas consecutivas (33.1, 33.1, 33.1) menos el vaiven observado de 0.2-0.3'. `git show 57ae066:SPEC.md` -> '35.0%-35.3% el 2026-09-28'; mensaje de 09deb5b l.19 '39.8%, piso 32.8%'; padre de 09deb5b = 57ae066; 09deb5b anade 5 `def test_drift`. `git merge-base --is-ancestor 3a91866 09deb5b` -> rc=1 (no esta en la historia de 09deb5b; si es ancestro de HEAD). Re-medicion real con `tools/cobertura_bash.sh bin/bb python3 -m pytest tests/test_bb_bash.py` sobre `git archive` de cada commit: 57ae066 -> 35.1 % (345/983), 09deb5b -> 39.8 % (394/989), HEAD -> 40.3 % (455/1130). tools/cobertura_bash.sh:24 PS4='+${BASH_SOURCE}:${LINENO}:' y l.46 patron `^\\++`. Comprobacion directa del comportamiento de bash con un script de prueba bajo `bash -x`: la sustitucion `$(f)` produce `++`, la tuberia y el subshell `( )` producen un solo `+`, como afirma el claim. CONTROLES NEGATIVOS corridos: (a) tests/cobertura_bb.piso=99.0 en copia scratch -> '[bb-cobertura] FAIL: bin/bb al 40.3%, por debajo del piso 99.0%', rc=1; con 32.8 -> rc=0. (b) devolver el patron a `^\\+` -> `pytest tests/test_cobertura_bash.py` 1 failed, 2 passed (sin mutacion 3 passed). Hallazgo lateral, fuera del claim: el docstring de tests/test_cobertura_bash.py l.11-12 dice que lo que corria en 'una substitucion, una tuberia o un subshell' se contaba SIN CUBRIR; la prueba con bash -x muestra que tuberia y subshell llevan un solo `+`, asi que ese docstring contradice al claim y al comportamiento medido.",
+      "seal": "64dcee39a9207bb22f7a8b12fe301dcf4fa24badf91027a7c0a9caa4c1742c81",
+      "verdict": "pass"
     }
   ],
-  "timestamp": "2026-10-04T14:17:54Z",
-  "tree_fingerprint": "abc2ba3faf84c34b8da68af067a38415c7441671bd7feaace127998cbef56524",
+  "timestamp": "2026-10-06T07:13:38Z",
+  "tree_fingerprint": "3e541ed5ae50714eaeb2c1e032ca4b5adaff34f9d22b67dedf6e0e82702c8535",
   "violations": []
 }
