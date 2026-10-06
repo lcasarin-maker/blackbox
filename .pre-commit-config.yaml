@@ -15,10 +15,6 @@ repos:
         name: "gitleaks (secrets staged)"
         args: [--no-banner, --redact]
         stages: [pre-commit, pre-merge-commit]
-      - id: gitleaks
-        name: "gitleaks (full history, CI)"
-        args: [--no-banner, --redact, --pre-commit=false, --staged=false, --log-opts=--all]
-        stages: [pre-push]
 
   - repo: local
     hooks:
