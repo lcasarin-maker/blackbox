@@ -43,3 +43,26 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 - Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
 - Evidencias de clasificación: `tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01.md`, `tools/verify_gpu_clock_cap_ab.py`, `tests/test_debt_registration_controls.py::test_debt_close_check_verify_gpu_clock_cap_ab_01`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/three-hardware-original-selectors-primary-run.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01-current-selector.log`, `tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Revisión 2026-10-07 — el A/B físico no basta: falta un readback nativo del rango bloqueado
+
+La ficha sigue abierta. Selector original, sin cambios de código:
+`python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01`
+→ `{"could_not_run": 1, "fail": 0, ..., "reason": "raw timestamped GPU clock-cap command capture missing or malformed", "status": "unknown"}`, rc=2.
+
+Corrección a la «Siguiente acción» anterior: aun con un `commands.json` físico completo, el
+verificador devuelve `unknown` en `_policy_window`, porque `_csv_policy` devuelve siempre `None`
+(no existe readback nativo del rango `-lgc`). `tests/test_hardware_missing_selectors.py::test_gpu_clock_cap_needs_native_locked_policy_readback`
+lo demuestra con una captura sintética completa (status=unknown, reason contiene "readbacks").
+Consultas de solo lectura en este host (GB10, driver 580.178.04, kernel 6.17.0-1032-nvidia;
+`atom-clock-lock` declara `nvidia-smi -lgc 300,2800`):
+
+- `nvidia-smi -q -d CLOCK`: Clocks Graphics 2457 MHz; Applications Clocks 2418; Max Clocks 3003; sin campo de rango bloqueado.
+- `nvidia-smi -q | grep -iE "lock|offset|policy"`: sólo `Applications Clocks Setting : Not Active` y `Clock Policy` (Auto Boost N/A).
+- NVML (pynvml): `nvmlDeviceGetMinMaxClockOfPState(GRAPHICS, P0) => (208, 3003)`;
+  `nvmlDeviceGetCurrentClockFreqs => nvclock=2450, nvclockmin=208, nvclockmax=3003, nvclockeditable=0`.
+  Ningún getter reporta 300/2800; estos valores no prueban ni refutan que el bloqueo esté activo.
+
+Mientras no exista un readback nativo, o una decisión de Luis que acepte otra observación como confirmación
+de la política efectiva, la vía `pass` de este verificador es inalcanzable y el ensayo físico
+terminaría en could_not_run=1. Ese cambio altera cómo se mide y queda pendiente de decisión.
