@@ -18,10 +18,11 @@ substitucion `$(...)` anida el prefijo (`++`). Lo que se corrigio es esa
 substitucion, no tuberias ni subshells.
 
 Medido el 2026-09-25: al arreglar el ancla, `bin/bb` paso de 27.0 % a 33.1 %.
-**Nadie escribio un test nuevo entre las dos cifras.** 57 lineas siempre
-estuvieron cubiertas y el instrumento no las veia -- que es la forma en que un
-medidor da un numero mas bajo del real y nadie lo nota, porque un numero bajo
-parece prudente.
+**Nadie escribio un test nuevo entre las dos cifras.** Las lineas que el
+instrumento no veia son la diferencia entre 256 y 313 cubiertas; segun el mensaje
+del commit `2a228fa` son 57, pero en el mismo trace medido el 2026-10-06 la
+diferencia sale de 58 o 59 lineas, nunca 57. Es la forma en que un medidor da un
+numero mas bajo del real y nadie lo nota, porque un numero bajo parece prudente.
 
 Este parrafo decia 33.3 % y 59 lineas hasta el 2026-09-28, y SPEC.md lo llevaba
 anotado como pendiente: dos registros del mismo commit (`2a228fa`) en desacuerdo,
