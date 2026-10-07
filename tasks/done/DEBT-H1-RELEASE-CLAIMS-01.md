@@ -3,7 +3,7 @@ id: DEBT-H1-RELEASE-CLAIMS-01
 kind: debt
 domain: VERDICT
 title: Auditar las afirmaciones pendientes de SPEC antes del release
-status: open
+status: done
 closed_at: 2026-10-03
 closure_type: relocated_prior_verification
 reason: Correcciones factuales y controles integrados en 87759912; auditoría nativa registrada y gate actual pasa para las 12 afirmaciones antes de mover esta ficha.
