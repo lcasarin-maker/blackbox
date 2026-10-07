@@ -44,8 +44,10 @@ def verify(phase: str, directory: Path) -> dict[str, Any]:
 def _trace(d: dict[str, Any]) -> dict[str, Any]:
     cases = d.get("cases")
     expected = {"cpu_touch", "none", "cuda_bounded"}
-    if not isinstance(cases, list) or not all(isinstance(x, dict) for x in cases) or {x.get("case") for x in cases} != expected:
-        return _r("unknown", ["CPU positive, no-allocation negative, and bounded CUDA captures required"], 1)
+    # Exactly one capture per case: a duplicate would let a clean copy mask a leaking or charged one.
+    if (not isinstance(cases, list) or not all(isinstance(x, dict) for x in cases) or
+            {x.get("case") for x in cases} != expected or len(cases) != len(expected)):
+        return _r("unknown", ["exactly one CPU positive, no-allocation negative, and bounded CUDA capture required"], 1)
     issue = _trace_case_captures(cases)
     if issue:
         return issue
@@ -132,6 +134,8 @@ def _empty_window_issue(window: Any, case: dict[str, Any]) -> dict[str, Any] | N
     ordered = [ts for ts in timestamps if type(ts) is int]
     if any(a >= b for a, b in zip(ordered, ordered[1:])):
         return _r("unknown", ["probe heartbeat timestamps absent or unordered"], 1)
+    if any(ts < case["start_ns"] or ts > case["end_ns"] for ts in ordered):
+        return _r("unknown", ["probe heartbeats fall outside the no-allocation window"], 1)
     if any(row.get("boot_id") != case["boot_id"] or row.get("pid") != case["pid"] or
            row.get("cgroup") != case["cgroup"] or row.get("active") is not True for row in heartbeats):
         return _r("fail", ["no-allocation probe heartbeat is inactive or misattributed"], 0)
@@ -146,7 +150,9 @@ def _empty_window_issue(window: Any, case: dict[str, Any]) -> dict[str, Any] | N
 
 def _charge_ledger(case: dict[str, Any]) -> tuple[dict[str, Any], str | None]:
     events = case["events"]
-    if not isinstance(events, list) or not events:
+    # The no-allocation control honestly records zero events; its liveness comes from the
+    # windowed heartbeats checked in _empty_window_issue. Positive cases still need events.
+    if not isinstance(events, list) or (not events and case["case"] != "none"):
         return {}, f"no raw charge events for {case['case']}"
     fields = ("kind", "page", "bytes", "timestamp_ns", "pid", "cgroup", "owner_memcg")
     if any(not isinstance(e, dict) or any(k not in e for k in fields) for e in events):
