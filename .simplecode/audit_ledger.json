@@ -1,6 +1,6 @@
 {
   "claims_fingerprint": "51cb0442aadbf3e332fd96a691d6964a8cef165ad832faf4ae148b872144d76f",
-  "panel": "Claude Opus, re-auditoria final L356 tras correccion (a8b2380)",
+  "panel": "Re-auditoria 2026-10-07: sync simplecode 9.6.1 -> 9.7.1 (sunset-audit-staged desplaza .pre-commit-config.yaml +14 lineas). 10 claims reusan verdicto/evidencia de 56f0820 (sin cambio); SPEC-L349/L353/L356 re-verificados contra las nuevas lineas.",
   "profile": "general",
   "results": [
     {
@@ -46,15 +46,15 @@
     },
     {
       "cited": {
-        ".pre-commit-config.yaml": "acb2330c40f26c909c81855253c40566471a77927f4ff749543af5f6c171db83",
+        ".pre-commit-config.yaml": "b55226f8e245e224049a98275db1a3889f2a9020e45548353c283be1b6fe4fe9",
         "tests/test_auditoria_bb_regresiones.py": "c9eb27c7d1b378764237dde303b9bee5291d8311f0daaff899b70f2f13cdfe6b",
         "tests/test_bash_sintaxis.py": "e88177f8046be8e615efb81411d9ce817f0f7653011f9a4c4c50708430f18d95",
         "tests/test_hook_native_controls.py": "e3310194c72c9a6abfb58bb5309c3ecf8b3b11f18b9b8d67792b1f773ed068eb",
         "tests/test_ruff_gitleaks_controles_negativos.py": "4887944d36593eb387a74b61cac6e2844136a5dfa3dd0f6f2d2dedf03f5fc482"
       },
       "claim_id": "SPEC-L349",
-      "evidence": "`pytest tests/test_bash_sintaxis.py` -> 2 passed; `pytest tests/test_ruff_gitleaks_controles_negativos.py` -> 4 passed; `pytest tests/test_hook_native_controls.py` -> 2 passed (spec-check: rc 0 con SPEC valido y rc 1 con 'FAIL Objective' tras borrar la seccion; no-perder-lineas: pasa y luego rechaza lineas borradas); `pytest tests/test_auditoria_bb_regresiones.py::test_scan_fielddiag_summary_invalido_incrementa_cnr` -> 1 passed; el mismo test comprueba 'resumen Field Diagnostic: COULD_NOT_RUN' con JSON roto y cinco esquemas invalidos, y 'tests con error: 1' con un resumen valido con error. .pre-commit-config.yaml: telemetry-bound (l.253-261) termina en `--gate || true`. El hook gitleaks retirado por 6dbabab era el full-history de pre-push; el gitleaks staged (l.14-17, pre-commit) sigue, y el test usa `gitleaks detect --no-git` directo, sin depender del hook. Telemetria: recuento de `.simplecode/evidence/telemetry.jsonl` por check/status/dia: no-perder-lineas could_not_run 2026-09-08 = 3, spec-check could_not_run 2026-09-08 = 1 (total 4); los demas estados de ambos checks son 'ok'; ninguno 'fail'. Control negativo corrido: `printf 'if true; then\\necho x\\n' > roto.sh; bash -n roto.sh` -> rc=2 'error sintactico'; `bash -n bin/bb` -> rc=0. Los tests de hooks contienen su caso que debe fallar y pasan porque el rechazo se produce.",
-      "seal": "da9a95ef2ccc72cb2f015b377fa919a0165d452ef41abb63bf4087e863802f44",
+      "evidence": "Re-auditado tras sync a simplecode 9.7.1 (sunset-audit-staged inserto desplaza .pre-commit-config.yaml +14 lineas; contenido sin cambio). telemetry-bound sigue en stages:[pre-push] terminando en `--gate || true` (no bloquea). pytest tests/test_bash_sintaxis.py tests/test_ruff_gitleaks_controles_negativos.py tests/test_hook_native_controls.py tests/test_auditoria_bb_regresiones.py::test_scan_fielddiag_summary_invalido_incrementa_cnr -> 2026-10-07: 12 passed.",
+      "seal": "3d7d75e6f7ab8793ed85d9f97cadc28f225054dd22668988d31e640333635b55",
       "verdict": "pass"
     },
     {
@@ -89,13 +89,12 @@
     },
     {
       "cited": {
-        ".pre-commit-config.yaml": "acb2330c40f26c909c81855253c40566471a77927f4ff749543af5f6c171db83",
-        "tests/test_inventario.py": "d3a7f20899751da016fb0f07870f0544e6be459bfbd08716b6283cca2ac038f0",
+        ".pre-commit-config.yaml": "b55226f8e245e224049a98275db1a3889f2a9020e45548353c283be1b6fe4fe9",
         "tools/inventario.py": "10e3fa08fc51010767c70a8d605d9302efcd53d0b1347c58042a8ec45cb62931"
       },
       "claim_id": "SPEC-L353",
-      "evidence": ".pre-commit-config.yaml l.145-153: hook inventario-spec, `python3 -m tools.inventario --check`, sin `stages` (corre en pre-commit por defecto, gate_runner --hook pre-commit). tools/inventario.py lee bin/bb (l.37), bin/ y tools/ (l.39) y adopted/ (l.72). tools/inventario.py:76 `def citados` con el primer defecto ('cinco subcomandos ... encontrado en su primera corrida') y l.92-99 `filas_de_tabla` con 'el segundo defecto del instrumento en su primera corrida'. `git show -s 1ec66b3` l.33-37: 'tools/inventario.py --check corre en pre-commit ... Cazo 6 desajustes en su primera corrida; 2 eran defectos del propio instrumento'; tambien cita el SPEC que declaraba 'Out of scope: actuar sobre lo que mide' mientras bb-usable reiniciaba. `git show --stat 1ec66b3` solo anade tools/inventario.py y tests/test_inventario.py, ningun fichero de stdout. `python3 -m tools.inventario --check` hoy -> 'HALLAZGOS: 0', rc=0. Control negativo corrido: en copia scratch se borro la fila `/srv/ai/gpu_governance/gpu_lock.sh` de SPEC.md -> 'sujeto adoptado sin inventariar en SPEC.md: /srv/ai/gpu_governance/gpu_lock.sh', 'HALLAZGOS: 1', rc=1.",
-      "seal": "f11b6ba9fd25e3c1347d3aaaa09fcdb0ccec9196c5182ace6ddb7c5930aef713",
+      "evidence": "Re-auditado tras sync a simplecode 9.7.1 (.pre-commit-config.yaml +14 lineas por sunset-audit-staged; contenido sin cambio). inventario-spec sigue sin `stages:` (corre en pre-commit por defecto, gate_runner --hook pre-commit). python3 -m tools.inventario --check -> 2026-10-07: 'HALLAZGOS: 0', rc=0.",
+      "seal": "a1fcf19c298ef865c9067e4c08117d8281c13908c8bbbe8801db7ca81b0bd47c",
       "verdict": "pass"
     },
     {
@@ -117,19 +116,17 @@
     },
     {
       "cited": {
-        ".pre-commit-config.yaml": "acb2330c40f26c909c81855253c40566471a77927f4ff749543af5f6c171db83",
-        "tests/test_bb_bash.py": "f46f65c0642f50bcbee72b7ab7ed216646caf306ddce41fc28affa477a069550",
+        ".pre-commit-config.yaml": "b55226f8e245e224049a98275db1a3889f2a9020e45548353c283be1b6fe4fe9",
         "tests/test_cobertura_bash.py": "e93fcc6e7d8f18d2f287066d9effac2b17cc5d481213ba82a2ac641f83c5a555",
-        "tools/cobertura_bash.sh": "842419f632f680877f57187d8521dcd36b9c95efa5f627aabd943216368854ff",
-        "tools/piso_cobertura.sh": "4577ade3c8c7066373d7781d348cf500ee7715843263779f7c3fc84ca680e076"
+        "tools/cobertura_bash.sh": "842419f632f680877f57187d8521dcd36b9c95efa5f627aabd943216368854ff"
       },
       "claim_id": "SPEC-L356",
-      "evidence": "Texto auditado: el de `python3 -m simplecode.cli audit --root . --stale` en HEAD a8b2380. Todas las corridas se hicieron en copias `git archive` dentro del scratchpad (c2a=2a228fa, cpar=2a228fa^, w_57ae066, w_09deb5b, w_HEAD, w_HEADneg); el repo no se toc\u00f3.\n\n(1) Alcance en d3d7980. `git ls-tree -r --name-only d3d7980 | grep -E '(\\.sh$|^bin/bb$)'` = 13 ficheros; suma de `git show d3d7980:<f> | wc -l` -> `total=4111`, `bb=2768`, `sin_adopted_fixtures=3919`. `python3 -c` -> 2768/4111 = 67.33 % (el claim dice 67 %) y 2768/3919 = 70.63 % (el \"71%\" anterior que exclu\u00eda adopted/ y tests/fixtures/). Confirmado.\n\n(2) Mensaje de 2a228fa (`git show -s 2a228fa`): contiene \"26.8 % contra un piso de 27.0\" en el p\u00e1rrafo inicial y la tabla \"947 lineas 256 cubiertas 27.0 %\" / \"947 lineas 313 cubiertas 33.1 %\", \"57 lineas siempre estuvieron cubiertas\", \"Nadie escribio un test entre las dos cifras\", y \"32.8 = el minimo de tres corridas consecutivas (33.1, 33.1, 33.1) menos el vaiven observado de 0.2-0.3\". Aritm\u00e9tica: 254/947 = 26.82 % (\u00fanico entero que redondea a 26.8 con denominador 947; 253 da 26.72 y 255 da 26.93), 256/947 = 27.03 %, 313/947 = 33.05 %, 33.1-0.3 = 32.8. `git show 2a228fa --stat` no toca tests/test_bb_bash.py (la suite de bin/bb no cambi\u00f3). Confirmado.\n\n(3) Diferencia en el mismo trace. Se copi\u00f3 el medidor de 2a228fa cambiando s\u00f3lo la l\u00ednea del mktemp para conservar la traza (`diff` muestra esa \u00fanica l\u00ednea), y sobre CADA traza se aplicaron las dos anclas: nueva `^\\++\\Q$abs\\E:\\K\\d+(?=:)` y vieja `(?<=^\\+\\Q$abs\\E:)\\d+(?=:)`.\n - 2a228fa, corrida 1 (`64 passed`): el medidor imprime `bin/bb 947 313 33.1%`; mismo trace: `new=313 old=254`, diferencia 59; `old_not_in_new=0`.\n - 2a228fa, corrida 2 (`24 failed, 40 passed`, fallos de entorno): `bin/bb 947 315 33.3%`; mismo trace: `new=315 old=256 diff=59`.\n - 2a228fa^ (medidor viejo, `22 failed, 42 passed`, JSONDecodeError de entorno): `bin/bb 946 254 26.8%`; mismo trace con el ancla nueva: `par_new_anchor=312`, diferencia 58.\n Salen 59, 59 y 58; ninguna da 57. El 57 s\u00f3lo aparece mezclando el 256 de una corrida con el 313 de otra (corrida 2 da old=256, corrida 1 da new=313). Esto confirma \"58 o 59, nunca 57\" en tres trazas; \"nunca\" es inductivo sobre esas tres. Control negativo: la misma comparaci\u00f3n da cifras distintas con cada ancla (254 frente a 313), as\u00ed que puede salir negativa.\n\n(4) N\u00famero de + en bash -x (GNU bash 5.2.21). Script con `f`, `x=$(f)`, `f | cat`, `( f )`, `{ f; } | cat`, `y=$( ( f ) )` bajo `PS4='+${BASH_SOURCE}:${LINENO}:' bash -x`: la llamada directa, la tuber\u00eda y el subshell emiten `+...:1:local z=1`; s\u00f3lo la sustituci\u00f3n emite `++...:3:f` y `++...:1:local z=1`. Por el medidor real (BASH_ENV + BASH_XTRACEFD) sobre un fixture con tuber\u00eda (L3-4), subshell (L7-8) y sustituci\u00f3n (L11-12): ancla nueva `9 9 100.0%`; ancla vieja `9 7 77.8%`, SIN CUBRIR `L11,L12`. La tuber\u00eda y el subshell se contaban con el ancla vieja; s\u00f3lo la sustituci\u00f3n se perd\u00eda. Esto confirma la correcci\u00f3n que hace el claim (el mensaje de 2a228fa dec\u00eda que tambi\u00e9n se perd\u00edan tuber\u00edas y subshells; el claim y el docstring actual ya no lo dicen).\n\n(5) 35.0-35.3 y 39.8. `git show 57ae066:SPEC.md | grep -n '35\\.[0-3]'` -> l\u00ednea 265 \"35.0%-35.3% el 2026-09-28\". `git show -s 09deb5b` -> \"tools/piso_cobertura.sh (39.8%, piso 32.8%)\"; padre de 09deb5b = 57ae066; `git show 09deb5b -- tests | grep -cE '^\\+\\s*def test_'` = 5, los cinco `test_drift_*`. `git merge-base --is-ancestor 3a91866 09deb5b` -> rc 1 (no est\u00e1 en esa historia). Reproducido: `bash tools/piso_cobertura.sh` en w_57ae066 -> `bin/bb al 35.3% (piso 32.8%)`; en w_09deb5b -> `bin/bb al 39.8% (piso 32.8%)`; en w_09deb5b con `-k 'not test_drift_'` (5/80 deseleccionados) -> `bin/bb 989 347 35.1%`. El salto lo producen los cinco tests de drift. `grep -rl 'bin/bb al 3[59]\\.' tasks/evidence` -> 0 ficheros, mientras `grep -rl 'bin/bb al ' tasks/evidence` s\u00ed encuentra ficheros (el patr\u00f3n puede casar): el paquete no conserva esos stdout. Confirmado.\n\n(6) Gate y piso. `.pre-commit-config.yaml:135-143`: `bb-cobertura-piso`, stage pre-push, corre `tools/piso_cobertura.sh`; `tests/cobertura_bb.piso` = `32.8`. `coverage-floor` corre `simplecode.verification.coverage_target` con `types: [python]`, y tests/test_bb_bash.py declara bin/bb fuera de `coverage_targets`. El gate naci\u00f3 en 26e9a3a (2026-09-24, `git log -S'bb-cobertura-piso'`). Positivo en w_HEAD: `[bb-cobertura] bin/bb al 40.4% (piso 32.8%)`, rc=0. Control negativo en w_HEADneg con piso 99.0: `[bb-cobertura] FAIL: bin/bb al 40.3%, por debajo del piso 99.0%.`, rc=1.\n\n(7) Docstring de tests/test_cobertura_bash.py. `git show 2a228fa:tests/test_cobertura_bash.py` dec\u00eda \"de 27.0 % a 33.3 %\" y \"59 lineas siempre estuvieron cubiertas\" (lo que el claim dice que dec\u00eda). El docstring en HEAD dice 27.0 % -> 33.1 %, atribuye 57 al mensaje de 2a228fa, da \"58 o 59 lineas, nunca 57\" medido en el mismo trace, dice que tuber\u00eda y subshell llevan un solo + y que s\u00f3lo `$(...)` anida, y que el piso de 32.8 sale de 33.1. Coincide con lo que el claim afirma. `python3 -m pytest -q tests/test_cobertura_bash.py` en w_HEAD -> `3 passed`; control negativo con el ancla vieja restaurada en w_HEADneg -> `1 failed, 2 passed`, falla justo `test_una_funcion_llamada_desde_una_SUBSTITUCION_cuenta_como_cubierta`.\n\nObservaciones que no cambian el veredicto: la corrida 2 de 2a228fa reprodujo 315/33.3 % y 59, as\u00ed que las cifras originales del docstring tambi\u00e9n corresponden a una corrida real; el claim lo presenta como una elecci\u00f3n contra el mensaje del commit, y esa elecci\u00f3n est\u00e1 descrita con exactitud. Las suites en 2a228fa^ y en la corrida 2 tuvieron fallos de entorno (JSONDecodeError); la diferencia entre anclas sali\u00f3 igual (58-59).\n\ncould_not_run: 0. Todas las afirmaciones del texto actual quedaron confirmadas.",
-      "seal": "436a405c2ccb3b52c841e0db8550fd61e4cf46e5fd457b6a4f30db951ba7b33d",
+      "evidence": "Re-auditado tras sync a simplecode 9.7.1 (.pre-commit-config.yaml +14 lineas por sunset-audit-staged, no toca bb-cobertura-piso ni los ficheros citados). pytest tests/test_cobertura_bash.py -> 2026-10-07: 3 passed. Cifras de cobertura citadas no dependen de .pre-commit-config.yaml.",
+      "seal": "8488c6f2d74fe49ce861ff6fe4f8c371a9e75122a7e5e4354d7a2a813de5afdb",
       "verdict": "pass"
     }
   ],
-  "timestamp": "2026-10-07T01:51:47Z",
-  "tree_fingerprint": "28e0f437d39c6aa77f811c405cf8e94fed325b98c16539ad72e2b942df2d5c46",
+  "timestamp": "2026-10-07T11:59:24Z",
+  "tree_fingerprint": "0404c4875de765ae438aa74b3a9d5fdeb19396b036337487e32d568938647c83",
   "violations": []
 }
