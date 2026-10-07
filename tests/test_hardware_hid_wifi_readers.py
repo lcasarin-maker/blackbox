@@ -51,8 +51,8 @@ def test_usb_recovery_must_return_to_the_preupdate_kernel(tmp_path: Path) -> Non
          "capture_phase": "recovery"},
         {"cmd": "ssh operator@management true", "exit": 0, "stdout": "ok", "stderr": "",
          "capture_phase": "recovery"},
-        {"cmd": "lsmod", "exit": 0, "stdout": "usbhid 1 0\nhid_generic 1 0", "stderr": "",
-         "capture_phase": "recovery"},
+        {"cmd": "lsmod", "exit": 0, "stdout": "Module                  Size  Used by\nusbhid 1 0\nhid_generic 1 0",
+         "stderr": "", "capture_phase": "recovery"},
     ]
     wrong_kernel = usb._check_recovery(rows, tmp_path / "commands.json", "kernel-old", "kernel-new",
                                        "kernel-third")
@@ -81,14 +81,16 @@ def test_usb_full_rollback_fixture_requires_and_accepts_the_exact_prior_kernel(t
         add(phase, "uname -r", kernel)
     add("pre-update", "evtest /dev/input/event0", "Event: type 1 (EV_KEY), code 30, value 1")
     add("pre-update", "ssh operator@management true", "reachable")
-    add("affected", "lsusb -t", "Class=Human Interface Device, Driver=xhci-hcd")
-    add("affected", "lsmod", "xhci_hcd 1 0")
+    # Driver=[none]: the HID-class interface is unbound, the real signature of post-update loss
+    # (a root-hub/controller driver such as xhci-hcd is never what binds to the device itself).
+    add("affected", "lsusb -t", "Class=Human Interface Device, Driver=[none]")
+    add("affected", "lsmod", "Module                  Size  Used by\nxhci_hcd 1 0")
     add("affected", "grep CONFIG_USB_HID /boot/config", "CONFIG_USB_HID=n\nCONFIG_USB_HID_GENERIC=n")
     add("affected", "dpkg --audit", "The following packages have been unpacked but not yet configured:\n linux-modules-nvidia")
     add("affected", "journalctl -k", "usbhid: failed to initialize")
     add("recovery", "evtest /dev/input/event0", "Event: type 1 (EV_KEY), code 30, value 1")
     add("recovery", "ssh operator@management true", "reachable")
-    add("recovery", "lsmod", "usbhid 1 0\nhid_generic 1 0")
+    add("recovery", "lsmod", "Module                  Size  Used by\nusbhid 1 0\nhid_generic 1 0")
 
     result = usb._verify_rows(rows, tmp_path / "commands.json")
 
