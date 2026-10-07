@@ -102,28 +102,42 @@ def _usb_tree(rows: list[dict[str, Any]], phase: str) -> str:
     return row["stdout"] if row else ""
 
 
+def _hid_drivers(tree: str) -> list[str]:
+    """Driver bound to each HID-class interface in `lsusb -t`; unbound reads `[none]`."""
+    return re.findall(r"(?i)Class=Human Interface Device,\s*Driver=([^,\s]*)", tree)
+
+
 def _modules(rows: list[dict[str, Any]], phase: str) -> tuple[bool, bool] | None:
     row = next((r for r in rows if _phase(r) == phase and _has(r, "lsmod") and r["exit"] == 0), None)
     if row is None:
         return None
-    return "usbhid" in row["stdout"], "hid_generic" in row["stdout"]
+    names = {line.split()[0] for line in row["stdout"].splitlines()[1:] if line.split()}
+    return "usbhid" in names, "hid_generic" in names
+
+
+# Real Kconfig symbols for built-in USB HID (CONFIG_USB_HID_GENERIC does not exist).
+HID_SYMBOLS = ("CONFIG_HID", "CONFIG_USB_HID", "CONFIG_HID_GENERIC")
 
 
 def _integrated(rows: list[dict[str, Any]], phase: str) -> bool | None:
-    row = next((r for r in rows if _phase(r) == phase and "CONFIG_USB_HID" in r["cmd"]
-                and r["exit"] == 0), None)
-    if row is None:
+    """True/False only from the config of this phase's running kernel naming every symbol."""
+    kernel = _kernel(rows, phase)
+    if kernel is None:
         return None
-    argv = _command_args(row)
-    config_path = re.compile(r"^/boot/config(?:-[A-Za-z0-9.+_-]+)?$")
-    reads_config = (bool(argv) and Path(argv[0]).name == "cat"
-                    and any(config_path.fullmatch(token) for token in argv[1:]))
-    reads_selected_keys = (bool(argv) and Path(argv[0]).name == "grep"
-                           and "CONFIG_USB_HID" in argv[1:]
-                           and any(config_path.fullmatch(token) for token in argv[1:]))
-    if not (reads_config or reads_selected_keys):
-        return None
-    return bool(re.search(r"(?m)^CONFIG_USB_HID=y$", row["stdout"]) and re.search(r"(?m)^CONFIG_USB_HID_GENERIC=y$", row["stdout"]))
+    config = f"/boot/config-{kernel}"
+    for row in rows:
+        argv = _command_args(row)
+        if (_phase(row) != phase or row["exit"] != 0 or not argv
+                or Path(argv[0]).name not in {"cat", "grep"} or config not in argv[1:]):
+            continue
+        values = {}
+        for symbol in HID_SYMBOLS:
+            match = re.search(rf"(?m)^(?:{symbol}=([ym])|# {symbol} is not set)$", row["stdout"])
+            if match:
+                values[symbol] = match.group(1)
+        if len(values) == len(HID_SYMBOLS):
+            return all(value == "y" for value in values.values())
+    return None
 
 
 def _boot_observations(rows: list[dict[str, Any]], path: Path) -> tuple[tuple[str, str, str], str] | dict[str, Any]:
@@ -162,8 +176,11 @@ def _affected_loss(rows: list[dict[str, Any]], path: Path) -> tuple[bool, str] |
     broken = bool(re.search(r"(?im)^The following packages have been unpacked but not yet configured:|^The following packages have unmet dependencies:|^dpkg: error", errors))
     broken |= bool(re.search(r"(?i)(usbhid|hid_generic|xhci).*(?:failed|error|unknown symbol|not found)|(?:failed|error|unknown symbol|not found).*(usbhid|hid_generic|xhci)", errors))
     supported = module_state == (True, True) or built_in is True
-    if supported or _input_event(rows, "affected"):
+    drivers = _hid_drivers(_usb_tree(rows, "affected"))
+    if supported or _input_event(rows, "affected") or any(d != "[none]" for d in drivers):
         return _result("fail", "healthy HID evidence on affected boot means post-update loss was not reproduced", [str(path)])
+    if "[none]" not in drivers:
+        return _result("unknown", "affected boot did not capture an unbound HID-class interface", [str(path)])
     return broken, "" if broken else "correlated HID/module or package failure is absent"
 
 
@@ -179,9 +196,11 @@ def _check_recovery(rows: list[dict[str, Any]], path: Path, prior: str,
         return _result("unknown", "rollback kernel did not prove local keyboard input and remote access", [str(path)])
     modules = _modules(rows, "recovery")
     builtin = _integrated(rows, "recovery")
-    if modules != (True, True) and builtin is not True:
-        return _result("fail", "recovery kernel lacks loaded or built-in USB-HID support", [str(path)])
-    return None
+    if modules == (True, True) or builtin is True:
+        return None
+    if modules is None or builtin is None:
+        return _result("unknown", "recovery kernel HID support is unproven: modules absent or unread and built-in config unread", [str(path)])
+    return _result("fail", "recovery kernel lacks loaded or built-in USB-HID support", [str(path)])
 
 
 def _verify_rows(rows: list[dict[str, Any]], path: Path) -> dict[str, Any]:
@@ -190,16 +209,15 @@ def _verify_rows(rows: list[dict[str, Any]], path: Path) -> dict[str, Any]:
                        or not isinstance(row.get("stderr", ""), str) for row in rows):
         return _result("fail", "raw USB command capture has malformed rows", [str(path)])
     tree = next((row["stdout"] for row in rows if _has(row, "lsusb", "-t") and row["exit"] == 0), "")
-    modules = next((row["stdout"] for row in rows if _has(row, "lsmod") and row["exit"] == 0), "")
     declared_phases = {_phase(row) for row in rows}
+    # Binding is read on the interface itself: lsmod cannot see built-in usbhid.
     if (not {"pre-update", "affected", "recovery"}.issubset(declared_phases)
-            and re.search(r"(?i)class\s*=\s*(?:human interface device|hid|03h)|\b(?:keyboard|mouse|hid)\b", tree)
-            and "xhci-hcd" in tree and "usbhid" not in modules and "hid_generic" not in modules):
-        return _result("fail", "attached HID-class device is unbound while xHCI is live", [str(path)])
-    boot, detail = _boot_observations(rows, path)
-    if isinstance(boot, dict):
-        return boot
-    pre, affected, recovery = boot
+            and "Driver=xhci-hcd" in tree and "[none]" in _hid_drivers(tree)):
+        return _result("fail", "attached HID-class interface has no bound driver while xHCI is live", [str(path)])
+    observed = _boot_observations(rows, path)
+    if isinstance(observed, dict):
+        return observed
+    (pre, affected, recovery), _tree = observed
     loss_result = _affected_loss(rows, path)
     if isinstance(loss_result, dict):
         return loss_result

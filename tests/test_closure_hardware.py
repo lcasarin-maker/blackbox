@@ -153,18 +153,158 @@ def test_wifi_classifier_keeps_unrun_probes_out_of_fail(
     assert result['fail'] == 0 and result['could_not_run'] == 1, result
 
 
-def test_usb_classifier_detects_unbound_attached_hid_device(tmp_path: Path) -> None:
+# Real capture of this host (headless, modular HID, no HID device attached). Mutations below are
+# labeled; the capture itself is never a pre-update/affected/recovery closure capture.
+USB_HID_HOST = ROOT / 'tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01/host-capture-2026-10-07.json'
+HID_LINE = '    |__ Port 002: Dev 003, If 0, Class=Human Interface Device, Driver={driver}, 1.5M\n'
+
+
+def _usb_hid_real_rows() -> dict[str, dict[str, Any]]:
+    rows = json.loads(USB_HID_HOST.read_text(encoding='utf-8'))['commands']
+    return {row['cmd']: {k: row[k] for k in ('cmd', 'exit', 'stdout', 'stderr')} for row in rows}
+
+
+def _usb_hid_config(kernel: str) -> dict[str, Any]:
+    return dict(_usb_hid_real_rows()[f"grep -E '^(# )?CONFIG_(HID|USB_HID|HID_GENERIC)[= ]' /boot/config-{kernel}"])
+
+
+def _with_hid(tree: str, driver: str) -> str:
+    first, _, rest = tree.partition('\n')
+    return first + '\n' + HID_LINE.format(driver=driver) + rest
+
+
+def _write_usb_hid(tmp_path: Path, rows: list[dict[str, Any]]) -> dict[str, Any]:
     evidence = tmp_path / 'usb'
-    evidence.mkdir()
+    evidence.mkdir(exist_ok=True)
     (evidence / 'commands.json').write_text(json.dumps({
-        'id': 'FEATURE-USB-HID-POSTUPDATE-CHECK',
-        'commands': [
-            {'cmd': 'lsusb -t', 'exit': 0, 'stdout': 'Class=Human Interface Device, Driver=xhci-hcd', 'stderr': ''},
-            {'cmd': 'lsmod', 'exit': 0, 'stdout': 'xhci_hcd 123 0', 'stderr': ''},
-        ],
-    }), encoding='utf-8')
-    result = verify_usb_hid_postupdate(evidence)
-    assert result['status'] == 'fail' and result['fail'] == 1, result
+        'id': 'FEATURE-USB-HID-POSTUPDATE-CHECK', 'commands': rows}), encoding='utf-8')
+    return verify_usb_hid_postupdate(evidence)
+
+
+def _snapshot(driver: str | None) -> list[dict[str, Any]]:
+    real = _usb_hid_real_rows()
+    tree = dict(real['lsusb -t'])
+    if driver is not None:
+        tree['stdout'] = _with_hid(tree['stdout'], driver)
+    return [tree, real['lsmod']]
+
+
+def test_usb_hid_real_headless_modular_capture_is_not_a_loss(tmp_path: Path) -> None:
+    result = _write_usb_hid(tmp_path, _snapshot(None))
+    assert result['status'] == 'unknown', result
+    assert result['fail'] == 0 and result['could_not_run'] == 1, result
+
+
+def test_usb_classifier_detects_unbound_attached_hid_device(tmp_path: Path) -> None:
+    result = _write_usb_hid(tmp_path, _snapshot('[none]'))
+    assert result['status'] == 'fail' and result['fail'] == 1 and result['could_not_run'] == 0, result
+    assert 'no bound driver' in result['reason'], result
+
+
+def test_usb_hid_snapshot_does_not_flag_bound_interface_without_lsmod_entry(tmp_path: Path) -> None:
+    # Built-in usbhid is bound in lsusb -t yet absent from lsmod; that is not a HID loss.
+    result = _write_usb_hid(tmp_path, _snapshot('usbhid'))
+    assert result['status'] == 'unknown' and result['fail'] == 0, result
+
+
+def test_usb_hid_kernel_config_uses_real_symbols_and_running_kernel() -> None:
+    from tools.verify_usb_hid_postupdate import _integrated
+
+    running = {'cmd': 'uname -r', 'exit': 0, 'stdout': '6.17.0-1032-nvidia\n', 'stderr': '', 'capture_phase': 'affected'}
+
+    def integrated(config: dict[str, Any]) -> bool | None:
+        return _integrated([running, {**config, 'capture_phase': 'affected'}], 'affected')
+
+    modular = _usb_hid_config('6.17.0-1032-nvidia')
+    assert integrated(modular) is False
+    built_in = {**modular, 'stdout': modular['stdout'].replace('=m', '=y')}
+    assert integrated(built_in) is True
+    filtered = {**built_in, 'stdout': built_in['stdout'].replace('CONFIG_HID_GENERIC=y\n', '')}
+    assert integrated(filtered) is None
+    other_kernel = _usb_hid_config('7.0.0-1019-nvidia')
+    assert integrated({**other_kernel, 'stdout': other_kernel['stdout'].replace('=m', '=y')}) is None
+
+
+def _usb_hid_scenario() -> list[dict[str, Any]]:
+    """Three-boot scenario: real host rows re-labeled by phase plus labeled synthetic probes."""
+    real = _usb_hid_real_rows()
+    prior, affected = '6.11.0-1016-nvidia', '6.17.0-1032-nvidia'
+    boots = {'pre-update': '11111111-1111-1111-1111-111111111111',
+             'affected': '22222222-2222-2222-2222-222222222222',
+             'recovery': '33333333-3333-3333-3333-333333333333'}
+    key = 'Event: time 1.0, type 1 (EV_KEY), code 30 (KEY_A), value 1\n'
+    loaded = real['lsmod']['stdout'] + 'hid_generic            12288  0\nusbhid                 81920  0\n'
+
+    def row(phase: str, cmd: str, stdout: str, exit_code: int = 0, base: dict[str, Any] | None = None) -> dict[str, Any]:
+        return {**(base or {'stderr': ''}), 'cmd': cmd, 'exit': exit_code, 'stdout': stdout,
+                'capture_phase': phase, 'boot_id': boots[phase]}
+
+    rows = [{'cmd': 'dmidecode -t system', 'exit': 0, 'stderr': '',
+             'stdout': 'System Information\n\tManufacturer: NVIDIA\n\tProduct Name: DGX Spark\n'}]
+    for phase, kernel in (('pre-update', prior), ('affected', affected), ('recovery', prior)):
+        rows += [row(phase, 'cat /proc/sys/kernel/random/boot_id', boots[phase] + '\n'),
+                 row(phase, 'uname -r', kernel + '\n')]
+    rows += [row('pre-update', 'evtest /dev/input/event3', key),
+             row('pre-update', 'ssh spark hostname', 'spark\n')]
+    rows += [row('affected', 'lsusb -t', _with_hid(real['lsusb -t']['stdout'], '[none]')),
+             row('affected', 'lsmod', real['lsmod']['stdout']),
+             row('affected', _usb_hid_config(affected)['cmd'], _usb_hid_config(affected)['stdout']),
+             row('affected', 'dpkg --audit',
+                 'The following packages have been unpacked but not yet configured:\n nvidia-driver-580-open\n'),
+             row('affected', 'journalctl -k -b 0', 'kernel: usbhid: Unknown symbol hid_open (err -2)\n')]
+    rows += [row('recovery', 'evtest /dev/input/event3', key),
+             row('recovery', 'ssh spark hostname', 'spark\n'),
+             row('recovery', 'lsusb -t', _with_hid(real['lsusb -t']['stdout'], 'usbhid')),
+             row('recovery', 'lsmod', loaded),
+             row('recovery', _usb_hid_config(prior)['cmd'], _usb_hid_config(prior)['stdout'])]
+    return rows
+
+
+def _replace(rows: list[dict[str, Any]], phase: str, prefix: str, /, **changes: Any) -> list[dict[str, Any]]:
+    return [{**r, **changes} if r.get('capture_phase') == phase and r['cmd'].startswith(prefix) else r for r in rows]
+
+
+def test_usb_hid_scenario_passes_only_with_loss_and_recovery(tmp_path: Path) -> None:
+    result = _write_usb_hid(tmp_path, _usb_hid_scenario())
+    assert result['status'] == 'pass' and result['fail'] == 0 and result['could_not_run'] == 0, result
+
+
+def test_usb_hid_scenario_rejects_bound_hid_on_affected_boot(tmp_path: Path) -> None:
+    rows = _usb_hid_scenario()
+    tree = _with_hid(_usb_hid_real_rows()['lsusb -t']['stdout'], 'usbhid')
+    result = _write_usb_hid(tmp_path, _replace(rows, 'affected', 'lsusb -t', stdout=tree))
+    assert result['status'] == 'fail' and result['fail'] == 1 and result['could_not_run'] == 0, result
+
+
+def test_usb_hid_scenario_accepts_built_in_recovery_kernel(tmp_path: Path) -> None:
+    rows = _usb_hid_scenario()
+    prior = _usb_hid_config('6.11.0-1016-nvidia')
+    rows = _replace(rows, 'recovery', 'lsmod', stdout=_usb_hid_real_rows()['lsmod']['stdout'])
+    rows = _replace(rows, 'recovery', prior['cmd'], stdout=prior['stdout'].replace('=m', '=y'))
+    result = _write_usb_hid(tmp_path, rows)
+    assert result['status'] == 'pass' and result['could_not_run'] == 0, result
+
+
+def test_usb_hid_scenario_rejects_config_of_other_kernel(tmp_path: Path) -> None:
+    rows = _usb_hid_scenario()
+    prior, other = _usb_hid_config('6.11.0-1016-nvidia'), _usb_hid_config('7.0.0-1019-nvidia')
+    rows = _replace(rows, 'recovery', 'lsmod', stdout=_usb_hid_real_rows()['lsmod']['stdout'])
+    rows = _replace(rows, 'recovery', prior['cmd'], cmd=other['cmd'], stdout=other['stdout'].replace('=m', '=y'))
+    result = _write_usb_hid(tmp_path, rows)
+    assert result['status'] == 'unknown' and result['fail'] == 0 and result['could_not_run'] == 1, result
+    assert 'built-in' in result['reason'], result
+
+
+def test_usb_hid_scenario_rejects_modular_recovery_without_modules(tmp_path: Path) -> None:
+    rows = _replace(_usb_hid_scenario(), 'recovery', 'lsmod', stdout=_usb_hid_real_rows()['lsmod']['stdout'])
+    result = _write_usb_hid(tmp_path, rows)
+    assert result['status'] == 'fail' and result['fail'] == 1 and result['could_not_run'] == 0, result
+
+
+def test_usb_hid_scenario_keeps_inaccessible_telemetry_could_not_run(tmp_path: Path) -> None:
+    rows = _replace(_usb_hid_scenario(), 'affected', 'journalctl', exit=1, stdout='')
+    result = _write_usb_hid(tmp_path, rows)
+    assert result['status'] == 'unknown' and result['fail'] == 0 and result['could_not_run'] == 1, result
 
 
 def test_gpu_clock_verifier_rejects_failed_nvidia_command(tmp_path: Path) -> None:
