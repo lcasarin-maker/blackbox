@@ -10,6 +10,10 @@ satd_family: BLIND_INSTRUMENT
 created: 2026-10-05
 closed_at: 2026-10-06
 close_check: {"cmd": "python3 -m pytest -q tests/test_renderer_probe_sleep.py", "expect": "exit_zero", "porque": "El probe espera la senal real (marcador de proceso visible, llamada killpg observada) en vez de tiempo fijo, y su control negativo sigue distinguiendo la terminacion diferida de la inmediata. Mientras haya sleeps, el cierre sigue pendiente."}
+evidence:
+  pass: tasks/evidence/DEBT-RENDERER-PROBE-SLEEP-01.pass.txt
+  e2e: tasks/evidence/DEBT-RENDERER-PROBE-SLEEP-01.e2e.txt
+  fail: tasks/evidence/DEBT-RENDERER-PROBE-SLEEP-01.fail.txt
 ---
 
 ## Registro y responsable
