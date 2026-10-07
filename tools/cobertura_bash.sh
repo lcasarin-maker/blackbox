@@ -36,8 +36,9 @@ rc_suite=$?
 # profundidad de anidamiento tenga lo que ejecuta: `+` en el cuerpo principal,
 # `++` dentro de una funcion llamada desde `$(...)`, `+++` un nivel mas. El
 # patron anterior anclaba en UN solo `+`, asi que contaba como SIN CUBRIR todo
-# lo que corre en una substitucion, una tuberia o un subshell -- que en bin/bb
-# es casi todo, porque el muestreo se arma con `x=$(funcion)`.
+# lo que corre dentro de una substitucion `$(...)` -- que en bin/bb es casi todo,
+# porque el muestreo se arma con `x=$(funcion)`. Una tuberia y un subshell llevan
+# un solo `+` (medido con bash -x el 2026-10-06): el ancla de un `+` los contaba bien.
 #
 # Medido el 2026-09-25: corriendo SOLO los tres tests de `slices_mem`, que la
 # ejecutan entera, 11 de sus 14 lineas salian sin cubrir. El bug no estaba en
