@@ -29,3 +29,24 @@ El cierre exige sustituir ambos sleeps por esperas sobre senal real y repetir el
 ## Estado
 
 Abierta. La justificacion en el codigo cita esta ficha; no demuestra por si sola que el probe sea correcto.
+
+## Root Cause
+
+El probe medía con tiempo fijo en vez de esperar la señal real: un sondeo de 10 ms con
+`real_sleep` en el bucle que espera el marcador, y un retraso fijo de 120 ms antes del
+`SIGKILL` para simular la terminación diferida. El sujeto de la prueba (terminación
+diferida frente a inmediata) dependía de ese tiempo fijo, no de un evento observado.
+
+## Regression Test
+
+tests/test_renderer_probe_sleep.py::test_renderer_probe_sin_sleeps_fijos -- falla si el
+probe vuelve a tener `time.sleep` o `real_sleep(`. El propio probe trae su control
+negativo: sale con `CANNOT-DISTINGUISH` y rc=1 si no separa la terminación diferida de la
+inmediata (ver `DEFERRED_ALIVE_OBSERVATIONS` y el tercer ensayo de terminación inmediata).
+
+## Verification Evidence
+
+tasks/evidence/DEBT-RENDERER-PROBE-SLEEP-01.fail.txt (antes) y .pass.txt (después, 1
+passed). Evidencia del probe regenerada: renderer-delayed-probe.stdout y
+renderer-delayed-proof.json, con la corrida por eventos (alive_observations_before_kill 2
+en diferido, 0 en inmediato) en vez de la medición por ventana de tiempo.
