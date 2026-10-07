@@ -33,3 +33,23 @@ Escaner y gate dan el mismo conteo de fraudes sobre el mismo repo, y un fraude s
 Cerrada el 2026-10-06 por decision de Luis: la prueba de cierre pasa (escaner y gate cuentan igual) y el gate da 0 fraudes. La causa de los 7 fraudes que el escaner reporto antes NO se identifico. Si reaparece, abrir una ficha nueva con esa salida.
 
 Abierta. La prueba tests/test_escaner_debt_fraudes.py llama a simplecode_backlog_verifier de scan.py y al gate, y falla: el escaner y el gate no cuentan igual (confirmado 2026-10-06). Costo: la prueba tarda ~13 min porque el escaner vuelve a correr el gate; decidir si se queda en la suite o pasa a una comprobacion manual.
+
+## Root Cause
+
+No identificada. El escáner reportó 7 "FRAUD DETECTED" en una corrida del 2026-10-06
+mientras `backlog_verifier --gate` daba `frauds: 0` en el mismo repo y hora cercana. No se
+reprodujo esa discrepancia en corridas posteriores (confirmado 2 veces: la función del
+escáner y el gate coinciden en 0).
+
+## Regression Test
+
+tests/test_escaner_debt_fraudes.py -- compara el regex que el escáner usa para parsear la
+salida de `backlog_verifier` contra una captura real guardada (sin invocar el gate en
+vivo, para no recursar: esta misma ficha está en `tasks/done/` y `backlog_verifier`
+re-ejecuta el close_check de toda ficha cerrada).
+
+## Verification Evidence
+
+tasks/evidence/DEBT-ESCANER-DEBT-CUENTA-FRAUDES-QUE-GATE-NO-REPRODUCE-01.pass.txt y
+tests/fixtures/backlog_verifier_gate_capture_20261006.txt (captura real del 2026-10-06
+08:44, antes de cerrar esta ficha).
