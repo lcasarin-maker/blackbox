@@ -147,6 +147,26 @@ def _management_probe(row: dict[str, Any]) -> bool:
     return target is not None and target not in {"localhost", "127.0.0.1", "::1"}
 
 
+def _management_ping(row: dict[str, Any]) -> bool:
+    """A ping whose destination (last argv word) is a non-loopback management host."""
+    argv = _command_args(row)
+    return (len(argv) >= 2 and Path(argv[0]).name == "ping" and not argv[-1].startswith("-")
+            and not _is_loopback_probe(row))
+
+
+def _ping_no_reply(row: dict[str, Any]) -> bool:
+    """iputils ping exits 1 only when it ran and got no reply; 2/127 mean it never ran."""
+    return row["exit"] == 1
+
+
+def _explicit_loopback_failure(row: dict[str, Any]) -> bool:
+    if not _is_loopback_probe(row):
+        return False
+    if Path(_command_args(row)[0]).name == "ping":
+        return _ping_no_reply(row)
+    return _explicit_remote_failure(row)
+
+
 def _wifi_connected(row: dict[str, Any]) -> bool:
     if row["exit"] != 0:
         return False
@@ -285,6 +305,8 @@ def _trial_remote_index(following: list[tuple[int, dict[str, Any]]]) -> tuple[in
 
 
 def _explicit_remote_failure(row: dict[str, Any]) -> bool:
+    if _management_ping(row):
+        return _ping_no_reply(row)
     if row["exit"] == 0 or _ssh_target(row) is None:
         return False
     diagnostic = row["stdout"] + "\n" + row["stderr"]
@@ -398,16 +420,20 @@ def _check_incident(data: dict[str, Any], rows: list[dict[str, Any]], path: Path
                          and re.search(r"no-secrets", journal_text, re.I)
                          and re.search(r"wpa_supplicant|NetworkManager", journal_text, re.I))
     local_rows = [row for row in rows if _is_loopback_probe(row)]
-    remote_rows = [row for row in rows if _management_probe(row)]
+    remote_rows = [row for row in rows if _management_probe(row) or _management_ping(row)]
     local_alive = any(_loopback_probe(row) for row in local_rows)
+    local_failed = any(_explicit_loopback_failure(row) for row in local_rows)
     remote_failed = any(_explicit_remote_failure(row) for row in remote_rows)
-    if local_rows and remote_rows and not local_alive and remote_failed:
+    if not local_alive and local_failed and remote_failed:
         return _result("fail", "loopback and management probes both fail; this is host failure, not Wi-Fi isolation", [str(path)])
     if not journal or not local_rows or not remote_rows:
         return _result("unknown", "raw NetworkManager incident, successful local-host probe, or management endpoint probe missing", [str(path)])
     if not remote_failed:
         return _result("unknown", "management probe has no successful response or explicit native connection failure diagnostic", [str(path)])
-    if not network_fault or not local_alive:
+    if not local_alive:
+        # An explicit loopback failure already returned fail above; what remains never ran.
+        return _result("unknown", "loopback probe did not run to a native reply or no-reply verdict", [str(path)])
+    if not network_fault:
         return _result("fail", "raw output does not show WRONG_KEY/no-secrets with a responsive local host and failed remote path", [str(path)])
     if not _source_applies(data, rows):
         return _result("unknown", "exact OEM/BIOS/kernel/Wi-Fi driver and vendor applicability evidence missing", [str(path)])

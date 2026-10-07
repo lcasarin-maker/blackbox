@@ -128,6 +128,31 @@ def test_wifi_classifier_marks_local_host_failure_separately(tmp_path: Path) -> 
     assert result['status'] == 'fail' and result['fail'] == 1, result
 
 
+@pytest.mark.parametrize('local, remote', [
+    # ping exit 2 / 127: the probe never ran, so it proves nothing about the host.
+    ({'cmd': 'ping 127.0.0.1', 'exit': 2, 'stdout': '', 'stderr': 'ping: socket: Operation not permitted'},
+     {'cmd': 'ping management', 'exit': 1, 'stdout': '', 'stderr': 'unreachable'}),
+    ({'cmd': 'ping 127.0.0.1', 'exit': 1, 'stdout': '', 'stderr': 'host unreachable'},
+     {'cmd': 'ping management', 'exit': 2, 'stdout': '', 'stderr': 'ping: management: Name or service not known'}),
+    ({'cmd': 'ping 127.0.0.1', 'exit': 127, 'stdout': '', 'stderr': 'ping: command not found'},
+     {'cmd': 'ssh admin@management true', 'exit': 255, 'stdout': '', 'stderr': 'No route to host'}),
+])
+def test_wifi_classifier_keeps_unrun_probes_out_of_fail(
+        tmp_path: Path, local: dict[str, Any], remote: dict[str, Any]) -> None:
+    evidence = tmp_path / 'wifi'
+    evidence.mkdir()
+    (evidence / 'commands.json').write_text(json.dumps({
+        'id': 'FEATURE-FORUM-WIFI-ISOLATION-01',
+        'commands': [
+            {'cmd': 'journalctl -u NetworkManager', 'exit': 0, 'stdout': 'no matching roam failure', 'stderr': ''},
+            local, remote,
+        ],
+    }), encoding='utf-8')
+    result = verify_wifi_isolation(evidence)
+    assert result['status'] == 'unknown', result
+    assert result['fail'] == 0 and result['could_not_run'] == 1, result
+
+
 def test_usb_classifier_detects_unbound_attached_hid_device(tmp_path: Path) -> None:
     evidence = tmp_path / 'usb'
     evidence.mkdir()
