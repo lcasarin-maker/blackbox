@@ -773,6 +773,7 @@ def _hang_run(r: dict[str, Any]) -> tuple[dict[str, Any], str | None]:
            for rows in (samples, journal, bb, trials)):
         # Empty sources do not prove zero incidents (protocol.txt, FEATURE-1358-CGROUP-05).
         raise MissingEvidence("raw memory.current samples, journalctl JSON, bb JSONL samples and trial rows required per run")
+    assert isinstance(samples, list) and isinstance(journal, list) and isinstance(bb, list) and isinstance(trials, list)
     start, end, boot = r.get("started_ns"), r.get("ended_ns"), r.get("boot_id")
     if type(start) is not int or type(end) is not int or start >= end:
         return {}, "positive exposure interval absent"
