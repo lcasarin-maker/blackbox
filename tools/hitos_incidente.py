@@ -276,6 +276,22 @@ def analyze(journal: Iterable[dict[str, Any]], samples: Iterable[dict[str, Any]]
     return out
 
 
+def source_gaps(journal: list[dict[str, Any]], samples: list[dict[str, Any]]) -> list[str]:
+    """Rows whose timestamp or boot identity is absent; they cannot be placed in a window."""
+    gaps: list[str] = []
+    for label, rows in (("journal", journal), ("muestras", samples)):
+        if rows:
+            missing_ts = sum(1 for row in rows if
+                             (_journal_time(row) if label == "journal" else _sample_time(row)) is None)
+            missing_boot = sum(1 for row in rows if
+                               _boot_id(row) is None)
+            if missing_ts:
+                gaps.append(f"{label}: timestamp inválido/ausente en {missing_ts} registro(s)")
+            if missing_boot:
+                gaps.append(f"{label}: boot_id ausente en {missing_boot} registro(s)")
+    return gaps
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--journal", required=True, type=Path,
@@ -288,16 +304,7 @@ def main(argv: list[str] | None = None) -> int:
     samples = _read_jsonl(args.samples, "muestras", could_not_run)
     result = analyze(journal, samples)
     could_not_run.extend(result.pop("could_not_run", []))
-    for label, rows in (("journal", journal), ("muestras", samples)):
-        if rows:
-            missing_ts = sum(1 for row in rows if
-                             (_journal_time(row) if label == "journal" else _sample_time(row)) is None)
-            missing_boot = sum(1 for row in rows if
-                               _boot_id(row) is None)
-            if missing_ts:
-                could_not_run.append(f"{label}: timestamp inválido/ausente en {missing_ts} registro(s)")
-            if missing_boot:
-                could_not_run.append(f"{label}: boot_id ausente en {missing_boot} registro(s)")
+    could_not_run.extend(source_gaps(journal, samples))
     result["could_not_run"] = could_not_run
     result["interpretation"] = "Hitos observados; sin inferencia de causalidad ni inicio físico."
     print(json.dumps(result, ensure_ascii=False, indent=2))

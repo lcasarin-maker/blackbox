@@ -46,3 +46,18 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01.md`, `tests/test_debt_registration_controls.py`, `tools/verify_cgroup_plan.py`, `tests/test_closure_kernel_selectors.py`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-cgroup-capability-root-summary-20261004.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-02-TRAZA-direct-close-current.log`, `tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/comparison.txt`, `tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE/readiness.txt`, `tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/host-controls.txt`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Avance 2026-10-07 — fase 05 deja de ser instrumento ciego; la ficha sigue abierta
+
+Defecto corregido en `tools/verify_cgroup_plan.py`: `_hangs` (05-cuelgues) daba `pass` a un fixture sano de 10 ns con `service_response='{"ok":true}'` sin clasificar rechazo, pérdida de servicio ni reinicio, y sin usar `tools.hitos_incidente`, que su protocolo exige. Ahora, por pila (baseline/candidate), la 05:
+
+- recalcula los hitos (service_loss, watchdog, NVRM, oomd, boots) con `hitos_incidente.analyze` sobre filas crudas `journalctl -o json` (`journal`) y JSONL de bb (`bb_samples`); cualquier `could_not_run` del detector, una fuente vacía o filas sin timestamp/boot (`hitos_incidente.source_gaps`, extraída de su `main`) es CNR;
+- exige `collection` con comandos literales y returncode (debe incluir `journalctl ... -o json`); un colector con rc≠0 es CNR y los comandos se imprimen en el informe;
+- exige `boot_id`, `started_ns/ended_ns` monotónicos y `started_utc/ended_utc`; las filas del boot de la corrida deben caer en la ventana y las de otro boot cuentan como reinicio observado;
+- clasifica cada ensayo de `trials` (api, requested/limit bytes, cgroup, intervalo, returncode o null, diagnostic) desde `memory.current` crudo: completed / controlled_rejection / accepted_over_limit / failed / not_executed;
+- exige como controles sanos none y cpu_touch sin límite ejecutados, y como control positivo que cpu_touch cargue sus bytes; si fallan o están neutralizados, el resultado es `fail`. Un ensayo de límite ejecutado es obligatorio (si falta, CNR);
+- imprime por pila conteos con ceros, exposición, primeros hitos, última respuesta útil y `outcome` (`observed_window_without_hang` / `service_loss_observed` / `host_reset_observed`).
+
+Control negativo: los 7 tests nuevos de la fase 05 en `tests/test_closure_kernel.py` fallan contra el verificador de HEAD (7 failed) y pasan con el nuevo. El fixture antiguo pasaba con el verificador de HEAD y ahora sale `unknown`, could_not_run=1.
+
+Por qué sigue abierta: el selector agrega 01–05 y las cinco salen `unknown` sobre la evidencia real (01: `dmem.current` ausente en 23 lecturas; 02–05: no existe `capture.json`). En el host, el 2026-10-07: driver 580.178.04, `dmem` está en `cgroup.controllers` de la raíz pero `dmem.capacity` está vacío y `user.slice` delega solo `cpu memory pids`. La siguiente acción sigue siendo de laboratorio (operador Luis, canario GPU), como indica la clasificación del 2026-10-04.
