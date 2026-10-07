@@ -1,0 +1,64 @@
+{
+ "id": "DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01",
+ "kind": "real_host_capture",
+ "captured_at": "2026-10-07T13:00:04+00:00",
+ "scope": "single healthy headless boot; no HID device attached; NOT a pre-update/affected/recovery capture",
+ "commands": [
+  {
+   "cmd": "uname -r",
+   "exit": 0,
+   "stdout": "6.17.0-1032-nvidia\n",
+   "stderr": "",
+   "boot_id": "0de3e072-9702-4027-bb50-a2f3e4abd14d"
+  },
+  {
+   "cmd": "cat /proc/sys/kernel/random/boot_id",
+   "exit": 0,
+   "stdout": "0de3e072-9702-4027-bb50-a2f3e4abd14d\n",
+   "stderr": "",
+   "boot_id": "0de3e072-9702-4027-bb50-a2f3e4abd14d"
+  },
+  {
+   "cmd": "lsusb -t",
+   "exit": 0,
+   "stdout": "/:  Bus 001.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 480M\n/:  Bus 002.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 20000M/x2\n/:  Bus 003.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 480M\n/:  Bus 004.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 20000M/x2\n/:  Bus 005.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 480M\n/:  Bus 006.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 20000M/x2\n/:  Bus 007.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 480M\n/:  Bus 008.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 20000M/x2\n/:  Bus 009.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 480M\n/:  Bus 010.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 20000M/x2\n/:  Bus 011.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/2p, 480M\n    |__ Port 002: Dev 002, If 0, Class=Wireless, Driver=btusb, 480M\n    |__ Port 002: Dev 002, If 1, Class=Wireless, Driver=btusb, 480M\n    |__ Port 002: Dev 002, If 2, Class=Wireless, Driver=btusb, 480M\n/:  Bus 012.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/1p, 20000M/x2\n",
+   "stderr": "",
+   "boot_id": "0de3e072-9702-4027-bb50-a2f3e4abd14d"
+  },
+  {
+   "cmd": "lsmod",
+   "exit": 0,
+   "stdout": "Module                  Size  Used by\nveth                   36864  0\nnf_conntrack_netlink    57344  0\nxt_nat                 12288  7\nxt_MASQUERADE          16384  4\nbridge                405504  0\nstp                    12288  1 bridge\nllc                    16384  2 bridge,stp\nxfrm_user              61440  1\nxfrm_algo              20480  1 xfrm_user\nxt_set                 20480  0\nip_set                 65536  1 xt_set\nnft_chain_nat          12288  7\nnf_nat                 65536  3 xt_nat,nft_chain_nat,xt_MASQUERADE\nrfcomm                102400  0\nsnd_seq_dummy          12288  0\nsnd_hrtimer            12288  1\noverlay               212992  5\nqrtr                   49152  2\nalgif_hash             16384  1\nalgif_skcipher         12288  1\naf_alg                 32768  6 algif_hash,algif_skcipher\nbnep                   36864  2\nsunrpc                782336  1\nnvidia_uvm           1900544  32\nnvidia_drm            135168  11\nnvidia_modeset       1957888  20 nvidia_drm\nip6t_REJECT            12288  1\nnf_reject_ipv6         24576  1 ip6t_REJECT\nxt_hl                  12288  22\nip6t_rt                16384  3\nipt_REJECT             12288  1\nnf_reject_ipv4         20480  1 ipt_REJECT\nxt_LOG                 16384  10\nnf_log_syslog          20480  10\nnft_limit              20480  13\nxt_limit               12288  0\nxt_addrtype            12288  8\nxt_tcpudp              20480  60\nxt_conntrack           12288  20\nnf_conntrack          200704  5 xt_conntrack,nf_nat,xt_nat,nf_conntrack_netlink,xt_MASQUERADE\nnf_defrag_ipv6         24576  1 nf_conntrack\nnf_defrag_ipv4         12288  1 nf_conntrack\nnft_compat             24576  136\nnf_tables             352256  930 nft_compat,nft_chain_nat,nft_limit\nbinfmt_misc            28672  1\nnls_iso8859_1          12288  1\nbtusb                  81920  0\nbtrtl                  32768  1 btusb\nbtintel                73728  1 btusb\nbtbcm                  24576  1 btusb\nbtmtk                  36864  1 btusb\nbluetooth            1028096  32 btrtl,btmtk,btintel,btbcm,bnep,btusb,rfcomm\nmt7925e                24576  0\nsnd_hda_codec_tegrahdmi    12288  1\nmt7925_common         155648  1 mt7925e\nsnd_hda_codec_hdmi     61440  1 snd_hda_codec_tegrahdmi\nmt792x_lib             77824  2 mt7925e,mt7925_common\nmt76_connac_lib       106496  3 mt792x_lib,mt7925e,mt7925_common\nnvidia              14684160  450 nvidia_uvm,nvidia_modeset\nmt76                  163840  4 mt792x_lib,mt7925e,mt76_connac_lib,mt7925_common\nsnd_hda_acpi           16384  3\nmac80211             1679360  4 mt792x_lib,mt76,mt76_connac_lib,mt7925_common\nsbsa_gwdt              20480  1\nsnd_hda_codec         208896  3 snd_hda_acpi,snd_hda_codec_hdmi,snd_hda_codec_tegrahdmi\nsnd_hwdep              24576  1 snd_hda_codec\nvideo                  81920  1 nvidia_modeset\ndrm_ttm_helper         16384  1 nvidia_drm\narm_spe_pmu            24576  0\narm_smmuv3_pmu         32768  0\ncfg80211             1331200  4 mt76,mac80211,mt76_connac_lib,mt7925_common\nsnd_hda_core          176128  4 snd_hda_acpi,snd_hda_codec_hdmi,snd_hda_codec,snd_hda_codec_tegrahdmi\nttm                   126976  1 drm_ttm_helper\nsnd_seq_midi           24576  0\nlibarc4                12288  1 mac80211\nsnd_pcm               200704  4 snd_hda_codec_hdmi,snd_hda_codec,snd_hda_core\nsnd_seq_midi_event     20480  1 snd_seq_midi\nsnd_rawmidi            53248  1 snd_seq_midi\nmlx5_fwctl             16384  0\nsnd_seq               131072  9 snd_seq_midi,snd_seq_midi_event,snd_seq_dummy\nsnd_seq_device         16384  3 snd_seq,snd_seq_midi,snd_rawmidi\nsnd_timer              53248  3 snd_seq,snd_hrtimer,snd_pcm\ncppc_cpufreq           32768  0\nsnd                   147456  16 snd_seq,snd_hda_acpi,snd_seq_device,snd_hda_codec_hdmi,snd_hwdep,snd_hda_codec,snd_timer,snd_pcm,snd_rawmidi\nsoundcore              16384  1 snd\nmtk_pcie_hotplug       40960  0\nacpi_tad               20480  0\nsch_fq_codel           24576  2\nmstflint_access        36864  0\ndm_multipath           49152  0\nipmi_devintf           20480  0\nnvme_fabrics           36864  0\nipmi_msghandler       102400  1 ipmi_devintf\nefi_pstore             12288  0\nnfnetlink              20480  6 nft_compat,nf_conntrack_netlink,nf_tables,ip_set\ndmi_sysfs              24576  0\nip_tables              36864  0\nx_tables               65536  14 xt_conntrack,nft_compat,xt_LOG,xt_tcpudp,xt_addrtype,xt_nat,ip6t_rt,xt_set,ipt_REJECT,ip_tables,xt_limit,xt_hl,xt_MASQUERADE,ip6t_REJECT\nautofs4                61440  2\nbtrfs                2023424  0\nblake2b_generic        20480  0\nraid10                 77824  0\nraid456               212992  0\nasync_raid6_recov      24576  1 raid456\nasync_memcpy           16384  2 raid456,async_raid6_recov\nasync_pq               16384  2 raid456,async_raid6_recov\nasync_xor              16384  3 async_pq,raid456,async_raid6_recov\nasync_tx               16384  5 async_pq,async_memcpy,async_xor,raid456,async_raid6_recov\nxor                    12288  2 async_xor,btrfs\nxor_neon               16384  1 xor\nraid6_pq              106496  4 async_pq,btrfs,raid456,async_raid6_recov\nraid1                  61440  0\nraid0                  28672  0\nlinear                 16384  0\ndm_mirror              28672  0\ndm_region_hash         24576  1 dm_mirror\ndm_log                 20480  2 dm_region_hash,dm_mirror\nmlx5_ib               520192  0\nib_uverbs             208896  1 mlx5_ib\nmacsec                 77824  1 mlx5_ib\nib_core               528384  2 ib_uverbs,mlx5_ib\npolyval_ce             12288  0\nghash_ce               20480  0\nsm4_ce_gcm             16384  0\nsm4_ce_ccm             16384  0\nsm4_ce                 28672  2 sm4_ce_gcm,sm4_ce_ccm\nsm4_ce_cipher          12288  0\nmlx5_core            2760704  2 mlx5_fwctl,mlx5_ib\nsm4                    12288  4 sm4_ce,sm4_ce_cipher,sm4_ce_gcm,sm4_ce_ccm\nsm3_ce                 12288  0\nnvme                   73728  2\nsha3_ce                16384  0\nmlxfw                  32768  1 mlx5_core\narm_smccc_trng         12288  0\nnvme_core             237568  4 nvme,nvme_fabrics\npsample                24576  1 mlx5_core\nr8127                 233472  0\nnvme_keyring           20480  2 nvme_core,nvme_fabrics\ntls                   159744  4 mlx5_core\nnvme_auth              28672  1 nvme_core\npci_hyperv_intf        12288  1 mlx5_core\nxhci_plat_hcd          24576  0\naes_neon_bs            24576  0\naes_neon_blk           24576  1 aes_neon_bs\naes_ce_blk             32768  4\naes_ce_cipher          12288  1 aes_ce_blk\n",
+   "stderr": "",
+   "boot_id": "0de3e072-9702-4027-bb50-a2f3e4abd14d"
+  },
+  {
+   "cmd": "grep -E '^(# )?CONFIG_(HID|USB_HID|HID_GENERIC)[= ]' /boot/config-6.17.0-1032-nvidia",
+   "exit": 0,
+   "stdout": "CONFIG_HID=m\nCONFIG_HID_GENERIC=m\nCONFIG_USB_HID=m\n",
+   "stderr": "",
+   "boot_id": "0de3e072-9702-4027-bb50-a2f3e4abd14d"
+  },
+  {
+   "cmd": "grep -E '^(# )?CONFIG_(HID|USB_HID|HID_GENERIC)[= ]' /boot/config-7.0.0-1019-nvidia",
+   "exit": 0,
+   "stdout": "CONFIG_HID=m\nCONFIG_HID_GENERIC=m\nCONFIG_USB_HID=m\n",
+   "stderr": "",
+   "boot_id": "0de3e072-9702-4027-bb50-a2f3e4abd14d"
+  },
+  {
+   "cmd": "grep -E '^(# )?CONFIG_(HID|USB_HID|HID_GENERIC)[= ]' /boot/config-6.11.0-1016-nvidia",
+   "exit": 0,
+   "stdout": "CONFIG_HID=m\nCONFIG_HID_GENERIC=m\nCONFIG_USB_HID=m\n",
+   "stderr": "",
+   "boot_id": "0de3e072-9702-4027-bb50-a2f3e4abd14d"
+  },
+  {
+   "cmd": "grep -c CONFIG_USB_HID_GENERIC /boot/config-6.17.0-1032-nvidia",
+   "exit": 1,
+   "stdout": "0\n",
+   "stderr": "",
+   "boot_id": "0de3e072-9702-4027-bb50-a2f3e4abd14d"
+  }
+ ]
+}
