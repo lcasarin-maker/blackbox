@@ -795,6 +795,13 @@ def test_rescue_boot_and_verified_service_restore_pass_from_native_outputs(tmp_p
     result = evaluate(finding_id, tmp_path)
     assert result["status"] == "pass" and result["fail"] == result["could_not_run"] == 0, result
 
+    # Expiry is judged against the restoration capture (2026-10-03), not the day the verifier runs.
+    expired = {**manifest, "expiry": "2026-10-02T00:00:00+00:00"}
+    (tmp_path / "service-restore-manifest.json").write_text(json.dumps(expired), encoding="utf-8")
+    late = evaluate(finding_id, tmp_path)
+    assert late["status"] == "fail" and late["reason"] == "service restore was captured after the manifest expiry", late
+    (tmp_path / "service-restore-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
     evidence = json.loads((tmp_path / "capture.json").read_text(encoding="utf-8"))
     rescue_cmdline = next(row for row in evidence["captures"]
                           if row["name"] == "rescue_boot" and row["argv"][0] == "cat")
