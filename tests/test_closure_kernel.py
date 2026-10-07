@@ -1356,7 +1356,9 @@ def test_rcu_fixture_backend_and_kdump_description_do_not_pass(tmp_path):
     doc = json.loads((root / "recovery.json").read_text(encoding="utf-8"))
     doc["active"]["pstore_backend_capture"] = {"command": ["dmesg"], "returncode": 0, "stdout": "Registered efi as persistent store backend"}
     put(root / "recovery.json", doc)
-    assert _asserted_status(verify_rcu(root)) == "fail"
+    # A kdump description without LoadState/ActiveState observed nothing: could_not_run, not fail.
+    described = verify_rcu(root)
+    assert described["status"] == "unknown" and described["could_not_run"] == 1 and described["fail"] == 0
 
 
 def test_rcu_conflicting_duplicate_sysctls_fail(tmp_path):
@@ -1425,6 +1427,29 @@ def test_rcu_rollback_and_kdump_capture_types_are_distinguished(tmp_path):
                                "kdump": {"systemctl_show": ""}})) == "unknown"
     assert _asserted_status(_validate_rollback({"rollback": {"original_sysctl_text": "x", "restored_sysctl_text": "x"},
                                "kdump": {"systemctl_show": "ActiveState=active\nActiveState=inactive"}})) == "fail"
+
+
+def test_rcu_absent_rollback_or_kdump_state_is_could_not_run_not_fail():
+    from tools.verify_rcu_panic_pstore import _validate_rollback
+    kdump_ok = {"systemctl_show": "LoadState=loaded\nActiveState=active\n"}
+    # Nothing captured about the rollback: could_not_run, never a claim that it failed.
+    for rollback in ({}, {"original_sysctl_text": "x"}, {"restored_sysctl_text": "x"},
+                     {"original_sysctl_text": "", "restored_sysctl_text": ""}):
+        result = _validate_rollback({"rollback": rollback, "kdump": kdump_ok})
+        assert result["status"] == "unknown" and result["could_not_run"] == 1 and result["fail"] == 0, rollback
+    assert _validate_rollback({"kdump": kdump_ok})["status"] == "unknown"
+    # A systemctl capture without the state keys observed nothing about kdump.
+    for show in ("Description=kdump active, running\n", "LoadState=loaded\n", "ActiveState=active\n"):
+        result = _validate_rollback({"rollback": {"original_sysctl_text": "x", "restored_sysctl_text": "x"},
+                                     "kdump": {"systemctl_show": show}})
+        assert result["status"] == "unknown" and result["could_not_run"] == 1 and result["fail"] == 0, show
+    # Negative controls: captured and wrong still fails, captured and right still passes.
+    assert _asserted_status(_validate_rollback({"rollback": {"original_sysctl_text": "x", "restored_sysctl_text": "y"},
+                                                "kdump": kdump_ok})) == "fail"
+    assert _asserted_status(_validate_rollback({"rollback": {"original_sysctl_text": "x", "restored_sysctl_text": "x"},
+                                                "kdump": {"systemctl_show": "LoadState=masked\nActiveState=active\n"}})) == "fail"
+    assert _validate_rollback({"rollback": {"original_sysctl_text": "x", "restored_sysctl_text": "x"},
+                               "kdump": kdump_ok}) is None
 
 
 def test_rcu_malformed_nested_types_and_boolean_schema_never_traceback(tmp_path):
