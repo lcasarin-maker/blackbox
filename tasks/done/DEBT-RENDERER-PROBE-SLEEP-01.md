@@ -3,11 +3,12 @@ id: DEBT-RENDERER-PROBE-SLEEP-01
 kind: task
 domain: VERDICT
 title: "Sustituir los time.sleep del probe de terminacion diferida del renderer por esperas por evento"
-status: open
+status: done
 severity: P3
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-05
+closed_at: 2026-10-06
 close_check: {"cmd": "python3 -m pytest -q tests/test_renderer_probe_sleep.py", "expect": "exit_zero", "porque": "El probe espera la senal real (marcador de proceso visible, llamada killpg observada) en vez de tiempo fijo, y su control negativo sigue distinguiendo la terminacion diferida de la inmediata. Mientras haya sleeps, el cierre sigue pendiente."}
 ---
 
