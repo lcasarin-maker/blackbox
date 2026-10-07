@@ -763,20 +763,8 @@ def test_cgroup_patch_rejects_double_lost_migration_and_teardown_ledger_defects(
     assert "teardown" in _patch(evidence)[0]
 
 
-def test_cgroup_hangs_requires_same_raw_api_sizes_and_interval_journal():
-    required = ("none", "cpu_touch", "cuda_malloc", "cuda_malloc_managed", "pytorch_empty")
-    runs = []
-    for stack in ("baseline", "candidate"):
-        runs.append({"stack": stack, "started_ns": 10, "ended_ns": 20, "service_response": '{"ok":true}',
-                     "samples": [{"api": api, "requested_bytes": 4096, "monotonic_ns": 11 + index,
-                                  "memory_current": 10, "cgroup": stack} for index, api in enumerate(required)],
-                     "journal": [{"monotonic_ns": 15, "message": "service ready"}]})
-    assert verify_hangs({"incidents": runs}) == []
-    runs[1]["samples"].pop()
-    assert "same API" in verify_hangs({"incidents": runs})[0] or "each stack" in verify_hangs({"incidents": runs})[0]
-
-
-def _hang_runs():
+def _legacy_summary_only_hang_runs():
+    """The pre-2026-10-07 phase 05 fixture: a 10 ns window and a trusted ``{"ok":true}`` string."""
     apis = ("none", "cpu_touch", "cuda_malloc", "cuda_malloc_managed", "pytorch_empty")
     return [{"stack": stack, "started_ns": 10, "ended_ns": 20, "service_response": '{"ok":true}',
              "samples": [{"api": api, "requested_bytes": 4096, "monotonic_ns": 11 + index,
@@ -785,32 +773,191 @@ def _hang_runs():
             for stack in ("baseline", "candidate")]
 
 
-def test_cgroup_hang_capture_boundaries_and_api_size_discrimination():
+_HANG_TRIALS = (("none", 0, None, 0, ""), ("cpu_touch", 4096, None, 0, ""), ("cuda_malloc", 4096, None, 0, ""),
+                ("cuda_malloc_managed", 4096, None, 0, ""), ("pytorch_empty", 4096, None, 0, ""),
+                ("cuda_malloc", 4096, 1024, 1, "cudaMalloc: ENOMEM under dmem.max"))
+
+
+def _hang_fixture_run(stack):
+    boot = f"boot-{stack}"
+    trials, samples = [], []
+    for index, (api, requested, limit, returncode, diagnostic) in enumerate(_HANG_TRIALS):
+        start = 1_000_000 * (index + 1)
+        trials.append({"api": api, "requested_bytes": requested, "limit_bytes": limit, "cgroup": f"/{stack}/{index}",
+                       "started_ns": start, "ended_ns": start + 900_000, "returncode": returncode,
+                       "diagnostic": diagnostic})
+        charged = 0 if limit is not None else requested
+        for offset, value in ((100_000, 100), (500_000, 100 + charged), (800_000, 100)):
+            samples.append({"api": api, "requested_bytes": requested, "cgroup": f"/{stack}/{index}",
+                            "monotonic_ns": start + offset, "memory_current": value})
+    return {"stack": stack, "boot_id": boot, "started_ns": 500_000, "ended_ns": 9_000_000,
+            "started_utc": "2026-10-07T12:00:00+00:00", "ended_utc": "2026-10-07T12:00:10+00:00",
+            "trials": trials, "samples": samples,
+            "collection": [{"command": ["journalctl", "-o", "json", "--boot", boot], "returncode": 0},
+                           {"command": ["python3", "-m", "tools.cgroup_repro", "--api", "all"], "returncode": 0}],
+            "journal": [{"__REALTIME_TIMESTAMP": "1791374402000000", "__MONOTONIC_TIMESTAMP": "2000",
+                         "_BOOT_ID": boot, "MESSAGE": "bounded trial started"}],
+            "bb_samples": [{"ts": f"2026-10-07T12:00:0{second}+00:00", "boot_id": boot, "psi": {"mem_full": 0.0},
+                            "servicio_ssh": {"estado": "OK"}} for second in (1, 5, 9)]}
+
+
+def _hang_runs():
+    return [_hang_fixture_run("baseline"), _hang_fixture_run("candidate")]
+
+
+def _hang_capture(tmp_path, runs):
+    root = tmp_path / "phase05"
+    put(root / "capture.json", {"schema": 1, "id": "FEATURE-1358-CGROUP-05-CUELGUES", "phase": "05-cuelgues",
+                                "host": {"boot_id": "boot-baseline", "kernel": "6.17", "driver": "580"},
+                                "incidents": runs})
+    return root
+
+
+def _stack(result, name):
+    return next(row for row in result["evaluation"]["stacks"] if row["stack"] == name)
+
+
+def test_cgroup_hangs_legacy_summary_only_fixture_no_longer_passes():
     from tools.verify_cgroup_plan import MissingEvidence
     import pytest
+    with pytest.raises(MissingEvidence, match="bb JSONL samples and trial rows"):
+        verify_hangs({"incidents": _legacy_summary_only_hang_runs()})
+
+
+def test_cgroup_hangs_positive_reports_counts_zeros_and_observed_window(tmp_path):
+    result = verify_cgroup("05-cuelgues", _hang_capture(tmp_path, _hang_runs()))
+    assert result["status"] == "pass" and result["could_not_run_count"] == 0 and result["fail"] == 0
+    for name in ("baseline", "candidate"):
+        stack = _stack(result, name)
+        assert stack["outcome"] == "observed_window_without_hang"
+        assert (stack["trials_planned"], stack["trials_executed"], stack["completed"], stack["controlled_rejection"],
+                stack["accepted_over_limit"], stack["failed"], stack["not_executed"]) == (6, 6, 5, 1, 0, 0, 0)
+        assert (stack["service_loss_events"], stack["watchdog_events"], stack["nvrm_events"], stack["oomd_actions"]) == (0, 0, 0, 0)
+        assert stack["first_service_loss_utc"] is None and stack["last_useful_response_utc"].startswith("2026-10-07T12:00:09")
+        assert stack["exposure_s"] == 0.0085
+        assert stack["collection"][0] == {"command": ["journalctl", "-o", "json", "--boot", f"boot-{name}"], "returncode": 0}
+        cpu = next(row for row in stack["trials"] if row["api"] == "cpu_touch")
+        assert (cpu["charge_initial_bytes"], cpu["charge_peak_bytes"], cpu["charge_final_bytes"]) == (100, 4196, 100)
+
+
+def test_cgroup_hangs_discriminates_service_loss_watchdog_and_reset_per_stack(tmp_path):
+    runs = _hang_runs()
+    runs[1]["bb_samples"][1]["servicio_ssh"] = {"estado": "TIMEOUT", "motivo": "ssh probe timed out"}
+    result = verify_cgroup("05-cuelgues", _hang_capture(tmp_path, runs))
+    assert result["status"] == "pass"
+    assert _stack(result, "baseline")["outcome"] == "observed_window_without_hang"
+    candidate = _stack(result, "candidate")
+    assert candidate["outcome"] == "service_loss_observed" and candidate["service_loss_events"] == 1
+    assert candidate["first_service_loss_utc"].startswith("2026-10-07T12:00:05")
+
+    runs = _hang_runs()
+    runs[1]["journal"].append({"__REALTIME_TIMESTAMP": "1791374404000000", "__MONOTONIC_TIMESTAMP": "4000",
+                               "_BOOT_ID": "boot-candidate", "UNIT": "bb-usable.service",
+                               "MESSAGE": "bb-usable.service: Watchdog timeout (limit 6min)!"})
+    candidate = _stack(verify_cgroup("05-cuelgues", _hang_capture(tmp_path, runs)), "candidate")
+    assert candidate["outcome"] == "service_loss_observed" and candidate["watchdog_events"] == 1
+
+    runs = _hang_runs()
+    runs[0]["journal"].append({"__REALTIME_TIMESTAMP": "1791374500000000", "__MONOTONIC_TIMESTAMP": "3",
+                               "_BOOT_ID": "boot-after-reset", "MESSAGE": "Linux version 6.17.0"})
+    baseline = _stack(verify_cgroup("05-cuelgues", _hang_capture(tmp_path, runs)), "baseline")
+    assert baseline["outcome"] == "host_reset_observed"
+    assert baseline["boots_observed"] == ["boot-after-reset", "boot-baseline"]
+
+
+def test_cgroup_hangs_limit_trial_classes_are_measured_not_declared():
+    from tools.verify_cgroup_plan import _hang_report
+    runs = _hang_runs()
+    runs[0]["trials"][5]["diagnostic"] = "Segmentation fault"
+    runs[1]["trials"][5]["returncode"] = 0
+    stacks = {row["stack"]: row for row in _hang_report({"incidents": runs})["stacks"]}
+    assert (stacks["baseline"]["failed"], stacks["baseline"]["controlled_rejection"]) == (1, 0)
+    assert (stacks["candidate"]["accepted_over_limit"], stacks["candidate"]["controlled_rejection"]) == (1, 0)
+    runs = _hang_runs()
+    leaked = next(row for row in runs[0]["samples"] if row["cgroup"] == "/baseline/5" and row["monotonic_ns"] == 6_800_000)
+    leaked["memory_current"] = 200
+    stacks = {row["stack"]: row for row in _hang_report({"incidents": runs})["stacks"]}
+    assert stacks["baseline"]["failed"] == 1, "a rejection that leaves charge behind is not a controlled rejection"
+
+
+def test_cgroup_hangs_neutralized_or_failed_healthy_controls_fail():
+    runs = _hang_runs()
+    for row in runs[0]["samples"]:
+        if row["api"] == "cpu_touch":
+            row["memory_current"] = 100
+    assert "cpu_touch positive control" in verify_hangs({"incidents": runs})[0]
+    runs = _hang_runs()
+    runs[1]["trials"][0]["returncode"] = 1
+    assert "healthy none/cpu_touch control" in verify_hangs({"incidents": runs})[0]
+
+
+def test_cgroup_hangs_missing_controls_and_sources_stay_could_not_run(tmp_path):
+    from tools.verify_cgroup_plan import MissingEvidence
+    import pytest
+    mutations = {
+        "limit trial": lambda runs: [run["trials"].pop() for run in runs],
+        "healthy controls": lambda runs: runs[0]["trials"][1].update(returncode=None),
+        "journalctl JSON": lambda runs: runs[0].update(journal=[]),
+        "boot_id ausente": lambda runs: runs[0]["journal"][0].pop("_BOOT_ID"),
+        "servicio_ssh": lambda runs: [row.pop("servicio_ssh") for row in runs[1]["bb_samples"]],
+        "PSI": lambda runs: [row.pop("psi") for row in runs[1]["bb_samples"]],
+        "no memory.current samples": lambda runs: runs[0].update(
+            samples=[row for row in runs[0]["samples"] if row["api"] != "pytorch_empty"]),
+        "run boot": lambda runs: runs[0].update(boot_id="another-boot"),
+        "boot identity absent": lambda runs: runs[1].update(boot_id=""),
+        "literal collection commands": lambda runs: runs[0].pop("collection"),
+        "journalctl -o json collection": lambda runs: runs[0]["collection"].pop(0),
+        "collection failed: python3 -m tools.cgroup_repro": lambda runs: runs[1]["collection"][1].update(returncode=1),
+    }
+    for expected, mutate in mutations.items():
+        runs = _hang_runs()
+        mutate(runs)
+        with pytest.raises(MissingEvidence, match=expected):
+            verify_hangs({"incidents": runs})
+        result = verify_cgroup("05-cuelgues", _hang_capture(tmp_path, runs))
+        assert (result["status"], result["could_not_run_count"], result["fail"]) == ("unknown", 1, 0), expected
+
+
+def test_cgroup_hang_capture_boundaries_and_api_size_discrimination(tmp_path, capsys):
+    from tools.verify_cgroup_plan import main
     runs = _hang_runs()
     assert verify_hangs({"incidents": runs}) == []
     assert "baseline and candidate runs" in verify_hangs(
         {"incidents": [{**runs[0], "stack": "candidate"}, runs[1]]})[0]
-    data = json.loads(json.dumps(runs))
-    data[1]["samples"][0]["requested_bytes"] = 2048
-    assert "same API/size" in verify_hangs({"incidents": data})[0]
-    data = json.loads(json.dumps(runs))
-    data[0]["journal"][0]["monotonic_ns"] = 21
-    assert "outside" in verify_hangs({"incidents": data})[0]
-    data = json.loads(json.dumps(runs))
-    data[0]["samples"][1]["monotonic_ns"] = 11
-    assert "timestamps are not increasing" in verify_hangs({"incidents": data})[0]
-    data = json.loads(json.dumps(runs))
-    data[0]["started_ns"] = data[0]["ended_ns"]
-    assert "exposure interval" in verify_hangs({"incidents": data})[0]
-    data = json.loads(json.dumps(runs))
-    data[0]["service_response"] = ""
-    assert "service returned" in verify_hangs({"incidents": data})[0]
-    data = json.loads(json.dumps(runs))
-    data[0]["journal"] = None
-    with pytest.raises(MissingEvidence):
-        verify_hangs({"incidents": data})
+    assert "baseline and candidate runs" in verify_hangs({"incidents": [*runs, runs[1]]})[0]
+    failures = {
+        "same API/size/limit": lambda data: data[1]["trials"][5].update(limit_bytes=2048),
+        "each stack needs": lambda data: [row.update(api="other") for run in data
+                                          for row in (run["trials"][4], *run["samples"]) if row["api"] == "pytorch_empty"],
+        "journal records fall outside": lambda data: data[0]["journal"][0].update(__MONOTONIC_TIMESTAMP="9001"),
+        "bb samples fall outside": lambda data: data[0]["bb_samples"][0].update(ts="2026-10-07T11:59:59+00:00"),
+        "timestamps are not increasing": lambda data: data[0]["samples"][1].update(monotonic_ns=1_100_000),
+        "memory.current samples fall outside": lambda data: data[0]["samples"][0].update(monotonic_ns=1),
+        "exposure interval": lambda data: data[0].update(started_ns=data[0]["ended_ns"]),
+        "UTC exposure": lambda data: data[0].update(started_utc=data[0]["ended_utc"]),
+        "trial falls outside": lambda data: data[0]["trials"][5].update(ended_ns=9_500_000),
+    }
+    for expected, mutate in failures.items():
+        data = _hang_runs()
+        mutate(data)
+        issues = verify_hangs({"incidents": data})
+        assert issues and expected in issues[0], (expected, issues)
+    data = _hang_runs()
+    data[0]["started_utc"] = "2026-10-07T12:00:00"
+    root = _hang_capture(tmp_path, data)
+    assert _asserted_status(verify_cgroup("05-cuelgues", root)) == "unknown"
+    assert main(["--phase", "05-cuelgues", "--evidence", str(_hang_capture(tmp_path, _hang_runs()))]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert (out["could_not_run_count"], out["fail"]) == (0, 0)
+    data = _hang_runs()
+    data[1]["trials"][5]["limit_bytes"] = 2048
+    assert main(["--phase", "05-cuelgues", "--evidence", str(_hang_capture(tmp_path, data))]) == 1
+    capsys.readouterr()
+    data = _hang_runs()
+    data[1]["bb_samples"] = []
+    assert main(["--phase", "05-cuelgues", "--evidence", str(_hang_capture(tmp_path, data))]) == 2
+
+
 
 
 def test_cgroup_patch_raw_helpers_reject_forged_controls():
@@ -2022,8 +2169,12 @@ def test_cgroup_phase_evaluators_classify_measured_failures_and_missing_data():
         _candidate_build_issue({"command": ["make"], "returncode": 0, "stdout": ""})
     with pytest.raises(MissingEvidence):
         _candidate_integrity_issue([])
+    malformed = _hang_fixture_run("baseline")
+    malformed["samples"][0] = {"api": "cpu_touch", "monotonic_ns": 1}
     with pytest.raises(ValueError, match="sample rows"):
-        _hang_run({"samples": [None], "journal": []})
+        _hang_run(malformed)
+    with pytest.raises(MissingEvidence, match="trial rows required"):
+        _hang_run({**malformed, "samples": [None]})
 
 
 def test_cgroup_patch_measurements_require_exact_release_and_complete_cases():
@@ -2231,10 +2382,14 @@ def test_cgroup_patch_measurement_contradictions_and_ledger_malformed_rows():
     assert not _domain_charge_ledger(json.dumps(conflict))
     with pytest.raises(MissingEvidence, match="incident captures"):
         _hangs({"incidents": []})
+    malformed = _hang_fixture_run("baseline")
+    malformed["journal"][0]["__MONOTONIC_TIMESTAMP"] = "not-a-number"
     with pytest.raises(ValueError, match="journal rows"):
-        _hang_run({"samples": [{"monotonic_ns": 1, "api": "cuda", "requested_bytes": 1,
-            "memory_current": 0, "cgroup": "a"}], "journal": [None],
-            "started_ns": 0, "ended_ns": 2, "service_response": "ok"})
+        _hang_run(malformed)
+    malformed = _hang_fixture_run("baseline")
+    malformed["trials"][0]["returncode"] = True
+    with pytest.raises(ValueError, match="trial rows need"):
+        _hang_run(malformed)
 
 
 def _patch_declining_capture():
