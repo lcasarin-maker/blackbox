@@ -996,6 +996,38 @@ def test_memory_saver_requires_live_probe_heartbeat_and_current_abi():
     assert _asserted_status(_trace({"cases": cases})) == "unknown"
 
 
+def test_memory_saver_negative_control_is_honest_unique_and_windowed():
+    """DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01: the no-allocation control must discriminate."""
+    from tools.verify_memory_saver import _trace
+
+    def fresh():
+        return [_memory_case(name, charges) for name, charges in (("cpu_touch", 1), ("none", 0), ("cuda_bounded", 1))]
+
+    # An honest no-allocation capture records zero events; with live heartbeats it passes.
+    cases = fresh()
+    cases[1]["events"] = []
+    assert _asserted_status(_trace({"cases": cases})) == "pass"
+    # Positive cases with zero events stay a failed positive control.
+    cases = fresh()
+    cases[0]["events"] = []
+    assert _asserted_status(_trace({"cases": cases})) == "fail"
+    # A duplicate case must not mask a leaking positive or a charged negative.
+    cases = fresh()
+    leaking = json.loads(json.dumps(cases[0]))
+    leaking["events"].pop()
+    result = _trace({"cases": [leaking, *cases]})
+    assert _asserted_status(result) == "unknown" and result["could_not_run_count"] == 1
+    cases = fresh()
+    charged_none = {**json.loads(json.dumps(cases[0])), "case": "none", "window": cases[1]["window"]}
+    assert _asserted_status(_trace({"cases": [charged_none, *cases]})) == "unknown"
+    # Heartbeats outside the no-allocation window do not prove the probe was live in it.
+    cases = fresh()
+    for offset, row in enumerate(cases[1]["window"]["heartbeat_rows"]):
+        row["timestamp_ns"] = 1000 + offset
+    result = _trace({"cases": cases})
+    assert _asserted_status(result) == "unknown" and "outside" in result["findings"][0]
+
+
 def test_memory_saver_packing_cost_alignment_and_candidate_branches():
     from tools.verify_memory_saver import _packing
 
