@@ -92,15 +92,16 @@ def test_usb_hid_classifies_update_loss_and_prior_kernel_recovery(tmp_path: Path
         _row("uname -r", "6.17.0-1025-nvidia", phase="pre-update", when=1),
         _row("cat /proc/sys/kernel/random/boot_id", "00000000-0000-0000-0000-000000000002", phase="affected", when=2),
         _row("uname -r", "6.17.0-1026-nvidia", phase="affected", when=2),
-        _row("lsusb -t", "Class=Human Interface Device, Driver=xhci-hcd", phase="affected", when=3),
-        _row("lsmod", "xhci_hcd 123", phase="affected", when=4),
+        # Driver=[none]: unbound HID-class interface, the real signature of post-update loss.
+        _row("lsusb -t", "Class=Human Interface Device, Driver=[none]", phase="affected", when=3),
+        _row("lsmod", "Module                  Size  Used by\nxhci_hcd 123", phase="affected", when=4),
         _row("grep CONFIG_USB_HID /boot/config", "# CONFIG_USB_HID is not set", phase="affected", when=5),
         _row("dpkg --audit", "The following packages have been unpacked but not yet configured:\n linux-modules-nvidia-550-open", phase="affected", when=6),
         _row("journalctl -k -b", "usbhid: Unknown symbol hidinput_connect", phase="affected", when=7),
         _row("cat /proc/sys/kernel/random/boot_id", "00000000-0000-0000-0000-000000000003", phase="recovery", when=8),
         _row("uname -r", "6.17.0-1025-nvidia", phase="recovery", when=8),
         _row("lsusb -t", "Class=Human Interface Device, Driver=usbhid", phase="recovery", when=9),
-        _row("lsmod", "usbhid 123\nhid_generic 123", phase="recovery", when=10),
+        _row("lsmod", "Module                  Size  Used by\nusbhid 123\nhid_generic 123", phase="recovery", when=10),
         _row("evtest /dev/input/event2", "Event: time 1.0, type 1 (EV_KEY), code 28 (KEY_ENTER), value 1", phase="recovery", when=11),
         _row("ssh admin@management uname -r", "6.17.0-1025-nvidia", phase="recovery", when=12),
     ]
@@ -109,7 +110,8 @@ def test_usb_hid_classifies_update_loss_and_prior_kernel_recovery(tmp_path: Path
     evidence = _write(tmp_path, "FEATURE-USB-HID-POSTUPDATE-CHECK", rows)
     result = verify_usb(evidence)
     assert result["status"] == "pass", result
-    next(row for row in rows if row["cmd"] == "lsmod" and row.get("capture_phase") == "affected")["stdout"] = "usbhid 123\nhid_generic 123"
+    next(row for row in rows if row["cmd"] == "lsmod" and row.get("capture_phase") == "affected")["stdout"] = \
+        "Module                  Size  Used by\nusbhid 123\nhid_generic 123"
     result = verify_usb(_write(tmp_path, "FEATURE-USB-HID-POSTUPDATE-CHECK", rows))
     assert result["status"] == "fail", result
 

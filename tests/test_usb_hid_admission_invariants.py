@@ -29,13 +29,14 @@ def test_boot_identity_is_phase_specific_and_rejects_recycled_or_malformed_ids()
 def test_affected_boot_healthy_builtin_or_loaded_hid_is_negative_control(tmp_path: Path) -> None:
     package = _row("dpkg --audit", "")
     journal = _row("journalctl -k", "usbhid: failed to initialize")
-    loaded = [package, journal, _row("lsmod", "usbhid 1 0\nhid_generic 1 0")]
+    loaded = [package, journal,
+              _row("lsmod", "Module                  Size  Used by\nusbhid 1 0\nhid_generic 1 0")]
     result = usb._affected_loss(loaded, tmp_path / "commands.json")
     assert isinstance(result, dict) and result["status"] == "fail"
 
-    builtin = [package, journal,
-               _row("grep CONFIG_USB_HID /boot/config",
-                    "CONFIG_USB_HID=y\nCONFIG_USB_HID_GENERIC=y")]
+    builtin = [package, journal, _row("uname -r", "6.17.0-1032-nvidia\n"),
+               _row("grep -E '^(# )?CONFIG_(HID|USB_HID|HID_GENERIC)[= ]' /boot/config-6.17.0-1032-nvidia",
+                    "CONFIG_HID=y\nCONFIG_USB_HID=y\nCONFIG_HID_GENERIC=y")]
     result = usb._affected_loss(builtin, tmp_path / "commands.json")
     assert isinstance(result, dict) and result["status"] == "fail"
 
@@ -62,7 +63,9 @@ def test_malformed_rows_and_live_unbound_hid_are_distinguished(tmp_path: Path) -
     assert malformed["status"] == "fail" and "malformed" in malformed["reason"]
 
     unbound = usb._verify_rows([
-        _row("lsusb -t", "Class=Human Interface Device, Driver=xhci-hcd", phase="snapshot"),
-        _row("lsmod", "xhci_hcd 1 0", phase="snapshot"),
+        _row("lsusb -t", "Port 1: Dev 1, If 0, Class=Hub, Driver=xhci-hcd, 480M\n"
+                         "    |__ Port 2: Dev 2, If 0, Class=Human Interface Device, Driver=[none], 1.5M",
+             phase="snapshot"),
+        _row("lsmod", "Module                  Size  Used by\nxhci_hcd 1 0", phase="snapshot"),
     ], tmp_path / "commands.json")
-    assert unbound["status"] == "fail" and "unbound" in unbound["reason"]
+    assert unbound["status"] == "fail" and "no bound driver" in unbound["reason"]

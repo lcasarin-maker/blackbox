@@ -176,10 +176,15 @@ def _affected_loss(rows: list[dict[str, Any]], path: Path) -> tuple[bool, str] |
     broken = bool(re.search(r"(?im)^The following packages have been unpacked but not yet configured:|^The following packages have unmet dependencies:|^dpkg: error", errors))
     broken |= bool(re.search(r"(?i)(usbhid|hid_generic|xhci).*(?:failed|error|unknown symbol|not found)|(?:failed|error|unknown symbol|not found).*(usbhid|hid_generic|xhci)", errors))
     supported = module_state == (True, True) or built_in is True
-    drivers = _hid_drivers(_usb_tree(rows, "affected"))
+    tree = _usb_tree(rows, "affected")
+    drivers = _hid_drivers(tree)
     if supported or _input_event(rows, "affected") or any(d != "[none]" for d in drivers):
         return _result("fail", "healthy HID evidence on affected boot means post-update loss was not reproduced", [str(path)])
-    if "[none]" not in drivers:
+    # Only an lsusb -t capture that shows NO unbound HID interface is ambiguous (it may just
+    # mean the tree was captured too late, or the interface enumerated under a different
+    # class). No lsusb -t row at all still falls through to the package/journal correlation
+    # below, which is the only signal those cases have.
+    if tree and "[none]" not in drivers:
         return _result("unknown", "affected boot did not capture an unbound HID-class interface", [str(path)])
     return broken, "" if broken else "correlated HID/module or package failure is absent"
 
