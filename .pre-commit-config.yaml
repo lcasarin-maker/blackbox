@@ -69,6 +69,20 @@ repos:
         stages: [pre-commit, pre-merge-commit]
         pass_filenames: false
 
+      # 2026-10-07 (Atlas DGX-531): an exemption enters WITH its
+      # `# sunset-reviewed: X.Y -- reason` tag or the commit is refused,
+      # not at push. `--staged` judges only the lines this commit ADDS, so
+      # a repo with old untagged exemptions is not frozen by them.
+      - id: sunset-audit-staged
+        name: "sunset audit (exemptions this commit adds carry a tag)"
+        entry: >-
+          python .simplecode/run.py simplecode.verification.gate_runner
+          --root . --name sunset-audit-staged --hook pre-commit --
+          python .simplecode/run.py simplecode.verification.sunset_audit --root . --staged --gate
+        language: system
+        stages: [pre-commit, pre-merge-commit]
+        pass_filenames: false
+
       - id: zero-debt-repo
         name: "zero debt (repo-wide ship freeze)"
         entry: >-
