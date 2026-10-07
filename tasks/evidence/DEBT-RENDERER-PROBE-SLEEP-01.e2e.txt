@@ -1,0 +1,5 @@
+scenario: actual temporary marker process; deferred SIGKILL after the helper's pgrep has seen it alive 2 times, immediate SIGKILL inside the cleanup request as negative control; helper deadline 2 s
+{"alive_observations_before_kill": 2, "elapsed_seconds": 0.23, "mode": "50ms-poll", "pgrep_calls": 3, "termination": "deferred", "verdict": "remaining-empty"}
+{"alive_observations_before_kill": 2, "elapsed_seconds": 0.116, "mode": "neutralized", "pgrep_calls": 3, "termination": "deferred", "verdict": "remaining-empty"}
+{"alive_observations_before_kill": 0, "elapsed_seconds": 0.041, "mode": "50ms-poll", "pgrep_calls": 1, "termination": "immediate", "verdict": "remaining-empty"}
+probe-verdict: deferred and immediate termination distinguished

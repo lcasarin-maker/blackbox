@@ -12,6 +12,10 @@ closed_at: 2026-10-06
 closure_type: void_wontfix
 reason: "No reproducido: la prueba de cierre pasa y el gate da 0 fraudes. La causa de los 7 fraudes que el escaner reporto no se identifico. Decision de Luis (2026-10-06): cerrar como no reproducida; reabrir si reaparece."
 close_check: {"cmd": "python3 -m pytest -q tests/test_escaner_debt_fraudes.py", "expect": "exit_zero", "porque": "El escaner y el gate deben contar lo mismo sobre el mismo repo: el numero de fraudes del escaner debe igualar el de backlog_verifier --gate, y un fraude real debe aparecer en ambos."}
+evidence:
+  pass: tasks/evidence/DEBT-ESCANER-DEBT-CUENTA-FRAUDES-QUE-GATE-NO-REPRODUCE-01.pass.txt
+  fail: tasks/evidence/DEBT-ESCANER-DEBT-CUENTA-FRAUDES-QUE-GATE-NO-REPRODUCE-01.fail.txt
+  e2e: tasks/evidence/DEBT-ESCANER-DEBT-CUENTA-FRAUDES-QUE-GATE-NO-REPRODUCE-01.e2e.txt
 ---
 
 ## Registro y responsable
