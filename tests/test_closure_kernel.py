@@ -1615,12 +1615,14 @@ def test_rcu_absent_rollback_or_kdump_state_is_could_not_run_not_fail():
     for rollback in ({}, {"original_sysctl_text": "x"}, {"restored_sysctl_text": "x"},
                      {"original_sysctl_text": "", "restored_sysctl_text": ""}):
         result = _validate_rollback({"rollback": rollback, "kdump": kdump_ok})
+        assert result is not None
         assert result["status"] == "unknown" and result["could_not_run"] == 1 and result["fail"] == 0, rollback
-    assert _validate_rollback({"kdump": kdump_ok})["status"] == "unknown"
+    assert _asserted_status(_validate_rollback({"kdump": kdump_ok})) == "unknown"
     # A systemctl capture without the state keys observed nothing about kdump.
     for show in ("Description=kdump active, running\n", "LoadState=loaded\n", "ActiveState=active\n"):
         result = _validate_rollback({"rollback": {"original_sysctl_text": "x", "restored_sysctl_text": "x"},
                                      "kdump": {"systemctl_show": show}})
+        assert result is not None
         assert result["status"] == "unknown" and result["could_not_run"] == 1 and result["fail"] == 0, show
     # Negative controls: captured and wrong still fails, captured and right still passes.
     assert _asserted_status(_validate_rollback({"rollback": {"original_sysctl_text": "x", "restored_sysctl_text": "y"},
