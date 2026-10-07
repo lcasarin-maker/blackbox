@@ -9,6 +9,7 @@ the digest checks internal consistency, not capture origin.
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 import hashlib
 import json
 import re
@@ -16,9 +17,13 @@ from pathlib import Path
 import sys
 from typing import Any
 
+from tools import hitos_incidente
 from tools.verify_cgroup_repro import APIS, _case as verify_case, verify as verify_reproduction
 
 PHASES = ("02-traza", "03-nativo", "04-parche", "05-cuelgues")
+LIMIT_DIAGNOSTIC = re.compile(r"(?i)(?:ENOMEM|EAGAIN|EDQUOT|dmem\.max|memory\.max|cgroup.{0,20}limit|resource limit)")
+HANG_CASES = frozenset({"none", "cpu_touch", "cuda_malloc", "cuda_malloc_managed", "pytorch_empty"})
+TRIAL_CLASSES = ("completed", "controlled_rejection", "accepted_over_limit", "failed", "not_executed")
 MAX_CAPTURE_BYTES = 16 * 1024 * 1024  # bounded multi-API trace bundle; avoids unbounded JSON allocation
 IDS = {
     "02-traza": "FEATURE-1358-CGROUP-02-TRAZA",
@@ -70,6 +75,8 @@ def _evaluate(phase: str, doc: dict[str, Any]) -> dict[str, Any]:
         passed["evaluation"] = _native_report(doc)
     elif phase == "04-parche":
         passed["evaluation"] = _patch_report(doc)
+    elif phase == "05-cuelgues":
+        passed["evaluation"] = _hang_report(doc)
     return passed
 
 
@@ -407,7 +414,7 @@ def _sharing_observation_complete(row: dict[str, Any]) -> bool:
 def _native_control_report(controls: dict[str, Any]) -> dict[str, Any]:
     limits = {}
     for row in controls["limit_observations"]:
-        diag_causal = re.search(r"(?i)(?:ENOMEM|EAGAIN|EDQUOT|dmem\.max|memory\.max|cgroup.{0,20}limit|resource limit)", row["diagnostic"]) is not None
+        diag_causal = LIMIT_DIAGNOSTIC.search(row["diagnostic"]) is not None
         classification = "rejected_at_limit" if row["returncode"] != 0 and row["before"] == row["after"] and diag_causal else "accepted_or_unattributed"
         limits[f"{row['api']}:{row['domain']}"] = {"classification": classification,
                 "requested_bytes": row["requested_bytes"], "limit_bytes": row["limit_bytes"],
@@ -657,7 +664,7 @@ def _raw_limit_test(value: Any) -> bool:
     diagnostic = parsed.get("diagnostic")
     return (parsed["returncode"] != 0 and 0 <= parsed["limit_bytes"] < parsed["requested_bytes"] and
             parsed["before"] == parsed["after"] and isinstance(diagnostic, str) and
-            re.search(r"(?i)(?:ENOMEM|EAGAIN|EDQUOT|dmem\.max|memory\.max|cgroup.{0,20}limit|resource limit)", diagnostic) is not None)
+            LIMIT_DIAGNOSTIC.search(diagnostic) is not None)
 
 
 def _raw_unwind_test(value: Any) -> bool:
@@ -718,49 +725,194 @@ def _domain_charge_ledger(value: Any) -> bool:
 
 
 def _hangs(d: dict[str, Any]) -> list[str]:
+    return _hang_stacks(d)[1]
+
+
+def _hang_report(d: dict[str, Any]) -> dict[str, Any]:
+    return {"complete": True, "could_not_run": [], "stacks": _hang_stacks(d)[0],
+            "interpretation": "observed windows only: a window without hang states its exposure, "
+                              "not a universal fix; milestones carry no causality"}
+
+
+def _hang_stacks(d: dict[str, Any]) -> tuple[list[dict[str, Any]], list[str]]:
+    """Phase 05 subject: what each stack did under identical bounded trials.
+
+    Milestones (service loss, watchdog, NVRM, oomd, boots) come from the existing
+    ``tools.hitos_incidente`` detector over raw ``journalctl -o json`` rows and bb
+    JSONL samples; this phase never trusts a summary of them.
+    """
     runs = d["incidents"]
     if not isinstance(runs, list) or len(runs) < 2:
         raise MissingEvidence("comparable baseline/candidate incident captures required")
-    if {r.get("stack") for r in runs} != {"baseline", "candidate"}:
-        return ["baseline and candidate runs must both be present"]
-    return _compare_hang_runs(runs)
-
-
-def _compare_hang_runs(runs: list[dict[str, Any]]) -> list[str]:
+    if (len(runs) != 2 or any(not isinstance(r, dict) for r in runs) or
+            {r.get("stack") for r in runs} != {"baseline", "candidate"}):
+        return [], ["baseline and candidate runs must both be present exactly once"]
     outputs = [_hang_run(r) for r in runs]
-    if any(issue for _, issue in outputs):
-        return [issue for _, issue in outputs if issue]
-    case_sets = [row[0][0] for row in outputs]
-    sizes = [row[0][1] for row in outputs]
-    required = {"none", "cpu_touch", "cuda_malloc", "cuda_malloc_managed", "pytorch_empty"}
-    if case_sets[0] != required or case_sets[1] != required:
-        return ["each stack needs raw none/CPU/CUDA/managed/PyTorch cases"]
-    if sizes[0] != sizes[1]:
-        return ["baseline and candidate do not cover the same API/size cases"]
-    return []
+    issues = [issue for _, issue in outputs if issue]
+    if issues:
+        return [], issues
+    stacks = [summary for summary, _ in outputs]
+    plans = [summary.pop("plan") for summary in stacks]
+    if any({api for api, _, _ in plan} != HANG_CASES for plan in plans):
+        return [], ["each stack needs raw none/CPU/CUDA/managed/PyTorch trials"]
+    if plans[0] != plans[1]:
+        return [], ["baseline and candidate do not cover the same API/size/limit trials"]
+    return stacks, []
 
 
-def _hang_run(r: dict[str, Any]) -> tuple[tuple[set[str], set[tuple[str, int]]], str | None]:
-    samples, journal = r.get("samples"), r.get("journal")
-    if not isinstance(samples, list) or not samples or not isinstance(journal, list):
-        raise MissingEvidence("raw samples and JSON journal events required per run")
-    valid_samples = all(isinstance(row, dict) and isinstance(row.get("monotonic_ns"), int) and isinstance(row.get("api"), str) and isinstance(row.get("requested_bytes"), int) and isinstance(row.get("memory_current"), int) and isinstance(row.get("cgroup"), str) for row in samples)
-    if not valid_samples:
+def _utc(value: Any) -> datetime:
+    parsed = datetime.fromisoformat(value) if isinstance(value, str) else None
+    if parsed is None or parsed.utcoffset() is None:
+        raise ValueError("run UTC interval needs timezone-aware ISO timestamps")
+    return parsed
+
+
+def _hang_run(r: dict[str, Any]) -> tuple[dict[str, Any], str | None]:
+    samples, journal, bb, trials = r.get("samples"), r.get("journal"), r.get("bb_samples"), r.get("trials")
+    if any(not isinstance(rows, list) or not rows or any(not isinstance(row, dict) for row in rows)
+           for rows in (samples, journal, bb, trials)):
+        # Empty sources do not prove zero incidents (protocol.txt, FEATURE-1358-CGROUP-05).
+        raise MissingEvidence("raw memory.current samples, journalctl JSON, bb JSONL samples and trial rows required per run")
+    start, end, boot = r.get("started_ns"), r.get("ended_ns"), r.get("boot_id")
+    if type(start) is not int or type(end) is not int or start >= end:
+        return {}, "positive exposure interval absent"
+    if not isinstance(boot, str) or not boot:
+        raise MissingEvidence("run boot identity absent")
+    _hang_collection(r.get("collection"))
+    utc_start, utc_end = _utc(r.get("started_utc")), _utc(r.get("ended_utc"))
+    if utc_start >= utc_end:
+        return {}, "positive UTC exposure interval absent"
+    if not all(type(row.get("monotonic_ns")) is int and isinstance(row.get("api"), str) and
+               type(row.get("requested_bytes")) is int and type(row.get("memory_current")) is int and
+               isinstance(row.get("cgroup"), str) for row in samples):
         raise ValueError("raw sample rows need monotonic time, API, requested bytes and memory.current")
     if any(a["monotonic_ns"] >= b["monotonic_ns"] for a, b in zip(samples, samples[1:])):
-        return (set(), set()), "sample timestamps are not increasing"
-    start, end = r.get("started_ns"), r.get("ended_ns")
-    if not isinstance(start, int) or not isinstance(end, int) or start >= end:
-        return (set(), set()), "positive exposure interval absent"
-    if any(not isinstance(e, dict) or not isinstance(e.get("monotonic_ns"), int) or not isinstance(e.get("message"), str) for e in journal):
-        raise ValueError("raw journal rows require monotonic timestamp and message")
-    if any(not start <= event["monotonic_ns"] <= end for event in journal):
-        return (set(), set()), "journal records fall outside the measured exposure interval"
-    response = r.get("service_response")
-    if not isinstance(response, str) or not response.strip():
-        return (set(), set()), "service returned no useful response bytes"
-    pairs = {(row["api"], row["requested_bytes"]) for row in samples}
-    return ({api for api, _ in pairs}, pairs), None
+        return {}, "sample timestamps are not increasing"
+    if any(not start <= row["monotonic_ns"] <= end for row in samples):
+        return {}, "memory.current samples fall outside the measured exposure interval"
+    window_issue = _hang_sources_in_window(journal, bb, boot, (start, end), (utc_start, utc_end))
+    if window_issue:
+        return {}, window_issue
+    milestones = hitos_incidente.analyze(journal, bb)
+    if milestones["could_not_run"]:
+        raise MissingEvidence("incident milestones could_not_run: " + "; ".join(milestones["could_not_run"]))
+    rows = []
+    for trial in trials:
+        if not _trial_shape(trial):
+            raise ValueError("trial rows need api, requested/limit bytes, cgroup, interval, returncode and diagnostic")
+        if not start <= trial["started_ns"] < trial["ended_ns"] <= end:
+            return {}, f"{trial['api']} trial falls outside the measured exposure interval"
+        rows.append(_hang_trial(trial, samples))
+    control_issue = _hang_controls(rows)
+    if control_issue:
+        return {}, control_issue
+    return {**_hang_summary(r["stack"], boot, (start, end), rows, milestones, journal, bb),
+            "collection": [{"command": row["command"], "returncode": row["returncode"]} for row in r["collection"]]}, None
+
+
+def _hang_collection(rows: Any) -> None:
+    """Literal collection commands and their exit codes; a failed collector is CNR, never a clean window."""
+    if (not isinstance(rows, list) or not rows or
+            any(not isinstance(row, dict) or not isinstance(row.get("command"), list) or not row["command"] or
+                any(not isinstance(arg, str) for arg in row["command"]) or type(row.get("returncode")) is not int
+                for row in rows)):
+        raise MissingEvidence("literal collection commands with return codes are required per run")
+    if not any(row["command"][0] == "journalctl" and ("json" in row["command"] or "--output=json" in row["command"])
+               for row in rows):
+        raise MissingEvidence("journalctl -o json collection command absent")
+    failed = [" ".join(row["command"]) for row in rows if row["returncode"] != 0]
+    if failed:
+        raise MissingEvidence("collection failed: " + "; ".join(failed))
+
+
+def _hang_sources_in_window(journal: list[dict[str, Any]], bb: list[dict[str, Any]], boot: str,
+                            mono: tuple[int, int], utc: tuple[datetime, datetime]) -> str | None:
+    gaps = hitos_incidente.source_gaps(journal, bb)
+    if gaps:
+        raise MissingEvidence("; ".join(gaps))
+    if any(not isinstance(row.get("MESSAGE"), str) or not str(row.get("__MONOTONIC_TIMESTAMP", "")).isdecimal()
+           for row in journal):
+        raise ValueError("raw journal rows require journalctl MESSAGE and __MONOTONIC_TIMESTAMP")
+    same_boot = [row for row in journal if row["_BOOT_ID"] == boot]
+    same_boot_bb = [row for row in bb if row["boot_id"] == boot]
+    if not same_boot or not same_boot_bb:
+        raise MissingEvidence("journal and bb samples need rows from the run boot")
+    # Rows from another boot are kept: they are the post-reset observations.
+    if any(not mono[0] <= int(row["__MONOTONIC_TIMESTAMP"]) * 1000 <= mono[1] for row in same_boot):
+        return "journal records fall outside the measured exposure interval"
+    if any(not utc[0] <= _utc(row["ts"]) <= utc[1] for row in same_boot_bb):
+        return "bb samples fall outside the measured UTC exposure interval"
+    return None
+
+
+def _trial_shape(t: Any) -> bool:
+    return (isinstance(t, dict) and isinstance(t.get("api"), str) and type(t.get("requested_bytes")) is int and
+            t["requested_bytes"] >= 0 and isinstance(t.get("cgroup"), str) and bool(t["cgroup"]) and
+            type(t.get("started_ns")) is int and type(t.get("ended_ns")) is int and
+            (t.get("returncode") is None or type(t.get("returncode")) is int) and
+            isinstance(t.get("diagnostic"), str) and
+            (t.get("limit_bytes") is None or type(t.get("limit_bytes")) is int and t["limit_bytes"] >= 0))
+
+
+def _hang_trial(t: dict[str, Any], samples: list[dict[str, Any]]) -> dict[str, Any]:
+    limited = t["limit_bytes"] is not None and t["limit_bytes"] < t["requested_bytes"]
+    row = {"api": t["api"], "requested_bytes": t["requested_bytes"], "limit_bytes": t["limit_bytes"],
+           "limited": limited, "returncode": t["returncode"], "diagnostic": t["diagnostic"],
+           "duration_s": (t["ended_ns"] - t["started_ns"]) / 1e9,
+           "charge_initial_bytes": None, "charge_peak_bytes": None, "charge_final_bytes": None}
+    if t["returncode"] is None:
+        return {**row, "classification": "not_executed"}
+    charges = [s["memory_current"] for s in samples
+               if (s["api"], s["requested_bytes"], s["cgroup"]) == (t["api"], t["requested_bytes"], t["cgroup"]) and
+               t["started_ns"] <= s["monotonic_ns"] <= t["ended_ns"]]
+    if not charges:
+        raise MissingEvidence(f"executed {t['api']} trial has no memory.current samples inside its interval")
+    row.update(charge_initial_bytes=charges[0], charge_peak_bytes=max(charges), charge_final_bytes=charges[-1])
+    if t["returncode"] == 0:
+        return {**row, "classification": "accepted_over_limit" if limited else "completed"}
+    if limited and LIMIT_DIAGNOSTIC.search(t["diagnostic"]) and charges[-1] <= charges[0]:
+        return {**row, "classification": "controlled_rejection"}
+    return {**row, "classification": "failed"}
+
+
+def _hang_controls(rows: list[dict[str, Any]]) -> str | None:
+    """Healthy controls and the limit control must run, or the comparison has no reference."""
+    controls = [row for row in rows if row["api"] in ("none", "cpu_touch") and not row["limited"]]
+    if {row["api"] for row in controls if row["classification"] != "not_executed"} != {"none", "cpu_touch"}:
+        raise MissingEvidence("unlimited none and cpu_touch healthy controls must be executed")
+    if not any(row["limited"] and row["classification"] != "not_executed" for row in rows):
+        raise MissingEvidence("an executed below-request limit trial is required to observe controlled rejection")
+    if any(row["classification"] not in ("completed", "not_executed") for row in controls):
+        return "healthy none/cpu_touch control did not complete"
+    if any(row["api"] == "cpu_touch" and row["classification"] == "completed" and
+           row["charge_peak_bytes"] - row["charge_initial_bytes"] < row["requested_bytes"] for row in controls):
+        return "cpu_touch positive control did not charge memory.current by its requested bytes"
+    return None
+
+
+def _hang_summary(stack: str, boot: str, mono: tuple[int, int], rows: list[dict[str, Any]],
+                  milestones: dict[str, Any], journal: list[dict[str, Any]], bb: list[dict[str, Any]]) -> dict[str, Any]:
+    counts = {name: sum(row["classification"] == name for row in rows) for name in TRIAL_CLASSES}
+    boots = sorted({row["_BOOT_ID"] for row in journal} | {row["boot_id"] for row in bb})
+    useful = [event["timestamp"] for event in milestones["service_observations"] if event.get("service_state") == "OK"]
+    first = {key: milestones[key][0]["timestamp"] if milestones[key] else None
+             for key in ("service_loss", "watchdog", "nvrm", "oomd_actions")}
+    if len(boots) > 1:
+        outcome = "host_reset_observed"
+    elif milestones["service_loss"] or milestones["watchdog"]:
+        outcome = "service_loss_observed"
+    else:
+        outcome = "observed_window_without_hang"
+    return {"stack": stack, "boot_id": boot, "boots_observed": boots, "exposure_s": (mono[1] - mono[0]) / 1e9,
+            "trials_planned": len(rows), "trials_executed": len(rows) - counts["not_executed"], **counts,
+            "service_loss_events": len(milestones["service_loss"]), "watchdog_events": len(milestones["watchdog"]),
+            "nvrm_events": len(milestones["nvrm"]), "oomd_actions": len(milestones["oomd_actions"]),
+            "first_service_loss_utc": first["service_loss"], "first_watchdog_utc": first["watchdog"],
+            "first_nvrm_utc": first["nvrm"], "first_oomd_action_utc": first["oomd_actions"],
+            "last_useful_response_utc": useful[-1] if useful else None,
+            "outcome": outcome, "trials": rows,
+            "plan": sorted((row["api"], row["requested_bytes"], -1 if row["limit_bytes"] is None else row["limit_bytes"])
+                           for row in rows)}
 
 
 def result(status: str, reasons: list[str], could_not_run: int) -> dict[str, Any]:
