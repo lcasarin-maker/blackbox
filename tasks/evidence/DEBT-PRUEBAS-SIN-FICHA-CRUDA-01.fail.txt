@@ -1,0 +1,41 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+____ test_signature_verifier_authenticates_exact_bytes_and_rejects_mutation ____
+tests/test_apt_sources.py:496: in test_signature_verifier_authenticates_exact_bytes_and_rejects_mutation
+    assert baseline['status'] == 'pass', baseline
+E   AssertionError: {'command': ['gpgv', '--homedir', '/tmp/bb-apt-signature-b67evkuz', '--status-fd=1', '--keyring', '/tmp/bb-apt-signatu..._run_count': 0, 'fail': 1, 'keyring_sha256': ['69aae313ca35db5e524697ac72e26e6970eed357e3a0be2899ab470989312775'], ...}
+E   assert 'block' == 'pass'
+E     
+E     - pass
+E     + block
+____________ test_gpu_clock_verifier_rejects_failed_nvidia_command _____________
+tests/test_closure_hardware.py:154: in test_gpu_clock_verifier_rejects_failed_nvidia_command
+    assert result['status'] == 'fail' and result['fail'] == 1, result
+E   AssertionError: {'could_not_run': 1, 'fail': 0, 'files': ['/tmp/pytest-of-lcasarin/pytest-15400/test_gpu_clock_verifier_reject0/gpu/commands.json'], 'reason': 'raw timestamped GPU clock-cap command capture missing or malformed', ...}
+E   assert ('unknown' == 'fail'
+E     
+E     - fail
+E     + unknown)
+___________ test_wifi_classifier_marks_local_host_failure_separately ___________
+tests/test_closure_hardware.py:128: in test_wifi_classifier_marks_local_host_failure_separately
+    assert result['status'] == 'fail' and result['fail'] == 1, result
+E   AssertionError: {'could_not_run': 1, 'fail': 0, 'files': ['/tmp/pytest-of-lcasarin/pytest-15400/test_wifi_classifier_marks_loc0/wifi/c...son'], 'reason': 'raw NetworkManager incident, successful local-host probe, or management endpoint probe missing', ...}
+E   assert ('unknown' == 'fail'
+E     
+E     - fail
+E     + unknown)
+____ test_rescue_boot_and_verified_service_restore_pass_from_native_outputs ____
+tests/test_forum_hardware_subjects.py:796: in test_rescue_boot_and_verified_service_restore_pass_from_native_outputs
+    assert result["status"] == "pass" and result["fail"] == result["could_not_run"] == 0, result
+E   AssertionError: {'checks': {}, 'could_not_run': 0, 'fail': 1, 'files': ['/tmp/pytest-of-lcasarin/pytest-15400/test_rescue_boot_and_verified_0/capture.json'], ...}
+E   assert ('fail' == 'pass'
+E     
+E     - pass
+E     + fail)
+=========================== short test summary info ============================
+FAILED tests/test_apt_sources.py::test_signature_verifier_authenticates_exact_bytes_and_rejects_mutation
+FAILED tests/test_closure_hardware.py::test_gpu_clock_verifier_rejects_failed_nvidia_command
+FAILED tests/test_closure_hardware.py::test_wifi_classifier_marks_local_host_failure_separately
+FAILED tests/test_forum_hardware_subjects.py::test_rescue_boot_and_verified_service_restore_pass_from_native_outputs
+4 failed in 0.09s
+EXIT=1
