@@ -106,7 +106,9 @@ def _validate_rollback(d: dict[str, Any]) -> dict[str, Any] | None:
         return _r("unknown", ["rollback and kdump raw evidence objects required"], 1)
     before_settings = rollback.get("original_sysctl_text")
     restored_settings = rollback.get("restored_sysctl_text")
-    if not isinstance(before_settings, str) or not before_settings or not isinstance(restored_settings, str) or restored_settings != before_settings:
+    if not all(isinstance(text, str) and text for text in (before_settings, restored_settings)):
+        return _r("unknown", ["raw original and restored sysctl text required for rollback"], 1)
+    if restored_settings != before_settings:
         return _r("fail", ["rollback does not restore the exact original sysctl text"], 0)
     service_raw = kdump.get("systemctl_show")
     if not isinstance(service_raw, str) or not service_raw.strip():
@@ -115,6 +117,8 @@ def _validate_rollback(d: dict[str, Any]) -> dict[str, Any] | None:
         service = _sysctls(service_raw)
     except ValueError as exc:
         return _r("fail", [str(exc)], 0)
+    if not all(k in service for k in ("ActiveState", "LoadState")):
+        return _r("unknown", ["raw systemctl show output lacks kdump LoadState/ActiveState"], 1)
     if service.get("ActiveState") != "active" or service.get("LoadState") != "loaded":
         return _r("fail", ["rollback or existing kdump control failed"], 0)
     return None
