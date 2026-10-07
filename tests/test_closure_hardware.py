@@ -308,12 +308,34 @@ def test_usb_hid_scenario_keeps_inaccessible_telemetry_could_not_run(tmp_path: P
 
 
 def test_gpu_clock_verifier_rejects_failed_nvidia_command(tmp_path: Path) -> None:
+    # Decision de Luis (boleta 2026-10-07): un rechazo de PERMISOS del operador (sudo) es un
+    # problema del instrumento, no un defecto de la GPU -- da could_not_run, nunca fail. Medido
+    # por el agente DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01: sin 'captured_at' el verificador
+    # ya rechaza la fila entera como malformada; con 'captured_at' y sin diagnostico de
+    # driver/hardware, da 'unknown' -- nunca confunde "no tengo sudo" con "la GPU esta rota".
     evidence = tmp_path / 'gpu'
     evidence.mkdir()
     (evidence / 'commands.json').write_text(json.dumps({
         'id': 'FEATURE-FORUM-GPU-CLOCK-CAP-AB-01',
-        'commands': [{'cmd': 'nvidia-smi -lgc 300,2200', 'exit': 1,
+        'commands': [{'cmd': 'nvidia-smi -lgc 300,2200', 'exit': 1, 'captured_at': '2026-10-07T00:00:00Z',
                       'stdout': '', 'stderr': 'Insufficient Permissions'}],
+    }), encoding='utf-8')
+    result = verify_gpu_clock_cap(evidence)
+    assert result['status'] == 'unknown', result
+    assert result['fail'] == 0 and result['could_not_run'] == 1, result
+    assert 'hardware-fault diagnostic' in result['reason'], result
+
+
+def test_gpu_clock_verifier_marks_real_driver_fault_as_fail(tmp_path: Path) -> None:
+    # Control negativo del caso anterior: un diagnostico REAL de fallo de driver/GPU (no un
+    # rechazo de permisos) debe seguir dando fail -- el instrumento sigue pudiendo detectar un
+    # defecto real del sujeto, solo deja de confundirlo con el acceso del operador.
+    evidence = tmp_path / 'gpu'
+    evidence.mkdir()
+    (evidence / 'commands.json').write_text(json.dumps({
+        'id': 'FEATURE-FORUM-GPU-CLOCK-CAP-AB-01',
+        'commands': [{'cmd': 'nvidia-smi -lgc 300,2200', 'exit': 1, 'captured_at': '2026-10-07T00:00:00Z',
+                      'stdout': '', 'stderr': "Couldn't communicate with the NVIDIA driver"}],
     }), encoding='utf-8')
     result = verify_gpu_clock_cap(evidence)
     assert result['status'] == 'fail' and result['fail'] == 1, result
