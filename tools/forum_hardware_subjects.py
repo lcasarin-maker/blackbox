@@ -1315,7 +1315,7 @@ def _check_eee(cases: dict[str, dict[str, Any]]) -> tuple[str, str]:
     return "pass", "direct-link EEE A/B, switch control and bidirectional connectivity passed"
 
 
-def _check_rescue(cases: dict[str, dict[str, Any]], directory: Path) -> tuple[str, str]:
+def _check_rescue(document: dict[str, Any], cases: dict[str, dict[str, Any]], directory: Path) -> tuple[str, str]:
     if not _text(cases["rescue_entry"], "entry_id") or not _text(cases["restoration"], "restored_entry"):
         return "unknown", "OEM rescue selection or restored boot entry was not observed"
     if cases["normal_boot"].get("boot_id") == cases["restoration"].get("boot_id"):
@@ -1330,13 +1330,19 @@ def _check_rescue(cases: dict[str, dict[str, Any]], directory: Path) -> tuple[st
         return "fail", "restoration still selects the rescue boot entry instead of normal boot"
     if cases["rescue_boot"].get("rescue_target") is not True:
         return "fail", "rescue boot lacks systemd.unit=rescue.target or emergency.target in kernel command line"
-    return _check_rescue_restoration(cases, directory)
+    return _check_rescue_restoration(document, cases, directory)
 
 
-def _check_rescue_restoration(cases: dict[str, dict[str, Any]], directory: Path) -> tuple[str, str]:
+def _check_rescue_restoration(document: dict[str, Any], cases: dict[str, dict[str, Any]],
+                              directory: Path) -> tuple[str, str]:
     if not _text(cases["restoration"], "network_route"):
         return "unknown", "restored boot management route unavailable"
-    restored, error = _verify_restored_service(directory)
+    # The expiry is judged against the restoration capture's own clock, never the verifier's:
+    # the same evidence must yield the same verdict on every later re-run. _load already
+    # guarantees these rows exist with timezone-aware, strictly increasing captured_at.
+    restored_at = max(datetime.fromisoformat(row["captured_at"].replace("Z", "+00:00"))
+                      for row in document["captures"] if row["name"] == "restoration")
+    restored, error = _verify_restored_service(directory, restored_at)
     if error:
         status = "unknown" if error.startswith("canary service restoration manifest unavailable") else "fail"
         return status, error
@@ -1345,7 +1351,7 @@ def _check_rescue_restoration(cases: dict[str, dict[str, Any]], directory: Path)
     return "pass", "OEM rescue transition, normal boot, management route, and canary service restoration verified"
 
 
-def _verify_restored_service(directory: Path) -> tuple[bool, str | None]:
+def _verify_restored_service(directory: Path, restored_at: datetime) -> tuple[bool, str | None]:
     manifest_path = directory / "service-restore-manifest.json"
     try:
         raw = read_regular_bytes(manifest_path, 65_536)
@@ -1367,8 +1373,8 @@ def _verify_restored_service(directory: Path) -> tuple[bool, str | None]:
         expiry_day = datetime.fromisoformat(expiry).date()
     except ValueError:
         return False, "service restore expiry is not an ISO date/time"
-    if expiry_day < datetime.now().date():
-        return False, "service restore manifest expiry has passed"
+    if expiry_day < restored_at.date():
+        return False, "service restore was captured after the manifest expiry"
     original_relative = Path(path_value)
     suspended_relative = Path(suspended_value)
     if (original_relative.is_absolute() or suspended_relative.is_absolute()
@@ -1468,7 +1474,7 @@ def _evaluate_simple(document: dict[str, Any], finding_id: str, directory: Path)
         sources_ok, source_error = _references(document)
         if not sources_ok:
             return "unknown", source_error or "version-scoped OEM rescue path unavailable"
-        return _check_rescue(cases, directory)
+        return _check_rescue(document, cases, directory)
     if finding_id not in CHECKS:
         return "fail", "unsupported subject predicate"
     sources_ok, source_error = _references(document)
