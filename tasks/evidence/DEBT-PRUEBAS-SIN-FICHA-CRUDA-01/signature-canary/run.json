@@ -1,0 +1,88 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "gpg",
+        "--homedir",
+        "/tmp/bb-apt-signature-canary-_xahnfl1/gpg",
+        "--batch",
+        "--pinentry-mode",
+        "loopback",
+        "--passphrase",
+        "",
+        "--quick-generate-key",
+        "BB APT signature canary",
+        "rsa2048",
+        "sign",
+        "never"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-10-07T13:10:35.171525+00:00",
+      "stderr": "gpg: caja de claves '/tmp/bb-apt-signature-canary-_xahnfl1/gpg/pubring.kbx' creada\ngpg: /tmp/bb-apt-signature-canary-_xahnfl1/gpg/trustdb.gpg: se ha creado base de datos de confianza\ngpg: creado el directorio '/tmp/bb-apt-signature-canary-_xahnfl1/gpg/openpgp-revocs.d'\ngpg: certificado de revocaci\u00f3n guardado como '/tmp/bb-apt-signature-canary-_xahnfl1/gpg/openpgp-revocs.d/3BCCA6E564BEE86460AA66AF428251801D69ACF5.rev'\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "gpg",
+        "--homedir",
+        "/tmp/bb-apt-signature-canary-_xahnfl1/gpg",
+        "--batch",
+        "--pinentry-mode",
+        "loopback",
+        "--passphrase",
+        "",
+        "--output",
+        "/tmp/bb-apt-signature-canary-_xahnfl1/keyring.gpg",
+        "--export"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-10-07T13:10:35.316004+00:00",
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "gpg",
+        "--homedir",
+        "/tmp/bb-apt-signature-canary-_xahnfl1/gpg",
+        "--batch",
+        "--pinentry-mode",
+        "loopback",
+        "--passphrase",
+        "",
+        "--armor",
+        "--output",
+        "/tmp/bb-apt-signature-canary-_xahnfl1/InRelease",
+        "--clearsign",
+        "/tmp/bb-apt-signature-canary-_xahnfl1/Release"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-10-07T13:10:35.318905+00:00",
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "gpgv",
+        "--homedir",
+        "/tmp/bb-apt-signature-recheck-8hwdegbl",
+        "--status-fd=1",
+        "--keyring",
+        "/home/lcasarin/projects/blackbox/.claude/worktrees/agent-a7343dd076a1387ef/tasks/evidence/DEBT-PRUEBAS-SIN-FICHA-CRUDA-01/signature-canary/canary-public-keyring.gpg",
+        "/home/lcasarin/projects/blackbox/.claude/worktrees/agent-a7343dd076a1387ef/tasks/evidence/DEBT-PRUEBAS-SIN-FICHA-CRUDA-01/signature-canary/baseline.InRelease"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-10-07T13:10:35.328821+00:00",
+      "stderr": "gpgv: Firmado el mi\u00e9 07 oct 2026 07:10:35 CST\ngpgv:                usando RSA clave 3BCCA6E564BEE86460AA66AF428251801D69ACF5\ngpgv: Firma correcta de \"BB APT signature canary\"\n",
+      "stdout": "[GNUPG:] NEWSIG\n[GNUPG:] KEY_CONSIDERED 3BCCA6E564BEE86460AA66AF428251801D69ACF5 0\n[GNUPG:] SIG_ID LFNIvsmgo1gNV4aa2I61FZE86/g 2026-10-07 1791378635\n[GNUPG:] GOODSIG 428251801D69ACF5 BB APT signature canary\n[GNUPG:] VALIDSIG 3BCCA6E564BEE86460AA66AF428251801D69ACF5 2026-10-07 1791378635 0 4 0 1 10 01 3BCCA6E564BEE86460AA66AF428251801D69ACF5\n"
+    }
+  ],
+  "scope": "Temporary key, never-expiring, private half destroyed with its GPG home; signs bytes only.",
+  "sha256": {
+    "baseline.InRelease": "049aa829f8a8d18d336455c4fc1dbe511270fd1d7474b7d542595536df004181",
+    "baseline.Packages": "992f3cb9d14b21da15acdefc81ed49a83c68bb46820660add63feb11306fe563",
+    "canary-public-keyring.gpg": "98f162f45fc6c334d3230c9d8acf6547cb223247a42aea697d1453bf4a1a343b"
+  },
+  "temporary_root": "/tmp/bb-apt-signature-canary-_xahnfl1",
+  "temporary_root_removed": true
+}

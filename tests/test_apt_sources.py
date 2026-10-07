@@ -489,7 +489,14 @@ def test_deb822_exact_path_requires_omitted_components(suite, components, valid)
 
 
 def test_signature_verifier_authenticates_exact_bytes_and_rejects_mutation(tmp_path: Path) -> None:
-    evidence = Path(__file__).resolve().parents[1] / 'tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary'
+    root = Path(__file__).resolve().parents[1] / 'tasks/evidence'
+    # The first canary's key was generated with a 1-day expiry; since 2026-10-05 gpgv reports
+    # EXPKEYSIG for it. It stays as the expired-key negative control; the never-expiring canary
+    # (collector archived beside it) is the positive subject.
+    expired = root / 'DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary'
+    stale = apt_sources.verify_release_signature(expired / 'baseline.InRelease', [expired / 'canary-public-keyring.gpg'])
+    assert stale['status'] == 'block' and stale['fail'] == 1 and stale['could_not_run_count'] == 0, stale
+    evidence = root / 'DEBT-PRUEBAS-SIN-FICHA-CRUDA-01/signature-canary'
     subject = evidence / 'baseline.InRelease'
     keys = [evidence / 'canary-public-keyring.gpg']
     baseline = apt_sources.verify_release_signature(subject, keys)
