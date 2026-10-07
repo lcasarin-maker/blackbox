@@ -50,3 +50,7 @@ El selector registrado ejecuta la rama afectada del test real y exige salida sin
 ## Verification Evidence
 
 Las rutas fail/pass/e2e contienen el close_check original literal (EXIT=4 por selector ausente), el resultado posterior literal y el control específico. `could_not_run` observado: 0 en la ejecución cerrada.
+
+## Reabierta 2026-10-07 -- el close_check depende del corpus vivo, no es reproducible
+
+Al re-verificar antes de mover esta ficha a `done/`, `python3 -m pytest -q -rs tests/test_debt_registration_controls.py::test_debt_skip_test_control_racha_118` fallo: `_run_without_skips` corre `tests/test_control_racha.py::test_el_gate_sale_0_sobre_el_corpus_real`, que mide el corte de racha contra el corpus de telemetria QUE SIGUE CRECIENDO (24867 muestras hoy, 2026-09-22 -> 2026-10-07, contra las 22653 de cuando se escribio este cierre). La corrida de hoy da `FALSO POSITIVO en 2026-10-05 00:26:00` en las 4 reglas probadas -- el mismo falso positivo que SPEC.md ya declara sin calibrar en su fila de riesgo de PSI ("Corrido el 2026-10-06... rc=1, un falso positivo... y un incidente no detectado"). El close_check de esta ficha no es un cierre estable: pasa o falla segun que ventana de tiempo tenga el corpus en el momento de correrlo, y hoy falla. Se revierte el cierre (status vuelve a `open`); el `closed_at`/`evidence` de arriba quedan como registro de esa corrida puntual, no como cierre vigente. No cerrar de nuevo sin resolver primero la calibracion de corte que SPEC.md ya tiene abierta (`tools/calibra_psi.py`).

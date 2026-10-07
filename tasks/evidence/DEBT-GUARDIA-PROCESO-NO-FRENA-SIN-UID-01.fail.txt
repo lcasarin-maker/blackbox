@@ -1,0 +1,60 @@
+$ python3 -m pytest -q tests/test_guardia_proceso_uid.py   # contra bin/bb-guardia-proceso en commit d188581 (pre-fix)
+FFFFFFFF...F                                                             [100%]
+=================================== FAILURES ===================================
+________________ test_guardia_resuelve_dueno_sin_status_legible ________________
+tests/test_guardia_proceso_uid.py:68: in test_guardia_resuelve_dueno_sin_status_legible
+    assert motivo is None or "no se pudo leer" not in motivo
+E   AssertionError: assert ('no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca' is None or 'no se pudo leer' not in 'no se pudo ..., no se toca'
+E     
+E     'no se pudo leer' is contained here:
+E       no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca
+E     ? +++++++++++++++)
+____________ test_mismo_usuario_sin_status_es_tocable_por_stat_real ____________
+tests/test_guardia_proceso_uid.py:74: in test_mismo_usuario_sin_status_es_tocable_por_stat_real
+    assert guardia._es_intocable(hijo, "sleep") is None
+E   AssertionError: assert 'no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca' is None
+E    +  where 'no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca' = <function _es_intocable at 0xe8a34381a200>(3438983, 'sleep')
+E    +    where <function _es_intocable at 0xe8a34381a200> = <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-lcasarin-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'>._es_intocable
+________________ test_mismo_usuario_sin_status_recibe_la_senal _________________
+tests/test_guardia_proceso_uid.py:82: in test_mismo_usuario_sin_status_recibe_la_senal
+    espia.assert_called_once_with(hijo, signal.SIGTERM)
+/opt/miniforge3/lib/python3.12/unittest/mock.py:960: in assert_called_once_with
+    raise AssertionError(msg)
+E   AssertionError: Expected 'mock' to be called once. Called 0 times.
+----------------------------- Captured stderr call -----------------------------
+[bb-guardia-proceso] NO SE TOCA pid=3438984 comm=sleep: no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca (motivo del disparo: prueba)
+_________________ test_root_con_status_legible_sigue_intocable _________________
+tests/test_guardia_proceso_uid.py:90: in test_root_con_status_legible_sigue_intocable
+    monkeypatch.setattr(guardia, "_uid_por_stat", lambda pid: os.getuid())
+E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-lcasarin-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
+________________ test_root_sin_status_sigue_intocable_por_stat _________________
+tests/test_guardia_proceso_uid.py:97: in test_root_sin_status_sigue_intocable_por_stat
+    monkeypatch.setattr(guardia, "_uid_por_stat", lambda pid: 0)
+E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-lcasarin-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
+__________________ test_root_real_sin_status_sigue_intocable ___________________
+tests/test_guardia_proceso_uid.py:108: in test_root_real_sin_status_sigue_intocable
+    assert motivo is not None and "root" in motivo
+E   AssertionError: assert ('no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca' is not None and 'root' in 'no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca')
+_______________________ test_pid_1_sigue_intocable[None] _______________________
+tests/test_guardia_proceso_uid.py:117: in test_pid_1_sigue_intocable
+    monkeypatch.setattr(guardia, "_uid_por_stat", lambda pid: os.getuid())
+E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-lcasarin-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
+_______________________ test_pid_1_sigue_intocable[1000] _______________________
+tests/test_guardia_proceso_uid.py:117: in test_pid_1_sigue_intocable
+    monkeypatch.setattr(guardia, "_uid_por_stat", lambda pid: os.getuid())
+E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-lcasarin-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
+____________________ test_otro_usuario_por_stat_no_se_toca _____________________
+tests/test_guardia_proceso_uid.py:148: in test_otro_usuario_por_stat_no_se_toca
+    monkeypatch.setattr(guardia, "_uid_por_stat", lambda pid: os.getuid() + 1)
+E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-lcasarin-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
+=========================== short test summary info ============================
+FAILED tests/test_guardia_proceso_uid.py::test_guardia_resuelve_dueno_sin_status_legible
+FAILED tests/test_guardia_proceso_uid.py::test_mismo_usuario_sin_status_es_tocable_por_stat_real
+FAILED tests/test_guardia_proceso_uid.py::test_mismo_usuario_sin_status_recibe_la_senal
+FAILED tests/test_guardia_proceso_uid.py::test_root_con_status_legible_sigue_intocable
+FAILED tests/test_guardia_proceso_uid.py::test_root_sin_status_sigue_intocable_por_stat
+FAILED tests/test_guardia_proceso_uid.py::test_root_real_sin_status_sigue_intocable
+FAILED tests/test_guardia_proceso_uid.py::test_pid_1_sigue_intocable[None] - ...
+FAILED tests/test_guardia_proceso_uid.py::test_pid_1_sigue_intocable[1000] - ...
+FAILED tests/test_guardia_proceso_uid.py::test_otro_usuario_por_stat_no_se_toca
+9 failed, 3 passed in 0.11s

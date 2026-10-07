@@ -3,10 +3,10 @@ id: DEBT-SCHEMA-EVIDENCE-INDEX-SCOPE-01
 kind: task
 domain: VERDICT
 title: "Índice Markdown de evidencias queda fuera del esquema gobernado"
-status: open
+status: done
 closed_at: 2026-10-03
-closure_type: fixed
-closure_reason: "Prosa archivada byte idéntica bajo docs; ledger conserva todos los sujetos y detecta ficha real fuera de alcance."
+closure_type: relocated_prior_verification
+reason: "El fix (prosa archivada byte identica bajo docs; ledger conserva todos los sujetos y detecta ficha real fuera de alcance) ya estaba commiteado desde el 2026-10-03 en 383a1d0. Esta ficha solo corrige una nota interna desactualizada y mueve el archivo el 2026-10-07."
 evidence:
   fail: tasks/evidence/DEBT-SCHEMA-EVIDENCE-INDEX-SCOPE-01/fail.txt
   pass: tasks/evidence/DEBT-SCHEMA-EVIDENCE-INDEX-SCOPE-01/pass.txt
@@ -34,7 +34,7 @@ El gate conserva los 145 sujetos y deja de omitir el índice de documentación c
 
 ## Estado del verificador
 
-La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
+Nota corregida 2026-10-07: esta sección decía "el test selector es una especificación pendiente, no una prueba existente" -- quedó desactualizada por el propio trabajo que describen las secciones Root Cause/Regression Test/Verification Evidence de abajo. `test_debt_schema_evidence_index_scope_01` existe en `tests/test_debt_registration_controls.py` (línea 379) y pasa hoy: `python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_schema_evidence_index_scope_01` -> 1 passed. `tasks/evidence/DEBT-SCHEMA-EVIDENCE-INDEX-SCOPE-01/{fail,pass,e2e}.txt` están en disco y su contenido coincide con la medición (`could_not_run` 4 antes, 0 después).
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
 
