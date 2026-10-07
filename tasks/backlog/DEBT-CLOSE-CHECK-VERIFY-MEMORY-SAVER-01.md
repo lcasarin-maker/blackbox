@@ -44,3 +44,15 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/memory-original-selector-primary-run.json`, `tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Endurecimiento del verificador — 2026-10-07
+
+Cuatro agujeros de discriminación medidos en `tools/verify_memory_saver.py` (fase 02-trazador) y cerrados:
+
+- Captura honesta del control negativo `none` con `events=[]` daba `fail` ("no raw charge events for none"); el fixture sólo pasaba con un evento `failure` sintético. Ahora pasa si los heartbeats y el control CPU lo respaldan; los casos positivos sin eventos siguen en `fail`.
+- `cpu_touch` duplicado con una copia que filtra daba `pass`; `none` duplicado con cargos daba `pass` (control neutralizado). Ahora: exactamente una captura por caso, si no `unknown` + could_not_run=1.
+- Heartbeats fuera de `[start_ns, end_ns]` daban `pass`. Ahora `unknown` + could_not_run=1.
+
+Regresión: `tests/test_closure_kernel.py::test_memory_saver_negative_control_is_honest_unique_and_windowed` (falla con el código previo: `assert 'fail' == 'pass'`; pasa con el arreglo).
+
+La ficha sigue abierta: el close_check aún reporta por fase `status: unknown`, `fail: 0`, `could_not_run: 1` ("raw phase capture unavailable: ... 'capture.json'"). Falta la captura real, que exige bpftrace como root (`sudo -n` pide contraseña) y una carga CUDA medida; la aporta el operador.
