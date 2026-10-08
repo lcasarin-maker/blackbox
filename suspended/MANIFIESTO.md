@@ -12,7 +12,7 @@ vuelve permanente en silencio, así que cada entrada lleva la suya y quién vigi
 | **sha256** | `ce823854e9b1dd5da6dd92c6a5a8e69d609b008d97c00a6219f3ce82e5354122` |
 | **modo** | `775` |
 | **Unit parada** | `ai-gpu-telemetry.service` (disable --now) |
-| **Caduca** | **2026-10-07** — si sigue suspendido sin decisión, se revisa |
+| **Caduca** | **2026-11-07** — si sigue suspendido sin decisión, se revisa |
 | **Vigila** | `bb status`, que comprueba la frescura de la telemetría absorbida |
 
 **Por qué.** Sus campos los absorbió `Atlas/tools/atom_gpu_telemetry.py` el
