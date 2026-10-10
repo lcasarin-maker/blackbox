@@ -8,7 +8,7 @@ severity: P2
 origin: asserted
 satd_family: INFRASTRUCTURE_GOVERNANCE
 created: 2026-10-10
-close_check: {"cmd": "cmp adopted/system-config/etc_systemd_system_atom-secundarias.slice /etc/systemd/system/atom-secundarias.slice", "expect": "exit_zero", "porque": "El slice adoptado debe existir y ser identico en la maquina; mientras no, bb drift sale con exit 1 y el timer diario de drift reporta fallo."}
+close_check: {"cmd": "bash tools/verifica_slice_desplegado.sh", "expect": "exit_zero", "porque": "El slice adoptado debe existir y ser identico en la maquina; mientras no, bb drift sale con exit 1 y el timer diario de drift reporta fallo."}
 ---
 
 ## Hueco

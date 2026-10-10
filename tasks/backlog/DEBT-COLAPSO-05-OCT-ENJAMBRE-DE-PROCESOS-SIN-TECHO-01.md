@@ -8,7 +8,7 @@ severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-10
-close_check: {"cmd": "test -s tasks/evidence/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/quien-lanzo.txt", "expect": "exit_zero", "porque": "Solo cierra con la evidencia de quien lanzo los procesos y con el techo medido que habria acotado el enjambre."}
+close_check: {"cmd": "grep -q . tasks/evidence/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/quien-lanzo.txt", "expect": "exit_zero", "porque": "Solo cierra con la evidencia de quien lanzo los procesos y con el techo medido que habria acotado el enjambre."}
 ---
 
 ## Medido (2026-10-10, muestras por minuto y journal de bb-usable)

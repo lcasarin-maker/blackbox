@@ -8,7 +8,7 @@ severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-10
-close_check: {"cmd": "test \"$(nvidia-smi --query-gpu=accounting.mode --format=csv,noheader)\" = Enabled", "expect": "exit_zero", "porque": "Con accounting apagado, bb scan no puede nombrar los procesos de GPU ya salidos: tras una caida CUDA no se sabe quien tenia la GPU."}
+close_check: {"cmd": "bash tools/verifica_gpu_accounting.sh", "expect": "exit_zero", "porque": "Con accounting apagado, bb scan no puede nombrar los procesos de GPU ya salidos: tras una caida CUDA no se sabe quien tenia la GPU."}
 ---
 
 ## Hueco

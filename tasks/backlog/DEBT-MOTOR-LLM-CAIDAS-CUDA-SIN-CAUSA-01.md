@@ -8,7 +8,7 @@ severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-10
-close_check: {"cmd": "test -s tasks/evidence/DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01/cuda-gdb-kernel.txt && grep -qE 'Warp|Exception|kernel' tasks/evidence/DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01/cuda-gdb-kernel.txt", "expect": "exit_zero", "porque": "Solo se cierra con la salida literal de cuda-gdb sobre un volcado REAL vllm_* del motor: kernel, excepcion y linea. Hipotesis sin volcado no cierran nada."}
+close_check: {"expect": "exit_zero", "porque": "Solo se cierra con la salida literal de cuda-gdb sobre un volcado REAL vllm_* del motor: kernel, excepcion y linea. Hipotesis sin volcado no cierran nada.", "cmd": "grep -qE \"Warp|Exception|kernel\" tasks/evidence/DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01/cuda-gdb-kernel.txt"}
 ---
 
 ## Que paso (medido con `bb scan "2026-10-08 19:39"`, journal de ai-nemotron.service)

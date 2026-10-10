@@ -2,7 +2,7 @@
 id: DEBT-AUDIT-ANILLO-DESBORDADO-SIN-LIMITE-01
 kind: task
 domain: AUDIT
-title: "Subir audit_backlog_limit: el anillo de audit pierde eventos y la atribucion de quien mato queda ciega"
+title: "Subir audit_backlog_limit: el anillo de audit pierde eventos y deja ciega la atribucion"
 status: open
 severity: P2
 origin: asserted
