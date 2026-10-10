@@ -67,3 +67,48 @@ def test_cuda_gdb_que_falla_es_COULD_NOT_RUN_no_un_kernel_inventado(tmp_path):
     f = tmp_path / "vllm_h_9_1"; f.write_bytes(b"x")
     r = mc.kernel_del_volcado(f, "/bin/false")
     assert r.startswith("COULD_NOT_RUN")
+
+
+# --- atascos: peticiones corriendo y ni un token avanza ---------------------
+
+
+def _m(minuto, run, gen, pro, boot="b1"):
+    return ('{"ts": "2026-10-09T10:%02d:00-0600", "boot_id": "%s", "gw_salud": "%s,0,0.1,0,%s,%s,0"}'
+            % (minuto, boot, run, gen, pro))
+
+
+def test_atasco_peticiones_corriendo_sin_avanzar_tokens_es_un_episodio():
+    filas = [_m(0, 30, 100, 500), _m(1, 30, 100, 500), _m(2, 30, 100, 500), _m(3, 30, 100, 500)]
+    eps = mc.atascos(filas)
+    assert len(eps) == 1 and eps[0][2] == 4
+
+
+def test_control_negativo_motor_que_avanza_no_es_atasco():
+    assert mc.atascos([_m(i, 30, 100 + i * 50, 500 + i * 90) for i in range(8)]) == []
+
+
+def test_control_negativo_motor_ocioso_run_cero_no_es_atasco():
+    assert mc.atascos([_m(i, 0, 100, 500) for i in range(8)]) == []
+
+
+def test_control_negativo_prefill_que_avanza_aunque_no_genere_no_es_atasco():
+    assert mc.atascos([_m(i, 30, 100, 500 + i * 900) for i in range(8)]) == []
+
+
+def test_control_negativo_dos_muestras_iguales_no_alcanzan_el_minimo():
+    assert mc.atascos([_m(0, 30, 100, 500), _m(1, 30, 100, 500), _m(2, 30, 200, 900)]) == []
+
+
+def test_un_cambio_de_boot_corta_el_episodio():
+    filas = [_m(0, 30, 100, 500), _m(1, 30, 100, 500), _m(2, 30, 100, 500, boot="b2"), _m(3, 30, 100, 500, boot="b2")]
+    assert mc.atascos(filas) == []
+
+
+def test_muestra_ilegible_se_salta_sin_romper():
+    filas = ["{no es json", _m(0, 30, 100, 500), _m(1, 30, 100, 500), _m(2, 30, 100, 500)]
+    assert len(mc.atascos(filas)) == 1
+
+
+def test_el_informe_nombra_los_atascos(tmp_path):
+    filas = [_m(i, 30, 100, 500) for i in range(5)]
+    assert "atascos (peticiones corriendo, 0 tokens): 1" in mc.informe([], [], [], tmp_path, muestras=filas)
