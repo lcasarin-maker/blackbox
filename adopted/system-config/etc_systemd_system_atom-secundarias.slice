@@ -1,0 +1,23 @@
+# atom-secundarias.slice -- aisla tareas secundarias de la inferencia central
+# en GB10 (memoria unificada 128GB, Grace/Blackwell) via cgroups v2.
+#
+# TASK-ATOM-01: procesos concurrentes sin limite de cgroups pueden provocar
+# caidas de vLLM. Este slice NO es para el proceso de inferencia central --
+# es para todo lo demas (scripts de migracion, indexado, tareas auxiliares),
+# de modo que un consumo excesivo de memoria en ellos falle DENTRO de este
+# slice (MemoryMax = hard limit, OOM-kill dentro del slice) en vez de
+# competir por la memoria unificada que vLLM necesita.
+#
+# MemoryHigh es un umbral BLANDO (throttling de reclaim, no mata el proceso):
+# se fija mas bajo que MemoryMax para dar una señal de presion de memoria
+# antes de llegar al limite duro.
+#
+# Uso: copiar a /etc/systemd/system/, luego
+#   sudo systemctl daemon-reload
+#   systemd-run --slice=atom-secundarias.slice <comando>
+[Unit]
+Description=Aislamiento de memoria para tareas secundarias (no inferencia)
+
+[Slice]
+MemoryHigh=32G
+MemoryMax=48G

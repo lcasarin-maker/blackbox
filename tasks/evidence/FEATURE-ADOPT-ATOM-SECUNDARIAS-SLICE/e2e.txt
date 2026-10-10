@@ -1,0 +1,8 @@
+$ systemd-analyze verify adopted/system-config/etc_systemd_system_atom-secundarias.slice
+exit=0 (salida vacia = sin advertencias)
+
+$ cmp con el origen en migracion_atom
+identico a migracion_atom/systemd/atom-secundarias.slice
+
+$ bb drift | grep atom-secundarias
+  AUSENTE     /etc/systemd/system/atom-secundarias.slice (esta en el repo pero ya no en la maquina)
