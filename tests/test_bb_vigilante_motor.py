@@ -29,6 +29,7 @@ def falso(tmp_path):
         '  *"show"*ActiveState*) echo "${FAKE_ACTIVE:-active}" ;;\n'
         '  *"show"*ExecMainStartTimestamp*) echo "${FAKE_START-Mon 2020-01-01 00:00:00 UTC}" ;;\n'
         '  *restart*) echo "$*" >> "$FAKE_LOG" ;;\n'
+        '  *is-active*bb-guardia*) exit "${FAKE_GUARDIA_RC:-0}" ;;\n'
         '  *is-active*) exit "${FAKE_TIMER_RC:-0}" ;;\n'
         'esac\n', encoding="utf-8")
     for f in b.iterdir():
@@ -286,3 +287,9 @@ def test_status_con_alerta_es_FALTA_y_sin_alerta_ARMADO(con_alertas):
     (tmp / "d").mkdir(exist_ok=True)
     (tmp / "d" / "motor_alerta.json").write_text("{}", encoding="utf-8")
     assert "FALTA" in _fila(_status(tmp, {**env, "FAKE_CHAT_CODE": "200"}), "sin alerta de tope")
+
+
+def test_status_guardia_de_procesos_activa_ARMADO_y_parada_FALTA(falso):
+    tmp, env = falso
+    assert "ARMADO" in _fila(_status(tmp, env), "guardia de procesos")
+    assert "FALTA" in _fila(_status(tmp, {**env, "FAKE_GUARDIA_RC": "3"}), "guardia de procesos")

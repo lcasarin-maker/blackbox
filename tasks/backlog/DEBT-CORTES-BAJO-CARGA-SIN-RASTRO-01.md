@@ -8,7 +8,7 @@ severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-10
-close_check: {"cmd": "test -s tasks/evidence/DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01/clasificacion.md", "expect": "exit_zero", "porque": "Solo cierra con la clasificacion escrita de cada corte, con la confirmacion de Luis de cuales fueron cortes de energia."}
+close_check: {"cmd": "grep -q . tasks/evidence/DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01/clasificacion.md", "expect": "exit_zero", "porque": "Solo cierra con la clasificacion escrita de cada corte, con la confirmacion de Luis de cuales fueron cortes de energia."}
 ---
 
 ## Medido (2026-10-10, journal, telemetria de 5 s y registros BERT)

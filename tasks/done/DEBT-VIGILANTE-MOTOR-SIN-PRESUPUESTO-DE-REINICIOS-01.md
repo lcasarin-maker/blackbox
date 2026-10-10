@@ -53,3 +53,17 @@ Votado por Luis: tope de 3 por hora con snapshot, alerta y una tarea programada 
 Si la politica de reinicios no puede correr, el vigilante reinicia igual y lo registra: el instrumento no debe tumbar el servicio que cuida. Con tope 3 y los 4 reinicios medidos (86 min, 77 min y 15.4 h de distancia) el tope no habria bloqueado ninguno.
 
 `fail.txt` es la misma suite contra un vigilante con el limite subido a 99: el cuarto reinicio ocurre y la prueba cae. `pass.txt` es el `close_check` y la suite completa. `e2e.txt` es el simulacro contra el motor vivo, las filas de `bb status` y `bb drift`.
+
+## Root Cause
+
+`bin/bb-vigilante-motor` reiniciaba `ai-nemotron.service` sin ningun tope: ante un fallo persistente reiniciaba cada unos 8 min, y cada arranque carga el modelo ~4 min. El repo ya tenia el mecanismo de presupuesto (`tools/workload_restart_policy.py`) y el vigilante no lo usaba.
+
+## Regression Test
+
+`python3 -m pytest -q tests/test_bb_vigilante_motor.py -k presupuesto`. Cubre el cuarto reinicio en una hora (no reinicia, escribe la alerta, un snapshot y un aviso), el control negativo de tres reinicios sin alerta, que el simulacro no consume presupuesto, y que un presupuesto ilegible reinicia igual y lo registra.
+
+## Verification Evidence
+
+- `tasks/evidence/DEBT-VIGILANTE-MOTOR-SIN-PRESUPUESTO-DE-REINICIOS-01/fail.txt`: la misma suite contra un vigilante con el limite subido a 99; el cuarto reinicio ocurre y la prueba cae.
+- `tasks/evidence/DEBT-VIGILANTE-MOTOR-SIN-PRESUPUESTO-DE-REINICIOS-01/pass.txt`: el `close_check` y la suite completa del vigilante, exit 0.
+- `tasks/evidence/DEBT-VIGILANTE-MOTOR-SIN-PRESUPUESTO-DE-REINICIOS-01/e2e.txt`: simulacro contra el motor vivo, filas de `bb status` y `bb drift`.

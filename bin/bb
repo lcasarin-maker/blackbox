@@ -2442,6 +2442,14 @@ EOF
   systemctl --user is-active ai-nemotron-vigilante.timer >/dev/null 2>&1; ok=$?
   chk "vigilante del motor (reinicia si el chat no contesta)" "$ok" "arma: bb install"
 
+  # La guardia que frena a UN proceso desbocado estuvo parada ~25 h (09-oct 05:28
+  # a 10-oct 07:01) sin que nada lo dijera: salio por TERM, que systemd cuenta como
+  # exito, y Restart=on-failure no la levanta. Limite declarado: se mira la unit,
+  # no su latido, porque la guardia no escribe uno (su estado solo cambia con
+  # muestras nuevas).
+  systemctl --user is-active bb-guardia-proceso.service >/dev/null 2>&1; ok=$?
+  chk "guardia de procesos (frena un proceso desbocado)" "$ok" "parada: systemctl --user start bb-guardia-proceso.service"
+
   # Sin volcado CUDA, una caida por 'illegal memory access' no nombra el kernel
   # que fallo: CUDA la informa tarde, en otro punto de sincronizacion.
   if grep -q '"CUDA_ENABLE_COREDUMP_ON_EXCEPTION": *"1"' "$MOTOR_CONFIG" 2>/dev/null && [ -w "$MOTOR_VOLCADOS" ]; then ok=0; else ok=1; fi

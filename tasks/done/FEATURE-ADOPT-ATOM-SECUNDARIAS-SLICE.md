@@ -44,3 +44,17 @@ Este trabajo lo dejo una sesion anterior sin commitear (archivos del 2026-10-08)
 - Se agrego el paso al instalador `enable-privileged.sh` y su fila en el inventario de SPEC.md.
 - La unica linea cambiada en `tests/test_atom_slice.py` es la ruta de la unidad.
 - El despliegue real queda fuera: exige root. Ficha `DEBT-ATOM-SECUNDARIAS-SLICE-SIN-DESPLEGAR-01`.
+
+## Root Cause
+
+Sin limites de cgroups v2, los procesos secundarios (indexado, migracion, OCR) competian por la memoria unificada que vLLM necesita en la GB10, y una sobrecarga detonaba caidas del motor. La unidad existia solo en `migracion_atom` y no estaba en este repo.
+
+## Regression Test
+
+`python3 -m pytest -q tests/test_atom_slice.py`: la unidad real no produce advertencias de `systemd-analyze verify`, una unidad deliberadamente rota SI las produce (control negativo) y `MemoryHigh` es menor que `MemoryMax`.
+
+## Verification Evidence
+
+- `tasks/evidence/FEATURE-ADOPT-ATOM-SECUNDARIAS-SLICE/fail.txt`: la unidad rota produce las dos advertencias (`Invalid memory limit` y `Unknown key name`) con exit 0, por eso el criterio mira la salida y no el codigo.
+- `tasks/evidence/FEATURE-ADOPT-ATOM-SECUNDARIAS-SLICE/pass.txt`: 3 pruebas pasan.
+- `tasks/evidence/FEATURE-ADOPT-ATOM-SECUNDARIAS-SLICE/e2e.txt`: verificacion limpia, identica al origen y `bb drift` marcando AUSENTE hasta el despliegue (ficha `DEBT-ATOM-SECUNDARIAS-SLICE-SIN-DESPLEGAR-01`).
