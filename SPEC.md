@@ -282,6 +282,7 @@ disco.
 | `/etc/sysctl.d/99-sysrq.conf` | `kernel.sysrq=1`: la salida manual de un cuelgue desde el teclado. Cuelgue. |
 | `/etc/systemd/system.conf.d/99-blackbox-watchdog.conf` | el watchdog SBSA por hardware, la ultima capa. Cuelgue. |
 | `/etc/systemd/system/atom-clock-lock.service` | fija el reloj de GPU; sin el, el throttle se confunde con un fallo. |
+| `/etc/systemd/system/atom-secundarias.slice` | `MemoryHigh=32G` y `MemoryMax=48G` para tareas secundarias (indexado, migracion, OCR) que se lanzan con `systemd-run --slice=atom-secundarias.slice`: si se pasan, el OOM-kill ocurre dentro del slice y no contra la memoria unificada que vLLM necesita. Rescatado de `migracion_atom` (TASK-ATOM-01, `9966d04`). No entra en el presupuesto de compromisos de memoria hasta que algo lo use. Memoria. |
 | `/etc/systemd/system/bb-usable.service` | el vigilante por PSI que reinicia la maquina. Cuelgue. |
 | `/etc/systemd/system/docker.slice.d/99-blackbox.conf` | techo agregado de los contenedores. Presion de memoria. |
 | `/etc/systemd/system/earlyoom.service.d/override.conf` | punteria del OOM killer antes de que la maquina se atasque. |

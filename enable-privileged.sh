@@ -318,6 +318,15 @@ run systemctl daemon-reload
 run systemctl enable atom-clock-lock.service
 run systemctl enable --now nvrm-watch.timer
 echo "  atom-clock-lock armado (oneshot tras nvidia-persistenced)"
+
+# `atom-secundarias.slice` aisla las tareas que NO son inferencia: si se pasan
+# de 48G, el OOM-kill cae dentro del slice y no contra la memoria unificada de
+# vLLM (TASK-ATOM-01). Un slice no se habilita ni se arranca: existe al usarse
+# con `systemd-run --slice=atom-secundarias.slice <comando>`.
+run cp adopted/system-config/etc_systemd_system_atom-secundarias.slice \
+       /etc/systemd/system/atom-secundarias.slice
+run systemctl daemon-reload
+echo "  atom-secundarias.slice instalado (sin efecto hasta que algo lo use)"
 echo "  nvrm-watch armado (cada 5 min, 2 min tras el arranque)"
 echo
 echo "  CONTROL NEGATIVO -- mira el sujeto, no este informe:"
