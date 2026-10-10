@@ -29,3 +29,14 @@ estado atomico, 3 por hora por defecto, y nunca reinicia por si mismo.
 La sesion Declutter espera al servidor hasta 30 min por llamada. Un tope que deje al motor
 colgado sin reiniciar tambien la detiene: al agotarse el presupuesto hay que AVISAR, no
 quedarse mudo.
+
+## Datos de la sesion Declutter (2026-10-10, mensaje entre sesiones, sin verificar aqui)
+
+- Su corrida de fichas sobrevive a caidas por conexion rechazada y por chat colgado sin
+  perder documentos (sus fichas DECL-CORE-326 y 327). Un reinicio rapido le sale barato.
+- Lo caro es un servidor que no vuelve en mas de 30 min: su lanzador espera 20 min y aborta.
+- Recomienda tope de 3 reinicios por hora y, agotado, dejar de reiniciar y mostrar una
+  alerta visible en `bb status`. Pide que se le avise el numero final para ajustar su lanzador.
+
+Propuesta pendiente de decision: 3 por hora (el valor por defecto de la politica) y fila
+nueva en `bb status` que diga FALTA mientras el presupuesto este agotado.
