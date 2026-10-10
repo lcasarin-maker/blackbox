@@ -929,17 +929,17 @@ cmd_scan() {
   # --- 1. OOM del kernel y del driver NVIDIA -------------------------------
   echo "-- OOM / fallos de memoria --"
   local koom nvoom
-  if journalctl -k -S "$since_fmt" --no-pager >/dev/null 2>&1; then
+  if journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager >/dev/null 2>&1; then
     # Las lineas NVRM tambien dicen "Out of memory", pero son de la GPU, no de
     # la RAM. Contarlas aqui daba 4 falsos positivos de OOM del kernel.
-    koom=$(journalctl -k -S "$since_fmt" --no-pager 2>/dev/null |
+    koom=$(journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager 2>/dev/null |
       grep -vi 'NVRM' | grep -icE 'oom-kill|oom_reaper|killed process|out of memory' || true)
-    nvoom=$(journalctl -k -S "$since_fmt" --no-pager 2>/dev/null |
+    nvoom=$(journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager 2>/dev/null |
       grep -icE 'NVRM.*(Out of memory|NV_ERR_NO_MEMORY)' || true)
     echo "  OOM del kernel (RAM):        ${koom:-0}"
     echo "  OOM del driver NVIDIA:       ${nvoom:-0}"
     if [ "${nvoom:-0}" -gt 0 ]; then
-      journalctl -k -S "$since_fmt" --no-pager 2>/dev/null |
+      journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager 2>/dev/null |
         grep -iE 'NVRM.*(Out of memory|NV_ERR_NO_MEMORY)' | tail -5 | sed 's/^/    /'
     fi
   else
@@ -954,16 +954,16 @@ cmd_scan() {
   # de RPC del GSP, fallo de init de firmware, ECC, etc.). Hasta hoy bin/bb
   # nunca lo grep-eaba -- HARVEST-374016/379959/348223.
   echo "-- Xid del driver NVIDIA --"
-  if journalctl -k -S "$since_fmt" --no-pager >/dev/null 2>&1; then
+  if journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager >/dev/null 2>&1; then
     local nxid
-    nxid=$(journalctl -k -S "$since_fmt" --no-pager 2>/dev/null | grep -icE 'NVRM: Xid' || true)
+    nxid=$(journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager 2>/dev/null | grep -icE 'NVRM: Xid' || true)
     echo "  eventos Xid:                 ${nxid:-0}"
     if [ "${nxid:-0}" -gt 0 ]; then
       # El codigo va DESPUES de "): ", no despues de "Xid": la direccion PCI
       # (ej. "PCI:0000:01:00") tiene digitos propios que un split ingenuo por
       # "Xid[^0-9]*" confunde con el codigo. Medido: sobre una linea real
       # daba "0000:01:00):" en vez de "79". Se extrae con el patron completo.
-      journalctl -k -S "$since_fmt" --no-pager 2>/dev/null | grep -oE 'Xid \(PCI:[^)]*\): [0-9]+' |
+      journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager 2>/dev/null | grep -oE 'Xid \(PCI:[^)]*\): [0-9]+' |
         grep -oE '[0-9]+$' | sort | uniq -c | sort -rn |
         awk '{printf "    codigo %-6s x%s\n", $2, $1}'
     fi
@@ -1105,12 +1105,12 @@ for d in fallos[:5]:
   # garantizado). El inventario de velocidad por puerto, sin veredicto, vive
   # en `bb hw`.
   echo "-- xHCI / USB --"
-  if journalctl -k -S "$since_fmt" --no-pager >/dev/null 2>&1; then
+  if journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager >/dev/null 2>&1; then
     local nxhci
-    nxhci=$(journalctl -k -S "$since_fmt" --no-pager 2>/dev/null |
+    nxhci=$(journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager 2>/dev/null |
       grep -icE 'xhci_hcd.*(HC died|assum.*dead|not responding|timeout|reset)' || true)
     echo "  errores xHCI:                ${nxhci:-0}"
-    [ "${nxhci:-0}" -gt 0 ] && journalctl -k -S "$since_fmt" --no-pager 2>/dev/null |
+    [ "${nxhci:-0}" -gt 0 ] && journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager 2>/dev/null |
       grep -iE 'xhci_hcd.*(HC died|assum.*dead|not responding|timeout|reset)' | tail -5 | sed 's/^/    /'
   else
     cannot_run "xHCI/USB" "journalctl -k no legible (hace falta el grupo adm o systemd-journal)"
@@ -1611,10 +1611,10 @@ else:
   # 12 caidas fatales y este scan solo contaba Xid sueltos, sin unirlos.
   if have python3; then
     journalctl --user -u "$MOTOR_UNIDAD" -S "$since_fmt" --no-pager -o short-iso >"$scan_tmp/motor_unidad.txt" 2>/dev/null
-    journalctl -k -S "$since_fmt" --no-pager -o short-iso >"$scan_tmp/motor_kernel.txt" 2>/dev/null
+    journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager -o short-iso >"$scan_tmp/motor_kernel.txt" 2>/dev/null
     python3 "$repo_root/tools/motor_caidas.py" --unidad "$scan_tmp/motor_unidad.txt" \
       --kernel "$scan_tmp/motor_kernel.txt" --bitacora "$DATA/vigilante_motor.log" \
-      --volcados "$MOTOR_VOLCADOS" 2>&1 || cannot_run "causas de caida del motor" "motor_caidas.py fallo"
+      --volcados "$MOTOR_VOLCADOS" --muestras "$scan_samples" 2>&1 || cannot_run "causas de caida del motor" "motor_caidas.py fallo"
   else
     cannot_run "causas de caida del motor" "python3 no disponible"
   fi
@@ -1630,6 +1630,23 @@ else:
   [ "${nhook:-0}" -gt 0 ] && journalctl -S "$since_fmt" --no-pager 2>/dev/null |
     grep -iE 'nvidia-container-(runtime|cli).*(error|fail)|OCI runtime.*nvidia.*fail|failed to initialize NVML' |
     tail -3 | sed 's/^/    /'
+  # Registros BERT: el firmware los deja ANTES del boot siguiente cuando el
+  # anterior termino sin apagado. Medido el 2026-10-10: aparecieron tras los
+  # cortes del 05, 06 y 07-oct y no tras el del 08; bb no los leia. El
+  # payload es del fabricante (seccion MTKID) y NO se decodifica aqui: se
+  # imprime la palabra en 0x14, la unica que cambia de un corte a otro.
+  local bert
+  bert=$(journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager -o short-iso 2>/dev/null | awk '
+    /BERT: Error records from previous boot/ { t = substr($1, 1, 19) }
+    /\[Hardware Error\]:   00000010:/ { if (t != "") { printf "    %s  palabra@0x14=%s\n", t, $8; t = "" } }')
+  echo "  registros BERT del firmware (corte sin apagado): $(printf '%s' "$bert" | grep -c . || true)"
+  [ -n "$bert" ] && printf '%s\n' "$bert"
+  # El anillo de audit desborda y descarta eventos: toda atribucion basada en
+  # audit ("quien mato") queda ciega mientras tanto. 2662 perdidos en el boot
+  # del 07 al 08-oct.
+  local audperd
+  audperd=$(journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager 2>/dev/null | grep -oE 'audit_lost=[0-9]+' | tail -1)
+  echo "  eventos de audit perdidos (anillo desbordado): ${audperd#audit_lost=}"
   # tok/s del trafico REAL, derivado de los contadores entre muestras. Un
   # gateway degradado responde igual de "vivo": esto es lo que lo delata.
   cat "$scan_samples" 2>/dev/null | python3 -c '
@@ -1947,14 +1964,14 @@ if not hallazgos:
   # arriba, los resume en una linea.
   echo "-- clasificador de causa de apagado/reinicio no limpio --"
   local npower nnaer
-  npower=$(journalctl -k -S "$since_fmt" --no-pager 2>/dev/null |
+  npower=$(journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager 2>/dev/null |
     grep -icE 'mlx5_pcie_event.*insufficient power' || true)
   # OJO: un grep amplio de "AER:|hotplug" cuenta tambien el RUIDO de
   # inicializacion al boot ("AER: enabled with IRQ", "pciehp: Slot #N
   # AttnBtn-...") -- medido: 28 lineas con ese patron amplio, de las cuales
   # solo 5 eran errores reales. El patron de abajo exige la palabra "error"
   # o la firma real de RxErr/remocion de cable/caida de enlace.
-  nnaer=$(journalctl -k -S "$since_fmt" --no-pager 2>/dev/null |
+  nnaer=$(journalctl _TRANSPORT=kernel -S "$since_fmt" --no-pager 2>/dev/null |
     grep -icE 'AER: (Corrected|Uncorrected|Correctable|Fatal) error|\] RxErr|Cable removal|Link Down' || true)
   echo "  PCIe: insuficiencia de energia:  ${npower:-0}"
   echo "  PCIe: errores AER/RxErr/cable:   ${nnaer:-0}"

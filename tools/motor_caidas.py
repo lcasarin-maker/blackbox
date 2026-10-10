@@ -13,6 +13,7 @@ vigilante. No atribuye causa: nombra lo que paso y cuando.
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import shutil
 import subprocess
@@ -61,6 +62,37 @@ def cuelgues(bitacora: list[str]) -> list[str]:
     return [ln.strip() for ln in bitacora if "REINICIA" in ln]
 
 
+def atascos(muestras: list[str], minimo: int = 3) -> list[tuple[datetime, datetime, int]]:
+    """Episodios en que el motor tiene peticiones corriendo y ni los tokens
+    generados ni los de prompt avanzan, entre muestras seguidas del mismo boot.
+
+    Es la firma de los cuelgues del 2026-10-09/10: el log del motor dice
+    "Running: 22-31 reqs" con 0.0 tokens/s de entrada y de salida mientras
+    /v1/models sigue en 200. Un motor ocioso (run=0) o que avanza no cuenta.
+    """
+    eps, prev, ini, n, ult = [], None, None, 0, None
+    for ln in muestras:
+        try:
+            d = json.loads(ln)
+            p = d["gw_salud"].split(",")
+            fila = (datetime.strptime(d["ts"][:19], "%Y-%m-%dT%H:%M:%S"), float(p[0]),
+                    float(p[4]), float(p[5]), d.get("boot_id", ""))
+        except (ValueError, KeyError, IndexError, AttributeError):
+            continue
+        if prev and fila[4] == prev[4] and fila[1] > 0 and fila[2] == prev[2] and fila[3] == prev[3]:
+            if ini is None:
+                ini, n = prev[0], 1
+            n, ult = n + 1, fila[0]
+        else:
+            if ini and n >= minimo:
+                eps.append((ini, ult, n))
+            ini, n = None, 0
+        prev = fila
+    if ini and n >= minimo:
+        eps.append((ini, ult, n))
+    return eps
+
+
 def volcados(directorio: Path) -> list[Path]:
     """Solo los reales (vllm_*): los prueba_* son el control positivo del armado."""
     return sorted(directorio.glob("vllm_*")) if directorio.is_dir() else []
@@ -78,7 +110,7 @@ def kernel_del_volcado(archivo: Path, cuda_gdb: str | None) -> str:
     return " | ".join(cuerpo[-3:]) if cuerpo else f"COULD_NOT_RUN: cuda-gdb rc={r.returncode} sin salida"
 
 
-def informe(unidad, kernel, bitacora, dir_volcados: Path, cuda_gdb=None) -> str:
+def informe(unidad, kernel, bitacora, dir_volcados: Path, cuda_gdb=None, muestras=()) -> str:
     out = []
     cs = caidas(unidad)
     out.append(f"  caidas fatales del EngineCore:   {len(cs)}")
@@ -95,6 +127,9 @@ def informe(unidad, kernel, bitacora, dir_volcados: Path, cuda_gdb=None) -> str:
     ch = cuelgues(bitacora)
     out.append(f"  cuelgues (chat mudo, reiniciado): {len(ch)}")
     out += [f"    {ln}" for ln in ch[-5:]]
+    at = atascos(list(muestras))
+    out.append(f"  atascos (peticiones corriendo, 0 tokens): {len(at)}")
+    out += [f"    {a.strftime('%m-%d %H:%M')} -> {b.strftime('%H:%M')}  {n} muestras" for a, b, n in at[-5:]]
     vs = volcados(dir_volcados)
     out.append(f"  volcados CUDA reales (vllm_*):   {len(vs)}  en {dir_volcados}")
     if cs and not vs:
@@ -118,9 +153,11 @@ def main(argv=None) -> int:
     a.add_argument("--kernel", required=True)
     a.add_argument("--bitacora", required=True)
     a.add_argument("--volcados", required=True)
+    a.add_argument("--muestras", default="")
     a = a.parse_args(argv)
     cuda_gdb = shutil.which("cuda-gdb") or ("/usr/local/cuda/bin/cuda-gdb" if Path("/usr/local/cuda/bin/cuda-gdb").exists() else None)
-    print(informe(_leer(a.unidad), _leer(a.kernel), _leer(a.bitacora), Path(a.volcados), cuda_gdb))
+    print(informe(_leer(a.unidad), _leer(a.kernel), _leer(a.bitacora), Path(a.volcados), cuda_gdb,
+                  _leer(a.muestras) if a.muestras else ()))
     return 0
 
 
