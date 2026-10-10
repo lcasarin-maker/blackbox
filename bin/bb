@@ -373,6 +373,10 @@ psi_campo() { # recurso, linea(some|full), clave(avg10|avg60) -> valor o ""
 # ingeridos en la KB de Atlas), que vigilan el motor de inferencia junto al
 # hardware en vez de dejarlo fuera del cuadro.
 GATEWAY_URL="${BLACKBOX_GATEWAY_URL:-http://127.0.0.1:8000/v1/models}"
+GATEWAY_CHAT="${BLACKBOX_GATEWAY_CHAT:-http://127.0.0.1:8000/v1/chat/completions}"
+MOTOR_UNIDAD="${BLACKBOX_MOTOR_UNIDAD:-ai-nemotron.service}"
+MOTOR_CONFIG="${BLACKBOX_MOTOR_CONFIG:-/srv/ai/gateway/active_engine.json}"
+MOTOR_VOLCADOS="${BLACKBOX_MOTOR_VOLCADOS:-/srv/ai/models/_coredumps}"
 
 gateway_modelo() { # -> nombre del modelo servido, o "" si no responde
   have curl || { echo ""; return 1; }
@@ -1602,6 +1606,18 @@ else:
   conmuestra=$(grep -ho '"gateway":"[^"]*"' "$scan_samples" 2>/dev/null | wc -l)
   echo "  muestras con el gateway caido: ${caidas:-0} de ${conmuestra:-0}"
   echo "  contenedores (vivos/total):  $(docker_estado 2>/dev/null || echo '?')"
+  # Causas de las caidas del motor (clase de error CUDA, Xid cercanos, cuelgues,
+  # volcados). Absorbido de Declutter el 2026-10-10: el 09 y 10 de octubre hubo
+  # 12 caidas fatales y este scan solo contaba Xid sueltos, sin unirlos.
+  if have python3; then
+    journalctl --user -u "$MOTOR_UNIDAD" -S "$since_fmt" --no-pager -o short-iso >"$scan_tmp/motor_unidad.txt" 2>/dev/null
+    journalctl -k -S "$since_fmt" --no-pager -o short-iso >"$scan_tmp/motor_kernel.txt" 2>/dev/null
+    python3 "$repo_root/tools/motor_caidas.py" --unidad "$scan_tmp/motor_unidad.txt" \
+      --kernel "$scan_tmp/motor_kernel.txt" --bitacora "$DATA/vigilante_motor.log" \
+      --volcados "$MOTOR_VOLCADOS" 2>&1 || cannot_run "causas de caida del motor" "motor_caidas.py fallo"
+  else
+    cannot_run "causas de caida del motor" "python3 no disponible"
+  fi
   # Fallback silencioso a modo "legacy" (sin GPU real) por fallo del
   # prestart hook OCI de nvidia-container-runtime (FEATURE-NVIDIA-CONTAINER-
   # RUNTIME-HOOK, HARVEST-351579): el contenedor puede reportar "Up" con el
@@ -2390,6 +2406,24 @@ EOF
   if [ -n "$(gateway_modelo)" ]; then ok=0; else ok=1; fi
   chk "motor de inferencia sirviendo" "$ok" "el gateway no responde en $GATEWAY_URL"
 
+  # /v1/models respondiendo NO prueba que el motor sirva: el 2026-10-09 estuvo 3.5 h
+  # con /v1/models en 200 y el chat mudo. Se prueba una llamada minima de chat.
+  if [ -n "$(gateway_modelo)" ]; then
+    codigo=$(timeout 25 curl -s -m 20 -o /dev/null -w '%{http_code}' "$GATEWAY_CHAT" \
+      -H 'Content-Type: application/json' \
+      -d "{\"model\":\"$(gateway_modelo)\",\"messages\":[{\"role\":\"user\",\"content\":\"ok\"}],\"max_tokens\":1}" 2>/dev/null)
+    if [ "$codigo" = 200 ]; then ok=0; else ok=1; fi
+    chk "motor de inferencia contesta una llamada de chat" "$ok" "chat sin respuesta (http=${codigo:-000}) con /v1/models vivo: el motor esta colgado"
+  fi
+
+  systemctl --user is-active ai-nemotron-vigilante.timer >/dev/null 2>&1; ok=$?
+  chk "vigilante del motor (reinicia si el chat no contesta)" "$ok" "arma: bb install"
+
+  # Sin volcado CUDA, una caida por 'illegal memory access' no nombra el kernel
+  # que fallo: CUDA la informa tarde, en otro punto de sincronizacion.
+  if grep -q '"CUDA_ENABLE_COREDUMP_ON_EXCEPTION": *"1"' "$MOTOR_CONFIG" 2>/dev/null && [ -w "$MOTOR_VOLCADOS" ]; then ok=0; else ok=1; fi
+  chk "volcado CUDA ante excepcion del motor" "$ok" "falta CUDA_ENABLE_COREDUMP_ON_EXCEPTION=1 en $MOTOR_CONFIG o $MOTOR_VOLCADOS no es escribible"
+
   have nvidia-smi; ok=$?
   chk "nvidia-smi" "$ok" "sin telemetria de GPU"
 
@@ -2432,9 +2466,12 @@ cmd_install() {
   cp "$(dirname "$0")/../systemd/blackbox-sample.timer" "$unitdir/"
   cp "$(dirname "$0")/../systemd/blackbox-drift.service" "$unitdir/"
   cp "$(dirname "$0")/../systemd/blackbox-drift.timer" "$unitdir/"
+  cp "$(dirname "$0")/../adopted/systemd-user/ai-nemotron-vigilante.service" "$unitdir/"
+  cp "$(dirname "$0")/../adopted/systemd-user/ai-nemotron-vigilante.timer" "$unitdir/"
   systemctl --user daemon-reload
   systemctl --user enable --now blackbox-sample.timer
   systemctl --user enable --now blackbox-drift.timer
+  systemctl --user enable --now ai-nemotron-vigilante.timer
   echo "timers instalados. estado:"
   systemctl --user status blackbox-sample.timer --no-pager 2>&1 | head -5
   systemctl --user status blackbox-drift.timer --no-pager 2>&1 | head -5
