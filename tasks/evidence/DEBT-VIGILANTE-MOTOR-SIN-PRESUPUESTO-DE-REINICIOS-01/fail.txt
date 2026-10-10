@@ -1,0 +1,10 @@
+$ python3 -m pytest -q tests/test_bb_vigilante_motor.py -k presupuesto   # script mutado: --limit 99 (sin tope efectivo)
+tests/test_bb_vigilante_motor.py:229: in test_presupuesto_agotado_cuarto_reinicio_no_reinicia_y_avisa
+    assert len(_reinicios(tmp)) == 3
+E   AssertionError: assert 4 == 3
+E    +  where 4 = len(['--user restart ai-nemotron.service', '--user restart ai-nemotron.service', '--user restart ai-nemotron.service', '--user restart ai-nemotron.service'])
+E    +    where ['--user restart ai-nemotron.service', '--user restart ai-nemotron.service', '--user restart ai-nemotron.service', '--user restart ai-nemotron.service'] = _reinicios(PosixPath('/tmp/pytest-of-lcasarin/pytest-770/test_presupuesto_agotado_cuart0'))
+=========================== short test summary info ============================
+FAILED tests/test_bb_vigilante_motor.py::test_presupuesto_agotado_cuarto_reinicio_no_reinicia_y_avisa
+1 failed, 3 passed, 24 deselected in 2.29s
+exit=1

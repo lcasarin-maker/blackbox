@@ -15,6 +15,14 @@
 # entre dos corridas seguidas (ATASCO_N, 2 por defecto = ~4 min). Es la firma de
 # los cuelgues medidos y detecta en ~4 min lo que la prueba de chat tarda 9-11.
 #
+# Tope de reinicios, desde 2026-10-10 (voto de Luis): TOPE por hora, contados con
+# tools/workload_restart_policy.py. Agotado, deja de reiniciar, guarda un snapshot,
+# escribe motor_alerta.json, avisa al escritorio y `bb status` marca FALTA hasta
+# que el motor vuelva a responder. Un reinicio no arregla la causa (un bug CUDA):
+# el tope corta el bucle y obliga a que alguien mire. Si la politica misma no
+# puede correr, REINICIA igual y lo registra: el instrumento no debe tumbar el
+# servicio que cuida.
+#
 # Cada reinicio queda en vigilante_motor.log con la palabra REINICIA: `bb scan`
 # (tools/motor_caidas.py) cuenta esas lineas como cuelgues del motor.
 DATA="${BLACKBOX_DATA:-$HOME/.local/share/blackbox}"
@@ -27,9 +35,14 @@ ESPERA_CHAT_S=${VIGILANTE_ESPERA_CHAT_S:-120}
 MODELO=${VIGILANTE_MODELO:-nemotron-local}
 METRICAS=${VIGILANTE_METRICAS:-http://localhost:8000/metrics}
 ATASCO_N=${VIGILANTE_ATASCO_N:-2}
+TOPE=${VIGILANTE_TOPE:-3}
+RAIZ=$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)
+SNAPSHOT_CMD=${VIGILANTE_SNAPSHOT_CMD:-$RAIZ/bin/bb snapshot}
 mkdir -p "$S"
 ESTADO=$S/vigilante_motor.fallos
 ESTADO_ATASCO=$S/vigilante_motor.atasco
+PRESUPUESTO=$S/vigilante_motor.presupuesto
+ALERTA=$S/motor_alerta.json
 LOG=$S/vigilante_motor.log
 reg() { echo "[$(date '+%F %T')] $*" >> "$LOG"; }
 
@@ -42,7 +55,32 @@ edad=$(( $(date +%s) - $(date -d "$arranque" +%s) ))
 
 reinicia() { # motivo
   if [ -n "$VIGILANTE_SIMULA" ]; then reg "SIMULACRO: reiniciaria $UNIDAD ($1)"; return; fi
+  local decision rc
+  decision=$(python3 "$RAIZ/tools/workload_restart_policy.py" --state "$PRESUPUESTO" \
+    --workload-id "$UNIDAD" --limit "$TOPE" --window-seconds 3600); rc=$?
+  case $rc in
+    1) tope_agotado "$1"; return ;;
+    0) ;;
+    *) reg "presupuesto de reinicios ilegible (rc=$rc): reinicia igual -- $decision" ;;
+  esac
   reg "REINICIA $UNIDAD ($1)"; systemctl --user restart "$UNIDAD"
+}
+
+tope_agotado() { # motivo
+  reg "TOPE: $TOPE reinicios en la ultima hora; NO reinicia ($1)"
+  [ -e "$ALERTA" ] && return          # ya avisado: no repetir snapshot ni aviso
+  printf '{"ts": "%s", "unidad": "%s", "motivo": "%s", "tope_por_hora": %s}\n' \
+    "$(date -Is)" "$UNIDAD" "$1" "$TOPE" > "$ALERTA"
+  timeout 180 $SNAPSHOT_CMD "motor: tope de reinicios agotado" >> "$LOG" 2>&1 || reg "snapshot del tope no completo"
+  if command -v notify-send >/dev/null 2>&1; then
+    DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus" \
+      notify-send -u critical "Motor LLM caido" "Tope de $TOPE reinicios/hora agotado ($1). Ver bb status." 2>>"$LOG" || true
+  fi
+}
+
+alerta_resuelta() {
+  [ -e "$ALERTA" ] || return 0
+  mv "$ALERTA" "$S/motor_alerta.resuelta.$(date +%s).json" && reg "alerta del tope resuelta: el motor responde"
 }
 
 # run>0 y contadores planos entre corridas. Sin metricas legibles no se cuenta
@@ -73,7 +111,7 @@ codigo=$(curl -s -m "$ESPERA_CHAT_S" -o /dev/null -w '%{http_code}' "$URL/chat/c
   -d "{\"model\":\"$MODELO\",\"messages\":[{\"role\":\"user\",\"content\":\"ok\"}],\"max_tokens\":1}")
 if [ "$codigo" = 200 ]; then
   [ "$(cat "$ESTADO" 2>/dev/null || echo 0)" != 0 ] && reg "chat responde de nuevo"
-  echo 0 > "$ESTADO"; exit 0
+  echo 0 > "$ESTADO"; alerta_resuelta; exit 0
 fi
 
 fallos=$(( $(cat "$ESTADO" 2>/dev/null || echo 0) + 1 )); echo "$fallos" > "$ESTADO"

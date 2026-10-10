@@ -201,3 +201,88 @@ def test_simulacro_del_atasco_registra_y_no_reinicia(falso):
     _atasco(env, 3, FAKE_RUN="30", VIGILANTE_SIMULA="1")
     assert _reinicios(tmp) == []
     assert "SIMULACRO" in (tmp / "d" / "vigilante_motor.log").read_text(encoding="utf-8")
+
+
+# --- tope de reinicios: 3 por hora, luego alerta en vez de reiniciar ---------
+
+
+@pytest.fixture
+def con_alertas(falso):
+    tmp, env = falso
+    snap = tmp / "snap.sh"
+    snap.write_text('#!/bin/bash\necho "$*" >> "%s/snapshots.txt"\n' % tmp, encoding="utf-8")
+    snap.chmod(0o755)
+    ns = tmp / "bin" / "notify-send"
+    ns.write_text('#!/bin/bash\necho "$*" >> "%s/avisos.txt"\n' % tmp, encoding="utf-8")
+    ns.chmod(0o755)
+    return tmp, {**env, "VIGILANTE_SNAPSHOT_CMD": str(snap), "FAKE_CHAT_CODE": "000"}
+
+
+def _lineas(tmp, nombre):
+    p = tmp / nombre
+    return p.read_text(encoding="utf-8").splitlines() if p.exists() else []
+
+
+def test_presupuesto_agotado_cuarto_reinicio_no_reinicia_y_avisa(con_alertas):
+    tmp, env = con_alertas
+    _vig(env, 12)                                  # 4 ciclos de 3 fallos
+    assert len(_reinicios(tmp)) == 3
+    assert (tmp / "d" / "motor_alerta.json").exists()
+    assert "TOPE" in (tmp / "d" / "vigilante_motor.log").read_text(encoding="utf-8")
+    assert len(_lineas(tmp, "snapshots.txt")) == 1
+    assert len(_lineas(tmp, "avisos.txt")) == 1
+
+
+def test_control_negativo_presupuesto_tres_reinicios_caben_sin_alerta(con_alertas):
+    tmp, env = con_alertas
+    _vig(env, 9)
+    assert len(_reinicios(tmp)) == 3
+    assert not (tmp / "d" / "motor_alerta.json").exists()
+    assert _lineas(tmp, "snapshots.txt") == [] and _lineas(tmp, "avisos.txt") == []
+
+
+def test_la_alerta_no_repite_snapshot_ni_aviso_aunque_siga_fallando(con_alertas):
+    tmp, env = con_alertas
+    _vig(env, 24)                                  # 8 ciclos
+    assert len(_reinicios(tmp)) == 3
+    assert len(_lineas(tmp, "snapshots.txt")) == 1 and len(_lineas(tmp, "avisos.txt")) == 1
+
+
+def test_el_simulacro_no_consume_presupuesto(con_alertas):
+    tmp, env = con_alertas
+    _vig({**env, "VIGILANTE_SIMULA": "1"}, 18)     # 6 ciclos simulados
+    _vig(env, 9)                                   # 3 reales
+    assert len(_reinicios(tmp)) == 3
+    assert not (tmp / "d" / "motor_alerta.json").exists()
+
+
+def test_la_alerta_se_resuelve_cuando_el_chat_vuelve(con_alertas):
+    tmp, env = con_alertas
+    _vig(env, 12)
+    assert (tmp / "d" / "motor_alerta.json").exists()
+    _vig({**env, "FAKE_CHAT_CODE": "200"}, 1)
+    assert not (tmp / "d" / "motor_alerta.json").exists()
+    assert list((tmp / "d").glob("motor_alerta.resuelta.*.json"))
+
+
+def test_control_negativo_la_alerta_no_se_resuelve_mientras_siga_mudo(con_alertas):
+    tmp, env = con_alertas
+    _vig(env, 14)
+    assert (tmp / "d" / "motor_alerta.json").exists()
+
+
+def test_presupuesto_ilegible_reinicia_igual_y_lo_registra(con_alertas):
+    tmp, env = con_alertas
+    (tmp / "d").mkdir(exist_ok=True)
+    (tmp / "d" / "vigilante_motor.presupuesto").write_text("no es json", encoding="utf-8")
+    _vig(env, 3)
+    assert len(_reinicios(tmp)) == 1
+    assert "ilegible" in (tmp / "d" / "vigilante_motor.log").read_text(encoding="utf-8")
+
+
+def test_status_con_alerta_es_FALTA_y_sin_alerta_ARMADO(con_alertas):
+    tmp, env = con_alertas
+    assert "ARMADO" in _fila(_status(tmp, {**env, "FAKE_CHAT_CODE": "200"}), "sin alerta de tope")
+    (tmp / "d").mkdir(exist_ok=True)
+    (tmp / "d" / "motor_alerta.json").write_text("{}", encoding="utf-8")
+    assert "FALTA" in _fila(_status(tmp, {**env, "FAKE_CHAT_CODE": "200"}), "sin alerta de tope")

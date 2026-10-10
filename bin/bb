@@ -2433,6 +2433,12 @@ EOF
     chk "motor de inferencia contesta una llamada de chat" "$ok" "chat sin respuesta (http=${codigo:-000}) con /v1/models vivo: el motor esta colgado"
   fi
 
+  # Alerta del tope de reinicios: la escribe bin/bb-vigilante-motor al agotar el
+  # presupuesto y la retira al responder el chat. Mientras exista, el motor esta
+  # caido y nadie lo va a reiniciar solo.
+  if [ -e "$DATA/motor_alerta.json" ]; then ok=1; else ok=0; fi
+  chk "motor sin alerta de tope de reinicios" "$ok" "tope agotado: el vigilante ya no reinicia; ver $DATA/motor_alerta.json y bb snapshot"
+
   systemctl --user is-active ai-nemotron-vigilante.timer >/dev/null 2>&1; ok=$?
   chk "vigilante del motor (reinicia si el chat no contesta)" "$ok" "arma: bb install"
 

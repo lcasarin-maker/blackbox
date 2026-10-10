@@ -1,0 +1,14 @@
+$ VIGILANTE_SIMULA=1 bin/bb-vigilante-motor   # contra el motor en vivo
+exit=0  archivos: vigilante_motor.atasco vigilante_motor.fallos   bitacora: 0 lineas
+
+$ bin/bb status | grep motor
+  ARMADO    bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)
+  ARMADO    motor de inferencia sirviendo
+  ARMADO    motor de inferencia contesta una llamada de chat
+  ARMADO    motor sin alerta de tope de reinicios
+  ARMADO    vigilante del motor (reinicia si el chat no contesta)
+  ARMADO    volcado CUDA ante excepcion del motor
+
+$ bin/bb drift | grep vigilante
+  igual       /home/lcasarin/.config/systemd/user/ai-nemotron-vigilante.service
+  igual       /home/lcasarin/.config/systemd/user/ai-nemotron-vigilante.timer

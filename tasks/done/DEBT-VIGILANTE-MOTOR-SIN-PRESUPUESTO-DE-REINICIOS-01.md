@@ -3,7 +3,12 @@ id: DEBT-VIGILANTE-MOTOR-SIN-PRESUPUESTO-DE-REINICIOS-01
 kind: task
 domain: INFERENCE
 title: "Limitar los reinicios de bin/bb-vigilante-motor con tools/workload_restart_policy.py"
-status: open
+status: done
+closed_at: 2026-10-10
+closure_type: fixed
+reason: "bin/bb-vigilante-motor cuenta sus reinicios con tools/workload_restart_policy.py (3 por hora); agotado el tope deja de reiniciar, guarda bb snapshot, escribe motor_alerta.json, avisa al escritorio y bb status marca FALTA; una tarea programada lee la alerta cada 10 min y avisa a Luis."
+evidence: {"pass":"tasks/evidence/DEBT-VIGILANTE-MOTOR-SIN-PRESUPUESTO-DE-REINICIOS-01/pass.txt","fail":"tasks/evidence/DEBT-VIGILANTE-MOTOR-SIN-PRESUPUESTO-DE-REINICIOS-01/fail.txt","e2e":"tasks/evidence/DEBT-VIGILANTE-MOTOR-SIN-PRESUPUESTO-DE-REINICIOS-01/e2e.txt"}
+owner: Luis; tope y aviso votados en la boleta del 2026-10-10
 severity: P2
 origin: asserted
 satd_family: UNBOUNDED_ACTION
@@ -40,3 +45,11 @@ quedarse mudo.
 
 Propuesta pendiente de decision: 3 por hora (el valor por defecto de la politica) y fila
 nueva en `bb status` que diga FALTA mientras el presupuesto este agotado.
+
+## Cierre (2026-10-10)
+
+Votado por Luis: tope de 3 por hora con snapshot, alerta y una tarea programada que la lea. La tarea `motor-llm-alerta` corre cada 10 min, no hace nada si no hay `motor_alerta.json` y avisa una sola vez por alerta. Solo funciona con la app de escritorio abierta: si esta cerrada, la tarea corre al abrirla.
+
+Si la politica de reinicios no puede correr, el vigilante reinicia igual y lo registra: el instrumento no debe tumbar el servicio que cuida. Con tope 3 y los 4 reinicios medidos (86 min, 77 min y 15.4 h de distancia) el tope no habria bloqueado ninguno.
+
+`fail.txt` es la misma suite contra un vigilante con el limite subido a 99: el cuarto reinicio ocurre y la prueba cae. `pass.txt` es el `close_check` y la suite completa. `e2e.txt` es el simulacro contra el motor vivo, las filas de `bb status` y `bb drift`.
