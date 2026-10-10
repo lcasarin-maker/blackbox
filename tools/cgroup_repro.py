@@ -89,7 +89,7 @@ def cuda_use_allocation(rt: Any, ptr: Any, api: str, size: int, name: str) -> No
         if rc: raise RuntimeError(f"allocation synchronize returned CUDA error {rc}")
         print(json.dumps({"phase": "held", "api": api, "requested_bytes": size, "cuda_runtime": name,
                           "touch": "cudaMemset byte pattern 1 over full allocation; synchronized", **snapshot(os.getpid())}), flush=True)
-        time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.6 -- el worker acotado retiene la asignación durante la ventana de observación; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16
+        time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.7 -- el worker acotado retiene la asignación durante la ventana de observación; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16
     except BaseException as primary:
         # Keep teardown secondary to the allocation failure, including cancellation.
         cleanup_errors = _release_cuda_allocation(rt, ptr)
@@ -186,7 +186,7 @@ def torch_worker(mib: int) -> int:
         print(json.dumps({"phase": "held", "api": "torch.empty", "requested_bytes": mib * 1024 * 1024,
                           "pytorch_version": torch.__version__, "allocator": "PyTorch CUDA caching allocator",
                           "touch": "tensor.fill_(1); torch.cuda.synchronize()", **snapshot(os.getpid())}), flush=True)
-        time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.6 -- el worker acotado retiene la asignación durante la ventana de observación; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16
+        time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.7 -- el worker acotado retiene la asignación durante la ventana de observación; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16
     # Preserve worker failures and cancellation while attaching teardown failures.
     except BaseException as primary:
         allocated = tensor is not None
@@ -223,7 +223,7 @@ def memory_worker(api: str, mib: int) -> int:
         for i in range(0, len(buf), 4096): buf[i] = 1
     print(json.dumps({"phase": "held", "api": api, "requested_bytes": len(buf) if buf is not None else 0,
                       **snapshot(os.getpid())}), flush=True)
-    time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.6 -- el worker acotado retiene la asignación durante la ventana de observación; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16
+    time.sleep(2)  # blocking-sleep: retain allocation for cgroup observation -- DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP  # sunset-reviewed: 2.7 -- el worker acotado retiene la asignación durante la ventana de observación; positivo alcanza 2 s y neutralizado queda debajo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-14-16
     del buf
     print(json.dumps({"phase": "after_release", **snapshot(os.getpid())}), flush=True)
     return 0
