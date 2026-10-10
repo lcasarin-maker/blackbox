@@ -1,6 +1,6 @@
 {
   "claims_fingerprint": "089a2261d4bc4e21988da2f3b96fda785eb2809b2ebd7103668932bea6e94792",
-  "panel": "1 auditor Opus (resumido en 5 rondas), 2026-10-10: 10 afirmaciones, 7 PASS de entrada; SPEC-L355, L357 y L361 reescritas por el auditor (fila de bb status que lee solo la unit, instrumentos sin Nice, 44 sujetos de bb drift) y re-auditadas hasta PASS; L357 pas\u00f3 a lista no exhaustiva tras 3 refutaciones por omision",
+  "panel": "1 auditor Opus, 2026-10-10: re-auditoria de SPEC-L355 y SPEC-L359 tras el cambio del helper muestras() en tests/test_bb_bash.py; texto sin cambios, ambas PASS corriendo de nuevo los tests citados y sus controles negativos",
   "profile": "general",
   "results": [
     {
@@ -32,12 +32,11 @@
     },
     {
       "cited": {
-        "tests/test_bb_bash.py": "a37aab12625552ce9efa3aa340814307d39492fa9e5af70bebdd3dd1b9c7a93c",
-        "tests/test_bb_vigilante_motor.py": "b0aa4a589f89b6bcfc926d34d3f6fdce790be1b838eff8a477a27f389fa8de4d"
+        "tests/test_bb_bash.py": "f8927f64fa452073068413755ad81916547029b515a1d573deb0e736cf896461"
       },
       "claim_id": "SPEC-L355",
-      "evidence": "Recorr\u00ed todas las llamadas `chk` de `cmd_status` (`bin/bb:2215-2480`): s\u00f3lo dos filas deciden ARMADO/FALTA \u00fanicamente con el rc de `systemctl --user is-active`, `bin/bb:2442-2443` ('vigilante del motor (reinicia si el chat no contesta)', `ai-nemotron-vigilante.timer`) y `bin/bb:2450-2451` ('guardia de procesos (frena un proceso desbocado)', `bb-guardia-proceso.service`). Los otros dos `is-active` (`bin/bb:2397`, `bin/bb:2413`) s\u00f3lo condicionan filas CIEGO. El comentario de `bin/bb:2445-2449` declara el l\u00edmite: 'se mira la unit, no su latido, porque la guardia no escribe uno'. Las dos filas tienen control negativo del rc de la unit y ninguno de artefacto, como dice el texto: `tests/test_bb_vigilante_motor.py::test_control_negativo_status_sin_timer_del_vigilante_es_FALTA` (`FAKE_TIMER_RC=3`) y `::test_status_guardia_de_procesos_activa_ARMADO_y_parada_FALTA` (`FAKE_GUARDIA_RC=3`). `pytest tests/test_bb_vigilante_motor.py` da `29 passed in 13.89s`. El texto ya reescrito est\u00e1 en el SPEC.md del \u00e1rbol de trabajo (`git diff --stat HEAD -- SPEC.md`: 3 inserciones, 3 borrados).",
-      "seal": "b051020bbc3bb9806179ff45ac237bf0370f64b5168f77abb0945e95e47ea8ff",
+      "evidence": "El cambio del commit `e893f10` s\u00f3lo toca el helper `muestras()` (`tests/test_bb_bash.py:110-116`, ahora tambi\u00e9n filtra `burst_inicio`/`burst_fin`) y no renombra ni quita ninguna prueba citada. `pytest tests/test_bb_bash.py -k \"control_negativo_sin_muestra_fresca or clock_lock_con_OTRO or clock_lock_sin_confirmacion or earlyoom_de_serie or earlyoom_con_UNA or bb_usable\" -rA` lista PASSED para los cinco controles negativos nombrados, para `test_bb_usable_con_latido_fresco_SI_cuenta` y para los tres del latido de bb-usable (`..._con_latido_RANCIO` y `..._sin_latido[journal_vacio|solo_arranque]`); la misma corrida, junto con las tres de drift, da `12 passed, 76 deselected in 13.48s`. `grep -n is-active bin/bb` sigue dando 2397, 2413, 2442 y 2450: las dos filas que leen s\u00f3lo la unit no se movieron. El latido de 120 s no cambi\u00f3 en `status_usable`.",
+      "seal": "ff36674d94a1ebdd0b3c2db7bc263ea79694cf3c75e2a69d7138f3a5f89baf3b",
       "verdict": "PASS"
     },
     {
@@ -74,11 +73,11 @@
     },
     {
       "cited": {
-        "tests/test_bb_bash.py": "a37aab12625552ce9efa3aa340814307d39492fa9e5af70bebdd3dd1b9c7a93c"
+        "tests/test_bb_bash.py": "f8927f64fa452073068413755ad81916547029b515a1d573deb0e736cf896461"
       },
       "claim_id": "SPEC-L359",
-      "evidence": "`cmd_drift` (`bin/bb:2619`) termina en `return 0` s\u00f3lo si `diverged + missing == 0` y si no en `return 1`, con suspendido fuera del recuento. `systemd/blackbox-drift.timer` declara `OnCalendar=daily` y `Persistent=true`, y `systemctl --user list-timers blackbox-drift.timer` muestra LAST `Sat 2026-10-10 00:00:06` y NEXT `Sun 2026-10-11 00:00:00`. Control negativo corrido: `pytest tests/test_bb_bash.py -k drift_SALE` da `3 passed` (`test_drift_SALE_0_cuando_el_repo_describe_la_maquina`, `test_drift_SALE_DISTINTO_DE_0_cuando_diverge`, `test_drift_SALE_DISTINTO_DE_0_cuando_esta_ausente`), as\u00ed que el exit s\u00ed puede salir distinto de 0; hoy `./bin/bb drift` sale rc=0.",
-      "seal": "700da9a4e5eb64e203560861625836b0b0c81d5d74f3b8c72c3d3d21b8a71543",
+      "evidence": "Despu\u00e9s de `e893f10`, `pytest tests/test_bb_bash.py -k drift_SALE` sigue dando `3 passed, 85 deselected in 0.45s`: `test_drift_SALE_0_cuando_el_repo_describe_la_maquina`, `test_drift_SALE_DISTINTO_DE_0_cuando_diverge` y `test_drift_SALE_DISTINTO_DE_0_cuando_esta_ausente`. Los dos \u00faltimos son el control negativo de que el exit puede salir distinto de 0. En vivo `./bin/bb drift` sale rc=0 con `revisados: 44   divergentes: 0   ausentes: 0   suspendidos: 1`, y `systemctl --user list-timers blackbox-drift.timer` muestra la \u00faltima corrida el `Sat 2026-10-10 00:00:06` y la siguiente el `Sun 2026-10-11 00:00:00`, es decir, la cadencia diaria que la fila afirma.",
+      "seal": "a93cc01fe7266b710b0b1cba37c5414169cd282c21cb18ad97c425880b246000",
       "verdict": "PASS"
     },
     {
@@ -122,7 +121,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-10T13:40:48Z",
-  "tree_fingerprint": "7ea49cb1c0148408f18f113380a09af09dc6bcb556473353ccacd2f521fbc4cf",
+  "timestamp": "2026-10-10T14:26:57Z",
+  "tree_fingerprint": "06c99aa914a879011b0a01af363fec7b423b4c28ce7746f14e82f21fac07c53b",
   "violations": []
 }
