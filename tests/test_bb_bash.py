@@ -107,7 +107,13 @@ def muestras(datos):
     if f is None:
         return []
     todas = [json.loads(l) for l in f.read_text(encoding="utf-8").splitlines() if l.strip()]
-    return [m for m in todas if not m.get("burst")]
+    # Tambien se descartan los MARCADORES de rafaga (`burst_inicio`, `burst_fin`):
+    # no llevan `burst` y tampoco `cpu_top`, asi que si uno era la ultima linea el
+    # test leia un registro que no es una muestra y reventaba con KeyError.
+    # Medido el 2026-10-10, load 37: `test_cpu_top_NOMBRA_a_quien_quema_cpu` cayo
+    # asi en el pre-push tras haber arreglado el otro modo de fallo de esa prueba.
+    return [m for m in todas
+            if not m.get("burst") and not m.get("burst_inicio") and not m.get("burst_fin")]
 
 
 # =====================================================================

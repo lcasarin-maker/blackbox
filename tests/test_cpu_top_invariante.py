@@ -35,3 +35,27 @@ def test_control_negativo_con_holgura_uno_realmente_mas_frio_SI_cae():
 def test_control_negativo_lista_incompleta_cae_aunque_haya_holgura():
     with pytest.raises(AssertionError, match="NO esta llena"):
         HELPER(_lista(9, 8, 7), "cpu_s", 10, "cpu_top", holgura=4)
+
+
+def test_muestras_descarta_los_marcadores_de_rafaga(tmp_path):
+    """Un marcador `burst_fin` como ultima linea no es una muestra: no lleva cpu_top."""
+    import json
+    carpeta = tmp_path / "samples"
+    carpeta.mkdir()
+    lineas = [
+        {"ts": "t1", "cpu_top": [{"pid": 1}]},
+        {"ts": "t2", "burst": True, "load1": 9},
+        {"ts": "t3", "burst_inicio": True, "motivo": "x"},
+        {"ts": "t4", "burst_fin": True},
+    ]
+    (carpeta / "2026-10-10.jsonl").write_text("\n".join(json.dumps(x) for x in lineas) + "\n", encoding="utf-8")
+    assert [m["ts"] for m in bash_tests.muestras(tmp_path)] == ["t1"]
+
+
+def test_control_negativo_una_muestra_completa_posterior_SI_se_conserva(tmp_path):
+    import json
+    carpeta = tmp_path / "samples"
+    carpeta.mkdir()
+    lineas = [{"ts": "t1", "burst_fin": True}, {"ts": "t2", "cpu_top": []}]
+    (carpeta / "2026-10-10.jsonl").write_text("\n".join(json.dumps(x) for x in lineas) + "\n", encoding="utf-8")
+    assert [m["ts"] for m in bash_tests.muestras(tmp_path)] == ["t2"]
