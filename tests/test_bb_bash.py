@@ -59,7 +59,7 @@ def _cpu_segundos(pid):
     return int(r.stdout.strip() or 0)
 
 
-def _no_esta_pero_los_cinco_queman_mas(lista, campo, mio, sujeto):
+def _no_esta_pero_los_cinco_queman_mas(lista, campo, mio, sujeto, holgura=0):
     """El invariante REAL de una lista `sort -rn | head -5`.
 
     `pidio` y `cpu_top` prometen EL TOP 5, no "tu proceso". Que el proceso de un
@@ -77,9 +77,15 @@ def _no_esta_pero_los_cinco_queman_mas(lista, campo, mio, sujeto):
     assert len(lista) == 5, (
         f"{sujeto} no nombro al mio y la lista NO esta llena ({len(lista)} de 5): "
         f"habia sitio y no lo uso. {lista}")
-    frios = [x for x in lista if x[campo] < mio]
+    # `holgura`: `mio` se midio desde ANTES de la primera muestra, y el campo de
+    # bb solo cubre el intervalo ENTRE las dos. Con la maquina cargada la primera
+    # muestra tarda segundos y esa diferencia se leia como "otros mas frios".
+    # Medido el 2026-10-10 con load 37: el test fallo en el pre-push dos veces
+    # seguidas y paso 3 de 3 en reposo. El que pasa la holgura es quien mide
+    # cuanto tardo esa primera muestra; sin ella el comportamiento es el de antes.
+    frios = [x for x in lista if x[campo] < mio - holgura]
     assert not frios, (
-        f"{sujeto} solto al mio ({mio}) y nombro a estos, que son MAS FRIOS: {frios}")
+        f"{sujeto} solto al mio ({mio}, holgura {holgura}) y nombro a estos, que son MAS FRIOS: {frios}")
 
 
 def muestras(datos):
@@ -839,8 +845,10 @@ def test_cpu_top_NOMBRA_a_quien_quema_cpu(datos):
         assert quemador.stdout is not None
         assert quemador.stdout.readline().strip() == "listo"
         cpu_antes = _cpu_segundos(quemador.pid)
+        t_base = time.monotonic()
         correr(["sample"], datos)                  # muestra 1: linea base
-        time.sleep(4)  # blocking-sleep: ps reports whole CPU seconds; window needed for delta -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.6 -- `ps` informa segundos enteros; sin la ventana de 4 s el positivo falla 1 de 7 corridas (cpu_top 1-5 en las demas), medido 2026-10-05 por revision de sunset. Antes decia 3/3 con cpu_top 0/5: no se reprodujo.
+        tardo_base = time.monotonic() - t_base      # el burner quemo ese tiempo ANTES del intervalo medido
+        time.sleep(4)  # blocking-sleep: ps reports whole CPU seconds; window needed for delta -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 2.7 -- `ps` informa segundos enteros; sin la ventana de 4 s el positivo falla 1 de 7 corridas (cpu_top 1-5 en las demas), medido 2026-10-05 por revision de sunset. Antes decia 3/3 con cpu_top 0/5: no se reprodujo.
         correr(["sample"], datos)                  # muestra 2: ya quemo
         mio = _cpu_segundos(quemador.pid) - cpu_antes
         d = muestras(datos)[-1]
@@ -848,7 +856,8 @@ def test_cpu_top_NOMBRA_a_quien_quema_cpu(datos):
         if quemador.pid not in por_pid:
             # La maquina tenia cinco procesos mas calientes. `cpu_top` promete el
             # top 5, no el mio: se comprueba ESA promesa.
-            _no_esta_pero_los_cinco_queman_mas(d["cpu_top"], "cpu_s", mio, "cpu_top")
+            _no_esta_pero_los_cinco_queman_mas(d["cpu_top"], "cpu_s", mio, "cpu_top",
+                                               holgura=int(tardo_base) + 1)
             return
         fila = por_pid[quemador.pid]
         # Un bucle vacio de bash satura UN nucleo: por debajo del 50 % de uno
@@ -1634,7 +1643,7 @@ def _esperar_proceso(patron, timeout=15.0):
         pids = r.stdout.split()
         if pids:
             return pids[0]
-        time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- sin el, el bucle quema un nucleo entero re-consultando pgrep sin ceder CPU -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.6 -- el sondeo acotado cede CPU hasta detectar el proceso o agotar deadline; medido 2026-10-05: con el sleep el bucle usa 0.29 nucleos y hace 3 llamadas a pgrep, sin el usa 1.00 nucleo y hace 10. (Antes decia 4 a 130 en 0.2 s: no se reprodujo.)
+        time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- sin el, el bucle quema un nucleo entero re-consultando pgrep sin ceder CPU -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.7 -- el sondeo acotado cede CPU hasta detectar el proceso o agotar deadline; medido 2026-10-05: con el sleep el bucle usa 0.29 nucleos y hace 3 llamadas a pgrep, sin el usa 1.00 nucleo y hace 10. (Antes decia 4 a 130 en 0.2 s: no se reprodujo.)
     raise AssertionError(f"ningun proceso con {patron!r} aparecio en {timeout}s")
 
 
@@ -1688,7 +1697,7 @@ def _matar_electron_falso(proc, marcadores, timeout=15.0):
                 break
             assert time.time() < deadline, (
                 f"proceso huerfano con {patron!r} sigue vivo tras matar el arbol")
-            time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- confirma que un huerfano de verdad muere, no solo lo asume -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.6 -- sondea entre consultas para confirmar desaparición del renderer huérfano; cleanup verificado con dos observaciones y SIGKILL de respaldo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-20 Segunda revisión: proceso marcador real con terminación demorada; ver tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/renderer-delayed-root.log
+            time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- confirma que un huerfano de verdad muere, no solo lo asume -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 2.7 -- sondea entre consultas para confirmar desaparición del renderer huérfano; cleanup verificado con dos observaciones y SIGKILL de respaldo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-20 Segunda revisión: proceso marcador real con terminación demorada; ver tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/renderer-delayed-root.log
     return remaining
 
 

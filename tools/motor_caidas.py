@@ -36,8 +36,8 @@ def _ts(linea: str) -> datetime | None:
 
 def caidas(unidad: list[str]) -> list[dict]:
     """Una entrada por caida fatal: hora y clase del error CUDA mas cercano."""
-    errores = [(t, CUDA_ERR.search(ln).group(1)) for ln in unidad
-               if "CUDA error:" in ln and (t := _ts(ln)) and CUDA_ERR.search(ln)]
+    errores = [(t, m.group(1)) for ln in unidad
+               if "CUDA error:" in ln and (t := _ts(ln)) and (m := CUDA_ERR.search(ln))]
     vistas, salida = set(), []
     for ln in unidad:
         t = _ts(ln)
