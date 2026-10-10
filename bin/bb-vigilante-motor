@@ -1,0 +1,49 @@
+#!/bin/bash
+# Vigilante del motor de inferencia local. Absorbido de Declutter (DECL-CORE-322,
+# /home/lcasarin/data/declutter_corpus/vigilante_servidor.sh) el 2026-10-10.
+#
+# systemd (ai-nemotron.service, Restart=on-failure) ya levanta el servidor cuando
+# muere; este script cubre lo que systemd no ve: la unidad sigue activa y
+# /v1/models responde 200, pero el chat no vuelve. Medido el 2026-10-09: de 03:21
+# a 06:52 sin una sola ficha, y otras cuatro veces ese dia y el siguiente.
+# Prueba una llamada minima de chat; tras UMBRAL fallos seguidos reinicia la
+# unidad. No actua durante GRACIA_S tras un arranque (el modelo tarda ~4 min en
+# cargar). Lo dispara ai-nemotron-vigilante.timer cada 2 minutos.
+#
+# Cada reinicio queda en vigilante_motor.log con la palabra REINICIA: `bb scan`
+# (tools/motor_caidas.py) cuenta esas lineas como cuelgues del motor.
+DATA="${BLACKBOX_DATA:-$HOME/.local/share/blackbox}"
+URL=${VIGILANTE_URL:-http://localhost:8000/v1}
+UNIDAD=${VIGILANTE_UNIDAD:-ai-nemotron.service}
+S=${VIGILANTE_SALIDAS:-$DATA}
+UMBRAL=${VIGILANTE_UMBRAL:-3}
+GRACIA_S=${VIGILANTE_GRACIA_S:-600}
+ESPERA_CHAT_S=${VIGILANTE_ESPERA_CHAT_S:-120}
+MODELO=${VIGILANTE_MODELO:-nemotron-local}
+mkdir -p "$S"
+ESTADO=$S/vigilante_motor.fallos
+LOG=$S/vigilante_motor.log
+reg() { echo "[$(date '+%F %T')] $*" >> "$LOG"; }
+
+arranque=$(systemctl --user show "$UNIDAD" -p ExecMainStartTimestamp --value)
+if [ "$(systemctl --user show "$UNIDAD" -p ActiveState --value)" != active ] || [ -z "$arranque" ]; then
+  reg "unidad $UNIDAD no activa: la recupera systemd"; echo 0 > "$ESTADO"; exit 0
+fi
+edad=$(( $(date +%s) - $(date -d "$arranque" +%s) ))
+[ "$edad" -lt "$GRACIA_S" ] && { echo 0 > "$ESTADO"; exit 0; }
+
+codigo=$(curl -s -m "$ESPERA_CHAT_S" -o /dev/null -w '%{http_code}' "$URL/chat/completions" \
+  -H 'Content-Type: application/json' \
+  -d "{\"model\":\"$MODELO\",\"messages\":[{\"role\":\"user\",\"content\":\"ok\"}],\"max_tokens\":1}")
+if [ "$codigo" = 200 ]; then
+  [ "$(cat "$ESTADO" 2>/dev/null || echo 0)" != 0 ] && reg "chat responde de nuevo"
+  echo 0 > "$ESTADO"; exit 0
+fi
+
+fallos=$(( $(cat "$ESTADO" 2>/dev/null || echo 0) + 1 )); echo "$fallos" > "$ESTADO"
+reg "chat sin respuesta (http=$codigo, espera ${ESPERA_CHAT_S}s) fallo $fallos de $UMBRAL; unidad lleva ${edad}s activa"
+if [ "$fallos" -ge "$UMBRAL" ]; then
+  echo 0 > "$ESTADO"
+  if [ -n "$VIGILANTE_SIMULA" ]; then reg "SIMULACRO: reiniciaria $UNIDAD"; exit 0; fi
+  reg "REINICIA $UNIDAD"; systemctl --user restart "$UNIDAD"
+fi
