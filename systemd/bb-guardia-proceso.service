@@ -10,7 +10,10 @@ After=blackbox-sample.timer
 [Service]
 Type=simple
 ExecStart=%h/projects/blackbox/bin/bb-guardia-proceso
-Restart=on-failure
+# Una senal externa SIGTERM cuenta como salida limpia para systemd. Reiniciar
+# tambien tras esa salida evita dejar la guardia apagada; `systemctl stop`
+# explicito sigue suprimiendo el reinicio.
+Restart=always
 RestartSec=10
 # No necesita privilegios de root: matar un proceso del MISMO usuario no
 # requiere mas permiso que el que este unit ya tiene. Deliberadamente NO es
