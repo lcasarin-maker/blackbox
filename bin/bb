@@ -1034,8 +1034,9 @@ cmd_scan() {
   # correr junto al uso normal. Si el operador YA lo corrio, se lee su
   # veredicto en vez de duplicarlo. Verificado 2026-09-12 contra la guia
   # oficial (userguide-dgx-spark-fieldiag.pdf): cada corrida escribe
-  # dgx/logs-<yyyymmdd-hhnnss>/summary.json, un array con "Error Code"
-  # (000000000000 = sin error), "Test", "Virtual ID" y "Notes" por prueba.
+  # dgx/logs-<yyyymmdd-hhnnss>/summary.json, normalmente un array con "Error
+  # Code" (000000000000 = sin error), "Test", "Virtual ID" y "Notes" por
+  # prueba. Una ejecucion interrumpida puede dejar estado global sin resultados.
   echo "-- NVIDIA Field Diagnostic (dgx-spark-fieldiag), si corrio en la ventana --"
   local fdroot="${BB_FIELDDIAG_ROOT:-/opt/nvidia/dgx-spark-fieldiag/dgx}"
   if [ -d "$fdroot" ]; then
@@ -1054,7 +1055,16 @@ except Exception as e:
     print("  (no se pudo leer summary.json: %s)" % e)
     sys.exit(2)
 if not isinstance(data, list) or not all(isinstance(d, dict) for d in data):
+    if isinstance(data, dict) and isinstance(data.get("finalResult"), str):
+        print("  resultado global: %s" % data["finalResult"])
+        if "errorCode" in data:
+            print("  codigo global:    %s" % data["errorCode"])
+        print("  resultados por prueba: ausentes; ejecucion incompleta")
+        sys.exit(2)
     print("  (summary.json no contiene una lista de resultados valida)")
+    sys.exit(2)
+if not data:
+    print("  (lista de resultados vacia; ejecucion incompleta, no acredita PASS)")
     sys.exit(2)
 if not all(isinstance(d.get("Error Code"), str)
            and d["Error Code"].strip().split("-")[-1].strip()
@@ -1070,7 +1080,7 @@ for d in fallos[:5]:
 ' "$fdrun/summary.json"; then
         :
       else
-        cannot_run "NVIDIA Field Diagnostic" "summary.json no legible o con formato invalido"
+        cannot_run "NVIDIA Field Diagnostic" "summary.json ilegible, invalido o sin resultados completos"
         echo "  resumen Field Diagnostic: COULD_NOT_RUN"
       fi
     else
