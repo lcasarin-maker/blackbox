@@ -51,7 +51,7 @@ Ahora hay seis volcados `vllm_*` reales y `file` confirma los seis como ELF core
 NVIDIA CUDA. El intento literal de abrir el primero abortó dentro de `cuda-gdb` con
 `Assertion 'm_instance.m_num_devices > 0' failed`; `nvidia-smi -L` también falla con código 9
 porque esta sesión no puede comunicarse con el driver. La salida y los comandos están en
-`tasks/evidence/DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01/audit-2026-10-10.md`.
+`tasks/backlog/DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01/evidence/audit-2026-10-10.md`.
 
 La captura ya ocurrió; falta correr el análisis en una sesión con GPU/driver visible. La P1 sigue
 abierta y no se atribuye la causa ni se cambia el motor o el driver.
