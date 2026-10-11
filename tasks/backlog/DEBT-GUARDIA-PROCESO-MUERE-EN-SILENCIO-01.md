@@ -25,4 +25,8 @@ Quien envio la TERM no se sabe: el anillo de audit desbordaba (ver `DEBT-AUDIT-A
 
 ## Ya hecho
 
-`bb status` tiene desde 2026-10-10 la fila "guardia de procesos (frena un proceso desbocado)", con su control negativo. Faltan dos cosas: cambiar la politica a `Restart=always` (y la prueba `tests/test_guardia_proceso_reinicio.py`) y averiguar quien manda la TERM.
+`bb status` tiene desde 2026-10-10 la fila "guardia de procesos (frena un proceso desbocado)", con su control negativo. La política de reinicio y su prueba ya están actualizadas. Sigue pendiente identificar quién envió la TERM y desplegar/verificar el archivo actualizado en el servicio vivo.
+
+## Decision y avance (2026-10-10)
+
+Luis priorizo reparar la politica de reinicio antes de investigar el emisor de SIGTERM. La unit usa ahora `Restart=always` y la prueba verifica esa politica; `systemctl stop` explicito conserva su excepcion nativa de systemd. La ficha sigue abierta: falta atribuir quien envio la TERM y desplegar/verificar la unit actualizada en el servicio vivo. No se reinicio el servicio como parte de esta decision.
