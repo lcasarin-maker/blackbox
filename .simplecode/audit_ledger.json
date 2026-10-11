@@ -1,25 +1,25 @@
 {
-  "claims_fingerprint": "089a2261d4bc4e21988da2f3b96fda785eb2809b2ebd7103668932bea6e94792",
-  "panel": "1 auditor Opus, 2026-10-10: re-auditoria de SPEC-L355 y SPEC-L359 tras el cambio del helper muestras() en tests/test_bb_bash.py; texto sin cambios, ambas PASS corriendo de nuevo los tests citados y sus controles negativos",
+  "claims_fingerprint": "551d6e1ad260eb6a3189e590dcfb507f9afa2bf4d5e99c0545603b0c61a97e27",
+  "panel": "2 auditores GPT-6 Astra (Opus no disponible en esta sesi\u00f3n), auditor\u00eda adversarial de solo lectura 2026-10-10; 4 afirmaciones stale revisadas, SPEC-L359 precisada sobre suspensiones vigentes y fecha de estado del timer",
   "profile": "general",
   "results": [
     {
       "cited": {
-        "tools/atom_gpu_telemetry.py": "50519f062b0d4cf314d631b41cc5a37d06e4dad8b7ddc7970322e569b1970e40"
+        "tools/atom_gpu_telemetry.py": "b1568958269bf99135d2db7b8e7a7c58dfe5b80b0b9f05e5a00e2ddf22de2107"
       },
       "claim_id": "SPEC-L118",
-      "evidence": "Afirmaciones: (a) Atlas no importa codigo de blackbox; (b) blackbox no importa codigo de Atlas; (c) Atlas consume el jsonl que escribe tools/atom_gpu_telemetry.py en $BLACKBOX_DATA/atom_gpu_telemetry.jsonl. (a)+(b) Escaner AST propio sobre `git ls-files '*.py'` de ambos repos (145 ficheros blackbox, 940 Atlas): imports cuyo modulo existe SOLO en el otro repo -> 'blackbox->Atlas-only module imports: 0 []', 'Atlas->blackbox-only module imports: 0 []'. Control negativo corrido: el mismo matcher sobre imports sinteticos ('tools.atom_degradacion_resuelta' en blackbox, 'tools.calibra_psi' en Atlas) -> detecta ambos. grep de carga dinamica (sys.path/importlib/runpy/SourceFileLoader) en ambos repos: ninguna linea apunta al otro repo (las de Atlas apuntan a su propio REPO; las de blackbox a sus propios ficheros). Test de Atlas `pytest tests/test_dgx483_blackbox_telemetry_ownership.py` -> 14 passed; nota: su test test_ningun_fichero_de_atlas_importa_codigo_de_blackbox solo busca la subcadena 'blackbox' y no detectaria `from tools.calibra_psi import x` con sys.path manipulado; por eso el veredicto descansa en el escaner AST, no en ese test. (c) blackbox tools/atom_gpu_telemetry.py:96-97: DATA_DIR = BLACKBOX_DATA o ~/.local/share/blackbox; JSONL_PATH = DATA_DIR/'atom_gpu_telemetry.jsonl'. Atlas tools/atom_degradacion_resuelta.py:72-74 lee _BB_DATA/'atom_gpu_telemetry.jsonl'. El fichero existe y esta vivo: `ls -l` -> 139965877 bytes, mtime 2026-10-06 00:29:11 (date 00:29:13). Atlas ya no versiona atom_gpu_telemetry.py (`git ls-files | grep atom_gpu_telemetry.py$` vacio).",
-      "seal": "716c06dd43357d37831ce7c376c216d30a9ff945e649040abb9f6709d937b45b",
-      "verdict": "pass"
+      "evidence": "tools/atom_gpu_telemetry.py:49-65 importa \u00fanicamente m\u00f3dulos de la biblioteca est\u00e1ndar y tools/atom_gpu_telemetry.py:77-90 contiene su propia implementaci\u00f3n de _argv_tokens; la procedencia hist\u00f3rica desde Atlas est\u00e1 documentada en el docstring, sin importarla del otro repositorio. En el consumidor real, /home/lcasarin/projects/Atlas/tools/bb_consulta.py:30 define la ruta del productor de blackbox, mientras las l\u00edneas 50-61 y 92-104 lo ejecutan mediante subprocess y decodifican stdout JSON para --gate-termico y --procesos-gpu. Las b\u00fasquedas de imports cruzados, modificaciones de sys.path hacia el otro repositorio y spec_from_file_location asociado a blackbox no encontraron una importaci\u00f3n ejecutable cruzada en los \u00e1mbitos revisados.",
+      "seal": "8e2f10334e0494e1340a8c896da6295c3e5583bd54a704fc5394a1274d2b5c89",
+      "verdict": "PASS"
     },
     {
       "cited": {
-        "tools/atom_gpu_telemetry.py": "50519f062b0d4cf314d631b41cc5a37d06e4dad8b7ddc7970322e569b1970e40"
+        "tools/atom_gpu_telemetry.py": "b1568958269bf99135d2db7b8e7a7c58dfe5b80b0b9f05e5a00e2ddf22de2107"
       },
       "claim_id": "SPEC-L122",
-      "evidence": "Afirmaciones: blackbox gobierna estado fisico y expone telemetria y gates; Atlas consulta esos resultados y conserva la admision; detect_atom_crash.py vive en Atlas, importa tools.durable_log y escribe en docs/agent_findings/; Atlas/tools/instalar_earlyoom.sh retirado a tools/_retired/ por DGX-604 mergeado a master en ec9b4288a con la colision de id con DGX-600 renumerada. Gate expuesto: `python3 ~/projects/blackbox/tools/atom_gpu_telemetry.py --gate-termico` -> {\"bloquea\": false, \"motivo\": \"\"} rc=0. Atlas tools/bb_consulta.py:30 GATE_POR_DEFECTO = ~/projects/blackbox/tools/atom_gpu_telemetry.py, invocado por subprocess con --gate-termico (l.51). Consulta real desde Atlas: motivo_termico() -> '' . Control negativo corrido: BB_GATE_TERMICO=<gate falso que imprime bloquea=true> -> motivo_termico() = 'FAKE caliente' (la consulta si cambia de veredicto). Gobierno fisico: tools/atom_gpu_telemetry.py:1455 ctx.enviar_senal(pid, signal.SIGSTOP); bb-usable.service enabled y active. Atlas detect_atom_crash.py:76 `from tools.durable_log import append_jsonl`, l.82 FINDINGS_DIR = REPO/'docs'/'agent_findings'. earlyoom: `ls tools/instalar_earlyoom.sh` -> No existe; tools/_retired/instalar_earlyoom.sh existe. `git log -1 ec9b4288a` -> 'Merge branch claude/eloquent-babbage-23bf8b', `git merge-base --is-ancestor ec9b4288a master` -> verdadero; su rama trae 558ea990c 'retire(DGX-600): tools/instalar_earlyoom.sh' (id previo a renumerar). tasks/done/DGX-604.md id DGX-604, titulo sobre instalar_earlyoom.sh, l.17 'Un audit H1 de blackbox/SPEC.md (2026-09-28...)', l.79 '## Aterrizada por /clean 2026-09-28: renumerada'; tasks/done/DGX-600.md es otra ficha (lote de cosecha) -> colision resuelta. `pytest tests/test_dgx604_earlyoom_retirado.py` -> 5 passed.",
-      "seal": "ed8ea928adc069fe09588575f07d74b2687bb7c3bb804f692bf684563b10f640",
-      "verdict": "pass"
+      "evidence": "tools/atom_gpu_telemetry.py:96-100 define el archivo de telemetr\u00eda y las fuentes f\u00edsicas de temperatura y presi\u00f3n de memoria; tools/atom_gpu_telemetry.py:1685-1691 ejecuta el muestreo y la mitigaci\u00f3n con persistencia de estado. La actuaci\u00f3n f\u00edsica existe en tools/atom_gpu_telemetry.py:1455 y :1496 mediante SIGSTOP y SIGCONT, y las interfaces de consulta devuelven JSON y c\u00f3digos de salida en :1635-1655. Atlas consume esas interfaces por proceso en /home/lcasarin/projects/Atlas/tools/bb_consulta.py:50-61 y :92-104, lo que respalda la frontera declarada entre gobierno f\u00edsico, telemetr\u00eda y gates.",
+      "seal": "ac534f9cd607c5246b66a3a2f2207f828091db46a24b7f09559e4f2213937804",
+      "verdict": "PASS"
     },
     {
       "cited": {
@@ -32,11 +32,12 @@
     },
     {
       "cited": {
-        "tests/test_bb_bash.py": "f8927f64fa452073068413755ad81916547029b515a1d573deb0e736cf896461"
+        "tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/final-results.json": "59b94b52905091a668b58889f1ab0c59067304ba6d7dc47c77825f73f78cf597",
+        "tests/test_bb_bash.py": "f604e0c7ca04c8637bedecf38dd7bfbaacc9ce1fc7ebd8eb738664ca4ec1d871"
       },
       "claim_id": "SPEC-L355",
-      "evidence": "El cambio del commit `e893f10` s\u00f3lo toca el helper `muestras()` (`tests/test_bb_bash.py:110-116`, ahora tambi\u00e9n filtra `burst_inicio`/`burst_fin`) y no renombra ni quita ninguna prueba citada. `pytest tests/test_bb_bash.py -k \"control_negativo_sin_muestra_fresca or clock_lock_con_OTRO or clock_lock_sin_confirmacion or earlyoom_de_serie or earlyoom_con_UNA or bb_usable\" -rA` lista PASSED para los cinco controles negativos nombrados, para `test_bb_usable_con_latido_fresco_SI_cuenta` y para los tres del latido de bb-usable (`..._con_latido_RANCIO` y `..._sin_latido[journal_vacio|solo_arranque]`); la misma corrida, junto con las tres de drift, da `12 passed, 76 deselected in 13.48s`. `grep -n is-active bin/bb` sigue dando 2397, 2413, 2442 y 2450: las dos filas que leen s\u00f3lo la unit no se movieron. El latido de 120 s no cambi\u00f3 en `status_usable`.",
-      "seal": "ff36674d94a1ebdd0b3c2db7bc263ea79694cf3c75e2a69d7138f3a5f89baf3b",
+      "evidence": "La implementaci\u00f3n conserva los cuatro chequeos por artefacto: bin/bb:2318 exige el JSONL del d\u00eda modificado en menos de dos minutos; bin/bb:2186 y bin/bb:2204 comparan ExecStart con la confirmaci\u00f3n del driver; bin/bb:2449 exige ambas marcas de earlyoom; bin/bb:2266 consulta journalctl -S para los \u00faltimos 120 segundos y bin/bb:2274 exige la marca del latido. bin/bb-usable:91 fija PROBE_INTERVAL=30.0 y bin/bb-usable:277 imprime esa marca en cada vuelta. Los cinco controles negativos nombrados existen en tests/test_bb_bash.py:486, :528, :541, :577 y :595; los tres casos del latido est\u00e1n en :657 y en la parametrizaci\u00f3n de :665. La ejecuci\u00f3n hist\u00f3rica est\u00e1 documentada en tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/final-results.json:28 como \u00ab17 passed in 17.29s\u00bb, incluidos esos ocho controles; esta auditor\u00eda no ejecut\u00f3 pruebas. bin/bb:2506 y bin/bb:2514 comprueban \u00fanicamente is-active para las dos filas a\u00f1adidas, y bin/bb:2511 declara expresamente la ausencia de latido de la guardia. El antecedente de la ruta borrada consta en tasks/done/DEBT-TRES-CHEQUEOS-POR-IS-ACTIVE.md:34; `git show 37ccd7d:SPEC.md` confirma literalmente la cifra hist\u00f3rica err\u00f3nea \u00abcuatro controles negativos corridos\u00bb. El l\u00edmite sobre contenido fresco pero incorrecto sigue siendo expl\u00edcito tanto en SPEC.md:355 como en tasks/done/DEBT-TRES-CHEQUEOS-POR-IS-ACTIVE.md:116.",
+      "seal": "39f50dc6b1f097361cdf97963dfcf1a3e05036b532bd04bb62f763b0f3847ba2",
       "verdict": "PASS"
     },
     {
@@ -73,11 +74,11 @@
     },
     {
       "cited": {
-        "tests/test_bb_bash.py": "f8927f64fa452073068413755ad81916547029b515a1d573deb0e736cf896461"
+        "tests/test_bb_bash.py": "f604e0c7ca04c8637bedecf38dd7bfbaacc9ce1fc7ebd8eb738664ca4ec1d871"
       },
       "claim_id": "SPEC-L359",
-      "evidence": "Despu\u00e9s de `e893f10`, `pytest tests/test_bb_bash.py -k drift_SALE` sigue dando `3 passed, 85 deselected in 0.45s`: `test_drift_SALE_0_cuando_el_repo_describe_la_maquina`, `test_drift_SALE_DISTINTO_DE_0_cuando_diverge` y `test_drift_SALE_DISTINTO_DE_0_cuando_esta_ausente`. Los dos \u00faltimos son el control negativo de que el exit puede salir distinto de 0. En vivo `./bin/bb drift` sale rc=0 con `revisados: 44   divergentes: 0   ausentes: 0   suspendidos: 1`, y `systemctl --user list-timers blackbox-drift.timer` muestra la \u00faltima corrida el `Sat 2026-10-10 00:00:06` y la siguiente el `Sun 2026-10-11 00:00:00`, es decir, la cadencia diaria que la fila afirma.",
-      "seal": "a93cc01fe7266b710b0b1cba37c5414169cd282c21cb18ad97c425880b246000",
+      "evidence": "La afirmaci\u00f3n revisada de SPEC.md:359 coincide con bin/bb:2714-2726: las ausencias incrementan missing salvo suspensi\u00f3n vigente documentada, mientras una suspensi\u00f3n vencida s\u00ed incrementa missing; bin/bb:2728-2733 incrementa diverged cuando cmp -s encuentra una diferencia y bin/bb:2753-2761 retorna 1 si diverged + missing es distinto de cero. Los controles identificados en tests/test_bb_bash.py:1523-1570 comprueban en su c\u00f3digo las tres condiciones de ausencia, suspensi\u00f3n vigente y vencida; no se ejecutaron pruebas durante esta revisi\u00f3n. systemd/blackbox-drift.timer:7-8 configura OnCalendar=daily y Persistent=true, y systemd/blackbox-drift.service:7 ejecuta bb drift. tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/host-evidence/timers-current.txt:1 y :9-13 conserva la captura fechada el 2026-10-03 con ActiveState=active y UnitFileState=enabled; SPEC.md:359 ahora fecha expresamente esa comprobaci\u00f3n y declara que la consulta actual del bus fall\u00f3 con Operation not permitted, tal como ocurri\u00f3 en esta auditor\u00eda.",
+      "seal": "8641b47e4497c3982586f999ba151fd0ece87c3b56a18dccbab71cf435c99ec2",
       "verdict": "PASS"
     },
     {
@@ -121,7 +122,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-10T14:26:57Z",
-  "tree_fingerprint": "06c99aa914a879011b0a01af363fec7b423b4c28ce7746f14e82f21fac07c53b",
+  "timestamp": "2026-10-11T01:23:35Z",
+  "tree_fingerprint": "81eaea93dbdaa1c37e31e08f3e170081dca1cbc214e777cc08c5f29e79b65406",
   "violations": []
 }
