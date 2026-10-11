@@ -107,7 +107,12 @@ def kernel_del_volcado(archivo: Path, cuda_gdb: str | None) -> str:
     except (OSError, subprocess.TimeoutExpired) as e:
         return f"COULD_NOT_RUN: {type(e).__name__}"
     cuerpo = [ln for ln in r.stdout.splitlines() if ln.strip()]
-    return " | ".join(cuerpo[-3:]) if cuerpo else f"COULD_NOT_RUN: cuda-gdb rc={r.returncode} sin salida"
+    if cuerpo:
+        return " | ".join(cuerpo[-3:])
+    diagnostico = next((ln.strip() for ln in r.stderr.splitlines()
+                        if "internal-error:" in ln), "")
+    return (f"COULD_NOT_RUN: cuda-gdb rc={r.returncode}: {diagnostico}" if diagnostico
+            else f"COULD_NOT_RUN: cuda-gdb rc={r.returncode} sin salida")
 
 
 def informe(unidad, kernel, bitacora, dir_volcados: Path, cuda_gdb=None, muestras=()) -> str:
@@ -136,7 +141,11 @@ def informe(unidad, kernel, bitacora, dir_volcados: Path, cuda_gdb=None, muestra
         out.append("    AVISO: hubo caidas y no hay un solo volcado; el armado no ha disparado "
                    "o las caidas son anteriores a el")
     for v in vs[-3:]:
-        out.append(f"    {v.name}: {kernel_del_volcado(v, cuda_gdb)}")
+        resultado = kernel_del_volcado(v, cuda_gdb)
+        out.append(f"    {v.name}: {resultado}")
+        if "m_num_devices > 0" in resultado:
+            out.append("    análisis restantes omitidos: cuda-gdb no detecta dispositivos NVIDIA")
+            break
     return "\n".join(out)
 
 

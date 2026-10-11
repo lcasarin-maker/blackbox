@@ -29,7 +29,7 @@ agregada no distingue caidas de calma. Medicion de la sesion Declutter, no repro
 - Volcado CUDA armado el 2026-10-10 05:56 (`CUDA_ENABLE_COREDUMP_ON_EXCEPTION=1` en
   /srv/ai/gateway/active_engine.json, destino /srv/ai/models/_coredumps). Control positivo
   hecho por Declutter: un kernel Triton fuera de rango produjo un volcado de 3.4 MB que
-  cuda-gdb leyo. Hasta la hora de esta ficha: 0 volcados `vllm_*` reales.
+  cuda-gdb leyo. Al crear esta ficha: 0 volcados `vllm_*` reales.
 - `bb status` lo exige (fila "volcado CUDA ante excepcion del motor") y `bb scan` lo lista
   y le corre `cuda-gdb ... info cuda kernels` a los ultimos tres (tools/motor_caidas.py).
 
@@ -44,3 +44,19 @@ Guardar en `tasks/evidence/DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01/cuda-gdb-kern
 salida literal de cuda-gdb sobre el primer volcado real, y nombrar aqui el kernel. Cambiar
 el motor o el driver antes de eso destruye la comparacion: avisar a la sesion Declutter,
 cuya corrida de fichas (~45 h) depende del servidor.
+
+## Seguimiento, 2026-10-10
+
+Ahora hay seis volcados `vllm_*` reales y `file` confirma los seis como ELF core de arquitectura
+NVIDIA CUDA. El intento literal de abrir el primero abortó dentro de `cuda-gdb` con
+`Assertion 'm_instance.m_num_devices > 0' failed`; `nvidia-smi -L` también falla con código 9
+porque esta sesión no puede comunicarse con el driver. La salida y los comandos están en
+`tasks/evidence/DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01/audit-2026-10-10.md`.
+
+La captura ya ocurrió; falta correr el análisis en una sesión con GPU/driver visible. La P1 sigue
+abierta y no se atribuye la causa ni se cambia el motor o el driver.
+
+`tools/motor_caidas.py` conserva la línea `internal-error` de `cuda-gdb` cuando no produce salida,
+y omite los volcados restantes de ese scan cuando detecta esta aserción de dispositivo ausente.
+Así deja visible el motivo y evita repetir el mismo aborto por cada archivo; todavía requiere el
+host con GPU/driver visible para cumplir el criterio de cierre.
