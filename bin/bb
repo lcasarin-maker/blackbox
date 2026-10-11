@@ -142,6 +142,54 @@ slices_mem() {
   printf '%s' "${out%,}"
 }
 
+# Memoria contabilizada por los scopes transitorios de Claude Desktop/Code.
+# `top_rss` conserva solo cinco procesos y no suma los hijos; el colapso del
+# 2026-10-05 fue un enjambre dentro de uno de estos scopes. Se lee
+# memory.current (RAM contabilizada por cgroup v2), memory.peak y cgroup.procs.
+# Estado `unavailable` es distinto de cero: una lectura fallida no certifica
+# un scope vacio. La contabilidad de cgroup no incluye la memoria unificada de
+# GPU del driver NVIDIA; estos datos sirven para atribucion, nunca para matar.
+claude_scopes_mem() {
+  local cg="${BB_CGROUP_ROOT:-/sys/fs/cgroup}" uid root r cur peak cur_kb peak_kb pids processes unit_json state out=""
+  uid=$(id -u)
+  root="$cg/user.slice/user-$uid.slice/user@$uid.service/app.slice"
+  [ -d "$root" ] || { printf 'null'; return; }
+  for r in "$root"/app*com.anthropic.Claude-*.scope; do
+    [ -d "$r" ] || continue
+    state="ok"
+    cur=$(cat "$r/memory.current" 2>/dev/null) || { cur=""; state="unavailable"; }
+    peak=$(cat "$r/memory.peak" 2>/dev/null) || peak=""
+    pids=$(cat "$r/cgroup.procs" 2>/dev/null) || { pids=""; state="unavailable"; }
+    if [[ "$cur" =~ ^[0-9]+$ ]]; then cur_kb=$((cur / 1024)); else cur_kb=null; fi
+    if [[ "$peak" =~ ^[0-9]+$ ]]; then peak_kb=$((peak / 1024)); else peak_kb=null; fi
+    if [ -n "$pids" ] || [ -r "$r/cgroup.procs" ]; then
+      processes=$(printf '%s\n' "$pids" | awk 'NF {n++} END {print n+0}')
+    else
+      processes=null
+    fi
+    unit_json=$(json_escape "${r##*/}")
+    out="${out}{\"unit\":\"$unit_json\",\"memory_current_kb\":$cur_kb,\"memory_peak_kb\":$peak_kb,\"process_count\":$processes,\"state\":\"$state\"},"
+  done
+  printf '[%s]' "${out%,}"
+}
+
+# Un aviso de diagnóstico cuando PSI cruza el corte ya calibrado de bb-usable.
+# Se emite al inicio de la excursión y solo enumera candidatos; no envía
+# señales ni aplica límites. La muestra siguiente puede volver a avisar tras
+# una recuperación real por debajo del corte.
+claude_scope_pressure_alert() {
+  local psi="$1" anterior="$2" scopes="$3"
+  if [ "$scopes" != "null" ] && [ "$scopes" != "[]" ] &&
+     awk -v p="${psi:-0}" -v a="${anterior:-0}" \
+       'BEGIN {exit !(p >= 10 && a < 10)}'; then
+    printf '[bb] ALERTA DIAGNOSTICA: PSI memory full avg10=%s cruzo 10; scopes Claude (solo candidatos, sin senales ni limites): %s\n' \
+      "$psi" "$scopes" >&2
+    printf 'true'
+  else
+    printf 'false'
+  fi
+}
+
 # Salud del PROPIO nvidia-smi, no de la GPU. Que la consulta no responda es EL
 # sintoma del cuelgue -- es lo que da titulo al hilo del foro de NVIDIA #358951,
 # "Spark hangs, requires a hard reset" -- y hoy no lo registra nadie.
@@ -792,10 +840,16 @@ cmd_sample() {
   pybg=$(ps -eo pid=,etimes=,comm= 2>/dev/null |
     awk '$3 ~ /^python/ && $2 > 60 {printf "%s%s", (n++?",":""), $1}')
 
-  local slices; slices=$(slices_mem 2>/dev/null)
+  local slices claude_scopes previous_psi scope_pressure_alert
+  slices=$(slices_mem 2>/dev/null)
+  claude_scopes=$(claude_scopes_mem 2>/dev/null)
+  previous_psi=$(grep -v '"burst":true' "$f" 2>/dev/null | grep '"mem_full":' | tail -1 |
+    sed -n 's/.*"mem_full":\([0-9.-]*\).*/\1/p')
+  scope_pressure_alert=$(claude_scope_pressure_alert "${psi_m_full:-0}" \
+    "${previous_psi:-0}" "${claude_scopes:-null}")
 
-  printf '{"ts":"%s","boot_id":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":%s,"slices":[%s],"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s,"top":[%s]},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s},"servicio_ssh":%s}\n' \
-    "$ts" "$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || true)" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$topvsz" "$cputop" "$pybg" "$gpu_json" "$slices" \
+  printf '{"ts":"%s","boot_id":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":%s,"slices":[%s],"claude_scopes":%s,"scope_pressure_alert":%s,"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s,"top":[%s]},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s},"servicio_ssh":%s}\n' \
+    "$ts" "$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || true)" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$topvsz" "$cputop" "$pybg" "$gpu_json" "$slices" "$claude_scopes" "$scope_pressure_alert" \
     "${commit_pct:-0}" "${residuo:-null}" \
     "${swap_free:-0}" "${swap_total:-0}" "${swpin_s:-0}" "${swpout_s:-0}" "$swaptop" \
     "${psi_m_some:-0}" "${psi_m_full:-0}" "${psi_io_some:-0}" "${psi_cpu_some:-0}" \

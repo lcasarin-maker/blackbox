@@ -23,3 +23,11 @@ En las muestras, los procesos que mas crecieron en esos minutos colgaban del sco
 ## Hueco
 
 Pasa despues del cierre de DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES (2026-09-28). La guardia por proceso mira UN proceso que crece; aqui eran muchos pequenos bajo un mismo scope. Falta medir que techo de scope habria detenido el enjambre antes de 7 min de PSI alto, y quien lanzo los java.
+
+## Avance, 2026-10-10
+
+La auditoría de `tasks/evidence/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/audit-2026-10-10.md` recuperó 18 muestras válidas del `app.slice`: llegó a 40.32 GiB con PSI full de 49.21 % y carga 1 de 153.85. El `MemoryMax=42G` actual no frenó el episodio. El journal retuvo 40 lanzamientos de pruebas/scripts de Atlas en la ventana, pero cero líneas de Java; no atribuye el launcher de esos procesos.
+
+`bin/bb sample` ahora conserva por scope Claude `memory.current`, `memory.peak`, conteo de procesos y estado de disponibilidad. Cuando PSI full cruza el corte calibrado de 10 con un scope presente, escribe un aviso diagnóstico con los scopes candidatos. La ruta solo lee cgroup v2 y emite telemetría: no envía señales ni cambia límites. Los registros rápidos reducidos de una ráfaga siguen sin recorrer cgroups para mantener bajo su coste.
+
+La ficha permanece abierta: la instrumentación aún necesita muestras reales para calibrar un techo, y el launcher Java histórico no se conserva en las fuentes disponibles.
