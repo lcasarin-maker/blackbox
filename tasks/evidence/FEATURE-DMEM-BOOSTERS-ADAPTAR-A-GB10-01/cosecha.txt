@@ -1,0 +1,112 @@
+COSECHA 2026-10-12 - BOOSTERS dmem (ficha FEATURE-DMEM-BOOSTERS-ADAPTAR-A-GB10-01) y otras soluciones caseras (punto 5 de la tarea)
+Solo lectura. Se clonaron con --depth 1 en directorios nuevos; NADA se ejecuto, compilo ni instalo.
+[LEIDO] = visto en archivo:linea o URL citada. [INFERENCIA] = mia.
+Contexto: el controlador dmem del kernel (cgroup v2) tiene tres archivos por cgroup: dmem.capacity (raiz), dmem.current, dmem.low (proteccion blanda), dmem.max (techo duro), dmem.min en la documentacion de NVIDIA. En GB10 con driver 580.178.04 la region NO existe (investigacion previa del repo); estos boosters son la mitad del lado del userspace y solo sirven cuando el driver registra una region.
+
+======================================================================
+0. RESUMEN
+======================================================================
+- Ninguno de los tres boosters LIMITA nada por si mismo en el sentido de contabilidad: todos dependen de que el driver registre una region en dmem.capacity. Si no hay region, escriben en el vacio.
+- Dos mecanismos distintos: (A) PROTEGER = escribir dmem.low (el kernel evita desalojar hasta ese valor); (B) LIMITAR = escribir dmem.max (techo duro). dmemcg-booster solo hace A y de forma indiscriminada; gnome-vram-booster hace A por aplicacion en primer plano y B opcional sobre app.slice; Vram-Management-fix hace solo B sobre app.slice.
+- Requisitos de driver NVIDIA segun el propio texto de gnome-vram-booster (README.md:Requirements): region registrada por los modulos abiertos "from driver 610"; "only 615 lets dmem.low decide what is evicted; on 610 the boost is written but has little effect". Es un reporte del autor, que dice "Intel and NVIDIA are untested here". Fiabilidad BAJA-MEDIA (el autor no lo probo en NVIDIA).
+- Documentacion oficial de NVIDIA leida (MPS v3 Memory Partitioning, por WebFetch, resumen de un modelo pequeno, fiabilidad media): la contabilidad se activa con RmMemacctMode (NVreg_RegistryDwords="RmMemacctMode=1" en /etc/modprobe.d/nvidia.conf; 0 off, 1 misc, 2 dmem, 3 auto) y requiere CUDA 13.4+, cgroup v2, dispositivo no-MIG; kernel 6.14+ para el backend dmem y fallback "misc" en kernels sin DMEM. NVIDIA recomienda "nvidia-smi memory-limits --set -n <cgroup> --soft-limit <MiB> --hard-limit <MiB> -i <idx>" y NVML nvmlDeviceSetMemoryLimits_v1 en lugar de escribir dmem.* a mano. La pagina NO menciona Jetson, Grace, memoria unificada ni GB10. Fiabilidad de la cita: MEDIA; confirmar contra el HTML original antes de usarla en una decision.
+
+======================================================================
+1. dmemcg-booster (DistrictD64) - traduccion a C del demonio de Valve
+======================================================================
+URL: https://github.com/DistrictD64/dmemcg-booster  Commit: 95162bdd9be9c4bd89d65cb558acb858c35f8bf6 (2026-04-27, "Merge pull request #2 from DistrictD64/code-translation-to-c-a6a32")
+Licencia: LICENSE = texto MIT estandar ("Permission is hereby granted, free of charge ...") con "Copyright (c) 2026 Valve Corporation". API gh: MIT, repo NO es fork. El nombre de la rama ("code-translation-to-c") y la linea de copyright indican que es una traduccion del demonio original (en Rust) de Valve/pixelcluster. El original NO fue leido ni clonado: otras versiones vistas por busqueda: Nitrux/dmemcg-booster (Rust, OpenRC), pixelcluster/dmemcg-booster-pkgbuild (Arch). Fiabilidad de la procedencia: MEDIA.
+Lenguaje y tamano: C, src/main.c 12.635 B, src/cgroup.c 6.855 B, 392 KB totales.
+ADVERTENCIA DE CADENA DE SUMINISTRO [LEIDO]: el repositorio versiona binarios compilados (dmemcg-booster, src/main.o, src/cgroup.o; "file": ELF 64-bit x86-64, no aarch64). El .gitignore contiene una frase de un agente ("Nothing needs to be added to .gitignore since only a README.md file was modified...") en lugar de reglas. NO ejecutar el binario versionado; no es de nuestra arquitectura. Si se reutiliza logica, compilar desde las fuentes o reescribir.
+Requisitos [LEIDO README.md "Requirements"]: cgroups v2, systemd con DBus (libdbus-1), GCC. NO declara requisito de kernel ni de driver en el README; implica una region ya registrada.
+
+Mecanismo [LEIDO]:
+ - Al iniciar recorre todos los cgroups y activa el controlador dmem (src/main.c:337-340 activate_dmem_in_descendants; src/cgroup.c:151-172 cgroup_add_controller escribe "+dmem" en cgroup.subtree_control).
+ - Escucha por DBus las senales de systemd UnitNew y UnitRemoved (README "How It Works"; src/main.c:223 arma el mensaje, :268 propaga la activacion).
+ - Para cada cgroup que activa, COPIA dmem.capacity a dmem.low: src/main.c:169-173 (cgroup_device_memory_capacity lee la raiz/cgroup, cgroup_write_device_memory_low escribe) y src/cgroup.c:245-259. Es decir, dmem.low = capacidad completa de cada region = "proteger todo". src/cgroup.c:222-243 write_limits_file escribe lineas "<region> <bytes>\n" o "<region> max\n".
+ - Aislamiento de usuarios: en modo sistema NO toca cgroups de usuario (src/main.c:70-75 user_slice_id(...) con system); en modo usuario solo protege app.slice y user@<uid>.service (src/main.c:155-160).
+ - Servicios: dmemcg-booster-system.service (ExecStart=/usr/bin/dmemcg-booster --use-system-bus, WantedBy=multi-user.target) y dmemcg-booster-user.service. La descripcion de la unidad dice "boosting foreground games".
+Formato de escritura (clave para nosotros): "<clave_region> <bytes>" con la clave tal cual aparece en dmem.capacity (por ejemplo drm/<busid>/vram o nvidia/<busid>/vidmem segun el kernel/driver; ver seccion 2).
+Funciona con memoria unificada de GB10? Texto propio: no menciona memoria unificada; escribe lo que dmem.capacity liste. Si el driver 580 no registra region, dmem.capacity no tiene la entrada y el demonio no escribe nada (cgroup_device_memory_capacity devuelve 0 si no hay entradas, src/main.c:169). [INFERENCIA coherente con la investigacion previa del repo; no probado aqui].
+Fallos conocidos: ningun issue leido (repo con 5 estrellas). Un efecto de diseno citado por otro proyecto: Vram-Management-fix (seccion 3) dice que dmemcg-booster causa "stutters and constant memory evacuation" porque protege todo con dmem.low = capacidad. Fiabilidad BAJA-MEDIA (descripcion del autor de ese fix).
+Reutilizacion: MIT, se puede copiar con el aviso de copyright (Valve Corporation) y atribucion. La logica (activar +dmem arriba y abajo de la jerarquia, copiar capacity a low) cabe en ~100 lineas de shell o C. Lo reutilizable es el patron de escritura, no los binarios.
+
+======================================================================
+2. gnome-vram-booster (sachesi, con un fork de F1rePowered)
+======================================================================
+URL principal: https://github.com/sachesi/gnome-vram-booster  Commit: 8afee9519691623fb3892dd32be10b2300b3d7d6 (2026-10-08, "chore: release 0.7.3"). Creado 2026-05-17, 2 estrellas, no es fork.
+URL del fork pedido: https://github.com/F1rePowered/gnome-vram-booster  Commit: 1c41512985328235bf5095e242e4aa583a0a0ca6 (2026-09-07, "fix(daemon): claim the bus name before clearing stale boosts"). Es FORK de sachesi (API gh: fork=true, parent sachesi/gnome-vram-booster), creado 2026-09-14, 0 estrellas. Es una version vieja y mas pequena: daemon/src/main.rs 15.240 B contra 58.255 B del principal. La cosecha usa el principal; el fork solo sirve de referencia historica.
+Licencia: LICENSE = "GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007"; el README final dice "GPL-3.0-or-later" y la API gh dice GPL-3.0. ATENCION: copyleft fuerte. Copiar codigo a un repo con otra licencia obliga a relicenciar o a no copiar; reimplementar la IDEA (escribir dmem.low/dmem.max) con codigo propio no hereda la GPL. [INFERENCIA juridica; no es asesoria legal]. Se recomienda NO copiar codigo, solo aprender el protocolo.
+Lenguaje y tamano: Rust (tokio, libc) + extension GNOME Shell en JS; 536 KB.
+
+Que hace [LEIDO README.md]: una extension de GNOME Shell reporta el PID de la ventana en primer plano a un demonio de sistema que, mediante dmem, protege "most of the VRAM for that app's scope", quita la proteccion a la app anterior y protege session.slice. Util sobre todo en GPU con <= 8 GB.
+Requisitos [LEIDO README.md "Requirements"]:
+ - Linux 6.14+ para el controlador dmem; amdgpu informa VRAM desde 6.15; "NVIDIA's open kernel modules from driver 615".
+ - Texto exacto sobre NVIDIA: "NVIDIA's open modules register a region from driver 610, so the daemon starts there too, but only 615 lets dmem.low decide what is evicted; on 610 the boost is written but has little effect."
+ - Hasta Linux 7.2 la proteccion solo decide que se desaloja cuando un buffer vuelve a VRAM; un buffer nuevo que encuentra VRAM llena sigue yendo a memoria del sistema; desde 7.3 (o con parches de CachyOS) un buffer nuevo protegido desaloja a los no protegidos.
+ - dmemcg-booster en sus dos servicios (sistema y usuario), GNOME Shell 45-51 en Wayland; "Intel and NVIDIA are untested here".
+ - Servicio systemd (packaging/usr/lib/systemd/system/gnome-vram-booster.service): Type=dbus, BusName=org.gnome.VramBooster, necesita ReadWritePaths=/sys/fs/cgroup; nota del autor: NO poner ProtectControlGroups=true ni ProtectKernelTunables=true porque rompen las escrituras a dmem.low.
+ - Tambien exige que cada app corra en su propio scope bajo app.slice (docs/usage.md).
+
+Como escribe dmem.low/dmem.max [LEIDO daemon/src/main.rs]:
+ - Region: la mayor region de GPU en /sys/fs/cgroup/dmem.capacity (main.rs:57-90 read_dmem_capacity; filtro main.rs:24-56 is_gpu_region acepta claves "<ns>/<dispositivo>/<region>" con 3 componentes y capacidad > 0; ejemplos de la funcion: "drm/<busid>/<region>" para amdgpu/xe y "nvidia/<busid>/vidmem" para los modulos abiertos de NVIDIA; ignora region "system", gtt, stolen). DRM_KEY elige otra.
+ - dmem.low por app: main.rs:164-173 (DmemWriter::write -> "dmem.low", cuerpo "{drm_key} {bytes}\n"). Valor = VRAM_BOOST_RATIO x VRAM total (por defecto 0,90; main.rs:441-455). Registro: main.rs:765-788 "focus pid=... -> dmem.low={boost} -> {label}"; restaura a 0 al perder el foco (main.rs:703).
+ - Proteccion de session.slice: dmem.low = VRAM completa (SliceSetting::session_protection, main.rs:531-538), solo si estaba en 0 (no pisa valores ajenos); VRAM_PROTECT_SESSION=0 lo desactiva.
+ - Techo opcional sobre app.slice: SliceSetting::ceiling (main.rs:540-548) escribe dmem.max = VRAM - VRAM_RESERVE_MIB en user@<uid>.service/app.slice (apagado por defecto). Solo escribe donde el archivo tiene el valor "max" (sin fijar); restaura "max" al salir si el valor sigue siendo suyo. docs/usage.md "The ceiling on app.slice": "A new buffer that would take app.slice past the ceiling goes straight to system memory (GTT) without evicting anything"; hasta 7.2 el kernel conserva el limite viejo sin error si app.slice ya usa mas que el techo; desde 7.3 se aplica de inmediato; las escrituras a dmem.max se hacen con O_NONBLOCK (main.rs:105-125, write_file con custom_flags(libc::O_NONBLOCK)) para que un nucleo >= 7.3 no desaloje dentro del write.
+ - Robustez que merece copiarse como IDEA: un hilo escritor unico con cola ordenada y tiempo de espera de 2 s (main.rs:127-215 DmemWriter) para que una escritura bloqueada no deje un "clear" adelantado a un "boost"; limpieza al arrancar de los dmem.low que dejo un cierre sucio (main.rs:315-340); no pisar valores que no escribio el demonio ("Foreign").
+Funciona en GB10 segun su texto? NO PROBADO por el autor ("Intel and NVIDIA are untested here"). Ademas es una herramienta de escritorio GNOME para el primer plano: la logica de foco no aplica a un servidor sin sesion grafica. Lo aplicable es solo el patron "escribir <clave> <bytes> en dmem.low/dmem.max de un scope concreto". Fiabilidad BAJA-MEDIA para NVIDIA.
+Fallos conocidos [LEIDO docs/usage.md y README]: efecto del techo sobre la app en foco; "experimental ... try it on a setup you can afford to reboot"; el autor admite que en 610 el boost "has little effect".
+
+======================================================================
+3. "Vram-Management" - el script que baja app.slice/dmem.max
+======================================================================
+URL: https://github.com/dirtymalonepost-cmd/Vram-Management-fix  Commit: f8c4c920e2edde287529f6e8c52a46cea9b9bd86 (2026-09-20). Descripcion de GitHub: "a workaround to fix the stutters and constant memory evacuation caused by dmemcg-booster (VRAM Management), leveraging most of the intended performance improvement." 42 estrellas, Shell.
+Licencia: LICENSE = "MIT License ... Copyright (c) 2026" (sin nombre de titular).
+Contenido: vram-manager.sh (26.747 B), cuatro guias .txt y README.md. Hay un binario "Linux-VRAM-Manager-x86_64" mencionado como activo de release del README: NO leido, no clonado.
+Mecanismo [LEIDO]: baja "app.slice/dmem.max" por debajo de la capacidad, dejando una reserva (README "How it works": ejemplo 4 GiB de VRAM menos 50 MiB = 4.225.761.280 bytes). Script generado en "2-Create the service for the fix.txt" (helper /usr/local/sbin/set-dmem-appslice-limit; RESERVE_MIB=50):
+ - Ruta: /sys/fs/cgroup/user.slice/user-$UID.slice/user@$UID.service/app.slice (vram-manager.sh:61-67 app_path con "systemctl show user@UID.service -p ControlGroup").
+ - Espera hasta 300 s a que existan dmem.max, dmem.current y /sys/fs/cgroup/dmem.capacity.
+ - Para cada linea de dmem.capacity cuya clave termine en */vram o */vidmem (AMD/Intel vram, NVIDIA vidmem): TARGET = CAPACITY - RESERVE_MIB x 1024 x 1024; si el uso actual (de dmem.current) ya excede TARGET, sale con error; arma un archivo temporal con "<clave> <TARGET>" por region y lo escribe de una vez: "cat $TMP > $APP/dmem.max" (escribe todas las regiones en UNA sola operacion para que una no pise a otra).
+ - Unidad systemd oneshot dmemcg-appslice-limit.service (After/Requires user@UID.service, RemainAfterExit=yes, TimeoutStartSec=300). "The custom service is a oneshot. It applies the limit and exits; it does not continuously monitor VRAM. The kernel continues enforcing the cgroup limit after the service exits." (README).
+ - vram-manager.sh:70-72 dmem_ready exige una linea en dmem.capacity con clave que acabe en vram|vram[0-9]+|vidmem|vidmem[0-9]+.
+Requisitos de driver [LEIDO README "GPU support"]: "For NVIDIA, working support still depends on a driver/kernel combination that exposes video memory through Linux DMEM. An NVIDIA GPU by itself does not guarantee that dmem.capacity will contain a usable vidmem entry." Es decir: sin region, el script sale con error (dmem_ready falla). Instalacion automatica solo para Arch/Fedora (pacman/dnf) y usa sudo: NO aplicable tal cual (Ubuntu/DGX OS); lo reutilizable son ~40 lineas del helper.
+Marcado "Experimental" por el propio autor. Fiabilidad BAJA para eficacia (workaround de escritorio, sin mediciones en el README leido).
+Reutilizacion: MIT, con atribucion. Este es el mecanismo MAS CERCANO a lo que necesitamos para LIMITAR (dmem.max duro sobre un slice) y es trivial de replicar para otro cgroup (por ejemplo el scope/slice de un servicio) en cuanto exista la region.
+
+======================================================================
+4. COMPARATIVA
+======================================================================
+Proyecto               Escribe        Sobre que cgroup          Cuanto                       Demonio       Licencia  Requiere region NVIDIA
+dmemcg-booster         dmem.low       cada cgroup (app.slice y  = dmem.capacity completa     DBus, siempre  MIT       si (no la crea)
+                                      user@uid.service)         (protege todo)               corriendo
+gnome-vram-booster     dmem.low       scope de la app en foco;  0,90 x VRAM (por defecto);  DBus, siempre  GPL-3.0   si; "615" para efecto
+                       dmem.max (opc) session.slice; app.slice  VRAM - RESERVE_MIB (techo)   corriendo
+Vram-Management-fix    dmem.max       app.slice del usuario     capacidad - 50 MiB           oneshot       MIT       si; sale si no hay vidmem
+Nada de lo anterior CUENTA memoria; el kernel+driver cuentan si registran la region.
+
+======================================================================
+5. OTRAS SOLUCIONES (punto 5)
+======================================================================
+5.1 NVIDIA MPS v3 Memory Partitioning (oficial) - ver cabecera; requiere CUDA 13.4+; sin mencion de GB10. Si el driver 580 no tiene memacct (investigacion previa) tampoco habria RmMemacctMode. NO PROBADO.
+5.2 nvml-unified-shim (CINOAdam) y fork de parallelArchitect: monitor de NVML para memoria unificada, no limitador (hilo de foro 358869 leido via WebFetch). Licencias NO LEIDAS.
+5.3 eugr/spark-vllm-docker: mods/gpu-mem-util-gb (parche a vLLM, --gpu-memory-utilization-gb), earlyoom dentro del contenedor (--earlyoom), mods/drop-caches, mods/memory-profile (muestreo de arranque). MIT, commit ef086aea1252dc2db59ceef2f2db805656fc9ac5. Son capas de aplicacion/arranque, no cgroup.
+5.4 natolambert/dgx-spark-setup: capas de proteccion (scope con MemoryMax, OOMScoreAdjust, watchdog de MemAvailable, drop_caches). Sin LICENSE. Nota: "MemoryMax=100G" NO acota CUDA (evanwtf/local-llm#456), ver cosecha del vigilante.
+5.5 KAI-Scheduler + HAMi-core (kai-resource-isolator): limitador LD_PRELOAD por contenedor; ver cosecha del limitador. Es la solucion "casera" mas completa para el limite por contenedor.
+5.6 Foro NVIDIA "DGX Spark (GB10 UMA) NIM Container Memory Runaway, All Limitation Parameters Invalid" (hilo 371180, 2026-05-24, WebFetch): docker --memory/--kernel-memory y systemd MemoryMax "bypassed"; sin respuesta de NVIDIA ni de la comunidad en el hilo leido. Fiabilidad MEDIA-BAJA. Cita de un usuario de Jetson en otro hilo (300493, resultado de busqueda, NO abierto): "no mechanism to control GPU resource limits" de un ingeniero de NVIDIA (hilo antiguo; puede no reflejar JetPack actual).
+5.7 Hilo de foro NVIDIA 264689 (2023, driver 515, otra GPU): "CUDA unified memory usage is not accounted by linux cgroup": NO leido; solo resultado de busqueda.
+5.8 RFC de LKML "GPU cgroup controller" (2022): historia del controlador de GPU no fusionado; no es solucion; NO leido a fondo.
+5.9 No se encontro ninguna solucion publica especifica para Jetson/Grace que limite memoria GPU/UMA por contenedor, mas alla de HAMi-core. Cobertura de busqueda: gh search (0 resultados en la mayoria de consultas), web search (varias), foros de NVIDIA via resumenes. La ausencia no prueba que no exista.
+
+======================================================================
+6. LO QUE NO SE LEYO
+======================================================================
+- Demonio original en Rust de Valve/pixelcluster y sus forks (Nitrux, evlaV/dmemcg, razzeee, ngoquang2708, Gur0v/sway-foreground-booster-dmemcg).
+- Binario "Linux-VRAM-Manager-x86_64" de las releases.
+- Texto original HTML de la documentacion MPS v3 (solo resumen de un modelo pequeno).
+- El comportamiento real de dmem en el kernel 6.17 de esta maquina con driver 580.178.04 (no se ejecuto nada; las escrituras en dmem.* de otros proyectos NO se probaron).
+- Si el driver 580 expone memacct: la investigacion previa del repo dice que NO; esta cosecha no la contradice ni la confirma por ejecucion.
+
+======================================================================
+7. RECOMENDACION DE ESTA PARTE [INFERENCIA]
+======================================================================
+Los boosters no sirven hoy en GB10 con 580.178.04 porque dependen de una region que ese driver no registra. Su valor es de patron: (1) el helper de Vram-Management-fix (escritura de dmem.max de todas las regiones en una sola operacion, comprobar uso actual antes de bajar el techo, esperar a que existan los archivos) y (2) la disciplina de gnome-vram-booster (no pisar valores ajenos, restaurar al salir, cola de escrituras con timeout, O_NONBLOCK en dmem.max). Ambos son implementables con codigo propio sin heredar la GPL, y con atribucion bajo MIT. Hacerlo antes de que exista la region no se puede verificar; la parte debe dependerse del backport de memacct (FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01) o de un driver >= 610/615, y su prueba de aceptacion debe incluir el caso negativo (sin region: el helper debe salir con error distinto de cero, no con exito silencioso).
