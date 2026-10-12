@@ -122,8 +122,25 @@ gpu_procs() {
 # una tuberia corre en un subshell cuyo xtrace no llega a la traza. El piso de
 # cobertura de bin/bb bajo de 27.1 a 26.8 y bloqueo el push -- por codigo no
 # MEDIBLE, no por codigo sin probar. Sin tuberia, se traza.
+#
+# `events` y `pressure` (2026-10-12, DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01):
+# que app.slice estuviera CONTRA su techo en los colapsos del 11-oct era
+# inferencia por su 94 % de uso -- `memory.events` (cuantas veces toco `max`,
+# `oom_kill`) se pierde al reiniciar. Guardarlo en cada muestra lo vuelve
+# lectura. Son los contadores y medias tal cual los da cgroup v2; un fichero que
+# no se puede leer es `null`, nunca un objeto de ceros.
+cg_campos() { # fichero memory.events|memory.pressure -> objeto JSON o null
+  local f="$1" j
+  case "${f##*/}" in
+    memory.events) j=$(awk '{printf "%s\"%s\":%s", (NR>1?",":""), $1, $2}' "$f" 2>/dev/null) ;;
+    *) j=$(awk '{for (i = 2; i <= NF; i++) { split($i, a, "=")
+                 printf "%s\"%s_%s\":%s", (n++?",":""), $1, a[1], a[2] }}' "$f" 2>/dev/null) ;;
+  esac
+  if [ -n "$j" ]; then printf '{%s}' "$j"; else printf 'null'; fi
+}
+
 slices_mem() {
-  local cg="${BB_CGROUP_ROOT:-/sys/fs/cgroup}" uid n r cur pk pk_kb out=""
+  local cg="${BB_CGROUP_ROOT:-/sys/fs/cgroup}" uid n r cur pk pk_kb ev pr out=""
   uid=$(id -u)
   for n in app docker system; do
     case $n in
@@ -137,7 +154,8 @@ slices_mem() {
     # cosas distintas, y un 0 se promediaria como si fuera una medida.
     pk=$(cat "$r/memory.peak" 2>/dev/null)
     if [ -n "$pk" ]; then pk_kb=$(( pk / 1024 )); else pk_kb=null; fi
-    out="${out}{\"slice\":\"$n\",\"cur_kb\":$(( cur / 1024 )),\"peak_kb\":$pk_kb},"
+    ev=$(cg_campos "$r/memory.events"); pr=$(cg_campos "$r/memory.pressure")
+    out="${out}{\"slice\":\"$n\",\"cur_kb\":$(( cur / 1024 )),\"peak_kb\":$pk_kb,\"events\":$ev,\"pressure\":$pr},"
   done
   printf '%s' "${out%,}"
 }
@@ -405,10 +423,13 @@ residuo_mb() { # MemTotal - todo lo reclamado, en MiB
 # knowledge/references/forum_nvidia_366877_sparkview-gpu-monitor-tool-with-
 # gb10-aware-unified-memory-handling.md -- clasifica LOW/MODERATE/HIGH/CRITICAL
 # sobre esta misma fuente para GB10.
+# BB_PSI_ROOT: sustituible SOLO para probar, como BB_CGROUP_ROOT. Sin el, el
+# camino que enciende `scope_pressure_alert` (y captura el origen) no se podia
+# ejercitar sin presion de memoria real (2026-10-12).
 psi_campo() { # recurso, linea(some|full), clave(avg10|avg60) -> valor o ""
   awk -v l="$2" -v k="$3" '$1==l { for (i=2; i<=NF; i++) {
       split($i, kv, "="); if (kv[1]==k) print kv[2] } }' \
-    "/proc/pressure/$1" 2>/dev/null
+    "${BB_PSI_ROOT:-/proc/pressure}/$1" 2>/dev/null
 }
 
 # Estado del motor de inferencia. Hueco demostrado el 2026-09-08: el gateway se
@@ -533,6 +554,11 @@ RAFAGA_COMMIT_PTS="${BLACKBOX_RAFAGA_COMMIT_PTS:-10}"   # puntos de %commit en 1
 RAFAGA_AVAIL_GB="${BLACKBOX_RAFAGA_AVAIL_GB:-8}"        # GB de MemAvailable perdidos
 RAFAGA_SEGS="${BLACKBOX_RAFAGA_SEGS:-50}"               # duracion maxima
 RAFAGA_PASO="${BLACKBOX_RAFAGA_PASO:-2}"                # cada cuanto
+# Origen del que mas crece: corte medido en cmd_sample. El plazo acota a python
+# si /proc se pone lento bajo presion; la muestra no espera mas que eso.
+ORIGEN_CRECE_KB="${BLACKBOX_ORIGEN_CRECE_KB:-2097152}"
+ORIGEN_TIMEOUT_S="${BLACKBOX_ORIGEN_TIMEOUT_S:-10}"
+ORIGEN_PY="$(dirname "$(readlink -f "$0")")/../tools/origen_proceso.py"
 
 # Muestra LIGERA: solo los contadores baratos. No llama a nvidia-smi ni recorre
 # cgroups -- durante una rampa lo que importa es la resolucion temporal, y una
@@ -703,6 +729,29 @@ cmd_sample() {
   fi
   mv -f "$prev_vsz.new" "$prev_vsz" 2>/dev/null
 
+  # ORIGEN de quien mas crecio (2026-10-12, DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01).
+  # `pidio` dice pid, comm y unit; no dice que suite, repo, sesion o hook lo
+  # lanzo, y en los colapsos del 11-oct el muestreo se estrangulo antes de que
+  # alguien preguntara. Esto guarda su cadena de ancestros, cmdline enmascarado
+  # y cwd (tools/origen_proceso.py) mientras el proceso aun existe.
+  #
+  # El corte de 2 GiB es MEDIDO, sobre las 20 232 muestras completas del
+  # 2026-09-28 al 2026-10-12 (37 con PSI full >= 10):
+  #   >= 1 GiB dispara en 40.06 % de las muestras y cubre 35 de las 37
+  #   >= 2 GiB dispara en 28.65 % y cubre 33 de 37
+  #   >= 4 GiB dispara en 24.10 % y cubre 27 de 37
+  # 2 es el codo: bajar de 4 a 2 suma 6 de las 37 por 4.5 puntos de disparo;
+  # bajar de 2 a 1 suma 2 por 11.4 puntos. LIMITE DECLARADO: un proceso que
+  # muere antes de esta muestra queda NOT_COLLECTED.
+  local pidio_origen=null p0_pid="" p0_kb=""
+  read -r p0_pid p0_kb <<<"$(printf '%s' "$topvsz" |
+    sed -n 's/^{"pid":\([0-9]*\),"crecio_kb":\([0-9]*\),.*/\1 \2/p')"
+  if [ -n "$p0_kb" ] && [ "$p0_kb" -ge "$ORIGEN_CRECE_KB" ]; then
+    pidio_origen=$(timeout "$ORIGEN_TIMEOUT_S" python3 "$ORIGEN_PY" capturar \
+      --motivo crecimiento_pidio --top 0 --pid "$p0_pid" 2>/dev/null) || pidio_origen=null
+    [ -n "$pidio_origen" ] || pidio_origen=null
+  fi
+
   # QUIEN quemo CPU desde la muestra anterior. Anadido el 2026-09-25 por lo que
   # se midio la noche del 24 al 25: entre la 01:00 y las 03:15, `psi.cpu_some`
   # llego a 85.43 con load1 47.65 sobre 20 nucleos -- contencion real, la
@@ -847,15 +896,22 @@ cmd_sample() {
     sed -n 's/.*"mem_full":\([0-9.-]*\).*/\1/p')
   scope_pressure_alert=$(claude_scope_pressure_alert "${psi_m_full:-0}" \
     "${previous_psi:-0}" "${claude_scopes:-null}")
+  # Al encender el aviso, el origen de los 10 mayores de TODO el sistema, no
+  # solo del scope Claude: el lanzador puede ser un hook, cron, docker u otro.
+  if [ "$scope_pressure_alert" = true ]; then
+    timeout "$ORIGEN_TIMEOUT_S" python3 "$ORIGEN_PY" capturar \
+      --motivo scope_pressure_alert --top 10 >/dev/null 2>&1 ||
+      echo "[bb] origen del aviso de scope NO registrado (rc=$?)" >&2
+  fi
 
-  printf '{"ts":"%s","boot_id":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":%s,"slices":[%s],"claude_scopes":%s,"scope_pressure_alert":%s,"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s,"top":[%s]},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s},"servicio_ssh":%s}\n' \
+  printf '{"ts":"%s","boot_id":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":%s,"slices":[%s],"claude_scopes":%s,"scope_pressure_alert":%s,"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s,"top":[%s]},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s},"servicio_ssh":%s,"pidio_origen":%s}\n' \
     "$ts" "$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || true)" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$topvsz" "$cputop" "$pybg" "$gpu_json" "$slices" "$claude_scopes" "$scope_pressure_alert" \
     "${commit_pct:-0}" "${residuo:-null}" \
     "${swap_free:-0}" "${swap_total:-0}" "${swpin_s:-0}" "${swpout_s:-0}" "$swaptop" \
     "${psi_m_some:-0}" "${psi_m_full:-0}" "${psi_io_some:-0}" "${psi_cpu_some:-0}" \
     "${gw:-CAIDO}" "${dk:-?}" "${salud:-}" "${disco:-}" "${red:-}" "${cpuj:-}" \
     "${smi_estado:-DESCONOCIDO}" "${smi_ms:-0}" \
-    "${x_estado:-DESCONOCIDO}" "${x_ms:-0}" "$servicio_probe" >>"$f"
+    "${x_estado:-DESCONOCIDO}" "${x_ms:-0}" "$servicio_probe" "$pidio_origen" >>"$f"
 
   # --- muestreo adaptativo, anadido el 2026-09-24 -------------------------
   # El cuarto congelamiento entero -- de maquina sana a memoria agotada --
@@ -2633,6 +2689,14 @@ linaje() { # pid -> "unit | ppid comm_padre | cwd"
   echo "${unit:-?} | ppid=${ppid:-?} ${pcomm:-?} | ${cwd:-?}"
 }
 
+# `bb origen`: los registros de ORIGEN que ya se guardaron (bb sample, bb-usable),
+# agrupados por lanzador. `bb who` mira AHORA; esto mira lo que paso, cuando el
+# proceso ya murio. Codigos de salida de witr (tools/origen_proceso.py): 0
+# encontrado, 1 con advertencias, 2 no encontrado, 3 permiso, 4 entrada
+# invalida, 5 error interno, 6 encontrado sin saber quien lo inicio.
+# Es funcion `cmd_` y no una linea del `case` para que tools/inventario.py la vea.
+cmd_origen() { python3 "$ORIGEN_PY" leer "$@"; }
+
 # `bb who` responde la pregunta para un pid, o para los que mas consumen.
 cmd_who() {
   local objetivo="${1:-}"
@@ -3176,6 +3240,7 @@ bb -- caja negra de la maquina
   bb drift               compara lo adoptado en el repo con lo desplegado (exit != 0 si diverge)
   bb protect             sube el limite de core de las apps ya corriendo (prlimit)
   bb who [pid]           que procesos pesan y QUIEN los lanzo (unit, padre, cwd)
+  bb origen [--desde T] [--hasta T]  registros de origen guardados, agrupados por lanzador
   bb sigterm ["hace X"]  QUIEN mando SIGTERM/SIGKILL a quien (DEBT-DGX-438)
   bb cap <GB> <cmd...>   lanza algo con techo de memoria propio (el kernel lo aplica)
   bb install             instala los timers de usuario (muestreo cada minuto, drift diario)
@@ -3202,6 +3267,7 @@ case "${1:-}" in
   drift)    shift; cmd_drift "$@" ;;
   protect)  shift; cmd_protect "$@" ;;
   who)      shift; cmd_who "$@" ;;
+  origen)   shift; cmd_origen "$@" ;;
   sigterm)  shift; cmd_sigterm "$@" ;;
   cap)      shift; cmd_cap "$@" ;;
   install)  shift; cmd_install "$@" ;;

@@ -1782,3 +1782,108 @@ def test_sample_all_smi_queries_are_bounded(datos, tmp_path):
         assert sample["smi"]["estado"] == "OK"
         assert sample["gpu"] is None
         assert sample["residuo_mb"] is None
+
+
+# =====================================================================
+# DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01: memory.events/pressure
+# del slice, origen del que mas crece y del aviso de scope, `bb origen`
+# =====================================================================
+
+
+def _cg_con_eventos(tmp_path, con_eventos=True):
+    env = _cg_slices(tmp_path)
+    app = (Path(env["BB_CGROUP_ROOT"]) / "user.slice" / f"user-{os.getuid()}.slice"
+           / f"user@{os.getuid()}.service" / "app.slice")
+    if con_eventos:
+        (app / "memory.events").write_text(
+            "low 0\nhigh 3\nmax 7\noom 1\noom_kill 1\noom_group_kill 0\n", encoding="utf-8")
+        (app / "memory.pressure").write_text(
+            "some avg10=1.50 avg60=0.20 avg300=0.00 total=1234\n"
+            "full avg10=0.75 avg60=0.10 avg300=0.00 total=999\n", encoding="utf-8")
+    return env
+
+
+def test_la_muestra_guarda_memory_events_y_pressure_del_slice(datos, tmp_path):
+    """Que app.slice tocara su techo el 11-oct era inferencia por su 94 %: esto lo vuelve lectura."""
+    correr(["sample"], datos, _cg_con_eventos(tmp_path))
+    app = next(x for x in _slices_de_la_muestra(datos) if x["slice"] == "app")
+    assert app["events"] == {"low": 0, "high": 3, "max": 7, "oom": 1, "oom_kill": 1, "oom_group_kill": 0}
+    assert app["pressure"]["full_avg10"] == 0.75 and app["pressure"]["full_total"] == 999
+
+
+def test_control_negativo_sin_memory_events_es_null_y_no_ceros(datos, tmp_path):
+    correr(["sample"], datos, _cg_con_eventos(tmp_path, con_eventos=False))
+    app = next(x for x in _slices_de_la_muestra(datos) if x["slice"] == "app")
+    assert app["events"] is None and app["pressure"] is None, app
+
+
+def _reservar(mib):
+    """Reserva direcciones SIN tocarlas: crece VmSize (lo que mide `pidio`), no la RAM."""
+    hijo = subprocess.Popen(
+        [sys.executable, "-c",
+         f"import mmap,signal; m=mmap.mmap(-1, {mib}*1024**2); print('listo', flush=True); signal.pause()"],
+        stdout=subprocess.PIPE, text=True)
+    assert hijo.stdout.readline().strip() == "listo"
+    return hijo
+
+
+def test_el_que_mas_crece_lleva_su_origen_en_la_muestra(datos):
+    correr(["sample"], datos)
+    hijo = _reservar(300)
+    try:
+        correr(["sample"], datos, {"BLACKBOX_ORIGEN_CRECE_KB": "262144"})
+        d = muestras(datos)[-1]
+        assert d["pidio"], "con 300 MiB reservados pidio no puede salir vacio"
+        o = d["pidio_origen"]
+        assert o is not None and o["motivo"] == "crecimiento_pidio"
+        assert o["procesos"][0]["pid"] == d["pidio"][0]["pid"]
+        assert o["procesos"][0]["ancestros"], "sin cadena no hay origen"
+        assert (datos / "origen").is_dir(), "el registro tambien queda para `bb origen`"
+    finally:
+        hijo.kill()
+        hijo.wait()
+
+
+def test_control_negativo_por_debajo_del_corte_no_hay_origen(datos):
+    correr(["sample"], datos)
+    hijo = _reservar(300)
+    try:
+        correr(["sample"], datos, {"BLACKBOX_ORIGEN_CRECE_KB": str(10 ** 12)})
+        assert muestras(datos)[-1]["pidio_origen"] is None
+    finally:
+        hijo.kill()
+        hijo.wait()
+
+
+def _psi_falso(tmp_path, full):
+    d = tmp_path / f"psi_{full}"
+    d.mkdir()
+    for r in ("memory", "io", "cpu"):
+        (d / r).write_text(f"some avg10={full} avg60=0 avg300=0 total=1\n"
+                           f"full avg10={full} avg60=0 avg300=0 total=1\n", encoding="utf-8")
+    return str(d)
+
+
+def test_el_aviso_de_scope_captura_el_origen_del_sistema(datos, tmp_path):
+    env = _cg_slices(tmp_path)
+    scope = (Path(env["BB_CGROUP_ROOT"]) / "user.slice" / f"user-{os.getuid()}.slice"
+             / f"user@{os.getuid()}.service" / "app.slice" / "app-com.anthropic.Claude-1.scope")
+    scope.mkdir()
+    (scope / "memory.current").write_text("1048576\n", encoding="utf-8")
+    (scope / "cgroup.procs").write_text(f"{os.getpid()}\n", encoding="utf-8")
+    env["BLACKBOX_RAFAGA_SEGS"] = "0"
+    correr(["sample"], datos, {**env, "BB_PSI_ROOT": _psi_falso(tmp_path, "0.00")})
+    assert not (datos / "origen").exists(), "sin aviso no hay captura"
+    correr(["sample"], datos, {**env, "BB_PSI_ROOT": _psi_falso(tmp_path, "50.00")})
+    assert muestras(datos)[-1]["scope_pressure_alert"] is True
+    (f,) = (datos / "origen").glob("*.jsonl")
+    reg = json.loads(f.read_text(encoding="utf-8").splitlines()[-1])
+    assert reg["motivo"] == "scope_pressure_alert" and len(reg["procesos"]) == 10
+
+
+def test_bb_origen_codigos_de_salida_y_json(datos):
+    vacio = correr(["origen", "--json"], datos)
+    assert vacio.returncode == 2, vacio.stderr
+    assert json.loads(vacio.stdout)["codigo"] == 2
+    mal = correr(["origen", "--desde", "ayer"], datos)
+    assert mal.returncode == 4
