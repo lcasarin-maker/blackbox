@@ -1,0 +1,9 @@
+[Unit]
+Description=bb monitor del parche dmem del modulo NVIDIA (kernel o driver nuevo)
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.dmem_monitor
+SuccessExitStatus=0 1
+MemoryMax=64M
