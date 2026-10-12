@@ -1,0 +1,23 @@
+RUNBOOK DE RECUPERACION - modulo NVIDIA parcheado (2026-10-12). Medido en esta maquina; los pasos de abajo NO se han ejecutado en un fallo real.
+
+Hechos medidos que sostienen el plan
+- SSH escucha por socket (ssh.socket activo, puerto 22) y la red (enP7s7) no depende de la GPU: aunque la GPU no suba, se entra por SSH.
+- initramfs sin modulos NVIDIA (solo firmware): el modulo parcheado vive en /lib/modules/6.17.0-1032-nvidia/updates/ y depmod busca `updates` primero (search updates ubuntu built-in).
+- GRUB muestra el menu 5 s (GRUB_TIMEOUT_STYLE=menu). El kernel 7.0.0-1019-nvidia tiene sus propios modulos nvidia-580-open de Canonical y NO se toca: es una salida sin comandos (Advanced options -> 7.0.0-1019). Sin probar que ese kernel arranque la maquina completa. El kernel 6.11 NO trae modulos 580.
+
+Sintomas y que hacer
+1. La maquina arranca pero `nvidia-smi` falla.
+   - Por SSH:  sudo bash ~/projects/blackbox/tools/dmem_modulo.sh retrocede && sudo reboot
+   - La unidad bb-dmem-guardia.service ya lo intenta sola a los 120 s (deja /var/lib/bb-dmem/retrocedido); solo falta reiniciar.
+   - Causa tipica en dmesg: "Loading of unsigned module is rejected" o "Required key not available" = la llave no esta enrolada.
+2. Sin red ni pantalla: consola fisica (Ctrl+Alt+F3), iniciar sesion y el mismo comando de arriba.
+   - Si el repo no esta accesible, a mano:  sudo rm -f /lib/modules/$(uname -r)/updates/nvidia*.ko && sudo depmod -a && sudo reboot
+3. No arranca ni a consola: en GRUB elegir Advanced options -> Linux 7.0.0-1019-nvidia (driver de Canonical); desde ahi retroceder el 6.17 con el comando de 1.
+4. Cuelgue duro: apagado por boton, arrancar, y aplicar 1.
+5. El MOK Manager no aparece tras `enrolar`: repetir `sudo bash tools/dmem_modulo.sh enrolar` y reiniciar; la contrasena es de un uso. Si se equivoca, no pasa nada: el arranque continua sin enrolar y nada cambia.
+6. Quitar la llave despues (revierte el cambio de confianza): `sudo mokutil --delete /var/lib/shim-signed/mok/MOK.der`, reiniciar y confirmar en la pantalla azul.
+
+Comprobacion de que se volvio al estado de Canonical
+  modinfo -F signer nvidia   ->  Canonical Ltd. Kernel Module Signing
+  ls /lib/modules/$(uname -r)/updates   ->  no existe
+  sha256 de los .ko de kernel/nvidia-580-open  ->  los de modulos-sha256.txt (seccion Canonical)
