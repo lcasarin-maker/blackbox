@@ -21,3 +21,14 @@ close_check: {"cmd": "grep -q oomd_mata_y_medido tasks/evidence/DEBT-OOMD-PROBAR
 2. Diagnosticar por que no toma el nombre D-Bus (`oomctl` expira).
 3. Medir que cgroup mataria bajo presion agregada de `user@1000` sin arriesgar las sesiones: en un laboratorio o con `ManagedOOMPreference` en scopes desechables.
 4. Decidir convivencia con earlyoom (global) y el escalon de bb-usable (60 s, un proceso): oomd mataria un cgroup entero, posiblemente el scope de la app de Claude con todas las sesiones.
+
+## Lo que dice el manual instalado (`man systemd-oomd`, `oomd.conf`, 255.4) y por que mis dos primeras pruebas no median nada (2026-10-12)
+- Se monitorean los cgroups de unidades con `ManagedOOMMemoryPressure=kill`; al superar el limite durante `DefaultMemoryPressureDurationSec` (20 s) oomd elige un cgroup y le manda SIGKILL a todos sus procesos. **Solo los cgroups DESCENDIENTES son candidatos; la unidad con la propiedad no se mata a si misma**, y solo cuentan las hojas o los cgroups con `memory.oom.group=1`. Mi primera prueba puso la propiedad en el propio scope acaparador: no podia ser candidato.
+- Limite por defecto de presion: 60 %; recomiendan ~40 % para `user@UID.service`. `user@.service` ya trae `kill` por un drop-in del paquete (`10-oomd-user-service-defaults.conf`) y `-.slice` trae otro.
+- `SwapUsedLimit=90 %`: la accion por swap solo actua si memoria Y swap usados superan el limite; las acciones por swap se ignoran sin swap.
+- Aviso explicito del manual: si se activa en `user.slice`/`user-UID.slice`, los programas deben colgar del gestor de usuario o un trabajo pesado hara que oomd mate TODO lo que haya bajo ese cgroup: es exactamente el scope unico de la app de Claude con todas las sesiones.
+- Segunda prueba (propiedad en un slice padre `bbtest-oomd.slice` con `MemoryHigh=150M`, hijos de 200 MB y 40 MB, y control negativo en un slice gemelo sin propiedad): ningun hijo murio en 80 s; no se pudo leer la presion del slice (ruta vacia), asi que NO se sabe si se alcanzo el 10 %. Inconcluso, no negativo.
+## Que falta (actualizado)
+Medir la presion del slice durante la prueba (ruta `/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/<slice>/memory.pressure` o la del padre real), repetirla hasta superar el limite y, solo entonces, concluir. Con root: log de depuracion de oomd y `oomctl`.
+## Utilidad para bb (cosecha de diseno, no dependencia)
+Senal doble (presion sostenida N s Y holgura), candidatos solo hojas, muerte de un cgroup entero, preferencia por unidad (`ManagedOOMPreference=avoid|omit`) y modo `--dry-run`. Encaja con los cgroups por trabajo del portero: matar el cgroup del trabajo, no el scope de la app.
