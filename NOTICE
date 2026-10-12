@@ -21,3 +21,22 @@ witr; se reescribio en Python la logica de estos archivos):
 
 Los cambios respecto al original estan descritos en la cabecera de tools/origen_proceso.py y en cada
 funcion portada, que cita su archivo:linea de origen.
+
+----------------------------------------------------------------------------------------------------
+
+Este repositorio incluye logica PORTADA a Python desde el siguiente proyecto, distribuido bajo la
+Licencia MIT:
+
+  gpuoom -- "GPU-aware early OOM killer for unified-memory Linux machines"
+  Autor: Tom Doerr (Copyright (c) 2026 Tom Doerr)
+  Repositorio: https://github.com/tom-doerr/gpuoom
+  Commit leido: 475855b (2026-09-22)
+
+Que se porto, a tools/gpuoom_bb.py (no se copio codigo Rust ni se distribuye ningun binario; se reescribio en
+Python la logica de estos archivos):
+  - src/trigger.rs: disparo por MemAvailable bajo y presion PSI `some` alta, sostenidos, mas un suelo critico
+    inmediato.
+  - src/select.rs: huella de la victima (anon + shmem + GPU + swap con pesos) escalada por oom_score_adj.
+  - src/gpu.rs / README: muestreo de memoria GPU en un hilo aparte para que la decision nunca llame al driver.
+No se porto: mlockall, getdents64 sin asignaciones, pidfd/process_mrelease, el hook de notificacion ni la accion
+de matar (en `actuar` este modulo declara UNSUPPORTED).

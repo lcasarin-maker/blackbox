@@ -1,0 +1,12 @@
+[Unit]
+Description=bb guardia estilo gpuoom (interruptor gpuoom; off por defecto, solo observa)
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.gpuoom_bb
+Restart=on-failure
+MemoryMax=96M
+
+[Install]
+WantedBy=default.target
