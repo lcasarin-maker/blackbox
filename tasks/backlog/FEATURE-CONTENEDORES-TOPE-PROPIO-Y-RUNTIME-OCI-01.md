@@ -2,13 +2,13 @@
 id: FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01
 kind: task
 domain: MEMORY
-title: "Todo contenedor con tope propio desde su creacion, incluido vLLM, con un runtime OCI de bb probado en un entorno aislado"
+title: "Todo contenedor con tope propio desde su creacion, incluido vLLM, via runtime OCI de bb"
 status: open
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-12
-close_check: {"cmd": "grep -q runtime_oci_probado tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/medicion.md", "expect": "exit_zero", "porque": "Decision de Luis 2026-10-12: todo contenedor debe tener tope propio, incluido vLLM, y eso se impone en el punto donde se crea el cgroup: el runtime OCI que invoca el daemon de Docker (daemon.json ya declara el runtime nvidia). Cierra cuando un envoltorio de runtime de bb, probado en un daemon de laboratorio separado (nunca en el de produccion), rechace o corrija la creacion de un contenedor sin tope de memoria, swap y procesos, exija el reclamo GPU declarado a los contenedores que piden GPU, y lo demuestre con su control negativo. Frase obligatoria en medicion.md: runtime_oci_probado."}
+close_check: {"cmd": "grep -q runtime_oci_probado tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/medicion.txt", "expect": "exit_zero", "porque": "Decision de Luis 2026-10-12: todo contenedor debe tener tope propio, incluido vLLM, y eso se impone en el punto donde se crea el cgroup: el runtime OCI que invoca el daemon de Docker (daemon.json ya declara el runtime nvidia). Cierra cuando un envoltorio de runtime de bb, probado en un daemon de laboratorio separado (nunca en el de produccion), rechace o corrija la creacion de un contenedor sin tope de memoria, swap y procesos, exija el reclamo GPU declarado a los contenedores que piden GPU, y lo demuestre con su control negativo. Frase obligatoria en medicion.md: runtime_oci_probado."}
 ---
 
 ## Regla (voto de Luis, 2026-10-12)
