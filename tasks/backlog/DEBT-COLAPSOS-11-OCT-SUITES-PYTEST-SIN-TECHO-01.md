@@ -21,6 +21,8 @@ Cadena: enjambre de procesos en `app-com.anthropic.Claude-*.scope` (sesiones de 
 - Calibracion con 489 muestras que traen scope y PSI: con el scope Claude por debajo de 35 GB, 0 de 439 muestras tuvo PSI full >= 10 (maximo 7.17); con 35-40 GB, 2 de 2 la tuvieron (maximo 64.7). Muestra pequena para el tramo alto.
 - No fue hardware ni el reindexado de Atlas (el colapso 2 ocurrio sin el) ni calor (sin throttle termico).
 
+Dato aportado por la sesion `ae` (aequitas_os, 2026-10-12): lanzo `git push origin main` con pre-push de suite completa (~8.7k tests, ~40 min) hacia las 22:43 del 11-oct, sin tope, y seguia corriendo al reiniciar a las 22:54; sus pushes de las ~19:40, 20:20 y 21:00 no colapsaron nada. Coincide con el `python3` de 26 GB del colapso 2 (no probado que sea ese pid) y deja la hipotesis de trabajo: el colapso aparece cuando DOS o mas suites completas coinciden dentro de `app.slice` (colapso 1: suite de Atlas 21:48 + push de Declutter 21:51 + mi pre-push; colapso 2: push de aequitas 22:43 + suite de Atlas 22:43:47), no cuando corre una sola. Es correlacion temporal con n=2; el escalon de prevencion no depende de ella.
+
 Limite declarado: `memory.events` de `app.slice` (cuantas veces toco `max`, `oom_kill`) se pierde al reiniciar; que el slice estuviera contra su techo es inferencia por su 94 % de uso, no una lectura directa.
 
 ## Prevencion propuesta
