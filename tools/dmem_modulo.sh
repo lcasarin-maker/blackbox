@@ -98,7 +98,7 @@ UNIT
 cmd_guardia() {
     raiz guardia
     local i
-    for i in $(seq 1 24); do nvidia-smi -L >/dev/null 2>&1 && { log "la GPU responde; el modulo parcheado se queda"; return 0; }; sleep 5; done  # blocking-sleep: espera acotada de arranque, 24 x 5 s -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.8 -- revalidado 2026-10-12: unidad de arranque de una sola pasada
+    for i in $(seq 1 24); do nvidia-smi -L >/dev/null 2>&1 && { log "la GPU responde; el modulo parcheado se queda"; return 0; }; sleep 5; done  # blocking-sleep: espera acotada de arranque, 24 x 5 s -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.9 -- re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 101 (dd39aa7a) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-12: unidad de arranque de una sola pasada
     log "la GPU NO respondio en 120 s: retrocedo"
     cmd_retrocede
     touch "$ESTADO/retrocedido"

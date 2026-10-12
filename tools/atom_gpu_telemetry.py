@@ -1829,7 +1829,7 @@ def _run_sampler(args) -> int:
                     print(json.dumps(evento, ensure_ascii=False))
             if args.once:
                 return 0
-            time.sleep(args.interval_seconds)  # blocking-sleep: intervalo del sampler de vida larga, no I/O a esperar -- DGX-334  # sunset-reviewed: 2.8 -- revalidado 2026-10-10: el sampler de vida larga requiere su intervalo entre muestras; closecheck positivo y neutralizado prueba el parámetro y el control. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-13
+            time.sleep(args.interval_seconds)  # blocking-sleep: intervalo del sampler de vida larga, no I/O a esperar -- DGX-334  # sunset-reviewed: 2.9 -- re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 1832 (dbc1017f) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-10: el sampler de vida larga requiere su intervalo entre muestras; closecheck positivo y neutralizado prueba el parámetro y el control. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-13
     except KeyboardInterrupt:
         return 0
 
