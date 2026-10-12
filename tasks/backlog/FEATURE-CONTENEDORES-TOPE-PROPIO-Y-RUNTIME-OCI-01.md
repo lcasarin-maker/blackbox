@@ -65,6 +65,6 @@ Nunca se prueba en el daemon de produccion (contiene nemotron-server, atlas-pgve
 
 ## Que falta
 
-1. Envoltorio `bb-oci-runtime`, script de laboratorio y sus pruebas: nivel 1 hecho (2026-10-12); falta el nivel 2, que ejecuta Luis con `sudo bash tools/portero_docker_lab.sh up && sudo bash tools/portero_docker_lab.sh prueba; sudo bash tools/portero_docker_lab.sh down` (detalle en `tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/instrucciones-nivel2.md`).
+1. Envoltorio `bb-oci-runtime`, script de laboratorio y sus pruebas: nivel 1 hecho (2026-10-12); falta el nivel 2, que ejecuta Luis con `sudo bash tools/portero_docker_lab.sh up && sudo bash tools/portero_docker_lab.sh prueba; sudo bash tools/portero_docker_lab.sh down` (detalle en `tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/instrucciones-nivel2.txt`).
 2. Persistir los topes de los contenedores existentes en sus creadores.
 3. Decidir `atlas-pgvector` (swap) y la absorcion de `gpu_governance`.
