@@ -681,6 +681,16 @@ def leer_procesos_gpu() -> dict:
     return {"gpu_procs": procs, "gpu_mem_total_mib": round(total)}
 
 
+# Escalares de /metrics que se guardan tal cual. Los dos contadores de tokens permiten derivar tokens/s entre
+# muestras (FEATURE-INCIDENTE-CAMPOS-NO-COLECTADOS-01); `prompt_tokens_cached_total` no empieza con estos prefijos.
+_VLLM_ESCALARES = (
+    ("vllm:kv_cache_usage_perc", "vllm_kv_cache_usage_perc"),
+    ("vllm:num_preemptions_total", "vllm_num_preemptions_total"),
+    ("vllm:generation_tokens_total", "vllm_generation_tokens_total"),
+    ("vllm:prompt_tokens_total", "vllm_prompt_tokens_total"),
+)
+
+
 def _procesar_linea_vllm(linea: str, res: dict) -> None:
     parts = linea.rsplit(maxsplit=1)
     if len(parts) != 2:
@@ -700,10 +710,11 @@ def _procesar_linea_vllm(linea: str, res: dict) -> None:
             by_reason[reason] = val
     elif metric_spec.startswith("vllm:num_requests_waiting"):
         res["vllm_num_requests_waiting"] = val
-    elif metric_spec.startswith("vllm:kv_cache_usage_perc"):
-        res["vllm_kv_cache_usage_perc"] = val
-    elif metric_spec.startswith("vllm:num_preemptions_total"):
-        res["vllm_num_preemptions_total"] = val
+    else:
+        for prefijo, campo in _VLLM_ESCALARES:
+            if metric_spec.startswith(prefijo):
+                res[campo] = val
+                break
 
 
 def leer_vllm_metrics(url: str = VLLM_METRICS_URL_DEFAULT,
@@ -720,6 +731,8 @@ def leer_vllm_metrics(url: str = VLLM_METRICS_URL_DEFAULT,
         "vllm_num_requests_waiting_by_reason": {},
         "vllm_kv_cache_usage_perc": None,
         "vllm_num_preemptions_total": None,
+        "vllm_generation_tokens_total": None,
+        "vllm_prompt_tokens_total": None,
     }
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Atlas-Telemetry/1.0"})
@@ -736,6 +749,8 @@ def leer_vllm_metrics(url: str = VLLM_METRICS_URL_DEFAULT,
         "vllm_num_requests_waiting_by_reason": {},
         "vllm_kv_cache_usage_perc": None,
         "vllm_num_preemptions_total": None,
+        "vllm_generation_tokens_total": None,
+        "vllm_prompt_tokens_total": None,
     }
 
     for linea in texto.splitlines():

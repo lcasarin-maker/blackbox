@@ -30,6 +30,7 @@ import argparse
 import hashlib
 import json
 import re
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -46,7 +47,18 @@ ATLAS_RAIZ = "knowledge/investigations/gb10_cortes_2026-10-11/"
 NOT_COLLECTED = "NOT_COLLECTED"
 UNSUPPORTED = "UNSUPPORTED"
 COLLECTION_FAILED = "COLLECTION_FAILED"
-SALIDA = Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox")) / "incidentes"
+DATOS = Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox"))
+SALIDA = DATOS / "incidentes"
+MUESTRAS_BB = DATOS / "samples"  # `bb sample`, 1 muestra por minuto, con boot_id
+# Bitacora del liberation-watchdog de Atlas: la lee blackbox solo para lectura (relacion de informacion,
+# sin `import` de codigo de Atlas). El job_start trae boot_id; job_done y job_orphaned cierran el job.
+ATLAS_COLA = Path(
+    os.environ.get(
+        "ATLAS_BITACORA_COLA", Path.home() / "projects/Atlas/logs/liberation_watchdog.jsonl"
+    )
+)
+VENTANA_ENGINE_MIN = 5  # minutos antes del ultimo punto en que se mide el progreso del engine
+CAMBIO_GPU_MIB = 256  # variacion de memoria de GPU en la ventana que se lee como carga/descarga de modelo
 UMBRAL_ZONA_C = 94.8  # alarma de atom_gpu_telemetry: trip 104.8 C menos 10 C
 NVRM_NOMEM = "NV_ERR_NO_MEMORY"
 VENTANA_RELEVANTE_MIN = 30  # un evento a horas de la muerte es contexto, no su inicio
@@ -231,12 +243,16 @@ def config_del_boot(idx: int) -> dict[str, Any]:
 
 
 # ------------------------------------------------------------------ evidencia del boot
-def telemetria_del_boot(boot_id: str) -> list[dict[str, Any]]:
-    marca = (
+def _boot_con_guiones(boot_id: str) -> str:
+    return (
         boot_id
         if "-" in boot_id
         else f"{boot_id[:8]}-{boot_id[8:12]}-{boot_id[12:16]}-{boot_id[16:20]}-{boot_id[20:]}"
     )
+
+
+def telemetria_del_boot(boot_id: str) -> list[dict[str, Any]]:
+    marca = _boot_con_guiones(boot_id)
     filas = []
     if not rv.TELEMETRIA.exists():
         return filas
@@ -415,6 +431,330 @@ def exposicion(muestras: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+# ------------------------------------------- fase de carga y progreso del engine
+def muestras_bb_del_boot(
+    boot_id: str, directorio: Path | None = None
+) -> tuple[list[dict[str, Any]], str]:
+    """Muestras de `bb sample` (1 min) del boot, y el estado de la fuente cuando no hay ninguna."""
+    d = directorio or MUESTRAS_BB
+    if not d.is_dir():
+        return [], f"{NOT_COLLECTED}: no existe {d} (bb sample no ha escrito)"
+    marca = _boot_con_guiones(boot_id)
+    filas: list[dict[str, Any]] = []
+    try:
+        for f in sorted(d.glob("*.jsonl")):
+            with f.open(encoding="utf-8") as fh:
+                for linea in fh:
+                    if marca in linea:
+                        try:
+                            filas.append(json.loads(linea))
+                        except json.JSONDecodeError:
+                            continue  # ultima fila truncada por la muerte subita
+    except OSError:
+        return [], COLLECTION_FAILED
+    return filas, f"0 muestras de bb sample con boot_id {marca} en {d}"
+
+
+def _gw(m: dict[str, Any]) -> dict[str, float] | None:
+    """`gw_salud` de bb sample: 'run,wait,kv,preempt,gen_tokens,prompt_tokens,errores'; vacio si /metrics callo."""
+    p = str(m.get("gw_salud") or "").split(",")
+    if len(p) != 7:
+        return None
+    try:
+        v = [float(x) for x in p]
+    except ValueError:
+        return None
+    return {"run": v[0], "kv": v[2], "gen": v[4], "prompt": v[5]}
+
+
+def _gw_5s(m: dict[str, Any]) -> dict[str, float] | None:
+    """Mismo contenido, desde la telemetria de 5 s (solo las filas que ya traen los contadores de tokens)."""
+    g, p = m.get("vllm_generation_tokens_total"), m.get("vllm_prompt_tokens_total")
+    if g is None or p is None or m.get("vllm_num_requests_running") is None:
+        return None
+    return {
+        "run": float(m["vllm_num_requests_running"]),
+        "kv": float(m.get("vllm_kv_cache_usage_perc") or 0.0),
+        "gen": float(g),
+        "prompt": float(p),
+    }
+
+
+def _puntos_engine(
+    tele: list[dict[str, Any]], bb: list[dict[str, Any]]
+) -> tuple[list[tuple[float, dict[str, float]]], str]:
+    """Puntos (epoch, contadores) del engine: telemetria de 5 s si ya trae tokens; si no, bb sample."""
+    pts = [(epoch_de(m["ts"]), g) for m in tele if (g := _gw_5s(m))]
+    fuente = "atom_gpu_telemetry (5 s)"
+    if not pts:
+        pts = [(epoch_de(m["ts"]), g) for m in bb if (g := _gw(m))]
+        fuente = "bb sample (1 min, gw_salud)"
+    return [(t, g) for t, g in pts if t is not None], fuente
+
+
+def _rango(v: list[float]) -> dict[str, float]:
+    return {"min": round(min(v), 2), "max": round(max(v), 2), "ultimo": round(v[-1], 2)}
+
+
+def progreso_del_engine(
+    tele: list[dict[str, Any]],
+    bb: list[dict[str, Any]],
+    minutos: int = VENTANA_ENGINE_MIN,
+) -> dict[str, Any]:
+    """Tokens por segundo de prompt y de generacion en la ultima ventana, derivados de los contadores de vLLM.
+    Firma S11 (Atlas, catalogo_destilado.md#github:S11): peticiones en curso con prompt y generacion en 0 tok/s.
+    Un contador que baja es un reinicio del engine: ese par no se mide y se cuenta aparte."""
+    pts, fuente = _puntos_engine(tele, bb)
+    if not pts:
+        return {
+            "estado": f"{NOT_COLLECTED}: ninguna muestra con contadores de tokens de vLLM "
+            f"(/metrics no respondia, o son anteriores a que el sampler los guardara; "
+            f"{len(tele)} de telemetria, {len(bb)} de bb sample)"
+        }
+    fin = pts[-1][0]
+    w = [p for p in pts if p[0] >= fin - minutos * 60]
+    pares: list[dict[str, float]] = []
+    reinicios = 0
+    for (t0, a), (t1, b) in zip(w, w[1:]):
+        dt = t1 - t0
+        if dt <= 0:
+            continue
+        if b["gen"] < a["gen"] or b["prompt"] < a["prompt"]:
+            reinicios += 1
+            continue
+        pares.append(
+            {
+                "gen": (b["gen"] - a["gen"]) / dt,
+                "prompt": (b["prompt"] - a["prompt"]) / dt,
+                "run": b["run"],
+                "kv": b["kv"],
+            }
+        )
+    if not pares:
+        return {
+            "estado": f"{NOT_COLLECTED}: {len(w)} puntos en los ultimos {minutos} min de {fuente}, "
+            f"0 pares medibles ({reinicios} reinicios del contador)"
+        }
+    detenidos = 0
+    for p in reversed(pares):
+        if p["run"] > 0 and p["gen"] == 0 and p["prompt"] == 0:
+            detenidos += 1
+        else:
+            break
+    return {
+        "estado": "ok",
+        "fuente": fuente,
+        "ventana": f"ultimos {minutos} min antes del ultimo punto ({len(w)} puntos, {len(pares)} pares)",
+        "ultimo_punto": iso(fin),
+        "generacion_tok_s": _rango([p["gen"] for p in pares]),
+        "prompt_tok_s": _rango([p["prompt"] for p in pares]),
+        "peticiones_en_curso_ultimo_par": pares[-1]["run"],
+        "kv_cache_pct_ultimo_par": round(100 * pares[-1]["kv"], 1),
+        "reinicios_del_contador": reinicios,
+        "pares_consecutivos_al_final_con_peticiones_y_0_tok_s": detenidos,
+        "firma_S11_motor_detenido": f"SI: {detenidos} pares consecutivos al final con peticiones en curso y 0 tok/s"
+        if detenidos
+        else f"NO en los {len(pares)} pares de la ventana",
+    }
+
+
+def fase_de_carga(
+    bb: list[dict[str, Any]],
+    vacio: str,
+    progreso: dict[str, Any],
+    minutos: int = VENTANA_ENGINE_MIN,
+) -> dict[str, Any]:
+    """Fase al final del boot: carga/descarga de modelo, prefill, decode, motor detenido o inactivo.
+    Sin /metrics la fase sale de la memoria de GPU por proceso (columna `gpu` de bb sample); training y
+    NCCL setup no tienen fuente en bb y se declaran UNSUPPORTED, no se infieren."""
+    no_distinguibles = {
+        k: f"{UNSUPPORTED}: ningun contador de bb distingue {k} de decode (el proceso es `python` en ambos)"
+        for k in ("training", "NCCL setup")
+    }
+    if not bb:
+        return {"fase": vacio, "fases_no_distinguibles": no_distinguibles}
+    fin = epoch_de(bb[-1]["ts"]) or 0.0
+    w = [m for m in bb if (epoch_de(m["ts"]) or 0.0) >= fin - minutos * 60]
+    mib = [
+        sum(float(g.get("mib") or 0) for g in m["gpu"])
+        for m in w
+        if isinstance(m.get("gpu"), list)
+    ]
+    delta = mib[-1] - mib[0] if len(mib) >= 2 else None
+    ev: dict[str, Any] = {
+        "ultima_muestra_bb": iso(fin),
+        "ventana_min": minutos,
+        "muestras_bb_en_la_ventana": len(w),
+        "gpu_mib_por_procesos_primera_y_ultima": [mib[0], mib[-1]]
+        if mib
+        else NOT_COLLECTED,
+    }
+    ult = _gw(w[-1])
+    if ult is None:  # /metrics no respondia en la ultima muestra: la fase sale de la memoria de GPU
+        ev["metrics_de_vllm"] = "no respondia en la ultima muestra"
+        fase = _fase_sin_metrics(mib, delta, minutos)
+    else:
+        fase = _fase_con_metrics(ult, progreso, ev)
+    return {"fase": fase, "evidencia": ev, "fases_no_distinguibles": no_distinguibles}
+
+
+def _fase_sin_metrics(mib: list[float], delta: float | None, minutos: int) -> str:
+    if delta is None:
+        return f"{NOT_COLLECTED}: sin /metrics y sin memoria de GPU por proceso en la ventana"
+    if delta >= CAMBIO_GPU_MIB:
+        return f"carga de modelo (memoria de GPU +{delta:g} MiB en {minutos} min, sin /metrics)"
+    if delta <= -CAMBIO_GPU_MIB:
+        return f"descarga de modelo (memoria de GPU {delta:g} MiB en {minutos} min, sin /metrics)"
+    if mib[-1] == 0:
+        return "sin carga: ningun proceso en GPU y el motor no responde"
+    return (
+        f"indeterminada: sin /metrics y la memoria de GPU vario menos de {CAMBIO_GPU_MIB} MiB "
+        f"({delta:g} MiB) en {minutos} min"
+    )
+
+
+def _fase_con_metrics(
+    ult: dict[str, float], progreso: dict[str, Any], ev: dict[str, Any]
+) -> str:
+    if progreso.get("estado") != "ok":
+        ev["progreso"] = progreso.get("estado")
+        if ult["run"] == 0:
+            return "inactivo (0 peticiones en curso)"
+        return f"{NOT_COLLECTED}: {ult['run']:g} peticiones en curso y sin par de contadores para medir avance"
+    gen = progreso["generacion_tok_s"]["ultimo"]
+    pro = progreso["prompt_tok_s"]["ultimo"]
+    run = progreso["peticiones_en_curso_ultimo_par"]
+    ev["tok_s_ultimo_par"] = {"generacion": gen, "prompt": pro, "peticiones_en_curso": run}
+    if progreso["pares_consecutivos_al_final_con_peticiones_y_0_tok_s"]:
+        return "motor detenido con peticiones en curso (firma S11)"
+    if run == 0 and gen == 0 and pro == 0:
+        return "inactivo (0 peticiones en curso)"
+    if gen > 0:
+        return "decode (la generacion avanza)"
+    if pro > 0:
+        return "prefill (el prompt avanza y la generacion no)"
+    return "indeterminada: sin avance en el ultimo par y sin peticiones en curso contadas"
+
+
+def primera_respuesta_de_aplicacion(
+    tele: list[dict[str, Any]], bb: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Primera lectura de /metrics de vLLM que responde en el boot SIGUIENTE al corte. Un puerto abierto
+    no cuenta (#1358). Telemetria de 5 s si hay; si no, bb sample (1 min)."""
+    fuentes = (
+        (
+            tele,
+            "atom_gpu_telemetry (5 s)",
+            "+-5 s",
+            lambda m: m.get("vllm_num_requests_running") is not None
+            and not m.get("vllm_ausente"),
+        ),
+        (bb, "bb sample (1 min)", "+-60 s", lambda m: _gw(m) is not None),
+    )
+    for filas, fuente, inc, responde in fuentes:
+        if not filas:
+            continue
+        hit = next((m for m in filas if responde(m)), None)
+        if hit is None:
+            return {
+                "ts": f"0 respuestas en {len(filas)} muestras de {fuente} del boot siguiente (hasta {filas[-1]['ts']})",
+                "fuente": fuente,
+                "incertidumbre": inc,
+            }
+        t0, t1 = epoch_de(filas[0]["ts"]), epoch_de(hit["ts"])
+        return {
+            "ts": iso(t1),
+            "fuente": f"primera lectura de /metrics de vLLM que responde, {fuente}",
+            "incertidumbre": inc,
+            "segundos_desde_la_primera_muestra_del_boot": round(t1 - t0, 1)
+            if t0 is not None and t1 is not None
+            else NOT_COLLECTED,
+        }
+    return {
+        "ts": NOT_COLLECTED,
+        "fuente": "sin telemetria ni bb sample del boot siguiente",
+        "incertidumbre": NOT_COLLECTED,
+    }
+
+
+# ------------------------------------------------------------ carga de Atlas
+def _lee_bitacora_atlas(
+    ruta: Path, marca: str
+) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]], int, int, int]:
+    """(abiertos, huerfanos, iniciados, terminados, lineas): un solo recorrido en orden cronologico."""
+    abiertos: dict[str, dict[str, Any]] = {}
+    huerfanos: dict[str, dict[str, Any]] = {}
+    iniciados = terminados = lineas = 0
+    with ruta.open(encoding="utf-8") as fh:
+        for linea in fh:
+            lineas += 1
+            if '"event": "job_done"' in linea:
+                evento = "job_done"
+            elif marca in linea and '"event": "job_start"' in linea:
+                evento = "job_start"
+            elif marca in linea and '"event": "job_orphaned"' in linea:
+                evento = "job_orphaned"
+            else:
+                continue
+            try:
+                d = json.loads(linea)
+            except json.JSONDecodeError:
+                continue  # ultima fila truncada
+            jf = d.get("job_file")
+            if evento == "job_start":
+                iniciados += 1
+                abiertos[jf] = d
+            elif evento == "job_done" and jf in abiertos:
+                del abiertos[jf]
+                terminados += 1
+            elif evento == "job_orphaned":
+                huerfanos[jf] = d
+    return abiertos, huerfanos, iniciados, terminados, lineas
+
+
+def carga_de_atlas(boot_id: str, ruta: Path | None = None) -> dict[str, Any]:
+    """Jobs de la cola de Atlas que corrian cuando se corto el boot: `job_start` con el boot_id sin `job_done`
+    posterior. Solo lectura de la bitacora que Atlas publica; blackbox no importa codigo de Atlas.
+    Ausente -> NOT_COLLECTED; ilegible -> COLLECTION_FAILED; ningun job -> el cero con su alcance."""
+    ruta = ruta or ATLAS_COLA
+    if not ruta.is_file():
+        return {"estado": f"{NOT_COLLECTED}: Atlas no publica {ruta}"}
+    marca = _boot_con_guiones(boot_id)
+    try:
+        abiertos, huerfanos, iniciados, terminados, lineas = _lee_bitacora_atlas(ruta, marca)
+    except (OSError, UnicodeError):
+        return {"estado": COLLECTION_FAILED, "fuente": str(ruta)}
+    base = {
+        "fuente": str(ruta),
+        "boot_id": marca,
+        "jobs_iniciados_en_el_boot": iniciados,
+        "jobs_terminados_en_el_boot": terminados,
+    }
+    if not iniciados:
+        return {
+            "estado": f"0 job_start con boot_id {marca} en {lineas} lineas de {ruta.name}",
+            **base,
+        }
+    return {
+        "estado": "ok",
+        **base,
+        "jobs_en_ejecucion_al_cortar": [
+            {
+                "job_file": jf,
+                "name": d.get("name"),
+                "inicio_hora_local_de_atlas": d.get("ts"),
+                "memory_max_gb": d.get("memory_max_gb"),
+                "timeout_minutes": d.get("timeout_minutes"),
+                "atlas_lo_registro_huerfano": jf in huerfanos,
+            }
+            for jf, d in abiertos.items()
+        ]
+        or f"0 jobs sin job_done de {iniciados} job_start del boot",
+        "nota": "job_start sin job_done = corria al cortar; `atlas_lo_registro_huerfano` = el watchdog de Atlas "
+        "lo marco job_orphaned al arrancar el boot siguiente",
+    }
+
+
 def lineas_nvrm(idx: int) -> dict[str, Any]:
     r = rv._journal("-b", str(idx), "-k", "--grep", "NVRM:", "-o", "short-iso")
     if r.returncode not in (0, 1):
@@ -585,26 +925,59 @@ def estado_mitigaciones(
     ]
 
 
-def adjuntos_y_ruta(plat: dict[str, Any]) -> dict[str, Any]:
+def _adjunto_presente(salida: Path, incident_id: str | None, sufijo: str) -> str | None:
+    """Ruta y tamano del adjunto que el operador dejo junto al reporte (`<incident_id>.<sufijo>`), o None."""
+    if not incident_id:
+        return None
+    p = salida / f"{incident_id}.{sufijo}"
+    try:
+        return f"{p} ({p.stat().st_size} bytes)" if p.is_file() else None
+    except OSError:
+        return COLLECTION_FAILED
+
+
+def adjuntos_y_ruta(
+    plat: dict[str, Any],
+    incident_id: str | None = None,
+    salida: Path | None = None,
+    uid: int | None = None,
+) -> dict[str, Any]:
     """Que pide NVIDIA, en que orden y con que comando (dossier de foros F1-F3), y el estado de cada
     uno aqui. La ruta de soporte apunta a Atlas: lo dicho por el personal de NVIDIA es OFICIAL
     solo como declaracion en un foro, no como politica verificada con soporte de esta unidad."""
     sb = plat.get("secure_boot")
+    salida = salida or SALIDA
+    uid = os.geteuid() if uid is None else uid
+    root = "root: si" if uid == 0 else f"root: no (uid {uid}), bb no ejecuta sudo"
+    bug = _adjunto_presente(salida, incident_id, "nvidia-bug-report.log.gz")
+    bug_tool = shutil.which("nvidia-bug-report.sh")
+    diag = _adjunto_presente(salida, incident_id, "fieldiag-summary.json")
+    diag_dir = Path("/opt/nvidia/dgx-spark-fieldiag")
+    destino = f"{salida}/{incident_id or '<incident_id>'}"
     return {
         "adjuntos_en_orden": [
             {
                 "que": "nvidia-bug-report.log.gz (obligatorio, si cuelga se envia el parcial)",
-                "comando": "sudo nvidia-bug-report.sh",
+                "comando": f"sudo nvidia-bug-report.sh --output-file {destino}.nvidia-bug-report.log",
                 "root": True,
-                "estado": NOT_COLLECTED,
+                "estado": f"presente: {bug}"
+                if bug
+                else f"{NOT_COLLECTED}: {'nvidia-bug-report.sh instalado en ' + bug_tool if bug_tool else 'nvidia-bug-report.sh no instalado'}; "
+                f"{root}; describe el boot actual, no el del incidente; bb lo reconoce si queda como {destino}.nvidia-bug-report.log.gz",
             },
             {
                 "que": "bundle completo de dgx-spark-fieldiag (.tgz, no un solo log; incluye summary.json)",
                 "comando": "sudo init 3; cd /opt/nvidia/dgx-spark-fieldiag; sudo ./partnerdiag --field",
                 "root": True,
-                "estado": f"NOT_COLLECTED; bloqueado: Secure Boot {sb} y fieldiag exige apagarlo (foro 358951 #12)"
-                if sb != "disabled"
-                else NOT_COLLECTED,
+                "estado": f"presente: {diag}"
+                if diag
+                else (
+                    f"{NOT_COLLECTED}; bloqueado: Secure Boot {sb} y fieldiag exige apagarlo (foro 358951 #12)"
+                    if sb != "disabled"
+                    else NOT_COLLECTED
+                )
+                + f"; fieldiag {'instalado en ' + str(diag_dir) if diag_dir.is_dir() else 'no instalado'}; {root}; "
+                f"bb lo reconoce si el summary.json queda como {destino}.fieldiag-summary.json",
             },
             {
                 "que": "journal del kernel del boot del incidente",
@@ -649,6 +1022,7 @@ def seis_timestamps(
     tele: list[dict[str, Any]],
     nvrm: dict[str, Any],
     sig_primero: float | None,
+    primera_respuesta: dict[str, Any] | None = None,
 ) -> list[dict[str, str]]:
     ultima = tele[-1] if tele else None
     vllm = [
@@ -691,6 +1065,11 @@ def seis_timestamps(
             f"{iso(ult_nomem)} ({juicio}{lag}; "
             f"{nomem.get('cuenta')} en el boot, la primera {nomem.get('primera')})"
         )
+    pr = (
+        primera_respuesta
+        if primera_respuesta and primera_respuesta.get("incertidumbre") != NOT_COLLECTED
+        else None
+    )
     return [
         {
             "evento": "Primer error de asignacion NVRM (NV_ERR_NO_MEMORY)",
@@ -704,7 +1083,7 @@ def seis_timestamps(
             if psi
             else f"0 de {len(ventana)} muestras con PSI full avg10 >= {rv.PSI_FULL_COLAPSO:g} en los {VENTANA_RELEVANTE_MIN} min previos",
             "fuente": "atom_gpu_telemetry (5 s)",
-            "incertidumbre": "+-5 s; progreso del engine NO se mide (solo peticiones en curso)",
+            "incertidumbre": "+-5 s; el progreso del engine (tok/s) se mide aparte en `progreso_del_engine`",
         },
         {
             "evento": "Ultima respuesta correcta de aplicacion",
@@ -726,9 +1105,12 @@ def seis_timestamps(
         },
         {
             "evento": "Siguiente boot / primera respuesta de aplicacion",
-            "ts": iso(sig_primero),
-            "fuente": "primera entrada del journal del boot siguiente",
-            "incertidumbre": "+-1 s; la primera respuesta de aplicacion no se mide",
+            "ts": iso(sig_primero)
+            + (f"; primera respuesta de aplicacion: {pr['ts']}" if pr else ""),
+            "fuente": "primera entrada del journal del boot siguiente"
+            + (f"; respuesta: {pr['fuente']}" if pr else ""),
+            "incertidumbre": "+-1 s el boot"
+            + (f"; +-{pr['incertidumbre'].lstrip('+-')} la respuesta" if pr else "; la primera respuesta de aplicacion no se midio"),
         },
     ]
 
@@ -762,7 +1144,12 @@ def reporte(
         .astimezone()
         .strftime("%Y-%m-%d")
     )
-    ultima_muestra = muestras[-1] if muestras else None
+    bb, bb_vacio = muestras_bb_del_boot(b["boot_id"])
+    progreso = progreso_del_engine(muestras, bb)
+    sig_id = boots[i + 1]["boot_id"]
+    sig_tele = [m for m in telemetria_del_boot(sig_id) if m.get("evento") == "muestra"]
+    sig_bb, _ = muestras_bb_del_boot(sig_id)
+    primera = primera_respuesta_de_aplicacion(sig_tele, sig_bb)
     plat = plataforma()
     return {
         "formato": "bb-incident/1",
@@ -788,16 +1175,17 @@ def reporte(
                 ),
                 "nota": "NVIDIA pregunta siempre: apagado completo, cuelgue o degradado; reinicio normal o desconexion de AC",
             },
-            "fase_de_carga": NOT_COLLECTED
-            if not ultima_muestra
-            else f"no inferible con certeza; en la ultima muestra: {ultima_muestra.get('vllm_num_requests_running')} peticiones en curso, KV {round(100 * (ultima_muestra.get('vllm_kv_cache_usage_perc') or 0), 1)} %",
+            "fase_de_carga": fase_de_carga(bb, bb_vacio, progreso),
         },
+        "progreso_del_engine": progreso,
+        "primera_respuesta_de_aplicacion_tras_el_boot_siguiente": primera,
+        "carga_de_atlas": carga_de_atlas(b["boot_id"]),
         "plataforma": plat,
         "configuracion_al_generar_el_reporte": config_vigente(),
         "configuracion_registrada_por_el_journal_de_ese_boot": config_del_boot(
             b["index"]
         ),
-        "seis_timestamps": seis_timestamps(ev, muestras, nvrm, sig),
+        "seis_timestamps": seis_timestamps(ev, muestras, nvrm, sig, primera),
         "ventana_previa_a_la_muerte": ventana_previa(muestras),
         "residencia_termica_del_boot": residencia_termica(muestras),
         "throttle_del_boot": throttle_del_boot(muestras),
@@ -819,7 +1207,7 @@ def reporte(
             "huecos": v["could_not_run"],
             "bert_en_el_arranque_siguiente": bert_registro(boots[i + 1]["index"]),
         },
-        "soporte": adjuntos_y_ruta(plat),
+        "soporte": adjuntos_y_ruta(plat, f"bb-{fecha}-{b['boot_id'][:8]}"),
     }
 
 
