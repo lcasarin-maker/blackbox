@@ -1,0 +1,11 @@
+# 2026-10-11T20:45:30-06:00 DESPUES (Atlas HEAD 21dbc9308 incluye 21dbc9308)
+$ grep -rq blackbox/hallazgos /home/lcasarin/projects/Atlas/tools
+rc=0
+
+# control negativo: la misma orden contra un arbol sin esa cadena debe dar rc=1
+$ grep -rq blackbox/hallazgos /home/lcasarin/projects/Atlas/tools/liberation_queue/FORMATO_JOBS.md
+rc=1
+# y el ANTES (fail.txt) dio rc=1 sobre el arbol de Atlas previo al commit
+
+$ grep -rl blackbox/hallazgos /home/lcasarin/projects/Atlas/tools
+/home/lcasarin/projects/Atlas/tools/recoge_hallazgos_bb.py

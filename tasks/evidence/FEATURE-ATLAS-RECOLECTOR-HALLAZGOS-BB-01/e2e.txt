@@ -1,0 +1,15 @@
+# 2026-10-11T20:45:30-06:00 e2e sobre la bandeja REAL (solo lectura) con el recolector ya commiteado
+$ .venv/bin/python3 -m tools.recoge_hallazgos_bb --dry-run
+recogidos=0 ya_recogidos=12 rechazados=0
+rc=0
+$ ls ~/.local/share/blackbox/hallazgos | wc -l
+12
+$ ls docs/agent_findings/*_bb_hallazgo_*.md | wc -l
+12
+$ .venv/bin/python3 -m pytest tests/test_recoge_hallazgos_bb.py tests/test_index_cosecha_clases.py tests/test_findings_indexed.py -q
+...................................                                      [100%]
+35 passed in 6.68s
+
+# control negativo medido el 2026-10-11 (sin docs/INDEX_BB_HALLAZGO.md):
+FAILED tests/test_findings_indexed.py::test_ningun_dictamen_nuevo_queda_sin_indexar (12 dictamenes bb_hallazgo nombrados, 1 failed)
+# sin la validacion de contrato: 3 casos de test_hallazgo_invalido_se_rechaza_y_no_se_copia fallaron; sin idempotencia: test_segunda_corrida_no_escribe_nada fallo; sin la clase en CLASES: 2 fallos
