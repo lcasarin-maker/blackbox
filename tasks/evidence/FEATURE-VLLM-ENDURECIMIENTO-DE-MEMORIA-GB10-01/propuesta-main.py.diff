@@ -1,0 +1,10 @@
+--- a/srv/ai/gateway/main.py	2026-10-12 09:40:20.357157515 -0600
++++ b/srv/ai/gateway/main.py	2026-10-12 09:40:20.380003953 -0600
+@@ -110,6 +110,7 @@
+         *build_env_args(cfg),
+         "-v", "/srv/ai/models:/models",
+         "--memory", mem, "--memory-swap", mem, "--oom-score-adj", "500", "--oom-score-adj", "500",
++        *cfg.get("docker_args", []),  # bb: p. ej. --annotation bb.gpu_budget_gib=N, que el runtime OCI de bb exige a todo contenedor con GPU
+         cfg["image"],
+         cfg["model_path"],
+         "--served-model-name", cfg["served_model_name"],

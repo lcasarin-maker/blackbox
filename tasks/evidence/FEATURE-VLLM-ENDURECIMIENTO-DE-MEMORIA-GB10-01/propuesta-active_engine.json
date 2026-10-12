@@ -1,0 +1,45 @@
+{
+ "engine": "vllm",
+ "image": "vllm/vllm-openai:v0.27.1",
+ "model_path": "/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4",
+ "served_model_name": "nemotron-local",
+ "host": "127.0.0.1",
+ "port": 8000,
+ "env": {
+  "VLLM_HOST_IP": "127.0.0.1",
+  "VLLM_USE_V2_MODEL_RUNNER": "0",
+  "CUDA_ENABLE_COREDUMP_ON_EXCEPTION": "1",
+  "CUDA_COREDUMP_FILE": "/models/_coredumps/vllm_%h_%p_%t",
+  "CUDA_COREDUMP_GENERATION_FLAGS": "skip_nonrelocated_elf_images,skip_global_memory,skip_shared_memory,skip_local_memory",
+  "CUDA_COREDUMP_SHOW_PROGRESS": "1"
+ },
+ "gpu_memory_utilization": 0.3,
+ "max_model_len": 32768,
+ "container_memory_gb": 75,
+ "admission_check_gb": 68,
+ "extra_args": [
+  "--trust-remote-code",
+  "--moe-backend",
+  "marlin",
+  "--mamba-backend",
+  "flashinfer",
+  "--mamba-cache-mode",
+  "align",
+  "--kv-cache-dtype",
+  "fp8",
+  "--enable-prefix-caching",
+  "--reasoning-parser",
+  "nemotron_v3",
+  "--enable-auto-tool-choice",
+  "--tool-call-parser",
+  "qwen3_xml",
+  "--max-num-batched-tokens",
+  "8192",
+  "--max-num-seqs",
+  "16"
+ ],
+ "docker_args": [
+  "--annotation",
+  "bb.gpu_budget_gib=44"
+ ]
+}
