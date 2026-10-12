@@ -1,0 +1,109 @@
+{
+ "esquema": "bb-fuentes/1",
+ "creado": "2026-10-12",
+ "origen": "tasks/evidence/FEATURE-COSECHA-DISTROS-ALTERNAS-GB10-01/cosecha.txt",
+ "busca": [
+  "CGROUP_DMEM",
+  "memacct",
+  "dmem.capacity",
+  "HAMi",
+  "MemAvailable",
+  "PSI",
+  "driver 610",
+  "driver 615",
+  "Secure Boot",
+  "oomd"
+ ],
+ "fuentes": [
+  {
+   "id": "graham33-nixos",
+   "tipo": "repo",
+   "url": "https://github.com/graham33/nixos-dgx-spark",
+   "nota": "NixOS; trae 615; README documenta CDMM por defecto desde R615"
+  },
+  {
+   "id": "straylight-nixos",
+   "tipo": "repo",
+   "url": "https://github.com/straylight-software/nixos-dgx-spark",
+   "nota": "NixOS; config kernel 6.17.1 con CGROUP_DMEM"
+  },
+  {
+   "id": "rageltd-arch",
+   "tipo": "repo",
+   "url": "https://github.com/RageLtd/linux-dgx-spark",
+   "nota": "Arch; config con CGROUP_DMEM y PSI desactivados"
+  },
+  {
+   "id": "jdvmi00-omarchy-spark",
+   "tipo": "repo",
+   "url": "https://github.com/jdvmi00/omarchy-spark",
+   "nota": "Omarchy; 610.57.04 via Arch Linux ARM; systemd-oomd solo x86_64"
+  },
+  {
+   "id": "maxspevack-spark-rocky",
+   "tipo": "repo",
+   "url": "https://github.com/maxspevack/spark-rocky",
+   "nota": "Rocky 10, kernel 6.18 con CGROUP_DMEM; driver 610.57.04 con SHA256 fijado"
+  },
+  {
+   "id": "tom-doerr-gpuoom",
+   "tipo": "repo",
+   "url": "https://github.com/tom-doerr/gpuoom",
+   "nota": "guardia OOM por PSI + MemAvailable + NVML con mlockall; MIT"
+  },
+  {
+   "id": "jagones84-vram-shield",
+   "tipo": "repo",
+   "url": "https://github.com/jagones84/VRAM_Shield",
+   "nota": "guardia de umbral fijo; MIT"
+  },
+  {
+   "id": "patcastle-omarchy-sparkdash",
+   "tipo": "repo",
+   "url": "https://github.com/patcastle/omarchy-sparkdash",
+   "nota": "monitor de memoria unificada en Omarchy; logica sin leer"
+  },
+  {
+   "id": "vroomfondel-dgxarley",
+   "tipo": "repo",
+   "url": "https://github.com/vroomfondel/dgxarley",
+   "nota": "no leido a fondo en la cosecha"
+  },
+  {
+   "id": "wiredquill-opensuse",
+   "tipo": "repo",
+   "url": "https://github.com/wiredquill/opensuse-tumbleweed-nvidia-dgx-spark",
+   "nota": "openSUSE Tumbleweed en DGX Spark"
+  },
+  {
+   "id": "foro-349124",
+   "tipo": "hilo",
+   "url": "https://forums.developer.nvidia.com/t/has-anyone-tried-an-alternative-linux-distro/349124",
+   "nota": "hilo de distros alternas (70 posts leidos 2026-10-12)"
+  },
+  {
+   "id": "foro-379085",
+   "tipo": "hilo",
+   "url": "https://forums.developer.nvidia.com/t/can-dgx-spark-work-with-non-dgx-os/379085",
+   "nota": "peticion de soporte no Debian"
+  },
+  {
+   "id": "foro-373655",
+   "tipo": "hilo",
+   "url": "https://forums.developer.nvidia.com/t/ubuntu-26-04-drivers-610-cuda-toolkit-13-3-zfs-on-gx10/373655",
+   "nota": "Ubuntu 26.04 con 610; rendimiento igual a 580"
+  },
+  {
+   "id": "kairos",
+   "tipo": "guia",
+   "url": "https://kairos.io/docs/installation/nvidia_dgx_spark/",
+   "nota": "Kairos en DGX Spark; leida por resumen"
+  },
+  {
+   "id": "omarchy-dragon",
+   "tipo": "articulo",
+   "url": "https://omarchy.org/news/2026/09/introducing-omarchy-dragon/",
+   "nota": "Jim Martin y Matt Gilg trabajan Omarchy en DGX Spark"
+  }
+ ]
+}

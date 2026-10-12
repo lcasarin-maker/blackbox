@@ -1,0 +1,194 @@
+COSECHA DE DISTROS ALTERNAS PARA DGX SPARK (GB10) - FEATURE-COSECHA-DISTROS-ALTERNAS-GB10-01
+Fecha: 2026-10-12   Modo: solo lectura. Nada clonado se ejecuto, compilo ni instalo.
+Clones (git clone --depth 1) en /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/cosecha_distros/<owner>_<repo>/
+Foro descargado como JSON publico de Discourse (<url>.json) y convertido a texto en .../cosecha_distros/foro/t349124.txt y t379085.txt.
+Convencion: LEIDO = archivo:linea o URL exacta. INFERENCIA = lo marco como tal. NO LEIDO = lista al final.
+
+======================================================================
+0. HILOS DEL FORO NVIDIA
+======================================================================
+0.1 https://forums.developer.nvidia.com/t/has-anyone-tried-an-alternative-linux-distro/349124
+ LEIDO COMPLETO: 70 posts (post 1 + 69 respuestas; el JSON declara posts_count=70, stream=70, 70 recuperados, ninguno MISSING).
+ Texto local: .../cosecha_distros/foro/t349124.txt
+ Contenido relevante (post#, autor, fecha):
+ - #2/#5/#7/#18/#36 (cosinus, eugr, 2025-10/11): Fedora 43 KDE aarch64, kernel 6.17.1 stock. Ethernet r8127 queda invisible tras reboot hasta apagado completo; Fedora stock mas lenta en GPU; Fedora Server + kernel propio compilado rinde mejor que DGX OS stock.
+ - #6 (aplattner, NVIDIA): hace falta el driver r8127 (en NV-Kernels) y otros cherry-picks para igualar el kernel de DGX OS.
+ - #15 (aseipp): kernels nvidia 6.14/6.17 en repos Ubuntu; ~800 parches sobre upstream 6.17.
+ - #23 (eugr, 2025-11-02): compila NVIDIA/NV-Kernels rama 24.04_linux-nvidia-6.17-next con la config de DGX OS; CONFIG_SYSTEM_TRUSTED_KEYS y CONFIG_SYSTEM_REVOCATION_KEYS hay que quitarlas fuera de Ubuntu; "Install NVIDIA drivers" (sin detalle de firma).
+ - #24/#28-#32/#52 (graham36, eugr): NixOS usa la config de anotaciones Debian de NVIDIA; faltar opciones de la anotacion rompe la deteccion de GPU en PyTorch.
+ - #35 (kal5): Fedora 43 Server, kernel 6.17.7, driver 580.95.05; comandos nvidia-smi -pm 1, nvidia-persistenced, grubby nvidia-drm.modeset=0.
+ - #48-#51 (maclean, eugr): para arrancar medios de instalacion: Secure Boot OFF en BIOS, firmware actualizado, modo grafico basico.
+ - #53-#59 (kal5, eugr): kernel propio 6.17.9; 64K pages sin ganancia clara; eugr reporta cuelgues con 64K.
+ - #62 (justin.garrison, 2025-12-27): Talos Linux soportado en Spark desde 1.12, kernel LTS 6.18.
+ - #64-#65 (2026-08): vasimv usa GX10 con Ubuntu 26.04, CUDA 13.3, drivers 610, ZFS (enlace a otro hilo: ubuntu-26-04-drivers-610-cuda-toolkit-13-3-zfs-on-gx10; NO abierto).
+ - #66, #69 (graham36, 2026-10-04): NixOS con kernel 7.0, CUDA 13.4, driver 615; release v1.3.0 de graham33/nixos-dgx-spark; el driver 615 cambia el modo de memoria coherente a CDMM (vLLM lento cargando checkpoints; arreglo --safetensors-load-strategy eager); mejora 1-8 % segun el propio autor.
+ - #70 (igor.pecovnik, 2026-10-11): opina que el trabajo real es upstream (Yocto/Armbian/Buildroot), no cambiar de distro.
+ BUSQUEDA de (1)-(6) en las 70 posts: ninguna menciona CGROUP_DMEM, HAMi, memacct, earlyoom, oomd, PSI ni limites de memoria por contenedor. (Grep local sobre t349124.txt abajo, ver control negativo.) Secure Boot aparece solo como "desactivalo" (#49) y como "quita las claves de confianza de Ubuntu" (#23).
+ Control negativo del grep: ver seccion 12.
+
+0.2 https://forums.developer.nvidia.com/t/can-dgx-spark-work-with-non-dgx-os/379085
+ LEIDO COMPLETO: 9 posts en el stream (8 respuestas), tema cerrado automaticamente 2026-08-19. Texto: .../foro/t379085.txt
+ - #2 NVES (NVIDIA): DGX OS es el unico SO soportado; otro SO permitido, soporte muy limitado; pueden pedir reimagen a imagen de fabrica.
+ - #4 hiroshiya: Fedora 44 en dos GX10, kernel 7.0.12-nv-1016.16, driver 595.84 con Runfile, btrfs; "usa los kernels mantenidos por NVIDIA"; enlaza guia de Red Hat para kernel RHEL.
+ - #5 elsaco: Spark usa ACPI no DT, cualquier distro nueva arranca.
+ - #6 sjug (el "post 6" de la ficha): solo pide una distro no Debian/Ubuntu. No aporta mas.
+ Ninguna mencion de (1)-(6).
+
+======================================================================
+1. graham33/nixos-dgx-spark  (NixOS)    https://github.com/graham33/nixos-dgx-spark
+======================================================================
+ Licencia: MIT (LICENSE:1). Ultima actividad: HEAD 2026-10-05 "overlays: skip torchaudio's test suite" (autor graham33-agent[bot]); git log -1.
+ Que hace: modulo y USB de NixOS para Spark; kernel NVIDIA 7.0.14 (4K y 64K) generado desde las anotaciones Debian de NVIDIA; driver NVIDIA R615 abierto (hardware.nvidia open=true, package nvidiaPackages.latest) modules/dgx-spark.nix:212,228; podman + nvidia-container-toolkit modules/dgx-spark.nix:252,262; memlock unlimited para RDMA :265-274; parametros de arranque espejo de DGX OS (pci=pcie_bus_safe :191, kho=off :200, cppc auto_sel_mode); dashboard DGX (modules/dgx-dashboard.nix, es el paquete oficial de NVIDIA portado, no UMA propio).
+ (1) limite de memoria GPU por contenedor/cgroup: NO. grep de dmem/memacct/HAMi/MemoryMax/memory.max: sin hits en el repo.
+ (2) CONFIG_CGROUP_DMEM: NO CONFIRMABLE en este repo. kernel-configs/nvidia-dgx-spark-7.0.14.nix es "terse" y solo lista diferencias contra el defecto de NixOS (cabecera lineas 1-7); solo hay CGROUP_MISC (l.235). Que CGROUP_DMEM este o no depende de la base; INFERENCIA: ausente del archivo = igual al defecto de NixOS, valor desconocido sin construir el kernel. NO se construyo.
+ (3) guardia OOM UMA: NO (sin hits earlyoom/oomd/MemAvailable). Hay "kho=off" l.200 con comentario sobre ENOMEM de ibv_reg_mr bajo presion.
+ (4) driver 610/615: SI para 615 (README.md:381-430: R615, CDMM por defecto; revert a NUMA con NVreg_CoherentGPUMemoryMode=numa y uvm_disable_sam_migration=false, README.md:424-430). Secure Boot: NO resuelto; README.md:82 "Disable Secure Boot in the DGX Spark BIOS". Los kernel-configs ponen LOCK_DOWN_IN_SECURE_BOOT=yes pero sin cadena de firma.
+ (5) monitores UMA: PARCIAL. nvtop (dgx-spark.nix, systemPackages) y el DGX Dashboard portado; ningun monitor propio de UMA.
+ (6) politica cgroup/slice Docker: NO (usa podman; sin slices ni limites).
+ Hallazgo util para nosotros: README.md:386-395 documenta que desde R615 el driver gestiona la memoria coherente (CDMM) y que esto aplica a GB10; relevante si pasamos a 615.
+
+======================================================================
+2. straylight-software/nixos-dgx-spark  (fork de la rama anterior)   https://github.com/straylight-software/nixos-dgx-spark
+======================================================================
+ Licencia: MIT (LICENSE:1). Ultima actividad: HEAD 2025-12-14 "bump nixified-ai" (Graham Bennett). Estancado frente al original.
+ Kernel NVIDIA 6.17.1 (modules/dgx-spark.nix:8). Driver: nvidiaPackages.production (modules/dgx-spark.nix:119), nvidia-container-toolkit :138.
+ (2) SI, en config de kernel 6.17.1: kernel-configs/nvidia-dgx-spark-6.17.1.nix:1494 CGROUP_DMEM = yes; :5969 MEMCG = yes; :5970 MEMCG_V1 = no; :8349 PSI = yes; :8350 PSI_DEFAULT_DISABLED = no. Esa config es la de NVIDIA (anotaciones) para 6.17, la misma familia que el kernel 6.17.0-1032-nvidia de este host.
+ (1) NO. (3) NO. (4) driver production, Secure Boot: README.md:27 "Disable Secure Boot". (5) NO. (6) NO.
+
+======================================================================
+3. RageLtd/linux-dgx-spark  (Arch Linux)   https://github.com/RageLtd/linux-dgx-spark
+======================================================================
+ Licencia: PKGBUILD y scripts MIT (LICENSE:1; README "License"); kernel GPL-2.0. Ultima actividad: HEAD 2026-08-17 "enable wifi, more optimizations from redhat"; clone superficial muestra 1 commit.
+ Que hace: paquete Arch del kernel NVIDIA (linux-nvidia-6.17 de Launchpad, configs/version.env: _kernelver=6.17.0, _ubuntupkg=1012.12), config generada desde los .nix de graham33 aplicados sobre arm64 defconfig (README "How it works"). Estado declarado "Early / experimental".
+ (2) NO: configs/config.aarch64:197 "# CONFIG_CGROUP_DMEM is not set".
+ (3) PSI desactivado: configs/config.aarch64:137 "# CONFIG_PSI is not set" (MEMCG si: :185 =y; MEMCG_V1 no :186). Esto invalida PSI/oomd/gpuoom en ese kernel salvo que se recompile: dato negativo importante.
+ (4) Driver: README "GPU driver": Arch Linux ARM trae nvidia-open-dkms y nvidia-utils aarch64 610.57.04+ (afirmacion del README; no verificada contra el repo de Arch). Secure Boot: no tratado (grep sin hits utiles; solo LOCK_DOWN_IN_SECURE_BOOT=y config.aarch64:11140).
+ (1) NO. (5) NO. (6) NO.
+
+======================================================================
+4. jdvmi00/omarchy-spark  (Omarchy + Arch Linux ARM; Jim Martin)  https://github.com/jdvmi00/omarchy-spark
+======================================================================
+ Identidad: la pagina de Omarchy (https://omarchy.org/news/2026/09/introducing-omarchy-dragon/, via WebFetch resumido) dice que Jim Martin trabaja en Omarchy para DGX Spark y Matt Gilg tiene un escritorio Omarchy funcionando en una Spark, y enlaza perfiles github.com/jdvmi00 y github.com/gilgm12. La atribucion jdvmi00 = Jim Martin es INFERENCIA por el enlace de la pagina; el repo omarchy-spark lo encontre por busqueda en GitHub.
+ Licencia: MIT para codigo original (LICENSE:1), GPL-3.0 y MIT de Omarchy en LICENSES/; el listado de la API marco NOASSERTION. Ultima actividad: HEAD 2026-09-07; release v0.1.0-preview.3 (README). "Developer preview", no soportado.
+ Que trae: recetas Arch de linux-dgx-spark (kernel 6.17.0-1014.14 -> 6.17.9-dgx-spark, BUILDING.md:88-90), cuda-dgx-spark, dgx-dashboard, ollama, nvidia-ai-workbench, dgx-spark-mlnx-hotplug (packages/). Docker con runtime NVIDIA verificado (README tabla).
+ (2) SI: packages/linux-dgx-spark/config.aarch64:215 CONFIG_CGROUP_DMEM=y; :145 CONFIG_PSI=y; :200 CONFIG_MEMCG=y (distinto del repo RageLtd).
+ (3) PARCIAL/NO para aarch64: packages/omarchy-settings/PKGBUILD:202-208 marca app.slice como candidato de systemd-oomd, pero SOLO en x86_64 (if [[ $CARCH == x86_64 ]]); en aarch64 se borra /etc/systemd/oomd.conf.d (l.231-233) y "systemd-oomd is not enabled there". Es oomd por cgroup, no UMA-GPU-aware.
+ (4) Driver: BUILDING.md:92-96: nvidia-open-dkms, nvidia-utils, libnvidia-container y nvidia-container-toolkit vienen del repo extra de Arch Linux ARM, 610.57.04-1 y toolkit 1.20.0-1; DKMS compila contra linux-dgx-spark-headers; "Nothing pins them". nvidia-ai-workbench/README.md:135,147 confirma driver 610.57.04. Secure Boot: no hay solucion ni mencion util en docs (grep "secure boot|MOK|sign" en docs/KNOWN-ISSUES.md y GETTING-STARTED.md sin hits); docs/KNOWN-ISSUES.md:3 y :75 declaran que falta un repositorio de paquetes firmado.
+ (1) NO. (5) PARCIAL (DGX Dashboard portado; ver tambien omarchy-sparkdash). (6) NO.
+ Omarchy Package Repository: la pagina de Omarchy no da URL. Hallazgo por API (repos de gilgm12 listados): gilgm12/omarchy-pkgs (pushed 2026-09-05) y gilgm12/omarchy-iso (2026-09-12). NO se clonaron ni leyeron; la relacion con el "Omarchy Package Repository" es INFERENCIA por el nombre.
+ KNOWN-ISSUES.md:31 menciona que el repositorio aarch64 de Omarchy publica algo (linea truncada en mi lectura, no leida completa).
+
+ 4b. patcastle/omarchy-sparkdash   https://github.com/patcastle/omarchy-sparkdash
+ MIT, HEAD 2026-09-18. Widget de barra Omarchy para sparkDash (MiaAI-Lab/sparkDash, NO clonado ni leido): muestra memoria unificada, VRAM, potencia, "memory pressure" como excepcion de flota (README.md lineas 1-25). (5) SI como dashboard que muestra "unified memory" y memoria presion; la logica esta en sparkDash (no leido). Resto NO.
+
+======================================================================
+5. maxspevack/spark-rocky  (Rocky Linux 10.2 + CIQ kernel 6.18)   https://github.com/maxspevack/spark-rocky
+======================================================================
+ Licencia: MIT (LICENSE; README final). Ultima actividad: HEAD 2026-08-16. "Soft-launched and unsupported ... Not a CIQ product" (README l.5).
+ Que hace: Rocky 10.2 + CIQ Linux Kernel 6.18.42-clk + driver NVIDIA abierto 610.57.04, "zero source patches" (README l.3); USB en vivo, instalacion a NVMe, registro de recetas sparkrun, recibos de benchmark.
+ (2) SI: config/rocky-6.18.34-gb10.config:215 CONFIG_CGROUP_DMEM=y; :145 CONFIG_PSI=y; :200 CONFIG_MEMCG=y.
+ (3) PARCIAL: scripts/04-build-image.sh:199-201 enmascara swap.target con el comentario "GB10 unified memory: swap-on-overcommit hangs the box (zombie instead of a clean CUDA OOM)". No hay guardia earlyoom propia (docs/benchmark/reproduce-pipeline.md:32 solo menciona que el asistente de sparkrun instala earlyoom con helpers apt, que no son necesarios aqui).
+ (4) SI y con detalle: config/versions.env:22 DRIVER_VER=610.57.04, :27 DRIVER_BRANCH=610, :33 DRIVER_SHA256 fijado (el .run de NVIDIA no tiene checksum firmado). Secure Boot: NO soportado por diseno: docs/use/running.md:19-21 y docs/use/install.md:13 "Secure Boot must be disabled"; docs/build/build.md:36-43 "Secure Boot: unsupported by design", confianza en artefacto firmado con GPG; scripts/01-build-kernel.sh:143-148 neutraliza MODULE_SIG.
+ (1) NO. (5) NO. (6) NO.
+
+======================================================================
+6. Kairos   https://kairos.io/docs/installation/nvidia_dgx_spark/
+======================================================================
+ LEIDO via WebFetch (resumen de modelo pequeno, no cita literal completa). Licencia y actividad de Kairos: NO LEIDAS.
+ Imagen inmutable: kairos-init con modelo nvidia-dgx-spark sobre ubuntu:24.04, "NVIDIA HWE kernel for Ubuntu 24.04", "open NVIDIA 580 kernel modules and headless driver"; repos DGX BaseOS y Spark; fwupd. La pagina no da version de kernel, no trata Secure Boot (solo menciona que existen Trusted Boot y providers), ni acceso a GPU en contenedores, ni cgroups/OOM.
+ (1)-(3) NO. (4) driver 580, no 610/615; firma no tratada. (5)(6) NO.
+
+======================================================================
+7. RHEL 10 / CentOS Stream 10 (Red Hat, Developer Preview)
+======================================================================
+ https://developers.redhat.com/articles/2026/06/23/building-custom-red-hat-enterprise-linux-kernel-nvidia-dgx-spark  (WebFetch, resumen)
+ Kernel desde https://gitlab.com/redhat/edge/kernel/nvidia-gb10.git, variante kernel-64k; driver 595.58.03 compilado de open-gpu-kernel-modules con kmod-nvidia-open.spec (5 modulos). Licencia del spec "MIT and GPLv2". Sin firma ni Secure Boot en el articulo. DMEM/MEMCG/PSI: no mencionados. OOM/limites UMA: no tratados. RHEL 10.y publicados no instalan en GB10, hay que usar CentOS Stream 10.
+ https://www.redhat.com/es/blog/supercharging-local-ai-development-rhel-nvidia-dgx-spark : HTTP 404 (la URL del buscador fallo). NO LEIDO.
+ NVIDIA DGX EL10 (https://docs.nvidia.com/dgx/dgx-el10-user-guide/release_notes.html): solo aparecio en resultados de busqueda; lista DGX A100/A800/H100/H200/B200, no Spark. NO abierto.
+ (1)-(3) NO LEIDO/NO. (4) 595.58.03, firma NO. (5)(6) NO.
+
+======================================================================
+8. Rocky Linux 10 (guia de NVIDIA/Rocky)
+======================================================================
+ No hay guia oficial de Rocky para Spark que encontrara. Lo existente es la comunidad: spark-rocky (seccion 5). Una busqueda web no hallo guia oficial.
+
+======================================================================
+9. Fedora 43/44 en Spark
+======================================================================
+ Sin repo propio. LEIDO solo en foros: 0.1 (#2, #5, #35, #36) y 0.2 (#4: Fedora 44, kernel 7.0.12-nv-1016.16, driver 595.84). Fedora 43 Server: driver 580.95.05 (#35). Instalacion de driver con .run, kernel NVIDIA compilado a mano. Sin (1)-(6).
+
+======================================================================
+10. Start9 (StartOS)
+======================================================================
+ https://community.start9.com/t/experience-report-dgx-spark-gb10-start9-os-v0-4-0-ollama-currently-cpu-only-gpu-not-detected/5347  (WebFetch resumen)
+ Imagen aarch64-nvidia v0.4.0-beta.9, driver 580.159.03, GCC 14.2.0. Secure Boot: SI resuelto por enrolamiento MOK: el asistente enrola la clave de firma de StartOS mediante MokManager en el primer reinicio; sin MOK el modulo NVIDIA no carga (posts de StuPleb 2026-07-13 y Walther 2026-07-14). Referencia al issue Start9Labs/start-technologies #3465, NO abierto.
+ (4) PARCIAL: es el unico caso leido donde el driver va firmado y cargado con Secure Boot activo (driver 580, no 610/615). (1)-(3),(5),(6): NO (el hilo no trata memoria).
+
+======================================================================
+11. Otras distros
+======================================================================
+ - openSUSE Tumbleweed: wiredquill/opensuse-tumbleweed-nvidia-dgx-spark (guia, 2 archivos, sin licencia, HEAD 2026-07-05). README: zypper install nvidia-driver-gfx-G06 nvidia-gfx-G06-kmp-default (l.106); parametros PCIe para evitar cuelgues (l.199); swappiness (l.189). Version de driver y kernel: no declaradas. Nada de (1)-(3),(5),(6). El HCL oficial https://en.opensuse.org/HCL:DGX-Spark devolvio 403: NO LEIDO.
+ - Talos Linux: foro 0.1 #62 (Talos 1.12, kernel 6.18). Docs https://docs.siderolabs.com/talos/v1.13/configure-your-talos-cluster/hardware-and-drivers/nvidia-gpu-proprietary (WebFetch): GB10 requiere arm64.nobti en la linea de kernel; extensiones nonfree-kmod-nvidia versionadas por release; no trata firma/Secure Boot ni limites de memoria. Release notes de Talos 1.12: NO LEIDAS.
+ - Ubuntu 26.04: foro 0.1 #65 (GX10, driver 610, CUDA 13.3, ZFS); hilo enlazado NO abierto.
+ - gpuoom y VRAM_Shield (no son distros; son la pieza (3), ver seccion 11b).
+ - Gentoo, Debian puro, Flatcar, Bazzite/Universal Blue: busqueda web y busqueda de repos en GitHub (consultas "dgx spark gentoo": 0 resultados; las demas, rate limit de la API al llegar a "debian") sin resultados utiles. Debian: la API de GitHub devolvio rate limit, NO consultado. NO LEIDO.
+ - vroomfondel/dgxarley (https://github.com/vroomfondel/dgxarley): Ansible, 4 Sparks con K3s sobre DGX OS (no es distro). LGPL-3.0 (listado API), HEAD 2026-10-12. roles/k3sserver/tasks/ensure_cgroups.yml es para RPi/cmdline.txt. Limites de memoria de Kubernetes solo en pods auxiliares (roles/k8s_dgx/tasks/hf_preload.yml:96-101: requests 2Gi / limits 8Gi). DSV4_MEM_WORKAROUND.md describe que la presion de memoria en carga de pesos es de paginas mmap de safetensors y no de CUDA, y como lo evitan con fastsafetensors. (6) NO (sin politica de slice/limite GPU); (3) NO; dato util para diagnostico UMA.
+
+ 11b. Piezas de la necesidad (3), halladas por GitHub (no son distros)
+ - tom-doerr/gpuoom   https://github.com/tom-doerr/gpuoom   MIT, 1 commit, HEAD 2026-09-22. OOM killer "GPU-aware" para UMA (GB10, Jetson, Grace) en Rust: dispara por MemAvailable bajo + PSI (README "Why another OOM killer", src/engine.rs:57-61,184), suma anon+shmem+swap+GPU por proceso via NVML en hilo aparte, mlock, sin alloc, unidad systemd en systemd/gpuoom.service. Mata UN proceso (pidfd, process_mrelease). Requiere PSI activo (src/engine.rs:61 "Boot with psi=1"): incompatible con el kernel RageLtd (PSI off). Es lo mas cercano a lo que buscamos en (3). NO se compilo ni ejecuto; leido README y src/engine.rs parcial.
+ - jagones84/VRAM_Shield  https://github.com/jagones84/VRAM_Shield  MIT, HEAD 2026-09-18. Watchdog Python+NVML para UMA: umbral fijo (ej. 113000 MB en GB10), modos PROCESS/SYSTEM, mata el mayor consumidor, servicio systemd de usuario (README). Sin PSI en lo que lei (src/vram_guard.py usa pynvml, psutil). (3) SI parcial.
+ - Ninguno es una limitacion por cgroup/contenedor.
+
+======================================================================
+12. CONTROLES NEGATIVOS
+======================================================================
+ Los grep de este informe pueden devolver cero. Controles corridos:
+ - Positivo: grep CGROUP_DMEM encontro straylight kernel-configs:1494, spark-rocky config:215, omarchy-spark config:215 y "not set" en RageLtd config:197; el grep distingue y/not set. Ademas /boot/config-$(uname -r) de este host da CONFIG_CGROUP_DMEM=y, CONFIG_PSI=y, CONFIG_MEMCG=y (este host ya tiene DMEM; lo ajeno no nos da el kernel).
+ - El mismo grep sobre graham33 devolvio 0 para CGROUP_DMEM y se explica por el formato terse (solo diferencias), por eso lo marco NO CONFIRMABLE y no NO.
+ - Palabras HAMi/memacct: 0 hits en todos los clones; el mismo patron en el mismo comando si encontro "earlyoom" (spark-rocky) y "oomd" (omarchy-spark), asi que el patron funciona.
+ - Un grep de 0 hits para DMEM/dmem en t349124.txt no se corrio como control aparte; la lectura completa del texto (70 posts) es la evidencia, y no hay mencion.
+
+======================================================================
+13. TABLA FINAL proyecto x necesidad
+======================================================================
+ (1) limite GPU por contenedor/cgroup | (2) kernel CGROUP_DMEM | (3) guardia OOM UMA | (4) driver 610/615 + firma/SB | (5) monitor UMA | (6) cgroup/slice Docker+GPU
+
+ graham33/nixos        | NO | NO CONFIRMABLE | NO | SI 615 (CDMM doc); SB: NO, desactivar | PARCIAL (nvtop, dashboard NVIDIA) | NO
+ straylight fork       | NO | SI (6.17.1 :1494) | NO | production; SB: NO | NO | NO
+ RageLtd Arch          | NO | NO (:197 not set; PSI off :137) | NO | 610.57+ via Arch ARM (README); SB: NO | NO | NO
+ omarchy-spark         | NO | SI (:215, PSI y MEMCG) | PARCIAL (oomd solo x86) | SI 610.57.04 via Arch ARM; SB: NO | PARCIAL (dashboard) | NO
+ omarchy-sparkdash     | NO | NO LEIDO | NO | NO | SI (memoria unificada, via sparkDash NO leido) | NO
+ spark-rocky           | NO | SI (:215) | PARCIAL (swap off) | SI 610.57.04 fijado; SB: NO por diseno | NO | NO
+ Kairos                | NO | NO LEIDO | NO | 580 solamente; firma NO LEIDO | NO | NO LEIDO
+ RHEL/CentOS Stream    | NO | NO LEIDO | NO | 595.58.03; firma NO | NO | NO
+ Fedora 43/44 (foro)   | NO | NO LEIDO | NO | 580/595 .run; SB: desactivar | NO | NO
+ Start9                | NO | NO LEIDO | NO | 580.159.03, SB SI por MOK | NO | NO LEIDO
+ Talos                 | NO LEIDO | NO LEIDO | NO LEIDO | NO LEIDO | NO | NO LEIDO
+ openSUSE Tumbleweed   | NO | NO LEIDO | NO | version NO LEIDA | NO | NO
+ gpuoom                | NO | n/a | SI (MemAvailable+PSI+GPU, 1 proceso) | n/a | NO | NO
+ VRAM_Shield           | NO | n/a | SI parcial (umbral fijo) | n/a | NO | NO
+ dgxarley (K3s)        | NO | NO LEIDO | NO | NO | NO | NO (limites k8s solo en pods auxiliares)
+
+======================================================================
+14. CONCLUSION
+======================================================================
+ 1. YA HECHO y adaptable: gpuoom (MemAvailable + PSI + GPU por proceso, MIT) es lo mas cercano a la guardia (3); VRAM_Shield es el caso simple de umbral fijo. Ninguno se ejecuto aqui.
+ 2. Kernel CGROUP_DMEM=y existe en cuatro configs leidas (straylight 6.17.1, omarchy-spark, spark-rocky 6.18 y este host); la necesidad (2) no es un hueco de distro, ya la cumplimos.
+ 3. Driver 610/615: spark-rocky (610.57.04, .run con SHA256 fijado) y omarchy-spark (610.57.04 via Arch ARM) y graham33 (615, con la nota de CDMM) lo traen; ninguno resuelve Secure Boot, todos piden desactivarlo; solo Start9 firma via MOK, con driver 580.
+ 4. NO existe en ninguna fuente leida: limite de memoria GPU por contenedor o cgroup (dmem, memacct, HAMi), politica de cgroup/slice para Docker con GPU en GB10, y monitor UMA propio dentro de una distro; el unico dato es que en foros NVIDIA los limites de cgroup no contienen la GPU (resultado de busqueda web, hilos 371180 y 353752, NO abiertos).
+ 5. Ojo: RageLtd Arch trae PSI desactivado (config:137), asi que gpuoom no funcionaria alli sin recompilar; los repos de NixOS no permiten saber DMEM sin construir el kernel.
+
+======================================================================
+15. NO LEIDO / LIMITACIONES
+======================================================================
+ - Resumenes por WebFetch (modelo pequeno, no texto literal): Kairos, Omarchy, articulo Red Hat, docs Talos, hilo Start9. Citas literales marcadas entre comillas solo donde las vi en el resumen.
+ - HTTP 404: https://www.redhat.com/es/blog/supercharging-local-ai-development-rhel-nvidia-dgx-spark. HTTP 403: https://en.opensuse.org/HCL:DGX-Spark. Sin rodeos.
+ - API de GitHub con rate limit (anonima) tras 9 busquedas; consultas Debian y alguna mas no corridas.
+ - No clonados: gilgm12/omarchy-pkgs, gilgm12/omarchy-iso, MiaAI-Lab/sparkDash, gitlab redhat nvidia-gb10, Kairos, siderolabs/talos, Start9Labs issue 3465, NV-Kernels.
+ - No abiertos: hilo ubuntu-26-04-drivers-610-cuda-toolkit-13-3-zfs-on-gx10; foro 371180, 353752, 364886 (hallazgos de busqueda sobre limites de contenedor y creep de memoria).
+ - Terse configs de graham33: valor de CGROUP_DMEM/PSI sin construir el kernel.
+ - Rocky: no existe guia oficial leida; solo spark-rocky.
+ - Gentoo, Debian puro, Flatcar, Bazzite/Universal Blue: sin resultados.
+ - Nada compilado ni ejecutado: todo (2) es lectura de archivos de config, no verificacion de un kernel booteado.
+ Criterio de cierre: hilo 349124 leido completo (70/70) y 6 repos clonados y leidos (graham33, straylight, RageLtd, omarchy-spark, spark-rocky, gpuoom) mas guias; los huecos de arriba quedan declarados.
+cosecha_distros_leida
