@@ -42,6 +42,8 @@ DATA_ROOT=/var/lib/bb-docker-lab
 EXEC_ROOT=/run/bb-docker-lab
 PIDFILE=$RUN_DIR/dockerd.pid
 CONF_DIR=$RUN_DIR/conf
+# /run esta montado noexec (medido 2026-10-12: "fork/exec .../bb-runtime: permission denied"): el lanzador vive en el data-root.
+BIN_DIR=$DATA_ROOT/bin
 CTRD_SOCK=$RUN_DIR/containerd.sock
 CTRD_PID=$RUN_DIR/containerd.pid
 CTRD_ROOT=$DATA_ROOT/containerd
@@ -92,7 +94,8 @@ asegura_lab() {
 
 requiere_root() { [ "$(id -u)" = 0 ] || die "'$1' necesita root: sudo bash $0 $1"; }
 
-vivo() { [ -f "$1" ] && kill -0 "$(cat "$1")" 2>/dev/null; }
+# /proc/<pid> y no `kill -0`: sin root, kill -0 a un proceso de root da EPERM y `status` decia "abajo" con el daemon arriba (medido 2026-10-12).
+vivo() { [ -f "$1" ] && [ -d "/proc/$(cat "$1")" ]; }
 
 # Espera acotada a que exista un socket: 60 x 0.5 s.
 espera_socket() {
@@ -104,7 +107,7 @@ espera_socket() {
 }
 
 escribe_configs() {
-    mkdir -p "$CONF_DIR" "$CTRD_STATE" "$CTRD_ROOT" "$LAB_DATA" "$EXEC_ROOT"
+    mkdir -p "$CONF_DIR" "$BIN_DIR" "$CTRD_STATE" "$CTRD_ROOT" "$LAB_DATA" "$EXEC_ROOT"
     cat >"$CONF_DIR/containerd.toml" <<EOF
 version = 3
 root = "$CTRD_ROOT"
@@ -121,17 +124,18 @@ disabled_plugins = ["io.containerd.grpc.v1.cri", "io.containerd.cri.v1.images", 
 EOF
     local py
     py=$(command -v python3) || die "no hay python3"
-    cat >"$CONF_DIR/bb-runtime" <<EOF
+    cat >"$BIN_DIR/bb-runtime" <<EOF
 #!/bin/sh
 # Lanzador del envoltorio para el daemon de laboratorio (daemon.json no pasa entorno).
 export BLACKBOX_DATA="$LAB_DATA"
 export BB_OCI_REAL_RUNTIME="$REAL_RUNTIME"
 exec "$py" "$WRAPPER" "\$@"
 EOF
-    chmod 0755 "$CONF_DIR/bb-runtime"
+    chmod 0755 "$BIN_DIR/bb-runtime"
+    ! findmnt -T "$BIN_DIR" -no OPTIONS | grep -qw noexec || die "$BIN_DIR esta en un montaje noexec: el runtime no se podria ejecutar"
     cat >"$CONF_DIR/daemon.json" <<EOF
 {
-  "runtimes": {"bb": {"path": "$CONF_DIR/bb-runtime"}},
+  "runtimes": {"bb": {"path": "$BIN_DIR/bb-runtime"}},
   "default-runtime": "bb",
   "cgroup-parent": "$SLICE",
   "exec-opts": ["native.cgroupdriver=systemd"]
