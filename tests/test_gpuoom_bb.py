@@ -108,3 +108,26 @@ def test_lee_proc_real_encuentra_este_proceso():
     import os
     filas, omitidos = g.lee_proc()
     assert os.getpid() in {p[0] for p in filas} and omitidos >= 0
+
+
+def test_el_muestreo_corre_en_otro_hilo_y_no_bloquea_la_decision():
+    import threading
+    import time
+
+    liberar = threading.Event()
+    arrancado = threading.Event()
+    hilos = []
+
+    def colgado():
+        hilos.append(threading.current_thread().name)
+        arrancado.set()
+        liberar.wait(timeout=5.0)  # simula nvidia-smi bloqueado por el cerrojo del driver
+        return "1, 10\n"
+
+    m = g.MuestreadorGpu(ejecuta=colgado)
+    m.arranca(intervalo=0.01)
+    assert arrancado.wait(timeout=2.0)
+    t0 = time.monotonic()
+    mapa, nota = m.lee(t0)  # no debe esperar al hilo colgado
+    liberar.set()
+    assert time.monotonic() - t0 < 1.0 and hilos[0] == "gpuoom-gpu" and nota.startswith("NOT_COLLECTED")

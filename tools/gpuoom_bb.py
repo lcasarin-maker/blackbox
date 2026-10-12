@@ -116,6 +116,16 @@ class MuestreadorGpu:
         with self._cerrojo:
             self._copia = (ahora, d)
 
+    def arranca(self, intervalo: float = GPU_INTERVALO_S) -> threading.Thread:
+        """Hilo demonio: muestrea cada `intervalo` s; si nvidia-smi se bloquea, solo se bloquea este hilo."""
+        def bucle() -> None:
+            while True:
+                self.muestrea(time.monotonic())
+                time.sleep(intervalo)  # blocking-sleep: hilo de muestreo de vida larga, el trabajo es la llamada a nvidia-smi -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.8 -- revalidado 2026-10-12: hilo demonio aparte del ciclo de decision
+        h = threading.Thread(target=bucle, name="gpuoom-gpu", daemon=True)
+        h.start()
+        return h
+
     def lee(self, ahora: float) -> tuple[dict[int, int], str]:
         with self._cerrojo:
             c = self._copia
@@ -173,14 +183,11 @@ def paso(modo: str, disponible_pct: float | None, psi_some: float | None, ahora:
 
 def principal() -> None:
     gpu = MuestreadorGpu()
-    ultimo_gpu = 0.0
+    gpu.arranca()
     desde = None
     total = _meminfo_kib("MemTotal") or 1
     while True:
         ahora = time.monotonic()
-        if ahora - ultimo_gpu >= GPU_INTERVALO_S:
-            gpu.muestrea(ahora)
-            ultimo_gpu = ahora
         disp = _meminfo_kib("MemAvailable")
         psi = _psi_some()
         pct = None if disp is None else disp / total * 100
