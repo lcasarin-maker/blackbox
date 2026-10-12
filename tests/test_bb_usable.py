@@ -49,8 +49,17 @@ def _cargar():
 
 
 @pytest.fixture
-def bbu():
-    return _cargar()
+def bbu(tmp_path, monkeypatch):
+    """Desde el escalon (2026-10-12) el bucle lee cgroup y /proc y escribe en
+    $BLACKBOX_DATA en cada vuelta. Aqui se le dan raices vacias y datos propios:
+    estos tests miden el latido, y no pueden leer la maquina real ni escribir en
+    los datos vivos. El escalon tiene su suite en test_escalon_app_slice.py."""
+    mod = _cargar()
+    monkeypatch.setenv("BLACKBOX_DATA", str(tmp_path / "datos"))
+    (tmp_path / "sin-proc").mkdir()
+    monkeypatch.setattr(mod, "CGROUP_ROOT", tmp_path / "sin-cgroup")
+    monkeypatch.setattr(mod, "PROC_ROOT", tmp_path / "sin-proc")
+    return mod
 
 
 # ----------------------------------------------------- lectura de la senal
