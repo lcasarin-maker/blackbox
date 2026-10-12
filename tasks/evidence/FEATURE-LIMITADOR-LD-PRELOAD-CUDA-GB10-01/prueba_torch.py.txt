@@ -1,0 +1,5 @@
+import sys, torch
+n=int(sys.argv[1])<<20
+try:
+    x=torch.empty(n,dtype=torch.uint8,device="cuda"); torch.cuda.synchronize(); print("OK alloc",n>>20,"MiB", "mem_get_info free MiB",torch.cuda.mem_get_info()[0]>>20)
+except Exception as e: print("FALLA",type(e).__name__,str(e)[:120])

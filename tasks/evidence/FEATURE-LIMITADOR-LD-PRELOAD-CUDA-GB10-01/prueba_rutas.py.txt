@@ -1,0 +1,7 @@
+import ctypes, sys
+c=ctypes.CDLL("libcuda.so.1"); c.cuInit(0); d=ctypes.c_int(); c.cuDeviceGet(ctypes.byref(d),0)
+ctx=ctypes.c_void_p(); c.cuDevicePrimaryCtxRetain(ctypes.byref(ctx),d); c.cuCtxSetCurrent(ctx)
+n=1<<30; p=ctypes.c_void_p()
+print("cuMemAlloc_v2     1GiB rc=",c.cuMemAlloc_v2(ctypes.byref(p),ctypes.c_size_t(n)))
+print("cuMemAllocManaged 1GiB rc=",c.cuMemAllocManaged(ctypes.byref(p),ctypes.c_size_t(n),1))
+print("cuMemAllocHost    1GiB rc=",c.cuMemAllocHost_v2(ctypes.byref(p),ctypes.c_size_t(n)))
