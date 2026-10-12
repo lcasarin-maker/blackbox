@@ -64,7 +64,7 @@ def paso(modo_actual: str, meminfo: int | None, psi: float | None, directorio: P
 def main() -> None:
     while True:
         paso(interruptores.modo(NOMBRE), lee_meminfo(), lee_psi_full())
-        time.sleep(1)  # blocking-sleep: intervalo del vigilante de vida larga, sin I/O que esperar -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.8 -- revalidado 2026-10-12: demonio de usuario sin otro hilo; a 1 Hz la rampa de 0.7 GiB/s mueve MemAvailable ~0.7 GiB entre lecturas
+        time.sleep(1)  # blocking-sleep: intervalo del vigilante de vida larga, sin I/O que esperar -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.9 -- re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 67 (8d33e5cb) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-12: demonio de usuario sin otro hilo; a 1 Hz la rampa de 0.7 GiB/s mueve MemAvailable ~0.7 GiB entre lecturas
 
 
 if __name__ == "__main__":

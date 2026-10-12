@@ -121,7 +121,7 @@ class MuestreadorGpu:
         def bucle() -> None:
             while True:
                 self.muestrea(time.monotonic())
-                time.sleep(intervalo)  # blocking-sleep: hilo de muestreo de vida larga, el trabajo es la llamada a nvidia-smi -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.8 -- revalidado 2026-10-12: hilo demonio aparte del ciclo de decision
+                time.sleep(intervalo)  # blocking-sleep: hilo de muestreo de vida larga, el trabajo es la llamada a nvidia-smi -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.9 -- re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 124 (c370a699) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-12: hilo demonio aparte del ciclo de decision
         h = threading.Thread(target=bucle, name="gpuoom-gpu", daemon=True)
         h.start()
         return h
@@ -192,7 +192,7 @@ def principal() -> None:
         psi = _psi_some()
         pct = None if disp is None else disp / total * 100
         desde, _ = paso(interruptores.modo(NOMBRE), pct, psi, ahora, desde, lee_proc, gpu)
-        time.sleep(1)  # blocking-sleep: intervalo del vigilante de vida larga, sin I/O que esperar -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.8 -- revalidado 2026-10-12: demonio de usuario; a 1 Hz la rampa medida de 9.3 GiB/s mueve MemAvailable ~8% entre lecturas, de ahi el suelo critico inmediato
+        time.sleep(1)  # blocking-sleep: intervalo del vigilante de vida larga, sin I/O que esperar -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.9 -- re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 195 (f90a57d5) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-12: demonio de usuario; a 1 Hz la rampa medida de 9.3 GiB/s mueve MemAvailable ~8% entre lecturas, de ahi el suelo critico inmediato
 
 
 def _meminfo_kib(clave: str) -> int | None:
