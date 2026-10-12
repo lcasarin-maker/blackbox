@@ -1,0 +1,130 @@
+Inventario de propiedad de la maquina -- FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE-LA-MAQUINA-01
+Fecha: 2026-10-12. Metodo: solo lectura, sin sudo, sin tocar nada vivo (ls, cat, dpkg -S,
+dpkg --verify, systemctl list-timers, crontab -l). Ningun original se edito ni se movio.
+
+Regla de ubicacion (estudio bb/Atlas, decision de Luis 2026-10-12):
+  bb          = mide o actua sobre la maquina sin necesitar a Atlas
+  Atlas       = conocimiento y cola de trabajos
+  pila-IA     = motores, modelos, imagenes, datos de la pila de IA (NO es de bb)
+  SO-base     = paquete del SO o del fabricante (dpkg lo reclama) o instalador del SO
+  otro-repo   = unidad de otro proyecto del dueno, versionada en ese proyecto
+Nombres de proyectos privados redactados como <proyecto-privado-N> (repo publico,
+tests/test_sin_datos_privados.py).
+
+Columnas: ruta | dueno (fs) | que hace | adoptada? | destino
+
+ESTADO: INCOMPLETO. Falta la pieza 10.1 (regla de auditoria de bb, ilegible sin root).
+Por eso este fichero NO lleva la marca que cierra la ficha.
+
+== 1. /srv/ai ==========================================================================
+1.1  /srv/ai/gpu_governance/{admission_check,gpu_lock,monitor_memory}.sh | lcasarin | veto de memoria, exclusion de GPU, monitor | YA (adopted/gpu_governance) | bb
+1.2  /srv/ai/gpu_governance/gpu_sampler.sh.suspendido-2026-09-07 | lcasarin | muestreador suspendido | YA (SUSPENDIDO en suspended/MANIFIESTO.md, vence 2026-11-07) | bb
+1.3  /srv/ai/gpu_governance/gpu.lock | lcasarin | estado en ejecucion del lock | NO: estado, no configuracion | bb (runtime)
+1.4  /srv/ai/gateway/admission_check_wrapper.sh | lcasarin 775 | ExecStartPre del motor: lee admission_check_gb y llama a admission_check.sh | ADOPTADA HOY -> adopted/gateway/ | bb
+1.5  /srv/ai/gateway/active_engine.json | lcasarin | imagen, modelo, flags y memoria del motor | NO | pila-IA (bb lo LEE: admission_check_gb, container_memory_gb)
+1.6  /srv/ai/gateway/active_engine*.bak* (14 ficheros) | lcasarin | historico de configuraciones del motor | NO | pila-IA
+1.7  /srv/ai/gateway/main.py, README.md, configs/ (vacio), __pycache__/ | lcasarin | lanzador del contenedor del motor y su contrato L3 | NO | pila-IA
+1.8  /srv/ai/librechat/config/librechat.yaml (+ .bak) | lcasarin | configuracion de la UI de chat | NO | pila-IA
+1.9  /srv/ai/librechat/.env, .env.bak-* | lcasarin 600 | SECRETOS | NO, NUNCA (no se leyeron) | pila-IA
+1.10 /srv/ai/librechat/data, mongo/ | lcasarin, dnsmasq | datos de la UI | NO | pila-IA
+1.11 /srv/ai/engines/ollama/store (vacio) | lcasarin | almacen de un motor | NO | pila-IA
+1.12 /srv/ai/bakeoff/ (runner.py, workloads, results) | lcasarin | benchmark de motores (mide motores, no la maquina) | NO | pila-IA
+1.13 /srv/ai/suspensiones/open-webui-2026-08-17.json | lcasarin | volcado `docker inspect` de un contenedor suspendido; trae su entorno (7 coincidencias de key/token/secret: no se copia) | NO | pila-IA
+1.14 /srv/ai/vendor/ (marker-venv, SkillOpt) | lcasarin | dependencias de la pila | NO | pila-IA
+1.15 /srv/ai/models/ (155G), _downloads/ (40G), storage/ (root, open-webui) | lcasarin/root | modelos y datos | NO | pila-IA (bb lee models/_coredumps)
+1.16 /srv/ai/logs/memory_monitor.log | lcasarin | salida de monitor_memory.sh (adoptado) | NO: dato, no configuracion | bb (runtime)
+1.17 /srv/ai/logs/gpu/*.csv (11) | lcasarin | salida historica del muestreador suspendido | NO: dato | bb (runtime)
+1.18 /srv/ai/.claude/ | lcasarin | estado de un agente sobre /srv/ai | NO | otro (estado de herramienta, puede llevar credenciales)
+
+== 2. ~/.config/systemd/user ===========================================================
+2.1  ai-gpu-telemetry.service, ai-memory-monitor.{service,timer}, ai-nemotron-vigilante.{service,timer}, atom-crash-detector.{service,timer}, atom-gpu-telemetry.service, bb-aviso-termico.service, bb-reboot-verdict.{service,timer}, blackbox-drift.{service,timer}, blackbox-sample.{service,timer} | lcasarin | ver SPEC Inventario de propiedad | YA (adopted/systemd-user) | bb
+2.2  bb-guardia-proceso.service | lcasarin | corre bin/bb-guardia-proceso (frena un proceso desbocado) | ADOPTADA HOY -> adopted/systemd-user/ (identica a systemd/bb-guardia-proceso.service) | bb
+2.3  app.slice.d/99-blackbox.conf, app.slice.d/99-blackbox-escritorio.conf, session.slice.d/, app-gnome-.scope.d/, snap.antigravity.antigravity-.scope.d/ | lcasarin | techos y memory.low del escritorio | YA (adopted/system-config, home_...) | bb
+2.4  ai-nemotron.service (+ .bak-pre-admission-fix) | lcasarin | lanza el motor via main.py; su ExecStartPre es el wrapper 1.4 | NO | pila-IA (bb lo vigila y reinicia por systemctl)
+2.5  ai-ollama.service | lcasarin | motor de modelos pequenos (no habilitado) | NO | pila-IA
+2.6  ai-memory-monitor.timer.bak-2026-08-28 | lcasarin | copia vieja | NO | basura de bb; no se adopta un .bak
+2.7  atlas-api.service, atlas-api.service.d/memoria-acotada.conf (MemoryMax=8G) | lcasarin | API de Atlas y su techo | NO | Atlas
+2.8  kb-nightly-investigator.{service,timer}, liberation-watchdog.{service,timer}, liberation-watchdog.timer.d/cuanto-5min.conf, overnight-judge-watchdog.{service,timer} | lcasarin | cola y consolidacion de Atlas | NO | Atlas
+2.9  <proyecto-privado-1>-{fichas,guardian,monitor} (.service/.timer, 4 ficheros) | lcasarin | cadena de trabajo de otro proyecto | NO | otro-repo
+2.10 <proyecto-privado-2>-* (10 symlinks a su repo) | lcasarin | sincronizacion de otro proyecto, ya versionada alli | NO | otro-repo
+2.11 simplecode-daemon.service | lcasarin | demonio del kit simplecode | NO | otro-repo (simplecode)
+2.12 systemd/app-com.anthropic.Claude-.scope.d (en el repo) | -- | plantilla de bb NO desplegada en la maquina | n/a | bb (hallazgo: plantilla sin despliegue; no es adopcion)
+
+== 3. /etc/systemd/system y /etc/systemd/*.conf.d ======================================
+3.1  atom-clock-lock.service, atom-secundarias.slice, bb-usable.service, nvrm-watch.{service,timer}, docker.slice.d/99-blackbox.conf, system.slice.d/99-blackbox.conf, earlyoom.service.d/override.conf, sysstat-collect.timer.d/override.conf, user.slice.d, user-.slice.d, session-.scope.d, user@.service.d (99-blackbox-escritorio.conf), system.conf.d/99-blackbox-watchdog.conf | root | ver SPEC | YA | bb
+3.2  /etc/systemd/coredump.conf.d/99-blackbox.conf | root | techo de volcados (seccion 1 de enable-privileged.sh) | ADOPTADA HOY | bb
+3.3  /etc/systemd/system.conf.d/99-blackbox.conf | root | DefaultLimitCORE=infinity (seccion 2) | ADOPTADA HOY | bb
+3.4  /etc/systemd/user.conf.d/99-blackbox.conf | root | idem usuario (seccion 2) | ADOPTADA HOY | bb
+3.5  journal-udp-forward.service | root | reenvia journalctl -kf por UDP a otra maquina (reemplazo de netconsole) | ADOPTADA HOY | bb
+3.6  dgx-dashboard.service, dgx-dashboard-admin.service | root | dpkg: dgx-dashboard | NO | SO-base (fabricante)
+3.7  docker.service.d/docker-override.conf | root | dpkg: nv-docker-options | NO | SO-base
+3.8  nvidia-persistenced.service.d/nv-persistence-override.conf | root | dpkg: nv-persistence-mode | NO | SO-base
+3.9  avahi-daemon.service.d/override.conf | root | dpkg: nvidia-spark-avahi-conf | NO | SO-base
+3.10 dcgm.service -> nvidia-dcgm; nvsm-*.service -> /dev/null | root | monitoreo del fabricante | NO (SPEC: "Deliberadamente fuera") | SO-base
+3.11 restart-resolved.service | root | reinicia systemd-resolved antes de la red; sin paquete, sin repo que lo cite | NO | SO-base (red; no mide ni actua sobre cuelgue/memoria)
+3.12 snap-*.mount, snap.*.service | root | snapd | NO | SO-base
+3.13 /etc/systemd/sleep.conf.d/disable_suspend.conf | root | dpkg: nvidia-no-systemd-suspend | NO | SO-base
+
+== 4. Docker ============================================================================
+4.1  /etc/docker/daemon.json | root | runtime nvidia + cgroup-parent=docker.slice (seccion 9) | ADOPTADA HOY | bb
+4.2  docker.slice.d/99-blackbox.conf | root | techo agregado | YA | bb
+4.3  ~/.docker/config.json | -- | credenciales de registro | NO, NUNCA (no se leyo) | otro
+4.4  flags --memory de cada contenedor | -- | vienen de active_engine.json / ai-ollama.service | NO | pila-IA
+
+== 5. /etc/sysctl.d =====================================================================
+5.1  99-blackbox-panic.conf, 99-freeze-panic.conf, 99-nvidia-unified-memory.conf, 99-sysrq.conf | root | ver SPEC | YA | bb
+5.2  10-*.conf (procps), 20-nvidia-defaults.conf (nvidia-kernel-defaults), 50-cursor.conf (paquete cursor), 99-sysctl.conf -> ../sysctl.conf (solo comentarios) | root | dpkg los reclama | NO | SO-base
+
+== 6. /etc/default ======================================================================
+6.1  /etc/default/earlyoom | root | EARLYOOM_ARGS (seccion 6, editado en sitio; conffile modificado) | ADOPTADA HOY | bb
+6.2  /etc/default/kdump-tools | root | KDUMP_SKIP_VMCORE=1 | YA | bb
+6.3  /etc/default/grub | root | GRUB_DEFAULT fijado por la seccion 8b | ADOPTADA HOY | bb
+6.4  /etc/default/grub.d/kdump-tools.cfg | root | crashkernel=1G-:512M (conffile de kdump-tools modificado) | ADOPTADA HOY | bb
+6.5  /etc/default/grub.d/{menu,no-grubmenu,nvidia-*}.cfg | root | dpkg: dgxstation-grub, nv-no-grubmenu, nvidia-spark-* | NO | SO-base
+6.6  /etc/default/grub.d/{disable-init-on-alloc,grubserial,iommu}.cfg | root | sin paquete; fechas de la instalacion del SO (2025-11-07, 2026-07-12) | NO | SO-base (imagen del fabricante)
+6.7  /etc/default/sysstat (ENABLED="false") | root | bb NO lo toca a proposito (seccion 3: manda el drop-in de sysstat-collect.timer) | NO | SO-base
+
+== 7. Drop-ins de slices ===============================================================
+7.1  app.slice.d/99-blackbox.conf, docker.slice.d/99-blackbox.conf, system.slice.d/99-blackbox.conf y la cadena 99-blackbox-escritorio | -- | techos y memory.low | YA (todas) | bb
+
+== 8. udev y modprobe ==================================================================
+8.1  /etc/modprobe.d/99-blackbox-uvm.conf | root | uvm_global_oversubscription=0 | YA | bb
+8.2  /etc/modprobe.d/{sbsa_gwdt,cppc_cpufreq,zz-nvidia-drm-override,nvidia-spark-r8169,nvidia-graphics-drivers-kms,disable-algif_aead,dkms,blacklist*,alsa-base,iwlwifi,mdadm}.conf | root | dpkg los reclama (nvidia-*, kmod, dkms, ...) | NO | SO-base
+8.3  /etc/udev/rules.d/70-snap.*.rules | root | snapd | NO | SO-base
+8.4  /etc/udev/rules.d/osdisk.rules | root | "Written by curtin": enlace by-dname del disco del SO (lleva el serial del disco) | NO | SO-base (instalador)
+8.5  /etc/udev/rules.d/99-nvme-disk-group.rules | root | GROUP=disk MODE=0640 en nvme*n* (2026-08-31). Sin paquete; ningun repo revisado (bb, Atlas tools/docs, simplecode src) lo cita | NO | SO-base, ORIGEN SIN ATRIBUIR (endurece permisos de disco; no mide ni actua sobre cuelgue/memoria)
+
+== 9. cron y timers ====================================================================
+9.1  timers de usuario de bb (blackbox-sample, blackbox-drift, ai-memory-monitor, ai-nemotron-vigilante, atom-crash-detector, bb-reboot-verdict) | -- | -- | YA | bb
+9.2  nvrm-watch.timer, sysstat-collect.timer (+ override) | -- | -- | YA | bb
+9.3  timers de sistema restantes (apt-*, fwupd, anacron, ua, motd, logrotate, man-db, e2scrub, fstrim, dpkg-db-backup, tmpfiles, sysstat-summary, update-notifier-*) | root | paquetes | NO | SO-base
+9.4  /etc/cron.d/{anacron,e2scrub_all,sysstat} | root | paquetes | NO | SO-base
+9.5  crontab de usuario: 3 lineas del kit simplecode, 1 de <proyecto-privado-3> | lcasarin | auditorias de flota / cosecha semanal | NO | otro-repo
+9.6  /var/spool/cron/crontabs | root | ilegible sin root | COULD_NOT_RUN (solo se vio el crontab propio con crontab -l) | --
+
+== 10. Otros escritos por enable-privileged.sh ==========================================
+10.1 /etc/audit/rules.d/10-blackbox-signals.rules | root | regla de auditoria de senales (seccion 7, DEBT-DGX-438) | NO: /etc/audit es ilegible sin root (`ls: Permiso denegado`); y `bb drift` corre como usuario, asi que tampoco podria compararla (la veria AUSENTE) | bb -- PENDIENTE
+10.2 /etc/security/limits.d/99-blackbox-core.conf | root | core unlimited (seccion 2) | ADOPTADA HOY | bb
+10.3 /etc/security/limits.d/{nv-limits,99-nv-spark-limits}.conf | root | memlock/nofile del fabricante | YA (solo-registro) | bb
+10.4 /etc/security/limits.d/{10-gamemode,25-pw-rlimits}.conf | root | paquetes | NO | SO-base
+10.5 /usr/local/bin/nvrm-watch.sh | root | detector NVRM | YA | bb
+10.6 /usr/local/bin/journal-udp-forward.sh | root 755 | cuerpo de 3.5 | ADOPTADA HOY, con la IP destino REDACTADA (<REDACTADO-IP-LAN>) | bb
+10.7 /usr/local/bin/{syft,nsys,nsys-ui,docker-credential-workbench} | root | herramientas | NO | SO-base / otro
+10.8 /usr/local/sbin/nv_scripts/ | root | scripts del fabricante | NO | SO-base
+
+== Relacion de informacion con la pila de IA ===========================================
+bb no versiona la pila de IA. Lee, sin escribir: /srv/ai/gateway/active_engine.json
+(admission_check_gb, container_memory_gb) y /srv/ai/models/_coredumps. Actua sobre ella solo
+por systemctl: el vigilante reinicia ai-nemotron.service, y el gate de admision (1.4, adoptado)
+corre como su ExecStartPre. Cambiar de motor o modelo es editar active_engine.json, que no
+produce divergencia en `bb drift`.
+
+== bb drift ============================================================================
+Antes: revisados 47, divergentes 0, ausentes 0, suspendidos 1.
+Despues: revisados 59, divergentes 0, ausentes 0, suspendidos 1 (12 sujetos nuevos).
+
+== Lo que falta para cerrar ============================================================
+- 10.1: adoptar la regla de auditoria. Necesita root para leerla y un camino para que
+  `bb drift` la compare (corre como usuario y /etc/audit es ilegible para el usuario). Hasta entonces
+  queda fuera de la vigilancia.
+- 9.6: crontabs de otros usuarios (root) sin revisar: COULD_NOT_RUN.
