@@ -994,6 +994,9 @@ vllm:kv_cache_usage_perc{engine="0",model_name="nemotron-local"} 0.45
 # HELP vllm:num_preemptions_total Cumulative number of preemption from the engine.
 # TYPE vllm:num_preemptions_total counter
 vllm:num_preemptions_total{engine="0",model_name="nemotron-local"} 3.0
+vllm:prompt_tokens_total{engine="0",model_name="nemotron-local"} 1.6100115e+07
+vllm:prompt_tokens_cached_total{engine="0",model_name="nemotron-local"} 99.0
+vllm:generation_tokens_total{engine="0",model_name="nemotron-local"} 222767.0
 """
 
 
@@ -1025,6 +1028,9 @@ def test_leer_vllm_metrics_exito_parsea_campos_y_reasons(monkeypatch):
     assert metrics["vllm_num_requests_waiting_by_reason"] == {"capacity": 1.0, "deferred": 0.0}
     assert metrics["vllm_kv_cache_usage_perc"] == 0.45
     assert metrics["vllm_num_preemptions_total"] == 3.0
+    # contadores de tokens (FEATURE-INCIDENTE-CAMPOS-NO-COLECTADOS-01): el decoy `prompt_tokens_cached_total` no se cuela
+    assert metrics["vllm_generation_tokens_total"] == 222767.0
+    assert metrics["vllm_prompt_tokens_total"] == 16100115.0
     assert "vllm_ausente" not in metrics
 
 
@@ -1040,6 +1046,8 @@ def test_leer_vllm_metrics_no_alcanzable_declara_ausencia(monkeypatch):
     assert metrics["vllm_num_requests_waiting"] is None
     assert metrics["vllm_kv_cache_usage_perc"] is None
     assert metrics["vllm_num_preemptions_total"] is None
+    assert metrics["vllm_generation_tokens_total"] is None  # ausente no es 0 tokens
+    assert metrics["vllm_prompt_tokens_total"] is None
     assert "vllm /metrics no alcanzable" in metrics["vllm_ausente"]
 
 
