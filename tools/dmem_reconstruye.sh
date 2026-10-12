@@ -8,14 +8,16 @@
 # primero, compila bajo systemd-run (MemoryMax 8G, sin swap), y deja los .ko SIN FIRMAR en
 # ~/.local/share/blackbox/dmem/construidos/<driver>-<kernel>/ con sus sha256. NO instala ni reinicia: imprime los comandos
 # con sudo (firma + instala), porque eso cambia el arranque y es decision de quien lo corre.
+# --instala: despues de compilar, corre con sudo `dmem_modulo.sh retrocede` (si hay instalacion), `firma` e `instala`. NUNCA reinicia.
+#   Se niega ANTES de compilar (rc 6) si la llave MOK no esta enrolada: sin ella el kernel rechazaria los modulos.
 # --seco: solo comprueba que el parche aplica al tag (rc 0 aplica, rc 4 NO aplica); no compila.
-# rc: 0 ok, 3 falta algo (headers, tag, git), 4 el parche NO aplica a ese driver (hay que portarlo de nuevo), 5 compilo mal o el .ko no verifica.
+# rc: 0 ok, 6 --instala sin llave enrolada, 3 falta algo (headers, tag, git), 4 el parche NO aplica a ese driver (hay que portarlo de nuevo), 5 compilo mal o el .ko no verifica.
 set -euo pipefail
 
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 PARCHE=${BB_DMEM_PARCHE:-$REPO/data/dmem/memacct-580.patch}
-SECO=0; ARGS=()
-for a in "$@"; do [ "$a" = "--seco" ] && SECO=1 || ARGS+=("$a"); done
+SECO=0; INSTALA=0; ARGS=()
+for a in "$@"; do case "$a" in --seco) SECO=1 ;; --instala) INSTALA=1 ;; *) ARGS+=("$a") ;; esac; done
 KERNEL=${ARGS[0]:-$(uname -r)}
 DRIVER=${ARGS[1]:-$(modinfo -F version "/lib/modules/$KERNEL/kernel/nvidia-580-open/nvidia.ko" 2>/dev/null || true)}
 FUENTE=${BB_DMEM_FUENTE:-https://github.com/NVIDIA/open-gpu-kernel-modules}
@@ -25,6 +27,10 @@ MODS=(nvidia nvidia-modeset nvidia-uvm nvidia-drm nvidia-peermem)
 log() { echo "[dmem-reconstruye] $*"; }
 fallo() { local rc=$1; shift; echo "[dmem-reconstruye] ERROR: $*" >&2; exit "$rc"; }
 
+LLAVE=${BB_DMEM_LLAVE_PUB:-/var/lib/shim-signed/mok/MOK.der}
+if [ "$INSTALA" = 1 ]; then
+    mokutil --test-key "$LLAVE" 2>&1 | grep -q "is already enrolled" || fallo 6 "--instala: la llave $LLAVE NO esta enrolada; el kernel rechazaria el modulo. Primero: sudo bash tools/dmem_modulo.sh enrolar"
+fi
 [ -n "$DRIVER" ] || fallo 3 "no pude leer la version del driver (modulo de Canonical de $KERNEL ausente); pasala como segundo argumento"
 [ -f "$PARCHE" ] || fallo 3 "falta el parche $PARCHE"
 mkdir -p "$CACHE"
@@ -53,6 +59,14 @@ done
 nm "$OUT/nvidia.ko" | grep -q "dmem_cgroup_try_charge" || fallo 5 "nvidia.ko no importa dmem_cgroup_try_charge: el parche no quedo en el modulo"
 ( cd "$OUT" && sha256sum ./*.ko >SHA256SUMS )
 log "listo: $OUT (sin firmar)"
+if [ "$INSTALA" = 1 ]; then
+    log "--instala: retroceso previo, firma e instalacion (pide sudo); NO reinicia"
+    sudo bash "$REPO/tools/dmem_modulo.sh" retrocede
+    sudo bash "$REPO/tools/dmem_modulo.sh" firma "$OUT"
+    sudo bash "$REPO/tools/dmem_modulo.sh" instala
+    log "instalado; el modulo nuevo se carga en el proximo arranque (reinicia cuando tengas la consola a mano)"
+    exit 0
+fi
 log "para instalarlo (cambia el arranque; hazlo con la consola a mano):"
 log "  sudo bash tools/dmem_modulo.sh retrocede   # si hay una instalacion previa"
 log "  sudo bash tools/dmem_modulo.sh firma $OUT && sudo bash tools/dmem_modulo.sh instala"
