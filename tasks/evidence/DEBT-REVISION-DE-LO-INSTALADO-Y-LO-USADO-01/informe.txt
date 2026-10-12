@@ -22,20 +22,20 @@ Columnas: pieza | tipo | dueño/quien la usa | ultimo uso medido | MEM/CPU ahora
 ----------------------------------------------------------------------------------------
 nemotron-server | contenedor (vllm/vllm-openai:v0.27.1, 22.5 GB) | ai-nemotron.service (usuario) via /srv/ai/gateway/main.py; blackbox/tools/portero.py, Atlas/tools/gateway_control.py y otros 5 scripts Atlas lo nombran | EN USO: Up desde 06:41:55 CST hoy; 12 conexiones establecidas al :8000 | MEM 7.358 GiB en docker stats (+ procesos EngineCore RSS 6.8 GB, vllm 1.7 GB); CPU 109% | ALTO: es el motor de inferencia, lo vigila ai-nemotron-vigilante.timer cada 2 min | MANTENER. Inverso: n/a
 atlas-pgvector | contenedor (pgvector:pg16) | Atlas (RAG), restart=unless-stopped | Up 8 h; 2 puertos locales 5434/5435 escuchan (ss) | MEM 163.8 MiB, CPU 0.00% | ALTO para Atlas (indice RAG) | MANTENER
-aequitas-pg | contenedor (pgvector:pg16, 1.82 GB de escritura) | proyecto aequitas_os, restart=unless-stopped | Up 8 h; creado 2026-07-12 | MEM 248.4 MiB, CPU 0.02% | ALTO si aequitas se usa; NOT_COLLECTED cuando se consultó por ultima vez (no se hizo docker exec sobre BD ajena a la ficha) | MANTENER
-librechat | contenedor (ghcr.io/danny-avila/librechat:latest, 2.28 GB) | solo Atlas (api/openai_compat.py, api/librechat_feedback.py, atlas-api.service); aequitas no | ultimo mensaje 2026-08-22 (dato de la ficha, mongo apagado ahora: no re-medible en este informe -> NOT_COLLECTED hoy); 0 msgs en 30 dias segun ficha | MEM 0 (Exited 06:51 CST hoy, causa externa a este informe) | BAJO: 1 usuario, 31 msgs; su backend atlas-api ya esta caido (H2) | DESINSTALAR candidato (votar). Inverso: respaldar /srv/ai/librechat (3.8 MB, con .env) y /srv/ai/librechat/mongo, luego `docker rm librechat mongo-librechat` y, para volver, recrear con el compose original en /srv/ai/librechat y `docker start`; la imagen (2.28 GB) se conserva si no se hace `docker rmi`
+proyecto-A-pg | contenedor (pgvector:pg16, 1.82 GB de escritura) | proyecto proyecto-A, restart=unless-stopped | Up 8 h; creado 2026-07-12 | MEM 248.4 MiB, CPU 0.02% | ALTO si proyecto-A se usa; NOT_COLLECTED cuando se consultó por ultima vez (no se hizo docker exec sobre BD ajena a la ficha) | MANTENER
+librechat | contenedor (ghcr.io/danny-avila/librechat:latest, 2.28 GB) | solo Atlas (api/openai_compat.py, api/librechat_feedback.py, atlas-api.service); proyecto-A no | ultimo mensaje 2026-08-22 (dato de la ficha, mongo apagado ahora: no re-medible en este informe -> NOT_COLLECTED hoy); 0 msgs en 30 dias segun ficha | MEM 0 (Exited 06:51 CST hoy, causa externa a este informe) | BAJO: 1 usuario, 31 msgs; su backend atlas-api ya esta caido (H2) | DESINSTALAR candidato (votar). Inverso: respaldar /srv/ai/librechat (3.8 MB, con .env) y /srv/ai/librechat/mongo, luego `docker rm librechat mongo-librechat` y, para volver, recrear con el compose original en /srv/ai/librechat y `docker start`; la imagen (2.28 GB) se conserva si no se hace `docker rmi`
 mongo-librechat | contenedor (mongo:latest, 930 MB) | solo librechat | idem | MEM 0 ahora (95 MiB cuando corria, segun ficha) | BAJO | junto con librechat; INVERSO identico; sus datos viven en /srv/ai/librechat/mongo (propietario dnsmasq, modificado 06:51 al apagarse)
 open-webui | contenedor (open-webui:main, 4.49 GB) | nadie: grep sin coincidencias en blackbox/bin, tools, Atlas/api, tools, gateway | ultimo FinishedAt 2026-08-17 (docker inspect) | MEM 0; 49 MB de capa de escritura | NULO medido | DESINSTALAR candidato. Inverso: la imagen se vuelve a bajar con `docker pull ghcr.io/open-webui/open-webui:main` (4.5 GB de red); si se quiere conservar el estado, su volumen no se inspecciono -> NOT_COLLECTED
-aequitas-test-db-tmp2 | contenedor efimero (pgvector) | auditoria aequitas 2026-08-27 | ultimo FinishedAt 2026-08-28 | MEM 0 | NULO (nombre "tmp") | DESINSTALAR candidato. Inverso: recrear desde pgvector:pg16
-aequitas-aa-etapa1-20260912 | contenedor efimero | auditoria aequitas | ultimo FinishedAt 2026-09-26; 197 MB de escritura | MEM 0 | BAJO (podria tener evidencia: revisar antes) | REVISAR y luego desinstalar. Inverso: `docker commit` previo para conservar
-aequitas-audit-luna-20260927 | contenedor efimero | auditoria aequitas | FinishedAt 2026-10-05; 21.9 MB | MEM 0 | BAJO | REVISAR
-aequitas-audit-mailpit-20261002 | contenedor efimero | auditoria | FinishedAt 2026-10-05 | MEM 0 | NULO | DESINSTALAR candidato
-aequitas-documenso-audit-20261002-documenso-1 y -database-1 | 2 contenedores compose | auditoria | FinishedAt 2026-10-05 | MEM 0 | BAJO (compose de auditoria cerrada) | REVISAR; desinstalar al cerrar la ficha de la auditoria
+proyecto-A-test-db-tmp2 | contenedor efimero (pgvector) | auditoria proyecto-A 2026-08-27 | ultimo FinishedAt 2026-08-28 | MEM 0 | NULO (nombre "tmp") | DESINSTALAR candidato. Inverso: recrear desde pgvector:pg16
+proyecto-A-aa-etapa1-20260912 | contenedor efimero | auditoria proyecto-A | ultimo FinishedAt 2026-09-26; 197 MB de escritura | MEM 0 | BAJO (podria tener evidencia: revisar antes) | REVISAR y luego desinstalar. Inverso: `docker commit` previo para conservar
+proyecto-A-audit-luna-20260927 | contenedor efimero | auditoria proyecto-A | FinishedAt 2026-10-05; 21.9 MB | MEM 0 | BAJO | REVISAR
+proyecto-A-audit-mailpit-20261002 | contenedor efimero | auditoria | FinishedAt 2026-10-05 | MEM 0 | NULO | DESINSTALAR candidato
+proyecto-A-documenso-audit-20261002-documenso-1 y -database-1 | 2 contenedores compose | auditoria | FinishedAt 2026-10-05 | MEM 0 | BAJO (compose de auditoria cerrada) | REVISAR; desinstalar al cerrar la ficha de la auditoria
 Imagenes (docker images, tamaño; las 8 ACTIVAS son las de los 3 contenedores Up y los Exited que las referencian; el resto se declara no referenciado por contenedor):
  - vllm/vllm-openai:v0.27.1 22.5 GB (en uso por nemotron-server) MANTENER
  - vllm/vllm-openai:v0.28.0 20.6 GB, :latest 19.7 GB, :v0.20.1 24 GB (sin contenedor): REVISAR; 64 GB entre las tres. Inverso: `docker pull` del tag
  - lmsysorg/sglang:latest-cu130 26.4 GB; ollama/ollama:latest 4.17 GB (el servicio ai-ollama esta disabled/inactive y existe tambien el snap ollama): sin contenedor -> REVISAR
- - aequitas-audit:aa47-20261002-backend 7.67 GB, aequitas_os-backend 6.81 GB, aequitas_os-frontend 1.21 GB: dueño aequitas; sin contenedor Up -> REVISAR
+ - proyecto-A-audit:aa47-20261002-backend 7.67 GB, proyecto-A-backend 6.81 GB, proyecto-A-frontend 1.21 GB: dueño proyecto-A; sin contenedor Up -> REVISAR
  - ghcr.io/nvidia/openshell/{sandbox,supervisor} 0.1.1/0.1.2/0.1.3: 3 versiones; la 0.1.3 va con el snap openshell 0.1.3; 0.1.1 y 0.1.2 son versiones viejas -> candidato a desinstalar
  - traefik:v3.6.1 174 MB (11 meses), ankane/pgvector 472 MB (3 años), hello-world, tonistiigi/binfmt 81 MB, betterleaks 52 MB, postgres:16 474 MB: sin contenedor
  Inverso comun: `docker pull <repo:tag>`; ningun dato propio hay en imagenes de registro publico.
@@ -56,15 +56,15 @@ blackbox-drift.timer | bb drift | diario; ultima 00:00 | 0.2 s | BAJO | MANTENER
 bb-reboot-verdict.timer | tools.reboot_verdict | una vez por arranque; ultima 23:00 ayer | 0.57 s | MEDIO | MANTENER
 atom-crash-detector.timer | Atlas/tools/detect_atom_crash.py | una vez por arranque; 23:01 ayer | 0.07 s | MEDIO | MANTENER
 simplecode-daemon.service | /opt/miniforge3 python -m simplecode.daemon | corriendo | MEM 17.5 MB, 1.2 s | MEDIO (hooks/telemetria que la ley global cita) | MANTENER
-declutter-fichas.service | bash declutter_corpus/cadena_fichas_servicio.sh | corriendo desde 22:56 | MEM 1.14 GB, CPU 86 s | MEDIO: proceso de la cadena de fichas, usa modelo local | REVISAR (1.1 GB residentes)
-declutter-monitor.service | bash declutter_corpus/registrar_monitor.sh | corriendo desde 22:56 | MEM 1.93 GB, CPU 2025 s (34 min) | BAJO-MEDIO: es un MONITOR y es el mayor consumidor de la categoria; 1.93 GB para vigilar avance no es proporcional | REVISAR (primer candidato real). Inverso: `systemctl --user start declutter-monitor`
-declutter-guardian.timer | declutter scripts.guardian_cadena | cada ~5 min; 06:51 | 96 ms | MEDIO | MANTENER
+proyecto-D-fichas.service | bash proyecto-D_corpus/cadena_fichas_servicio.sh | corriendo desde 22:56 | MEM 1.14 GB, CPU 86 s | MEDIO: proceso de la cadena de fichas, usa modelo local | REVISAR (1.1 GB residentes)
+proyecto-D-monitor.service | bash proyecto-D_corpus/registrar_monitor.sh | corriendo desde 22:56 | MEM 1.93 GB, CPU 2025 s (34 min) | BAJO-MEDIO: es un MONITOR y es el mayor consumidor de la categoria; 1.93 GB para vigilar avance no es proporcional | REVISAR (primer candidato real). Inverso: `systemctl --user start proyecto-D-monitor`
+proyecto-D-guardian.timer | proyecto-D scripts.guardian_cadena | cada ~5 min; 06:51 | 96 ms | MEDIO | MANTENER
 kb-nightly-investigator.timer | Atlas/tools/nightly_kb_consolidation.py | nocturno; ultima 04:03 (41 s CPU) | 0 en reposo | MEDIO | MANTENER
 liberation-watchdog.timer | Atlas/tools/liberation_watchdog.py (llama a rustdesk segun grep) | cada 15 min; 06:50 | 5 s acumulados | BAJO | MANTENER
-own-chats-sync.timer | flock + mychatarchive sync --embed | horario; ultima 06:05 (152 s CPU acumulados) | 0 en reposo | MEDIO | MANTENER
-own-chats-classify.timer | own_chats/tools/classify.py | periodico; 05:12 | 2.7 s | BAJO | MANTENER
-own-chats-retraction-check.timer | check_export_retractions.py | horario; 06:18 | 1.1 s | BAJO | MANTENER
-own-chats-export-check.timer / own-chats-upstream.timer | semanales | NUNCA han corrido en este arranque (CPUUsageNSec [not set], Inactive timestamp vacio) | NOT_COLLECTED: fecha de su ultima ejecucion previa (journal user no consultado por rango) | BAJO | MANTENER
+proyecto-C-sync.timer | flock + mychatarchive sync --embed | horario; ultima 06:05 (152 s CPU acumulados) | 0 en reposo | MEDIO | MANTENER
+proyecto-C-classify.timer | proyecto-C/tools/classify.py | periodico; 05:12 | 2.7 s | BAJO | MANTENER
+proyecto-C-retraction-check.timer | check_export_retractions.py | horario; 06:18 | 1.1 s | BAJO | MANTENER
+proyecto-C-export-check.timer / proyecto-C-upstream.timer | semanales | NUNCA han corrido en este arranque (CPUUsageNSec [not set], Inactive timestamp vacio) | NOT_COLLECTED: fecha de su ultima ejecucion previa (journal user no consultado por rango) | BAJO | MANTENER
 atlas-api.service | Atlas api.server:app :8010 (alimenta LibreChat y retroalimentacion) | FALLIDO desde 2026-10-11 22:57:42 (H2) | MEM 0 | BAJO | REVISAR, ligado a la decision de LibreChat
 ai-ollama.service | ollama local 7B | disabled, inactive; referenciado por Atlas/tools/source_verifier.py, generate_paraphrase_cases.py, gateway/main.py | no corre | 0 | BAJO | MANTENER como unidad (cuesta 0); existe tambien snap ollama
 Servicios de usuario sin dueño propio (escritorio): at-spi, dconf, evolution-* (3 factories activas), gcr-ssh-agent, gnome-*, gvfs-* (6), ibus, pipewire/wireplumber/filter-chain, tracker-miner-fs-3, xdg-*, snap.firmware-updater/snapd-desktop-integration. Costo individual NO medido servicio a servicio salvo gnome-shell RSS 402 MB. evolution-* y tracker-miner-fs-3 son candidatos a REVISAR (indexador y libretas de un servidor de GPU); riesgo bajo; inverso `systemctl --user unmask/start`.
@@ -101,7 +101,7 @@ soffice.bin (pid 1187250) 645 MB al 99.6% CPU, 265 s vivo y otro soffice.bin 201
 python pid 1225823 950 MB, 74% CPU, vivo 13 s | transitorio | n/a
 chrome (419 MB + MainThread 374 MB) y gnome-shell 402 MB | escritorio | MANTENER
 rustdesk x2 223 MB c/u (rustdesk.service) | ver 2b
-declutter-monitor 1.93 GB y declutter-fichas 1.14 GB (cgroups de usuario) | ver 2a
+proyecto-D-monitor 1.93 GB y proyecto-D-fichas 1.14 GB (cgroups de usuario) | ver 2a
 Observacion: el "Top por RSS" mezcla la unidad cgroup; el dueño por /proc/PID/exe de los claude/python no se desglosó uno a uno, solo por unidad cgroup (user@1000.service no distingue sesion).
 
 ========================================================================================
@@ -138,7 +138,7 @@ Flatpaks: flatpak list sin salida; NOT_COLLECTED (puede no estar instalado el co
 ~/.cache/uv 34 GB | cache de uv, reconstruible | RIESGO BAJO (se vuelve a bajar) | `uv cache clean` es el inverso... NO se ejecuto. Recomendacion: REVISAR; inverso: se regenera con la siguiente instalacion
 ~/.cache/pip 15 GB | reconstruible | idem
 ~/.cache/pre-commit 4.7 GB; ~/.cache/prek 775 MB | herramientas de hooks | MANTENER salvo apuro
-~/.cache/ms-playwright 3.5 GB; datalab 3.3 GB; huggingface 2.5 GB; google-chrome 1.7 GB; trivy 1.2 GB; Codex 560 MB; aequitas_zero 536 MB; aws 440 MB; vllm 271 MB; electron 212 MB; go-build 179 MB
+~/.cache/ms-playwright 3.5 GB; datalab 3.3 GB; huggingface 2.5 GB; google-chrome 1.7 GB; trivy 1.2 GB; Codex 560 MB; proyecto-A_zero 536 MB; aws 440 MB; vllm 271 MB; electron 212 MB; go-build 179 MB
 ~/.local/share/Trash 4.3 GB (papelera; ya borrado logico; vaciarla es borrado permanente, requiere voto)
 ~/.local/share/pnpm 1.6 GB, pipx 811 MB, antigravity-ide 733 MB, claude 641 MB, opencode 632 MB, NuGet 280 MB, blackbox 272 MB, uv 100 MB, simplecode 64 MB
 Disco: / 3.7 TB, 1.5 TB usados (42%). Presion de disco: sin urgencia.
@@ -146,16 +146,16 @@ Ultimo uso de estos directorios: mtime de primer nivel no recolectado salvo /srv
 
 ========================================================================================
 TABLA DE RECOMENDACIONES (resumen)
- DETENER/DESINSTALAR (votar):  librechat+mongo-librechat (ya apagados hoy, urge decidir si se recrean al arrancar atlas-api), open-webui, aequitas-test-db-tmp2, aequitas-audit-mailpit-20261002, imagenes openshell 0.1.1/0.1.2
- REVISAR:  declutter-monitor (1.93 GB), declutter-fichas (1.14 GB), atlas-api (fallido, H2), tor@default (143 MB, 0 conexiones), multipathd, cups apt+snap duplicado, evolution-*/tracker-miner, antigravity x3, trivy, kernels 6.17.0-1026/1029/1031, dgx-spark-fieldiag, nvidia-ai-workbench, vllm 0.20.1/0.28.0/latest (64 GB de imagenes), sglang 26 GB, /srv/ai/_downloads 40 GB, ~/.cache/uv 34 GB
- MANTENER:  nemotron-server, atlas-pgvector, aequitas-pg, todo el conjunto blackbox/ai-*/own-chats, rustdesk, dropbear, smbd, earlyoom, nvidia-dcgm y las libs CUDA
+ DETENER/DESINSTALAR (votar):  librechat+mongo-librechat (ya apagados hoy, urge decidir si se recrean al arrancar atlas-api), open-webui, proyecto-A-test-db-tmp2, proyecto-A-audit-mailpit-20261002, imagenes openshell 0.1.1/0.1.2
+ REVISAR:  proyecto-D-monitor (1.93 GB), proyecto-D-fichas (1.14 GB), atlas-api (fallido, H2), tor@default (143 MB, 0 conexiones), multipathd, cups apt+snap duplicado, evolution-*/tracker-miner, antigravity x3, trivy, kernels 6.17.0-1026/1029/1031, dgx-spark-fieldiag, nvidia-ai-workbench, vllm 0.20.1/0.28.0/latest (64 GB de imagenes), sglang 26 GB, /srv/ai/_downloads 40 GB, ~/.cache/uv 34 GB
+ MANTENER:  nemotron-server, atlas-pgvector, proyecto-A-pg, todo el conjunto blackbox/ai-*/proyecto-C, rustdesk, dropbear, smbd, earlyoom, nvidia-dcgm y las libs CUDA
 
 NOT_COLLECTED (con razon)
  - Ultimo mensaje de LibreChat hoy: mongo apagado (H1); se usa el dato de la ficha 2026-08-22.
  - Ultimo uso de tor, dropbear, nvidia-dcgm, openshell, cups, avahi, bluetooth, ModemManager, lldpd: no hay registro de uso en journal consultado; solo conexiones establecidas (0 para tor/dashboard).
  - Ultimo uso de snaps, flatpak, nvidia-ai-workbench, dgx-spark-fieldiag, gigabyte-ai-top-utility, nsight: el atime del sistema de archivos no es evidencia en squashfs; sin journal por unidad.
  - Tamaño individual de snaps, dueño del python pid 345345, contenido/uso de volumenes docker (43 volumenes, 22.65 GB), mtimes de primer nivel de ~/.cache y /srv/ai/models.
- - Journal de usuario de own-chats-export-check/upstream (nunca corrieron este arranque).
+ - Journal de usuario de proyecto-C-export-check/upstream (nunca corrieron este arranque).
  - Costo en CPU de sistema por unidad (solo MemoryCurrent de unidades con cgroup).
 Control negativo: `docker exec mongo-librechat true` devolvio "container is not running", con lo que se confirmo que una consulta en solo lectura de la BD no era posible hoy y no se inventó un conteo; `systemctl --user is-enabled ai-ollama` dio "disabled", prueba de que el comando distingue estados.
 Cero inventado: ningun valor de esta tabla es una estimacion; los "candidato" son recomendaciones, no mediciones.

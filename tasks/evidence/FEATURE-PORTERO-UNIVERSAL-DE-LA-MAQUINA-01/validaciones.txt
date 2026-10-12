@@ -5,7 +5,7 @@ Cada una con su control negativo. Los hilos del foro son indicios; esto es el su
 ## 1. Docker ya esta contenido y se puede acotar EN VIVO
 - `/etc/docker/daemon.json` tiene `"cgroup-parent": "docker.slice"`: todo contenedor nace bajo `docker.slice`
   (MemoryMax 15032385536 = 14 GiB, MemorySwapMax 4 GiB). Medido con `docker inspect` + `/sys/fs/cgroup/docker.slice/docker-<id>.scope`.
-- Topes por contenedor hoy: nemotron-server 75 GiB, atlas-pgvector 2 GiB; librechat, mongo-librechat y aequitas-pg SIN tope (`memory.max=max`).
+- Topes por contenedor hoy: nemotron-server 75 GiB, atlas-pgvector 2 GiB; librechat, mongo-librechat y proyecto-A-pg SIN tope (`memory.max=max`).
 - `docker update --memory 256m --memory-swap 256m --pids-limit 40` sobre un contenedor de prueba en marcha (imagen pgvector, `sleep 120`):
   ANTES `memory.max=max swap.max=max pids.max=152777`; DESPUES `memory.max=268435456 swap.max=0 pids.max=40`. Contenedor borrado, 0 restos.
 - Correccion: la afirmacion "el portero no puede cercar los contenedores Docker" era una suposicion tomada de un hilo (353752, n=1). Falsa en esta maquina.

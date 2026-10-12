@@ -23,7 +23,7 @@ Todo contenedor lleva tope propio de memoria, swap y procesos desde su creacion,
 | atlas-pgvector | 2 GiB | **max** | max | `docker update --memory-swap` bloqueado por el clasificador de permisos: decision pendiente de Luis |
 | librechat | 3 GiB | 0 | 2048 | `docker update` en vivo 2026-10-12 (pico medido 753 MiB, 4x redondeado) |
 | mongo-librechat | 2 GiB | 0 | 2048 | idem (pico 407 MiB) |
-| aequitas-pg | 2 GiB | 0 | 2048 | idem (pico 418 MiB) |
+| proyecto-A-pg | 2 GiB | 0 | 2048 | idem (pico 418 MiB) |
 
 Los tres `docker update` se pierden si el contenedor se recrea: ninguno lleva etiquetas de compose, se crean con `docker run`. Hallar quien los crea y persistir el tope ahi es parte de esta ficha; el runtime OCI lo resuelve de forma general.
 
@@ -59,7 +59,7 @@ Los tres `docker update` se pierden si el contenedor se recrea: ninguno lleva et
 
 ## Entorno de prueba (lo mas importante, voto de Luis)
 
-Nunca se prueba en el daemon de produccion (contiene nemotron-server, atlas-pgvector, librechat, mongo-librechat y aequitas-pg).
+Nunca se prueba en el daemon de produccion (contiene nemotron-server, atlas-pgvector, librechat, mongo-librechat y proyecto-A-pg).
 - Nivel 1, sin root: pruebas dorado sobre `config.json` (generado con `runc spec`) y, si `runc` rootless funciona aqui, un contenedor real con el envoltorio.
 - Nivel 2, con root (lo ejecuta Luis una vez): `sudo bash tools/portero_docker_lab.sh up` levanta un SEGUNDO `dockerd` con otro socket, otro `data-root`, otro `exec-root`, otro puente (o ninguno) y su propio `daemon.json` que apunta al envoltorio; las imagenes se cargan con `docker save | docker -H unix:///run/bb-lab/docker.sock load`; `down` lo borra todo. Cada prueba lleva su control negativo (un contenedor con tope no se toca, uno sin tope se corrige o se rechaza).
 

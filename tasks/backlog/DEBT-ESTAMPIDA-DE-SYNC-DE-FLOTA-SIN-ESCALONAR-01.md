@@ -12,4 +12,4 @@ close_check: {"cmd": "grep -q sync_de_flota_escalonado DECISIONS.md", "expect": 
 ---
 
 ## Medido
-Atribucion por las transcripciones de las sesiones, en `DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01.md`. Los workers `simple`, `declutter atom` y `ae` aceptaron por escrito la regla provisional (una suite a la vez, bajo scope con tope y PSI full < 5); falta que `twiner`, `020` y `atlas` confirmen y que el sync de flota lo escalone `simple` (kit simplecode).
+Atribucion por las transcripciones de las sesiones, en `DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01.md`. Los workers `simple`, `proyecto-D atom` y `ae` aceptaron por escrito la regla provisional (una suite a la vez, bajo scope con tope y PSI full < 5); falta que `twiner`, `020` y `atlas` confirmen y que el sync de flota lo escalone `simple` (kit simplecode).
