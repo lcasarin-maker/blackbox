@@ -2,13 +2,13 @@
 id: DEBT-DATOS-PRIVADOS-EN-EVIDENCIA-HISTORICA-01
 kind: task
 domain: SECURITY
-title: "El repo publico conserva MACs, IPs de LAN, hostname y nombres de proyectos privados en evidencias historicas"
+title: "El repo publico conserva MACs, IPs, hostname y proyectos privados en evidencias historicas"
 status: open
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-11
-close_check: {"cmd": "grep -q '\"tasks/evidence' tests/fixtures/datos_privados_baseline.json", "expect": "exit_nonzero", "porque": "Medido el 2026-10-11: 139 archivos versionados y 2194 ocurrencias en tests/fixtures/datos_privados_baseline.json, la mayoria en tasks/evidence con hashes de procedencia. Desde hoy tests/test_sin_datos_privados.py impide que crezca; falta vaciar la lista. Cierra cuando ninguna ruta de tasks/evidence quede en la base."}
+close_check: {"cmd": "grep -F tasks/evidence/ tests/fixtures/datos_privados_baseline.json", "expect": "empty_stdout", "porque": "Medido el 2026-10-11: 139 archivos versionados y 2194 ocurrencias en tests/fixtures/datos_privados_baseline.json, la mayoria en tasks/evidence con hashes de procedencia. Desde hoy tests/test_sin_datos_privados.py impide que crezca; falta vaciar la lista. Cierra cuando ninguna ruta de tasks/evidence quede en la base."}
 ---
 
 ## Estado

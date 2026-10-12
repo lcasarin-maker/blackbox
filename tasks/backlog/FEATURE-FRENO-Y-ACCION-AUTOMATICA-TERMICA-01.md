@@ -2,7 +2,7 @@
 id: FEATURE-FRENO-Y-ACCION-AUTOMATICA-TERMICA-01
 kind: task
 domain: GPU
-title: "El calor sostenido debe disparar acciones automaticas: congelar la carga pausable de Atlas y cerrar las entradas sin freno"
+title: "El calor sostenido debe disparar acciones automaticas sobre la carga pausable de Atlas"
 status: open
 severity: P1
 origin: asserted
