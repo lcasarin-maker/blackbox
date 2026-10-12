@@ -1,0 +1,96 @@
+DEBT-CONTRATO-ATLAS-INSTRUMENTOS-EN-BLACKBOX-01 -- e2e de la frontera bb -> Atlas sobre los boots reales de la maquina.
+Sujeto: Atlas/tools/detect_atom_crash.py ya no mide; lee reboots.jsonl (esquema bb-reboot/1) que escribe
+blackbox/tools/reboot_verdict.py. Scripts en el scratchpad de la sesion: e2e.sh, equiv.sh, mutantes_bb.sh, mutantes_atlas.sh.
+
+== 1. Equivalencia de la medicion: detector anterior de Atlas vs bb, boot por boot ==
+$ compara.py dac_viejo.py rv11.jsonl   (detector de Atlas en 55f8b533a vs filas nuevas de bb, mismos boots reales)
+1204bc48 viejo: journal_danado nuevo: journal_danado lineas: 342 342 IGUAL
+ce37bdb6 viejo: journal_danado nuevo: journal_danado lineas: 50 50 IGUAL
+a45f8aa5 viejo: None nuevo: None lineas: 1307 1307 IGUAL
+3c61716a viejo: None nuevo: None lineas: 491 491 IGUAL
+7ee2ddd4 viejo: journal_danado nuevo: journal_danado lineas: 8 8 IGUAL
+36ebc0d9 viejo: journal_danado nuevo: journal_danado lineas: 642 642 IGUAL
+0de3e072 viejo: journal_danado nuevo: journal_danado lineas: 450 450 IGUAL
+e651544a viejo: journal_danado nuevo: journal_danado lineas: 11 11 IGUAL
+05d62d81 viejo: None nuevo: None lineas: 0 0 IGUAL
+295efc0f viejo: None nuevo: None lineas: 1359 1359 IGUAL
+54b71618 viejo: journal_danado nuevo: journal_danado lineas: 2094 2094 IGUAL
+boots comparados: 11; con diferencia: 0
+rc=0
+
+$ compara.py dac_viejo.py rv11_mutado.jsonl   (control negativo: a45f8aa5 con cierre_pid1=false, 54b71618 sin su ultima linea de diagnostico)
+1204bc48 viejo: journal_danado nuevo: journal_danado lineas: 342 342 IGUAL
+ce37bdb6 viejo: journal_danado nuevo: journal_danado lineas: 50 50 IGUAL
+a45f8aa5 viejo: None nuevo: sin_senal lineas: 1307 1307 DIFIERE ['diagnostico']
+3c61716a viejo: None nuevo: None lineas: 491 491 IGUAL
+7ee2ddd4 viejo: journal_danado nuevo: journal_danado lineas: 8 8 IGUAL
+36ebc0d9 viejo: journal_danado nuevo: journal_danado lineas: 642 642 IGUAL
+0de3e072 viejo: journal_danado nuevo: journal_danado lineas: 450 450 IGUAL
+e651544a viejo: journal_danado nuevo: journal_danado lineas: 11 11 IGUAL
+05d62d81 viejo: None nuevo: None lineas: 0 0 IGUAL
+295efc0f viejo: None nuevo: None lineas: 1359 1359 IGUAL
+54b71618 viejo: journal_danado nuevo: journal_danado lineas: 2094 2093 DIFIERE ['lineas_diagnostico']
+boots comparados: 11; con diferencia: 2
+rc=1
+
+== 2. Cadena completa: bb escribe reboots.jsonl en un BLACKBOX_DATA temporal, Atlas lo lee y redacta ==
+$ BLACKBOX_DATA=/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/e2e.0iOU python3 -m tools.reboot_verdict --ultimos 11 --escribe   (cwd blackbox)
+# hallazgo publicado: bb-2026-09-28-colapso-memoria-1204bc48.md
+# hallazgo publicado: bb-2026-09-28-colapso-memoria-ce37bdb6.md
+# hallazgo publicado: bb-2026-09-30-cierre-ordenado-reboot-a45f8aa5.md
+# hallazgo publicado: bb-2026-10-04-cierre-ordenado-reboot-3c61716a.md
+# hallazgo publicado: bb-2026-10-05-colapso-memoria-7ee2ddd4.md
+# hallazgo publicado: bb-2026-10-06-corte-abrupto-36ebc0d9.md
+# hallazgo publicado: bb-2026-10-07-corte-abrupto-0de3e072.md
+# hallazgo publicado: bb-2026-10-08-corte-abrupto-e651544a.md
+# hallazgo publicado: bb-2026-10-08-cierre-ordenado-reboot-05d62d81.md
+# hallazgo publicado: bb-2026-10-10-cierre-ordenado-poweroff-295efc0f.md
+# hallazgo publicado: bb-2026-10-11-corte-abrupto-54b71618.md
+# 11 boots; con could_not_run: 11
+rc=0  filas escritas: 11  esquemas: ['bb-reboot/1']
+
+$ BLACKBOX_DATA=/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/e2e.0iOU .venv/bin/python3 tools/detect_atom_crash.py --dry-run   (cwd Atlas; historial real de Atlas)
+sin crash nuevo que registrar
+rc=0   <- control: todos los crashes de la ventana ya estan en logs/atom_crashes.jsonl
+
+$ redactor con historial VACIO (JSONL_PATH y FINDINGS_DIR temporales), escribiendo
+huecos: []
+1204bc48 journal_danado | historial real de Atlas: journal_danado IGUAL | dictamen: 2026-10-12_crash_atom_1204bc48.md
+ce37bdb6 journal_danado | historial real de Atlas: journal_danado IGUAL | dictamen: 2026-10-12_crash_atom_ce37bdb6.md
+7ee2ddd4 journal_danado | historial real de Atlas: journal_danado IGUAL | dictamen: 2026-10-12_crash_atom_7ee2ddd4.md
+36ebc0d9 journal_danado | historial real de Atlas: journal_danado IGUAL | dictamen: 2026-10-12_crash_atom_36ebc0d9.md
+0de3e072 journal_danado | historial real de Atlas: journal_danado IGUAL | dictamen: 2026-10-12_crash_atom_0de3e072.md
+e651544a journal_danado | historial real de Atlas: journal_danado IGUAL | dictamen: 2026-10-12_crash_atom_e651544a.md
+54b71618 journal_danado | historial real de Atlas: journal_danado IGUAL | dictamen: 2026-10-12_crash_atom_54b71618.md
+redactados: 7; distintos del historial real: 0
+rc=0
+
+== 3. Controles negativos por mutacion, medicion en bb (cada mutante debe dar rc=1) ==
+1 failed, 22 passed in 0.28s
+MUTANTE tools/reboot_verdict.py: 'and desde <= p.stat().st_mtime' -> 'and 0 <= p.stat().st_mtime': pytest rc=1
+2 failed, 21 passed in 0.27s
+MUTANTE tools/reboot_verdict.py: '"crash_confirmado": bool(ev.get("journal_danado") or ev.get("panic_linea"))' -> '"crash_confirmado": bool(ev.get("journal_danado") or ev.get("panic_linea") or not ev.get("cierre_pid1"))': pytest rc=1
+2 failed, 21 passed in 0.25s
+MUTANTE tools/reboot_verdict.py: 'p1 = _journal("-b", str(b["index"]), "-o", "cat", "_PID=1")' -> 'p1 = _journal("-b", str(b["index"]), "-o", "cat")': pytest rc=1
+1 failed, 22 passed in 0.24s
+MUTANTE tools/reboot_verdict.py: 'r"oom|killed process|kernel panic|nvrm.*xid|hung task|nmi watchdog:|"' -> 'r"oom|killed process|kernel panic|nvrm.*xid|hung task|nmi watchdog|watchdog|"': pytest rc=1
+2 failed, 21 passed in 0.26s
+MUTANTE tools/reboot_verdict.py: 'if "permission denied" in salida.lower():' -> 'if False:': pytest rc=1
+
+== 4. Controles negativos por mutacion, redactor en Atlas (cada mutante debe dar rc=1) ==
+1 failed, 29 passed in 6.07s
+MUTANTE tools/detect_atom_crash.py: 'if fila.get("cierre_pid1") is True:' -> 'if fila.get("cierre_pid1") is not False:': pytest rc=1
+1 failed, 29 passed in 6.94s
+MUTANTE tools/detect_atom_crash.py: 'if diagnostico is None or _ya_registrado(fila["boot_id"]):' -> 'if diagnostico is None:': pytest rc=1
+1 failed, 29 passed in 6.39s
+MUTANTE tools/detect_atom_crash.py: 'sin_registrar = [b for b in descartes["otro_esquema"] if not _ya_registrado(b)]' -> 'sin_registrar = []': pytest rc=1
+1 failed, 29 passed in 8.76s
+MUTANTE tools/detect_atom_crash.py: 'import argparse' -> 'import argparse\nimport subprocess': pytest rc=1
+1 failed, 29 passed in 5.65s
+MUTANTE tools/detect_atom_crash.py: '    if huecos:\n        return COULD_NOT_RUN' -> '    if False:\n        return COULD_NOT_RUN': pytest rc=1
+
+== Lo que NO se ejercito en vivo ==
+- Rama panic: ningun boot de la ventana del journal (11 boots, desde 2026-09-26) termino en panic; 07db1a8a ya roto.
+  Cubierta solo por pruebas unitarias (bb test_recoge_*, Atlas test_panic_sin_journal_corrupto_se_registra_como_panic).
+- vmcore: /var/crash no tiene ningun directorio dump.* hoy; la atribucion por hueco del corte solo esta probada con fixtures.
+- SMART legible: el servicio --user recibe Permission denied; la rama legible solo esta probada con fixtures.
