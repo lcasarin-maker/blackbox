@@ -530,8 +530,9 @@ def test_oci_como_script_sale_por_el_exec_del_runtime_real(tmp_path: Path, monke
     monkeypatch.setattr(sys, "argv", ["bb_oci_runtime.py", "state", "c1"])
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(FileNotFoundError, match="No such file") as caso:
             runpy.run_module("tools.bb_oci_runtime", run_name="__main__")
+    assert caso.value.errno == 2
 
 
 def test_vigilante_como_script_entra_al_bucle_y_se_corta_en_el_sleep(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
