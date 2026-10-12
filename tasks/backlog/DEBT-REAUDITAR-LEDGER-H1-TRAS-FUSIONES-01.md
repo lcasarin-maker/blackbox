@@ -13,3 +13,8 @@ close_check: {"cmd": "python3 .simplecode/run.py simplecode.cli audit --root . -
 
 ## Medido (2026-10-12)
 `python3 .simplecode/run.py simplecode.cli audit --root . --gate` -> rc=1 tras fusionar `d039565` y `674f190`. El agente del escalon lo midio: 7 afirmaciones caducadas (L378-L384) y 2 sin auditar (L385, L386). Falta ademas fusionar el laboratorio OCI antes de re-auditar una sola vez. NO se sellan afirmaciones sin comprobarlas contra el sujeto.
+
+## Avance 2026-10-12 (re-auditoria en curso)
+- 9 afirmaciones sin sello (SPEC-L400 a L408: las filas de Risks, cuyo texto no cambio pero cuyo id por numero de linea se desplazo al anadirse filas de inventario). Dos auditores Opus de solo lectura: 6 PASS y 3 FAIL por cifras viejas (L406: `bb drift` vigila 59 sujetos y no 47; L408: `bin/bb` es el 63 % del bash y no el 67 %; L403: corrida nueva de `calibra_psi` con el colapso real del 2026-10-11 22:44 aun sin etiquetar en `INCIDENTES`). Los tres textos se corrigieron en SPEC.md y un tercer auditor los verifica.
+- Costo medido que no debe repetirse: correr `tools/piso_cobertura.sh` en una auditoria uso `maxrss_kb=4162316` (~4 GB), mas de lo permitido tras dos colapsos de memoria. Las auditorias deben recalcular el porcentaje con `git show <commit>:<archivo> | wc -l` y no con ese gate.
+- Pendiente de codigo fuera de esta ficha: etiquetar los colapsos del 2026-10-11 (22:02 y 22:44) en `tools/calibra_psi.py` `INCIDENTES` (hoy n=6) y actualizar su test.
