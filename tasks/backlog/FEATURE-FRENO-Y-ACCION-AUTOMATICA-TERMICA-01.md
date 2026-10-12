@@ -8,7 +8,7 @@ severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-11
-close_check: {"cmd": "grep -q 'atlas-carga/1' SPEC.md", "expect": "exit_zero", "porque": "Hecho el 2026-10-11: el gate de bb lee estado_termico (bb-estado-termico/2) y bloquea sostenida, sobre_100 y estado ausente o viejo. Falta la ACCION: con sostenida, `systemctl --user freeze` del scope pausable de Atlas (revierte con thaw) y evento emitido aunque no actue. bb no puede nombrar la unidad: Atlas debe declararla como dato (atlas-carga/1: unidad y si es pausable). Cierra cuando SPEC documente atlas-carga/1 y exista el freeze con su test y control negativo."}
+close_check: {"cmd": "grep -q sobre_100 tasks/evidence/FEATURE-FRENO-Y-ACCION-AUTOMATICA-TERMICA-01/decision_sobre_100.md", "expect": "exit_zero", "porque": "Hecho el 2026-10-11: gate de bb bloquea sostenida/sobre_100/estado ausente; bb congela la unidad que Atlas declara en atlas-carga/1 (accion_termica.py, commit dc1e7f4); Atlas publica la declaracion y su job nocturno consulta el gate (Atlas 474b1551a). Falta: (1) decidir y construir las acciones de sobre_100 y dejar la decision en decision_sobre_100.md, (2) verificar de punta a punta con un congelado REAL de liberation_job.scope (solo se probo con un scope de prueba y dobles), (3) decidir si ingest_batch a los 1800 s y --force-free siguen siendo excepciones deliberadas."}
 ---
 
 ## Medido por el analisis bb/Atlas (2026-10-11)
@@ -22,8 +22,8 @@ close_check: {"cmd": "grep -q 'atlas-carga/1' SPEC.md", "expect": "exit_zero", "
 
 Con `sostenida`: dejar de admitir carga (hecho en bb) y congelar el scope de Atlas. Contrato por archivo `bb-estado-termico/2`.
 
-## Que falta
+## Que falta (actualizado)
 
-1. Atlas publica `atlas-carga/1` y cierra sus entradas sin freno (cambios en el repo de Atlas).
-2. bb congela esa unidad en `sostenida` y la descongela al volver a `normal`, con evento propio.
-3. Decidir las acciones de `sobre_100`.
+1. Acciones de `sobre_100`: `-lgc 300,1500` (root), `docker pause nemotron-server`, `stop ai-nemotron`; decision del dueno.
+2. Congelado real de `liberation_job.scope` con un job vivo: hasta hoy solo hay un scope de prueba (10 lineas -> congelado -> 20) y tests con doble de systemctl.
+3. `ingest_batch` sigue tras 1800 s caliente por decision de DGX-342 y `--force-free` es modo de pruebas: confirmar o cambiar.
