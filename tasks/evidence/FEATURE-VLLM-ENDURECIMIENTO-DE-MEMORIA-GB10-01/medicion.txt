@@ -1,0 +1,7 @@
+MEDICION 2026-10-12 (parcial) - rampa de MemAvailable en NUESTRAS series (28 284 muestras, 6 485 en rafaga a ~2 s; 2026-09-27..2026-10-12)
+Comando: script inline sobre ~/.local/share/blackbox/samples/*.jsonl (pares consecutivos con dt<=6 s; ventanas de 9 s).
+Mayor caida por par: 9.32 GiB/s (101.0 -> 82.4 GiB en 2 s, 2026-10-10 13:49); siguientes 5.15, 5.08, 4.40 GiB/s.
+Mayor caida en 9 s: 20.9 GiB (87.9 -> 67.1, 2026-10-11 14:08); 20.4 GiB (102.8 -> 82.4, 2026-10-10 13:49); 13.9 GiB (39.5 -> 25.7, 2026-10-06).
+Lectura: nuestras rampas tienen el mismo orden que la reportada fuera (29 -> 2.5 GiB en 9 s) pero partieron de 40-100 GiB libres y terminaron en 25-82 GiB: ninguna cruzo 8 GiB.
+Correccion: el residuo anotado antes ("sin muestra propia") era falso; si hay muestra propia (rafagas de bin/bb). Lo que falta es una rampa que cruce la linea, que en nuestras series no ocurrio.
+Pendiente de esta ficha: ajustes del motor (gpu_memory_utilization, expandable_segments, max-num-seqs) los aplica Luis en active_engine.json; sin su aplicacion no hay medicion antes/despues. NO cerrado: falta vllm_memoria_medida.
