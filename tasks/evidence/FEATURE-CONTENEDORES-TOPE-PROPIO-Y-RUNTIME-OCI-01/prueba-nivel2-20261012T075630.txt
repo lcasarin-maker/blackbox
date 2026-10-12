@@ -1,0 +1,15 @@
+# prueba nivel 2 2026-10-12T07:56:29-06:00 -- daemon /run/bb-lab/docker.sock, runtime real nvidia-container-runtime, imagen postgres:16-alpine
+PASS bblab-control: /sys/fs/cgroup/bblab.slice/docker-28e807cec7c1ef6708611cc6cfd8984e52a839e60866c4e5d35fa2d879d4db4a.scope memory.max=max memory.swap.max=max pids.max=152777
+COULD_NOT_RUN bblab-sintope: docker run fallo: 23ea2dc433ac2abe4de22447efddf296c874b34f8751315b53a72acf10731073
+docker: Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: unable to retrieve OCI runtime error (open /run/bb-lab/containerd-state/io.containerd.runtime.v2.task/bblab/23ea2dc433ac2abe4de22447efddf296c874b34f8751315b53a72acf10731073/log.json: no such file or directory): fork/exec /run/bb-lab/conf/bb-runtime: permission denied
+
+Run 'docker run --help' for more information
+COULD_NOT_RUN bblab-estricto: docker run fallo: 61477cfc12dfe7437ac9349de10309c8111d80b6973eb1d8225531c721e8a683
+docker: Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: unable to retrieve OCI runtime error (open /run/bb-lab/containerd-state/io.containerd.runtime.v2.task/bblab/61477cfc12dfe7437ac9349de10309c8111d80b6973eb1d8225531c721e8a683/log.json: no such file or directory): fork/exec /run/bb-lab/conf/bb-runtime: permission denied
+
+Run 'docker run --help' for more information
+FAIL bblab-gpu-sin-etiqueta: docker run fallo pero el registro no tiene RECHAZAR para de30b319e3ca1578e595c16528bf0eb51cb7f36f531f6255f056654ee525a898: de30b319e3ca1578e595c16528bf0eb51cb7f36f531f6255f056654ee525a898 docker: Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: unable to retrieve OCI runtime error (open /run/bb-lab/containerd-state/io.containerd.runtime.v2.task/bblab/de30b319e3ca1578e595c16528bf0eb51cb7f36f531f6255f056654ee525a898/log.json: no such file or directory): fork/exec /run/bb-lab/conf/bb-runtime: permission denied  Run 'docker run --help' for more information
+FAIL bblab-gpu-desborda: docker run fallo pero el registro no tiene RECHAZAR para 498088ba9ba686ffd9295eb95f898de182d343d37e69d0510f7e7b7acc37f85c: 498088ba9ba686ffd9295eb95f898de182d343d37e69d0510f7e7b7acc37f85c docker: Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: unable to retrieve OCI runtime error (open /run/bb-lab/containerd-state/io.containerd.runtime.v2.task/bblab/498088ba9ba686ffd9295eb95f898de182d343d37e69d0510f7e7b7acc37f85c/log.json: no such file or directory): fork/exec /run/bb-lab/conf/bb-runtime: permission denied  Run 'docker run --help' for more information
+fallos=2 could_not_run=2
+--- registro del envoltorio (ultimas 12 lineas de /var/lib/bb-docker-lab/blackbox-data/oci_runtime.jsonl)
+NOT_COLLECTED: sin registro
