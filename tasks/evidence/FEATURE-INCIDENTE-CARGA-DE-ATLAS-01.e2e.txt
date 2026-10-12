@@ -1,0 +1,33 @@
+$ python3 -m tools.incident_report --json   (boot terminado -1 de esta maquina; rc=0)
+[carga_de_atlas]
+{
+ "estado": "ok",
+ "fuente": "/home/lcasarin/projects/Atlas/logs/liberation_watchdog.jsonl",
+ "boot_id": "54b71618-69da-4fc9-9f7b-ecb9571f529d",
+ "jobs_iniciados_en_el_boot": 10,
+ "jobs_terminados_en_el_boot": 9,
+ "jobs_en_ejecucion_al_cortar": [
+  {
+   "job_file": "69_01_gen_sparse_side_regen_20261011.json",
+   "name": "queue_gen_sparse_side_regen_20261011",
+   "inicio_hora_local_de_atlas": "2026-10-11T11:35:08",
+   "memory_max_gb": 12,
+   "timeout_minutes": 180,
+   "atlas_lo_registro_huerfano": true
+  }
+ ],
+ "nota": "job_start sin job_done = corria al cortar; `atlas_lo_registro_huerfano` = el watchdog de Atlas lo marco job_orphaned al arrancar el boot siguiente"
+}
+
+$ ATLAS_BITACORA_COLA=/nonexistent/liberation_watchdog.jsonl python3 -m tools.incident_report --json   (control negativo: Atlas no publica; rc=0)
+[carga_de_atlas]
+{
+ "estado": "NOT_COLLECTED: Atlas no publica /nonexistent/liberation_watchdog.jsonl"
+}
+
+$ grep job_orphaned ~/projects/Atlas/logs/liberation_watchdog.jsonl | grep 54b71618   (la bitacora real: Atlas marco huerfano el mismo job)
+{"ts": "2026-10-11T13:30:03", "event": "job_orphaned", "job_file": "69_01_gen_sparse_side_regen_20261011.json", "murio_con_la_maquina": true, "boot_id_al_arrancar": "54b71618-69da-4fc9-9f7b-ecb9571f529d", "boot_id_ahora": "5461291a-ce01-4597-bd0c-43efb53c0546", "detail": "La maquina se reinicio con el job corriendo: el boot_id d
+# controles negativos de codigo (mutaciones): listadas abajo
+job_done no cierra el job: rc=1 ['FAILED tests/test_incident_report.py::test_carga_de_atlas_lista_solo_los_jobs_del_boot_sin_job_done']
+job de otro boot cuenta: rc=1 ['FAILED tests/test_incident_report.py::test_carga_de_atlas_lista_solo_los_jobs_del_boot_sin_job_done']
+archivo ilegible se lee como ausente: rc=1 ['FAILED tests/test_incident_report.py::test_carga_de_atlas_archivo_ilegible_es_collection_failed_no_ausente']

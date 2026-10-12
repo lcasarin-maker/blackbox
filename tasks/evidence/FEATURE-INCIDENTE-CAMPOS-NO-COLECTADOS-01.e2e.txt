@@ -1,0 +1,88 @@
+$ python3 -m tools.incident_report --json   (boot terminado -1 de esta maquina; rc=0)
+[resumen.fase_de_carga]
+{
+ "fase": "decode (la generacion avanza)",
+ "evidencia": {
+  "ultima_muestra_bb": "2026-10-11T12:12:00-06:00 (18:12:00Z)",
+  "ventana_min": 5,
+  "muestras_bb_en_la_ventana": 6,
+  "gpu_mib_por_procesos_primera_y_ultima": [
+   37774.0,
+   37774.0
+  ],
+  "tok_s_ultimo_par": {
+   "generacion": 101.18,
+   "prompt": 8764.73,
+   "peticiones_en_curso": 31.0
+  }
+ },
+ "fases_no_distinguibles": {
+  "training": "UNSUPPORTED: ningun contador de bb distingue training de decode (el proceso es `python` en ambos)",
+  "NCCL setup": "UNSUPPORTED: ningun contador de bb distingue NCCL setup de decode (el proceso es `python` en ambos)"
+ }
+}
+[progreso_del_engine]
+{
+ "estado": "ok",
+ "fuente": "bb sample (1 min, gw_salud)",
+ "ventana": "ultimos 5 min antes del ultimo punto (6 puntos, 5 pares)",
+ "ultimo_punto": "2026-10-11T12:12:00-06:00 (18:12:00Z)",
+ "generacion_tok_s": {
+  "min": 97.52,
+  "max": 127.03,
+  "ultimo": 101.18
+ },
+ "prompt_tok_s": {
+  "min": 7075.48,
+  "max": 9160.15,
+  "ultimo": 8764.73
+ },
+ "peticiones_en_curso_ultimo_par": 31.0,
+ "kv_cache_pct_ultimo_par": 16.1,
+ "reinicios_del_contador": 0,
+ "pares_consecutivos_al_final_con_peticiones_y_0_tok_s": 0,
+ "firma_S11_motor_detenido": "NO en los 5 pares de la ventana"
+}
+[primera_respuesta_de_aplicacion_tras_el_boot_siguiente]
+{
+ "ts": "2026-10-11T13:28:40-06:00 (19:28:40Z)",
+ "fuente": "primera lectura de /metrics de vLLM que responde, atom_gpu_telemetry (5 s)",
+ "incertidumbre": "+-5 s",
+ "segundos_desde_la_primera_muestra_del_boot": 263.6
+}
+[seis_timestamps.5]
+{
+ "evento": "Siguiente boot / primera respuesta de aplicacion",
+ "ts": "2026-10-11T13:23:48-06:00 (19:23:48Z); primera respuesta de aplicacion: 2026-10-11T13:28:40-06:00 (19:28:40Z)",
+ "fuente": "primera entrada del journal del boot siguiente; respuesta: primera lectura de /metrics de vLLM que responde, atom_gpu_telemetry (5 s)",
+ "incertidumbre": "+-1 s el boot; +-5 s la respuesta"
+}
+[soporte.adjuntos_en_orden.0]
+{
+ "que": "nvidia-bug-report.log.gz (obligatorio, si cuelga se envia el parcial)",
+ "comando": "sudo nvidia-bug-report.sh --output-file /home/lcasarin/.local/share/blackbox/incidentes/bb-2026-10-11-54b71618.nvidia-bug-report.log",
+ "root": true,
+ "estado": "NOT_COLLECTED: nvidia-bug-report.sh instalado en /usr/bin/nvidia-bug-report.sh; root: no (uid 1000), bb no ejecuta sudo; describe el boot actual, no el del incidente; bb lo reconoce si queda como /home/lcasarin/.local/share/blackbox/incidentes/bb-2026-10-11-54b71618.nvidia-bug-report.log.gz"
+}
+[soporte.adjuntos_en_orden.1]
+{
+ "que": "bundle completo de dgx-spark-fieldiag (.tgz, no un solo log; incluye summary.json)",
+ "comando": "sudo init 3; cd /opt/nvidia/dgx-spark-fieldiag; sudo ./partnerdiag --field",
+ "root": true,
+ "estado": "NOT_COLLECTED; bloqueado: Secure Boot enabled y fieldiag exige apagarlo (foro 358951 #12); fieldiag instalado en /opt/nvidia/dgx-spark-fieldiag; root: no (uid 1000), bb no ejecuta sudo; bb lo reconoce si el summary.json queda como /home/lcasarin/.local/share/blackbox/incidentes/bb-2026-10-11-54b71618.fieldiag-summary.json"
+}
+
+# controles negativos: cada mutacion del codigo hace fallar su test (rc=1 = el instrumento puede salir negativo)
+reinicio de contador no se salta: rc=1 ['FAILED tests/test_incident_report.py::test_fase_de_carga_progreso_calcula_tok_s_de_los_contadores_y_un_reinicio_no_da_negativos']
+S11 sin exigir peticiones: rc=1 ['FAILED tests/test_incident_report.py::test_fase_de_carga_progreso_detecta_la_firma_s11_y_no_la_confunde_con_decode']
+sin /metrics siempre es carga: rc=1 ['FAILED tests/test_incident_report.py::test_fase_de_carga_distingue_carga_descarga_decode_prefill_inactivo_y_motor_detenido']
+job_done no cierra el job: rc=1 ['FAILED tests/test_incident_report.py::test_carga_de_atlas_lista_solo_los_jobs_del_boot_sin_job_done']
+job de otro boot cuenta: rc=1 ['FAILED tests/test_incident_report.py::test_carga_de_atlas_lista_solo_los_jobs_del_boot_sin_job_done']
+primera respuesta: cualquier fila: rc=1 ['FAILED tests/test_incident_report.py::test_fase_de_carga_primera_respuesta_de_aplicacion_no_cuenta_el_boot_sin_metrics']
+adjunto de cualquier incidente: rc=1 ['FAILED tests/test_incident_report.py::test_fase_de_carga_adjuntos_reconoce_el_archivo_presente_y_si_falta_dice_por_que']
+archivo ilegible se lee como ausente: rc=1 ['FAILED tests/test_incident_report.py::test_carga_de_atlas_archivo_ilegible_es_collection_failed_no_ausente']
+restaurado: 42 passed in 0.32s
+
+$ python3 -m pytest -q tests/test_incident_report.py tests/test_atom_gpu_telemetry.py
+116 passed in 3.27s
+rc=0
