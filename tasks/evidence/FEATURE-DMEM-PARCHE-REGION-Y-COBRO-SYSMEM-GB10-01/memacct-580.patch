@@ -1,0 +1,1341 @@
+diff --git a/kernel-open/common/inc/nvstatuscodes.h b/kernel-open/common/inc/nvstatuscodes.h
+index 4404349..9164f10 100644
+--- a/kernel-open/common/inc/nvstatuscodes.h
++++ b/kernel-open/common/inc/nvstatuscodes.h
+@@ -166,6 +166,8 @@ NV_STATUS_CODE(NV_ERR_BUFFER_FULL,                     0x00000088, "Buffer is fu
+ NV_STATUS_CODE(NV_ERR_BUFFER_EMPTY,                    0x00000089, "Buffer is empty")
+ NV_STATUS_CODE(NV_ERR_MC_FLA_OFFSET_TABLE_FULL,        0x0000008A, "Multicast FLA offset table has no available slots")
+ NV_STATUS_CODE(NV_ERR_DMA_XFER_FAILED,                 0x0000008B, "DMA transfer failed")
++/* bb-patch: memacct status codes, same values as 615 */
++NV_STATUS_CODE(NV_ERR_RESOURCE_ACCOUNTING_HARD_LIMIT_EXCEEDED,  0x0000008D, "Resource accounting rejected request (hard limit)")
+ 
+ // Warnings:
+ NV_STATUS_CODE(NV_WARN_HOT_SWITCH,                     0x00010001, "WARNING Hot switch")
+@@ -177,5 +179,7 @@ NV_STATUS_CODE(NV_WARN_NOTHING_TO_DO,                  0x00010006, "WARNING Noth
+ NV_STATUS_CODE(NV_WARN_NULL_OBJECT,                    0x00010007, "WARNING NULL object found")
+ NV_STATUS_CODE(NV_WARN_OUT_OF_RANGE,                   0x00010008, "WARNING value out of range")
+ NV_STATUS_CODE(NV_WARN_THRESHOLD_CROSSED,              0x00010009, "WARNING Threshold has been crossed")
++/* bb-patch: memacct status code, same value as 615 */
++NV_STATUS_CODE(NV_WARN_RESOURCE_ACCOUNTING_SOFT_LIMIT_EXCEEDED, 0x0001000A, "Resource accounting rejected request (soft limit)")
+ 
+ #endif /* SDK_NVSTATUSCODES_H */
+diff --git a/kernel-open/common/inc/os-interface.h b/kernel-open/common/inc/os-interface.h
+index dde5c84..17cf9ea 100644
+--- a/kernel-open/common/inc/os-interface.h
++++ b/kernel-open/common/inc/os-interface.h
+@@ -281,4 +281,33 @@ int  NV_API_CALL  nv_printf(NvU32 debuglevel, const char *printf_format, ...);
+ #define NV_OS_TEGRA_PLATFORM_FPGA       1
+ #define NV_OS_TEGRA_PLATFORM_SILICON    2
+ 
++/*
++ * Plumbing through cgroup dmem api
++ * bb-patch: subset of 615 (pool_state_put / get_from_fd / put / get omitted: only
++ * the misc-cgroup limit ioctls use them, and those are not ported)
++ */
++#define OS_CGROUP_IMPL_NONE 0
++#define OS_CGROUP_IMPL_MISC 1
++#define OS_CGROUP_IMPL_DMEM 2
++
++void* NV_API_CALL os_cgroup_for_pid(int pid, void *pidInfo, int impl);
++
++#if defined(NV_LINUX)
++NvU32 NV_API_CALL os_cgroup_implementation(void);
++void* NV_API_CALL os_dmem_cgroup_register_region(const char *name, NvU64 size, NvU64 precharge, void **prechargePool);
++void NV_API_CALL os_dmem_cgroup_unregister_region(void *region, void *prechargePool, NvU64 precharge);
++NV_STATUS NV_API_CALL os_dmem_cgroup_try_charge(void *region, NvU64 size, void **ret_pool, void **ret_limit_pool);
++void NV_API_CALL os_dmem_cgroup_uncharge(void *pool, NvU64 size);
++NvBool NV_API_CALL os_dmem_cgroup_state_evict_valuable(void *limit_pool, void *test_pool, NvBool ignore_low, NvBool *ret_hit_low);
++void* NV_API_CALL os_cgroup_parent(void *cgroup);
++#else // !defined(NV_LINUX)
++#define os_cgroup_implementation()               OS_CGROUP_IMPL_NONE
++#define os_dmem_cgroup_register_region(...)      NULL
++#define os_dmem_cgroup_unregister_region(...)
++#define os_dmem_cgroup_try_charge(...)           NV_OK
++#define os_dmem_cgroup_uncharge(...)
++#define os_dmem_cgroup_state_evict_valuable(...) NV_FALSE
++#define os_cgroup_parent(...)                    NULL
++#endif // defined(NV_LINUX)
++
+ #endif /* OS_INTERFACE_H */
+diff --git a/kernel-open/conftest.sh b/kernel-open/conftest.sh
+index 67e799d..ccf3dff 100755
+--- a/kernel-open/conftest.sh
++++ b/kernel-open/conftest.sh
+@@ -5062,6 +5062,38 @@ compile_test() {
+         ;;
+ 
+ 
++        dmem_cgrp_id)
++            #
++            # bb-patch: ported from 615 conftest.sh
++            # Check to see if the dmem cgroup type is available
++            #
++            # dmem_cgrp_id was added by commit id b168ed4 ("kernel/cgroup: Add "dmem"
++            # memory accounting cgroup") in 6.14
++            #
++            CODE="
++            #include <linux/cgroup.h>
++            enum cgroup_subsys_id cgrpid = dmem_cgrp_id;
++            "
++
++            compile_check_conftest "$CODE" "NV_DMEM_CGROUP_PRESENT" "" "types"
++        ;;
++
++        misc_cgrp_id)
++            #
++            # bb-patch: ported from 615 conftest.sh
++            # Check to see if the misc cgroup type is available
++            #
++            # misc_cgrp_id was added by commit id a72232e ("cgroup: Add misc cgroup
++            # controller") in 5.13
++            #
++            CODE="
++            #include <linux/cgroup.h>
++            enum cgroup_subsys_id cgrpid = misc_cgrp_id;
++            "
++
++            compile_check_conftest "$CODE" "NV_MISC_CGROUP_PRESENT" "" "types"
++        ;;
++
+         is_vma_write_locked_has_mm_lock_seq_arg)
+             #
+             # Determine if __is_vma_write_locked() takes only a single
+diff --git a/kernel-open/nvidia/nvidia.Kbuild b/kernel-open/nvidia/nvidia.Kbuild
+index 8e31b92..bf7ebcf 100644
+--- a/kernel-open/nvidia/nvidia.Kbuild
++++ b/kernel-open/nvidia/nvidia.Kbuild
+@@ -220,6 +220,8 @@ NV_CONFTEST_TYPE_COMPILE_TESTS += devfreq_has_freq_table
+ NV_CONFTEST_TYPE_COMPILE_TESTS += has_enum_pidtype_tgid
+ NV_CONFTEST_TYPE_COMPILE_TESTS += pci_resize_resource_has_exclude_bars_arg
+ NV_CONFTEST_TYPE_COMPILE_TESTS += is_vma_write_locked_has_mm_lock_seq_arg
++NV_CONFTEST_TYPE_COMPILE_TESTS += dmem_cgrp_id # bb-patch
++NV_CONFTEST_TYPE_COMPILE_TESTS += misc_cgrp_id # bb-patch
+ 
+ NV_CONFTEST_GENERIC_COMPILE_TESTS += dom0_kernel_present
+ NV_CONFTEST_GENERIC_COMPILE_TESTS += nvidia_vgpu_kvm_build
+diff --git a/kernel-open/nvidia/os-interface.c b/kernel-open/nvidia/os-interface.c
+index fb8f5fb..a55e042 100644
+--- a/kernel-open/nvidia/os-interface.c
++++ b/kernel-open/nvidia/os-interface.c
+@@ -43,6 +43,14 @@
+ #include <linux/lockdep.h>
+ #endif // CONFIG_LOCKDEP
+ 
++/* bb-patch: dmem/misc cgroup headers, guarded by the same conftests 615 uses */
++#if defined(NV_MISC_CGROUP_PRESENT)
++#include <linux/cgroup.h>
++#endif // NV_MISC_CGROUP_PRESENT
++#if defined(NV_DMEM_CGROUP_PRESENT)
++#include <linux/cgroup_dmem.h>
++#endif // NV_DMEM_CGROUP_PRESENT
++
+ extern char *NVreg_TemporaryFilePath;
+ 
+ #define MAX_ERROR_STRING 528
+@@ -2738,3 +2746,134 @@ NV_STATUS NV_API_CALL os_device_vm_present(void)
+     return NV_ERR_NOT_SUPPORTED;
+ #endif
+ }
++
++/* bb-patch: memacct cgroup plumbing ported from 615 os-interface.c (subset) */
++NvU32 NV_API_CALL os_cgroup_implementation(void)
++{
++#if defined(NV_DMEM_CGROUP_PRESENT)
++    if (cgroup_subsys_enabled(dmem_cgrp_subsys))
++        return OS_CGROUP_IMPL_DMEM;
++#endif
++#if defined(NV_MISC_CGROUP_PRESENT)
++    if (cgroup_subsys_enabled(misc_cgrp_subsys))
++        return OS_CGROUP_IMPL_MISC;
++#endif
++    return OS_CGROUP_IMPL_NONE;
++}
++
++void* NV_API_CALL os_cgroup_for_pid(int pid, void *pidInfo, int impl)
++{
++    struct task_struct *task;
++    struct pid *p;
++    int subsys_id;
++
++    if (pidInfo)
++        p = pidInfo;
++    else
++        p = find_vpid(pid);
++
++    if (!p)
++        return NULL;
++
++    task = pid_task(p, PIDTYPE_PID);
++    if (!task)
++        return NULL;
++
++    switch (impl)
++    {
++#if defined(NV_DMEM_CGROUP_PRESENT)
++        case OS_CGROUP_IMPL_DMEM:
++            subsys_id = dmem_cgrp_id;
++            break;
++#endif
++#if defined(NV_MISC_CGROUP_PRESENT)
++        case OS_CGROUP_IMPL_MISC:
++            subsys_id = misc_cgrp_id;
++            break;
++#endif
++        default:
++            return NULL;
++    }
++    return task_cgroup(task, subsys_id);
++}
++
++#if defined(NV_DMEM_CGROUP_PRESENT) || defined(NV_MISC_CGROUP_PRESENT)
++void* NV_API_CALL os_cgroup_parent(void *cgroup)
++{
++    if (cgroup == NULL)
++        return NULL;
++
++    return cgroup_parent(cgroup);
++}
++#else
++void* NV_API_CALL os_cgroup_parent(void *cgroup) { return NULL; }
++#endif
++
++#if defined(NV_DMEM_CGROUP_PRESENT)
++void* NV_API_CALL os_dmem_cgroup_register_region(const char *name, NvU64 size, NvU64 precharge, void **prechargePool)
++{
++    /*
++     * bb-patch: the 6.17 header declares
++     *   dmem_cgroup_register_region(u64 size, const char *name_fmt, ...) __printf(2,3);
++     * 615 passes `name` as the format string; here it goes through "%s" so a '%'
++     * in the name cannot be interpreted as a conversion.
++     */
++    void *region = dmem_cgroup_register_region(size, "%s", name);
++    if (IS_ERR_OR_NULL(region))
++    {
++        return NULL;
++    }
++
++    if (precharge > 0)
++    {
++        int err = dmem_cgroup_try_charge(region, precharge, (struct dmem_cgroup_pool_state **)prechargePool, NULL);
++        if (err)
++        {
++            dmem_cgroup_unregister_region(region);
++            region = NULL;
++        }
++    }
++
++    return region;
++}
++
++void NV_API_CALL os_dmem_cgroup_unregister_region(void *region, void *prechargePool, NvU64 precharge)
++{
++    if (precharge > 0)
++        dmem_cgroup_uncharge(prechargePool, precharge);
++    dmem_cgroup_unregister_region(region);
++}
++
++NV_STATUS NV_API_CALL os_dmem_cgroup_try_charge(void *region, NvU64 size, void **ret_pool, void **ret_limit_pool)
++{
++    int err = dmem_cgroup_try_charge(region, size, (struct dmem_cgroup_pool_state **)ret_pool,
++        (struct dmem_cgroup_pool_state **)ret_limit_pool);
++
++    if (err == -EAGAIN)
++        return NV_ERR_RESOURCE_ACCOUNTING_HARD_LIMIT_EXCEEDED;
++    else if (err < 0)
++        return NV_ERR_OPERATING_SYSTEM;
++
++    return NV_OK;
++}
++
++void NV_API_CALL os_dmem_cgroup_uncharge(void *pool, NvU64 size)
++{
++    dmem_cgroup_uncharge(pool, size);
++}
++
++NvBool NV_API_CALL os_dmem_cgroup_state_evict_valuable(void *limit_pool, void *test_pool, NvBool ignore_low, NvBool *ret_hit_low)
++{
++    bool kernel_ret_hit_low;
++    NvBool kernel_result = dmem_cgroup_state_evict_valuable(limit_pool, test_pool, ignore_low, &kernel_ret_hit_low);
++    if (ret_hit_low)
++        *ret_hit_low = kernel_ret_hit_low;
++    return kernel_result;
++}
++#else // !defined(NV_DMEM_CGROUP_PRESENT)
++void* NV_API_CALL os_dmem_cgroup_register_region(const char *name, NvU64 size, NvU64 precharge, void **prechargePool) { return NULL; }
++void NV_API_CALL os_dmem_cgroup_unregister_region(void *region, void *prechargePool, NvU64 precharge) {}
++NV_STATUS NV_API_CALL os_dmem_cgroup_try_charge(void *region, NvU64 size, void **ret_pool, void **ret_limit_pool) { return NV_OK; }
++void NV_API_CALL os_dmem_cgroup_uncharge(void *pool, NvU64 size) {}
++NvBool NV_API_CALL os_dmem_cgroup_state_evict_valuable(void *limit_pool, void *test_pool, NvBool ignore_low, NvBool *ret_hit_low) { return NV_FALSE; }
++#endif
+diff --git a/src/common/sdk/nvidia/inc/nvstatuscodes.h b/src/common/sdk/nvidia/inc/nvstatuscodes.h
+index 4404349..9164f10 100644
+--- a/src/common/sdk/nvidia/inc/nvstatuscodes.h
++++ b/src/common/sdk/nvidia/inc/nvstatuscodes.h
+@@ -166,6 +166,8 @@ NV_STATUS_CODE(NV_ERR_BUFFER_FULL,                     0x00000088, "Buffer is fu
+ NV_STATUS_CODE(NV_ERR_BUFFER_EMPTY,                    0x00000089, "Buffer is empty")
+ NV_STATUS_CODE(NV_ERR_MC_FLA_OFFSET_TABLE_FULL,        0x0000008A, "Multicast FLA offset table has no available slots")
+ NV_STATUS_CODE(NV_ERR_DMA_XFER_FAILED,                 0x0000008B, "DMA transfer failed")
++/* bb-patch: memacct status codes, same values as 615 */
++NV_STATUS_CODE(NV_ERR_RESOURCE_ACCOUNTING_HARD_LIMIT_EXCEEDED,  0x0000008D, "Resource accounting rejected request (hard limit)")
+ 
+ // Warnings:
+ NV_STATUS_CODE(NV_WARN_HOT_SWITCH,                     0x00010001, "WARNING Hot switch")
+@@ -177,5 +179,7 @@ NV_STATUS_CODE(NV_WARN_NOTHING_TO_DO,                  0x00010006, "WARNING Noth
+ NV_STATUS_CODE(NV_WARN_NULL_OBJECT,                    0x00010007, "WARNING NULL object found")
+ NV_STATUS_CODE(NV_WARN_OUT_OF_RANGE,                   0x00010008, "WARNING value out of range")
+ NV_STATUS_CODE(NV_WARN_THRESHOLD_CROSSED,              0x00010009, "WARNING Threshold has been crossed")
++/* bb-patch: memacct status code, same value as 615 */
++NV_STATUS_CODE(NV_WARN_RESOURCE_ACCOUNTING_SOFT_LIMIT_EXCEEDED, 0x0001000A, "Resource accounting rejected request (soft limit)")
+ 
+ #endif /* SDK_NVSTATUSCODES_H */
+diff --git a/src/nvidia/arch/nvalloc/unix/include/os-interface.h b/src/nvidia/arch/nvalloc/unix/include/os-interface.h
+index 84842e1..8cab236 100644
+--- a/src/nvidia/arch/nvalloc/unix/include/os-interface.h
++++ b/src/nvidia/arch/nvalloc/unix/include/os-interface.h
+@@ -277,4 +277,33 @@ int  NV_API_CALL  nv_printf(NvU32 debuglevel, const char *printf_format, ...);
+ #define NV_OS_TEGRA_PLATFORM_FPGA       1
+ #define NV_OS_TEGRA_PLATFORM_SILICON    2
+ 
++/*
++ * Plumbing through cgroup dmem api
++ * bb-patch: subset of 615 (pool_state_put / get_from_fd / put / get omitted: only
++ * the misc-cgroup limit ioctls use them, and those are not ported)
++ */
++#define OS_CGROUP_IMPL_NONE 0
++#define OS_CGROUP_IMPL_MISC 1
++#define OS_CGROUP_IMPL_DMEM 2
++
++void* NV_API_CALL os_cgroup_for_pid(int pid, void *pidInfo, int impl);
++
++#if defined(NV_LINUX)
++NvU32 NV_API_CALL os_cgroup_implementation(void);
++void* NV_API_CALL os_dmem_cgroup_register_region(const char *name, NvU64 size, NvU64 precharge, void **prechargePool);
++void NV_API_CALL os_dmem_cgroup_unregister_region(void *region, void *prechargePool, NvU64 precharge);
++NV_STATUS NV_API_CALL os_dmem_cgroup_try_charge(void *region, NvU64 size, void **ret_pool, void **ret_limit_pool);
++void NV_API_CALL os_dmem_cgroup_uncharge(void *pool, NvU64 size);
++NvBool NV_API_CALL os_dmem_cgroup_state_evict_valuable(void *limit_pool, void *test_pool, NvBool ignore_low, NvBool *ret_hit_low);
++void* NV_API_CALL os_cgroup_parent(void *cgroup);
++#else // !defined(NV_LINUX)
++#define os_cgroup_implementation()               OS_CGROUP_IMPL_NONE
++#define os_dmem_cgroup_register_region(...)      NULL
++#define os_dmem_cgroup_unregister_region(...)
++#define os_dmem_cgroup_try_charge(...)           NV_OK
++#define os_dmem_cgroup_uncharge(...)
++#define os_dmem_cgroup_state_evict_valuable(...) NV_FALSE
++#define os_cgroup_parent(...)                    NULL
++#endif // defined(NV_LINUX)
++
+ #endif /* OS_INTERFACE_H */
+diff --git a/src/nvidia/arch/nvalloc/unix/src/os.c b/src/nvidia/arch/nvalloc/unix/src/os.c
+index 0f6952a..889e595 100644
+--- a/src/nvidia/arch/nvalloc/unix/src/os.c
++++ b/src/nvidia/arch/nvalloc/unix/src/os.c
+@@ -63,6 +63,7 @@
+ #include "rmapi/client_resource.h"
+ #include "os/dce_rm_client_ipc.h"
+ #include "mem_mgr/mem.h"
++#include "nvrm_registry.h" /* bb-patch: NV_REG_STR_MEMACCT_MODE */
+ #include "gpu/mem_mgr/virt_mem_allocator_common.h"
+ 
+ #include "vgpu/vgpu_util.h"
+@@ -2002,6 +2003,136 @@ NvU32 osGetCurrentProcessorNumber(void)
+     return os_get_cpu_number();
+ }
+ 
++/* bb-patch: memacct OS layer ported from 615 os.c (subset used by memacct.c) */
++ClientGroupID osClientGroupID(NvU64 process, void *pidInfo)
++{
++    int impl;
++    switch (osCgroupImplementation())
++    {
++    case CGROUP_IMPL_OS:
++        impl = OS_CGROUP_IMPL_DMEM;
++        break;
++    case CGROUP_IMPL_FALLBACK:
++        impl = OS_CGROUP_IMPL_MISC;
++        break;
++    default:
++        impl = OS_CGROUP_IMPL_NONE;
++        break;
++    }
++    return os_cgroup_for_pid(process, pidInfo, impl);
++}
++
++static const char *osCgroupImplString(NvCgroupImpl impl)
++{
++    switch (impl)
++    {
++    case CGROUP_IMPL_OS:       return "CGROUP_IMPL_OS";
++    case CGROUP_IMPL_FALLBACK: return "CGROUP_IMPL_FALLBACK";
++    case CGROUP_IMPL_NONE:     return "CGROUP_IMPL_NONE";
++    default:                   return "UNKNOWN";
++    }
++}
++
++NvCgroupImpl osCgroupImplementation(void)
++{
++    static NvBool done = NV_FALSE;
++    static NvCgroupImpl impl = CGROUP_IMPL_NONE;
++
++    if (!done)
++    {
++        NvCgroupImpl os_impl;
++        NvU32 data = 0;
++        NvCgroupImpl reg_impl;
++        NV_STATUS status;
++
++        switch (os_cgroup_implementation())
++        {
++        case OS_CGROUP_IMPL_DMEM:
++            os_impl = CGROUP_IMPL_OS;
++            break;
++        case OS_CGROUP_IMPL_MISC:
++            os_impl = CGROUP_IMPL_FALLBACK;
++            break;
++        case OS_CGROUP_IMPL_NONE:
++        default:
++            os_impl = CGROUP_IMPL_NONE;
++            break;
++        }
++
++        reg_impl = os_impl;
++        status = osReadRegistryDword(NULL, NV_REG_STR_MEMACCT_MODE, &data);
++        if (status == NV_OK)
++        {
++            switch (data)
++            {
++            case NV_REG_STR_MEMACCT_MODE_NONE:
++                reg_impl = CGROUP_IMPL_NONE;
++                break;
++            case NV_REG_STR_MEMACCT_MODE_FALLBACK:
++                reg_impl = CGROUP_IMPL_FALLBACK;
++                break;
++            case NV_REG_STR_MEMACCT_MODE_OS:
++                reg_impl = CGROUP_IMPL_OS;
++                break;
++            case NV_REG_STR_MEMACCT_MODE_NO_OVERRIDE:
++            default:
++                reg_impl = os_impl;
++                break;
++            }
++        }
++
++        impl = os_impl;
++        if (reg_impl < os_impl)
++        {
++            NV_PRINTF(LEVEL_INFO, "memacct implementation overriden to %s.\n", osCgroupImplString(reg_impl));
++            impl = reg_impl;
++        }
++        else if (reg_impl > os_impl)
++        {
++            NV_PRINTF(LEVEL_ERROR, "memacct override to %s not supported, using default (%s).\n",
++                osCgroupImplString(reg_impl), osCgroupImplString(os_impl));
++        }
++
++        done = NV_TRUE;
++    }
++    return impl;
++}
++
++void *osCgroupRegisterRegion(OBJGPU *pGpu, NvU64 size, NvU64 precharge, void **prechargePool)
++{
++    char name[64];
++    nvDbgSnprintf(name, sizeof name, "nvidia/%08X:%02X:%02X.0/vidmem",
++        gpuGetDomain(pGpu),
++        gpuGetBus(pGpu),
++        gpuGetDevice(pGpu));
++    return os_dmem_cgroup_register_region(name, size, precharge, prechargePool);
++}
++
++void osCgroupUnregisterRegion(void *region, void *prechargePool, NvU64 precharge)
++{
++    os_dmem_cgroup_unregister_region(region, prechargePool, precharge);
++}
++
++NV_STATUS osMemacctTryCharge(void *pRegion, NvLength size, void **ppPool, void **limitPool)
++{
++    return os_dmem_cgroup_try_charge(pRegion, size, ppPool, limitPool);
++}
++
++void osMemacctReleaseCharge(void *pool, NvLength size)
++{
++    os_dmem_cgroup_uncharge(pool, size);
++}
++
++void *osCgroupParent(void *cgroup)
++{
++    return os_cgroup_parent(cgroup);
++}
++
++NvBool osCgroupCanEvict(void *limitPool, void *testPool)
++{
++    return os_dmem_cgroup_state_evict_valuable(limitPool, testPool, NV_TRUE, NULL);
++}
++
+ void osGetTimeoutParams(OBJGPU *pGpu, NvU32 *pTimeoutUs, NvU32 *pScale, NvU32 *pFlags)
+ {
+     NvU32 gpuMode   = gpuGetMode(pGpu);
+diff --git a/src/nvidia/generated/g_mem_nvoc.h b/src/nvidia/generated/g_mem_nvoc.h
+index ec37ba0..816527e 100644
+--- a/src/nvidia/generated/g_mem_nvoc.h
++++ b/src/nvidia/generated/g_mem_nvoc.h
+@@ -212,6 +212,7 @@ struct Memory {
+     HWRESOURCE_INFO *pHwResource;
+     NvBool bRpcAlloc;
+     NvBool bRegisteredWithGsp;
++    struct MemoryCharge *pCharge;    /* bb-patch: memacct charge (615 g_mem_nvoc.h:191) */
+     VGPU_NS_INTR vgpuNsIntr;
+ };
+ 
+diff --git a/src/nvidia/generated/g_os_nvoc.h b/src/nvidia/generated/g_os_nvoc.h
+index 457ae0f..f40785d 100644
+--- a/src/nvidia/generated/g_os_nvoc.h
++++ b/src/nvidia/generated/g_os_nvoc.h
+@@ -339,6 +339,23 @@ typedef NvU64      OSGetPageSize(void);
+ typedef NvU64      OSGetSupportedSysmemPageSizeMask(void);
+ typedef NvU8       OSGetPageShift(void);
+ 
++/* bb-patch: memacct OS layer, subset of 615 g_os_nvoc.h (only what memacct.c uses) */
++typedef enum
++{
++    CGROUP_IMPL_NONE,
++    CGROUP_IMPL_FALLBACK,
++    CGROUP_IMPL_OS
++} NvCgroupImpl;
++NvCgroupImpl osCgroupImplementation(void);
++typedef NvP64 ClientGroupID;
++ClientGroupID osClientGroupID(NvU64 process, void *pidInfo); // from osGetCurrentProcess or equivalent
++void *osCgroupRegisterRegion(OBJGPU *pGpu, NvU64 size, NvU64 precharge, void **prechargePool);
++void osCgroupUnregisterRegion(void *region, void *prechargePool, NvU64 precharge);
++NV_STATUS osMemacctTryCharge(void *pRegion, NvLength size, void **ppPool, void **limitPool);
++void osMemacctReleaseCharge(void *pool, NvLength size);
++void *osCgroupParent(void *cgroup);
++NvBool osCgroupCanEvict(void *limitPool, void *testPool);
++
+ typedef NV_STATUS  NV_FORCERESULTCHECK OSAcquireRmSema(void *);
+ typedef NvBool     NV_FORCERESULTCHECK OSIsRmSemaOwner(void *);
+ typedef NV_STATUS  NV_FORCERESULTCHECK OSCondAcquireRmSema(void *);
+diff --git a/src/nvidia/inc/kernel/mem_mgr/memacct.h b/src/nvidia/inc/kernel/mem_mgr/memacct.h
+new file mode 100644
+index 0000000..b647adc
+--- /dev/null
++++ b/src/nvidia/inc/kernel/mem_mgr/memacct.h
+@@ -0,0 +1,60 @@
++ /*
++ * SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
++ * SPDX-License-Identifier: MIT
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++ * DEALINGS IN THE SOFTWARE.
++ */
++#ifndef MEMORY_ACCOUNTING_H
++#define MEMORY_ACCOUNTING_H
++
++#include "core/core.h"
++#include "os/os.h"
++#include "rmapi/client.h"
++
++//
++// Opaque type representing a single "charge" of memory. which is essentially
++// a voucher that allows you to make a memory allocation.
++// The allocation may still fail for various reasons, this simply certifies that
++// you are within your allotted quotas.
++//
++typedef struct MemoryCharge MemoryCharge;
++
++NV_STATUS memacctTryCharge(RmClient *pRmClient, NvU32 gpuId, NvLength size, MemoryCharge **ppCharge);
++void memacctIncrementChargeRefCount(MemoryCharge *pCharge);
++void memacctReleaseCharge(MemoryCharge *pCharge);
++
++NV_STATUS memacctSetLimits(ClientGroupID cligrp, NvU32 gpuId, NvLength softlimit, NvLength hardlimit);
++NV_STATUS memacctGetLimits(ClientGroupID cligrp, NvU32 gpuId, NvLength *pSoftLimit, NvLength *pHardLimit, NvLength *pCurrent);
++
++// Initialize the accounting for a given pGpu
++NV_STATUS memacctInitGpuInfo(OBJGPU *pGpu);
++void memacctRemoveGpu(OBJGPU *pGpu);
++NvCgroupImpl memacctActiveImplementation(void);
++
++/* bb-patch: 580 has no memmgrGetTotalRamSizeBytes/memmgrGetHeapFreeBytes (615 adds them
++ * as NVOC HAL methods). Plain functions in gpu/mem_mgr/mem_mgr.c, non-MIG path only. */
++struct MemoryManager;
++struct KernelMemorySystem;
++struct Heap;
++NvU64 bbMemmgrGetTotalRamSizeBytes(OBJGPU *pGpu, struct MemoryManager *pMemoryManager,
++                                   struct KernelMemorySystem *pKernelMemorySystem);
++NvU64 bbMemmgrGetHeapFreeBytes(OBJGPU *pGpu, struct MemoryManager *pMemoryManager,
++                               struct Heap *pHeap, NvBool bIsPmaEnabled);
++
++#endif
+diff --git a/src/nvidia/interface/nvrm_registry.h b/src/nvidia/interface/nvrm_registry.h
+index ea00512..62da21d 100644
+--- a/src/nvidia/interface/nvrm_registry.h
++++ b/src/nvidia/interface/nvrm_registry.h
+@@ -2959,4 +2959,15 @@
+ #define NV_REG_STR_RM_GSP_TRACE_CRASH_LOGGING_BUFFER_SIZE_MIN     10
+ #define NV_REG_STR_RM_GSP_TRACE_CRASH_LOGGING_BUFFER_SIZE_MAX     10000
+ 
++//
++// Type DWORD
++// Regkey to force fallback memory accounting implementation
++// bb-patch: ported from 615 (read by osCgroupImplementation in os.c)
++//
++#define NV_REG_STR_MEMACCT_MODE             "RmMemacctMode"
++#define NV_REG_STR_MEMACCT_MODE_NONE        (0x00000000)
++#define NV_REG_STR_MEMACCT_MODE_FALLBACK    (0x00000001)
++#define NV_REG_STR_MEMACCT_MODE_OS          (0x00000002)
++#define NV_REG_STR_MEMACCT_MODE_NO_OVERRIDE (0x00000003)
++
+ #endif // NVRM_REGISTRY_H
+diff --git a/src/nvidia/src/kernel/gpu/mem_mgr/mem_mgr.c b/src/nvidia/src/kernel/gpu/mem_mgr/mem_mgr.c
+index 14d2495..389ebb7 100644
+--- a/src/nvidia/src/kernel/gpu/mem_mgr/mem_mgr.c
++++ b/src/nvidia/src/kernel/gpu/mem_mgr/mem_mgr.c
+@@ -43,6 +43,7 @@
+ #include "gpu/mem_mgr/phys_mem_allocator/numa.h"
+ #include "kernel/gpu/mig_mgr/kernel_mig_manager.h"
+ #include "kernel/rmapi/rs_utils.h"
++#include "mem_mgr/memacct.h" /* bb-patch */
+ #include "rmapi/rmapi_utils.h"
+ #include "mmu/gmmu_fmt.h"
+ #include "class/cl0040.h" // NV01_MEMORY_LOCAL_USER
+@@ -789,6 +790,8 @@ failed:
+         return status;
+     }
+ 
++    memacctInitGpuInfo(pGpu); /* bb-patch: 615 mem_mgr.c:826 */
++
+     return NV_OK;
+ }
+ 
+@@ -953,6 +956,8 @@ memmgrStateDestroy_IMPL
+     Heap *pHeap = MEMORY_MANAGER_GET_HEAP(pMemoryManager);
+     NvU32 i;
+ 
++    memacctRemoveGpu(pGpu); /* bb-patch: 615 mem_mgr.c:989 */
++
+     _memmgrFreeInternalClientObjects(pMemoryManager);
+ 
+     gpuDestroyRusdMemory(pGpu);
+@@ -4229,3 +4234,75 @@ memmgrGetInternalClientHandles_IMPL
+ 
+     return NV_OK;
+ }
++
++/*
++ * bb-patch: memacct region size for zero-FB chips.
++ * 615 memmgrGetTotalRamSizeBytes_IMPL / memmgrGetHeapFreeBytes_IMPL return 0 when
++ * pGpu->pGpuArch->bGpuArchIsZeroFb, and memacctInitGpuInfo then skips the GPU
++ * ("zero size, ignoring"), so dmem never gets a region. In 580 the same predicate is
++ * PDB_PROP_GPU_ZERO_FB (set by NVOC for GB10B | GB20B | GB20C, g_gpu_nvoc.c), the one
++ * kern_mem_sys_ctrl.c uses for TOTAL_RAM_SIZE. On zero-FB both helpers return the SAME
++ * constant, so precharge = size - free = 0 (no sysmem charged at registration).
++ * Only memacct calls these; nvidia-smi / NV2080_CTRL_FB_INFO keep reporting 0.
++ * ponytail: fixed size, not measured from the platform; trigger: a different
++ * unified-memory size or a need to track the real free sysmem.
++ * Build with -DBB_NO_ZEROFB_PATCH to get 615's behaviour (return 0) for the negative control.
++ */
++#define BB_ZEROFB_REGION_BYTES (51302ULL << 20) /* 50.1 GiB rounded down to MiB = 51302 MiB */
++
++NvU64 bbMemmgrGetTotalRamSizeBytes
++(
++    OBJGPU *pGpu,
++    MemoryManager *pMemoryManager,
++    KernelMemorySystem *pKernelMemorySystem
++)
++{
++    if (pGpu->getProperty(pGpu, PDB_PROP_GPU_ZERO_FB))
++    {
++#if defined(BB_NO_ZEROFB_PATCH)
++        NV_PRINTF(LEVEL_INFO, "[zero-FB, No local RAM] TOTAL_RAM_SIZE = 0\n");
++        return 0;
++#else
++        NV_PRINTF(LEVEL_INFO, "[zero-FB] bb-patch memacct region size %llu\n",
++                  BB_ZEROFB_REGION_BYTES);
++        return BB_ZEROFB_REGION_BYTES;
++#endif
++    }
++
++    // 615 non-partition branch (pMemoryPartitionHeap == NULL)
++    return NV_MIN((pMemoryManager->Ram.fbTotalMemSizeMb << 20),
++                  (pMemoryManager->Ram.fbOverrideSizeMb << 20))
++                  - (pKernelMemorySystem->fbOverrideStartKb << 10);
++}
++
++NvU64 bbMemmgrGetHeapFreeBytes
++(
++    OBJGPU *pGpu,
++    MemoryManager *pMemoryManager,
++    Heap *pHeap,
++    NvBool bIsPmaEnabled
++)
++{
++    NvU64 bytesFree = 0;
++
++    if (pGpu->getProperty(pGpu, PDB_PROP_GPU_ZERO_FB))
++    {
++#if defined(BB_NO_ZEROFB_PATCH)
++        NV_PRINTF(LEVEL_INFO, "[zero-FB, No local HEAP] HEAP_SIZE = 0\n");
++        return 0;
++#else
++        return BB_ZEROFB_REGION_BYTES; // same as total -> precharge 0
++#endif
++    }
++
++    // 615 non-MIG branches (memacct passes bIsMIG = NV_FALSE)
++    if (pHeap == NULL)
++        return 0;
++
++    if (bIsPmaEnabled)
++        pmaGetFreeMemory(pHeap->pPmaObject, &bytesFree);
++    else
++        heapGetFree(pHeap, &bytesFree);
++
++    return bytesFree;
++}
+diff --git a/src/nvidia/src/kernel/mem_mgr/memacct.c b/src/nvidia/src/kernel/mem_mgr/memacct.c
+new file mode 100644
+index 0000000..8337d7e
+--- /dev/null
++++ b/src/nvidia/src/kernel/mem_mgr/memacct.c
+@@ -0,0 +1,554 @@
++/*
++ * SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
++ * SPDX-License-Identifier: MIT
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++ * DEALINGS IN THE SOFTWARE.
++ */
++
++#include "mem_mgr/memacct.h"
++#include "gpu/mem_mgr/mem_mgr.h"
++#include "rmapi/client.h"
++#include "gpu/gpu.h"
++#include "gpu_mgr/gpu_mgr.h" /* bb-patch: gpumgrIsSafeToReadGpuInfo is not reachable via 580 gpu.h */
++
++typedef struct ClientGroupLimits
++{
++    NvLength SoftLimit;
++    NvLength HardLimit;
++    NvLength Available;
++} ClientGroupLimits;
++
++// map from cgroup id to the limits/stats for that specific group
++MAKE_MAP(ClientGroupMapType, ClientGroupLimits);
++
++typedef struct GpuRegion
++{
++    ClientGroupMapType clientGroupMap;
++    struct {
++        void *region;
++        void *prechargePool;
++        NvU64 precharge;
++    } os;
++} GpuRegion;
++
++// map region id (gpuId) to region's group limit map
++MAKE_MAP(GpuRegionMapType, GpuRegion);
++
++static struct {
++    GpuRegionMapType GpuRegionMap;
++    NvCgroupImpl impl;
++    PORT_MUTEX *mutex;
++} g_memacct;
++
++struct MemoryCharge
++{
++    NvU32 gpuId;
++    NvU32 pid;
++    ClientGroupID cligrp;
++    NvLength size;
++    void *osPool;
++    int refCount;
++};
++
++static NV_STATUS memacctTryChargeOs(void *osRegion, ClientGroupID cligrp, NvLength size, MemoryCharge **ppCharge)
++{
++    MemoryCharge *pCharge;
++    void *pPool;
++    NV_STATUS status;
++
++    *ppCharge = NULL;
++
++    status = osMemacctTryCharge(osRegion, size, &pPool, NULL);
++    if (status == NV_ERR_RESOURCE_ACCOUNTING_HARD_LIMIT_EXCEEDED)
++    {
++        NV_PRINTF(LEVEL_INFO, "charge %llu osRegion 0x%016llx rejected\n", size, (NvU64)osRegion);
++        return NV_ERR_RESOURCE_ACCOUNTING_HARD_LIMIT_EXCEEDED;
++    }
++    else if (status != NV_OK)
++    {
++        return status;
++    }
++
++    NV_PRINTF(LEVEL_INFO, "charge %llu for osRegion 0x%016llx pool 0x%016llx ok\n", size, (NvU64)osRegion, (NvU64)pPool);
++
++    pCharge = portMemAllocNonPaged(sizeof *pCharge);
++    if (pCharge == NULL)
++    {
++        NV_PRINTF(LEVEL_INFO, "release %llu for pool 0x%016llx (charge structure allocation failure)\n",
++            size, (NvU64)pPool);
++        osMemacctReleaseCharge(pPool, size);
++        return NV_ERR_NO_MEMORY;
++    }
++
++    pCharge->size = size;
++    pCharge->osPool = pPool;
++    pCharge->refCount = 1;
++    *ppCharge = pCharge;
++
++    if ((osCgroupParent(cligrp) != NULL) && osCgroupCanEvict(NULL, pPool))
++        return NV_WARN_RESOURCE_ACCOUNTING_SOFT_LIMIT_EXCEEDED;
++
++    return NV_OK;
++}
++
++static ClientGroupLimits *memacctLimitsForGroupLocked(GpuRegion *pRegion, ClientGroupID *cligrp)
++{
++    ClientGroupLimits *pLimits = NULL;
++    ClientGroupID limitingGroup = *cligrp;
++    while (limitingGroup != NULL)
++    {
++        pLimits = mapFind(&pRegion->clientGroupMap, (NvU64)limitingGroup);
++        if (pLimits != NULL)
++        {
++            *cligrp = limitingGroup;
++            break;
++        }
++
++        limitingGroup = osCgroupParent(limitingGroup);
++    }
++    return pLimits;
++}
++
++static NV_STATUS memacctTryChargeInternalLocked(GpuRegion *pRegion, ClientGroupID cligrp, NvU32 gpuId, NvLength size, MemoryCharge *pCharge)
++{
++    NvLength current;
++    ClientGroupLimits *pLimits;
++
++    pLimits = memacctLimitsForGroupLocked(pRegion, &cligrp);
++    if (pLimits == NULL)
++    {
++        NV_PRINTF(LEVEL_INFO, "region %x no limits set for group %016llx\n", gpuId,
++            (NvU64)cligrp);
++        return NV_ERR_INVALID_LIMIT;
++    }
++
++    if (size > pLimits->Available)
++    {
++        NV_PRINTF(LEVEL_INFO, "region %x group %016llx request %llu over limit, available %llu/%llu\n",
++            gpuId, (NvU64)cligrp, size, pLimits->Available, pLimits->HardLimit);
++        return NV_ERR_RESOURCE_ACCOUNTING_HARD_LIMIT_EXCEEDED;
++    }
++
++    pCharge->size = size;
++    pCharge->cligrp = cligrp;
++    pCharge->refCount = 1;
++    pLimits->Available -= size;
++
++    current = pLimits->HardLimit - pLimits->Available;
++    NV_PRINTF(LEVEL_INFO, "region %x group %016llx charged %llu total %llu/%llu\n", gpuId,
++        (NvU64)cligrp, size, current, pLimits->HardLimit);
++
++    if (current > pLimits->SoftLimit)
++        return NV_WARN_RESOURCE_ACCOUNTING_SOFT_LIMIT_EXCEEDED;
++
++    return NV_OK;
++}
++
++void memacctIncrementChargeRefCount(MemoryCharge *pCharge)
++{
++    if (pCharge == NULL)
++        return;
++
++    pCharge->refCount++;
++}
++
++NV_STATUS memacctTryCharge(RmClient *pRmClient, NvU32 gpuId, NvLength size, MemoryCharge **ppCharge)
++{
++    NV_STATUS status;
++    ClientGroupID cligrp;
++    GpuRegion *pRegion;
++
++    if (g_memacct.impl == CGROUP_IMPL_NONE)
++        return NV_OK;
++
++    cligrp = osClientGroupID(pRmClient->ProcID, pRmClient->pOsPidInfo);
++    if (cligrp == NULL)
++    {
++        NV_PRINTF(LEVEL_INFO, "no cgroup found for pid %d\n", pRmClient->ProcID);
++        return NV_OK;
++    }
++
++    // attempt to pre-allocate charge structure outside the lock for the fallback/misc cgroup case
++    if (g_memacct.impl == CGROUP_IMPL_FALLBACK)
++    {
++        *ppCharge = portMemAllocNonPaged(sizeof **ppCharge);
++        if (*ppCharge == NULL)
++        {
++            NV_PRINTF(LEVEL_INFO, "region %x group %016llx request %llu charge structure allocation failure\n",
++                gpuId, (NvU64)cligrp, size);
++            return NV_ERR_NO_MEMORY;
++        }
++    }
++
++    portSyncMutexAcquire(g_memacct.mutex);
++    pRegion = mapFind(&g_memacct.GpuRegionMap, gpuId);
++    if (pRegion == NULL)
++    {
++        portSyncMutexRelease(g_memacct.mutex);
++        NV_PRINTF(LEVEL_INFO, "region %x not found\n", gpuId);
++        portMemFree(*ppCharge);
++        *ppCharge = NULL;
++        return NV_OK;
++    }
++
++    if (g_memacct.impl == CGROUP_IMPL_OS)
++    {
++        void *osRegion = pRegion->os.region;
++        portSyncMutexRelease(g_memacct.mutex);
++        status = memacctTryChargeOs(osRegion, cligrp, size, ppCharge);
++    }
++    else
++    {
++        status = memacctTryChargeInternalLocked(pRegion, cligrp, gpuId, size, *ppCharge);
++        portSyncMutexRelease(g_memacct.mutex);
++        if ((status != NV_OK) && (status != NV_WARN_RESOURCE_ACCOUNTING_SOFT_LIMIT_EXCEEDED))
++        {
++            // not really an error case, just need to clean up the pre-allocation
++            if (status == NV_ERR_INVALID_LIMIT)
++                status = NV_OK;
++
++            portMemFree(*ppCharge);
++            *ppCharge = NULL;
++        }
++    }
++
++    if (*ppCharge != NULL)
++    {
++        (*ppCharge)->gpuId = gpuId;
++        (*ppCharge)->pid = pRmClient->ProcID;
++    }
++
++    /* bb-patch: 580 has no NV2080_NOTIFIERS_MEMACCT_* (MAXCOUNT is 198, 615 uses 200/201);
++     * the soft-limit event is dropped, the soft-limit warning is still folded into NV_OK. */
++    if (status == NV_WARN_RESOURCE_ACCOUNTING_SOFT_LIMIT_EXCEEDED)
++    {
++        status = NV_OK;
++    }
++
++    return status;
++}
++
++static NvBool memacctReleaseChargeInternal(MemoryCharge *pCharge)
++{
++    NvBool notify = NV_FALSE;
++    GpuRegion *pRegion;
++    ClientGroupLimits *pLimits;
++    NvLength before;
++    NvLength after;
++
++    portSyncMutexAcquire(g_memacct.mutex);
++    pRegion = mapFind(&g_memacct.GpuRegionMap, pCharge->gpuId);
++    if (pRegion == NULL)
++        goto done;
++
++    pLimits = mapFind(&pRegion->clientGroupMap, (NvU64)pCharge->cligrp);
++    if (pLimits == NULL)
++        goto done;
++
++    // uncharge
++    before = pLimits->HardLimit - pLimits->Available;
++    pLimits->Available += pCharge->size;
++    after = pLimits->HardLimit - pLimits->Available;
++
++    NV_PRINTF(LEVEL_INFO, "region %x group %016llx released %llu total %llu/%llu\n",
++        pCharge->gpuId, (NvU64)pCharge->cligrp, pCharge->size,
++        after, pLimits->HardLimit);
++
++    if ((before > pLimits->SoftLimit) && (after <= pLimits->SoftLimit))
++        notify = NV_TRUE;
++
++done:
++    portSyncMutexRelease(g_memacct.mutex);
++    return notify;
++}
++
++void memacctReleaseCharge(MemoryCharge *pCharge)
++{
++    if (g_memacct.impl == CGROUP_IMPL_NONE)
++        return;
++
++    if (pCharge == NULL)
++        return;
++
++    if (--pCharge->refCount)
++        return;
++
++    /* bb-patch: below-soft-limit event dropped (no NV2080_NOTIFIERS_MEMACCT_* in 580). */
++    if (g_memacct.impl == CGROUP_IMPL_OS)
++    {
++        NV_PRINTF(LEVEL_INFO, "release %llu for pool 0x%016llx\n", pCharge->size,
++            (NvU64)pCharge->osPool);
++
++        osMemacctReleaseCharge(pCharge->osPool, pCharge->size);
++    }
++    else
++    {
++        (void)memacctReleaseChargeInternal(pCharge);
++    }
++
++    portMemFree(pCharge);
++}
++
++NV_STATUS memacctGetLimits(ClientGroupID cligrp, NvU32 gpuId, NvLength *pSoftLimit, NvLength *pHardLimit, NvLength *pCurrent)
++{
++    GpuRegion *pRegion;
++    ClientGroupLimits *pLimits;
++    NV_STATUS status = NV_OK;
++
++    if (g_memacct.impl != CGROUP_IMPL_FALLBACK)
++        return NV_ERR_NOT_SUPPORTED;
++
++    portSyncMutexAcquire(g_memacct.mutex);
++    pRegion = mapFind(&g_memacct.GpuRegionMap, gpuId);
++    if (pRegion == NULL)
++    {
++        // device doesn't exist - might be a bad argument or maybe was skipped as zerofb, for example
++        status = NV_ERR_INVALID_LIMIT;
++        goto cleanup;
++    }
++
++    pLimits = memacctLimitsForGroupLocked(pRegion, &cligrp);
++    if (pLimits == NULL)
++    {
++        status = NV_ERR_NOT_SUPPORTED;
++        goto cleanup;
++    }
++
++    *pSoftLimit = pLimits->SoftLimit;
++    *pHardLimit = pLimits->HardLimit;
++    *pCurrent = pLimits->HardLimit - pLimits->Available;
++
++cleanup:
++    portSyncMutexRelease(g_memacct.mutex);
++    return status;
++}
++
++NV_STATUS memacctSetLimits(ClientGroupID cligrp, NvU32 gpuId, NvLength softlimit, NvLength hardlimit)
++{
++    NV_STATUS status;
++    GpuRegion *pRegion;
++    ClientGroupLimits *pLimits;
++
++    if (g_memacct.impl != CGROUP_IMPL_FALLBACK)
++        return NV_ERR_NOT_SUPPORTED;
++
++    portSyncMutexAcquire(g_memacct.mutex);
++    pRegion = mapFind(&g_memacct.GpuRegionMap, gpuId);
++    if (pRegion == NULL)
++    {
++        status = NV_ERR_OBJECT_NOT_FOUND;
++        goto cleanup;
++    }
++
++    // no setting root group limits (to match dmem)
++    if (osCgroupParent(cligrp) == NULL)
++    {
++        status = NV_ERR_NOT_SUPPORTED;
++        goto cleanup;
++    }
++
++    pLimits = mapFind(&pRegion->clientGroupMap, (NvU64)cligrp);
++    if (pLimits != NULL)
++    {
++        NvLength used = pLimits->HardLimit - pLimits->Available;
++        if (used > hardlimit)
++        {
++            NV_PRINTF(LEVEL_ERROR, "region %x group %016llx set limit error - requested limit %llu is lower than current allocation %llu\n",
++                gpuId, (NvU64)cligrp, hardlimit, used);
++
++            status = NV_ERR_INVALID_LIMIT;
++            goto cleanup;
++        }
++        pLimits->Available = hardlimit - used;
++    }
++    else
++    {
++        pLimits = mapInsertNew(&pRegion->clientGroupMap, (NvU64)cligrp);
++        if (pLimits == NULL)
++        {
++            status = NV_ERR_NO_MEMORY;
++            goto cleanup;
++        }
++        pLimits->Available = hardlimit;
++    }
++
++    pLimits->SoftLimit = softlimit;
++    pLimits->HardLimit = hardlimit;
++    status = NV_OK;
++
++    NV_PRINTF(LEVEL_INFO, "region %x group %016llx setting limits %llu %llu\n", gpuId,
++        (NvU64)cligrp, softlimit, hardlimit);
++
++cleanup:
++    portSyncMutexRelease(g_memacct.mutex);
++    return status;
++}
++
++static void memacctOneTimeSetup(void)
++{
++    g_memacct.impl = osCgroupImplementation();
++    if ((g_memacct.mutex == NULL) && (g_memacct.impl != CGROUP_IMPL_NONE))
++    {
++        PORT_MEM_ALLOCATOR *allocator = portMemAllocatorGetGlobalNonPaged();
++        mapInit(&g_memacct.GpuRegionMap, allocator);
++        g_memacct.mutex = portSyncMutexCreate(allocator);
++    }
++}
++
++NvCgroupImpl memacctActiveImplementation(void)
++{
++    return g_memacct.impl;
++}
++
++NV_STATUS memacctInitGpuInfo(OBJGPU *pGpu)
++{
++    NvU64 id;
++    MemoryManager *pMemoryManager;
++    KernelMemorySystem *pKernelMemorySystem;
++    NvBool bIsPmaEnabled;
++    Heap *pHeap;
++    NvU64 size;
++    NvU64 freeSize;
++    NvU64 precharge;
++    void *prechargePool;
++    void *osRegion;
++    NV_STATUS status;
++    GpuRegion *pRegion;
++
++    memacctOneTimeSetup();
++
++    if (g_memacct.impl == CGROUP_IMPL_NONE)
++        return NV_OK;
++
++    NV_ASSERT_OR_RETURN(gpumgrIsSafeToReadGpuInfo(), NV_ERR_INVALID_LOCK_STATE);
++
++    id = pGpu->gpuId;
++    pMemoryManager = GPU_GET_MEMORY_MANAGER(pGpu);
++    pKernelMemorySystem = GPU_GET_KERNEL_MEMORY_SYSTEM(pGpu);
++    bIsPmaEnabled = memmgrIsPmaInitialized(pMemoryManager);
++    pHeap = GPU_GET_HEAP(pGpu);
++
++    /* bb-patch: 580 helpers (see memacct.h); 615 passes pMemoryPartitionHeap=NULL, bIsMIG=FALSE. */
++    size = bbMemmgrGetTotalRamSizeBytes(pGpu, pMemoryManager, pKernelMemorySystem);
++    if (size == 0)
++    {
++        NV_PRINTF(LEVEL_INFO, "region %llx zero size, ignoring\n", id);
++        return NV_OK;
++    }
++
++    NV_PRINTF(LEVEL_INFO, "creating new memacct region %llx size %llu\n", id, size);
++    freeSize = bbMemmgrGetHeapFreeBytes(pGpu, pMemoryManager, pHeap, bIsPmaEnabled);
++    precharge = size - freeSize;
++    prechargePool = NULL;
++
++    osRegion = NULL;
++    if (g_memacct.impl == CGROUP_IMPL_OS)
++    {
++        osRegion = osCgroupRegisterRegion(pGpu, size, precharge, &prechargePool);
++        if (!osRegion)
++            return NV_ERR_OPERATING_SYSTEM;
++    }
++
++    portSyncMutexAcquire(g_memacct.mutex);
++
++    status = NV_OK;
++    pRegion = mapInsertNew(&g_memacct.GpuRegionMap, id);
++    if (pRegion == NULL)
++    {
++        status = NV_ERR_NO_MEMORY;
++        if (osRegion)
++            osCgroupUnregisterRegion(osRegion, prechargePool, precharge);
++        goto cleanup;
++    }
++
++    if (g_memacct.impl == CGROUP_IMPL_OS)
++    {
++        pRegion->os.region = osRegion;
++        pRegion->os.precharge = precharge;
++        pRegion->os.prechargePool = prechargePool;
++    }
++    else
++    {
++        mapInit(&pRegion->clientGroupMap, portMemAllocatorGetGlobalNonPaged());
++    }
++cleanup:
++    portSyncMutexRelease(g_memacct.mutex);
++    return status;
++}
++
++void memacctRemoveGpu(OBJGPU *pGpu)
++{
++    void *osRegion = NULL;
++    void *prechargePool = NULL;
++    NvU64 precharge = 0;
++    GpuRegion *pRegion;
++    
++    if (g_memacct.impl == CGROUP_IMPL_NONE)
++        return;
++
++    if (g_memacct.mutex == NULL)
++        return;
++
++    if (pGpu == NULL)
++        return;
++
++    NV_ASSERT_OR_RETURN_VOID(gpumgrIsSafeToReadGpuInfo());
++
++    portSyncMutexAcquire(g_memacct.mutex);
++    pRegion = mapFind(&g_memacct.GpuRegionMap, pGpu->gpuId);
++    if (pRegion == NULL)
++    {
++        NV_PRINTF(LEVEL_INFO, "region %x not found, ignoring\n", pGpu->gpuId);
++        goto cleanup;
++    }
++
++    NV_PRINTF(LEVEL_INFO, "removing memacct region %x\n", pGpu->gpuId);
++
++    if (g_memacct.impl == CGROUP_IMPL_OS)
++    {
++        osRegion = pRegion->os.region;
++        precharge = pRegion->os.precharge;
++        prechargePool = pRegion->os.prechargePool;
++    }
++    else
++    {
++        mapClear(&pRegion->clientGroupMap);
++    }
++    mapRemove(&g_memacct.GpuRegionMap, pRegion);
++
++cleanup:
++    if (mapCount(&g_memacct.GpuRegionMap) == 0)
++    {
++        mapClear(&g_memacct.GpuRegionMap);
++        portSyncMutexRelease(g_memacct.mutex);
++        portSyncMutexDestroy(g_memacct.mutex);
++        g_memacct.mutex = NULL;
++    }
++    else
++    {
++        portSyncMutexRelease(g_memacct.mutex);
++    }
++
++    if (osRegion)
++    {
++        osCgroupUnregisterRegion(osRegion, prechargePool, precharge);
++    }
++
++    return;
++}
+diff --git a/src/nvidia/src/kernel/mem_mgr/video_mem.c b/src/nvidia/src/kernel/mem_mgr/video_mem.c
+index 6a6fd5f..c7fe7d7 100644
+--- a/src/nvidia/src/kernel/mem_mgr/video_mem.c
++++ b/src/nvidia/src/kernel/mem_mgr/video_mem.c
+@@ -38,6 +38,7 @@
+ #include "gpu/bus/third_party_p2p.h"
+ #include "gpu/bus/kern_bus.h"
+ #include "platform/sli/sli.h"
++#include "mem_mgr/memacct.h" /* bb-patch */
+ 
+ #include "class/cl0040.h" // NV01_MEMORY_LOCAL_USER
+ 
+@@ -503,6 +504,14 @@ vidmemCopyConstruct
+             break;
+     }
+ 
++    /* bb-patch: copy and reference any memory accounting charges (615 video_mem.c:516-522) */
++    if (status == NV_OK)
++    {
++        Memory *pMemory = staticCast(pVideoMemory, Memory);
++        pMemory->pCharge = pMemorySrc->pCharge;
++        memacctIncrementChargeRefCount(pMemory->pCharge);
++    }
++
+     return status;
+ }
+ 
+@@ -607,6 +616,13 @@ vidmemConstruct_IMPL
+ 
+     stdmemDumpInputAllocParams(pAllocData, pCallContext);
+ 
++    /* bb-patch: memacct charge before allocating (615 video_mem.c:626-630) */
++    if (!IS_MIG_ENABLED(pGpu))
++    {
++        NV_CHECK_OK_OR_RETURN(LEVEL_ERROR,
++            memacctTryCharge(pRmClient, pGpu->gpuId, pAllocData->size, &pMemory->pCharge));
++    }
++
+     if (pCallContext->secInfo.privLevel >= RS_PRIV_LEVEL_KERNEL)
+     {
+         bRsvdHeap = FLD_TEST_DRF(OS32, _ATTR, _ALLOCATE_FROM_RESERVED_HEAP, _YES, pAllocData->attr);
+@@ -1079,6 +1095,10 @@ vidmemConstruct_IMPL
+     stdmemDumpOutputAllocParams(pAllocData);
+ 
+ done:
++    /* bb-patch: release the charge on failure (615 video_mem.c:1114-1115) */
++    if (pMemory->pCharge != NULL && rmStatus != NV_OK)
++        memacctReleaseCharge(pMemory->pCharge);
++
+     if (bSubheap && pTempMemDesc != NULL && rmStatus != NV_OK)
+         heapRemoveRef(pHeap);
+ 
+@@ -1118,6 +1138,7 @@ vidmemDestruct_IMPL
+     // Free any association of the memory with existing third-party p2p object
+     CliUnregisterMemoryFromThirdPartyP2P(pMemory);
+ 
++    memacctReleaseCharge(pMemory->pCharge); /* bb-patch: 615 video_mem.c:1157 */
+     memDestructCommon(pMemory);
+ 
+     //
+diff --git a/src/nvidia/srcs.mk b/src/nvidia/srcs.mk
+index 3686f7f..d58c4de 100644
+--- a/src/nvidia/srcs.mk
++++ b/src/nvidia/srcs.mk
+@@ -815,6 +815,7 @@ SRCS += src/kernel/mem_mgr/mem_fabric_import_ref.c
+ SRCS += src/kernel/mem_mgr/mem_fabric_import_v2.c
+ SRCS += src/kernel/mem_mgr/mem_list.c
+ SRCS += src/kernel/mem_mgr/mem_multicast_fabric.c
++SRCS += src/kernel/mem_mgr/memacct.c
+ SRCS += src/kernel/mem_mgr/no_device_mem.c
+ SRCS += src/kernel/mem_mgr/os_desc_mem.c
+ SRCS += src/kernel/mem_mgr/phys_mem.c
