@@ -29,6 +29,16 @@ Limite declarado: `memory.events` de `app.slice` (cuantas veces toco `max`, `oom
 2. Persistir `memory.events` y `memory.pressure` de `app.slice` en cada muestra de `bb sample`, para convertir la inferencia en medicion.
 3. Demanda: limitar `-n` de pytest-xdist a 4 workers en los repos y correr suites completas bajo `systemd-run --user --scope -p MemoryMax=20G -p MemorySwapMax=0`.
 
+### Implementado el 2026-10-12 (sin desplegar; la ficha sigue abierta)
+
+- (1) Escalon en `bin/bb-usable` (`decidir_escalon`, `matar_en_grupo`, puras; lectura y senal aparte). PSI full >= 10 sostenido `ESCALON_SOSTENIDO_S`=60 s Y un app.slice >= `ESCALON_FRACCION_SLICE`=0.90 de su `memory.max` -> SIGKILL al grupo del mayor RSS de los scopes `app*com.anthropic.Claude-*.scope` no protegido (claude, node, claude-desktop, escritorio, docker/vLLM, piezas de bb, root, PID 1, fuera de scope); solo el pid si el grupo incluye algo protegido o ajeno. Una muerte por `ESCALON_ENFRIAMIENTO_S`=300 s (= `PSI_ACT_SOSTENIDO_S`). El COLAPSO y el watchdog quedan intactos (test con el escalon "matando" en cada vuelta: mismas 9 caricias). Falla cerrado: cgroup o /proc ilegible -> no mata y lo dice; una excepcion del escalon se registra y no tumba al vigilante. Cada decision, tambien "nada" y su motivo, va a `$BLACKBOX_DATA/escalon/<dia>.jsonl`; al cumplirse la condicion y al declararse COLAPSO se guarda el origen de los 10 mayores del sistema en `$BLACKBOX_DATA/origen/`, y el evento de una muerte cita el origen del proceso muerto.
+- (2) `bb sample` guarda `events` y `pressure` de cada slice (cgroup v2; `null` si no se leen) y `pidio_origen` (cadena y cmdline enmascarado del que mas crece cuando pasa de 2 GiB de VmSize; corte medido) y captura el origen al encender `scope_pressure_alert`.
+- Origen: `tools/origen_proceso.py` (fuente primaria y regla de "padre salio" portadas de witr, Apache-2.0, ver `NOTICE`) y `bb origen` para leerlo.
+- Numeros y su procedencia: `tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/calibracion-escalon.txt`. Mutaciones (22 del escalon, 12 del origen, todas muertas): `mutaciones.txt`.
+- Superficie medida de accion sin reinicio posterior: el 2026-10-06 08:50 y 09:10 hubo episodios de PSI 49-66 % durante 180-240 s con app.slice al 93.4-94.6 % que se recuperaron solos; el escalon habria matado ahi.
+- Despliegue pendiente (lo corre Luis, requiere sudo): ver `tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/despliegue.txt`. Ojo: `ExecStart` apunta al checkout, asi que el codigo nuevo entra en el SIGUIENTE arranque de `bb-usable` aunque nadie lo despliegue; sin la linea `BLACKBOX_DATA` de la unit, sus eventos irian a /root.
+- Pendiente aqui: la fila de `bin/bb-usable` en el inventario de SPEC.md no menciona el escalon (no se edito: solo se tocan filas que `tools/inventario.py --check` exige).
+
 ## Medido antes (2026-10-12, primera version de esta ficha)
 
 
