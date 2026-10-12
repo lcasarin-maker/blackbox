@@ -8,7 +8,7 @@ severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-11
-close_check: {"cmd": "python3 -m pytest -q tests/test_incident_report.py -k 'fase_de_carga or progreso_del_engine or adjuntos'", "expect": "exit_zero", "porque": "Hoy `bb incident` declara NOT_COLLECTED en cuatro campos que la issue NVIDIA #1358 pide: fase de carga, progreso del engine, primera respuesta de aplicacion tras el boot y adjuntos. Los tests no existen: el cierre exige implementarlos con su control negativo."}
+close_check: {"cmd": "python3 -m pytest -q tests/test_incident_report.py -k fase_de_carga", "expect": "exit_zero", "porque": "Hoy `bb incident` declara NOT_COLLECTED en cuatro campos que la issue NVIDIA #1358 pide: fase de carga, progreso del engine, primera respuesta de aplicacion tras el boot y adjuntos. Los tests no existen: el cierre exige implementarlos con su control negativo."}
 ---
 
 ## Lo que el reporte declara y no mide (2026-10-11)
