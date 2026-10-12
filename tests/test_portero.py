@@ -18,7 +18,7 @@ APP = "/user.slice/user-1000.slice/user@1000.service/app.slice"
 CLAUDE = APP + "/app-com.anthropic.Claude-1.scope"
 
 
-def estado(psi=0.0, freno="", tope=42 * G, uso=30 * G, **kw):
+def estado(psi: float | None = 0.0, freno: str | None = "", tope: int | None = 42 * G, uso: int | None = 30 * G, **kw):
     return po.Estado(psi, freno, tope, uso, tuple(kw.get("alternos", ())), kw.get("consumo", 0))
 
 
@@ -326,6 +326,7 @@ def test_real_mover_topar_en_caliente_congelar_y_control_negativo(tmp_path):
         ev = po.aplica([po.Accion("congelar", "prueba", p.pid, "suite", topes=topes)], [a], estado(), fx)
         assert ev[0]["rc"] == 0, ev[0]["salida"]
         nuevo = po._cg_de(p.pid)
+        assert nuevo is not None
         destino = po.CGROUP_RAIZ / nuevo.lstrip("/")
         assert Path(nuevo).name == po.nombre_unidad("suite", p.pid)
         assert (destino / "memory.max").read_text(encoding="utf-8").strip() == str(64 * 1024 * 1024)
@@ -357,7 +358,7 @@ def test_real_mover_topar_en_caliente_congelar_y_control_negativo(tmp_path):
 # --- Contenedores (docker.slice) -------------------------------------------------------------------------------
 
 
-def _ct(nombre, tope=None, pico=1 * G):
+def _ct(nombre, tope: int | None = None, pico: int | None = 1 * G):
     return po.Contenedor(nombre, tope, pico)
 
 

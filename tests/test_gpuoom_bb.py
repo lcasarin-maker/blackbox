@@ -40,14 +40,15 @@ def test_la_gpu_decide_la_victima():
     gpu = g.Candidato(2, "VLLM::EngineCor", 2_000_000, 0, 0, 60_000_000)
     assert gpu.anon_kib < cpu.anon_kib and gpu.puntaje() > cpu.puntaje()
     v, porque = g.elige_victima([cpu, gpu], propio_pid=999)
-    assert v.pid == 2 and "gpu 58593" in porque
+    assert v is not None and v.pid == 2 and "gpu 58593" in porque
 
 
 def test_oom_adj_escala_y_menos_mil_exime():
     base = g.Candidato(1, "a", 1000 * KIB, 0, 0, 0)
     assert g.Candidato(1, "a", 1000 * KIB, 0, 0, 0, 500).puntaje() == base.puntaje() * 3 // 2
     exento = g.Candidato(3, "x", 99_000_000, 0, 0, 0, -1000)
-    assert g.elige_victima([exento, base], 999)[0].pid == 1
+    elegido = g.elige_victima([exento, base], 999)[0]
+    assert elegido is not None and elegido.pid == 1
 
 
 def test_protegidos_propio_y_minimo_no_son_victimas():
@@ -83,6 +84,7 @@ def test_paso_observar_registra_victima_con_gpu_y_confirma_psi(tmp_path):
     gpu = g.MuestreadorGpu(ejecuta=lambda: "11, 60000\n")
     gpu.muestrea(0.0)
     _, ev = g.paso("observar", 1.0, 50.0, 1.0, None, _cands, gpu, tmp_path)
+    assert ev is not None and ev["victima"] is not None
     assert ev["procesos_omitidos"] == 3 and ev["veredicto"] == "critico" and "VLLM::EngineCor" in ev["victima"] and ev["confirmado_por_psi"] is True
     assert interruptores.resumen("gpuoom", tmp_path) == {"disparos": 1, "confirmados": 1, "falsos_positivos": 0}
 
@@ -101,7 +103,7 @@ def test_paso_sin_meminfo_no_actua(tmp_path):
 def test_actuar_declara_unsupported(tmp_path):
     gpu = g.MuestreadorGpu(ejecuta=lambda: "")
     _, ev = g.paso("actuar", 1.0, 50.0, 1.0, None, _cands, gpu, tmp_path)
-    assert ev["accion"].startswith("UNSUPPORTED")
+    assert ev is not None and ev["accion"].startswith("UNSUPPORTED")
 
 
 def test_lee_proc_real_encuentra_este_proceso():

@@ -8,7 +8,7 @@ severity: P3
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-12
-close_check: {"cmd": "test -s tasks/evidence/FEATURE-MONITOR-DISTROS-ALTERNAS-GB10-01/primera-pasada.txt && grep -q monitor_distros_probado tasks/evidence/FEATURE-MONITOR-DISTROS-ALTERNAS-GB10-01/primera-pasada.txt", "expect": "exit_zero", "porque": "Decision de Luis 2026-10-12 (DECISIONS.md): la ATOM se queda en DGX OS oficial y se MONITOREAN las distros alternas. Cierra con una primera pasada real del monitor sobre la lista de fuentes, que escriba un hallazgo por fuente con cambio (o 'sin cambio') y su control negativo: una fuente sin actividad no genera hallazgo, una con commit nuevo si."}
+close_check: {"cmd": "grep -q monitor_distros_probado tasks/evidence/FEATURE-MONITOR-DISTROS-ALTERNAS-GB10-01/primera-pasada.txt", "expect": "exit_zero", "porque": "Decision de Luis 2026-10-12 (DECISIONS.md): la ATOM se queda en DGX OS oficial y se MONITOREAN las distros alternas. Cierra con una primera pasada real del monitor sobre la lista de fuentes, que escriba un hallazgo por fuente con cambio (o 'sin cambio') y su control negativo: una fuente sin actividad no genera hallazgo, una con commit nuevo si."}
 ---
 
 ## Que monitorea

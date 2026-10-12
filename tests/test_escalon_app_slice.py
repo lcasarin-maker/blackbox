@@ -387,6 +387,7 @@ def _lanzar(nombre_scope: str, exe: str, mb: int) -> subprocess.Popen:
         ["systemd-run", "--user", "--scope", "--quiet", f"--unit={nombre_scope}",
          "-p", "MemoryMax=1G", "-p", "MemorySwapMax=0", exe, "-c", ACAPARADOR.format(mb=mb)],
         stdout=subprocess.PIPE, text=True, start_new_session=True)
+    assert p.stdout is not None
     assert p.stdout.readline().strip() == "listo"
     return p
 

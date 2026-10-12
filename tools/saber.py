@@ -82,7 +82,7 @@ def busca(
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap = argparse.ArgumentParser(description=(__doc__ or "").split("\n")[0])
     ap.add_argument("patron")
     ap.add_argument("--regex", action="store_true")
     ap.add_argument("--max", type=int, default=MAX_POR_DEFECTO)

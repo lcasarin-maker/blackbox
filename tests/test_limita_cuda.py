@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Any
 
 from tools import interruptores, limita_cuda as lc
 
@@ -18,7 +19,7 @@ def test_decide_off_lanza_sin_limitador():
 
 
 def test_decide_fallo_cerrado_en_cada_causa():
-    base = dict(modo="actuar", limite=512 << 20, lib=LIB, existe_lib=True, simbolos=True, centinela_rc=lc.CUDA_OOM)
+    base: dict[str, Any] = dict(modo="actuar", limite=512 << 20, lib=LIB, existe_lib=True, simbolos=True, centinela_rc=lc.CUDA_OOM)
     assert lc.decide(**base)[0] == "lanza"
     for cambio in ({"limite": None}, {"existe_lib": False}, {"simbolos": False}, {"centinela_rc": 0}, {"centinela_rc": None}, {"centinela_rc": -1}):
         accion, motivo = lc.decide(**{**base, **cambio})

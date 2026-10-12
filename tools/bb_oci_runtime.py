@@ -166,8 +166,8 @@ def decidir(spec: object, reclamos: dict[str, float], suelo_gib: float,
     base.update(gpu=gpu, clase=clase)
     if gpu:
         gib, error = reclamo_gpu(spec)
-        if error:
-            return {**base, "decision": "RECHAZAR", "motivo": f"{error} ({gpu})"}
+        if error or gib is None:
+            return {**base, "decision": "RECHAZAR", "motivo": f"{error or 'reclamo GPU ausente'} ({gpu})"}
         otros = sum(v for k, v in reclamos.items() if k != contenedor)
         if otros + gib > suelo_gib:
             return {**base, "decision": "RECHAZAR", "motivo": (
@@ -326,9 +326,9 @@ def _anotar(registro, fila: dict) -> None:
 def gobernar(argv: list[str]) -> int | None:
     """Aplica la politica. Devuelve un codigo de salida si hay que rechazar."""
     i = subcomando(argv)
-    sub = argv[i] if i is not None else None
-    if sub not in ("create", "delete"):
+    if i is None or argv[i] not in ("create", "delete"):
         return None
+    sub = argv[i]
     with contextlib.ExitStack() as pila:
         registro = _abrir_registro(pila)
         if sub == "delete":

@@ -382,8 +382,9 @@ def _supervisor(cadena: list[dict[str, Any]]) -> dict[str, Any] | None:
         base = _base(p)
         if base == "init" and not hay_shell:
             return {"tipo": "supervisor", "nombre": "init"}
-        tokens = [base.lower()] + [Path(t).name for t in (p.get("cmdline") if isinstance(p.get("cmdline"), list)
-                                                           else []) if not t.startswith("-") and "=" not in t]
+        cmdline = p.get("cmdline")
+        tokens = [base.lower()] + [Path(t).name for t in (cmdline if isinstance(cmdline, list) else [])
+                                   if not t.startswith("-") and "=" not in t]
         for t in tokens:
             if t.lower() in SUPERVISORES:
                 return {"tipo": "supervisor", "nombre": SUPERVISORES[t.lower()]}

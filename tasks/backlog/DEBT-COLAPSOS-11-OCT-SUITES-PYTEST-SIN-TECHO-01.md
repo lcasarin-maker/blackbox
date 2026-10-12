@@ -71,7 +71,7 @@ Limite declarado: `memory.events` de `app.slice` (cuantas veces toco `max`, `oom
 2. Captura de los procesos mayores al entrar PSI full >= 10, antes de que el sampler se estrangule.
 3. Reproducir con el tope puesto.
 
-## Primera evidencia propia de que el tope funciona (2026-10-12, sesion 020, office2office)
+## Primera evidencia propia de que el tope funciona (2026-10-12, sesion 020, otro proyecto de la flota)
 Un `backlog_verifier --gate` completo (kit simplecode 9.9.0) en `systemd-run --user --scope -p MemoryMax=20G -p MemorySwapMax=0` fue matado por OOM a los 4 min 30 s (08:44:55 -> 08:49:25, rc=143): `oom-kill:constraint=CONSTRAINT_MEMCG`, victima `pytest-xdist`, `Consumed 1h 6min 39.722s CPU time` (~15 nucleos). La maquina NO cayo: murio solo el scope; load average 66 en 20 nucleos, PSI full avg10 0.50. Tres corridas anteriores (mismo scope, 15-16 min) terminaron; la cuarta tenia la cache del verificador invalidada y re-ejecuto casi todo a la vez: el pico depende del estado de la cache. Causa probable, NO probada: ~500 close_checks en paralelo; el simplecode de master acota concurrencia pero llega a este repo con la proxima version del kit. Pregunta abierta de la sesion 020: si 20 GiB es el tope correcto para el verificador completo con cache fria; decision de Luis, no se sube por iniciativa de un agente (el valor sale de la clase `suite` del portero, votado).
 
 ## Voto de Luis 2026-10-12: el tope del verificador completo sigue en 20 GiB

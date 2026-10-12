@@ -3,6 +3,7 @@ y las funciones puras que arman la tabla de seis timestamps."""
 
 import json
 import re
+from typing import Any
 
 import pytest
 
@@ -472,7 +473,7 @@ def test_lineas_scan_imprime_la_racha_el_pico_y_el_throttle_decodificado(tmp_pat
 # Todos los nombres llevan `fase_de_carga` porque ese es el filtro del close_check de la ficha.
 def bbm(min_, gw="", mib=None, ts_base=0):
     """Muestra de `bb sample`: `gw` es el gw_salud 'run,wait,kv,preempt,gen,prompt,err' ('' = /metrics caido)."""
-    m = {
+    m: dict[str, Any] = {
         "ts": f"2026-10-11T18:{min_ + ts_base:02d}:00+00:00",
         "boot_id": "b",
         "gw_salud": gw,

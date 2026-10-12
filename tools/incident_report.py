@@ -1247,7 +1247,7 @@ def journal_kernel_anonimo(idx: int, nodo: str, lineas: int = 300) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap = argparse.ArgumentParser(description=(__doc__ or "").split("\n")[0])
     ap.add_argument(
         "boot",
         nargs="?",

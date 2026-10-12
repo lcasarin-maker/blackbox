@@ -122,4 +122,5 @@ def test_lee_distingue_archivo_ausente_de_ilegible(tmp_path):
     f.write_text("no es json", encoding="utf-8")
     assert av.lee(f) is None
     f.write_text(json.dumps(dato("normal")), encoding="utf-8")
-    assert av.lee(f)["estado"] == "normal"
+    leido = av.lee(f)
+    assert leido is not None and leido["estado"] == "normal"

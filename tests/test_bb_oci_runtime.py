@@ -193,7 +193,7 @@ def test_argv_al_estilo_containerd():
             "--log-format", "json", "--systemd-cgroup", "create", "--bundle", "/b",
             "--pid-file", "/b/init.pid", "--console-socket", "/tmp/s", "abc123"]
     i = oci.subcomando(argv)
-    assert argv[i] == "create"
+    assert i is not None and argv[i] == "create"
     assert oci.args_create(argv[i + 1:]) == (Path("/b"), "abc123")
 
 
