@@ -337,12 +337,32 @@ disco.
 | `~/.config/systemd/user/bb-reboot-verdict.service` | corre `tools/reboot_verdict.py --ultimos 1 --escribe` y agrega la fila del boot recien terminado a `~/.local/share/blackbox/reboots.jsonl`; idempotente por `boot_id`. |
 | `~/.config/systemd/user/bb-reboot-verdict.timer` | su cadencia: una vez por arranque, 3 min despues de iniciar, ANTES del `atom-crash-detector` de Atlas (`OnBootSec=4min`), que lee la fila de `reboots.jsonl` que esta unidad escribe. |
 | `~/.config/systemd/user/bb-aviso-termico.service` | corre `python3 -m tools.aviso_termico` de forma continua (reinicio en fallo); lleva `DBUS_SESSION_BUS_ADDRESS` porque un servicio de usuario no siempre hereda el bus de notificaciones. |
+| `~/.config/systemd/user/bb-guardia-proceso.service` | corre `bin/bb-guardia-proceso`, que frena a un proceso desbocado antes de que tumbe la maquina. Desplegado sin adoptar hasta el 2026-10-12. |
+| `/srv/ai/gateway/admission_check_wrapper.sh` | el `ExecStartPre` del motor: lee `admission_check_gb` de `active_engine.json` y llama a `admission_check.sh`. Es la mitad del veto de memoria que no estaba en el repo. |
+| `/etc/systemd/coredump.conf.d/99-blackbox.conf` | techo de disco de los volcados (seccion 1 de `enable-privileged.sh`). Cuelgue. |
+| `/etc/security/limits.d/99-blackbox-core.conf` | `core unlimited` para sesiones (seccion 2). |
+| `/etc/systemd/system.conf.d/99-blackbox.conf` | `DefaultLimitCORE=infinity` para servicios del sistema (seccion 2). |
+| `/etc/systemd/user.conf.d/99-blackbox.conf` | idem para servicios de usuario (seccion 2). |
+| `/etc/default/earlyoom` | `EARLYOOM_ARGS`: umbrales y punteria del OOM killer, editados en sitio por la seccion 6. Presion de memoria. |
+| `/etc/docker/daemon.json` | `cgroup-parent: docker.slice`, mezclado por la seccion 9: sin el, el techo de `docker.slice` no alcanza a los contenedores. |
+| `/etc/default/grub` | `GRUB_DEFAULT` fijado al kernel 6.17.0-1032-nvidia por la seccion 8b. Cuelgue. |
+| `/etc/default/grub.d/kdump-tools.cfg` | `crashkernel=1G-:512M`, la reserva sin la que kdump no captura. Conffile modificado del paquete. Cuelgue. |
+| `/etc/systemd/system/journal-udp-forward.service` | reenvia el log del kernel por UDP a otra maquina: la captura que sobrevive a un cuelgue (reemplazo de netconsole). |
+| `/usr/local/bin/journal-udp-forward.sh` | su cuerpo; la copia lleva la IP destino redactada y `bb drift` compara con la misma redaccion. |
 
 **Deliberadamente fuera**: `dcgm.service` y la familia `nvsm-*` son la pila de
 monitoreo del fabricante; `bb scan` las lee, no las custodia. `/etc/systemd/system.conf`
 tampoco se adopta entero, porque el paquete `systemd` lo reescribe: lo que bb
 posee es el drop-in `system.conf.d/99-blackbox-watchdog.conf`, que sobrevive a
 la actualización.
+
+**La pila de IA no es de bb** (inventario del 2026-10-12, en
+`tasks/evidence/FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE-LA-MAQUINA-01/inventario.txt`):
+`active_engine.json`, `main.py`, `ai-nemotron.service`, modelos, imagenes y datos
+se quedan donde estan. La relacion es de informacion: bb LEE
+`/srv/ai/gateway/active_engine.json` (`admission_check_gb`, `container_memory_gb`)
+y `/srv/ai/models/_coredumps`, y actua sobre la unidad del motor solo por
+`systemctl` (vigilante y gate de admision), sin versionar su configuracion.
 
 ## Constraints
 

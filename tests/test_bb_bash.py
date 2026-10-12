@@ -1570,6 +1570,48 @@ def test_drift_suspension_VENCIDA_SI_cuenta_como_fallo(raiz_drift):
     assert "VENCIDA" in r.stdout
 
 
+# FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE-LA-MAQUINA-01: el repo es publico, asi
+# que una copia adoptada con IP de LAN la lleva redactada, y `bb drift` aplica la
+# misma redaccion al desplegado antes de comparar.
+
+def test_drift_compara_una_copia_REDACTADA_contra_el_desplegado(raiz_drift):
+    raiz, home = raiz_drift
+    (raiz / "adopted" / "systemd-user" / "f.sh").write_text(
+        "echo x > /dev/udp/<REDACTADO-IP-LAN>/6666\n", encoding="utf-8")
+    (home / ".config" / "systemd" / "user" / "f.sh").write_text(
+        "echo x > /dev/udp/192.168.7.20/6666\n", encoding="utf-8")
+    r = _correr_drift(raiz, home)
+    assert r.returncode == 0, r.stdout
+    assert "192.168.7.20" not in r.stdout
+
+
+def test_drift_redactado_SIGUE_viendo_un_cambio_fuera_de_la_IP(raiz_drift):
+    """Control negativo del anterior: la redaccion no puede volver ciego al
+    resto del fichero."""
+    raiz, home = raiz_drift
+    (raiz / "adopted" / "systemd-user" / "f.sh").write_text(
+        "echo x > /dev/udp/<REDACTADO-IP-LAN>/6666\n", encoding="utf-8")
+    (home / ".config" / "systemd" / "user" / "f.sh").write_text(
+        "echo x > /dev/udp/192.168.7.20/7777\n", encoding="utf-8")
+    r = _correr_drift(raiz, home)
+    assert r.returncode != 0, r.stdout
+    assert "divergentes: 1" in r.stdout
+    assert "192.168.7.20" not in r.stdout, "el diff imprimio la IP sin redactar"
+
+
+def test_drift_vigila_srv_ai_gateway(raiz_drift, tmp_path):
+    raiz, home = raiz_drift
+    srv = tmp_path / "srv"
+    (srv / "gateway").mkdir(parents=True)
+    (raiz / "adopted" / "gateway").mkdir()
+    (raiz / "adopted" / "gateway" / "w.sh").write_text("repo\n", encoding="utf-8")
+    (srv / "gateway" / "w.sh").write_text("maquina\n", encoding="utf-8")
+    r = correr(["drift"], extra_env={"BLACKBOX_DRIFT_ROOT": str(raiz), "HOME": str(home),
+                                     "BLACKBOX_DRIFT_SRV": str(srv)})
+    assert r.returncode != 0, r.stdout
+    assert f"DIVERGE     {srv}/gateway/w.sh" in r.stdout
+
+
 # =====================================================================
 # bb scan -- "apps Electron sin renderer" (proceso vivo, UI muerta)
 # =====================================================================

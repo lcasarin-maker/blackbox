@@ -1,0 +1,13 @@
+[Unit]
+Description=Reenvia journalctl -kf a la Dell por UDP (reemplazo de netconsole)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/journal-udp-forward.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
