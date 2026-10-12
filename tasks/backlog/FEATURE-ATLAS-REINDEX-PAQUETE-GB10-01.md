@@ -36,3 +36,13 @@ El build de Atlas embebe con `bge-m3` en CUDA (`logs/index_build.jsonl`: `embedd
 1. Con la maquina fria y sin vLLM sirviendo, correr `python tools/build_incremental.py` en Atlas.
 2. El tamano del paquete completo en chunks NO esta medido (solo la muestra de 42 archivos). Medirlo antes de dar por buena la indexacion.
 3. AGENTS.md de Atlas advierte que el umbral del router caduca con cada crecimiento grande del corpus: re-medir la eval congelada despues del build y comparar con la linea base. Los archivos van bajo `investigations/`, que Atlas ya marca como derivado y penaliza en el reranker (`derived_penalty=3.0`), para que no desplacen a los manuales.
+
+## Estado 2026-10-11 -- ENCOLADO, NO CERRADO (espera a la cola de Atlas)
+
+El `close_check` mide el grafo de entidades de Atlas, que solo cambia cuando el job corre; correrlo a mano esta prohibido (GPU, posible FULL build). Hecho en Atlas (commit `fee0a2b89`, sin push):
+
+- `tools/liberation_queue/pending/79_00_reindex_paquete_gb10_20261011.json` (efecto `modifica`): `build_incremental.py --stats-json ...` y despues `build_entity_graph` + `save_graph`. El segundo paso es necesario y no estaba en la ficha: `build_incremental --graph-path` escribe el `KnowledgeGraph` (`knowledge_graph.json`), no `entity_graph.json`, que es el que mide el `close_check`.
+- `tools/liberation_queue/pending/80_00_verifica_reindex_paquete_gb10_20261011.json` (efecto `verifica`, `verifica_a` el anterior): corre el `close_check` y MIDE los chunks de las dos carpetas en `rag/embeddings/index.json` (pendiente 2 de esta ficha). Sale 1 si falta el hilo o alguna carpeta tiene 0 chunks.
+- Gate termico (`atom_gpu_telemetry.py --gate-termico`): `bloquea:false` justo antes de escribir los jobs; `bloquea:true` ("sostenida") minutos despues. El watchdog es quien decide cuando corre; encolar no genera carga.
+
+Siguen abiertos: (a) que la cola corra los dos jobs y se lea `logs/reindex_paquete_gb10_20261011.txt` (modo `incremental` o `full`) y `logs/verifica_reindex_paquete_gb10_20261011.txt`; (b) el pendiente 3, re-medir la eval congelada contra la linea base despues del build, que NO se encolo porque `rebenchmark_v2_post_expansion.py` escribe un dictamen nuevo en `docs/agent_findings/` que exige su propia indexacion y una pareja de medicion; (c) el paquete sigue SIN versionar en el git de Atlas (esta ficha no lo pide). Se cierra cuando `80_00` pase y el `close_check` de arriba de rc=0.
