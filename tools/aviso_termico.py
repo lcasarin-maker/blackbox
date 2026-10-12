@@ -33,6 +33,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from tools import accion_termica
+
 RUTA = (
     Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox"))
     / "estado_termico.json"
@@ -200,9 +202,15 @@ def main(argv: list[str] | None = None) -> int:
     previo: str | None = None
     recordatorio: float | None = None
     while True:
+        antes = previo
         avisos, previo, recordatorio = decide(
             previo, lee(), datetime.now(timezone.utc), recordatorio, time.monotonic()
         )
+        if previo != antes or previo in accion_termica.ESTADOS_CALIENTES:
+            try:  # congelar/descongelar la carga que Atlas declara; un fallo no tumba el vigilante
+                accion_termica.aplica(previo)
+            except OSError as e:
+                print(f"COULD_NOT_ACT: {e}", file=sys.stderr)
         for av in avisos:
             enviar(av)
         time.sleep(INTERVALO_S)  # blocking-sleep: intervalo del vigilante de vida larga, no hay I/O a esperar -- DEBT-TERMICA-CORROBORACION-DE-ALARMA-SIEMPRE-DESCARTA-01  # sunset-reviewed: 2.8 -- revalidado 2026-10-11: demonio de usuario sin otro hilo; el intervalo acota la latencia del aviso
