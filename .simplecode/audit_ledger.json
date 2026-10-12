@@ -1,43 +1,85 @@
 {
-  "claims_fingerprint": "551d6e1ad260eb6a3189e590dcfb507f9afa2bf4d5e99c0545603b0c61a97e27",
-  "panel": "2 auditores GPT-6 Astra (Opus no disponible en esta sesi\u00f3n), auditor\u00eda adversarial de solo lectura 2026-10-10; 4 afirmaciones stale revisadas, SPEC-L359 precisada sobre suspensiones vigentes y fecha de estado del timer",
+  "claims_fingerprint": "02d88617fc0823a348f9ce8388857db63008939ddfb8ce32cf1e5074a30dd12d",
+  "panel": "1 auditor Claude Opus 5.5 (subagente executor), 2026-10-11, lectura y ejecucion contra el sujeto con control negativo corrido por afirmacion; 16 afirmaciones (3 caducadas, 13 sin auditar); corregidas en SPEC.md L144, L145, L377, L380 y L382",
   "profile": "general",
   "results": [
     {
       "cited": {
-        "tools/atom_gpu_telemetry.py": "b1568958269bf99135d2db7b8e7a7c58dfe5b80b0b9f05e5a00e2ddf22de2107"
+        "tests/test_hallazgo.py": "22881b51eed8e1e62a3baf72e53d83277fba21c64ee51176111b57325d5ab327",
+        "tools/atom_gpu_telemetry.py": "ae6e3d53ee8dfee48ac883b589f76968b420915fabe19de6d00f564504af6108"
       },
       "claim_id": "SPEC-L118",
-      "evidence": "tools/atom_gpu_telemetry.py:49-65 importa \u00fanicamente m\u00f3dulos de la biblioteca est\u00e1ndar y tools/atom_gpu_telemetry.py:77-90 contiene su propia implementaci\u00f3n de _argv_tokens; la procedencia hist\u00f3rica desde Atlas est\u00e1 documentada en el docstring, sin importarla del otro repositorio. En el consumidor real, /home/lcasarin/projects/Atlas/tools/bb_consulta.py:30 define la ruta del productor de blackbox, mientras las l\u00edneas 50-61 y 92-104 lo ejecutan mediante subprocess y decodifican stdout JSON para --gate-termico y --procesos-gpu. Las b\u00fasquedas de imports cruzados, modificaciones de sys.path hacia el otro repositorio y spec_from_file_location asociado a blackbox no encontraron una importaci\u00f3n ejecutable cruzada en los \u00e1mbitos revisados.",
-      "seal": "8e2f10334e0494e1340a8c896da6295c3e5583bd54a704fc5394a1274d2b5c89",
+      "evidence": "tools/atom_gpu_telemetry.py:49-66 importa solo biblioteca estandar y escribe el jsonl en tools/atom_gpu_telemetry.py:98 (`$BLACKBOX_DATA/atom_gpu_telemetry.jsonl`); Atlas lo lee como archivo en /home/lcasarin/projects/Atlas/tools/atom_degradacion_resuelta.py:72-74 y ejecuta el gate como proceso en /home/lcasarin/projects/Atlas/tools/bb_consulta.py:40-72. `grep -rnE \"sys\\.path\\.(insert|append).*(Atlas|blackbox)\" --include=*.py` sale rc=1 en tools/ tests/ bin/ de blackbox y en tools/ rag/ de Atlas (fuera de _retired). Limite declarado: tests/test_hallazgo.py:127-160 ejecuta codigo de Atlas como PROCESO aparte con cwd=Atlas, no lo importa en blackbox. Control negativo corrido: el mismo grep sobre un tools/plantado.py del scratchpad con `sys.path.insert(0, \"/home/lcasarin/projects/Atlas\")` sale rc=0 y lo imprime.",
+      "seal": "af265e2d9176c0599e084892591079941b43d49ffe7810ed3ff04b0eeb81bb6a",
       "verdict": "PASS"
     },
     {
       "cited": {
-        "tools/atom_gpu_telemetry.py": "b1568958269bf99135d2db7b8e7a7c58dfe5b80b0b9f05e5a00e2ddf22de2107"
+        "tools/atom_gpu_telemetry.py": "ae6e3d53ee8dfee48ac883b589f76968b420915fabe19de6d00f564504af6108"
       },
       "claim_id": "SPEC-L122",
-      "evidence": "tools/atom_gpu_telemetry.py:96-100 define el archivo de telemetr\u00eda y las fuentes f\u00edsicas de temperatura y presi\u00f3n de memoria; tools/atom_gpu_telemetry.py:1685-1691 ejecuta el muestreo y la mitigaci\u00f3n con persistencia de estado. La actuaci\u00f3n f\u00edsica existe en tools/atom_gpu_telemetry.py:1455 y :1496 mediante SIGSTOP y SIGCONT, y las interfaces de consulta devuelven JSON y c\u00f3digos de salida en :1635-1655. Atlas consume esas interfaces por proceso en /home/lcasarin/projects/Atlas/tools/bb_consulta.py:50-61 y :92-104, lo que respalda la frontera declarada entre gobierno f\u00edsico, telemetr\u00eda y gates.",
-      "seal": "ac534f9cd607c5246b66a3a2f2207f828091db46a24b7f09559e4f2213937804",
+      "evidence": "tools/atom_gpu_telemetry.py:1542 envia SIGSTOP y :1583 SIGCONT (mitigacion fisica); tools/atom_gpu_telemetry.py:1386 publica `bb-estado-termico/2` y :1755-1765 (`_comando_gate_termico`) expone el gate con salida JSON y rc. `python3 tools/atom_gpu_telemetry.py --gate-termico` imprime `{\"bloquea\": false, \"motivo\": \"\"}` rc=0; control negativo corrido con BLACKBOX_DATA apuntando a un directorio vacio: `{\"bloquea\": true, \"motivo\": \"estado termico ausente o ilegible ...\"}` rc=1. La admision de trabajos sigue en Atlas: /home/lcasarin/projects/Atlas/tools/liberation_watchdog.py:2981-2983 consulta `_motivo_termico()` antes de lanzar un job. Lo que el resto del parrafo dice de Atlas se comprobo: /home/lcasarin/projects/Atlas/tools/detect_atom_crash.py:76 importa `tools.durable_log` y :82 escribe en docs/agent_findings; tools/_retired/instalar_earlyoom.sh existe y tools/instalar_earlyoom.sh no; `git merge-base --is-ancestor ec9b4288a master` en Atlas sale 0.",
+      "seal": "a9a1ed8257de6eb336cde5ef24609866d3d36dda609f5625eeb9d914998b4820",
       "verdict": "PASS"
     },
     {
       "cited": {
-        "enable-privileged.sh": "0ba1463022d0a37b5c2d592da39d30ca5383d5e73d7b3a0b99f7e6f9e360750b"
+        "enable-privileged.sh": "e92ac93a83e85100fe5f67de8590a2cc08c995ad4ff91fef4efefad1631ecadb"
       },
       "claim_id": "SPEC-L135",
-      "evidence": "`enable-privileged.sh:659` corre `loginctl enable-linger \"$DUENO\"` en la secci\u00f3n 10 (l\u00edneas 643-670) y `enable-privileged.sh:95-103` s\u00f3lo lo devuelve a 'no' en el revert si la copia previa dec\u00eda 'no'. En vivo `loginctl show-user lcasarin -p Linger` imprime `Linger=yes` y `/var/lib/systemd/linger/lcasarin` existe; control negativo corrido: `loginctl show-user root -p Linger` imprime `Failed to get user: User ID 0 is not logged in or lingering`, as\u00ed que la consulta s\u00ed puede dar el veredicto contrario. Las units de usuario que blackbox instala cuelgan de `timers.target` o `default.target` (`systemd/blackbox-sample.timer:15`, `systemd/blackbox-drift.timer:12`, `systemd/bb-guardia-proceso.service:21`, `adopted/systemd-user/ai-nemotron-vigilante.timer:10`), no de `graphical-session.target`; el paso nuevo del bloque 4b (`enable-privileged.sh:326`) instala `atom-secundarias.slice` en `/etc/systemd/system`, unidad de sistema, y no toca esta afirmaci\u00f3n.",
-      "seal": "88f85af38b33aa70be034432ae732f39c2d2640e0cbcedb369a70ea3ce1b2118",
+      "evidence": "enable-privileged.sh:645-661 (bloque 10) guarda el estado previo y corre `run loginctl enable-linger \"$DUENO\"`; el cambio de enable-privileged.sh desde el sello anterior solo toca comentarios del bloque 4b (300-305: rango 2100 del clock lock). En vivo `loginctl show-user lcasarin -p Linger` da `Linger=yes` y `ls /var/lib/systemd/linger/` lista `lcasarin`. Control negativo corrido: `loginctl show-user root -p Linger` falla con `User ID 0 is not logged in or lingering`, asi que la consulta distingue un usuario sin linger. La frase sobre el arranque completo sin sesion queda declarada como no comprobada en el propio texto.",
+      "seal": "4a842a8b46eeb8aebe4a0b33b20b3d8935af1cc953b350472ba9fd6c07a967e7",
       "verdict": "PASS"
     },
     {
       "cited": {
-        "tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/final-results.json": "59b94b52905091a668b58889f1ab0c59067304ba6d7dc47c77825f73f78cf597",
+        "docs/evidence/INVESTIGACION-GB10-2026-10-11/entrega_atlas_manifiesto.json": "6e527446ae3ab77a122d20df747016de26d4fd8e792c83472bd2afa59d514bdd"
+      },
+      "claim_id": "SPEC-L144",
+      "evidence": "`ls knowledge` falla (no existe) y `git log --all --oneline -- 'knowledge/gb10/*'` sale vacio: el directorio nunca se versiono, por eso el texto se corrigio a 'se retiro antes de versionarse'. Un verificador de manifiesto (scratchpad/manif.py) recalcula el SHA-256 de cada entrada de docs/evidence/INVESTIGACION-GB10-2026-10-11/entrega_atlas_manifiesto.json contra /home/lcasarin/projects/Atlas/knowledge/investigations/gb10_cortes_2026-10-11/: `entradas=430 ok=429 distintos=1 ausentes=0`, el distinto es 00_INDICE.md (mtime 2026-10-11 16:33, despues del manifiesto); el de mediciones propias da `entradas=4 ok=4`. En Atlas `git status --short` marca la carpeta `??`. Ese DIFF de 00_INDICE.md es el control negativo: el verificador si produce el veredicto contrario.",
+      "seal": "c1ef1e69e493656acca5abf1d512927c4422fa1d855ab84d8e674a56cfeb9224",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {
+        "tools/atom_gpu_telemetry.py": "ae6e3d53ee8dfee48ac883b589f76968b420915fabe19de6d00f564504af6108"
+      },
+      "claim_id": "SPEC-L145",
+      "evidence": "Busqueda corrida en /home/lcasarin/projects/Atlas (tools/ y rag/, sin _retired) de nvidia-smi, /proc/meminfo, /sys/class/thermal, smartctl, journalctl y /proc/pressure: ademas de detect_atom_crash.py (768 lineas por `wc -l`; 20 Xid, 10 journalctl, 7 kdump, 6 smartctl) aparecen tools/medir_consumo_de_job.py:37,53 (reusa `liberation_watchdog.available_gb`) y tools/dgx401_medicion_pareada_dos_motores.py:84 (lee /proc/meminfo); el 'solo' anterior era falso y el texto se corrigio. tools/liberation_watchdog.py:1021-1032 mide memoria con `free -b` y no invoca nvidia-smi: :137 importa `procesos_gpu` de tools/bb_consulta.py, que ejecuta tools/atom_gpu_telemetry.py --procesos-gpu de blackbox. adopted/ contiene ai-gpu-telemetry.service, ai-memory-monitor.service/.timer y los tres de nvrm-watch; tasks/backlog/DEBT-CONTRATO-ATLAS-INSTRUMENTOS-EN-BLACKBOX-01.md existe. Control negativo: la misma busqueda produjo dos archivos que refutaban la version anterior.",
+      "seal": "74f69ccd4a6f234e6c033a227db5b16b1649fb1f884ead5e74c30d877a3b00f9",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {
+        "rules/firmas_gb10.json": "1fdee1398e1c44b2dfb26245be3a85dbbedd1126e314583928d828c46dc1d463",
+        "tools/atom_gpu_telemetry.py": "ae6e3d53ee8dfee48ac883b589f76968b420915fabe19de6d00f564504af6108",
+        "tools/incident_report.py": "c85469d533e32c2a397665d24dc4656ee2118a441919d7d1b42fb4f899c7c0c2",
+        "tools/reboot_verdict.py": "75e43d4d18366760c9afc835b21790c2f93bc54d52ce35194780d9c9ca8d4893"
+      },
+      "claim_id": "SPEC-L146",
+      "evidence": "Ningun sys.path ni import cruzado (ver grep de SPEC-L118). De blackbox a Atlas: tools/atom_gpu_telemetry.py:98 escribe atom_gpu_telemetry.jsonl, tools/reboot_verdict.py:44 escribe reboots.jsonl con `boot_id` por fila (:291, idempotente en :331), tools/incident_report.py:49 escribe en incidentes/ con `\"formato\": \"bb-incident/1\"` (:768). Limite: hoy Atlas solo lee el jsonl de telemetria (atom_degradacion_resuelta.py:72-74); grep de reboots.jsonl e incidentes en Atlas no da consumidores, el texto declara el vinculo, no su uso. De Atlas a blackbox: rules/firmas_gb10.json:3 fija `atlas_raiz` y cada una de sus 15 firmas lleva campo `atlas`; scratchpad/punteros.py da `firmas=15 sin_documento=0` rc=0, y con una copia cuyo primer puntero es `no_existe_xyz.md` da `sin_documento=1` rc=1 (control negativo corrido). tasks/backlog/FEATURE-INCIDENTE-CARGA-DE-ATLAS-01.md existe.",
+      "seal": "4964b837a2d6ca2ae229d0587617364f382ca382171f4934590306e78c97dc78",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {
+        "tests/test_hallazgo.py": "22881b51eed8e1e62a3baf72e53d83277fba21c64ee51176111b57325d5ab327",
+        "tests/test_incident_report.py": "5104159a2f62c61c2a082e9c2950b28621ff3653b6a255cf963f15cee1afb973",
+        "tests/test_reboot_verdict.py": "27605e53076e7ce4055581a9f09ff0cdd86d80e2ad3d5813b5705e3b3c05fe79",
+        "tools/atom_gpu_telemetry.py": "ae6e3d53ee8dfee48ac883b589f76968b420915fabe19de6d00f564504af6108"
+      },
+      "claim_id": "SPEC-L147",
+      "evidence": "Sin Atlas: `HOME=<vacio> PYTHONPATH=<user-site> python3 -m pytest tests/test_hallazgo.py tests/test_incident_report.py tests/test_reboot_verdict.py` da `45 passed, 2 skipped` con los skips en tests/test_hallazgo.py:127 y tests/test_incident_report.py:364 ('Atlas no esta en esta maquina'); con Atlas presente da `47 passed` (control negativo del skip). `HOME=<vacio> BLACKBOX_DATA=<vacio> python3 tools/atom_gpu_telemetry.py --once --dry-run` imprime el evento de arranque con umbrales, rc=0. Atlas sin blackbox: en Atlas `BB_GATE_TERMICO=/no/existe.py python3 -c 'from tools.bb_consulta import motivo_termico; print(repr(motivo_termico()))'` devuelve 'el gate termico de blackbox no esta en /no/existe.py: ... no se suma carga', y con el gate real devuelve ''. tools/liberation_watchdog.py:2981-2983 y tools/nightly_kb_consolidation.py:269 de Atlas paran ante ese motivo. tools/atom_gpu_telemetry.py:1736-1752 bloquea si estado_termico.json (`bb-estado-termico/2`, :1386) falta o tiene latido viejo.",
+      "seal": "0af5169e49e627dacbffe43165ca27ba41304db3b8632c54eeb74584eb24c2a4",
+      "verdict": "PASS"
+    },
+    {
+      "cited": {
         "tests/test_bb_bash.py": "f604e0c7ca04c8637bedecf38dd7bfbaacc9ce1fc7ebd8eb738664ca4ec1d871"
       },
-      "claim_id": "SPEC-L355",
-      "evidence": "La implementaci\u00f3n conserva los cuatro chequeos por artefacto: bin/bb:2318 exige el JSONL del d\u00eda modificado en menos de dos minutos; bin/bb:2186 y bin/bb:2204 comparan ExecStart con la confirmaci\u00f3n del driver; bin/bb:2449 exige ambas marcas de earlyoom; bin/bb:2266 consulta journalctl -S para los \u00faltimos 120 segundos y bin/bb:2274 exige la marca del latido. bin/bb-usable:91 fija PROBE_INTERVAL=30.0 y bin/bb-usable:277 imprime esa marca en cada vuelta. Los cinco controles negativos nombrados existen en tests/test_bb_bash.py:486, :528, :541, :577 y :595; los tres casos del latido est\u00e1n en :657 y en la parametrizaci\u00f3n de :665. La ejecuci\u00f3n hist\u00f3rica est\u00e1 documentada en tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/final-results.json:28 como \u00ab17 passed in 17.29s\u00bb, incluidos esos ocho controles; esta auditor\u00eda no ejecut\u00f3 pruebas. bin/bb:2506 y bin/bb:2514 comprueban \u00fanicamente is-active para las dos filas a\u00f1adidas, y bin/bb:2511 declara expresamente la ausencia de latido de la guardia. El antecedente de la ruta borrada consta en tasks/done/DEBT-TRES-CHEQUEOS-POR-IS-ACTIVE.md:34; `git show 37ccd7d:SPEC.md` confirma literalmente la cifra hist\u00f3rica err\u00f3nea \u00abcuatro controles negativos corridos\u00bb. El l\u00edmite sobre contenido fresco pero incorrecto sigue siendo expl\u00edcito tanto en SPEC.md:355 como en tasks/done/DEBT-TRES-CHEQUEOS-POR-IS-ACTIVE.md:116.",
-      "seal": "39f50dc6b1f097361cdf97963dfcf1a3e05036b532bd04bb62f763b0f3847ba2",
+      "claim_id": "SPEC-L376",
+      "evidence": "bin/bb:2323 exige el JSONL del dia con `find -mmin -2`; bin/bb:2191-2251 y :2404-2422 comparan ExecStart de atom-clock-lock con la confirmacion del driver; bin/bb:2454-2459 exige las dos marcas de earlyoom; bin/bb:2271-2280 consulta `journalctl -u bb-usable.service -S` de los ultimos 120 s y exige `[bb-usable] latencia del escritorio:`; bin/bb-usable:91 `PROBE_INTERVAL = 30.0` y :277 imprime la marca. bin/bb:2511 y :2519 leen solo `systemctl --user is-active` para vigilante y guardia, :2517 declara que la guardia no escribe latido. Corridos los cinco controles nombrados (tests/test_bb_bash.py:486, :528, :541, :577, :595) mas :651, :657 y :666 parametrizado: `9 passed in 182.22s`. Control negativo corrido sobre una copia `git archive HEAD` con bin/bb:2280 mutado a `chk \"$name\" 0`: los tres controles del latido dan `3 failed`.",
+      "seal": "1daa09b59b04915d2198d3e5996e84c464c0142a5f9c765ea0f6f4015d2bf5c0",
       "verdict": "PASS"
     },
     {
@@ -48,18 +90,18 @@
         "tests/test_hook_native_controls.py": "e3310194c72c9a6abfb58bb5309c3ecf8b3b11f18b9b8d67792b1f773ed068eb",
         "tests/test_ruff_gitleaks_controles_negativos.py": "4887944d36593eb387a74b61cac6e2844136a5dfa3dd0f6f2d2dedf03f5fc482"
       },
-      "claim_id": "SPEC-L356",
-      "evidence": "`python3 -m pytest -q -p no:cacheprovider tests/test_bash_sintaxis.py tests/test_ruff_gitleaks_controles_negativos.py tests/test_hook_native_controls.py tests/test_auditoria_bb_regresiones.py::test_scan_fielddiag_summary_invalido_incrementa_cnr` da `9 passed in 23.53s` = 2 (`test_bash_n_pasa_sobre_un_script_real_del_repo`, `test_bash_n_FALLA_sobre_sintaxis_rota`) + 4 (ruff/gitleaks pasa y FALLA) + 2 (`test_spec_check_passes_then_rejects_missing_objective`, `test_no_perder_lineas_passes_then_rejects_deleted_tracked_lines`) + 1, cifras que coinciden con las declaradas. `.pre-commit-config.yaml:272` sigue terminando el hook `telemetry-bound` en `|| true`, y los hooks `bash-sintaxis` (l\u00ednea 141), `no-perder-lineas` (277) y `spec-check` (295) siguen cableados. El recuento de `.simplecode/evidence/telemetry.jsonl` por gate da `spec-check`: 483 ok + 1 could_not_run (2026-09-08) y `no-perder-lineas`: 170 ok + 3 could_not_run (2026-09-08), cero bloqueos: los cuatro could_not_run declarados, ning\u00fan hallazgo.",
-      "seal": "55ee36d49fec18a9ae3fc4ec1e53b2e677b940e21bb6bf75c51913b24dd0dfe9",
+      "claim_id": "SPEC-L377",
+      "evidence": "`python3 -m pytest -q -p no:cacheprovider tests/test_bash_sintaxis.py tests/test_ruff_gitleaks_controles_negativos.py tests/test_hook_native_controls.py tests/test_auditoria_bb_regresiones.py::test_scan_fielddiag_summary_invalido_incrementa_cnr` da `9 passed in 28.89s` (2+4+2+1), y cada par incluye su caso que FALLA, que es el control negativo. .pre-commit-config.yaml:272 sigue terminando telemetry-bound en `|| true`; bash-sintaxis (:141), no-perder-lineas (:277) y spec-check (:295) siguen cableados. Recuento de .simplecode/evidence/telemetry.jsonl por `check`: spec-check 507 ok + 1 could_not_run (2026-09-08); no-perder-lineas 179 ok + 4 could_not_run (3 el 2026-09-08 y 1 el 2026-10-11T01:12:42Z, pre-push, subject_sha 66fb032), cero `fail`. La fila decia 'cuatro el 2026-09-08' sin el quinto y se corrigio a cinco.",
+      "seal": "ed0bd013a0e1ee4f1cd063e0836653545e84eb1ab76e892e77582e814e5bd6bb",
       "verdict": "PASS"
     },
     {
       "cited": {
-        "enable-privileged.sh": "0ba1463022d0a37b5c2d592da39d30ca5383d5e73d7b3a0b99f7e6f9e360750b"
+        "enable-privileged.sh": "e92ac93a83e85100fe5f67de8590a2cc08c995ad4ff91fef4efefad1631ecadb"
       },
-      "claim_id": "SPEC-L357",
-      "evidence": "Revis\u00e9 cada hecho que la fila nombra, en el fichero y en vivo. Los dos muestreadores: `systemctl --user show` da `blackbox-sample` `Nice=19 IOSchedulingClass=3` y `atom-gpu-telemetry` `Nice=19 IOSchedulingClass=3`. Los dos adoptados de `/srv/ai/gpu_governance/`: `ai-memory-monitor` da `Nice=0` con timer active y `OnCalendar=*:0/5` (`adopted/systemd-user/ai-memory-monitor.timer:9`); `ai-gpu-telemetry` da `Nice=10` y `UnitFileState=disabled`. Los tres instrumentos nombrados: `grep -c '^Nice\\|^IOSched'` da 0 en `systemd/bb-usable.service`, en `adopted/systemd-user/ai-nemotron-vigilante.service` y en `adopted/system-config/etc_systemd_system_nvrm-watch.service`. En vivo, `bb-usable` y `nvrm-watch` dan `Nice=0 IOSchedulingClass=2` (`systemctl show`) y `ai-nemotron-vigilante` tambi\u00e9n da `Nice=0 IOSchedulingClass=2` (`systemctl --user show`). `systemd/bb-usable.service:41-42` declara `OOMScoreAdjust=-900` y `MemoryMin=128M`, `bin/bb-usable:91` declara `PROBE_INTERVAL = 30.0` y `ai-nemotron-vigilante.timer:6` declara `OnUnitInactiveSec=2min`. `git show --name-status 1ec66b3 -- adopted/` da `A` para los tres ficheros de nvrm-watch y el asunto del commit dice 'monitoreo y cuelgue son de bb'. El bloque 4b (`enable-privileged.sh:296-319`) los copia y corre `run systemctl enable --now nvrm-watch.timer`; en vivo el timer est\u00e1 active y enabled. La frase de la guardia sigue siendo cierta: `systemd/bb-guardia-proceso.service:18` declara `Nice=10` y en vivo da `Nice=10`, mayor prioridad que 19 y menor que el 0 de ai-memory-monitor. Su 'consulta del 2026-10-03: enabled, inactive' es un registro fechado; hoy est\u00e1 active. La lista ya no se declara exhaustiva, as\u00ed que sysstat-collect y earlyoom (tambi\u00e9n `Nice=0`) no la refutan.",
-      "seal": "1c0566c1946cecab373eb95e42df3e2308c923148ff5cf1f2d76d4f4f8bf1ff5",
+      "claim_id": "SPEC-L378",
+      "evidence": "`systemctl --user show` en vivo: blackbox-sample y atom-gpu-telemetry `Nice=19 IOSchedulingClass=3`; ai-memory-monitor `Nice=0` (timer active, adopted/systemd-user/ai-memory-monitor.timer:9 `OnCalendar=*:0/5`); ai-gpu-telemetry `Nice=10` `UnitFileState=disabled`; ai-nemotron-vigilante `Nice=0 IOSchedulingClass=2`; bb-guardia-proceso `Nice=10` (systemd/bb-guardia-proceso.service:21). `systemctl show`: bb-usable y nvrm-watch `Nice=0 IOSchedulingClass=2`, nvrm-watch.timer active/enabled. Declarado: systemd/blackbox-sample.service:8-9 y adopted/systemd-user/atom-gpu-telemetry.service:14-15 `Nice=19`/`idle`; `grep -c '^Nice\\|^IOSched'` da 0 en systemd/bb-usable.service, ai-nemotron-vigilante.service y etc_systemd_system_nvrm-watch.service, que es el control negativo del mismo grep. systemd/bb-usable.service:41-42 OOMScoreAdjust=-900 y MemoryMin=128M; ai-nemotron-vigilante.timer:6 `OnUnitInactiveSec=2min`; enable-privileged.sh:312-320 copia nvrm-watch y corre `systemctl enable --now nvrm-watch.timer`; `git show --name-status 1ec66b3` da A para los tres de nvrm-watch.",
+      "seal": "945eafe1d5beb4f72f9fcf6cb4a20ddbec3f60e3c3e03b3ae881aa78231d9437",
       "verdict": "PASS"
     },
     {
@@ -67,46 +109,46 @@
         "tests/test_calibra_psi.py": "0d933d4fd985a38407edee0f59836aceaaaf09188160afc13ad2f37e2a9c0b48",
         "tools/calibra_psi.py": "8254b6296b36d06e1bc84c34a3f8001b132c90da5965edabf6489fba94f18c87"
       },
-      "claim_id": "SPEC-L358",
-      "evidence": "`tools/calibra_psi.py:13-16` lleva las cifras citadas (19804 muestras, 98.53 %, 48.80 %), `UMBRAL_PCT = 10.0` (l\u00ednea 42) y `SOSTENIDO_MIN = 5.0` (l\u00ednea 45), y `INCIDENTES` (l\u00edneas 57-134) tiene 6 ventanas, dos del 2026-09-28 (`03:28-03:39`, `04:18-04:27`), sin etiqueta para el 2026-10-05: n=6 y el posible s\u00e9ptimo sigue sin etiquetar; `bin/bb:16` mantiene `RETAIN_DAYS=14`. `tests/test_calibra_psi.py::test_control_negativo_excursion_solapa_incidente_pero_dispara_despues` da `1 passed`. Corrido hoy `python3 -m tools.calibra_psi` sale rc=1 con `VEREDICTO: CORTE INVALIDO`, `falsos positivos: 1` (el COLAPSO `10-05 00:18 (7 min, max 78.30 %)`) e `incidentes no detectados: 1` sobre `2026-09-25 00:00 -> 2026-10-10 07:30`, 26999 muestras, coherente con la corrida fechada del 2026-10-06; las dem\u00e1s frases son registros fechados.",
-      "seal": "ce900e60500546bdc88ee22deeea1b58812b75e66f4f912a5f71a15e9f1c7ab2",
+      "claim_id": "SPEC-L379",
+      "evidence": "tools/calibra_psi.py:13-16 conserva 19804 muestras, 98.53 % y 48.80 %; UMBRAL_PCT=10.0 (:42) y SOSTENIDO_MIN=5.0 (:45); `len(INCIDENTES)` = 6 con dos ventanas del 2026-09-28 (03:28-03:39 y 04:18-04:27); bin/bb:16 `RETAIN_DAYS` 14. `python3 -m pytest tests/test_calibra_psi.py::test_control_negativo_excursion_solapa_incidente_pero_dispara_despues` da `1 passed`. Corrido hoy `python3 -m tools.calibra_psi`: rc=1, corpus 2026-09-26 00:00 -> 2026-10-11 20:15, 28392 muestras con PSI, `falsos positivos: 1`, `incidentes no detectados: 1`, `VEREDICTO: CORTE INVALIDO`, coherente con la corrida fechada del 2026-10-06; ese rc=1 muestra que el instrumento da el veredicto negativo. Las demas frases son registros fechados.",
+      "seal": "6f9f4a9dda446e2d265478956acfebe0128655c18e0238773d9ed4f42094dd73",
       "verdict": "PASS"
     },
     {
       "cited": {
         "tests/test_bb_bash.py": "f604e0c7ca04c8637bedecf38dd7bfbaacc9ce1fc7ebd8eb738664ca4ec1d871"
       },
-      "claim_id": "SPEC-L359",
-      "evidence": "La afirmaci\u00f3n revisada de SPEC.md:359 coincide con bin/bb:2714-2726: las ausencias incrementan missing salvo suspensi\u00f3n vigente documentada, mientras una suspensi\u00f3n vencida s\u00ed incrementa missing; bin/bb:2728-2733 incrementa diverged cuando cmp -s encuentra una diferencia y bin/bb:2753-2761 retorna 1 si diverged + missing es distinto de cero. Los controles identificados en tests/test_bb_bash.py:1523-1570 comprueban en su c\u00f3digo las tres condiciones de ausencia, suspensi\u00f3n vigente y vencida; no se ejecutaron pruebas durante esta revisi\u00f3n. systemd/blackbox-drift.timer:7-8 configura OnCalendar=daily y Persistent=true, y systemd/blackbox-drift.service:7 ejecuta bb drift. tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/host-evidence/timers-current.txt:1 y :9-13 conserva la captura fechada el 2026-10-03 con ActiveState=active y UnitFileState=enabled; SPEC.md:359 ahora fecha expresamente esa comprobaci\u00f3n y declara que la consulta actual del bus fall\u00f3 con Operation not permitted, tal como ocurri\u00f3 en esta auditor\u00eda.",
-      "seal": "8641b47e4497c3982586f999ba151fd0ece87c3b56a18dccbab71cf435c99ec2",
+      "claim_id": "SPEC-L380",
+      "evidence": "bin/bb:2692-2760: cmp_one (:2717) cuenta ausencias en missing salvo suspension vigente (:2727-2728), una suspension vencida suma missing (:2724-2725), una diferencia de cmp suma diverged (:2738) y :2758 retorna 0 solo si diverged+missing es 0. Corridos `tests/test_bb_bash.py::test_drift_SALE_DISTINTO_DE_0_cuando_esta_ausente`, `test_drift_suspendido_VIGENTE_no_cuenta_como_fallo` y `test_drift_suspension_VENCIDA_SI_cuenta_como_fallo` (lineas 1523, 1533, 1553): `3 passed`; el primero y el tercero son el control negativo (exigen rc distinto de 0). systemd/blackbox-drift.timer:7-8 `OnCalendar=daily` `Persistent=true`, systemd/blackbox-drift.service:7 `ExecStart=%h/projects/blackbox/bin/bb drift`. La frase 'el estado actual no se pudo consultar' envejecio: hoy `systemctl --user show blackbox-drift.timer -p ActiveState -p UnitFileState -p LastTriggerUSec` da active/enabled/`Sun 2026-10-11 00:00:06 CST` (la misma consulta sobre no-existe-xyz.timer da `ActiveState=inactive`), y el texto se corrigio con ambas fechas.",
+      "seal": "f1b531068775a8eb77d86be2c476ca7a4d09f490b22bfabaa14169a5f4f6409a",
       "verdict": "PASS"
     },
     {
       "cited": {
         ".pre-commit-config.yaml": "b55226f8e245e224049a98275db1a3889f2a9020e45548353c283be1b6fe4fe9",
-        "tests/test_inventario.py": "d3a7f20899751da016fb0f07870f0544e6be459bfbd08716b6283cca2ac038f0",
         "tools/inventario.py": "10e3fa08fc51010767c70a8d605d9302efcd53d0b1347c58042a8ec45cb62931"
       },
-      "claim_id": "SPEC-L360",
-      "evidence": "El hook `inventario-spec` (`.pre-commit-config.yaml:159-167`) corre `python3 -m tools.inventario --check` sin `stages`, o sea en pre-commit, y el docstring de `tools/inventario.py:1-6` lo ata a `bin/bb`, `tools/` y `adopted/`. Los dos defectos iniciales est\u00e1n en el rango citado: `tools/inventario.py:76-84` (`citados`, 'defecto del instrumento, encontrado en su primera corrida') y `tools/inventario.py:93-98` (`filas_de_tabla`, 'el segundo defecto del instrumento en su primera corrida'). Hoy `python3 -m tools.inventario --check` imprime `HALLAZGOS: 0` rc=0; control negativo corrido sobre una copia en el scratchpad con `cmd_inventadoxyz` a\u00f1adido a `bin/bb`: `--root <copia> --check` imprime `HALLAZGOS: 1` y `FAIL`; `tests/test_inventario.py` da `19 passed`. `git log -1 --format=%B 1ec66b3` dice 'Cazo 6 desajustes en su primera corrida; 2 eran defectos del ...' y el commit no guarda stdout.",
-      "seal": "7492d69d59b1192f006a117124e1564d7ee7ce047f266a01dfdf46fb6c6d1fd3",
+      "claim_id": "SPEC-L381",
+      "evidence": "El hook inventario-spec (.pre-commit-config.yaml:159-167) corre `python3 -m tools.inventario --check` en pre-commit (sin `stages`). tools/inventario.py:1-6 ata la spec a bin/bb, tools/ y adopted/; los dos defectos iniciales estan en tools/inventario.py:77-82 (`citados`) y :89-98 (`filas_de_tabla`). Hoy `python3 -m tools.inventario --check` imprime `HALLAZGOS: 0` rc=0. Control negativo corrido sobre una copia `git archive HEAD` con `cmd_inventadoxyz() { :; }` anadido a bin/bb: `--root <copia> --check` imprime `HALLAZGOS: 1`, `FAIL: SPEC.md y el sujeto no coinciden.` rc=1. `git log -1 --format=%B 1ec66b3` linea 36 dice 'Cazo 6 desajustes en su primera corrida' y el commit no guarda stdout.",
+      "seal": "cfc356a10e69e784b1ce9262f44117ce9491481b64744a15ae2bcf209360eac1",
       "verdict": "PASS"
     },
     {
       "cited": {
-        "enable-privileged.sh": "0ba1463022d0a37b5c2d592da39d30ca5383d5e73d7b3a0b99f7e6f9e360750b",
+        "adopted/gpu_governance/gpu_sampler.sh": "ce823854e9b1dd5da6dd92c6a5a8e69d609b008d97c00a6219f3ce82e5354122",
+        "enable-privileged.sh": "e92ac93a83e85100fe5f67de8590a2cc08c995ad4ff91fef4efefad1631ecadb",
         "tasks/evidence/RELEASE-2.1.0/h1-items.json": "f83de679f314740d5cad19814f28d06a0234afd29f45642b69be8fa8a29145c5"
       },
-      "claim_id": "SPEC-L361",
-      "evidence": "Volv\u00ed a correr `./bin/bb drift` y guard\u00e9 la salida en el scratchpad (`drift2.txt`): rc=0, `revisados: 44   divergentes: 0   ausentes: 0   suspendidos: 1`. Desglose: 43 filas `igual` m\u00e1s 1 `SUSPENDIDO`, que es `/srv/ai/gpu_governance/gpu_sampler.sh` y vence el 2026-11-07. Los tres sujetos nuevos aparecen como `igual`: `~/.config/systemd/user/ai-nemotron-vigilante.service` y `.timer` (l\u00edneas 9-10) y `/etc/systemd/system/atom-secundarias.slice` (l\u00ednea 27). `git diff --name-status f8046fb HEAD -- adopted/` sin las filas M da exactamente esas tres altas y `git log --diff-filter=D f8046fb..HEAD -- adopted/` sale vac\u00edo: despu\u00e9s del commit de los sujetos 40-41 no se borr\u00f3 nada. Por `git show --name-status`, `4daaf4f` (2026-10-10 06:12:38) a\u00f1ade los dos ai-nemotron-vigilante y `49390a5` (2026-10-10 06:52:46) a\u00f1ade el slice, y `git merge-base --is-ancestor 4daaf4f 49390a5` sale 0, lo que confirma el orden 42-43 antes de 44.",
-      "seal": "c366db3c0ea9493bae9715b1c7aa9f28882db9ad3d2ac458c0427b705ff2d07a",
+      "claim_id": "SPEC-L382",
+      "evidence": "`git diff --diff-filter=A --name-only 1ec66b3^ 1ec66b3 -- adopted/ | wc -l` = 12, sin filtro 13, y `git ls-tree -r --name-only 1ec66b3^ -- adopted/ | wc -l` = 18. `git show 1ec66b3^:enable-privileged.sh` linea 351 tiene el heredoc `cat >/etc/modprobe.d/99-blackbox-uvm.conf <<'CONF'` y `git show 1ec66b3:enable-privileged.sh` lineas 523 y 544 copian panic y watchdog desde adopted/. e4cb0e2 (2026-09-28) anade system.slice.d_99-blackbox.conf, 4daaf4f (2026-10-10 06:12) los dos ai-nemotron-vigilante y 49390a5 (06:52) el slice. Hoy `./bin/bb drift` da rc=0 y `revisados: 47   divergentes: 0   ausentes: 0   suspendidos: 1` (suspendido gpu_sampler.sh, vence 2026-11-07); `git log --diff-filter=A bc1bac3..HEAD -- adopted/` muestra que a38d157 (2026-10-11) anadio bb-aviso-termico.service y bb-reboot-verdict.service/.timer, y el texto que decia 44 se corrigio a 47. Las capturas fechadas existen: tasks/evidence/DEBT-BB-SAMPLE-SIN-TECHO-DE-TIEMPO-SE-QUEDO-COLGADO-EN-EL-COLAPSO/e2e.txt (41/0/0/1) y tasks/evidence/DEBT-H1-RELEASE-CLAIMS-01/drift-current.txt (41/2/0/1), esta ultima es el caso con divergencias del mismo instrumento.",
+      "seal": "e5672d94034751aa58e794546e78a0be549902cbcfb40142d66c83a8f5c758a9",
       "verdict": "PASS"
     },
     {
       "cited": {},
-      "claim_id": "SPEC-L362",
-      "evidence": "La \u00faltima muestra de `~/.local/share/blackbox/samples/2026-10-10.jsonl` trae `cpu_top` (con `unit`), `x` = `{'estado': 'OK', 'ms': ...}` y `swap` con `free_kb`, `total_kb`, `in_pag_s`, `out_pag_s`; `bin/bb:582-583` lee `latencia_x`. `python3 -m tools.calibra_latencia_x` sale rc=2 hoy. `tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md` tiene `closure_type: void_wontfix` (l\u00ednea 6), la frase del 14 % en la l\u00ednea 72 y la fila de Claude en la 67, y `git show 11e3cfb:<ficha> | sed -n '52p;57p'` da las mismas dos frases en 52 y 57. `git show 2460f20:SPEC.md` registra '3563 muestras con `x.estado` OK: mediana 4 ms, p75 5, p95 8' y el cuerpo del commit da '3568, mediana 4, p95 8', tal como se declara.",
-      "seal": "3718f673f426c7cc7257f6bff711ab3cc3859d77190f346c563e187176dc7301",
+      "claim_id": "SPEC-L383",
+      "evidence": "La ultima muestra con `x` de ~/.local/share/blackbox/samples/2026-10-11.jsonl (2026-10-11T20:17:00-0600) trae `x={'estado':'OK','ms':4}`, `swap` con free_kb/total_kb/in_pag_s/out_pag_s y `cpu_top` con `unit`; bin/bb:851 los escribe y bin/bb:251 define `latencia_x`. La ultima linea cruda del mismo archivo no trae `cpu_top` (marcador de rafaga), lo que muestra que la comprobacion distingue ausencia. `python3 -m tools.calibra_latencia_x` sale rc=2. tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md linea 6 `closure_type: void_wontfix`, linea 72 contiene '14 %' y la 67 la fila del scope de Claude; `git show 11e3cfb:<ficha> | sed -n 57p` contiene '14 %'. `git show 2460f20:SPEC.md` contiene '3563 muestras con `x.estado` OK: mediana 4 ms, p75 5, p95 8' y el cuerpo del commit '3568, mediana 4, p95 8'.",
+      "seal": "477042f2ea9ccf61bda1bf9f95a82c9fc50b678eed2b61f898205c3cca0b5f4c",
       "verdict": "PASS"
     },
     {
@@ -116,13 +158,13 @@
         "tools/cobertura_bash.sh": "842419f632f680877f57187d8521dcd36b9c95efa5f627aabd943216368854ff",
         "tools/piso_cobertura.sh": "4577ade3c8c7066373d7781d348cf500ee7715843263779f7c3fc84ca680e076"
       },
-      "claim_id": "SPEC-L363",
-      "evidence": "Al commit `d3d7980`, `git show d3d7980:bin/bb | wc -l` = 2768 y la suma de los `*.sh` trackeados = 1343, total 4111 (67.3 %), como dice la fila. El hook `bb-cobertura-piso` (`.pre-commit-config.yaml:149-158`, `stages: [pre-push]`) corre `tools/piso_cobertura.sh`, que lee `tests/cobertura_bb.piso` = `32.8` y sale 1 si `tools/cobertura_bash.sh` mide menos (y 2 como COULD_NOT_RUN si el medidor falla). `git show 57ae066:SPEC.md` registra '35.0%-35.3% el 2026-09-28', el mensaje de `09deb5b` da '39.8%, piso 32.8%' y su padre es `57ae066`; `git merge-base --is-ancestor 3a91866 09deb5b` sale 1, y el mensaje de `2a228fa` da '947 lineas 256 cubiertas 27.0 %' -> '313 cubiertas 33.1 %' con '26.8 %' en la l\u00ednea 3. El docstring de `tests/test_cobertura_bash.py:20-33` dice 33.1 % y 58-59 l\u00edneas medidas frente a las 57 del mensaje.",
-      "seal": "a32b355dc4f7c1363688c79eef415a4b1b81c279051e974c45b842912b755d59",
+      "claim_id": "SPEC-L384",
+      "evidence": "`git show d3d7980:bin/bb | wc -l` = 2768 y la suma de los `*.sh` trackeados en d3d7980 = 1343: 2768/4111 = 67.3 %. .pre-commit-config.yaml:149-157 define bb-cobertura-piso en pre-push con tools/piso_cobertura.sh, que lee tests/cobertura_bb.piso = 32.8 y sale 1 si tools/cobertura_bash.sh mide menos (2 si el medidor falla). Control negativo de la comparacion del script: `awk -v p=32.7 -v s=32.8 'BEGIN{exit !(p+0 < s+0)}'` rc=0 (rama FAIL) frente a p=33.1 rc=1; la medicion completa de cobertura no se corrio. `git show 57ae066:SPEC.md` contiene '35.0%-35.3%', el mensaje de 09deb5b '39.8%' y 'piso 32.8%', su padre es 57ae066 y `git merge-base --is-ancestor 3a91866 09deb5b` sale 1. El mensaje de 2a228fa da '947 lineas 256 cubiertas 27' -> '313 cubiertas 33' y '26.8 %'; tests/test_cobertura_bash.py:20-33 dice 33.1 % y 58-59 lineas frente a las 57 del mensaje.",
+      "seal": "0f9fd3ef269b3d471e6513bf60af319d0ed78f75f726400e71f85c9065862483",
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-11T01:23:35Z",
-  "tree_fingerprint": "81eaea93dbdaa1c37e31e08f3e170081dca1cbc214e777cc08c5f29e79b65406",
+  "timestamp": "2026-10-12T02:20:02Z",
+  "tree_fingerprint": "cd31683df0e09e4c92c415d94e2d926e3d09a3a8f85969e70454a991748d104b",
   "violations": []
 }
