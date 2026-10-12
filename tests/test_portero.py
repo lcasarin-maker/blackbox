@@ -1,0 +1,464 @@
+"""Portero: ramas que DEBEN actuar y ramas que NO, y una prueba real con scopes desechables propios."""
+
+import json
+import os
+import shutil
+import subprocess
+import time
+import uuid
+from dataclasses import replace
+from pathlib import Path
+
+import pytest
+
+from tools import portero as po
+
+G = po.GIB_KB
+APP = "/user.slice/user-1000.slice/user@1000.service/app.slice"
+CLAUDE = APP + "/app-com.anthropic.Claude-1.scope"
+
+
+def estado(psi=0.0, freno="", tope=42 * G, uso=30 * G, **kw):
+    return po.Estado(psi, freno, tope, uso, tuple(kw.get("alternos", ())), kw.get("consumo", 0))
+
+
+def arbol(raiz, edad, rss=10 * G, cgroup=CLAUDE, **kw):
+    return po.Arbol(raiz=raiz, clase="suite", rss_kb=rss, procesos=5, edad_s=edad, cgroup=cgroup, **kw)
+
+
+def tipos(acciones):
+    return {(a.raiz, a.tipo) for a in acciones}
+
+
+# --- PSI, termico, holgura -----------------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_psi_bajo_admite_el_arbol_pesado():
+    assert tipos(po.decide([arbol(1, 60)], estado(psi=0.5))) == {(1, "admitir")}
+
+
+@pytest.mark.unit
+def test_psi_alto_congela_en_vez_de_admitir():
+    acc = po.decide([arbol(1, 60)], estado(psi=po.PSI_FULL_MAX))
+    assert tipos(acc) == {(1, "congelar")} and "PSI" in acc[0].motivo
+
+
+@pytest.mark.unit
+def test_freno_termico_congela():
+    acc = po.decide([arbol(1, 60)], estado(freno="estado termico 'sostenida'"))
+    assert tipos(acc) == {(1, "congelar")} and "termico" in acc[0].motivo
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("campo", ["psi", "freno", "tope", "uso"])
+def test_sin_medir_no_actua_y_lo_declara(campo):
+    acc = po.decide([arbol(1, 60), arbol(2, 30)], estado(**{campo: None}))
+    assert [a.tipo for a in acc] == ["no_actua"] and acc[0].motivo.startswith("NOT_COLLECTED")
+
+
+@pytest.mark.unit
+def test_proc_ilegible_no_actua(tmp_path):
+    assert po.observar(proc=tmp_path / "no-existe") is None
+    acc = po.decide(None, estado())
+    assert [a.tipo for a in acc] == ["no_actua"] and "/proc" in acc[0].motivo
+
+
+@pytest.mark.unit
+def test_holgura_baja_congela_y_con_slice_alterno_mueve():
+    poca = 42 * G - po.HOLGURA_MIN_KB + 1
+    assert tipos(po.decide([arbol(1, 60)], estado(uso=poca))) == {(1, "congelar")}
+    alt = po.SliceAlterno("bb-jobs.slice", 30 * G, 0)
+    acc = po.decide([arbol(1, 60)], estado(uso=poca, alternos=[alt]))
+    assert tipos(acc) == {(1, "mover")} and acc[0].slice == "bb-jobs.slice"
+    lleno = po.SliceAlterno("bb-jobs.slice", 30 * G, 15 * G)  # 15 + 20 > 30: no cabe
+    assert tipos(po.decide([arbol(1, 60)], estado(uso=poca, alternos=[lleno]))) == {(1, "congelar")}
+
+
+# --- Cola FIFO -----------------------------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_cola_con_uno_dos_y_tres_arboles():
+    assert tipos(po.decide([arbol(1, 60)], estado())) == {(1, "admitir")}
+    assert tipos(po.decide([arbol(1, 30), arbol(2, 60)], estado())) == {(2, "admitir"), (1, "congelar")}
+    tres = [arbol(1, 10), arbol(2, 90), arbol(3, 50)]
+    assert tipos(po.decide(tres, estado())) == {(2, "admitir"), (3, "congelar"), (1, "congelar")}
+
+
+@pytest.mark.unit
+def test_admitido_no_se_recongela_aunque_suba_la_presion():
+    corriendo = arbol(1, 600, unidad="bb-portero-suite-1.scope")
+    assert po.decide([corriendo, arbol(2, 900)], estado(psi=50.0)) == [
+        po.Accion("congelar", "PSI memory full avg10=50.0 >= 5.0", 2, "suite", topes=po._topes(po.CLASES["suite"]))
+    ]
+
+
+@pytest.mark.unit
+def test_turno_ocupado_congela_al_nuevo_y_al_liberarse_descongela_al_mas_antiguo():
+    corriendo = arbol(1, 600, unidad="bb-portero-suite-1.scope")
+    assert tipos(po.decide([corriendo, arbol(2, 60)], estado())) == {(2, "congelar")}
+    c2 = arbol(2, 60, unidad="bb-portero-suite-2.scope", congelado=True)
+    c3 = arbol(3, 120, unidad="bb-portero-suite-3.scope", congelado=True)
+    assert tipos(po.decide([c2, c3], estado())) == {(3, "descongelar"), (2, "esperar")}
+
+
+@pytest.mark.unit
+def test_arbol_ligero_no_se_toca():
+    assert po.decide([arbol(1, 60, rss=po.UMBRAL_RSS_SUITE_KB - 1)], estado()) == []
+
+
+# --- Excepciones -----------------------------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_pre_commit_no_se_congela_solo_se_le_pone_tope():
+    corriendo = arbol(1, 600, unidad="bb-portero-suite-1.scope")
+    pc = arbol(2, 60, ancestros=("/bin/sh .git/hooks/pre-commit", "git commit -m x", "bash"))
+    acc = po.decide([corriendo, pc], estado())
+    assert tipos(acc) == {(2, "admitir")} and "index.lock" in acc[0].motivo
+
+
+@pytest.mark.unit
+def test_control_negativo_pre_push_si_se_congela():
+    corriendo = arbol(1, 600, unidad="bb-portero-suite-1.scope")
+    pp = arbol(2, 60, ancestros=(
+        "python .simplecode/run.py simplecode.verification.gate_runner --hook pre-push -- pre-commit run --hook-stage pre-push",
+        "git push origin master",
+    ))
+    assert tipos(po.decide([corriendo, pp], estado())) == {(2, "congelar")}
+
+
+@pytest.mark.unit
+def test_fuera_de_app_slice_no_actua():
+    for cg in ("/system.slice/docker-abc.scope", "/system.slice/x.service", "/user.slice/user-1000.slice/session-2.scope"):
+        acc = po.decide([arbol(1, 60, cgroup=cg)], estado())
+        assert [a.tipo for a in acc] == ["no_actua"] and "fuera de app.slice" in acc[0].motivo, cg
+
+
+@pytest.mark.unit
+def test_proceso_con_tope_propio_no_se_mueve():
+    atlas = arbol(1, 60, tope_propio_kb=8 * G, cgroup=APP + "/run-u5.scope")
+    acc = po.decide([atlas], estado())
+    assert [a.tipo for a in acc] == ["no_actua"] and "tope propio" in acc[0].motivo
+
+
+@pytest.mark.unit
+def test_control_negativo_tope_propio_mas_holgado_que_la_clase_si_es_candidato():
+    assert tipos(po.decide([arbol(1, 60, tope_propio_kb=40 * G)], estado())) == {(1, "admitir")}
+
+
+@pytest.mark.unit
+def test_jobs_de_atlas_docker_y_bb_cap_excluidos_aunque_no_tengan_tope():
+    casos = [
+        arbol(1, 60, cgroup=APP + "/liberation_job.scope"),
+        arbol(2, 60, cgroup=APP + "/liberation_job_test_7.scope"),
+        arbol(3, 60, cgroup=APP + "/bb-cap-code-99.scope"),
+        arbol(4, 60, ancestros=("pytest -n 8", "python3 liberation_watchdog.py --loop")),
+    ]
+    acc = po.decide(casos, estado())
+    assert {a.tipo for a in acc} == {"no_actua"} and len(acc) == 4
+    assert all("excluido" in a.motivo for a in acc)
+
+
+# --- Presupuesto ------------------------------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_presupuesto_desbordado_no_actua():
+    clases = {"suite": po.Clase(20 * G, 18 * G, 100, 3, 1)}  # 3 x 20 > 42
+    acc = po.decide([arbol(1, 60)], estado(), clases)
+    assert [a.tipo for a in acc] == ["no_actua"] and "desbordado" in acc[0].motivo
+    altas = {"suite": po.Clase(20 * G, 21 * G, 100, 1, 1)}  # MemoryHigh > MemoryMax
+    assert po.decide([arbol(1, 60)], estado(), altas)[0].tipo == "no_actua"
+
+
+@pytest.mark.unit
+def test_presupuesto_descuenta_lo_que_consumen_los_scopes_con_tope_propio():
+    acc = po.decide([arbol(1, 60)], estado(consumo=23 * G))  # 23 + 20 > 42
+    assert tipos(acc) == {(1, "congelar")} and "presupuesto" in acc[0].motivo
+    assert tipos(po.decide([arbol(1, 60)], estado(consumo=22 * G))) == {(1, "admitir")}  # 22 + 20 = 42 cabe
+
+
+# --- Clasificacion -----------------------------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_clasifica_por_forma():
+    assert po.clasifica(["python3", "-m", "pytest", "-n", "8"]) == "suite"
+    assert po.clasifica(["/home/x/.venv/bin/pytest"]) == "suite"
+    assert po.clasifica(["/bin/sh", ".git/hooks/pre-push", "origin"]) == "suite"
+    assert po.clasifica(["pre-commit", "run", "--hook-stage", "pre-push"]) == "suite"
+    assert po.clasifica(["python3", "server.py"]) is None
+    assert po.clasifica(["vim", "pytest.ini"]) is None
+
+
+@pytest.mark.unit
+def test_sostiene_index_lock():
+    assert po.sostiene_index_lock(["git -C /r commit -m x"])
+    assert po.sostiene_index_lock(["git rebase main"])
+    assert po.sostiene_index_lock(["python run.py --hook pre-commit"])
+    assert not po.sostiene_index_lock(["git push origin master", "bash"])
+    assert not po.sostiene_index_lock(["pre-commit run --hook-stage pre-push"])
+
+
+# --- Medicion de cgroups (arbol falso en disco) -----------------------------------------------------------------
+
+
+def _cg(base: Path, rel: str, max_: str, cur: str = "0"):
+    d = base / rel.lstrip("/")
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "memory.max").write_text(max_ + "\n", encoding="utf-8")
+    (d / "memory.current").write_text(cur + "\n", encoding="utf-8")
+    return d
+
+
+@pytest.mark.unit
+def test_tope_propio_y_consumo_con_tope_propio(tmp_path):
+    app = _cg(tmp_path, APP, str(42 * G * 1024), str(30 * G * 1024))
+    _cg(tmp_path, APP + "/app-com.anthropic.Claude-1.scope", "max", str(20 * G * 1024))
+    _cg(tmp_path, APP + "/liberation_job.scope", str(8 * G * 1024), str(5 * G * 1024))
+    _cg(tmp_path, APP + "/bb-portero-suite-9.scope", str(20 * G * 1024), str(3 * G * 1024))
+    assert po.tope_propio_kb(CLAUDE, tmp_path) is None
+    assert po.tope_propio_kb(APP + "/liberation_job.scope", tmp_path) == 8 * G
+    assert po.tope_propio_kb("/system.slice/docker-x.scope", tmp_path) is None
+    assert po.consumo_con_tope_propio_kb(app) == 5 * G  # sin el scope del portero ni el de Claude
+    assert po.consumo_con_tope_propio_kb(tmp_path / "no-existe") is None
+    assert po.lee_slice(app) == (42 * G, 30 * G)
+    assert po.lee_slice(tmp_path / APP.lstrip("/") / "app-com.anthropic.Claude-1.scope") == (None, None)
+
+
+@pytest.mark.unit
+def test_lee_psi(tmp_path):
+    f = tmp_path / "memory"
+    f.write_text("some avg10=1.00 avg60=0 avg300=0 total=1\nfull avg10=7.25 avg60=0 avg300=0 total=1\n", encoding="utf-8")
+    assert po.lee_psi(f) == 7.25
+    assert po.lee_psi(tmp_path / "nada") is None
+
+
+# --- Cola compartida de `run` -------------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_turno_espera_mientras_la_puerta_esta_cerrada_y_lanza_al_abrirse(tmp_path):
+    fx = po.Efectos(log=tmp_path / "p.jsonl", cola=tmp_path / "cola")
+    pid = os.getpid()
+    lecturas = iter([estado(psi=20.0), estado(psi=20.0), estado(psi=0.0)])
+
+    def fuente():
+        e = next(lecturas)
+        procs = {pid: object()}
+        return e, po._peticiones(procs, time.time(), fx.cola)
+
+    esperas = []
+    acc = po.turno(pid, "suite", fuente, lambda: esperas.append(1), fx)
+    assert acc.tipo == "admitir" and len(esperas) == 2
+    assert json.loads((fx.cola / f"{pid}.json").read_text(encoding="utf-8"))["concedido"] is True
+    eventos = [json.loads(x) for x in fx.log.read_text(encoding="utf-8").splitlines()]
+    assert [e["accion"] for e in eventos] == ["esperar", "turno"]  # la espera se registra una vez, no en cada vuelta
+
+
+@pytest.mark.unit
+def test_peticion_concedida_ocupa_turno_para_el_demonio(tmp_path):
+    cola = tmp_path / "cola"
+    cola.mkdir()
+    (cola / "7.json").write_text(json.dumps({"pid": 7, "clase": "suite", "ts": time.time(), "concedido": True}), encoding="utf-8")
+    (cola / "8.json").write_text(json.dumps({"pid": 8, "clase": "suite", "ts": time.time()}), encoding="utf-8")  # pid muerto
+    virtuales = po._peticiones({7: object()}, time.time(), cola)
+    assert [(a.raiz, a.nuestro, a.virtual) for a in virtuales] == [(7, True, False)]
+    assert tipos(po.decide([*virtuales, arbol(1, 60)], estado())) == {(1, "congelar")}
+
+
+@pytest.mark.unit
+def test_aplica_registra_no_actua_una_vez_con_medicion_no_colectada(tmp_path):
+    fx = po.Efectos(log=tmp_path / "p.jsonl", ejecutar=lambda a: pytest.fail("no debe ejecutar nada"))
+    e = estado(psi=None)
+    ultimo = {}
+    for _ in range(3):
+        po.aplica(po.decide([arbol(1, 60)], e), [arbol(1, 60)], e, fx, ultimo)
+    eventos = [json.loads(x) for x in fx.log.read_text(encoding="utf-8").splitlines()]
+    assert len(eventos) == 1 and eventos[0]["medicion"]["psi_full_avg10"] == "NOT_COLLECTED"
+
+
+@pytest.mark.unit
+def test_aplica_lleva_el_origen_de_la_costura(tmp_path):
+    fx = po.Efectos(log=tmp_path / "p.jsonl", origen=lambda pid: {"lanzo": f"sesion-{pid}"})
+    ev = po.aplica([po.Accion("no_actua", "fuera de app.slice", 5, "suite")], [], estado(), fx)
+    assert ev[0]["origen"] == {"lanzo": "sesion-5"}
+    assert po.origen_no_integrado(5)["estado"] == "NOT_COLLECTED"
+
+
+# --- Prueba real: scopes desechables propios, cgroup v2 delegado ---------------------------------------------
+
+
+def _delegado() -> bool:
+    app = po.cgroup_app()
+    return bool(shutil.which("systemd-run") and shutil.which("busctl") and os.access(app / "cgroup.procs", os.W_OK))
+
+
+def _espera_evento(cg, linea):
+    """cgroup.freeze es asincrono: `frozen` cambia cuando el kernel termino con todas las tareas (medido: flaky sin esto)."""
+    for _ in range(40):
+        if linea in (cg / "cgroup.events").read_text(encoding="utf-8"):
+            return True
+        time.sleep(0.05)  # blocking-sleep: sondeo acotado (2 s) de cgroup.events tras escribir cgroup.freeze -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.8 -- revisado 2026-10-12: la congelacion termina despues de la escritura
+    return False
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(not _delegado(), reason="sin cgroup v2 delegado al usuario (systemd --user)")
+def test_real_mover_topar_en_caliente_congelar_y_control_negativo(tmp_path):
+    tag = uuid.uuid4().hex[:8]
+    p = subprocess.Popen(["systemd-run", "--user", "--scope", "--quiet", f"--unit=bbtest-a-{tag}", "--", "sleep", "60"])
+    h = subprocess.Popen(["systemd-run", "--user", "--scope", "--quiet", f"--unit=bbtest-h-{tag}", "--", "sleep", "60"])
+    try:
+        cg, cg_h = None, None
+        for _ in range(50):
+            cg, cg_h = po._cg_de(p.pid), po._cg_de(h.pid)
+            if cg and cg.endswith(f"bbtest-a-{tag}.scope") and cg_h and cg_h.endswith(f"bbtest-h-{tag}.scope"):
+                break
+            time.sleep(0.05)  # blocking-sleep: espera a que systemd ponga el pid en su scope -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.8 -- revisado 2026-10-12: sondeo acotado a 2.5 s de un scope desechable propio
+        assert cg and cg.endswith(f"bbtest-a-{tag}.scope"), cg
+        assert cg_h and cg_h.endswith(f"bbtest-h-{tag}.scope"), cg_h
+        a = po.Arbol(raiz=p.pid, clase="suite", rss_kb=1, procesos=1, edad_s=1, cgroup=cg, pids=(p.pid,))
+        topes = {"MemoryMax": 64 * 1024 * 1024, "MemoryHigh": 60 * 1024 * 1024, "MemorySwapMax": 0, "TasksMax": 8}
+        fx = po.Efectos(log=tmp_path / "p.jsonl", cola=tmp_path / "cola")
+        ev = po.aplica([po.Accion("congelar", "prueba", p.pid, "suite", topes=topes)], [a], estado(), fx)
+        assert ev[0]["rc"] == 0, ev[0]["salida"]
+        nuevo = po._cg_de(p.pid)
+        destino = po.CGROUP_RAIZ / nuevo.lstrip("/")
+        assert Path(nuevo).name == po.nombre_unidad("suite", p.pid)
+        assert (destino / "memory.max").read_text(encoding="utf-8").strip() == str(64 * 1024 * 1024)
+        assert (destino / "memory.swap.max").read_text(encoding="utf-8").strip() == "0"
+        assert (destino / "pids.max").read_text(encoding="utf-8").strip() == "8"
+        assert _espera_evento(destino, "frozen 1")
+        congelado = replace(a, cgroup=nuevo, unidad=Path(nuevo).name, congelado=True)
+        po.aplica([po.Accion("descongelar", "prueba", p.pid, "suite")], [congelado], estado(), fx)
+        assert _espera_evento(destino, "frozen 0")
+        r = subprocess.run(["systemctl", "--user", "set-property", "--runtime", Path(nuevo).name, "MemoryMax=32M"],
+                           capture_output=True, text=True, check=False)
+        assert r.returncode == 0 and (destino / "memory.max").read_text(encoding="utf-8").strip() == str(32 * 1024 * 1024)
+        # Mover dentro de lo delegado funciona (a otro scope propio); fuera (system.slice, user-1000.slice) se niega.
+        assert po.mueve_pid(p.pid, po.CGROUP_RAIZ / cg_h.lstrip("/")) == ""
+        assert po._cg_de(p.pid) == cg_h
+        for fuera in ("system.slice", "user.slice/user-1000.slice"):
+            err = po.mueve_pid(p.pid, po.CGROUP_RAIZ / fuera)
+            assert err.startswith("PermissionError"), (fuera, err)
+        assert po._cg_de(p.pid) == cg_h
+    finally:
+        for x in (p, h):
+            x.kill()
+            x.wait(timeout=10)
+        subprocess.run(["systemctl", "--user", "reset-failed", po.nombre_unidad("suite", p.pid), f"bbtest-a-{tag}.scope",
+                        f"bbtest-h-{tag}.scope"],
+                       capture_output=True, check=False)
+
+
+# --- Contenedores (docker.slice) -------------------------------------------------------------------------------
+
+
+def _ct(nombre, tope=None, pico=1 * G):
+    return po.Contenedor(nombre, tope, pico)
+
+
+@pytest.mark.unit
+def test_contenedor_sin_tope_se_acota_con_el_reparto_medido():
+    conts = [_ct("pg", tope=2 * G, pico=1 * G), _ct("libre", pico=1 * G), _ct("otro", pico=3 * G)]
+    acc = {a.objetivo: a for a in po.decide_contenedores(conts, 14 * G)}
+    assert acc["libre"].tipo == "acotar" and acc["libre"].topes["MemoryMax"] == (14 - 2 - 3) * G * 1024
+    assert acc["libre"].topes["MemorySwapMax"] == 0
+    assert acc["pg"].tipo == "no_actua" and "tope propio" in acc["pg"].motivo
+
+
+@pytest.mark.unit
+def test_contenedor_con_tope_propio_o_excluido_no_se_toca():
+    conts = [_ct("nemotron-server"), _ct("x", tope=75 * G)]
+    assert {a.tipo for a in po.decide_contenedores(conts, 14 * G)} == {"no_actua"}
+
+
+@pytest.mark.unit
+def test_contenedor_cuyo_reparto_no_cubre_su_pico_no_se_acota():
+    # Caso medido el 2026-10-12: el pico de un contenedor con tope mayor que el slice (vLLM) ya llena docker.slice.
+    conts = [_ct("vllm", tope=75 * G, pico=12 * G), _ct("libre", pico=1 * G)]
+    acc = {a.objetivo: a for a in po.decide_contenedores(conts, 14 * G)}
+    assert acc["libre"].tipo == "acotar"
+    conts = [_ct("vllm", tope=75 * G, pico=13 * G + 512 * 1024), _ct("libre", pico=1 * G)]
+    acc = {a.objetivo: a for a in po.decide_contenedores(conts, 14 * G)}
+    assert acc["libre"].tipo == "no_actua" and "mataria" in acc["libre"].motivo
+
+
+@pytest.mark.unit
+def test_contenedores_sin_medir_no_actua():
+    assert po.decide_contenedores(None, 14 * G)[0].motivo.startswith("NOT_COLLECTED")
+    assert po.decide_contenedores([_ct("a")], None)[0].motivo.startswith("NOT_COLLECTED")
+    acc = po.decide_contenedores([_ct("a"), _ct("b", pico=None)], 14 * G)
+    assert {a.tipo for a in acc} == {"no_actua"}
+
+
+@pytest.mark.unit
+def test_aplica_contenedores_solo_ejecuta_docker_update_con_aplicar(tmp_path):
+    llamadas = []
+
+    def ejecutar(args):
+        llamadas.append(args)
+        return 0, ""
+
+    fx = po.Efectos(log=tmp_path / "p.jsonl", ejecutar=ejecutar)
+    acc = po.decide_contenedores([_ct("libre")], 14 * G)
+    assert po.aplica_contenedores(acc, fx)[0]["accion"] == "acotaria" and llamadas == []
+    po.aplica_contenedores(acc, fx, aplicar=True)
+    b = str(14 * G * 1024)  # solo: todo el slice
+    assert llamadas == [["docker", "update", "--memory", b, "--memory-swap", b, "libre"]]
+
+
+@pytest.mark.unit
+def test_observar_contenedores_lee_su_cgroup(tmp_path):
+    cid = "a" * 64
+    _cg(tmp_path, f"docker.slice/docker-{cid}.scope", "max")
+    (tmp_path / f"docker.slice/docker-{cid}.scope/memory.peak").write_text("2048\n", encoding="utf-8")
+    assert po.observar_contenedores(lambda a: (0, f"{cid} libre\n"), tmp_path) == [po.Contenedor("libre", None, 2)]
+    assert po.observar_contenedores(lambda a: (1, "sin docker"), tmp_path) is None
+    assert po.observar_contenedores(lambda a: (0, f"{'b' * 64} perdido\n"), tmp_path) is None
+
+
+# --- Drop-in por prefijo: tope de creacion de los scopes de la app ---------------------------------------------
+
+DROPIN = Path(__file__).resolve().parents[1] / "systemd/app-com.anthropic.Claude-.scope.d/50-bb-portero.conf"
+
+
+def _scope_desechable(unidad):
+    p = subprocess.Popen(["systemd-run", "--user", "--scope", "--quiet", f"--unit={unidad}", "--", "sleep", "60"])
+    cg = None
+    for _ in range(50):
+        cg = po._cg_de(p.pid)
+        if cg and cg.endswith(f"{unidad}.scope"):
+            break
+        time.sleep(0.05)  # blocking-sleep: espera a que systemd ponga el pid en su scope -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.8 -- revisado 2026-10-12: sondeo acotado a 2.5 s de un scope desechable propio
+    return p, cg
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(not _delegado(), reason="sin cgroup v2 delegado al usuario (systemd --user)")
+def test_real_dropin_por_prefijo_topa_el_scope_al_crearse_y_no_a_otro():
+    tag = uuid.uuid4().hex[:8]
+    d = Path.home() / f".config/systemd/user/app-bbprobe{tag}-.scope.d"
+    d.mkdir(parents=True)
+    procs = []
+    try:
+        (d / "50-bb-portero.conf").write_text(DROPIN.read_text(encoding="utf-8"), encoding="utf-8")
+        subprocess.run(["systemctl", "--user", "daemon-reload"], check=True, timeout=60)
+        leidos = {}
+        for unidad in (f"app-bbprobe{tag}-1", f"app-bbotro{tag}-1"):
+            p, cg = _scope_desechable(unidad)
+            procs.append(p)
+            assert cg and cg.endswith(f"{unidad}.scope"), cg
+            base = po.CGROUP_RAIZ / cg.lstrip("/")
+            leidos[unidad] = tuple((base / f).read_text(encoding="utf-8").strip() for f in ("memory.max", "pids.max"))
+        assert leidos[f"app-bbprobe{tag}-1"] == (str(35 * 1024**3), "1230")
+        assert leidos[f"app-bbotro{tag}-1"][0] == "max"  # control negativo: sin el prefijo no hay tope
+    finally:
+        for p in procs:
+            p.kill()
+            p.wait(timeout=10)
+        shutil.rmtree(d, ignore_errors=True)
+        subprocess.run(["systemctl", "--user", "daemon-reload"], check=False, timeout=60)
