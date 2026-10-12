@@ -38,10 +38,13 @@ cmd_estado() {
     if [ -f "$ESTADO/instalados.txt" ]; then log "instalados por este script:"; cat "$ESTADO/instalados.txt"; else log "nada instalado por este script"; fi
 }
 
+# mokutil --test-key SALE 1 cuando la llave ya esta enrolada; con pipefail eso tumbaba el `| grep -q` (medido 2026-10-12)
+llave_enrolada() { local o; o=$(mokutil --test-key "$LLAVE_PUB" 2>&1 || true); grep -q "is already enrolled" <<<"$o"; }
+
 cmd_enrolar() {
     raiz enrolar
     [ -f "$LLAVE_PUB" ] || die "no existe $LLAVE_PUB"
-    if mokutil --test-key "$LLAVE_PUB" 2>&1 | grep -q "is already enrolled"; then log "la llave ya esta enrolada"; return 0; fi
+    if llave_enrolada; then log "la llave ya esta enrolada"; return 0; fi
     log "mokutil pedira una contrasena de UN USO; en el proximo arranque aparece la pantalla azul MOK Manager:"
     log "Enroll MOK -> Continue -> Yes -> escribir esa contrasena -> Reboot. Hace falta teclado y pantalla fisicos."
     mokutil --import "$LLAVE_PUB"
@@ -69,7 +72,7 @@ cmd_instala() {
     local m
     [ -d "$ESTADO/firmados" ] || die "primero: firma <dir>"
     if [ -n "${BB_DMEM_SIN_RAIZ:-}" ]; then log "(prueba) se omite la comprobacion de la llave enrolada"
-    else mokutil --test-key "$LLAVE_PUB" 2>&1 | grep -q "is already enrolled" || die "la llave NO esta enrolada: el kernel rechazaria los modulos y la GPU no subiria. Primero: enrolar y reiniciar"; fi
+    else llave_enrolada || die "la llave NO esta enrolada: el kernel rechazaria los modulos y la GPU no subiria. Primero: enrolar y reiniciar"; fi
     mkdir -p "$MODDIR/updates" "$ESTADO"
     [ ! -f "$ESTADO/instalados.txt" ] || die "ya hay una instalacion (retrocede primero)"
     : >"$ESTADO/instalados.txt"

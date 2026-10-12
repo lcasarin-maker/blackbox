@@ -9,6 +9,11 @@ set -euo pipefail
 PIDE=${1:-1024}; TOPE=${2:-512}
 RAIZ=${BB_DMEM_RAIZ:-/sys/fs/cgroup}
 PY=${BB_DMEM_PYTHON:-python3}
+# torch vive en el site de usuario de quien invoco sudo; root no lo ve (medido 2026-10-12: ModuleNotFoundError)
+if [ -n "${SUDO_USER:-}" ]; then
+    SITIO=$(sudo -u "$SUDO_USER" "$PY" -c 'import site; print(site.getusersitepackages())' 2>/dev/null || true)
+    [ -z "$SITIO" ] || export PYTHONPATH="$SITIO:${PYTHONPATH:-}"
+fi
 log() { echo "[dmem-prueba] $*"; }
 [ "$(id -u)" = 0 ] || [ -n "${BB_DMEM_SIN_RAIZ:-}" ] || { echo "necesita root" >&2; exit 2; }
 CAP=$(cat "$RAIZ/dmem.capacity" 2>/dev/null || true)
@@ -28,10 +33,13 @@ except Exception as e:
 PY
 corre() {  # $1 cgroup, $2 MiB
     mkdir -p "$RAIZ/$1"
-    sh -c "echo \$\$ >'$RAIZ/$1/cgroup.procs'; exec '$PY' '$T/pide.py' '$2' '$RAIZ/$1/dmem.current'" 2>&1 | grep -E '^(OK|OOM|ERR)' | tail -1
+    local salida
+    salida=$(sh -c "echo \$\$ >'$RAIZ/$1/cgroup.procs'; exec '$PY' '$T/pide.py' '$2' '$RAIZ/$1/dmem.current'" 2>&1 || true)
+    echo "$salida" | grep -E '^(OK|OOM|ERR)' | tail -1 || true
+    echo "$salida" | grep -qE '^(OK|OOM|ERR)' || echo "ERR sin veredicto: $(echo "$salida" | tail -2 | tr '\n' ' ')"
 }
 # 1) cobra: con tope holgado, dmem.current sube
-echo "$REGION max" >"$RAIZ/bb-dmem-sin/dmem.max" 2>/dev/null || { mkdir -p "$RAIZ/bb-dmem-sin"; }
+mkdir -p "$RAIZ/bb-dmem-sin"; echo "$REGION max" >"$RAIZ/bb-dmem-sin/dmem.max"
 SIN=$(corre bb-dmem-sin 256)
 log "control sin tope, pide 256 MiB: $SIN"
 case "$SIN" in OK*) ;; *) log "el control sin tope fallo: la prueba no distingue"; exit 6 ;; esac
