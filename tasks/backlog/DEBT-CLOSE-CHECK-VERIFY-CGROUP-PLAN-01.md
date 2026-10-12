@@ -61,3 +61,7 @@ Defecto corregido en `tools/verify_cgroup_plan.py`: `_hangs` (05-cuelgues) daba 
 Control negativo: los 7 tests nuevos de la fase 05 en `tests/test_closure_kernel.py` fallan contra el verificador de HEAD (7 failed) y pasan con el nuevo. El fixture antiguo pasaba con el verificador de HEAD y ahora sale `unknown`, could_not_run=1.
 
 Por qué sigue abierta: el selector agrega 01–05 y las cinco salen `unknown` sobre la evidencia real (01: `dmem.current` ausente en 23 lecturas; 02–05: no existe `capture.json`). En el host, el 2026-10-07: driver 580.178.04, `dmem` está en `cgroup.controllers` de la raíz pero `dmem.capacity` está vacío y `user.slice` delega solo `cpu memory pids`. La siguiente acción sigue siendo de laboratorio (operador Luis, canario GPU), como indica la clasificación del 2026-10-04.
+
+## Estado (2026-10-11, /0 + /vote)
+
+Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.

@@ -65,3 +65,7 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 - RESCUE-RUNBOOK tampoco tiene captura real (sólo `host-observation.txt`); el arreglo corrige el predicado, no su evidencia.
 - Los 32 IDs restantes no tienen defecto de evaluador: 24 no tienen captura cruda (15 directorios vacíos, 9 con sólo `host-observation.txt`/`progress.txt`/`owner-query.json`) en `tasks/evidence/<id>/`; APT-ARM64 tiene un sondeo de 6 comandos, no el bundle schema 1; DGX-OTA y KERNEL-INITRD tienen las observaciones en `null` (sysfs denegado, lock de dpkg); GB10-RUNTIME, GPU-GSP y PROVIDER-FALLBACK declaran `closure: open` con bloqueadores en su propia evidencia; OTA-DRIVER-KERNEL y THERMAL-TELEMETRY sólo tienen resúmenes/prototipos.
 - La ficha sigue abierta: el cierre exige capturas físicas por ID (arranque de rescate, hotplug CX7, actualización de firmware, reinicio de energía, soaks térmicos), y el código no las produce.
+
+## Estado (2026-10-11, /0 + /vote)
+
+Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.

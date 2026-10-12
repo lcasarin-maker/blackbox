@@ -223,3 +223,12 @@ camino es el que se toma, aunque cueste más pasos.
 - **Motivo:** el verificador daba COULD_NOT_RUN porque no había proceso vivo que leer; con el servicio activo da rc=0.
 - **Descartado:** declarar una línea base de could_not_run para esa ficha (la excepción no resuelve el instrumento caído).
 - **Pendiente:** no se investigó por qué el servicio se detuvo con SIGTERM el 2026-10-05; si vuelve a detenerse, el verificador lo dirá.
+
+## 2026-10-11 — Con `sobre_100` solo se congela la carga de Atlas; las fichas `xfail` quedan abiertas y declaradas (Luis)
+
+- **Decidido (1):** al pasar una zona de 100 °C se hace lo mismo que con calor sostenido: `systemctl --user freeze` de la unidad que Atlas declara en `atlas-carga/1` (`tools/accion_termica.py`), reversible con `thaw`.
+- **Motivo (1):** es la única acción construida, sin root y reversible. Un `sobre_100` nunca ha ocurrido (máximo medido 98.6 °C), así que no hay medición que justifique una acción más dura.
+- **Descartado (1):** `docker pause` de vLLM (congela peticiones en vuelo y `bb-vigilante-motor` podría reiniciarlo) y `nvidia-smi -lgc 300,1500` (pide root, hoy no delegado). Se reabre si un `sobre_100` real muestra que congelar Atlas no baja el calor.
+- **Decidido (2):** las 65 fichas `DELTA-*` y `DEBT-CLOSE-CHECK-VERIFY-*` cuyo `close_check` termina en `xfailed` siguen abiertas, con la nota "Bloqueada por criterio sin implementar" en cada una.
+- **Motivo (2):** un `xfail` sale con código 0 sin que el criterio exista; cerrarlas con él sería un cierre falso.
+- **Descartado (2):** cerrarlas como `void_wontfix` (pierde de vista validaciones de foros) e implementarlas todas ahora (cada una pide vLLM, NCCL o CX7 reales).

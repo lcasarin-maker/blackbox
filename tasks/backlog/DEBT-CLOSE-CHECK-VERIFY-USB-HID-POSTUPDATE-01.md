@@ -65,3 +65,7 @@ Pruebas nuevas en `tests/test_closure_hardware.py` (`-k usb_hid`), construidas s
 - Con la corrección → `9 passed, 19 deselected, 1 xfailed`.
 
 Por qué sigue abierta: `python3 -m pytest -q --runxfail tests/test_debt_registration_controls.py::test_debt_close_check_verify_usb_hid_postupdate_01` → `1 failed`, `status=unknown, fail=0, could_not_run=1`, «paired raw post-update USB command capture is missing». Sin `--runxfail` sale 0 sólo por la línea base xfail. El cierre exige una captura real de tres arranques en hardware (pre-update sano con evtest+SSH, arranque afectado con interfaz HID `Driver=[none]` y DPKG/journal correlacionados, y recuperación al kernel previo con evtest+SSH), que no puede producirse desde software. El escenario de tres arranques en las pruebas es una mezcla de filas reales re-rotuladas y sondas sintéticas: prueba la discriminación y no cuenta como evidencia de cierre.
+
+## Estado (2026-10-11, /0 + /vote)
+
+Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.

@@ -66,3 +66,7 @@ Consultas de solo lectura en este host (GB10, driver 580.178.04, kernel 6.17.0-1
 Mientras no exista un readback nativo, o una decisión de Luis que acepte otra observación como confirmación
 de la política efectiva, la vía `pass` de este verificador es inalcanzable y el ensayo físico
 terminaría en could_not_run=1. Ese cambio altera cómo se mide y queda pendiente de decisión.
+
+## Estado (2026-10-11, /0 + /vote)
+
+Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
