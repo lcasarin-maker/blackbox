@@ -1,0 +1,12 @@
+[Unit]
+Description=bb vigilante de MemAvailable (interruptor memavail; off por defecto)
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.vigilante_memavail
+Restart=on-failure
+MemoryMax=64M
+
+[Install]
+WantedBy=default.target

@@ -18,3 +18,9 @@ evanwtf/local-llm #456 (GB10): ni el `MemoryMax` de systemd ni `docker --memory`
 ## Plan por partes
 1. Medir en las muestras (`samples/*.jsonl`) cuantos episodios de estancamiento habria detectado una linea de MemAvailable a distintos valores (por serie, no por intuicion).
 2. Si no aporta, documentarlo y cerrar con evidencia; si aporta, implementarlo en el portero.
+
+## Correccion (2026-10-12, Luis: "no quiero descartes superficiales")
+
+La primera medicion comparo una linea de MemAvailable contra PSI en muestras historicas y concluyo "no aporta". Eso descarta por una sola vara. Lo medido (evidence/medicion.txt) sigue valiendo como hecho, pero no cierra: falta ver el efecto REAL de la solucion. Por decision de Luis se implementa cada solucion como INTERRUPTOR con tres modos: `off`, `observar` (registra "habria actuado" sin tocar nada) y `actuar`. Cada interruptor acumula en el registro sus aciertos, sus falsos positivos y el dano que causaria. Se decide con ese registro, no antes.
+
+Dano medido de este vigilante si ACTUARA: a 16 GiB marca 560 muestras, 431 sin colapso (falsas); a 8 GiB marca 46, 23 falsas. Con una accion de matar, cada falsa mata trabajo sano; por eso arranca en `observar`.
