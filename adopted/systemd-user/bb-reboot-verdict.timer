@@ -2,7 +2,8 @@
 Description=blackbox: corre el veredicto de reinicio una vez por arranque
 
 [Timer]
-# 3 min: despues del atom-crash-detector (2 min) y con journald asentado.
+# 3 min: con journald asentado, y ANTES del atom-crash-detector (4 min), que
+# lee la fila que esta unidad escribe en reboots.jsonl.
 OnBootSec=3min
 Persistent=false
 

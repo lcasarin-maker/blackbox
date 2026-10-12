@@ -1,0 +1,12 @@
+close_check DESPUES (Atlas ecdf88cc8: detect_atom_crash.py lee reboots.jsonl y ya no mide):
+2026-10-11T21:00:23-06:00
+$ grep -q reboots.jsonl /home/lcasarin/projects/Atlas/tools/detect_atom_crash.py; echo rc=$?
+rc=0
+control negativo: el mismo grep sobre el detector anterior (git show 55f8b533a:tools/detect_atom_crash.py)
+rc=1
+
+Suites que el cambio toca:
+$ python3 -m pytest -q tests/test_reboot_verdict.py tests/test_incident_report.py tests/test_hallazgo.py   (bb)
+58 passed in 0.70s
+$ .venv/bin/python3 -m pytest -q tests/test_detect_atom_crash.py tests/test_atom_degradacion_resuelta.py tests/test_finding_telemetry_contrato.py tests/test_dgx483_blackbox_telemetry_ownership.py   (Atlas, sobre ecdf88cc8)
+76 passed in 12.12s
