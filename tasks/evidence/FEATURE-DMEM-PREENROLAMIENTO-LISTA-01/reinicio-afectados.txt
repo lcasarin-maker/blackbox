@@ -1,0 +1,8 @@
+QUIEN SUFRE EL REINICIO (medido 2026-10-12, en vivo)
+Contenedores (3): nemotron-server (vLLM, 41 GiB de GPU), atlas-pgvector, y un segundo pgvector de otro proyecto.
+Servicios de usuario: ai-nemotron.service, bb-aviso-termico, bb-guardia-proceso, bb-vigilante-memavail, ai-memory-monitor.timer, ai-nemotron-vigilante.timer, bb-reboot-verdict.timer, liberation-watchdog.timer.
+Sesiones Claude/codex abiertas: 19 procesos (mueren con el reinicio; avisar a las otras sesiones antes).
+Procesos con GPU: 1879023 (41 469 MiB) y 2840238 (237 MiB).
+Orden sugerido (por confirmar): 1) avisar a las sesiones y a Atlas (congelar liberation-watchdog con atlas_carga), 2) parar ai-nemotron.service, 3) parar los contenedores de BD, 4) reiniciar.
+Pierde: la inferencia local mientras dure el arranque y la recarga del modelo de vLLM (medir el tiempo en el primer reinicio).
+Lo que NO se hace: reiniciar con trabajos de Atlas en vuelo; el portero y el escalon siguen sin desplegar.

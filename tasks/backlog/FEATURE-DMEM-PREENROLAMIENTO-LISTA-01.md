@@ -15,7 +15,7 @@ close_check: {"cmd": "grep -q pre_enrolamiento_completo tasks/evidence/FEATURE-D
 | # | Pieza | Estado | Evidencia / lo que falta |
 |---|---|---|---|
 | 1 | Modulo 580.178.04 con memacct y parche zero-FB, compilado | HECHO | `FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01`: sha256 `bf817b6b…`, vermagic 6.17.0-1032-nvidia |
-| 2 | Los 5 modulos (nvidia, modeset, uvm, drm, peermem) compilados | HECHO | `kernel-open/*.ko` en el scratchpad; falta guardar su sha256 junto al parche |
+| 2 | Los 5 modulos (nvidia, modeset, uvm, drm, peermem) compilados | HECHO | sha256 de los 5 y de los de Canonical en `modulos-sha256.txt` |
 | 3 | Instalar/retroceder con retroceso verificable | HECHO | `tools/dmem_modulo.sh` probado en directorio temporal con llave desechable (incl. archivo alterado: rc 1) |
 | 4 | Guardia de arranque (retrocede si la GPU no responde en 120 s) | HECHO en logica; sin probar en arranque real | `bb-dmem-guardia.service`; su primera prueba real es el primer arranque |
 | 5 | Prueba posterior al arranque | HECHO en logica | `tools/dmem_prueba.sh`: rc 0/4/5 con arbol falso, rc 3 contra el sistema real hoy |
@@ -26,8 +26,8 @@ close_check: {"cmd": "grep -q pre_enrolamiento_completo tasks/evidence/FEATURE-D
 | 10 | Prueba del limitador con vLLM real en el laboratorio | PENDIENTE | el laboratorio solo tiene postgres y 1 GiB de tope: hace falta cargar la imagen vLLM y un modelo pequeno, o declarar que no cabe |
 | 11 | Ajustes de vLLM (gpu-memory-utilization, expandable_segments, max-num-seqs) | PENDIENTE de Luis | `FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01` |
 | 12 | Adaptar el patron de los boosters dmem (dmem.low/dmem.max) | PENDIENTE | depende de que la prueba 5 dé region; `FEATURE-DMEM-BOOSTERS-ADAPTAR-A-GB10-01` |
-| 13 | Runbook de recuperacion desde la consola fisica | PENDIENTE | escribirlo con comandos exactos y probarlos en seco |
-| 14 | Quien sufre el reinicio: vLLM, Atlas, atlas-pgvector, otras sesiones Claude, jobs | PENDIENTE | lista y orden de parada/arranque |
+| 13 | Runbook de recuperacion | HECHO (escrito, sin probar en un fallo real) | `runbook-recuperacion.txt`: SSH por socket, GRUB con kernel 7.0 de Canonical, comandos exactos |
+| 14 | Quien sufre el reinicio | HECHO (lista medida; orden por confirmar) | `reinicio-afectados.txt`: 3 contenedores, 8 servicios de usuario, 19 procesos de sesiones |
 | 15 | Bloqueo de actualizaciones del kernel y del driver mientras el modulo este parcheado | PENDIENTE | un kernel nuevo hace que `updates/` no coincida (vermagic); `apt-mark hold` o aviso en `bb` |
 | 16 | Ventana de reinicio | DE LUIS | fecha y hora, con consola fisica |
 
