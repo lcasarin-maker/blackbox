@@ -1,7 +1,12 @@
 """Veredicto por reinicio: cada rama con el caso que la activa y el que NO."""
 
+import json
+import os
+from types import SimpleNamespace
+
 import pytest
 
+from tools import reboot_verdict as rv
 from tools.reboot_verdict import disparador, veredicto
 
 pytestmark = pytest.mark.unit
@@ -115,3 +120,214 @@ def test_la_fila_lleva_la_palabra_bert_0x14_del_arranque_siguiente_y_nada_si_no_
     assert (
         sin["bert_palabra_0x14"] is None and sin["bert_guid"] is None
     )  # control: sin registro no se inventa una palabra
+
+
+# ------------------------------------------------- forense movido desde Atlas (detect_atom_crash)
+# DEBT-CONTRATO-ATLAS-INSTRUMENTOS-EN-BLACKBOX-01: la medicion vive en bb; Atlas solo lee la fila.
+SMART_SIN_PERMISO = (
+    "smartctl 7.4 2023-08-01 r5530 [aarch64-linux-6.17.0-1031-nvidia] (local build)\n"
+    "Copyright (C) 2002-23, Bruce Allen, Christian Franke, www.smartmontools.org\n"
+    "\n"
+    "Smartctl open device: /dev/nvme0n1 failed: Permission denied\n"
+)
+SMART_CON_PERMISO = (
+    "smartctl 7.4 2023-08-01 r5530 [aarch64-linux] (local build)\n"
+    "Copyright (C) 2002-23, Bruce Allen, Christian Franke\n"
+    "\n"
+    "=== START OF SMART DATA SECTION ===\n"
+    "SMART overall-health self-assessment test result: PASSED\n"
+    "Temperature:                        41 Celsius\n"
+)
+
+
+def test_patrones_de_diagnostico_no_casan_el_ruido_de_un_boot_normal():
+    for linea in (
+        "kernel: ACPI: thermal: Thermal Zone [TSOC] (47 C)",
+        "kernel: watchdog: NMI not fully supported",
+        "kernel: watchdog: Hard watchdog permanently disabled",
+        "kernel: simple-framebuffer simple-framebuffer.0: [drm] Registered 1 planes with drm panic",
+    ):
+        assert not rv.PATRONES_DIAGNOSTICO.search(linea), linea
+
+
+def test_patrones_de_diagnostico_casan_los_eventos_reales():
+    for linea in (
+        "kernel: NVRM: Xid (PCI:000f:01:00): 13, Graphics SM Warp Exception",
+        "kernel: workqueue: mmput_async_fn hogged CPU for >20000us 11 times",
+        "kernel: Out of memory: Killed process 1234 (python3)",
+        "kernel: Xid (PCI:0000:01:00): 79, algo",
+        "kernel: GPU has fallen off the bus",
+    ):
+        assert rv.PATRONES_DIAGNOSTICO.search(linea), linea
+
+
+def test_xids_con_la_forma_real_y_sin_inventar_uno():
+    xids = rv.xids_del_boot(
+        [
+            "kernel: NVRM: Xid (PCI:000f:01:00): 13, Graphics SM Warp Exception",
+            "kernel: NVRM: Xid (PCI:000f:01:00): 43, pid=39320, name=python3",
+        ]
+    )
+    assert [(x["xid"], x["pid"]) for x in xids] == [(13, None), (43, 39320)]
+    assert rv.xids_del_boot(["kernel: workqueue: hogged CPU for >20000us"]) == []
+
+
+def test_crash_confirmado_es_journal_corrupto_o_panic_y_nada_mas():
+    base = {"inicio_epoch": 1000.0, "fin_epoch": 4600.0}
+    assert rv.forense({**base, "journal_danado": "/var/log/journal/x/system.journal"})[
+        "crash_confirmado"
+    ]
+    assert rv.forense({**base, "panic_linea": "Kernel panic - not syncing: hung_task"})[
+        "crash_confirmado"
+    ]
+    # control negativo: sin ninguna de las dos no se confirma, haya o no cierre de PID 1
+    assert not rv.forense({**base, "cierre_pid1": False})["crash_confirmado"]
+    assert not rv.forense({**base, "cierre_pid1": True})["crash_confirmado"]
+    f = rv.forense(base)
+    assert f["esquema"] == "bb-reboot/1" and f["duracion_s"] == 3600.0
+    assert rv.forense({})["duracion_s"] is None  # sin horas no hay duracion, nunca 0
+
+
+def test_smart_sin_permiso_se_declara_y_legible_se_registra(monkeypatch):
+    monkeypatch.setattr(rv, "_correr_con_codigo", lambda *a: (2, SMART_SIN_PERMISO))
+    s = rv.salud_de_almacenamiento()
+    assert s["smart_no_disponible"] == "permiso denegado, requiere root"
+    assert "smart" not in s
+    monkeypatch.setattr(rv, "_correr_con_codigo", lambda *a: (0, SMART_CON_PERMISO))
+    s = rv.salud_de_almacenamiento()
+    assert "smart_no_disponible" not in s and any("PASSED" in ln for ln in s["smart"])
+    assert not any(ln.startswith(("smartctl ", "Copyright (")) for ln in s["smart"])
+    monkeypatch.setattr(rv, "_correr_con_codigo", lambda *a: (-1, "No such file"))
+    assert "no ejecutable" in rv.salud_de_almacenamiento()["smart_no_disponible"]
+    monkeypatch.setattr(rv, "_correr_con_codigo", lambda *a: (1, "Use smartctl -h\n"))
+    assert "sin datos SMART" in rv.salud_de_almacenamiento()["smart_no_disponible"]
+
+
+def test_edac_sin_controladores_ausente_y_legible(tmp_path, monkeypatch):
+    edac = tmp_path / "mc"
+    edac.mkdir()
+    monkeypatch.setattr(rv, "EDAC_DIR", edac)
+    assert "sin controladores" in rv._edac()["edac_no_disponible"]
+    (edac / "mc0").mkdir()
+    (edac / "mc0" / "ce_count").write_text("7\n", encoding="utf-8")
+    (edac / "mc0" / "ue_count").write_text("0\n", encoding="utf-8")
+    assert rv._edac() == {"edac": {"mc0_ce_count": 7, "mc0_ue_count": 0}}
+    (edac / "mc0" / "ue_count").write_text("basura\n", encoding="utf-8")
+    ilegible = rv._edac()["edac"]["mc0_ue_count"]
+    assert ilegible.startswith("ilegible")  # un contador roto no se lee como cero
+    monkeypatch.setattr(rv, "EDAC_DIR", tmp_path / "no_existe")
+    assert "no existe" in rv._edac()["edac_no_disponible"]
+
+
+def test_vmcore_solo_el_volcado_escrito_en_el_hueco_del_corte(tmp_path, monkeypatch):
+    crash = tmp_path / "crash"
+    dentro, viejo = crash / "202610111300", crash / "202609010000"
+    for d, t in ((dentro, 5000), (viejo, 100)):
+        d.mkdir(parents=True)
+        (d / "dump.x").write_text("vmcore", encoding="utf-8")
+        os.utime(d, (t, t))
+    (crash / "kexec_cmd").write_text("no es volcado", encoding="utf-8")
+    monkeypatch.setattr(rv, "CRASH_DIR", crash)
+    assert rv.vmcore_en(4000, 6000) == str(dentro)
+    # control negativo: el volcado viejo NO se atribuye a un corte posterior (Atlas si lo hacia)
+    assert rv.vmcore_en(7000, 9000) is None
+    monkeypatch.setattr(rv, "CRASH_DIR", tmp_path / "sin_crash")
+    assert rv.vmcore_en(0, None) is None
+
+
+def _journal_falso(respuestas):
+    def _journal(*args):
+        for clave, (rc, salida) in respuestas.items():
+            if all(x in args for x in clave):
+                return SimpleNamespace(returncode=rc, stdout=salida, stderr="")
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    return _journal
+
+
+BOOTS = [
+    {
+        "index": -1,
+        "boot_id": "a" * 32,
+        "first_entry": 1_000_000_000,
+        "last_entry": 4_600_000_000,
+    },
+    {
+        "index": 0,
+        "boot_id": "b" * 32,
+        "first_entry": 4_700_000_000,
+        "last_entry": 4_800_000_000,
+    },
+]
+
+
+def _recoge(monkeypatch, tmp_path, respuestas):
+    monkeypatch.setattr(rv, "TELEMETRIA", tmp_path / "no_hay.jsonl")
+    monkeypatch.setattr(rv, "CRASH_DIR", tmp_path / "sin_crash")
+    monkeypatch.setattr(rv, "WATCHDOG_BOOTSTATUS", tmp_path / "bootstatus")
+    monkeypatch.setattr(rv, "_journal", _journal_falso(respuestas))
+    return rv.recoge(BOOTS, 0)
+
+
+def test_recoge_lee_journal_corrupto_del_siguiente_y_lineas_del_caido(
+    monkeypatch, tmp_path
+):
+    ev = _recoge(
+        monkeypatch,
+        tmp_path,
+        {
+            ("systemd-journald.service",): (
+                0,
+                "File /var/log/journal/x/system.journal corrupted or uncleanly shut "
+                "down, renaming and replacing.",
+            ),
+            ("-k", "-1"): (
+                0,
+                "k: NVRM: Xid (PCI:000f:01:00): 43, pid=7, name=p\nk: normal\n",
+            ),
+        },
+    )
+    f = rv.forense(ev)
+    assert f["journal_danado"] == "/var/log/journal/x/system.journal"
+    assert f["crash_confirmado"] and f["cierre_pid1"] is False
+    assert f["xids"][0]["xid"] == 43 and len(f["lineas_diagnostico"]) == 1
+
+
+def test_recoge_control_negativo_cierre_limpio_no_confirma_crash(monkeypatch, tmp_path):
+    ev = _recoge(
+        monkeypatch, tmp_path, {("_PID=1",): (0, "Reached target x\nShutting down.\n")}
+    )
+    f = rv.forense(ev)
+    assert f["cierre_pid1"] is True and not f["crash_confirmado"]
+    assert f["journal_danado"] is None
+
+
+def test_recoge_journal_ilegible_va_a_could_not_run_no_a_limpio(monkeypatch, tmp_path):
+    ev = _recoge(
+        monkeypatch,
+        tmp_path,
+        {("_PID=1",): (1, ""), ("systemd-journald.service",): (1, "")},
+    )
+    assert ev["cierre_pid1"] is None  # no leido: ni True ni False
+    assert "journal_pid1_boot_-1" in ev["no_se_pudo_leer"]
+    assert "journal_journald_boot_0" in ev["no_se_pudo_leer"]
+
+
+def test_main_escribe_fila_con_esquema_y_forense(monkeypatch, tmp_path):
+    monkeypatch.setattr(rv, "SALIDA", tmp_path / "reboots.jsonl")
+    monkeypatch.setattr(rv, "TELEMETRIA", tmp_path / "no_hay.jsonl")
+    monkeypatch.setattr(rv, "CRASH_DIR", tmp_path / "sin_crash")
+    monkeypatch.setattr(rv, "WATCHDOG_BOOTSTATUS", tmp_path / "bootstatus")
+    monkeypatch.setattr(rv, "_correr_con_codigo", lambda *a: (2, SMART_SIN_PERMISO))
+    monkeypatch.setattr(rv, "_publica_hallazgos", lambda filas: None)
+    monkeypatch.setattr(
+        rv, "_journal", _journal_falso({("--list-boots",): (0, json.dumps(BOOTS))})
+    )
+    assert rv.main(["--ultimos", "1", "--escribe"]) == 0
+    fila = json.loads((tmp_path / "reboots.jsonl").read_text(encoding="utf-8"))
+    assert fila["esquema"] == "bb-reboot/1" and fila["boot_id_siguiente"] == "b" * 32
+    assert (
+        fila["almacenamiento"]["smart_no_disponible"]
+        == "permiso denegado, requiere root"
+    )
+    assert fila["crash_confirmado"] is False and fila["cierre_pid1"] is False

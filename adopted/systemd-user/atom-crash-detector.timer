@@ -2,9 +2,11 @@
 Description=Corre el detector de crash de la ATOM una vez, poco despues de cada arranque
 
 [Timer]
-# 2 min de margen para que el sistema termine de asentarse (red, journald con
-# los servicios ya arrancados) antes de leer su propio journal.
-OnBootSec=2min
+# 4 min: DESPUES de bb-reboot-verdict (3 min). Desde el 2026-10-11 el detector
+# de Atlas no mide: lee la fila que bb-reboot-verdict escribe en
+# reboots.jsonl. Antes de esa fila no hay nada que leer, y con los 2 min de
+# antes el crash del boot recien caido se habria dictaminado un boot tarde.
+OnBootSec=4min
 # No repite dentro del mismo boot: una corrida por arranque basta, el propio
 # script es idempotente por boot_id de todos modos.
 Persistent=false
