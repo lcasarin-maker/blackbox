@@ -1,0 +1,18 @@
+[Unit]
+Description=blackbox: portero de la maquina (cola FIFO y tope por trabajo pesado dentro de app.slice)
+Documentation=file:%h/projects/blackbox/tools/portero.py
+After=atom-gpu-telemetry.service
+
+[Service]
+# Lee /proc cada 2 s y actua solo sobre lo delegado al usuario (scopes bb-portero-*, cgroup.freeze).
+# Sin estado termico fresco, PSI o cgroup de app.slice, no actua y lo escribe en portero.jsonl.
+ExecStart=/usr/bin/python3 %h/projects/blackbox/tools/portero.py demonio
+Restart=on-failure
+RestartSec=10
+# El portero no debe ser victima de lo que vigila: vive fuera de app.slice, con tope propio pequeno.
+Slice=background.slice
+MemoryMax=256M
+MemorySwapMax=0
+
+[Install]
+WantedBy=default.target
