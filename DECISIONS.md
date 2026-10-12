@@ -232,3 +232,10 @@ camino es el que se toma, aunque cueste más pasos.
 - **Decidido (2):** las 65 fichas `DELTA-*` y `DEBT-CLOSE-CHECK-VERIFY-*` cuyo `close_check` termina en `xfailed` siguen abiertas, con la nota "Bloqueada por criterio sin implementar" en cada una.
 - **Motivo (2):** un `xfail` sale con código 0 sin que el criterio exista; cerrarlas con él sería un cierre falso.
 - **Descartado (2):** cerrarlas como `void_wontfix` (pierde de vista validaciones de foros) e implementarlas todas ahora (cada una pide vLLM, NCCL o CX7 reales).
+
+## 2026-10-12 — La ATOM se queda en DGX OS oficial (driver 580); las distros alternas se MONITOREAN para cosechar mecanismos (Luis)
+
+- **Decidido:** no se migra a NixOS, Arch, Fedora/RHEL/Rocky, Omarchy, Kairos ni Ubuntu 26.04. Se vigilan esos proyectos (`FEATURE-MONITOR-DISTROS-ALTERNAS-GB10-01`) en busca de mecanismos que se puedan adaptar a la ATOM: límite de memoria GPU, `dmem`, guardias de memoria unificada, driver 610/615, políticas de cgroup.
+- **Motivo:** las distros alternas reportan Ethernet ConnectX-7 inestable (Fedora), kernel estándar con Ethernet rota (NixOS) y herramientas NVIDIA que no corren fuera de DGX OS; el canal oficial es el único con soporte, y la máquina sirve a Atlas y a vLLM. El hilo 373655 (Ubuntu 26.04 + 610) midió rendimiento igual (±0.6 %) y no probó `dmem`; el problema de memoria que no se libera persiste ahí.
+- **Descartado:** migrar la ATOM (riesgo de red y pérdida de soporte sin ganancia medida); subir de rama de driver por `apt` (quita toda la rama 580 y mezcla módulos 610 con bibliotecas 615; medido con simulaciones).
+- **Se reabre si:** una distro alterna publica un mecanismo que cierre uno de los huecos de `FEATURE-DMEM-*` o `FEATURE-LIMITADOR-*` con evidencia en GB10, o si DGX OS deja de ofrecer parches de seguridad para 580.
