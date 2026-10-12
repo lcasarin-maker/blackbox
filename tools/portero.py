@@ -644,8 +644,8 @@ def nombre_unidad(clase: str, raiz: int) -> str:
 
 def crea_scope(nombre: str, pids: Iterable[int], slice_: str, topes: dict[str, int], ejecutar: Ejecutor = _ejecuta) -> tuple[int, str]:
     """Adopta procesos vivos en un scope transitorio del gestor de usuario, con sus topes, en una sola llamada."""
-    pids = [str(p) for p in pids]
-    props: list[str] = ["PIDs", "au", str(len(pids)), *pids, "Slice", "s", slice_]
+    pids_txt = [str(p) for p in pids]
+    props: list[str] = ["PIDs", "au", str(len(pids_txt)), *pids_txt, "Slice", "s", slice_]
     for k in ("MemoryMax", "MemoryHigh", "MemorySwapMax", "TasksMax"):
         if k in topes:
             props += [k, "t", str(topes[k])]

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import signal
 import subprocess
 import sys
 from pathlib import Path
@@ -228,7 +229,20 @@ PAUSA = "import os, signal; print(os.getpid(), flush=True); signal.pause()"
 
 
 def _pid_del_hijo(padre: subprocess.Popen) -> int:
+    assert padre.stdout is not None
     return int(padre.stdout.readline())
+
+
+def _limpia(padre: subprocess.Popen, hijo: int | None) -> None:
+    """Mata al hijo POR PID: matar antes al padre lo deja huerfano (su `pkill -P` ya no lo encuentra) y un hijo suelto
+    mantiene abierto el pipe del gate que corre esta suite (colgo un pre-push 8 minutos el 2026-10-12)."""
+    if hijo is not None:
+        try:
+            os.kill(hijo, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+    padre.kill()
+    padre.wait(timeout=10)
 
 
 def test_real_cadena_cmdline_y_ningun_secreto(tmp_path):
@@ -238,6 +252,7 @@ def test_real_cadena_cmdline_y_ningun_secreto(tmp_path):
     env = {**os.environ, "MI_SECRET": SEMILLAS[3], "LD_PRELOAD": ""}
     padre = subprocess.Popen(["bash", "-c", f"{hijo}; true"], cwd=tmp_path, env=env,
                              stdout=subprocess.PIPE, text=True)
+    pid = None
     try:
         pid = _pid_del_hijo(padre)
         o = op.origen(pid)
@@ -252,9 +267,7 @@ def test_real_cadena_cmdline_y_ningun_secreto(tmp_path):
         assert o["fuente"]["tipo"] == "shell" and o["fuente"]["nombre"] == "bash"
         assert o["env_nombres"] == [], "solo nombres de la lista, y LD_PRELOAD vacio no cuenta"
     finally:
-        padre.kill()
-        subprocess.run(["pkill", "-KILL", "-P", str(padre.pid)], check=False)
-        padre.wait(timeout=10)
+        _limpia(padre, pid)
 
 
 def test_real_git_hook_da_repo_y_rama(tmp_path):
@@ -266,26 +279,29 @@ def test_real_git_hook_da_repo_y_rama(tmp_path):
     hook.write_text(f"#!/bin/bash\n{sys.executable} -c '{PAUSA}'\n", encoding="utf-8")
     hook.chmod(0o755)
     padre = subprocess.Popen([str(hook)], cwd=repo, stdout=subprocess.PIPE, text=True)
+    pid = None
     try:
-        o = op.origen(_pid_del_hijo(padre))
+        pid = _pid_del_hijo(padre)
+        o = op.origen(pid)
         assert o["rastros"]["git_hook"] == {"hook": "pre-push", "pid": padre.pid, "repo": str(repo),
                                             "rama": "rama-de-prueba"}
         assert op.clave_lanzador(o).startswith("git_hook pre-push")
     finally:
-        subprocess.run(["pkill", "-KILL", "-P", str(padre.pid)], check=False)
-        padre.kill()
-        padre.wait(timeout=10)
+        _limpia(padre, pid)
 
 
 def test_control_negativo_sin_hook_no_hay_rastro_de_hook(tmp_path):
-    padre = subprocess.Popen(["bash", "-c", f"{sys.executable} -c '{PAUSA}'; true"],
+    """El hijo se separa con `setsid -f`: queda adoptado por el gestor de usuario, sin ningun ancestro de esta suite.
+    Sin esto el control falla cuando la suite corre DENTRO de un pre-push real: su cadena de ancestros incluye ese
+    hook y el rastro `git_hook` es verdadero (fallo medido 2026-10-12, coverage-100 en un pre-push)."""
+    padre = subprocess.Popen(["setsid", "-f", sys.executable, "-c", PAUSA],
                              cwd=tmp_path, stdout=subprocess.PIPE, text=True)
+    pid = None
     try:
-        assert "git_hook" not in op.origen(_pid_del_hijo(padre))["rastros"]
+        pid = _pid_del_hijo(padre)
+        assert "git_hook" not in op.origen(pid)["rastros"]
     finally:
-        subprocess.run(["pkill", "-KILL", "-P", str(padre.pid)], check=False)
-        padre.kill()
-        padre.wait(timeout=10)
+        _limpia(padre, pid)
 
 
 # ============================================================ lector y codigos de salida (witr app.go:100)

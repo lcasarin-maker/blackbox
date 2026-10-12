@@ -2,3 +2,6 @@
 ## Nivel 2 (2026-10-12T07:58:41-06:00)
 
 runtime_oci_probado: 5 de 5 casos, control negativo incluido; salida literal en prueba-nivel2-20261012T075841.txt.
+
+## Prueba con vLLM real bajo el envoltorio (2026-10-12T10:11, laboratorio de 16 GiB)
+`prueba-vllm-20261012T101117.txt`: qwen3-8b-nvfp4 con `--annotation bb.gpu_budget_gib=12`: el envoltorio dejo el cgroup en memory.max=15032385536 (14 GiB, clase gpu), swap 0, pids 2048; el servidor quedo LISTO en 203 s, respondio una peticion ("2+2=4"), pico de cgroup 7.57 GB, MemAvailable minimo del anfitrion 39 383 MiB (sin abortar). Aviso: durante esa ventana el vLLM de produccion dejo de responder (ver DEBT-MOTOR-VLLM-ATASCO-CON-32-PETICIONES-01); causalidad sin separar.

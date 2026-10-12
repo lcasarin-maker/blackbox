@@ -20,3 +20,6 @@ close_check: {"cmd": "grep -q atasco_vllm_atribuido tasks/evidence/DEBT-MOTOR-VL
 1. Atribuir los clientes de las 32 peticiones (origen por `bb origen` o registro del gateway).
 2. Medir el tope de concurrencia que el motor sostiene (vLLM `--max-num-seqs` y/o limite en el gateway) sin atascarse.
 3. Que el vigilante registre el cliente mayoritario al reiniciar.
+
+## Segundo atasco del dia (2026-10-12, 10:15-10:23)
+`vigilante_motor.log`: 10:15:01 "chat sin respuesta (http=000, espera 120s) fallo 1 de 3", 10:19:06 fallo 2, 10:21:06 "atasco por metricas: 33 peticiones corriendo y 0 tokens avanzados", 10:23:06 fallo 3 y `REINICIA ai-nemotron.service` (el primero del dia fue 07:37). Coincide con la prueba de vLLM en el laboratorio (10:11-10:15, 12 GiB de GPU de un segundo vLLM mientras produccion atendia la cadena de fichas del corpus con ~33 peticiones): NO se puede separar si la carga extra de GPU contribuyo o si es el mismo atasco por concurrencia de las 07:37. Control pendiente: repetir el atasco con la GPU libre de otras cargas y con `--max-num-seqs 16` (propuesta en FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01).

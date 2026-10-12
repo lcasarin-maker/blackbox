@@ -1,10 +1,12 @@
+from typing import Any
+
 from tools import dmem_monitor as m
 
 K = "6.17.0-1032-nvidia"
 
 
 def est(**kw):
-    base = dict(kernel=K, driver_stock="580.178.04", parche_version="580.178.04", parche_vermagic=f"{K} SMP preempt",
+    base: dict[str, Any] = dict(kernel=K, driver_stock="580.178.04", parche_version="580.178.04", parche_vermagic=f"{K} SMP preempt",
                 parche_srcversion="AAA", cargado_version="580.178.04", cargado_srcversion="AAA", dmem_con_region=True)
     base.update(kw)
     return m.Estado(**base)

@@ -37,7 +37,8 @@ def test_observar_registra_y_cuenta_falso_positivo(tmp_path):
 
 
 def test_actuar_declara_unsupported(tmp_path):
-    assert v.paso("actuar", 1 * GIB, 0.0, tmp_path)["accion"].startswith("UNSUPPORTED")
+    ev = v.paso("actuar", 1 * GIB, 0.0, tmp_path)
+    assert ev is not None and ev["accion"].startswith("UNSUPPORTED")
 
 
 def test_lecturas_reales_o_none(tmp_path):

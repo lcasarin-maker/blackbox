@@ -1865,6 +1865,7 @@ def _reservar(mib):
         [sys.executable, "-c",
          f"import mmap,signal; m=mmap.mmap(-1, {mib}*1024**2); print('listo', flush=True); signal.pause()"],
         stdout=subprocess.PIPE, text=True)
+    assert hijo.stdout is not None
     assert hijo.stdout.readline().strip() == "listo"
     return hijo
 

@@ -110,7 +110,7 @@ def principal(argv: list[str], sondeo: Sondeo = centinela_driver, ejecuta=os.exe
     if accion == "rechaza":
         print(f"limita: NO lanzo: {motivo}", file=sys.stderr)
         return 3
-    entorno = prepara(limite, a.lib, dict(os.environ), a.cache) if accion == "lanza" else dict(os.environ)
+    entorno = prepara(limite, a.lib, dict(os.environ), a.cache) if accion == "lanza" and limite is not None else dict(os.environ)
     ejecuta(cmd[0], cmd, entorno)
     return 0  # ejecuta no vuelve; solo los tests llegan aqui
 
