@@ -241,7 +241,6 @@ efectos de esta spec, y `tools/inventario.py --check` lo bloquea en el commit.
 | `tools/provider_trace.py` | Evalúa selección efectiva de proveedor por petición y transición de worker en JSONL; conserva fallback e incompletitud | `tests/test_provider_trace.py`; fixtures declarados y traza real pendiente |
 | `tools/kernel_charges.bt` | Borrador de probes de cargo/descargo kmem 6.17 con mapas por cgroup ejecutor; dueño real desconocido | Headers de ABI y limitación de validación bpftrace sin root en `tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt`; compilación y captura pendientes |
 
-
 Los siguientes controles reciben evidencias suministradas. Sus pruebas de fixtures verifican el instrumento; los hashes acreditan consistencia de bytes y el cierre de cada investigación exige su captura y criterio originales.
 
 | Instrumento | Alcance | Verificación |
