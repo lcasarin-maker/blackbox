@@ -8,7 +8,7 @@ severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-11
-close_check: {"cmd": "grep -q 'boot sano' tasks/evidence/FEATURE-CALIBRAR-CALOR-SOSTENIDO-01/medicion.md", "expect": "exit_zero", "porque": "Las constantes de temp_sostenida (banda umbral-5 C, 80 % de 60 lecturas) salen de UN boot de 22 h y no hay ningun boot SANO bajo carga pesada para medir falsos positivos. Cierra con la medicion de al menos 3 boots mas y de un boot sano cargado, con las constantes re-derivadas de los datos."}
+close_check: {"cmd": "grep -q 'boot sano' tasks/evidence/FEATURE-CALIBRAR-CALOR-SOSTENIDO-01/medicion.txt", "expect": "exit_zero", "porque": "Las constantes de temp_sostenida (banda umbral-5 C, 80 % de 60 lecturas) salen de UN boot de 22 h y no hay ningun boot SANO bajo carga pesada para medir falsos positivos. Cierra con la medicion de al menos 3 boots mas y de un boot sano cargado, con las constantes re-derivadas de los datos."}
 ---
 
 ## Que se sabe (2026-10-11)
@@ -21,4 +21,4 @@ La primera version del detector (banda a umbral-2 C) no disparo nunca en la repr
 2. **Mas boots** (el A/B del cap de CPU, `FEATURE-BB-EVALUAR-CAP-DE-CPU-01`, los producira) para re-derivar la banda y la fraccion en vez de heredarlas de un caso.
 3. **Prueba con un `sobre_100` real**, que no ha ocurrido (maximo historico de zona 98.6 C).
 
-Medicion en `tasks/evidence/FEATURE-CALIBRAR-CALOR-SOSTENIDO-01/medicion.md`; debe usar la frase `boot sano` solo si existe ese boot.
+Medicion en `tasks/evidence/FEATURE-CALIBRAR-CALOR-SOSTENIDO-01/medicion.txt`; debe usar la frase `boot sano` solo si existe ese boot.

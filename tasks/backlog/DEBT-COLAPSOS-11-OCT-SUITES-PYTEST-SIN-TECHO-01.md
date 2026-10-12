@@ -8,7 +8,7 @@ severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-12
-close_check: {"cmd": "grep -q suites_pytest_con_techo tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/medicion.md", "expect": "exit_zero", "porque": "Dos colapsos (boots 5461291a a las 22:02 y 7b217d8b a las 22:44, PSI memory full 98 % con 15-30 GB disponibles, reinicio por watchdog, BERT 0x10) arrancaron con una suite pytest de Atlas corriendo (scopes liberation_job_test_* a las 21:48 y 22:43), vLLM con 33 peticiones y, la primera vez, un pre-push de otro proyecto. En el segundo no corria ningun job de la cola. Cierra cuando haya una medicion con las suites bajo un scope con MemoryMax y el colapso no se reproduzca, escrita en medicion.md con la frase suites_pytest_con_techo."}
+close_check: {"cmd": "grep -q suites_pytest_con_techo tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/medicion.txt", "expect": "exit_zero", "porque": "Dos colapsos (boots 5461291a a las 22:02 y 7b217d8b a las 22:44, PSI memory full 98 % con 15-30 GB disponibles, reinicio por watchdog, BERT 0x10) arrancaron con una suite pytest de Atlas corriendo (scopes liberation_job_test_* a las 21:48 y 22:43), vLLM con 33 peticiones y, la primera vez, un pre-push de otro proyecto. En el segundo no corria ningun job de la cola. Cierra cuando haya una medicion con las suites bajo un scope con MemoryMax y el colapso no se reproduzca, escrita en medicion.md con la frase suites_pytest_con_techo."}
 ---
 
 ## Diagnostico a fondo (2026-10-12), medido en `samples/` de bb

@@ -1,0 +1,21 @@
+---
+id: DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01
+kind: task
+domain: MEMORY
+title: "Revisar lo instalado y corriendo contra lo que se usa (LibreChat sin uso desde agosto)"
+status: open
+severity: P2
+origin: asserted
+satd_family: BLIND_INSTRUMENT
+created: 2026-10-12
+close_check: {"cmd": "grep -q revision_instalado_usado tasks/evidence/DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01/informe.txt", "expect": "exit_zero", "porque": "Peticion de Luis 2026-10-12: revisar lo instalado y lo que sigue corriendo contra lo que se usa; hace meses que no se usa LibreChat. Cierra con un informe por servicio, contenedor, timer y paquete grande: dueno, ultimo uso medido, costo en memoria, y decision (mantener, detener, desinstalar) votada por Luis."}
+---
+
+## Medido (2026-10-12)
+- LibreChat (`ghcr.io/danny-avila/librechat:latest`, red host) y `mongo-librechat`: creados 2026-08-17; BD con 1 usuario, 1 conversacion y 31 mensajes; ultimo mensaje 2026-08-22; 0 mensajes en los ultimos 30 dias. Sus logs de 72 h son solo arranques.
+- Lo alimenta Atlas: `atlas-api.service` ("API RAG y endpoint OpenAI-compatible para LibreChat") y su endpoint de retroalimentacion; aequitas NO lo usa (solo menciones en informes de auditoria). `aequitas-pg` es otro contenedor (BD de aequitas).
+- Cuestan 187 MiB + 95 MiB de memoria y un puerto en red host.
+## Que falta
+1. Inventario de servicios de usuario y de sistema, timers, contenedores, imagenes y paquetes grandes, con ultimo uso medido.
+2. Para cada uno: quien lo usa (repos, unidades que lo llaman) y decision.
+3. Detener o desinstalar lo que la medicion declare sin uso, con respaldo de datos y su inverso documentado.
