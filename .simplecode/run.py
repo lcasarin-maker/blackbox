@@ -2,22 +2,60 @@
 """Run the explicitly pinned Simplecode runtime."""
 import hashlib
 import json
+import os
 import runpy
 import sys
 import zipfile
 from pathlib import Path
 
+# runtime-resolver:v1 -- the hook preamble reads this marker: a runner that
+# carries it finds and verifies its own runtime.zip, so a clone with a
+# tracked run.py + kit.lock and no zip is not a hook-level COULD_NOT_RUN.
 here = Path(__file__).resolve().parent
-runtime = here / "runtime.zip"
 lock_path = here / "kit.lock"
 
-if not runtime.is_file():
-    raise SystemExit("simplecode runtime.zip is missing; run explicit sync apply")
+
+def refuse(message):
+    print(f"[simplecode] COULD_NOT_RUN: {message}", file=sys.stderr)
+    raise SystemExit(2)
+
+
 if not lock_path.is_file():
-    raise SystemExit("simplecode kit.lock is missing; run explicit sync apply")
+    refuse("kit.lock is missing; run explicit sync apply")
 try:
     lock = json.loads(lock_path.read_text(encoding="utf-8"))
-    bundle = runtime.read_bytes()
+except (OSError, ValueError) as exc:
+    refuse(f"kit.lock cannot be read: {exc}")
+wanted = str(lock.get("artifact_sha256"))
+cache_root = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "simplecode"
+cached = cache_root / wanted / "runtime.zip"
+mother = Path(os.environ.get("SIMPLECODE_MOTHER") or Path.home() / "projects" / "simplecode")
+# Only a bundle whose sha256 IS the lock's is ever imported; the order is
+# local copy, the cache `sync` fills, then the mother checkout.
+runtime = None
+tried = []
+for candidate in (here / "runtime.zip", cached, mother / ".simplecode" / "runtime.zip"):
+    try:
+        bundle = candidate.read_bytes()
+    except OSError:
+        tried.append(f"{candidate} (absent)")
+        continue
+    if hashlib.sha256(bundle).hexdigest() == wanted:
+        runtime = candidate
+        break
+    tried.append(f"{candidate} (sha256 differs from kit.lock)")
+if runtime is None:
+    refuse(f"no runtime.zip matches kit.lock artifact_sha256 {wanted}; tried: " + "; ".join(tried)
+           + "; run explicit sync apply")
+if runtime != cached:
+    try:
+        cached.parent.mkdir(parents=True, exist_ok=True)
+        partial = cached.with_name(f"runtime.zip.{os.getpid()}")
+        partial.write_bytes(bundle)
+        os.replace(partial, cached)
+    except OSError as exc:  # ponytail: cache is best-effort, the verified bundle already runs; trigger: a satellite whose only copy is the mother's and the mother moves
+        print(f"[simplecode] runtime cache not written ({cached}): {exc}", file=sys.stderr)
+try:
     with zipfile.ZipFile(runtime) as zf:
         manifest = json.loads(zf.read("RUNTIME_MANIFEST.json").decode("utf-8"))
         entries = [
@@ -25,18 +63,16 @@ try:
             for name in sorted(name for name in zf.namelist() if name.endswith((".py", ".yaml")))
         ]
 except (OSError, KeyError, ValueError, zipfile.BadZipFile) as exc:
-    raise SystemExit(f"simplecode runtime identity cannot be verified: {exc}") from exc
-actual_bundle_sha = hashlib.sha256(bundle).hexdigest()
-if lock.get("artifact_sha256") != actual_bundle_sha:
-    raise SystemExit("simplecode runtime.zip differs from kit.lock; run explicit sync apply")
+    refuse(f"runtime identity cannot be verified: {exc}")
+actual_bundle_sha = wanted
 content = hashlib.sha256()
 for name, data in entries:
     content.update(name.encode("utf-8"))
     content.update(data)
 if manifest.get("content_sha256") != content.hexdigest():
-    raise SystemExit("simplecode runtime.zip does not match its content manifest; run explicit sync apply")
+    refuse("runtime.zip does not match its content manifest; run explicit sync apply")
 if lock.get("content_sha256") != manifest.get("content_sha256"):
-    raise SystemExit("simplecode runtime manifest differs from kit.lock; run explicit sync apply")
+    refuse("runtime manifest differs from kit.lock; run explicit sync apply")
 if len(sys.argv) < 2:
     raise SystemExit("usage: run.py MODULE [ARGS...]   |   run.py --version")
 if sys.argv[1] in ("--version", "-V"):
