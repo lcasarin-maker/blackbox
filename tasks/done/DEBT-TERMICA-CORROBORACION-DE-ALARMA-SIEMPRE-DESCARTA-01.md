@@ -76,3 +76,15 @@ Al ir a "arreglar la corroboracion" lei el docstring de `_alarmas` (DGX-396): en
 **Limites:** el aviso es manual: nadie lo atiende si no mira la pantalla, y `sostenida` ocurre varias veces por boot (3 episodios en las 22 h del boot del 11-oct), asi que puede avisar seguido. `sobre_100` no sono en ningun corte medido (maximo historico de zona: 98.6 C). Falta una prueba del aviso con un estado real de `sobre_100`, que no ha ocurrido.
 
 El `close_check` de esta ficha pide un test `destino_del_aviso` que hoy no existe; cuando se escriba, la ficha cierra.
+
+## Root Cause
+
+`bb scan` leyo el campo `corroboracion` de la alarma de flanco (`descarta` por diseno, DGX-396) como "sin calor", y el sampler no emitia ningun evento de calor sostenido ni publicaba estado para que alguien lo leyera en tiempo real.
+
+## Regression Test
+
+`tests/test_atom_gpu_telemetry.py -k destino_del_aviso` (recorrido del sampler al aviso) mas los tests de `temp_sostenida`/`temp_sobre_100` y de `tests/test_aviso_termico.py`; cada rama con su caso negativo (mutacion que quita el manejo de OSError, y el gate sin llamada al estado).
+
+## Verification Evidence
+
+`tasks/evidence/DEBT-TERMICA-CORROBORACION-DE-ALARMA-SIEMPRE-DESCARTA-01.fail.txt` (commit b088fce: rc=5, el test no existe) y `.pass.txt` (rc=0, 1 passed).
