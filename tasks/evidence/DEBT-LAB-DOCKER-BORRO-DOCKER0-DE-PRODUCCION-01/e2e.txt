@@ -1,0 +1,6 @@
+E2E (medido en el journal del host, 2026-10-12): docker0 desaparece a las 07:55:30, segundos despues de arrancar el dockerd del laboratorio con --bridge=none; vuelve a existir solo a las 13:16:08 (reinicio de Docker de produccion por Luis).
+oct 12 07:55:30 aitopatom-41f1 kernel: docker0: port 3(veth6a243a6) entered disabled state
+oct 12 07:55:30 aitopatom-41f1 kernel: docker0: port 1(veth83a2a18) entered disabled state
+oct 12 07:55:30 aitopatom-41f1 systemd-networkd[1962]: docker0: Link DOWN
+oct 12 07:55:30 aitopatom-41f1 systemd-networkd[1962]: docker0: Lost carrier
+oct 12 07:55:30 aitopatom-41f1 NetworkManager[2269]: <info>  [1791813330.2616] device (docker0): bridge port veth6a243a6 was detached

@@ -162,7 +162,8 @@ cmd_up() {
     [ "$(cat "/sys/fs/cgroup/$SLICE/memory.max")" = "$mem_bytes" ] ||
         die "$SLICE no quedo con memory.max=$mem_bytes: $(cat "/sys/fs/cgroup/$SLICE/memory.max" 2>&1)"
 
-    log "arrancando containerd de laboratorio ($CTRD_SOCK)"
+    DOCKER0_ANTES=0; ip link show docker0 >/dev/null 2>&1 && DOCKER0_ANTES=1
+    log "arrancando containerd de laboratorio ($CTRD_SOCK); docker0 de produccion antes: $DOCKER0_ANTES"
     setsid containerd --config "$CONF_DIR/containerd.toml" >"$RUN_DIR/containerd.log" 2>&1 &
     echo $! >"$CTRD_PID"
     espera_socket "$CTRD_SOCK" "$RUN_DIR/containerd.log"
@@ -177,10 +178,17 @@ cmd_up() {
         --containerd "$CTRD_SOCK" \
         --containerd-namespace "$NS" \
         --containerd-plugins-namespace "$NS-plugins" \
-        --bridge=none --iptables=false --ip6tables=false --ip-forward=false \
+        --bridge=bblab0 --bip=172.31.250.1/24 --iptables=false --ip6tables=false --ip-forward=false \
         --ip-masq=false --userland-proxy=false \
         >"$RUN_DIR/dockerd.log" 2>&1 &
     espera_socket "$LAB_SOCK" "$RUN_DIR/dockerd.log"
+    # GUARDA: el laboratorio NO puede tocar el puente de produccion (2026-10-12 07:55:30: `--bridge=none` borro docker0 del host y
+    # atlas-pgvector quedo sin red 5 h hasta que Luis reinicio Docker a las 13:16). Si docker0 existia antes de `up` y ya no, se aborta.
+    if [ "$DOCKER0_ANTES" = 1 ] && ! ip link show docker0 >/dev/null 2>&1; then
+        log "ERROR: docker0 de PRODUCCION desaparecio al arrancar el laboratorio; apagando el laboratorio"
+        kill -TERM "$(cat "$PIDFILE")" 2>/dev/null || true
+        die "el laboratorio borro docker0: no se continua (reinicia Docker de produccion para recrearlo)"
+    fi
     for _ in $(seq 1 60); do labdocker info >/dev/null 2>&1 && break; sleep 0.5; done
     asegura_lab
 
@@ -378,6 +386,7 @@ cmd_down() {
     findmnt -rn -o TARGET | { grep -E "^($DATA_ROOT|$EXEC_ROOT|$RUN_DIR)(/|$)" || true; } | sort -r | while read -r m; do
         umount -l "$m" || log "no se pudo desmontar $m"
     done
+    ip link show bblab0 >/dev/null 2>&1 && ip link del bblab0 || true
     systemctl stop "$SLICE" 2>/dev/null || true
     systemctl revert "$SLICE" 2>/dev/null || true
     rm -rf --one-file-system "$DATA_ROOT" "$EXEC_ROOT" "$RUN_DIR"
