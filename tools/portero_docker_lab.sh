@@ -152,10 +152,15 @@ cmd_up() {
     escribe_configs
 
     # Tope del slice del laboratorio: --runtime (vive en /run, no en /etc; `down` lo revierte).
+    # BB_LAB_MEM sube el tope del laboratorio (por defecto 1G); nunca mas de 24G: es un slice de PRUEBA dentro de una maquina cuyo
+    # vLLM de produccion ya usa ~41 GiB de GPU, y la estampida del 11-oct fue justamente falta de techo.
+    local mem_bytes
+    mem_bytes=$(numfmt --from=iec "${BB_LAB_MEM:-1G}") || die "BB_LAB_MEM invalido: ${BB_LAB_MEM:-}"
+    [ "$mem_bytes" -le $((24 * 1024 * 1024 * 1024)) ] || die "BB_LAB_MEM=${BB_LAB_MEM} supera el maximo de 24G"
     systemctl start "$SLICE"
-    systemctl set-property --runtime "$SLICE" MemoryMax=1G MemorySwapMax=0 TasksMax=512
-    [ "$(cat "/sys/fs/cgroup/$SLICE/memory.max")" = 1073741824 ] ||
-        die "$SLICE no quedo con memory.max=1G: $(cat "/sys/fs/cgroup/$SLICE/memory.max" 2>&1)"
+    systemctl set-property --runtime "$SLICE" MemoryMax="$mem_bytes" MemorySwapMax=0 TasksMax=2048
+    [ "$(cat "/sys/fs/cgroup/$SLICE/memory.max")" = "$mem_bytes" ] ||
+        die "$SLICE no quedo con memory.max=$mem_bytes: $(cat "/sys/fs/cgroup/$SLICE/memory.max" 2>&1)"
 
     log "arrancando containerd de laboratorio ($CTRD_SOCK)"
     setsid containerd --config "$CONF_DIR/containerd.toml" >"$RUN_DIR/containerd.log" 2>&1 &
@@ -297,6 +302,51 @@ cmd_prueba() {
     [ "$FALLOS" -eq 0 ] && [ "$NO_CORRIO" -eq 0 ]
 }
 
+# --- vllm: arranca vLLM REAL (modelo chico) bajo el envoltorio, mide memoria y lo apaga -------------
+# Uso: sudo BB_LAB_MEM=16G BB_LAB_IMAGE=vllm/vllm-openai:v0.27.1 bash tools/portero_docker_lab.sh up
+#      sudo bash tools/portero_docker_lab.sh vllm [modelo=qwen3-8b-nvfp4] [gpu_gib=12]
+# Mide: tope de cgroup que dejo el envoltorio, pico de cgroup, MemAvailable minimo del anfitrion a 1 Hz durante la carga,
+# si el servidor responde una peticion, y que el contenedor se apaga y deja el lab limpio. Aborta (docker stop) si
+# MemAvailable baja de 12 GiB: el lab NO puede repetir lo que el techo evita.
+cmd_vllm() {
+    requiere_root vllm
+    guarda
+    asegura_lab
+    local modelo=${1:-qwen3-8b-nvfp4} gpu_gib=${2:-12} n=bblab-vllm cg t0 min_kb=999999999 estado=""
+    local ruta="/srv/ai/models/llm/$modelo"
+    [ -d "$ruta" ] || die "no existe el modelo $ruta"
+    case "$IMAGE" in vllm/*) ;; *) die "BB_LAB_IMAGE es '$IMAGE': para esta prueba debe ser una imagen vllm/* (cargala con up)";; esac
+    labdocker rm -f "$n" >/dev/null 2>&1 || true
+    local util
+    util=$(awk -v g="$gpu_gib" 'BEGIN{printf "%.3f", g/121.7}')
+    labdocker run -d --name "$n" --network none -e NVIDIA_VISIBLE_DEVICES=all -e VLLM_HOST_IP=127.0.0.1 \
+        --annotation "bb.gpu_budget_gib=$gpu_gib" -v "/srv/ai/models:/models:ro" \
+        "$IMAGE" "/models/llm/$modelo" --served-model-name prueba --gpu-memory-utilization "$util" \
+        --max-model-len 4096 --max-num-seqs 4 --host 127.0.0.1 --port 8000 >/dev/null || { anota "COULD_NOT_RUN vllm: docker run fallo (¿la imagen no tiene el entrypoint de vllm serve? ¿GPU sin anotacion?)"; return 1; }
+    cg=$(cgroup_de "$n") || { anota "COULD_NOT_RUN vllm: sin cgroup"; return 1; }
+    anota "# vllm $modelo gpu_gib=$gpu_gib util=$util imagen=$IMAGE"
+    anota "cgroup $cg memory.max=$(cat "$cg/memory.max") swap.max=$(cat "$cg/memory.swap.max") pids.max=$(cat "$cg/pids.max")"
+    t0=$(date +%s)
+    while [ $(( $(date +%s) - t0 )) -lt 900 ]; do
+        local av; av=$(awk '/MemAvailable/{print $2}' /proc/meminfo)
+        [ "$av" -lt "$min_kb" ] && min_kb=$av
+        if [ "$av" -lt $((12 * 1024 * 1024)) ]; then estado="ABORTADO: MemAvailable $((av / 1024)) MiB < 12 GiB"; break; fi
+        if labdocker exec "$n" python3 -c "import urllib.request,sys;sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=2).status==200 else 1)" >/dev/null 2>&1; then estado="LISTO en $(( $(date +%s) - t0 )) s"; break; fi
+        labdocker inspect -f '{{.State.Running}}' "$n" 2>/dev/null | grep -q true || { estado="MURIO: $(labdocker logs --tail 5 "$n" 2>&1 | tr '\n' ' ' | cut -c1-300)"; break; }
+        sleep 1  # blocking-sleep: espera acotada (900 s) del arranque de un modelo, 1 Hz para medir MemAvailable -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.8 -- revalidado 2026-10-12: arnes de laboratorio de una pasada
+    done
+    [ -n "$estado" ] || estado="TIMEOUT 900 s sin /health"
+    anota "estado: $estado"
+    anota "pico del cgroup: memory.peak=$(cat "$cg/memory.peak" 2>/dev/null || echo NOT_COLLECTED) bytes; MemAvailable minimo del anfitrion: $((min_kb / 1024)) MiB"
+    case "$estado" in LISTO*)
+        anota "peticion: $(labdocker exec "$n" python3 -c "import urllib.request,json;r=urllib.request.Request('http://127.0.0.1:8000/v1/completions',json.dumps({'model':'prueba','prompt':'1+1=','max_tokens':8}).encode(),{'Content-Type':'application/json'});print(json.load(urllib.request.urlopen(r,timeout=120))['choices'][0]['text'])" 2>&1 | tail -1 | cut -c1-120)";; esac
+    labdocker rm -f "$n" >/dev/null 2>&1 || true
+    mkdir -p "$EVIDENCIA"
+    printf '%s' "$SALIDA" >"$EVIDENCIA/prueba-vllm-$(date +%Y%m%dT%H%M%S).txt"
+    if [ -n "${SUDO_USER:-}" ]; then chown -R "$SUDO_USER:" "$EVIDENCIA"; fi
+    case "$estado" in LISTO*) return 0 ;; *) return 1 ;; esac
+}
+
 # Mata un proceso del laboratorio solo si su cmdline nombra rutas del laboratorio.
 para() {
     local pidf=$1 marca=$2 pid
@@ -339,6 +389,7 @@ case "${1:-}" in
     up) cmd_up ;;
     status) cmd_status ;;
     prueba) cmd_prueba ;;
+    vllm) shift; cmd_vllm "$@" ;;
     down) cmd_down ;;
-    *) echo "uso: sudo bash $0 up|status|prueba|down" >&2; exit 2 ;;
+    *) echo "uso: sudo bash $0 up|status|prueba|vllm|down" >&2; exit 2 ;;
 esac
