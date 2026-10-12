@@ -2252,6 +2252,42 @@ cmd_status_clock_lock() {
   return 1
 }
 
+# Regresion del kernel 7.0.0-1019 (hilo 383023 de Atlas, L20): KHO deja ~9.3 GiB
+# marcados MIGRATE_CMA fuera de la contabilidad y CmaTotal cae de 128 MiB a 0;
+# el hotfix oficial es `kho=off`, y el post #44 reporta un caso que persiste con
+# `kho=off`, por eso se exige TAMBIEN CmaTotal>0 y no solo el parametro. Se lee
+# /proc/version, /proc/cmdline y /proc/meminfo (BB_PROC_DIR los redirige en tests,
+# mismo precedente que BB_CGROUP_ROOT). Lo que no se pudo leer es NOT_COLLECTED,
+# nunca un sano inventado. ponytail: solo se evalua en el kernel nombrado; otro
+# kernel sin CMA no se juzga porque esa lectura no esta medida, al aparecer otro
+# kernel con la regresion se anade su release aqui.
+status_kernel_kho() {
+  local p="${BB_PROC_DIR:-/proc}" name="kernel sin la regresion KHO/CMA (7.0.0-1019)"
+  local ver cmd cma
+  ver=$(cat "$p/version" 2>/dev/null)
+  if [ -z "$ver" ]; then
+    cannot_run "$p/version" "ilegible o vacio"
+    ciego "$name" "NOT_COLLECTED: $p/version ilegible"
+    return
+  fi
+  case "$ver" in
+    "Linux version 7.0.0-1019"[!0-9]*) ;;
+    *) chk "$name" 0 ""; return ;;
+  esac
+  cmd=$(cat "$p/cmdline" 2>/dev/null)
+  cma=$(awk '/^CmaTotal:/{print $2; exit}' "$p/meminfo" 2>/dev/null)
+  if [ -z "$cmd" ] || ! [[ "$cma" =~ ^[0-9]+$ ]]; then
+    cannot_run "$p/cmdline o CmaTotal" "cmdline='${cmd:+leida}' CmaTotal='$cma'"
+    ciego "$name" "NOT_COLLECTED: kernel 7.0.0-1019 y no se pudo leer cmdline o CmaTotal"
+    return
+  fi
+  case " $cmd " in
+    *" kho=off "*) if [ "$cma" -gt 0 ]; then ok=0; else ok=1; fi ;;
+    *) ok=1 ;;
+  esac
+  chk "$name" "$ok" "KERNEL_CONOCIDO_MALO: 7.0.0-1019 con kho=off $( [[ " $cmd " == *" kho=off "* ]] && echo presente || echo AUSENTE ) y CmaTotal=${cma} kB (>0 exigido)"
+}
+
 # Consultar propiedades permite separar una unidad ausente de un bus ilegible.
 status_usable() {
   local query rc load active heartbeat since name
@@ -2488,6 +2524,8 @@ EOF
   # imprime "latencia del escritorio". 120s = 4 vueltas: holgura para jitter y
   # una sonda lenta, y un bucle colgado deja de verse en 2 min. Sin tuberia (ver earlyoom).
   status_usable
+
+  status_kernel_kho
 
   if [ -n "$(gateway_modelo)" ]; then ok=0; else ok=1; fi
   chk "motor de inferencia sirviendo" "$ok" "el gateway no responde en $GATEWAY_URL"
