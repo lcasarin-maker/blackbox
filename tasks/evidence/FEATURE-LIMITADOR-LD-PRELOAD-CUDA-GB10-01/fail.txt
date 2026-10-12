@@ -1,0 +1,3 @@
+FAIL (control negativo): sin la variable el mismo comando corre SIN tope; compilado Release no limita nada
+  D CONTROL NEGATIVO sin variable, 1024   -> OK alloc 1024 MiB, mem_get_info free 122773 MiB (corre SIN tope: falla abierto, como documenta KAI #2156)
+  * Primer intento compile Release (-fvisibility=hidden): los simbolos del hook quedan ocultos y NO limita nada, aunque imprime "Initializing". Un limitador mal compilado parece activo y no lo esta.

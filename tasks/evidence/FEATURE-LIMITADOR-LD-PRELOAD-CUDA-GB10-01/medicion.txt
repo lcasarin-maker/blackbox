@@ -1,0 +1,18 @@
+MEDICION 2026-10-12 - HAMi-core (Apache-2.0, commit 5ab7da1) en esta maquina (GB10, driver 580.178.04, torch 2.13.0+cu130)
+Compilado en copia aislada fuera del repo con las opciones de su build.sh (CMAKE_BUILD_TYPE=Debug); salida: ELF aarch64 libvgpu.so.
+Sujeto de prueba: prueba_torch.py.txt (torch.empty de N MiB en cuda) y prueba_rutas.py.txt (driver por ctypes). Nada toco el daemon ni vLLM; asignaciones de 1 GiB.
+
+Resultados literales:
+  A sin limitador, pide 1024 MiB          -> OK alloc 1024 MiB
+  B limite 512m, pide 1024 MiB            -> FALLA OutOfMemoryError "GPU 0 has a total capacity of 512.00 MiB of which 341.52 MiB is free"
+  C limite 512m, pide 256 MiB             -> OK alloc 256 MiB (mem_get_info free 85 MiB: el limitador FALSEA la memoria libre)
+  D CONTROL NEGATIVO sin variable, 1024   -> OK alloc 1024 MiB, mem_get_info free 122773 MiB (corre SIN tope: falla abierto, como documenta KAI #2156)
+Rutas (prueba_rutas, limite 512m, 1 GiB): cuMemAlloc_v2 rc=2 (OOM), cuMemAllocManaged rc=2 (OOM), cuMemAllocHost rc=0 (memoria fijada del anfitrion NO limitada). Sin limitador las tres rc=0.
+Dano / errores propios medidos:
+  * Primer intento compile Release (-fvisibility=hidden): los simbolos del hook quedan ocultos y NO limita nada, aunque imprime "Initializing". Un limitador mal compilado parece activo y no lo esta.
+  * Costo: 2000 asignaciones+liberaciones, tres repeticiones, sin 1.173/0.682/0.961 s, con 0.650/0.888/1.040 s: el ruido (0.65 a 1.17) es mayor que cualquier diferencia; no se puede afirmar costo ni ahorro.
+  * Crea /tmp/cudevshr.cache (2 MB, modo rw-rw-rw-) compartido entre procesos.
+  * mem_get_info falseado: vLLM calcula su presupuesto con ella; con limite bajo vLLM veria memoria total = limite.
+No probado: arranque real de vLLM bajo el limitador, cuMemCreate/cuMemMap, asignaciones por malloc/ATS (HAMi no las intercepta segun la cosecha), varios procesos compartiendo la cache.
+
+limitador_cuda_probado: rechaza sobre el tope (B), pasa bajo el tope (C), control negativo sin variable corre sin tope (D), rutas device y managed cubiertas, host fijado no.

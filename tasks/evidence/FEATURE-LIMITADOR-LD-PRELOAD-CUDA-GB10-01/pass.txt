@@ -1,0 +1,4 @@
+PASS: el limitador rechaza sobre el tope y deja pasar bajo el tope (HAMi-core Debug, GB10, torch 2.13+cu130)
+  B limite 512m, pide 1024 MiB            -> FALLA OutOfMemoryError "GPU 0 has a total capacity of 512.00 MiB of which 341.52 MiB is free"
+  C limite 512m, pide 256 MiB             -> OK alloc 256 MiB (mem_get_info free 85 MiB: el limitador FALSEA la memoria libre)
+Rutas (prueba_rutas, limite 512m, 1 GiB): cuMemAlloc_v2 rc=2 (OOM), cuMemAllocManaged rc=2 (OOM), cuMemAllocHost rc=0 (memoria fijada del anfitrion NO limitada). Sin limitador las tres rc=0.
