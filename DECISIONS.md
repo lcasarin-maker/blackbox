@@ -239,3 +239,10 @@ camino es el que se toma, aunque cueste más pasos.
 - **Motivo:** las distros alternas reportan Ethernet ConnectX-7 inestable (Fedora), kernel estándar con Ethernet rota (NixOS) y herramientas NVIDIA que no corren fuera de DGX OS; el canal oficial es el único con soporte, y la máquina sirve a Atlas y a vLLM. El hilo 373655 (Ubuntu 26.04 + 610) midió rendimiento igual (±0.6 %) y no probó `dmem`; el problema de memoria que no se libera persiste ahí.
 - **Descartado:** migrar la ATOM (riesgo de red y pérdida de soporte sin ganancia medida); subir de rama de driver por `apt` (quita toda la rama 580 y mezcla módulos 610 con bibliotecas 615; medido con simulaciones).
 - **Se reabre si:** una distro alterna publica un mecanismo que cierre uno de los huecos de `FEATURE-DMEM-*` o `FEATURE-LIMITADOR-*` con evidencia en GB10, o si DGX OS deja de ofrecer parches de seguridad para 580.
+
+## 2026-10-12 — Se amplía la línea base de deuda para poder publicar antes del reinicio con el módulo parcheado (Luis)
+
+- **Decidido:** `.simplecode/backlog_baseline.json` incorpora las 33 fichas abiertas nuevas (colapsos del 11-oct, portero, runtime OCI, dmem, cosecha de distros) y retira las 9 que ya no están en `tasks/backlog`. La fecha de caducidad (2026-11-06) no cambia.
+- **Motivo:** Luis pidió árboles limpios, todo publicado y trabajo reanudable antes del reinicio; sin esto el gate de deuda rechaza el push mientras haya fichas abiertas fuera de la lista, aunque cada una tenga su `close_check` fallando a propósito.
+- **Descartado:** mover fichas fuera de `tasks/backlog` (oculta deuda real a `zero-debt`) y cerrarlas sin evidencia.
+- **Pendiente:** si para el 2026-11-06 siguen abiertas, el gate vuelve a bloquear.

@@ -7,6 +7,7 @@ import runpy
 import sys
 import zipfile
 from pathlib import Path
+from typing import NoReturn
 
 # runtime-resolver:v1 -- the hook preamble reads this marker: a runner that
 # carries it finds and verifies its own runtime.zip, so a clone with a
@@ -15,7 +16,7 @@ here = Path(__file__).resolve().parent
 lock_path = here / "kit.lock"
 
 
-def refuse(message):
+def refuse(message: str) -> NoReturn:
     print(f"[simplecode] COULD_NOT_RUN: {message}", file=sys.stderr)
     raise SystemExit(2)
 
@@ -33,7 +34,7 @@ mother = Path(os.environ.get("SIMPLECODE_MOTHER") or Path.home() / "projects" / 
 # Only a bundle whose sha256 IS the lock's is ever imported; the order is
 # local copy, the cache `sync` fills, then the mother checkout.
 runtime = None
-tried = []
+tried: list[str] = []
 for candidate in (here / "runtime.zip", cached, mother / ".simplecode" / "runtime.zip"):
     try:
         bundle = candidate.read_bytes()
