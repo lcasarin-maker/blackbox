@@ -36,3 +36,16 @@ Comandos: `apt-get -s install nvidia-driver-610-open linux-modules-nvidia-610-op
 - **Herramientas propias que leen `nvidia-smi` y los mensajes NVRM** (muestreador, freno termico que consulta Atlas, firmas) podrian cambiar de formato: no medido.
 - **DGX OS:** repos `nvidia-dgx` y `nvidia-spark-repo` y `dgx-spark-ota-update-meta` presentes: una actualizacion OTA podria reimponer 580; no medido.
 Conclusion: por apt NO hay una subida limpia ni reversible garantizada; el backport con la MISMA version 580.178.04 evita el cambio de bibliotecas y de contenedor, a costa de enrolar una llave MOK (reversible con `mokutil --delete`).
+
+## Medicion previa al backport (2026-10-12, voto "medir primero")
+
+Medido en esta maquina (driver 580.178.04), sin tocar el driver:
+- `nvidia-smi -q -d MEMORY`: `FB Memory Usage Total/Reserved/Used/Free = N/A` y `BAR1 = N/A`. GB10 no declara framebuffer dedicado.
+- `nvidia-smi --query-compute-apps` de un proceso torch: 196 MiB -> 2244 MiB tras 2 GiB -> 4292 MiB tras 4 GiB -> 194 MiB al liberar. El driver contabiliza por proceso, pero eso es otra via (RM por cliente), no la de memacct.
+
+Leido en el codigo 615 (`src/nvidia/src/kernel/mem_mgr/`):
+- `memacct.c`: la region se crea con `memmgrGetTotalRamSizeBytes(...)` y si es 0 hace `region %llx zero size, ignoring` y retorna sin registrar.
+- `video_mem.c:621-629`: `memacctTryCharge` solo corre si el atributo es `NVOS32_ATTR_LOCATION_VIDMEM`.
+
+Inferencia (no probada): con FB total N/A, el tamano de la region puede ser 0 y memacct no registrar nada; y si las asignaciones de GB10 son de sysmem, tampoco pasan por `video_mem.c`. En ese caso el backport es esfuerzo sin efecto. Lo que lo confirmaria o refutaria: cargar el modulo 615 en un entorno aislado con `LEVEL_INFO` y leer `/sys/fs/cgroup/dmem.capacity` (exige modulos propios, es decir MOK) o encontrar en 615 la salida de `memmgrGetTotalRamSizeBytes` para GB10 (no leido todavia).
+Estado: el backport queda condicionado; no se pide la llave MOK hasta leer esa funcion para chip GB10.
