@@ -1,0 +1,180 @@
+# Modulo construido: $S/nv580/kernel-open/nvidia.ko, copiado a $S/nvidia-580-memacct/nvidia.ko (sin firmar; nada del sistema tocado)
+# $S=/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad
+$ sha256sum kernel-open/nvidia.ko /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/nvidia-580-memacct/nvidia.ko
+bf817b6b573aed6c131df23f42e6b37e7f0579e11fbcd60112c3396e3067c078  kernel-open/nvidia.ko
+bf817b6b573aed6c131df23f42e6b37e7f0579e11fbcd60112c3396e3067c078  /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/nvidia-580-memacct/nvidia.ko
+[rc=0]
+
+$ modinfo kernel-open/nvidia.ko
+filename:       /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/nv580/kernel-open/nvidia.ko
+import_ns:      DMA_BUF
+alias:          char-major-195-*
+description:    NVIDIA core GPU kernel module
+version:        580.178.04
+supported:      external
+license:        Dual MIT/GPL
+firmware:       nvidia/580.178.04/gsp_tu10x.bin
+firmware:       nvidia/580.178.04/gsp_ga10x.bin
+softdep:        pre: ecdh_generic,ecdsa_generic
+srcversion:     73BC7E52961D5FE2E16A551
+alias:          pci:v000010DEd*sv*sd*bc06sc80i00*
+alias:          pci:v000010DEd*sv*sd*bc03sc02i00*
+alias:          pci:v000010DEd*sv*sd*bc03sc00i00*
+alias:          of:N*T*Cnvidia,tegra264-displayC*
+alias:          of:N*T*Cnvidia,tegra264-display
+alias:          of:N*T*Cnvidia,tegra234-displayC*
+alias:          of:N*T*Cnvidia,tegra234-display
+depends:        
+name:           nvidia
+vermagic:       6.17.0-1032-nvidia SMP preempt mod_unload modversions aarch64
+parm:           NvSwitchRegDwords:NvSwitch regkey (charp)
+parm:           NvSwitchBlacklist:NvSwitchBlacklist=uuid[,uuid...] (charp)
+parm:           NVreg_ResmanDebugLevel:int
+parm:           NVreg_RmLogonRC:int
+parm:           NVreg_ModifyDeviceFiles:int
+parm:           NVreg_DeviceFileUID:int
+parm:           NVreg_DeviceFileGID:int
+parm:           NVreg_DeviceFileMode:int
+parm:           NVreg_InitializeSystemMemoryAllocations:int
+parm:           NVreg_UsePageAttributeTable:int
+parm:           NVreg_EnablePCIeGen3:int
+parm:           NVreg_EnableMSI:int
+parm:           NVreg_EnableStreamMemOPs:int
+parm:           NVreg_RestrictProfilingToAdminUsers:int
+parm:           NVreg_PreserveVideoMemoryAllocations:int
+parm:           NVreg_EnableS0ixPowerManagement:int
+parm:           NVreg_S0ixPowerManagementVideoMemoryThreshold:int
+parm:           NVreg_DynamicPowerManagement:int
+parm:           NVreg_DynamicPowerManagementVideoMemoryThreshold:int
+parm:           NVreg_EnableGpuFirmware:int
+parm:           NVreg_EnableGpuFirmwareLogs:int
+parm:           NVreg_OpenRmEnableUnsupportedGpus:int
+parm:           NVreg_EnableUserNUMAManagement:int
+parm:           NVreg_MemoryPoolSize:int
+parm:           NVreg_KMallocHeapMaxSize:int
+parm:           NVreg_VMallocHeapMaxSize:int
+parm:           NVreg_IgnoreMMIOCheck:int
+parm:           NVreg_NvLinkDisable:int
+parm:           NVreg_EnablePCIERelaxedOrderingMode:int
+parm:           NVreg_RegisterPCIDriver:int
+parm:           NVreg_RegisterPlatformDeviceDriver:int
+parm:           NVreg_EnableResizableBar:int
+parm:           NVreg_EnableDbgBreakpoint:int
+parm:           NVreg_EnableNonblockingOpen:int
+parm:           NVreg_CoherentGPUMemoryMode:charp
+parm:           NVreg_RegistryDwords:charp
+parm:           NVreg_RegistryDwordsPerDevice:charp
+parm:           NVreg_RmMsg:charp
+parm:           NVreg_GpuBlacklist:charp
+parm:           NVreg_TemporaryFilePath:charp
+parm:           NVreg_ExcludedGpus:charp
+parm:           NVreg_DmaRemapPeerMmio:int
+parm:           NVreg_RmNvlinkBandwidth:charp
+parm:           NVreg_RmNvlinkBandwidthLinkCount:int
+parm:           NVreg_ImexChannelCount:int
+parm:           NVreg_CreateImexChannel0:int
+parm:           NVreg_GrdmaPciTopoCheckOverride:int
+parm:           rm_firmware_active:charp
+[rc=0]
+
+$ modinfo -F vermagic kernel-open/nvidia.ko
+6.17.0-1032-nvidia SMP preempt mod_unload modversions aarch64
+[rc=0]
+
+$ modinfo kernel-open/nvidia.ko | grep -c '^sig'
+0
+[rc=1]
+
+$ nm kernel-open/nvidia.ko | grep -E 'dmem_cgroup|memacct|bbMemmgr|osCgroup|osClientGroupID|osMemacct|os_cgroup'
+0000000000255e70 T bbMemmgrGetHeapFreeBytes
+0000000000255e00 T bbMemmgrGetTotalRamSizeBytes
+                 U dmem_cgroup_register_region
+                 U dmem_cgroup_state_evict_valuable
+                 U dmem_cgroup_try_charge
+                 U dmem_cgroup_uncharge
+                 U dmem_cgroup_unregister_region
+000000000000cf00 b g_memacct
+00000000002e2d10 T memacctIncrementChargeRefCount
+00000000002e3300 T memacctInitGpuInfo
+00000000002e31d0 T memacctReleaseCharge
+00000000002e3540 T memacctRemoveGpu
+00000000002e2d30 T memacctTryCharge
+000000000013b650 T osCgroupCanEvict
+0000000000021f18 T os_cgroup_for_pid
+0000000000021ee8 T os_cgroup_implementation
+000000000013b420 T osCgroupImplementation
+0000000000021ff8 T os_cgroup_parent
+000000000013b640 T osCgroupParent
+000000000013b5a0 T osCgroupRegisterRegion
+000000000013b610 T osCgroupUnregisterRegion
+000000000013b550 T osClientGroupID
+0000000000022020 T os_dmem_cgroup_register_region
+0000000000022240 T os_dmem_cgroup_state_evict_valuable
+0000000000022170 T os_dmem_cgroup_try_charge
+00000000000221f8 T os_dmem_cgroup_uncharge
+00000000000220d8 T os_dmem_cgroup_unregister_region
+000000000013b630 T osMemacctReleaseCharge
+000000000013b620 T osMemacctTryCharge
+[rc=0]
+
+$ strings kernel-open/nvidia.ko | grep -E 'nvidia/%08X|vermagic=|bb-patch|RmMemacctMode'
+RmMemacctMode
+nvidia/%08X:%02X:%02X.0/vidmem
+NVRM: [zero-FB] bb-patch memacct region size %llu
+vermagic=6.17.0-1032-nvidia SMP preempt mod_unload modversions aarch64
+[rc=0]
+
+# El nucleo RM (nv-kernel.o) llama a la capa Linux real (NV_LINUX), no a las macros stub:
+$ nm src/nvidia/_out/Linux_aarch64/nv-kernel.o | grep -E ' (U|T) (os_dmem_cgroup_[a-z_]+|os_cgroup_implementation|os_cgroup_for_pid|memacct[A-Za-z]+|bbMemmgr[A-Za-z]+)$'
+000000000021d580 T bbMemmgrGetHeapFreeBytes
+000000000021d510 T bbMemmgrGetTotalRamSizeBytes
+00000000002aa420 T memacctIncrementChargeRefCount
+00000000002aaa10 T memacctInitGpuInfo
+00000000002aa8e0 T memacctReleaseCharge
+00000000002aac50 T memacctRemoveGpu
+00000000002aa440 T memacctTryCharge
+                 U os_cgroup_for_pid
+                 U os_cgroup_implementation
+                 U os_dmem_cgroup_register_region
+                 U os_dmem_cgroup_state_evict_valuable
+                 U os_dmem_cgroup_try_charge
+                 U os_dmem_cgroup_uncharge
+                 U os_dmem_cgroup_unregister_region
+[rc=0]
+
+# Sitios de cobro enlazados (relocaciones de llamada):
+$ objdump -dr src/nvidia/_out/Linux_aarch64/video_mem.o | grep -E 'R_AARCH64_CALL26.*memacct'
+			30: R_AARCH64_CALL26	memacctReleaseCharge
+			2d8: R_AARCH64_CALL26	memacctTryCharge
+			b30: R_AARCH64_CALL26	memacctIncrementChargeRefCount
+			c30: R_AARCH64_CALL26	memacctReleaseCharge
+			1198: R_AARCH64_CALL26	memacctReleaseCharge
+[rc=0]
+
+$ objdump -dr src/nvidia/_out/Linux_aarch64/mem_mgr.o | grep -E 'R_AARCH64_CALL26.*memacct'
+			1c: R_AARCH64_CALL26	memacctRemoveGpu
+			59c: R_AARCH64_CALL26	memacctInitGpuInfo
+[rc=0]
+
+# Exports del kernel destino que usa el modulo:
+$ grep -E '\s(dmem_cgroup_[a-z_]+|dmem_cgrp_subsys_enabled_key|misc_cgrp_subsys_enabled_key)\s' /lib/modules/6.17.0-1032-nvidia/build/Module.symvers
+0x546c19d9	misc_cgrp_subsys_enabled_key	vmlinux	EXPORT_SYMBOL_GPL	
+0x546c19d9	dmem_cgrp_subsys_enabled_key	vmlinux	EXPORT_SYMBOL_GPL	
+0x6303cfda	dmem_cgroup_state_evict_valuable	vmlinux	EXPORT_SYMBOL_GPL	
+0x803f8281	dmem_cgroup_unregister_region	vmlinux	EXPORT_SYMBOL_GPL	
+0x9830e2af	dmem_cgroup_register_region	vmlinux	EXPORT_SYMBOL_GPL	
+0x05ebce6a	dmem_cgroup_pool_state_put	vmlinux	EXPORT_SYMBOL_GPL	
+0xf707418e	dmem_cgroup_uncharge	vmlinux	EXPORT_SYMBOL_GPL	
+0xe9ccb4dd	dmem_cgroup_try_charge	vmlinux	EXPORT_SYMBOL_GPL	
+[rc=0]
+
+$ grep -n 'CGROUP_DMEM\|CGROUP_MISC' /lib/modules/6.17.0-1032-nvidia/build/.config
+215:CONFIG_CGROUP_DMEM=y
+224:CONFIG_CGROUP_MISC=y
+[rc=0]
+
+$ cat kernel-open/conftest/compile-tests/dmem_cgrp_id.h kernel-open/conftest/compile-tests/misc_cgrp_id.h
+#define NV_DMEM_CGROUP_PRESENT
+#define NV_MISC_CGROUP_PRESENT
+[rc=0]
+

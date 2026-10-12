@@ -1,0 +1,42 @@
+# Firma de dmem_cgroup_register_region: kernel destino vs llamada de 615
+$ grep -n -A0 'dmem_cgroup_register_region\|dmem_cgroup_try_charge' /lib/modules/6.17.0-1032-nvidia/build/include/linux/cgroup_dmem.h
+18:struct dmem_cgroup_region *dmem_cgroup_register_region(u64 size, const char *name_fmt, ...) __printf(2,3);
+--
+20:int dmem_cgroup_try_charge(struct dmem_cgroup_region *region, u64 size,
+--
+31:dmem_cgroup_register_region(u64 size, const char *name_fmt, ...)
+--
+39:static inline int dmem_cgroup_try_charge(struct dmem_cgroup_region *region, u64 size,
+[rc=0]
+
+$ sed -n 3029,3048p /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/nv_src/615/kernel-open/nvidia/os-interface.c
+void* NV_API_CALL os_dmem_cgroup_register_region(const char *name, NvU64 size, NvU64 precharge, void **prechargePool)
+{
+    void *region = dmem_cgroup_register_region(size, name);
+    if (IS_ERR(region))
+    {
+        return NULL;
+    }
+
+    if (precharge > 0)
+    {
+        int err = dmem_cgroup_try_charge(region, precharge, (struct dmem_cgroup_pool_state **)prechargePool, NULL);
+        if (err)
+        {
+            dmem_cgroup_unregister_region(region);
+            region = NULL;
+        }
+    }
+
+    return region;
+}
+[rc=0]
+
+# 615 pasa 'name' como name_fmt (formato printf). La firma real es (u64 size, const char *name_fmt, ...) __printf(2,3).
+# Adaptacion en 580: dmem_cgroup_register_region(size, "%s", name) y IS_ERR_OR_NULL (la variante sin CONFIG_CGROUP_DMEM devuelve NULL).
+$ grep -n 'dmem_cgroup_register_region(size\|IS_ERR_OR_NULL(region)' /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/nv580/kernel-open/nvidia/os-interface.c
+2821:    void *region = dmem_cgroup_register_region(size, "%s", name);
+2822:    if (IS_ERR_OR_NULL(region))
+[rc=0]
+
+# try_charge / uncharge / unregister / evict_valuable: misma firma que usa 615, sin cambios.

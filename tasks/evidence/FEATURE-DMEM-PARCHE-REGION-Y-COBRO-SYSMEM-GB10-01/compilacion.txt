@@ -1,0 +1,84 @@
+# Compilacion de 580.178.04 + memacct (rama dmem-port en $S/nv580, base c8e699821c23e4335bf23330a54a23d15cfb95e9)
+# $S=/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad
+# Comando (los tres intentos), en $S/nv580:
+$ systemd-run --user --scope -p MemoryMax=8G -p MemorySwapMax=0 -p TasksMax=2000 nice -n 10 -- make modules -j4 SYSSRC=/lib/modules/6.17.0-1032-nvidia/build > ../buildN.log 2>&1; echo "EXIT=$?" >> ../buildN.log
+
+## Intento 1 (build1.log): FALLO
+$ grep -n 'error:\|Error [0-9]\|EXIT=' /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/build1.log
+1084:src/kernel/mem_mgr/memacct.c:438:25: error: implicit declaration of function ‘gpumgrIsSafeToReadGpuInfo’ [-Werror=implicit-function-declaration]
+1097:make[1]: *** [Makefile:204: _out/Linux_aarch64/memacct.o] Error 1
+1100:make: *** [Makefile:34: src/nvidia/_out/Linux_aarch64/nv-kernel.o] Error 2
+1101:EXIT=2
+[rc=0]
+
+Arreglo: #include "gpu_mgr/gpu_mgr.h" en memacct.c (en 580 gpu.h no declara gpumgrIsSafeToReadGpuInfo).
+
+## Intento 2 (build2.log): FALLO
+$ grep -n 'error:\|Error [0-9]\|EXIT=' /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/build2.log
+492:nvidia/os-interface.c:2821:20: error: implicit declaration of function ‘dmem_cgroup_register_region’; did you mean ‘drmm_cgroup_register_region’? [-Werror=implicit-function-declaration]
+497:nvidia/os-interface.c:2829:19: error: implicit declaration of function ‘dmem_cgroup_try_charge’; did you mean ‘os_dmem_cgroup_try_charge’? [-Werror=implicit-function-declaration]
+501:nvidia/os-interface.c:2832:13: error: implicit declaration of function ‘dmem_cgroup_unregister_region’; did you mean ‘os_dmem_cgroup_unregister_region’? [-Werror=implicit-function-declaration]
+506:nvidia/os-interface.c:2843:9: error: implicit declaration of function ‘dmem_cgroup_uncharge’; did you mean ‘mem_cgroup_uncharge’? [-Werror=implicit-function-declaration]
+511:nvidia/os-interface.c:2868:28: error: implicit declaration of function ‘dmem_cgroup_state_evict_valuable’; did you mean ‘os_dmem_cgroup_state_evict_valuable’? [-Werror=implicit-function-declaration]
+519:make[5]: *** [/usr/src/linux-headers-6.17.0-1032-nvidia/scripts/Makefile.build:287: nvidia/os-interface.o] Error 1
+521:make[4]: *** [/usr/src/linux-headers-6.17.0-1032-nvidia/Makefile:2017: .] Error 2
+522:make[3]: *** [/usr/src/linux-headers-6.17.0-1032-nvidia/Makefile:248: __sub-make] Error 2
+524:make[2]: *** [Makefile:248: __sub-make] Error 2
+526:make[1]: *** [Makefile:115: modules] Error 2
+528:make: *** [Makefile:59: modules] Error 2
+529:EXIT=2
+[rc=0]
+
+Arreglo: el bloque #include <linux/cgroup.h>/<linux/cgroup_dmem.h> habia quedado DENTRO de #if defined(CONFIG_LOCKDEP) en os-interface.c (error mio de insercion); movido despues del #endif.
+
+## Intento 3 (build3.log): COMPILA
+$ grep -c 'error:' /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/build3.log
+0
+[rc=1]
+
+$ grep -n 'WARNING: modpost\|undefined!' /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/build3.log
+[rc=1]
+
+$ tail -40 /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/build3.log
+  CC [M]  nvidia-drm/nvidia-drm-gem-nvkms-memory.o
+  CC [M]  nvidia-drm/nvidia-drm-gem-user-memory.o
+  CC [M]  nvidia-drm/nvidia-drm-gem-dma-buf.o
+  CC [M]  nvidia-drm/nvidia-drm-format.o
+  CC [M]  nvidia-drm/nvidia-drm-os-interface.o
+  CC [M]  nvidia-drm/nvidia-drm-linux.o
+  CC [M]  nvidia-peermem/nvidia-peermem.o
+  LD [M]  nvidia.o
+  LD [M]  nvidia-uvm.o
+  LD [M]  nvidia-modeset.o
+  LD [M]  nvidia-drm.o
+ld -r -o nvidia/nv-interface.o nvidia/nv-platform.o nvidia/nv-dsi-parse-panel-props.o nvidia/nv-bpmp.o nvidia/nv-gpio.o nvidia/nv-backlight.o nvidia/nv-imp.o nvidia/nv-platform-pm.o nvidia/nv-ipc-soc.o nvidia/nv.o nvidia/nv-pci.o nvidia/nv-dmabuf.o nvidia/nv-nano-timer.o nvidia/nv-acpi.o nvidia/nv-cray.o nvidia/nv-dma.o nvidia/nv-i2c.o nvidia/nv-mmap.o nvidia/nv-p2p.o nvidia/nv-pat.o nvidia/nv-procfs.o nvidia/nv-usermap.o nvidia/nv-vm.o nvidia/nv-vtophys.o nvidia/os-interface.o nvidia/os-mlock.o nvidia/os-pci.o nvidia/os-registry.o nvidia/os-usermap.o nvidia/nv-modeset-interface.o nvidia/nv-pci-table.o nvidia/nv-kthread-q.o nvidia/nv-memdbg.o nvidia/nv-report-err.o nvidia/nv-rsync.o nvidia/nv-msi.o nvidia/nv-caps.o nvidia/nv-caps-imex.o nvidia/nv-clk.o nvidia/nv-host1x.o nvidia/nv_uvm_interface.o nvidia/libspdm_aead.o nvidia/libspdm_ecc.o nvidia/libspdm_hkdf.o nvidia/libspdm_rand.o nvidia/libspdm_shash.o nvidia/libspdm_rsa.o nvidia/libspdm_aead_aes_gcm.o nvidia/libspdm_sha.o nvidia/libspdm_hmac_sha.o nvidia/libspdm_internal_crypt_lib.o nvidia/libspdm_hkdf_sha.o nvidia/libspdm_ec.o nvidia/libspdm_x509.o nvidia/libspdm_rsa_ext.o nvidia/nvlink_linux.o nvidia/nvlink_caps.o nvidia/linux_nvswitch.o nvidia/procfs_nvswitch.o nvidia/i2c_nvswitch.o
+ld -r -o nvidia-modeset/nv-modeset-interface.o nvidia-modeset/nvidia-modeset-linux.o nvidia-modeset/nv-kthread-q.o
+  LD [M]  nvidia-peermem.o
+  MODPOST Module.symvers
+  CC [M]  nvidia.mod.o
+  CC [M]  .module-common.o
+  CC [M]  nvidia-uvm.mod.o
+  CC [M]  nvidia-modeset.mod.o
+  CC [M]  nvidia-drm.mod.o
+  CC [M]  nvidia-peermem.mod.o
+  LD [M]  nvidia.ko
+  LD [M]  nvidia-modeset.ko
+  BTF [M] nvidia-modeset.ko
+Skipping BTF generation for nvidia-modeset.ko due to unavailability of vmlinux
+  LD [M]  nvidia-uvm.ko
+  BTF [M] nvidia.ko
+Skipping BTF generation for nvidia.ko due to unavailability of vmlinux
+  LD [M]  nvidia-peermem.ko
+  BTF [M] nvidia-peermem.ko
+Skipping BTF generation for nvidia-peermem.ko due to unavailability of vmlinux
+  LD [M]  nvidia-drm.ko
+  BTF [M] nvidia-uvm.ko
+Skipping BTF generation for nvidia-uvm.ko due to unavailability of vmlinux
+  BTF [M] nvidia-drm.ko
+Skipping BTF generation for nvidia-drm.ko due to unavailability of vmlinux
+make[3]: se sale del directorio '/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/nv580/kernel-open'
+make[2]: se sale del directorio '/usr/src/linux-headers-6.17.0-1032-nvidia'
+make[1]: se sale del directorio '/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/nv580/kernel-open'
+EXIT=0
+[rc=0]
+

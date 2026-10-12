@@ -1,0 +1,152 @@
+# CONTROL NEGATIVO del parche zero-FB.  $S=/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad
+## 1) 615 sin parche: en zero-FB devuelve 0 (fuente citada)
+$ sed -n 4178,4194p /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/nv_src/615/src/nvidia/src/kernel/gpu/mem_mgr/mem_mgr.c
+NvU64 memmgrGetTotalRamSizeBytes_IMPL
+(
+    OBJGPU *pGpu,
+    MemoryManager *pMemoryManager,
+    KernelMemorySystem *pKernelMemorySystem,
+    Heap *pHeap,
+    Heap *pMemoryPartitionHeap,
+    NvBool bIsPmaEnabled
+)
+{
+    NvU64 size = 0;
+
+    if (pGpu->pGpuArch->bGpuArchIsZeroFb)
+    {
+        NV_PRINTF(LEVEL_INFO,
+            "[zero-FB, No local RAM] TOTAL_RAM_SIZE = 0\n");
+    }
+[rc=0]
+
+$ sed -n 4216,4230p /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/nv_src/615/src/nvidia/src/kernel/gpu/mem_mgr/mem_mgr.c
+NvU64 memmgrGetHeapFreeBytes_IMPL
+(
+    OBJGPU *pGpu,
+    MemoryManager *pMemoryManager,
+    KernelMIGManager *pKernelMIGManager,
+    Heap *pHeap,
+    NvBool bIsPmaEnabled,
+    NvBool bIsMIG
+)
+{
+    NvU64 bytesFree = 0;
+
+    if (pGpu->pGpuArch->bGpuArchIsZeroFb)
+    {
+        NV_PRINTF(LEVEL_INFO, "[zero-FB, No local HEAP] HEAP_SIZE = 0\n");
+[rc=0]
+
+# y memacct ignora la GPU con size 0:
+$ grep -n -A4 'size = memmgrGetTotalRamSizeBytes' /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/nv_src/615/src/nvidia/src/kernel/mem_mgr/memacct.c
+465:    size = memmgrGetTotalRamSizeBytes(pGpu, pMemoryManager, pKernelMemorySystem, pHeap, NULL,
+466-        bIsPmaEnabled);
+467-    if (size == 0)
+468-    {
+469-        NV_PRINTF(LEVEL_INFO, "region %llx zero size, ignoring\n", id);
+[rc=0]
+
+## 2) 580: no existen memmgrGetTotalRamSizeBytes/memmgrGetHeapFreeBytes (por eso se crean bbMemmgr*); el predicado zero-FB en 580 es PDB_PROP_GPU_ZERO_FB
+$ git -C /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/nv580 grep -c 'memmgrGetTotalRamSizeBytes\|memmgrGetHeapFreeBytes\|bGpuArchIsZeroFb' c8e699821c23e4335bf23330a54a23d15cfb95e9 -- src/nvidia
+[rc=1]
+
+$ sed -n 214,224p generated/g_gpu_nvoc.c
+    // NVOC Property Hal field -- PDB_PROP_GPU_ZERO_FB
+    if (( ((chipHal_HalVarIdx >> 5) == 1UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x80000000UL) ) ||
+        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x00000c00UL) )) /* ChipHal: GB10B | GB20B | GB20C */ 
+    {
+        pThis->setProperty(pThis, PDB_PROP_GPU_ZERO_FB, NV_TRUE);
+    }
+    // default
+    else
+    {
+        pThis->setProperty(pThis, PDB_PROP_GPU_ZERO_FB, NV_FALSE);
+    }
+[rc=0]
+
+## 3) Mismo fuente compilado dos veces: con parche (build real) y con -DBB_NO_ZEROFB_PATCH (comportamiento 615).
+# Comando del objeto sin parche (el del Makefile de RM, con -DBB_NO_ZEROFB_PATCH y otra salida), bajo systemd-run MemoryMax=8G:
+$ cat /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/negctl_zerofb/cmd.txt
+cc -DBB_NO_ZEROFB_PATCH -Wall -fno-strict-aliasing -fno-omit-frame-pointer -Wformat=2   -Wno-unused-parameter  -O2  -DNV_LINUX -DNV_AARCH64 -DNV_ARCH_BITS=64 -include ../common/sdk/nvidia/inc/cpuopsys.h -I kernel/inc -I interface -I ../common/sdk/nvidia/inc -I ../common/sdk/nvidia/inc/hw -I arch/nvalloc/common/inc -I arch/nvalloc/common/inc/gsp -I arch/nvalloc/common/inc/deprecated -I arch/nvalloc/unix/include -I inc -I inc/os -I ../common/shared/inc -I ../common/shared/msgq/inc -I ../common/inc -I ../common/uproc/os/libos-v2.0.0/include -I ../common/uproc/os/common/include -I ../common/inc/swref -I ../common/inc/swref/published -I generated -I ../common/nvswitch/kernel/inc -I ../common/nvswitch/interface -I ../common/nvswitch/common/inc/ -I ../common/inc/displayport -I ../common/nvlink/interface/ -I ../common/nvlink/inband/interface -I src/mm/uvm/interface -I inc/libraries -I src/libraries -I inc/kernel -I ../common/mbedtls/3.6.2/include -I ../common/mbedtls/3.6.2/nvidia -D"MBEDTLS_USER_CONFIG_FILE=<nvrm_mbedtls_config.h>" -Werror-implicit-function-declaration -Wwrite-strings -Wundef -fno-common -ffreestanding -fno-stack-protector -mgeneral-regs-only -march=armv8-a -mstrict-align -ffixed-x18 -fno-pic -D_LANGUAGE_C -D__NO_CTYPE -DNVRM -DLOCK_VAL_ENABLED=0 -DPORT_ATOMIC_64_BIT_SUPPORTED=1 -DPORT_IS_KERNEL_BUILD=1 -DPORT_IS_CHECKED_BUILD=0 -DPORT_MODULE_atomic=1 -DPORT_MODULE_core=1 -DPORT_MODULE_cpu=1 -DPORT_MODULE_crypto=1 -DPORT_MODULE_debug=1 -DPORT_MODULE_memory=1 -DPORT_MODULE_safe=1 -DPORT_MODULE_string=1 -DPORT_MODULE_sync=1 -DPORT_MODULE_thread=1 -DPORT_MODULE_util=1 -DPORT_MODULE_example=0 -DPORT_MODULE_mmio=0 -DPORT_MODULE_time=0 -DRS_STANDALONE=0 -DRS_STANDALONE_TEST=0 -DRS_COMPATABILITY_MODE=1 -DRS_PROVIDES_API_STATE=0 -DNV_CONTAINERS_NO_TEMPLATES -DINCLUDE_NVLINK_LIB -DINCLUDE_NVSWITCH_LIB -DNV_PRINTF_STRINGS_ALLOWED=1 -DNV_ASSERT_FAILED_USES_STRINGS=1 -DPORT_ASSERT_FAILED_USES_STRINGS=1 -ffunction-sections -fdata-sections -mno-outline-atomics -Wstrict-prototypes -Wold-style-definition -Wno-format-zero-length --std=gnu11 -c src/kernel/gpu/mem_mgr/mem_mgr.c -o /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/negctl_zerofb/mem_mgr_nopatch.o -MMD -MF _out/Linux_aarch64/mem_mgr.d.to_be_processed -MP -MT _out/Linux_aarch64/mem_mgr.o && sed -e "1,3s| src/kernel/gpu/mem_mgr/mem_mgr.c | |" < _out/Linux_aarch64/mem_mgr.d.to_be_processed > _out/Linux_aarch64/mem_mgr.d
+[rc=0]
+
+# Constante esperada: 51302 MiB = 51302<<20 = 53794045952 = 0xc86600000 (aarch64: mov #0x86600000 + movk #0xc, lsl #32)
+$ objdump -d _out/Linux_aarch64/mem_mgr.o --disassemble=bbMemmgrGetTotalRamSizeBytes | grep -cE '#0x86600000|#0xc, lsl #32'
+4
+[rc=0]
+
+$ objdump -d _out/Linux_aarch64/mem_mgr.o --disassemble=bbMemmgrGetHeapFreeBytes | grep -cE '#0x86600000|#0xc, lsl #32'
+2
+[rc=0]
+
+$ objdump -d /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/negctl_zerofb/mem_mgr_nopatch.o --disassemble=bbMemmgrGetTotalRamSizeBytes | grep -cE '#0x86600000|#0xc, lsl #32'
+0
+[rc=1]
+
+$ objdump -d /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/negctl_zerofb/mem_mgr_nopatch.o --disassemble=bbMemmgrGetHeapFreeBytes | grep -cE '#0x86600000|#0xc, lsl #32'
+0
+[rc=1]
+
+$ objdump -d --no-show-raw-insn _out/Linux_aarch64/mem_mgr.o --disassemble=bbMemmgrGetTotalRamSizeBytes | grep -E '^ +[0-9a-f]+:'
+   0:	ldrb	w0, [x0, #1051]
+   4:	cbnz	w0, 2c <bbMemmgrGetTotalRamSizeBytes+0x2c>
+   8:	ldr	x3, [x1, #2088]
+   c:	ldr	x1, [x1, #2112]
+  10:	ldr	x0, [x2, #1128]
+  14:	lsl	x2, x3, #20
+  18:	lsl	x1, x1, #20
+  1c:	cmp	x1, x2
+  20:	csel	x1, x1, x2, ls	// ls = plast
+  24:	sub	x0, x1, x0, lsl #10
+  28:	ret
+  2c:	stp	x29, x30, [sp, #-16]!
+  30:	mov	x5, #0x86600000            	// #2254438400
+  34:	movk	x5, #0xc, lsl #32
+  38:	mov	x29, sp
+  3c:	mov	w3, #0x1                   	// #1
+  40:	mov	w1, #0x10aa                	// #4266
+  44:	adrp	x4, 0 <bbMemmgrGetTotalRamSizeBytes>
+  48:	adrp	x2, 0 <bbMemmgrGetTotalRamSizeBytes>
+  4c:	add	x4, x4, #0x0
+  50:	add	x2, x2, #0x0
+  54:	adrp	x0, 0 <bbMemmgrGetTotalRamSizeBytes>
+  58:	add	x0, x0, #0x0
+  5c:	bl	0 <nvDbg_Printf>
+  60:	mov	x0, #0x86600000            	// #2254438400
+  64:	movk	x0, #0xc, lsl #32
+  68:	ldp	x29, x30, [sp], #16
+  6c:	ret
+[rc=0]
+
+$ objdump -d --no-show-raw-insn /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/negctl_zerofb/mem_mgr_nopatch.o --disassemble=bbMemmgrGetTotalRamSizeBytes | grep -E '^ +[0-9a-f]+:'
+   0:	ldrb	w0, [x0, #1051]
+   4:	cbnz	w0, 2c <bbMemmgrGetTotalRamSizeBytes+0x2c>
+   8:	ldr	x3, [x1, #2088]
+   c:	ldr	x1, [x1, #2112]
+  10:	ldr	x0, [x2, #1128]
+  14:	lsl	x2, x3, #20
+  18:	lsl	x1, x1, #20
+  1c:	cmp	x1, x2
+  20:	csel	x1, x1, x2, ls	// ls = plast
+  24:	sub	x0, x1, x0, lsl #10
+  28:	ret
+  2c:	stp	x29, x30, [sp, #-16]!
+  30:	mov	w3, #0x1                   	// #1
+  34:	mov	w1, #0x10a7                	// #4263
+  38:	mov	x29, sp
+  3c:	adrp	x4, 0 <bbMemmgrGetTotalRamSizeBytes>
+  40:	add	x4, x4, #0x0
+  44:	adrp	x2, 0 <bbMemmgrGetTotalRamSizeBytes>
+  48:	adrp	x0, 0 <bbMemmgrGetTotalRamSizeBytes>
+  4c:	add	x2, x2, #0x0
+  50:	add	x0, x0, #0x0
+  54:	bl	0 <nvDbg_Printf>
+  58:	mov	x0, #0x0                   	// #0
+  5c:	ldp	x29, x30, [sp], #16
+  60:	ret
+[rc=0]
+
+# Lectura: con parche la rama zero-FB (cbnz -> 0x2c) carga 0xc86600000 en x0 y retorna; sin parche la misma rama hace 'mov x0, #0x0' y retorna.
+# El grep da 4/2 en el objeto parchado y 0/0 en el de control: el instrumento produce ambos veredictos.
+# NO verificado: que 'ldrb w0, [x0, #1051]' sea exactamente PDB_PROP_GPU_ZERO_FB (lo implica el fuente; no se resolvio el offset).

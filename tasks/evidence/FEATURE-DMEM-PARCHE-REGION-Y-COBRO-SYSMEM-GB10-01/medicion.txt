@@ -1,0 +1,85 @@
+MEDICION - port de memacct (615) a nvidia-open 580.178.04 + parche zero-FB, compilado SIN cargar
+Fecha: 2026-10-12. Autorizacion: Luis, "autorizo" en el chat (portar y compilar, no cargar).
+$S = /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad
+Arbol: $S/nv580, rama dmem-port sobre tag 580.178.04 (c8e699821c23e4335bf23330a54a23d15cfb95e9). Sin commit.
+Referencia: $S/nv_src/615 (solo lectura).
+
+RESULTADO
+- Compila: SI. make modules -j4 bajo systemd-run MemoryMax=8G/MemorySwapMax=0/TasksMax=2000, intento 3, EXIT=0,
+  0 lineas "error:", 0 avisos de modpost/undefined. Intentos 1 y 2 fallaron (causa y arreglo en compilacion.txt).
+- nvidia.ko: vermagic 6.17.0-1032-nvidia, version 580.178.04, sin firma (modinfo sin campo sig).
+  sha256 bf817b6b573aed6c131df23f42e6b37e7f0579e11fbcd60112c3396e3067c078, copia en $S/nvidia-580-memacct/nvidia.ko.
+  nm: U dmem_cgroup_register_region / try_charge / uncharge / unregister_region / state_evict_valuable;
+  T memacct*, os_dmem_cgroup_*, osCgroup*, bbMemmgr*. strings: "nvidia/%08X:%02X:%02X.0/vidmem", "RmMemacctMode".
+- Parche zero-FB: medido en el objeto compilado (control-negativo-zerofb.txt). Con parche la rama zero-FB devuelve
+  0xc86600000 (= 51302 MiB = 53794045952 B); con -DBB_NO_ZEROFB_PATCH la misma rama devuelve 0. grep de la constante: 4/2 vs 0/0.
+
+ARCHIVOS DE EVIDENCIA (esta carpeta)
+- memacct-580.patch          git diff completo (16 archivos, 1112 inserciones, 0 borrados; 33 marcas bb-patch)
+- compilacion.txt            comandos, errores de intentos 1-2, ultimas 40 lineas y EXIT del intento 3
+- modulo-ko.txt              modinfo, nm, strings, relocaciones de los sitios de cobro, exports del kernel, conftests
+- control-negativo-zerofb.txt  615 citado + desensamblado con y sin parche
+- firma-dmem.txt             firma real de dmem_cgroup_register_region vs llamada de 615
+
+QUE SE PORTO, POR ARCHIVO (todo marcado /* bb-patch */)
+1. src/nvidia/inc/kernel/mem_mgr/memacct.h (nuevo): copia de 615 + prototipos bbMemmgrGetTotalRamSizeBytes /
+   bbMemmgrGetHeapFreeBytes con forward-decls de struct.
+   src/nvidia/src/kernel/mem_mgr/memacct.c (nuevo): copia de 615 con 4 adaptaciones:
+   a) quitadas las dos llamadas gpuNotifySubDeviceEvent(NV2080_NOTIFIERS_MEMACCT_*): 580 tiene NV2080_NOTIFIERS_MAXCOUNT=198
+      y 615 usa los indices 200/201; subir MAXCOUNT cambia el ABI con espacio de usuario. El warning de limite suave
+      se sigue convirtiendo en NV_OK; solo se pierde el evento.
+   b) memmgrGetTotalRamSizeBytes/memmgrGetHeapFreeBytes (no existen en 580) -> bbMemmgr* (ver punto 5).
+   c) #include "gpu_mgr/gpu_mgr.h" (gpumgrIsSafeToReadGpuInfo no llega via gpu.h en 580; fue el error del intento 1).
+   d) eliminada la variable pKernelMIGManager (solo alimentaba el helper de 615).
+   src/nvidia/srcs.mk: SRCS += src/kernel/mem_mgr/memacct.c.
+2. kernel-open/nvidia/os-interface.c: os_cgroup_implementation, os_cgroup_for_pid, os_cgroup_parent,
+   os_dmem_cgroup_{register_region,unregister_region,try_charge,uncharge,state_evict_valuable}, con las guardas
+   NV_DMEM_CGROUP_PRESENT / NV_MISC_CGROUP_PRESENT de 615. Includes <linux/cgroup.h>, <linux/cgroup_dmem.h>.
+   kernel-open/conftest.sh + kernel-open/nvidia/nvidia.Kbuild: conftests dmem_cgrp_id y misc_cgrp_id (copiados de 615).
+   Generados en este build: conftest/compile-tests/dmem_cgrp_id.h define NV_DMEM_CGROUP_PRESENT (ver modulo-ko.txt).
+   kernel-open/common/inc/os-interface.h y src/nvidia/arch/nvalloc/unix/include/os-interface.h: declaraciones.
+   OMITIDO por no usarlo memacct: os_dmem_cgroup_pool_state_put, os_cgroup_get_from_fd/put/get (solo los usan las
+   ioctl de limites del modo misc/fallback, que no se portaron).
+3. src/nvidia/arch/nvalloc/unix/src/os.c: osClientGroupID, osCgroupImplementation (lee RmMemacctMode),
+   osCgroupRegisterRegion, osCgroupUnregisterRegion, osMemacctTryCharge, osMemacctReleaseCharge, osCgroupParent,
+   osCgroupCanEvict + include nvrm_registry.h. Declaraciones (enum NvCgroupImpl, ClientGroupID) en
+   src/nvidia/generated/g_os_nvoc.h.
+4. src/nvidia/src/kernel/mem_mgr/video_mem.c: los 4 sitios de 615 (copia de cargo en vidmemCopyConstruct,
+   memacctTryCharge tras stdmemDumpInputAllocParams si !IS_MIG_ENABLED, release en done: si falla, release en
+   vidmemDestruct). Relocaciones memacct* presentes en video_mem.o (modulo-ko.txt).
+5. src/nvidia/src/kernel/gpu/mem_mgr/mem_mgr.c: memacctInitGpuInfo(pGpu) al final de memmgrStateInitLocked,
+   memacctRemoveGpu(pGpu) al inicio de memmgrStateDestroy, + bbMemmgrGetTotalRamSizeBytes / bbMemmgrGetHeapFreeBytes.
+   PARCHE ZERO-FB: 580 no tiene memmgrGetTotalRamSizeBytes_IMPL / memmgrGetHeapFreeBytes_IMPL ni bGpuArchIsZeroFb.
+   El predicado equivalente en 580 es PDB_PROP_GPU_ZERO_FB (NVOC lo pone a TRUE para GB10B | GB20B | GB20C,
+   g_gpu_nvoc.c:214-224; es el que usa kern_mem_sys_ctrl.c para TOTAL_RAM_SIZE). Con zero-FB ambos helpers devuelven
+   BB_ZEROFB_REGION_BYTES = (51302ULL << 20), asi precharge = size - free = 0. Sin zero-FB replican la rama no-MIG,
+   no-particion de 615. -DBB_NO_ZEROFB_PATCH restaura el "return 0" de 615 (solo para el control negativo).
+   El parche NO toca kern_mem_sys_ctrl.c: nvidia-smi / NV2080_CTRL_FB_INFO siguen reportando 0 en zero-FB.
+6. src/nvidia/generated/g_mem_nvoc.h: campo `struct MemoryCharge *pCharge;` en struct Memory (tras bRegisteredWithGsp,
+   como en 615:191). Se usa forward-decl de struct en vez de incluir memacct.h (615 lo incluye) para no meter
+   rmapi/client.h en g_mem_nvoc.h. g_mem_nvoc.c de 615 no referencia pCharge: no se toco.
+7. src/nvidia/interface/nvrm_registry.h: NV_REG_STR_MEMACCT_MODE ("RmMemacctMode") y sus 4 valores (los lee os.c).
+8. Codigos de estado NV_ERR_RESOURCE_ACCOUNTING_HARD_LIMIT_EXCEEDED (0x8D) y NV_WARN_RESOURCE_ACCOUNTING_SOFT_LIMIT_EXCEEDED
+   (0x1000A), mismos valores que 615, en src/common/sdk/nvidia/inc/nvstatuscodes.h y kernel-open/common/inc/nvstatuscodes.h.
+   Ninguno de los dos valores existia en 580 (grep de 0x0000008D|0x0001000A en nvstatus*.h devolvio solo las 4 lineas nuevas).
+
+ADAPTACION DE FIRMA (firma-dmem.txt)
+- Kernel 6.17: dmem_cgroup_register_region(u64 size, const char *name_fmt, ...) __printf(2,3).
+  615 llama dmem_cgroup_register_region(size, name): pasa el nombre como formato. En 580 queda
+  dmem_cgroup_register_region(size, "%s", name), y el chequeo pasa de IS_ERR a IS_ERR_OR_NULL (el stub sin
+  CONFIG_CGROUP_DMEM devuelve NULL). try_charge/uncharge/unregister/evict_valuable: firma identica, sin cambio.
+
+NO VERIFICADO
+- Nada se cargo en el kernel: ni insmod, ni modprobe, ni firma MOK. Que el modulo cargue, que registre la region
+  dmem y que cobre, esta sin medir.
+- No se sabe si cudaMalloc en GB10 llega por vidmemConstruct (video_mem.c) con LOCATION_VIDMEM; si en zero-FB
+  las asignaciones van por sysmem/otra clase, memacctTryCharge no se ejecuta y el limite dmem no muerde.
+- No se sabe si el chip de esta maquina es GB10B (HAL con PDB_PROP_GPU_ZERO_FB=TRUE en 580) u otro; 580 no lista GB10C.
+  Si el HAL no marca zero-FB, el parche no actua y el tamano sale de fbTotalMemSizeMb.
+- No se resolvio que el offset 1051 leido en bbMemmgrGetTotalRamSizeBytes corresponde a PDB_PROP_GPU_ZERO_FB
+  (lo implica el fuente, no se comprobo en el binario).
+- 51302 MiB es una constante fija, no medida del sistema (ponytail en el codigo: techo = tamano fijo; disparador =
+  otra cantidad de memoria unificada o necesidad de seguir la sysmem libre real).
+- Ruta misc/fallback (CGROUP_IMPL_FALLBACK): compila, pero sin las ioctl de limites no hay forma de fijar limites;
+  con dmem activo (CONFIG_CGROUP_DMEM=y) osCgroupImplementation elige CGROUP_IMPL_OS.
+- Modo MIG: el cobro se salta con IS_MIG_ENABLED, como en 615.
