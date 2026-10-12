@@ -1,0 +1,8 @@
+$ python3 -m pytest -q tests/test_status_kernel_kho.py
+........                                                                 [100%]
+8 passed in 17.04s
+rc=0
+
+Control negativo (corrido 2026-10-11): con la llamada `status_kernel_kho` anulada en bin/bb
+(`: status_kernel_kho`), la misma orden dio `8 failed in 9.81s` (StopIteration: la fila no existe).
+Restaurada la llamada, vuelve a pasar. shellcheck bin/bb: rc=0; bash -n bin/bb: rc=0.

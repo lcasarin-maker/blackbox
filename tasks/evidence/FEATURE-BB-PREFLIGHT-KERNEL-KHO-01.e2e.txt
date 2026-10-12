@@ -1,0 +1,10 @@
+$ ./bin/bb status 2>&1 | grep -A1 -E "KHO|armado:"     (maquina real, kernel 6.17.0-1032-nvidia)
+  ARMADO    kernel sin la regresion KHO/CMA (7.0.0-1019)
+  ARMADO    motor de inferencia sirviendo
+--
+  armado: 21    falta: 0    ciego: 1
+could_not_run: 0
+
+El `ciego: 1` es previo a esta ficha (otra fila de status), no la nueva. El caso que DEBE avisar
+(kernel malo sin kho=off) no se puede producir en esta maquina; se mide con /proc redirigido en
+tests/test_status_kernel_kho.py.
