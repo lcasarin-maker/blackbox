@@ -1,0 +1,9 @@
+Medicion con el modulo parcheado CARGADO (2026-10-12 17:4x, kernel 6.17.0-1032-nvidia, driver 580.178.04, Secure Boot, MOK enrolada)
+$ sudo bash tools/dmem_modulo.sh verifica
+[dmem] modulo en uso: /lib/modules/6.17.0-1032-nvidia/updates/nvidia.ko ; firmante: aitopatom-41f1 Secure Boot Module Signature key
+[dmem] dmem.capacity: [nvidia/0000000F:01:00.0/vidmem 53794045952;]    -> HAY region (antes: vacio)
+$ sudo bash tools/dmem_prueba.sh
+[dmem-prueba] control sin tope, pide 256 MiB: OK nvidia/0000000F:01:00.0/vidmem 0
+[dmem-prueba] hay region pero dmem.current no sube: NO cobra          (rc 4)
+Lectura: la region existe; torch.empty(256 MiB, device=cuda) NO pasa por video_mem.c con cobro. El punto de cobro actual no cubre la ruta real de cudaMalloc en GB10.
+Control negativo del instrumento: el mismo script con root sin torch dio "ERR sin veredicto: ModuleNotFoundError" (antes se callaba); con torch da OK. Falta el caso positivo (alguna ruta que si cobre): no existe aun.
