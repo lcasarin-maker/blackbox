@@ -25,3 +25,14 @@ close_check: {"cmd": "grep -q memacct_backport_probado tasks/evidence/FEATURE-DM
 5. Medir; revertir: borrar `updates/*.ko`, `depmod -a`, reiniciar; opcional `mokutil --delete`.
 ## Riesgos declarados
 Si el modulo falla al cargar no hay GPU ni pantalla hasta revertir (queda SSH). Hacerlo con ventana acordada y la reversion preescrita. Incognita que decide todo: si las asignaciones CUDA de GB10 pasan por `video_mem.c` y si `memmgrGetTotalRamSizeBytes` != 0 (si es 0 la region se ignora).
+
+## Que afectaria subir de rama (simulacion de apt, sin root, 2026-10-12)
+Comandos: `apt-get -s install nvidia-driver-610-open linux-modules-nvidia-610-open-6.17.0-1032-nvidia` y la variante con paquetes 610 explicitos. Resultados literales: la primera da `22 nuevos se instalaran, 17 para eliminar`; la segunda `24 nuevos, 16 para eliminar`.
+- **Quita toda la rama 580:** `libnvidia-compute-580` (libcuda), `nvidia-utils-580`, `libnvidia-gl-580`, `nvidia-driver-580-open` y los modulos `linux-modules-nvidia-580-open-6.17.0-1032-nvidia` y `-7.0.0-1019-nvidia`.
+- **La rama 610 no es instalable limpia por apt:** el meta `nvidia-driver-610-open` depende de `nvidia-driver-615-open`, y aun con paquetes 610 explicitos apt trae las bibliotecas 615 (`libnvidia-compute-615`, `libnvidia-gl-615`...). Resultado: modulos 610 (firmados por Canonical, 610.x) con bibliotecas de usuario 615.71.09: versiones distintas entre modulo y biblioteca.
+- **615 no tiene modulos firmados para nuestro kernel:** `apt-cache search` solo lista `linux-modules-nvidia-{580,595,610}-open-6.17.0-1032-nvidia`; los de 615 son para kernels 6.8 (aws, gke, oracle, nvidia 6.8.0-1064). Para 615 en 6.17 quedaria `nvidia-dkms-615-open` (DKMS no instalado) y una llave MOK enrolada para Secure Boot.
+- **El contenedor de vLLM** usa `runtime=nvidia`: recibe del host las bibliotecas `libcuda.so.<version>`; hoy `libcuda.so.580.178.04`. Con 615 correria sobre bibliotecas distintas (no probado con la imagen vllm v0.27.1).
+- **Retroceso:** no hay instantaneas (ext4 en `/dev/nvme0n1p2`). `libnvidia-compute-580 580.178.04-0ubuntu0.24.04.1` aun se sirve desde noble-updates y noble-security y hay 2 .deb de NVIDIA en la cache de apt: reinstalarlo es probable, no garantizado a futuro.
+- **Herramientas propias que leen `nvidia-smi` y los mensajes NVRM** (muestreador, freno termico que consulta Atlas, firmas) podrian cambiar de formato: no medido.
+- **DGX OS:** repos `nvidia-dgx` y `nvidia-spark-repo` y `dgx-spark-ota-update-meta` presentes: una actualizacion OTA podria reimponer 580; no medido.
+Conclusion: por apt NO hay una subida limpia ni reversible garantizada; el backport con la MISMA version 580.178.04 evita el cambio de bibliotecas y de contenedor, a costa de enrolar una llave MOK (reversible con `mokutil --delete`).
