@@ -134,6 +134,7 @@ def test_destino_de_cada_familia_de_adoptados() -> None:
     assert inventario.destino_desplegado(Path("adopted/system-config/etc_a_b.conf")) == "/etc/a/b.conf"
     assert inventario.destino_desplegado(Path("adopted/systemd-user/x.service")) == "~/.config/systemd/user/x.service"
     assert inventario.destino_desplegado(Path("adopted/gpu_governance/y.sh")) == "/srv/ai/gpu_governance/y.sh"
+    assert inventario.destino_desplegado(Path("adopted/gateway/w.sh")) == "/srv/ai/gateway/w.sh"
 
 
 # --------------------------------------------------------------- seccion()
