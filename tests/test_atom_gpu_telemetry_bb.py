@@ -556,7 +556,7 @@ def test_el_bucle_sale_limpio_con_Ctrl_C(monkeypatch, tmp_path, capsys):
 # maquina se desacuerdan en silencio.
 
 
-def _gate(monkeypatch, capsys, tmp_path, entradas):
+def _gate(monkeypatch, capsys, tmp_path, entradas, estado_termico="normal"):
     zonas, umbrales, historial_en_disco = entradas
     ruta = tmp_path / "t.jsonl"
     ruta.write_text("\n".join(json.dumps(m | {"evento": "muestra"})
@@ -565,6 +565,12 @@ def _gate(monkeypatch, capsys, tmp_path, entradas):
     monkeypatch.setattr(agt, "leer_zonas", lambda: zonas)
     monkeypatch.setattr(agt, "leer_umbrales", lambda: umbrales)
     monkeypatch.setattr(agt.sys, "argv", ["agt", "--gate-termico"])
+    if estado_termico != "AUSENTE":
+        ruta_estado = tmp_path / "estado_termico.json"
+        ruta_estado.write_text(json.dumps(
+            {"estado": estado_termico, "desde": "x",
+             "actualizado": datetime.now(timezone.utc).isoformat()}), encoding="utf-8")
+        monkeypatch.setattr(agt, "ESTADO_TERMICO_PATH", ruta_estado)
     rc = agt.main()
     return rc, json.loads(capsys.readouterr().out)
 
@@ -640,3 +646,43 @@ def test_una_gpu_de_verdad_ociosa_NO_es_lo_mismo_que_no_saber(monkeypatch, capsy
     rc = agt.main()
     salida = json.loads(capsys.readouterr().out)
     assert rc == 0 and salida["gpu_procs"] == [] and salida["gpu_mem_total_mib"] == 0
+
+
+FRIA = [{"zona": "thermal_zone0", "temp_c": 45.0, "type": "gpu"}]
+
+
+def test_el_gate_BLOQUEA_calor_sostenido_aunque_la_lectura_viva_este_fria(monkeypatch, capsys, tmp_path):
+    """Defecto medido el 2026-10-11: con `sostenida` publicado el gate devolvia bloquea=false."""
+    rc, salida = _gate(monkeypatch, capsys, tmp_path, (FRIA, UMBRALES, _historial(10, 45.0, 5.0)),
+                       estado_termico="sostenida")
+    assert rc == 1 and salida["bloquea"] is True and "sostenida" in salida["motivo"], salida
+
+
+def test_el_gate_BLOQUEA_sobre_100(monkeypatch, capsys, tmp_path):
+    rc, salida = _gate(monkeypatch, capsys, tmp_path, (FRIA, UMBRALES, _historial(10, 45.0, 5.0)),
+                       estado_termico="sobre_100")
+    assert rc == 1 and salida["bloquea"] is True, salida
+
+
+def test_el_gate_BLOQUEA_sin_estado_termico_publicado(monkeypatch, capsys, tmp_path):
+    monkeypatch.setattr(agt, "ESTADO_TERMICO_PATH", tmp_path / "no_existe.json")
+    rc, salida = _gate(monkeypatch, capsys, tmp_path, (FRIA, UMBRALES, _historial(10, 45.0, 5.0)),
+                       estado_termico="AUSENTE")
+    assert rc == 1 and "ausente" in salida["motivo"], salida
+
+
+def test_el_gate_BLOQUEA_con_latido_viejo_y_PASA_con_latido_fresco_normal(monkeypatch, capsys, tmp_path):
+    ahora = datetime.now(timezone.utc)
+    ruta = tmp_path / "e.json"
+    ruta.write_text(json.dumps({"estado": "normal", "actualizado": (ahora - timedelta(seconds=300)).isoformat()}), encoding="utf-8")
+    assert "latido" in agt._motivo_estado_termico(ruta, ahora)
+    ruta.write_text(json.dumps({"estado": "normal", "actualizado": ahora.isoformat()}), encoding="utf-8")
+    assert agt._motivo_estado_termico(ruta, ahora) == ""
+
+
+def test_el_estado_publicado_declara_admite_carga():
+    est = {"sostenida": {"a": {"abs": False, "activa": True}}}
+    d = agt._estado_termico(est, [{"zona": "a", "temp_c": 96.0}])
+    assert d["esquema"] == "bb-estado-termico/2" and d["admite_carga"] is False
+    d = agt._estado_termico({"sostenida": {"a": {"abs": False, "activa": False}}}, [{"zona": "a", "temp_c": 50.0}])
+    assert d["admite_carga"] is True

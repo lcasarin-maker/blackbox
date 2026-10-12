@@ -58,6 +58,8 @@ hardware are welcome; see [Contributing](#contributing).
 ```
 bb status              which instrument is armed and which isn't
 bb scan ["since X"]    failure report over a time window (default: "2 hours ago")
+bb incident [boot]     per-incident report in the NVIDIA #1358 community format
+bb reboots             cause of each reboot, one by one
 bb snapshot [reason]   full forensic dump, right now
 bb hw                  hardware inventory and applied limits
 bb drift               diff between what's adopted in the repo and what's deployed (exit != 0 on drift; runs daily via blackbox-drift.timer)
@@ -83,6 +85,43 @@ sudo ./enable-privileged.sh   # core dumps (see below)
 `enable-privileged.sh` supports `--dry-run` and `--revert`.
 
 ---
+
+## Incident reports
+
+`bb scan` groups findings by symptom. Two units' reports cannot be compared that
+way, so `bb incident` emits one report per incident in the format that the
+[NVIDIA #1358](https://github.com/NVIDIA/open-gpu-kernel-modules/issues/1358)
+thread converged on (the incident summary proposed in comment 12, plus the
+timeline, control table and mitigation matrix other reporters added):
+
+- an anonymised identity block (hash of the machine-id; no hostname, serial,
+  GPU UUID or user name) and the platform tuple: OEM, DGX OS, kernel, driver,
+  module size and licence, BIOS, Secure Boot;
+- **six separate timestamps** with UTC offset, source and uncertainty: first
+  relevant NVRM allocation error, first PSI stall, last application response,
+  last telemetry sample, watchdog action or manual reset, next boot;
+- unavailable measurements are `NOT_COLLECTED`, `UNSUPPORTED` or
+  `COLLECTION_FAILED`; a zero is written only when observed, with the searched
+  interval (`0 in journal of boot -1`);
+- thermal **residence** (minutes above each threshold, longest streak) and the
+  decoded `clocks_event_reasons` history of the boot, not only the throttle
+  state at the moment of the scan;
+- the signatures in `rules/firmas_gb10.json`, with known noise counted apart from
+  incidents, and the state of each mitigation on this machine with a pointer to
+  where Atlas documents its evidence.
+
+`bb reboots` classifies every finished boot (`CIERRE_ORDENADO_*`,
+`COLAPSO_MEMORIA`, `PANIC_KERNEL`, `CORTE_ABRUPTO`...). A silent cut with no
+external observer stays `CORTE_ABRUPTO` with the cause reported as
+undetermined: an in-OS tool cannot see a power loss, because the cut kills the
+tool too.
+
+Knowledge does not live here. The research behind these checks (423 NVIDIA forum
+threads, NVIDIA issue 1358, official replies, mitigations with their evidence
+level) is in Atlas, under `knowledge/investigations/gb10_cortes_2026-10-11/`.
+`rules/firmas_gb10.json` lists only the signatures `bb incident` searches for;
+each one points at the Atlas document that backs it. Entries describe what other
+operators measured on their own units: they are not recommendations for this one.
 
 ## Evidence for GB10 allocation failures
 
@@ -332,7 +371,7 @@ charging an allocation to its owner is a separate mechanism.
 
 Operator reports describe workload limits and clock caps as partial
 mitigations. Their effects depend on the workload and platform. On this host,
-a boot-time systemd unit applies `nvidia-smi -lgc 300,2800`; its driver
+a boot-time systemd unit applies `nvidia-smi -lgc 300,2100` (since 2026-10-11; before that `300,2800`, which never bound: the highest SM clock measured under load was 2567-2587 MHz in every boot); its driver
 confirmation is checked by `bb status clock lock`, separately from the
 current clock reading. The recorded power-limit query on this GB10 returned
 `N/A` for current, requested, default, minimum and maximum limits. Captures

@@ -87,7 +87,7 @@ json_escape() {
 # Memoria GPU. En el GB10 de esta maquina `--query-gpu=memory.used` devuelve
 # N/A (memoria unificada), asi que el agregado se obtiene sumando los procesos
 # de computo. Comprobado 2026-09-07: query-gpu -> [N/A]; query-compute-apps ->
-# vLLM 33813 MiB, aequitas_os 10251 MiB, rustdesk 237 MiB.
+# vLLM 33813 MiB, otro servicio 10251 MiB, rustdesk 237 MiB.
 gpu_mem_mib() {
   have nvidia-smi || { echo ""; return 1; }
   local raw
@@ -1509,9 +1509,14 @@ else:
       grep '"corroboracion": *"descarta"' | awk -v s="$since_iso" -F'"' '$4>=s' | wc -l)
     mp=$(grep -a '"evento": *"mitigacion_pausa"' "$ajl" 2>/dev/null |
       awk -v s="$since_iso" -F'"' '$4>=s' | wc -l)
-    echo "  eventos termicos REALES:     $tc"
-    echo "  picos de sensor descartados: $td  (ruido, no eventos)"
+    echo "  alarmas de flanco corroboradas: $tc"
+    echo "  alarmas de flanco descartadas:  $td  (el campo 'corroboracion' vale 'descarta' en 395 de 395 eventos medidos el 2026-10-11: NO significa 'sin calor'; ver DEBT-TERMICA-CORROBORACION-DE-ALARMA-SIEMPRE-DESCARTA-01)"
     echo "  pausas por mitigacion:       $mp"
+    # Calor SOSTENIDO: lo que las alarmas de flanco no miden. Un sensor que oscila sobre el umbral
+    # cruza el flanco una y otra vez y cada cruce parecia un pico aislado.
+    if ! (cd "$repo_root" && python3 -m tools.incident_report --ventana "$desde_epoch" "$hasta_epoch" 2>/dev/null); then
+      cannot_run "calor sostenido" "sin muestras de telemetria en la ventana o archivo ilegible"
+    fi
     [ "${tc:-0}" -gt 0 ] && grep -a '"corroboracion": *"corrobora"' "$ajl" |
       awk -v s="$since_iso" -F'"' '$4>=s' | tail -3 | sed 's/^/    /' | cut -c1-160
   else
@@ -3125,6 +3130,9 @@ bb -- caja negra de la maquina
   bb scan ["hace X"]     informe de fallos en una ventana (def: "2 hours ago")
   bb hw                  inventario de hardware y limites aplicados
   bb recovery            estado de RCU, watchdog y pstore, solo lectura
+  bb incident [boot]     reporte POR INCIDENTE (formato NVIDIA #1358): 6 timestamps, config, throttle
+  bb reboots             causa de cada reinicio, uno por uno (--ultimos N); deja un hallazgo para Atlas con --escribe
+  bb saber <patron>      busca en la KB de Atlas, solo leyendo archivos (ATLAS_KNOWLEDGE)
   bb status              que instrumento esta armado y cual no
   bb status clock lock   comprobar declaracion y confirmacion reciente del rango GPU
   bb drift               compara lo adoptado en el repo con lo desplegado (exit != 0 si diverge)
@@ -3149,6 +3157,9 @@ case "${1:-}" in
   scan)     shift; cmd_scan "$@" ;;
   hw)       shift; cmd_hw "$@" ;;
   recovery) python3 "$(dirname "$(readlink -f "$0")")/../tools/recovery_profile.py" ;;
+  incident) shift; (cd "$(dirname "$(readlink -f "$0")")/.." && python3 -m tools.incident_report "$@") ;;
+  reboots)  shift; (cd "$(dirname "$(readlink -f "$0")")/.." && python3 -m tools.reboot_verdict "$@") ;;
+  saber)    shift; (cd "$(dirname "$(readlink -f "$0")")/.." && python3 -m tools.saber "$@") ;;
   status)   shift; cmd_status "$@" ;;
   drift)    shift; cmd_drift "$@" ;;
   protect)  shift; cmd_protect "$@" ;;

@@ -1,0 +1,16 @@
+[Unit]
+Description=blackbox: avisa en pantalla cuando la ATOM entra en calor sostenido o pasa de 100 C
+Documentation=file:%h/projects/blackbox/tools/aviso_termico.py
+After=atom-gpu-telemetry.service
+
+[Service]
+ExecStart=/usr/bin/python3 %h/projects/blackbox/tools/aviso_termico.py
+WorkingDirectory=%h/projects/blackbox
+# notify-send habla por D-Bus con el escritorio; un servicio de usuario no siempre hereda este bus.
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus
+Restart=on-failure
+RestartSec=10
+Nice=10
+
+[Install]
+WantedBy=default.target
