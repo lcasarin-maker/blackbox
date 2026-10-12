@@ -1,0 +1,123 @@
+COSECHA 2026-10-12 - VLLM: ajustes de memoria recomendados para GB10 (ficha FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01)
+Solo lectura. Nada se ejecuto. [LEIDO] = visto en la URL/archivo citado. [INFERENCIA] = mia.
+Regla de lectura: todo lo de aqui es auto-reporte de un usuario en su maquina, con una sola ejecucion o pocas. Es un indicio, no una verdad.
+Fiabilidad usada: ALTA = tabla con muestreo propio + comando/log citado; MEDIA = cifra con contexto pero una sola maquina/ejecucion; BAJA = afirmacion sin cifra o de un tercero; NULA = publicidad/no verificable.
+
+======================================================================
+0. FUENTES LEIDAS (todas por la API de GitHub con gh, texto completo mas todos los comentarios)
+======================================================================
+F1  vllm-project/vllm#46307 (open, marcado stale 2026-09-22) "gpu_memory_utilization is not respected on GB10 unified-memory systems during startup profiling (host wedges)". https://github.com/vllm-project/vllm/issues/46307
+F2  vllm-project/vllm#55569 (open) "GLM-5.3-Flash on DGX Spark/GB10: a ~230K-token prefill exhausts unified memory and kills the engine ... 64 MiB logits budget or expandable_segments fixes it" + 3 comentarios. https://github.com/vllm-project/vllm/issues/55569
+F3  vllm-project/vllm#56824 (open) "Engine startup on DGX Spark (GB10, unified memory) collapses host memory - NV_ERR_NO_MEMORY while MemAvailable reports ~22 GiB" + 9 comentarios. https://github.com/vllm-project/vllm/issues/56824
+F4  NVIDIA/dgx-spark-playbooks, clonado depth 1, commit 09e077d8299e58df5df0202e3411d54d7211d523, licencia Apache-2.0 (LICENSE leido), 225 MB en disco. Se leyeron nvidia/vllm/README.md, nvidia/sglang/README.md, nvidia/nvfp4-quantization/README.md, nvidia/nim-llm/README.md, nvidia/playbook-nim-llm/README.md.
+F5  deepwiki NVIDIA/dgx-spark-playbooks "Memory Management": NO LEIDA. WebFetch a deepwiki.com devolvio HTTP 429 dos veces. Se sustituyo por la lectura directa de los README de F4, que es la fuente primaria de lo que deepwiki resume. No afirmo nada sobre lo que dice deepwiki.
+F6  eugr/spark-vllm-docker, clonado depth 1, commit ef086aea1252dc2db59ceef2f2db805656fc9ac5, licencia MIT (Copyright 2026 Eugene Rakhmatulin). https://github.com/eugr/spark-vllm-docker
+F7  evanwtf/local-llm#456, #458, #459, #390 (issues publicos del repo evanwtf/local-llm, licencia MIT segun la API).
+F8  llamastash/llamastash#80, MiaAI-Lab/Qwen3.8-Flash-Next-Dual-DGX-Sparks#78, foro NVIDIA 371180 (WebFetch, resumen de un modelo pequeno: fiabilidad media).
+F9  randomvariable/vllm#8 "Add an absolute GPU-memory budget for unified-memory systems" (propuesta en un fork, no codigo).
+
+======================================================================
+1. CAUSA RAIZ segun los reportes (contexto para entender cada ajuste)
+======================================================================
+[LEIDO F1] En GB10 el "total de GPU" contra el que vLLM presupuesta es el MISMO pozo del SO. gpu_memory_utilization=0.70 en 119 GiB implica 0.70x119 ~ 83 GiB, pero "profile_run" llevo el uso a ~112 GiB (MemAvailable bajo a ~7 GiB) y el anfitrion se colgo (hubo que cortar la corriente). Modelo: gemma-4-26B-A4B bf16 (48,54 GiB de pesos), TRITON_ATTN, bf16 KV, max_num_seqs=8, enforce_eager=True, max_model_len=4096. Driver 580.159.03, kernel 6.17.0-1021-nvidia. Un modelo denso mayor (gemma-4-31B, 62 GiB) arranco bien a util=0.85 en la misma maquina: el pico depende del transitorio del perfilado, no del tamano del modelo.
+[LEIDO F2/F3] Mecanismo propuesto: el asignador de cache de PyTorch pide segmentos nuevos de tamano creciente; en discreta cudaMalloc acaba fallando y el asignador vacia su cache y reintenta; en UMA cudaMalloc "sigue teniendo exito" hasta que el driver se queda sin nada, y el fallo aparece como NV_ERR_NO_MEMORY y colapso del anfitrion. Hipotesis de los reporteros, apoyada en las mediciones de F2 (E3/E4b) pero no probada para F3.
+[LEIDO F3] Invisibilidad: pico fisico 119,2 de 121,7 GiB mientras RSS del motor era 1,8 GiB y memory.current del cgroup nunca paso de 34 GiB. F7#456 (otra maquina) lo confirma: nvidia-smi 71.776 MiB frente a memory.current 3.762 MiB.
+[LEIDO F3] Mensaje del driver "NVRM: nvCheckOkFailedNoLog: Check failed: Out of memory [NV_ERR_NO_MEMORY] (0x00000051) returned from _memdescAllocInternal(pMemDesc) @ mem_desc.c:1359". Comentarios de hclsys y jahnclawdmonet en F3: aparece tambien en arranques SANOS (3 de 3 corridas exitosas de hclsys tuvieron 1 linea cada una; la corrida que fallo tuvo 0; otro host acumulo 1.503 lineas en un dia). CONCLUSION LEIDA: la linea NV_ERR_NO_MEMORY NO sirve como disparador de un vigilante. Sirve como pista con posible anticipo (17 s antes de earlyoom en una secuencia).
+
+======================================================================
+2. AJUSTE POR AJUSTE
+======================================================================
+
+2.1 --gpu-memory-utilization
+ a) F1: 0.70 NO acota en GB10 durante el perfilado (112 GiB usados con presupuesto de 83). Fiabilidad ALTA en la existencia del defecto (muestreo 0,5 s de MemAvailable, repro publicado en la rama jethac/vllm repro/gb10-unified-memory-oom, que NO lei). Alcance: un modelo, una maquina.
+ b) F2 (wydi42, comentario 2026-09-13): NemotronH-NVFP4 120B, util 0.85 colgo el anfitrion 3 de 3 veces (drivers 580.173.02 y 595.84); "our guide value 0.90 OOM-killed the box during startup (3/3 runs)". Fiabilidad MEDIA (auto-reporte, tabla de 3 ejecuciones, sin logs adjuntos; el autor dice que los tiene).
+ c) F8 MiaAI#78: util 0.80 con earlyoom al 4 % -> earlyoom mato vLLM 15 s despues de que la API respondiera, en el primer prompt de ~33.311 tokens; util 0.75 con el resto igual funciono (prueba de velocidad, sweep y tarea de 10 min). KV a 0.80 = 42,86 GiB = 5.301.459 tokens; KV a 0.75 = 4.421.300 tokens (medido con otro checkpoint). Fiabilidad MEDIA-ALTA (logs de earlyoom y vLLM en el issue). Es la unica comparacion directa 0.80 vs 0.75 con numeros.
+ d) F6 (.env.sample de MiaAI citado en F8): "GPU_MEMORY_UTILIZATION=0.80 # 0.835 left <1 GiB MemAvailable per node under load". Fiabilidad MEDIA (comentario del autor del kit).
+ e) F4 NVIDIA playbooks (fuente oficial del vendor): nvidia/vllm/README.md:196 usa 0.8 con max-num-seqs 10 (TP1); :411 0.8; :451-452 0.9 con max-num-seqs 1 (TP2, max-model-len 64); :743-745 0.4 con max-num-seqs 4; nvfp4-quantization README:218-220 0.4 con max-num-seqs 4; playbook-nim-llm README:167-169 "If you select the BF16 profile on DGX Spark, add a memory cap ... will OOM at the default utilization" con --gpu-memory-utilization 0.75. Fiabilidad: ALTA como "lo que NVIDIA publica", pero NO son pruebas de seguridad (no traen medicion de MemAvailable). Contradice a F2/F3: 0.9 aparece en un playbook oficial y F2 reporta que 0.90 mato el equipo.
+ f) F8 llamastash#80 (GB10 medido, vLLM v0.28.0): --kv-cache-memory-bytes NO evita la comprobacion previa: vllm/v1/worker/utils.py:444 (segun el issue) compara memoria libre con total x gpu_memory_utilization y aborta en init_device ("Free memory on device (49.84/121.69 GiB) ... less than desired GPU memory utilization (0.92, 111.95 GiB)"). Sobrecoste del motor medido: 5,40 GiB (Qwen2.5-0.5B) y 6,73 GiB (Nemotron-3.5-Lightning-30B NVFP4) por encima de pesos + tope de KV; la captura de grafos CUDA agrego 1,0 a 3,0 GiB. Fiabilidad ALTA (muestreo a 1 Hz, tabla, citas de codigo).
+ g) F1 propone y F9 repite: reservar un piso ABSOLUTO del anfitrion (tope efectivo = total - max(reserva_gb, (1-util)*total)). Es propuesta, no codigo mergeado. PR vllm-project/vllm#49760 "Respect gpu_memory_utilization on integrated GPUs; fail clean instead of wedging the host": estado open, merged=false (API gh). eugr/spark-vllm-docker mods/gpu-mem-util-gb/gpu_mem.patch (445 lineas) agrega --gpu-memory-utilization-gb (tope en GiB; mutuamente excluyente con kv_cache_memory_bytes; cache.py campo gpu_memory_utilization_gb gt=0). Eso es codigo LEIDO pero NO ejecutado ni validado por mi; no hay cifra de eficacia en el parche.
+
+2.2 expandable_segments (PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True)
+ a) F2 (autor del issue, E4b): con expandable_segments:True solo, a 512 MiB de presupuesto de logits, la misma peticion de 231K tokens se sirve y MemAvailable queda plano en 7,9-8,3 GB (sonda con clave 15/22 correctas). GLM-5.3-Flash-NVFP4, TP=2 sobre dos Spark, driver 580.173.02. Fiabilidad MEDIA-ALTA (experimentos E1, E3, E4b descritos, arnes con guarda de MemAvailable).
+ b) F2 (wydi42): NO evita el cuelgue en NemotronH-NVFP4: ensayo 3 (595.84, util 0.85, expandable_segments:True) "first ~40k request ran 537 s (HTTP 502), engine dead (503), host wedged minutes later". Fiabilidad MEDIA (una ejecucion).
+ c) F3: el autor ya lo tenia activo (PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True en su entorno) y el arranque colapso igual (2,54 GiB de MemAvailable minimo). Fiabilidad MEDIA.
+ Resumen LEIDO: expandable_segments arregla UN patron (churn de tamanos crecientes en un modelo concreto) y no otros. No es proteccion general.
+ [INFERENCIA]: expandable_segments hace que PyTorch use cuMemCreate/cuMemMap; el limitador LD_PRELOAD debe cubrir cuMemCreate (HAMi-core lo cubre solo para tipo DEVICE; ver cosecha del limitador).
+
+2.3 VLLM_SPARSE_INDEXER_MAX_LOGITS_MB (variable especifica del indexador sparse de GLM)
+ F2 E3: 64 en lugar de 512 (defecto) -> la peticion de 232.484 tokens se sirvio, primer token tras ~3 min, MemAvailable plano en 7,9-8,9 GB. Fiabilidad MEDIA-ALTA. Alcance: SOLO modelos con ese indexador. F3 la lista como palanca 2 "a probar" sin resultado publicado.
+ Alternativa F2 (bit-incarnas, PR vllm-project/vllm#58068, open, no mergeado): ancho de logits fijo; medido en GLM-5.3-Flash-NVFP4: stock +4.782 MB reservados / 14 cudaMalloc, con ancho fijo +2.134 MB / 3 cudaMalloc, sin crecimiento por paso; prefill frio de 231K sin NV_ERR_NO_MEMORY a --max-model-len 409600. Fiabilidad MEDIA (autor del PR midiendo su propio parche). Bandera VLLM_SPARSE_INDEXER_FIXED_LOGITS_WIDTH=1/0.
+
+2.4 --max-num-seqs y --max-model-len
+ a) F3: tabla original "256 seqs/32768 len -> min MemAvailable 2,54 GiB" vs "32 seqs/16384 len -> 22,5 GiB". CORREGIDA por el mismo autor (comentario 2026-09-14): la segunda corrida se habia cortado antes de la fase critica por un umbral mal calibrado; la corrida completa con 32/16384 llego a 6,27 GiB, 115,4 GiB fisicos, 10 mensajes NV_ERR_NO_MEMORY nuevos. Cita textual del autor: "lowering max-num-seqs / max-model-len reduces the footprint during weight loading, but does not remove the post-load peak". memory.current maximo del cgroup ~34 GiB en ambos. Fiabilidad ALTA en la correccion; el efecto de bajar seqs/len sobre el pico post-carga es NULO o pequeno segun el propio autor.
+ b) F1 uso max_num_seqs=8, max_model_len=4096 y igual colgo: confirma que reducirlos no basta.
+ c) F4 NVIDIA: "CUDA out of memory | Insufficient GPU memory | Reduce --max-model-len and --max-num-seqs parameters" (nvidia/vllm/README.md:795,804). Es guia oficial pero contradicha por F1/F3 para el caso de cuelgue del anfitrion. Eficaz solo contra OOM de Python, que en UMA no es el modo de fallo peligroso. [INFERENCIA]
+
+2.5 --enforce-eager / CUDA graphs
+ a) F3 (jahnclawdmonet, comentario 2026-09-15): TP=2 en dos GB10, grafos activos, max-model-len 32768, gmu 0.85: log gpu_worker.py:876 "Actual usage is 94.41 GiB for consumed memory (weights + non-torch), 4.02 GiB for peak activation, and 0.07 GiB for CUDAGraph memory"; "Graph capturing finished in 43 secs, took 0.71 GiB". Frente a una corrida eager identica: el KV pool con grafos fue 29 % MENOR y el rendimiento de decodificacion menos de 3 % mayor. Fiabilidad MEDIA (una pareja de ejecuciones; la cifra 29 % y <3 % son del autor, no verificadas por mi).
+ b) F3 (skbotoc1-web): lista --enforce-eager como "fallback aceptando coste de throughput" y reducir cudagraph_capture_sizes; sin resultado publicado. Fiabilidad BAJA (plan, no medicion).
+ c) F7/evanwtf y F8 llamastash: captura de grafos aporta 1,0-3,0 GiB al sobrecoste (llamastash#80).
+ d) F1 usa enforce_eager=True y aun asi colgo: enforce-eager no previene el pico del perfilado.
+
+2.6 kv-cache dtype y tope de KV
+ a) F3: --kv-cache-dtype fp8_e4m3 estaba activo y el colapso ocurrio igual.
+ b) F2 usa --kv-cache-dtype fp8_ds_mla; F6/README del repo eugr usa fp8 con gmu 0.7 en un ejemplo (README.md:491, comando de Qwen3.8-27B-NVFP4).
+ c) Hilo de foro NVIDIA 358869 (resumen de WebFetch, NO leido directamente): un usuario recomienda "--num-gpu-blocks-override" para acotar el KV en vez de confiar en gmu. Fiabilidad BAJA (tercero, resumen de un modelo pequeno). Ademas el hilo del foro 371180 reporta que el wrapper NIM filtraba esa bandera.
+ d) F8 llamastash#80: --kv-cache-memory-bytes si fija el KV pero no salta la comprobacion de arranque (2.1f).
+ Resumen: ninguna fuente muestra que un dtype de KV mas chico proteja el pico de perfilado/captura; solo reduce el KV estacionario.
+
+2.7 Pesos cuantizados (NVFP4/W4A16) como mitigacion de F1
+ F1: "Use 4-bit weights ... so the profiling transient has ~100 GiB of headroom". Fiabilidad MEDIA-BAJA (no hay cifra de la maquina con 4 bits; es consejo). F2/F3 usan NVFP4 y colapsan igual (modelos grandes), asi que no es proteccion general.
+
+2.8 fastsafetensors / formato de carga
+ a) F6 README.md:884 (eugr): "mods/drop-caches which clears filesystem caches every minute while the container is running, resolving fastsafetensors getting stuck during loading" (receta Qwen3.5-397B, doble nodo). mods/drop-caches/run.sh LEIDO: bucle `sync; echo 3 > /proc/sys/vm/drop_caches` cada 60 s, se lanza con nohup y PIDFILE /tmp/drop_caches.pid. Fiabilidad MEDIA (autor del lanzador; sin cifra).
+ b) F6 README.md:877-878: --load-format instanttensor "experimental ... faster loading than the current fastsafetensors default". Sin cifra de memoria.
+ c) F3: "Loading weights took 549.60 seconds" (PLE disk-offload en overlays locales). Sin relacion directa con el pico.
+ d) F4 nvfp4-quantization README:293: contenedor muerto con codigo 137 durante la carga: "Unified-memory exhaustion: model weights plus filesystem page cache exceed DGX Spark memory". Fuente oficial; sin cifras.
+
+2.9 drop_caches
+ a) F4 (oficial NVIDIA, en nvidia/vllm/README.md:810-812, sglang README:276-278, nvfp4-quantization README:300-302, nim-llm README:204-206, playbook-nim-llm README:245-247): "manually flush the buffer cache with: sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'". Texto: "you may encounter memory issues even when within the memory capacity of DGX Spark". Fiabilidad: ALTA como instruccion oficial, NULA como medicion (ningun README da cifra de antes/despues).
+ b) F8 foro NVIDIA 371180 (resumen WebFetch; fiabilidad media): tras soltar caches la memoria "returned to 120GB+ after startup" (el reporte dice que sigue siendo ~120 GB despues de arrancar, sin que los caches lo resuelvan).
+ c) F6: repetir drop_caches cada 60 s tambien tiene coste: descarta paginas utiles. [INFERENCIA]
+
+2.10 Limite por cgroup (MemoryMax, docker --memory)
+ a) F7#456 (evanwtf/local-llm, una observacion 2026-09-17, cerrado): scope con MemoryMax=108G; nvidia-smi 71.776 MiB; memory.current 3.762 MiB (anon 2.219, file 1.377, kernel 163, shmem 50); VmRSS ~3,1 GB; MemAvailable 46,6 de 127,6 GB. Cita: "On GB10, CUDA allocations are not charged to the process's cgroup v2 memory controller". El propio issue pedia verificacion controlada (torch.empty en systemd-run --scope -p MemoryMax=8G, y docker --memory=8g) y NO muestra el resultado: no leido. Fiabilidad MEDIA (una observacion; mecanismo coherente con F3 y F8-foro).
+ b) F8 foro 371180 (WebFetch): --memory=80g, --memory-swap=0, --kernel-memory=32g, docker update --memory 80g y systemd-run MemoryMax=80G "bypassed by CUDA unified memory". Sin respuesta de NVIDIA. Fiabilidad MEDIA-BAJA (un usuario, resumen de un modelo pequeno, wrapper NIM sobrescribia parametros).
+ c) F8 foro NVIDIA 264689 (otra GPU, 2023, driver 515): "CUDA unified memory usage is not accounted by linux cgroup" (via resultado de busqueda; no abierto). Fiabilidad BAJA para GB10 (otra plataforma).
+ d) [INFERENCIA]: coherente con la investigacion previa del repo: la contabilidad por cgroup de memoria de GPU no existe en 580.178.04.
+
+2.11 Guardas externas citadas en estos issues (detalle en la cosecha del vigilante)
+ F3: "an external 2-second host guard (stop the unit below a hard MemAvailable line) ... 0 oom-kill events across all runs, while a comparable earlier configuration produced 197 kernel OOM dumps over two days" (skbotoc1-web, auto-reporte).
+
+======================================================================
+3. LO QUE NO SE LEYO
+======================================================================
+- deepwiki NVIDIA/dgx-spark-playbooks "Memory Management" (HTTP 429).
+- Rama jethac/vllm repro/gb10-unified-memory-oom (repro + vigilante de F1).
+- vllm-project/vllm#56457, PR #49760 y PR #58068: solo el titulo y el estado por la API; no el codigo.
+- Logs adjuntos "disponibles bajo peticion" de F2, F3.
+- Foros NVIDIA "Memory Creep on DGX Spark" y "System crashes when memory is full": solo titulo/estadisticas via WebFetch, sin contenido.
+- Un comentario de michaelmanly en F3 es publicidad de un producto ("Want some free credits?"): descartado, fiabilidad NULA.
+- Un comentario de HelloKS en F3 enlaza una regresion del kernel 7.0.0-1019-nvidia con NCCL/RoCE (ibv_reg_mr ENOMEM) y recomienda volver a 6.17: ajeno a la memoria de GPU, anotado como contexto; no verificado.
+
+======================================================================
+4. TABLA RESUMEN (ajuste -> efecto medido por quien lo reporta)
+======================================================================
+Ajuste                              Cifra reportada                                        Fuente  Fiab.
+gmu 0.70                            112 GiB usados vs 83 presupuestados; colgo             F1      ALTA(defecto)
+gmu 0.85 / 0.90 (NemotronH)         colgo 3/3 (0.85); 0.90 mato 3/3 en arranque            F2      MEDIA
+gmu 0.80 -> 0.75 (con earlyoom 4%)  0.80 SIGTERM a 15 s; 0.75 estable; KV 5,30M->4,42M tok F8     MEDIA-ALTA
+kv-cache-memory-bytes               no salta el chequeo gmu de arranque                    F8      ALTA
+max-num-seqs/len reducidos          pico post-carga NO desaparece (min 6,27 GiB)           F3      ALTA
+expandable_segments:True            arregla GLM (plano 7,9-8,3 GB); NO arregla NemotronH   F2      MEDIA
+LOGITS_MB=64                        plano 7,9-8,9 GB en GLM 231K                           F2      MEDIA-ALTA
+ancho fijo de logits (PR #58068)    +2.134 MB / 3 cudaMalloc vs +4.782 MB / 14             F2      MEDIA
+enforce-eager vs grafos             KV 29% mayor eager; decode <3% mejor con grafos        F3      MEDIA
+drop_caches                         sin cifra (instruccion oficial)                        F4      NULA(como medicion)
+MemoryMax / docker --memory         no acota CUDA: 71.776 MiB vs 3.762 MiB                 F7      MEDIA
+sobrecoste motor sobre KV+pesos     5,40 a 6,73 GiB (grafos 1-3 GiB)                       F8      ALTA
+
+======================================================================
+5. RECOMENDACION DE ESTA PARTE [INFERENCIA]
+======================================================================
+Los ajustes de vLLM (gmu, seqs, len, eager, KV dtype) reducen la probabilidad, no ponen techo. Ninguna fuente mide un techo duro por ajuste. El unico ajuste con garantia propia es el que no depende de vLLM: un limite en el borde del driver (ficha del limitador) mas un vigilante externo de MemAvailable (ficha del vigilante). El endurecimiento de vLLM debe ir como capa barata y documentada, con gmu <= 0.75 como valor de partida (unica comparacion directa medida) y la regla de que cada modelo nuevo se mide con muestreo de MemAvailable a 1 Hz bajo un vigilante antes de promover su gmu.

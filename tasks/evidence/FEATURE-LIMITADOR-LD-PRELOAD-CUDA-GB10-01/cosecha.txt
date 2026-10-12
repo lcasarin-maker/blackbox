@@ -1,0 +1,146 @@
+COSECHA 2026-10-12 - LIMITADOR LD_PRELOAD de asignaciones CUDA (ficha FEATURE-LIMITADOR-LD-PRELOAD-CUDA-GB10-01)
+Alcance: solo lectura. Se clonaron con --depth 1 en un directorio nuevo; NADA se ejecuto, compilo ni instalo.
+Convencion: [LEIDO] = visto en el archivo/URL citado. [INFERENCIA] = deduccion mia, sin salida que la contradiga todavia.
+Contexto del hardware: GB10, memoria unificada, driver 580.178.04, kernel 6.17.
+
+======================================================================
+0. RESUMEN EJECUTIVO (de esta parte)
+======================================================================
+- Existe UN limitador LD_PRELOAD vivo y mantenido: Project-HAMi/HAMi-core (libvgpu.so), Apache-2.0, C, empujado el 2026-10-12.
+- Existe UN limitador viejo (tkestack/vcuda-controller): CUDA <= 11.5.1, sin cuMemCreate/cuMemAllocAsync; descartado para GB10.
+- El "limitador de 96 GB" de modular/modular#6488 NO esta publicado: el issue solo lo nombra ("CUDA memory limiter shim, LD_PRELOAD interception of cuMemAlloc, 96GB cap"). No se pudo leer su codigo.
+- Ningun texto leido (README, issues, tests) de HAMi-core declara soporte o prueba en GB10/Jetson/memoria unificada. Se busco "GB10|Jetson|Tegra|Grace|unified|integrated" en README.md, docs y src: la unica coincidencia en src es el nombre cuMemAllocManaged. Estado: NO PROBADO en GB10.
+- Fallo de seguridad documentado y relevante: con LD_PRELOAD cargado y la variable de limite ausente, HAMi-core NO limita (fail open). Corregido en el binder de KAI-Scheduler, no en libvgpu.
+
+======================================================================
+1. HAMi-core
+======================================================================
+URL: https://github.com/Project-HAMi/HAMi-core
+Commit leido: 5ab7da10f72c72b7c158bb2d81f5148ec0af6392 (fecha de commit 2026-10-09)
+Licencia: LICENSE = "Apache License Version 2.0, January 2004" (texto estandar). Excepcion en NOTICE:1-12 [LEIDO]: src/include/nvml-subset.h deriva de cabeceras NVML de NVIDIA (1993-2018) y queda bajo los terminos de la cabecera de ese archivo, no Apache. Cualquier reutilizacion debe excluir ese archivo.
+Lenguaje: C (CMake). Tamano: src 544 KB, .git 728 KB (depth 1), ~7.757 lineas en src/*.c clave (memory.c 893, multiprocess_memory_limit.c 1676, libvgpu.c 935, allocator.c 418, hook.c 412).
+Mantenimiento (API gh): 343 estrellas, pushed 2026-10-12.
+
+1.1 Mecanismo [LEIDO]
+- Intercepta dlsym y cuGetProcAddress/cuGetProcAddress_v2 para que el runtime CUDA (libcudart) reciba sus funciones: src/libvgpu.c:125 (dlsym), :147-148 (DLSYM_HOOK_FUNC(cuGetProcAddress...)), src/cuda/hook.c:349-365 (_cuGetProcAddress devuelve el simbolo hookeado si esta en la tabla).
+- Contabilidad PROPIA, no NVML: usage = suma por proceso de los bytes interceptados, en una region compartida mmap (src/multiprocess/multiprocess_memory_limit.c:372-440, get_gpu_memory_usage lee slots por proceso con seqlock). Esto importa en GB10, donde NVML no da memoria por proceso (ver seccion 5).
+- Chequeo de limite: src/allocator/allocator.c:37-74 (oom_check_impl): si limit==0 devuelve 0 (sin limite) en :51-53; si usage+addon > limit devuelve OOM. reserve_device_memory (:80-89) reserva bajo lock compartido para evitar carreras entre procesos.
+- Falsea cuMemGetInfo_v2: src/cuda/memory.c:515-556. Con limit!=0 devuelve total=min(limit,total_driver) y free=total-usage. Esto hace que vLLM/PyTorch "vean" el techo. Con limit==0 devuelve free = drv_total - usage (:529-532), es decir TOTAL del driver, no MemAvailable.
+- Variables: CUDA_DEVICE_MEMORY_LIMIT (y _<n> por dispositivo) src/include/memory_limit.h:12, src/multiprocess/multiprocess_memory_limit.c:265-269; CUDA_DEVICE_MEMORY_SHARED_CACHE (fichero de region compartida) :1327-1332; ACTIVE_OOM_KILLER :1241-1252; LIBCUDA_LOG_LEVEL src/log_utils.c:13; ENV_OVERRIDE_FILE cargado en initialized() :1458-1460.
+- Valor 0 = sin limite: multiprocess_memory_limit.c:205 (LOG_WARN "device memory limit set to 0, which means no limit"). Valor no parseable = sin limite: :197 (LOG_ERROR "Unparsable limit, no limit applied").
+- Formato del valor (README.md "Usage"): 1g, 1024m, 1048576k, bytes. README: "If you have updated CUDA_DEVICE_MEMORY_LIMIT ... please delete the local cache file" (/tmp/cudevshr.cache). Requiere crear /tmp/vgpulock/ en uso local.
+
+1.2 Funciones del driver API interceptadas (lista exacta de contabilidad de memoria)
+Tabla de hooks: src/cuda/hook.c:68-155 y src/include/libcuda_hook.h:101-189; implementacion en src/cuda/memory.c.
+  CUENTAN contra el limite (reservan/chequean bytes de dispositivo):
+  - cuMemAlloc_v2          memory.c:119-127 -> allocate_raw -> add_chunk (allocator.c:156)
+  - cuMemAllocPitch_v2     memory.c:164-200 (cuenta bytes con pitch)
+  - cuMemAllocManaged      memory.c:143-162  reserve_device_memory + add_chunk_only  [LEIDO: SI cuenta, bytes completos]
+  - cuMemCreate            memory.c:629-654  SOLO si prop->location.type == CU_MEM_LOCATION_TYPE_DEVICE (:633); otros tipos de ubicacion NO se cuentan
+  - cuMemRelease           memory.c:656-662  descuenta
+  - cuMemAllocAsync        memory.c:679-682 -> allocate_async_raw (allocator.c:404) -> add_chunk_async
+  - cuMemFreeAsync         memory.c:684-693  descuenta (allocator.c:297-317)
+  - cuMemAllocFromPoolAsync hook en libvgpu.c:286, implementacion allocator.c:384-398 (add_chunk_from_pool_async)
+  - cuArrayCreate_v2, cuArray3DCreate_v2, cuMipmappedArrayCreate (+Destroy): memory.c:96-110, :557-578
+  - cuMemFree_v2           memory.c:206 (descuenta)
+  CHEQUEAN pero NO SUMAN (check_oom con addon=0, memory.c:50-55): son memoria del anfitrion fijada; sobre UMA igual consumen el pozo comun.
+  - cuMemAllocHost_v2      memory.c:129-141
+  - cuMemHostAlloc         memory.c:227-240
+  - cuMemHostRegister_v2   memory.c:243-266
+  Evidencia: la comprobacion es DESPUES de la asignacion real y con addon=0, asi que solo detecta que la suma YA contada excede el limite; no agrega los bytes pinned a ninguna cuenta.
+  NO INTERCEPTADAS (no hay hook ni en hook.c ni en libcuda_hook.h) [LEIDO por ausencia, comprobado con grep en memory.c, hook.c, libcuda_hook.h]:
+  - cuMemAdvise/cuMemPrefetchAsync: cuMemAdvise (memory.c:498-511) solo reenvia, sin contar.
+  - cuMemMap/cuMemAddressReserve/cuMemImportFromShareableHandle: reenvian sin contar (memory.c:621-677); el conteo ocurre en cuMemCreate.
+  - Memoria del sistema (malloc/mmap/new) accedida por la GPU: ningun hook CUDA puede verla.
+  Funciones de pool (cuMemPoolCreate/Destroy/SetAttribute/...) solo se reenvian (memory.c:705-738).
+
+1.3 Que significa para UMA/GB10 [INFERENCIA, no probada]
+- cudaMalloc de PyTorch y vLLM pasa por cuMemAlloc_v2 (o por cuMemCreate si expandable_segments:True, o cuMemAllocAsync con el asignador asincrono). HAMi cubre las tres rutas. Es la ruta que el issue vLLM#55569 y #56824 acusan del colapso del anfitrion (asignaciones del asignador de cache que crecen sin parar).
+- Un limite "duro" via cuMemAlloc devolveria CUDA_ERROR_OUT_OF_MEMORY al llamante, y PyTorch lo trata como OOM limpio (vacia cache y reintenta). Eso convierte el "NV_ERR_NO_MEMORY + cuelgue" en un OOM de Python, que es el comportamiento del dispositivo discreto. Es la hipotesis central; nadie la ha medido en GB10.
+- Huecos que sobreviven al limitador: memoria pinned (cuMemAllocHost/cuMemHostAlloc/cuMemHostRegister no suman); malloc/mmap accedidos por ATS/HMM; memoria del propio driver y contextos CUDA (no pasan por estos hooks); page cache. Por eso un limite de HAMi acota solo "lo que CUDA asigno por estas rutas", no el uso total del pozo UMA. Hay que seguir con un vigilante de MemAvailable (ver ficha FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01).
+- Con limit==0, cuMemGetInfo_v2 devuelve el total del driver menos lo contado (memory.c:529-532): sobre UMA eso sigue diciendo "casi todo libre" (el defecto que modular#6488 y la vLLM#46307 describen). Para que vLLM calcule bien hay que fijar CUDA_DEVICE_MEMORY_LIMIT.
+- Arquitectura: el repo incluye src/dlsym_entry.S con salto RTLD_NEXT "on supported architectures" (libvgpu.c:95 comentario) y ramas aarch64 en ensamblador de spin (multiprocess_memory_limit.c:404-406 usa "yield" en __aarch64__). No hay CI aarch64 visible: grep de aarch64/arm64 en CMakeLists.txt y .github/workflows no devolvio coincidencias. Compilacion en aarch64: NO VERIFICADA.
+- Dependencia NVML: src/nvml/hook.c y nvml_entry.c (1584 lineas) hookean NVML; el issue Project-HAMi/HAMi-core#218 "fallback to GetProcessesUtilizationInfo on Blackwell GPUs" (cerrado) indica que NVML en Blackwell ya dio problemas. La cuenta de memoria no usa NVML (multiprocess_memory_limit.c:1590 tiene el camino NVML comentado), pero el descubrimiento de PID anfitrion y el monitor de utilizacion si pueden tocarlo: riesgo en GB10 donde NVML esta incompleto (seccion 5). No probado.
+
+1.4 Fallos conocidos
+- Fail open sin variable: KAI-Scheduler#2156 (closed, completed 2026-09-17). Texto leido: pods con /etc/ld.so.preload apuntando a libvgpu.so pero sin CUDA_DEVICE_MEMORY_LIMIT corrieron "uncapped at 81559 MiB instead of 40779 MiB" y el log decia "HAMI-core ... Initialized" igual que los pods limitados. 3 de 16 pods, determinista tras reiniciar GPU Operator. El issue propone: (a) fallar cerrado, (b) que libvgpu rechace arrancar sin limite. Corregido por KAI-Scheduler PR #2157 "fix(binder): fail closed when hamicore cannot calculate GPU memory limit" (merged). La causa en libvgpu sigue (multiprocess_memory_limit.c:205 trata 0/ausente como "sin limite" con un LOG_WARN). Licencia KAI-Scheduler: Apache-2.0.
+  LECCION PARA NOSOTROS: un lanzador que inyecte LD_PRELOAD debe verificar la variable y, tras arrancar, comprobar el techo efectivo (control negativo: lanzar SIN la variable y comprobar que el lanzador/arnes lo detecta como fallo).
+- Issues abiertos relevantes (API gh, consulta "GB10 OR Jetson OR unified OR Thor OR Spark" en el repo): ninguno cita GB10/Jetson/Spark. Los resultados fueron: #350 (limite SM no se activa con politica por defecto, abierto), #354/#353/#358 (PID anfitrion y utilizacion, abiertos), #281 cuPointerGetAttributes sobre memoria managed (cerrado). Es decir: no hay reporte publico de GB10 en este repo, ni a favor ni en contra.
+- Latencia: cada asignacion toma un lock compartido (reserve_device_memory, allocator.c:80-89) y las lecturas son seqlock con espera exponencial (multiprocess_memory_limit.c:382-413). Costo sobre vLLM no medido.
+
+1.5 Reutilizacion con atribucion
+- Apache-2.0 permite copiar y modificar con aviso de licencia y atribucion. Excluir src/include/nvml-subset.h (licencia NVIDIA propia).
+- Alternativa: no copiar, usar libvgpu.so compilado de este repo tal cual (si compila en aarch64) y escribir solo el lanzador. Es el camino con menos codigo propio (escalera ponytail: Reuse/Installed dep antes que Minimum code).
+
+======================================================================
+2. tkestack/vcuda-controller (descartado para GB10)
+======================================================================
+URL: https://github.com/tkestack/vcuda-controller  Commit: 72e0115d5884f22469de857271c002c84c0d0543  pushed 2024-06-07
+Licencia: LICENSE = "Tencent ... TKEStack is licensed under the Apache License Version 2.0, except for the third-party components listed below" (incluye componentes MIT). La API de GitHub la marca NOASSERTION. Lenguaje C, ~7.000 lineas en src, 744 KB.
+[LEIDO] README.md: "CUDA 11.5.1 and before are supported"; "Any architecture of GPU after Kepler".
+Hooks de memoria (src/hijack_call.c:157-170): cuMemAllocManaged, cuMemAlloc_v2, cuMemAlloc, cuMemAllocPitch_v2, cuMemAllocPitch, cuArrayCreate(_v2), cuArray3DCreate(_v2), cuMipmappedArrayCreate, cuDeviceTotalMem(_v2), cuMemGetInfo(_v2), mas cuLaunch*.
+NO hookea cuMemCreate (aparece solo como entrada de enum en include/cuda-helper.h:927-928, sin hook), ni cuMemAllocAsync, ni cuMemAllocFromPoolAsync, ni cuMemAllocHost/HostAlloc. Con CUDA 13 y PyTorch moderno (expandable_segments, asignador async) el limite se evade.
+Contabilidad: src/hijack_call.c:482-510 usa nvmlDeviceGetComputeRunningProcesses para sumar memoria por PID: depende de NVML por proceso, que en GB10 no entrega memoria (ver seccion 5).
+Config en /etc/vcuda/ con socket RPC a gpu-manager (include/hijack.h:38-65): necesita el gestor de Tencent. Veredicto [INFERENCIA]: no reutilizable en GB10.
+
+======================================================================
+3. modular/modular #6488 (el "limitador de 96 GB")
+======================================================================
+URL: https://github.com/modular/modular/issues/6488  Estado: open. Titulo: "Gemma-4-31B: CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES on DGX Spark GB10 (SM 12.1) - topk sampling kernel". Entorno del reporte: variante AI TOP ATOM, ARM64 Grace, 128 GB unificados, MAX 26.4.0.dev2026050306, CUDA 13.0.
+[LEIDO] Seccion "Additional Issues Found", punto 3 "CUDA Memory Overallocation (OOM)": "Without constraints, CUDA allocates the entire unified memory pool during model loading + graph capture, OOMing the system. Workaround: Use a CUDA memory limiter shim (LD_PRELOAD interception of cuMemAlloc) with a 96GB cap to leave headroom for the OS."
+[LEIDO] Punto 1: "MemoryEstimator.free_memory() reads CUDA-reported GPU memory (~34GB) instead of system available memory (~116GB)... Workaround: Monkey-patch ... to read /proc/meminfo on unified memory systems".
+NO PUDE LEER: el codigo del shim. El issue no enlaza repo, gist ni parche; sin comentarios. Lo unico confirmado es que alguien reporto que un limitador LD_PRELOAD de cuMemAlloc con tope de 96 GiB permitio terminar la carga y captura de grafos en GB10. Es un indicio de comunidad (un solo reporte, sin cifras de antes/despues), no una verdad.
+Observacion [LEIDO]: el shim interceptaba "cuMemAlloc" por nombre; el issue no dice si cubria cuMemCreate/cuMemAllocAsync/cuMemAllocManaged.
+
+======================================================================
+4. kai-scheduler/KAI-Scheduler #2156
+======================================================================
+Ya resumido en 1.4 (fail open). Datos adicionales leidos:
+- Issue: "Isolator fails open: LD_PRELOAD injected without CUDA_DEVICE_MEMORY_LIMIT, pod runs uncapped while logging as enforcing". Cerrado 2026-09-17 (state_reason completed).
+- Entorno del reporte: KAI v0.17.1, kai-resource-isolator 1.1.0, 8x H100 80GB, driver 580.126.20. NO es GB10.
+- Documentacion de KAI (docs/gpu-sharing/hami/README.md:3,5,146 en el repo KAI-Scheduler): "by default it does not enforce memory limits at the CUDA level"; HAMi-core "hooks CUDA memory allocation calls via LD_PRELOAD"; el limite se calcula como fraccion x memoria total (ej. 4096 MiB sobre 15360 MiB da "4147m").
+- Senales que SI distinguen "limitado" de "adjunto pero inerte" (tabla del issue): la variable CUDA_DEVICE_MEMORY_LIMIT y la cifra de nvidia-smi dentro del pod. El mensaje "HAMI-core ... Initialized" aparece en ambos casos. => La verificacion correcta es leer el techo efectivo (cuMemGetInfo_v2 total), no el log de arranque.
+
+======================================================================
+5. Hallazgo colateral: NVML en GB10 (afecta a cualquier limitador que dependa de NVML)
+======================================================================
+[LEIDO via WebFetch, resumen de una pagina de foro, fiabilidad media] https://forums.developer.nvidia.com/t/nvml-support-for-dgx-spark-grace-blackwell-unified-memory-community-solution/358869
+- Existe nvml-unified-shim (CINOAdam/nvml-unified-shim, reemplazo de libnvidia-ml.so.1 con 16 funciones, usa CUDA Runtime + /proc/meminfo), y un fork de parallelArchitect que calcula el total como MemAvailable + SwapFree. Licencias no declaradas en el hilo: NO LEIDAS.
+- El hilo no describe limite por proceso ni por cgroup. Un usuario reporta que "Docker --memory limits don't constrain CUDA unified allocations on GB10".
+- No clone esos repos (el hilo no era el objetivo de la cosecha); queda como pendiente de lectura si se quiere un monitor de memoria compatible con NVML.
+
+======================================================================
+6. TABLA COMPARATIVA
+======================================================================
+Columna: S = intercepta y CUENTA; C = solo CHEQUEA, no suma; - = no intercepta.
+Funcion                      HAMi-core   vcuda-controller   shim 96GB (#6488)
+cuMemAlloc_v2                S           S                  S ("cuMemAlloc", segun el issue)
+cuMemAlloc (legacy)          -           S                  no leido
+cuMemAllocPitch_v2           S           S                  no leido
+cuMemAllocManaged            S           S                  no leido
+cuMemCreate (tipo DEVICE)    S           -                  no leido
+cuMemCreate (otro tipo)      -           -                  no leido
+cuMemAllocAsync              S           -                  no leido
+cuMemAllocFromPoolAsync      S           -                  no leido
+cuArrayCreate/3D/Mipmapped   S           S                  no leido
+cuMemAllocHost_v2            C           -                  no leido
+cuMemHostAlloc               C           -                  no leido
+cuMemHostRegister_v2         C           -                  no leido
+cuMemGetInfo_v2 (falsea)     S           S                  no leido
+cuMemMap/AddressReserve      -           -                  no leido
+cuMemAdvise/Prefetch         -           -                  no leido
+malloc/mmap (ATS/HMM)        -           -                  -
+Fuente de la cuenta          interna     NVML por PID       desconocida
+Rige en CUDA 13             probable    NO (<=11.5.1)       desconocido
+Licencia                     Apache-2.0  Apache-2.0+MIT      sin publicar
+Mantenido (2026-10)          si          no (2024-06)        n/a
+Soporte GB10 declarado       no          no                  si (un reporte, sin codigo)
+
+======================================================================
+7. RECOMENDACION DE ESTA PARTE
+======================================================================
+1. Primer paso medible y barato: compilar HAMi-core en aarch64 en un directorio aislado (NO hecho aqui) y, con una prueba trivial de CUDA (cuMemAlloc de 1 GiB en un proceso con CUDA_DEVICE_MEMORY_LIMIT=512m), comprobar (a) que devuelve OOM limpio, (b) que cuMemGetInfo_v2 reporta total=512 MiB, (c) CONTROL NEGATIVO: lo mismo sin la variable debe dejar pasar 1 GiB y el lanzador debe detectar la ausencia como fallo.
+2. Segundo paso: repetir con torch.empty en cuda con y sin expandable_segments:True y con el asignador async, para confirmar que las tres rutas (cuMemAlloc_v2, cuMemCreate, cuMemAllocAsync) quedan contadas.
+3. Antes de confiar en el techo: medir cuanto del uso total de la memoria queda fuera de la cuenta (pinned, contexto, grafos CUDA). La cuenta de HAMi no es la del pozo.
+4. No usar vcuda-controller.
+Lo que NO se pudo leer: codigo del shim de 96 GB; compilacion/ejecucion de cualquier libreria; comportamiento de HAMi-core en aarch64 y en GB10; licencias de nvml-unified-shim.
