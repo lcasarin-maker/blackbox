@@ -1,0 +1,66 @@
+# Envoltorio de runtime OCI: lo medido sin root (2026-10-12)
+
+Esto NO es la medicion del cierre. El close_check exige `medicion.md` con la frase
+que solo escribe `tools/portero_docker_lab.sh prueba` en el daemon de laboratorio
+(nivel 2), y ese daemon no se ha levantado. Este fichero recoge el nivel 1.
+
+## Nivel 1: contenedor real con runc rootless (sin Docker, sin root)
+
+`runc 1.3.6` rootless con `--systemd-cgroup` funciona en esta maquina: el contenedor
+cae en `app.slice/bblab-<id>.scope` del systemd de usuario, que tiene delegados
+`cpu memory pids` (medido: `cgroup.subtree_control` de `user@1000.service`).
+El envoltorio se invoco exactamente como lo invocaria containerd:
+`bb_oci_runtime.py --root <st> --rootless=true --systemd-cgroup create --bundle <b> <id>`,
+con `BB_OCI_REAL_RUNTIME=runc`. Bundle de `runc spec --rootless`, rootfs vacio con
+`/usr` del host en solo lectura, proceso `sleep 20`.
+
+Reproducir: `L1_DIR=<dir> bash l1_run.sh <repo> <id> <modo> [directo]` (este directorio).
+Salida literal completa, con el registro jsonl: `nivel1-salida.txt`.
+
+| caso | rc create | memory.max | memory.swap.max | pids.max | decision registrada |
+|---|---|---|---|---|---|
+| sin tope | 0 | 3221225472 | 0 | 2048 | CORREGIR (clase general) |
+| **control negativo**: mismo bundle, runc directo SIN envoltorio | 0 | max | max | 152777 | (no pasa por el envoltorio) |
+| tope propio mas estricto (64 MiB, pids 16) | 0 | 67108864 | 0 | 16 | ADMITIR, sin cambios |
+| GPU (`NVIDIA_VISIBLE_DEVICES=all`) sin anotacion | 3 | (sin cgroup) | | | RECHAZAR |
+| GPU con `bb.gpu_budget_gib=36` | 0 | 15032385536 | 0 | 2048 | CORREGIR (clase gpu), reclamo 36.0 |
+| GPU con reclamo 60 > suelo 50.1 | 3 | (sin cgroup) | | | RECHAZAR |
+| config.json truncado | 1 (lo devuelve runc: `unexpected EOF`) | (sin cgroup) | | | NO_ACTUAR, `NOT_COLLECTED` |
+
+El control negativo es lo que hace valer la fila de arriba: la misma lectura de
+`memory.max` sale `max` cuando el envoltorio no esta en medio. El caso truncado
+muestra el fallo cerrado: el envoltorio no bloquea, pasa el spec intacto y el que
+falla es runc, igual que hoy sin envoltorio.
+
+Limite del nivel 1: la GPU se pide solo por variable de entorno; el runtime real era
+`runc`, no `nvidia-container-runtime`, asi que el contenedor admitido con reclamo no
+recibio GPU. No se probo bajo Docker ni con el runtime nvidia: eso es el nivel 2.
+
+## Pruebas dorado y mutaciones
+
+`tests/test_bb_oci_runtime.py`: 38 casos, base `runc spec` (runc presente).
+`python3 -m pytest -q -p no:cacheprovider tests/test_bb_oci_runtime.py` -> `38 passed`.
+
+Mutaciones: `python3 mutar.py <repo>` anula cada rama de `tools/bb_oci_runtime.py`
+una a una, corre el test de esa rama y restaura el fichero. Salida literal:
+`mutaciones-salida.txt`, resultado `mutantes vivos o sin correr: 0 de 18`.
+
+Guarda del script de laboratorio, en las dos direcciones (corrido sin root):
+- `BB_LAB_SOCK=/var/run/docker.sock bash tools/portero_docker_lab.sh status` ->
+  `[lab] ERROR: el socket del laboratorio (/var/run/docker.sock -> /run/docker.sock) es el de produccion (/var/run/docker.sock); no se actua`, rc=1.
+- con un enlace simbolico a `/var/run/docker.sock` como socket: mismo rechazo, rc=1.
+- `bash tools/portero_docker_lab.sh status` (socket propio): `containerd lab: abajo`,
+  `dockerd lab: abajo`, `sin respuesta en /run/bb-lab/docker.sock`, `bblab.slice: sin cgroup`, rc=0.
+- `bash tools/portero_docker_lab.sh up` sin root: `'up' necesita root`, rc=1.
+
+## Origen de cada numero de la politica
+
+- Clase general 3 GiB / pids 2048: el mayor tope aplicado en vivo el 2026-10-12
+  (librechat, 4x su pico de 753 MiB) y el pids aplicado ese dia. Picos medidos hoy
+  en `docker.slice/docker-<id>.scope/memory.peak`: atlas-pgvector 1438220288,
+  librechat 790507520, aequitas-pg 439193600, mongo-librechat 427773952; mayor
+  `pids.peak` 71.
+- Clase gpu 14 GiB: `docker.slice` `memory.max` = 15032385536, el padre que ya acota
+  a todo contenedor de produccion. vLLM `memory.peak` = 13368209408, `pids.peak` = 211.
+- Suelo GPU 50.1 GiB: p95 de 19 901 muestras (`99-blackbox.conf`, voto 2026-09-27).
+  Configurable con `BB_OCI_GPU_FLOOR_GIB`; el registro guarda `suelo_origen`.
