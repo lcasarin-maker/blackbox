@@ -288,10 +288,10 @@ cmd_prueba() {
     printf '%s' "$SALIDA" >"$f"
     if [ "$FALLOS" -eq 0 ] && [ "$NO_CORRIO" -eq 0 ]; then
         printf '\n## Nivel 2 (%s)\n\nruntime_oci_probado: 5 de 5 casos, control negativo incluido; salida literal en %s.\n' \
-            "$(date -Iseconds)" "$(basename "$f")" >>"$EVIDENCIA/medicion.md"
-        log "PASS: anotado runtime_oci_probado en $EVIDENCIA/medicion.md"
+            "$(date -Iseconds)" "$(basename "$f")" >>"$EVIDENCIA/medicion.txt"
+        log "PASS: anotado runtime_oci_probado en $EVIDENCIA/medicion.txt"
     else
-        log "NO probado: fallos=$FALLOS could_not_run=$NO_CORRIO; salida en $f (medicion.md no se toca)"
+        log "NO probado: fallos=$FALLOS could_not_run=$NO_CORRIO; salida en $f (medicion.txt no se toca)"
     fi
     if [ -n "${SUDO_USER:-}" ]; then chown -R "$SUDO_USER:" "$EVIDENCIA"; fi
     [ "$FALLOS" -eq 0 ] && [ "$NO_CORRIO" -eq 0 ]

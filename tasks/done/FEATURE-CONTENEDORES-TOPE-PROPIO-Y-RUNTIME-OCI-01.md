@@ -3,7 +3,10 @@ id: FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01
 kind: task
 domain: MEMORY
 title: "Todo contenedor con tope propio desde su creacion, incluido vLLM, via runtime OCI de bb"
-status: open
+status: done
+closed_at: 2026-10-12
+closure_type: relocated_prior_verification
+evidence: {"pass": "tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/prueba-nivel2-20261012T075841.txt", "fail": "tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/mutaciones-salida.txt", "e2e": "tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/nivel1-y-dorado.txt", "measure": "tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/medicion.txt"}
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -68,3 +71,12 @@ Nunca se prueba en el daemon de produccion (contiene nemotron-server, atlas-pgve
 1. Envoltorio `bb-oci-runtime`, script de laboratorio y sus pruebas: nivel 1 hecho (2026-10-12); falta el nivel 2, que ejecuta Luis con `sudo bash tools/portero_docker_lab.sh up && sudo bash tools/portero_docker_lab.sh prueba; sudo bash tools/portero_docker_lab.sh down` (detalle en `tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/instrucciones-nivel2.txt`).
 2. Persistir los topes de los contenedores existentes en sus creadores.
 3. Decidir `atlas-pgvector` (swap) y la absorcion de `gpu_governance`.
+
+## Root Cause
+Los contenedores nacian sin tope propio y el tope de Docker no gobierna la memoria unificada; nada en el punto de creacion del cgroup los obligaba.
+
+## Regression Test
+`tests/test_bb_oci_runtime.py` (38 casos, 18 mutaciones sin vivas) y el nivel 2 bajo un dockerd de laboratorio: 5 de 5 casos con control negativo (el control sin envoltorio nace con `max/max`).
+
+## Verification Evidence
+Nivel 2 2026-10-12T07:58:41: `bblab-sintope` memory.max=3221225472 swap=0 pids=2048; `bblab-estricto` 67108864 intacto; GPU sin anotacion y GPU con 60 GiB rechazadas con RECHAZAR en el registro. Un primer intento fallo (31 min antes) porque `/run` es noexec; corregido en b8171ad. Sigue SIN probar: `nvidia-container-runtime` con GPU real y el despliegue en produccion, que va en DEBT-DESPLIEGUES-PENDIENTES-DE-LUIS-01 (requiere `--annotation bb.gpu_budget_gib` en ai-nemotron).
