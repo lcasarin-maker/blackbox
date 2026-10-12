@@ -49,3 +49,10 @@ Leido en el codigo 615 (`src/nvidia/src/kernel/mem_mgr/`):
 
 Inferencia (no probada): con FB total N/A, el tamano de la region puede ser 0 y memacct no registrar nada; y si las asignaciones de GB10 son de sysmem, tampoco pasan por `video_mem.c`. En ese caso el backport es esfuerzo sin efecto. Lo que lo confirmaria o refutaria: cargar el modulo 615 en un entorno aislado con `LEVEL_INFO` y leer `/sys/fs/cgroup/dmem.capacity` (exige modulos propios, es decir MOK) o encontrar en 615 la salida de `memmgrGetTotalRamSizeBytes` para GB10 (no leido todavia).
 Estado: el backport queda condicionado; no se pide la llave MOK hasta leer esa funcion para chip GB10.
+
+### Lectura decisiva del codigo 615 (2026-10-12, misma sesion)
+- `g_gpu_arch_nvoc.c:113-120`: `bGpuArchIsZeroFb = true` para `ChipHal: GB10B | GB10C | GB20B | GB20C`.
+- `mem_mgr.c:4178-4190`: si `bGpuArchIsZeroFb`, `memmgrGetTotalRamSizeBytes` devuelve 0 ("[zero-FB, No local RAM] TOTAL_RAM_SIZE = 0").
+- `memacct.c:455-462`: con tamano 0, "region zero size, ignoring" y no se registra region en dmem.
+Conclusion de lectura: en una GB10 de ese HAL, `memacct` no crea region y `dmem.capacity` seguiria vacio; el backport no daria limite alguno. Consistente con `nvidia-smi` FB = N/A.
+Lo que NO esta cerrado: que ESTE chip sea GB10B/GB10C no se puede leer desde el espacio de usuario (`Model: Unknown`; PCI 10de:2e12 no esta en una tabla del codigo; el HAL sale de un registro). Estado: fuerte indicio de que la ficha y FEATURE-DMEM-BOOSTERS-ADAPTAR-A-GB10-01 no tienen objeto en esta maquina; no se cierran hasta confirmar el HAL con el modulo cargado (exige modulos propios) o con una version de NVIDIA que cambie GB10 a FB no cero. No se pide la llave MOK.
