@@ -62,8 +62,8 @@ def destino_desplegado(f: Path) -> str | None:
         return "/" + f.name.replace("_", "/")
     if f.parent.name == "systemd-user":
         return "~/.config/systemd/user/" + f.name
-    if f.parent.name == "gpu_governance":
-        return "/srv/ai/gpu_governance/" + f.name
+    if f.parent.name in ("gpu_governance", "gateway"):
+        return f"/srv/ai/{f.parent.name}/{f.name}"
     return None
 
 

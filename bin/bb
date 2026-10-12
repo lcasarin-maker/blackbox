@@ -2832,19 +2832,34 @@ cmd_drift() {
       echo "  AUSENTE     $1 (esta en el repo pero ya no en la maquina)"
       missing=$((missing + 1)); return
     fi
-    if cmp -s "$1" "$2"; then
+    # El repo es PUBLICO: una copia adoptada con una IP de LAN la lleva
+    # redactada (`<REDACTADO-IP-LAN>`), y se compara contra el desplegado con
+    # la misma redaccion. Limite declarado: un cambio de ESA IP no se ve.
+    local desplegado="$1" marca="<REDACTADO-IP-LAN>"
+    if grep -qF "$marca" "$2"; then
+      desplegado=$(mktemp)
+      sed -E "s/\\b(10(\\.[0-9]{1,3}){3}|192\\.168(\\.[0-9]{1,3}){2}|172\\.(1[6-9]|2[0-9]|3[01])(\\.[0-9]{1,3}){2})\\b/$marca/g" \
+        "$1" > "$desplegado"
+    fi
+    if cmp -s "$desplegado" "$2"; then
       echo "  igual       $1"
     else
       echo "  DIVERGE     $1"
-      diff -u "$2" "$1" 2>/dev/null | head -12 | sed 's/^/                /'
+      diff -u "$2" "$desplegado" 2>/dev/null | head -12 | sed 's/^/                /'
       diverged=$((diverged + 1))
     fi
+    [ "$desplegado" = "$1" ] || rm -f "$desplegado"
   }
 
   echo "== divergencia repo vs maquina =="
-  for f in "$root"/adopted/gpu_governance/*.sh; do
-    [ -e "$f" ] || continue
-    cmp_one "/srv/ai/gpu_governance/$(basename "$f")" "$f"
+  # BLACKBOX_DRIFT_SRV: el mismo patron que BLACKBOX_DRIFT_ROOT, para el lado
+  # desplegado de /srv/ai.
+  local srv="${BLACKBOX_DRIFT_SRV:-/srv/ai}" sub
+  for sub in gpu_governance gateway; do
+    for f in "$root"/adopted/"$sub"/*.sh; do
+      [ -e "$f" ] || continue
+      cmp_one "$srv/$sub/$(basename "$f")" "$f"
+    done
   done
   for f in "$root"/adopted/systemd-user/*; do
     [ -e "$f" ] || continue

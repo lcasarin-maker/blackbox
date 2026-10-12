@@ -2,7 +2,7 @@
 # es una decision escrita con su motivo; uno que no este ni aqui ni en un
 # instalador es un hueco, y `tools/config_entregable.sh` lo bloquea.
 #
-# Lo que estar aqui NO significa: que el fichero no importe. Los cuatro se
+# Lo que estar aqui NO significa: que el fichero no importe. Todos se
 # siguen comparando con `bb drift`, que es exactamente para lo que se guardan.
 # Lo que se declara es otra cosa: que el remedio de una divergencia NO es
 # correr `enable-privileged.sh`, sino lo que diga su entrada.
@@ -82,3 +82,67 @@ etc_default_kdump-tools
     que hay es riesgo de pisar una plantilla que evoluciona.
     Remedio de una divergencia: mirar si la diferencia es la linea local o una
     plantilla nueva, y en el segundo caso re-adoptar en vez de restaurar.
+
+
+--- Adoptados el 2026-10-12 (FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE-LA-MAQUINA-01)
+
+etc_systemd_coredump.conf.d_99-blackbox.conf
+etc_security_limits.d_99-blackbox-core.conf
+etc_systemd_system.conf.d_99-blackbox.conf
+etc_systemd_user.conf.d_99-blackbox.conf
+    SI tienen camino a la maquina: las secciones 1 y 2 de `enable-privileged.sh`
+    los ESCRIBEN con un heredoc o un `printf` en linea, no con `cp` desde
+    `adopted/`. Hasta el 2026-10-12 `bb drift` no los miraba: eran de bb y
+    estaban fuera de su vigilancia. La copia es el contenido desplegado ese dia.
+    Remedio de una divergencia: editar el heredoc/`printf` de
+    `enable-privileged.sh`, correrlo, y re-adoptar la copia. Limite declarado:
+    nada compara el heredoc con la copia; si se edita uno solo, `bb drift` lo
+    vera al desplegar, no antes.
+
+
+etc_default_earlyoom
+    Conffile del paquete `earlyoom` (`dpkg --verify earlyoom` lo marca
+    modificado, `??5??????`). La seccion 6 lo edita EN SITIO con `sed` y guarda
+    copia en el backup; copiarlo entero desde el repo pisaria la plantilla del
+    paquete -- el mismo caso que `etc_default_kdump-tools`.
+    Remedio de una divergencia: mirar si cambio `EARLYOOM_ARGS` (decision de
+    bb: re-correr la seccion 6) o la plantilla (re-adoptar).
+
+
+etc_docker_daemon.json
+    La seccion 9 lo MEZCLA (anade `"cgroup-parent": "docker.slice"` y conserva
+    el runtime de nvidia), nunca lo copia: el resto del fichero es del
+    fabricante. Sin `cgroup-parent` los contenedores salen de `docker.slice` y
+    su techo deja de aplicarles.
+    Remedio de una divergencia: re-correr la seccion 9 si falta `cgroup-parent`;
+    si cambio otra clave, re-adoptar.
+
+
+etc_default_grub
+    La seccion 8b lo edita EN SITIO (`GRUB_DEFAULT` fijado al kernel
+    6.17.0-1032-nvidia, menu visible 5 s). `dpkg -S` no lo reclama; lo gestiona
+    ucf (existe `/etc/default/grub.ucf-dist`).
+    Remedio de una divergencia: si cambio `GRUB_DEFAULT`, decidir si el kernel
+    nuevo se queda (re-adoptar) o se vuelve (re-correr 8b). Un kernel cambiado
+    en silencio es lo que esta copia existe para ver.
+
+
+etc_default_grub.d_kdump-tools.cfg
+    Conffile del paquete `kdump-tools` (`dpkg --verify kdump-tools` lo marca
+    `??5??????`): lleva `crashkernel=1G-:512M`, la reserva de memoria sin la que
+    kdump no captura. Ningun script de este repo lo escribe; se adopta para ver
+    si una actualizacion del paquete cambia la reserva.
+    Remedio de una divergencia: comprobar `cat /sys/kernel/kexec_crash_loaded`
+    tras el siguiente arranque; re-adoptar si sigue en 1.
+
+
+etc_systemd_system_journal-udp-forward.service
+usr_local_bin_journal-udp-forward.sh
+    Reenvia `journalctl -kf` por UDP a otra maquina de la LAN: el reemplazo de
+    netconsole, la captura que sobrevive a un cuelgue. Creados a mano el
+    2026-09-09 (`dpkg -S` no los reclama, ningun script los instala). La copia
+    del `.sh` lleva la IP destino REDACTADA (`<REDACTADO-IP-LAN>`) porque el
+    repo es publico; `bb drift` aplica la misma redaccion al desplegado antes de
+    comparar. Limite declarado: un cambio de esa IP no se ve como divergencia.
+    Remedio de una divergencia: no hay instalador; editar en la maquina y
+    re-adoptar (redactando de nuevo la IP).
