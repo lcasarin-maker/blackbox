@@ -11,7 +11,26 @@ created: 2026-10-12
 close_check: {"cmd": "grep -q suites_pytest_con_techo tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/medicion.md", "expect": "exit_zero", "porque": "Dos colapsos (boots 5461291a a las 22:02 y 7b217d8b a las 22:44, PSI memory full 98 % con 15-30 GB disponibles, reinicio por watchdog, BERT 0x10) arrancaron con una suite pytest de Atlas corriendo (scopes liberation_job_test_* a las 21:48 y 22:43), vLLM con 33 peticiones y, la primera vez, un pre-push de otro proyecto. En el segundo no corria ningun job de la cola. Cierra cuando haya una medicion con las suites bajo un scope con MemoryMax y el colapso no se reproduzca, escrita en medicion.md con la frase suites_pytest_con_techo."}
 ---
 
-## Medido (2026-10-12)
+## Diagnostico a fondo (2026-10-12), medido en `samples/` de bb
+
+Cadena: enjambre de procesos en `app-com.anthropic.Claude-*.scope` (sesiones de agente y sus pytest-xdist) -> `app.slice` pegado a ~39-40 GiB de su `MemoryMax=42G` -> estancamiento (PSI memory full 98 %) con 18-30 GB libres en el sistema -> `bb-usable` declara COLAPSO a los 300 s y, por diseno, deja de acariciar el watchdog -> reinicio de TODA la maquina. vLLM seguia sirviendo (el journal lo muestra con 200 OK durante el colapso 1): el fallo era local al slice de apps, la maquina entera se reinicio por la politica.
+
+- Colapso 1 (22:02): scope Claude 25-30 GB con 150-193 procesos desde las 21:44 (antes 14-15 GB y ~90-115 procesos); `app.slice` 41.1-41.5 M kiB entre 21:58 y 22:00 (94 % del tope).
+- Colapso 2 (22:44): scope Claude de 23.6 a 34.5 a 38.4 GB en dos minutos, procesos 46 -> 62 -> 136; un `python3` (pid 73493) tomo 26 GB en un minuto; swap out 12 000 paginas/s; `app.slice` 41.1 M kiB; `scope_pressure_alert` encendio a las 22:45:03 (solo observa). Ningun job de la cola de Atlas corria; si la suite de Atlas (22:43:47), 4-5 procesos `claude` reanudando sesiones (+6 GB cada uno) y vLLM.
+- 05-oct (`DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01`): `app.slice` 40.32 GiB, PSI 49 %: el mismo mecanismo, y dice que el `MemoryMax=42G` no lo freno.
+- Calibracion con 489 muestras que traen scope y PSI: con el scope Claude por debajo de 35 GB, 0 de 439 muestras tuvo PSI full >= 10 (maximo 7.17); con 35-40 GB, 2 de 2 la tuvieron (maximo 64.7). Muestra pequena para el tramo alto.
+- No fue hardware ni el reindexado de Atlas (el colapso 2 ocurrio sin el) ni calor (sin throttle termico).
+
+Limite declarado: `memory.events` de `app.slice` (cuantas veces toco `max`, `oom_kill`) se pierde al reiniciar; que el slice estuviera contra su techo es inferencia por su 94 % de uso, no una lectura directa.
+
+## Prevencion propuesta
+
+1. Escalon antes del reinicio en `bb-usable`: con PSI full >= 10 sostenido 60 s y `app.slice` >= 90 % del tope, matar el proceso mayor del scope Claude que no sea `claude`/`node` (el pytest o python desbocado) en vez de esperar 300 s y reiniciar la maquina. Con control negativo: un acaparador sintetico en un scope de prueba.
+2. Persistir `memory.events` y `memory.pressure` de `app.slice` en cada muestra de `bb sample`, para convertir la inferencia en medicion.
+3. Demanda: limitar `-n` de pytest-xdist a 4 workers en los repos y correr suites completas bajo `systemd-run --user --scope -p MemoryMax=20G -p MemorySwapMax=0`.
+
+## Medido antes (2026-10-12, primera version de esta ficha)
+
 
 - Colapso 1: PSI full 42 % a las 22:02:07 (boot 5461291a) hasta el reinicio de las 22:12:46. Corria el job 79_00 de Atlas, una suite de Atlas desde las 21:48 y un pre-push de otro proyecto desde las 21:51.
 - Colapso 2: PSI full >= 10 sostenido desde ~22:44:12 (boot 7b217d8b), reinicio a las 22:54:41. Solo corrian jobs pequenos de la cola (terminaron 22:27) y una suite pytest de Atlas desde las 22:43:47.
