@@ -47,7 +47,7 @@ Medir el calor como residencia (minutos sobre cada umbral, racha maxima) en la t
 
 El throttle termico de hardware aparece solo en los dos boots mas largos y cargados (295efc0f: 7.2 h con GPU >= 80 %; 54b71618), con la GPU entre 79 y 86 C y la zona entre 89.1 y 92.1 C. La ultima muestra con `SW_THERMAL_SLOWDOWN` del boot que murio es 2 min antes de la ultima muestra. Es correlacion con la exposicion a carga sostenida, no una causa demostrada. `tools/incident_report.py` ya imprime este historial (`throttle_del_boot`); falta llevarlo a `bb scan`.
 
-## Pedido de la sesion "declutter atom" (2026-10-11): aviso a mas de 100 C
+## Pedido de la sesion "proyecto externo atom" (2026-10-11): aviso a mas de 100 C
 
 Medido el 11-oct 16:40 por esa sesion: `thermal_zone0` y `thermal_zone4` en 96 C con trip 104.8 C. Mi telemetria confirma 94.4-96.3 C sostenidos de 11:50 a 12:13 (pico del boot 98.1 C) sin rampa previa al corte. Piden un aviso cuando z0 o z4 pasen de 100 C.
 
@@ -59,7 +59,7 @@ Alcance a agregar al cierre: ademas del arreglo de la corroboracion, un evento `
 Al ir a "arreglar la corroboracion" lei el docstring de `_alarmas` (DGX-396): en el flanco de subida `descarta` es **por diseno** y se lee "en este instante el gate todavia no bloquearia", nunca "esto fue ruido"; quien mitiga lee `carga_gpu`. Tocar su semantica reabriria la divergencia que ese diseno cerro, asi que **no se toco**. Lo que estaba mal:
 
 1. **`bb scan` leia `descarta` como ruido** ("picos de sensor descartados (ruido, no eventos)") e imprimia 0 eventos reales: **corregido**; ahora imprime calor sostenido y throttle decodificado (`incident_report.residencia_ventana`).
-2. **El sampler no tenia ningun evento de calor sostenido**: **agregado**, aditivo y sin cambiar `_alarmas` ni lo que recibe `mitigar`: `temp_sostenida` / `temp_sostenida_fin` (ventana de 60 lecturas, banda umbral-5 C = 89.8 C, 80 %) y `temp_sobre_100` (pedido de la sesion declutter atom).
+2. **El sampler no tenia ningun evento de calor sostenido**: **agregado**, aditivo y sin cambiar `_alarmas` ni lo que recibe `mitigar`: `temp_sostenida` / `temp_sostenida_fin` (ventana de 60 lecturas, banda umbral-5 C = 89.8 C, 80 %) y `temp_sobre_100` (pedido de la sesion externa).
 
 **Calibracion y su limite:** la primera version (banda umbral-2 C) no disparo nunca en la reproduccion sobre los datos reales; con la banda a umbral-5 C marca 65.8 min de las 22 h del boot del corte (3 episodios, uno 33 min antes del corte). Es UN boot: constantes provisionales, a re-medir con mas boots y con un boot SANO bajo carga pesada, que hoy no existe en los datos.
 
