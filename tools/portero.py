@@ -74,8 +74,8 @@ class Clase:
 
 
 # Clase `suite` (pytest, hooks pre-push/pre-commit). MemoryMax=20G con swap 0 y MemoryHigh al 90 % es el tope que
-# fija la ficha (propuesto por la sesion de Declutter; supera el p99 de 7.09 GiB de un python de sesion y queda por
-# debajo de los 26-34 GiB del colapso). turnos=1: con una sola suite no hubo colapso (pushes de aequitas de 19:40,
+# fija la ficha (propuesto por la sesion de proyecto-D; supera el p99 de 7.09 GiB de un python de sesion y queda por
+# debajo de los 26-34 GiB del colapso). turnos=1: con una sola suite no hubo colapso (pushes de proyecto-A de 19:40,
 # 20:20 y 21:00 del 11-oct); los dos colapsos coincidieron con dos o mas. TasksMax=1230 es `pids.peak` de
 # app.slice en este arranque (medido 2026-10-12): una suite no puede tener mas tareas que el slice entero tuvo.
 CLASES: dict[str, Clase] = {

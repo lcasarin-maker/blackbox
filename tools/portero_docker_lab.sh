@@ -10,7 +10,7 @@
 #
 # POR QUE UN SEGUNDO DAEMON Y NO EL DE PRODUCCION. El dockerd de produccion
 # (pid de /run/docker.pid, socket /var/run/docker.sock) sirve nemotron-server,
-# atlas-pgvector, librechat, mongo-librechat y aequitas-pg a otras sesiones.
+# atlas-pgvector, librechat, mongo-librechat y proyecto-A-pg a otras sesiones.
 # Cambiarle el runtime exige reiniciarlo. Aqui todo es propio: socket, data-root,
 # exec-root, pidfile, daemon.json, containerd (con su socket, root y state), el
 # namespace de containerd y el slice de cgroup.

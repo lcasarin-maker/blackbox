@@ -21,7 +21,7 @@ Cadena: enjambre de procesos en `app-com.anthropic.Claude-*.scope` (sesiones de 
 - Calibracion con 489 muestras que traen scope y PSI: con el scope Claude por debajo de 35 GB, 0 de 439 muestras tuvo PSI full >= 10 (maximo 7.17); con 35-40 GB, 2 de 2 la tuvieron (maximo 64.7). Muestra pequena para el tramo alto.
 - No fue hardware ni el reindexado de Atlas (el colapso 2 ocurrio sin el) ni calor (sin throttle termico).
 
-Dato aportado por la sesion `ae` (aequitas_os, 2026-10-12): lanzo `git push origin main` con pre-push de suite completa (~8.7k tests, ~40 min) hacia las 22:43 del 11-oct, sin tope, y seguia corriendo al reiniciar a las 22:54; sus pushes de las ~19:40, 20:20 y 21:00 no colapsaron nada. Coincide con el `python3` de 26 GB del colapso 2 (no probado que sea ese pid) y deja la hipotesis de trabajo: el colapso aparece cuando DOS o mas suites completas coinciden dentro de `app.slice` (colapso 1: suite de Atlas 21:48 + push de Declutter 21:51 + mi pre-push; colapso 2: push de aequitas 22:43 + suite de Atlas 22:43:47), no cuando corre una sola. Es correlacion temporal con n=2; el escalon de prevencion no depende de ella.
+Dato aportado por la sesion `ae` (proyecto-A, 2026-10-12): lanzo `git push origin main` con pre-push de suite completa (~8.7k tests, ~40 min) hacia las 22:43 del 11-oct, sin tope, y seguia corriendo al reiniciar a las 22:54; sus pushes de las ~19:40, 20:20 y 21:00 no colapsaron nada. Coincide con el `python3` de 26 GB del colapso 2 (no probado que sea ese pid) y deja la hipotesis de trabajo: el colapso aparece cuando DOS o mas suites completas coinciden dentro de `app.slice` (colapso 1: suite de Atlas 21:48 + push de proyecto-D 21:51 + mi pre-push; colapso 2: push de proyecto-A 22:43 + suite de Atlas 22:43:47), no cuando corre una sola. Es correlacion temporal con n=2; el escalon de prevencion no depende de ella.
 
 ## Origen atribuido por las transcripciones de las sesiones (2026-10-12)
 
@@ -29,10 +29,10 @@ Fuente: ordenes `Bash` con hora en `~/.claude/projects/*/*.jsonl` (UTC; CST = UT
 
 Colapso 2 (~22:44:03): tres `git push` con pre-push (suite completa) en 3 minutos, de tres sesiones distintas:
 - 22:41:25 sesion Atlas: `setsid nohup bash -c "git push origin master"`.
-- 22:44:00 sesion aequitas_os: `git push origin main` con `DATABASE_URL` cargada de `~/secrets/aequitas.env`; el `python3` pid 73493 que tomo 26 GB aparece 3 s despues (muestra de 22:44:03). Es la atribucion mas probable, no probada: las muestras no guardaron el cmdline del pid.
-- 22:44:14 sesion office2office: comando en segundo plano de push (`timeout 1200 git push origin main` en la ronda anterior).
+- 22:44:00 sesion proyecto-A: `git push origin main` con `DATABASE_URL` cargada de `~/secrets/proyecto-A.env`; el `python3` pid 73493 que tomo 26 GB aparece 3 s despues (muestra de 22:44:03). Es la atribucion mas probable, no probada: las muestras no guardaron el cmdline del pid.
+- 22:44:14 sesion proyecto-O: comando en segundo plano de push (`timeout 1200 git push origin main` en la ronda anterior).
 
-Colapso 1 (21:42-21:58, colapso 22:02): al menos seis pushes/suites simultaneos, todos tras el cambio de kit 9.9.0 de la flota: blackbox 21:42:20 (el `git push` de `/clean`), Atlas (varios, uno matado con pkill a las 21:44:56), simple 21:46:06 (migracion_atom) y 21:47:05 (simplecode), office2office 21:49:39 (`timeout 1200 git push origin main`), declutter 21:51:04, y una suite pytest de Twiner a las 21:55:42; aequitas esperaba con un vigia a que terminara un push.
+Colapso 1 (21:42-21:58, colapso 22:02): al menos seis pushes/suites simultaneos, todos tras el cambio de kit 9.9.0 de la flota: blackbox 21:42:20 (el `git push` de `/clean`), Atlas (varios, uno matado con pkill a las 21:44:56), simple 21:46:06 (migracion_atom) y 21:47:05 (simplecode), proyecto-O 21:49:39 (`timeout 1200 git push origin main`), proyecto-D 21:51:04, y una suite pytest de Twiner a las 21:55:42; proyecto-A esperaba con un vigia a que terminara un push.
 
 Causa de origen: la orden de sincronizar la flota con el kit 9.9.0 hizo que cada proyecto commiteara y empujara a la vez, y cada pre-push corre su suite completa (pytest-xdist con decenas de workers) sin tope. No fue un proceso de un solo dueno: fue una estampida coordinada por una orden. El `/clean` de esta sesion fue uno de los pushes.
 
@@ -67,6 +67,6 @@ Limite declarado: `memory.events` de `app.slice` (cuantas veces toco `max`, `oom
 
 ## Que falta
 
-1. Un tope de memoria por scope para suites y pushes (la sesion de Declutter propuso MemoryMax=20G sin swap).
+1. Un tope de memoria por scope para suites y pushes (la sesion de proyecto-D propuso MemoryMax=20G sin swap).
 2. Captura de los procesos mayores al entrar PSI full >= 10, antes de que el sampler se estrangule.
 3. Reproducir con el tope puesto.

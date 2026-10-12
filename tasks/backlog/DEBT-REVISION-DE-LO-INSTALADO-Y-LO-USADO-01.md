@@ -13,7 +13,7 @@ close_check: {"cmd": "grep -q decisiones_de_revision_votadas tasks/evidence/DEBT
 
 ## Medido (2026-10-12)
 - LibreChat (`ghcr.io/danny-avila/librechat:latest`, red host) y `mongo-librechat`: creados 2026-08-17; BD con 1 usuario, 1 conversacion y 31 mensajes; ultimo mensaje 2026-08-22; 0 mensajes en los ultimos 30 dias. Sus logs de 72 h son solo arranques.
-- Lo alimenta Atlas: `atlas-api.service` ("API RAG y endpoint OpenAI-compatible para LibreChat") y su endpoint de retroalimentacion; aequitas NO lo usa (solo menciones en informes de auditoria). `aequitas-pg` es otro contenedor (BD de aequitas).
+- Lo alimenta Atlas: `atlas-api.service` ("API RAG y endpoint OpenAI-compatible para LibreChat") y su endpoint de retroalimentacion; proyecto-A NO lo usa (solo menciones en informes de auditoria). `proyecto-A-pg` es otro contenedor (BD de proyecto-A).
 - Cuestan 187 MiB + 95 MiB de memoria y un puerto en red host.
 ## Que falta
 1. Inventario de servicios de usuario y de sistema, timers, contenedores, imagenes y paquetes grandes, con ultimo uso medido.

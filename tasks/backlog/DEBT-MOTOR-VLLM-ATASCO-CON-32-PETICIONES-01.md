@@ -14,7 +14,7 @@ close_check: {"cmd": "grep -q atasco_vllm_atribuido tasks/evidence/DEBT-MOTOR-VL
 ## Medido (2026-10-12)
 - `vigilante_motor.log`: 06:35:23 chat sin respuesta (http=000, espera 120 s) fallo 1 de 3; 06:37:23 atasco por metricas 1 de 2; 06:41:24 atasco 2 de 2 y `REINICIA ai-nemotron.service`.
 - Tras el reinicio el motor volvio a tener 32 peticiones corriendo apenas arranco: los clientes reintentan en tropel.
-- La sesion de declutter-fichas.service aparece como cliente habitual (RSS 2.7-3.4 GB); no atribuido.
+- La sesion de proyecto-D-fichas.service aparece como cliente habitual (RSS 2.7-3.4 GB); no atribuido.
 - Relacionada con `DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01` (caidas fatales del 08-10 oct).
 ## Que falta
 1. Atribuir los clientes de las 32 peticiones (origen por `bb origen` o registro del gateway).
