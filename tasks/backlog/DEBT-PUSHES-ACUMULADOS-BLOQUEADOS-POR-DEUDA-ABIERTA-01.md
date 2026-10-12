@@ -13,3 +13,6 @@ close_check: {"cmd": "grep -q repositorio_publicado tasks/evidence/DEBT-PUSHES-A
 
 ## Medido
 bb: 38 commits adelante de origin/master al 2026-10-12; Atlas informa 39 locales sin empujar. `zero-debt-repo` bloquea con 100+ fichas abiertas. El pre-push corre la suite completa: solo bajo el portero (una a la vez, scope con tope).
+
+## Voto de Luis 2026-10-12
+Cerrar fichas con evidencia real y empujar cuando zero-debt pase. Descartado: mover las fichas de despliegue fuera del backlog para destrabar el push (oculta deuda real de la vista de zero-debt).

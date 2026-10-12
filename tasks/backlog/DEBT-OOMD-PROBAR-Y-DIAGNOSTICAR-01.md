@@ -32,3 +32,6 @@ close_check: {"cmd": "grep -q oomd_mata_y_medido tasks/evidence/DEBT-OOMD-PROBAR
 Medir la presion del slice durante la prueba (ruta `/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/<slice>/memory.pressure` o la del padre real), repetirla hasta superar el limite y, solo entonces, concluir. Con root: log de depuracion de oomd y `oomctl`.
 ## Utilidad para bb (cosecha de diseno, no dependencia)
 Senal doble (presion sostenida N s Y holgura), candidatos solo hojas, muerte de un cgroup entero, preferencia por unidad (`ManagedOOMPreference=avoid|omit`) y modo `--dry-run`. Encaja con los cgroups por trabajo del portero: matar el cgroup del trabajo, no el scope de la app.
+
+## Voto de Luis 2026-10-12
+Dejar systemd-oomd activo y medir la presion por slice mientras se diagnostica el fallo D-Bus de `oomctl`. Descartado: deshabilitarlo ya (`sudo systemctl disable --now systemd-oomd` sigue disponible y reversible). Riesgo aceptado: puede matar un cgroup entero con presion >60 % durante 20 s.
