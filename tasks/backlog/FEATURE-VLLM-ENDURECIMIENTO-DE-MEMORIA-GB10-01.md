@@ -23,3 +23,6 @@ close_check: {"cmd": "grep -q vllm_memoria_medida tasks/evidence/FEATURE-VLLM-EN
 ## Residuo del vigilante (2026-10-12)
 
 De FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01 (cerrada, medido negativo): la rampa de carga de vLLM (29 a 2.5 GiB en 9 s, segun la cosecha) no tiene muestra propia en nuestras series. Medir MemAvailable a 1 Hz durante el siguiente arranque de modelo antes de promoverlo.
+
+## Correccion del residuo (2026-10-12)
+El residuo anterior decia que la rampa de vLLM no tenia muestra propia. Falso: las rafagas de `bb sample` la contienen (mayor caida 20.9 GiB en 9 s, ninguna cruza 8 GiB). Ver medicion.txt. Queda por medir antes/despues de cada ajuste cuando Luis lo aplique.
