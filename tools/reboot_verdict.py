@@ -23,6 +23,18 @@ reporte con `could_not_run` no vacio no es un reporte limpio.
 Lo que esta herramienta NO ve: la perdida de alimentacion. Un corte de energia
 mata este mismo proceso, asi que la prueba tiene que venir de afuera
 (`--externo`). Ver DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01.
+
+Forense por boot (esquema `bb-reboot/1`, 2026-10-11): la medicion que hacia
+`Atlas/tools/detect_atom_crash.py` vive aqui (DEBT-CONTRATO-ATLAS-INSTRUMENTOS-
+EN-BLACKBOX-01, enmienda del 2026-10-11 a la SPEC). Cada fila lleva, ademas del
+veredicto: la linea de journald del arranque siguiente que declara el journal
+corrupto, la linea literal de panic, el `Shutting down.` de PID 1, las lineas
+de kernel con los patrones del diagnostico manual del 2026-08-31, los Xid con
+su pid, el vmcore de kdump que cae en el hueco del corte, la duracion del boot
+y SMART/EDAC en mejor esfuerzo. Atlas lee estas filas y redacta su dictamen;
+no mide. `crash_confirmado` usa el MISMO criterio que Atlas usaba (journal
+corrupto o panic): el veredicto de bb y el dictamen de Atlas son dos lecturas
+distintas y ninguna reemplaza a la otra.
 """
 
 from __future__ import annotations
@@ -52,6 +64,25 @@ CIERRE = re.compile(r"Reached target (reboot|poweroff|halt|kexec)\.target")
 JOURNAL_PARADO = re.compile(r"systemd-journald\[\d+\]: Journal stopped")
 COLAPSO = re.compile(r"\[bb-usable\] COLAPSO")
 PANIC = re.compile(r"Kernel panic - not syncing")
+ESQUEMA = "bb-reboot/1"
+CRASH_DIR = Path("/var/crash")
+EDAC_DIR = Path("/sys/devices/system/edac/mc")
+DISPOSITIVO_NVME = "/dev/nvme0n1"  # medido con `lsblk`: SAMSUNG MZALC4T0HBL1, 3.7T
+# journald lo escribe al arrancar el boot SIGUIENTE (codigo C de systemd, en ingles siempre).
+PATRON_UNCLEAN = re.compile(
+    r"File (\S+) corrupted or uncleanly shut down, renaming and replacing"
+)
+# Los patrones del diagnostico manual del 2026-08-31, tal cual los calibro Atlas: `thermal`,
+# `watchdog`, `nmi` y `panic` pelados casan lineas de registro de TODO boot normal.
+PATRONES_DIAGNOSTICO = re.compile(
+    r"oom|killed process|kernel panic|nvrm.*xid|hung task|nmi watchdog:|"
+    r"throttl|critical temp|hogged cpu|out of memory|"
+    r"gpu has fallen off the bus|xid\s*(?:\([^)]*\))?\s*:?\s*\d+",
+    re.IGNORECASE,
+)
+# `NVRM: Xid (PCI:000f:01:00): 13, ...`: el numero va DESPUES del parentesis; `Xid\s+\d+` casa
+# 0 de las 145 lineas reales de la rafaga del 2026-08-30 (medido en Atlas, DGX-336).
+PATRON_XID = re.compile(r"\bXid\s*(?:\([^)]*\))?\s*:?\s*(\d+)")
 DISPARADOR = re.compile(
     r"sudo\b.*COMMAND=\S*(?:reboot|poweroff|shutdown|halt)"
     r"|systemd-logind\[\d+\]: (?:Power key pressed|The system will (?:reboot|power off|halt) now!"
@@ -150,7 +181,140 @@ def veredicto(ev: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def xids_del_boot(lineas: list[str]) -> list[dict[str, Any]]:
+    """Cada linea `Xid NN` con su numero y su pid cuando lo trae. Se conserva cada una: la rafaga
+    del 2026-08-30 fueron 144 `Xid 13` y UN `Xid 43`, y esa asimetria es el dato."""
+    encontrados = []
+    for linea in lineas:
+        m = PATRON_XID.search(linea)
+        if not m:
+            continue
+        pid = re.search(r"\bpid=(\d+)", linea)
+        encontrados.append(
+            {
+                "xid": int(m.group(1)),
+                "pid": int(pid.group(1)) if pid else None,
+                "linea_cruda": linea,
+            }
+        )
+    return encontrados
+
+
+def _iso(epoch: float | None) -> str:
+    if not epoch:
+        return ""
+    return datetime.fromtimestamp(epoch, tz=timezone.utc).isoformat()
+
+
+def forense(ev: dict[str, Any]) -> dict[str, Any]:
+    """Campos forenses de la fila, a partir de evidencia ya leida (pura, como `veredicto`).
+
+    `crash_confirmado` es el criterio que Atlas usaba para su historial de duraciones: journal
+    corrupto declarado por journald o panic literal. Un boot sin ninguna de las dos y sin
+    `Shutting down.` de PID 1 NO es limpio: sale `crash_confirmado: false` y `cierre_pid1: false`,
+    y quien lea la fila decide (Atlas lo rotula `sin_senal`)."""
+    lineas = ev.get("lineas_diagnostico") or []
+    inicio, fin = ev.get("inicio_epoch"), ev.get("fin_epoch")
+    return {
+        "esquema": ESQUEMA,
+        "hora_inicio": _iso(inicio),
+        "hora_fin_registrada": _iso(fin),
+        "duracion_s": round(fin - inicio, 3) if inicio and fin else None,
+        "journal_danado": ev.get("journal_danado"),
+        "panic_linea": ev.get("panic_linea"),
+        "cierre_pid1": ev.get("cierre_pid1"),
+        "crash_confirmado": bool(ev.get("journal_danado") or ev.get("panic_linea")),
+        "lineas_diagnostico": lineas,
+        "xids": xids_del_boot(lineas),
+        "vmcore": ev.get("vmcore"),
+    }
+
+
 # ---------------------------------------------------------------- colectores
+def vmcore_en(desde: float, hasta: float | None) -> str | None:
+    """Directorio de kdump con `dump.*` cuyo mtime cae en el hueco del corte [desde, hasta].
+
+    kdump-tools escribe `/var/crash/<fecha>/dump.*`; `kexec_cmd`, `kdump_lock` y los `.crash` de
+    apport NO son un volcado (medido en Atlas el 2026-08-31: el primer detector devolvio
+    `kexec_cmd` como si lo fuera). Atlas tomaba el volcado MAS NUEVO sin mirar la hora, asi que un
+    vmcore viejo se atribuia a cualquier crash posterior; aqui solo cuenta el escrito entre el
+    ultimo registro del boot caido y el primero del siguiente, que es cuando corre el kernel de
+    kdump."""
+    if not CRASH_DIR.is_dir():
+        return None
+    candidatos = [
+        p
+        for p in CRASH_DIR.glob("*")
+        if p.is_dir()
+        and list(p.glob("dump.*"))
+        and desde <= p.stat().st_mtime <= (hasta if hasta is not None else float("inf"))
+    ]
+    if not candidatos:
+        return None
+    return str(max(candidatos, key=lambda p: p.stat().st_mtime))
+
+
+def _correr_con_codigo(*args: str) -> tuple[int, str]:
+    """El codigo y stderr son el dato: sin ellos 'disco sano' y 'no pude preguntar' se confunden."""
+    try:
+        p = subprocess.run(
+            list(args), capture_output=True, text=True, timeout=60, check=False
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return -1, str(exc)
+    return p.returncode, (p.stdout or "") + (p.stderr or "")
+
+
+def _edac() -> dict[str, Any]:
+    """Contadores EDAC. Medido el 2026-08-31: el directorio existe SIN `mc0`; omitir el campo se
+    leeria como 'cero errores'."""
+    if not EDAC_DIR.is_dir():
+        return {"edac_no_disponible": f"{EDAC_DIR} no existe"}
+    controladores = sorted(EDAC_DIR.glob("mc[0-9]*"))
+    if not controladores:
+        return {"edac_no_disponible": f"sin controladores registrados en {EDAC_DIR}"}
+    conteos: dict[str, Any] = {}
+    for mc in controladores:
+        for campo in ("ce_count", "ue_count"):
+            try:
+                conteos[f"{mc.name}_{campo}"] = int(
+                    (mc / campo).read_text(encoding="utf-8").strip()
+                )
+            except (OSError, ValueError) as exc:
+                print(
+                    f"_edac: {mc / campo} ilegible ({exc}): contador ausente, no cero",
+                    file=sys.stderr,
+                )
+                conteos[f"{mc.name}_{campo}"] = f"ilegible: {exc}"
+    return {"edac": conteos}
+
+
+def salud_de_almacenamiento(dispositivo: str = DISPOSITIVO_NVME) -> dict[str, Any]:
+    """SMART del NVMe y EDAC, foto al registrar (no serie: smartctl cada 5 s despertaria el disco
+    17,280 veces al dia). Nunca escala privilegios: un servicio `--user` recibe `Permission denied`
+    (medido el 2026-08-31) y eso se escribe como `smart_no_disponible`, no se omite. El codigo de
+    smartctl es un mapa de bits que convive con una lectura buena: decide la presencia de datos."""
+    codigo, salida = _correr_con_codigo("smartctl", "-H", "-A", dispositivo)
+    if codigo == -1:
+        r: dict[str, Any] = {"smart_no_disponible": f"smartctl no ejecutable: {salida}"}
+    elif "permission denied" in salida.lower():
+        r = {"smart_no_disponible": "permiso denegado, requiere root"}
+    else:
+        utiles = [
+            ln
+            for ln in salida.splitlines()
+            if ln.strip() and not ln.startswith(("smartctl ", "Copyright ("))
+        ]
+        if any("SMART" in ln for ln in utiles):
+            r = {"smart_codigo_salida": codigo, "smart": utiles}
+        else:
+            r = {
+                "smart_no_disponible": f"salida sin datos SMART (codigo {codigo}): "
+                f"{' | '.join(utiles[:2]) or 'vacia'}"
+            }
+    return {**r, **_edac(), "leido_en": datetime.now(timezone.utc).isoformat()}
+
+
 def _journal(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         ["journalctl", "--no-pager", *args],
@@ -260,6 +424,43 @@ def bert_registro(idx_siguiente: int) -> dict[str, Any]:
     }
 
 
+def _evidencia_forense(
+    b: dict[str, Any], sig: dict[str, Any] | None, no_leido: list[str]
+) -> dict[str, Any]:
+    """Lo que Atlas/detect_atom_crash media hasta el 2026-10-11: kernel del boot caido, PID 1, y
+    la linea de journald y el vmcore que deja el arranque siguiente. Lo ilegible va a `no_leido`."""
+    fin = b["last_entry"] / 1e6
+    k = _journal("-b", str(b["index"]), "-k")
+    if k.returncode != 0:
+        no_leido.append(f"journal_kernel_boot_{b['index']}")
+    kernel = k.stdout.splitlines()
+    # `_PID=1` a proposito: sin el filtro, uvicorn o GNOME Shell tambien escriben "Shutting down."
+    # (8 falsos positivos medidos en Atlas el 2026-09-29 sobre el panic de `07db1a8a`).
+    p1 = _journal("-b", str(b["index"]), "-o", "cat", "_PID=1")
+    if p1.returncode != 0:
+        no_leido.append(f"journal_pid1_boot_{b['index']}")
+    ev: dict[str, Any] = {
+        "inicio_epoch": b["first_entry"] / 1e6,
+        "lineas_diagnostico": [ln for ln in kernel if PATRONES_DIAGNOSTICO.search(ln)],
+        "panic_linea": next(
+            (ln for ln in kernel if "Kernel panic - not syncing" in ln), None
+        ),
+        "cierre_pid1": "Shutting down." in p1.stdout if p1.returncode == 0 else None,
+        "journal_danado": None,
+        "vmcore": None,
+    }
+    if sig is not None:
+        jd = _journal(
+            "-b", str(sig["index"]), "-o", "cat", "-u", "systemd-journald.service"
+        )
+        if jd.returncode != 0:
+            no_leido.append(f"journal_journald_boot_{sig['index']}")
+        m = PATRON_UNCLEAN.search(jd.stdout)
+        ev["journal_danado"] = m.group(1) if m else None
+        ev["vmcore"] = vmcore_en(fin, sig["first_entry"] / 1e6)
+    return ev
+
+
 def recoge(boots: list[dict[str, Any]], i: int) -> dict[str, Any]:
     """Evidencia del boot boots[i]; el boot siguiente (i+1) aporta BERT y hueco."""
     b = boots[i]
@@ -300,8 +501,9 @@ def recoge(boots: list[dict[str, Any]], i: int) -> dict[str, Any]:
     }
     if ev["telemetria"] is None:
         ev["no_se_pudo_leer"].append("telemetria_gpu (no existe para este boot)")
-    if i + 1 < len(boots):
-        sig = boots[i + 1]
+    sig = boots[i + 1] if i + 1 < len(boots) else None
+    ev.update(_evidencia_forense(b, sig, no_leido))
+    if sig is not None:
         ev["hueco_s"] = round(sig["first_entry"] / 1e6 - fin)
         k = _journal(
             "-b",
@@ -371,16 +573,22 @@ def main(argv: list[str] | None = None) -> int:
     boots = json.loads(r.stdout)
     filas = []
     ya = _ya_escritos() if a.escribe else set()
+    almacenamiento: dict[str, Any] | None = None  # una foto por corrida, no por fila
     for i in range(
         max(0, len(boots) - 1 - a.ultimos), len(boots) - 1
     ):  # el ultimo sigue vivo
         if boots[i]["boot_id"] in ya:
             continue
         ev = recoge(boots, i)
+        if almacenamiento is None:
+            almacenamiento = salud_de_almacenamiento()
         fila = {
             "boot_idx": boots[i]["index"],
             "boot_id": boots[i]["boot_id"],
+            "boot_id_siguiente": boots[i + 1]["boot_id"],
             **veredicto(ev),
+            **forense(ev),
+            "almacenamiento": almacenamiento,
         }
         fila["_generado"] = (
             datetime.fromtimestamp(ev["fin_epoch"], tz=timezone.utc)
