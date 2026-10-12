@@ -3178,6 +3178,8 @@ bb -- caja negra de la maquina
   bb who [pid]           que procesos pesan y QUIEN los lanzo (unit, padre, cwd)
   bb sigterm ["hace X"]  QUIEN mando SIGTERM/SIGKILL a quien (DEBT-DGX-438)
   bb cap <GB> <cmd...>   lanza algo con techo de memoria propio (el kernel lo aplica)
+  bb portero estado      que arboles pesados ve el portero y que decidiria (solo lectura)
+  bb portero run --clase suite -- <cmd...>  pide turno en la cola FIFO y lanza con el tope de su clase
   bb install             instala los timers de usuario (muestreo cada minuto, drift diario)
 
 Datos propios en ~/.local/share/blackbox (retencion 14 dias).
@@ -3204,6 +3206,7 @@ case "${1:-}" in
   who)      shift; cmd_who "$@" ;;
   sigterm)  shift; cmd_sigterm "$@" ;;
   cap)      shift; cmd_cap "$@" ;;
+  portero)  shift; python3 "$(dirname "$(readlink -f "$0")")/../tools/portero.py" "$@" ;;
   install)  shift; cmd_install "$@" ;;
   ""|-h|--help|help) usage ;;
   *) echo "subcomando desconocido: $1" >&2; usage >&2; exit 2 ;;
