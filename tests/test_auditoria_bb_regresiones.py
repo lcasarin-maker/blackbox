@@ -219,9 +219,15 @@ def _simular_archivo_tardio(g, fecha, ruta1, ruta2):
     return dormir
 
 
-def test_watchdog_colapso_psi_ilegible(monkeypatch):
+def test_watchdog_colapso_psi_ilegible(monkeypatch, tmp_path):
     """PSI perdido no devuelve el latido tras declarar colapso."""
     bbu = _cargar_watchdog()
+    # El escalon y el origen del COLAPSO (2026-10-12) leen cgroup y /proc y
+    # escriben en $BLACKBOX_DATA: raices vacias y datos propios del test.
+    monkeypatch.setenv("BLACKBOX_DATA", str(tmp_path / "datos"))
+    (tmp_path / "sin-proc").mkdir()
+    monkeypatch.setattr(bbu, "CGROUP_ROOT", tmp_path / "sin-cgroup")
+    monkeypatch.setattr(bbu, "PROC_ROOT", tmp_path / "sin-proc")
     eventos = []
     psi = iter([99.0, 99.0, None])
     monkeypatch.setattr(bbu, "notify", eventos.append)

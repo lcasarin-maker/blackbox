@@ -1,0 +1,39 @@
+Despliegue del escalon de bb-usable (DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01), 2026-10-12
+NO desplegado por el agente: bb-usable es un servicio de SISTEMA y reiniciarlo requiere sudo del dueno.
+
+Antes de nada, dos hechos que cambian el orden:
+  - `ExecStart` apunta a /home/lcasarin/projects/blackbox/bin/bb-usable. En cuanto esta rama se fusione
+    en master, el codigo nuevo corre en el SIGUIENTE arranque de bb-usable (reinicio de la maquina o del
+    servicio), se despliegue la unit o no. Si arranca sin la unit nueva, el escalon funciona pero sus
+    eventos y registros de origen van a /root/.local/share/blackbox.
+  - `bb sample` (timer de usuario, cada minuto) toma los campos nuevos (`events`, `pressure`,
+    `pidio_origen`) desde la primera muestra tras la fusion; no necesita nada.
+
+Pasos (en el checkout principal, con la rama ya en master):
+
+  cd /home/lcasarin/projects/blackbox
+  sudo cp systemd/bb-usable.service /etc/systemd/system/bb-usable.service
+  sudo systemctl daemon-reload
+  sudo systemctl restart bb-usable.service
+
+  (enable-privileged.sh sustituye la ruta del repo con sed; en esta maquina la sustitucion es identidad,
+  verificado en adopted/solo-registro.txt, por eso basta el cp.)
+
+Comprobacion (cada una puede salir mal):
+
+  systemctl show bb-usable.service -p Environment
+      -> debe contener BLACKBOX_DATA=/home/lcasarin/.local/share/blackbox
+  journalctl -u bb-usable -n 20 --no-pager
+      -> NO debe aparecer "ORIGEN NO CARGADO"; si aparece, el escalon actua igual pero el origen queda
+         NOT_COLLECTED y hay que leer el error que imprime.
+  ls -l ~/.local/share/blackbox/escalon/
+      -> un fichero del dia, del usuario lcasarin (no de root), con una linea cada ~30 s:
+         tail -n 2 ~/.local/share/blackbox/escalon/$(date +%F).jsonl
+
+Re-adopcion (para que `bb drift` compare contra la unit nueva):
+
+  cp /etc/systemd/system/bb-usable.service adopted/system-config/etc_systemd_system_bb-usable.service
+  ./bin/bb drift        -> divergentes: 0
+
+Retirada, si hiciera falta: revertir el commit del escalon en master y repetir los pasos de arriba;
+la unit vieja no tiene la linea BLACKBOX_DATA y el resto es identico.

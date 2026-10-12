@@ -1,0 +1,243 @@
+# Calibracion del escalon y del corte de origen, 2026-10-12
+
+Fuente: ~/.local/share/blackbox/samples/*.jsonl (bb sample, una muestra por minuto) desde el
+2026-09-28 (techo de app.slice = 42G desde el 09-27) y el journal de bb-usable.
+
+## Script 1 (calib.py): reparto conjunto PSI full x app.slice/42G y crecimiento de pidio[0]
+```python
+import glob
+import json
+
+MAX42 = 42 * 1024 * 1024  # kB
+files = sorted(glob.glob('/home/lcasarin/.local/share/blackbox/samples/*.jsonl'))
+files = [f for f in files if f.split('/')[-1] >= '2026-09-28']
+rows = []
+for f in files:
+    with open(f, encoding='utf-8') as fh:
+        for line in fh:
+            try:
+                d = json.loads(line)
+            except ValueError:
+                continue
+            if d.get('burst') or 'slices' not in d:
+                continue
+            app = next((s for s in d.get('slices') or [] if s.get('slice') == 'app'), None)
+            psi = (d.get('psi') or {}).get('mem_full')
+            if app is None or psi is None:
+                continue
+            pid0 = (d.get('pidio') or [None])[0]
+            rows.append((d['ts'], d.get('boot_id'), float(psi), app['cur_kb'] / MAX42, pid0))
+print('muestras con app.slice y psi desde 2026-09-28:', len(rows), rows[0][0], '->', rows[-1][0])
+
+
+def cnt(pred):
+    return sum(1 for r in rows if pred(r))
+
+
+for thr in (0.80, 0.85, 0.90, 0.93):
+    print(f'ratio>={thr:.2f}: total={cnt(lambda r: r[3] >= thr)}  con psi>=10: '
+          f'{cnt(lambda r: r[3] >= thr and r[2] >= 10)}  con psi<10: {cnt(lambda r: r[3] >= thr and r[2] < 10)}')
+print('psi>=10 total:', cnt(lambda r: r[2] >= 10), ' de ellas ratio<0.90:', cnt(lambda r: r[2] >= 10 and r[3] < 0.90))
+print('\nmuestras psi>=10 (ts, psi, ratio):')
+for r in rows:
+    if r[2] >= 10:
+        print(' ', r[0], r[2], f'{r[3]*100:.1f}%')
+print('\nmax ratio con psi<10:', max(r[3] for r in rows if r[2] < 10))
+ratios = sorted(r[3] for r in rows)
+for q in (0.5, 0.9, 0.99, 0.999):
+    print(f'p{q*100:g} ratio', f'{ratios[int(q*(len(ratios)-1))]*100:.1f}%')
+g = sorted(r[4]['crecio_kb'] for r in rows if r[4] and not r[4].get('nuevo'))
+print('\npidio[0] no-nuevo n=', len(g))
+for q in (0.5, 0.9, 0.99, 0.999, 1.0):
+    print(f' p{q*100:g}', g[int(q*(len(g)-1))] // 1024, 'MiB')
+print('pidio[0] en muestras con psi>=10:')
+for r in rows:
+    if r[2] >= 10 and r[4]:
+        print(' ', r[0], r[4])
+```
+$ python3 calib.py
+```
+muestras con app.slice y psi desde 2026-09-28: 20259 2026-09-28T00:00:02-0600 -> 2026-10-12T06:28:02-0600
+ratio>=0.80: total=7601  con psi>=10: 16  con psi<10: 7585
+ratio>=0.85: total=4895  con psi>=10: 11  con psi<10: 4884
+ratio>=0.90: total=1499  con psi>=10: 10  con psi<10: 1489
+ratio>=0.93: total=170  con psi>=10: 7  con psi<10: 163
+psi>=10 total: 37  de ellas ratio<0.90: 27
+
+muestras psi>=10 (ts, psi, ratio):
+  2026-09-28T04:18:04-0600 25.95 92.5%
+  2026-09-28T04:19:24-0600 22.02 93.0%
+  2026-09-28T04:21:16-0600 26.46 93.1%
+  2026-09-28T04:22:52-0600 26.13 93.4%
+  2026-09-28T11:24:00-0600 22.81 73.1%
+  2026-09-28T11:26:26-0600 95.87 70.6%
+  2026-09-28T11:28:41-0600 24.42 73.2%
+  2026-09-29T09:51:01-0600 42.17 65.0%
+  2026-09-29T09:52:02-0600 32.5 64.2%
+  2026-09-29T12:13:00-0600 20.25 75.3%
+  2026-09-29T13:20:00-0600 11.34 78.1%
+  2026-09-29T15:58:00-0600 11.08 66.1%
+  2026-09-29T17:42:00-0600 10.41 70.7%
+  2026-09-30T08:31:00-0600 11.9 73.3%
+  2026-09-30T10:32:06-0600 12.37 80.8%
+  2026-09-30T10:34:03-0600 10.2 82.0%
+  2026-10-01T13:16:00-0600 15.57 75.2%
+  2026-10-03T21:52:00-0600 20.45 64.5%
+  2026-10-04T12:24:00-0600 12.07 29.0%
+  2026-10-04T13:51:00-0600 15.41 25.5%
+  2026-10-04T23:27:51-0600 64.54 63.4%
+  2026-10-05T00:23:09-0600 49.21 96.0%
+  2026-10-05T19:44:00-0600 14.98 73.5%
+  2026-10-06T03:31:00-0600 15.18 92.2%
+  2026-10-06T08:38:47-0600 60.48 80.0%
+  2026-10-06T08:51:31-0600 57.18 93.4%
+  2026-10-06T08:53:22-0600 65.76 64.2%
+  2026-10-06T09:02:46-0600 64.79 77.6%
+  2026-10-06T09:03:49-0600 66.36 68.9%
+  2026-10-06T09:10:07-0600 59.03 94.6%
+  2026-10-06T09:12:54-0600 60.38 82.5%
+  2026-10-06T14:02:00-0600 10.76 89.7%
+  2026-10-07T07:50:00-0600 17.07 76.0%
+  2026-10-10T07:15:01-0600 16.53 84.8%
+  2026-10-10T18:15:00-0600 11.92 48.5%
+  2026-10-11T22:45:03-0600 51.09 93.4%
+  2026-10-11T22:50:56-0600 64.73 93.5%
+
+max ratio con psi<10: 0.9442325773693266
+p50 ratio 75.3%
+p90 ratio 88.6%
+p99 ratio 92.8%
+p99.9 ratio 94.2%
+
+pidio[0] no-nuevo n= 2915
+ p50 1923 MiB
+ p90 15531 MiB
+ p99 28402 MiB
+ p99.9 44375 MiB
+ p100 44808 MiB
+pidio[0] en muestras con psi>=10:
+  2026-09-28T04:19:24-0600 {'pid': 366203, 'crecio_kb': 6008184, 'comm': 'claude', 'unit': 'app-com.anthropic.Claude-47169.scope', 'nuevo': True}
+  2026-09-28T04:22:52-0600 {'pid': 373413, 'crecio_kb': 1639312, 'comm': 'gh', 'unit': 'app-com.anthropic.Claude-47169.scope', 'nuevo': True}
+  2026-09-28T11:24:00-0600 {'pid': 2172458, 'crecio_kb': 7689456, 'comm': 'python', 'unit': 'run-re7174b8c02334dd0be78de21368a979f.scope', 'nuevo': True}
+  2026-09-28T11:26:26-0600 {'pid': 2185562, 'crecio_kb': 27018668, 'comm': 'python3', 'unit': 'atlas-api.service', 'nuevo': True}
+  2026-09-28T11:28:41-0600 {'pid': 2194044, 'crecio_kb': 4165764, 'comm': 'rustdesk', 'unit': 'rustdesk.service', 'nuevo': True}
+  2026-09-29T09:51:01-0600 {'pid': 2784163, 'crecio_kb': 5164068, 'comm': '[pytest-xdist', 'unit': 'app-com.anthropic.Claude-2626324.scope', 'nuevo': False}
+  2026-09-29T09:52:02-0600 {'pid': 2784168, 'crecio_kb': 11753100, 'comm': '[pytest-xdist', 'unit': 'app-com.anthropic.Claude-2626324.scope', 'nuevo': False}
+  2026-09-29T12:13:00-0600 {'pid': 3625153, 'crecio_kb': 6293660, 'comm': '[pytest-xdist', 'unit': 'app-com.anthropic.Claude-2626324.scope', 'nuevo': False}
+  2026-09-29T13:20:00-0600 {'pid': 4167607, 'crecio_kb': 2472320, 'comm': '[pytest-xdist', 'unit': 'app-com.anthropic.Claude-2626324.scope', 'nuevo': False}
+  2026-09-29T15:58:00-0600 {'pid': 1203424, 'crecio_kb': 10829204, 'comm': '[pytest-xdist', 'unit': 'app-com.anthropic.Claude-2626324.scope', 'nuevo': False}
+  2026-09-29T17:42:00-0600 {'pid': 1739628, 'crecio_kb': 10135692, 'comm': '[pytest-xdist', 'unit': 'app-com.anthropic.Claude-2626324.scope', 'nuevo': False}
+  2026-09-30T08:31:00-0600 {'pid': 830684, 'crecio_kb': 5164556, 'comm': '[pytest-xdist', 'unit': 'app-com.anthropic.Claude-2626324.scope', 'nuevo': False}
+  2026-09-30T10:32:06-0600 {'pid': 1606599, 'crecio_kb': 8691676, 'comm': '[pytest-xdist', 'unit': 'app-com.anthropic.Claude-2626324.scope', 'nuevo': False}
+  2026-09-30T10:34:03-0600 {'pid': 1606603, 'crecio_kb': 2654960, 'comm': '[pytest-xdist', 'unit': 'app-com.anthropic.Claude-2626324.scope', 'nuevo': False}
+  2026-10-01T13:16:00-0600 {'pid': 2291384, 'crecio_kb': 7576124, 'comm': '[pytest-xdist', 'unit': 'app-com.anthropic.Claude-279101.scope', 'nuevo': False}
+  2026-10-03T21:52:00-0600 {'pid': 1458052, 'crecio_kb': 45440676, 'comm': 'VLLM::EngineCor', 'unit': 'docker-dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3.scope', 'nuevo': False}
+  2026-10-04T12:24:00-0600 {'pid': 3254781, 'crecio_kb': 6047640, 'comm': 'gitleaks', 'unit': 'app-com.anthropic.Claude-2778774.scope', 'nuevo': True}
+  2026-10-04T13:51:00-0600 {'pid': 3520156, 'crecio_kb': 34399912, 'comm': 'VLLM::EngineCor', 'unit': 'docker-dab61307b1399f9cf48b9cce6aeb9c1f37c86f05a44443ca08830dfe883097a3.scope', 'nuevo': False}
+  2026-10-04T23:27:51-0600 {'pid': 2019049, 'crecio_kb': 5446320, 'comm': 'gitleaks', 'unit': '?', 'nuevo': True}
+  2026-10-05T00:23:09-0600 {'pid': 744252, 'crecio_kb': 31779932, 'comm': 'java', 'unit': 'app-com.anthropic.Claude-39185.scope', 'nuevo': True}
+  2026-10-05T19:44:00-0600 {'pid': 3537876, 'crecio_kb': 2744404, 'comm': '[pytest-xdist', 'unit': 'app-com.anthropic.Claude-113540.scope', 'nuevo': False}
+  2026-10-06T03:31:00-0600 {'pid': 3439253, 'crecio_kb': 34419032, 'comm': 'python3', 'unit': 'kb-nightly-investigator.service', 'nuevo': True}
+  2026-10-06T08:38:47-0600 {'pid': 1281077, 'crecio_kb': 6078944, 'comm': 'claude', 'unit': 'app-com.anthropic.Claude-113540.scope', 'nuevo': True}
+  2026-10-06T08:51:31-0600 {'pid': 1726359, 'crecio_kb': 5194092, 'comm': 'python3', 'unit': 'dgx630-final.scope', 'nuevo': True}
+  2026-10-06T08:53:22-0600 {'pid': 1747768, 'crecio_kb': 4541208, 'comm': 'python', 'unit': 'app-com.anthropic.Claude-113540.scope', 'nuevo': True}
+  2026-10-06T09:02:46-0600 {'pid': 2138361, 'crecio_kb': 36187908, 'comm': 'java', 'unit': '?', 'nuevo': True}
+  2026-10-06T09:03:49-0600 {'pid': 2149722, 'crecio_kb': 2914700, 'comm': 'python', 'unit': 'app-com.anthropic.Claude-113540.scope', 'nuevo': True}
+  2026-10-06T09:10:07-0600 {'pid': 2410258, 'crecio_kb': 5161916, 'comm': 'python', 'unit': 'app-com.anthropic.Claude-113540.scope', 'nuevo': True}
+  2026-10-06T09:12:54-0600 {'pid': 2426091, 'crecio_kb': 4078180, 'comm': 'python', 'unit': 'app-com.anthropic.Claude-113540.scope', 'nuevo': True}
+  2026-10-06T14:02:00-0600 {'pid': 1337686, 'crecio_kb': 1073891440, 'comm': 'shellcheck', 'unit': 'app-com.anthropic.Claude-113540.scope', 'nuevo': True}
+  2026-10-07T07:50:00-0600 {'pid': 242119, 'crecio_kb': 8679948, 'comm': '[pytest-xdist', 'unit': 'app-com.anthropic.Claude-48714.scope', 'nuevo': False}
+  2026-10-10T07:15:01-0600 {'pid': 2402337, 'crecio_kb': 6093260, 'comm': 'claude', 'unit': 'app-com.anthropic.Claude-138157.scope', 'nuevo': True}
+  2026-10-10T18:15:00-0600 {'pid': 818802, 'crecio_kb': 4253168, 'comm': '[pytest-xdist', 'unit': 'app-org.chromium.Chromium-196611.scope', 'nuevo': False}
+  2026-10-11T22:45:03-0600 {'pid': 73493, 'crecio_kb': 8022872, 'comm': 'python3', 'unit': 'app-com.anthropic.Claude-56782.scope', 'nuevo': False}
+  2026-10-11T22:50:56-0600 {'pid': 84542, 'crecio_kb': 1639568, 'comm': 'gh', 'unit': 'app-com.anthropic.Claude-56782.scope', 'nuevo': True}
+```
+
+## Script 2 (calib2.py): disparo del corte de origen por crecimiento
+```python
+import glob
+import json
+
+files = sorted(glob.glob('/home/lcasarin/.local/share/blackbox/samples/*.jsonl'))
+files = [f for f in files if f.split('/')[-1] >= '2026-09-28']
+n = 0
+hi = []
+psi_hi = []
+for f in files:
+    with open(f, encoding='utf-8') as fh:
+        for line in fh:
+            try:
+                d = json.loads(line)
+            except ValueError:
+                continue
+            if d.get('burst') or 'pidio' not in d or 'slices' not in d:
+                continue
+            n += 1
+            p = (d.get('pidio') or [None])[0]
+            c = p['crecio_kb'] if p else 0
+            hi.append(c)
+            if float((d.get('psi') or {}).get('mem_full') or 0) >= 10:
+                psi_hi.append(c)
+print('muestras completas desde 2026-09-28:', n)
+for gib in (1, 2, 4, 8, 16):
+    kb = gib * 1024 * 1024
+    a = sum(1 for c in hi if c >= kb)
+    b = sum(1 for c in psi_hi if c >= kb)
+    print(f'pidio[0].crecio_kb >= {gib} GiB: {a} muestras ({100*a/n:.2f} %, {a/15:.1f}/dia en 15 dias); '
+          f'de las {len(psi_hi)} con PSI>=10 cubre {b}')
+```
+$ python3 calib2.py
+```
+muestras completas desde 2026-09-28: 20259
+pidio[0].crecio_kb >= 1 GiB: 8129 muestras (40.13 %, 541.9/dia en 15 dias); de las 37 con PSI>=10 cubre 35
+pidio[0].crecio_kb >= 2 GiB: 5813 muestras (28.69 %, 387.5/dia en 15 dias); de las 37 con PSI>=10 cubre 33
+pidio[0].crecio_kb >= 4 GiB: 4891 muestras (24.14 %, 326.1/dia en 15 dias); de las 37 con PSI>=10 cubre 27
+pidio[0].crecio_kb >= 8 GiB: 2927 muestras (14.45 %, 195.1/dia en 15 dias); de las 37 con PSI>=10 cubre 12
+pidio[0].crecio_kb >= 16 GiB: 2442 muestras (12.05 %, 162.8/dia en 15 dias); de las 37 con PSI>=10 cubre 7
+```
+
+## Journal de bb-usable, 2026-10-06 08:35-09:15 (episodios que se recuperaron solos)
+$ journalctl -u bb-usable --since '2026-10-06 08:35' --until '2026-10-06 09:15' | grep -v latencia
+(hostname sustituido por <host>)
+```
+oct 06 08:35:34 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=64.4 >= 10 -- racha 1/10 (30s de 300s), sonda 43 ms
+oct 06 08:36:04 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=64.6 >= 10 -- racha 2/10 (60s de 300s), sonda 32 ms
+oct 06 08:36:34 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=63.1 >= 10 -- racha 3/10 (90s de 300s), sonda 38 ms
+oct 06 08:37:04 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=63.2 >= 10 -- racha 4/10 (120s de 300s), sonda 35 ms
+oct 06 08:37:34 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=62.7 >= 10 -- racha 5/10 (150s de 300s), sonda 35 ms
+oct 06 08:38:04 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=61.1 >= 10 -- racha 6/10 (180s de 300s), sonda 35 ms
+oct 06 08:38:34 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=61.5 >= 10 -- racha 7/10 (210s de 300s), sonda 37 ms
+oct 06 08:39:04 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=41.1 >= 10 -- racha 8/10 (240s de 300s), sonda 35 ms
+oct 06 08:39:34 <host> bb-usable[6035]: [bb-usable] PSI bajo a 2.1, pero UNA sonda no absuelve: la racha sigue en 8/10 (hacen falta 2 bajas seguidas)
+oct 06 08:40:04 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=52.3 >= 10 -- racha 9/10 (270s de 300s), sonda 35 ms
+oct 06 08:40:34 <host> bb-usable[6035]: [bb-usable] COLAPSO: PSI memory full avg10=14.3 >= 10 sostenido 300s >= 300s (sonda 35 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+oct 06 08:41:04 <host> bb-usable[6035]: [bb-usable] PSI bajo a 4.4, pero UNA sonda no absuelve: la racha sigue en 10/10 (hacen falta 2 bajas seguidas)
+oct 06 08:41:34 <host> bb-usable[6035]: [bb-usable] PSI bajo a 0.6 en 2 sondas seguidas (60s): la racha de 300s se corta. Era un pico, no un colapso
+oct 06 08:50:35 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=28.9 >= 10 -- racha 1/10 (30s de 300s), sonda 26 ms
+oct 06 08:51:05 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=61.5 >= 10 -- racha 2/10 (60s de 300s), sonda 21 ms
+oct 06 08:51:35 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=49.7 >= 10 -- racha 3/10 (90s de 300s), sonda 39 ms
+oct 06 08:52:05 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=63.4 >= 10 -- racha 4/10 (120s de 300s), sonda 41 ms
+oct 06 08:52:35 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=65.7 >= 10 -- racha 5/10 (150s de 300s), sonda 38 ms
+oct 06 08:53:05 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=66.4 >= 10 -- racha 6/10 (180s de 300s), sonda 35 ms
+oct 06 08:53:35 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=16.2 >= 10 -- racha 7/10 (210s de 300s), sonda 36 ms
+oct 06 08:54:05 <host> bb-usable[6035]: [bb-usable] PSI bajo a 0.8, pero UNA sonda no absuelve: la racha sigue en 7/10 (hacen falta 2 bajas seguidas)
+oct 06 08:54:35 <host> bb-usable[6035]: [bb-usable] PSI bajo a 0.0 en 2 sondas seguidas (60s): la racha de 210s se corta. Era un pico, no un colapso
+oct 06 09:01:06 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=61.6 >= 10 -- racha 1/10 (30s de 300s), sonda 31 ms
+oct 06 09:01:36 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=64.7 >= 10 -- racha 2/10 (60s de 300s), sonda 34 ms
+oct 06 09:02:06 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=63.6 >= 10 -- racha 3/10 (90s de 300s), sonda 32 ms
+oct 06 09:02:36 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=64.5 >= 10 -- racha 4/10 (120s de 300s), sonda 33 ms
+oct 06 09:03:06 <host> bb-usable[6035]: [bb-usable] PSI bajo a 9.6, pero UNA sonda no absuelve: la racha sigue en 4/10 (hacen falta 2 bajas seguidas)
+oct 06 09:03:36 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=60.9 >= 10 -- racha 5/10 (150s de 300s), sonda 33 ms
+oct 06 09:04:06 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=23.3 >= 10 -- racha 6/10 (180s de 300s), sonda 24 ms
+oct 06 09:04:36 <host> bb-usable[6035]: [bb-usable] PSI bajo a 1.1, pero UNA sonda no absuelve: la racha sigue en 6/10 (hacen falta 2 bajas seguidas)
+oct 06 09:05:06 <host> bb-usable[6035]: [bb-usable] PSI bajo a 0.1 en 2 sondas seguidas (60s): la racha de 180s se corta. Era un pico, no un colapso
+oct 06 09:10:06 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=59.0 >= 10 -- racha 1/10 (30s de 300s), sonda 29 ms
+oct 06 09:10:36 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=62.3 >= 10 -- racha 2/10 (60s de 300s), sonda 33 ms
+oct 06 09:11:07 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=63.2 >= 10 -- racha 3/10 (90s de 300s), sonda 36 ms
+oct 06 09:11:37 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=63.5 >= 10 -- racha 4/10 (120s de 300s), sonda 32 ms
+oct 06 09:12:07 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=61.9 >= 10 -- racha 5/10 (150s de 300s), sonda 34 ms
+oct 06 09:12:37 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=61.5 >= 10 -- racha 6/10 (180s de 300s), sonda 33 ms
+oct 06 09:13:07 <host> bb-usable[6035]: [bb-usable] PSI memory full avg10=18.2 >= 10 -- racha 7/10 (210s de 300s), sonda 30 ms
+oct 06 09:13:37 <host> bb-usable[6035]: [bb-usable] PSI bajo a 0.9, pero UNA sonda no absuelve: la racha sigue en 7/10 (hacen falta 2 bajas seguidas)
+oct 06 09:14:07 <host> bb-usable[6035]: [bb-usable] PSI bajo a 0.0 en 2 sondas seguidas (60s): la racha de 210s se corta. Era un pico, no un colapso
+```

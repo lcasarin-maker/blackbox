@@ -80,11 +80,18 @@ motivo.
 """
 from __future__ import annotations
 
+import fnmatch
+import importlib.util
+import json
 import os
+import signal
 import socket
 import subprocess
 import sys
+import threading
 import time
+from pathlib import Path
+from typing import Any, NamedTuple
 
 # Cada cuanto se corre la sonda. Mas corto que el WatchdogSec del servicio
 # (systemd recomienda acariciar a la mitad del plazo).
@@ -256,6 +263,453 @@ def log_recovery(psi: float, bajas: int, sostenido: int) -> None:
             f"Era un pico, no un colapso")
 
 
+# =====================================================================
+# ESCALON ANTES DEL REINICIO -- anadido el 2026-10-12
+# DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01, decision de Luis del mismo dia.
+# =====================================================================
+#
+# Los dos reinicios del 2026-10-11 (22:02 y 22:44) fueron un estancamiento
+# LOCAL a app.slice: PSI memory full 98 % con 18-30 GB libres en el sistema,
+# app.slice en 41.1-41.5 M kiB de su MemoryMax=42G, un enjambre de 136-193
+# procesos y un python3 de 26 GB dentro del scope de Claude. vLLM seguia
+# respondiendo 200 OK. El camino de PSI de arriba declaro COLAPSO a los 300 s y
+# reinicio la maquina ENTERA por un fallo de un slice.
+#
+# Esto pone un escalon antes: con PSI full >= PSI_ACT_FULL_AVG10 sostenido
+# ESCALON_SOSTENIDO_S Y un app.slice >= ESCALON_FRACCION_SLICE de su tope, mata
+# (SIGKILL al grupo de procesos) al proceso de mayor RSS dentro de un scope
+# app*com.anthropic.Claude-*.scope que no este protegido. Una muerte por
+# ventana de enfriamiento. El COLAPSO de arriba NO cambia: si el escalon no
+# basta, la racha sigue contando y el watchdog reinicia igual que antes.
+#
+# Falla cerrado: si no puede leer cgroup o /proc, no mata y lo dice. Cualquier
+# excepcion del escalon se registra y se traga en `paso_escalon` -- es la UNICA
+# excepcion tragada de este fichero, y a proposito: una excepcion que escapara
+# mataria este proceso, y su FailureAction=reboot-immediate reiniciaria la
+# maquina por un fallo del escalon, que es lo contrario de lo que el escalon
+# viene a evitar.
+#
+# DE DONDE SALE CADA NUMERO, medido sobre las 20 231 muestras de bb sample con
+# app.slice y PSI del 2026-09-28 al 2026-10-12 (techo 42G desde el 09-27) y el
+# journal de este demonio:
+#
+#   - 0.90: lo fijo Luis. La serie lo sostiene como MITAD de una conjuncion,
+#     nunca solo: app.slice paso del 90 % en 1493 muestras (7.4 %) con PSI
+#     baja, y el 2026-10-12 a las 06:xx estaba al 90.9 % con PSI 0.00. Las 7
+#     muestras de colapsos que terminaron en reinicio (09-28 04:18-04:22,
+#     10-05 00:23, 10-11 22:45 y 22:50) estaban entre 92.5 % y 96.0 %: el corte
+#     queda 2.5 puntos por debajo del menor.
+#   - 60 s: lo fijo Luis. Deja 240 s de los 300 del COLAPSO para que la muerte
+#     se note en PSI (avg10 es una media de 10 s). NO separa por si solo: el
+#     control de falsos positivos de BAJAS_PARA_CORTAR midio excursiones sanas
+#     de hasta 180 s. Lo que separa es la conjuncion con el slice lleno.
+#   - Superficie medida de accion sin reinicio posterior: el 2026-10-06 hubo
+#     episodios de PSI 49-66 % sostenidos 180-240 s que se recuperaron solos
+#     (journal de bb-usable, 08:50-08:54 y 09:10-09:14), con app.slice al 93.4 %
+#     y 94.6 % en las muestras de 08:51 y 09:10. El escalon habria matado ahi.
+#   - ESCALON_ENFRIAMIENTO_S = PSI_ACT_SOSTENIDO_S: una muerte como maximo por
+#     cada ventana que el COLAPSO tarda en declararse. Asi un episodio no puede
+#     llevarse dos procesos antes de que el respaldo de siempre decida.
+ESCALON_SOSTENIDO_S = 60.0
+ESCALON_FRACCION_SLICE = 0.90
+ESCALON_ENFRIAMIENTO_S = PSI_ACT_SOSTENIDO_S
+# El mismo patron que `claude_scopes_mem` de bin/bb: cubre app-com.* y
+# app-gnome-com.* (los dos existen en esta maquina, medido el 2026-10-12).
+ESCALON_SCOPE_GLOB = "app*com.anthropic.Claude-*.scope"
+# `comm` que nunca se matan aunque sean los mayores. El kernel trunca comm a 15
+# caracteres: "bb-guardia-proc" es bb-guardia-proceso. Que esten dentro del
+# scope ya es requisito; esta lista protege lo que vive DENTRO de el y no es
+# el trabajo desbocado: la propia sesion (claude, node, claude-desktop,
+# cowork-linux-helper), el escritorio, docker/vLLM y las piezas de bb.
+ESCALON_COMM_PROTEGIDOS = frozenset({
+    "claude", "claude-desktop", "node", "cowork-linux-he", "electron",
+    "chrome_crashpad", "Xorg", "Xwayland", "gnome-shell", "systemd",
+    "dbus-daemon", "sshd", "dockerd", "containerd", "containerd-shim", "docker",
+    "VLLM::EngineCor", "vllm", "bb", "bb-usable", "bb-guardia-proc",
+    "bb-vigilante-mo",
+})
+# Cuantos procesos del SISTEMA ENTERO entran en un registro de origen. No es un
+# umbral de decision: es el tamano de la foto. `top_rss` de bb sample guarda 5;
+# en el colapso de las 22:44 esos 5 los llenaban cuatro `claude` (+6 GB cada
+# uno) y el python3 de 26 GB, asi que 10 deja sitio al siguiente escalon.
+ORIGEN_TOP_N = 10
+# Plazo de la captura de origen. Leer cmdline toma el mmap_lock del proceso, y
+# bajo el estancamiento que este escalon vigila eso puede tardar. Muy por debajo
+# de PROBE_INTERVAL (30 s) para que el latido conserve su cadencia.
+ORIGEN_PLAZO_S = 5.0
+
+# Raices sustituibles SOLO para probar, igual que PSI_PATH.
+CGROUP_ROOT = Path("/sys/fs/cgroup")
+PROC_ROOT = Path("/proc")
+
+
+def _cargar_origen() -> tuple[Any, str | None]:
+    """tools/origen_proceso.py, cargado por ruta y sin tocar sys.path.
+
+    Un error aqui NO puede tumbar este demonio (un bb-usable que no arranca es
+    un reinicio por FailureAction), asi que se guarda el error y el escalon lo
+    declara en cada evento: sin modulo, el escalon sigue decidiendo y matando,
+    y solo el origen queda NOT_COLLECTED.
+    """
+    ruta = Path(__file__).resolve().parent.parent / "tools" / "origen_proceso.py"
+    try:
+        spec = importlib.util.spec_from_file_location("bb_usable_origen", ruta)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod, None
+    except Exception as exc:  # ver docstring: un fallo de carga no puede reiniciar la maquina
+        return None, f"{type(exc).__name__}: {exc}"
+
+
+_ORIGEN, _ORIGEN_ERROR = _cargar_origen()
+
+
+# NamedTuple y no dataclass: un dataclass con `from __future__ import annotations`
+# busca su modulo en sys.modules, y los tests cargan este ejecutable sin
+# registrarlo ahi (SourceFileLoader). Medido: 55 errores al importar.
+
+
+def _datos() -> Path:
+    # Se lee en cada llamada, no al importar: la leccion de latencia_x_ms.
+    return Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox"))
+
+
+class SliceApp(NamedTuple):
+    ruta: str
+    actual: int             # bytes, memory.current
+    techo: int | None       # bytes, memory.max; None = "max", sin techo
+
+    def fraccion(self) -> float | None:
+        return None if not self.techo else self.actual / self.techo
+
+
+class Proc(NamedTuple):
+    pid: int
+    pgid: int
+    comm: str
+    uid: int
+    rss_kb: int
+    inicio: int             # starttime en ticks: identidad del pid
+    scope: str | None       # scope Claude que lo contiene; None = fuera de todos
+    slice_ruta: str | None
+
+
+class MuestraEscalon(NamedTuple):
+    ahora: float
+    psi: float | None
+    slices: tuple[SliceApp, ...] | None     # None = cgroup ilegible
+    candidatos: tuple[Proc, ...] | None     # None = /proc o cgroup.procs ilegible
+    propio_pid: int
+    propio_pgid: int
+
+
+class EstadoEscalon(NamedTuple):
+    alto_desde: float | None = None
+    ultima_muerte: float | None = None
+
+
+class Decision(NamedTuple):
+    accion: str             # "matar" o "nada"
+    condicion: bool         # PSI sostenido Y slice lleno, se actue o no
+    motivo: str
+    estado: EstadoEscalon
+    objetivo: Proc | None = None
+    slice: SliceApp | None = None
+
+
+def protegido(p: Proc, propio_pid: int) -> str | None:
+    """Motivo por el que NO se puede matar, o None."""
+    if p.pid in (1, propio_pid):
+        return "PID 1 o el propio bb-usable"
+    if p.uid == 0:
+        return "corre como root"
+    if p.comm in ESCALON_COMM_PROTEGIDOS:
+        return f"comm '{p.comm}' protegido"
+    if p.scope is None:
+        return "fuera de los scopes app*com.anthropic.Claude-*.scope"
+    return None
+
+
+def decidir_escalon(m: MuestraEscalon, e: EstadoEscalon) -> Decision:
+    """La decision entera, PURA: sin /proc, sin cgroup, sin reloj, sin senales."""
+    if m.psi is None or m.psi < PSI_ACT_FULL_AVG10:
+        motivo = ("PSI ilegible: no se mata a ciegas" if m.psi is None else
+                  f"PSI {m.psi:.1f} < {PSI_ACT_FULL_AVG10:.0f}")
+        return Decision("nada", False, motivo, EstadoEscalon(None, e.ultima_muerte))
+    desde = m.ahora if e.alto_desde is None else e.alto_desde
+    estado = EstadoEscalon(desde, e.ultima_muerte)
+    alto_s = m.ahora - desde
+    if alto_s < ESCALON_SOSTENIDO_S:
+        return Decision("nada", False, f"PSI {m.psi:.1f} alto hace {alto_s:.0f}s < "
+                        f"{ESCALON_SOSTENIDO_S:.0f}s", estado)
+    if m.slices is None:
+        return Decision("nada", False, "cgroup de app.slice ilegible: no se mata; "
+                        "el COLAPSO sigue de respaldo", estado)
+    llenos = [s for s in m.slices
+              if s.fraccion() is not None and s.fraccion() >= ESCALON_FRACCION_SLICE]
+    if not llenos:
+        vistos = ", ".join("sin techo" if s.fraccion() is None else f"{s.fraccion():.1%}"
+                           for s in m.slices) or "ninguno"
+        return Decision("nada", False, f"app.slice por debajo de {ESCALON_FRACCION_SLICE:.0%} "
+                        f"de su tope ({vistos})", estado)
+    lleno = llenos[0]
+    if e.ultima_muerte is not None and m.ahora - e.ultima_muerte < ESCALON_ENFRIAMIENTO_S:
+        return Decision("nada", True, f"enfriamiento: la ultima muerte fue hace "
+                        f"{m.ahora - e.ultima_muerte:.0f}s < {ESCALON_ENFRIAMIENTO_S:.0f}s",
+                        estado, slice=lleno)
+    if m.candidatos is None:
+        return Decision("nada", True, "/proc o cgroup.procs ilegible: no se mata",
+                        estado, slice=lleno)
+    rutas = {s.ruta for s in llenos}
+    elegibles = [p for p in m.candidatos
+                 if p.slice_ruta in rutas and protegido(p, m.propio_pid) is None]
+    if not elegibles:
+        return Decision("nada", True, f"solo procesos protegidos en los scopes Claude "
+                        f"({len(m.candidatos)} vistos)", estado, slice=lleno)
+    objetivo = max(elegibles, key=lambda p: (p.rss_kb, -p.pid))
+    lleno = next(s for s in llenos if s.ruta == objetivo.slice_ruta)
+    return Decision("matar", True,
+                    f"PSI {m.psi:.1f} sostenido {alto_s:.0f}s y {lleno.ruta} al "
+                    f"{lleno.fraccion():.1%} de su tope: el mayor RSS no protegido",
+                    EstadoEscalon(desde, m.ahora), objetivo, lleno)
+
+
+def matar_en_grupo(objetivo: Proc, miembros: tuple[Proc, ...] | None,
+                   propio_pid: int, propio_pgid: int) -> tuple[bool, str]:
+    """PURA. Grupo entero solo si TODO el grupo es matable; si no, solo el pid."""
+    if miembros is None:
+        return False, "miembros del grupo ilegibles: solo el pid"
+    if objetivo.pgid <= 1 or objetivo.pgid == propio_pgid:
+        return False, f"pgid {objetivo.pgid} reservado: solo el pid"
+    ajenos = [f"{p.pid}:{p.comm} ({protegido(p, propio_pid)})"
+              for p in miembros if protegido(p, propio_pid)]
+    if ajenos:
+        return False, f"el grupo {objetivo.pgid} incluye {', '.join(ajenos)}: solo el pid"
+    return True, (f"grupo {objetivo.pgid}: {len(miembros)} procesos, todos en scopes "
+                  f"Claude y ninguno protegido")
+
+
+# ---------------------------------------------- lectura (efectos, sin decidir)
+
+
+def leer_slices_app() -> tuple[SliceApp, ...] | None:
+    """Todos los app.slice de usuario, por cgroup v2. None si cualquiera falla."""
+    rutas = sorted(CGROUP_ROOT.glob("user.slice/user-*.slice/user@*.service/app.slice"))
+    if not rutas:
+        return None
+    out = []
+    for r in rutas:
+        try:
+            actual = int((r / "memory.current").read_text(encoding="ascii"))
+            techo = (r / "memory.max").read_text(encoding="ascii").strip()
+            out.append(SliceApp(str(r), actual, None if techo == "max" else int(techo)))
+        except (OSError, ValueError):
+            return None
+    return tuple(out)
+
+
+def _leer_proc(pid: int, scope: str | None, slice_ruta: str | None) -> Proc | None:
+    base = PROC_ROOT / str(pid)
+    try:
+        stat = (base / "stat").read_text(encoding="ascii", errors="replace")
+        uid = next(int(linea.split()[1]) for linea in
+                   (base / "status").read_text(encoding="ascii", errors="replace").splitlines()
+                   if linea.startswith("Uid:"))
+        resto = stat[stat.rfind(")") + 2:].split()
+        return Proc(pid, int(resto[2]), stat[stat.find("(") + 1:stat.rfind(")")], uid,
+                    int(resto[21]) * (os.sysconf("SC_PAGE_SIZE") // 1024), int(resto[19]),
+                    scope, slice_ruta)
+    except (OSError, ValueError, IndexError, StopIteration):
+        return None
+
+
+def leer_candidatos(slices: tuple[SliceApp, ...]) -> tuple[Proc, ...] | None:
+    """Procesos de los scopes Claude de cada slice. None si un cgroup.procs no se
+    lee, o si habia pids y no se leyo NINGUNO (eso es /proc ciego, no vacio)."""
+    out, pids_vistos = [], 0
+    for s in slices:
+        for scope in sorted(Path(s.ruta).glob(ESCALON_SCOPE_GLOB)):
+            for carpeta, _subs, _fich in os.walk(scope):
+                try:
+                    pids = (Path(carpeta) / "cgroup.procs").read_text(encoding="ascii").split()
+                except OSError:
+                    return None
+                pids_vistos += len(pids)
+                out.extend(p for p in (_leer_proc(int(x), scope.name, s.ruta) for x in pids) if p)
+    return None if pids_vistos and not out else tuple(out)
+
+
+def _scope_de(pid: int) -> tuple[str | None, str | None]:
+    try:
+        texto = (PROC_ROOT / str(pid) / "cgroup").read_text(encoding="ascii", errors="replace")
+    except OSError:
+        return None, None
+    ruta = next((linea[3:] for linea in texto.splitlines() if linea.startswith("0::")), "")
+    partes = ruta.strip("/").split("/")
+    for i, parte in enumerate(partes):
+        if fnmatch.fnmatch(parte, ESCALON_SCOPE_GLOB):
+            return parte, str(CGROUP_ROOT.joinpath(*partes[:i]))
+    return None, None
+
+
+def leer_grupo(pgid: int) -> tuple[Proc, ...] | None:
+    """Todos los procesos del SISTEMA con ese pgid, cada uno con su scope."""
+    try:
+        entradas = [e for e in PROC_ROOT.iterdir() if e.name.isdigit()]
+    except OSError:
+        return None
+    miembros = []
+    for e in entradas:
+        if _pgid_de(e) != pgid:
+            continue
+        p = _leer_proc(int(e.name), *_scope_de(int(e.name)))
+        if p:
+            miembros.append(p)
+    return tuple(miembros)
+
+
+def _pgid_de(entrada: Path) -> int | None:
+    """None si murio entre el listado y la lectura: un proceso que ya no existe no es del grupo."""
+    try:
+        stat = (entrada / "stat").read_text(encoding="ascii", errors="replace")
+        return int(stat[stat.rfind(")") + 2:].split()[2])
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+def ejecutar_muerte(objetivo: Proc, en_grupo: bool) -> str:
+    """El UNICO sitio donde este demonio manda una senal."""
+    actual = _leer_proc(objetivo.pid, objetivo.scope, objetivo.slice_ruta)
+    if actual is None or actual.inicio != objetivo.inicio:
+        return "no se mato: el objetivo ya no existe o su pid cambio de identidad"
+    try:
+        if en_grupo:
+            os.killpg(objetivo.pgid, signal.SIGKILL)
+            return f"SIGKILL al grupo {objetivo.pgid}"
+        os.kill(objetivo.pid, signal.SIGKILL)
+        return f"SIGKILL al pid {objetivo.pid}"
+    except ProcessLookupError:
+        return "ya habia terminado"
+    except PermissionError as exc:
+        return f"no se mato: {exc}"
+
+
+def _anexar(ruta: Path, obj: dict[str, Any]) -> None:
+    """Una linea con un solo write(2) O_APPEND. Este demonio corre como root:
+    lo que crea pasa al dueno de $BLACKBOX_DATA, o `bb sample` (usuario) no
+    podria volver a escribir en esa carpeta."""
+    datos = ruta.parent.parent
+    nueva = not ruta.parent.exists()
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(ruta, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+    try:
+        vacio = os.fstat(fd).st_size == 0
+        os.write(fd, (json.dumps(obj, ensure_ascii=False) + "\n").encode("utf-8"))
+    finally:
+        os.close(fd)
+    if os.geteuid() == 0 and datos.exists():
+        dueno = datos.stat()
+        for p, toca in ((ruta.parent, nueva), (ruta, vacio)):
+            if toca:
+                os.chown(p, dueno.st_uid, dueno.st_gid)
+
+
+_hilo_origen: list[threading.Thread] = []
+
+
+def capturar_origen(motivo: str, pids: list[int]) -> dict[str, Any]:
+    """Registro de origen de los ORIGEN_TOP_N mayores del sistema + `pids`, con
+    plazo. Lo escribe en $BLACKBOX_DATA/origen/ y lo devuelve."""
+    if _ORIGEN is None:
+        return {"estado": "NOT_COLLECTED", "motivo": f"modulo de origen no cargado: {_ORIGEN_ERROR}"}
+    if _hilo_origen and _hilo_origen[-1].is_alive():
+        return {"estado": "NOT_COLLECTED", "motivo": "la captura anterior sigue atascada"}
+    caja: dict[str, Any] = {}
+
+    def correr() -> None:
+        try:
+            caja["r"] = _ORIGEN.capturar(motivo, ORIGEN_TOP_N, pids, PROC_ROOT)
+        except Exception as exc:  # el hilo informa, no revienta en silencio
+            caja["r"] = {"estado": "NOT_COLLECTED", "motivo": f"{type(exc).__name__}: {exc}"}
+
+    hilo = threading.Thread(target=correr, daemon=True)
+    _hilo_origen[:] = [hilo]
+    hilo.start()
+    hilo.join(ORIGEN_PLAZO_S)
+    registro = caja.get("r") or {"estado": "NOT_COLLECTED",
+                                 "motivo": f"plazo de {ORIGEN_PLAZO_S:.0f}s agotado"}
+    if "procesos" in registro:
+        _anexar(_datos() / "origen" / f"{time.strftime('%Y-%m-%d')}.jsonl", registro)
+    return registro
+
+
+def avisar_origen_no_cargado() -> None:
+    if _ORIGEN_ERROR:
+        log(f"[bb-usable] ORIGEN NO CARGADO ({_ORIGEN_ERROR}): el escalon decide y "
+            f"actua igual, pero el origen de cada proceso queda NOT_COLLECTED")
+
+
+def origen_al_declarar_colapso(sostenido: int) -> None:
+    """Origen del sistema entero UNA vez por declaracion de COLAPSO (la primera
+    sonda que llega al corte). Registrarlo nunca cambia si se acaricia: no
+    devuelve nada y no lanza."""
+    if sostenido != PSI_ACT_SONDAS:
+        return
+    try:
+        capturar_origen("colapso", [])
+    except Exception as exc:  # ver el encabezado del escalon
+        log(f"[bb-usable] origen del COLAPSO no registrado: {type(exc).__name__}: {exc}")
+
+
+def _paso_escalon(psi: float | None, estado: EstadoEscalon, ahora: float,
+                  salida: list[EstadoEscalon]) -> None:
+    slices = leer_slices_app()
+    m = MuestraEscalon(ahora, psi, slices, leer_candidatos(slices) if slices else None,
+                       os.getpid(), os.getpgrp())
+    d = decidir_escalon(m, estado)
+    salida[0] = d.estado  # antes de actuar: un fallo despues no puede borrar el enfriamiento
+    evento: dict[str, Any] = {
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "psi_full_avg10": psi,
+        "accion": d.accion, "condicion": d.condicion, "motivo": d.motivo,
+        "slices": None if slices is None else [
+            {"ruta": s.ruta, "actual": s.actual, "techo": s.techo} for s in slices],
+    }
+    try:
+        if d.condicion:
+            pids = [d.objetivo.pid] if d.objetivo else []
+            registro = capturar_origen("escalon", pids)
+            evento["origen_registro"] = registro.get("ts", registro)
+            if d.objetivo:
+                evento["origen_objetivo"] = next(
+                    (p for p in registro.get("procesos", []) if p.get("pid") == d.objetivo.pid),
+                    {"estado": "NOT_COLLECTED", "motivo": registro.get("motivo", "sin registro")})
+        if d.objetivo:
+            en_grupo, por_que = matar_en_grupo(d.objetivo, leer_grupo(d.objetivo.pgid),
+                                               m.propio_pid, m.propio_pgid)
+            evento["objetivo"] = d.objetivo._asdict()
+            evento["en_grupo"], evento["grupo"] = en_grupo, por_que
+            evento["efecto"] = ejecutar_muerte(d.objetivo, en_grupo)
+            log(f"[bb-usable] ESCALON: {d.motivo} -- pid={d.objetivo.pid} "
+                f"comm={d.objetivo.comm} rss={d.objetivo.rss_kb / 1048576:.1f} GiB, "
+                f"{por_que} -> {evento['efecto']}")
+        elif d.condicion:
+            log(f"[bb-usable] ESCALON no actua: {d.motivo}")
+    finally:
+        _anexar(_datos() / "escalon" / f"{time.strftime('%Y-%m-%d')}.jsonl", evento)
+
+
+def paso_escalon(psi: float | None, estado: EstadoEscalon,
+                 ahora: float | None = None) -> EstadoEscalon:
+    """Una vuelta del escalon. Nunca lanza: ver el encabezado."""
+    salida = [estado]
+    try:
+        _paso_escalon(psi, estado, time.monotonic() if ahora is None else ahora, salida)
+    except Exception as exc:  # ver el encabezado del escalon
+        log(f"[bb-usable] ESCALON FALLO ({type(exc).__name__}: {exc}): no actua; "
+            f"el COLAPSO sigue de respaldo")
+    return salida[0]
+
+
 def main() -> int:
     notify("READY=1")
     first = probe()
@@ -263,9 +717,11 @@ def main() -> int:
         f"{PROBE_BYTES // (1024*1024)} MiB -- plazo {PROBE_DEADLINE:.0f}s "
         f"({PROBE_DEADLINE/max(first, 1e-6):.0f}x ese valor)")
     notify("WATCHDOG=1")
+    avisar_origen_no_cargado()
 
     sostenido = 0  # sondas consecutivas con PSI por encima del umbral de accion
     bajas = 0      # sondas consecutivas por DEBAJO, para no cortar la racha con una
+    escalon = EstadoEscalon()  # independiente de la racha: no toca el latido
 
     while True:
         time.sleep(PROBE_INTERVAL)
@@ -277,6 +733,9 @@ def main() -> int:
         log(f"[bb-usable] latencia del escritorio: "
             f"{'sin DISPLAY' if xms is None else f'{xms:.0f} ms'} "
             f"(observacion, no actua -- DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA)")
+        # El escalon va aparte de la racha y antes de toda decision de latido:
+        # ni lee `sostenido` ni lo escribe, y nunca lanza.
+        escalon = paso_escalon(psi, escalon)
 
         if took > PROBE_DEADLINE:
             # Se paso del plazo pero volvio: NO se acaricia. systemd cobra.
@@ -312,6 +771,7 @@ def main() -> int:
                     f">= {PSI_ACT_SOSTENIDO_S:.0f}s (sonda {took*1000:.0f} ms, "
                     f"que es justo por lo que la sonda sola no lo ve) -- "
                     f"NO se acaricia el watchdog, que reinicie")
+                origen_al_declarar_colapso(sostenido)
                 continue
             log(f"[bb-usable] PSI memory full avg10={psi:.1f} >= "
                 f"{PSI_ACT_FULL_AVG10:.0f} -- racha {sostenido}/{PSI_ACT_SONDAS} "
