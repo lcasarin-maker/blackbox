@@ -1,0 +1,23 @@
+blackbox
+
+Este repositorio incluye logica PORTADA a Python desde el siguiente proyecto, distribuido bajo la
+Licencia Apache, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0):
+
+  witr -- "why is this running"
+  Autor: pranshuparmar
+  Repositorio: https://github.com/pranshuparmar/witr
+  Commit leido: 7e46fa6 (VERSION 0.3.4)
+
+Que se porto, a tools/origen_proceso.py (no se copio codigo Go ni se distribuye ningun binario de
+witr; se reescribio en Python la logica de estos archivos):
+  - internal/source/detect.go: orden de deteccion de la fuente primaria, la regla de "el padre salio"
+    (forOrphan, explainsOrphan, parentExitedAt) y las advertencias (LD_PRELOAD, origen desconocido).
+  - internal/source/container.go, ssh.go, shell.go, supervisor.go, cron.go, init.go,
+    systemd_linux.go: los detectores de cada fuente.
+  - internal/proc/ancestry.go: recorrido de ancestros, padre ausente, pid reciclado y adopcion por
+    cambio de sesion.
+  - internal/proc/process_linux.go: el umbral de RSS alto (> 1 GiB).
+  - internal/app/app.go: los codigos de salida y su orden de severidad.
+
+Los cambios respecto al original estan descritos en la cabecera de tools/origen_proceso.py y en cada
+funcion portada, que cita su archivo:linea de origen.

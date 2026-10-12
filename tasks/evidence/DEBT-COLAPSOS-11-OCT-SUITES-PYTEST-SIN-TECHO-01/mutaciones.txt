@@ -1,0 +1,165 @@
+# Mutaciones del escalon (bin/bb-usable) y del origen (tools/origen_proceso.py), 2026-10-12
+
+Cada mutante anula una rama; la suite de esa pieza tiene que FALLAR (MUERTO). El runner restaura el
+original tras cada mutante (verificado con cmp: 'restaurado-identico'). El control real del escalon
+(acaparador en systemd-run) se excluye con -k para que ningun mutante decida sobre procesos reales.
+
+## Control negativo del instrumento: el runner SI puede decir VIVO
+Primera corrida de mutar_origen.py, antes de escribir test_rastro_claude_solo_debajo_del_corte:
+```
+O12 rastros por encima del corte              VIVO     24 passed in 0.35s
+mutantes: 12  muertos: 11  vivos o sin correr: 1
+rc=1
+```
+Ese mutante vivo mostro un hueco real y se cerro con un test; la corrida de abajo es la posterior.
+
+## Runner del escalon
+```python
+"""Anula cada rama del escalon de bin/bb-usable y corre su suite: cada mutante tiene que MORIR.
+
+Restaura el original despues de cada mutante (y en finally). Excluye el control real (-k), para que un
+mutante nunca decida sobre procesos reales.
+"""
+import subprocess
+import sys
+from pathlib import Path
+
+REPO = Path(sys.argv[1])
+RUTA = REPO / "bin" / "bb-usable"
+ORIGINAL = RUTA.read_text(encoding="utf-8")
+(Path(__file__).parent / "bb-usable.original").write_text(ORIGINAL, encoding="utf-8")
+
+MUTANTES = [
+    ("M01 sin corte de PSI", "if m.psi is None or m.psi < PSI_ACT_FULL_AVG10:", "if m.psi is None:"),
+    ("M02 sin 60 s sostenidos", "if alto_s < ESCALON_SOSTENIDO_S:", "if False:"),
+    ("M03 cgroup ilegible no frena", "if m.slices is None:", "if False:"),
+    ("M04 sin corte del 90 %", "s.fraccion() >= ESCALON_FRACCION_SLICE]", "True]"),
+    ("M05 sin enfriamiento", "if e.ultima_muerte is not None and m.ahora - e.ultima_muerte < ESCALON_ENFRIAMIENTO_S:",
+     "if False:"),
+    ("M06 /proc ilegible no frena", "if m.candidatos is None:", "if False:"),
+    ("M07 sin filtro de protegidos", "and protegido(p, m.propio_pid) is None]", "]"),
+    ("M08 comm protegido no protege", "if p.comm in ESCALON_COMM_PROTEGIDOS:", "if False:"),
+    ("M09 root no protegido", "if p.uid == 0:", "if False:"),
+    ("M10 fuera de scope no protegido", "if p.scope is None:", "if False:"),
+    ("M11 elige el MENOR", "objetivo = max(elegibles", "objetivo = min(elegibles"),
+    ("M12 grupo con ajenos se mata entero", "    if ajenos:\n", "    if False:\n"),
+    ("M13 grupo ilegible se mata entero", "if miembros is None:", "if False:"),
+    ("M14 pgid propio se mata", "if objetivo.pgid <= 1 or objetivo.pgid == propio_pgid:", "if False:"),
+    ("M15 matar no arranca el enfriamiento", "EstadoEscalon(desde, m.ahora), objetivo, lleno)",
+     "EstadoEscalon(desde, e.ultima_muerte), objetivo, lleno)"),
+    ("M16 sin comprobar identidad del pid", "if actual is None or actual.inicio != objetivo.inicio:", "if False:"),
+    ("M17 el bucle no llama al escalon", "escalon = paso_escalon(psi, escalon)", "pass"),
+    ("M18 el escalon no traga su excepcion", "    except Exception as exc:  # ver el encabezado del escalon\n        log(f\"[bb-usable] ESCALON FALLO",
+     "    except KeyError as exc:  # ver el encabezado del escalon\n        log(f\"[bb-usable] ESCALON FALLO"),
+    ("M19 enfriamiento se fija DESPUES de actuar", "salida[0] = d.estado  # antes", "pass  # antes"),
+    ("M20 no se registra la decision", "_anexar(_datos() / \"escalon\"", "(lambda *a: None)(_datos() / \"escalon\""),
+    ("M21 COLAPSO captura en cada vuelta", "    if sostenido != PSI_ACT_SONDAS:\n        return\n", ""),
+    ("M22 el evento no cita el origen", "evento[\"origen_objetivo\"] = next(", "evento[\"origen_x\"] = next("),
+]
+
+vivos = 0
+try:
+    for nombre, viejo, nuevo in MUTANTES:
+        assert ORIGINAL.count(viejo) == 1, f"{nombre}: el texto a mutar no es unico ({ORIGINAL.count(viejo)})"
+        RUTA.write_text(ORIGINAL.replace(viejo, nuevo), encoding="utf-8")
+        r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:xdist", "-x",
+                            "tests/test_escalon_app_slice.py", "-k", "not control_real"],
+                           cwd=REPO, capture_output=True, text=True, timeout=300)
+        ultima = (r.stdout.strip().splitlines() or ["(sin salida)"])[-1]
+        estado = "MUERTO" if r.returncode == 1 else ("VIVO" if r.returncode == 0 else f"COULD_NOT_RUN rc={r.returncode}")
+        vivos += estado != "MUERTO"
+        print(f"{nombre:<45} {estado:<8} {ultima}")
+finally:
+    RUTA.write_text(ORIGINAL, encoding="utf-8")
+print(f"mutantes: {len(MUTANTES)}  muertos: {len(MUTANTES) - vivos}  vivos o sin correr: {vivos}")
+sys.exit(1 if vivos else 0)
+```
+$ python3 mutar_escalon.py <worktree>
+```
+M01 sin corte de PSI                          MUERTO   1 failed, 4 passed, 1 deselected in 0.14s
+M02 sin 60 s sostenidos                       MUERTO   1 failed, 5 passed, 1 deselected in 0.15s
+M03 cgroup ilegible no frena                  MUERTO   1 failed, 9 passed, 1 deselected in 0.20s
+M04 sin corte del 90 %                        MUERTO   1 failed, 3 passed, 1 deselected in 0.13s
+M05 sin enfriamiento                          MUERTO   1 failed, 8 passed, 1 deselected in 0.16s
+M06 /proc ilegible no frena                   MUERTO   1 failed, 10 passed, 1 deselected in 0.18s
+M07 sin filtro de protegidos                  MUERTO   1 failed, 7 passed, 1 deselected in 0.15s
+M08 comm protegido no protege                 MUERTO   1 failed, 7 passed, 1 deselected in 0.17s
+M09 root no protegido                         MUERTO   1 failed, 7 passed, 1 deselected in 0.16s
+M10 fuera de scope no protegido               MUERTO   1 failed, 7 passed, 1 deselected in 0.16s
+M11 elige el MENOR                            MUERTO   1 failed, 1 deselected in 0.11s
+M12 grupo con ajenos se mata entero           MUERTO   1 failed, 15 passed, 1 deselected in 0.24s
+M13 grupo ilegible se mata entero             MUERTO   1 failed, 17 passed, 1 deselected in 0.26s
+M14 pgid propio se mata                       MUERTO   1 failed, 17 passed, 1 deselected in 0.23s
+M15 matar no arranca el enfriamiento          MUERTO   1 failed, 1 deselected in 0.11s
+M16 sin comprobar identidad del pid           MUERTO   1 failed, 27 passed, 1 deselected in 0.31s
+M17 el bucle no llama al escalon              MUERTO   1 failed, 18 passed, 1 deselected in 0.25s
+M18 el escalon no traga su excepcion          MUERTO   1 failed, 20 passed, 1 deselected in 0.27s
+M19 enfriamiento se fija DESPUES de actuar    MUERTO   1 failed, 21 passed, 1 deselected in 0.25s
+M20 no se registra la decision                MUERTO   1 failed, 25 passed, 1 deselected in 0.29s
+M21 COLAPSO captura en cada vuelta            MUERTO   1 failed, 19 passed, 1 deselected in 0.24s
+M22 el evento no cita el origen               MUERTO   1 failed, 26 passed, 1 deselected in 0.31s
+mutantes: 22  muertos: 22  vivos o sin correr: 0
+rc=0
+```
+
+## Runner del origen
+```python
+"""Anula las reglas portadas de witr y el enmascarado en tools/origen_proceso.py: cada mutante debe MORIR."""
+import subprocess
+import sys
+from pathlib import Path
+
+REPO = Path(sys.argv[1])
+RUTA = REPO / "tools" / "origen_proceso.py"
+ORIGINAL = RUTA.read_text(encoding="utf-8")
+
+MUTANTES = [
+    ("O01 sin regla de adopcion por sesion", "        if _adoptado(hijo, padre):\n            hijo[\"padre_salio\"] = True\n", ""),
+    ("O02 sin regla de pid reciclado", "        if _padre_salio_por_inicio(padre, hijo):\n            hijo[\"padre_salio\"] = True\n            break\n", ""),
+    ("O03 padre ausente no corta", "                hijo[\"padre_salio\"] = True\n            break\n        if _padre", "                pass\n            break\n        if _padre"),
+    ("O04 sin forOrphan", "    if not _explica_huerfano(fuente, cadena[:corte + 1]):", "    if False:"),
+    ("O05 shell antes que contenedor", "    for detector in (lambda c: _contenedor(c, objetivo_env), _ssh, _shell,",
+     "    for detector in (_shell, lambda c: _contenedor(c, objetivo_env), _ssh,"),
+    ("O06 sin enmascarar dentro de texto", "        arg = PAR_EN_TEXTO.sub(", "        arg = (lambda *a: a[1])("),
+    ("O07 sin enmascarar el argumento siguiente", "            ocultar_siguiente = True\n        arg = CRED", "            pass\n        arg = CRED"),
+    ("O08 LD_PRELOAD vacio cuenta", "        if sep and valor and nombre in ENV_NOMBRES:", "        if sep and nombre in ENV_NOMBRES:"),
+    ("O09 contenedor sin exigir ID", "        es_id = ID_CONTENEDOR.search(cg) and \"-conmon-\" not in cg", "        es_id = True"),
+    ("O10 user@ explica un huerfano", "and not nombre.startswith(\"user@\")", ""),
+    ("O11 codigo 6 no pesa mas que 1", "SEVERIDAD = {0: 0, 1: 1, 6: 2,", "SEVERIDAD = {0: 0, 1: 2, 6: 1,"),
+    ("O12 rastros por encima del corte", "    datos[\"rastros\"] = rastros(cadena if corte < 0 else cadena[:corte + 1])",
+     "    datos[\"rastros\"] = rastros(cadena)"),
+]
+
+vivos = 0
+try:
+    for nombre, viejo, nuevo in MUTANTES:
+        assert ORIGINAL.count(viejo) == 1, f"{nombre}: texto no unico ({ORIGINAL.count(viejo)})"
+        RUTA.write_text(ORIGINAL.replace(viejo, nuevo), encoding="utf-8")
+        r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:xdist", "-x",
+                            "tests/test_origen_proceso.py"], cwd=REPO, capture_output=True, text=True, timeout=300)
+        ultima = (r.stdout.strip().splitlines() or ["(sin salida)"])[-1]
+        estado = "MUERTO" if r.returncode == 1 else ("VIVO" if r.returncode == 0 else f"COULD_NOT_RUN rc={r.returncode}")
+        vivos += estado != "MUERTO"
+        print(f"{nombre:<45} {estado:<8} {ultima}")
+finally:
+    RUTA.write_text(ORIGINAL, encoding="utf-8")
+print(f"mutantes: {len(MUTANTES)}  muertos: {len(MUTANTES) - vivos}  vivos o sin correr: {vivos}")
+sys.exit(1 if vivos else 0)
+```
+$ python3 mutar_origen.py <worktree>
+```
+O01 sin regla de adopcion por sesion          MUERTO   1 failed, 4 passed in 0.09s
+O02 sin regla de pid reciclado                MUERTO   1 failed, 7 passed in 0.09s
+O03 padre ausente no corta                    MUERTO   1 failed, 6 passed in 0.13s
+O04 sin forOrphan                             MUERTO   1 failed, 4 passed in 0.09s
+O05 shell antes que contenedor                MUERTO   1 failed, 12 passed in 0.10s
+O06 sin enmascarar dentro de texto            MUERTO   1 failed, 1 passed in 0.09s
+O07 sin enmascarar el argumento siguiente     MUERTO   1 failed in 0.08s
+O08 LD_PRELOAD vacio cuenta                   MUERTO   1 failed, 16 passed in 0.17s
+O09 contenedor sin exigir ID                  MUERTO   1 failed, 11 passed in 0.12s
+O10 user@ explica un huerfano                 MUERTO   1 failed, 10 passed in 0.10s
+O11 codigo 6 no pesa mas que 1                MUERTO   1 failed, 21 passed in 0.25s
+O12 rastros por encima del corte              MUERTO   1 failed, 5 passed in 0.09s
+mutantes: 12  muertos: 12  vivos o sin correr: 0
+rc=0
+```
