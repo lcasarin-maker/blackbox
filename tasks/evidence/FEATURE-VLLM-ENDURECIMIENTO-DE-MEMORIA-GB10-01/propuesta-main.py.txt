@@ -1,0 +1,154 @@
+#!/usr/bin/env python3
+"""AI TOP ATOM inference gateway launcher.
+
+The L3 contract (see README.md): a stable OpenAI-compatible endpoint at
+http://127.0.0.1:8000/v1, fail-closed (loopback only), one model served at
+a time today. Swapping the serving engine or model is meant to be "edit
+active_engine.json, restart the service" — no consumer (Aequitas_OS,
+Office2Office, Antigravity) should ever need to change anything.
+
+This script is the thing that makes that true: it reads active_engine.json
+and execs the right `docker run` for it, instead of a systemd unit file
+hardcoding one engine's flags inline (which is what ai-nemotron.service did
+before this existed — the model path, memory limits, and vLLM flags were
+all baked into ExecStart, so "switch engines" meant editing the unit file
+and knowing vLLM's flag syntax).
+
+Usage: python3 main.py [path/to/active_engine.json]  (default: sibling file)
+Exec's docker run — this process becomes the container's foreground process,
+same lifecycle systemd already expected from the old inline ExecStart.
+"""
+import json
+import os
+import sys
+from pathlib import Path
+
+GATEWAY_DIR = Path(__file__).resolve().parent
+CONTAINER_NAME = "nemotron-server"  # kept stable across engine swaps — ai-nemotron.service's ExecStartPre/ExecStop reference this name
+
+
+def build_env_args(cfg: dict) -> list[str]:
+    """Traduce el bloque `env` de active_engine.json a pares `-e K=V`.
+
+    `NVIDIA_VISIBLE_DEVICES=all` es plomería del runtime nvidia (no config del
+    motor), asi que arranca como base y `env` la puede sobrescribir. El bloque
+    `env` existe porque hay ajustes de vLLM que SOLO se exponen como variable de
+    entorno, no como flag de CLI -- p.ej. VLLM_HOST_IP (ver README, seccion
+    "Superficie de red interna").
+    """
+    env = {"NVIDIA_VISIBLE_DEVICES": "all"}
+    extra = cfg.get("env", {})
+    if not isinstance(extra, dict):
+        raise ValueError(f"active_engine.json: 'env' debe ser un objeto K:V, no {type(extra).__name__}")
+    bad = [k for k, v in extra.items() if not isinstance(k, str) or not isinstance(v, str)]
+    if bad:
+        raise ValueError(f"active_engine.json: 'env' solo admite strings; claves invalidas: {bad}")
+    env.update(extra)
+    return [arg for k, v in env.items() for arg in ("-e", f"{k}={v}")]
+
+
+NETWORK_MODES = ("host", "bridge_loopback")
+
+
+def build_network_args(cfg: dict) -> list[str]:
+    """Traduce el campo `network` de active_engine.json a flags de red de docker.
+
+    Dos modos, y solo dos (valor desconocido = ValueError, fail-closed: una red
+    mal escrita NO debe degradar silenciosamente a la más permisiva):
+
+    - `host` (default): `--network host`. El contenedor comparte la netns del
+      host, asi que `--host 127.0.0.1` de vLLM ya bindea el loopback real y no
+      hace falta publicar nada. Contra: TODO socket que abra el contenedor
+      queda en la netns del host -- incluido el `TCPStore` de torch.distributed
+      que el `VLLM::EngineCore` levanta en wildcard y que ninguna config de
+      vLLM puede mover a loopback (ver README, "Superficie de red interna").
+
+    - `bridge_loopback`: sin `--network`, o sea la bridge default de docker, y
+      se publica UN solo puerto atado al loopback del host
+      (`-p 127.0.0.1:<port>:<port>`). Todo lo demas que escuche dentro del
+      contenedor queda inalcanzable desde el host (ConnectionRefusedError), que
+      es el unico cierre real del socket wildcard del EngineCore.
+
+    Por que en `bridge_loopback` se EXIGE `"host": "0.0.0.0"`: la publicacion
+    reenvia hacia la IP del contenedor en la bridge, no hacia su loopback. Si
+    vLLM bindea 127.0.0.1 dentro de su propia netns, docker-proxy se topa con
+    connection refused y el endpoint queda muerto. Ese 0.0.0.0 NO reabre la
+    superficie: es wildcard dentro de una netns aislada cuya unica puerta al
+    exterior es el puerto publicado en 127.0.0.1. Se valida en vez de
+    reescribirse solo para que la config diga la verdad de lo que corre.
+    """
+    mode = cfg.get("network", "host")
+    if mode not in NETWORK_MODES:
+        raise ValueError(f"active_engine.json: 'network' desconocido {mode!r} "
+                         f"— admitidos: {list(NETWORK_MODES)}")
+    if mode == "host":
+        return ["--network", "host"]
+
+    if cfg.get("host") != "0.0.0.0":
+        raise ValueError(
+            f"active_engine.json: con network='bridge_loopback' el bind del motor "
+            f"debe ser 'host': '0.0.0.0' (llegó {cfg.get('host')!r}). La publicación "
+            f"-p 127.0.0.1:{cfg.get('port')}:{cfg.get('port')} reenvía a la IP del "
+            "contenedor en la bridge, no a su loopback: bindear 127.0.0.1 adentro deja "
+            "el endpoint inalcanzable. La exposición sigue siendo solo-loopback en el host."
+        )
+    port = cfg["port"]
+    return ["-p", f"127.0.0.1:{port}:{port}"]
+
+
+def build_vllm_args(cfg: dict) -> list[str]:
+    required = ["image", "model_path", "served_model_name", "host", "port",
+                "gpu_memory_utilization", "max_model_len", "container_memory_gb"]
+    missing = [k for k in required if k not in cfg]
+    if missing:
+        raise ValueError(f"active_engine.json missing required fields for engine=vllm: {missing}")
+
+    mem = f"{cfg['container_memory_gb']}g"
+    return [
+        "/usr/bin/docker", "run", "--rm", "--name", CONTAINER_NAME,
+        *build_network_args(cfg), "--runtime", "nvidia",
+        *build_env_args(cfg),
+        "-v", "/srv/ai/models:/models",
+        "--memory", mem, "--memory-swap", mem, "--oom-score-adj", "500", "--oom-score-adj", "500",
+        *cfg.get("docker_args", []),  # bb: p. ej. --annotation bb.gpu_budget_gib=N, que el runtime OCI de bb exige a todo contenedor con GPU
+        cfg["image"],
+        cfg["model_path"],
+        "--served-model-name", cfg["served_model_name"],
+        "--gpu-memory-utilization", str(cfg["gpu_memory_utilization"]),
+        "--max-model-len", str(cfg["max_model_len"]),
+        "--host", cfg["host"], "--port", str(cfg["port"]),
+        *cfg.get("extra_args", []),
+    ]
+
+
+ENGINE_BUILDERS = {
+    "vllm": build_vllm_args,
+    # sglang/ollama/trt-llm/nim-llm: not wired yet — the bake-off (Fase 1)
+    # only validated vLLM as the production engine. Add a builder here
+    # (same shape as build_vllm_args) when one of those is actually promoted,
+    # rather than guessing at untested flag translations now.
+}
+
+
+def main() -> int:
+    config_path = Path(sys.argv[1]) if len(sys.argv) > 1 else GATEWAY_DIR / "active_engine.json"
+    cfg = json.loads(config_path.read_text())
+
+    engine = cfg.get("engine")
+    builder = ENGINE_BUILDERS.get(engine)
+    if builder is None:
+        sys.stderr.write(
+            f"[gateway] Unknown or unimplemented engine {engine!r} in {config_path} "
+            f"— supported: {sorted(ENGINE_BUILDERS)}\n"
+        )
+        return 1
+
+    argv = builder(cfg)
+    sys.stderr.write(f"[gateway] engine={engine} served_model_name={cfg.get('served_model_name')} "
+                      f"host={cfg.get('host')} port={cfg.get('port')} "
+                      f"network={cfg.get('network', 'host')}\n")
+    os.execvp(argv[0], argv)  # replaces this process — systemd tracks the docker run directly
+
+
+if __name__ == "__main__":
+    sys.exit(main())

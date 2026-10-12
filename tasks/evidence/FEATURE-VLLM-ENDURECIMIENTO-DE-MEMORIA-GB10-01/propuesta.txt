@@ -1,0 +1,20 @@
+PROPUESTA vLLM para el reinicio (2026-10-12). NADA aplicado: los archivos de /srv/ai/gateway no se tocaron.
+Se aplica con:  bash tasks/evidence/FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01/aplica_propuesta.sh   (respaldo con fecha, valida JSON, no reinicia nada)
+Surte efecto en el PROXIMO arranque de vLLM, es decir, el del reinicio de la maquina.
+
+Cambios (2) y por que
+1) docker_args: ["--annotation","bb.gpu_budget_gib=44"] + 3 lineas en main.py que lo ponen ANTES de la imagen.
+   - Necesario: el runtime OCI de bb RECHAZA todo contenedor con GPU sin esa anotacion (probado en el laboratorio nivel 2, caso bblab-gpu-sin-etiqueta). Sin este cambio, el primer arranque de vLLM tras desplegar el runtime fallaria.
+   - 44 GiB: pico de GPU medido de vLLM 41 469 MiB (nvidia-smi, 2026-10-12) = 40.5 GiB, mas ~3.5 GiB de margen; por debajo del suelo de GPU 50.1 GiB. Con un solo contenedor GPU, la suma es 44 < 50.1.
+   - Verificado de forma simulada: con el main.py nuevo y el JSON propuesto, `build_vllm_args` coloca --annotation antes de la imagen (indice 35) y deja intactos el resto de flags.
+   - El runtime OCI NO esta desplegado todavia: este cambio es inocuo con el runtime actual (docker acepta --annotation y lo ignora).
+2) extra_args += ["--max-num-seqs","16"].
+   - Hipotesis, NO medida: el motor se atasco con 32 peticiones concurrentes (DEBT-MOTOR-VLLM-ATASCO-CON-32-PETICIONES-01); 16 queda por debajo. vLLM sin este flag usa su valor por defecto.
+   - Es una prueba A/B: medir tokens/s y latencia con 8 y 16 peticiones concurrentes antes y despues; si la tasa baja, volver al respaldo. El control es el respaldo `active_engine.json.bak-2026-10-12-preReinicio`.
+
+Lo que NO se propone y por que (evidencia de la cosecha)
+- gpu_memory_utilization se queda en 0.3: el 0.70 que no acota (#46307) es otro regimen; aqui la GPU real (40.5 GiB) ya excede en ~4 GiB el nominal (36.5 GiB), lo que confirma que no es un tope duro, pero bajarlo sin medir arriesga que el modelo no arranque.
+- PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True: arregla GLM pero NO NemotronH (#55569), y nuestro modelo es nemotron-3.5; no se propone.
+- --enforce-eager: comunidad reporta ~13 GB de ahorro por grafos CUDA, sin medicion propia: queda como prueba posterior, no en este paquete.
+- container_memory_gb 75: el tope efectivo es docker.slice (14 GiB, medido pico de vLLM 12.7 GiB); decidirlo va en DEBT-DOCKER-SLICE-TOPE-VS-TOPES-DE-CONTENEDORES-01.
+Gain rule: ninguno de estos cambios afirma una mejora; (2) es una hipotesis con control.

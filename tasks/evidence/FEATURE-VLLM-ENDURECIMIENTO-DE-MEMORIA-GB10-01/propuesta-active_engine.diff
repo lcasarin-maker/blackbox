@@ -1,0 +1,18 @@
+--- a/srv/ai/gateway/active_engine.json	2026-10-12 09:40:20.359149299 -0600
++++ b/srv/ai/gateway/active_engine.json	2026-10-12 09:40:20.379833714 -0600
+@@ -34,6 +34,12 @@
+   "--tool-call-parser",
+   "qwen3_xml",
+   "--max-num-batched-tokens",
+-  "8192"
++  "8192",
++  "--max-num-seqs",
++  "16"
++ ],
++ "docker_args": [
++  "--annotation",
++  "bb.gpu_budget_gib=44"
+  ]
+-}
++}
+\ No hay ningún carácter de nueva línea al final del archivo
