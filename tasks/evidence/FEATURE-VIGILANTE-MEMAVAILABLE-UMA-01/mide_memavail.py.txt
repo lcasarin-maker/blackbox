@@ -1,0 +1,34 @@
+import json,glob,os,statistics
+from datetime import datetime
+rows=[]
+for f in sorted(glob.glob(os.path.expanduser("~/.local/share/blackbox/samples/*.jsonl"))):
+    for l in open(f,encoding="utf-8"):
+        try: d=json.loads(l)
+        except ValueError: continue
+        p=d.get("psi") or {}
+        if "mem_full" in p and d.get("mem_avail_kb") is not None:
+            rows.append((d["ts"],d["mem_avail_kb"]/1048576,p["mem_full"]))
+print("muestras con psi",len(rows))
+bad=[r for r in rows if r[2]>=10]
+print("colapso (mem_full>=10):",len(bad), "en dias:",sorted({r[0][:10] for r in bad}))
+av=[r[1] for r in bad]
+print("MemAvail GiB en colapso min/mediana/max: %.1f %.1f %.1f"%(min(av),statistics.median(av),max(av)))
+for G in (2,4,6,8,16,32):
+    fl=[r for r in rows if r[1]<G]; hit=[r for r in bad if r[1]<G]; fp=[r for r in fl if r[2]<10]
+    print(f"<{G:2d}GiB: marcadas={len(fl):5d} colapso detectado={len(hit)}/{len(bad)} falsas={len(fp)}")
+# libres bajas sin colapso
+lo=[r for r in rows if r[1]<4]
+print("muestras MemAvail<4GiB:",[(r[0][:19],round(r[1],2),r[2]) for r in lo][:30])
+from datetime import datetime as D
+def t(s): return D.strptime(s,"%Y-%m-%dT%H:%M:%S%z").timestamp()
+eps=[];cur=[]
+for r in rows:
+    if r[2]>=10:
+        if cur and t(r[0])-t(cur[-1][0])>120: eps.append(cur);cur=[]
+        cur.append(r)
+if cur: eps.append(cur)
+print("episodios (huecos>120 s):",len(eps))
+for G in (4,8,16):
+    print(f"<{G}GiB detecta episodios:",sum(1 for e in eps if any(x[1]<G for x in e)),"/",len(eps))
+for e in eps:
+    if e[0][0].startswith("2026-10-11"): print("10-11",e[0][0][11:19],len(e),"muestras minAvail %.1f"%min(x[1] for x in e))

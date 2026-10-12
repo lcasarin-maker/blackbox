@@ -1,0 +1,26 @@
+MEDICION 2026-10-12 - ¿una linea dura de MemAvailable anade algo sobre PSI + escalon + earlyoom?
+Comando: python3 mide2.py (copia en esta carpeta: mide_memavail.py) sobre ~/.local/share/blackbox/samples/*.jsonl
+Sujeto: 28265 muestras con psi (2026-09-27..2026-10-12); colapso = psi.mem_full >= 10
+Control negativo: el mismo instrumento SI marca episodios con umbral alto (16 GiB detecta 17/42), asi que puede dar veredicto positivo; con umbral bajo da 2/42.
+
+muestras con psi 28265
+colapso (mem_full>=10): 470 en dias: ['2026-09-27', '2026-09-28', '2026-09-29', '2026-09-30', '2026-10-01', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07', '2026-10-10', '2026-10-11', '2026-10-12']
+MemAvail GiB en colapso min/mediana/max: 0.2 27.7 94.9
+< 2GiB: marcadas=   16 colapso detectado=4/470 falsas=12
+< 4GiB: marcadas=   26 colapso detectado=6/470 falsas=20
+< 6GiB: marcadas=   32 colapso detectado=10/470 falsas=22
+< 8GiB: marcadas=   46 colapso detectado=23/470 falsas=23
+<16GiB: marcadas=  560 colapso detectado=129/470 falsas=431
+<32GiB: marcadas= 2103 colapso detectado=327/470 falsas=1776
+episodios (huecos>120 s): 42
+<4GiB detecta episodios: 2 / 42
+<8GiB detecta episodios: 5 / 42
+<16GiB detecta episodios: 17 / 42
+10-11 21:06:24 10 muestras minAvail 14.6
+10-11 22:44:20 16 muestras minAvail 29.5
+10-11 22:50:56 20 muestras minAvail 29.5
+
+earlyoom en produccion (adopted/system-config/etc_default_earlyoom): -m 10 -s 100,100 = la correccion publicada en evanwtf/local-llm#458 (swap deja de contar). Ver cosecha.txt V1.
+
+CONCLUSION memavailable_no_aporta_medido: a 8 GiB la linea ve 5 de 42 episodios y ninguno de los tres del 2026-10-11 (MemAvail minimo 14.6 y 29.5 GiB). PSI ya ve los 42 por definicion. Una linea de MemAvailable no se anade al portero.
+RESIDUO: la rampa rapida de carga de vLLM (29 a 2.5 GiB en 9 s, cosecha.txt) no tiene muestra propia en nuestras series (muestreo 2 s, sin arranque de modelo nuevo). Pasa a FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01: medir MemAvailable a 1 Hz durante el siguiente arranque de modelo.

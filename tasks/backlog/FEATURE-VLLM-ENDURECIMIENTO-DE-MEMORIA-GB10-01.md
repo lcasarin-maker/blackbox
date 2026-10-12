@@ -19,3 +19,7 @@ close_check: {"cmd": "grep -q vllm_memoria_medida tasks/evidence/FEATURE-VLLM-EN
 1. Medir el consumo real del motor (GPU y cgroup) a distintas utilizaciones y concurrencias sin tocar produccion en horas de uso.
 2. Probar `expandable_segments` y `--max-num-seqs` menor; anotar tokens/s y atascos.
 3. La configuracion del motor es de la pila de IA, no de bb: bb mide y propone; el cambio lo aplica Luis en `active_engine.json` con su respaldo.
+
+## Residuo del vigilante (2026-10-12)
+
+De FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01 (cerrada, medido negativo): la rampa de carga de vLLM (29 a 2.5 GiB en 9 s, segun la cosecha) no tiene muestra propia en nuestras series. Medir MemAvailable a 1 Hz durante el siguiente arranque de modelo antes de promoverlo.
