@@ -1,0 +1,52 @@
+# nivel 1 2026-10-12T06:52:33-06:00 runc 1.3.6 kernel 6.17.0-1032-nvidia
+# PSI memoria antes: full avg10=0.00 avg60=0.35 avg300=2.62 total=37138466
+== create l1sintope (none)
+rc_create=0
+start rc=0; procesos en el cgroup: 1
+cgroup=/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bblab-l1sintope.scope memory.max=3221225472 memory.swap.max=0 pids.max=2048
+rc_delete=0
+== create l1directo (none)
+(control negativo: runc directo, SIN envoltorio)
+rc_create=0
+start rc=0; procesos en el cgroup: 1
+cgroup=/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bblab-l1directo.scope memory.max=max memory.swap.max=max pids.max=152777
+rc_delete=0
+== create l1estricto (estricto)
+rc_create=0
+start rc=0; procesos en el cgroup: 1
+cgroup=/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bblab-l1estricto.scope memory.max=67108864 memory.swap.max=0 pids.max=16
+rc_delete=0
+== create l1gpu (gpu)
+bb-oci-runtime: RECHAZADO l1gpu: pide GPU sin anotacion bb.gpu_budget_gib (env NVIDIA_VISIBLE_DEVICES=all)
+rc_create=3
+cgroup ausente: /sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bblab-l1gpu.scope
+rc_delete=0
+== create l1gpuok (gpuok)
+rc_create=0
+start rc=0; procesos en el cgroup: 1
+cgroup=/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bblab-l1gpuok.scope memory.max=15032385536 memory.swap.max=0 pids.max=2048
+rc_delete=0
+== create l1gpuover (gpuover)
+bb-oci-runtime: RECHAZADO l1gpuover: reclamo GPU 60.0 GiB + 0.0 GiB ya registrados = 60.0 GiB supera el suelo de GPU 50.1 GiB
+rc_create=3
+cgroup ausente: /sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bblab-l1gpuover.scope
+rc_delete=0
+== create l1roto (roto)
+time="2026-10-12T06:52:35-06:00" level=error msg="runc create failed: unexpected EOF"
+rc_create=1
+cgroup ausente: /sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bblab-l1roto.scope
+rc_delete=0
+--- registro /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/l1run/data/oci_runtime.jsonl
+{"ts": "2026-10-12T06:52:33-0600", "evento": "create", "contenedor": "l1sintope", "bundle": "/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/l1run/b-l1sintope", "suelo_gpu_gib": 50.1, "suelo_origen": "p95 de 19901 muestras de GPU (99-blackbox.conf, voto 2026-09-27)", "decision": "CORREGIR", "motivo": "faltaban topes; inyectados los de la clase general", "cambios": ["memory.limit None -> 3221225472", "memory.swap None -> 3221225472", "pids.limit None -> 2048"], "clase": "general", "gpu": null, "gpu_gib": null, "reclamos_previos_gib": 0, "registro_lineas_ilegibles": 0, "registro_nota": null}
+{"ts": "2026-10-12T06:52:33-0600", "evento": "delete", "contenedor": "l1sintope", "decision": "NO_ACTUAR", "motivo": "libera el reclamo GPU si lo habia"}
+{"ts": "2026-10-12T06:52:34-0600", "evento": "delete", "contenedor": "l1directo", "decision": "NO_ACTUAR", "motivo": "libera el reclamo GPU si lo habia"}
+{"ts": "2026-10-12T06:52:34-0600", "evento": "create", "contenedor": "l1estricto", "bundle": "/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/l1run/b-l1estricto", "suelo_gpu_gib": 50.1, "suelo_origen": "p95 de 19901 muestras de GPU (99-blackbox.conf, voto 2026-09-27)", "decision": "ADMITIR", "motivo": "ya trae tope propio de memoria, swap y pids", "cambios": [], "clase": "general", "gpu": null, "gpu_gib": null, "reclamos_previos_gib": 0, "registro_lineas_ilegibles": 0, "registro_nota": null}
+{"ts": "2026-10-12T06:52:34-0600", "evento": "delete", "contenedor": "l1estricto", "decision": "NO_ACTUAR", "motivo": "libera el reclamo GPU si lo habia"}
+{"ts": "2026-10-12T06:52:34-0600", "evento": "create", "contenedor": "l1gpu", "bundle": "/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/l1run/b-l1gpu", "suelo_gpu_gib": 50.1, "suelo_origen": "p95 de 19901 muestras de GPU (99-blackbox.conf, voto 2026-09-27)", "decision": "RECHAZAR", "motivo": "pide GPU sin anotacion bb.gpu_budget_gib (env NVIDIA_VISIBLE_DEVICES=all)", "cambios": [], "clase": "gpu", "gpu": "env NVIDIA_VISIBLE_DEVICES=all", "gpu_gib": null, "reclamos_previos_gib": 0, "registro_lineas_ilegibles": 0, "registro_nota": null}
+{"ts": "2026-10-12T06:52:34-0600", "evento": "delete", "contenedor": "l1gpu", "decision": "NO_ACTUAR", "motivo": "libera el reclamo GPU si lo habia"}
+{"ts": "2026-10-12T06:52:34-0600", "evento": "create", "contenedor": "l1gpuok", "bundle": "/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/l1run/b-l1gpuok", "suelo_gpu_gib": 50.1, "suelo_origen": "p95 de 19901 muestras de GPU (99-blackbox.conf, voto 2026-09-27)", "decision": "CORREGIR", "motivo": "faltaban topes; inyectados los de la clase gpu", "cambios": ["memory.limit None -> 15032385536", "memory.swap None -> 15032385536", "pids.limit None -> 2048"], "clase": "gpu", "gpu": "env NVIDIA_VISIBLE_DEVICES=all", "gpu_gib": 36.0, "reclamos_previos_gib": 0, "registro_lineas_ilegibles": 0, "registro_nota": null}
+{"ts": "2026-10-12T06:52:35-0600", "evento": "delete", "contenedor": "l1gpuok", "decision": "NO_ACTUAR", "motivo": "libera el reclamo GPU si lo habia"}
+{"ts": "2026-10-12T06:52:35-0600", "evento": "create", "contenedor": "l1gpuover", "bundle": "/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/l1run/b-l1gpuover", "suelo_gpu_gib": 50.1, "suelo_origen": "p95 de 19901 muestras de GPU (99-blackbox.conf, voto 2026-09-27)", "decision": "RECHAZAR", "motivo": "reclamo GPU 60.0 GiB + 0.0 GiB ya registrados = 60.0 GiB supera el suelo de GPU 50.1 GiB", "cambios": [], "clase": "gpu", "gpu": "env NVIDIA_VISIBLE_DEVICES=all", "gpu_gib": null, "reclamos_previos_gib": 0, "registro_lineas_ilegibles": 0, "registro_nota": null}
+{"ts": "2026-10-12T06:52:35-0600", "evento": "delete", "contenedor": "l1gpuover", "decision": "NO_ACTUAR", "motivo": "libera el reclamo GPU si lo habia"}
+{"ts": "2026-10-12T06:52:35-0600", "evento": "create", "contenedor": "l1roto", "bundle": "/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/l1run/b-l1roto", "suelo_gpu_gib": 50.1, "suelo_origen": "p95 de 19901 muestras de GPU (99-blackbox.conf, voto 2026-09-27)", "decision": "NO_ACTUAR", "motivo": "NOT_COLLECTED: no se pudo leer o parsear /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/l1run/b-l1roto/config.json: Expecting value: line 1 column 34 (char 33)"}
+{"ts": "2026-10-12T06:52:35-0600", "evento": "delete", "contenedor": "l1roto", "decision": "NO_ACTUAR", "motivo": "libera el reclamo GPU si lo habia"}

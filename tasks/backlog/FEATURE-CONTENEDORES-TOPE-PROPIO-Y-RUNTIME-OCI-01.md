@@ -38,6 +38,25 @@ Los tres `docker update` se pierden si el contenedor se recrea: ninguno lleva et
 
 `daemon.json` declara `"runtimes": {"nvidia": {"path": "nvidia-container-runtime"}}` y `"cgroup-parent": "docker.slice"`. Un envoltorio `bb-oci-runtime` en lugar del `path` vera cada `create` con su `config.json` OCI y podra: (1) inyectar `linux.resources.memory.limit/swap` y `pids.limit` por defecto de la clase si faltan; (2) rechazar (exit != 0 con motivo) un contenedor que pida GPU sin etiqueta `bb.gpu_budget_gib` o cuya suma de reclamos supere el suelo de GPU (50.1 GiB p95, `99-blackbox.conf`); (3) registrar cada decision en `$BLACKBOX_DATA`; (4) delegar en el runtime real sin cambiar nada mas. Falla cerrado hacia el comportamiento actual si no puede leer el spec.
 
+### Implementado (etapa 1, 2026-10-12)
+
+- `tools/bb_oci_runtime.py`: se invoca como runc. `create`: lee `<bundle>/config.json`, `decidir()` (pura, sin I/O) y, si corrige, reescribe el spec (tmp + rename) y hace `exec` del runtime real (`BB_OCI_REAL_RUNTIME`, por defecto `nvidia-container-runtime`). `delete`: registra la liberacion del reclamo y delega. El resto de subcomandos pasa tal cual y sin registro.
+- Clases: `general` 3 GiB / pids 2048; `gpu` 14 GiB (= `docker.slice` memory.max) / pids 2048. Swap = limite (sin swap). Un campo cuenta como ausente si es nulo, 0 o -1; un valor positivo declarado no se toca nunca, sea mas estricto o mas laxo que la clase (vLLM con 75 GiB conserva sus 75 y solo recibe swap y pids).
+- GPU = `NVIDIA_VISIBLE_DEVICES` distinto de vacio/void/none, o `/dev/nvidia*` en `linux.devices`, o un hook `nvidia-container`. El reclamo es la ANOTACION OCI `bb.gpu_budget_gib`, que en Docker se pone con `docker run --annotation` (las `--label` no llegan al spec OCI).
+- Registro y suma: `$BLACKBOX_DATA/oci_runtime.jsonl`, con `flock` alrededor de leer-decidir-escribir. Los reclamos vigentes se repliegan del propio registro (creates admitidos menos deletes). Suelo con su origen en cada fila; `BB_OCI_GPU_FLOOR_GIB` lo cambia.
+- `tools/portero_docker_lab.sh up|status|prueba|down` para el nivel 2; usa `bblab.slice` (no `docker-lab.slice`: el guion lo haria hijo de `docker.slice`) y un containerd propio (el dockerd de produccion usa el containerd del sistema).
+
+### Probado de verdad
+
+- Nivel 1 sin root: contenedores reales con runc 1.3.6 rootless a traves del envoltorio; sin tope -> `3221225472/0/2048`; control negativo sin envoltorio -> `max/max/152777`; tope estricto intacto; GPU sin anotacion y GPU con 60 GiB rechazadas (rc 3, sin cgroup); spec truncado pasa intacto y lo rechaza runc. `tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/nivel1-salida.txt`.
+- `tests/test_bb_oci_runtime.py` 38 casos sobre `runc spec`; 18 mutaciones, 0 vivas (`mutaciones-salida.txt`). La guarda del laboratorio se niega con el socket de produccion y con un enlace a el, y no se niega con el suyo.
+
+### NO probado (y por que)
+
+- Nada bajo Docker: el nivel 2 no se ha ejecutado (pide root). Tampoco con `nvidia-container-runtime` como runtime real ni con un contenedor que reciba GPU de verdad.
+- No desplegado en produccion. Antes de hacerlo hay que decidir: (a) el creador de vLLM (`ai-nemotron.service`) tiene que pasar `--annotation bb.gpu_budget_gib=<N>`, o el siguiente arranque de vLLM sera RECHAZADO; (b) el registro arranca vacio, asi que los contenedores que ya corren no cuentan en la suma hasta que se recreen; (c) un contenedor que muera sin `delete` (caida del shim o del daemon) deja su reclamo en el registro y la suma rechaza de mas hasta que alguien lo limpie: falla hacia rechazar, y se ve en el jsonl.
+- Si el mensaje de rechazo llega a la salida de `docker run` depende de como containerd recoge la stderr del runtime: se vera en el nivel 2.
+
 ## Entorno de prueba (lo mas importante, voto de Luis)
 
 Nunca se prueba en el daemon de produccion (contiene nemotron-server, atlas-pgvector, librechat, mongo-librechat y aequitas-pg).
@@ -46,6 +65,6 @@ Nunca se prueba en el daemon de produccion (contiene nemotron-server, atlas-pgve
 
 ## Que falta
 
-1. Envoltorio `bb-oci-runtime`, script de laboratorio y sus pruebas (nivel 1 ahora, nivel 2 cuando Luis ejecute el script).
+1. Envoltorio `bb-oci-runtime`, script de laboratorio y sus pruebas: nivel 1 hecho (2026-10-12); falta el nivel 2, que ejecuta Luis con `sudo bash tools/portero_docker_lab.sh up && sudo bash tools/portero_docker_lab.sh prueba; sudo bash tools/portero_docker_lab.sh down` (detalle en `tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/instrucciones-nivel2.md`).
 2. Persistir los topes de los contenedores existentes en sus creadores.
 3. Decidir `atlas-pgvector` (swap) y la absorcion de `gpu_governance`.
