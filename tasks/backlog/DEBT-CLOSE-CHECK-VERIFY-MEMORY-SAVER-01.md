@@ -56,3 +56,7 @@ Cuatro agujeros de discriminación medidos en `tools/verify_memory_saver.py` (fa
 Regresión: `tests/test_closure_kernel.py::test_memory_saver_negative_control_is_honest_unique_and_windowed` (falla con el código previo: `assert 'fail' == 'pass'`; pasa con el arreglo).
 
 La ficha sigue abierta: el close_check aún reporta por fase `status: unknown`, `fail: 0`, `could_not_run: 1` ("raw phase capture unavailable: ... 'capture.json'"). Falta la captura real, que exige bpftrace como root (`sudo -n` pide contraseña) y una carga CUDA medida; la aporta el operador.
+
+## Estado (2026-10-11, /0 + /vote)
+
+Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.

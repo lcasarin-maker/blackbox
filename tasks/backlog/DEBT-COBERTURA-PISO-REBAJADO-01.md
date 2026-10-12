@@ -27,3 +27,7 @@ El piso vuelve a 100 % cuando las fichas de las pruebas xfail se cierran y la co
 ## Estado
 
 Abierta. La caducidad de la excepción no la aplica ningún gate todavía: hay que revisarla a mano antes de 2026-11-06.
+
+## Estado (2026-10-11, /0 + /vote)
+
+Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
