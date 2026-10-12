@@ -3,7 +3,10 @@ id: DEBT-TERMICA-CORROBORACION-DE-ALARMA-SIEMPRE-DESCARTA-01
 kind: task
 domain: GPU
 title: "bb scan leia mal la alarma de flanco y el sampler no tenia evento de calor sostenido (corregido; falta el destino del aviso)"
-status: open
+status: done
+closed_at: 2026-10-11
+closure_type: relocated_prior_verification
+reason: "el arreglo (estado_termico.json, aviso y gate) aterrizo en a38d157 y dc1e7f4; este commit solo mueve la ficha con su evidencia fail (b088fce, rc=5) y pass (rc=0)"
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
