@@ -315,7 +315,11 @@ cmd_vllm() {
     local modelo=${1:-qwen3-8b-nvfp4} gpu_gib=${2:-12} n=bblab-vllm cg t0 min_kb=999999999 estado=""
     local ruta="/srv/ai/models/llm/$modelo"
     [ -d "$ruta" ] || die "no existe el modelo $ruta"
-    case "$IMAGE" in vllm/*) ;; *) die "BB_LAB_IMAGE es '$IMAGE': para esta prueba debe ser una imagen vllm/* (cargala con up)";; esac
+    case "$IMAGE" in vllm/*) ;; *)
+        # `up` carga la imagen de BB_LAB_IMAGE; este subcomando suele correr en OTRO sudo sin esa variable (fallo de la primera instruccion, 2026-10-12): busca una ya cargada
+        IMAGE=$(labdocker images --format '{{.Repository}}:{{.Tag}}' | grep '^vllm/' | head -1)
+        [ -n "$IMAGE" ] || die "no hay imagen vllm/* cargada en el laboratorio (up con BB_LAB_IMAGE=vllm/vllm-openai:<tag>)";;
+    esac
     labdocker rm -f "$n" >/dev/null 2>&1 || true
     local util
     util=$(awk -v g="$gpu_gib" 'BEGIN{printf "%.3f", g/121.7}')
