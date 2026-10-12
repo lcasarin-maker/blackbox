@@ -42,3 +42,6 @@ close_check: {"cmd": "grep -q dmem_llenado_y_medido tasks/evidence/FEATURE-DMEM-
 2. Medir en lectura del codigo y en una maquina de prueba si `memmgrGetTotalRamSizeBytes` != 0 y si CUDA UMA carga por `video_mem.c`.
 3. Mientras tanto, evaluar un limitador LD_PRELOAD con prueba negativa (variable ausente = debe rechazar o registrar).
 4. Decidir backport 580.178.04 frente a actualizar a 610/615 (soporte de DGX OS y firma Secure Boot por MOK).
+
+## Voto de Luis 2026-10-12
+Medir primero si las asignaciones de GB10 pasan por vidmem antes de portar memacct o enrolar una llave MOK. Descartado por ahora: backport inmediato con MOK; esperar una version de NVIDIA. El backport (FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01) queda condicionado al resultado de esa medicion.
