@@ -27,3 +27,15 @@ def pytest_collection_modifyitems(config, items):
         if ficha and (ROOT / "tasks" / "backlog" / f"{ficha}.md").is_file():
             item.add_marker(pytest.mark.xfail(
                 strict=True, reason=f"ficha de deuda abierta: {ficha}"))
+
+
+@pytest.fixture(autouse=True)
+def _estado_termico_aislado(tmp_path, monkeypatch):
+    """Ningun test puede escribir el estado termico REAL de la maquina (`estado_termico.json`).
+    Medido el 2026-10-11: sin esto, `muestrear(escribir=True)` de los tests lo piso con un estado
+    de fixture ('normal', sin zonas) en la carpeta de datos vivos."""
+    try:
+        from tools import atom_gpu_telemetry as agt
+    except ImportError:  # pragma: no cover - el modulo siempre existe en este repo
+        return
+    monkeypatch.setattr(agt, "ESTADO_TERMICO_PATH", tmp_path / "estado_termico_de_prueba.json")

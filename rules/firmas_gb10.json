@@ -1,0 +1,21 @@
+{
+ "_nota": "INSTRUMENTO, no conocimiento: las firmas que `bb incident` sabe buscar en `journalctl -k` (regex PCRE2). El conocimiento que las respalda (nivel de evidencia, fuentes, quien las reporta) vive SOLO en Atlas: knowledge/investigations/gb10_cortes_2026-10-11/. Cada firma apunta al documento y al id que la documenta. Una firma que no este aqui, bb no la busca.",
+ "atlas_raiz": "knowledge/investigations/gb10_cortes_2026-10-11/",
+ "firmas": [
+  {"id": "nvrm_nomem",        "clase": "incidente",     "regex": "NV_ERR_NO_MEMORY.*_memdescAllocInternal", "atlas": "catalogo_destilado.md#github:S1"},
+  {"id": "nvrm_nomem_1361",   "clase": "incidente",     "regex": "_memdescAllocInternal.*mem_desc\\.c:1361", "atlas": "catalogo_destilado.md#github:S1b"},
+  {"id": "iova_metadata",     "clase": "incidente",     "regex": "_iovaspaceCreateMappingDataFromMemDesc: failed to allocate", "atlas": "catalogo_destilado.md#github:S2"},
+  {"id": "ctx_contiguo",      "clase": "incidente",     "regex": "kgmmuClientShadowFaultBufferPagesAllocate|kgrctxAllocMainCtxBuffer|RM_ALLOC class 0xcec0", "atlas": "catalogo_destilado.md#github:S3"},
+  {"id": "oom_global",        "clase": "incidente",     "regex": "oom-kill:constraint=CONSTRAINT_NONE", "atlas": "catalogo_destilado.md#github:S10"},
+  {"id": "xid_31",            "clase": "incidente",     "regex": "NVRM: Xid \\(PCI:[^)]*\\): 31,", "atlas": "catalogo_destilado.md#github:S13"},
+  {"id": "xid_43",            "clase": "incidente",     "regex": "NVRM: Xid \\(PCI:[^)]*\\): 43,", "atlas": "catalogo_destilado.md#github:S14"},
+  {"id": "xid_119_120_doe",   "clase": "incidente",     "regex": "NVRM: Xid \\(PCI:[^)]*\\): (119|120),|DOE mailbox", "atlas": "catalogo_destilado.md#github:S15"},
+  {"id": "tarea_bloqueada",   "clase": "incidente",     "regex": "blocked for more than", "atlas": "catalogo_destilado.md#github:S20"},
+  {"id": "rcu_timer_perdido", "clase": "incidente",     "regex": "rcu_.*self-detected stall|lost timer wakeup", "atlas": "hilos/hilo_381655 (post de RCU lost timer wakeup)"},
+  {"id": "cpuid_chipset",     "clase": "ruido_conocido","regex": "CPUID: unknown implementer|Chipset not recognized", "atlas": "catalogo_destilado.md#github:S17"},
+  {"id": "mlx5_27w",          "clase": "ruido_conocido","regex": "mlx5_core.*insufficient power on the PCIe slot", "atlas": "dossier_foros_primera_pasada.md (falsos positivos catalogados, seccion A punto 9)"},
+  {"id": "watchdog_no_paro",  "clase": "ruido_conocido","regex": "watchdog0: watchdog did not stop", "atlas": "dossier_foros_primera_pasada.md (falsos positivos catalogados, seccion A punto 9)"},
+  {"id": "aer_corregible",    "clase": "ruido_conocido","regex": "AER: Corrected error|RxErr", "atlas": "dossier_foros_primera_pasada.md (falsos positivos catalogados, seccion A punto 9)"},
+  {"id": "tecla_de_encendido","clase": "ambiguo",       "regex": "Power key pressed", "atlas": "dossier_foros_primera_pasada.md (G9: aparece tambien cuando el EC pidio el apagado)"}
+ ]
+}

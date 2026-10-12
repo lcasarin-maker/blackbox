@@ -46,6 +46,7 @@ Diseño:
    caso real del 2026-08-30 07:38:47 (boot `485fe3f1`) siguió corriendo 28 h
    más después de perder el video.
 """
+import collections
 import argparse
 import ipaddress
 import math
@@ -96,12 +97,28 @@ REPO = Path(__file__).resolve().parent.parent
 DATA_DIR = Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox"))
 JSONL_PATH = Path(os.environ.get("ATOM_TELEMETRY_JSONL", DATA_DIR / "atom_gpu_telemetry.jsonl"))
 MITIGACION_STATE_PATH = DATA_DIR / "atom_gpu_mitigacion.json"
+ESTADO_TERMICO_PATH = DATA_DIR / "estado_termico.json"
 THERMAL_DIR = Path("/sys/class/thermal")
 MEMORY_PRESSURE_PATH = Path("/proc/pressure/memory")
 
 INTERVALO_DEFAULT_S = 5.0
 MARGEN_TRIP_C = 10.0
 HISTERESIS_C = 2.0
+# Calor SOSTENIDO (2026-10-11). `_alarmas` emite en el FLANCO de subida y cuenta flancos: un sensor que
+# oscila alrededor del umbral cruza el flanco una y otra vez y nunca "se sostiene" para ese contador. Medido
+# ese dia: la zona 0 estuvo 23 min entre 94.4 y 96.3 C justo antes de un corte, con el trip en 104.8 C.
+# Estos eventos son ADITIVOS: no cambian los de `_alarmas` ni lo que lee `mitigar`.
+SOSTENIDA_MUESTRAS = 60  # 5 min a la cadencia por defecto de 5 s
+SOSTENIDA_BANDA_C = 5.0  # banda caliente = umbral menos esto (89.8 C con el umbral de 94.8): ver calibracion abajo
+SOSTENIDA_FRACCION = 0.8  # fraccion de la ventana dentro de la banda caliente para declarar el episodio
+# Calibracion (2026-10-11, UN boot de 22 h, n=1: es un punto de partida, no una constante validada): en los 23 min
+# previos al corte la zona 0 tuvo el 97 % de sus lecturas de 5 s sobre 89.8 C pero solo el 58 % sobre 92.8 C (mediana
+# 93.2 C). Con la banda a umbral-2 C el detector no dispara nunca en ese boot (0 min marcados); a umbral-5 C marca
+# 65.8 min de las 22 h en 3 episodios, uno de ellos la hora previa al corte, y no marca el tramo frio.
+SOSTENIDA_FIN_FRACCION = 0.5  # por debajo de esta fraccion el episodio termina (histeresis)
+ESTADO_TERMICO_LATIDO_S = 60.0
+ALERTA_ABSOLUTA_C = 100.0  # `temp_sobre_100`: pedido externo, 2026-10-11
+ALERTA_ABSOLUTA_HISTERESIS_C = 2.0
 MAX_LINEAS = 200_000
 LINEAS_A_CONSERVAR = 100_000
 
@@ -628,7 +645,7 @@ PROCESOS_GPU_CADA = 3
 def leer_procesos_gpu() -> dict:
     """La ÚNICA vía fiable de memoria de GPU en el GB10: `--query-gpu` devuelve
     `[N/A]`, pero `--query-compute-apps` sí reporta por proceso. Se suma para
-    el agregado (medido 2026-09-07: vLLM 33813 MiB + aequitas_os 10251 MiB)."""
+    el agregado (medido 2026-09-07: vLLM 33813 MiB + otro servicio 10251 MiB)."""
     try:
         resultado = _correr_resultado(
             "nvidia-smi",
@@ -1314,6 +1331,76 @@ def _alarmas(zonas: list[dict], umbrales: dict, estado: dict, *,
     return eventos
 
 
+def _alarmas_sostenidas(zonas: list[dict], umbrales: dict, estado: dict) -> list[dict]:
+    """Eventos de calor sostenido y de alerta absoluta, por zona.
+
+    `temp_sostenida`: la ventana de las ultimas `SOSTENIDA_MUESTRAS` lecturas esta llena y al menos
+    `SOSTENIDA_FRACCION` de ellas cae en la banda caliente (umbral menos `SOSTENIDA_BANDA_C`); una sola vez por
+    episodio, y `temp_sostenida_fin` cuando la fraccion baja de `SOSTENIDA_FIN_FRACCION`. La banda es ancha
+    porque el sensor real oscila varios grados por debajo del umbral aun estando caliente de forma sostenida.
+
+    `temp_sobre_100`: la zona cruza `ALERTA_ABSOLUTA_C`, una vez hasta que baja `ALERTA_ABSOLUTA_HISTERESIS_C`.
+
+    Una ventana que no esta llena NO declara nada: tras reiniciar el servicio hacen falta 5 min de muestras
+    antes de poder decir que el calor se sostiene (el estado vive en memoria y no se persiste)."""
+    eventos = []
+    st = estado.setdefault("sostenida", {})
+    for z in zonas:
+        nombre, t = z["zona"], z.get("temp_c")
+        umbral = (umbrales.get(nombre) or {}).get("umbral_c")
+        if t is None or umbral is None:
+            continue
+        s = st.setdefault(nombre, {"ventana": collections.deque(maxlen=SOSTENIDA_MUESTRAS), "activa": False, "abs": False})
+        s["ventana"].append(t >= umbral - SOSTENIDA_BANDA_C)
+        fraccion = sum(s["ventana"]) / len(s["ventana"])
+        base = {"ts": _ahora(), "zona": nombre, "type": z["type"], "temp_c": t, "umbral_c": umbral,
+                "trip_c": umbrales[nombre]["trip_c"]}
+        if len(s["ventana"]) == SOSTENIDA_MUESTRAS and fraccion >= SOSTENIDA_FRACCION and not s["activa"]:
+            s["activa"] = True
+            eventos.append({**base, "evento": "temp_sostenida", "fraccion_caliente": round(fraccion, 2),
+                            "ventana_muestras": SOSTENIDA_MUESTRAS})
+        elif s["activa"] and fraccion < SOSTENIDA_FIN_FRACCION:
+            s["activa"] = False
+            eventos.append({**base, "evento": "temp_sostenida_fin", "fraccion_caliente": round(fraccion, 2)})
+        if t >= ALERTA_ABSOLUTA_C and not s["abs"]:
+            s["abs"] = True
+            eventos.append({**base, "evento": "temp_sobre_100", "alerta_c": ALERTA_ABSOLUTA_C})
+        elif s["abs"] and t < ALERTA_ABSOLUTA_C - ALERTA_ABSOLUTA_HISTERESIS_C:
+            s["abs"] = False
+    return eventos
+
+
+def _estado_termico(estado: dict, zonas: list[dict]) -> dict:
+    """Foto del estado termico actual: `normal`, `sostenida` o `sobre_100`, y desde cuando. La leen el vigilante
+    de avisos (`tools/aviso_termico.py`) y cualquiera que necesite saberlo sin recorrer un jsonl de 150 MB.
+    `actualizado` es el latido: quien lea un archivo con latido viejo debe tratar el estado como DESCONOCIDO,
+    no como `normal`."""
+    st = estado.get("sostenida", {})
+    sobre = sorted(n for n, s in st.items() if s["abs"])
+    sost = sorted(n for n, s in st.items() if s["activa"])
+    actual = "sobre_100" if sobre else ("sostenida" if sost else "normal")
+    if estado.get("termico_estado") != actual:
+        estado["termico_estado"], estado["termico_desde"] = actual, _ahora()
+    temps = {z["zona"]: z["temp_c"] for z in zonas if z.get("temp_c") is not None}
+    pico = max(temps.items(), key=lambda kv: kv[1]) if temps else (None, None)
+    return {"esquema": "bb-estado-termico/2", "estado": actual, "admite_carga": actual == "normal",
+            "desde": estado["termico_desde"], "zona_mas_caliente": pico[0], "temp_c": pico[1], "zonas_en_sostenida": sost, "zonas_sobre_100": sobre,
+            "actualizado": _ahora()}
+
+
+def _publicar_estado_termico(dato: dict, ruta: Path | None = None) -> None:
+    """Escritura atomica. Un fallo aqui NO debe tumbar el muestreo: si el archivo deja de actualizarse, el
+    vigilante lo ve por el latido viejo y lo declara."""
+    ruta = ruta or ESTADO_TERMICO_PATH
+    try:
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        tmp = ruta.with_suffix(ruta.suffix + ".tmp")
+        tmp.write_text(json.dumps(dato), encoding="utf-8")
+        tmp.replace(ruta)
+    except OSError:
+        pass
+
+
 def _es_el_script_invocado(tokens: list[str], i: int) -> bool:
     """¿`tokens[i]` es el script que se está ejecutando, y no un argumento?
 
@@ -1621,7 +1708,10 @@ def muestrear(umbrales: dict, estado: dict, *, escribir: bool = True,
     if journal_ausente:
         muestra["journal_ausente"] = journal_ausente
     alarmas = _alarmas(zonas, umbrales, estado)
-    eventos = [muestra, *alarmas, *alertas,
+    sostenidas = _alarmas_sostenidas(zonas, umbrales, estado)  # aditivo: `mitigar` solo recibe `alarmas`
+    if escribir:
+        _publicar_estado_termico(_estado_termico(estado, zonas))
+    eventos = [muestra, *alarmas, *sostenidas, *alertas,
                *mitigar(alarmas, estado, actuar=actuar,
                         persistir_estado=persistir_estado)]
     if persistir_estado is not None:
@@ -1643,13 +1733,32 @@ def _comando_procesos_gpu() -> int:
     return 1 if datos.get("gpu_procs") is None else 0
 
 
+def _motivo_estado_termico(ruta: Path | None = None, ahora: datetime | None = None) -> str:
+    """Motivo de bloqueo segun `estado_termico.json`, o "" si admite carga. Archivo ausente, ilegible, con
+    latido viejo o con estado desconocido BLOQUEA: quien no sabe, no pasa. Cubre lo que la lectura viva no ve
+    (calor sostenido con la GPU ociosa) y es el contrato `bb-estado-termico/2` para quien encola trabajo."""
+    ruta = ruta or ESTADO_TERMICO_PATH
+    ahora = ahora or datetime.now(timezone.utc)
+    try:
+        d = json.loads(ruta.read_text(encoding="utf-8"))
+        edad = (ahora - datetime.fromisoformat(d["actualizado"])).total_seconds()
+        estado = d["estado"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return f"estado termico ausente o ilegible en {ruta}: sin dato no se admite carga"
+    if edad > ESTADO_TERMICO_LATIDO_S:
+        return f"estado termico con latido de hace {edad:.0f} s (>{ESTADO_TERMICO_LATIDO_S:.0f}): desconocido, no se admite carga"
+    if estado != "normal":
+        return f"estado termico '{estado}' desde {d.get('desde')}: no se admite carga hasta que vuelva a normal"
+    return ""
+
+
 def _comando_gate_termico() -> int:
     # Una sola fuente para el 94.8 C. Atlas llamaba a `presupuesto_termico`
     # por import; ahora llama a este proceso. El numero no se copia, y la
     # ausencia de telemetria fresca sigue BLOQUEANDO (DGX-383): quien no
     # sabe, no pasa.
     umbrales = leer_umbrales()
-    motivo = presupuesto_termico(leer_zonas(), umbrales)
+    motivo = presupuesto_termico(leer_zonas(), umbrales) or _motivo_estado_termico()
     print(json.dumps({"bloquea": bool(motivo), "motivo": motivo},
                      ensure_ascii=False))
     return 1 if motivo else 0

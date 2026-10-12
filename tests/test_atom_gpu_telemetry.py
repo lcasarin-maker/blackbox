@@ -1271,3 +1271,124 @@ def test_control_negativo_el_bucle_NO_revisa_antes_de_tiempo(tmp_path, monkeypat
 
     assert agt.main() == 0
     assert llamadas == [], "una sola muestra no puede alcanzar el contador de 720"
+
+
+# --- Calor SOSTENIDO (2026-10-11): temp_sostenida y temp_sobre_100, aditivos ---------------------
+#
+# El caso que hizo FALLAR la primera version: la zona 0 de la ATOM oscilo 23 min entre 89.1 y 96.3 C
+# antes de un corte (97 % de las lecturas sobre 89.8 C, solo 58 % sobre 92.8 C). Con la banda a
+# umbral-2 C el detector no disparaba nunca; la prueba de reproduccion lo destapo.
+
+UMB = {"thermal_zone0": {"umbral_c": 94.8, "trip_c": 104.8}}
+
+
+def _z(t):
+    return [{"zona": "thermal_zone0", "type": "acpitz", "temp_c": t}]
+
+
+def _correr_sostenida(temps, estado=None):
+    estado = {} if estado is None else estado
+    out = []
+    for t in temps:
+        out += agt._alarmas_sostenidas(_z(t), UMB, estado)
+    return [e["evento"] for e in out], estado
+
+
+def test_una_ventana_incompleta_no_declara_calor_sostenido():
+    ev, _ = _correr_sostenida([96.0] * (agt.SOSTENIDA_MUESTRAS - 1))
+    assert ev == []  # control: con 59 lecturas calientes todavia no se puede decir que se sostiene
+    ev, _ = _correr_sostenida([96.0] * agt.SOSTENIDA_MUESTRAS)
+    assert ev == ["temp_sostenida"]
+
+
+def test_la_oscilacion_real_de_la_zona_0_si_dispara_y_la_banda_antigua_no_lo_habria_hecho():
+    # 97 % sobre 89.8 C y 58 % sobre 92.8 C, como en los 23 min previos al corte del 2026-10-11
+    ciclo = [96.3, 95.0, 93.2, 94.1, 92.0, 91.0, 90.4, 93.7, 95.5, 89.5]  # 9 de 10 sobre 89.8, 5 de 10 sobre 92.8
+    ev, _ = _correr_sostenida(ciclo * 7)
+    assert ev == ["temp_sostenida"]
+    viejo = sum(1 for t in ciclo if t >= 94.8 - 2.0) / len(ciclo)
+    assert viejo < agt.SOSTENIDA_FRACCION  # con umbral-2 C la fraccion no llegaba al 80 %: nunca habria disparado
+
+
+def test_un_tramo_frio_no_produce_eventos():
+    ev, _ = _correr_sostenida([70.0, 85.0, 89.0, 60.0] * 40)
+    assert ev == []  # control negativo
+
+
+def test_se_declara_una_vez_por_episodio_y_termina_con_histeresis():
+    ev, estado = _correr_sostenida([96.0] * 80)  # sigue caliente tras declarar: no repite
+    assert ev == ["temp_sostenida"]
+    ev2, _ = _correr_sostenida([60.0] * 25, estado)  # fraccion 35/60 = 0.58: sigue activo (histeresis)
+    assert ev2 == []
+    ev3, _ = _correr_sostenida([60.0] * 10, estado)  # ya por debajo de 0.5
+    assert ev3 == ["temp_sostenida_fin"]
+    ev4, _ = _correr_sostenida([96.0] * 60, estado)  # nuevo episodio
+    assert ev4 == ["temp_sostenida"]
+
+
+def test_temp_sobre_100_se_emite_una_vez_y_rearma_al_bajar():
+    ev, estado = _correr_sostenida([99.0, 100.5, 101.0, 100.2])
+    assert ev == ["temp_sobre_100"]
+    ev, _ = _correr_sostenida([99.0], estado)  # 99 no es menor que 98: sigue armada la alerta anterior
+    assert ev == []
+    ev, _ = _correr_sostenida([97.0, 100.5], estado)  # baja de 98 y vuelve a cruzar
+    assert ev == ["temp_sobre_100"]
+    ev, _ = _correr_sostenida([99.9])  # control: 99.9 no es 100
+    assert ev == []
+
+
+def test_zona_sin_umbral_o_sin_lectura_se_ignora_sin_lanzar():
+    estado = {}
+    assert agt._alarmas_sostenidas([{"zona": "z", "type": "x", "temp_c": None}], UMB, estado) == []
+    assert agt._alarmas_sostenidas(_z(99.0), {}, estado) == []
+
+
+def test_muestrear_agrega_los_eventos_nuevos_pero_mitigar_solo_recibe_las_alarmas_de_flanco(thermal, gpu_ok, monkeypatch):
+    recibido = []
+    monkeypatch.setattr(agt, "mitigar", lambda alarmas, estado, **kw: recibido.append(list(alarmas)) or [])
+    for i in range(7):
+        _fijar_temp(thermal, i, 96.0)
+    umbrales = agt.leer_umbrales()
+    estado = _estado()
+    todos = []
+    for _ in range(agt.SOSTENIDA_MUESTRAS):
+        todos += agt.muestrear(umbrales, estado, escribir=False)
+    tipos = {e["evento"] for e in todos}
+    assert "temp_sostenida" in tipos and "temp_critica" in tipos
+    assert all(e["evento"] == "temp_critica" for lote in recibido for e in lote)  # mitigar nunca ve los eventos aditivos
+    assert recibido and any(lote for lote in recibido)  # y si ve el de flanco: el comportamiento previo se conserva
+
+
+def test_destino_del_aviso_el_sampler_publica_el_estado_y_el_vigilante_lo_convierte_en_aviso(thermal, gpu_ok):
+    """De punta a punta: calor sostenido en el sampler -> `estado_termico.json` -> el aviso que ve el usuario."""
+    from datetime import datetime, timezone
+
+    from tools import aviso_termico as av
+
+    for i in range(7):
+        _fijar_temp(thermal, i, 96.0)
+    umbrales, estado = agt.leer_umbrales(), _estado()
+    for _ in range(agt.SOSTENIDA_MUESTRAS - 1):
+        agt.muestrear(umbrales, estado, escribir=True)
+    antes = json.loads(agt.ESTADO_TERMICO_PATH.read_text(encoding="utf-8"))
+    assert antes["estado"] == "normal"  # control: con 59 lecturas la ventana no esta llena
+    agt.muestrear(umbrales, estado, escribir=True)
+    dato = json.loads(agt.ESTADO_TERMICO_PATH.read_text(encoding="utf-8"))
+    assert dato["esquema"] == "bb-estado-termico/2" and dato["estado"] == "sostenida" and dato["zona_mas_caliente"].startswith("thermal_zone")
+    avisos, nuevo, _ = av.decide("normal", dato, datetime.now(timezone.utc))
+    assert nuevo == "sostenida" and avisos[0].titulo == "ATOM: calor sostenido" and "bb who" in avisos[0].cuerpo
+    for i in range(7):
+        _fijar_temp(thermal, i, 101.5)
+    agt.muestrear(umbrales, estado, escribir=True)
+    dato = json.loads(agt.ESTADO_TERMICO_PATH.read_text(encoding="utf-8"))
+    assert dato["estado"] == "sobre_100" and dato["zonas_sobre_100"]
+    assert av.decide("sostenida", dato, datetime.now(timezone.utc), None, 0.0)[0][0].urgencia == "critical"
+
+
+def test_si_el_directorio_de_estado_no_es_escribible_el_muestreo_no_se_cae(thermal, gpu_ok, monkeypatch, tmp_path):
+    ocupado = tmp_path / "archivo_donde_deberia_haber_un_directorio"
+    ocupado.write_text("x", encoding="utf-8")
+    monkeypatch.setattr(agt, "ESTADO_TERMICO_PATH", ocupado / "e.json")  # mkdir falla con OSError, solo para esta ruta
+    ev = agt.muestrear(agt.leer_umbrales(), _estado(), escribir=True)
+    assert ev and ev[0]["evento"] == "muestra"  # el instrumento sigue midiendo aunque no pueda publicar
+    assert not (ocupado / "e.json").exists()  # control: de verdad no pudo publicar

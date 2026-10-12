@@ -1,11 +1,11 @@
 [Unit]
-Description=Fija el rango de clock del GPU de la ATOM (300-2800 MHz) para evitar los transitorios de boost que confluyen con el limite termico (DGX-342/344/345)
+Description=Fija el rango de clock del GPU de la ATOM (300-2100 MHz) -- cap con evidencia en NVIDIA #1358 (wydi42 6/6, Croxatte 9+ dias); el anterior 300-2800 nunca acotaba: maximo medido bajo carga 2567-2587 MHz (DGX-342/344/345)
 After=nvidia-persistenced.service
 Wants=nvidia-persistenced.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/nvidia-smi -lgc 300,2800
+ExecStart=/usr/bin/nvidia-smi -lgc 300,2100
 RemainAfterExit=yes
 
 [Install]

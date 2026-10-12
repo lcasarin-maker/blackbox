@@ -300,8 +300,9 @@ fi
 # existia en el repo.
 echo
 echo "-- 4b. clock de la GPU y vigilante de NVRM OOM --"
-# `atom-clock-lock` fija -lgc 300,2800 en cada arranque para evitar los
-# transitorios de boost que confluyen con el limite termico (DGX-342/344/345).
+# `atom-clock-lock` fija -lgc 300,2100 en cada arranque (era 300,2800 hasta el
+# 2026-10-11: nunca acotaba, el maximo medido bajo carga fue 2567-2587 MHz).
+# Evidencia del 2100: NVIDIA #1358, wydi42 y Croxatte; ver DGX-342/344/345.
 run cp adopted/system-config/etc_systemd_system_atom-clock-lock.service \
        /etc/systemd/system/atom-clock-lock.service
 # `nvrm-watch` mira el journal del kernel cada 5 min buscando

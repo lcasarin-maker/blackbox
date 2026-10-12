@@ -1,0 +1,12 @@
+[Unit]
+Description=blackbox: veredicto de causa del reinicio anterior (una fila por boot, INDETERMINADO por defecto)
+Documentation=file:%h/projects/blackbox/tools/reboot_verdict.py
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.reboot_verdict --ultimos 1 --escribe
+Nice=19
+IOSchedulingClass=idle
+# La lectura de telemetria recorre un archivo de ~150 MB: 7 s medidos para 10 boots.
+TimeoutStartSec=120
