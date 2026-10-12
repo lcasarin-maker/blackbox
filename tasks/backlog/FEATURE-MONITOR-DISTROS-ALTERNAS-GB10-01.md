@@ -18,7 +18,7 @@ Lista versionada de fuentes en este repo (`data/distros_alternas.json`, esquema 
 ## Contrato de informacion (sin imports cruzados)
 El monitor escribe `$BLACKBOX_DATA/hallazgos/distros_alternas.jsonl` (`bb-hallazgo/1`, como los demas hallazgos de bb); Atlas los recoge con `tools/recoge_hallazgos_bb.py`. bb no sabe de Atlas.
 ## Plan
-1. Lista de fuentes y esquema (hecho cuando la cosecha FEATURE-COSECHA-DISTROS-ALTERNAS-GB10-01 entregue su tabla).
+1. HECHO 2026-10-12: lista de fuentes `data/distros_alternas.json` (15 fuentes, `bb-fuentes/1`) con `tests/test_distros_alternas_fuentes.py`, de la cosecha FEATURE-COSECHA-DISTROS-ALTERNAS-GB10-01.
 2. Comparador por fuente con `git ls-remote` (HEAD) y la API de commits recientes; el hilo del foro por numero de respuestas. Sin descargar codigo.
 3. Interruptor `monitor_distros` (off/observar/actuar) en `tools/interruptores.py`; `actuar` solo escribe el hallazgo.
 4. Frecuencia semanal; la unidad de usuario con tope de memoria.
