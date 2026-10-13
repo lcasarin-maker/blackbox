@@ -1,0 +1,36 @@
+{
+ "id": 365094,
+ "titulo": "NVMe Write Failures on DGX Spark Founders Edition",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Los mensajes DOE mailbox ABORT timed out y 0.000 Gb/s x0 en el dispositivo PCI de la GPU son normales segun un usuario que los ve en varias unidades sanas; no indican por si solos fallo.",
+   "como": "dmesg | grep -i DOE",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "varias unidades del usuario trystan1, kernel no indicado",
+   "riesgo": null,
+   "verificable_aqui": "dmesg | grep -i 'DOE'"
+  },
+  {
+   "que": "Firma del fallo del autor: NVMe status sct 0x0 / sc 0x4 (Data Transfer Error), escrituras sostenidas fallan, SMART limpio, FioSSD de field diag FAILED. Staff NVES lo califica para RMA.",
+   "como": "no indicado (patron en dmesg: I/O Cmd(0x1) ... sct 0x0 / sc 0x4)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Founders Edition, kernels 6.17.0-1008-nvidia y 6.11.0-1014-nvidia (declarado)",
+   "riesgo": "Fallo de hardware con sistema de archivos destruido tras recuperaciones",
+   "verificable_aqui": "dmesg | grep -iE 'sct 0x0|nvme.*error'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Caso de hardware defectivo (SSD/PCIe) resuelto con RMA por staff NVIDIA en el post 6, sin relacion con memoria o calor. Aporta solo la aclaracion de que los mensajes DOE de dmesg son benignos y la firma de error NVMe."
+}

@@ -1,0 +1,36 @@
+{
+ "id": 376239,
+ "titulo": "GPU clock bug - looks like 5 min wait is enough",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround del reloj de GPU caido (Asus GX10): apagar, desconectar el adaptador por ambos lados, esperar 5 minutos, reconectar, arrancar y revisar el reloj",
+   "como": "apagar; desconectar el adaptador en equipo y toma; esperar 5 minutos; reconectar; arrancar; revisar el reloj de GPU",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus GX10 segun el usuario",
+   "riesgo": "un solo caso; antes se mencionaba 30 minutos",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "Variante: desconectar el adaptador solo de la toma, mantener presionado el boton de encendido 5-10 segundos para drenar capacitores y reconectar; el usuario atribuye la causa a circuitos de control de energia de la fuente",
+   "como": "desconectar adaptador de la toma; mantener boton de encendido 5-10 s; reconectar",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "causa afirmada sin verificacion",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Dos usuarios dan un procedimiento fisico de ciclo de energia para recuperar el reloj de GPU caido, sin comandos de software ni respuesta de NVIDIA. Es reutilizable como workaround pero las causas son especulacion."
+}

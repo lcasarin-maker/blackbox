@@ -1,0 +1,48 @@
+{
+ "id": 374016,
+ "titulo": "DGX Spark GB10 GPU fails to initialize - GSP firmware SEC2 secure boot timeout - RMA?",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Firma de fallo de GSP/SEC2 tras un colapso por thrashing de memoria unificada+swap y apagado forzado (nvidia-smi: No devices were found); persiste con power-cycle, rmmod/modprobe y reboots",
+   "como": "NVRM: ksec2PrepareBootCommands_GB20B: SEC2 secure boot partition timed out ; NVRM: RmInitAdapter: Cannot initialize GSP firmware RM ; RmInitAdapter failed! (0x62:0x65:2028)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE, DGX OS 7.5.0, kernel 6.17.0-1021-nvidia, driver 580.159.03 (usuario)",
+   "riesgo": "Un apagado forzado tras thrashing de memoria precede al fallo; resolucion = RMA aprobada por staff (post 9).",
+   "verificable_aqui": "journalctl -k | grep -E 'ksec2|RmInitAdapter'"
+  },
+  {
+   "que": "Entrar al menu UEFI desde CLI (sugerencia de staff aniculescu)",
+   "como": "sudo systemctl reboot --firmware-setup",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "no indicado",
+   "riesgo": "Con la pantalla muerta no se ve el menu y SSH no vuelve (post 5).",
+   "verificable_aqui": "systemctl --version"
+  },
+  {
+   "que": "Advertencia de NVIDIA: fieldiag exige Secure Boot desactivado (el modulo mods.ko es rechazado con Key was rejected by service); no se pueden retener componentes en el RMA (staff, post 6)",
+   "como": "insmod: ERROR: could not insert module mods.ko: Key was rejected by service",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE, 580.159.03",
+   "riesgo": "Con Secure Boot activo no se puede correr el diagnostico de campo; nuestra maquina tiene Secure Boot activo.",
+   "verificable_aqui": "mokutil --sb-state"
+  }
+ ],
+ "omision_nvidia": "NVIDIA no ofrece ruta para diagnosticar con Secure Boot activo ni sin pantalla (no hay BMC/consola remota, segun el usuario); el staff exige desactivar Secure Boot para fieldiag y aprueba RMA (posts 6 y 9). Datos de serie y caso omitidos aqui.",
+ "utilidad_atom": "media",
+ "razon": "Documenta que un colapso por thrashing de memoria unificada con swap seguido de apagado forzado precede a un fallo permanente de GSP, con firma de log y respuesta de staff (RMA, Secure Boot necesario para fieldiag). Util como firma de log a vigilar y advertencia de riesgo; no da forma de prevenir ni reparar el fallo."
+}

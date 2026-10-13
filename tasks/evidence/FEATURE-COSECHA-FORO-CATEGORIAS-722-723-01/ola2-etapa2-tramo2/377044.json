@@ -1,0 +1,100 @@
+{
+ "id": 377044,
+ "titulo": "DGX Spark / GB10 thermal throttling after EC/UEFI updates, ACPI zones 96-97C, fans not ramping",
+ "leido": true,
+ "posts_leidos": 16,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "rastrear",
+  "omision_nvidia",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Volcado sincronizado de zonas termicas ACPI con su tipo (pedido por staff NVIDIA para triage)",
+   "como": "paste <(ls /sys/class/thermal/thermal_zone*/type) <(cat /sys/class/thermal/thermal_zone*/temp)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "pedido por NVIDIA (Neill); datos del usuario en ASUS GX10, driver 580.159.03",
+   "riesgo": null,
+   "verificable_aqui": "paste <(ls /sys/class/thermal/thermal_zone*/type) <(cat /sys/class/thermal/thermal_zone*/temp)"
+  },
+  {
+   "que": "Journal del kernel filtrado por eventos termicos; en el caso del usuario no mostro nada durante el throttle",
+   "como": "sudo journalctl -k --since \"10 minutes ago\" | grep -iE \"thermal|throttl|fan|acpi\"",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "pedido por NVIDIA",
+   "riesgo": "ausencia de lineas no prueba ausencia de throttle (post 6)",
+   "verificable_aqui": "journalctl -k --since \"10 minutes ago\" | grep -iE \"thermal|throttl|fan|acpi\""
+  },
+  {
+   "que": "Medicion de violaciones termicas por segundo (columna tviol) y contadores de slowdown SW/HW durante carga",
+   "como": "nvidia-smi dmon (columna tviol) y nvidia-smi -q (SW/HW Thermal Slowdown)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10, driver 580.159.03",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi -q -d PERFORMANCE"
+  },
+  {
+   "que": "Umbrales observados: zonas ACPI 0 y 5 llegan a 96.6-96.8 C en throttle; un usuario sobre otro hardware documenta corte duro con zonas 94-95.6 C (GPU 87-89 C, 3s muestreo)",
+   "como": "thermal_zone0/thermal_zone5 hasta 96800 millideg C; corte tras muestras de 94.1 C de zona",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS Ascent GX10, driver 580.142, kernel 6.17.0-1029-nvidia",
+   "riesgo": "corte duro sin traza en el journal",
+   "verificable_aqui": "cat /sys/class/thermal/thermal_zone*/temp"
+  },
+  {
+   "que": "Curva de ventilador recuperada del capsule EC por analisis estatico de usuario: 48% a 85 C, 54% a 93 C, 68% a 95 C, 100% a 97 C; idéntica entre EC 0x02000004, 0x02000005 y 0x02000006",
+   "como": "no indicado (comparacion offline de capsulas LVFS)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10, EC 0x02000004-0x02000006",
+   "riesgo": "analisis de usuario no verificado por NVIDIA",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un usuario reporta que bajar la version de firmware EC (rollback) elimino el calor en Gigabyte y MSI; no se da comando en este tema, solo la mencion y un hilo enlazado",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Gigabyte y MSI Spark segun el usuario",
+   "riesgo": "riesgo de brick o garantia sin respuesta oficial; fwupdmgr get-releases no ofrecia version previa en ASUS",
+   "verificable_aqui": "fwupdmgr get-releases"
+  },
+  {
+   "que": "Busqueda de contrastar versiones FE vs socios en fwupd.org: el firmware de socios va varias versiones detras del Founder Edition; nueva EC/UEFI/PD solo en canal testing para ASUS",
+   "como": "no indicado (paginas LVFS)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "canal testing sin procedimiento de rollback oficial",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Apagado en seco con memoria: log NVRM nvCheckOkFailedNoLog Out of memory NV_ERR_NO_MEMORY en _memdescAllocInternal minutos u horas antes de cada corte; watchdog SBSA (RuntimeWatchdogSec=2min) no reinicio la maquina",
+   "como": "systemd RuntimeWatchdogSec=2min; cap de reloj 2000 MHz y DPMS desactivado segun t/372662 y t/378945",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark P4242, BIOS 5.36_0ACUM018, kernel 6.17.0-1029-nvidia, driver 580.173.02",
+   "riesgo": "corte con temperatura max 79 C, por debajo del umbral; aniculescu (NVIDIA) lo clasifica como OOM, no termico (post 15)",
+   "verificable_aqui": "journalctl -k | grep -c NV_ERR_NO_MEMORY"
+  }
+ ],
+ "omision_nvidia": "El ventilador no es legible por software (nvidia-smi da N/A, sin hwmon fan_input ni PWM en /sys/class/thermal), no hay log de eventos del EC tras apagados espontaneos, y NVIDIA no pudo reproducir en FE y remite a OEM (aniculescu, post 13); dgx-spark-fieldiag 2.0.4-1 depende de ofed-scripts sin candidato en los repos oficiales.",
+ "utilidad_atom": "alta",
+ "razon": "Aporta comandos de medicion concretos pedidos por staff NVIDIA (post 4), valores de umbral de zonas ACPI y un patron de corte duro con registro NVRM de memoria previo (posts 12, 14). NVIDIA respondio que no reproduce en FE y que el caso de OOM es otra categoria (posts 13, 15); lo demas son afirmaciones de usuarios."
+}

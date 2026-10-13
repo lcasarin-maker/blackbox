@@ -1,0 +1,119 @@
+{
+ "id": 372540,
+ "titulo": "New release: Nex-N2-Pro, a 397B parameter MoE model based on Qwen",
+ "leido": true,
+ "posts_leidos": 29,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir",
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Usar moe_wna16 en vez del repack GPTQ a Marlin: el repack asigna ~15 GiB de golpe tras cargar pesos y congelo un nodo (ping vivo, sshd muerto, hizo falta apagado fisico)",
+   "como": "--quantization moe_wna16",
+   "fuente_post": 23,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark TP=2, modelo W4A16 (~98 GiB/nodo); vLLM 0.22.1rc1.dev124",
+   "riesgo": "Kernel Triton algo mas lento; en post 29 otro usuario midio Marlin mas rapido (1612/31.2 vs 1086/23.9) pero con pico de memoria en carga",
+   "verificable_aqui": "python3 -c 'import vllm;print(vllm.__version__)'"
+  },
+  {
+   "que": "Liberar el pool del allocator entre modulos durante process_weights_after_loading para que el piso de memoria unificada no caiga a cero",
+   "como": "torch.cuda.empty_cache()   # tras quant_method.process_weights_after_loading(module) en vllm/model_executor/model_loader/utils.py",
+   "fuente_post": 23,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark",
+   "riesgo": "Parche local a vLLM; el post 29 lo reporta acotando el pico a ~3 GiB/capa",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Bucle de vaciado de page cache durante carga de pesos rapida (InstantTensor ~3 GB/s inunda el cache)",
+   "como": "while true; do echo 1 > /proc/sys/vm/drop_caches; sleep 2; done",
+   "fuente_post": 23,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark",
+   "riesgo": "Solo mientras carga; requiere root; degrada lecturas",
+   "verificable_aqui": "grep -E 'MemAvailable|Cached' /proc/meminfo"
+  },
+  {
+   "que": "Watchdog de memoria: bucle de 0.3 s por nodo que mata el contenedor si MemAvailable cae bajo 2 GiB, para evitar un congelamiento con sshd muerto",
+   "como": "no indicado (script no publicado; aviso: armarlo por SSH con awk inline falla en silencio, hay que ponerlo como archivo y correrlo local)",
+   "fuente_post": 23,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark",
+   "riesgo": "gpu-memory-utilization 0.90 dejo MemAvailable ~2.05 GiB y el watchdog mato un servidor sano; 0.88 dio ~4.5 GiB de margen",
+   "verificable_aqui": "grep MemAvailable /proc/meminfo"
+  },
+  {
+   "que": "Margen de memoria: gpu-memory-utilization 0.88 deliberado; el NVFP4 (~110 GiB/nodo) choca con una pared de OOM al ~74% de carga en 2 Sparks",
+   "como": "--gpu-memory-utilization 0.88",
+   "fuente_post": 23,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark TP=2",
+   "riesgo": "Otro usuario subio a 0.90 y solo quedaron 2 GB para el SO, recomendando ejecutar sin interfaz grafica",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Piso de max-num-batched-tokens con prefix caching en modelos hibridos Qwen3.5 (assert al primer prefill si es menor)",
+   "como": "--max-num-batched-tokens 4176",
+   "fuente_post": 23,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark, Qwen3_5MoE hibrido",
+   "riesgo": "Valor especifico de este modelo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Cudagraphs de decodificacion completa: +52% de generacion (20.7 a 31.4 t/s); la causa de la brecha de otro usuario fue el tamano del pool visible en el log de arranque",
+   "como": "--compilation-config '{\"cudagraph_mode\":\"FULL_DECODE_ONLY\",\"cudagraph_capture_sizes\":[1,2,4]}'  y revisar la linea 'CUDA graph pool memory: X GiB' (0.55 GiB bueno, 0.12 GiB malo)",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark; build vLLM dev124 (3 jun) vs dev330 (10 jun)",
+   "riesgo": "Regresion de version de vLLM sin confirmar; el propio autor del post 28 la infiere por comparacion, sin bisectar",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de rendimiento reproducible con llama-benchy (fork de eugr)",
+   "como": "uvx --from git+https://github.com/eugr/llama-benchy llama-benchy --base-url http://localhost:8000/v1 --model nex/nex-n2-pro --tokenizer <HF tokenizer> --pp 2048 --tg 128 --depth 0 4096 8192 16384 32768 65536 --runs 3 --latency-mode generation",
+   "fuente_post": 28,
+   "repositorio": "https://github.com/eugr/llama-benchy",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables de entorno de la receta (NCCL y asignador)",
+   "como": "PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True; NCCL_CUMEM_ENABLE: \"0\"; NCCL_NVLS_ENABLE: \"0\"; VLLM_MARLIN_USE_ATOMIC_ADD: \"1\"; TORCH_CUDA_ARCH_LIST: \"12.1a\"",
+   "fuente_post": 21,
+   "repositorio": "https://github.com/JoeyRenfrew/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fork con receta y mods para Spark (indicado por un usuario en post 26)",
+   "como": "no indicado (enlace al repo)",
+   "fuente_post": 26,
+   "repositorio": "https://github.com/JoeyRenfrew/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark, gpu_memory_utilization 0.90",
+   "riesgo": "Solo 2 GB para el SO; ejecutar headless",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario (karol.spark) documenta, con comandos literales, el congelamiento de nodo por picos de memoria en carga, el empty_cache, el bucle de drop_caches, el watchdog de MemAvailable y el margen 0.88, todos aplicables a vLLM en memoria unificada; sin respuesta de NVIDIA. Es multinodo (2 Sparks) y los parches son de un solo usuario sin repo propio, por eso media y no alta."
+}

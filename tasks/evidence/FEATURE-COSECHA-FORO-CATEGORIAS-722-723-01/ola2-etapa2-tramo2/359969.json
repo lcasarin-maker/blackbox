@@ -1,0 +1,59 @@
+{
+ "id": 359969,
+ "titulo": "Driver 590.48.01 regression: UMA memory not released after CUDA process exit (works on 580.126.09)",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Liberar memoria que el driver 590.48.01 no devuelve tras salir un proceso CUDA",
+   "como": "sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, kernel 6.14.0-1015-nvidia, driver 590.48.01 CUDA 13.1",
+   "riesgo": "Alternativas del mismo post: rmmod nvidia o reiniciar; vaciar cache afecta rendimiento transitorio",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Detectar el sintoma: MemAvailable baja ~80GB sin reflejarse en AnonPages, Cached, Slab ni PageTables tras salir del proceso",
+   "como": "cat /proc/meminfo | grep MemAvailable",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, driver 590.48.01",
+   "riesgo": null,
+   "verificable_aqui": "grep -E 'MemAvailable|AnonPages|^Cached|Slab|PageTables' /proc/meminfo"
+  },
+  {
+   "que": "Prevencion: quedarse en driver 580.126.09 (con CUDA 13.0), donde la memoria se libera al salir el proceso",
+   "como": "driver 580.126.09",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "misma maquina, mismo binario y modelo",
+   "riesgo": "Afirmacion de usuario",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+  },
+  {
+   "que": "Declaracion de NVIDIA (cyuen1): no soportan drivers posteriores a 580.126.09",
+   "como": "no indicado (declaracion de politica de soporte)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Instalar driver 590.x queda fuera de soporte",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA no soporta drivers posteriores a 580.126.09 en la Spark (post 2, staff); trasladara el reporte a ingenieria.",
+ "utilidad_atom": "alta",
+ "razon": "Reporte con reproduccion y workaround concreto (drop_caches) mas declaracion de NVIDIA sobre version maxima soportada; la maquina usa 580.178.04, por lo que sirve como advertencia de no subir de rama 580. Respuesta de NVIDIA presente en post 2; post 3 ausente, post 4 cierre automatico."
+}

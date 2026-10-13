@@ -1,0 +1,10 @@
+{"id": 382536, "titulo": "DGX Spark fan-control kernel module — running on dual Sparks since mid-August", "leido": true, "posts_leidos": 1, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["prevenir", "solucionar", "omision_nvidia"],
+ "mecanismos": [
+  {"que": "Modulo de kernel de control de ventiladores (dgx-spark-fan-control) del autor, usado en dos Sparks desde mediados de agosto", "como": "no indicado (el post solo enlaza el codigo fuente)", "fuente_post": 1, "repositorio": "no indicado (enlace titulado dgx-spark-fan-control; URL no visible en el texto)", "licencia": "no indicada", "probado_en": "dual DGX Spark, segun el autor", "riesgo": "Modulo de kernel de terceros que sustituye el control de firmware; el autor pide feedback, sin garantia.", "verificable_aqui": null},
+  {"que": "Dato de umbral: el firmware contiene critical = 104800 (miligrados, unos 104.8 C) y el autor observo apagados a unos 105 C en corridas largas", "como": "critical = 104800", "fuente_post": 1, "repositorio": null, "licencia": null, "probado_en": "DGX Spark del autor", "riesgo": "Apagado termico en carga sostenida; el autor indica que el ConnectX-7 contribuye.", "verificable_aqui": "grep -r . /sys/class/thermal/thermal_zone*/trip_point_*_temp 2>/dev/null"}
+ ],
+ "omision_nvidia": "NVIDIA no expone control de ventiladores en espacio de usuario; el control queda en firmware (afirmacion del usuario, sin respuesta de NVIDIA en el tema).",
+ "utilidad_atom": "media",
+ "razon": "El unico post declara un apagado termico a unos 105 C con umbral critico de firmware de 104800 y un modulo de kernel como remedio, pero no da comandos ni licencia ni URL en el texto. Es un mensaje de usuario sin respuesta de NVIDIA."}

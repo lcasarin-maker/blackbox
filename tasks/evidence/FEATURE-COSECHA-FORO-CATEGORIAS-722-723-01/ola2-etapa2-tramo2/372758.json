@@ -1,0 +1,27 @@
+{
+ "id": 372758,
+ "titulo": "Fwupd daemon failure",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Si fwupd no arranca por desajuste de version entre libfwupd y el demonio, actualizar fwupd antes de aplicar firmware",
+   "como": "sudo apt upgrade fwupd",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Lenovo PGX (GB10), fwupd 1.9.30 a 2.0.20",
+   "riesgo": "Un usuario, sin respuesta de NVIDIA; dist-upgrade no actualizo fwupd",
+   "verificable_aqui": "fwupdmgr --version; systemctl status fwupd --no-pager"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario resolvio el fallo del demonio con apt upgrade fwupd y confirmo en el post 2 que la actualizacion de firmware funciono despues. Relevante porque el tema 373394 vincula un fallo de GPU con una OTA de firmware via fwupdmgr, aunque aqui no hay causalidad."
+}

@@ -1,0 +1,98 @@
+{
+ "id": 359275,
+ "titulo": "Tier 0 Findings on DGX Spark: Why Hybrid Mamba (Nemotron) Beats 120B for Agents (Plus sm121 Fix)",
+ "leido": true,
+ "posts_leidos": 30,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar la reserva de memoria de vLLM para dejar margen al resto del sistema (vLLM ocupa por defecto todo el espacio disponible); eugr recomienda 0.7 o 0.6 en vez de 0.9",
+   "como": "--gpu-memory-utilization 0.7",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "cluster de Sparks del usuario eugr con gpt-oss-120b; el OP uso 0.90 y tuvo OOM",
+   "riesgo": "Con 0.90 y otros procesos (navegador headless) el sistema entra en swap y mata procesos segun el OP",
+   "verificable_aqui": "docker ps --format '{{.Names}}' ; docker inspect <contenedor> --format '{{.Args}}' (buscar gpu-memory-utilization)"
+  },
+  {
+   "que": "Memoria unificada: cualquier proceso extra en RAM resta de la VRAM disponible y consume ancho de banda; no ejecutar nada ademas del motor de inferencia salvo limitar memoria",
+   "como": "no indicado (advertencia)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "OOM si se acumulan procesos de CPU junto a vLLM",
+   "verificable_aqui": "free -m"
+  },
+  {
+   "que": "nvidia-smi no reporta uso de VRAM en la Spark por ser memoria unificada, por lo que un script que lea memory.used con nvidia-smi no funciona",
+   "como": "nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv,noheader,nounits (no funciona segun eugr)",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (afirmacion de usuario)",
+   "riesgo": "Monitoreo basado en nvidia-smi da ceros o N/A",
+   "verificable_aqui": "nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits"
+  },
+  {
+   "que": "Compilar llama.cpp para sm121 del GB10; el OP reporta paso de 0.9 a ~30 t/s (otro usuario sospecha que antes corria en CPU)",
+   "como": "cmake .. -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=\"121\"",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10 (declarado por el OP)",
+   "riesgo": "Medicion del OP discutida por mjpansa (post 24)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Salida de vLLM como medida de capacidad de KV cache a utilization 0.7: tokens de cache, concurrencia maxima y memoria de KV disponible",
+   "como": "GPU KV cache size: 1,296,944 tokens / Maximum concurrency for 131,072 tokens per request: 19.46x / Available KV cache memory: 44.6 GiB",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "gpt-oss-120b, cluster del usuario eugr",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "llama.cpp reserva por defecto cache para una sola peticion; gpt-oss-120b cabe en unos 70GB totales con llama.cpp segun eugr",
+   "como": "no indicado",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Repositorio que simula la carga 'Pension Analysis' para reproducir saturacion de KV cache en vLLM",
+   "como": "no indicado (solo el enlace y capturas)",
+   "fuente_post": 20,
+   "repositorio": "https://github.com/raphaelamorim/kv-cache-saturation",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Parametros propuestos por el OP para un contenedor vllm-mxfp4-spark: MXFP4 con backend CUTLASS, utilizacion 0.70, FlashInfer con KV cache FP8, contexto maximo 131072; el script de benchmark adjunto fue calificado como sin sentido por eugr",
+   "como": "no indicado como comando",
+   "fuente_post": 27,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Script no valido: bucle vacio y lectura nvidia-smi inutil (post 28)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "La parte valiosa es de usuarios experimentados (eugr, post 9): bajar --gpu-memory-utilization a 0.7/0.6 y no mezclar procesos con vLLM en memoria unificada, mas que nvidia-smi no mide VRAM aqui; la tesis del OP sobre Mamba fue refutada y el hilo fue cerrado por staff (aniculescu) sin pronunciamiento tecnico. Util como medida preventiva de OOM; las medidas de velocidad del OP no estan verificadas."
+}

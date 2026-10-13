@@ -1,0 +1,11 @@
+{"id": 381549, "titulo": "GPU underclock warning (please read)", "leido": true, "posts_leidos": 7, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["monitorear", "prevenir"],
+ "mecanismos": [
+  {"que": "Advertencia: el ventilador del Spark responde sobre todo a la temperatura de GPU; hacer underclock de GPU baja esa temperatura y puede dejar la CPU sin refrigeracion (CPU hasta 92-95 C en el nodo cabeza)", "como": "no indicado (no se da el comando de underclock)", "fuente_post": 1, "repositorio": null, "licencia": null, "probado_en": "dual DGX Spark con carcasa impresa 3D (declarado por el usuario)", "riesgo": "CPU a 86-95 C bajo inferencia; el propio autor cita que una IA confirmo la hipotesis, sin medicion propia de la curva de ventilador.", "verificable_aqui": "sensors ; nvidia-smi -q -d TEMPERATURE,CLOCK"},
+  {"que": "Contraste de usuarios: otro usuario ve la CPU por debajo de 70 C en un solo nodo con inferencia pesada; un Gigabyte AI TOP ATOM muestra CPU unos 10 C mas caliente que GPU con uso de CPU 5-10 % y llega a los 90", "como": "no indicado", "fuente_post": 6, "repositorio": null, "licencia": null, "probado_en": "Gigabyte AI TOP ATOM (post 6, usuario)", "riesgo": "Sesgo del enfriamiento hacia la GPU, segun el usuario.", "verificable_aqui": "sensors"},
+  {"que": "Mitigacion fisica y referencia: sustituir el ventilador externo por uno de mas rpm (Arctic P12 Pro, max 3000 rpm), controlarlo con un PWM; se menciona un script que escribe en la memoria compartida del firmware para cambiar el perfil de ventilador, no probado por quien lo cita", "como": "no indicado (script no identificado)", "fuente_post": 5, "repositorio": null, "licencia": "no indicada", "probado_en": "dual Spark (usuario)", "riesgo": "Escribir en firmware sin probar.", "verificable_aqui": null}
+ ],
+ "omision_nvidia": "No hay forma documentada de fijar la velocidad del ventilador (pregunta en post 1, sin respuesta oficial; sin staff de NVIDIA en el tema).",
+ "utilidad_atom": "media",
+ "razon": "Los posts 1, 5 y 6 reportan CPU a 86-95 C con refrigeracion regida por temperatura de GPU y un Gigabyte AI TOP ATOM con el mismo sesgo, util como advertencia y para vigilar CPU con sensors. Todo son afirmaciones de usuarios sin comandos exactos ni respuesta de NVIDIA."}

@@ -1,0 +1,36 @@
+{
+ "id": 374699,
+ "titulo": "Gigabyte AI TOP Atom high temps in idle",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comparar dos unidades identicas en reposo: potencia GPU 3 W y 50 C (unidad caliente) frente a 5 W y 38 C a 26 C ambiente; ventiladores no arrancan en idle; bajo carga temperaturas iguales; tiempos de compilacion 12 min frente a 8-9 min (build de eugr vllm)",
+   "como": "no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Gigabyte AI TOP Atom, fabricadas ene 2026, firmware reciente (usuario)",
+   "riesgo": "Posible gestion de ventiladores defectuosa; usuario no abrio el equipo por garantia.",
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,temperature.gpu,fan.speed --format=csv"
+  },
+  {
+   "que": "Segundo usuario dice haber bajado 40 C cambiando la pasta termica por PTM7950 (enlaza otro tema; el autor lo descarta como causa)",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Gigabyte AI TOP (usuario)",
+   "riesgo": "Abrir el equipo puede anular la garantia (sellos en tornillos inferiores, post 3).",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El staff (aniculescu) solo pide nvidia-bug-report; no hay solucion ni explicacion del control de ventiladores en idle (post 4).",
+ "utilidad_atom": "baja",
+ "razon": "Es directamente nuestro hardware (Gigabyte AI TOP Atom) y un caso de gestion de ventiladores en idle, pero el tema solo aporta mediciones comparativas, ningun comando ni arreglo (posts 1-4). La unica respuesta de NVIDIA pide un bug report."
+}

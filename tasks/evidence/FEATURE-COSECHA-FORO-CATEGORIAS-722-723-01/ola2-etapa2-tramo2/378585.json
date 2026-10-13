@@ -1,0 +1,68 @@
+{
+ "id": 378585,
+ "titulo": "Unified-memory kernel-init allocations consume ~50GB before weight loading starts, disabling auto-prefetch on large models",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "monitorear",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Muestrear la memoria disponible cada 2 s durante el arranque de vLLM y etiquetar cada muestra con la ultima linea de log del motor, para atribuir la caida a una linea concreta",
+   "como": "muestreo de MemAvailable cada 2 segundos (post 2); el OP usa `free -h` cada 2s (post 1); no se da el script exacto",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark GB10, 121 GiB unificados, vLLM TP=2 (segun el usuario)",
+   "riesgo": null,
+   "verificable_aqui": "grep MemAvailable /proc/meminfo"
+  },
+  {
+   "que": "El pool pre-peso de vLLM escala con --gpu-memory-utilization: es memoria reservada que luego se vuelve KV cache, no fuga",
+   "como": "--gpu-memory-utilization 0.85 -> 88.6 GiB consumidos antes del primer shard, KV 2,228,932 tokens; --gpu-memory-utilization 0.70 -> 64.3 GiB, KV 1,001,815 tokens (~21 KB/token)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 TP=2, checkpoint NVFP4 mixto (segun el usuario)",
+   "riesgo": "Elegir utilidad segun el KV necesario; en 121 GB unificados la reserva inicial deja poca memoria libre para el sistema",
+   "verificable_aqui": "grep -E 'gpu.memory.utilization' /proc/*/cmdline 2>/dev/null | head; docker ps --format '{{.Command}}'"
+  },
+  {
+   "que": "Selector de backend MoE de vLLM; en GB10 con checkpoint mixto solo flashinfer_cutlass funciona (marlin y flashinfer_trtllm fallan)",
+   "como": "--moe-backend marlin -> ValueError: moe_backend='marlin' is not supported for unquantized MoE; --moe-backend flashinfer_trtllm -> NvFp4 MoE backend 'FLASHINFER_TRTLLM' does not support the deployment configuration",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 (segun el usuario)",
+   "riesgo": "Cambiar el backend no reduce la reserva y rompe el arranque",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: `vllm serve --help` en contenedor sin --gpus sale con codigo 1 y sin salida util; un grep vacio no prueba que falte la bandera",
+   "como": "vllm serve --help (sin --gpus)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Falso negativo al sondear banderas",
+   "verificable_aqui": null
+  },
+  {
+   "que": "El chequeo de auto-prefetch de weight_utils.py lee psutil.virtual_memory().available despues de la reserva y se desactiva en modelos grandes; tambien se desactiva por 'EXT4 is not a recognized network FS'",
+   "como": "psutil.virtual_memory().available (post 1); mensaje 'checkpoint size exceeds 90% of available RAM' (post 1)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "nvcr.io vllm 26.07-py3 y vllm-openai v0.26.0-aarch64, GB10 (segun el usuario)",
+   "riesgo": "Carga de pesos sin prefetch, varios minutos mas",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Dos usuarios (sin respuesta de NVIDIA) miden con muestreo de MemAvailable que la caida previa a los pesos es una reserva proporcional a --gpu-memory-utilization (post 4, cifras literales). Util para dimensionar vLLM en 121 GB unificados y para entender caidas de memoria en el arranque, sin comando de monitoreo completo."
+}

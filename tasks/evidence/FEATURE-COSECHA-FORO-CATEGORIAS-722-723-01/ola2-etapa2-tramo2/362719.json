@@ -1,0 +1,26 @@
+{
+ "id": 362719,
+ "titulo": "Max observed wattage",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Contrastar la potencia que reporta nvidia-smi/nvitop con la potencia medida en la pared para ver si el sensor del GB10 cuadra",
+   "como": "nvidia-smi / nvitop vs medidor de pared; comando exacto no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 MSI 4TB; carga: demo Vulkan indirectdraw a pantalla completa (usuario allanmac)",
+   "riesgo": "Medicion de un solo usuario; la pared incluye un monitor USB-C de ~10 W y el propio usuario no explica ~83 W de diferencia",
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,temperature.gpu --format=csv -l 1"
+  }
+ ],
+ "omision_nvidia": "Un usuario afirma que NVIDIA no publica pruebas holisticas que demuestren que nvidia-smi mide con exactitud la potencia; NVES (staff) solo remite a un documento 'DGX Spark Power Clarification' sin contenido en el hilo (post 4).",
+ "utilidad_atom": "baja",
+ "razon": "El hilo tiene 5 posts: una medicion de potencia (87 W segun nvidia-smi vs 180 W en la pared, temperatura maxima 80C) y quejas de que el sensor es inexacto. La unica respuesta de NVIDIA (NVES) es un enlace sin texto, de modo que no hay formula, comando ni valor reutilizable."
+}

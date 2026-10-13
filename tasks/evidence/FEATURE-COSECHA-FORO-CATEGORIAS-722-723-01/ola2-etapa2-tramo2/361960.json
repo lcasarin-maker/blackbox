@@ -1,0 +1,37 @@
+{
+ "id": 361960,
+ "titulo": "DGX Spark (GB10) – Fans do not spin in headless boot mode, temperature rises to ~70°C",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobar que el gestor grafico sigue activo en arranque 'headless' (el staff de NVIDIA dice que se espera activo) y vigilar recursos con nvtop",
+   "como": "systemctl status display-manager",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Diagnostico, no solucion; el staff no pudo reproducir el fallo de ventiladores",
+   "verificable_aqui": "systemctl status display-manager --no-pager | head -5"
+  },
+  {
+   "que": "Un usuario con dos GX10 identicas observo que en una unidad la temperatura GPU subia 36-40C -> 45C al desconectar solo HDMI con la sesion X11 activa, y que con el apagado de pantalla de GNOME en 'Nunca' la unidad se mantuvo en 36-37C; la unidad de control headless en el greeter de GDM se mantuvo en 34-35C",
+   "como": "comando no indicado (ajuste de GNOME 'blank screen' de 300 s a Never)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x ASUS Ascent GX10, kernel 6.17.0-1029-nvidia, driver 580.173.02, DGX OTA 7.5.0",
+   "riesgo": "Solo una de dos unidades identicas; el usuario pregunta si es fallo de EC/ventilador o RMA, sin respuesta en el hilo",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw,pstate --format=csv -l 5"
+  }
+ ],
+ "omision_nvidia": "El usuario del post 4 pregunta si hay forma oficial de leer RPM/PWM del ventilador por diagnostico de campo; no hay respuesta de NVIDIA en el hilo.",
+ "utilidad_atom": "media",
+ "razon": "Hay respuesta de NVIDIA (aniculescu, post 2): comportamiento inesperado, no reproducido, y pide comprobar display-manager. El post 4 (ago 2026) aporta datos controlados de una unidad que se calienta en P8 (55-58C GPU) y depende de HDMI/sesion, lo que importa para un equipo headless con calor, pero sin causa ni solucion confirmadas."
+}

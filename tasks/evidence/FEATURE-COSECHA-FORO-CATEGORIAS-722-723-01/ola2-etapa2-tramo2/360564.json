@@ -1,0 +1,48 @@
+{
+ "id": 360564,
+ "titulo": "Crashing every few minutes",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobar si el modulo del watchdog SBSA esta cargado; un usuario atribuyo reinicios espontaneos a que no cargaba",
+   "como": "lsmod | grep sbsa_gwdt",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark del usuario kosta, sin version declarada",
+   "riesgo": "El post dice que es 'facil de arreglar' pero no da el arreglo",
+   "verificable_aqui": "lsmod | grep sbsa_gwdt"
+  },
+  {
+   "que": "Consultar estado del watchdog (dispositivo, timeout, timeleft) con wdctl",
+   "como": "sudo wdctl",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark del usuario elsaco, sin version declarada",
+   "riesgo": "Timeleft mostrado como contador enorme (~40 anios) segun el usuario; lectura no confirmada por NVIDIA",
+   "verificable_aqui": "wdctl 2>&1 | head -20"
+  },
+  {
+   "que": "Opcion de BIOS para desactivar el watchdog (controlado por firmware) y asi ver el fallo en vez de reiniciar",
+   "como": "BIOS: Advanced->Watchdog Timer",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Desactivar el watchdog elimina el reinicio automatico; afirmacion de usuario, no de NVIDIA",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Tres usuarios aportan comandos de lectura (lsmod, wdctl) y una opcion de BIOS para el watchdog; un usuario con rol NVES solo pide logs por DM, sin diagnostico. Util para distinguir reinicio por watchdog de caida; sin verificacion de NVIDIA."
+}

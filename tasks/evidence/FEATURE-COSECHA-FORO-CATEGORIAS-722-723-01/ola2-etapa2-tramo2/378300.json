@@ -1,0 +1,37 @@
+{
+ "id": 378300,
+ "titulo": "What were the commands for throttling CPU and GPU again?",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar la frecuencia de la GPU con el lock de relojes de nvidia-smi; el ajuste se pierde tras reiniciar/actualizar",
+   "como": "sudo nvidia-smi -lgc 0,2000",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un usuario (elsaco) sin declarar hardware; el OP dice que el equipo se caia sin limite",
+   "riesgo": "No persiste tras reboot; el OP lo perdio y el equipo volvio a caerse",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK | head -40"
+  },
+  {
+   "que": "Un usuario reporta que limitando a 2000 MHz el consumo baja de ~80 W a ~60 W o menos sin perdida notable de velocidad (via hilo enlazado 'Cooler GB10 Temps')",
+   "como": "nvidia-smi -lgc a 2000 MHz (cifras en watts segun el usuario, post 3)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 segun el usuario",
+   "riesgo": "Afirmacion sin verificar",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Dos usuarios, sin respuesta de NVIDIA: el comando concreto para limitar relojes de GPU como mitigacion de cortes por calor/potencia, y que se pierde al reiniciar. Util para prevenir cortes con calor sostenido; la persistencia no se resuelve en el tema."
+}

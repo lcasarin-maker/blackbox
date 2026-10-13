@@ -1,0 +1,48 @@
+{
+ "id": 380282,
+ "titulo": "ASUS Ascent GX10 idle temperature rises after HDMI disconnect; identical unit stays cool",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo de A/B de estado de pantalla con unidad de control identica: al desconectar solo el HDMI la GPU subio de 36 C a 45 C y ACPI de 39.8 a 47.9 C en 5 min en P8 (3.48-3.71 W, 4-6% de uso); la unidad de control sin pantalla se mantuvo a 34-36 C con 4.6-4.8 W",
+   "como": "no indicado (mide con nvidia-smi y sensores ACPI; sin comando literal)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x ASUS Ascent GX10, kernel 6.17.0-1029-nvidia, driver 580.173.02, DGX OTA 7.5.0",
+   "riesgo": "Posible diferencia de EC/ventilador por unidad",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw,pstate --format=csv"
+  },
+  {
+   "que": "Hipotesis de usuario x1917x: el ventilador sigue el consumo de potencia de la unidad y no la temperatura en reposo; 4 workarounds (carga USB de al menos 5 W, monitor, sesion VNC con app que refresca pantalla, enlace CX7 a otra unidad)",
+   "como": "no indicado (sin comando; carga fisica/VNC)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "null (afirmacion de usuario, sin datos en el post)",
+   "riesgo": "El enlace CX7 casi duplica el consumo en reposo y sube la temperatura unos grados",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Emulador HDMI (dongle) sugerido para evitar el efecto del cable desconectado",
+   "como": "no indicado (enlace de compra a un comercio)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "null",
+   "riesgo": "Sin verificacion",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "nvidia-smi reporta fan speed N/A y Linux no expone entradas de ventilador ni PWM; staff NVIDIA (aniculescu) responde que no tiene detalles de la logica de enfriamiento de ASUS y remite a soporte de ASUS (post 4).",
+ "utilidad_atom": "baja",
+ "razon": "Buen metodo de medicion A/B con control, pero sin comando literal y las causas son hipotesis de usuario en un OEM (ASUS) distinto de nuestra GIGABYTE. NVIDIA respondio que no conoce la logica del OEM."
+}

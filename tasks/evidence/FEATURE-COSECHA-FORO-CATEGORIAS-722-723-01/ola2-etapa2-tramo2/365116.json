@@ -1,0 +1,68 @@
+{
+ "id": 365116,
+ "titulo": "UEFI Firmware Update failing",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Leer versiones de firmware instaladas via tabla SMBIOS tipo 45 (EC, PD, UEFI, FLASH); el staff la usa para ver que hay realmente instalado.",
+   "como": "sudo dmidecode -t 45 | egrep -A4 \"EC|PD|UEFI|FLASH\"",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (staff)",
+   "riesgo": null,
+   "verificable_aqui": "sudo dmidecode -t 45 | egrep -A4 'EC|PD|UEFI|FLASH'"
+  },
+  {
+   "que": "Listar dispositivos actualizables y su estado de firmware",
+   "como": "fwupdmgr get-devices",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Historial de actualizaciones de firmware con estado y error",
+   "como": "fwupdmgr get-history",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "fwupdmgr get-history"
+  },
+  {
+   "que": "NVIDIA DGX Spark Field Diagnostics (OneDiag): suite GpuStress, C2CStress, CpuStress, PowerStress, ThermalStress, FioSSD, MemStress; el usuario la completa en unos 30 min con resultado PASS. Se descarga de NVIDIA; comando de lanzamiento no indicado.",
+   "como": "no indicado",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "fieldiag r9.257.3",
+   "riesgo": "El script retira drivers NVIDIA y detiene docker durante la prueba (visto en la salida)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fallo de actualizacion por banco PD con version 0.0 (bad PD firmware); staff indica RMA. Usuario: instalar un firmware intermedio o reinstalar con imagen actualizada. Staff: la actualizacion de julio hizo el proceso mas robusto.",
+   "como": "no indicado",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Banco PD invalido bloquea la actualizacion y requiere RMA segun staff",
+   "verificable_aqui": "sudo dmidecode -t 45 | grep -A3 'PD'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Staff NVIDIA (posts 3,5,9,11,12) ofrece comandos de lectura utiles para auditar firmware (dmidecode -t 45, fwupdmgr). El tema es un fallo de actualizacion de firmware de un equipo concreto, no de memoria ni calor."
+}

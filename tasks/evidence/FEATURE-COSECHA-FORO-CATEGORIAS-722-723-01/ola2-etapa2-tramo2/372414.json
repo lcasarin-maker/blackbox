@@ -1,0 +1,10 @@
+{"id": 372414, "titulo": "Fans keep running indefinitely when LLM is loaded but idle (GIGABYTE AI TOP ATOM)", "leido": true, "posts_leidos": 6, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["monitorear","medir"],
+ "mecanismos": [
+  {"que": "Comandos de firmware que el usuario uso en la AI TOP ATOM (EC y UEFI) via fwupd; tras la actualizacion los ventiladores quedaron altos en reposo", "como": "sudo fwupdmgr refresh ; sudo fwupdmgr upgrade", "fuente_post": 3, "repositorio": null, "licencia": "no indicada", "probado_en": "GIGABYTE AI TOP ATOM, Ubuntu 24.04.4, driver 580.159.03, SoC FW 2.148.24, EC FW 2.78.24 (segun el usuario)", "riesgo": "Una actualizacion EC/UEFI de GIGABYTE cambio la curva de ventiladores: ruido y +10 W (+25%) en reposo (post 5); GIGABYTE tardo unas semanas en corregirlo", "verificable_aqui": "fwupdmgr get-history"},
+  {"que": "Medicion de reposo con temperaturas de sensores, nvidia-smi y consumo; reporta 50 W en reposo con LLM cargado en la unidad con ventiladores altos", "como": "no indicado (el usuario muestra salida de sensors y top, sin comando de medicion de potencia en pared)", "fuente_post": 1, "repositorio": null, "licencia": null, "probado_en": "3 unidades GIGABYTE AI TOP ATOM, vLLM", "riesgo": null, "verificable_aqui": "sensors; nvidia-smi --query-gpu=temperature.gpu,power.draw --format=csv"}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Describe una regresion de curva de ventiladores tras un firmware EC/UEFI de GIGABYTE (el post 6 dice que un firmware nuevo de GIGABYTE lo mitigo), sin comando de solucion concreto mas alla de fwupdmgr. No hay respuesta de NVIDIA; es dato util solo como advertencia de que un firmware OEM puede alterar el control termico."}

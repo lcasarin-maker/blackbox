@@ -1,0 +1,59 @@
+{
+ "id": 379266,
+ "titulo": "GB10: second CUDA process gets CUDA_ERROR_NO_DEVICE while another process holds a context (Compute Mode = Default) - expected?",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "rastrear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Compuerta de serializacion: sondear cuInit() hasta que devuelva 0 antes de lanzar el siguiente proceso CUDA, con backoff; staff NVIDIA lo valida como mitigacion",
+   "como": "python3 -c \"import ctypes; print(ctypes.CDLL('libcuda.so.1').cuInit(0))\" (100 = CUDA_ERROR_NO_DEVICE); backoff 1 s inicial / 10 s tope (sugerido por staff, post 2); mas un periodo de gracia fijo tras el teardown",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, driver 580.159.03 (open kernel module), CUDA 13, Ubuntu 24.04 aarch64, vLLM 0.25.x en Docker",
+   "riesgo": "cuInit()=0 es necesario pero NO suficiente: en un evento una rafaga de ~100 GiB tras pasar la compuerta llevo a fullchip reset (post 3)",
+   "verificable_aqui": "python3 -c \"import ctypes; print(ctypes.CDLL('libcuda.so.1').cuInit(0))\""
+  },
+  {
+   "que": "Dos regimenes de CUDA_ERROR_NO_DEVICE: (a) ventana de teardown de decenas de segundos tras salir el proceso; (b) memoria unificada casi llena (~119/128 GiB comprometidos); el codigo de error enmascara un fallo de asignacion de GSP",
+   "como": "sondeo de contexto con programa minimo: gcc cuprobe.c -o cuprobe -lcuda (cuInit, cuDeviceGet, cuDeviceGetName, cuCtxCreate_v2)",
+   "fuente_post": 3,
+   "repositorio": "GitHub, repo de artefactos del tema 379266 (enlace en post 5; url completa no indicada)",
+   "licencia": "no indicada",
+   "probado_en": "driver 580.159.03, GB10",
+   "riesgo": "El modo sleep de vLLM libera ~36 GB pero conserva el contexto; solo salir del proceso libera el dispositivo (post 1)",
+   "verificable_aqui": "nvidia-smi -q | grep -i 'compute mode'"
+  },
+  {
+   "que": "Firma de fallo Xid 119 por condicion de carrera rafaga de asignacion x teardown (o cerca de OOM): secuencia en dmesg _memdescAllocInternal -> NV_ERR_NO_MEMORY -> timeouts GSP_RM_ALLOC / GSP_RM_CONTROL -> Xid 119; estado de fullchip reset con spam de la asercion (status == NV_OK) || (status == NV_ERR_GPU_IN_FULLCHIP_RESET); recuperado con reinicio",
+   "como": "dmesg (buscar Xid 119, GSP_RM_ALLOC, NV_ERR_GPU_IN_FULLCHIP_RESET); serializar usuarios de GPU",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "driver 580.159.03, GB10",
+   "riesgo": "Un contenedor vLLM con restart-loop contra la GPU caida genero 358 aserciones consecutivas (post 5); la GPU limpia ~45 min con timeouts antes del colapso total",
+   "verificable_aqui": "journalctl -k --no-pager | grep -E 'Xid|GSP_RM|FULLCHIP_RESET'"
+  },
+  {
+   "que": "NVIDIA MPS como alternativa para acceso concurrente (staff Neill)",
+   "como": "no indicado (el comando no aparece en el texto)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "null (staff avisa que no esta ampliamente validado con vLLM en GB10)",
+   "riesgo": "vLLM gestiona la memoria de GPU de forma agresiva; probar con cuidado",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Staff NVIDIA (Neill, post 4) confirma que no existe API para consultar si el dispositivo esta listo para un nuevo contexto, que CUDA_ERROR_NO_DEVICE deberia ser CUDA_ERROR_OUT_OF_MEMORY en agotamiento de memoria unificada, y se comprometio a enviarlo como solicitud/bug al equipo de drivers.",
+ "utilidad_atom": "alta",
+ "razon": "Tema con respuesta oficial de NVIDIA que confirma que cuInit()=0 no basta y que la compuerta de sondeo es la mitigacion; da comando literal de sondeo, firma de dmesg del Xid 119 y el repo de repro. Se relaciona directamente con colapsos de GPU por rafagas de asignacion sobre memoria unificada, aunque el repo sin licencia indicada no es reutilizable tal cual."
+}

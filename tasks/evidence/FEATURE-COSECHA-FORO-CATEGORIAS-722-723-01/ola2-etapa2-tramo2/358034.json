@@ -1,0 +1,48 @@
+{
+ "id": 358034,
+ "titulo": "Shutdown under high utilization during image generation using qwen",
+ "leido": true,
+ "posts_leidos": 14,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "rastrear",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Revisar el final del journal del arranque previo para ver si hubo apagado sin trazas (journald reporta 'uncleanly shut down' tras reset no planeado)",
+   "como": "journalctl -k -b -1",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark variante MSI, driver 580.95.05",
+   "riesgo": "El log mostrado es solo arranque temprano; NVIDIA (NVES, post 6) dice que no es concluyente",
+   "verificable_aqui": "journalctl -k -b -1 | tail -20"
+  },
+  {
+   "que": "Spark Field Diagnostics de NVIDIA: la prueba GPU Stress fallo con codigo 020000021139 (limite de temperatura excedido o sensor termico roto/descalibrado)",
+   "como": "NVIDIA DGX Spark Field Diagnostics (instalar y ejecutar segun guia NVIDIA; comando no indicado)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "MSI Spark, driver 580.95.05 (post 10)",
+   "riesgo": "Herramienta oficial; NVES pidio los logs por DM",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reproductor de carga termica: gpu_burn por 300 s, que muestra temperaturas 78-85 C y luego la unidad muere sin apagado ordenado",
+   "como": "./gpu_burn 300",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (usuario gmettifogo, sin driver declarado)",
+   "riesgo": "Puede apagar la maquina; probar solo con riesgo aceptado",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA no da en el hilo ningun limite termico publicado ni solucion; remite a soporte del fabricante (MSI) y pide logs por DM.",
+ "utilidad_atom": "media",
+ "razon": "Cuatro usuarios reportan apagado en seco a ~80 C bajo carga sostenida (gpu_burn, Qwen image, todos los nucleos CPU); un usuario aporta la falla de Field Diagnostics por temperatura y NVES solo pide DM. No hay solucion; el valor es el metodo de reproduccion y las pistas de diagnostico (journalctl -k -b -1, Field Diagnostics). El texto incluye hostnames, MAC, IPs y UUID que no se copian."
+}
