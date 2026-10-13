@@ -1,37 +1,37 @@
 {
   "claims_fingerprint": "b21a22c95297f93562bbcfa45c8a91fb820f28ddd4ca2bf1554f11aa365ffb1d",
-  "panel": "1 auditor Opus, 2026-10-13: L118,L122,L145,L146,L416,L420 re-sellados tras re-fechar 37 comentarios sunset a 3.3 (diff solo comentarios: 37 pares, 0 diferencias de codigo, control negativo)",
+  "panel": "1 auditor Opus, 2026-10-13: L118,L122,L135,L145,L146,L416,L418,L420,L422 tras docker.slice 16G (comentarios en portero.py y bb_oci_runtime.py, instalador y drop-in); controles negativos en copia",
   "profile": "general",
   "results": [
     {
       "cited": {
-        "tests/test_bb_bash.py": "a96112417d6ead4a76e7715333e8fb0b0e72a524d63514a1fd05edafcaf44327",
         "tools/atom_gpu_telemetry.py": "4150c8022c26ad60da94d026fe730c81e00ebe95e6d610d783c5310a6cd0e068",
-        "tools/portero.py": "7c79f5d5badad840a6e2e0bdbefe2cd8c82191f57681a9e190eadc8ac8935b75"
+        "tools/bb_oci_runtime.py": "b94c0f2d76172db09cc38cb8d2b89c0971acd1fd877a84644959e31015ce67f3",
+        "tools/portero.py": "e85d74ba078cf98d85b86547e1ab421d3ca5727ab941ced64a85b599d56b44a3"
       },
       "claim_id": "SPEC-L118",
-      "evidence": "Precondicion: `git diff -U0` del arbol (14 ficheros, 37+/37-) comparado par a par por la parte anterior al primer `#` con scratchpad/cmp5.py -> `pairs 37 code_diffs 0`; control negativo (un `+` reescrito a `X = 1  # sunset-reviewed: 3.3`) -> `pairs 37 code_diffs 1`. En tools/atom_gpu_telemetry.py, tools/portero.py y tests/test_bb_bash.py los 7 pares son solo `sunset-reviewed: 3.2`->`3.3`. tools/atom_gpu_telemetry.py:49-66 importa solo stdlib y `_argv_tokens` esta copiado (tools/atom_gpu_telemetry.py:68-91, 'sin sys.path'); en blackbox `git ls-files '*.py' bin | xargs grep -nE \"sys\\.path\\.(insert|append)|spec_from_file_location|runpy\\.run_path\" | grep -i atlas` -> vacio; en Atlas (fuera de _retired) todo `sys.path.insert` apunta a su propio `Path(__file__).parent.parent` (p.ej. tools/liberation_watchdog.py:128) y ningun `import`/`sys.path` nombra blackbox. Control negativo: el mismo patron sobre un fichero con `import blackbox.tools` y `sys.path.insert(0, \"/home/x/projects/blackbox\")` devuelve las 2 lineas. Atlas consume la salida: `$BLACKBOX_DATA/atom_gpu_telemetry.jsonl` (tools/atom_gpu_telemetry.py:97-98).",
-      "seal": "1e882aebcba478677adb1714f95fca2392b7eb04d2d50d6b4a6d06dff49c25d1",
+      "evidence": "Precondicion: `git diff HEAD~1 -U0 -- tools/portero.py tools/bb_oci_runtime.py` comparado par a par por la parte anterior al primer `#` con scratchpad/cmp6.py -> `pairs 2 code_diffs 0 unpaired 0` (portero.py:783 y bb_oci_runtime.py:61, solo comentario 14->16 GiB); control negativo (el `+` de portero reescrito a `X = 1  # usa cgroup-parent...`) -> `pairs 2 code_diffs 1`. tools/atom_gpu_telemetry.py:97-98 escribe `DATA_DIR/atom_gpu_telemetry.jsonl` con DATA_DIR=$BLACKBOX_DATA y sus imports (:49-66) son solo stdlib. `git ls-files '*.py' bin | xargs grep -inE \"sys\\.path\\.(insert|append)|spec_from_file_location|runpy\\.run_path|^\\s*(from|import) .*atlas\" | grep -i atlas` -> vacio (rc=1); en Atlas, `git ls-files '*.py' | grep -v _retired | xargs grep -lE \"^\\s*(from|import)\\s+.*blackbox|sys\\.path\\.(insert|append)\\(.*blackbox\"` -> 0 ficheros. Control negativo: el mismo patron sobre scratchpad/neg6/fake.py (`import blackbox.tools` + `sys.path.insert(0, \"/home/x/projects/blackbox\")`) -> 2.",
+      "seal": "ef8b34a5c84b6f0bbd04e48956a5c8b835d970bcdc0571ea3f592620593694c0",
       "verdict": "PASS"
     },
     {
       "cited": {
-        "tests/test_bb_bash.py": "a96112417d6ead4a76e7715333e8fb0b0e72a524d63514a1fd05edafcaf44327",
         "tools/atom_gpu_telemetry.py": "4150c8022c26ad60da94d026fe730c81e00ebe95e6d610d783c5310a6cd0e068",
-        "tools/portero.py": "7c79f5d5badad840a6e2e0bdbefe2cd8c82191f57681a9e190eadc8ac8935b75"
+        "tools/bb_oci_runtime.py": "b94c0f2d76172db09cc38cb8d2b89c0971acd1fd877a84644959e31015ce67f3",
+        "tools/portero.py": "e85d74ba078cf98d85b86547e1ab421d3ca5727ab941ced64a85b599d56b44a3"
       },
       "claim_id": "SPEC-L122",
-      "evidence": "Precondicion: `git diff -U0` del arbol (14 ficheros, 37+/37-) comparado par a par por la parte anterior al primer `#` con scratchpad/cmp5.py -> `pairs 37 code_diffs 0`; control negativo (un `+` reescrito a `X = 1  # sunset-reviewed: 3.3`) -> `pairs 37 code_diffs 1`. En tools/atom_gpu_telemetry.py, tools/portero.py y tests/test_bb_bash.py los 7 pares son solo `sunset-reviewed: 3.2`->`3.3`. El gate existe: tools/atom_gpu_telemetry.py:1770-1779 (`_comando_gate_termico`, imprime {bloquea, motivo}, rc 1 si bloquea) y :1849/:1858 (`--gate-termico`); Atlas lo consulta via tools/bb_consulta.py (procesos_gpu en :75-122 tambien). `BLACKBOX_DATA=<vacio> python3 tools/atom_gpu_telemetry.py --gate-termico` -> `{\"bloquea\": true, \"motivo\": \"estado termico ausente o ilegible en .../empty5/estado_termico.json: sin dato no se admite carga\"}` rc=1; con los datos reales -> `{\"bloquea\": false, \"motivo\": \"\"}` rc=0: el gate produce ambos veredictos. tools/portero.py:428 consulta la misma fuente de umbrales.",
-      "seal": "a6937a59180d888daee696abeb0da7bd05370a3e23d7b5d5736b34bac9c52be0",
+      "evidence": "Precondicion: `git diff HEAD~1 -U0 -- tools/portero.py tools/bb_oci_runtime.py` comparado par a par por la parte anterior al primer `#` con scratchpad/cmp6.py -> `pairs 2 code_diffs 0 unpaired 0` (portero.py:783 y bb_oci_runtime.py:61, solo comentario 14->16 GiB); control negativo (el `+` de portero reescrito a `X = 1  # usa cgroup-parent...`) -> `pairs 2 code_diffs 1`. Gate presente: tools/atom_gpu_telemetry.py:1770 `_comando_gate_termico`, :1849/:1859 `--gate-termico`. `BLACKBOX_DATA=scratchpad/empty6 python3 tools/atom_gpu_telemetry.py --gate-termico` -> `{\"bloquea\": true, \"motivo\": \"estado termico ausente o ilegible ...\"}` rc=1; con datos reales -> `{\"bloquea\": false, \"motivo\": \"\"}` rc=0 (el gate da ambos veredictos). Atlas tools/bb_consulta.py:94 invoca `--procesos-gpu`; Atlas `git log -1 ecdf88cc8` -> 'detect_atom_crash redacta desde reboots.jsonl de blackbox, ya no mide'; tools/detect_atom_crash.py:58 `from tools.durable_log import append_jsonl`, :63 FINDINGS_DIR docs/agent_findings, :65 reboots.jsonl; grep subprocess/journalctl/... solo da :7 (docstring). Atlas tools/instalar_earlyoom.sh no existe y tools/_retired/instalar_earlyoom.sh si; `ec9b4288a` es un merge.",
+      "seal": "ff32b7e3e46998350c08e9717702dc5178df53bff896751a570b25db129b22c7",
       "verdict": "PASS"
     },
     {
       "cited": {
-        "enable-privileged.sh": "d59a448564b0c49277e2179c8bd5c992a01c57b5cbd4047d91b7fe653baaff33"
+        "enable-privileged.sh": "c5bef1289e8b1c8f9137f30404e1c3dcc7c8e76a6e8ce8326895d4d1f40c7c00"
       },
       "claim_id": "SPEC-L135",
-      "evidence": "enable-privileged.sh:651-667 (seccion 10) guarda el estado previo en $BACKUP/linger-estaba y ejecuta `run loginctl enable-linger \"$DUENO\"` cuando Linger no es yes; el cambio reciente (-b 32768 en :436) no toca ese bloque. En vivo: `loginctl show-user lcasarin -p Linger` -> `Linger=yes`; `ls /var/lib/systemd/linger/` -> `lcasarin`. El resto de la frase (la comprobacion del arranque completo requiere observar la maquina) es un limite declarado, no una afirmacion de comprobado. Control negativo en la copia: `grep -c 'run loginctl enable-linger' enable-privileged.sh` 1 -> 0 tras borrar la linea, y `bash -n enable-privileged.sh` sigue con rc=0 (el instalador sigue siendo valido, asi que solo el grep delata la ausencia); igual al quitar `-b 32768`: rc=0.",
-      "seal": "1484363d370fc3f485845720367588b4cd9c18e93df56afd522923a6d7476b13",
+      "evidence": "La frase no cita 14G/15032385536/techo de docker.slice; el cambio de f0bab812 en enable-privileged.sh son solo dos `echo` (:617 MemoryMax=16G, :627 17179869184), fuera del bloque. enable-privileged.sh:651-667 (seccion 10) guarda $BACKUP/linger-estaba (:660-661) y ejecuta `run loginctl enable-linger \"$DUENO\"` (:666). En vivo `loginctl show-user lcasarin -p Linger` -> `Linger=yes`; `ls /var/lib/systemd/linger/` -> `lcasarin`. La comprobacion del arranque sin sesion es un limite declarado. Control negativo en copia scratchpad/ep6.sh: `grep -c 'run loginctl enable-linger'` 1 -> 0 tras borrar la linea, `bash -n` rc=0 (solo el grep delata la ausencia).",
+      "seal": "b8885452bb11ab1d9f7bddd9a3d9381f245224c302da6e839d493a380af2d88f",
       "verdict": "PASS"
     },
     {
@@ -47,29 +47,29 @@
       "cited": {
         "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-coverage-after-fixture-fix/command.json": "e50375cf3aed0133d1513deb92bbf6ce482d407cd4bacc3e8b2f543cf1177a61",
         "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-coverage-after-nvme/command.json": "252c845a8030e3a9a49471890b0cef8281ea3b5ddc6ec685bd1c5db5eeced8c8",
-        "tests/test_bb_bash.py": "a96112417d6ead4a76e7715333e8fb0b0e72a524d63514a1fd05edafcaf44327",
         "tools/atom_gpu_telemetry.py": "4150c8022c26ad60da94d026fe730c81e00ebe95e6d610d783c5310a6cd0e068",
-        "tools/portero.py": "7c79f5d5badad840a6e2e0bdbefe2cd8c82191f57681a9e190eadc8ac8935b75",
+        "tools/bb_oci_runtime.py": "b94c0f2d76172db09cc38cb8d2b89c0971acd1fd877a84644959e31015ce67f3",
+        "tools/portero.py": "e85d74ba078cf98d85b86547e1ab421d3ca5727ab941ced64a85b599d56b44a3",
         "tools/reboot_verdict.py": "7b417bc5f8407f1a26b0a86e671ec9326097036c48b4220611a3c3d5a31b9368"
       },
       "claim_id": "SPEC-L145",
-      "evidence": "Precondicion: `git diff -U0` del arbol (14 ficheros, 37+/37-) comparado par a par por la parte anterior al primer `#` con scratchpad/cmp5.py -> `pairs 37 code_diffs 0`; control negativo (un `+` reescrito a `X = 1  # sunset-reviewed: 3.3`) -> `pairs 37 code_diffs 1`. En tools/atom_gpu_telemetry.py, tools/portero.py y tests/test_bb_bash.py los 7 pares son solo `sunset-reviewed: 3.2`->`3.3`. Atlas: `git cat-file -t ecdf88cc8` -> commit ('detect_atom_crash redacta desde reboots.jsonl de blackbox, ya no mide'); `wc -l tools/detect_atom_crash.py` -> 557; grep de subprocess/Popen/nvidia-smi/journalctl/smartctl//proc//sys en ese fichero -> solo la linea 7 (docstring). Re-escaneo de tools/ y rag/ de Atlas (fuera de _retired, .py/.sh/.ps1) con los 6 patrones: 15 ficheros; ejecutan medicion solo liberation_watchdog.py (`available_gb()` :1033, `free -b`), medir_consumo_de_job.py (:37 `from tools.liberation_watchdog import available_gb`), dgx401_medicion_pareada_dos_motores.py (:84 `/proc/meminfo`); gateway_control.py:432 y benchmark_network_isolation.py:357 ejecutan `journalctl --user -u`; Atom_Local_AI_Audit.ps1:72-76 ejecuta nvidia-smi y :12-13 escribe `ATOM_AUDIT_<ts>` en Desktop; el resto (rag/hybrid_retriever.py:64, atom_crash_registrado.py:27, bb_consulta.py:83, gather_failed_evidence.py, run_gpu_allowlist_mutation.py, tool_limits.py:287, verify_dgx22*, verify_dgx499*) es texto. Blackbox: tools/reboot_verdict.py nombra bb-reboot/1, reboots.jsonl, journalctl, Xid, kdump, smartctl, EDAC; `--procesos-gpu` en tools/atom_gpu_telemetry.py:1845; adopted/systemd-user/ai-gpu-telemetry.service, ai-memory-monitor.{service,timer}, adopted/system-config/*nvrm-watch*; tasks/done/DEBT-CONTRATO-ATLAS-INSTRUMENTOS-EN-BLACKBOX-01.md y tasks/backlog/DEBT-CONTRATO-ATLAS-SONDAS-DE-MEMORIA-01.md. Control negativo implicito: el escaneo devolvio 15 coincidencias (puede salir positivo).",
-      "seal": "e465aec3e3058489d38b56287d3c2dfea3dd2c629057a053c6ef9b330e688caa",
+      "evidence": "Precondicion: `git diff HEAD~1 -U0 -- tools/portero.py tools/bb_oci_runtime.py` comparado par a par por la parte anterior al primer `#` con scratchpad/cmp6.py -> `pairs 2 code_diffs 0 unpaired 0` (portero.py:783 y bb_oci_runtime.py:61, solo comentario 14->16 GiB); control negativo (el `+` de portero reescrito a `X = 1  # usa cgroup-parent...`) -> `pairs 2 code_diffs 1`. Atlas `git log -1 ecdf88cc8` -> commit 'detect_atom_crash redacta desde reboots.jsonl...'; `wc -l tools/detect_atom_crash.py` -> 557; grep subprocess|Popen|nvidia-smi|journalctl|smartctl|/proc/|/sys/ -> solo :7 (docstring). Re-escaneo `git ls-files tools rag | grep -v _retired | grep -E '\\.(py|sh|ps1)$' | xargs grep -lE 'nvidia-smi|/proc/meminfo|/sys/class/thermal|smartctl|journalctl|/proc/pressure'` -> 15 ficheros (el escaneo sale positivo: sirve de control); miden liberation_watchdog.py:1033-1039 (`available_gb`, `free -b`), medir_consumo_de_job.py:37 (reusa available_gb), dgx401_medicion_pareada_dos_motores.py:84 (/proc/meminfo); gateway_control.py:432 y benchmark_network_isolation.py:357 `journalctl --user -u`; Atom_Local_AI_Audit.ps1:72-76 nvidia-smi, :13 `ATOM_AUDIT_$Timestamp` en Desktop. Blackbox: tools/atom_gpu_telemetry.py:1845 `--procesos-gpu`; Atlas liberation_watchdog.py:137 importa procesos_gpu de bb_consulta; adopted/ trae ai-gpu-telemetry.service, ai-memory-monitor.{service,timer} y los tres nvrm-watch; tools/reboot_verdict.py nombra bb-reboot/1; tasks/done/DEBT-CONTRATO-ATLAS-INSTRUMENTOS-EN-BLACKBOX-01.md y tasks/backlog/DEBT-CONTRATO-ATLAS-SONDAS-DE-MEMORIA-01.md.",
+      "seal": "e88bf90ea7df981ecc4900e4d2b0b97d204ad96e40b435426f6920d7dc994b1b",
       "verdict": "PASS"
     },
     {
       "cited": {
         "rules/firmas_gb10.json": "1fdee1398e1c44b2dfb26245be3a85dbbedd1126e314583928d828c46dc1d463",
-        "tests/test_bb_bash.py": "a96112417d6ead4a76e7715333e8fb0b0e72a524d63514a1fd05edafcaf44327",
         "tools/accion_termica.py": "1e3739860cb2ef4aa6e3d00d8d28c4c8cc453b333b1b947875eed7f62d4f92ca",
         "tools/atom_gpu_telemetry.py": "4150c8022c26ad60da94d026fe730c81e00ebe95e6d610d783c5310a6cd0e068",
+        "tools/bb_oci_runtime.py": "b94c0f2d76172db09cc38cb8d2b89c0971acd1fd877a84644959e31015ce67f3",
         "tools/hallazgo.py": "910171e47fc9a4b99b41fa6e66e1a5d76188f140ef9868b3764ede3aa888ff1a",
         "tools/incident_report.py": "19810166266536f8ec328faa2efd9a7dcab4b8cf189229f3707342e6bc345a21",
-        "tools/portero.py": "7c79f5d5badad840a6e2e0bdbefe2cd8c82191f57681a9e190eadc8ac8935b75"
+        "tools/portero.py": "e85d74ba078cf98d85b86547e1ab421d3ca5727ab941ced64a85b599d56b44a3"
       },
       "claim_id": "SPEC-L146",
-      "evidence": "Precondicion: `git diff -U0` del arbol (14 ficheros, 37+/37-) comparado par a par por la parte anterior al primer `#` con scratchpad/cmp5.py -> `pairs 37 code_diffs 0`; control negativo (un `+` reescrito a `X = 1  # sunset-reviewed: 3.3`) -> `pairs 37 code_diffs 1`. En tools/atom_gpu_telemetry.py, tools/portero.py y tests/test_bb_bash.py los 7 pares son solo `sunset-reviewed: 3.2`->`3.3`. Esquemas y rutas presentes: `bb-estado-termico/2` en tools/atom_gpu_telemetry.py:1401; `bb-incident/1` en tools/incident_report.py, que guarda en `DATOS / \"incidentes\"` (:51) y lee la bitacora de Atlas `projects/Atlas/logs/liberation_watchdog.jsonl` (:57); `bb-hallazgo/1` y `$BLACKBOX_DATA/hallazgos/` en tools/hallazgo.py:2-5; Atlas tools/detect_atom_crash.py:16-17 lee reboots.jsonl `bb-reboot/1` 'sin import'; Atlas tools/bb_consulta.py:94 invoca `--procesos-gpu` y liberation_watchdog.py:137 lo usa; Atlas tools/recoge_hallazgos_bb.py:1-8 declara solo lectura y solo escribe en su `docs/agent_findings` (:86); rules/firmas_gb10.json:2 `_nota` apunta cada firma al documento de Atlas; tools/accion_termica.py:5-12,36,62 exige `atlas-carga/1` y hace `freeze` (:118) en `sostenida`/`sobre_100`; tasks/done/FEATURE-INCIDENTE-CARGA-DE-ATLAS-01.md (cerrada). Sin import cruzado: mismo grep y control negativo que SPEC-L118.",
-      "seal": "948b7ad95466d9e187b6003210e9179decd3c8ef8dc4ac6c13ff1f0e10abfe54",
+      "evidence": "Precondicion: `git diff HEAD~1 -U0 -- tools/portero.py tools/bb_oci_runtime.py` comparado par a par por la parte anterior al primer `#` con scratchpad/cmp6.py -> `pairs 2 code_diffs 0 unpaired 0` (portero.py:783 y bb_oci_runtime.py:61, solo comentario 14->16 GiB); control negativo (el `+` de portero reescrito a `X = 1  # usa cgroup-parent...`) -> `pairs 2 code_diffs 1`. `bb-estado-termico/2` en tools/atom_gpu_telemetry.py:1401; tools/incident_report.py:51 `SALIDA = DATOS / \"incidentes\"`, :57 lee `projects/Atlas/logs/liberation_watchdog.jsonl`, :1187 `bb-incident/1`; tools/hallazgo.py:2-5 `bb-hallazgo/1` y `$BLACKBOX_DATA/hallazgos/`; rules/firmas_gb10.json:2 `_nota` remite al documento de Atlas; tools/accion_termica.py:5,12,36,62 `atlas-carga/1`, `systemctl --user freeze` en `sostenida`/`sobre_100`; tasks/done/FEATURE-INCIDENTE-CARGA-DE-ATLAS-01.md existe. Atlas: detect_atom_crash.py:17,66 `bb-reboot/1` 'sin import'; recoge_hallazgos_bb.py:1-8 solo lectura, sin importar codigo de blackbox; bb_consulta.py:94 `--procesos-gpu`. Sin import cruzado: mismo grep que SPEC-L118 (0 en ambos repos) con su control negativo (2 sobre fake.py).",
+      "seal": "9ae7969665f54f7d2eac2c7913275c53f12dc8afe5082989bc5de297c7fa40ad",
       "verdict": "PASS"
     },
     {
@@ -84,16 +84,16 @@
     {
       "cited": {
         "tests/test_bb_bash.py": "a96112417d6ead4a76e7715333e8fb0b0e72a524d63514a1fd05edafcaf44327",
-        "tools/atom_gpu_telemetry.py": "4150c8022c26ad60da94d026fe730c81e00ebe95e6d610d783c5310a6cd0e068",
+        "tools/bb_oci_runtime.py": "b94c0f2d76172db09cc38cb8d2b89c0971acd1fd877a84644959e31015ce67f3",
         "tools/canario_motor.py": "4b5cbbc3d6a0930405333bd841d8588d92fd494af0c116b9e2b90f016744b98c",
         "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6",
         "tools/huella_host.py": "6a8df4ffd59ab0647ffda2cdd3a9d49e7512761a8c0308d9da5a2d9a1036272f",
         "tools/monitor_distros.py": "174785d51e69ddfedd1797a2327c50ceb7133607b8ab5f0334a255fdf265ae82",
-        "tools/portero.py": "7c79f5d5badad840a6e2e0bdbefe2cd8c82191f57681a9e190eadc8ac8935b75"
+        "tools/portero.py": "e85d74ba078cf98d85b86547e1ab421d3ca5727ab941ced64a85b599d56b44a3"
       },
       "claim_id": "SPEC-L416",
-      "evidence": "Precondicion: `git diff -U0` del arbol (14 ficheros, 37+/37-) comparado par a par por la parte anterior al primer `#` con scratchpad/cmp5.py -> `pairs 37 code_diffs 0`; control negativo (un `+` reescrito a `X = 1  # sunset-reviewed: 3.3`) -> `pairs 37 code_diffs 1`. En tools/atom_gpu_telemetry.py, tools/portero.py y tests/test_bb_bash.py los 7 pares son solo `sunset-reviewed: 3.2`->`3.3`. bin/bb:2616-2650: memavail/gpuoom/termico_predictivo/reloj_arranque por `systemctl --user is-active` de su unit (:2625-2630, limite declarado :2619-2620); huella_host `_fresco ... 2880` min = 2 dias (:2634), monitor_distros `11520` min = 8 dias (:2639), canario_motor 75 (:2644), gpumem_historial 15 (:2649); filas unit-only `vigilante del motor` (:2605) y `guardia de procesos` (:2613, limite :2608-2612); bb-usable latido 120 s con `journalctl -u bb-usable.service -S` (:2363-2372). Los 6 tests citados existen 1 vez cada uno y los 3 de latido en tests/test_bb_bash.py:657,666 (parametrizado journal_vacio/solo_arranque). `python3 -m pytest -q tests/test_bb_bash.py -k \"...clock_lock...earlyoom...bb_usable or status_sensor or monitor_de_distros or drift\"` -> `21 passed, 80 deselected`. Control negativo en copia bajo scratchpad/copia5: gpumem 15->2000 en bin/bb -> `E assert 'FALTA' in '  ARMADO    historial de memoria de GPU ...'` `1 failed`; restaurado -> pasa.",
-      "seal": "22f2ada50a614a65b6764e30f4b2f128ade6122467b3e21b20f0a90f395f3bf7",
+      "evidence": "Precondicion: `git diff HEAD~1 -U0 -- tools/portero.py tools/bb_oci_runtime.py` comparado par a par por la parte anterior al primer `#` con scratchpad/cmp6.py -> `pairs 2 code_diffs 0 unpaired 0` (portero.py:783 y bb_oci_runtime.py:61, solo comentario 14->16 GiB); control negativo (el `+` de portero reescrito a `X = 1  # usa cgroup-parent...`) -> `pairs 2 code_diffs 1`. bin/bb:2616-2630 (memavail/gpuoom/termico_predictivo/reloj_arranque por `systemctl --user is-active`, limite :2619-2620); :2634 huella 2880 min = 2 dias, :2639 monitor_distros 11520 = 8 dias, :2644 canario 75, :2649 gpumem 15; :2605 vigilante, :2613 guardia; latido bb-usable :2363-2372 (`date -d '120 seconds ago'`, `journalctl -u bb-usable.service`); bin/bb-usable:98 `PROBE_INTERVAL = 30.0`. Los 6 tests nombrados existen 1 vez cada uno (`grep -c \"def <test>\"` = 1); latido en tests/test_bb_bash.py:657,666. `python3 -m pytest -q tests/test_bb_bash.py -k \"control_negativo or bb_usable or status_sensor or drift\"` -> `51 passed, 50 deselected`. Control negativo en copia scratchpad/copia6 (git archive HEAD): gpumem 15->2000 en bin/bb -> `E assert 'FALTA' in '  ARMADO    historial de memoria de GPU ...'`, `1 failed, 2 passed`.",
+      "seal": "17af65a43976a484a51ce74a71983aaa75be9bc693e1fc2ac20d74a1e3472c99",
       "verdict": "PASS"
     },
     {
@@ -112,12 +112,12 @@
     },
     {
       "cited": {
-        "enable-privileged.sh": "d59a448564b0c49277e2179c8bd5c992a01c57b5cbd4047d91b7fe653baaff33",
+        "enable-privileged.sh": "c5bef1289e8b1c8f9137f30404e1c3dcc7c8e76a6e8ce8326895d4d1f40c7c00",
         "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6"
       },
       "claim_id": "SPEC-L418",
-      "evidence": "Repo: systemd/blackbox-sample.service:8-9 y adopted/systemd-user/atom-gpu-telemetry.service:14-15 llevan Nice=19 + IOSchedulingClass=idle; systemd/bb-usable.service:47-48 OOMScoreAdjust=-900, MemoryMin=128M sin Nice, bin/bb-usable:98 PROBE_INTERVAL = 30.0; adopted/systemd-user/ai-nemotron-vigilante.timer OnUnitInactiveSec=2min y su .service sin Nice/IOScheduling (grep rc=1); enable-privileged.sh:296-331 (bloque 4b) copia nvrm-watch.sh/.service/.timer y hace `run systemctl enable --now nvrm-watch.timer` (:320), timer OnUnitActiveSec=5min, nvrm-watch.sh:2 lee `journalctl -k`; systemd/bb-gpumem-historial.timer:6 OnUnitActiveSec=1min, .service:9 Nice=10 sin IOSchedulingClass; bb-canario-motor (30min) y bb-huella (1d) Nice=10; bb-guardia-proceso.service:21 Nice=10. En vivo `systemctl --user show ... -p Nice -p IOSchedulingClass`: blackbox-sample y atom-gpu-telemetry 19/3, ai-nemotron-vigilante 0/2, bb-gpumem-historial/bb-canario-motor/bb-huella/bb-guardia-proceso 10/2, ai-memory-monitor 0/2; `systemctl show bb-usable.service nvrm-watch.service` -> bb-usable Nice=0 OOMScoreAdjust=-900 MemoryMin=134217728, nvrm-watch Nice=0 IOSchedulingClass=2. El instrumento distingue (19 frente a 0 frente a 10 en la misma consulta). Control negativo en copia: borrar la linea de enable del bloque 4b lleva `grep -c` de 1 a 0 con `bash -n` rc=0. La lista se declara no exhaustiva: el nuevo bb-monitor-distros.service (Nice=15) no figura y la frase no lo excluye.",
-      "seal": "e22a4d880f665cf59df55f4051626f97a9877a4c7efa1d4ed34bb3be95c6ce29",
+      "evidence": "La frase no cita 14G/15032385536/techo de docker.slice. Repo: systemd/blackbox-sample.service:8-9 y adopted/systemd-user/atom-gpu-telemetry.service:14-15 Nice=19+IOSchedulingClass=idle; adopted/systemd-user/ai-gpu-telemetry.service:11 Nice=10; systemd/bb-usable.service:47-48 OOMScoreAdjust=-900/MemoryMin=128M sin Nice; ai-nemotron-vigilante.service sin Nice/IOScheduling, timer OnUnitInactiveSec=2min; enable-privileged.sh:312-320 copia nvrm-watch y `run systemctl enable --now nvrm-watch.timer` (:320), timer OnUnitActiveSec=5min, nvrm-watch.sh:2 `journalctl -k`; bb-gpumem-historial.timer:6 1min, .service:9 Nice=10; canario 30min/huella 1d Nice=10; bb-guardia-proceso.service:21 Nice=10; ai-memory-monitor.timer:9 `OnCalendar=*:0/5`; tools/gpumem_historial.py:39 gpumem_historial.jsonl; e782c77d existe. En vivo `systemctl --user show <u>.service -p Nice -p IOSchedulingClass`: blackbox-sample/atom-gpu-telemetry 19/3, ai-nemotron-vigilante 0/2, gpumem/canario/huella/guardia 10/2, ai-memory-monitor 0/2, ai-gpu-telemetry 10 disabled; `systemctl show bb-usable.service` Nice=0 OOMScoreAdjust=-900 MemoryMin=134217728; nvrm-watch Nice=0 IOSchedulingClass=2 (el instrumento distingue 19/10/0). Control negativo en copia scratchpad/ep6b.sh: borrar la linea de enable -> `grep -c` 1->0 con `bash -n` rc=0.",
+      "seal": "584007d7943a0680942ed3a25c44baf843240bd56cf5f98bad9c7adf4170743c",
       "verdict": "PASS"
     },
     {
@@ -133,12 +133,12 @@
     {
       "cited": {
         "tests/test_bb_bash.py": "a96112417d6ead4a76e7715333e8fb0b0e72a524d63514a1fd05edafcaf44327",
-        "tools/atom_gpu_telemetry.py": "4150c8022c26ad60da94d026fe730c81e00ebe95e6d610d783c5310a6cd0e068",
-        "tools/portero.py": "7c79f5d5badad840a6e2e0bdbefe2cd8c82191f57681a9e190eadc8ac8935b75"
+        "tools/bb_oci_runtime.py": "b94c0f2d76172db09cc38cb8d2b89c0971acd1fd877a84644959e31015ce67f3",
+        "tools/portero.py": "e85d74ba078cf98d85b86547e1ab421d3ca5727ab941ced64a85b599d56b44a3"
       },
       "claim_id": "SPEC-L420",
-      "evidence": "Precondicion: `git diff -U0` del arbol (14 ficheros, 37+/37-) comparado par a par por la parte anterior al primer `#` con scratchpad/cmp5.py -> `pairs 37 code_diffs 0`; control negativo (un `+` reescrito a `X = 1  # sunset-reviewed: 3.3`) -> `pairs 37 code_diffs 1`. En tools/atom_gpu_telemetry.py, tools/portero.py y tests/test_bb_bash.py los 7 pares son solo `sunset-reviewed: 3.2`->`3.3`. bin/bb:2856-2888 `cmp_one` (AUSENTE/SUSPENDIDO/VENCIDA cuenta en missing) y retorno :2912-2921 (`return 1` si diverged+missing>0). Tests tests/test_bb_bash.py:1523,1533,1553 pasan en el arbol. Control negativo en copia: `cmp_one` neutralizado a `echo igual; return` -> `FAILED test_drift_SALE_DISTINTO_DE_0_cuando_esta_ausente`, `FAILED test_drift_suspendido_VIGENTE_no_cuenta_como_fallo`, `FAILED test_drift_suspension_VENCIDA_SI_cuenta_como_fallo` (`3 failed`); restaurado -> `11 passed` (-k drift or status_sensor). systemd/blackbox-drift.timer:7 `OnCalendar=daily`; systemd/blackbox-drift.service:7 `ExecStart=%h/projects/blackbox/bin/bb drift`. Hoy `systemctl --user show blackbox-drift.timer -p ActiveState -p UnitFileState -p LastTriggerUSec` -> `ActiveState=active`, `UnitFileState=enabled`, `LastTriggerUSec=Tue 2026-10-13 00:00:05 CST` (consistente con lo fechado; las lecturas del 10-10/10-11 y la captura del 10-03 son historicas y no las relocalice en tasks/evidence en esta pasada: no refutadas, no re-verificadas).",
-      "seal": "c0197aac75357271a8bb911239642479740fbf269a1af8d7e428f391ab832dd0",
+      "evidence": "Precondicion: `git diff HEAD~1 -U0 -- tools/portero.py tools/bb_oci_runtime.py` comparado par a par por la parte anterior al primer `#` con scratchpad/cmp6.py -> `pairs 2 code_diffs 0 unpaired 0` (portero.py:783 y bb_oci_runtime.py:61, solo comentario 14->16 GiB); control negativo (el `+` de portero reescrito a `X = 1  # usa cgroup-parent...`) -> `pairs 2 code_diffs 1`. bin/bb:2856 `cmp_one`; systemd/blackbox-drift.timer:7 `OnCalendar=daily`; systemd/blackbox-drift.service:7 `ExecStart=%h/projects/blackbox/bin/bb drift`; tests en tests/test_bb_bash.py:1523,1533,1553. Hoy `systemctl --user show blackbox-drift.timer -p ActiveState -p UnitFileState -p LastTriggerUSec` -> `ActiveState=active`, `UnitFileState=enabled`, `LastTriggerUSec=Tue 2026-10-13 00:00:05 CST`. Control negativo en copia scratchpad/copia6: `cmp_one() { echo igual; return 0; ...` -> FAILED test_drift_SALE_DISTINTO_DE_0_cuando_diverge, _cuando_esta_ausente, _suspendido_VIGENTE_no_cuenta_como_fallo, _suspension_VENCIDA_SI_cuenta_como_fallo (`4 failed`); restaurado -> `4 passed`. Las lecturas del 10-03/10-10/10-11 son historicas fechadas (no re-verificadas).",
+      "seal": "82c798ba21a6360975d17c852905365fb56512ffa48fe9ef4e89550123f49a6e",
       "verdict": "PASS"
     },
     {
@@ -160,12 +160,12 @@
         "adopted/system-config/etc_default_grub.d_kdump-tools.cfg": "8544d0c7f8658e4b8f197816206d50f279b63f979119a9a8fa6a5688a5fd81dc",
         "adopted/system-config/etc_docker_daemon.json": "ec299b052af3e5e8ec874b241fc42cda4317ad5dcf71cde1d02d1a2b7216aa67",
         "adopted/system-config/usr_local_bin_journal-udp-forward.sh": "24418ee035cfbded65c24df44e1f56807f9278a93ca8f84fbf271ccbcc1bed68",
-        "enable-privileged.sh": "d59a448564b0c49277e2179c8bd5c992a01c57b5cbd4047d91b7fe653baaff33",
+        "enable-privileged.sh": "c5bef1289e8b1c8f9137f30404e1c3dcc7c8e76a6e8ce8326895d4d1f40c7c00",
         "tasks/evidence/RELEASE-2.1.0/h1-items.json": "f83de679f314740d5cad19814f28d06a0234afd29f45642b69be8fa8a29145c5"
       },
       "claim_id": "SPEC-L422",
-      "evidence": "`git diff --diff-filter=A --name-only 1ec66b3^ 1ec66b3 -- adopted/ | wc -l` -> 12, sin el filtro -> 13; `git ls-tree -r --name-only 1ec66b3^ -- adopted/ | wc -l` -> 18; `git show 1ec66b3^:enable-privileged.sh` escribe 99-blackbox-uvm.conf con un heredoc (:351 `cat >/etc/modprobe.d/99-blackbox-uvm.conf <<'CONF'`); tasks/evidence/RELEASE-2.1.0/h1-items.json existe y nombra `99-freeze-panic.conf` y los tres `nvrm-watch`; `git diff --diff-filter=A --name-only 8cea8bd^ 8cea8bd -- adopted/` lista exactamente los 12 citados (admission_check_wrapper.sh, bb-guardia-proceso.service y los diez de system-config); los cuatro ficheros citados existen. Hoy `./bin/bb drift` -> `revisados: 59   divergentes: 0   ausentes: 0   suspendidos: 1`, exit 0. El cambio de enable-privileged.sh (-b 32768 en :436) no toca nada de esta fila. Control negativo: el veredicto de bb drift puede salir 1 (mutacion de L420 hace fallar 5 tests); `bash -n` de la copia sin la regla -b da rc=0.",
-      "seal": "ce28cc050fa011147562960f501a13d8fb6cecf049402802b47422c13bc35090",
+      "evidence": "La frase no cita 14G/15032385536/techo de docker.slice, y todas sus cifras de `bb drift` llevan fecha. `git diff --diff-filter=A --name-only 1ec66b3^ 1ec66b3 -- adopted/ | wc -l` -> 12, sin filtro -> 13; `git ls-tree -r --name-only 1ec66b3^ -- adopted/ | wc -l` -> 18; `git show 1ec66b3^:enable-privileged.sh` :351 heredoc de 99-blackbox-uvm.conf; `git diff --diff-filter=A --name-only 8cea8bd^ 8cea8bd -- adopted/` -> exactamente los 12 citados; e4cb0e2, 4daaf4f, 49390a5, a38d157 existen; tasks/evidence/.../e2e.txt:10 `revisados: 41 divergentes: 0` (2026-09-28) y DEBT-H1-RELEASE-CLAIMS-01/drift-current.txt:1,67 `exit=1`, `revisados: 41 divergentes: 2` (2026-10-03). Hoy (2026-10-13) `./bin/bb drift` -> `revisados: 59   divergentes: 1   ausentes: 0   suspendidos: 1`, rc=1: DIVERGE /etc/systemd/system/docker.slice.d/99-blackbox.conf (repo MemoryMax=16G, /etc:62 MemoryMax=14G, /sys/fs/cgroup/docker.slice/memory.max 15032385536); esto confirma el 59 y no contradice la fila, cuyo 0 mas reciente esta fechado el 2026-10-12. Control negativo: el propio bb drift de hoy sale 1 (el instrumento puede dar el veredicto contrario).",
+      "seal": "e7a64168648a172d31b72895e701282cf0ccc4d49d8a2cb2c0002f959cd292fa",
       "verdict": "PASS"
     },
     {
@@ -192,7 +192,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-13T19:01:19Z",
-  "tree_fingerprint": "c08af20a936271aa05e1e0819a21bfa78aa34410437b91a6ff11470f90693e58",
+  "timestamp": "2026-10-13T20:29:56Z",
+  "tree_fingerprint": "bff68e9ef4a3e649165b65648c80e229f2c9756d30f83dedab0dbadcca6c9708",
   "violations": []
 }
