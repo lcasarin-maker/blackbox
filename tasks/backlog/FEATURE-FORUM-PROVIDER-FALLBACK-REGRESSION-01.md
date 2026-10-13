@@ -72,3 +72,12 @@ La corrección requiere decodificación JSON estricta por línea y lectura regul
 - Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
 - Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json`, `tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/commands.json`, `tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/preflight.json`, `tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/provider-trace-run.json`, `tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/validator-run.json`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+El hilo 380948 es ONNX Runtime; aqui el analogo es vLLM nemotron-local cayendo a CPU o degradado tras respawn, con tools/provider_trace.py y tools/canario_motor.py ya presentes. La ficha ademas documenta un defecto abierto: provider_trace usa json.loads y pierde claves duplicadas (provider-duplicate-key-root-negative.json).
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Corregir primero el lector estricto de provider_trace (claves duplicadas, FIFO, tamano) y despues enlazar canario_motor con una comprobacion de que el motor responde por GPU tras un reinicio del contenedor; descartar los OEM y casos Ollama/llama-server.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

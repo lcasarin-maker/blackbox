@@ -47,3 +47,12 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+Hay un problema termico medido aqui (zona 95.7 C en el corte del 11-oct, ver DEBT-CORTES-BAJO-CARGA) y tools/verify_gpu_clock_cap_ab.py y verify_clock_cap_tradeoff.py ya evaluan el A/B; ademas FEATURE-BB-EVALUAR-CAP-DE-CPU-01 existe. Los enfriadores USB/cartulina del foro son de GX10 de ASUS, no de esta ATOM; selector en UNKNOWN/CNR=1 por captura ausente.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Correr el A/B de tope de reloj de GPU (o ventilador auxiliar) en esta ATOM con las herramientas verify_gpu_clock_cap_ab/verify_clock_cap_tradeoff, midiendo zona, reloj y throughput contra control; sin prototipos del foro.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

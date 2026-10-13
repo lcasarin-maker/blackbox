@@ -70,3 +70,12 @@ La captura APT reutiliza `tools.host_diagnostics.run_readonly` para ejecutar con
 - Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
 - Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json`, `tasks/evidence/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01/host-observation.txt`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+DGX OS con GDM corre aqui y huella_host ya captura OTA/kernel/driver/apt, pero ninguna sonda distingue greeter activo de sesion usable; los casos de Apple Studio Display, HDMI switch y RDP del foro no aplican. El equipo parece de uso headless/SSH, lo que baja la probabilidad.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Anadir a huella_host una sonda de solo lectura (loginctl list-sessions y estado de gdm.service) que clasifique headless intencional vs greeter sin sesion tras una actualizacion, con NOT_COLLECTED si falta permiso; sin reinicio de GDM automatico.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

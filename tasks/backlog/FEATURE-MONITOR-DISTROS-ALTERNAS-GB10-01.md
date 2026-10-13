@@ -24,3 +24,12 @@ El monitor escribe `$BLACKBOX_DATA/hallazgos/distros_alternas.jsonl` (`bb-hallaz
 4. Frecuencia semanal; la unidad de usuario con tope de memoria.
 ## Limite declarado
 Detecta actividad y palabras clave, no juzga si el mecanismo sirve: eso lo mide una ficha propia con control negativo.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: baja · lectura: completa.
+
+Decision de Luis 2026-10-12: quedarse en DGX OS y monitorear distros alternas; data/distros_alternas.json existe (15 fuentes). El monitor semanal con git ls-remote es barato pero P3 y la utilidad es de vigilancia de conocimiento (hallazgos para Atlas), no de proteccion del equipo. Falta comparador, interruptor monitor_distros en tools/interruptores.py y primera pasada.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Implementar el comparador con git ls-remote sobre data/distros_alternas.json, escribir hallazgos bb-hallazgo/1 y correr una primera pasada semanal con control negativo (fuente sin actividad no genera hallazgo).
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

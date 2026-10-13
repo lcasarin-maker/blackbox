@@ -51,3 +51,12 @@ Estado: `deferred_lab`. Se reutilizó el inventario térmico existente y su capt
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+El host tiene 7 thermal zones/11 canales hwmon (inventario de la ficha) y ya hay sensores termico_predictivo y bb reloj (tools/reloj_atascado.py). El A/B de cap de reloj es un estudio de laboratorio en un solo nodo con nemotron-local.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Estudio A/B de un solo nodo: decode y prefill de nemotron-local a stock vs un cap elegido, registrando todas las zonas termicas; sin governor comunitario ni cap universal.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

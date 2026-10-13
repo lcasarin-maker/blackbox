@@ -1,0 +1,13 @@
+Clasificador de fichas, SOLO LECTURA (no edites, no stagees, no commitees, no toques la GPU, no corras suites). Repo /home/lcasarin/projects/blackbox. Tu lote: la lista JSON de ids en {LOTE} (cada id es tasks/backlog/<id>.md). Lee CADA ficha entera (frontmatter, evidencia del foro, close_check) y clasificala contra ESTE equipo.
+
+PERFIL DE ESTE EQUIPO (medido, no supongas otra cosa): UN SOLO nodo Gigabyte AI TOP ATOM (GB10, no Founders Edition de NVIDIA); DGX OS 7.2.3 (Ubuntu 24.04.5), kernel 6.17.0-1032-nvidia, driver 580.178.04, Secure Boot activo, Docker con cgroup driver systemd y runtime nvidia; UN contenedor vLLM sirviendo `nemotron-local` en el puerto 8000; red Realtek r8127 (cable) y MediaTek mt7925e (wifi); SIN InfiniBand/CX7 en pareja (/sys/class/infiniband no existe), SIN cluster multinodo, SIN Ray, SIN llama.cpp RPC, SIN Qwen/GLM/MiniMax/DeepSeek servidos; watchdog SBSA activo; dmem parcheado cargado (memoria de GPU por cgroup); sensores ya en observar: memavail, gpuoom, termico_predictivo, reloj_arranque, huella_host (identidad/OTA/kernel/driver/apt/USB/watchdog), canario_motor (JSON/tool-call del motor local), gpumem_historial. Atlas (otro repo) aloja conocimiento; blackbox aloja instrumentos.
+
+Para cada ficha decide:
+- `aplicabilidad`: "aplica" (el mecanismo o riesgo existe tal cual en este equipo), "adaptable" (existe una version util en un solo nodo o con otro modelo/hardware; di CUAL), "otro_hardware" (solo tiene sentido en otro equipo: cluster multinodo, CX7 en pareja, otro OEM, otro modelo, otra distro), "ya_cubierta" (un instrumento o ficha existente ya lo cubre; nombralo con ruta: busca en tools/, bin/bb y SPEC.md).
+- `utilidad`: "alta" | "media" | "baja" para ESTE equipo (impacto si ocurre x probabilidad aqui).
+- `recomendacion`: "mantener" | "adaptar" | "deprecar". Deprecar SOLO si aplicabilidad es otro_hardware o ya_cubierta Y utilidad es baja; ante la duda, mantener o adaptar, nunca deprecar.
+- `razon`: 1-3 frases con anclas concretas (cita algo leido en la ficha o un archivo del repo). Sin adjetivos vacios.
+- `si_adaptar`: la version concreta para este equipo (una frase) o null.
+- `texto_cierre`: si recomiendas deprecar, el `reason:` exacto para cerrarla como void_wontfix (1-2 frases, hechos).
+Regla de honestidad: si no pudiste leer la ficha completa, di `lectura: "parcial"` y por que; nunca declares leida una ficha que no leiste. No inventes que algo existe en el repo: verifica con grep.
+Salida: un JSON `[{id, aplicabilidad, utilidad, recomendacion, razon, si_adaptar, texto_cierre, lectura}]` en {SALIDA}, EXACTAMENTE una entrada por id del lote (se verificara). Reporta en 3 lineas: cuantas por recomendacion.

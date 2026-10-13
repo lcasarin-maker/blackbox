@@ -51,3 +51,12 @@ El agente hardware tiene asignada la entrada CLI con JSON literal y códigos 0/1
 - Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
 - Evidencias de clasificación: `tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json`, `tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK/host-observation.txt`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+Hilo 348453 es DGX Spark Ubuntu 22.04 con nvidia-550; este nodo es DGX OS 7.2.3/24.04 en Gigabyte con kernel 6.17.0-1032, y huella_host ya cubre USB/apt/kernel/driver. El hueco real es que falten usbhid/hid_generic o dpkg roto tras OTA con el host headless posible.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Agregar a tools/huella_host.py una sonda de modulos HID (lsmod/modinfo/builtin) y dpkg --audit tras cambio de kernel, tratando host headless sin dispositivos HID como normal; sin autocarga de modulos.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

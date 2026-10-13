@@ -57,3 +57,12 @@ Estado: parcial, reutilizando los campos existentes de arquitectura, driver/CUDA
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+Se sirve vLLM v0.27.1 en GB10 (sm_121), asi que la matriz arquitectura/build/PTXAS aplica a la propia imagen; los casos del foro (0.11-0.12, DeepSeek-V4 dual Spark, MTP) son otras versiones y otro hardware. Las 28 caidas CUDA del motor local (DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01) muestran que el riesgo de build existe.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Registrar en huella_host el digest de imagen, torch/CUDA/PTXAS y arquitecturas compiladas de vllm-openai:v0.27.1 y exigir carga+generacion finita en canario_motor al cambiar de imagen; descartar la parte de DeepSeek dual-Spark/MTP.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

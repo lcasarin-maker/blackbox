@@ -61,3 +61,12 @@ Estado: `blocked` para progreso de cola/prefill/decode: SSE de Chat Completions 
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+GLM-5.3 no se sirve aqui, pero el hang parcial (una peticion decodifica y hasta siete quedan sin prefill 14 min con endpoint vivo y KV al 37%) puede ocurrir en el vLLM local. tools/atom_gpu_telemetry.py ya lee http://127.0.0.1:8000/metrics (VLLM_METRICS_URL_DEFAULT); la ficha dice que SSE no basta y pide estado interno de cola.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Sensor que lee de /metrics del vLLM local las peticiones en espera y los tokens generados, y marca cola > 0 sin progreso de tokens durante N minutos aun con KV bajo; sin los parametros de GLM-5.3.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

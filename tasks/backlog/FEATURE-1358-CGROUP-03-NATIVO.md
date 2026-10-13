@@ -51,3 +51,12 @@ NVIDIA 615.71.09 compiló contra headers 6.17.0-1032-nvidia (`make modules -j2`,
 - Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
 - Evidencias de clasificación: `tasks/backlog/FEATURE-1358-CGROUP-03-NATIVO.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json`, `tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-615.json`, `tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/build-modules.json`, `tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO/comparison.txt`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+Compara el driver 615.71.09 contra el 580.178.04 de este host; el modulo 615 compilo contra 6.17.0-1032-nvidia, pero FEATURE-DMEM-PREENROLAMIENTO-LISTA-01 indica que el parche dmem aplica a 580 y no a 615, y con Secure Boot exige firma. Cargar 615 en produccion es riesgoso.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Reducir a informe estatico de compatibilidad 615 y rechazo documentado, sin cargar el driver; la contabilidad nativa se evalua con el modulo 580 parcheado (tools/dmem_*).
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

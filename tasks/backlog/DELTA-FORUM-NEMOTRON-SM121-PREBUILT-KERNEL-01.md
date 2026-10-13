@@ -50,3 +50,12 @@ Reuso disponible: perfiles de runtime/host existentes no asocian una arquitectur
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+SM121 es la GPU de este nodo y nemotron-local es el modelo servido; el hilo 354771 es SGLang sobre driver 580.95.05, otro stack. Tras cada actualizacion de imagen vLLM, 'servidor listo' no prueba kernels correctos en primera inferencia.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Extender tools/canario_motor.py con una primera inferencia de referencia (salida no basura, mismo prompt fijo) tras cada cambio de imagen/driver del contenedor vLLM; sin SGLang ni llama.cpp.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

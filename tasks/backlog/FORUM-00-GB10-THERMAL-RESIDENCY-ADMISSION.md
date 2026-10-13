@@ -132,3 +132,12 @@ La [revisión de la nota Atlas](../../docs/evidence/GB10-POWER-BOUNDARIES-ATLAS-
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_09.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION-direct-close-current.log`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: aplica · utilidad: alta · lectura: completa.
+
+Ficha paraguas de 28 KB con decenas de hilos de otros OEM (ASUS, MSI, FE, clusters); el nucleo local es calor CPU/idle y modelos residentes en un ATOM con vLLM residente, donde atom_gpu_telemetry.py descarta calor sostenido con GPU ociosa y termico_predictivo ya esta en observar.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Reducirla al caso de un nodo: perfil termico CPU/GPU/ACPI con frescura, rama corroborada para calor CPU/idle (hoy descartada por _corroboracion) y A/B del extractor ya instalado por Luis; mover los hilos de cluster, FieldDiag/RMA y enfriamiento ajeno a fichas hijas o deprecarlos.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

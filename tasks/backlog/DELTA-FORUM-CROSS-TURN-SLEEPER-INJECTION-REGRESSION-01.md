@@ -51,3 +51,12 @@ Estado: `deferred_lab`. No existe historial multi-turno capturado ni receipt de 
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+El caso (Qwen3.5/3.6, hilos 370834/367085) no corre aqui, pero el riesgo de inyeccion cross-turn en tool results existe con nemotron-local y su parser. tools/canario_motor.py ya prueba tool-call de una ronda, no multi-turno.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Anadir a tools/canario_motor.py un caso mock de dos turnos (resultado de herramienta con instruccion atacante y luego correo mock) contra nemotron-local, con control positivo de que el fixture llega al contexto.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

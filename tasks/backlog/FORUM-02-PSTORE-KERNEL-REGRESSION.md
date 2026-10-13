@@ -62,3 +62,12 @@ Evidencia: `docs/evidence/BB-INSTRUMENTS-kernel.md` y `tasks/evidence/BB-INSTRUM
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-02-PSTORE-KERNEL-REGRESSION-direct-close-current.log`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+El hilo es DGX Spark FE con kernel 1014; aqui kernel 6.17.0-1032 y OEM Gigabyte, sin exposicion demostrada. Lo util es la lectura de pstore tras un reinicio inesperado (bb recovery, kernel_capture existen) pero /sys/fs/pstore da Permiso denegado.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Dar acceso de lectura a pstore (unit o sudoers de solo lectura) y registrar firmas FPAC/PSCI/SBSA tras cada reinicio no limpio en reboot_verdict; sin pinnear kernel.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

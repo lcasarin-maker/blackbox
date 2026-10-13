@@ -53,3 +53,12 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: baja · lectura: completa.
+
+El caso es un Dell GB10 con dos NVMe USB en mdadm; aqui no hay evidencia de matriz USB. El mecanismo (bajada a USB 2 de 480 Mbps tras reinicio antes de montar) aplica a cualquier disco USB externo usado como destino de respaldo; tools/host_diagnostics.py ya recoge velocidad sysfs y huella_host la velocidad USB.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Antes de montar cualquier disco USB de respaldo, comprobar velocidad de enlace >= 5000 Mbps por identidad estable y abortar el montaje si no; sin mdadm.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

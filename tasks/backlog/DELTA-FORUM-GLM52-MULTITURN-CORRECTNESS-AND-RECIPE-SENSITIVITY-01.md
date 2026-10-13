@@ -50,3 +50,12 @@ Instrumentación local reutilizable: `tools/chat_sse_capture.py` conserva deltas
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+GLM-5.2 FP8/MXFP4 en 4 GB10 no se sirve aqui, pero el mecanismo (texto incoherente tras 80-95K tokens y 15+ turnos con prefix caching, needle tests de prompt unico sanos; bucle de ~200 llamadas con tool_choice=required) puede ocurrir en el vLLM local. tools/chat_sse_capture.py y tools/canario_motor.py no miden conversaciones crecientes ni limite de iteraciones de herramientas.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Canario de sesion multi-turno creciente con prefix cache sobre nemotron-local (prompt unico vs prefijo creciente, finish_reason, coherencia semantica) y tope de iteraciones con tool_choice=required; sin los parametros de GLM.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

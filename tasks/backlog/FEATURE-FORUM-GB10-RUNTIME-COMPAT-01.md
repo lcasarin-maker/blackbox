@@ -439,3 +439,12 @@ Estado: parcial, reutilizando la tupla de identidad existente de arquitectura, d
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01-direct-close-current.log`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: alta · lectura: completa.
+
+Ficha acumulada de ~40 hilos; el nucleo (imagen ARM64, driver 580 frente a NVIDIA_REQUIRE_CUDA, cubin sm_121, NaN/salida corrupta en backends FP8/NVFP4) aplica a este nodo, que corre vllm/vllm-openai:v0.27.1 con nemotron-local. La parte de preflight ya existe (tools/preflight.py check_runtime, evidencia en tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/) con resultado unknown en kernels efectivos, y tools/canario_motor.py cubre nombre servido, JSON y tool-call; la ficha sigue abierta por soak, rollback y manifiesto de kernels. Los casos multinodo/CX7/Ray/NCCL/GLM/Qwen/MiniMax/DeepSeek (alrededor de la mitad del texto) no tienen sujeto aqui (/sys/class/infiniband no existe).
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Reducir el alcance a un nodo: cerrar con preflight runtime (arquitectura, digest OCI, driver vs NVIDIA_REQUIRE_CUDA, GPU sm_121) mas un canario de finish_reason/usage/logits finitos sobre nemotron-local (extender tools/canario_motor.py) y rollback al digest de v0.27.1; mover todos los casos multinodo, Ray/NCCL y otros modelos a una ficha aparte marcada otro_hardware.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
