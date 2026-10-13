@@ -55,3 +55,12 @@ NO verificado: que el modulo v2 cargue y cobre. `tools/dmem_prueba_completa.sh` 
 RESUELTO: `cudaMalloc`, `expandable_segments`, `cudaMallocAsync` y CUDA graph SE COBRAN al cgroup del proceso; sin fugas al salir; el vLLM de produccion queda cobrado (19483439376 B contra 19482542080 B de nvidia-smi, 0.005 %). El tope `dmem.max` se hace cumplir: con 512M y un pedido de 1 GiB la asignacion falla; sin tope y con un tope que cabe el mismo pedido pasa; el proceso sigue usable. Evidencia: `medicion-v2-cargado-20261012.txt`.
 ABIERTO (menor): el rechazo llega a CUDA como `cudaErrorUnknown` (el libcuda de 580 no conoce el estado 0x8D), no como OOM. Corregir = devolver NV_ERR_NO_MEMORY en `sysmemConstruct_IMPL`; exige recompilar y reiniciar.
 ABIERTO: pinned y managed no se cobran; falta poner el tope en el cgroup de un contenedor con la integracion del lanzador (FEATURE-LIMITADOR-INTEGRAR-LANZADOR-FALLA-CERRADO-01).
+
+## Root Cause
+En GB10 (sin memoria de video dedicada) memacct de 615 ignoraba la region de tamano 0 y solo cobraba en video_mem.c; cudaMalloc entra por la clase RM 0x3e (sysmem), asi que nada se cobraba y dmem.capacity quedaba vacio.
+
+## Regression Test
+tests/test_dmem_parche_contrato.py (estatico: cobro en sysmemConstruct, liberacion en sysmemDestruct, traduccion de 0x8D a NV_ERR_NO_MEMORY, con control negativo) y tools/dmem_prueba_completa.sh en la maquina.
+
+## Verification Evidence
+Las tres rutas de evidencia del frontmatter: `tasks/evidence/FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01.fail.txt` (el close_check fallaba antes), `.pass.txt` (pasa despues) y `.e2e.txt` (sujeto vivo: dmem.capacity, `bb gpumem` contra `nvidia-smi`). Medicion literal en `tasks/evidence/FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01/medicion.txt`.
