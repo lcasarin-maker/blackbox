@@ -1,0 +1,48 @@
+{
+ "id": 380995,
+ "titulo": "DGX Spark fan control",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Modulo de kernel nvfancontrol (repo de un usuario) que sobreescribe el ventilador via comando 5 del EC por servicio FF-A eSPI; fuerza hasta 13500 RPM",
+   "como": "perilla sysfs /sys/bus/arm_ffa/devices/arm-ffa-17/fan (fija velocidad maxima 13500 RPM); escribe mailbox en memoria 0x933dd000 (ESPI_NS_SHM_PA hardcodeado)",
+   "fuente_post": 4,
+   "repositorio": "GitHub Z841973620/dgx-spark-fan-override (el post 5 enlaza nvfancontrol.c)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark FE (autor); un usuario dice que el perfil max funciona en ASUS GX10 con modulo firmado por Secure Boot",
+   "riesgo": "Longevidad del ventilador a 13500 RPM desconocida; direccion de mailbox puede diferir en OEM; requiere firmar el modulo con Secure Boot activo; escribe SRAM volatil del EC (se pierde al reiniciar/ciclar energia), no flash",
+   "verificable_aqui": "ls /sys/bus/arm_ffa/devices/ ; mokutil --sb-state"
+  },
+  {
+   "que": "Curva de ventilador por temperatura sobre el modulo (usuario wangyichuan9587): 9000 RPM es el punto de eficiencia; con GEMM + 20 hilos CPU la zona mas caliente bajo de 86.2 C (auto) a 81.7 C (9000 RPM), -4.5 C; aire interno -2.9 C, GPU -3.4 C; +2.1 W y ~+45 MHz SM",
+   "como": "curva: auto por debajo de 70 C; 7000 RPM a 70 C; 9000 RPM a 80 C; 11000 RPM a 86 C; 13500 RPM a 90 C; con histeresis y retorno a auto al quitar carga",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark con nvfancontrol + controlador de temperatura en espacio de usuario (autor del post)",
+   "riesgo": "Beneficio de 13500 RPM no validado; telemetria de RPM de ventilador no expuesta; desgaste a largo plazo desconocido; el controlador de usuario no se publica en el post",
+   "verificable_aqui": "cat /sys/class/thermal/thermal_zone*/temp"
+  },
+  {
+   "que": "Advertencia: el modulo exige firma por Secure Boot; el perfil B no se pudo seleccionar (usuario GX10)",
+   "como": "no indicado (sin comando de firma en el texto)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10 (usuario)",
+   "riesgo": "Con Secure Boot activo el modulo no carga sin firmar",
+   "verificable_aqui": "mokutil --sb-state"
+  }
+ ],
+ "omision_nvidia": "NVIDIA no ofrece forma de ajustar la curva del ventilador ni telemetria de RPM del ventilador; el usuario mashie y wangyichuan9587 lo senalan. Sin respuesta de staff NVIDIA en el tema.",
+ "utilidad_atom": "media",
+ "razon": "El tema da un mecanismo real (modulo + perilla sysfs + curva medida con deltas de temperatura) pero es codigo de un usuario sin licencia indicada y escribe en memoria del EC; riesgo y firma Secure Boot lo hacen aplicable solo tras revision. Las mediciones (-4.5 C a 9000 RPM) vienen de un solo usuario, sin respuesta de NVIDIA."
+}

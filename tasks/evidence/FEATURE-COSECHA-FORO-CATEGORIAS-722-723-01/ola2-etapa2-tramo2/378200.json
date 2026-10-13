@@ -1,0 +1,79 @@
+{
+ "id": 378200,
+ "titulo": "DGX Spark: apt upgrade to driver 580.173.02 breaks GPU on OTA2607 (nvidia-smi No devices found)",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "prevenir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobar la pareja driver/firmware con la herramienta de OTA de DGX",
+   "como": "sudo nvidia-spark-ota-check torn-score ; sudo nvidia-spark-ota-check summary ; sudo nvidia-spark-ota-check is-ota-available ; sudo nvidia-spark-ota-check ota-versions | grep -A1 driver",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS 7.2.3, OTA 7.3.1, kernel 6.17.0-1026-nvidia (segun el usuario)",
+   "riesgo": null,
+   "verificable_aqui": "sudo nvidia-spark-ota-check summary"
+  },
+  {
+   "que": "Firma del fallo: Xid 119 timeout de GSP, fallo de SEC2 secure boot, nvidia-smi 'No devices were found' tras apt upgrade del driver a 580.173.02",
+   "como": "NVRM: Xid (PCI:000f:01:00): 119, Timeout after 6s of waiting for RPC response from GPU0 GSP! Expected function 4097 (GSP_INIT_DONE)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 unidades GB10",
+   "riesgo": "GPU inutilizable tras reiniciar",
+   "verificable_aqui": "journalctl -k | grep -E 'Xid|GSP|SEC2'"
+  },
+  {
+   "que": "Rollback: instalar los .deb exactos del driver 580.159.03 y el modulo del kernel, fijarlos y apagar/encender en frio",
+   "como": "dpkg -i <debs 580.159.03-0ubuntu0.24.04.1 y linux-modules-nvidia-580-open-6.17.0-1026-nvidia 6.17.0-1026.26> ; apt-mark hold ; cold power cycle",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 DGX Spark (segun el usuario)",
+   "riesgo": "Los debs antiguos fueron retirados del archivo de Ubuntu (se bajaron de Launchpad); el usuario pregunta si es aceptable frente a restauracion de fabrica y NVIDIA no lo confirma",
+   "verificable_aqui": "apt-mark showhold"
+  },
+  {
+   "que": "Reinstalar los paquetes del driver (otro usuario, con Secure Boot desactivado)",
+   "como": "sudo apt install --reinstall nvidia-driver-580-open nvidia-utils-580 nvidia-compute-utils-580 nvidia-settings",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4 Sparks (2 NVIDIA/PNY FE, 2 Gigabyte) segun el usuario; no ocurrio en otras 2 Gigabyte",
+   "riesgo": "El usuario tambien desactivo Secure Boot, no se separa cual accion arreglo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Respuesta de NVIDIA (staff aniculescu): el kernel no estaba en 6.17.0-1029-nvidia; apt dist-upgrade resuelve dependencias; la actualizacion por DGX Dashboard repetida lo arreglo",
+   "como": "uname -a ; apt dist-upgrade (post 4); volver a ejecutar la actualizacion del DGX Dashboard (post 7)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "NVIDIA staff; el OP confirma que funciona tras repetir la actualizacion del Dashboard el 2026-07-28",
+   "riesgo": "apt upgrade sin dist-upgrade puede dejar driver y kernel desparejados",
+   "verificable_aqui": "uname -r"
+  },
+  {
+   "que": "Contraejemplo de un usuario: 4 Sparks con driver 580.173.02 funcionan; fwupdmgr no reporta actualizaciones pendientes",
+   "como": "sudo fwupdmgr get-updates",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4 DGX Spark segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": "fwupdmgr get-devices"
+  }
+ ],
+ "omision_nvidia": "Segun el OP, el mecanismo nv-update-disable no impidio que apt upgrade instalara un driver sin pareja, y no hay pin de los paquetes nvidia-driver-580 de Ubuntu restricted en DGX Spark (afirmacion del usuario, no confirmada por NVIDIA).",
+ "utilidad_atom": "alta",
+ "razon": "Comandos literales de verificacion (nvidia-spark-ota-check), rollback y la respuesta de staff NVIDIA sobre kernel desparejado (posts 1 y 4); el tema coincide con el driver 580 y kernel 6.17 de esta maquina y con el riesgo de apt upgrade. La causa exacta sigue sin confirmar por NVIDIA."
+}

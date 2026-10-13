@@ -1,0 +1,69 @@
+{
+ "id": 364468,
+ "titulo": "DGX Spark - 9+ silent crashes in one day, PCI DOE mailbox timeout on every boot, unit purchased 3 days ago",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "rastrear",
+  "prevenir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar el reloj maximo de GPU como prueba diagnostica de apagones bajo carga; un usuario dice que una de sus dos maquinas solo es estable asi. No persiste tras reiniciar salvo que se configure en systemd.",
+   "como": "sudo nvidia-smi -pm 1\nsudo nvidia-smi -lgc 300,2100",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "maquinas del usuario josephbreda, version no indicada",
+   "riesgo": "Reduce rendimiento; es un diagnostico, no una solucion declarada",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK | head -30"
+  },
+  {
+   "que": "Recolector forense dgx-forensic-collect: junta journal, registros EFI pstore y errores de rasdaemon en una corrida, con paso de verificacion antes de compartir.",
+   "como": "no indicado (el post solo da el nombre del repositorio)",
+   "fuente_post": 7,
+   "repositorio": "https://github.com/parallelArchitect/dgx-forensic-collect",
+   "licencia": "no indicada",
+   "probado_en": "GB10 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": "ls /sys/fs/pstore; systemctl is-active rasdaemon"
+  },
+  {
+   "que": "Hipotesis: apagones por consumo excesivo donde la unidad se protege a si misma; fuera de OOM. Afirmacion de un usuario sin metodo de medicion.",
+   "como": "no indicado",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,power.limit,clocks_throttle_reasons.active --format=csv"
+  },
+  {
+   "que": "Los mensajes de arranque DOE mailbox y fallos de plataforma NVDA8800 son normales segun un usuario con varias unidades.",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "unidades del usuario trystan1",
+   "riesgo": null,
+   "verificable_aqui": "dmesg | grep -iE 'DOE|NVDA88'"
+  },
+  {
+   "que": "Recomendacion de usuario: no lanzar Ollama al arrancar, porque algunas recetas vLLM de modelos grandes necesitan toda la RAM disponible.",
+   "como": "no indicado",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "systemctl is-enabled ollama"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Contiene el comando exacto de limite de reloj de GPU como prueba para apagones secos bajo carga (post 5), mas un recolector forense con repositorio (post 7) y la hipotesis de proteccion por consumo (post 11). Staff NVES solo pide field diagnostics (post 8); el autor no reporta resultado y la causa sigue sin confirmar."
+}

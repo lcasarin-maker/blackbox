@@ -1,0 +1,129 @@
+{
+ "id": 361294,
+ "titulo": "DGX Spark Performance Degradation - GPU Power Draw Issue",
+ "leido": true,
+ "posts_leidos": 71,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reponer el estado normal de potencia/reloj tras un fallo de entrega de potencia (PD): apagar y desconectar la fuente de la pared y del equipo ~1 minuto, no basta reiniciar ni quitar solo el USB-C en algunos casos",
+   "como": "procedimiento fisico: desenchufar la fuente de la pared y del equipo ~1 min y reconectar (sin comando)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark con fuente original; confirmado por decenas de usuarios en ASUS GX10, MSI EdgeXpert y FE; fuente y mismo resultado en posts 10, 13, 32, 55",
+   "riesgo": "Reaparece tras un crash/OOM o tras sueño; en algunas unidades no resuelve (posts 30, 36, 63); sin solucion permanente",
+   "verificable_aqui": "nvidia-smi -q -d PERFORMANCE | grep -A12 'Clocks Event Reasons Counters'"
+  },
+  {
+   "que": "Detectar el estado degradado: GPU al 95-96% de uso pero con 6-15 W y reloj bajo (624-650 MHz) con contador 'SW Power Capping' creciendo y 'HW Slowdown'/'Thermal' en cero",
+   "como": "nvidia-smi -q -d POWER  (y 'Clocks Event Reasons Counters' / 'SW Power Capping' en la salida completa)",
+   "fuente_post": 63,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Driver 580.126.09-580.159.03, DGX OS 7.4.0/7.5.0, GX10/MSI/FE segun cada post",
+   "riesgo": "Un uso de GPU alto con 35 W en una sola peticion es normal segun posts 64-65; solo es anomalia si el reloj colapsa y el contador SW Power Capping sube",
+   "verificable_aqui": "nvidia-smi -q -d POWER; nvidia-smi --query-gpu=clocks.sm,power.draw,pstate --format=csv -l 1"
+  },
+  {
+   "que": "Recolectar versiones de firmware (el staff las pide para reproducir): UEFI, EC, PD, FLASH",
+   "como": "sudo dmidecode -t 45 | grep -A2 -E \"UEFI|EC|PD|FLASH\"",
+   "fuente_post": 19,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Requiere sudo; solo lectura",
+   "verificable_aqui": "sudo dmidecode -t 45 | grep -A2 -E \"UEFI|EC|PD|FLASH\""
+  },
+  {
+   "que": "Actualizar firmware desde linea de comandos",
+   "como": "sudo fwupdmgr get-devices; sudo fwupdmgr refresh; sudo fwupdmgr get-updates; sudo fwupdmgr update; sudo fwupdmgr get-history",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Otro hilo (361967 post 194) cuenta que una actualizacion por linea de comandos dejo un primer arranque fallido y que la recomendacion oficial es el DGX Dashboard (afirmacion de usuario); en este hilo un usuario que actualizo modulos de firmware vio ventiladores detenidos y 90C (post 35, metodo no indicado)",
+   "verificable_aqui": "sudo fwupdmgr get-devices; sudo fwupdmgr get-updates"
+  },
+  {
+   "que": "Aviso: correr el diagnostico de campo oficial de NVIDIA en una unidad sana puede dejarla en estado de potencia limitada (clock 2405 MHz/70.5 W en vez de 2496 MHz/87.5 W) hasta desconectar PD 15 s",
+   "como": "sin comando; herramienta 'DGX Spark Field Diagnostics' (enlace de soporte NVIDIA, sin comando)",
+   "fuente_post": 27,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Efecto observado por dos usuarios (posts 27, 28); un tercero vio reinicio en bucle con prueba de estres de diagnostico tras actualizar firmware (post 35)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Disparadores comunes del estado limitado: crash por OOM/panic de kernel con carga CUDA, SIGKILL/SIGTERM de carga CUDA seguido de reinicio, despertar de suspension, y apagado largo (~20 h) con la fuente conectada",
+   "como": "no indicado (observacion de usuarios)",
+   "fuente_post": 22,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10, MSI EdgeXpert, FE segun posts 10, 12, 18, 22, 31, 52, 67",
+   "riesgo": "Correlacion reportada por usuarios, sin confirmacion de NVIDIA",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Firmware OEM atrasado respecto al FE: en MSI EdgeXpert el equipo 'working' FE tiene SOC FW 2.152.15, PD FW2 5.22 y EC 3.3.2 contra SOC 2.148.24, PD FW2 4.10 y EC 4.1.60; la herramienta nvidia-spark-ota-check no lee el esquema de version de MSI",
+   "como": "nvidia-spark-ota-check",
+   "fuente_post": 45,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Inferencia de un usuario; MSI publico firmware nuevo el 19 mayo 2026 y un usuario reporto que resolvio (post 72)",
+   "verificable_aqui": "command -v nvidia-spark-ota-check"
+  },
+  {
+   "que": "Reglas de descarte antes de culpar al firmware: una UPS con respaldo de bateria limito la fuente y causo velocidad reducida",
+   "como": "no indicado",
+   "fuente_post": 57,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Anecdota de un usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Monitoreo historico de flota con Beszel (hub en x86 + agentes) para ver tendencias de potencia",
+   "como": "https://beszel.dev/",
+   "fuente_post": 61,
+   "repositorio": "https://beszel.dev/",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark y Jetson Thor segun el post enlazado",
+   "riesgo": "Instala un agente y un hub; el post solo muestra un resumen",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un usuario dejo de ver el estado de baja potencia tras retirar la carcasa exterior y cambiar la pasta termica de ambos Spark",
+   "como": "comando no indicado (accion fisica)",
+   "fuente_post": 73,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Anecdota de un usuario (arctic.gus); pierde garantia; un usuario con pasta original reporta lo contrario en otras unidades",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Aviso de firmware: tras actualizar EC/UEFI en ASUS GX10 el equipo se enciende solo al reconectar la corriente (auto power-on activo por defecto)",
+   "como": "no indicado",
+   "fuente_post": 47,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Efecto de actualizacion reportado por un usuario; otro dice que siempre fue asi",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu) no ofrece causa raiz ni correccion; pide diagnostico de campo (post 5), versiones de firmware (post 19) y que se pruebe la actualizacion de 28 abril (post 34). Los usuarios reportan que NVIDIA no explico el error de entrega de potencia y que los OEM (MSI, ASUS) liberan firmware con retraso.",
+ "utilidad_atom": "alta",
+ "razon": "El tema contiene el diagnostico medible del colapso de potencia/reloj (nvidia-smi -q -d POWER con contador SW Power Capping), el comando dmidecode que pide el staff y el unico remedio confirmado por muchos usuarios (ciclo completo de energia). Hay respuesta de NVIDIA (aniculescu, posts 5, 19, 21, 34), sin solucion permanente; el hilo se cerro el 29 junio 2026."
+}

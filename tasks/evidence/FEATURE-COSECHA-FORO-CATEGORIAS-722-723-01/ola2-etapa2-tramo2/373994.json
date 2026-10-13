@@ -1,0 +1,47 @@
+{
+ "id": 373994,
+ "titulo": "Upgraded driver of spark to 610.43.02, so far so good",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reciclado manual de page cache en UMA para recuperar memoria",
+   "como": "echo 3 | sudo tee /proc/sys/vm/drop_caches",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 con driver 610.43.02 (declarado por usuario)",
+   "riesgo": "Descartar caches degrada rendimiento de E/S temporalmente; es paliativo, no corrige la causa",
+   "verificable_aqui": "free -m; grep -E 'MemAvailable|Cached' /proc/meminfo"
+  },
+  {
+   "que": "Procedimiento de upgrade a driver 610 con paquete de pin apt",
+   "como": "sudo apt install nvidia-driver-pinning-610 ; sudo apt install nvidia-open linux-modules-nvidia-610-open-nvidia-hwe-24.04 (tras purge de nvidia-kernel-common-580 y nvidia-utils-580)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10, driver 610.43.02",
+   "riesgo": "dist-upgrade fallo; requirio desactivar Secure Boot o enrolar MOK para firmar el driver; purge desordenado",
+   "verificable_aqui": "apt-cache policy nvidia-driver-pinning-610; mokutil --sb-state"
+  },
+  {
+   "que": "Limitar la frecuencia de GB10 a 2000MHz mejora mucho la eficiencia energetica (afirmacion de usuario, comando no indicado)",
+   "como": "no indicado",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 610.43.02",
+   "riesgo": "Sin comando ni medicion en el post",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario reporta upgrade a 610 sin problemas aparentes y el drop_caches manual como molestia de UMA; sin respuesta de NVIDIA. El limite de 2000MHz se afirma sin comando ni medida, y el upgrade exige tocar Secure Boot, que aqui esta activo."
+}

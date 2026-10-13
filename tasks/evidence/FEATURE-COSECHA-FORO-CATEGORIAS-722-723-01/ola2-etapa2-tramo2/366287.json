@@ -1,0 +1,47 @@
+{
+ "id": 366287,
+ "titulo": "DGX Spark OS 7.4.0 (kernel 6.17.0-1014-nvidia, aarch64): snapd.service repeatedly timing out and consuming high CPU",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Rastrear el bucle de snapd en el journal",
+   "como": "sudo journalctl -u snapd --since \"10 minutes ago\"",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS 7.4.0, kernel 6.17.0-1014-nvidia, snapd 2.74.1 (declarado por el autor)",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -u snapd --since '1 hour ago' | tail -20"
+  },
+  {
+   "que": "Workaround: deshabilitar/enmascarar snapd o purgar snapd/firmware-updater; los procesos snap cliente existentes siguen girando hasta matarlos a mano. El origen son timers systemd del snap firmware-updater.",
+   "como": "no indicado (el post nombra disable/mask/purge sin comandos exactos; timer: snap run --timer=00:00-24:00/8 firmware-updater.firmware-notifier)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "autor, DGX OS 7.4.0",
+   "riesgo": "Staff NVIDIA dice que snapd es soportado y requerido para algunos paquetes; purgarlo puede romper actualizacion de firmware via snap.",
+   "verificable_aqui": "systemctl list-timers --all | grep -i snap; snap list"
+  },
+  {
+   "que": "Causa real reportada por el autor (post 3, resumen de Copilot): evaluacion LLM larga con HF Transformers deja un mapeo virtual de ~166 GB con ~54 GB de paginas anonimas intercambiables; el kernel las paso a swap, tras ~60h el OOM killer actuo y la maquina quedo en thrash. Sin XID ni fallos de GPU.",
+   "como": "no indicado",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "driver 580.142 (declarado)",
+   "riesgo": "Conclusion generada por un asistente de IA, sin verificacion independiente",
+   "verificable_aqui": "swapon --show; grep -E 'SwapTotal|SwapFree' /proc/meminfo"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El autor concluye en el post 3 que el cuadro real es thrash de swap UMA por carga LLM (respalda el vinculo swap-colapso del tema 366436), pero sin comando de solucion. Staff NVIDIA (post 2) solo pide nvidia-bug-report y afirma que snapd es soportado."
+}

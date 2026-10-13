@@ -1,0 +1,68 @@
+{
+ "id": 375537,
+ "titulo": "Bug in DGX dashboard updates panel (fwupd/libfwupd mismatch after OTA 7.5.0)",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Detectar cuelgue de fwupdmgr (exit 124 = timeout)",
+   "como": "timeout 15 fwupdmgr get-devices --json; echo \"exit code: $?\"",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE, DGX OS 7.2.3 + OTA 7.5.0, kernel 6.17.0-1026-nvidia (declarado por usuario)",
+   "riesgo": "Solo lectura; puede tardar 15 s.",
+   "verificable_aqui": "timeout 15 fwupdmgr get-devices --json; echo $?"
+  },
+  {
+   "que": "Detectar desajuste de versiones fwupd/libfwupd",
+   "como": "systemctl status fwupd.service ; dpkg -l | grep -i fwupd",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE, OTA 7.5.0 (declarado por usuario)",
+   "riesgo": null,
+   "verificable_aqui": "dpkg -l | grep -i fwupd; systemctl status fwupd.service --no-pager"
+  },
+  {
+   "que": "Arreglo: actualizar fwupd (trae libfwupd3, libfwupd2 queda huerfana; luego autoremove)",
+   "como": "sudo apt update && sudo apt install --only-upgrade fwupd",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE, OTA 7.5.0 (usuario)",
+   "riesgo": "Actualiza fwupd a 2.0.20 y cambia libfwupd2 por libfwupd3; en Secure Boot/firmware puede afectar el camino de actualizacion; hacerlo solo tras revisar apt.",
+   "verificable_aqui": "apt-cache policy fwupd libfwupd2 libfwupd3"
+  },
+  {
+   "que": "Detectar acumulacion de procesos colgados del chequeo OTA de NVIDIA",
+   "como": "ps aux | grep -i ota",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE (usuario)",
+   "riesgo": null,
+   "verificable_aqui": "ps aux | grep -i ota"
+  },
+  {
+   "que": "Probar el backend local del dashboard con timeout (puerto en 127.0.0.1:11000 segun el usuario; requiere token Bearer del navegador, no copiado)",
+   "como": "curl -v http://localhost:11000/api/v1/ota/status -H \"Authorization: Bearer <token>\" --max-time 10",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE (usuario)",
+   "riesgo": "Cada llamada lanza un check_ota_status.py nuevo que queda colgado si fwupd falla.",
+   "verificable_aqui": "sudo ss -tlnp | grep dashboard"
+  }
+ ],
+ "omision_nvidia": "El paquete OTA 7.5.0 deja fwupd y libfwupd2 en versiones distintas y el script check_ota_status.py no impone realmente su timeout de 30 s (segun el usuario); no hay respuesta de NVIDIA, solo un moderador que movio el tema.",
+ "utilidad_atom": "media",
+ "razon": "Un usuario (no staff) aisla un fallo de la ruta de actualizacion OTA con comandos de diagnostico y arreglo concretos y probados en su Spark. Util para vigilar fwupd y procesos huerfanos tras OTA, pero no toca memoria ni calor; nuestra maquina tiene DGX OS 7.2.3 y el OTA 7.5.0 podria no aplicar."
+}

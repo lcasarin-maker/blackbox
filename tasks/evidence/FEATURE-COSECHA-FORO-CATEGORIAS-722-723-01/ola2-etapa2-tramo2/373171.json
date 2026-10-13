@@ -1,0 +1,26 @@
+{
+ "id": 373171,
+ "titulo": "After later boot, GPU disappeared from nvidia-smi",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Sintomas de GPU desaparecida: nvidia-smi sin dispositivos, error 999 de CUDA en Docker, mismo timeout SEC2 de GB20B",
+   "como": "ksec2PrepareBootCommands_GB20B: SEC2 secure boot partition timed out",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, Secure Boot desactivado",
+   "riesgo": "Sin causa ni solucion",
+   "verificable_aqui": "journalctl -k | grep -E 'RmInitAdapter|ksec2'; nvidia-smi"
+  }
+ ],
+ "omision_nvidia": "El staff (aniculescu, post 2) solo pide nvidia-bug-report y repetir el field diag en estado fallido; no da causa ni solucion.",
+ "utilidad_atom": "baja",
+ "razon": "El fallo ocurre con Secure Boot desactivado, a diferencia del tema 373394, lo que descarta esa variable como causa unica; el hilo termina sin solucion. Con la firma SEC2 comun solo aporta un dato comparativo."
+}

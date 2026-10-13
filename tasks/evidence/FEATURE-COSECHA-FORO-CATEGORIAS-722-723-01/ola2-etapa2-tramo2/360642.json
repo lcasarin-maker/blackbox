@@ -1,0 +1,47 @@
+{
+ "id": 360642,
+ "titulo": "Testing Nemotron 3 Nano Models on Nvidia DGX Spark/Jetson Thor with vLLM and FlashInfer",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "En vLLM sobre DGX Spark/Jetson Thor (memoria unificada) bajar --gpu-memory-utilization desde el 0.9 por defecto a 0.7-0.8 para evitar presion de memoria e inestabilidad; el autor sirve con 0.75",
+   "como": "--gpu-memory-utilization 0.75",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark y Jetson Thor segun el autor (shahizat); vLLM y FlashInfer compilados de fuente con CUDA 13",
+   "riesgo": "Consejo de usuario sin medicion de colapso; en otro hilo (361967) modelos grandes exigen 0.85-0.9 o fallan al capturar CUDA graphs",
+   "verificable_aqui": "docker ps --format '{{.Names}}' | xargs -r -I{} docker inspect -f '{{.Name}} {{.Args}}' {} | grep -o 'gpu-memory-utilization[ =][0-9.]*'"
+  },
+  {
+   "que": "Limpiar la cache de FlashInfer antes de servir el modelo NVFP4",
+   "como": "rm -rf /home/spark/.cache/flashinfer",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Borra la cache JIT; obliga a recompilar kernels en el siguiente arranque",
+   "verificable_aqui": "du -sh ~/.cache/flashinfer"
+  },
+  {
+   "que": "Aviso: aun compilando vLLM y FlashInfer de fuente, NVFP4 de Nemotron-3-Nano se cae a los 20 min-1 h con Xid 13 (Graphics SM Warp Exception, Misaligned Address) y Xid 43",
+   "como": "no indicado (patron de log: NVRM: Xid ... 13 / 43 en dmesg)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario trystan1, hardware no indicado en el post",
+   "riesgo": "Reporte de un usuario sin respuesta de NVIDIA; el Xid se manifiesta como fallo de GPU/driver ante carga NVFP4",
+   "verificable_aqui": "sudo dmesg | grep -E 'NVRM: Xid' | tail -20"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El post 1 da un valor concreto (--gpu-memory-utilization 0.75, rango 0.7-0.8) y la receta de compilacion; el post 4 documenta cuelgues con Xid 13/43 tras 20-60 min. La unica reaccion de NVIDIA (johnny_nv, post 3) es agradecimiento sin contenido tecnico."
+}

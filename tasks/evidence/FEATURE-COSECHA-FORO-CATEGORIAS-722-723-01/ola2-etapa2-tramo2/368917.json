@@ -1,0 +1,8 @@
+{"id": 368917, "titulo": "Performance report: Mistral Medium 3.5 128B NVFP4 + EAGLE", "leido": true, "posts_leidos": 2, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["medir", "prevenir"],
+ "mecanismos": [
+  {"que": "Metodo de medicion de prompt processing: contar tokens exactos con POST /tokenize y calcular prompt_tokens / TTFT con max_tokens=1 en streaming, prefijo unico por peticion para evitar cache de prefijo (cota inferior)", "como": "POST /tokenize; stream con max_tokens=1; PP = prompt_tokens / TTFT", "fuente_post": 1, "repositorio": null, "licencia": "no indicada", "probado_en": "DGX Spark/GB10 solo, vLLM 0.20.2rc1.dev6+g894a02500.d20260504", "riesgo": "TTFT incluye sobrecarga HTTP y un paso de decode", "verificable_aqui": null},
+  {"que": "Advertencia: con un modelo 128B a 16k de contexto, --load-format fastsafetensors uso mucha mas memoria y causo OOM; --load-format auto fue lento (559 s) pero estable", "como": "--load-format auto", "fuente_post": 1, "repositorio": null, "licencia": "no indicada", "probado_en": "una DGX Spark, vLLM 0.20.2rc1, --gpu-memory-utilization 0.75", "riesgo": "Carga lenta; fastsafetensors puede llevar a OOM", "verificable_aqui": null}],
+ "omision_nvidia": null, "utilidad_atom": "baja",
+ "razon": "Informe de rendimiento de un modelo concreto (6.9-9.1 tok/s, PP ~190 tok/s) con una advertencia util sobre fastsafetensors y OOM en memoria unificada. El post 2 es una imagen sin contenido textual; no hay respuesta de NVIDIA."}

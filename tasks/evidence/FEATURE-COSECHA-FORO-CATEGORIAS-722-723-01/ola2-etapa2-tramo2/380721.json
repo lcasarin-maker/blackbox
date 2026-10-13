@@ -1,0 +1,48 @@
+{
+ "id": 380721,
+ "titulo": "Playbook submitted: keeping vLLM up as a long-lived service (PR #104)",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "--gpu-memory-utilization reserva RAM del sistema (no hay VRAM): con 0.75 sobre 121.7 GB vLLM reservo ~91 GB, 53.8 GB de KV cache para 31 peticiones a 131k de contexto; el cache midio 0.0% en reposo y 0.5% bajo carga",
+   "como": "--gpu-memory-utilization 0.75 ; log de arranque: gpu_worker.py:538] Available KV cache memory: 53.84 GiB / GPU KV cache size: 4,073,445 tokens / Maximum concurrency for 131,072 tokens per request: 31.08x",
+   "fuente_post": 1,
+   "repositorio": "PR #104 del playbook (url no indicada en el texto)",
+   "licencia": "no indicada",
+   "probado_en": "GB10, usuario unico, vLLM 24/7",
+   "riesgo": "Copiar valores de ejemplos de GPU discreta compromete toda la RAM del equipo",
+   "verificable_aqui": "free -g"
+  },
+  {
+   "que": "/health devuelve 200 en un motor que dejo de servir (planificador detenido: Running: 0 reqs, KV cache 0.0%, nada en el journal); el vigilante debe pedir una generacion real",
+   "como": "no indicado (sin comando de sonda; describe pedir una completion y buscar \"choices\")",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 (autor)",
+   "riesgo": "Una sonda sin API key recibio Unauthorized, se tomo por motor colgado y reinicio vLLM sano cada 45 min (4 min de recarga); leer el nombre del modelo en /v1/models con match voraz devuelve el id del objeto de permisos; separar \"no pude preguntar\" de \"respuesta incorrecta\"",
+   "verificable_aqui": null
+  },
+  {
+   "que": "PrivateDevices=true en una unidad systemd retira la GPU y DeviceAllow no la devuelve; BindPaths si funciona; exposicion 7.8 EXPOSED a 4.0 OK",
+   "como": "PrivateDevices=true (rompe CUDA) ; BindPaths= de los nodos nvidia (valores exactos no indicados); comprobacion: sudo ls -1 /proc/$(systemctl show my-agent -p MainPID --value)/root/dev/",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 (autor)",
+   "riesgo": "Sandbox de systemd deja el servicio sin nodos de dispositivo",
+   "verificable_aqui": "systemd-analyze security <unidad> (solo lectura)"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un solo mensaje con tres hallazgos medidos en GB10 (consumo de RAM por gpu-memory-utilization, /health falso positivo, PrivateDevices vs CUDA), pero sin comandos completos de la sonda ni los BindPaths. Sin respuesta de NVIDIA; la evidencia es la de un usuario."
+}

@@ -1,0 +1,47 @@
+{
+ "id": 378529,
+ "titulo": "Repeated Xid 31 MMU faults during AMP-enabled YOLOv8s training on DGX Spark (GB10)",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround/arreglo oficial: el Xid 31 con AMP reproduce en PyTorch NGC 26.06 y no en 26.05; NVIDIA indica que 26.08 lo corrige",
+   "como": "usar el contenedor NGC PyTorch 26.05, o 26.08 o posterior (tag de imagen nvcr.io pytorch 26.05 / 26.08)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "NVIDIA (aniculescu, staff) reprodujo en 26.06 y no en 26.05; reporta arreglado en 26.08 (post 5)",
+   "riesgo": null,
+   "verificable_aqui": "docker images --format '{{.Repository}}:{{.Tag}}' | grep -i pytorch"
+  },
+  {
+   "que": "Aislar con CUDA_LAUNCH_BLOCKING=1 para obtener el error sincrono de la operacion que falla",
+   "como": "CUDA_LAUNCH_BLOCKING=1 (resultado: RuntimeError: cuDNN error: CUDNN_STATUS_EXECUTION_FAILED en torch.nn.functional.conv2d)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS 7.5.0, kernel 6.17.0-1026-nvidia, driver 580.159.03 (segun el usuario)",
+   "riesgo": "Ralentiza la ejecucion",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Firma del fallo para rastrear en el log del kernel: Xid 31, ENGINE GRAPHICS GPC2, FAULT_PDE ACCESS_TYPE_VIRT_READ",
+   "como": "no indicado (el comando de lectura del log no se da; se cita la firma)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k | grep -i 'Xid'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Respuesta de staff de NVIDIA: regresion del contenedor PyTorch 26.06, corregida en 26.08 (posts 3 y 5). Aporta la firma Xid 31 y la correlacion de version, pero solo aplica a cargas PyTorch con AMP, no a los cortes de esta maquina."
+}

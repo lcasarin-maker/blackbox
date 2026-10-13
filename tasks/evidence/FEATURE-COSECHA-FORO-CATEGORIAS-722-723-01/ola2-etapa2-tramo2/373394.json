@@ -1,0 +1,47 @@
+{
+ "id": 373394,
+ "titulo": "DGX Spark GB10: GPU fails to initialize, GSP_INIT_DONE timeout (Xid 119) and SEC2 secure-boot timeout, RmInitAdapter failed (0x62:0x65:2028)",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Firma de fallo de GPU a identificar en dmesg (Xid 119 en espera de GSP_INIT_DONE, ksec2PrepareBootCommands timeout, RmInitAdapter failed 0x62:0x65:2028)",
+   "como": "NVRM: Xid (PCI:000f:01:00): 119, Timeout after 7s of waiting for RPC response from GPU0 GSP! Expected function 4097 (GSP_INIT_DONE)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS 7.5.0, kernel 6.17.0-1021-nvidia, driver 580.159.03",
+   "riesgo": "Persistio tras recuperacion de sistema, lo que NVIDIA Customer Care califica como fallo de hardware",
+   "verificable_aqui": "journalctl -k | grep -E 'Xid|RmInitAdapter|ksec2'"
+  },
+  {
+   "que": "Advertencia: el diagnostico de campo (partnerdiag/MODS) no corre con Secure Boot activo porque rechaza el modulo sin firmar",
+   "como": "insmod: ERROR: could not insert module mods.ko: Key was rejected by service",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario soojin, mismo SO/kernel/driver",
+   "riesgo": "Con GPU caida tambien sin video, no se puede entrar a UEFI para desactivar Secure Boot; DGX Spark sin BMC",
+   "verificable_aqui": "mokutil --sb-state"
+  },
+  {
+   "que": "Una carga LLM grande bajo presion de memoria, con apagado forzado, precedio a la falla (relato de usuario)",
+   "como": "no indicado",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Correlacion de un usuario, sin comprobar causa",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA no ofrece via de diagnostico remota (sin BMC) ni confirmacion publica de causa; el staff (aniculescu) solo pide logs y remite al soporte de consumo para RMA. Customer Care indica System Recovery como paso previo.",
+ "utilidad_atom": "media",
+ "razon": "Dos usuarios muestran la misma firma de GSP/SEC2 tras un apagado forzado con memoria agotada (post 6) y la recuperacion de sistema no la corrige; hay respuesta de NVIDIA staff solo para pedir logs y RMA. Util como firma de dmesg y como aviso de que fieldiag choca con Secure Boot; los posts incluyen un serial y un caso de soporte que no se copian."
+}

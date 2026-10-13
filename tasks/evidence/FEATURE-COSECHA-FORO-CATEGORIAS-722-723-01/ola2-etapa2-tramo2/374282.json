@@ -1,0 +1,78 @@
+{
+ "id": 374282,
+ "titulo": "Running Nemotron 3 Ultra on 4 DGX Sparks!",
+ "leido": true,
+ "posts_leidos": 19,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "rastrear",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Medir crecimiento de memoria anonima (Pss_Anon) por proceso dentro del contenedor vLLM para rastrear fuga lenta en VLLM::Worker_TP (unas decenas de MB cada pocos minutos; en el ejemplo 5052.3 -> 5168.5 MiB en 4 min)",
+   "como": "docker exec vllm_node bash -lc 'for pid in $(find /proc -maxdepth 1 -regex \"/proc/[0-9]+\" -printf \"%f\\n\"); do [ -r /proc/$pid/smaps_rollup ] || continue; name=$(cat /proc/$pid/comm 2>/dev/null); anon=$(awk \"/^Pss_Anon:/ {print \\$2}\" /proc/$pid/smaps_rollup); [ -n \"$anon\" ] && printf \"%10.1f MiB  pid=%-6s  %s\\n\" \"$(awk -v x=\"$anon\" \"BEGIN {print x/1024}\")\" \"$pid\" \"$name\"; done | sort -nr | head -15' (dentro de while true; sleep 60)",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "cluster de 4 DGX Spark, driver 580.159.03, imagenes spark-vllm-docker (usuario davedgd)",
+   "riesgo": "Solo lectura; la fuga termina en OOM de un nodo; earlyoom lo atrapa a nivel de nodo segun el usuario.",
+   "verificable_aqui": "grep Pss_Anon /proc/$(pgrep -f -o VLLM)/smaps_rollup"
+  },
+  {
+   "que": "Parametros vLLM conservadores que el usuario reporta estables frente a OOM (cambiados varios a la vez, no cientifico)",
+   "como": "gpu_memory_utilization: 0.83; max_model_len: 131072; max_num_seqs: 1; max_num_batched_tokens: 8192",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4 DGX Spark, driver 580.159.03 (usuario)",
+   "riesgo": "Reduce contexto y concurrencia; no es prueba aislada de cual parametro ayuda.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Firma del OOM en kernel y del colgado de vLLM (para rastrear en logs)",
+   "como": "NVRM: nvCheckOkFailedNoLog: Check failed: Out of memory [NV_ERR_NO_MEMORY] (0x00000051) returned from _memdescAllocInternal(pMemDesc) @ mem_desc.c:135 ; vLLM: No available shared memory broadcast block found in 60 seconds",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4 DGX Spark, 580.159.03 (usuario)",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k | grep -i 'NV_ERR_NO_MEMORY'"
+  },
+  {
+   "que": "Mitigaciones del usuario para liberar memoria: multi-user.target sin escritorio y earlyoom en cada nodo",
+   "como": "multi-user.target; earlyoom (sin comando de instalacion)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4 DGX Spark (usuario)",
+   "riesgo": null,
+   "verificable_aqui": "systemctl get-default; systemctl is-active earlyoom"
+  },
+  {
+   "que": "Advertencia de NVIDIA staff (eugr_nv): problema vigente de vLLM con prefix caching en modelos Mamba que podria relacionarse con la fuga; el contexto maximo estimado es ~600K en 4 Spark, usan 256K por margen",
+   "como": "no indicado",
+   "fuente_post": 13,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "4 DGX Spark",
+   "riesgo": "Posible fuga ligada al prefix caching en Mamba, sin parche confirmado en el hilo.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia de red para NCCL/RoCE: todos los nodos con igual numero de interfaces; con 2 puertos de 200G en unos nodos y 1 en otros NCCL falla; el PCIe 5.0 x8 hacia CPU/GPU limita a ~256G (usuario mashie)",
+   "como": "no indicado",
+   "fuente_post": 15,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker (docs/NETWORKING.md); sparkrun (sin url)",
+   "licencia": "no indicada",
+   "probado_en": "cluster de Sparks (usuarios)",
+   "riesgo": "NCCL va a la velocidad del camino mas lento (post 19).",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Sin declaracion de NVIDIA sobre la fuga; solo staff (eugr_nv) reconoce un problema de prefix caching en Mamba en vLLM. El tema parte de un anuncio de NVIDIA (playbook para Nemotron 3 Ultra).",
+ "utilidad_atom": "media",
+ "razon": "El post 12 da un metodo concreto de medicion de fuga de memoria host por proceso en el contenedor vLLM, y el post 9 un set de parametros estables contra OOM; ambos reportados por un usuario en 4 Spark. Es cluster de 4 nodos con otro modelo; la fuga no esta confirmada como la causa y no hay arreglo."
+}

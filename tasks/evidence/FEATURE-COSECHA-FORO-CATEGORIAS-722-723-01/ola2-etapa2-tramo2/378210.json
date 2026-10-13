@@ -1,0 +1,47 @@
+{
+ "id": 378210,
+ "titulo": "Acer Thermal Test",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo de carga sostenida de 1 hora contra vLLM para medir temperatura y throttling, con llama-benchy",
+   "como": "llama-benchy --base-url http://<host>:8000/v1 --model qwen --tokenizer /path/to/Qwen3.5-122B-A10B-int4-AutoRound --pp 2048 --tg 512 --concurrency 3 --runs 300 --no-cache",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/llama-benchy",
+   "licencia": "no indicada",
+   "probado_en": "2 Acer Veriton GN100 (GB10), vLLM con Qwen3.5-122B-A10B INT4 (segun el usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Referencia termica medida por un usuario: bajo carga sostenida de 1 h el equipo se mantuvo 67-74 C (pico unico 82 C) sin throttling ni caida de rendimiento",
+   "como": "tabla de temperaturas en post 1 (idle 42-43 C; +5 min 68-71 C; 82 C pico unico)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Acer Veriton GN100 en mini-rack, sin ventilacion extra",
+   "riesgo": "Chasis de otro fabricante; no extrapolable a Gigabyte",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu --format=csv"
+  },
+  {
+   "que": "Driver hwmon de Linux que expone la telemetria completa de potencia del DGX Spark via sysfs",
+   "como": "no indicado (solo se nombra el repositorio)",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/antheas/spark_hwmon",
+   "licencia": "no indicada",
+   "probado_en": "mencionado, el usuario no lo instalo",
+   "riesgo": "Modulo de kernel de terceros; con Secure Boot activo exige firma. El usuario desactivo Secure Boot para fielddiag y quedo reacio a seguir",
+   "verificable_aqui": "ls /sys/class/hwmon/*/name"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Aporta un metodo de carga reproducible con su comando literal (post 1) y la mencion de spark_hwmon (post 4), sin respuesta de NVIDIA. Los datos termicos son de otro chasis; el resultado resumido lo generó el usuario con Claude."
+}

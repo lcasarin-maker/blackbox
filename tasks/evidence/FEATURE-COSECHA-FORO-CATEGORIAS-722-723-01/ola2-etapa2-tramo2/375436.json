@@ -1,0 +1,37 @@
+{
+ "id": 375436,
+ "titulo": "No GPU boost after driver downgrade (DGX Sparks stopped to warm to ~80 C on inference)",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reducir clocks de GPU atascados (507 y 689 MHz) tras cambio de driver: el usuario dice que apagar el equipo quitando fisicamente la alimentacion restauro el rendimiento (remite a otro tema sobre bucle de 15 W / 650 MHz con limite termico artificial de 50 C, respuesta atribuida a aniculescu). No da comando.",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark, driver 580.159 y 580.142 (usuario)",
+   "riesgo": "Restaurar a defaults de fabrica y apagar Secure Boot no lo arreglo; solo el corte de energia segun el usuario.",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,power.draw,temperature.gpu --format=csv -l 5"
+  },
+  {
+   "que": "Metodo de medicion: recoger frecuencia y potencia con nvidia-smi para detectar clocks bajos (comando exacto no dado)",
+   "como": "no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark (usuario)",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,power.draw,temperature.gpu --format=csv"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El usuario observa clocks de 507/689 MHz y 40-50 C en vez de ~80 C y lo resuelve con un corte fisico de energia, sin comando ni explicacion de causa (post 1-2). Sin respuesta de NVIDIA en este hilo; sirve solo como pista de un estado de clocks atascado reiniciable por power-cycle."
+}

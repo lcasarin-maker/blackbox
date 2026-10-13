@@ -1,0 +1,48 @@
+{
+ "id": 366436,
+ "titulo": "LM Studio models overload freezes Spark",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Desactivar swap: con swap activo una asignacion masiva de modelo provoca thrash y cuelgue total; sin swap el modelo falla al cargar y el sistema sigue vivo. Atribuido por un usuario a ingenieros NVIDIA (sin cita de staff en el hilo); el autor del tema lo confirma en su equipo.",
+   "como": "sudo swapoff -a",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark del autor (post 8), version no indicada",
+   "riesgo": "No persiste tras reiniciar; sin swap el OOM killer actua antes ante picos de memoria. El autor nota que DGX Spark trae swap activo de fabrica.",
+   "verificable_aqui": "swapon --show; free -h; cat /proc/sys/vm/swappiness"
+  },
+  {
+   "que": "Monitor sparkview (TUI) que usa MemAvailable en lugar de nvmlDeviceGetMemoryInfo, porque en GB10 NVML devuelve total ~ MemTotal (~121 GB) que no refleja memoria asignable; escribe un log de causas.",
+   "como": "no indicado (el post solo nombra la herramienta sparkview y dice ejecutarla en una shell)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "grep -E 'MemTotal|MemAvailable' /proc/meminfo; nvidia-smi --query-gpu=memory.total --format=csv"
+  },
+  {
+   "que": "Practica: mantener un solo modelo cargado (JIT loading) para dejar RAM al inferir; no previene el cuelgue si se cargan dos.",
+   "como": "no indicado (configuracion de LM Studio sin comando)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Mitigacion por disciplina, sin garantia",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El sistema trae swap activo de fabrica y no falla la carga limpiamente al desbordar memoria unificada; sin respuesta de NVIDIA en el hilo.",
+ "utilidad_atom": "alta",
+ "razon": "Un usuario da el comando exacto swapoff -a y el autor confirma en el post 8 que con swap apagado la carga falla y el sistema sigue vivo, lo que se relaciona con los colapsos de memoria. No hay staff de NVIDIA en el hilo; la atribucion a ingenieros NVIDIA es de un usuario."
+}

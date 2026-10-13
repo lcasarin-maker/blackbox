@@ -1,0 +1,10 @@
+{"id": 363323, "titulo": "DGX crashing after ~8 hours: Stability issues switching from GLM 4.6v (FP8) to Qwen 122B (Q6) in llama.cpp", "leido": true, "posts_leidos": 5, "lectura": "completa",
+ "clase": "mecanismo", "proposito": ["prevenir", "solucionar"],
+ "mecanismos": [
+  {"que": "Fijar el reloj del nucleo GPU a 2300 MHz como workaround de apagados totales; el usuario reporta 2 dias estable con Qwen3.5 122B Q6 en llama.cpp y TPS de ~18 a 17", "como": "sudo nvidia-smi -lgc 2300,2300", "fuente_post": 3, "repositorio": null, "licencia": null, "probado_en": "DGX Spark del usuario (versiones no indicadas); tambien ocurria con imagen vllm-docker y quant Q4 autoround", "riesgo": "Reloj fijo siempre a 2300 MHz; reduccion leve de TPS segun el usuario; no es solucion de causa raiz", "verificable_aqui": "nvidia-smi -q -d CLOCK"},
+  {"que": "Variante propuesta por eugr: rango 200-2300 para que el reloj baje en reposo en lugar de quedar fijo", "como": "sudo nvidia-smi -lgc 200,2300", "fuente_post": 4, "repositorio": null, "licencia": null, "probado_en": null, "riesgo": "Sin verificacion en el hilo; afirmacion de un usuario", "verificable_aqui": "nvidia-smi -q -d CLOCK"},
+  {"que": "Descripcion del fallo: apagado total sin reinicio ni congelamiento, sin entradas previas en el journal, GPU por debajo de 70 C y VRAM al 80 por ciento", "como": "no indicado", "fuente_post": 3, "repositorio": null, "licencia": null, "probado_en": null, "riesgo": null, "verificable_aqui": "journalctl -b -1 -n 50 --no-pager"}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Dos usuarios (sin respuesta de NVIDIA) dan el workaround de bloquear reloj con nvidia-smi -lgc; el autor reporta 2 dias estable y que el fallo no se debe a temperatura ni OOM. eugr confirma que muchos sufren apagados con causa raiz desconocida."}

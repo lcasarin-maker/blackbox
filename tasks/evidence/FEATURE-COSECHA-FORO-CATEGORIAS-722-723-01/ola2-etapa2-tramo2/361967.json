@@ -1,0 +1,170 @@
+{
+ "id": 361967,
+ "titulo": "Qwen3.5-397B-A17B run in dual spark! but I have a concern",
+ "leido": true,
+ "posts_leidos": 237,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir",
+  "monitorear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar el reloj maximo de GPU para evitar apagados en seco bajo inferencia pesada (firmware actual); solo dura hasta el siguiente reinicio",
+   "como": "sudo nvidia-smi -lgc 200,2150",
+   "fuente_post": 95,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "eugr: 2 Spark FE con apagado repetido a 32K de contexto; valor por defecto 2411 MHz, pico 3000 MHz; en post 112 un usuario con firmware Dell lo uso y el nodo 2 fue mas lento",
+   "riesgo": "Baja rendimiento; el valor 2300 aguanto algo mas pero siguio apagando y el valor 2500 apago el otro nodo (post 75); se reportó que bajando a 2100 no hubo apagados (post 79)",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.max.sm,clocks.sm,clocks.applications.graphics --format=csv"
+  },
+  {
+   "que": "Los apagados ocurren con alta carga GPU y baja carga CPU; en la Spark que se apaga la CPU estaba baja y en la otra un proceso python usaba 2 nucleos al 100%",
+   "como": "no indicado (observacion de eugr)",
+   "fuente_post": 52,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark FE de eugr",
+   "riesgo": "Hipotesis de usuario; un enfriador externo no ayudo (post 66); otro usuario con 2 MSI y panel de ventilador AC Infinity a maximo no tuvo apagados tras dias al 95% (post 54)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Estado de entrega de potencia (PD) atascado: tras apagar, desconectar cables y fuente, esperar y reconectar se recupera el reloj/potencia; sintoma es un nodo mas lento (721 MHz vs 2125 MHz)",
+   "como": "apagar el equipo, desconectar el cable de corriente del Spark y la fuente de la pared, esperar y reconectar",
+   "fuente_post": 113,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark FE y GX10; vedcsolution vio nodo 2 lento y lo resolvio (post 114); co-le recupero 28.98 tok/s (posts 188-190)",
+   "riesgo": "El mismo usuario reporta recaida diaria (post 201) tras apagar; apagar el enchufe de pared tambien recae",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.current.graphics,clocks.sm,clocks.applications.graphics --format=csv -l 1"
+  },
+  {
+   "que": "Monitorear el reloj de GPU en vivo para ver que nodo esta degradado",
+   "como": "nvidia-smi --query-gpu=clocks.current.graphics,clocks.sm,clocks.applications.graphics --format=csv -l 1",
+   "fuente_post": 112,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Dell GB10 con firmware reciente (usuario vedcsolution)",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.current.graphics,clocks.sm,clocks.applications.graphics --format=csv -l 1"
+  },
+  {
+   "que": "Pasar a modo consola para liberar RAM y evitar deadlock al cargar el modelo (el autor del hilo cita que con GUI hay alta probabilidad de deadlock); volver a GUI con graphical.target",
+   "como": "sudo systemctl set-default multi-user.target  /  sudo systemctl isolate multi-user.target  /  sudo systemctl isolate graphical.target",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 DGX Spark; eugr dice que runlevel 3 ayuda a asignar 110 GB y >200K tokens de KV (post 79), aunque 'reduce un poco el rendimiento' (post 95)",
+   "riesgo": "Solo se opera por SSH; cada GB de RAM libre cuenta, aun VSCode remote server consume demasiado (post 116)",
+   "verificable_aqui": "systemctl get-default; free -h"
+  },
+  {
+   "que": "Antes de cargar un modelo grande vaciar la cache de paginas, y si la carga de pesos se vuelve lenta (>~10 s por shard) volver a vaciarla",
+   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'",
+   "fuente_post": 95,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x ASUS GX10 (fred_dev, post 111 y 182)",
+   "riesgo": "Aumenta temporalmente la lectura de disco; sparkrun lo hace automaticamente con una entrada de sudoers: 'sparkrun setup clear-cache --save-sudo' (post 198), que crea un permiso sudo sin contrasena para ese comando",
+   "verificable_aqui": "grep -E 'MemAvailable|Cached|SwapCached' /proc/meminfo"
+  },
+  {
+   "que": "Reservar memoria GPU en GiB absolutos, no en fraccion, porque el porcentaje no funciona fiable en memoria unificada (eugr escribio un parche de vLLM)",
+   "como": "--gpu-memory-utilization-gb 112  (con --apply-mod mods/gpu-mem-util-gb)",
+   "fuente_post": 44,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x Spark/GX10; 112 GB exige no tener nada extra corriendo; ASUS/GIGABYTE disponen de ~2 GiB menos que FE (posts 170, 172); usuarios usaron 105-114.5",
+   "riesgo": "Con 112 falla si hay GUI ('Requested memory (112.0 GiB) exceeds available memory'); en vLLM 0.21 la memoria volvio a fraccion y rompio el arranque (post 235)",
+   "verificable_aqui": "free -h; nvidia-smi --query-gpu=memory.used,memory.total --format=csv"
+  },
+  {
+   "que": "Segun el autor, con --gpu-memory-utilization por debajo del 0.9 por defecto el modelo puede fallar al capturar CUDA graphs; recomienda no bajar de 0.87 y asegurar >=116 GiB disponibles en free -h dentro del contenedor",
+   "como": "free -h (dentro del contenedor); --gpu-memory-utilization 0.9",
+   "fuente_post": 49,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark; PILCOTHINK declara 117-118 GiB disponibles en idle",
+   "riesgo": "Otros usuarios resuelven el cuelgue en graphs subiendo la fraccion a 0.9 (post 25) o 0.85 (post 24); valores contradictorios segun build",
+   "verificable_aqui": "docker exec $(docker ps -q | head -1) free -h"
+  },
+  {
+   "que": "Variable para reducir fragmentacion de asignaciones CUDA en memoria casi al limite",
+   "como": "PYTORCH_CUDA_ALLOC_CONF=\"expandable_segments:True\"",
+   "fuente_post": 79,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2 Spark; recetas de eugr y fred_dev",
+   "riesgo": "Parametro de PyTorch sin medicion aislada en el hilo",
+   "verificable_aqui": "docker inspect -f '{{.Config.Env}}' $(docker ps -q | head -1) | tr ' ' '\\n' | grep PYTORCH"
+  },
+  {
+   "que": "Bajar la agresividad del swap para llegar al ultimo GB al reservar 112 GB (el usuario lo declara como el cambio decisivo)",
+   "como": "swapiness=60 -> swapiness=10 (comando exacto no indicado; sysctl vm.swappiness es la ruta de lectura)",
+   "fuente_post": 168,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 ASUS Ascent GB10 en cluster (mclenithan)",
+   "riesgo": "Efecto aislado no medido; el usuario aplico muchos otros cambios a la vez",
+   "verificable_aqui": "sysctl vm.swappiness; swapon --show"
+  },
+  {
+   "que": "Corregir red del cluster: usar un solo cable y un solo par de dispositivos RoCE; con dos cables NCCL allReduce falla con 'unhandled system error'; NCCL_IB_DISABLE=1 funciona pero baja a ~9 tok/s",
+   "como": "export NCCL_IB_HCA=rocep1s0f1,roceP2p1s0f1",
+   "fuente_post": 161,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark con 200GbE; ib_write_bw midio 108 Gbps en bare metal (post 162)",
+   "riesgo": "Con IP solo en un gemelo y GID index 3, el otro gemelo sin IPv4 hizo que NCCL/Gloo agotaran 1800000 ms (post 190); eugr dice que NCCL_IB_GID_INDEX: 3 no es necesario (post 193)",
+   "verificable_aqui": "ibdev2netdev; rdma link show"
+  },
+  {
+   "que": "Verificar KV cache y bloques desde la metrica de vLLM",
+   "como": "curl -s http://localhost:8000/metrics | grep -E 'num_gpu_blocks|kv_cache'",
+   "fuente_post": 209,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark; fred_dev (351 bloques con batch 4176, 303 con 8192, 124 con 32K)",
+   "riesgo": null,
+   "verificable_aqui": "curl -s http://localhost:8000/metrics | grep -E 'num_gpu_blocks|kv_cache'"
+  },
+  {
+   "que": "Cuando el motor queda esperando 'No available shared memory broadcast block' o falla con JSONDecodeError del cache Triton, borrar cache Triton corrupta (cortes de luz previos) y revisar logs del otro nodo",
+   "como": "rm -rf ~/.triton/cache/* ; docker logs vllm_node",
+   "fuente_post": 228,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark; paxren2020",
+   "riesgo": "Borra cache; se recompilan kernels",
+   "verificable_aqui": "docker logs vllm_node --tail 50"
+  },
+  {
+   "que": "Aviso de recursos: vLLM sin Ray reduce sobrecarga (+~1 tok/s) y es necesario para ajustar el contexto completo; con Ray falla el contexto completo",
+   "como": "./run-recipe.sh qwen3.5-397b-int4-autoround.yaml --no-ray",
+   "fuente_post": 95,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2 Spark FE/GX10; 27-30 tok/s",
+   "riesgo": "Receta marcada EXPERIMENTAL por eugr; borde de OOM; hay que reconstruir imagenes con --tf5",
+   "verificable_aqui": "docker images | grep vllm-node"
+  },
+  {
+   "que": "Cuidado: si el firmware actual provoca apagados repentinos, lo recomendado por el autor de la receta es limitar clock; un usuario sugiere fallo de hardware de unidades concretas, y el moderador NVES recomienda RMA tras no reproducirlo en SKUs distintos (cita de un usuario en el post 51)",
+   "como": "RMA recomendado por NVES segun cita del usuario",
+   "fuente_post": 51,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Cita secundaria; el post 50 (eugr) dice que no cree que sea hardware porque el apagado cambio de unidad tras la actualizacion de potencia de febrero",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA no ofrece correccion del apagado en seco ni del bug de entrega de potencia; eugr (post 126) pide que NVIDIA lo arregle para correr a plena velocidad sin limitar GPU; un usuario dice que no hay palabra oficial de NVIDIA o Canonical sobre el fallo de DNS local tras restaurar (post 147). La unica voz de NVIDIA es una cita de NVES (post 51) que recomienda RMA.",
+ "utilidad_atom": "alta",
+ "razon": "El hilo (237 posts) contiene mecanismos concretos y reutilizables para memoria y apagados: reserva absoluta de memoria GPU, drop_caches, modo consola, limite de reloj con nvidia-smi -lgc 200,2150 y ciclo de energia, cada uno con su post y condiciones. NVIDIA no responde directamente; la cita de NVES (post 51) lo trata como RMA y eugr atribuye el apagado a firmware."
+}

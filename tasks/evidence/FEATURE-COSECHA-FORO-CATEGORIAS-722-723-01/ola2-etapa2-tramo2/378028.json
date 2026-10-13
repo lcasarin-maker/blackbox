@@ -1,0 +1,68 @@
+{
+ "id": 378028,
+ "titulo": "After the latest update of DGX Spark it's roasting in stale",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar el reloj de GPU como mitigacion de calor; un usuario dice que otro lo probo sin gran impacto",
+   "como": "sudo nvidia-smi -lgc 0,2000",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "afirmacion de usuario sin medicion propia en el post; reduce rendimiento maximo",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK | head -40"
+  },
+  {
+   "que": "Aislar que paquetes se actualizaron un dia concreto, para correlacionar con regresiones",
+   "como": "grep \"2026-07-23.* install \" /var/log/dpkg.log",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE, driver 580.159.03 a 580.173.02, kernel 6.17.0-1026-nvidia segun el log",
+   "riesgo": null,
+   "verificable_aqui": "grep \"$(date +%F).* upgrade \" /var/log/dpkg.log | head"
+  },
+  {
+   "que": "Historial de actualizaciones de firmware aplicadas por fwupd (EC, SoC, USB-C PD) con versiones y fechas",
+   "como": "fwupdmgr get-history",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": "Proprietary (firmware segun fwupd)",
+   "probado_en": "DGX Spark FE, fwupd 2.0.20",
+   "riesgo": null,
+   "verificable_aqui": "fwupdmgr get-history"
+  },
+  {
+   "que": "Registro de fwupd desde una fecha para ver si hubo capsulas aplicadas",
+   "como": "journalctl -u fwupd.service --since \"2026-07-23\"",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "fwupd 2.0.20",
+   "riesgo": "en el caso del usuario no mostro cambios; no detecta por si solo la actualizacion pendiente de USB-C",
+   "verificable_aqui": "journalctl -u fwupd.service --since today --no-pager | tail -20"
+  },
+  {
+   "que": "Workaround de sobrecalentamiento sin carga: apagar y desconectar de la alimentacion 30 minutos; al arrancar se instalo una actualizacion pendiente de potencia de los puertos USB-C y el calor cedio (afirmacion de usuario, un caso)",
+   "como": "no indicado (procedimiento fisico: desconectar de la alimentacion 30 min y arrancar)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE segun el usuario",
+   "riesgo": "un solo caso; la causa declarada es especulacion del usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario reporta calor con la maquina apagada tras la actualizacion del 23 de julio, resuelto con ciclo de energia y una actualizacion pendiente de USB-C (post 2); un miembro con rol de NVIDIA (Neill, post 5) pide versiones pero no da causa ni solucion. Los comandos de rastreo de actualizaciones (dpkg.log, fwupdmgr get-history) son reutilizables; el post 8 es un recorte de otro tema sobre lentitud tras actualizacion del 31 de julio, sin comandos."
+}

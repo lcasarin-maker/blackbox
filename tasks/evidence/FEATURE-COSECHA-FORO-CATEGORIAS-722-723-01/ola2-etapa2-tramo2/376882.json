@@ -1,0 +1,79 @@
+{
+ "id": 376882,
+ "titulo": "Total host freeze during multi-node TP=2 vLLM prefill on 2x DGX Spark, zero forensic trace",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "rastrear",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Detectar fuga de memdesc del driver de memoria unificada contando lineas 0x00000051 en el journal del kernel; un reinicio la resetea, el tiempo ocioso no",
+   "como": "journalctl -k | grep -c 0x00000051",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark GB10, NVRM 580.159.03 y anteriores (segun usuario msunner)",
+   "riesgo": "afirmacion de usuario, no de NVIDIA",
+   "verificable_aqui": "journalctl -k | grep -c 0x00000051"
+  },
+  {
+   "que": "Firma de livelock de kernel GPU flashinfer sparse_mla_sm120: nvidia-smi muestra ~96% de uso con solo ~18-21 W y ~0% de throughput de memoria; procesos apilados en cuLaunchKernel",
+   "como": "nvidia-smi (uso ~96%, potencia ~18-21 W durante el cuelgue)",
+   "fuente_post": 4,
+   "repositorio": "vllm-project/vllm issue 48720 y marksunner/glm52-dgx-spark-deadlock-evidence",
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark GB10 con vLLM, modelos sparse-MLA",
+   "riesgo": "aplica solo a modelos sparse-MLA",
+   "verificable_aqui": "nvidia-smi --query-gpu=utilization.gpu,power.draw --format=csv -l 1"
+  },
+  {
+   "que": "Workaround del livelock: backend de atencion FLASHMLA_SPARSE mas archivos Triton para sm12x; 500+ sesiones largas sin congelacion segun el usuario",
+   "como": "--attention-backend FLASHMLA_SPARSE",
+   "fuente_post": 4,
+   "repositorio": "vllm-project/vllm issue 48720",
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark GB10",
+   "riesgo": "solo para modelos sparse-MLA (linaje DeepSeek/GLM)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Discriminador barato para congelaciones multinodo: conteo de operaciones por rango en NCCL RAS",
+   "como": "nc localhost 28028",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark GB10",
+   "riesgo": "requiere NCCL RAS activo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Limitar memoria de vLLM a 90 GB con un parche, mas descartar unidad defectuosa con la prueba de campo; tras cambio de unidades las nuevas pasaron y no hubo cuelgues",
+   "como": "no indicado (parche que obliga a vLLM a no usar mas de 90gb)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark GB10 con spark-vllm-docker de eugr",
+   "riesgo": "unidades originales fallaron la prueba de campo y se cambiaron",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Intentos de forense sin resultado: hung_task_panic, softlockup_panic, netconsole bidireccional, NCCL Flight Recorder y kdump no capturaron nada en el cuelgue total",
+   "como": "no indicado (nombres de parametros hung_task_panic, softlockup_panic)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "driver 580.159.03, kernel 6.17.0-1026-nvidia",
+   "riesgo": null,
+   "verificable_aqui": "cat /proc/sys/kernel/hung_task_panic /proc/sys/kernel/softlockup_panic"
+  }
+ ],
+ "omision_nvidia": "No hay respuesta de NVIDIA en el tema; el usuario original describe que ni kdump ni netconsole dejan traza del cuelgue, es decir ningun mecanismo oficial captura el evento.",
+ "utilidad_atom": "alta",
+ "razon": "El post 4 (usuario con 4 Sparks) da dos firmas diagnosticas concretas, una flag de vLLM y comandos medibles; el post 1 documenta que las herramientas forenses estandar fallan. Todo es de usuarios, sin respuesta de NVIDIA; el post 2 y el 5 apuntan a calor y a unidad defectuosa."
+}
