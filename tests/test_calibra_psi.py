@@ -15,6 +15,7 @@ import sys
 import pytest
 
 from tools.calibra_psi import (
+    INCIDENTES,
     calibra,
     carga,
     clasifica,
@@ -104,13 +105,35 @@ def test_ventanas_por_defecto_son_los_congelamientos_reales():
     llego a 4). Los dos reinicios del 2026-09-28 (DEBT-PROCESO-SIN-TECHO-TUMBO-
     LA-MAQUINA-DOS-VECES) dejaron `test_el_gate_sale_0_sobre_el_corpus_real` en
     rojo por la misma razon -- la muestra de las 04:24:02, dentro del sexto
-    incidente, salia FALSO POSITIVO (asi llego a 6)."""
+    incidente, salia FALSO POSITIVO (asi llego a 6). Los dos reinicios por
+    watchdog del 2026-10-11 (DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01)
+    dejaron la excursion de las 22:44 como FALSO POSITIVO (asi llego a 8)."""
     vs = ventanas()
-    assert len(vs) == 6
+    assert len(vs) == 8
     assert vs[0][0] == dt.datetime(2026, 9, 22, 5, 45)
-    assert vs[-1][0] == dt.datetime(2026, 9, 28, 4, 18), (
+    assert vs[5][0] == dt.datetime(2026, 9, 28, 4, 18), (
         "el sexto es el segundo reinicio del 2026-09-28: un proceso ya estable "
         "en 30+ GiB cuando aparecio en la telemetria, sin brotar rapido")
+    assert vs[6] == (dt.datetime(2026, 10, 11, 22, 2), dt.datetime(2026, 10, 11, 22, 12)), (
+        "el septimo arranca con la primera lectura >= 10 de bb-usable (22:02:07): "
+        "bb sample ya no escribia desde las 22:00:34")
+    assert vs[-1] == (dt.datetime(2026, 10, 11, 22, 44), dt.datetime(2026, 10, 11, 22, 54)), (
+        "el octavo arranca en la primera muestra >= 10 (22:44:20) y acaba en el "
+        "reset por watchdog (22:54:41)")
+
+
+def test_las_ventanas_del_11_oct_cambian_el_veredicto_sobre_su_corpus():
+    """Control negativo de la etiqueta: sobre un corpus con la forma del octavo
+    (8 min sobre el 10 %), la lista vieja de seis lo da como falso positivo y la
+    nueva lo cuenta como incidente detectado. Si las dos listas dieran lo mismo,
+    anadir la ventana no habria cambiado nada que este modulo mida."""
+    s = [(dt.datetime(2026, 10, 11, 22, 44) + dt.timedelta(minutes=m), v)
+         for m, v in ((0, 16.54), (2, 72.47), (7, 59.52))]
+    vieja = calibra(s, incidentes=INCIDENTES[:6])
+    nueva = calibra(s, incidentes=INCIDENTES)
+    assert len(vieja["falsos_positivos"]) == 1
+    assert nueva["falsos_positivos"] == []
+    assert nueva["no_detectados"] == []
 
 
 def test_solapa_en_los_dos_bordes_y_fuera():
