@@ -1,0 +1,13 @@
+$ ls -la /etc/systemd/system/atom-secundarias.slice
+rc=0
+-rw-r--r-- 1 root root 1023 oct 10 07:05 /etc/systemd/system/atom-secundarias.slice
+
+$ systemctl show atom-secundarias.slice -p LoadState -p ActiveState
+rc=0
+LoadState=loaded
+ActiveState=inactive
+
+$ bash bin/bb drift | grep secundarias
+rc=0
+  igual       /etc/systemd/system/atom-secundarias.slice
+
