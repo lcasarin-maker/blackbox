@@ -1,0 +1,24 @@
+Cosecha de dos hilos del foro de NVIDIA (2026-10-12). Leidos con WebFetch: los dos hilos y los dos README de GitHub. NO se clono ni se ejecuto codigo ajeno.
+
+HILO 384499 "Spark intelligent energy management" (6 posts) -> repo djmad/Spark_Energy_Management (autor rene47). Licencia CC BY-NC 4.0 (no comercial): SOLO IDEAS, no se copia codigo. Python 3.12 stdlib. Probado en un Lenovo ThinkStation PGX, no en GIGABYTE. Afirma resolver sus caidas; sin verificacion independiente.
+ Ideas (con los numeros que da el repo, propios de su maquina):
+  1. Rampa de reloj al iniciar carga: techo de GPU 1700 MHz que sube 100 MHz/s mientras la GPU este >=75 % ocupada (contra apagados por fuente al pasar de idle a plena carga).
+  2. Guardia independiente con su propio muestreador: aborta por temperatura o por prediccion (tendencia de 2 s mas un termino de velocidad de subida); estado seguro = GPU 200-500 MHz, CPU al minimo, ventilador 12; se rearma al enfriar.
+  3. Topes: zona ACPI 96 C, GPU 85 C, objetivo CPU <=92 C.
+  4. Un solo proceso lee el hardware y escribe un status.json; dashboard, API y CLI solo leen (sin privilegios).
+  5. Controles por cluster de CPU con cpufreq (E0, P0, E1, P1): la CPU tambien calienta el mismo enfriador.
+  6. Comprobacion cruzada de sensores (zonas ACPI contra nvidia-smi), registrador de caidas ("crash recorder"), historial acotado, auditoria de cambios.
+  7. Ventiladores: modulo DKMS GPL-2.0 de christopher_owen que escribe al controlador embebido. NO se adopta: NVIDIA dice que no hay metodo soportado y el buzon fijo no esta probado en GIGABYTE.
+HILO 385664 "dgxtop v2" (1 post, 2026-10-12) -> repo DennySORA/dgxtop. Apache-2.0 (reutilizable con atribucion), Rust, x86_64 y aarch64, probado en DGX Spark.
+  1. Historial por proceso, persistente entre reinicios (SQLite, ultimas 512 ejecuciones): inicio, fin, pico de memoria de GPU y de RAM, linea de comandos, carpeta de trabajo; motivo de fin: codigo de salida, senal, detenido por el usuario, o "probablemente OOM killer" (el README no dice como lo infiere).
+  2. Barra de RAM dividida en parte del sistema y parte de cada trabajo de GPU en memoria unificada; el README no explica como calcula la parte de la GPU.
+  3. Historial por niveles (barras de 1 min a 24 h, 300 por nivel), muestreo 4 Hz, tope de memoria propio.
+  4. Fuentes que nombra: /proc, hwmon, zonas termicas, powercap, NVML. Potencia CPU+GPU total "cuando los sensores lo permiten".
+HILOS RELACIONADOS que aparecen en la lista del hilo y NO estan en bb (0 coincidencias en tasks/): "NVML Support for DGX Spark Grace Blackwell Unified Memory - Community Solution" (7 resp.), "NVTOP with DGX Spark unified memory support" (38 resp.), "Dear @nvidia - nvidia-smi is broken on the DGX Spark" (10), "Monitoring NVIDIA DGX Spark (GB10) with Prometheus + Grafana" (4), "Btop for DGX Spark" (4), "WebUI monitoring of the DGX Spark" (2).
+
+HUECO DE COSECHA: el hilo 384499 tiene un id MENOR que los ya cosechados (el mas alto en tasks/ es 384907) y no estaba. El inventario de hilos no es exhaustivo por id; falta saber como lista el colector (DEBT-RESEARCH-COLLECTOR-BB-FORUM-INVENTORY-01).
+
+LO QUE ESTE HOST YA MIDE y apoya estas ideas (medido hoy, atom_gpu_telemetry.jsonl, campo `zonas`): en la ultima muestra de los 3 arranques que terminaron en corte con telemetria, la zona ACPI mas caliente marcaba 98.0 C (2026-10-10), 95.7 C (2026-10-11) y 96.3 C (2026-10-12); el trip del kernel es 104.8 C. 96 C es el tope de aborto de la zona en el repo de djmad.
+LO QUE ESTE HOST NO TIENE: powercap ni hwmon de potencia (solo acpitz, nvme, wifi, bateria del raton); la potencia total del SoC no se puede leer, solo gpu_power_w de nvidia-smi. Cubre FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01.
+LO QUE bb YA TIENE de esto: muestreo cada 5 s con zonas, aviso por estado, congelado de la carga pausable que Atlas declara (accion_termica.py, en el corte decia no_actua: unidad inactiva). NO tiene: accion sobre el reloj de la GPU o sobre vLLM, rampa de carga, guardia predictivo, historial por proceso con motivo de fin.
+Control negativo del grep de cobertura: el mismo patron encontro "nvtop" en 8 archivos y "Prometheus" en 18, asi que el patron distingue; 0 en dgxtop, NVML Support y el repo de djmad.
