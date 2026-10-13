@@ -300,6 +300,15 @@ edges, and it isn't trying to duplicate what already exists elsewhere:
   allocatable memory, and both projects landed on the same workaround
   (derive used/available from the host side, not from NVML's own total).
 
+- **[HAMi-core](https://github.com/Project-HAMi/HAMi-core)** (Apache-2.0) —
+  the CUDA `LD_PRELOAD` limiter behind `bb limita`. Not bundled: you build it
+  from your own clone. `bb limita` only refuses to launch when no limit is
+  set, because HAMi-core fails open (measured 2026-10-12).
+- **[Spark_Energy_Management](https://forums.developer.nvidia.com/t/spark-intelligent-energy-management/384499)**
+  (djmad, CC BY-NC) and **[dgxtop](https://forums.developer.nvidia.com/t/385664)**
+  (DennySORA, Apache-2.0) — ideas only, no code copied: the predictive thermal
+  guard and the per-process GPU-memory gap. Full list of credits in `NOTICE`.
+
 If you maintain a tool in this space and it belongs here, open a PR.
 
 ---

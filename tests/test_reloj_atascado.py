@@ -51,3 +51,24 @@ def test_inicio_sin_paso_devuelve_none(tmp_path: Path) -> None:
     ruta = tmp_path / "t.jsonl"
     ruta.write_text(json.dumps(_f(96, 2400, 55)) + "\n", encoding="utf-8")
     assert r.inicio(ruta) is None
+
+
+def test_arranque_off_no_registra_nada(tmp_path: Path) -> None:
+    avisos: list[object] = []
+    assert r.arranque("off", {"estado": "ATASCADO"}, "b", tmp_path, avisa=avisos.append) is None
+    assert avisos == [] and not (tmp_path / "reloj_arranque.jsonl").exists()
+
+
+def test_arranque_observar_sano_registra_y_no_avisa(tmp_path: Path) -> None:
+    avisos: list[object] = []
+    ev = r.arranque("observar", {"estado": "SANO", "reloj_mediano_mhz": 2080.0, "tflops": 77.4}, "b1", tmp_path, avisa=avisos.append)
+    assert ev is not None and ev["estado"] == "SANO" and "habria_actuado" not in ev and avisos == []
+    assert (tmp_path / "reloj_arranque.jsonl").exists()
+
+
+def test_arranque_atascado_avisa_con_las_cifras(tmp_path: Path) -> None:
+    avisos: list[object] = []
+    ev = r.arranque("observar", {"estado": "ATASCADO", "reloj_mediano_mhz": 663.0, "tflops": 23.5}, "b2", tmp_path, avisa=avisos.append)
+    assert ev is not None and ev["habria_actuado"] is True and len(avisos) == 1
+    aviso = avisos[0]
+    assert getattr(aviso, "urgencia") == "critical" and "663" in getattr(aviso, "cuerpo")

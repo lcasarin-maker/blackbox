@@ -1,0 +1,9 @@
+[Unit]
+Description=bb prueba de reloj de GPU 6 minutos despues del arranque (el estado atascado sobrevive a los reinicios)
+
+[Timer]
+OnBootSec=6min
+Unit=bb-reloj-arranque.service
+
+[Install]
+WantedBy=timers.target

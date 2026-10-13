@@ -27,8 +27,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from tools import aviso_termico, interruptores
 from tools import guardia_termico_predictivo as g
 
+NOMBRE = "reloj_arranque"
 UMBRAL_ATASCADO_MHZ = 1000.0
 UMBRAL_SANO_MHZ = 1400.0
 UTIL_CARGA = 80.0
@@ -106,11 +108,33 @@ def prueba(segundos: int = 15) -> dict[str, Any]:
     return {**v, "tflops": round(hechos * 2 * n**3 / segundos / 1e12, 1), "segundos": segundos}
 
 
+def evento_arranque(r: dict[str, Any], boot_id: str) -> dict[str, Any]:
+    """Pura. Lo que se registra tras la prueba de arranque: el veredicto y las cifras que lo sostienen."""
+    return {"boot_id": boot_id, "estado": r.get("estado"), "reloj_mediano_mhz": r.get("reloj_mediano_mhz"), "tflops": r.get("tflops"), "motivo": r.get("motivo")}
+
+
+def arranque(modo_actual: str, r: dict[str, Any], boot_id: str, directorio: Path | None = None, avisa: Any = aviso_termico.enviar) -> dict[str, Any] | None:
+    """Tras el arranque: en `observar` registra el veredicto y, si es ATASCADO, avisa en pantalla (el reloj atascado
+    sobrevive a los reinicios y solo lo limpia un ciclo de corriente; esta vez costo ~8 h notarlo). `off` no hace nada."""
+    if modo_actual == "off":
+        return None
+    ev = {"modo": modo_actual, **evento_arranque(r, boot_id)}
+    if r.get("estado") == "ATASCADO":
+        ev["habria_actuado"] = True
+        avisa(aviso_termico.Aviso("critical", "GPU con el reloj atascado", f"{r.get('reloj_mediano_mhz')} MHz y {r.get('tflops')} TFLOPS tras el arranque: apagar, desconectar el adaptador de la pared y esperar (hilos 376039/370304). `bb reloj --prueba` para repetir."))
+    interruptores.registra(NOMBRE, ev, directorio)
+    return ev
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="bb reloj")
     ap.add_argument("--prueba", action="store_true", help="prueba activa de ~15 s con carga en la GPU")
+    ap.add_argument("--arranque", action="store_true", help="prueba activa y registra el veredicto segun el interruptor reloj_arranque (lo corre bb-reloj-arranque.timer)")
     a = ap.parse_args(argv)
-    r = prueba() if a.prueba else decide(g.lee_cola(filas=60))
+    r = prueba() if (a.prueba or a.arranque) else decide(g.lee_cola(filas=60))
+    if a.arranque:
+        boot = Path("/proc/sys/kernel/random/boot_id").read_text(encoding="utf-8").strip()
+        arranque(interruptores.modo(NOMBRE), r, boot)
     if r.get("estado") == "ATASCADO":
         r["desde"] = inicio()
         r["remedio"] = "apagar, desconectar el adaptador del enchufe, boton de encendido ~10 s, esperar, reconectar (hilos 376039/376239)"
