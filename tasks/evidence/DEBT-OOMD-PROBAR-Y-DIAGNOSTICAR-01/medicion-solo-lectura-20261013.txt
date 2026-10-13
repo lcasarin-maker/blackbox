@@ -1,0 +1,17 @@
+presion de memoria y estado de systemd-oomd, solo lectura, 2026-10-13
+
+$ systemctl is-active systemd-oomd
+active
+
+$ cat /sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/memory.pressure
+some avg10=0.00 avg60=0.00 avg300=0.00 total=5170562
+full avg10=0.00 avg60=0.00 avg300=0.00 total=5150073
+
+$ oomctl
+Dry Run: no
+Swap Used Limit: 90.00%
+Default Memory Pressure Limit: 60.00%
+Default Memory Pressure Duration: 20s
+(oomctl SI corre sin privilegios y muestra la configuracion: limite de presion 60 % durante 20 s, swap 90 %, Dry Run: no)
+
+LECTURA: oomd esta activo y la presion del slice del usuario es ~0. Esto cubre SOLO 'medir la presion del slice'. La frase de cierre oomd_mata_y_medido exige un kill medido de oomd bajo presion real, que pone en riesgo las sesiones y el motor; el log de depuracion de oomd necesita root.

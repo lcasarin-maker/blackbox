@@ -35,3 +35,6 @@ Senal doble (presion sostenida N s Y holgura), candidatos solo hojas, muerte de 
 
 ## Voto de Luis 2026-10-12
 Dejar systemd-oomd activo y medir la presion por slice mientras se diagnostica el fallo D-Bus de `oomctl`. Descartado: deshabilitarlo ya (`sudo systemctl disable --now systemd-oomd` sigue disponible y reversible). Riesgo aceptado: puede matar un cgroup entero con presion >60 % durante 20 s.
+
+## Avance 2026-10-13: medicion de solo lectura
+`tasks/evidence/DEBT-OOMD-PROBAR-Y-DIAGNOSTICAR-01/medicion-solo-lectura-20261013.txt`: oomd activo, presion del slice del usuario en 0 (some y full avg10/60/300 = 0,00) y `oomctl` con su configuracion (60 % durante 20 s, swap 90 %). La frase `oomd_mata_y_medido` sigue exigiendo un kill medido bajo presion real, que arriesga sesiones y motor; el log de depuracion necesita root.

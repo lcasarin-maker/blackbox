@@ -60,3 +60,6 @@ GB10 es SM121 y el contenedor vLLM trae sus propios kernels; la ficha pide gatea
 Version para un solo nodo Gigabyte AI TOP ATOM: Registrar en tools/huella_host.py la capacidad de computo efectiva (nvidia-smi compute_cap) y la arch con que se compilo el wheel/imagen del contenedor, y alertar si difieren.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Avance 2026-10-13: control negativo de ISA producido y probado
+`tasks/evidence/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01/isa-negativo-local-20261013.txt`: con nvcc 13.0.88 un kernel vacio compila con `-arch=sm_121` (rc 0, `ok.sm_121.cubin`) y una instruccion `tcgen05.fence` (sm_100) falla en ptxas con `not supported on .target 'sm_121'` (rc 255). Cubre solo el control negativo de ISA; faltan el build de CUTLASS con commit fijado y el canario con soak en la GPU compartida con produccion, que exigen tocar el motor.
