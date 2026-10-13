@@ -3,7 +3,11 @@ id: FEATURE-MONITOR-DISTROS-ALTERNAS-GB10-01
 kind: task
 domain: GPU
 title: "Monitor de distros alternas para GB10 que avise de mecanismos cosechables para la ATOM"
-status: open
+status: done
+closed_at: 2026-10-13
+closure_type: fixed
+reason: "tools/monitor_distros.py compara 13 de las 15 fuentes (10 repos con git ls-remote, 3 hilos del foro por posts_count; guia y articulo NOT_COLLECTED declarados), publica un hallazgo bb-hallazgo/1 solo por fuente con cambio, y tiene interruptor monitor_distros en observar, fila en bb status y timer semanal. Primera pasada real con control negativo en primera-pasada.txt."
+evidence: {"pass": "tasks/evidence/FEATURE-MONITOR-DISTROS-ALTERNAS-GB10-01/pass.txt", "fail": "tasks/evidence/FEATURE-MONITOR-DISTROS-ALTERNAS-GB10-01/fail.txt", "e2e": "tasks/evidence/FEATURE-MONITOR-DISTROS-ALTERNAS-GB10-01/e2e.txt"}
 severity: P3
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -33,3 +37,16 @@ Decision de Luis 2026-10-12: quedarse en DGX OS y monitorear distros alternas; d
 Version para un solo nodo Gigabyte AI TOP ATOM: Implementar el comparador con git ls-remote sobre data/distros_alternas.json, escribir hallazgos bb-hallazgo/1 y correr una primera pasada semanal con control negativo (fuente sin actividad no genera hallazgo).
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Avance 2026-10-13: cierre
+Construido: `tools/monitor_distros.py` (`bb distros`), `systemd/bb-monitor-distros.{service,timer}` (semanal, instalados y activos), interruptor `monitor_distros` en `observar`, fila en `bb status` (frescura 8 dias, `tests/test_bb_bash.py::test_status_monitor_de_distros_fresco_ARMADO_y_sin_estado_FALTA`) y `tests/test_monitor_distros.py` (8 tests, 99 %). Primera pasada real: 13 lecturas de base y 2 `NOT_COLLECTED` (kairos y omarchy-dragon, sin comparador). Control negativo real: con la cabeza de graham33-nixos alterada la misma pasada da `cambio` y publica `bb-2026-10-13-distros-graham33-nixos.md`; una segunda pasada inmediata da 0 cambios.
+Limite declarado: guias y articulos no tienen comparador; el monitor detecta actividad, no juzga si el mecanismo sirve.
+
+## Root Cause
+No existia un monitor de las distros alternas que la decision de Luis del 2026-10-12 dejaba como unica via de vigilancia.
+
+## Regression Test
+`tests/test_monitor_distros.py` (lectura de repo, hilo y fallos como NOT_COLLECTED; compara nunca confunde no recogido con sin cambio; off no lee; una lectura fallida no pisa la marca guardada) y la fila de status en `tests/test_bb_bash.py`.
+
+## Verification Evidence
+fail.txt: el close_check sin primera pasada sale 2; pass.txt: sobre la primera pasada real sale 0; e2e.txt: 8 tests pasan.

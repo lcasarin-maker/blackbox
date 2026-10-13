@@ -1956,6 +1956,13 @@ def test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FA
     assert "FALTA" in _fila(salida, "canario del motor")  # el artefacto ni existe
 
 
+def test_status_monitor_de_distros_fresco_ARMADO_y_sin_estado_FALTA(datos):
+    _modos(datos, monitor_distros="observar")
+    assert "FALTA" in _fila(correr(["status"], datos), "monitor de distros alternas")  # sin estado no hay pasada
+    (datos / "monitor_distros_estado.json").write_text("{}", encoding="utf-8")
+    assert "ARMADO" in _fila(correr(["status"], datos), "monitor de distros alternas")
+
+
 def test_status_sensor_en_off_no_tiene_fila(datos):
     _modos(datos, huella_host="off")
     assert "huella del host" not in correr(["status"], datos).stdout

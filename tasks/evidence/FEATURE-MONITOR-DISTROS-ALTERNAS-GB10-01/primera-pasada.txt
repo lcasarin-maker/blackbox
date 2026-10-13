@@ -1,0 +1,37 @@
+primera pasada real del monitor de distros alternas, 2026-10-13 (interruptor monitor_distros en observar)
+
+$ python3 -m tools.monitor_distros --paso   # contra las 15 fuentes de data/distros_alternas.json
+{
+ "modo": "observar",
+ "habria_actuado": false,
+ "veredictos": {
+  "graham33-nixos": "primera_lectura",
+  "straylight-nixos": "primera_lectura",
+  "rageltd-arch": "primera_lectura",
+  "jdvmi00-omarchy-spark": "primera_lectura",
+  "maxspevack-spark-rocky": "primera_lectura",
+  "tom-doerr-gpuoom": "primera_lectura",
+  "jagones84-vram-shield": "primera_lectura",
+  "patcastle-omarchy-sparkdash": "primera_lectura",
+  "vroomfondel-dgxarley": "primera_lectura",
+  "wiredquill-opensuse": "primera_lectura",
+  "foro-349124": "primera_lectura",
+  "foro-379085": "primera_lectura",
+  "foro-373655": "primera_lectura",
+  "kairos": "no_recogido",
+  "omarchy-dragon": "no_recogido"
+ },
+ "no_recogidas": [
+  "kairos",
+  "omarchy-dragon"
+ ]
+}
+
+# Control negativo: copia del estado con la cabeza de graham33-nixos alterada, misma pasada con BLACKBOX_DATA apuntando a la copia
+graham33-nixos: cambio | fuentes sin cambio: 12 | habria_actuado: True
+hallazgo publicado: bb-2026-10-13-distros-graham33-nixos.md
+
+# Segunda pasada real inmediata (sin cambios en las fuentes): ninguna debe dar cambio
+cambios: 0 | sin_cambio: 13 | no_recogido: 2
+
+monitor_distros_probado

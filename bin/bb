@@ -2634,6 +2634,11 @@ EOF
     _fresco "$DATA/huella_host.json" 2880; ok=$?
     chk "huella del host ($_m; ciclo diario)" "$ok" "sin huella en 2 dias: systemctl --user status bb-huella.timer"
   fi
+  _m=$(_modo_inter monitor_distros)
+  if [ "$_m" != off ]; then
+    _fresco "$DATA/monitor_distros_estado.json" 11520; ok=$?
+    chk "monitor de distros alternas ($_m; ciclo semanal)" "$ok" "sin pasada en 8 dias: systemctl --user status bb-monitor-distros.timer"
+  fi
   _m=$(_modo_inter canario_motor)
   if [ "$_m" != off ]; then
     _fresco "$DATA/interruptores/canario_motor.jsonl" 75; ok=$?
@@ -3326,6 +3331,7 @@ case "${1:-}" in
   huella)   shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.huella_host "$@") ;;
   canario)  shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.canario_motor "$@") ;;
   gpumem-historial) shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.gpumem_historial "$@") ;;
+  distros)  shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.monitor_distros "$@") ;;
   hid)      shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.hid_inventario "$@") ;;
   proveedor-gpu) shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.verifica_proveedor_gpu "$@") ;;
   calor)    shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.calibra_calor "$@") ;;
