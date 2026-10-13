@@ -22,13 +22,13 @@ y siete con un solo Xid 31 (fallo de MMU) o con Xid 13 y 31. Los dos conviven en
 carga. Quien investigue no debe tratarlas como un solo fallo.
 
 Racha sana de 13 h 49 min (09-oct 13:55 a 10-oct 03:44) con la misma carga: la carga
-agregada no distingue caidas de calma. Medicion de la sesion Declutter, no reproducida aqui.
+agregada no distingue caidas de calma. Medicion de la sesion otro proyecto, no reproducida aqui.
 
 ## Instrumento
 
 - Volcado CUDA armado el 2026-10-10 05:56 (`CUDA_ENABLE_COREDUMP_ON_EXCEPTION=1` en
   /srv/ai/gateway/active_engine.json, destino /srv/ai/models/_coredumps). Control positivo
-  hecho por Declutter: un kernel Triton fuera de rango produjo un volcado de 3.4 MB que
+  hecho por otro proyecto: un kernel Triton fuera de rango produjo un volcado de 3.4 MB que
   cuda-gdb leyo. Al crear esta ficha: 0 volcados `vllm_*` reales.
 - `bb status` lo exige (fila "volcado CUDA ante excepcion del motor") y `bb scan` lo lista
   y le corre `cuda-gdb ... info cuda kernels` a los ultimos tres (tools/motor_caidas.py).
@@ -42,7 +42,7 @@ para SM12.0 corriendo en SM12.1, driver o kernel (hay 7.0.0-1019 pendiente de re
 
 Guardar en `tasks/evidence/DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01/cuda-gdb-kernel.txt` la
 salida literal de cuda-gdb sobre el primer volcado real, y nombrar aqui el kernel. Cambiar
-el motor o el driver antes de eso destruye la comparacion: avisar a la sesion Declutter,
+el motor o el driver antes de eso destruye la comparacion: avisar a la sesion otro proyecto,
 cuya corrida de fichas (~45 h) depende del servidor.
 
 ## Seguimiento, 2026-10-10

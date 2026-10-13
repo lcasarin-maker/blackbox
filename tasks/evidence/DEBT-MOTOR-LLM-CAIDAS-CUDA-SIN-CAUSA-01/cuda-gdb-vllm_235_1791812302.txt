@@ -1,6 +1,6 @@
-$ systemd-run --user --scope -q -p MemoryMax=8G -p MemorySwapMax=0 timeout 300 /usr/local/cuda/bin/cuda-gdb -batch -ex "target cudacore /srv/ai/models/_coredumps/vllm_aitopatom-41f1_235_1791812302" -ex "info cuda devices" -ex "info cuda kernels" -ex "bt"
+$ systemd-run --user --scope -q -p MemoryMax=8G -p MemorySwapMax=0 timeout 300 /usr/local/cuda/bin/cuda-gdb -batch -ex "target cudacore /srv/ai/models/_coredumps/vllm_<host>_235_1791812302" -ex "info cuda devices" -ex "info cuda kernels" -ex "bt"
 --- 2026-10-13T08:21:08-06:00
-Opening GPU coredump: /srv/ai/models/_coredumps/vllm_aitopatom-41f1_235_1791812302
+Opening GPU coredump: /srv/ai/models/_coredumps/vllm_<host>_235_1791812302
 cuda-gdb/14/gdb/cuda/cuda-state.c:182: internal-error: initialize: Assertion `m_instance.m_num_devices > 0' failed.
 A problem internal to GDB has been detected,
 further debugging may prove unreliable.
@@ -37,5 +37,5 @@ This is a bug, please report it.  For instructions, see:
 <https://forums.developer.nvidia.com/c/developer-tools/cuda-developer-tools/cuda-gdb>.
 
 /usr/bin/timeout: la orden monitorizada ha volcado un 'core'
-/bin/bash: línea 5: 3206783 Abortado                systemd-run --user --scope -q -p MemoryMax=8G -p MemorySwapMax=0 timeout 300 /usr/local/cuda/bin/cuda-gdb -batch -ex "target cudacore /srv/ai/models/_coredumps/vllm_aitopatom-41f1_235_1791812302" -ex "info cuda devices" -ex "info cuda kernels" -ex "bt"
+/bin/bash: línea 5: 3206783 Abortado                systemd-run --user --scope -q -p MemoryMax=8G -p MemorySwapMax=0 timeout 300 /usr/local/cuda/bin/cuda-gdb -batch -ex "target cudacore /srv/ai/models/_coredumps/vllm_<host>_235_1791812302" -ex "info cuda devices" -ex "info cuda kernels" -ex "bt"
 rc=134
