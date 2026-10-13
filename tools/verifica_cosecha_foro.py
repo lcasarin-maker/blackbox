@@ -92,6 +92,75 @@ def valida_resultado(d: Any, tid: int) -> list[str]:
     return malos
 
 
+CANDIDATO = {"si", "quizas", "no"}
+
+
+def valida_triaje(d: Any, tid: int) -> list[str]:
+    """Etapa 1 de la segunda oleada: resultado corto de triaje. Lista de problemas (vacia = valido)."""
+    if not isinstance(d, dict):
+        return ["no es un objeto JSON"]
+    malos: list[str] = []
+    if d.get("id") != tid:
+        malos.append(f"id {d.get('id')!r} distinto de {tid}")
+    if d.get("candidato") not in CANDIDATO:
+        malos.append(f"candidato invalido {d.get('candidato')!r}")
+    if not isinstance(d.get("leido"), bool):
+        malos.append("leido debe ser booleano")
+    if d.get("leido") is True and (not isinstance(d.get("mensajes_leidos"), int) or d["mensajes_leidos"] < 1):
+        malos.append("leido sin mensajes_leidos")
+    prop = d.get("proposito")
+    if not isinstance(prop, list) or not set(prop) <= PROPOSITOS:
+        malos.append("proposito debe ser una lista dentro de " + "/".join(sorted(PROPOSITOS)))
+    elif d.get("candidato") in ("si", "quizas") and not prop:
+        malos.append("candidato si/quizas exige proposito")
+    if not isinstance(d.get("senales"), list):
+        malos.append("senales debe ser una lista")
+    if not isinstance(d.get("una_frase"), str) or len(d["una_frase"].strip()) < 15:
+        malos.append("una_frase ausente o corta")
+    return malos
+
+
+def verifica_triaje(inventario: list[dict[str, Any]], hilos: Path, resultados: Path) -> dict[str, Any]:
+    """Cobertura del triaje: cada tema descargado tiene un resultado valido, y se cuentan los candidatos."""
+    cuenta = {"descargado": 0, "vacio_del_producto": 0, "no_se_pudo": 0}
+    sin_resultado: list[int] = []
+    invalidos: dict[int, list[str]] = {}
+    fallos: dict[int, str] = {}
+    candidatos = {"si": [], "quizas": [], "no": []}
+    de_mas: dict[int, str] = {}
+    for it in inventario:
+        tid = int(it["id"])
+        est, motivo = estado_descarga(hilos, tid)
+        cuenta[est] += 1
+        if est == "no_se_pudo":
+            fallos[tid] = motivo
+        if est == "vacio_del_producto":
+            continue
+        try:
+            d = json.loads((resultados / f"{tid}.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            sin_resultado.append(tid)
+            continue
+        malos = valida_triaje(d, tid)
+        if malos:
+            invalidos[tid] = malos
+            continue
+        if d["leido"] and d["mensajes_leidos"] > mensajes_reales(hilos, tid) + TOLERANCIA_MENSAJES:
+            de_mas[tid] = f"declara {d['mensajes_leidos']} y el tema tiene {mensajes_reales(hilos, tid)}"
+        candidatos[d["candidato"]].append(tid)
+    return {
+        "temas": len(inventario),
+        "descarga": cuenta,
+        "fallos_de_descarga": fallos,
+        "sin_resultado": sin_resultado,
+        "resultados_invalidos": invalidos,
+        "lectura_declarada_de_mas": de_mas,
+        "candidatos": {k: len(v) for k, v in candidatos.items()},
+        "ids_candidatos": {k: v for k, v in candidatos.items() if k != "no"},
+        "cobertura_completa": not fallos and not sin_resultado and not invalidos and not de_mas,
+    }
+
+
 def verifica(inventario: list[dict[str, Any]], hilos: Path, resultados: Path) -> dict[str, Any]:
     cuenta = {"descargado": 0, "vacio_del_producto": 0, "no_se_pudo": 0}
     sin_resultado: list[int] = []
@@ -145,10 +214,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--inventario", type=Path, required=True)
     ap.add_argument("--hilos", type=Path, required=True)
     ap.add_argument("--resultados", type=Path, required=True)
+    ap.add_argument("--triaje", action="store_true", help="etapa 1 de la segunda oleada (esquema corto)")
     a = ap.parse_args(argv)
     raw = json.loads(a.inventario.read_text(encoding="utf-8"))
     inv = raw["temas"] if isinstance(raw, dict) else raw
-    r = verifica(inv, a.hilos, a.resultados)
+    r = (verifica_triaje if a.triaje else verifica)(inv, a.hilos, a.resultados)
     print(json.dumps(r, indent=1, ensure_ascii=False))
     return 0 if r["cobertura_completa"] else 1
 
