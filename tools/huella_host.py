@@ -308,8 +308,15 @@ def _dkms_sin_firmar(raiz: Path, correr: Correr, ver: str, d: Path, sb: bool | s
     return False
 
 
+def _dpkg_consistente(correr: Correr) -> bool | str:
+    """`dpkg --audit` sin salida = ningun paquete a medio configurar (la comprobacion previa al reinicio que pide el personal en el hilo 383450)."""
+    salida = _comando(correr, ["dpkg", "--audit"])
+    return _nc("dpkg --audit no corrio") if salida is None else salida == ""
+
+
 def sonda_arranque_tras_actualizacion(raiz: Path, correr: Correr) -> Any:
-    """Por kernel instalado: initrd no vacio, modulos nvidia.ko y DKMS sin firmar bajo Secure Boot. `listo_para_reiniciar` mira solo al mas alto."""
+    """Por kernel instalado: initrd no vacio, modulos nvidia.ko y DKMS sin firmar bajo Secure Boot. `listo_para_reiniciar` mira solo al mas alto;
+    un dpkg a medio configurar tambien lo baja a False (nunca lo sube: sin leer queda como estaba)."""
     mods, boot = raiz / "lib/modules", raiz / "boot"
     vers = {d.name for d in _hijos(mods, "[0-9]*") if d.is_dir()} | {f.name[len("vmlinuz-"):] for f in _hijos(boot, "vmlinuz-*")}
     if not vers:
@@ -326,13 +333,14 @@ def sonda_arranque_tras_actualizacion(raiz: Path, correr: Correr) -> Any:
         }
     nuevo = list(kernels)[-1]
     k = kernels[nuevo]
-    if k["initrd"] is False or k["modulos_nvidia"] is False or k["dkms_sin_firmar"] is True:
+    dpkg = _dpkg_consistente(correr)
+    if k["initrd"] is False or k["modulos_nvidia"] is False or k["dkms_sin_firmar"] is True or dpkg is False:
         listo: bool | str = False
     elif k["initrd"] is True and k["dkms_sin_firmar"] is False:
         listo = True
     else:
         listo = _nc("initrd o firma DKMS del kernel nuevo sin leer")
-    return {"kernels": kernels, "kernel_nuevo": nuevo, "secure_boot": sb, "listo_para_reiniciar": listo}
+    return {"kernels": kernels, "kernel_nuevo": nuevo, "secure_boot": sb, "dpkg_consistente": dpkg, "listo_para_reiniciar": listo}
 
 
 # Recomendaciones de personal de NVIDIA en hilos del foro (evidencia: tasks/evidence/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01/

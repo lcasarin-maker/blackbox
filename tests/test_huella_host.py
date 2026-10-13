@@ -409,6 +409,17 @@ def test_modulos_en_updates_y_kernel_solo_en_boot(tmp_path: Path, en_uso: None) 
     assert r["kernels"]["7.0.0-1019-nvidia"]["modulos_nvidia"] is True
 
 
+def test_dpkg_a_medio_configurar_baja_listo_y_limpio_no_lo_sube(tmp_path: Path, en_uso: None) -> None:
+    _kernel(tmp_path, "7.0.0-1019-nvidia")
+    _w(tmp_path, "sys/firmware/efi/efivars/SecureBoot-8be4", "\x06\x00\x00\x00\x00")
+    limpio = h.sonda_arranque_tras_actualizacion(tmp_path, _correr({"dpkg --audit": (0, "")}))
+    assert limpio["dpkg_consistente"] is True and limpio["listo_para_reiniciar"] is True
+    roto = h.sonda_arranque_tras_actualizacion(tmp_path, _correr({"dpkg --audit": (0, "The following packages are only half configured:\n nvidia-dkms-580-open")}))
+    assert roto["dpkg_consistente"] is False and roto["listo_para_reiniciar"] is False  # control negativo: el mismo arbol con dpkg limpio da True
+    sin_leer = h.sonda_arranque_tras_actualizacion(tmp_path, _cae)
+    assert h.es_nc(sin_leer["dpkg_consistente"]) and sin_leer["listo_para_reiniciar"] is True  # no leer no baja ni sube
+
+
 def test_arranque_sin_kernels_es_nc(tmp_path: Path) -> None:
     assert h.es_nc(h.sonda_arranque_tras_actualizacion(tmp_path, _cae))
 
