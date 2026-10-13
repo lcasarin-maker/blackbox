@@ -3289,6 +3289,7 @@ case "${1:-}" in
   cap)      shift; cmd_cap "$@" ;;
   portero)  shift; python3 "$(dirname "$(readlink -f "$0")")/../tools/portero.py" "$@" ;;
   limita)   shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.limita_cuda "$@") ;;
+  gpumem)   shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.gpumem "$@") ;;
   install)  shift; cmd_install "$@" ;;
   ""|-h|--help|help) usage ;;
   *) echo "subcomando desconocido: $1" >&2; usage >&2; exit 2 ;;
