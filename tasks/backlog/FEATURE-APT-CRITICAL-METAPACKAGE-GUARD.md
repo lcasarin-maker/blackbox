@@ -8,7 +8,7 @@ severity: P3
 origin: asserted
 satd_family: HARVEST_SUGGESTION
 created: 2026-10-02
-close_check: {"cmd": "python3 -m tools.verify_apt_critical_removals --evidence tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD", "expect": "exit_zero", "porque": "El cierre requiere demostrar que una remoción simulada peligrosa se bloquea o se declara antes de aplicar cambios, y que una transacción inocua sigue disponible; un inventario estático de paquetes no demuestra protección."}
+close_check: {"cmd": "python3 -m tools.verify_apt_critical_removals --cierre --evidence tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD", "expect": "exit_zero", "porque": "El cierre requiere demostrar que una remoción simulada peligrosa se bloquea o se declara antes de aplicar cambios, y que una transacción inocua sigue disponible; un inventario estático de paquetes no demuestra protección."}
 ---
 
 ## Fuente
@@ -92,3 +92,6 @@ Corrige la sección «Compatibilidad y estado local»: la frase «no indica vuln
 - OEM: el metapaquete sale del componente compartido `common`. Desde este host no se verificó si los otros OEM consumen ese mismo componente y esa versión.
 - Fuente: los archivos `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/threads/348170.{json,txt}` que cita la sección «Fuente» no existen en el repo. Se usó el resumen de `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.
 - Defecto del gate: el `close_check` (`exit_zero`) sale 0 hoy con `"closure": "open"`, porque `tools/verify_apt_critical_removals.py` escribe `closure` y `open_blockers` como literales y su código de salida solo refleja la discriminación del instrumento. Un gate que solo mira el código de salida aceptaría esta ficha como cerrada. No se cambió: `tests/test_debt_registration_controls.py::test_apt_critical_verifier_cli_and_evidence_controls` fija `rc=0` con `closure` abierta (ficha `DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01`).
+
+## Defecto del close_check corregido (2026-10-13)
+El CLI daba exit 0 (`status: pass`) mientras su propia salida declara `closure: open` y `open_blockers` (cobertura OEM y guarda APT instalada sin verificar): el `close_check` de esta ficha pasaba con la ficha abierta. Se anade `--cierre` (sale 2 si hay bloqueos abiertos) y el `close_check` lo usa; sin la bandera el comportamiento no cambia (la ficha cerrada `DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01` sigue reproduciendo). Antes: rc=0; despues: rc=2; control: con `closure: closed` simulado sale 0 (`tests/test_debt_registration_controls.py::test_apt_critical_removals_flag_cierre_no_sale_0_con_bloqueos_abiertos`).

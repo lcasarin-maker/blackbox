@@ -1492,3 +1492,15 @@ def test_debt_close_check_verify_forum_finding_01() -> None:
     print(json.dumps(results, sort_keys=True))
     for card, result in results.items():
         _assert_pass(card, {**result, "could_not_run_count": result["could_not_run"]})
+
+
+def test_apt_critical_removals_flag_cierre_no_sale_0_con_bloqueos_abiertos(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Sin `--cierre` el CLI sigue diciendo pass (0); con `--cierre` un pass con bloqueos abiertos sale 2 y solo sale 0 si no quedan."""
+    root = Path(__file__).resolve().parent.parent
+    evidence = str(root / "tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD")
+    assert verify_apt_critical_removals.main(["--evidence", evidence]) == 0
+    assert verify_apt_critical_removals.main(["--evidence", evidence, "--cierre"]) == 2
+    cerrado = {"status": "pass", "findings": [], "fail": 0, "could_not_run": 0, "closure": "closed"}
+    monkeypatch.setattr(verify_apt_critical_removals, "verify", lambda _d: cerrado)  # control negativo del control: sin bloqueos, 0
+    assert verify_apt_critical_removals.main(["--evidence", evidence, "--cierre"]) == 0
+
