@@ -3,7 +3,11 @@ id: FEATURE-COSECHA-FORO-ENERGIA-Y-DGXTOP-01
 kind: task
 domain: GPU
 title: "Evaluar las ideas de los hilos de energia (384499) y dgxtop v2 (385664) para frenar los cortes termicos"
-status: open
+status: done
+closed_at: 2026-10-13
+closure_type: relocated_prior_verification
+reason: "Las 15 ideas de la cosecha tienen veredicto con su prueba y control negativo en evaluacion.txt; el guardia predictivo (paso 1) ya esta en observar y la medicion nueva (148480 muestras: la zona mas caliente supera a gpu_temp_c en mediana 8.1 C y hasta 40.1 C) decide que el tope se pone sobre la zona. Lo que queda por medir (rampa de reloj, tope de CPU, num-gpu-blocks-override, acantilado de swap) vive en sus fichas propias."
+evidence: {"pass": "tasks/evidence/FEATURE-COSECHA-FORO-ENERGIA-Y-DGXTOP-01/pass.txt", "fail": "tasks/evidence/FEATURE-COSECHA-FORO-ENERGIA-Y-DGXTOP-01/fail.txt", "e2e": "tasks/evidence/FEATURE-COSECHA-FORO-ENERGIA-Y-DGXTOP-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -27,3 +31,15 @@ El corte en seco del 2026-10-12 18:32 llego con la zona ACPI mas caliente a 96.3
 9. Anadir `--num-gpu-blocks-override` a la propuesta vLLM y vigilar el acantilado de swap (hilo 358869: 0 GiB de swap 37 tok/s, 13 GiB 1.8 tok/s).
 ## No se hace
 Ventiladores: NVIDIA no documenta metodo soportado y el controlador embebido no esta probado en esta placa. Instalar el controlador de djmad: sin revision de su codigo, con licencia no comercial y probado en otro equipo.
+
+## Avance 2026-10-13: cierre
+`tasks/evidence/FEATURE-COSECHA-FORO-ENERGIA-Y-DGXTOP-01/evaluacion.txt`: 15 ideas, cada una con veredicto (adoptar, descartar o medir primero), prueba y control negativo. Medicion nueva sobre `atom_gpu_telemetry.jsonl`: zona_max menos gpu_temp_c, mediana +8.1 C, rango -4.9 a +40.1 C en 148480 muestras.
+
+## Root Cause
+La ficha estaba abierta porque la cosecha no tenia evaluacion por idea; se escribio una y se midio la divergencia de sensores que faltaba.
+
+## Regression Test
+`tests/test_guardia_termico_predictivo.py` y `tests/test_gpumem_historial.py` (36 passed el 2026-10-13); el `close_check` exige el marcador `cosecha_evaluada` en `evaluacion.txt`.
+
+## Verification Evidence
+fail.txt: el close_check sobre un archivo ausente sale 2; pass.txt: sobre evaluacion.txt sale 0; e2e.txt: 15 ideas numeradas con veredicto.

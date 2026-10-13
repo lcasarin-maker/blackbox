@@ -1,0 +1,35 @@
+evaluacion de la cosecha del hilo 384499 (djmad, CC BY-NC: solo ideas) y del hilo 385664 (dgxtop v2, Apache-2.0), 2026-10-13
+Cada idea lleva veredicto (adoptar / descartar / medir primero), su prueba y su control negativo. Las afirmaciones de los hilos son de sus autores; solo cuenta lo medido aqui.
+
+HILO 384499
+1. Rampa de reloj al iniciar carga (techo 1700 MHz, +100 MHz/s con GPU >= 75 %).
+   Veredicto: MEDIR PRIMERO. Prueba: el A/B de FEATURE-FORUM-GPU-CLOCK-CAP-AB-01 (reloj topado contra potencia y estabilidad). Control negativo: ese A/B exige el brazo sin tope. Sin el A/B no se actua sobre el reloj: un tope mal puesto ya produjo el estado de reloj atascado que `bb reloj` detecta.
+2. Guardia independiente con prediccion de zona.
+   Veredicto: ADOPTADA en `observar` (tools/guardia_termico_predictivo.py). Prueba: tests/test_guardia_termico_predictivo.py (36 tests con tests/test_gpumem_historial.py, 36 passed el 2026-10-13) y la repasada contra los 3 cortes con telemetria (repasada-guardia-20261012.json): la regla corta avisa 0-76 s antes y NO sirve; la de acumulacion avisa 11.8 y 34.5 min antes en dos cortes y dispara tambien en arranques sin corte. Control negativo: la misma repasada sobre un arranque que termino limpio (b8707961) da 46 episodios de la regla corta, y la ausencia de etiqueta fiable impide calcular falsas alarmas: el modo `actuar` queda UNSUPPORTED hasta tener esa tasa.
+3. Topes: zona 96 C, GPU 85 C, CPU <= 92 C.
+   Veredicto: ADOPTAR el tope de zona 96 C (ya es TOPE_C del guardia); DESCARTAR el tope de GPU 85 C. Prueba medida el 2026-10-13 sobre 148480 muestras de atom_gpu_telemetry.jsonl con zonas y gpu_temp_c: zona_max - gpu_temp_c tiene mediana +8.1 C, minimo -4.9 C y maximo +40.1 C. Con un tope sobre gpu_temp_c solo, la zona mas caliente (CPU/SoC) pasaba hasta 40 C por encima sin dispararlo. Control negativo: el mismo calculo con el signo invertido (gpu - zona) da mediana -8.1 C, o sea que la zona es la que manda en esta placa.
+4. Un solo proceso lee el hardware y escribe status.json; el resto solo lee.
+   Veredicto: YA ES ASI. El unico muestreador es atom_gpu_telemetry.py (jsonl cada ~5 s) y el guardia lee ese archivo en vez de leer el hardware (docstring de guardia_termico_predictivo.py). Control negativo: un segundo lector directo del hardware no existe en tools/ para termica (grep de nvidia-smi --query en el guardia da 0).
+5. Controles por cluster de CPU (cpufreq E0/P0/E1/P1).
+   Veredicto: MEDIR PRIMERO. Prueba: FEATURE-BB-EVALUAR-CAP-DE-CPU-01 (efecto de topar la CPU a 2400 MHz sobre la zona). Control negativo: el A/B con y sin tope. Esta maquina no tiene powercap ni hwmon de potencia, asi que no se puede medir el efecto en vatios, solo en temperatura.
+6. Comprobacion cruzada de sensores (zonas contra nvidia-smi), registrador de caidas, historial acotado.
+   Veredicto: ADOPTADA la comprobacion cruzada como hallazgo, no como gate: la divergencia medida en el punto 3 (+8.1 C mediana, hasta +40.1 C) es la razon de vigilar la zona y no la temperatura de GPU. El registrador de caidas ya existe (bb scan / reboot_verdict). Control negativo: ver punto 3.
+7. Ventiladores por el modulo DKMS del hilo.
+   Veredicto: DESCARTAR. NVIDIA no documenta metodo soportado; el modulo no esta probado en esta placa; licencia GPL-2.0 de un tercero. Control negativo: el hilo 378945 muestra un fan detenido por otra causa (CX7 hotplug), asi que un control de fan no se puede validar sin leer su estado, y esta maquina no expone RPM (FEATURE-FAN-RPM, done).
+
+HILO 385664 (dgxtop v2)
+8. Historial por proceso persistente con motivo de fin y pico de memoria de GPU.
+   Veredicto: ADOPTADO EN PARTE: tools/gpumem_historial.py (sensor en observar, muestreo por cgroup con dmem, exacto contra nvidia-smi segun la medicion dmem de 2026-10-12). El motivo de fin (codigo de salida, senal, OOM) NO esta: MEDIR PRIMERO con el registro de bb sigterm (DEBT-AUDIT-ANILLO: sin el limite -b 32768 aplicado el audit pierde eventos). Control negativo: tests/test_gpumem_historial.py.
+9. Barra de RAM dividida entre sistema y trabajos de GPU.
+   Veredicto: DESCARTAR el panel (bb es un instrumento de linea de comandos y de archivos de datos); la separacion ya existe como memoria por cgroup (`bb gpumem`).
+10. Historial por niveles a 4 Hz con tope propio.
+   Veredicto: DESCARTAR el muestreo a 4 Hz: el muestreador de bb va a 5 s y la repasada mostro que el aviso util es de minutos, no de subsegundos.
+
+HILOS RELACIONADOS (358869, 352743, 353752, 372486)
+11. Docker --memory no limita memoria unificada CUDA (358869).  Veredicto: CONFIRMADO Y RESUELTO con el modulo parcheado (dmem.current cobra, dmem.max rechaza; medicion-v2-cargado-20261012.txt; tests/test_dmem_parche_contrato.py con control negativo).
+12. vLLM dimensiona el KV con torch.cuda.mem_get_info(); `--num-gpu-blocks-override` como workaround.  Veredicto: MEDIR PRIMERO. Prueba: FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01. Control negativo: grep de `num-gpu-blocks-override` en la propuesta vLLM de bb da 0 resultados hoy.
+13. Acantilado de swap (0 GiB 37 tok/s, 13 GiB 1.8 tok/s).  Veredicto: MEDIR PRIMERO en esta maquina; afirmacion de un cluster de 4 nodos.
+14. Docker daemon-reload quita la GPU (352743).  Veredicto: ficha propia DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01; bb ya no recarga en dmem_modulo.sh.
+15. Tras cada corte correr `sudo ras-mc-ctl --errors` (372486).  Veredicto: ADOPTAR como paso manual de Luis (requiere sudo); rasdaemon instalado.
+
+cosecha_evaluada
