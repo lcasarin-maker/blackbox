@@ -83,7 +83,10 @@ cmd_instala() {
     $DEPMOD -a "$(basename "$MODDIR")"
     rm -f "$ESTADO/retrocedido"
     if [ -z "${BB_DMEM_SIN_RAIZ:-}" ]; then
-        cat >"$UNIDAD" <<UNIT
+        # SIN `systemctl daemon-reload`: con Docker en cgroup `systemd`, recargar systemd puede quitarle el acceso a la GPU a
+        # los contenedores en marcha (hilo 352743 del foro; produccion corre vLLM asi). La unidad nueva se carga en el arranque.
+        local nueva; nueva=$(mktemp)
+        cat >"$nueva" <<UNIT
 [Unit]
 Description=bb: retrocede el modulo NVIDIA parcheado si la GPU no responde tras el arranque
 After=multi-user.target
@@ -93,7 +96,9 @@ ExecStart=/bin/bash $(readlink -f "${BASH_SOURCE[0]}") guardia
 [Install]
 WantedBy=multi-user.target
 UNIT
-        systemctl daemon-reload && systemctl enable bb-dmem-guardia.service
+        cmp -s "$nueva" "$UNIDAD" 2>/dev/null || cp "$nueva" "$UNIDAD"
+        rm -f "$nueva"
+        systemctl enable --no-reload bb-dmem-guardia.service >/dev/null 2>&1 || true
     fi
     log "instalado en $MODDIR/updates; NO se descargo nada. Reinicia cuando tengas la consola a mano."
 }
@@ -134,7 +139,7 @@ cmd_retrocede() {
         die "retroceso INCOMPLETO: quedan archivos alterados en $MODDIR/updates (lista en $ESTADO/instalados.txt); borralos a mano y corre depmod -a"
     fi
     rm -f "$ESTADO/instalados.txt" "$ESTADO/instalados.restos"
-    [ -n "${BB_DMEM_SIN_RAIZ:-}" ] || { systemctl disable bb-dmem-guardia.service 2>/dev/null || true; rm -f "$UNIDAD"; }
+    [ -n "${BB_DMEM_SIN_RAIZ:-}" ] || { systemctl disable --no-reload bb-dmem-guardia.service >/dev/null 2>&1 || true; rm -f "$UNIDAD"; }   # --no-reload: ver instala
     log "retrocedido: el siguiente arranque usa los modulos de Canonical"
 }
 

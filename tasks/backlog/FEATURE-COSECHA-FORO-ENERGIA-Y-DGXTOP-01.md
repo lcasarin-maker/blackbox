@@ -21,5 +21,9 @@ El corte en seco del 2026-10-12 18:32 llego con la zona ACPI mas caliente a 96.3
 3. Rampa de carga y tope de reloj: sigue en `FEATURE-FORUM-GPU-CLOCK-CAP-AB-01`; esta ficha aporta el diseno de rampa (100 MHz/s con GPU >=75 %).
 4. Leer los hilos relacionados (NVML con memoria unificada, nvtop con memoria unificada, nvidia-smi roto).
 5. Arreglar la cobertura del colector de foros por id (DEBT-RESEARCH-COLLECTOR-BB-FORUM-INVENTORY-01).
+6. HECHO 2026-10-12: `tools/guardia_termico_predictivo.py` en `observar` (unidad `systemd/bb-vigilante-termico.service`, sin instalar: decision de Luis). La repasada mide que la regla corta no sirve (0-76 s de aviso) y que la de acumulacion de calor avisa 11.8 min antes del ultimo corte pero dispara tambien en arranques sin corte; falta etiquetar como termino cada arranque.
+7. Riesgo medido: Docker usa cgroup `systemd` (hilo 352743). Ficha propia: DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01.
+8. Tras cada corte correr `sudo ras-mc-ctl --errors` y guardar la salida (hilo 372486; rasdaemon ya esta instalado).
+9. Anadir `--num-gpu-blocks-override` a la propuesta vLLM y vigilar el acantilado de swap (hilo 358869: 0 GiB de swap 37 tok/s, 13 GiB 1.8 tok/s).
 ## No se hace
 Ventiladores: NVIDIA no documenta metodo soportado y el controlador embebido no esta probado en esta placa. Instalar el controlador de djmad: sin revision de su codigo, con licencia no comercial y probado en otro equipo.
