@@ -1,0 +1,10 @@
+$ tail -3 tasks/evidence/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01/cobertura-final.txt
+rc=0
+385714 | ruido | ninguna | completa | 1
+
+CONTROL NEGATIVO: el mismo verificador sobre una copia sin el resultado del tema 342874: rc=1, cobertura_completa=False, sin_resultado=[342874]
+
+$ python3 -m tools.verifica_cosecha_foro --inventario tasks/evidence/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01/inventario.json --hilos /home/lcasarin/.local/share/blackbox/foro-722-723 --resultados tasks/evidence/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01/ola1-resultados | python3 -c "import json,sys;d=json.load(sys.stdin);print(d['cobertura_completa'],len(d['lectura_parcial_por_completar']),len(d['sin_resultado']))"
+rc=0
+True 0 0
+

@@ -1,0 +1,18 @@
+$ grep -q '^cobertura_completa: True' tasks/evidence/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01/cobertura-final.txt
+rc=0
+
+$ head -12 tasks/evidence/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01/cobertura-final.txt
+rc=0
+cobertura-final de FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01, 2026-10-13
+
+$ python3 -m tools.verifica_cosecha_foro --inventario tasks/evidence/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01/inventario.json --hilos <foro-722-723> --resultados tasks/evidence/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01/ola1-resultados
+rc=0
+{
+ "temas": 450,
+ "descarga": {
+  "descargado": 450,
+  "vacio_del_producto": 0,
+  "no_se_pudo": 0
+ },
+ "fallos_de_descarga": {},
+
