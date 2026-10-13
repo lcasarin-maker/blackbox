@@ -1,0 +1,10 @@
+$ u=bb-prueba-always; systemd-run --user -q --unit=$u -p Restart=always -p RestartSec=1 sleep 600; sleep 1; p1=$(systemctl --user show $u -p MainPID --value); kill -TERM $p1; sleep 4; echo "politica=always pid_antes=$p1 estado_despues=$(systemctl --user is-active $u) pid_despues=$(systemctl --user show $u -p MainPID --value)"; systemctl --user stop $u 2>/dev/null; systemctl --user reset-failed $u 2>/dev/null; true
+rc=0
+politica=always pid_antes=3132071 estado_despues=active pid_despues=3132701
+
+$ grep -q Restart=always systemd/bb-guardia-proceso.service
+rc=0
+
+$ diff systemd/bb-guardia-proceso.service /home/lcasarin/.config/systemd/user/bb-guardia-proceso.service
+rc=0
+

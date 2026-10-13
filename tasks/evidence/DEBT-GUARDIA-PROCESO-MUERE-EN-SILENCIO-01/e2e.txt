@@ -1,0 +1,15 @@
+$ systemctl --user show bb-guardia-proceso.service -p Restart -p ActiveState -p SubState
+rc=0
+Restart=always
+ActiveState=active
+SubState=running
+
+$ python -m pytest tests/test_guardia_proceso_reinicio.py -q -p no:cacheprovider
+rc=0
+...                                                                      [100%]
+3 passed in 0.04s
+
+$ bash bin/bb status | grep "guardia de procesos"
+rc=0
+  ARMADO    guardia de procesos (frena un proceso desbocado)
+
