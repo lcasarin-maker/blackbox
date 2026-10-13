@@ -214,7 +214,7 @@ def _huella(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kernel: str = "6.17
 
 def test_recoge_cubre_todas_las_sondas_sin_inventar(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     r = _huella(tmp_path, monkeypatch)
-    assert set(r) == set(h.SONDAS) and len(r) == 15 and h.es_nc(r["os_release"])
+    assert set(r) == set(h.SONDAS) and len(r) == 16 and h.es_nc(r["os_release"])
 
 
 def test_recoge_sonda_que_lanza_es_nc(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -512,3 +512,70 @@ def test_secure_boot_variable_ilegible_se_nombra_en_el_nc(tmp_path: Path) -> Non
     assert isinstance(r, str) and h.es_nc(r) and "SecureBoot-8be4" in r and "ilegibles" in r
     _w(tmp_path, "sys/firmware/efi/efivars/SecureBoot-aaaa", "\x06\x00\x00\x00\x01")
     assert h._secure_boot(tmp_path, _cae) is True
+
+
+# recomendaciones_personal
+def _rp(tmp_path: Path, correr: Any = None) -> dict[str, Any]:
+    r = h.sonda_recomendaciones_personal(tmp_path, correr or _correr({}))
+    assert isinstance(r, dict)
+    return r
+
+
+def test_recomendaciones_cumple(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DISPLAY", ":1")
+    _w(tmp_path, "proc/cmdline", "ro iommu.passthrough=1 quiet")
+    _w(tmp_path, "proc/sys/vm/overcommit_memory", "2\n")
+    _w(tmp_path, "proc/sys/vm/overcommit_ratio", "90\n")
+    _w(tmp_path, "sys/module/sbsa_gwdt/parameters/action", "1\n")
+    r = _rp(tmp_path, _correr({"xset": (0, "DPMS (Display Power Management Signaling):\n  DPMS is Disabled\n")}))
+    assert [v["cumple"] for v in r.values()] == [True, True, True, True]
+    assert r["overcommit"]["hilo"] == 368536 and r["overcommit"]["post"] == 23 and "CUDA" in r["overcommit"]["nota"]
+
+
+def test_recomendaciones_no_cumple(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DISPLAY", ":1")
+    _w(tmp_path, "proc/cmdline", "ro iommu.passthrough=0")
+    _w(tmp_path, "proc/sys/vm/overcommit_memory", "0\n")
+    _w(tmp_path, "proc/sys/vm/overcommit_ratio", "50\n")
+    _w(tmp_path, "etc/modprobe.d/x.conf", "options sbsa_gwdt action=0\n")
+    _w(tmp_path, "usr/lib/modprobe.d/ignora.conf", "options otro action=1\n")
+    r = _rp(tmp_path, _correr({"xset": (0, "  DPMS is Enabled\n")}))
+    assert [v["cumple"] for v in r.values()] == [False, False, False, False]
+    assert r["iommu_passthrough"]["actual"] == "iommu.passthrough=0" and "declarado" in r["sbsa_gwdt_action"]["actual"]
+
+
+def test_recomendaciones_sbsa_declarado_cumple(tmp_path: Path) -> None:
+    _w(tmp_path, "etc/modprobe.d/sbsa_gwdt.conf", "options sbsa_gwdt action=1\n")
+    assert _rp(tmp_path)["sbsa_gwdt_action"]["cumple"] is True
+
+
+def test_recomendaciones_no_legible_es_none_nunca_true(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("DISPLAY", raising=False)
+    r = _rp(tmp_path)  # arbol vacio: control negativo, ninguna lectura posible
+    assert [v["cumple"] for v in r.values()] == [None, None, None, None]
+    assert h.es_nc(r["iommu_passthrough"]["actual"]) and h.es_nc(r["sbsa_gwdt_action"]["actual"]) and h.es_nc(r["dpms"]["actual"])
+    assert all(h.es_nc(v) for v in r["overcommit"]["actual"].values())
+
+
+def test_recomendaciones_lecturas_parciales(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _w(tmp_path, "proc/cmdline", "ro quiet")  # sin iommu.passthrough: None, no False ni True
+    _w(tmp_path, "proc/sys/vm/overcommit_memory", "2")  # coincide, ratio ilegible: None
+    _w(tmp_path, "etc/modprobe.d/otro.conf", "options otro x=1\n")  # modprobe legible sin declaracion
+    monkeypatch.setenv("DISPLAY", ":1")
+    r = _rp(tmp_path, _correr({"xset": (0, "sin linea dpms")}))
+    assert [v["cumple"] for v in r.values()] == [None, None, None, None]
+    assert "ausente" in r["iommu_passthrough"]["actual"] and "no expuesto" in r["sbsa_gwdt_action"]["actual"] and "sin linea" in r["dpms"]["actual"]
+    _w(tmp_path, "proc/sys/vm/overcommit_ratio", "10")  # una diferencia leida decide aunque falte otra
+    assert _rp(tmp_path)["overcommit"]["cumple"] is False
+
+
+def test_recomendaciones_xset_cae(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DISPLAY", ":1")
+    r = _rp(tmp_path, _cae)
+    assert r["dpms"]["cumple"] is None and h.es_nc(r["dpms"]["actual"])
+
+
+def test_recomendaciones_conf_ilegible_se_omite(tmp_path: Path) -> None:
+    (tmp_path / "etc/modprobe.d/roto.conf").mkdir(parents=True)  # directorio con nombre .conf: read_text lanza OSError
+    r = _rp(tmp_path)["sbsa_gwdt_action"]
+    assert r["cumple"] is None and "sin modprobe.d legible" in r["actual"]
