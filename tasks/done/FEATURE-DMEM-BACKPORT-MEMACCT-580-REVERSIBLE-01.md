@@ -63,3 +63,12 @@ Lo que NO esta cerrado: que ESTE chip sea GB10B/GB10C no se puede leer desde el 
 
 ### Origen de la llave MOK existente (investigado 2026-10-12, pregunta de Luis)
 `/var/lib/shim-signed/mok/MOK.der|priv` se crearon el 2026-09-12 00:44:07, 14 s despues de `apt-get -y install doca-ofed` (00:43:51, usuario lcasarin), que arrastro el paquete `dkms` 1:3.4.3 (instalado 00:43:53). Con Secure Boot activo, el paquete genera una llave de firma de modulos (CN "<host> Secure Boot Module Signature key", Code Signing, valida hasta 2126). La instalacion fue `-y` (sin preguntas), asi que nunca se enrolo. `/var/log/apt/term.log` muestra a DKMS firmando con ella los modulos DOCA/OFED (`mlnx-ofed-kernel-dkms`, `xpmem-dkms`, `isert-dkms`...). Esos modulos no cargaban sin enrolar. A las 08:29 `apt-get -f install` y a las 08:34 `apt-get purge doca-ofed ... mlnx-ofed-kernel-dkms ...` retiraron todo; `dkms` quedo en estado `rc` (config residual). Hoy `/var/lib/dkms` no existe, no hay modulos DKMS instalados, y la llave sobrevivio sin uso. Enrolada hoy: solo la CA de Canonical. Conclusion: reutilizable sin crear otra; el enrolamiento sigue pendiente de la decision de Luis.
+
+## Root Cause
+El driver 580.178.04 no trae memacct (llega con 610); sin el, dmem.capacity esta vacio y ningun cgroup paga por la memoria de GPU.
+
+## Regression Test
+tests/test_dmem_parche_contrato.py (el parche conserva el cobro, la liberacion y la traduccion del limite) y tools/dmem_modulo.sh retrocede para la reversion.
+
+## Verification Evidence
+Las tres rutas de evidencia del frontmatter: `tasks/evidence/FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01.fail.txt` (el close_check fallaba antes), `.pass.txt` (pasa despues) y `.e2e.txt` (sujeto vivo: dmem.capacity, `bb gpumem` contra `nvidia-smi`). Medicion literal en `tasks/evidence/FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01/medicion.txt`.
