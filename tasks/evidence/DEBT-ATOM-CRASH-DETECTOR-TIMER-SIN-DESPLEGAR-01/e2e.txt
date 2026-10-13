@@ -1,0 +1,14 @@
+$ bash bin/bb drift | grep crash-detector
+rc=0
+  igual       /home/lcasarin/.config/systemd/user/atom-crash-detector.service
+  igual       /home/lcasarin/.config/systemd/user/atom-crash-detector.timer
+
+$ systemctl --user is-enabled atom-crash-detector.timer
+rc=0
+enabled
+
+$ systemctl --user show atom-crash-detector.timer -p LastTriggerUSec -p NextElapseUSecMonotonic
+rc=0
+NextElapseUSecMonotonic=infinity
+LastTriggerUSec=Mon 2026-10-12 22:01:44 CST
+

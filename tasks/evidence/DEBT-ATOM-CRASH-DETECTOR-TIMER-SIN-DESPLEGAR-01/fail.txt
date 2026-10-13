@@ -1,0 +1,7 @@
+$ git show 4265a3b5~1:adopted/systemd-user/atom-crash-detector.timer > /tmp/timer_previo.timer; grep -qx OnBootSec=4min /tmp/timer_previo.timer
+rc=1
+
+$ git show 4265a3b5~1:adopted/systemd-user/atom-crash-detector.timer | grep OnBootSec
+rc=0
+OnBootSec=2min
+
