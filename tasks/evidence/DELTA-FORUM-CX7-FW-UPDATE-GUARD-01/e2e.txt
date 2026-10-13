@@ -1,0 +1,8 @@
+Clasificacion de aplicabilidad de DELTA-FORUM-CX7-FW-UPDATE-GUARD-01 (lectura completa contra el perfil del equipo), 2026-10-13:
+{
+ "aplicabilidad": "ya_cubierta",
+ "utilidad": "baja",
+ "recomendacion": "deprecar",
+ "razon": "Esta ATOM no expone HCA RDMA (/sys/class/infiniband no existe) y la ficha misma registra firmware 'UNKNOWN' por falta de dispositivo. tools/huella_host.py ya tiene sonda_firmware_cx7 y detecta cambio de firmware; la deteccion de escrituras indirectas via dpkg la cubre FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.",
+ "texto_cierre": "Sin HCA CX7 expuesto en la ATOM Gigabyte (sin /sys/class/infiniband); el cambio de firmware lo detecta tools/huella_host.py (sonda_firmware_cx7) y la guarda de paquetes APT criticos la lleva FEATURE-APT-CRITICAL-METAPACKAGE-GUARD."
+}

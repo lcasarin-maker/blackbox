@@ -1,0 +1,22 @@
+Perfil medido de este equipo el 2026-10-13: el sujeto de la ficha no existe aqui.
+$ ls -la /sys/class/infiniband
+rc=0
+total 0
+drwxr-xr-x  2 root root 0 oct 13 08:00 .
+drwxr-xr-x 88 root root 0 oct 12 21:57 ..
+
+$ python3 -m tools.huella_host | python3 -c "import json,sys;d=json.load(sys.stdin);print('firmware_cx7:',d['firmware_cx7']);print('driver_red:',d['driver_red'])"
+rc=0
+firmware_cx7: NOT_COLLECTED: sin /sys/class/infiniband/*/fw_ver
+driver_red: {'enP7s7': 'r8127', 'wlP9s9': 'mt7925e'}
+
+$ docker ps --format "{{.Names}} {{.Image}}"
+rc=0
+nemotron-server vllm/vllm-openai:v0.27.1
+atlas-pgvector pgvector/pgvector:pg16
+aequitas-pg pgvector/pgvector:pg16
+
+$ pgrep -fa 'raylet|ray::|llama-rpc-server|mpirun' | cut -c1-80
+rc=0
+3002575 /bin/bash -c source /home/lcasarin/.claude/shell-snapshots/snapshot-bash
+3002634 /bin/sh -c pgrep -fa 'raylet|ray::|llama-rpc-server|mpirun' | cut -c1-80

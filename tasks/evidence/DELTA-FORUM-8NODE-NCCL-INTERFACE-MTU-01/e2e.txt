@@ -1,0 +1,8 @@
+Clasificacion de aplicabilidad de DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01 (lectura completa contra el perfil del equipo), 2026-10-13:
+{
+ "aplicabilidad": "otro_hardware",
+ "utilidad": "baja",
+ "recomendacion": "deprecar",
+ "razon": "El sintoma (Kimi K2.6 en 8 GB10, NCCL 2.30.6a2, warmup colgado por MTU de una interfaz) exige 8 nodos con NCCL; este equipo no tiene cluster ni /sys/class/infiniband. Lo reusable (leer MTU por interfaz) ya lo hace tools/host_diagnostics.py (MTU 1500 de enP7s7 por sysfs, 2026-10-03). Nota: la decision del dueno del 2026-10-11 dejo abiertas las fichas con xfail por no cerrar con un xfail, no por aplicabilidad; si prefiere conservarla, pasar a mantener.",
+ "texto_cierre": "Reporte de operador sobre un cluster de 8 GB10 con NCCL; este equipo es un solo nodo sin CX7 en pareja ni NCCL multinodo. La captura de MTU por interfaz ya existe en tools/host_diagnostics.py (BB-INSTRUMENTS-network)."
+}

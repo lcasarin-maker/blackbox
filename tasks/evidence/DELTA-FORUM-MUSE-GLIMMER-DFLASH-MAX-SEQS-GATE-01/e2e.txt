@@ -1,0 +1,8 @@
+Clasificacion de aplicabilidad de DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01 (lectura completa contra el perfil del equipo), 2026-10-13:
+{
+ "aplicabilidad": "otro_hardware",
+ "utilidad": "baja",
+ "recomendacion": "deprecar",
+ "razon": "Hilo 379722 trata de un tag vLLM muse-glimmer con DFlash y max_num_seqs<=32; este equipo no sirve ese modelo ni DFlash. Los canarios semanticos de tool-call ya los cubre tools/canario_motor.py para el motor local.",
+ "texto_cierre": "El mecanismo es especifico de la rama vLLM muse-glimmer/DFlash y su limite max_num_seqs; este equipo sirve solo nemotron-local sin DFlash, y tools/canario_motor.py cubre los canarios de JSON/tool-call del motor local."
+}

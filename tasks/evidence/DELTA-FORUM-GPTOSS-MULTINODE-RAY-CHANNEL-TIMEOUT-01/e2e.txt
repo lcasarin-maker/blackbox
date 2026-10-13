@@ -1,0 +1,8 @@
+Clasificacion de aplicabilidad de DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01 (lectura completa contra el perfil del equipo), 2026-10-13:
+{
+ "aplicabilidad": "otro_hardware",
+ "utilidad": "baja",
+ "recomendacion": "deprecar",
+ "razon": "El fallo es RayChannelTimeoutError con TP=2 y placement group de 1 GPU por nodo en dos Spark con GPT-OSS-120B; aqui no hay Ray, ni segundo nodo, ni ese modelo. Su close_check es un xfail y tools/provider_trace.py no observa placement groups. Nota: el dueno decidio el 2026-10-11 dejarla abierta; se pide reconsiderar.",
+ "texto_cierre": "Requiere dos nodos con vLLM/Ray y placement group multinodo; este equipo sirve un solo vLLM (nemotron-local) sin Ray y sin segundo nodo, y el criterio nunca tuvo verificador real (xfail)."
+}

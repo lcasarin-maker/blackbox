@@ -4,12 +4,18 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+from pathlib import Path
 from typing import Any
 
 import pytest
 
 from tools import runtime_batch02_controls as controls
 from test_openclaw_contract import _bundle as _openclaw_bundle
+
+
+def _ficha_abierta(card: str) -> bool:
+    """Las fichas deprecadas por aplicabilidad (void_wontfix) salen de tasks/backlog: su control de cierre ya no aplica."""
+    return (Path(__file__).resolve().parent.parent / "tasks" / "backlog" / f"{card}.md").exists()
 
 
 def _base(card: str) -> dict[str, Any]:
@@ -467,7 +473,7 @@ def test_reader_bounds_raw_json_and_preserves_missing_as_cnr(tmp_path: Any) -> N
     assert controls.verify(card, valid)["status"] == "pass"
 
 
-@pytest.mark.parametrize("card", sorted(controls.IDS))
+@pytest.mark.parametrize("card", sorted(i for i in controls.IDS if _ficha_abierta(i)))
 def test_real_capture_close_gate_requires_raw_capture(card: str) -> None:
     result = controls.verify(card)
     assert result["status"] == "pass", (

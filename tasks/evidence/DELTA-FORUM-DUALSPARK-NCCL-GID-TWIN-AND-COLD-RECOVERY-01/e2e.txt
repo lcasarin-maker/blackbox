@@ -1,0 +1,8 @@
+Clasificacion de aplicabilidad de DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01 (lectura completa contra el perfil del equipo), 2026-10-13:
+{
+ "aplicabilidad": "otro_hardware",
+ "utilidad": "baja",
+ "recomendacion": "deprecar",
+ "razon": "Exige dos ASUS GX10 con NCCL/RoCE twin y GID por puerto; este equipo no tiene /sys/class/infiniband ni par ni NCCL multinodo. La ficha misma se clasifico hardware_or_peer y su close_check termina en xfailed. Nota: el dueno decidio el 2026-10-11 dejarla abierta y no cerrarla como void_wontfix; esta clasificacion pide reconsiderar esa decision para un solo nodo.",
+ "texto_cierre": "Fuera de alcance del perfil de un solo nodo: exige dos GX10 con NCCL/RoCE twin e InfiniBand/CX7 en pareja, ausentes aqui (sin /sys/class/infiniband, sin cluster); el close_check era un xfail sin sujeto."
+}

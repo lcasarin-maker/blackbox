@@ -1,0 +1,8 @@
+Clasificacion de aplicabilidad de DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01 (lectura completa contra el perfil del equipo), 2026-10-13:
+{
+ "aplicabilidad": "otro_hardware",
+ "utilidad": "baja",
+ "recomendacion": "deprecar",
+ "razon": "Trata de dos vLLM dentro del mismo cluster Ray con NCCL atascado (hilo 377396, relato unico sin version); aqui hay un solo motor, sin Ray ni NCCL colectivo. Su close_check es un xfail. Nota: el dueno decidio el 2026-10-11 dejarla abierta; se pide reconsiderar.",
+ "texto_cierre": "Presupone dos motores vLLM bajo un cluster Ray con colectivo NCCL; este equipo corre un solo vLLM sin Ray ni segundo rank y el relato fuente carece de version y logs."
+}
