@@ -1,0 +1,47 @@
+{
+ "id": 373049,
+ "titulo": "Two DGX Spark (GB10) GPUs independently hit the same Xid 119 GSP-firmware timeout under sustained LLM load",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Capturar el log del kernel del arranque actual y del anterior inmediatamente tras el cuelgue y antes de reiniciar, para atrapar el evento de fallo",
+   "como": "sudo journalctl -k -b > kernel_current.log ; sudo journalctl -k -b -1 > kernel_prev.log",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Si se reinicia antes de capturar, el evento se pierde (segun el usuario parallelArchitect)",
+   "verificable_aqui": "journalctl -k -b -1 --no-pager | grep -ciE 'Xid|NVRM'"
+  },
+  {
+   "que": "Firmas de fallo a buscar en el log: DOE mailbox ABORT timed out en el dispositivo PCI de la GPU, lecturas de registros 0xbadf5600, Xid 119 (timeout GSP) y Xid 154 en timeouts consecutivos",
+   "como": "pci ... DOE: [2c8] ABORT timed out; registros 0xbadf5600; Xid 119; Xid 154",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "dos unidades GB10 de usuarios (logs adjuntos); sin driver/kernel indicado en el texto",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k --no-pager | grep -iE 'badf5600|Xid (119|154)|DOE'"
+  },
+  {
+   "que": "Recuperacion tras DOE mailbox fallido o EC latch: ciclo de energia en frio, no reinicio en caliente",
+   "como": "desenchufar el adaptador de corriente por mas de 30 segundos (segun el usuario)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Un reinicio en caliente no recupera la GPU segun el autor",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario (parallelArchitect) interpreta los logs adjuntos y da comandos exactos de captura y firmas de Xid 119/154 y 0xbadf5600; son rastreo util pero no hay causa raiz ni solucion. NVIDIA (aniculescu, post 4) solo pide recolectar esos logs; no ofrece correccion."
+}

@@ -1,0 +1,109 @@
+{
+ "id": 352339,
+ "titulo": "System crashes when memory is full",
+ "leido": true,
+ "posts_leidos": 37,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar la memoria del contenedor para que el OOM killer lo mate",
+   "como": "docker run --memory=\"80G\" nvcr.io/nvidia/vllm:25.09-py3",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, vllm 25.09; el autor reporta que con 110G y hasta 30G sigue colgandose",
+   "riesgo": "Solo limita RAM, no la VRAM unificada; no evito el cuelgue segun el autor (posts 5, 21)",
+   "verificable_aqui": "docker info --format '{{.CgroupDriver}}'"
+  },
+  {
+   "que": "Subir oom_score_adj del contenedor para que muera primero",
+   "como": "docker run --oom-score-adj 500 (1000 puede ser demasiado agresivo)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Sin confirmacion de que evite el cuelgue",
+   "verificable_aqui": "cat /proc/self/oom_score_adj"
+  },
+  {
+   "que": "Desactivar swap para que el proceso muera en vez de colgar el sistema",
+   "como": "sudo swapoff -a",
+   "fuente_post": 30,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios en DGX Spark; post 28 dice que aun asi se cuelga",
+   "riesgo": "Procesos que usan casi toda la RAM pueden caer sin aviso (post 23)",
+   "verificable_aqui": "swapon --show; free -h"
+  },
+  {
+   "que": "Instalar earlyoom con prioridades",
+   "como": "EARLYOOM_ARGS=\"-m 2 -s 100 --prefer vllm|python3|python|llama-server|triton --avoid sshd|systemd|journald|NetworkManager|dropbear|dockerd|containerd\" en /etc/default/earlyoom",
+   "fuente_post": 37,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.159.03, kernel 6.17.0-1018-nvidia",
+   "riesgo": "Usuario sin verificacion de NVIDIA; mata procesos al 2% de memoria libre",
+   "verificable_aqui": "systemctl status earlyoom; cat /etc/default/earlyoom"
+  },
+  {
+   "que": "Liberar cache de paginas antes de cargar un modelo grande",
+   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches' (variante en docker run --rm --privileged alpine)",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Modifica estado del sistema; la variante privilegiada da root al contenedor",
+   "verificable_aqui": "grep -E 'MemAvailable|^Cached' /proc/meminfo"
+  },
+  {
+   "que": "Read-ahead del NVMe reducido/ajustado como posible factor de estabilidad con swap",
+   "como": "echo 8192 > /sys/block/nvme0n1/queue/read_ahead_kb",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Autor no sabe si fue la causa; correlacion no probada",
+   "verificable_aqui": "cat /sys/block/nvme0n1/queue/read_ahead_kb"
+  },
+  {
+   "que": "Recoger crash dumps tras el cuelgue",
+   "como": "ls /var/crash/ (staff pide logs de /var/crash/*)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "El usuario solo obtuvo un kdump_lock vacio",
+   "verificable_aqui": "ls -la /var/crash/"
+  },
+  {
+   "que": "Fix de driver declarado por NVIDIA",
+   "como": "actualizar a driver 580.159.03 o posterior (staff, post 33); post 34, 35 y 37 reportan que el problema persiste en 580.159.03",
+   "fuente_post": 33,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "staff NVIDIA; refutado parcialmente por usuarios",
+   "riesgo": "Esta maquina corre 580.178.04, posterior a 580.159.03",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+  },
+  {
+   "que": "Metodo de reproduccion y limite",
+   "como": "torch.randn((200000,200000),device='cuda',dtype=torch.float16) con matmul en bucle cuelga con swap activo; con 170000 funciona (memoria ~115GB)",
+   "fuente_post": 30,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Cuelga la maquina; no ejecutar sin proteccion",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "La GPU puede reservar casi el 100% de la memoria unificada sin dejar margen al sistema; un usuario pide una reserva protegida (post 23). Staff dice que el sistema esta disenado para matar procesos (post 38) y cierra con fix de driver no confirmado por usuarios.",
+ "utilidad_atom": "alta",
+ "razon": "Hay respuesta de NVIDIA (aniculescu, NVES): caso abierto en post 29, cierre por driver 580.159.03 en post 33, contradicho por usuarios. Aporta earlyoom con argumentos exactos, swapoff y limites docker como mitigaciones de usuarios para colapso de memoria, sin que NVIDIA confirme ninguna."
+}

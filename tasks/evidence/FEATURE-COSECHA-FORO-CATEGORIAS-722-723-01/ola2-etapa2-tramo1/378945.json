@@ -1,0 +1,91 @@
+{
+ "id": 378945,
+ "titulo": "DGX Spark fans stop when the screen goes dark or running from SSH - box gets too hot to touch* FIRE HAZARD",
+ "leido": true,
+ "posts_leidos": 19,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "rastrear",
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Captura del estado de fallo sin despertar la pantalla (staff de NVIDIA): forzar DPMS off y leer temperaturas, RPM y zonas por SSH",
+   "como": "xset dpms force off  (local); luego: nvidia-smi -q -d TEMPERATURE,FAN,POWER ; find /sys/class/hwmon -name 'fan*_input' | xargs -I{} sh -c 'echo {}; cat {}' ; for z in /sys/class/thermal/thermal_zone*/; do printf '%s\\t%s\\n' \"$(cat ${z}type)\" \"$(cat ${z}temp)\"; done ; sudo journalctl --since '5 minutes ago' | grep -iE 'fan|thermal|temp|pwm|cool|dpms|blank|idle' ; sudo dmesg | grep -iE 'fan|thermal|temp|pwm|cool|throttl' | tail -30",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, EC y BIOS 5.36_0ACUM018, driver 580.173.02, kernel 6.17.0-1029 (usuario dmayer1)",
+   "riesgo": "Con el fallo activo no aparecen fan*_input en hwmon ni eventos en journal",
+   "verificable_aqui": "find /sys/class/hwmon -name 'fan*_input'; paste <(cat /sys/class/thermal/thermal_zone*/type) <(cat /sys/class/thermal/thermal_zone*/temp)"
+  },
+  {
+   "que": "Lectura combinada de todas las fuentes termicas",
+   "como": "nvidia-smi | grep \"Not Supported\" && sensors && paste <(cat /sys/class/thermal/thermal_zone*/device/path) <(cat /sys/class/thermal/thermal_zone*/temp)",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GX10 (Asus), driver 580.173.02 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": "sensors; paste <(cat /sys/class/thermal/thermal_zone*/type) <(cat /sys/class/thermal/thermal_zone*/temp)"
+  },
+  {
+   "que": "Diagnostico de campo: una falla CX7Stress ('Unable to start MST') es motivo de RMA segun staff",
+   "como": "apt install dgx-spark-fieldiag",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX OS 7.2.3, OTA 7.5.0",
+   "riesgo": "Instala paquetes (mft, stress-ng, memtester, fio, ...)",
+   "verificable_aqui": "dpkg -l dgx-spark-fieldiag"
+  },
+  {
+   "que": "Con poca carga el ventilador sigue el consumo (umbral ~4-4.5 W; 5V/1A de carga USB basta), no la temperatura: una carga USB o el cable CX7 lo reactivan; unidad inactiva y sin carga se calienta de 38 a 53-70 C",
+   "como": "medicion con enchufe medidor; sin comando",
+   "fuente_post": 17,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x Asus GX10, EC 0x02000005/6, drivers 580.159.03 y 580.173.02 (declarado)",
+   "riesgo": "Una unidad llego a ~65-70 C inactiva con olor a metal caliente (post 16); solo recupero tras apagar y desenchufar",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw --format=csv"
+  },
+  {
+   "que": "Workarounds oficiales (staff): desactivar el sueno de pantalla, VNC con app de render activa, carga USB sostenida; no dejar la unidad inactiva y headless sin uno de ellos",
+   "como": "xset -dpms",
+   "fuente_post": 20,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Staff dice que lo lleva a ingenieria; sin fix",
+   "verificable_aqui": "xset q | grep -i dpms"
+  },
+  {
+   "que": "Bajar el firmware EC resuelve el caso (usuario); requiere conectividad del NIC CX7 para actualizar",
+   "como": "fwupdmgr (comando exacto no indicado)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "maquinas nuevas tras OOBE (declarado)",
+   "riesgo": "Un segundo usuario (post 15) bajo el EC y no resolvio nada",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Causa raiz propuesta: el modulo mtk_pcie_hotplug apaga el CX7 sin cable ~16 s tras arrancar ('Cable removal'); bloquearlo mantiene el CX7 alimentado (~17 W) y los ventiladores giran",
+   "como": "printf 'blacklist mtk_pcie_hotplug\\ninstall mtk_pcie_hotplug /bin/false\\n' | sudo tee /etc/modprobe.d/no-cx7-hotplug.conf ; sudo update-initramfs -u -k $(uname -r) ; sudo reboot  (deshacer: sudo rm /etc/modprobe.d/no-cx7-hotplug.conf && sudo update-initramfs -u -k $(uname -r) && sudo reboot)",
+   "fuente_post": 22,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark FE board P4242 A04, BIOS 5.36_0ACUM027, DGX OS 7.6.0, driver 580.178.04 (usuario Strats)",
+   "riesgo": "Cambia initramfs y reinicia; el CX7 queda con ~17 W; NVIDIA no lo ha confirmado",
+   "verificable_aqui": "lsmod | grep mtk_pcie_hotplug; journalctl -k -b | grep -i 'Cable removal'; lspci | grep -i mellanox"
+  }
+ ],
+ "omision_nvidia": "Staff (Neill) reconoce que nvidia-smi da N/A en ventilador en esta plataforma y que la logica del EC cambio; no hay fix, solo workarounds, y lo trata como seguimiento interno.",
+ "utilidad_atom": "alta",
+ "razon": "Tema con staff de NVIDIA (posts 3, 14, 20) que da una captura de fallo ejecutable y workarounds oficiales, mas pruebas de usuarios que ligan el ventilador al consumo y a mtk_pcie_hotplug (post 22) con comandos exactos y reversion. Relevante a la ATOM por el calor sostenido y las zonas termicas; los posts 4-6 faltan en el texto descargado (numeracion salta de 3 a 7)."
+}

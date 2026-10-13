@@ -1,0 +1,88 @@
+{
+ "id": 369076,
+ "titulo": "Spark-vllm-docker runs out of memory loading Qwen3.5-397B-A17B-int4-AutoRound",
+ "leido": true,
+ "posts_leidos": 38,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Causa raiz de OOM al terminar la carga del modelo: variable de entorno PYTORCH_CUDA_ALLOC_CONF; quitarla elimina el OOM",
+   "como": "PYTORCH_CUDA_ALLOC_CONF: \"expandable_segments:True\" (quitarla)",
+   "fuente_post": 25,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos Sparks (cluster vLLM); respuesta de eugr (mantenedor de la receta, tambien posteo como eugr_nv)",
+   "riesgo": "el mismo valor figura en el comando de lanzamiento del post 10 (-e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True)",
+   "verificable_aqui": "docker inspect <contenedor> --format '{{.Config.Env}}' | tr ' ' '\\n' | grep PYTORCH"
+  },
+  {
+   "que": "Fijar la version de vLLM para evitar la regresion de la rama main",
+   "como": "./build-and-copy.sh --tf5 --vllm-ref releases/v0.20.1 --flashinfer-ref release-v0.6.9 -c <nodo>",
+   "fuente_post": 18,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario bankjaneo; v0.19.1 y v0.20.1 funcionan segun post 16",
+   "riesgo": "flashinfer mas nuevo que v0.6.9 fallo al reconstruir la imagen (post 32)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Limitar la memoria que vLLM reserva en GB (parche de la receta)",
+   "como": "--gpu-memory-utilization-gb 106",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario aceangel, dos Sparks, con Sunshine consumiendo ~2 GB",
+   "riesgo": "depende del mod mods/gpu-mem-util-gb, que no aplico a v0.19.1 (post 16)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "sysctl vm.swappiness demasiado bajo provoca cuelgue: el calentamiento sobrepasa la RAM y necesita ~3.5 GB de swap; con 0 el sistema intenta quedarse en RAM y se cuelga",
+   "como": "cat /proc/sys/vm/swappiness ; sudo sysctl vm.swappiness=60 ; sudo swapoff -a && sudo swapon -a",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un solo GB10 con modelo 122b-A10B; con 10 tambien cargo",
+   "riesgo": "en dos nodos subir a 100 no ayudo (post 7); no es la causa universal",
+   "verificable_aqui": "cat /proc/sys/vm/swappiness"
+  },
+  {
+   "que": "Liberar cache de paginas durante la carga",
+   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario Keyper-AI; el autor del tema reporto que no cambio nada (post 9)",
+   "riesgo": "no resolvio el caso original",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reducir consumo base quitando gestor de pantalla y escritorio en equipos headless",
+   "como": "purgar o enmascarar el display manager y el entorno de escritorio (comando no indicado)",
+   "fuente_post": 30,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "NVIDIA y ASUS GX10, ~121 GB reportados",
+   "riesgo": "no indicado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Declaracion de que el sistema se cuelga y exige ciclo de corriente cuando la memoria se agota en ambos nodos; el journal registra NV_ERR_NO_MEMORY de NVRM antes del reset",
+   "como": "journalctl del arranque previo muestra: Check failed: Out of memory [NV_ERR_NO_MEMORY] (0x00000051)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark y ASUS GX10, dos nodos",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k -b -1 | grep -c NV_ERR_NO_MEMORY"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Identifica una causa concreta (PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True) confirmada por el mantenedor eugr en el post 25, mas una regresion de vLLM main y el efecto de swappiness, con comandos exactos. Nadie con rol de staff de NVIDIA responde; eugr_nv es mantenedor de la receta, y la afirmacion del post 25 viene de usuario/mantenedor, no de un anuncio oficial."
+}

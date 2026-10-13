@@ -1,0 +1,48 @@
+{
+ "id": 357778,
+ "titulo": "No video output, no DRM devices detected, BIOS inaccessible",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Generar nvidia-bug-report para soporte (NVIDIA lo pide por SSH)",
+   "como": "nvidia-bug-report (genera nvidia-bug-report.log.gz)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark P4242",
+   "riesgo": "ninguno",
+   "verificable_aqui": "command -v nvidia-bug-report.sh"
+  },
+  {
+   "que": "Enrolar la clave MOK cuando Secure Boot bloquea el modulo nvidia",
+   "como": "sudo mokutil --import /var/lib/shim-signed/mok/MOK.der ; sudo reboot ; si falta la clave: sudo update-secureboot-policy --enroll-key",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, kernel 6.11.0-1016-nvidia, segun usuario parallelArchitect",
+   "riesgo": "requiere confirmar en el gestor MOK al reiniciar",
+   "verificable_aqui": "mokutil --sb-state"
+  },
+  {
+   "que": "Leer en el bug report la secuencia Xid 119 (timeout RPC de GSP) seguida de Xid 154 (reset requerido); la recuperacion exige ciclo de energia",
+   "como": "buscar Xid 119 y Xid 154 en el log del kernel / bug report",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "analisis de usuario del bug report de la unidad del autor",
+   "riesgo": "interpretacion del usuario, no confirmada por NVIDIA",
+   "verificable_aqui": "journalctl -k | grep -i xid"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El moderador de NVIDIA (aniculescu, posts 2-6) dijo que la GPU cayo del bus y pidio desenchufar y actualizar; el usuario parallelArchitect aporta la pista Xid 119/154 y el comando mokutil. Es util para rastrear cortes y Secure Boot, pero es un caso de una unidad."
+}

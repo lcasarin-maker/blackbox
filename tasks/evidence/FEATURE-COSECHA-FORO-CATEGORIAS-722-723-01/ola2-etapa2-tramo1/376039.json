@@ -1,0 +1,47 @@
+{
+ "id": 376039,
+ "titulo": "DGX Spark (GB10) GPU clock pinned at 721 MHz under full load",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Recuperar el reloj pegado a 721 MHz: desconectar corriente (y USB), esperar minutos, reconectar; reportado como resuelto por el autor y otro usuario, no resuelto para un tercero (espera de hasta 8 h)",
+   "como": "desenchufar AC y USB, esperar unos minutos, reconectar y arrancar; alternativa: desconectar de la pared, pulsar encendido 10 s y reconectar",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS 7.5.0, kernel 6.17.0-1026-nvidia, driver 580.159.03",
+   "riesgo": "no funciono para akil.chien (post 4)",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,clocks.max.sm,power.draw --format=csv -l 2"
+  },
+  {
+   "que": "Medir si el reloj es real y no telemetria: microbenchmark FP32 FMA; ~3.75 TFLOPS medidos frente a ~37 teoricos a 3003 MHz (6144 nucleos x 2 x 3.003 GHz)",
+   "como": "formula: 6144 x 2 x 3.003 GHz",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.159.03",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi -q -d PERFORMANCE | grep -i -A12 'Clocks Event'"
+  },
+  {
+   "que": "Hipotesis de usuario sin verificar: tras OOM el PSU entra en modo seguro y limita voltaje; reinicio de potencia lo resetea",
+   "como": "no indicado (teoria)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Respuesta de NVIDIA (AakankshaS, post 3) solo confirma que es una restriccion real y retransmite el workaround comunitario; sin causa raiz. Un usuario nota que nvidia-smi -lgc no tiene efecto, Supported Clocks y power limit en N/A.",
+ "utilidad_atom": "media",
+ "razon": "Aporta un workaround concreto (ciclo de potencia completo) y una formula de medicion del reloj teorico, y vincula el fallo a un congelamiento por OOM segun el autor (post 6). La causa raiz sigue sin respuesta y el workaround fallo para otro usuario."
+}

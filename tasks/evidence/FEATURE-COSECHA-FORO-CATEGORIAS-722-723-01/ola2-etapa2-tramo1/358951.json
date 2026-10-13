@@ -1,0 +1,59 @@
+{
+ "id": 358951,
+ "titulo": "Spark `hangs` - requires a hard-reset (physically unplugging)",
+ "leido": true,
+ "posts_leidos": 16,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "earlyoom como mitigacion practica de congelamiento por OOM mientras llega el fix de SO (sugerido por parallelArchitect; hilo enlazado en el foro, URL en post 5)",
+   "como": "earlyoom (configuracion en el hilo 362769 del foro; no copiada aqui)",
+   "fuente_post": 5,
+   "repo": "https://forums.developer.nvidia.com/t/mitigating-oom-system-freezes-on-uma-based-single-board-computers/362769",
+   "licencia": "no indicada",
+   "probado_en": "GB10, segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": "systemctl status earlyoom"
+  },
+  {
+   "que": "Deshabilitar swap para que muera el proceso y no el sistema (post 2); plan de recuperacion remota con KVM o enchufe inteligente",
+   "como": "swap deshabilitado; KVM remoto (GL.iNet Comet Pro) o enchufe inteligente",
+   "fuente_post": 2,
+   "repo": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "El usuario no probo aun el KVM; sin swap hay kill inmediato",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Diagnostico de cuelgue sin presion de memoria: logger de signos vitales con fsync cada 3 s fuera de journald y journalctl -k -b -1 -e para el boot previo; hung_task_panic, softlockup_panic y panic_on_rcu_stall armados con kdump",
+   "como": "journalctl -k -b -1 -e ; logger propio con fsync cada 3 s ; hung_task_panic / softlockup_panic / panic_on_rcu_stall + kdump (valores exactos no indicados)",
+   "fuente_post": 8,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "ASUS Ascent GX10, DGX OS 7.5.0, driver 580.173.02, kernel 6.17.0-1029-nvidia (post 7)",
+   "riesgo": "Armar panic_on_* reinicia el equipo ante falsos positivos",
+   "verificable_aqui": "cat /proc/sys/kernel/hung_task_panic /proc/sys/kernel/softlockup_panic"
+  },
+  {
+   "que": "Un 'cuelgue en reposo' fue aislamiento de red WiFi (MT7925): un roam de banda hace timeout del handshake de 4 vias, wpa_supplicant lo lee como clave incorrecta y NetworkManager deja la interfaz en failed (no-secrets); el logger local siguio vivo. Mitigaciones propuestas por el usuario: Ethernet cableado, fijar BSSID o desactivar band-steering, autoconexion ilimitada",
+   "como": "connection.autoconnect-retries=0 en NetworkManager + dispatcher o nmcli con up (valores propuestos, no probados)",
+   "fuente_post": 14,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "GX10, MediaTek MT7925 (mt7925e), NetworkManager + wpa_supplicant",
+   "riesgo": "El propio autor aun no confirma cual mitigacion funciona; staff NVIDIA lo trata como otro hilo de WiFi (post 15)",
+   "verificable_aqui": "nmcli -f NAME,AUTOCONNECT-RETRIES connection show"
+  }
+ ],
+ "omision_nvidia": "Staff NVIDIA (aniculescu) dice que el OOM es 'known issue' (post 3), que los drivers de mayo y julio detienen procesos que consumen demasiada memoria (post 8), y cierra el hilo porque nadie reporto OOM tras la actualizacion de julio (post 15); admite que Fieldiag exige descargar el driver normal y desactivar Secure Boot (post 12). Un usuario reporta que ECC no es soportado en el SKU (ECCSupported: 0, post 7).",
+ "utilidad_atom": "media",
+ "razon": "El hilo documenta el sintoma de cuelgue por OOM en UMA, una mitigacion concreta (earlyoom, via enlace) y una metodologia de diagnostico (logger fsync, kdump, journalctl -k -b -1), pero los comandos de configuracion exactos no estan en el texto y el caso 'idle' resulto ser WiFi. Staff NVIDIA confirma el bug conocido y un OOM killer en actualizaciones de mayo/julio, sin pruebas aportadas."
+}

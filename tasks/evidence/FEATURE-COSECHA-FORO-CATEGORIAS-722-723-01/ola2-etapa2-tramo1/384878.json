@@ -1,0 +1,78 @@
+{
+ "id": 384878,
+ "titulo": "Tips & Tricks for DGX Spark newbie",
+ "leido": true,
+ "posts_leidos": 17,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "monitorear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Vigilante de OOM alrededor de cargas pesadas, mas enchufe inteligente para ciclo de energia remoto (usuario: un OOM deja la maquina muerta sin recuperacion remota)",
+   "como": "no indicado (sin comando; solo la recomendacion de un OOM watcher y un smart plug)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "El usuario afirma que tras un OOM no se recupera remotamente; otro usuario dice que OOM ocurre sobre todo al lanzar el modelo y que ~117GB de uso en el par es estable",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Para que el ciclo de energia remoto resucite el nodo hace falta configurar la BIOS para arrancar al recibir corriente (el usuario no recuerda si aplica a DGX Spark, GX10 o ambos)",
+   "como": "opcion de BIOS 'boot up upon power on' (nombre segun el usuario, sin ruta exacta)",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "nodos GB10 del usuario (modelo exacto no recordado)",
+   "riesgo": "Sin esa opcion el enchufe inteligente puede no bastar",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: apagado automatico por consumo de potencia excesivo; y un fallo del PD (usdc) que baja relojes hasta apagar y desenchufar unos segundos (reinicio en frio)",
+   "como": "reinicio en frio: apagar y desenchufar de la pared unos segundos",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "experiencia de usuarios (christopher_owen; giles8 dice no haberlo sufrido)",
+   "riesgo": "Relojes reducidos hasta el reinicio en frio; apagado si la potencia es alta al escribir kernels",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Limitar relojes de GPU para contener temperatura; con dos Spark enlazadas el calor sube mas",
+   "como": "no indicado (sin comando; 'underclocking' y 'downclocking' mencionados)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "Correr sin entorno grafico (headless) con SSH por llave para liberar memoria",
+   "como": "no indicado (sin comando)",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "systemctl get-default"
+  },
+  {
+   "que": "Herramientas de la comunidad para servir vLLM en Spark: spark-vllm-docker (eugr), spark-arena/dgx-vllm, sparkrun",
+   "como": "no indicado (solo enlaces)",
+   "fuente_post": 14,
+   "repositorio": "github.com/eugr/spark-vllm-docker; github.com/spark-arena/dgx-vllm",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Hilo de consejos de usuarios, sin respuesta de NVIDIA staff; contiene advertencias utiles (OOM sin recuperacion remota, apagado por potencia, BIOS arranque al encender, downclock) pero ninguna con comando ni valor concreto. Por eso la utilidad es media y no alta."
+}

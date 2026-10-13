@@ -1,0 +1,89 @@
+{
+ "id": 353752,
+ "titulo": "DGX Spark becomes unresponsive (zombie) instead of throwing CUDA OOM",
+ "leido": true,
+ "posts_leidos": 17,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Desactivar swap para evitar el bloqueo al desbordar memoria",
+   "como": "sudo swapoff -a ; comprobar con cat /proc/swaps ; grep swap /etc/fstab",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios; amit59 desactivo swap y aun asi logro colgar la maquina con tareas CPU (post 4)",
+   "riesgo": "No evito el cuelgue en el caso del autor",
+   "verificable_aqui": "cat /proc/swaps; swapon --show"
+  },
+  {
+   "que": "Ajustes systemd-oomd y proteccion de ssh",
+   "como": "printf \"[oomd]\\nDefaultMemoryPressureLimit=60%%\\n\" > /etc/systemd/oomd.conf.d/override.conf ; ssh.service.d/override.conf con [Service] OOMScoreAdjust=-1000",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "amit59; el autor dice que el cuelgue se repitio igual",
+   "riesgo": "Sin efecto comprobado",
+   "verificable_aqui": "cat /etc/systemd/oomd.conf.d/*.conf; systemctl show ssh -p OOMScoreAdjust"
+  },
+  {
+   "que": "Liberar page cache antes de cargas grandes (parche temporal)",
+   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios segun parallelArchitect",
+   "riesgo": "Solo temporal; no resuelve la causa",
+   "verificable_aqui": "grep -E 'MemFree|MemAvailable|^Cached' /proc/meminfo"
+  },
+  {
+   "que": "Vigilar presion de memoria con PSI antes de que MemAvailable lo muestre",
+   "como": "leer /proc/pressure/memory (campos some y full)",
+   "fuente_post": 18,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "sugerencia de parallelArchitect, no medida por el autor",
+   "riesgo": null,
+   "verificable_aqui": "cat /proc/pressure/memory"
+  },
+  {
+   "que": "Medir que memoria de GPU en UMA no se contabiliza en cgroups",
+   "como": "comparar asignacion de GPU (10.7 GB) con el aumento de memory.current (377 MB) dentro del contenedor; systemd-run --scope -p MemoryMax=100G -p MemorySwapMax=0 docker run --gpus all ... no limita porque Docker crea su propio cgroup con memory.max = max",
+   "fuente_post": 17,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "amit59 en DGX Spark 128 GB (medicion propia)",
+   "riesgo": "Los limites de cgroup y --memory=100g no protegen: el crash ocurre igual (posts 15 y 17)",
+   "verificable_aqui": "cat /sys/fs/cgroup/memory.max; docker info | grep -i cgroup"
+  },
+  {
+   "que": "Herramientas de observabilidad UMA y throttle",
+   "como": "cuda-unified-memory-analyzer, spark-gpu-throttle-check, nvidia-uma-fault-probe (uma_bw), de parallelArchitect",
+   "fuente_post": 16,
+   "repositorio": "https://github.com/parallelArchitect/cuda-unified-memory-analyzer (tambien parallelArchitect/spark-gpu-throttle-check y nvidia-uma-fault-probe)",
+   "licencia": "no indicada",
+   "probado_en": "el autor dice que nvidia-uma-fault-probe esta validado en Pascal y que GB10 esta pendiente",
+   "riesgo": "Licencia no indicada: no reutilizable sin comprobar; codigo de tercero",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Diagnostico del colapso: fallo de asignacion interna del driver bajo presion de memoria unificada",
+   "como": "en el bug report: NV_ERR_NO_MEMORY en _memdescAllocInternal (mem_desc.c:1359), luego kgrctxAllocMainCtxBuffer; nvidia-modeset en D-state mas de 122 s; con MemFree ~1 GB, Cached ~98 GB",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "interpretacion de usuario parallelArchitect sobre el bug report de amit59; sin confirmacion de NVIDIA",
+   "riesgo": "No verificado por NVIDIA",
+   "verificable_aqui": "journalctl -k | grep -E 'NV_ERR_NO_MEMORY|_memdescAllocInternal|blocked for more than'"
+  }
+ ],
+ "omision_nvidia": "nvidia-smi devuelve N/A o 'Operation not supported' para memoria dedicada en UMA y no hay herramienta oficial que muestre residencia de la GPU en memoria compartida; los ingenieros de NVIDIA (sumitg, knirmal) pidieron repro pero no hay causa ni arreglo en el tema.",
+ "utilidad_atom": "alta",
+ "razon": "Es el tema mas cercano a los colapsos de memoria de esta maquina: documenta que cgroups y Docker --memory no contienen la memoria de GPU en UMA (medicion de amit59, post 17), que swap off y oomd no bastaron, y propone PSI y drop_caches como senales o parches. Los ingenieros de NVIDIA no reprodujeron (post 13) y no hay solucion oficial."
+}

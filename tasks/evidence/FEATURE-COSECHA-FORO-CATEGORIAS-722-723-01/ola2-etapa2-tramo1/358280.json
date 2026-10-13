@@ -1,0 +1,79 @@
+{
+ "id": 358280,
+ "titulo": "DGX Spark Shutdown around 95°C during nanoChat Pretraining (20-30 min)",
+ "leido": true,
+ "posts_leidos": 22,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Field Diagnostics pasa todos los tests (GpuStress, C2CStress, CpuStress1/2, PowerStress, ThermalStress, FioSSD, MemStress: PASS) mientras el equipo se apaga a ~20 min de carga; el pase no descarta el fallo",
+   "como": "DGX Spark Field Diagnostics (comando exacto no indicado en este hilo)",
+   "fuente_post": 13,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun el usuario kralvis",
+   "riesgo": "Un PASS no implica ausencia del apagado; staff NVIDIA lo toma como 'buena senal' (post 7) y pide RMA al reproducirse (post 11)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Monitor de carga con dgxtop por SSH: muestra CPU 91 C, GPU 82 C, 71 W/100 W y RAM 118.5/120 GB justo antes del corte",
+   "como": "dgxtop (herramienta de un tercero, repositorio y licencia no indicados)",
+   "fuente_post": 13,
+   "repo": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "No indicado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround de software: pausar el entrenamiento por micro-batch si la temperatura de CPU llega a 91 C",
+   "como": "check de temperatura de CPU por micro-batch con pausa al llegar a 91 C (codigo no indicado)",
+   "fuente_post": 14,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, nanoChat, segun el usuario cshangyt",
+   "riesgo": "Alarga el entrenamiento",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Enfriamiento externo: elevar la unidad, mover a un cuarto frio; el usuario kralvis resolvio el apagado a 0 C ambiente y eggman a elevar la caja",
+   "como": "elevar la Spark unas pulgadas del escritorio; ambiente frio (comando no aplica)",
+   "fuente_post": 9,
+   "repo": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Anecdotico; sin medicion controlada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Hipotesis de usuario: un sensor no esta incluido en la curva del ventilador y llega a 95 C sin que los ventiladores suban en cargas GPU-centricas; aumentar carga de CPU dispara la curva pero baja potencia a GPU",
+   "como": "subir carga de CPU para disparar la curva del ventilador (sin comando)",
+   "fuente_post": 19,
+   "repo": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "El propio usuario advierte que subir cores puede disparar un corte por consumo",
+   "verificable_aqui": "cat /sys/class/thermal/thermal_zone*/temp"
+  },
+  {
+   "que": "Patron de logs de un OOM del driver que acaba en reinicio sucio: linea NVRM nvCheckOkFailedNoLog con NV_ERR_NO_MEMORY desde _memdescAllocInternal en mem_desc.c linea 1359, RAM al 94% y swap activo; comandos de captura y verificacion",
+   "como": "journalctl -k -f ; vmstat 1 ; free -h ; nvidia-smi dmon -d 1 ; journalctl -b -1 -k | grep -i NVRM ; watch -n1 'grep -E \"MemFree|MemAvailable|Cached|SwapFree\" /proc/meminfo'",
+   "fuente_post": 21,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "ASUS Ascent GX10, kernel 6.14.0-1015-nvidia, driver 580.126.09, vLLM con max_seq_len=131072",
+   "riesgo": "Si MemAvailable cae mientras Cached sigue alto y sube swap, el driver puede fallar asignaciones antes que el OOM de CUDA",
+   "verificable_aqui": "journalctl -b -1 -k | grep -i NVRM"
+  }
+ ],
+ "omision_nvidia": "Staff NVIDIA (NVES) no explica la causa del apagado ni da curva de ventilador; solo pide Field Diag y abre caso (posts 2-11). Un usuario dice que la curva de ventilador no se puede ajustar desde el SO (post 18, pregunta). Un moderador (segun siertum en post 21) menciono un OOM conocido que se arreglaria en una actualizacion futura.",
+ "utilidad_atom": "media",
+ "razon": "El hilo mezcla dos causas (calor con ~95 C de CPU y OOM del driver) y aporta comandos de captura y un patron de log verificable (NV_ERR_NO_MEMORY en _memdescAllocInternal), mas un workaround de pausa por temperatura, pero la mayoria de las mitigaciones termicas son anecdotas sin medicion y no hay solucion de NVIDIA. Staff NVIDIA (NVES, post 2-11) solo pide Field Diag y RMA."
+}

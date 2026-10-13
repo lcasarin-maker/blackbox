@@ -1,0 +1,68 @@
+{
+ "id": 371402,
+ "titulo": "Quick Test Results Regarding DGX SPARK Temperatures",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Script de monitoreo cada 5 s de potencia, temperatura y reloj con nvidia-smi",
+   "como": "nvidia-smi --query-gpu=power.draw,temperature.gpu,clocks.current.graphics --format=csv,noheader,nounits en un bucle while true con sleep 5 (script completo en el post)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10 (GB10) segun el usuario Mkei88",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,temperature.gpu,clocks.current.graphics --format=csv,noheader,nounits"
+  },
+  {
+   "que": "Metodo de medicion: el reloj no distingue reposo de carga (cerca de 2411 MHz en reposo con ~10 W y ~2380-2392 MHz bajo carga con 67-83 W), por lo que hay que mirar la potencia; el usuario midio temperatura subiendo de 59 a 75 C en unos 70 s de inferencia larga",
+   "como": "comparar power.draw con clocks.current.graphics; datos en logs del post (ejemplo: 67.24W 59C 2392MHZ a 82.61W 75C 2379MHZ)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10, llama.cpp, un usuario",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,clocks.current.graphics --format=csv"
+  },
+  {
+   "que": "Limitar el reloj grafico maximo a 2000 MHz para evitar el sobrecalentamiento con casi nula perdida de rendimiento segun el usuario",
+   "como": "sudo nvidia-smi -lgc 0,2000",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10 con llama.cpp; el hilo enlazado cita Qwen3.6-35b-a3b-NVFP4 (~113 tk/s en reloj de serie, resto del texto truncado)",
+   "riesgo": "Rendimiento propio sin verificar en esta maquina; afirmacion de usuario, texto del hilo enlazado truncado",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK | head -30"
+  },
+  {
+   "que": "Observacion de usuario: la temperatura sube en reposo en la pantalla de login sin sesion local y baja tras iniciar sesion local; sin causa conocida",
+   "como": "no indicado (remite a otros hilos)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10",
+   "riesgo": "Afecta a quien use solo acceso remoto",
+   "verificable_aqui": "loginctl list-sessions; nvidia-smi --query-gpu=temperature.gpu --format=csv"
+  },
+  {
+   "que": "Observacion de usuario dhhu088 (sin respuesta resuelta): con vLLM el ventilador permanece silencioso hasta que la maquina se calienta y se cuelga, mientras que con llama.cpp el ventilador sube pronto",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Calor sostenido con vLLM seguido de cuelgue segun el usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Hay un script de monitoreo exacto, el metodo (vigilar potencia y no solo reloj) y el comando de limitar reloj `sudo nvidia-smi -lgc 0,2000`, todo de usuarios sin respuesta de NVIDIA. Los datos de rendimiento con reloj limitado estan truncados en el texto, por lo que el costo en rendimiento es afirmacion no verificada."
+}

@@ -1,0 +1,37 @@
+{
+ "id": 355865,
+ "titulo": "Problem with simple-framebuffer",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Confirmar que hubo reinicio sin apagado limpio",
+   "como": "last -x | head",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus GX10 (el usuario); respuesta de NVES (NVIDIA)",
+   "riesgo": null,
+   "verificable_aqui": "last -x | head"
+  },
+  {
+   "que": "Buscar en el arranque previo panic/oops, lockups, errores PCIe/IOMMU, Xid/NVRM, resets, termica y OOM con journalctl",
+   "como": "journalctl -k -b -1 | egrep -i 'Kernel panic|not syncing|Oops|BUG:|Call Trace|RIP:|general protection fault' (y variantes: watchdog|hard lockup|soft lockup; ACPI|AER|PCIe Bus Error|EDAC|IOMMU; NVRM|Xid|fallen off the bus; thermal|overheat|throttl|Thermal trip; Out of memory|oom-killer)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "El OOM killer normalmente mata el trabajo, no reinicia (afirmacion de NVES)",
+   "verificable_aqui": "journalctl -k -b -1 | egrep -i 'Kernel panic|not syncing|Oops|watchdog|thermal|Xid|Out of memory'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "NVES (staff NVIDIA) aclara que la linea simple-framebuffer es un helper DRM y no un panic, y da en el post 6 una lista concreta de egrep sobre journalctl -b -1 para clasificar reinicios en seco. El tema se cerro sin repro ni causa; la lista es reutilizable pero generica."
+}

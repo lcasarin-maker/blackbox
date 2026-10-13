@@ -1,0 +1,47 @@
+{
+ "id": 370080,
+ "titulo": "DGX Spark GB10 - fan not spinning? 80C at idle with 0% GPU utilization",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Hallazgo de un usuario: no hay nodos fan*_input ni PWM en /sys/class/hwmon y nvidia-smi devuelve N/A en fan.speed; el control del ventilador es solo de firmware segun el usuario",
+   "como": "nvidia-smi --query-gpu=fan.speed (devuelve [N/A]); /sys/class/hwmon/ sin fan*_input",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark del usuario hankh95, UEFI 5.36_0ACUM018",
+   "riesgo": "No se puede leer ni forzar el ventilador desde el SO",
+   "verificable_aqui": "nvidia-smi --query-gpu=fan.speed --format=csv; ls /sys/class/hwmon/*/ | grep -E 'fan|pwm'"
+  },
+  {
+   "que": "Registro de telemetria cada 5 s de memoria, acpitz, temperatura GPU, potencia y utilizacion para detectar anomalia de reposo (80-86 C acpitz con 13 W y 0 % de GPU frente a 52 C normales); pico 94.3 C acpitz y congelacion total horas despues",
+   "como": "no indicado (CSV adjunto dgx-flightrec.csv no incluido en el texto)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, 5 s de intervalo",
+   "riesgo": "Congelacion total durante una carga de GPU",
+   "verificable_aqui": "cat /sys/class/thermal/thermal_zone*/temp"
+  },
+  {
+   "que": "Herramienta oficial de NVIDIA para diagnostico en campo (pedida por NVES, staff)",
+   "como": "https://nvidia.custhelp.com/app/answers/detail/a_id/5767/~/nvidia-dgx-spark-field-diagnostics (instrucciones en la pagina; no en el hilo)",
+   "fuente_post": 2,
+   "repositorio": "https://nvidia.custhelp.com/app/answers/detail/a_id/5767/~/nvidia-dgx-spark-field-diagnostics",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "El usuario reporta que la maquina se sobrecalienta y se cuelga al correrla",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA responde con una herramienta de diagnostico y luego RMA (posts 2 y 4, staff); no ofrece lectura ni control del ventilador desde el SO ni causa del calentamiento en reposo.",
+ "utilidad_atom": "media",
+ "razon": "Un usuario documenta calentamiento anomalo en reposo y la ausencia de nodos de ventilador en hwmon; NVIDIA (NVES, aniculescu) deriva a la herramienta de diagnostico y a RMA sin explicar causa. No hay mecanismo de solucion, solo hallazgo de observabilidad y la ruta oficial de escalado."
+}

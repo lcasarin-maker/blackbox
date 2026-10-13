@@ -1,0 +1,59 @@
+{
+ "id": 378315,
+ "titulo": "Hard power-off under sustained GPU load at ~90W, persists after full platform firmware update",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround confirmado por staff NVIDIA (post 2, 'known issue'): limitar el reloj maximo de GPU; en el repro evito el apagado y completo cargas mayores",
+   "como": "nvidia-smi -lgc 300,2200",
+   "fuente_post": 1,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, BIOS 5.36, SOCFW 2.155.11, EC 3.5.8, driver 580.159.03, kernel 6.17.0-1021-nvidia, OTA2607",
+   "riesgo": "El apagado en seco ocurre sin marcador de shutdown en journal ni pstore; con reloj libre murio a ~88-92 W y 82-83 C sin bit termico",
+   "verificable_aqui": "nvidia-smi -q -d PERFORMANCE | grep -A6 'Clocks Event Reasons'"
+  },
+  {
+   "que": "Metodo de medicion: carga escalonada de matmul FP16 (4096 a 20480) en contenedor registrando temperatura, potencia y clocks_event_reasons.active a disco cada 15 s para sobrevivir al apagado",
+   "como": "nvidia-smi query de temperatura, potencia y clocks_event_reasons.active cada 15 s a disco (comando exacto no indicado)",
+   "fuente_post": 1,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "mismo hardware que arriba",
+   "riesgo": "Provoca el apagado en seco si el reloj no esta limitado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Evidencia de forense: tras el corte no hay marcadores de shutdown en journalctl, /sys/fs/pstore vacio, rasdaemon sin errores, ECC limpio",
+   "como": "journalctl (boot previo); ls /sys/fs/pstore; ras-mc-ctl --errors",
+   "fuente_post": 1,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "mismo hardware",
+   "riesgo": null,
+   "verificable_aqui": "ls /sys/fs/pstore; ras-mc-ctl --errors"
+  },
+  {
+   "que": "Prueba de actualizacion de firmware de plataforma (tambien probada sin efecto sobre el fallo)",
+   "como": "fwupdmgr (flujo de update); nvidia-spark-ota-check",
+   "fuente_post": 1,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "mismo hardware",
+   "riesgo": "Tras actualizar EC/SOCFW el corte ocurrio antes (paso 8192) segun el autor",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "nvidia-smi reporta power.limit, power.max_limit y todos los umbrales termicos como N/A, y dcgmi diag -r 3 salta targeted_power, targeted_stress y otros tests en GB10 (segun el autor); NVIDIA staff solo dice 'known issue' sin envolvente documentada",
+ "utilidad_atom": "alta",
+ "razon": "El post 1 aporta un metodo de medicion reproducible y un comando de limite de reloj (nvidia-smi -lgc 300,2200) que el staff NVIDIA (aniculescu, post 2) confirma como workaround del problema conocido; el autor registra que sin limite el equipo se apaga a ~90 W sin bit termico. Coincide con el sintoma de cortes en seco bajo calor sostenido de esta maquina."
+}

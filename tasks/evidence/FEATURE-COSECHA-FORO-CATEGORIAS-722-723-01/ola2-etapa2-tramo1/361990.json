@@ -1,0 +1,69 @@
+{
+ "id": 361990,
+ "titulo": "Double memory use in Huggingface Qwen3 coder next",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnosticar doble uso de memoria por page cache de mmap en memoria unificada: la cache coincide con el tamano del modelo",
+   "como": "cat /proc/meminfo | grep -i Cached",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (explicacion de usuario parallelArchitect, sin verificacion)",
+   "riesgo": "ninguno",
+   "verificable_aqui": "cat /proc/meminfo | grep -i Cached"
+  },
+  {
+   "que": "Vigilar presion de memoria durante la carga; cudaMemGetInfo no refleja el page cache",
+   "como": "watch -n1 free -h",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun usuario",
+   "riesgo": "ninguno",
+   "verificable_aqui": "free -h"
+  },
+  {
+   "que": "Vaciar page cache justo antes de cargar el modelo",
+   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun usuario; el autor original dijo que no le sirvio (post 1)",
+   "riesgo": "si la cache se repuebla entre el vaciado y la carga, el problema vuelve; trata el sintoma",
+   "verificable_aqui": "cat /proc/sys/vm/drop_caches"
+  },
+  {
+   "que": "Aumentar read-ahead del NVMe para acortar la carga con mmap",
+   "como": "sudo bash -c \"echo 8192 > /sys/block/nvme0n1/queue/read_ahead_kb\"",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun usuario ('reportado')",
+   "riesgo": "cambia comportamiento de I/O; no persiste al reiniciar",
+   "verificable_aqui": "cat /sys/block/nvme0n1/queue/read_ahead_kb"
+  },
+  {
+   "que": "Liberar bytes fuente al instante en la carga HF con NVFP4PlaceOp (untyped_storage().resize_(0)); pico bajo de 127.5 a 103 GB",
+   "como": "untyped_storage().resize_(0) dentro de NVFP4PlaceOp mas cargador streaming propio (codigo no incluido)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark 128 GB, Qwen 3.5 122B NVFP4, segun usuario dustin1925",
+   "riesgo": "codigo propio sin publicar en el texto",
+   "verificable_aqui": "no indicado"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Da comandos de lectura y mitigacion concretos para el colapso de memoria por doble conteo de page cache y memoria unificada, con un caso de pico 127.5 GB (post 6). Sin respuesta de NVIDIA; todo es de usuarios."
+}

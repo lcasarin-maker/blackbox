@@ -1,0 +1,58 @@
+{
+ "id": 382132,
+ "titulo": "Perplexity Computer on DGX Spark - first impressions + memory/telemetry numbers",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Medir que sale de la maquina y quien abre conexiones: comando de sockets filtrado por proceso y captura TLS con tshark mostrando el nombre de servidor de cada handshake",
+   "como": "ss -tunp | grep -i perplex ; sudo tshark -i any -Y 'tls.handshake.type==1' -T fields -e tls.handshake.extensions_server_name",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10 128 GB, DGX OS aarch64, Perplexity Computer 26.9.0",
+   "riesgo": "tshark exige sudo",
+   "verificable_aqui": "ss -tunp"
+  },
+  {
+   "que": "Un motor vLLM con gpu-memory-utilization por defecto (~0.9) reservo ~82 GB (nvidia-smi: 83,984 MiB) para un modelo 27B de 4 bits; la RAM llego a ~121 GB, hubo swap y NV_ERR_NO_MEMORY; otra app GPU (Firefox) se cae mientras el modelo esta cargado",
+   "como": "nvidia-smi (lectura de memoria por proceso); liberar con Stop del modelo en la app",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10 128 GB (usuario maiia)",
+   "riesgo": "La app no ofrece ajuste de la reserva; cerrar la ventana no libera",
+   "verificable_aqui": "nvidia-smi --query-gpu=memory.used,memory.total --format=csv"
+  },
+  {
+   "que": "Apuntar la app a un modelo servido aparte permite controlar la reserva de memoria y KV cache (sugerencia, sin probar por su autor)",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Telemetria del proveedor: bloquear dominios de analitica en el archivo de hosts (IPv4 e IPv6) y barrer el directorio de spans local con cron",
+   "como": "entradas en /etc/hosts para los dominios de analitica (nombres omitidos aqui) y limpieza periodica de ~/.config/Perplexity/spans/",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Perplexity Computer 26.9.0",
+   "riesgo": "Bloquear hace que los lotes locales se acumulen",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo sobre una aplicacion de terceros sin NVIDIA staff; sus comandos de medicion de red y memoria (ss, tshark, nvidia-smi) son genericos y el hallazgo de que una reserva de vLLM al ~0.9 llena la memoria unificada solo confirma un riesgo ya conocido. El resto concierne a telemetria de Perplexity, ajena al objetivo."
+}

@@ -1,0 +1,48 @@
+{
+ "id": 384720,
+ "titulo": "GB10 endboss to insta-poweroff",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "prevenir",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Prueba de estres que provoca apagon instantaneo por salto de potencia (GPU 90W+)",
+   "como": "script gpu_burnin.py de Spark_Energy_Management (herramienta/ruta citada en el post; no se da comando)",
+   "fuente_post": 1,
+   "repositorio": "github.com/djmad/Spark_Energy_Management (tools/burnin/gpu_burnin.py)",
+   "licencia": "no indicada",
+   "probado_en": "Spark (no especifica driver); el autor menciona Lenovo PGX",
+   "riesgo": "Apaga el equipo en segundos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Limitar frecuencia GPU a 2.2 GHz mantiene viva una Lenovo PGX",
+   "como": "no indicado el comando exacto (solo 'gpu limitation to 2.2 Ghz')",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Lenovo PGX segun el autor",
+   "riesgo": "Afirmacion de usuario sin verificar",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "Rampa gradual de potencia permite sostener 80 W",
+   "como": "software de gestion de energia del autor (sin comando)",
+   "fuente_post": 3,
+   "repositorio": "github.com/djmad/Spark_Energy_Management",
+   "licencia": "no indicada",
+   "probado_en": "Lenovo tras cambiar el conjunto de refrigeracion",
+   "riesgo": "Usuario sin verificacion",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Sin respuesta de NVIDIA. El autor pregunta por que la fuente no soporta el pico de potencia y propone un limite de picos por driver.",
+ "utilidad_atom": "media",
+ "razon": "Sin staff de NVIDIA; un usuario reporta apagon por pico de potencia y que cambiar la refrigeracion (montaje incorrecto del cooler) estabilizo la unidad. Util como pista de causa termica o de potencia, pero sin comando concreto reutilizable."
+}

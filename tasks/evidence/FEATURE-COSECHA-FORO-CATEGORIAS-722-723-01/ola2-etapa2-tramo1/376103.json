@@ -1,0 +1,79 @@
+{
+ "id": 376103,
+ "titulo": "Sparks have recently powered off randomly",
+ "leido": true,
+ "posts_leidos": 15,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Watchdog externo: un Raspberry Pi/ESP32 hace ping periodico a los nodos y, tras varios fallos consecutivos, corta y devuelve la corriente con un rele; la BIOS enciende sola al volver la corriente (Auto Boot). Sugerido sin implementacion",
+   "como": "no indicado (ping cada ~5 min, varios fallos seguidos, rele por GPIO apagado ~30 s; sin comando ni codigo)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "el post dice que ssh es mejor indicador que ping tras OOM; Spark no soporta wake-on-lan segun el usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Cierre de falla por PDU: desenchufar la PDU de la pared y el Spark unos 30 s resolvio apagados con 0 logs (un usuario)",
+   "como": "desconectar PDU y Spark ~30 s",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reparar TIM y quitar la carcasa/ventilar redujo apagados; el sensor expuesto podria no capturar el punto caliente (hipotesis de usuario)",
+   "como": "no indicado (repaste, retirar carcasa, ventiladores USB; 65-73C en carga segun el usuario)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario sin hardware especificado",
+   "riesgo": "abrir la unidad puede afectar la garantia",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw,clocks.sm --format=csv -l 5"
+  },
+  {
+   "que": "Gobernador termico propio que escala frecuencia de CPU y caudal de LiteLLM segun temperatura GPU/ACPI; estable 3d20h+ tras separar unidades (sin codigo publicado)",
+   "como": "no indicado",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Pedir a NVIDIA diagnostico de campo: DGX Spark Field Diagnostics; DCGM 3.3.9 no corre en CUDA 13.0 (driver 580.142) y modulo SysMon falla",
+   "como": "dcgmi diag -r 1 devuelve 'Detected unsupported Cuda version'",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.142",
+   "riesgo": null,
+   "verificable_aqui": "dcgmi --version"
+  },
+  {
+   "que": "Limitar la frecuencia del GPU a 2100 como posible mitigacion (referida a otro tema)",
+   "como": "lower freq to 2100 (comando no indicado en este post)",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un usuario, unidad unica, 20C ambiente",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Respuesta de NVIDIA (Neill, post 11): apagados bajo carga no son comportamiento esperado, rango ideal de operacion 5-30C, pide original adapter, desapilar y correr Field Diagnostics; abrio ticket interno. Post 14 reporta apagado duro durante PowerStress de FieldDiag; post 16 (aniculescu) indica abrir ticket de RMA si Founders Edition. DCGM no soporta CUDA 13.0.",
+ "utilidad_atom": "alta",
+ "razon": "Reune el diagnostico oficial (Field Diagnostics, rango termico 5-30C), el watchdog externo con Auto Boot y evidencia de apagados duros bajo carga que coinciden con el problema del ATOM; los mecanismos de usuario carecen de comandos exactos. El post 12 documenta que DCGM 3.3.9 no corre en CUDA 13, una laguna de herramienta."
+}

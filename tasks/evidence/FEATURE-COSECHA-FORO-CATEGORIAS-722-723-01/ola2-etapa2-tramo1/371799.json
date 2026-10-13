@@ -1,0 +1,78 @@
+{
+ "id": 371799,
+ "titulo": "Apt upgrade has broken nvidia driver",
+ "leido": true,
+ "posts_leidos": 17,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Declaracion oficial de NVIDIA (aniculescu): el driver 595 no esta soportado en Spark; mantener el 580 que entrega el proceso de actualizacion",
+   "como": "Driver 595 is currently not supported on Spark. Please stick with the 580 drivers",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Usuario p33zy reporta que instalar modulos 595 dejo una unidad sin arrancar (kernel panic) y causo caidas intermitentes en otras; restauro desde firmware de fabrica",
+   "verificable_aqui": "dpkg -l | grep nvidia-driver; nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+  },
+  {
+   "que": "Causa de la rotura tras apt upgrade: el kernel nuevo 6.17.0-1021-nvidia se instalo pero el paquete nvidia-driver-580-open (que contiene nvidia.ko) quedo retenido; lo arregla full-upgrade",
+   "como": "sudo apt full-upgrade",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark de usuario elsaco, kernel 6.17.0-1021",
+   "riesgo": "Un apt upgrade plano deja retenidos paquetes y mezcla kernel nuevo con driver ausente",
+   "verificable_aqui": "apt-mark showhold; modinfo nvidia | head -3"
+  },
+  {
+   "que": "Comprobar que el paquete de driver correcto esta instalado y como se firma el modulo con Secure Boot",
+   "como": "dpkg -l|grep nvidia-driver ; sudo dmesg | grep -iE 'nvidia|secure|PKCS|signature'",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "dpkg -l | grep nvidia-driver; mokutil --sb-state"
+  },
+  {
+   "que": "Advertencia de Secure Boot: instalar nvidia-driver-580-open compilo y autofirmo el modulo y pidio enrolar una clave; el usuario objeta tener una clave de firma de modulos en el disco",
+   "como": "no indicado (observacion del usuario; luego duda de la causa)",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "MSI EdgeXpert (usuario p33zy)",
+   "riesgo": "Clave de firma disponible en disco; enrolamiento de clave MOK solo tras cambiar paquetes",
+   "verificable_aqui": "mokutil --sb-state"
+  },
+  {
+   "que": "Advertencia de recuperacion: sin snapshot del sistema, solo se vuelve a la imagen de fabrica y se rehace la configuracion; paki recomienda Timeshift o rustic y actualizar por la pestana de updates del DGX Dashboard en lugar de apt blanket",
+   "como": "no indicado (consejo de usuario; sin comando)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Perdida de configuracion; copiar el home antes",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de reintroducir modulo para el kernel exacto (propuesto por un usuario) con paquete precompilado y HWE, con purga de nvidia-kernel-common-580 y nvidia-dkms",
+   "como": "sudo apt purge nvidia-kernel-common-580 ; sudo apt install linux-modules-nvidia-595-open-nvidia-hwe-24.04",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "2 DGX Spark segun vince_du_66",
+   "riesgo": "Contradicho por el post 11 y 15 y por NVIDIA (post 16): lleva al driver 595 no soportado y rompio una unidad",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA no soporta el driver 595 en Spark (post 16); los usuarios piden sin respuesta oficial un procedimiento de migracion y un repositorio especifico para Spark que no ofrezca paquetes incompatibles.",
+ "utilidad_atom": "alta",
+ "razon": "El tema trae una declaracion de NVIDIA (post 16) de no soporte del driver 595, la causa observada (kernel nuevo con driver 580 retenido) y la correccion con comandos exactos (apt full-upgrade, post 10), mas el contraejemplo de usuarios que rompieron unidades con 595. Incluye logs de Xid 31/32/44/120 y errores AER PCIe tras instalar 595, que la lectura de usuario atribuye a la mezcla de paquetes; no incluyo los identificadores de hardware que aparecen en los logs."
+}

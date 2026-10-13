@@ -1,0 +1,69 @@
+{
+ "id": 379959,
+ "titulo": "GB10 spontaneous reboots after July 2026 update: GSP health check fail, NVRM assert flood (gpu_user_shared_data.c:373)",
+ "leido": true,
+ "posts_leidos": 12,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "rastrear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Tras aplicar capsulas de firmware EC/SBIOS por fwupd, o un lote de apt que toque firmware o pila de GPU, hacer desconexion completa de la corriente AC (no solo reinicio) para activar el firmware; resolvio reinicios cada ~2 h y luego un segundo episodio",
+   "como": "no indicado como comando; procedimiento: apagado limpio, desconectar adaptador (post 6) un minuto o mas (30+ s en post 11), volver a encender",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Dell Pro Max GB10, kernel 6.17.0-1029-nvidia, driver 580.173.02, EC 0x02000b00, UEFI 4.0.0; 24+ h y 27+ h limpios segun el usuario",
+   "riesgo": "Un reinicio en caliente deja el GSP en estado malo; confirmado por staff NVIDIA (Neill, post 10) para capsulas EC/SBIOS; la generalizacion a apt (post 11) es del usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Detectar el fallo del firmware de GPU por la firma Xid 120 (excepcion de tarea GSP) y kgspHealthCheck/rpcRecvPoll en el journal; el catalogo Xid indica que 119/120 pueden requerir reinicio de GPU o ciclo de energia",
+   "como": "no indicado como comando; patrones: 'NVRM: Xid ... 120 ... GSP task exception', 'kgspHealthCheck_TU102', 'nvAssertFailedNoLog ... gpu_user_shared_data.c:373'",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 driver 580.173.02",
+   "riesgo": "Una firma aislada no demuestra causa; el 3er crash no tuvo trazas NVRM",
+   "verificable_aqui": "journalctl -k | grep -i -E 'xid|nvrm|gsp'"
+  },
+  {
+   "que": "Parametro del watchdog sbsa_gwdt: action=1 hace panic del kernel en WS0 (valor por defecto 0); en DGX OS esta preconfigurado en el paquete nvidia-sbsa-gwdt-options",
+   "como": "options sbsa_gwdt action=1 (archivo /etc/modprobe.d/sbsa_gwdt.conf); consulta: modinfo sbsa_gwdt ; dpkg -S",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Dell Pro Max GB10 / DGX OS",
+   "riesgo": "Con action=1 un wedge produce reinicio automatico; pstore quedo vacio asi que no persisten registros del panic",
+   "verificable_aqui": "modinfo sbsa_gwdt ; cat /etc/modprobe.d/sbsa_gwdt.conf ; dpkg -S /etc/modprobe.d/sbsa_gwdt.conf"
+  },
+  {
+   "que": "Comprobar versiones de firmware disponibles via fwupd/LVFS",
+   "como": "fwupdmgr get-updates",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Dell Pro Max GB10",
+   "riesgo": "El numero de EC es especifico por OEM (la version FE 0x3000508 no aplica a Dell)",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Diagnostico de memoria descartado: memtester sobre 80 GB, seis ciclos, cero errores; netconsole a otra maquina para distinguir wedge de panic limpio",
+   "como": "memtester 80G (no indicado el comando exacto; solo el tamano y ciclos); netconsole no indicado como configuracion",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Dell Pro Max GB10",
+   "riesgo": "Comando no copiado literal por el post",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Staff de NVIDIA (Neill, post 10) confirma que las capsulas EC/SBIOS por fwupd requieren desconexion AC completa y dice haberlo marcado al equipo de documentacion; no estaba indicado en las notas de version.",
+ "utilidad_atom": "alta",
+ "razon": "Hay una confirmacion de staff NVIDIA de que la desconexion AC completa es necesaria tras capsulas EC/SBIOS, con firmas de log concretas y el valor action=1 de sbsa_gwdt. La extension a actualizaciones apt de linux-firmware es de un usuario (post 11) y las causas del GSP no estan demostradas."
+}

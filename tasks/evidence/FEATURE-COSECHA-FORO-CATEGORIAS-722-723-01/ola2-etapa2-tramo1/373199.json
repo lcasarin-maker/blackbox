@@ -1,0 +1,69 @@
+{
+ "id": 373199,
+ "titulo": "Best $17 you can spend for a GB10 machine",
+ "leido": true,
+ "posts_leidos": 31,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar el reloj del GPU a 2000 MHz baja picos de temperatura mas de 10C con menos de 1% de rendimiento perdido; ~30 W menos de calor segun el usuario",
+   "como": "sudo nvidia-smi -lgc 0,2000",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 en carga de cuantizacion, 96% util, ~28 W, ~2000 MHz",
+   "riesgo": "sin datos duros segun el propio autor (post 19)",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "Medicion de potencia en pared con llama.cpp (qwen3.6-27b): reloj normal 85-95 W GPU, total hasta 180 W; con bloqueo 2100 MHz GPU 55 W, total 125 W; idle 4 W/26 W; estado 'bloqueado a 15 W' 12 W/62 W",
+   "como": "nvidia-smi -rgc (restablecer) vs nvidia-smi --lock-gpu-clocks=200,2100",
+   "fuente_post": 22,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus GX10 en 120 V",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi -q -d CLOCK,POWER"
+  },
+  {
+   "que": "Script de prueba de throttling de GPU (nombre spark-gpu-throttle-check.py): 20 muestras cada 0.5 s, umbral 1400 MHz, reporta PASS si no hay muestras bajo umbral",
+   "como": "python3 spark-gpu-throttle-check.py",
+   "fuente_post": 25,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10, driver 580.159.03, CUDA 13.0",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Refrigeracion externa: ventiladores USB, desapilar, poner el equipo de lado, conductos impresos en 3D con filtro de 140mm; ventilador 120/140mm bajo la toma en el ASUS reduce 61-63C a 55-56C; control de velocidad de ventilador por temperatura recomendado",
+   "como": "no indicado (mecanico)",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Asus GX10",
+   "riesgo": "un ventilador de extraccion crea baja presion y entra polvo por rendijas",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Lectura de que el estado de 15 W bloqueado se asocia a sobrecalentamiento del PSU (hipotesis de usuario)",
+   "como": "no indicado",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El post 13 da el comando de cap de reloj con medicion de calor y el post 22 mide potencia en pared con y sin cap; el post 25 trae una herramienta de comprobacion de throttling. No hay respuesta de NVIDIA, el repositorio y la licencia del script no aparecen y varias cifras de temperatura vienen de usuarios sin datos duros."
+}

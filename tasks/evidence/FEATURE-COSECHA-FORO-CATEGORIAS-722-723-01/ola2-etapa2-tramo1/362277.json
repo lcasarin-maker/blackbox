@@ -1,0 +1,38 @@
+{
+ "id": 362277,
+ "titulo": "Unexpected Shutdown During ComfyUI Inference on DGX Spark (Occurs on Two Units)",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Aplicar un limite de potencia/reloj elimina los apagados en ComfyUI (segun usuarios); el comando exacto no se da en este tema, solo se cita otro post",
+   "como": "no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE (2 unidades) segun usuario",
+   "riesgo": "pierde rendimiento (usuario jas.burton lo califica de despreciable)",
+   "verificable_aqui": "nvidia-smi -q -d POWER"
+  },
+  {
+   "que": "Ejecutar el diagnostico de campo de NVIDIA y enviar los logs antes de RMA",
+   "como": "guia field diagnostics de NVIDIA (enlace de soporte); el usuario lo paso 3 veces por equipo sin detectar el fallo",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark FE",
+   "riesgo": "el diagnostico pasa aunque el equipo se apague",
+   "verificable_aqui": "no indicado"
+  }
+ ],
+ "omision_nvidia": "Un moderador de NVIDIA habria dicho que ocurre solo en ciertas unidades y recomendo RMA (relato de PILCOTHINK, post 6, de segunda mano); NVIDIA no explica por que no sostiene el reloj por defecto.",
+ "utilidad_atom": "media",
+ "razon": "Confirma que el apagado ocurre con picos de potencia de GPU (jas.burton, post 5: no es termico, sin evidencia) y que el diagnostico oficial pasa. No aporta comando ni valor propio, solo remite a otro hilo."
+}

@@ -1,0 +1,27 @@
+{
+ "id": 363984,
+ "titulo": "Shutdown Issue: Is This a Hardware Problem or Software Problem?",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround temporal: limitar el reloj maximo de GPU hasta que cesen los apagados; el autor dice que NO es solucion",
+   "como": "sudo nvidia-smi -lgc min,max (max ~2300 o menos, bajar gradualmente)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark del usuario PILCOTHINK (version no indicada)",
+   "riesgo": "Pierde rendimiento; enmascara la falla, no la corrige",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  }
+ ],
+ "omision_nvidia": "Un moderador de NVIDIA (NVES) pide el caso RMA por DM; no hay reconocimiento publico de un problema general ni solucion.",
+ "utilidad_atom": "media",
+ "razon": "Reporta apagados bajo carga sostenida mitigados con nvidia-smi -lgc (post 1), un usuario declara el mismo problema y que corre con relojes reducidos (post 4). NVIDIA solo ofrece RMA via DM (post 3)."
+}

@@ -1,0 +1,99 @@
+{
+ "id": 383939,
+ "titulo": "7.0.0-1019-nvidia CPU overheating",
+ "leido": true,
+ "posts_leidos": 13,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar frecuencia maxima de los nucleos de rendimiento X925 (cpuinfo_max 3900000) a 2600 MHz",
+   "como": "for c in 5 6 7 8 9 15 16 17 18 19; do p=/sys/devices/system/cpu/cpufreq/policy$c; min=$(cat $p/scaling_min_freq); [ \"$min\" -gt 2600000 ] && echo 2600000 > $p/scaling_min_freq; echo 2600000 > $p/scaling_max_freq; done",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark, vLLM TP=2; zona0 de 86 C a ~56 C, sin perdida de throughput (una corrida por condicion)",
+   "riesgo": "Medicion de un usuario; un reinicio restaura 3900 si no se persiste; 2600 no es un piso probado",
+   "verificable_aqui": "for p in /sys/devices/system/cpu/cpufreq/policy*; do printf '%s max=%s\\n' \"$(basename $p)\" \"$(cat $p/cpuinfo_max_freq)\"; done"
+  },
+  {
+   "que": "Verificar que el tope se aplica bajo carga",
+   "como": "cat /sys/devices/system/cpu/cpu17/cpufreq/scaling_cur_freq (debe leer 2600000 en decode)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "cat /sys/devices/system/cpu/cpu17/cpufreq/scaling_cur_freq"
+  },
+  {
+   "que": "Detectar nucleos fijados al 100% por busy-wait de vLLM",
+   "como": "mpstat -P ALL 1 durante decode",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Causa citada: busy loop de vLLM; PR vllm #52814 y #52848 sin fusionar segun el post",
+   "verificable_aqui": "mpstat -P ALL 1 1"
+  },
+  {
+   "que": "Persistir el tope tras reinicio",
+   "como": "unidad systemd oneshot (Type=oneshot, RemainAfterExit=true, WantedBy=multi-user.target; ExecStop restaura cpuinfo_max_freq)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Un rc.local simple no basta segun el post",
+   "verificable_aqui": "systemctl list-unit-files | grep -i oneshot"
+  },
+  {
+   "que": "Control de ventiladores dgx-spark-fan-control",
+   "como": "herramienta de Christopher Owen; comando/instalacion no indicados en el hilo",
+   "fuente_post": 1,
+   "repositorio": "no indicado (nombre dgx-spark-fan-control)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark kernel 7.0.0-1019-nvidia; temperaturas 50-70 C, sin cortes en dias",
+   "riesgo": "Mas ruido; el dueno responde que enfrento limites termicos antes de 7.0",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fijar vLLM a los nucleos de rendimiento en Docker",
+   "como": "VLLM_SPARK_EXTRA_DOCKER_ARGS=\"--cpuset-cpus=5-9,15-19\"; comprobar con docker inspect -f '{{.HostConfig.CpusetCpus}}' vllm_node",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario; taskset no se hereda al contenedor (post 7)",
+   "riesgo": null,
+   "verificable_aqui": "docker inspect -f '{{.HostConfig.CpusetCpus}}' <contenedor>"
+  },
+  {
+   "que": "Limitar reloj GPU y gobernador CPU",
+   "como": "/etc/default/cpufrequtils: GOVERNOR=\"ondemand\", MAX_SPEED=\"2500000\"; sudo nvidia-smi -i 0 -lgc 0,2500",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10; decode 30-33 W, prefill 65 W, caja 80-82 C en prefill",
+   "riesgo": "Usuario sin verificacion; cpufrequtils puede no existir en DGX OS",
+   "verificable_aqui": "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor; nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "Lista de verificacion de carga vLLM (backends, swap, preemption KV, compilacion, MTP)",
+   "como": "revisar logs de arranque por 'GDN decode kernel', swap activo, preempciones de KV, caches persistentes, aceptacion MTP",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "christopher_owen, autor de fan-control (usuario)",
+   "riesgo": "Orientativo; sin comandos exactos",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Sin respuesta de NVIDIA. Un usuario sostiene que el monitor (dgxtop) no marca throttling aunque el reloj GPU sube tras mejorar la refrigeracion; la temperatura de union, RPM de ventilador y vatios por nodo no son legibles en la plataforma (post 2).",
+ "utilidad_atom": "alta",
+ "razon": "Contiene comandos sysfs exactos, metodo de verificacion y medidas con tablas por frecuencia para reducir el calor sostenido. Todo es de usuarios, sin respuesta de NVIDIA, una corrida por condicion."
+}

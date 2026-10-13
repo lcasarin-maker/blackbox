@@ -1,0 +1,70 @@
+{
+ "id": 380238,
+ "titulo": "2x DGX Spark FE: silent hard-locks under sustained inference - units RMA'd in 48h. Full diagnosis and process notes",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "medir",
+  "rastrear",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Tope de reloj de GPU (estabilizo el cluster; el usuario midio -21% decode y -7% prefill a 32K, decode 2.3x mejor a 262K)",
+   "como": "sudo nvidia-smi -pm 1 && sudo nvidia-smi -lgc 300,2100",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark FE, DGX OS 7.2.3, kernel 6.17.0-1026-nvidia, driver 580.173.02, vLLM TP=2; ~12 corridas de 262K sin bloqueo",
+   "riesgo": "El lock no sobrevive al reinicio (hay que persistirlo con un oneshot de systemd); 2200 MHz reactiva estrangulamiento leve segun el usuario; costo de rendimiento",
+   "verificable_aqui": "nvidia-smi -q -d PERFORMANCE | grep -i -E 'thermal|slowdown'"
+  },
+  {
+   "que": "Tope de frecuencia maxima de CPU (zonas sostenidas 92->84 C y 85->80 C, mismo tiempo de pared segun el usuario)",
+   "como": "for p in /sys/devices/system/cpu/cpufreq/policy*/scaling_max_freq; do echo 2400000 | sudo tee $p; done",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark FE; los workers TP de vLLM hacen busy-poll al 200-350% de CPU",
+   "riesgo": "Se pierde al reiniciar; el post aclara que cambiar el governor no ayudo, solo el tope",
+   "verificable_aqui": "cat /sys/devices/system/cpu/cpufreq/policy*/scaling_max_freq ; cat /sys/devices/system/cpu/cpufreq/policy*/scaling_governor"
+  },
+  {
+   "que": "Prueba de estres de NVIDIA (fieldiag) para detectar fallo termico PowerStress; error 020000600139 en ambas unidades",
+   "como": "sudo partnerdiag --field --run_on_error",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "fieldiag 1.0.9 y 2.0.4, DGX Spark FE",
+   "riesgo": "Requiere Secure Boot desactivado; CX7Stress deja enlaces ConnectX caidos (restaurar con ip link set <if> up && netplan apply); fieldiag 2.0.4 depende de ofed-scripts y de paquetes DOCA; upgrade en sitio deja el lanzador 1.0.9 y aborta",
+   "verificable_aqui": "dpkg -l | grep -i fieldiag (solo lectura)"
+  },
+  {
+   "que": "Monitor NVML en el nodo: reloj con bandera HW_THERMAL_SLOWDOWN, temperatura de GPU y zonas ACPI (punto critico 104 C) para ver el estrangulamiento antes del bloqueo",
+   "como": "no indicado (el post describe un monitor NVML sin dar el codigo; valores reportados: 2197/3003 MHz, GPU 88-90 C, zonas CPU 97-98 C)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark FE",
+   "riesgo": "Sin script no es reproducible directamente",
+   "verificable_aqui": "nvidia-smi -q -d PERFORMANCE ; cat /sys/class/thermal/thermal_zone*/temp"
+  },
+  {
+   "que": "Advertencia de proceso RMA: correr fieldiag a configuracion de fabrica, adjuntar summary.json y logs, portal acepta .zip/.txt/.pdf y rechaza ~10 MB (excluir los vectores de video de GpuStress), sanear discos (UEFI Security Media Sanitization, Purge), reactivar Secure Boot",
+   "como": "no indicado (proceso, sin comando)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 unidades FE, caso resuelto en ~48 h segun el usuario",
+   "riesgo": "Experiencia de un usuario; en post 4-5 otros usuarios reportan RMAs lentos y sin comunicacion",
+   "verificable_aqui": "Ninguno"
+  }
+ ],
+ "omision_nvidia": "El usuario afirma que el control del ventilador es interno al EC sin superficie desde el SO y que los ventiladores quedan inaudibles incluso a 95 C sostenidos; no hay respuesta de staff NVIDIA en el tema.",
+ "utilidad_atom": "alta",
+ "razon": "Contiene dos comandos exactos de mitigacion con medicion A/B declarada por el usuario, el procedimiento de fieldiag y las trampas conocidas (Secure Boot, CX7Stress, ofed-scripts). En post 10 el mismo usuario concluye que las unidades de reemplazo (kernel 6.17.0-1032) corren sin tope con reloj estable ~2400 MHz y zonas de pico 87 C, lo que apunta a unidades defectuosas; sin respuesta de NVIDIA."
+}

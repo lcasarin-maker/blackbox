@@ -1,0 +1,69 @@
+{
+ "id": 373251,
+ "titulo": "DGX Spark (GB10) reproducibly hard powers-off under GPU load",
+ "leido": true,
+ "posts_leidos": 14,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Registrador de 1 minuto de memoria/GPU/contenedores en disco para capturar el estado previo al apagado; muestra GPU de 74C/96% util/79.4W a 79C/82.4W y corte total sin Xid, sin pstore ni vmcore",
+   "como": "no indicado (script propio no publicado); lecturas: 22:59 74C 96% 79.4W, 23:00 79C 82.4W",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark A.7, DGX OS 7.5.0, kernel 6.17.0-1021-nvidia, driver 580.159.03",
+   "riesgo": null,
+   "verificable_aqui": "ls /sys/fs/pstore; journalctl --list-boots"
+  },
+  {
+   "que": "Cap de reloj GPU para reducir calor/potencia (propuesto por el autor, citando otros temas)",
+   "como": "sudo nvidia-smi -lgc 200,2150",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "no indicado (aun no probado por el autor en este tema)",
+   "riesgo": "sin verificar en el post",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "Repaste de TIM + retirar carcasa + ventiladores USB eliminaron apagados; el CPU llegaba a 96C en inferencia (usuario arctic.gus); otro usuario con repaste + sin caja + ventilador de 120mm sin apagados por dias",
+   "como": "no indicado (procedimiento fisico; 27-35C idle, 55-73C carga tras el cambio)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus GX10 segun el usuario",
+   "riesgo": "tornillos del disipador del CX7 fragiles, se rompen al apretar de mas; la garantia podria afectarse",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu --format=csv"
+  },
+  {
+   "que": "Advertencia: el sensor GPU de nvidia-smi puede no reflejar el SoC/CPU que dispara el corte; no hay metrica de hot-spot expuesta",
+   "como": "no indicado",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "leer solo nvidia-smi subestima la temperatura real",
+   "verificable_aqui": "cat /sys/class/thermal/thermal_zone*/type /sys/class/thermal/thermal_zone*/temp"
+  },
+  {
+   "que": "Caso de apilado: sacar la unidad superior para descubrir la toma inferior detuvo apagados con GPU 80C, CPU 70C, reloj 2385-2411 MHz",
+   "como": "no indicado",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x Asus GX10",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Ninguna respuesta de NVIDIA. El autor pregunta por un log OOB de EC/PMIC y /dev/ipmi0 esta ausente, por lo que no hay SEL que leer.",
+ "utilidad_atom": "alta",
+ "razon": "Evidencia directa de apagado duro bajo carga con 33% de memoria libre, sin Xid ni vmcore, y de mitigaciones termicas coincidentes (repaste, ventilacion, desapilar), mas el comando de limite de reloj. Las cifras de temperatura son de usuarios sin respuesta oficial."
+}

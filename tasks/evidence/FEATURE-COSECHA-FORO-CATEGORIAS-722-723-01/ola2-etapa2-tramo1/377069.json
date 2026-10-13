@@ -1,0 +1,58 @@
+{
+ "id": 377069,
+ "titulo": "NVIDIA DGX Spark (GB10) Thermal Throttling / Fan Curve Fix via EC Firmware Rollback",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Rollback del firmware del Embedded Controller de la rama 0x0300 a 0x02 via fwupd (reporte de un usuario, texto redactado por su agente de IA)",
+   "como": "sudo fwupdmgr get-devices ; sudo fwupdmgr downgrade <ID_DEL_EC> (elegir 0x02004e18) ; sudo reboot",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Gigabyte y MSI Spark segun el autor; wyatt.neal (post 5) dice que le funciono en un FE DGX",
+   "riesgo": "No correr 'sudo fwupdmgr update' tras el rollback porque reinstala el 0x0300; csaba.kecskemeti (post 6, 2x Founders) y trufflebutter (post 7, FE) no pudieron confirmar mejora, y el segundo siguio fallando PowerStress en 0x02004e18",
+   "verificable_aqui": "sudo fwupdmgr get-devices (solo lectura; version del EC)"
+  },
+  {
+   "que": "Limitar reloj de GPU como unica medida que paro el apagado termico intermitente (usuario con 2x Founders)",
+   "como": "sudo nvidia-smi -lgc 200,2100",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x Founders Edition cluster",
+   "riesgo": "Reduce rendimiento",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "Registro independiente de zonas termicas cada 30 s con cron mientras corre la Field Diagnostic (metodo de medicion)",
+   "como": "no indicado (el post no da el script)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Las muestras se retrasan bajo carga de CPU",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Condicion de riesgo: acercar el equipo a OOM con alto uso de GPU da 50/50 OOM o bloqueo termico",
+   "como": "~1 MB libre, sin swap, alto throughput de GPU",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "FE DGX (usuario wyatt.neal)",
+   "riesgo": "Bloqueo termico u OOM",
+   "verificable_aqui": "free -m; swapon --show"
+  }
+ ],
+ "omision_nvidia": "El staff (post 3) dice que no logro reproducirlo en un FE DGX Spark y remite a soporte del OEM; en el post 8 indica que una Field Diagnostic fallida aprueba RMA automaticamente. No hay firmware corregido anunciado en el tema.",
+ "utilidad_atom": "alta",
+ "razon": "Aporta comandos exactos de fwupdmgr, el limite de reloj, con resultados contradictorios entre usuarios (funciono en unos, no en otros). Hay un fallo PowerStress con zonas hasta 97 C y silencio de ventiladores reportado y respuesta de NVIDIA que niega reproduccion."
+}

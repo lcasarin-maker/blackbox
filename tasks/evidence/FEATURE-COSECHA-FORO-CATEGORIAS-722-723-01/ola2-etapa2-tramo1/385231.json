@@ -1,0 +1,68 @@
+{
+ "id": 385231,
+ "titulo": "NVIDIA Support Failed Me..can someone help?",
+ "leido": true,
+ "posts_leidos": 14,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Con Secure Boot desactivado la capsula de firmware PD se reporta con exito (ESRT estado 0) sin aplicarse; con Secure Boot activado se aplico a la primera",
+   "como": "mokutil --sb-state ; activar Secure Boot (modo Standard) en BIOS y reaplicar la actualizacion PD",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark Founders Edition P4242 A04; una unidad; staff NVIDIA (Neill) en el post 16 dice que la evidencia apunta a Secure Boot y pide mantenerlo activado y reactivarlo antes de cualquier actualizacion tras Field Diagnostics",
+   "riesgo": "Field Diagnostics exige Secure Boot desactivado; reintentos de PD en un controlador de un solo banco no son gratuitos",
+   "verificable_aqui": "mokutil --sb-state"
+  },
+  {
+   "que": "Inventario de firmware PD para ver bancos FW1/FW2",
+   "como": "sudo dmidecode -t 45 | grep -C 4 PD",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "pedido por Neill (staff NVIDIA)",
+   "riesgo": null,
+   "verificable_aqui": "sudo dmidecode -t 45 | grep -C 4 PD"
+  },
+  {
+   "que": "Leer el resultado de la ultima actualizacion de firmware (solo lectura)",
+   "como": "fwupdmgr get-results <id de dispositivo de get-devices> -v",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "propuesto por elsaco y respaldado por Neill (staff)",
+   "riesgo": null,
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Reinstalar la version actual de PD",
+   "como": "sudo fwupdmgr refresh --force ; fwupdmgr get-devices ; fwupdmgr get-releases <PD_DEVICE_ID> ; sudo fwupdmgr reinstall <PD_DEVICE_ID> ; luego fwupdmgr get-history",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "christopher_owen dice que no lo probo; robert318 no pudo usarlo porque get-releases solo ofrecia versiones superiores",
+   "riesgo": "No garantiza que el firmware acepte la escritura; NVIDIA pide no reintentar manualmente",
+   "verificable_aqui": "fwupdmgr get-history"
+  },
+  {
+   "que": "Evidencia de que ESRT puede reportar exito sin aplicar y de que la capsula quedo en la ESP",
+   "como": "comparar fw_version contra last_attempt_version y last_attempt_status en ESRT, la variable de resultado de capsula y el archivo en EFI/UpdateCapsule",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "robert318 en su unidad",
+   "riesgo": null,
+   "verificable_aqui": "grep . /sys/firmware/efi/esrt/entries/*/* 2>/dev/null"
+  }
+ ],
+ "omision_nvidia": "NVIDIA (Neill) no pudo decir si el caso califica para RMA ni si hay forma soportada de reescribir un banco PD; no hay mecanismo oficial de recuperacion. El soporte de pago respondio con un mensaje para otro cliente (afirmacion del usuario).",
+ "utilidad_atom": "alta",
+ "razon": "El post 15 aporta una causa reproducida en una unidad (Secure Boot desactivado hace que la capsula PD falle sin error) y el post 16 de Neill, staff NVIDIA, lo confirma como diferencia y da la regla de reactivar Secure Boot antes de actualizar firmware. Sirve a esta maquina porque tiene Secure Boot activo y el firmware PD 0x516 ya aparece en el tema 348760."
+}

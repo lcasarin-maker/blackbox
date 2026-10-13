@@ -1,0 +1,37 @@
+{
+ "id": 363888,
+ "titulo": "Temperature status",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Utilidad del usuario hoesing que carga la GPU con matmul 4096x4096 en bucle y muestrea relojes ~10 s; devuelve error si los relojes son menores a lo esperado (detecta estado malo por posible fallo de Power Delivery)",
+   "como": "no indicado (solo se da el repositorio hoesing/spark-gpu-throttle-check en GitHub)",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/hoesing/spark-gpu-throttle-check",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark/GB10 segun el autor",
+   "riesgo": "Carga la GPU brevemente; el autor dice que no busca inducir el estado malo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Estado de energia malo, sospecha de PD, que se resuelve desconectando USB-C del Spark y/o el adaptador de la pared (hipotesis de usuario, no confirmada)",
+   "como": "desenchufar USB-C del Spark, la fuente de la pared, o ambos",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Causa no determinada",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario reporta temperaturas de 50-60 C tras actualizaciones (post 1) y otro idle de 53-57 C (post 3). El post 2 aporta una herramienta de deteccion de throttling sin comando de uso ni licencia en el texto."
+}

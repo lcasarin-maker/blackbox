@@ -1,0 +1,68 @@
+{
+ "id": 362769,
+ "titulo": "Mitigating OOM System Freezes on UMA-Based Single-Board Computers",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "monitorear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "earlyoom con args que matan vllm/python primero y protegen servicios criticos; umbrales RAM<3% y swap<10%",
+   "como": "EARLYOOM_ARGS=\"-m 3 -s 10 --avoid 'pipewire|wireplumber|systemd|ssh|journald' --prefer 'vllm|python|triton'\" en /etc/default/earlyoom",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark / Jetson segun autor shahizat",
+   "riesgo": "Mata procesos del usuario; parallelArchitect (post 9) advierte que el 3% puede disparar tarde o nunca en UMA porque asignaciones CUDA no siempre aparecen en /proc/meminfo",
+   "verificable_aqui": "systemctl status earlyoom; cat /etc/default/earlyoom"
+  },
+  {
+   "que": "Override systemd de earlyoom para poder matar procesos de otros usuarios y evitar que se le mate o intercambie",
+   "como": "[Service] LimitMEMLOCK=infinity; CapabilityBoundingSet=CAP_IPC_LOCK CAP_SYS_NICE CAP_KILL; AmbientCapabilities=CAP_IPC_LOCK CAP_SYS_NICE CAP_KILL; MemoryLock=infinity; OOMScoreAdjust=-1000 (via sudo systemctl edit earlyoom)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "igual",
+   "riesgo": "Servicio con capacidades elevadas",
+   "verificable_aqui": "systemctl cat earlyoom"
+  },
+  {
+   "que": "Canal de recuperacion SSH ligero (Dropbear) en puerto alterno que sobrevive con RAM critica",
+   "como": "sudo apt install dropbear; /etc/default/dropbear: NO_START=0, DROPBEAR_PORT=2222; sudo systemctl enable dropbear; sudo systemctl start dropbear",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark/Jetson segun autor",
+   "riesgo": "Segundo servicio SSH expuesto",
+   "verificable_aqui": "systemctl is-enabled dropbear"
+  },
+  {
+   "que": "Comando de sparkrun que instala y configura earlyoom (prefer: vllm, sglang, llama-server, ray, python...; avoid: systemd, sshd, dockerd, containerd...)",
+   "como": "sparkrun setup earlyoom (v0.1.9)",
+   "fuente_post": 7,
+   "repositorio": "sparkrun (dbsci); URL no indicada en el texto",
+   "licencia": "no indicada",
+   "probado_en": "1 host y cluster de 4 segun dbsci",
+   "riesgo": "Requiere sudo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Monitorizar presion de memoria con PSI y contadores CUDA UM en vez de memoria libre absoluta",
+   "como": "/proc/pressure/memory; herramienta cuda-unified-memory-analyzer (comando no indicado)",
+   "fuente_post": 9,
+   "repositorio": "https://github.com/parallelArchitect/cuda-unified-memory-analyzer",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "cat /proc/pressure/memory"
+  }
+ ],
+ "omision_nvidia": "dbsci opina que falta una proteccion OOM bien definida en un sistema de memoria unificada (post 5); no hay respuesta de NVIDIA en el tema.",
+ "utilidad_atom": "alta",
+ "razon": "Da config concreta de earlyoom (post 1), canal SSH de rescate y un metodo PSI para anticipar el congelamiento (post 9) con comandos exactos. Sin staff de NVIDIA; limite declarado por un usuario sobre el umbral de RAM en UMA."
+}

@@ -1,0 +1,80 @@
+{
+ "id": 362585,
+ "titulo": "MSI EdgeXpert Suddenly Power-Off During llama-benchy – Possible PD Firmware Issue?",
+ "leido": true,
+ "posts_leidos": 26,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "medir",
+  "monitorear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Actualizar firmware PD/EC via LVFS y reiniciar el controlador PD desconectando brick y cable 60 s",
+   "como": "sudo fwupdmgr enable-remote lvfs-testing; sudo fwupdmgr refresh; sudo fwupdmgr update (luego apagar, desconectar cable del equipo Y el brick de la pared ~60 s)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario Balaxxe; el autor del tema lo aplico en MSI EdgeXpert y el apagado persistio",
+   "riesgo": "habilita el remoto lvfs-testing (firmware de pruebas); un moderador de NVIDIA (aniculescu) pidio intentarlo (post 4)",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Limitar el reloj maximo de GPU como prevencion de apagados bajo carga",
+   "como": "sudo nvidia-smi -lgc min,max; el usuario dice que el default es ~2418-3003 MHz y que 300-2100 MHz nunca produjo apagados; otro usuario uso max 2250",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark FE (PILCOTHINK, 3 equipos; josephbreda 2 Spark FE); afirmacion de usuarios, sin NVIDIA",
+   "riesgo": "pierde rendimiento; es mitigacion, no causa raiz",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "Quitar el cable ConnectX-7 elimino los apagados en alta carga prolongada (segun un usuario)",
+   "como": "retirar cable ConnectX-7; no indicado comando",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE segun usuario",
+   "riesgo": "impide clustering",
+   "verificable_aqui": "ip -br link"
+  },
+  {
+   "que": "Desactivar el watchdog timer en UEFI junto con limite de reloj 2250",
+   "como": "UEFI: watchdog timer off; nvidia-smi limite de reloj a 2250 (valor exacto del comando no dado)",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark FE segun usuario; no aislo cual de los dos cambios sirvio",
+   "riesgo": "desactivar watchdog quita proteccion de reinicio ante cuelgues",
+   "verificable_aqui": "no indicado"
+  },
+  {
+   "que": "Monitorear temperatura CPU y GPU con dgxtop; el dashboard por defecto no muestra la CPU",
+   "como": "herramienta dgxtop (comando exacto y repositorio no indicados); el usuario reporta CPU 6-8 C sobre GPU, GPU 85-86 C y CPU en los 90 bajos",
+   "fuente_post": 23,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark FE segun usuario",
+   "riesgo": "posible corte por termistor de CPU en BIOS es hipotesis del usuario, no verificada",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu --format=csv"
+  },
+  {
+   "que": "Reproducir el fallo con llama-benchy a profundidades de contexto altas",
+   "como": "uvx llama-benchy --base-url <URL>/v1 --model Qwen/Qwen3.5-397B-A17B-GPTQ-Int4 --pp 2048 --tg 32 --depth 0 4096 8192 16384 65536 100000 200000 --runs 3 --adapt-prompt",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "cluster de 4 nodos GB10 (1 Spark FE + 3 MSI EdgeXpert)",
+   "riesgo": "carga extrema; puede apagar la unidad defectuosa",
+   "verificable_aqui": "no aplica (genera carga)"
+  }
+ ],
+ "omision_nvidia": "Segun el usuario (post 25), la herramienta oficial de diagnostico de NVIDIA solo hace una prueba termica PASS/FAIL y no detecta apagados bajo carga real de inferencia; NVIDIA no respondio sobre si es problema conocido de plataforma (solo aniculescu pidio actualizar firmware, post 4).",
+ "utilidad_atom": "alta",
+ "razon": "El tema da comandos concretos (fwupdmgr, nvidia-smi -lgc con valores) y un metodo de reproduccion con llama-benchy para apagados en seco bajo carga sostenida en GB10. Las mitigaciones son afirmaciones de usuarios sin verificacion de NVIDIA; la unidad de s0ne se resolvio por RMA (post 25)."
+}

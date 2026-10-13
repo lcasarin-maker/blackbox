@@ -1,0 +1,58 @@
+{
+ "id": 366590,
+ "titulo": "GB10 is power limited after crash",
+ "leido": true,
+ "posts_leidos": 17,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Test de throttling de GPU GB10: muestrea reloj, P-state y potencia bajo carga; estado sano 2392-2405 MHz y ~70 W, umbral 1400 MHz",
+   "como": "script spark-gpu-throttle-check (commit 6a27755b37c753ed09a99b29d4732379a4ba4a14); invocacion no indicada",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/hoesing/spark-gpu-throttle-check",
+   "licencia": "no indicada",
+   "probado_en": "ASUS Ascent GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Sintoma medible de limitacion de potencia tras un OOM o un cierre de carga CUDA: nvidia-smi reporta 5-9 W (4-14 W en otro episodio) aun tras reiniciar; en sano llega a ~80 W y 55 C a 96% de carga",
+   "como": "nvidia-smi (consulta de potencia); comando exacto no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS Ascent GB10",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,temperature.gpu --format=csv"
+  },
+  {
+   "que": "Workaround: apagar, desenchufar el adaptador de corriente 1-2 minutos y volver a encender; una variante pide mantener pulsado el boton de encendido 1 minuto y esperar 5 minutos antes de reconectar",
+   "como": "apagar; desenchufar la fuente 1 minuto o mas; enchufar; arrancar",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS Ascent GB10 y MSI EdgeXpert (post 15)",
+   "riesgo": "alivio temporal; el estado puede volver a arrancar degradado tras apagados largos (post 8)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Sugerencia de desactivar Fast Boot en BIOS (origen: Google AI Mode, sin verificacion)",
+   "como": "desactivar Fast Boot en BIOS",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "MSI EdgeXpert, el autor no confirma que fuera la causa",
+   "riesgo": "sin evidencia de efecto",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu) dice que los logs no muestran fallo y que la limitacion de potencia sigue en investigacion por ingenieria (posts 6, 12); no reprodujo el fallo en un DGX Spark FE y remite a soporte OEM/RMA (post 16). No hay correccion publicada.",
+ "utilidad_atom": "media",
+ "razon": "Aporta una herramienta de medicion con repositorio (licencia no indicada), cifras sanas de referencia y un workaround de ciclo de corriente, pero el caso es de equipos OEM y NVIDIA no lo reproduce en la edicion FE. La causa raiz sigue sin identificar."
+}

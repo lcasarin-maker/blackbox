@@ -1,0 +1,140 @@
+{
+ "id": 377478,
+ "titulo": "Spark abruptly shuts down",
+ "leido": true,
+ "posts_leidos": 48,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "medir",
+  "rastrear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar reloj de GPU (mitigacion comunitaria que el staff respalda); 2100 MHz reportado estable por varios; el reloj no persiste tras reinicio",
+   "como": "sudo nvidia-smi -lgc 300,2100 ; reset: sudo nvidia-smi -rgc",
+   "fuente_post": 30,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "declarado por usuarios de GB10/Spark; staff Neill en post 30",
+   "riesgo": "Menos rendimiento; el reloj solicitado se ajusta a pasos discretos (pedir 1200 puede dar 1098); no resolvio el bucle de arranque de adam8234 (post 32); DropTheBeat y johnwongsl18 (posts 44, 47) siguen con apagados tras aplicarlo",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "Unidad systemd para reaplicar el cap en cada arranque (compartida por el usuario jetspark, citada por el staff)",
+   "como": "[Unit] Description=GB10 fixed MHz GPU clock cap / Wants=nvidia-persistenced.service / After=nvidia-persistenced.service ; [Service] Type=oneshot / ExecStart=/usr/bin/nvidia-smi -pm 1 / ExecStart=/usr/bin/nvidia-smi -lgc 0,2100 / ExecStop=/usr/bin/nvidia-smi -rgc / RemainAfterExit=yes ; [Install] WantedBy=multi-user.target",
+   "fuente_post": 30,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "systemctl list-unit-files | grep -i clock"
+  },
+  {
+   "que": "Variantes de cap usadas por usuarios",
+   "como": "-lgc 300,2800 (post 6, insuficiente despues), -lgc 300,2400 (post 14), -lgc 200,2150 (post 29); 1400-1700 MHz como punto de eficiencia (~25% menos potencia, ~3% menos throughput, segun el staff citando a peter.h177)",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Cifras de la comunidad",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de cuatro pasos de stuart.trusty: --gpu-memory-utilization 0.85-0.92, firmware de plataforma, nvidia-smi -pm 1, nvidia-smi -pl, -lgc",
+   "como": "vLLM --gpu-memory-utilization 0.85-0.92 ; sudo nvidia-smi -pm 1 ; sudo nvidia-smi -pl <vatios> ; sudo nvidia-smi -lgc <min,max>",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark segun el usuario, sin verificacion",
+   "riesgo": "Afirmaciones de causa (livelock UVM) sin evidencia en el texto; ai_dev_dxb (post 33) tuvo apagados con 0.55",
+   "verificable_aqui": "nvidia-smi -q -d POWER"
+  },
+  {
+   "que": "Field Diagnostic: instalar la version anterior por dependencia rota (ofed-scripts) en la 2.0; la 2.0 anade CX7 y requiere DOCA y modulos mst_cpi y mst_pciconf",
+   "como": "sudo apt install dgx-spark-fieldiag=1.0.9-1 ; sudo ./partnerdiag --field",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS en Spark del usuario",
+   "riesgo": "Detener dgx-dashboard.service y dgx-dashboard-admin.service, desactivar Secure Boot (la maquina tiene Secure Boot activo) y detener gdm3 para que cargue el modulo (post 35); la firma pide desactivar Secure Boot (post 31)",
+   "verificable_aqui": "apt-cache policy dgx-spark-fieldiag"
+  },
+  {
+   "que": "Telemetria a 1 Hz hacia otra maquina para sobrevivir al corte (clock, potencia, temperatura, pstate, mascara throttle y 7 zonas ACPI); el journal local paro 70 s antes en un evento y ~2 min antes en otro",
+   "como": "muestreador propio, script no publicado en el texto",
+   "fuente_post": 35,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Registro BERT de firmware tras un reset: seccion tipo desconocido con creador MTKID; solo en el equipo defectuoso, no en otros; sin decodificador conocido",
+   "como": "dmesg | grep -i BERT (seccion 3c1e3f4b-1e1a-43df-af28-59820e958e3c)",
+   "fuente_post": 40,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "dmesg | grep -iE 'BERT|Hardware Error'"
+  },
+  {
+   "que": "Drenaje completo de energia: dejar desenchufado mas de una hora para salir de bucle de arranques de 0-7 s; cap de reloj tras recuperar",
+   "como": "desenchufar el equipo >1 h",
+   "fuente_post": 32,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10 segun el usuario",
+   "riesgo": "Cambiar el reloj durante el bucle no basto",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Herramienta de diagnostico adicional que localizo el hotspot por encima de 95 C en zona spark0/5; el autor repasto y desaparecio el fallo (el propio autor dice que el codigo lo escribio una IA)",
+   "como": "https://github.com/volfco/dgx-spark-more-diag",
+   "fuente_post": 50,
+   "repositorio": "https://github.com/volfco/dgx-spark-more-diag",
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Licencia no indicada; codigo generado por IA y de terceros sin revision",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Control de ventiladores en espacio de usuario con pisos de RPM, curva por temperatura y firma Secure Boot",
+   "como": "https://github.com/christopherowen/dgx-spark-fan-control",
+   "fuente_post": 49,
+   "repositorio": "https://github.com/christopherowen/dgx-spark-fan-control",
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Licencia no indicada; modulo DKMS firmado; sin evidencia en el tema de que funcione",
+   "verificable_aqui": "modinfo -n nvidia"
+  },
+  {
+   "que": "Registro de la causa en SO: contador de apagados no limpios de NVMe subio de 192 a 205 y cx7-pcie-hotplug apaga el ConnectX-7 sin cables QSFP",
+   "como": "smartctl/nvme smart-log campo unsafe_shutdowns (nombre exacto del comando no indicado)",
+   "fuente_post": 43,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10, DGX OS 7.6.0, kernel 7.0.0-1019-nvidia, driver 580.178.04",
+   "riesgo": null,
+   "verificable_aqui": "sudo nvme smart-log /dev/nvme0 | grep -i unsafe"
+  },
+  {
+   "que": "Aviso de OOM de driver registrado por NVRM durante un recipe de vLLM tras aplicar cap",
+   "como": "NVRM: nvCheckOkFailedNoLog: Check failed: Out of memory [NV_ERR_NO_MEMORY] (0x00000051)",
+   "fuente_post": 47,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k | grep -i NVRM"
+  }
+ ],
+ "omision_nvidia": "El staff (Neill, posts 18, 22, 30) confirma que investiga varios patrones de apagado abrupto (termico y de corriente) sin causa ni correccion anunciada, recomienda el cap de reloj como mitigacion, y aprueba RMA si la Field Diagnostic falla. No ofrece causa raiz, decodificador del registro BERT ni firmware corregido; usuarios reportan apagados tras un mes sin actualizacion de NVIDIA.",
+ "utilidad_atom": "alta",
+ "razon": "Es el hilo central del colapso con calor: el staff respalda el cap -lgc con unidad systemd y valores medidos por la comunidad, y varios usuarios instrumentan con telemetria externa y descartan memoria y termica como causa en algunos equipos. Usuarios con cap siguen reportando apagados (44, 46, 47), por lo que el cap es mitigacion y no solucion."
+}

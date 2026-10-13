@@ -1,0 +1,69 @@
+{
+ "id": 362775,
+ "titulo": "To NVIDIA Staff: Is This a Hardware Issue Requiring Repeated Shutdowns and RMA Under High Load?",
+ "leido": true,
+ "posts_leidos": 26,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "rastrear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround: fijar rango de reloj GPU; max 2300 o menos elimina los apagados segun varios usuarios (de fabrica 2418:3003)",
+   "como": "sudo nvidia-smi -lgc min,max (variante citada: nvidia-smi -lgc 0.2300); otros usuarios: max 2200 estable, 2100 estable, 2500 aun falla",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE y partner SKUs segun usuarios; versiones no indicadas",
+   "riesgo": "Pierde rendimiento; enmascara la causa",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK | grep -i -A4 'Max Clocks'"
+  },
+  {
+   "que": "NVIDIA DGX Spark Field Diagnostics (onediagfield, spec_dgx_spark_field_level2): pruebas Gpu/C2C/Cpu/Power/Thermal/Fio/Mem; usuarios con apagados la pasan (PASS)",
+   "como": "onediagfield.r9.257.3 --keep_disp_enabled --force_product=spark --run_spec=spec_dgx_spark_field_level2.json",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark r9.257.3, 30 min",
+   "riesgo": "Un usuario sospecha que tras correrla el reloj queda bloqueado (post 10, sin verificar); PASS no descarta el fallo",
+   "verificable_aqui": "ls /opt/nvidia/dgx-spark-fieldiag/"
+  },
+  {
+   "que": "Ubicacion de logs de field diag para RMA (NVES): bundle completo, summary.json",
+   "como": "/opt/nvidia/dgx-spark-fieldiag/logs-<timestamp>/ con output.log, run.log, summary.json",
+   "fuente_post": 20,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "ls -d /opt/nvidia/dgx-spark-fieldiag/logs-* 2>/dev/null"
+  },
+  {
+   "que": "Reproductor de carga: workflow ComfyUI Wan2.2 i2v por defecto causa apagados; llama-benchy no en el caso del autor (otros usuarios si lo reportan con >65K de contexto)",
+   "como": "llama-benchy --base-url http://localhost:8000/v1 --model <ruta> --depth 0 16384 32768, 65536, 131072, 262144 --concurrency 20",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/eugr/llama-benchy",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark",
+   "riesgo": "Puede provocar apagado en unidades afectadas",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Observacion: apagado abrupto sin mensajes en log, como disparo de proteccion de sobrevoltaje; desconectar la fuente ayudo temporalmente",
+   "como": "no indicado",
+   "fuente_post": 29,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Sparks de eugr, cluster",
+   "riesgo": "Hipotesis de usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVES (NVIDIA) dice no reproducir internamente y recomienda RMA de unidades que fallan consistentemente; no declara causa ni fix, y el field diag no detecta el fallo (post 22).",
+ "utilidad_atom": "alta",
+ "razon": "Varios usuarios reproducen apagados con carga sostenida y los mitigan con nvidia-smi -lgc max <=2300 (posts 1, 2, 12, 29), con comando concreto y log de field diag que da PASS. NVIDIA (post 22) responde que no reproduce y recomienda RMA."
+}
