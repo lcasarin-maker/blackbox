@@ -60,3 +60,32 @@ las cabeceras `SPDX-License-Identifier: MIT` y `Copyright NVIDIA` que traian; el
 modulos compilados. Quien lo use compila su propio modulo (tools/dmem_reconstruye.sh), lo firma con su propia llave
 y asume el riesgo de cargarlo; no esta respaldado ni probado por NVIDIA.
 
+
+----------------------------------------------------------------------------------------------------
+
+IDEAS CREDITADAS, SIN CODIGO COPIADO. Lo que sigue no esta en este repositorio como codigo ajeno: se leyo el
+proyecto o el hilo, se tomo la IDEA y se escribio la implementacion desde cero. Se acredita porque la idea fue de
+otros. La licencia indicada es la que se registro al leer; no se verifico de nuevo al escribir este aviso.
+
+  - HAMi-core (Project-HAMi, Apache-2.0, https://github.com/Project-HAMi/HAMi-core): `bb limita`
+    (tools/limita_cuda.py, tools/limitador_cuda_lab.sh) lanza un proceso con HAMi-core por LD_PRELOAD. blackbox NO
+    distribuye ni incluye HAMi-core: quien lo use lo compila de su propio clon.
+  - Spark_Energy_Management (djmad, CC BY-NC, hilo 384499): la idea de un guardia termico que predice la zona unos
+    segundos adelante en vez de esperar al tope (tools/guardia_termico_predictivo.py). Su licencia es no comercial:
+    por eso no se leyo para copiar y no se copio nada; el tope de 96 C es el de su repositorio, citado como dato.
+  - dgxtop (DennySORA, Apache-2.0, hilo 385664): la observacion de que un monitor de GB10 debe leer la memoria de
+    GPU por proceso; origen de `bb gpumem` (tools/gpumem.py), que la obtiene por otra via (dmem.current).
+  - dgx-spark-memory-dashboard (hectorTSH, MIT): el asesor "¿cabe el siguiente modelo?" de `bb gpumem --cabe`.
+  - nvml-unified-shim y sparkview (parallelArchitect): el diagnostico de que NVML reporta mal la memoria en memoria
+    unificada, y la senal de presion PSI; ver "Related work" en README.md.
+  - spark-gpu-throttle-check (hoesing, hilo 362737): el umbral de 1400 MHz de `bb reloj` (tools/reloj_atascado.py).
+  - Prueba de humo del hilo 366944 (co-le): la prueba activa de `bb reloj --prueba` (matmul fp16 8192x8192).
+  - thx0701/dgx_spark_status y MiaAI_Lab/sparkDash: la idea de vigilar el motor de inferencia junto al hardware
+    (bin/bb, comentario sobre el gateway). Idea unicamente.
+  - Hilos del foro de desarrolladores de NVIDIA (https://forums.developer.nvidia.com): las afirmaciones sobre el
+    reloj atascado (376039, 376239, 366944, 362737, 375687, 376542, 378150, 382897), el remedio del ciclo de corriente,
+    el riesgo de `systemctl daemon-reload` con Docker (352743) y GB contra GiB (352962) son de sus autores y del
+    personal de NVIDIA que respondio. Los resumenes en esta cosecha derivan de mensajes publicos; el texto de los
+    mensajes pertenece a quienes lo escribieron.
+  - Twiner (propio, mismo autor): patrones de resultado de tres estados y completitud sustantiva, sin importar su
+    codigo.

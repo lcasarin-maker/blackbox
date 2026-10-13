@@ -1,0 +1,10 @@
+[Unit]
+Description=bb prueba de reloj de GPU tras el arranque (interruptor reloj_arranque; off por defecto)
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.reloj_atascado --arranque
+TimeoutStartSec=180
+MemoryMax=4G
+Nice=10
