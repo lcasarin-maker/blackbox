@@ -335,6 +335,89 @@ def sonda_arranque_tras_actualizacion(raiz: Path, correr: Correr) -> Any:
     return {"kernels": kernels, "kernel_nuevo": nuevo, "secure_boot": sb, "listo_para_reiniciar": listo}
 
 
+# Recomendaciones de personal de NVIDIA en hilos del foro (evidencia: tasks/evidence/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01/
+# ola2-etapa2-tramo1/<hilo>.json). Es un reporte de DIFERENCIAS, nunca una orden: ninguna esta verificada en esta maquina.
+_CMD_IOMMU = re.compile(r"(?:^|\s)iommu\.passthrough=(\w+)")
+_OPT_GWDT = re.compile(r"^\s*options\s+sbsa_gwdt\s+(.*)$", re.M)
+_ACCION_GWDT = re.compile(r"\baction=(\w+)")
+_DPMS = re.compile(r"DPMS is (Enabled|Disabled)", re.I)
+_QUIEN_IOMMU = "personal de NVIDIA confirma el ajuste (post 5); el nombre no consta en la evidencia"
+
+
+def _rec(actual: Any, recomendado: str, hilo: int, post: int, quien: str, cumple: bool | None, nota: str) -> dict[str, Any]:
+    return {"actual": actual, "recomendado": recomendado, "hilo": hilo, "post": post, "quien": quien, "cumple": cumple, "nota": nota}
+
+
+def _rec_iommu(raiz: Path) -> dict[str, Any]:
+    nota = "Medido por un usuario en GX10 (RDMA CX7); riesgo declarado en el hilo: menos aislamiento por IOMMU, no evaluado. No es una orden."
+    cmd = _lee(raiz / "proc/cmdline")
+    if cmd is None:
+        return _rec(_nc("/proc/cmdline ilegible"), "iommu.passthrough=1", 384436, 5, _QUIEN_IOMMU, None, nota)
+    m = _CMD_IOMMU.findall(cmd)
+    if not m:
+        return _rec("ausente de /proc/cmdline", "iommu.passthrough=1", 384436, 5, _QUIEN_IOMMU, None, nota + " Ausente en cmdline: el valor efectivo depende del kernel y no se leyo.")
+    return _rec(f"iommu.passthrough={m[-1]}", "iommu.passthrough=1", 384436, 5, _QUIEN_IOMMU, m[-1] == "1", nota)
+
+
+def _rec_overcommit(raiz: Path) -> dict[str, Any]:
+    nota = ("overcommit_memory=2 puede rechazar asignaciones de CUDA y contenedores que reservan mucha memoria virtual; el hilo no da cifras "
+            "de prueba y el autor no lo probo. Medir con la carga real antes de adoptarlo. No es una orden.")
+    act = {k: _lee(raiz / f"proc/sys/vm/{k}") for k in ("overcommit_memory", "overcommit_ratio")}
+    rec = {"overcommit_memory": "2", "overcommit_ratio": "90"}
+    actual: dict[str, str] = {k: v if v else _nc(f"/proc/sys/vm/{k} ilegible") for k, v in act.items()}
+    if any(act[k] and act[k] != rec[k] for k in rec):
+        cumple: bool | None = False  # una diferencia leida decide, aunque la otra no se lea
+    elif any(not act[k] for k in rec):
+        cumple = None
+    else:
+        cumple = True
+    return _rec(actual, "vm.overcommit_memory=2 y vm.overcommit_ratio=90", 368536, 23, "personal de NVIDIA (Neill)", cumple, nota)
+
+
+def _rec_sbsa(raiz: Path) -> dict[str, Any]:
+    nota = ("action=1 hace panic del kernel en WS0: un wedge produce reinicio automatico y pstore quedo vacio en el hilo. Si el parametro no se expone "
+            "en sysfs solo se ve lo DECLARADO en modprobe.d, no el valor vivo del modulo. No es una orden.")
+    quien = "hilo de usuario; DGX OS lo trae en el paquete nvidia-sbsa-gwdt-options (post 3)"
+    rec = "options sbsa_gwdt action=1"
+    vivo = _lee(raiz / "sys/module/sbsa_gwdt/parameters/action")
+    if vivo:
+        return _rec(f"action={vivo} (vivo)", rec, 379959, 3, quien, vivo == "1", nota)
+    decl: list[str] = []
+    leidos = 0
+    for d in ("usr/lib/modprobe.d", "etc/modprobe.d"):
+        for f in _hijos(raiz / d, "*.conf"):
+            txt = _lee(f)
+            if txt is None:
+                continue  # ponytail: un .conf ilegible no tumba la sonda, trigger: si importa cual, registrarlo
+            leidos += 1
+            for linea in _OPT_GWDT.findall(txt):
+                decl += _ACCION_GWDT.findall(linea)
+    if decl:
+        return _rec(f"action={decl[-1]} (declarado en modprobe.d; el parametro no se expone en sysfs)", rec, 379959, 3, quien, decl[-1] == "1", nota)
+    motivo = "parametro action no expuesto en /sys/module/sbsa_gwdt/parameters y sin declaracion en modprobe.d" if leidos else "action no expuesto en sysfs y sin modprobe.d legible"
+    return _rec(_nc(motivo), rec, 379959, 3, quien, None, nota)
+
+
+def _rec_dpms(correr: Correr) -> dict[str, Any]:
+    nota = "Workaround del personal para ventiladores parados en idle/headless; sin fix y sin medir aqui. Solo lee `xset q`; no cambia nada. No es una orden."
+    quien = "personal de NVIDIA (post 20; el nombre no consta en la evidencia)"
+    rec = "DPMS deshabilitado (xset -dpms)"
+    if not os.environ.get("DISPLAY"):
+        return _rec(_nc("sin DISPLAY: no hay servidor X que consultar"), rec, 378945, 20, quien, None, nota)
+    q = _comando(correr, ["xset", "q"])
+    if q is None:
+        return _rec(_nc("`xset q` no corre o falla"), rec, 378945, 20, quien, None, nota)
+    m = _DPMS.search(q)
+    if not m:
+        return _rec(_nc("`xset q` sin linea 'DPMS is ...'"), rec, 378945, 20, quien, None, nota)
+    return _rec(f"DPMS {m.group(1).lower()}", rec, 378945, 20, quien, m.group(1).lower() == "disabled", nota)
+
+
+def sonda_recomendaciones_personal(raiz: Path, correr: Correr) -> Any:
+    """Diferencias entre el estado actual y cuatro recomendaciones de personal de NVIDIA. `cumple` es None si no se pudo leer, jamas True por defecto."""
+    return {"iommu_passthrough": _rec_iommu(raiz), "overcommit": _rec_overcommit(raiz), "sbsa_gwdt_action": _rec_sbsa(raiz), "dpms": _rec_dpms(correr)}
+
+
 SONDAS: dict[str, Callable[[Path, Correr], Any]] = {
     "os_release": sonda_os_release,
     "kernel": sonda_kernel,
@@ -351,6 +434,7 @@ SONDAS: dict[str, Callable[[Path, Correr], Any]] = {
     "clock_lock": sonda_clock_lock,
     "drm_modeset": sonda_drm_modeset,
     "arranque_tras_actualizacion": sonda_arranque_tras_actualizacion,
+    "recomendaciones_personal": sonda_recomendaciones_personal,
 }
 
 

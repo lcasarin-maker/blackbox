@@ -1,18 +1,16 @@
 {
   "claims_fingerprint": "dee20359f02de510930e066c731cda91f902f3ac18a1a8e07989300d7d34d912",
-  "panel": "1 auditor Opus, 2026-10-13: L118/L146/L147/L416 tras clasifica_hueco_de_red, sonda gpu_gsp y cuatro casos de despacho en bin/bb",
+  "panel": "1 auditor Opus, 2026-10-13: SPEC-L118 y L416 tras la sonda recomendaciones_personal en huella_host",
   "profile": "general",
   "results": [
     {
       "cited": {
-        "tests/test_huella_host.py": "6d7c8992aef6e5d5a3bd7d2a3b32cc9c9ddc68aa7ff5f22fc9ac38cf18afeb74",
-        "tests/test_incident_report.py": "4636ad109e3dc481622888291523d99e2cc7c8ef428b05a65115970ec3a8200e",
         "tools/atom_gpu_telemetry.py": "f4eb776d23c072ef6d82b82a3a889944d368751e1de03f5627638e4ec538a21a",
-        "tools/incident_report.py": "19810166266536f8ec328faa2efd9a7dcab4b8cf189229f3707342e6bc345a21"
+        "tools/huella_host.py": "d3a174070a5954c600828b9e893fe15b3412583971020baec5026a48dcffec0d"
       },
       "claim_id": "SPEC-L118",
-      "evidence": "git diff HEAD -- tools/incident_report.py tests/test_incident_report.py: solo adiciones (32+42 lineas, 0 lineas '-'), ningun import nuevo; funcion clasifica_hueco_de_red y 4 tests aislamiento_wifi. grep de import/sys.path a Atlas en tools bin tests: 0 imports (unica coincidencia es un comentario en atom_gpu_telemetry.py:68 que dice 'sin sys.path'); git grep en ~/projects/Atlas de import blackbox|incident_report|huella_host: 0. Control negativo: la misma regex sobre 'import blackbox.tools' cuenta 1. pytest tests/test_incident_report.py tests/test_huella_host.py: 103 passed.",
-      "seal": "734a0dd17ac4cfe9d6e37376fafad8e5a0ba10c227d4e0c5e785dfbb14ca20da",
+      "evidence": "git diff HEAD -- tools/huella_host.py: 0 lineas borradas, la unica linea anadida con 'import' es un comentario ponytail ('un .conf ilegible no tumba la sonda'); la sonda recomendaciones_personal lee /proc, /sys, modprobe.d y `xset q`, sin imports nuevos. Diff del test: 1 linea borrada (len(r)==15 de SONDAS), nada de imports. grep -rnE --include='*.py' '^\\s*(import|from)\\s+blackbox\\b' ~/projects/Atlas (sin .venv) -> 0; grep -rnE --include='*.py' '^\\s*(import|from)\\s+atlas\\b' blackbox -> 0; sys.path hacia Atlas: solo un comentario en tools/atom_gpu_telemetry.py:68 ('sin sys.path'). Control negativo: la misma regex sobre un fichero con 'import blackbox.tools' -> 1, y sobre 'import atlas.x' -> 1.",
+      "seal": "195d56a6d74bda37b0b1f523e1ab814fa85ca610d871d4c96d022d4f78608148",
       "verdict": "PASS"
     },
     {
@@ -82,11 +80,11 @@
         "tests/test_bb_bash.py": "2b57ca26801521f6e77a030004bcbf2b67fadcf7208c313a67c15f6362841a5f",
         "tools/canario_motor.py": "4b5cbbc3d6a0930405333bd841d8588d92fd494af0c116b9e2b90f016744b98c",
         "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6",
-        "tools/huella_host.py": "6a587db4715f32aab0fb7353caa4e0ae7fef7931a5b7b8fd3122c2104c94e906"
+        "tools/huella_host.py": "d3a174070a5954c600828b9e893fe15b3412583971020baec5026a48dcffec0d"
       },
       "claim_id": "SPEC-L416",
-      "evidence": "git diff HEAD -- bin/bb: +4 lineas de despacho (hid, proveedor-gpu, calor, enjambre), 0 lineas '-' (grep -cE '^-[^-]' = 0); cmd_status intacto. tools/huella_host.py: solo anade sonda_gpu_gsp y su entrada en SONDAS; no toca frescura. bin/bb:2605/2613 vigilante y guardia solo por unit; :2625 memavail/gpuoom/termico_predictivo/reloj_arranque solo unit; :2634 huella_host.json 2880 min (2 dias), :2639 canario_motor 75, :2644 gpumem_historial 15; :2364-2371 latido 'latencia del escritorio'. Los 6 tests citados por nombre existen (grep -c = 1 cada uno; control: nombre inventado = 0). pytest tests/test_bb_bash.py -k 'sensor or control_negativo or usable': 43 passed, 57 deselected. En vivo bash bin/bb status: las 7 filas de sensor aparecen ARMADO con el texto 'solo la unit, sin latido' para los cuatro sin artefacto.",
-      "seal": "0a7ca78c46452a146bdcff914e683678c3d4879ab7859979ff1043323456777c",
+      "evidence": "El diff solo anade la sonda recomendaciones_personal (solo lectura) y el registro en SONDAS; no toca la ruta $BLACKBOX_DATA/huella_host.json (tools/huella_host.py:470) ni nada de bin/bb. bin/bb:2616-2646: bucle de memavail/gpuoom/termico_predictivo/reloj_arranque por unit con el limite declarado, _fresco huella_host.json 2880, canario_motor.jsonl 75, gpumem_historial.jsonl 15; guardia de procesos (2613-2614) y vigilante del motor (2606) por unit; bb-usable con since='120 seconds ago' y journalctl -S (2363-2364). Los seis tests citados existen (grep -c 'def <nombre>\\b' = 1 cada uno; control negativo: nombre inventado test_control_negativo_inexistente_xyz -> 0). python -m pytest tests/test_bb_bash.py -q -p no:cacheprovider -n0 -k \"sensor or control_negativo or usable\" -> '43 passed, 57 deselected in 52.64s'. bash bin/bb status | grep -E 'huella|canario|historial|memavail|gpuoom|termico|reloj|guardia' -> 8 filas ARMADO: guardia de procesos, memavail/gpuoom/termico_predictivo/reloj_arranque (observar; solo la unit, sin latido), huella del host (observar; ciclo diario), canario del motor (observar; cada 30 min), historial de memoria de GPU (observar; ...). Limite: el estado ARMADO del vivo no ejerce la rama FALTA; esa la ejerce el test de control negativo citado, que paso.",
+      "seal": "4019f62c5da27c7e5944e7d23b1b85d119eddca0682c28875f77e5fc86b55c50",
       "verdict": "PASS"
     },
     {
@@ -184,7 +182,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-13T14:38:49Z",
-  "tree_fingerprint": "5a2afd4a567d82c46de1f45bb12a98288ff430e647d47c10f06fb9a2d3f64237",
+  "timestamp": "2026-10-13T15:13:17Z",
+  "tree_fingerprint": "656a03ea0189084d5ff5b2a2ed59f8dbfa99326d027cba4dec730f13d53334b7",
   "violations": []
 }
