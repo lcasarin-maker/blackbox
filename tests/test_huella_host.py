@@ -169,7 +169,7 @@ def _huella(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kernel: str = "6.17
 
 def test_recoge_cubre_todas_las_sondas_sin_inventar(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     r = _huella(tmp_path, monkeypatch)
-    assert set(r) == set(h.SONDAS) and len(r) == 12 and h.es_nc(r["os_release"])
+    assert set(r) == set(h.SONDAS) and len(r) == 14 and h.es_nc(r["os_release"])
 
 
 def test_recoge_sonda_que_lanza_es_nc(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -263,3 +263,207 @@ def test_main_paso(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(h.interruptores, "modo", lambda n: "observar")
     monkeypatch.setattr(h, "paso", lambda m: visto.append(m))
     assert h.main(["--paso"]) == 0 and visto == ["observar"]
+
+
+# drm_modeset
+def _modprobe(raiz: Path, etc: dict[str, str], usr: dict[str, str] | None = None, cmdline: str | None = None) -> None:
+    for n, t in etc.items():
+        _w(raiz, f"etc/modprobe.d/{n}", t)
+    for n, t in (usr or {}).items():
+        _w(raiz, f"usr/lib/modprobe.d/{n}", t)
+    if cmdline is not None:
+        _w(raiz, "proc/cmdline", cmdline)
+
+
+def test_drm_solo_paquete_no_es_override(tmp_path: Path) -> None:
+    _modprobe(tmp_path, {"nvidia-graphics-drivers-kms.conf": "options nvidia_drm modeset=1\n", "zz-nvidia-drm-override.conf": "options nvidia-drm modeset=0\n"}, cmdline="BOOT_IMAGE=/x ro\n")
+    r = h.sonda_drm_modeset(tmp_path, subprocess.run)
+    assert r["modeset"]["efectivo"] == "0" and r["modeset"]["fuente"] == "zz-nvidia-drm-override.conf"  # gana el ultimo por nombre
+    assert r["override_no_soportado"] is False
+    assert r["fbdev"] == {"efectivo": None, "fuente": None, "declaraciones": []}
+    assert h.es_nc(r["sysfs_modeset"])
+
+
+def test_drm_archivo_propio_es_override_y_etc_tapa_usr(tmp_path: Path) -> None:
+    _modprobe(tmp_path, {"50-mio.conf": "# c\noptions nvidia-drm modeset=1 fbdev=1\n", "x.conf": "options otro modeset=7\n"}, usr={"50-mio.conf": "options nvidia-drm modeset=0\n"})
+    _w(tmp_path, "sys/module/nvidia_drm/parameters/modeset", "Y\n")
+    r = h.sonda_drm_modeset(tmp_path, subprocess.run)
+    assert r["override_no_soportado"] is True
+    assert r["modeset"]["declaraciones"] == [{"param": "modeset", "valor": "1", "archivo": "50-mio.conf"}]  # control: el de /usr/lib (0) quedo tapado; otro modulo no cuenta
+    assert r["fbdev"]["efectivo"] == "1" and r["sysfs_modeset"] == "Y"
+
+
+def test_drm_cmdline_es_override_y_pesa_mas(tmp_path: Path) -> None:
+    _modprobe(tmp_path, {"zz-nvidia-drm-override.conf": "options nvidia-drm modeset=0\n"}, cmdline="ro nvidia_drm.modeset=1 quiet\n")
+    r = h.sonda_drm_modeset(tmp_path, subprocess.run)
+    assert r["modeset"]["efectivo"] == "1" and r["modeset"]["fuente"] == "/proc/cmdline" and r["override_no_soportado"] is True
+
+
+def test_drm_nada_legible_es_nc(tmp_path: Path) -> None:
+    assert h.es_nc(h.sonda_drm_modeset(tmp_path, subprocess.run))
+
+
+def test_drm_sin_declaracion_no_es_override(tmp_path: Path) -> None:
+    _modprobe(tmp_path, {"a.conf": "blacklist x\n"})
+    r = h.sonda_drm_modeset(tmp_path, subprocess.run)
+    assert r["modeset"]["efectivo"] is None and r["override_no_soportado"] is False
+
+
+# arranque_tras_actualizacion
+def _kernel(raiz: Path, v: str, initrd: str | None = "x", modulos: bool = True, vmlinuz: bool = True) -> None:
+    _w(raiz, f"lib/modules/{v}/modules.dep", "")
+    if modulos:
+        _w(raiz, f"lib/modules/{v}/kernel/nvidia-580-open/nvidia.ko", "m")
+    if initrd is not None:
+        _w(raiz, f"boot/initrd.img-{v}", initrd)
+    if vmlinuz:
+        _w(raiz, f"boot/vmlinuz-{v}", "k")
+
+
+@pytest.fixture
+def en_uso(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(h.platform, "release", lambda: "6.17.0-1032-nvidia")
+
+
+def test_arranque_sano(tmp_path: Path, en_uso: None) -> None:
+    _kernel(tmp_path, "6.17.0-1032-nvidia")
+    _kernel(tmp_path, "7.0.0-1019-nvidia")
+    _w(tmp_path, "lib/modules/kernel/x", "")  # directorio 'kernel' no es una version
+    _w(tmp_path, "sys/firmware/efi/efivars/SecureBoot-8be4", "\x06\x00\x00\x00\x01")
+    r = h.sonda_arranque_tras_actualizacion(tmp_path, _cae)
+    assert r["kernel_nuevo"] == "7.0.0-1019-nvidia" and r["secure_boot"] is True and r["listo_para_reiniciar"] is True
+    assert r["kernels"]["6.17.0-1032-nvidia"] == {"initrd": True, "modulos_nvidia": True, "dkms_sin_firmar": False, "kernel_en_uso": True}
+    assert r["kernels"]["7.0.0-1019-nvidia"]["kernel_en_uso"] is False
+    assert list(r["kernels"]) == ["6.17.0-1032-nvidia", "7.0.0-1019-nvidia"]
+
+
+def test_control_negativo_kernel_nuevo_sin_initrd(tmp_path: Path, en_uso: None) -> None:
+    _kernel(tmp_path, "6.17.0-1032-nvidia")
+    _kernel(tmp_path, "7.0.0-1019-nvidia", initrd=None)
+    r = h.sonda_arranque_tras_actualizacion(tmp_path, _cae)
+    assert r["kernels"]["7.0.0-1019-nvidia"]["initrd"] is False and r["listo_para_reiniciar"] is False
+    assert r["kernels"]["6.17.0-1032-nvidia"]["initrd"] is True  # el viejo sano no salva al nuevo
+
+
+def test_initrd_vacio_y_sin_modulos(tmp_path: Path, en_uso: None) -> None:
+    _kernel(tmp_path, "7.0.0-1019-nvidia", initrd="")
+    assert h.sonda_arranque_tras_actualizacion(tmp_path, _cae)["listo_para_reiniciar"] is False
+    _w(tmp_path, "boot/initrd.img-7.0.0-1019-nvidia", "x")
+    assert h.sonda_arranque_tras_actualizacion(tmp_path, _cae)["listo_para_reiniciar"] is not False  # control: con initrd y modulos ya no bloquea
+    (tmp_path / "lib/modules/7.0.0-1019-nvidia/kernel/nvidia-580-open/nvidia.ko").unlink()
+    r = h.sonda_arranque_tras_actualizacion(tmp_path, _cae)
+    assert r["kernels"]["7.0.0-1019-nvidia"]["modulos_nvidia"] is False and r["listo_para_reiniciar"] is False
+
+
+def test_modulos_en_updates_y_kernel_solo_en_boot(tmp_path: Path, en_uso: None) -> None:
+    _kernel(tmp_path, "7.0.0-1019-nvidia", modulos=False, vmlinuz=False)
+    _w(tmp_path, "lib/modules/7.0.0-1019-nvidia/updates/nvidia.ko.zst", "m")
+    _w(tmp_path, "boot/vmlinuz-8.0.0-1-nvidia", "k")  # sin /lib/modules ni initrd
+    r = h.sonda_arranque_tras_actualizacion(tmp_path, _cae)
+    assert r["kernel_nuevo"] == "8.0.0-1-nvidia" and r["listo_para_reiniciar"] is False
+    assert r["kernels"]["7.0.0-1019-nvidia"]["modulos_nvidia"] is True
+
+
+def test_arranque_sin_kernels_es_nc(tmp_path: Path) -> None:
+    assert h.es_nc(h.sonda_arranque_tras_actualizacion(tmp_path, _cae))
+
+
+def test_initrd_ilegible_es_nc_nunca_true(tmp_path: Path, en_uso: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    _kernel(tmp_path, "7.0.0-1019-nvidia")
+    monkeypatch.setattr(h, "_initrd_ok", lambda p: h._nc("permiso"))
+    r = h.sonda_arranque_tras_actualizacion(tmp_path, _cae)
+    assert h.es_nc(r["listo_para_reiniciar"]) and h.es_nc(r["kernels"]["7.0.0-1019-nvidia"]["initrd"])
+
+
+def test_initrd_ok_oserror_real(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def boom(self: Path, *a: Any, **k: Any) -> Any:
+        raise PermissionError("no")
+    monkeypatch.setattr(Path, "stat", boom)
+    assert h.es_nc(h._initrd_ok(tmp_path / "i"))
+
+
+def test_secure_boot_por_mokutil_y_fallo(tmp_path: Path) -> None:
+    assert h._secure_boot(tmp_path, _correr({"mokutil": (0, "SecureBoot enabled")})) is True
+    assert h._secure_boot(tmp_path, _correr({"mokutil": (0, "SecureBoot disabled")})) is False
+    assert h.es_nc(h._secure_boot(tmp_path, _cae))
+    assert h.es_nc(h._secure_boot(tmp_path, _correr({"mokutil": (0, "???")})))
+
+
+def test_secure_boot_efivar_truncado_o_ilegible_cae_a_mokutil(tmp_path: Path) -> None:
+    _w(tmp_path, "sys/firmware/efi/efivars/SecureBoot-a", "\x06\x00")
+    (tmp_path / "sys/firmware/efi/efivars/SecureBoot-b").mkdir()  # read_bytes sobre un directorio: OSError
+    assert h._secure_boot(tmp_path, _correr({"mokutil": (0, "SecureBoot disabled")})) is False
+    _w(tmp_path, "sys/firmware/efi/efivars/SecureBoot-c", "\x06\x00\x00\x00\x00")
+    assert h._secure_boot(tmp_path, _cae) is False  # efivar valor 0
+
+
+def _dkms(raiz: Path, ko: str, contenido: bytes, v: str = "7.0.0-1019-nvidia") -> None:
+    _kernel(raiz, v)
+    p = raiz / f"lib/modules/{v}/updates/{ko}"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_bytes(contenido)
+    _w(raiz, "usr/sbin/dkms", "")
+    _w(raiz, "sys/firmware/efi/efivars/SecureBoot-a", "\x06\x00\x00\x00\x01")
+
+
+_ESTADO = _correr({"dkms": (0, f"nvidia/580, 7.0.0-1019-nvidia, aarch64: installed\n")})
+_FIRMA = b"mod\n~Module signature appended~\n"
+
+
+def test_dkms_sin_firmar_bajo_secure_boot_bloquea(tmp_path: Path, en_uso: None) -> None:
+    _dkms(tmp_path, "nvidia.ko", b"sin firma")
+    r = h.sonda_arranque_tras_actualizacion(tmp_path, _ESTADO)
+    assert r["kernels"]["7.0.0-1019-nvidia"]["dkms_sin_firmar"] is True and r["listo_para_reiniciar"] is False
+
+
+def test_dkms_firmado_no_bloquea(tmp_path: Path, en_uso: None) -> None:
+    _dkms(tmp_path, "nvidia.ko", _FIRMA)
+    r = h.sonda_arranque_tras_actualizacion(tmp_path, _ESTADO)
+    assert r["kernels"]["7.0.0-1019-nvidia"]["dkms_sin_firmar"] is False and r["listo_para_reiniciar"] is True
+
+
+def test_dkms_casos_limite(tmp_path: Path, en_uso: None) -> None:
+    _dkms(tmp_path, "nvidia.ko.zst", b"z")
+    d = tmp_path / "lib/modules/7.0.0-1019-nvidia"
+    assert h.es_nc(h._dkms_sin_firmar(tmp_path, _ESTADO, "7.0.0-1019-nvidia", d, True))  # comprimido: no se puede leer la firma
+    assert h.es_nc(h.sonda_arranque_tras_actualizacion(tmp_path, _ESTADO)["listo_para_reiniciar"])
+    assert h.es_nc(h._dkms_sin_firmar(tmp_path, _cae, "7.0.0-1019-nvidia", d, True))  # dkms presente pero no corre
+    assert h._dkms_sin_firmar(tmp_path, _correr({"dkms": (0, "otro/1, 7.0.0-1019-nvidia: installed")}), "7.0.0-1019-nvidia", d, True) is False  # dkms sin nvidia
+    assert h._dkms_sin_firmar(tmp_path, _ESTADO, "7.0.0-1019-nvidia", d, False) is False  # sin Secure Boot
+    assert h.es_nc(h._dkms_sin_firmar(tmp_path, _ESTADO, "7.0.0-1019-nvidia", d, h._nc("sb")))  # estado SB desconocido
+    assert h._dkms_sin_firmar(tmp_path / "otro", _ESTADO, "7.0.0-1019-nvidia", d, True) is False  # sin dkms instalado
+
+
+def test_dkms_ko_ilegible(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _dkms(tmp_path, "nvidia.ko", b"x")
+    def boom(self: Path) -> bytes:
+        raise PermissionError("no")
+    monkeypatch.setattr(Path, "read_bytes", boom)
+    d = tmp_path / "lib/modules/7.0.0-1019-nvidia"
+    assert h.es_nc(h._dkms_sin_firmar(tmp_path, _ESTADO, "7.0.0-1019-nvidia", d, True))
+
+
+def test_dkms_status_sin_modulos_updates_es_false(tmp_path: Path) -> None:
+    _kernel(tmp_path, "7.0.0-1019-nvidia")
+    _w(tmp_path, "usr/sbin/dkms", "")
+    assert h._dkms_sin_firmar(tmp_path, _ESTADO, "7.0.0-1019-nvidia", tmp_path / "lib/modules/7.0.0-1019-nvidia", True) is False
+
+
+def test_recoge_incluye_las_dos_sondas(tmp_path: Path) -> None:
+    r = h.recoge(tmp_path, _cae)
+    assert "drm_modeset" in r and "arranque_tras_actualizacion" in r
+
+
+def test_drm_conf_ilegible_se_omite(tmp_path: Path) -> None:
+    (tmp_path / "etc/modprobe.d/roto.conf").mkdir(parents=True)  # leer un directorio: OSError
+    _modprobe(tmp_path, {}, cmdline="ro\n")
+    assert h.sonda_drm_modeset(tmp_path, subprocess.run)["override_no_soportado"] is False
+
+
+def test_secure_boot_variable_ilegible_se_nombra_en_el_nc(tmp_path: Path) -> None:
+    """Una variable EFI que no se puede leer no se salta en silencio: el NOT_COLLECTED la nombra (control negativo: con el estado legible no hay NC)."""
+    (tmp_path / "sys/firmware/efi/efivars/SecureBoot-8be4").mkdir(parents=True)  # un directorio no se lee como archivo
+    r = h._secure_boot(tmp_path, _cae)
+    assert isinstance(r, str) and h.es_nc(r) and "SecureBoot-8be4" in r and "ilegibles" in r
+    _w(tmp_path, "sys/firmware/efi/efivars/SecureBoot-aaaa", "\x06\x00\x00\x00\x01")
+    assert h._secure_boot(tmp_path, _cae) is True

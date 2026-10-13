@@ -175,6 +175,137 @@ def sonda_clock_lock(raiz: Path, correr: Correr) -> Any:
     return v if v else _nc("nvidia-smi sin salida")
 
 
+# Archivos que trae el paquete de DGX OS (`dpkg -L nvidia-drm-options-modeset0` -> zz-nvidia-drm-override.conf; el de
+# nvidia-graphics-drivers-kms.conf lo trae el paquete del driver). La ficha FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT NO define
+# "unsupported override": solo pide detectar `modeset` fijado por un override ajeno al OTA y no retirarlo sin fuente oficial.
+# Criterio operativo (de quien encarga esta sonda, no de NVIDIA): modeset/fbdev fijado en un archivo que no trae un paquete
+# de NVIDIA, o en /proc/cmdline, es override propio. Declarado, no una verdad del fabricante.
+ARCHIVOS_PAQUETE_NVIDIA = ("zz-nvidia-drm-override.conf", "nvidia-graphics-drivers-kms.conf")
+_OPT_DRM = re.compile(r"^\s*options\s+nvidia[-_]drm\s+(.*)$", re.M)
+_PARAM_DRM = re.compile(r"\b(modeset|fbdev)=(\w+)")
+_CMD_DRM = re.compile(r"(?:^|\s)nvidia[-_]drm\.(modeset|fbdev)=(\w+)")
+
+
+def sonda_drm_modeset(raiz: Path, correr: Correr) -> Any:
+    """Valor DECLARADO (modprobe.d y cmdline) de nvidia-drm modeset/fbdev; el valor vivo de sysfs va aparte y puede ser NOT_COLLECTED."""
+    decl: list[dict[str, str]] = []
+    leidos = 0
+    # /etc tapa a /usr/lib con el mismo nombre; modprobe aplica en orden de nombre y gana la ultima declaracion
+    archivos: dict[str, Path] = {}
+    for d in ("usr/lib/modprobe.d", "etc/modprobe.d"):
+        for f in _hijos(raiz / d, "*.conf"):
+            archivos[f.name] = f
+    for nombre in sorted(archivos):
+        txt = _lee(archivos[nombre])
+        if txt is None:
+            continue
+        leidos += 1
+        for linea in _OPT_DRM.findall(txt):
+            decl += [{"param": k, "valor": v, "archivo": nombre} for k, v in _PARAM_DRM.findall(linea)]
+    cmd = _lee(raiz / "proc/cmdline")
+    if cmd is not None:
+        leidos += 1
+        decl += [{"param": k, "valor": v, "archivo": "/proc/cmdline"} for k, v in _CMD_DRM.findall(cmd)]  # el cmdline pesa mas que modprobe.d
+    if not leidos:
+        return _nc("sin modprobe.d ni /proc/cmdline legibles")
+    out: dict[str, Any] = {}
+    for param in ("modeset", "fbdev"):
+        propias = [d for d in decl if d["param"] == param]
+        out[param] = {"efectivo": propias[-1]["valor"] if propias else None, "fuente": propias[-1]["archivo"] if propias else None, "declaraciones": propias}
+    vivo = _lee(raiz / "sys/module/nvidia_drm/parameters/modeset")
+    out["sysfs_modeset"] = vivo if vivo else _nc("/sys/module/nvidia_drm/parameters/modeset ilegible o ausente")
+    out["override_no_soportado"] = any(d["param"] in ("modeset", "fbdev") and d["archivo"] not in ARCHIVOS_PAQUETE_NVIDIA for d in decl)
+    return out
+
+
+def _clave_version(v: str) -> tuple[int, ...]:
+    return tuple(int(n) for n in re.findall(r"\d+", v))
+
+
+def _initrd_ok(ruta: Path) -> bool | str:
+    """True solo si existe y no esta vacio; False si falta; NOT_COLLECTED si no se pudo leer."""
+    try:
+        st = ruta.stat()
+    except FileNotFoundError:
+        return False
+    except OSError as e:
+        return _nc(f"{ruta}: {type(e).__name__}")
+    return st.st_size > 0
+
+
+def _modulos_nvidia(d: Path) -> list[Path]:
+    return [*_hijos(d / "updates", "**/nvidia.ko*"), *_hijos(d / "kernel", "nvidia*/**/nvidia.ko*")]
+
+
+def _secure_boot(raiz: Path, correr: Correr) -> bool | str:
+    ilegibles: list[str] = []
+    for var in _hijos(raiz / "sys/firmware/efi/efivars", "SecureBoot-*"):
+        try:
+            b = var.read_bytes()
+        except OSError as e:
+            ilegibles.append(f"{var.name}: {type(e).__name__}")
+            continue
+        if len(b) >= 5:  # 4 bytes de atributos + 1 de valor
+            return b[4] == 1
+    out = _comando(correr, ["mokutil", "--sb-state"])
+    if out and "enabled" in out.lower():
+        return True
+    if out and "disabled" in out.lower():
+        return False
+    return _nc("ni efivars SecureBoot ni mokutil --sb-state dieron estado" + (f" (ilegibles: {'; '.join(ilegibles)})" if ilegibles else ""))
+
+
+def _dkms_sin_firmar(raiz: Path, correr: Correr, ver: str, d: Path, sb: bool | str) -> bool | str:
+    """True solo si dkms registra nvidia para este kernel, hay Secure Boot y algun .ko de updates/ no lleva firma."""
+    if not (raiz / "usr/sbin/dkms").exists():
+        return False  # sin dkms no hay modulos DKMS que firmar
+    estado = _comando(correr, ["dkms", "status"])
+    if estado is None:
+        return _nc("dkms presente pero `dkms status` no corre")
+    if not any("nvidia" in l and f", {ver}," in l for l in estado.splitlines()):
+        return False
+    if sb is False:
+        return False
+    if not isinstance(sb, bool):
+        return sb
+    for ko in _hijos(d / "updates", "**/nvidia*.ko*"):
+        if ko.suffix != ".ko":
+            return _nc(f"{ko.name} comprimido: firma no legible")
+        try:
+            if not ko.read_bytes().endswith(b"~Module signature appended~\n"):
+                return True
+        except OSError as e:
+            return _nc(f"{ko.name}: {type(e).__name__}")
+    return False
+
+
+def sonda_arranque_tras_actualizacion(raiz: Path, correr: Correr) -> Any:
+    """Por kernel instalado: initrd no vacio, modulos nvidia.ko y DKMS sin firmar bajo Secure Boot. `listo_para_reiniciar` mira solo al mas alto."""
+    mods, boot = raiz / "lib/modules", raiz / "boot"
+    vers = {d.name for d in _hijos(mods, "[0-9]*") if d.is_dir()} | {f.name[len("vmlinuz-"):] for f in _hijos(boot, "vmlinuz-*")}
+    if not vers:
+        return _nc("sin kernels en /lib/modules ni /boot/vmlinuz-*")
+    sb = _secure_boot(raiz, correr)
+    en_uso = platform.release()
+    kernels: dict[str, dict[str, Any]] = {}
+    for v in sorted(vers, key=_clave_version):
+        kernels[v] = {
+            "initrd": _initrd_ok(boot / f"initrd.img-{v}"),
+            "modulos_nvidia": bool(_modulos_nvidia(mods / v)),
+            "dkms_sin_firmar": _dkms_sin_firmar(raiz, correr, v, mods / v, sb),
+            "kernel_en_uso": v == en_uso,
+        }
+    nuevo = list(kernels)[-1]
+    k = kernels[nuevo]
+    if k["initrd"] is False or k["modulos_nvidia"] is False or k["dkms_sin_firmar"] is True:
+        listo: bool | str = False
+    elif k["initrd"] is True and k["dkms_sin_firmar"] is False:
+        listo = True
+    else:
+        listo = _nc("initrd o firma DKMS del kernel nuevo sin leer")
+    return {"kernels": kernels, "kernel_nuevo": nuevo, "secure_boot": sb, "listo_para_reiniciar": listo}
+
+
 SONDAS: dict[str, Callable[[Path, Correr], Any]] = {
     "os_release": sonda_os_release,
     "kernel": sonda_kernel,
@@ -188,6 +319,8 @@ SONDAS: dict[str, Callable[[Path, Correr], Any]] = {
     "gpu": sonda_gpu,
     "pstore": sonda_pstore,
     "clock_lock": sonda_clock_lock,
+    "drm_modeset": sonda_drm_modeset,
+    "arranque_tras_actualizacion": sonda_arranque_tras_actualizacion,
 }
 
 
