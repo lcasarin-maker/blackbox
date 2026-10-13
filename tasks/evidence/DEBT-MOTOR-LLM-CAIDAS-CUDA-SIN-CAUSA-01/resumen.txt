@@ -1,0 +1,46 @@
+DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01 -- analisis de volcados, 2026-10-13 (solo lectura; motor, contenedor y GPU sin tocar)
+
+VOLCADOS: 28 vllm_* (10-oct 11:49 a 12-oct 10:13) + 1 prueba_* (control de Declutter, 10-oct 05:56).
+  Los 28 vllm_* miden 67904 bytes y tienen 51-52 bytes no cero; su encabezado ELF promete la
+  tabla de secciones en el byte 420-459 MB (e_shnum 18810-59981). Estan TRUNCADOS. -> encabezados-elf.txt
+
+CUDA-GDB (13.0) SOBRE VOLCADOS REALES: no nombrable por esta via.
+  vllm_..._236_1791652203 y vllm_..._235_1791812302: rc=134,
+  "cuda-state.c:182: internal-error: initialize: Assertion `m_instance.m_num_devices > 0' failed."
+  Causa medida: el archivo truncado no contiene la tabla de dispositivos. NO es falta de driver:
+  en la misma sesion nvidia-smi -L ve la GB10 y el volcado prueba_* abre bien (control positivo).
+  -> cuda-gdb-vllm_236_1791652203.txt, cuda-gdb-vllm_235_1791812302.txt
+  Controles: positivo (prueba_*) rc=0, "CUDA Exception: Warp Illegal Address",
+  kernel_que_escribe_fuera_de_rango, falla_gpu.py:6 -> control-positivo-prueba.txt.
+  Negativo (archivo de texto) rc=1, "ELF header 'ident' verification failed", "No CUDA kernels."
+  -> control-negativo-no-volcado.txt
+
+KERNEL Y EXCEPCION NOMBRADOS (fuente: el propio generador de volcados, CUDA_COREDUMP_SHOW_PROGRESS=1,
+  en journalctl --user -u ai-nemotron; 28 eventos, 1:1 con los 28 archivos) -> tabla-eventos.txt,
+  journal-coredump-lineas.txt
+  Frame #0 en los 28: kernels cuDNN de fusion runtime "matMul_pointwise_pointwise":
+    22  cudnn_generated_fort_native_sm120_matMul_pointwise_pointwise_knob_11_128x128x64_0_0
+     4  cudnn_generated_fort_native_sm80_matMul_pointwise_pointwise_knob_0_256x128x128_3_0
+     1  cudnn_generated_fort_native_sm120_matMul_pointwise_pointwise_knob_12_128x64x64_0_0
+     1  cudnn_generated_fort_native_sm120_matMul_pointwise_pointwise_knob_6_64x128x128_0_0
+  Excepciones: 17 CUDBG_EXCEPTION_WARP_OUT_OF_RANGE_ADDRESS, 8 WARP_MISALIGNED_ADDRESS,
+               3 WARP_ILLEGAL_INSTRUCTION.  Linea de codigo fuente: no disponible (pila de 1 frame, sin simbolos de linea).
+  GPU reportada: sm_121 (GB10); los kernels estan generados para sm120 y sm80.
+
+POR QUE ESTAN TRUNCADOS (medido): en los 28 el progreso se detiene en 90% o 95% de
+  "Writing out global memory" y nunca llega a 100%; despues el EngineCore queda colgado hasta que
+  ai-nemotron se detiene y vLLM hace "force killing remaining process EngineCore" (28/28; 4-622 s
+  despues del inicio del volcado). -> journal-volcado-vs-reinicio.txt
+
+CAIDAS DE 2026-10-08/10 (las de la ficha): NINGUN volcado las cubre; todas son anteriores al
+  armado (10-oct 05:56). El journal solo da la clase de error (56 lineas illegal memory access,
+  9 illegal instruction, 4 misaligned address) sin kernel. -> journal-caidas-08-10-previas-al-volcado.txt
+  Que sean el mismo kernel cuDNN es INFERENCIA (mismas tres clases de error, mismo motor), no medicion.
+
+INFERIDO, NO MEDIDO: (a) el volcado colgado al 95% explicaria parte de los "cuelgues" con /v1/models=200;
+  (b) cudnn generado para sm120/sm80 corriendo en sm_121 es compatible con la hipotesis SM12.0-en-SM12.1
+  de la ficha, pero no la prueba.
+
+DEFECTO DEL INSTRUMENTO DE CIERRE: el close_check grep -qE "Warp|Exception|kernel" da rc=0 sobre la
+  salida FALLIDA de cuda-gdb y sobre el control negativo (la linea del comando contiene "kernels").
+  Por eso NO se creo cuda-gdb-kernel.txt: con cualquier contenido de cuda-gdb pasaria.

@@ -1,0 +1,41 @@
+$ systemd-run --user --scope -q -p MemoryMax=8G -p MemorySwapMax=0 timeout 300 /usr/local/cuda/bin/cuda-gdb -batch -ex "target cudacore /srv/ai/models/_coredumps/vllm_aitopatom-41f1_236_1791652203" -ex "info cuda devices" -ex "info cuda kernels" -ex "info cuda warps" -ex "info cuda lanes" -ex "bt" -ex "x/4i \$pc"
+--- 2026-10-13T08:17:37-06:00
+Opening GPU coredump: /srv/ai/models/_coredumps/vllm_aitopatom-41f1_236_1791652203
+cuda-gdb/14/gdb/cuda/cuda-state.c:182: internal-error: initialize: Assertion `m_instance.m_num_devices > 0' failed.
+A problem internal to GDB has been detected,
+further debugging may prove unreliable.
+----- Backtrace -----
+0x50adeb ???
+0x9536cb ???
+0x9538d3 ???
+0xae6ccf ???
+0x5faea7 ???
+0x60085f ???
+0x5c2273 ???
+0x5c2327 ???
+0x5c280f ???
+0x90842f ???
+0x536cbf ???
+0x918c73 ???
+0x78b7c3 ???
+0x78b937 ???
+0x78c967 ???
+0x78d28f ???
+0x413723 ???
+0xe1ff75ac84c3 __libc_start_call_main
+	../sysdeps/nptl/libc_start_call_main.h:58
+0xe1ff75ac8597 __libc_start_main_impl
+	../csu/libc-start.c:360
+0x42534f ???
+---------------------
+cuda-gdb/14/gdb/cuda/cuda-state.c:182: internal-error: initialize: Assertion `m_instance.m_num_devices > 0' failed.
+A problem internal to GDB has been detected,
+further debugging may prove unreliable.
+Quit this debugging session? (y or n) [answered Y; input not from terminal]
+
+This is a bug, please report it.  For instructions, see:
+<https://forums.developer.nvidia.com/c/developer-tools/cuda-developer-tools/cuda-gdb>.
+
+/usr/bin/timeout: la orden monitorizada ha volcado un 'core'
+environment: línea 8: 3182921 Abortado                systemd-run --user --scope -q -p MemoryMax=8G -p MemorySwapMax=0 timeout 300 /usr/local/cuda/bin/cuda-gdb -batch -ex "target cudacore /srv/ai/models/_coredumps/vllm_aitopatom-41f1_236_1791652203" -ex "info cuda devices" -ex "info cuda kernels" -ex "info cuda warps" -ex "info cuda lanes" -ex "bt" -ex "x/4i \$pc"
+rc=134

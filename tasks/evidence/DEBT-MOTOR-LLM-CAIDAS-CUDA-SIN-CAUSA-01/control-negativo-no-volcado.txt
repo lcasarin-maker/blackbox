@@ -1,0 +1,11 @@
+$ systemd-run --user --scope -q -p MemoryMax=8G -p MemorySwapMax=0 timeout 300 /usr/local/cuda/bin/cuda-gdb -batch -ex "target cudacore /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/no_es_volcado.txt" -ex "info cuda devices" -ex "info cuda kernels" -ex "info cuda warps" -ex "info cuda lanes" -ex "bt" -ex "x/4i \$pc"
+--- 2026-10-13T08:17:38-06:00
+Opening GPU coredump: /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/no_es_volcado.txt
+Failed to read core file: elfOpenByName() failed: ELF header 'ident' verification failed
+No CUDA devices.
+No CUDA kernels.
+No CUDA Warps.
+No CUDA Lanes.
+No stack.
+No registers.
+rc=1
