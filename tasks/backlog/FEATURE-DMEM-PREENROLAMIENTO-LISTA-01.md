@@ -37,3 +37,6 @@ close_check: {"cmd": "grep -q pre_enrolamiento_completo tasks/evidence/FEATURE-D
 3. `sudo bash tools/dmem_modulo.sh firma <dir con los .ko>` y `sudo bash tools/dmem_modulo.sh instala`.
 4. Reiniciar con la consola a mano. Tras el arranque: `sudo bash tools/dmem_modulo.sh verifica` y `sudo bash tools/dmem_prueba.sh`.
 5. Si algo falla: `sudo bash tools/dmem_modulo.sh retrocede && sudo reboot`.
+
+## Avance 2026-10-13
+Fila 10 (prueba del limitador con vLLM real): por voto de Luis se declara NO EJECUTABLE mientras el motor de produccion corra. Medido: el motor usa hasta 75 GiB de memoria unificada de 121 GiB (pico 76 968 MiB en la telemetria) y un segundo vLLM compartiria esa memoria; la imagen cabe en disco (2,0 TB libres) pero la prueba arriesgaria el unico motor. Quedan abiertas la fila 11 (ajustes de vLLM, de Luis) y la fila 16 (ventana de reinicio, de Luis).
