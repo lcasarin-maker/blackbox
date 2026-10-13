@@ -1,0 +1,10 @@
+[Unit]
+Description=bb medidor de energia externo: una lectura del enchufe con medidor (interruptor medidor_energia; correr en OTRO equipo, no en la ATOM)
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.medidor_energia --paso
+TimeoutStartSec=5
+MemoryMax=64M
+Nice=10

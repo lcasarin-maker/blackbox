@@ -49,7 +49,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from tools import hallazgo
+from tools import hallazgo, medidor_energia
 
 DATOS = Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox"))
 TELEMETRIA = DATOS / "atom_gpu_telemetry.jsonl"
@@ -461,6 +461,25 @@ def _evidencia_forense(
     return ev
 
 
+def _evidencia_externa(fin: float, hueco_s: float, ruta: Path | None = None) -> tuple[dict[str, Any] | None, str | None]:
+    """(externo, no_concluyente): `externo` solo si el medidor mide el corte con voltaje; si hay filas sin conclusion se declara como no leido."""
+    ext = medidor_energia.ventana_de_corte(ruta or medidor_energia._datos() / "energia.jsonl", fin, hueco_s)
+    if ext is None:
+        return None, None
+    if ext["voltaje_perdido"] is None:
+        return None, f"medidor_externo ({ext['motivo']})"
+    return ext, None
+
+
+def _anade_evidencia_externa(ev: dict[str, Any], fin: float, ruta: Path | None = None) -> None:
+    """Pone `ev["externo"]` si el medidor concluye, o declara en `no_se_pudo_leer` que hubo filas sin conclusion."""
+    externo, no_concluyente = _evidencia_externa(fin, ev["hueco_s"], ruta)
+    if externo is not None:
+        ev["externo"] = externo
+    if no_concluyente is not None:
+        ev["no_se_pudo_leer"].append(no_concluyente)
+
+
 def recoge(boots: list[dict[str, Any]], i: int) -> dict[str, Any]:
     """Evidencia del boot boots[i]; el boot siguiente (i+1) aporta BERT y hueco."""
     b = boots[i]
@@ -505,6 +524,7 @@ def recoge(boots: list[dict[str, Any]], i: int) -> dict[str, Any]:
     ev.update(_evidencia_forense(b, sig, no_leido))
     if sig is not None:
         ev["hueco_s"] = round(sig["first_entry"] / 1e6 - fin)
+        _anade_evidencia_externa(ev, fin)
         k = _journal(
             "-b",
             str(sig["index"]),

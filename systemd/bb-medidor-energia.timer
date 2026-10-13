@@ -1,0 +1,11 @@
+[Unit]
+Description=bb medidor de energia externo, una lectura por segundo (sin instalar hasta que exista el enchufe y su medidor.json)
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1s
+AccuracySec=100ms
+Unit=bb-medidor-energia.service
+
+[Install]
+WantedBy=timers.target
