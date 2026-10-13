@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from tools import verifica_cosecha_foro as v
 
 
@@ -159,3 +161,110 @@ def test_triaje_declarar_de_mas_se_detecta(tmp_path: Path) -> None:
     _tema(h, 1, esperados=2, bajados=2)
     _guarda(r, _tri(1, mensajes_leidos=30))
     assert 1 in v.verifica_triaje([{"id": 1}], h, r)["lectura_declarada_de_mas"]
+
+
+def test_estado_descarga_ramas_de_recibo_y_texto(tmp_path: Path) -> None:
+    h = tmp_path / "h"
+    assert v.estado_descarga(h, 1) == ("no_se_pudo", "sin recibo de descarga")
+    _tema(h, 2, texto=False)
+    assert v.estado_descarga(h, 2) == ("no_se_pudo", "recibo dice fetched pero falta el texto")
+    _tema(h, 3)
+    (h / "threads" / "3.txt").write_text("POST 1 |", encoding="utf-8")
+    assert v.estado_descarga(h, 3) == ("no_se_pudo", "texto vacio")
+    (h / "threads" / "3.txt").write_text("sin marcas de mensaje " * 5, encoding="utf-8")
+    assert v.estado_descarga(h, 3) == ("no_se_pudo", "texto vacio")
+    _tema(h, 4)
+    assert v.estado_descarga(h, 4) == ("descargado", "")  # control negativo: el mismo camino puede dar descargado
+    _tema(h, 5, error="HTTP Error 403: Forbidden")
+    assert v.estado_descarga(h, 5)[0] == "vacio_del_producto"
+    _tema(h, 6, error="")
+    (h / "threads" / "6.fetch.json").write_text(json.dumps({"status": "could_not_run"}), encoding="utf-8")
+    assert v.estado_descarga(h, 6) == ("no_se_pudo", "sin detalle")
+
+
+def test_mensajes_reales_cuenta_marcas_y_tolera_texto_ausente(tmp_path: Path) -> None:
+    h = tmp_path / "h"
+    assert v.mensajes_reales(h, 1) == 0
+    _tema(h, 2, esperados=3, bajados=3)
+    assert v.mensajes_reales(h, 2) == 3
+    (h / "threads" / "2.txt").write_text("POST 1 | a\nx\nPOST 2 | b\ny", encoding="utf-8")
+    assert v.mensajes_reales(h, 2) == 2
+
+
+def test_valida_resultado_ramas_de_error() -> None:
+    assert v.valida_resultado([], 1) == ["no es un objeto JSON"]
+    malos = v.valida_resultado(_res(1, clase="x", utilidad_atom="y", lectura="z", proposito="medir", razon="corta", mecanismos="no"), 1)
+    texto = " | ".join(malos)
+    for frag in ("clase invalida", "utilidad_atom invalida", "lectura debe ser", "proposito debe ser", "razon ausente", "mecanismos debe ser una lista"):
+        assert frag in texto
+    assert any("proposito debe ser" in m for m in v.valida_resultado(_res(1, proposito=["inventado"]), 1))
+    assert any("clase mecanismo sin mecanismos" in m for m in v.valida_resultado(_res(1, clase="mecanismo"), 1))
+    assert any("mecanismo 0" in m for m in v.valida_resultado(_res(1, mecanismos=["no dict"]), 1))
+    assert any("mecanismo 0" in m for m in v.valida_resultado(_res(1, mecanismos=[{"que": "a", "como": "b", "fuente_post": "3"}]), 1))
+
+
+def test_verifica_resultado_invalido_no_es_limpio(tmp_path: Path) -> None:
+    h, r = tmp_path / "h", tmp_path / "r"
+    _tema(h, 1)
+    _guarda(r, _res(1, clase="x"))
+    out = v.verifica([{"id": 1}], h, r)
+    assert 1 in out["resultados_invalidos"] and out["cobertura_completa"] is False
+
+
+def test_valida_triaje_ramas_de_error() -> None:
+    assert v.valida_triaje("x", 1) == ["no es un objeto JSON"]
+    assert v.valida_triaje(_tri(1), 1) == []  # control negativo: un triaje bueno no produce problemas
+    assert any("distinto" in m for m in v.valida_triaje(_tri(9), 1))
+    assert any("candidato invalido" in m for m in v.valida_triaje(_tri(1, candidato="tal vez"), 1))
+    assert any("booleano" in m for m in v.valida_triaje(_tri(1, leido="si"), 1))
+    assert any("sin mensajes_leidos" in m for m in v.valida_triaje(_tri(1, mensajes_leidos=0), 1))
+    assert any("proposito debe ser" in m for m in v.valida_triaje(_tri(1, proposito="medir"), 1))
+    assert any("senales" in m for m in v.valida_triaje(_tri(1, senales="x"), 1))
+    assert any("una_frase" in m for m in v.valida_triaje(_tri(1, una_frase="corta"), 1))
+
+
+def test_verifica_triaje_fallos_invalidos_y_vacio(tmp_path: Path) -> None:
+    h, r = tmp_path / "h", tmp_path / "r"
+    _tema(h, 1, esperados=5, bajados=3)
+    _tema(h, 2)
+    _tema(h, 3, error="HTTP Error 404: Not Found")
+    _guarda(r, _tri(1))
+    _guarda(r, _tri(2, candidato="si"))
+    out = v.verifica_triaje([{"id": 1}, {"id": 2}, {"id": 3}], h, r)
+    assert 1 in out["fallos_de_descarga"] and 2 in out["resultados_invalidos"]
+    assert out["descarga"]["vacio_del_producto"] == 1 and 3 not in out["sin_resultado"]
+    assert out["cobertura_completa"] is False
+
+
+def test_verifica_triaje_ids_candidatos_excluyen_no(tmp_path: Path) -> None:
+    h, r = tmp_path / "h", tmp_path / "r"
+    _tema(h, 1)
+    _tema(h, 2)
+    _guarda(r, _tri(1, candidato="quizas", proposito=["medir"]))
+    _guarda(r, _tri(2))
+    out = v.verifica_triaje([{"id": 1}, {"id": 2}], h, r)
+    assert out["ids_candidatos"] == {"si": [], "quizas": [1]}
+
+
+def _carpetas(tmp_path: Path, inv: object) -> list[str]:
+    ruta = tmp_path / "inv.json"
+    ruta.write_text(json.dumps(inv), encoding="utf-8")
+    return ["--inventario", str(ruta), "--hilos", str(tmp_path / "h"), "--resultados", str(tmp_path / "r")]
+
+
+def test_main_sin_triaje_rc0_y_rc1(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    _tema(tmp_path / "h", 1)
+    _guarda(tmp_path / "r", _res(1))
+    assert v.main(_carpetas(tmp_path, [{"id": 1}])) == 0
+    assert json.loads(capsys.readouterr().out)["cobertura_completa"] is True
+    assert v.main(_carpetas(tmp_path, {"temas": [{"id": 1}, {"id": 2}]})) == 1  # el tema 2 no existe: fallo
+    assert json.loads(capsys.readouterr().out)["cobertura_completa"] is False
+
+
+def test_main_con_triaje_rc0_y_rc1(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    _tema(tmp_path / "h", 1)
+    _guarda(tmp_path / "r", _tri(1))
+    assert v.main([*_carpetas(tmp_path, [{"id": 1}]), "--triaje"]) == 0
+    assert "ids_candidatos" in json.loads(capsys.readouterr().out)
+    assert v.main([*_carpetas(tmp_path, [{"id": 1}, {"id": 2}]), "--triaje"]) == 1
+    assert "ids_candidatos" in json.loads(capsys.readouterr().out)
