@@ -8,7 +8,7 @@ severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-10
-close_check: {"expect": "exit_zero", "porque": "Solo se cierra con la salida literal de cuda-gdb sobre un volcado REAL vllm_* del motor: kernel, excepcion y linea. Hipotesis sin volcado no cierran nada.", "cmd": "grep -qE \"Warp|Exception|kernel\" tasks/evidence/DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01/cuda-gdb-kernel.txt"}
+close_check: {"expect": "exit_zero", "porque": "Solo se cierra con la salida literal de cuda-gdb sobre un volcado REAL vllm_* del motor: kernel, excepcion y linea. Hipotesis sin volcado no cierran nada.", "cmd": "grep -qE \"^CUDA Exception: Warp\" tasks/evidence/DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01/cuda-gdb-kernel.txt"}
 ---
 
 ## Que paso (medido con `bb scan "2026-10-08 19:39"`, journal de ai-nemotron.service)
@@ -60,3 +60,12 @@ abierta y no se atribuye la causa ni se cambia el motor o el driver.
 y omite los volcados restantes de ese scan cuando detecta esta aserción de dispositivo ausente.
 Así deja visible el motivo y evita repetir el mismo aborto por cada archivo; todavía requiere el
 host con GPU/driver visible para cumplir el criterio de cierre.
+
+## Analisis de los 28 volcados (2026-10-13, solo lectura; evidencia en `tasks/evidence/DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01/`, resumen en `resumen.txt`)
+- **Los 28 volcados `vllm_*` estan truncados** (67904 bytes cada uno; su encabezado ELF promete 420-459 MB). `cuda-gdb` no puede abrirlos (rc=134, `m_num_devices > 0`); el control positivo (un volcado de prueba) abre con rc=0 y el negativo (un archivo de texto) falla con rc=1.
+- **Kernel nombrado por el log del propio generador de volcados** (`journalctl --user -u ai-nemotron`, 28 eventos, 1:1 con los archivos): en los 28, frame #0 es un kernel cuDNN fusionado `matMul_pointwise_pointwise` (22 `sm120 knob_11_128x128x64`, 4 `sm80 knob_0_256x128x128_3_0`, 1 `sm120 knob_12`, 1 `sm120 knob_6`). Excepciones: 17 `WARP_OUT_OF_RANGE_ADDRESS`, 8 `WARP_MISALIGNED_ADDRESS`, 3 `WARP_ILLEGAL_INSTRUCTION`. Sin linea de fuente.
+- **Por que estan truncados:** en los 28 la escritura se detiene al 90 % o 95 % de "Writing out global memory" y el EngineCore queda colgado hasta que vLLM lo mata, 4 a 622 s despues. Es decir, el volcado de CUDA activado para diagnosticar retrasa el reinicio del motor y no produce un volcado utilizable.
+- **Las caidas del 2026-10-08/10 de esta ficha no tienen volcado** (son anteriores al armado, 10-oct 05:56); solo hay la clase de error en el journal (56 illegal memory access, 9 illegal instruction, 4 misaligned address). Decir que son el mismo kernel cuDNN es inferencia, no medicion.
+- **Hipotesis sin probar:** kernels compilados para sm120/sm80 corriendo en una GPU sm_121 encajan con una incompatibilidad SM12.0 sobre SM12.1; no la prueban.
+- **Defecto del `close_check` corregido:** `grep -qE "Warp|Exception|kernel"` daba exit 0 sobre una salida fallida de `cuda-gdb` y sobre el control negativo, porque la linea de comando impresa contiene "kernels". Ahora exige una linea que empiece por `CUDA Exception: Warp`.
+- **Decision pendiente de Luis:** para obtener un volcado completo hay que dejar que el generador termine (mas tiempo antes del reinicio o otras banderas de generacion). Eso cambia el motor de produccion y la ficha pide avisar antes a la otra sesion que usa el motor.

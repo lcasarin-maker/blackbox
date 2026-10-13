@@ -1,0 +1,59 @@
+$ systemd-run --user --scope -q -p MemoryMax=8G -p MemorySwapMax=0 timeout 300 /usr/local/cuda/bin/cuda-gdb -batch -ex "target cudacore /srv/ai/models/_coredumps/prueba_3de02fbba121_1_1791633360" -ex "info cuda devices" -ex "info cuda kernels" -ex "info cuda warps" -ex "info cuda lanes" -ex "bt" -ex "x/4i \$pc"
+--- 2026-10-13T08:17:36-06:00
+Opening GPU coredump: /srv/ai/models/_coredumps/prueba_3de02fbba121_1_1791633360
+[Current focus set to CUDA kernel 0, grid 2, block (0,0,0), thread (96,0,0), device 0, sm 0, warp 0, lane 0]
+
+CUDA Exception: Warp Illegal Address
+The exception was triggered at PC 0x325b678d0  kernel_que_escribe_fuera_de_rango  (falla_gpu.py:6)
+#0  0x0000000325b678e0 in kernel_que_escribe_fuera_de_rango<<<(1,1,1),(128,1,1)>>> () at /falla_gpu.py:6
+warning: 6	/falla_gpu.py: No existe el archivo o el directorio
+  Dev PCI Bus/Dev ID        Name Description SM Type SMs Warps/SM Lanes/Warp Max Regs/Lane Active SMs Mask 
+*   0        01:00.0 NVIDIA GB10       GB20B  sm_121  48       48         32           255  0x000000000001 
+  Kernel Parent Dev Grid Status       SMs Mask GridDim  BlockDim Invocation                          
+*      0      -   0    2 Active 0x000000000001 (1,1,1) (128,1,1) kernel_que_escribe_fuera_de_rango() 
+  Wp Active Lanes Mask Divergent Lanes Mask          Active PC Kernel BlockIdx First Active ThreadIdx 
+Device 0 SM 0
+*  0        0xffffffff           0x00000000 0x0000000325b678e0      0  (0,0,0)               (96,0,0) 
+   1        0xffffffff           0x00000000 0x0000000325b678e0      0  (0,0,0)                (0,0,0) 
+   2        0xffffffff           0x00000000 0x0000000325b678e0      0  (0,0,0)               (32,0,0) 
+   3        0xffffffff           0x00000000 0x0000000325b678e0      0  (0,0,0)               (64,0,0) 
+  Ln  State         PC         ThreadIdx       Exception      
+Device 0 SM 0 Warp 0
+*  0 active 0x0000000325b678e0  (96,0,0) Warp Illegal Address 
+   1 active 0x0000000325b678e0  (97,0,0) Warp Illegal Address 
+   2 active 0x0000000325b678e0  (98,0,0) Warp Illegal Address 
+   3 active 0x0000000325b678e0  (99,0,0) Warp Illegal Address 
+   4 active 0x0000000325b678e0 (100,0,0) Warp Illegal Address 
+   5 active 0x0000000325b678e0 (101,0,0) Warp Illegal Address 
+   6 active 0x0000000325b678e0 (102,0,0) Warp Illegal Address 
+   7 active 0x0000000325b678e0 (103,0,0) Warp Illegal Address 
+   8 active 0x0000000325b678e0 (104,0,0) Warp Illegal Address 
+   9 active 0x0000000325b678e0 (105,0,0) Warp Illegal Address 
+  10 active 0x0000000325b678e0 (106,0,0) Warp Illegal Address 
+  11 active 0x0000000325b678e0 (107,0,0) Warp Illegal Address 
+  12 active 0x0000000325b678e0 (108,0,0) Warp Illegal Address 
+  13 active 0x0000000325b678e0 (109,0,0) Warp Illegal Address 
+  14 active 0x0000000325b678e0 (110,0,0) Warp Illegal Address 
+  15 active 0x0000000325b678e0 (111,0,0) Warp Illegal Address 
+  16 active 0x0000000325b678e0 (112,0,0) Warp Illegal Address 
+  17 active 0x0000000325b678e0 (113,0,0) Warp Illegal Address 
+  18 active 0x0000000325b678e0 (114,0,0) Warp Illegal Address 
+  19 active 0x0000000325b678e0 (115,0,0) Warp Illegal Address 
+  20 active 0x0000000325b678e0 (116,0,0) Warp Illegal Address 
+  21 active 0x0000000325b678e0 (117,0,0) Warp Illegal Address 
+  22 active 0x0000000325b678e0 (118,0,0) Warp Illegal Address 
+  23 active 0x0000000325b678e0 (119,0,0) Warp Illegal Address 
+  24 active 0x0000000325b678e0 (120,0,0) Warp Illegal Address 
+  25 active 0x0000000325b678e0 (121,0,0) Warp Illegal Address 
+  26 active 0x0000000325b678e0 (122,0,0) Warp Illegal Address 
+  27 active 0x0000000325b678e0 (123,0,0) Warp Illegal Address 
+  28 active 0x0000000325b678e0 (124,0,0) Warp Illegal Address 
+  29 active 0x0000000325b678e0 (125,0,0) Warp Illegal Address 
+  30 active 0x0000000325b678e0 (126,0,0) Warp Illegal Address 
+  31 active 0x0000000325b678e0 (127,0,0) Warp Illegal Address 
+#0  0x0000000325b678e0 in kernel_que_escribe_fuera_de_rango<<<(1,1,1),(128,1,1)>>> () at /falla_gpu.py:6
+=> 0x325b678e0 <kernel_que_escribe_fuera_de_rango+224>:	EXIT
+   0x325b678f0 <kernel_que_escribe_fuera_de_rango+240>:	BRA 0x325b678f0
+   0x325b67900 <kernel_que_escribe_fuera_de_rango+256>:	NOP
+   0x325b67910 <kernel_que_escribe_fuera_de_rango+272>:	NOP
+rc=0
