@@ -1,0 +1,10 @@
+[Unit]
+Description=bb huella del host (interruptor huella_host; off por defecto)
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.huella_host --paso
+TimeoutStartSec=60
+MemoryMax=256M
+Nice=10

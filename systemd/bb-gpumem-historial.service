@@ -1,0 +1,9 @@
+[Unit]
+Description=bb historial de memoria de GPU por contenedor (interruptor gpumem_historial; off por defecto)
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.gpumem_historial --paso
+MemoryMax=128M
+Nice=10
