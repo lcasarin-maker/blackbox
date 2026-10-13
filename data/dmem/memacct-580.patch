@@ -1268,7 +1268,7 @@ index 0000000..8337d7e
 +    return;
 +}
 diff --git a/src/nvidia/src/kernel/mem_mgr/system_mem.c b/src/nvidia/src/kernel/mem_mgr/system_mem.c
-index c7bb7fe..78c057e 100644
+index c7bb7fe..9259c49 100644
 --- a/src/nvidia/src/kernel/mem_mgr/system_mem.c
 +++ b/src/nvidia/src/kernel/mem_mgr/system_mem.c
 @@ -42,6 +42,7 @@
@@ -1290,7 +1290,7 @@ index c7bb7fe..78c057e 100644
  (
      SystemMemory *pSystemMemory,
      CALL_CONTEXT *pCallContext,
-@@ -524,6 +525,54 @@ failed_destroy_memdesc:
+@@ -524,6 +525,61 @@ failed_destroy_memdesc:
      return rmStatus;
  }
  
@@ -1329,8 +1329,15 @@ index c7bb7fe..78c057e 100644
 +
 +    if ((pRmClient != NULL) && !IS_MIG_ENABLED(pGpu))
 +    {
-+        NV_CHECK_OK_OR_RETURN(LEVEL_ERROR,
-+            memacctTryCharge(pRmClient, pGpu->gpuId, pAllocData->size, &pMemory->pCharge));
++        status = memacctTryCharge(pRmClient, pGpu->gpuId, pAllocData->size, &pMemory->pCharge);
++        /*
++         * bb-patch: libcuda 580 does not know NV_ERR_RESOURCE_ACCOUNTING_HARD_LIMIT_EXCEEDED (added with 615) and
++         * reports cudaErrorUnknown (measured 2026-10-12). Report the limit as out-of-memory so PyTorch raises
++         * OutOfMemoryError, frees its cache and retries.
++         */
++        if (status == NV_ERR_RESOURCE_ACCOUNTING_HARD_LIMIT_EXCEEDED)
++            return NV_ERR_NO_MEMORY;
++        NV_CHECK_OK_OR_RETURN(LEVEL_ERROR, status);
 +    }
 +
 +    status = sysmemConstructInner(pSystemMemory, pCallContext, pParams);
@@ -1345,7 +1352,7 @@ index c7bb7fe..78c057e 100644
  NV_STATUS
  sysmemCtrlCmdGetSurfaceNumPhysPages_IMPL
  (
-@@ -829,6 +878,8 @@ failed:
+@@ -829,6 +885,8 @@ failed:
  void sysmemDestruct_IMPL(SystemMemory *pSystemMemory)
  {
      Memory             *pMemory        = staticCast(pSystemMemory, Memory);
