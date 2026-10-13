@@ -64,8 +64,10 @@ corre() {  # $1 cgroup  $2 caso  $3 MiB  $4 env extra opcional
     echo "$salida" | grep -E '^(OK|OOM|ERR)' | tail -1 || true
     echo "$salida" | grep -qE '^(OK|OOM|ERR)' || echo "ERR sin veredicto: $(echo "$salida" | tail -2 | tr '\n' ' ')"
 }
-cobrado() {  # extrae los bytes de "despues=<region> N" de una linea OK
-    echo "$1" | sed -n 's/.*despues=[^ ]* \([0-9]*\).*/\1/p'
+cobrado() {  # bytes cobrados por la asignacion = despues - base (el contexto CUDA ya cobra ~206 MB al crearse)
+    local a d
+    a=$(echo "$1" | sed -n 's/.*base=[^ ]* \([0-9]*\) despues=.*/\1/p'); d=$(echo "$1" | sed -n 's/.*despues=[^ ]* \([0-9]*\).*/\1/p')
+    [ -n "$a" ] && [ -n "$d" ] && echo $((d - a)) || echo 0
 }
 MIB=256; MINIMO=$((MIB * 1048576 * 9 / 10)); RC=0
 declare -A ESPERA=( [empty]=cobra [expandable]=cobra [async]=cobra [graph]=cobra [pinned]=no_cobra [managed]=no_cobra )
@@ -80,19 +82,22 @@ for caso in empty expandable async graph pinned managed; do
     marca="ok"; [ "$real" = "${ESPERA[$caso]}" ] || { marca="INESPERADO"; [ "${ESPERA[$caso]}" = cobra ] && RC=4; }
     log "  $caso: esperado=${ESPERA[$caso]} real=$real ($b bytes) [$marca]  <- $r"
 done
-log "--- 2. rechazo sobre dmem.max, con control negativo"
-mkdir -p "$RAIZ/bb-dmem-tope"; CGS+=("bb-dmem-tope")
-echo "$REGION 512M" >"$RAIZ/bb-dmem-tope/dmem.max"
-CON=$(corre bb-dmem-tope empty 1024); log "  tope 512M, pide 1024 MiB: $CON"
-[ "$CON" = OOM ] || { log "  NO rechazo sobre el tope"; [ "$RC" = 0 ] && RC=5; }
-BAJO=$(corre bb-dmem-tope empty 128); log "  control: mismo tope, pide 128 MiB: ${BAJO%% *}"
-case "$BAJO" in OK*) ;; *) log "  el control bajo el tope fallo: la prueba no distingue"; [ "$RC" = 0 ] && RC=6 ;; esac
+log "--- 2. rechazo sobre dmem.max, con controles (el rechazo llega como OOM o como cudaErrorUnknown: el libcuda de 580 no conoce el estado 0x8D)"
+mkdir -p "$RAIZ/bb-dmem-tope" "$RAIZ/bb-dmem-holgado"; CGS+=("bb-dmem-tope" "bb-dmem-holgado")
+echo "$REGION 512M" >"$RAIZ/bb-dmem-tope/dmem.max"; echo "$REGION 2048M" >"$RAIZ/bb-dmem-holgado/dmem.max"
+CON=$(corre bb-dmem-tope empty 1024); LIBRE=$(corre bb-dmem-libre empty 1024); CABE=$(corre bb-dmem-holgado empty 1024)
+log "  tope 512M, pide 1024 MiB:               ${CON:0:110}"
+log "  control sin tope, pide 1024 MiB:        ${LIBRE%% *}   (debe ser OK)"
+log "  control tope 2048M, pide 1024 MiB:      ${CABE%% *}   (debe ser OK)"
+case "$LIBRE$CABE" in OK*OK*) ;; *) log "  un control fallo: la prueba no distingue"; [ "$RC" = 0 ] && RC=6 ;; esac
+case "$CON" in OOM*|"ERR CUDA error: unknown error"*|*cudaErrorUnknown*|ERR*unknown\ error*) log "  rechazo sobre el tope: SI" ;;
+    *) log "  NO rechazo sobre el tope"; [ "$RC" = 0 ] && RC=5 ;; esac
 log "--- 3. fuga: dmem.current de un cgroup tras salir su proceso debe ser 0"
-for c in bb-dmem-empty bb-dmem-tope; do
+for c in bb-dmem-empty bb-dmem-tope bb-dmem-libre bb-dmem-holgado; do
     v=$(grep -E "^$REGION " "$RAIZ/$c/dmem.current" 2>/dev/null | awk '{print $2}'); v=${v:-NA}
     log "  $c: dmem.current tras salir = $v"; { [ "$v" = 0 ] || [ "$v" = NA ]; } || { [ "$RC" = 0 ] && RC=7; }
 done
-log "--- 4. contenedores en marcha (SOLO LECTURA, no se pone ningun tope)"
+log "--- 4. contenedores en marcha (SOLO LECTURA, no se pone ningun tope; 0 es esperable si vLLM aun carga el modelo: comparar con nvidia-smi)"
 for id in $(docker ps -q 2>/dev/null); do
     n=$(docker inspect -f '{{.Name}}' "$id" | tr -d /); d="$RAIZ/docker.slice/docker-$(docker inspect -f '{{.Id}}' "$id").scope"
     log "  $n: $(grep -E "^$REGION " "$d/dmem.current" 2>/dev/null || echo 'sin dmem.current')"

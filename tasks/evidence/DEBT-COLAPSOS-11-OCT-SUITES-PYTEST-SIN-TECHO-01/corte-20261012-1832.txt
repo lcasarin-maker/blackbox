@@ -1,0 +1,8 @@
+Corte en seco de la ATOM, 2026-10-12 ~18:32:41-45 hora local (00:32:41 UTC). Medido tras el reinicio de las 18:33.
+- Registro del sistema (journalctl -b -1): termina a las 18:32:36 sin mensajes de apagado, panico, OOM, XID ni MCE. Ultima linea de kernel: 18:30:29 (UFW). earlyoom 18:32:31: 57.42 % de memoria disponible, swap libre 99.99 %.
+- Telemetria de GPU (atom_gpu_telemetry.jsonl, boot 0b00a7c2): ultima muestra 00:32:41 UTC: 89 C, 13.4 W, util 96 %, clk 624 MHz, throttle 0x0, mem_avail 70463 MB, PSI 0.0. vLLM sirviendo 8 peticiones (18:32:22).
+- Estado termico de bb (acciones_termicas.jsonl): `sostenida` desde 00:32:03 UTC, filas a las 00:32:03, :13, :23, :33. Corte ~40 s despues del inicio de `sostenida`. aviso_termico.py documenta `sostenida` como el estado previo a los cuatro cortes anteriores medidos.
+- Arranques anteriores: ultima T de GPU antes de los cortes = 85 y 84 C (boots e651544a, 54b71618); max historico reciente 87 C; este arranque llego a 89 C, el valor mas alto de los 16 arranques con telemetria.
+- Lo que NO se pudo medir: la temperatura de las zonas acpitz antes del corte (solo hay la lectura actual de 80.8 C; la telemetria guarda la GPU, no la serie de zonas) y la causa de hardware (pstore sin permiso de lectura para el usuario).
+- Carga concurrente conocida: vLLM al 96 %; un `git push` con gates de pre-push (pytest con xdist) lanzado en segundo plano por la sesion de Claude minutos antes (no sobrevivio al corte: blackbox quedo 2 commits por delante); jobs de declutter.
+- `dmem_modulo.sh retrocede`: sin linea de sudo en el journal del arranque previo (el corte pudo perder las ultimas escrituras); el script solo borra archivos, corre depmod y deshabilita una unidad, y no descarga modulos.
