@@ -1,16 +1,18 @@
 {
   "claims_fingerprint": "dee20359f02de510930e066c731cda91f902f3ac18a1a8e07989300d7d34d912",
-  "panel": "1 auditor Opus, 2026-10-13: SPEC-L118 y L416 tras la sonda recomendaciones_personal en huella_host",
+  "panel": "1 auditor Opus, 2026-10-13: SPEC-L118 (sin imports cruzados, control negativo del grep) y SPEC-L416 (filas de bb status, nombres de tests, limites; control negativo con limite alterado)",
   "profile": "general",
   "results": [
     {
       "cited": {
-        "tools/atom_gpu_telemetry.py": "f4eb776d23c072ef6d82b82a3a889944d368751e1de03f5627638e4ec538a21a",
-        "tools/huella_host.py": "d3a174070a5954c600828b9e893fe15b3412583971020baec5026a48dcffec0d"
+        "tools/huella_host.py": "d7ebf553d767e5d19a01abe4aa13907c507f3f83cbba31eafa578c2e9aa26cfe",
+        "tools/incident_report.py": "19810166266536f8ec328faa2efd9a7dcab4b8cf189229f3707342e6bc345a21",
+        "tools/portero.py": "1a2bffb25894f42cc9bea1906c92b22d563e70e2f31e20c0c0127a3a32f68fba",
+        "tools/saber.py": "98ec5ab16835b46f3178dec8ef0f9b5ff9d77322a8451f79235fc8540bcb1338"
       },
       "claim_id": "SPEC-L118",
-      "evidence": "git diff HEAD -- tools/huella_host.py: 0 lineas borradas, la unica linea anadida con 'import' es un comentario ponytail ('un .conf ilegible no tumba la sonda'); la sonda recomendaciones_personal lee /proc, /sys, modprobe.d y `xset q`, sin imports nuevos. Diff del test: 1 linea borrada (len(r)==15 de SONDAS), nada de imports. grep -rnE --include='*.py' '^\\s*(import|from)\\s+blackbox\\b' ~/projects/Atlas (sin .venv) -> 0; grep -rnE --include='*.py' '^\\s*(import|from)\\s+atlas\\b' blackbox -> 0; sys.path hacia Atlas: solo un comentario en tools/atom_gpu_telemetry.py:68 ('sin sys.path'). Control negativo: la misma regex sobre un fichero con 'import blackbox.tools' -> 1, y sobre 'import atlas.x' -> 1.",
-      "seal": "195d56a6d74bda37b0b1f523e1ab814fa85ca610d871d4c96d022d4f78608148",
+      "evidence": "blackbox -> Atlas: `grep -rniE '^\\s*(import|from)\\s+\\S*atlas' tools bin tests` returns no matches; the only Atlas references in tools/ and bin/ are data paths or comments (tools/incident_report.py:57 reads Atlas/logs/liberation_watchdog.jsonl, tools/saber.py:29 reads Atlas/knowledge as text, bin/bb:546 is a comment). The dynamic loads load blackbox's own code: tools/portero.py:433 importlib.import_module('tools.atom_gpu_telemetry') and bin/bb-usable:355 spec_from_file_location on <repo>/tools/origen_proceso.py. The imports in the changed tools/huella_host.py:15-28 are stdlib plus `from tools import interruptores` (blackbox). Atlas -> blackbox: `grep -rnE '^\\s*(import|from)\\s+\\S*(blackbox|huella_host|atom_gpu_telemetry)' ~/projects/Atlas --include=*.py` returns no matches. The Atlas files that do `from tools...` insert their own parent into sys.path (Atlas/tools/detect_atom_crash.py:56 sys.path.insert(0, Path(__file__).resolve().parent.parent), and :59 imports Atlas's tools.finding_telemetry). detect_atom_crash.py:65 reads $BLACKBOX_DATA/reboots.jsonl as data. The only Atlas mention of blackbox/tools/*.py is Atlas/tests/test_recoge_hallazgos_bb.py:4, a copied schema, not an import. Negative control (the grep can match): `grep -nE '^\\s*(import|from) ' tools/huella_host.py` does match line 28 `from tools import interruptores`.",
+      "seal": "01ce40a7da1093efc8041d6e62f32d2d668ef94d94b5abf4844e5099b4cd858c",
       "verdict": "PASS"
     },
     {
@@ -80,11 +82,12 @@
         "tests/test_bb_bash.py": "2b57ca26801521f6e77a030004bcbf2b67fadcf7208c313a67c15f6362841a5f",
         "tools/canario_motor.py": "4b5cbbc3d6a0930405333bd841d8588d92fd494af0c116b9e2b90f016744b98c",
         "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6",
-        "tools/huella_host.py": "d3a174070a5954c600828b9e893fe15b3412583971020baec5026a48dcffec0d"
+        "tools/huella_host.py": "d7ebf553d767e5d19a01abe4aa13907c507f3f83cbba31eafa578c2e9aa26cfe",
+        "tools/interruptores.py": "22eb6152a8fe1a34c405ded283293523d1bb1ceedca74eeb08f0234a830b5408"
       },
       "claim_id": "SPEC-L416",
-      "evidence": "El diff solo anade la sonda recomendaciones_personal (solo lectura) y el registro en SONDAS; no toca la ruta $BLACKBOX_DATA/huella_host.json (tools/huella_host.py:470) ni nada de bin/bb. bin/bb:2616-2646: bucle de memavail/gpuoom/termico_predictivo/reloj_arranque por unit con el limite declarado, _fresco huella_host.json 2880, canario_motor.jsonl 75, gpumem_historial.jsonl 15; guardia de procesos (2613-2614) y vigilante del motor (2606) por unit; bb-usable con since='120 seconds ago' y journalctl -S (2363-2364). Los seis tests citados existen (grep -c 'def <nombre>\\b' = 1 cada uno; control negativo: nombre inventado test_control_negativo_inexistente_xyz -> 0). python -m pytest tests/test_bb_bash.py -q -p no:cacheprovider -n0 -k \"sensor or control_negativo or usable\" -> '43 passed, 57 deselected in 52.64s'. bash bin/bb status | grep -E 'huella|canario|historial|memavail|gpuoom|termico|reloj|guardia' -> 8 filas ARMADO: guardia de procesos, memavail/gpuoom/termico_predictivo/reloj_arranque (observar; solo la unit, sin latido), huella del host (observar; ciclo diario), canario del motor (observar; cada 30 min), historial de memoria de GPU (observar; ...). Limite: el estado ARMADO del vivo no ejerce la rama FALTA; esa la ejerce el test de control negativo citado, que paso.",
-      "seal": "4019f62c5da27c7e5944e7d23b1b85d119eddca0682c28875f77e5fc86b55c50",
+      "evidence": "bin/bb:2363 sets the bb-usable heartbeat window to `date -d '120 seconds ago'`, bin/bb:2364 reads it with `journalctl -u bb-usable.service -S`, and bin/bb:2371 requires '[bb-usable] latencia del escritorio:'. bin/bb:2605 and bin/bb:2613 are unit-only rows that run `systemctl --user is-active` on ai-nemotron-vigilante.timer and bb-guardia-proceso.service, with the declared limit at bin/bb:2608-2612. bin/bb:2616-2646 adds one row per sensor whose mode in $DATA/interruptores.json is not `off` (_modo_inter defaults to off). memavail, gpuoom, termico_predictivo and reloj_arranque get unit-only rows (bin/bb:2625-2631, limit declared at 2619-2620). The artifact freshness rows use `find -mmin`: huella_host.json at 2880 min = 2 days (bin/bb:2634), interruptores/canario_motor.jsonl at 75 min (bin/bb:2639), gpumem_historial.jsonl at 15 min (bin/bb:2644). Those are the paths the writers use: tools/huella_host.py:478, tools/interruptores.py:37 via tools/canario_motor.py:133, tools/gpumem_historial.py:39. The sar, memory-monitor, clock lock and earlyoom rows are at bin/bb:2436, 2444, 2514 and 2551. All six cited test names exist exactly once in tests/test_bb_bash.py, as do the three bb-usable heartbeat controls (test_control_negativo_bb_usable_activa_con_latido_RANCIO, and test_control_negativo_bb_usable_activa_sin_latido[journal_vacio|solo_arranque]). `python3 -m pytest -q tests/test_bb_bash.py -k \"<the 6 names> or bb_usable or test_status_sensor_en_off_no_tiene_fila\"` printed `11 passed, 89 deselected in 6.71s`. Negative control: in a scratchpad copy, changing bin/bb:2644 `15` to `999999` makes test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FALTA FAIL (`1 failed, 99 deselected`); with the original bin/bb restored in the same copy it passes (`1 passed`). The huella_host.py dpkg change does not touch the artifact path or the bb status thresholds.",
+      "seal": "c44640520061f774596c5115fc9753781b687721d70af011190a0318da570976",
       "verdict": "PASS"
     },
     {
@@ -182,7 +185,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-13T15:13:17Z",
-  "tree_fingerprint": "656a03ea0189084d5ff5b2a2ed59f8dbfa99326d027cba4dec730f13d53334b7",
+  "timestamp": "2026-10-13T15:42:09Z",
+  "tree_fingerprint": "c9129bb2b684cbad07f348ab5e4b54e0e46d1e918495f8d5bc31deba3ee894bd",
   "violations": []
 }
