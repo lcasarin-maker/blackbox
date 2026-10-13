@@ -1,6 +1,6 @@
 {
   "claims_fingerprint": "dee20359f02de510930e066c731cda91f902f3ac18a1a8e07989300d7d34d912",
-  "panel": "1 auditor Opus, 2026-10-13: SPEC-L419 tras etiquetar los dos colapsos del 11-oct en INCIDENTES (n=8), cifras recalculadas y control con la lista vieja",
+  "panel": "1 auditor Opus, 2026-10-13: SPEC-L416 tras anadir dos sondas a huella_host",
   "profile": "general",
   "results": [
     {
@@ -83,13 +83,11 @@
         "tests/test_bb_bash.py": "2b57ca26801521f6e77a030004bcbf2b67fadcf7208c313a67c15f6362841a5f",
         "tools/canario_motor.py": "4b5cbbc3d6a0930405333bd841d8588d92fd494af0c116b9e2b90f016744b98c",
         "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6",
-        "tools/huella_host.py": "be0eb2e0d9b010db129f495caf2a80c8e2a3f59d96ca2214b25ac5cbc607318d",
-        "tools/interruptores.py": "22eb6152a8fe1a34c405ded283293523d1bb1ceedca74eeb08f0234a830b5408",
-        "tools/limita_cuda.py": "1b241027780e2caac7a2fb55c4e58876339b935f3eaec1bae6add385d58532e0"
+        "tools/huella_host.py": "7674f71dc16481c8afc18c57e6c4e986d2fb06fa588d0a4ccb3222ac9971bbd6"
       },
       "claim_id": "SPEC-L416",
-      "evidence": "bin/bb:2616-2646 (cmd_status) tiene la fila por sensor leida de $DATA/interruptores.json con _modo_inter (ausente/ilegible = off): memavail, gpuoom, termico_predictivo y reloj_arranque solo por `systemctl --user is-active` de su unit (bucle :2625-2631, limite declarado en el comentario :2616-2620), y huella_host/canario_motor/gpumem_historial por `find -mmin` sobre $DATA/huella_host.json (2880 min = 2 dias), $DATA/interruptores/canario_motor.jsonl (75) y $DATA/gpumem_historial.jsonl (15); las rutas coinciden con las que escriben tools/huella_host.py:223, tools/interruptores.py:37 (via canario_motor.registra) y tools/gpumem_historial.py:39. `python -m pytest tests/test_bb_bash.py -q -p no:cacheprovider -k sensor` -> `3 passed, 97 deselected`, incluido test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FALTA (:1948, artefacto de hace 1 dia y artefacto ausente -> FALTA). Control negativo en vivo: BLACKBOX_DATA=<dir vacio> con gpumem_historial=observar -> `FALTA historial de memoria de GPU (observar; ...) -- sin fila en 15 min`; en el arbol real `bash bin/bb status | grep ...` da las 7 filas ARMADO. La parte anterior se sostiene: los cinco tests citados por nombre existen (grep -c = 1 cada uno), los tres de bb-usable existen (:657 rancio, :666 parametrizado journal_vacio/solo_arranque), bin/bb:2363 exige latido en 120 s, y vigilante del motor (:2605) y guardia de procesos (:2613) leen solo la unit; `-k 'control_negativo or usable or drift'` -> 49 passed. Nota sin efecto en el veredicto: el interruptor `limitador` (tools/limita_cuda.py:26) no tiene fila aunque se ponga en observar (probado: sin fila), pero es un lanzador a demanda, no un sensor, asi que 'cada sensor' sigue siendo verdad.",
-      "seal": "6fb69b1bc72814febc5b44b1b80a1a4ced2d08f1004100bd0822fc48c7e191da",
+      "evidence": "tools/huella_host.py diff (+131) adds only sondas drm_modeset/arranque_tras_actualizacion; artifact path unchanged ($BLACKBOX_DATA/huella_host.json, line 354). bin/bb cmd_status L2616-2646: four unit-only rows memavail/gpuoom/termico_predictivo/reloj_arranque, _fresco huella_host.json 2880 min, interruptores/canario_motor.jsonl 75, gpumem_historial.jsonl 15, gated on interruptores.json modo != off; limit declared in comment; vigilante del motor and guardia de procesos read only systemctl is-active. pytest -k 'sensor or control_negativo or usable': 43 passed, 57 deselected; the 6 cited test names each defined once and pass (7 passed with -k on their names); bb-usable controls: RANCIO + parametrized sin_latido [journal_vacio, solo_arranque] = 3. bb status live: all 7 sensor rows + guardia ARMADO; artifact ages 43/12/2 min vs 2880/75/15. Negative control: find -mmin -2880 on a file touched 3 days ago rc=1, fresh rc=0; test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FALTA passes.",
+      "seal": "eb44df818b09d650ae0484e4864170d719de93d98e4e47d2fc9b11c942e785ee",
       "verdict": "PASS"
     },
     {
@@ -187,7 +185,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-13T14:15:27Z",
-  "tree_fingerprint": "a1436ca1ada3e93917433a40c8a24636980c07290e08c4c0a69d6537ddcb2662",
+  "timestamp": "2026-10-13T14:23:00Z",
+  "tree_fingerprint": "98b0a2c882877eb5a0abecc702f55afb00706fbd7d9d9a893434477c8e3da1a1",
   "violations": []
 }
