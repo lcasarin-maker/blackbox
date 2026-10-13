@@ -58,7 +58,7 @@ GIB = 1024**3
 #     pico de 753 MiB); los picos de los demas contenedores sin GPU fueron
 #     atlas-pgvector 1.34 GiB, proyecto-A-pg 419 MiB, mongo-librechat 408 MiB.
 #     pids 2048 = el valor aplicado en vivo; el mayor pids.peak fue 71 (mongo).
-#   gpu: 16 GiB = MemoryMax de docker.slice (17179869184, voto 2026-10-13), el padre que ya acota
+#   gpu: 14 GiB = MemoryMax de docker.slice (15032385536; 16 GiB votado el 2026-10-13 y pendiente de desplegar), el padre que ya acota
 #     a todo contenedor de produccion: un tope por encima no compraria nada.
 #     El pico de cgroup de vLLM fue 13368209408 (12.45 GiB). pids 2048 frente a
 #     un pids.peak de 211 en vLLM.
