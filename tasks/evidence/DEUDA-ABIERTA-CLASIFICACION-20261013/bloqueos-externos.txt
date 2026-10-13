@@ -1,0 +1,13 @@
+bloqueos verificados por comando, 2026-10-13
+
+$ sudo -n true
+sudo: se requiere una contraseña
+(sudo sin contrasena imposible desde esta sesion: enable-privileged.sh, el drop-in de docker.slice y sudo nvidia-spark-ota-check summary requieren al dueno)
+
+$ ls /sys/class/typec /sys/class/power_supply /sys/class/usb_power_delivery
+  ls: no se puede acceder a '/sys/class/typec': No existe el archivo o el directorio
+  ls: no se puede acceder a '/sys/class/usb_power_delivery': No existe el archivo o el directorio
+  /sys/class/power_supply:
+(el sistema operativo no expone la negociacion USB-C ni el adaptador: /sys/class/typec y usb_power_delivery no existen y power_supply esta vacio; el modelo del adaptador solo se lee en su etiqueta fisica)
+
+enchufe medidor o UPS: es una compra y una conexion fisica; ninguna herramienta de esta sesion puede adquirirlos ni conectarlos. Cuando existan, el colector escribe externo/energia.jsonl (close_check de FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01).
