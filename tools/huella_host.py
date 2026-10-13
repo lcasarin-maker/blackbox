@@ -426,6 +426,13 @@ def sonda_recomendaciones_personal(raiz: Path, correr: Correr) -> Any:
     return {"iommu_passthrough": _rec_iommu(raiz), "overcommit": _rec_overcommit(raiz), "sbsa_gwdt_action": _rec_sbsa(raiz), "dpms": _rec_dpms(correr)}
 
 
+def sonda_cx7_hotplug(raiz: Path, correr: Correr) -> Any:
+    """CX7 hotplug nativo: marcador `/etc/nvidia/cx7-hotplug-enabled` y bandera `hotplug_enabled` de la plataforma MTKP0001. Con ambos activos el CX7 sin cable
+    se retira del bus; el hilo 378945 (post 19) lo relaciona con el fan detenido en una unidad sola. Solo lee: no toca el marcador ni la bandera."""
+    bandera = _lee(raiz / "sys/devices/platform/MTKP0001:00/pcie_hotplug/hotplug_enabled")
+    return {"marcador": (raiz / "etc/nvidia/cx7-hotplug-enabled").is_file(), "hotplug_enabled": bandera if bandera is not None else _nc("hotplug_enabled ausente o ilegible")}
+
+
 SONDAS: dict[str, Callable[[Path, Correr], Any]] = {
     "os_release": sonda_os_release,
     "kernel": sonda_kernel,
@@ -443,6 +450,7 @@ SONDAS: dict[str, Callable[[Path, Correr], Any]] = {
     "drm_modeset": sonda_drm_modeset,
     "arranque_tras_actualizacion": sonda_arranque_tras_actualizacion,
     "recomendaciones_personal": sonda_recomendaciones_personal,
+    "cx7_hotplug": sonda_cx7_hotplug,
 }
 
 
