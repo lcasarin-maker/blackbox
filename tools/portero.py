@@ -780,7 +780,7 @@ def aplica(
 # --- Contenedores (docker.slice) ---------------------------------------------------------------------------
 #
 # Medido 2026-10-12 (tasks/evidence/FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01/validaciones.md): el daemon de Docker
-# usa cgroup-parent=docker.slice (MemoryMax 16 GiB desde el voto del 2026-10-13) y `docker update --memory X --memory-swap X` acota un contenedor
+# usa cgroup-parent=docker.slice (MemoryMax 14 GiB; 16 GiB votado el 2026-10-13, pendiente de desplegar) y `docker update --memory X --memory-swap X` acota un contenedor
 # EN VIVO (memory.max de max a X, swap 0). Tres contenedores corren sin tope propio. La memoria GPU NO la ve el cgroup
 # (vLLM 33.4 GB de GPU frente a 12.2 GiB de cgroup): esto acota RAM ordinaria, no GPU.
 #

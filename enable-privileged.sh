@@ -614,7 +614,7 @@ PYEOF
   run mkdir -p /etc/systemd/system/docker.slice.d
   run cp adopted/system-config/etc_systemd_system_docker.slice.d_99-blackbox.conf \
          /etc/systemd/system/docker.slice.d/99-blackbox.conf
-  echo "  techo puesto: MemoryMax=16G, MemorySwapMax=4G sobre docker.slice"
+  echo "  techo puesto: MemoryMax=14G, MemorySwapMax=4G sobre docker.slice"
   echo
   echo "  NO SURTE EFECTO HASTA REINICIAR EL DEMONIO, y eso TIRA los"
   echo "  contenedores -- incluido el vLLM. Cuando te venga bien:"
@@ -624,7 +624,7 @@ PYEOF
   echo "    cat /proc/\$(docker inspect -f '{{.State.Pid}}' nemotron-server)/cgroup"
   echo "      espera:  0::/docker.slice/docker-<id>.scope    (NO system.slice)"
   echo "    cat /sys/fs/cgroup/docker.slice/memory.max"
-  echo "      espera:  17179869184                          (NO 'max')"
+  echo "      espera:  15032385536                          (NO 'max')"
   echo "    Si sigue diciendo system.slice o 'max', el techo NO esta puesto"
   echo "    por mucho que este informe diga que si."
 fi

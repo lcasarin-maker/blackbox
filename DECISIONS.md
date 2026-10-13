@@ -13,7 +13,7 @@ Meter cada voto aquí lo convierte en el log que la línea de arriba prohíbe.
 Voto de Luis. Medido el 2026-10-13: el slice usa 12,06 GiB de 14 (86 %, 1,94 GiB libres) con el pico de vLLM en 12,5 GiB y topes propios de 2 GiB en cada contenedor pequeño.
 Cada GiB del techo del slice es un GiB menos de presupuesto de GPU, así que el umbral de la alarma del abanico pasa de 53,1 a 51,1 GiB; sigue por encima del p90 de 50,1 de la serie de 18 944 muestras.
 Descartado: 18 GiB (umbral 49,1, por debajo del p90: dispara más del 10 % del tiempo y la alarma deja de discriminar) y dejarlo en 14 (1,94 GiB libres, un pico lo lleva al tope).
-El repo ya trae el drop-in y el instalador en 16G; el efecto en la máquina espera a `sudo systemctl daemon-reload && sudo systemctl restart docker` (reinicia los contenedores, incluido vLLM). Ficha: `DEBT-DOCKER-SLICE-TOPE-VS-TOPES-DE-CONTENEDORES-01`.
+`adopted/` describe lo DESPLEGADO (`bb drift` exige que el repo describa la máquina), así que sigue en 14G; el drop-in de 16G espera en `adopted/pendiente-de-despliegue/`. Para desplegarlo: `sudo cp adopted/pendiente-de-despliegue/etc_systemd_system_docker.slice.d_99-blackbox.conf /etc/systemd/system/docker.slice.d/99-blackbox.conf`, mover ese archivo a `adopted/system-config/` (`git mv`, mismo nombre) y, cuando te venga bien, `sudo systemctl daemon-reload && sudo systemctl restart docker` (reinicia los contenedores, incluido vLLM). Ficha: `DEBT-DOCKER-SLICE-TOPE-VS-TOPES-DE-CONTENEDORES-01`.
 
 ---
 
