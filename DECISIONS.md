@@ -246,3 +246,7 @@ camino es el que se toma, aunque cueste más pasos.
 - **Motivo:** Luis pidió árboles limpios, todo publicado y trabajo reanudable antes del reinicio; sin esto el gate de deuda rechaza el push mientras haya fichas abiertas fuera de la lista, aunque cada una tenga su `close_check` fallando a propósito.
 - **Descartado:** mover fichas fuera de `tasks/backlog` (oculta deuda real a `zero-debt`) y cerrarlas sin evidencia.
 - **Pendiente:** si para el 2026-11-06 siguen abiertas, el gate vuelve a bloquear.
+
+- **Decidido (2026-10-12, instruccion de Luis: todo publicado antes del ciclo de corriente):** la linea base de `ship-freeze` incorpora 3 fichas abiertas nuevas: `DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01`, `FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01` y `FEATURE-COSECHA-FORO-ENERGIA-Y-DGXTOP-01`.
+- **Motivo:** son deuda REAL con `close_check` que falla hoy (la cosecha del foro tiene 19 lecturas parciales y la etapa 2 sin hacer; el riesgo de Docker no se ha medido con un contenedor desechable).
+- **Descarta:** esperar a cerrarlas (bloquearia el push de todo lo demas) y declararlas cerradas sin evidencia. La fecha de caducidad (2026-11-06) no cambia.
