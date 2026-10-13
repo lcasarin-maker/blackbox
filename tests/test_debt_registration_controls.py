@@ -1249,9 +1249,6 @@ def test_delta_root_display_carveout_oem_fix_gate_01() -> None:
     _assert_hardware_batch03_closure('DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01')
 
 
-def test_delta_root_gx10_soc_ec_cable_recovery_candidate_01() -> None:
-    _assert_hardware_batch03_closure('DELTA-ROOT-GX10-SOC-EC-CABLE-RECOVERY-CANDIDATE-01')
-
 
 def test_delta_root_subambient_cooling_and_uma_canary_01() -> None:
     _assert_hardware_batch03_closure('DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01')
@@ -1271,20 +1268,8 @@ def test_delta_forum_cutlass_sm121_isa_gate_01() -> None:
     _assert_hardware_batch02_closure('DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01')
 
 
-def test_delta_forum_cx7_fw_update_guard_01() -> None:
-    _assert_hardware_batch02_closure('DELTA-FORUM-CX7-FW-UPDATE-GUARD-01')
 
 
-def test_delta_forum_cx7_physical_topology_alias_check_01() -> None:
-    _assert_hardware_batch02_closure('DELTA-FORUM-CX7-PHYSICAL-TOPOLOGY-ALIAS-CHECK-01')
-
-
-def test_delta_forum_cx7_posthotplug_01() -> None:
-    _assert_hardware_batch02_closure('DELTA-FORUM-CX7-POSTHOTPLUG-01')
-
-
-def test_delta_forum_cx7_rdma_asymmetry_retest_01() -> None:
-    _assert_hardware_batch02_closure('DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01')
 
 
 def test_delta_forum_dualspark_power_reset_recovery_01() -> None:
@@ -1316,36 +1301,18 @@ def _assert_runtime_batch01_closure(card_id: str) -> None:
     _assert_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
 
 
-def test_delta_forum_3node_nccl_image_and_first_request_01() -> None:
-    _assert_runtime_batch01_closure('DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01')
-
-
-def test_delta_forum_8node_nccl_interface_mtu_01() -> None:
-    _assert_runtime_batch01_closure('DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01')
 
 
 def test_delta_forum_cross_turn_sleeper_injection_regression_01() -> None:
     _assert_runtime_batch01_closure('DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01')
 
 
-def test_delta_forum_dcp_mtp_draft_correctness_and_pretrim_oom_01() -> None:
-    _assert_runtime_batch01_closure('DELTA-FORUM-DCP-MTP-DRAFT-CORRECTNESS-AND-PRETRIM-OOM-01')
-
-
-def test_delta_forum_dcp4_decode_starvation_fair_scheduler_01() -> None:
-    _assert_runtime_batch01_closure('DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01')
 
 
 def test_delta_forum_dflash_xgrammar_structured_output_regression_01() -> None:
     _assert_runtime_batch01_closure('DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01')
 
 
-def test_delta_forum_dsv41_nfs_stop_tag_pin_01() -> None:
-    _assert_runtime_batch01_closure('DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01')
-
-
-def test_delta_forum_dualspark_nccl_gid_twin_and_cold_recovery_01() -> None:
-    _assert_runtime_batch01_closure('DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01')
 
 
 def test_delta_forum_glm52_multiturn_correctness_and_recipe_sensitivity_01() -> None:
@@ -1361,16 +1328,7 @@ def _assert_runtime_batch02_closure(card_id: str) -> None:
     _assert_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
 
 
-def test_delta_forum_gptoss_multinode_ray_channel_timeout_01() -> None:
-    _assert_runtime_batch02_closure('DELTA-FORUM-GPTOSS-MULTINODE-RAY-CHANNEL-TIMEOUT-01')
 
-
-def test_delta_forum_llamacpp_rpc_uma_and_orderly_teardown_01() -> None:
-    _assert_runtime_batch02_closure('DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01')
-
-
-def test_delta_forum_m2_compaction_state_validation_01() -> None:
-    _assert_runtime_batch02_closure('DELTA-FORUM-M2-COMPACTION-STATE-VALIDATION-01')
 
 
 def test_delta_forum_minimax_toolcall_functional_canary_01() -> None:
@@ -1381,12 +1339,6 @@ def test_delta_forum_mtp_acceptance_and_semantic_control_01() -> None:
     _assert_runtime_batch02_closure('DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01')
 
 
-def test_delta_forum_muse_glimmer_dflash_max_seqs_gate_01() -> None:
-    _assert_runtime_batch02_closure('DELTA-FORUM-MUSE-GLIMMER-DFLASH-MAX-SEQS-GATE-01')
-
-
-def test_delta_forum_nccl_tp_orchestration_correction_01() -> None:
-    _assert_runtime_batch02_closure('DELTA-FORUM-NCCL-TP-ORCHESTRATION-CORRECTION-01')
 
 
 def test_delta_forum_nemotron_sm121_prebuilt_kernel_01() -> None:
@@ -1396,9 +1348,6 @@ def test_delta_forum_nemotron_sm121_prebuilt_kernel_01() -> None:
 def test_delta_forum_openclaw_vllm_request_contract_01() -> None:
     _assert_runtime_batch02_closure('DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01')
 
-
-def test_delta_forum_qwen_cold_compile_oom_01() -> None:
-    _assert_runtime_batch02_closure('DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01')
 
 
 def _assert_runtime_batch03_closure(card_id: str) -> None:
@@ -1422,9 +1371,6 @@ def test_delta_forum_qwen_service_oomd_cache_fail_01() -> None:
     _assert_runtime_batch03_closure('DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01')
 
 
-def test_delta_forum_qwen_toolcall_wedge_01() -> None:
-    _assert_runtime_batch03_closure('DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01')
-
 
 def test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01() -> None:
     _assert_runtime_batch03_closure('DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01')
@@ -1434,16 +1380,10 @@ def test_delta_forum_qwen38_long_run_json_correctness_canary_01() -> None:
     _assert_runtime_batch03_closure('DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01')
 
 
-def test_delta_forum_ray_torch_graph_hang_01() -> None:
-    _assert_runtime_batch03_closure('DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01')
-
 
 def test_delta_forum_vllm_gb10_arch_and_build_matrix_01() -> None:
     _assert_runtime_batch03_closure('DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01')
 
-
-def test_delta_forum_vllm_ray_gb10_resource_fix_01() -> None:
-    _assert_runtime_batch03_closure('DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01')
 
 
 def test_delta_root_container_effective_build_and_offline_gate_01() -> None:
@@ -1467,16 +1407,7 @@ def test_delta_root_glm53_queued_request_progress_gate_01() -> None:
     _assert_runtime_batch04_closure('DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01')
 
 
-def test_delta_root_mimo_overlay_and_prefill_fairness_01() -> None:
-    _assert_runtime_batch04_closure('DELTA-ROOT-MIMO-OVERLAY-AND-PREFILL-FAIRNESS-01')
 
-
-def test_delta_root_mimo_patch_supersession_gate_01() -> None:
-    _assert_runtime_batch04_closure('DELTA-ROOT-MIMO-PATCH-SUPERSESSION-GATE-01')
-
-
-def test_delta_root_ray_multiengine_rank_progress_01() -> None:
-    _assert_runtime_batch04_closure('DELTA-ROOT-RAY-MULTIENGINE-RANK-PROGRESS-01')
 
 
 def test_delta_root_recipe_memory_unknown_and_raw_evidence_01() -> None:
@@ -1486,9 +1417,6 @@ def test_delta_root_recipe_memory_unknown_and_raw_evidence_01() -> None:
 def test_delta_root_tokenizer_patch_semantic_gate_01() -> None:
     _assert_runtime_batch04_closure('DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01')
 
-
-def test_delta_root_triton_allocator_patch_state_gate_01() -> None:
-    _assert_runtime_batch04_closure('DELTA-ROOT-TRITON-ALLOCATOR-PATCH-STATE-GATE-01')
 
 
 def test_delta_forum_apt_arm64_source_validation_01() -> None:

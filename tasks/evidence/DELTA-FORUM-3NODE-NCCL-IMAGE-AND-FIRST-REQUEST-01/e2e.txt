@@ -1,0 +1,8 @@
+Clasificacion de aplicabilidad de DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01 (lectura completa contra el perfil del equipo), 2026-10-13:
+{
+ "aplicabilidad": "otro_hardware",
+ "utilidad": "baja",
+ "recomendacion": "deprecar",
+ "razon": "Exige malla de tres Spark con PP y NCCL por rank; aqui hay un nodo, sin Ray y sin /sys/class/infiniband. La parte util (primera inferencia real tras readiness) ya la hace canario_motor.py.",
+ "texto_cierre": "Malla de tres Spark con NCCL por rank no existe en este equipo (un solo nodo GB10, sin InfiniBand/CX7 en pareja, sin Ray); la primera inferencia tras readiness la cubre tools/canario_motor.py (bb canario)."
+}

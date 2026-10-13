@@ -1,0 +1,8 @@
+Clasificacion de aplicabilidad de DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01 (lectura completa contra el perfil del equipo), 2026-10-13:
+{
+ "aplicabilidad": "otro_hardware",
+ "utilidad": "baja",
+ "recomendacion": "deprecar",
+ "razon": "Reporte de dic-2025 sobre Ray marcando GB10 solo como accelerator_type; el propio hilo lo atribuye a la imagen vllm:25.11-py3 equivocada y un update dice corregido en 26.01. Aqui no hay Ray ni cluster y el contenedor vLLM de nemotron-local lo cubre el canario/huella (tools/canario_motor.py, tools/huella_host.py).",
+ "texto_cierre": "Fallo de Ray (sin clave generica GPU en GB10) de dic-2025 en la imagen vllm:25.11, declarado corregido por el propio hilo en 26.01; este equipo no usa Ray ni cluster."
+}

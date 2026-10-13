@@ -1,0 +1,8 @@
+Clasificacion de aplicabilidad de DELTA-FORUM-LLAMACPP-RPC-UMA-AND-ORDERLY-TEARDOWN-01 (lectura completa contra el perfil del equipo), 2026-10-13:
+{
+ "aplicabilidad": "otro_hardware",
+ "utilidad": "baja",
+ "recomendacion": "deprecar",
+ "razon": "El sujeto es llama.cpp RPC entre dos Spark (hilo 374523, orden de cierre servidor/cliente, RDMA); aqui no hay llama.cpp RPC ni segundo nodo, y la ficha admite 'no hay captura local llama.cpp/RPC'. La memoria/PSI/cgroup general ya la mide tools/memory_profile.py.",
+ "texto_cierre": "Sujeto es llama.cpp RPC en dos nodos (cierre servidor/cliente, RDMA); este equipo sirve solo vLLM en un nodo y no tiene llama.cpp RPC ni segundo Spark."
+}

@@ -1,0 +1,8 @@
+Clasificacion de aplicabilidad de DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01 (lectura completa contra el perfil del equipo), 2026-10-13:
+{
+ "aplicabilidad": "otro_hardware",
+ "utilidad": "baja",
+ "recomendacion": "deprecar",
+ "razon": "Ray/vLLM tensor-parallel en dos Spark; aqui no hay Ray ni segundo nodo. El diagnostico de 100% GPU sin progreso se cubre con gpumem_historial y canario_motor.",
+ "texto_cierre": "Reporte de Ray con tensor-parallel en dos Spark y torch 2.10.0; este equipo no usa Ray ni TP y el cuelgue del motor local se vigila con tools/canario_motor.py y tools/gpumem_historial.py."
+}
