@@ -1,0 +1,39 @@
+{
+ "id": 350170,
+ "titulo": "Tutorial: Creating a bootable live USB with Timeshift",
+ "leido": true,
+ "posts_leidos": 5,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Respaldo de archivos del sistema con Timeshift y restauracion a un USB booteable (GPT, particion FAT ~500MB para EFI, particion EXT4 grande) para tener un sistema vivo de rescate",
+   "como": "sudo apt install timeshift; en Timeshift restaurar un snapshot con / -> USB_UBUNTU y /boot/efi -> USB_EFI, marcando opciones de bootloader; arrancar con DEL para entrar a BIOS y elegir el USB",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark del autor (usuario RazielAU), sin version de driver/kernel indicada",
+   "riesgo": "El propio autor dice que el USB resultante casi siempre no arranca al primer intento y puede requerir repetir la restauracion con otra opcion de bootloader; la restauracion puede parecer colgada hasta 2 horas.",
+   "verificable_aqui": "command -v timeshift; lsblk -f"
+  },
+  {
+   "que": "Alternativa sugerida en post 5: imagen de rescate con Clonezilla (solo se menciona un titulo de otro tema para Asus Ascent GX10)",
+   "como": "no indicado",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun el autor, el proceso de restauracion de NVIDIA es enrevesado, poco fiable, no ofrece un sistema vivo para respaldar archivos antes de formatear el SSD y deja un sistema que obliga a tomar actualizaciones.",
+ "utilidad_atom": "media",
+ "razon": "Tutorial de usuario con un metodo de respaldo/rescate (Timeshift a USB) util para recuperacion tras fallos, con comandos y pasos pero sin version verificada y con reconocida fragilidad. No hay respuesta de NVIDIA; la afirmacion sobre la restauracion de NVIDIA es de un usuario.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

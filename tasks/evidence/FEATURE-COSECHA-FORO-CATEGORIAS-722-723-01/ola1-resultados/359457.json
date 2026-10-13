@@ -1,0 +1,68 @@
+{
+ "id": 359457,
+ "titulo": "Running Step-3.5-Flash on Single Spark",
+ "leido": true,
+ "posts_leidos": 21,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Lanzamiento de llama-server con contexto largo sin OOM: contexto 200000, KV cache en q8_0, sin mmap, flash attention; mas de ~200000 da error de memoria",
+   "como": "llama-server -m <gguf> -c 200000 -ngl 999 -fa 1 -b 2048 -ub 2048 -ctk q8_0 -ctv q8_0 --no-mmap --port 8000 --host 0.0.0.0 ; export GGML_CUDA_GRAPH_OPT=1 ; build con -DGGML_CUDA_GRAPHS=ON -DCMAKE_CUDA_ARCHITECTURES=121",
+   "fuente_post": 9,
+   "repositorio": "https://github.com/stepfun-ai/Step-3.5-Flash",
+   "licencia": "no indicada",
+   "probado_en": "Spark, CUDA 13.1 (V13.1.115), driver 580.126.09 segun el usuario Keyper-AI (post 8)",
+   "riesgo": "Otro usuario reporta 'encountered an error while trying to fit params to free device memory' con -c 16384 -ngl 999 (post 6); sin resolver en el hilo",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv; free -m"
+  },
+  {
+   "que": "Mitigaciones oficiales del repo de StepFun (citadas por un usuario) para OOM a 256K: -DGGML_CUDA_FORCE_MMQ=ON, GGML_CUDA_ENABLE_UNIFIED_MEMORY=1, -ctk q8_0 -ctv q8_0. El usuario duda de la utilidad de UNIFIED_MEMORY en GB10 y de FORCE_MMQ (menos RAM a costa de rendimiento)",
+   "como": "-DGGML_CUDA_FORCE_MMQ=ON ; GGML_CUDA_ENABLE_UNIFIED_MEMORY=1 ; -ctk q8_0 -ctv q8_0",
+   "fuente_post": 12,
+   "repositorio": "https://github.com/stepfun-ai/Step-3.5-Flash",
+   "licencia": "no indicada",
+   "probado_en": "StepFun declara DGX-Spark entre plataformas validadas; el post no verifica estas flags en Spark",
+   "riesgo": "FORCE_MMQ reduce rendimiento; efecto de UNIFIED_MEMORY en GB10 especulado, no medido",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de escalado de rendimiento con contexto: benchmark llama-batched-bench; resultados reportados por StepFun: TG 19.79 t/s a 0 PP, 8.39 t/s a 262144 PP",
+   "como": "GGML_CUDA_ENABLE_UNIFIED_MEMORY=1 && ./llama-batched-bench -m step3.5_flash_Q4_K_S.gguf -c 262150 -b 2048 -ub 1024 -npp 0,2048,8192,16384,32768,65536,262144 -ntg 128 -npl 1 -ctk q8_0 -ctv q8_0",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "resultados citados de la documentacion de StepFun, no medidos por el usuario",
+   "riesgo": "El usuario advierte que puede no correr en su entorno Docker",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Cuantizacion mas chica que libera memoria: IQ4_XS de ubergarm, unos 10 GB menos que el GGUF oficial y mejor perplexity segun el usuario",
+   "como": "no indicado (referencia a huggingface ubergarm/Step-3.5-Flash-GGUF)",
+   "fuente_post": 21,
+   "repositorio": "https://huggingface.co/ubergarm/Step-3.5-Flash-GGUF",
+   "licencia": "no indicada",
+   "probado_en": "el usuario aun lo estaba descargando",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un git pull del repo HF tras el re-upload duplica espacio en disco (111 GB de pesos nuevos mas los viejos en .git)",
+   "como": "borrar el repo y git clone --depth 1",
+   "fuente_post": 20,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "disco",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Da flags concretas para estirar contexto sin OOM en llama.cpp (KV q8_0, --no-mmap, tope ~200000), con la advertencia de que otro usuario aun tropieza con error de ajuste de memoria. Hilo de usuarios; un moderador de NVIDIA solo movio el tema (post 2).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

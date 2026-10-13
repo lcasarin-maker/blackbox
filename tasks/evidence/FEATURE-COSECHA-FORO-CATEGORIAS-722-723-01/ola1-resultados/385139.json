@@ -1,0 +1,37 @@
+{
+ "id": 385139,
+ "titulo": "Prioritizing Compute on the GB10",
+ "posts_leidos": 10,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir"
+ ],
+ "utilidad_atom": "baja",
+ "mecanismos": [
+  {
+   "que": "Politica de scheduling por prioridad de vLLM con campo priority por peticion (menor valor corre primero, con preemption si se agota el KV); el autor no la probo todavia",
+   "como": "--scheduling-policy priority  (campo priority por peticion, reenviado como extra_body segun el autor)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "no probado; el autor la lee del codigo de vLLM en su DGX Spark",
+   "riesgo": "No se sabe si funciona con speculative decoding (DFlash/MTP) ni cuanto cae el throughput batch por preemption (preguntas abiertas del autor)",
+   "verificable_aqui": "docker exec <contenedor_vllm> vllm serve --help | grep -i scheduling-policy"
+  },
+  {
+   "que": "Limite de peticiones paralelas por clave virtual en LiteLLM para que el trabajo batch no ocupe todos los slots; es lo unico que el autor dice que funciona hoy",
+   "como": "Max Parallel Requests por clave: P4-Background 1, P3-Automation 2, P2-Normal 4, P1-Interactive 8, P0-Realtime sin limite",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark del autor con LiteLLM 1.100.0",
+   "riesgo": "No es priorizacion real; segun el autor la prioridad por metadata de clave la ignora la cola de LiteLLM y llama-swap no expulsa un modelo con una peticion en vuelo",
+   "verificable_aqui": null
+  }
+ ],
+ "razon": "Un usuario con LiteLLM, llama-swap y vLLM sobre un Spark describe que la TTFT se degrada hasta mas de 5 minutos con trabajos batch (la GPU esta al maximo) y reporta que la prioridad por clave de LiteLLM no funciona. La segunda mitad del post 10 esta redactada por IA segun el propio autor y la parte de vLLM no esta probada; sin respuesta de NVIDIA.",
+ "leido": true,
+ "omision_nvidia": null,
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,37 @@
+{
+ "id": 363264,
+ "titulo": "Managing Local LLM Orchestration",
+ "leido": true,
+ "posts_leidos": 13,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Ejecutar varios modelos a la vez repartiendo la memoria por modelo con sparkrun; el usuario debe evitar la sobreasignacion",
+   "como": "--gpu-mem (opcion de sparkrun, valor no indicado) junto con --tp 4 en un cluster de 4 nodos",
+   "fuente_post": 6,
+   "repositorio": "https://sparkrun.dev (sin url de repositorio ni licencia en el texto)",
+   "licencia": "no indicada",
+   "probado_en": "cluster de 4 Spark segun el autor de sparkrun (dbsci)",
+   "riesgo": "El autor advierte que sobreasignar memoria queda a cargo del usuario; no hay proteccion automatica.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "llama-swap para cargar y descargar modelos locales; LiteLLM solo enruta y no arranca ni detiene modelos",
+   "como": "no indicado (comparacion generada por un asistente, post 7)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Discusion de orquestacion (LiteLLM, llama-swap, sparkrun) cuyo unico dato sobre memoria es la advertencia de gestionar a mano la sobreasignacion con --gpu-mem; sin valores ni comandos de medicion. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

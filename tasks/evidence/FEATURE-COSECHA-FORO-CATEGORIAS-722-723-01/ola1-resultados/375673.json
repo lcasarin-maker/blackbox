@@ -1,0 +1,27 @@
+{
+ "id": 375673,
+ "titulo": "Openshell install on Spark",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de instalacion de OpenShell: borrar el binario previo que la actualizacion no reemplaza y abrir el puerto del gateway en ufw para que el sandbox se comunique",
+   "como": "sudo ufw allow 17670/tcp (y borrar /usr/local/bin/openshell de la version anterior)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun el usuario floater, OpenShell 0.0.76",
+   "riesgo": "Abre un puerto en el firewall",
+   "verificable_aqui": "sudo ufw status | grep 17670; ls -l /usr/local/bin/openshell"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El usuario reporta dos fallos de instalacion de OpenShell y sus arreglos (borrar binario viejo, regla ufw para el puerto 17670). Es especifico de OpenShell y sin relacion con monitoreo de memoria o termica; sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,48 @@
+{
+ "id": 380739,
+ "titulo": "DGX Spark Cluster Dashboard",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Telemetria RoCE/InfiniBand leyendo contadores HCA; los bytes de netdev marcan ~0 mientras un enlace RDMA de 200 Gb/s esta saturado, y los contadores IB estan en palabras de 4 bytes",
+   "como": "leer /sys/class/infiniband/*/ports/*/counters/ y multiplicar palabras de 4 bytes a bytes; reportar desconocido (no cero) en la primera muestra y tras un reinicio del contador",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/LackOfSkillz/sparkDash",
+   "licencia": "no indicada",
+   "probado_en": "cluster de DGX Spark (2 nodos TP=2 segun el cuadro del post); versiones no indicadas",
+   "riesgo": "afirmacion del autor; el repo upstream es MiaAI-Lab/sparkDash",
+   "verificable_aqui": "ls /sys/class/infiniband/*/ports/*/counters/ 2>&1 | head"
+  },
+  {
+   "que": "Error de metrica: la tasa de prefill calculada como delta de tokens de prompt entre intervalo de sondeo es falsa, porque vLLM acredita los tokens al admitir la solicitud (80K tokens leyeron 39,584 tok/s frente a ~1,600 reales); se corrige con la razon de dos agregados de vida",
+   "como": "no indicado como formula exacta; ratio de dos agregados acumulados de las metricas de vLLM, mas una ventana movil de ~20 s",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/LackOfSkillz/sparkDash",
+   "licencia": "no indicada",
+   "probado_en": "vLLM sobre Spark segun el autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Maquina de estados de liveness para evitar falsos offline: declarar caido solo tras 3 fallos consecutivos y sin exito en una gracia de 30 s",
+   "como": "3 fallos consecutivos Y ningun exito en 30 s; una sonda buena restaura (sondeo cada 10 s)",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/LackOfSkillz/sparkDash",
+   "licencia": "no indicada",
+   "probado_en": "nodos con 4 dias de uptime, camino de gestion inalambrico",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario lista un panel multi-nodo con rutas y reglas concretas de medicion (contadores IB, correccion de tasa de prefill, liveness). Sin comando de instalacion en el texto, licencia no indicada y enfoque a clusters; sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

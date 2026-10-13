@@ -1,0 +1,37 @@
+{
+ "id": 362202,
+ "titulo": "Qwen 3.5 SLM on DGX GB10",
+ "leido": true,
+ "posts_leidos": 13,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Cuantizar Qwen3.5-9B a int4 con Intel AutoRound en el propio Spark (~1 h); memoria pico reportada 38G (22 CPU / 16 GPU)",
+   "como": "uv venv --python 3.12 --seed .venv/autoround ; uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130 ; uv pip install git+https://github.com/intel/auto-round.git ; auto-round \"Qwen/Qwen3.5-9B\" --output_dir ./qwen35-9b/ --ignore_layers shared_expert",
+   "fuente_post": 11,
+   "repositorio": "https://github.com/intel/auto-round",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, modelo denso de 9B (declarado por trystan1)",
+   "riesgo": "Compilar desde fuente; sin garantia para otros tamanos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Benchmarks llama-benchy de Qwen3.5-9B/4B con y sin MTP en Spark (tablas de t/s y ttft)",
+   "como": "no indicado (resultados de llama-benchy)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, imagen vLLM de eugr (declarado)",
+   "riesgo": "Un usuario aclara que el 9B es bf16 sin cuantizar (post 5)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Tablas de benchmark y receta de cuantizacion de AutoRound; sin relacion con monitoreo de memoria o termica mas alla de un dato de memoria pico durante la cuantizacion. Licencia de la herramienta no indicada.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

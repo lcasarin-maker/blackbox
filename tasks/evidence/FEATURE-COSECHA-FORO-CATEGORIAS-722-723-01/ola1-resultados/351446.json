@@ -1,0 +1,38 @@
+{
+ "id": 351446,
+ "titulo": "Unable to recover DGX Spark to CUDA13.0 from CUDA12.9",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Recuperacion del sistema con la imagen oficial para reinstalar CUDA 13 tras un downgrade a CUDA 12.9 (NVIDIA staff, post 2); borra todos los datos",
+   "como": "no indicado (sigue la guia System Recovery del DGX Spark User Guide y la imagen de recuperacion; sin comandos)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "El usuario confirma exito en post 3, sin version declarada",
+   "riesgo": "Los datos se pierden con la reimagen",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Timeshift con instantaneas programadas (cada arranque y diarias) para restaurar archivos de sistema como la version de CUDA; afirmacion de usuario sin comando",
+   "como": "no indicado",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Usuario RazielAU, DGX Spark, sin version",
+   "riesgo": "Timeshift no respalda el home del usuario (post 6)",
+   "verificable_aqui": "command -v timeshift"
+  }
+ ],
+ "omision_nvidia": "NVIDIA staff indica que la restauracion con imagen deshace los cambios pero borra datos; no ofrece instantaneas de sistema.",
+ "utilidad_atom": "baja",
+ "razon": "La respuesta de NVIDIA (post 2) remite a la reimagen oficial y un usuario sugiere Timeshift, ambos sin comandos concretos. Es consejo de recuperacion generico.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

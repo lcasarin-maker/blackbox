@@ -1,0 +1,48 @@
+{
+ "id": 361105,
+ "titulo": "Trained GPT-OSS-20B-Vision (A Vision-Language Model for GPT-OSS-20B) entirely on a single DGX Spark",
+ "leido": true,
+ "posts_leidos": 10,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Prevencion del congelamiento 'zombi' bajo presion de memoria (sin SSH ni OOM kill, requiere reinicio duro): bajar swappiness y agregar un swapfile como red de seguridad",
+   "como": "vm.swappiness=1 + 48 GB swap file (el valor por defecto era 60)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark del autor VincentKaufmannUAE con 123-125 de 128 GB en uso durante entrenamiento; sin driver/kernel",
+   "riesgo": "Explicacion del autor sin medicion en el texto: con swappiness alto Linux paginea a NVMe antes de agotar memoria, incluidas paginas que la GPU necesita (el autor dice ~39x mas lento que LPDDR5x), lo que bloquea el sistema antes de que actue el OOM killer. El mismo autor afirma que el swapfile da margen al OOM killer.",
+   "verificable_aqui": "sysctl vm.swappiness; swapon --show; free -h"
+  },
+  {
+   "que": "Temperatura reportada en entrenamiento: GPU sostenida a 73C con 96% de uso; el autor quito la tapa magnetica inferior para ganar margen de enfriamiento",
+   "como": "no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark del autor",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,utilization.gpu --format=csv"
+  },
+  {
+   "que": "Hallazgo sobre MoE: entrenar solo el proyector falla; QLoRA en atencion (rango 128, 4-bit NormalFloat) funciona para adaptar el router a tokens visuales",
+   "como": "QLoRA rank 128, 4-bit NormalFloat",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark del autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El post 5 da un valor concreto y verificable (vm.swappiness=1 y swapfile de 48 GB) contra el congelamiento por presion de memoria con CPU y GPU compartiendo memoria. Es afirmacion de un usuario, sin respuesta de NVIDIA ni medicion en el texto.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

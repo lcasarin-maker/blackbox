@@ -1,0 +1,37 @@
+{
+ "id": 353456,
+ "titulo": "Very poor performance with Ollama on DGX Spark – looking for help",
+ "leido": true,
+ "posts_leidos": 8,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de rendimiento: servir con llama.cpp en contenedor limitando capas en GPU en lugar de Ollama en Docker",
+   "como": "docker run -d --name llama-spark-mistral32 --gpus all -p 3010:8080 -v /home/user/models:/models llama.cpp:server-spark --host 0.0.0.0 --port 8080 -m /models/mistral-small-3.2-24b-ud-q4_k_xl.gguf --ctx-size 4096 --threads -1 --n-gpu-layers 16 --flash-attn auto",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark del usuario deeduckme; el usuario reporta 27-30% de uso de GPU; sin driver/kernel",
+   "riesgo": "Afirmacion de usuario sin medicion comparativa; la imagen llama.cpp:server-spark es construida por el usuario.",
+   "verificable_aqui": "docker images | grep -i llama"
+  },
+  {
+   "que": "Reportes de usuarios: la imagen Docker de Ollama tiene problemas graves de rendimiento en Spark; reinstalar Ollama localmente (no en Docker) devuelve rendimiento normal; LM Studio y llama.cpp resultaron mas rapidos",
+   "como": "no indicado",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun usuario vmm1234",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios sin respuesta de NVIDIA; la unica pieza concreta es un comando docker de llama.cpp con 16 capas en GPU, sin metricas. Sirve poco para monitoreo o prevencion de colapsos.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

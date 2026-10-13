@@ -1,0 +1,80 @@
+{
+ "id": 360336,
+ "titulo": "Unlocking the Power of the Spark In ComfyUI - No Crashes!",
+ "leido": true,
+ "posts_leidos": 14,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar el reloj maximo de la GPU para bajar el consumo y evitar reinicios en seco durante carga sostenida",
+   "como": "sudo nvidia-smi -lgc 300,2100  (el autor dice que 1800 MHz fue estable y 2100 su punto optimo; potencia ~50 W en vez de ~85 W)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, driver 580.126.09, CUDA 13.0, kernel 6.14.0-1015-nvidia (segun el usuario jas.burton); post 14 reporta que estabilizo otro equipo (79 C GPU, 2086 MHz, 69.77 W)",
+   "riesgo": "La causa 'pico de potencia dispara proteccion de sobrecorriente' es una hipotesis del usuario, no verificada (post 1 dice 'appears'). En post 15 un usuario ejecuto el mismo comando y clocks.applications.graphics siguio en 2418 MHz; no hubo respuesta que lo explique",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.applications.graphics,clocks.sm,clocks.max.sm,power.draw --format=csv"
+  },
+  {
+   "que": "Desactivar swap para que la memoria unificada produzca un OOM limpio en vez de congelamiento",
+   "como": "sudo swapoff -a ; echo \"vm.swappiness=10\" | sudo tee -a /etc/sysctl.conf ; sudo sysctl -w vm.swappiness=10",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "mismo equipo del post 1",
+   "riesgo": "La explicacion 'swap thrash satura el bus' es del usuario sin medicion. Nota: swapoff -a y swappiness=10 son dos cosas distintas; swappiness=10 con swap activo no lo desactiva",
+   "verificable_aqui": "swapon --show; cat /proc/sys/vm/swappiness; free -g"
+  },
+  {
+   "que": "Monitor de bitacora cada 5 s de temperatura, potencia, RAM y swap para diagnosticar cortes sin logs",
+   "como": "bucle while true con nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits ; nvidia-smi --query-gpu=power.draw --format=csv,noheader,nounits ; free -g | awk '/Mem:/{print $3}' ... ; sleep 5 >> thermal_monitor.log",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "mismo equipo",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw --format=csv,noheader,nounits"
+  },
+  {
+   "que": "Evidencia de un corte en seco sin rastro: ultima traza 54 C -> 71 C -> 78 C, potencia 14 W -> 85 W, RAM 49/119 G, swap 0, luego reinicio; dmesg y journalctl limpios, journal 'corrupted or uncleanly shut down' tras reiniciar",
+   "como": "journalctl y dmesg tras reinicio (sin comando exacto indicado)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark del autor, LTX Video 768x768 201 frames en ComfyUI",
+   "riesgo": "Es evidencia de un unico usuario; el autor descarta termica por 78 C pero otros hilos del equipo muestran cortes a >95 C, no comparables",
+   "verificable_aqui": "journalctl --list-boots; journalctl -b -1 -n 50 --no-pager"
+  },
+  {
+   "que": "Cache de kernels CUDA ampliada: el autor afirma 3x mas rapido en pasos de denoise subsiguientes",
+   "como": "export CUDA_CACHE_MAXSIZE=4294967296 ; NO usar CUDA_CACHE_DISABLE=1 ni PYTORCH_NO_CUDA_MEMORY_CACHING=1 (fragmentacion -> OOM segun el autor)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "mismo equipo; paso 20 s -> 6.6 s segun el usuario",
+   "riesgo": "TORCH_INDUCTOR_FX_GRAPH_CACHE=1 sirvio grafos obsoletos al cambiar LoRAs (post 1)",
+   "verificable_aqui": "env | grep CUDA_CACHE"
+  },
+  {
+   "que": "Banderas de ComfyUI: --highvram es contraproducente en memoria unificada; dejar el offload asincrono",
+   "como": "python main.py --listen 0.0.0.0 --bf16-unet --bf16-vae --bf16-text-enc --use-sage-attention (sin --highvram, --disable-async-offload, --gpu-only)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "pico RAM ~93/119 GB sin OOM, 68-74 C, 45-51 W segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA no responde en el hilo sobre la causa de los reinicios; un moderador solo mueve el tema (post 3). El autor dice que nvidia-smi -pl muestra N/A en GB10, por lo que el limite de potencia no se puede fijar (afirmacion de usuario, post 1).",
+ "utilidad_atom": "alta",
+ "razon": "Un usuario con GB10 documenta un corte en seco sin logs con traza de temperatura, potencia y RAM, y aplica tope de reloj (nvidia-smi -lgc 300,2100) y swap desactivado; otro equipo (post 14) lo reporta estabilizador, y otro (post 15) no logra que el tope se aplique. La causa raiz propuesta es hipotesis del autor sin verificacion de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

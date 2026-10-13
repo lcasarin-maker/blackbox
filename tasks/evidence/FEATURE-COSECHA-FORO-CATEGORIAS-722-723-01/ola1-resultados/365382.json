@@ -1,0 +1,68 @@
+{
+ "id": 365382,
+ "titulo": "Implementation Guide: DGX Spark with Qwen3.5-35B-A3B via llama.cpp for Claude Code",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Desactivar mmap en llama-server; el autor lo describe como arreglo de rendimiento porque mmap causa lentitud severa en GB10",
+   "como": "--no-mmap",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/ggml-org/llama.cpp.git",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark / GB10 (SM121) segun el usuario claytantor",
+   "riesgo": "Sintoma declarado de lentitud 5-10 tok/s si falta --no-mmap o se usa KV f16; sin medicion comparativa en el post",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Compilacion de llama.cpp para SM121 y banderas de servidor del autor",
+   "como": "cmake -B build -DGGML_CUDA=ON -DLLAMA_CURL=ON -DGGML_CUDA_FA_ALL_QUANTS=ON -DCMAKE_CUDA_ARCHITECTURES=121 -DGGML_NATIVE=ON ; --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn on -ngl 999 --ctx-size 131072",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/ggml-org/llama.cpp.git",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark / GB10 segun el usuario",
+   "riesgo": "AoE (post 3) dice que la guia parece generada por IA y que el paso 3 esta desactualizado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variable de Claude Code para evitar que una cabecera de atribucion invalide la cache KV en cada turno (el autor dice ~90% mas lento sin ella)",
+   "como": "export CLAUDE_CODE_ATTRIBUTION_HEADER=0",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "llama-server en GB10 segun el usuario",
+   "riesgo": "Cifra del 90% sin medicion publicada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de estabilidad: el autor reporta desviacion estandar de la generacion <= 0.3 t/s en la mayoria de tareas y concluye que no hay estrangulamiento termico; no incluye lectura de temperatura",
+   "como": "no indicado (metricas del campo timings de llama-server)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, pruebas de segundos a decenas de segundos",
+   "riesgo": "Corridas cortas (2 por tarea); no prueban comportamiento termico sostenido",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Comparacion de backend: Vulkan resulto algo mas rapido en generacion que CUDA para Qwen3.5-35B-A3B (tg128 61.55 contra 59.93 t/s) y mas lento en prefill",
+   "como": "GGML_VK_PREFER_HOST_MEMORY=1 llama-bench -hf unsloth/Qwen3.5-35B-A3B-GGUF:UD-Q4_K_XL -ngl 99 -fa 1 -ctv q8_0 -ctk q8_0 --mmap 0 -d 0,10000,65000 -dev CUDA0,Vulkan0",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, compute capability 12.1, Vulkan con uma:1 segun el usuario pontostroy",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Guia de uso de llama.cpp con banderas concretas (--no-mmap, KV q8_0) y un benchmark CUDA contra Vulkan; sin respuesta de NVIDIA y sin lectura de memoria ni temperatura. El post 3 advierte que partes estan desactualizadas.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

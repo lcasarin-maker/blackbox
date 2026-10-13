@@ -1,0 +1,48 @@
+{
+ "id": 380957,
+ "titulo": "Qwen3.8-27B benchmarking on one DGX Spark: DFlash2 beat vLLM+MTP, and greedy beat the \"thinking\" sampler",
+ "leido": true,
+ "posts_leidos": 25,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Con SGLang, subir --mem-fraction-static por encima de 0.50 casi bloquea todo el host (incluido SSH) porque SGLang no cuenta las asignaciones transitorias de flashinfer/grafos en memoria unificada",
+   "como": "--mem-fraction-static 0.50 (tope recomendado por el autor)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "1x DGX Spark (usuario)",
+   "riesgo": "Bloqueo total del host, que comparte memoria con SSH",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de medicion de calidad de tool-calling con semilla fija",
+   "como": "tool-eval-bench run --seed 42 ; tool-eval-bench run --hardmode --seed 42",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "1x DGX Spark",
+   "riesgo": "El propio autor dice que los resultados varian entre corridas aun a temperatura 0 y deben leerse como banda",
+   "verificable_aqui": null
+  },
+  {
+   "que": "--allow-auto-truncate evita el aborto duro de SGLang con contextos agenticos de ~110K tokens",
+   "como": "--allow-auto-truncate",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "1x DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Una afirmacion de usuario con valor medido sobre el limite seguro de memoria de SGLang en memoria unificada (0.50) y el riesgo de bloqueo del host; el resto es comparacion de motores y samplers, sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

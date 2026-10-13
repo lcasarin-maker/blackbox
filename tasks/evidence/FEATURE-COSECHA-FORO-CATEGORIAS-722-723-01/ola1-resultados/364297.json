@@ -1,0 +1,27 @@
+{
+ "id": 364297,
+ "titulo": "Critical security flaw for all NVIDIA docker images- Insecure http for updates and installation",
+ "leido": true,
+ "posts_leidos": 9,
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobacion de que las imagenes base usan http para apt, y parche propuesto a cambiar a https",
+   "como": "docker run --rm vllm-node-tf5:latest cat /etc/apt/sources.list.d/ubuntu.sources ; correccion: sustituir http por https en ese archivo (comando exacto no indicado; PR eugr/spark-vllm-docker/pull/132)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker (PR 132)",
+   "licencia": "no indicada",
+   "probado_en": "imagen nvcr.io/nvidia/pytorch:26.01-py3 base de spark-vllm-docker, segun elvis.dowson",
+   "riesgo": "Otros usuarios (post 6 y 8) advierten que https rompe proxies de cache y redes con inspeccion TLS sin CA propia; trystan1 sostiene que apt ya verifica firmas; eugr acuerda hacerlo opcional con CA propia (post 9)",
+   "verificable_aqui": "grep -R URIs /etc/apt/sources.list.d/"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario reporta apt por http en imagenes base de NVIDIA; la gravedad se discute y otros usuarios la rechazan como defecto critico. Sin respuesta de NVIDIA y sin relacion con memoria o termica.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

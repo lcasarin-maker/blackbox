@@ -1,0 +1,48 @@
+{
+ "id": 374826,
+ "titulo": "Eigr's gold by Leathery Tendons",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Bloquear el reloj de GPU para evitar apagados duros bajo carga sostenida; el autor afirma que el firmware actual puede apagar en seco una Spark y lo llama riesgo de incendio",
+   "como": "sudo nvidia-smi -lgc 200,2150",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos DGX Spark (GB10) segun el autor LeatheryTendons; firmware, driver y kernel no indicados",
+   "riesgo": "Limita el reloj maximo a 2150 MHz; el autor no mide el efecto en rendimiento ni documenta la causa del apagado",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK | grep -i -A4 'Applications Clocks\\|Max Clocks'"
+  },
+  {
+   "que": "Preparacion de nodos para servir un modelo de 397B al limite de memoria: swap en NVMe de cada Spark como valvula de presion en el techo de unos 108 GB por nodo, nivel de ejecucion 3 sin GUI, y --no-ray para caber el contexto completo",
+   "como": "./run-recipe.sh qwen3.5-397b-int4-autoround.yaml --download-only ; ./run-recipe.sh qwen3.5-397b-int4-autoround.yaml --no-ray (repo eugr/spark-vllm-docker, commit cf0d5f6); comando de swap y de runlevel no indicados",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker (MIT segun el texto)",
+   "licencia": "MIT",
+   "probado_en": "2 Spark (GB10) con enlace directo QSFP56 de 200 Gb, vLLM 0.23.1rc1 (build GB10), segun el autor",
+   "riesgo": "El intento previo con un modelo GPTQ y contexto demasiado grande agoto la memoria en la inicializacion; una prueba anterior estilo denso dejo una Spark colgada; el autor dice que corre en el techo de memoria y deja sin margen a otro trabajo de GPU",
+   "verificable_aqui": "free -g ; swapon --show ; systemctl get-default"
+  },
+  {
+   "que": "Huella de memoria medida del servicio",
+   "como": "~98 GiB de memoria de modelo por nodo y KV cache de 284,939 tokens; unos 11 tok/s",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "las dos Spark del autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El unico post da un comando exacto de bloqueo de reloj con la afirmacion de que el firmware actual puede apagar en seco una Spark, ademas de cifras de memoria por nodo y la advertencia de operar en el techo. Es afirmacion de un usuario sin medicion termica ni respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

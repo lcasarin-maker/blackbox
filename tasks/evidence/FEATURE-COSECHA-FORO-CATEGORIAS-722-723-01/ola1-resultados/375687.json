@@ -1,0 +1,70 @@
+{
+ "id": 375687,
+ "titulo": "Vision works on the MiniMax-M3-W4A16-GPTQ b12x stack — 33 tok/s + OCR-grade multimodal on 2× GB10",
+ "leido": true,
+ "posts_leidos": 12,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "GPU 'power-wedged': el reloj SM quedo fijo en 611 MHz y ~10 W con 95% de carga sin ninguna razon de throttle activa; un reinicio no lo limpia, un ciclo completo de corriente AC si; tras eso 2400 MHz y de 20 a 36 tok/s",
+   "como": "nvidia-smi --query-gpu=clocks.sm --format=csv en ambos nodos ; nvidia-smi -q -d PERFORMANCE (mostraba cero razones de throttle activas)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark GB10 (TP=2); driver y kernel no indicados",
+   "riesgo": "un nodo atascado arrastra a todo el par TP; el reinicio no lo arregla, hay que desenchufar la fuente USB-C",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,clocks.max.sm,power.draw,utilization.gpu --format=csv ; nvidia-smi -q -d PERFORMANCE"
+  },
+  {
+   "que": "Soltar la cache de paginas en ambos nodos justo antes de arrancar, porque el chequeo de memoria libre con gpu_memory_utilization 0.92 falla (libre 112 < necesario 113 GiB)",
+   "como": "sync; echo 3 > /proc/sys/vm/drop_caches",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark GB10, 121 GiB de memoria unificada por nodo",
+   "riesgo": "requiere privilegios de root; la cache se vuelve a llenar",
+   "verificable_aqui": "free -m ; cat /proc/sys/vm/drop_caches"
+  },
+  {
+   "que": "En un nodo con escritorio el chequeo de memoria libre con utilizacion 0.93 falla por ~0.5 GB; el autor lo recupera dejando el nodo sin interfaz grafica",
+   "como": "systemctl set-default multi-user.target",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 con cabeza de nodo con escritorio",
+   "riesgo": "cambia el target por defecto del sistema (configuracion persistente)",
+   "verificable_aqui": "systemctl get-default"
+  },
+  {
+   "que": "Desactivar el presupuesto de video del perfilador multimodal para devolver ~6 GB al KV pool; sin esto el KV falla con 'No available memory for the cache blocks'",
+   "como": "--limit-mm-per-prompt '{\"image\": 4, \"video\": 0}' con gpu_memory_utilization 0.92 y max_model_len 98304 (pool de 106,112 tokens)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10",
+   "riesgo": "la ViT necesita ~4 GB",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Calentar la cache de Triton en ambos nodos: JIT durante el primer replay de cudagraph desincroniza rangos y produce 'shm_broadcast: No available shared memory broadcast block found in 60 seconds', EngineDead o salida basura",
+   "como": "rsync -a ~/.triton/ <worker>:~/.triton/ ; B12X_TRITON_PREWARM_STRICT=1",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/a3refaat/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10 (nodos sm_121 identicos)",
+   "riesgo": "sin GPUDirect entre nodos",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Un usuario describe con comandos un reloj de GPU atascado a 611 MHz sin razones de throttle que solo se limpia con un ciclo AC, mas el uso de drop_caches antes de arrancar con memoria unificada. Sin respuesta de NVIDIA; cifras de un solo cluster de dos nodos.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

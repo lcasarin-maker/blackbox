@@ -1,0 +1,27 @@
+{
+ "id": 364675,
+ "titulo": "Qwen3.5-27B-FP8 with MTP versus int4 AutoRound",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comando de arranque de Qwen3.5-27B-FP8 con MTP y cache KV fp8 en vLLM (spark-vllm-docker)",
+   "como": "launch-cluster.sh -t vllm-node-tf5 --solo exec vllm serve /models/Qwen3.5-27B-FP8 --max-model-len 262144 --gpu-memory-utilization 0.92 --enable-prefix-caching --load-format fastsafetensors --speculative-config '{\"method\":\"qwen3_next_mtp\",\"num_speculative_tokens\":2}' --kv-cache-dtype fp8",
+   "fuente_post": 3,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (declarado por el usuario)",
+   "riesgo": "--gpu-memory-utilization 0.92 deja poco margen en memoria unificada",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Comparacion de rendimiento de cuantizaciones con un comando de arranque; 12-14 tok/s medidos en cliente segun el usuario. Sin relacion con monitoreo ni prevencion de cortes.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

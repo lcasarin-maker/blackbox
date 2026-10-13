@@ -1,0 +1,27 @@
+{
+ "id": 383630,
+ "titulo": "Your DGX Spark as a production AI server: one command, a cockpit, and an agent in the browser",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Sondeo de salud que ejecuta una generacion real en vez de confiar en /health, porque SGLang responde /health aun atascado; clasifica el motor como ready, loading, wedged o stopped",
+   "como": "no indicado (comportamiento del panel; solo se describe el criterio)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/hasso5703/dgx-spark-qwen38",
+   "licencia": "MIT",
+   "probado_en": "un DGX Spark de referencia, SGLang con NVFP4 (declarado por el autor)",
+   "riesgo": "La instalacion propuesta es curl -fsSL .../get.sh | bash, que ejecuta un script remoto sin revision previa.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El unico criterio reutilizable es verificar el motor con una generacion real porque /health miente cuando el motor esta atascado; el resto es un instalador y un panel para Qwen3.8 con SGLang. Licencia MIT declarada y sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

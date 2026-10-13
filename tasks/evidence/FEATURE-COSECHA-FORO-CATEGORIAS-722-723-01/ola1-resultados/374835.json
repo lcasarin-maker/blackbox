@@ -1,0 +1,25 @@
+{
+ "id": 374835,
+ "titulo": "New model (one of the best i ever used, in my humble opinion): Qwen Agent World for local programming",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [],
+ "mecanismos": [
+  {
+   "que": "Configuracion docker compose de vLLM nightly para un modelo NVFP4 de 35B-A3B con MTP en un Spark",
+   "como": "image vllm/vllm-openai:nightly ; --gpu-memory-utilization 0.78 --max-model-len 131072 --max-num-seqs 64 --max-num-batched-tokens 32768 --quantization compressed-tensors --kv-cache-dtype fp8 --moe-backend flashinfer_cutlass --attention-backend FLASHINFER --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3}' ; ipc: host",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark segun el autor luis.manrique.car; ~60 tok/s de decode con una peticion",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario comparte el compose de un modelo y una configuracion de OpenCode, con una velocidad de decode declarada sin metodo de medicion. No hay respuestas ni contenido de memoria, termica o monitoreo.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

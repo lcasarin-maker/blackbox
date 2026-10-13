@@ -1,0 +1,58 @@
+{
+ "id": 367803,
+ "titulo": "Qwen3.6-27B-Dflash link",
+ "leido": true,
+ "posts_leidos": 21,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Configuracion de decodificacion especulativa DFlash en vLLM con el borrador de z-lab; en 2 Spark el usuario midio ~41-58 tok/s frente a ~31-37 con MTP=3",
+   "como": "--speculative-config '{\"method\": \"dflash\", \"model\": \"z-lab/Qwen3.6-27B-DFlash\", \"num_speculative_tokens\": 5}'",
+   "fuente_post": 13,
+   "repositorio": "https://huggingface.co/z-lab/Qwen3.6-27B-DFlash",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark, Qwen3.6-27B-FP8, TP=2 (declarado por p1140)",
+   "riesgo": "El modelo borrador esta 'en entrenamiento'; un usuario midio aceptacion ~7% (post 11)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Mejora con soporte de ventana deslizante en el borrador: PR de vLLM 40898, con dflash=15 pasa de ~31 a ~50-82 tok/s",
+   "como": "./build-and-copy.sh -t vllm-node --apply-vllm-pr 40898 -c",
+   "fuente_post": 23,
+   "repositorio": "https://github.com/vllm-project/vllm/pull/40898",
+   "licencia": "no indicada",
+   "probado_en": "2x Spark, Qwen3.6-27b-fp8 TP=2 (declarado)",
+   "riesgo": "Parche en PR sin fusionar",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: con --gpu-memory-utilization 0.85 el proceso de vLLM consumio ~99% de la RAM y puntuaciones 0; el usuario cancelo la ejecucion",
+   "como": "--gpu-memory-utilization 0.85 (el sistema llego a ~99% de RAM)",
+   "fuente_post": 17,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark, version nueva de vLLM/DFlash (declarado por DannyTup)",
+   "riesgo": "Agotamiento de memoria en memoria unificada",
+   "verificable_aqui": "free -h; grep MemAvailable /proc/meminfo"
+  },
+  {
+   "que": "Receta de eugr con mod de reserva de memoria en GiB para una gestion estable de memoria unificada",
+   "como": "mods/gpu-mem-util-gb ; gpu_memory_utilization: 0.7 ; VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS: 1",
+   "fuente_post": 18,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x Spark, Qwen3.6-35B-A3B (declarado por arctic.gus)",
+   "riesgo": "El post 18 publica un token de HuggingFace en un comentario; un usuario lo advierte (post 20)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de rendimiento de decodificacion especulativa con comandos reproducibles; solo contiene dos datos de memoria (RAM al 99% con 0.85, mod de reserva en GiB) sin medicion de causa. La relacion con colapsos de memoria es tangencial.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,110 @@
+{
+ "id": 376884,
+ "titulo": "1x Spark tuned DSpark for DeepSeek-V4-Flash: 35 tok/s, 800+ prefill, and fast multi-agent serving",
+ "leido": true,
+ "posts_leidos": 162,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Fallo de memoria al arrancar con --warm-weights: carga todo el mmap (~81 GiB) en cache de paginas antes de iniciar CUDA y el asignador de GB10 no fuerza la recuperacion de cache limpia; en un primer arranque cudaSetDevice fallo con ~5 GiB libres y ~99 GiB recuperables en cache. Solucion: quitar --warm-weights y, si quedo cache caliente, vaciarla",
+   "como": "sudo sysctl vm.drop_caches=3 (o posix_fadvise POSIX_FADV_DONTNEED sobre el GGUF); relanzar sin --warm-weights ni DS4_CUDA_NO_DERIVED_WEIGHTS",
+   "fuente_post": 80,
+   "repositorio": "https://github.com/Entrpi/ds4",
+   "licencia": "no indicada",
+   "probado_en": "GX10/Spark del usuario fabiopili (el analisis fue redactado por su asistente LLM local y no esta verificado por NVIDIA)",
+   "riesgo": "Afirmacion de usuario generada con ayuda de un LLM; sin respuesta de NVIDIA",
+   "verificable_aqui": "grep -E 'MemAvailable|^Cached|MemFree' /proc/meminfo"
+  },
+  {
+   "que": "La memoria disponible reportada por Linux se reduce con horas de uptime y de carga sostenida, y el ajuste al arrancar lo toma por cierto: en una caja recien reiniciada y sin escritorio entran 7 slots de 256k, tras horas de servicio solo 2",
+   "como": "arrancar el servidor poco despues de reiniciar, en arranque sin interfaz grafica; DS4_BATCH_FIT_HEADROOM_MB=2048 da 17 slots con especulacion, --no-spec da 19",
+   "fuente_post": 119,
+   "repositorio": "https://github.com/Entrpi/ds4",
+   "licencia": "no indicada",
+   "probado_en": "Asus GX10 del autor entrpi (medicion propia)",
+   "riesgo": "Menos margen de seguridad con headroom bajo",
+   "verificable_aqui": "free -g"
+  },
+  {
+   "que": "NV_ERR_NO_MEMORY / NVRM al servir 200K+32K de contexto: limitar el ancho del lote, fijar un margen de memoria y comprobar que no queda otro servidor sin terminar reteniendo memoria unificada (caso clasico segun el autor)",
+   "como": "DS4_SERVER_COALESCE_MAX=2 DS4_BATCH_FIT_HEADROOM_MB=6272 ./ds4-server -m <gguf> --cuda -c 245760 -n 32768 --host 0.0.0.0 --port 8000 ; antes: free -g debe mostrar ~110+ GiB disponibles",
+   "fuente_post": 89,
+   "repositorio": "https://github.com/Entrpi/ds4",
+   "licencia": "no indicada",
+   "probado_en": "GB10 121 GB segun agupta30 (no verificado para la pregunta de heart1689)",
+   "riesgo": "El usuario que pregunto (post 88) ya habia probado deshabilitar grafos, DSpark, HBM cache, coalescing, derepack y bajar a 160K sin resolver el NVRM",
+   "verificable_aqui": "journalctl -k | grep -E 'NVRM|NV_ERR_NO_MEMORY'; free -g"
+  },
+  {
+   "que": "Crecimiento lento de memoria durante sesiones largas con cache KV en disco hasta un cliff de rendimiento (117.5 GB a 121 GB; el motor refalla MoE desde disco al comprimir el page cache de los pesos); workaround: fijar presupuesto del mapeo VMM",
+   "como": "DS4_BATCH_VMM_BUDGET_MB=8192 (12288 si hay margen); correccion posterior en v0.5.1 (trim-on-evict)",
+   "fuente_post": 98,
+   "repositorio": "https://github.com/Entrpi/ds4",
+   "licencia": "no indicada",
+   "probado_en": "Spark del usuario jlbas, v0.4.2",
+   "riesgo": "Admisiones que superen el presupuesto se rechazan",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Superficie de metricas del servidor: bloque timings en cada respuesta, endpoint Prometheus y estado legible; gen/prefill por request con DS4_CONT_GEN_TIMING=1",
+   "como": "GET /metrics (texto Prometheus); GET /v1/stats (watch -n2 curl -s :8000/v1/stats); DS4_CONT_GEN_TIMING=1 registra 'cont admit ... suffix=N wall=Ts'",
+   "fuente_post": 31,
+   "repositorio": "https://github.com/Entrpi/ds4",
+   "licencia": "no indicada",
+   "probado_en": "GB10 segun el autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Control de calidad de la medicion: llama-benchy sin parche sobrecuenta tokens de generacion ~1.9x si el servidor no devuelve token_ids por delta; contrastar con usage.completion_tokens de la misma respuesta",
+   "como": "comparar tokens contados por benchy con usage.completion_tokens",
+   "fuente_post": 19,
+   "repositorio": "https://github.com/eugr/llama-benchy (fork del autor referido)",
+   "licencia": "no indicada",
+   "probado_en": "GB10 segun el autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reloj de GPU limitado a ~2100 MHz para que el modelo corra mas frio y estable (el modelo 'corre caliente'); un usuario con 2 GHz mide 22.4 tok/s frente a 28.3 a reloj de fabrica",
+   "como": "no indicado el comando para fijar el reloj",
+   "fuente_post": 48,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "sistemas de azampatti, phyo.arkarlwin y m0l0 segun ellos",
+   "riesgo": "Afirmacion de usuarios sin mediciones de temperatura; el rendimiento baja",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,clocks.max.sm,temperature.gpu --format=csv"
+  },
+  {
+   "que": "Guardian por cron que reinicia el servidor si el proceso muere, si el contexto CUDA queda envenenado (illegal memory access en el log) o si la API no responde en un proceso maduro; guarda el log del fallo antes de reiniciar",
+   "como": "crontab: * * * * * /home/you/ds4-watchdog.sh ; el script usa pgrep -x ds4-server, tail -n 100 del log | grep -q 'illegal memory access' y curl -s -m 10 http://localhost:8000/v1/models (gracia de 300 s, 180 s entre reinicios)",
+   "fuente_post": 142,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark de scope_cr33p, v0.5.x",
+   "riesgo": "Un reinicio automatico oculta fallos de causa abierta; los crashes de ds4 se atribuyen a bugs del motor, no del driver",
+   "verificable_aqui": null
+  },
+  {
+   "que": "La memoria que reporta el panel (129.10 de 128 GB) es un artefacto: los pesos van mapeados y el panel cuenta la cache de paginas (el autor lo atribuye al DGX Dashboard, segun su lectura)",
+   "como": "no indicado",
+   "fuente_post": 119,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus Ascent segun clint25 (pregunta) y entrpi (respuesta)",
+   "riesgo": null,
+   "verificable_aqui": "free -h; cat /proc/meminfo | head -5"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Hilo de un motor de usuario (ds4) con varias observaciones transferibles de memoria unificada: cache de paginas no reclamada al arrancar, disponibilidad que decae con uptime, firma NV_ERR_NO_MEMORY, vigilante por cron y reloj a 2100 MHz. Todo viene de usuarios sin respuesta de NVIDIA y buena parte es especifica de un motor y de su version.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

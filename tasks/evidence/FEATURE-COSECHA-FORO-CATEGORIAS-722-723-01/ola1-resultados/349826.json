@@ -1,0 +1,38 @@
+{
+ "id": 349826,
+ "titulo": "Build \"Ovi: Twin Backbone Cross-Modal Fusion for Audio-Video Generation\" on DGX Spark",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar los trabajos paralelos de compilacion de flash_attn para que no agoten CPU y memoria y disparen el OOM killer",
+   "como": "MAX_JOBS=4 uv pip install flash_attn --no-build-isolation",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/character-ai/Ovi.git",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario avrami (sin version de driver/kernel)",
+   "riesgo": "Sin el limite, la compilacion usa todas las CPUs y agota la RAM, lo que activa el OOM killer",
+   "verificable_aqui": "nproc; free -h"
+  },
+  {
+   "que": "Instalar torch con backend automatico en uv",
+   "como": "uv pip install torch torchvision torchaudio --torch-backend auto",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El post 1 da el truco MAX_JOBS=4 para evitar OOM al compilar flash_attn (post 3 dice que viene de issues de GitHub, no es especifico de uv); el post 2 menciona de pasada instalaciones largas que cuelgan el equipo, sin diagnostico. Sin respuesta de NVIDIA; es una nota de instalacion de un modelo de video.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

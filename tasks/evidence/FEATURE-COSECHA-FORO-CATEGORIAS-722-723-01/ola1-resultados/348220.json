@@ -1,0 +1,47 @@
+{
+ "id": 348220,
+ "titulo": "Setting up your DGX SPARK for Remote Virtual Desktop (with Headless Sunshine Setup)",
+ "leido": true,
+ "posts_leidos": 13,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Resolucion mayor en escritorio headless (Sunshine): xorg.conf con ModeValidation permisivo y MetaModes",
+   "como": "Option \"ModeValidation\" \"AllowNonEdidModes, NoMaxPClkCheck, NoEdidMaxPClkCheck, NoHorizSyncCheck, NoVertRefreshCheck\"; Option \"AllowEmptyInitialConfiguration\" \"True\"; Option \"VirtualHeads\" \"1\"; Option \"ConnectedMonitor\" \"DFP-0\"; Option \"MetaModes\" \"HDMI-0: 2560x1440 +0+0\"",
+   "fuente_post": 11,
+   "repositorio": "https://github.com/eelbaz/dgx-spark-headless-sunshine (nombre dado en el post 1; URL exacta no aparece en el texto)",
+   "licencia": "no indicada",
+   "probado_en": "usuario eduardp, DGX Spark, sin version declarada",
+   "riesgo": "Opciones Coolbits 28 y ModeValidation sin chequeo de pixel clock pueden dar modos invalidos; usuario admite que no sabe si cada paso era necesario",
+   "verificable_aqui": "cat /etc/X11/xorg.conf 2>/dev/null; xrandr --query"
+  },
+  {
+   "que": "Cambiar resolucion headless con nvidia-settings",
+   "como": "nvidia-settings -a CurrentMetaMode=\"HDMI-0: nvidia-auto-select { ViewPortIn=2192x1565, ViewPortOut=2192x1565+0+0 }\"",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario aceangel, sin version declarada",
+   "riesgo": "ids de usuario y rutas XAUTHORITY dependen del sistema",
+   "verificable_aqui": "nvidia-settings -q CurrentMetaMode"
+  },
+  {
+   "que": "Alternativa sin instalar nada: RDP nativo de GNOME; o arrancar multi-user (sin grafico) para ahorrar memoria",
+   "como": "no indicado (solo se nombra gnome native RDP / multi-user mode)",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "systemctl get-default"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Tema de escritorio remoto headless, ajeno a memoria o termica; solo aporta que arrancar en multi-user ahorra memoria (post 14, sin cifra). Sin respuesta de staff de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

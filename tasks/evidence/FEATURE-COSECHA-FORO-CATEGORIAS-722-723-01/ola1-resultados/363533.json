@@ -1,0 +1,68 @@
+{
+ "id": 363533,
+ "titulo": "[GB10] vLLM + DeepSeek-R1-32B Stable Setup on Blackwell — Full Protocol After 4 Days of Failures",
+ "leido": true,
+ "posts_leidos": 5,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Un build de vLLM por compilacion ilimitada agota RAM y el OOM Killer lo mata en silencio (solo visible en dmesg); mitigacion limitando jobs",
+   "como": "MAX_JOBS=8 python3 setup.py build_ext --inplace",
+   "fuente_post": 1,
+   "repositorio": "github.com/trgysvc/AutonomousNativeForge",
+   "licencia": "no indicada",
+   "probado_en": "GB10, 120GB, aarch64 (declarado por el usuario)",
+   "riesgo": "Afirmacion de usuario sin verificacion independiente",
+   "verificable_aqui": "dmesg | grep -i 'out of memory'"
+  },
+  {
+   "que": "--gpu-memory-utilization 0.95 o mas deja sin margen al sistema y provoca bucles de recarga por fallos del health check; el autor usa 0.85",
+   "como": "--gpu-memory-utilization 0.85",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 (usuario)",
+   "riesgo": "Causa atribuida a picos de Gnome/Xorg, no verificada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un modelo 70B bf16 (~132GB) dispara el OOM Killer cerca del 90% de la carga de pesos sin traza de CUDA; el autor pasa a 32B (~64GB)",
+   "como": "no indicado como comando; es una regla de dimensionado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 (usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Motor V1 de vLLM queda sin responder tras 10-15 min con salidas largas (10K+ tokens); el autor lo evita con la variable de entorno",
+   "como": "export VLLM_USE_V1=0 ; comando final con --enforce-eager --max-model-len 32768 --dtype bfloat16",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 (usuario)",
+   "riesgo": "Desactiva el motor V1 y puede no aplicar a versiones recientes de vLLM",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Sintoma de PyTorch +cpu: corre en CPU sin aviso; la unica senal es nvidia-smi con cero memoria de GPU",
+   "como": "nvidia-smi",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 (usuario)",
+   "riesgo": "El arreglo que propone (nightly cu121) no coincide con CUDA 13 y no se debe copiar sin verificar",
+   "verificable_aqui": "python3 -c 'import torch;print(torch.cuda.is_available())'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Registro de fallos de un usuario (sin respuesta tecnica de NVIDIA; el staff solo movio el hilo) con valores concretos como MAX_JOBS=8 y gpu-memory-utilization 0.85; todo afirmado por el autor sin pruebas independientes y con un arreglo de CUDA dudoso. Util como lista de sintomas de OOM silencioso.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

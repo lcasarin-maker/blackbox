@@ -1,0 +1,27 @@
+{
+ "id": 364980,
+ "titulo": "Running NVIDIA Nemotron ASR Streaming locally with OpenWebUI",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Proxy FastAPI que convierte MP3 a WAV 16kHz mono 16-bit y reenvia por gRPC al NIM Nemotron ASR, con compose del NIM",
+   "como": "image: nvcr.io/nim/nvidia/nemotron-asr-streaming:latest, runtime: nvidia, shm_size: 8gb, ports 8005:9000 y 50055:50051, NIM_TAGS_SELECTOR=mode=str; proxy en puerto 8006; OpenWebUI Settings > Audio, STT Engine OpenAI, Base URL http://YOUR_HOST_IP:8006/v1",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "null (el texto del tutorial lo declara generado por IA)",
+   "riesgo": "Requiere NGC_API_KEY; el tutorial es generado por IA y no verificado.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El NIM exige WAV PCM 16kHz y no acepta MP3 de OpenWebUI, segun el usuario (no es afirmacion de NVIDIA).",
+ "utilidad_atom": "ninguna",
+ "razon": "Tutorial de integracion de voz sin relacion con monitoreo, medicion ni prevencion de fallos de memoria o calor. El texto lo declara generado por IA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,69 @@
+{
+ "id": 378352,
+ "titulo": "ACE-Step v1.5 on DGX Spark — install recipe, measured numbers, and the scheduling finding I'd have wanted before I started",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Registro continuo de temperatura, potencia, relojes y memoria unificada, con log en archivo que sobrevive a un reinicio duro; ademas diagnostico de instalacion",
+   "como": "./spark-comfyui.sh status --watch 3 ; ./spark-comfyui.sh doctor",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/bjarkebolding/spark-comfyui",
+   "licencia": "no indicada",
+   "probado_en": "una DGX Spark del usuario Turrican; driver y kernel no indicados",
+   "riesgo": "Script de terceros; el log permite reconstruir lo ocurrido antes de un reinicio sin logs",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw,clocks.sm --format=csv"
+  },
+  {
+   "que": "Tope de reloj para evitar reinicios duros sin logs por picos de potencia, ya que nvidia-smi -pl no esta disponible en GB10",
+   "como": "tune --clock-cap 2100 (del script spark-comfyui.sh; forma completa del comando no indicada)",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/bjarkebolding/spark-comfyui",
+   "licencia": "no indicada",
+   "probado_en": "unidad del usuario Turrican; afirma que corrige esa clase de reinicio, sin medicion mostrada",
+   "riesgo": "Limita el reloj maximo a 2100 MHz sin cifra del costo en rendimiento",
+   "verificable_aqui": "nvidia-smi -q -d POWER | grep -i 'power limit'"
+  },
+  {
+   "que": "Lectura de memoria en GB10: nvidia-smi --query-gpu=memory.used devuelve [N/A] en dos maquinas (580.159.03 y 595.71.05); la lectura por proceso funciona",
+   "como": "nvidia-smi --query-compute-apps (campos no indicados); --query-gpu=memory.used devuelve [N/A]",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos ASUS Ascent GX10, DGX OS 7.5.0, Ubuntu 24.04.4 aarch64, drivers 580.159.03 y 595.71.05 segun artfedderson",
+   "riesgo": "Un monitor que lea memory.used por GPU no obtiene dato en GB10",
+   "verificable_aqui": "nvidia-smi --query-gpu=memory.used --format=csv ; nvidia-smi --query-compute-apps=pid,used_memory --format=csv"
+  },
+  {
+   "que": "Huella de memoria medida: ACE-Step 15,140 MiB en reposo y 15,172 MiB al generar; ComfyUI 37,566 MiB; juntos unos 52.7 GB. ACE-Step encola en vez de agrupar (N=1 a 8 sin cambio de memoria; unos 7 pistas por minuto)",
+   "como": "mediciones de la tabla del post 1; consulta de memoria por proceso",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS Ascent GX10 segun el autor; ComfyUI estaba cargado pero inactivo",
+   "riesgo": "El autor cita informes de otros usuarios de que la generacion de imagen se ralentiza 5-6x bajo contencion",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround ComfyUI LTX-2.3 en GB10: el error 'Input type (float) and bias type (c10::BFloat16) should be the same' del VAE de audio",
+   "como": "./spark-comfyui.sh service --no-bf16-vae",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/bjarkebolding/spark-comfyui",
+   "licencia": "no indicada",
+   "probado_en": "Spark del usuario Turrican",
+   "riesgo": "--fp32-vae no funciona porque las banderas de precision de VAE son excluyentes",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun el post 2, nvidia-smi -pl (limite de potencia) no esta disponible en GB10; el texto no trae respuesta de NVIDIA.",
+ "utilidad_atom": "alta",
+ "razon": "El post 2 nombra herramientas concretas de registro continuo (status --watch 3) y un tope de reloj (--clock-cap 2100) contra reinicios duros por picos de potencia, y el post 1 documenta que memory.used devuelve [N/A] en GB10 mas cifras de huella por servicio. Son afirmaciones de usuarios sin mediciones del efecto del tope y sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,48 @@
+{
+ "id": 365555,
+ "titulo": "Multi-Node DGX Spark Cluster (4×) — K3s, SGLang/vLLM, ConnectX-7 SR-IOV, Full Benchmark Matrix",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Xid 13 (instruccion ilegal) en SM121 por el kernel de despacho MoE flashinfer_cutlass; correccion y segunda correccion para fp4_gemm_backend=auto",
+   "como": "moe_runner_backend=triton ; forzar fp4_gemm_backend=flashinfer_cutlass",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/vroomfondel/dgxarley",
+   "licencia": "no indicada",
+   "probado_en": "4x ASUS Ascent GX10 GB10 SM121, SGLang 0.5.9-dev2/0.5.10rc0 (declarado)",
+   "riesgo": "triton MoE falla con EP>1 (el autor lo reporta)",
+   "verificable_aqui": "dmesg | grep -i xid"
+  },
+  {
+   "que": "Stack de monitoreo y UPS del repositorio (Prometheus/Grafana, NUT) y automatizacion Ansible; sin detalles de configuracion en el post",
+   "como": "no indicado",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/vroomfondel/dgxarley",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: piecewise CUDA graphs siempre OOM; requiere disable_piecewise_cuda_graph=true",
+   "como": "disable_piecewise_cuda_graph=true",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "SGLang en GB10 (declarado)",
+   "riesgo": "OOM",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Receta de cluster abierta con repositorio y hallazgos concretos de Xid 13 y OOM de CUDA graphs en GB10. Licencia no indicada; el post no da comandos de monitoreo, solo los enumera.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

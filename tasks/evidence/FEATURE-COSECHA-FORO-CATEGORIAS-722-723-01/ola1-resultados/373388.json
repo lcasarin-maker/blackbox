@@ -1,0 +1,58 @@
+{
+ "id": 373388,
+ "titulo": "Minimax M3 on 3 Sparks TP=3 is now working",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reducir la reserva del object store de Ray: Ray reserva ~30% de la RAM (~36 GB por nodo) para un plasma que vLLM TP no usa; en el nodo cabeza esa reserva mas el shard de 84 GB mas el KV sobrecomprometen los 121 GB y aparece 'NVRM: Out of memory' al cargar pesos; limitarla liberaba ~35 GB por nodo",
+   "como": "--object-store-memory 1073741824 en cada ray start",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/tonyd2wild/minimax-m3-dgx-spark-tp3",
+   "licencia": "no indicada",
+   "probado_en": "3 DGX Spark (GB10, sm_121), vLLM fork de Luke Alonso, torch 2.12 segun el usuario tonyd615",
+   "riesgo": "Sin el limite, OOM de NVRM durante la carga de pesos",
+   "verificable_aqui": "ray status 2>/dev/null | head; free -h; nvidia-smi --query-gpu=memory.used --format=csv"
+  },
+  {
+   "que": "Desactivar el monitor de memoria de Ray: tras un calentamiento exitoso el nodo cabeza queda al ~96% de RAM, normal en memoria unificada; el monitor del 95% de Ray mata falsamente al worker rank-0 (NODE_OUT_OF_MEMORY) sin OOM real (sin NVRM, sin kill de Linux, ~4.4 GB libres); el autor deja al kernel y al driver como respaldo real",
+   "como": "RAY_memory_monitor_refresh_ms=0",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/tonyd2wild/minimax-m3-dgx-spark-tp3",
+   "licencia": "no indicada",
+   "probado_en": "3 DGX Spark segun el usuario",
+   "riesgo": "Sin monitor de Ray, solo el kernel y el driver detienen un OOM real",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Cargar con safetensors porque el GDS open() de instanttensor falla en Spark (sin GPUDirect Storage)",
+   "como": "--load-format safetensors",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "torch 2.12 en Spark segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Parametros NCCL para anillo RoCE sin switch (borrador no integrado): NCCL_NET_GDR_LEVEL=0 es obligatorio en GB10 segun el autor; sin RoCE usado, NCCL corre por la NIC de gestion de 1 GbE y da ~6 tok/s",
+   "como": "unset NCCL_IB_GID_INDEX ; NCCL_IB_ADDR_RANGE por conexion ; NCCL_NET_GDR_LEVEL=0",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/tonyd2wild/minimax-m3-dgx-spark-tp3",
+   "licencia": "no indicada",
+   "probado_en": "borrador no integrado, no probado segun el autor",
+   "riesgo": "Config sin validar",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El post 1 documenta con valores exactos como evitar OOM de NVRM al cargar y como un monitor de memoria de Ray mata procesos con RAM al 96% que es normal en memoria unificada, con ~4.4 GB libres como evidencia. Es afirmacion de usuario sin respuesta de NVIDIA, probada en 3 Sparks.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

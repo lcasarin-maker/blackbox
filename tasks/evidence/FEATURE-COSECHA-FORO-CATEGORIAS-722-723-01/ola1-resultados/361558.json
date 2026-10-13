@@ -1,0 +1,27 @@
+{
+ "id": 361558,
+ "titulo": "Open WebUI with Ollama",
+ "leido": true,
+ "posts_leidos": 8,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Exponer el puerto de Ollama (11434) del contenedor open-webui de la playbook",
+   "como": "docker run -d -p 12000:8080 -p 11434:11434 -e OLLAMA_HOST=0.0.0.0:11434 --gpus=all -v open-webui:/app/backend/data -v open-webui-ollama:/root/.ollama --name open-webui ghcr.io/open-webui/open-webui:ollama ; alternativa de otros usuarios: --network=host",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun el usuario; sin version de driver",
+   "riesgo": "OLLAMA_HOST=0.0.0.0 expone Ollama a toda la red; un usuario dice que --network=host no le funciono (post 9)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Pregunta de configuracion de Docker resuelta por usuarios con flags de puertos; sin respuesta de NVIDIA. Nada de monitoreo ni estabilidad.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

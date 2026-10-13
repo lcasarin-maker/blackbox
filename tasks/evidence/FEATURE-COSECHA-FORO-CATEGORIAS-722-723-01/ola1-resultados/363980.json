@@ -1,0 +1,27 @@
+{
+ "id": 363980,
+ "titulo": "NVIDIA GreenBoost — 3-Tier GPU Memory Extension for Linux",
+ "leido": true,
+ "posts_leidos": 11,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Modulo de kernel Linux mas shim CUDA que extiende la VRAM con RAM del sistema y almacenamiento (tres niveles: GPU, RAM, disco como ultimo recurso)",
+   "como": "no indicado (el texto no da comandos de instalacion); backing file de nivel 3 abierto con filp_open(t3_file_path, O_RDWR | O_CREAT | O_LARGEFILE, 0600) y vfs_fallocate",
+   "fuente_post": 4,
+   "repositorio": "https://gitlab.com/IsolatedOctopi/nvidia_greenboost (post 1); el autor ferran.duarri indica en el post 2 como repositorio correcto 'Ferran Duarri / greenboost' en GitLab",
+   "licencia": "no indicada",
+   "probado_en": "El autor dice en el post 7 que no lo probo en DGX Spark",
+   "riesgo": "Modulo de kernel de terceros (Secure Boot activo en esta maquina); posible desgaste y calentamiento del NVMe sin medir (posts 3-5); backing file sobre NFS exige v4.2 por fallocate (post 4)",
+   "verificable_aqui": "mokutil --sb-state"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Herramienta comunitaria de extension de memoria sin prueba en GB10 (el autor lo admite); un critico (mrDragonFox) la llama plug sin validar. Sin respuesta de NVIDIA, y GB10 ya tiene memoria unificada, asi que el beneficio declarado (diffusion en tarjeta de 12 GB) no aplica.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

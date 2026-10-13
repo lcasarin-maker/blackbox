@@ -1,0 +1,48 @@
+{
+ "id": 381836,
+ "titulo": "[WITHDRAWN] Qwen3.8-Flash-Next NVFP4 on 2x GB10: long-agent crash isolation and historical TP2 measurements",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Firma de un crash que el autor distingue de OOM: probabilidades de muestreo invalidas en ambos rangos, luego assert de dispositivo CUDA, Xid 43, terminacion TP/NCCL y reinicio del contenedor; con OOMKilled=false en ambos contenedores y ~10% del pool de KV usado",
+   "como": "buscar 'Xid 43' y 'OOMKilled' (docker inspect) en logs del contenedor; el post no da el comando exacto",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/hellojiaru/qwen38-flash-next-dual-gb10 (citado)",
+   "licencia": "no indicada",
+   "probado_en": "2x ASUS Ascent GX10 (GB10 SM121), TP2 sobre ConnectX-7 RoCEv2, SGLang (declarado por el usuario)",
+   "riesgo": "El autor retiro el perfil: no pudo probar la causa raiz y dice que el sampler detecta pero no demuestra haber creado las probabilidades invalidas",
+   "verificable_aqui": "dmesg | grep -i 'Xid' ; docker inspect --format '{{.State.OOMKilled}}' <contenedor>"
+  },
+  {
+   "que": "Las CUDA graphs pueden corromper en silencio una salida de 1K tokens y la recuperacion de un marcador a 25K devolviendo HTTP 200",
+   "como": "desactivar CUDA Graph y overlap (eager); aun asi hubo crashes posteriores en trafico multi-turno",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x ASUS Ascent GX10 (GB10 SM121), TP2 sobre ConnectX-7 RoCEv2, SGLang (declarado por el usuario)",
+   "riesgo": "El perfil con eager tambien se retiro tras crashear a ~29K y ~50.6K de contexto",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un timeout de cliente en streaming deja trabajo zombi en SGLang; se arregla con el parche de PR #36418 (aborto en desconexion) segun el autor",
+   "como": "backport de los dos commits del PR #36418 de sgl-project/sglang",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/sgl-project/sglang (PR citado)",
+   "licencia": "no indicada",
+   "probado_en": "2x ASUS Ascent GX10 (GB10 SM121), TP2 sobre ConnectX-7 RoCEv2, SGLang (declarado por el usuario)",
+   "riesgo": "Solo cubre una ruta estrecha; no estabiliza el stack",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Analisis de un usuario retirado por el propio autor; la firma del fallo (Xid 43 con OOMKilled=false) es util para clasificar caidas, pero el perfil concreto (2 nodos, SGLang NEXTN/EAGLE) no aplica a la ATOM. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

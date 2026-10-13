@@ -12,7 +12,7 @@ Un mecanismo es algo concreto y reutilizable: un comando, una formula, un valor 
 - Salida: `<RESULTADOS>/<id>.json`, un archivo por tema, escrito justo despues de leerlo (no al final).
 - Esquema EXACTO:
 ```json
-{"id": 123456, "titulo": "...", "leido": true, "posts_leidos": 7,
+{"id": 123456, "titulo": "...", "leido": true, "posts_leidos": 7, "lectura": "completa|parcial",
  "clase": "mecanismo|diagnostico|anuncio_oficial|ruido|pregunta_sin_respuesta",
  "proposito": ["monitorear","medir","rastrear","solucionar","prevenir","omision_nvidia"],
  "mecanismos": [{"que": "...", "como": "comando/formula/valor EXACTO tal como aparece", "fuente_post": 3,
@@ -34,4 +34,5 @@ Un mecanismo es algo concreto y reutilizable: un comando, una formula, un valor 
 5. Licencia: copia la que diga el texto; si no la dice, "no indicada" (se trata como no reutilizable).
 6. Prohibido: ejecutar comandos, instalar, abrir red, tocar el repositorio, escribir fuera de `<RESULTADOS>`.
 7. Si dudas entre `ruido` y util, lee otra vez; pero no rellenes mecanismos para parecer util.
-8. Al terminar, imprime una linea por tema: `id clase utilidad`. No resumas lo que no leiste.
+8. `posts_leidos` es el numero de mensajes que LEISTE de verdad, no el total del tema. Si no leiste todos (temas largos, filtraste con grep), `lectura` = "parcial", `posts_leidos` = los que leiste y `razon` dice cuales faltaron. Declarar de mas se detecta contra el texto y invalida el resultado.
+9. Al terminar, imprime una linea por tema: `id clase utilidad`. No resumas lo que no leiste.

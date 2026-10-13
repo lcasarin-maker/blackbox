@@ -1,0 +1,28 @@
+{
+ "id": 375386,
+ "titulo": "MiniMax-M3-MXFP4 on 4× GB10, TP=4, EAGLE3, 262k context, ~35 tok/s",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta de MiniMax-M3-MXFP4 en 4 Spark con vLLM nightly parcheado (fijado en 93d8f834), TP=4, KV bf16, EAGLE3 con k=2 y contexto de 262k",
+   "como": "no indicado en el texto del tema; archivos y build en el repo",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/BokuNoGF/minimax-m3-mxfp4-4x-gb10",
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark segun el autor; throughput medido con sparkrun benchmark (pp 2048, tg 512): 34.8 tok/s a profundidad 0 con concurrencia 1, 28.6 tok/s a 65536",
+   "riesgo": "--kv-cache-dtype fp8 provoca un fallo al arrancar, lo que reduce el KV cache disponible a unos 800k tokens; la calidad de la cuantizacion MXFP4 no esta verificada",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta multinodo de 4 Spark con una tabla de throughput medida y el aviso de que --kv-cache-dtype fp8 provoca un fallo de arranque. Es de un usuario y el texto no da comandos.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

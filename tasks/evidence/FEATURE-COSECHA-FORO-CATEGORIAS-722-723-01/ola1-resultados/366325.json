@@ -1,0 +1,88 @@
+{
+ "id": 366325,
+ "titulo": "Two multi-node DGX Spark wins: RoCE 2× inference throughput + Qwen3.5-397B-A17B-NVFP4 serving (with SM121 CUTLASS patch)",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Detectar la caida silenciosa de NCCL de RDMA a transporte socket (nvidia-smi mostraba 100% de GPU en ambos casos; el cuello era la CPU Grace con TCP, unos 2 GB/s)",
+   "como": "anadir NCCL_DEBUG=INFO al entorno del pod y buscar 'IB' o 'Socket' en las lineas de seleccion de transporte",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4 nodos DGX Spark GB10, ConnectX-7 200 GbE, MikroTik CRS812, K3s, driver 580.142 segun el usuario ht12",
+   "riesgo": "Sin /dev/infiniband en el pod NCCL cae a socket sin error",
+   "verificable_aqui": "ls /sys/class/infiniband/ /dev/infiniband/"
+  },
+  {
+   "que": "Requisitos para RoCE con SR-IOV VF en pods de Kubernetes",
+   "como": "interfaces VF con IPv4 en el host (netplan, misma IP que Multus IPAM); pods privilegiados; NetworkAttachmentDefinitions para todos los indices VF usados",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "mismo cluster de 4 nodos segun el usuario",
+   "riesgo": "Sin IPv4 en el host la tabla GID solo tiene fe80:: e ibv_modify_qp falla con 'Network is unreachable'",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Resultado medido de bus bandwidth NCCL y tok/s al pasar de socket a RoCE",
+   "como": "NCCL bus bandwidth 2.12 GB/s a 9.78 GB/s; Qwen3-235B-A22B-NVFP4 EP=4 TP=4 n=4: 34.6 a 65.4 tok/s; TTFT 2.14 s a 0.92 s",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/vroomfondel/dgxarley",
+   "licencia": "no indicada",
+   "probado_en": "4 nodos GB10 segun ht12",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Parche monkey-patch de CUTLASS para SM121: anadir sm_120a y sm_121a a admissible_archs de BlockScaledMmaOp en cute/mma.py",
+   "como": "adicion de dos lineas a admissible_archs en la clase BlockScaledMmaOp; snippet exacto no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 SM121 segun ht12",
+   "riesgo": "NVIDIA (aniculescu, post 6) dice que CUTLASS 4.5, publicado en mayo, ya trae soporte sm121 y el parche personalizado ya no hace falta",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround: desactivar graficos CUDA piecewise para modelos NVFP4 en SM121, y causa de cudaErrorIllegalInstruction por el JIT de SGLang que compila con compute_121/sm_121 en vez de la familia sm_120f",
+   "como": "--disable-piecewise-cuda-graph ; causa citada: sglang/jit_kernel/utils.py:_init_jit_cuda_arch_once() sin el sufijo f",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/vroomfondel/dgxarley",
+   "licencia": "no indicada",
+   "probado_en": "SGLang 0.5.10, GLM-4.7-NVFP4, 4x GB10 segun ht12",
+   "riesgo": "Con kv_cache_dtype fp8_e4m3 y graficos CUDA activos el JIT genera SASS que GB10 no decodifica",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Speculative decoding MTP en SGLang (sin modelo borrador)",
+   "como": "--speculative-algorithm NEXTN --speculative-num-steps 3 --speculative-num-draft-tokens 4 ; para Qwen3.5 ademas --mamba-scheduler-strategy extra_buffer y SGLANG_ENABLE_SPEC_V2=1; mem_fraction bajada de 0.80 a 0.75 (Qwen3.5) y 0.60 (GLM-4.7)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10, SGLang 0.5.10 segun ht12; n=1 21.5 a 40.0 tok/s con Qwen3.5-397B",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Huella de memoria medida de un modelo grande en GB10",
+   "como": "Qwen3.5-397B-A17B-NVFP4 TP=4: unos 59 GB por GPU; GLM-4.7-NVFP4 con KV fp8_e4m3 unos 54 GB por GPU",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10 segun ht12",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Un empleado de NVIDIA (aniculescu) solo indica que CUTLASS 4.5 ya soporta sm121 (post 6); NVIDIA no documenta en el tema la caida silenciosa de NCCL a socket.",
+ "utilidad_atom": "media",
+ "razon": "Mediciones y flags concretos de un cluster de 4 nodos, de los cuales NCCL_DEBUG=INFO, --disable-piecewise-cuda-graph y el aviso del JIT sm_121 son transferibles a un nodo; el resto exige multinodo con ConnectX-7 y RoCE. Los datos son de un usuario; solo el post 6 es de NVIDIA y deja obsoleto el parche CUTLASS.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,37 @@
+{
+ "id": 370519,
+ "titulo": "Spark: one script CLI for setup, remote access, and LLM serving on DGX Spark",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround del fallo de vLLM del contenedor NGC 26.04 (transformers v4) al cargar un modelo guardado con transformers v5: 'Tokenizer class TokenizersBackend does not exist'",
+   "como": "editar ~/.cache/huggingface/hub/models--RedHatAI--Qwen3.6-35B-A3B-NVFP4/snapshots/*/tokenizer_config.json y cambiar \"tokenizer_class\": \"TokenizersBackend\" por \"PreTrainedTokenizerFast\"",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/massimo92/spark",
+   "licencia": "no indicada",
+   "probado_en": "NGC vLLM 26.04 (0.19.0+6bc3197f), driver kernel 580.159.03, segun el autor; dice que se corrige en NGC 26.05",
+   "riesgo": "Edicion manual de la cache de HuggingFace",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Script Bash 'spark' con instalacion remota, comando de diagnostico de requisitos y perfilado automatico de banderas de vLLM",
+   "como": "curl -fsSL https://raw.githubusercontent.com/massimo92/spark/main/install.sh | bash ; spark setup ; spark doctor ; spark run <model>",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/massimo92/spark",
+   "licencia": "no indicada",
+   "probado_en": "ASUS Ascent GX10 segun el autor; un usuario reporta fallo de carga (post 2)",
+   "riesgo": "curl | bash de terceros; el setup desactiva el acceso SSH por contrasena tras configurar claves",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Script de usuario para configurar la Spark y servir vLLM; su valor es el workaround del tokenizer en el contenedor NGC 26.04. Sin respuesta de NVIDIA; nada sobre memoria o termica.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

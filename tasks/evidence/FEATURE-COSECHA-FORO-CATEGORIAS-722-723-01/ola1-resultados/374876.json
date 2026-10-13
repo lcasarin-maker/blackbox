@@ -1,0 +1,38 @@
+{
+ "id": 374876,
+ "titulo": "Open-source recipe + scaffold: training a DSpark-class speculative-decoding draft for Nemotron",
+ "leido": true,
+ "posts_leidos": 5,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Hallazgo en GB10 (ARM) de entrenamiento: flex_attention sin compilar es patologicamente lento (la GPU queda en espera activa a unos 37 W); flex con torch.compile da error de Inductor; sdpa rechaza BlockMask. Workaround: materializar el predicado de la mascara como tensor booleano denso [B,1,Q,KV] y pasarlo a sdpa",
+   "como": "tensor booleano denso [B,1,Q,KV] con el mismo predicado, entregado a sdpa; detalle y codigo en GB10-TRAINING-NOTES.md del repo (el texto del tema no incluye el codigo)",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/Extended-Systems-Intelligence/nemotron-dspark-recipe",
+   "licencia": "Apache-2.0",
+   "probado_en": "dos Spark GB10, segun el autor rneble",
+   "riesgo": "El autor avisa de una trampa de corrupcion silenciosa en el respaldo causal de EAGLE-3 con ttt_length > 1",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Decaimiento del tiempo por paso en el pool de memoria unificada (el asignador con cache avanza hacia lleno)",
+   "como": "no indicado en el tema; remite a GB10-TRAINING-NOTES.md",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/Extended-Systems-Intelligence/nemotron-dspark-recipe",
+   "licencia": "Apache-2.0",
+   "probado_en": "dos Spark GB10",
+   "riesgo": "Ralentizacion progresiva del entrenamiento",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta de entrenamiento de un borrador de decodificacion especulativa para Nemotron; solo las notas de GB10 (espera activa de 37 W y el decaimiento por el asignador en memoria unificada) tocan el hardware, sin comando en el texto del tema. Cifras de aceptacion (1.25 contra 1.15) de una corrida de prueba, sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,37 @@
+{
+ "id": 384774,
+ "titulo": "Qwen-Image-2.1 on DGX Spark: 54 s per 1024² image (40 steps), 31.6 GB, and a fix for the pink vertical line",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo para medir la memoria GPU de un proceso en GB10 porque memory.used total reporta N/A con este driver",
+   "como": "nvidia-smi --query-compute-apps muestreando used_memory cada 0.5 s durante el trabajo y tomando el maximo",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.126.09, CUDA 13.0, 120 GB unificada",
+   "riesgo": "No incluye el RSS de CPU del proceso, que en Spark sale del mismo pool unificado.",
+   "verificable_aqui": "nvidia-smi --query-compute-apps=pid,used_memory --format=csv; nvidia-smi --query-gpu=memory.used --format=csv"
+  },
+  {
+   "que": "Arreglo de la linea rosa vertical: era la costura del VAE con decodificacion en mosaico (tiles de 256 px cada 192 px); desactivar el tiling la elimina a costa de hasta ~28 GB extra a 2048²",
+   "como": "no llamar a enable_tiling() en el VAE de diffusers; quitar cpu_offload: model en model-compose.yml",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/MindrLabs/image-generation-qwen-image-2.1",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10, torch 2.13.0 cu130 aarch64, diffusers 0.41.0.dev0",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Benchmark de usuario de un modelo de imagen; lo transferible es el metodo de medir memoria por proceso con nvidia-smi --query-compute-apps y el dato de que memory.used total da N/A con el driver 580.126.09. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

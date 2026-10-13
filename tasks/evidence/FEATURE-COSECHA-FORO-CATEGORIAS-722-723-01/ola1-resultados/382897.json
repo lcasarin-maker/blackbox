@@ -1,0 +1,28 @@
+{
+ "id": 382897,
+ "titulo": "DeepSeek-V4.1-Flash 552B MoE on 4x DGX Spark TP4 - 77.2 tok/s c1 on PEAK 52 code · 72 tok/s on a warm code run · 47 math · 39 reasoning · 23 prose",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Segun el autor, dos GPUs quedaron trabadas por debajo de 1 GHz y el rendimiento paso de 41 a 77 tok/s al destrabarlas; un reinicio no lo limpia, hay que desenchufar el Spark",
+   "como": "unplug the Spark to clear it, a reboot won't (el post no da comando de deteccion)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/tonyd2wild/DeepSeek-V4.1-Flash-vLLM-DGX-Spark",
+   "licencia": "no indicada",
+   "probado_en": "4 DGX Spark TP4 con vLLM + DSpark, segun el autor",
+   "riesgo": "Es una afirmacion de usuario sin causa explicada ni comando; el estado de reloj atascado sobrevive a un reinicio segun el relato",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.gr,clocks.max.gr,clocks_throttle_reasons.active --format=csv"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Entre cifras de rendimiento, el post 1 describe un reloj de GPU atascado bajo 1 GHz que solo se limpia cortando la alimentacion, con relevancia para el diagnostico de estados persistentes. No hay comando de deteccion ni respuesta de NVIDIA; el resto es benchmark.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

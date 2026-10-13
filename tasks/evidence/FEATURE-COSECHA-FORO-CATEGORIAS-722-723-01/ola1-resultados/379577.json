@@ -1,0 +1,37 @@
+{
+ "id": 379577,
+ "titulo": "1x Spark(GB10), 236B unpruned: K-EXAONE-236B-A23B serving at its full 262,144-token context on one GB10",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Presupuesto de memoria medido para un modelo de 236B en un GB10: pesos 84.48 GiB, KV 12.30 GiB a 262144 tokens, workspace 1.60 GiB, residentes 103.95 de 121.6 GiB",
+   "como": "git clone https://github.com/Baekpica/ds4; git checkout 920427ac124078af021a0736792d2115b1d00bc2; make cuda-spark; ./ds4-server -m <modelo>.gguf --cuda -c 262144 --host 0.0.0.0 --port 8001",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/Baekpica/ds4",
+   "licencia": "no indicada (el modelo base lleva K-EXAONE AI Model License Agreement, solo investigacion)",
+   "probado_en": "un DGX Spark GB10, sm_121 (declarado por el autor)",
+   "riesgo": "El propio autor indica que 262K es un resultado de memoria y no de velocidad: decodificacion de 5.42 tok/s con 16376 tokens de prompt y menos de 1 tok/s a 262K; commits anteriores a 920427a degradan la comprension de prompts largos.",
+   "verificable_aqui": "free -h"
+  },
+  {
+   "que": "Formula del costo de KV por token con ventana deslizante: 12 de 48 capas con contexto completo, 48 KiB/token frente a 192 KiB/token",
+   "como": "KV = tokens x 48 KiB/token (12.30 GiB a 262144 tokens)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "K-EXAONE-236B-A23B",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Muestra un desglose medido de memoria de un modelo muy grande en un solo GB10 y la formula de KV por token, pero es una demostracion de capacidad con rendimiento bajo, sin relacion con monitoreo o prevencion de cortes. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,28 @@
+{
+ "id": 356468,
+ "titulo": "DGX Spark Ubuntu upgrade to 25.10",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "DGX OS bloquea por defecto el do-release-upgrade; forzar el salto a Ubuntu 25.10 se reporta como causa de arranque roto",
+   "como": "do-release-upgrade -c  /  /etc/update-manager/release-upgrades con Prompt=never",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (hostname spark2) segun el usuario elsaco",
+   "riesgo": "Un usuario (post 2) dice que tras actualizar a 25.10 el sistema quedo en tty1 y la GUI cayo; otro (post 5) dice que forzar el upgrade rompe la compatibilidad de DGX OS. Son relatos de usuarios sin verificar",
+   "verificable_aqui": "grep -v '^#' /etc/update-manager/release-upgrades | grep -i prompt"
+  }
+ ],
+ "omision_nvidia": "NVES (staff NVIDIA, post 3) declara que no existe un release DGX Spark OS 25.x y que AI Workbench solo soporta Ubuntu 24.04 y 22.x; NVIDIA exige un SO soportado para dar soporte.",
+ "utilidad_atom": "media",
+ "razon": "Advertencia de riesgo con condicion: no actualizar la base Ubuntu fuera de DGX OS; el valor Prompt=never esta pegado en el post 5. La rotura reportada en el post 2 es una anecdota sin diagnostico.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

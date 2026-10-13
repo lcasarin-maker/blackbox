@@ -1,0 +1,38 @@
+{
+ "id": 376946,
+ "titulo": "Fastest llama.cpp docker image？",
+ "leido": true,
+ "posts_leidos": 5,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo de medicion de referencia con llama-bench dentro del contenedor oficial, para separar problemas del sistema de problemas de la imagen",
+   "como": "docker run -it -v /home/pont/.cache/huggingface:/root/.cache/huggingface --gpus=all ghcr.io/ggml-org/llama.cpp:full-cuda13 --bench -hf s-batman/Agents-A1-NVFP4-MTP-GGUF:NVFP4 -fa 1 --mmap 0",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": "no indicada",
+   "probado_en": "GB10 (cc 12.1, 124546 MiB) segun pontostroy: tg128 72.28 t/s, pp512 2636.97 t/s",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Caso de degradacion: el mismo benchmark dio tg128 40.63 t/s y pp512 1109.88 t/s en el equipo de knitvoger1 y subio a 67.10 t/s y 2429.43 t/s tras actualizar el sistema (MSI EdgeXpert)",
+   "como": "actualizar el sistema (comando no indicado); pontostroy tambien sugiere apagar y desenchufar el adaptador de la pared 3-5 minutos",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "MSI EdgeXpert segun el usuario",
+   "riesgo": "Atribucion de la causa por un usuario, sin comprobar cual actualizacion lo corrigio",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Documenta con cifras de llama-bench una degradacion de ~40% del rendimiento (40.63 contra 72 t/s) que se resolvio con una actualizacion del sistema, y da un benchmark reproducible de referencia. Sin respuesta de NVIDIA y la causa exacta queda sin identificar.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

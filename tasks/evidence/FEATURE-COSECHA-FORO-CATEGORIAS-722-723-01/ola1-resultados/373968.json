@@ -1,0 +1,37 @@
+{
+ "id": 373968,
+ "titulo": "MiMo V2.5 Omni on 3x DGX Spark: TP=3 + MTP + 1M context 39 tok/s",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Parche de padding de cabezas virtuales (64 a 96 query, 4 a 6 KV) para repartir TP=3 sobre 3 Spark; mas fix de FusedMoE zero-fill y de attention_sink_bias del draft MTP",
+   "como": "no indicado en el hilo (receta y parche en un repositorio de GitHub del autor)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/tonyd2wild/MiMo-V2.5-Omni-3x-DGX-Spark-TP-3-MTP",
+   "licencia": "no indicada",
+   "probado_en": "3x DGX Spark sobre RoCE sin switch, MTU 9000; decode 38.8 tok/s, KV cache 3,127,938 tokens a 1M de contexto",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Ajustes de memoria en Ray para GB10: object-store-memory limitada a 1 GB y memory-monitor deshabilitado; el autor afirma que la memoria unificada cerca del tope al cargar es normal",
+   "como": "no indicado (valores en prosa: object-store-memory 1GB, memory-monitor disabled)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3x Spark, autor tonyd615",
+   "riesgo": "Deshabilitar el monitor de memoria de Ray quita su proteccion contra OOM",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta de cluster de 3 nodos sin comandos explicitos en el post; solo la nota de que Ray con memory-monitor desactivado y memoria unificada casi llena se considera normal. Sin respuesta de staff NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

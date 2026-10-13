@@ -1,0 +1,37 @@
+{
+ "id": 365394,
+ "titulo": "DGX Spark Model Manager — Open Source Web UI for Ollama, SGLang & LiteLLM",
+ "leido": true,
+ "posts_leidos": 9,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Interfaz web para gestionar Ollama, LiteLLM, SGLang, vLLM, llama.cpp, LocalAI y ComfyUI con barra de salud de servicios, logs y diagnostico de Docker",
+   "como": "bash setup.sh (crea venv, instala dependencias, opcionalmente reglas UFW y servicio systemd); servicios por defecto: Ollama :11434, SGLang :30000, LiteLLM :4000",
+   "fuente_post": 1,
+   "repositorio": "GitHub calico88x/DGX-Model-Manager (nombre tal como aparece en el post)",
+   "licencia": "no indicada (el autor la llama 'open source' pero no da licencia)",
+   "probado_en": "DGX Spark segun el autor; vLLM funcional con Nemotron 3 Super NVFP4 (post 6); multinodo segun comentarios de terceros, no probado por el autor (post 9)",
+   "riesgo": "Setup agrega reglas UFW y un servicio systemd; la clave de API es opcional (post 7)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Tabla de banderas de SGLang para GB10/SM121A segun el autor: --attention-backend triton requerido; --quantization modelopt_fp4 y --fp4-gemm-backend incompatibles",
+   "como": "--attention-backend triton",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 / SM121A segun el autor (la tabla esta en la documentacion del repositorio, no en el hilo)",
+   "riesgo": "Afirmacion de usuario sin verificacion de NVIDIA",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Herramienta de gestion de modelos con monitoreo de salud de servicios por HTTP; no mide memoria, temperatura ni potencia. No hay respuesta de NVIDIA y el repositorio no declara licencia en el texto.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,37 @@
+{
+ "id": 354539,
+ "titulo": "DGX Spark apt update failure (EXPKEYSIG)",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de NVIDIA (usuario NVES) para apt update que falla por clave GPG expirada del repo de Workbench (EXPKEYSIG CD63F8B21266DE3C)",
+   "como": "curl -fsSL https://workbench.download.nvidia.com/stable/linux/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/ai-workbench-desktop-key.gpg > /dev/null ; sudo apt update",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (afirmado por NVIDIA)",
+   "riesgo": "Importa una clave de un repo remoto en el llavero del sistema; confiar solo si el origen es el esperado",
+   "verificable_aqui": "apt-cache policy 2>/dev/null | head; ls /usr/share/keyrings | grep -i workbench"
+  },
+  {
+   "que": "Arreglo permanente de NVIDIA: la actualizacion instala la clave nueva",
+   "como": "sudo apt update (aun falla); sudo apt full-upgrade (instala clave nueva); sudo apt update (sin error)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (afirmado por NVIDIA)",
+   "riesgo": "full-upgrade actualiza todos los paquetes, incluido posiblemente kernel/driver",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA dejo expirar la clave GPG del repo de Workbench y rompio apt update en el Spark (reconocido por NVIDIA en el post 1).",
+ "utilidad_atom": "baja",
+ "razon": "Anuncio de NVIDIA con workaround y arreglo permanente para un fallo de apt, con comandos exactos. Util solo como mantenimiento del gestor de paquetes; sin relacion con memoria o termica.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,58 @@
+{
+ "id": 378038,
+ "titulo": "Laguna s2.1 YAML for Eugr's Repo (or sparkrun)",
+ "leido": true,
+ "posts_leidos": 23,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Alternativa a gpu_memory_utilization para ajustar la memoria: fijar la memoria de KV en bytes (comentario de la receta)",
+   "como": "# Replace gpu_memory_utilization config with `--kv-cache-memory=32449423258 to fit into memory",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark segun davidbarnesguildford (valor no verificado por otros)",
+   "riesgo": "Valor exacto para un modelo y contexto concretos (Laguna-S-2.1 NVFP4, 262144)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Evitar que el motor se caiga durante una carga lenta ampliando el limite de espera",
+   "como": "env: VLLM_ENGINE_READY_TIMEOUT_S: \"3600\"",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Discrepancia de memoria observada: vLLM reporta 88 GB y free -h muestra 110Gi usados de 121Gi (swap 1.0Gi) con un checkpoint de 64.38 GiB que supera 90% de la RAM disponible (49.22 GiB); vLLM desactiva el auto-prefetch",
+   "como": "free -h (salida: Mem 121Gi total, 110Gi used, 10Gi free, 10Gi available; Swap 15Gi, 1.0Gi used)",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "contenedor vllm-node de eugr, Spark de un usuario (id anonimo)",
+   "riesgo": "El propio usuario dice que la diferencia le resulta confusa",
+   "verificable_aqui": "free -h"
+  },
+  {
+   "que": "Receta con kv_cache_dtype fp8 (necesario para que DFlash funcione), max_num_batched_tokens 2048, gpu_memory_utilization 0.90 y 3 tokens especulativos",
+   "como": "gpu_memory_utilization: 0.90; max_num_batched_tokens: 2048; max_num_seqs: 1; num_speculative_tokens: 3; kv_cache_dtype: fp8; TORCH_CUDA_ARCH_LIST: 12.1f; CUTE_DSL_ARCH: sm_121a",
+   "fuente_post": 18,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un Spark segun seddonm1 (usuario unico)",
+   "riesgo": "0.90 es el valor que otros hilos asocian a congelamientos; el propio autor dice que a veces entra en bucles",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de recetas para servir un modelo especifico con calidad discutida; contiene un dato de memoria (free -h frente a lo que reporta vLLM) y una variable de timeout de arranque, ambos de usuarios. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

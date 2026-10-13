@@ -1,0 +1,80 @@
+{
+ "id": 367580,
+ "titulo": "Running a Full LLM Stack on DGX Spark GB10 (Your Application -> LiteLLM -> llama-swap -> vLLM / llama.cpp / Ollama)",
+ "leido": true,
+ "posts_leidos": 21,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir",
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Medir memoria libre en GB10 con /proc/meminfo porque nvidia-smi --query-gpu=memory.* devuelve 'Not Supported'; CUDA ve ~121.7 GiB de los 128 GB",
+   "como": "leer /proc/meminfo (MemAvailable); lanzador launch-vllm-auto.sh calcula --gpu-memory-utilization con GMEM_MIN/GMEM_MAX, GMEM_OVERRIDE=0.7069 para fijarlo o GMEM_OVERRIDE=adaptive",
+   "fuente_post": 16,
+   "repositorio": "https://github.com/mARTin-B78/dgx-spark_lite-llm_llama-swap_vllm_llama-cpp_ollama",
+   "licencia": "no indicada",
+   "probado_en": "1 DGX Spark GB10, vLLM (imagenes de eugr spark-vllm-docker)",
+   "riesgo": "script generado por IA segun el autor; el autor dice no haber probado el instalador setup.sh (post 8)",
+   "verificable_aqui": "grep -E 'MemTotal|MemAvailable' /proc/meminfo ; nvidia-smi --query-gpu=memory.total,memory.free --format=csv"
+  },
+  {
+   "que": "Techo de RAM del sistema: el autor reporta crashes aleatorios al superar ~126.5 GB de RAM usada y fija un techo en el lanzador mas un margen de 5 GiB entre MemAvailable y cudaMemGetInfo",
+   "como": "SYSTEM_RAM_CEILING_GIB=117.81 (= 126.5 GB decimal), reservar (MemTotal - techo) GiB siempre; margen de 5 GiB",
+   "fuente_post": 16,
+   "repositorio": "https://github.com/mARTin-B78/dgx-spark_lite-llm_llama-swap_vllm_llama-cpp_ollama",
+   "licencia": "no indicada",
+   "probado_en": "1 DGX Spark GB10 segun el autor; kernel y driver no indicados",
+   "riesgo": "el autor dijo que el DGX se cayo porque la RAM se lleno; cifra empirica de un usuario, sin respuesta de NVIDIA",
+   "verificable_aqui": "free -b ; grep MemTotal /proc/meminfo"
+  },
+  {
+   "que": "Tras detener un contenedor, el asignador CUDA en memoria unificada no devuelve toda la memoria al instante y el chequeo de arranque de vLLM falla; la mitigacion es esperar a que la lectura de memoria sea estable unos segundos",
+   "como": "free_memory >= gpu_memory_utilization x total falla; esperar a lectura estable de memoria (varios segundos) antes de lanzar; el script calcula utilizacion = (libre - (total_nvidia - 124610) - 3072) / 124610 acotada a [0.60, 0.85]",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/mARTin-B78/dgx-spark_lite-llm_llama-swap_vllm_llama-cpp_ollama",
+   "licencia": "no indicada",
+   "probado_en": "GB10 con vLLM",
+   "riesgo": "cifra 124610 MiB es la vision CUDA del autor",
+   "verificable_aqui": "nvidia-smi --query-gpu=memory.free,memory.total --format=csv,noheader,nounits"
+  },
+  {
+   "que": "Causa de un OOM del sistema ~30 min tras arrancar vLLM: un blank en un bloque YAML folded hizo que MAX_MODEL_LEN y GMEM_MAX no llegaran al lanzador; vLLM tomo max_model_len=262144 y asigno 81 GiB de KV; con 65536 y gpu_memory_utilization=0.49 el KV fue 44 GiB",
+   "como": "quitar la linea en blanco dentro de cmd: > ; MAX_MODEL_LEN=65536 ; GMEM_MAX=0.65 ; num_speculative_tokens=1 (con 3 hubo crash; estimador de CUDA graph dio -12.10 GiB en vLLM 0.21.1rc1)",
+   "fuente_post": 21,
+   "repositorio": "https://github.com/mARTin-B78/dgx-spark_lite-llm_llama-swap_vllm_llama-cpp_ollama",
+   "licencia": "no indicada",
+   "probado_en": "GB10, vLLM 0.21.1rc1, Qwen3.6-27B",
+   "riesgo": "el sistema se cae por OOM de memoria unificada si el KV no esta acotado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "llama.cpp: quitar --no-mmap evita un pico de RAM al cargar un GGUF de 28 GiB; --parallel 2 en vez de 4 reduce el KV de ~17 GiB a ~8.5 GiB a 65K",
+   "como": "quitar --no-mmap ; --parallel 2",
+   "fuente_post": 21,
+   "repositorio": "https://github.com/mARTin-B78/dgx-spark_lite-llm_llama-swap_vllm_llama-cpp_ollama",
+   "licencia": "no indicada",
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Ray en MoE de una sola GPU anade ~500 MB y empuja la asignacion sobre el umbral de OOM del 95% de Ray",
+   "como": "no usar --distributed-executor-backend ray; usar el ejecutor mp por defecto",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GPT-OSS-120B MXFP4 en una Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El autor, con repositorio publico y 22 posts, documenta con scripts y numeros un techo de ~126.5 GB de RAM usada donde su GB10 se cae, la medicion por /proc/meminfo porque nvidia-smi no la da y la espera de memoria estable tras detener contenedores. Sin respuesta de NVIDIA; licencia no indicada.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

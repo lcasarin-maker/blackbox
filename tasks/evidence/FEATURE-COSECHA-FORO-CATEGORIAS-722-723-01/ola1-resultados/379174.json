@@ -1,0 +1,90 @@
+{
+ "id": 379174,
+ "titulo": "Full Kimi K3 running on 16x GB10 cluster",
+ "leido": true,
+ "posts_leidos": 147,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir",
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Advertencia de riesgo con cifra: gpu-memory-utilization 0.985 dejo ~187 MiB libres y dejo nodos atascados (sshd no podia hacer fork) hasta un ciclo de energia fisico; el autor anota que GB10 no tiene BMC y fija el limite en 0.90 o menos",
+   "como": "--gpu-memory-utilization <= 0.90 (el autor uso 0.881); 0.985 -> ~187 MiB libres y nodo atascado",
+   "fuente_post": 135,
+   "repositorio": "https://github.com/ciprianveg/gb10-vllm",
+   "licencia": "no indicada",
+   "probado_en": "16x DGX Spark (GB10), imagen kimi-k3:v4-prd segun el usuario DropTheBeat",
+   "riesgo": "Nodo inaccesible por memoria agotada; sin BMC solo se recupera con ciclo de energia fisico",
+   "verificable_aqui": "free -m; nvidia-smi --query-gpu=memory.used,memory.total --format=csv"
+  },
+  {
+   "que": "Tope de memoria para la cache hibrida Mamba/KDA que sin limite crece hasta llenar el pool y deja max_num_seqs=1; con ~5 GB se llego a 8 secuencias",
+   "como": "--kv-cache-memory-bytes 5000000000",
+   "fuente_post": 135,
+   "repositorio": "https://github.com/ciprianveg/gb10-vllm",
+   "licencia": "no indicada",
+   "probado_en": "16x DGX Spark segun el usuario DropTheBeat",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Deteccion de un fallo silencioso: el contenedor corria NCCL sobre sockets TCP (1.3 tok/s) hasta agregar --privileged y NCCL_NET=IB (8.9 tok/s); se verifica con NCCL_DEBUG=INFO buscando 'Using network IB'",
+   "como": "NCCL_DEBUG=INFO ; NCCL_NET=IB ; --privileged (o montar /dev/infiniband)",
+   "fuente_post": 135,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "16x DGX Spark segun el usuario",
+   "riesgo": "--privileged reduce el aislamiento del contenedor",
+   "verificable_aqui": "ibdev2netdev; ls /dev/infiniband"
+  },
+  {
+   "que": "Variables NCCL para RoCE que el usuario fijo, y limites de ficheros abiertos a 16 rangos",
+   "como": "NCCL_NET=IB, NCCL_IB_GID_INDEX=3, NCCL_IB_DISABLE=0, NCCL_PROTO=LL,LL128,Simple, NCCL_BUFFSIZE=16777216, NCCL_MAX/MIN_NCHANNELS=2 ; --ulimit nofile=1048576 ; NCCL_ALGO sin fijar (NCCL_ALGO=Tree rompe el cargador InstantTensor)",
+   "fuente_post": 135,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "16x DGX Spark segun el usuario",
+   "riesgo": "urbanspr1nter (post 129) tenia NCCL_ALGO=Ring fijo por error y perdia 2-3 tok/s; ciprianveg (post 89) recomienda NCCL min/max channels en 4 para dos rieles y sjug (post 90) lo confirma para el NCCL nuevo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Diagnostico de red RoCE con perdidas: PFC deshabilitado en las NIC y ib_write_bw de 1 MB atascado en ~15 MB/s contra ~12 GB/s esperados",
+   "como": "ib_write_bw 1MB ; PFC prio1 habilitado: enabled 0 1 0 0 0 0 0 0",
+   "fuente_post": 111,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "16 Sparks, RouterOS sin soporte de prio-flow-control en esa version segun clawDRude",
+   "riesgo": "Sin solucion confirmada en el hilo",
+   "verificable_aqui": "ibdev2netdev; ip -br link"
+  },
+  {
+   "que": "Un nodo con menos memoria libre rompe el arranque: ciprianveg responde que se reduzca gpu-memory-utilization (gmu) cuando un nodo cuelga durante el arranque y toda la ejecucion cae",
+   "como": "reducir gmu",
+   "fuente_post": 68,
+   "repositorio": "https://github.com/ciprianveg/gb10-vllm",
+   "licencia": "no indicada",
+   "probado_en": "16 Sparks segun ciprianveg",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Consumo de energia del cluster de 16 Sparks: ~2.3 kW segun ciprianveg (contra una estimacion ajena de ~3.8 kW con switch)",
+   "como": "no indicado (cifra sin metodo de medicion)",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "16x GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Un usuario (post 135) dice que GB10 no tiene BMC; no hay respuesta de NVIDIA en el hilo.",
+ "utilidad_atom": "alta",
+ "razon": "El post 135 da con cifras que una gpu-memory-utilization de 0.985 deja ~187 MiB libres y atasca nodos hasta un ciclo de energia, y que NCCL cae a TCP en silencio sin --privileged (verificable con NCCL_DEBUG=INFO). Son datos de usuarios en 16 nodos sin respuesta de NVIDIA; el resto del hilo es rendimiento y red del cluster.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

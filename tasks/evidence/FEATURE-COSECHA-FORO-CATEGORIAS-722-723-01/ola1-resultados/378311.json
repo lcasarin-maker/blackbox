@@ -1,0 +1,90 @@
+{
+ "id": 378311,
+ "titulo": "Nightly QLoRA on a DGX Spark: fine-tuning Qwen3.6-35B-A3B on my own coding-agent logs (hobby project)",
+ "leido": true,
+ "posts_leidos": 7,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "monitorear",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Proteccion contra el colapso por sobreasignacion de memoria unificada: el autor dice que una sobreasignacion no da un OOM limpio de CUDA sino que cuelga la maquina entera (tres reinicios en junio), y que un MemoryMax de cgroup no lo evita porque las asignaciones de GPU/unificadas no se contabilizan alli; lo unico que le funciono fue un watchdog por sondeo que mata el entrenamiento por debajo de un piso de RAM libre",
+   "como": "watchdog que lee la RAM libre y mata el proceso de entrenamiento si baja de 18 GB (piso 'watchdog floor 18 GB free RAM'; el script no se publica en el post)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "1x DGX Spark GB10, 121 GB de memoria unificada, driver 580.159.03, nvcc 13.0, segun el autor",
+   "riesgo": "Afirmacion de usuario sin script; el sondeo puede llegar tarde si la asignacion es rapida",
+   "verificable_aqui": "grep -E 'MemTotal|MemAvailable' /proc/meminfo"
+  },
+  {
+   "que": "bitsandbytes no cuantiza a 4 bits este MoE porque los expertos son nn.Parameter fusionados y no nn.Linear: una carga '4-bit' llego a 116 GB al 87% (la real seria de unos 17 GB), asi que cada intento de QLoRA fue de precision completa, luego OOM y colgado de la maquina; Unsloth carga el mismo modelo en 19.2 GB",
+   "como": "no indicado (comparacion de consumo de carga: bitsandbytes 116 GB al 87% frente a Unsloth 19.2 GB)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 segun el autor",
+   "riesgo": "Un fallo silencioso de cuantizacion termina en colgado de la maquina",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Falta de flash-linear-attention: transformers cae en silencio a una implementacion torch pura del gated delta rule; instalarlo dio 2.52x (88.5 a 35.1 s/muestra a 16k); el aviso 'The fast path is not available' sigue apareciendo aunque FLA este activo, asi que se juzga por s/it",
+   "como": "instalar flash-linear-attention 0.5.1 (version del entorno del autor); medir por s/it y no por el aviso",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "torch 2.10.0+cu128, transformers 5.5.0, triton 3.6.0, unsloth 2026.6.9 en GB10 (sm_121a), segun el autor",
+   "riesgo": "Torch imprime que la capacidad 12.1 supera el maximo soportado (12.0) en cada ejecucion; el autor concluye que hay que asumir que cada kernel critico esta en un camino de reserva hasta medirlo",
+   "verificable_aqui": "python3 -c 'import fla; print(fla.__version__)' (si el entorno lo tiene; no ejecutado)"
+  },
+  {
+   "que": "Lanzar el servidor vLLM como unidad transitoria propia con KillMode=mixed para que systemd no lo mate al terminar el servicio oneshot padre",
+   "como": "systemd-run --user --unit=vllm-serve --collect --property=KillMode=mixed",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark con timers systemd de usuario y linger, segun el autor",
+   "riesgo": "Con el KillMode por defecto control-group el servidor murio en el mismo segundo en que dijo estar listo",
+   "verificable_aqui": "systemctl --user list-units 'vllm*' --no-pager"
+  },
+  {
+   "que": "Evitar que pgrep -f coincida con el propio vigilante; filtrar por el ejecutable real y excluir el PID propio",
+   "como": "filtrar con readlink /proc/PID/exe y excluir el PID propio (el autor vio 4 PIDs de los cuales solo 1 era python)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fijar HF_HOME de forma explicita: un XDG_CACHE_HOME redirigido produjo una copia duplicada de 67 GB del modelo y llenó el disco al 97%",
+   "como": "HF_HOME fijado explicitamente",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "echo \"$HF_HOME\"; df -h ~"
+  },
+  {
+   "que": "Evaluar un adaptador midiendo el NLL de la completion de referencia con vLLM /v1/completions con prompts en token ids y prompt_logprobs: 0; vLLM con temperatura 0 no es reproducible bit a bit segun el autor",
+   "como": "/v1/completions con prompt_logprobs: 0; conjunto retenido reconstruido con torch.randperm(N, generator=manual_seed(42))[:steps*GA]",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "NLL base 1.0305 frente a adaptador 0.7336 en checkpoint-186, segun el autor, que declara que no es un benchmark de capacidad",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El post 1 afirma, con consecuencias medidas por el autor (tres reinicios), que la sobreasignacion de memoria unificada cuelga todo el equipo sin OOM limpio, que el cgroup MemoryMax no la contiene y que un watchdog de RAM libre con piso de 18 GB si, ademas de varios arreglos operativos con valores exactos. Todo viene de un usuario hobbista sin respuesta de NVIDIA; el script del watchdog no esta en el texto.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

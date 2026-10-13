@@ -1,0 +1,70 @@
+{
+ "id": 368005,
+ "titulo": "DGX Spark / sm121: silent SDPA EFFICIENT_ATTENTION corruption in a custom PyTorch build — diagnostic chain, standalone reproducer, workaround",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reproductor autonomo que compara cada backend de SDPA (MATH, EFFICIENT_ATTENTION, FLASH_ATTENTION) contra referencia CPU fp32 para detectar corrupcion silenciosa (sin NaN) en una imagen PyTorch; con imagen afectada EFFICIENT da normas de 1.96x a 27.2x la referencia",
+   "como": "script sdpa_sm121_repro.py: torch.nn.attention.sdpa_kernel([backend]) y F.scaled_dot_product_attention(q,k,v) para shapes (1,12,77,64) fp32/bf16/fp16 y (1,8,4096,64) bf16; compara norm y max|Δ| contra la salida CPU fp32",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 sm121, torch 2.10.0 cu13.1 (imagen comunitaria afectada) y torch 2.11 cu13.2; NGC nvcr.io/nvidia/pytorch 25.12, 26.02, 26.03 dan salida correcta",
+   "riesgo": "Es un diagnostico de una imagen concreta; el autor atribuye la causa al flag NVCC_GENCODE=-gencode=arch=compute_121,code=sm_121 sin familia sm120, como causa 'mas probable', no confirmada por el mantenedor",
+   "verificable_aqui": "docker run --rm --gpus all <imagen_torch> python3 sdpa_sm121_repro.py  (el script esta en el post; no ejecutar sin revisar)"
+  },
+  {
+   "que": "Correccion de build: compilar sm_120 ademas de sm_121",
+   "como": "NVCC_GENCODE=\"-gencode=arch=compute_120,code=sm_120 -gencode=arch=compute_121,code=sm_121\"; o TORCH_CUDA_ARCH_LIST 12.0 (o 12.0;12.1) en vez de 12.1a",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "propuesta del autor, no declara haberla verificado reconstruyendo la imagen",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround independiente de imagen: forzar backend MATH en el forward del encoder de texto (cuesta milisegundos en secuencias de 77 tokens)",
+   "como": "with sdpa_kernel([SDPBackend.MATH]): out = model(...)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ComfyUI 0.19.3 en cluster de 4 ASUS Ascent GX10; el autor lo corrio unas 24 h en produccion",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Alternativa limpia: usar la imagen NGC como base",
+   "como": "FROM nvcr.io/nvidia/pytorch:26.03-py3  (tambien 26.02-py3 y 25.12-py3)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "sm121 GB10 segun el autor; la imagen pesa unos 13 GB y omite torchaudio en arm64",
+   "riesgo": "pip puede reemplazar los wheels NGC por los de PyPI y dar 'undefined symbol'",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia de CI: pasar pruebas HTTP 200 + PNG no detecta la corrupcion; hace falta un chequeo semantico (similitud CLIP prompt/salida o distancia de embeddings CPU vs GPU)",
+   "como": "no indicado como comando; la prueba de embeddings CPU vs GPU de CLIP-L se describe en el post",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun el autor, falta guia oficial sobre TORCH_CUDA_ARCH_LIST/NVCC_GENCODE canonico para sm_121 y el mensaje FATAL del dispatcher CUTLASS es un printf bajo TORCH_CPP_LOG_LEVEL en vez de un aviso; el autor reconoce que las imagenes NGC arm64 si son correctas.",
+ "utilidad_atom": "media",
+ "razon": "Entrega un metodo de verificacion con control (backend MATH vs EFFICIENT vs referencia CPU) para detectar corrupcion numerica silenciosa en builds PyTorch propios de sm121. Un solo post de un usuario, sin respuesta de NVIDIA, y la causa raiz es una hipotesis del autor.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

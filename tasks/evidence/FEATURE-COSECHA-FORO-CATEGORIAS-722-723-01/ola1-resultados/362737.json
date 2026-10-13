@@ -1,0 +1,49 @@
+{
+ "id": 362737,
+ "titulo": "GPU PD Throttle Check Tool",
+ "leido": true,
+ "posts_leidos": 7,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Herramienta que compara el reloj de GPU bajo carga contra un umbral en varias muestras para detectar el estado degradado atribuido a Power Delivery (USB-C)",
+   "como": "umbral por defecto 1400 MHz, 20 muestras espaciadas ~0.5 s; GPU sana alcanza ~2400 MHz, GPU en mal estado 500-850 MHz aunque el estado de energia siga en P0 (el post no da el comando de ejecucion)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/hoesing/spark-gpu-throttle-check",
+   "licencia": "no indicada",
+   "probado_en": "FE Spark y MSI segun hoesing",
+   "riesgo": "Solo detecta el estado; la causa raiz no esta confirmada (post 4: 'still trying to figure out a repro')",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,clocks.max.sm,power.draw,pstate --format=csv -l 1"
+  },
+  {
+   "que": "Remedio reportado por usuarios: quitar la alimentacion en el ladrillo (no solo el cable USB-C del Spark) para recuperar el reloj completo",
+   "como": "desconectar el adaptador de la pared; reiniciar, apagar o quitar el cable USB-C del Spark no basta segun el post 4",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "FE Spark y MSI segun hoesing y bernisse (post 8)",
+   "riesgo": "Afirmacion de usuarios sin verificar por NVIDIA; phonosys (post 7) dice que cambiar el adaptador entre dos Spark no lo resolvio",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Factor desencadenante reportado: un cable CX7 defectuoso que generaba errores de red coincidio con la entrada al estado; al cambiarlo el problema bajo de frecuencia",
+   "como": "no indicado",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "FE Spark y MSI segun bernisse",
+   "riesgo": "Anecdota de un usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA (NVES, post 3) solo pide ejecutar los NVIDIA DGX Spark Field Diagnostics y enviar los logs por DM; no ofrece causa ni arreglo para el estado de reloj reducido que no se recupera con reinicio.",
+ "utilidad_atom": "alta",
+ "razon": "Describe una herramienta de medicion con repositorio, umbrales y firma del fallo (500-850 MHz en P0 frente a ~2400 MHz), mas un remedio de usuario, todo sobre throttling de GB10. La licencia no figura en el texto y el comando de uso tampoco.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

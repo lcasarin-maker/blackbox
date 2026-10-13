@@ -1,0 +1,59 @@
+{
+ "id": 384765,
+ "titulo": "veloGB10 v0.7.0 RELEASE - Qwen3.8-Flash-Next TP=2 @ 186 tok/sec , SINGLE at 137 tok/sec on code",
+ "leido": true,
+ "posts_leidos": 48,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "monitorear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comando de lectura de reloj, potencia y temperatura de la GPU durante la inferencia, propuesto por el autor del motor para comparar con una GIGABYTE AI TOP Atom",
+   "como": "nvidia-smi --query-gpu=clocks.sm,clocks.max.sm,power.draw,temperature.gpu --format=csv -l 1",
+   "fuente_post": 29,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Salida del usuario cdzinpin en una Gigabyte AI Atom (driver 580.178.04, DGX OS 7.6.0, kernel 7.0.0-1019-nvidia, segun el usuario): clocks.sm ~2496-2528 MHz de 3003 maximo, 45-57 W, 42-55 C durante decode de 3000 tokens, 10.4 W en reposo (post 33)",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,clocks.max.sm,power.draw,temperature.gpu --format=csv -l 1"
+  },
+  {
+   "que": "Motor de inferencia propio veloGB10 (EXL3, Qwen3.8-Flash-Next) con autoajuste, telemetria OTLP, metricas /metrics tipo Prometheus (agregadas en v0.7.2) y medidores de ocupacion de KV (v0.7.4, issue #24); tabla de pares nodo-rango para TP=1/2/4",
+   "como": "./gb10_inference --model-dir <ruta> --max-seq-len 262144 --server --host 0.0.0.0 --port 8000 --max-batch=1 ; --tp 4 ; --kv-cache fp8|f16 ; --ple-ram ram|ssd|auto",
+   "fuente_post": 33,
+   "repositorio": "GitHub sf-stav/veloGB10 (nombre tal como aparece); benchmark sf-stav/VeloBench",
+   "licencia": "no indicada",
+   "probado_en": "4 equipos DGX Spark, DGX OS 7.5.0, kernel 6.17.0-1029-nvidia, driver 580.173.02, CUDA 13.0 (post 29 del autor)",
+   "riesgo": "El autor dice que es una version preliminar de un proyecto de una persona; un usuario (post 35) reporta que en sesiones largas con la cuantizacion 4.05 hubo OOM en un solo equipo y un cuelgue que obligo a reiniciar fisicamente, con ~30 GB libres estables antes del pico; el autor responde que corregira problemas de ejecuciones largas en v0.7.3, sin diagnosticar la causa",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reporte de caida abrupta de memoria: pico tan rapido que btop no lo registro, con ~30 GB libres antes, que termino en cuelgue total y reinicio manual",
+   "como": "no indicado; sin comando de medicion ni log",
+   "fuente_post": 35,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un equipo, Flash-Next 4.05 bpw segun el usuario emX0r (no indica hardware ni driver)",
+   "riesgo": "Sin respuesta tecnica de NVIDIA ni causa raiz; el autor del motor lo trata como pendiente de v0.7.3",
+   "verificable_aqui": "free -m; cat /proc/pressure/memory"
+  },
+  {
+   "que": "Estado de la cuantizacion EXL3 frente a NVFP4: un usuario recomienda --kv-cache f16 para calidad comparable porque sus pruebas de matematica no funcionaron con kv8",
+   "como": "--kv-cache f16",
+   "fuente_post": 49,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GB10 segun el usuario TimoGoetze (v0.7.4)",
+   "riesgo": "Afirmacion de un solo usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Hilo de lanzamiento de un motor comunitario con datos de otro usuario en una GIGABYTE AI Atom (clock, potencia y temperatura bajo decode con valores de 42-55 C, mucho menores que los de los cortes reportados) y un reporte de OOM con cuelgue que no recibe diagnostico. NVIDIA staff no participa; las cifras de rendimiento son del autor y de usuarios, y el autor mismo reconoce que dependen de la carga.",
+ "lectura": "parcial",
+ "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+}

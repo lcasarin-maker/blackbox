@@ -1,0 +1,38 @@
+{
+ "id": 378431,
+ "titulo": "Any proven and documented out-of-box to fully configured instructions for Mikrotik CRS812 DDQ for 4-node setup?",
+ "leido": true,
+ "posts_leidos": 17,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Lista de comprobacion de red RoCE en un cluster: MTU 9000 de extremo a extremo, IP estatica en las interfaces RoCE (netplan) para que NCCL no falle tras un reinicio, autonegociacion/FEC/velocidad forzados, GID de RoCE v2",
+   "como": "ip link show | grep mtu ; rdma link show gid-table ; export NCCL_IB_GID_INDEX=<indice> ; sudo ethtool -s <iface> autoneg off speed 200000 duplex full",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "cluster CRS812 con ConnectX-7 (texto compilado por un agente de IA; el propio autor lo llama 'AI slop' en el post 12)",
+   "riesgo": "Contenido generado por IA con errores reconocidos por el autor (puertos 'padre' inexistentes); un tercero (post 14) afirma que desactivar la autonegociacion en todos los carriles es incorrecto para el breakout",
+   "verificable_aqui": "ip link show | grep mtu ; rdma link show"
+  },
+  {
+   "que": "Configuracion minima del breakout 400G a 2x200G en CRS812 segun un usuario: autonegociacion apagada y speed=200G-baseCR4 solo en los carriles 1 y 5 de cada puerto, el resto con autonegociacion",
+   "como": "/interface ethernet set qsfp56-dd-1-1 auto-negotiation=no speed=200G-baseCR4 ; /interface ethernet set qsfp56-dd-1-2 auto-negotiation=yes (y analogos)",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "MikroTik CRS812 (afirmado por un usuario que dice no ser experto)",
+   "riesgo": "Contradice a otras fuentes del propio hilo (post 2, post 8)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de configuracion de un switch para 4 nodos, con comandos de origen IA y contradicciones entre usuarios; la ATOM es un nodo unico y no usa switch. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

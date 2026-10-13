@@ -1,0 +1,38 @@
+{
+ "id": 351929,
+ "titulo": "Three GB10 in \"Triangle\" configuration",
+ "leido": true,
+ "posts_leidos": 5,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Depuracion de rutas estaticas entre tres Sparks conectados en triangulo",
+   "como": "ip route get ; tcpdump con filtro bpf; rutas estaticas por host; comprobar ping en ambos sentidos para evitar rutas asimetricas",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "El propio usuario (murphy09) dice que no lo ha probado, no tiene 3 Sparks.",
+   "verificable_aqui": "ip route get 1.1.1.1"
+  },
+  {
+   "que": "Advertencia de limites de ancho de banda y topologia: los dos puertos ConnectX-7 comparten los mismos carriles PCIe (2x4 PCIe 5.0), cada puerto recibe la mitad del ancho de banda si ambos se usan; RDMA entre Sparks no conectados directamente probablemente falla; tensor parallel requiere 2, 4 u 8 nodos",
+   "como": "no indicado (advertencia, sin comando)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "afirmacion de usuario eugr, sin hardware declarado",
+   "riesgo": "Triangulo de 3 nodos no sirve para TP; RDMA en NCCL puede fallar sin conexion directa.",
+   "verificable_aqui": "lspci | grep -i mellanox; ibdev2netdev"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Discusion entre usuarios sin respuesta de NVIDIA sobre topologia multi-nodo; los consejos son generales y no probados, sin relacion con memoria o terminica en una sola maquina. La unica pieza concreta es ip route get y la advertencia de carriles PCIe compartidos.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

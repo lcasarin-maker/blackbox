@@ -1,0 +1,37 @@
+{
+ "id": 362764,
+ "titulo": "Value of 2nd Spark?",
+ "leido": true,
+ "posts_leidos": 22,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo de medicion de rendimiento de inferencia con llama-benchy contra un servidor compatible con OpenAI",
+   "como": "llama-benchy --base-url http://0.0.0.0:8080/v1 --pp 2048 --tg 128 --depth 16384 --concurrency 4",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos Sparks con vLLM tp=2 segun el usuario serapis",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Ajuste VLLM_MARLIN_USE_ATOMIC_ADD en la receta de Intel/Qwen3.5-122B-A10B-int4-AutoRound; raphael.amorim dice que debe dar 65-75 tok/s a c4 en tg128 @16384, pero serapis mide ~28 con la receta (post 16)",
+   "como": "env: VLLM_MARLIN_USE_ATOMIC_ADD: '1' ; gpu_memory_utilization: 0.7 ; max_model_len: 131072",
+   "fuente_post": 15,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "dos Sparks segun el usuario",
+   "riesgo": "El rendimiento afirmado no se reproduce en la medicion del post 16",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Es una discusion de valor de comprar un segundo Spark con benchmarks de usuarios y recetas vLLM; sin respuesta de NVIDIA. El unico dato reutilizable es el comando llama-benchy y el limite de ancho de banda de 273 GB/s citado por raphael.amorim (post 2), sin metodo de medicion.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

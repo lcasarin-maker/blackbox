@@ -1,0 +1,79 @@
+{
+ "id": 380340,
+ "titulo": "DeepSeek V4 Flash on two GB10 nodes — tuning and benchmark notes",
+ "leido": true,
+ "posts_leidos": 10,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "monitorear",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Leer el sensor termico del SoC en sysfs: 96.7 C era el sensor de paquete SoC (thermal_zone0 / TSOC) y 68 C el sensor de GPU; el unico punto de disparo en cualquier zona ACPI es 'critical' a 104 C",
+   "como": "cat /sys/class/thermal/thermal_zone0/temp (el autor lo divide entre 1000)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/AlexLJC/deepseek-v4-flash-gb10 (citado)",
+   "licencia": "no indicada",
+   "probado_en": "2x ASUS Ascent GX10 (GB10 SM121), kernel 6.17.0-1029-nvidia, driver 580.173.02, CUDA 13.0, firmware plataforma GX10DGX.0105.2026.0505.1153 (declarado por el usuario)",
+   "riesgo": "El autor admite en el hilo que dio dos cifras de temperatura sin etiquetar el sensor",
+   "verificable_aqui": "cat /sys/class/thermal/thermal_zone0/temp ; grep . /sys/class/thermal/thermal_zone*/type"
+  },
+  {
+   "que": "Contadores de limitacion de NVML: 'SW Power Capping 152 s, SW Thermal Slowdown 0.074 s, HW Thermal Slowdown 0' en la corrida; el autor dice que leyo tarde el contador de power capping, 2063 veces mayor, y que afirmo 'cero throttling termico' cuando era 74 ms",
+   "como": "no indicado el comando exacto (son los contadores de clock event reasons de la GPU)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x ASUS Ascent GX10 (GB10 SM121), kernel 6.17.0-1029-nvidia, driver 580.173.02, CUDA 13.0, firmware plataforma GX10DGX.0105.2026.0505.1153 (declarado por el usuario)",
+   "riesgo": "Cifras de un solo experimento",
+   "verificable_aqui": "nvidia-smi -q -d PERFORMANCE"
+  },
+  {
+   "que": "Un nucleo de CPU en espera activa toma presupuesto termico de la GPU porque CPU y GPU comparten paquete en GB10; un sleep acotado en el bucle de espera de vLLM (SpinCondition) bajo el exceso de CPU de 1.924 a 0.0252 nucleos y la brecha termica entre nodos de 10.27 a 7.42 C; el tiempo en o sobre 95 C bajo de 8.25% a 1.02%",
+   "como": "time.sleep(0.00025) dentro de la rama busy de SpinCondition (vllm/distributed/device_communicators/shm_broadcast.py); medido con pidstat",
+   "fuente_post": 10,
+   "repositorio": "https://github.com/AlexLJC/deepseek-v4-flash-gb10",
+   "licencia": "no indicada",
+   "probado_en": "2x ASUS Ascent GX10 (GB10 SM121), kernel 6.17.0-1029-nvidia, driver 580.173.02, CUDA 13.0, firmware plataforma GX10DGX.0105.2026.0505.1153 (declarado por el usuario)",
+   "riesgo": "El propio autor dice que el par de pruebas no establece aceleracion ni regresion y pide una repeticion con solicitudes fijas",
+   "verificable_aqui": "pidstat -u 5 3"
+  },
+  {
+   "que": "Prueba de 30 s para comparar la respuesta termica de dos unidades: carga fija de 1.6 nucleos con sched_yield fijada a CPU 5 y 6 y comparacion de la subida de thermal_zone0; una de sus dos GX10 subio 2.6 a 2.8 veces mas que la otra con carga identica",
+   "como": "T0=$(awk '{printf \"%.1f\",$1/1000}' /sys/class/thermal/thermal_zone0/temp); timeout 30 taskset -c 5 python3 -c 'import os\nwhile True: os.sched_yield()' & ... (script completo en el post 1)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x ASUS Ascent GX10 (GB10 SM121), kernel 6.17.0-1029-nvidia, driver 580.173.02, CUDA 13.0, firmware plataforma GX10DGX.0105.2026.0505.1153 (declarado por el usuario)",
+   "riesgo": "Genera carga de CPU de 30 s; es una medicion de usuario sobre 2 unidades",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Firma de silencio del deadlock de 16 asientos en vLLM: 'No available shared memory broadcast block found in 60 seconds' con ambos TP vivos y callados; hipotesis (sin reproducir) de un lector parado en poll sin plazo, comprobable con py-spy",
+   "como": "py-spy dump en el rank worker",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x ASUS Ascent GX10 (GB10 SM121), kernel 6.17.0-1029-nvidia, driver 580.173.02, CUDA 13.0, firmware plataforma GX10DGX.0105.2026.0505.1153 (declarado por el usuario)",
+   "riesgo": "Hipotesis sin probar segun el autor",
+   "verificable_aqui": "grep -r 'No available shared memory broadcast block' en los logs del contenedor"
+  },
+  {
+   "que": "Subir el reloj SM un 10.4% (de 2200 a 2411 MHz, techo 3003 MHz) dio solo +2% de throughput: el decode es limitado por ancho de banda de memoria",
+   "como": "nvidia-smi -lgc (referido como el bloqueo de reloj); sin bloqueo SM 2411 MHz",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x ASUS Ascent GX10 (GB10 SM121), kernel 6.17.0-1029-nvidia, driver 580.173.02, CUDA 13.0, firmware plataforma GX10DGX.0105.2026.0505.1153 (declarado por el usuario)",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,clocks.max.sm --format=csv"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Medicion directa de temperatura (sensor SoC 96.7 C vs 68 C GPU, trip critico 104 C), contadores de limitacion y un metodo de 30 s para comparar unidades, con correcciones publicas del propio autor; coincide con el problema termico de la ATOM. Son afirmaciones de un usuario sobre 2 GX10, sin respuesta de NVIDIA, y dos tercios del texto pueden ser redactados por IA segun otros usuarios (posts 2 a 4).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

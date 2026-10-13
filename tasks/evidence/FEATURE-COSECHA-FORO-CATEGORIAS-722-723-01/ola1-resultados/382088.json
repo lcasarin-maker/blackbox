@@ -1,0 +1,60 @@
+{
+ "id": 382088,
+ "titulo": "Theoretical feasibility of running Qwen 3.8 Flash Next (Q5 Quant, Vision enabled, 80k context) on DGX Spark?",
+ "leido": true,
+ "posts_leidos": 7,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir",
+  "monitorear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Afirmacion de usuario (jahnclawdmonet): en GB10 ningun limite de userland hace fallar una corrida de forma limpia; las asignaciones CUDA las hace el driver y no se cargan al cgroup del proceso, de modo que MemoryMax de systemd-run o --memory de Docker solo ven el heap del host; el modo de fallo es un fallo de asignacion del driver que congela la maquina",
+   "como": "no indicado (advertencia; no es un comando)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 segun el usuario; remite al hilo t/382079 (SGLang con swap y reinicio automatico en bucle); sin version de driver",
+   "riesgo": "Congelamiento del equipo que cuesta un ciclo de energia y el lote en curso; usar swap o reinicio automatico en el servidor de prueba lo convierte en bucle.",
+   "verificable_aqui": "cat /sys/fs/cgroup/system.slice/docker.service/memory.current; nvidia-smi --query-compute-apps=pid,used_memory --format=csv"
+  },
+  {
+   "que": "Procedimiento escalonado de prueba de memoria con proyeccion sin asignar y presion de memoria",
+   "como": "llama-fit-params -m <first shard> -c 80000 -ngl 999 --fit-print ; arrancar con -c 8192, revisar free -g y /proc/pressure/memory, luego 80000, luego primer prompt largo e imagen mas grande observando ambos; --load-mode dio ; --lazy-mode auto (no usar --lazy-mode off ni -ot para el tensor per_layer_token_embd.weight); mantener --cache-ram 0 y -np 1",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, usuario jahnclawdmonet; cita PR llama.cpp #28136 y issue #28201",
+   "riesgo": "Probar solo con produccion inactiva porque ambas no pueden coexistir.",
+   "verificable_aqui": "free -g; cat /proc/pressure/memory"
+  },
+  {
+   "que": "Aritmetica de memoria reportada para la Spark: 119.7 GiB expuestos a Linux, ~5 GB en reposo, ~115 GiB utilizables; Q5 con tabla perezosa fija ~103 a 105 GiB y Q6 ~114 GiB sin margen para el page cache",
+   "como": "147.4 GiB (UD-Q5_K_XL) - 50.66 GiB (tabla) - 0.63 GiB = ~96.1 GiB CUDA; + 2.6 GiB contexto 80k + 1.5 GiB buffers + 0.84 GiB mmproj + 1-2 GiB vision + 1.5 GiB contexto CUDA",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "free -g; grep MemTotal /proc/meminfo"
+  },
+  {
+   "que": "El autor de la pregunta declara que estrangula (throttle) la Spark para evitar sobrecalentamiento y que el margen es muy estrecho",
+   "como": "no indicado",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun el usuario peterwern",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Un usuario afirma que en GB10 las asignaciones CUDA no se cargan al cgroup del proceso, por lo que no hay limite de memoria de userland que falle limpiamente; sin respuesta de NVIDIA.",
+ "utilidad_atom": "alta",
+ "razon": "El post 2 da un procedimiento concreto (llama-fit-params, free -g, /proc/pressure/memory) y la afirmacion de que las asignaciones CUDA escapan al cgroup, que coincide con el problema de contabilidad de memoria de esta maquina. Todo es de usuarios, sin respuesta de NVIDIA, y las cifras de memoria son del autor sin medicion independiente.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

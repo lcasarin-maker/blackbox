@@ -1,0 +1,80 @@
+{
+ "id": 383579,
+ "titulo": "Single Spark Qwen3.8 Flash-Next + Qwen3.8 27B Left/Right Brain Hermes MoA (35-39 toks/s)",
+ "leido": true,
+ "posts_leidos": 24,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo para distinguir swap util de thrashing en memoria unificada: mirar flujos y no stocks. Estado sano: pgin/s cerca de cero, NVMe casi ocioso, sin picos de iowait, decodificacion normal. Thrashing: page-ins persistentes, NVMe sostenido, iowait creciente, tok/s colapsando. El autor dice que 'free -h' al 99% no es metrica de salud por si sola",
+   "como": "sar -B 1 ; iostat -x 1 ; deltas de pswpin / pswpout en /proc/vmstat",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10 (DGX Spark), kernel 6.17.0-1021-nvidia, driver 610.43.02, CUDA 13.3, BIOS GX10DGX.0104.2026.0326.1657",
+   "riesgo": "Es criterio del autor; su caso no tuvo thrashing",
+   "verificable_aqui": "grep -E 'pswpin|pswpout' /proc/vmstat; sar -B 1 3; iostat -x 1 3"
+  },
+  {
+   "que": "Configuracion de presion de memoria elegida en lugar de mlock sin holgura: zswap con lzo y zsmalloc, swappiness 1 y un swapfile de 100 GB como valvula. El autor dice que mlock con casi cero swap convertia picos normales en posibles OOM con el modelo grande. Snapshot: ~420 MiB disponibles, 21.8 GiB de swap usados, sin thrashing",
+   "como": "zswap: enabled, compressor lzo, zpool zsmalloc, max_pool_percent 1; vm.swappiness=1; /swap.img 100G; persistido en /etc/sysctl.d/99-zswap-tuning.conf mas una unidad systemd",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10 con 121 GiB utiles segun el usuario jimliu_sv; angryCougar (post 19) usa el mismo swap de 100G con ~22.9G usados y dice que zswap no esta activo en su Spark",
+   "riesgo": "Latencia de unos segundos al volver a paginar tras inactividad; el swap no hace ilimitadas las asignaciones de GPU",
+   "verificable_aqui": "cat /sys/module/zswap/parameters/enabled; sysctl vm.swappiness; swapon --show; free -h"
+  },
+  {
+   "que": "Reducir los checkpoints de contexto de llama.cpp reduce la presion de memoria: con el valor por defecto de 32 por slot (~230-260 MiB cada uno) el swap llegaba a 11-14 GiB en la primera hora tras el arranque; con 8 bajo a ~1.4 GiB y pswpout a ~0 paginas/s; la regla del autor es n_checkpoints ≈ D / 8192 si el cliente compacta a profundidad D",
+   "como": "--ctx-checkpoints 8",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10, Qwen3.8 Flash-Next y 27B con llama.cpp, segun el usuario",
+   "riesgo": "Solo aplica si el cliente compacta contexto; sin compactacion los checkpoints si se usan",
+   "verificable_aqui": "grep -E 'pswpout|pswpin' /proc/vmstat"
+  },
+  {
+   "que": "Parametros de arranque para dos slots con ctx de 98304, KV q8_0 y modo de carga lazy; build de llama.cpp para GB10",
+   "como": "llama-server ... --flash-attn on --n-gpu-layers 999 --lazy-mode on-direct --ctx-size 98304 --cache-type-k q8_0 --cache-type-v q8_0 --cache-ram -1 --kv-unified --spec-type draft-mtp,ngram-mod ; cmake ... -DCMAKE_CUDA_ARCHITECTURES=\"121a-real\" -DGGML_CUDA_GRAPHS=ON",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/seovendorco/dgx-spark-qwen38-llamacpp-patches",
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10 segun el usuario",
+   "riesgo": "Requiere un arbol de llama.cpp parcheado con 5 parches; angryCougar (posts 12-19) necesito resolver conflictos de merge",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Tope en el cliente contra bucles de llamadas a herramientas que MTP vuelve atractores (un agente quemo 176 llamadas identicas en 28 min)",
+   "como": "tool_loop_guardrails.hard_stop_enabled: true (bloquea tras 5 llamadas identicas)",
+   "fuente_post": 22,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Hermes Agent v0.21.0 segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de la penalizacion por concurrencia en un Spark limitado por ancho de banda: Flash-Next con parallel=2 tiene mediana 24.6 tok/s con una tarea y 16.7 con dos o mas tareas concurrentes (antes del cambio a 98K por slot era 9.3)",
+   "como": "--parallel 2 con --kv-unified-per-slot 98304; muestras tg_3s de los logs de llama-server",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10 segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El post 1 da un criterio de salud de memoria con comandos exactos (sar -B 1, iostat -x 1, pswpin/pswpout) y una configuracion zswap/swappiness con la afirmacion de que mlock sin holgura convierte picos en OOM; el post 8 mide que reducir --ctx-checkpoints a 8 baja el swap de 11-14 GiB a ~1.4 GiB. Son afirmaciones de usuario sin respuesta de NVIDIA, en una ASUS GX10 con kernel 6.17.0-1021-nvidia.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

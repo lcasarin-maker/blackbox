@@ -1,0 +1,48 @@
+{
+ "id": 378850,
+ "titulo": "Running DeepSeek-V4-Flash and Other Text-Only LLMs as Multimodal with Pilco-mmbridge",
+ "leido": true,
+ "posts_leidos": 7,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Fijar el tamano del KV cache en bytes ademas de gpu-memory-utilization para estabilizar el reparto de memoria entre dos modelos vLLM",
+   "como": "--gpu-memory-utilization 0.75 --kv-cache-memory-bytes 11859478446 (DeepSeek-V4-Flash-0731) y --gpu-memory-utilization 0.05 --kv-cache-memory-bytes 367001600 (Qwen3.5-9B-quantized.w4a16)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "dos DGX Spark FE, vLLM con ray (el autor aclara que solo probo ese modelo de hardware)",
+   "riesgo": "El autor dice en el post 2 que la primera receta (0.75 y 0.075) se quedaba sin memoria en uso real.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Lectura de metricas de vLLM en el log: utilizacion de KV, tasa de aciertos de prefix cache y aceptacion de decodificacion especulativa",
+   "como": "lineas de log 'GPU KV cache usage: 7.8%, Prefix cache hit rate: 64.1%' y 'SpecDecoding metrics: Mean acceptance length: 4.00'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos Spark",
+   "riesgo": null,
+   "verificable_aqui": "docker logs <contenedor_vllm> 2>&1 | grep -E 'KV cache usage|SpecDecoding'"
+  },
+  {
+   "que": "Pilco-mmbridge: puente que conecta un modelo de texto con un modelo de vision",
+   "como": "no indicado (solo enlace al repositorio gpdev-Pilcothink/Pilco-mmbridge)",
+   "fuente_post": 1,
+   "repositorio": "GitHub gpdev-Pilcothink/Pilco-mmbridge",
+   "licencia": "no indicada",
+   "probado_en": "dos Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El dato reutilizable es el uso de --kv-cache-memory-bytes con valores concretos para evitar OOM en un cluster de dos nodos; el resto es un proyecto de vision multimodal. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

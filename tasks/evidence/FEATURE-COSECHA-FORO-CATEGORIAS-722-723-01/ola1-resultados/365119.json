@@ -1,0 +1,39 @@
+{
+ "id": 365119,
+ "titulo": "Marlin Fix: NVFP4 Actually Works on SM121 (DGX Spark)",
+ "leido": true,
+ "posts_leidos": 16,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Forzar el backend Marlin para NVFP4 en vLLM en SM121; el autor mide 50.0 tok/s y 32 GB contra 42.6 tok/s y 39 GB con FlashInfer por defecto en Nemotron-3-Nano-30B-A3B-NVFP4 (un modelo, una compilacion)",
+   "como": "VLLM_USE_FLASHINFER_MOE_FP4=0 VLLM_NVFP4_GEMM_BACKEND=marlin VLLM_TEST_FORCE_FP8_MARLIN=1",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/Sggin1/spark-ai-containers",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10, CUDA 13.2, Driver 580.142, vLLM 0.18.1rc1 (compilacion eugr), 26 de marzo de 2026",
+   "riesgo": "eugr (post 15) revirtio a CUTLASS por perdida de calidad reportada y confirmada con Marlin; dbsci (post 6) dice que Marlin desquantiza a BF16 y es peor en rendimiento; sggin1 (post 13) reconoce que la palabra 'broken' era su opinion y que el PR vLLM 37725 (post 14) cambia la respuesta",
+   "verificable_aqui": "docker logs <contenedor> 2>&1 | grep -E 'NvFp4LinearBackend|NvFp4 MoE backend'"
+  },
+  {
+   "que": "Sintoma en el log de vLLM que indica que los kernels CUTLASS FP4 fallan en SM121",
+   "como": "[Autotuner]: Skipping tactic … due to failure while profiling: [TensorRT-LLM][ERROR] Failed to initialize cutlass TMA WS grouped gemm",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun el autor",
+   "riesgo": "Segun post 14 el arreglo en vLLM 37725 ya esta fusionado",
+   "verificable_aqui": "docker logs <contenedor> 2>&1 | grep -c 'Failed to initialize cutlass TMA WS'"
+  }
+ ],
+ "omision_nvidia": "El autor dice (post 1) que no hay plazo de NVIDIA para FP4 nativo en SM121; no hay respuesta de staff de NVIDIA en el hilo.",
+ "utilidad_atom": "media",
+ "razon": "Da tres variables de entorno concretas con medicion de memoria (7 GB menos) y un sintoma de log verificable, pero los posts 6, 13, 14 y 15 muestran que el valor depende de la version de vLLM y que hay perdida de calidad reportada. El post 13 apunta a un hilo previo del autor 'Memory Creep on DGX Spark: Where Your 128 GB Actually Goes' que no esta en este texto.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

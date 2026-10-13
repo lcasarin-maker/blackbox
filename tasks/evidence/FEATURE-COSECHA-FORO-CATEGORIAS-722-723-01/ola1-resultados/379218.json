@@ -1,0 +1,39 @@
+{
+ "id": 379218,
+ "titulo": "Sparkup - DGX Spark as code",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Playbook de Ansible que aprovisiona un DGX Spark con Docker y runtime NVIDIA, exportadores de nodo y GPU, Prometheus con un ano de retencion y Grafana con panel preconfigurado",
+   "como": "no indicado (solo enlace al repositorio vtemian/sparkup)",
+   "fuente_post": 1,
+   "repositorio": "GitHub vtemian/sparkup (nombre en el texto)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark desde una instalacion limpia de DGX OS (declarado por el autor)",
+   "riesgo": "Aplica cambios amplios al sistema (usuarios, ufw, kernel firmado, firmware preparado); no se debe correr sin revisar.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Modulo de firmware spbm (apagado por defecto) para obtener la potencia del sistema completo; nvidia-smi solo ve el riel de la GPU, cerca de la mitad del consumo de pared",
+   "como": "no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (autor)",
+   "riesgo": "Es un modulo de firmware de terceros; cargarlo con Secure Boot activo requiere firma.",
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw --format=csv,noheader"
+  }
+ ],
+ "omision_nvidia": "Segun el autor, nvidia-smi reporta solo el riel de la GPU, aproximadamente la mitad del consumo de pared, y no la potencia del sistema completo (afirmacion de usuario).",
+ "utilidad_atom": "media",
+ "razon": "Menciona una pila de telemetria (exportadores, Prometheus, Grafana) y un modulo spbm para potencia total, util como punto de partida de medicion, pero el post carece de comandos, versiones y licencia. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,37 @@
+{
+ "id": 376872,
+ "titulo": "DeepSeekv4 Flash for 1x Spark [REAP25] [PrismaAURA]",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Servidor local ds4-server con GGUF cuantizado por medicion (91 GB residentes, contexto hasta 1M) y decodificacion especulativa DSpark; rechaza en la carga un modelo que no cabe en vez de degradarse",
+   "como": "./ds4-server -m ds4flash.gguf --ctx 1048576 ; ./download_model.sh v5mx ; make cuda-spark CUDA_ARCH=sm_120f",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/tylerwagler/ds4",
+   "licencia": "no indicada",
+   "probado_en": "Un solo GB10 (declarado por twaggs88)",
+   "riesgo": "El GGUF solo carga en ds4-server; un solo usuario; beta",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Mejora de memoria: pre-almacenar los pesos MXFP8 con layout swizzled libera ~6.4 GiB de copia residente y sube el limite de sesiones vivas de dos a tres",
+   "como": "nuevo tipo de peso MXFP8_LT (tamano del GGUF sin cambios)",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/tylerwagler/ds4",
+   "licencia": "no indicada",
+   "probado_en": "Un solo GB10 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Motor y cuantizacion para ejecutar DeepSeek V4 Flash en un unico GB10 con medidas propias; los datos de memoria son sobre el motor del autor, no sobre monitoreo o prevencion en esta maquina.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,69 @@
+{
+ "id": 360832,
+ "titulo": "Sparkrun - central command with tab completion for launching inference on Spark Clusters",
+ "leido": true,
+ "posts_leidos": 98,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Estimacion de VRAM antes de lanzar un modelo: la herramienta calcula pesos, KV y contexto maximo para un recipe y dice si cabe en un Spark (ejemplo: presupuesto 121 GB x 30% = 36.3 GB, KV disponible 33.1 GB)",
+   "como": "sparkrun show <recipe> ; sparkrun recipe vram <recipe>",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/scitrera/sparkrun (luego github.com/spark-arena/sparkrun)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el autor dbsci; el post 1 usa 121 GB de memoria utilizable",
+   "riesgo": "Estimacion de la herramienta; el post 87 reporta un fallo 'VRAM estimation failed: invalid literal for int() with base 10: 200k'",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reducir la tendencia a hacer swap y limpiar el page cache, que segun el autor crece en el nodo que mas trabaja: swappiness en 1 (el valor por defecto es 60) y una regla sudoers acotada para vaciar el page cache",
+   "como": "swappiness=1 ; sparkrun setup clear-cache --save-sudo (instala reglas /etc/sudoers.d/sparkrun-*) ; sparkrun setup fix-permissions",
+   "fuente_post": 70,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "cluster de 2 Spark; el usuario redacted.design observo swap en el primer nodo (post 69)",
+   "riesgo": "Instala reglas sudoers (descritas como acotadas en el post 53); un usuario no pudo ejecutar el comando por fallos de SSH (post 20)",
+   "verificable_aqui": "cat /proc/sys/vm/swappiness && grep -E 'SwapTotal|SwapFree' /proc/meminfo"
+  },
+  {
+   "que": "Instalar earlyoom en los nodos con el asistente de la herramienta",
+   "como": "sparkrun setup earlyoom --hosts 192.168.10.11,192.168.10.12 (con --cluster fallo porque exige SSH sin contrasena por las IP de gestion)",
+   "fuente_post": 36,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "2 Spark segun el usuario AoE",
+   "riesgo": "No se describe el umbral de earlyoom ni su comportamiento en el texto",
+   "verificable_aqui": "systemctl is-active earlyoom"
+  },
+  {
+   "que": "Un usuario pide una prueba en toda la red del cluster para detectar el bug de entrega de energia (power delivery) descrito en otro hilo ('Power delivery bug: How I'm catching it early') y pruebas de velocidad de los enlaces de 200 Gb cuando alguno negocia 13 Gb; el autor responde que los anota",
+   "como": "no indicado (remite al otro hilo)",
+   "fuente_post": 66,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "cluster de 2 Spark segun el usuario mashie",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Diagnostico de fallos de la herramienta con mas verbosidad y recoleccion de logs",
+   "como": "sparkrun -vvv run <recipe> ; sparkrun run <recipe> --collect-diagnostics \"diag.log\" ; sparkrun cluster inspect <clusterName>",
+   "fuente_post": 70,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Herramienta comunitaria de lanzamiento de inferencia que incluye estimacion de VRAM, un asistente que configura earlyoom y limpieza de page cache, y recomienda swappiness 1 para evitar swap temprano (posts 1, 36, 70). Los comandos estan en el texto pero sin umbrales ni licencia, y la mayoria del hilo es soporte de recipes, mods y proxy; NVIDIA solo aparece de forma indirecta.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

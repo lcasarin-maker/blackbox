@@ -1,0 +1,49 @@
+{
+ "id": 356043,
+ "titulo": "Local K8s Cluster with minikube on Nvidia DGX Spark",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Pila de observabilidad vLLM con Prometheus y Grafana sobre minikube (TTFT, ITL, throughput)",
+   "como": "cd observability; bash install.sh; kubectl port-forward -n monitoring svc/kube-prom-stack-grafana 3000:80 --address 0.0.0.0; importar observability/vllm-dashboard.json en Grafana",
+   "fuente_post": 3,
+   "repositorio": "https://github.com/vllm-project/production-stack",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, vLLM nvcr.io/nvidia/vllm:25.12-py3, minikube driver docker (declarado por el usuario)",
+   "riesgo": "El port-forward con --address 0.0.0.0 expone Grafana en la red local; la contrasena por defecto probable es la de values.yaml.",
+   "verificable_aqui": "curl -s http://localhost:8000/metrics | head"
+  },
+  {
+   "que": "Benchmark de carga para generar trafico y medir TTFT/TPOT/ITL",
+   "como": "vllm bench serve --backend vllm --base-url http://localhost:30080 --model Qwen/Qwen3-4B --dataset-name random --random-input-len 128 --random-output-len 128 --num-prompts 1000 --max-concurrency 100 --temperature 0.7",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, Qwen3-4B, 728.54 tok/s de salida segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: el panel de GPU Cache Usage queda sin datos si el nvidia-device-plugin falla en GB10",
+   "como": "no indicado (el usuario enlaza una pregunta sobre soporte del device plugin en GB10)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario)",
+   "riesgo": "Los pods de Kubernetes con nvidia.com/gpu pueden no programarse o las metricas de GPU faltar.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun un usuario, no hay soporte oficial del device plugin de NVIDIA para DGX Spark (afirmacion de usuario, sin respuesta de NVIDIA en el tema).",
+ "utilidad_atom": "baja",
+ "razon": "Da comandos concretos para observar vLLM con Prometheus/Grafana, pero depende de Kubernetes/minikube que esta maquina no usa (Docker directo) y las metricas son de inferencia, no de memoria unificada ni termica. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

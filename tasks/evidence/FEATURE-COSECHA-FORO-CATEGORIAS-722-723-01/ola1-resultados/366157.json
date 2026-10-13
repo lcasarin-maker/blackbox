@@ -1,0 +1,49 @@
+{
+ "id": 366157,
+ "titulo": "ONNX Runtime GPU inference on DGX Spark (GX10) — build guide and prebuilt binaries",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Compilacion de ONNX Runtime con CUDA EP para sm_121 en aarch64",
+   "como": "git clone --recursive --branch v1.24.4 --depth 1 https://github.com/microsoft/onnxruntime; ./build.sh --config Release --use_cuda --cuda_home /usr/local/cuda --cudnn_home /usr --build_shared_lib --parallel $(nproc) --skip_tests --cmake_extra_defines CMAKE_CUDA_ARCHITECTURES=121; sudo apt install libcudnn9-cuda-13 libcudnn9-dev-cuda-13",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/Albatross1382/onnxruntime-aarch64-cuda-blackwell",
+   "licencia": "no indicada",
+   "probado_en": "GX10, GB10 sm_121, CUDA 13.0, cuDNN 9.20, Ubuntu 24.04",
+   "riesgo": "Los modelos INT8 carecen de kernels sm_121 segun el autor; ORT 1.20.1 incompatible con CUDA 13.",
+   "verificable_aqui": "nvidia-smi --query-gpu=compute_cap --format=csv; nvcc --version"
+  },
+  {
+   "que": "Advertencia de riesgo: con drivers 580.126.09 y 580.95.05 una carga por lotes de ORT CUDA EP fallaba en cada ejecucion (CUDNN_FE failure 11 en Conv, CUBLAS_STATUS_INTERNAL_ERROR en FusedMatMul); con 580.142 corre limpio; se corrigio con 580.173.02. No aparecen Xid en dmesg y el worker cae en silencio a CPU y sigue sirviendo",
+   "como": "no indicado (diagnostico; senal: comprobar proveedor de ejecucion activo y version de driver)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 con driver 580.126.09/580.95.05/580.142/580.173.02 segun el usuario YolandaHuang",
+   "riesgo": "Fallo silencioso: ausencia de Xid no implica GPU sana; el servicio degrada a CPU sin aviso.",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv; sudo dmesg | grep -i xid"
+  },
+  {
+   "que": "Visibilidad en Rust: sin tracing-subscriber, RUST_LOG no produce salida y no se sabe si CUDA esta activo",
+   "como": "no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Guia de usuario con comando de build exacto y un reporte (post 3) de fallos dependientes del driver 580.x con caida silenciosa a CPU y sin Xid, relevante para el driver 580.178.04 de esta maquina. Sin respuesta de NVIDIA; el driver 580.173.02 se afirma por un usuario con enlace a otro hilo.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

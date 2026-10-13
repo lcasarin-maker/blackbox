@@ -1,0 +1,48 @@
+{
+ "id": 382675,
+ "titulo": "2× DGX Spark DeepSeek-V4-Flash-Vision-Exp: TP=2, RoCE, DSpark K=5 experiment, and CodeWhale long-agent observations",
+ "leido": true,
+ "posts_leidos": 11,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Variables de red NCCL/UCX para un solo carril RoCE estable en 2 Spark",
+   "como": "NCCL_IB_HCA=rocep1s0f0 NCCL_IB_GID_INDEX=3 UCX_NET_DEVICES=rocep1s0f0:1 NCCL_IB_DISABLE=0 NCCL_NET_GDR_LEVEL=0 NCCL_CROSS_NIC=1 NCCL_CUMEM_ENABLE=0 NCCL_ASYNC_ERROR_HANDLING=1 NCCL_IGNORE_CPU_AFFINITY=1 UCX_RCACHE_MAX_UNRELEASED=1024 UCX_MEM_MMAP_HOOK_MODE=none",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark, imagen aidendle94/sparkrun-vllm-ds4-gb10:production-3.73-vision (declarado por huxiaofengtiger)",
+   "riesgo": null,
+   "verificable_aqui": "ibv_devices"
+  },
+  {
+   "que": "Bypass del validador de divisibilidad MTP para permitir K=5 en DSpark (montaje de solo lectura reversible); la causa es n_predict=3 y dspark_block_size=5",
+   "como": "condicion anadida: self.method != \"dspark\" en vllm/config/speculative.py, montado con bind mount",
+   "fuente_post": 11,
+   "repositorio": "https://github.com/hxfhd/deepseek-v4-dspark-k5-workaround",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark, vLLM 0.11.2.dev279 (declarado)",
+   "riesgo": "Un usuario advierte que en v0.28.0 el guard K>=dspark_block_size se elimino; el parche es solo para esa imagen no oficial (post 9)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Observacion de estado: KV-cache usage sube a ~57-59% en el prefill largo y vuelve a ~2.4% al terminar, Waiting=0, prefijo 97%+; sin ratcheting de KV ni CUDA illegal memory access",
+   "como": "leer las metricas del log de vLLM (sin comando)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x Spark, TP=2 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Configuracion detallada de un cluster de 2 nodos con variables NCCL/UCX y un parche de validador, con estabilidad solo declarada por el autor. Sin relacion con la memoria unificada o la termica en una sola maquina; un usuario cuestiona la ausencia de prefix caching en una imagen similar (post 7).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

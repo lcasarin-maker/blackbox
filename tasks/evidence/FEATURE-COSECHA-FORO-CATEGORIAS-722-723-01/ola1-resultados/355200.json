@@ -1,0 +1,27 @@
+{
+ "id": 355200,
+ "titulo": "WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8)",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Respuesta de NVIDIA (usuario NVES): para imagenes solo amd64, o pedir a HF/proyecto una imagen arm64, o reconstruir la imagen desde su Dockerfile para arm64",
+   "como": "docker buildx create --use && docker buildx build --platform linux/arm64 -t myimg:arm64 --load .",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Solo funciona si se tiene Dockerfile y fuentes; la respuesta es general, no especifica de Spark.",
+   "verificable_aqui": "uname -m; docker buildx version"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Respuesta de NVIDIA (NVES) con comando docker buildx para construir arm64; es un problema general de arquitectura de contenedores, sin relacion con memoria o terminica.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

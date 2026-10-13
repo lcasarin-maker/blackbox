@@ -1,0 +1,37 @@
+{
+ "id": 358874,
+ "titulo": "GLM-4.7-Flash on PGX/DGX vLLM Guide",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Construir imagen vLLM con transformers reciente para el error glm4_moe_lite no reconocido",
+   "como": "git clone https://github.com/eugr/spark-vllm-docker.git ; cd spark-vllm-docker ; ./build-and-copy.sh --pre-tf --use-wheels",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "PGX/DGX GB10 (declarado por el autor)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Lanzar GLM-4.7-Flash con backend flashinfer y umbral de memoria de Ray desactivado para evitar muertes OOM prematuras de Ray",
+   "como": "-e RAY_memory_usage_threshold=0.98 -e RAY_memory_monitor_refresh_ms=0 ; vllm serve /root/model --attention-config.backend flashinfer --tool-call-parser glm47 --reasoning-parser glm45 --enable-auto-tool-choice -tp 1 --gpu-memory-utilization 0.88 --max-model-len 32000 --distributed-executor-backend ray",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "PGX/DGX (declarado por el autor)",
+   "riesgo": "Desactivar el monitor de memoria de Ray quita una proteccion contra OOM; el docker run usa --privileged",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta de despliegue de un modelo concreto con un workaround de transformers; desactivar el monitor de Ray es lo unico relacionado con memoria y es opinion de usuario sin medicion. El post 4 solo cuestiona el contexto de 32000.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,47 @@
+{
+ "id": 362009,
+ "titulo": "Why 200 tok/s is new normal? — TP=2 Does Scale After All",
+ "leido": true,
+ "posts_leidos": 25,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Sacar NCCL AllReduce de los CUDA graphs en vLLM (splitting op) para TP=2; el autor reporta 108 a 196 tok/s en Qwen3-Coder-30B INT4, pero otro usuario (eugr) dice que el truco le produjo salida basura y el propio autor mide 0% de mejora en Qwen3.5-397B",
+   "como": "if os.environ.get(\"VLLM_UF_EAGER_ALLREDUCE\", \"0\") == \"1\": self.splitting_ops.append(\"vllm::all_reduce\")",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/flash7777/vllm-marlin-sm12x",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark + PGX ThinkStation, NCCL 2.29.2, ConnectX-7 RoCE 200 Gbps, TP=2",
+   "riesgo": "Salida corrupta reportada por eugr (post 8, '!!!'); parche sobre vLLM fijado a una revision",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de medicion de AllReduce: crudo 18.2 us vs 45.6 us dentro de CUDA graph (97 llamadas por token = 4.43 ms, 48% del tiempo por token de 9.28 ms)",
+   "como": "no indicado (cifras de NCCL 2.29.2, mensaje de 4 KiB BF16)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 nodos GB10, RoCE 200 Gbps",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de throughput con llama-benchy (usada por eugr en Qwen3-VL-30B AWQ: tg32 81.46 t/s en un solo Spark)",
+   "como": "llama-benchy 0.3.3, defaults",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark, QuantTrio/Qwen3-VL-30B-A3B-Instruct-AWQ",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Optimizacion de rendimiento TP=2 entre dos nodos, sin monitoreo, memoria ni termica de una sola maquina; la afirmacion central fue cuestionada por eugr y el autor mismo mide cero mejora en otro modelo (post 12). Sin respuesta de staff NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

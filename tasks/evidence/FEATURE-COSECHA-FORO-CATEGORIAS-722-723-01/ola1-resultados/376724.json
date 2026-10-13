@@ -1,0 +1,27 @@
+{
+ "id": 376724,
+ "titulo": "Serving multiple small LLMs on DGX Spark with CUDA MPS",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Procedimiento de CUDA MPS para varios procesos vLLM en la misma GPU, con medicion frente a un servidor unico: salida total 569.96 tok/s (uno) frente a 310.23 y 310.44 tok/s (dos con MPS); TTFT medio 16725 ms frente a 27141 ms; TPOT medio 155.97 ms frente a 289.93 ms. El autor concluye +10% de rendimiento y latencia mucho peor",
+   "como": "nvidia-smi -q | grep \"Compute Mode\" ; sudo nvidia-smi -i 0 -c EXCLUSIVE_PROCESS ; mkdir -p /tmp/nvidia-mps /var/log/nvidia-mps ; export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps ; export CUDA_MPS_LOG_DIRECTORY=/var/log/nvidia-mps ; nvidia-cuda-mps-control -d ; echo ps | nvidia-cuda-mps-control ; vllm serve ... --gpu-memory-utilization 0.45",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10 con Qwen3.5-4B segun el usuario shahizat (versiones de driver/kernel no indicadas)",
+   "riesgo": "El post fija EXCLUSIVE_PROCESS para toda la GPU 0, lo que limita a un solo contexto por proceso para el resto de contenedores; el autor no aclara si 'ya hay un daemon activo' provenia de la configuracion de fabrica; el segundo escenario uso 50 RPS configurados frente a 100 en el baseline, de modo que la comparacion no es identica",
+   "verificable_aqui": "nvidia-smi -q | grep 'Compute Mode'; pgrep -a mps"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Medicion con numeros completos de vllm bench y comandos exactos de MPS en GB10, con resultado de rendimiento modesto y latencia peor. Es un reporte de usuario, el autor pide opinion a NVIDIA pero el texto solo muestra una respuesta de otro usuario que pregunta por Docker (post 2).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

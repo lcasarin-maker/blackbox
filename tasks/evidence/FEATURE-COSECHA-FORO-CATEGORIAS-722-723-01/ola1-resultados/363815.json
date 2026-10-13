@@ -1,0 +1,79 @@
+{
+ "id": 363815,
+ "titulo": "RedHatAI/Qwen3.5-122B-A10B-NVFP4 seems to be the best option for a single Spark",
+ "leido": true,
+ "posts_leidos": 76,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comando de vLLM para servir Qwen3.5-122B NVFP4 en un solo Spark con contexto de 262144",
+   "como": "vllm serve /workspace/Model/Qwen3.5-122B-A10B-NVFP4 --host 0.0.0.0 --port 8000 --reasoning-parser qwen3 --enable-prefix-caching --enable-auto-tool-choice --tool-call-parser qwen3_coder --max-model-len 262144 --moe_backend flashinfer_cutlass --max-num-batched-tokens 8192 --default-chat-template-kwargs '{\"enable_thinking\": false}' --chat-template /workspace/spark-vllm-docker/mods/fix-qwen3.5-chat-template/chat_template.jinja --max-num-seqs 100 --trust-remote-code",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "un DGX Spark; tg32 de 16.15 t/s segun el autor (PILCOTHINK)",
+   "riesgo": "Varios usuarios (posts 10, 46, 70) reportan OOM o caidas constantes con este modelo incluso con --gpu-memory-utilization 0.65 y --max-model-len 8192.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Precondicion de memoria: al menos 116 GiB libres en reposo y --gpu-memory-utilization entre 0.85 y 0.9",
+   "como": "free -h; --gpu-memory-utilization >= 0.85 y < 0.9",
+   "fuente_post": 18,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario PILCOTHINK)",
+   "riesgo": "Con 115 GB libres tras el arranque (post 19) el modelo de 262144 de contexto puede no caber.",
+   "verificable_aqui": "free -h"
+  },
+  {
+   "que": "Liberar la cache de paginas antes de cargar un modelo grande",
+   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'",
+   "fuente_post": 20,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark en multi-user.target (usuario DannyTup): 119Gi libres tras ejecutarlo",
+   "riesgo": "Es un workaround de depuracion; el usuario dice que la documentacion de NVIDIA lo menciona para limpiar buffers (afirmacion de usuario).",
+   "verificable_aqui": "free -h"
+  },
+  {
+   "que": "Evitar OOM durante la compilacion de kernels CUDA limitando los trabajos paralelos",
+   "como": "MAX_JOBS=4 (variable de entorno)",
+   "fuente_post": 23,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario drifts_phobia.7k)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables de entorno de una receta sparkrun que carga el NVFP4 resharded con backend Marlin",
+   "como": "MAX_JOBS: 4; VLLM_NVFP4_GEMM_BACKEND: marlin; VLLM_TEST_FORCE_FP8_MARLIN: 1; VLLM_MARLIN_USE_ATOMIC_ADD: 1; gpu_memory_utilization: 0.85; max_model_len: 131072; --load-format fastsafetensors",
+   "fuente_post": 24,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "vLLM 0.18.1rc1, PyTorch 2.10.0+cu130, driver 595.58.03 (declarado por el usuario); medicion free -h --si con 121G usados y 1.7G libres",
+   "riesgo": "Deja solo 9.7G disponibles en el sistema; un pico adicional de memoria queda sin margen.",
+   "verificable_aqui": "free -h --si"
+  },
+  {
+   "que": "Advertencia: los cuantizados NVFP4 con flashinfer se reportan como inestables (sobre todo Nemotron)",
+   "como": "no indicado",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Caidas del servicio; afirmacion de usuario sin logs.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Aporta comandos y valores copiables de vLLM, margenes de memoria libre y el workaround drop_caches, con mediciones de free -h bajo carga, pero los fallos de OOM y caidas quedan sin causa raiz y sin logs. Hay participantes con sufijo NVIDIA en el nombre (AL_NVIDIA) pero reportan sus propias caidas como usuarios, sin respuesta oficial.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

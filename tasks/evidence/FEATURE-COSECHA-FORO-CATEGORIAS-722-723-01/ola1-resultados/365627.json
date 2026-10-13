@@ -1,0 +1,27 @@
+{
+ "id": 365627,
+ "titulo": "DGX Spark GB10 / vLLM 0.19.1: TurboQuant KV cache integration results on Qwen3.5 and Nemotron, including gather-free Triton decode and CUDA WPH decode",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Rama de vLLM 0.19.1 con compresion de KV cache TurboQuant: la capacidad de KV sube de 155K a 405K tokens en Qwen3.5-122B-A10B-NVFP4 (TP1) con una caida de tg32 c=4 de 55.2 a 40.6 t/s (WPH v2); sin comando de uso en el post",
+   "como": "no indicado (portado desde el PR vllm #38280; presets en la rama feat/turboquant)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/bjk110/spark_vllm_docker/tree/feat/turboquant",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 x2, 121 GB unificada, NGC PyTorch 26.03, vLLM 0.19.1, CUDA 13.2, FlashInfer 0.6.7",
+   "riesgo": "Rama no integrada en upstream; incompatible con Gemma 4 31B (head_dim heterogeneo); menor throughput que bf16",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Trabajo de kernels (Triton y CUDA) para comprimir el KV cache con cifras medidas por el autor (c=1: 17.0 a 14.0 t/s). No trae comando de uso, no mide temperatura ni memoria del sistema, y no hay respuesta de NVIDIA; la pregunta del post 6 sobre si el ahorro es de memoria queda sin respuesta.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

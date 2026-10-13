@@ -1,0 +1,48 @@
+{
+ "id": 368039,
+ "titulo": "Introducing vLLM-Tune — Kernel tuning CLI for vLLM on DGX Spark",
+ "leido": true,
+ "posts_leidos": 50,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "CLI que sintoniza y despliega configs de kernels Triton de MoE y GEMM FP8 de vLLM para GB10 (rendimiento, no estabilidad)",
+   "como": "vllm-tune.sh Qwen/Qwen3.6-35B-A3B-FP8 --tp 2 --deploy ; --deploy-only para configs ya incluidas ; vllm-tune.sh Qwen/Qwen3.6-27B-FP8 --mode fp8 --tp 2 (modelos densos) ; instalacion: curl -fsSL https://raw.githubusercontent.com/SeraphimSerapis/vllm-tune/main/install.sh | bash",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/SeraphimSerapis/vllm-tune",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10, vLLM v0.19.2, Qwen3.6-35B-A3B-FP8, TP=2 segun el autor",
+   "riesgo": "La instalacion ejecuta un script remoto con curl | bash; el sintonizado ocupa los Spark durante horas; las configs no se intercambian entre TP distintos (post 14); en TP=1 y modelos densos la mejora no se confirmo (posts 32, 43)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Mediciones del autor: prefill pp2048 4,677 a 7,406 t/s (+58%) y decode tg128 74.4 a 81.5 t/s (+9.5%); medicion independiente de jwarner con 174k prompts en un GB10: 3.3% mas rapido con sintonizado MoE",
+   "como": "llama-benchy; el autor recomienda 2-3 benchmarks a distintas profundidades de contexto antes y despues y comparar promedios",
+   "fuente_post": 47,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "1 GB10, Gemma4-26B-A4B FP8, concurrencia 156 (post 47); 2x GB10 (post 1)",
+   "riesgo": "senbeisenbei no pudo confirmar mejora consistente con llama-benchy runs=5 en TP=1 (post 32)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Correccion del fallo de deteccion MoE: el checkpoint FP8 de Qwen usa num_experts en vez de num_local_experts",
+   "como": "buscar num_experts ademas de num_local_experts en vllm-tune.sh (corregido por el autor en post 44)",
+   "fuente_post": 43,
+   "repositorio": "https://github.com/SeraphimSerapis/vllm-tune",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Herramienta de optimizacion de rendimiento de vLLM sin relacion con estabilidad de memoria ni termica; solo el metodo de medicion antes/despues y la advertencia curl|bash tienen valor de procedimiento. Las mejoras son de usuarios y discutidas (5% a 10%, variables).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,27 @@
+{
+ "id": 371096,
+ "titulo": "Spark Pulse: web control plane for spark-vllm-docker on DGX Spark",
+ "posts_leidos": 11,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear"
+ ],
+ "utilidad_atom": "baja",
+ "mecanismos": [
+  {
+   "que": "Panel web open source para spark-vllm-docker con monitoreo en streaming de GPU, CPU, RAM y disco, y limpieza de caches (HF, wheel, ccache, Triton)",
+   "como": "python3 -m pip install --user spark-pulse --break-system-packages --upgrade ; spark-pulse install --user ; spark-pulse status --user (UI en el puerto 8100)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/kharkevich-engineering-lab/spark-pulse",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Instala con --break-system-packages; en el post 2 un usuario reporta 'Authentication is not configured' (corregido segun el autor en el post 4) y en el post 6 otro un blanco por MIME text/html",
+   "verificable_aqui": null
+  }
+ ],
+ "razon": "Un usuario presenta un dashboard que envuelve spark-vllm-docker y muestra uso de recursos; no especifica metricas de memoria unificada ni de temperatura. Es un monitor generico sin licencia indicada y sin respuesta de NVIDIA.",
+ "leido": true,
+ "omision_nvidia": null,
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

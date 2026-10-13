@@ -1,0 +1,48 @@
+{
+ "id": 373618,
+ "titulo": "GB10 really does hit ~1 PFLOP NVFP4 (2:4 sparse) — measured, with an open-source tool to reproduce it",
+ "leido": true,
+ "posts_leidos": 23,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "nvfp4bench: herramienta de linea de comandos que mide el pico de NVFP4 en tensor cores (escalera mxf8f6f4 contra mxf4nvf4, denso y 2:4 disperso) y el ancho de banda de memoria con una sonda STREAM triad; imprime el reloj SM actual contra el maximo",
+   "como": "git clone https://github.com/secYOUre/nvfp4bench ; cd nvfp4bench ; cmake -B build && cmake --build build -j ; ./build/nvfp4bench --peak --bandwidth ; solo el pico: nvcc -gencode=arch=compute_121a,code=sm_121a -O3 -o peak_mma src/peak_mma.cu && ./peak_mma",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/secYOUre/nvfp4bench",
+   "licencia": "no indicada",
+   "probado_en": "GB10, CUDA 13.0, driver 580.x segun el autor adg1; salidas de ASUS GX10, HP ZGX Nano y FE Spark en los posts 2 y 4",
+   "riesgo": "Los tamanos cuadrados grandes (>=8192^3) hacen throttling termico segun el autor; compilar con -arch=sm_121a pierde la 'a' y produce sm_121 plano",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK | grep -A4 -i 'Max Clocks'"
+  },
+  {
+   "que": "Medicion de ancho de banda de memoria: STREAM triad entre 200 y 213 GB/s contra 273 GB/s de especificacion en cuatro unidades",
+   "como": "salida de ./build/nvfp4bench --peak --bandwidth: 205 GB/s (ASUS GX10), 207 GB/s (HP ZGX Nano y FE Spark), 200 GB/s y 213 GB/s en otras dos unidades; 'Current SM clock' reportado entre 0.21 y 0.78 GHz frente a 3.00 GHz maximo",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/secYOUre/nvfp4bench",
+   "licencia": "no indicada",
+   "probado_en": "unidades GB10 de los usuarios pontostroy, FlossingEnthusiast, mike136 y otros",
+   "riesgo": "El reloj SM actual bajo puede ser reposo y no throttling; el texto no lo distingue",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Formula del techo de decode limitado por ancho de banda",
+   "como": "ceiling ≈ 273 GB/s ÷ 1.5 GB ≈ ~180 tok/s (flujo unico, sin especulacion) para el modelo del ejemplo; tok/s = ancho de banda ÷ bytes por token",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "razonamiento del autor adg1, aproximado",
+   "riesgo": "El propio autor indica que son valores aproximados",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El post 1 y los posts 2 y 4 dan comandos exactos de compilacion y ejecucion de una herramienta de medicion con salidas de varias unidades (triad 200-213 GB/s, reloj SM actual contra maximo), y el autor avisa de throttling termico en GEMM grandes. Sin respuesta de NVIDIA; la cifra de 1 PFLOP es medicion de un usuario y no la valida el staff.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

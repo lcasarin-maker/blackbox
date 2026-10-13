@@ -1,0 +1,59 @@
+{
+ "id": 363268,
+ "titulo": "Bf16 LoRA Fine-Tuning of Qwen3.5-35B-A3B on DGX Spark — No Quantization Required",
+ "leido": true,
+ "posts_leidos": 7,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnostico: cargar un modelo bf16 de 67 GB con transformers por mmap hace OOM al 66% en memoria unificada porque las paginas mmap (~67 GB) y los tensores CUDA (~67 GB) compiten por el mismo pool (~119 GB utilizables). Cuenta del autor: 134 GB necesarios contra 119 GB disponibles.",
+   "como": "Page cache (mmap'd shards): ~67 GB + CUDA tensors (materialized): ~67 GB = ~134 GB; Available: ~119 GB -> OOM at 119/134 ≈ 66%",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/kreuzhofer/dgx-spark-unsloth-qwen3.5-training",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario danielkreuzhofer, contenedor nvcr.io/nvidia/pytorch:25.10-py3",
+   "riesgo": "OOM kill con codigo de salida 137 durante la carga",
+   "verificable_aqui": "free -h; grep -E 'MemTotal|MemAvailable|^Cached' /proc/meminfo"
+  },
+  {
+   "que": "Workaround: parche de safe_open (_EagerSafeOpen) que carga cada shard directo a CUDA, lo cierra y expulsa el page cache con posix_fadvise; baja el pico a ~72 GB segun el autor",
+   "como": "posix_fadvise(POSIX_FADV_DONTNEED) tras cada shard; tensores directo a CUDA; un shard abierto a la vez",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/kreuzhofer/dgx-spark-unsloth-qwen3.5-training",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario",
+   "riesgo": "Monkey-patch de transformers; haidij (posts 3 y 5) y alexander.korolev.germany (post 4) necesitaron cambios adicionales",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Evitar que accelerate descargue parametros a CPU en silencio al cargar un checkpoint recien escrito con el page cache lleno; sintomas: log 'Some parameters are on the meta device', generacion ~15 veces mas lenta y salida sin sentido",
+   "como": "sync; echo 3 > /proc/sys/vm/drop_caches",
+   "fuente_post": 7,
+   "repositorio": "https://github.com/gtsan-dev/moe-lora-capture-merge",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario gergana.tsaneva",
+   "riesgo": "Escribir en /proc/sys/vm requiere privilegios; afecta el cache de todo el sistema",
+   "verificable_aqui": "grep -E '^(Cached|MemAvailable)' /proc/meminfo"
+  },
+  {
+   "que": "Ajustes de compatibilidad para el mismo entrenamiento con imagen 26.03-py3: TORCH_CUDA_ARCH_LIST 12.1 para sm_121, adamw_torch en lugar de adamw_8bit (CUDA 13.2 lo rompe), carga con device_map y atencion sdpa",
+   "como": "TORCH_CUDA_ARCH_LIST=12.1 ; optim adamw_torch ; FastModel.from_pretrained(..., load_in_4bit=False, load_in_16bit=True, device_map={\"\": torch.cuda.current_device()}, attn_implementation=\"sdpa\")",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "nvcr.io/nvidia/pytorch:26.03-py3 y DGX Spark OS 7.5.0 segun los usuarios (posts 4 y 5)",
+   "riesgo": "Distinto stack al de esta maquina (DGX OS 7.2.3)",
+   "verificable_aqui": "cat /etc/dgx-release 2>/dev/null; nvidia-smi --query-gpu=driver_version,compute_cap --format=csv"
+  }
+ ],
+ "omision_nvidia": "El autor dice que los playbooks oficiales cuantizan a 4 bits los modelos de mas de 8B y cita un hilo donde un ingeniero de NVIDIA confirma sobrecarga de mmap en UMA (referencia, texto del hilo no incluido aqui); el post 2 (jesse75) reporta que from_pretrained carga el modelo completo en cada rank con FSDP.",
+ "utilidad_atom": "alta",
+ "razon": "El post 1 explica con cifras por que el doble conteo mmap + tensores CUDA en memoria unificada produce OOM y da el workaround con posix_fadvise; el post 7 agrega drop_caches con sintomas observables. Todo es afirmacion de usuarios sin respuesta de NVIDIA en este hilo, probado en DGX Spark.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

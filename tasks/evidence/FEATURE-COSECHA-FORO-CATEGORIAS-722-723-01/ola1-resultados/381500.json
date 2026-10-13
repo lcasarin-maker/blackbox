@@ -1,0 +1,38 @@
+{
+ "id": 381500,
+ "titulo": "Qwen3.8 Flash Next NVFP4 single spark",
+ "leido": true,
+ "posts_leidos": 9,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Prueba de determinismo: mismo prompt repetido con temperatura 0 y comparacion byte a byte de los top logprobs",
+   "como": "enviar el mismo prompt 10 veces con temperature=0, max_tokens=1, top_logprobs=20 y comparar las listas top-20",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark con vLLM y Qwen3.8-Flash-Next NVFP4 (usuario dani27); el stock dio 0 de 6 prompts estables",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Causa y arreglo declarados de la no-determinacion en GB10: el selector top-k persistent_topk de vLLM usa atomicAdd y cambia el conjunto elegido; se reemplaza por torch.topk(sorted=False) con orden canonico de empates",
+   "como": "superposicion de un archivo sobre qsa.py activada por variable de entorno; costo medido por el autor: prefill 2360 a 1760 tok/s",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 familia 12x, vLLM (declarado por el usuario); referencia vllm#51782",
+   "riesgo": "Reduce la velocidad de prefill; el usuario reporta 13 de 50 prompts inestables antes del arreglo.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Documenta con un metodo repetible un defecto de correccion de salida de vLLM en GB10, ajeno a memoria, termica o cortes; el autor del SGLang modificado abandona sin publicar (post 9). Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

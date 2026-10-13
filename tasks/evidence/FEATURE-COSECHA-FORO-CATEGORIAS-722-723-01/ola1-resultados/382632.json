@@ -1,0 +1,27 @@
+{
+ "id": 382632,
+ "titulo": "GLM 5.3 Flash Intel AutoQuant W4A16 TP2 MTP3 - Concurrent Agentic Use",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta TP=2 con KV fp8 E4M3 de 13.5 GB por rango, gpu-memory-utilization 0.85, max batched tokens 8192, 6 secuencias, y 2.5 GiB libres por nodo sin otros procesos",
+   "como": "gpu memory utilization 0.85 ; KV-cache allocation 13.5 GB per rank ; maximum sequences 6 ; max batched tokens 8192 (valores de la tabla del post)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/florianbrede-ayet/spark-recipes",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark (GB10) con ConnectX-7, imagen ghcr.io/tonyd2wild/vllm-glm53-flash (declarado por florianbrede)",
+   "riesgo": "Un unico autor; sin metodo de medicion independiente",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta de despliegue con parametros de memoria y una estimacion de margen libre de ~2.5 GiB por nodo, sin comando de monitoreo. Tiene relacion marginal con prevenir sobreasignacion.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

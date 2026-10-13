@@ -1,0 +1,47 @@
+{
+ "id": 355772,
+ "titulo": "Local Kubernetes Cluster with K3s on Nvidia DGX Spark",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Configurar Docker con el runtime nvidia por defecto y desplegar K3s sobre Docker para servir un modelo con vLLM",
+   "como": "/etc/docker/daemon.json: {\"runtimes\":{\"nvidia\":{\"args\":[],\"path\":\"nvidia-container-runtime\"}},\"default-runtime\":\"nvidia\"}; sudo systemctl restart docker; curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=\"--docker --write-kubeconfig-mode 644 --disable=traefik\" sh -",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "nodo gx10-868a (ASUS GX10), k3s v1.33.6, sin driver/kernel",
+   "riesgo": "Reiniciar Docker con systemctl restart docker detiene los contenedores en ejecucion; el hilo no habla de cgroup.",
+   "verificable_aqui": "cat /etc/docker/daemon.json; docker info | grep -i -E 'runtime|cgroup'"
+  },
+  {
+   "que": "Limites de recursos del pod vLLM: reserva parcial de memoria de GPU para convivir con otros procesos",
+   "como": "vllm serve Qwen/Qwen3-4B --host 0.0.0.0 --trust-remote-code --max-model-len 32768 --gpu-memory-utilization 0.45 ; limits cpu 8, memory 16Gi, nvidia.com/gpu: 1; /dev/shm emptyDir Memory 2Gi",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "imagen nvcr.io/nvidia/vllm:25.12-py3 en DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi"
+  },
+  {
+   "que": "Referencia de otro usuario: repo con Helm charts de GPU y RDMA (RoCE) multi-nodo para k3s en Spark",
+   "como": "no indicado (solo enlace al repo)",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/TheNoise2Signal/dgx-spark-k8s-operators",
+   "licencia": "no indicada",
+   "probado_en": "2 DGX Spark segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Guia de usuario (shahizat, sin respuesta de NVIDIA) para K3s con Docker; el valor para esta maquina es limitado a daemon.json con runtime nvidia y --gpu-memory-utilization 0.45. No trata memoria, cgroups ni terminica.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

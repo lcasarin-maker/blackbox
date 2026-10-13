@@ -1,0 +1,89 @@
+{
+ "id": 373094,
+ "titulo": "Asus GX10 Stable: Hermes Twin Qwen3.6-35A-A3B + Qwen3.6-27B + ComfyUI",
+ "posts_leidos": 12,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "monitorear"
+ ],
+ "utilidad_atom": "alta",
+ "mecanismos": [
+  {
+   "que": "Orientar el equipo en vertical (cable de poder abajo) para bajar temperaturas; el autor dice 20 C menos",
+   "como": "Colocar el equipo en vertical con el lado del cable de poder hacia abajo; mantener libres al menos 2 pies al frente y 2 pies atras",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus GX10 (GB10), Ubuntu 24.04.4, kernel 6.17.0-1014-nvidia, driver 595.58.03 (segun el post 1)",
+   "riesgo": "Afirmacion de un usuario sin metodo de medicion; el chasis de otra marca (GIGABYTE ATOM) puede tener otro flujo de aire",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu --format=csv -l 5"
+  },
+  {
+   "que": "Ventilador externo (base de portatil con cuatro ventiladores por USB) soplando a la entrada de aire; el autor dice que lo estabilizo hasta con pruebas extremas",
+   "como": "Laptop cooler a 3 pulgadas de la entrada de aire; ver el flujo: entrada por abajo, salida por atras (post 6)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus GX10 (GB10), Ubuntu 24.04.4, kernel 6.17.0-1014-nvidia, driver 595.58.03 (segun el post 1)",
+   "riesgo": "El equipo se apagaba solo antes de esto, incluso tras RMA y burn-in de 3 dias; sin cifras de temperatura de corte",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metrica de referencia: bajar la temperatura promedio en reposo para que no se caliente tanto bajo carga; el autor usa nvtop y reporta temperaturas casi siempre bajo 80 C, promedio cerca de 60 C",
+   "como": "nvtop (captura de nvtop-gpu-idle en el post 11; no indica comando adicional)",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus GX10 (GB10), Ubuntu 24.04.4, kernel 6.17.0-1014-nvidia, driver 595.58.03 (segun el post 1)",
+   "riesgo": "Medicion informal sin umbral ni metodo",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw --format=csv"
+  },
+  {
+   "que": "Actualizacion de BIOS de Asus que segun el autor mejoro la estabilidad de energia",
+   "como": "BIOS GX10DGX.0104.2026.0326.1657 (03/26/2026)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus GX10",
+   "riesgo": "Es BIOS de Asus; no aplica a un GIGABYTE ATOM; el equipo siguio apagandose solo bajo estres mayor tras el BIOS y el RMA",
+   "verificable_aqui": "sudo dmidecode -s bios-version"
+  },
+  {
+   "que": "Configuracion de tres instancias llama.cpp con memoria bloqueada y sin mmap, 83.6 GB de 128 GB en uso, un solo slot por instancia",
+   "como": "GPU Layers 999, Context Size 131072, Flash Attention on, No MMAP enabled, KV Cache Unified enabled, mlock enabled; compilacion con -DCMAKE_CUDA_ARCHITECTURES=\"121a-real\" -DGGML_CUDA_GRAPHS=ON",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus GX10 (GB10), Ubuntu 24.04.4, kernel 6.17.0-1014-nvidia, driver 595.58.03 (segun el post 1)",
+   "riesgo": "mlock mas varias instancias reduce el margen de memoria unificada",
+   "verificable_aqui": "nvidia-smi --query-compute-apps=pid,used_memory --format=csv"
+  },
+  {
+   "que": "Herramienta para compartir pesos de LLM entre procesos CUDA y ahorrar VRAM al correr varios llama.cpp",
+   "como": "no indicado (solo el nombre Cuda-llm-weight-share, sin comando)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Sin enlace ni licencia en el texto",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Receta vLLM con margen de memoria GPU al 55 por ciento y expandable_segments",
+   "como": "--gpu-memory-utilization 0.55 --max-model-len 131072 --max-num-seqs 8 -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True --ulimit memlock=-1:-1",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Asus GX10 (GB10), Ubuntu 24.04.4, kernel 6.17.0-1014-nvidia, driver 595.58.03 (segun el post 1)",
+   "riesgo": "El autor volvio a llama.cpp por ser mas rapido y eficiente en memoria",
+   "verificable_aqui": null
+  }
+ ],
+ "razon": "Un usuario de Asus GX10 (mismo GB10) describe que el equipo se apagaba solo y lo estabilizo con BIOS, posicion vertical y ventilador externo, y afirma que la gestion termica es obligatoria (post 6). Son afirmaciones de un usuario sin respuesta de NVIDIA; los cambios de driver 610 y CUDA 13.3 (post 12) no son DGX OS 580 y la receta de memoria no mide margen.",
+ "leido": true,
+ "omision_nvidia": null,
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,58 @@
+{
+ "id": 369144,
+ "titulo": "Water cooling dgx spark boards",
+ "leido": true,
+ "posts_leidos": 33,
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Enfriamiento externo con ventiladores adicionales evito los apagados repentinos; el usuario dice que la temperatura no llego a 100 grados",
+   "como": "no indicado (ventiladores externos improvisados; las capturas no estan en el texto)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "unidades ASUS GX10 / Spark en un cluster de hasta 8 (usuario charles132); sin medicion formal en el texto",
+   "riesgo": "Los usuarios advierten que ventilador externo empuja polvo al radiador (post 6) y que el montaje no escala.",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader"
+  },
+  {
+   "que": "Voltear la unidad boca abajo empeoro el problema: apagados mas frecuentes y mas rapidos",
+   "como": "no indicado (cambio de orientacion fisica)",
+   "fuente_post": 18,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "unidad de charles132",
+   "riesgo": "Orientacion boca abajo aumenta la probabilidad de corte segun el usuario.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Conducto impreso en 3D para ventilador de 120 mm trasero y ventiladores USB con regulador manual",
+   "como": "no indicado (archivo STL en un tema aparte)",
+   "fuente_post": 22,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos Spark; el autor aclara que no hizo pruebas formales y se guia por sensacion de mano (post 24)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Desarmado de una unidad: el disipador cubre GB10, RAM, reguladores de voltaje, ConnectX y jaulas QSFP",
+   "como": "no indicado",
+   "fuente_post": 25,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10 (usuario ericstarroman)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario relata que los apagados repentinos ocurren cerca de 100 grados y cesaron con enfriamiento externo, y que invertir la unidad los empeora, pero sin cifras ni comandos ni logs en el texto. Es evidencia anecdotica util para la hipotesis termica; NVIDIA no responde.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

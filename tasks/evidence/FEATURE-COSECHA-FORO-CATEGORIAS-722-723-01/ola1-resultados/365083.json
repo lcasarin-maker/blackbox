@@ -1,0 +1,69 @@
+{
+ "id": 365083,
+ "titulo": "DGX Spark: 13 → 49 tok/s with Qwen3.5-35B — Native SM121 Kernel Build Guide",
+ "leido": true,
+ "posts_leidos": 14,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Sintoma de throttling por Power Delivery: rendimiento de vLLM muy por debajo del esperado se corrige desconectando la alimentacion del Spark y del ladrillo",
+   "como": "apagar el Spark, desconectar el cable USB-C del equipo y el ladrillo de la pared, esperar, reconectar y repetir el benchmark",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark edicion Asus segun faparicior (post 13): tg32 de 36.63 t/s subio tras el procedimiento",
+   "riesgo": "Afirmacion de usuarios (eugr, arctic.gus); sin respuesta de NVIDIA",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,clocks.max.sm,pstate --format=csv"
+  },
+  {
+   "que": "Metodo de medicion de rendimiento llama-benchy con receta de eugr para Qwen3.5-35B-A3B-FP8 (referencia ~52.85 t/s en tg32 con nightly de 2026-03-31)",
+   "como": "git clone https://github.com/eugr/spark-vllm-docker.git; cd spark-vllm-docker; ./run-recipe.sh recipes/qwen3.5-35b-a3b-fp8.yaml --setup --solo",
+   "fuente_post": 6,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "Spark, vLLM 0.18.3.dev17 segun eugr",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variable de entorno recomendada por el autor: evitar la ruta CUTLASS scaled_mm que produce NaN en SM121",
+   "como": "-e VLLM_TEST_FORCE_FP8_MARLIN=1",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.142, CUDA 13.0 segun el autor",
+   "riesgo": "Afirmacion del autor; el propio autor admite redaccion generada por LLM y dbsci/eugr senalan errores en el texto (posts 9, 10)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Parametros de lanzamiento de vLLM con limite de memoria de GPU",
+   "como": "--gpu-memory-utilization 0.65 --quantization fp8 --kv-cache-dtype fp8 --max-model-len 32768 --ipc host --shm-size 64gb",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 segun el autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Correccion de eugr: sm120 y sm121 tienen la misma memoria compartida de 99KB (la cifra 228KB vs 99KB es una afirmacion falsa propagada por LLM)",
+   "como": "no indicado (remite a la documentacion de CUDA)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Guia de rendimiento de un usuario con errores reconocidos (texto generado por LLM); lo reutilizable para monitoreo es la confirmacion repetida (posts 8, 12, 13) de que un rendimiento bajo se resuelve cortando la energia del ladrillo, y la referencia de benchmark de eugr. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

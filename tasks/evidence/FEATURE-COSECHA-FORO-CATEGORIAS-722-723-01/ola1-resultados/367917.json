@@ -1,0 +1,38 @@
+{
+ "id": 367917,
+ "titulo": "ComfyUI: High-Performance Model Loading and DGX Spark Optimizations",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Fork de ComfyUI para memoria unificada: carga con mmap/madvise, evitar copias de respaldo de pesos en RAM al aplicar LoRAs (problema de duplicacion de memoria), descarga rapida de modelos",
+   "como": "git clone https://github.com/stardust7700/ComfyUI.git ; cd ComfyUI ; python main.py --fast-mmap-load --cuda-uma --fast-unload-models",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/stardust7700/ComfyUI.git",
+   "licencia": "no indicada",
+   "probado_en": "no indicado por el autor; el usuario trithemius reporta en el post 4 mucho mas rapido y menor huella de memoria con Qwen 2512 y dos LoRAs, sin cifras",
+   "riesgo": "El autor admite que --fast-unload-models no devuelve la memoria disponible al valor previo al flujo de trabajo (limitacion conocida)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Lectura de memoria asignable en sistemas UMA directamente desde /proc/meminfo",
+   "como": "lectura de /proc/meminfo (campo exacto no indicado)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/stardust7700/ComfyUI.git",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "grep -E 'MemAvailable|MemTotal' /proc/meminfo"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario publica un fork de ComfyUI con banderas de memoria unificada y reconoce una limitacion de liberacion de memoria; otro usuario confirma mejora cualitativa sin medidas. Sin respuesta de NVIDIA; el texto no da campos ni cifras de memoria.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

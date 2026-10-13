@@ -1,0 +1,37 @@
+{
+ "id": 350688,
+ "titulo": "Build \"Step-Audio-EditX Technical Report\" On DGX Spark",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Compilar onnxruntime-gpu desde fuente para aarch64/CUDA 13 porque no hay wheel 1.17.0 para aarch64",
+   "como": "sh build.sh --config Release --build_dir build/cuda13 --parallel 4 --nvcc_threads 1 --use_cuda --cuda_version 13.0 --cuda_home $CUDA_HOME --cudnn_home $CUDNN_HOME --build_wheel --skip_tests --cmake_generator Ninja --use_binskim_compliant_compile_flags --cmake_extra_defines CMAKE_CUDA_ARCHITECTURES=121 onnxruntime_BUILD_UNIT_TESTS=OFF",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/microsoft/onnxruntime",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario avrami, CUDA 13, Python 3.12",
+   "riesgo": "Compilacion larga; el usuario la llama 'cargo cult'; depende de CUDNN_HOME bajado a mano",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables de entorno de build para GB10 (sm_121a)",
+   "como": "export TORCH_CUDA_ARCH_LIST=12.1a; export TRITON_PTXAS_PATH=$(which ptxas); export CUDA_HOME=/usr/local/cuda; export UV_TORCH_BACKEND=auto; export MAX_JOBS=4",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": "which ptxas; ls -d /usr/local/cuda*"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta de usuario para compilar onnxruntime en aarch64 para una app de audio; sin relacion con monitoreo ni estabilidad de memoria. Sin respuesta de NVIDIA; el intento de vikcious con un indice extra no funciono (post 3).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

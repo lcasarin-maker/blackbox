@@ -1,0 +1,48 @@
+{
+ "id": 378451,
+ "titulo": "GLM 5.2 on 4x GB10s - Switchless Ring - 22 tps Coding",
+ "leido": true,
+ "posts_leidos": 15,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "SparkRing: pila de inferencia experimental para 4 GB10 conectados en anillo directo por 200GbE (sin switch); capa de transporte propia SIRCL (RDMA RC entre vecinos, arenas de memoria fijada mapeadas, anillos de comandos con CUDA graphs) y un NCCL parcheado solo en anillo para lo que aun no pasa por la ruta propia",
+   "como": "no indicado en el hilo; el autor dice que se apunta un agente de codigo al repositorio y se le pide montar el perfil (leer AGENTS.md, docs/PREREQUISITES.md, docs/QUICKSTART.md)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/FujitsuPolycom/sparkring",
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark, 4 enlaces ConnectX-7 de 200GbE en anillo, GLM-5.2 con TP4/DCP4/MTP; ~19-20 tok/s de decode de una peticion segun el autor",
+   "riesgo": "El autor admite que gran parte del codigo esta escrito con IA y que el repositorio esta desordenado; un usuario (post 9) reporta 7 fallos de puesta en marcha (orden de pares del launcher invertido para rangos 2/3, variable VLLM_PREFIX_CACHE_RETENTION_INTERVAL=4096 que mata el motor, CUDA graphs que dan respuestas erroneas) y que el autor dice haber resuelto la mayoria al cambiar de cuantizacion (post 10)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Afirmacion tecnica: NCCL/RoCE estandar en un anillo de 4 nodos intenta crear queue pairs entre rangos no adyacentes que no son vecinos de capa 2, y el comunicador falla antes de elegir algoritmo",
+   "como": "no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4 nodos GB10 en anillo segun el autor",
+   "riesgo": "Afirmacion de usuario sin log citado en el hilo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Falla silenciosa de vLLM con GLM-5.2: el checkpoint trae pesos del indexador solo para 21 de 78 capas y vLLM no lee indexer_types de config.json, por lo que 57 capas usan memoria sin inicializar si falta --hf-overrides index_topk_pattern; la comprobacion de pesos sin inicializar esta desactivada al usar cuantizacion",
+   "como": "docker logs <rank> | grep -c \"skip sparse MLA indexer computation\" debe dar 57 por rango, no 0",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4 nodos GB10 segun el usuario Terry01 (el texto lo redacto Claude a peticion del usuario)",
+   "riesgo": "Texto generado por IA; el autor del proyecto responde que ya no aplica con la cuantizacion nueva",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Proyecto comunitario de cluster de 4 nodos con transporte RDMA propio y cifras de decode; la maquina objetivo es un solo equipo, de modo que solo sirve como referencia. El tema se cerro automaticamente (post 16) y no hay participacion de NVIDIA staff.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

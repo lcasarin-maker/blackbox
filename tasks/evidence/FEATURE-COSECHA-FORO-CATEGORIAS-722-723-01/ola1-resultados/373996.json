@@ -1,0 +1,38 @@
+{
+ "id": 373996,
+ "titulo": "Commercially Available Rack/Cooling for 1+N Sparks?",
+ "leido": true,
+ "posts_leidos": 9,
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Refrigeracion externa por hardware: jaula con ducto y ventilador Noctua 120 mm conectado por USB-C a 5 V; la cita (de otro hilo del foro, via post 4) dice que en reposo la GPU queda en los 40 C bajos",
+   "como": "no indicado (modelos 3D de 'Dual Spark Ducted Cooling Cage' en otro hilo del foro)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "autor del diseno, sin medicion en este hilo",
+   "riesgo": "Oculta los Spark; el post 4 lo senala",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu --format=csv"
+  },
+  {
+   "que": "Rack bajo escritorio de 5U con panel de extraccion frontal comercial (AC Infinity CLOUDPLATE T6) para 4 Spark y un switch; sin las fuentes dentro para no sumar calor",
+   "como": "no indicado (producto: AC Infinity CLOUDPLATE T6, 1U rack mount fan, front exhaust)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario robert287, sin temperaturas",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun el hilo, no existe solucion comercial de rack con enfriamiento para varios Spark: las opciones de rack comerciales no incluyen enfriamiento (post 2) y la gente recurre a diseno propio.",
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios sobre racks y ventilacion externa sin temperaturas medidas ni comandos; confirma que los usuarios improvisan refrigeracion externa. Sin respuesta de staff NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

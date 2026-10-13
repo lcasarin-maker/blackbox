@@ -1,0 +1,59 @@
+{
+ "id": 374742,
+ "titulo": "[GUIDE] DeepSeek-V4-Flash on 2× DGX Spark (GB10) — Reproducible vLLM Serving Recipe up to 1M Token Context",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Fuga de memoria por solicitud en UCX (cache de registro RDMA) que, en memoria unificada, drena la UMA hasta colgar el host; el usuario la mide en ~14 MB por solicitud y con las variables la memoria libre queda plana",
+   "como": "UCX_MEM_MMAP_HOOK_MODE=none y UCX_RCACHE_MAX_UNRELEASED=1024",
+   "fuente_post": 3,
+   "repositorio": "GanyX19/deepseek-v4-1m-on-dgx-spark (GitHub, citado)",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark GB10/SM121, vLLM TP=2 sobre RoCEv2 ConnectX (declarado por el usuario)",
+   "riesgo": "Prueba A/B solo a 256K con 5 concurrentes; falta una prueba de saturacion de >12 h (lo admite el autor)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reserva de memoria del kernel para que un OOM de UMA mate el proceso en vez de congelar el host",
+   "como": "sysctl -w vm.min_free_kbytes=3145728 ; swapoff -a",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark GB10/SM121, vLLM TP=2 sobre RoCEv2 ConnectX (declarado por el usuario)",
+   "riesgo": "swapoff -a elimina el swap; el valor de 3 GB es propuesta del autor, sin medicion de otros valores",
+   "verificable_aqui": "sysctl vm.min_free_kbytes ; swapon --show"
+  },
+  {
+   "que": "Medicion A/B de la fuga: sin las variables la UMA libre baja de 10 a 6 GB y aborta por OOM en ~18 min",
+   "como": "medir memoria libre durante carga de 5 concurrentes a 256K",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark GB10/SM121, vLLM TP=2 sobre RoCEv2 ConnectX (declarado por el usuario)",
+   "riesgo": null,
+   "verificable_aqui": "free -m"
+  },
+  {
+   "que": "Limite practico de --gpu-memory-utilization en GB10: 0.80-0.82; con 0.85 quedan ~1 GB por nodo",
+   "como": "--gpu-memory-utilization 0.80",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark GB10/SM121, vLLM TP=2 sobre RoCEv2 ConnectX (declarado por el usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El autor afirma que NVIDIA ha reconocido el cuelgue del host por OOM de UMA como problema conocido de GB10 (afirmacion de usuario, sin enlace ni cita de NVIDIA en el hilo). Tambien cita NVIDIA/open-gpu-kernel-modules #1111 (hard-hang de GSP en SM120).",
+ "utilidad_atom": "alta",
+ "razon": "Mecanismo concreto y medido (A/B) con valores exactos para evitar el colapso de memoria unificada: UCX_RCACHE_MAX_UNRELEASED=1024 y vm.min_free_kbytes=3145728, directamente alineado con nuestros colapsos de memoria. Es una afirmacion de usuario, sin respuesta de staff NVIDIA en el hilo, y solo aplica donde se use UCX/RDMA multinodo.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

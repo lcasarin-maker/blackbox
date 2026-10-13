@@ -1,0 +1,27 @@
+{
+ "id": 359704,
+ "titulo": "Runbook: bu-30b-a3b-preview-AWQ-4bit Model on DGX Spark (Solo) with vLLM + Browser-Use",
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "utilidad_atom": "baja",
+ "mecanismos": [
+  {
+   "que": "Receta de lanzamiento de vLLM en contenedor con limite de memoria de GPU al 70 por ciento para dejar margen de estabilidad",
+   "como": "docker run -d --privileged --gpus all --rm --ipc=host --network host --name bu30b -v ~/.cache/huggingface:/root/.cache/huggingface scitrera/dgx-spark-vllm:0.13.0-t4 vllm serve cyankiwi/bu-30b-a3b-preview-AWQ-4bit --gpu-memory-utilization 0.70 --served-model-name bu30b --max-model-len 65536 --host 0.0.0.0 --port 8000",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Un solo DGX Spark GB10, segun el autor; sin cifras de memoria ni estabilidad",
+   "riesgo": "Usa --privileged; el autor no mide el margen que dice dejar",
+   "verificable_aqui": "docker ps --format '{{.Names}} {{.Image}}'"
+  }
+ ],
+ "razon": "Runbook de un usuario con una linea de vLLM; la unica pieza reutilizable es --gpu-memory-utilization 0.70 como margen, afirmado sin medicion. El resto es cliente Browser-Use sin relacion con colapsos de memoria o termica.",
+ "leido": true,
+ "omision_nvidia": null,
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,49 @@
+{
+ "id": 363464,
+ "titulo": "DGX's vicious update cycle",
+ "leido": true,
+ "posts_leidos": 11,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "rastrear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Secuencia de actualizacion incluyendo firmware via fwupd (la actualizacion de UEFI mejora el controlador USB Power Delivery segun el texto de fwupd)",
+   "como": "sudo apt update; sudo apt dist-upgrade; sudo fwupdmgr refresh; sudo fwupdmgr upgrade; sudo reboot",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuarios)",
+   "riesgo": "Puede requerir varios reinicios (~10 min); el firmware debe actualizarse con alimentacion conectada",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Rastrear si la actualizacion de firmware UEFI se aplico: la version pasa de 0x00000500 a 0x00000507; si falla, el historial lo indica",
+   "como": "sudo fwupdmgr get-results (Update State: Failed; Update Error: expected 0x00000507 and got 0x00000500)",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark de podstawek",
+   "riesgo": "En ese caso la actualizacion fallaba de forma repetida; no hay solucion de NVIDIA en el hilo",
+   "verificable_aqui": "fwupdmgr get-history"
+  },
+  {
+   "que": "Drenado completo de energia para resetear el controlador USB-C PD (teoria de trabajo de eugr)",
+   "como": "apagar; desconectar USB-C del Spark y del enchufe; mantener el boton de encendido 10 s; esperar 5 minutos; reconectar; repetir 2-3 veces",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Afirmacion de usuarios; en el post 6 a 8 las ideas no ayudaron al autor del tema",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Sin respuesta de NVIDIA en el hilo; el firmware UEFI 0x507 que mejora el controlador USB PD se muestra en fwupd pero no se aplica en el caso del autor, y nadie de NVIDIA responde.",
+ "utilidad_atom": "media",
+ "razon": "Contiene comandos exactos de fwupd/apt y la vinculacion entre un bug de USB-C Power Delivery y el firmware UEFI, util para rastrear la version de firmware. Todo viene de usuarios; el fallo de aplicacion de la actualizacion queda sin solucion.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

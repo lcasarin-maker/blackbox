@@ -1,0 +1,28 @@
+{
+ "id": 367781,
+ "titulo": "NVFP4 Performance Update",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Mejora del backend CUTLASS para NVFP4 en vLLM via FlashInfer; los kernels MoE/GEMM para SM 120/121 (cuteDSL/TileIR) estan en FlashInfer top-of-tree y su PR en vLLM seguia abierto",
+   "como": "FlashInfer 0.6.8 (version que NVIDIA dice que ya trae los cambios CUTLASS para NVFP4)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 (SM 12.x) segun NVIDIA; sin cifras de rendimiento",
+   "riesgo": "NVIDIA avisa que la mejora depende del modelo, la carga y el framework",
+   "verificable_aqui": "docker run --rm --entrypoint python3 <imagen-vllm-local> -c 'import flashinfer; print(flashinfer.__version__)' (si hay imagen local; no ejecutado)"
+  }
+ ],
+ "omision_nvidia": "NVIDIA reconoce que el rendimiento NVFP4 en vLLM para GB10 sigue en trabajo (Multi-Token Prediction y kernels SM12.x pendientes de integrar en vLLM) y que no puede responder cada comentario.",
+ "utilidad_atom": "media",
+ "razon": "Anuncio oficial de NVIDIA (aniculescu) que fija la version de FlashInfer con las mejoras y explica que SM 12.x usa la familia mma.* y SM 10.x tcgen05.*. No da comandos ni numeros medidos.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

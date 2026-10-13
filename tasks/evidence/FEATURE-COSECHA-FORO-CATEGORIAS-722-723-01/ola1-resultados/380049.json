@@ -1,0 +1,28 @@
+{
+ "id": 380049,
+ "titulo": "Inkling-NVFP4 (975B) on 8× DGX Spark",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta sparkrun/vLLM para correr Inkling-NVFP4 en 8 Sparks tras corregir el fallo CUBLAS_STATUS_INTERNAL_ERROR bajo carga con los arreglos del PR vllm #49681 (cerrado sin fusionar, issue #49049); incluye RAY_memory_monitor_refresh_ms=0 y la mod drop-caches",
+   "como": "env: RAY_memory_usage_threshold: \"0.99\", RAY_memory_monitor_refresh_ms: \"0\", VLLM_USE_BREAKABLE_CUDAGRAPH: \"0\" ; mods: mods/drop-caches ; gpu_memory_utilization: 0.80 ; sparkrun run ~/inkling-nvfp4-tp8-fixed.yaml --cluster default --tp 8 --no-follow",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "8x DGX Spark, driver 580.173.02, kernel 6.17.0-1029-nvidia, vLLM 0.26.1rc1.dev553, CUDA 13.0",
+   "riesgo": "El parche es de un PR cerrado sin fusionar; sin la correccion el modelo cae con CUBLAS_STATUS_INTERNAL_ERROR",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta de un cluster de 8 Sparks con valores concretos de Ray y un fallo de cuBLAS bajo carga corregido con un PR no fusionado; no contiene medicion de memoria o temperatura del sistema. Sin respuesta de NVIDIA; el post 3 admite que no hubo comparacion controlada con el modelo pequeno.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

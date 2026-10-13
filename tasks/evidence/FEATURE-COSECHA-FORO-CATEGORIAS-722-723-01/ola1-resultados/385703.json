@@ -1,0 +1,49 @@
+{
+ "id": 385703,
+ "titulo": "Pixal3D (image-to-3D) on DGX Spark: what it takes on GB10, and why low_vram should be off",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "En memoria unificada, el modo low_vram (mantiene etapas en RAM del sistema) no ahorra nada y eleva el RSS; con low_vram activo el worker llego a 89.6 GiB de RSS y fue matado una vez al superar un tope de 100 GiB; con low_vram desactivado a 1536 la maquina uso ~47 GiB",
+   "como": "poner low_vram: false (y resolution: 1536) en model-compose.yml; tope de 100 GiB de memoria aplicado con un scope de systemd (comando exacto no indicado)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/MindrLabs/image-to-3d-pixal3d",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 128 GB, aarch64, CUDA 13.0 de sistema, torch 2.7.1+cu128, Triton 3.5.1",
+   "riesgo": "RSS puede incluir pesos mapeados, el autor dice que es una direccion y no una razon; en una caja de 64 GB con 4090 low_vram una vez congelo toda la maquina",
+   "verificable_aqui": "free -g ; systemctl list-units --type=scope --no-pager | head"
+  },
+  {
+   "que": "nvidia-smi no sirve para saber cuanta memoria retiene un trabajo en GB10: la memoria total del dispositivo marca [N/A] y --query-compute-apps dio 17.7-18.0 GiB para el servidor en ambos modos",
+   "como": "nvidia-smi --query-compute-apps (resultado engañoso); medir con free y el RSS del proceso",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10",
+   "riesgo": "leer solo nvidia-smi subestima la memoria realmente retenida",
+   "verificable_aqui": "nvidia-smi --query-compute-apps=pid,used_memory --format=csv ; free -m"
+  },
+  {
+   "que": "Compilar extensiones CUDA y Triton en sm_121: toolkit CUDA 12.9 junto a CUDA 13, TORCH_CUDA_ARCH_LIST=12.0, Triton 3.5.1 con ptxas de 12.9 (Triton 3.3.1 falla con 'sm_121a' no reconocido)",
+   "como": "sh cuda_12.9.1_575.57.08_linux_sbsa.run --silent --toolkit --toolkitpath=$HOME/cuda-12.9 --no-man-page --override ; export CUDA_HOME=$HOME/cuda-12.9 PATH=$HOME/cuda-12.9/bin:$PATH ; export TORCH_CUDA_ARCH_LIST=12.0 ; pip install --no-deps \"triton==3.5.1\" ; export TRITON_PTXAS_PATH=$CUDA_HOME/bin/ptxas ; FLASH_ATTN_CUDA_ARCHS=120 MAX_JOBS=8 pip install --no-build-isolation --no-binary flash-attn \"flash-attn==2.8.3.post1\"",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/MindrLabs/image-to-3d-pixal3d",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10, system CUDA 13.0, torch 2.7.1+cu128",
+   "riesgo": "compilar flash-attn tarda ~66 min con MAX_JOBS=8; mezclar versiones de Triton; el propio autor pregunta si hay una ruta mas limpia",
+   "verificable_aqui": "nvcc --version 2>/dev/null; python3 -c 'import torch;print(torch.__version__)'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El autor mide en GB10 que low_vram eleva el RSS a 89.6 GiB frente a ~47 GiB con low_vram apagado, advierte que nvidia-smi da [N/A] de memoria total y documenta comandos exactos de compilacion para sm_121. Sin respuesta de NVIDIA; el autor aclara que las cifras de RSS y free no son la misma medida.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

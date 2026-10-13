@@ -1,0 +1,79 @@
+{
+ "id": 373808,
+ "titulo": "DeepSeek-V4-Flash on 4× DGX Spark via vLLM (jasl fork, TP=4, RDMA, MTP) — 49–54 tok/s single-stream, full recipe + the traps",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "NCCL 2.28.9 (el de la base CUDA 13.0) congela toda generacion larga con TP=4; el arreglo es superponer NCCL 2.30.4",
+   "como": "RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages libnccl2=2.30.4-1+cuda13.2 libnccl-dev=2.30.4-1+cuda13.2 ; LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libnccl.so.2.30.4 ; verificar con: docker logs vllm-ds4 2>&1 | grep \"NCCL version\"",
+   "fuente_post": 1,
+   "repositorio": "hazyumps/deepseek-v4-flash-gb10 y jasl/vllm PR #41834 (citados)",
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark GB10 sm_121a, CUDA 13.0 sbsa, ConnectX-7 RoCE, MikroTik CRS520 (declarado por el usuario)",
+   "riesgo": "Si el overlay falta, el LD_PRELOAD falla con un aviso facil de pasar por alto y se sigue usando 2.28.9",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables NCCL/Docker para RDMA en RoCE",
+   "como": "NCCL_IB_HCA=rocep1s0f0, NCCL_IB_DISABLE=0, NCCL_SOCKET_IFNAME y GLOO_SOCKET_IFNAME de la misma interfaz; docker: --device=/dev/infiniband --cap-add=IPC_LOCK --ulimit memlock=-1:-1",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark GB10 sm_121a, CUDA 13.0 sbsa, ConnectX-7 RoCE, MikroTik CRS520 (declarado por el usuario)",
+   "riesgo": null,
+   "verificable_aqui": "ibv_devices"
+  },
+  {
+   "que": "Reduccion de fragmentacion de memoria unificada en asignaciones grandes de KV",
+   "como": "PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True ; --gpu-memory-utilization 0.80",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark GB10 sm_121a, CUDA 13.0 sbsa, ConnectX-7 RoCE, MikroTik CRS520 (declarado por el usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Firma de fallo del wedge de NCCL: 'No available shared memory broadcast block found in 60 seconds', luego 'TimeoutError: RPC call to sample_tokens timed out', luego EngineDeadError; los workers quedan zombis",
+   "como": "buscar esas cadenas en docker logs",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark GB10 sm_121a, CUDA 13.0 sbsa, ConnectX-7 RoCE, MikroTik CRS520 (declarado por el usuario)",
+   "riesgo": "Los workers requieren reinicio manual en los 4 nodos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de rendimiento: 49.4 tok/s un flujo, 179.9 tok/s agregado con 8 concurrentes con --max-num-seqs 8 (baseline 2 daba 84.3)",
+   "como": "--max-num-seqs 8 --max-num-batched-tokens 4096 --kv-cache-dtype fp8 --block-size 256 --enable-prefix-caching --speculative-config '{\"method\":\"deepseek_mtp\",\"num_speculative_tokens\":2}'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark GB10 sm_121a, CUDA 13.0 sbsa, ConnectX-7 RoCE, MikroTik CRS520 (declarado por el usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Los directorios de cache de Triton y vLLM deben montarse desde el host o la primera inferencia tras reiniciar reproduce el congelamiento",
+   "como": "-v montaje de /root/.cache/vllm y /root/.triton/cache",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark GB10 sm_121a, CUDA 13.0 sbsa, ConnectX-7 RoCE, MikroTik CRS520 (declarado por el usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Receta detallada de usuario para un cluster de 4 nodos con flags y valores exactos y una firma de fallo documentada (wedge de NCCL 2.28.9); sin respuesta de NVIDIA. Aplica a la ATOM solo en parte, porque esta es un nodo unico, pero la firma de log y el valor expandable_segments son reutilizables.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

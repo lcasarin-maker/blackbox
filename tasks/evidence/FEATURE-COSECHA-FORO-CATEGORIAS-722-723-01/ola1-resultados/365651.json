@@ -1,0 +1,27 @@
+{
+ "id": 365651,
+ "titulo": "Gemma4 Benchmarks on double DGX Sparks Ray Cluster and single DGX",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo de benchmark de servicio vLLM con concurrencia 1",
+   "como": "vllm bench serve --backend openai-chat --base-url http://localhost:8000 --endpoint /v1/chat/completions --model google/gemma-4-26B-A4B-it --dataset-name random --random-input-len 512 --random-output-len 512 --num-prompts 10 --max-concurrency 1 --percentile-metrics ttft,tpot,itl,e2el --save-result",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "MSI DGX EdgeXpert (GB10), driver 580.142, CUDA 13.0, Ubuntu 24.04 aarch64",
+   "riesgo": null,
+   "verificable_aqui": "command -v vllm"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Benchmarks de usuario (26B-A4B MoE ~23-27 t/s en un nodo; 31B bf16 ~3.5 t/s) con un comando de medicion conocido. La respuesta remite a Spark Arena y a sparkrun del repositorio spark-arena; NVIDIA (aniculescu) solo movio el tema.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

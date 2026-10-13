@@ -1,0 +1,38 @@
+{
+ "id": 380283,
+ "titulo": "Monitoring NVIDIA DGX Spark (GB10) with Prometheus + Grafana",
+ "leido": true,
+ "posts_leidos": 5,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Stack Docker Compose con un colector Python escrito a mano que lee /proc/meminfo y nvidia-smi, Prometheus que lo raspa y Grafana con dashboard autoprovisionado; el autor afirma que nvidia-smi reporta la memoria como Not Supported / N/A y que las asignaciones CUDA viven en la RAM del host",
+   "como": "git clone https://github.com/shahizat/dgx-spark-dashboard ; cd dgx-spark-dashboard ; docker compose up -d ; docker compose ps  (Grafana en http://localhost:3000, Prometheus en http://localhost:9090)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/shahizat/dgx-spark-dashboard",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 segun el autor; luego agrega soporte para Jetson Thor (post 2)",
+   "riesgo": "Credenciales de Grafana admin / admin por defecto segun el post; las opciones de acceso remoto (cloudflared tunnel, tailscale funnel 3000) exponen el panel a internet",
+   "verificable_aqui": "nvidia-smi --query-gpu=memory.used,memory.total --format=csv; grep -E 'MemTotal|MemAvailable' /proc/meminfo"
+  },
+  {
+   "que": "Dashboard de Prometheus y Grafana de otro usuario con contadores de vLLM por agregar (solo captura de pantalla)",
+   "como": "no indicado",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun el autor, los exportadores de GPU estandar y el node exporter no ofrecen metricas utiles de memoria en el Spark porque nvidia-smi reporta memoria como Not Supported / N/A.",
+ "utilidad_atom": "media",
+ "razon": "Es una herramienta de monitoreo concreta (colector sobre /proc/meminfo + nvidia-smi, con Prometheus/Grafana), pero el post no muestra el codigo del colector y la licencia no se indica, asi que no es reutilizable tal cual. Sin respuesta de staff NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

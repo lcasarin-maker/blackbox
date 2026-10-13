@@ -1,0 +1,59 @@
+{
+ "id": 371804,
+ "titulo": "Step-3.7-Flash on single Spark (llama.cpp only)",
+ "leido": true,
+ "posts_leidos": 18,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Evitar que el sistema se caiga con llama-server a contexto completo: con prompts de 256k la maquina se cuelga al tercero porque llama.cpp conserva la cache previa mientras llega la nueva",
+   "como": "llama-server ... -c 262144 -ngl 999 -fa on -b 2048 -ub 1024 -ctk q8_0 -ctv q8_0 --parallel 1 --ctx-checkpoints 1 --checkpoint-min-step 128 --cache-ram 1024 --no-mmap  (el autor dice que --parallel 1 y --ctx-checkpoints 1 son obligatorios o se cae en el tercer prompt de 256k)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/stepfun-ai/llama.cpp.git (rama step3.7)",
+   "licencia": "no indicada",
+   "probado_en": "un solo DGX Spark GB10, CUDA 13.1.2, Ubuntu 24.04 en el contenedor, segun el autor joshua.dale.warner",
+   "riesgo": "El fallo se describe como OOM que tumba la maquina entera, no un error limpio; el autor lo atribuye a un diseno de llama.cpp pensado para RAM no unificada (post 18)",
+   "verificable_aqui": "free -m && cat /proc/pressure/memory"
+  },
+  {
+   "que": "Config con concurrencia que otro usuario probo hasta 70k tokens: unifica el pool de KV entre peticiones, uso total de memoria cercano a 117 GB; con 3 corridas de contexto completo la maquina se congelo; se anade --ctx-checkpoints 0 porque los checkpoints a veces drenan la RAM del sistema",
+   "como": "llama-server ... --kv-unified --parallel 4 --ctx-checkpoints 0 -cb -b 2048 -ub 2048 -ctk q8_0 -ctv q8_0 --no-mmap -c 262144 -ngl 999 -fa on",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "un DGX Spark segun el usuario Kulimi; resultados con prompts muy cortos: 26.60 tps con 1 concurrente, 120.84 tps con 32",
+   "riesgo": "Post 16 y 17: con 3 corridas a contexto completo el sistema colapso completo cuando la segunda tarea escribio en el pool de KV justo despues de terminar la primera; no hay error de OOM en el log, el equipo cae",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de rendimiento por profundidad de contexto con llama-benchy (pp2048 y tg128 a distintas profundidades); en el post 2 el autor mide caida de la generacion de 30.98 a 11.01 t/s a 256000 tokens",
+   "como": "tabla de llama-bench/llama-benchy: pp2048 @ d256000 410.21 t/s, tg128 @ d256000 11.01 t/s; TTFT de unos 629877 ms a 256000 (comando exacto no indicado)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "un DGX Spark segun el autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Decodificacion especulativa MTP con llama.cpp principal para el mismo modelo",
+   "como": "llama-server -m ...IQ4_XS-00001-of-00003.gguf --spec-draft-model ...mtp-Q8_0.gguf --spec-type draft-mtp -c 128144 -ngl all --spec-draft-n-max 2 --spec-draft-p-min 0.6 --parallel 1 --split-mode layer --reasoning-budget 16384",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario trithemius, hardware no indicado en el post; jwarner (post 12) recomienda quitar la vision para dejar sitio a MTP",
+   "riesgo": "IQ4_XS ya va justo de memoria en GB10",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Documenta con comandos exactos y dos reportes independientes (posts 14, 16-18) un colapso del equipo por agotamiento de memoria unificada con llama.cpp a contexto completo, con las banderas que lo evitan (--parallel 1, --ctx-checkpoints 1 o 0, --cache-ram 1024, --no-mmap). Todo es de usuarios, sin respuesta de NVIDIA; los usuarios dicen que el fallo cae el sistema sin error de OOM visible.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

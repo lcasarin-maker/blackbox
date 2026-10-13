@@ -1,0 +1,27 @@
+{
+ "id": 356729,
+ "titulo": "Btop for DGX Spark",
+ "leido": true,
+ "posts_leidos": 5,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Fork de btop con metricas de GPU en aarch64 y compatible con GCC 13",
+   "como": "git clone https://github.com/haven-jeon/btop.git ; cd btop ; gmake -j$(nproc) ; sudo gmake install  (requiere lowdown; en btop pulsar 5 para GPU)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/haven-jeon/btop",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (aarch64, GCC 13.x), autor",
+   "riesgo": "Instala con sudo desde fork de terceros",
+   "verificable_aqui": "command -v btop; gcc --version | head -1"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Herramienta de monitoreo de GPU en terminal para aarch64 con instrucciones de compilacion completas. Licencia no indicada en el texto y no hay medicion de memoria unificada ni de temperatura declarada.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

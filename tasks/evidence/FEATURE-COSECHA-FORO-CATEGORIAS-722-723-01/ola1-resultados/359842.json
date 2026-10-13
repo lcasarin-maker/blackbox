@@ -1,0 +1,69 @@
+{
+ "id": 359842,
+ "titulo": "HOW-TO: setup-dgx-spark docker inference - A \"Sane\" Inference Stack for GB10 (Need Contributors!)",
+ "leido": true,
+ "posts_leidos": 41,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "monitorear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Advertencia de riesgo: gpu-memory-utilization 0.90 en vLLM provoca OOM en Spark porque los procesos que compilan grafos consumen memoria unificada (en otras maquinas serian RAM de CPU). eugr dice que limito los hilos de compilacion y no pasa de 0.88.",
+   "como": "--gpu-memory-utilization 0.8 (lanzamiento de eugr); normalmente no mas de 0.88",
+   "fuente_post": 27,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario eugr (sin driver/kernel)",
+   "riesgo": "OOM a 0.90 en memoria unificada; armand1m (post 22) reporta OOM a 0.90 y exito a 0.80",
+   "verificable_aqui": "free -h; nvidia-smi --query-gpu=memory.used,memory.total --format=csv"
+  },
+  {
+   "que": "Practica de jd36 para subir el uso de memoria (0.93) sin fallos: no montar IPC del host, tener swap amplio y fijar --shm-size. jd36 afirma que asi el Spark no se cae durante inferencia; eugr responde que --ipc host no es obligatorio si se mapea infiniband y se fija shm-size, y que en sus pruebas da algo mas de rendimiento.",
+   "como": "no pasar --ipc host; --shm-size 64gb (en los ejemplos); gpu-memory-utilization hasta 0.93 con swap suficiente (cifra de jd36)",
+   "fuente_post": 30,
+   "repositorio": "https://github.com/jdaln/dgx-spark-inference-stack",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario jd36",
+   "riesgo": "Afirmacion de usuario sin prueba publicada sobre que --ipc host cause caidas del equipo; eugr discrepa en rendimiento",
+   "verificable_aqui": "docker inspect --format '{{.HostConfig.IpcMode}} {{.HostConfig.ShmSize}}' <contenedor>; swapon --show"
+  },
+  {
+   "que": "Limites de recursos del contenedor en el script de armand1m para vLLM (truncado en el texto)",
+   "como": "docker run -d --name vllm --restart unless-stopped --gpus all --ipc host --shm-size 64gb --memory 110g --memory-swap 120g --pids-limit 4096 ...",
+   "fuente_post": 15,
+   "repositorio": "https://gist.github.com/armand1m/8f354797ed39f14e14cea0ed5c52c770",
+   "licencia": "no indicada",
+   "probado_en": "Spark segun el usuario armand1m",
+   "riesgo": "El script esta truncado; eugr dice (post 16) que no hacen falta la mitad de los parametros",
+   "verificable_aqui": "docker inspect --format '{{.HostConfig.Memory}} {{.HostConfig.MemorySwap}} {{.HostConfig.PidsLimit}}' <contenedor>"
+  },
+  {
+   "que": "Metricas de vLLM habilitables y arquitectura objetivo en la receta AWQ de davidbarnesguildford",
+   "como": "--kv-cache-metrics --cudagraph-metrics --enable-mfu-metrics ; -e VLLM_LOG_STATS_INTERVAL=\"10\" ; -e TORCH_CUDA_ARCH_LIST=\"12.1f\" ; --gpu-memory-utilization 0.70",
+   "fuente_post": 21,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark, imagen scitrera/dgx-spark-vllm:0.15.1-t5 segun el usuario",
+   "riesgo": "Banderas de una version concreta de vLLM; no se verifican aqui",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Observabilidad de memoria incluida en el stack de jd36 (afirmada, sin detalle de como)",
+   "como": "no indicado",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/jdaln/dgx-spark-inference-stack",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Los posts 27, 22 y 30 dan evidencia de usuarios (no hay respuesta de NVIDIA) de que 0.90 de gpu-memory-utilization arriesga OOM en memoria unificada y de que 0.80-0.88 es lo que usan, mas una discusion sin resolver sobre --ipc host y estabilidad. El resto es orquestacion de modelos (llama-swap, LiteLLM) sin relacion con termica o medicion.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

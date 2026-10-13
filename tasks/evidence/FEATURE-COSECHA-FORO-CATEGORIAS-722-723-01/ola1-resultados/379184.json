@@ -1,0 +1,47 @@
+{
+ "id": 379184,
+ "titulo": "Latest Eugr vLLM deepseek v4 0731 hangs when loading",
+ "leido": true,
+ "posts_leidos": 12,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Un usuario destraba el cuelgue al 92% de la carga de shards quitando el mod 'instanttensor-hybrid-draft-loader' de la receta; el mismo usuario enlaza un reporte upstream (vllm-project) sobre un deadlock de fastsafetensors en el grupo WORLD con drafts bajo paralelismo de pipeline",
+   "como": "quitar el mod de la receta; el post no da un comando exacto",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker (citado)",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10 (declarado), ~21GB libres en cada host durante la carga",
+   "riesgo": "Causa no confirmada; otro usuario (post 11) no pudo reproducir el cuelgue al volver a la receta original",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Otro usuario lo resuelve con una configuracion de especulacion distinta",
+   "como": "num_speculative_tokens: 7 y \"draft_sample_method\":\"greedy\"",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 (usuario)",
+   "riesgo": "El autor del post 9 dice que ya usaba ese valor en el build no-b12x sin problema",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Limpiar la cache de paginas antes de cargar un modelo grande",
+   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "no indicado",
+   "riesgo": "El propio usuario que lo intento (post 10) dice que no ayudo; vacia la cache de todo el sistema",
+   "verificable_aqui": "grep -E 'Cached|MemAvailable' /proc/meminfo"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de soporte entre usuarios sin respuesta de NVIDIA y sin causa raiz confirmada (un usuario ya no reproduce el cuelgue); es un fallo de carga de vLLM en 2 nodos, ajeno a los colapsos de la ATOM. Solo drop_caches es transferible y se reporta sin efecto.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

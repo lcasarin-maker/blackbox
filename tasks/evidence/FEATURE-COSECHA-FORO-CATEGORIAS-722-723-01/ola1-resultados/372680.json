@@ -1,0 +1,38 @@
+{
+ "id": 372680,
+ "titulo": "Nemotron-3-Ultra-550B-A55B-NVFP4 on 4× DGX Spark via SGLang (TP=4 EP=4, RoCE) — it works, ~42–43 tok/s n8 peak",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Lanzamiento validado de SGLang en 4 Sparks con banderas de memoria; mem-fraction-static es una reserva posterior a los pesos y con EP=4 el piso es 0.88 (con 0.85 falla el arranque por KV negativo)",
+   "como": "python3 -m sglang.launch_server --model-path nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4 --trust-remote-code --quantization modelopt_fp4 --tp-size 4 --pp-size 1 --ep-size 4 --nnodes 4 --node-rank 0 --dist-init-addr <head-ip>:<port> --context-length 262144 --kv-cache-dtype fp8_e4m3 --mem-fraction-static 0.9 --attention-backend flashinfer --moe-runner-backend flashinfer_cutlass --max-mamba-cache-size 48 --cuda-graph-max-bs 8 --disable-piecewise-cuda-graph --disable-deep-gemm --reasoning-parser nemotron_3 --tool-call-parser qwen3_coder",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/vroomfondel/dgxarley",
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark GB10, driver 580.159, kernel 6.17.0-1018-nvidia, Ubuntu 24.04 aarch64, imagen scitrera/dgx-spark-sglang:0.5.12",
+   "riesgo": "Usar triton como moe-runner crashea con AssertionError en cutlass_moe.py:427; en NVFP4 DeepGemm JIT 'exhausts host RAM' si no se desactiva (--disable-deep-gemm); mem-fraction-static 0.85 aborta el arranque.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Para el modelo hibrido Mamba el techo de concurrencia lo da el pool de estado Mamba, no el KV: max_running_requests = mamba_cache // 3",
+   "como": "--max-mamba-cache-size 48 (da 16 peticiones paralelas; por defecto ~6)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark segun el autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta de usuario multi-nodo (4 Sparks) con trampas de arranque bien documentadas pero de otro modelo y de SGLang, sin respuesta de NVIDIA. El unico dato transferible es que DeepGemm sobre NVFP4 agota la RAM del host.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

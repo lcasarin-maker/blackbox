@@ -1,0 +1,39 @@
+{
+ "id": 384499,
+ "titulo": "Spark Intelligent Energy Management",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "monitorear",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Controlador unificado termico y de potencia para un Lenovo ThinkStation PGX (GB10): arranque de cada carga con reloj de GPU seguro y subida gradual, lazos de control de temperatura objetivo para GPU y cada cluster de CPU, guardia independiente que predice limites unos 2 s antes, ventilador predictivo y un gemelo digital del modelo termico",
+   "como": "no indicado (solo descripcion y enlace al repositorio djmad/Spark_Energy_Management)",
+   "fuente_post": 1,
+   "repositorio": "GitHub djmad/Spark_Energy_Management (nombre en el texto)",
+   "licencia": "no indicada",
+   "probado_en": "Lenovo ThinkStation PGX (GB10) segun el autor; el autor afirma que resuelve sus caidas, sin cifras",
+   "riesgo": "Controla relojes y ventiladores del equipo; el post 5 indica que se adapto a direcciones de memoria del PGX de Lenovo, asi que puede no aplicar a otra placa.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Driver de controlador de ventilador para el kernel del GB10 (mencionado por christopher_owen como su driver)",
+   "como": "no indicado",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel 7.0 segun el post 5",
+   "riesgo": "Driver de kernel de terceros; Secure Boot activo exige firma.",
+   "verificable_aqui": "ls /sys/class/hwmon/*/name"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Describe una familia de mecanismos relevantes (rampa de reloj contra caidas de fuente, guardia predictiva de 2 s, ventilador predictivo) pero sin comandos, umbrales ni mediciones; el repositorio no tiene licencia indicada y la maquina de esta cosecha es una GIGABYTE, no una Lenovo. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

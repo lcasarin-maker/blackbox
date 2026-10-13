@@ -1,0 +1,38 @@
+{
+ "id": 369626,
+ "titulo": "Battery-Powering the DGX Spark",
+ "leido": true,
+ "posts_leidos": 15,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Observacion de potencia USB PD: la fuente de 240 W de la Spark; la maxima PDO solicitada parece ser 180 W (36 V a 5 A) segun fins_gd, pendiente de confirmar con un probador de cargadores",
+   "como": "no indicado; el usuario espera un charger tester para confirmar las PDO y rangos",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10 (post 17), sin confirmar",
+   "riesgo": "Afirmacion de usuario sin verificacion",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reducir consumo bajando relojes de CPU/GPU",
+   "como": "no indicado (el usuario dice que hace underclock hasta que CPU/GPU quedan bajo 30 W en pico y el sistema ronda 60 W)",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Sparks del usuario jashic123; sin modelo ni driver",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi -q -d POWER,CLOCK"
+  }
+ ],
+ "omision_nvidia": "Los usuarios piden que NVIDIA publique las capacidades PD que la Spark negocia (post 6); no hay respuesta de NVIDIA en el tema.",
+ "utilidad_atom": "baja",
+ "razon": "Discusion de alimentar la Spark con bateria: los hechos utiles son la PDO observada de 180 W y el underclock a menos de 30 W de CPU/GPU, ambos de usuarios sin comandos ni mediciones mostradas. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

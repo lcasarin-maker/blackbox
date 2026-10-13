@@ -1,0 +1,27 @@
+{
+ "id": 381032,
+ "titulo": "Switchless 2x 4x 6x GB10 Clusters Serving GLM, DeepSeek, and Qwen",
+ "leido": true,
+ "posts_leidos": 26,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "SparkRing: capa de integracion y ejecucion sobre vLLM/NCCL para clusteres de Spark en anillo sin switch; reenvia trafico RoCE por el ASIC del ConnectX-7 intermedio (anade ~1.78 us frente a DAC directa; 64 KiB: 8.65 us directo, 10.51 us con diagonal virtual)",
+   "como": "sudo curl -fsSL https://raw.githubusercontent.com/FujitsuPolycom/sparkring/8e27a4fe9a15a64df78e390f06fe3f1cd0077fd4/install.sh | bash -s -- --ref 8e27a4fe9a15a64df78e390f06fe3f1cd0077fd4 --profile glm53-flash-nvfp4-spark-tp4 --plan",
+   "fuente_post": 23,
+   "repositorio": "https://github.com/FujitsuPolycom/sparkring",
+   "licencia": "no indicada",
+   "probado_en": "4x GB10 en anillo con ConnectX-7 (declarado por FujitsuPolycom)",
+   "riesgo": "Autor declara codigo alfa, asistido por IA y con errores; ejecuta un script remoto con sudo",
+   "verificable_aqui": "ibv_devices; ip -br link"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Pila de clustering en anillo con mediciones de latencia declaradas por su autor, sin aplicacion a una sola maquina ni a memoria o termica. Un hilo de 4 nodos; licencia no indicada; la instalacion usa curl | sudo bash.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

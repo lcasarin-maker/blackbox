@@ -1,0 +1,27 @@
+{
+ "id": 379921,
+ "titulo": "NVIDIA Nemotron-3.5-Lightning-30B-A3B-NVFP4: DGX Spark vs. RTX PRO 6000 Blackwell Performance",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo de benchmark vLLM con 16 prompts concurrentes en tres perfiles (prompt-heavy, decode-heavy, balanced) y numeros de referencia en DGX Spark",
+   "como": "vllm bench serve --model nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4 --dataset-name random --random-input-len 8000 --random-output-len 1000 --request-rate 10000 --num-prompts 16 --ignore-eos  (Spark: 192.96 / 420.03 / 236.39 tok/s de salida segun el perfil)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark y RTX PRO 6000 Blackwell; versiones de driver y kernel no indicadas",
+   "riesgo": null,
+   "verificable_aqui": "vllm bench serve --help | head -n 5"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Benchmark de rendimiento con comandos exactos y salida completa, sin relacion con memoria, termica ni estabilidad. Es una linea base comparable y nada mas.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

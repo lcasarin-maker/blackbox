@@ -1,0 +1,48 @@
+{
+ "id": 358495,
+ "titulo": "[Request] GLM-4.7-Flash AWQ/NVFP4 Instructions",
+ "leido": true,
+ "posts_leidos": 8,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar la reserva de memoria de vLLM: la guia usa 0.85 de la memoria unificada y un usuario reporta 111 GB de 119 GB en uso con esa guia",
+   "como": "docker run -d --privileged --gpus all --rm --ipc=host --network host --name glm47flash -v ~/.cache/huggingface:/root/.cache/huggingface scitrera/dgx-spark-vllm:0.14.0-t5 vllm serve cyankiwi/GLM-4.7-Flash-AWQ-4bit --gpu-memory-utilization 0.85 --tool-call-parser glm47 --reasoning-parser glm45 --enable-auto-tool-choice --served-model-name glm-4.7-flash --max-model-len 100001",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun los usuarios dbsci y LuckyChap",
+   "riesgo": "--privileged y reserva de 85% de la memoria compartida; el usuario del post 5 la considera excesiva para un solo modelo",
+   "verificable_aqui": "free -g && docker ps --format '{{.Names}} {{.Image}}'"
+  },
+  {
+   "que": "Estimacion de un usuario para dimensionar --gpu-memory-utilization: modelo AWQ de 17.24 GB mas 6-8 GB de sistema y vLLM, unos 25 GB; 100k tokens de contexto caben en unos 10 GB con vLLM parcheado; propone reservar 55 GB (43%) para 3 prompts de 100k en paralelo",
+   "como": "--gpu-memory-utilization (~0.43 segun el calculo del post 5); el log de arranque de vLLM da el tamano del modelo, el del KV cache y el multiplicador de concurrencia",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Calculo de usuario sin medicion; depende del modelo y del parche de vLLM",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Descargar el modelo como usuario normal para que ~/.cache/huggingface no quede con archivos de root creados por el contenedor",
+   "como": "uvx hf download cyankiwi/GLM-4.7-Flash-AWQ-4bit",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "stat -c '%U %n' ~/.cache/huggingface"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Receta con comandos exactos y una discusion util sobre como --gpu-memory-utilization fija el consumo total (post 4) y cuanto reservar (post 5, calculo de usuario). NVIDIA solo movio el tema (aniculescu); un usuario reporta que NVFP4 no rinde mejor que AWQ.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

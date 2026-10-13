@@ -1,0 +1,27 @@
+{
+ "id": 364665,
+ "titulo": "Problem with Fine-tuning LLMs with NVIDIA DGX Spark and Unsloth guide",
+ "leido": true,
+ "posts_leidos": 9,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Compilar Flash Attention 2 desde fuente en Spark limitando paralelismo para no agotar memoria",
+   "como": "export FLASH_ATTN_CUDA_ARCHS=\"120\" ; export MAX_JOBS=16 ; export NVCC_THREADS=2 ; export FLASH_ATTENTION_FORCE_BUILD=\"TRUE\" ; uv pip install -v --no-build-isolation .",
+   "fuente_post": 8,
+   "repositorio": "https://github.com/Dao-AILab/flash-attention",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario haidij (instrucciones tomadas de otro hilo de vLLM-Omni)",
+   "riesgo": "MAX_JOBS=16 con NVCC_THREADS=2 'segun RAM/CPU'; el propio post dice que Flash Attention 3 no es compatible con Blackwell",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Tres usuarios reportan problemas de entrenamiento en Spark: cuelgue en el paso 165 con CPU 100% y GPU 5% durante 9 horas (post 1), un crash a los 10 minutos (post 4) y un OOM al 70% de un entrenamiento (post 9), sin causa identificada. NVIDIA (aniculescu, post 2) dice que investigara y remite al playbook oficial; no hay resolucion.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

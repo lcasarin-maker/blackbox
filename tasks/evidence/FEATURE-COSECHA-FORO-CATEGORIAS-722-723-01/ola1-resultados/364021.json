@@ -1,0 +1,37 @@
+{
+ "id": 364021,
+ "titulo": "[GB10] vLLM + DeepSeek-R1-32B on Blackwell aarch64 — 4 more failure modes (v2 protocol)",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo de diagnostico de desajuste ABI: comparar la firma del simbolo en el binario de vLLM y en libc10.so; la causa dada es el aislamiento de build de pip que baja un torch mas viejo",
+   "como": "nm -D vllm/_C.abi3.so | grep MessageLogger ; nm -D /usr/local/lib/python3.12/dist-packages/torch/lib/libc10.so | grep MessageLogger ; compilar con pip3 install -e . --no-deps --no-build-isolation --break-system-packages",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/trgysvc/AutonomousNativeForge",
+   "licencia": "no indicada",
+   "probado_en": "GB10, sbsa-linux, Python 3.12, CUDA 13.0, vLLM v0.7.1 segun el usuario turgaysavaci",
+   "riesgo": "Version de vLLM muy vieja respecto a las demas del lote; LD_PRELOAD forzado de libnccl puede ocultar otros desajustes",
+   "verificable_aqui": "nm -D /usr/local/lib/python3.12/dist-packages/torch/lib/libc10.so | grep MessageLogger"
+  },
+  {
+   "que": "Workaround de simbolo ncclWaitSignal indefinido con torch cu130: precargar el NCCL de pip",
+   "como": "export LD_PRELOAD=/usr/local/lib/python3.12/dist-packages/nvidia/nccl/lib/libnccl.so.2",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, CUDA 13.0 segun el usuario",
+   "riesgo": "LD_PRELOAD global en un servicio systemd",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Cuatro fallos de compilacion e instalacion de vLLM en aarch64 con CUDA 13.0 y sus arreglos (cu130, LD_PRELOAD, libnuma-dev, --no-build-isolation); no toca memoria, termica ni monitoreo. Una sola publicacion de usuario sin respuestas.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

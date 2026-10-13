@@ -1,0 +1,58 @@
+{
+ "id": 354231,
+ "titulo": "New bleeding-edge vLLM Docker Image: avarok/vllm-nvfp4-gb10-sm120",
+ "leido": true,
+ "posts_leidos": 36,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobar con el log de vLLM que el modelo NVFP4 usa de verdad el camino cuantizado y comparar contra una cuantizacion AWQ con un benchmark propio, en vez de fiarse de la imagen",
+   "como": "buscar en el log 'Using flashinfer-cutlass for NVFP4 GEMM' y 'Using Cutlass for CompressedTensorsW4A4Nvfp4MoEMethod'; la advertencia 'Falling back to UnquantizedLinearMethod' indica que no se aplica; ejecutar vllm bench serve con 1 y 10 peticiones y comparar con una cuantizacion AWQ",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark del usuario eugr (vLLM 0.11.2.dev699+g804e3468c.d20251209.cu130)",
+   "riesgo": "Los mensajes de log solos no prueban rendimiento, segun eugr",
+   "verificable_aqui": "docker logs <contenedor-vllm> 2>&1 | grep -E 'NVFP4|UnquantizedLinearMethod'"
+  },
+  {
+   "que": "Reducir tiempo de carga y consumo de memoria al cargar modelos grandes en vLLM; el post citado dice que permite cargar pesos de 70 GB o mas sin agotar la memoria unificada",
+   "como": "dependencia fastsafetensors>=0.1.10 en el entorno Python de vLLM (el comando completo de instalacion esta truncado en la cita)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario raphael.amorim (cita de otro tema sobre mmap lento)",
+   "riesgo": null,
+   "verificable_aqui": "python3 -c 'import fastsafetensors; print(fastsafetensors.__version__)' (si el entorno lo tiene; no ejecutado)"
+  },
+  {
+   "que": "Imagen y comando de la receta del autor para Qwen3-Next-80B NVFP4 en un Spark",
+   "como": "docker run -d --gpus '\"device=0\"' --shm-size=16g -p 8000:8000 -v /raid/hf-cache:/root/.cache/huggingface avarok/vllm-nvfp4-gb10-sm120:v8 vllm serve RESMP-DEV/Qwen3-Next-80B-A3B-Instruct-NVFP4 --max-model-len 131072 --gpu-memory-utilization 0.90 --trust-remote-code",
+   "fuente_post": 1,
+   "repositorio": "https://blog.thomaspbraun.com/nvfp4-w4a4-moe-inference-on-nvidia-blackwell-gb10-1a83e85d0f9e (articulo)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el autor; eugr senala en los posts 10, 11 y 20 inconsistencias del articulo (nvidia-smi con 400W y 49GB, CUDA 12.1) y que no hay cifras de rendimiento",
+   "riesgo": "Imagen de un tercero cuya documentacion fue cuestionada; reserva 0.90 de la memoria compartida",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Cifras de un usuario sobre NVFP4 contra AWQ en Spark: AWQ 83 t/s contra 64 t/s de NVFP4 en su benchmark; la generacion de tokens esta limitada por ancho de banda de memoria",
+   "como": "no indicado en este tema (remite a otro post de benchmarks)",
+   "fuente_post": 18,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark del usuario eugr",
+   "riesgo": "NVIDIA, segun eugr (post 21), dijo en el foro que trabaja en la implementacion; no hay respuesta de NVIDIA en este tema",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El valor del tema esta en las respuestas de eugr: como verificar en el log de vLLM que NVFP4 se aplica y la recomendacion de fastsafetensors para la carga de modelos grandes; el post inicial es una imagen de un tercero con articulo cuestionado. No hay respuesta de NVIDIA, y el post 2 es spam marcado.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

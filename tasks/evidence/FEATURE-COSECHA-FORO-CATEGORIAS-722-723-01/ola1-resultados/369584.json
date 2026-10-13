@@ -1,0 +1,48 @@
+{
+ "id": 369584,
+ "titulo": "DeepSeekV4-Flash hybrid quant, 1x DGX Spark: antirez's optimized 128 GB MLX recipe ported to vLLM for GB10",
+ "leido": true,
+ "posts_leidos": 19,
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Deteccion de un bucle crash -> reinicio automatico del contenedor que oculta el fallo (el log se sobreescribe en cada arranque): comprobar si el tiempo desde la creacion del contenedor no coincide con el tiempo en marcha",
+   "como": "docker container list (comparar 'started hours ago' con el tiempo de 'Up')",
+   "fuente_post": 22,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun jwarner; el mismo patron aparece en el log del post 13 (EngineCore failed to start tras 1902.76 s de autotune y reinicio por auto-restart)",
+   "riesgo": "Un contenedor con politica de reinicio automatico oculta el fallo y repite una carga de ~85 GiB.",
+   "verificable_aqui": "docker ps --format '{{.Names}} {{.Status}}'; docker inspect -f '{{.RestartCount}} {{.State.StartedAt}}' <contenedor>"
+  },
+  {
+   "que": "Dato de memoria reportado: checkpoint ~85 GiB en disco y ~110 GiB residentes al servir; modelo cargado ocupa 81.4 GiB y el pool de KV queda en 23.09 GiB (cifra que vLLM reporto como 18,860 tokens)",
+   "como": "no indicado (valores de registro de vLLM: Available KV cache memory 23.09 GiB; Model loading took 81.4 GiB)",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/Entrpi/ds4-spark-vllm",
+   "licencia": "MIT (afirmado por el autor, 'MIT licensed end-to-end')",
+   "probado_en": "1x DGX Spark GB10 SM121, requiere >=118 GiB RAM segun el instalador",
+   "riesgo": "Instalador via curl | bash; el autor reconoce que el rendimiento es <2 t/s y que el primer arranque tarda >10 min por autotuning de flashinfer.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Parches de KV para un modelo con estado de compresor: tratar CompressorStateMLASpec limitado por ventana deslizante recupero concurrencia (de ~25x a 229x a 16K)",
+   "como": "no indicado (referencia a la rama Entrpi/vllm kv-layout-dsv4-compressor-state)",
+   "fuente_post": 18,
+   "repositorio": "https://github.com/Entrpi/vllm",
+   "licencia": "no indicada",
+   "probado_en": "1x DGX Spark segun entrpi",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios sin respuesta de NVIDIA, centrado en un modelo experimental con rendimiento de ~2 tok/s. Lo aprovechable es el patron de diagnostico del bucle crash-reinicio con docker ps/inspect y las cifras de memoria residente (~110 GiB) como orden de magnitud.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

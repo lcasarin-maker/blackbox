@@ -1,0 +1,48 @@
+{
+ "id": 371810,
+ "titulo": "Benchmark Report: Qwen3.6-35B-A3B-NVFP4 on NVIDIA DGX Spark, Jetson Thor, Blackwell 6000 Pro",
+ "leido": true,
+ "posts_leidos": 13,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comando de benchmark vLLM y lanzamiento de referencia con memoria de GPU al 85%",
+   "como": "vllm serve nvidia/Qwen3.6-35B-A3B-NVFP4 --port 8000 --tensor-parallel-size 1 --trust-remote-code --dtype auto --quantization modelopt --kv-cache-dtype fp8 --attention-backend flashinfer --moe-backend marlin --gpu-memory-utilization 0.85 --max-model-len 65536 --max-num-seqs 4 --max-num-batched-tokens 8192 --enable-chunked-prefill --async-scheduling --enable-prefix-caching --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3,\"moe_backend\":\"triton\"}'; vllm bench serve --model nvidia/Qwen3.6-35B-A3B-NVFP4 --dataset-name random --random-input-len 8000 --random-output-len 1000 --request-rate 10000 --num-prompts 16 --ignore-eos",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, Jetson Thor y Blackwell 6000 Pro segun shahizat; sin driver/kernel",
+   "riesgo": "El autor admite haber usado un LLM para escribir las tablas del post 3; las cifras de Spark (171.64 tok/s de salida prompt-heavy) son del autor.",
+   "verificable_aqui": "command -v vllm"
+  },
+  {
+   "que": "Variables de entorno recomendadas para Spark segun un usuario (per.arneng) y su comprobacion por otro (Jortfal): VLLM_USE_FLASHINFER_MOE_FP4=0 esta obsoleta (se reemplaza por --moe-backend); VLLM_FP8_MOE_BACKEND no es reconocida por vLLM; se usan solo FLASHINFER_DISABLE_VERSION_CHECK=1 y CUTE_DSL_ARCH=sm_121a",
+   "como": "export FLASHINFER_DISABLE_VERSION_CHECK=1; export CUTE_DSL_ARCH=sm_121a",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun Jortfal (gpu-memory-utilization 0.81, max-model-len 131072)",
+   "riesgo": "FLASHINFER_DISABLE_VERSION_CHECK=1 desactiva la verificacion de version entre FlashInfer y los kernels precompilados; el autor la describe como solucion temporal.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reporte de usuario liviuyuki: MTP no estaba roto en sm121 sino que el contenedor eugr/spark-vllm-docker antiguo moria al arrancar; con eugr/spark-vllm:nightly-20260812 (vLLM v0.26.1rc1.dev693) funciona con --gpu-memory-utilization 0.8 --max-model-len 262144 --max-num-seqs 32",
+   "como": "--kv-cache-dtype fp8 --attention-backend flashinfer --moe-backend marlin --gpu-memory-utilization 0.8 --max-model-len 262144 --max-num-seqs 32 --max-num-batched-tokens 8192 --enable-chunked-prefill --async-scheduling --enable-prefix-caching",
+   "fuente_post": 13,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x Lenovo ThinkStation PGX (GB10, sm121) segun liviuyuki",
+   "riesgo": "Atribuir un fallo a una limitacion de hardware sin descartar la imagen del contenedor llevo al autor a una conclusion erronea durante semanas.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de benchmarks de usuarios sin respuesta de NVIDIA: lo transferible son las banderas de vLLM con gpu-memory-utilization 0.8-0.85, las variables CUTE_DSL_ARCH y FLASHINFER_DISABLE_VERSION_CHECK y la leccion de que un fallo atribuido al hardware era de la imagen. No hay monitoreo ni termica; el post 13 estaba truncado en mi lectura mas alla de la configuracion citada.",
+ "lectura": "parcial",
+ "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+}

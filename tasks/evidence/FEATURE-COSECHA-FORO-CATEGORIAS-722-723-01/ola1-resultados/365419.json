@@ -1,0 +1,38 @@
+{
+ "id": 365419,
+ "titulo": "Nv-monitor: Add RDMA/InfiniBand metrics (data export only) - testers needed",
+ "leido": true,
+ "posts_leidos": 9,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "nv-monitor, monitor de terminal para DGX Spark (CPU Grace + GPU GB10) con registro CSV y metricas RDMA; prueba de 30 s",
+   "como": "ls /sys/class/infiniband/ ; curl -L -o nv-monitor https://github.com/wentbackward/nv-monitor/releases/download/v1.6.1/nv-monitor-linux-arm64 ; timeout 30 ./nv-monitor -n -l rdma-test.csv -i 2000 ; grep -n rdma rdma-test.csv",
+   "fuente_post": 7,
+   "repositorio": "https://github.com/wentbackward/nv-monitor",
+   "licencia": "no indicada",
+   "probado_en": "Un usuario (hammadsheikh) confirma en un cluster de dos Spark que registra trafico InfiniBand (post 8); el autor no tuvo el hardware",
+   "riesgo": "Descargar un binario de CI de un tercero; en la Spark individual sin InfiniBand la prueba termina en el primer paso",
+   "verificable_aqui": "ls /sys/class/infiniband/"
+  },
+  {
+   "que": "Correccion de exposicion Prometheus con locale no ingles (decimales con coma)",
+   "como": "setlocale(LC_ALL, \"\"); setlocale(LC_NUMERIC, \"C\"); en main() (nv-monitor.c:1757 segun el usuario); el autor dice que v1.5.1 la incluye",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/wentbackward/nv-monitor",
+   "licencia": "no indicada",
+   "probado_en": "sistema con locale es_ES.UTF-8, segun vedcsolution",
+   "riesgo": "Sin la correccion, el scrape de Prometheus falla en locales con coma decimal",
+   "verificable_aqui": "locale | grep LC_NUMERIC"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Herramienta comunitaria de monitoreo para GB10 con comandos exactos y salida CSV/Prometheus, confirmada en un cluster por un usuario. No se mencionan temperatura ni memoria unificada en el texto del tema, y no hay respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

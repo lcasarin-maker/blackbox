@@ -17,12 +17,13 @@ def _tema(hilos: Path, tid: int, *, esperados: int = 2, bajados: int = 2, texto:
         rec = {"id": tid, "status": "fetched", "posts_expected": esperados, "posts_fetched": bajados}
     (d / f"{tid}.fetch.json").write_text(json.dumps(rec), encoding="utf-8")
     if texto and not error:
-        (d / f"{tid}.txt").write_text("titulo\nurl\n\nPOST 1 | u | f | url\nhola mundo de prueba largo\nPOST 2 | u | f | url\notro", encoding="utf-8")
+        cuerpo = "".join(f"\nPOST {i} | u | f | url\nhola mundo de prueba largo" for i in range(1, esperados + 1))
+        (d / f"{tid}.txt").write_text("titulo\nurl\n" + cuerpo, encoding="utf-8")
 
 
 def _res(tid: int, **kw: object) -> dict:
     base = {"id": tid, "titulo": "t", "leido": True, "posts_leidos": 2, "clase": "ruido", "proposito": [],
-            "mecanismos": [], "utilidad_atom": "ninguna", "razon": "no aporta nada reutilizable al caso"}
+            "mecanismos": [], "lectura": "completa", "utilidad_atom": "ninguna", "razon": "no aporta nada reutilizable al caso"}
     base.update(kw)
     return base
 
@@ -87,3 +88,40 @@ def test_resultado_que_no_demuestra_lectura() -> None:
 
 def test_id_cruzado_se_detecta() -> None:
     assert any("distinto" in m for m in v.valida_resultado(_res(9), 1))
+
+
+def test_lectura_parcial_no_es_cobertura_completa(tmp_path: Path) -> None:
+    h, r = tmp_path / "h", tmp_path / "r"
+    _tema(h, 1, esperados=2, bajados=2)
+    _guarda(r, _res(1, posts_leidos=2, lectura="parcial"))
+    out = v.verifica([{"id": 1}], h, r)
+    assert 1 in out["lectura_parcial_por_completar"] and out["cobertura_completa"] is False
+
+
+def test_declarar_mas_mensajes_de_los_que_tiene_el_tema(tmp_path: Path) -> None:
+    h, r = tmp_path / "h", tmp_path / "r"
+    _tema(h, 1, esperados=2, bajados=2)
+    _guarda(r, _res(1, posts_leidos=9))
+    out = v.verifica([{"id": 1}], h, r)
+    assert 1 in out["lectura_declarada_de_mas"] and out["cobertura_completa"] is False
+
+
+def test_posts_leidos_menor_que_los_reales_se_marca_aunque_diga_completa(tmp_path: Path) -> None:
+    h, r = tmp_path / "h", tmp_path / "r"
+    _tema(h, 1, esperados=8, bajados=8)
+    _guarda(r, _res(1, posts_leidos=3, lectura="completa"))
+    assert 1 in v.verifica([{"id": 1}], h, r)["lectura_parcial_por_completar"]
+
+
+def test_diferencia_de_un_mensaje_es_contabilidad_y_no_parcial(tmp_path: Path) -> None:
+    h, r = tmp_path / "h", tmp_path / "r"
+    _tema(h, 1, esperados=6, bajados=6)
+    _guarda(r, _res(1, posts_leidos=7))
+    out = v.verifica([{"id": 1}], h, r)
+    assert 1 in out["diferencia_de_contabilidad_tolerada"] and out["cobertura_completa"] is True
+
+
+def test_resultado_sin_campo_lectura_es_invalido() -> None:
+    d = _res(1)
+    del d["lectura"]
+    assert any("lectura" in m for m in v.valida_resultado(d, 1))

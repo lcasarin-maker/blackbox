@@ -1,0 +1,49 @@
+{
+ "id": 365798,
+ "titulo": "vLLM custom for DGX Spark - STREAM LOADING and automatic KV cache",
+ "leido": true,
+ "posts_leidos": 11,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Fork de vLLM 0.17.1 con carga en flujo (cuantiza a 4 bits al leer chunks de disco, sin tener a la vez pesos BF16 y cuantizados en memoria) y asignacion automatica de KV cache en lugar de afinar --gpu-memory-utilization (default auto: reserva KV minimo, tras torch.compile y FlashInfer JIT lo libera, recalcula memoria disponible considerando el pool de fragmentacion del allocator y reasigna)",
+   "como": "no indicado el comando de instalacion en el hilo ('dos pip install' en el README); NF4 via --quantization mxfp4 con variable VLLM_NF4_LAYERS",
+   "fuente_post": 1,
+   "repositorio": "GitHub namake-taro/vllm-custom (nombre tal como aparece en el post)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 / SM121, Qwen3.5-397B-A17B-FP8 en TP=2, Nemotron3-120B-A12B-BF16 y Qwen3.5-122B-A10B en TP=1 y TP=2 segun el autor",
+   "riesgo": "Proyecto personal 'as-is'; el arranque se alarga bastante (post 1); el autor dice que los cambios son invasivos y dificiles de subir a vLLM upstream (post 8); mantener un fork contra un vLLM que cambia a diario (post 5)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Comando de benchmark de rendimiento de inferencia con concurrencia",
+   "como": "llama-benchy --base-url http://localhost:8000/v1 --pp 2048 --tg 128 --concurrency 1 10 --runs 5 --latency-mode generation --enable-prefix-caching",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark; ej. gpt-oss-120b 64.52 tok/s TP=1 y 79.55 TP=2 en decode de una peticion (segun el autor)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "GreenBoost: modulo de kernel de Linux (orquestador de memoria CUDA) que extiende la memoria usando NVMe; biblioteca libgreenboost_cuda.so intercepta cudaMalloc y el hook de cuDeviceTotalMem_v2 reporta tamano combinado",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": "https://gitlab.com/IsolatedOctopi/nvidia_greenboost",
+   "licencia": "no indicada",
+   "probado_en": "descrito como pensado para GPU discretas con VRAM limitada; no probado en GB10 en este hilo",
+   "riesgo": "El autor del fork sostiene (post 3) que el hook de memoria total contaria doble la capacidad fisica y haria que vLLM asigne KV de mas y de OOM; es una inferencia del usuario sin prueba. Un segundo usuario (post 10) la rebate en parte",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Hilo con un fork de vLLM con cifras de decode por modelo, un comando de benchmark y una discusion sobre como contar la memoria unificada (cudaMalloc/malloc del mismo pool de ~273 GB/s segun el autor). Todo es afirmacion de usuarios sin respuesta de NVIDIA (solo mueve el tema en el post 7), y el fork no declara licencia.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

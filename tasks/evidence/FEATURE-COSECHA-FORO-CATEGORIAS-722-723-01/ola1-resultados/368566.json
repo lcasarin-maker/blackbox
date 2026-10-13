@@ -1,0 +1,48 @@
+{
+ "id": 368566,
+ "titulo": "[Benchmark] nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comando de arranque de vLLM para Nemotron-3-Nano-Omni NVFP4 en un solo Spark con la build comunitaria de eugr",
+   "como": "./launch-cluster.sh --solo exec vllm serve nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4 --port 8888 --trust-remote-code --gpu-memory-utilization 0.8 --limit-mm-per-prompt '{\"video\": 1, \"image\": 1, \"audio\": 1}' --media-io-kwargs '{\"video\": {\"fps\": 2, \"num_frames\": 256}}' --allowed-local-media-path=/ --enable-prefix-caching --max-num-batched-tokens 32768 --reasoning-parser nemotron_v3 --enable-auto-tool-choice --tool-call-parser qwen3_coder",
+   "fuente_post": 6,
+   "repositorio": "eugr/spark-vllm-docker (nombre citado en el hilo)",
+   "licencia": "no indicada",
+   "probado_en": "GB10 segun eugr; llama-benchy 0.3.7: tg32 60.10 t/s, pp2048 6625.34 t/s (post 7)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fallo del kernel Marlin NVFP4 en SM121 con la imagen vllm-node de eugr (truncamiento de escala negativa que produce tokens UNK) y su alternativa con la imagen oficial",
+   "como": "vllm/vllm-openai:v0.20.0-aarch64-cu130-ubuntu2404 con --moe-backend marlin, VLLM_NVFP4_GEMM_BACKEND=marlin, VLLM_USE_FLASHINFER_MOE_FP4=0, VLLM_MARLIN_USE_ATOMIC_ADD=1, --mamba-ssm-cache-dtype float32, --video-pruning-rate 0.5",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 segun el usuario traderaegis; 56.96 tok/s",
+   "riesgo": "eugr (post 6) responde que ya no hace falta Marlin y que el backend Flashinfer por defecto funciona igual con builds recientes",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de rendimiento con llama-benchy",
+   "como": "no indicado el comando exacto; la tabla del post 7 muestra pp2048, tg32 y variantes a profundidad de contexto 4096, 16384, 32078 y 65535",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "llama-benchy 0.3.7, 2026-05-01",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Reporte de rendimiento de un modelo de NVIDIA en Spark con recetas y variables de vLLM, y una correccion de un colaborador que dice que Marlin ya no es necesario. No hay monitoreo ni control de memoria o temperatura; NVIDIA staff no participa.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

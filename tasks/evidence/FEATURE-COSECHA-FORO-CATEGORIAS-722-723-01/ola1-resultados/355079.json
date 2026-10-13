@@ -1,0 +1,27 @@
+{
+ "id": 355079,
+ "titulo": "OpenFold3 Docker Deployment for DGX Spark (ARM64/Blackwell)",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround del error NVCC 'compute_121 not recognized' en JIT de DeepSpeed mapeando a compute_120, y uso de triton-nightly para kernels sm_121",
+   "como": "parche que mapea compute_121 a compute_120 (DeepSpeed); triton-nightly para sm_121; build script que hornea las ops CUDA JIT en la imagen. Comando exacto no indicado en el texto",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/adrian-greenneuron/openfold3-DGX-Spark",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (GB10), segun el usuario; sin driver/kernel",
+   "riesgo": "Mapear a compute_120 es un workaround; el texto no dice si cambia el rendimiento",
+   "verificable_aqui": "nvidia-smi --query-gpu=compute_cap --format=csv"
+  }
+ ],
+ "omision_nvidia": "No hay imagen ARM64 oficial de OpenFold3 segun el autor.",
+ "utilidad_atom": "baja",
+ "razon": "El post 1 describe parches de compatibilidad sm_121 en un repo de usuario, con tiempos de inferencia (9s ubiquitina, 3m16s proteina-ligando). NVES (staff) solo agradece en el post 2.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

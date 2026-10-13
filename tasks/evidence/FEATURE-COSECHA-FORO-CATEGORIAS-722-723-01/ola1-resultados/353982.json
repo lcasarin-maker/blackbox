@@ -1,0 +1,59 @@
+{
+ "id": 353982,
+ "titulo": "GLM 4.6V works on Spark!",
+ "leido": true,
+ "posts_leidos": 13,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo de benchmark de servicio vLLM con 1, 10 y 100 solicitudes (TTFT, TPOT, ITL)",
+   "como": "vllm bench serve --backend vllm --model zai-org/GLM-4.6V-FP8 --endpoint /v1/completions --dataset-name sharegpt --dataset-path ShareGPT_V3_unfiltered_cleaned_split.json --port 8888 --host spark --num-prompts 1",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark (TP=2, ray), FP8; 22.98 tok/s con una solicitud",
+   "riesgo": null,
+   "verificable_aqui": "vllm bench serve --help | head -n 5"
+  },
+  {
+   "que": "Lanzamiento de GLM-4.6V-FP8 en dos Spark con 70% de memoria GPU; fastsafetensors congelo vLLM durante 100 solicitudes del benchmark, por lo que el autor lo desaconseja",
+   "como": "vllm serve zai-org/GLM-4.6V-FP8 --tool-call-parser glm45 --reasoning-parser glm45 --enable-auto-tool-choice --allowed-local-media-path / --mm-encoder-tp-mode data -tp 2 --gpu-memory-utilization 0.7 --distributed-executor-backend ray --host 0.0.0.0 --port 8888 ; previo en ambos nodos: pip install transformers>=5.0.0 --pre -U",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark; el autor no da driver ni kernel",
+   "riesgo": "fastsafetensors puede congelar vLLM bajo carga; transformers v5 es release candidate",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Duplicar contexto cuantizando el KV cache a FP8",
+   "como": "--kv-cache-dtype fp8",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, segun eugr",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Desactivar el razonamiento via plantilla de chat de vLLM",
+   "como": "--default-chat-template-kwargs '{\"enable_thinking\": false}' (no funciono para PrinceHal); alternativa: plantilla copiada con {% set enable_thinking = false %} y --chat-template ./glm4.6v-nothink.jinja",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x Spark; la alternativa resolvio el caso (post 13)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Usuario experimentado da comandos exactos de vLLM y benchmark en dos Spark, con la advertencia de que fastsafetensors congelo el servicio. Un usuario (post 5) reporta llama.cpp consumiendo 98% de la RAM (126 GB) con un GGUF de 114 GB. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

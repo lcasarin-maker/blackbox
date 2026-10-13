@@ -1,0 +1,57 @@
+{
+ "id": 356698,
+ "titulo": "New tool: llama-benchy - llama-bench style benchmarking for ANY LLM backend (vLLM, SGLang, llama.cpp, etc.)",
+ "leido": true,
+ "posts_leidos": 19,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "llama-benchy: CLI que mide velocidad de procesamiento de prompt (pp) y de generacion (tg) a distintas profundidades de contexto sobre cualquier endpoint compatible con OpenAI, con TTFT estimado y de extremo a extremo",
+   "como": "uvx llama-benchy --base-url http://spark:8888/v1 --model cyankiwi/MiniMax-M2.1-AWQ-4bit --depth 0 4096 8192 16384 32768 65535 100000 --adapt-prompt --latency-mode generation --enable-prefix-caching",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/llama-benchy",
+   "licencia": "no indicada",
+   "probado_en": "cluster de dos DGX Spark con vLLM (declarado por eugr); concurrencia probada en un Spark",
+   "riesgo": "El autor avisa que las cifras de dos Spark eran menores de lo debido por correr otras cargas a la vez (post 7); un usuario (post 19) reporta que otros motores no estandar dan cifras de prefill falsas.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Pruebas de concurrencia y salida JSON/CSV desde la version 0.2.0",
+   "como": "llama-benchy --base-url http://spark:8888/v1 --model cyankiwi/GLM-4.7-Flash-AWQ-4bit --served-model-name glm-4.7-flash --depth 0 4096 --adapt-prompt --concurrency 1 2 10",
+   "fuente_post": 3,
+   "repositorio": "https://github.com/eugr/llama-benchy",
+   "licencia": "no indicada",
+   "probado_en": "un Spark con gpu_memory_utilization 0.7, max_model_len 202752, max_num_batched_tokens 4096, max_num_seqs 64",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia de metodo: vllm bench sweep serve reutiliza prompts y acierta el cache de prefijo, lo que da TTFT bajo y velocidad de prefill inflada; el TTFT de vLLM bench se mide hasta el primer fragmento de datos, no hasta el primer token util",
+   "como": "no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Mediciones infladas si el cache de prefijo esta activo.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Spark Arena: plataforma comunitaria para publicar benchmarks reproducibles",
+   "como": "https://spark-arena.com/",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Herramienta de medicion de rendimiento con comando exacto y metodologia clara, reutilizable para medir sin sesgo de cache; mide velocidad de inferencia, no memoria ni temperatura, y la licencia no consta en el texto. Sin respuesta de NVIDIA (un usuario del post 10 critica la ausencia de apoyo del personal).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,90 @@
+{
+ "id": 368916,
+ "titulo": "Deepseek v4 Flash on 2 Nodes",
+ "leido": true,
+ "posts_leidos": 72,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Con gpu_memory_utilization 0.85 la memoria del sistema queda en 91-92%; con 0.92 sube a 99% en estado 'Critical' en Netdata (medicion del usuario tonyd615 en 2 Spark con 121 GiB UMA cada una)",
+   "como": "gpu_memory_utilization: 0.85 (0.92 empuja al 99%)",
+   "fuente_post": 11,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10 SM 12.1a, vLLM con PR 40991 y 41276 (declarado)",
+   "riesgo": "Con 0.92 la memoria llega al 99%",
+   "verificable_aqui": "grep -E 'MemTotal|MemAvailable' /proc/meminfo"
+  },
+  {
+   "que": "Actualizar NCCL a 2.30.4-1 mitiga cuelgues de vLLM y 'No available shared memory broadcast block'; verificar la biblioteca realmente cargada, no torch.cuda.nccl.version(), que lee la version de compilacion",
+   "como": "/proc/self/maps muestra /usr/lib/aarch64-linux-gnu/libnccl.so.2.30.4 ; ncclGetVersion devuelve 23004 ; apt libnccl2=2.30.4-1+cuda13.2",
+   "fuente_post": 20,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10, vLLM 0.20.2rc1 (declarado por jasl y slackyrabbit)",
+   "riesgo": "torch.cuda.nccl.version() puede seguir mostrando (2,28,9) tras el parche",
+   "verificable_aqui": "python3 -c \"import torch; print(torch.cuda.nccl.version())\"; dpkg -l | grep libnccl"
+  },
+  {
+   "que": "Advertencia de usuario: fallos OOM severos simultaneos en ambos nodos que obligan a un ciclo de energia; ni sudo reboot funciona; la reconocio NVIDIA (@eugr_nv) en otro hilo segun el usuario",
+   "como": "no indicado (sin solucion; referencia a el hilo 'Help, team spark!' post 5)",
+   "fuente_post": 43,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "cluster de 2 Spark con vLLM (declarado por j0n)",
+   "riesgo": "Cortes que requieren ciclo de energia; no verificado el reconocimiento oficial aqui",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Declaracion de jasl: el sistema deberia tener salvaguardas contra fallos de programa; tras actualizar NCCL su fallo desaparecio; actualizar el driver de GPU dejo el SO inutilizable y lo restauro con la imagen de recuperacion",
+   "como": "reinstalar con la imagen de recuperacion; apt purge y apt upgrade daban conflictos",
+   "fuente_post": 44,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 (declarado por jasl)",
+   "riesgo": "Actualizar el driver puede dejar el SO inutilizable segun el usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Mod de la recipe de eugr para liberar cache de paginas y arreglar la cache de GPU de DS4 antes de arrancar",
+   "como": "mods: [mods/fix-ds4-gpu-cache, mods/drop-caches] ; gpu_memory_utilization: 0.90 ; max_model_len: 262144 ; --distributed-executor-backend mp",
+   "fuente_post": 52,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark TP=2 (declarado por paxren2020)",
+   "riesgo": "0.90 es alto para memoria unificada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Comando de arranque de jasl para 2 nodos con 0.70 de memoria, MTP=2, FP8 KV y NCCL_IB_HCA",
+   "como": "vllm serve deepseek-ai/DeepSeek-V4-Flash --kv-cache-dtype fp8 --block-size 256 --tensor-parallel-size 2 --distributed-executor-backend mp --nnodes 2 --gpu-memory-utilization 0.70 --max-model-len 147456 --max-num-seqs 2 --max-num-batched-tokens 4176 --enable-expert-parallel --no-enable-flashinfer-autotune --speculative_config '{\"method\":\"mtp\",\"num_speculative_tokens\":2}' ; NCCL_IB_HCA=rocep1s0f1 VLLM_TRITON_MLA_SPARSE_ALLOW_CUDAGRAPH=1",
+   "fuente_post": 14,
+   "repositorio": "https://github.com/jasl/vllm",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10 SM121, NCCL 2.30.4 (declarado)",
+   "riesgo": "Un bug de FlashInfer obliga a --no-enable-flashinfer-autotune",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Observacion de usuario: el cache de prefijos conserva KV de sesiones anteriores y la utilizacion de KV sube hasta ~95%, tras lo cual se re-prefilla el contexto en cada turno",
+   "como": "no indicado (comportamiento observado; jasl lo confirma y promete arreglo)",
+   "fuente_post": 50,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "build ds4-sm120-preview (declarado por susni)",
+   "riesgo": "Re-prefill en cada turno con KV al 95%",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Hilo largo de recetas con datos concretos de memoria (0.85 frente a 0.92), NCCL cargado y un informe de OOM simultaneo en ambos nodos con ciclo de energia, mas la restauracion con imagen de recuperacion tras actualizar el driver. Todo son afirmaciones de usuarios; el reconocimiento de NVIDIA se cita de segunda mano y no se pudo leer aqui.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

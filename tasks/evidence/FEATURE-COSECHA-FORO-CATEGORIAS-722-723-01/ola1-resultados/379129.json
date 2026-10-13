@@ -1,0 +1,38 @@
+{
+ "id": 379129,
+ "titulo": "1x DGX Spark: DeepSeek-V4-Flash-0731 on llama.cpp: 131K ctx/slot, 19.7 tok/s single-stream, 52 tok/s @ 4 concurrent",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comando llama-server con contexto repartido por slots y carga sin mmap",
+   "como": "llama-server -m DeepSeek-V4-Flash-0731-UD-IQ2_M-00001-of-00003.gguf --n-gpu-layers 999 --flash-attn on --ctx-size 524288 --parallel 4 --cont-batching --batch-size 2048 --ubatch-size 1024 --jinja --threads 10 --threads-batch 10 --no-mmap --metrics",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "1x DGX Spark GB10 128GB (~121GiB usables), llama.cpp build 10235 (221f0f635); sin driver/kernel",
+   "riesgo": "Con 4 peticiones concurrentes cada una con 16K de contexto previo, el rendimiento combinado colapso a 6.3 tok/s; con el quant UD-IQ3_XXS hubo una caida reproducible en concurrencia 4 (47.6 a 26.3 tok/s). KV q8_0 produjo salida corrupta segun dos usuarios.",
+   "verificable_aqui": "command -v llama-server"
+  },
+  {
+   "que": "Variables de entorno de ds4-server para ajustar memoria en contexto largo (afirmacion de coder543, que dice no recordar cuales ayudan mas)",
+   "como": "DS4_CUDA_NO_HBM_CACHE=1 DS4_BATCH_FIT_HEADROOM_MB=6272 DS4_BATCH_VMM_BUDGET_MB=6144 DS4_SERVER_COALESCE_MAX=8 DS4_CONT_PREFILL_CHUNK=2048 DS4_CONT_CAPTURE=1 ./ds4-server --cuda -c 1048576 --kv-disk-dir ~/.cache/ds4-kv --kv-disk-space-mb 32768",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/Entrpi/ds4-on-spark",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun coder543; bugzy no pudo reproducir los 107GB (uso ~117GB con 131K)",
+   "riesgo": "El segundo usuario no pudo replicar la cifra de memoria; la ruta de lote continuo fue rechazada por 'memory floor'.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Reportes de usuarios con comando exacto de llama.cpp y variables ds4, sin respuesta de NVIDIA; el valor es sobre rendimiento de un modelo concreto, con un par de datos de riesgo (caidas con concurrencia, 117GB usados con 131K) no replicados.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

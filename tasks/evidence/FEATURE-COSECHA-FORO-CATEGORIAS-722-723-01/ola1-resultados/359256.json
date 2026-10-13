@@ -1,0 +1,58 @@
+{
+ "id": 359256,
+ "titulo": "Running GLM-4.7-FP8 (355B MoE) on 4x DGX Spark with SGLang + EAGLE Speculative Decoding",
+ "leido": true,
+ "posts_leidos": 39,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "El GB10 tiene un limite de memoria compartida por bloque de 101,376 bytes (opt-in) y SM 12.1; los kernels MoE por defecto de SGLang lo exceden ('Required: 147456, Hardware limit: 101376'); solucion con el script de afinacion de MoE de SGLang",
+   "como": "python3 benchmark/kernels/fused_moe_triton/tuning_fused_moe_triton.py --model <modelo> --tp-size 1 --dtype fp8_w8a8 --batch-size <n> --tune",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/sgl-project/sglang (script citado)",
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark GB10 (declarado); PyTorch 2.11.0+cu130, Triton 3.6.0",
+   "riesgo": "La afinacion tomo ~9 horas en 4 nodos segun el autor",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Datos del dispositivo observados en logs de un usuario: nvidia-smi devuelve memory.total [N/A] en GB10; PyTorch reporta 48 SM, 128495886336 bytes, shared_memory_per_block 49152, optin 101376, per_multiprocessor 102400",
+   "como": "nvidia-smi --query-gpu=name,compute_cap,memory.total",
+   "fuente_post": 35,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, compute_cap 12.1",
+   "riesgo": "nvidia-smi no sirve para medir la memoria total en GB10 (da N/A); hay que usar otros contadores",
+   "verificable_aqui": "nvidia-smi --query-gpu=name,compute_cap,memory.total --format=csv"
+  },
+  {
+   "que": "Contenedor correcto para GB10: lmsysorg/sglang:spark, porque :latest no tiene sgl-kernel compilado para sm_121",
+   "como": "docker pull lmsysorg/sglang:spark",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10",
+   "riesgo": "Afirmacion de usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Arranque multinodo con memoria bloqueada y RDMA",
+   "como": "docker run -d --network host --ipc=host --gpus all --ulimit memlock=-1 --ulimit stack=67108864 --device=/dev/infiniband/uverbs0 ...",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10, RoCE 200Gbps",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "No se encuentra una omision declarada por NVIDIA. El staff (aniculescu, post 41) solo indica que un PR de SGLang fusionado arregla un problema y saldra en SGLang v0.5.14.",
+ "utilidad_atom": "media",
+ "razon": "Hilo de usuarios con un valor de hardware concreto (limite de memoria compartida de 101,376 bytes) y una advertencia de que nvidia-smi da memory.total N/A, util para entender por que fallan kernels en sm_121. Es una receta de 4 nodos que no aplica al caso de un solo nodo de la ATOM; una sola respuesta de staff de NVIDIA, de contenido minimo.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

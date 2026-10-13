@@ -1,0 +1,38 @@
+{
+ "id": 382173,
+ "titulo": "Single DGX Spark Success: Qwen3.8-Flash-Next-NVFP4 with vLLM #54129, PLE mmap, MTP2 and Tool Calling",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Mantener una tabla de 47.68 GiB en disco NVMe via mmap en vez de consumir memoria unificada permanentemente (PLE mmap en un fork de vLLM)",
+   "como": "VLLM_USE_V2_MODEL_RUNNER=1 ; VLLM_PLE_MMAP=1 ; VLLM_PLE_MMAP_WORKERS=24 ; CUTE_DSL_ARCH=sm_121a ; ./build-and-copy.sh -t vllm-node-qwen38-pr54129 --vllm-repo https://github.com/Trosfy/vllm.git --vllm-ref ple-mmap-upstream -j 4 --full-log",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "un Spark GB10, DGX OS 7.2.3, CUDA 13.0; 128K contexto, gpu-memory-utilization 0.75; 21-23 tok/s con MTP2",
+   "riesgo": "Fork no oficial de vLLM (PR 54129); el autor no corrio vllm bench y obtuvo las cifras con una pregunta real de codigo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Seguimiento en vivo de carga de vLLM con un watch sobre el log: rendimiento de prompt, generacion, uso del KV cache y hit rate",
+   "como": "log de vLLM: 'Engine 000: Avg prompt throughput: 4369.1 tokens/s, Avg generation throughput: 12.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 18.3%' (watch cada 2.0 s)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un Spark (gx10)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta para correr un modelo con 47.68 GiB fuera de la memoria unificada via mmap NVMe en un fork de vLLM, con variables exactas; util solo para ese modelo. Sin respuesta de staff NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

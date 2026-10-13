@@ -1,0 +1,37 @@
+{
+ "id": 369372,
+ "titulo": "Scaling a 22-Agent Dev Team (Qwen Orchestrator) on a 2x Gigabyte AI TOP Atom Cluster (PCIe 5.0) using sparkrun and Qwen Code",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Extension de Qwen Code que orquesta 22 agentes y un agente vigilante anti-bucle que interrumpe razonamientos redundantes en contexto largo",
+   "como": "no indicado (instrucciones en el repositorio)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/Omar-Obando/qwen-orchestrator",
+   "licencia": "no indicada",
+   "probado_en": "2 nodos GIGABYTE AI TOP Atom con sparkrun y Qwen 3 Coder Next segun el autor",
+   "riesgo": "Sin medidas ni logs en el post",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Proxy balanceador de carga en Go con afinidad de contexto, metricas OTel y detector simple de bucles",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": "GitHub wentbackward/hikyaku (nombre tal como aparece)",
+   "licencia": "no indicada",
+   "probado_en": "pruebas de carga con cientos o miles de conexiones en hardware modesto segun el autor; no probado a esta escala",
+   "riesgo": "El autor dice que mantiene el contexto completo en memoria durante una peticion y que seria el limite de memoria",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de promocion de un proyecto de orquestacion de agentes en dos nodos GIGABYTE AI TOP Atom, con un comentario que ofrece un proxy balanceador. No hay metricas de hardware, memoria ni termica, y NVIDIA no responde.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

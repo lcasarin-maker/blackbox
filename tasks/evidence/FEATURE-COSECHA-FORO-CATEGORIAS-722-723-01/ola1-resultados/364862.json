@@ -1,0 +1,37 @@
+{
+ "id": 364862,
+ "titulo": "Nemotron-3-Super NVFP4 via vLLM TP=2 on 2x DGX Spark — 24 tok/s (ABI fix for cu130/cu132 mismatch)",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnostico de un ImportError por desajuste ABI entre wheel de vLLM cu132 y PyTorch cu130 en spark-vllm-docker; el autor edito luego para decir que se resolvio con un nuevo wheel .dev176 y limpiando la cache de wheels",
+   "como": "ImportError: vllm/_C.abi3.so: undefined symbol: _ZN3c1013MessageLoggerC1EPKciib; corregir cu130 -> cu132 en las lineas 48 y 259 del Dockerfile (uv pip install --prerelease=allow torch --index-url /whl/nightly/cu132)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker (PR #141)",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark GB10, vLLM 0.18.1rc1, ConnectX-7 200Gbps",
+   "riesgo": "El autor dice que el texto fue generado con ayuda de Claude; la correccion quedo obsoleta por un wheel nuevo.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Copiar pesos entre nodos por el enlace CX7 en vez de descargar dos veces",
+   "como": "rsync de ~75 GB de spark1 a spark2 (aprox. 2 min frente a 90+ min de HuggingFace)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark segun el autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Reporte de usuario sobre un fallo de compilacion/ABI en un stack multi-nodo, ya resuelto por otro wheel; sin respuesta de NVIDIA ni relevancia para memoria o termica en una maquina.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

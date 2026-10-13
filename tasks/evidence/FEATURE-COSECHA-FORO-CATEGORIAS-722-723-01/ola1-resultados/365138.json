@@ -1,0 +1,28 @@
+{
+ "id": 365138,
+ "titulo": "KV Cache Quantization Benchmarks on DGX Spark — q4_0 vs q8_0 vs f16 (llama.cpp, Nemotron 30B, 128K context)",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Medicion: KV cache q4_0 en llama.cpp cae 92.5% en prompt processing a ~64K de contexto (21.3 vs 282.7 t/s) y 35.3% en generacion; q8_0 reportado con menos de 5% de perdida; a 64K el KV cache f16 pesa menos de 2 GB segun el autor",
+   "como": "--cache-type-k q8_0 --cache-type-v q8_0 (recomendado para 16-64K); f16 por defecto para <16K",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 cc 12.1, CUDA 13.0, driver 580.126.09, llama.cpp build 8399, Nemotron-3-Nano-30B-A3B Q4 K XL, 4 servidores llama.cpp simultaneos",
+   "riesgo": "La columna 'Memory (RSS)' mide RSS de proceso (1.25-2.06 GB), no memoria GPU; la conclusion de que q4_0 usa mas memoria se apoya solo en esa cifra. No se muestra tabla de q8_0 en el post",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Benchmark de una sola persona sobre cuantizacion del KV cache en llama.cpp; util para elegir flags, pero la afirmacion de memoria depende de RSS y no de memoria GPU. Sin respuesta de staff NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

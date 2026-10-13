@@ -1,0 +1,67 @@
+{
+ "id": 381102,
+ "titulo": "Comprehensive Qwen3.8-27B Study on DGX Sparks: Quantization, Speculative Decoding, and TP/DP Scaling",
+ "leido": true,
+ "posts_leidos": 11,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Cota superior de decodificacion en un solo flujo por ancho de banda: bandwidth / tamano del modelo (273 / 55.6 GB = 4.9 tok/s; medido 4.5 tok/s a C1)",
+   "como": "273 / 55.6 = 4.9 tok/s (formula en prosa: ancho de banda 273 GB/s entre tamano del modelo en GB)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark GB10, LPDDR5X de 273 GB/s, Qwen3.8-27B BF16 55.6 GB",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodologia de benchmark de concurrencia con criterio de paso TTFT < 1000 ms y TPS >= 15 tok/s, 128 tokens de entrada y 128 de salida, 10 rondas, herramienta CordatusAI LLM Benchmark; progresion medida a C1: BF16 4.5, FP8 7.9, NVFP4 9.7, NVFP4+MTP 18.5, SGLang NVFP4+DSpark 36.6 tok/s en un solo Spark",
+   "como": "no indicado (herramienta CordatusAI LLM Benchmark Tool con sparkrun v0.3.4)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "1 a 4 DGX Spark, CX-7 100 Gbps",
+   "riesgo": "Resultados limitados a ese umbral y a contextos cortos; el autor lo dice",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Tamano de chunked prefill: con contexto muy largo 2048 fue el mejor (TTFT 415 s vs 424.1 s con 4096 y 441.1 s con 8192)",
+   "como": "tool-eval-bench --backend sglang --context-size 524288 --context-pressure 0.6 ; --chunked-prefill-size 2048",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario pontostroy, un Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fijar el contenedor a los nucleos de rendimiento del GB10 (diferencia menor de 2 TPS a C1, opcional)",
+   "como": "docker update --cpuset-cpus 5-9,15-19 $(docker ps --format \"{{.Names}}\" --filter \"ancestor=lmsysorg/sglang:qwen38-27b-dflash2\")",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4 Spark del estudio; el post indica que los nucleos 5-9,15-19 son los 10 Cortex-X5",
+   "riesgo": null,
+   "verificable_aqui": "lscpu --extended | head -25; cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq | sort | uniq -c"
+  },
+  {
+   "que": "Limite de memoria del contenedor SGLang para evitar saturacion del host: --memory 100g --memory-swap 100g con --mem-fraction-static 0.45",
+   "como": "/usr/bin/docker run --rm --name qwen38-sglang --gpus all --memory 100g --memory-swap 100g --shm-size 16g --network host --ipc=host ... --mem-fraction-static 0.45 ... --sleep-on-idle ... --enable-metrics",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/hasso5703/dgx-spark-qwen38",
+   "licencia": "MIT",
+   "probado_en": "usuario pontostroy, un Spark; derivado del repo de basbunarhasan",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Estudio de throughput por cuantizacion y TP; solo aporta una formula de cota por ancho de banda, un metodo de benchmark y un tope de memoria de contenedor ya visto en otros hilos. Sin respuesta de staff NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

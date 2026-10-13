@@ -1,0 +1,27 @@
+{
+ "id": 383994,
+ "titulo": "Qwen-Image-2.1 via vLLM-OMNI",
+ "leido": true,
+ "posts_leidos": 5,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Servir Qwen-Image-2.1 con vLLM-Omni en Spark construyendo la imagen desde la rama qwen-image-2.1 (PR 7759); ~40 s por imagen 1024x1024 con 40 pasos usando ~30 GB, y 27 s con TP2 en 0.30.1 segun otro usuario",
+   "como": "docker compose up -d --build (con Dockerfile y docker-compose.yml del gist stelterlab/ca18f3aa29658e02ecd5beaf9dc6f3b5; .env con PORT=8091)",
+   "fuente_post": 1,
+   "repositorio": "https://gist.github.com/stelterlab/ca18f3aa29658e02ecd5beaf9dc6f3b5",
+   "licencia": "no indicada",
+   "probado_en": "Spark GB10, base dgx-vllm-eugr-nightly-b12x del 20260921 (declarado por cosinus)",
+   "riesgo": "Se construye desde una rama sin fusionar; el autor avisa de que versiones posteriores pueden romper",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta de despliegue de un modelo de imagen con tiempos medidos por usuarios. No aporta monitoreo, medicion de memoria ni prevencion de fallos.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,59 @@
+{
+ "id": 360656,
+ "titulo": "New pre-built sglang Docker Images for NVIDIA DGX Spark",
+ "leido": true,
+ "posts_leidos": 29,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Estimacion de memoria antes de lanzar un modelo con sparkrun: pesos + KV frente a memoria usable (121 GB x fraccion de utilizacion)",
+   "como": "sparkrun show qwen3-coder-next-fp8-sglang --tp 1 (muestra Model weights 74.51 GB, KV cache 18.31 GB para max_model_len=200,000, Usable GPU memory 96.8 GB = 121 GB x 80%, DGX Spark fit: YES)",
+   "fuente_post": 9,
+   "repositorio": "https://sparkrun.dev (docs; repositorio no indicado en el texto)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun dbsci; sin driver/kernel",
+   "riesgo": "El mismo post advierte que con ese modelo FP8 en un solo Spark apenas cabe, que hay que cuidar las peticiones concurrentes y que nada mas puede correr a la vez.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reporte de usuario luc21: Qwen3-coder-next en SGLang 'gobbles up all 128GB' y se cae aun con contexto pequeno y mem-fraction-static bajo; dbsci responde que hay que usar al menos la version FP8 para caber en una Spark",
+   "como": "no indicado",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun luc21",
+   "riesgo": "Modelo demasiado grande para memoria unificada: consume toda la memoria y se cae el sistema.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Lectura de versiones de un contenedor mediante etiquetas Docker (collect_env mostro sglang 0.0.0 pero las etiquetas son correctas)",
+   "como": "docker inspect scitrera/dgx-spark-sglang:0.5.9-t5 --format '{{json .Config.Labels}}' | jq",
+   "fuente_post": 18,
+   "repositorio": "https://github.com/scitrera/cuda-containers",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "docker inspect <imagen> --format '{{json .Config.Labels}}'"
+  },
+  {
+   "que": "Ejemplo de ejecucion con fraccion de memoria estatica limitada y red/IPC del host",
+   "como": "docker run --privileged --gpus all -it --rm --network host --ipc=host -v ~/.cache/huggingface:/root/.cache/huggingface scitrera/dgx-spark-sglang:0.5.8-t4 sglang serve --model-path Qwen/Qwen2.5-7B-Instruct --mem-fraction-static 0.4",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun dbsci (imagenes experimentales)",
+   "riesgo": "Usa --privileged; el autor las llama experimentales.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Hilo de usuario/mantenedor sin respuesta de NVIDIA con la formula de reserva de memoria (121 GB x fraccion) y la advertencia de que un modelo mal dimensionado se come los 128 GB y tumba el equipo. Valor transferible limitado a prevencion por dimensionado, no a monitoreo.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,28 @@
+{
+ "id": 371303,
+ "titulo": "Native Monitoring Terminal App",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Sparkview, monitor TUI en Python que en GB10 sustituye la lectura de memoria de NVML por MemAvailable",
+   "como": "segun AoE: nvmlDeviceGetMemoryInfo puede devolver total ~ MemTotal (~121 GB), valor que no refleja la memoria asignable; la capacidad usable sigue a MemAvailable (texto truncado, sin comando de instalacion)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 / DGX Spark segun el autor",
+   "riesgo": "afirmacion de usuario; el post esta truncado y no da el repositorio",
+   "verificable_aqui": "grep -E 'MemTotal|MemAvailable' /proc/meminfo ; nvidia-smi --query-gpu=memory.total,memory.used --format=csv"
+  }
+ ],
+ "omision_nvidia": "Segun el tema, nvidia-smi y nvtop tienen aspectos rotos en Spark porque no estan enfocados en ella (afirmacion de usuarios, no de NVIDIA).",
+ "utilidad_atom": "media",
+ "razon": "Dos usuarios publican monitores especificos de GB10; el post 2 da el principio concreto de usar MemAvailable en vez del total de NVML. Sin comando completo ni repositorio visible en el texto.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}
