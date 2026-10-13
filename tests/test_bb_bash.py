@@ -854,7 +854,7 @@ def test_cpu_top_NOMBRA_a_quien_quema_cpu(datos):
         t_base = time.monotonic()
         correr(["sample"], datos)                  # muestra 1: linea base
         tardo_base = time.monotonic() - t_base      # el burner quemo ese tiempo ANTES del intervalo medido
-        time.sleep(4)  # blocking-sleep: ps reports whole CPU seconds; window needed for delta -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 3.0 -- re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 857 (92598b79) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 857 (dbc1017f) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-10: `ps` informa segundos enteros; sin la ventana de 4 s el positivo falla 1 de 7 corridas (cpu_top 1-5 en las demas), medido 2026-10-05 por revision de sunset. Antes decia 3/3 con cpu_top 0/5: no se reprodujo.
+        time.sleep(4)  # blocking-sleep: ps reports whole CPU seconds; window needed for delta -- DEBT-ACCEPTED-SLEEP-TESTS-BB  # sunset-reviewed: 3.1 -- re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 857 (92598b79) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 857 (dbc1017f) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-10: `ps` informa segundos enteros; sin la ventana de 4 s el positivo falla 1 de 7 corridas (cpu_top 1-5 en las demas), medido 2026-10-05 por revision de sunset. Antes decia 3/3 con cpu_top 0/5: no se reprodujo. ; re-revisado 2026-10-13 contra 3.1: la linea no cambio desde 20256295 (git blame de esta linea)
         correr(["sample"], datos)                  # muestra 2: ya quemo
         mio = _cpu_segundos(quemador.pid) - cpu_antes
         d = muestras(datos)[-1]
@@ -1691,7 +1691,7 @@ def _esperar_proceso(patron, timeout=15.0):
         pids = r.stdout.split()
         if pids:
             return pids[0]
-        time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- sin el, el bucle quema un nucleo entero re-consultando pgrep sin ceder CPU -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 3.0 -- re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 1694 (92598b79) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 1694 (dbc1017f) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-10: el sondeo acotado cede CPU hasta detectar el proceso o agotar deadline; medido 2026-10-05: con el sleep el bucle usa 0.29 nucleos y hace 3 llamadas a pgrep, sin el usa 1.00 nucleo y hace 10. (Antes decia 4 a 130 en 0.2 s: no se reprodujo.)
+        time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- sin el, el bucle quema un nucleo entero re-consultando pgrep sin ceder CPU -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 3.1 -- re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 1694 (92598b79) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 1694 (dbc1017f) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-10: el sondeo acotado cede CPU hasta detectar el proceso o agotar deadline; medido 2026-10-05: con el sleep el bucle usa 0.29 nucleos y hace 3 llamadas a pgrep, sin el usa 1.00 nucleo y hace 10. (Antes decia 4 a 130 en 0.2 s: no se reprodujo.) ; re-revisado 2026-10-13 contra 3.1: la linea no cambio desde 20256295 (git blame de esta linea)
     raise AssertionError(f"ningun proceso con {patron!r} aparecio en {timeout}s")
 
 
@@ -1745,7 +1745,7 @@ def _matar_electron_falso(proc, marcadores, timeout=15.0):
                 break
             assert time.time() < deadline, (
                 f"proceso huerfano con {patron!r} sigue vivo tras matar el arbol")
-            time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- confirma que un huerfano de verdad muere, no solo lo asume -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 3.0 -- re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 1748 (92598b79) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 1748 (dbc1017f) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-10: sondea entre consultas para confirmar desaparición del renderer huérfano; cleanup verificado con dos observaciones y SIGKILL de respaldo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-20 Segunda revisión: proceso marcador real con terminación demorada; ver tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/renderer-delayed-root.log
+            time.sleep(0.05)  # blocking-sleep: intervalo de sondeo DENTRO de un bucle con deadline explicito (arriba), no una espera fija -- confirma que un huerfano de verdad muere, no solo lo asume -- DEBT-EL-GATE-DE-RENDERERS-EXIGE-CERO-NO-UI-MUERTA  # sunset-reviewed: 3.1 -- re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 1748 (92598b79) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 1748 (dbc1017f) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-10: sondea entre consultas para confirmar desaparición del renderer huérfano; cleanup verificado con dos observaciones y SIGKILL de respaldo. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-20 Segunda revisión: proceso marcador real con terminación demorada; ver tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/renderer-delayed-root.log ; re-revisado 2026-10-13 contra 3.1: la linea no cambio desde 20256295 (git blame de esta linea)
     return remaining
 
 
@@ -1930,3 +1930,32 @@ def test_bb_origen_codigos_de_salida_y_json(datos):
     assert json.loads(vacio.stdout)["codigo"] == 2
     mal = correr(["origen", "--desde", "ayer"], datos)
     assert mal.returncode == 4
+
+
+# --- sensores en observar: una fila por artefacto -------------------------
+
+
+def _modos(datos, **m):
+    (datos / "interruptores.json").write_text(json.dumps({"modos": m}), encoding="utf-8")
+
+
+def test_status_sensor_en_observar_con_artefacto_fresco_esta_ARMADO(datos):
+    _modos(datos, gpumem_historial="observar")
+    (datos / "gpumem_historial.jsonl").write_text("{}\n", encoding="utf-8")
+    assert "ARMADO" in _fila(correr(["status"], datos), "historial de memoria de GPU")
+
+
+def test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FALTA(datos):
+    _modos(datos, gpumem_historial="observar", canario_motor="observar")
+    viejo = datos / "gpumem_historial.jsonl"
+    viejo.write_text("{}\n", encoding="utf-8")
+    hace_un_dia = time.time() - 86400
+    os.utime(viejo, (hace_un_dia, hace_un_dia))
+    salida = correr(["status"], datos)
+    assert "FALTA" in _fila(salida, "historial de memoria de GPU")
+    assert "FALTA" in _fila(salida, "canario del motor")  # el artefacto ni existe
+
+
+def test_status_sensor_en_off_no_tiene_fila(datos):
+    _modos(datos, huella_host="off")
+    assert "huella del host" not in correr(["status"], datos).stdout

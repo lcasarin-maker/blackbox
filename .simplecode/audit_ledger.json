@@ -1,29 +1,27 @@
 {
-  "claims_fingerprint": "aedfa6a33e35c7c5dc29bb3ce44c0b08670ecaf47e636cb2dee90cc0a6412488",
-  "panel": "4 auditores Opus, 2026-10-12: 14 afirmaciones; 5 FAIL de texto corregidas y reauditadas (L145 en 3 rondas)",
+  "claims_fingerprint": "6a54028cd57c98a07875f73201c7568eb3bf805bb552e08c7c91ac4632c964c6",
+  "panel": "3 auditores Opus, 2026-10-13: 8 afirmaciones tras re-fechar exenciones a 3.1; L416 y L418 corregidas (codigo de bb status y texto) y reauditadas",
   "profile": "general",
   "results": [
     {
       "cited": {
-        "tools/mutacion_alcanza.py": "e4560d6152b249a988a8a330aa1e58e91f67029c380604155e2fc7a7363d1ed4",
-        "tools/portero.py": "453d957bf820b6f5d0aedcce6be57584e733131afd1b84edec7118a3d6303f67"
+        "tests/test_hallazgo.py": "22881b51eed8e1e62a3baf72e53d83277fba21c64ee51176111b57325d5ab327",
+        "tests/test_incident_report.py": "26100c4ca29e818fe5c44f04f7a659f741621c32554f350cd026020a501e2185",
+        "tools/atom_gpu_telemetry.py": "f4eb776d23c072ef6d82b82a3a889944d368751e1de03f5627638e4ec538a21a"
       },
       "claim_id": "SPEC-L118",
-      "evidence": "En Atlas, `git grep -nE blackbox -- '*.py' | grep -E 'sys.path|import|spec_from_file|runpy'` solo devuelve tests/test_dgx483_blackbox_telemetry_ownership.py:198-205 (la prueba que lo prohibe) y comentarios (tools/ingest_batch.py:82, tools/recoge_hallazgos_bb.py:5); bb_consulta.py:94 invoca blackbox por subprocess, no por import. En blackbox, `grep -rnE 'projects/Atlas|Atlas/tools' tools/*.py bin/* | grep -iE 'import|sys.path|spec_from|exec'` vacio; los importlib/sys.path.insert que existen son internos (tools/portero.py:434 importa tools.atom_gpu_telemetry, tools/mutacion_alcanza.py:42 .simplecode/runtime.zip, bin/bb-usable:356). Control negativo: el patron casa `from blackbox.tools import x` (rc=0). Atlas consume la salida: tools/atom_degradacion_resuelta.py:72-74 lee $BLACKBOX_DATA/atom_gpu_telemetry.jsonl.",
-      "fix": "",
-      "seal": "33964e8fae94e5dabdcb98c13f52c676b3d3b29190e41dda70439ceebd43aa73",
+      "evidence": "`grep -rnE \"^\\s*(import|from)\\s+.*blackbox|sys\\.path.*blackbox|importlib.*blackbox\" --include=*.py` en ~/projects/Atlas (HEAD 47c08cf79, fuera de _retired) da 0 lineas; los `sys.path.insert` de Atlas que mencionan blackbox en el mismo archivo (tools/detect_atom_crash.py:56, tools/medir_consumo_de_job.py:35) apuntan a la raiz de Atlas, no a blackbox. Atlas consume la salida por proceso: tools/bb_consulta.py:31 fija la ruta de tools/atom_gpu_telemetry.py y lo lanza con subprocess (bb_consulta.py:51-53). En blackbox, `grep -nE \"^\\s*(import|from).*atlas\"` sobre tools/ y tests/ da 0; tests/test_incident_report.py:747 `test_carga_de_atlas_es_solo_lectura_y_sin_import_de_codigo_de_atlas` lo guarda, y tests/test_hallazgo.py:131 corre el validador de Atlas como PROCESO aparte. Control negativo: la misma forma de regex con `subprocess` sobre tools/bb_consulta.py da 1.",
+      "seal": "815744cbb984506fe43f65d0d5946e1b77bae0ff6c46242fec1991e59e526b64",
       "verdict": "PASS"
     },
     {
       "cited": {
-        "tools/accion_termica.py": "1e3739860cb2ef4aa6e3d00d8d28c4c8cc453b333b1b947875eed7f62d4f92ca",
-        "tools/atom_gpu_telemetry.py": "695efdcb2b3408e35f307ea30df23b8cd4440744c068cb6a256e6ca1a9282c31",
-        "tools/portero.py": "453d957bf820b6f5d0aedcce6be57584e733131afd1b84edec7118a3d6303f67"
+        "tools/atom_gpu_telemetry.py": "f4eb776d23c072ef6d82b82a3a889944d368751e1de03f5627638e4ec538a21a",
+        "tools/portero.py": "1a2bffb25894f42cc9bea1906c92b22d563e70e2f31e20c0c0127a3a32f68fba"
       },
       "claim_id": "SPEC-L122",
-      "evidence": "Gates expuestos: tools/atom_gpu_telemetry.py:1849 `--gate-termico` ('sale 1 si NO se le debe sumar carga') y l.1845 `--procesos-gpu`; Atlas los consulta via tools/bb_consulta.py:94. Gobierno del estado fisico: tools/accion_termica.py:12,118 hace `systemctl --user freeze` de la carga pausable en sostenida/sobre_100, tools/atom_gpu_telemetry.py:1557/1598 SIGSTOP/SIGCONT, tools/portero.py (cola y tope dentro de app.slice, systemd/bb-portero.service). Telemetria: atom-gpu-telemetry.service activo (`systemctl --user show` ActiveState=active). Los cambios recientes en tools/atom_gpu_telemetry.py y tools/portero.py (08ffc6b9, 92598b79) solo reescriben comentarios sunset-reviewed de time.sleep.",
-      "fix": "",
-      "seal": "4d2cfd8c6ee3f3503665e9e2fce0740ac3d76060c6a4edfb9fdf601a71a57c1e",
+      "evidence": "tools/atom_gpu_telemetry.py:1845 declara `--procesos-gpu` y :1849 `--gate-termico`; :1401 emite `bb-estado-termico/2` con `admite_carga`, y :98 escribe la telemetria en `atom_gpu_telemetry.jsonl`. tools/portero.py:1005-1012 expone el gate de admision (`--clase`, `--una-vez`, `--aplicar`). Atlas consulta esos resultados: ~/projects/Atlas/tools/liberation_watchdog.py:136-137 importa de su propio tools/bb_consulta.py `motivo_termico` y `procesos_gpu`, y :3048-3050 frena el job con `temperatura_elevada`; la politica de admision queda en Atlas. No ejecute el gate (prohibido tocar la GPU; el clasificador lo denego).",
+      "seal": "390a096dcceaadc50384fdd326f038ff15403b039d507209572556647fdf21ba",
       "verdict": "PASS"
     },
     {
@@ -48,52 +46,50 @@
       "cited": {
         "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-coverage-after-fixture-fix/command.json": "e50375cf3aed0133d1513deb92bbf6ce482d407cd4bacc3e8b2f543cf1177a61",
         "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-coverage-after-nvme/command.json": "252c845a8030e3a9a49471890b0cef8281ea3b5ddc6ec685bd1c5db5eeced8c8",
-        "tools/atom_gpu_telemetry.py": "695efdcb2b3408e35f307ea30df23b8cd4440744c068cb6a256e6ca1a9282c31",
+        "tools/atom_gpu_telemetry.py": "f4eb776d23c072ef6d82b82a3a889944d368751e1de03f5627638e4ec538a21a",
         "tools/reboot_verdict.py": "7b417bc5f8407f1a26b0a86e671ec9326097036c48b4220611a3c3d5a31b9368"
       },
       "claim_id": "SPEC-L145",
-      "evidence": "Atlas HEAD 5c8967d94. `grep -rlE 'nvidia-smi|/proc/meminfo|/sys/class/thermal|smartctl|journalctl|/proc/pressure' tools rag --exclude-dir=_retired | wc -l` -> 76 archivos. Invocaciones ejecutables: `grep -rnE '\\[ *\"(nvidia-smi|smartctl|journalctl)\"|...|open\\(.*/proc/(meminfo|pressure)|/sys/class/thermal' tools rag --include=*.py` -> solo tools/gateway_control.py:432 y tools/benchmark_network_isolation.py:357, ambos `journalctl --user -u` (unidad de usuario); medicion de hardware: liberation_watchdog.py:1021-1027 available_gb() subprocess.run(['free','-b']), medir_consumo_de_job.py:37 importa available_gb, dgx401_medicion_pareada_dos_motores.py:84 Path('/proc/meminfo'); Atom_Local_AI_Audit.ps1 l.72-76 nvidia-smi, l.12-13 Desktop/ATOM_AUDIT_$Timestamp. Los 10 .py restantes (hybrid_retriever, atom_crash_registrado, bb_consulta, detect_atom_crash, gather_failed_evidence, run_gpu_allowlist_mutation, tool_limits, verify_dgx22, verify_dgx499) coinciden solo en comentarios/docstrings/mensajes; atomic_blocks/rules/hardware.json en `nota_de_forma`. tools/liberation_queue: 53 archivos, clasificados por campo JSON -> 48 command, 6 description, 2 causa_cerrada; quitando los slugs `forum_nvidia_*` de los 48 command queda 1 residuo: done/160_restore_nemotron.json, donde `journalctl` va dentro de un print(... file=sys.stderr) -> texto de mensaje, no ejecuta. rag: embeddings/index.json, build_manifest.json, sparse_side/*.jsonl (cubiertos por `rag/embeddings/*`), graphs/entity_graph.json, finetuned/run_2026-07-26_overnight/iter_{1,2}/README.md. Detector: `wc -l tools/detect_atom_crash.py` -> 557; `grep -cE 'subprocess|Popen|os\\.system'` -> 0; `git log -1 ecdf88cc8` -> 'detect_atom_crash redacta desde reboots.jsonl de blackbox, ya no mide'. blackbox: atom_gpu_telemetry.py:1845 --procesos-gpu, Atlas bb_consulta.py:75/94 lo invoca; adopted/ tiene ai-gpu-telemetry, ai-memory-monitor, nvrm-watch; fichas en tasks/done y tasks/backlog como dice el texto. Control negativo: el mismo filtro de slugs sobre la cadena inyectada 'for d in 2026_forum_nvidia_1_nvidia-smi-x; do nvidia-smi; done' devuelve residuo ['nvidia-smi'], y sobre la cola real devolvio el residuo de job 160: el instrumento detecta coincidencias fuera de slugs.",
-      "fix": "",
-      "seal": "b8a66c270c3eb324d069aaaecb636c0041abc3d74367325f2c6b59cbd055d135",
+      "evidence": "`wc -l ~/projects/Atlas/tools/detect_atom_crash.py` = 557; su ultimo commit es `ecdf88cc8` ('redacta desde reboots.jsonl de blackbox, ya no mide'), y `grep -nE \"subprocess|os\\.system|Popen|check_output\"` sobre el archivo da 0 (solo texto: :7, :448). tools/reboot_verdict.py:56 y :67 escriben `reboots.jsonl` con `bb-reboot/1`. Barrido repetido hoy: `grep -rlE \"nvidia-smi|/proc/meminfo|/sys/class/thermal|smartctl|journalctl|/proc/pressure\" tools rag | grep -v _retired` -- miden: liberation_watchdog.py:1033-1039 (`available_gb`, `free -b`), medir_consumo_de_job.py:37 (`from tools.liberation_watchdog import available_gb`), dgx401_medicion_pareada_dos_motores.py:84 (`/proc/meminfo`); gateway_control.py:432 y benchmark_network_isolation.py:357 corren `journalctl --user -u`; Atom_Local_AI_Audit.ps1:72-76 ejecuta nvidia-smi y :12-13 escribe `ATOM_AUDIT_<ts>` en el Escritorio; el resto (hybrid_retriever.py:64, atom_crash_registrado.py:27, gather_failed_evidence.py:11, run_gpu_allowlist_mutation.py:9, tool_limits.py:287, verify_dgx22_citation_gate.py:440, verify_dgx499_truncation_guard.py:11, bb_consulta.py:83, atomic_blocks/rules/hardware.json:31 `nota_de_forma`) es comentario, docstring, mensaje o dato. El cambio de hoy a liberation_watchdog.py (d90982e6d) no anade ninguna de esas lecturas (grep sobre sus lineas `+` = 0). liberation_watchdog.py:1193 y :3406 piden la lista de procesos GPU via `_procesos_gpu`. adopted/ contiene ai-gpu-telemetry.service, ai-memory-monitor.{service,timer} y nvrm-watch.{sh,service,timer}; fichas: tasks/done/DEBT-CONTRATO-ATLAS-INSTRUMENTOS-EN-BLACKBOX-01.md y tasks/backlog/DEBT-CONTRATO-ATLAS-SONDAS-DE-MEMORIA-01.md.",
+      "seal": "5f087289590566ddaef9c8ed9af67d85cba943261e30f6180740fee1a2a0535c",
       "verdict": "PASS"
     },
     {
       "cited": {
         "rules/firmas_gb10.json": "1fdee1398e1c44b2dfb26245be3a85dbbedd1126e314583928d828c46dc1d463",
         "tools/accion_termica.py": "1e3739860cb2ef4aa6e3d00d8d28c4c8cc453b333b1b947875eed7f62d4f92ca",
-        "tools/atom_gpu_telemetry.py": "695efdcb2b3408e35f307ea30df23b8cd4440744c068cb6a256e6ca1a9282c31",
+        "tools/atom_gpu_telemetry.py": "f4eb776d23c072ef6d82b82a3a889944d368751e1de03f5627638e4ec538a21a",
         "tools/hallazgo.py": "910171e47fc9a4b99b41fa6e66e1a5d76188f140ef9868b3764ede3aa888ff1a",
         "tools/incident_report.py": "3cc3d994a253d77ab09da2c60fea5b49de7229af1b2b0a24ab50375d3c5dacba",
         "tools/reboot_verdict.py": "7b417bc5f8407f1a26b0a86e671ec9326097036c48b4220611a3c3d5a31b9368"
       },
       "claim_id": "SPEC-L146",
-      "evidence": "Every named link exists with the stated schema and direction. Blackbox to Atlas: tools/atom_gpu_telemetry.py:98 writes atom_gpu_telemetry.jsonl; tools/reboot_verdict.py:56,67 writes reboots.jsonl as `bb-reboot/1`, which Atlas tools/detect_atom_crash.py:65-66 reads; atom_gpu_telemetry.py:1401 emits `bb-estado-termico/2` behind `--gate-termico` (l.1849), and Atlas bb_consulta.py:52 calls it as a subprocess; tools/incident_report.py:51,1155 writes incidentes/ with `bb-incident/1`; `--procesos-gpu` (atom_gpu_telemetry.py:1740-1857) is called by bb_consulta.py:94, which liberation_watchdog.py:137 imports; tools/hallazgo.py:30,71 writes `bb-hallazgo/1` under $BLACKBOX_DATA; Atlas recoge_hallazgos_bb.py:32 reads that tray and writes only to its own destination (l.80-86, 110). Atlas to blackbox: rules/firmas_gb10.json gives each of its 15 signatures an `atlas` document anchor (example: 'catalogo_destilado.md#github:S1'); incident_report.py:53-57 reads Atlas logs/liberation_watchdog.jsonl read-only; FEATURE-INCIDENTE-CARGA-DE-ATLAS-01 is in tasks/done; tools/accion_termica.py:32,36,62,118 reads atlas_carga.json (`atlas-carga/1`) and runs `freeze` in `sostenida`/`sobre_100`. No cross import: `grep -rnE '^(from|import) .*blackbox|sys.path.*blackbox' Atlas/tools/*.py` is empty, and on the blackbox side the only hit is a comment (atom_gpu_telemetry.py:68). Negative control: the same grep pattern does return that comment line, so the grep can produce hits.",
-      "fix": "",
-      "seal": "9fc9b7c6a613e7030fc4003395ac0cdea2ab7cc391674fd57b365ea45180f371",
+      "evidence": "blackbox->Atlas: tools/atom_gpu_telemetry.py:98 (`atom_gpu_telemetry.jsonl`), :100 (`estado_termico.json`), :1401 (`bb-estado-termico/2`) leido por Atlas via proceso `--gate-termico` (Atlas tools/bb_consulta.py:51-53); tools/reboot_verdict.py:67 `bb-reboot/1`, que Atlas tools/detect_atom_crash.py:16-17 solo LEE; tools/incident_report.py:1155 `bb-incident/1`; `--procesos-gpu` en atom_gpu_telemetry.py:1845, pedido por Atlas bb_consulta.py:75 para liberation_watchdog.py:1193; tools/hallazgo.py:2-5 `bb-hallazgo/1` en `$BLACKBOX_DATA/hallazgos/`, que Atlas tools/recoge_hallazgos_bb.py:71-74 solo lee (escribe solo en su `destino`, :86). Atlas->blackbox: rules/firmas_gb10.json trae `atlas_raiz` y cada firma un campo `atlas` (incident_report.py:44, :791-793); incident_report.py:57 lee `projects/Atlas/logs/liberation_watchdog.jsonl` (FEATURE-INCIDENTE-CARGA-DE-ATLAS-01 en tasks/done/); tools/accion_termica.py:32 lee `atlas_carga.json`, :62 exige `atlas-carga/1`, :36 `ESTADOS_CALIENTES = (\"sostenida\", \"sobre_100\")` y :118 ejecuta `freeze`; Atlas bb_consulta.py:130-143 publica ese archivo. Los tres sensores nuevos no cruzan la frontera: `grep -rlnE \"huella_host|canario_motor|gpumem_historial\" tools rag` en Atlas solo da rag/embeddings/index.json (corpus).",
+      "seal": "153eb4aca328f3600663ea0c0d0ea51173a475ab9931e086c94a6b526d00f542",
       "verdict": "PASS"
     },
     {
       "cited": {
         "tests/test_hallazgo.py": "22881b51eed8e1e62a3baf72e53d83277fba21c64ee51176111b57325d5ab327",
-        "tests/test_incident_report.py": "26100c4ca29e818fe5c44f04f7a659f741621c32554f350cd026020a501e2185",
-        "tools/atom_gpu_telemetry.py": "695efdcb2b3408e35f307ea30df23b8cd4440744c068cb6a256e6ca1a9282c31",
-        "tools/incident_report.py": "3cc3d994a253d77ab09da2c60fea5b49de7229af1b2b0a24ab50375d3c5dacba",
-        "tools/saber.py": "98ec5ab16835b46f3178dec8ef0f9b5ff9d77322a8451f79235fc8540bcb1338"
+        "tests/test_incident_report.py": "26100c4ca29e818fe5c44f04f7a659f741621c32554f350cd026020a501e2185"
       },
       "claim_id": "SPEC-L147",
-      "evidence": "Las pruebas de punteros a Atlas se omiten sin Atlas: tests/test_incident_report.py:368 `pytest.skip(\"Atlas no esta en esta maquina\")` y tests/test_hallazgo.py:126-129 skipif con reason \"Atlas no esta en esta maquina\"; las lecturas de Atlas en tools/ (incident_report.py:55 ATLAS_COLA, saber.py:29 ATLAS_KNOWLEDGE) son de solo lectura y tienen ruta de ausencia. Del lado Atlas, ~/projects/Atlas/tools/bb_consulta.py:motivo_termico devuelve motivo de bloqueo si el gate de blackbox (`tools/atom_gpu_telemetry.py --gate-termico`) no existe, no responde o no da JSON con `bloquea`, y lo importan liberation_watchdog.py:136, ingest_batch.py:86 y nightly_kb_consolidation.py:65. En blackbox, tools/atom_gpu_telemetry.py:1770-1779 (_comando_gate_termico) combina presupuesto_termico con _motivo_estado_termico (1751-1762), que bloquea con estado_termico.json ausente o ilegible y declara el contrato `bb-estado-termico/2` (escrito en tools/atom_gpu_telemetry.py:1401).",
-      "fix": "",
-      "seal": "ef795a127bce53441756ca3807149d14fcaef159dcbcceb96e8da1de2d072355",
+      "evidence": "Las pruebas de punteros se omiten sin Atlas: `python -m pytest -q tests/test_incident_report.py::test_los_punteros_a_atlas_existen_si_atlas_esta_y_la_comprobacion_puede_fallar tests/test_hallazgo.py::test_hallazgo_cumple_el_contrato_de_atlas` -> `2 passed in 0.34s`; control negativo con Atlas ausente (`HOME=<scratch vacio> PYTHONUSERBASE=~/.local` mismo comando) -> `SKIPPED [1] tests/test_incident_report.py:368: Atlas no esta en esta maquina`, `SKIPPED [1] tests/test_hallazgo.py:127: ...`, `2 skipped`. Atlas sin blackbox bloquea: ~/projects/Atlas/tools/bb_consulta.py:47-49 devuelve motivo de bloqueo si el gate no existe (y :55-59 si no responde o no se ejecuta), y liberation_watchdog.py:3048-3050 convierte ese motivo en `temperatura_elevada` antes de lanzar el job.",
+      "seal": "2157896e6e0407215e20977d76ebc7fc597630e517ccb4733835571b8ae00f93",
       "verdict": "PASS"
     },
     {
       "cited": {
-        "tests/test_bb_bash.py": "9e046e11cc635f2a00fee74a987074c08db6c35779a00ab29963ebb706e462f3"
+        "tests/test_bb_bash.py": "2b57ca26801521f6e77a030004bcbf2b67fadcf7208c313a67c15f6362841a5f",
+        "tools/canario_motor.py": "4b5cbbc3d6a0930405333bd841d8588d92fd494af0c116b9e2b90f016744b98c",
+        "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6",
+        "tools/huella_host.py": "be0eb2e0d9b010db129f495caf2a80c8e2a3f59d96ca2214b25ac5cbc607318d",
+        "tools/interruptores.py": "22eb6152a8fe1a34c405ded283293523d1bb1ceedca74eeb08f0234a830b5408",
+        "tools/limita_cuda.py": "1b241027780e2caac7a2fb55c4e58876339b935f3eaec1bae6add385d58532e0"
       },
       "claim_id": "SPEC-L416",
-      "evidence": "Los cinco tests nombrados existen una vez cada uno en tests/test_bb_bash.py (`grep -c 'def <nombre>'` = 1 x5), y los tres del latido de bb-usable son test_control_negativo_bb_usable_activa_con_latido_RANCIO (600 s) y test_control_negativo_bb_usable_activa_sin_latido parametrizado ids journal_vacio/solo_arranque (tests/test_bb_bash.py:657-672); `python -m pytest tests/test_bb_bash.py -q -k \"control_negativo_sin_muestra_fresca or clock_lock or earlyoom or bb_usable\"` da 13 passed, y esos tests asertan FALTA, el veredicto contrario al caso positivo test_bb_usable_con_latido_fresco_SI_cuenta. bin/bb:2363 usa `date -d '120 seconds ago'` con journalctl y bin/bb:2371 busca `[bb-usable] latencia del escritorio:`. Los \u00fanicos `is-active` sin artefacto en el status son bin/bb:2605 (`systemctl --user is-active ai-nemotron-vigilante.timer`, fila 'vigilante del motor') y bin/bb:2613 (`bb-guardia-proceso.service`, fila 'guardia de procesos', con el l\u00edmite declarado en el comentario 2607-2612); earlyoom (2558) y bb-usable (2574) leen tambi\u00e9n su artefacto.",
-      "fix": "",
-      "seal": "0d1794e99683ac1bc762958130d79c13db3a5fcbdaf6fdf454678bb7c47a92b6",
+      "evidence": "bin/bb:2616-2646 (cmd_status) tiene la fila por sensor leida de $DATA/interruptores.json con _modo_inter (ausente/ilegible = off): memavail, gpuoom, termico_predictivo y reloj_arranque solo por `systemctl --user is-active` de su unit (bucle :2625-2631, limite declarado en el comentario :2616-2620), y huella_host/canario_motor/gpumem_historial por `find -mmin` sobre $DATA/huella_host.json (2880 min = 2 dias), $DATA/interruptores/canario_motor.jsonl (75) y $DATA/gpumem_historial.jsonl (15); las rutas coinciden con las que escriben tools/huella_host.py:223, tools/interruptores.py:37 (via canario_motor.registra) y tools/gpumem_historial.py:39. `python -m pytest tests/test_bb_bash.py -q -p no:cacheprovider -k sensor` -> `3 passed, 97 deselected`, incluido test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FALTA (:1948, artefacto de hace 1 dia y artefacto ausente -> FALTA). Control negativo en vivo: BLACKBOX_DATA=<dir vacio> con gpumem_historial=observar -> `FALTA historial de memoria de GPU (observar; ...) -- sin fila en 15 min`; en el arbol real `bash bin/bb status | grep ...` da las 7 filas ARMADO. La parte anterior se sostiene: los cinco tests citados por nombre existen (grep -c = 1 cada uno), los tres de bb-usable existen (:657 rancio, :666 parametrizado journal_vacio/solo_arranque), bin/bb:2363 exige latido en 120 s, y vigilante del motor (:2605) y guardia de procesos (:2613) leen solo la unit; `-k 'control_negativo or usable or drift'` -> 49 passed. Nota sin efecto en el veredicto: el interruptor `limitador` (tools/limita_cuda.py:26) no tiene fila aunque se ponga en observar (probado: sin fila), pero es un lanzador a demanda, no un sensor, asi que 'cada sensor' sigue siendo verdad.",
+      "seal": "6fb69b1bc72814febc5b44b1b80a1a4ced2d08f1004100bd0822fc48c7e191da",
       "verdict": "PASS"
     },
     {
@@ -112,14 +108,12 @@
     },
     {
       "cited": {
-        "adopted/system-config/usr_local_bin_nvrm-watch.sh": "ff4e43c4009274f1c939de971535f1d3266da70fd3e2f5403488a25edbf9422f",
         "enable-privileged.sh": "e92ac93a83e85100fe5f67de8590a2cc08c995ad4ff91fef4efefad1631ecadb",
-        "tools/atom_gpu_telemetry.py": "695efdcb2b3408e35f307ea30df23b8cd4440744c068cb6a256e6ca1a9282c31"
+        "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6"
       },
       "claim_id": "SPEC-L418",
-      "evidence": "Unidades: adopted/systemd-user/blackbox-sample.service:8-9 y adopted/systemd-user/atom-gpu-telemetry.service:14-15 declaran Nice=19/IOSchedulingClass=idle; `systemctl --user show <u>.service -p Nice -p IOSchedulingClass` dio blackbox-sample Nice=19 IO=3, atom-gpu-telemetry Nice=19 IO=3, ai-memory-monitor Nice=0 IO=2 (timer cada 5 min activo en list-timers), ai-gpu-telemetry Nice=10 disabled, ai-nemotron-vigilante Nice=0 IOSchedulingClass=2, bb-guardia-proceso Nice=10 (systemd/bb-guardia-proceso.service:21); control negativo: el mismo comando devolvio valores distintos de 19 (0, 10) en otras units. `systemctl show bb-usable.service` = Nice=0, OOMScoreAdjust=-900, MemoryMin=134217728 (systemd/bb-usable.service:47-48), PROBE_INTERVAL = 30.0 en bin/bb-usable:98; nvrm-watch.service Nice=0 IO=2, instalado y habilitado en enable-privileged.sh:296-331 (bloque 4b, `systemctl enable --now nvrm-watch.timer` l.320), timer OnUnitActiveSec=5min (adopted/system-config/etc_systemd_system_nvrm-watch.timer), script hace `journalctl -k` (usr_local_bin_nvrm-watch.sh:2). bb install copia y habilita ai-nemotron-vigilante.timer (bin/bb:2663-2668), OnUnitInactiveSec=2min, ExecStart bin/bb-vigilante-motor que consulta http://localhost:8000/metrics (l.36) y escribe vigilante_motor.log (l.46). SIGSTOP/SIGCONT en tools/atom_gpu_telemetry.py:1557/1598; guardia_proceso.jsonl en bin/bb-guardia-proceso:106; git log 1ec66b3 = 'feat(owns): monitoreo y cuelgue son de bb'.",
-      "fix": "",
-      "seal": "0fe219ca9b37e0e05a9e74420b27a12fc4d1eed86d08b0e14e2e34fdb4e46bfd",
+      "evidence": "En vivo `systemctl --user show <u>.service -p Nice -p IOSchedulingClass`: blackbox-sample Nice=19 IOSchedulingClass=3 (idle), atom-gpu-telemetry Nice=19/3, ai-memory-monitor Nice=0, ai-gpu-telemetry Nice=10 UnitFileState=disabled, ai-nemotron-vigilante Nice=0/2, bb-gpumem-historial Nice=10/2, bb-canario-motor Nice=10, bb-huella Nice=10, bb-guardia-proceso Nice=10; `systemctl show bb-usable.service nvrm-watch.service` -> Nice=0 IOSchedulingClass=2 en ambos (y Nice=0 de ai-memory-monitor prueba que la consulta discrimina). Ficheros: systemd/bb-gpumem-historial.timer OnUnitActiveSec=1min y .service Nice=10 sin IOSchedulingClass; bb-canario-motor.timer OnUnitActiveSec=30min; bb-huella.timer OnUnitActiveSec=1d; los seis creados en e782c77d (git show --stat); systemd/bb-usable.service:47-48 OOMScoreAdjust=-900 MemoryMin=128M y bin/bb-usable:98 PROBE_INTERVAL = 30.0; adopted/systemd-user/ai-nemotron-vigilante.timer:6 OnUnitInactiveSec=2min, instalado por bin/bb:2695-2696; ai-memory-monitor.timer OnCalendar *:00/5; enable-privileged.sh bloque 4b (:296-331) copia y `systemctl enable --now nvrm-watch.timer`, en vivo enabled/active; systemd/bb-guardia-proceso.service:21 Nice=10.",
+      "seal": "36aa0aba552edc972d5d9688762139af56f385af43fd62fe9d88bbcd5932f4ce",
       "verdict": "PASS"
     },
     {
@@ -135,12 +129,11 @@
     },
     {
       "cited": {
-        "tests/test_bb_bash.py": "9e046e11cc635f2a00fee74a987074c08db6c35779a00ab29963ebb706e462f3"
+        "tests/test_bb_bash.py": "2b57ca26801521f6e77a030004bcbf2b67fadcf7208c313a67c15f6362841a5f"
       },
       "claim_id": "SPEC-L420",
-      "evidence": "bin/bb:2819 define cmp_one; una suspensi\u00f3n vencida suma `missing` y una vigente suma `suspended` (bin/bb, rama VENCIDA/SUSPENDIDO), y la funci\u00f3n retorna 1 si hay divergentes o ausentes. Los tests test_drift_SALE_DISTINTO_DE_0_cuando_esta_ausente, test_drift_suspendido_VIGENTE_no_cuenta_como_fallo y test_drift_suspension_VENCIDA_SI_cuenta_como_fallo est\u00e1n en tests/test_bb_bash.py; `pytest tests/test_bb_bash.py -k drift` da 8 passed, con casos que asertan el exit contrario (SALE_0 frente a SALE_DISTINTO_DE_0). systemd/blackbox-drift.timer:7 `OnCalendar=daily` y systemd/blackbox-drift.service:7 `ExecStart=%h/projects/blackbox/bin/bb drift`. La consulta repetida hoy `systemctl --user show blackbox-drift.timer -p ActiveState -p UnitFileState -p LastTriggerUSec` da `ActiveState=active`, `UnitFileState=enabled`, `LastTriggerUSec=Mon 2026-10-12 00:00:01 CST`, consistente con las corridas fechadas que la afirmaci\u00f3n cita.",
-      "fix": "",
-      "seal": "b2a3124bab3d3408f985d6b3c04e196d2ac364b22c436f235286942ca6322c53",
+      "evidence": "bin/bb:2851-2866 cmp_one: ausente con suspension vigente -> SUSPENDIDO (no cuenta), vencida -> VENCIDA y missing+1, sin suspension -> AUSENTE; el retorno (:2907-2916) es 0 solo si diverged+missing=0, si no 1. Los tres controles existen (tests/test_bb_bash.py:1523, :1533, :1553) y `python -m pytest tests/ -q -p no:cacheprovider -k '<los tres>'` -> `3 passed`. systemd/blackbox-drift.timer:7 OnCalendar=daily y systemd/blackbox-drift.service:7 ExecStart=%h/projects/blackbox/bin/bb drift; en vivo `systemctl --user show blackbox-drift.timer -p ActiveState -p UnitFileState -p LastTriggerUSec` -> ActiveState=active, UnitFileState=enabled, LastTriggerUSec=Tue 2026-10-13 00:00:05 CST, consistente con la captura fechada del 2026-10-11 que la fila cita.",
+      "seal": "3bc8618ca3bde06f8e6a8987c7fc6a2ba804efa55ecbf49682a48744c35ecf5a",
       "verdict": "PASS"
     },
     {
@@ -195,7 +188,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-13T04:32:15Z",
-  "tree_fingerprint": "f3d1290ad1a2eb25ad866455864fdf316fe841f57c509c927269faeffdcba88c",
+  "timestamp": "2026-10-13T13:54:16Z",
+  "tree_fingerprint": "df620ca04e6104fd838a7dd19e9b422899568a6568cf163c7d85b3c49785e77d",
   "violations": []
 }

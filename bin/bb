@@ -2613,6 +2613,38 @@ EOF
   systemctl --user is-active bb-guardia-proceso.service >/dev/null 2>&1; ok=$?
   chk "guardia de procesos (frena un proceso desbocado)" "$ok" "parada: systemctl --user start bb-guardia-proceso.service"
 
+  # Sensores en `observar` (interruptores.json): sin una fila, uno que dejara de
+  # escribir no lo diria nadie. Solo se mira el artefacto de los que el interruptor
+  # tiene en observar o actuar; los demas no existen para `status`. Limite declarado:
+  # memavail, gpuoom, termico_predictivo y reloj_arranque escriben solo cuando
+  # disparan, sin latido; de esos se mira la unit, no un artefacto.
+  local _inter="$DATA/interruptores.json" _m
+  _modo_inter() { python3 -c 'import json,sys;print(json.load(open(sys.argv[1])).get("modos",{}).get(sys.argv[2],"off"))' "$_inter" "$1" 2>/dev/null || echo off; }
+  _fresco() { [ -n "$(find "$1" -mmin "-$2" 2>/dev/null)" ]; }
+  # Los cuatro sin latido: se mira la unit (limite declarado arriba).
+  for _par in memavail:bb-vigilante-memavail.service gpuoom:bb-vigilante-gpuoom.service termico_predictivo:bb-vigilante-termico.service reloj_arranque:bb-reloj-arranque.timer; do
+    _m=$(_modo_inter "${_par%%:*}")
+    if [ "$_m" != off ]; then
+      systemctl --user is-active "${_par#*:}" >/dev/null 2>&1; ok=$?
+      chk "${_par%%:*} ($_m; solo la unit, sin latido)" "$ok" "parada: systemctl --user start ${_par#*:}"
+    fi
+  done
+  _m=$(_modo_inter huella_host)
+  if [ "$_m" != off ]; then
+    _fresco "$DATA/huella_host.json" 2880; ok=$?
+    chk "huella del host ($_m; ciclo diario)" "$ok" "sin huella en 2 dias: systemctl --user status bb-huella.timer"
+  fi
+  _m=$(_modo_inter canario_motor)
+  if [ "$_m" != off ]; then
+    _fresco "$DATA/interruptores/canario_motor.jsonl" 75; ok=$?
+    chk "canario del motor ($_m; cada 30 min)" "$ok" "sin ronda en 75 min: systemctl --user status bb-canario-motor.timer"
+  fi
+  _m=$(_modo_inter gpumem_historial)
+  if [ "$_m" != off ]; then
+    _fresco "$DATA/gpumem_historial.jsonl" 15; ok=$?
+    chk "historial de memoria de GPU ($_m; fila al cambiar o cada 10 min)" "$ok" "sin fila en 15 min: systemctl --user status bb-gpumem-historial.timer"
+  fi
+
   # Sin volcado CUDA, una caida por 'illegal memory access' no nombra el kernel
   # que fallo: CUDA la informa tarde, en otro punto de sincronizacion.
   if grep -q '"CUDA_ENABLE_COREDUMP_ON_EXCEPTION": *"1"' "$MOTOR_CONFIG" 2>/dev/null && [ -w "$MOTOR_VOLCADOS" ]; then ok=0; else ok=1; fi
