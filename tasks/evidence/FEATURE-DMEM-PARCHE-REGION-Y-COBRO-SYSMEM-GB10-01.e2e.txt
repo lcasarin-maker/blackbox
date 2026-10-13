@@ -1,0 +1,25 @@
+e2e de FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01 sobre el sujeto vivo (modulo parcheado memacct 580.178.04 cargado), 2026-10-13.
+La region de dmem.capacity esta registrada; el cobro por cgroup de gpumem coincide con nvidia-smi para el proceso de vLLM; el contrato del parche pasa.
+
+$ cat /sys/fs/cgroup/dmem.capacity
+rc=0
+nvidia/0000000F:01:00.0/vidmem 53794045952
+
+$ python3 -m tools.gpumem
+rc=0
+region nvidia/0000000F:01:00.0/vidmem  cobrado 34.26 GiB de 50.1 GiB (techo utilizable de la maquina 119.2 GiB)
+     33.54 GiB  contenedor nemotron-server
+      0.47 GiB  user.slice
+      0.25 GiB  system.slice
+      0.00 GiB  sin atribuir a una hoja
+
+$ nvidia-smi --query-compute-apps=pid,used_memory --format=csv
+rc=0
+pid, used_gpu_memory [MiB]
+29746, 34345 MiB
+2131867, 237 MiB
+
+$ python -m pytest tests/test_dmem_parche_contrato.py -q -p no:cacheprovider
+rc=0
+..                                                                       [100%]
+2 passed in 0.04s
