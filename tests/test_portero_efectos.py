@@ -11,6 +11,7 @@ Nada toca cgroups, systemd ni docker reales.
 from __future__ import annotations
 
 import argparse
+import threading
 import json
 import os
 import runpy
@@ -538,15 +539,25 @@ def test_cmd_demonio_sin_contenedores_no_llama_a_docker_y_duerme_entre_ciclos(
         pass
 
     dormidos: list[float] = []
+    del_test = threading.current_thread()
+    real = po.time.sleep
 
     def dormir(s: float) -> None:
+        # `po.time` es el modulo `time` ENTERO: este parche tambien lo ve cualquier hilo filtrado por otro test
+        # (p.ej. el de muestreo de gpuoom_bb, que duerme 0.01 s). Solo cuenta lo que duerme el hilo del test.
+        if threading.current_thread() is not del_test:
+            real(0)
+            return
         dormidos.append(s)
         raise Parar
 
     monkeypatch.setattr(po.time, "sleep", dormir)
+    intruso = threading.Thread(target=lambda: po.time.sleep(0.01))  # control: un hilo ajeno duerme mientras el parche esta puesto
+    intruso.start()
+    intruso.join()
     with pytest.raises(Parar):
         po.cmd_demonio(argparse.Namespace(una_vez=False, contenedores=False))
-    assert dormidos == [po.INTERVALO_S]  # tras un ciclo, antes del siguiente
+    assert dormidos == [po.INTERVALO_S]  # tras un ciclo, antes del siguiente; el hilo ajeno no cuenta
     assert [f["accion"] for f in filas(banco.fx.log)] == ["no_actua"] and banco.llamadas == []
 
 
