@@ -114,3 +114,12 @@ Se reutilizó la captura existente de sesiones/servicios; no se entró a rescue.
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-RESCUE-RUNBOOK-01-direct-close-current.log`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+Ficha de 21 KB con casos Dell/ASUS/MSI/HP y multinodo; para esta Gigabyte con DGX OS 7.2.3 aplica la parte de rescue.target, captura previa al reset, medio de recuperacion verificado y guarda de mountpoint. bb recovery (tools/recovery_profile.py) cubre solo RCU/watchdog/pstore.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Reducir a un runbook verificable para la ATOM Gigabyte: entrada a rescue.target por su UEFI, suspender una unidad canary con rename+sha256, medio de recuperacion con checksum, y guarda de mountpoint/UUID de respaldo; descartar casos OEM ajenos y multinodo.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

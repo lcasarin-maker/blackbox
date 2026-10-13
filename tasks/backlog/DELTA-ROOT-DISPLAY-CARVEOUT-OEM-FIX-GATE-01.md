@@ -53,3 +53,12 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: baja · lectura: completa.
+
+El hilo 370458 es un congelado de terminales Sway por NV_ERR_NO_MEMORY en scanoutcarveout con driver 580.159.03; este equipo corre 580.178.04 posterior y no hay evidencia aqui de sesion Sway ni del fallo. La reserva 'Adjustable Display Reserved Memory' es un dato de firmware que sirve leer una vez.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Registrar en huella_host el valor efectivo de la reserva de display (si el firmware ATOM la expone) y el driver, sin reproducir el fallo ni cambiar la reserva.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

@@ -45,3 +45,12 @@ La confirmación NVIDIA del “July update” todavía no identifica versión/pa
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/FORUM-02-USB-UVC-EP0.md`, `tools/forum_hardware_subjects.py`, `tools/forum_finding.py`, `tests/test_debt_registration_controls.py`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: baja · lectura: completa.
+
+Cuelgue xHCI por controles UVC EP0 reportado con RealSense y xHCI MT8901; este host tiene una Logitech C920 (UVC) y un hub USB (lsusb), y huella_host ya recoge USB y velocidad, mas FEATURE-USB-XHCI-FORENSICS detecta HC died. Sin RealSense ni evidencia local del fallo.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Mantener solo la deteccion de firma HC died y la huella de kernel/OEM; no reproducir A/B salvo que se use la C920 en streaming con controles EP0.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

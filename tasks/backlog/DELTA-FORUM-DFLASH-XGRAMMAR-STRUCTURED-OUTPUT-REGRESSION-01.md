@@ -95,3 +95,12 @@ Reusa `tools/chat_sse_capture.py` para preservar chunks, finish y fragmentos de 
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+Ficha-contenedor de ~12 hallazgos de foro sobre Qwen3.6/DFlash/DeepSeek/GLM/Gemma, ninguno servido aqui (solo nemotron-local en :8000). El riesgo transferible es JSON estricto, tool calls streamed/no streamed, paralelas y follow-up: tools/canario_motor.py (una ronda: nombre servido, JSON estricto, una llamada de herramienta) cubre solo la primera parte y no tiene streaming, paralelas ni follow-up.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Extender tools/canario_motor.py con tool call streamed, llamadas paralelas, follow-up tras respuesta de herramienta y `tool_calls: []` vacio en deltas, contra nemotron-local; dividir los hallazgos de otros modelos (DFlash, DSpark, GLM, Gemma) en una ficha aparte o cerrarlos.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

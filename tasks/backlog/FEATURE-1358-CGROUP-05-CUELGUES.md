@@ -162,3 +162,12 @@ Un segundo caso del mismo hilo es distinto: cuatro Spark/TP4, `vllm/vllm-openai:
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-1358-CGROUP-05-CUELGUES-direct-close-current.log`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+Ficha madre grande (40 KB) con varios relatos; lo aplicable es el A/B de contencion de memoria de GPU por cgroup, y aqui esta cargado el dmem parcheado (tools/dmem_*.sh, verify_cgroup_plan.py). Muchas sub-propuestas son multinodo (M3 quad Spark, TP=2, 376882, Qwen dual) o de otros modelos y no aplican. Ensayos A/B ejecutados: 0 segun la ficha; depende de FEATURE-1358-CGROUP-03-NATIVO.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Ejecutar el A/B de presion RAM+CUDA con dmem cargado sobre el contenedor vLLM local con captura de PSI, tiempos de ultima respuesta y watchdog, y partir las sub-propuestas multinodo/otro modelo en fichas separadas o descartarlas.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

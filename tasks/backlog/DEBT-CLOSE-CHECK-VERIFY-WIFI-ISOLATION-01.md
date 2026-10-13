@@ -47,3 +47,12 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: aplica · utilidad: baja · lectura: completa.
+
+El mt7925e wifi existe en este equipo, pero la ficha es un verificador (tools/verify_wifi_isolation.py ya existe) sin captura real de roam; el close_check termina en xfail y la ficha declara decision del dueno 2026-10-11 de dejarla abierta, no void_wontfix. Riesgo de aislamiento wifi es real solo si el equipo opera por wifi; hay cable r8127.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Capturar una secuencia roam real en el mt7925e (interfaz/AP, ruta, DNS, intento aislado) y correr el selector existente; o fusionar con FEATURE-FORUM-WIFI-ISOLATION-01.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

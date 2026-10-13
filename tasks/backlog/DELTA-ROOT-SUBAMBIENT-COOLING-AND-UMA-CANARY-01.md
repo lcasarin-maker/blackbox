@@ -51,3 +51,12 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: baja · lectura: completa.
+
+Hilo 375158: ducto de aire acondicionado sobre dos unidades, con relato sin baseline. El problema termico es real aqui (zona ACPI a 95-98 C en los cortes) pero el montaje fisico es una intervencion del dueno que ningun sensor valida; guardia_termico_predictivo y termico_predictivo ya miden la parte observable.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Reducir a registrar temperatura ambiente y punto de rocio junto a la residencia termica del boot si Luis prueba enfriamiento externo; sin canario ni protocolo propio.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

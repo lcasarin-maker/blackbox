@@ -110,3 +110,12 @@ Validación propuesta: OEM/PSID/repositorio y actualizador exactos antes de admi
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_06.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION-direct-close-current.log`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: alta · lectura: completa.
+
+Severidad P1: ficha 'standalone DGX Spark' es este caso (un nodo sin cable CX7, cx7-pcie-hotplug presente); riesgo de fan detenido en idle con temperaturas altas. Sin RPM de fan en hwmon, pero termico_predictivo y huella_host ya observan temperatura; el modelo es FE y este equipo es Gigabyte ATOM, por lo que hace falta verificar si el handler existe aqui. El grueso de la ficha (CX7 en malla, NCCL, firmware) es otro hardware.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Sensor de solo lectura: presencia de /etc/nvidia/cx7-hotplug-enabled, estado del endpoint PCIe CX7 y journal de cx7-pcie-hotplug, correlacionado con temperatura en idle; no aplicar blacklist.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

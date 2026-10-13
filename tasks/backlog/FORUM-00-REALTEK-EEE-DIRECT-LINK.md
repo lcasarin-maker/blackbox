@@ -52,3 +52,12 @@ Cerrar con reproducción y A/B repetido en la topología reportada o con resulta
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/FORUM-00-REALTEK-EEE-DIRECT-LINK.md`, `docs/evidence/BB-INSTRUMENTS-network.md`, `tools/forum_finding.py`, `tools/forum_hardware_subjects.py`, `tools/host_diagnostics.py`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: baja · lectura: completa.
+
+Hay r8127 por cable (enP7s7) en este nodo, pero el caso es enlace directo contra un Windows con Intel I225-V y la topologia local no esta medida; otra variante del hilo sobre kernel 1013 con switch no tiene problema. El delta 382184 (USRP/OAI) es otra carga.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Registrar en tools/huella_host.py o host_diagnostics.py el estado de 'ethtool --show-eee' y los link down/up de r8127 por boot; sin A/B con partner ni mitigacion automatica.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

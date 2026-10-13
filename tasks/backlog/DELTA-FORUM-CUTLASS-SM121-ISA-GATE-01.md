@@ -51,3 +51,12 @@ Estado: `needs_contract`. Antes del gate se debe fijar revisión CUTLASS/CuTe/ba
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: baja · lectura: completa.
+
+GB10 es SM121 y el contenedor vLLM trae sus propios kernels; la ficha pide gatear backend por capacidad real y ficha reconoce 'No hay build/smoke real para SM121'. Sin kernels CUTLASS externos en uso local, el riesgo es latente.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Registrar en tools/huella_host.py la capacidad de computo efectiva (nvidia-smi compute_cap) y la arch con que se compilo el wheel/imagen del contenedor, y alertar si difieren.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

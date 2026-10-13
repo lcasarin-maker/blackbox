@@ -50,3 +50,12 @@ Reusa `tools/atom_gpu_telemetry.py` y `tools/memory_profile.py` para observacion
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+El mecanismo fuente (llama-rpc-server remoto reteniendo memoria) no existe: no hay llama.cpp RPC ni multinodo. La parte util es el soak multihora de liberacion de memoria UMA tras terminar el cliente, aplicable al contenedor vLLM y a gpumem_historial (tools/gpumem_historial.py) y vigilante_memavail.py.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Soak multihora sobre el contenedor vLLM: tras detener cliente y luego el contenedor, comprobar que MemAvailable/PSI vuelven a linea base, usando gpumem_historial y memavail; sin RPC remoto.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.

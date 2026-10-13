@@ -51,3 +51,12 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: baja · lectura: completa.
+
+El truncamiento a 2048 tokens era de un modelo/tokenizer multimodal concreto y el patch MXFP4 es de otro checkpoint; ninguno corre aqui (nemotron-local). La idea de un canary de prompt largo con centinelas aplica a cualquier motor y no esta en tools/canario_motor.py (solo nombre, JSON y tool-call). Depende de proveedor sin artefacto.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Anadir al canario_motor una ronda de prompt largo con centinelas al inicio/medio/fin para detectar truncamiento silencioso de nemotron-local; ignorar patch MXFP4 e imagenes.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
