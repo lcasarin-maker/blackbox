@@ -19,3 +19,5 @@ Hilo 352743 del foro: en GB10 con Docker en cgroup `systemd`, `systemctl daemon-
 1. Prueba con contenedor desechable (no el de produccion) y un `daemon-reload` en una ventana sin vLLM: ¿pierde `/dev/nvidia-caps`? Con control: el mismo contenedor sin recarga.
 2. Decision de Luis (toca el demonio de Docker, regla del repo: no se toca produccion): `"exec-opts": ["native.cgroupdriver=cgroupfs"]` (remedio que reporta el autor del hilo) o CDI (`--device nvidia.com/gpu=all`, recomendado por NVIDIA; existe `/var/run/cdi/nvidia.yaml`). Cada una exige reiniciar el contenedor de vLLM.
 3. Registrar cada `daemon-reload` del host junto a un `nvidia-smi -L` dentro del contenedor, para saber si ya paso.
+## Decision de Luis (2026-10-12)
+Probar primero con un contenedor desechable (paso 1 de "Falta"), con `daemon-reload` en una ventana sin vLLM y con control sin recarga. Descartado por ahora: pasar Docker a cgroupfs o a CDI sin ese dato (ambas tocan el demonio y reinician vLLM). La decision entre cgroupfs y CDI se vota con la medicion delante.
