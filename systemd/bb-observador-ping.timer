@@ -1,0 +1,11 @@
+[Unit]
+Description=bb observador externo, un ping por segundo (sin instalar hasta que exista el equipo observador y su observador.json)
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1s
+AccuracySec=100ms
+Unit=bb-observador-ping.service
+
+[Install]
+WantedBy=timers.target
