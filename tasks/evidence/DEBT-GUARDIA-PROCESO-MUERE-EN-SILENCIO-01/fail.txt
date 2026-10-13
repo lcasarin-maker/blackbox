@@ -1,0 +1,4 @@
+$ u=bb-prueba-on-failure; systemd-run --user -q --unit=$u -p Restart=on-failure -p RestartSec=1 sleep 600; sleep 1; p1=$(systemctl --user show $u -p MainPID --value); kill -TERM $p1; sleep 4; echo "politica=on-failure pid_antes=$p1 estado_despues=$(systemctl --user is-active $u) pid_despues=$(systemctl --user show $u -p MainPID --value)"; systemctl --user stop $u 2>/dev/null; systemctl --user reset-failed $u 2>/dev/null; true
+rc=0
+politica=on-failure pid_antes=3130933 estado_despues=inactive pid_despues=0
+
