@@ -1,6 +1,6 @@
 {
   "claims_fingerprint": "dee20359f02de510930e066c731cda91f902f3ac18a1a8e07989300d7d34d912",
-  "panel": "1 auditor Opus, 2026-10-13: SPEC-L416 tras anadir dos sondas a huella_host",
+  "panel": "1 auditor Opus, 2026-10-13: SPEC-L416 tras el arreglo de _secure_boot en huella_host",
   "profile": "general",
   "results": [
     {
@@ -83,11 +83,12 @@
         "tests/test_bb_bash.py": "2b57ca26801521f6e77a030004bcbf2b67fadcf7208c313a67c15f6362841a5f",
         "tools/canario_motor.py": "4b5cbbc3d6a0930405333bd841d8588d92fd494af0c116b9e2b90f016744b98c",
         "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6",
-        "tools/huella_host.py": "7674f71dc16481c8afc18c57e6c4e986d2fb06fa588d0a4ccb3222ac9971bbd6"
+        "tools/huella_host.py": "d5506cb37094f39d7a4a1837994f6a6c8061ecd4fa9eaec046b0ef2b4adc4b29"
       },
       "claim_id": "SPEC-L416",
-      "evidence": "tools/huella_host.py diff (+131) adds only sondas drm_modeset/arranque_tras_actualizacion; artifact path unchanged ($BLACKBOX_DATA/huella_host.json, line 354). bin/bb cmd_status L2616-2646: four unit-only rows memavail/gpuoom/termico_predictivo/reloj_arranque, _fresco huella_host.json 2880 min, interruptores/canario_motor.jsonl 75, gpumem_historial.jsonl 15, gated on interruptores.json modo != off; limit declared in comment; vigilante del motor and guardia de procesos read only systemctl is-active. pytest -k 'sensor or control_negativo or usable': 43 passed, 57 deselected; the 6 cited test names each defined once and pass (7 passed with -k on their names); bb-usable controls: RANCIO + parametrized sin_latido [journal_vacio, solo_arranque] = 3. bb status live: all 7 sensor rows + guardia ARMADO; artifact ages 43/12/2 min vs 2880/75/15. Negative control: find -mmin -2880 on a file touched 3 days ago rc=1, fresh rc=0; test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FALTA passes.",
-      "seal": "eb44df818b09d650ae0484e4864170d719de93d98e4e47d2fc9b11c942e785ee",
+      "evidence": "`git diff -- tools/huella_host.py` is empty, so the _secure_boot change is the one committed in HEAD cd6c877b. `git diff HEAD~1 -- tools/huella_host.py` only adds the sonda_drm_modeset and sonda_arranque_tras_actualizacion probes and their helpers (_secure_boot now records unreadable efivars in the NOT_COLLECTED text). Nothing in it touches bb status, freshness thresholds or the tests the row cites. pytest tests/test_bb_bash.py -k 'sensor or control_negativo or usable' -n0: 43 passed, 57 deselected. bash bin/bb status shows ARMADO for guardia de procesos; memavail/gpuoom/termico_predictivo/reloj_arranque '(observar; solo la unit, sin latido)'; huella del host, canario del motor, historial de memoria de GPU. bin/bb:2634 `_fresco huella_host.json 2880`, :2639 canario_motor.jsonl 75, :2644 gpumem_historial.jsonl 15. :2625-2628 the four sensors read only `systemctl is-active`. :2605 vigilante.timer and :2613 bb-guardia-proceso.service read only the unit. :2363 bb-usable heartbeat window is 120 seconds. All 6 tests the row cites by name exist (grep -c 'def <name>' = 1 each), plus 3 bb_usable tests (lines 651/657/666). Negative control on _fresco's primitive: `find viejo(3 days old) -mmin -2880` gave empty output, rc=1; `find fresco` gave a match, rc=0.",
+      "fix": null,
+      "seal": "926e2e89a60031a3800713ccfded2dfb2c153450f3e68eb6110b0405dcaaf695",
       "verdict": "PASS"
     },
     {
@@ -185,7 +186,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-13T14:23:00Z",
-  "tree_fingerprint": "98b0a2c882877eb5a0abecc702f55afb00706fbd7d9d9a893434477c8e3da1a1",
+  "timestamp": "2026-10-13T14:26:10Z",
+  "tree_fingerprint": "0091640411e64fefcc4b0299636df5a5a5892745305d7f8b3da45e04840135c4",
   "violations": []
 }
