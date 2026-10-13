@@ -7,7 +7,7 @@ status: done
 closed_at: 2026-10-12
 closure_type: fixed
 reason: "Backport de memacct a 580.178.04 cargado (firmado con la MOK) y medido: region en dmem.capacity y carga CUDA contabilizada; reversible con tools/dmem_modulo.sh retrocede."
-evidence: {"pass": "tasks/evidence/FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01.pass.txt", "fail": "tasks/evidence/FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01.fail.txt"}
+evidence: {"pass": "tasks/evidence/FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01.pass.txt", "fail": "tasks/evidence/FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01.fail.txt", "e2e": "tasks/evidence/FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01.e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
