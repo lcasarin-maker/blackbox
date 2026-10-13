@@ -1,14 +1,16 @@
-{
- "id": 373177,
- "titulo": "MiniMax M3 NVFP4 and NVFP4 REAP 50 for 4x & 2x DGX Sparks",
- "posts_leidos": 33,
- "clase": "ruido",
- "proposito": [],
- "utilidad_atom": "ninguna",
- "razon": "Un usuario publica recetas sparkrun para MiniMax M3 en 2x y 4x Spark y otros reportan benchmarks de tool-eval-bench y recetas de 8 nodos con NCCL. Requiere varios nodos y no contiene monitoreo, medicion de memoria unificada ni prevencion de cortes; una busqueda de terminos termicos y OOM no encontro nada relevante.",
- "leido": true,
- "mecanismos": [],
+{"id": 373177, "titulo": "MiniMax M3 NVFP4 and NVFP4 REAP 50 for 4x & 2x DGX Sparks", "leido": true, "posts_leidos": 55, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["medir","solucionar"],
+ "mecanismos": [
+  {"que": "Medicion de tok/s de un solo flujo con curl: completion_tokens / tiempo total de la peticion; el resultado depende de la predictibilidad del texto con Eagle3 (aleatorio 33.5, codigo denso ~45, codigo fluido ~54.5 tok/s)", "como": "curl http://HOST:8000/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"minimax-m3\",\"messages\":[...],\"max_tokens\":1500,\"temperature\":0,\"chat_template_kwargs\":{\"thinking_mode\":\"disabled\"}}'", "fuente_post": 47, "repositorio": null, "licencia": "no indicada", "probado_en": "8x GB10 sm_121, vLLM 0.23.1rc1.dev101, TP=8 (usuario vexus777)", "riesgo": "Cifras de un usuario, cluster de 8 nodos; no aplica a un nodo unico", "verificable_aqui": null},
+  {"que": "Benchmark estandar de vLLM como piso comparable", "como": "vllm bench serve --backend openai-chat --model minimax-m3 --tokenizer /models/MiniMax-M3-MXFP8 --base-url http://HOST:8000 --endpoint /v1/chat/completions --dataset-name random --num-prompts 1 --random-input-len 32 --random-output-len 1500", "fuente_post": 49, "repositorio": null, "licencia": "no indicada", "probado_en": "8x GB10 sm_121", "riesgo": "El dataset random da el peor caso para Eagle3", "verificable_aqui": "vllm bench serve --help | head -5"},
+  {"que": "Benchmark de llamadas a herramientas tool-eval-bench (puntaje 0-100, 69 escenarios; incluye casos de inyeccion de prompt)", "como": "tool-eval-bench --base-url http://127.0.0.1:8000 --seed 42 --temperature 0 --timeout 60 --parallel 1", "fuente_post": 16, "repositorio": null, "licencia": "no indicada", "probado_en": "2x DGX Spark, tool-eval-bench v2.0.6", "riesgo": "Mide calidad del modelo, no estabilidad del hardware", "verificable_aqui": null},
+  {"que": "NCCL 2.28.9 produjo cuelgues de shm_broadcast en la captura de grafos; el usuario fija NCCL 2.30.4 por LD_PRELOAD", "como": "LD_PRELOAD=/opt/nccl-2.30.4/lib/libnccl.so.2", "fuente_post": 47, "repositorio": null, "licencia": null, "probado_en": "8x GB10 sm_121, red RoCE v2", "riesgo": "Solo cluster multinodo; la ruta /opt/nccl-2.30.4 es del usuario", "verificable_aqui": "python3 -c \"import torch;print(torch.cuda.nccl.version())\""},
+  {"que": "Variables NCCL/RoCE y Ray para cluster de 8 nodos GB10", "como": "NCCL_NET=IB NCCL_IB_DISABLE=0 NCCL_IB_ROCE_VERSION_NUM=2 NCCL_IB_QPS_PER_CONNECTION=8 NCCL_IB_SPLIT_DATA_ON_QPS=1 NCCL_MIN_NCHANNELS=32 NCCL_IB_PCI_RELAXED_ORDERING=1 NCCL_IB_MERGE_NICS=1", "fuente_post": 47, "repositorio": null, "licencia": null, "probado_en": "8x GB10 sm_121", "riesgo": "Valores de un cluster concreto con RoCE; sin sentido en un nodo", "verificable_aqui": null},
+  {"que": "Ajustes de memoria en la receta: expandable_segments, utilizacion de GPU 0.664 vs 0.80", "como": "PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True ; --gpu-memory-utilization 0.664 (post 33) / 0.80 (post 47)", "fuente_post": 33, "repositorio": null, "licencia": null, "probado_en": "8x GB10, vLLM, TP=8", "riesgo": "Valores de utilizacion alta en memoria unificada pueden dejar sin margen al sistema; sin cifra de margen en el tema", "verificable_aqui": null},
+  {"que": "Advertencia: --enable-expert-parallel empeoro de ~45 a 32 tok/s en un flujo; num_speculative_tokens=5 mas lento que 3; KV fp8 con spec-decode y block-size 128 falla con 'No common block size for 128'", "como": "no indicado (resultados de pruebas del usuario)", "fuente_post": 47, "repositorio": null, "licencia": null, "probado_en": "8x GB10 sm_121, vLLM dev101", "riesgo": "Fallo de arranque con fp8 KV mas spec-decode", "verificable_aqui": null},
+  {"que": "Configuracion de decodificacion especulativa Eagle3 con draft en un solo rank", "como": "--speculative-config '{\"model\": \".../MiniMax-M3-EAGLE3\", \"method\": \"eagle3\", \"num_speculative_tokens\": 3, \"draft_tensor_parallel_size\": 1, \"attention_backend\": \"TRITON_ATTN\"}'", "fuente_post": 41, "repositorio": null, "licencia": null, "probado_en": "8x GB10 (usuario ciprianveg)", "riesgo": "Ganancia anecdotica y dependiente del contenido", "verificable_aqui": null}
+ ],
  "omision_nvidia": null,
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
-}
+ "utilidad_atom": "baja",
+ "razon": "Tema sobre correr MiniMax M3 en clusters de 2 a 8 Spark con sparkrun/SGLang/vLLM, sin ninguna respuesta de staff NVIDIA en los 55 mensajes. Aporta metodos de medicion de tok/s y valores NCCL, pero todos son de cluster multinodo y de rendimiento del modelo, no de monitoreo termico ni de colapso de memoria en un nodo."}

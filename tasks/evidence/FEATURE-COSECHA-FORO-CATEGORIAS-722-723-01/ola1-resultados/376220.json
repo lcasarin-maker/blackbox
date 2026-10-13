@@ -2,78 +2,88 @@
  "id": 376220,
  "titulo": "Instructions for running Deepseek-v4-flash with DSpark using Eugr's repo",
  "leido": true,
- "posts_leidos": 13,
+ "posts_leidos": 101,
+ "lectura": "completa",
  "clase": "mecanismo",
  "proposito": [
-  "monitorear",
   "solucionar",
-  "medir"
+  "monitorear",
+  "medir",
+  "prevenir"
  ],
  "mecanismos": [
   {
-   "que": "Un nodo del par TP=2 quedo en 'cutout mode' bajo carga: 786 MHz, 15 W, 47 C, 96% de util frente a 2470 MHz, 44 W, 65 C en el otro; segun un usuario es un fallo conocido del Spark; se limpia apagando el sistema y desenchufando la fuente de la pared ~1 minuto",
-   "como": "apagar, desenchufar la fuente ~1 minuto y volver a enchufar (sin comando); tras el ciclo: generacion 30.5 a 37.9 tok/s, TTFT 5.94 s a 2.18 s",
-   "fuente_post": 70,
+   "que": "Diagnostico y reparacion de un nodo GB10 atascado en modo de corte (reloj ~786 MHz, 15 W) con el otro nodo a 2470 MHz/44 W; reparacion con apagado y desconexion de corriente",
+   "como": "apagar el sistema y desenchufar la fuente de la pared ~1 minuto y reiniciar (Odin 786 MHz, 15W, 47C, 96% util vs Tyr 2470 MHz, 44W, 65C, 96% util)",
+   "fuente_post": 71,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "2 DGX Spark ('Odin' y 'Tyr') con DeepSeek-V4-Flash TP=2 (declarado por nvidiaspark1; el diagnostico lo dio el usuario bernisse en el post 71)",
-   "riesgo": "La causa no esta explicada; la afirmacion de 'fallo conocido' es de un usuario, no de NVIDIA",
-   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,power.draw,temperature.gpu,utilization.gpu --format=csv"
+   "probado_en": "par de DGX Spark TP=2 (usuarios bernisse y nvidiaspark1)",
+   "riesgo": "bernisse lo califica como glitch conocido del Spark, sin causa raiz ni respuesta de NVIDIA",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,clocks.max.sm,power.draw,temperature.gpu,utilization.gpu --format=csv"
   },
   {
-   "que": "Solucion de usuario para scripts que se rompen tras apt update/upgrade: ampliar el tiempo de espera de arranque del motor",
-   "como": "VLLM_ENGINE_READY_TIMEOUT_S: \"3600\" en env",
+   "que": "Resultado medido tras el ciclo de energia duro del nodo atascado",
+   "como": "generacion 30.5 -> 37.9 tok/s (+24%), TTFT 5.94 s -> 2.18 s, c4 prefill 1,195 -> 1,882 pp/s",
+   "fuente_post": 73,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "par de DGX Spark TP=2 (nvidiaspark1)",
+   "riesgo": "antes/despues de un solo usuario, sin repeticion",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Timeout de arranque del motor vLLM subido para evitar fallos tras sudo update/upgrade",
+   "como": "env: VLLM_ENGINE_READY_TIMEOUT_S: \"3600\"",
    "fuente_post": 40,
-   "repositorio": "https://github.com/eugr/spark-vllm-docker",
-   "licencia": "no indicada",
-   "probado_en": "DGX Spark (declarado por davidbarnesguildford)",
-   "riesgo": null,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "recetas de eugr/sparkrun (davidbarnesguildford)",
+   "riesgo": "el autor no sabe por que la actualizacion dispara el timeout",
    "verificable_aqui": null
   },
   {
-   "que": "Usar la carga perezosa de safetensors da mas KV cache que instanttensor y evita el bloqueo de carga con fastsafetensors",
-   "como": "--load-format safetensors --safetensors-load-strategy lazy",
+   "que": "Retencion de cache de prefijo: la cache se invalida por asignacion de bloques, no por tiempo, en el MLA hibrido con ventana deslizante de DeepSeek V4 Flash",
+   "como": "VLLM_PREFIX_CACHE_RETENTION_INTERVAL=4096 (recetas posteriores: --prefix-cache-retention-interval 4096) con --long-prefill-token-threshold 1024 y --enable-prompt-tokens-details para verificar cached_tokens",
+   "fuente_post": 45,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x ASUS Ascent GX10, vLLM 0.1.dev19023+g30038602b, TP2 (florianbrede)",
+   "riesgo": "max_num_batched_tokens=2048 mata EngineCore bajo c4 (workspace MLA 578.5 MB < 758.6 MB requerido)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Regresion de salida corrupta tras horas de uso en imagenes b12x posteriores a 20260810; mitigacion por rollback de imagen",
+   "como": "docker pull eugr/spark-vllm-b12x:nightly-20260810 (o editar PREBUILT_B12X_RUNNER_IMAGE en build-and-copy.sh linea 11)",
+   "fuente_post": 84,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "varios usuarios (DColt, s0ne, Ama5u, tanbuikim7, benj1m1, foogitiff); builds 0813/0815 afectadas",
+   "riesgo": "vavrusam (post 77/93) atribuye la corrupcion a la rama vLLM del fork b12x y regresa a eugr/spark-vllm:latest (mainline)",
+   "verificable_aqui": "docker images --digests | grep -E 'spark-vllm'"
+  },
+  {
+   "que": "Fallo de carga de safetensors y atasco; workarounds de cargador",
+   "como": "--load-format safetensors --safetensors-load-strategy lazy (mas KV cache que instanttensor); --enforce-eager; fasttensors cuelga",
    "fuente_post": 17,
-   "repositorio": "https://github.com/eugr/spark-vllm-docker",
-   "licencia": "no indicada",
-   "probado_en": "2 Spark (declarado por vedcsolution)",
-   "riesgo": "Con fastsafetensors la carga se cuelga indefinidamente (post 12)",
-   "verificable_aqui": null
-  },
-  {
-   "que": "Reducir --max-num-batched-tokens a 4096 permite >1.5M tokens de KV con 0.84 de utilizacion; 2048 mejora el uso pero falla al azar; otro usuario avisa de que lotes pequenos degradan MTP",
-   "como": "--max-num-batched-tokens 4096 con --gpu-memory-utilization 0.84",
-   "fuente_post": 42,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "2 Spark TP=2 DeepSeek-V4-Flash-0731 (declarado por tanbuikim7)",
-   "riesgo": "2048 puede fallar al azar",
+   "probado_en": "clusters de 2 Spark (vedcsolution, frankyyyyy)",
+   "riesgo": "--enforce-eager reduce rendimiento (~10 t/s reportado en post 12)",
    "verificable_aqui": null
   },
   {
-   "que": "Imagen b12x de eugr: regresion con salida corrupta tras horas de uso en builds posteriores al 20260810; el usuario revierte a la imagen anterior",
-   "como": "docker pull eugr/spark-vllm-b12x:nightly-20260810 ; PREBUILT_B12X_RUNNER_IMAGE=\"eugr/spark-vllm-b12x:nightly-20260810\" en build-and-copy.sh",
-   "fuente_post": 85,
-   "repositorio": "https://github.com/eugr/spark-vllm-docker",
-   "licencia": "no indicada",
-   "probado_en": "2 Spark, varios usuarios (posts 78-102)",
-   "riesgo": "Salida incoherente en builds nuevos; un usuario reporta tareas 3x mas lentas en 0813 y 0815 (post 89)",
-   "verificable_aqui": null
-  },
-  {
-   "que": "Mediciones de tuning de DSpark: 3 tokens especulativos superaron 4, 5 y 6 en el benchmark de 50 concurrentes (71.63 frente a 48.60 tok/s); batched tokens 10240 mejor que 8192",
-   "como": "--speculative-config '{\"method\":\"dspark\",\"num_speculative_tokens\":3}' --max-num-batched-tokens 10240",
-   "fuente_post": 5,
+   "que": "Comprobacion de esfuerzo de razonamiento via render del prompt (mod dsv4-reasoning-effort-fix)",
+   "como": "curl -s http://<host>:8000/v1/chat/completions -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Solve 99*97 - 144\"}],\"chat_template_kwargs\":{\"thinking\":true,\"reasoning_effort\":\"max\"}}'",
+   "fuente_post": 50,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "2 Spark TP=2 (declarado por johndaly)",
-   "riesgo": "16384 no cabe con max_model_len=262144",
+   "probado_en": "TP=2 b12x (bernisse)",
+   "riesgo": "valores no soportados como medium devuelven HTTP 500 sin el parche (post 51)",
    "verificable_aqui": null
   }
  ],
  "omision_nvidia": null,
- "utilidad_atom": "media",
- "razon": "El tema es un hilo largo de recetas de DeepSeek V4 Flash, con un dato util de monitoreo: un nodo atascado a 786 MHz y 15 W bajo carga, diagnosticado y resuelto por usuarios con un ciclo de energia, medido con un antes y un despues. Todo son afirmaciones de usuarios en 2 Spark, y ningun post de NVIDIA lo respalda; las respuestas de eugr_nv tratan solo de empaquetado de recetas.",
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+ "utilidad_atom": "alta",
+ "razon": "El tema contiene mecanismos concretos y reutilizables, destacando posts 68-73: un nodo en modo de corte (786 MHz, 15 W) reparado con ciclo de energia duro y medicion antes/despues, mas el workaround de rollback de imagen para salida corrupta. NVIDIA no responde sobre el glitch (staff eugr_nv solo opina de builds); todo viene de usuarios y no se verifico aqui."
 }

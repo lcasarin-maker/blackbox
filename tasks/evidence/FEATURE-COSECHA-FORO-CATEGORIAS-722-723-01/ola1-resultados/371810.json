@@ -3,46 +3,56 @@
  "titulo": "Benchmark Report: Qwen3.6-35B-A3B-NVFP4 on NVIDIA DGX Spark, Jetson Thor, Blackwell 6000 Pro",
  "leido": true,
  "posts_leidos": 13,
+ "lectura": "completa",
  "clase": "diagnostico",
  "proposito": [
   "medir",
-  "solucionar"
+  "omision_nvidia",
+  "prevenir"
  ],
  "mecanismos": [
   {
-   "que": "Comando de benchmark vLLM y lanzamiento de referencia con memoria de GPU al 85%",
-   "como": "vllm serve nvidia/Qwen3.6-35B-A3B-NVFP4 --port 8000 --tensor-parallel-size 1 --trust-remote-code --dtype auto --quantization modelopt --kv-cache-dtype fp8 --attention-backend flashinfer --moe-backend marlin --gpu-memory-utilization 0.85 --max-model-len 65536 --max-num-seqs 4 --max-num-batched-tokens 8192 --enable-chunked-prefill --async-scheduling --enable-prefix-caching --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3,\"moe_backend\":\"triton\"}'; vllm bench serve --model nvidia/Qwen3.6-35B-A3B-NVFP4 --dataset-name random --random-input-len 8000 --random-output-len 1000 --request-rate 10000 --num-prompts 16 --ignore-eos",
+   "que": "Metodo de medicion A/B alternando MTP on/off para separar deriva termica del efecto probado; el usuario midio ~6 % menos throughput con la maquina caliente",
+   "como": "cuatro corridas del mismo benchmark alternando MTP on/off; baseline sin MTP 569.1 ± 11.7 (dia 1) vs 569.0 ± 7.0 (dia 2)",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x Lenovo ThinkStation PGX (GB10, sm121), vLLM v0.26.1rc1.dev693 (declarado por usuario)",
+   "riesgo": "corridas en bloque confunden calor acumulado con el factor medido",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Comando de benchmark de serving de vLLM usado para cargas prompt-heavy/decode-heavy/balanced",
+   "como": "vllm bench serve --model nvidia/Qwen3.6-35B-A3B-NVFP4 --dataset-name random --random-input-len 8000 --random-output-len 1000 --request-rate 10000 --num-prompts 16 --ignore-eos",
    "fuente_post": 1,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "DGX Spark, Jetson Thor y Blackwell 6000 Pro segun shahizat; sin driver/kernel",
-   "riesgo": "El autor admite haber usado un LLM para escribir las tablas del post 3; las cifras de Spark (171.64 tok/s de salida prompt-heavy) son del autor.",
-   "verificable_aqui": "command -v vllm"
+   "probado_en": "DGX Spark, Jetson Thor, Blackwell 6000 Pro (usuario shahizat)",
+   "riesgo": "con --max-num-seqs 4 y 16 concurrentes se mide la cola, no la GPU (advertido en post 13)",
+   "verificable_aqui": null
   },
   {
-   "que": "Variables de entorno recomendadas para Spark segun un usuario (per.arneng) y su comprobacion por otro (Jortfal): VLLM_USE_FLASHINFER_MOE_FP4=0 esta obsoleta (se reemplaza por --moe-backend); VLLM_FP8_MOE_BACKEND no es reconocida por vLLM; se usan solo FLASHINFER_DISABLE_VERSION_CHECK=1 y CUTE_DSL_ARCH=sm_121a",
-   "como": "export FLASHINFER_DISABLE_VERSION_CHECK=1; export CUTE_DSL_ARCH=sm_121a",
-   "fuente_post": 10,
+   "que": "Variables de entorno que per.arneng atribuye a una receta para DGX Spark; Jortfal informa que VLLM_FP8_MOE_BACKEND no la reconoce vLLM y VLLM_USE_FLASHINFER_MOE_FP4 esta deprecada",
+   "como": "export VLLM_USE_FLASHINFER_MOE_FP4=0; export VLLM_FP8_MOE_BACKEND=flashinfer_cutlass; export FLASHINFER_DISABLE_VERSION_CHECK=1; export CUTE_DSL_ARCH=sm_121a",
+   "fuente_post": 5,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "DGX Spark segun Jortfal (gpu-memory-utilization 0.81, max-model-len 131072)",
-   "riesgo": "FLASHINFER_DISABLE_VERSION_CHECK=1 desactiva la verificacion de version entre FlashInfer y los kernels precompilados; el autor la describe como solucion temporal.",
-   "verificable_aqui": null
+   "probado_en": null,
+   "riesgo": "FLASHINFER_DISABLE_VERSION_CHECK=1 desactiva la verificacion de version y esconde desajustes de cubin (post 10)",
+   "verificable_aqui": "docker exec <contenedor> env | grep -E 'FLASHINFER|CUTE_DSL'"
   },
   {
-   "que": "Reporte de usuario liviuyuki: MTP no estaba roto en sm121 sino que el contenedor eugr/spark-vllm-docker antiguo moria al arrancar; con eugr/spark-vllm:nightly-20260812 (vLLM v0.26.1rc1.dev693) funciona con --gpu-memory-utilization 0.8 --max-model-len 262144 --max-num-seqs 32",
-   "como": "--kv-cache-dtype fp8 --attention-backend flashinfer --moe-backend marlin --gpu-memory-utilization 0.8 --max-model-len 262144 --max-num-seqs 32 --max-num-batched-tokens 8192 --enable-chunked-prefill --async-scheduling --enable-prefix-caching",
+   "que": "Omision de palancas de potencia/reloj en GB10 segun un usuario",
+   "como": "Current/Default/Min/Max Power Limit: N/A ; --query-supported-clocks devuelve [N/A]; 2424 de 3003 MHz",
    "fuente_post": 13,
-   "repositorio": "https://github.com/eugr/spark-vllm-docker",
-   "licencia": "no indicada",
-   "probado_en": "2x Lenovo ThinkStation PGX (GB10, sm121) segun liviuyuki",
-   "riesgo": "Atribuir un fallo a una limitacion de hardware sin descartar la imagen del contenedor llevo al autor a una conclusion erronea durante semanas.",
-   "verificable_aqui": null
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Lenovo ThinkStation PGX (GB10) segun el usuario",
+   "riesgo": "no se puede limitar potencia ni reloj por software en esa variante",
+   "verificable_aqui": "nvidia-smi -q -d POWER,CLOCK"
   }
  ],
- "omision_nvidia": null,
- "utilidad_atom": "baja",
- "razon": "Hilo de benchmarks de usuarios sin respuesta de NVIDIA: lo transferible son las banderas de vLLM con gpu-memory-utilization 0.8-0.85, las variables CUTE_DSL_ARCH y FLASHINFER_DISABLE_VERSION_CHECK y la leccion de que un fallo atribuido al hardware era de la imagen. No hay monitoreo ni termica; el post 13 estaba truncado en mi lectura mas alla de la configuracion citada.",
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+ "omision_nvidia": "Segun un usuario (post 13, no staff de NVIDIA), el firmware no expone limites de potencia ni relojes soportados en GB10 (N/A).",
+ "utilidad_atom": "media",
+ "razon": "Tema sin respuesta de staff NVIDIA; el valor para el ATOM esta en el post 13 (usuario liviuyuki): metodo A/B alternado contra deriva termica ~6 %, y la ausencia de palancas de potencia/reloj, ambas declaraciones de un usuario sin verificar aqui. El resto son tablas de benchmark sin relacion con colapsos de memoria o calor."
 }

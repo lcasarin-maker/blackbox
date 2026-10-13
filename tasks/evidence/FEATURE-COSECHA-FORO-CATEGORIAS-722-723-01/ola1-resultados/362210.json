@@ -2,13 +2,56 @@
  "id": 362210,
  "titulo": "Introducing the Atlas Inference Server and Engine",
  "leido": true,
- "posts_leidos": 27,
+ "posts_leidos": 165,
+ "lectura": "completa",
  "clase": "ruido",
- "proposito": [],
- "mecanismos": [],
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Bandera de Atlas que deja en BF16 las primeras y ultimas capas de atencion del KV cache para frenar la perdida de coherencia con contexto largo en NVFP4",
+   "como": "--kv-high-precision-layers (por defecto 0; con 2, las primeras 2 y ultimas 2 capas de atencion van en BF16)",
+   "fuente_post": 130,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 segun el autor (tbraun96), sin hardware/driver/kernel declarados",
+   "riesgo": "Motor propietario/binario ofuscado hasta el post 166; el autor afirma efecto de rendimiento dentro de 1% sin medicion publicada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Formula de tamano de KV cache propuesta por un autor de Atlas",
+   "como": "2 (K,V) x batch x dim_head x head_count x layers x seq_len; el propio autor dice que no aplica a Qwen3.5 con atencion lineal/Gated DeltaNet",
+   "fuente_post": 34,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Formula incompleta para arquitecturas hibridas, el autor admite que 'se da vuelta'",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Aviso de medicion: llama-benchy reporta mal pp t/s con Atlas porque Atlas envia la primera respuesta al recibir la peticion, no tras procesar el prompt",
+   "como": "no indicado comando; eugr dice tener una rama de llama-benchy que lo corrige sin fusionar",
+   "fuente_post": 162,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Cifras de prefill de Atlas (p.ej. 1,690,260 pp t/s en post 156) no son fiables",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Comando docker de ejemplo para correr Atlas en GB10 con KV fp8 y prefix caching",
+   "como": "docker run -d --rm --name atlas --network host --gpus all --ipc=host -p 30000:30000 ... avarok/atlas-gb10:latest serve google/gemma-4-31B-it --max-seq-len 8192 --kv-cache-dtype fp8 --kv-high-precision-layers max --gpu-memory-utilization 0.90 --scheduling-policy slai --quantization fp8 --enable-prefix-caching --speculative",
+   "fuente_post": 161,
+   "repositorio": "https://github.com/Avarok-Cybersecurity/atlas (enlazado en post 166)",
+   "licencia": "no indicada",
+   "probado_en": "GB10 declarado por el usuario alexander.korolev.germany",
+   "riesgo": "El mismo usuario reporta salida corrupta, KV en bf16 pese a pedir fp8 y limite de ~20k tokens de cache con 70 GB usados",
+   "verificable_aqui": null
+  }
+ ],
  "omision_nvidia": null,
  "utilidad_atom": "baja",
- "razon": "Anuncio de un motor de inferencia en Rust (Atlas, 82 tok/s con Qwen3-Next-80B segun sus autores) seguido de un debate sobre el codigo cerrado, binarios ofuscados en Docker y la fecha de apertura; el post 166 dice que el codigo fue liberado despues. Cifras de rendimiento de los autores sin metodo reproducible en el texto (mencionan una bandera --kv-high-precision-layers para capas de KV en BF16); sin respuesta de NVIDIA. Lei completos unos 27 posts y recorri las primeras lineas de los 164.",
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+ "razon": "Es un anuncio de producto de terceros (Atlas, motor Rust) con 165 mensajes de escepticismo y benchmarks de usuario; no hay respuesta de NVIDIA en el tema. Los pocos mecanismos concretos (--kv-high-precision-layers, formula de KV cache, advertencia de llama-benchy) no tocan monitoreo de calor ni colapsos de memoria del sistema."
 }

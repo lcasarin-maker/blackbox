@@ -3,12 +3,95 @@
  "titulo": "Qwen3.8 27b - Upcoming release countdown",
  "leido": true,
  "posts_leidos": 60,
- "clase": "ruido",
- "proposito": [],
- "mecanismos": [],
- "omision_nvidia": null,
- "utilidad_atom": "ninguna",
- "razon": "Hilo de espera y reportes de rendimiento de un modelo nuevo; incluye plantillas de vllm serve y la mencion del motor veloGB10 y de la herramienta de benchmark llama-benchy (github.com/eugr/llama-benchy), sin comandos de monitoreo ni de prevencion de fallos de memoria o calor. Leido por busqueda dirigida de terminos y por las primeras publicaciones, no linea por linea.",
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe"
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta vLLM para Qwen3.8-27B NVFP4 en un Spark con MTP (sparkrun yaml)",
+   "como": "vllm serve rdtand/Qwen3.8-27B-PrismaAQUA-5.5bit-vllm --max-model-len 262144 --gpu-memory-utilization 0.59 --max-num-seqs 4 --load-format fastsafetensors --attention-backend flashinfer --mamba-block-size 256 --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":5}' ... env: VLLM_NVFP4_GEMM_BACKEND=flashinfer-cutlass, VLLM_USE_FLASHINFER_MOE_FP4=0, TORCH_CUDA_ARCH_LIST=12.1a, ENABLE_NVFP4_SM100=0",
+   "fuente_post": 44,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark con reloj bajado a 2 GHz segun el autor; vLLM 0.27.2rc1.dev88; tool-eval-bench 93/100",
+   "riesgo": "Valores copiados de una receta de 3.6; el autor dice que no optimizo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Receta alternativa vLLM 0.23.1rc1 con unsloth NVFP4",
+   "como": "gpu_memory_utilization 0.35; speculative {\"method\":\"mtp\",\"num_speculative_tokens\":3}; --load-format instanttensor; --kv-cache-dtype fp8_e4m3; --async-scheduling; env FLASHINFER_DISABLE_VERSION_CHECK=1, CUTE_DSL_ARCH=sm_121a",
+   "fuente_post": 48,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark, vLLM 0.23.1rc1.dev1453, c1 26.0 tok/s tg (unsloth)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Receta SGLang de un solo Spark: 31.4 tok/s",
+   "como": "python3 -m sglang.launch_server --model-path RadixArk/Qwen3.8-27B-NVFP4 --mem-fraction-static 0.85 --attention-backend flashinfer --kv-cache-dtype fp8_e4m3 --mamba-ssm-dtype bfloat16 --speculative-algorithm EAGLE --speculative-num-steps 3 --speculative-eagle-topk 1 --speculative-num-draft-tokens 4 --max-running-requests 10 --context-length 262144",
+   "fuente_post": 58,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, imagen lmsysorg/sglang:qwen38-27b",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Bug de tokenizer en el cuantizado de unsloth: 'truncate' arrastrado en tokenizer.json provoca HTTP 400 con imagenes de mas de 2048 tokens de vision",
+   "como": "no indicado el parche en este post; helge remite a otro hilo",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "vLLM 0.26.1rc1, transformers 5.14.1",
+   "riesgo": "Error 400 silencioso con imagenes grandes",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reducir sobrepensado en Hermes Agent",
+   "como": "config.yaml: agent: reasoning_overrides: qwen3.8-27b: low",
+   "fuente_post": 53,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Aceptacion de MTP peor que en 3.6: depth auto 4 vs 6",
+   "como": "tabla TP=4: aceptacion MTP 74-76% (3.6) vs 51-55% (3.8); tg mtp=off 31.5 tok/s en ambos",
+   "fuente_post": 26,
+   "repositorio": "https://github.com/sf-stav/veloGB10",
+   "licencia": "no indicada",
+   "probado_en": "GB10, motor propio del autor",
+   "riesgo": "Datos de motor de terceros",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Banco de medicion reutilizable: llama-benchy y tool-eval-bench con --spec-bench",
+   "como": "tool-eval-bench --spec-bench --base-url URL --depth \"0 16384 32768\"; llama-benchy (https://github.com/eugr/llama-benchy)",
+   "fuente_post": 13,
+   "repositorio": "https://github.com/eugr/llama-benchy",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Nota de calidad: reloj reducido de la GB10 por el usuario",
+   "como": "Spark 'downclocked' a 2 GHz: prefill mas bajo que otros sin recorte",
+   "fuente_post": 46,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,clocks.max.sm --format=csv"
+  }
+ ],
+ "omision_nvidia": "Pregunta sin respuesta en el hilo: si NVIDIA publicara nvidia/qwen3.8-27b-nvfp4; un usuario cita que eugr lo espera esa semana (posts 54-55). Ningun mensaje de personal de NVIDIA.",
+ "utilidad_atom": "media",
+ "razon": "Hilo de 60 mensajes (todos leidos; el 40 no aparece en el texto) con recetas de vLLM/SGLang y metodos de medicion para Qwen3.8-27B en Spark, utiles como linea base de configuracion de inferencia. No trata memoria, calor ni cortes; solo trae un dato de reloj reducido a 2 GHz y un fallo de tokenizer."
 }

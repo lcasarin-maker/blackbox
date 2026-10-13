@@ -1,38 +1,99 @@
 {
  "id": 381027,
  "titulo": "veloGB10 v0.4.0 RELEASE: Qwen 3.8-27b code sustained tok/s: 4x : 125 tok/s , 2x: 85/tok/s, 1x: 75tok/s",
- "posts_leidos": 50,
+ "leido": true,
+ "posts_leidos": 118,
+ "lectura": "completa",
  "clase": "mecanismo",
  "proposito": [
   "monitorear",
-  "prevenir"
+  "medir",
+  "prevenir",
+  "solucionar"
  ],
- "utilidad_atom": "baja",
  "mecanismos": [
   {
-   "que": "Consulta de potencia, temperatura, utilizacion y reloj SM de la GPU en un Spark; un usuario reporta 84 C a 89.67 W y 96 por ciento de utilizacion durante un benchmark",
-   "como": "nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu,clocks.sm --format=csv,noheader",
+   "que": "Comando de lectura de potencia, temperatura, utilizacion y reloj durante benchmark; el usuario vio 84 C y 89.67 W con 96 % de uso y 2392 MHz y lo describe como calor inedito en su caja",
+   "como": "nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu,clocks.sm --format=csv,noheader   ->   89.67 W, 84, 96 %, 2392 MHz",
    "fuente_post": 31,
    "repositorio": null,
-   "licencia": null,
-   "probado_en": "DGX Spark de un usuario; salida 89.67 W, 84, 96 %, 2392 MHz",
-   "riesgo": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 (cliente jbourny), veloGB10 0.4.x, Qwen3.8-27B NVFP4 + DFlash2",
+   "riesgo": "Observacion de un usuario; no se reporta corte ni causa",
    "verificable_aqui": "nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu,clocks.sm --format=csv,noheader"
   },
   {
-   "que": "Limitar el reloj de la GPU (1500 MHz o 2000 MHz) en benchmarks y uso diario; un usuario dice que lo fijo a 2000 MHz porque en MoE no vio diferencia de rendimiento, y otro usa 1500 MHz como condicion de sus tablas",
-   "como": "no indicado (los posts dan el valor del tope, no el comando); lectura: nvidia-smi --query-gpu=name,pstate,clocks.current.graphics,clocks.current.sm,clocks.max.graphics,clocks.max.sm --format=csv (maximo 3003 MHz, actual 2411 MHz segun el post 44)",
+   "que": "Consulta de pstate y relojes maximos: reloj actual 2411 MHz, de aplicacion 2418 MHz, maximo 3003 MHz",
+   "como": "nvidia-smi --query-gpu=name,pstate,clocks.current.graphics,clocks.current.sm,clocks.max.graphics,clocks.max.sm --format=csv",
+   "fuente_post": 44,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 (Nysso)",
+   "riesgo": "Solo lectura",
+   "verificable_aqui": "nvidia-smi --query-gpu=name,pstate,clocks.current.graphics,clocks.current.sm,clocks.max.graphics,clocks.max.sm --format=csv"
+  },
+  {
+   "que": "Practica declarada de limitar el reloj de GPU para benchmarks (2000 MHz en un usuario, 1500 MHz en otro) con efecto sobre el rendimiento reportado; ningun post indica el comando para fijarlo",
+   "como": "no indicado (solo 'GPU cap 1500 Mhz' en la tabla y 'clock set to 2000Mhz')",
    "fuente_post": 46,
    "repositorio": null,
-   "licencia": null,
-   "probado_en": "DGX Spark / Asus GX10 de usuarios; sin version de driver ni kernel indicada",
-   "riesgo": "Reduce el rendimiento en modelos densos segun el propio usuario; los posts no dicen que el tope sea una medida termica",
-   "verificable_aqui": "nvidia-smi --query-gpu=clocks.current.sm,clocks.max.sm --format=csv"
+   "licencia": "no indicada",
+   "probado_en": "GB10, Linux-6.17.0-1029-nvidia, vLLM 0.28.0",
+   "riesgo": "Resultados no comparables si los relojes difieren; stav_kats pregunta si fueron con reloj bloqueado (post 105) sin respuesta en el tema",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Trampa de benchmark: bench-matrix.sh limita la salida a 680 tokens y sin esfuerzo de razonamiento cae en xhigh, midiendo sobre todo el razonamiento inicial",
+   "como": "no indicado (solo la descripcion del defecto)",
+   "fuente_post": 55,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Qwen3.8-27B",
+   "riesgo": "Afirmacion del autor de veloGB10",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fallo silencioso de truncacion: un tokenizer.json de una recuantizacion de comunidad llevaba un bloque truncation con max_length 8192 y recortaba el prompt; la correccion fue poner max_length 262144",
+   "como": "\"truncation\": {\"max_length\": 8192, \"strategy\": \"LongestFirst\"}  ->  max_length 262144 ; comparar el log del motor [req] sync prompt_tokens=N con usage.prompt_tokens del cliente",
+   "fuente_post": 101,
+   "repositorio": "https://github.com/sf-stav/veloGB10",
+   "licencia": "no indicada",
+   "probado_en": "veloGB10 0.5.4/0.5.5, ASUS GX10",
+   "riesgo": "El motor y el cliente deben contarse por separado para localizar quien trunca; cambio verificado por el usuario con un prompt de 15,468 tokens",
+   "verificable_aqui": "python3 -c \"import json,sys;print(json.load(open(sys.argv[1])).get('truncation'))\" <ruta>/tokenizer.json"
+  },
+  {
+   "que": "Registro de memoria del arranque del motor: presupuesto estimado y trazas de VmRSS/MemAvailable por etapa de carga",
+   "como": "[mem-budget] ... steady-state estimate ~67.0 GB of 121.6 GB physical ; startup peak ~75.0 GB ; [mem] up#N: VmRSS ... MemAvailable ...",
+   "fuente_post": 31,
+   "repositorio": "https://github.com/sf-stav/veloGB10",
+   "licencia": "no indicada",
+   "probado_en": "GB10 121.6 GB fisicos, Qwen3.8-27B NVFP4 batch 3 ctx 262144",
+   "riesgo": "KV ~51.5 GB a batch 3; el pico de arranque suma una calibracion transitoria de ~8 GB",
+   "verificable_aqui": "grep -E 'MemAvailable|MemTotal' /proc/meminfo"
+  },
+  {
+   "que": "Flag de vLLM declarado inerte en GB10: VLLM_BLOCKSCALE_FP8_GEMM_FLASHINFER=1 no cambia el kernel (vLLM usa cutlass blockscale en sm_121)",
+   "como": "export VLLM_BLOCKSCALE_FP8_GEMM_FLASHINFER=1  (sin efecto segun el autor del motor)",
+   "fuente_post": 117,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "vLLM 0.28.0, sm_121",
+   "riesgo": "Afirmacion de un tercero sin verificar",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Receta vLLM de dos Spark con limites de memoria explicitos",
+   "como": "vllm serve ... --tensor-parallel-size 2 --max-model-len 524288 --max-num-batched-tokens 16384 --max-num-seqs 5 --gpu-memory-utilization 0.55 --kv-cache-dtype fp8 --kv-cache-memory-bytes 20G --attention-backend flashinfer --enable-prefix-caching --enable-chunked-prefill -O3",
+   "fuente_post": 96,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "vLLM v0.28.0, TP2, 2x GB10, GPU a 1500 MHz",
+   "riesgo": "Receta de un usuario con drafter propio; la calidad del DSpark fue discutida (posts 107-114)",
+   "verificable_aqui": null
   }
  ],
- "razon": "Hilo de lanzamiento de un motor de inferencia propio (veloGB10, repositorio sf-stav/veloGB10, licencia no indicada) con benchmarks. Solo hay dos datos sueltos sobre termica: 84 C a 89.67 W en un benchmark (post 31) y topes de reloj a 1500 o 2000 MHz sin comando ni medicion de su efecto termico; respuesta de NVIDIA ausente.",
- "leido": true,
  "omision_nvidia": null,
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+ "utilidad_atom": "media",
+ "razon": "Tema de un motor de terceros sin respuesta de NVIDIA; contiene dos lecturas concretas de nvidia-smi con valores reales de reloj/potencia/temperatura (84 C a 89.67 W) y el hecho de que usuarios limitan el reloj a 1500-2000 MHz, pero sin dar el comando de limitacion. Aporta ademas el diagnostico de truncacion silenciosa por tokenizer.json y la traza de memoria del arranque, utiles como metodo, no como solucion de los cortes."
 }

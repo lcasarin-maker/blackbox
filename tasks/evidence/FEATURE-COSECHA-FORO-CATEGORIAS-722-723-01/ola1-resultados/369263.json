@@ -1,38 +1,15 @@
-{
- "id": 369263,
- "titulo": "Atlas: Open-source inference engine for DGX Spark <2minute cold start, 100+ tok/s on Qwen3.6-35B-FP8, 13+ supported models",
- "leido": true,
- "posts_leidos": 27,
- "clase": "diagnostico",
- "proposito": [
-  "prevenir",
-  "medir"
- ],
+{"id": 369263, "titulo": "Atlas: Open-source inference engine for DGX Spark <2minute cold start, 100+ tok/s on Qwen3.6-35B-FP8, 13+ supported models", "leido": true, "posts_leidos": 102, "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": ["medir","prevenir"],
  "mecanismos": [
-  {
-   "que": "Atlas incluye una guarda de memoria en la carga del modelo: aborta si la memoria GPU libre cae bajo un margen tras cualquier shard, para evitar OOM del sistema",
-   "como": "--oom-guard-mb <MB> (default 4096) ; --gpu-memory-utilization (default 0.9) ; --max-num-seqs (default 128) ; --max-seq-len (default 32768)",
-   "fuente_post": 20,
-   "repositorio": "https://github.com/Avarok-Cybersecurity/atlas",
-   "licencia": "no indicada",
-   "probado_en": "DGX Spark GB10; imagen avarok/atlas-gb10:latest",
-   "riesgo": "el propio autor reconoce que la receta publicada fallaba con 'KV cache can hold at most 0 concurrent sequence(s)' porque los pesos NVFP4 del 122B ocupan ~108 GB de un presupuesto de ~110 GB (post 14); varios usuarios reportan fallos de tool calls y caida de 35-40% de throughput con 2 solicitudes concurrentes (posts 34-40, 95, 99)",
-   "verificable_aqui": null
-  },
-  {
-   "que": "Afirmacion de un usuario (aaronannas): GB10 (sm_121) carece de tcgen05 y de MMA cooperativo de 2 SM necesarios para la via rapida NVFP4, por lo que NVFP4 cae a dequant-a-BF16 (~12 tok/s, 5x mas lento que FP8) y el cold start de Atlas (~44 s vs ~10 min en vLLM) es su unica ventaja",
-   "como": "no indicado (sin comando de verificacion)",
-   "fuente_post": 101,
-   "repositorio": null,
-   "licencia": null,
-   "probado_en": "1 DGX Spark GB10 (128GB unified), Qwen3.6-35B-A3B-FP8, avarok/atlas-gb10:latest",
-   "riesgo": "afirmacion de usuario sin verificar por NVIDIA; contradice los 130 tok/s NVFP4 del autor de Atlas (post 1)",
-   "verificable_aqui": "nvidia-smi --query-gpu=name,compute_cap --format=csv"
-  }
+  {"que": "Guarda de memoria libre durante la carga del modelo: aborta la carga si la memoria libre de GPU cae bajo el umbral, para evitar OOM del sistema", "como": "--oom-guard-mb <OOM_GUARD_MB> (defecto 4096)", "fuente_post": 20, "repositorio": "https://github.com/Avarok-Cybersecurity/atlas", "licencia": "no indicada", "probado_en": "no indicado (texto de --help de Atlas)", "riesgo": "Aplica solo al motor Atlas, no a vLLM; el tema no mide si evita colapsos reales", "verificable_aqui": "free -m; nvidia-smi --query-gpu=memory.used,memory.total --format=csv"},
+  {"que": "Preflight de memoria de Atlas: calcula buffers de inferencia contra memoria libre antes de cargar pesos y falla con mensaje en vez de colapsar", "como": "Error: Preflight failed: inference buffers alone need 9.35 GB but only 6.92 GB is free on the GPU (before weights load). Try --max-seq-len 2048 (or lower --max-batch-size / --num-drafts)", "fuente_post": 96, "repositorio": null, "licencia": null, "probado_en": "sparkrun run @atlas/qwen3.5-35b-a3b-nvfp4 en DGX Spark (usuario nvidiaspark)", "riesgo": "Los pesos 122B NVFP4 ocupan ~108 GB de un presupuesto de 110 GB segun el autor (post 14), sin margen para KV", "verificable_aqui": null},
+  {"que": "Metodo de medicion de throughput secuencial vs concurrente con curl en paralelo; mostro que 4 peticiones concurrentes dan menos tok/s por peticion", "como": "for j in 1 2 3 4; do curl -sS http://localhost:8888/v1/chat/completions -H \"Content-Type: application/json\" -d \"{...\\\"max_tokens\\\":100...}\" > r_$j.json & done; wait", "fuente_post": 14, "repositorio": null, "licencia": null, "probado_en": "DGX Spark GB10, Atlas, Qwen3.5-122B NVFP4", "riesgo": null, "verificable_aqui": null},
+  {"que": "Volcado JSONL de peticiones y respuestas del servidor para reproducir fallos", "como": "--dump [<PATH>] (anade a un archivo JSONL; sin valor crea un temporal bajo $TMPDIR)", "fuente_post": 20, "repositorio": "https://github.com/Avarok-Cybersecurity/atlas", "licencia": "no indicada", "probado_en": "no indicado", "riesgo": "Registra system prompts y esquemas de herramientas del cliente", "verificable_aqui": null},
+  {"que": "Endurecimiento de red del servidor: por defecto escucha solo en 127.0.0.1; exponer en 0.0.0.0 sin autenticacion deja la API accesible en la LAN; hay token Bearer", "como": "--bind <ADDR> (defecto 127.0.0.1); --require-auth con --auth-tokens-file <PATH> (permisos 0600); --auth-token inline visible en ps y /proc/<pid>/cmdline", "fuente_post": 20, "repositorio": "https://github.com/Avarok-Cybersecurity/atlas", "licencia": "no indicada", "probado_en": "no indicado", "riesgo": "--auth-token en linea expone el token en la lista de procesos; CORS permisivo por defecto", "verificable_aqui": "ss -ltnp | grep -E ':8000|:8888'"},
+  {"que": "Afirmacion de un usuario: en GB10 (sm_121) NVFP4 cae a dequant a BF16 por falta de tcgen05 y MMA cooperativo de 2 SM, y rinde ~12 tok/s, unas 5 veces menos que FP8", "como": "no indicado (medicion y afirmacion de un usuario, sin comando)", "fuente_post": 101, "repositorio": null, "licencia": null, "probado_en": "DGX Spark GB10 128GB unificada, Atlas avarok/atlas-gb10:latest, Qwen3.6-35B-A3B", "riesgo": "Sin verificacion independiente; contradice la tabla del anuncio (post 1) y otros usuarios midieron ~130 tok/s NVFP4 en el post 2; la cifra de 21 kernels CUDA faltantes en sm_121 tampoco tiene comando", "verificable_aqui": "nvidia-smi --query-gpu=compute_cap --format=csv,noheader"},
+  {"que": "Perfilado por kernel del propio Atlas", "como": "--profile (desactiva CUDA graphs, anade ~10% de sobrecarga)", "fuente_post": 20, "repositorio": "https://github.com/Avarok-Cybersecurity/atlas", "licencia": "no indicada", "probado_en": "no indicado", "riesgo": "Altera el rendimiento medido", "verificable_aqui": null}
  ],
  "omision_nvidia": null,
- "utilidad_atom": "media",
- "razon": "Hilo de lanzamiento y debate de un motor de inferencia en Rust, con muchas quejas de documentacion y rendimiento; los datos utiles para ATOM son la guarda --oom-guard-mb y el presupuesto de KV/memoria que dejo en 0 bloques. Sin respuesta de staff de NVIDIA; licencia no indicada.",
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
-}
+ "utilidad_atom": "baja",
+ "razon": "Anuncio de un motor de inferencia de terceros (Avarok Atlas) con 102 mensajes leidos, mayoria discusion de fiabilidad, documentacion y hostilidad; sin respuesta de staff NVIDIA (el autor afirma reuniones con NVIDIA sin verificacion). Aporta guardas de memoria y de red propias de Atlas y una afirmacion no verificada sobre NVFP4 en sm_121, pero ningun mecanismo reutilizable en la pila vLLM de esta maquina."}

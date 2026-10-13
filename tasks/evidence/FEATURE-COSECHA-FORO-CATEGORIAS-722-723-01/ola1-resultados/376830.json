@@ -2,8 +2,9 @@
  "id": 376830,
  "titulo": "Optimizing DeepSeek-V4-Flash on a single NVIDIA GB10/GX10 with DSpark speculative decoding",
  "leido": true,
- "posts_leidos": 17,
- "clase": "mecanismo",
+ "posts_leidos": 51,
+ "lectura": "completa",
+ "clase": "diagnostico",
  "proposito": [
   "medir",
   "prevenir",
@@ -11,69 +12,57 @@
  ],
  "mecanismos": [
   {
-   "que": "Evidencia de OOM-killer en memoria unificada: el backend CUDA del motor ds4 fija oom_score_adj=1000 y, con dos contextos concurrentes de ~850k, el kernel mata el servidor (2x KV + 80 GB de modelo exceden 121 GB); antes de morir el prefill se desacelero de 222 a 176 t/s bajo presion",
-   "como": "linea del kernel citada: 'Out of memory: Killed process ds4-server total-vm:239803800kB oom_score_adj:1000'; log de arranque: 'ds4: Linux cuda backend set oom_score_adj=1000'",
+   "que": "Pared de memoria unificada: dos contextos de ~850K concurrentes provocan OOM-kill del servidor; el backend CUDA se marca a si mismo como victima preferida del OOM killer",
+   "como": "Out of memory: Killed process ds4-server total-vm:239803800kB oom_score_adj:1000 ; log 'ds4: Linux cuda backend set oom_score_adj=1000'",
    "fuente_post": 22,
    "repositorio": "https://github.com/xangel82/DS4-GB10-GX10-DSpark-CUDA",
    "licencia": "no indicada",
-   "probado_en": "GB10 de 121 GB, build 61800f6, segun el usuario agupta30 (el log de arranque con oom_score_adj aparece en el post 4 de foogitiff)",
-   "riesgo": "Con el modelo residente cerca del limite de memoria el kernel mata el proceso; el prefill se ralentiza antes",
-   "verificable_aqui": "dmesg | grep -i 'out of memory' ; cat /proc/$(pgrep -f ds4-server | head -1)/oom_score_adj"
+   "probado_en": "1x GB10 121 GB, build 61800f6 (usuario agupta30)",
+   "riesgo": "con 2x KV de ~850K + 80 GB de modelo > 121 GB; el prefill se desacelero (222 -> 176 t/s) antes del kill",
+   "verificable_aqui": "dmesg | grep -i 'out of memory'; cat /proc/<pid>/oom_score_adj"
   },
   {
-   "que": "Admision de memoria por UMA disponible: el servidor decide cuantas sesiones CUDA quedan residentes segun la memoria unificada libre y pasa a ejecucion serial con checkpoints de KV en disco cuando una lane agotaria la memoria",
-   "como": "no indicado como comando; resultado citado: resident=1/3, 10.97 tok/s agregados con 2 clientes y 11.19 con 3 a 1M de contexto, sin OOM ni swap de proceso",
-   "fuente_post": 34,
-   "repositorio": "https://github.com/xangel82/DS4-GB10-GX10-DSpark-CUDA",
-   "licencia": "no indicada",
-   "probado_en": "una GB10 del autor marco.palaferri (maquina 'Athena')",
-   "riesgo": "Afirmacion del autor del fork; resultado de una unica configuracion",
-   "verificable_aqui": "grep -E 'MemAvailable|SwapTotal|SwapFree' /proc/meminfo"
-  },
-  {
-   "que": "Dimensionar el cache de KV en disco y lanzar con contexto largo",
-   "como": "DS4_CTX=262144 ./run-dspark-server.sh ; DS4_KV_DISK_SPACE_MB=81920 ; DS4_KV_LONG_COLD_ANCHOR_TRIM_TOKENS=0 (agupta30 senala que run-dspark-server-1m.sh fija 65536 y no se puede sobreescribir en linea)",
-   "fuente_post": 22,
-   "repositorio": "https://github.com/xangel82/DS4-GB10-GX10-DSpark-CUDA",
-   "licencia": "no indicada",
-   "probado_en": "GB10 de 121 GB, build 61800f6",
-   "riesgo": "Con el valor por defecto de 16 GB los checkpoints de 7-9 GB cada uno se desalojan y fuerza reprefill",
-   "verificable_aqui": null
-  },
-  {
-   "que": "Observacion termica: temperatura sostenida cercana a 75 C durante sesiones largas",
-   "como": "'sustained temperature observed around 75 C on Athena' (sin comando de medicion indicado)",
-   "fuente_post": 11,
-   "repositorio": null,
-   "licencia": null,
-   "probado_en": "una GB10 del autor, sin firmware ni driver",
-   "riesgo": null,
-   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,clocks.sm --format=csv"
-  },
-  {
-   "que": "Limite acotado de ejecutables de CUDA Graph para evitar acumulacion en sesiones largas (el autor dice que no era una fuga del driver)",
-   "como": "cache LRU segmentado global con limite por defecto de 24 ejecutables de grafo; resultado: 7 vivos, ~800 MiB de RSS, 0 swap",
+   "que": "Limite global de ejecutables de CUDA Graph para evitar acumulacion en sesiones largas (diagnostico: no era fuga del driver)",
+   "como": "cache segmentado LRU global con limite por defecto de 24 graph executables, con opcion de rollback legado",
    "fuente_post": 44,
    "repositorio": "https://github.com/xangel82/DS4-GB10-GX10-DSpark-CUDA",
    "licencia": "no indicada",
-   "probado_en": "una GB10 del autor; diagnostico corregido por el usuario avisual (issue 3)",
-   "riesgo": null,
+   "probado_en": "Athena, una GB10 (usuario marco.palaferri); 4 agentes, 6,954 ciclos, ~800 MiB RSS",
+   "riesgo": "solo controla que ejecutables siguen residentes",
    "verificable_aqui": null
   },
   {
-   "que": "Metodo de medicion de decode concurrente a contexto profundo sin contaminar con prefill",
-   "como": "calentar N contextos en serie y lanzar N peticiones identicas a la vez; verificar en el log kv cache hit tokens == prompt tokens, cero lineas 'prefill chunk' y cero desalojos; cliente llama-benchy 0.3.3 con pp 2048, tg 128, depth 8192, --no-cache, --concurrency 1 2 4",
-   "fuente_post": 21,
+   "que": "Admision de carriles segun UMA disponible: el servidor decide cuantos carriles CUDA caben y cae a serie con checkpoints KV si no",
+   "como": "resident=1/3 en configuracion 1M de contexto; sin OOM ni swap de proceso (afirmacion del autor)",
+   "fuente_post": 34,
+   "repositorio": "https://github.com/xangel82/DS4-GB10-GX10-DSpark-CUDA",
+   "licencia": "no indicada",
+   "probado_en": "1x GB10 (autor)",
+   "riesgo": "afirmacion no verificada por terceros",
+   "verificable_aqui": "free -m; grep -E 'MemAvailable|SwapFree' /proc/meminfo"
+  },
+  {
+   "que": "Presupuesto de disco para checkpoints KV; el valor por defecto de 16 GB expulsa contextos profundos y fuerza re-prefill",
+   "como": "DS4_KV_DISK_SPACE_MB=81920 ; DS4_CTX=262144 ./run-dspark-server.sh",
+   "fuente_post": 22,
+   "repositorio": "https://github.com/xangel82/DS4-GB10-GX10-DSpark-CUDA",
+   "licencia": "no indicada",
+   "probado_en": "1x GB10 (agupta30)",
+   "riesgo": "3x 512k contextos requieren ~60-80 GB de disco",
+   "verificable_aqui": "df -h"
+  },
+  {
+   "que": "Temperatura sostenida reportada bajo carga",
+   "como": "sustained temperature observed around 75 C (sin comando de medicion indicado)",
+   "fuente_post": 11,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "GB10 de 121 GB segun agupta30",
-   "riesgo": "Puntos de una sola corrida, aproximados segun el propio autor",
-   "verificable_aqui": null
+   "probado_en": "Athena, una GB10 (autor)",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw,clocks.sm --format=csv"
   }
  ],
  "omision_nvidia": null,
  "utilidad_atom": "media",
- "razon": "Tema largo de un fork comunitario de un motor de inferencia; lo transferible es la evidencia medida de OOM-killer en memoria unificada (post 22), el metodo de medicion de decode concurrente y una temperatura sostenida de ~75 C. Lei con detalle los posts 1-13, 22, 34, 44 y 49 y recorri los demas por palabras clave (termica, OOM, swap, memoria); sin respuesta de NVIDIA en el tema.",
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+ "razon": "Sin respuesta de NVIDIA. Los posts 22 y 44 aportan evidencia concreta de memoria unificada (OOM-kill con oom_score_adj=1000 al superar 121 GB, limite de 24 CUDA Graph executables) aplicable a colapsos de memoria, pero proviene de un fork experimental sin licencia indicada y de mediciones de usuarios. Gran parte del tema es marketing de rendimiento de un motor distinto de vLLM."
 }

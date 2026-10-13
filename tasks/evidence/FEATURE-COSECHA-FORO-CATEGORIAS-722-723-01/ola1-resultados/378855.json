@@ -3,77 +3,148 @@
  "titulo": "1x Spark: DeepSeek-V4-Flash-0731 @ 1,000 tok/s prefill, 59 tok/s multi-agent serving",
  "leido": true,
  "posts_leidos": 115,
+ "lectura": "completa",
  "clase": "mecanismo",
  "proposito": [
-  "prevenir",
+  "monitorear",
   "medir",
-  "solucionar"
+  "rastrear",
+  "solucionar",
+  "prevenir"
  ],
  "mecanismos": [
   {
-   "que": "Juzgar el margen de memoria por MemAvailable y no por MemFree; el autor dice que 1.2 GiB libres es demasiado poco porque el escritorio muere primero y se lleva la sesion, y recomienda varios GiB libres bajo carga",
-   "como": "DS4_BATCH_FIT_HEADROOM_MB (por defecto 8192; 16384 reservado en la solucion de un usuario); reducir DS4_SERVER_COALESCE_MAX antes que el contexto",
-   "fuente_post": 38,
-   "repositorio": "https://github.com/entrpi/ds4-on-spark y Entrpi/ds4 (citados); base antirez/ds4 con licencia MIT segun el autor",
-   "licencia": "MIT (motor de antirez, segun el autor); la licencia del fork no se indica",
-   "probado_en": "1x GB10 (DGX Spark y Asus GX10) segun usuarios",
-   "riesgo": "Instalador por 'curl | bash' sin autenticacion de la API (el propio hilo avisa que v0.5.4 no tiene --api-key)",
+   "que": "Senal de memoria correcta en GB10: usar MemAvailable, no MemFree ni RSS del proceso (la memoria unificada/GPU no aparece en VmRSS)",
+   "como": "MemAvailable (juzgar seguridad por MemAvailable; mantener varios GiB libres bajo carga; piso de 1 GiB declarado demasiado bajo por el autor)",
+   "fuente_post": 36,
+   "repositorio": "https://github.com/Entrpi/ds4-on-spark",
+   "licencia": "no indicada (el motor base ds4 de antirez se declara MIT)",
+   "probado_en": "GB10 / DGX Spark, driver 580.159.03 segun reportes del hilo",
+   "riesgo": "Con ~1.2 GiB libres el escritorio muere primero y arrastra la sesion (respuesta del autor, post 38)",
    "verificable_aqui": "grep -E 'MemAvailable|MemFree' /proc/meminfo"
   },
   {
-   "que": "El mismo patron de fallo: la memoria sube hasta ~122 GB y el GB10 se congela sin responder por SSH, solo recupera con el boton fisico de reset; el usuario lo mitiga con un tope de concurrencia",
-   "como": "DS4_SERVER_COALESCE_MAX=4 (en v0.5.4); con ello la RAM quedo en 109/122 GB",
-   "fuente_post": 51,
-   "repositorio": null,
-   "licencia": null,
-   "probado_en": "1x Asus GX10 con Kilo en VS Code (declarado)",
-   "riesgo": "Reporte de un usuario sin root-cause confirmada",
+   "que": "Contadores de fuga de bancos de contexto via Prometheus: el motor exporta gauges",
+   "como": "scrape de /metrics: ds4_banks_live, ds4_banks_total, ds4_kv_pages_resident (stat de Grafana con umbral que pasa a rojo si banks_live crece)",
+   "fuente_post": 60,
+   "repositorio": "https://github.com/Entrpi/ds4-on-spark",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Metodo aplicable solo a ese motor; el patron (gauge de recursos vivos con umbral) es reutilizable",
    "verificable_aqui": null
   },
   {
-   "que": "El log del motor muestra que el backend CUDA se pone a si mismo oom_score_adj=1000, es decir, el proceso pide ser el primero en morir ante OOM",
-   "como": "linea de log: ds4: Linux cuda backend set oom_score_adj=1000",
-   "fuente_post": 48,
+   "que": "Comprobar si la especulacion corre de verdad (el log de arranque imprime 'drafter armed' aunque no corra)",
+   "como": "curl -s :30001/metrics | grep ds4_spec ; ds4_spec_drafts_total 0 significa que nunca corrio",
+   "fuente_post": 8,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "GB10 sm_121",
+   "probado_en": "ASUS Ascent GX10 (GB10), 121 GB utiles",
    "riesgo": null,
-   "verificable_aqui": "cat /proc/<pid>/oom_score_adj"
-  },
-  {
-   "que": "Un usuario ve NVRM: Out of memory [NV_ERR_NO_MEMORY] en la carga del modelo con ~120 GiB de MemAvailable y sin evento del OOM killer de Linux; el autor del motor lo describe como una falla de asignacion del driver, no agotamiento de RAM",
-   "como": "buscar la cadena 'NVRM: Out of memory [NV_ERR_NO_MEMORY]' en dmesg/journal",
-   "fuente_post": 36,
-   "repositorio": null,
-   "licencia": null,
-   "probado_en": "1x GB10 (usuario, version de driver no dada en el post)",
-   "riesgo": "El autor pide la version de driver de nvidia-smi para reproducirlo",
-   "verificable_aqui": "dmesg | grep -i NVRM"
-  },
-  {
-   "que": "Estabilidad de largo plazo reportada: con contexto 262144 la memoria disponible llega a cero y el sistema empieza a hacer swap; con 131072 quedan ~6 GB libres; con 196608 mas reinicio limpio pasa de 1 GiB a 8 GiB disponibles",
-   "como": "-c 131072 / -c 196608 ; DS4_BATCH_FIT_HEADROOM_MB=16384",
-   "fuente_post": 23,
-   "repositorio": null,
-   "licencia": null,
-   "probado_en": "1x GB10 (usuarios)",
-   "riesgo": "Workaround sin causa raiz",
    "verificable_aqui": null
   },
   {
-   "que": "Vigilante propio por cron que reinicia el servidor cuando aparece 'illegal memory access' en el final del log y guarda antes el log del fallo",
-   "como": "no indicado (el autor ofrece compartir el script, no esta en el hilo)",
+   "que": "Verificar que el binario es nativo sm_121a y no la compilacion generica",
+   "como": "cuobjdump ds4-server | grep sm_121a ; construir con: make -j20 cuda-spark",
+   "fuente_post": 64,
+   "repositorio": "https://github.com/Entrpi/ds4-on-spark",
+   "licencia": "no indicada",
+   "probado_en": "GB10",
+   "riesgo": "Con 'make cuda' el servidor rinde ~1/3 del prefill y ~1/2 del decode segun el aviso de arranque citado en post 65",
+   "verificable_aqui": "cuobjdump no se ejecuta aqui sin binario; la linea de verificacion es de solo lectura sobre el binario"
+  },
+  {
+   "que": "Medir clock, potencia y temperatura de GPU durante carga",
+   "como": "nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu,clocks.sm --format=csv,noheader",
+   "fuente_post": 90,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.173.02 (nvidia-smi del post), CUDA 13.0",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu,clocks.sm --format=csv,noheader"
+  },
+  {
+   "que": "Reproducir el indicio de colapso por memoria: llevar el sistema a ~122 GB usados congela la maquina",
+   "como": "Sin valor de configuracion; reporte: a ~118/122 GB en uso la GB10 queda sin respuesta (SSH caido) y exige reset fisico; con DS4_SERVER_COALESCE_MAX=4 bajo a 105/122 GB y estabilizo",
+   "fuente_post": 50,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS Ascent GX10 con ds4 v0.5.3/v0.5.4",
+   "riesgo": "Corte en seco con RAM al limite: coincide con el sintoma local de colapso de memoria (afirmacion de usuario, no de NVIDIA)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Estabilizar uso de memoria acotando bancos concurrentes y contexto",
+   "como": "DS4_SERVER_COALESCE_MAX=3; DS4_BATCH_FIT_HEADROOM_MB=2048; DS4_SESSION_GRAPH_HEADROOM_MB=512; DS4_SESSION_LAZY_GRAPH=0; ds4-serve -c 196608 --mem-floor-gb 1 --no-dspark --reasoning-effort low",
+   "fuente_post": 69,
+   "repositorio": "https://github.com/Entrpi/ds4-on-spark",
+   "licencia": "no indicada",
+   "probado_en": "GB10, ds4 v0.5.4, 4 h de SWE-bench sin errores segun el autor del post",
+   "riesgo": "Receta obsoleta: el autor del motor dice en v0.6.2 que esas variables quedan superadas (post 106)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Piso de memoria libre para el servidor",
+   "como": "ds4-serve -c 524288 --mem-floor-gb 1 (receta colapsada en v0.6.2; --mem-floor-gb por defecto 4 en v0.5.4)",
+   "fuente_post": 106,
+   "repositorio": "https://github.com/Entrpi/ds4-on-spark",
+   "licencia": "no indicada",
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reducir presion de memoria del contexto: tamano de buffers segun ctx",
+   "como": "-c 262144: buffers de contexto 5855 MiB y MemAvailable llego a cero (swap y caida de un contenedor); -c 131072: buffers 3111 MiB y ~6 GB libres",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS Ascent GX10 (GB10), ds4 v0.5.0",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Causa raiz de un Xid 13 / illegal memory access: carrera de un contador en el selector de tokens de atencion",
+   "como": "Explicacion del autor: ventana de pocos nanosegundos; el arreglo toma una instantanea del contador (v0.5.5); prueba: build viejo crasheo 5 de 16 ejecuciones, el nuevo 0 de 16",
+   "fuente_post": 62,
+   "repositorio": "https://github.com/Entrpi/ds4",
+   "licencia": "no indicada (base MIT segun post 1)",
+   "probado_en": "GB10",
+   "riesgo": "Afirmacion del autor del motor; las herramientas de NVIDIA dan falsos positivos en ese tipo de kernel segun el mismo autor",
+   "verificable_aqui": "journalctl -k | grep -i 'Xid'"
+  },
+  {
+   "que": "Firma de Xid 13 determinista en dos fallos",
+   "como": "dos Xid 13 (SM Warp Exception, Out Of Range Address) con ESR identico 0x1c81fb60",
+   "fuente_post": 30,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.159.03, ds4 v0.5.0",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k | grep -i 'Xid'"
+  },
+  {
+   "que": "Vigilante cron que reinicia al aparecer 'illegal memory access' en la cola del log (guarda el log antes)",
+   "como": "script no publicado en el hilo; ofrecido por scope_cr33p; pila de estabilidad: FORK_PARTIAL=0, COALESCE_MAX=2",
    "fuente_post": 56,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "1x GB10",
+   "probado_en": "1x Spark, 20 h estables en v0.5.1 segun el autor",
    "riesgo": null,
    "verificable_aqui": null
+  },
+  {
+   "que": "Cuello de botella y workaround de carga de modelo",
+   "como": "aviso: --warm-weights sobre 78.71 GB reempaquetados empeoro (bi 336k-421k en vmstat); disco en lectura sostenida indica que los pesos no estan en page cache (contenedor sin limite de memoria)",
+   "fuente_post": 64,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": "vmstat 1 5"
   }
  ],
  "omision_nvidia": null,
- "utilidad_atom": "media",
- "razon": "Hilo muy largo de un mantenedor de un motor de inferencia con reportes de usuarios sobre OOM/congelamientos del GB10 y valores concretos de margen de memoria; no hay respuesta de staff NVIDIA. Los mecanismos son afirmaciones de usuarios sobre un software concreto (ds4) y solo parte (MemAvailable, firma NV_ERR_NO_MEMORY) se transfiere a la ATOM. Lectura parcial: el hilo (115 posts) se reviso por busqueda dirigida de terminos y lectura de los posts de memoria, fallos y estabilidad, no linea por linea.",
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe"
+ "utilidad_atom": "alta",
+ "razon": "El tema (115 mensajes, leidos todos) aporta senales concretas de memoria unificada (MemAvailable, gauges /metrics, valores de piso y de headroom), un sintoma de congelacion a ~122 GB que exige reset fisico y la firma Xid 13 con su causa en el motor. No hay respuesta de NVIDIA; todo viene del autor de un motor de terceros y de usuarios, con licencia del fork no indicada."
 }

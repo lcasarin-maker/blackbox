@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -55,7 +56,7 @@ def mensajes_reales(hilos: Path, tid: int) -> int:
         texto = (hilos / "threads" / f"{tid}.txt").read_text(encoding="utf-8")
     except OSError:
         return 0
-    return texto.count("\nPOST ") + (1 if texto.startswith("POST ") else 0)
+    return len(re.findall(r"^POST \d+ \|", texto, re.M))  # la marca exacta `POST n |`: un cuerpo que empieza por "POST /v1/..." no cuenta
 
 
 def valida_resultado(d: Any, tid: int) -> list[str]:

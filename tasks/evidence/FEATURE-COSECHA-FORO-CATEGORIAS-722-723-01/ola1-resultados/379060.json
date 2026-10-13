@@ -3,12 +3,44 @@
  "titulo": "One-Forward-Pass Readout Engine for TensorRT-LLM—1,014 tokens in 92.3 ms",
  "leido": true,
  "posts_leidos": 1,
- "clase": "ruido",
- "proposito": [],
- "mecanismos": [],
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Parche de build de TensorRT-LLM en la imagen pytorch:26.02-py3 para SM121: sustituir objetivos NVRTC estaticos ausentes",
+   "como": "find cpp/ -name CMakeLists.txt -exec sed -i -e 's/CUDA::nvrtc_builtins_static/CUDA::nvrtc_builtins/g' -e 's/CUDA::nvrtc_static/CUDA::nvrtc/g' {} +",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/lcoleman0422/TensorRT-LLM",
+   "licencia": "no indicada",
+   "probado_en": "GB10 sm_121, CUDA 13.0, TensorRT 10.14.1.48, imagen nvcr.io/nvidia/pytorch:26.02-py3",
+   "riesgo": "Cambia dependencias de enlazado; sin verificar por terceros",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Dependencia de build y flags de compilacion solo SM121",
+   "como": "apt-get install -y --no-install-recommends libzmq3-dev pkg-config ; ./scripts/build_wheel.py --trt_root /usr/local/tensorrt --cuda_architectures '121-real' --fast_build --configure_cmake --job_count 16 --extra-cmake-vars 'BUILD_DEEP_EP=OFF;BUILD_DEEP_GEMM=OFF;BUILD_FLASH_MLA=OFF'",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/lcoleman0422/TensorRT-LLM",
+   "licencia": "no indicada",
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Registro de captura por peticion: evita que el estado de la peticion A sirva a la B bajo trafico concurrente",
+   "como": "patron de diseno: plan de captura inmutable por peticion, verificacion de identidad, longitudes por carril y consumo unico contra un digest de layout; contador stateblock_capture_cross_request_events",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/lcoleman0422/TensorRT-LLM",
+   "licencia": "no indicada",
+   "probado_en": "3x DGX Spark, rama nemoclaw/v9.16-rc14",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
  "omision_nvidia": null,
- "utilidad_atom": "ninguna",
- "razon": "Proyecto de investigacion de inferencia (rama de TensorRT-LLM en 3 Sparks) con mediciones propias del autor, que el mismo admite sin experiencia formal y sin explicacion de dos medidas base discrepantes (1.535 s frente a 4.91 s). Sin relacion con monitoreo, memoria del sistema ni termica; la unica nota de memoria es que atencion completa con K=8, D=8192 materializaria ~45 GiB.",
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+ "utilidad_atom": "baja",
+ "razon": "Mensaje unico de un usuario que se declara sin formacion en el campo y reconoce partes programadas por intuicion; presenta una rama de TensorRT-LLM con decodificador entrenado aparte y sus propias mediciones, sin relacion con memoria, calor ni cortes. Solo el parche de build NVRTC para SM121 es un mecanismo concreto, sin licencia indicada y sin respuesta de NVIDIA."
 }
