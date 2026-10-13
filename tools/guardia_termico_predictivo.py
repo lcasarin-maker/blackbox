@@ -204,7 +204,7 @@ def main() -> None:
         return
     while True:
         paso(interruptores.modo(NOMBRE), lee_cola(), lee_carga())
-        time.sleep(5)  # blocking-sleep: muestreo a 5 s, el mismo ritmo que escribe atom_gpu_telemetry; demonio de usuario sin otro hilo -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.9 -- nuevo 2026-10-12 con la misma razon que vigilante_memavail: intervalo del vigilante de vida larga, sin I/O que esperar
+        time.sleep(5)  # blocking-sleep: muestreo a 5 s, el mismo ritmo que escribe atom_gpu_telemetry; demonio de usuario sin otro hilo -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 3.0 -- re-revisado 2026-10-12 contra 3.0: la linea 207 es NUEVA en este ciclo (0023430b, despues de ab63e2b); se releyo hoy: el muestreo de 5 s es el mismo ritmo con que atom_gpu_telemetry escribe su archivo y el demonio de usuario no tiene otro hilo ni E/S que esperar; nuevo 2026-10-12 con la misma razon que vigilante_memavail: intervalo del vigilante de vida larga, sin I/O que esperar
 
 
 if __name__ == "__main__":

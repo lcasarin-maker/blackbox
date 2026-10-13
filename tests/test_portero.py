@@ -301,7 +301,7 @@ def _espera_evento(cg, linea):
     for _ in range(40):
         if linea in (cg / "cgroup.events").read_text(encoding="utf-8"):
             return True
-        time.sleep(0.05)  # blocking-sleep: sondeo acotado (2 s) de cgroup.events tras escribir cgroup.freeze -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.9 -- re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 304 (7283bfb9) no cambio desde su revision anterior; la razon sigue valiendo: revisado 2026-10-12: la congelacion termina despues de la escritura
+        time.sleep(0.05)  # blocking-sleep: sondeo acotado (2 s) de cgroup.events tras escribir cgroup.freeze -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 3.0 -- re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 304 (92598b79) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 304 (7283bfb9) no cambio desde su revision anterior; la razon sigue valiendo: revisado 2026-10-12: la congelacion termina despues de la escritura
     return False
 
 
@@ -317,7 +317,7 @@ def test_real_mover_topar_en_caliente_congelar_y_control_negativo(tmp_path):
             cg, cg_h = po._cg_de(p.pid), po._cg_de(h.pid)
             if cg and cg.endswith(f"bbtest-a-{tag}.scope") and cg_h and cg_h.endswith(f"bbtest-h-{tag}.scope"):
                 break
-            time.sleep(0.05)  # blocking-sleep: espera a que systemd ponga el pid en su scope -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.9 -- re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 320 (7283bfb9) no cambio desde su revision anterior; la razon sigue valiendo: revisado 2026-10-12: sondeo acotado a 2.5 s de un scope desechable propio
+            time.sleep(0.05)  # blocking-sleep: espera a que systemd ponga el pid en su scope -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 3.0 -- re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 320 (92598b79) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 320 (7283bfb9) no cambio desde su revision anterior; la razon sigue valiendo: revisado 2026-10-12: sondeo acotado a 2.5 s de un scope desechable propio
         assert cg and cg.endswith(f"bbtest-a-{tag}.scope"), cg
         assert cg_h and cg_h.endswith(f"bbtest-h-{tag}.scope"), cg_h
         a = po.Arbol(raiz=p.pid, clase="suite", rss_kb=1, procesos=1, edad_s=1, cgroup=cg, pids=(p.pid,))
@@ -434,7 +434,7 @@ def _scope_desechable(unidad):
         cg = po._cg_de(p.pid)
         if cg and cg.endswith(f"{unidad}.scope"):
             break
-        time.sleep(0.05)  # blocking-sleep: espera a que systemd ponga el pid en su scope -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 2.9 -- re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 437 (7283bfb9) no cambio desde su revision anterior; la razon sigue valiendo: revisado 2026-10-12: sondeo acotado a 2.5 s de un scope desechable propio
+        time.sleep(0.05)  # blocking-sleep: espera a que systemd ponga el pid en su scope -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 3.0 -- re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 437 (92598b79) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 437 (7283bfb9) no cambio desde su revision anterior; la razon sigue valiendo: revisado 2026-10-12: sondeo acotado a 2.5 s de un scope desechable propio
     return p, cg
 
 
