@@ -93,3 +93,37 @@ def test_negativo_de_firma(tmp_path: Path) -> None:
     assert verify_capture(_escribe(tmp_path, rows))["reason"] == "signature-negative capture absent"
     aceptada = _con(tmp_path, 5, exit_code=0, stderr="Good signature")
     assert aceptada["status"] == "fail" and aceptada["checks"]["bad_signature_negative"] == "fail"
+
+
+def _fuente_mala(**cambios: Any) -> dict[str, Any]:
+    fila = _row(["apt-get", "update", "-o", "Dir::Etc::sourcelist=/tmp/bad.list"],
+                err="E: Failed to fetch http://x/ 404  Not Found", rc=100)
+    fila["control"] = "bad_source"
+    fila.update(cambios)
+    return fila
+
+
+def test_pass_alcanzable_con_fila_bad_source(tmp_path: Path) -> None:
+    out = verify_capture(_escribe(tmp_path, [*_buenas(), _fuente_mala()]))
+    assert out["status"] == "pass" and out["fail"] == 0 and out["could_not_run"] == 0
+    assert out["checks"]["bad_source_negative"] == "pass"
+    assert all(v == "pass" for v in out["checks"].values())
+
+
+def test_pass_alcanzable_control_que_acepta_la_fuente_mala_es_fail(tmp_path: Path) -> None:
+    out = verify_capture(_escribe(tmp_path, [*_buenas(), _fuente_mala(exit_code=0)]))
+    assert out["status"] == "fail" and out["checks"]["bad_source_negative"] == "fail"
+    assert out["reason"] == "el control negativo no rechazo la fuente mala"
+
+
+def test_pass_alcanzable_stderr_irrelevante_es_fail(tmp_path: Path) -> None:
+    out = verify_capture(_escribe(tmp_path, [*_buenas(), _fuente_mala(stderr="disco lleno")]))
+    assert out["status"] == "fail" and out["checks"]["bad_source_negative"] == "fail"
+    vacio = verify_capture(_escribe(tmp_path, [*_buenas(), _fuente_mala(argv=[])]))
+    assert vacio["status"] == "fail"
+
+
+def test_pass_alcanzable_sin_fila_sigue_unknown(tmp_path: Path) -> None:
+    out = verify_capture(_escribe(tmp_path, _buenas()))
+    assert out["status"] == "unknown" and out["checks"]["bad_source_negative"] == "unknown"
+    assert "wrong-source negative remains unrun" in out["reason"]

@@ -91,7 +91,20 @@ def _validate_simulation(rows: list[Any], checks: dict[str, str]) -> dict[str, A
         checks["bad_signature_negative"] = "fail"
         return _outcome("fail", "signature-negative control was not rejected", checks)
     checks["bad_signature_negative"] = "pass"
-    return _outcome("unknown", "APT captures pass available checks; wrong-source negative remains unrun", checks)
+    return _validate_bad_source(rows, checks)
+
+
+def _validate_bad_source(rows: list[Any], checks: dict[str, str]) -> dict[str, Any] | None:
+    control = next((row for row in rows if row.get("control") == "bad_source"), None)
+    if control is None:
+        return _outcome("unknown", "APT captures pass available checks; wrong-source negative remains unrun", checks)
+    rejected = (bool(control["argv"]) and control["argv"][0] == "apt-get" and control["exit_code"] != 0
+                and re.search(r"404|Failed to fetch|Unable to locate", control["stderr"]) is not None)
+    if not rejected:
+        checks["bad_source_negative"] = "fail"
+        return _outcome("fail", "el control negativo no rechazo la fuente mala", checks)
+    checks["bad_source_negative"] = "pass"
+    return None
 
 
 def verify_capture(path: Path) -> dict[str, Any]:
