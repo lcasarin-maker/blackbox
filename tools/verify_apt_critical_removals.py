@@ -95,9 +95,12 @@ def verify(directory: Path) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evidence", type=Path, required=True, help="captured evidence directory")
+    parser.add_argument("--cierre", action="store_true", help="exit 0 solo si la ficha es cerrable: un pass con `closure: open` (bloqueos abiertos) sale 2")
     args = parser.parse_args(argv)
     result = verify(args.evidence)
     print(json.dumps(result, sort_keys=True))
+    if args.cierre and result["status"] == "pass" and result.get("closure") == "open":
+        return 2
     return 0 if result["status"] == "pass" else 1 if result["status"] == "fail" else 2
 
 
