@@ -11,3 +11,11 @@ $ ls /sys/class/typec /sys/class/power_supply /sys/class/usb_power_delivery
 (el sistema operativo no expone la negociacion USB-C ni el adaptador: /sys/class/typec y usb_power_delivery no existen y power_supply esta vacio; el modelo del adaptador solo se lee en su etiqueta fisica)
 
 enchufe medidor o UPS: es una compra y una conexion fisica; ninguna herramienta de esta sesion puede adquirirlos ni conectarlos. Cuando existan, el colector escribe externo/energia.jsonl (close_check de FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01).
+
+== Anexo 2026-10-13 (corregido): los tres items restantes ==
+
+1) Equipo observador (ping externo). Comprobado: ~/.ssh/config no existe, ssh-add -l lista una clave ED25519 del propio usuario y ~/.ssh/known_hosts tiene 7 lineas (hosts con hash, sin nombre legible); ssh -G github.com resuelve a github.com con la clave por defecto. No hay ninguna entrada Host de un segundo equipo, asi que no hay un equipo observador configurado desde el que correr el ping. Un ping desde la propia ATOM muere con ella. Falta un equipo siempre encendido.
+
+2) Borradores del foro (docs/foro-borradores/). Comprobado: 8 archivos de ~/.config/google-chrome y 3 de ~/.config/Codex mencionan forums.developer.nvidia.com, asi que el Chrome del dueño PODRIA tener una sesion iniciada; no se verifico y no se uso. No es un bloqueo tecnico: es publicar contenido bajo la cuenta del dueño en un foro externo, y exige su orden explicita (decision que se le planteo como votacion el 2026-10-13).
+
+3) apt-mark hold. `apt-mark showhold` esta vacio; el dueño eligio el 2026-10-13 'No, te dejo el comando y decides tu', y aplicarlo exige sudo (`sudo -n true`: se requiere una contrasena).
