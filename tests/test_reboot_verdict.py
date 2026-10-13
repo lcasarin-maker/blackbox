@@ -331,3 +331,35 @@ def test_main_escribe_fila_con_esquema_y_forense(monkeypatch, tmp_path):
         == "permiso denegado, requiere root"
     )
     assert fila["crash_confirmado"] is False and fila["cierre_pid1"] is False
+
+
+def test_evidencia_externa_une_el_medidor_con_el_veredicto(tmp_path):
+    import json as _j
+    from tools import reboot_verdict as rv
+
+    ruta = tmp_path / "e.jsonl"
+    assert rv._evidencia_externa(1000, 255, ruta) == (None, None)  # sin medidor: sigue CORTE_ABRUPTO por falta de observador
+    filas = [{"epoch": 999, "ok": True, "voltaje_v": 120, "potencia_w": 40}, {"epoch": 1001, "ok": True, "voltaje_v": 120, "potencia_w": 0.2}, {"epoch": 1002, "ok": True, "voltaje_v": 120, "potencia_w": 0.2}]
+    ruta.write_text("\n".join(_j.dumps(f) for f in filas) + "\n", encoding="utf-8")
+    ext, nc = rv._evidencia_externa(1000, 255, ruta)
+    assert nc is None and ext is not None and ext["voltaje_perdido"] is False
+    assert etiqueta(externo=ext) == "APAGADO_INTERNO"  # el mismo dato produce el veredicto
+    ruta.write_text(_j.dumps({"epoch": 1001, "ok": False}) + "\n", encoding="utf-8")
+    ext2, nc2 = rv._evidencia_externa(1000, 255, ruta)
+    assert ext2 is None and nc2 is not None and "no concluyente" in nc2  # un enchufe mudo se declara, no se adivina
+
+
+def test_anade_evidencia_externa_modifica_el_ev_solo_si_hay_algo_que_decir(tmp_path):
+    import json as _j
+    from tools import reboot_verdict as rv
+
+    ruta = tmp_path / "e.jsonl"
+    ev = {"hueco_s": 255, "no_se_pudo_leer": []}
+    rv._anade_evidencia_externa(ev, 1000, ruta)
+    assert "externo" not in ev and ev["no_se_pudo_leer"] == []
+    ruta.write_text(_j.dumps({"epoch": 1001, "ok": False}) + "\n", encoding="utf-8")
+    rv._anade_evidencia_externa(ev, 1000, ruta)
+    assert "externo" not in ev and "medidor_externo" in ev["no_se_pudo_leer"][0]
+    ruta.write_text(_j.dumps({"epoch": 1001, "ok": True, "voltaje_v": 3, "potencia_w": 0}) + "\n", encoding="utf-8")
+    rv._anade_evidencia_externa(ev, 1000, ruta)
+    assert ev["externo"]["voltaje_perdido"] is True
