@@ -27,3 +27,6 @@ Config medida: `kernel.panic=10`, panics por hung/softlockup/hardlockup/oops act
 ## Cierre
 
 El close_check pasa solo con `ping.jsonl` con datos; el medidor de energia tiene su propia ficha (FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01). Ademas, un corte real o provocado debe salir clasificado por `reboot_verdict` como CORTE_DE_RED o APAGADO_INTERNO, no CORTE_ABRUPTO.
+
+## Avance 2026-10-13: colector de ping construido, falta el equipo observador
+`tools/observador_ping.py` (un ping por ejecucion a la ATOM hacia `externo/ping.jsonl`; `ultima_respuesta(ruta, hasta)` devuelve la hora de la ultima respuesta anterior al corte, y None si no hay cobertura), con `tests/test_observador_ping.py` (4 tests) y las unidades `systemd/bb-observador-ping.{service,timer}` (1 s, sin instalar). Falta, y no se puede producir aqui: un equipo siempre encendido que lo corra (un ping desde la propia ATOM muere con ella) y `$BLACKBOX_DATA/externo/observador.json` con `{"destino": "<ip de la ATOM>"}`. Tampoco esta enlazado a `reboot_verdict`: sin datos reales de ese equipo no hay forma de probar el enlace con el sujeto.

@@ -16,3 +16,6 @@ bb: 38 commits adelante de origin/master al 2026-10-12; Atlas informa 39 locales
 
 ## Voto de Luis 2026-10-12
 Cerrar fichas con evidencia real y empujar cuando zero-debt pase. Descartado: mover las fichas de despliegue fuera del backlog para destrabar el push (oculta deuda real de la vista de zero-debt).
+
+## Avance 2026-10-13: la premisa de bb esta obsoleta
+`git rev-list --count origin/master..master` en bb da 0 (control negativo: `origin/master~3..master` da 3), asi que bb no tiene commits sin publicar; el ultimo push fue `75b3b1ee` y luego `b99560e8`. Sigue abierta por la parte de Atlas y por la decision de Luis sobre el baseline de ship-freeze con dueno y fecha.

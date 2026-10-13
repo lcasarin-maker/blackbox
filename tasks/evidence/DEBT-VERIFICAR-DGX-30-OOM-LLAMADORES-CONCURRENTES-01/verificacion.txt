@@ -1,0 +1,32 @@
+verificacion de DGX-30 (Atlas), 2026-10-13. Solo lectura sobre el repo de Atlas y sobre este repo.
+
+$ grep -nE "NV_ERR_NO_MEMORY|OOM-killer|oom|0\.70|BGE-M3|gpu_intruder|2026-07-31" Atlas/tasks/done/DGX-30.md | head -12
+4:title: Cuelgue de máquina 2026-07-31 14:17 — agotamiento de memoria unificada a nivel driver NVIDIA,…
+9:close_check: {"cmd": "python -m tools.artifact_exists tests/test_watchdog_gpu_intruder.py", "expect": "exit_zero"}
+10:created: 2026-07-31
+22:- **`created` 2026-07-31**: derivado por `encabezado_min`, nunca un literal. El orden del archivo no es el orden del tiempo, así que se toma el mínimo de las fechas declaradas y no la primera del archivo.
+23:- **`close_check`**: `python -m tools.artifact_exists tests/test_watchdog_gpu_intruder.py` — comprueba que `tests/test_watchdog_gpu_intruder.py` --el artefacto que la entrada cita-- sigue en HEAD y en el árbol. Mide la super
+49:### DGX-30 · Cuelgue de máquina 2026-07-31 14:17 — agotamiento de memoria unificada a nivel driver NVIDIA, tercera instancia de la clase H35/H6 (2026-07-31) — CERRADO 2026-08-17: la libertad del watchdog ahora exige "ning
+51:**Evidencia** (`journalctl -k -b -1`, boot anterior): `NVRM: NV_ERR_NO_MEMORY` en
+54:y hard-reset a las 14:17 (`who -b`). **Cero eventos del OOM-killer de Linux** — no fue memoria de
+58:**Aritmética del choque**: Nemotron al 0.70 de utilización (~98GB) + el job 35 cargando BGE-M3
+64:**Mitigaciones aplicadas HOY, no anotadas**: (1) job 87 corre BGE-M3 con `CUDA_VISIBLE_DEVICES=""`
+65:— ningún job de la cola vuelve a cargar un embedder en CUDA mientras Nemotron esté al 0.70;
+75:> condición** (`gpu_intruder()`, cableada como una compuerta más junto a `running_heavy_jobs()`,
+
+$ grep -n "def gpu_intruder" Atlas/tools/liberation_watchdog.py
+1157:def gpu_intruder() -> str | None:
+
+$ grep -nEi "cuda|nvidia-smi|compute-apps|gpu_intruder" tools/portero.py | head -5   # el portero de bb: cobertura de procesos ajenos con CUDA
+(sin coincidencias = el portero serializa arboles pytest por /proc y no vigila procesos ajenos con CUDA)
+
+$ grep -rn "DGX-30" Atlas/tools/ingest_batch.py Atlas/tools/ingest.py | head -4
+
+LECTURA (de las lineas citadas arriba, no de memoria):
+- Que paso: cuelgue de la maquina el 2026-07-31 14:17 con `NVRM: NV_ERR_NO_MEMORY` en el pool de memoria unificada del driver y hard-reset; cero eventos del OOM-killer de Linux (DGX-30.md:51-54).
+- Causa que declara Atlas: Nemotron al 0.70 de utilizacion (~98 GB) mas un job que cargaba BGE-M3 en CUDA (DGX-30.md:58). NO es "OOM por llamadores LLM concurrentes": el titulo de esta ficha era una cita erronea.
+- Como se cerro en Atlas: `gpu_intruder()` como compuerta del watchdog de liberacion (liberation_watchdog.py:1157) y el job de embeddings sin CUDA (`CUDA_VISIBLE_DEVICES=""`, DGX-30.md:64).
+- Relacion con la estampida del 11-oct (DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01): clase distinta. Aquella fue presion de procesos pytest bajo app.slice; esta fue memoria del driver por un proceso CUDA ajeno. El portero de bb (tools/portero.py) no vigila procesos ajenos con CUDA: la grep de arriba no encuentra compute-apps, gpu_intruder ni libcuda. Esa clase la cubre el watchdog de Atlas, no bb.
+- La cita "referenciado en ingest_batch.py e ingest.py" que traia la ficha no se pudo comprobar: la grep de DGX-30 en esos dos archivos no da coincidencias hoy.
+
+dgx30_verificado

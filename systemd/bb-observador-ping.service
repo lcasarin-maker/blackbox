@@ -1,0 +1,10 @@
+[Unit]
+Description=bb observador externo: un ping a la ATOM (interruptor observador_ping; correr en OTRO equipo, no en la ATOM)
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.observador_ping --paso
+TimeoutStartSec=8
+MemoryMax=64M
+Nice=10
