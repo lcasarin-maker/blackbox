@@ -1,6 +1,6 @@
 {
-  "claims_fingerprint": "6a54028cd57c98a07875f73201c7568eb3bf805bb552e08c7c91ac4632c964c6",
-  "panel": "3 auditores Opus, 2026-10-13: 8 afirmaciones tras re-fechar exenciones a 3.1; L416 y L418 corregidas (codigo de bb status y texto) y reauditadas",
+  "claims_fingerprint": "dee20359f02de510930e066c731cda91f902f3ac18a1a8e07989300d7d34d912",
+  "panel": "1 auditor Opus, 2026-10-13: SPEC-L419 tras etiquetar los dos colapsos del 11-oct en INCIDENTES (n=8), cifras recalculadas y control con la lista vieja",
   "profile": "general",
   "results": [
     {
@@ -118,13 +118,12 @@
     },
     {
       "cited": {
-        "tests/test_calibra_psi.py": "0d933d4fd985a38407edee0f59836aceaaaf09188160afc13ad2f37e2a9c0b48",
-        "tools/calibra_psi.py": "8254b6296b36d06e1bc84c34a3f8001b132c90da5965edabf6489fba94f18c87"
+        "tests/test_calibra_psi.py": "4616d032d983afeecedcd42995f693876bea2e0a6a8f345e26297b897d66ad46",
+        "tools/calibra_psi.py": "c3c36049dda2fe8a2d53def9c05594013be2575551331d97b61b9fcad6a4637a"
       },
       "claim_id": "SPEC-L419",
-      "evidence": "`timeout 120 python3 -m tools.calibra_psi` hoy: corpus 2026-09-27 00:00 -> 2026-10-12 22:06, 29171 muestras, COLAPSO 3 (09-28 04:18, 10-05 00:18 max 78.30 %, 10-11 22:44 max 72.47 %), falsos positivos 2, no detectados 1, fuera del corpus 4, VEREDICTO: CORTE INVALIDO, rc=1 -- coincide con la corrida declarada del 2026-10-12 (el corpus solo crecio). `python3 -c 'import tools.calibra_psi as c; print(len(c.INCIDENTES))'` = 6 (n=6, sin la ventana del 2026-10-11); UMBRAL_PCT=10.0 y SOSTENIDO_MIN=5.0 (tools/calibra_psi.py:42,45); calibra() (l.216-254) cuenta falso positivo cuando el instante de disparo cae fuera de una ventana; main devuelve 1 si malo (l.319). 19804/98.53/48.80 en el docstring l.13-16 y en el mensaje de 90847b3; RETAIN_DAYS=14 en bin/bb:16. `python -m pytest tests/test_calibra_psi.py -q -p no:xdist -p no:cacheprovider` = 24 passed, incluye test_control_negativo_excursion_solapa_incidente_pero_dispara_despues (l.154). La ficha tasks/backlog/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01.md:63 da el reinicio a las 22:54:41; io_some/cpu_some se imprimen sin etiqueta en bb scan (bin/bb:1924-1927); blackbox-sample es Type=oneshot (systemd/blackbox-sample.service:6).",
-      "fix": "",
-      "seal": "221c2c66a838e2e18f004e1227520b4c6ae7b9938b542d6739e332e96ec55d8a",
+      "evidence": "Arbol actual (SPEC.md y tools/calibra_psi.py con cambios sin commitear). `python3 -m tools.calibra_psi` -> rc=1, corpus 2026-09-28 00:00 -> 2026-10-13 08:12, 28132 muestras, COLAPSO 3 (09-28 04:18 6 min max 37.13; 10-05 00:18 7 min max 78.30; 10-11 22:44 8 min max 72.47), falsos positivos 1, no detectados 2, fuera del corpus 4, VEREDICTO CORTE INVALIDO. python -c con calibra(serie, incidentes=...): lista de 8 -> FP=[10-05 00:18:38->00:26:00, 7.4 min, max 78.3], ND=[09-28 03:28-03:39, 10-11 22:02-22:12], fuera 4. CONTROL NEGATIVO lista vieja INCIDENTES[:6] sobre la misma serie -> FP 2 (10-05 00:18 y 10-11 22:44:20->22:51:50, 7.5 min, max 72.47), ND 1 (09-28 03:28), fuera 4: el calculo SI cambia de veredicto con la lista. Muestras: 28130 = muestras con ts <= 2026-10-13 08:11 (08:10 da 28129, 08:13 da 28133); el corpus vivo crece, cifra fechada coherente. Corrida 2026-10-12: serie truncada a 10-12 07:10 con 6 incidentes -> FP 2, ND 1, fuera 4 (muestras 26485 porque 09-27 ya se purgo; 28239 no re-derivable). Corrida 2026-10-06 (23776) no re-derivable por RETAIN_DAYS; su FP 00:18:38->00:26:00 7.4 min si se reproduce. journalctl -b -9: 22:12:33 `bb-usable.service: Watchdog timeout (limit 6min)!` -> 22:12:46 `Failed with result 'watchdog'` + `Rebooting.`; -b -8: 22:54:40 Watchdog timeout -> 22:54:41 `Failed with result 'watchdog'` + `Rebooting.`. samples/2026-10-11.jsonl: ultima linea 22:00:34, siguiente 22:15:01. samples/2026-09-28.jsonl: linea 315 `burst_fin` 03:29:02, siguiente 03:41:52; journalctl --list-boots: arranque -20 termina 2026-09-28 03:39:21. INCIDENTES tiene 8 entradas incluidas (2026-10-11 22:02, 22:12) y (22:44, 22:54), comentario 'Anadidas el 2026-10-13'. No hallo cifra refutada.",
+      "seal": "ef3688ca697ef3f85ea2a091d5193facbb083844c0eb3f508fb234db2eb5c558",
       "verdict": "PASS"
     },
     {
@@ -188,7 +187,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-13T13:54:16Z",
-  "tree_fingerprint": "df620ca04e6104fd838a7dd19e9b422899568a6568cf163c7d85b3c49785e77d",
+  "timestamp": "2026-10-13T14:15:27Z",
+  "tree_fingerprint": "a1436ca1ada3e93917433a40c8a24636980c07290e08c4c0a69d6537ddcb2662",
   "violations": []
 }

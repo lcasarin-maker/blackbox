@@ -104,8 +104,9 @@ def test_fichero_ilegible_devuelve_None(bbu, tmp_path, monkeypatch):
 
 def test_el_corte_es_el_calibrado_y_no_otro(bbu):
     """Fijar los numeros aqui hace que cambiarlos sea deliberado. Salen de
-    tools/calibra_psi.py, validado contra los TRES congelamientos reales con
-    falsos positivos 0 e incidentes no detectados 0."""
+    tools/calibra_psi.py. Al 2026-10-13, con ocho incidentes etiquetados en INCIDENTES, ese instrumento da CORTE
+    INVALIDO (1 falso positivo, 2 incidentes no detectados): estos numeros siguen fijos hasta recalibrar, y cambiarlos
+    es una decision deliberada."""
     assert bbu.PSI_ACT_FULL_AVG10 == 10.0
     assert bbu.PSI_ACT_SOSTENIDO_S == 300.0
 

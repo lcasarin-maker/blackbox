@@ -132,6 +132,47 @@ INCIDENTES = [
     # las leia como excursion sana sin estas ventanas: la muestra de las
     # 04:24:02, DENTRO del sexto incidente, salia FALSO POSITIVO.
     ("2026-09-28 04:18", "2026-09-28 04:27"),
+    # SEPTIMO y OCTAVO, 2026-10-11, dos arranques seguidos y el mismo mecanismo:
+    # enjambre de suites pytest/pre-push sin techo de memoria dentro de
+    # `app.slice` (DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01, que atribuye
+    # el origen por las transcripciones de las sesiones; etiquetarlos aqui era el
+    # pendiente que dejo DEBT-REAUDITAR-LEDGER-H1-TRAS-FUSIONES-01).
+    #
+    # Son incidentes y no excursiones sanas, y eso no se deduce de PSI: los dos
+    # arranques terminan sin cierre limpio. `journalctl -b` cierra cada uno con
+    # `bb-usable.service: Watchdog timeout (limit 6min)!` -> `Failed with result
+    # 'watchdog'` -> `Rebooting.`, `last -x` no registra `shutdown` para ninguno
+    # de los dos, y el arranque siguiente de cada uno trae `BERT: Error records
+    # from previous boot`. Corroboracion independiente de PSI: la memoria
+    # disponible no se agoto -- atom_gpu_telemetry.jsonl da mem_avail_mb 22053
+    # a 31617 en el septimo y 29589 a 30648 en el octavo. sar NO corrobora estas
+    # dos: `sar -r -f /var/log/sysstat/sa20261011` deja de leer a las 12:12:00
+    # (el reset del arranque anterior), aunque el fichero se siguio escribiendo
+    # hasta las 23:59.
+    #
+    # SEPTIMO, arranque 5461291a. El fin es el reset: watchdog a las 22:12:33,
+    # `Rebooting.` a las 22:12:46 (`journalctl --list-boots`; el arranque nuevo
+    # es el de las 22:14:47). LIMITE DECLARADO, el mismo del quinto: ninguna
+    # muestra de bin/bb esta sobre el umbral. `bb sample` deja de escribir a las
+    # 22:00:34 (mem_full 3.34; maximo de la ventana 7.17 a las 22:00:00) y la
+    # telemetria de GPU a las 22:01:43 (psi_mem_full_avg10 1.72). Por eso el
+    # inicio sale del journal de `bb-usable`, que lee /proc/pressure/memory
+    # directo: 22:02:07 es su primera lectura >= 10 (avg10=42.6, racha 1/10), y
+    # declara COLAPSO sostenido desde las 22:08:18 (97.7, 360 s). `calibra()` la
+    # marca `no_detectados` y es la verdad sobre el instrumento, no un error de
+    # esta lista.
+    ("2026-10-11 22:02", "2026-10-11 22:12"),
+    # OCTAVO, arranque 7b217d8b, en el arranque SIGUIENTE al septimo. El inicio
+    # sale de las muestras de bin/bb: 22:44:20 es la primera con mem_full >= 10
+    # (16.54; 22:44:16 daba 9.17), maximo 72.47 a las 22:46:43, ultima muestra a
+    # las 22:51:50 (59.52). `bb-usable` declara COLAPSO sostenido hasta las
+    # 22:54:12 (55.3, 600 s). El fin es el reset: watchdog a las 22:54:40,
+    # `Rebooting.` a las 22:54:41 (arranque nuevo a las 22:56:42).
+    #
+    # Anadidas el 2026-10-13: sin esta ventana el modulo daba la excursion de
+    # las 22:44 (8 min, max 72.47 %) como FALSO POSITIVO, leyendo un colapso
+    # real como excursion sana.
+    ("2026-10-11 22:44", "2026-10-11 22:54"),
 ]
 
 
