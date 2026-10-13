@@ -3,12 +3,34 @@
  "titulo": "Hermes is losing its glory, what is next?",
  "leido": true,
  "posts_leidos": 93,
+ "lectura": "completa",
  "clase": "ruido",
- "proposito": [],
- "mecanismos": [],
+ "proposito": [
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Modos de aprobacion de comandos peligrosos del agente Hermes para evitar acciones destructivas",
+   "como": "approval modes: manual, smart (LLM auxiliar evalua el comando) u off; documentado en website/docs/user-guide/security.md",
+   "fuente_post": 88,
+   "repositorio": "https://github.com/NousResearch/hermes-agent",
+   "licencia": "no indicada",
+   "probado_en": "un usuario (siertum) lo cita de la documentacion; relato de borrado de cronjobs con Qwen3.5-122B en posts 85 y 87 sin version",
+   "riesgo": "Con 'off' o modo YOLO se pierde la proteccion; el propio post 88 dice que no sustituye control de versiones ni sandbox",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Practica de aislar el agente en sandbox y con control de versiones antes de darle permisos peligrosos",
+   "como": "no indicado comando; pedir a Hermes crear un sandbox y usar otro harness (deepseek/oh my pi) para programar",
+   "fuente_post": 93,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Consejo de usuario sin verificacion",
+   "verificable_aqui": null
+  }
+ ],
  "omision_nvidia": null,
- "utilidad_atom": "ninguna",
- "razon": "Discusion de opiniones sobre agentes de programacion (Hermes, OpenCode, Cline) sin comandos ni valores sobre monitoreo, memoria o termica. Lectura del inicio y busqueda por palabras clave (oom, swap, thermal, cgroup, driver, sysctl) en el resto: solo coincidencias casuales (analogia del coche, uso de Hermes para administracion).",
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+ "utilidad_atom": "baja",
+ "razon": "Debate de usuarios sobre harnesses de agentes (Hermes, OpenCode, Pi) sin ninguna respuesta tecnica de NVIDIA; el unico staff (aniculescu, post 44) pide mantener el respeto. Solo los modos de aprobacion de Hermes son un mecanismo concreto, ajeno a calor o memoria del hardware."
 }

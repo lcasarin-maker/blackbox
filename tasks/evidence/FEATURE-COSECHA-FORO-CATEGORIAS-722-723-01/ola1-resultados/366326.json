@@ -3,6 +3,7 @@
  "titulo": "Qwen3.5-35B-A3B optimizations on single Spark",
  "leido": true,
  "posts_leidos": 49,
+ "lectura": "completa",
  "clase": "mecanismo",
  "proposito": [
   "medir",
@@ -11,59 +12,107 @@
  ],
  "mecanismos": [
   {
-   "que": "Linea de arranque vLLM para Qwen3.5-35B-A3B hibrido int4+FP8 con MTP=2, con tuning de memoria y liberacion de cache de paginas antes de cargar",
-   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches' ; docker run ... -e VLLM_MARLIN_USE_ATOMIC_ADD=1 --gpus all --net=host --ipc=host ... --max-num-batched-tokens 32768 --gpu-memory-utilization 0.85 --load-format fastsafetensors --attention-backend FLASHINFER --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":2}' --enable-prefix-caching --enable-chunked-prefill --max-num-seqs 256",
+   "que": "Liberar cache de paginas del sistema antes de cargar el modelo (memoria unificada)",
+   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'",
    "fuente_post": 4,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "DGX Spark segun el usuario joshua.dale.warner (imagen vllm-qwen35-v2, vLLM 0.19.0); 108-125 tok/s en benchmark sintetico, 'low 80s' sostenido en uso real",
-   "riesgo": "El mismo autor advierte que los numeros sinteticos son optimistas y que llama-benchy no cuenta tokens MTP (post 5)",
+   "probado_en": "DGX Spark/GX10 segun el usuario joshua.dale.warner, sin driver/kernel",
+   "riesgo": "Requiere root; descarta cache de disco y ralentiza la siguiente lectura; no se mide su efecto sobre estabilidad",
+   "verificable_aqui": "grep -E 'MemAvailable|^Cached' /proc/meminfo"
+  },
+  {
+   "que": "Variable de entorno para vLLM Marlin en los arranques de Qwen3.5/3.6",
+   "como": "-e VLLM_MARLIN_USE_ATOMIC_ADD=1",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "GB10, vLLM 0.19.0 segun el usuario",
+   "riesgo": null,
    "verificable_aqui": null
   },
   {
-   "que": "Variables NCCL/PyTorch en un cluster de 4 Spark para evitar timeouts del watchdog de NCCL durante FSDP",
-   "como": "NCCL_IB_HCA=rocep1s0f0:1,roceP2p1s0f0:1 ; NCCL_NET_GDR_LEVEL=0 ; TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=1800",
+   "que": "Limitar el uso de memoria GPU de vLLM para dejar margen en memoria unificada",
+   "como": "--gpu-memory-utilization 0.85 (0.7 en los arranques Qwen3.6 de los posts 40 y 41; 0.92 en el script que fallo en el post 13)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 segun usuarios",
+   "riesgo": null,
+   "verificable_aqui": "free -m"
+  },
+  {
+   "que": "Metodo de medicion: llama-benchy no cuenta tokens de MTP, asi que no mide throughput real con speculative decoding; sirve para escalado por concurrencia",
+   "como": "no indicado comando exacto; el autor compara contra un benchmark propio de 4 peticiones concurrentes",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/eugr/llama-benchy (nombre citado, URL no dada en el texto)",
+   "licencia": null,
+   "probado_en": "GB10 segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "DFlash exige flash_attn, no admite KV cuantizado y pide margen de tokens por lote",
+   "como": "--attention-backend flash_attn --max-num-batched-tokens 32768 --speculative-config '{\"method\":\"dflash\",\"model\":\"/models/Qwen3.5-35B-A3B-DFlash\",\"num_speculative_tokens\":15}'",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "vLLM 0.19.0rc1/nightly en GB10 segun el usuario",
+   "riesgo": "Rinde menos que MTP=2 en cargas reales segun el mismo usuario (posts 6, 15, 40)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Diagnostico de fallo de arranque en GB10: RuntimeError Error Internal en torch.ops._C.cutlass_scaled_mm con imagen vllm/vllm-openai:latest 0.19.0; el log avisa que PyTorch soporta capacidad CUDA 8.0-12.0 y la GPU es 12.1",
+   "como": "Causa atribuida por fususu al uso de la imagen generica porque no existia vllm-sm121; solucion: reconstruir la imagen (opcion 6 del script vllm.sh, 40-60 min)",
+   "fuente_post": 16,
+   "repositorio": "https://github.com/phuongncn/asus-gx10-qwen35-speed-hack",
+   "licencia": "no indicada",
+   "probado_en": "GB10 cc 12.1, vLLM 0.19.0, Docker 29.2.1",
+   "riesgo": "Reconstruccion tarda 40-60 minutos",
+   "verificable_aqui": "nvidia-smi --query-gpu=name,compute_cap --format=csv"
+  },
+  {
+   "que": "Script que escala dos tensores conv1d de las capas 36 y 37 de un checkpoint FP8 para corregir sigma alta",
+   "como": "scale_factor = 0.063 / 0.102 aplicado a model.language_model.layers.36/37.linear_attn.conv1d.weight; ejecutar python3 fix_qwen_fp8.py en el directorio del modelo",
+   "fuente_post": 20,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "sin hardware declarado",
+   "riesgo": "Sobrescribe los shards safetensors en sitio; sin respaldo ni verificacion de calidad",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Plantilla de chat mejorada y parser que mejoran fiabilidad de tool calls con contexto mayor a 100k",
+   "como": "--chat-template /models/qwen3.5-enhanced.jinja --tool-call-parser qwen3_coder",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "opinion de whpthomas con Qwen3.5-35B FP8 y 122B hibrido",
+   "riesgo": "Sin benchmark, solo observacion de un dia",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Parametros de llama.cpp con fork DFlash para 35B-A3B",
+   "como": "--spec-draft-p-min 0.3 --spec-draft-n-max 14",
+   "fuente_post": 42,
+   "repositorio": "https://github.com/phuongncn/qwen3.6-27b-speedhack-gx10-dgx-spark",
+   "licencia": "no indicada",
+   "probado_en": "GB10 segun fususu",
+   "riesgo": "Fork de terceros (spiritbuun); el post 47 reporta inestabilidad en otro modelo recomendado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables NCCL/PyTorch para entrenamiento FSDP multinodo en cuatro Sparks",
+   "como": "NCCL_IB_HCA=rocep1s0f0:1,roceP2p1s0f0:1 ; NCCL_NET_GDR_LEVEL=0 ; TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=1800 (la P mayuscula de roceP2p1s0f0 importa: minuscula cae en un solo carril sin avisar)",
    "fuente_post": 49,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "4 nodos GB10 sm_121, kernel 6.11.0-1016-nvidia, driver 580.95.05 (segun el usuario jesse75)",
-   "riesgo": "El propio autor marca como inferencia (no medida) que la presion de memoria unificada dispare el watchdog; dice que la P mayuscula en roceP2p1s0f0 importa (minuscula degrada en silencio a un solo carril); no hay barrido de ancho de banda con nccl-tests",
-   "verificable_aqui": "env | grep -E 'NCCL|TORCH_NCCL'; ls /sys/class/infiniband"
-  },
-  {
-   "que": "Falla de arranque de vLLM en GB10: tras torch.compile, determine_available_memory termina en RuntimeError: Error Internal al calcular la memoria disponible para KV cache (version vLLM 0.19.0, gpu_memory_utilization 0.92, cuda capability 12.1 reportada por PyTorch como fuera del rango soportado 8.0-12.0)",
-   "como": "no indicado el arreglo; el usuario fususu pide reconstruir la imagen vllm-sm121 / vllm-qwen35-v2 (post 16 y 17); el log muestra gpu_memory_utilization 0.92 frente al 0.85 de los scripts que funcionan",
-   "fuente_post": 12,
-   "repositorio": "GitHub phuongncn/asus-gx10-qwen35-speed-hack (nombre tal como aparece en el post 1)",
-   "licencia": "no indicada",
-   "probado_en": "GB10 segun el usuario TaraniDebnath",
-   "riesgo": "Causa raiz no establecida en el hilo; el post 13 ademas muestra 'Could not read GPU memory info ([N/A])' del script de arranque",
-   "verificable_aqui": "nvidia-smi --query-gpu=memory.used,memory.total --format=csv"
-  },
-  {
-   "que": "Parche de pesos FP8 de Qwen3.5-35B-A3B: dos capas con sigma alta en conv1d se reescalan por 0.063/0.102",
-   "como": "scale_factor = 0.063 / 0.102 aplicado a model.language_model.layers.36.linear_attn.conv1d.weight y layers.37 ...conv1d.weight, via python3 fix_qwen_fp8.py sobre los shards safetensors",
-   "fuente_post": 20,
-   "repositorio": null,
-   "licencia": null,
-   "probado_en": null,
-   "riesgo": "Sobrescribe los shards originales (save_file(weights, shard)); la validez depende de otro hilo citado que el texto no incluye",
-   "verificable_aqui": null
-  },
-  {
-   "que": "Parametros de llama.cpp con DFlash para el 35B-A3B: descartar borradores de baja confianza",
-   "como": "--spec-draft-p-min 0.3 ; --spec-draft-n-max 14",
-   "fuente_post": 42,
-   "repositorio": "GitHub phuongncn/qwen3.6-27b-speedhack-gx10-dgx-spark",
-   "licencia": "no indicada",
-   "probado_en": "GX10 / Spark segun el usuario fususu; el propio usuario dice en el post 47 que no alcanzo la velocidad que otro afirma y que no fue estable",
-   "riesgo": "DFlash empeora el chat corto (44 tok/s frente a 60-66 stock) segun el autor",
-   "verificable_aqui": null
+   "probado_en": "4 nodos DGX Spark, sm_121 aarch64, kernel 6.11.0-1016-nvidia, driver 580.95.05 segun jesse75",
+   "riesgo": "El autor admite que no ejecuto nccl-tests; el efecto del heartbeat es inferido, no medido",
+   "verificable_aqui": "ls /sys/class/infiniband"
   }
  ],
  "omision_nvidia": null,
  "utilidad_atom": "media",
- "razon": "Hilo de rendimiento de usuarios con comandos vLLM completos, un reporte de fallo 'Error Internal' en la fase de memoria disponible sin resolver y una configuracion NCCL de un cluster de 4 nodos con marcas de lo observado frente a lo inferido. NVIDIA no participa; no hay mecanismo de monitoreo termico ni de memoria por contenedor.",
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+ "razon": "Los 49 mensajes son de usuarios (ninguno de NVIDIA) con comandos reales de arranque vLLM, un diagnostico de crash por imagen sin soporte sm121 y variables NCCL declaradas con hardware; orientan memoria unificada y medicion, pero no hay mecanismo de temperatura ni de corte en seco. El post 13 incluye un token de HuggingFace visible en el docker run, que no se copio y conviene rotar."
 }

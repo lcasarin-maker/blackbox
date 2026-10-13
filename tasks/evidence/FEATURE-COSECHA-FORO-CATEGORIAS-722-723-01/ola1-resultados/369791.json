@@ -2,58 +2,77 @@
  "id": 369791,
  "titulo": "Fully custom CUDA-native Deepseek 4 Flash optimized for 1x Spark! antirez/ds4",
  "leido": true,
- "posts_leidos": 80,
+ "posts_leidos": 81,
+ "lectura": "completa",
  "clase": "mecanismo",
  "proposito": [
-  "prevenir",
   "medir",
-  "solucionar"
+  "monitorear",
+  "prevenir"
  ],
  "mecanismos": [
   {
-   "que": "Reduccion de la memoria residente con streaming de expertos desde SSD en ds4-server (el autor del post dice que a --ctx 32768 los pesos ocupan ~80 GiB y dejan 1-2 GiB de MemAvailable)",
-   "como": "./ds4-server --cuda --host 0.0.0.0 --port 18004 -m ds4flash.gguf --ctx 32768 --ssd-streaming --ssd-streaming-cache-experts 50GB --cors ; compilar con make cuda-spark",
-   "fuente_post": 1,
-   "repositorio": "https://github.com/antirez/ds4",
-   "licencia": "no indicada",
-   "probado_en": "DGX Spark GB10, kernel 6.17.0-1021-nvidia, 128 GiB unificada (~121.7 GiB visibles a CUDA, sin swap) segun el usuario que redacto la guia (texto generado con IA segun el)",
-   "riesgo": "Sin streaming el modelo no puede convivir con otra carga; con el streaming el rendimiento baja (el post remite a una tabla no leida completa).",
-   "verificable_aqui": "grep -E 'MemTotal|MemAvailable' /proc/meminfo; free -g"
-  },
-  {
-   "que": "Dato de memoria a contexto largo: ds4 upstream con --ctx 256000 usa ~113 GB de RAM en total, con prefill algo menos de 400 tok/s y decodificacion 13.x tok/s; otro usuario reporta ds4-server consumiendo un poco menos de 91 GB con --ctx 64000",
-   "como": "ds4-server --ctx 256000",
-   "fuente_post": 71,
-   "repositorio": "https://github.com/antirez/ds4",
-   "licencia": "no indicada",
-   "probado_en": "DGX Spark segun joshua.dale.warner",
-   "riesgo": "Errores 'cuda prefill failed' con prompts de ~30k tokens en la rama de entrpi (fork) pero no en upstream, segun dos usuarios.",
-   "verificable_aqui": null
-  },
-  {
-   "que": "Comando de instalacion de un solo paso de un tercero (curl | bash)",
-   "como": "curl -sSL https://raw.githubusercontent.com/Entrpi/ds4-on-spark/main/install.sh | bash -s -- --with-mtp --start",
+   "que": "Metodo de medicion roofline de decodificacion: ancho de banda alcanzable medido con un banco de copia CUDA pequeno (215-227 GB/s frente a ~273 GB/s publicados, ~82 %) y bytes por token ~8 GB",
+   "como": "techo = 225 / 8 ≈ 28 t/s; ds4 al ~95 % de ese techo",
    "fuente_post": 1,
    "repositorio": "https://github.com/Entrpi/ds4-on-spark",
    "licencia": "no indicada",
-   "probado_en": "GB10 segun entrpi",
-   "riesgo": "Ejecuta un script remoto sin revisar.",
+   "probado_en": "GB10 (aarch64, sm_121, CUDA 13) segun el autor",
+   "riesgo": "Cifras de un solo usuario sin verificacion independiente",
    "verificable_aqui": null
   },
   {
-   "que": "Variables de ds4-server para ajustar la reserva de memoria en lote continuo (coder543 aparece en otro hilo; aqui solo se recoge que el post 1 usa un instalador con MTP)",
-   "como": "no indicado",
+   "que": "Benchmark de velocidad reproducible con llama-benchy",
+   "como": "uvx --from git+https://github.com/eugr/llama-benchy llama-benchy --base-url http://127.0.0.1:8000/v1 --model deepseek-v4-flash --pp 2048 --tg 32 128 512 --depth 0 4096 16384 --latency-mode generation",
    "fuente_post": 1,
-   "repositorio": null,
-   "licencia": null,
-   "probado_en": null,
-   "riesgo": null,
+   "repositorio": "https://github.com/eugr/llama-benchy",
+   "licencia": "no indicada",
+   "probado_en": "GB10, ds4-server en :8000",
+   "riesgo": "Ejecuta codigo descargado con uvx",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia de huella de memoria: ds4 carga todo el GGUF residente (~80 GiB de pesos a --ctx 32768) y deja ~1-2 GiB de MemAvailable, sin margen para otra carga",
+   "como": "./ds4-server --cuda --host 0.0.0.0 --port 18004 -m ds4flash.gguf --ctx 32768 --cors ; GGUF 86.7 GB en disco",
+   "fuente_post": 77,
+   "repositorio": "https://github.com/antirez/ds4",
+   "licencia": "no indicada",
+   "probado_en": "GB10 128 GiB (~121.7 GiB visibles a CUDA), kernel 6.17.0-1021-nvidia",
+   "riesgo": "Coexistir con otra carga agota la memoria unificada; otro usuario reporta ~113 GB de RAM con --ctx 256000 (post 71) y ~91 GB con --ctx 64000 (post 68)",
+   "verificable_aqui": "grep -E 'MemAvailable|MemTotal' /proc/meminfo"
+  },
+  {
+   "que": "Palanca de memoria: streaming de expertos desde SSD con cache acotada (gen 2.5-10x mas lenta, memoria libre de 1-2 GiB a 32-82 GiB)",
+   "como": "./ds4-server --cuda --host 0.0.0.0 --port 18004 -m ds4flash.gguf --ctx 32768 --ssd-streaming --ssd-streaming-cache-experts 50GB --cors",
+   "fuente_post": 77,
+   "repositorio": "https://github.com/antirez/ds4",
+   "licencia": "no indicada",
+   "probado_en": "GB10, commit bbd069d (2026-06-14)",
+   "riesgo": "Con 50GB de cache tg 11-12.6 tok/s y cada turno tarda ~56 s, superando el limite de 60 s de tool-eval-bench",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Cache KV a disco de ds4-server",
+   "como": "--kv-disk-dir /home/athena/ds4-kv --kv-disk-space-mb 8192 (con -c 131072 -n 2200 -t 10)",
+   "fuente_post": 83,
+   "repositorio": "https://github.com/antirez/ds4",
+   "licencia": "no indicada",
+   "probado_en": "GB10, make cuda-spark",
+   "riesgo": "Ocupa disco; sin evaluacion de impacto",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fallo CUDA reportado en el fork de entrpi: illegal memory access y cuda prefill failed con prompts de ~30k tokens; el upstream antirez/ds4 estable a mas de 200k",
+   "como": "ds4: CUDA end commands failed: an illegal memory access was encountered ; ejecutar con --trace termina en 'prefill failed: cuda decode failed while extending checkpoint'",
+   "fuente_post": 61,
+   "repositorio": "https://github.com/antirez/ds4",
+   "licencia": "no indicada",
+   "probado_en": "GB10, commit cf8a263b",
+   "riesgo": "Causa no determinada; la mejora estable fue volver al upstream (posts 70, 71)",
    "verificable_aqui": null
   }
  ],
  "omision_nvidia": null,
  "utilidad_atom": "media",
- "razon": "Hilo largo de usuarios sin respuesta de NVIDIA; lo transferible es la contabilidad de memoria de un motor que carga todo residente (80 a 113 GB segun contexto) y la opcion de streaming de expertos desde SSD para convivir con otras cargas. Lei de forma selectiva (inicio, posts 68-72, y la guia de los posts siguientes), no los 80 posts completos; el resto de benchmarks no se auditaron.",
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+ "razon": "Tema de un motor de inferencia de terceros en GB10 sin respuesta de NVIDIA; aporta un metodo de medicion roofline, el comando de llama-benchy y cifras concretas de ocupacion de memoria unificada (80-113 GiB) que previenen el colapso por carga concurrente. No contiene mecanismo de calor ni de corte en seco; los resultados son de usuarios sin verificacion independiente."
 }

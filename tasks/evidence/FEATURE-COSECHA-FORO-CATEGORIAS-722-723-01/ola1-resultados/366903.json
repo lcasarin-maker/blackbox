@@ -3,55 +3,66 @@
  "titulo": "Introducing Tool Eval Bench CLI",
  "leido": true,
  "posts_leidos": 215,
+ "lectura": "completa",
  "clase": "mecanismo",
  "proposito": [
-  "medir"
+  "medir",
+  "monitorear",
+  "solucionar"
  ],
  "mecanismos": [
   {
-   "que": "CLI de evaluacion de calidad de llamadas a herramientas (63 a 80+ escenarios offline con herramientas simuladas) contra cualquier endpoint OpenAI-compatible; para rendimiento delega en llama-benchy",
-   "como": "uv tool install git+https://github.com/SeraphimSerapis/tool-eval-bench.git ; tool-eval-bench --base-url http://0.0.0.0:8080 --short ; --perf ; --seed 42 --trials 3",
+   "que": "Herramienta de evaluacion de tool-calling de LLM contra endpoint OpenAI-compatible (69 escenarios base, mas Hard Mode, GSM8K/MMLU/IFEval); no es herramienta de telemetria de hardware",
+   "como": "uv tool install git+https://github.com/SeraphimSerapis/tool-eval-bench.git ; tool-eval-bench --base-url http://0.0.0.0:8080 --seed 42 --trials 3",
    "fuente_post": 1,
    "repositorio": "https://github.com/SeraphimSerapis/tool-eval-bench",
    "licencia": "no indicada",
-   "probado_en": "Spark con vLLM y modelos Qwen3.6 (usuarios del hilo); no es una medicion de hardware",
-   "riesgo": "Los puntajes cambian entre versiones de la herramienta (usuario 0rand, post 212: 90 a 85 a 90-91); un usuario reporto que el pico de contexto puede agotar el tiempo de espera (post 113)",
-   "verificable_aqui": null
+   "probado_en": "vLLM sobre DGX Spark/GB10 (varios usuarios)",
+   "riesgo": "los puntajes no son comparables entre versiones (2.6.0 y 2.7.0 lo declaran)",
+   "verificable_aqui": "command -v tool-eval-bench"
   },
   {
-   "que": "Prueba de presion de contexto: llena un porcentaje de la ventana de contexto antes de cada escenario y busca el punto donde el modelo deja de llamar herramientas",
-   "como": "tool-eval-bench --seed 42 --context-pressure 0.75 ; --context-pressure-sweep 0.9-1.0 --sweep-steps 10 ; --context-size 262144",
-   "fuente_post": 16,
+   "que": "Dashboard en vivo de aceptacion de decodificacion especulativa leyendo Prometheus /metrics de vLLM",
+   "como": "tool-eval-bench --spec-live ; --spec-bench ; --metrics-url http://vllm:8080/metrics ; vLLM >= 2.7.0 con --per-request-spec-decode-metrics summary",
+   "fuente_post": 51,
    "repositorio": "https://github.com/SeraphimSerapis/tool-eval-bench",
    "licencia": "no indicada",
-   "probado_en": "usuario pontostroy corrio 0.75 con 262144 y lo describe como un reto real para el Spark (post 49, ~185K tokens)",
-   "riesgo": "Segun el autor (post 113) el modo de una sola corrida no escalaba el timeout (60 s) para rellenos grandes",
-   "verificable_aqui": null
+   "probado_en": "vLLM en Spark (serapis)",
+   "riesgo": "contadores del servidor mezclan trafico ajeno; el autor recomienda metricas por peticion (post 215)",
+   "verificable_aqui": "curl -s http://localhost:8000/metrics | grep spec_decode"
   },
   {
-   "que": "Panel en vivo de decodificacion especulativa leyendo metricas Prometheus de vLLM (aceptacion, cache de prefijo)",
-   "como": "--spec-bench ; --spec-live",
-   "fuente_post": 9,
+   "que": "Barrido de presion de contexto para hallar el punto donde el modelo deja de llamar herramientas",
+   "como": "tool-eval-bench --short --seed 42 --context-pressure-sweep 0.3-1.0 --scenarios TC-01 --sweep-steps 14 --context-size 260000",
+   "fuente_post": 32,
    "repositorio": "https://github.com/SeraphimSerapis/tool-eval-bench",
    "licencia": "no indicada",
-   "probado_en": "vLLM en Spark",
-   "riesgo": "El parser de metricas fallo con notacion cientifica de contadores grandes (post 54, corregido); con llama.cpp puede no leer (post 63)",
+   "probado_en": "Spark/GB10 (paxren2020, martinB78)",
+   "riesgo": "en el modo de una sola corrida el timeout no escalaba (60 s) y se leia como FAIL (post 113); version 1.6 tuvo un patron alterno pass/fail por un bug de la herramienta (post 103)",
    "verificable_aqui": null
   },
   {
-   "que": "Regresion reportada por varios usuarios: en imagenes vLLM 0.20 el cache de prefijo degrada la calidad de llamadas a herramientas; el unico arreglo citado es desactivarlo (con speculative decoding se ve peor)",
-   "como": "quitar --enable-prefix-caching (o bajar a vLLM 0.19.2)",
+   "que": "Workaround de regresion de vLLM 0.20: calidad de tool-calling cae con prefix caching, y con MTP/DFlash",
+   "como": "desactivar prefix caching (omitir --enable-prefix-caching); bajar a vLLM 0.19.2",
    "fuente_post": 79,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "usuarios arctic.gus (post 76: Qwen3.6 27B BF16 de 93 a 44 puntos y recuperado, post 80), twaggs88 y bernisse (post 84, 87), imagen eugr de vLLM 0.20",
-   "riesgo": "Causa raiz no identificada ('I haven't found the root cause yet', post 79)",
+   "probado_en": "imagen de eugr con vLLM 0.20 (arctic.gus, twaggs88, djordjestojanovic1992, paxren2020)",
+   "riesgo": "causa raiz no encontrada; serapis ve regresion Prefix Caching + MTP en builds nuevos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de medicion y advertencias: no_proxy para loopback; tokenizer local si no hay red; --parallel 1 para puntajes reproducibles",
+   "como": "export no_proxy=127.0.0.1,localhost,0.0.0.0,::1 ; tool-eval-bench --perf --tokenizer /ruta/tokenizer.json ; tool-eval-bench --parallel 1",
+   "fuente_post": 134,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios en Spark (cho, giles8)",
+   "riesgo": "bajo saturacion los timeouts se registran como FAIL aunque el modelo razone bien",
    "verificable_aqui": null
   }
  ],
  "omision_nvidia": null,
- "utilidad_atom": "baja",
- "razon": "Hilo de 215 posts sobre un benchmark de calidad de llamadas a herramientas con versiones y quejas de usuarios; una busqueda por temperatura, reinicio, OOM, swap y nvidia-smi no devolvio ningun mecanismo de hardware o memoria (solo gpu_memory_utilization de configuraciones de vLLM). El post 14 aclara que los numeros de prefill de la herramienta eran imprecisos hasta que adopto llama-benchy; no hay respuesta de NVIDIA staff relevante.",
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+ "utilidad_atom": "media",
+ "razon": "El tema (215 mensajes leidos) documenta una herramienta comunitaria de medicion de calidad de tool-calling y aceptacion especulativa, con comandos concretos pero licencia no indicada en el texto y sin relacion directa con los colapsos de memoria ni el calor sostenido. No hay respuesta de staff de NVIDIA; el valor para el ATOM es medir regresiones de configuracion vLLM (prefix caching, MTP) con --spec-live y --context-pressure-sweep."
 }

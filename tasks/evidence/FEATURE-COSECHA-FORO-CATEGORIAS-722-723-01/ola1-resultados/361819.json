@@ -2,7 +2,8 @@
  "id": 361819,
  "titulo": "Qwen3.5-122B-A10B NVFP4 Quantized for DGX Spark — 234GB → 75GB, Runs on 128GB",
  "leido": true,
- "posts_leidos": 33,
+ "posts_leidos": 45,
+ "lectura": "completa",
  "clase": "mecanismo",
  "proposito": [
   "prevenir",
@@ -11,69 +12,97 @@
  ],
  "mecanismos": [
   {
-   "que": "Congelamiento del sistema por memoria unificada: fastsafetensors con --gpu-memory-utilization 0.84 pre-asigna ~107 GB de 128 GB y el buffer temporal de carga (~70 GB) compite por el mismo pool; el equipo entra en swap thrash, SSH deja de responder y hace falta ciclo de energia. Limite sugerido 0.76 o menos con --load-format fastsafetensors y un modelo de 70 GB",
-   "como": "--load-format fastsafetensors con --gpu-memory-utilization 0.84 (provoca el cuelgue); 0.76 o menos (evita el cuelgue segun el usuario); las recetas de eugr usan 0.7 (~90 GB, ~38 GB de margen)",
-   "fuente_post": 14,
-   "repositorio": null,
-   "licencia": null,
-   "probado_en": "una DGX Spark segun alper.tor; en contra, joshua.dale.warner (post 23) usa 0.85 con fastsafetensors sin problema, y relc (post 27) 0.88",
-   "riesgo": "Cuelgue total con necesidad de reinicio fisico; los usuarios discrepan del umbral exacto",
-   "verificable_aqui": "free -g ; grep -E 'MemAvailable|SwapFree' /proc/meminfo"
-  },
-  {
-   "que": "Ajustes sysctl para memoria unificada durante la carga de ~77 GB de pesos, porque el kernel intercambia paginas de aplicacion para conservar cache de archivos",
+   "que": "Sysctl para memoria unificada durante la carga del modelo (evitar swap agresivo de paginas de aplicacion)",
    "como": "vm.swappiness=1 ; vm.dirty_bytes=268435456 ; vm.dirty_background_bytes=134217728",
    "fuente_post": 8,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "DGX Spark segun alper.tor; sin efecto medido en el texto",
-   "riesgo": "Valor no verificado por una medicion en el tema",
+   "probado_en": "DGX Spark 128 GB, modelo de ~77 GB, vLLM 0.16.0rc2 segun el autor",
+   "riesgo": "Valores de un usuario sin medicion comparativa; swappiness=1 no desactiva swap",
    "verificable_aqui": "sysctl vm.swappiness vm.dirty_bytes vm.dirty_background_bytes"
   },
   {
-   "que": "Pico de memoria en la carga del modelo: casi toda la memoria unificada de 128 GB; recomendacion de detener otros servicios de GPU antes de arrancar vLLM y reiniciarlos cuando el endpoint de salud responda (servicio systemd oneshot)",
-   "como": "no indicado el comando; el autor usa un servicio systemd oneshot que sondea el endpoint de salud",
-   "fuente_post": 8,
+   "que": "Advertencia con condicion: --load-format fastsafetensors con --gpu-memory-utilization 0.84 congela el sistema (swap thrash, SSH caido, ciclo de energia)",
+   "como": "gpu-memory-utilization 0.84 reserva ~107 GB; el buffer de carga de ~70 GB compite por los mismos 128 GB; mantener <=0.76 con un modelo de 70 GB",
+   "fuente_post": 14,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "DGX Spark del autor",
-   "riesgo": "Servicios concurrentes pueden provocar OOM durante la carga",
+   "probado_en": "DGX Spark, Avarok dgx-vllm (vLLM 0.16.0rc2), modelo NVFP4 78 GB",
+   "riesgo": "Congelacion total del equipo con reset por energia; otro usuario reporta 0.85 sin problema con vLLM mas reciente y modelo de 67 GB (posts 23, 29): la condicion depende de version y tamano del modelo",
    "verificable_aqui": null
   },
   {
-   "que": "Variables de vLLM para evitar el fallo PTX 'cvt with .e2m1x2 not supported on sm_121' del backend FLASHINFER_CUTLASS MoE",
-   "como": "VLLM_USE_FLASHINFER_MOE_FP4=0 VLLM_NVFP4_GEMM_BACKEND=marlin VLLM_TEST_FORCE_FP8_MARLIN=1 (y VLLM_MARLIN_USE_ATOMIC_ADD=1 en otros posts)",
-   "fuente_post": 8,
+   "que": "Contraprueba del mismo riesgo: fastsafetensors a 0.85 sin congelar",
+   "como": "--load-format fastsafetensors --gpu-memory-utilization 0.85 con modelo INT4 AutoRound de 67 GB; carga de pesos 60 s frente a 430 s; arranque ~2 min frente a ~9 min",
+   "fuente_post": 29,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "GB10 SM121; --enforce-eager no evita el fallo segun el autor",
-   "riesgo": "Afirmacion de usuario; el tema no incluye respuesta de NVIDIA",
-   "verificable_aqui": null
-  },
-  {
-   "que": "Explicacion de por que vLLM ocupa ~95 GB con pesos de ~65 GB: toma toda la memoria permitida hasta --gpu-memory-utilization (0.7 en la receta), incluyendo CUDA graphs y KV cache",
-   "como": "--gpu-memory-utilization 0.7 (receta); desglose de memoria con 0.85 = 108.8 GiB de presupuesto sobre 128 GiB (post 29)",
-   "fuente_post": 33,
-   "repositorio": null,
-   "licencia": null,
-   "probado_en": "imagen spark-vllm-docker de eugr segun el usuario",
+   "probado_en": "Single DGX Spark GB10, eugr vllm-node-tf5 (vLLM 0.17.0rc1), transformers 5.3.0",
    "riesgo": null,
    "verificable_aqui": null
   },
   {
-   "que": "Carga lenta de pesos (540 s para 62.65 GiB) y su correccion",
-   "como": "--load-format fastsafetensors (el log debe decir 'Loading safetensors using Fastsafetensor loader'); un usuario reporta menos de 70 s para los shards y menos de 5 min de arranque en frio",
-   "fuente_post": 13,
+   "que": "SM121 no soporta la instruccion PTX cvt .e2m1x2: el backend FLASHINFER_CUTLASS de MoE aborta en ptxas",
+   "como": "error: Instruction 'cvt with .e2m1x2' not supported on .target 'sm_121'; workaround: VLLM_USE_FLASHINFER_MOE_FP4=0 VLLM_NVFP4_GEMM_BACKEND=marlin VLLM_TEST_FORCE_FP8_MARLIN=1; --enforce-eager no ayuda",
+   "fuente_post": 8,
    "repositorio": null,
    "licencia": null,
-   "probado_en": "usuarios joshua.dale.warner y stuckwi, DGX Spark",
-   "riesgo": "Ver el primer mecanismo: junto a utilizacion alta puede congelar el equipo",
+   "probado_en": "GB10 sm_121, vLLM 0.16.0rc2",
+   "riesgo": "Afirmacion de usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Pico de memoria al cargar: la carga del modelo llega casi a los 128 GB; detener otros servicios GPU antes",
+   "como": "systemd oneshot que sondea el endpoint de salud y arranca otros servicios cuando vLLM esta listo",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Lo que vLLM reserva no es fuga: gpu-memory-utilization define el techo (pesos + grafos CUDA + KV)",
+   "como": "--gpu-memory-utilization (0.7 en la receta de eugr) - explicacion de eugr",
+   "fuente_post": 33,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Banderas de agente: parser de herramientas y razonamiento",
+   "como": "--enable-auto-tool-choice --tool-call-parser qwen3_xml (o qwen3_coder) --reasoning-parser qwen3; desactivar thinking con --default-chat-template-kwargs {\"enable_thinking\":false}",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Rebuild del contenedor tras fallo de vLLM que rompio cuantizados",
+   "como": "./build-and-copy.sh --rebuild-vllm [--tf5]; eugr: lanzamientos 'stable' nocturnos",
+   "fuente_post": 3,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Inestabilidad: TurboQuant KV 3.5-bit con backend Triton se cuelga con trafico real (0.0-0.3 tok/s durante minutos con /health 200)",
+   "como": "JIT de Triton sobre formas de prompt nuevas bloquea el motor; reproducido 3 veces; usar v2 sin TurboQuant",
+   "fuente_post": 45,
+   "repositorio": "https://github.com/albond/DGX_Spark_Qwen3.5-122B-A10B-AR-INT4",
+   "licencia": "no indicada",
+   "probado_en": "Spark, vLLM 0.19.1",
+   "riesgo": "Health OK mientras el servicio no responde: el chequeo de salud no detecta el bloqueo",
    "verificable_aqui": null
   }
  ],
  "omision_nvidia": null,
  "utilidad_atom": "alta",
- "razon": "Los posts 8 y 14 dan valores exactos (sysctl, utilizacion de memoria, flags) y un caso de cuelgue por agotar la memoria unificada en la carga, con medicion parcial y desacuerdo entre usuarios sobre el umbral. Sin respuesta de NVIDIA; la cuantizacion original fue retirada por su autor por estar rota. Lei los posts 1-33 y no los restantes.",
- "lectura": "completa",
- "nota_normalizacion": "lectura completa segun el agente; no verificable"
+ "razon": "Hilo de 45 mensajes (todos leidos) con valores sysctl exactos para memoria unificada (post 8), una congelacion por arranque con 0.84 de utilizacion que exige apagar y encender (post 14) y su contradiccion con otro usuario (posts 23 y 29), y el limite de PTX de SM121. Todo viene de usuarios; no hay respuesta de NVIDIA y los repositorios citados no declaran licencia en el texto."
 }

@@ -268,3 +268,15 @@ def test_main_con_triaje_rc0_y_rc1(tmp_path: Path, capsys: pytest.CaptureFixture
     assert "ids_candidatos" in json.loads(capsys.readouterr().out)
     assert v.main([*_carpetas(tmp_path, [{"id": 1}, {"id": 2}]), "--triaje"]) == 1
     assert "ids_candidatos" in json.loads(capsys.readouterr().out)
+
+
+def test_mensajes_reales_no_cuenta_un_cuerpo_que_empieza_por_POST(tmp_path: Path) -> None:
+    """Defecto hallado el 2026-10-13: un mensaje cuyo cuerpo empieza con 'POST /v1/chat/completions' sumaba uno de mas."""
+    d = tmp_path / "threads"
+    d.mkdir()
+    (d / "7.txt").write_text(
+        "POST 1 | ana | 2026-10-01 | u\nhola\n\nPOST 2 | bob | 2026-10-02 | u\nPOST /v1/chat/completions HTTP/1.1\n\nPOST 3 | ana | 2026-10-03 | u\nfin\n",
+        encoding="utf-8",
+    )
+    assert v.mensajes_reales(tmp_path, 7) == 3  # control negativo: contar "\nPOST " daria 4
+    assert v.mensajes_reales(tmp_path, 8) == 0

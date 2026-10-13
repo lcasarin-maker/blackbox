@@ -3,12 +3,45 @@
  "titulo": "Immich picture library (alternative to google photos / icloud Photos)",
  "leido": true,
  "posts_leidos": 1,
- "clase": "ruido",
- "proposito": [],
- "mecanismos": [],
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Hecho de plataforma: la GPU GB10 no expone el archivo vendor de DRM ni entrada en el bus PCI, por lo que ONNX Runtime 1.24.4 no registra CUDAExecutionProvider y cae a CPU en silencio",
+   "como": "find /sys/bus/pci/devices/ -name \"vendor\" -exec grep -il \"10de\" {} \\;  (devuelve nada segun el post); ORT falla leyendo /sys/class/drm/card0/device/vendor",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/volschin/immich/commit/fab7df3371d522f12a4b780b3c2b837f341b88bb",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10, driver 580.126.09, CUDA 13.0, Ubuntu 24.04 ARM64, ORT v1.24.4, Immich v2.7.5",
+   "riesgo": "Detectores propios que identifiquen la GPU por sysfs/PCI fallan en GB10; el parche solo se verifico contra ORT v1.24.4",
+   "verificable_aqui": "ls /sys/class/drm/card0/device/vendor; ls /dev/nvidia0; find /sys/bus/pci/devices/ -name vendor -exec grep -il 10de {} \\;"
+  },
+  {
+   "que": "Workaround: parche de device_discovery.cc (saltar tarjetas DRM sin vendor con continue y, si no hay GPU, crear un dispositivo NVIDIA sintetico cuando existe /dev/nvidia0) y desinstalar el paquete onnxruntime CPU antes de instalar onnxruntime_gpu",
+   "como": "uv pip uninstall onnxruntime onnxruntime-gpu 2>/dev/null || true && uv pip install --no-deps /ort-wheel/onnxruntime_gpu-*.whl ; compilar con CMAKE_CUDA_ARCHITECTURES=121 onnxruntime_USE_FLASH_ATTENTION=OFF; en compose NVIDIA_VISIBLE_DEVICES: all, NVIDIA_DRIVER_CAPABILITIES: compute,utility, runtime: nvidia",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/immich-app/immich/discussions/10647",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10, ORT v1.24.4",
+   "riesgo": "Compilacion de 60-90 min; parche exacto solo para v1.24.4; ninguna respuesta de NVIDIA",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Configurar el runtime nvidia como predeterminado de Docker",
+   "como": "sudo nvidia-ctk runtime configure --runtime=docker --set-as-default ; sudo systemctl restart docker",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10",
+   "riesgo": "Reinicia Docker (detiene contenedores) y cambia el runtime por defecto",
+   "verificable_aqui": "docker info --format '{{.DefaultRuntime}} {{.Runtimes}}'"
+  }
+ ],
  "omision_nvidia": null,
- "utilidad_atom": "ninguna",
- "razon": "Guia de usuario (texto generado por IA segun el autor) para montar Immich con NAS Synology y el servidor de aprendizaje automatico en la Spark. No contiene mecanismos de monitoreo, memoria ni termica; leido hasta el docker-compose del servidor.",
- "lectura": "parcial",
- "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+ "utilidad_atom": "baja",
+ "razon": "Un solo mensaje de un usuario (sin staff de NVIDIA): guia de Immich cuyo aporte reutilizable es que la GB10 no publica vendor en sysfs/PCI, lo que rompe la deteccion de GPU en ORT 1.24.4 y obliga a un parche. No toca memoria ni calor; sirve solo como advertencia para herramientas que detecten la GPU por sysfs, con driver 580.126.09 distinto del nuestro (580.178.04)."
 }
