@@ -3,7 +3,11 @@ id: FEATURE-DMEM-LLENAR-CAPACIDAD-GPU-01
 kind: task
 domain: GPU
 title: "Registrar la memoria GPU/UMA en el controlador dmem de cgroup (modulo propio y parche del driver)"
-status: open
+status: done
+closed_at: 2026-10-12
+closure_type: fixed
+reason: "dmem.capacity lleno (53794045952 B) y carga GPU contabilizada contra un cgroup con dmem.max, con controles d1/d3."
+evidence: {"pass": "tasks/evidence/FEATURE-DMEM-LLENAR-CAPACIDAD-GPU-01.pass.txt", "fail": "tasks/evidence/FEATURE-DMEM-LLENAR-CAPACIDAD-GPU-01.fail.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
