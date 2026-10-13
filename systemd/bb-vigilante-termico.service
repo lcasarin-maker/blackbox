@@ -1,0 +1,12 @@
+[Unit]
+Description=bb guardia termico predictivo (interruptor termico_predictivo; off por defecto)
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.guardia_termico_predictivo
+Restart=on-failure
+MemoryMax=128M
+
+[Install]
+WantedBy=default.target
