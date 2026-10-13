@@ -8,7 +8,7 @@ severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-12
-close_check: {"cmd": "grep -q vllm_memoria_medida tasks/evidence/FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01/medicion.txt", "expect": "exit_zero", "porque": "Voto de Luis 2026-10-12. Cierra con una medicion de memoria y atascos antes y despues de cada ajuste en el motor local, con la configuracion anotada y su inverso."}
+close_check: {"cmd": "grep -qx vllm_memoria_medida tasks/evidence/FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01/medicion.txt", "expect": "exit_zero", "porque": "Voto de Luis 2026-10-12. Cierra con una medicion de memoria y atascos antes y despues de cada ajuste en el motor local, con la configuracion anotada y su inverso."}
 ---
 
 ## Antecedentes (lectura)
@@ -26,3 +26,6 @@ De FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01 (cerrada, medido negativo): la rampa de
 
 ## Correccion del residuo (2026-10-12)
 El residuo anterior decia que la rampa de vLLM no tenia muestra propia. Falso: las rafagas de `bb sample` la contienen (mayor caida 20.9 GiB en 9 s, ninguna cruza 8 GiB). Ver medicion.txt. Queda por medir antes/despues de cada ajuste cuando Luis lo aplique.
+
+## Defecto del close_check corregido (2026-10-13)
+`grep -q vllm_memoria_medida medicion.txt` daba exit 0 con la ficha explicitamente abierta: la propia frase "NO cerrado: falta vllm_memoria_medida" de `medicion.txt` contiene el centinela. Se cambia a `grep -qx` (la linea entera debe ser el centinela). Antes: rc=0 (falso cierre); despues: rc=1; control positivo: un archivo cuya unica linea es el centinela da rc=0.
