@@ -1,0 +1,36 @@
+{
+ "id": 365044,
+ "titulo": "Problem with \"Multi-Agent Chatbot\" Playbook",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Detectar un proceso que ocupa el puerto 8000 y rompe los contenedores del playbook (staff NVIDIA lo reprodujo)",
+   "como": "ss -tlnp | grep 8000",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Hay que bajar antes los contenedores del playbook para ver al otro proceso; sin sudo no se ve el nombre del proceso",
+   "verificable_aqui": "ss -tlnp | grep 8000"
+  },
+  {
+   "que": "Listar salud de contenedores Docker",
+   "como": "docker ps --format \"table {{.ID}}\\t{{.Names}}\\t{{.Status}}\"",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "docker ps --format \"table {{.ID}}\\t{{.Names}}\\t{{.Status}}\""
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Staff de NVIDIA (aniculescu) indica actualizar el playbook por commits nuevos y diagnostica un conflicto de puerto 8000 con ss. Son comandos genericos de diagnostico sin relacion con memoria o calor."
+}

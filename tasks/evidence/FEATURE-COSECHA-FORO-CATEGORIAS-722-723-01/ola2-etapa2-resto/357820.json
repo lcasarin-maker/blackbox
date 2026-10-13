@@ -1,0 +1,57 @@
+{
+ "id": 357820,
+ "titulo": "DGX Spark + Qwen3-Next-80B: Proven Performance, But Missing Clear Path to NIM, TensorRT-LLM & Web UIs",
+ "leido": true,
+ "posts_leidos": 18,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Benchmark de carga reproducible con vllm bench serve y ShareGPT para medir tok/s y TTFT por concurrencia",
+   "como": "vllm bench serve --backend openai-chat --base-url http://localhost:8020 --endpoint /v1/chat/completions --model SuperQwen --tokenizer Qwen/Qwen3-Next-80B-A3B-Instruct-FP8 --dataset-name sharegpt --dataset-path /data/sharegpt.json --num-prompts 1000 --max-concurrency 16 --request-rate inf --seed 42 --save-result",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark; otro usuario obtuvo 129.19 tok/s de salida con concurrencia 16 (post 14)",
+   "riesgo": "Mantener la carga 1534 s ejercita calor y memoria sostenidos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables de entorno de vLLM para FP8 MoE y no forzar kv-cache fp8 ni VLLM_USE_V1=0",
+   "como": "VLLM_USE_FLASHINFER_MOE_FP8=1 VLLM_FLASHINFER_MOE_BACKEND=latency VLLM_ATTENTION_BACKEND=FLASH_ATTN VLLM_USE_DEEP_GEMM=0 ; quitar --kv-cache-dtype fp8",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "imagen nvcr.io/nvidia/vllm:25.12.post1-py3, Spark",
+   "riesgo": "Texto del post con apariencia de generado por IA; la causa del OOM del otro usuario no se resolvio por esto",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Mensaje 'built for NVIDIA Driver Release 590.44 or later' con modo compatibilidad: se debia a un contenedor viejo; recrear contenedor",
+   "como": "docker rm -f vllm-qwen vllm-qwen-old 2>/dev/null || true ; docker compose -f docker-vllmqwen.yml up -d ; docker logs -f vllm-qwen --tail 50",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "driver 580.126.09",
+   "riesgo": "No actualizar a 590 todavia: un usuario dice que fallo y perdio el driver de GPU (post 8)",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+  },
+  {
+   "que": "OOM CUDA de un usuario con 115 GiB en uso de 119.64 GiB aun con gpu-memory-utilization 0.85 y swap de 64 GB; el sistema se cuelga",
+   "como": "no indicado (sin solucion confirmada)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark 128GB, driver 580.126.09",
+   "riesgo": "Con memoria unificada un 0.85 puede agotar la RAM y colgar el equipo",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El autor senala que NVIDIA no publica Qwen3-Next-80B en su tabla de compatibilidad, ni playbook de TensorRT-LLM/NIM para Spark; un staff (cyuen1, post 3) solo agradece y dice que lo comunicara a ingenieria.",
+ "utilidad_atom": "baja",
+ "razon": "Mayormente solicitud de documentacion y benchmarks de rendimiento; el unico elemento reutilizable es el comando de benchmark y una advertencia sobre actualizar a driver 590 (usuarios, no verificada por NVIDIA). El OOM del post 6 queda sin resolver."
+}

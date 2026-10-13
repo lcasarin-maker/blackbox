@@ -1,0 +1,9 @@
+{"id": 359661, "titulo": "Some observation about DGX Spark usb ports", "leido": true, "posts_leidos": 9, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["medir", "solucionar"],
+ "mecanismos": [
+  {"que": "Workaround de usuarios: conectar el almacenamiento USB despues del arranque; con el dispositivo conectado al reiniciar negocia USB 2 (480M) y al reconectar sube a la velocidad correcta", "como": "desconectar y volver a conectar el disco tras el arranque; medir con: lsusb -t | grep Storage", "fuente_post": 2, "repositorio": null, "licencia": null, "probado_en": "Spark con carcasas ASMedia y OWC segun usuarios; la velocidad correcta depende del dispositivo (un Crucial X10 negocio 20000M/x2 siempre)", "riesgo": "Segun post 6, otro usuario con tres discos conectados antes del arranque obtuvo 20000M/x2; el fallo depende del dispositivo", "verificable_aqui": "lsusb -t | grep Storage"}
+ ],
+ "omision_nvidia": "Un usuario pide que NVIDIA corrija el fallo de negociacion de velocidad USB (post 2); no hay respuesta de NVIDIA en el tema.",
+ "utilidad_atom": "baja",
+ "razon": "Observacion de usuarios sobre negociacion de velocidad USB en discos externos, dependiente del dispositivo y sin staff de NVIDIA; el comando lsusb -t da el diagnostico. No tiene relacion con memoria ni calor."}

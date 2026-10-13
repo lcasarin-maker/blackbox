@@ -1,0 +1,10 @@
+{"id": 366840, "titulo": "Full NVIDIA Enterprise RAG Blueprint on DGX Spark (ARM64) — First Deployment, 11 Bug Fixes Documented", "leido": true, "posts_leidos": 5, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["solucionar","omision_nvidia"],
+ "mecanismos": [
+  {"que": "Workaround de usuario: el NIM page-elements se cae con memoria unificada ~95% usada; se redirige YOLOX_GRPC_ENDPOINT al endpoint gRPC del NIM table-structure", "como": "YOLOX_GRPC_ENDPOINT apuntando al endpoint gRPC de nim-table-structure (puerto indicado en el post, no se copia direccion)", "fuente_post": 4, "repositorio": null, "licencia": "no indicada", "probado_en": "DGX Spark GB10, DGX OS 7.x, ARM64, segun el usuario", "riesgo": "Cambia la composicion del pipeline de ingestion; sin verificar por terceros.", "verificable_aqui": null},
+  {"que": "Advertencia de usuario: con el pipeline completo hubo agotamiento de swap (~15 GiB) que se limpia al reiniciar y NIMs inestables a ~95% de memoria unificada", "como": "no indicado", "fuente_post": 4, "repositorio": null, "licencia": "no indicada", "probado_en": "DGX Spark, segun el usuario", "riesgo": "Evidencia de presion de memoria bajo carga RAG completa; el post no da medicion ni comando.", "verificable_aqui": "free -h; swapon --show"}
+ ],
+ "omision_nvidia": "Segun el usuario, la posicion declarada de NVIDIA a febrero de 2026 era que los contenedores ARM64 de los componentes Python del Enterprise RAG Blueprint (rag-server, ingestor-server, NV-Ingest) no estan soportados y estan en la hoja de ruta; es una cita de usuario, sin respuesta de NVIDIA en el tema.",
+ "utilidad_atom": "baja",
+ "razon": "Un usuario describe su despliegue del blueprint RAG en ARM64 y documenta solo 4 de 11 correcciones, ofreciendo el resto en otro mensaje que nadie publico; el tema incluye un post vacio de spam y uno de sistema. Sin respuesta de NVIDIA ni comandos de medicion reutilizables."}

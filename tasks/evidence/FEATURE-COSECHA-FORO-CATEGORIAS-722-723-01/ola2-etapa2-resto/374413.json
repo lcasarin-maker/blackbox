@@ -1,0 +1,38 @@
+{
+ "id": 374413,
+ "titulo": "DGX Spark freezes under load",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Actualizar firmware via fwupdmgr (usuario MarcelStevano, no staff; afirma un update de abril 2026 para USB PD/EC)",
+   "como": "sudo apt update && sudo apt dist-upgrade; sudo fwupdmgr refresh --force; sudo fwupdmgr upgrade",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Afirmacion de usuario sin verificacion; el autor ya tenia firmware actual y seguia fallando (post 3)",
+   "verificable_aqui": "fwupdmgr get-updates"
+  },
+  {
+   "que": "Staff NVIDIA pide logs del arranque previo tras un freeze",
+   "como": "journalctl -k -b -1 -e",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k -b -1 -e | tail -20"
+  }
+ ],
+ "omision_nvidia": "Sin ciclo RMA con envio cruzado: segun un usuario (post 2), NVIDIA no ofrece advance replacement en DGX Spark y el reemplazo puede ser reacondicionado; sin verificacion de staff.",
+ "utilidad_atom": "baja",
+ "razon": "PowerStress falla con el mismo codigo MODS-020000600139; las unicas acciones son fwupdmgr (ya aplicado) y journalctl -k -b -1, ambos comunes. Staff solo respondio pidiendo el journal."
+}

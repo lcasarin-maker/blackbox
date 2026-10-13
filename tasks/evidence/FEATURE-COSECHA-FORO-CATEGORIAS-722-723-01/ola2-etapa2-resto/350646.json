@@ -1,0 +1,37 @@
+{
+ "id": 350646,
+ "titulo": "Invalid runtime name: nvidia",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Error 'unknown or invalid runtime name: nvidia': el usuario lo corrige registrando el runtime en Docker.",
+   "como": "nvidia-ctk runtime configure ; service docker restart",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (clon), nvidia-container-toolkit 1.18.0-1",
+   "riesgo": "Reescribe /etc/docker/daemon.json (en el post la config no existia)",
+   "verificable_aqui": "cat /etc/docker/daemon.json ; docker info --format '{{.Runtimes}}'"
+  },
+  {
+   "que": "Declaracion de staff: el runtime nvidia no hace falta en Spark, basta --gpus=all.",
+   "como": "docker run --gpus=all ...",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "docker info --format '{{.Runtimes}} {{.DefaultRuntime}}'"
+  }
+ ],
+ "omision_nvidia": "Staff (aniculescu, posts 2 y 4): el toolkit viene preinstalado pero no completamente configurado; el runtime nvidia es innecesario con --gpus=all.",
+ "utilidad_atom": "baja",
+ "razon": "Staff y usuario dan dos caminos para exponer la GPU a Docker. La maquina ya tiene runtime nvidia, asi que no aporta nada nuevo."
+}

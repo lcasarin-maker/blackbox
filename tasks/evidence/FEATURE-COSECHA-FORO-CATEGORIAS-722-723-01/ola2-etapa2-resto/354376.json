@@ -1,0 +1,27 @@
+{
+ "id": 354376,
+ "titulo": "ECC on DGX Spark",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobar si hay ECC en la memoria del sistema",
+   "como": "sudo dmidecode --type memory (campo Error Correction Type)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, dmidecode 3.5, SMBIOS 3.3.0 (declarado por usuario)",
+   "riesgo": null,
+   "verificable_aqui": "sudo dmidecode --type memory | grep -i 'Error Correction'"
+  }
+ ],
+ "omision_nvidia": "Segun un post que cita respuestas de NVIDIA en otros temas (post 2, citado por un usuario, no del staff aqui): la memoria no tiene ECC y no hay capacidad de activarlo.",
+ "utilidad_atom": "baja",
+ "razon": "El usuario muestra dmidecode con Error Correction Type: None y LPDDR5 de 128 GB; otro usuario cita afirmaciones de NVIDIA de que no habra ECC. Sin respuesta directa de staff en este tema."
+}

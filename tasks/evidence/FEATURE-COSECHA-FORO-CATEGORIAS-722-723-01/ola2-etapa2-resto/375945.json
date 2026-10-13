@@ -1,0 +1,57 @@
+{
+ "id": 375945,
+ "titulo": "MiMo V2.5 with Dflash FP8 KV 1.5M+ & Deep Speed up to 30 tk/s",
+ "leido": true,
+ "posts_leidos": 41,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta vLLM para MiMo-V2.5 con decodificacion especulativa DFlash y KV fp8 en 2x Spark",
+   "como": "no indicado (esta en el repositorio)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/HeNryous/mimo-v25-dflash-dgx-spark",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark GB10 sm_121, vLLM 0.23.1rc1.dev760",
+   "riesgo": "requiere una version concreta de vLLM; NVFP4 de KV reduce calidad segun el autor",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Parametros de muestreo contra bucles de razonamiento",
+   "como": "--override-generation-config '{\"temperature\": 0.5, \"top_p\": 0.9, \"top_k\": 40, \"presence_penalty\": 0.1, \"repetition_penalty\": 1.1}'",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "vLLM, Qwen 3.6 27B FP8 (usuario)",
+   "riesgo": "sin verificacion sistematica; el propio usuario duda de su efecto",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Benchmark reproducible de tool-calling",
+   "como": "tool-eval-bench --hardmode --seed 42 --parallel 8 --max-turns 30 --timeout 600 --trials 3 --backend-kwargs '{\"chat_template_kwargs\": {\"thinking\": false,\"temperature\": 0.0,\"top_p\":0.85}}' --temperature 0.0 --no-think",
+   "fuente_post": 38,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "tool-eval-bench v2.1.0, 2x GB10",
+   "riesgo": "con --parallel 8 los timeouts se registran como fallo; usar --parallel 1 para puntuaciones reproducibles",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un usuario atribuye un salto de produccion de tokens a una actualizacion de zram, y dice que el swap hundia el rendimiento del cluster",
+   "como": "no indicado (sin comando ni valores de zram)",
+   "fuente_post": 43,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": "swapon --show; zramctl"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios sobre rendimiento de un modelo en dos Sparks; los mecanismos concretos son banderas de vLLM y un benchmark, y la mencion de zram (posts 41 y 43) no trae comando. No hay personal de NVIDIA en el hilo; los posts 18 y 34 no existen en el texto."
+}

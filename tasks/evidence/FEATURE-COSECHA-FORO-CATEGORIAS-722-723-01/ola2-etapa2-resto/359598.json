@@ -1,0 +1,15 @@
+{
+ "id": 359598,
+ "titulo": "When are you going to properly fix tcgen05 FP4 support for DGX Spark / GB10 (SM121)?",
+ "leido": true,
+ "posts_leidos": 38,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "omision_nvidia"
+ ],
+ "mecanismos": [],
+ "omision_nvidia": "Staff (johnny_nv, post 18) afirma que SM12x (GB10) no implementa tcgen05 ni TMEM ni la ruta FP4 bloqueada sobre ese ISA; las restricciones de CuTe a sm_100a/sm_110f son intencionales y mapear SM121 a SM100 produce codigo invalido; FP4 debe ir por las rutas MMA propias de la arquitectura (ejemplo cutlass blackwell_geforce/dense_gemm.py). NVIDIA no da cronograma (posts 11-15); post 40 enlaza anuncio oficial de rendimiento NVFP4 en vLLM (contenido truncado).",
+ "utilidad_atom": "baja",
+ "razon": "Hilo de reclamos de usuarios con una aclaracion oficial de que GB10 carece de tcgen05; un usuario cita b12x a 69.60 tok/s en Qwen3-30B-A3B-NVFP4, similar a Marlin (post 41). Ningun comando ni valor reutilizable para monitoreo o prevencion."
+}

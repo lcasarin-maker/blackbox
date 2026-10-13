@@ -1,0 +1,37 @@
+{
+ "id": 383649,
+ "titulo": "Super slow connection between 2 sparks",
+ "posts_leidos": 5,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Medicion de ancho de banda RDMA entre dos nodos con ib_write_bw",
+   "como": "receptor: ib_write_bw -d rocep1s0f0 --report_gbits -q 4 -R --force-link IB ; emisor: ib_write_bw <IP receptor> -d rocep1s0f0 --report_gbits -q 4 -R --force-link IB",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "2 Spark con kernel 7.0.0-1019-nvidia (usuario)",
+   "riesgo": null,
+   "verificable_aqui": "ibdev2netdev; which ib_write_bw"
+  },
+  {
+   "que": "Remedio de un usuario para enlace CX7 lento (13 Gb/s tras 110 Gb/s): apagar ambas Spark, desenchufar de la pared un minuto y encender; atribuye el fallo a la primera conexion de un cable DAC",
+   "como": "apagar y desenchufar un minuto, sin comando",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "mismo hardware, resultado 110.92 Gb/s pico segun el usuario",
+   "riesgo": "la causa 'reconfiguracion desconocida del ConnectX-7' es afirmacion sin verificar de otro usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios sin personal NVIDIA. Mecanismos validos solo para enlaces CX7 entre dos nodos, que esta maquina no tiene.",
+ "leido": true,
+ "lectura": "completa"
+}

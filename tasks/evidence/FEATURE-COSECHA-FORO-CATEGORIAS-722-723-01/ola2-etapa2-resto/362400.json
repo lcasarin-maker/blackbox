@@ -1,0 +1,27 @@
+{
+ "id": 362400,
+ "titulo": "Terrible throughput number between 2 DGX Sparks",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Usuario lbr reporta que la regresion de rendimiento de red (13 Gb/s frente a 100 Gb/s) desaparece al volver del kernel 6.17 al 6.11; staff NVIDIA (aniculescu) lo califica de problema conocido de CX7 y remite a otro tema",
+   "como": "no indicado (revertir kernel de 6.17 a 6.11)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos DGX Spark, kernel 6.11 vs 6.17, firmware ultimo (usuario)",
+   "riesgo": "Revertir kernel en DGX OS con Secure Boot activo puede ser imposible o romper soporte; el staff lo atribuye a CX7 y no a kernel",
+   "verificable_aqui": "uname -r"
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu, post 3) reconoce un problema conocido de CX7 y envia a un tema sobre ancho de banda NCCL; no da fix en este tema.",
+ "utilidad_atom": "baja",
+ "razon": "Un usuario atribuye una caida de red a regresion del kernel 6.17 y NVIDIA staff responde que es un problema conocido de CX7, remitiendo a otro hilo; no hay comando ni medicion en el texto. Atane a QSFP/NCCL, no a memoria ni calor."
+}

@@ -1,0 +1,27 @@
+{
+ "id": 372713,
+ "titulo": "DGX Spark System Recovery completes with errors, then boots to grub>",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Staff de NVIDIA (aniculescu) pide ejecutar la autoprueba NVMe del menu UEFI para descartar fallo del disco; el usuario reporta que la prueba extendida paso",
+   "como": "UEFI, pestana Advanced, NVMe self test (el post enlaza la guia UEFI; no da comando)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario no indica driver/kernel)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Caso de recuperacion fallida (e2fsck abortado, resize2fs con checksum de bitmap, grub> tras reiniciar) sin resolucion; el staff solo pidio la autoprueba NVMe y preguntas sobre sectores de 4k. El tema se cerro sin solucion."
+}

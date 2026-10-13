@@ -1,0 +1,36 @@
+{
+ "id": 370808,
+ "titulo": "Slow Qwen 3.6 27B NVFP4 - recipe feedback",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reconstruir spark-vllm-docker con un PR rebasado para que DFlash use sliding-window attention; el PR original 40898 deja de aplicar y degrada aceptacion y escalado",
+   "como": "./build-and-copy.sh --apply-vllm-pr 44807 --tf5",
+   "fuente_post": 8,
+   "repositorio": "spark-vllm-docker (eugr) y vllm-project/vllm PR 44807 (nombrados en el texto, sin URL completa)",
+   "licencia": "no indicada",
+   "probado_en": "un usuario dice que lo probo y funciona; hardware no detallado (DGX Spark)",
+   "riesgo": "PR temporal de un usuario, no fusionado; usar 40898 falla al aplicar o degrada aceptacion y rendimiento al crecer el contexto (post 10)",
+   "verificable_aqui": "docker images --format '{{.Repository}}:{{.Tag}}' | grep -i vllm"
+  },
+  {
+   "que": "Para Qwen3.6-27B denso un usuario reporta que MTP nativo con 3 tokens da 25-27 t/s sostenido en un Spark, mejor que DFlash para ese modelo; DFlash solo rinde en el 35B",
+   "como": "no indicado (solo el valor MTP=3 y la cifra 25-27 t/s)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "1x DGX Spark segun el usuario",
+   "riesgo": "afirmacion sin metodo de medicion",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de rendimiento de inferencia de un modelo concreto; solo aporta un comando de build de vLLM y comparaciones de tokens/s de usuarios. Ningun mensaje de NVIDIA ni mecanismo para colapsos de memoria o cortes por calor."
+}

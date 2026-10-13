@@ -1,0 +1,27 @@
+{
+ "id": 351926,
+ "titulo": "Spark failed to retrieve SM Activity and the profiler module failed to load",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "omision_nvidia",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnostico de DCGM 4.3.1 en contenedor: modulos Profiling y SysMon en 'Failed to load'; dcgmi profile -l falla",
+   "como": "dcgmi modules -l ; dcgmi profile -l",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, DCGM 4.3.1 aarch64 en contenedor",
+   "riesgo": null,
+   "verificable_aqui": "command -v dcgmi"
+  }
+ ],
+ "omision_nvidia": "Staff de NVIDIA (aniculescu) declara que DCGM no tiene soporte oficial en DGX Spark (post 3) y que no hay planes de soportarlo porque no es un datacenter (post 5); no hay otra via para actividad de SM.",
+ "utilidad_atom": "media",
+ "razon": "Declaracion explicita de NVIDIA en posts 3 y 5 que cubre la omision de DCGM/perfilado de SM en Spark. El comando de diagnostico del post 1 es de usuario y solo demuestra el fallo."
+}

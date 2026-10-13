@@ -1,0 +1,37 @@
+{
+ "id": 341589,
+ "titulo": "Can I use Clara Parabricks on DGX Spark?",
+ "leido": true,
+ "posts_leidos": 12,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de staff (dpuleri) para el fallo de Parabricks 4.6.0-1 con nvidia-smi N/A en memoria: parametros explicitos; hoy obsoleto con la imagen -2",
+   "como": "pbrun fq2bam ... --bwa-nstreams 3 --bwa-primary-cpus 16 --bwa-cpu-thread-pool 1 --gpusort",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10, driver 580.82.09, CUDA 13.0",
+   "riesgo": "Obsoleto: usar clara-parabricks:4.6.0-2",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un bug de recuperacion en Parabricks agotaba la memoria del host (128 GB); corregido en la imagen indicada",
+   "como": "nvcr.io/nvidia/clara/clara-parabricks:4.6.0-2",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "docker images | grep -i parabricks"
+  }
+ ],
+ "omision_nvidia": "Staff NVIDIA (dpuleri, post 9) confirma como problema conocido que nvidia-smi no reporta memoria de GPU en Spark; Parabricks requiere 16 GB de GPU y soporta un solo nodo (post 13).",
+ "utilidad_atom": "baja",
+ "razon": "Staff NVIDIA documenta que nvidia-smi no reporta memoria de GPU (N/A) y que Parabricks tenia un bug que agotaba memoria del host, corregido en 4.6.0-2. Sin relevancia para monitoreo del equipo salvo la omision de nvidia-smi."
+}

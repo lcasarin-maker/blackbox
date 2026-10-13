@@ -1,0 +1,27 @@
+{
+ "id": 352107,
+ "titulo": "USB Docks, Hubs and multi-slot NVME enclosures for DGX Spark",
+ "posts_leidos": 5,
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Tras reinicios sucios (incluidos bloqueos por VRAM) las unidades USB-C enumeran a 480 Mbps en vez de 20 Gbps; solo se recupera desconectando fisicamente; el usuario automatizo la deteccion de 480 Mbps y el desmontaje del RAID",
+   "como": "no indicado",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, RAID 0 por dos unidades USB-C (declarado por el usuario)",
+   "riesgo": "Rendimiento limitado a USB 2.0 tras reinicio sucio; reset logico del USB no funciono segun el usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario describe la renegociacion USB fallida a 480 Mbps tras reinicios sucios y que los reinicios logicos no la arreglan, sin dar el script. Otro usuario usa un OWC Express 4M2 con ZFS raidz (~10 Gbps) y el staff (aniculescu) dice que sirve cualquier hub USB-C.",
+ "leido": true,
+ "lectura": "completa"
+}

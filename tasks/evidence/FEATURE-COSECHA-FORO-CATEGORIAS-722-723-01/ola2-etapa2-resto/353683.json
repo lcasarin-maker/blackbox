@@ -1,0 +1,37 @@
+{
+ "id": 353683,
+ "titulo": "DGX Spark GPU usage 0 after 24 Hours Open-WebUI",
+ "leido": true,
+ "posts_leidos": 12,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Sintoma de la GPU perdida en contenedor tras horas (Open-WebUI/ollama vuelve a CPU) probablemente la misma causa del tema 352743; el usuario DannyTup confirma que systemctl daemon-reload la provoca y que el workaround la evita",
+   "como": "systemctl daemon-reload (disparador, post 12); workaround: ver tema 352743 (cgroupfs o --device nvidia.com/gpu=all); la referencia exacta del workaround en este hilo no se escribe",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario DannyTup (en otro tema), GB10",
+   "riesgo": "Vinculo con el caso de nego_0 es una hipotesis de un usuario; nego_0 no confirmo (staff pregunto en post 13 sin respuesta).",
+   "verificable_aqui": "docker info | grep -i 'cgroup driver'"
+  },
+  {
+   "que": "Captura de evidencia pedida por staff NVIDIA (NVES): dos reportes, uno con la GPU en uso y otro cuando deja de usarse",
+   "como": "sudo nvidia-bug-report.sh",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "El reporte contiene datos del sistema; revisar antes de compartir.",
+   "verificable_aqui": "which nvidia-bug-report.sh"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El hilo se une al fallo de 352743 por la hipotesis de un usuario; sin confirmacion del autor ni causa verificada. El comando de captura es de staff pero generico."
+}

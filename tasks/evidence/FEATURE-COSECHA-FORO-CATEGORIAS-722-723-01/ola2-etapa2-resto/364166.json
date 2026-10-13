@@ -1,0 +1,38 @@
+{
+ "id": 364166,
+ "titulo": "Latest Update (20Mar 2026) on Nvidia Spark FE caps GPU performance",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Script que detecta si un GB10 esta estrangulado por posible problema de Power Delivery, automatizable",
+   "como": "no indicado (herramienta spark-gpu-throttle-check del usuario hoesing)",
+   "fuente_post": 2,
+   "repositorio": "GitHub hoesing/spark-gpu-throttle-check (URL exacta no copiada en el texto)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark/GB10 segun el autor",
+   "riesgo": "No se leyo el codigo; licencia no indicada, no reutilizable",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,power.draw,utilization.gpu --format=csv -l 1  (bajo carga)"
+  },
+  {
+   "que": "Workaround de tope de reloj tras actualizacion (2400MHz a 750MHz con 96% de uso, kernel 6.17.0-1014, driver 580.142): desconectar USB-C del Spark, esperar, reconectar; si no basta, desenchufar tambien el adaptador de pared (5 min minimo segun kosta)",
+   "como": "Ciclo fisico de USB-C y del adaptador de pared (sin comando)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE segun usuarios",
+   "riesgo": "hoesing (post 8) dice que no es unico y reaparece en una unidad inactiva; mathijs.brands lo atribuye a firmware de USB PD",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,clocks.max.sm --format=csv"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Sintoma cuantificado (reloj 2400 a 750 MHz) y script de deteccion de estrangulamiento por PD, pero de licencia no indicada y sin comando; es el mismo mecanismo de ciclo de potencia del tema 363487. Sin personal de NVIDIA en el hilo."
+}

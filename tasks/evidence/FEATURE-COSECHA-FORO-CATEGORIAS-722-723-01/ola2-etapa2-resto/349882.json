@@ -1,0 +1,26 @@
+{
+ "id": 349882,
+ "titulo": "DGX Spark isn't working",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Respuesta oficial de NVIDIA (NVES, post 5): el mensaje de dmesg 'ACPI: thermal: [Firmware Bug]: No valid trip points!' se puede ignorar porque su pila de software no usa esa funcion ACPI",
+   "como": "sudo dmesg | grep -i firmware",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, DGX OS de fabrica",
+   "riesgo": "Implica que NVIDIA no declara puntos de disparo termicos ACPI; la proteccion termica no pasa por ahi segun NVIDIA",
+   "verificable_aqui": "sudo dmesg | grep -i 'trip points'"
+  }
+ ],
+ "omision_nvidia": "NVIDIA indica que su pila no depende de las trip points termicas de ACPI y que lo aclarara en versiones futuras (NVES, post 5).",
+ "utilidad_atom": "media",
+ "razon": "Declaracion oficial de NVES: el aviso termico ACPI 'No valid trip points' es ignorable, dato util para no perseguirlo como causa de cortes por calor. El resto es una queja de hardware nuevo (WiFi MediaTek, DNS) con remision a soporte."
+}

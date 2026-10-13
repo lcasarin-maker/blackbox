@@ -1,0 +1,37 @@
+{
+ "id": 364420,
+ "titulo": "SSD Expert Streaming",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Medir lectura secuencial directa del NVMe interno",
+   "como": "sudo hdparm -tT --direct /dev/nvme0n1",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE con Samsung 4TB (usuario FlossingEnthusiast, no staff): 6643 MB/s; HP ZGX Nano con Corsair MP700: 3517 MB/s",
+   "riesgo": "Requiere root; solo lectura del dispositivo",
+   "verificable_aqui": "sudo hdparm -tT --direct /dev/nvme0n1"
+  },
+  {
+   "que": "Advertencia: vigilar uso de RAM al cargar expertos para no entrar en swap, porque la escritura intensa acelera el desgaste del NVMe",
+   "como": "no indicado (sin comando)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Desgaste del NVMe por swap",
+   "verificable_aqui": "swapon --show; free -m"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Aporta un metodo de medicion de NVMe y una advertencia de swap de usuarios; sin respuesta de NVIDIA. El resto es propuesta (flash-moe, NVMe-oF sobre ConnectX-7) sin resultados."
+}

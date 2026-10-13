@@ -1,0 +1,26 @@
+{
+ "id": 383986,
+ "titulo": "ASUS Ascent GX10 (GB10) shutdowns under load, now powers off 2s after power-on; ASUS won't honor warranty",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo de autopsia tras muerte silenciosa: el SSD sobrevivio y tras la reparacion se leyo el journal del arranque fallido; ultima entrada a mitad de actividad, sin secuencia de apagado, panic, termico, NVRM, Xid, AER, MCE ni pstore. Snapshots de salud cada 2 minutos mostraron memoria normal hasta el final",
+   "como": "no indicado (el usuario no da el comando; solo describe leer el journal del arranque fallido)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10, BIOS GX10DGX.0105, driver 580.178.04 (declarado por el usuario)",
+   "riesgo": "La placa de reemplazo llego con BIOS 0101 en vez de 0105: comprobar version de BIOS tras cambio de placa (post 9).",
+   "verificable_aqui": "journalctl -b -1 -n 50 --no-pager"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Dos reportes de usuarios (posts 1 y 9) de muerte en seco con diagnostico de taller PMIC/VRM quemados (post 6), sin respuesta de NVIDIA. El post 9 aporta que la muerte ocurrio en reposo y sin rastro en logs, util como caso de contraste para cortes sin telemetria."
+}

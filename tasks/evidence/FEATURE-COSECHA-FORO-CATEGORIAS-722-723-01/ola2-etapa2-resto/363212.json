@@ -1,0 +1,26 @@
+{
+ "id": 363212,
+ "titulo": "Docker nvidia/vllm issue",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Error de contenedor vLLM que exige driver 590.44 o superior cuando el host tiene 580.x; la sugerencia de un usuario es usar una imagen NGC mas reciente o la build de la comunidad",
+   "como": "nvcr.io/nvidia/vllm:26.02-py3  /  ./build-and-copy.sh (en el repositorio eugr/spark-vllm-docker)",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark; el autor dice que la imagen 26.02 tambien fallo (post 4)",
+   "riesgo": "El problema original no queda resuelto en el hilo.",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios sin respuesta de personal de NVIDIA; la sugerencia no resolvio el error del autor (post 4) y los posts 5-7 discuten sin acuerdo si los drivers 590 estan soportados en DGX OS. Falta el post numerado 3 en el texto descargado."
+}

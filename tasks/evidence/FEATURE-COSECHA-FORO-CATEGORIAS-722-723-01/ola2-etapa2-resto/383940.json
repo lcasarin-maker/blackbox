@@ -1,0 +1,47 @@
+{
+ "id": 383940,
+ "titulo": "What happened with CUDA 13.2 on DGX Spark?",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "omision_nvidia",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Declaracion de NVIDIA (Neill, firmando como DGX Spark Team): migrando Spark a Ubuntu 26.04 con drivers/CUDA nuevos; quien actualice antes de la validacion sigue la guia manual de Canonical; CUDA nuevo disponible como contenedores en NGC. Sin fecha.",
+   "como": "no indicado (sin comando)",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Cambiar el driver firmado de Canonical sin validacion NVIDIA queda fuera de soporte segun los usuarios (post 5).",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv; nvcc --version"
+  },
+  {
+   "que": "Advertencia de riesgo (usuario christopher_owen, con issue de NVIDIA/open-gpu-kernel-modules): con kernel de paginas de 64 KiB y driver 590.44.01 o posterior (595.x, 610.x), mapeos >=4 GiB por la ruta DMA submap fallan con Xid 31 FAULT_PTE justo bajo cada limite de 4 GiB; vLLM muere al reservar un KV cache de ~90 GiB. 4 KiB y driver 580.x no afectados segun el reporte.",
+   "como": "nvcc -O2 -o repro repro-64k-4gib-fault.cu (reproductor en el post; sale 0 no reproducido, 1 reproducido, 2 no pudo probar); causa: NV_DMA_SUBMAP_MAX_PAGES en kernel-open/common/inc/nv-linux.h sin alineacion de 2 MiB en ARM64 de 64K; parche: #if defined(CONFIG_ARM64) con NV_DMA_SUBMAP_2M_PAGES = (0x200000 >> PAGE_SHIFT)",
+   "fuente_post": 10,
+   "repositorio": "github.com/NVIDIA/open-gpu-kernel-modules (issue de otro usuario, sin numero en el texto)",
+   "licencia": "no indicada",
+   "probado_en": "usuario: GB10, kernels kernel.org 6.18.38/6.18.39 de 64K, Rocky Linux 10.2, CUDA 13.0; tambien afirma fallo con el kernel 7.0.0-1019-nvidia-64k",
+   "riesgo": "Solo aplica a kernels de 64K; esta maquina corre 6.17.0-1032-nvidia, kernel de 4K (a comprobar).",
+   "verificable_aqui": "getconf PAGESIZE"
+  },
+  {
+   "que": "Instalar driver 595.99.02 (CUDA 13.2) a mano en un Spark: usuario hiroshiya muestra nvidia-smi y nvcc resultantes y dice que GB10 figura soportado en el apendice A del README del driver; avisa de que DGX OS trae configuraciones preestablecidas y puede no ser fluido.",
+   "como": "no indicado (instalacion por runfile o repositorio NVIDIA sin comandos)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario: GB10, driver 595.99.02, CUDA 13.2.86",
+   "riesgo": "Sustituir el driver firmado por Canonical, fuera del tuple soportado: el post 5 recuerda que DGX OS 7.6 lista R580 y CUDA 13.0 U3.",
+   "verificable_aqui": "nvidia-smi -q | head -12"
+  }
+ ],
+ "omision_nvidia": "NVIDIA no ofrece driver ni CUDA mas nuevos que R580/CUDA 13.0 U3 en DGX OS 7.6 para Spark, ni publica tupla soportada kernel/driver/CUDA ni fechas de migracion; solo dice que migra a Ubuntu 26.04 (post 8).",
+ "utilidad_atom": "media",
+ "razon": "Respuesta oficial de NVIDIA (post 8) que confirma la ausencia de driver/CUDA nuevos y advierte de costo del cambio manual; el post 10 aporta una advertencia tecnica con reproductor, aplicable solo a kernels de 64K. Sin comando de monitoreo propio para esta maquina, el valor es de contexto y prevencion."
+}

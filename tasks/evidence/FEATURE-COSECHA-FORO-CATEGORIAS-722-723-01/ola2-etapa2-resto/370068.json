@@ -1,0 +1,47 @@
+{
+ "id": 370068,
+ "titulo": "NVFP4 quantization of a 100B-class Llama on 2x DGX Spark - lessons + open questions",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Cuantizacion NVFP4 distribuida (Ray, 2 Spark) para modelos 100B+ porque hf_ptq.py de un solo nodo muere por OOM silencioso en Spark",
+   "como": "scripts/distrib_quant.py; scripts/export_smoke_test.py (dry-run de 1 capa, ~1 min); scripts/run_quant.sh",
+   "fuente_post": 6,
+   "repositorio": "GitHub KaletoAI/distrib-nvfp4",
+   "licencia": "Apache-2.0",
+   "probado_en": "2x DGX Spark, modelopt 0.43, vLLM 0.20.2rc1 (declarado por el usuario)",
+   "riesgo": "Memoria residente ~115-120 GB por Spark en calibracion BF16 dispara OOM del kernel; 123B con 2 nodos hizo OOM",
+   "verificable_aqui": null
+  },
+  {
+   "que": "accelerate.infer_auto_device_map detecta la memoria unificada GB10 como GPU de ~5.2 TB y provoca OOM silencioso en flujos de un nodo",
+   "como": "no indicado (descripcion del fallo, sin comando)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10",
+   "riesgo": "OOM silencioso",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Senal de ruta rapida en vLLM: lineas de arranque que confirman backend FlashInfer y Marlin NvFp4 MoE",
+   "como": "\"Using AttentionBackendEnum.FLASHINFER backend.\" y \"Using 'MARLIN' NvFp4 MoE backend\" en el log; env VLLM_NVFP4_GEMM_BACKEND=marlin",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "vLLM 0.20.2rc1 en Spark (usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Usuario de la comunidad (sin respuesta de NVIDIA) comparte un pipeline de cuantizacion y un repo Apache-2.0; sirve a quien cuantiza modelos 100B+, no a monitoreo ni prevencion de colapsos de la maquina. El unico dato de memoria (115-120 GB residentes antes de OOM) es contexto de capacidad, sin comando de medicion."
+}

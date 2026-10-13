@@ -1,0 +1,37 @@
+{
+ "id": 368485,
+ "titulo": "Spark-vllm-docker older version/commit. Is it viable?",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Construir una version anterior de vLLM en spark-vllm-docker",
+   "como": "./build-and-copy.sh --tag v0.19.2rc0 --vllm-ref v0.19.2rc0",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "confirmado por raphael.amorim (usuario), sin cleanup previo",
+   "riesgo": "Segun post 1 los wheels vienen de una URL no versionada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Posible bug de regresion de rendimiento: apagar, desenchufar el cable USB-C, esperar 10 s, reconectar y encender (eugr, usuario). El autor recupero rendimiento tras actualizar vLLM 0.20.x y el OS por Nvidia Sync, que reinicio la maquina.",
+   "como": "apagar el Spark, desconectar USB-C, esperar 10 segundos, reconectar y arrancar",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "no indicado; el autor lo resolvio con update+reinicio (post 6)",
+   "riesgo": "Causa no confirmada; el reinicio pudo ser el factor",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta de build con --vllm-ref y un ciclo de energia contra una regresion de rendimiento, todo de usuarios sin respuesta de NVIDIA. El autor lo resolvio al actualizar y reiniciar, sin causa demostrada."
+}

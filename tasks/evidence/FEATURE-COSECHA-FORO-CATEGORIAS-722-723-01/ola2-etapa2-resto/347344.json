@@ -1,0 +1,59 @@
+{
+ "id": 347344,
+ "titulo": "DGX Spark / GB10 FAQ",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "nvidia-smi muestra memoria 'Not Supported' en GB10 (comportamiento esperado por memoria unificada); para medir memoria NVIDIA indica top, htop, free o el DGX Dashboard",
+   "como": "top | htop | free -h | https://localhost:11000 (DGX Dashboard)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (afirmacion de personal NVIDIA, usuario MackenzieNVIDIA)",
+   "riesgo": null,
+   "verificable_aqui": "free -h; nvidia-smi --query-gpu=memory.used --format=csv"
+  },
+  {
+   "que": "Desde la release de enero 2026 el modulo CX7 usa hotplug para ahorrar energia: aparece en lspci solo al conectar un cable QSFP, y con el cable conectado se observa un aumento de temperatura",
+   "como": "desactivar: sudo rm -f /etc/nvidia/cx7-hotplug-enabled ; reactivar: sudo touch /etc/nvidia/cx7-hotplug-enabled",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, release enero 2026 (NVIDIA)",
+   "riesgo": "Desactivar el hotplug elimina el ahorro de energia; el texto no mide cuanta temperatura sube",
+   "verificable_aqui": "ls -l /etc/nvidia/cx7-hotplug-enabled"
+  },
+  {
+   "que": "Workaround NVIDIA para lentitud en procesos CPU-bound compilados con NVCC (CMake no enlaza OpenMP en archivos CUDA)",
+   "como": "nvcc -Xcompiler=-fopenmp ...  / target_compile_options(mytarget PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-fopenmp>)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (NVIDIA)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Para problemas de memoria dentro de la capacidad, NVIDIA sugiere revisar buff/cache y vaciar la cache de bloques",
+   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (NVIDIA)",
+   "riesgo": "Solo paliativo; no corrige la causa",
+   "verificable_aqui": "free -h"
+  }
+ ],
+ "omision_nvidia": "NVIDIA declara que GPUDirect RDMA no esta soportado en DGX Spark (nvidia-peermem, dma-buf y GDRCopy no funcionan porque la memoria cudaMalloc del iGPU no es coherente para CPU ni perifericos PCIe); sugiere cudaHostAlloc + ib_reg_mr. Tambien: no hay metodo soportado para recuperar la clave de BIOS/UEFI perdida; nvidia-smi no reporta memoria.",
+ "utilidad_atom": "media",
+ "razon": "FAQ oficial de personal NVIDIA (posts 2-7 llegan vacios en la descarga, todo el contenido esta en el post 1). Aporta la declaracion de que nvidia-smi no mide memoria, el interruptor del hotplug CX7 con su efecto termico declarado y la omision de GPUDirect RDMA, pero ningun mecanismo directo contra cortes por calor."
+}

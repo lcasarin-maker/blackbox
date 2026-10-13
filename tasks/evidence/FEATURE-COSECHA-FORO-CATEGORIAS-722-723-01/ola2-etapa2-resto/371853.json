@@ -1,0 +1,47 @@
+{
+ "id": 371853,
+ "titulo": "Nemotron-3-Super-120B-A12B-NVFP4 with vllm v0.22.0 on 1x Acer GB10 with 495.71.05 driver (Container is Ubuntu 24.04, CUDA 13.2.1, gxx11)",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Fijar la version del paquete de driver para que apt no lo actualice mientras se usa un contenedor construido contra un driver mas nuevo",
+   "como": "sudo apt-mark hold nvidia-utils-595",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Acer Veriton GN100 (GB10), usuario nrevo; el titulo cita un driver con otra numeracion que el cuerpo (595)",
+   "riesgo": "retener paquetes de driver puede dejar el sistema sin parches; el usuario usa un driver distinto al del Atom (580)",
+   "verificable_aqui": "apt-mark showhold; dpkg -l | grep -i nvidia | head"
+  },
+  {
+   "que": "Receta de arranque vLLM 0.22.0 en contenedor: kv fp8, util de memoria 0.83, MTP 2 tokens, 8 secuencias, 8192 tokens por lote",
+   "como": "--kv-cache-dtype fp8 --gpu-memory-utilization 0.83 --max-num-batched-tokens 8192 --max-num-seqs 8 --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":2}'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Acer GB10, vLLM v0.22.0 construido desde release/v0.22.0, CUDA 13.2.1",
+   "riesgo": "reconocido por el autor como configuracion por afinar",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia de un usuario basada en una respuesta de un asistente de IA: vLLM con contexto de 256k cayo tras unas 12-24 h; se atribuye a corrupcion de grafos cuDNN y se sugiere reiniciar cada 12 h. Las referencias a issues citadas por la IA no estan verificadas",
+   "como": "no indicado (la mitigacion propuesta es reiniciar el servicio cada 12 horas)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Acer GB10, vLLM 0.22.0",
+   "riesgo": "origen es salida de un asistente de IA sin verificar; los numeros de issue citados pueden ser inventados",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario comparte su build y arranque de vLLM en una GB10; el unico mecanismo transferible es fijar paquetes con apt-mark hold. La causa del cuelgue de 12 h proviene de un asistente de IA y no esta verificada. Sin respuesta de NVIDIA."
+}

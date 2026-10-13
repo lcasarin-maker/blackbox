@@ -1,0 +1,36 @@
+{
+ "id": 369404,
+ "titulo": "Is training on 3 DGX Spark nodes without a switch supported?",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Variables NCCL para forzar RoCE/IB en malla de 3 nodos (eugr_nv, usuario del foro con etiqueta _nv)",
+   "como": "export NCCL_IB_HCA=rocep1s0f0,roceP2p1s0f0,rocep1s0f1,roceP2p1s0f1; export NCCL_IB_DISABLE=0; export NCCL_IB_MERGE_NICS=0; export NCCL_NET_PLUGIN=none; export NCCL_IB_SUBNET_AWARE_ROUTING=1 (mas UCX_NET_DEVICES, NCCL_SOCKET_IFNAME, OMPI_MCA_btl_tcp_if_include = enP7s7)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark x3 en anillo sin switch; por si solas NO bastaron (post 5)",
+   "riesgo": "Insuficiente con NCCL estandar; el autor siguio con timeouts ibv_modify_qp",
+   "verificable_aqui": "env | grep -E '^(NCCL|UCX)_' ; ibdev2netdev"
+  },
+  {
+   "que": "Compilar NCCL de la rama dgxspark-3node-ring para malla de 3 nodos; el autor confirma que funciono",
+   "como": "git clone -b dgxspark-3node-ring https://github.com/zyang-dev/nccl.git ~/nccl/ ; make -j src.build NVCC_GENCODE=\"-gencode=arch=compute_121,code=sm_121\"",
+   "fuente_post": 6,
+   "repositorio": "https://github.com/zyang-dev/nccl (rama dgxspark-3node-ring)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark sm_121, confirmado por el autor (post 7)",
+   "riesgo": "Fork de terceros de NCCL; hay que exportar LD_LIBRARY_PATH propio",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NCCL estandar no soporta la malla de 3 nodos sin switch; hace falta un fork de usuario.",
+ "utilidad_atom": "baja",
+ "razon": "Tema de clustering multinodo, sin relacion con los colapsos de memoria o el calor en una sola maquina. Sin respuesta de staff NVIDIA (eugr_nv es usuario con sufijo _nv, no verificable como staff); el fix es un fork de terceros sin licencia indicada."
+}

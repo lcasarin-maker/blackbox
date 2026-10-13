@@ -1,0 +1,37 @@
+{
+ "id": 373173,
+ "titulo": "17GB bandwidth issue, 2x FE's + one newbie end user",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround para NCCL a ~17 GB/s entre dos Spark: apagar, sacar los cables de alimentacion, esperar 1 minuto y encender",
+   "como": "apagar, desenchufar alimentacion, esperar 1 min, encender",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Founders Edition con UEFI R:1.108.20 (usuario)",
+   "riesgo": "Experiencia de un usuario; el autor no confirmo el resultado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Prueba de rendimiento NCCL del playbook de dos Spark",
+   "como": "mpirun -np 2 -H <ip1>:1,<ip2>:1 --mca plm_rsh_agent \"ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no\" -x LD_LIBRARY_PATH=$LD_LIBRARY_PATH $HOME/nccl-tests/build/all_gather_perf",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "nccl-tests 2.18.5",
+   "riesgo": null,
+   "verificable_aqui": "ls $HOME/nccl-tests/build 2>&1 | head -3"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El unico remedio dado por un usuario es el ciclo de energia, que otro hilo del lote reporta igual. Staff de NVIDIA solo pregunta si funciono (post 5)."
+}

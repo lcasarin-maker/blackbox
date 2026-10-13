@@ -1,0 +1,37 @@
+{
+ "id": 384884,
+ "titulo": "Introducing DGX Spark Memory Saver: more memory headroom for CUDA workloads",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Parche del UVM driver (usuario, no NVIDIA) que agrupa las tablas de paginas hoja de GPU de 256 bytes en slots de 4 KiB dentro de paginas compartidas (16 por pagina) en kernel de 64 KiB; el autor reporta 1.78-1.86 GiB extra por nodo frente al sistema stock de 4 KiB y 3.03 GiB frente al driver stock de 64 KiB.",
+   "como": "no indicado en el hilo (instalacion manual o DKMS descrita solo en el repositorio; reporte de estado de solo lectura con salida JSON)",
+   "fuente_post": 1,
+   "repositorio": "github.com/christopherowen/dgx-spark-memory-saver",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark/GB10, driver abierto 580.178.04, kernel Ubuntu 7.0.0-1019-nvidia-64k (declarado por el autor, 3 nodos)",
+   "riesgo": "Modulo de kernel autofirmado: con Secure Boot exige enrolar MOK en consola fisica por nodo (posts 2-3); el autor admite que no esta validado en kernel de 16 KiB (post 6) ni garantiza resolver fallos de asignacion (post 6). Esta maquina corre kernel 6.17.0-1032-nvidia, distinto del probado.",
+   "verificable_aqui": "getconf PAGESIZE; uname -r; mokutil --sb-state"
+  },
+  {
+   "que": "Medicion del tamano de pagina del kernel como condicion de aplicabilidad del parche (el problema solo existe con kernel de 64 KiB).",
+   "como": "no indicado como comando; el post solo declara el contexto 64 KiB vs 4 KiB",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "getconf PAGESIZE"
+  }
+ ],
+ "omision_nvidia": "El driver UVM de NVIDIA en kernel de 64 KiB asigna una pagina de CPU entera por cada tabla hoja de 256 bytes; no hay respuesta de NVIDIA en el hilo (post 3: el autor dice no hablar por NVIDIA; post 2 pregunta sin respuesta si se subira upstream).",
+ "utilidad_atom": "media",
+ "razon": "Mecanismo real y con repositorio, pero sin comando en el hilo, sin licencia indicada y probado en un kernel distinto del de esta maquina. Usuarios, sin intervencion de personal de NVIDIA; el post 7 repite drop_caches sin conexion con el parche."
+}

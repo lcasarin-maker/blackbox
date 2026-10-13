@@ -1,0 +1,58 @@
+{
+ "id": 380584,
+ "titulo": "DGX Spark Overheating While Idle, System Freezes and Field Diagnostics Installation Error Related to a Signed-By Conflict",
+ "leido": true,
+ "posts_leidos": 13,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Quitar el repo CUDA duplicado que causa el conflicto Signed-By (NVIDIA: error de documentacion de la guia Field Diagnostics; DGX OS ya trae ese repo)",
+   "como": "sudo rm /etc/apt/sources.list.d/cuda-sbsa-ubuntu2404.list ; sudo apt update",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, driver/kernel 6.17.0-1031 segun salida del post 7",
+   "riesgo": "Borra un archivo de fuentes apt; confirmar antes que es el duplicado",
+   "verificable_aqui": "grep -Rn cuda /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null ; ls -l /usr/share/keyrings/cuda*.gpg"
+  },
+  {
+   "que": "Field Diagnostics: requiere DOCA-OFED antes del paquete dgx-spark-fieldiag (para probar el CX7); NVIDIA indica que un FD fallido suele significar fallo de hardware y pide logs y ticket de RMA",
+   "como": "sudo apt-get install dgx-spark-fieldiag (tras instalar doca-ofed segun userguide-dgx-spark-fieldiag.pdf)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark con DOCA 3.3.0",
+   "riesgo": "Instalar doca-ofed elimina paquetes (libucx0, nvidia-mlnx-tools, sosreport, ucx-utils) y compila DKMS de MFT; un usuario vio apt colgado en kernel-mft-dkms mas de 10 horas",
+   "verificable_aqui": "dpkg -l | grep -E 'dgx-spark-fieldiag|doca-ofed'"
+  },
+  {
+   "que": "Repositorio DOCA para la instalacion: clave y lista apt (aniculescu, requiere root con sudo; el contenido correcto del archivo es una sola linea)",
+   "como": "curl -fsSL https://linux.mellanox.com/public/repo/doca/GPG-KEY-Mellanox.pub | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/GPG-KEY-Mellanox.pub ; deb [signed-by=/etc/apt/trusted.gpg.d/GPG-KEY-Mellanox.pub] https://linux.mellanox.com/public/repo/doca/3.3.0/ubuntu24.04/arm64-sbsa/ ./",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DOCA 3.3.0 ubuntu24.04 arm64-sbsa",
+   "riesgo": "Anade una clave y una fuente apt de terceros (Mellanox) a un sistema con Secure Boot",
+   "verificable_aqui": "ls /etc/apt/sources.list.d/doca.list"
+  },
+  {
+   "que": "Recuperar un dpkg colgado: ver el final del log, buscar jobs de systemd atascados, matar el proceso que sostiene el lock del frontend y reanudar",
+   "como": "tail -30 /var/log/dpkg.log ; systemctl list-jobs ; sudo kill <pid del lock> ; sudo dpkg --configure -a",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario tras colgado en kernel-mft-dkms (post 9)",
+   "riesgo": "Nunca borrar el archivo de lock (advertencia de dpkg citada en el post 9)",
+   "verificable_aqui": "tail -30 /var/log/dpkg.log ; systemctl list-jobs"
+  }
+ ],
+ "omision_nvidia": "NVIDIA reconoce un error de documentacion en la guia de Field Diagnostics (repo CUDA duplicado, post 2) y no da en el hilo un diagnostico para el sobrecalentamiento en reposo del autor; lo condiciona a correr FD y deriva a RMA.",
+ "utilidad_atom": "media",
+ "razon": "El tema parte de un sobrecalentamiento con congelamiento en reposo (fuera de lo que se resuelve en el hilo) y deriva en usar Field Diagnostics de NVIDIA como metodo de medicion; el ibstress del autor fallo y NVIDIA (aniculescu, post 13) lo toma como indicio de hardware. Las respuestas de staff (Neill, aniculescu) dan los pasos concretos de instalacion y recuperacion, pero no un monitoreo termico."
+}

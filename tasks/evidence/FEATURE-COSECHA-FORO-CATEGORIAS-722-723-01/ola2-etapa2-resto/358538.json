@@ -1,0 +1,26 @@
+{
+ "id": 358538,
+ "titulo": "A software update removed docker. Now I am unable to run docker with gpu",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Docker instalado por snap no ve libnvidia-ml; quitar snap y reinstalar docker-ce por apt (usuario elsaco, no staff); el autor confirma que funciono",
+   "como": "sudo apt install docker-ce",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun usuario (docker-ce 5:28.5.1, ubuntu noble arm64)",
+   "riesgo": "El snap borra imagenes y contenedores previos al cambiar de instalacion; el post indica que ya se habian perdido tras la actualizacion",
+   "verificable_aqui": "dpkg -l | grep -E 'docker-ce|nv-docker'; snap list 2>/dev/null | grep docker"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Solucion de usuario (sin respuesta de NVIDIA) a un fallo de runtime GPU con docker de snap; la maquina ya usa Docker con runtime nvidia, asi que solo sirve como advertencia de no instalar docker por snap."
+}

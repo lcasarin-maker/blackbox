@@ -1,0 +1,67 @@
+{
+ "id": 365296,
+ "titulo": "Three node Spark clusters (without a switch) are now supported in spark-vllm-docker and sparkrun!",
+ "leido": true,
+ "posts_leidos": 16,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Variables NCCL que sparkrun inyecta para topologia de malla de 3 nodos",
+   "como": "NCCL_NET_PLUGIN=none; NCCL_IB_SUBNET_AWARE_ROUTING=1; NCCL_IB_MERGE_NICS=0",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "3x DGX Spark, imagen eugr con NCCL parcheado",
+   "riesgo": "Solo valido con la imagen de la comunidad; NGC u otras no funcionan por requisitos de NCCL",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Valores de recipe vLLM para Qwen3.5-397B en 3 nodos: gpu_memory_utilization 0.7, PYTORCH_CUDA_ALLOC_CONF expandable_segments:True, VLLM_MARLIN_USE_ATOMIC_ADD 1, kv_cache_dtype fp8",
+   "como": "PYTORCH_CUDA_ALLOC_CONF: \"expandable_segments:True\"; gpu_memory_utilization: 0.7; --kv-cache-dtype fp8",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "3x DGX Spark (usuario)",
+   "riesgo": "Un usuario reporta que 0.85 mata workers en silencio y 0.8 es estable (post 15)",
+   "verificable_aqui": "docker inspect <contenedor> --format '{{.Config.Env}}'"
+  },
+  {
+   "que": "Un usuario reporta muerte silenciosa del worker (SIGTERM) con gpu_memory_utilization 0.85 y estabilidad con 0.8",
+   "como": "gpu_memory_utilization: 0.8",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3 nodos GB10 (usuario jameslacroix; lo llama Grace Hopper)",
+   "riesgo": "Afirmacion de un usuario sin verificacion independiente",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un usuario reporta que el loader fastsafetensors se congela al 29% con modelos descargados via Xet y usa instanttensor",
+   "como": "--load-format instanttensor",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3 nodos GB10 (usuario)",
+   "riesgo": "Afirmacion de un usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Limite de tensor parallel: el numero de cabezas de atencion debe ser divisible por TP, por eso potencias de 2; con 3 nodos solo pipeline o data parallel",
+   "como": "no indicado (regla, no comando)",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Con PP en 3 nodos la velocidad queda cerca de un solo nodo (posts 3, 5)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Guia de comunidad (eugr, dbsci) sin respuesta de NVIDIA; da valores concretos de vLLM/NCCL y un reporte de usuario sobre gpu_memory_utilization 0.85 vs 0.8 que es relevante para colapsos de memoria. La mayor parte aplica a clusters multinodo que esta maquina no tiene."
+}

@@ -1,0 +1,27 @@
+{
+ "id": 367655,
+ "titulo": "NVIDIA-GB10 not supported on DGX Spark after Restore - Driver 580-open Troubleshooting",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Tras fallo del driver (nvidia-smi 'not supported'), usar solo el driver de la imagen del SO y restaurar con System Recovery (USB de recuperacion); instalar paquetes nvidia-driver-580-open/fabricmanager lo empeora o no sirve",
+   "como": "no indicado (procedimiento en la guia 'System Recovery' del DGX Spark User Guide)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark; el autor confirma que se recupero (post 6)",
+   "riesgo": "La recuperacion reinstala el sistema.",
+   "verificable_aqui": "nvidia-smi; cat /etc/dgx-release"
+  }
+ ],
+ "omision_nvidia": "NVIDIA staff (aniculescu, post 4): DGX Spark no tiene NVSwitch, Fabric Manager no se necesita; usar solo el driver incluido en la imagen.",
+ "utilidad_atom": "baja",
+ "razon": "Staff de NVIDIA indica recuperacion del sistema y que Fabric Manager no aplica. El hilo trae enlaces a playbooks de cluster pero ningun mecanismo con comando."
+}

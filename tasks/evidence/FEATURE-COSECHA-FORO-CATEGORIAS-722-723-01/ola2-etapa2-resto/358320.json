@@ -1,0 +1,37 @@
+{
+ "id": 358320,
+ "titulo": "DGX Spark (GB10): PCIe root port reports x0/unknown + DOE mailbox timeouts at boot",
+ "posts_leidos": 8,
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comandos de lectura para inspeccionar enlace PCIe y mensajes DOE del arranque",
+   "como": "sudo lspci -vv -s 000f:00:00.0 | egrep -i 'LnkCap|LnkSta|AER|DevSta' ; sudo lspci -vv -s 000f:01:00.0 | egrep -i 'LnkCap|LnkSta|AER|DevSta' ; journalctl -k -b | egrep -i 'doe|pcie|aer|xid|nvlink|bandwidth'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, kernel 6.14.0-1015-nvidia, driver 580.95.05 segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k -b | egrep -i 'doe|aer|xid'"
+  },
+  {
+   "que": "Herramienta oficial Field Diagnostics para pruebas de estres y salud (GPU, C2C, CPU, memoria, SSD, energia, termica); resultado PASS reportado por el usuario",
+   "como": "partnerdiag --field (instalacion segun el articulo de soporte NVIDIA a_id 5767)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario",
+   "riesgo": "Los logs pueden contener seriales; NVIDIA pide enviarlos por DM",
+   "verificable_aqui": "which partnerdiag"
+  }
+ ],
+ "omision_nvidia": "NVIDIA (NVES, post 8) confirma como esperados los mensajes de arranque x1/DOE (entrenamiento de enlace PCIe) pero no ofrece KB ni parametro del kernel para suprimirlos; el usuario lo pidio y no hubo respuesta sobre ello.",
+ "utilidad_atom": "media",
+ "razon": "NVIDIA responde oficialmente: los mensajes PCIe x1 y DOE son esperados y Field Diagnostics es la via de verificacion de salud. Aporta comandos de lectura y la herramienta FD, sin solucion de fallos.",
+ "leido": true,
+ "lectura": "completa"
+}

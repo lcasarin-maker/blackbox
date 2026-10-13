@@ -1,0 +1,87 @@
+{
+ "leido": true,
+ "lectura": "completa",
+ "mecanismos": [
+  {
+   "que": "Receta vLLM TP=2 en dos Spark para el cuantizado NVFP4 (flags)",
+   "como": "vllm serve /model --tensor-parallel-size 2 --enable-expert-parallel --gpu-memory-utilization 0.85 --max-model-len 262144 --max-num-seqs 64 --kv-cache-dtype bfloat16 --enforce-eager --reasoning-parser qwen3 --enable-auto-tool-choice --tool-call-parser qwen3_xml --distributed-executor-backend mp --nnodes 2 --node-rank 0",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "dos DGX Spark (declarado por el usuario)",
+   "riesgo": "El usuario dice que los modos completos de cudagraph cuelgan estas maquinas; por eso enforce-eager.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables NCCL: con el valor por defecto de 64 canales la inicializacion se cuelga; limitarlos a 4",
+   "como": "NCCL_MIN_NCHANNELS=4 NCCL_MAX_NCHANNELS=4 NCCL_SOCKET_IFNAME=<interfaz CX7>",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "dos DGX Spark (declarado por el usuario)",
+   "riesgo": null,
+   "verificable_aqui": "env | grep NCCL"
+  },
+  {
+   "que": "Parche de una linea para cargar el checkpoint (ensanchar isinstance de Fp8Config para aceptar ModelOpt); montado por bind-mount sobre la imagen",
+   "como": "editar models/qwen3_8_flash_next/nvidia/ple_layer.py, funcion _get_ple_embedding_quant_method",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "No borrar la escala sobrante: daria corrupcion silenciosa.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Lanzar el contenedor con --entrypoint bash porque el ENTRYPOINT ya es vllm serve y un -c se interpreta como --compilation-config",
+   "como": "--entrypoint bash",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "KV cache fp8 rechazado por QSA; exige bf16 (el doble de bytes de KV)",
+   "como": "--kv-cache-dtype bfloat16",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Mayor partida de memoria en ambas compilaciones segun el usuario.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Verificar el parser de tool calls con una peticion que devuelva finish_reason: tool_calls antes de evaluar; qwen3_xml funciona, qwen3_coder no",
+   "como": "--tool-call-parser qwen3_xml",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Un parser incorrecto no da error y produce corridas completas fallidas.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Escalera de concurrencia medida: NVFP4 agregado 29.61 (conc 1) a 257.59 (conc 64) tok/s; FP8 23.02 a 176.75",
+   "como": "no indicado como script; datos en tablas del post 1 y 4",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "2 DGX Spark, vLLM, TP=2",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun el usuario, la tarjeta del modelo solo documenta ruta SGLang y no vLLM; sin respuesta de NVIDIA en el tema.",
+ "id": 382634,
+ "titulo": "Qwen3.8-Flash-Next NVFP4 on 2x DGX Spark - recipe, benchmarks, and the patch it needs to load",
+ "posts_leidos": 5,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "utilidad_atom": "media",
+ "razon": "Receta detallada de un usuario (sin staff de NVIDIA) con flags, variables NCCL y numeros medidos en 2 Spark; es de un modelo y configuracion concretos y no resuelve colapsos de memoria ni calor de esta maquina de un solo nodo. Los comandos son reutilizables solo para clusteres de 2 nodos con ese modelo."
+}

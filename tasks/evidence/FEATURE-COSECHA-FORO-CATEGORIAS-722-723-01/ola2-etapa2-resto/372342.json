@@ -1,0 +1,47 @@
+{
+ "id": 372342,
+ "titulo": "Nemotron-3-Ultra-550B-A55B (2-bit GGUF) across 2x DGX Spark via llama.cpp RPC - it works (~5 tok/s)",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Compilar llama.cpp para GB10 con CUDA y RPC",
+   "como": "-DGGML_CUDA=ON -DGGML_RPC=ON -DCMAKE_CUDA_ARCHITECTURES=121",
+   "fuente_post": 1,
+   "repositorio": "llama.cpp upstream master",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark (GB10), enlace 200GbE ConnectX-7 RoCE, segun el usuario tonyd615",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Servir un GGUF mayor que un nodo repartiendo por capas via RPC, sin mmap",
+   "como": "--rpc :50052 --device CUDA0,RPC0 -sm layer --tensor-split 1,1 --no-mmap -fit off",
+   "fuente_post": 1,
+   "repositorio": "llama.cpp",
+   "licencia": null,
+   "probado_en": "2x GB10, decode ~5.2 tok/s, prefill ~120 tok/s, ~95 GiB por nodo",
+   "riesgo": "ambos nodos deben tener el mismo build (version de protocolo RPC); un rpc-server local en el head duplica la GPU y bloquea",
+   "verificable_aqui": "ls /sys/class/infiniband/ 2>/dev/null; ibdev2netdev 2>/dev/null"
+  },
+  {
+   "que": "Advertencia con condicion: si el modelo (188 GiB) supera la RAM de un nodo, mmap hace thrash y la carga no termina; --no-mmap lee lineal a ~960 MB/s y carga en ~6 min",
+   "como": "--no-mmap + -fit off (obligatorios para el caso en que el modelo excede la RAM)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 128 GB unificados",
+   "riesgo": "sin --no-mmap la carga queda atascada en el ajuste de parametros",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta de dos nodos con llama.cpp RPC; la maquina Atom es de un nodo, asi que solo transfiere la advertencia sobre mmap y modelos mayores que la RAM. El post 8 cita notas de version de NVIDIA (Cluster Assistant en Sync y NCCL 2.30u1 con anillo de tres Spark), citadas por un usuario, no una respuesta de staff."
+}

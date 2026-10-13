@@ -1,0 +1,47 @@
+{
+ "id": 379003,
+ "titulo": "DGX is working slowly after update on 31 of july",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Restablecer la caja tras degradacion de rendimiento tras actualizacion: apagar, quitar la alimentacion de la pared (solo quitar el USB-C no sirve), esperar unos minutos, reconectar. Un usuario dice que basta pulsar el boton de encendido 10 s tras desenchufar",
+   "como": "apagar; desenchufar de la pared; esperar unos minutos (o pulsar encendido 10 s); enchufar y encender",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE, vLLM v0.25.0, Qwen3.6-35B-A3B NVFP4 (el OP confirma que funciono, post 4)",
+   "riesgo": "tras el ciclo el OP midio 84 tok/s frente a 107 antes (mejoro de 45)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de medicion antes/despues: vllm bench serve con 1 de concurrencia, entrada 10000 y salida 2000 por peticion, comparando tok/s, TPOT, ITL",
+   "como": "no indicado (solo se muestran salidas del benchmark, no el comando)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE segun usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Registro de actualizaciones apt con fecha para correlacionar con la degradacion (driver 580.159.03 a 580.173.02 el 2026-07-23; kernel 6.17.0-1029)",
+   "como": "/var/log/dpkg.log y /var/log/dpkg.log.1 (grep upgrade)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE segun usuario",
+   "riesgo": null,
+   "verificable_aqui": "grep ' upgrade nvidia-driver' /var/log/dpkg.log*"
+  }
+ ],
+ "omision_nvidia": "Staff Neill (post 5) no da causa; pide abrir tema nuevo con version previa, versiones nuevas y journal del sistema.",
+ "utilidad_atom": "media",
+ "razon": "El ciclo de energia desde la pared recupero rendimiento degradado (usuario OP, sin verificacion de NVIDIA); es una variante de desconexion AC ya conocida. No hay causa ni mecanismo nuevo; el post 4 sugiere que cada actualizacion de DGX toca el consumo de energia sin evidencia."
+}

@@ -1,0 +1,58 @@
+{
+ "id": 353950,
+ "titulo": "Memtester failures and missing NVIDIA DGX Diagnostics Suite",
+ "leido": true,
+ "posts_leidos": 13,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "omision_nvidia",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Prueba de memoria con memtester",
+   "como": "sudo memtester 10G 2",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE de elsaco, sin errores; el autor falla con 4G 1 en kernel 6.11.x",
+   "riesgo": "memtester no maneja bien la memoria GPU en memoria unificada (afirmacion de un usuario); resultados erraticos ('sok' en una linea)",
+   "verificable_aqui": "memtester --version"
+  },
+  {
+   "que": "Actualizar SO y firmware antes de repetir memtester",
+   "como": "sudo apt update; sudo apt dist-upgrade; sudo fwupdmgr refresh; sudo fwupdmgr upgrade; sudo reboot",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario raphael.amorim; el autor vio que memtester paso tras actualizar pero volvio a fallar al instalar paquetes (post 11)",
+   "riesgo": "dist-upgrade modifica paquetes del sistema",
+   "verificable_aqui": "fwupdmgr get-updates"
+  },
+  {
+   "que": "Reparar segfault de apt por listas corruptas",
+   "como": "sudo rm -rf /var/lib/apt/lists/* ; sudo mkdir -p /var/lib/apt/lists/partial ; sudo apt clean",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "raphael.amorim; el autor dice que apt volvio a funcionar tras reiniciar y ejecutar esto",
+   "riesgo": "Borra listas de paquetes (se regeneran con apt update)",
+   "verificable_aqui": "dmesg | tail -n 20"
+  },
+  {
+   "que": "Comprobar que no existe BMC ni suite de diagnostico",
+   "como": "sudo ipmitool sel list (error: no existe /dev/ipmi0); ls /usr/local/nvidia/dgx/; sudo nvsm show health (falla por plataforma no soportada)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "ls /dev/ipmi0 /usr/local/nvidia/dgx/"
+  }
+ ],
+ "omision_nvidia": "Personal de NVIDIA (aniculescu, post 4) dice que el DGX Spark no tiene BMC ni suite de diagnostico preinstalada; NVES (post 14) dice que el informe de la suite aun no se exige pero se exigira en el futuro. NVIDIA no da un metodo de diagnostico de memoria.",
+ "utilidad_atom": "media",
+ "razon": "NVIDIA confirma por staff la ausencia de BMC y de suite de diagnostico, lo que fija que la deteccion de fallos de memoria depende de herramientas del usuario como memtester. Los fallos del autor no se explicaron y el hilo termina sin resolucion, con caveat de que memtester no cubre bien la memoria unificada."
+}

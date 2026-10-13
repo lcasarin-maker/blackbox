@@ -1,0 +1,58 @@
+{
+ "id": 355603,
+ "titulo": "How to run GLM 4.7 on dual DGX Sparks with vLLM / mods support in spark-vllm-docker",
+ "leido": true,
+ "posts_leidos": 29,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Lanzamiento de GLM-4.7 AWQ en dos Sparks con KV fp8 y MTP, 128K de contexto",
+   "como": "./launch-cluster.sh exec vllm serve QuantTrio/GLM-4.7-AWQ --tool-call-parser glm47 --reasoning-parser deepseek_r1 --enable-auto-tool-choice -tp 2 --gpu-memory-utilization 0.9 --max-model-len 128000 --kv-cache-dtype fp8 --speculative-config.method mtp --speculative-config.num_speculative_tokens 1 --distributed-executor-backend ray --host 0.0.0.0 --port 8000",
+   "fuente_post": 12,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "dos Sparks, usuario eugr; sin driver/kernel",
+   "riesgo": "El mismo usuario reporta que el servidor se cayo tras 100 peticiones en la prueba con MTP (post 8); eugr dice que 140K cabe solo si se hace drop_caches",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Regla practica de capacidad de memoria: maximo medido usable 115 GB (pesos + KV + grafos CUDA); mantener pesos por debajo de 105 GB en un Spark y 210 GB en dos",
+   "como": "umbral: pesos < 105 GB (1 Spark), < 210 GB (2 Sparks); uso maximo observado 115 GB",
+   "fuente_post": 27,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario eugr, Spark",
+   "riesgo": "Pasarse de ese margen provoca OOM (chief1 reporta CUDA out of memory, post 21)",
+   "verificable_aqui": "free -g"
+  },
+  {
+   "que": "Metodo de medicion de rendimiento de servido",
+   "como": "vllm bench serve --backend vllm --model QuantTrio/GLM-4.7-AWQ --endpoint /v1/completions --dataset-name sharegpt --dataset-path ShareGPT_V3_unfiltered_cleaned_split.json --num-prompts 1 --port 8888 --host spark",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos Sparks",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Descarga y copia de modelos entre nodos por el enlace ConnectX-7",
+   "como": "./hf-download.sh QuantTrio/GLM-4.7-AWQ -c --copy-parallel",
+   "fuente_post": 8,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "dos Sparks",
+   "riesgo": "requiere uvx instalado en el host (post 1)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Ofrece recetas vLLM y una regla cuantitativa de capacidad (115 GB usable, pesos <105 GB) util para prevenir OOM, pero el hilo trata de dos Sparks. La unica participacion de NVIDIA (aniculescu, post 6) es un agradecimiento."
+}

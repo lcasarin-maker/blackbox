@@ -1,0 +1,57 @@
+{
+ "id": 382079,
+ "titulo": "Remote SSH rescue on Spark?",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Rescate remoto de un contenedor con restart policy que sobrecarga la memoria en cada arranque: esperar a sshd, poner restart=no y parar",
+   "como": "until ssh -o ConnectTimeout=3 <user>@<spark> true; do sleep 0.5; done\nssh -t <user>@<spark> 'sudo docker update --restart=no $(sudo docker ps -q) && sudo docker stop $(sudo docker ps -q)'",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "no indicado (respuesta de usuario sin verificacion)",
+   "riesgo": "Requiere sudo sin contrasena o -t; solo actua dentro de la ventana antes de que el modelo termine de cargar",
+   "verificable_aqui": "docker inspect -f '{{.Name}} {{.HostConfig.RestartPolicy.Name}}' $(docker ps -q)"
+  },
+  {
+   "que": "systemctl disable docker no detiene el contenedor en curso y docker.socket sigue activando dockerd; alternativa es enmascarar ambos",
+   "como": "sudo systemctl mask --now docker.service docker.socket",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Con el demonio enmascarado docker update no corre; la politica vive en /var/lib/docker/containers/<id>/hostconfig.json (RestartPolicy name a no); con live-restore true el contenedor sigue bajo containerd",
+   "verificable_aqui": "systemctl is-enabled docker.socket docker.service"
+  },
+  {
+   "que": "Ventana SSH garantizada: drop-in de docker.service con retardo",
+   "como": "ExecStartPre=/bin/sleep 60",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Retrasa el arranque de docker 60 s",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion citada: una asignacion CUDA de 10.7 GB aparecio como 377 MB en memory.current del cgroup; un limite --memory solo captura crecimiento del heap del host",
+   "como": "no indicado (referencia a otro hilo t/353752)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "otro dueno de Spark segun el autor del post",
+   "riesgo": "Un limite de memoria de contenedor no protege contra asignacion CUDA en GB10",
+   "verificable_aqui": "cat /sys/fs/cgroup/system.slice/docker-<id>.scope/memory.current  (comparar contra nvidia-smi)"
+  }
+ ],
+ "omision_nvidia": "Un Spark no tiene BMC; el unico camino remoto es la ventana SSH tras el arranque (afirmacion de usuario, sin respuesta de NVIDIA).",
+ "utilidad_atom": "media",
+ "razon": "Contiene un procedimiento concreto de rescate remoto y la correccion de que los limites cgroup no cuentan memoria CUDA en GB10 (afirmacion de un usuario citando otra medicion). Solo usuarios responden, ninguna respuesta de NVIDIA; el post 3 solo da un workaround de enchufe inteligente mas 'Restore AC Power Loss'."
+}

@@ -1,0 +1,37 @@
+{
+ "id": 362735,
+ "titulo": "ComfyUI Performance Problem related to power usage",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround del tope de potencia: desenchufar el ladrillo de la pared y del Spark un minuto y reconectar",
+   "como": "no indicado comando; procedimiento fisico",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario hoesing; 'latest firmware' segun el",
+   "riesgo": "Es solo mitigacion; el autor dice que el problema de PD sigue en el ultimo firmware.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Sintoma: iteracion 10.25 s en lugar de 4 s con GPU a 44 C y 11 W segun nvidia-smi",
+   "como": "no indicado comando; lectura de potencia con nvidia-smi",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,temperature.gpu --format=csv"
+  }
+ ],
+ "omision_nvidia": "Ninguna respuesta de staff; un usuario (hoesing) afirma que NVIDIA no ha corregido el problema de PD.",
+ "utilidad_atom": "baja",
+ "razon": "Segundo caso de GPU a ~11 W y 44 C que se resolvio con ciclo de alimentacion, solo confirmando el patron del hilo 361296. Sin comando de medicion propio."
+}

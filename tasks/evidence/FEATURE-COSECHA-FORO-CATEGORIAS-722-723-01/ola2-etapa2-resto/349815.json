@@ -1,0 +1,67 @@
+{
+ "id": 349815,
+ "titulo": "Has anyone been able to get Ostris' AI Toolkit running on DGX Spark?",
+ "leido": true,
+ "posts_leidos": 23,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Instalar PyTorch cu130 en lugar de la version cu128 fijada por AI Toolkit: un usuario reporta que baja la generacion de muestras de 30-35 min a unos 5 min y el entrenamiento de mas de 30 s/it a 10-12 s/it; otro usuario confirma sampling 2x mas rapido (WAN 2.2 14B)",
+   "como": "pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130",
+   "fuente_post": 19,
+   "repositorio": "https://github.com/ostris/ai-toolkit",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (usuarios RazielAU y krzysztof.kolago), prueba unica segun el propio autor",
+   "riesgo": "El autor avisa de crear un entorno conda nuevo; el entorno con torch 2.7.0 le dejo de funcionar",
+   "verificable_aqui": "python3 -c 'import torch;print(torch.__version__,torch.version.cuda)'"
+  },
+  {
+   "que": "Depurar un trabajo que no arranca desde la UI: ejecutar el entrenamiento por CLI con la config copiada de la pantalla avanzada",
+   "como": "python run.py path/to/train.yaml",
+   "fuente_post": 9,
+   "repositorio": "https://github.com/ostris/ai-toolkit",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Compilar onnxruntime con CUDA 13 para sm_121 (no hay build ARM64)",
+   "como": "sh build.sh --config Release --build_dir build/cuda13 --parallel 20 --nvcc_threads 20 --use_cuda --cuda_version 13.0 --cuda_home /usr/local/cuda-13.0/ --cudnn_home /usr/local/cuda-13.0/ --build_wheel --skip_tests --cmake_generator Ninja --use_binskim_compliant_compile_flags --cmake_extra_defines CMAKE_CUDA_ARCHITECTURES=121 onnxruntime_BUILD_UNIT_TESTS=OFF",
+   "fuente_post": 3,
+   "repositorio": "https://github.com/Microsoft/onnxruntime.git",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, usuario; el propio autor luego recomienda omitir la dependencia easy_dwpose que lo requiere (post 9)",
+   "riesgo": "--enable_training falla al compilar",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia de memoria unificada: AI Toolkit usa unos 40 GB de RAM de sistema (quedaban unos 10 GB libres sin cuantizar), lo que en el Spark equivale a perder esa parte de la memoria de GPU; diffusion-pipe y musubi-tuner usan unos 2.5 GB",
+   "como": "no indicado (medicion cualitativa del usuario)",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, entrenando Qwen-Image-Edit-2509, un usuario",
+   "riesgo": "Agotar la memoria unificada durante entrenamiento",
+   "verificable_aqui": "free -h"
+  },
+  {
+   "que": "Un usuario (schordan) reporta que el entrenamiento de LoRA Flux2 con ajustes por defecto es demasiado grande y la GUI de DGX se congelo; es un ejemplo de colapso por memoria sin comando de mitigacion",
+   "como": "no indicado",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, driver 580.95.05, un usuario",
+   "riesgo": "Congelacion de la interfaz por sobreuso de memoria",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "No hay respuesta de personal NVIDIA en el tema; el usuario dice que el PyTorch viejo recomendado por AI Toolkit es unas tres veces mas lento que el actual.",
+ "utilidad_atom": "baja",
+ "razon": "Es un tutorial de instalacion de un software de terceros, con una comparacion cu130 contra cu128 de una sola prueba por usuario y la advertencia de consumo de unos 40 GB de memoria unificada. Sin staff NVIDIA; el unico dato transferible a vigilancia es que un entrenamiento sin cuantizar deja poca memoria libre."
+}

@@ -1,0 +1,27 @@
+{
+ "id": 348428,
+ "titulo": "Unable to install datacenter-gpu-manager-4-cuda12 using apt DGX SPARK",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "omision_nvidia",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnostico de origen de paquete DCGM (staff pide verificar politica de apt)",
+   "como": "apt policy datacenter-gpu-manager-4-cuda13 ; apt policy datacenter-gpu-manager-4-core",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Ninguno, es lectura; DCGM sin soporte oficial",
+   "verificable_aqui": "apt policy datacenter-gpu-manager-4-cuda13; dpkg --print-architecture"
+  }
+ ],
+ "omision_nvidia": "Personal de NVIDIA (posts 2 y 3) dice que DCGM no esta oficialmente soportado en DGX Spark; Spark usa CUDA 13 y arquitectura ARM, no amd64.",
+ "utilidad_atom": "media",
+ "razon": "Dos miembros del staff dicen que DCGM no esta soportado en Spark y que el usuario instala paquetes amd64 de CUDA 12 en vez de ARM/CUDA 13. Es una omision declarada relevante para monitoreo."
+}

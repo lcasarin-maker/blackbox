@@ -1,0 +1,37 @@
+{
+ "id": 371302,
+ "titulo": "Disable ConnectX-7 even when QSFP is connected (to save power)",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Apagar/encender el modulo ConnectX-7 con el cable conectado mediante el manejador del paquete dgx-spark-mlnx-hotplug; el autor mide ~18 W de diferencia en consumo",
+   "como": "sudo /opt/nvidia/dgx-spark-mlnx-hotplug/mtk-hotplug-handler.sh removal  (apagar) ; sudo /opt/nvidia/dgx-spark-mlnx-hotplug/mtk-hotplug-handler.sh plug-in  (encender)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark; cifra de 18 W declarada por el autor",
+   "riesgo": "Desconecta las interfaces CX7 y su red; el post 4 cita un nombre de script con una letra de mas (handlers), el 5 usa handler que es el que funciono",
+   "verificable_aqui": "ls /opt/nvidia/dgx-spark-mlnx-hotplug/ ; cat /lib/udev/rules.d/90-mtk-hotplug.rules"
+  },
+  {
+   "que": "Ver las reglas udev que gobiernan el hotplug del CX7",
+   "como": "cat /lib/udev/rules.d/90-mtk-hotplug.rules",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark",
+   "riesgo": "Ninguno",
+   "verificable_aqui": "cat /lib/udev/rules.d/90-mtk-hotplug.rules"
+  }
+ ],
+ "omision_nvidia": "El staff (aniculescu) declara que no hay metodo oficial para apagar el CX7 con cable conectado; el hotplug solo lo apaga sin cable.",
+ "utilidad_atom": "media",
+ "razon": "Hay un mecanismo concreto que reduce ~18 W (medido por un usuario) con un script del paquete de NVIDIA, contra la respuesta oficial de que no existe; baja la carga termica en reposo. Respuesta de staff NVIDIA (aniculescu) en el post 2."
+}

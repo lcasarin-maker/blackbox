@@ -1,0 +1,88 @@
+{
+ "id": 379303,
+ "titulo": "Severe one-way RDMA performance regression on ASUS Ascent GX10 with kernel 6.17.0-1029-nvidia",
+ "leido": true,
+ "posts_leidos": 22,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Medicion de ancho de banda RDMA Write entre dos GB10 con perftest; el hilo registra ~111 Gbit/s sano frente a ~13 Gbit/s degradado",
+   "como": "ib_write_bw -d rocep1s0f1 -i 1 -x 3 -F -q 8 --report_gbits <IP_RECEPTOR> (el receptor lanza el mismo comando sin IP)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 ASUS Ascent GX10 / DGX Spark, ConnectX-7 FW 28.45.4028, kernel 6.17.0-1026 y 1029",
+   "riesgo": "Requiere dos nodos con enlace; el nombre del dispositivo rocep1s0f1 depende de cada maquina.",
+   "verificable_aqui": "ibv_devices; rdma link show"
+  },
+  {
+   "que": "Variante con un solo QP, 30 s y mensaje de 64 KiB",
+   "como": "ib_write_bw -d rocep1s0f1 -i 1 -p 12000 -F --report_gbits -D 30 -s 65536 <IP>",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10, kernel 6.17.0-1029 vs 1026",
+   "riesgo": "Con -D 30 las iteraciones caen cuando la velocidad cae; comparar BW promedio, no iteraciones (post 6).",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround 1 (un usuario): volver al kernel 6.17.0-1026-nvidia y poner los paquetes del 1029 en hold. Despues un segundo usuario no pudo reproducir tras actualizar y reiniciar, y un tercero mostro que la causa real parece ser el estado del enlace al arranque, no el kernel",
+   "como": "no indicado (comando de hold no dado; solo se dice que se pusieron en hold)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10",
+   "riesgo": "El diagnostico de regresion de kernel fue refutado parcialmente en los posts 10, 13 y 14.",
+   "verificable_aqui": "uname -r; apt-mark showhold"
+  },
+  {
+   "que": "Causa y arreglo propuestos por un usuario (wentbackward, mecanismo inferido por su IA): si el nodo arranca sin portadora en el CX7 y el cable se conecta despues, el driver mlx5 queda con la transmision degradada (13.3 vs 97.98 Gb/s); la solucion es reiniciar con el enlace ya activo",
+   "como": "reiniciar ambos nodos con el cable conectado y el enlace vivo (sin comando)",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Sparks via switch; foogitiff reprodujo en 2 GX10 (post 14: reinicio de uno y luego del otro restauro ~110 Gb/s)",
+   "riesgo": "Mecanismo inferido, no confirmado por NVIDIA; staff (aniculescu) no pudo reproducirlo en un FE Spark (post 15).",
+   "verificable_aqui": "ethtool -S <iface> | grep -i -E 'err|drop'"
+  },
+  {
+   "que": "Advertencia: conectar o desconectar el DAC con los equipos encendidos puede colgar nodos (un usuario colgo dos nodos); hacerlo apagados",
+   "como": "no indicado (practica operativa)",
+   "fuente_post": 23,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Cuelgue de nodos por hot-plug del DAC.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un cable FS.com de 0.5 m dio problemas a un usuario y se resolvio cambiando a uno Amphenol",
+   "como": "no indicado",
+   "fuente_post": 20,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Staff NVIDIA pide la salida de dmidecode -t 45 para ver versiones de firmware (el hilo muestra dumps largos de varios firmwares; un usuario con firmwares viejos fue aconsejado actualizar)",
+   "como": "sudo dmidecode -t 45",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "sudo dmidecode -t 45"
+  }
+ ],
+ "omision_nvidia": "El staff no confirma ni documenta la regresion; pidio firmware y no pudo reproducir en un Founders Edition. Un usuario pide documentar buenas practicas de hot-plug de cables (post 24); NVIDIA no responde a eso.",
+ "utilidad_atom": "baja",
+ "razon": "Aplica a enlaces ConnectX-7 entre dos nodos GB10; el comando ib_write_bw es reutilizable como medicion pero la maquina es una sola y sin segundo nodo. La hipotesis de regresion de kernel fue matizada por el propio hilo (reinicio con enlace vivo lo arregla)."
+}

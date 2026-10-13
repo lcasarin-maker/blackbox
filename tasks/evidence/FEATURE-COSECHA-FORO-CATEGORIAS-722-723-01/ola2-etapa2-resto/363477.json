@@ -1,0 +1,27 @@
+{
+ "id": 363477,
+ "titulo": "NVIDIA DGX Spark - mlxconfig missing",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Instalar las Mellanox Firmware Tools (MFT) para obtener mlxconfig y listar dispositivos con mst",
+   "como": "wget https://www.mellanox.com/downloads/MFT/mft-${VERSION}-${ARCH}-${OS_DIST}.tgz ; tar -zxf mft-*.tgz ; cd mft-*/ ; sudo ./install.sh ; sudo mst start ; sudo mst status (VERSION=4.35.0-159 ARCH=aarch64 OS_DIST=deb)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "no indicado",
+   "riesgo": "Descarga e instala un script como root desde fuera de los repos; el autor mezcla instrucciones genericas (parece texto generado) y no confirma que funcione en el Spark",
+   "verificable_aqui": "which mlxconfig mst; fwupdmgr get-devices"
+  }
+ ],
+ "omision_nvidia": "mlxconfig no viene instalado en el Spark; ninguna respuesta de NVIDIA en el tema.",
+ "utilidad_atom": "baja",
+ "razon": "El usuario da pasos para instalar MFT, sin evidencia de ejecucion en el Spark ni salida. Sin respuesta de NVIDIA; tema cerrado automaticamente."
+}

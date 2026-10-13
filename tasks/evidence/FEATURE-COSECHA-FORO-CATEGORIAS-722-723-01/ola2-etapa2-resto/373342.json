@@ -1,0 +1,27 @@
+{
+ "id": 373342,
+ "titulo": "Dgx spark failing fieldiag PowerStress",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Field diagnostics oficial; PowerStress falla ~8 min con MODS-020000600139 y califica para RMA (staff aniculescu lo confirma)",
+   "como": "sudo ./partnerdiag --field",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, BIOS 5.36_0ACUM018, DGX OS Ubuntu 24.04.4, kernel 6.17.0-1021-nvidia (segun el usuario)",
+   "riesgo": "Corte en seco del equipo posible durante la prueba; requiere cold power cycle",
+   "verificable_aqui": "ls /opt/nvidia/dgx-spark-fieldiag 2>/dev/null"
+  }
+ ],
+ "omision_nvidia": "Proceso de RMA lento: hubo un fallo de IT de NVIDIA que impidio procesar RMA (post 8, staff).",
+ "utilidad_atom": "media",
+ "razon": "Un usuario reproduce 4 veces el fallo PowerStress con apagado duro bajo inferencia sostenida; staff NVIDIA (aniculescu) confirma elegibilidad de RMA. El resto es seguimiento de RMA sin mecanismo nuevo."
+}

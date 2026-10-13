@@ -1,0 +1,27 @@
+{
+ "id": 376507,
+ "titulo": "Spark Studio — Open-source inference dashboard for DGX Spark",
+ "leido": true,
+ "posts_leidos": 30,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Herramienta comunitaria (no NVIDIA): dashboard con monitor de memoria unificada y guarda previa al lanzamiento que, segun un usuario (post 3), detiene modelos, espera reclamo y rechaza lanzamientos que no caben",
+   "como": "bash <(curl -fsSL <url install.sh del repo>) ; chequeo de salud: ./start.sh --doctor",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/TheAwaken1/Spark-Studio",
+   "licencia": "MIT",
+   "probado_en": "DGX Spark (autor)",
+   "riesgo": "Instalador por curl|bash y agente que parchea y relanza automaticamente con suscripcion Claude Code/Codex; sin autenticacion de la app propia mencionada. Consumo propio 60-90 MB por instancia (post 10)",
+   "verificable_aqui": "ps aux | grep uvicorn"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Anuncio de un dashboard de usuario con licencia MIT; la guarda de memoria se describe en prosa sin comando ni formula, y el resto es soporte de la interfaz. Sin respuesta de staff NVIDIA; la utilidad es baja porque ya existe monitoreo propio y la instalacion es curl|bash."
+}

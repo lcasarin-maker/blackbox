@@ -1,0 +1,26 @@
+{
+ "id": 350523,
+ "titulo": "DGX Dashboard Constantly claims Updates Available",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Secuencia manual que replica la actualizacion del Dashboard e incluye firmware (UEFI) via fwupd; con ella desaparecio el aviso de actualizacion",
+   "como": "sudo apt update; sudo apt dist-upgrade; sudo fwupdmgr refresh; sudo fwupdmgr upgrade; sudo reboot",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario LsDmTandAI, DGX Spark; UEFI Device Firmware 0x00000001 a 0x00000500",
+   "riesgo": "El propio instalador del EC avisa que el equipo debe seguir conectado a corriente durante la actualizacion para evitar dano (post 6); una descarga fallo por limite del servidor",
+   "verificable_aqui": "fwupdmgr get-devices; fwupdmgr get-upgrades"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Solo usuarios responden (sin staff NVIDIA); la secuencia apt+fwupdmgr es conocida y util solo para mantener firmware al dia. Un usuario reporta fallo de descarga del Embedded Controller por limite de servidor (post 6) sin solucion."
+}

@@ -1,0 +1,47 @@
+{
+ "id": 348643,
+ "titulo": "DGX Spark Networking Issue",
+ "leido": true,
+ "posts_leidos": 17,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Tras actualizar a kernel 6.11.0-1016-nvidia se pierden Ethernet/WiFi/Bluetooth porque falta el paquete linux-modules-extra; se instala a mano con dpkg (descarga en otro equipo).",
+   "como": "wget \"http://ports.ubuntu.com/ubuntu-ports/pool/main/l/linux-nvidia-6.11/linux-modules-extra-6.11.0-1016-nvidia_6.11.0-1016.16_arm64.deb\" ; sudo dpkg -i linux-modules-extra-6.11.0-1016-nvidia_6.11.0-1016.16_arm64.deb ; reiniciar",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, kernel 6.11.0-1016-nvidia (usuarios ready725, akjoshi, john337 confirman)",
+   "riesgo": "Paquete de otra version de kernel no sirve en 6.17; descarga fuera de apt sin verificar firma",
+   "verificable_aqui": "dpkg -l 'linux-modules-extra-*' | grep -i nvidia"
+  },
+  {
+   "que": "Workaround alternativo: arrancar el kernel anterior (1014) desde el menu GRUB; hay dos kernels instalados y el nuevo es el predeterminado.",
+   "como": "seleccionar 6.11.0-1014 en el menu GRUB al arrancar",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario markus.schmidt (post 6)",
+   "riesgo": "Kernel viejo sin parches; no persistente",
+   "verificable_aqui": "ls /boot/vmlinuz-* ; uname -r"
+  },
+  {
+   "que": "Controladores de red del Spark (Ethernet r8127, WiFi mt7925e) y comprobacion con modinfo.",
+   "como": "modinfo r8127",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": "GPL (modulo r8127 segun modinfo)",
+   "probado_en": "6.11.0-1016-nvidia",
+   "riesgo": null,
+   "verificable_aqui": "modinfo r8127 | head -5 ; lsmod | grep -E 'r8127|mt7925e'"
+  }
+ ],
+ "omision_nvidia": "El paquete linux-modules-extra no se actualiza junto al kernel; un usuario pide fijar el aviso y corregir el paquete de actualizacion. Ninguna respuesta de NVIDIA en el tema.",
+ "utilidad_atom": "baja",
+ "razon": "Solucion de usuarios (sin staff de NVIDIA) a un fallo del kernel 6.11-1016, ya superado: la maquina usa 6.17. El patron general (verificar linux-modules-extra tras actualizar kernel) es la parte reutilizable."
+}

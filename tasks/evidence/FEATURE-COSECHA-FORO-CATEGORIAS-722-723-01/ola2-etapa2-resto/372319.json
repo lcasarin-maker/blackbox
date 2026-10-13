@@ -1,0 +1,26 @@
+{
+ "id": 372319,
+ "titulo": "FSDP viability on Dual Spark Cluster",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Advertencia con condicion: en memoria unificada, FSDP v1 al guardar el checkpoint del adaptador LoRA convoca el modelo completo y requiere RAM del orden de tamano_modelo/world_size x 2; FSDP v2 con Accelerate carga el checkpoint base completo en rank0 y limita a la capacidad de un solo nodo",
+   "como": "no indicado (el autor reescribio fsdp2_load_full_state_dict como cargador por tensor y lo parcheo en accelerate; sin codigo en el post)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark segun el autor",
+   "riesgo": "los frameworks asumen VRAM y RAM separadas; en UMA las copias en CPU durante checkpoint o broadcast consumen el mismo pool",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un solo mensaje, una pregunta sin respuesta, con un diagnostico de uso de memoria de FSDP en UMA y un monkey patch sin codigo. No hay respuesta de NVIDIA ni comando reutilizable."
+}

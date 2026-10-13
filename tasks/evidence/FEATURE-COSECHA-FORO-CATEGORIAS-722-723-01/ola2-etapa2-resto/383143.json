@@ -1,0 +1,27 @@
+{
+ "id": 383143,
+ "titulo": "Does DGX Spark FieldDiag CX7Stress require a physical cable",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "CX7Stress falla (KeyError en /dev/mst/mt4129_pciconf0, 'MST PCI module is not loaded') sin cable; se resuelve desactivando el hotplug CX7 y reiniciando",
+   "como": "renombrar o quitar /etc/nvidia/cx7-hotplug-enabled y reiniciar (archivo presente = hotplug activo; ausente = desactivado; o desinstalar el paquete dgx-spark-mlnx-hotplug)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario abhilashmv: AI TOP ATOM, kernel 6.17.0-1032-nvidia, fieldiag 2.0.4-1, Secure Boot desactivado; confirmo que paso en post 5",
+   "riesgo": "Desactiva el hotplug del CX-7; sin cable el puerto queda apagado y descargado segun otro usuario (post 2)",
+   "verificable_aqui": "ls -l /etc/nvidia/cx7-hotplug-enabled; dpkg -l dgx-spark-mlnx-hotplug"
+  }
+ ],
+ "omision_nvidia": "La documentacion de fieldiag no aclara si el modo PHY loopback de CX7Stress necesita cable externo; ninguna respuesta de NVIDIA en el hilo.",
+ "utilidad_atom": "media",
+ "razon": "Hilo corto de usuarios con un workaround concreto y confirmado por el autor en su mismo hardware (AI TOP ATOM, el mismo kernel que esta maquina). Cubre solo el caso de correr fieldiag sin cable; sin staff de NVIDIA."
+}

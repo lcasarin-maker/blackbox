@@ -1,0 +1,37 @@
+{
+ "id": 355255,
+ "titulo": "[ASUS Ascent GX10 / DGX Spark] Permanent Power Throttle at 30W (Safety Mode) - PD Firmware Negotiation Failure",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Detectar falta de potencia PCIe y limitacion leyendo dmesg (hallazgo de un usuario con un ASUS GX10; sin confirmacion de NVIDIA de que explique el tope)",
+   "como": "sudo dmesg | grep -iE \"limit|throttle|power\"",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS Ascent GX10, DGX OS 7.2.3, BIOS 0102 (declarado)",
+   "riesgo": "el mensaje 'insufficient power' de mlx5 puede ser lectura incorrecta; el usuario solo pregunta si lo confirma",
+   "verificable_aqui": "sudo dmesg | grep -iE 'limit|throttle|power' | head -20"
+  },
+  {
+   "que": "Actualizar firmware PD dos veces siguiendo la guia de ASUS (reporte de usuario)",
+   "como": "flashear firmware PD, reiniciar, flashear de nuevo, reiniciar (guia ASUS, sin comando)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10",
+   "riesgo": "flasheo de firmware",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA (cuenta NVES, post 4) no diagnostica y deriva a ASUS para RMA al ser unidad ASUS.",
+ "utilidad_atom": "baja",
+ "razon": "Caso de hardware ASUS con negociacion de potencia fallida; el usuario no resolvio y NVIDIA deriva a RMA (post 4). El unico comando es un grep de dmesg ya generico."
+}

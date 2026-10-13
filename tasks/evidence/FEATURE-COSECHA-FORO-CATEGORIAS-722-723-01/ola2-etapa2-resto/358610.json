@@ -1,0 +1,37 @@
+{
+ "id": 358610,
+ "titulo": "Qwen3-235B-A22B-NVFP4 Playbook Example Hangs",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de usuario (eugr) para dos Spark: lanzar con el script del repositorio y un cuantizado AWQ en vez del NVFP4 del playbook",
+   "como": "./launch-cluster.sh exec vllm serve QuantTrio/Qwen3-VL-235B-A22B-Instruct-AWQ --port 8888 --host 0.0.0.0 --gpu-memory-utilization 0.7 -tp 2 --distributed-executor-backend ray --load-format fastsafetensors",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": null,
+   "probado_en": "dos DGX Spark (usuario)",
+   "riesgo": "especifico de cluster de dos nodos; no aplica a una sola maquina",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Personal NVIDIA (aniculescu) informa que el playbook de TRT-LLM se actualizo con una imagen nueva y se corrigio el problema de autocarga",
+   "como": "no indicado (declaracion)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El tema trata de un cuelgue del playbook de TRT-LLM en dos nodos (libreria librdmacm.so.1 ausente en un log) con solucion de usuario y una actualizacion posterior del staff. No aplica a una maquina sola."
+}

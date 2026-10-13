@@ -1,0 +1,36 @@
+{
+ "id": 372329,
+ "titulo": "Gemma 4 12b dense model - experiences?",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta de vLLM en Docker para Gemma 4 12B con decodificacion especulativa (borrador) y KV cache fp8",
+   "como": "docker run -d --name gemma4-12b --gpus all --restart unless-stopped ... vllm/vllm-openai:gemma4-unified /model --max-model-len 262144 --max-num-seqs 10 --gpu-memory-utilization 0.85 --kv-cache-dtype fp8 --speculative-config '{\"model\": \"/draft-model\", \"num_speculative_tokens\": 5}'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "una Spark, ~30 tok/s segun el autor",
+   "riesgo": "gpu-memory-utilization 0.85 deja poca memoria a otros servicios; otro usuario bajo a 0.75 por eso (post 4).",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Ajuste de reserva de memoria para convivir con otros servicios",
+   "como": "--gpu-memory-utilization 0.75",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark, ~29 tok/s segun el usuario",
+   "riesgo": "Valor especifico de ese modelo; no generaliza.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta especifica de un modelo con parametros de vLLM copiados del post 1 y un ajuste de memoria en el post 4. No hay respuesta de NVIDIA y nada es transversal a monitoreo o prevencion de nuestros fallos."
+}

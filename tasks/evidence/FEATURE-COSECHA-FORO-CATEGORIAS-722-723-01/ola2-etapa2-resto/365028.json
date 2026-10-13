@@ -1,0 +1,48 @@
+{
+ "id": 365028,
+ "titulo": "Bricked spark after updating drivers to nvidia-driver-590",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Revertir a driver 580 tras instalar 590 (via ssh)",
+   "como": "apt purge nvidia-driver-590-open ; apt install nvidia-driver-580-open ; reboot",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario cosinus, DGX Spark",
+   "riesgo": "NVIDIA no soporta drivers distintos de los instalados con el SO",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Identificar paquete instalado",
+   "como": "dpkg -l|grep nvidia-driver",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "dpkg -l | grep nvidia-driver"
+  },
+  {
+   "que": "Causa real del congelamiento: contenedores Docker con reinicio automatico tras el boot agotan la memoria; entrar en modo monousuario para detenerlos",
+   "como": "arranque en modo monousuario / boot a /bin/bash (requiere root password o disco sin cifrar)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario cosmonist confirma en post 6 que eran contenedores reiniciandose",
+   "riesgo": "No funciona con sistemas de archivos cifrados segun el usuario cosinus",
+   "verificable_aqui": "docker ps --format '{{.Names}} {{.Status}}' ; docker inspect -f '{{.HostConfig.RestartPolicy.Name}}' $(docker ps -aq)"
+  }
+ ],
+ "omision_nvidia": "El personal de NVIDIA (aniculescu, post 10) declara que cualquier driver no instalado con el SO no esta soportado y que no puede predecir que pasa al subir o bajar de version.",
+ "utilidad_atom": "media",
+ "razon": "Un colapso de memoria al arrancar fue causado por contenedores con politica de reinicio, no por el driver 590; el post 6 lo confirma y el post 4 da la salida por modo monousuario. NVIDIA solo reitera que el driver fuera del SO no esta soportado (post 10)."
+}

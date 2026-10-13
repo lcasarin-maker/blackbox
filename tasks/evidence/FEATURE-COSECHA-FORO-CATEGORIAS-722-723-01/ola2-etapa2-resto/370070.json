@@ -1,0 +1,37 @@
+{
+ "id": 370070,
+ "titulo": "Nemotron-3-Super-120B-A12B-NVFP4 on single DGX Spark: 23.45 tok/s",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "El wrapper NIM limita gpu_memory_utilization a 0.50 en hardware UMA, lo que causa OOM con un modelo de 75 GB en 128 GB; workaround: imagen vllm-openai nightly en lugar de NIM",
+   "como": "imagen vllm-openai nightly (sha256:3dbe092e) en vez del contenedor NIM; VLLM_NVFP4_GEMM_BACKEND=marlin",
+   "fuente_post": 9,
+   "repositorio": "https://github.com/airawatraj/dgx-spark-nemotron-super-agent",
+   "licencia": "no indicada",
+   "probado_en": "1 DGX Spark, segun usuario",
+   "riesgo": "Nightly: comportamiento puede variar; el parser hermes dio error 500 en el fork de vLLM de NVIDIA segun el usuario (usa --tool-call-parser qwen3_coder)",
+   "verificable_aqui": "docker ps --format '{{.Image}}'"
+  },
+  {
+   "que": "Descarga del perfil NVFP4 a cache local con NIM",
+   "como": "docker run -it --rm --runtime=nvidia --gpus all -v \"$HOME/nim-cache:/opt/nim/.cache\" -e NGC_API_KEY=$NGC_API_KEY nvcr.io/nim/nvidia/nemotron-3-super-120b-a12b:latest download-to-cache --profiles <perfil>",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Requiere clave NGC (no copiada)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario (sin staff de NVIDIA) afirma que el wrapper NIM fija gpu_memory_utilization en 0.50 en UMA, y da el workaround con comandos. Es un informe de usuario no verificado; el resto son benchmarks."
+}

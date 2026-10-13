@@ -1,0 +1,69 @@
+{
+ "id": 364886,
+ "titulo": "Memory Creep on DGX Spark: Where Your 128 GB Actually Goes",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Medir memoria usada en GB10 desde /proc/meminfo porque el autor afirma que nvidia-smi no la reporta",
+   "como": "watch -n1 \"awk '/MemTotal/{t=$2}/MemAvailable/{a=$2}END{printf \\\"Used: %.1f GB / %.1f GB\\\\n\\\",(t-a)/1048576,t/1048576}' /proc/meminfo\"",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, CUDA 13.2, driver 580.142, vLLM 0.18.1rc1 (eugr build)",
+   "riesgo": null,
+   "verificable_aqui": "awk '/MemTotal/{t=$2}/MemAvailable/{a=$2}END{print (t-a)/1048576, t/1048576}' /proc/meminfo"
+  },
+  {
+   "que": "Evitar que vLLM preasigne ~89 GB de KV cache y los graficos CUDA (13 GB): bajar utilizacion y modo eager; el autor midio 117 GB a 32 GB con un modelo NVFP4 de 19 GB",
+   "como": "--enforce-eager --gpu-memory-utilization 0.2 --max-model-len 8192 --kv-cache-dtype fp8",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "mismo que arriba, modelo Nemotron-3-Nano-30B NVFP4",
+   "riesgo": "Caida de throughput y contexto; resultado del autor, post marcado por otro usuario como redactado con IA (el autor dice que los datos son medidos)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Forzar backend Marlin en NVFP4 y desactivar FlashInfer MoE FP4 por kernels CUTLASS rotos en SM121",
+   "como": "-e VLLM_USE_FLASHINFER_MOE_FP4=0 -e VLLM_NVFP4_GEMM_BACKEND=marlin -e VLLM_TEST_FORCE_FP8_MARLIN=1",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "mismo que arriba",
+   "riesgo": "Afirmacion de usuario; la parte 2 anunciada no esta en el tema",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: con fastsafetensors y gpu_memory_utilization mayor a 0.76 en memoria unificada hay riesgo de congelar el sistema",
+   "como": "--load-format fastsafetensors con gpu_memory_utilization > 0.76",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, sin prueba mostrada",
+   "riesgo": "Congelamiento del sistema segun el autor",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Ajustes de sistema que propone el autor: sin escritorio, swappiness y dirty_bytes",
+   "como": "sudo systemctl set-default multi-user.target ; sudo sysctl vm.swappiness=1 ; sudo sysctl vm.dirty_bytes=268435456",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Sin medicion propia de efecto en estos tres ajustes",
+   "verificable_aqui": "sysctl vm.swappiness vm.dirty_bytes; systemctl get-default"
+  }
+ ],
+ "omision_nvidia": "Segun el autor, el contenedor vLLM de NVIDIA trae FlashInfer precompilado para sm_120 y no sm_121, lo que obliga a compilar JIT al arranque (picos de 20-30 GB); afirmacion de usuario.",
+ "utilidad_atom": "alta",
+ "razon": "Un usuario documenta con mediciones de /proc/meminfo donde se va la memoria de vLLM en GB10 y da flags concretos y una advertencia de congelamiento con fastsafetensors. Otro usuario critica que parece texto de IA; no hay respuesta de NVIDIA staff y la parte 2 no existe en el tema."
+}

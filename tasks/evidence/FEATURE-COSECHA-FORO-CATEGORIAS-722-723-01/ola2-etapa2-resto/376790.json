@@ -1,0 +1,37 @@
+{
+ "id": 376790,
+ "titulo": "Running DeepSeek V4 + vision model on 2x DGX Spark (GB10) – memory balancing tips?",
+ "leido": true,
+ "posts_leidos": 16,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reparto de memoria GPU para servir DeepSeek V4 Flash y Qwen3.5-9B a la vez en 2 nodos (afirmacion de usuario PILCOTHINK, sin respuesta de NVIDIA)",
+   "como": "Qwen 3.5 9B: --gpu-memory-utilization 0.095 --max-num-batched-tokens 8192; DeepSeek V4 Flash: --gpu-memory-utilization 0.785 --max-num-batched-tokens 8192; KV cache dtype FP8 en ambos; modo 'no ray'",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "cluster de dos DGX Spark segun el usuario; sin version de driver/kernel",
+   "riesgo": "Con la variante DSpark queda poca memoria para Qwen; sin modo no ray no se logra la convivencia segun el usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Alternativa de menor memoria: cargar primero el cluster y luego llama.cpp en lugar de vLLM para el modelo de vision (usuario 0rand)",
+   "como": "no indicado (solo la recomendacion 'Use llamacpp, not vllm')",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Tema de usuarios sobre repartir VRAM entre dos modelos en un cluster de 2 Spark; los valores de vLLM son de un usuario, de un cluster de dos nodos, sin staff de NVIDIA. Para un solo ATOM aporta poco fuera del principio de partir gpu-memory-utilization entre modelos."
+}

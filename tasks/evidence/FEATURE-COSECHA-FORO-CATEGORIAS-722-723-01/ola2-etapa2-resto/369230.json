@@ -1,0 +1,57 @@
+{
+ "id": 369230,
+ "titulo": "Avoid ASUS GX10s If You Want Any Support",
+ "leido": true,
+ "posts_leidos": 33,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Habilitar el remoto de pruebas de LVFS para ver firmware GX10 aun no estable",
+   "como": "sudo fwupdmgr enable-remote lvfs-testing",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10 (usuario)",
+   "riesgo": "Compila builds no estables de firmware",
+   "verificable_aqui": "fwupdmgr get-remotes 2>&1 | head"
+  },
+  {
+   "que": "Un usuario recupero los puertos CX-7 instalando los firmwares SoC y EC de LVFS en todos los nodos para que queden sincronizados",
+   "como": "instalar firmware SoC y EC desde LVFS en todos los nodos (comando exacto no indicado)",
+   "fuente_post": 30,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x ASUS GX10 (usuario)",
+   "riesgo": "Firmware no estable; comando no indicado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround del bug de powercap: desenchufar el adaptador varios minutos",
+   "como": "desenchufar 1 minuto (post 7); un usuario dice 5 minutos (post 8)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Tras 'Some issue negotiating with the AC adapter' segun un usuario; sin verificacion",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Leer version de firmware y ancho PCIe de mlx5",
+   "como": "sudo dmesg | grep mlx5",
+   "fuente_post": 24,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "sudo dmesg | grep mlx5 | head"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo mayormente una queja de soporte de ASUS; la solucion final de un usuario fue firmware SoC+EC de LVFS en todos los nodos (post 30) y otro cita el bug de powercap resuelto desenchufando. No hay respuesta de personal de NVIDIA, y el unico comando concreto es fwupdmgr."
+}

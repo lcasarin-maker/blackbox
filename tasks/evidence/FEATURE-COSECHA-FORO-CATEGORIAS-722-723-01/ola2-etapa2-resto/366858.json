@@ -1,0 +1,37 @@
+{
+ "id": 366858,
+ "titulo": "How to disable CX7 equivalent way to removing DAC?",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Medicion de usuario: con un cable DAC conectado la temperatura sube unos 6 grados C y consume mas, incluso con el Mellanox desvinculado; solo sacar el DAC la baja",
+   "como": "for dev in 0000:01:00.0 0000:01:00.1 0002:01:00.0 0002:01:00.1; do echo $dev | sudo tee /sys/bus/pci/drivers/mlx5_core/unbind; done (y luego echo 1 | sudo tee /sys/bus/pci/devices/$dev/remove)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, segun usuario",
+   "riesgo": "Estos comandos NO bajaron la temperatura, segun el propio autor",
+   "verificable_aqui": "ls /sys/bus/pci/drivers/mlx5_core/"
+  },
+  {
+   "que": "Pista de otro usuario: el paquete dgx-spark-mlnx-hotplug instala reglas udev y un script que gestionan las interfaces CX7",
+   "como": "/lib/udev/rules.d/90-mtk-hotplug.rules ; /opt/nvidia/dgx-spark-mlnx-hotplug/mtk-hotplug-handler.sh (el post truncado no da el comando para apagarlo)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark, post enlazado/truncado",
+   "riesgo": "La solucion completa esta en otro tema; aqui no se indica",
+   "verificable_aqui": "ls /lib/udev/rules.d/90-mtk-hotplug.rules /opt/nvidia/dgx-spark-mlnx-hotplug/"
+  }
+ ],
+ "omision_nvidia": "No hay forma documentada de apagar el CX7 con el QSFP conectado para ahorrar potencia (planteado por el usuario; el post 2 apunta a otro tema).",
+ "utilidad_atom": "media",
+ "razon": "El OP mide que el DAC calienta unos 6 grados y que el unbind PCI no lo evita; la unica pista es el paquete de hotplug citado en el post 2, sin comando. Ninguna respuesta de NVIDIA staff."
+}

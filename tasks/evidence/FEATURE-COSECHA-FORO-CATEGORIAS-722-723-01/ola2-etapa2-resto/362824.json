@@ -1,0 +1,37 @@
+{
+ "id": 362824,
+ "titulo": "vLLM 0.17.0 MXFP4 Patches for DGX Spark: Qwen3.5-35B-A3B 70 tok/s, gpt-oss-120b 80 tok/s (TP=2)",
+ "leido": true,
+ "posts_leidos": 33,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Parches de usuario para MXFP4 en SM121 (Marlin, MoE) con tabla de precision por capa; TP=1 de gpt-oss-120b corregido tras detectar una condicion de carrera de memoria compartida en el kernel Marlin MoE de 256 hilos",
+   "como": "no indicado como comando; instrucciones y parches en el repositorio",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/namake-taro/vllm-custom",
+   "licencia": "no indicada",
+   "probado_en": "usuario amasawa_seiji: 2 nodos DGX Spark GB10 (TP=2), vLLM 0.17.0",
+   "riesgo": "El propio autor pidio suspender el parche en el post 26 y lo rehizo en el 27; otros usuarios reportan artefactos (post 14, 22) y regresion de calidad en un benchmark agentico (post 32); la cuantizacion en linea sin calibracion pierde calidad segun eugr (post 20)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de medicion con llama-benchy a varias profundidades de contexto",
+   "como": "llama-benchy --base-url http://spark:8000/v1 --model openai/gpt-oss-120b --enable-prefix-caching --depth 0 4096 8192 16384 32768 65535 100000",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "eugr pide la medicion; resultados en posts 11 y 27",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "La compatibilidad MXFP4 de vLLM en GB10 (SM121) no existe en upstream: sin parche el TP=1 no funciona (post 27, tabla vanilla); eugr nota que el error de SFA/SFB persiste en CUTLASS (post 2).",
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios sin respuesta de NVIDIA, centrado en rendimiento de inferencia con parches sin licencia declarada e inestables segun su autor. No aporta monitoreo ni prevencion de los cortes de memoria o calor; solo el comando de benchmark es reutilizable."
+}

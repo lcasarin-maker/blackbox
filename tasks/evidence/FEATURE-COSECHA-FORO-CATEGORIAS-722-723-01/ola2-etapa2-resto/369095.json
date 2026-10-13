@@ -1,0 +1,47 @@
+{
+ "id": 369095,
+ "titulo": "Image diffusion speeds",
+ "posts_leidos": 17,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Precision de matmul float32 alta en torch: Krea2-Turbo bajo de 39.3s a ~32s",
+   "como": "torch.set_float32_matmul_precision('high')",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 (GX10) con diffusers; driver/kernel no indicados",
+   "riesgo": "Menor precision numerica en float32",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Backend de atencion cuDNN nativo en diffusers: Krea2-Turbo 32s a 13.9s, ERNIE-Image 11.2s a 8.8s, sin mejora en Z-Image-Turbo",
+   "como": "export DIFFUSERS_ATTN_BACKEND=_native_cudnn",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 (GX10) con diffusers",
+   "riesgo": "Medicion de un solo usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "torch.compile reduce Z-Image-Turbo de 12.1s a 8.1s; las 2 primeras ejecuciones tardan ~30s",
+   "como": "no indicado (compile sin comando literal)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "utilidad_atom": "media",
+ "razon": "Mediciones de un usuario con dos ajustes concretos para difusion en GB10, utiles para rendimiento pero no para estabilidad. Sin respuesta de NVIDIA; los posts 8 a 10 no existen en el texto descargado (numeracion salta de 7 a 11).",
+ "leido": true,
+ "lectura": "completa",
+ "omision_nvidia": null
+}

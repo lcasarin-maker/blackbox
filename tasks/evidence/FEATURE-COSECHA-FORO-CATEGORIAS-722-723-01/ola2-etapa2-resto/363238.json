@@ -1,0 +1,57 @@
+{
+ "id": 363238,
+ "titulo": "The DDR bandwidth is significantly lower than the claimed 273GB/s",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo de medicion de ancho de banda UMA con test CUDA propio (copy/triad) en reposo y bajo decode de vLLM; reporta 229-230 GB/s con buffers de 128MB en reposo (84% de 273) y caida de 55-60% durante decode activo. El fuente bw_small.cu no se publica en el texto",
+   "como": "bw_small.cu (buffers de 8MB, 50 repeticiones) ejecutado concurrente con vLLM; el archivo no esta enlazado en el texto",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10, driver 580.126.09, CUDA 13.0, vLLM 0.17.1.dev0 (segun el usuario)",
+   "riesgo": "Resultado de usuario no auditado; el codigo no esta disponible",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv"
+  },
+  {
+   "que": "Prueba de memoria/ancho de banda por Vulkan en la GPU GB10: ~177 GB/s escritura y ~192 GB/s lectura verificada",
+   "como": "./target/aarch64-unknown-linux-gnu/release/memtest_vulkan",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/GpuZelenograd/memtest_vulkan",
+   "licencia": "no indicada",
+   "probado_en": "GB10 (92GB visibles para Vulkan), memtest_vulkan v0.6.0",
+   "riesgo": "Ocupa memoria y ancho de banda de la GPU mientras corre (test de 5 minutos); requiere acceso a /dev/dri",
+   "verificable_aqui": "ls -l /dev/dri/"
+  },
+  {
+   "que": "Perfilado de kernels de vLLM con torch profiler (nsys no traza el subproceso EngineCore de vLLM)",
+   "como": "--profiler-config de vLLM, con --enforce-eager y /start_profile; delay_iterations=2",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "vLLM v0.17.1.dev0, PyTorch 2.10.0a0, CUDA 13.0 (segun el usuario)",
+   "riesgo": "--enforce-eager desactiva CUDAGraphs y altera el rendimiento medido",
+   "verificable_aqui": "python3 -c 'import vllm;print(vllm.__version__)'"
+  },
+  {
+   "que": "Formula de cota por ancho de banda para decode: bytes de pesos por paso = parametros activos x bytes por parametro; BW = bytes / tiempo de paso",
+   "como": "3B x 2 bytes (bf16) = 6 GB; 6 GB / 0.0337s = 178 GB/s (65% de 273 GB/s)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Qwen3.5-35B-A3B TP=1 bf16 en GB10 segun el usuario",
+   "riesgo": "El factor 1.5x de trafico total es una estimacion del usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El usuario del post 1 no encuentra otra forma de monitorear el ancho de banda DDR durante inferencia; ninguna respuesta de NVIDIA ni herramienta oficial. Sin respuesta de staff NVIDIA en el tema.",
+ "utilidad_atom": "media",
+ "razon": "Mediciones de usuarios: el ancho de banda utilizable cae 55-60% durante decode y memtest_vulkan da ~177/192 GB/s; es un metodo de medicion reutilizable pero el codigo del test principal no esta publicado. Sin respuesta de NVIDIA."
+}

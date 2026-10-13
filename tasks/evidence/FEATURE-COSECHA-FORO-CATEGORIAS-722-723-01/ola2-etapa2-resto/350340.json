@@ -1,0 +1,26 @@
+{
+ "id": 350340,
+ "titulo": "Auto removed packages",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Advertencia de riesgo: tras instalar un paquete (el usuario sospecha del navegador Brave), apt marca como autoremovible una lista enorme de paquetes de escritorio (ubuntu-desktop, gnome-*, nautilus, dgxstation-desktop, nvidia-update-manager); ejecutar apt autoremove rompe el sistema y obligo al usuario a recuperar imagen cuatro veces",
+   "como": "no indicado como solucion; el unico comando es apt autoremove, que es lo que NO se debe correr; el post 2 remite a otro hilo sin dar el comando",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario)",
+   "riesgo": "apt autoremove tras instalar paquetes elimina metapaquetes de escritorio y deja la maquina inutilizable",
+   "verificable_aqui": "apt-mark showauto | grep -E 'ubuntu-desktop|dgxstation'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Condicion de riesgo concreta (no ejecutar apt autoremove; metapaquetes de escritorio marcados auto) reportada por un usuario sin respuesta de NVIDIA. La mitigacion (apt-mark manual) no la da el texto."
+}

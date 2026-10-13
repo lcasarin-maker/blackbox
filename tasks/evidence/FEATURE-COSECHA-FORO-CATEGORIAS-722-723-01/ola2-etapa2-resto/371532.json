@@ -1,0 +1,58 @@
+{
+ "id": 371532,
+ "titulo": "Dual DGX Spark Network issue",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Leer contadores de errores por carril y de capa fisica de la NIC CX7 para detectar un enlace degradado",
+   "como": "sudo ethtool -S enp1s0f1np1 | grep -E 'rx_err_lane_[0-3]_phy|rx_crc_errors_phy|rx_symbol_err_phy|rx_pcs_symbol_err_phy'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark, CX7 fw 28.45.4028 (declarado por el usuario)",
+   "riesgo": "Contadores acumulativos: comparar deltas, no valor absoluto",
+   "verificable_aqui": "ethtool -S <interfaz_cx7> | grep -E 'rx_err_lane|rx_crc_errors_phy|rx_symbol_err_phy'"
+  },
+  {
+   "que": "Detectar degradacion del ancho de enlace PCIe de la NIC: LnkSta x2 (downgraded) frente a LnkCap x4 en dos de cuatro funciones, con aviso del driver 'limited by 32.0 GT/s PCIe x2 link'",
+   "como": "lspci -vv de las funciones CX7 (campos LnkCap/LnkSta); dmesg de mlx5_core 'available PCIe bandwidth'",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, fw 28.45.4028",
+   "riesgo": "No se da el comando lspci exacto; solo la salida",
+   "verificable_aqui": "sudo lspci -vv | grep -E 'LnkCap:|LnkSta:' ; dmesg | grep -i 'available PCIe bandwidth'"
+  },
+  {
+   "que": "Medir ancho de banda real con NCCL tests por mpirun en vez de iperf (un usuario con rol community, raphael.amorim, lo recomienda); resultado del autor ~12.8 GB/s bus con enlace degradado",
+   "como": "no indicado (se remite a otro tema; salida de all_reduce_perf a 1-16 GiB en post 3)",
+   "fuente_post": 2,
+   "repositorio": "https://sparkrun.dev (herramienta comunitaria de gestion de cluster, sin repositorio ni licencia en el texto)",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Staff NVIDIA (aniculescu): ante degradacion PCIe, ciclo de corriente AC (apagar, desconectar cable, esperar minutos, reconectar)",
+   "como": "apagar, desconectar cable de alimentacion, esperar unos minutos, reconectar",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El post 1 da el comando exacto de ethtool -S con los contadores por carril y el post 5 evidencia la degradacion x2 por lspci/dmesg, util para monitorear el enlace CX7. Staff NVIDIA solo responde con el ciclo AC."
+}

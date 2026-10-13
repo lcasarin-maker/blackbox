@@ -1,0 +1,10 @@
+{"id": 360538, "titulo": "Apparently mmap is still slow on DGX Spark on Linux 6.17?", "leido": true, "posts_leidos": 2, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["medir","solucionar"],
+ "mecanismos": [
+  {"que": "Usar --no-mmap en llama-server acorta el arranque hasta la primera respuesta (medicion de 3 corridas por variante)", "como": "llama-server --no-mmap ...; metodo: cronometrar desde el lanzamiento hasta la primera respuesta valida de /v1/chat/completions con max_tokens: 1", "fuente_post": 1, "repositorio": null, "licencia": "no indicada", "probado_en": "coder543: DGX Spark, kernel 6.17, modelo step-3.5-flash; medianas 15.101s con --no-mmap frente a 96.556s con mmap", "riesgo": "Tras el arranque la latencia por peticion es similar; con --no-mmap el modelo se copia a memoria anonima y en memoria unificada de 128 GB puede duplicar el consumo durante la carga", "verificable_aqui": "uname -r; free -h; ps -eo args | grep llama-server"},
+  {"que": "Un usuario con experiencia (eugr) afirma que el kernel 6.17 no arregla el mmap lento pero si acelera --no-mmap", "como": "no indicado", "fuente_post": 2, "repositorio": null, "licencia": null, "probado_en": "eugr, sin version exacta", "riesgo": null, "verificable_aqui": null}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Medicion propia con numeros por corrida (post 1) y confirmacion de otro usuario (post 2); sin respuesta de NVIDIA. Sirve para cargas de modelos grandes con llama.cpp, no para vLLM en contenedor, y solo se probo un modelo."}

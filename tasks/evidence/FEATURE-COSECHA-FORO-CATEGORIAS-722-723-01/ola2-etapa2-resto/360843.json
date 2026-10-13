@@ -1,0 +1,37 @@
+{
+ "id": 360843,
+ "titulo": "Dgx spark restarting after every 20-30 mins of activity",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Recuperacion del sistema por el sistema de recuperacion oficial del DGX Spark; staff NVIDIA (aniculescu) dice que la imagen generica DGX OS enlazada por un usuario NO esta soportada en Spark porque Spark usa una variante de DGX OS 7.4",
+   "como": "no indicado (guia 'System Recovery' del DGX Spark User Guide, sin comando)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Reinstalar una imagen no soportada rompio el equipo segun el hilo (post 2 apunta a una actualizacion que dejo el sistema en el logo NVIDIA)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un usuario (elsaco) da la URL publica de la imagen de recuperacion para Founders Edition, version 1.120.36",
+   "como": "https://developer.nvidia.com/downloads/dgx-spark/dgx-spark-recovery-image-1.120.36.tar.gz",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Descarga grande; solo para FE segun el usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA no dio causa de los reinicios cada 20-30 min; solo remitio a la guia de recuperacion y aclaro que la imagen DGX OS generica no es compatible con Spark (post 10). Un usuario (cho) asocio problema similar a kernel 6.18 y lo resolvio reinstalando (posts 3, 5).",
+ "utilidad_atom": "baja",
+ "razon": "Reinicios cada 20-30 min con pantalla negra y arranque UEFI, sin diagnostico: ningun log, temperatura ni comando; el OP sigue con el fallo en 7.4 (post 9). El unico dato de NVIDIA es la advertencia de imagen no soportada y la guia de recuperacion."
+}

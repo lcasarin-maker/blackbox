@@ -1,0 +1,37 @@
+{
+ "id": 369673,
+ "titulo": "Dual DGX Spark RoCE Bandwidth Expectations",
+ "leido": true,
+ "posts_leidos": 22,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Identificar interfaces RoCE activas: un cable fisico aparece como dos puertos",
+   "como": "ibdev2netdev",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark dual",
+   "riesgo": "Ninguno",
+   "verificable_aqui": "ibdev2netdev"
+  },
+  {
+   "que": "Si el rendimiento es bajo en dos Sparks, ciclo de energia: apagar, desenchufar el USB-C de alimentacion, volver a enchufar (el usuario eugr_nv sugiere estado de bajo consumo atascado; el autor dijo que tras actualizar y desenchufar toda la noche subio de ~17-19 a ~26-28 tps, sin saber cual fue la causa)",
+   "como": "shut down both Sparks, unplug the USB-C power cable from the back, plug it back in",
+   "fuente_post": 17,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark, Nemotron-3-Super NVFP4 en vLLM",
+   "riesgo": "Causa no aislada (actualizacion vs desenchufe); evidencia anecdotica de un usuario",
+   "verificable_aqui": "nvidia-smi -q -d POWER,PERFORMANCE"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Tema de ancho de banda RoCE y tps de vLLM en dos nodos; el unico dato cercano a nuestro caso es la anecdota de estado de bajo consumo resuelto con ciclo de energia, sin causa aislada. Sin respuesta de staff NVIDIA identificada (eugr_nv es usuario)."
+}

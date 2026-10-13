@@ -1,0 +1,37 @@
+{
+ "id": 356581,
+ "titulo": "Best LLM engine for several parallel models?",
+ "posts_leidos": 7,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Compilar llama.cpp para Blackwell GB10 sin contenedor, con arquitectura 121a-real; incluye RPC solo para dos Sparks",
+   "como": "cmake -B build -DGGML_NATIVE=ON -DGGML_CUDA=ON -DGGML_CURL=ON -DGGML_RPC=ON -DCMAKE_CUDA_ARCHITECTURES=121a-real && cmake --build build --config Release -j",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark (declarado por el usuario eugr, no staff)",
+   "riesgo": "Un flag de compilacion erroneo puede degradar el rendimiento (preocupacion del post 3)",
+   "verificable_aqui": "nvidia-smi --query-gpu=compute_cap --format=csv"
+  },
+  {
+   "que": "Limite de memoria de vLLM: --gpu-memory-utilization es un porcentaje del total, que en Spark no es constante; llama.cpp ocupa menos memoria",
+   "como": "--gpu-memory-utilization",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark (usuario eugr)",
+   "riesgo": "vLLM tiende a ocupar toda la memoria disponible, lo que en memoria unificada compite con el sistema",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El usuario eugr (no staff) da los flags de cmake para llama.cpp con arquitectura 121a-real y advierte que --gpu-memory-utilization de vLLM es relativo y no fijo en Spark. Mecanismos de usuario sin verificar, sin respuesta de NVIDIA.",
+ "leido": true,
+ "lectura": "completa"
+}

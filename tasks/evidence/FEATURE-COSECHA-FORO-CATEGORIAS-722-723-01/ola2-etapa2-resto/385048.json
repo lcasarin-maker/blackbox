@@ -1,0 +1,37 @@
+{
+ "id": 385048,
+ "titulo": "Kolibri-1 (Aleph Alpha's 78B FP8 MoE) runs on the Spark",
+ "posts_leidos": 8,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Flags de vLLM que funcionaron para un MoE FP8 de 73.5 GiB en una Spark",
+   "como": "--gpu-memory-utilization 0.78 --max-model-len 131072 --max-num-seqs 4 --kv-cache-dtype fp8 --enable-prefix-caching; ipc: host; PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True; OMP_NUM_THREADS=4",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/mARTin-B78/aleph-alpha-inference-kolibri-1-dgx-spark",
+   "licencia": "no indicada",
+   "probado_en": "1 DGX Spark, vLLM 0.29.0, CUDA 13.0 (declarado)",
+   "riesgo": "El autor deja 0.78 porque CUDA ve ~11 GiB menos que MemAvailable; mas alto arriesga OOM",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Observacion: carga de pesos de 18-25 min en kernel 7.0, ~10 min con otra imagen, y un usuario dice que otro modelo carga en 2.5 min",
+   "como": "apt-cache depends linux-image-nvidia-hwe-24.04 | grep linux-image",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark con kernel 7.0.0-1019-nvidia (declarado)",
+   "riesgo": "Posible regresion de carga ligada al kernel, sin confirmar (sin staff NVIDIA)",
+   "verificable_aqui": "apt-cache depends linux-image-nvidia-hwe-24.04 | grep linux-image"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta de un modelo concreto por usuarios; el unico dato de sistema es la sospecha de lentitud de carga con kernel 7.0 (post 7-8), sin confirmar y nuestro kernel es 6.17. Sin respuesta de staff NVIDIA.",
+ "leido": true,
+ "lectura": "completa"
+}

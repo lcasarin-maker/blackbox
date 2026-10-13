@@ -1,0 +1,22 @@
+{"id": 353503, "titulo": "When we install an LLM model and start a chat session, the response speed becomes extremely slow", "leido": true, "posts_leidos": 2, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["medir"],
+ "mecanismos": [
+  {"que": "Comprobar el enlace PCIe de la GPU durante la inferencia para descartar un enlace degradado (el usuario reporta x1 a 2.5GT/s; su conclusion de defecto fisico viene de un chatbot y no esta verificada)",
+   "como": "sudo lspci -vv -s 01:00.0 | grep -E \"LnkCap|LnkSta\"",
+   "fuente_post": 1,
+   "repositorio": null, "licencia": null,
+   "probado_en": "DGX OS 7 con imagen nvcr.io/nvidia/vllm:25.11-py3, segun el usuario",
+   "riesgo": "La direccion de bus 01:00.0 es la del usuario; en esta maquina el bus de la GPU es otro (en otros hilos aparece un dominio PCI distinto). Interpretar x1/Gen1 como averia sin contraste es una inferencia del usuario, no de NVIDIA.",
+   "verificable_aqui": "lspci -D | grep -i nvidia"},
+  {"que": "Un usuario de la comunidad (cosinus, no personal NVIDIA) indica que los modelos densos como Gemma 3 27B rinden poco en Spark, que llama.cpp compilado desde fuente da mejor t/s por ahora, y que en vLLM las cuantizaciones AWQ superan a NVFP4",
+   "como": "no indicado (recomendacion, sin comando)",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker", "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Afirmacion de usuario sin cifras en este post.",
+   "verificable_aqui": null}
+ ],
+ "omision_nvidia": "No hay respuesta de personal NVIDIA en el tema. El unico respondedor es un usuario; no aparece garantia de contenedores arm64 de llama.cpp (el post 2 dice que no existen).",
+ "utilidad_atom": "baja",
+ "razon": "El post 1 reporta 4 a 12 tok/s en vLLM y consumo de 37 W en nvidia-smi durante el chat, y pide reemplazo; el post 2 lo atribuye a modelos densos y a falta de optimizacion de vLLM. El unico comando concreto es el lspci de lectura, util como chequeo generico pero su diagnostico de hardware defectuoso no esta confirmado por nadie."}

@@ -1,0 +1,67 @@
+{
+ "id": 363928,
+ "titulo": "Who wants to be the hero and help a total newbie! Got a spark and um, yeah",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "vLLM reserva por defecto casi toda la memoria como KV cache (por eso el panel muestra ~120 GB aun con un modelo pequeno); se limita con la fraccion de memoria GPU",
+   "como": "gpu-memory-utilization .65 (valor que el usuario dice haber usado; bajo el uso maximo de 123GB a 116GB)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, vLLM de eugr con Qwen 3.5 30B A3B FP8 (usuario)",
+   "riesgo": "Menos KV cache disponible para contexto/concurrencia.",
+   "verificable_aqui": "free -m; docker ps --format '{{.Names}} {{.Command}}'"
+  },
+  {
+   "que": "Lanzar vLLM desacoplado de la sesion SSH y pararlo limpiamente",
+   "como": "tmux con vLLM dentro; o -d para segundo plano y ./launch-cluster.sh stop para detener; o sparkrun (https://sparkrun.dev)",
+   "fuente_post": 7,
+   "repositorio": "https://github.com/scitrera/sparkrun",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "command -v tmux"
+  },
+  {
+   "que": "Eleccion de cuantizacion en Spark: evitar BF16 salvo modelos diminutos; FP8 para modelos pequenos o medianos, AWQ/Int4-Autoround/NVFP4 para grandes; preferir MoE sobre densos; benchmarks y recetas en spark-arena.com",
+   "como": "no indicado como comando (regla de eugr, post 7)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Cache de modelos de Hugging Face en el directorio del usuario, no se vuelve a bajar salvo snapshot nuevo; el usuario monta el volumen en docker run",
+   "como": "/home/<usuario>/.cache/huggingface/hub/ (ruta citada en el post 1) ; flags que la propia imagen recomienda: docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 ...",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, imagen nvcr.io/nvidia/vllm 26.02 (usuario)",
+   "riesgo": "El docker run del usuario monta el volumen sin destino y sin los flags recomendados, lo que explica parte de la lentitud o cuelgues (inferencia mia, no afirmada en el hilo).",
+   "verificable_aqui": "ls ~/.cache/huggingface/hub"
+  },
+  {
+   "que": "Referencia a un articulo de un usuario sobre a donde va la RAM de 128 GB con vLLM (memory creep)",
+   "como": "no indicado; el post 4 solo cita el titulo 'Memory Creep on DGX Spark: Where Your 128 GB Actually Goes (And How to Stop It)'",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 sm_121, Nemotron-3-Nano-30B-A3B-NVFP4 (segun el articulo citado)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El playbook oficial de vLLM funciona pero deja la memoria casi agotada y los modelos grandes lentos; un usuario (AoE, post 2) aconseja usar las playbooks solo como prueba y reinstalar. No hay respuesta de personal de NVIDIA en el hilo.",
+ "utilidad_atom": "media",
+ "razon": "El hilo confirma por usuarios que la fraccion de memoria de vLLM define el uso de RAM unificada (valor .65 medido por el autor) y da formas de lanzar y detener vLLM. Todo viene de usuarios y no hay medicion de terceros ni respuesta de NVIDIA."
+}

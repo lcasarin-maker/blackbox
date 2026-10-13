@@ -1,0 +1,48 @@
+{
+ "id": 385049,
+ "titulo": "Dgx-spark-networking: open-source switchless RoCE collectives, NCCL profiles and fabric tooling for multi-Spark inference",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Biblioteca para TP multi-Spark sobre ConnectX-7: colectivas one-shot, parches NCCL 2.30.7 para SM121, perfiles tp3-triangle/tp4-ring, herramientas de topologia, doctor de fabrica de solo lectura y sonda de colectivas",
+   "como": "pip install git+https://github.com/christopherowen/dgx-spark-networking",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/christopherowen/dgx-spark-networking",
+   "licencia": "Apache-2.0",
+   "probado_en": "cuatro DGX Spark, driver 580.178.04, kernel 7.0.0-1019-nvidia-64k, firmware ConnectX-7 28.45.4028",
+   "riesgo": "v0.1; el runtime empaquetado no se ejercito aun en las Spark via este paquete; perfiles de dos nodos y con switch sin medir",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reporte de preparacion de GPUDirect",
+   "como": "sparknet probe gpudirect",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/christopherowen/dgx-spark-networking",
+   "licencia": "Apache-2.0",
+   "probado_en": null,
+   "riesgo": "no indicado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: un intento de GPU doorbell (DOCA_GPUNETIO_VERBS_NIC_HANDLER_GPU_SM_DB) no completo nada; un nodo reinicio y otra GPU quedo ocupada hasta reiniciar, sin clasificar en el journal",
+   "como": "DOCA_GPUNETIO_VERBS_NIC_HANDLER_GPU_SM_DB",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "cuatro Spark, driver 580",
+   "riesgo": "reinicio de nodo y GPU atascada",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El autor (usuario) publica una biblioteca Apache-2.0 para clusters multi-Spark con mediciones por tamano de mensaje; esta maquina es una sola unidad, asi que la utilidad directa es baja. Solo se aplica la advertencia del doorbell de GPU como riesgo de cuelgue sin registro."
+}

@@ -1,0 +1,37 @@
+{
+ "id": 359479,
+ "titulo": "Is there a way to reduce baseline memory usage on DGX Spark systems?",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Pasar a modo consola (multi-user.target) para reducir memoria base de la GUI; revertir a graphical.target",
+   "como": "sudo systemctl set-default multi-user.target  (temporal: sudo systemctl isolate multi-user.target; revertir: sudo systemctl set-default graphical.target; requiere reinicio)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX OS segun usuarios (adg1, eugr), sin version",
+   "riesgo": "eugr (post 3): ahorra solo 2-3 GB si nunca se entra al escritorio; el dashboard puede dejar de funcionar por componentes no habilitados; NCCL fue mas lento en multi-user.target (teoria: NCCL y red pegados al mismo nucleo; sin probar IGNORE_GPU_AFFINITY)",
+   "verificable_aqui": "systemctl get-default; free -h"
+  },
+  {
+   "que": "Aclaracion: gran parte de la memoria 'usada' en reposo es cache de archivos",
+   "como": "no indicado",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "free -h"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Dos usuarios dan el cambio de target systemd con su reversa y eugr cuantifica el ahorro (2-3 GB) y los riesgos; no hay respuesta de NVIDIA. Util como palanca de memoria, con ahorro bajo y efectos secundarios en NCCL/dashboard."
+}

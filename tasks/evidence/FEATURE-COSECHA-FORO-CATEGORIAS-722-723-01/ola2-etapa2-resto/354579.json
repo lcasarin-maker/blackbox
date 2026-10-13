@@ -1,0 +1,26 @@
+{
+ "id": 354579,
+ "titulo": "Help with GPU passthrough via virt-manager",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Declaracion de NVIDIA (rol NVES): virtualizacion y GPU passthrough no soportados en Spark; no esta desactivado activamente",
+   "como": "no indicado",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario con variante Asus Ascent; sin prueba exitosa",
+   "riesgo": "passthrough puede fallar con error de grupo vfio; el usuario cita en dmesg una peticion de firmware de mapeo IOMMU 1:1",
+   "verificable_aqui": "sudo dmesg | grep -i iommu"
+  }
+ ],
+ "omision_nvidia": "NVIDIA confirma que no soporta virtualizacion ni la GPU como dispositivo passthrough.",
+ "utilidad_atom": "baja",
+ "razon": "Personal de NVIDIA (NVES, posts 2 y 4) confirma que la virtualizacion no esta soportada aunque no este desactivada. El usuario no logra solucion; sin comando reutilizable."
+}

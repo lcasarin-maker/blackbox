@@ -1,0 +1,27 @@
+{
+ "id": 347982,
+ "titulo": "Device in Livefish mode how to solve",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Consulta de firmware de la tarjeta CX7 pedida por ingenieria de NVIDIA",
+   "como": "sudo flint -d /dev/mst/mt536_pciconf0 -ocr q",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Un usuario avisa que reinicia (power cycle) la CX7; mst/flint pertenecen a DOCA, no incluido en Spark",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA (staff, post 4) dice que mst es parte de DOCA y que DOCA no se entrega con Spark.",
+ "utilidad_atom": "baja",
+ "razon": "Un usuario ve Livefish en la CX7 con herramientas mst de DOCA; el staff de NVIDIA indica que DOCA no viene con Spark y pide dos comandos de diagnostico sin resolver el caso. Sin solucion en el tema."
+}

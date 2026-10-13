@@ -1,0 +1,15 @@
+{"id": 354277, "titulo": "How to update the driver to version 590?", "leido": true, "posts_leidos": 6, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["prevenir", "omision_nvidia"],
+ "mecanismos": [
+  {"que": "Advertencia de riesgo: instalar un driver 590 aarch64 beta manualmente fuera del repositorio propio de Spark es posible pero el usuario eugr (comunidad, no NVIDIA) lo desaconseja salvo dominio de modulos del kernel; recomienda esperar al lanzamiento",
+   "como": "no indicado (el post 4 solo dice descargar el instalador aarch64 de la pagina de descargas de NVIDIA)",
+   "fuente_post": 4,
+   "repositorio": null, "licencia": null,
+   "probado_en": "DGX Spark con driver 580 (segun el usuario que pregunta)",
+   "riesgo": "Mezclar repositorios o un driver beta puede romper dependencias (el intento con apt install nvidia-open fallo por dependencias sin resolver, post 1) y los modulos del kernel; con Secure Boot activo un modulo no firmado no cargaria (inferencia mia, no esta en el tema).",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv,noheader; apt-cache policy nvidia-driver-open"}
+ ],
+ "omision_nvidia": "El usuario dice que el sistema se actualiza desde el dashboard pero el driver sigue en 580; eugr indica que 590 es beta en aarch64 y que Spark usa su propio repositorio Ubuntu. No hay respuesta de personal NVIDIA.",
+ "utilidad_atom": "baja",
+ "razon": "El post 1 muestra que apt install nvidia-open y nvidia-driver-open fallan por dependencias de libnvidia-compute 590.44.01 frente a 580; el post 4 desaconseja forzarlo y aconseja esperar. No hay procedimiento soportado."}

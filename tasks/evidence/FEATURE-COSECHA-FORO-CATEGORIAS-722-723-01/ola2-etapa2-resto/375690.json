@@ -1,0 +1,57 @@
+{
+ "id": 375690,
+ "titulo": "Full GLM-4.7 (355B) NVFP4 at 64K context on 2x DGX Spark GB10 working recipe",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Sin NCCL_NET_GDR_LEVEL=0 el SoC UMA se bloquea en seco al cargar el modelo; el lanzador no lo pone",
+   "como": "-e NCCL_NET_GDR_LEVEL=0",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10, driver 580.159.03",
+   "riesgo": "Afirmacion de usuario sin respuesta de NVIDIA; vinculado a bloqueo duro",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reducir el pico de activaciones que el perfilador de vLLM reserva para liberar unos 9 GiB, y subir gpu-memory-utilization gradualmente porque el SO comparte la memoria",
+   "como": "--max-num-batched-tokens 8192 --max-num-seqs 8 --gpu-memory-utilization 0.90",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10, vLLM 0.23.1rc1.dev448",
+   "riesgo": "0.90 puede quedar justo; fallback --enforce-eager a 0.88 con menos rendimiento",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Evitar colision de sesiones Ray en multinodo",
+   "como": "--no-ray",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10, vLLM 0.23.1rc1.dev448",
+   "riesgo": "Solo aplica a multinodo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Verificar el servicio con una completion real y no con /health",
+   "como": "completion con max_tokens 512+ y prueba de tool call",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "2x GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Receta de usuario para 2 nodos; lo transferible a un nodo son los topes de batch/seqs de vLLM y la advertencia de GDR_LEVEL=0 (post 1). El post 2 y 3 hablan de reanudar agentes, sin mecanismo del sistema; sin respuesta de NVIDIA."
+}

@@ -1,0 +1,88 @@
+{
+ "id": 357832,
+ "titulo": "New pre-built vLLM Docker Images for NVIDIA DGX Spark",
+ "leido": true,
+ "posts_leidos": 75,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "PyTorch 2.10 oficial cu130 causa cuelgues en cluster (un nodo al 100% y otro al 0%) en GB10; las ruedas con PyTorch 2.9.1 no los tienen",
+   "como": "no indicado como comando; revertir PyTorch a 2.9.1 o compilar PyTorch desde fuente (issue #24 de eugr/spark-vllm-docker)",
+   "fuente_post": 34,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "cluster de Spark, usuario eugr",
+   "riesgo": "Cuelgues de nodos en inferencia distribuida",
+   "verificable_aqui": "python3 -c 'import torch;print(torch.__version__)'"
+  },
+  {
+   "que": "El aviso de PyTorch 'cuda capability 12.1 ... supported (8.0)-(12.0)' es un chequeo erroneo sin efecto funcional",
+   "como": "no indicado (aviso)",
+   "fuente_post": 29,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Inspeccionar versiones de componentes de la imagen por etiquetas Docker",
+   "como": "docker inspect scitrera/dgx-spark-vllm:0.14.0rc2-t4 --format '{{json .Config.Labels}}' | jq",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/scitrera/cuda-containers",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Verificar NCCL/RoCE dentro del contenedor",
+   "como": "ldconfig -p | grep -i nccl ; nvidia-smi topo -m ; vllm --nccl-debug (sugerido por eugr)",
+   "fuente_post": 30,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark GB10",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi topo -m"
+  },
+  {
+   "que": "Arranque de un modelo con systemd via sparkrun, tras probarlo estable",
+   "como": "sparkrun export systemd <cluster_id> --install",
+   "fuente_post": 76,
+   "repositorio": "https://sparkrun.dev",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Marcado experimental por el autor; arrancar automaticamente un modelo mal dimensionado es lo que en otros temas causa OOM al boot",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Modelos densos FP16 rinden ~3.5 tok/s; MoE y cuantizados rinden mucho mas; gpu-memory-utilization 0.7-0.75 en ejemplos",
+   "como": "--gpu-memory-utilization 0.75",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark, usuario dbsci",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de rendimiento con llama-benchy a distintas profundidades de contexto",
+   "como": "no indicado el comando (version llama-benchy 0.3.4)",
+   "fuente_post": 55,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Qwen3.5-35B-A3B-FP8, Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Los contenedores NVIDIA se describen como conservadoramente atrasados (post 61, usuario); no hay declaracion de staff. aniculescu (staff) solo pregunta si las imagenes son comunitarias (post 3).",
+ "utilidad_atom": "media",
+ "razon": "Hilo de distribucion de imagenes vLLM comunitarias; lo util para el equipo es la advertencia de cuelgues de cluster con PyTorch 2.10 cu130 en GB10 y el aviso 12.1 inofensivo (usuarios, sin respuesta de NVIDIA). No ataca monitoreo de memoria o calor."
+}

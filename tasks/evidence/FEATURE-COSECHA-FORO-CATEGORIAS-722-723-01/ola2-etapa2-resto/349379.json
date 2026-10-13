@@ -1,0 +1,47 @@
+{
+ "id": 349379,
+ "titulo": "DGX Spark - Post ISO .. tarball method doesn't work for me",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Un usuario cita el grub.cfg de la ISO de DGX OS 7.2.3 para Spark: todas las entradas de instalacion y rescate pasan sbsa_gwdt.action=1 en la linea del kernel, junto con force-platform=dgx_spark y no-nvsm-enable; existe tambien entrada con kernel 6.14",
+   "como": "sbsa_gwdt.action=1 (parametro de linea de kernel, entrada 'Install DGX OS 7.2.3 for DGX Spark')",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ISO DGX OS 7.2.3 segun el usuario elsaco; el dispositivo venia con kernel 6.11.0-1016-nvidia",
+   "riesgo": "El post no explica el significado de action=1; no se debe asumir semantica sin verificar en documentacion del kernel",
+   "verificable_aqui": "cat /proc/cmdline; cat /sys/module/sbsa_gwdt/parameters/action"
+  },
+  {
+   "que": "Workaround de recuperacion: la ISO de recuperacion de Dell para GB10 (Dell Pro Max con GB10) revivio un Spark cuando el metodo tarball de NVIDIA fallaba (Secure Boot: error de shim; sin Secure Boot: cuelgue en pantalla de carga)",
+   "como": "usar Dell_Pro_Max_with_GB10_FCM1253_US_DGX_OS7_A01_Recovery_Image.iso desde el sitio de soporte de Dell",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark de brian52, confirmado en post 6",
+   "riesgo": "Imagen de un tercero, no oficial de NVIDIA para Spark; reinstala el sistema",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Version de FastOS de recuperacion del Spark segun fastos-release.txt del archivo de recuperacion",
+   "como": "fastos-release.txt: VERSION=1.91.51, DATE=2025-10-10",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "La ISO de DGX OS 7.2.3 solo esta en el Download Center para clientes enterprise; el soporte de NVIDIA dijo al usuario que no existia (segun el usuario, post 6). No hay respuesta de personal de NVIDIA en el tema.",
+ "utilidad_atom": "media",
+ "razon": "El grub.cfg citado muestra el parametro sbsa_gwdt.action=1 que NVIDIA pone por defecto en su instalador, util para comparar con /proc/cmdline; el resto es recuperacion de imagen y quejas de acceso a la ISO."
+}

@@ -1,0 +1,27 @@
+{
+ "id": 350254,
+ "titulo": "I'd like to learn how to use the latest vLLM on DGX Spark",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Advertencia: el contenedor nvcr.io/nvidia/vllm (vLLM 0.10.2 segun post 3) esta desactualizado y no corre Qwen3-Next; vLLM oficial no soporta sm121a; el kernel Triton no soporta fp8e4nv en contenedor NVIDIA ni en sglang:spark",
+   "como": "no indicado (sin flags ni comando de solucion; se remite a otro hilo de compilar vLLM desde fuente)",
+   "fuente_post": 7,
+   "repositorio": "https://github.com/vllm-project/vllm",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, CUDA 12.8 (usuario)",
+   "riesgo": "VLLM_USE_PRECOMPILED falla con AssertionError en este build (post 1)",
+   "verificable_aqui": "docker images | grep vllm"
+  }
+ ],
+ "omision_nvidia": "El staff (aniculescu, post 4) solo remite al playbook de vLLM; no reconoce la falta de soporte sm121a ni de modelos nuevos.",
+ "utilidad_atom": "baja",
+ "razon": "Hilo de soporte de software vLLM sin solucion concreta; la respuesta de NVIDIA es un enlace. Sin relacion con monitoreo ni colapsos."
+}

@@ -1,0 +1,57 @@
+{
+ "id": 362015,
+ "titulo": "All USB connections fall back to 480 Mbps USB 2.0",
+ "leido": true,
+ "posts_leidos": 19,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Leer el estado del puerto SuperSpeed xHCI por debugfs (RxDetect = sin enlace SS)",
+   "como": "sudo cat /sys/kernel/debug/usb/xhci/NVDA8000:02/ports/port01/portsc",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, kernel 6.17.0-1008-nvidia (declarado por usuario rstovall)",
+   "riesgo": "requiere root y debugfs montado",
+   "verificable_aqui": "sudo cat /sys/kernel/debug/usb/xhci/*/ports/port01/portsc"
+  },
+  {
+   "que": "Listar velocidad negociada por bus; 480M en un bus SS indica caida a USB2",
+   "como": "lsusb -t",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "FE Spark (usuario elsaco)",
+   "riesgo": null,
+   "verificable_aqui": "lsusb -t"
+  },
+  {
+   "que": "Prueba de E/S de disco a mano para medir la velocidad real",
+   "como": "dd if=/dev/urandom bs=4096 count=4882813 of=$PATH_TO_VOLUME/urandom.dat ; time dd if=$PATH_TO_VOLUME/urandom.dat bs=4096 count=4882813 of=/dev/null",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "escribe unos 20 GB en el volumen; la lectura puede quedar en cache de pagina",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround de usuario: conectar el disco USB con la maquina ya encendida (en un caso volvio a 20000M)",
+   "como": "no indicado como comando; conectar el dispositivo despues del arranque",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario paulsc.liu, enclosure externo; otro usuario (post 6) dice que no le funciono",
+   "riesgo": "no reproducible segun el autor del tema",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Staff de NVIDIA (NVES, post 4) solo pide ejecutar Field Diagnostics y enviar logs por DM; no hay causa ni arreglo publicado. Sin mecanismo oficial; usuarios esperan firmware.",
+ "utilidad_atom": "baja",
+ "razon": "El tema documenta como medir el enlace USB (lsusb -t, portsc por debugfs) y un fallo sin arreglo confirmado; no toca memoria ni calor. Los comandos son de lectura pero de valor marginal para el objetivo."
+}

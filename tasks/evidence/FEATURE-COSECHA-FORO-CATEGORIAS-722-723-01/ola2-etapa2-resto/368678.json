@@ -1,0 +1,38 @@
+{
+ "id": 368678,
+ "titulo": "Dell DGX Spark BIOS dated 09/23/2025 hangs on long-context vLLM inference",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reproductor de cuelgue total con una peticion de ~197k tokens en BIOS Dell 5.36_2.1.0 fechada 2025-09-23; no ocurre con la compilacion del 2025-10-08. Firma previa en dmesg de Out of memory NV_ERR_NO_MEMORY. Remite a vllm/vllm#40756 y NVIDIA/open-gpu-kernel-modules#968.",
+   "como": "vllm serve Lorbus/Qwen3.6-27B-int4-AutoRound --tensor-parallel-size 1 --max-model-len 262144 --gpu-memory-utilization 0.75 --attention-backend flashinfer --max-num-seqs 2 --kv-cache-dtype fp8_e4m3 --quantization auto_round --enable-prefix-caching --enable-chunked-prefill --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":3}' --reasoning-parser qwen3",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4 Dell DGX Spark, kernel 6.17.0-1014-nvidia, driver 580.142, dgx-release 7.5.0",
+   "riesgo": "Cuelga el equipo; solo se recupera con corte de energia",
+   "verificable_aqui": "sudo dmidecode -s bios-release-date; sudo dmidecode -s bios-version"
+  },
+  {
+   "que": "Comprobar actualizaciones de firmware LVFS",
+   "como": "fwupdmgr get-updates",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Dell DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "fwupdmgr get-updates"
+  }
+ ],
+ "omision_nvidia": "No hay via documentada para obtener la compilacion BIOS nueva de Dell en unidades antiguas (pregunta del autor, sin respuesta).",
+ "utilidad_atom": "media",
+ "razon": "Reproduce un cuelgue por memoria con un solo prefill largo y lo liga a la fecha de BIOS, y da la firma de dmesg a rastrear. Es una sola publicacion de usuario sin respuesta, de hardware Dell."
+}

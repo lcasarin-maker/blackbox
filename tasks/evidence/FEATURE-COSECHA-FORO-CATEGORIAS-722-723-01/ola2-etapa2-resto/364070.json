@@ -1,0 +1,37 @@
+{
+ "id": 364070,
+ "titulo": "DGX Spark memory not released using llama.cpp?",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Banderas de llama-server que un usuario cree que frenan lentitud/crecimiento del KV cache (el propio autor lo dice de memoria, sin confirmar)",
+   "como": "-np 1 --no-mmap --metrics --batch-size 4096 --ubatch-size 4096 --ctx-size 0",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun usuario, qwen3.5 122B GGUF",
+   "riesgo": "Afirmacion de usuario no verificada; el post dice que la config puede estar desactualizada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Compilacion de llama.cpp para GB10 con arquitectura 121a-real",
+   "como": "cmake -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DGGML_CUDA=ON -DGGML_RPC=ON -DCMAKE_CUDA_ARCHITECTURES=121a-real",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario dice que le funciona bien",
+   "riesgo": "No se midio efecto en la fuga de memoria",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El OP ve la memoria subir con llama-server en bare metal sin liberarse; un usuario (no staff) dice que no es normal y recomienda vLLM en contenedor, otro propone -np 1 sin que nadie confirme la causa ni la solucion. No hay respuesta de NVIDIA y el hilo termina sin resolver la fuga."
+}

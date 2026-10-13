@@ -1,0 +1,46 @@
+{
+ "id": 373401,
+ "titulo": "The latest community version appears to be buggy",
+ "leido": true,
+ "posts_leidos": 15,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de vLLM contra errores de gramatica (grammar rejected tokens / Failed to advance FSM) con Qwen3.6: desactivar el forzado estricto de herramientas; otro usuario advierte que con ello el JSON estructurado falla",
+   "como": "VLLM_ENFORCE_STRICT_TOOL_CALLING=false",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "vLLM 0.23.1rc1.dev53 con nvidia/Qwen3.6-35B-A3B-NVFP4 (usuario lewald_jens)",
+   "riesgo": "Segun ben3241 anula toda guia de salida: tool_choice=required y salidas estructuradas pasan a no hacer nada; lewald_jens vio fallos de JSON invalido",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround alternativo: quitar la decodificacion especulativa MTP de la receta oficial qwen3.6-35b-a3b-fp8-mtp-vllm",
+   "como": "borrar speculative_config: '{\"method\": \"mtp\", \"num_speculative_tokens\": 2}' y la linea --speculative-config '{speculative_config}' \\",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "sparkrun con receta oficial (jcagle); hardware no indicado",
+   "riesgo": "Pierde el aumento de velocidad de MTP",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reconstruccion de la imagen tras el revert upstream (PR #45600 de vllm-project/vllm) de las structural tags",
+   "como": "./build-and-copy.sh --rebuild-vlm --cleanup",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/vllm-project/vllm",
+   "licencia": "no indicada",
+   "probado_en": "build de la comunidad (jbourny)",
+   "riesgo": "Un usuario aun ve errores tras el revert (post 8)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Tres workarounds concretos para un error de gramatica en vLLM con Qwen3.6 y decodificacion especulativa; ben3241 explica la causa pero no se identifica como personal de NVIDIA en el texto. Solo relevante si se sirve Qwen3.6 con tool calling o salida estructurada."
+}

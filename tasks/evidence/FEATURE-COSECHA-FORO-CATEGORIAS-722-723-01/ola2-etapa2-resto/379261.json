@@ -1,0 +1,47 @@
+{
+ "id": 379261,
+ "titulo": "Issues Setup and Update of New DGX Spark",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Declaracion de staff NVIDIA (aniculescu): el aviso de mlx5_core 'insufficient power ... 27W' en los cuatro ConnectX-7 es benigno y no indica fallo",
+   "como": "no indicado (respuesta de una linea)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark reemplazo, DGX OTA 7.5.0, kernel 6.17.0-1029-nvidia, driver 580.173.02 (declarado por el usuario)",
+   "riesgo": "Sin condicion ni detalle del staff",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: instalar DOCA/OFED/MFT sobre Secure Boot trae modulos DKMS que hay que firmar y provoco errores PCIe correctables (RxErr) y recargas del ConnectX-7; el usuario hizo rollback a las libs inbox de Ubuntu",
+   "como": "downgrade a libs inbox y apt-mark hold de dgx-spark-fieldiag 1.0.9-1 (el post no da el comando exacto)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel 6.17.0-1029-nvidia, Secure Boot activo",
+   "riesgo": "FieldDiag 2.0.4 exige tooling Mellanox (/dev/mst) para CX7Stress; el usuario lo dejo en 1.0.9",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Subida de reportes de fwupdmgr rechazada por LVFS ('machine identifier is banned'); el usuario aclara que no implica fallo del equipo",
+   "como": "fwupdmgr get-devices (ofrece subir reportes)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark",
+   "riesgo": "Aceptar la subida envia identificador de maquina",
+   "verificable_aqui": "fwupdmgr get-devices --no-unreported-check"
+  }
+ ],
+ "omision_nvidia": "El staff no explica la causa del aviso de 27 W ni confirma si NVSM debe estar en esta imagen (el usuario dice que 'nvsm show version' no existe y espera confirmacion).",
+ "utilidad_atom": "baja",
+ "razon": "Reporte largo de un usuario con una unica respuesta de staff NVIDIA que declara benigno el aviso de 27 W, sin comando ni condicion. El tema se cerro automaticamente (post 3, system) sin mas aportes."
+}

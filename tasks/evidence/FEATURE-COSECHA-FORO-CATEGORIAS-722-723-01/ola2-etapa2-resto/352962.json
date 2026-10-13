@@ -1,0 +1,26 @@
+{
+ "id": 352962,
+ "titulo": "Dgx spark can only use 119GB of memory running ComfyUI, it is killed",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comparar memoria de DGX Dashboard con free: el dashboard mezcla GB y GiB, de modo que 119 GiB equivalen a unos 128 GB; no es un tope real",
+   "como": "free -h --si  (unidades SI) frente a free -h (GiB)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario DannyTup, GB10",
+   "riesgo": "Afirmacion de un usuario; el OOM original no se diagnostico (staff pidio el mensaje de error y no hubo respuesta).",
+   "verificable_aqui": "free -h --si; free -h"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Usuario sin staff aclara que 119 es GiB; la causa del kill de ComfyUI no se resolvio. El unico metodo es una comparacion de unidades con free."
+}

@@ -1,0 +1,47 @@
+{
+ "id": 373314,
+ "titulo": "NOTE: Latest updates break vLLM -- see thread",
+ "leido": true,
+ "posts_leidos": 13,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Rotura de vLLM (500 en /v1/models, AttributeError '_IncludedRouter' sin 'path') por una version nueva de FastAPI que vLLM no limita por arriba; workaround: fijar fastapi por debajo de 0.137",
+   "como": "pip install \"fastapi<0.137\" (o uv pip install)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "contenedores vLLM en DGX Spark, 2026-06-14 (segun usuario ben3241)",
+   "riesgo": "Parche temporal; el arreglo definitivo lo dio eugr_nv fijando la dependencia en la build comunitaria",
+   "verificable_aqui": "docker exec <contenedor-vllm> pip show fastapi"
+  },
+  {
+   "que": "Volver a una imagen prebuilt anterior que funciona",
+   "como": "dgx-vllm-eugr-nightly:2026052903",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2 DGX Spark (segun el usuario)",
+   "riesgo": "Imagen vieja; el usuario no dice que riesgo de seguridad asume",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: dependencias sin tope superior rompen contenedores ya funcionales tras un rebuild; fijar versiones que funcionan",
+   "como": "fijar version (pin) de cada dependencia; actualizar solo por seguridad/bug/rendimiento/feature",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Opinion de usuario, sin comando",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un moderador (eugr_nv, post 8 y 9) confirma que fijo FastAPI en la build comunitaria; el diagnostico de causa lo da un usuario (post 6) con un workaround exacto. Sirve como practica de prevencion (pin de dependencias) para el vLLM en contenedor, sin relacion con memoria o calor."
+}

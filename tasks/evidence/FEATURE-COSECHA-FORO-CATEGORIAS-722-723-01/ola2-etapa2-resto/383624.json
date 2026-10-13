@@ -1,0 +1,110 @@
+{
+ "id": 383624,
+ "titulo": "DGX Spark silent hard-freeze under sustained llama.cpp inference, no Xid/OOM/panic",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "rastrear",
+  "solucionar",
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "netconsole para capturar printk por UDP sin pasar por el journal; con Secure Boot el modulo viene firmado con la clave del kernel; requiere listener UDP y MAC destino, y modprobe.d o netconsole= en cmdline para sobrevivir reinicios (usuario jahnclawdmonet, no NVIDIA; lo probo en su Spark)",
+   "como": "modinfo netconsole  (crea /sys/kernel/config/netconsole para target dinamico)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark del usuario con Secure Boot activo (version no indicada)",
+   "riesgo": "Requiere host receptor; configuracion persistente necesaria",
+   "verificable_aqui": "modinfo netconsole | head; ls /sys/kernel/config/netconsole"
+  },
+  {
+   "que": "Reporte de bug del driver, presente en DGX OS",
+   "como": "sudo nvidia-bug-report.sh",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX OS, Secure Boot activo (usuario)",
+   "riesgo": null,
+   "verificable_aqui": "ls -l /usr/bin/nvidia-bug-report.sh"
+  },
+  {
+   "que": "Tope de reloj GPU: con -lgc 1000,1000 el SM quedo en 955 MHz, ~23 W, 63-64 C frente a 2184-2249 MHz, 80-87 W, 71-74 C sin tope (usuario); se limpia con -rgc o reinicio",
+   "como": "sudo nvidia-smi -lgc 1000,1000 ; sudo nvidia-smi -rgc",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 del usuario",
+   "riesgo": "Menos trabajo por minuto",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "Segundo tope de reloj de un usuario: 0,2100 (70% del rating); 91 a 65 C y 92 a 80 C; contador SW Thermal Slowdown pasa de 27.6 s a Not Active; evidencia de 13 minutos, el autor la califica como no concluyente",
+   "como": "sudo nvidia-smi -lgc 0,2100",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, driver 580.173.02, BIOS 5.36_0ACUM018",
+   "riesgo": "Evidencia corta",
+   "verificable_aqui": "nvidia-smi -q -d PERFORMANCE"
+  },
+  {
+   "que": "Verificar si el watchdog reinicio la maquina: bootstatus 0 tras un cuelgue con watchdog armado (timeout 60, kernel.panic=10) indica arranque normal; RFDH (post 10) senala que por si solo es debil, porque un power cycle manual tambien da 0",
+   "como": "cat /sys/class/watchdog/watchdog0/bootstatus",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "3 unidades Spark, firmware 5.36_0ACUM018; ASUS GX10 con 6.17.0-1008 (RFDH)",
+   "riesgo": "Interpretacion debil",
+   "verificable_aqui": "cat /sys/class/watchdog/watchdog0/bootstatus"
+  },
+  {
+   "que": "Hallazgo: sbsa-gwdt no disparo en 4 configuraciones (FE y ASUS, modulo abierto y cerrado, kernel 6.17 y 7.0); la omision del watchdog cubre lo que NVIDIA no ofrece",
+   "como": "no indicado",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10, BIOS GX10DGX.0103, kernel 6.17.0-1008-nvidia, modulo cerrado 580.142 (RFDH)",
+   "riesgo": null,
+   "verificable_aqui": "ls /sys/class/watchdog/"
+  },
+  {
+   "que": "Telemetria de 10 s (y 1 s por UDP a otro host) para sobrevivir al freeze; con 79100 muestras el fallo requeria conjuncion de calor >=90 C y memoria baja (2 fallos en 1214 muestras; 0 fallos en las otras condiciones)",
+   "como": "no indicado (sampler propio sin script ni repositorio)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3 unidades identicas, driver 580.173.02",
+   "riesgo": "Cifras de usuarios; sin repositorio",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Habilitar panic en RCU stall para que el siguiente cuelgue caiga en pstore (RFDH; receta en el tema 381655, fuera de este lote)",
+   "como": "panic_on_rcu_stall=1",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10 kernel 6.17.0-1008-nvidia",
+   "riesgo": "Provoca panic",
+   "verificable_aqui": "cat /proc/sys/kernel/panic_on_rcu_stall"
+  },
+  {
+   "que": "Workaround de partnerdiag con kernel 7.0.0-1019 y Secure Boot: el mods.ko sin firma es rechazado; se firma con una MOK propia y se usa --skip_driver_load; se omite CX7Stress por dependencia ofed-scripts",
+   "como": "partnerdiag --field --skip_driver_load --skip_tests=CX7Stress",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "kernel 7.0.0-1019-nvidia, driver 580.173.02",
+   "riesgo": "Pasos de MOK; saltar CX7Stress",
+   "verificable_aqui": "uname -r; mokutil --sb-state"
+  }
+ ],
+ "omision_nvidia": "nvidia-smi devuelve N/A para memoria total/usada/libre, Power Limit, y fan.speed en GB10 (usuarios, posts 3 y 9); nvidia-smi -pl no soportado; ninguna respuesta de staff NVIDIA en el tema.",
+ "utilidad_atom": "alta",
+ "razon": "Tema denso con tres lineas medibles aqui: netconsole, bootstatus del watchdog y panic_on_rcu_stall. No hay respuesta de staff NVIDIA; todo viene de usuarios y los resultados son de sus equipos. El PowerStress FAIL 8:13 con MODS-020000600139 se repite aqui y en otro tema."
+}

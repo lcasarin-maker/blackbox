@@ -1,0 +1,109 @@
+{
+ "id": 365302,
+ "titulo": "Dual Spark Ducted Cooling Cage",
+ "leido": true,
+ "posts_leidos": 341,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "monitorear",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Extraccion trasera con ventilador de 120 mm en conducto impreso 3D; el autor mide GPU estable 66-74 C a 96% de carga y 2496 MHz, y el usuario kan11 baja de 86 C a 73 C en dos nodos MSI",
+   "como": "STL/STEP en Printables, Thingiverse y GrabCAD (autor whpthomas); alturas de elevador Tall/Medium/Short segun modelo (post 148)",
+   "fuente_post": 148,
+   "repositorio": "Printables/Thingiverse/GrabCAD (URL exacta no copiada en el texto)",
+   "licencia": "CC share alike (dicho por el autor en post 270; la variante exacta no indicada)",
+   "probado_en": "GB10 DGX Spark y OEM (GX10, MSI, Acer, Gigabyte); medicion propia de usuarios",
+   "riesgo": "impreso en PLA puede deformarse; el aire busca la ruta de menor resistencia, los huecos anulan el efecto (posts 88, 111)",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,clocks.sm,power.draw --format=csv -l 5"
+  },
+  {
+   "que": "Monitor de temperaturas de la comunidad: exportador Prometheus para clusters DGX Spark, usado para controlar un ventilador ESP32",
+   "como": "GitHub ateska/dgx-spark-prometheus (instalacion no indicada)",
+   "fuente_post": 335,
+   "repositorio": "https://github.com/ateska/dgx-spark-prometheus",
+   "licencia": "no indicada",
+   "probado_en": "AI TOP ATOM segun el usuario matousjk",
+   "riesgo": "no evaluado por el hilo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Herramientas de seguimiento mencionadas: sparkview (post 39) y Spark Dashboard (requiere cargo de rust, post 250)",
+   "como": "tool-eval-bench --spec-live ; Spark Dashboard (cargo)",
+   "fuente_post": 250,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Prueba de carga larga para termica con vLLM, usuario paxren2020: temperaturas mas altas con contexto largo",
+   "como": "tool-eval-bench --spec-bench --backend vllm --base-url <endpoint> --model my-ds4 --pp 1000 --tg 128 --depth 900000 --concurrency 1 --spec-method mtp ; llama-benchy ... --depth 1000 10000 15000 ... 250000 --concurrency 1",
+   "fuente_post": 217,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark mas un nodo ASUS, DeepSeek-V4-Flash; 4000 RPM no bajo 15 C de 85 a 70",
+   "riesgo": "carga larga sostiene calor alto",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metrica util para evaluar enfriamiento: fijar un objetivo termico y medir MHz ganados (referencia a otro hilo, sin comando de gobernador)",
+   "como": "hilo 'Cooler GB10 Temps - (almost) no performance lost'; el comando de tope ya esta en la lista excluida",
+   "fuente_post": 325,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Aviso de riesgo por polvo: una unidad ASUS se apago por sobrecalentamiento tras 5 meses y volvio a funcionar al soplarla con compresor; filtros de polvo recomendados",
+   "como": "limpieza y filtro de malla; evitar filtros plasticos que bloquean aire (posts 98, 211)",
+   "fuente_post": 98,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "los filtros de plastico reducen el caudal segun JW2026",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Aviso sobre alimentar el ventilador desde USB-C de la Spark",
+   "como": "usar fuente externa 12 V con controlador PWM en lugar del USB-C de la Spark",
+   "fuente_post": 170,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios corbett_korbett, kan11",
+   "riesgo": "no se confia en cargar 120 mm 5 V al USB-C; a 5 V el ventilador de 12 V gira lento (post 341)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Aviso de alimentacion: PSU y cables tambien se calientan, sin monitorizacion; un usuario sugiere que podrian limitar potencia (especulacion)",
+   "como": "enfriar la fuente; sin comando",
+   "fuente_post": 290,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario 0rand, sin evidencia",
+   "riesgo": "especulativo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Bajar el reloj de GPU a 1900-2000 MHz, ya en lista excluida, y tope de CPU por sysfs (post 334, excluido): se citan solo como contexto",
+   "como": "sudo nvidia-smi -lgc 200,2150 (post 40); cpufreq scaling_max_freq (post 334)",
+   "fuente_post": 40,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "el post 334 avisa de perdida de TG y PP",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Un usuario cita la guia de inicio rapido de NVIDIA que recomienda espaciado entre equipos (post 63); el hilo no contiene respuesta de personal de NVIDIA.",
+ "utilidad_atom": "media",
+ "razon": "Hilo de 341 mensajes sobre conductos y ventiladores con mediciones de usuarios (86 a 73 C, 85 a 61-65 C con extraccion trasera; 4000 RPM no logra 15 C con contexto largo). Util para prevenir calor sostenido por hardware, pero los mecanismos de software son los ya excluidos (-lgc, tope de CPU); el exportador Prometheus no tiene licencia indicada."
+}

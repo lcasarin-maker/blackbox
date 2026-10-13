@@ -1,0 +1,57 @@
+{
+ "id": 348188,
+ "titulo": "DGX Spark day 2 - failure to connect to home WiFi \"No Wi-Fi Adapter Found\"",
+ "leido": true,
+ "posts_leidos": 12,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reparar WiFi desaparecido tras actualizacion reinstalando modulos del kernel",
+   "como": "sudo apt install --reinstall linux-generic ; sudo apt install linux-modules-extra-6.11.0-1016-nvidia (version = salida de uname -r)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, kernel 6.11.0-1016-nvidia (usuario)",
+   "riesgo": "Version de kernel de ese usuario (6.11); en esta maquina el kernel es otro, hay que usar uname -r",
+   "verificable_aqui": "uname -r; ls /lib/modules/$(uname -r)/kernel/drivers/net/wireless/mediatek/mt76/mt7925/ "
+  },
+  {
+   "que": "Comprobar que los drivers de red existen en cada kernel instalado",
+   "como": "find /lib/modules -name r8127.ko.* ; find /lib/modules -name mt7925e*",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark 6.11.0-1014/1016 (usuario)",
+   "riesgo": "Ninguno, es lectura",
+   "verificable_aqui": "find /lib/modules -name 'r8127.ko.*'; find /lib/modules -name 'mt7925e*'"
+  },
+  {
+   "que": "Diagnostico de driver de red cargado",
+   "como": "lspci -k ; rfkill list ; sudo modprobe mt7925e",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario)",
+   "riesgo": "modprobe carga un modulo (cambia estado)",
+   "verificable_aqui": "lspci -k | grep -A2 -i -E 'ethernet|network'; rfkill list"
+  },
+  {
+   "que": "Arrancar con el kernel anterior si el nuevo perdio los drivers y terminar la actualizacion por linea de comandos",
+   "como": "bootear 6.11.0-1014 y completar el upgrade; elegir el kernel que tenga ambos drivers en /lib/modules",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Requiere acceso a consola/GRUB",
+   "verificable_aqui": "ls /boot/vmlinuz-*"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Tras una actualizacion de kernel el WiFi (mt7925e) y el 10GbE (r8127) pueden quedar sin modulo; usuarios dan comandos de reinstalacion y de verificacion por kernel. No responde NVIDIA con arreglo, solo pide lspci y dmesg (post 3); fix de otros usuarios."
+}

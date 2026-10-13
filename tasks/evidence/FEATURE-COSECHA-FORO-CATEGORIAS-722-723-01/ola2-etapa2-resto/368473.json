@@ -1,0 +1,37 @@
+{
+ "id": 368473,
+ "titulo": "DGX Ubuntu desktop UI is frozen/suspended",
+ "posts_leidos": 3,
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reiniciar gdm por SSH y leer su estado para obtener mas informacion del fallo",
+   "como": "sudo systemctl stop gdm; sudo systemctl start gdm; systemctl status gdm",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Detener gdm cierra la sesion grafica activa",
+   "verificable_aqui": "systemctl status gdm"
+  },
+  {
+   "que": "Staff pide generar nvidia-bug-report con la UI congelada (sin comando literal)",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "utilidad_atom": "baja",
+ "razon": "Un usuario pega logs de gdm; aniculescu (rol NVIDIA no confirmado en el texto) pide bug report y azampatti (usuario) sugiere reiniciar gdm. Sin resolucion ni causa.",
+ "leido": true,
+ "lectura": "completa",
+ "omision_nvidia": null
+}

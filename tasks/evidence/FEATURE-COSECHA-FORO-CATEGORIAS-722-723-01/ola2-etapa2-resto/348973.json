@@ -1,0 +1,48 @@
+{
+ "id": 348973,
+ "titulo": "Is transient freezing expected behavior?",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "rastrear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Subir el nivel de log del kernel para ver los mensajes del OOM killer (staff Bibek: el nivel quiet los oculta)",
+   "como": "dmesg -n 8",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (staff NVIDIA)",
+   "riesgo": "Solo cambia el nivel de consola; no persiste tras reinicio",
+   "verificable_aqui": "dmesg --console-level 2>/dev/null; cat /proc/sys/kernel/printk"
+  },
+  {
+   "que": "Firma de OOM de GPU en dmesg: NVRM nvCheckOkFailedNoLog Out of memory [NV_ERR_NO_MEMORY] (0x00000051) al cargar un modelo grande; el sistema se congela segundos sin que el kernel mate nada",
+   "como": "dmesg | grep NV_ERR_NO_MEMORY",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, LM Studio, gpt-oss-120b, llama.cpp CUDA 13 (usuario)",
+   "riesgo": "El congelamiento sin mensajes extra tambien ocurre (post 7), asi que la ausencia de la linea no descarta el problema",
+   "verificable_aqui": "dmesg | grep -c NV_ERR_NO_MEMORY"
+  },
+  {
+   "que": "Vaciar cache de buffers antes de lanzar contenedores (recomendacion de NVIDIA, staff; ya cubierto por drop_caches)",
+   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark",
+   "riesgo": "El usuario sigue viendo el error NV_ERR_NO_MEMORY aun vaciando cache",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Staff de NVIDIA (NVES, Bibek) pide reproduccion, recomienda drop_caches y dmesg -n 8; el usuario aporta la firma NV_ERR_NO_MEMORY y la salta de RAM de 72 a 127 GB. Un usuario (post 9) dice que la actualizacion de noviembre lo resolvio, sin detalle."
+}

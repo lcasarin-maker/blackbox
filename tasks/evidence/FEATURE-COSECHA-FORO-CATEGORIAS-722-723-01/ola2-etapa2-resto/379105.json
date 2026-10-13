@@ -1,0 +1,68 @@
+{
+ "id": 379105,
+ "titulo": "Token Generation dropping to 0.1 for Qwen3.6-35b-a3b",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta de equidad prefill/decode: bajar max-num-batched-tokens de 16384 a 2048 (cuesta ~8% de prefill, ~3x mas decode durante prefill largo; p95 del hueco entre chunks 6.10 s a 1.64 s)",
+   "como": "max_num_batched_tokens: 2048 (vllm serve --max-num-batched-tokens 2048)",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/spark-arena/recipe-registry",
+   "licencia": "no indicada",
+   "probado_en": "Spark (usuario raphael.amorim; cifras en el comentario de la receta, no verificadas)",
+   "riesgo": "cifras propias del autor de la receta, sin reproduccion",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Dejar margen de page cache en UMA: gpu_memory_utilization 0.65 (0.85 por nodo, ~105 GB, la deja sin cache); 0.70 en TP=2",
+   "como": "gpu_memory_utilization: 0.65",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark segun usuario",
+   "riesgo": null,
+   "verificable_aqui": "free -g"
+  },
+  {
+   "que": "Limitar max_model_len a 131072 (262144 admitia un prompt de ~165K tokens) y no sobrescribir la plantilla de chat con el mod porque rompe el prefijo cacheable (0.0% de acierto de prefix cache)",
+   "como": "max_model_len: 131072; mods: []; --enable-prefix-caching",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark segun usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Para dos nodos: executor mp en vez de Ray y NCCL con ambas rails RoCE (la P mayuscula importa o NCCL cae a una sola rail)",
+   "como": "--distributed-executor-backend mp; NCCL_IB_HCA: rocep1s0f1,roceP2p1s0f1; NCCL_IB_GID_INDEX: '3'; NCCL_CUMEM_ENABLE: '0'; NCCL_NET_PLUGIN: none; NCCL_IB_DISABLE: '0'",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dual Spark segun usuario; no aplica a una sola maquina",
+   "riesgo": null,
+   "verificable_aqui": "ibdev2netdev (solo lectura)"
+  },
+  {
+   "que": "Interpretacion: tasa de generacion cercana a 0.1 o 0 equivale aproximadamente a OOM (opinion de usuario J-R); proponen probar la version fp8 oficial",
+   "como": "no indicado",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Tema solo de usuarios sin respuesta de NVIDIA ni confirmacion del OP; el post 2 aporta valores concretos para colapso de decode (batched-tokens 2048, margen de memoria 0.65) sin evidencia reproducida. Es util para vLLM en contenedor, con cifras no verificadas."
+}

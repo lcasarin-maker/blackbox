@@ -1,0 +1,47 @@
+{
+ "id": 362962,
+ "titulo": "DGX Spark Mini - Missing Mellanox OFED drivers and DGX Spark repo for Ubuntu 24.04 (ARM64)",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "omision_nvidia",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Declaracion de NVIDIA: DOCA/OFED exige Secure Boot desactivado y no esta soportado en plataformas DGX Spark; no se necesitan ni soportan drivers extra en GB10; solo Ubuntu 24.04 soportado",
+   "como": "no aplica (declaracion de staff)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "instalar DOCA/OFED con Secure Boot activo no carga los modulos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround de usuario: firmar modulos DKMS con una MOK propia para usar doca-ofed con Secure Boot",
+   "como": "instalar dkms, registrar una MOK, luego instalar paquetes doca-ofed (sin comandos exactos)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "no indicado",
+   "riesgo": "no soportado por NVIDIA; sin comando literal en el post",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fijar el kernel para evitar roturas tras actualizar",
+   "como": "sudo apt-mark hold linux-image-$(uname -r) linux-modules-$(uname -r)",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, lista de pasos de notas propias",
+   "riesgo": "un hold bloquea actualizaciones de seguridad del kernel; el resto de los pasos del post 8 son notas de usuario sin verificar (afirma que DKMS no compila en ARM64)",
+   "verificable_aqui": "apt-mark showhold"
+  }
+ ],
+ "omision_nvidia": "Staff (aniculescu, posts 2 y 4): DOCA/OFED no esta soportado en DGX Spark ni hay drivers extra soportados en GB10; el unico SO soportado es Ubuntu 24.04.",
+ "utilidad_atom": "media",
+ "razon": "Staff de NVIDIA declara lo que NO soporta (OFED con Secure Boot, drivers extra), relevante porque esta maquina tiene Secure Boot activo. Los pasos del post 8 son de un usuario, sin prueba, y solo el apt-mark hold es un comando util."
+}

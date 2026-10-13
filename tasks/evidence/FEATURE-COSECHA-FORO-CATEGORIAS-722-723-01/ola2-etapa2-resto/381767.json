@@ -1,0 +1,78 @@
+{
+ "id": 381767,
+ "titulo": "Fieldiag CX7 prerequisites (doca-ofed + kernel-mft-dkms) replace inbox mlx5 and leave ConnectX-7 unusable (ibdev2netdev exit 255)",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Compuerta previa al reinicio: confirmar que mlx5_core viene del arbol inbox y no de updates/dkms",
+   "como": "modinfo mlx5_core | grep filename   # debe ser .../kernel/drivers/net/ethernet/mellanox/mlx5/core/mlx5_core.ko.zst, NO .../updates/dkms/",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark P4242, kernel 6.17.0-1031-nvidia (declarado por el usuario)",
+   "riesgo": "Si apunta a updates/dkms el CX-7 queda sin driver ligado tras reiniciar",
+   "verificable_aqui": "modinfo mlx5_core | grep filename"
+  },
+  {
+   "que": "Recuperacion tras overlay DOCA: instalar nvidia-mlnx-tools (reemplaza paquetes OFED); desaparecen los mensajes de modulo rechazado",
+   "como": "sudo apt install -y nvidia-mlnx-tools",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario qhadron, Spark; confirmado en post 4 'cx7 was working'",
+   "riesgo": "Retira/reemplaza varios paquetes; revisar la lista que propone apt",
+   "verificable_aqui": "dpkg -l nvidia-mlnx-tools"
+  },
+  {
+   "que": "Secuencia corta de retiro de fieldiag y reparacion de CX7",
+   "como": "sudo apt purge infiniband-diags mft ofed-scripts opensm ; sudo apt install -y nvidia-mlnx-tools ; sudo systemctl enable gdm3",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, probado el dia del post",
+   "riesgo": "El purge de la guia PDF por si solo deja mlnx-ofed-kernel-dkms y el CX-7 roto; gdm3 queda deshabilitado por fieldiag",
+   "verificable_aqui": "systemctl is-enabled gdm3"
+  },
+  {
+   "que": "Sintoma diagnostico: ibdev2netdev sale con 255 cuando falta /sys/class/infiniband; dmesg muestra rechazo de modulos por clave no disponible",
+   "como": "ibdev2netdev ; echo $? ; ls /sys/class/infiniband ; sudo dmesg | grep -i 'unavailable key'",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios, Spark",
+   "riesgo": null,
+   "verificable_aqui": "ls /sys/class/infiniband; lsmod | grep mlx5"
+  },
+  {
+   "que": "Advertencia: ofed_uninstall.sh --force recorre dependencias inversas y empieza a quitar paquetes de plataforma Spark (nvidia-system-*, OTA, firmware manager)",
+   "como": "/usr/sbin/ofed_uninstall.sh --force   # NO ejecutar",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark P4242 segun el usuario",
+   "riesgo": "Rompe metapaquetes de plataforma; el autor termino con RMA del equipo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Revertir el repositorio DOCA para que apt no vuelva a traer 2601.*",
+   "como": "sudo mv /etc/apt/sources.list.d/doca.list /etc/apt/sources.list.d/doca.list.disabled ; apt-cache policy rdma-core   # debe dar 50.0-2ubuntu0.2",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, Spark",
+   "riesgo": "Las versiones fijas del post derivan rapido (el autor lo dice; qhadron confirmo que los pines ya no encajaban)",
+   "verificable_aqui": "apt-cache policy rdma-core"
+  }
+ ],
+ "omision_nvidia": "La guia Field Diag 2.x pide doca-ofed para CX7Stress sin documentar via de reversion segura ni avisar que rompe el CX-7; el autor cita que las notas de DGX OS 7 listan Spark con OFED inbox y sin soporte doca-ofed.",
+ "utilidad_atom": "alta",
+ "razon": "Hilo con comandos exactos de diagnostico y reversion del overlay DOCA/MFT; el staff aniculescu (posts 5-6) confirma que nvidia-mlnx-tools debe venir con el SO, recomienda apt dist-upgrade y marca la respuesta de qhadron como solucion. Aplica a esta maquina si algun dia se corre fieldiag con CX7Stress."
+}

@@ -1,0 +1,89 @@
+{
+ "id": 349124,
+ "titulo": "Has anyone tried an alternative Linux distro?",
+ "leido": true,
+ "posts_leidos": 70,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Ethernet r8127 desaparece tras reinicio caliente si carga r8169; apagar y encender en frio, y listar el driver cargado",
+   "como": "sudo poweroff (luego encender) ; lspci -k | grep r8127 ; blacklist r8169 en /etc/modprobe.d/blacklist.conf",
+   "fuente_post": 23,
+   "repositorio": "https://github.com/NVIDIA/NV-Kernels",
+   "licencia": "no indicada",
+   "probado_en": "Spark con kernel 6.17.1 NV-Kernels y Fedora/NixOS (usuarios)",
+   "riesgo": "Con r8169 el adaptador no es visible ni en BIOS hasta ciclo completo de energia",
+   "verificable_aqui": "lspci -k | grep -iA2 ethernet"
+  },
+  {
+   "que": "Kernel NVIDIA: rama 24.04_linux-nvidia-6.17-next con opciones de eugr (modulo r8127, governor schedutil)",
+   "como": "CONFIG_CPU_FREQ_DEFAULT_GOV_SCHEDUTIL=y ; CONFIG_R8127=m (por annotations de debian.nvidia-6.17)",
+   "fuente_post": 23,
+   "repositorio": "https://github.com/NVIDIA/NV-Kernels",
+   "licencia": "no indicada",
+   "probado_en": "Spark, usuarios; carga de modelo 4-5x mas rapida (20 s vs mas de 1 min para gpt-oss-120b)",
+   "riesgo": "Hay que desactivar CONFIG_SYSTEM_TRUSTED_KEYS fuera de Ubuntu; el usuario probo kernel de 64K paginas con congelamientos (post 56)",
+   "verificable_aqui": "uname -r ; grep -i R8127 /boot/config-$(uname -r)"
+  },
+  {
+   "que": "Asegurar persistencia del driver para gestion de energia",
+   "como": "nvidia-smi -pm 1 ; systemctl enable --now nvidia-persistenced",
+   "fuente_post": 35,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Fedora 43 Server, driver 580.95.05 (usuario kal5)",
+   "riesgo": null,
+   "verificable_aqui": "systemctl is-enabled nvidia-persistenced"
+  },
+  {
+   "que": "Benchmark reproducible de carga y rendimiento",
+   "como": "build/bin/llama-bench -m <modelo.gguf> -fa 1 -d 0,4096,8192,16384,32768 -p 2048 -n 32 -ub 2048 -mmp 0",
+   "fuente_post": 26,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": "no indicada",
+   "probado_en": "Spark segun usuario eugr",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Carga lenta de safetensors con vLLM: estrategia eager (consume RAM de CPU adicional, ~1/4 del modelo)",
+   "como": "--safetensors-load-strategy eager",
+   "fuente_post": 27,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark; tambien reportado con driver 615 en post 66",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Ancho de banda ConnectX-7: un solo puerto da ~100 Gb/s; hace falta agregar ambos puertos para 200",
+   "como": "ib_write_bw -d rocep1s0f0 -R -s 1048576 -q 8 -Q 8 -D 10 --report_gbits <ip>",
+   "fuente_post": 38,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Fedora vs DGX OS, ConnectX-7 (usuario kal5)",
+   "riesgo": null,
+   "verificable_aqui": "rdma link show"
+  },
+  {
+   "que": "Ver kernels NVIDIA disponibles en apt",
+   "como": "apt search 'linux-image.*nvidia'",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Un usuario con rol de staff NVIDIA (aplattner) senala que Fedora necesita cambios para el driver r8127 y no se enumeran los parches esenciales del kernel NVIDIA; no hay soporte oficial para otras distros (usuarios: no soportado).",
+ "utilidad_atom": "media",
+ "razon": "Hilo largo de usuarios (con un aporte de staff NVIDIA, post 6) sobre otras distros: el mecanismo valioso es el ciclo de energia en frio para el adaptador Ethernet y las opciones de kernel NV-Kernels. Los demas puntos son benchmarks de usuario sin relacion directa con cortes por calor."
+}

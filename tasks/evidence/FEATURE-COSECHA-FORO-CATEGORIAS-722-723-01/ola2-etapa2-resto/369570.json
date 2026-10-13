@@ -1,0 +1,26 @@
+{
+ "id": 369570,
+ "titulo": "Megatron Bridge uses endless vram on GB10",
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Dos causas halladas por el propio autor del reporte: los dataloaders usaban unos 14 GB, y cambiar el paso de entrenamiento qwen3_vl_step por vlm_step redujo la memoria a la mitad con tensor parallel 2",
+   "como": "usar --step_func vlm_step en lugar de --step_func qwen3_vl_step",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 GB10 con 200GbE, contenedor nvcr.io/nvidia/nemo:26.04.00, segun el usuario",
+   "riesgo": "Afirmacion de un usuario sin verificacion externa",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El autor reporta OOM en Megatron-Bridge y luego publica su propia correccion (post 5); no hay respuesta de NVIDIA. Los mensajes 2 y 4 no existen en el texto; es un caso especifico de entrenamiento.",
+ "leido": true,
+ "lectura": "completa"
+}

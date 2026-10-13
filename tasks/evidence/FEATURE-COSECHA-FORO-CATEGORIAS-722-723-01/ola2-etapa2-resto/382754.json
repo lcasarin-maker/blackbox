@@ -1,0 +1,98 @@
+{
+ "id": 382754,
+ "titulo": "4x DGX Spark running Qwen3.8-27B (NVFP4) with SGLang + DFlash2 - full repro and 8 pitfalls",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "NCCL en 4 nodos: usar la NIC de gestion para el bootstrap, la RoCE para los datos (evita cuelgue silencioso cuando la NIC RoCE tiene dos IPv4)",
+   "como": "NCCL_SOCKET_IFNAME=enP7s7 ; NCCL_IB_HCA=rocep1s0f0 ; NCCL_IB_ROCE_VERSION_NUM=2",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark, SGLang custom, segun el autor",
+   "riesgo": "Nombres de interfaz son del cluster del autor",
+   "verificable_aqui": "ip -br addr; ibv_devices"
+  },
+  {
+   "que": "El indice GID RoCEv2 difiere por nodo; elegir la entrada v2 en cada uno",
+   "como": "show_gids   # en el script: GID=7 rank<=1, GID=5 rank>=2 ; -e NCCL_IB_GID_INDEX=$GID",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x Spark segun el autor",
+   "riesgo": "Un GID fijo rompe la mitad del cluster",
+   "verificable_aqui": "show_gids"
+  },
+  {
+   "que": "Un max_tokens <= 8 con DFlash2 (num-draft-tokens 8) tumba los 4 rangos; parche externo que sube a 16 el minimo",
+   "como": "parche en tokenizer_manager._validate_one_request: clamp 0 < max_new_tokens < 16 -> 16",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "SGLang 0.0.0.dev0+qwen38.27b, 4x Spark",
+   "riesgo": "Sin el parche no enviar max_tokens <= 8",
+   "verificable_aqui": null
+  },
+  {
+   "que": "py-spy no sirve en esta imagen; volcado de pilas de todos los hilos en el camino de timeout del watchdog",
+   "como": "sys._current_frames() + traceback.format_stack ; --watchdog-timeout 120",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "imagen SGLang del autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un .pyc rancio puede tapar un parche montado por bind; verificar dentro del contenedor",
+   "como": "PYTHONDONTWRITEBYTECODE=1 ; grep HARDEN-PATCH dentro del contenedor tras arrancar",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Watchdog por cron cada minuto con flock: rango 0 ausente => caida => reinicio de trabajadores primero; rango 0 arriba >= 600 s sin /health 200 => atascado => reinicio",
+   "como": "* * * * *  qwen38-tp4-watchdog.sh   (script no incluido en el texto)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "autor: deteccion ~15 s, servicio de vuelta en ~6-7 min",
+   "riesgo": "Script no publicado en el post",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Descarga de Hugging Face con 401 via espejo: desactivar Xet",
+   "como": "HF_ENDPOINT=https://hf-mirror.com HF_HUB_DISABLE_XET=1",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Banderas SGLang del autor para memoria unificada",
+   "como": "--mem-fraction-static 0.50 --kv-cache-dtype fp8_e4m3 --max-running-requests 8 ; docker run --memory 100g --memory-swap 100g --shm-size 16g",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x Spark, TP4",
+   "riesgo": "Contradice la medicion de otros hilos: el limite --memory no cuenta asignaciones CUDA en GB10",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Reporte de un usuario (sin respuesta de NVIDIA) con valores concretos de NCCL/RoCE y un patron watchdog+cron, pero pensado para cluster de 4 nodos y SGLang; esta maquina es un solo nodo con vLLM. Las IPs y rutas del post existen y no se copian."
+}

@@ -1,0 +1,58 @@
+{
+ "id": 367604,
+ "titulo": "How to fix CPU frequency in DGX Spark",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Fijar frecuencia CPU: desactivar auto_select, gobernador userspace y scaling_setspeed (staff NVIDIA)",
+   "como": "export NUM_CORES=$(nproc); export TARGET_FREQ=1300000; for (( i=0; i<NUM_CORES; i++ )); do echo 0 > sys/devices/system/cpu/cpu$i/cpufreq/auto_select ; echo \"userspace\" > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor ; echo $TARGET_FREQ > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_setspeed ; done",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "NVIDIA staff; el autor lo confirma tras pasar a DGX OS 7.4 con kernel 6.17 (post 5); en 6.14 el nodo auto_select no existia (post 3)",
+   "riesgo": "El script del post 2 tiene la ruta 'sys/devices' sin barra inicial; en kernel 6.14 auto_select esta en acpi_cppc/auto_sel y requiere cppc_cpufreq.auto_sel_mode=0 en GRUB.",
+   "verificable_aqui": "ls /sys/devices/system/cpu/cpu0/cpufreq/ ; cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors"
+  },
+  {
+   "que": "Limitar frecuencia maxima por politica (tope de CPU para calor/consumo); un usuario reporta que no surtio efecto segun cpuinfo_cur_freq",
+   "como": "for i in {5,6,7,8,9,15,16,17,18,19}; do echo 0 > /sys/devices/system/cpu/cpufreq/policy$i/auto_select; echo 2800000 > /sys/devices/system/cpu/cpufreq/policy$i/scaling_max_freq; done",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario yuanlinios, hardware no declarado",
+   "riesgo": "Segun el usuario el tope no fue efectivo.",
+   "verificable_aqui": "cat /sys/devices/system/cpu/cpufreq/policy*/scaling_max_freq"
+  },
+  {
+   "que": "Medir frecuencia real: cpuinfo_cur_freq lee contadores HW y da valores bajos si el core se queda idle; NVIDIA recomienda cargar el core con una tarea afinizada y leer cpuinfo_avg_freq",
+   "como": "cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_avg_freq (con tarea afinizada que no ceda CPU)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "NVIDIA staff (aniculescu), ACPI-ARM64",
+   "riesgo": null,
+   "verificable_aqui": "cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_avg_freq"
+  },
+  {
+   "que": "Verificar que scaling_setspeed realmente fija la frecuencia: contar ciclos con perf stat",
+   "como": "perf stat (comando exacto no indicado)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX OS 7.4, kernel 6.17 (usuario)",
+   "riesgo": null,
+   "verificable_aqui": "command -v perf"
+  }
+ ],
+ "omision_nvidia": "NVIDIA staff admite que cpuinfo_cur_freq es poco fiable en ACPI-ARM64 y que Tegra/Jetson lo corrigen distinto.",
+ "utilidad_atom": "media",
+ "razon": "Staff da el procedimiento de pin de frecuencia y el metodo de medicion fiable (cpuinfo_avg_freq); es un tope de CPU, ya cubierto, y el unico dato distinto es la advertencia de medicion de cpuinfo_cur_freq."
+}

@@ -1,0 +1,36 @@
+{
+ "id": 348996,
+ "titulo": "Corrupt docker buildkit?",
+ "leido": true,
+ "posts_leidos": 16,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Arreglo de buildkit corrupto (error invalid database) moviendo el directorio",
+   "como": "systemctl stop docker ; systemctl disable docker ; mv /var/lib/docker/buildkit /root/buildkit-bad ; systemctl enable docker ; systemctl start docker",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS Ascent GX10 nuevo (usuarios)",
+   "riesgo": "Mueve cache de build; en post 11 queda un aviso de 'key modified' sin explicar",
+   "verificable_aqui": "journalctl -u docker | grep -i buildkit"
+  },
+  {
+   "que": "Contenedor con GPU funcional en Spark: usar runtime nvidia",
+   "como": "docker run -it --runtime=nvidia --gpus=all nvcr.io/nvidia/cuda:13.0.1-devel-ubuntu24.04 nvidia-smi",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10 segun usuario",
+   "riesgo": null,
+   "verificable_aqui": "docker info | grep -i runtime"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Varios usuarios con ASUS GX10 de fabrica reportan el mismo fallo de buildkit; solucion probada por usuarios. Un usuario de NVIDIA (NVES) solo pregunta cuando ocurre; sin respuesta oficial."
+}

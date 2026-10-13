@@ -1,0 +1,48 @@
+{
+ "id": 364312,
+ "titulo": "DGX Spark - Persistent 30-Minute Restart After ALL Firmware Updates",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobar errores de hardware RAS (el autor lo ejecuto y salio limpio)",
+   "como": "sudo ras-mc-ctl --errors",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, BIOS 5.36_0ACUM018, DGX_SWBUILD 7.2.3, OTA 7.4.0 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": "command -v ras-mc-ctl"
+  },
+  {
+   "que": "Hipotesis de watchdog: apagar el watchdog en BIOS (Advanced > Watchdog) hizo que otra unidad se mantuviera arriba, segun cita de otro hilo (usuario trystan1)",
+   "como": "BIOS: Advanced -> Advanced -> Watchdog -> apagar",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "no declarado; relato de un tercero citado",
+   "riesgo": "quita la proteccion de reinicio por watchdog; el propio relato dice que no es lo mejor",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Actualizacion de firmware via fwupd; la de USB-C PD fallo por no resolver r2.fwupd.org",
+   "como": "fwupdmgr (comando exacto no indicado); EC 0x02004e12, SoC 0x0200941a",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "la actualizacion exige conexion de corriente",
+   "verificable_aqui": "fwupdmgr get-devices"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Reinicios cada 30 min en reposo sin panico ni errores RAS; usuarios (trystan1 y twaggs88, sin rol de NVIDIA) apuntan al watchdog de hardware, sin confirmacion de NVIDIA ni resolucion; el autor pide RMA y afirma, sin fuente, casos previos. Util como lista de comprobacion (ras-mc-ctl, estado de firmware) y como pista del watchdog; el UUID de GPU del post existe y no se copia."
+}

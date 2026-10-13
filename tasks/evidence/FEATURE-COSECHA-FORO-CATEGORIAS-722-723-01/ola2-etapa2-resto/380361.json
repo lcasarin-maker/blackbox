@@ -1,0 +1,26 @@
+{
+ "id": 380361,
+ "titulo": "DGX Spark ConnectX7 network card use promisc mode message sending and receiving failure",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Activar el flooding de MAC de uplink desconocida en el firmware del CX7 para recibir trafico de MAC no local (modo promiscuo efectivo); lo da un usuario, sin respuesta de NVIDIA",
+   "como": "mstconfig -d 0000:01:00.0 set UNKNOWN_UPLINK_MAC_FLOOD_P1=True UNKNOWN_UPLINK_MAC_FLOOD_P2=True ; mstconfig -d 0002:01:00.0 set UNKNOWN_UPLINK_MAC_FLOOD_P1=True UNKNOWN_UPLINK_MAC_FLOOD_P2=True",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark CX7 con firmware 28.45.4028 (declarado por el autor)",
+   "riesgo": "Cambia configuracion persistente del firmware de la NIC; mstconfig requiere el paquete MFT; no probado aqui",
+   "verificable_aqui": "mstconfig -d 0000:01:00.0 query | grep -i FLOOD"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario resuelve que ip link promisc devuelva exito sin efecto real activando UNKNOWN_UPLINK_MAC_FLOOD en mstconfig, y el autor confirma. Es captura de red para DPI, ajena a memoria, calor o cortes; sin respuesta de NVIDIA."
+}

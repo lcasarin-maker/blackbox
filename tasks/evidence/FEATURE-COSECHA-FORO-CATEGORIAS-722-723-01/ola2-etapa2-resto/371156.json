@@ -1,0 +1,27 @@
+{
+ "id": 371156,
+ "titulo": "ConnectX PCIe Slot Power Message",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "No usar iperf3 para medir el enlace; usar el procedimiento ib_write_bw (un usuario obtiene ~111.5 Gb/s por canal con el aviso de 27W presente)",
+   "como": "procedimiento ib_write_bw de docs/NETWORKING.md del repositorio spark-vllm-docker",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario dice que el aviso 27W es benigno y que iperf3 no mide bien el enlace; otro reporta iperf3 de 15 Gbps de transmision en unidades nuevas. Sin respuesta de personal de NVIDIA ni comando literal."
+}

@@ -1,0 +1,58 @@
+{
+ "id": 370523,
+ "titulo": "Ethernet connection fails randomly",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "rastrear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Paquete de diagnostico de red pedido por NVIDIA (Neill): captura de enlaces, driver, contadores y dmesg",
+   "como": "ip -br link ; ip addr ; ethtool -i <ethernet_iface> ; sudo ethtool <ethernet_iface> ; ip -s link show <ethernet_iface> ; sudo dmesg -Tw | grep -Ei 'eth|r8169|realtek|link'",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark Founders Edition; stack indicado por Neill: DGX OS 7.4.0, driver 580.142, CUDA 13.0.2, kernel 6.17, UEFI 1.107.26",
+   "riesgo": null,
+   "verificable_aqui": "ip -br link; ethtool -i <iface>; ip -s link show <iface>"
+  },
+  {
+   "que": "Aislar problema de negociacion forzando 1 Gb/full duplex y luego restaurar autoneg",
+   "como": "sudo ethtool -s <ethernet_iface> speed 1000 duplex full autoneg off ; despues sudo ethtool -s <ethernet_iface> autoneg on",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Recomendacion de Neill",
+   "riesgo": "En el caso del usuario el driver r8127 respondio 'Invalid argument' a autoneg off (post 3)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Alternativa que si acepto el driver r8127: autoneg on y restringir el anuncio",
+   "como": "sudo ethtool -s enP7s7 advertise 0x020",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario yoprogramo, driver r8127 11.014.00-NAPI",
+   "riesgo": "El propio usuario informa que no quedo estable (post 4)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Solucion que funciono para el usuario: deshabilitar Wi-Fi y reiniciar; Neill sugirio probar con Wi-Fi apagado para descartar trafico entre interfaces",
+   "como": "deshabilitar Wi-Fi y reiniciar (sin comando)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark propio",
+   "riesgo": null,
+   "verificable_aqui": "ip -br link; nmcli radio wifi 2>/dev/null"
+  }
+ ],
+ "omision_nvidia": "NVIDIA (Neill) dice que el fallo no esta documentado como known issue de DGX Spark.",
+ "utilidad_atom": "media",
+ "razon": "El staff de NVIDIA da una lista de comandos de solo lectura utiles para diagnosticar caidas de Ethernet (post 2) y el usuario resuelve apagando Wi-Fi (post 9). Es especifico de un driver r8127 y no de colapsos de memoria o calor."
+}

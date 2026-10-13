@@ -1,0 +1,37 @@
+{
+ "id": 349775,
+ "titulo": "Mellanox QSFP breakout",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobar si el puerto es divisible: devlink muestra splittable false en los 4 puertos fisicos",
+   "como": "sudo devlink port show",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark de usuario (elsaco), sin version indicada",
+   "riesgo": "Solo lectura",
+   "verificable_aqui": "devlink port show"
+  },
+  {
+   "que": "Parametros mlxconfig relacionados con el split de puerto (isdias, post 4; un usuario en post 5 dice que existen en ambas NIC CX-7 pero no logro dividir el puerto con un cable breakout)",
+   "como": "mlxconfig: NUM_OF_PF y MODULE_SPLIT_M<x> (valores no indicados)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "nunca probado en Spark segun el autor; el usuario del post 5 reporta fallo",
+   "riesgo": "Cable split sin validar puede causar sobrecalentamiento u otros problemas segun el autor del post 4",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu, post 3) dice que el breakout esta sin probar en Spark; el autor del post 4 (isdias, rol no declarado) dice que solo dos cables DAC 200G QSFP112 estan validados.",
+ "utilidad_atom": "baja",
+ "razon": "Es un tema de red de puertos QSFP, ajeno a memoria y calor; solo aporta el comando de lectura devlink y la omision de NVIDIA sobre cables split. Los usuarios del 5 al 8 discrepan sobre si hay o no problemas de potencia."
+}

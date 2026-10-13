@@ -1,0 +1,27 @@
+{
+ "id": 381844,
+ "titulo": "Spark Recovery fails due to missing access to /dev/nvme0n1p1",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Prueba de autodiagnostico NVMe desde la UEFI (corta y extendida, sobre controlador y namespace) para distinguir fallo de disco de fallo de software cuando la recuperacion no ve /dev/nvme0n1p1",
+   "como": "BIOS > pestana Advanced > NVMe Configuration > Device Self Test (short/extended) segun la guia UEFI de DGX Spark; no indicada la ruta exacta de menu",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (usuario felix-t)",
+   "riesgo": "Un resultado Fail implica fallo de hardware",
+   "verificable_aqui": "nvme self-test-log /dev/nvme0 (no mencionado en el post; sugerencia del lector, solo lectura)"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Staff de NVIDIA (aniculescu) pide self-test NVMe en BIOS y concluye que un Fail indica error de hardware con RMA. Caso de disco defectuoso; sin comando concreto de monitoreo."
+}

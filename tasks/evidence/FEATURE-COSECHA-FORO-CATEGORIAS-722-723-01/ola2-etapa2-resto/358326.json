@@ -1,0 +1,47 @@
+{
+ "id": 358326,
+ "titulo": "Has ANYONE managed to boot into BIOS/UEFI on Nvidia SPARK",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Entrar a UEFI por ssh con teclado conectado fallando; respuesta de personal NVIDIA (aniculescu)",
+   "como": "sudo systemctl reboot --firmware-setup",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark",
+   "riesgo": "reinicia la maquina de inmediato",
+   "verificable_aqui": "systemctl --version | head -1; bootctl status 2>/dev/null | grep -i firmware"
+  },
+  {
+   "que": "Hacer visible el menu de GRUB cambiando timeout y timeout_style en grub.cfg y revertir al terminar; un usuario (elsaco) dice que los valores por defecto son timeout_style=hidden y timeout=0",
+   "como": "editar timeout y timeout_style en grub.cfg",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS (usuario)",
+   "riesgo": "editar grub.cfg a mano se pierde al regenerarlo; riesgo de dejar el arranque modificado",
+   "verificable_aqui": "grep -nE 'timeout' /boot/grub/grub.cfg"
+  },
+  {
+   "que": "Teclado: usar USB por cable y pulsar Supr/Esc repetidamente; el staff dice que algunos dongles interfieren con la entrada a BIOS",
+   "como": "tecla Del repetida durante el arranque",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario con un vLLM en arranque que mata el equipo necesita parar el boot; el staff (aniculescu) da la via por ssh y otro usuario la via por GRUB. Es util como recuperacion cuando un servicio de arranque colapsa la memoria, pero no mide ni previene nada."
+}

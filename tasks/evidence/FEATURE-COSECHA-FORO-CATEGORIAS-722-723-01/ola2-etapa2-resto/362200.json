@@ -1,0 +1,88 @@
+{
+ "id": 362200,
+ "titulo": "Does Qwen3.5-35B-A3B on GB10 leave a lot of performance on the table?",
+ "leido": true,
+ "posts_leidos": 41,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Parametros vLLM afinados para throughput con contexto largo y prefix caching en GB10 (usuario trystan1, modelo int4 AutoRound)",
+   "como": "\"load_format\":\"fastsafetensors\", \"gpu_memory_utilization\":0.8, \"kv_cache_dtype\":\"fp8\", \"enable_prefix_caching\":true, \"mamba_ssm_cache_dtype\":\"float16\", \"max_num_batched_tokens\":32768, \"max_num_seqs\":10, \"max_cudagraph_capture_size\":10",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (declarado por usuario)",
+   "riesgo": "afinado para throughput, no latencia; TTFT medio 15.7 s a concurrencia 5",
+   "verificable_aqui": "docker inspect de los contenedores vLLM para comparar flags"
+  },
+  {
+   "que": "Benchmark de prefijo repetido para medir cache de prefijo",
+   "como": "vllm bench serve --dataset-name prefix_repetition --prefix-repetition-prefix-len 37000 --prefix-repetition-suffix-len 5000 --prefix-repetition-output-len 325 --num-prompts 100",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario trystan1 en Spark",
+   "riesgo": "el subcomando exacto se cita como 'vllm serve bench' en el texto; confirmar con --help",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Barrido de rendimiento por profundidad de contexto y concurrencia con llama-benchy",
+   "como": "llama-benchy --base-url http://localhost:8000/v1 --model local-vllm --depth 0 4096 8192 16384 32768 65535 100000 --pp 2048 --tg 128 --concurrency 1 2 5 10 --latency-mode generation",
+   "fuente_post": 23,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark, vLLM nightly personalizado (usuario amasawa_seiji)",
+   "riesgo": "eugr (autor de la herramienta, post 27) avisa: si --model no es el nombre HF, usa tokenizer gpt2 y sesga resultados; usar --served-model-name",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Imagen vLLM pre-construida para SM121 con MTP + KV fp8 y variables requeridas",
+   "como": "docker run -d --name vllm-qwen --gpus all --ipc=host --network host --restart unless-stopped -e VLLM_USE_FLASHINFER_MOE_FP8=0 -e VLLM_FLASHINFER_MOE_BACKEND=latency -e HF_HUB_DISABLE_XET=1 buildspark/vllm-gb10-mtp vllm serve Qwen/Qwen3.5-35B-A3B --max-num-seqs 12 --gpu-memory-utilization 0.85 --enable-prefix-caching --max-num-batched-tokens 4096 --kv-cache-dtype fp8_e4m3 --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":1}'",
+   "fuente_post": 38,
+   "repositorio": "https://github.com/buildsparklabs/vllm-gb10-mtp (receta, post 41); base JungkwanBan/spark_vllm_docker",
+   "licencia": "no indicada",
+   "probado_en": "GX10 (ASUS), vLLM 0.17.0rc1, el propio autor",
+   "riesgo": "imagen de terceros no verificada; mejora declarada 10-18 % sobre BF16 por el autor; el primer arranque tarda 8-10 min",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: cuantizacion de pesos fp8 de vLLM produce salida basura en SM121; fp8 solo en KV cache funciona",
+   "como": "--quantization fp8 (mal) vs --kv-cache-dtype fp8_e4m3 (bien)",
+   "fuente_post": 38,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10 (autor buildspark)",
+   "riesgo": "salida incorrecta silenciosa con --quantization fp8",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: --max-num-batched-tokens debe ser >=4096 en Qwen3.5 (capas Mamba); prefill por trozos no se puede desactivar",
+   "como": "--max-num-batched-tokens 4096",
+   "fuente_post": 38,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10 (autor buildspark)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reparar buildkit de Docker corrupto",
+   "como": "sudo systemctl stop docker.service; sudo -s; mv /var/lib/docker/buildkit /var/lib/docker/buildkit-bad; exit; sudo systemctl start docker.service",
+   "fuente_post": 34,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10 (usuario cosinus); cita un post de otro hilo",
+   "riesgo": "detiene Docker y todos los contenedores",
+   "verificable_aqui": "ls -ld /var/lib/docker/buildkit*"
+  }
+ ],
+ "omision_nvidia": "Sin respuesta de staff de NVIDIA en el tema. Un usuario (post 17, 35) dice que el soporte NVFP4 prometido no esta maduro; es opinion de usuarios.",
+ "utilidad_atom": "media",
+ "razon": "Contiene flags vLLM concretos, un metodo de medicion (llama-benchy, prefix_repetition) y advertencias de SM121, todos de usuarios y sin staff NVIDIA; el post 2 es texto generado por IA con comandos que el propio texto marca como inexistentes, no se usa. Util para ajustar vLLM, no para los cortes por calor; el consumo de memoria se controla con gpu_memory_utilization."
+}

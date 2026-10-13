@@ -1,0 +1,37 @@
+{
+ "id": 353639,
+ "titulo": "DGX Spark crashes when running tensorrt-llm",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de un usuario (scottgl): desactivar la ruta FlashInfer MoE FP4 y usar la ruta Triton, porque los cubins de FlashInfer estan compilados solo para SM100 y fallan en SM121 (GB10)",
+   "como": "VLLM_USE_FLASHINFER_MOE_FP4=0",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/NVIDIA/TensorRT-LLM (issue 11799)",
+   "licencia": "no indicada",
+   "probado_en": "usuario, GB10/SM121; relacion con el cuelgue original solo supuesta",
+   "riesgo": "Posible perdida de rendimiento; el propio usuario dice que 'puede estar relacionado' con los cuelgues.",
+   "verificable_aqui": "nvidia-smi --query-gpu=compute_cap --format=csv"
+  },
+  {
+   "que": "Peticion de diagnostico de staff NVIDIA: pedir logs y reporte",
+   "como": "nvidia-bug-report (sin ruta ni argumentos indicados)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "which nvidia-bug-report.sh"
+  }
+ ],
+ "omision_nvidia": "No hay cubins SM120/SM121 publicados para FlashInfer/trtllm-gen; hay issue abierto sin resolver en el hilo.",
+ "utilidad_atom": "media",
+ "razon": "El cuelgue del post 1 (reinicio en frio al servir un modelo con trtllm-serve) no tiene causa confirmada; el unico mecanismo es el workaround de variable de entorno de un usuario, posterior en 3 meses. Staff solo pidio logs."
+}

@@ -1,0 +1,26 @@
+{
+ "id": 384293,
+ "titulo": "Is the fix a simple one-liner?",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Hipotesis de usuario: paquetes nvidia-firmware viejos causan el aviso erroneo del Dashboard",
+   "como": "sudo apt autoremove ; apt list --installed nvidia-firmware*",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "No confirmado; el autor no lo aplico por seguir el manual del fabricante; autoremove elimina paquetes",
+   "verificable_aqui": "apt list --installed 'nvidia-firmware*'"
+  }
+ ],
+ "omision_nvidia": "Un usuario afirma que el Dashboard muestra actualizaciones de firmware erroneas y que los fabricantes OEM piden usar solo el Dashboard; sin respuesta de NVIDIA.",
+ "utilidad_atom": "baja",
+ "razon": "Un usuario ve avisos de firmware erroneos en el Dashboard; otro sugiere sudo apt autoremove y apt list --installed nvidia-firmware* (post 4) como hipotesis de paquetes viejos, sin confirmacion de que resuelva el caso, y el autor lo rechaza. Sin staff de NVIDIA."
+}

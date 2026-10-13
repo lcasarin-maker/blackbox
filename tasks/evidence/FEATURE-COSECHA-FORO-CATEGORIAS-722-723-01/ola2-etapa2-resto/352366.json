@@ -1,0 +1,48 @@
+{
+ "id": 352366,
+ "titulo": "Switching to headless mode",
+ "leido": true,
+ "posts_leidos": 13,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Arrancar sin escritorio para ahorrar RAM",
+   "como": "sudo systemctl set-default multi-user.target",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS 7 segun usuarios DannyTup y algocraft",
+   "riesgo": "eugr (post 9) vio que el servicio del Dashboard no arrancaba en multi-user en una version anterior; DannyTup (post 11) dice que ya funciona",
+   "verificable_aqui": "systemctl get-default"
+  },
+  {
+   "que": "Desactivar powersave de WiFi en NetworkManager porque se pierde conectividad",
+   "como": "wifi.powersave = 2 en /etc/NetworkManager/conf.d/default-wifi-powersave-on.conf, luego sudo systemctl restart NetworkManager",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS 7 segun usuarios; algocraft confirma que ayudo (post 10)",
+   "riesgo": "Reinicia la red",
+   "verificable_aqui": "grep -r powersave /etc/NetworkManager/conf.d/"
+  },
+  {
+   "que": "Observacion: en multi-user.target NCCL y la tarjeta Mellanox fijaban IRQ al mismo nucleo (19); en graphical se balanceo y ganó 10% de rendimiento",
+   "como": "no indicado (observacion de eugr, sin comando)",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Cluster de Sparks segun eugr",
+   "riesgo": "Causa desconocida segun el propio usuario",
+   "verificable_aqui": "grep -E 'mlx|enP|eth' /proc/interrupts"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Staff NVIDIA (NVES, post 2) solo dice que headless es entrar por ssh. Los mecanismos (multi-user.target, wifi.powersave=2, observacion de IRQ) vienen de usuarios sin medicion formal."
+}

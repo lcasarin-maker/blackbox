@@ -1,0 +1,58 @@
+{
+ "id": 368025,
+ "titulo": "NCCL all_gather Performance Halved on Dual Spark Setup (ConnectX-7) After MSI Firmware Update - Solved via Downgrade",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Medicion de ancho de banda NCCL all_gather con nccl-tests por 1 o 2 HCA (esperado ~12.5 GB/s y ~25 GB/s)",
+   "como": "mpirun -np 2 -H <spark1>:1,<spark2>:1 ... -x NCCL_IB_HCA=mlx5_0 -x NCCL_BUFFSIZE=8388608 -x NCCL_CROSS_NIC=1 -x NCCL_MIN_NCHANNELS=32 -x NCCL_NSOCKS_PERTHREAD=4 ./nccl-tests/build/all_gather_perf -b 16G -e 16G -f 2 (dual: NCCL_IB_HCA=mlx5_0,mlx5_2)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "MSI EdgeXpert MS-C931, dos nodos",
+   "riesgo": "Requiere dos nodos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Revertir firmware SoC con fwupdmgr tras una regresion de ancho de banda CX7 (el update de abril de MSI bajo CX7 de 19W a 1W segun el autor)",
+   "como": "fwupdmgr downgrade",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "MSI EdgeXpert, resultados 13.4874 y 24.3178 GB/s tras downgrade",
+   "riesgo": "Downgrade de firmware; la causa de potencia es hipotesis del autor",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Comprobar version de firmware; NVIDIA indica CX7 al menos 28.45.4028 y UEFI 1.107.26",
+   "como": "sudo dmidecode -t 45 | grep -A2 \"UEFI\"",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "respuesta de aniculescu (probable NVIDIA)",
+   "riesgo": null,
+   "verificable_aqui": "sudo dmidecode -t 45 | grep -A2 UEFI"
+  },
+  {
+   "que": "Un usuario sugiere habilitar el remoto lvfs-testing para actualizar firmware (afirma ~22GB/s)",
+   "como": "sudo fwupdmgr enable-remote lvfs-testing; sudo fwupdmgr refresh --force; sudo fwupdmgr update",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Firmware de canal de pruebas, sin verificar",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Una version de FW de ediciones OEM redujo NCCL; las ediciones MSI no se sincronizan con la FE (post 5, usuario).",
+ "utilidad_atom": "media",
+ "razon": "Receta NCCL con comandos literales y regresion de FW confirmada por NVIDIA (post 3), pero la ATOM es de un solo nodo y los mecanismos de firmware ya estan catalogados. Aplica solo si se usa cluster de dos nodos."
+}

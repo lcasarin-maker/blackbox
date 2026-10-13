@@ -1,0 +1,19 @@
+{"id": 370198, "titulo": "DGX Spark running hot, cannot update firmware", "leido": true, "posts_leidos": 4, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["medir", "monitorear", "solucionar"],
+ "mecanismos": [
+  {"que": "Diagnostico de campo de NVIDIA (fieldiag) que corre pruebas de estres de GPU, C2C, CPU, potencia, termica, SSD y memoria; el usuario lo ejecuto y obtuvo PASS en ~30 min. Su salida revela que desinstala drivers/servicios NVIDIA y detiene docker durante la prueba.",
+   "como": "sudo init 3 ; cd /opt/nvidia/dgx-spark-fieldiag ; sudo ./partnerdiag --field",
+   "fuente_post": 1, "repositorio": null, "licencia": "no indicada",
+   "probado_en": "DGX Spark (Product Version A.7), fieldiag r9.257.3 build 19 dic 2025, segun el usuario lori1",
+   "riesgo": "La salida del propio post muestra que la herramienta quita drivers y servicios NVIDIA y detiene docker/udev; hay que parar cargas de trabajo antes y reiniciar despues. Uso de init 3 saca la sesion grafica.",
+   "verificable_aqui": "ls -la /opt/nvidia/dgx-spark-fieldiag"},
+  {"que": "Registros del fieldiag: el post indica donde quedan los logs y el output.log (incluye salida de dmidecode -t system); la salida contiene numero de serie y UUID del equipo (existen, no se copian).",
+   "como": "cat  /opt/nvidia/dgx-spark-fieldiag/logs/output.log",
+   "fuente_post": 1, "repositorio": null, "licencia": "no indicada",
+   "probado_en": "igual que el anterior", "riesgo": "El log expone serial y UUID: no publicarlo tal cual.",
+   "verificable_aqui": "ls /opt/nvidia/dgx-spark-fieldiag/logs 2>/dev/null"}
+ ],
+ "omision_nvidia": "No hay respuesta de NVIDIA en el tema (elsaco, que responde en post 3, es otro usuario). El usuario reporta una unidad 10-15 C mas caliente en reposo que su gemela y NVIDIA no explica la diferencia en el hilo; las imagenes de temperatura no se pueden leer en el texto.",
+ "utilidad_atom": "alta",
+ "razon": "Post 1 da el comando literal del diagnostico de campo (incluye ThermalStress y PowerStress) y su resultado PASS aun con la unidad caliente, util como metodo de medicion/descarte de hardware. El resto del hilo es el procedimiento de actualizacion de firmware (fwupdmgr, ya conocido) y el problema termico queda sin resolver (posts 4 y 5, solo imagenes)."}

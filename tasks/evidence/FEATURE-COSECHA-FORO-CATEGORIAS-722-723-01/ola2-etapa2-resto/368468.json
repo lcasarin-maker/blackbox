@@ -1,0 +1,47 @@
+{
+ "id": 368468,
+ "titulo": "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-FP8",
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta vLLM de un solo nodo para Nemotron-3-Omni-FP8 con gpu_memory_utilization 0.8 y max_num_batched_tokens 49152",
+   "como": "vllm serve nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-FP8 --max-model-len 262144 --trust-remote-code --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser nemotron_v3 --kv-cache-dtype auto --video-pruning-rate 0.5 --max-num-batched-tokens 49152 --gpu-memory-utilization 0.8",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "un Spark, segun el usuario",
+   "riesgo": "Contexto de 262144 con 0.8 de memoria en unificada puede competir con el sistema",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Habilitar TF32 via variables de entorno del contenedor",
+   "como": "VLLM_SPARK_EXTRA_DOCKER_ARGS=\"-e TORCH_ALLOW_TF32_CUBLAS_OVERRIDE=1 -e NVIDIA_TF32_OVERRIDE=1\" ./run-recipe.sh nemotron-3-omni-fp8 --solo",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "un Spark, segun el usuario",
+   "riesgo": "Cambia precision numerica",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion con llama-benchy (pp2048, tg32 a distintas profundidades); el usuario reporta alrededor de 62 t/s en tg32",
+   "como": "no indicado (solo la tabla de resultados)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "un Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario publica receta vLLM y banderas concretas; los otros dos mensajes son una broma y una peticion de benchmark. Sin respuesta de NVIDIA.",
+ "leido": true,
+ "lectura": "completa"
+}

@@ -1,0 +1,27 @@
+{
+ "id": 356366,
+ "titulo": "DGX Spark cluster - what cable do you use?",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Advertencia de NVIDIA sobre cables de interconexion: solo dos modelos soportados; los no soportados pueden tener componentes activos que consumen potencia extra e interferir con la envolvente termica y de potencia del Spark",
+   "como": "Usar solo Amphenol NJAAKK0006 o Luxshare LMTQF022-SD-R (referencia: guia Spark Stacking)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "personal NVIDIA (NVES), sin hardware declarado",
+   "riesgo": "Cables no soportados: consumo extra y posible interferencia termica/de potencia; un usuario desaconseja un cable FS QSFP-100G-AO03 sin dar motivo (post 2); otro usa cables QSFP56 de FS y mide 25.62 GB/s",
+   "verificable_aqui": "ip -br link  (comprobar si hay enlace de interconexion; no identifica el modelo de cable)"
+  }
+ ],
+ "omision_nvidia": "NVIDIA confirma (post 8) que solo soporta esos dos cables; los usuarios no encuentran donde comprarlos en EE. UU. (post 6).",
+ "utilidad_atom": "media",
+ "razon": "El personal NVIDIA declara que cables activos no soportados cargan la envolvente termica y de potencia, una advertencia con condicion clara, pero solo aplica si se usa un cable de interconexion (no confirmado aqui). No hay mecanismo de medicion."
+}

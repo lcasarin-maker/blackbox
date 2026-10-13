@@ -1,0 +1,67 @@
+{
+ "id": 373274,
+ "titulo": "Qwen3.6-35B-A3B-NVFP4 hangs after attention backend selection across 3 vLLM images, including NVIDIA's own official recipe",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnostico: comprobar si la imagen vLLM trae cubins precompilados de FlashInfer; con False la compilacion JIT en SM12.1 se cuelga en silencio",
+   "como": "python3 -c \"import vllm.envs as e; print(e.VLLM_HAS_FLASHINFER_CUBIN)\"",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10 SM12.1, driver 580.159.03, CUDA 13.0.2 (segun el usuario)",
+   "riesgo": "Comprobacion dentro del contenedor vLLM; la afirmacion de causa es del usuario",
+   "verificable_aqui": "docker exec <contenedor-vllm> python3 -c \"import vllm.envs as e; print(e.VLLM_HAS_FLASHINFER_CUBIN)\""
+  },
+  {
+   "que": "Workaround en imagenes viejas: forzar backends Triton",
+   "como": "--attention-config '{\"backend\": \"TRITON_ATTN\"}' --kernel-config '{\"moe_backend\": \"triton\"}' -e VLLM_USE_FLASHINFER_SAMPLER=0",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "VLLM_ATTENTION_BACKEND no existe en vLLM 0.21 y se ignora en silencio (segun el usuario)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Con --kv-cache-dtype fp8 se descartan FLASH_ATTN y otros backends y queda FlashInfer (causa del hang en imagenes sin cubins)",
+   "como": "--kv-cache-dtype fp8",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "vLLM 0.21 con DEBUG, segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Cache HF corrupta: blobs .incomplete = descargas parciales (modelos gated sin HF_TOKEN); se borran y se vuelve a descargar",
+   "como": "find ... -name \"*.incomplete\" -delete",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Borra archivos; revisar la ruta antes",
+   "verificable_aqui": "find ~/.cache/huggingface -name '*.incomplete'"
+  },
+  {
+   "que": "Solucion final: construir la imagen eugr con wheels precompilados (vLLM 0.22.1rc1.dev511, FlashInfer 0.6.13 con cubins SM12.1)",
+   "como": "git clone https://github.com/eugr/spark-vllm-docker.git ; cd spark-vllm-docker ; ./build-and-copy.sh --tf5",
+   "fuente_post": 3,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "GB10 SM12.1, DGX OS 7 (segun el usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Receta oficial de build.nvidia.com (agent-ready Qwen3.6-35B) segun el usuario no arranca tal cual en la Spark; no hay respuesta de NVIDIA en el hilo (eugr_nv aparece solo mencionado como moderador).",
+ "utilidad_atom": "media",
+ "razon": "Hay comandos concretos de diagnostico y workaround para cuelgues de vLLM en GB10 (cubins FlashInfer, backends Triton, cache .incomplete), todos de un usuario con linea de tiempo detallada y sin respuesta de NVIDIA. Tiene valor para la pila vLLM en contenedor, pero no toca colapsos de memoria ni cortes por calor."
+}

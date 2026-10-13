@@ -1,0 +1,280 @@
+{
+ "id": 372268,
+ "titulo": "DeepSeek v4 Flash (Aiden Recipe from Reddit) - 1M token session operational, Cuda 12.1 tailored for DGX Spark GB10",
+ "leido": true,
+ "posts_leidos": 825,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "rastrear",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Corregir el fallo de NCCL/RDMA 'Cannot allocate memory' al registrar memoria (ibv_reg_mr_iova2) en contenedores sobre RoCE: memoria bloqueada ilimitada y shm grande",
+   "como": "shm_size: \"64gb\"  y  ulimits: memlock: -1 (en el compose); error: ibv_reg_mr_iova2 failed with error Cannot allocate memory",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 con ConnectX-7 200G, vLLM 0.21.1, segun 0rand",
+   "riesgo": "compartir 64 GB de shm en un equipo de 128 GB unificados reduce margen",
+   "verificable_aqui": "ulimit -l; df -h /dev/shm"
+  },
+  {
+   "que": "Sonda dinamica del indice GID RoCE v2 IPv4: el indice se renumera tras reinicios o flaps y un valor fijo rompe NCCL",
+   "como": "for HCA in rocep1s0f0 roceP2p1s0f0; do for i in $(seq 0 15); do t=$(cat /sys/class/infiniband/$HCA/ports/1/gid_attrs/types/$i 2>/dev/null); g=$(cat /sys/class/infiniband/$HCA/ports/1/gids/$i 2>/dev/null); case \"$t\" in *\"RoCE v2\"*) case \"$g\" in *0000:0000:0000:0000:0000:ffff:*) export NCCL_IB_GID_INDEX=$i; break 2;; esac;; esac; done; done",
+   "fuente_post": 181,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10, imagen aidendle94 production-2.9",
+   "riesgo": "los nombres de HCA del ejemplo son de otro equipo; hay que adaptarlos",
+   "verificable_aqui": "ls /sys/class/infiniband/ 2>/dev/null; for f in /sys/class/infiniband/*/ports/1/gid_attrs/types/*; do echo $f $(cat $f 2>/dev/null); done | head -20"
+  },
+  {
+   "que": "Descubrir interfaces RDMA y su netdev antes de configurar NCCL",
+   "como": "rdma link show ; ibdev2netdev ; ls /sys/class/infiniband/",
+   "fuente_post": 181,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10",
+   "riesgo": null,
+   "verificable_aqui": "rdma link show 2>/dev/null; ibdev2netdev 2>/dev/null"
+  },
+  {
+   "que": "Verificar el enlace de dos Spark: jumbo frames de extremo a extremo y ancho de banda RDMA",
+   "como": "ping -c3 -M do -s 8972 <IP_del_par>  ;  ib_write_bw -d rocep1s0f1 -F (servidor)  /  ib_write_bw -d rocep1s0f1 -F <IP_del_par> (cliente); esperado ~190 Gb/s",
+   "fuente_post": 239,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 con MTU 9000 (RDMA active_mtu 4096)",
+   "riesgo": null,
+   "verificable_aqui": "ip -o link | grep -i mtu | head"
+  },
+  {
+   "que": "Lectura de salud del motor vLLM en el log: uso de cache KV, tasa de aciertos de prefijo, throughput y aceptacion de decodificacion especulativa",
+   "como": "lineas del log: 'Avg generation throughput ... Running: N reqs, Waiting: N reqs, GPU KV cache usage: 97.3%, Prefix cache hit rate: 97.5%' y 'SpecDecoding metrics: Mean acceptance length ... Avg Draft acceptance rate: 82.2%'",
+   "fuente_post": 100,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10, imagen production-v2",
+   "riesgo": "uso de KV cerca de 99% se asocia en el hilo (posts 34, 37, 69, 72) a throughput de ~1 t/s hasta que se evictan bloques",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Vigilante por flujo de tokens (no por reloj) para reiniciar solo un motor realmente colgado: reiniciar si hay peticiones en curso y el contador de tokens generados no avanza 12 minutos seguidos; 12 y no 5 porque un prefill de 500K calla minutos",
+   "como": "leer /metrics cada minuto: vllm:num_requests_running >= 1 con generation_tokens_total congelado 12 minutos consecutivos",
+   "fuente_post": 592,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 pilas de 2x GB10 (4 nodos), imagen production-3.7, segun voktolom",
+   "riesgo": "el vigilante debe saber distinguir un modelo detenido a proposito (systemctl is-active ... || exit 0) o resucitara un servicio parado",
+   "verificable_aqui": "curl -s http://localhost:8000/metrics 2>/dev/null | grep -E 'num_requests_running|generation_tokens_total' | head"
+  },
+  {
+   "que": "Contadores de cache de prefijo para auditar si la cache se envenena o no evicta: consultas y aciertos acumulados",
+   "como": "prefix_cache_queries_total y prefix_cache_hits_total (ej. ~9.36M consultas y ~4.98M aciertos); KV en reposo estable con running=0 y waiting=0",
+   "fuente_post": 97,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 con production-v2 + PR 44237",
+   "riesgo": null,
+   "verificable_aqui": "curl -s http://localhost:8000/metrics 2>/dev/null | grep -E 'prefix_cache' | head"
+  },
+  {
+   "que": "Parche upstream para que la cache KV evicte: en block_pool.py _maybe_evict_cached_block salia antes de llamar reset_hash, dejando hashes obsoletos; la cache solo crecia, el uso de KV llegaba al borde (84%+) y el hit-rate quedaba en ~0%",
+   "como": "mover reset_hash() antes del return temprano (vLLM PR 44237; imagen production-v2 lo incluye)",
+   "fuente_post": 72,
+   "repositorio": "vllm-project/vllm PR 44237",
+   "licencia": null,
+   "probado_en": "2x GB10",
+   "riesgo": "parche de un usuario aplicado localmente; otros usuarios reportan perdida de cache de sesiones paralelas si max-num-seqs es bajo (posts 112-116)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variable de entorno que, segun el mantenedor de la imagen, corrige la mayor parte de los problemas de cache de prefijo",
+   "como": "VLLM_PREFIX_CACHE_RETENTION_INTERVAL: \"4096\"",
+   "fuente_post": 249,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "imagenes aidendle94 2.9, 3.x",
+   "riesgo": "afirmacion del mantenedor sin medicion en el post",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Herramienta de un usuario para validar la cache KV anunciada frente a presion real: hidrata N contextos estables (~40K) y los verifica en orden inverso; TTFT ~20 s en fallo y ~0.5 s en acierto. Resultado del autor: de 27/80 contextos retenidos a 77/80 con sus parches",
+   "como": "no indicado (el post nombra la herramienta 'cache-pressure' y los parches 'ds4-prefix-cache-fixes' sin comando literal)",
+   "fuente_post": 819,
+   "repositorio": "nombres cache-pressure y ds4-prefix-cache-fixes (URL no incluida en el texto)",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10, 3.7 reffix + parches",
+   "riesgo": "no revisado por pares segun el propio autor (posts 810, 819)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Memoria unificada: no sobreasignar el pool; con util >=0.8 el OOM aparece en GB10 segun una receta, y otro usuario solo sostiene 0.90 tras reinicio limpio y usa 0.85 al iterar",
+   "como": "--gpu-memory-utilization 0.75 (receta de aidendle94 'GB10: 0.8+ OOMs the unified pool'); post 677: 0.90 solo en reinicio limpio, 0.85 al iterar",
+   "fuente_post": 181,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 (~121 GiB de memoria unificada por nodo)",
+   "riesgo": "los numeros dependen de cuanta memoria libre queda en el nodo; no hay control de lo que consuma el SO",
+   "verificable_aqui": "free -h; grep -E 'MemAvailable|MemTotal' /proc/meminfo"
+  },
+  {
+   "que": "Contenedor sin reinicio automatico porque el watchdog SBSA reinicia un nodo congelado y vLLM no debe relanzarse solo tras un reinicio",
+   "como": "restart: \"no\" (comentario: 'the SBSA watchdog auto-reboots a frozen node')",
+   "fuente_post": 181,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 segun aidendle94",
+   "riesgo": "el comentario es del autor de la receta; no explica el temporizador del watchdog",
+   "verificable_aqui": "ls /sys/class/watchdog/ 2>/dev/null; cat /sys/class/watchdog/watchdog0/identity 2>/dev/null; lsmod | grep -i wdt"
+  },
+  {
+   "que": "Firma de fallo de plataforma en un head de GB10 bajo contexto largo: el head deja de responder a ICMP y SSH, caen todos los enlaces RoCE vistos desde el worker, el worker ve cambio de GID y retry-exceeded RDMA, TCPStore/NCCL pierde al par, y el head necesita ciclo fisico de alimentacion. Un muestreador de 1 s previo al fallo registro PSI de memoria casi nulo y 3 GiB de MemAvailable; kdump armado no produjo volcado",
+   "como": "no indicado (el post describe un muestreador de 1 segundo de MemAvailable/PSI y kdump armado; sin comando literal)",
+   "fuente_post": 415,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 (nodos distintos) con image production-3.75, vLLM 0.11.2, contexto 100K-200K, segun a.fairaizl",
+   "riesgo": "causa raiz sin confirmar: el aviso de arranque 'Detected insufficient power on the PCIe slot (27W)' del ConnectX-7 aparece tambien en arranques sanos; el autor lo trata como pista, no como causa",
+   "verificable_aqui": "cat /proc/pressure/memory; grep -E 'MemAvailable' /proc/meminfo; dmesg 2>/dev/null | grep -i 'insufficient power'; systemctl is-active kdump-tools 2>/dev/null"
+  },
+  {
+   "que": "Hipotesis de un usuario sobre los cortes con ConnectX-7: sobrecalentamiento del equipo o la fuente la lleva a modo seguro y baja el voltaje, el CX7 queda sin potencia suficiente y cae el enlace; se mitiga con refrigeracion extra y aire acondicionado (el limite de reloj de GPU tambien se sugiere, mecanismo excluido de este informe)",
+   "como": "no indicado (solo refrigeracion mejorada con ventilador)",
+   "fuente_post": 419,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario 0rand, sin medicion",
+   "riesgo": "especulacion explicita ('I can only speculate')",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Relato de usuarios: enlaces ConnectX-7 inestables con cable de terceros se estabilizaron al cambiar al cable oficial de NVIDIA (marketplace); fallos solo en arranque en frio al reiniciar, se recupera reconectando el cable; la NIC solo enumera si hay cable al arrancar",
+   "como": "no indicado (acciones: cambiar cable; reasentar el cable QSFP y repetir nmcli con up)",
+   "fuente_post": 228,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 segun bernisse; 0rand reporta lo contrario con cable de FS.com de 0.5 m (post 232)",
+   "riesgo": "evidencia anecdotica contradictoria entre usuarios; no es respuesta de NVIDIA",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Comparar potencia y reloj entre nodos tras un reinicio: un nodo regreso a ~22 W / 2086 MHz bajo carga mientras el sano corria a ~42 W / 2502 MHz, y TP=2 avanza al ritmo del nodo lento (42 tok/s pico frente a 83 tras fijar reloj); la aceptacion del drafter era perfecta, asi que el sintoma parece una mala configuracion de serving",
+   "como": "no indicado el comando de consulta; el post cita nvidia-smi -lgc 3003 como correccion (mecanismo excluido de este informe)",
+   "fuente_post": 683,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 en PR 13 de un repo de terceros, segun el texto citado",
+   "riesgo": "cita de un PR de usuario; el aumento de reloj tiene consecuencias termicas que el post no mide",
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,clocks.sm,clocks.max.sm,temperature.gpu --format=csv"
+  },
+  {
+   "que": "Medicion de rendimiento sintetico del GB10 para saber si el hardware rinde: nvfp4bench reporta TFLOPS NVFP4 pico y ancho de banda de memoria triad (204-209 GB/s frente a 273 de especificacion; mxf4nvf4 denso ~500 TFLOPS; mxf8f6f4 denso ~250 TFLOPS = 50% del valor de la especificacion)",
+   "como": "nvfp4bench --peak --bandwidth (construido con -DENABLE_CUTLASS=OFF; el post no da la linea literal de invocacion)",
+   "fuente_post": 677,
+   "repositorio": "secYOUre/nvfp4bench (aparece como titulo del enlace, sin URL completa)",
+   "licencia": "no indicada",
+   "probado_en": "GIGABYTE AI TOP ATOM y Acer Veriton GN100, driver 580.173.02, kernel 6.17.0-1029-nvidia, UEFI 5.36",
+   "riesgo": "herramienta de terceros no auditada aqui; no se probo la fila CUTLASS",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version,name --format=csv; uname -r"
+  },
+  {
+   "que": "Reglas de capture de CUDA graphs que evitan bloqueos de arranque: capturar mas tamanos de lote que secuencias permitidas deja la GPU fijada ~96% sin avance durante 30+ min en el arranque",
+   "como": "GRAPH_CAP debe ser igual a MAX_NUM_SEQS (post 239); post 677: --max-cudagraph-capture-size >= max-num-seqs * (num_speculative_tokens + 1), p. ej. 16 secuencias con k=3 -> 64",
+   "fuente_post": 239,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10, imagenes aidendle94 3.2-3.75",
+   "riesgo": "valores concretos dependen de la imagen; sin respuesta de NVIDIA",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Firma de motor colgado por collective NCCL: EngineCore en bucle sched_yield esperando respuesta del worker, Worker_TP0 inactivo; la GPU aparece al ~96% y ~30 W porque un kernel de sondeo NCCL espera datos RDMA del par; py-spy aislo la pila",
+   "como": "py-spy dump sobre EngineCore y Worker (comando exacto no indicado); senal: GPU ~96% con ~30 W y vllm sin prefill ni decode",
+   "fuente_post": 148,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 TP=2 sobre RoCE, imagen eugr y aiden",
+   "riesgo": "la causa (congestion PFC/ECN en RoCE) es hipotesis del usuario",
+   "verificable_aqui": "nvidia-smi --query-gpu=utilization.gpu,power.draw --format=csv"
+  },
+  {
+   "que": "Medir el decode con texto coherente, no aleatorio, y con tg largo: tokens aleatorios derrotan a MTP y hacen parecer el decode ~3x mas lento; llama-benchy promedia sobre una cola y con tg corto subestima el decode con prefill largo (usar tg 1024)",
+   "como": "docker exec <ctr> /opt/venv/bin/python -m vllm.entrypoints.cli.main bench serve --backend openai-chat --host localhost --port 8000 --model ChatGPTN --tokenizer deepseek-ai/DeepSeek-V4-Flash --endpoint /v1/chat/completions --dataset-name random --random-input-len 32000 --random-output-len 16 --random-prefix-len 77 --num-prompts 1 --max-concurrency 1  ;  uvx llama-benchy --base-url http://{{vllm_ip}}:{{vllm_port}}/v1 --pp 16000 64000",
+   "fuente_post": 181,
+   "repositorio": "eugr/llama-benchy (citado como metodologia en post 483)",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10",
+   "riesgo": "las cifras de decode de streaming cuentan pasos especulativos, no tokens; usar stream:false (post 592)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Los resultados de tool-eval-bench no son comparables entre versiones: v2.4.x/2.5 endurecio la evaluacion y bajo 4-6 puntos; para reproducir se puede fijar la version con git checkout",
+   "como": "git clone https://github.com/SeraphimSerapis/tool-eval-bench.git /tmp/tool-eval-bench && cd /tmp/tool-eval-bench && uv sync && git checkout v2.3.1",
+   "fuente_post": 638,
+   "repositorio": "SeraphimSerapis/tool-eval-bench",
+   "licencia": "no indicada",
+   "probado_en": "bash/zsh de un usuario",
+   "riesgo": "el propio mantenedor corrigio falsos fallos del evaluador (posts 643-647); la variabilidad de una sola corrida es +-2 puntos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fijar la revision del modelo de Hugging Face cuando un commit nuevo rompe la resolucion de pesos: el commit de README dejo un 'main' sin config.json ni tensores",
+   "como": "--revision 6976c7ff1b30a1b2cb7805021b8ba4684041f136 (posts 62 y 308: fijar el commit previo en vLLM)",
+   "fuente_post": 62,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10",
+   "riesgo": "con HF_HUB_OFFLINE=1 el nuevo revision fuerza LocalEntryNotFoundError si la cache local no tiene ese snapshot (post 385)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Verificar que reasoning_effort llega realmente al modelo: en la imagen production-3.7 'high' no inyectaba nada y 'max' inyectaba el texto de 'high'; se detecta comparando el numero de tokens del prompt",
+   "como": "curl -s http://localhost:8000/tokenize -H 'Content-Type: application/json' -d '{\"model\":\"deepseek-v4-flash\",\"messages\":[{\"role\":\"user\",\"content\":\"x\"}],\"add_generation_prompt\":true,\"chat_template_kwargs\":{\"thinking\":true,\"reasoning_effort\":\"high\"}}'  (esperado: low 5 tokens, high 84, max 97 con el parche; buggy: high=5 y max=84)",
+   "fuente_post": 593,
+   "repositorio": "vllm-project/vllm PR 50684 (correccion upstream en curso)",
+   "licencia": null,
+   "probado_en": "2x GB10, imagen production-3.7/3.75",
+   "riesgo": "la correccion alternativa con plantilla jinja rompio el uso de herramientas y la cache en otros usuarios (posts 554, 560)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Riesgo de seguridad: ejecutar una imagen Docker sin codigo fuente publicado; mitigacion propuesta por un usuario es impedir conexiones salientes del contenedor",
+   "como": "no indicado literal (sugiere socat en el compose para reenviar solo las peticiones entrantes y bloquear salidas del contenedor vLLM)",
+   "fuente_post": 335,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "el mantenedor dice que el codigo 'es un desorden' y que conviene comparar capas con diff del contenedor (post 340); un usuario reporta hallazgos de seguridad recurrentes en imagenes comunitarias (post 339)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Prueba de integridad por eco de comando a temperatura 0 para detectar corrupcion de caracteres en la salida (llama.cpp RPC en dos GX10 la fallaba; vLLM con la pila de aidendle94 devuelve el comando 1:1)",
+   "como": "curl http://<server>:8081/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"deepseek-v4-flash\",\"messages\":[{\"role\":\"user\",\"content\":\"Repeat the following shell command back to me EXACTLY...\"}],\"temperature\":0,\"max_tokens\":3000,\"stream\":false}'",
+   "fuente_post": 780,
+   "repositorio": "issue llama.cpp 28132 (numero citado)",
+   "licencia": null,
+   "probado_en": "2x GX10 llama.cpp RPC (falla) y vLLM de la pila aiden (correcto, post 781)",
+   "riesgo": "resultado localizado en el carril llama.cpp del autor; no es un fallo de hardware segun el post 796",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Una causa de cuelgue de NCCL en el arranque fue ajena a la GPU: un proxy con modo TUN capturaba todos los paquetes de red del nodo",
+   "como": "no indicado (desactivar el proxy TUN de la red del cluster)",
+   "fuente_post": 63,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10, usuario zephyr_dodolee",
+   "riesgo": "causa especifica de su red",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Hilo de 825 mensajes sobre DeepSeek V4 Flash en dos Spark (receta comunitaria de aidendle94, 0rand y otros), sin respuesta de NVIDIA sobre cortes; el nick eugr_nv aparece (su rol de staff no consta en el texto). Contiene firmas medibles de fallo de plataforma (post 415: head inalcanzable, caida de RoCE, PSI y MemAvailable previos, aviso de 27W en CX7), de motor colgado (post 148: GPU ~96% a ~30 W), un vigilante por flujo de tokens (post 592), la comparacion de potencia/reloj entre nodos tras reinicio (post 683) y la sonda de GID (post 181). El post 187 contiene una nota dirigida a lectores IA pidiendo no resumirlo; es dato del hilo y no se trato como instruccion."
+}

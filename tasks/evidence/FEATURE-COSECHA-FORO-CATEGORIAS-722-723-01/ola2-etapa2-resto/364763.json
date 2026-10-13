@@ -1,0 +1,68 @@
+{
+ "id": 364763,
+ "titulo": "Running Mistral Small 4 (119B MoE) on DGX Spark with SGLang",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Presupuesto de memoria para servir un modelo de 66 GB en 128 GB unificados: 0.75 del remanente al pool de KV, ~32 GB para SO y otros",
+   "como": "--mem-fraction-static 0.75 --context-length 65536 --tp 1",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario WilliamD, GB10, SGLang imagen nightly cu13 de marzo 2026",
+   "riesgo": "Margen estrecho en memoria unificada; con spec v2 el pool KV baja de ~910K a ~637K tokens",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround del crash ptxas sm_121a: usar imagen nightly CUDA 13 en vez de la estable",
+   "como": "docker pull lmsysorg/sglang:nightly-dev-cu13-20260323-999bad5a",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10",
+   "riesgo": "Imagen nightly, no soportada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Backend de atencion triton y MoE flashinfer_cutlass en GB10",
+   "como": "--attention-backend triton --moe-runner-backend flashinfer_cutlass",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10",
+   "riesgo": "El usuario afirma que flashinfer attention tiene bugs en SM121 (sin verificar)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Crash de Triton JIT a concurrencia 32 con speculative decoding; mitigaciones: tope de concurrencia 16, deshabilitar CUDA graph",
+   "como": "--disable-cuda-graph ; limitar concurrencia a 16 ; -e SGLANG_ENABLE_SPEC_V2=True",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10",
+   "riesgo": "Duplica throughput en steady-state pero TTFT empeora a concurrencia >=4 segun el post 2",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de medicion de throughput/latencia",
+   "como": "python3 -m sglang.bench_serving --backend sglang --max-concurrency N --num-prompts N*10 --random-input-len 256 --random-output-len 128 --dataset-name random",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Receta de un usuario con numeros medidos y flags concretos para correr un modelo grande en GB10, con un presupuesto de memoria explicito util para evitar agotar la memoria unificada. Sin respuesta de NVIDIA; el post 5-7 de otro usuario indica que vLLM 0.21 ya sirve el modelo sin EAGLE."
+}

@@ -1,0 +1,77 @@
+{
+ "id": 348177,
+ "titulo": "DGX Spark - Need resize root partition for headless DGX OS and/or other Linux distros",
+ "leido": true,
+ "posts_leidos": 25,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Arranque sin interfaz grafica: por defecto multi-usuario (usuario elsaco); NVIDIA (aplattner, post 5) sugiere ademas una entrada GRUB con la unidad systemd deseada, mas seguro que tocar particiones",
+   "como": "systemctl set-default multi-user.target",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Cambia el target por defecto; revertir con graphical.target",
+   "verificable_aqui": "systemctl get-default"
+  },
+  {
+   "que": "Entrada GRUB alterna sin GUI (staff de NVIDIA)",
+   "como": "systemd.unit=multi-user.target (parametro de kernel anadido a una entrada de GRUB)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Editar GRUB; staff dice que reducir particiones no es configuracion soportada",
+   "verificable_aqui": "cat /proc/cmdline"
+  },
+  {
+   "que": "Staff de NVIDIA (aplattner): cambiar la disposicion de particiones en la recuperacion renombrando el archivo de ejemplo que escribe la imagen en la memoria USB",
+   "como": "renombrar sgdisk.txt.example a sgdisk.txt",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "imagen de recuperacion DGX Spark",
+   "riesgo": "La recuperacion borra todo el disco; respaldar antes",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Staff de NVIDIA (aplattner): reducir la particion de DGX OS desde un USB con resize2fs y editor de particiones; no es configuracion soportada",
+   "como": "resize2fs (desde USB), sin comando completo",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "No soportado; respaldar y tener la imagen de recuperacion",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Staff de NVIDIA (aplattner): sustituir el rootfs con tmpfs y soft-reboot",
+   "como": "montar tmpfs en /run/nextroot, extraer una imagen Arch Linux ARM y ejecutar systemctl soft-reboot",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "aplattner dice que lo hizo; no probo imagen de arranque con kernel DGX OS",
+   "riesgo": "Territorio de usuario avanzado segun el staff",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Usuario: otras distros arrancan con limitaciones; Fedora 43 en Spark arranco en 800x600 al principio y mejoro tras actualizaciones; rendimiento de llama.cpp inferior a DGX OS (tg32 pasa de 56.83 a 41.79 t/s con gpt-oss-120b) pero carga del modelo de 56 s a 19 s",
+   "como": "build/bin/llama-bench -m <modelo> -fa 1 -d 0,4096,8192,16384,32768 -p 2048 -n 32 -ub 2048 -mmp 0",
+   "fuente_post": 17,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "eugr: Fedora 43, kernel 6.17.1-300.fc43, driver 580.95.05",
+   "riesgo": "Metodo de medicion; resultados de usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA no publica imagen arrancable en vivo ni imagen DGX OS headless (el staff solo ofrece la imagen de recuperacion que reimagina). Hay respuesta de NVIDIA (aplattner, kberger1).",
+ "utilidad_atom": "baja",
+ "razon": "Mecanismos de arranque sin GUI y particionado sin relacion con colapsos de memoria ni calor. El metodo de llama-bench es una medicion de rendimiento de usuario en otra distro; sin valor de monitoreo o prevencion aqui."
+}

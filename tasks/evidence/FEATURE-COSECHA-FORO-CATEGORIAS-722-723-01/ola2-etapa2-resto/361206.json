@@ -1,0 +1,37 @@
+{
+ "id": 361206,
+ "titulo": "An update this week to DGX Spark caused ComfyUI to run much slower",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Causa raiz reportada: se habia instalado por error el driver NVIDIA 590, lo que ralentizaba ComfyUI; corregirlo restauro el rendimiento.",
+   "como": "no indicado (el post solo dice que el driver era 590)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (declarado por usuario)",
+   "riesgo": "Una actualizacion puede cambiar el driver sin aviso.",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+  },
+  {
+   "que": "Aceleracion de ComfyUI con Sage Attention y bf16.",
+   "como": "python main.py --listen 0.0.0.0 --use-sage-attention --bf16-unet --bf16-vae --bf16-text-enc",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "--listen 0.0.0.0 expone el servicio a la red.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Diagnostico de regresion de rendimiento por driver 590 inesperado (verificable comparando la version de driver) y flags de ComfyUI de un usuario. Sin respuesta de NVIDIA; mecanismo de comprobar driver_version es trivial."
+}

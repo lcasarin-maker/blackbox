@@ -1,0 +1,68 @@
+{
+ "id": 357663,
+ "titulo": "DGX Spark (SM121) Software Support is Severely Lacking - Official Roadmap Needed",
+ "leido": true,
+ "posts_leidos": 44,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "omision_nvidia",
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Registro de llamadas de FlashInfer para rastrear fallos de kernel (indicado por johnny_nv, personal NVIDIA segun el rol que usa en el hilo)",
+   "como": "export FLASHINFER_LOGLEVEL=3 ; export FLASHINFER_LOGDEST=stdout",
+   "fuente_post": 38,
+   "repositorio": "https://docs.flashinfer.ai/logging.html#main-configuration",
+   "licencia": null,
+   "probado_en": "DGX Spark",
+   "riesgo": "el nivel alto vuelca tensores y genera logs grandes",
+   "verificable_aqui": "env | grep FLASHINFER"
+  },
+  {
+   "que": "Variables que NVIDIA publica para instalar vLLM 0.15.1 en Spark (sm_121a) sin contenedor",
+   "como": "export TORCH_CUDA_ARCH_LIST=12.1a ; export TRITON_PTXAS_PATH=/usr/local/cuda/bin/ptxas ; VLLM_USE_FLASHINFER_MOE_FP4=1 VLLM_FLASHINFER_MOE_BACKEND=throughput ; --kv-cache-dtype fp8",
+   "fuente_post": 34,
+   "repositorio": "https://github.com/vllm-project/vllm",
+   "licencia": "Apache-2.0 no se menciona; licencia no indicada",
+   "probado_en": "DGX Spark; el propio autor admite en el post 38 que no lo probo por largo tiempo y que le fallo tambien",
+   "riesgo": "el usuario trystan1 reporta el mismo fallo (CUDA illegal instruction, Xid 13 y 43 en dmesg) tras mas de 20 minutos de carga con Nemotron 3 Nano NVFP4 (posts 33 y 37)",
+   "verificable_aqui": "journalctl -k -b | grep -E 'NVRM: Xid'"
+  },
+  {
+   "que": "El mismo post 34 incluye sudo sysctl -w vm.drop_caches=3 como paso de 'Clean memory' (ya catalogado, no se repite como mecanismo nuevo)",
+   "como": "sudo sysctl -w vm.drop_caches=3",
+   "fuente_post": 34,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "ya conocido",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Declaracion de personal NVIDIA: las GPU sm12x (incluye GB10) no tienen tcgen05; los kernels sm80 corren por compatibilidad; las optimizaciones MoE para GB10 siguen en desarrollo; --enforce-eager es necesario en ciertas versiones de vLLM",
+   "como": "no indicado (declaracion)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un usuario (eugr) afirma que los wheels cu130 de vLLM funcionan sin --enforce-eager y que Nemotron NVFP4 corre a ~60 t/s frente a 83 t/s de Qwen3-30B AWQ",
+   "como": "no indicado (medicion de usuario)",
+   "fuente_post": 35,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, build propio de eugr",
+   "riesgo": "FlashInfer escribe errores al arrancar y puede fallar en inferencia",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Personal de NVIDIA reconoce (posts 9, 11, 13, 23, 38) que no existen kernels MoE optimizados para GB10 todavia y que no hay tcgen05; no entrega fechas ni hoja de ruta.",
+ "utilidad_atom": "media",
+ "razon": "Hilo de queja con respuestas del staff (johnny_nv) que admiten huecos del software sm121 y entregan variables y un logging de FlashInfer; un usuario documenta caidas con Xid 13 y 43 bajo carga larga con NVFP4. La utilidad es media porque el unico rastreo concreto es el logging de FlashInfer y no hay causa relacionada con calor ni memoria."
+}

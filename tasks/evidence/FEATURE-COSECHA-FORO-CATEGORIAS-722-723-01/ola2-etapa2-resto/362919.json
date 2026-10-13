@@ -1,0 +1,47 @@
+{
+ "id": 362919,
+ "titulo": "Nvidia drivers 595.45.04 and CUDA 13.2 on their way",
+ "leido": true,
+ "posts_leidos": 24,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Prueba de usuario para saber si el bug de memoria no liberada de la serie 590 esta corregido: esperar a que vLLM arranque, terminarlo con Ctrl-C y comprobar si la memoria se libera",
+   "como": "no indicado (sin comando exacto; terminar vLLM con Ctrl-C y observar la memoria)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "null",
+   "riesgo": "Afirmacion de usuario sin verificar",
+   "verificable_aqui": "free -m"
+  },
+  {
+   "que": "Advertencia de staff NVIDIA (aplattner): 595.45.04 es beta; para sistemas estables esperar actualizaciones por el canal de DGX OS",
+   "como": "no indicado",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "null",
+   "riesgo": "Instalar 595 desde el repositorio cuda directo se sale del stack validado de DGX OS",
+   "verificable_aqui": "cat /proc/driver/nvidia/version"
+  },
+  {
+   "que": "Un usuario indica que en Grace hay que instalar el modulo de kernel abierto (nvidia-open), no cuda-drivers",
+   "como": "no indicado (nombre de paquete nvidia-open)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "null",
+   "riesgo": "Afirmacion de usuario que cita la pagina de instalacion de CUDA 13.2",
+   "verificable_aqui": "dpkg -l | grep -i nvidia"
+  }
+ ],
+ "omision_nvidia": "El driver 595 no llego por el canal oficial de DGX OS en el periodo del hilo; la pagina de productos soportados no menciona DGX Spark (post 2, usuario).",
+ "utilidad_atom": "media",
+ "razon": "Staff (aplattner, post 10) confirma que 595.45.04 es beta y recomienda esperar por DGX OS; el resto son usuarios con relatos de versiones y pruebas sin comandos. Util como aviso de riesgo, no como mecanismo accionable."
+}

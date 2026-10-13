@@ -1,0 +1,79 @@
+{
+ "id": 367221,
+ "titulo": "ASUS GX10 ConnectX-7 Will not recognize QSPF-112 cable plugin",
+ "leido": true,
+ "posts_leidos": 30,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "rastrear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Recoger bundle de diagnostico NVIDIA",
+   "como": "sudo nvidia-bug-report.sh",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "NVIDIA staff (Neill)",
+   "riesgo": "El bundle contiene datos del sistema; no publicarlo sin revisar.",
+   "verificable_aqui": "command -v nvidia-bug-report.sh"
+  },
+  {
+   "que": "Leer estado del enlace y EEPROM del modulo QSFP; err -5 (EIO) indica que la ruta I2C al modulo falla",
+   "como": "sudo ethtool enP2p1s0f1np1 ; ethtool -m <iface> (error: Query module eeprom by page failed, read 0 bytes, err -5)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10, kernel 6.17.0-1014-nvidia, FW CX7 28.45.4028 (usuario)",
+   "riesgo": null,
+   "verificable_aqui": "ip -br link; ethtool -m <iface>"
+  },
+  {
+   "que": "Volcado de firmware CX7 pedido por NVIDIA: iniciar mst, listar dispositivos, amber_collect y mstdump",
+   "como": "sudo mst start; sudo mst status -v; sudo mlxlink -d /dev/mst/mt4129_pciconf0 --amber_collect; sudo mstdump /dev/mst/mt4129_pciconf0 > cx7_fw_dump_0.txt",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": "no indicada (MFT de NVIDIA Networking)",
+   "probado_en": "NVIDIA staff; el usuario lo ejecuto en 3 GX10 (post 9, 13)",
+   "riesgo": "mst_pci no compila para 6.17.0-1014-nvidia con MFT 4.34.1-12 (post 6); diagnostico funciona por direccion PCI.",
+   "verificable_aqui": "mst --version"
+  },
+  {
+   "que": "Solucion confirmada por el usuario: actualizar firmware SoC y EC desde LVFS (versiones 3000007 y 20000006) restauro el reconocimiento de cable; persistio tras reinicios",
+   "como": "fwupd/LVFS test firmware (comando exacto no indicado); versiones SoC 3000007 y EC 20000006",
+   "fuente_post": 30,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10 con switch MikroTik CRS804 (usuario)",
+   "riesgo": "Firmware 'test' de LVFS; es un usuario, sin confirmacion de NVIDIA en el hilo.",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Advertencia: el hotplug CX7 (cx7-pcie-hotplug) dispara 'Cable removal' ~16 s tras arrancar y expulsa los 4 CX-7; el usuario lo desactivo moviendo el script a .bak y creando un archivo vacio",
+   "como": "no indicado (ruta exacta del script no dada)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10 (usuario)",
+   "riesgo": "Desactivar el hotplug es una modificacion de usuario no avalada por NVIDIA.",
+   "verificable_aqui": "journalctl -k -b | grep -i cx7-pcie-hotplug"
+  },
+  {
+   "que": "Los avisos AER 'Correctable ... RxErr' en pcieport durante el arranque son ignorables salvo que inunden el log (usuario elsaco)",
+   "como": "dmesg | grep -i AER",
+   "fuente_post": 27,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Sparks de elsaco",
+   "riesgo": "Afirmacion de usuario.",
+   "verificable_aqui": "dmesg | grep -i 'PCIe Bus Error'"
+  }
+ ],
+ "omision_nvidia": "NVIDIA staff (Neill, post 7) reconoce un problema real de reconocimiento de cable CX7 en GX10 y dice no tener workaround; ASUS declina soporte (post 16).",
+ "utilidad_atom": "baja",
+ "razon": "Tema de red CX7 en ASUS GX10; la mayor parte es dump de ethtool/iomem y config de switch MikroTik. El unico dato transferible es que la actualizacion de firmware SoC/EC por LVFS es la solucion reportada, sin comando exacto y sin relacion con memoria o calor."
+}

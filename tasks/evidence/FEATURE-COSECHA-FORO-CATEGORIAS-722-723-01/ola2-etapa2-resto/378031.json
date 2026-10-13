@@ -1,0 +1,37 @@
+{
+ "id": 378031,
+ "titulo": "MSI Edge Expert Nvme devices not found",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnostico de NVMe desde USB live cuando el BIOS no ve discos (respuesta del staff Neill de NVIDIA)",
+   "como": "sudo nvme list; sudo nvme device-self-test /dev/nvme0 -s 1; sudo nvme self-test-log /dev/nvme0; sudo nvme smart-log /dev/nvme0",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "MSI Edge Expert (OEM de Spark), segun staff sin prueba",
+   "riesgo": "si nvme list no muestra discos, fallo fisico: RMA con el OEM",
+   "verificable_aqui": "sudo nvme list; sudo nvme smart-log /dev/nvme0"
+  },
+  {
+   "que": "Mensaje 'Start PXE over IPv4' al arrancar suele ser orden de arranque con red primero (dos de cuatro FE de un usuario venian asi de fabrica); cambiar el orden en BIOS lo quita y solo suma ~60 s al arranque",
+   "como": "no indicado (ajuste de orden de arranque en BIOS)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "NVIDIA FE (usuarios mashie, DannyTup)",
+   "riesgo": null,
+   "verificable_aqui": "efibootmgr (solo lectura)"
+  }
+ ],
+ "omision_nvidia": "Staff NVIDIA dice que para el producto OEM MSI no hay ruta de diagnostico remoto de NVIDIA; la garantia es del OEM; menciona un test NVMe en la UEFI de DGX Spark (post 3).",
+ "utilidad_atom": "baja",
+ "razon": "El staff (Neill) da secuencia nvme-cli estandar y apunta a un test NVMe en UEFI; usuarios aclaran que el PXE es orden de arranque. No toca memoria ni calor; DannyTup menciona fijar reloj a 1800 con ~65 C sin dar comando."
+}

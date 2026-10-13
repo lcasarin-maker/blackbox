@@ -1,0 +1,68 @@
+{
+ "id": 376981,
+ "titulo": "DGX Spark July 2026 software update issue",
+ "leido": true,
+ "posts_leidos": 21,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "monitorear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround: instalar manualmente el paquete de firmware que el Dashboard sigue ofreciendo, reiniciar",
+   "como": "sudo apt install nvidia-firmware-580-580.159.03",
+   "fuente_post": 17,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario alpe con nvidia-firmware 580.173.02 instalado; joe.24x7 confirma en post 19",
+   "riesgo": "un usuario con driver 580.178.04 no lo aplico por dudar si instalar un firmware mas viejo (post 20)",
+   "verificable_aqui": "apt list --installed 2>/dev/null | grep nvidia-firmware"
+  },
+  {
+   "que": "Consultar estado OTA del Dashboard",
+   "como": "nvidia-spark-ota-check installed-name ; nvidia-spark-ota-check torn-score ; nvidia-spark-ota-check is-ota-available",
+   "fuente_post": 20,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10, dgx-release 7.6.0, driver 580.178.04 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-spark-ota-check installed-name"
+  },
+  {
+   "que": "Logs del Dashboard que NVIDIA pide para diagnosticar",
+   "como": "/var/log/dgx-dashboard-admin.log, dgx-dashboard-admin.err.log, dgx-dashboard-reboot.log, dgx-dashboard-service.log, dgx-dashboard-service.err.log (y rotados .1)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "ls -l /var/log/dgx-dashboard-*"
+  },
+  {
+   "que": "Actualizar manualmente y forzar paquetes retenidos",
+   "como": "sudo apt update ; sudo apt upgrade ; sudo apt full-upgrade",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "full-upgrade fuerza cambios en paquetes retenidos",
+   "verificable_aqui": "apt-mark showhold"
+  },
+  {
+   "que": "Comprobar firmware de plataforma disponible",
+   "como": "fwupdmgr get-updates",
+   "fuente_post": 20,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "fwupdmgr get-updates"
+  }
+ ],
+ "omision_nvidia": "El Dashboard sigue ofreciendo 'July 2026' tras instalar todo; staff (aniculescu) pidio logs y dijo en el post 16 que ingenieria trabaja en ello, sin causa raiz ni arreglo oficial. Un usuario sostiene que la insignia no se puede limpiar por diseno en unidades headless (post 22, hipotesis sin confirmar).",
+ "utilidad_atom": "media",
+ "razon": "Leidos los 21 mensajes presentes en el archivo (el numero 18 no existe en el texto). Hay respuesta de staff NVIDIA solo pidiendo logs y diciendo que ingenieria investiga; el workaround de apt install vino de usuarios y su validez frente a 580.178.04 esta sin confirmar."
+}

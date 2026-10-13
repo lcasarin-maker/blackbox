@@ -1,0 +1,77 @@
+{
+ "id": 370459,
+ "titulo": "MiMo-V2.5-NVFP4 on 2x Spark Cluster - Recipe, findings, fixes, benchmarks",
+ "leido": true,
+ "posts_leidos": 47,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta vLLM de MiMo-V2.5-NVFP4 en 2 Spark con variables NCCL/FlashInfer",
+   "como": "export NCCL_CUMEM_ENABLE=0; export NCCL_NVLS_ENABLE=0; export VLLM_NVFP4_GEMM_BACKEND=flashinfer-cutlass; export VLLM_USE_FLASHINFER_MOE_FP4=1; export VLLM_FLASHINFER_MOE_BACKEND=throughput; vllm serve ... --tensor-parallel-size 2 --kv-cache-dtype fp8_e4m3 --load-format instanttensor --max-num-batched-tokens 16384",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker/pull/251",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark / GB10, vLLM 0.21.1rc1.dev39, CUDA 13.2 (usuario)",
+   "riesgo": "Parches no estan en vLLM upstream; los mods dejaron de aplicar con vLLM mas nuevo (post 39)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Configuracion para 256K de contexto: gpu_memory_utilization 0.89, max_num_seqs 4, PYTORCH_CUDA_ALLOC_CONF expandable_segments:True, VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS 0",
+   "como": "gpu_memory_utilization: 0.89; max_model_len: 262144; max_num_seqs: 4; VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS: 0; PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True",
+   "fuente_post": 33,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark, TP=2 (usuario serapis)",
+   "riesgo": "Otro usuario comento expandable_segments por problemas con otra receta (post 7) y hubo un crash con dos clientes a 100k+ (post 10)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Con MTP cargando, la RAM de ambos Spark se llena y quedan sin respuesta hasta apagar con el boton; solucion enlazada a otro hilo de OOM de carga",
+   "como": "no indicado (remite al hilo 'Spark-vllm-docker runs out of memory loading Qwen3.5-397B-A17B-int4-AutoRound')",
+   "fuente_post": 40,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x Spark, vLLM actual a 2026-06-01 (usuario nglrrr)",
+   "riesgo": "Cuelgue total que exige reinicio forzado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Parar earlyoom antes de lanzar el modelo permitio que corriera en el cluster (earlyoom ya catalogado)",
+   "como": "sudo systemctl stop earlyoom",
+   "fuente_post": 42,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "cluster Spark (usuario karol.spark)",
+   "riesgo": "Sin earlyoom no hay proteccion ante OOM",
+   "verificable_aqui": "systemctl is-active earlyoom"
+  },
+  {
+   "que": "Metodo de medicion de aceptacion MTP y tool-calling con herramientas de benchmark",
+   "como": "llama-benchy (pp=[2048] tg=[128] depth=[0,4096,8192] concurrency=[1,2,4] runs=3); tool-eval-bench; metricas de aceptacion via Prometheus /metrics (agregados del servidor)",
+   "fuente_post": 43,
+   "repositorio": "https://github.com/eugr/llama-benchy",
+   "licencia": "no indicada",
+   "probado_en": "2x Spark (usuarios)",
+   "riesgo": "Con trafico concurrente el contador de aceptacion se contamina",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un checkpoint distinto (shadowlilac) daba aceptacion MTP de ~15-31%; con lukealonso subio a ~46-87%",
+   "como": "cambiar el modelo a lukealonso/MiMo-V2.5-NVFP4",
+   "fuente_post": 43,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x Spark (usuario nglrrr)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios, sin respuesta de NVIDIA, sobre una receta de vLLM para 2 Spark; los mecanismos son de servicio de un modelo concreto y de benchmarking. Lo unico adyacente a colapsos de memoria (cuelgue por RAM llena al cargar con MTP, post 40, y earlyoom, post 42) es anecdotico o ya catalogado."
+}

@@ -1,0 +1,68 @@
+{
+ "id": 375767,
+ "titulo": "Configure DGX so it does not go into power standby mode",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Desactivar suspension automatica del greeter GDM (el mask de sleep.target no basta)",
+   "como": "sudo -u gdm dbus-run-session gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type 'nothing' ; sudo -u gdm dbus-run-session gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-timeout 0",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario original con DGX Spark kernel 6.17.0-1021-nvidia; respuesta de usuario (raphael.amorim, no staff NVIDIA declarado), el autor agradece que funciono",
+   "riesgo": "ninguno declarado; la respuesta fue generada con ayuda de una base de conocimiento con IA, no verificada por NVIDIA",
+   "verificable_aqui": "sudo -u gdm dbus-run-session gsettings get org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type"
+  },
+  {
+   "que": "Verificar ausencia de suspensiones tras la correccion",
+   "como": "journalctl -b | grep -i suspend",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "journalctl -b | grep -i suspend"
+  },
+  {
+   "que": "Desactivar powersave de Wi-Fi en NetworkManager",
+   "como": "/etc/NetworkManager/conf.d/wifi-powersave-off.conf con [connection] wifi.powersave = 2 ; sudo systemctl restart NetworkManager",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "solo aplica si hay Wi-Fi",
+   "verificable_aqui": "ls /etc/NetworkManager/conf.d/"
+  },
+  {
+   "que": "Hacer la conexion Wi-Fi del sistema (no ligada al usuario)",
+   "como": "sudo nmcli connection modify \"YOUR_WIFI_SSID\" connection.permissions \"\" ; sudo nmcli connection modify \"YOUR_WIFI_SSID\" connection.autoconnect yes",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "solo aplica a Wi-Fi",
+   "verificable_aqui": "nmcli -f NAME,TYPE connection show"
+  },
+  {
+   "que": "HDMI sin despertar: forzar DPMS on por SSH o desactivar blanking",
+   "como": "xset dpms force on ; gsettings set org.gnome.desktop.session idle-delay 0",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "gsettings get org.gnome.desktop.session idle-delay"
+  }
+ ],
+ "omision_nvidia": "El post menciona un problema conocido de HDMI deep sleep listado en la User Guide, sin solucion oficial.",
+ "utilidad_atom": "media",
+ "razon": "Leidos los 10 posts; el post 2 da comandos concretos para impedir la suspension del greeter GDM, util para cortes en seco si fueran suspensiones, aunque el equipo ya esta headless con otro perfil. Los posts 3-7 y 9 hablan de respuestas generadas por IA; el 10 es cierre automatico."
+}

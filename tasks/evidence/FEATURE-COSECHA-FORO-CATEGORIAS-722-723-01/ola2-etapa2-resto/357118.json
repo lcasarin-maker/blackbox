@@ -1,0 +1,47 @@
+{
+ "id": 357118,
+ "titulo": "Using the latest recovery image after a sanitize doesnt have the correct modules loaded",
+ "leido": true,
+ "posts_leidos": 16,
+ "lectura": "completa",
+ "clase": "pregunta_sin_respuesta",
+ "proposito": [
+  "rastrear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Recoger tabla DMI tipo 45 para depurar reinicios (peticion del personal, aniculescu)",
+   "como": "sudo dmidecode -t 45",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "sudo dmidecode -t 45"
+  },
+  {
+   "que": "Diagnostico de hardware de campo del paquete oficial, pedido por un respondedor de NVIDIA (wiguo; el texto no muestra insignia)",
+   "como": "sudo apt install dgx-spark-fieldiag (paso 2 del articulo de soporte, anadir repo CUDA posiblemente redundante)",
+   "fuente_post": 15,
+   "repositorio": "https://nvidia.custhelp.com/app/answers/detail/a_id/5767/~/nvidia-dgx-spark-field-diagnostics",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "no indicado",
+   "verificable_aqui": "apt-cache policy dgx-spark-fieldiag"
+  },
+  {
+   "que": "Informe sos pedido por staff",
+   "como": "sos report (comando exacto no indicado)",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El staff (aniculescu, post 9) afirma que ni nvidia-peermem ni una clave BaseOS se requieren en Spark; el usuario intentaba superar 13 GB/s entre nodos con un script propio.",
+ "utilidad_atom": "baja",
+ "razon": "El autor hizo un sanitize NIST y reporta reinicios con salidas de ceros; el hilo es en gran parte imagenes sin texto y termina sin resolucion. Solo aporta peticiones de diagnostico del staff (dmidecode -t 45, fieldiag, sos) y la declaracion de que peermem y la clave BaseOS no hacen falta."
+}

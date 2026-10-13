@@ -1,0 +1,47 @@
+{
+ "id": 353477,
+ "titulo": "NCCL For 2 Sparks Setup - Errors?",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnostico de cableado cruzado entre dos Spark: el mismo puerto fisico debe estar activo en ambos; si el nombre de interfaz Up difiere, Open MPI rechaza btl_tcp_if_include",
+   "como": "ibdev2netdev (en ambos nodos; comparar cual enp.../roce... esta Up)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario ura6, 2 Spark; tras re-cablear NCCL test dio 22.93 GB/s",
+   "riesgo": "Consejo de usuario (raphael.amorim), sin respuesta de staff.",
+   "verificable_aqui": "ibdev2netdev"
+  },
+  {
+   "que": "El playbook de NVIDIA queda incompleto: sin estas variables NCCL usa Ethernet en vez de Infiniband/RoCE, con peor latencia; con ellas el test sube a ~24 GB/s",
+   "como": "export NCCL_IB_HCA=rocep1s0f1,roceP2p1s0f1 ; export NCCL_IB_DISABLE=0 (usar ambos roceXXX en estado Up segun ibdev2netdev)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario eugr, cluster de 2 Spark",
+   "riesgo": "Los nombres roce dependen de que puertos esten Up en cada maquina; usar los incorrectos rompe la conexion.",
+   "verificable_aqui": "ibdev2netdev"
+  },
+  {
+   "que": "Confirmar que NCCL usa Infiniband",
+   "como": "export NCCL_DEBUG=INFO  y leer los registros",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario eugr",
+   "riesgo": "Salida muy verbosa.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun un usuario (eugr), el playbook NCCL for Two Sparks omite NCCL_IB_HCA y NCCL_IB_DISABLE y no aclara el cableado del mismo puerto.",
+ "utilidad_atom": "media",
+ "razon": "Mecanismos concretos de usuarios (sin staff NVIDIA) para configuracion de dos Spark; la maquina de esta tarea es una sola, asi que la aplicacion es futura. El comando de diagnostico ibdev2netdev se puede comprobar aqui."
+}

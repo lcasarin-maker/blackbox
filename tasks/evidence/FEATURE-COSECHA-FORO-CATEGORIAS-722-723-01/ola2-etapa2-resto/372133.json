@@ -1,0 +1,36 @@
+{
+ "id": 372133,
+ "titulo": "GB10 driver 580.159.03 dual DP-MST stream scanout fails",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Parametro de nvidia_modeset que resuelve el fallo de dos flujos DP-MST con relojes de pixel iguales; sugerido por un usuario con cuenta rrameshbabu (no consta rol de staff en el texto) y confirmado por otro usuario",
+   "como": "/etc/modprobe.d/nvidia-modeset-opportunistic-sync.conf: options nvidia_modeset opportunistic_display_sync=0 ; luego sudo update-initramfs -u y reiniciar",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, DGX OS 7.6.0, kernel 7.0.0-1019-nvidia, driver 580.178.04 (segun usuario)",
+   "riesgo": "Efecto en equipos sin monitores MST no medido; el usuario pregunta si es seguro con MST",
+   "verificable_aqui": "cat /sys/module/nvidia_modeset/parameters/opportunistic_display_sync"
+  },
+  {
+   "que": "Revisar paquete que fuerza modeset=0 en imagen de fabrica; purgarlo subio la supervivencia y reactivo Wayland; reportado que mata la salida de video tras OTA a DGX OS 7.5.0",
+   "como": "nvidia-drm-options-modeset0 (nombre del paquete; comando de purga no indicado)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, DGX OS 7.2.3 de fabrica",
+   "riesgo": "Cambiar modeset afecta toda la salida de video",
+   "verificable_aqui": "dpkg -l | grep nvidia-drm-options"
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu, posts 2 y 4) solo acuso recibo y pidio resultados; no hay causa ni correccion oficial.",
+ "utilidad_atom": "baja",
+ "razon": "El tema da un parametro de modulo concreto confirmado por un segundo usuario, pero solo afecta pantallas MST y la maquina de produccion no tiene ese uso comprobado. Sin respuesta de NVIDIA sobre la causa."
+}

@@ -1,0 +1,68 @@
+{
+ "id": 353723,
+ "titulo": "Help: Running NVFP4 model on 2x DGX Spark with vLLM + Ray (multi-node)",
+ "leido": true,
+ "posts_leidos": 19,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reparar ptxas de Triton sin soporte sm_121a enlazando el ptxas de CUDA",
+   "como": "ln -sf /usr/local/cuda/bin/ptxas /usr/local/lib/python3.12/dist-packages/triton/backends/nvidia/bin/ptxas",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark, driver 580.95.05, imagen vllm v0.12.0-aarch64 (declarado por el usuario)",
+   "riesgo": "Reemplaza un binario dentro del contenedor; solo aplica a esa imagen",
+   "verificable_aqui": "ls -l $(python3 -c 'import triton,os;print(os.path.dirname(triton.__file__))')/backends/nvidia/bin/ptxas"
+  },
+  {
+   "que": "Verificar que NCCL usa InfiniBand/RoCE leyendo el log de arranque (staff no; usuario eugr)",
+   "como": "./launch-cluster.sh --nccl-debug exec vllm serve ... ; buscar las lineas 'NET/IB : Using' y 'Using network IB'; si aparecen muchas 'Socket' hay que depurar IB",
+   "fuente_post": 14,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark FE (declarado por el usuario eugr)",
+   "riesgo": "Solo aplica a clusters de 2 nodos; el ATOM es un nodo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Carga rapida de pesos y servicio de modelo AWQ en dual Spark",
+   "como": "vllm serve QuantTrio/MiniMax-M2-AWQ --port 8888 --host 0.0.0.0 --gpu-memory-utilization 0.7 -tp 2 --distributed-executor-backend ray --max-model-len 128000 --load-format fastsafetensors --enable-auto-tool-choice --tool-call-parser minimax_m2 --reasoning-parser minimax_m2_append_think",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark FE (declarado por eugr)",
+   "riesgo": "gpu-memory-utilization 0.7 sobre memoria unificada compite con el resto del sistema",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de rendimiento de servicio con vllm bench serve",
+   "como": "vllm bench serve --backend vllm --model QuantTrio/MiniMax-M2-AWQ --endpoint /v1/completions --dataset-name sharegpt --dataset-path /tmp/ShareGPT_V3.json --num-prompts 1 --port 8000 --host localhost",
+   "fuente_post": 17,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark (declarado por el usuario)",
+   "riesgo": null,
+   "verificable_aqui": "vllm bench serve --help"
+  },
+  {
+   "que": "Advertencia: --enforce-eager es obligatorio para NVFP4 (los CUDA graphs fallan) y NVFP4 es mas lento que W4A16/AWQ en sm121; --enable-expert-parallel da memoria desigual entre nodos",
+   "como": "--enforce-eager (NVFP4); no usar --enable-expert-parallel en dos Sparks",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Con --enforce-eager el rendimiento del AWQ cae mucho (post 8); declaraciones de usuarios, sin respuesta de NVIDIA",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo entre usuarios (eugr y letsrock85), sin respuesta de personal de NVIDIA, sobre vLLM+Ray en dos Sparks: casi todo es especifico de cluster multinodo y de rendimiento de cuantizaciones. Los comandos son concretos pero no abordan monitoreo ni los colapsos de memoria o calor del ATOM de un solo nodo."
+}

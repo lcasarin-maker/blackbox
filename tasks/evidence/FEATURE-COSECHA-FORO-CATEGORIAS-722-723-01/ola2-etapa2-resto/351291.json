@@ -1,0 +1,26 @@
+{
+ "id": 351291,
+ "titulo": "NVIDIA Driver was not detected inside docker container",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "El contenedor no detecta el driver porque el nuevo nvidia-container-runtime trae desactivada una opcion; se habilita o se comenta.",
+   "como": "/etc/nvidia-container-runtime/config.toml: accept-nvidia-visible-devices-envvar-when-unprivileged = false (habilitar o comentar)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Ubuntu 22/24 generico, toolkit 1.18.0/1.17.1, Docker 29.0.0; no es Spark",
+   "riesgo": "Cambia el aislamiento de dispositivos del runtime (seguridad)",
+   "verificable_aqui": "grep -n accept-nvidia-visible-devices /etc/nvidia-container-runtime/config.toml"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Solucion de un usuario en Ubuntu generico, no en Spark, sin respuesta de NVIDIA. Sin relacion con los cortes o la memoria."
+}

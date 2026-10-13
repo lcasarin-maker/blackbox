@@ -1,0 +1,47 @@
+{
+ "id": 365002,
+ "titulo": "Qwen 3.5 397B int4-AutoRound Weight Conflict on Dual Spark",
+ "leido": true,
+ "posts_leidos": 14,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround del error FilesBufferOnDevice de claves duplicadas: usar load-format safetensors normal en lugar de fastsafetensors (solo aparece con fastsafetensors)",
+   "como": "--load-format safetensors (en vez de fastsafetensors)",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 x ASUS GX10, Qwen3.5-397B int4-AutoRound, vLLM",
+   "riesgo": "La carga es mas lenta; fastsafetensors es experimental segun un usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Comprobar si una clave esta duplicada en los shards frente al indice",
+   "como": "grep -ao \"model.language_model.layers.59.mlp.experts.213.down_proj.qweight\" *.safetensors | cut -d: -f1 | sort | uniq -c",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Actualizar firmware libera ~2 GB de memoria reservada en UEFI (el total sube de 119 a 121 Gi segun free -h)",
+   "como": "fwupdmgr update ; free -h",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 x ASUS GX10",
+   "riesgo": "Segun un usuario que lo recuerda de memoria (post 11), sin cifra oficial",
+   "verificable_aqui": "free -h"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El OP resuelve un error de carga cambiando a safetensors y usa sparkrun/eugr recipes con --no-ray; un usuario observa que fwupdmgr update sube la memoria visible de 119 a 121 Gi. Todo viene de usuarios, sin staff de NVIDIA."
+}

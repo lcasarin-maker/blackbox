@@ -1,0 +1,47 @@
+{
+ "id": 369489,
+ "titulo": "Copyfail/Dirtyfrag LPE Kernel Patches",
+ "leido": true,
+ "posts_leidos": 43,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Mitigacion temporal de Dirty Frag publicada por el usuario Neill (respuesta oficial de NVIDIA segun el tono de 'we are tracking'; el rol de staff no consta en el texto): descargar y bloquear modulos esp4 esp6 rxrpc",
+   "como": "lsmod | egrep 'esp4|esp6|rxrpc'; sudo rmmod esp4 esp6 rxrpc 2>/dev/null || true; sudo sh -c \"printf 'install esp4 /bin/false\\ninstall esp6 /bin/false\\ninstall rxrpc /bin/false\\n' > /etc/modprobe.d/dirtyfrag.conf\"; sync && echo 3 | sudo tee /proc/sys/vm/drop_caches; sudo update-initramfs -u -k all",
+   "fuente_post": 42,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Rompe IPsec y funciones RxRPC/AFS; update-initramfs necesario para que persista tras reinicio",
+   "verificable_aqui": "lsmod | egrep 'esp4|esp6|rxrpc'; cat /etc/modprobe.d/*.conf | grep -E 'esp4|esp6|rxrpc|algif_aead'"
+  },
+  {
+   "que": "Mitigacion de Copy Fail por usuario: bloquear algif_aead (ademas de esp4, esp6, rxrpc) via modprobe",
+   "como": "install algif_aead /bin/false",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Deshabilita el modulo por completo; quien lo necesite pierde la funcion (post 32)",
+   "verificable_aqui": "lsmod | grep algif_aead"
+  },
+  {
+   "que": "Copy Fail (CVE-2026-31431) queda corregido en el kernel linux-nvidia-6.17 version 6.17.0-1018.18 segun el changelog que cita un usuario; incluye tambien backports de MPAM mbw hard limit e iommu arm-smmu-v3 para BMC ASPEED",
+   "como": "Package: linux-image-6.17.0-1018-nvidia Version: 6.17.0-1018.18",
+   "fuente_post": 43,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Ubuntu 24.04 Noble, repos proposed y updates",
+   "riesgo": null,
+   "verificable_aqui": "uname -r; dpkg -l | grep linux-image-nvidia"
+  }
+ ],
+ "omision_nvidia": "NVIDIA no habia publicado kernel parcheado al abrirse el tema; el post 42 dice que no hay consideraciones especificas de DGX OS y que el remedio es instalar el kernel parcheado cuando exista. Sin SLA para DGX OS fuera de la suscripcion enterprise (argumento de usuarios, post 38).",
+ "utilidad_atom": "media",
+ "razon": "Aporta una mitigacion concreta de seguridad (modulos esp4/esp6/rxrpc/algif_aead) con respuesta de NVIDIA en el post 42 y la version de kernel que corrige Copy Fail; esta maquina corre kernel 6.17.0-1032, posterior al 1018. No toca colapsos de memoria ni calor, y la mayor parte del tema es discusion."
+}

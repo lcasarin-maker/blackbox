@@ -1,0 +1,48 @@
+{
+ "id": 364097,
+ "titulo": "Should we as a community gofundme one Spark for Eugr's nightly builds?",
+ "leido": true,
+ "posts_leidos": 53,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Configuracion de playbook de NVIDIA de 3 nodos en anillo con las cuatro interfaces con IP en la misma subred reduce el ancho de banda a la mitad segun mediciones de un usuario (eugr); configuracion correcta: cada subinterfaz con su propia subred, con una build de NCCL especial",
+   "como": "nccl-tests 2.17.9 all_gather_perf: avg bus bandwidth 17.5093 GB/s con la config del playbook vs 24.1112 GB/s con subredes separadas",
+   "fuente_post": 35,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3x DGX Spark, nccl-tests 2.17.9, NCCL 2.29.x segun la cabecera del test",
+   "riesgo": "Requiere NCCL parchado; la malla rompe clusters de 2 nodos sin el parche (post 38)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Guia de paralelismo para 3 nodos: tp=3 no funciona con los modelos existentes; pipeline-parallel 3 permite modelos mayores sin ganar velocidad; data-parallel 3 aumenta concurrencia",
+   "como": "--pipeline-parallel 3 ; --data-parallel 3 (opcional --enable-expert-parallel) ; --tensor-parallel 2 usa solo dos nodos",
+   "fuente_post": 43,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3x DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Qwen3-397B int4-autoround en pipeline-parallel 3 cabe con ~500K de contexto; ~18 tok/s de generacion",
+   "como": "pipeline-parallel-size=3 con gpu-memory-utilization 0.7; benchmark llama-benchy 0.3.5 tg32 18.45 t/s",
+   "fuente_post": 37,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3x DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA habia publicado un playbook de tres Spark en anillo con configuracion de IP que segun un usuario reducia el ancho de banda; staff aniculescu (post 40) dice haberlo actualizado para mayor ancho de banda. No se incluye el detalle de la actualizacion en el texto.",
+ "utilidad_atom": "baja",
+ "razon": "Hilo mayormente social (colecta para un nodo de builds) con un aporte tecnico de eugr: mediciones all_gather de 17.5 vs 24.1 GB/s en malla de 3 nodos y guia de paralelismo. Util solo para clusters multinodo, no para el sistema de un solo nodo; staff de NVIDIA responde solo en el post 40 con la actualizacion del playbook."
+}

@@ -1,0 +1,37 @@
+{
+ "id": 186802,
+ "titulo": "Update to libnvidia-container-tools has broken docker functionality",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Una actualizacion de libnvidia-container a 1.5.0~rc.1 y toolkit 1.6.0~rc.1 produjo segfault en nvidia-container-cli y en docker; el log de apt identifica el paquete culpable",
+   "como": "/var/log/apt/history.log (revisar Upgrade:)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Ubuntu 18.04 x86, driver 470.57.02",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-container-cli info; dpkg -l | grep -E 'libnvidia-container|nvidia-container-toolkit'"
+  },
+  {
+   "que": "Workaround de un usuario: bajar a la version anterior de los tres paquetes",
+   "como": "apt install libnvidia-container1=1.4.0-1 libnvidia-container-tools=1.4.0-1 nvidia-container-toolkit=1.5.1-1",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Ubuntu 18.04 x86, confirmado por otro usuario en post 4",
+   "riesgo": "Versiones antiguas; sin fijar (apt-mark hold) volveran a actualizarse (no lo dice el post)",
+   "verificable_aqui": "apt-mark showhold"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Regresion de 2021 en x86; el post 5 de TomNVIDIA (staff) llega vacio en el texto descargado, por lo que no hay respuesta oficial legible. El patron (leer apt history, hacer downgrade) es generico y los numeros de version no aplican a DGX OS 7.2.3."
+}

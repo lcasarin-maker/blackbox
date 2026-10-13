@@ -1,0 +1,27 @@
+{
+ "id": 380503,
+ "titulo": "DGX Spark Capsule Firmware Update Blocked by UEFI Administrator Password Never Set",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Advertencia de riesgo con su condicion: tras fwupdmgr upgrade (EC y UEFI/SoC aceptados) el reinicio puede detenerse en la pantalla Capsule Update pidiendo contrasena de administrador UEFI aunque nunca se haya configurado; el autor describe 3 ciclos de 3 intentos fallidos tras los cuales arranco el login normal",
+   "como": "sudo apt update ; sudo apt dist-upgrade ; sudo fwupdmgr refresh ; sudo fwupdmgr upgrade",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark con EC 0x03000302->0x03000508 y UEFI 0x0200980f->0x02009b0b, DGX OS tras dist-upgrade a dgx-spark-ota-update-meta 26.04.1",
+   "riesgo": "Equipo bloqueado en el capsule update; sin metodo de reset segun NVIDIA, la salida es RMA",
+   "verificable_aqui": "fwupdmgr get-devices ; fwupdmgr get-updates"
+  }
+ ],
+ "omision_nvidia": "aniculescu (staff, post 2): no existe metodo para resetear o borrar la contrasena de administrador; indica pedir RMA a soporte.",
+ "utilidad_atom": "media",
+ "razon": "NVIDIA (aniculescu) confirma que no hay forma de limpiar la contrasena de admin UEFI y remite a RMA; es una advertencia valida antes de aplicar fwupdmgr upgrade en la maquina. El mecanismo es el procedimiento oficial de actualizacion cuyo riesgo se documenta, no una herramienta nueva."
+}

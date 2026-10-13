@@ -1,0 +1,68 @@
+{
+ "id": 362513,
+ "titulo": "GB10 CPU frequency capped at ~1.5 GHz despite performance governor and policy set to 2.8 GHz",
+ "leido": true,
+ "posts_leidos": 18,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Leer la frecuencia real por nucleo desde sysfs (valor en kHz) para comparar con la politica de cpupower",
+   "como": "sudo cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 NVIDIA, kernel 6.14.0-1013-nvidia-64k segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": "cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq"
+  },
+  {
+   "que": "Ver politica y frecuencia asertada por hardware de todos los nucleos",
+   "como": "cpupower -c all frequency-info",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver cppc_cpufreq (segun usuario)",
+   "riesgo": null,
+   "verificable_aqui": "cpupower -c all frequency-info"
+  },
+  {
+   "que": "Comprobar el driver de escalado (cppc_cpufreq)",
+   "como": "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver"
+  },
+  {
+   "que": "Benchmark de un solo nucleo para detectar nucleo/maquina lenta (un usuario midio 709.80 vs 2072.63 eventos/s entre dos GB10)",
+   "como": "taskset -c 19  sysbench cpu --cpu-max-prime=20000 run",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos GB10 (una NVIDIA, una ASUS) segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround de un usuario (no staff) para un bug de Power Delivery que deja la CPU lenta: apagar, desenchufar el adaptador de la pared y volver a encender (resetea el controlador del adaptador)",
+   "como": "apagar Spark, desenchufar el adaptador de corriente de la pared, volver a encender (sin comando)",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "null (afirma que ayudo a otros)",
+   "riesgo": "No confirmado por NVIDIA; el bug se describe como no corregido del todo",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Staff (aniculescu) dice que no conoce ningun ajuste de BIOS que limite la CPU y que no ve el comportamiento en versiones recientes; recomienda DGX Spark Field Diagnostic y actualizar el sistema. No da causa ni correccion del tope.",
+ "utilidad_atom": "media",
+ "razon": "Staff NVIDIA (posts 7 y 12) no reconoce el tope y remite a diagnostico y actualizacion; solo un usuario (posts 16, 19) sugiere el ciclo de alimentacion como solucion al bug de Power Delivery, sin confirmacion oficial. Los comandos de lectura de frecuencia sirven para medir pero el hilo no resuelve la causa."
+}

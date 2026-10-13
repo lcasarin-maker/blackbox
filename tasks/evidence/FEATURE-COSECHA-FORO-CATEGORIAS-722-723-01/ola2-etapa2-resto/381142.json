@@ -1,0 +1,9 @@
+{"id": 381142, "titulo": "1x Spark new workhorse: DFlash2 + SGLang is fairly fast for Qwen3.8 27B NVFP4", "leido": true, "posts_leidos": 4, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["solucionar"],
+ "mecanismos": [
+  {"que": "Bandera de SGLang que evita que un nucleo de CPU quede fijo al 100% en reposo", "como": "--sleep-on-idle (se anade al docker run)", "fuente_post": 1, "repositorio": null, "licencia": null, "probado_en": "una DGX Spark, SGLang via docker con el cookbook oficial, Qwen3.8-27B NVFP4 (declarado por el usuario)", "riesgo": "No indicado; efecto sobre la latencia de la primera peticion no medido en el tema", "verificable_aqui": "top -b -n1 -H | head -15"}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario (xkm121) reporta ~104GB de memoria unificada en uso con SGLang y recomienda --sleep-on-idle; no hay respuesta de NVIDIA. Los demas posts piden receta y enlazan un docker compose externo sin dar comandos."}

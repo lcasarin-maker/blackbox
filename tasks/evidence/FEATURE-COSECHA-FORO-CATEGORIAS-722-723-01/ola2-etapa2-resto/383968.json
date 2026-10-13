@@ -1,0 +1,108 @@
+{
+ "id": 383968,
+ "titulo": "MiMo-V2.6-Flash-RL, about 310B total / 12B active MoE DFLASH Running on 2X DGX Sparks PEAK 80 tok/s in CODE",
+ "leido": true,
+ "posts_leidos": 63,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Usar --oom-score-adj en el contenedor en lugar de un tope cgroup --memory, porque en GB10 las asignaciones de GPU cuentan contra el cgroup y un tope causo un livelock en la maquina del usuario",
+   "como": "--oom-score-adj 1000 (y evitar --memory 112g)",
+   "fuente_post": 41,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 (declarado por helge, con escritorio activo)",
+   "riesgo": "Afirmacion de usuario sin reproduccion ajena; oom-score-adj 1000 hace al contenedor la victima del OOM killer",
+   "verificable_aqui": "cat /proc/self/oom_score_adj; docker inspect --format '{{.HostConfig.OomScoreAdj}} {{.HostConfig.Memory}}' <contenedor>"
+  },
+  {
+   "que": "vLLM mide memoria CUDA libre, no MemAvailable: con escritorio activo gpu-memory-utilization 0.90 no arranca y 0.88 si",
+   "como": "Free memory ... (108.73/121.63 GiB) ... less than desired (0.9, 109.46 GiB) (mensaje de vLLM citado); GMU 0.88",
+   "fuente_post": 41,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 con escritorio",
+   "riesgo": "Valor dependiente de lo que consuma el escritorio",
+   "verificable_aqui": "nvidia-smi --query-gpu=memory.free --format=csv; grep MemAvailable /proc/meminfo"
+  },
+  {
+   "que": "Piso de memoria libre observado durante prueba de 1M de contexto como metrica de seguridad",
+   "como": "El piso de memoria se mantuvo en 6 GiB o mas (sin comando indicado)",
+   "fuente_post": 41,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Tope de reloj de GPU para pruebas reproducibles",
+   "como": "GPU frequency limited to 2200 MHz / 1800 MHz (comando no indicado)",
+   "fuente_post": 41,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Es el tope de reloj ya conocido",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Quitar el max_tokens por defecto heredado de generation_config del checkpoint",
+   "como": "--override-generation-config '{\"repetition_penalty\": 1.0, \"max_new_tokens\": null}'",
+   "fuente_post": 41,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "vLLM de la imagen de la receta",
+   "riesgo": "Sin limite por defecto la generacion puede ser larga (una prueba tardo 42 min)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Bug de la receta: serve.sh toma todas las lineas de ip -4 -o addr show y con direccion secundaria el rank 1 muere tras cargar pesos",
+   "como": "ip -4 -o addr show $IFACE (usar la direccion primaria o pasarla explicita)",
+   "fuente_post": 41,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Fallo tras la carga completa de pesos (tiempo perdido)",
+   "verificable_aqui": "ip -4 -o addr show"
+  },
+  {
+   "que": "Fix silencioso: --kv-cache-dtype fp8 no se aplicaba a las 48 capas objetivo; sintoma: el tamano del pool de KV no cambia",
+   "como": "--kv-cache-dtype fp8 (parche en patches/ del repositorio)",
+   "fuente_post": 1,
+   "repositorio": "github.com/tonyd2wild/MiMo-V2.6-Flash-2x-DGX-Spark",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10, vLLM TP2 sobre RoCE",
+   "riesgo": "Parche a la imagen de vLLM, sin licencia indicada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "DeepGEMM de la imagen corrompe en silencio GEMMs fp8 en SM12x; mitigacion de la receta (otro usuario no pudo reproducir la corrupcion y perdio 8% al apagarla)",
+   "como": "VLLM_USE_DEEP_GEMM=0 y --moe-backend marlin",
+   "fuente_post": 1,
+   "repositorio": "github.com/tonyd2wild/MiMo-V2.6-Flash-2x-DGX-Spark",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10",
+   "riesgo": "Desacuerdo entre usuarios (post 28): no reproducida por sam344",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de la caida de decode con el contexto en una GB10 pareada (decode 24.0 tok/s a 1.7K y 4.3 a 928K)",
+   "como": "tabla de helge con prefill y decode por longitud, aguja al 50% de profundidad, tool-eval-bench",
+   "fuente_post": 41,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "No hay respuesta de personal de NVIDIA en el tema; todos son usuarios.",
+ "utilidad_atom": "media",
+ "razon": "Hilo de usuarios sobre una receta de vLLM; los mecanismos aplicables a la maquina son --oom-score-adj en lugar de tope cgroup (post 41, afirmacion de usuario) y el hecho de que vLLM valida memoria CUDA libre y no MemAvailable. El resto es rendimiento de un modelo concreto y opiniones; sin staff de NVIDIA."
+}

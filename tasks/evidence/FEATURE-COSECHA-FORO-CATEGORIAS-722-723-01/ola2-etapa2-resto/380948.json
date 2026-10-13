@@ -1,0 +1,38 @@
+{
+ "id": 380948,
+ "titulo": "GB10 / DGX Spark: CUDNN_FE failure 11 and CUBLAS_STATUS_INTERNAL_ERROR under batch load - fixed by driver 580.173",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "rastrear",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Prevencion: los fallos CUDNN_FE failure 11 y CUBLAS_STATUS_INTERNAL_ERROR con carga por lotes desaparecieron al subir de driver 580.126.09 o 580.95.05 a DGX OS 7.5.0 (driver 580.173.02, kernel 6.17.0-1031); aniculescu (NVIDIA) dice que recomiendan siempre la ultima version y no conoce el arreglo exacto",
+   "como": "apt full-upgrade (OTA estandar segun el autor)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3 unidades GB10 de 3 OEM; falla con 580.126.09/6.17.0-1008 y 580.95.05/6.14.0-1015; limpio con 580.142/6.17.0-1018 y 580.173.02/6.17.0-1031",
+   "riesgo": "Evidencia de un solo autor; NVIDIA no confirma la causa",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv,noheader ; uname -r"
+  },
+  {
+   "que": "Metodo de diagnostico: ausencia de Xid en dmesg y memoria unificada libre de decenas de GB (muestreo cada 10 s) descartan fallo de kernel y OOM; tras el crash el proceso reaparecido cae silenciosamente a CPU con 'no CUDA-capable device is detected' hasta reiniciar el contenedor",
+   "como": "dmesg (buscar Xid) ; muestreo cada 10 s de memoria libre ; reinicio completo del contenedor",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ONNX Runtime CUDA EP autocompilado para sm_121/aarch64/CUDA 13",
+   "riesgo": "El servicio sigue sin avisar en CPU, degradacion silenciosa de latencia",
+   "verificable_aqui": "sudo dmesg | grep -i xid ; free -m"
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu, post 2) no tiene visibilidad de todos los arreglos y no confirma la correccion concreta; no ofrece via de recuperacion en proceso tras el fallo de contexto CUDA.",
+ "utilidad_atom": "media",
+ "razon": "El autor documenta un A/B entre tres unidades GB10 y pilas de driver, con la firma de error y la degradacion silenciosa a CPU, y NVIDIA (aniculescu) solo recomienda actualizar. El host ya usa driver 580.178.04 posterior al 580.173.02, de modo que el hallazgo es una confirmacion de linea base, sin comando nuevo de monitoreo."
+}

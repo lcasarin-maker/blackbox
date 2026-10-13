@@ -1,0 +1,80 @@
+{
+ "id": 383926,
+ "titulo": "Upgrade to 7.6.0 / kernel 7.0.0-1019-nvidia system wide slowdown 50/60%",
+ "leido": true,
+ "posts_leidos": 18,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "monitorear",
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobar driver/gobernador/frecuencias de CPU para descartar throttling de reloj de CPU (nucleos asimetricos 10 a 2.808 GHz y 10 a 3.900 GHz).",
+   "como": "cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor | sort -u; cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_driver | sort -u; cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq | sort -n | uniq -c",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario: DGX OS 7.2.3 / 7.5.0, kernels 6.11.0-1016 y 6.17.0-1026 (aclarado en post 9)",
+   "riesgo": null,
+   "verificable_aqui": "los tres cat anteriores (solo lectura)"
+  },
+  {
+   "que": "Medir memoria que ve CUDA vs MemAvailable: en GB10 vLLM sustituye la memoria libre por psutil.virtual_memory().available; torch.cuda.mem_get_info()[0] sigue a MemFree y sube al vaciar cache (cuda_free 73.24 -> 107.80 GiB, MemAvailable casi fijo).",
+   "como": "python3 -c \"import torch; f,t=torch.cuda.mem_get_info(); print('free %.2f total %.2f' % (f/2**30, t/2**30))\"",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario: 7.5.0, kernel 6.17.0-1026, driver 580.159.03; total 121.69 GiB",
+   "riesgo": "La lectura con el servidor vLLM activo no es comparable (free 1.67 con 97870MiB ocupados).",
+   "verificable_aqui": "python3 -c con mem_get_info; grep -E 'MemFree|MemAvailable|^Cached|^Buffers|CmaTotal' /proc/meminfo"
+  },
+  {
+   "que": "Causa raiz de usuario (Digital_David) de la inflacion de memoria con 7.0.0-1019: CONFIG_CMA_SIZE_MBYTES=0 deja CmaTotal en 0 kB; fix de linea de comandos del kernel (footprint del modelo 110 -> 71.09 GiB segun el autor). No verificado por NVIDIA; vedcsolution (post 14-15) dice que el CMA solo no resolvio un fallo de vLLM, que luego atribuye a CUDA graph/vLLM propio.",
+   "como": "GRUB_CMDLINE_LINUX_DEFAULT con: cma=128M kho=off ; luego sudo update-grub",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario: GB10 DGX OS 7.6.0, kernel 7.0.0-1019-nvidia, driver 580.178.04",
+   "riesgo": "Parametros de kernel no oficiales; cma reserva memoria. Personal NVIDIA (aniculescu, post 16) solo dice que un hotfix posterior anade kho=off.",
+   "verificable_aqui": "grep -i CmaTotal /proc/meminfo; grep CONFIG_CMA_SIZE_MBYTES /boot/config-$(uname -r); cat /proc/cmdline"
+  },
+  {
+   "que": "Diagnostico de reloj de GPU atascado bajo carga (SM 676 MHz con 96% de uso, 7-13 W, contador de SW Power Capping) y fijacion/reset del reloj.",
+   "como": "nvidia-smi dmon ; sudo nvidia-smi -lgc 2418,2418 ; sudo nvidia-smi -rgc ; nvidia-smi -q -d CLOCK | grep -E \"Graphics|SM\"",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario: GB10, 7.0.0-1019, 580.178.04",
+   "riesgo": "-lgc fuerza un tope de reloj (mecanismo ya conocido por el caller); el autor lo resetea despues con -rgc.",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK ; nvidia-smi -q -d PERFORMANCE"
+  },
+  {
+   "que": "Hipotesis de usuario: el controlador EC/USB-C PD queda enganchado en un contrato de 30 W tras el reinicio de actualizacion, reduciendo la velocidad del bus de memoria a la mitad (latencia 2.0x); un reinicio por software no lo limpia. Senal: dmesg con 'Detected insufficient power on the PCIe slot (27W)' de mlx5_core. La mecanica del medio bus no esta verificada en el tema.",
+   "como": "sudo shutdown -h now; desenchufar el adaptador de 240W de equipo y pared; mantener el boton de encendido 15-20 s; esperar 60 s; reconectar y arrancar",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario: GB10, tras actualizar a 7.6.0; resultado declarado prefill 10,402 tok/s y decode 41.3 tok/s",
+   "riesgo": "Afirmacion de causa no verificada; hoesing (post 12) dice no verla en meses con firmware PD actualizado, el autor sugiere que el kernel nuevo anulo el fix (post 13).",
+   "verificable_aqui": "dmesg | grep -i 'insufficient power'  (journalctl -k -b)"
+  },
+  {
+   "que": "Version real de DGX OS: /etc/dgx-release deja DGX_SWBUILD_VERSION sin cambiar al actualizar; el OTA anade DGX_OTA_VERSION y DGX_OTA_DATE; el banner de login y get_dgx_sw_version.bash usan DGX_OTA_VERSION si existe.",
+   "como": "cat /etc/dgx-release ; primera linea del MOTD ('Welcome to NVIDIA DGX Spark Version ...')",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario: cajas 7.5.0 y 7.2.3",
+   "riesgo": null,
+   "verificable_aqui": "cat /etc/dgx-release"
+  }
+ ],
+ "omision_nvidia": "Un hotfix de NVIDIA (aniculescu) anade kho=off; el tema no recoge declaracion de NVIDIA sobre CMA ni sobre el PD wedge. NVIDIA no avisa del hotfix necesario antes del OTA a 7.6.0 segun la queja del autor (post 17).",
+ "utilidad_atom": "alta",
+ "razon": "Tema con medicion concreta (mem_get_info vs MemAvailable, dmon, cpufreq, CmaTotal, /etc/dgx-release) y cadena causal declarada por un usuario, con una sola respuesta de NVIDIA (hotfix kho=off). La causa CMA y la del PD son de usuario sin verificacion de NVIDIA; la medicion de memoria CUDA vs MemAvailable y la lectura de DGX_OTA_VERSION son utiles para el monitoreo aqui."
+}

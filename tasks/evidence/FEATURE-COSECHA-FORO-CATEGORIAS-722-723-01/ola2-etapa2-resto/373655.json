@@ -1,0 +1,58 @@
+{
+ "id": 373655,
+ "titulo": "Ubuntu 26.04 + drivers 610 + cuda-toolkit 13.3 + ZFS on GX10",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Con vLLM la memoria de buffers/cache se asigna y no se libera sola; solo drop manual o recargar los modulos del driver NVIDIA la libera (el usuario cree que lo causa el driver, no el SO)",
+   "como": "for m in nvidia_uvm nvidia_drm nvidia_modeset nvidia; do modprobe -r \"$m\" 2>/dev/null || true; done; modprobe nvidia; modprobe nvidia_uvm",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10, Ubuntu 26.04, driver 610, CUDA 13.3 (segun el usuario)",
+   "riesgo": "Descarga el driver: mata todo proceso que use la GPU y rompe la pantalla",
+   "verificable_aqui": "free -m ; grep -E 'Buffers|^Cached' /proc/meminfo"
+  },
+  {
+   "que": "El paquete dgx-spark-mlnx-hotplug arregla ~15 W de consumo extra de los puertos ConnectX-7 en reposo",
+   "como": "dpkg -i dgx-spark-mlnx-hotplug_26.01-1_all.deb ; update-initramfs -u",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10, Ubuntu 26.04 (segun el usuario)",
+   "riesgo": "Paquete de NVIDIA; el usuario no mide el consumo en el hilo",
+   "verificable_aqui": "dpkg -l dgx-spark-mlnx-hotplug"
+  },
+  {
+   "que": "Tope del ARC de ZFS (2 GB max, 1 GB min) para acotar la cache de disco",
+   "como": "options zfs zfs_arc_max=2147483648 ; options zfs zfs_arc_min=1073741824 en /etc/modprobe.d/zfs.conf",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10 con ZFS",
+   "riesgo": "ZFS en RAM sin ECC (post 9); advertencia de usuario matizada en el post 10",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de medicion de memoria de GPU con Vulkan y comparativas clpeak entre driver 580 y 610 (tabla de FP32, memoria global ~245 GB/s, cooperative matrix FP8 nuevo en Vulkan 610)",
+   "como": "memtest_vulkan v0.6.0 ; clpeak",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/GpuZelenograd/memtest_vulkan",
+   "licencia": "no indicada",
+   "probado_en": "GB10, driver 580.159.03 vs 610.43.02",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun el usuario, el repositorio del DGX Software Stack no esta disponible para Ubuntu 26.04 todavia (post 5, elsaco; usuario).",
+ "utilidad_atom": "media",
+ "razon": "Reporta un efecto en la memoria (buffers/cache no liberado con vLLM, recargar los modulos nvidia lo libera) y un metodo de medicion Vulkan/clpeak, todo de usuarios sin respuesta de NVIDIA. El resto del tema es una guia de instalacion de otro SO y una discusion de ZFS; no aplica a DGX OS 7.2.3."
+}

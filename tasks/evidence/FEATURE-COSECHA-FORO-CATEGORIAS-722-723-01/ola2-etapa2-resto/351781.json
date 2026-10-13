@@ -1,0 +1,68 @@
+{
+ "id": 351781,
+ "titulo": "Release notes for DGX Spark update?",
+ "leido": true,
+ "posts_leidos": 17,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "rastrear",
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Listar paquetes instalados, actualizados o removidos en los ultimos 2 dias (changelog improvisado)",
+   "como": "zcat -qf /var/log/dpkg.log* | awk -vDate=\"$(date -d '2 days ago' +'%Y-%m-%d')\" '$1 >= Date' | grep -E ' install | upgrade | remove '",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario Neurfer, DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "zcat -qf /var/log/dpkg.log* | tail -n 20"
+  },
+  {
+   "que": "Ver firmware pendiente y firmware aplicado; el Software Updater no gestiona firmware, el Dashboard si",
+   "como": "fwupdmgr get-upgrades; fwupdmgr get-history",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario elsaco, DGX Spark; SoC FW 0x02009009 descrito como urgencia alta",
+   "riesgo": null,
+   "verificable_aqui": "fwupdmgr get-history"
+  },
+  {
+   "que": "Version de BIOS/firmware y version de DGX OS para saber si la actualizacion llego",
+   "como": "hostnamectl; cat /etc/dgx-release",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios la15 y DannyTup, DGX OS 7.2.3, kernel 6.14.0-1013-nvidia",
+   "riesgo": null,
+   "verificable_aqui": "hostnamectl; cat /etc/dgx-release"
+  },
+  {
+   "que": "Secuencia exacta que ejecuta el Dashboard al actualizar",
+   "como": "sudo apt update; sudo apt dist-upgrade; sudo fwupdmgr refresh; sudo fwupdmgr upgrade; sudo reboot",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario eugr citando documentacion NVIDIA",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Desactivar mmap en la carga de vLLM para acelerar carga de modelos en kernel 6.14, con mas consumo de memoria",
+   "como": "--safetensors-load-strategy eager",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario eugr, kernel 6.14 HWE; llama.cpp gpt-oss-120b de 108 s a 27 s sin mmap",
+   "riesgo": "Consume mas memoria; en memoria unificada con colapsos puede agravarlos",
+   "verificable_aqui": "uname -r"
+  }
+ ],
+ "omision_nvidia": "Usuarios senalan que NVIDIA no publica notas de cambios para las actualizaciones de la Spark (post 1) y que DGX OS 7.3.0 es solo x86 (post 4); NVIDIA anuncio actualizaciones por X y en el foro (post 6, anuncio citado de forma parcial).",
+ "utilidad_atom": "media",
+ "razon": "Solo usuarios aportan comandos; el anuncio oficial se menciona pero su texto esta truncado en el hilo. Los comandos de dpkg.log y fwupdmgr sirven para rastrear cambios de firmware y paquetes, y la bandera de vLLM es reproducible pero con riesgo de memoria."
+}

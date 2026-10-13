@@ -1,0 +1,37 @@
+{
+ "id": 357115,
+ "titulo": "Your DGX contract entitles you to Extended Security Maintenance updates (mensaje de apt)",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "omision_nvidia",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Declaracion de personal NVIDIA (NVES): no existe habilitacion ESM/clave para Spark, pese al mensaje de apt",
+   "como": "no indicado (declaracion)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "pro status 2>/dev/null; apt-cache policy | grep -i esm"
+  },
+  {
+   "que": "Declaracion de personal NVIDIA (aniculescu): el modulo nvidia_peermem no esta soportado en GB10; recomienda reimagen para quitar paquetes malos y preguntar si se instalo DOCA/OFED",
+   "como": "no indicado (declaracion)",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10",
+   "riesgo": "instalar DOCA/OFED puede producir el error de modprobe segun el staff",
+   "verificable_aqui": "lsmod | grep -c peermem; modinfo nvidia_peermem 2>&1 | head -1"
+  }
+ ],
+ "omision_nvidia": "NVIDIA indica que no hay ESM para Spark y que nvidia_peermem no esta soportado en GB10.",
+ "utilidad_atom": "baja",
+ "razon": "Dos declaraciones de personal NVIDIA sobre lo no soportado (post 3 y 8); el resto es un usuario con reinicios en bucle y varios sintomas sin diagnostico ni comando. Las declaraciones son utiles como omision pero sin accion concreta."
+}

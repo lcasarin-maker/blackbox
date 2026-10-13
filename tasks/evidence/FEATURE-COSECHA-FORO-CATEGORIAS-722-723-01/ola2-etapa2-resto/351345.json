@@ -1,0 +1,68 @@
+{
+ "id": 351345,
+ "titulo": "Status and Experience on Thermal Performance",
+ "leido": true,
+ "posts_leidos": 26,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Lazo PID de usuario que limita scaling_min_freq/scaling_max_freq de cpufreq segun la zona termica mas caliente (objetivo 93C, techos de seguridad escalonados 88-97C, falla cerrada a frecuencia minima); script Node.js, modos --check y --run",
+   "como": "node standalone_cpu_thermal_fast_first.js --check ; sudo node standalone_cpu_thermal_fast_first.js --run",
+   "fuente_post": 25,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "el autor dice 'one ARM workstation' sin precisar; los valores no son universales",
+   "riesgo": "escribe limites de cpufreq y el ultimo tope queda tras salir; exige parar otros controladores cpufreq; requiere dos clases de frecuencia",
+   "verificable_aqui": "cat /sys/devices/system/cpu/cpufreq/policy*/cpuinfo_max_freq; cat /sys/class/thermal/thermal_zone*/temp"
+  },
+  {
+   "que": "Pagina web de usuario para monitorear temperaturas y utilizacion de GPU",
+   "como": "no indicado (solo enlace al repositorio cgpadwick/system-temp-monitor)",
+   "fuente_post": 18,
+   "repositorio": "GitHub cgpadwick/system-temp-monitor (url completa no dada en el texto)",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un usuario ve que el sensor lm_sensors temp6 llega a 95C+ mientras los demas marcan 70-80C; con prueba de CPU el pico es temp5",
+   "como": "lm_sensors, canal temp6 (no se da comando exacto)",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "sensors"
+  },
+  {
+   "que": "Evidencia de usuario en Gigabyte AI Top Atom: con refrigeracion basica 90-99C y caidas del sistema bajo cargas ComfyUI; con ventiladores externos grandes sin caidas; apagar el enfriador a media carga provoco caida en 1 minuto",
+   "como": "no indicado (medicion de usuario, sin comando)",
+   "fuente_post": 21,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Gigabyte AI Top Atom (declarado por el usuario)",
+   "riesgo": "corte en seco por calor sostenido si se retira el flujo de aire",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Elevar el equipo sobre una malla/placa y ventilador de escritorio baja temperatura (descenso medido por el usuario: CPU 81 a 73, GPU 69 a 66 en 10 min)",
+   "como": "no indicado (medida fisica)",
+   "fuente_post": 24,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Qwen-3.5-9b via vLLM Docker, 35-40 W (usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Hilo largo de usuarios (sin respuesta de NVIDIA); aporta un controlador PID de cpufreq con codigo completo en post 25 (licencia no indicada, no reutilizable tal cual) y evidencia de que sin flujo de aire hay caidas en un Gigabyte Atom (post 21). El post 26 sobre limitar reloj esta truncado en el texto y coincide con el tope de reloj ya conocido."
+}

@@ -1,0 +1,47 @@
+{
+ "id": 348353,
+ "titulo": "DGX Memory Not Released After Stopping Ollama/OpenWebUI - FIXED",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Drop de caches tras parar contenedor y matar runners de Ollama",
+   "como": "sudo sh -c \"sync; echo 3 > /proc/sys/vm/drop_caches\"",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario declara DGX Spark, Ubuntu 22.04, sin kernel/driver",
+   "riesgo": "Libera solo cache; la causa declarada (segmentos compartidos) no esta verificada; ipcrm no funciono segun el autor",
+   "verificable_aqui": "grep -E 'MemAvailable|^Cached' /proc/meminfo"
+  },
+  {
+   "que": "Medicion de memoria liberada: diferencia de MemAvailable antes/despues",
+   "como": "mem_before_kb=$(awk '/MemAvailable/ {print $2}' /proc/meminfo)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "awk '/MemAvailable/ {print $2}' /proc/meminfo"
+  },
+  {
+   "que": "Detectar runners de Ollama residuales con pgrep/pkill por patron",
+   "como": "pgrep -f \"ollama[[:space:]-]runner\"",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "pkill amplio puede matar procesos ajenos",
+   "verificable_aqui": "pgrep -af 'ollama'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El unico remedio es drop_caches (ya conocido); lo medible nuevo es el patron MemAvailable antes/despues, trivial. Sin respuesta de NVIDIA; dos usuarios, scripts GNOME/Zenity sin licencia."
+}

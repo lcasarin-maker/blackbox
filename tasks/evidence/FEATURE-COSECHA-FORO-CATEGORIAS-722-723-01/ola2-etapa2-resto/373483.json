@@ -1,0 +1,10 @@
+{"id": 373483, "titulo": "[Fixed] DGX Spark freezing and lockup issue; unable to load new models due to cache saturation", "leido": true, "posts_leidos": 2, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["prevenir", "solucionar"],
+ "mecanismos": [
+  {"que": "Script de cron que vacia la cache de paginas cuando 'Cached' supera 40 GB", "como": "sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches' cuando awk '/^Cached:/ {print $2}' /proc/meminfo supera el umbral de 40 GB (THRESHOLD=40)", "fuente_post": 1, "repositorio": null, "licencia": "no indicada", "probado_en": null, "riesgo": "Es el mecanismo drop_caches ya catalogado; vaciar cache fuerza relecturas de modelos", "verificable_aqui": "grep -E '^(Cached|MemAvailable):' /proc/meminfo"},
+  {"que": "Limite de CPU para el slice de usuario como parte del arreglo", "como": "[Slice] CPUQuota=90% (configuracion de user.slice)", "fuente_post": 1, "repositorio": null, "licencia": "no indicada", "probado_en": null, "riesgo": "El post no dice en que archivo ni con que ruta se aplica; el efecto no se mide", "verificable_aqui": "systemctl show user.slice -p CPUQuotaPerSecUSec"}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El autor se declara arreglado con un cron de drop_caches por umbral de 40 GB mas CPUQuota=90% en user.slice, sin medir nada; otro usuario confirma que la cache de disco limita la memoria para modelos y que reinicia la cache antes de cada vLLM (post 2). Sin respuesta de NVIDIA; el mecanismo principal es drop_caches, ya catalogado, y el CPUQuota queda sin evidencia."}

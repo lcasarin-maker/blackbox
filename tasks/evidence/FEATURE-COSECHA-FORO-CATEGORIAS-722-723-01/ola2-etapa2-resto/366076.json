@@ -1,0 +1,9 @@
+{"id": 366076, "titulo": "Mellanox Cards Not Detected on DGX Spark After Updates", "leido": true, "posts_leidos": 4, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["solucionar","monitorear"],
+ "mecanismos": [
+  {"que": "Respuesta de personal de NVIDIA (aniculescu): una funcion de hotplug apaga las tarjetas CX7 (ConnectX-7) cuando no hay cable conectado para ahorrar energia, por lo que lspci no las lista; se desactiva borrando el archivo bandera y se reactiva recreandolo", "como": "rm /etc/nvidia/cx7-hotplug-enabled  (desactiva el hotplug); touch /etc/nvidia/cx7-hotplug-enabled  (lo reactiva); comprobacion: lspci | grep -i mell", "fuente_post": 2, "repositorio": null, "licencia": null, "probado_en": "DGX Spark con DGX OS actualizado; el consultante lo iba a probar y no confirmo resultado", "riesgo": "Sin hotplug las CX7 quedan encendidas sin cable (mas consumo y calor en reposo, inferencia mia); el post no cuantifica nada.", "verificable_aqui": "ls -l /etc/nvidia/cx7-hotplug-enabled; lspci | grep -i mell"}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El post 2 de personal de NVIDIA documenta un archivo bandera real (/etc/nvidia/cx7-hotplug-enabled) que explica por que la CX7 desaparece de lspci sin cable; el autor del tema solo agradecio y no confirmo el resultado. Es una pieza de gestion de energia de la plataforma, verificable en solo lectura, sin vinculo directo con colapsos de memoria."}

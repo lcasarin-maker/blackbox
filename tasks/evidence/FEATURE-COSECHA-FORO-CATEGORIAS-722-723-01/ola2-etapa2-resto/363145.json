@@ -1,0 +1,68 @@
+{
+ "id": 363145,
+ "titulo": "Corrupted output with ! marks for Intel/Qwen3-Coder-Next-int4-AutoRound",
+ "leido": true,
+ "posts_leidos": 19,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Restablecer el controlador de energia de la fuente: la mitad del rendimiento tras actualizar se recupera apagando y desconectando de la corriente la Spark y la fuente",
+   "como": "apagar la Spark, desconectar el cable de la Spark y la fuente de la pared, reconectar y volver a medir",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios eugr, elvis.dowson (post 15: tg32 de 37 a 72 t/s) y hype-Bar (post 18) en Spark",
+   "riesgo": "hype-Bar sugiere que hay que repetirlo tras cada actualizacion (opinion de usuario, post 18)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Actualizar firmware",
+   "como": "sudo fwupdmgr refresh ; sudo fwupdmgr upgrade (o DGX Dashboard)",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "eugr",
+   "riesgo": "Cambia firmware",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Metodo de medicion de rendimiento con llama-benchy por profundidad",
+   "como": "llama-benchy --base-url http://spark:8888/v1 --model Intel/Qwen3-Coder-Next-int4-AutoRound --depth 0 4096 8192 16384 32768",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "eugr",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Verificar integridad de un modelo descargado",
+   "como": "hf cache verify intel/qwen3-coder-next-int4-autoround --fail-on-missing-files",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario adg1",
+   "riesgo": null,
+   "verificable_aqui": "hf cache verify <modelo> --fail-on-missing-files"
+  },
+  {
+   "que": "Correccion de salida corrupta con '!' para este modelo",
+   "como": "--apply-mod mods/fix-qwen3-next-autoround (solo este mod) y -e VLLM_MARLIN_USE_ATOMIC_ADD=1 con launch-cluster.sh",
+   "fuente_post": 8,
+   "repositorio": "github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "eugr; confirmado por elvis.dowson en post 9",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Usuarios sin staff de NVIDIA: el reinicio de la fuente (posts 12, 15, 18) y la comprobacion de firmware (post 14) muestran una causa de perdida de rendimiento por entrega de energia tras actualizar, de interes para el diagnostico, pero ya cubiertos por el mecanismo de desconexion AC conocido. El resto es especifico de un modelo."
+}

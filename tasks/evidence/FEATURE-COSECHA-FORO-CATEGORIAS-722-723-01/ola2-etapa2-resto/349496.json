@@ -1,0 +1,179 @@
+{
+ "id": 349496,
+ "titulo": "Install and Use vLLM for Inference on two Sparks does not work",
+ "leido": true,
+ "posts_leidos": 160,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround del fallo de gpt-oss en vLLM reciente (error ptxas: 'sm_121a' no definido en Triton): forzar Marlin en lugar de los kernels Triton para MXFP4; fix definitivo pendiente en un PR de vLLM",
+   "como": "VLLM_MXFP4_USE_MARLIN=1 vllm serve openai/gpt-oss-120b ...",
+   "fuente_post": 63,
+   "repositorio": "https://github.com/vllm-project/vllm",
+   "licencia": "no indicada",
+   "probado_en": "Spark(s) de ben3241 y eugr; eugr confirma 'that worked' (post 66)",
+   "riesgo": "Velocidad Marlin 'so-so' segun eugr",
+   "verificable_aqui": "env | grep VLLM; docker exec <contenedor> printenv VLLM_MXFP4_USE_MARLIN"
+  },
+  {
+   "que": "Causa raiz del fallo inicial con contenedor de playbook: el ptxas de Triton del contenedor no conoce sm_121a (GB10 es capability 12.1) y falla la compilacion inductor",
+   "como": "ptxas fatal : Value 'sm_121a' is not defined for option 'gpu-name'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "contenedor del playbook de vLLM en dos Sparks",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=compute_cap --format=csv"
+  },
+  {
+   "que": "Formula de techo de velocidad de generacion para modelo denso: ancho de banda de memoria / tamano de pesos; con 273 GB/s: 70B BF16 ~1.95 t/s, FP8 ~3.9, FP4 ~7.8",
+   "como": "tokens_por_s_max = memory_bandwidth_GB / model_weights_GB (273/140 = 1.95 t/s)",
+   "fuente_post": 38,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "opinion de eugr, sin personal de NVIDIA; coincide con 3.2 a 3.8 t/s medidos por mark440 (post 43)",
+   "riesgo": "Es un techo teorico",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de medicion de rendimiento de servicio: benchmark incluido en vLLM con el dataset ShareGPT; --num-prompts es el numero de peticiones concurrentes (1 para una sola peticion); ben3241 aconseja al menos 100 para saturar",
+   "como": "vllm bench serve --backend vllm --model <modelo> --endpoint /v1/completions --dataset-name sharegpt --dataset-path ShareGPT_V3_unfiltered_cleaned_split.json --num-prompts 100 --port 8000",
+   "fuente_post": 65,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark GB10, varios modelos (posts 59, 64, 65, 67)",
+   "riesgo": "Con pocas peticiones no se satura el equipo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Lectura de verificacion: confirmar en los logs de vLLM que NCCL usa IB/RoCE y no Ethernet; si faltan las lineas 'NET/IB : Using ... RoCE' y 'Using network IB', el rendimiento cae (ejemplo medido por eugr: 56 t/s Ethernet vs 76 t/s RoCE con Qwen3-30B NVFP4 en dos Sparks)",
+   "como": "NCCL_DEBUG=INFO y buscar 'Using network IB' en el log",
+   "fuente_post": 83,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos Sparks con enlace 200G",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables NCCL para el enlace de dos Sparks: IB habilitado, HCA RoCE, interfaz de sockets TCP, GDR nivel 5; hace falta rdma-core/librdmacm dentro del contenedor o NCCL cae a Ethernet",
+   "como": "export NCCL_IB_DISABLE=0 NCCL_IB_HCA=rocep1s0f1,roceP2p1s0f1 NCCL_SOCKET_IFNAME=enp1s0f1np1 NCCL_NET_GDR_LEVEL=5 NCCL_DEBUG=INFO NCCL_DEBUG_SUBSYS=INIT,NET",
+   "fuente_post": 140,
+   "repositorio": "https://github.com/mark-ramsey-ri/vllm-dgx-spark",
+   "licencia": "no indicada",
+   "probado_en": "dos Sparks (mark440, mirceac); los nombres de interfaz dependen de cada maquina",
+   "riesgo": null,
+   "verificable_aqui": "ibdev2netdev; ibstat"
+  },
+  {
+   "que": "Evitar descargar ~200 GB inutiles al bajar gpt-oss: excluir carpetas original y metal y usar modo offline en vllm",
+   "como": "hf download openai/gpt-oss-120b --exclude \"original/*\" --exclude \"metal/*\"; HF_HUB_OFFLINE=1 vllm serve ...",
+   "fuente_post": 75,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "eugr",
+   "riesgo": "Offline no baja modelos faltantes; el script de mark440 no pasa variables al contenedor (post 79)",
+   "verificable_aqui": "du -sh ~/.cache/huggingface/hub/models--openai--gpt-oss-120b"
+  },
+  {
+   "que": "Con una sola Spark, un usuario resolvio el arranque de vLLM anadiendo memoria compartida al docker run",
+   "como": "--shm-size 32g",
+   "fuente_post": 31,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un Spark, playbook original (skimdt)",
+   "riesgo": "Sin verificacion independiente",
+   "verificable_aqui": "docker inspect <contenedor> --format '{{.HostConfig.ShmSize}}'"
+  },
+  {
+   "que": "Timeout de RPC de vLLM insuficiente para cargar un modelo grande (carga de ~350 s): subirlo a 30 minutos",
+   "como": "export VLLM_RPC_TIMEOUT=1800",
+   "fuente_post": 141,
+   "repositorio": "https://github.com/mark-ramsey-ri/vllm-dgx-spark",
+   "licencia": "no indicada",
+   "probado_en": "dos Sparks",
+   "riesgo": "No lo confirma quien lo recibio como causa (post 147)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Si el modelo no esta en el segundo nodo, vLLM lo descarga de nuevo; copiarlo con rsync -a (conserva enlaces simbolicos); arreglar propietario porque Docker corre como root",
+   "como": "rsync -av ~/.cache/huggingface/hub/models--openai--gpt-oss-120b user@second_spark:.cache/huggingface/hub/ ; chown -R $USER ~/.cache/huggingface",
+   "fuente_post": 89,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "eugr",
+   "riesgo": "Barra final en destino y sin barra en origen importan",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Con expert-parallel activado en un modelo no MoE vLLM falla con 'Number of experts must be greater than 0'; desactivarlo; eugr dice que no da ventaja de velocidad",
+   "como": "export ENABLE_EXPERT_PARALLEL=false",
+   "fuente_post": 117,
+   "repositorio": "https://github.com/mark-ramsey-ri/vllm-dgx-spark",
+   "licencia": "no indicada",
+   "probado_en": "dos Sparks (PrinceHal)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Compilar llama.cpp con backend RPC para repartir un modelo entre dos Sparks; -c cachea las capas",
+   "como": "build/bin/rpc-server -c -p 15001 --host <ip> ; build/bin/llama-server -hf unsloth/Qwen3-VL-235B-A22B-Instruct-GGUF:Q4_K_XL -ngl 999 --rpc <ip>:15001 --jinja -c 0 --host 0.0.0.0 (build con -DGGML_RPC=ON)",
+   "fuente_post": 44,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": "no indicada",
+   "probado_en": "eugr mide 12.98 t/s tg32 con Qwen3-VL-235B Q4_K_XL (post 47)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Subir MTU en las interfaces del enlace directo entre dos Sparks (comandos de PrinceHal antes de arrancar el cluster)",
+   "como": "sudo ip link set dev enp1s0f1np1 mtu 9000 && sudo ip link set dev enp1s0f1np1 up",
+   "fuente_post": 73,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos Sparks",
+   "riesgo": "Sin medicion de ganancia en el post",
+   "verificable_aqui": "ip link show enp1s0f1np1 | grep mtu"
+  },
+  {
+   "que": "PSA: el banner de login de un DGX Spark mostro 1 proceso zombi y version DGX OS 7.3.1 con kernel 6.14.0-1013-nvidia en el usuario mirceac",
+   "como": "no indicado",
+   "fuente_post": 140,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS 7.3.1, kernel 6.14.0-1013-nvidia (segun el usuario)",
+   "riesgo": null,
+   "verificable_aqui": "ps -eo stat,pid,comm | awk '$1 ~ /^Z/'"
+  },
+  {
+   "que": "Aviso de eugr: el contenedor vLLM de NVIDIA 25.11 trae vllm 0.11.0 pero flashinfer 0.5.0 'buggy' para Spark; la advertencia de PyTorch sobre capability 12.1 (soporta 8.0 a 12.0) no impide funcionar",
+   "como": "no indicado",
+   "fuente_post": 98,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "eugr; mismo aviso en post 117",
+   "riesgo": "Afirmacion de usuario sin cita de fuente",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Observacion de drop_caches antes de lanzar la carga de modelos en el recetario de un usuario",
+   "como": "sudo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches",
+   "fuente_post": 57,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "PrinceHal",
+   "riesgo": "Mecanismo ya catalogado (drop_caches)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El playbook oficial de vLLM en dos Sparks no funciona tal cual (errores sm_121a, bibliotecas rdma-core ausentes, 400+ incidencias en el playbook de TRT-LLM segun mark440 en post 43); NVIDIA solo aparece con preguntas y una recomendacion de modelo (aniculescu, post 2) y un enlace a un blog de rendimiento (abull, posts 27 y 29). Segun los usuarios, vLLM no esta optimizado para Spark: faltan kernels MXFP4 (post 104).",
+ "utilidad_atom": "alta",
+ "razon": "Lectura completa de 160 mensajes: contiene el workaround concreto VLLM_MXFP4_USE_MARLIN=1 para el fallo ptxas de gpt-oss en vLLM sobre GB10 (post 63, confirmado por otro usuario en 66), un metodo de medicion (vllm bench serve) y una formula de techo de tokens por segundo (post 38). Gran parte (NCCL, RoCE, Ray, scripts de terceros sin licencia) solo aplica a clusters de dos Sparks; todo viene de usuarios, sin confirmacion de personal de NVIDIA."
+}

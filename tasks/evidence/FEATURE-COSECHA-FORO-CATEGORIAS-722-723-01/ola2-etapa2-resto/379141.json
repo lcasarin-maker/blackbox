@@ -1,0 +1,46 @@
+{
+ "id": 379141,
+ "titulo": "How to recover nvidia-conf-xconfig.service",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Restaurar el servicio de xconfig borrado reinstalando los paquetes Spark (respuesta del staff NVIDIA, Neill)",
+   "como": "sudo apt update; apt policy nvidia-system-station nvidia-conf-xconfig; sudo apt install --reinstall nvidia-system-station nvidia-conf-xconfig; sudo reboot",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark Founders Edition, kernel 6.17.0-1026-nvidia, driver 580.173.02 (declarado por el usuario)",
+   "riesgo": "En el caso del hilo apt no encontraba el paquete porque faltaba el archivo de repositorio Spark; el usuario lo recupero extrayendolo de la imagen de recuperacion (post 9, sin comando).",
+   "verificable_aqui": "dpkg -l | grep -E 'nvidia-conf-xconfig|nvidia-system-station'"
+  },
+  {
+   "que": "Advertencia: actualizar con apt directamente en el Spark es riesgoso; la ruta recomendada por NVIDIA es DGX Dashboard y, si el estado esta danado, la imagen DGX Spark System Recovery (staff NVIDIA)",
+   "como": "no indicado (ruta documental: DGX Dashboard / System Recovery)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Un usuario paso a un kernel/driver no soportado (driver 595) y borro paquetes; el sistema quedo en modo mantenimiento.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Contenido del servicio nvidia-conf-xconfig.service segun un usuario (Before=graphical.target gdm.service, ExecStart=/usr/sbin/nvidia-conf-xconfig, RequiredBy=systemd-logind.service)",
+   "como": "systemctl cat nvidia-conf-xconfig.service",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Crear un servicio falso oneshot con /bin/true restauro el GDM (post 2, sugerido por un LLM) pero el usuario dudo de efectos secundarios; no es solucion de NVIDIA.",
+   "verificable_aqui": "systemctl cat nvidia-conf-xconfig.service"
+  }
+ ],
+ "omision_nvidia": "NVIDIA no ofrece, segun el tema, un camino de reparacion de paquetes sin reflashear cuando falta spark.sources; el staff solo remite a System Recovery como respaldo.",
+ "utilidad_atom": "baja",
+ "razon": "Tema de recuperacion de un usuario que rompio paquetes con apt; el staff (Neill) confirma reinstalar nvidia-conf-xconfig/nvidia-system-station y desaconseja apt directo. Util solo como advertencia de riesgo, sin relacion con memoria o calor."
+}

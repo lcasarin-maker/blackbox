@@ -1,0 +1,68 @@
+{
+ "id": 352743,
+ "titulo": "\"Failed to initialize NVML: Unknown Error\" running nvidia-smi in a docker container only after some hours/days",
+ "leido": true,
+ "posts_leidos": 30,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reproduccion del fallo: un systemctl daemon-reload en el host rompe el acceso GPU de contenedores lanzados con --gpus=all cuando Docker usa cgroup driver systemd",
+   "como": "1) contenedor con --gpus=all, nvidia-smi OK; 2) en el host: systemctl daemon-reload; 3) nvidia-smi dentro del contenedor",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, GB10, driver 580.95.05, Docker 28.5.1, runc 1.3.0, nvidia-ctk 1.18.1, kernel 6.14.0-1013-nvidia",
+   "riesgo": "Un NVIDIA staff (post 11) dijo que no lo reproducia con el enlace de GitHub citado; el usuario si.",
+   "verificable_aqui": "docker info | grep -i 'cgroup driver'; nvidia-ctk --version; docker --version"
+  },
+  {
+   "que": "Workaround 1: cambiar el cgroup driver de Docker a cgroupfs (el usuario confirmo que tras ello daemon-reload ya no rompe)",
+   "como": "{ \"exec-opts\": [\"native.cgroupdriver=cgroupfs\"] } en /etc/docker/daemon.json",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, GB10, Docker 28.5.1",
+   "riesgo": "Cambia el cgroup driver global del daemon (la maquina usa systemd); requiere reinicio de Docker y puede chocar con otras herramientas que esperan systemd. NVIDIA dice que ambos workarounds funcionan pero CDI es preferido (post 19).",
+   "verificable_aqui": "cat /etc/docker/daemon.json; docker info | grep -i 'cgroup driver'"
+  },
+  {
+   "que": "Workaround preferido por NVIDIA: inyectar la GPU por CDI en vez de --gpus (staff aniculescu, tras consultar ingenieria)",
+   "como": "sudo docker run -it --entrypoint /bin/bash --device nvidia.com/gpu=all ubuntu",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario confirma en posts 24 y 27 que funciona (GB10, nvidia-ctk 1.18.2 tras el fix musl)",
+   "riesgo": "Con imagenes alpine (musl) y toolkit v1.18.x falla con 'couldn't find libnvidia-ml.so' hasta v1.18.2 o aplicar el parche manual.",
+   "verificable_aqui": "ls /etc/cdi /var/run/cdi 2>/dev/null; docker info | grep -iA4 'CDI spec'"
+  },
+  {
+   "que": "Parche manual para contenedores alpine con CDI (staff elezar, NVIDIA): registrar rutas de librerias para musl e instalar gcompat",
+   "como": "cat /etc/ld.so.conf.d/* >> /etc/ld-musl-$(arch -m).path ; apk add --no-cache gcompat",
+   "fuente_post": 23,
+   "repositorio": "https://github.com/NVIDIA/nvidia-container-toolkit",
+   "licencia": "no indicada",
+   "probado_en": "usuario, post 24, GB10",
+   "riesgo": "Solo aplica a imagenes alpine; el fix definitivo quedo en nvidia-container-toolkit v1.18.2.",
+   "verificable_aqui": "nvidia-ctk --version"
+  },
+  {
+   "que": "Explicacion de NVIDIA de la causa: con --gpus el hook prestart modifica cgroups de dispositivos que runc no conoce y un refresh de cgroups por systemd (daemon-reload) las pierde; con CDI el spec ya lleva los permisos. Docker v29.2.0 trata --gpus=all como CDI cuando es posible",
+   "como": "no indicado como comando; version citada: Docker v29.2.0 (moby PR 50228)",
+   "fuente_post": 28,
+   "repositorio": "https://github.com/moby/moby",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Cualquier daemon-reload (instalar o configurar cualquier servicio) puede disparar la perdida de GPU en contenedores --gpus.",
+   "verificable_aqui": "docker --version"
+  }
+ ],
+ "omision_nvidia": "El DGX OS usaba por defecto --gpus/runtime nvidia con cgroup systemd sin advertir de este fallo; NVIDIA documenta la mitigacion solo en el troubleshooting del Container Toolkit.",
+ "utilidad_atom": "alta",
+ "razon": "El tema da causa raiz confirmada por staff de NVIDIA (aniculescu, elezar) y dos workarounds probados, aplicables directamente a esta maquina que usa Docker con cgroup systemd y runtime nvidia. El unico comando de reproduccion y los valores de configuracion estan en los posts 10, 12, 15 y 23."
+}

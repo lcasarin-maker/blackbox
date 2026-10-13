@@ -1,0 +1,27 @@
+{
+ "id": 367149,
+ "titulo": "The 100G network interface card (NIC) is not visible in the operating system",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Si la NIC CX7 no aparece en lspci, conectar un cable QSFP: los CX7 tienen hotplug y se deshabilitan sin cable",
+   "como": "sudo dmesg | grep mlx5_core (comando de diagnostico pedido por un usuario); la solucion es conectar el cable QSFP",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "no indicado; el autor confirma que funciono",
+   "riesgo": null,
+   "verificable_aqui": "lspci | grep -i mellanox; sudo dmesg | grep mlx5_core"
+  }
+ ],
+ "omision_nvidia": "NVIDIA staff (aniculescu, post 4) declara que los CX7 se deshabilitan y desaparecen de lspci sin cable QSFP (comportamiento por diseno).",
+ "utilidad_atom": "baja",
+ "razon": "Staff de NVIDIA explica el hotplug CX7 en post 4 y el autor resuelve conectando cable. Sin relacion con memoria o calor."
+}

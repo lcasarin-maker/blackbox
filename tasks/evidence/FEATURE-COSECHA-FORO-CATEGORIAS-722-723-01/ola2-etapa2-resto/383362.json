@@ -1,0 +1,48 @@
+{
+ "id": 383362,
+ "titulo": "Why RoCE and GID index 3 change to index 4?",
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "No fijar NCCL_IB_GID_INDEX; fijar criterios de seleccion en su lugar",
+   "como": "NCCL_IB_ROCE_VERSION_NUM=2 ; NCCL_IB_ADDR_FAMILY=AF_INET ; NCCL_IB_ADDR_RANGE=<subnet>/<len> (opcional)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "null (respuesta de personal NVIDIA, sin prueba declarada)",
+   "riesgo": "solo aplica a multinodo RoCE",
+   "verificable_aqui": "env | grep NCCL_IB"
+  },
+  {
+   "que": "Calcular al lanzar el indice GID RoCE v2 IPv4 en lugar de codificarlo",
+   "como": "p=/sys/class/infiniband/mlx5_0/ports/1; for g in $p/gids/*; do i=${g##*/}; [[ $(cat $p/gid_attrs/types/$i 2>/dev/null) == \"RoCE v2\" ]] && grep -q ffff \"$g\" && echo $i && break; done",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "null",
+   "riesgo": null,
+   "verificable_aqui": "ls /sys/class/infiniband/; show_gids"
+  },
+  {
+   "que": "El indice GID cambia al agregar o quitar una IP del CX7; usar IP estaticas con ignore-carrier en netplan mantiene la direccion y su GID ante cortes breves de enlace",
+   "como": "netplan con <ip>.x/24 y ignore-carrier: true",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "null",
+   "riesgo": null,
+   "verificable_aqui": "ls /etc/netplan/; networkctl status"
+  }
+ ],
+ "omision_nvidia": "Sin documentacion en el hilo de que el indice GID es inestable; la respuesta lo explica a posteriori.",
+ "utilidad_atom": "media",
+ "razon": "Respuesta de personal NVIDIA (aniculescu, post 3) con tres medidas concretas contra la deriva del GID; el autor reporta ademas la perdida de los GID RoCE v2 tras reiniciar. Solo sirve con enlaces CX7 entre nodos, que esta maquina de un nodo no usa.",
+ "leido": true,
+ "lectura": "completa"
+}

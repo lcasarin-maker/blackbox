@@ -1,0 +1,26 @@
+{
+ "id": 383540,
+ "titulo": "DGX SPARK Secure boot violation",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Aviso 'secure boot violation' al arrancar con el sistema arrancando igualmente: un usuario (elsaco) lo atribuye a bases de datos UEFI con certificados caducados (Windows UEFI CA) y propone refrescar firmware; el autor del tema confirma que lo soluciono.",
+   "como": "sudo fwupdmgr get-updates",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark del autor (version no indicada)",
+   "riesgo": "get-updates solo lista; aplicar actualizaciones (fwupdmgr update) no figura en el post y reinicia/flashea firmware.",
+   "verificable_aqui": "fwupdmgr get-updates (sin sudo lista; solo lectura) ; fwupdmgr get-devices"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Sin respuesta de NVIDIA; un usuario sugiere fwupdmgr get-updates y el autor dice que arreglo el aviso (causa solo conjeturada). Aplicable a esta maquina con Secure Boot, pero es un comando de fwupd ya conocido y no un mecanismo de monitoreo nuevo. El post 1 incluye un numero de serie (existe, no copiado)."
+}

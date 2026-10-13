@@ -1,0 +1,37 @@
+{
+ "id": 356077,
+ "titulo": "Hardware issue",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Los mensajes de enlace PCIe de la GPU (LnkSta Width x0 en el root port, Gen1 x1 en el endpoint, '0.000 Gb/s available PCIe bandwidth' y DOE mailbox timeouts) se reportan como normales en otros Sparks y no indican fallo de hardware; la GPU va unida a la CPU por C2C NVLink, no por PCIe",
+   "como": "sudo lspci -s 000f:00:00.0 -vv  y  sudo dmesg | grep -i 'mailbox'",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios elsaco y eugr, Sparks propios; el autor usa kernel 6.14.0-1015-nvidia y driver 580.95.05",
+   "riesgo": "Tomar estas lineas por un fallo real lleva a RMA innecesario; el autor probo pcie_aspm=off y perdio el acceso SSH (post 6)",
+   "verificable_aqui": "sudo dmesg | grep -iE 'DOE|available PCIe bandwidth'"
+  },
+  {
+   "que": "Los parametros energy_model=off y sysctl kernel.sched_energy_aware=0 no sirven en este kernel: el primero se reporta como desconocido y el segundo devuelve operacion no soportada",
+   "como": "energy_model=off (linea de arranque); sysctl kernel.sched_energy_aware=0",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario geo.politis, kernel 6.14.0-1015-nvidia",
+   "riesgo": "systemd-sysctl falla al aplicar el sysctl",
+   "verificable_aqui": "sysctl kernel.sched_energy_aware"
+  }
+ ],
+ "omision_nvidia": "No hay diagrama oficial de topologia (dicho por el autor, post 6); no responde ningun miembro de NVIDIA.",
+ "utilidad_atom": "media",
+ "razon": "Sirve para descartar una falsa alarma al leer lspci/dmesg en GB10 (x0, Gen1 x1 y DOE son normales segun dos usuarios) y avisa de que pcie_aspm=off puede cortar la red. Son afirmaciones de usuarios, sin confirmacion de NVIDIA."
+}

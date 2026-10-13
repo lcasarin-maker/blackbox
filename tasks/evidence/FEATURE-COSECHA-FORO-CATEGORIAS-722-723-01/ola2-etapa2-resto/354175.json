@@ -1,0 +1,36 @@
+{
+ "id": 354175,
+ "titulo": "Pip.to('cuda') is very slowly. DGX vs 3090 => [34s vs 1s]",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Clonar parametros y buffers de cada modulo antes de pipe.to('cuda') para evitar la carga lenta (tomado de un issue de HF segun raphael.amorim)",
+   "como": "def _clone_module_params_buffers(module): for p in module.parameters(): p.data = p.data.clone() ; for b in module.buffers(): if hasattr(b,'data'): b.data = b.data.clone() ; aplicar a pipe.unet, text_encoder, text_encoder_2, vae; luego pipe.to('cuda')",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark con kernel 6.14.0-1013-nvidia, driver 580.95.05, torch 2.9.1+cu130 (el problema del autor); la mejora 20s a 1s es del issue citado, no medida aqui",
+   "riesgo": "Duplica temporalmente los pesos en memoria unificada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Cargar con fastsafetensors para acortar tiempos de carga de LLM en Spark",
+   "como": "pip install --upgrade diffusers transformers accelerate safetensors ; fastsafetensors>=0.1.10 (el post dice vLLM de ~9 min a ~24 s)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Cifra sin fuente propia dentro del hilo",
+   "verificable_aqui": "pip show fastsafetensors"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario (raphael.amorim, sin rol de staff declarado) da una solucion con codigo para la lentitud de pipe.to('cuda') en Spark; no hay respuesta de NVIDIA ni confirmacion del autor. Es util solo para cargas de modelos de difusion con PyTorch."
+}

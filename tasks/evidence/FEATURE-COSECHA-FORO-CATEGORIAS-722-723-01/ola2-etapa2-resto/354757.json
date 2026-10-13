@@ -1,0 +1,47 @@
+{
+ "id": 354757,
+ "titulo": "Example ran out of memory on dgxspark",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de usuario: bajar parametros del fine-tuning QLoRA Llama 70B para que no agote memoria",
+   "como": "python Llama3_70B_qLoRA_finetuning.py --batch_size 2 --seq_length 2048 --gradient_accumulation_steps 2 --dataset_size 250",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/NVIDIA/dgx-spark-playbooks",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark en contenedor PyTorch NGC (declarado por usuario); termino en 485.74 s",
+   "riesgo": "Menor velocidad (0.52 muestras/s) y dataset reducido.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Respuesta de NVIDIA (aniculescu): si hubo otras cargas, limpiar la cache para liberar memoria segun la FAQ de DGX Spark / GB10",
+   "como": "no indicado (remite a la FAQ #7, sin comando en el post)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Sugerencia del propio error de PyTorch para fragmentacion",
+   "como": "PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "PyTorch 2.9 (mensaje de error)",
+   "riesgo": "Solo mitiga fragmentacion; el error mostraba 114.51 GiB en uso de 119.70 GiB totales.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El 70B QLoRA con batch 8 agoto los 119.70 GiB de la GPU (post 1) y el staff de NVIDIA solo remite a limpiar cache (post 3); el workaround de usuario reduce batch y dataset (post 4). Los mecanismos son conocidos (cache drop, tamano de batch) o sin comando."
+}

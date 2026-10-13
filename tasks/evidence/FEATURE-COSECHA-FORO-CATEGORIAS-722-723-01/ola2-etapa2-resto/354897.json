@@ -1,0 +1,36 @@
+{
+ "id": 354897,
+ "titulo": "Broken apt update?",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround para clave GPG expirada del repo Workbench (EXPKEYSIG), publicado como anuncio de NVIDIA citado por un usuario",
+   "como": "curl -fsSL https://workbench.download.nvidia.com/stable/linux/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/ai-workbench-desktop-key.gpg > /dev/null ; sudo apt update",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (apt update)",
+   "riesgo": "Confia en una clave descargada por red",
+   "verificable_aqui": "apt-get update 2>&1 | grep -c EXPKEYSIG"
+  },
+  {
+   "que": "Fix oficial: una full-upgrade instala la clave nueva (post de la cuenta NVES, rol NVIDIA)",
+   "como": "sudo apt update ; sudo apt full-upgrade ; sudo apt update",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "apt-get update 2>&1 | grep -c EXPKEYSIG"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Problema puntual de firma de repo ya corregido por NVIDIA (post 4); un usuario confirma la solucion con apt full-upgrade (post 9). No aporta monitoreo ni mecanismo termico o de memoria."
+}

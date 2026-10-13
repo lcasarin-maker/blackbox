@@ -1,0 +1,109 @@
+{
+ "id": 377903,
+ "titulo": "Ant Ling-3.0-Flash 124B-A5B... new fast model for one Spark!",
+ "leido": true,
+ "posts_leidos": 70,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir",
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limite de memoria unificada: por debajo de ~5 GiB libres hubo livelock duro (0 disponible, swap intacto, earlyoom sin poder matar un proceso en estado D, solo recupera un ciclo de energia); el usuario fija 0.85 como techo de gpu-memory-utilization y 0.75 si se comparte la caja",
+   "como": "--gpu-memory-utilization 0.85 (0.75 si se comparte); vigilar con free -g / MemAvailable",
+   "fuente_post": 32,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, driver 580.173.02, CUDA 13.0, vLLM (usuario jws85)",
+   "riesgo": "0.90 deja ~4 GiB de RAM libre y provoca livelock que exige apagado fisico",
+   "verificable_aqui": "free -g; grep MemAvailable /proc/meminfo"
+  },
+  {
+   "que": "nvidia-smi no reporta memoria en GB10 (memory.used devuelve N/A); usar free -g o MemAvailable",
+   "como": "free -g / MemAvailable",
+   "fuente_post": 32,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 driver 580.173.02 segun usuario",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=memory.used --format=csv"
+  },
+  {
+   "que": "Contenedor con tope de memoria y prioridad OOM para que el kernel mate el contenedor antes que el host",
+   "como": "--memory 118g --memory-swap 118g --oom-score-adj -500 --shm-size 32g (docker run)",
+   "fuente_post": 32,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10 segun usuario",
+   "riesgo": "oom-score-adj negativo protege al contenedor; no esta claro que proteja al host, el usuario no lo mide",
+   "verificable_aqui": "docker inspect --format '{{.HostConfig.Memory}} {{.HostConfig.OomScoreAdj}}' <contenedor>"
+  },
+  {
+   "que": "Reducir lanes (max-num-seqs) libera KV: 64 lanes extra consumieron 4.5 GiB de KV (~71 MiB/lane); y max-num-batched-tokens reserva activaciones tomadas del KV",
+   "como": "--max-num-seqs 34 --max-num-batched-tokens 8192 --kv-cache-dtype fp8 (fp8 da +75% de capacidad KV: 2.64M a 4.63M tokens)",
+   "fuente_post": 32,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 una Spark, vLLM fork inclusionAI, modelo Ling-3.0-flash-int4",
+   "riesgo": "cifras de un solo usuario, una muestra",
+   "verificable_aqui": null
+  },
+  {
+   "que": "MTP num_speculative_tokens>1 empeora: k=1 acepta 79.3% y da 35.7 tok/s; k=3 41.3% y 33.0; sin especulacion 21.3 tok/s (medido por el usuario)",
+   "como": "--speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":1}'",
+   "fuente_post": 32,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, Ling-3.0-flash-int4, vLLM",
+   "riesgo": "depende de modelo y build",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Verificar para que arquitecturas CUDA se compilo realmente un .so: TORCH_CUDA_ARCH_LIST=12.1a se descarta en silencio en CUDA 13 (la lista del CMake no incluye 12.1); se compilan kernels sm_120",
+   "como": "cuobjdump --list-elf /usr/local/lib/python3.12/dist-packages/vllm/_moe_C_stable_libtorch.abi3.so | grep -oE \"sm_[0-9]+[a-z]?\" | sort -u",
+   "fuente_post": 32,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, CUDA 13.0, vLLM segun usuario",
+   "riesgo": null,
+   "verificable_aqui": "cuobjdump --list-elf <ruta .so> | grep -oE 'sm_[0-9]+[a-z]?' | sort -u (si cuobjdump existe)"
+  },
+  {
+   "que": "Carga de pesos rapida con instanttensor: 71.7 GiB en 16 s frente a ~9 min con el cargador por defecto; persistir cache de torch.compile",
+   "como": "--load-format instanttensor (pip install instanttensor); -v $HOME/ling-vllm-cache:/root/.cache/vllm",
+   "fuente_post": 32,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 segun usuario",
+   "riesgo": "paquete externo sin licencia indicada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variable para reducir fragmentacion de CUDA alloc",
+   "como": "-e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True",
+   "fuente_post": 32,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 segun usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: un usuario reporta que con el modelo int4 en vLLM la memoria del sistema crece sin limite hasta OOM en ~20 min con el KV estable en 5% (sin respuesta ni causa)",
+   "como": "no indicado",
+   "fuente_post": 47,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "vLLM con Ling-3.0-flash-int4 (jeffutter), hardware no detallado",
+   "riesgo": "OOM de host",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Sin respuesta ni intervencion de personal de NVIDIA en el tema (ningun usuario con rol staff). Usuarios afirman que NVFP4/MXFP4 en sm121 carece de kernels nativos y cae a rutas lentas (opinion/medicion de usuarios, post 13 y 32).",
+ "utilidad_atom": "media",
+ "razon": "Tema de usuarios (sin NVIDIA); el post 32 contiene mecanismos reutilizables de dimensionado de memoria (techo 0.85, livelock bajo ~5 GiB libres, nvidia-smi N/A en GB10, oom-score-adj) con comandos exactos, pero medidos por un solo usuario con ayuda de IA, y el resto es debate de modelos y benchmarks. El reporte de OOM sin limite (post 47) no tiene solucion."
+}

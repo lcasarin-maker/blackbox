@@ -1,0 +1,37 @@
+{
+ "id": 348223,
+ "titulo": "DGX SPARK GPU crash",
+ "leido": true,
+ "posts_leidos": 12,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Resolucion de caidas diarias de la GPU en un usuario: reinstalar con la imagen de recuperacion actualizada (el sufijo -1) detuvo las caidas",
+   "como": "no indicado (reflash con dgx-spark-recovery-image-1.91.51-1.tar.gz)",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, DGX Spark, imagen 1.91.51-1",
+   "riesgo": "Reflash borra el disco; un solo usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Staff de NVIDIA (kberger1) pide un sos report para analizar un cuelgue; el usuario adjunto un nvidia-bug-report.log.gz y dice que el script no corre cuando la GPU esta caida",
+   "como": "nvidia-bug-report.sh (el usuario escribio nvidia-log-report.sh; sos report sin comando indicado)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "command -v nvidia-bug-report.sh"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario sufria caidas diarias de la GPU (nvidia-smi sin GPU) resueltas con una imagen de recuperacion nueva; el staff responde pidiendo logs. Sin causa raiz ni comando propio de monitoreo."
+}

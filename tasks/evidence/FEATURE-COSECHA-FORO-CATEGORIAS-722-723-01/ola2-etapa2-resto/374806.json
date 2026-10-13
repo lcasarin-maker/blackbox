@@ -1,0 +1,47 @@
+{
+ "id": 374806,
+ "titulo": "DGX Spark shuts down within minutes after OS reinstall",
+ "posts_leidos": 4,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Aislar apagado espurio por evento power-key de un receptor USB: desconectar perifericos USB no esenciales y usar adaptador original",
+   "como": "no indicado comando; procedimiento: quitar hubs/receptores USB, dejar solo monitor y teclado/raton con cable",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Solo hipotesis de staff basada en el journal del OP",
+   "verificable_aqui": "journalctl -b -1 | grep -i 'power key\\|Power Button'"
+  },
+  {
+   "que": "Field Diagnostics de DGX Spark (staff NVIDIA), 30 min, resultado PASS/FAIL, requiere Secure Boot deshabilitado",
+   "como": "sudo mokutil --sb-state; sudo systemctl reboot --firmware-setup; sudo apt-get install dgx-spark-fieldiag; sudo init 3; cd /opt/nvidia/dgx-spark-fieldiag; sudo ./partnerdiag --field",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark",
+   "riesgo": "Hay que deshabilitar Secure Boot y volver a habilitarlo despues; Secure Boot esta activo aqui; el paquete viene de repositorio CUDA de NVIDIA",
+   "verificable_aqui": "mokutil --sb-state; dpkg -l dgx-spark-fieldiag"
+  },
+  {
+   "que": "Captura de logs del arranque previo",
+   "como": "journalctl -b -1 -e ; journalctl -b -1 | tail -200",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "journalctl -b -1 | tail -200"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Staff NVIDIA (Neill) da el procedimiento oficial de Field Diagnostics con comandos exactos y la hipotesis de apagado por evento power-key tras un USB; el OP resolvio cambiando de pantalla (post 3) sin confirmar la causa. Los comandos de journal ya estan catalogados; Field Diagnostics es el unico elemento nuevo.",
+ "leido": true,
+ "lectura": "completa"
+}

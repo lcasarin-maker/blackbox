@@ -1,0 +1,36 @@
+{
+ "id": 365584,
+ "titulo": "ConnectX-7 Won't Come Online",
+ "posts_leidos": 6,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Staff NVIDIA (aniculescu) pide recoger nvidia-bug-report para ingenieria cuando los puertos CX7 no suben",
+   "como": "nvidia-bug-report",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "command -v nvidia-bug-report.sh nvidia-bug-report"
+  },
+  {
+   "que": "Los puertos CX7 se apagan por ahorro de energia sin cable; el paquete dgx-spark-mlnx-hotplug implementa eso (staff). El usuario dice que solo vio los puertos tras deshabilitarlo",
+   "como": "no indicado (nombre del paquete dgx-spark-mlnx-hotplug)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun usuario",
+   "riesgo": "deshabilitar el hotplug anula el ahorro de energia de CX7",
+   "verificable_aqui": "dpkg -l | grep -i mlnx-hotplug"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario reporta fallo DOE mailbox del CX7 en dos Spark; staff responde con la explicacion del ahorro de energia y pide nvidia-bug-report, sin solucion publicada. No hay mecanismo propio para monitorear nuestro problema.",
+ "leido": true,
+ "lectura": "completa"
+}

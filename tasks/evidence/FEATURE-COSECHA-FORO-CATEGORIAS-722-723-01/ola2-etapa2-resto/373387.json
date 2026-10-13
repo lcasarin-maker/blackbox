@@ -1,0 +1,98 @@
+{
+ "id": 373387,
+ "titulo": "Working recipe: MiniMax-M3 NVFP4 at TP=3 on 3x DGX Spark (no 4th node) + the OOM fixes",
+ "leido": true,
+ "posts_leidos": 35,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reducir el object store de Ray, que reserva ~30 % de RAM sin que vLLM TP lo use; liberaba ~35 GB por nodo y evita NVRM: Out of memory en la carga de pesos",
+   "como": "--object-store-memory 1073741824 (en cada ray start)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/tonyd2wild/minimax-m3-dgx-spark-tp3",
+   "licencia": "no indicada",
+   "probado_en": "3x DGX Spark GB10 sm_121, torch 2.12 (segun el usuario)",
+   "riesgo": "Solo aplica a Ray; el usuario lo afirma sin medicion publicada en el hilo",
+   "verificable_aqui": "ps -eo args | grep -E 'ray (start|::)' ; free -m"
+  },
+  {
+   "que": "Desactivar el monitor de memoria de Ray: con memoria unificada se llega a ~96 % de RAM tras el warmup y Ray mata al worker rank-0 (NODE_OUT_OF_MEMORY) sin OOM real; el kernel y el driver quedan como respaldo",
+   "como": "RAY_memory_monitor_refresh_ms=0",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/tonyd2wild/minimax-m3-dgx-spark-tp3",
+   "licencia": "no indicada",
+   "probado_en": "3x DGX Spark (segun el usuario)",
+   "riesgo": "Se pierde la proteccion de Ray; el usuario dice que no hubo NVRM ni kill de Linux con ~4.4 GB libres",
+   "verificable_aqui": null
+  },
+  {
+   "que": "--load-format safetensors porque el open() de GDS de instanttensor falla bajo torch 2.12 en Spark (sin GPUDirect Storage)",
+   "como": "--load-format safetensors",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, torch 2.12 (segun el usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "NCCL_NET_GDR_LEVEL=0 'obligatorio en GB10' (afirmacion del usuario) y variables RoCE en malla sin switch",
+   "como": "NCCL_NET_GDR_LEVEL=0 ; unset NCCL_IB_GID_INDEX ; NCCL_IB_ADDR_RANGE ; NCCL_IB_HCA",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3x GB10 (segun el usuario)",
+   "riesgo": "Descrito como borrador aun sin integrar en el post 1",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Comprobar que NCCL usa RoCE/IB y no Ethernet en all-reduce",
+   "como": "NCCL_DEBUG=INFO",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "respuesta de eugr_nv (rol NVIDIA/moderador)",
+   "riesgo": null,
+   "verificable_aqui": "echo ${NCCL_DEBUG:-no definido}"
+  },
+  {
+   "que": "Ancho de banda crudo de la ConnectX-7 atascado en ~12.8 Gb/s hasta un apagado en frio (apagar, desenchufar los adaptadores ~90 s); un reinicio en caliente no lo arreglo; paso a 111.85 Gb/s",
+   "como": "ib_write_bw para medir; apagado completo y desenchufar 90 s",
+   "fuente_post": 17,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark con ConnectX-7, PCIe Gen5 x4 (segun usuarios)",
+   "riesgo": "Desconexion total de energia; el usuario no ve causa raiz",
+   "verificable_aqui": "ethtool <iface> | grep Speed (solo lectura)"
+  },
+  {
+   "que": "Un LD_PRELOAD fijo en el contenedor gana a un cambio de symlink y a LD_LIBRARY_PATH; hay que forzar LD_PRELOAD a la libreria NCCL correcta y quitar las variables del shim",
+   "como": "forzar LD_PRELOAD a la lib nccl 2.30u1 y quitar las variables del shim",
+   "fuente_post": 17,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Afecta cualquier contenedor con LD_PRELOAD heredado",
+   "verificable_aqui": "docker exec <contenedor-vllm> env | grep -E 'LD_PRELOAD|NCCL'"
+  },
+  {
+   "que": "Para clusters de 3 nodos, NCCL 2.30u1 compilado desde fuente, IPs del adaptador de 10G para OOB, cableado segun la guia, subnet-aware routing y no fusionar NICs (staff NVIDIA/eugr_nv)",
+   "como": "seguir docs/NETWORKING.md ; MERGE_NICS=0",
+   "fuente_post": 16,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "GB10, cluster de 3 nodos",
+   "riesgo": "Aplica solo a multi-nodo",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun el tema, NVIDIA no documenta el TP=3 ni los topes de memoria de Ray en memoria unificada; la guia de red es de la build comunitaria (eugr_nv), no un documento oficial de NVIDIA.",
+ "utilidad_atom": "media",
+ "razon": "Los dos mecanismos de memoria (object store de Ray, monitor de memoria de Ray) son concretos y vienen de un usuario con repositorio; eugr_nv (moderador) confirma el resto de la guia de red. Aplican a Ray/multi-nodo, no a una sola maquina con vLLM en contenedor, por eso media."
+}

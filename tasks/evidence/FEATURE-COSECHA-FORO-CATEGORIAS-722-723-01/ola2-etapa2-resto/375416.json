@@ -1,0 +1,108 @@
+{
+ "id": 375416,
+ "titulo": "Followup: Mystery Solved: 4x Spark, GLM-5.2-nfp4, 24tp/s, 128k ctx, no REAP",
+ "leido": true,
+ "posts_leidos": 35,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Estrechar canales NCCL para ahorrar memoria por rank en cluster multi-Spark (usuario, no staff)",
+   "como": "NCCL_MAX_NCHANNELS=4 / NCCL_MIN_NCHANNELS=4 (y NCCL_IB_HCA fijado)",
+   "fuente_post": 6,
+   "repositorio": "https://github.com/m9e/blackwell-llm-docker",
+   "licencia": "no indicada",
+   "probado_en": "4x GB10 con RoCE, driver 580.159.03 (post 9)",
+   "riesgo": "El autor admite que su script publicado no lo traia; si se omite se pierde memoria",
+   "verificable_aqui": "env | grep NCCL_"
+  },
+  {
+   "que": "Variables de entorno del contenedor Ray para reducir presion de memoria en la carga de pesos en memoria unificada",
+   "como": "SAFETENSORS_FAST_GPU=1 ; PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True ; CUDA_DEVICE_MAX_CONNECTIONS=32",
+   "fuente_post": 35,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10, carga load_format=auto",
+   "riesgo": "Deben estar en el docker run -e de los contenedores Ray, no solo en el serve",
+   "verificable_aqui": "docker inspect <contenedor> --format '{{.Config.Env}}'"
+  },
+  {
+   "que": "Umbral de MemAvailable antes de lanzar: medirlo en cada nodo; bajo ~114 GB el autor espera morir a mitad de carga",
+   "como": "medir MemAvailable en cada nodo justo antes de lanzar (por debajo de ~114 GB, buscar residentes)",
+   "fuente_post": 35,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10, pesos ~106.9 GiB por rank",
+   "riesgo": "Cifra de un usuario en su cluster de 4 nodos, no generaliza a un nodo",
+   "verificable_aqui": "grep MemAvailable /proc/meminfo"
+  },
+  {
+   "que": "Swap presente y drenado, swappiness 1: el autor afirma que el pico de carga necesita swap y que apagarlo del todo rompe NVRM antes",
+   "como": "swapoff -a && swapon -a ; vm.swappiness=1",
+   "fuente_post": 35,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10",
+   "riesgo": "Afirmacion de usuario sin reproduccion independiente; contradice la practica de quitar swap",
+   "verificable_aqui": "sysctl vm.swappiness; swapon --show"
+  },
+  {
+   "que": "Limitar el pico de profiling de vLLM: el pico escala con max_num_batched_tokens; el cap de cudagraph debe quedar por encima de num_speculative_tokens+1",
+   "como": "MAX_NUM_BATCHED_TOKENS=1024 ; MAX_CUDAGRAPH_CAPTURE_SIZE=10 para MTP4",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10, vLLM de la rama local-inference-lab",
+   "riesgo": "Con N+1 exacto falla el arranque con 'No valid cudagraph sizes' (post 1)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Presupuesto explicito de KV en vLLM para que el profiling no se desborde en memoria unificada",
+   "como": "--kv-cache-memory-bytes 1.81e9 con gpu-memory-utilization 0.89, KV fp8",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10, 128K contexto",
+   "riesgo": "Margen libre de solo ~2.5-2.7 GB por rank segun el autor (post 6)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Verificar que el hook de trim corre tras la carga: buscar la linea de log en los workers Ray",
+   "como": "VLLM_KZ_TRIM_AFTER_LOAD completed ... malloc_trim=1 (linea de log; env VLLM_KZ_TRIM_AFTER_LOAD=1)",
+   "fuente_post": 6,
+   "repositorio": "https://github.com/m9e/vllm (rama spark4-overlay)",
+   "licencia": "no indicada",
+   "probado_en": "4x GB10",
+   "riesgo": "Su ausencia se asocia con NVRM NV_ERR_NO_MEMORY en el paso de profiling (afirmacion de usuario)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: un usuario con cargas en streaming (RunAI streamer) vio los nodos caer bajo 300 MB disponibles y quedar sin respuesta al ~1% de carga",
+   "como": "load_format=runai_streamer con model_loader_extra_config memory_limit 1903165440",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10, runai-model-streamer 0.16.0",
+   "riesgo": "Colapso del nodo por memoria; el autor sugiere pesos locales en NVMe, bind-mount ro (post 35)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fix de vLLM: el draft MTP no heredaba decode_context_parallel_size (colapso de aceptacion en MTP2/3 bajo DCP>1)",
+   "como": "PR #72 en local-inference-lab/vllm; env VLLM_DCP_SHARD_DRAFT=1",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/local-inference-lab/vllm",
+   "licencia": "no indicada",
+   "probado_en": "4x GB10, GLM-5.2 NVFP4",
+   "riesgo": "Parche de rama no oficial",
+   "verificable_aqui": "Solo aplica a cluster multi-nodo con DCP; no verificable aqui"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Tema de GLM-5.2 en 4 Spark por usuarios (sin respuesta de staff NVIDIA); la parte reutilizable en un solo nodo es el manejo de memoria unificada en la carga (envs, swap, MemAvailable previo, KV explicito) pero con cifras de un cluster distinto y sin repositorio con licencia indicada. El grueso (DCP, MTP, parches vLLM) no aplica a una sola maquina."
+}

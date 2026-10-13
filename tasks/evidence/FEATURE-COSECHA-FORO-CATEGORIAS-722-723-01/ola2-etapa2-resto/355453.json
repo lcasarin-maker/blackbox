@@ -1,0 +1,48 @@
+{
+ "id": 355453,
+ "titulo": "[DGX Spark] XHCI Controller \"HC Died\" crashes with RealSense D435i streaming 30fps (depth, RGB)",
+ "leido": true,
+ "posts_leidos": 14,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Causa raiz segun un usuario: una transferencia de control ep0 enviada tras iniciar el stream UVC deja colgado el controlador MT8901; sin ep0 tras STREAMON el stream corre estable (~37 min)",
+   "como": "trazado con usbmon y tracepoints de xhci-hcd (sin comando exacto indicado)",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS 7.5, kernel 6.17.0-1021-nvidia (declarado por tarcisio.jaolive)",
+   "riesgo": "el controlador no se recupera sin reinicio una vez colgado; cae todo dispositivo del controlador",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Mitigaciones del lado host: reset electrico del puerto antes de cada stream, o forzar USB2 (usuario)",
+   "como": "USBDEVFS_RESET / libusb_reset_device() entre cerrar y reabrir el stream; cable USB 2",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (declarado)",
+   "riesgo": "USB2 limita el ancho de banda (post 7)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Firma del fallo en el kernel para detectarlo",
+   "como": "xhci-hcd NVDA8000:02: HC died; cleaning up",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k | grep -c 'HC died'"
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu) confirma un bug de ingenieria en el controlador xHCI (post 10) y afirma que la actualizacion de julio lo corrige (post 12); un usuario reporta que persiste tras 7.5.0-2 (post 13) y NVIDIA pide nvidia-bug-report (post 15).",
+ "utilidad_atom": "baja",
+ "razon": "Fallo del controlador USB con camaras y capturadoras, sin relacion con memoria o calor. NVIDIA confirma el bug (posts 10, 12), el arreglo de julio queda sin confirmar (post 13) y no hay comando de mitigacion de sistema."
+}

@@ -1,0 +1,47 @@
+{
+ "id": 357197,
+ "titulo": "Docker-vLLM (GPT OSS)-VSC: struggling to figure out how to get tool use functioning",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reducir gpu-memory-utilization de vLLM por debajo de 0.8 en Spark por la memoria unificada: 0.9 por defecto puede causar OOM o uso de swap que se sabe que tumba el equipo",
+   "como": "--gpu-memory-utilization 0.70 (recomendado), eugr dice no pasar de 0.88 en su equipo",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario eugr, Spark, version no indicada",
+   "riesgo": "Valores altos con otra carga en CPU provocan OOM; christopher_owen (post 9) confirma que la memoria agotada hace que el Spark se cuelgue y requiera ciclo de energia",
+   "verificable_aqui": "docker ps --format '{{.Names}}' | xargs -I{} docker inspect -f '{{.Name}} {{.Args}}' {}"
+  },
+  {
+   "que": "Parametros de vllm serve para gpt-oss-120b con tool calling",
+   "como": "vllm serve openai/gpt-oss-120b --host 0.0.0.0 --port 8000 --enable-auto-tool-choice --tool-call-parser=openai --reasoning-parser=openai_gptoss --gpu-memory-utilization 0.70 --enable-prefix-caching --load-format fastsafetensors",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "usuario eugr, funciona con Cline",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Si build-and-copy.sh falla por ruedas aarch64 aun no publicadas, usar --use-wheels release o compilar desde fuente sin --use-wheels",
+   "como": "--use-wheels release",
+   "fuente_post": 3,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Usuarios (sin staff NVIDIA) confirman que el 0.9 por defecto de vLLM puede llevar a OOM/swap que cuelga el Spark y recomiendan 0.7-0.8 (posts 8 y 9). El resto es configuracion de tool-calling de gpt-oss, de poco valor para monitoreo."
+}

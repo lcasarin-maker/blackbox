@@ -1,0 +1,47 @@
+{
+ "id": 307879,
+ "titulo": "Nvidia docker runtime does not seem to work with docker compose",
+ "leido": true,
+ "posts_leidos": 12,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround: anadir count con valor valido en la reserva de dispositivo nvidia de docker compose (falla con compose plugin 2.29.7, reportado por usuarios; confirmado en post 12).",
+   "como": "deploy.resources.reservations.devices: - driver: nvidia, capabilities: [gpu], count: 1",
+   "fuente_post": 11,
+   "repositorio": "https://github.com/docker/compose (incidencia 'Nvidia Runtime Does Not Work via Docker Compose', cerrada)",
+   "licencia": "no indicada",
+   "probado_en": "Jetson Orin-NX (post 11), x86_64 Ubuntu 22.04/24.04 y Debian 11 (posts 6,9,10), usuarios",
+   "riesgo": "Especifico de compose 2.29.7 con docker-ce 27.3.1; se dice que 2.30.x lo corrige (post 11)",
+   "verificable_aqui": "docker compose version; docker info --format '{{.Runtimes}} {{.DefaultRuntime}}'"
+  },
+  {
+   "que": "Fijar versiones de docker con apt pinning para evitar la actualizacion rota (versiones para jammy).",
+   "como": "/etc/apt/preferences.d/docker-pinned con Pin-Priority: 1000 para docker-ce 5:27.1.2-1~ubuntu.22.04~jammy, docker-compose-plugin 2.29.1-1~ubuntu.22.04~jammy, docker-buildx-plugin 0.16.2-1~ubuntu.22.04~jammy",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "x86_64 Ubuntu 22.04 (usuario cclaunch)",
+   "riesgo": "Congela docker y pierde correcciones de seguridad; versiones de otra distribucion difieren",
+   "verificable_aqui": "apt-cache policy docker-ce docker-compose-plugin"
+  },
+  {
+   "que": "Aclaracion de personal de NVIDIA (elezar): el enfoque solo con variable de entorno exige el runtime NVIDIA como predeterminado en docker; reservations.devices dispara el hook directamente y puede fallar con Vulkan.",
+   "como": "runtime nvidia como default en daemon.json (default-runtime)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "reservations.devices no sirve para iGPU Tegra",
+   "verificable_aqui": "docker info --format '{{.DefaultRuntime}}'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Fallo de 2024 en compose 2.29.7 con workaround verificado por varios usuarios y aclaracion de un empleado de NVIDIA; no es de GB10 y esta maquina usa runtime nvidia con cgroup systemd. Util solo como advertencia si compose se actualiza."
+}

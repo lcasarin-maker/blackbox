@@ -1,0 +1,9 @@
+{"id": 355838, "titulo": "TensorRT OOM problem", "leido": true, "posts_leidos": 3, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["monitorear", "omision_nvidia"],
+ "mecanismos": [
+  {"que": "Diagnostico de memoria dentro del contenedor: limites del cgroup y memoria libre", "como": "free -h; cat /sys/fs/cgroup/memory.max 2>/dev/null || true; cat /sys/fs/cgroup/memory.current 2>/dev/null || true", "fuente_post": 2, "repositorio": null, "licencia": null, "probado_en": null, "riesgo": null, "verificable_aqui": "cat /sys/fs/cgroup/memory.max /sys/fs/cgroup/memory.current; free -h"}
+ ],
+ "omision_nvidia": "El usuario reporta que nvidia-smi devuelve [N/A] en memory.total/used/free en GB10 y que TensorRT-LLM trata GB10 como nodo embebido con tope de asignacion de 91879MiB y como L40 de 119 GB; nadie responde si es intencional ni si GB10 esta soportado para build de motores. Respuesta de raphael.amorim (rol de staff no indicado) solo pide drop_caches y los comandos de arriba; el hilo se cierra sin solucion.",
+ "utilidad_atom": "baja",
+ "razon": "El hilo documenta que nvidia-smi no informa memoria en GB10 y el tope de 91879MiB de TRT-LLM (postulado por el usuario, sin confirmacion de NVIDIA), pero no ofrece solucion. El unico mecanismo es una lectura de cgroup y free, trivial."}

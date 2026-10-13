@@ -1,0 +1,56 @@
+{
+ "id": 385261,
+ "titulo": "RTL8127 stuck at 100 Mbps / flapping on r8127 11.014.00: in-kernel r8169 fixes it (warm-reboot caveat)",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Probar el controlador r8169 del kernel en lugar del r8127 del proveedor para el NIC RTL8127 (100 Mbps / flapping)",
+   "como": "sudo modprobe -r r8127 ; sudo modprobe r8169 ; echo \"10ec 8127\" | sudo tee /sys/bus/pci/drivers/r8169/new_id",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS 7.6.0, kernel 7.0.0-1019-nvidia, r8127 11.014.00-NAPI, BIOS 5.36_0ACUM018, hardware A.7 (declarado)",
+   "riesgo": "Tras un reinicio caliente con r8169 el NIC puede desaparecer y exige apagar y desenchufar 30 s (kernel 6.17.0-1008 segun otro hilo; un moderador lo confirmo segun el autor); solo verificado a 1G y 2.5G; un reinicio de prueba no es evidencia",
+   "verificable_aqui": "ethtool -i <interfaz>; lspci -nn | grep -i 10ec:8127"
+  },
+  {
+   "que": "Reversa sin reiniciar",
+   "como": "sudo modprobe -r r8169 && sudo modprobe r8127",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "mismo que arriba",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Configuracion persistente: bloquear r8127 y cargar r8169 por regla udev",
+   "como": "/etc/modprobe.d/zz-rtl8127-r8169.conf: install r8127 /bin/true ; regla udev 70-rtl8127-r8169.rules con RUN+= que ejecuta modprobe r8169 y escribe 10ec 8127 en new_id ; luego sudo update-initramfs -u -k all",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "mismo que arriba",
+   "riesgo": "Un install hook de modprobe para r8169 no funciona porque se carga con insmod simple; revisar tras actualizar kernel",
+   "verificable_aqui": "ls /etc/modprobe.d/ /etc/udev/rules.d/"
+  },
+  {
+   "que": "Otra distro: desactivar r8169 en la configuracion del kernel y dejar r8127 como modulo",
+   "como": "# CONFIG_R8169 is not set ; CONFIG_R8127=m",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Fedora con kernel nvidia-7.0.0-1021.21 (declarado por hiroshiya)",
+   "riesgo": "Ambos modulos habilitados por defecto en el kernel de NVIDIA; afirmacion de usuario",
+   "verificable_aqui": "zgrep -E 'CONFIG_R8169|CONFIG_R8127' /boot/config-$(uname -r)"
+  }
+ ],
+ "omision_nvidia": "El autor dice que NVIDIA movio este chip a r8127 a proposito y que otro hilo cerrado sugeria RMA; sin respuesta de NVIDIA en este tema.",
+ "utilidad_atom": "media",
+ "razon": "Receta con comandos exactos para un NIC RTL8127, escrita por un agente y revisada por el usuario, con advertencia explicita de desaparicion del NIC tras reinicio caliente; es un problema de red, no de memoria ni calor. Un segundo usuario dice que el problema existe tambien en Debian Trixie y otro propone desactivar CONFIG_R8169."
+}

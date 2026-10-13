@@ -1,0 +1,23 @@
+{"id": 378459, "titulo": "DGX SPark Communication Speed Issue", "leido": true, "posts_leidos": 5, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["monitorear", "medir", "rastrear"],
+ "mecanismos": [
+  {"que": "Detector en el log del kernel de potencia insuficiente en la ranura PCIe de las NIC mlx5 (el usuario reporta avisos de 27W en los cuatro puertos); busca el evento en dmesg.",
+   "como": "sudo dmesg -T | grep -i \"insufficient power\"",
+   "fuente_post": 1, "repositorio": null, "licencia": "no indicada",
+   "probado_en": "dos DGX Spark conectados, segun el usuario ammarabbaxi13 (kernel/driver no indicados)",
+   "riesgo": "El post no demuestra que el aviso cause la lentitud; quitar la alimentacion 1 minuto no lo arreglo.",
+   "verificable_aqui": "dmesg -T 2>/dev/null | grep -ci 'insufficient power'"},
+  {"que": "Medicion correcta de ancho de banda del enlace ConnectX entre dos Sparks con perftest en vez de iperf (iperf dio ~19 Gbit/s; ib_write_bw dio ~111 Gb/s); hay que probar cada interfaz por separado. Receptor en el segundo nodo, emisor en el primero (IP del par omitida aqui).",
+   "como": "ib_write_bw -d rocep1s0f1 --report_gbits -q 4 -R --force-link IB   (receptor)  /  ib_write_bw <ip-del-receptor> -d rocep1s0f1 --report_gbits -q 4 -R --force-link IB   (emisor)",
+   "fuente_post": 2, "repositorio": null, "licencia": "no indicada",
+   "probado_en": "DGX Spark x2 segun mashie y ammarabbaxi13 (post 3 mide 111.59 Gb/s medio)", "riesgo": "Los nombres de interfaz (rocep1s0f1) dependen del equipo.",
+   "verificable_aqui": "ibv_devinfo 2>/dev/null | head -20; ip -br link"},
+  {"que": "Recoger el log del kernel del arranque anterior en el nodo que falla (consejo de aniculescu, que responde como soporte; el texto no declara su rol).",
+   "como": "dmesg  /  journalctl -k -b -1 -e",
+   "fuente_post": 4, "repositorio": null, "licencia": null,
+   "probado_en": null, "riesgo": null, "verificable_aqui": "journalctl -k -b -1 -e | tail -20"}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Post 1 aporta un comando literal para detectar eventos de potencia insuficiente de PCIe en el kernel (relevante para cortes con carga) y post 2 la medicion correcta del enlace (ib_write_bw frente a iperf). El usuario no confirma la causa; la resolucion posterior (post 5) fue otro hilo sobre un bloqueo de NCCL y el resto es un log de vLLM."}

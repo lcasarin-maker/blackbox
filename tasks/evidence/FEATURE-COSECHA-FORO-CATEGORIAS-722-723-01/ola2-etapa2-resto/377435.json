@@ -1,0 +1,57 @@
+{
+ "id": 377435,
+ "titulo": "6-Node DGX Spark Ring Topology - NCCL Fails on Non-Adjacent Node Pairs (Routed RDMA)",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Fallback TCP de NCCL sin RoCE en anillo multinodo",
+   "como": "NCCL_IB_DISABLE=1",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "6x DGX Spark, NCCL 2.28.9, vLLM PP=6 (declarado)",
+   "riesgo": "Menor velocidad de tokens",
+   "verificable_aqui": null
+  },
+  {
+   "que": "RDMA en anillo de 6 nodos: no fusionar NICs y enrutar por subred (requiere NCCL parcheado)",
+   "como": "NCCL_IB_MERGE_NICS=0 y NCCL_IB_SUBNET_AWARE_ROUTING=1",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "6x DGX Spark (declarado)",
+   "riesgo": "Ganancia medida de solo ~7% frente a TCP (326 vs 349 tok/s)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Comprobar GPUDirect RDMA / peermem",
+   "como": "sudo modprobe nvidia-peermem",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel 6.17.0-1021-nvidia (declarado)",
+   "riesgo": "Falla con Invalid argument sin diagnostico en dmesg",
+   "verificable_aqui": "lsmod | grep -i peermem; modinfo nvidia-peermem | head -3"
+  },
+  {
+   "que": "Prueba de ancho de banda RDMA cruda para aislar NCCL",
+   "como": "ib_write_bw -d rocep1s0f0 <nodo> --report_gbits",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "ibv_devinfo | head"
+  }
+ ],
+ "omision_nvidia": "Un usuario (elsaco, post 9, no staff) afirma que GPUDirect RDMA no esta soportado en Spark; nvidia_peermem falla con 'Invalid argument' (post 8).",
+ "utilidad_atom": "baja",
+ "razon": "Usuarios (sin staff) documentan que un anillo sin switch de 6 nodos requiere NCCL_IB_MERGE_NICS=0 y NCCL_IB_SUBNET_AWARE_ROUTING=1 (NCCL parcheado) para RDMA, o NCCL_IB_DISABLE=1 como fallback TCP; RDMA solo dio ~7% mas. Aplica a clusters multinodo; esta maquina es un solo nodo."
+}

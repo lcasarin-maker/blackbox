@@ -1,0 +1,68 @@
+{
+ "id": 371614,
+ "titulo": "GB10 Grace CPU Energy Telemetry - Full Audit + Paper",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Energia/potencia GPU via DCGM campos 155 (W instantaneos) y 156 (mJ acumulados); GPU solamente, no CPU Grace",
+   "como": "sudo apt install -y datacenter-gpu-manager; sudo systemctl start nvidia-dcgm; dcgmi dmon -e 155,156 -c 3",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10 y Acer GN100 (kernel 6.17.0-1021-nvidia en GN100), segun usuario",
+   "riesgo": "Solo carril GPU; stress-ng en CPU no movio el campo 156",
+   "verificable_aqui": "dcgmi dmon -e 155,156 -c 3"
+  },
+  {
+   "que": "Contadores PMU ARMv8 (70+ eventos, sin eventos de energia) tras relajar perf_event_paranoid",
+   "como": "perf_event_paranoid = -1",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10 segun usuario",
+   "riesgo": "Bajar perf_event_paranoid a -1 abre contadores de rendimiento a todos los usuarios",
+   "verificable_aqui": "cat /proc/sys/kernel/perf_event_paranoid"
+  },
+  {
+   "que": "Telemetria completa de sistema (potencia sys_total/dc_input/soc_pkg/gpu, acumuladores de energia, temperaturas) via modulo comunitario spark_hwmon; funciona en Acer GN100, falla en GX10 por conflicto ACPI MTKW9000/NVDA8800 (EBUSY -16)",
+   "como": "no indicado (se cita el repositorio; el post muestra la salida de carga del modulo, no el comando de instalacion)",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/antheas/spark_hwmon",
+   "licencia": "no indicada",
+   "probado_en": "Acer Veriton GN100, kernel 6.17.0-1021-nvidia",
+   "riesgo": "Modulo sin firmar: Secure Boot lo rechaza en el DGX Spark retail (post 7); aqui Secure Boot esta activo",
+   "verificable_aqui": "dmesg | grep NVDA8800"
+  },
+  {
+   "que": "Comprobar si existen interfaces de energia estandar: powercap vacio y dispositivos NVDA* sin hwmon",
+   "como": "ls /sys/class/powercap/",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark retail 5.36_0ACUM027 + EC 0x03000508, segun usuario",
+   "riesgo": null,
+   "verificable_aqui": "ls /sys/class/powercap/; ls /sys/bus/platform/devices/ | grep NVDA"
+  },
+  {
+   "que": "Version de firmware solicitada por NVIDIA para diagnostico",
+   "como": "sudo dmidecode -t bios",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "sudo dmidecode -t bios"
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu, posts 4 y 6) dice que el nodo ACPI MTKW9000 conflictivo queda tras una bandera de compilacion apagada y que ya no se solapa con NVDA8800 en 5.36_0ACUM027; el que el driver no se enlace y powercap este vacio sigue en discusion interna. No hay interfaz oficial de energia de CPU (SCMI powercap) en GB10.",
+ "utilidad_atom": "alta",
+ "razon": "El usuario da el comando DCGM 155/156 para medir energia GPU, con salida de ejemplo, y audita que el lado CPU no tiene interfaz; NVIDIA staff confirma parcialmente el arreglo ACPI. Las afirmaciones sobre spark_hwmon son de usuario y chocan con Secure Boot activo aqui."
+}

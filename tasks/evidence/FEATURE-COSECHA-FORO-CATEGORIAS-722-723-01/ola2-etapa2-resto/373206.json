@@ -1,0 +1,48 @@
+{
+ "id": 373206,
+ "titulo": "DeepSeek V4 Flash (1,048,576 Context) on 2x DGX Spark - Custom Sparkrun Recipe",
+ "leido": true,
+ "posts_leidos": 12,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta sparkrun/vLLM para DeepSeek V4 Flash con 1M de contexto en 2 nodos (GIGABYTE AI TOP Atom): presupuesto de memoria declarado y parametros",
+   "como": "sparkrun run ~/recetas/deepseekv4.yaml ; defaults: tensor_parallel: 2, gpu_memory_utilization: 0.825, max_model_len: 1048576, max_num_seqs: 2, kv_cache_dtype: fp8, block_size: 256, load_format: instanttensor",
+   "fuente_post": 1,
+   "repositorio": "https://sparkrun.dev/ (sparkrun); contenedor scitrera/dgx-spark-vllm-jasl-ds4:20260609",
+   "licencia": "no indicada",
+   "probado_en": "2 nodos GIGABYTE AI TOP Atom, sparkrun v0.2.38 (declarado por el autor); driver/kernel no indicados",
+   "riesgo": "0rand reporta que con esta imagen el consumo llega a 117GB de 122GB, al borde de OOM, y solo quedan 10.78 GiB de KV cache por nodo frente a ~20GB con otra receta",
+   "verificable_aqui": "free -g && nvidia-smi --query-gpu=memory.used,memory.total --format=csv"
+  },
+  {
+   "que": "Benchmark de tool-calling para servidores LLM (84 escenarios) con semilla repetible y modo duro",
+   "como": "tool-eval-bench --seed 42 ; --hardmode (el modo --short no ejecuta la mayoria de pruebas)",
+   "fuente_post": 6,
+   "repositorio": "https://github.com/SeraphimSerapis/tool-eval-bench",
+   "licencia": "no indicada",
+   "probado_en": "vLLM 0.1.dev17473 / v2.0.4-v2.0.6 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Ajuste de rendimiento: chunked prefill con lote mayor reduce tiempo segun el autor (sin medicion publicada)",
+   "como": "--enable-chunked-prefill + max_num_batched_tokens: 16384, max_num_seqs reducido a 2",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "2 nodos Atom (declarado)",
+   "riesgo": "Afirmacion sin numeros",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Receta y cifras de memoria en cluster de 2 nodos Atom, con advertencia de OOM cercano (117GB de 122GB) en una variante, y una herramienta de evaluacion con repositorio sin licencia indicada. No hay respuesta de NVIDIA; el resto son benchmarks de usuarios con puntuaciones divergentes (70 frente a 89-97 segun imagen)."
+}

@@ -1,0 +1,78 @@
+{
+ "id": 368339,
+ "titulo": "FYI: new firmware available!",
+ "leido": true,
+ "posts_leidos": 36,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Procedimiento de actualizacion de firmware por linea de comandos (EC, UEFI/SoC, controlador USB-PD) en DGX Spark FE; tarda 10-15 min",
+   "como": "sudo apt update; sudo apt dist-upgrade; sudo fwupdmgr refresh --force; sudo fwupdmgr upgrade",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark Founders Edition (usuario)",
+   "riesgo": "El equipo debe seguir conectado a corriente durante la actualizacion o hay riesgo de dano (aviso del propio fwupdmgr)",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Comprobar el firmware instalado tras reiniciar",
+   "como": "fwupdmgr get-history",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "fwupdmgr get-history"
+  },
+  {
+   "que": "En Gigabyte AI TOP ATOM las tres actualizaciones (EC 0x02004b03->0x02004e18, UEFI 0x02009009->0x02009418, USB-PD 0x00000500->0x00000507) se aplican con fwupdmgr; un usuario necesito el DGX dashboard para la ultima",
+   "como": "sudo fwupdmgr upgrade (o fwupdmgr get-upgrades + DGX dashboard)",
+   "fuente_post": 31,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Gigabyte AI TOP ATOM (usuario)",
+   "riesgo": "Reinicios multiples durante la actualizacion",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Tras el firmware ATOM un usuario informa que la memoria visible paso de 119 GB a 121 GB; se comprueba con df -h segun la pregunta del post 30 y confirmacion del 34",
+   "como": "df -h (segun post 30; lectura de memoria visible)",
+   "fuente_post": 34,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Gigabyte AI TOP ATOM (usuario)",
+   "riesgo": null,
+   "verificable_aqui": "free -h"
+  },
+  {
+   "que": "Usuario reporta mas estabilidad tras el firmware (sin apagados en carga vLLM, con mas eventos sw_thermal/hw_thermal); dato sin comando propio",
+   "como": "no indicado",
+   "fuente_post": 35,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Gigabyte AI TOP ATOM (usuario)",
+   "riesgo": "Informe anecdotico de un usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Diagnostico de campo oficial citado por un usuario (no personal NVIDIA) para enviar logs al personal",
+   "como": "herramienta 'NVIDIA DGX Spark field diagnostics' (pagina de soporte nvidia.custhelp.com a_id 5767)",
+   "fuente_post": 26,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Los firmware para clones (Asus GX10, Gigabyte ATOM) llegan semanas despues que a la Founders Edition (usuarios en posts 2, 9, 15, 27); el firmware no corrigio los cuelgues a plena velocidad de GPU, segun un usuario (post 23, que vuelve a topar el reloj a 2150) ni los problemas de ConnectX-7 (post 25).",
+ "utilidad_atom": "media",
+ "razon": "Describe el procedimiento fwupdmgr y las versiones de firmware con salidas literales; el post 31 cubre exactamente la Gigabyte AI TOP ATOM y el 35 reporta mayor estabilidad (anecdotico). No hay respuesta de personal NVIDIA en el tema; el anuncio inicial lo hace un usuario (elsaco)."
+}

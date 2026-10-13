@@ -1,0 +1,46 @@
+{
+ "id": 378870,
+ "titulo": "DGX Dashboard - Update error",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Los firmware de driver NVIDIA (paquete nvidia-firmware-580-*) llegan por apt, distintos del firmware de plataforma que gestiona fwupdmgr; un usuario (no staff) lo explica",
+   "como": "apt show nvidia-firmware-580-580.159.03",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario elsaco, Sparks, driver 580.173.02",
+   "riesgo": null,
+   "verificable_aqui": "apt show nvidia-firmware-580-580.173.02"
+  },
+  {
+   "que": "Comprobar kernel y version real del driver cargado frente a lo que ofrece el dashboard",
+   "como": "uname -r; nvidia-smi --query-gpu=driver_version --format=csv,noheader",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario sggin1, ASUS Ascent GX10, kernel 6.17.0-1029-nvidia, driver 580.173.02",
+   "riesgo": null,
+   "verificable_aqui": "uname -r; nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+  },
+  {
+   "que": "Listar versiones disponibles del metapaquete de driver; un usuario advierte que instalar drivers concretos a mano rompe el sistema",
+   "como": "apt list --installed nvidia-driver-580-open -a",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario elsaco, Sparks",
+   "riesgo": "Segun el usuario, fijar drivers especificos manualmente deja el sistema roto",
+   "verificable_aqui": "apt list --installed nvidia-driver-580-open -a"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios sin respuesta de NVIDIA: el dashboard muestra metadatos de firmware obsoletos (580.159.03) aunque el driver vivo es 580.173.02. Los comandos son de consulta de version, utiles solo para verificar estado de paquetes."
+}

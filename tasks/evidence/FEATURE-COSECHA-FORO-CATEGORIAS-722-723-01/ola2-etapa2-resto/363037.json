@@ -1,0 +1,27 @@
+{
+ "id": 363037,
+ "titulo": "DCGM-Exporter: Missing Process-level Attribution for GPU Time-Slicing on Blackwell GB10",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "omision_nvidia",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Declaracion de staff NVIDIA: DCGM no esta soportado en GB10 y no hay planes; la utilizacion de GPU se consulta con nvidia-smi desde el host",
+   "como": "nvidia-smi",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.95 segun el usuario",
+   "riesgo": "Staff dice 'likely', no garantiza atribucion por proceso",
+   "verificable_aqui": "nvidia-smi --query-gpu=utilization.gpu --format=csv"
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu, posts 2 y 4) declara que DCGM no esta soportado en GB10 y que no hay planes de soportarlo en Spark.",
+ "utilidad_atom": "media",
+ "razon": "Staff NVIDIA confirma sin ambiguedad que DCGM/dcgm-exporter no existe para Spark, lo que obliga a monitorear con nvidia-smi. No aporta metodo de atribucion por proceso."
+}

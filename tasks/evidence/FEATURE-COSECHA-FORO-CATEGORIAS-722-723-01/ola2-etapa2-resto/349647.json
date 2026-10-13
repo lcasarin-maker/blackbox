@@ -1,0 +1,27 @@
+{
+ "id": 349647,
+ "titulo": "DGX Spark Thermal throttling",
+ "leido": true,
+ "posts_leidos": 12,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Soporte tecnico de NVIDIA recomienda vaciar cache entre ejecuciones (ya cubierto por drop_caches); usuario eugr aclara que solo sirve al recargar un modelo porque el software CUDA ve la memoria cacheada como ocupada",
+   "como": "sudo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches > /dev/null",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, render de video (usuario)",
+   "riesgo": "No reduce temperatura; el usuario vio 86 C tras el vaciado. Staff dice que esa temperatura esta dentro de limites (post 7)",
+   "verificable_aqui": "free -h"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Staff (aniculescu) afirma que hay ventilador y que 86 C esta dentro de limites para GPU bajo carga; el unico mecanismo es drop_caches, ya conocido. El resto son quejas y dudas sin respuesta."
+}

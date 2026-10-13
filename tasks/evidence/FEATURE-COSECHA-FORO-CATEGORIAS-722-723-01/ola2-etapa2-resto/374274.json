@@ -1,0 +1,26 @@
+{
+ "id": 374274,
+ "titulo": "Suddenly much lower GPU performance in inference",
+ "posts_leidos": 13,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de rendimiento degradado (reloj GPU bajo, 11-13 W): apagar y desconectar el adaptador de AC por ambos extremos mas de 30 min",
+   "como": "no indicado comando; procedimiento fisico: apagar, desenchufar el adaptador de pared y de la maquina, esperar mas de 30 minutos, reconectar",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS Ascent GX10, kernel 6.17.0-1021-nvidia, Ubuntu 24.04.4",
+   "riesgo": "No explica la causa; usuario reporta que un intento corto no funciono",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK,POWER"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Usuarios (sin respuesta de staff NVIDIA) confirman que la desconexion de AC prolongada restaura reloj y potencia tras un estado degradado; es el mecanismo ya catalogado de desconexion AC. Hay una mencion de usuario a un firmware reciente para FE que no llega a GX10, sin comando.",
+ "leido": true,
+ "lectura": "completa"
+}

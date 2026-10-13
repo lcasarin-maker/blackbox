@@ -1,0 +1,57 @@
+{
+ "id": 384591,
+ "titulo": "GLM-5.3-Flash (NVFP4+DFlash2) on 2x Spark: does not scale with concurrency",
+ "posts_leidos": 5,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Si earlyoom de DGX OS mata el worker vLLM al asignar KV, reducir el pin de KV y revisar su journal antes de culpar a NCCL",
+   "como": "journalctl -u earlyoom ; pin de KV de 9 GiB a 6 GiB",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 DGX Spark, driver 580.159 (declarado)",
+   "riesgo": "earlyoom (umbral 2%) mato el worker en el nodo cabeza con 9 GiB de KV",
+   "verificable_aqui": "journalctl -u earlyoom --no-pager | tail"
+  },
+  {
+   "que": "gpu-memory-utilization es fraccion de la RAM total del sistema y es chequeo fatal previo a la carga; no portar valores entre imagenes",
+   "como": "gpu-memory-utilization 0.88 fallo por 0.5 GiB; 0.86 funcionaba",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 DGX Spark",
+   "riesgo": "Valores no portables entre imagenes",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Trick de reserva de KV de pantalla con nodos sin monitor: +1.75 GiB de KV por rango, reversible",
+   "como": "start-display-kv.sh (del repositorio de la receta; ruta GPU /dev/dri/card0 en vez de card1)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "driver 580.159",
+   "riesgo": "Requiere nodos sin interfaz grafica",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Tope de reloj GPU permanente como mitigacion termica",
+   "como": "GPU clocks capped at 2000 MHz (comando no indicado)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 DGX Spark",
+   "riesgo": "~25-30% menos rendimiento absoluto segun el autor",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El tema trata de escalado de concurrencia con DFlash2; los mecanismos utiles (earlyoom matando vLLM, fraccion de gpu-memory-utilization, tope de reloj) caen en lo ya conocido. Solo usuarios, sin staff NVIDIA.",
+ "leido": true,
+ "lectura": "completa"
+}

@@ -1,0 +1,26 @@
+{
+ "id": 374176,
+ "titulo": "Headless turn on boot on power on",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Herramienta que fija la opcion AMI BIOS 'Restore on AC Power Loss = Power On' escribiendo la variable EFI Setup (el GUID existe en el post), sin pantalla ni BMC",
+   "como": "no indicado (el post describe la herramienta y no da el comando de uso)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/Fheodoor01/DGX-Spark---Power-on-boot-",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark y otras GB10 (ASUS ASCEND) segun el autor, sin version de driver/kernel",
+   "riesgo": "Escribe una variable UEFI de firmware directamente; el autor dice USE AT YOUR OWN RISK. Con Secure Boot activo puede no aplicar",
+   "verificable_aqui": "ls /sys/firmware/efi/efivars | grep -c '^Setup-'  (solo lectura, comprueba que existe la variable)"
+  }
+ ],
+ "omision_nvidia": "El post indica que otras placas GB10 vienen con 'stay off after power loss' y sin pantalla no se puede cambiar la BIOS; no hay respuesta de NVIDIA.",
+ "utilidad_atom": "baja",
+ "razon": "Un solo mensaje de usuario con una herramienta sin licencia y sin comando; sirve para reinicio tras corte de AC, no para monitoreo ni calor. Sin respuestas de NVIDIA."
+}

@@ -1,0 +1,88 @@
+{
+ "id": 351461,
+ "titulo": "DGX Spark HDMI Display Stops Working Every",
+ "leido": true,
+ "posts_leidos": 29,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "rastrear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Recuperar la pantalla por SSH forzando DPMS encendido (usuario elsaco, no staff)",
+   "como": "xset dpms force on",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "sin hardware declarado; el mensaje lo recomienda para una DGX Spark",
+   "riesgo": "requiere sesion SSH previa y acceso al servidor grafico X; en Wayland puede no aplicar",
+   "verificable_aqui": "xset q | grep -i dpms"
+  },
+  {
+   "que": "Desactivar el apagado de pantalla/inactividad de GNOME (guia generada con IA, copiada por carlh, usuario)",
+   "como": "gsettings set org.gnome.desktop.session idle-delay 0",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "no declarado; el propio autor avisa que no se siga sin investigarlo",
+   "riesgo": "el autor advierte entender y poder revertir cada cambio; no verificado",
+   "verificable_aqui": "gsettings get org.gnome.desktop.session idle-delay"
+  },
+  {
+   "que": "Desactivar dim y suspension por inactividad en el plugin de energia",
+   "como": "gsettings set org.gnome.settings-daemon.plugins.power idle-dim false ; gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-timeout 0",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "no verificado por el autor",
+   "verificable_aqui": "gsettings get org.gnome.settings-daemon.plugins.power sleep-inactive-ac-timeout"
+  },
+  {
+   "que": "Config Xorg que desactiva DPMS y tiempos de blank",
+   "como": "/etc/X11/xorg.conf.d/90-disable-dpms.conf con Section Extensions Option DPMS Disable y ServerFlags StandbyTime/SuspendTime/OffTime/BlankTime 0; luego xset s off -dpms ; xset dpms 0 0 0",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "el autor dice que GNOME puede sobrescribirlo en ejecucion",
+   "verificable_aqui": "xset q | grep -i dpms"
+  },
+  {
+   "que": "systemd-logind: ignorar acciones por inactividad",
+   "como": "/etc/systemd/logind.conf: IdleAction=ignore, IdleActionSec=infinity, HandleLidSwitch=ignore; sudo systemctl restart systemd-logind.service",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "reiniciar logind termina la sesion grafica",
+   "verificable_aqui": "grep -E '^(Idle|HandleLid)' /etc/systemd/logind.conf"
+  },
+  {
+   "que": "Captura de diagnostico pedida por staff de NVIDIA (aplattner, aniculescu, rrameshbabu) cuando falla la pantalla",
+   "como": "sudo nvidia-bug-report.sh (ejecutarlo por SSH o tras reiniciar) y sudo journalctl -b -1; ping al equipo; tras la falla probar sudo init 3 y systemctl start gdm gnome-remote-desktop cups cups-browsed",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "el usuario reporto que el bug-report genero enorme volumen de avisos por segundo durante dias (post 17); un reinicio forzado pierde el trabajo en curso",
+   "verificable_aqui": "command -v nvidia-bug-report.sh"
+  },
+  {
+   "que": "Cable USB-C a DisplayPort o HDMI-USB-C evito el fallo en dos usuarios (anecdotico)",
+   "como": "cable usb-c a displayport / HDMI a USB-C (BENFEI) en lugar de HDMI a HDMI",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios sal_distefano y sangeetc; el autor original probo USB-C a HDMI y siguio fallando (post 15)",
+   "riesgo": "no reproducido; evidencia de usuarios",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "La entrada de cierre de NVIDIA (aniculescu, post 30) dice que anadieron este sintoma a Known Issues de la guia de usuario; el hilo no ofrece correccion ni causa raiz. El mensaje 11 de aplattner pide bug report y logs, sin causa.",
+ "utilidad_atom": "media",
+ "razon": "Hilo de pantalla HDMI negra con el sistema vivo, sin relacion directa con colapsos de memoria o calor; aporta un metodo de recuperacion por SSH (xset dpms force on, usuario) y la captura estandar de NVIDIA (nvidia-bug-report.sh). Hay respuesta de personal NVIDIA (posts 11, 16, 22, 25, 30) pero ninguna causa raiz; el autor devolvio el equipo (post 23)."
+}

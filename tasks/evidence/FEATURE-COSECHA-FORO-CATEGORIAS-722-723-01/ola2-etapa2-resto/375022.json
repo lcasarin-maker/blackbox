@@ -1,0 +1,57 @@
+{
+ "id": 375022,
+ "titulo": "MiniMax on two DGX Sparks",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Un usuario afirma que GPUDirect RDMA es inseguro en GB10 y puede bloquear el SoC durante la carga; se previene con la variable de NCCL",
+   "como": "NCCL_NET_GDR_LEVEL=0 (con NCCL_IB_DISABLE=0 para mantener RoCE por CPU)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark GB10, vLLM, MiniMax-M2.7 AWQ (declarado por el autor, sin verificacion de NVIDIA)",
+   "riesgo": "cuelgue total de ambos equipos con recuperacion solo por apagado fisico si se omite",
+   "verificable_aqui": "env | grep NCCL; docker inspect <contenedor> --format '{{.Config.Env}}'"
+  },
+  {
+   "que": "En el comando de cabeza, esperar a que el worker se una a Ray antes de lanzar vLLM; sin la espera puede caer a una sola GPU y quedarse sin memoria",
+   "como": "sleep 60 en el comando head, backend Ray (no --no-ray)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10",
+   "riesgo": "OOM por caida silenciosa a modo de un solo nodo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Banderas de la receta publicada",
+   "como": "--gpu-memory-utilization 0.75 --load-format fastsafetensors --kv-cache-dtype fp8_e4m3 ; privileged: true, ipc: host, --ulimit memlock=-1, /dev/infiniband",
+   "fuente_post": 1,
+   "repositorio": "ghcr.io/timothystewart6/vllm-gb10 (imagen); base eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10",
+   "riesgo": "privileged amplia permisos del contenedor; 0.5 queda sin KV, segun el autor",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Los montajes NAS y proxies pueden no volver tras reiniciar y parecer fallos del modelo",
+   "como": "no indicado (verificar persistencia tras reinicio)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "findmnt; systemctl is-enabled <servicio>"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Informe de usuario con la variable NCCL_NET_GDR_LEVEL=0 como causa y prevencion de cuelgues del SoC en cargas de dos nodos; sin verificacion independiente ni respuesta de NVIDIA, y aplica a configuracion multinodo. Los posts 2-5 solo confirman que la receta de eugr funciona."
+}

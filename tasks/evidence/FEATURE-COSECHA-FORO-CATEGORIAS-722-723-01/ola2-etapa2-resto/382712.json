@@ -1,0 +1,27 @@
+{
+ "leido": true,
+ "lectura": "completa",
+ "mecanismos": [
+  {
+   "que": "Advertencia: el instalador del driver NVIDIA (conftest.sh) rechaza kernels PREEMPT_RT; un kernel realtime no es utilizable con el driver",
+   "como": "from /usr/src/nvidia-580.173.02/conftest.sh: PREEMPT_RT_PRESENT != 0 -> 'The NVIDIA driver does not support real-time kernels.'",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "driver 580.173.02 (citado por usuario fins_gd)",
+   "riesgo": "Instalar un kernel PREEMPT_RT dejaria sin modulos NVIDIA.",
+   "verificable_aqui": "grep -n 'real-time kernels' /usr/src/nvidia-*/conftest.sh"
+  }
+ ],
+ "omision_nvidia": "El texto del instalador, citado por un usuario, declara que el driver NVIDIA no soporta kernels en tiempo real; sin respuesta de staff en el tema.",
+ "id": 382712,
+ "titulo": "Is Real-time Kernel Supported on DGX Spark?",
+ "posts_leidos": 3,
+ "clase": "diagnostico",
+ "proposito": [
+  "omision_nvidia",
+  "prevenir"
+ ],
+ "utilidad_atom": "baja",
+ "razon": "Un usuario cita el mensaje de conftest.sh que declara no soportado PREEMPT_RT; es una advertencia verificable pero sin relacion con memoria ni calor. Tema cerrado automaticamente (post 3, sistema)."
+}

@@ -1,0 +1,37 @@
+{
+ "id": 359196,
+ "titulo": "DGX Spark crashes immediately after login due to Docker container auto-restart",
+ "posts_leidos": 4,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Declaracion de NVIDIA: OOM conocido que provoca cuelgue al reiniciarse contenedores Docker con modelos; se corrige en la proxima gran actualizacion; workaround: Safe Mode y borrar los archivos del modelo por CLI",
+   "como": "no indicado (sin comando exacto)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Borra archivos de modelo",
+   "verificable_aqui": "docker ps -a --format '{{.Names}} {{.Status}}'; docker inspect -f '{{.HostConfig.RestartPolicy.Name}}' $(docker ps -aq)"
+  },
+  {
+   "que": "Matar Docker a tiempo tras el login antes de que el sistema se cuelgue (usuario christopher_owen)",
+   "como": "no indicado",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Depende de ventana de tiempo",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu, post 3) reconoce un fallo OOM conocido sin corregir al momento del mensaje; el usuario original pensaba en fallo de hardware (post 2).",
+ "utilidad_atom": "media",
+ "razon": "Respuesta oficial de NVIDIA que reconoce un OOM conocido que cuelga el sistema con contenedores de reinicio automatico, y un workaround vago. Sin comandos exactos; la verificacion de politica de reinicio es leible aqui.",
+ "leido": true,
+ "lectura": "completa"
+}

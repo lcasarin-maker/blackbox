@@ -1,0 +1,48 @@
+{
+ "id": 371009,
+ "titulo": "Soft lockup in nvidia_modeset DisplayPort path during Xorg logout",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Evitar el bloqueo de modeset en logout de GDM/Xorg ejecutando headless",
+   "como": "sudo systemctl set-default multi-user.target",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark/GB10 (ASUS GX10), Ubuntu 24.04.3, kernel 6.17.0-1018-nvidia, driver 580.142 (usuario)",
+   "riesgo": "No evita bloqueos por ruta de asignacion (post 2: el interbloqueo se reprodujo sin GDM)",
+   "verificable_aqui": "systemctl get-default"
+  },
+  {
+   "que": "Firma de soft lockup con tarea en estado D esperando semaforo que sostiene Xorg",
+   "como": "watchdog: BUG: soft lockup - CPU#18 stuck for 522s! [Xorg:...]; INFO: task nvidia-modeset/:... blocked for more than 368 seconds",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "mismo hardware",
+   "riesgo": "Solo recupera el reinicio del chasis",
+   "verificable_aqui": "journalctl -k | grep -E 'soft lockup|blocked for more than'"
+  },
+  {
+   "que": "Clase de fallo mas amplia: bloqueo largo de un lock del driver que afecta a consumidores vLLM, nvidia-smi y Xorg, disparado por NV_ERR_NO_MEMORY durante una asignacion pesada de vLLM",
+   "como": "no indicado (observacion; remite a post 6 del hilo 370983)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark, driver 580.159.03 open modules, kernel 6.17.0-1018-nvidia (usuario j0n)",
+   "riesgo": "Cuelgue con nvidia-smi bloqueado",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu, post 4) no logro reproducir con las actualizaciones recientes y marco el tema como resuelto; no explico causa ni dio parche.",
+ "utilidad_atom": "media",
+ "razon": "Staff de NVIDIA no reprodujo y cerro como solucion sin causa; el valor es el workaround multi-user.target y las firmas de log del lockup, mas la observacion de que el mismo patron de cuelgue aparece por la ruta de asignacion de vLLM. Relevante para rastrear cortes en seco."
+}

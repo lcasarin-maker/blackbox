@@ -1,0 +1,26 @@
+{
+ "id": 383295,
+ "titulo": "Apt repo problem with dgx-spark-ota-update-meta",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Respuesta de NVIDIA (aniculescu): reinstalar nvidia-spark-repo arregla dependencias rotas de dgx-spark-ota-update-meta; el usuario confirma",
+   "como": "sudo apt install nvidia-spark-repo (el staff dice 'manually installing nvidia-spark-repo'; sin comando literal)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Ninguno indicado",
+   "verificable_aqui": "apt-cache policy nvidia-spark-repo nvidia-spark-limits nvidia-spark-ota-check nvidia-spark-avahi-conf"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Staff de NVIDIA resuelve un conjunto de dependencias apt rotas reinstalando nvidia-spark-repo (post 4, confirmado en post 5). Util solo si el Atom presenta ese error."
+}

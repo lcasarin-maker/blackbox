@@ -1,0 +1,58 @@
+{
+ "id": 375016,
+ "titulo": "Device hangs under load",
+ "posts_leidos": 11,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "rastrear",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Staff: driver 580.159.03 o superior debe hacer que un OOM de aplicacion mate el proceso en vez de colgar el sistema",
+   "como": "nvidia-smi --query-gpu=driver_version --format=csv,noheader",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS 7.5.0, kernel 6.17.0-1021-nvidia",
+   "riesgo": "El OP ya tenia 580.159.03 y siguio colgandose (post 7); el arreglo no esta confirmado",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+  },
+  {
+   "que": "Firma de OOM de GPU en el kernel: fallos IOVA NVRM y NV_ERR_NO_MEMORY antes del cuelgue, con desborde del buffer de /dev/kmsg",
+   "como": "journalctl -k -b -1 -e",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k -b -1 | grep -E 'NVRM|NV_ERR_NO_MEMORY'"
+  },
+  {
+   "que": "Staff: los avisos mlx5 de potencia PCIe insuficiente (27W) son benignos",
+   "como": "no indicado comando; afirmacion de staff",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k | grep 'insufficient power'"
+  },
+  {
+   "que": "Recoleccion de diagnostico pedida por staff",
+   "como": "sudo journalctl -b > kernel_logs.txt; nvidia-smi -q; nvidia-smi dmon; nvidia-bug-report.sh",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi dmon -c 5"
+  }
+ ],
+ "omision_nvidia": "Un OOM de GPU sigue colgando el equipo hasta el ciclo de corriente aunque el driver sea el recomendado; staff no ofrece solucion distinta.",
+ "utilidad_atom": "media",
+ "razon": "Staff confirma que el cuelgue es un OOM (log NVRM) y que mlx5 27W es benigno; recomienda no usar toda la memoria. Es evidencia directa de colapso de memoria en un GB10, con comandos ya catalogados (journalctl -k -b -1).",
+ "leido": true,
+ "lectura": "completa"
+}

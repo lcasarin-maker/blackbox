@@ -1,0 +1,58 @@
+{
+ "id": 360643,
+ "titulo": "Trouble with Llama 70b 3.3 Instruct FP8 Model at 3 tokens per second",
+ "leido": true,
+ "posts_leidos": 17,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Techo de decodificacion denso por ancho de banda (usuario tudor5, sin fuente)",
+   "como": "max tok/s ~ bandwidth / bytes por token; 273 GB/s / ~70 GB ~ 3.9 (2.7-3 real); Q4 70B ~40 GB -> ~6-7 tok/s",
+   "fuente_post": 18,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10; afirmacion de usuario sin medicion propia",
+   "riesgo": "estimacion teorica; no aplica a MoE, cuyo coste es de parametros activos",
+   "verificable_aqui": "nvidia-smi -q | grep -i -E 'memory|clocks' (no entrega ancho de banda; referencia solamente)"
+  },
+  {
+   "que": "llama-server con modelo borrador (speculative decoding), usuario coder543",
+   "como": "llama-server -ngl 999 -fit off --parallel 1 --flash-attn on --draft-min 2 --draft-max 8 --no-warmup --no-mmap --jinja --model llama-3.3-70b-instruct-ud-q8_k_xl.gguf --model-draft llama-3.2-1b-instruct-ud-q8_k_xl.gguf --temp 0.0 -c 80000",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario: 7-8 tok/s en chat, hasta 18 tok/s en codigo",
+   "riesgo": "con memoria unificada, un modelo q8 de 70B mas contexto de 80000 aprieta la memoria del sistema",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Presion de memoria reportada por el autor: RAM 119Gi usada, swap 3-4.7G, y swapoff -a && swapon -a termina en Killed",
+   "como": "free -h ; swapon --show ; swapoff -a && swapon -a",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.126.09, kernel 6.14.x-nvidia (el post lo declara)",
+   "riesgo": "swapoff bajo presion provoca OOM killer sobre un proceso grande",
+   "verificable_aqui": "free -h; swapon --show"
+  },
+  {
+   "que": "Repositorio sugerido para vLLM en Spark (usuario norman.2)",
+   "como": "GitHub eugr/spark-vllm-docker",
+   "fuente_post": 9,
+   "repositorio": "github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "no evaluado en el hilo",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El autor corre vLLM con --gpu-memory-utilization 0.92 y deja 119Gi usados con swap activo, el patron de memoria al limite; los usuarios explican el techo de 3 tok/s con una formula de ancho de banda y un comando llama-server con modelo borrador. No hay respuesta de NVIDIA; todas son afirmaciones de usuarios."
+}

@@ -1,0 +1,37 @@
+{
+ "id": 375421,
+ "titulo": "Serving Qwen3.5-397B-A17B at 1M Tokens on 2x DGX Spark - MiniMax M3 Is Next",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Cuantizacion del KV cache con KVarN (4 bits K / 2 o 4 bits V) en vLLM para ampliar contexto",
+   "como": "vllm serve Intel/Qwen3.5-397B-A17B-int4-AutoRound --distributed-executor-backend ray --tensor-parallel-size 2 --gpu-memory-utilization 0.91 --max-model-len 1010000 --max-num-batched-tokens 8448 --kv-cache-dtype kvarn_k4v2_g128 --max-num-seqs 10 --enable-prefix-caching",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/huawei-csl/KVarN (y PR vllm-project/vllm #46812, sin fusionar segun el post)",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark, vLLM v0.24.0 con el PR aplicado",
+   "riesgo": "Tras aplicar el PR aparecen errores de memoria en memoria unificada y requiere un parche aparte que el autor aun no publico; --gpu-memory-utilization 0.91 deja poco margen en memoria unificada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion con llama-benchy del prefill y la generacion a profundidades de contexto",
+   "como": "metrica pp2048 y tg32 @ d<profundidad> en llama-benchy; el autor reporta caida de prefill ~32% a 500k y ~59% a 900k tokens",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "command -v llama-benchy"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El autor (usuario, no NVIDIA) sirve Qwen3.5-397B a 1M de contexto en 2 Spark con un backend de KV cuantizado no fusionado en vLLM y reporta cifras de llama-benchy. Requiere dos nodos y un parche de memoria no publicado, por lo que no es aplicable a una sola maquina.",
+ "respuesta_nvidia": "no"
+}

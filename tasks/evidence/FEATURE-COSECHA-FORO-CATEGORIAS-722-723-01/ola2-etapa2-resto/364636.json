@@ -1,0 +1,46 @@
+{
+ "id": 364636,
+ "titulo": "With two Sparks, vLLM 0.18.1rc0 still hammering two cores at 100% when idle",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Evitar Ray en vLLM multinodo, que mantiene dos nucleos al 100% en reposo; usar el backend mp. Nodo worker (headless)",
+   "como": "--distributed-executor-backend mp --nnodes 2 --node-rank 1 --master-addr $HEAD_IP_ADDR --master-port $MASTER_PORT --headless",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos Sparks, vLLM 0.18.1rc0, Qwen3.5-397B 4 bit AutoRound a 29 t/s (usuario Phaserblast)",
+   "riesgo": "Solo probado con 2 nodos; los paquetes deben estar sincronizados entre nodos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Nodo head con la misma bandera",
+   "como": "--distributed-executor-backend mp --nnodes 2 --node-rank 0 --master-addr $HEAD_IP_ADDR --master-port $MASTER_PORT",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "igual",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Lanzador de la imagen de eugr que oculta Ray",
+   "como": "./launch-cluster.sh --no-ray exec vllm serve ...",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "dos nodos (usuario AoE)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Solucion de usuarios para el consumo de CPU de Ray en cluster de 2 nodos; sin respuesta de NVIDIA. Nuestra maquina es un solo nodo, de ahi la utilidad baja."
+}

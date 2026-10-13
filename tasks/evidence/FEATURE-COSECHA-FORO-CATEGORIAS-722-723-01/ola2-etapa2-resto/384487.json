@@ -1,0 +1,27 @@
+{
+ "id": 384487,
+ "titulo": "UEFI firmware clears freed memory, adding 20 seconds to boots with Limine",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnostico: el UEFI (dos versiones de BIOS 5.36) parece tener activada la propiedad de depuracion EDK2 que sobrescribe con 0xAF cada pagina liberada con FreePages a ~6 GiB/s; con Limine una llamada de 117 GiB tarda 19.06 s",
+   "como": "DEBUG_PROPERTY_CLEAR_MEMORY_ENABLED en PcdDebugPropertyMask (hipotesis del autor); medicion en el issue 673 de Limine",
+   "fuente_post": 1,
+   "repositorio": "github.com/Limine-Bootloader/Limine/issues/673",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, UEFI 5.36_0ACUM018 y 5.36_0ACUM027",
+   "riesgo": "Hipotesis; sin confirmacion de NVIDIA",
+   "verificable_aqui": "cat /sys/class/dmi/id/bios_version"
+  }
+ ],
+ "omision_nvidia": "El autor pregunta si limpiar memoria liberada es intencional en el firmware de produccion; sin respuesta en el tema.",
+ "utilidad_atom": "baja",
+ "razon": "Un solo post con medicion de 20.15 s devolviendo 124 GiB en un gestor de arranque alternativo; afecta solo a quien arranca con Limine. No hay respuesta de NVIDIA ni mecanismo para nuestro caso."
+}

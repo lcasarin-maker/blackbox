@@ -1,0 +1,10 @@
+{"id": 359198, "titulo": "DGX Spark Completely Inoperable - Need Help (USB Boot Fails, UEFI Inaccessible, System Frozen)", "leido": true, "posts_leidos": 8, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["prevenir", "solucionar"],
+ "mecanismos": [
+  {"que": "Advertencia de riesgo (usuario): un contenedor con politica de reinicio siempre que cuelga el sistema al arrancar impide deshabilitarlo; el autor lo cuenta como causa de un bucle sin acceso", "como": "docker run -d --gpus all --restart always ... vllm/vllm-openai:latest --model /model --trust-remote-code (evitar --restart always en contenedores que pueden tumbar el equipo)", "fuente_post": 1, "repositorio": null, "licencia": null, "probado_en": "DGX Spark Founders Edition, DGX OS, enero 2026 (declarado por el autor)", "riesgo": "El autor no aporta evidencia de que el contenedor fuera la causa; un usuario (christopher_owen, post 8) atribuye el cuelgue a OOM por cargar un modelo de mas de 600 GB de pesos en 128 GB", "verificable_aqui": "docker ps -a --format '{{.Names}} {{.Image}}' ; docker inspect -f '{{.HostConfig.RestartPolicy.Name}}' <contenedor>"},
+  {"que": "Referencia oficial de NVIDIA para recuperar el equipo: reimagen por USB con DGX Spark OS (staff aniculescu); soporte indica RMA via NVIDIA DGX Spark Support (staff NVES)", "como": "no indicado (solo remite a la guia System Recovery del DGX Spark User Guide)", "fuente_post": 2, "repositorio": null, "licencia": null, "probado_en": null, "riesgo": null, "verificable_aqui": null}
+ ],
+ "omision_nvidia": "El autor reclama que NVIDIA no ofrece una recuperacion fiable cuando falla el acceso a UEFI/USB; NVIDIA responde con la guia de reimagen y una via de RMA, sin comentar el fallo de teclados ni el acceso inconsistente a UEFI.",
+ "utilidad_atom": "baja",
+ "razon": "Reporte de un equipo que se congela al iniciar sesion y no permite entrar a UEFI; hay respuesta de staff de NVIDIA (aniculescu, NVES) que solo remite a reimagen y RMA, y un usuario que atribuye el cuelgue a OOM. El unico mecanismo transferible es evitar --restart always en contenedores de modelos que pueden agotar memoria."}

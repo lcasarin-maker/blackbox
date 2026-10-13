@@ -1,0 +1,69 @@
+{
+ "id": 374722,
+ "titulo": "Has anyone done DDP training with 2x Sparks?",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "rastrear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Chequeo previo de red RoCE/CX7 entre dos Spark antes de culpar a DDP",
+   "como": "ibdev2netdev ; ip a | grep -A2 enp1s0f ; sudo mlxfwmanager --query ; cat /etc/nccl.conf 2>/dev/null ; ip link | grep mtu",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "mlxfwmanager requiere sudo; el post da 28.45.4028 como firmware sano de CX7",
+   "verificable_aqui": "ibdev2netdev; ip link | grep mtu; cat /etc/nccl.conf 2>/dev/null"
+  },
+  {
+   "que": "Prueba de ancho de banda RDMA crudo sin NCCL",
+   "como": "ib_write_bw -d rocep1s0f1 -R   (nodo B: ib_write_bw -d rocep1s0f1 -R <IP-CX7-nodoA>)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Un cierre a 128KB con syndrom 0x88 indica fallo de firmware segun el post; se arregla con fwupdmgr update",
+   "verificable_aqui": "command -v ib_write_bw"
+  },
+  {
+   "que": "nccl-tests all_gather como referencia de salud del fabric (sano 23-24 GB/s busbw; 13-16 un solo rail; 1-3 caida a TCP)",
+   "como": "make -j src.build NVCC_GENCODE=\"-gencode=arch=compute_121,code=sm_121\" ; mpirun -np 2 -H <ip1>:1,<ip2>:1 ... -x NCCL_SOCKET_IFNAME=enp1s0f1np1 -x NCCL_IB_HCA=rocep1s0f1,roceP2p1s0f1 -x NCCL_IB_DISABLE=0 ./build/all_gather_perf -b 16G -e 16G -f 2",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark/GB10 con NCCL master >=2.28.9 segun el post",
+   "riesgo": "versiones antiguas de nccl-tests fallan al compilar; la P mayuscula de roceP2p1s0f1 importa",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Repro minimo DDP con variables de entorno NCCL/GLOO fijadas y NCCL_DEBUG=INFO",
+   "como": "export NCCL_SOCKET_IFNAME=enp1s0f1np1; export GLOO_SOCKET_IFNAME=enp1s0f1np1; export NCCL_IB_HCA=rocep1s0f1,roceP2p1s0f1; export NCCL_IB_DISABLE=0; export NCCL_DEBUG=INFO; export NCCL_NET_PLUGIN=none (solo contenedores); torchrun --nnodes=2 --node_rank=0 --nproc_per_node=1 --master_addr=<IP-CX7-A> --master_port=29500 ddp_test.py",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Sin 'init OK' el bootstrap enlaza la interfaz equivocada (wifi, docker0, 10GbE)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Diagnostico de cuelgue en curso: pila del proceso y trafico RDMA",
+   "como": "py-spy dump --pid <pid> ; mlnx_perf -i enp1s0f1np1",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Trafico RDMA casi nulo con GPUs girando indica deadlock de colectiva NCCL",
+   "verificable_aqui": "command -v py-spy mlnx_perf"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Post 2 (usuario raphael.amorim, rol de staff no indicado) da un procedimiento escalonado con comandos exactos para aislar un cuelgue DDP en 2 Spark; sirve para medir el fabric CX7/NCCL, solo aplica si la maquina se une a un segundo nodo. El autor del tema no recibio confirmacion de resultado.",
+ "respuesta_nvidia": "no indicada"
+}

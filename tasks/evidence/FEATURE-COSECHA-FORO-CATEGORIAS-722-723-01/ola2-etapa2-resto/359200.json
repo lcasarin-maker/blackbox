@@ -1,0 +1,47 @@
+{
+ "id": 359200,
+ "titulo": "Investigating Performance Issue/Bottleneck",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "NVIDIA (staff NVES) indica ejecutar Field Diagnostic para validar la salud del hardware del Spark y enviar los logs por mensaje privado",
+   "como": "no indicado (solo enlace a un articulo de soporte, sin comando)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Requiere instalar la herramienta; no se dio comando",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Usuario eugr recomienda llama-benchy como herramienta de benchmark estilo llama-bench para todos los backends",
+   "como": "no indicado (solo nombre del repositorio)",
+   "fuente_post": 3,
+   "repositorio": "eugr/llama-benchy (GitHub, nombre en el post)",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Usuario shahizat da comando docker run con contenedor NGC vLLM para Nemotron-3-Nano NVFP4, con memlock ilimitado y stack 67108864",
+   "como": "sudo docker run -it --rm --pull always --runtime=nvidia --network host --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 -e VLLM_USE_FLASHINFER_MOE_FP4=1 -e VLLM_FLASHINFER_MOE_BACKEND=throughput nvcr.io/nvidia/vllm:26.01-py3 ... --kv-cache-dtype fp8",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun el usuario",
+   "riesgo": "Falla con 'unknown or invalid runtime name: nvidia' si el runtime nvidia no esta registrado en Docker (post 8); solucion del usuario: instalar NVIDIA Container Toolkit y fijar nvidia como runtime por defecto (post 9)",
+   "verificable_aqui": "docker info --format '{{.Runtimes}} {{.DefaultRuntime}}'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de rendimiento de inferencia (3B/8B con transformers, 25 W): consejo de usuarios de cambiar a vLLM/SGLang/llama.cpp, cuantizar y que el decode esta limitado por ancho de banda (273 GB/s, post 7). Solo un staff NVES respondio (post 2) y apunto a Field Diagnostic sin dar comando; nada util para los colapsos de memoria ni cortes por calor."
+}

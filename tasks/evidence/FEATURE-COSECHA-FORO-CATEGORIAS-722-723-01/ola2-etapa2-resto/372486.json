@@ -1,0 +1,10 @@
+{"id": 372486, "titulo": "DGX Spark GB10 - Asus GX10 - GPU becomes inoperable", "leido": true, "posts_leidos": 8, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["solucionar", "rastrear"],
+ "mecanismos": [
+  {"que": "Cambiar el driver de cgroup de Docker de systemd a cgroupfs como posible arreglo de caidas de GPU sin carga; verificacion del driver actual", "como": "docker info | grep -i cgroup", "fuente_post": 5, "repositorio": null, "licencia": "no indicada", "probado_en": "Usuario con Asus GX10 (GB10), Docker + vLLM; estable solo 24 h segun el, sin confirmacion final; origen de la idea: una IA (Gemini) sin fuentes", "riesgo": "Evidencia anecdotica de 24 h; el post no da el comando para cambiar el driver (solo el de lectura); cambiar el driver cgroup de Docker afecta a todos los contenedores", "verificable_aqui": "docker info | grep -i cgroup"},
+  {"que": "Recoger logs para diagnosticar GPU muerta desde el arranque (enlace PCIe colapsado a x0, DOE mailbox atascado) antes de buscar causa de carga", "como": "sudo journalctl -b -1 > journalctl-previous-boot.log ; sudo rasdaemon --errors > rasdaemon-errors.txt ; sudo dmesg > dmesg-full.txt", "fuente_post": 3, "repositorio": null, "licencia": "no indicada", "probado_en": null, "riesgo": "Diagnostico de un usuario (parallelArchitect), no de personal de NVIDIA; no consta que se haya confirmado", "verificable_aqui": "journalctl -b -1 --no-pager | tail -n 50"}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario con GX10 reporta caidas de GPU sin carga; un tercero diagnostica enlace PCIe colapsado y pide logs, y el autor prueba cgroupfs en lugar de systemd (estable 24 h, tema cerrado sin confirmar). Sin respuesta de personal de NVIDIA; la afirmacion del cgroup es una conjetura anecdotica pero toca una configuracion que esta maquina usa (cgroup systemd)."}

@@ -1,0 +1,47 @@
+{
+ "id": 364842,
+ "titulo": "Qwen3.5-35B-A3B-FP8 on 2x DGX Spark: Marlin FP8 on SM121",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Forzar backend FP8 Marlin en SM121 porque la ruta cutlass_scaled_mm por defecto falla",
+   "como": "VLLM_TEST_FORCE_FP8_MARLIN=1",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/Pablohassan/vllm-build-optimised-qwen-3.5-35B-A3-FP8-canary-26-03-2026",
+   "licencia": "no indicada",
+   "probado_en": "usuario sesmanovic, 2x DGX Spark GB10 SM121, vLLM main de marzo 2026",
+   "riesgo": "Variable de prueba de vLLM; VLLM_MARLIN_USE_ATOMIC_ADD=1 no dio ganancia consistente",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Perfil de runtime retenido",
+   "como": "max_model_len=32768 gpu_memory_utilization=0.33 max_num_batched_tokens=8192 max_num_seqs=32 kv_cache_dtype=fp8",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 TP=2",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Herramienta de medicion de concurrencia",
+   "como": "llama-benchy; c32 495.06 tok/s total, c40 pico 515.18, c44 regresa a 459.79",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario reporta el flag que corrige la ruta FP8 en SM121 y un perfil con gpu_memory_utilization acotado; es una ayuda para vLLM en contenedor pero es de dos nodos y con repositorio sin licencia indicada. Sin respuesta de NVIDIA; el post 2 solo remite a Spark Arena."
+}

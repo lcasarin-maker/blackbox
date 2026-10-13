@@ -1,0 +1,37 @@
+{
+ "id": 375830,
+ "titulo": "Massive performance boost on ComfyUI",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "SageAttention cae en silencio a atencion PyTorch si falta python3.12-dev; Triton reintenta compilar con gcc en cada paso (GPU 8-15%)",
+   "como": "sudo apt install -y python3.12-dev",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "2 DGX Spark, driver 580.142, kernel 6.17.0-1014-nvidia, torch 2.12.1+cu130, triton 3.7.1, sageattention 1.0.6 (declarado por usuario)",
+   "riesgo": "solo aplica a ComfyUI con --use-sage-attention",
+   "verificable_aqui": "dpkg -s python3.12-dev"
+  },
+  {
+   "que": "Detectar el fallback silencioso contando errores en el log de ComfyUI",
+   "como": "grep -c 'Error running sage attention' <your comfyui log>",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "cuenta creciente implica que Sage no esta activo",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Post 1 (usuario) da un workaround acotado a ComfyUI/SageAttention; la maquina usa vLLM en contenedor, no ComfyUI. Posts 2-9 anuncian un repo de terceros aun sin publicar (sin enlace ni licencia)."
+}

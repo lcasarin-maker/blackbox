@@ -1,0 +1,37 @@
+{
+ "id": 354990,
+ "titulo": "RAG Blueprint on DGX Spark (ARM64 / GB10): exec format error",
+ "posts_leidos": 8,
+ "clase": "diagnostico",
+ "proposito": [
+  "omision_nvidia",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Declaracion de NVIDIA: ingestor-server, rag-server y nv-ingest del RAG Blueprint no estan soportados en ARM (dependen de NIMs retriever y nv-ingest sin soporte ARM), en hoja de ruta",
+   "como": "no indicado",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "exec format error al correr imagenes amd64 en aarch64",
+   "verificable_aqui": "docker image inspect --format '{{.Architecture}}' <imagen>"
+  },
+  {
+   "que": "Un usuario dice haber construido para arm64 contenedores nv-ingest y un equivalente de nemotron-ocr-v1 y corrido el blueprint en Spark; guia autogenerada en un repo",
+   "como": "no indicado (guia en el repo bthntx/nim-for-spark segun el post)",
+   "fuente_post": 8,
+   "repositorio": "GitHub bthntx/nim-for-spark",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (declarado por el usuario)",
+   "riesgo": "Guia cruda, sin verificar; contenedores content-safety, topic-control y guardrails siguen en curso",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA confirma (staff aniculescu, posts 5 y 7) que ingestor, rag-server y nv-ingest no tienen soporte ARM, solo hoja de ruta.",
+ "utilidad_atom": "baja",
+ "razon": "El staff de NVIDIA confirma que estos servicios del RAG Blueprint carecen de soporte ARM; un usuario ofrece un repo con builds arm64 sin licencia indicada. Util solo como omision documentada, ajeno a memoria o calor.",
+ "leido": true,
+ "lectura": "completa"
+}

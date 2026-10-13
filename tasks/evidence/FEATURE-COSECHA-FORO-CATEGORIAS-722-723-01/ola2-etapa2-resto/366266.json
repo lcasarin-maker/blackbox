@@ -1,0 +1,68 @@
+{
+ "id": 366266,
+ "titulo": "NCCL bandwidth capped at 3 GB/s, GPU PCIe topology reports Gen1 x1 on DGX Spark FE",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Desactivar el plugin AWS OFI NCCL empaquetado en NGC (falla con ibv_reg_mr_iova2 por DMABUF GDR en memoria unificada) para que NCCL use su transporte IB nativo; ancho de banda de all_gather medido de 1.19 a 13.19 GB/s con 1 NIC",
+   "como": "NCCL_NET_PLUGIN=none",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark FE, kernel 6.17.0-1014-nvidia, NCCL 2.29.7, ConnectX-7 FW 28.45.4028 (declarado por el usuario)",
+   "riesgo": "Sin el plugin se pierde GDR; solo valido si el plugin falla.",
+   "verificable_aqui": "env | grep -i NCCL; ls /dev/infiniband 2>/dev/null"
+  },
+  {
+   "que": "Fusionar dos NICs en NCCL: 20.58 GB/s promedio, 21.11 pico",
+   "como": "NCCL_IB_MERGE_NICS=1 ; all_gather_perf -b 1G -e 4G -f 2",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "mismo hardware, dos puertos CX7 cableados",
+   "riesgo": "Cifras de un usuario, no verificadas por NVIDIA.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de medicion de ancho de banda crudo RDMA frente a NCCL para separar enlace de software",
+   "como": "ib_write_bw -d roceP2p1s0f1 -a --report_gbits",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "command -v ib_write_bw"
+  },
+  {
+   "que": "Comprobar la version de firmware del ConnectX-7 contra la regresion de FW (solicitado por personal NVIDIA)",
+   "como": "ethtool -i enp1s0f1np1  (esperado: firmware-version: 28.45.4028 (NVD0000000087))",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "respuesta de aniculescu (personal NVIDIA)",
+   "riesgo": null,
+   "verificable_aqui": "ethtool -i <interfaz mlx5>"
+  },
+  {
+   "que": "Advertencia: sysfs/nvidia-smi reportan el enlace PCIe de la GPU como Gen1 x1; personal NVIDIA dice que es normal porque la GPU se comunica con la CPU por C2C",
+   "como": "cat /sys/bus/pci/devices/000f:01:00.0/{current,max}_link_{speed,width}  ; nvidia-smi topo -m",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "aniculescu (personal NVIDIA)",
+   "riesgo": "No interpretar Gen1 x1 como falla.",
+   "verificable_aqui": "nvidia-smi topo -m"
+  }
+ ],
+ "omision_nvidia": "El playbook publicado esta pensado para un solo puerto/cable; segun NVIDIA un segundo cable sirve solo para redundancia o un tercer sistema (post 7). NVIDIA considera solo una advertencia el mensaje mlx5 de Write combining no soportado.",
+ "utilidad_atom": "alta",
+ "razon": "Hilo con personal NVIDIA que aclara que Gen1 x1 es esperado por C2C y que un puerto basta; el usuario mide 1.19 -> 13.19 -> 20.58 GB/s con NCCL_NET_PLUGIN=none y NCCL_IB_MERGE_NICS=1. Es util para configurar NCCL multinodo, aunque solo aplica si se usan dos Sparks."
+}
