@@ -69,7 +69,7 @@ cobrado() {  # bytes cobrados por la asignacion = despues - base (el contexto CU
     a=$(echo "$1" | sed -n 's/.*base=[^ ]* \([0-9]*\) despues=.*/\1/p'); d=$(echo "$1" | sed -n 's/.*despues=[^ ]* \([0-9]*\).*/\1/p')
     [ -n "$a" ] && [ -n "$d" ] && echo $((d - a)) || echo 0
 }
-MIB=256; MINIMO=$((MIB * 1048576 * 9 / 10)); RC=0
+MIB=256; MINIMO=$((MIB * 1048576 * 3 / 4)); RC=0   # 75 %: cudaMallocAsync cobra ~87 % de lo pedido (224 de 256 MiB, medido 2026-10-12); pinned/managed cobran 0
 declare -A ESPERA=( [empty]=cobra [expandable]=cobra [async]=cobra [graph]=cobra [pinned]=no_cobra [managed]=no_cobra )
 log "--- 1. que formas de pedir memoria cobran (pide $MIB MiB cada una, cgroup sin tope)"
 for caso in empty expandable async graph pinned managed; do

@@ -213,7 +213,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"COULD_NOT_ACT: {e}", file=sys.stderr)
         for av in avisos:
             enviar(av)
-        time.sleep(INTERVALO_S)  # blocking-sleep: intervalo del vigilante de vida larga, no hay I/O a esperar -- DEBT-TERMICA-CORROBORACION-DE-ALARMA-SIEMPRE-DESCARTA-01  # sunset-reviewed: 2.9 -- re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 216 (a38d1570) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-11: demonio de usuario sin otro hilo; el intervalo acota la latencia del aviso
+        time.sleep(INTERVALO_S)  # blocking-sleep: intervalo del vigilante de vida larga, no hay I/O a esperar -- DEBT-TERMICA-CORROBORACION-DE-ALARMA-SIEMPRE-DESCARTA-01  # sunset-reviewed: 3.0 -- re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 216 (92598b79) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 216 (a38d1570) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-11: demonio de usuario sin otro hilo; el intervalo acota la latencia del aviso
 
 
 if __name__ == "__main__":
