@@ -1267,6 +1267,93 @@ index 0000000..8337d7e
 +
 +    return;
 +}
+diff --git a/src/nvidia/src/kernel/mem_mgr/system_mem.c b/src/nvidia/src/kernel/mem_mgr/system_mem.c
+index c7bb7fe..78c057e 100644
+--- a/src/nvidia/src/kernel/mem_mgr/system_mem.c
++++ b/src/nvidia/src/kernel/mem_mgr/system_mem.c
+@@ -42,6 +42,7 @@
+ #include "Nvcm.h"
+ 
+ #include "class/cl003e.h" // NV01_MEMORY_SYSTEM
++#include "mem_mgr/memacct.h" /* bb-patch */
+ 
+ static NvU64
+ _sysmemGetNextPageSize
+@@ -140,8 +141,8 @@ _sysmemGetNextPageSize
+  * @return 'NV_ERR_INSUFFICIENT_RESOURCES'
+  *     Not enough available resources to satisfy allocation request.
+  */
+-NV_STATUS
+-sysmemConstruct_IMPL
++static NV_STATUS
++sysmemConstructInner
+ (
+     SystemMemory *pSystemMemory,
+     CALL_CONTEXT *pCallContext,
+@@ -524,6 +525,54 @@ failed_destroy_memdesc:
+     return rmStatus;
+ }
+ 
++/*
++ * bb-patch: on zero-FB chips (GB10) cudaMalloc arrives as NV01_MEMORY_SYSTEM, not as vidmem, so video_mem.c never
++ * charged it (measured 2026-10-12: dmem_prueba.sh rc 4, dmem.current 0 after a 256 MiB cudaMalloc, class 0x3e).
++ * Charge here, before the allocation, like vidmemConstruct does (615 video_mem.c:626-630); release on failure and
++ * in sysmemDestruct. The copy-construct path shares the source charge by reference count.
++ */
++NV_STATUS
++sysmemConstruct_IMPL
++(
++    SystemMemory *pSystemMemory,
++    CALL_CONTEXT *pCallContext,
++    RS_RES_ALLOC_PARAMS_INTERNAL *pParams
++)
++{
++    Memory *pMemory = staticCast(pSystemMemory, Memory);
++    OBJGPU *pGpu = pMemory->pGpu;
++    RmClient *pRmClient = dynamicCast(pCallContext->pClient, RmClient);
++    NV_MEMORY_ALLOCATION_PARAMS *pAllocData = pParams->pAllocParams;
++    NV_STATUS status;
++
++    if (RS_IS_COPY_CTOR(pParams))
++    {
++        Memory *pMemorySrc = dynamicCast(pParams->pSrcRef->pResource, Memory);
++
++        status = sysmemConstructInner(pSystemMemory, pCallContext, pParams);
++        if ((status == NV_OK) && (pMemorySrc != NULL))
++        {
++            pMemory->pCharge = pMemorySrc->pCharge;
++            memacctIncrementChargeRefCount(pMemory->pCharge);
++        }
++        return status;
++    }
++
++    if ((pRmClient != NULL) && !IS_MIG_ENABLED(pGpu))
++    {
++        NV_CHECK_OK_OR_RETURN(LEVEL_ERROR,
++            memacctTryCharge(pRmClient, pGpu->gpuId, pAllocData->size, &pMemory->pCharge));
++    }
++
++    status = sysmemConstructInner(pSystemMemory, pCallContext, pParams);
++    if ((status != NV_OK) && (pMemory->pCharge != NULL))
++    {
++        memacctReleaseCharge(pMemory->pCharge);
++        pMemory->pCharge = NULL;
++    }
++    return status;
++}
++
+ NV_STATUS
+ sysmemCtrlCmdGetSurfaceNumPhysPages_IMPL
+ (
+@@ -829,6 +878,8 @@ failed:
+ void sysmemDestruct_IMPL(SystemMemory *pSystemMemory)
+ {
+     Memory             *pMemory        = staticCast(pSystemMemory, Memory);
++
++    memacctReleaseCharge(pMemory->pCharge); /* bb-patch: refcounted, covers dup and copy-construct */
+     MEMORY_DESCRIPTOR  *pMemDesc       = pMemory->pMemDesc;
+     OBJGPU             *pGpu           = pMemory->pMemDesc->pGpu;
+     MemoryManager      *pMemoryManager = GPU_GET_MEMORY_MANAGER(pGpu);
 diff --git a/src/nvidia/src/kernel/mem_mgr/video_mem.c b/src/nvidia/src/kernel/mem_mgr/video_mem.c
 index 6a6fd5f..c7fe7d7 100644
 --- a/src/nvidia/src/kernel/mem_mgr/video_mem.c

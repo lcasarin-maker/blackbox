@@ -58,11 +58,11 @@ cmd_firma() {
     mkdir -p "$ESTADO/firmados"
     for m in "${MODS[@]}"; do
         f="$src/$m.ko"; [ -f "$f" ] || die "falta $f"
-        modinfo "$f" | grep -q "^vermagic:.*$(uname -r)" || die "$f no es para $(uname -r)"
-        modinfo "$f" | grep -q "^version:.*$VER_ESPERADA" || die "$f no es la version $VER_ESPERADA"
+        grep -q "^vermagic:.*$(uname -r)" < <(modinfo "$f") || die "$f no es para $(uname -r)"
+        grep -q "^version:.*$VER_ESPERADA" < <(modinfo "$f") || die "$f no es la version $VER_ESPERADA"
         cp "$f" "$ESTADO/firmados/$m.ko"
         "$SIGN" sha256 "$LLAVE_PRIV" "$LLAVE_PUB" "$ESTADO/firmados/$m.ko"
-        modinfo "$ESTADO/firmados/$m.ko" | grep -q "^sig_key:" || die "$m no quedo firmado"
+        grep -q "^sig_key:" < <(modinfo "$ESTADO/firmados/$m.ko") || die "$m no quedo firmado"
         log "firmado $m"
     done
 }

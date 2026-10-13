@@ -29,7 +29,7 @@ fallo() { local rc=$1; shift; echo "[dmem-reconstruye] ERROR: $*" >&2; exit "$rc
 
 LLAVE=${BB_DMEM_LLAVE_PUB:-/var/lib/shim-signed/mok/MOK.der}
 if [ "$INSTALA" = 1 ]; then
-    mokutil --test-key "$LLAVE" 2>&1 | grep -q "is already enrolled" || fallo 6 "--instala: la llave $LLAVE NO esta enrolada; el kernel rechazaria el modulo. Primero: sudo bash tools/dmem_modulo.sh enrolar"
+    grep -q "is already enrolled" < <(mokutil --test-key "$LLAVE" 2>&1) || fallo 6 "--instala: la llave $LLAVE NO esta enrolada; el kernel rechazaria el modulo. Primero: sudo bash tools/dmem_modulo.sh enrolar"
 fi
 [ -n "$DRIVER" ] || fallo 3 "no pude leer la version del driver (modulo de Canonical de $KERNEL ausente); pasala como segundo argumento"
 [ -f "$PARCHE" ] || fallo 3 "falta el parche $PARCHE"
@@ -52,11 +52,11 @@ mkdir -p "$OUT"
 for m in "${MODS[@]}"; do
     f=kernel-open/$m.ko
     [ -f "$f" ] || fallo 5 "falta $f tras compilar"
-    modinfo -F vermagic "$f" | grep -q "^$KERNEL" || fallo 5 "$m: vermagic no es $KERNEL"
+    grep -q "^$KERNEL" < <(modinfo -F vermagic "$f") || fallo 5 "$m: vermagic no es $KERNEL"
     [ "$(modinfo -F version "$f")" = "$DRIVER" ] || fallo 5 "$m: version no es $DRIVER"
     cp "$f" "$OUT/$m.ko"
 done
-nm "$OUT/nvidia.ko" | grep -q "dmem_cgroup_try_charge" || fallo 5 "nvidia.ko no importa dmem_cgroup_try_charge: el parche no quedo en el modulo"
+grep -q "dmem_cgroup_try_charge" < <(nm "$OUT/nvidia.ko") || fallo 5 "nvidia.ko no importa dmem_cgroup_try_charge: el parche no quedo en el modulo"
 ( cd "$OUT" && sha256sum ./*.ko >SHA256SUMS )
 log "listo: $OUT (sin firmar)"
 if [ "$INSTALA" = 1 ]; then
