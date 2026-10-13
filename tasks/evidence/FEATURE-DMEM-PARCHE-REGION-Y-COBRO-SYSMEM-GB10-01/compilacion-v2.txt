@@ -1,0 +1,10 @@
+Parche v2 (cobro en sysmemConstruct_IMPL) compilado con tools/dmem_reconstruye.sh, 2026-10-12, kernel 6.17.0-1032-nvidia, driver 580.178.04. SIN FIRMAR, SIN CARGAR.
+Causa del rc 4: cudaMalloc en GB10 entra por la clase RM 0x3e (NV01_MEMORY_SYSTEM), no por video_mem.c (barrido-ioctl-20261012.txt).
+Control del verificador: 'nm nvidia.ko | grep -q dmem_cgroup_try_charge' bajo pipefail FALLA con el .ko bueno (SIGPIPE de nm); 'grep -q ... < <(nm ...)' PASA.
+Contenido del .ko: objdump -d --disassemble=sysmemConstruct_IMPL | grep -c memacctTryCharge -> v2: 1, v1 instalado: 0; sysmemDestruct_IMPL memacctReleaseCharge -> v2: 1, v1: 0.
+sha256:
+379cdea3153aaa69b513d4f66c5a53470e956512dc0b240ca301d3bc283da4a3  ./nvidia-drm.ko
+b102fa907c5818fda3cf024063eed3115ab4dcb9ceb38603360402cb836cb298  ./nvidia.ko
+219c8313974b054f94d75286c36ef11dad23242577c239ee97161531098da8dd  ./nvidia-modeset.ko
+9b1e26e85304b5c6651d1f0a9cdb7dae63bdafeae80a51bc951b86f9bcf776f2  ./nvidia-peermem.ko
+80de618521809e5de99056ef8db89e469f7f47f296221cd1efb832c010f2e960  ./nvidia-uvm.ko
