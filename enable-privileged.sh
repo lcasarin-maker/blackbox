@@ -429,6 +429,12 @@ else
 ## regla estandar que genera el diluvio de abajo: auditd resuelve por primera
 ## coincidencia, asi que un `never` posterior no serviria de nada.
 
+## (0) El anillo. El kernel reporto audit_backlog=8193 > audit_backlog_limit=8192
+## y audit_lost=2662 en el boot del 07 al 08-oct (DEBT-AUDIT-ANILLO-DESBORDADO-
+## SIN-LIMITE-01): mientras desborda, la captura de abajo pierde eventos sin
+## avisar. `-b` es el limite de la cola del kernel; 32768 la cuadruplica.
+-b 32768
+
 ## (1) Callar el diluvio, sin cegar la regla que lo produce.
 ## La regla estandar `reboot_cmd` audita loginctl/systemctl para saber quien
 ## reinicio la maquina. rustdesk.service la dispara sondeando sesiones:
