@@ -1,0 +1,10 @@
+[Unit]
+Description=bb huella del host, 3 minutos despues del arranque y cada dia
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=1d
+Unit=bb-huella.service
+
+[Install]
+WantedBy=timers.target

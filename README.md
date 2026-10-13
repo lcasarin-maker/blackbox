@@ -70,6 +70,9 @@ bb sample              one sample (fired by the per-minute timer)
 bb gpumem [--cabe GiB] GPU memory per cgroup/container (needs the patched module); "does it fit?"
 bb reloj [--prueba]    detects the stuck GPU clock (500-800 MHz, zero throttle reasons); also runs at boot (observe mode)
 bb limita              launches a command under the HAMi-core CUDA limiter, refusing to start without a limit
+bb huella              host fingerprint with change detection (OS/OTA, kernel, driver, CX7 firmware, apt sources, USB, watchdog); observe mode
+bb canario             functional canary of the local inference engine (model name, strict JSON, tool call); observe mode
+bb gpumem-historial    per-container GPU-memory history with peaks (needs the patched module); observe mode
 bb install             install the user timers (per-minute sampling, daily drift check)
 ```
 

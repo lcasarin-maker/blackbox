@@ -3291,6 +3291,9 @@ case "${1:-}" in
   limita)   shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.limita_cuda "$@") ;;
   gpumem)   shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.gpumem "$@") ;;
   reloj)    shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.reloj_atascado "$@") ;;
+  huella)   shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.huella_host "$@") ;;
+  canario)  shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.canario_motor "$@") ;;
+  gpumem-historial) shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.gpumem_historial "$@") ;;
   install)  shift; cmd_install "$@" ;;
   ""|-h|--help|help) usage ;;
   *) echo "subcomando desconocido: $1" >&2; usage >&2; exit 2 ;;

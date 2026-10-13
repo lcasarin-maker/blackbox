@@ -1,0 +1,10 @@
+[Unit]
+Description=bb canario funcional del motor de inferencia (interruptor canario_motor; off por defecto)
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.canario_motor --paso
+TimeoutStartSec=240
+MemoryMax=128M
+Nice=10

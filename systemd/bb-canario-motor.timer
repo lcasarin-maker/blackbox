@@ -1,0 +1,10 @@
+[Unit]
+Description=bb canario del motor de inferencia cada 30 minutos (una peticion corta por prueba)
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=30min
+Unit=bb-canario-motor.service
+
+[Install]
+WantedBy=timers.target

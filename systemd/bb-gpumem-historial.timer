@@ -1,0 +1,10 @@
+[Unit]
+Description=bb historial de memoria de GPU cada minuto
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+Unit=bb-gpumem-historial.service
+
+[Install]
+WantedBy=timers.target
