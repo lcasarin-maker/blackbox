@@ -1,6 +1,6 @@
 {
   "claims_fingerprint": "dee20359f02de510930e066c731cda91f902f3ac18a1a8e07989300d7d34d912",
-  "panel": "1 auditor Opus, 2026-10-13: 6 claims (L118,L122,L145,L146,L416,L420) re-sellados tras re-fechar 37 comentarios sunset; diff solo comentarios, control negativo en copia",
+  "panel": "1 auditor Opus, 2026-10-13: SPEC-L416 tras anadir la sonda cx7_hotplug a huella_host (bb status sin cambio; control negativo en copia)",
   "profile": "general",
   "results": [
     {
@@ -81,12 +81,11 @@
         "tests/test_bb_bash.py": "d6a78d2b9d0e1284c28ade78544d0dd68ceee139856eeca1f51e52b974f94ef8",
         "tools/canario_motor.py": "4b5cbbc3d6a0930405333bd841d8588d92fd494af0c116b9e2b90f016744b98c",
         "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6",
-        "tools/huella_host.py": "d7ebf553d767e5d19a01abe4aa13907c507f3f83cbba31eafa578c2e9aa26cfe",
-        "tools/interruptores.py": "22eb6152a8fe1a34c405ded283293523d1bb1ceedca74eeb08f0234a830b5408"
+        "tools/huella_host.py": "6a8df4ffd59ab0647ffda2cdd3a9d49e7512761a8c0308d9da5a2d9a1036272f"
       },
       "claim_id": "SPEC-L416",
-      "evidence": "Los cinco controles nombrados existen en tests/test_bb_bash.py (l.486, 528, 541, 577, 595), los tres del latido de bb-usable (test_control_negativo_bb_usable_activa_con_latido_RANCIO l.657 y el parametrizado test_control_negativo_bb_usable_activa_sin_latido[journal_vacio|solo_arranque] l.665-666) y test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FALTA l.1948. `python3 -m pytest -q tests/test_bb_bash.py -k \"...muestreo_esta_FALTA or clock_lock_con_OTRO_rango or clock_lock_sin_confirmacion or earlyoom_de_serie or earlyoom_con_UNA_sola or bb_usable or status_sensor or test_drift_\"` -> `20 passed, 80 deselected`. bin/bb: latido de bb-usable `date -d '120 seconds ago'` l.2363 y `latencia del escritorio` l.2371; filas solo-unit `ai-nemotron-vigilante.timer` l.2605 y `bb-guardia-proceso.service` l.2613 con el limite declarado l.2608-2612; sensores de interruptores.json l.2616-2645: memavail/gpuoom/termico_predictivo/reloj_arranque por unit (l.2625-2629), huella_host 2880 min, canario_motor 75 min, gpumem_historial 15 min; rutas coinciden con tools/huella_host.py:478, tools/interruptores.py:34-37 (canario_motor.jsonl, NOMBRE l.27 de tools/canario_motor.py) y tools/gpumem_historial.py:39. Control negativo corrido en una copia en scratchpad: cambiar el umbral de gpumem_historial a 99999 min hace FALLAR test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FALTA. Verificado solo lo listado; el contenido correcto de los artefactos queda sin comprobar, como la propia afirmacion declara.",
-      "seal": "17a8b0b3e32811c2e1814d5ecddfc2b0090c6298625f145da78b156ee1392da0",
+      "evidence": "`git diff HEAD -U0 -- tools/huella_host.py` solo anade `sonda_cx7_hotplug` (hunk @@ -428,0 +429,7) y la entrada `\"cx7_hotplug\": sonda_cx7_hotplug` en SONDAS (@@ -445,0 +453); el mismo diff filtrado con `grep -cE \"huella_host.json|2880|_ruta|def ruta\"` da 0, la ruta del artefacto sigue en tools/huella_host.py:486 (`... / \"huella_host.json\"`) y `git diff HEAD --stat` no lista bin/bb. bin/bb:2363 exige el latido de bb-usable con `date -d '120 seconds ago'` + `journalctl -u bb-usable.service -S` y el patron `[bb-usable] latencia del escritorio:` (bin/bb:2373); bin/bb:2605 y bin/bb:2613 leen solo `systemctl --user is-active` del vigilante del motor y de la guardia de procesos; bin/bb:2625 mira solo la unit de memavail/gpuoom/termico_predictivo/reloj_arranque; bin/bb:2634/2639/2644 usan `_fresco` con 2880/75/15 min para huella_host.json, interruptores/canario_motor.jsonl y gpumem_historial.jsonl, solo si interruptores.json no los deja en off (bin/bb:2622). Los cinco tests citados por nombre existen en tests/test_bb_bash.py (lineas 486, 528, 541, 577, 595), los tres de bb-usable (`test_control_negativo_bb_usable_activa_con_latido_RANCIO` y `test_control_negativo_bb_usable_activa_sin_latido[journal_vacio|solo_arranque]`) y `test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FALTA` (linea 1948); `python3 -m pytest tests/test_bb_bash.py -q -k \"control_negativo\"` -> `40 passed, 60 deselected in 67.61s`. Control negativo en una copia bajo scratchpad/nc3: con el limite de gpumem cambiado de 15 a 99999 en bin/bb:2644, `test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FALTA` FALLA (`ARMADO    historial de memoria de GPU`, `1 failed, 1 passed`); con la ventana cambiada de 120 a 99999 s en bin/bb:2363, `test_control_negativo_bb_usable_activa_con_latido_RANCIO` FALLA (`1 failed`). Los tests pueden salir negativos y el cambio de huella_host.py no toca nada de lo que la afirmacion dice.",
+      "seal": "c4296cab01244e8ae87768aecdacc86cf65b2942053400159e0c0dbb60ffd0e0",
       "verdict": "PASS"
     },
     {
@@ -184,7 +183,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-13T17:08:16Z",
-  "tree_fingerprint": "a8a6c381675b03395fd3f864ea37e97bc5d1085da72a4cc8b8cd38427b38457d",
+  "timestamp": "2026-10-13T17:49:33Z",
+  "tree_fingerprint": "4ce598fa72c3d45b04e5771f75619b2bc2bc03717392688355d55737119469a9",
   "violations": []
 }

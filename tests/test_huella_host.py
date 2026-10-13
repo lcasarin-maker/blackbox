@@ -214,7 +214,7 @@ def _huella(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kernel: str = "6.17
 
 def test_recoge_cubre_todas_las_sondas_sin_inventar(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     r = _huella(tmp_path, monkeypatch)
-    assert set(r) == set(h.SONDAS) and len(r) == 16 and h.es_nc(r["os_release"])
+    assert set(r) == set(h.SONDAS) and len(r) == 17 and h.es_nc(r["os_release"])
 
 
 def test_recoge_sonda_que_lanza_es_nc(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -418,6 +418,19 @@ def test_dpkg_a_medio_configurar_baja_listo_y_limpio_no_lo_sube(tmp_path: Path, 
     assert roto["dpkg_consistente"] is False and roto["listo_para_reiniciar"] is False  # control negativo: el mismo arbol con dpkg limpio da True
     sin_leer = h.sonda_arranque_tras_actualizacion(tmp_path, _cae)
     assert h.es_nc(sin_leer["dpkg_consistente"]) and sin_leer["listo_para_reiniciar"] is True  # no leer no baja ni sube
+
+
+def test_cx7_hotplug_marcador_y_bandera(tmp_path: Path) -> None:
+    ruta = "sys/devices/platform/MTKP0001:00/pcie_hotplug/hotplug_enabled"
+    _w(tmp_path, ruta, "1\n")
+    _w(tmp_path, "etc/nvidia/cx7-hotplug-enabled", "")
+    assert h.sonda_cx7_hotplug(tmp_path, _cae) == {"marcador": True, "hotplug_enabled": "1"}
+    (tmp_path / "etc/nvidia/cx7-hotplug-enabled").unlink()
+    _w(tmp_path, ruta, "0")
+    assert h.sonda_cx7_hotplug(tmp_path, _cae) == {"marcador": False, "hotplug_enabled": "0"}  # control negativo: sin marcador y bandera 0 no se informa como activo
+    (tmp_path / ruta).unlink()
+    r = h.sonda_cx7_hotplug(tmp_path, _cae)
+    assert r["marcador"] is False and h.es_nc(r["hotplug_enabled"])  # sin bandera legible: NOT_COLLECTED, nunca 0 ni 1
 
 
 def test_arranque_sin_kernels_es_nc(tmp_path: Path) -> None:
