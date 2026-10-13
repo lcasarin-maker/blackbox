@@ -1,0 +1,28 @@
+observaciones de solo lectura para el gate de kernel/initrd antes de un reinicio, 2026-10-13
+
+$ dpkg --audit
+(salida vacia = ningun paquete a medio configurar) rc=0
+
+$ apt-get -s check
+Leyendo lista de paquetes...
+Creando árbol de dependencias...
+Leyendo la información de estado...
+rc=0
+
+$ modinfo -k 6.17.0-1032-nvidia -F signer nvidia; modinfo -k 6.17.0-1032-nvidia -F version nvidia
+aitopatom-41f1 Secure Boot Module Signature key
+580.178.04
+
+$ ls -la /boot/initrd.img-6.17.0-1032-nvidia /boot/vmlinuz-6.17.0-1032-nvidia | cut -c1-60
+84189487 /boot/initrd.img-6.17.0-1032-nvidia
+20896063 /boot/vmlinuz-6.17.0-1032-nvidia
+
+$ python3 -c "from tools import huella_host as h; ..."  # sonda arranque_tras_actualizacion
+{'kernel_nuevo': '7.0.0-1019-nvidia', 'secure_boot': True, 'dpkg_consistente': True, 'listo_para_reiniciar': True}
+
+LECTURA: sobre el kernel en uso (6.17.0-1032) el estado es consistente: dpkg sin paquetes a medio configurar, apt-get check limpio, modulo firmado y initrd presente y no vacio. NO cubre lo que exige el verificador completo: la prueba de arranque del kernel anterior tras un reinicio y el caso negativo de un incidente real (initrd ausente tras una actualizacion), que necesitan reinicio y una OTA real.
+
+$ grep -E "^GRUB_DEFAULT" /etc/default/grub; uname -r
+GRUB_DEFAULT="Advanced options for DGX OS GNU/Linux>DGX OS GNU/Linux, with Linux 6.17.0-1032-nvidia"
+6.17.0-1032-nvidia
+LECTURA 2: el kernel por defecto esta FIJADO a 6.17.0-1032-nvidia (no al mas alto instalado). El 7.0.0-1019-nvidia esta instalado pero no arranca solo, lo que protege de la regresion que NVIDIA avisa para ese kernel (hilo 383185). La sonda arranque_tras_actualizacion mira al kernel MAS ALTO instalado, no al que GRUB arrancara; ese es un limite de la sonda a ajustar.

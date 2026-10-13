@@ -1,0 +1,18 @@
+control negativo de ISA para sm_121 con el toolchain local, 2026-10-13. Solo compila en el scratchpad; no toca vLLM ni ningun contenedor.
+
+$ nvcc --version | tail -2
+Cuda compilation tools, release 13.0, V13.0.88
+Build cuda_13.0.r13.0/compiler.36424714_0
+
+$ nvcc -arch=sm_121 -cubin -o ok.cubin ok.cu   # kernel vacio: debe compilar
+rc=0
+
+$ cuobjdump --list-elf ok.cubin
+ELF file    1: ok.sm_121.cubin
+
+$ nvcc -arch=sm_121 -cubin -o mala.cubin mala.cu   # tcgen05.fence (instruccion de sm_100): debe FALLAR
+ptxas /tmp/tmpxft_001d4ab1_00000000-6_mala.ptx, line 20; error   : Instruction 'tcgen05.fence' not supported on .target 'sm_121'
+ptxas fatal   : Ptx assembly aborted due to errors
+rc=255
+
+LECTURA: con sm_121 un kernel vacio compila y una instruccion tcgen05 (de la arquitectura datacenter sm_100) es rechazada por ptxas. Esto cubre SOLO el control negativo de ISA (_cutlass_negative en tools/hardware_batch02_controls.py). NO cubre el build de CUTLASS con commit fijado, ni el canario con soak en la GPU compartida con produccion, que exigen tocar el motor.

@@ -142,3 +142,6 @@ Se registró el kernel en ejecución y presencia de sus archivos vmlinuz/initrd;
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_00.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FORUM-00-KERNEL-INITRD-UPDATE-GATE-direct-close-current.log`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Avance 2026-10-13: observaciones de solo lectura
+`tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE/observaciones-solo-lectura-20261013.txt`: `dpkg --audit` vacio, `apt-get -s check` rc 0, modulo firmado 580.178.04, initrd y vmlinuz del 6.17.0-1032 presentes y no vacios, y la sonda `arranque_tras_actualizacion` con `dpkg_consistente: True`. Hallazgo: `GRUB_DEFAULT` esta FIJADO a `6.17.0-1032-nvidia`; el 7.0.0-1019 esta instalado pero no arranca solo (NVIDIA avisa de una regresion en ese kernel, hilo 383185). Limite de la sonda, a corregir: `kernel_nuevo` toma el kernel mas alto instalado (7.0.0-1019) y no el que GRUB arrancara. Sigue abierta: falta la prueba de arranque del kernel anterior tras un reinicio y el caso negativo de un incidente real.
