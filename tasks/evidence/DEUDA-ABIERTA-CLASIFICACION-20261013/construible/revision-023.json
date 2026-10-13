@@ -1,0 +1,8 @@
+{
+ "id": "DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "nada nuevo: el inventario termico ya pasa (checks thermal_inventory=pass, oem_identity=pass).",
+ "por_que_no_mas": "python3 -c 'from tools.verify_clock_cap_tradeoff import verify;print(verify())' -> status unknown, could_not_run=1, checks matched_clock_runs=unknown, rollback=unknown, sensor_labels=unknown; reason: 'matched clock-cap/workload runs, OEM-safe threshold, and applied-policy rollback readback are missing' (tools/verify_clock_cap_tradeoff.py:56). Aplicar un cap de reloj exige root (nvidia-smi -lgc) y carga pareada sobre la GPU de produccion; labels hwmon faltantes no se fabrican."
+}

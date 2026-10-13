@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-MEMORYSAVER-02-TRAZADOR",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "nada: tools/kernel_charges.bt y la evidencia ABI ya existen; ningun parser ni fixture suma evidencia valida porque el cierre exige traza real (tools/verify_memory_saver.py _trace: capture.json con kernel_capture, symbol_capture de /proc/kallsyms, heartbeats).",
+ "por_que_no_mas": "Salida literal: `bpftrace -l 'kprobe:__memcg_kmem_charge_page'` -> 'ERROR: bpftrace currently only supports running as the root user.' (uid 1000). La ficha: 'bpftrace exige root incluso para listar/compilar probes'. Un fixture seria una captura fabricada."
+}

@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-FORUM-GPU-CLOCK-CAP-AB-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "Corrido: `python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01` -> rc=2, 'raw timestamped GPU clock-cap command capture missing or malformed'. El verificador (tools/verify_gpu_clock_cap_ab.py:_clock_command) exige comandos `nvidia-smi -lgc <rango>` ejecutados con exit 0, A/B con workload sostenido, soak predeclarado y rollback; `nvidia-smi -lgc` requiere root (sudo -n true -> 'sudo: se requiere una contrasena') y correria sobre la GPU del motor vLLM en produccion. El verificador ya existe; falta toda la captura."
+}

@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-1358-CGROUP-02-TRAZA",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "Probado: bpftrace -l -> 'ERROR: bpftrace currently only supports running as the root user.' (id -u = 1000). La ficha: 'traza dinamica de memcg/flags/worker; el acceso a probes requiere privilegios root'. Verificador: python3 -m tools.verify_cgroup_plan --phase 02-traza --evidence tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA -> status unknown, 'raw capture unavailable ... capture.json'. El mapa estatico y tools/kernel_charges.bt ya existen; el dueño real del cargo solo sale de una traza en vivo."
+}

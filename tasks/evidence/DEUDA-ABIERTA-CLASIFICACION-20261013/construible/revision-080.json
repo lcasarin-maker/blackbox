@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01",
+ "leido": true,
+ "construible": "parcial",
+ "bloqueador": "hardware_externo",
+ "que_se_puede_construir": "Colector de ping 1 s (tools/observador_ping.py nuevo + unidad systemd + test + enlace en reboot_verdict que hoy no lee ping.jsonl: `grep -rn ping.jsonl --include=*.py` solo lo halla fuera de codigo). Prototipo probado en scratchpad, con control negativo: `python3 ping_proto.py 127.0.0.1 p.jsonl` -> ok True; `python3 ping_proto.py 192.0.2.1 p.jsonl` -> ok False; p.jsonl tiene las dos filas.",
+ "por_que_no_mas": "close_check `grep -q . .../externo/ping.jsonl` exige datos de OTRO equipo siempre encendido ('la evidencia tiene que venir de afuera'; el directorio externo/ no existe) y el cierre pide un corte real clasificado CORTE_DE_RED/APAGADO_INTERNO, que necesita el medidor (ficha hermana). Pinguear desde esta maquina no es observacion externa: moriria con ella."
+}

@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-1358-CGROUP-03-NATIVO",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "tools/verify_cgroup_plan.py ya existe (935 lineas) y exige capture.json con stack_runs 580-baseline y 615-candidate (_native: 'paired 580 and complete 615 stack runs required'; _native_stack: driver_version/gsp con prefijo 615. y raw_run verificado). Cargar el driver 615 exige root y reinicio; el modulo compilado no esta firmado (ficha: 'carecen de firma'). Probado: `python3 -m tools.verify_cgroup_plan --phase 03-nativo --evidence tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO` -> rc=2, status unknown, could_not_run 1 ('raw capture unavailable: ... capture.json'). `sudo -n true` -> 'sudo: se requiere una contraseña'. Fabricar la corrida 615 con datos del 580 falsearia evidencia."
+}

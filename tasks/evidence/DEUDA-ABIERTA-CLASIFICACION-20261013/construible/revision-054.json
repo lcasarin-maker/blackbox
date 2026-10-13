@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-1358-CGROUP-01-REPRO",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "El verificador ya existe y corre: python3 -m tools.verify_cgroup_repro tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json -> status unknown, could_not_run_count 23, 'FileNotFoundError ... bb-cgroup-repro-*.scope/dmem.current'. Probado: cat /sys/fs/cgroup/cgroup.controllers = 'cpuset cpu io memory hugetlb pids rdma misc dmem' pero user@1000.service/cgroup.controllers = 'cpu memory pids' (dmem no delegado al usuario; delegarlo exige root). Rehacer la corrida no produciria dmem.current por scope y la ficha prohibe repetir la carga de 7 GiB. Se descarta tambien correr el arnes porque crea scopes systemd (no es solo lectura) y daria el mismo unknown."
+}

@@ -1,0 +1,8 @@
+{
+ "id": "DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "hardware_externo",
+ "que_se_puede_construir": "nada nuevo: tools/kernel_capture.py y tools/netconsole_marker.py ya existen",
+ "por_que_no_mas": "El close_check del lote es un xfail placeholder (salida literal: '1 xfailed in 0.2s', rc=0, probado con python3 -m pytest -q -p no:cacheprovider tests/test_debt_registration_controls.py::test_debt_close_check_verify_<x>_01); un xfail no verifica nada y convertirlo en pass sin sujeto real falsearia el cierre. python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01 -> {'status':'unknown','could_not_run':1,'findings':['required raw capture unavailable: ... kernel-capture.json']}. Cerrar exige entrega de un marcador a un receptor UDP en otro equipo de la LAN, estado Secure Boot/firma, persistencia y rollback configfs (modificacion del host con root); no existe receptor off-host aqui. "
+}

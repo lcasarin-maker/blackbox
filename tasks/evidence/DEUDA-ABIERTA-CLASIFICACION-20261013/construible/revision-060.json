@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-BB-EVALUAR-CAP-DE-CPU-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "close_check es `grep -q 'scaling_max_freq' tasks/evidence/FEATURE-BB-EVALUAR-CAP-DE-CPU-01/ab.md`; el directorio no existe. Solo cierra con un A/B medido aqui (2 h sin cap, 2 h con cap, misma carga) y rollback; escribir el cap exige root. Probado: `ls -l /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq` -> '-rw-r--r-- 1 root root'; id -u -> 1000; `sudo -n true` -> 'sudo: se requiere una contraseña'. Un ab.md que mencione scaling_max_freq sin medicion haria pasar el grep con evidencia falsa (el gate no tiene control negativo)."
+}

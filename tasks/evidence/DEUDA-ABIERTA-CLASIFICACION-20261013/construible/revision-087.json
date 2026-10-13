@@ -1,0 +1,8 @@
+{
+ "id": "FORUM-00-KERNEL-INITRD-UPDATE-GATE",
+ "leido": true,
+ "construible": "parcial",
+ "bloqueador": "reinicio",
+ "que_se_puede_construir": "Re-observar en solo lectura las dos observaciones que faltan en tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE/preflight.json: apt_check con `apt-get -s check` (simulado, sin lock, rc=0) y module_ready con `modinfo -k 6.17.0-1032-nvidia nvidia` (signer presente, version 580.178.04). Probado en copia de scratchpad: snapshot -> tools.preflight.CHECKS['kernel'] = {'status': 'pass', 'findings': []}; control negativo apt_check=False -> {'status': 'block', 'findings': ['APT dependency check failed']}. Hay que regrabar commands.json con esas dos sondas (hoy contiene `apt-get check` con Permission denied).",
+ "por_que_no_mas": "Aun con el preflight en pass, tools/forum_finding.py:_evaluate_supported termina en unknown: 'healthy preflight matches raw commands; incident negative and recovery/rollback controls are missing'. Salida literal en la copia: status unknown 'one or more required raw probes were inaccessible' (el commands.json viejo). Falta prueba de arranque del kernel anterior (reinicio) y caso negativo de incidente real. previous_kernel_bootable=true hoy es solo presencia de archivos en /boot."
+}

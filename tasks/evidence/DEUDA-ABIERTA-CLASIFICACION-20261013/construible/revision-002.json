@@ -1,0 +1,8 @@
+{
+ "id": "DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "captura_de_otro_caso",
+ "que_se_puede_construir": "nada (verificador y router ya existen; no hay predicado fallido que corregir)",
+ "por_que_no_mas": "El close_check del lote es un xfail placeholder (salida literal: '1 xfailed in 0.2s', rc=0, probado con python3 -m pytest -q -p no:cacheprovider tests/test_debt_registration_controls.py::test_debt_close_check_verify_<x>_01); un xfail no verifica nada y convertirlo en pass sin sujeto real falsearia el cierre. Corri los 15 ids: 15 x status=unknown, rc=2, could_not_run=1 cada uno. 9 por 'raw case capture unavailable: capture.json' o finding.json ausente (casos de hilos de foro de otras maquinas: pstore, UVC ep0, EEE, GX10 read integrity, etc.); 4 con preflight local parcial pero sin control de incidente/recuperacion ('incident negative and recovery/rollback controls are missing', 'missing observation: apt_check; module_ready', 'effective_modeset'), que requieren reinicio o el incidente; PROVIDER-FALLBACK ya tiene tools/verifica_proveedor_gpu.py construido y falta respawn en produccion. "
+}

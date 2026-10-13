@@ -1,0 +1,8 @@
+{
+ "id": "DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01",
+ "leido": true,
+ "construible": "parcial",
+ "bloqueador": "decision_de_luis",
+ "que_se_puede_construir": "Parcial producido y probado en solo lectura (scratchpad, sin tocar repo): control negativo de ISA con nvcc 13.0 local: 'echo __global__ void k(){ asm volatile(\"tcgen05.fence::before_thread_sync;\"); }' compilado con nvcc -arch=sm_121 -> 'ptxas ... error : Instruction 'tcgen05.fence' not supported on .target 'sm_121'' rc=255; control positivo '__global__ void k(){}' con -arch=sm_121 -> rc=0 y cuobjdump --list-elf 'ok.1.sm_121.cubin'. Esto satisface solo _cutlass_negative (tools/hardware_batch02_controls.py:~318, regex 'unsupported|not support'). Se puede empaquetar como fase 'negative' de commands.json.",
+ "por_que_no_mas": "Falta _cutlass_build (tools/hardware_batch02_controls.py:271 exige build cmake/ninja con revision CUTLASS/CuTe pinned; /usr/local/cuda/include/cutlass no existe, solo nvidia-cutlass-dsl 4.5.2/4.6.0 en pip) y _cutlass_canary (:283-312: logits finitos vs referencia, requests, batching y soak planeado en la GPU compartida con vLLM de produccion) y plan capture con _trusted_plan_sha256. verify('DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01') hoy -> unknown, 'raw command capture unavailable'. Soak en la GPU de produccion requiere autorizacion de Luis. Selector pytest: 1 xfailed."
+}

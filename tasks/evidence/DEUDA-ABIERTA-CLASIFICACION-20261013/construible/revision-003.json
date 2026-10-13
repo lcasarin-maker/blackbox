@@ -1,0 +1,8 @@
+{
+ "id": "DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "hardware_externo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "El close_check del lote es un xfail placeholder (salida literal: '1 xfailed in 0.2s', rc=0, probado con python3 -m pytest -q -p no:cacheprovider tests/test_debt_registration_controls.py::test_debt_close_check_verify_<x>_01); un xfail no verifica nada y convertirlo en pass sin sujeto real falsearia el cierre. python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01 -> status unknown, could_not_run=1, 'raw timestamped GPU clock-cap command capture missing or malformed'. El A/B exige fijar clocks (nvidia-smi -lgc: privilegio/modifica la GPU en produccion) y la ficha documenta que _csv_policy devuelve siempre None (sin readback nativo del rango), confirmado por tests/test_hardware_missing_selectors.py::test_gpu_clock_cap_needs_native_locked_policy_readback. "
+}

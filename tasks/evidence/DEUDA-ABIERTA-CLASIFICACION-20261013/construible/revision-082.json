@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-USB-HID-POSTUPDATE-CHECK",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "reinicio",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "tools/verify_usb_hid_postupdate.py:_boot_observations/_boot_ids exige tres capturas en arranques distintos (pre-update, affected, recovery) con boot_id y kernel distintos, evtest con EV_KEY real, SSH y un lsusb -t con HID sin driver. Salida literal del close_check: {\"could_not_run\": 1, \"fail\": 0, ... \"reason\": \"paired raw post-update USB command capture is missing\", \"status\": \"unknown\"} rc=2. Aqui `lsusb -t` solo muestra root hubs xhci-hcd, sin interfaz HID sin driver; un A/B con actualizacion y reinicio no se puede simular. La CLI ya existe (main, rc 0/1/2), el control negativo del verificador funciona (rc=2 sin captura)."
+}

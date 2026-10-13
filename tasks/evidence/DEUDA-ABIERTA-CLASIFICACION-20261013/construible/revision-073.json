@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-FORUM-WIFI-ISOLATION-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "hardware_externo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "La ficha 'Closure evidence' exige 'bounded roam/soak A/B for each proposed workaround' en el stack MT7925 citado. Corrido: `nmcli -t -f DEVICE,TYPE,STATE dev` -> 'wifi unavailable' (esta maquina no tiene Wi-Fi operativo, el stack MT7925/AP no existe aqui). Tambien falta la entrada CLI main/__main__ de tools.verify_wifi_isolation (ficha, 'Defecto de entrada CLI'), que es codigo del repo construible, pero el veredicto seria UNKNOWN sin captura real; se marca parcial solo por esa entrada CLI, no probada por mi (solo lectura). Corregido a 'no': la entrada CLI no fue probada en solo lectura, y sin captura real su veredicto es UNKNOWN."
+}

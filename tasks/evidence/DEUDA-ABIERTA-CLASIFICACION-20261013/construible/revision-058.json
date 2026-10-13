@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-1358-CGROUP-05-CUELGUES",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "_hang_stacks exige exactamente dos corridas baseline y candidate con samples, journalctl -o json, bb JSONL y ensayos none/cpu_touch/cuda_malloc/cuda_malloc_managed/pytorch_empty identicos (tools/verify_cgroup_plan.py:737-760); la candidata es la solucion de 03/04, no disponible. Ficha: 'Ensayos A/B ejecutados: 0'; ademas los ensayos de presion pueden congelar el host de produccion. Probado: `python3 -m tools.verify_cgroup_plan --phase 05-cuelgues --evidence tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES` -> rc=2, status unknown, could_not_run 1 (capture.json ausente). `sudo -n true` -> 'sudo: se requiere una contraseña'."
+}

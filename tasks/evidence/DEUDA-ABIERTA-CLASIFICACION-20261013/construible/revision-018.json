@@ -1,0 +1,8 @@
+{
+ "id": "DEBT-OOMD-PROBAR-Y-DIAGNOSTICAR-01",
+ "leido": true,
+ "construible": "parcial",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "Leer la presion del cgroup padre sin tocar nada: cat /sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/memory.pressure (la ficha dice que la ruta salio vacia en la 2a prueba; ahora existe). Probado en solo lectura, salida: 'some avg10=0.09 avg60=0.02 avg300=0.00 total=5073312 / full avg10=0.09 avg60=0.02 avg300=0.00 total=5052843'; memory.oom.group=0; systemd-oomd ActiveState=active. Sirve para el punto 'medir la presion del slice', pero no produce el kill.",
+ "por_que_no_mas": "close_check exige la frase oomd_mata_y_medido, que solo se emite tras un kill medido de oomd bajo presion >60% 20 s; provocarlo arriesga matar user@1000 (aviso del manual en la ficha) y el log de depuracion y oomctl requieren root ('requiere root' en la ficha, seccion Que falta 1)."
+}

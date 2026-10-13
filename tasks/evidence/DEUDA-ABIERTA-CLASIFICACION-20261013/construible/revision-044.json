@@ -1,0 +1,8 @@
+{
+ "id": "DELTA-FORUM-USB-RAID-LINK-ADMISSION-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "hardware_externo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "tools/hardware_batch03_controls.py:891-910 (_usb_raid) exige healthy_boot_a/b en dos arranques en frio distintos, slow_link, missing_speed, identity_swap y rollback sobre un array mdadm de miembros USB NVMe, con piso >=5000 Mbps. Aqui no hay miembros USB de almacenamiento (lsusb -t solo muestra root hubs xhci) y exige reinicio. verify() actual: 'raw card capture unavailable'. xfailed."
+}
