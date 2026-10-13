@@ -1,0 +1,69 @@
+{
+ "id": 385316,
+ "titulo": "Qwen3.8-Flash-Next on 3 DGX Sparks - 3 Recipes, Full Debugging Journey, Final Reproducible Setup",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta TensorFold para un Spark con la memoria como condicion de admision: necesita unos 103 GiB+ disponibles y fallo con 45 GiB; con 117 GiB y swap ~0 arranco",
+   "como": "revisar MemAvailable (no solo los 128 GB totales) antes de lanzar; TENSORFOLD_MEMORY_RESERVE_GIB=2",
+   "fuente_post": 1,
+   "repositorio": "MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark-TensorFold (revision 4c0dea8ebe93a1d445d6a716b5a38995ff6e9362)",
+   "licencia": "no indicada",
+   "probado_en": "un DGX Spark GB10, driver 580.x, CUDA 13.x (declarado por el usuario)",
+   "riesgo": "El propio autor dice que no es programador y que uso ChatGPT como copiloto; los resultados no son auditables.",
+   "verificable_aqui": "grep MemAvailable /proc/meminfo"
+  },
+  {
+   "que": "Parametros calificados de la receta Spark 5",
+   "como": "PARALLEL=5 CONTEXT=262144 KV_DTYPE=int8 MTP_DRAFTS=6 MTP_CONFIDENCE=0.60 TENSORFOLD_MTP_COPY=1 PLE_ON_SSD=1 TENSORFOLD_MEMORY_RESERVE_GIB=2 VISION=1 VISION_MAX_IMAGES=50",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Prueba de resistencia de 3 horas con contadores: 8,287 peticiones, 0 errores, 0 preempciones, 0 reinicios de contenedor, swap ~1.16-1.20 GiB",
+   "como": "no indicado (metodo de la prueba); veredicto del autor: CANARY_READY",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Diagnostico: respuesta vacia en video por agotarse el presupuesto de tokens en razonamiento (finish_reason length, 400 tokens), no por fallo del video",
+   "como": "enable_thinking = false o ampliar el presupuesto de la respuesta",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia de metodo: un error en el propio benchmark (regex sin grupo de captura con group(1)) parecio un fallo del modelo",
+   "como": "IndexError: no such group",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Entrega valores concretos y una condicion de memoria disponible para admision, ademas de un soak de 3 horas con contadores, pero es una receta de un runtime de terceros con checkpoint MLX y sin mediciones de temperatura ni de cortes. Un solo post, sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,90 @@
+{
+ "id": 380257,
+ "titulo": "Qwen3.8-27B at 34–38 tok/s on DGX Spark — open-source one-command setup (SGLang + NVFP4 + DSpark)",
+ "leido": true,
+ "posts_leidos": 107,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "monitorear",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Trampa de memoria del GB10: la contabilidad de SGLang no ve 25-40 GB de asignaciones transitorias (autotuner de flashinfer, captura de CUDA graph) en memoria unificada; el autor congelo la maquina hasta necesitar ciclo de energia; mitigacion con contenedor con tope de memoria y fraccion estatica baja. Con --mem-fraction-static 0.95 (reserva ~113 GB) otro usuario obtenia ~22 tok/s y el autor dice que la captura de graphs falla y cae a modo eager",
+   "como": "docker run -d --gpus all --memory 100g --memory-swap 100g --shm-size 16g --network host --ipc host ... python3 -m sglang.launch_server ... --mem-fraction-static 0.50 --disable-flashinfer-autotune --cuda-graph-max-bs 8 ; vigilar free -g del host durante la carga y las lineas 'Capture' del log",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/hasso5703/dgx-spark-qwen38",
+   "licencia": "MIT",
+   "probado_en": "ASUS Ascent GX10 (GB10) del autor basbunarhasan; otro usuario (post 65) dice que antes veia el motor pasar de 100 GB de RAM y congelar el sistema",
+   "riesgo": "Subir la fraccion es lo que muerde; el autor no valido 0.35 (post 82). El tope de contenedor debe incluir margen para activaciones y captura de graphs o el OOM killer actua en el arranque",
+   "verificable_aqui": "docker ps --format '{{.Names}}'; free -g; cat /sys/fs/cgroup/system.slice/docker-*/memory.max 2>/dev/null"
+  },
+  {
+   "que": "Calculo de memoria del GB10 por fraccion estatica: static = fraccion x ~120 GiB; pesos + draft ~18 GB; el resto es KV pool a ~14.5K tokens por GB; 0.35 da ~42 GB estaticos y ~24 GB de KV (~350K tokens); para capar a ~40 GB, contenedor con --memory 48g",
+   "como": "--mem-fraction-static 0.35 ; docker --memory 48g",
+   "fuente_post": 82,
+   "repositorio": "https://github.com/hasso5703/dgx-spark-qwen38",
+   "licencia": "MIT",
+   "probado_en": "el autor corre 0.50 a diario y declara no haber validado 0.35",
+   "riesgo": "Por debajo de ~0.30 puede no caber pesos + graphs; el KV a fp8 cuesta ~32.8 KB por token (un request de 1M necesita ~33 GB de KV segun el autor)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "El scheduler de SGLang gira al 100% de un nucleo en reposo salvo con --sleep-on-idle; medido A/B: CPU del scheduler en reposo 101% a 1.7%, potencia del modulo (nvidia-smi, mediana de 60 s en reposo) 12.1 W a 10.5 W, TTFT de despertar sin penalizacion (0.234-0.240 s antes, 0.234-0.239 s despues); un usuario reporta consumo en reposo de 37 W a 47 W en una Gigabyte Top Atom",
+   "como": "--sleep-on-idle (flag de sglang.launch_server)",
+   "fuente_post": 61,
+   "repositorio": "https://github.com/MiaAI-Lab/Qwen3.8-27B-SGLang-DGX-Spark",
+   "licencia": "no indicada",
+   "probado_en": "caja de referencia del autor (GB10); el post 57 reporta la subida de potencia en una Gigabyte Top Atom",
+   "riesgo": null,
+   "verificable_aqui": "top -b -n1 | head -15; nvidia-smi --query-gpu=power.draw --format=csv"
+  },
+  {
+   "que": "Modelo de ancho de banda de decodificacion batch 1: ~225 GB/s efectivos / ~20 GB leidos por paso x 3.3-4.7 tokens aceptados por paso = 34-47 tok/s; el autor dice que la config corre a ~92% del limite fisico",
+   "como": "formula en prosa: 225 GB/s / 20 GB por paso x tokens aceptados por paso",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 del autor; no es verificacion independiente",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Chequeo previo de arranque: no corre si hay procesos de computo en la GPU o el puerto esta ocupado; el autor dice que GB10 solo soporta un motor de inferencia a la vez",
+   "como": "nvidia-smi --query-compute-apps=pid,process_name --format=csv,noheader ; ss -tlnH | awk '{print $4}' | grep -q \":$PORT$\"",
+   "fuente_post": 84,
+   "repositorio": "https://github.com/hasso5703/dgx-spark-qwen38",
+   "licencia": "MIT",
+   "probado_en": "script run.sh del autor, publicado por un usuario en el post 84",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-compute-apps=pid,process_name --format=csv,noheader"
+  },
+  {
+   "que": "Herramienta de monitoreo para SGLang de otro usuario",
+   "como": "no indicado (solo enlace)",
+   "fuente_post": 62,
+   "repositorio": "https://github.com/Amethystxx/sglang-monitor",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Tabla de 51B n-gram del checkpoint servida desde NVMe por page cache (176B en un Spark); si un arranque se interrumpe mientras se escribe la tabla de 48 GB, los arranques siguientes quedaban bloqueados; el launcher ahora lo detecta y reconstruye",
+   "como": "curl -fsSL https://raw.githubusercontent.com/hasso5703/dgx-spark-qwen38/main/get.sh | MODEL_CHOICE=flash bash",
+   "fuente_post": 98,
+   "repositorio": "https://github.com/hasso5703/dgx-spark-qwen38",
+   "licencia": "MIT",
+   "probado_en": "un Spark del autor; 31-42 tok/s decode, contexto 262K",
+   "riesgo": "Instalacion por curl | bash; revisar el script antes de ejecutar",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El autor señala que la celda DGX Spark del cookbook de SGLang estaba marcada 'not yet validated' y que no hay imagen oficial con DFLASH2 (post 63); no hay respuesta de staff de NVIDIA en el hilo.",
+ "utilidad_atom": "alta",
+ "razon": "Documenta con comandos y cifras la trampa de memoria unificada que congela el GB10 (tope docker --memory/--memory-swap, --mem-fraction-static 0.50, vigilar free -g) y el costo de 10 W del busy-spin del scheduler con medicion A/B. Hilo de usuarios con licencia MIT en el repositorio; las cifras de congelamiento son del autor y se repiten en otro usuario (post 65), sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

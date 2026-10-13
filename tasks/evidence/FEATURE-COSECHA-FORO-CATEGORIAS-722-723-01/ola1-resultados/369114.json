@@ -1,0 +1,37 @@
+{
+ "id": 369114,
+ "titulo": "Gemma4 draft models are now available",
+ "leido": true,
+ "posts_leidos": 9,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Decodificacion especulativa MTP de Gemma 4 en vLLM (requiere un PR de vLLM en el momento del post y wheel nuevo de transformers); tg128 de 11.43 a 22.05 t/s con Gemma-4-31B int4 AutoRound",
+   "como": "vllm serve Intel/gemma-4-31B-it-int4-AutoRound --gpu-memory-utilization 0.9 --kv-cache-dtype fp8 --max-model-len 262144 --max-num-seqs 4 --max-num-batched-tokens 16384 --speculative-config '{\"model\": \"google/gemma-4-31B-it-assistant\", \"num_speculative_tokens\": 2, \"method\": \"gemma4_mtp\"}' (mas banderas de herramientas)",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/vllm-project/vllm (PR 41745)",
+   "licencia": "no indicada",
+   "probado_en": "un solo Spark, llama-benchy 0.3.7 segun serapis",
+   "riesgo": "Requiere codigo fuera de la version estable; --gpu-memory-utilization 0.9 es el valor que otros hilos asocian a congelamientos del equipo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Configuracion de joshua.dale.warner con gpu-memory-utilization 0.85 y 7 tokens especulativos (aceptacion >30%, ~19-21 t/s efectivos; hasta ~40 t/s en codigo)",
+   "como": "launch-cluster.sh -t vllm-node-tf5 --solo -d exec vllm serve ebircak/gemma-4-31B-it-4bit-NVFP4A16-GPTQ --gpu-memory-utilization 0.85 --max-model-len 262144 --kv-cache-dtype fp8_e4m3 --speculative-config '{\"method\":\"mtp\",\"model\":\"google/gemma4-31b-it-assistant\",\"num_speculative_tokens\":7}' ...",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un Spark segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de rendimiento de inferencia (decodificacion especulativa) con tablas de llama-benchy; no aborda estabilidad, memoria ni termica. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

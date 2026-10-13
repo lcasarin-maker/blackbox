@@ -1,0 +1,27 @@
+{
+ "id": 377364,
+ "titulo": "Performance test: unsloth/gemma-4-26B-A4B-it-NVFP4 vs nvidia/Gemma-4-26B-A4B-NVFP4",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Flags de vLLM y benchmark para Gemma 4 26B NVFP4; resultado en Spark: unsloth 159.77 tok/s de salida vs nvidia 128.21, con TTFT medio de 267 s y 340 s (100 solicitudes concurrentes)",
+   "como": "vllm serve nvidia/Gemma-4-26B-A4B-NVFP4 --kv-cache-dtype fp8 --max-model-len 65536 --max-num-seqs 8 --max-num-batched-tokens 4096 --gpu-memory-utilization 0.85 --reasoning-parser gemma4 --enable-prefix-caching --trust-remote-code ; vllm bench serve --dataset-name random --random-input-len 1000 --random-output-len 1000 --request-rate 100 --num-prompts 100 --ignore-eos",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark y RTX Blackwell 6000 Pro, version de vLLM no indicada en el post",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Comparativa de throughput entre dos cuantizaciones, con comando exacto de benchmark pero sin relacion con memoria o termica. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

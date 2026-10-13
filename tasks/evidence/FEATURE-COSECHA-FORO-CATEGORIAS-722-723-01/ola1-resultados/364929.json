@@ -1,0 +1,38 @@
+{
+ "id": 364929,
+ "titulo": "How to get Docling + Qwen2.5-VL working for picture description in Open WebUI Knowledge Base on DGX Spark",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reparto de memoria entre dos modelos vLLM en un Spark: Nemotron Super ~86 GB y Qwen2.5-VL-7B ~18 GB, total ~104 de 128 GB",
+   "como": "gpu_memory_utilization: 0.18 ; max_model_len: 16384 ; max_num_seqs: 4 ; ./run-recipe.sh qwen2.5-vl-7b --solo --name vllm_qwen_vision",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 (SM12.1, 128GB unificada), Open WebUI 0.8.11 (usuario digiegg)",
+   "riesgo": "Las cifras de VRAM son declaradas por el usuario sin comando de medicion.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un contenedor Docker en Linux llega a un servicio del host por la puerta del bridge, porque host.docker.internal no resuelve",
+   "como": "172.17.0.1",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Docker en DGX Spark (usuario)",
+   "riesgo": null,
+   "verificable_aqui": "docker network inspect bridge --format '{{(index .IPAM.Config 0).Gateway}}'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Guia de integracion de RAG; solo rescata la tabla de reparto de memoria entre dos modelos y el truco de red. Un usuario (post 4) advierte que buena parte de la guia esta generada por IA y desactualizada, y NVIDIA no interviene.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

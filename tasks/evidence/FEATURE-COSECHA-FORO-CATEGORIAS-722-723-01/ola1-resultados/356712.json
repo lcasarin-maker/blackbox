@@ -1,0 +1,57 @@
+{
+ "id": 356712,
+ "titulo": "A TOP monitor program specific for the DGX SPARK",
+ "leido": true,
+ "posts_leidos": 10,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "dgxtop (Python, TUI por SSH): carga y temperatura de CPU/GPU, E/S de disco y red",
+   "como": "no indicado (solo enlace al repositorio GigCoder-ai/dgxtop)",
+   "fuente_post": 1,
+   "repositorio": "GitHub GigCoder-ai/dgxtop (url exacta no indicada en el texto)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (autor)",
+   "riesgo": "Segun el post 3, consulta nvidia-smi cada segundo por defecto, lo que anade carga.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Recomendacion de leer procfs/sysfs o el wheel nvidia-nvml-dev en vez de invocar nvidia-smi cada segundo",
+   "como": "nvidia-smi --query-gpu=<campos> --format=csv,noheader,nounits (lo que usa dgxtop); alternativa: wheel nvidia-nvml-dev",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,utilization.gpu --format=csv,noheader,nounits"
+  },
+  {
+   "que": "spark_hwmon: driver hwmon de Linux que expone telemetria de potencia del GB10 por sysfs",
+   "como": "no indicado (solo enlace antheas/spark_hwmon)",
+   "fuente_post": 8,
+   "repositorio": "GitHub antheas/spark_hwmon (url exacta no indicada en el texto)",
+   "licencia": "no indicada",
+   "probado_en": "NVIDIA DGX Spark (GB10), segun la descripcion del repositorio citada",
+   "riesgo": "Es un modulo de kernel de terceros; con Secure Boot activo requeriria firma.",
+   "verificable_aqui": "ls /sys/class/hwmon/*/name"
+  },
+  {
+   "que": "Otros monitores: dgxtop en Rust (DennySORA), fork de dgxtop con procesos (sonusflow), cluster monitor de sparkrun, extension Vitals",
+   "como": "no indicado",
+   "fuente_post": 7,
+   "repositorio": "GitHub DennySORA/dgxtop; sonusflow/dgxtop; corecoding/Vitals",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Reune varios monitores y un driver hwmon de telemetria de potencia como punto de partida, pero ningun post da comando de instalacion ni licencia. No hay respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

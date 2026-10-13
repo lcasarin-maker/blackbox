@@ -1,0 +1,49 @@
+{
+ "id": 383193,
+ "titulo": "Temperature controlled external fan for DGX Spark",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "monitorear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Ventilador externo de 140 mm (Noctua NF-A14 PWM) controlado por Raspberry Pi Pico W con curva escalonada; un servicio en el DGX lee temperaturas de GPU y CPU y envia telemetria y comandos renovados cada 5 s; arranca a maxima velocidad y vuelve a ella si los comandos expiran (fail-safe)",
+   "como": "no indicado en el post (firmware Pico, servicio de telemetria, STL y BOM en el repositorio)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/aic5/face-hugger-fan-dgx-spark",
+   "licencia": "MIT",
+   "probado_en": "DGX Spark, prueba inicial del propio autor",
+   "riesgo": "Proyecto experimental 'as is'; el autor dice que se necesitan mas pruebas controladas",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu --format=csv; cat /sys/class/thermal/thermal_zone*/temp"
+  },
+  {
+   "que": "Resultado medido por el autor en lotes largos: temperatura maxima de GPU de 78.0 a 68.0 C y de CPU de 91.6 a 76.7 C; las temperaturas medias fueron algo mas altas durante la corrida con ventilador (reduce picos, no promedios); anuncia reduccion de 4-5 C",
+   "como": "no indicado (cifras reportadas)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/aic5/face-hugger-fan-dgx-spark",
+   "licencia": "MIT",
+   "probado_en": "un solo equipo, una comparacion",
+   "riesgo": "Una sola comparacion; el post anuncia 4-5 C en lotes largos y reporta picos 10.0 C (GPU) y 14.9 C (CPU) menores, con promedios algo mas altos con ventilador",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Alternativa a la Pi: controlador de ventilador con API HTTP y USB/WiFi (OpenFAN Micro, USD 35.10) al que el Spark envia el PWM y de donde lee RPM",
+   "como": "no indicado",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario mashie dice tener 8 unidades en uso",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Hardware de enfriamiento externo con licencia MIT y cifras de reduccion de picos (GPU 78.0 a 68.0 C, CPU 91.6 a 76.7 C), pero una sola comparacion y sin comandos en el post. Sin respuesta de staff NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

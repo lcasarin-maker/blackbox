@@ -1,0 +1,38 @@
+{
+ "id": 372266,
+ "titulo": "Cuda-llm-weight-share - LLM weight share for cuda across multiple processes",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Libreria LD_PRELOAD que intercepta cudaMalloc, imprime cada asignacion y comparte una sola copia de los pesos entre procesos por IPC; el segundo proceso gasta cero VRAM en pesos",
+   "como": "LD_PRELOAD=./cuda-llm-weight-share.so llama-server ... (primera pasada sin MODEL_SIZE para listar asignaciones); luego MODEL_SIZE=32060375552 LD_PRELOAD=./cuda-llm-weight-share.so llama-server ... --no-mmap -cram 0 -np 1 --ctx-checkpoints 0 -lv 1",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/pontostroy/cuda-llm-weight-share (nombre en el texto: pontostroy/cuda-llm-weight-share)",
+   "licencia": "no indicada",
+   "probado_en": "llama.cpp con Qwen3.6-35B-A3B Q6_K_XL en un solo GPU (el autor no nombra el hardware en el texto); nvidia-smi mostro 37392MiB y 6816MiB para los dos procesos",
+   "riesgo": "Un maestro muerto deja IPC obsoleto y el siguiente proceso toma el rol de maestro; solo probado con llama.cpp, y los pesos compartidos dependen de la vida del proceso maestro.",
+   "verificable_aqui": "nvidia-smi --query-compute-apps=pid,used_memory --format=csv"
+  },
+  {
+   "que": "Metodo de medicion: el gancho registra el tamano exacto de cada cudaMalloc para localizar el bloque de pesos",
+   "como": "salida '[VRAM_HOOK] cudaMalloc: Allocated 30575.16 MB (32060375552 bytes)' (la asignacion mas grande es el tamano de pesos que se pasa como MODEL_SIZE)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "llama.cpp",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Herramienta concreta y reutilizable para reducir duplicacion de pesos y para enumerar las asignaciones cudaMalloc de un proceso, con salida real de ejemplo; sin licencia indicada y sin probar en vLLM ni en memoria unificada. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

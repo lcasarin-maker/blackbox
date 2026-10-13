@@ -1,0 +1,38 @@
+{
+ "id": 371788,
+ "titulo": "Z-Image Turbo NVFP4",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reducir pico de memoria de generacion de imagen: bf16 ~23 GB pico a NVFP4 ~10.1 GB pico y 7.5 GB residente (1024x1024, 8 pasos, ~19 s)",
+   "como": "comfy-kitchen con QuantizedTensor.from_float(linear.weight.data, \"TensorCoreNVFP4Layout\"); build: PATH=\"$VIRTUAL_ENV/bin:$PATH\" uv pip install -e \".[cublas]\" --no-build-isolation ; comprobar: ck.list_backends()[\"cuda\"]",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 SM_121, CUDA 13.0, torch 2.11.0+cu130, diffusers 0.39.0.dev0, comfy-kitchen 0.2.10",
+   "riesgo": "Requiere compilar desde fuente; CUTLASS FP4 queda bloqueado a sm_100a, la ruta cuBLASLt si funciona en GB10",
+   "verificable_aqui": "nvidia-smi --query-gpu=memory.used --format=csv"
+  },
+  {
+   "que": "Advertencia medida: offload a CPU es inutil en el Spark; mover el encoder de texto de 8 GB tarda ~50 s en cada sentido pese a memoria unificada. Autocuantizar al cargar provoca un pico de bf16 completo; guardar el checkpoint ya cuantizado y cargar con assign=True",
+   "como": "no indicado como comando unico; descripcion: guardar qdata + block_scale + escala por tensor, reconstruir en 'meta' y load_state_dict(..., assign=True)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, medicion del propio usuario",
+   "riesgo": "Requiere reconstruir el buffer inv_freq de Qwen3RotaryEmbedding en device cuda",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta de cuantizacion NVFP4 de un modelo de imagen con cifras de memoria (23 GB a 10.1 GB pico) y el dato medido de que el offload CPU/GPU tarda ~50 s por 8 GB; ajena al monitoreo o a problemas termicos. Sin respuesta de staff NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,59 @@
+{
+ "id": 375475,
+ "titulo": "MiniMax-M3 (428B MoE + vision) at ~14–15 tok/s on 2× DGX Spark — EAGLE3 speculative decoding is the unlock",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Advertencia de riesgo: PP=2 con un checkpoint cuantizado de bits mixtos reparte capas por cantidad, no por bytes (etapa 0 cargo 69 GiB y etapa 1 ~119 GiB), lo que dio OOM en el nodo de 121 GB con memoria unificada hasta dejar sshd sin respuesta (timeout de banner); solo recupero un ciclo de energia de CA",
+   "como": "VLLM_PP_LAYER_PARTITION para equilibrar bytes y no capas, y dejar holgura real",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark (GB10, 121 GB unificada), vLLM 0.23.1rc1.dev537",
+   "riesgo": "Un OOM de memoria unificada puede dejar el equipo inaccesible por red; solo un ciclo de energia lo recupero",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Limitacion de potencia oculta en el nodo cabeza despues de un OOM: el autor la corrigio con un ciclo de energia y aun asi no supera ~17 tok/s",
+   "como": "no indicado (el autor no da el comando que uso para detectarla)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "cluster de 2 Sparks segun danielgbates",
+   "riesgo": "Despues de un OOM el equipo puede quedar con la potencia limitada sin aviso",
+   "verificable_aqui": "nvidia-smi -q -d POWER | grep -iE 'power limit|draw'"
+  },
+  {
+   "que": "Lectura de potencia de la GPU durante decodificacion latencia-limitada por colectivas NCCL sin GPUDirect: ~14 W con ~5 tok/s",
+   "como": "no indicado (cifra medida por el autor)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x Spark, ConnectX-7 200G RoCE directo, sin GPUDirect RDMA",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw --format=csv -l 1"
+  },
+  {
+   "que": "Comando de servicio con EAGLE3 (13.72 ± 0.63 tok/s en prosa, 15.07 en codigo); la lista de negativos incluye que nst=5 con draft_tp=1 empeora",
+   "como": "vllm serve aquaman164/MiniMax-M3-AutoRound-3.2bit-longctx --speculative-config '{\"method\":\"eagle3\",\"model\":\"Inferact/MiniMax-M3-EAGLE3\",\"num_speculative_tokens\":3,\"attention_backend\":\"TRITON_ATTN\"}' --tensor-parallel-size 2 --enable-expert-parallel --block-size 128 --attention-backend TRITON_ATTN --gpu-memory-utilization 0.88 --max-model-len 40960 --max-num-seqs 4 --max-num-batched-tokens 4096 --enforce-eager --disable-custom-all-reduce --dtype bfloat16",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark segun el autor",
+   "riesgo": "Con 0.85 solo quedan 2.83 GiB para KV, menos que los 3.53 GiB que necesita una peticion de 40k",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El autor dice que GB10 no tiene GPUDirect RDMA en este uso, por lo que NCCL pasa por memoria del host; no hay respuesta de NVIDIA en el hilo.",
+ "utilidad_atom": "alta",
+ "razon": "El post 1 describe un caso medido de OOM en memoria unificada que dejo sshd sin responder y exigio ciclo de energia, con la causa (reparto por capas con cuantizacion mixta) y la variable que lo evita; el post 3 reporta una limitacion de potencia posterior al OOM. Son afirmaciones de usuario sin respuesta de NVIDIA, en un cluster de 2 Sparks.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

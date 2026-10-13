@@ -1,0 +1,27 @@
+{
+ "id": 381835,
+ "titulo": "DeepSeek-V4-Flash-0731: DSML tool-call closers leak into the answer after latest spark-vllm-b12x",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de una regresion de la imagen: los cierres de llamada a herramienta DSML aparecen en el texto de la respuesta tras actualizar la imagen; se corrige volviendo a la imagen local anterior",
+   "como": "fijar la imagen vllm-node-b12x id f77c460897bd (vLLM 0.1.dev19023+g30038602b, dev/gilded-gnosis, del 3 de agosto) en lugar de eugr/spark-vllm-b12x:latest (nightly-20260823, vLLM 0.1.dev20133+gb5f995e73, dev/infernal-invocation)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DeepSeek-V4-Flash-0731 con DSpark (method dspark, 5 tokens), segun el usuario elvisnwh; hardware no indicado",
+   "riesgo": "Una imagen 'latest' puede introducir regresiones; el reporte es de un solo usuario y pide confirmacion de otros",
+   "verificable_aqui": "docker image ls --digests | grep -i b12x"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Reporte de un usuario de una regresion en la imagen nightly con la receta sin cambios y el rollback como solucion. Sin respuesta de NVIDIA ni relacion con memoria o termica; la leccion transferible es fijar la imagen conocida.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,58 @@
+{
+ "id": 381519,
+ "titulo": "Qwen3.8-Flash-Next 180B, Single Solo DGX Spark With HashK-PLE NVFP4",
+ "leido": true,
+ "posts_leidos": 43,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta que sirve el modelo de 180B en un solo GB10 con la tabla PLE (47.7 GiB) leida del disco por mmap, dejando ~24 GiB para KV; incluye fallos conocidos de sm_121 y como esquivarlos",
+   "como": "./run-recipe.sh /abs/path/to/recipes/qwen3.8-flash-next-nvfp4.yaml --solo --setup --earlyoom -d ; env: VLLM_PLE_MMAP=1, VLLM_PLE_MMAP_WORKERS=24, VLLM_PLE_MMAP_READAHEAD=16384, CUTE_DSL_ARCH=sm_121a ; gpu_memory_utilization 0.80 (el autor dice que 0.85 tambien funciona) ; --no-enable-prefix-caching ; --no-enable-flashinfer-autotune ; --kv-cache-dtype auto ; --compilation-config '{\"cudagraph_mode\":\"PIECEWISE\"}'",
+   "fuente_post": 30,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker (receta anadida; PR vllm-project/vllm #54129)",
+   "licencia": "no indicada",
+   "probado_en": "un Spark segun Turrican: ~29 tok/s prosa, ~35 codigo, ~42 agregado con 4 concurrentes",
+   "riesgo": "Depende de un PR sin fusionar de vLLM. Segun el post: la cache de prefijos provoca fallo de GDN en sm_121 (vLLM #54173) y el autotune de NVFP4-MoE falla en sm_121 (FlashInfer #4003), desactivarlo ahorra ~150 s de arranque",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Opcion --earlyoom del lanzador de la comunidad en el recipe (el hilo 378150 documenta que earlyoom mata vLLM durante la captura de CUDA graphs)",
+   "como": "--earlyoom (bandera de run-recipe.sh)",
+   "fuente_post": 30,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "No se explica en este hilo que hace; en otro hilo se reporta conflicto con earlyoom",
+   "verificable_aqui": "systemctl is-active earlyoom"
+  },
+  {
+   "que": "Corrupcion de salida en contexto largo: la tabla se corrompe de forma determinista ~200k de contexto en la ruta trtllm (SGLang); el workaround del autor es mover el prefill a triton y el decode al backend trtllm MHA general, a costa de velocidad. Sintoma de usuarios: solo se emite '!' tras compactar contexto",
+   "como": "no indicado en forma de comando",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un Spark, SGLang segun Mainstream_xx1",
+   "riesgo": "Corrupcion silenciosa de salidas en contexto largo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Instalador de una linea de un usuario (con --language-only que desactiva la vision)",
+   "como": "curl -fsSL https://raw.githubusercontent.com/azampatti/GB10-3.8-Flash-Next/main/install-3.8flash.sh | bash && ~/launch-3.8flash.sh",
+   "fuente_post": 32,
+   "repositorio": "https://github.com/azampatti/GB10-3.8-Flash-Next",
+   "licencia": "no indicada",
+   "probado_en": "un Spark segun azampatti, ~43 tok/s en codigo",
+   "riesgo": "Ejecuta un script remoto con curl | bash",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de recetas para un modelo concreto con varias variantes de usuarios; el valor transferible es la lista de fallos de sm_121 (cache de prefijos, autotune de FlashInfer) y gpu_memory_utilization 0.80, todos de usuarios sin respuesta de NVIDIA. No toca monitoreo de estabilidad ni termica.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

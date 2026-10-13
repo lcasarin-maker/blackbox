@@ -1,0 +1,79 @@
+{
+ "id": 376220,
+ "titulo": "Instructions for running Deepseek-v4-flash with DSpark using Eugr's repo",
+ "leido": true,
+ "posts_leidos": 13,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Un nodo del par TP=2 quedo en 'cutout mode' bajo carga: 786 MHz, 15 W, 47 C, 96% de util frente a 2470 MHz, 44 W, 65 C en el otro; segun un usuario es un fallo conocido del Spark; se limpia apagando el sistema y desenchufando la fuente de la pared ~1 minuto",
+   "como": "apagar, desenchufar la fuente ~1 minuto y volver a enchufar (sin comando); tras el ciclo: generacion 30.5 a 37.9 tok/s, TTFT 5.94 s a 2.18 s",
+   "fuente_post": 70,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 DGX Spark ('Odin' y 'Tyr') con DeepSeek-V4-Flash TP=2 (declarado por nvidiaspark1; el diagnostico lo dio el usuario bernisse en el post 71)",
+   "riesgo": "La causa no esta explicada; la afirmacion de 'fallo conocido' es de un usuario, no de NVIDIA",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,power.draw,temperature.gpu,utilization.gpu --format=csv"
+  },
+  {
+   "que": "Solucion de usuario para scripts que se rompen tras apt update/upgrade: ampliar el tiempo de espera de arranque del motor",
+   "como": "VLLM_ENGINE_READY_TIMEOUT_S: \"3600\" en env",
+   "fuente_post": 40,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (declarado por davidbarnesguildford)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Usar la carga perezosa de safetensors da mas KV cache que instanttensor y evita el bloqueo de carga con fastsafetensors",
+   "como": "--load-format safetensors --safetensors-load-strategy lazy",
+   "fuente_post": 17,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2 Spark (declarado por vedcsolution)",
+   "riesgo": "Con fastsafetensors la carga se cuelga indefinidamente (post 12)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reducir --max-num-batched-tokens a 4096 permite >1.5M tokens de KV con 0.84 de utilizacion; 2048 mejora el uso pero falla al azar; otro usuario avisa de que lotes pequenos degradan MTP",
+   "como": "--max-num-batched-tokens 4096 con --gpu-memory-utilization 0.84",
+   "fuente_post": 42,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark TP=2 DeepSeek-V4-Flash-0731 (declarado por tanbuikim7)",
+   "riesgo": "2048 puede fallar al azar",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Imagen b12x de eugr: regresion con salida corrupta tras horas de uso en builds posteriores al 20260810; el usuario revierte a la imagen anterior",
+   "como": "docker pull eugr/spark-vllm-b12x:nightly-20260810 ; PREBUILT_B12X_RUNNER_IMAGE=\"eugr/spark-vllm-b12x:nightly-20260810\" en build-and-copy.sh",
+   "fuente_post": 85,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2 Spark, varios usuarios (posts 78-102)",
+   "riesgo": "Salida incoherente en builds nuevos; un usuario reporta tareas 3x mas lentas en 0813 y 0815 (post 89)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Mediciones de tuning de DSpark: 3 tokens especulativos superaron 4, 5 y 6 en el benchmark de 50 concurrentes (71.63 frente a 48.60 tok/s); batched tokens 10240 mejor que 8192",
+   "como": "--speculative-config '{\"method\":\"dspark\",\"num_speculative_tokens\":3}' --max-num-batched-tokens 10240",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark TP=2 (declarado por johndaly)",
+   "riesgo": "16384 no cabe con max_model_len=262144",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El tema es un hilo largo de recetas de DeepSeek V4 Flash, con un dato util de monitoreo: un nodo atascado a 786 MHz y 15 W bajo carga, diagnosticado y resuelto por usuarios con un ciclo de energia, medido con un antes y un despues. Todo son afirmaciones de usuarios en 2 Spark, y ningun post de NVIDIA lo respalda; las respuestas de eugr_nv tratan solo de empaquetado de recetas.",
+ "lectura": "parcial",
+ "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+}

@@ -1,0 +1,27 @@
+{
+ "id": 356609,
+ "titulo": "Mobile DGX Management in 2026: DGX Console on iPhone, JupyterLab on iPad with Termius + Tailscale",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Acceso remoto al DGX Dashboard (metricas de memoria/GPU) y JupyterLab mediante reenvio de puertos SSH (Termius) y Tailscale",
+   "como": "reglas de port forwarding: Dashboard Local 11000 -> localhost:11000; JupyterLab Local 11003 -> localhost:11003; luego abrir localhost:11000 en el navegador. Tailscale segun https://build.nvidia.com/spark/tailscale",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, segun el usuario griffith.mark; sin driver/kernel",
+   "riesgo": "Exponer el dashboard exige tunel o VPN; el texto no discute autenticacion del dashboard",
+   "verificable_aqui": "ss -ltnp | grep -E ':(11000|11003)\\b'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El usuario describe como ver el DGX Dashboard y logs desde un movil con puertos 11000 y 11003 y Tailscale; no aporta metrica ni umbral propio. El staff (aniculescu) solo mueve el tema de categoria.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

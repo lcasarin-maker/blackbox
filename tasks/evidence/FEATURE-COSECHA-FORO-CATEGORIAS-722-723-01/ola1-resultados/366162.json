@@ -1,0 +1,59 @@
+{
+ "id": 366162,
+ "titulo": "Guide: Gemma 4 31B on DGX Spark via NemoClaw — Dual-Model Setup Guide",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Medicion de presupuesto de memoria con dos modelos: con llama-server (Gemma 4 31B F16, ~64 GB) mas NemoClaw/NIM el equipo queda con ~1 GB libre, ~13 GB disponibles y 8.4 GB de swap activo",
+   "como": "free -h ; nvidia-smi (procesos GPU). Salida citada: Mem total 121Gi, used 108Gi, free 1.0Gi, available 13Gi, Swap 15Gi usado 8.4Gi; llama-server 64107MiB",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, Ubuntu 24.04.4, CUDA 13.0 (V13.0.88) segun el autor",
+   "riesgo": "El autor advierte de ~89% de uso y swap activo que degrada la inferencia",
+   "verificable_aqui": "free -h; nvidia-smi --query-compute-apps=pid,used_memory --format=csv"
+  },
+  {
+   "que": "Variante liviana: cuantizar a Q4_K_M para convivir sin swap (~18 GB frente a ~62 GB)",
+   "como": "hf download ggml-org/gemma-4-31B-it-GGUF gemma-4-31B-it-Q4_K_M.gguf --local-dir ~/models/gemma-4-31B-it-GGUF ; ./bin/llama-server --model <ruta> --host 0.0.0.0 --port 8000 --n-gpu-layers 99 --ctx-size 65536 --threads 8 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0 --jinja --chat-template-kwargs '{\"enable_thinking\":false}'",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el autor (la variante Q4_K_M se propone, no se mide)",
+   "riesgo": "Degradacion leve de calidad segun el autor",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Compilar llama.cpp para GB10",
+   "como": "cmake .. -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=\"121\" -DLLAMA_CURL=OFF ; make -j8",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Registrar un proveedor local en OpenShell porque los nombres documentados de 'openshell inference set --provider' fallan en la version 0.0.21",
+   "como": "openshell provider create --name llama-cpp --type openai --credential \"OPENAI_API_KEY=unused\" --config \"OPENAI_BASE_URL=http://host.openshell.internal:8000/v1\"",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/NVIDIA/NemoClaw (issue 893 citado)",
+   "licencia": "no indicada",
+   "probado_en": "openshell 0.0.21, NemoClaw v0.1.0",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun el autor (usuario), los nombres de proveedor documentados para openshell inference set no funcionan en openshell 0.0.21; reporto el bug en GitHub de NemoClaw. No hay respuesta de NVIDIA en el hilo.",
+ "utilidad_atom": "baja",
+ "razon": "Guia de usuario de NemoClaw/Gemma; lo reutilizable para este equipo es la medicion de memoria con swap activo (108 Gi usados de 121 Gi) y las banderas de llama.cpp. Las mediciones son de un solo equipo y sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,38 @@
+{
+ "id": 368970,
+ "titulo": "DeepSeek v4 Flash (IQ2XXS) on a single GB10!",
+ "leido": true,
+ "posts_leidos": 14,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Linea de llama-server del autor para correr DeepSeek V4 Flash IQ2XXS en un GB10 (el autor reporta un OOM puntual y que sigue ajustando); generacion ~15 t/s a contexto corto, prefill ~80 t/s",
+   "como": "llama-server -hf antirez/deepseek-v4-gguf -c 524288 -np 1 --cont-batching -ngl all -fa 1 --batch-size 4096 --direct-io --no-mmap --jinja --fit off -t 10",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/kamnxt/llama.cpp-deepseek-v4-flash-cuda-spark",
+   "licencia": "no indicada",
+   "probado_en": "un GB10 segun el usuario kamnxt",
+   "riesgo": "Un OOM reportado por el autor; scottwalls2008 (post 14) reporta 'illegal memory access' con contextos de 100000 o mas tokens en ese repositorio, mientras antirez/ds4 es estable a 256000",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Usar el modelo 'mapped' (no copiado) en memoria unificada y 'warmed' permite el contexto completo de 1M tokens en un Spark a costa de decodificar ~13.6 tok/s en vez de ~15",
+   "como": "no indicado (contenedor de build CUDA en el repo hhackbarth/ds4-ops)",
+   "fuente_post": 9,
+   "repositorio": "https://github.com/hhackbarth/ds4-ops",
+   "licencia": "no indicada",
+   "probado_en": "un DGX Spark segun el usuario helge",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El post 1 da una linea de llama-server con --no-mmap --direct-io y reporta un OOM; el post 9 describe el modelo mapeado y calentado en memoria unificada como forma de ganar contexto. Todo son pruebas de usuarios en motores de inferencia, sin respuesta de NVIDIA ni metodo de medicion de memoria.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

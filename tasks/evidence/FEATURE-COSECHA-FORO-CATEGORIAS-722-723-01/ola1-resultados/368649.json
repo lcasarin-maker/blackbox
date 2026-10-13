@@ -1,0 +1,68 @@
+{
+ "id": 368649,
+ "titulo": "Now running 2x DGX Spark stacked over QSFP56 looking for model recs for agentic workloads (Hermes / OpenClaw)",
+ "leido": true,
+ "posts_leidos": 28,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Liberar memoria del sistema desactivando la interfaz grafica y el dashboard de NVIDIA para poder cargar vLLM con utilizacion superior al 90 %",
+   "como": "no indicado (el usuario dice que desactivo todo lo relacionado con GUI y el dashboard integrado)",
+   "fuente_post": 22,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos DGX Spark, MiniMax M2.7 y Qwen3.6-35B simultaneos (usuario Xynap)",
+   "riesgo": "Sin la GUI y con utilizacion >90 % queda poco margen de memoria libre.",
+   "verificable_aqui": "systemctl get-default"
+  },
+  {
+   "que": "Reparto de gpu-memory-utilization para dos modelos vLLM en cluster de dos nodos",
+   "como": "--gpu-memory-utilization 0.155 (Qwen3.6-35B-A3B-AWQ-4bit, --max-model-len 262144) y --gpu-memory-utilization 0.74 (MiniMax-M2.7-AWQ-4bit, --max-model-len 196608), ambos con --tensor-parallel-size 2 --no-ray --max_num_seqs 8 --max_num_batched_tokens 16384",
+   "fuente_post": 22,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "dos Spark con launch-cluster.sh de la comunidad (declarado por el usuario)",
+   "riesgo": "La suma 0.155 + 0.74 = 0.895 deja el margen minimo.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de memoria en uso por nodo con MiniMax, OpenClaw y servidor de embeddings",
+   "como": "no indicado (cifras: nodo primario 95.6/121 GB, secundario 94.4/121 GB con gpu_memory_utilization 0.7)",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos Spark",
+   "riesgo": null,
+   "verificable_aqui": "free -h"
+  },
+  {
+   "que": "Advertencia de version: vLLM 0.19.x produce alucinaciones graves con MiniMax-M2.7-AWQ; <=0.18.1 y >=0.20 funcionan segun los usuarios",
+   "como": "no indicado",
+   "fuente_post": 24,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos Spark (FredDerf confirma mejora con el candidato 20.x en el post 25)",
+   "riesgo": "Resultados incorrectos sin error visible.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Consumo en reposo de cada Spark",
+   "como": "no indicado (cifra declarada: nunca menos de 65 W por Spark en reposo tras conectarlos)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos Spark (usuario Brush)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Es sobre todo seleccion de modelos para dos nodos; los datos reutilizables son los porcentajes de gpu-memory-utilization que suman 0.895 y la idea de desactivar GUI y dashboard para ganar memoria, sin comando. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

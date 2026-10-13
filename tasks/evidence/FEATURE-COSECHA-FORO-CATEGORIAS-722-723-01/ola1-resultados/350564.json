@@ -1,0 +1,37 @@
+{
+ "id": 350564,
+ "titulo": "Pretrain nanochat on 2 x DGX Sparks",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Descubrir la interfaz ConnectX-7 activa y su IP para configurar NCCL en un cluster de dos Spark",
+   "como": "IB_IF=$(/usr/sbin/ibdev2netdev | awk '/(Up|ACTIVE)/{print $5; exit}'); MASTER_ADDR=$(ip -o -4 addr show dev \"$IB_IF\" | awk '{print $4}' | cut -d/ -f1); export NCCL_SOCKET_IFNAME=$IB_IF",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "dos DGX Spark enlazados por QSFP/CX7, contenedor nvcr.io/nvidia/pytorch:25.09-py3 (declarado por el usuario)",
+   "riesgo": null,
+   "verificable_aqui": "/usr/sbin/ibdev2netdev"
+  },
+  {
+   "que": "Lanzar el contenedor PyTorch de NGC con acceso a InfiniBand y memlock sin limite para entrenamiento multinodo",
+   "como": "docker run --gpus all -it --rm --ipc=host --network=host --ulimit memlock=-1 --ulimit stack=67108864 --device=/dev/infiniband ... nvcr.io/nvidia/pytorch:25.09-py3",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "dos DGX Spark (declarado por el usuario)",
+   "riesgo": null,
+   "verificable_aqui": "ls /dev/infiniband"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Es una receta de entrenamiento distribuido en dos Spark con comandos concretos de red y contenedor, pero la maquina de esta cosecha es un nodo unico y el tema no trata monitoreo ni estabilidad. Sin respuesta de NVIDIA (el staff solo movio el tema de categoria).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

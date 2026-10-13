@@ -1,0 +1,58 @@
+{
+ "id": 373933,
+ "titulo": "GLM-5.2 IQ4_XS on 4× GB10 — 6.28 tok/s, DSA active, full recipe",
+ "leido": true,
+ "posts_leidos": 9,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Actualizar firmware EC/SoC: el usuario dice que pasar de EC 10600/SoC 10700 a EC 10700/SoC 10800 limpio un 'stuck power state' y subio un SGLang de 12.8 a 20.83 tok/s",
+   "como": "sudo fwupdmgr get-updates",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x MSI EdgeXpert GB10, DGX OS 7.5.0, driver 580.142, CUDA 13.0 (declarado por el usuario)",
+   "riesgo": "Afirmacion de un usuario; el mecanismo del 'power state atascado' no se explica ni se mide.",
+   "verificable_aqui": "sudo fwupdmgr get-updates"
+  },
+  {
+   "que": "Compilacion de llama.cpp para GB10 y lanzamiento RPC de 4 nodos",
+   "como": "cmake -B build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=121a-real -DCMAKE_BUILD_TYPE=Release ; llama-rpc-server --host 0.0.0.0 --port 50052 ; llama-server --model ... --rpc 10.10.10.2:50052,... --ctx-size 1048576 --n-gpu-layers 999",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/ggml-org/llama.cpp (citado)",
+   "licencia": "no indicada",
+   "probado_en": "4x MSI EdgeXpert GB10",
+   "riesgo": "1M de contexto uso 124.6 GB por nodo, cerca del limite de 128GB",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de decode: 6.28 tok/s con C=1; con concurrencia 8 el agregado (8.50) cae bajo C=4 (9.07)",
+   "como": "no indicado como comando",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x MSI EdgeXpert GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Ngram self-spec y -fa auto reportados por un segundo usuario: decode estructurado ~6.5 a ~24 tok/s",
+   "como": "-fa auto, --spec-type ngram-map-k, -ub 1024, --spec-ngram-map-k-size-m 48",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10, CRS812 200G (declarado)",
+   "riesgo": "Incluye un parche propio RDMA-WRITE de llama.cpp RPC no publicado ('local brew', post 8)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El autor afirma que vLLM/SGLang con DSA en SM121 quedan bloqueados por el arch-gate de DeepGEMM (arch_major 9 o 10; SM121 es 12); afirmacion de usuario, no de NVIDIA.",
+ "utilidad_atom": "media",
+ "razon": "Hilo de usuarios sin respuesta de NVIDIA; la nota de firmware (sudo fwupdmgr get-updates) es el unico mecanismo transferible, de otro fabricante (MSI) y sin explicar el mecanismo. Resto es rendimiento de un cluster de 4 nodos que no aplica a la ATOM de un nodo.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

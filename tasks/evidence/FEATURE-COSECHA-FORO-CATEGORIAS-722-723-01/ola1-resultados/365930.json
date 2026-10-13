@@ -1,0 +1,59 @@
+{
+ "id": 365930,
+ "titulo": "My DGX Spark Hangs ... is this normal?",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "prevenir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Leer el log del kernel del arranque anterior tras un congelamiento para detectar OOM (NVRM)",
+   "como": "journalctl -k -b -1 -e",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (staff de NVIDIA, aniculescu, lo propone)",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k -b -1 -e | grep -E 'NV_ERR_NO_MEMORY|memory pressure'"
+  },
+  {
+   "que": "Firma de un congelamiento por memoria: el kernel registra Out of memory NV_ERR_NO_MEMORY desde NVRM y systemd-journald reporta presion de memoria antes de la caida",
+   "como": "NVRM: nvCheckOkFailedNoLog: Check failed: Out of memory [NV_ERR_NO_MEMORY] (0x00000051) returned from _memdescAllocInternal(pMemDesc) @ mem_desc.c:1359 ; systemd-journald: Under memory pressure, flushing caches.",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, vLLM con --gpu-memory-utilization 0.93 (post 1) y 0.85 con Qwen3.5-122B NVFP4 (post 6)",
+   "riesgo": "Equipo congelado sin respuesta a boton de encendido breve; corte forzado manteniendo el boton (post 6)",
+   "verificable_aqui": "journalctl -k -b -1 | grep -c NV_ERR_NO_MEMORY"
+  },
+  {
+   "que": "Recomendacion de un usuario: no pasar de 0.9 en gpu-memory-utilization de vLLM; 0.85-0.88 para Qwen3-Coder-Next-FP8; para 8 usuarios, modelos NVFP4 o INT4",
+   "como": "--gpu-memory-utilization 0.85 (rango 0.85-0.88)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Opinion de usuario (PILCOTHINK); DannyTup (post 6) congelo el equipo incluso con 0.85, asi que el valor por si solo no basta",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Hipotesis de usuario: --gpu-memory-utilization no cubre memoria necesaria durante la carga del modelo; propuesta de bajar a 0.4-0.5",
+   "como": "--gpu-memory-utilization 0.4-0.5 (propuesto en pregunta, sin resultado)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Sin verificar",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Sin respuesta oficial sobre la causa; el staff (aniculescu) solo sugiere revisar logs y senala un posible OOM como causa del congelamiento.",
+ "utilidad_atom": "alta",
+ "razon": "Documenta con logs literales la firma NV_ERR_NO_MEMORY seguida de presion de memoria en journald antes de un congelamiento, con el comando de staff para recuperarla tras el reinicio. Dos usuarios reproducen el colapso incluso con gpu-memory-utilization 0.85, lo que cuestiona ese parametro como prevencion.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

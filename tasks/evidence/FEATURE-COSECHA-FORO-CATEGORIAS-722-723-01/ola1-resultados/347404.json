@@ -1,0 +1,27 @@
+{
+ "id": 347404,
+ "titulo": "How are you planning on using your DGX spark?",
+ "leido": true,
+ "posts_leidos": 23,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo de medicion de throughput de vLLM con llama-benchy (pp/tg a distintas profundidades de contexto), con la linea de lanzamiento de vLLM usada",
+   "como": "llama-benchy --base-url \"http://0.0.0.0:8000/v1\" --model \"/models/Qwen3-Coder-Next-FP8\" --pp 2048 --tg 128 --depth 0 4096 8192 16384 32768 --enable-prefix-caching --runs 5 ; servidor: ./launch-cluster.sh --solo exec vllm serve /models/Qwen3-Coder-Next-FP8 --enable-auto-tool-choice --tool-call-parser qwen3_coder --gpu-memory-utilization 0.9 --host 0.0.0.0 --port 8000 --load-format fastsafetensors --attention-backend flashinfer --enable-prefix-caching --max-model-len 262144",
+   "fuente_post": 24,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario cho (version llama-benchy 0.3.1 citada en post 25); sin driver/kernel",
+   "riesgo": "Medicion de un usuario sin verificar; el post 24 indica que --enable-prefix-caching es necesario para ver ctx_pp/ctx_tg",
+   "verificable_aqui": "command -v llama-benchy && llama-benchy --help"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de opiniones sobre usos de la Spark; solo los posts 24-25 aportan un metodo de benchmark (llama-benchy) con resultados de unos 40-46 tok/s en tg128 para Qwen3-Coder-Next-FP8. No hay respuesta de NVIDIA ni nada sobre memoria o termica.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

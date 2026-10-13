@@ -1,0 +1,60 @@
+{
+ "id": 382610,
+ "titulo": "Qwen3.8-Flash-Next FP8 on 2x DGX Spark - recipe, benchmarks, and four errors that stopped the engine",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "En GB10 la GPU y la cache de paginas comparten el mismo pool unificado; un bucle con posix_fadvise(POSIX_FADV_DONTNEED) sobre archivos que dejaron de crecer libero 84 GB de cache y mantuvo MemAvailable ~115 GB durante una transferencia de 135 GB a 314 MB/s",
+   "como": "posix_fadvise(POSIX_FADV_DONTNEED) sobre archivos que ya no crecen (bucle propio, sin codigo en el post)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark GB10, DGX OS 24.04.4, kernel 6.17.0-1032-nvidia, driver 580.173.02 (declarado por tsarihan)",
+   "riesgo": "Codigo no publicado en el post",
+   "verificable_aqui": "grep MemAvailable /proc/meminfo"
+  },
+  {
+   "que": "Vigilar /proc/pressure/memory en lugar de free: bajo presion el sistema entra en direct reclaim (solo CPU, sin escrituras a disco) y se ve como el load average subiendo sin trabajo en curso",
+   "como": "cat /proc/pressure/memory",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": "cat /proc/pressure/memory"
+  },
+  {
+   "que": "Nodo que responde a ping y acepta TCP en el puerto 22 pero sshd nunca completa el login, con el motor colgado; no es OOM kill; matar el proceso cliente en el otro nodo lo libero sin ciclo de energia",
+   "como": "matar el proceso cliente en el otro nodo (comando no indicado)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 nodos GB10 (declarado)",
+   "riesgo": "Funciono en una ocasion segun el autor",
+   "verificable_aqui": "ss -tn | grep ':22'"
+  },
+  {
+   "que": "Receta TP=2 con 88.07 GiB de pesos por nodo y gpu-memory-utilization 0.85; NCCL_MIN_NCHANNELS=4 y NCCL_MAX_NCHANNELS=4 porque el valor por defecto de 64 cuelga la inicializacion de canales en este fabric",
+   "como": "--tensor-parallel-size 2 --enable-expert-parallel --gpu-memory-utilization 0.85 --max-model-len 262144 --max-num-seqs 64 --kv-cache-dtype bfloat16 --enforce-eager ; NCCL_MIN_NCHANNELS=4 NCCL_MAX_NCHANNELS=4",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10, vllm/vllm-openai:qwen38-flash-next (declarado)",
+   "riesgo": "Con KV bf16 se gasta el doble de memoria que con fp8 (el modelo no admite fp8 KV segun el log)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Aporta metodos concretos de medicion y mitigacion de presion de memoria unificada (PSI, fadvise, cache de paginas) y un cuelgue de nodo con ssh bloqueado, con hardware, kernel y driver declarados, muy cercanos a esta maquina. Todo es de un usuario; no hay respuesta de NVIDIA ni codigo del bucle fadvise.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

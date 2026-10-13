@@ -1,0 +1,59 @@
+{
+ "id": 369791,
+ "titulo": "Fully custom CUDA-native Deepseek 4 Flash optimized for 1x Spark! antirez/ds4",
+ "leido": true,
+ "posts_leidos": 80,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reduccion de la memoria residente con streaming de expertos desde SSD en ds4-server (el autor del post dice que a --ctx 32768 los pesos ocupan ~80 GiB y dejan 1-2 GiB de MemAvailable)",
+   "como": "./ds4-server --cuda --host 0.0.0.0 --port 18004 -m ds4flash.gguf --ctx 32768 --ssd-streaming --ssd-streaming-cache-experts 50GB --cors ; compilar con make cuda-spark",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/antirez/ds4",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10, kernel 6.17.0-1021-nvidia, 128 GiB unificada (~121.7 GiB visibles a CUDA, sin swap) segun el usuario que redacto la guia (texto generado con IA segun el)",
+   "riesgo": "Sin streaming el modelo no puede convivir con otra carga; con el streaming el rendimiento baja (el post remite a una tabla no leida completa).",
+   "verificable_aqui": "grep -E 'MemTotal|MemAvailable' /proc/meminfo; free -g"
+  },
+  {
+   "que": "Dato de memoria a contexto largo: ds4 upstream con --ctx 256000 usa ~113 GB de RAM en total, con prefill algo menos de 400 tok/s y decodificacion 13.x tok/s; otro usuario reporta ds4-server consumiendo un poco menos de 91 GB con --ctx 64000",
+   "como": "ds4-server --ctx 256000",
+   "fuente_post": 71,
+   "repositorio": "https://github.com/antirez/ds4",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun joshua.dale.warner",
+   "riesgo": "Errores 'cuda prefill failed' con prompts de ~30k tokens en la rama de entrpi (fork) pero no en upstream, segun dos usuarios.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Comando de instalacion de un solo paso de un tercero (curl | bash)",
+   "como": "curl -sSL https://raw.githubusercontent.com/Entrpi/ds4-on-spark/main/install.sh | bash -s -- --with-mtp --start",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/Entrpi/ds4-on-spark",
+   "licencia": "no indicada",
+   "probado_en": "GB10 segun entrpi",
+   "riesgo": "Ejecuta un script remoto sin revisar.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables de ds4-server para ajustar la reserva de memoria en lote continuo (coder543 aparece en otro hilo; aqui solo se recoge que el post 1 usa un instalador con MTP)",
+   "como": "no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Hilo largo de usuarios sin respuesta de NVIDIA; lo transferible es la contabilidad de memoria de un motor que carga todo residente (80 a 113 GB segun contexto) y la opcion de streaming de expertos desde SSD para convivir con otras cargas. Lei de forma selectiva (inicio, posts 68-72, y la guia de los posts siguientes), no los 80 posts completos; el resto de benchmarks no se auditaron.",
+ "lectura": "parcial",
+ "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+}

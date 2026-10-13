@@ -1,0 +1,10 @@
+HALLAZGO de la cosecha, medido en esta maquina (2026-10-12): la GPU esta en el estado "reloj atascado" descrito por 8+ hilos del foro.
+Hilos: 376039 y 376239 (personal de NVIDIA, AakankshaS, confirma limitacion real de reloj y recomienda ciclo de corriente), 366944 (prueba de humo matmul), 362737 (herramienta con umbral 1400 MHz), 375687, 376542, 378150, 382897.
+Medicion (nvidia-smi y matmul fp16 8192x8192, 15 s, estado termico bb normal, 65 C):
+  reloj SM 663 MHz (maximo 3003 MHz, reloj de aplicaciones por defecto 2418 MHz), 16.4 W, util 95 %, razones de throttle 0x0, 23.5 TFLOPS.
+  Telemetria (atom_gpu_telemetry.jsonl): ultima muestra SANA bajo carga 2026-10-12 16:59:29 local (2073 MHz, 28.3 W); primera ATASCADA 17:17:16 (676 MHz, 8.5 W). Los 3 arranques posteriores (51888b82, 0b00a7c2, f6f10dc3): 100 % de las muestras con util >= 80 % por debajo de 1000 MHz; los 9 anteriores con carga: 2077-2522 MHz y 0 % bajo 1000.
+  Aparecio entre dos arranques (16:55-17:08 local sano, 17:08 en adelante atascado): un reinicio no lo limpia.
+Relacion con el corte de las 18:32 (hipotesis, no demostrada): los hilos 381549 (incluye un usuario de GIGABYTE AI TOP ATOM) y 383821 dicen que el ventilador responde a la temperatura de la GPU; con la GPU atascada y fria la CPU/SoC se queda sin refrigeracion. En el arranque del corte las zonas ACPI llegaron a 96.3 C con la GPU a 12-13 W.
+Remedio reportado (sin verificar por NVIDIA): apagar, desconectar el adaptador del enchufe, boton de encendido ~10 s para drenar condensadores, esperar unos minutos, reconectar. Un usuario (akil.chien) no lo resolvio ni con 8 h de espera.
+Lo que NO se midio: el rendimiento sano de esta ATOM en TFLOPS (no hay linea base previa), y la causa de fondo (entrega de energia / negociacion PD). Despues del ciclo de corriente: repetir `bb reloj --prueba` y registrar reloj y TFLOPS.
+Control negativo: el detector da INDETERMINADO sin carga (no afirma sano) y no marca atascado si hay razones de throttle activas (tests/test_reloj_atascado.py).

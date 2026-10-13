@@ -1,0 +1,28 @@
+{
+ "id": 380443,
+ "titulo": "Qwen3.8-27B-FP8 any fools out there messing with FP8?",
+ "leido": true,
+ "posts_leidos": 14,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Un usuario con vLLM en un solo Spark necesito cargar perezoso para que el modelo FP8 quepa en memoria; receta con valores de memoria",
+   "como": "--safetensors-load-strategy lazy --gpu-memory-utilization 0.88 --max-model-len 212992 --max-num-seqs 4 --max-num-batched-tokens 8192 --kv-cache-dtype fp8 --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":2}' ; env VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0 MAX_JOBS=4 CUTE_DSL_ARCH=sm_121a",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "1x DGX Spark (usuario, sin version de driver)",
+   "riesgo": "Sin mediciones de estabilidad; el post 10 de otro usuario dice que MTP le cuelga el GB10 tras un uso prolongado",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de afinacion de un modelo con una receta de usuario; el dato transferible es que el modo de carga lazy evito la falta de memoria y un usuario reporta un cuelgue del GB10 con MTP, sin detalle ni diagnostico. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

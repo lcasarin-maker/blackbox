@@ -1,0 +1,27 @@
+{
+ "id": 355030,
+ "titulo": "Trellis 2 - 3d mode gen from microsoft",
+ "leido": true,
+ "posts_leidos": 25,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround para compilar TRELLIS.2 en aarch64: quitar pillow-simd, usar Pillow estandar y construir en imagen basada en CUDA 12.9.1 (con CUDA 13.1 flash-attn da error PTX)",
+   "como": "base nvcr.io/nvidia/cuda:12.9.1-cudnn-devel-ubuntu24.04 ; ENV PIP_PREFER_BINARY=1 ; pip install flash_attn==2.7.4.post1 --no-build-isolation",
+   "fuente_post": 13,
+   "repositorio": "https://github.com/dr-vij/Trellis2-DGX-Spark-Docker",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el autor; otro usuario confirma que funciono (post 22)",
+   "riesgo": "flash-attention tarda mucho en compilar; el error PTX con CUDA 13.1 lo reporta un usuario (post 8) sin version de driver",
+   "verificable_aqui": "nvcc --version 2>/dev/null; nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+  }
+ ],
+ "omision_nvidia": "NVES (staff) responde que las preguntas de instalacion y soporte de plataforma corresponden al equipo de Trellis; no ofrece solucion.",
+ "utilidad_atom": "baja",
+ "razon": "Un usuario resuelve la compilacion de un modelo 3D con CUDA 12.9.1; un staff de NVIDIA rechaza dar soporte. Sin relacion con monitoreo ni memoria.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

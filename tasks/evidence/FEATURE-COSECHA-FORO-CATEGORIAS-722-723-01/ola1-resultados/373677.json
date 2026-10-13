@@ -1,0 +1,48 @@
+{
+ "id": 373677,
+ "titulo": "SGLang multi-node on DGX Spark: three traps that wasted a day each, and how to spot them",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "No usar los modos estrictos de depuracion de PyTorch en SGLang multinodo: dan falso positivo 'Detected mismatch between collectives on ranks'; para ver el transporte usar NCCL_DEBUG",
+   "como": "no fijar TORCH_DISTRIBUTED_DEBUG=DETAIL ni TORCH_NCCL_BLOCKING_WAIT=1; usar NCCL_DEBUG=INFO con NCCL_DEBUG_SUBSYS=INIT,NET; NCCL_DEBUG=TRACE si hace falta traza de colectivas",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark GB10 sm_121a, ConnectX-7 RoCE, switch MikroTik 200 GbE, SGLang compilado de fuente BTankut",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Flags de speculative decoding EAGLE deben ir en todos los nodos; si solo van en rank 0, el arranque se cuelga tras 'Init torch distributed begin' y los workers callan en 'Dummy health check server started'",
+   "como": "--speculative-algorithm EAGLE mas los tres parametros speculative-num/topk, identicos en cada rank",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x Spark sobre RoCE con switch; el autor supone que en InfiniBand el orden de rendezvous lo oculta",
+   "riesgo": "Cuelgue sin error que puede terminar en OOM",
+   "verificable_aqui": null
+  },
+  {
+   "que": "CUDA graphs completos con FlashInfer funcionan en sm_121; lo que falla es el modo piecewise (illegal memory access); quitar --disable-cuda-graph subio GLM-4.7-FP8 de 8.2 a 9.8 tok/s",
+   "como": "quitar --disable-cuda-graph; agregar --disable-piecewise-cuda-graph si la version de SGLang lo expone",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x Spark, SGLang; cita issues sgl #19799 y vLLM #37754",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Tres trampas de depuracion en SGLang multinodo con cifra medida de una sola mejora (8.2 a 9.8 tok/s); la tecnica de preferir NCCL_DEBUG a la depuracion estricta de PyTorch es util para rastrear, pero el hilo es de cluster, no de una sola maquina. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

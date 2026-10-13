@@ -1,0 +1,38 @@
+{
+ "id": 366442,
+ "titulo": "[Guide] Uncensored Gemma-4-26B at 45 tok/s on DGX Spark — Actually Feels Great to Use!",
+ "leido": true,
+ "posts_leidos": 10,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reducir la reserva de memoria de vLLM conservando el contexto completo; el autor reporta unos 47 GB de GPU frente a unos 100 GB con los valores de la tarjeta del modelo",
+   "como": "--gpu-memory-utilization 0.60 --max-model-len 262000 (la tarjeta del modelo usa 0.85 y 65536)",
+   "fuente_post": 6,
+   "repositorio": "https://github.com/ZengboJamesWang/dgx-spark-vllm-gemma4-26b-uncensored",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el autor; otro usuario (post 4) reporta 48.78 t/s con la receta de eugr y 0.3 con 132K de contexto",
+   "riesgo": "Un usuario dice que no arranca como esta configurado (post 2) y otro obtuvo el error 'Unable to locate package nvidia-cuda-runtime-cu12' con la imagen vllm-openai cu130-nightly (post 5); los numeros son del autor",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un usuario reporta mas de 600 tok/s agregados con c=128 durante mas de 15 horas en extraccion de documentos, y que NVFP4 corre via Marlin",
+   "como": "no indicado",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario jwarner",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Guia de un modelo MoE con un unico dato reutilizable: bajar --gpu-memory-utilization a 0.60 reduce la memoria usada segun el autor; la mayor parte es promocion del modelo y comparaciones de velocidad cuestionadas por otros usuarios. No responde NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

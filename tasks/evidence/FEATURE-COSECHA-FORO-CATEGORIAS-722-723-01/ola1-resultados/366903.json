@@ -1,0 +1,57 @@
+{
+ "id": 366903,
+ "titulo": "Introducing Tool Eval Bench CLI",
+ "leido": true,
+ "posts_leidos": 215,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "CLI de evaluacion de calidad de llamadas a herramientas (63 a 80+ escenarios offline con herramientas simuladas) contra cualquier endpoint OpenAI-compatible; para rendimiento delega en llama-benchy",
+   "como": "uv tool install git+https://github.com/SeraphimSerapis/tool-eval-bench.git ; tool-eval-bench --base-url http://0.0.0.0:8080 --short ; --perf ; --seed 42 --trials 3",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/SeraphimSerapis/tool-eval-bench",
+   "licencia": "no indicada",
+   "probado_en": "Spark con vLLM y modelos Qwen3.6 (usuarios del hilo); no es una medicion de hardware",
+   "riesgo": "Los puntajes cambian entre versiones de la herramienta (usuario 0rand, post 212: 90 a 85 a 90-91); un usuario reporto que el pico de contexto puede agotar el tiempo de espera (post 113)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Prueba de presion de contexto: llena un porcentaje de la ventana de contexto antes de cada escenario y busca el punto donde el modelo deja de llamar herramientas",
+   "como": "tool-eval-bench --seed 42 --context-pressure 0.75 ; --context-pressure-sweep 0.9-1.0 --sweep-steps 10 ; --context-size 262144",
+   "fuente_post": 16,
+   "repositorio": "https://github.com/SeraphimSerapis/tool-eval-bench",
+   "licencia": "no indicada",
+   "probado_en": "usuario pontostroy corrio 0.75 con 262144 y lo describe como un reto real para el Spark (post 49, ~185K tokens)",
+   "riesgo": "Segun el autor (post 113) el modo de una sola corrida no escalaba el timeout (60 s) para rellenos grandes",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Panel en vivo de decodificacion especulativa leyendo metricas Prometheus de vLLM (aceptacion, cache de prefijo)",
+   "como": "--spec-bench ; --spec-live",
+   "fuente_post": 9,
+   "repositorio": "https://github.com/SeraphimSerapis/tool-eval-bench",
+   "licencia": "no indicada",
+   "probado_en": "vLLM en Spark",
+   "riesgo": "El parser de metricas fallo con notacion cientifica de contadores grandes (post 54, corregido); con llama.cpp puede no leer (post 63)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Regresion reportada por varios usuarios: en imagenes vLLM 0.20 el cache de prefijo degrada la calidad de llamadas a herramientas; el unico arreglo citado es desactivarlo (con speculative decoding se ve peor)",
+   "como": "quitar --enable-prefix-caching (o bajar a vLLM 0.19.2)",
+   "fuente_post": 79,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios arctic.gus (post 76: Qwen3.6 27B BF16 de 93 a 44 puntos y recuperado, post 80), twaggs88 y bernisse (post 84, 87), imagen eugr de vLLM 0.20",
+   "riesgo": "Causa raiz no identificada ('I haven't found the root cause yet', post 79)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de 215 posts sobre un benchmark de calidad de llamadas a herramientas con versiones y quejas de usuarios; una busqueda por temperatura, reinicio, OOM, swap y nvidia-smi no devolvio ningun mecanismo de hardware o memoria (solo gpu_memory_utilization de configuraciones de vLLM). El post 14 aclara que los numeros de prefill de la herramienta eran imprecisos hasta que adopto llama-benchy; no hay respuesta de NVIDIA staff relevante.",
+ "lectura": "parcial",
+ "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+}

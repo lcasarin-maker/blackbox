@@ -1,0 +1,38 @@
+{
+ "id": 373503,
+ "titulo": "Multiple models on vllm and multiple nodes",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Repartir la memoria de GPU entre dos instancias vLLM con tp=2 en dos Spark mediante gpu-memory-utilization parciales y un MASTER_PORT distinto por instancia",
+   "como": "qwen3.6 27b con ray (tp=2) y GPU memory utilization 0.25; qwen3 coder next con ray (tp=2) y GPU memory utilization 0.35; clonar spark-vllm-docker dos veces y cambiar MASTER_PORT en el .env de la segunda",
+   "fuente_post": 3,
+   "repositorio": "spark-vllm-docker (sin url en el texto)",
+   "licencia": "no indicada",
+   "probado_en": "par de Spark segun C_G; las dos instancias usan 80-90 GB de RAM por equipo",
+   "riesgo": "80-90 GB de RAM por equipo con dos modelos deja poco margen",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Alternativa sin Ray: --no-ray con --master-port distinto por modelo, detras de llama-swap; con run-recipe.py falla el segundo modelo, con launch-cluster.sh funciona",
+   "como": "./run-recipe.py qwen3-coder-next-nvfp4 --no-ray --master-port 29501 (funciona el primero); usar launch-cluster.sh para el segundo",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "par de Spark segun bugsareyummy",
+   "riesgo": "Posible desajuste de versiones de scripts por cherry-pick (post 6)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios sobre servir dos modelos en dos Spark; aporta fracciones de gpu-memory-utilization que suman 0.60 como patron de reparto, sin mediciones de estabilidad. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

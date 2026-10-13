@@ -1,0 +1,48 @@
+{
+ "id": 367681,
+ "titulo": "Looking for testers: open source live dashboard for GPU + vLLM inference metrics",
+ "leido": true,
+ "posts_leidos": 11,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Dashboard en vivo que combina telemetria NVML (utilizacion, VRAM, potencia, temperaturas, relojes) con el endpoint /metrics de vLLM (tokens/s, TTFT, ITL, cola, KV cache, aciertos de prefix cache); version 0.11.0 agrega metricas de decodificacion especulativa y despliegue por Docker",
+   "como": "no indicado (puerto 3000 segun post 6; requiere Nvidia Container Toolkit segun whpthomas, post 2; se compila con Rust)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/niklasfrick/spark-dashboard",
+   "licencia": "no indicada",
+   "probado_en": "un DGX Spark segun el autor niklas.frick; el autor pide validar el reporte de memoria unificada en GB10",
+   "riesgo": "El autor lo llama herramienta de exhibicion, no de metricas de produccion",
+   "verificable_aqui": "curl -s http://localhost:8000/metrics | head (si hay vLLM en ese puerto); nvidia-smi -q -d TEMPERATURE,POWER,CLOCK"
+  },
+  {
+   "que": "Objetivos SLO sugeridos para Spark con modelo MoE de 30B (el autor los da como referencia, no como medicion): ITL y TPOT <= 100 ms, TTFT <= 1500 ms (corto) o <= 4000 ms (contexto largo), E2E <= 20 s; E2E = TTFT + (ITL x tokens de salida)",
+   "como": "ITL <= 100 ms, TPOT <= 100 ms, TTFT <= 1500 ms / 4000 ms, E2E <= 20 s",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Valores de criterio del autor, no de NVIDIA",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Monitor de cluster sparkrun: segun davwu muestra PP/TG, temperatura y potencia instantaneas por Spark; Digital_David describe otro tablero Rust que consulta solo al refrescar para no consumir recursos",
+   "como": "no indicado",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "cluster de Sparks segun davwu",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Hay una herramienta concreta con repositorio que lee NVML y /metrics de vLLM (monitorear y medir), pero sin licencia indicada ni comando de arranque en el texto, y sin respuesta de NVIDIA. El post 6 aporta valores SLO de referencia derivados de que la decodificacion en GB10 esta limitada por ancho de banda de memoria.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

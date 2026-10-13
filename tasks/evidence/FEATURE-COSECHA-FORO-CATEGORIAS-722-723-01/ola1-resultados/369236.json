@@ -1,0 +1,59 @@
+{
+ "id": 369236,
+ "titulo": "Spark-inference: Run 3 specialized models simultaneously on your DGX Spark — cybersecurity + coding + orchestration, 30-min setup",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reducir el consumo de memoria de vLLM en GB10: sin ajuste un modelo de 19 GB ocupa 117 GB (89 GB de pre-asignacion de KV cache)",
+   "como": "--gpu-memory-utilization 0.25 (baja a unos 32 GB segun el autor)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/VictorGil-Ops/spark-inference",
+   "licencia": "no indicada",
+   "probado_en": "GB10 SM12.1, CUDA 13.2, vLLM main (build de eugr), mayo 2026, segun el usuario victorgilasp; credito al post de memoria de sggin1",
+   "riesgo": "Con 0.25 el KV cache queda limitado; el texto no mide el efecto en contexto o concurrencia",
+   "verificable_aqui": "nvidia-smi --query-gpu=memory.used --format=csv"
+  },
+  {
+   "que": "Los graficos CUDA ocupan unos 130 GB o mas por modelo, inviable con 3 modelos; modo eager para multimodelo",
+   "como": "--enforce-eager (multimodelo); --compilation-config para uno o dos modelos; sintaxis alternativa --compilation-config.cudagraph_capture_sizes",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/VictorGil-Ops/spark-inference",
+   "licencia": "no indicada",
+   "probado_en": "mismo entorno que arriba",
+   "riesgo": "Eager es mas lento: la tabla del post 1 da Qwen3.6-35B-A3B-FP8 33.5 tok/s eager contra 53.7 con graficos CUDA",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables y banderas de backend para evitar fallos en SM12.1",
+   "como": "VLLM_ATTENTION_BACKEND=FLASHINFER ; VLLM_NVFP4_GEMM_BACKEND=marlin ; VLLM_FLASHINFER_MOE_BACKEND=latency ; --stop-token-ids 11 (Nemotron Omni de AEON-7 emite tokens tras EOS)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/VictorGil-Ops/spark-inference",
+   "licencia": "no indicada",
+   "probado_en": "mismo entorno; el usuario norman.2 (post 3) dice que Cutlass NVFP4 le funciona sin problemas en su Spark, contradiciendo el aviso de fallo",
+   "riesgo": "Afirmacion de crash de CUTLASS FP4 discutida por otro usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Vigilante de recuperacion tras reinicio como servicio systemd, 5 minutos despues del arranque",
+   "como": "bash scripts/start-all.sh --install-watchdog ; --uninstall-watchdog ; --auto",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/VictorGil-Ops/spark-inference",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 segun el autor",
+   "riesgo": "Script de tercero que crea un servicio systemd",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El post 1 da banderas y variables de entorno exactas de vLLM para GB10 con cifras de memoria (117 GB contra unos 32 GB con --gpu-memory-utilization 0.25) y de rendimiento eager contra graficos CUDA; son afirmaciones de un usuario, y otro las contradice en un punto (CUTLASS FP4). Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

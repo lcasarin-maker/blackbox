@@ -1,0 +1,48 @@
+{
+ "id": 378436,
+ "titulo": "New single spark king? Macaron-V1-Tall",
+ "leido": true,
+ "posts_leidos": 12,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta vLLM para Macaron-V1-Tall (50B) en un Spark con mod drop-caches y reserva de memoria 0.7; 25-27 tok/s sin MTP",
+   "como": "gpu_memory_utilization: 0.7; max_model_len: 229376; max_num_batched_tokens: 16384; max_num_seqs: 128; kv_cache_dtype: fp8; mods/drop-caches; con MTP: --speculative-config '{\"method\": \"mtp\", \"num_speculative_tokens\": 3}'",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "un Spark, usuario TheAwakenOne",
+   "riesgo": "El usuario emX0r reporta 'un freeze por falta de memoria' al intentar servirlo completo con LoRAs en una sola caja (post 13); jomark reporta 'mucha presion de memoria' (post 9)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de MTP via metricas Prometheus de vLLM: aceptacion 71.5% de tokens de borrador, por posicion 84.7%, 70.6%, 59.2%; la mejora real de throughput fue 2.0% (41.93 a 42.79 tok/s)",
+   "como": "contadores vllm:spec_decode_num_drafts_total, vllm:spec_decode_num_draft_tokens_total, vllm:spec_decode_num_accepted_tokens_total, vllm:spec_decode_num_accepted_tokens_per_pos_total",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un Spark; el analisis lo genero el propio modelo y el autor lo reproduce; se advierte que el primer intento del modelo se equivoco",
+   "riesgo": "Cifras generadas por un LLM que se corrigio a si mismo; no hay reproduccion independiente",
+   "verificable_aqui": "curl -s localhost:8000/metrics | grep spec_decode"
+  },
+  {
+   "que": "Error de benchmark: servir la raiz del checkpoint no aplica ninguna LoRA, de modo que se mide solo el Qwen base; con el router completo el resultado cayo de 90 a 82 por enrutar 91 de 105 solicitudes a L0",
+   "como": "no indicado (seleccion de modelo/alias en la consulta a /v1/models)",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario jetspark en su servidor; sin version declarada",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Recetas y mediciones de un modelo, con la metrica Prometheus de speculative decoding como unico elemento de medicion reutilizable y advertencias de OOM al servirlo en una sola maquina. Sin respuesta de staff NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

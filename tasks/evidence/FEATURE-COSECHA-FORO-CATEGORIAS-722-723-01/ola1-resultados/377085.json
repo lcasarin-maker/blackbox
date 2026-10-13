@@ -1,0 +1,37 @@
+{
+ "id": 377085,
+ "titulo": "[Community project] A dependency-free monitoring dashboard built for the DGX Spark",
+ "leido": true,
+ "posts_leidos": 7,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Dashboard de monitoreo ligero (FastAPI) para GPU, CPU Grace con frecuencia/temperatura, RAM/swap, red, disco y contenedores; una sola orden de instalacion",
+   "como": "curl -fsSL https://raw.githubusercontent.com/singhangadin/DGX-Spark-Dashboard/main/install.sh | sh ; abrir http://localhost:8787",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/singhangadin/DGX-Spark-Dashboard",
+   "licencia": "Apache-2.0",
+   "probado_en": "DGX Spark GB10 (autor): 190 MB de imagen, ~42 MiB de RAM, ~0.2% de un nucleo en reposo",
+   "riesgo": "Ejecutar un script remoto con curl | sh; sin autenticacion, solo red de confianza; no cubre los puertos CX-7 ni multinodo (post 6)",
+   "verificable_aqui": "docker ps; ss -ltn | grep 8787"
+  },
+  {
+   "que": "Advertencia de usuario: leer nvidia-smi continuamente en una herramienta de monitoreo perjudica el rendimiento; el autor migro a NVML en la version nueva",
+   "como": "usar NVML en lugar de nvidia-smi",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "No medido",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Herramienta de monitoreo con licencia Apache 2.0 y metricas de temperatura de la CPU Grace y memoria, con medicion de huella del propio autor. No registra historial y la instalacion es por curl | sh.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

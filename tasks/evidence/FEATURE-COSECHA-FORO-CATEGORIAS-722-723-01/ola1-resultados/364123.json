@@ -1,0 +1,59 @@
+{
+ "id": 364123,
+ "titulo": "Small monitor program for DGX Spark",
+ "leido": true,
+ "posts_leidos": 19,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "nv-monitor: monitor de terminal de unos 74 KB para Grace + GB10 que usa /proc, calcula la memoria 'segun las cuentas de NVIDIA' mostrando cache frente a uso real, linea de swap si esta activo, registro a CSV y endpoint /metrics para Prometheus (PR de serapis, fusionado) mas un binario demo-load de carga sinusoidal",
+   "como": "no indicado (el post solo remite al repositorio; la instalacion no aparece en el texto)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/wentbackward/nv-monitor (URL inferida del titulo del enlace)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el autor (kernel especifico de Spark)",
+   "riesgo": null,
+   "verificable_aqui": "free -h; cat /proc/meminfo | head -5"
+  },
+  {
+   "que": "Afirmacion de usuario: el top empaquetado en Ubuntu 24.04 reporta mal la memoria en la Spark",
+   "como": "no indicado",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, usuario trystan1",
+   "riesgo": "Lectura de memoria incorrecta con herramientas estandar.",
+   "verificable_aqui": "top -bn1 | head -5; free -m"
+  },
+  {
+   "que": "Identificacion de nucleos en /proc/cpuinfo: parte 0xd85 = Cortex-X925 (nucleos 5-9, 15-19, 3900 MHz) y 0xd87 = Cortex-X725 (nucleos 0-4, 10-14, 2808 MHz); los nucleos 0-9 y 10-19 son dos clusters que comparten cache",
+   "como": "/proc/cpuinfo (CPU part 0xd85 / 0xd87)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun los usuarios",
+   "riesgo": null,
+   "verificable_aqui": "grep -E 'CPU part' /proc/cpuinfo | sort | uniq -c"
+  },
+  {
+   "que": "Afirmacion de wentbackward: el governor del kernel especifico de Spark bloquea permanentemente todos los nucleos en frecuencia maxima",
+   "como": "no indicado",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel especifico de Spark segun el autor",
+   "riesgo": null,
+   "verificable_aqui": "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor; cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
+  }
+ ],
+ "omision_nvidia": "Segun un usuario, el top de Ubuntu 24.04 calcula mal la memoria en la Spark; sin respuesta de NVIDIA (aniculescu solo movio el tema).",
+ "utilidad_atom": "media",
+ "razon": "Herramienta de monitoreo de usuarios que ya exporta metricas a Prometheus y contabiliza memoria 'como NVIDIA', util como referencia pero el texto no da comandos de instalacion ni licencia. Las identificaciones de nucleos y la afirmacion del governor son verificables en lectura.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

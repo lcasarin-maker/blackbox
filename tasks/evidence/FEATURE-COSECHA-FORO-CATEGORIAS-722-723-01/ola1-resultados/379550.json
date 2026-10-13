@@ -1,0 +1,27 @@
+{
+ "id": 379550,
+ "titulo": "Benchmarking Qwen3.6-35B-A3B with dspark speculative decoding",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "ruido",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar trabajos de compilacion para reducir uso de RAM en memoria unificada al arrancar vLLM",
+   "como": "MAX_JOBS=2 vllm serve Qwen/Qwen3.6-35B-A3B --tensor-parallel-size 1 --speculative-config '{\"model\": \"RedHatAI/Qwen3.6-35B-A3B-speculator.dspark\", \"num_speculative_tokens\": 8, \"method\": \"dspark\"}'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "el autor dice DGX Spark pero la tabla es de 2x RTX PRO 6000 Blackwell Max-Q",
+   "riesgo": "La tabla de resultados no tiene unidades y en todos los escenarios la decodificacion especulativa quedo por debajo del valor vanilla; los usuarios pidieron aclaraciones.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "ninguna",
+ "razon": "Benchmark de usuario con tabla sin unidades en otra GPU y sin respuesta de NVIDIA. Lo unico reutilizable es la idea de MAX_JOBS=2 por el uso de RAM, sin medicion.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

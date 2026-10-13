@@ -1,0 +1,70 @@
+{
+ "id": 367851,
+ "titulo": "GB10 Hardware Baseline — First Direct Measurements and Findings",
+ "leido": true,
+ "posts_leidos": 16,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "monitorear",
+  "rastrear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Sondas PTX (uma_probe, uma_atomic, uma_bw) que miden latencia, coste de coherencia y ancho de banda de LPDDR5X desde dentro del kernel con %clock64, ld.global.cv, atom.global.gpu/sys",
+   "como": "/usr/local/cuda-13.0/bin/nvcc -O2 -std=c++17 probe_launcher.cu -o uma_probe -lcudart -lcuda -lpthread ; /usr/local/cuda-13.0/bin/nvcc -O2 -std=c++17 uma_atomic_test.cu -o uma_atomic -lcudart -lcuda -lpthread ; /usr/local/cuda-13.0/bin/nvcc -O2 -std=c++17 uma_bandwidth_test.cu -o uma_bw -lcudart -lcuda -lpthread",
+   "fuente_post": 9,
+   "repositorio": "https://github.com/parallelArchitect/nvidia-uma-fault-probe",
+   "licencia": "no indicada",
+   "probado_en": "GB10 SM 12.1, driver 580.142, CUDA 13.0 (valido); CUDA 13.1 y 13.2 dan resultados invalidos segun el autor",
+   "riesgo": "Con CUDA 13.1/13.2 el reloj %clock64 da 0 o desbordamientos (4587571 GB/s); hay que compilar con nvcc 13.0. Dos usuarios, no verificado por NVIDIA",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version,name --format=csv,noheader; ls /usr/local/ | grep cuda"
+  },
+  {
+   "que": "Valores de referencia medidos: lectura GPU 161.31 GB/s en reposo con vLLM cargado; 90.49 GB/s bajo inferencia (-44%); escritura GPU 116.15 GB/s; lectura CPU 7.62 GB/s; latencia de acceso 16.5 ns; coste de atomico sys frente a gpu 0.0 ns",
+   "como": "salida de ./uma_bw (idle: GPU read 161.31 GB/s; bajo carga: 90.49 GB/s)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/parallelArchitect/nvidia-uma-fault-probe",
+   "licencia": "no indicada",
+   "probado_en": "GB10, driver 580.142, CUDA 13.0; segundo equipo pontostroy 165.68 GB/s (post 5); azampatti cita 166 GB/s frente a ~270 GB/s teorico (post 12)",
+   "riesgo": "Ancho de banda efectivo ~166 GB/s, menos que el teorico; el autor lo asocia a la variacion de tok/s",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Monitor de GPU operativo con presion PSI, deteccion de reloj y capa de red ConnectX-7, con registro persistente (termica, dominios de potencia, PSI, relojes) para sobrevivir cortes sin BMC",
+   "como": "no indicado en el hilo (ver README del repositorio)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/parallelArchitect/sparkview",
+   "licencia": "no indicada",
+   "probado_en": "GB10 segun el autor",
+   "riesgo": null,
+   "verificable_aqui": "cat /proc/pressure/memory"
+  },
+  {
+   "que": "Mapa de CUPTI Activity en GB10: funcionan KERNEL, MEMCPY, RUNTIME, DRIVER, OVERHEAD, SYNCHRONIZATION, MEMORY2; fallan UNIFIED_MEMORY_COUNTER (CUPTI_ERROR_NOT_READY), CONCURRENT_KERNEL (CUPTI_ERROR_NOT_COMPATIBLE), INSTRUCTION_EXECUTION (CUPTI_ERROR_LEGACY_PROFILER_NOT_SUPPORTED); NVLINK habilita pero emite 0 registros",
+   "como": "cupti_collector que habilita solo los tipos soportados",
+   "fuente_post": 10,
+   "repositorio": "https://github.com/parallelArchitect/cupti-activity-collector",
+   "licencia": "no indicada",
+   "probado_en": "dos unidades GB10, CUDA 13.0, driver 580.142",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Barrido sostenido de GEMM CUTLASS con telemetria de temperatura, potencia y reloj SM (comparacion Spark y GX10)",
+   "como": "no indicado (--full para 96 configuraciones)",
+   "fuente_post": 15,
+   "repositorio": "https://github.com/parallelArchitect/gb10-kernel-probe",
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10 y DGX Spark; potencia media ~68 W, pico 81.4 W, estabilizacion 62-65 C, sin throttling observado",
+   "riesgo": "Carga sostenida de GEMM calienta el equipo (+20 C en el barrido completo del Spark)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun el autor (usuario): Nsight Systems no soporta traza de memoria unificada en GB10; CUPTI UNIFIED_MEMORY_COUNTER falla con CUPTI_ERROR_NOT_READY; NVML no expone el reloj de memoria (nvidia-smi devuelve N/A); no hay BMC ni captura de fallos fuera de banda. Sin respuesta de NVIDIA en el hilo.",
+ "utilidad_atom": "alta",
+ "razon": "Aporta comandos de compilacion exactos, tres repositorios y cifras de ancho de banda medidas en GB10, mas el limite verificable de compilar con CUDA 13.0, y una lista de huecos de observabilidad de la plataforma. Las licencias no constan y todo es de un grupo de usuarios sin revision de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

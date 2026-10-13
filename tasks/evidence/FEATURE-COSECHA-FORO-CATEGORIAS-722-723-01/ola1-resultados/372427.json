@@ -1,0 +1,37 @@
+{
+ "id": 372427,
+ "titulo": "Mistral-Small-4-119B-2603-NVFP4",
+ "leido": true,
+ "posts_leidos": 5,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Falta de memoria en la etapa 'Parse safetensors files' al cargar un modelo NVFP4 de 119B en dos GB10 con vLLM; arreglo del autor: carga sin red y formato de carga mistral",
+   "como": "env: HF_HUB_OFFLINE: \"1\" ; TRANSFORMERS_OFFLINE: \"1\" ; --load-format mistral",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "par de GB10 con spark-vllm-docker segun el usuario bugsareyummy; eligio FLASHINFER_CUTLASS automaticamente",
+   "riesgo": "El propio usuario dice que la mayoria no lo necesita; la causa del OOM no se explica",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Sugerencia de otro usuario para el OOM de carga: subir gpu_memory_utilization de 0.8 a 0.9 y tener swap activo",
+   "como": "gpu_memory_utilization: 0.9 ; swap habilitado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Contradice la practica de otro hilo que desactiva el swap en memoria unificada; el autor no confirma que funcionara (resolvio con otra medida)",
+   "verificable_aqui": "swapon --show; free -g"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario reporta OOM al parsear safetensors y lo resuelve con variables offline y --load-format mistral; otros usuarios dicen que en un nodo funciona con 0.7 de utilizacion de memoria (post 5). No hay respuesta de NVIDIA ni explicacion causal.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

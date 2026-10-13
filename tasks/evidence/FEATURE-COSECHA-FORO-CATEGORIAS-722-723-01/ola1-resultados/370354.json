@@ -1,0 +1,37 @@
+{
+ "id": 370354,
+ "titulo": "Multi-node DGX Spark + SGLang win: Gemma-4-31B + MTP — +80 % @ n=8 (153 tok/s) on 4× GB10",
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "utilidad_atom": "baja",
+ "mecanismos": [
+  {
+   "que": "Workaround de un fallo de FlashInfer en prefill de Gemma-4 (head_dim=256, RoPE=64) con SGLang: usar el backend de atencion triton",
+   "como": "attention_backend: triton",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/vroomfondel/dgxarley",
+   "licencia": "no indicada",
+   "probado_en": "4x GB10 SM121, driver 580.142, kernel 6.19.13-custom, SGLang v0.5.11 + PR #24436, CUDA 13.2 host",
+   "riesgo": "Solo aplica a SGLang con Gemma-4; el error FlashInfer 'Invalid configuration' aparece con fi-attn",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Perfil de lanzamiento SGLang con fraccion de memoria estatica 0.60, KV cache fp8 y speculative MTP (num_draft_tokens = num_steps + 1 manual)",
+   "como": "mem_fraction_static: 0.60 / kv_cache_dtype: fp8_e4m3 / speculative_num_steps: 4 / speculative_num_draft_tokens: 5 / cuda_graph_max_bs: 8",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "4 nodos GB10, BF16, TP=4 EP=1, NCCL sobre RoCE",
+   "riesgo": "Medido por el autor en cluster de 4 nodos, no en un solo Spark; el drafter es Apache-2.0 segun el post, el resto de la licencia no consta",
+   "verificable_aqui": null
+  }
+ ],
+ "razon": "Un usuario documenta tuning de SGLang con MTP en 4 GB10 (153 tok/s a n=8, +80 por ciento sobre su base) y un workaround de FlashInfer. Es optimizacion de throughput en cluster, sin relacion con monitoreo ni prevencion de colapsos en un solo nodo; sin respuesta de NVIDIA.",
+ "leido": true,
+ "omision_nvidia": null,
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

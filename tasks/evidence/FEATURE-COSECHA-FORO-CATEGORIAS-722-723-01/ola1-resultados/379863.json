@@ -1,0 +1,69 @@
+{
+ "id": 379863,
+ "titulo": "C1 1058pp/s, 52 tg/s on 1x dgx spark on Deepseek V4 flash 0731 full 256 experts",
+ "leido": true,
+ "posts_leidos": 95,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta Docker de un solo Spark para DeepSeek V4 Flash con EXL3 K2 (checkpoint ~78.2 GB) y cache KV NVFP4 de 262K",
+   "como": "no indicado en el post 1 (solo enlace al repositorio tpurtell/deepseek-v4-flash-0731-exl3-k2-spark); parametros de lanzamiento citados en el hilo: --max-model-len 1000000 --gpu-memory-utilization 0.85 --kv-cache-dtype nvfp4_ds_mla, max_num_seqs 4, max_num_batched_tokens 4096",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/tpurtell/deepseek-v4-flash-0731-exl3-k2-spark",
+   "licencia": "no indicada (el cuantizado citado por un usuario se declara MIT)",
+   "probado_en": "un DGX Spark GB10, driver 580.173.02 en las capturas de usuarios",
+   "riesgo": "Un usuario mide 120Gi usados de 121Gi y solo 1.4Gi disponibles tras dos peticiones (post 26) y otro reporta un OOM (post 78); la velocidad de 52 tok/s es de pruebas de generacion de codigo y la medicion pareada dio 24.7 tok/s.",
+   "verificable_aqui": "free -h"
+  },
+  {
+   "que": "Evitar caida del compilador de kernels fijando variables explicitamente en .env",
+   "como": "CUTE_DSL_ARCH=sm_121a, GPU_MEMORY_UTILIZATION y MAX_MODEL_LEN definidos en .env (variables vacias ${VAR:-} provocan KeyError: '' en la compilacion MLA)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un Spark (timhbl; confirmado por scope_cr33p, post 4)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "No repetir banderas del entrypoint en EXTRA_VLLM_ARGS; vLLM toma la ultima aparicion y registra 'Found duplicate keys'",
+   "como": "grep 'duplicate keys' en el log de arranque",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un Spark",
+   "riesgo": "Sobrescribir --tool-call-parser deja tool_calls vacio.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Script de rendimiento que promedia el marcador 'Avg generation throughput' de los logs de vLLM",
+   "como": "no indicado (resultado citado: promedio 42.751 tokens/s, min 15.000, max 79.400)",
+   "fuente_post": 77,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un Spark",
+   "riesgo": null,
+   "verificable_aqui": "docker logs <contenedor_vllm> 2>&1 | grep 'Avg generation throughput' | tail"
+  },
+  {
+   "que": "Captura de nvidia-smi bajo carga del modelo: 59C, 46W, 96 % de uso de GPU; la columna de memoria de GPU aparece 'Not Supported'",
+   "como": "nvidia-smi",
+   "fuente_post": 26,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.173.02",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw,utilization.gpu --format=csv"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Aporta datos de memoria real al limite (121Gi total con 1.4Gi disponibles a 0.85 de utilizacion), un OOM reportado y varias trampas de configuracion con su arreglo exacto, pero el hilo es principalmente rendimiento y calidad del modelo. Sin respuesta de NVIDIA; un moderador solo pide centrarse en Spark.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

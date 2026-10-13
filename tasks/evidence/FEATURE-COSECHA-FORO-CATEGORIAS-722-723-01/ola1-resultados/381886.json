@@ -1,0 +1,38 @@
+{
+ "id": 381886,
+ "titulo": "Open source: MiniMax H3 SP2 at 1.691x on 2x GB10 + Qwen3.8 262K coexistence",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Perfil de coexistencia Qwen3.8-27B (TP2, 262,144 de contexto) con un modelo de video sobre dos GB10, con recolectores de memoria en los dos nodos y un gobernador de admision de memoria unificada que falla cerrado (fail-closed UMA admission governor)",
+   "como": "no indicado en el post (esta en el repositorio); el autor lista como peligros el apremio de mapeo de memoria unificada, la memoria del host fijada (pinned), los picos de residencia/decodificacion paralela del VAE y el solapamiento de una decodificacion pesada con el denoise; el perfil usa 'no pinned CPU memory' y 'serial fully streamed VAE decode'",
+   "fuente_post": 1,
+   "repositorio": "GitHub hellojiaru/dual-gb10-qwen38-h3-sp2 (nombre tal como aparece en el post)",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10 segun el autor; una prueba de capacidad >241K tokens y una de solapamiento de ~80K pasaron, pero el autor llama el resultado 'candidato operativo', no una calificacion de estabilidad 24x7",
+   "riesgo": "El autor dice que el solapamiento sostenido puede retardar materialmente la tarea de video; soak largo y recuperacion en arranque en frio siguen abiertos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Correccion de SageAttention3 para GB10: el kernel Blackwell upstream usa una malla persistente fija de 170 CTA y GB10 tiene 48 SM; el paquete incluye lanzamiento con el numero de SM en ejecucion",
+   "como": "no indicado; remite a thu-ml/SageAttention PR #379 e Issue #321",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/thu-ml/SageAttention (PR #379, Issue #321, segun el post)",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10; SA3 da +14.5% sobre FA4 en la ruta de video",
+   "riesgo": "El autor dice que SA3 es aproximada y deja FA4 como reversion",
+   "verificable_aqui": "nvidia-smi --query-gpu=name --format=csv; python3 -c \"import torch; print(torch.cuda.get_device_properties(0).multi_processor_count)\""
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El post nombra los factores de riesgo de memoria unificada que observo (memoria fijada, residencia del VAE, solapamiento de cargas) y un gobernador de admision, pero el mecanismo esta en un repositorio sin licencia declarada y sin detalle en el hilo. NVIDIA no participa y no hay respuestas.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

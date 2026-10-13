@@ -1,0 +1,48 @@
+{
+ "id": 373675,
+ "titulo": "GLM-4.7-FP8 on 4× DGX Spark via SGLang: 2.5× speedup (8.2 → 25 tok/s) just by enabling RDMA",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Habilitar RDMA en un contenedor SGLang: pasar /dev/infiniband, IPC_LOCK, memlock ilimitado y las variables NCCL para IB",
+   "como": "-e NCCL_IB_HCA=rocep1s0f0 -e NCCL_IB_DISABLE=0 --device=/dev/infiniband --cap-add=IPC_LOCK --ulimit memlock=-1 (quitar NCCL_P2P_DISABLE=1)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10 sm_121a, ConnectX-7 RoCE, vLLM 0.22.1 venv, SGLang desde fuente de BTankut (declarado por el autor)",
+   "riesgo": "--cap-add=IPC_LOCK y memlock ilimitado amplian privilegios del contenedor",
+   "verificable_aqui": "ibv_devices; ls /dev/infiniband"
+  },
+  {
+   "que": "Comprobar que NCCL usa IB y no sockets leyendo el log con NCCL_DEBUG=INFO",
+   "como": "docker logs sglang-server 2>&1 | grep -c \"via NET/IB\"  (esperado >0) ; grep -c \"via NET/Socket\" (esperado 0)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": "ibv_devices"
+  },
+  {
+   "que": "Resultado medido: decodificacion de un flujo de 8.2 a 9.8 con CUDA graphs a 25.1 tok/s con RDMA",
+   "como": "no indicado (medicion)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Mecanismo concreto y verificable para clusteres multi-nodo, con comandos exactos. Sin relacion con memoria, termica o cortes en una sola maquina.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

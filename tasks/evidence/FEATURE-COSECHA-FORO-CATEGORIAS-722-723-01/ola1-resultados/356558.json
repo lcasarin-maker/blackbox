@@ -1,0 +1,37 @@
+{
+ "id": 356558,
+ "titulo": "[Share] Docker Image for vLLM Inference & Unsloth Training",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Imagen Docker preconfigurada con vLLM parcheado para Blackwell y Unsloth",
+   "como": "docker run --gpus all -it --rm -v ~/.cache/huggingface:/root/.cache/huggingface gogamza/unsloth-vllm-gb10:latest",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/haven-jeon/unsloth-vllm-gb10",
+   "licencia": "no indicada",
+   "probado_en": "Autor la usa en nodos Blackwell; base nvcr.io/nvidia/pytorch:25.09-py3, CUDA 13.0 (segun el post)",
+   "riesgo": "Imagen de terceros con vLLM parcheado desde fuente; los parches no se detallan en el post",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables de entorno de vLLM usadas por la imagen",
+   "como": "VLLM_USE_V1=1 ; VLLM_USE_FLASHINFER_MOE_FP4 ; CUDA Graph mode full_and_piecewise (valores de NCCL no indicados)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario comparte su imagen Docker (repositorio y Docker Hub) sin benchmarks ni detalle de los parches. Un moderador de NVIDIA solo mueve el tema (post 2).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

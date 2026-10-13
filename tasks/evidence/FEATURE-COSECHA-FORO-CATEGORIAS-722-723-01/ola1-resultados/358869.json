@@ -1,0 +1,81 @@
+{
+ "id": 358869,
+ "titulo": "NVML Support for DGX Spark Grace Blackwell Unified Memory - Community Solution",
+ "leido": true,
+ "posts_leidos": 8,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Shim NVML que reemplaza libnvidia-ml.so.1 usando CUDA Runtime API y /proc/meminfo, para que pynvml/herramientas funcionen en memoria unificada GB10",
+   "como": "git clone https://github.com/CINOAdam/nvml-unified-shim.git ; cd nvml-unified-shim ; make -f Makefile.python ; sudo make -f Makefile.python install",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/CINOAdam/nvml-unified-shim",
+   "licencia": "no indicada",
+   "probado_en": "GB10, CUDA 12.8/13.0, Ubuntu 24.04, MAX Engine 26.2.0 (declarado por el autor)",
+   "riesgo": "Reemplaza una libreria del sistema; el propio autor avisa de usarlo solo si se sabe lo que se hace; utilizacion de GPU devuelve 0%",
+   "verificable_aqui": "ls -l /usr/lib/aarch64-linux-gnu/libnvidia-ml.so.1; nvidia-smi"
+  },
+  {
+   "que": "Un usuario afirma que vLLM decide el KV cache con torch.cuda.mem_get_info() y en GB10 ve todo el pool compartido como libre, incluida cache de paginas evictable; --gpu-memory-utilization actua como puerta y no como tope",
+   "como": "workaround: --num-gpu-blocks-override <N>",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Cluster 4 nodos GB10, vLLM, Qwen3.5-397B TP=4 (declarado por el usuario adi-sonusflow)",
+   "riesgo": "Sobreasignar empuja Ray/API/SO a swap (37 tok/s a 1.8 tok/s en el peor caso, segun el usuario)",
+   "verificable_aqui": "free -h; swapon --show"
+  },
+  {
+   "que": "Afirmacion de usuario: los limites de memoria cgroup de Docker (--memory) no limitan las asignaciones CUDA de memoria unificada en Grace Blackwell",
+   "como": "--memory=105g sin efecto sobre CUDA (segun el usuario)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10, vLLM en Docker (declarado por el usuario)",
+   "riesgo": "Un limite de contenedor no protege al SO de una asignacion CUDA desbocada",
+   "verificable_aqui": "cat /sys/fs/cgroup/system.slice/docker-*.scope/memory.max (solo lectura, tras identificar el contenedor)"
+  },
+  {
+   "que": "Metodo de diagnostico de swap: vigilar la columna Swap de free -h por nodo durante inferencia, comparar nvidia-smi frente a free, usar la captura de CUDAGraph como prueba de estres; tras la captura forzar recuperacion de paginas",
+   "como": "free -h ; swapoff -a && swapon -a",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10 (declarado por el usuario)",
+   "riesgo": "swapoff -a requiere RAM libre suficiente para absorber el swap; medicion del usuario: 0 GiB swap 37 tok/s, 6.7 GiB 21 tok/s, 13 GiB 1.8 tok/s",
+   "verificable_aqui": "free -h; nvidia-smi"
+  },
+  {
+   "que": "CUDA Unified Memory Analyzer: mide onset de fallos, techo de residencia y presion de migracion; v8.3 anade deteccion GB10/SM 12.1 y --cupti-debug",
+   "como": "no indicado (instrucciones en el README, build ARM64)",
+   "fuente_post": 6,
+   "repositorio": "https://github.com/parallelArchitect/cuda-unified-memory-analyzer",
+   "licencia": "no indicada",
+   "probado_en": "Desarrollado en PCIe discreta; el autor declara no tener hardware GB10 y validacion pendiente (posts 6 y 8)",
+   "riesgo": "Herramienta sin validar en GB10",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Correccion de contabilidad del shim: usar MemAvailable + SwapFree en lugar de MemTotal para memory->total en la ruta UMA",
+   "como": "MemAvailable + SwapFree reemplaza MemTotal",
+   "fuente_post": 6,
+   "repositorio": "https://github.com/parallelArchitect/nvml-unified-shim",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "grep -E 'MemTotal|MemAvailable|SwapFree' /proc/meminfo"
+  }
+ ],
+ "omision_nvidia": "Segun un usuario, no existe parametro NVreg_, ajuste de nvidia-smi ni variable de entorno para fijar el reparto de memoria GPU/CPU en GB10, y cudaMemGetInfo mezcla libre fisico con disponible para CUDA. Es afirmacion de usuario; NVIDIA solo respondio moviendo el tema (post 2).",
+ "utilidad_atom": "alta",
+ "razon": "Aporta un shim NVML con repositorio y comandos, ademas de mediciones de usuario sobre swap, cgroups y vLLM en memoria unificada, directamente relevantes al colapso de memoria. Todo es de usuarios con hardware declarado; NVIDIA no respondio sobre el fondo y la licencia no se indica.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

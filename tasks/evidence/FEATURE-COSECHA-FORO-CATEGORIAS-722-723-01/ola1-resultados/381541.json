@@ -1,0 +1,69 @@
+{
+ "id": 381541,
+ "titulo": "GLM-5.3-Flash-NVFP4 on 2× DGX Spark — vLLM TP=2 -- docker compose",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reservar memoria KV fija para evitar el perfilado y mantener el pool por debajo del limite UMA de 121.69 GiB; sin eso aparece NVRM NV_ERR_NO_MEMORY ~90 s despues del calentamiento",
+   "como": "--kv-cache-memory-bytes (9 GiB fijados, 10 GiB desborda con el front-end multimodal) ; batched-tokens 4096 (8192 hace OOM del driver) ; --language-model-only ; --skip-mm-profiling ; --enforce-eager",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/amasu/glm53-flash-cluster",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark GB10 TP=2, RoCE, vLLM, GLM-5.3-Flash-NVFP4 (declarado por Ama5u)",
+   "riesgo": "El front-end multimodal anade ~15.7 GiB; 8192 batched-tokens da OOM del driver",
+   "verificable_aqui": "grep -E 'MemTotal|MemAvailable' /proc/meminfo"
+  },
+  {
+   "que": "earlyoom del nodo cabeza mato 4 veces al worker de vLLM rank 0 en un dia (falso positivo); excluirlo",
+   "como": "anadir vllm|VLLM|EngineCore|APIServer|Worker_TP a la lista --avoid de earlyoom (default -m 2)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 (declarado)",
+   "riesgo": "Excluir procesos del OOM-killer reduce la proteccion del resto del sistema",
+   "verificable_aqui": "pgrep -a earlyoom; systemctl status earlyoom"
+  },
+  {
+   "que": "Ritual de lanzamiento: soltar cache de paginas antes de arrancar, MTU 9000, lanzar primero worker rank 1 y luego el head; reiniciar ambos rangos en cada relanzamiento",
+   "como": "drop_caches antes de lanzar (comando no indicado) ; MTU 9000",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 (declarado)",
+   "riesgo": "Comando exacto no dado",
+   "verificable_aqui": "cat /proc/sys/vm/drop_caches"
+  },
+  {
+   "que": "Advertencia: 4 lineas de NVRM de prueba de asignacion al arrancar son esperadas y no son el OOM real, que mata VllmWorker-0 ~90 s despues de 'GPU KV cache size'",
+   "como": "journalctl -k | grep NVRM",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k | grep NVRM"
+  },
+  {
+   "que": "Cola de verificacion: la imagen de compose estaba fija en glm53:v8 y un cambio en .env no surtia efecto; verificar la imagen del contenedor en ejecucion tras cada despliegue",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Cambio de configuracion silenciosamente ignorado",
+   "verificable_aqui": "docker ps --format '{{.Names}} {{.Image}}'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Describe como mantener un modelo grande dentro del limite UMA de 121.69 GiB con KV fijo, y como earlyoom mato al worker de vLLM; incluye comandos y flags exactos y un repositorio con la cadena de parches. Sin licencia indicada y es afirmacion de usuario en un cluster de 2 nodos.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

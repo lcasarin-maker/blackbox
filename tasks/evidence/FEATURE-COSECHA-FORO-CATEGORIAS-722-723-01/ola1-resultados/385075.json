@@ -1,0 +1,79 @@
+{
+ "id": 385075,
+ "titulo": "GLM-5.3-Flash NVFP4 on 3x DGX Spark, stock DGX OS: ~3,300 tok/s prefill, 3M-token KV, up to 64 concurrent requests (kindling TP=3)",
+ "leido": true,
+ "posts_leidos": 8,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Guardia de memoria libre del host durante prompts largos: una prueba de aguja de ~500K tokens aborta si la memoria libre de la cabeza baja de 2 GiB y reporta el minimo visto; el autor mide 6.5 GiB libres en el peor caso con KV pinned de 18 GiB frente a 12.2 GiB con 14 GiB, y ~2 GiB libres con un prompt en frio de ~500K",
+   "como": "bench/longwin.sh 600000 ; KV_CACHE_MEMORY=15032385536 (14 GiB) en scripts/config.sh ; vigilar Running/Waiting y preemptions en /metrics",
+   "fuente_post": 7,
+   "repositorio": "GitHub strusty/GLM-5.3-Flash-NVFP4-3x-DGX-Sparks-kindling-DGXOS (nombre tal como aparece)",
+   "licencia": "El drafter DFlash2 es no comercial (post 1); licencia del repositorio no indicada",
+   "probado_en": "3x DGX Spark en triangulo CX7, DGX OS de fabrica; tambien 3x ASUS Ascent GX10 con kernel 7.0.0-1019-nvidia y driver 580.178.04 (post 3, usuario danielgbates: memoria libre minima de 7.6/3.7/2.75 GiB en los tres nodos)",
+   "riesgo": "El propio autor dice que sus numeros a 500K son pruebas de un solo prompt largo, no 16 usuarios; una caida de memoria libre a ~2 GiB es el limite",
+   "verificable_aqui": "free -m; grep -E 'MemAvailable|MemFree' /proc/meminfo"
+  },
+  {
+   "que": "Efecto de la pagina de 64K en memoria: el kernel de 64K no gana capacidad; en una comparacion A/B el nodo de 64K tuvo +1.9 GiB de cache de paginas, +1.1 GiB de memoria del motor y ~+3.5 GiB 'que ningun contador muestra', porque el driver NVIDIA conserva ~un cuarto de la memoria GPU liberada en paginas de 64K (asignar y liberar 2 GiB devuelve 1.64 GiB en lugar de 2.01)",
+   "como": "no indicado el comando de medicion; instalador de kernel 64K con 'auto-reverting safety net' en el repositorio",
+   "fuente_post": 5,
+   "repositorio": "GitHub strusty/GLM-5.3-Flash-NVFP4-3x-DGX-Sparks-kindling-DGXOS",
+   "licencia": "no indicada",
+   "probado_en": "3x GB10 del autor; el prefill en frio fue +19% a +36% mas rapido con 64K (8k: 2,586 a 3,121 tok/s)",
+   "riesgo": "Medicion de un solo usuario; el post 5 dice que los 3.5 GiB son una estimacion por diferencia",
+   "verificable_aqui": "getconf PAGESIZE; uname -r; grep -E 'MemTotal|Hugepagesize' /proc/meminfo"
+  },
+  {
+   "que": "dispram: presta el carveout de display de 2 GB de la GB10 al cache KV; falla si hay sesion de escritorio (el framebuffer vive en el carveout) y el pool se dimensiona por el rango mas pequeno, de modo que un solo nodo sin dispram cuesta ~2 GiB de KV a todos",
+   "como": "no indicado; instalador en el repositorio, hay que operar en modo headless",
+   "fuente_post": 1,
+   "repositorio": "GitHub strusty/GLM-5.3-Flash-NVFP4-3x-DGX-Sparks-kindling-DGXOS",
+   "licencia": "no indicada",
+   "probado_en": "3x GB10 con DGX OS de fabrica",
+   "riesgo": "Modifica el reparto de memoria del equipo; el servidor escucha en todas las interfaces sin autenticacion (advertencia del autor en el post 1)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reduccion de la cantidad de tamanos de CUDA graphs de vLLM para liberar memoria: de 57 a 21 libero ~7 GB por caja a igual velocidad segun el autor",
+   "como": "no indicado el parametro exacto; el repositorio usa 21 tamanos",
+   "fuente_post": 1,
+   "repositorio": "GitHub strusty/GLM-5.3-Flash-NVFP4-3x-DGX-Sparks-kindling-DGXOS",
+   "licencia": "no indicada",
+   "probado_en": "3x GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de medicion limpia de decode y prefill: esperar a servidor ocioso, repetir corridas con solapamiento, calentar el motor ~30 minutos, informar medianas de al menos dos corridas limpias; el codigo varia +-15-30% entre corridas",
+   "como": "no hay comando; procedimiento descrito",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3x GB10 del autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Recomendacion de ventilacion: bajo carga sostenida de 12-16 flujos la caja cabeza corre mas caliente",
+   "como": "no indicado; 'good airflow on the head'",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3x GB10 del autor; sin cifras de temperatura en el hilo",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw --format=csv -l 1"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El hilo da una guardia de memoria libre con umbral de 2 GiB, la medicion del efecto de la pagina de 64K en memoria no contabilizada (~3.5 GiB) y el parametro KV_CACHE_MEMORY que cambio el peor caso de memoria libre de 6.5 a 12.2 GiB, todo medido por un usuario en 3 equipos. Es del autor sin verificacion de NVIDIA (staff no participa) y no contiene un monitor termico concreto.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

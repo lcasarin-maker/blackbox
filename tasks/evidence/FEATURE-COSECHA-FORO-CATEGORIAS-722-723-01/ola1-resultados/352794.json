@@ -1,0 +1,37 @@
+{
+ "id": 352794,
+ "titulo": "CPU–GPU Collaborative Computing for Local RAG on GB10",
+ "leido": true,
+ "posts_leidos": 7,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Advertencia de eugr: segun comentarios de gente de NVIDIA, memoria asignada por CUDA deja de ser accesible desde el lado CPU y no hay DMA desde PCIe, asi que GDS y GPUDirect RDMA no funcionarian y se dependeria de memcpy",
+   "como": "no indicado",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Afirmacion de usuario de segunda mano, sin verificar; el post 6 de alan.dang dice que sus pruebas sugieren que memcpy no hace falta",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Issue citado: la ruta GDS de fastsafetensors corrompe pesos de gpt-oss-120b en DGX Spark (GdsFileCopier wait_io alignment fix)",
+   "como": "no indicado (issue #38 de foundation-model-stack/fastsafetensors)",
+   "fuente_post": 7,
+   "repositorio": "https://github.com/foundation-model-stack/fastsafetensors",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (segun el titulo del issue citado)",
+   "riesgo": "corrupcion de pesos al cargar por GDS",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El OP presenta un tutorial de RAG de Arm; las respuestas utiles son de usuarios (eugr, alan.dang) con afirmaciones contradictorias y sin comandos. No hay respuesta de NVIDIA en este tema.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

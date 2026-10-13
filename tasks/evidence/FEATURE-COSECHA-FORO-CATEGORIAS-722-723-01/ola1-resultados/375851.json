@@ -1,0 +1,59 @@
+{
+ "id": 375851,
+ "titulo": "Hy3-295B (Hunyuan 3) NVFP4-W4A16 + MTP speculative on 2× DGX Spark (GB10) — 128K ctx, 21.8 tok/s single / 59.7 tok/s 6-way",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "En GB10 el camino FP4 nativo de FlashInfer congela el equipo; el usuario usa el backend Marlin y modo eager",
+   "como": "--moe-backend marlin --enforce-eager",
+   "fuente_post": 1,
+   "repositorio": "tonyd2wild/Hy3-295B-NVFP4-MTP-2x-DGX-Spark (GitHub, citado)",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10, vLLM 0.23.1, NCCL sobre ConnectX-7 MTU 9000 (declarado)",
+   "riesgo": "Afirmacion de un tercero (LibertAI) citada por el usuario; sin pruebas propias del congelamiento",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Margen de memoria al arrancar: un GB10 expone ~111.4GiB libres de 121.69; --gpu-memory-utilization 0.92 falla, 0.90 funciona",
+   "como": "--gpu-memory-utilization 0.90",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 (usuario)",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=memory.total,memory.used --format=csv"
+  },
+  {
+   "que": "Con num_speculative_tokens 2 la aceptacion de la posicion 2 es ~20% y la configuracion pierde ~30%; usar 1",
+   "como": "num_speculative_tokens: 1",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 (usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Las CUDA graphs cuestan ~25% de rendimiento en el decode Marlin W4A16 en sm121",
+   "como": "--enforce-eager",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10 (usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Receta de usuario con una advertencia de riesgo valiosa (FlashInfer FP4 nativo congela GB10, atribuida a LibertAI y sin verificar) y la cifra de ~111.4GiB utiles; sin respuesta de NVIDIA. El resto es afinacion de rendimiento de un modelo de 295B en dos nodos.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,28 @@
+{
+ "id": 364762,
+ "titulo": "Monitoring NVIDIA Jetson Thor (and DGX Spark) with Beszel",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Monitoreo historico con Beszel: hub en un servidor x86 y agente en el Spark que usa nvidia-smi y reporta uso de GPU y consumo",
+   "como": "curl -sL https://get.beszel.dev -o /tmp/install-agent.sh && chmod +x /tmp/install-agent.sh && sudo /tmp/install-agent.sh -k \"<clave publica del hub>\" -t \"<token>\" -url \"http://YOUR_HUB_IP:8090\"  (agente en puerto 45876; hub: imagen henrygd/beszel en docker compose, puerto 8090)",
+   "fuente_post": 1,
+   "repositorio": "https://beszel.dev/",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (DGX OS Ubuntu 24.04 ARM64) y Jetson Thor segun el autor",
+   "riesgo": "El agente instala un servicio systemd con un script descargado por curl; el post no mide su costo en CPU o memoria (el usuario serapis lo pregunta en el post 2 y nadie responde)",
+   "verificable_aqui": "nvidia-smi --query-gpu=name,temperature.gpu,utilization.gpu,power.draw,memory.used --format=csv"
+  }
+ ],
+ "omision_nvidia": "En el GB10 la memoria de GPU aparece como Not Supported (salida de pynvml: Memory query failed: Not Supported); solo se obtienen utilizacion y consumo, por lo que hay que vigilar la RAM del sistema completo (post 1).",
+ "utilidad_atom": "media",
+ "razon": "Da un metodo de monitoreo continuo con comandos de instalacion exactos y confirma que la memoria de GPU no se lee con NVML en el GB10; no indica licencia ni costo del agente. La respuesta de NVIDIA (aniculescu) solo mueve el tema.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

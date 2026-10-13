@@ -1,0 +1,58 @@
+{
+ "id": 352267,
+ "titulo": "DGX Spark: The Sovereign AI Stack — Dual-Model Architecture for Local Inference",
+ "leido": true,
+ "posts_leidos": 10,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Evitar OOM al servir dos modelos con TensorRT-LLM en memoria unificada: cargar uno primero y limitar la fraccion de KV cache del segundo",
+   "como": "kv_cache_config: dtype \"auto\", free_gpu_memory_fraction: 0.5 (20B) y 0.4 (120B); cuda_graph_config enable_padding: true; disable_overlap_scheduler: true; export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True; trtllm-serve ... --max_batch_size 64 (20B) / 32 (120B) --trust_remote_code --extra_llm_api_options <yml>",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 128 GB, imagen nvcr.io/nvidia/tensorrt-llm/release:spark-single-gpu-dev, segun el autor",
+   "riesgo": "El propio autor avisa de que sus cifras no son definitivas; el usuario eugr (post 3) dice que 24 t/s para gpt-oss-120b es demasiado lento",
+   "verificable_aqui": "docker ps --format '{{.Names}} {{.Image}}'"
+  },
+  {
+   "que": "Barrido de concurrencia con GenAI-Perf para medir TTFT, latencia y tokens/s; el autor advierte que genai-perf analyze, compare y --generate-plots fallan en la imagen tritonserver 25.10-py3-igpu-sdk",
+   "como": "genai-perf profile -m \"$MODEL\" --endpoint-type chat --url localhost:$PORT --concurrency $CONCURRENCY --streaming --synthetic-input-tokens-mean 128 --synthetic-input-tokens-stddev 20 --output-tokens-mean 128 --output-tokens-stddev 20 --tokenizer \"$TOKENIZER\" --num-prompts 50 --artifact-dir \"$OUTPUT_DIR/c${CONCURRENCY}\"  (CONCURRENCY en 1 2 4 8 16 32 64 128)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el autor; gpt-oss-120b c=1: 23.66 tok/s, TTFT medio 1,157.61 ms; c=32: 75.35 tok/s; c=128: 76.81 tok/s",
+   "riesgo": "Las cifras vienen de scripts de graficado con problemas de separador de coma (palabras del autor)",
+   "verificable_aqui": "command -v genai-perf"
+  },
+  {
+   "que": "Referencias de un usuario para gpt-oss-120b en un Spark, una peticion: vLLM 35 t/s, SGLang 52 t/s (imagen lmsys/sglang:spark), llama.cpp 58 t/s; pico de 125 t/s con 10 peticiones concurrentes en SGLang",
+   "como": "no indicado (solo los motores y la imagen lmsys/sglang:spark)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario eugr",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un usuario dice que vLLM sleep/wake no funcionaba en cluster la ultima vez que lo probo",
+   "como": "no indicado",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "cluster de Sparks segun el usuario eugr",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Da la configuracion exacta de TensorRT-LLM para repartir la memoria unificada entre dos modelos y un procedimiento de medicion con genai-perf, ambos de un usuario con cifras que el mismo declara no confirmadas. Sin respuesta de NVIDIA; el post 3 contradice la eleccion de motor.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

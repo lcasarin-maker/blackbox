@@ -1,0 +1,37 @@
+{
+ "id": 357850,
+ "titulo": "xTTS in a Dockercontainer on the DGX Spark",
+ "leido": true,
+ "posts_leidos": 10,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Instalacion limpia de PyTorch con uv y uso de la API Python de XTTS (la CLI no usaba CUDA de forma fiable segun el usuario); incluye parche de torchaudio con soundfile cuando falla TorchCodec",
+   "como": "uv pip install torch torchaudio torchcodec --torch-backend=auto --prerelease=allow; uv pip install coqui-tts; uv pip install soundfile; tts = TTS(MODEL); tts.to(\"cuda\")",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10 SM121, CUDA 13, Python 3.12, segun vipertdev (RTF 0.2-0.4)",
+   "riesgo": null,
+   "verificable_aqui": "command -v uv; python3 -c 'import torch;print(torch.cuda.is_available())'"
+  },
+  {
+   "que": "Configuracion de un contenedor con riesgo: docker-compose de martinB78 usa privileged: true, ipc: host, ulimits memlock -1 y PYTORCH_ALLOC_CONF=expandable_segments:True; el propio autor reporta que seguia corriendo en CPU y sin exito tras 192 intentos",
+   "como": "privileged: true; ipc: host; ulimits: memlock: -1, stack: 67108864; PYTORCH_ALLOC_CONF=expandable_segments:True",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun martinB78 (sin exito)",
+   "riesgo": "privileged: true da al contenedor acceso total al host; el post lo justifica con NVLink, afirmacion sin base verificable en el hilo.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El usuario pregunta si existe un torchaudio oficial de NVIDIA para SM121 ARM64 y afirma que NVIDIA lo quito de los contenedores PyTorch estandar; sin respuesta de NVIDIA en el hilo.",
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios sobre TTS en Spark sin ninguna respuesta de NVIDIA; la solucion util (post 5) es de dependencias de Python y no sirve para monitorear ni prevenir fallos de memoria o termica. El post 2 incluye una configuracion privilegiada sin base.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

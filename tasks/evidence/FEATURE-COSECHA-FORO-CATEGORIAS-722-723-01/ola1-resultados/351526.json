@@ -1,0 +1,27 @@
+{
+ "id": 351526,
+ "titulo": "Correction Request] Issue with curl Command in \"Serve the model with OpenAI-compatible API\" Step",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Correccion del curl de la guia NVFP4: el endpoint /v1/chat/completions exige el campo messages y rechaza prompt",
+   "como": "curl -X POST http://localhost:8000/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\": \"deepseek-ai/DeepSeek-R1-Distill-Llama-8B\", \"messages\": [{\"role\": \"user\", \"content\": \"What is artificial intelligence?\"}], \"max_tokens\": 100, \"temperature\": 0.7, \"stream\": false}'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "el usuario dice que con la correccion el modelo responde; hardware no indicado",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Un staff de NVIDIA (NVES) responde que revisara y actualizara la documentacion; no confirma el cambio concreto.",
+ "utilidad_atom": "baja",
+ "razon": "Un usuario corrige un curl de la guia oficial NVFP4 (messages en vez de prompt) y NVES acusa recibo en el post 2. Util solo para sintaxis de la API, sin relacion con monitoreo ni estabilidad.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

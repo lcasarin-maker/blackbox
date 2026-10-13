@@ -1,0 +1,38 @@
+{
+ "id": 385294,
+ "titulo": "VibeVoice-ASR on DGX Spark: a 59-minute recording in one pass, with speakers and timestamps (no chunking)",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Chequeo de bucle de repeticion en la generacion (un resultado vacio sin error ocultaba un bucle de 280 repeticiones hasta el limite de tokens)",
+   "como": "def is_looping(token_ids, window=400, max_period=100): tail = token_ids[-window:]; if len(tail) < window: return False; return any(tail[p:] == tail[:-p] for p in range(1, max_period + 1))",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/MindrLabs/speech-to-text-vibevoice",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10, driver 580.126.09, CUDA 13.0 (segun el autor); el chequeo disparo en 4 bucles entre 450 y 1,100 tokens y nunca en salida normal",
+   "riesgo": "Un fallo silencioso devuelve [] y la tuberia lo registra como 'nadie hablo'.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de medicion de memoria: pico de asignacion de PyTorch por archivo; reporta 28.1 GB pico para 59 min de audio en una Spark frente a OOM en una RTX 4090 de 24 GB a los 39 min",
+   "como": "pico de asignacion de PyTorch (no se da el comando exacto; script transformers directo, una corrida por archivo)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, 120 GB unificada, 'shared machine', driver 580.126.09",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Reporte de usuario de rendimiento de ASR con una funcion de deteccion de bucles reutilizable como idea y metodo de medicion de memoria por pico de PyTorch. Sin respuesta de NVIDIA ni relacion con monitoreo del equipo o termica.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

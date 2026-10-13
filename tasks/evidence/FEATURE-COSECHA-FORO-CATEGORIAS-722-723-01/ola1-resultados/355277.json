@@ -1,0 +1,38 @@
+{
+ "id": 355277,
+ "titulo": "Ostris' AI Toolkit on DGX Spark",
+ "leido": true,
+ "posts_leidos": 12,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Soporte DGX OS en AI Toolkit: dgx_requirements.txt con versiones exactas, PyTorch reciente, dwpose retirado por falta de onnxruntime ARM64; actualizar con git pull",
+   "como": "git pull ; pip install de los requirements si cambian",
+   "fuente_post": 8,
+   "repositorio": "https://github.com/ostris/ai-toolkit",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (usuarios RazielAU y joey28)",
+   "riesgo": "Conflicto de scipy entre dgx_requirements.txt y requirements.txt (post 3)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Mediciones de usuario WAN 2.2 5B a 512: 5090 6.57 s/it entrenamiento y Spark 21.27 s/it; muestreo 1.65 frente a 9.14 s/it; batch 2 = 40.83 s/it",
+   "como": "no indicado (medicion, sin comando)",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark frente a RTX 5090 (declarado por RazielAU)",
+   "riesgo": "Una afirmacion de usuario sin metodo reproducible",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Guia de instalacion de una herramienta de fine-tuning con benchmarks comparativos de usuarios. Ningun mecanismo de monitoreo ni prevencion de colapsos; menciona un bug de ComfyUI con memoria compartida sin detalle (post 10).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

@@ -1,0 +1,27 @@
+{
+ "id": 353580,
+ "titulo": "Mpirun Authorization required, but no authorization protocol specified",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Silenciar el aviso X11 'Authorization required' de orted al lanzar mpirun por ssh hacia una maquina con GUI",
+   "como": "export HWLOC_COMPONENTS=-gl  (colocado en ~/.bashrc ANTES del guard de shell interactivo 'case $- in')",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/open-mpi/ompi/issues/13535",
+   "licencia": "no indicada",
+   "probado_en": "Ubuntu 24.04.3, Open MPI 4.1.6, Spark en modo texto hacia PC AMD con GUI",
+   "riesgo": "Segun el autor, improbable que dane algo; la variable solo se necesita en las maquinas destino con GUI",
+   "verificable_aqui": "grep -n HWLOC_COMPONENTS ~/.bashrc; mpirun --version"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Workaround de un aviso cosmetico de mpirun entre dos maquinas, sin relacion con memoria o termica. Un moderador de NVIDIA solo movio el tema a GB10 projects (post 2).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

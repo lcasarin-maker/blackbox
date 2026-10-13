@@ -1,0 +1,27 @@
+{
+ "id": 356424,
+ "titulo": "[DGX Spark] VibeVoice TTS + Streaming Voice Pipeline - Setup Guide",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Instalar PyTorch con CUDA 13 cuando torch.cuda.is_available() devuelve False con torch 2.9.0+cpu",
+   "como": "pip uninstall torch torchaudio torchvision -y ; pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, CUDA 13.0, DGX Spark Version 7.2.3, Python 3.11",
+   "riesgo": null,
+   "verificable_aqui": "python3 -c \"import torch; print(torch.__version__, torch.cuda.is_available())\""
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Aporta un workaround de PyTorch CPU-only y un pipeline de voz; ninguno monitorea ni previene los colapsos o cortes. El enlace de codigo es un marcador sin URL.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

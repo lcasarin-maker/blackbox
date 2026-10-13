@@ -1,0 +1,27 @@
+{
+ "id": 379788,
+ "titulo": "*Native* 416-byte NVFP4 KV cache + DSpark for DeepSeek V4 Flash 0731 on 2× DGX Spark",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta experimental de 2 nodos con KV cache NVFP4 nativo de 416 bytes por registro (en vez de 584), unos 14% mas de tokens segun el autor",
+   "como": "MAX_MODEL_LEN=1048576 MAX_NUM_SEQS=4 MTP_NUM_TOKENS=5 GPU_MEMORY_UTILIZATION=0.835 ; ./validate-dspark-config.sh ./build-dspark-vllm-runtime.sh ./prepare-dspark-model-cache.sh ./start-deepseek-v4-flash-dspark.sh",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/coolbho3k/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark",
+   "licencia": "no indicada",
+   "probado_en": "2 DGX Spark con RoCE, segun el autor; reporta KV 17.66 GiB y 2,779,464 tokens",
+   "riesgo": "Experimental, necesita dos nodos y RoCE; los valores son de un usuario y no hay medicion independiente",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Da valores concretos de vLLM y scripts, pero para un cluster de dos nodos; esta maquina es un solo Spark. Sin respuesta de NVIDIA y sin licencia indicada.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

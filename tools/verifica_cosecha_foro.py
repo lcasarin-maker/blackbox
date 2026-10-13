@@ -20,6 +20,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+TOLERANCIA_MENSAJES = 2  # el conteo del foro (posts_count) incluye mensajes ocultos; el texto puede traer 1-2 menos
 PROPOSITOS = {"monitorear", "medir", "rastrear", "solucionar", "prevenir", "omision_nvidia"}
 CLASES = {"mecanismo", "diagnostico", "anuncio_oficial", "ruido", "pregunta_sin_respuesta"}
 UTILIDAD = {"alta", "media", "baja", "ninguna"}
@@ -48,6 +49,15 @@ def estado_descarga(hilos: Path, tid: int) -> tuple[str, str]:
     return "no_se_pudo", err[:80] or "sin detalle"
 
 
+def mensajes_reales(hilos: Path, tid: int) -> int:
+    """Mensajes del tema segun el texto descargado (marcas `POST n |`)."""
+    try:
+        texto = (hilos / "threads" / f"{tid}.txt").read_text(encoding="utf-8")
+    except OSError:
+        return 0
+    return texto.count("\nPOST ") + (1 if texto.startswith("POST ") else 0)
+
+
 def valida_resultado(d: Any, tid: int) -> list[str]:
     """Lista de problemas del resultado de analisis de un tema (vacia = valido)."""
     if not isinstance(d, dict):
@@ -57,6 +67,8 @@ def valida_resultado(d: Any, tid: int) -> list[str]:
         malos.append(f"id {d.get('id')!r} distinto de {tid}")
     if d.get("leido") is not True or not isinstance(d.get("posts_leidos"), int) or d["posts_leidos"] < 1:
         malos.append("leido/posts_leidos no demuestran lectura")
+    if d.get("lectura") not in ("completa", "parcial"):
+        malos.append("lectura debe ser completa o parcial (declara lo que NO leiste)")
     if d.get("clase") not in CLASES:
         malos.append(f"clase invalida {d.get('clase')!r}")
     if d.get("utilidad_atom") not in UTILIDAD:
@@ -83,6 +95,9 @@ def valida_resultado(d: Any, tid: int) -> list[str]:
 def verifica(inventario: list[dict[str, Any]], hilos: Path, resultados: Path) -> dict[str, Any]:
     cuenta = {"descargado": 0, "vacio_del_producto": 0, "no_se_pudo": 0}
     sin_resultado: list[int] = []
+    parciales: dict[int, str] = {}
+    de_mas: dict[int, str] = {}
+    contabilidad: dict[int, str] = {}
     invalidos: dict[int, list[str]] = {}
     fallos: dict[int, str] = {}
     for it in inventario:
@@ -102,13 +117,25 @@ def verifica(inventario: list[dict[str, Any]], hilos: Path, resultados: Path) ->
         malos = valida_resultado(d, tid)
         if malos:
             invalidos[tid] = malos
-    limpio = not fallos and not sin_resultado and not invalidos
+            continue
+        reales = mensajes_reales(hilos, tid)
+        leidos = d["posts_leidos"]
+        if leidos > reales + TOLERANCIA_MENSAJES:
+            de_mas[tid] = f"declara {leidos} mensajes leidos y el tema tiene {reales}"
+        elif d["lectura"] == "parcial" or leidos < reales - TOLERANCIA_MENSAJES:
+            parciales[tid] = f"leyo {leidos} de {reales}"
+        elif leidos != reales:
+            contabilidad[tid] = f"declara {leidos}, el texto trae {reales}"
+    limpio = not fallos and not sin_resultado and not invalidos and not parciales and not de_mas
     return {
         "temas": len(inventario),
         "descarga": cuenta,
         "fallos_de_descarga": fallos,
         "sin_resultado": sin_resultado,
         "resultados_invalidos": invalidos,
+        "lectura_parcial_por_completar": parciales,
+        "lectura_declarada_de_mas": de_mas,
+        "diferencia_de_contabilidad_tolerada": contabilidad,
         "cobertura_completa": limpio,
     }
 

@@ -1,0 +1,47 @@
+{
+ "id": 351254,
+ "titulo": "Blender 5.0 (and 5.1.0) running on GB10 with CUDA, OptiX, & Vulkan!",
+ "leido": true,
+ "posts_leidos": 23,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Compilacion/binarios precompilados de Blender para ARM64 con CUDA/OptiX/Vulkan en GB10 (build script builder.sh y releases)",
+   "como": "no indicado (post 1 menciona script builder.sh en un repo de GitHub; post 7 y 16 publican releases precompiladas 5.0.1 y 5.1.0; post 17 la 5.2)",
+   "fuente_post": 7,
+   "repositorio": "CoconutMacaroon/blender-arm64 (GitHub, nombre tal como aparece en el post)",
+   "licencia": "no indicada",
+   "probado_en": "DGX OS 7.2.3 instalacion limpia, GB10 (segun el autor)",
+   "riesgo": "El script instala archivos a nivel de sistema, choca con algunos paquetes apt y puede romper DGX OS (post 1); Vulkan y posiblemente OpenImageDenoise no funcionan bien en la 5.2 (post 17)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Para que renderice en GPU hay que poner el dispositivo del render en GPU Compute, ademas de las preferencias de OptiX",
+   "como": "Render / Render Properties -> Device = GPU Compute (no CPU)",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Cargar libreria runtime sin instalar apt: extraer .deb con dpkg-deb -x en la carpeta libExt del build",
+   "como": "dpkg-deb -x <paquete>.deb (los paquetes noble arm64 listados en el post 18: libblosc1, libgflags2.2, libopenexr-3-1-30, etc.)",
+   "fuente_post": 18,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "build 5.2 en DGX Spark segun el usuario helge",
+   "riesgo": "libopenexr se bajo a mano de ports.ubuntu.com porque apt lo resuelve a version ESM que exige suscripcion",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El tema es un port de Blender a GB10 con comparativas de render y pruebas de modelos generando escenas; no contiene mecanismos de monitoreo, memoria ni termica. Respuesta de NVIDIA: solo un moderador que mueve el tema (post 3).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

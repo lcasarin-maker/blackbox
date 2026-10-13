@@ -1,0 +1,79 @@
+{
+ "id": 360780,
+ "titulo": "Qwen3.5-397B-A17B + DGX Spark (duo)",
+ "leido": true,
+ "posts_leidos": 63,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar relojes de GPU si un nodo se apaga (comentario de receta de un usuario)",
+   "como": "sudo nvidia-smi -lgc 200,2150",
+   "fuente_post": 59,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "2x GB10, usuario giles8, kernel 6.17.0-1021-nvidia; el comentario es de la receta y el post no dice que el probara este comando",
+   "riesgo": "Reduce el rendimiento maximo; el post no da la causa del apagado ni mide el efecto",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK | head -40"
+  },
+  {
+   "que": "Carga de modelo grande atascada en 2% de safetensors: limpiar la page cache; sparkrun la limpia con sudo; la receta de eugr la limpia automaticamente cada minuto via mod",
+   "como": "sparkrun setup clear-cache  (y sparkrun setup clear-cache --save-sudo)",
+   "fuente_post": 56,
+   "repositorio": "https://sparkrun.dev",
+   "licencia": "no indicada",
+   "probado_en": "2x Spark headless, usuario blackdragon1400 confirma que lo resolvio (post 57)",
+   "riesgo": "Requiere sudo; solo limpia el segundo nodo con --save-sudo (post 57)",
+   "verificable_aqui": "grep -E 'MemFree|MemAvailable|^Cached' /proc/meminfo"
+  },
+  {
+   "que": "Reserva de memoria GPU en GB en vez de porcentaje para que quepa el modelo en 2 Spark; desactivar la estimacion de cudagraphs que cambio en vLLM 0.21",
+   "como": "--gpu-memory-utilization-gb 106 ; env VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS: 0 ; VLLM_MARLIN_USE_ATOMIC_ADD: 1 ; mods/gpu-mem-util-gb, mods/drop-caches ; el autor deshabilito earlyoom",
+   "fuente_post": 59,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "2x GB10, vLLM 0.22.1rc1 (post 60), el autor lo corrio con ray y dice que fue un error, volveria a probar con --no-ray",
+   "riesgo": "Modelo casi sin espacio para contexto; el autor deshabilito earlyoom",
+   "verificable_aqui": "systemctl status earlyoom"
+  },
+  {
+   "que": "Memoria util en un Spark: unos 115 GB de VRAM, hasta 120 GB con cuidado; ademas hay que reservar KV cache y CUDA graphs",
+   "como": "no indicado (afirmacion de eugr, sin comando)",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "afirmacion de usuario, sin medicion",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=memory.total,memory.used --format=csv; free -m"
+  },
+  {
+   "que": "Fallo conocido: NVFP4 de Qwen3.5 en GB10 da CUDA illegal instruction a mitad de generacion y raylet termina (issue de vLLM citado por usuario)",
+   "como": "no indicado (vllm serve ... --quantization modelopt_fp4 ... reproduce el fallo segun el issue)",
+   "fuente_post": 41,
+   "repositorio": "https://github.com/vllm-project/vllm (issue 'Qwen3.5 NVFP4 models crash on ARM64 GB10 DGX Spark')",
+   "licencia": "no indicada",
+   "probado_en": "GB10, driver 580.126.09, kernel 6.17.0-1008-nvidia, vLLM 0.16.1rc1",
+   "riesgo": "Estabilidad: NVFP4 'hit and miss' segun eugr (post 43)",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv"
+  },
+  {
+   "que": "Medicion con llama-benchy (throughput pp/tg a distintas profundidades de contexto) y tool-eval-bench (calidad de tool-calls)",
+   "como": "llama-benchy (defaults); tool-eval-bench v2.0.3",
+   "fuente_post": 21,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "2x Spark, Qwen3.5-122B-A10B FP8 tg32 ~29-30 t/s; 397B GPTQ-Int4 en 4 nodos tg32 24.52 t/s",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Aporta tres piezas concretas: nvidia-smi -lgc 200,2150 contra apagados de nodo (post 59, sin evidencia de medicion), limpiar page cache para cargar modelos grandes (post 56-57) y fijar memoria GPU en GB. Hilo de usuarios sobre cluster de 2-4 Spark, sin respuesta de staff de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

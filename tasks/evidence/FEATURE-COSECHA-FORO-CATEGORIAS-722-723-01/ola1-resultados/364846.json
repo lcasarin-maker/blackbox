@@ -1,0 +1,38 @@
+{
+ "id": 364846,
+ "titulo": "ComfyUI setup optimized for DGX Spark",
+ "leido": true,
+ "posts_leidos": 11,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Parche para que ComfyUI use la memoria disponible del host en vez de cudaMemGetInfo cuando otro proceso CUDA (vLLM) ocupa memoria unificada; sin el parche ComfyUI descarga parcialmente el codificador de texto y el tiempo por imagen pasa de ~20 s a 100-330 s",
+   "como": "reemplazar \"mem_free_cuda, _ = torch.cuda.mem_get_info(dev)\" por \"import psutil as _psutil; mem_free_cuda = _psutil.virtual_memory().available\" en comfy/model_management.py (get_free_memory)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "contenedor Docker en Spark con vLLM al 0.3 de memoria GPU, segun el usuario haidij",
+   "riesgo": "Afirmacion de usuario: con vLLM usando 34 GB, cudaMemGetInfo devolvio ~6 GB libres mientras el host tenia 46.3 GB libres. El parche ignora el limite real de la GPU y puede sobreestimar lo disponible",
+   "verificable_aqui": "nvidia-smi --query-gpu=memory.used,memory.total --format=csv; free -g; python3 -c \"import torch; print(torch.cuda.mem_get_info())\""
+  },
+  {
+   "que": "Imagen Docker de ComfyUI para Spark con CUDA 13.1, PyTorch cu130, SageAttention 2 compilado para sm_121 y banderas para memoria unificada (--disable-dynamic-vram, parche copy=False en tensor.to() de comfy/utils.py con --disable-mmap para el doble uso de memoria)",
+   "como": "no indicado en el hilo (el compose y COMFYUI_FLAGS estan en el repositorio)",
+   "fuente_post": 1,
+   "repositorio": "GitHub luix93/DGX-Spark-ComfyUI (nombre tal como aparece en el post)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 segun el autor luix93",
+   "riesgo": "En el post 4 se senala que CUDA_MODULE_LOADING=CUDA no es un valor valido; el autor reconoce que cae en LAZY (post 5). En post 10 un usuario no logra FP8/FP4 con ComfyUI v0.27 por version de Comfy Kitchen",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El post 7 aporta un diagnostico concreto con cifras (vram_free 6.2 GB frente a ram_free 46.3 GB en /system_stats) de que cudaMemGetInfo subestima la memoria libre en memoria unificada, tema pertinente para la medicion de memoria por contenedor. Es un reporte de usuario sin respuesta de NVIDIA, y el parche es especifico de ComfyUI.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

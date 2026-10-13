@@ -1,0 +1,37 @@
+{
+ "id": 354483,
+ "titulo": "LLaVA-Mistral multimodal (7B & 34B)",
+ "leido": true,
+ "posts_leidos": 7,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Dockerfile sobre imagen NGC pytorch que compila flash-attn limitando jobs de compilacion y arquitectura CUDA para no agotar memoria",
+   "como": "ENV MAX_JOBS=4 ; ENV TORCH_CUDA_ARCH_LIST=\"10.0\" ; RUN pip install flash-attn --no-build-isolation --upgrade --no-cache-dir (base nvcr.io/nvidia/pytorch:25.10-py3)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10 segun el autor WayneV (sin versiones de driver/kernel)",
+   "riesgo": "El autor dice que MAX_JOBS=4 evita un crash de memoria al compilar; no hay medicion que lo respalde",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Comando docker run con ajustes de memoria para contenedor de inferencia",
+   "como": "docker run -it --rm --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 -p 8000:8000 ...",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun el autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El post 1 y 3 son servidores FastAPI propios para LLaVA-NeXT; el usuario eugr (post 4 y 7) senala que los modelos son viejos y que vLLM/SGLang sirven modelos mas nuevos sin wrapper, recomendando cuantizados FP8/AWQ/FP4. Sin respuesta de NVIDIA staff; no hay mecanismos de monitoreo o prevencion.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

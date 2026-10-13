@@ -1,0 +1,110 @@
+{
+ "id": 378150,
+ "titulo": "GLM-5.2 on a 3× GB10 cluster: ~16,13 tok/s decode, 215K ctx FP8 TP=3 + VISION!",
+ "leido": true,
+ "posts_leidos": 8,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnostico de throttle de hardware con speculative decoding: si el rendimiento cae pero la aceptacion no cambia, la causa es hardware. Un nodo quedo a 702 MHz / 4.85 W mientras los otros dos corrian 2405-2411 MHz, con clocks_throttle_reasons.active = 0x0 (sin motivo reportado)",
+   "como": "nvidia-smi --query-gpu=clocks.sm,power.draw,clocks_throttle_reasons.active --format=csv (ejecutar en cada nodo y comparar)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/karolpalys/glm52-triple-spark-tuning",
+   "licencia": "MIT",
+   "probado_en": "3x DGX Spark GB10 segun el autor",
+   "riesgo": "Un nodo enfermo marca el ritmo de todo el cluster con TP=3",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,power.draw,clocks_throttle_reasons.active --format=csv"
+  },
+  {
+   "que": "Discriminante firmware/PMIC frente a gobernador del driver: nvidia-smi -lgc fue aceptado ('All done.') pero el reloj siguio en 702 MHz; un reinicio en caliente no lo limpia; desenchufar el nodo de la red electrica >=1 minuto lo resuelve (2502 MHz / 47.6 W, decode x2.36)",
+   "como": "nvidia-smi -lgc 1500,3003 (ignorado); desenchufar de la red >=1 minuto",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/karolpalys/glm52-triple-spark-tuning",
+   "licencia": "MIT",
+   "probado_en": "3x DGX Spark GB10 segun el autor",
+   "riesgo": "Medicion de un solo incidente; sin respuesta de NVIDIA",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK,PERFORMANCE"
+  },
+  {
+   "que": "Swap obligatorio con el recipe de ~119 GiB de 121 GiB por nodo: sin swap, OOM del kernel determinista ~3 minutos despues de arrancar (compilacion ~3.5 GiB que no se devuelven y falla la asignacion de KV)",
+   "como": "sudo fallocate -l 16G /swapfile && sudo chmod 600 /swapfile; sudo mkswap /swapfile && sudo swapon /swapfile; echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab; free -h | grep -i swap",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/karolpalys/glm52-triple-spark-tuning",
+   "licencia": "MIT",
+   "probado_en": "3x GB10 segun el autor",
+   "riesgo": "Con swap el equipo puede degradarse en lugar de caer",
+   "verificable_aqui": "swapon --show; free -h"
+  },
+  {
+   "que": "Liberar memoria unificada antes de arrancar: detener gdm (0.45 GiB por worker, 1.5 GiB en la cabeza) y 11 unidades (cups, bluetooth, ModemManager, avahi, fwupd, snapd, udisks2, multipathd; ~0.2 GiB por nodo); earlyoom se detiene siempre porque envia SIGTERM a vLLM durante la captura de CUDA graphs; NetworkManager y wpa_supplicant se dejan vivos en esa red",
+   "como": "ssh spark1 '~/glm5.sh' (STOP_GUI=1, STOP_SERVICES=1, DROP_CACHES=1 por defecto); ~/glm5.sh restore devuelve escritorio, servicios y earlyoom",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/karolpalys/glm52-triple-spark-tuning",
+   "licencia": "MIT",
+   "probado_en": "3x GB10 segun el autor",
+   "riesgo": "Detener gdm cierra la terminal local; el script exige SSH salvo FORCE_LOCAL=1",
+   "verificable_aqui": "systemctl is-active gdm earlyoom"
+  },
+  {
+   "que": "Comprobacion de salud real: /v1/models responde aunque el servidor no pueda aceptar trabajo; hay que probar una generacion; revisar cola con grep del log",
+   "como": "curl -m 120 -s http://localhost:8000/v1/chat/completions ... ; grep -oE \"Running: [0-9]+ reqs, Waiting: [0-9]+ reqs\" ~/glm52-nvfp4/logs/glm52-aqlm.log | tail -3",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3x GB10",
+   "riesgo": "Con MAX_NUM_SEQS=1 un request huerfano sin max_tokens retiene el unico slot; vLLM no aborta al desconectarse un cliente no streaming",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodologia de medicion: comparar tok/s dividido por aceptacion, no tok/s crudo (la aceptacion varia 2.8-3.6 entre instancias con VLLM_MARLIN_USE_ATOMIC_ADD=1); 3 warm-ups; medir decode antes de prefill; solo contenido unico para prefill",
+   "como": "python3 ~/glm-bench/glm_bench.py; python3 ~/glm-bench/glm_prefill.py mylabel; python3 ~/glm-bench/glm_quality.py",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/karolpalys/glm52-triple-spark-tuning",
+   "licencia": "MIT",
+   "probado_en": "3x GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reducir graficos CUDA no usados libera ~2 GiB por nodo (swap de la cabeza 7.1 a 5.2 GiB)",
+   "como": "CUDAGRAPH_CAPTURE_SIZES=4; MAX_NUM_BATCHED_TOKENS=8192",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/karolpalys/glm52-triple-spark-tuning",
+   "licencia": "MIT",
+   "probado_en": "3x GB10, MAX_NUM_SEQS=1, MTP k=3",
+   "riesgo": "Si MAX_NUM_SEQS > 1 hay que restaurar la lista completa",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Distribuir la imagen Docker por la fabrica QSFP en lugar del registro: 500-605 MB/s frente a 12 MB/s (x42); docker save tarda 3-4 min sin salida; verificar presencia con docker images -q, no el codigo de salida del pull",
+   "como": "docker save \"$IMAGE\" -o /var/tmp/img.tar; cat /var/tmp/img.tar | ssh <worker-fabric-ip> \"docker load\"",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3x GB10 segun el autor",
+   "riesgo": "Imagenes distintas entre nodos dan resultados erroneos silenciosos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Red de control: Wi-Fi (34 ms, 44 ms de jitter, 10% de perdida) no la toleran Ray ni NCCL; Ethernet cableado 0.9 ms / 0.17 ms / 0%",
+   "como": "usar Ethernet cableado para el plano de control; ibv_devices para listar IB_HCA",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3x GB10",
+   "riesgo": null,
+   "verificable_aqui": "ibv_devices"
+  }
+ ],
+ "omision_nvidia": "Segun el autor, el estado de reloj atascado a 702 MHz no reporta razon alguna en clocks_throttle_reasons (0x0) y nvidia-smi -lgc lo acepta sin efecto; el estado no se corrige con reinicio. No hay respuesta de NVIDIA en el hilo.",
+ "utilidad_atom": "alta",
+ "razon": "Combina el diagnostico exacto de throttling sin razon reportada (702 MHz, 0x0, -lgc ignorado, solo cortar la red electrica lo limpia), el uso de swap contra OOM, la lista de servicios a detener (incluido earlyoom) y una metodologia de medicion con repositorio MIT. Todo viene de un usuario con 3 equipos; el hallazgo del reloj es de un solo incidente.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

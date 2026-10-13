@@ -1,0 +1,48 @@
+{
+ "id": 376979,
+ "titulo": "# MiniMax-M3-NVFP4 @ 1M context, ~31 tok/s, native vision — 4× DGX Spark (GB10)",
+ "leido": true,
+ "posts_leidos": 7,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Precheck de memoria del KV cache que falla por OOM en el arranque; el autor limpia caches y contenedores viejos antes de arrancar y fija el KV explicito",
+   "como": "drop_caches + barrer contenedores viejos antes de arrancar; --kv-cache-memory-bytes 30064771072 --gpu-memory-utilization 0.86 --kv-cache-dtype nvfp4",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark GB10 (sm_121, aarch64, CUDA 13), imagen vllm/vllm-openai:nightly-dev-arm64-cu13.0.1-515d6e9, vllm 0.17.2rc1.dev3669, torch 2.11.0+cu130",
+   "riesgo": "el autor no da el comando exacto de drop_caches; un usuario (tdwyer, post 7) no pudo reproducir con otras imagenes nightly y la imagen citada no aparece en Docker Hub",
+   "verificable_aqui": "cat /proc/sys/vm/drop_caches ; free -m"
+  },
+  {
+   "que": "Limite de descriptores de archivo en el contenedor para evitar el bloqueo de NCCL 'Too many open files'",
+   "como": "--ulimit nofile=1048576:1048576 --cap-add IPC_LOCK --ulimit memlock=-1:-1 --device /dev/infiniband:/dev/infiniband",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10 con InfiniBand mlx5",
+   "riesgo": "sin esa opcion el autor reporta deadlock multinodo",
+   "verificable_aqui": "ulimit -n ; docker info --format '{{.CgroupDriver}} {{.DefaultRuntime}}'"
+  },
+  {
+   "que": "Variables NCCL del autor para IB en GB10 y fijar NCCL 2.30.x porque una version distinta produce errores CQE retry",
+   "como": "-e NCCL_NET=IB -e NCCL_IB_DISABLE=0 -e NCCL_IB_HCA=mlx5_1 -e NCCL_SOCKET_IFNAME=enp1s0f1np1 -e NCCL_IB_GID_INDEX=3 -e NCCL_CUMEM_ENABLE=0 -e NCCL_IGNORE_CPU_AFFINITY=1 ; pip nvidia-nccl-cu13==2.30.4 con LD_PRELOAD",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10, TP=4 por InfiniBand (MTU 9000, GID3)",
+   "riesgo": "nombres de HCA e interfaz son de su cluster",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El autor publica comandos exactos y trampas de memoria y NCCL de un arranque de vLLM en GB10 (precheck de KV con OOM, ulimit nofile). Sin respuesta de NVIDIA; un usuario no logra reproducir con otras imagenes.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

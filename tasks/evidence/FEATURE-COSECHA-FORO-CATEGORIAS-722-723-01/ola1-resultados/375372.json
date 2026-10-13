@@ -1,0 +1,27 @@
+{
+ "id": 375372,
+ "titulo": "MiniMax-M3-AWQ at 1M-token context on 4× DGX Spark (GB10) — 4-bit nvfp4 KV 25 tok/s",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "KV cache en nvfp4 de 4 bits para servir 1,048,576 tokens de contexto en 4 GB10: el pool crece ~36% (965K a 1.31M tokens con GMU 0.80); dos arreglos: mantener la query en bf16 (vLLM la cuantiza a fp8 con KV fp8/nvfp4 y rompe el kernel de dequant) y fusionar el desempaquetado 4-bit a bf16 en el kernel de atencion (de ~17.8 a ~25.2 tok/s)",
+   "como": "no indicado en el hilo (receta en el repositorio)",
+   "fuente_post": 1,
+   "repositorio": "GitHub tonyd2wild/MiniMax-M3-AWQ-1M-NVFP4-KV-4x-DGX-Spark (nombre tal como aparece)",
+   "licencia": "no indicada",
+   "probado_en": "4x GB10, TP=4 segun el autor tonyd615",
+   "riesgo": "Con cudagraphs se forza el modo breakable y baja a ~17 tok/s (por eso sirve en eager); una via WMMA fue mas lenta",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Reporte de un montaje de 4 nodos con KV en 4 bits; los numeros son del autor, sin comando en el hilo y sin respuestas. No toca monitoreo ni termica.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

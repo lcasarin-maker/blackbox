@@ -1,0 +1,48 @@
+{
+ "id": 376703,
+ "titulo": "Benchmark Report: unsloth/Qwen3.6-35B-A3B-NVFP4-Fast vs nvidia/Qwen3.6-35B-A3B-NVFP4",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Benchmark de servicio de vLLM con carga fija y reproducible (100 prompts, 1000 tokens de entrada y de salida, tasa 100 RPS, ignore-eos)",
+   "como": "vllm bench serve --model <modelo> --dataset-name random --random-input-len 1000 --random-output-len 1000 --request-rate 100 --num-prompts 100 --ignore-eos",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark y RTX 6000 Pro, vLLM 0.25.0; Spark: 435.84 tok/s de salida con unsloth NVFP4-Fast vs 404.24 con nvidia NVFP4",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Chequeo previo de que existan los kernels b12x en vLLM; si faltan, el servicio cae a Marlin W4A16 y queda 2x mas lento segun el blog de Unsloth citado",
+   "como": "python -c \"import torch; from vllm.utils.flashinfer import has_flashinfer_b12x_gemm as g, has_flashinfer_b12x_moe as m; cap = torch.cuda.get_device_capability(); print('cap', cap, '| b12x gemm', g(), '| b12x moe', m()); assert cap[0] == 12 and g() and m(), 'b12x unavailable'\"",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "citado de la documentacion de Unsloth por el usuario TheAwakenOne, no probado por el",
+   "riesgo": "Requiere vllm>=0.25.0, flashinfer-python>=0.6.13, nvidia-cutlass-dsl>=4.5.2",
+   "verificable_aqui": "pip list 2>/dev/null | grep -Ei 'vllm|flashinfer|cutlass'"
+  },
+  {
+   "que": "Variable y flag para servir con b12x en Spark",
+   "como": "export CUTE_DSL_ARCH=sm_121a ; vllm serve unsloth/Qwen3.6-35B-A3B-NVFP4-Fast --moe-backend flashinfer_b12x",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun docs de Unsloth citadas",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Comparativa de throughput entre dos cuantizaciones con comando de benchmark exacto y chequeo de kernels, ajena a memoria o termica. Un usuario (post 5) reporta que vLLM 0.25.x queda colgado en 'Waiting for 1 local, 0 remote core engine proc(s)', sin respuesta. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

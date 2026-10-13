@@ -1,0 +1,27 @@
+{
+ "id": 364782,
+ "titulo": "Solved - running gpt oss 120b with two sparks",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta de eugr (spark-vllm-docker) ajustada para gpt-oss-120b en dos Spark; la opcion no-ray evita que la CPU quede al 100 %",
+   "como": "./run-recipe.sh openai-gpt-oss-120b --no-ray ; env VLLM_MXFP4_BACKEND: TRTLLM_MXFP ; --quantization mxfp4 --mxfp4-backend cutlass --attention-backend FLASHINFER --kv-cache-dtype fp8 ; gpu_memory_utilization: 0.70 ; max_num_batched_tokens: 8192",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "dos DGX Spark (tensor_parallel 2), segun el usuario; el mismo dice que no es optimo",
+   "riesgo": "El autor reconoce que funciona pero no de forma optima; depende de versiones recientes de vLLM que rompian la receta original.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta de usuario para dos nodos con valores concretos de vLLM, sin medicion de memoria ni de temperatura. Esta maquina es un nodo unico y el unico efecto observable declarado es evitar el 100 % de CPU con --no-ray.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

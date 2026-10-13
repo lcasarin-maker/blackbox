@@ -1,0 +1,38 @@
+{
+ "id": 381279,
+ "titulo": "DGX Spark Memory Dashboard — live GiB occupancy map + “can I load next?”",
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "prevenir"
+ ],
+ "utilidad_atom": "media",
+ "mecanismos": [
+  {
+   "que": "Dashboard MIT que muestra el mapa de memoria unificada ocupada por Ollama y vLLM (con sondas de llama.cpp y SGLang) y ordena que modelo aun cabe segun RAM libre mas margen",
+   "como": "git clone https://github.com/hectorTSH/dgx-spark-memory-dashboard.git ; cd dgx-spark-memory-dashboard ; python3 scripts/run.py --demo  (UI en http://127.0.0.1:7474/)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/hectorTSH/dgx-spark-memory-dashboard",
+   "licencia": "MIT",
+   "probado_en": "no indicado; el modo --demo no requiere hardware segun el autor",
+   "riesgo": "La contabilidad de KV de vLLM es una limitacion declarada por el autor (pide mejor contabilidad en el post 1); no lee contadores de cgroup ni de dmem segun el texto",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Afirmacion de un usuario: en GB10 los campos de memoria de nvidia-smi dan [N/A]",
+   "como": "nvidia-smi (campos de memoria en [N/A], sin comando especifico en el post)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark del autor, sin version indicada",
+   "riesgo": "Afirmacion de usuario sin verificacion de NVIDIA",
+   "verificable_aqui": "nvidia-smi --query-gpu=memory.used,memory.total --format=csv"
+  }
+ ],
+ "razon": "Un usuario comparte un monitor de memoria unificada con licencia MIT (post 1), creado tras OOM al combinar Ollama y vLLM en el pool de 128 GB, y afirma que nvidia-smi no entrega memoria en GB10. Es una referencia de diseno para medir memoria por proceso; no cita medicion de cgroup y no hay respuesta de NVIDIA.",
+ "leido": true,
+ "omision_nvidia": null,
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

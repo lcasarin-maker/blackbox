@@ -1,0 +1,38 @@
+{
+ "id": 362734,
+ "titulo": "Making your own Intel AutoRound quants on GB10",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta para cuantizar con Intel AutoRound en contenedor PyTorch NGC",
+   "como": "docker run --gpus all -it --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 -v ~/models:/models:ro -v ~/quants:/quants --name autoround-quant autoround:26.01-source ; en ipython: AutoRound(model=model_path, scheme='W4A16', dataset=\"NeelNanda/pile-10k\", nsamples=128, iters=200, enable_torch_compile=True); ar.quantize_and_save(output_dir, format='auto_round')",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/intel/auto-round (citado en el post)",
+   "licencia": "no indicada",
+   "probado_en": "GB10 / imagen nvcr.io/nvidia/pytorch:26.01-py3 (declarado por el usuario)",
+   "riesgo": "enable_torch_compile=True es critico segun el autor; para NVFP4: scheme='NVFP4' y format='llm_compressor'",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de demanda de memoria de la cuantizacion en memoria unificada: carga de Qwen3.5 27B llega a ~90GB de pico y baja a ~55GB; con nsamples=512, iters=500 el log dio peak_ram 60.45GB (inicio) / 61.46GB (fin), peak_vram 54.98GB",
+   "como": "iter solo cuesta tiempo; la memoria adicional escala linealmente con nsamples; low_gpu_mem_usage=True para modelos mayores (sin probar)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 (declarado por el usuario)",
+   "riesgo": "Pico de ~90GB durante la carga cerca del limite de 128GB; riesgo de OOM con RAM y VRAM compartidas.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Guia de usuario con comandos exactos para cuantizar, no un mecanismo de monitoreo del sistema; su valor para la ATOM es la medicion de picos de RAM unificada (~90GB al cargar) como advertencia de OOM. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

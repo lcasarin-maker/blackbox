@@ -1,0 +1,27 @@
+{
+ "id": 381720,
+ "titulo": "Qwen3.8-Flash-Next (UD-Q4_K_XL GGUF) on DGX Spark with llama.cpp: GPU experts + PLE n-gram table streamed from disk, ~25 tok/s, up to 1M context",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Mantener en CPU y servir desde NVMe una tabla de embeddings de 51B parametros para que el resto del modelo quepa en GPU con contexto largo",
+   "como": "-ngl 999 -ot \"per_layer_token_embd.weight=CPU\" (llama.cpp PR #27742, no integrado)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/maci0/qwen3.8-flash-next-spark",
+   "licencia": "no indicada",
+   "probado_en": "un DGX Spark segun el autor: ~25 tok/s de generacion, 76.7 tok/s de evaluacion de prompt, ~1.5 min de carga, 700K-1M de contexto con KV de 4 bits",
+   "riesgo": "Depende de un PR sin integrar de llama.cpp",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Bandera -ot concreta para descargar una tabla grande a CPU/NVMe y ahorrar memoria de GPU, tomada de un solo post de usuario con un modelo especifico. Sin mediciones de estabilidad; sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

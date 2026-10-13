@@ -1,0 +1,82 @@
+{
+ "id": 377365,
+ "titulo": "DGX Spark GB10: partnerdiag PowerStress reproducibly hard-powers-off the box — acpitz 88→97.8°C in 5s, all other field tests pass",
+ "leido": true,
+ "posts_leidos": 10,
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "rastrear",
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Muestreador termico externo a 1 Hz sobre las zonas acpitz, que escribe a disco de forma continua, para capturar el evento aunque la maquina se apague (el log de partnerdiag muere con el equipo y journald cae durante el aislamiento)",
+   "como": "no indicado el script; los datos son las zonas thermal_zone de /sys/class/thermal muestreadas cada segundo con marca de tiempo ISO",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark Product Version A.7, SBIOS 5.36_0ACUM018, driver 580.159.03, kernel 6.17.0-1021-nvidia, partnerdiag r9.257.8",
+   "riesgo": "Cada ejecucion de PowerStress en la maquina afectada fue un apagado forzado",
+   "verificable_aqui": "for z in /sys/class/thermal/thermal_zone*; do echo \"=== $z ===\"; cat $z/type; cat $z/temp; done"
+  },
+  {
+   "que": "Medido antes del corte: meseta zone0/zone5 de 88.7 C durante ~6 minutos, luego salto a 97.8 C en 4 s con zone2 subiendo de 67.4 a 83.9 y zone4 cayendo de 85.6 a 69.7; el apagado ocurrio ~2 s despues del ultimo muestreo. El autor interpreta el intercambio de valores entre zone2 y zone4 como cambio de sensor o calibracion, no como inercia termica",
+   "como": "no indicado (observacion de muestreo, tabla en el post)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un solo equipo, PowerStress de partnerdiag",
+   "riesgo": "Interpretacion del autor, sin confirmacion de NVIDIA",
+   "verificable_aqui": "cat /sys/class/thermal/thermal_zone*/type; cat /sys/class/thermal/thermal_zone*/temp"
+  },
+  {
+   "que": "Actualizar firmware EC y SoC por capsula con fwupdmgr: tras pasar EC 0x03000302 a 0x03000508 y SoC 0x0200980f a 0x02009b0b la maquina ya no se apago; PowerStress devolvio FAIL con codigo 082-000-1-020000600139 (limites termicos excedidos o sensor termico roto o mal calibrado), pico 97.8 C sostenido ~50 s",
+   "como": "fwupdmgr (capsule-on-disk); verificar por cadena de version; no hizo apt upgrade",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "mismo equipo, SBIOS 5.36_0ACUM018 sin cambio, driver 580.159.03, kernel 6.17.0-1021-nvidia",
+   "riesgo": "El firmware detuvo el apagado pero no corrigio el fallo termico; el intercambio de zonas persiste",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Paquete de logs que NVIDIA pide para autorizar RMA (respuesta de staff, usuario Neill): bundle logs-*.tgz, test_status.log, PowerStress/output.log, run.log, mas estos comandos",
+   "como": "sudo journalctl -b -1 > journal_prev_boot.txt ; sudo journalctl -k -b -1 > kernel_prev_boot.txt ; nvidia-smi -q > nvidia-smi-q.txt ; for z in /sys/class/thermal/thermal_zone*; do echo \"=== $z ===\"; cat $z/type; cat $z/temp; done > thermal_zones.txt",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "respuesta de un participante con rol de NVIDIA; el usuario obtuvo RMA aprobado (post 4)",
+   "riesgo": null,
+   "verificable_aqui": "journalctl --list-boots; nvidia-smi -q | head -50"
+  },
+  {
+   "que": "Medida de mitigacion declarada por otro usuario: limitar relojes de GPU a 300-2200; reporta mejoria tras ello pero tambien apagados previos a 94.6 C",
+   "como": "GPU clocks 300-2200 (comando no indicado en el post)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario DannyTup, sin mediciones en el post",
+   "riesgo": "No dice cuanto reduce la temperatura",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK | head -40"
+  },
+  {
+   "que": "Diagnostico de campo de NVIDIA: paquete dgx-spark-fieldiag; en el post 7 el usuario no logra instalarlo por dependencia ofed-scripts no instalable; otro usuario sugiere que Secure Boot lo impide",
+   "como": "sudo apt install dgx-spark-fieldiag (falla con 'Depends: ofed-scripts but it is not installable')",
+   "fuente_post": 7,
+   "repositorio": "https://nvidia.custhelp.com/app/answers/detail/a_id/5767/",
+   "licencia": "no indicada",
+   "probado_en": "usuario DannyTup, sin version declarada; la sugerencia de Secure Boot (posts 8 y 10) es de otro usuario, sin verificar",
+   "riesgo": "En esta maquina Secure Boot esta activo, lo que podria bloquear la instalacion segun esos usuarios",
+   "verificable_aqui": "apt-cache policy dgx-spark-fieldiag ofed-scripts; mokutil --sb-state"
+  }
+ ],
+ "omision_nvidia": "No hay valores publicados de temperatura normal o segura bajo carga (pregunta de un usuario en el post 5, sin respuesta); el unico staff (Neill) pide logs y confirma que un fallo consistente del diagnostico de campo califica para RMA.",
+ "utilidad_atom": "alta",
+ "razon": "Documenta con muestreo a 1 Hz el perfil termico previo a un apagado forzado en un GB10 (zone0/zone5 88.7 a 97.8 C, intercambio zone2/zone4), la actualizacion EC/SoC que cambia apagado por FAIL y los comandos exactos que pide NVIDIA para RMA. Hay respuesta de staff NVIDIA (post 3); el apagado coincide con los cortes en seco de esta maquina pero el hilo no demuestra causa.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

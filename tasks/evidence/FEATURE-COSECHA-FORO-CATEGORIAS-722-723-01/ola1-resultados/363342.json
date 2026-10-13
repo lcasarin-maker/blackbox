@@ -1,0 +1,37 @@
+{
+ "id": 363342,
+ "titulo": "ComfyUI container for DGX Spark",
+ "leido": true,
+ "posts_leidos": 14,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround del aviso 'Unsupported CUDA architecture: sm121' de SageAttention: usar la rama git en vez de v2.2.0",
+   "como": "en 20-SageAttention2.sh comentar la linea 7 #sageattention_version=\"v2.2.0\" y descomentar la linea 8 sageattention_version=\"2-git\"",
+   "fuente_post": 10,
+   "repositorio": "https://github.com/mmartial/ComfyUI-Nvidia-Docker",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el usuario antdeep; el mantenedor dice haber anadido autoseleccion en el script (post 11)",
+   "riesgo": "El tag v2.2.0 no soporta sm121 segun el usuario; la rama 2-git cambia con el tiempo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Compilar componentes (pytorch 2.11, torchvision 0.26, torchaudio 2.11, torchcodec 0.11, SageAttention 2.2, comfy-kitchen 0.2.8) para el SM de GB10",
+   "como": "TORCH_CUDA_ARCH_LIST=12.1a",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "no indicado; el propio usuario AoE dice que no probo el contenedor",
+   "riesgo": "Afirmacion de usuario sin prueba mostrada",
+   "verificable_aqui": "nvidia-smi --query-gpu=compute_cap --format=csv"
+  }
+ ],
+ "omision_nvidia": "La imagen nvcr.io de PyTorch intenta actualizar torch de 2.11 alfa a 2.10 aunque se use --system-site-packages (post 5, usuario martial).",
+ "utilidad_atom": "baja",
+ "razon": "Contenedor Docker de un usuario con parches para sm121 y SageAttention en GB10; los dos mecanismos son de compatibilidad de kernels de imagen, sin relacion con memoria o termica. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

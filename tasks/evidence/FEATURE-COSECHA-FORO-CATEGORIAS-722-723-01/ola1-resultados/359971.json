@@ -1,0 +1,37 @@
+{
+ "id": 359971,
+ "titulo": "DFlash on DGX — Every Token Rate Scaled by Six?",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Calculo del techo de decodificacion limitado por ancho de banda: tok/s = ancho de banda / bytes de pesos activos por token",
+   "como": "273 GB/s / (3B params x 2 bytes = 6 GB) = 45.5 tok/s teorico; medido 50.1 tok/s con DFlash",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, SGLang 0.5.6 PR #16818, Qwen3-Coder-30B-A3B BF16 (declarado por el usuario)",
+   "riesgo": "El propio autor marca el resultado como sujeto a mas pruebas",
+   "verificable_aqui": "nvidia-smi -q | head"
+  },
+  {
+   "que": "Receta SGLang con DFlash y workarounds SM121 (flashinfer, sin DeepGEMM, BF16)",
+   "como": "python3 -m sglang.launch_server --speculative-algorithm DFLASH --attention-backend flashinfer --mem-fraction-static 0.75 --dtype bfloat16 ; SGLANG_ENABLE_JIT_DEEPGEMM=false",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 SM121 (declarado)",
+   "riesgo": "Parche de Python sobre qwen3_moe.py en el Dockerfile",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Aporta una formula de techo por ancho de banda y una receta de decodificacion especulativa; ninguna de las dos monitorea o previene los cortes. El autor mismo cuestiona la ganancia aparente.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

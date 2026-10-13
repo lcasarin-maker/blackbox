@@ -1,0 +1,58 @@
+{
+ "id": 372494,
+ "titulo": "Longcat-Next",
+ "posts_leidos": 14,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "utilidad_atom": "alta",
+ "mecanismos": [
+  {
+   "que": "Fix de congelamiento/OOM por fragmentacion del asignador CUDA de PyTorch en el encoder de vision (sglang) en un Spark",
+   "como": "PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark headless de un usuario (yaro.tal); sin version de driver ni kernel indicada",
+   "riesgo": "Afirmacion de un usuario sin cifras de antes y despues; el autor del modelo dice despues (post 8) que cree resuelto su lado",
+   "verificable_aqui": "docker exec <contenedor> env | grep PYTORCH_CUDA_ALLOC_CONF"
+  },
+  {
+   "que": "Sin earlyoom el nodo se congela entero con una conversacion larga con imagenes; con earlyoom el kernel-space no cae porque earlyoom mata el contenedor sglang",
+   "como": "no indicado (solo menciona earlyoom configurado, sin comando ni umbrales)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark headless de un usuario",
+   "riesgo": "Mata el contenedor para evitar el congelamiento del nodo",
+   "verificable_aqui": "systemctl status earlyoom"
+  },
+  {
+   "que": "Advertencia: subir la fraccion de memoria hace que el equipo se apague en seco sin OOM ordenado cuando se agota la memoria unificada; receta agente con fraccion 0.88",
+   "como": "LCN_AGENT=1 MAX_TOTAL_TOKENS=917504 MEM_FRACTION=0.88",
+   "fuente_post": 9,
+   "repositorio": "https://github.com/InquiringMinds-AI/longcat-next-multimodal",
+   "licencia": "no indicada",
+   "probado_en": "un Spark GB10, segun el autor del repo; el texto del post 9 lo redacto un agente y el autor lo reviso",
+   "riesgo": "Apagado en seco sin OOM gracioso al agotar la memoria unificada",
+   "verificable_aqui": "free -m; nvidia-smi --query-gpu=memory.used --format=csv"
+  },
+  {
+   "que": "Dato de KV: cache MLA comprimida de unos 31.5 KB por token, 3.94 GB para 128k de contexto; KV fp8 redujo el throughput 43 por ciento en este stack",
+   "como": "no indicado como comando; cifras del post: 31.5 KB/token, 3.94 GB a 128k, pool de KV de 819k tokens",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un Spark GB10 segun el autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "razon": "Dos usuarios reportan en un Spark que agotar la memoria unificada congela el nodo o lo apaga en seco sin OOM ordenado, y dan como fix PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True y earlyoom. Son afirmaciones de usuarios sin respuesta de NVIDIA ni cifras antes/despues; los valores del post 9 fueron redactados por un agente y revisados por el autor.",
+ "leido": true,
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

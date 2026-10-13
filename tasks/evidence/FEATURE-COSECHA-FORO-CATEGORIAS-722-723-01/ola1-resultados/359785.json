@@ -1,0 +1,91 @@
+{
+ "id": 359785,
+ "titulo": "Title: ASUS Ascent GX10 (GB10) hard power-off / unclean reboot under vLLM (gpt-oss-120b, long context)",
+ "leido": true,
+ "posts_leidos": 34,
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "rastrear",
+  "prevenir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Bucle de lectura de todas las zonas termicas del kernel; el usuario vio ~94 C en dos zonas (filas 1 y 6) al cortarse mientras la GPU marcaba 76 C",
+   "como": "while $true ;do paste <(cat /sys/class/thermal/thermal_zone*/type) <(cat /sys/class/thermal/thermal_zone*/temp) | awk '{printf \"%-20s %.2f °C\\n\", $1, $2/1000}' ; echo \"\"; sleep 2; done",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10, Qwen3-coder-next con 235000 de contexto (declarado por ToPa97)",
+   "riesgo": "Es afirmacion del usuario (\"no estoy 100% seguro\") sobre la causa; el bucle es solo lectura",
+   "verificable_aqui": "paste <(cat /sys/class/thermal/thermal_zone*/type) <(cat /sys/class/thermal/thermal_zone*/temp)"
+  },
+  {
+   "que": "Mitigacion por software ante calor: limitar la CPU del proceso del motor vLLM con cpulimit cuando la temperatura llega a un umbral",
+   "como": "cpulimit sobre el proceso de vLLM (umbral no indicado)",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10 (declarado)",
+   "riesgo": "Parche improvisado segun el propio usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fijar el reloj de la GPU a 2000 MHz estabiliza temperatura y potencia durante la inferencia; el usuario dice que la curva de ventilador por defecto es insuficiente y espera una BIOS futura",
+   "como": "locking the GPU clock to 2000 MHz (comando no indicado)",
+   "fuente_post": 29,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10 (declarado)",
+   "riesgo": "Comando no dado; reduce rendimiento",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Bajar el contexto y la fraccion de memoria de vLLM detuvo los apagados con gpt-oss-120b; luego el mismo patron reaparecio con Nemotron-3-Nano NVFP4 con Xid 13 y Xid 43",
+   "como": "--max-model-len 65536 --gpu-memory-utilization 0.65 (original: --max-model-len 131072 --gpu-memory-utilization 0.72)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10, driver 580.126.09, kernel 6.14.0-1015-nvidia (declarado por siertum)",
+   "riesgo": "El propio autor documenta recurrencia con otro modelo (post 8); la unidad se sustituyo por hardware nuevo sin causa raiz (post 34)",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw --format=csv"
+  },
+  {
+   "que": "Cadena de busqueda de pistas de OOM/Xid del driver en el log del arranque anterior, mas marcadores de apagado sucio",
+   "como": "journalctl -b -1 -k | egrep 'nvCheckOkFailed|NV_ERR_NO_MEMORY|Out of memory|Xid' ; marcador 'File ... corrupted or uncleanly shut down, renaming and replacing'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -b -1 -k | egrep 'nvCheckOkFailed|NV_ERR_NO_MEMORY|Out of memory|Xid'"
+  },
+  {
+   "que": "Diagnostico de campo de NVIDIA: la prueba GpuStress apaga la maquina; otro usuario obtuvo fallo con 'Acceptable temperature limits exceeded or the thermal sensor is broken or miscalibrated'",
+   "como": "sudo init 3 ; cd /opt/nvidia/dgx-spark-fielddiag ; sudo ./partnerdiag --field",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10, OneDiag r9.257.3 (declarado)",
+   "riesgo": "La prueba provoca el apagado y puede danar o apagar en seco la maquina",
+   "verificable_aqui": "ls /opt/nvidia/dgx-spark-fielddiag"
+  },
+  {
+   "que": "Causas ambientales reportadas por usuarios: elevar la unidad ~1 pulgada o ponerla de lado y ventilar con un ventilador de 140 mm evito los apagados; quitar un dongle USB; desconectar la fuente varias horas para reiniciar negociacion USB-C PD tras actualizar firmware",
+   "como": "no indicado (sin comando; medidas fisicas)",
+   "fuente_post": 21,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10 (declarado por varios usuarios)",
+   "riesgo": "Sin verificacion independiente; el usuario twaggs88 reporta aun ~90 C",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA staff (NVES, post 11, 13, 26, y aniculescu, post 16) solo remite a RMA con ASUS y a Field Diagnostics; no da causa, no documenta apagados por termica y no ofrece captura de diagnostico al cortarse en seco.",
+ "utilidad_atom": "alta",
+ "razon": "Hilo de usuarios con comandos de medicion termica y mitigaciones declaradas (contexto 65536, fijar reloj 2000 MHz, cpulimit) sobre cortes en seco en GB10, con respuestas de NVIDIA que solo derivan a RMA. Ninguna causa raiz verificada; ASUS GX10, no la maquina Gigabyte del proyecto.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

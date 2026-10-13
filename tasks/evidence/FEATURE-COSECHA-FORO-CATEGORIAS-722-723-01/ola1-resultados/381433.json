@@ -1,0 +1,49 @@
+{
+ "id": 381433,
+ "titulo": "GLM-5.3-Flash running on 2x DGX Spark (sm_121) day-0 - 24.7-30.3 tok/s with MTP-5; two silent GB10 gotchas worth knowing",
+ "leido": true,
+ "posts_leidos": 7,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "rastrear",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Fallo silencioso: el backend NVFP4 MoE auto-seleccionado FLASHINFER_CUTLASS en sm_121 produce salida degenerada (bucles de tokens) sin errores ni /health rojo; el workaround es forzar marlin",
+   "como": "--moe-backend marlin",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/kingjones30/GLM-5.3-Flash-2x-DGX-Spark",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark GB10 (sm_121), imagen vLLM glm53-flash-arm64-cu130, DGX Spark OS stock",
+   "riesgo": "Salida basura con /health verde; hay que verificar que backend MoE se activo.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Diagnostico de falsa suspension: el bucle de 60+ minutos 'No available shared memory broadcast block found' al arrancar puede ser autotuning de FlashInfer; se distingue mirando la CPU del worker (150%+) y la cache persiste en ~/.cache/vllm",
+   "como": "mirar CPU del proceso worker; cache en ~/.cache/vllm",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark segun el autor",
+   "riesgo": "El autor mato dos arranques sanos por creerlos colgados.",
+   "verificable_aqui": "ls -la ~/.cache/vllm"
+  },
+  {
+   "que": "Riesgo de OOM del sistema: con el procesador multimodal el front-end de la API crece a 15.7 GB anon y el kernel lo mata por OOM; se evita con --language-model-only",
+   "como": "--language-model-only",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark segun el autor",
+   "riesgo": null,
+   "verificable_aqui": "sudo dmesg | grep -i -E 'oom|killed process'"
+  }
+ ],
+ "omision_nvidia": "El autor dice que la receta del proveedor verifica solo H100/B200/GB200 y que el selector de backends de atencion para sm_121 falla de fabrica con esta arquitectura.",
+ "utilidad_atom": "media",
+ "razon": "Reporte de usuario con tres avisos concretos y accionables (backend MoE silencioso, autotuning lento, OOM por procesador multimodal) pero ligados a vLLM/GLM y a 2 nodos. No hay respuesta de NVIDIA; los numeros son medicion propia del autor.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

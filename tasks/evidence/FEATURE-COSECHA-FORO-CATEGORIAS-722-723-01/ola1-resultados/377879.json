@@ -1,0 +1,70 @@
+{
+ "id": 377879,
+ "titulo": "GLM-5.2 (unpruned) @ 200K context on 4× DGX Spark — 27 tok/s single / 52.5 tok/s @c4",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "monitorear",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Evitar que la carga de pesos se atasque por el page cache en memoria unificada GB10: vaciar el cache cada 60 s en todos los nodos mientras dura la carga (unos 98 GB por nodo)",
+   "como": "echo 3 > /proc/sys/vm/drop_caches  (en bucle cada 60s en todos los nodos durante la carga)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "4 DGX Spark GB10 (sm_121, aarch64, 128 GB cada uno) segun el autor",
+   "riesgo": "Requiere escribir en /proc como root; el post no mide el efecto, solo dice que sin esto la carga se atasca",
+   "verificable_aqui": "grep -E 'MemAvailable|^Cached|Dirty' /proc/meminfo"
+  },
+  {
+   "que": "No matar con SIGKILL ni con docker rm -f los procesos CUDA en GB10: las asignaciones de memoria unificada de la GPU se filtran y no se recuperan hasta reiniciar; parar con SIGTERM o un script de parada limpio",
+   "como": "SIGTERM / parada limpia (docker stop) en vez de SIGKILL / docker rm -f",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "4 DGX Spark segun el autor (afirmacion de usuario)",
+   "riesgo": "La fuga persiste hasta el reinicio segun el autor",
+   "verificable_aqui": "free -m && nvidia-smi --query-compute-apps=pid,used_memory --format=csv"
+  },
+  {
+   "que": "Verificar que la version de vLLM construida es la fijada: los preset PRs se mezclan con git merge sobre la referencia y arrastran cambios de main sin avisar; en este caso rompieron el KV fp8_ds_mla con el error de shape '[N, 64, 576]' contra 656",
+   "como": "ARG VLLM_APPLY_PRESET_PRS=\"0\" en el Dockerfile; comprobar que el version string sea exactamente dev190+gab6660699 (el build derivado mostraba dev851+g84710906a)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "4 DGX Spark, vLLM TP=4 segun el autor",
+   "riesgo": "Un build no fijado cambia de comportamiento sin aviso",
+   "verificable_aqui": "docker run --rm --entrypoint python3 <imagen-vllm-local> -c 'import vllm; print(vllm.__version__)' (si hay imagen local; no ejecutado)"
+  },
+  {
+   "que": "Senales de saturacion de concurrencia en trafico de agentes, en orden de utilidad segun el autor: profundidad de cola (num_requests_waiting), flujo de tokens generados (no peticiones completadas), y costo fijo de KV por peticion medido por el metodo delta con peticiones pequenas",
+   "como": "metrica num_requests_waiting de vLLM; flujo de tokens generados; el 'GPU KV cache size' del log se deriva como max_concurrency x max_model_len y no es comparable entre distintos max-model-len",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "4 DGX Spark con GLM-5.2, trafico de agentes MCP (relacion prefill:decode 192:1, 3.2M tokens de prompt contra 16.6K generados)",
+   "riesgo": "La tasa de aceptacion de MTP y el tok/s por stream son malos indicadores (dependen del contenido)",
+   "verificable_aqui": "curl -s http://localhost:8000/metrics | grep -E 'num_requests_(waiting|running)'"
+  },
+  {
+   "que": "Comprobar que NCCL usa InfiniBand y no cae a TCP en silencio: todo funciona igual pero mas lento",
+   "como": "NCCL_IB_HCA=mlx5_1, interfaz enp1s0f1np1; el rendimiento agregado es la prueba (52.5 tok/s en c4 es imposible por TCP segun el autor)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "4 DGX Spark segun el autor",
+   "riesgo": "Aplica solo a cluster multinodo",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El post 1 reune advertencias operativas con condicion (drop_caches durante la carga, no usar SIGKILL por fugas de memoria unificada, fijar la version de vLLM) y el post 3 da senales de saturacion medibles; todo es de usuarios con cluster de 4 nodos y sin respuesta de NVIDIA. La fuga tras SIGKILL y el efecto de drop_caches son afirmaciones del autor sin medicion en el texto.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

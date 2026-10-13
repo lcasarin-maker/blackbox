@@ -1,0 +1,38 @@
+{
+ "id": 370266,
+ "titulo": "NVFP4 quantization of a 123B Mistral-Large finetune on a 3-node heterogeneous cluster (2× Spark + 1× RTX 3090, distributed via Ray)",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Evidencia de presupuesto de memoria unificada: dos fragmentos BF16 de ~115 GB en dos Spark de 128 GB dejan ~13 GB libres, y la calibracion de modelopt suma 2-3 GB de activaciones por pasada; ambos intentos de 2 nodos activaron el OOM-killer del kernel Linux en la fase 3b",
+   "como": "reparto 41/41/6 capas entre dos Spark y una RTX 3090 (~115 GB / ~118 GB por Spark); pipeline con --shard-layers a,b,c",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/KaletoAI/distrib-nvfp4",
+   "licencia": "no indicada (el modelo hereda Mistral Research License, solo investigacion)",
+   "probado_en": "2x DGX Spark mas RTX 3090 en VM Proxmox por 2.5 GbE, vLLM 0.20.2rc1.dev53, segun el usuario kai.koehler",
+   "riesgo": "Con menos de 13 GB libres en la memoria unificada el kernel mata procesos por OOM",
+   "verificable_aqui": "free -g ; dmesg | grep -i 'out of memory'"
+  },
+  {
+   "que": "Variables de vLLM que dieron +12% de tok/s con un modelo de 123B (2.86 a 3.21 tok/s)",
+   "como": "VLLM_NVFP4_GEMM_BACKEND=marlin VLLM_TEST_FORCE_FP8_MARLIN=1 VLLM_MARLIN_USE_ATOMIC_ADD=1 --attention-backend flashinfer",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "una Spark, vLLM 0.20.2rc1.dev53, segun el usuario",
+   "riesgo": "Con contexto largo el decode esta limitado por ancho de banda de KV cache y Marlin no ayuda",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El post 1 aporta un caso medido de OOM-killer con ~13 GB de margen en memoria unificada y las variables de vLLM con su ganancia (+12%). Son datos de un usuario con una sola prueba y sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

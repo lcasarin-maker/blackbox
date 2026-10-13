@@ -1,0 +1,37 @@
+{
+ "id": 380973,
+ "titulo": "Yet another monitoring dashboard for GB10 clusters or even standalone installs",
+ "posts_leidos": 12,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear"
+ ],
+ "utilidad_atom": "media",
+ "mecanismos": [
+  {
+   "que": "Dashboard de monitoreo para GB10 (agente por nodo, backend Prometheus con retencion de 180 dias, alertas por ntfy.sh, estadisticas tipo nvitop, RDMA y tarjeta de temperatura); solo lectura, no carga ni descarga modelos",
+   "como": "git clone https://github.com/anakronox/spark-dash && cd spark-dash ; ./scripts/build-images.sh backend ; cd central && cp .env.example .env && docker compose up -d  (nodo: ./scripts/build-images.sh agent ; cd node ; cp .env.example .env ; docker compose up -d con BACKEND_URL=http://10.0.0.10:8080)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/anakronox/spark-dash",
+   "licencia": "no indicada",
+   "probado_en": "3 sistemas GB10 del autor y un cluster 4xDGX de otro usuario (post 7); el autor dice que la tarjeta de temperatura se agrego en el post 6",
+   "riesgo": "Codigo generado con Claude segun el propio autor (post 1); sin licencia indicada en el texto, se trata como no reutilizable; el agente corre en Docker en cada nodo",
+   "verificable_aqui": "docker ps --format '{{.Names}} {{.Image}}'"
+  },
+  {
+   "que": "Costo medido del agente: RAM y CPU por nodo durante 100 horas",
+   "como": "spark-dash-agent 83-170 MiB, node-exporter 16-18 MiB, promedio 2.0-2.6 por ciento de un core en 100 h (suma por nodo 99-187 MiB, 2.2-2.8 por ciento de un core)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3 nodos GB10 del autor",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "razon": "Un usuario publica un monitor para GB10 con alertas y una tarjeta de temperatura, con comandos de instalacion y costo de recursos medido por el propio autor (post 10). Es un monitor de terceros hecho con IA y sin licencia indicada; el repo bb ya mide memoria y temperatura, por lo que sirve como referencia de que metricas exponer, sin respuesta de NVIDIA.",
+ "leido": true,
+ "omision_nvidia": null,
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

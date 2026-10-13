@@ -1,0 +1,60 @@
+{
+ "id": 378890,
+ "titulo": "Agent Serving on 2× DGX Spark with DeepSeek V4 Flash 0731: KV-cache, scheduling, and UMA findings",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Fallo del chequeo de memoria al arranque de vLLM en GB10: el cache de paginas reclamable de Linux se trata como no disponible (vLLM issue #48140). En tres arranques reporto 4.22, 5.18 y 5.34 GiB disponibles para KV; el perfil de 262K necesitaba 18.35 GiB y fue rechazado siempre, el de 32K (~2.3 GiB) arranco",
+   "como": "mitigaciones propuestas, no verificadas por el autor: drop_caches explicito y registrado antes del arranque, o un parche local de contabilidad de memoria consciente de UMA (comando exacto no indicado)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/SvangenStudios/dgx-spark-agent-serving-benchmarks",
+   "licencia": "no indicada",
+   "probado_en": "despliegue de un solo nodo Laguna S 2.1, GB10, segun el autor",
+   "riesgo": "El autor dice que no completo la prueba de causalidad para 262K; las mitigaciones no estan verificadas",
+   "verificable_aqui": "grep -E 'MemAvailable|Cached|MemFree' /proc/meminfo; free -m"
+  },
+  {
+   "que": "Bajar --max-num-batched-tokens de 8192 a 2048 aumenta el pool de KV reportado de ~1.60M a 2.61-2.67M tokens (+63-67%), reduce el hueco p95 de salida un 73% y da 2.9x mas parte de decodificacion durante un prefill largo, a costa de 7.7% de prefill (1,462 frente a 1,584 tok/s)",
+   "como": "--max-num-batched-tokens 2048",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/SvangenStudios/dgx-spark-agent-serving-benchmarks",
+   "licencia": "no indicada",
+   "probado_en": "2x GB10, TP=2 sobre RoCE, vLLM 0.21.1rc1.dev339 con overlay DSpark segun el autor",
+   "riesgo": "Un solo despliegue parcheado, no reproducido en vLLM upstream; el KV pool varia ~2.3% entre arranques; un prefill largo bloquea requests nuevas durante ~145-159 s",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de medicion corregido: contar tokens de token_ids en streaming y contrastarlos con usage.completion_tokens, no contar eventos SSE (un chunk lleva en promedio 2.50 tokens con decodificacion especulativa; contar eventos subestimaba 2.11x)",
+   "como": "return_token_ids: true; comparar con usage.completion_tokens; usar cada flujo en curso como su propia linea base (25 s sin perturbar)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/SvangenStudios/dgx-spark-agent-serving-benchmarks",
+   "licencia": "no indicada",
+   "probado_en": "mismo despliegue",
+   "riesgo": "El autor retiro dos cifras publicadas (7.1% y 7.3%) y revirtio una conclusion",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Prefijo de cache: mover el campo cambiante de abajo arriba multiplico el coste por turno 39.6x en DeepSeek/DSpark y 13.7x en Laguna; regla 'contenido estable primero, dinamico al final'",
+   "como": "no indicado (herramienta propia de captura de proxy en el repositorio)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/SvangenStudios/dgx-spark-agent-serving-benchmarks",
+   "licencia": "no indicada",
+   "probado_en": "mismo despliegue",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Describe con tamanos medidos el fallo documentado de contabilidad de memoria de vLLM en UMA (page cache tratado como no disponible, issue #48140) y un metodo de medicion corregido con control cruzado contra el contador del servidor. Las mitigaciones para la memoria no estan verificadas por el autor, y es un despliegue parcheado sin reproduccion externa.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

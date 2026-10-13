@@ -1,0 +1,39 @@
+{
+ "id": 373676,
+ "titulo": "MiniMax-M2.5-NVFP4 on 4× DGX Spark via SGLang TP=4 EP=4: 124 tok/s aggregate @ n=8 (fixing the CUTLASS MoE compile OOM with MAX_JOBS=1)",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "La compilacion JIT de kernels CUTLASS MoE muere con ninja exit status 137 (SIGKILL del OOM killer) por RAM del host, no de GPU; la solucion es serializar la compilacion",
+   "como": "-e MAX_JOBS=1 -e NVCC_THREADS=1 -e OMP_NUM_THREADS=4 ; ademas --mem-fraction-static 0.8 en lugar de 0.9",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark (GB10, sm_121a, 128 GiB UMA por nodo), SGLang compilado desde fuente de BTankut",
+   "riesgo": "anade 10-15 minutos al primer arranque (cache de kernels vacia); el autor dice que cada kernel consume 5-8 GB de RAM del host y que el paralelismo por defecto en 20 nucleos agota el pool unificado",
+   "verificable_aqui": "journalctl -k --no-pager | grep -iE 'out of memory|oom-kill|Killed process' | tail -n 20"
+  },
+  {
+   "que": "Flags de Docker y NCCL para RDMA en cluster: dispositivo infiniband, IPC_LOCK, memlock ilimitado, NCCL con HCA RoCE",
+   "como": "--device=/dev/infiniband --cap-add=IPC_LOCK --ulimit memlock=-1 --ulimit stack=67108864 --ipc=host --network=host --gpus all ; -e NCCL_SOCKET_IFNAME=enp1s0f0np0 -e NCCL_IB_HCA=rocep1s0f0 -e NCCL_IB_DISABLE=0 -e NCCL_DEBUG=INFO -e NCCL_DEBUG_SUBSYS=INIT,NET -e TORCH_NCCL_ASYNC_ERROR_HANDLING=1",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10 con ConnectX-7 RoCE y switch MikroTik de 200 GbE",
+   "riesgo": "nombres de interfaz y HCA son de su cluster; el autor atribuye a RDMA un 2.5x pero lo dice como conjetura",
+   "verificable_aqui": "ibv_devinfo 2>/dev/null | head ; ip -br link"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Un usuario documenta con comandos exactos un OOM del host durante la compilacion de kernels (exit 137) en memoria unificada de GB10, con su remedio. Sin respuesta de NVIDIA; los numeros de rendimiento son del autor.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

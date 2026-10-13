@@ -1,0 +1,27 @@
+{
+ "id": 381551,
+ "titulo": "Qwen 3.8-Flash-Next Single Node VLLM 24 tok/s",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reduccion de memoria del checkpoint: empaquetar en NVFP4 solo la tabla PLE n-gram de 51.2B parametros que seguia en BF16 y ocupaba 95.368 GiB, ahorrando 68.5 GB; el checkpoint NVFP4 original pesaba 170.189 GiB. Se sirve con TP1, executor mp, PLE en CPU offload y KV BF16",
+   "como": "no indicado (repositorio con el script y el checkpoint)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/provsalt/qwen3.8-flash-ple-nvfp4",
+   "licencia": "no indicada",
+   "probado_en": "NVIDIA GB10 (una DGX Spark) segun el usuario raymond.goo; 24.1 tok/s con MTP de tres tokens",
+   "riesgo": "Cifra de rendimiento sin metodo detallado en el post",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El post 1 describe como hacer caber un modelo grande en 128 GB cuantizando una tabla que quedaba en BF16, con tamanos medidos (95.368 GiB y 68.5 GB). Es especifico de un modelo y no da comando; sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

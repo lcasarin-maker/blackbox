@@ -1,0 +1,38 @@
+{
+ "id": 369263,
+ "titulo": "Atlas: Open-source inference engine for DGX Spark <2minute cold start, 100+ tok/s on Qwen3.6-35B-FP8, 13+ supported models",
+ "leido": true,
+ "posts_leidos": 27,
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Atlas incluye una guarda de memoria en la carga del modelo: aborta si la memoria GPU libre cae bajo un margen tras cualquier shard, para evitar OOM del sistema",
+   "como": "--oom-guard-mb <MB> (default 4096) ; --gpu-memory-utilization (default 0.9) ; --max-num-seqs (default 128) ; --max-seq-len (default 32768)",
+   "fuente_post": 20,
+   "repositorio": "https://github.com/Avarok-Cybersecurity/atlas",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10; imagen avarok/atlas-gb10:latest",
+   "riesgo": "el propio autor reconoce que la receta publicada fallaba con 'KV cache can hold at most 0 concurrent sequence(s)' porque los pesos NVFP4 del 122B ocupan ~108 GB de un presupuesto de ~110 GB (post 14); varios usuarios reportan fallos de tool calls y caida de 35-40% de throughput con 2 solicitudes concurrentes (posts 34-40, 95, 99)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Afirmacion de un usuario (aaronannas): GB10 (sm_121) carece de tcgen05 y de MMA cooperativo de 2 SM necesarios para la via rapida NVFP4, por lo que NVFP4 cae a dequant-a-BF16 (~12 tok/s, 5x mas lento que FP8) y el cold start de Atlas (~44 s vs ~10 min en vLLM) es su unica ventaja",
+   "como": "no indicado (sin comando de verificacion)",
+   "fuente_post": 101,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "1 DGX Spark GB10 (128GB unified), Qwen3.6-35B-A3B-FP8, avarok/atlas-gb10:latest",
+   "riesgo": "afirmacion de usuario sin verificar por NVIDIA; contradice los 130 tok/s NVFP4 del autor de Atlas (post 1)",
+   "verificable_aqui": "nvidia-smi --query-gpu=name,compute_cap --format=csv"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Hilo de lanzamiento y debate de un motor de inferencia en Rust, con muchas quejas de documentacion y rendimiento; los datos utiles para ATOM son la guarda --oom-guard-mb y el presupuesto de KV/memoria que dejo en 0 bloques. Sin respuesta de staff de NVIDIA; licencia no indicada.",
+ "lectura": "parcial",
+ "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+}

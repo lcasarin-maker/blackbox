@@ -1,0 +1,48 @@
+{
+ "id": 359663,
+ "titulo": "Support for Qwen3-TTS on DGX Spark (GB10) | torchaudio installation failure on ARM64",
+ "leido": true,
+ "posts_leidos": 23,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Instalar torchaudio/torch con ruedas cu130 desde el indice de pytorch.org porque las imagenes NGC pytorch no incluyen torchaudio",
+   "como": "export PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cu130 ; o: pip install torch torchaudio --index-url=https://download.pytorch.org/whl/cu130 (borrar antes torch, torchaudio, torchvision)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, Qwen3-TTS en ComfyUI segun el usuario nav-intel",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Contenedor Docker faster-qwen3-tts con API TTS compatible OpenAI y CUDA graphs; comandos de arranque y prueba",
+   "como": "docker compose up -d ; curl http://localhost:8020/health ; POST /v1/audio/speech con model tts-1 ; opciones --max-seq-len 2048, chunk_size 4",
+   "fuente_post": 7,
+   "repositorio": "https://github.com/mARTin-B78/dgx-spark-faster-qwen3-tts",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 ARM64/SM121/CUDA13 segun el autor; usa ~6 GB de memoria GPU; RTF ~0.8",
+   "riesgo": "El post 7 afirma que Flash Attention no compila en SM 121; el autor reconoce que parte del texto lo redacto una IA (post 10) y varios usuarios reportan fallos de arranque (posts 9, 11, 13)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de latencia de un servicio TTS: TTFA, tiempo total, RTF",
+   "como": "python benchmark_api.py --host localhost --port 8020 --runs 3",
+   "fuente_post": 25,
+   "repositorio": "https://github.com/mARTin-B78/dgx-spark-faster-qwen3-tts",
+   "licencia": "no indicada",
+   "probado_en": "GB10, modelo 1.7B",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu, post 3) dice que torchaudio se esta deprecando y por eso no viene en los contenedores NVIDIA pytorch; se debe usar el build de pytorch.org.",
+ "utilidad_atom": "baja",
+ "razon": "El hilo resuelve la instalacion de torchaudio y la puesta en marcha de un TTS en contenedor; no trata memoria, termica ni monitoreo, salvo el dato de ~6 GB de GPU y la omision de torchaudio en NGC. Respuesta de NVIDIA en el post 3; el hack del post 6 (mock de torchaudio) es de un usuario sin verificacion.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

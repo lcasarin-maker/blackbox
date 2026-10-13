@@ -1,0 +1,27 @@
+{
+ "id": 358614,
+ "titulo": "ASR on Spark with nemotron-speech-streaming-en-0.6b",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "diagnostico",
+ "proposito": [
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Instalar NeMo ASR en Spark funciona; convertir .nemo a formato Riva con nemo2riva falla en arm64 por dependencias (nvidia-eff, onnxruntime)",
+   "como": "pip install git+https://github.com/NVIDIA/NeMo.git@main#egg=nemo_toolkit[asr]; contenedor nvcr.io/nvidia/riva/riva-speech:2.19.0 corre en Spark pero sin nemo2riva instalable",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, usuario joshua.dale.warner (el post 5 de otro usuario afirma pasos que funcionan, el post 6 los reproduce y falla)",
+   "riesgo": "Workaround: convertir en una maquina x86_64 (post 2 y 4)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Riva no tiene build oficial para Spark; la imagen Riva ASR NIM seria exclusivamente x86_64 segun release notes citadas (post 1); el contenedor riva-speech 2.15.1-servicemaker no soporta GB10 (post 4).",
+ "utilidad_atom": "ninguna",
+ "razon": "Hilo sobre ASR/Riva, sin relacion con memoria o termica; documenta una omision de soporte arm64 de Riva. No hay respuesta de staff de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

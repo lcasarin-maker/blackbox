@@ -1,0 +1,27 @@
+{
+ "id": 371355,
+ "titulo": "NVFP4 LoRA training on Nemotron-3-Super-120B recipe",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Cifras de memoria pico medidas durante entrenamiento LoRA NVFP4 en un solo Spark: Super-120B 93.2 GB, Nano-30B NVFP4 36.1 GB, Nano-30B BF16 67.5 GB; contexto 24576 estable pero dejando solo 2.6 GB disponibles",
+   "como": "no indicado (ver repositorio)",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/NvMayMay/nvfp4-lora-spark",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 128 GB UMA, CUDA 13 segun el autor",
+   "riesgo": "A 24576 de contexto quedan 2.6 GB libres: cerca del limite de memoria del equipo",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun el autor, los checkpoints NVFP4 de Nemotron-3 de NVIDIA no son compatibles de forma directa con las herramientas LoRA estandar (PEFT), motivo del proyecto.",
+ "utilidad_atom": "baja",
+ "razon": "Receta de entrenamiento con cifras de pico de memoria de un usuario; sin comandos en el texto ni medicion de estabilidad. Sin respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

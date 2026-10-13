@@ -1,0 +1,80 @@
+{
+ "id": 376542,
+ "titulo": "Spark-comfyui, a self-healing ComfyUI setup for DGX Spark",
+ "leido": true,
+ "posts_leidos": 36,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Deteccion de reloj atascado: algunas unidades quedan con SM fijo en 513-721 MHz sin razon de throttle tras un OOM o un evento de energia; los relojes en reposo son bajos por diseno, por eso el chequeo corre un matmul corto y muestrea bajo carga; solo un ciclo de corriente lo limpia",
+   "como": "./spark-comfyui.sh doctor (ejecuta matmul corto y muestrea el reloj SM bajo carga)",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/bjarkebolding/spark-comfyui",
+   "licencia": "no indicada",
+   "probado_en": "una DGX Spark (el autor solo tiene una unidad); driver no indicado",
+   "riesgo": "afirmacion de usuario; coincide con la de otro tema (reloj a 611 MHz) pero sin verificacion de NVIDIA",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,clocks.max.sm,power.draw,utilization.gpu --format=csv -l 1"
+  },
+  {
+   "que": "Monitor en vivo con serie temporal de temperatura GPU, potencia, reloj SM, utilizacion, memoria unificada, CPU, E/S de disco y banderas de throttle/swap; cada muestra queda en thermal_monitor.log con memoria por proceso de GPU",
+   "como": "./spark-comfyui.sh status --watch 1 ; el log thermal_monitor.log rota al superar 50 MB",
+   "fuente_post": 3,
+   "repositorio": "https://github.com/bjarkebolding/spark-comfyui",
+   "licencia": "no indicada",
+   "probado_en": "una DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw,clocks.sm,utilization.gpu --format=csv -l 1"
+  },
+  {
+   "que": "Tope de reloj persistente (clock cap) que el autor dice que previene reinicios por sobrecorriente; tune tambien apaga swap, y un usuario reporta que con un tope de ~2000 MHz la GPU baja de ~80 C a 65-70 C en generaciones largas",
+   "como": "./spark-comfyui.sh tune --persist --clock-cap <MHz> ; ./spark-comfyui.sh tune --revert (swap de nuevo, relojes desbloqueados, persistencia fuera, borra unidad de arranque y linea sysctl)",
+   "fuente_post": 28,
+   "repositorio": "https://github.com/bjarkebolding/spark-comfyui",
+   "licencia": "no indicada",
+   "probado_en": "Spark segun usuario ai-j (Minimax H3, ~80 C de serie, 2000 MHz como punto dulce); valor del cap no indicado por el autor",
+   "riesgo": "tune modifica swap, relojes y una unidad systemd del host; el post no da el comando de bloqueo de reloj subyacente",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK | head -n 30 ; swapon --show"
+  },
+  {
+   "que": "Reservar memoria unificada para otro proceso: parche a get_free_memory de ComfyUI para leer el pool unificado (corrige una ralentizacion de 5-15x cuando vLLM comparte la GPU) y variable que deja libres GB del pool",
+   "como": "SPARK_RESERVE_VRAM=8 (deja 8 GB libres del pool unificado)",
+   "fuente_post": 24,
+   "repositorio": "https://github.com/bjarkebolding/spark-comfyui",
+   "licencia": "no indicada",
+   "probado_en": "Spark con vLLM (Gemma4) segun ai-j",
+   "riesgo": null,
+   "verificable_aqui": "grep -E 'MemTotal|MemAvailable' /proc/meminfo"
+  },
+  {
+   "que": "/dev/shm mayor por errores de bus que el fabric unificado vuelve rutinarios",
+   "como": "/dev/shm por defecto a 16g (docker --shm-size)",
+   "fuente_post": 11,
+   "repositorio": "https://github.com/bjarkebolding/spark-comfyui",
+   "licencia": "no indicada",
+   "probado_en": "una Spark",
+   "riesgo": null,
+   "verificable_aqui": "df -h /dev/shm"
+  },
+  {
+   "que": "Compilar SageAttention con torch 2.14 (C++20) sin parchar el fuente",
+   "como": "CXX_APPEND_FLAGS=\"-std=c++20\" NVCC_APPEND_FLAGS=\"-std=c++20\" pip install ...",
+   "fuente_post": 31,
+   "repositorio": "https://github.com/bjarkebolding/spark-comfyui",
+   "licencia": "no indicada",
+   "probado_en": "sm_121 / GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El autor publica una herramienta con deteccion de reloj atascado (SM a 513-721 MHz tras OOM o evento de energia), monitor termico a log, tope de reloj persistente y reserva de memoria unificada, con comandos y variables exactos y respuestas de varios usuarios. Sin respuesta de NVIDIA; licencia no indicada.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

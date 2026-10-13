@@ -1,0 +1,38 @@
+{
+ "id": 362255,
+ "titulo": "Step-3.5-Flash on Single Spark with 256k context",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Correr un MoE 196B con contexto 256k en un Spark sin OOM: cuantizacion IQ4_XS (mas chica que el Int4 oficial), KV cache a 8 bits, sin mmap; el autor dice que usa unos 125.5 GB de 128 GB y nunca da OOM",
+   "como": "llama-server -m <IQ4_XS-00001-of-00004.gguf> --jinja --chat-template-file <fixed_step_template.jinja> -c 262144 -ngl 999 -fa on -b 8192 -ub 2048 -ctk q8_0 -ctv q8_0 --no-mmap --port 8000 --host 0.0.0.0 ; env GGML_CUDA_GRAPH_OPT=1 ; build -DGGML_CUDA_F16=ON -DGGML_CUDA_GRAPHS=ON -DCMAKE_CUDA_ARCHITECTURES=121a-real",
+   "fuente_post": 1,
+   "repositorio": "https://huggingface.co/ubergarm/Step-3.5-Flash-GGUF",
+   "licencia": "no indicada",
+   "probado_en": "un solo Spark, usuario joshua.dale.warner, llama.cpp mainline, CUDA 13.1.1",
+   "riesgo": "Margen de 2.5 GB sobre 128 GB; con vLLM el mismo modelo no cabe (hasta 128k de contexto, post 1 y 3)",
+   "verificable_aqui": "free -m; nvidia-smi --query-gpu=memory.used --format=csv"
+  },
+  {
+   "que": "Medicion de degradacion con contexto: benchmark llama-benchy de 0 a 262144 de profundidad",
+   "como": "uvx llama-benchy --base-url http://0.0.0.0:8000/v1 --model <gguf> --depth 0 2048 4096 8192 16384 32768 65536 131072 262144 --latency-mode generation --tg=128",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "un Spark; tg128 17.96 t/s a profundidad 0, 9.47 a 65536, 6.45 a 262144",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Da una configuracion concreta con cifras de uso de memoria al limite (125.5/128 GB sin OOM) y el metodo de medicion de caida de rendimiento por contexto. Hilo de usuarios, sin intervencion de staff NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

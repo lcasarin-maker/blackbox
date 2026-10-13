@@ -1,0 +1,48 @@
+{
+ "id": 361255,
+ "titulo": "Running vLLM-Omni for Qwen3-TTS(voice design, voice clone) on DGX Spark",
+ "leido": true,
+ "posts_leidos": 9,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar la compilacion paralela de flash-attention en el Spark para evitar OOM durante el build",
+   "como": "export MAX_JOBS=4; export NVCC_THREADS=2; export FLASH_ATTENTION_FORCE_BUILD=\"TRUE\"",
+   "fuente_post": 7,
+   "repositorio": "https://github.com/Dao-AILab/flash-attention",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun shahizat (post 1 dice validado en DGX Spark con CUDA 13.0)",
+   "riesgo": "Con MAX_JOBS=16 (valor del post 1) el build puede quedarse sin memoria; el usuario notmy.reward438 reporta el build fallando en el Spark (post 5)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Instalar cabeceras de Python cuando el build falla por Python.h ausente",
+   "como": "sudo apt install python3-dev python3.12-dev",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "dpkg -l python3-dev python3.12-dev"
+  },
+  {
+   "que": "Servir Qwen3-TTS con vLLM-Omni; omitir fa3-fwd en aarch64 porque no hay wheels y FA3 no es compatible con Blackwell segun el post",
+   "como": "vllm serve Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice --stage-configs-path vllm_omni/model_executor/stage_configs/qwen3_tts.yaml --omni --port 8091 --trust-remote-code --enforce-eager",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/vllm-project/vllm-omni",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark CUDA 13.0 segun el autor",
+   "riesgo": "Varios usuarios no logran compilar flash-attn (posts 5, 6)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Guia de usuario para servir TTS; solo el ajuste MAX_JOBS/NVCC_THREADS para evitar OOM en compilacion toca estabilidad de memoria. Sin respuesta de NVIDIA; los moderadores solo movieron el tema.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

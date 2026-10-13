@@ -1,0 +1,67 @@
+{
+ "id": 353664,
+ "titulo": "Building llama.cpp container images for Spark/GB10",
+ "leido": true,
+ "posts_leidos": 17,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Corregir el build de llama.cpp en contenedor para GB10: libcuda.so.1 no se encuentra por LD_LIBRARY_PATH; arquitectura CUDA 121",
+   "como": "ENV LD_LIBRARY_PATH=/usr/local/cuda-13/compat  (en la seccion build del Dockerfile); build: docker build -f .devops/spark.Dockerfile --target server -t llama.cpp:server-spark .",
+   "fuente_post": 1,
+   "repositorio": "https://gist.github.com/stelterlab/33885c600c102792acb1638ca7d2d7e9",
+   "licencia": "no indicada",
+   "probado_en": "GB10 segun el autor, base nvidia/cuda:13.0.2-devel-ubuntu24.04",
+   "riesgo": "El gist esta fijado a un commit; el propio autor reporta que otro fallo de build aparecio despues (post 13)",
+   "verificable_aqui": "docker image ls | grep llama"
+  },
+  {
+   "que": "En Spark usar todas las capas en GPU (memoria unificada, descargar capas a CPU solo pierde rendimiento)",
+   "como": "--n-gpu-layers 999 (o -ngl 999)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "afirmacion del usuario eugr, sin medicion en el post",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Compilar llama.cpp para sm_121 y enlazar contra stubs de libcuda",
+   "como": "-DCMAKE_CUDA_ARCHITECTURES=\"121a-real\" con -DGGML_CUDA=ON y rpath a ${CUDA_LIB_DIR}/stubs; en runtime NVIDIA_VISIBLE_DEVICES=all, NVIDIA_DRIVER_CAPABILITIES=compute,utility",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario jrsphd dice que funciono bien; Dockerfile escrito por GPT segun el",
+   "riesgo": "Dockerfile generado por LLM, versiones sin fijar (<#>)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Imagenes llama.cpp y llama-swap ya construidas para Spark (CUDA 13.1.0, arch 121a-real)",
+   "como": "ghcr.io/pontostroy/llama.cpp:full-cuda13 y ghcr.io/pontostroy/llama-swap:cuda-latest",
+   "fuente_post": 16,
+   "repositorio": "https://github.com/pontostroy/llama.cpp",
+   "licencia": "no indicada",
+   "probado_en": "GB10, compute capability 12.1; bench qwen3next 80B MXFP4: pp512 1274.41, tg128 45.17 t/s",
+   "riesgo": "Imagenes de terceros no auditadas",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Declaracion del mantenedor de las imagenes CUDA citada por un usuario: LD_LIBRARY_PATH apunta a rutas de nvidia-docker v1 por compatibilidad y no se cambiara",
+   "como": "no indicado",
+   "fuente_post": 14,
+   "repositorio": "https://gitlab.com/nvidia/container-images/cuda#ld_library_path-notice",
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "La imagen nvidia/cuda mantiene un LD_LIBRARY_PATH heredado que no sirve para GB10 y NVIDIA declara que no lo cambiara (cita en post 14); no hay imagen oficial arm64 de llama.cpp (post 1).",
+ "utilidad_atom": "baja",
+ "razon": "Tema de construccion de contenedores llama.cpp; aporta el fix de LD_LIBRARY_PATH y el consejo de -ngl 999, nada de memoria/termica. Sin respuesta de staff de NVIDIA en el hilo (la cita de NVIDIA viene de un issue enlazado).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

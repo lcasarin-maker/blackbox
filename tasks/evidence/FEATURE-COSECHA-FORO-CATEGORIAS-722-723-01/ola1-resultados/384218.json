@@ -1,0 +1,59 @@
+{
+ "id": 384218,
+ "titulo": "Spark Center – open-source local control panel for DGX Spark / GB10 (selective apt updates, no forced reboot, NVML monitoring, fwupd check)",
+ "leido": true,
+ "posts_leidos": 3,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Panel local (Monitor) con muestreo cada 2 s: memoria unificada, CPU por nucleo con relojes, GPU por NVML, temperatura de GPU contra el umbral real de slowdown, potencia, temperatura NVMe, rendimiento por interfaz; detecta el fallo 'GPU stuck at 611 MHz' del controlador PD",
+   "como": "git clone + ./install.sh (sin root); escucha en 127.0.0.1",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/tiong6/spark-center",
+   "licencia": "MIT",
+   "probado_en": "ASUS Ascent GX10 (GB10), Ubuntu 24.04 / DGX OS 7.x, aarch64",
+   "riesgo": "Probado solo en la variante ASUS por su autor; el post no da como detecta el 611 MHz ni umbrales.",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK,TEMPERATURE | head -60"
+  },
+  {
+   "que": "Aviso de riesgo: al actualizar el kernel sin los modulos NVIDIA firmados correspondientes (dos metapaquetes sin dependencia entre si) el equipo queda sin driver de GPU",
+   "como": "no indicado (el panel advierte; paquetes dgx-release y linux-image-nvidia se actualizan por el Dashboard oficial)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/tiong6/spark-center",
+   "licencia": "MIT",
+   "probado_en": null,
+   "riesgo": "Arrancar un kernel sin los modulos NVIDIA a juego deja sin driver.",
+   "verificable_aqui": "apt list --installed 2>/dev/null | grep -E 'linux-image-nvidia|linux-modules-nvidia'; uname -r"
+  },
+  {
+   "que": "Verificacion de firmware via fwupd: una actualizacion que reporto exito pero no cambio la version aparece como discrepancia",
+   "como": "no indicado (lee fwupd directamente)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/tiong6/spark-center",
+   "licencia": "MIT",
+   "probado_en": "ASUS Ascent GX10",
+   "riesgo": null,
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Lectura del indicador de reinicio pendiente sin reiniciar",
+   "como": "/var/run/reboot-required",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "ls -l /var/run/reboot-required"
+  }
+ ],
+ "omision_nvidia": "Segun el autor, el boton Update del DGX Dashboard actualiza todos los paquetes apt incluso de repos de terceros, fuerza reinicio, no muestra lo que va a instalar y reporta exito aunque un firmware falle; afirmacion de usuario, sin respuesta de NVIDIA.",
+ "utilidad_atom": "alta",
+ "razon": "Herramienta MIT con repositorio que cubre monitoreo NVML, temperatura contra umbral de slowdown, verificacion de firmware con fwupd y deteccion del GPU a 611 MHz; fuente de ideas reutilizables aunque el post no da comandos de la deteccion. Descripcion del autor sin verificacion independiente.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

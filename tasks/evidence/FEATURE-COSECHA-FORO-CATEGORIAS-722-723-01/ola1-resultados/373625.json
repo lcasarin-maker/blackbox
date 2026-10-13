@@ -1,0 +1,48 @@
+{
+ "id": 373625,
+ "titulo": "Nemotron-3-Super-120B-A12B-NVFP4 + MTP on 4× DGX Spark via SGLang (TP=4, RoCE) - MTP actually pays off: 1.70× single-stream, accept-len ≈ 2.7",
+ "leido": true,
+ "posts_leidos": 6,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta SGLang con decodificacion especulativa MTP en 4 Sparks: 3 pasos y 4 tokens borrador superan la receta 5/5 del cookbook de NVIDIA segun las mediciones del autor (n=1: 53.99 contra 51.5 tok/s; baseline sin spec 31.67)",
+   "como": "--speculative-algorithm EAGLE --speculative-num-steps 3 --speculative-num-draft-tokens 4 --speculative-eagle-topk 1 --mem-fraction-static 0.80 --attention-backend flashinfer --moe-runner-backend flashinfer_cutlass --fp4-gemm-backend flashinfer_cutlass --kv-cache-dtype fp8_e4m3",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/vroomfondel/dgxarley",
+   "licencia": "no indicada",
+   "probado_en": "4 DGX Spark (ASUS Ascent GX10), driver 580.159.03, CUDA 13.0, kernel 6.17.0-1021-nvidia, NCCL 2.30.4, SGLang 0.5.13-dev",
+   "riesgo": "La config 5/5 disparo el detector de repeticion en 1 de 8 peticiones",
+   "verificable_aqui": "uname -r; nvidia-smi --query-gpu=driver_version --format=csv"
+  },
+  {
+   "que": "Memoria de una sola Spark con el modelo (~121 GB utiles): pesos 72.7 GB, pool Mamba 7.1 GB (24 slots), KV 3.4 GB, cabeza MTP 7.0 GB, grafos CUDA ~1.5 GB, libre ~16 GB. El mensaje 'increase --mem-fraction-static' es una pista falsa porque la memoria disponible tras los pesos queda fija en ~37.5 GB",
+   "como": "max_running_requests = max_mamba_cache_size // per-request-slots ; max_mamba_cache_size 96 -> 24 ; mem-fraction-static ≈ 0.78",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "una Spark segun el usuario ht12",
+   "riesgo": "Subir mem-fraction-static es el reflejo equivocado en ambas fases segun el autor",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de medicion de throughput agregado: suma de tok/s por peticion de las exitosas; n concurrentes; hasta 3072 tokens por peticion",
+   "como": "peak = Σ de tok/s por peticion de las peticiones exitosas, no total_tokens/wall_time",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4 Sparks",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun el autor, la receta del cookbook de NVIDIA (5/5) no es la optima en SM121 con esta imagen; el estado publicado de MTP en Super-120B era 'crash' en vLLM y accept_len=1.00 en SGLang (sglang#21138). Sin respuesta de staff de NVIDIA en el hilo.",
+ "utilidad_atom": "media",
+ "razon": "Da una receta con mediciones y un presupuesto de memoria de una Spark con cifras (72.7 GB de pesos, ~37.5 GB libres tras cargar). Es un cluster de 4 nodos con SGLang y trata de rendimiento, no de termica ni de proteccion del sistema; el post 3 admite que no probaron la opcion dp-size 4.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

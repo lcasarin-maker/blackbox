@@ -1,0 +1,37 @@
+{
+ "id": 361088,
+ "titulo": "(sparkrun) Qwen3.5 GGUF Benchmarks over llama.cpp RPC",
+ "leido": true,
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Benchmark de servidores compatibles OpenAI con llama-benchy (pp y tg, 5 runs)",
+   "como": "uvx llama-benchy --base-url \"http://10.24.11.13:8000/v1\" --pp 512 2048 8192 16384 32768 65535 --tg 32 128 --runs 5 --model \"qwen3.5-397b\"",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "4x Spark, GGUF Q6_K, RPC sobre 100GbE CX7 sin bond, llama-benchy 0.3.1",
+   "riesgo": "Con pp 65535 fallaron RPC en el nodo cabeza y un worker (post 1)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Resultado medido: modo split layer da tg ~5-6 t/s y pp ~65-77 t/s; split row da tg ~5.3-7 t/s, pp ~66-80 t/s con 4 Spark",
+   "como": "sparkrun run qwen3.5-397b-gguf-q6k-llama-cpp --tp 4 --o split_mode=layer  (o split_mode=row)",
+   "fuente_post": 1,
+   "repositorio": "https://sparkrun.dev ; https://github.com/scitrera/cuda-containers",
+   "licencia": "no indicada",
+   "probado_en": "4x Spark, el autor aclara que layer solo reparte RAM, no rendimiento",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Benchmarks de llama.cpp RPC en cluster de 4 Spark; aporta la herramienta llama-benchy de medicion de throughput, sin relacion con memoria o termica de una sola maquina. Sin respuesta tecnica de NVIDIA (post 2 solo mueve el tema).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

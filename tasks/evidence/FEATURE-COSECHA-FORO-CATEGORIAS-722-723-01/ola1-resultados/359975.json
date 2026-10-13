@@ -1,0 +1,37 @@
+{
+ "id": 359975,
+ "titulo": "NVIDIA DGX Spark Cluster Dashboard",
+ "leido": true,
+ "posts_leidos": 9,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Dashboard web inspirado en btop para monitorear un cluster de dos Sparks desde otro equipo",
+   "como": "no indicado (configuracion en backend/config.yaml segun post 2)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/paul-aviles/NVIDIA-DGX-Spark-Dashboard",
+   "licencia": "no indicada",
+   "probado_en": "cluster de dos Sparks segun paul.aviles",
+   "riesgo": "Un usuario (post 7) dice que los valores de almacenamiento SSD y memoria no son exactos; el autor reconoce una barra de enP7s7 que muestra lleno sin estarlo (post 3)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Driver hwmon de Linux para el GB10 que expone telemetria de potencia del sistema por sysfs, recomendado por chrm para agregar potencia y temperatura al dashboard",
+   "como": "no indicado",
+   "fuente_post": 8,
+   "repositorio": "https://github.com/antheas/spark_hwmon",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Modulo de kernel de terceros; con Secure Boot activo exigiria firma (inferencia, no dicha en el texto)",
+   "verificable_aqui": "ls /sys/class/hwmon/; cat /sys/class/hwmon/hwmon*/name"
+  }
+ ],
+ "omision_nvidia": "NVIDIA no ofrece un dashboard de monitoreo de cluster; aniculescu (staff, post 9) dice que NV Sync tiene funciones de cluster en Settings y que la siguiente version planea un dashboard de monitoreo.",
+ "utilidad_atom": "media",
+ "razon": "Hay dos herramientas de terceros con repositorio (dashboard y spark_hwmon) pero sin comando de uso ni licencia en el texto; el post 9 es respuesta de NVIDIA que confirma la omision. El enlace a spark_hwmon puede cubrir lectura de potencia que NVIDIA no expone.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

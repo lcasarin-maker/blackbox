@@ -1,0 +1,90 @@
+{
+ "id": 374328,
+ "titulo": "DFlash for Qwen3.5-122B-A10B = 80+ tok/s on 1x Spark!",
+ "leido": true,
+ "posts_leidos": 73,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir",
+  "monitorear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limite de reserva de memoria de vLLM para dejar sitio al sistema: el autor reserva unos 14 GB para el SO y dice que 0.87 o mas sobresuscribe la memoria, entra en swap y se atasca",
+   "como": "--gpu-memory-utilization 0.82 (0.87+ over-subscribes → swaps → stalls); max context 262,144; --max-num-seqs 3",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/Entrpi/qwen3.5-122B-A10B-on-spark",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 segun el autor entrpi; otros usuarios (posts 9, 39, 53) reportan 0.82 en GB10 y en Asus GX10",
+   "riesgo": "El post 24 reporta que a 0.87 solo cabian 200k de contexto en una maquina y a 0.82 en otra mas; el post 31 reporta fallo de memoria al reiniciar",
+   "verificable_aqui": "free -m && cat /proc/swaps"
+  },
+  {
+   "que": "Liberar memoria unificada para el servidor quitando el escritorio: segun el autor GNOME y los demonios de mantenimiento retienen entre 10 y 15 GiB; su herramienta pasa el equipo a multi-user.target, mantiene ssh y docker, y muestra MemAvailable antes y despues",
+   "como": "sudo serving-mode serve ; serving-mode status",
+   "fuente_post": 26,
+   "repositorio": "https://github.com/Entrpi/dgx-spark-serving-mode",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 segun el autor; con el escritorio activo un usuario obtuvo solo ~200k de contexto a 0.82 frente a 417,792 tokens KV (26.2 GiB) del autor en modo headless",
+   "riesgo": "Detiene servicios del escritorio; el comportamiento exacto depende del script del repositorio, que no se lee aqui",
+   "verificable_aqui": "systemctl get-default && grep -E 'MemTotal|MemAvailable' /proc/meminfo"
+  },
+  {
+   "que": "Palancas adicionales para recuperar memoria del pool de KV: perfil hibrido con int8 lm-head, VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0, y mantener --max-num-seqs en 3 o menos porque valores mayores inflan la reserva mamba por secuencia; para diagnostico pegar tres lineas del log de arranque",
+   "como": "VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0 ; --max-num-seqs 3 ; revisar en el log 'Available KV cache memory: X GiB', 'GPU KV cache size: N tokens', 'Maximum concurrency for 262,144 tokens per request: Yx'",
+   "fuente_post": 26,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 segun el autor",
+   "riesgo": null,
+   "verificable_aqui": "docker logs <contenedor-vllm> 2>&1 | grep -E 'Available KV cache|GPU KV cache size|Maximum concurrency'"
+  },
+  {
+   "que": "Carga de pesos mucho mas rapida con fastsafetensors (62-71 GiB en ~32 s en vez de ~8 min; arranque de unos 3 min frente a 12), pero en el post 31 un usuario obtuvo 'available KV cache memory (0.57 GiB)' en arranques posteriores y lo resolvio cambiando de formato de carga",
+   "como": "--load-format fastsafetensors ; alternativa de un usuario: --load-format safetensors",
+   "fuente_post": 32,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 en modo headless, segun el usuario rtamax; el autor dice que el mmap por defecto es patologicamente lento en el kernel actual de GB10",
+   "riesgo": "Con fastsafetensors un usuario no pudo volver a arrancar el servicio por falta de memoria aunque solo habia 1.6 GB en uso",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un usuario dice que el porcentaje de utilizacion de GPU casi no informa de cuanto trabaja el Spark y que juzga la carga solo por vatios y temperatura",
+   "como": "vatios y temperatura (sin comando indicado)",
+   "fuente_post": 70,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark del usuario nbsparkz",
+   "riesgo": "Afirmacion de usuario; otro usuario (post 69) reporta GPU fijada en 96% con rendimiento efectivo bajo en trafico de agente",
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu --format=csv"
+  },
+  {
+   "que": "Borrar la cache de torch.compile al cambiar la profundidad especulativa o el perfil, para evitar errores de arranque",
+   "como": "borrar ~/.cache/huggingface/.vllm_cache/torch_compile_cache (el autor lo automatizo en install.sh)",
+   "fuente_post": 18,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "ls ~/.cache/huggingface/.vllm_cache/torch_compile_cache 2>/dev/null | head"
+  },
+  {
+   "que": "El servidor se publica en 0.0.0.0 sin autenticacion; el autor avisa de que hay que poner un proxy inverso o firewall si se expone fuera de una red de confianza",
+   "como": "bind 0.0.0.0 con --net=host, sin autenticacion",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Servicio abierto en la red local sin credenciales",
+   "verificable_aqui": "ss -ltnp | grep -E ':8000|:8001'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Entre los benchmarks de decodificacion especulativa hay mecanismos concretos de gestion de la memoria unificada con valores exactos: gpu-memory-utilization 0.82 con ~14 GB reservados (0.87+ llega a swap y atasco), el modo headless que libera 10-15 GiB y los fallos reales de arranque por memoria (posts 24, 26, 31, 32). Todo es de usuarios, sin respuesta de NVIDIA; el rendimiento de DFlash en trafico real de agente varia mucho segun los posts 55, 69 y 71.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

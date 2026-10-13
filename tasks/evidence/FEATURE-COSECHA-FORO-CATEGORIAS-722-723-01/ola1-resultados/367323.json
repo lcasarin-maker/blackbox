@@ -1,0 +1,48 @@
+{
+ "id": 367323,
+ "titulo": "Built a real-time Hardware + vLLM Metrics Dashboard",
+ "leido": true,
+ "posts_leidos": 11,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Panel en tiempo real (backend Rust) de GPU, CPU, memoria unificada, disco, red a 1 s, metricas de vLLM y deteccion de thermal throttle / power brake con historial de 15 min",
+   "como": "cargo install spark-dashboard && sudo spark-dashboard service install",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/niklasfrick/spark-dashboard",
+   "licencia": "MIT",
+   "probado_en": "DGX Spark (un solo equipo segun el autor; no probado en cluster)",
+   "riesgo": "Instala un servicio de systemd con sudo; el autor es el unico mantenedor; un usuario reporta un fallo del panel SLO Goodput (post 11)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Alternativa de monitoreo de produccion: node-exporter y un parser propio de nvidia-smi enviados a Prometheus, metricas de vLLM por su endpoint Prometheus y potencia de pared con un enchufe inteligente",
+   "como": "no indicado",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark de pfnguyen",
+   "riesgo": null,
+   "verificable_aqui": "curl -s localhost:8000/metrics | head"
+  },
+  {
+   "que": "Monitoreo de potencia en PDU, chequeos de red RoCE en puertos CX-7 y gestion de OS/firmware del cluster, ejecutado desde un Thor para no gastar memoria del GB10",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "cluster de Patrick-ServeTheHome",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Herramienta MIT con instalacion de una linea que detecta throttle y power brake y expone metricas de vLLM, ademas de describir una pila Prometheus. El texto no detalla los umbrales ni como detecta el throttle, y no hay respuesta de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

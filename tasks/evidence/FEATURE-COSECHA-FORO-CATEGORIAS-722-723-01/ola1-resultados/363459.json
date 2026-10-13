@@ -1,0 +1,68 @@
+{
+ "id": 363459,
+ "titulo": "Nemotron-3-Super 120B on GB10 — llama.cpp sm_121 build + Ollama GGUF incompatibility fix",
+ "leido": true,
+ "posts_leidos": 8,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Evitar OOM al cargar un modelo grande: soltar page cache y verificar memoria disponible antes de arrancar llama-server (66 GB de pesos requieren ~71 GB en runtime)",
+   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches' ; free -g  (columna available, debe mostrar 110+ GB)",
+   "fuente_post": 4,
+   "repositorio": "https://gist.github.com/Sggin1/cd21ed471c861e814a85925ee04dfed6",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10, kernel 6.17.0-1008-nvidia, CUDA 13.0, driver 580.126.09",
+   "riesgo": "drop_caches requiere sudo y descarta cache de otros procesos; el post no mide el efecto aislado",
+   "verificable_aqui": "free -g; grep -E 'MemAvailable|Cached' /proc/meminfo"
+  },
+  {
+   "que": "Desglose de memoria del modelo Q4_K 66 GB: pesos 66 GB mmap, KV a 8192 de contexto ~4 GB, contexto CUDA ~1 GB, total ~71 GB; aviso de mirar 'available' y no 'free'",
+   "como": "llama-server -m <gguf> --port 8090 --host 0.0.0.0 -ngl 99 -fa on -c 8192 --metrics",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10, llama.cpp build 924 (01d8eaa)",
+   "riesgo": "Carga tarda ~6 minutos al mapear 66 GB",
+   "verificable_aqui": "free -g"
+  },
+  {
+   "que": "Los blobs GGUF de Ollama para MoE no son compatibles con llama.cpp upstream (forma de blk.1.ffn_down_exps.weight: esperado 4096, obtenido 1024); el Q4_K de ggml-org ahorra ~20 GB frente al Q4_K_M de Ollama (66 vs 86 GB)",
+   "como": "usar el GGUF ggml-org/Nemotron-3-Super-120B-GGUF por separado",
+   "fuente_post": 1,
+   "repositorio": "https://huggingface.co/ggml-org/nemotron-3-super-120b-GGUF",
+   "licencia": "no indicada",
+   "probado_en": "GB10, llama.cpp commit 463b6a963, CUDA 13.0, driver 580.126.09",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "El checkpoint NVFP4 de Nemotron-3-Super no carga en vLLM en Spark (marzo 2026): ningun backend NVFP4 MoE soporta la config; wheels de vLLM 0.18.0 compilados contra CUDA 12 mientras Spark usa CUDA 13",
+   "como": "NotImplementedError: No NvFp4 MoE backend supports the deployment configuration",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark, imagen avarok/vllm-dgx-spark (vLLM 0.14)",
+   "riesgo": "Estado de marzo; el autor dice en el post 7 que eso evoluciono despues",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Receta vLLM para Nemotron-Labs-3-Puzzle-75B NVFP4 con reserva de memoria y variable que desactiva estimacion de cudagraphs",
+   "como": "env VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS: \"0\"; gpu_memory_utilization: 0.82; max_model_len: 24576; --kv-cache-dtype fp8; --mamba_ssm_cache_dtype float16; tensor_parallel 2",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, usuario TheAwakenOne reporta 19 tok/s; la receta usa tensor_parallel 2",
+   "riesgo": "Usuario sin medicion publicada, app propia",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Documenta el metodo concreto contra OOM en carga (drop_caches + comprobar MemAvailable) y un desglose de memoria con cifras para un modelo de 66 GB. Hilo de usuarios; un moderador de NVIDIA solo movio el tema (post 2).",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

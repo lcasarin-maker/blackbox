@@ -1,0 +1,68 @@
+{
+ "id": 381897,
+ "titulo": "Qwen3.8-Flash-Next NVFP4 on 4x DGX Spark — vLLM TP4 serving, 4.7M-token KV pool, and the three fixes you WILL need",
+ "leido": true,
+ "posts_leidos": 1,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limite de descriptores de archivo de Docker que se desborda durante el arranque (OSError Errno 24 Too many open files, a los diez minutos, por 128 shards safetensors mapeados mas el trafico de sockets de NCCL+EP en 4 nodos)",
+   "como": "--ulimit nofile=1048576",
+   "fuente_post": 1,
+   "repositorio": "GitHub tsw2k/Qwen3.8-Flash-Next-Quad-DGX-Sparks (nombre tal como aparece)",
+   "licencia": "no indicada",
+   "probado_en": "4x GB10, vLLM TP4 segun el autor tsw2000",
+   "riesgo": null,
+   "verificable_aqui": "ulimit -n; docker info --format '{{.DefaultUlimits}}'"
+  },
+  {
+   "que": "No fijar NCCL_IB_GID_INDEX: tras un rebote de enlace el GID RoCE v2 puede caer en otro indice en un nodo (indice 4 frente a 3); con un indice fijo NCCL falla con 'unhandled system error' al iniciar",
+   "como": "NCCL_IB_ROCE_VERSION_NUM=2 y NCCL_IB_ADDR_RANGE definidos, sin NCCL_IB_GID_INDEX",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10 segun el autor",
+   "riesgo": null,
+   "verificable_aqui": "show_gids (o) cat /sys/class/infiniband/*/ports/*/gids/*"
+  },
+  {
+   "que": "TP4 plano no carga el checkpoint NVFP4 (NotImplementedError: Intermediate size padding for w1 and w3); se resuelve repartiendo expertos completos",
+   "como": "--enable-expert-parallel",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10, vLLM, backend FLASHINFER_CUTLASS",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia operativa: mover un checkpoint de 122 GiB entre Sparks con ssh satura un nucleo ARM de GB10 a ~1 Gbps; un demonio rsync de solo lectura en la red de calculo da ~16 Gbps (~2 min por nodo)",
+   "como": "rsync daemon de solo lectura (script en el repositorio, no copiado en el hilo)",
+   "fuente_post": 1,
+   "repositorio": "GitHub tsw2k/Qwen3.8-Flash-Next-Quad-DGX-Sparks",
+   "licencia": "no indicada",
+   "probado_en": "4x GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Falla abierta: en el carril de 1M de contexto, la tercera peticion mas profunda que ~100k tokens congela un stream de GPU y mata el motor; el autor la sigue aislando",
+   "como": "no hay arreglo; docs/OPEN-PROBLEMS.md del repositorio",
+   "fuente_post": 1,
+   "repositorio": "GitHub tsw2k/Qwen3.8-Flash-Next-Quad-DGX-Sparks",
+   "licencia": "no indicada",
+   "probado_en": "4x GB10",
+   "riesgo": "Posible bug de kernel segun el autor, sin confirmar",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Reporte de un montaje de 4 nodos con tres arreglos de arranque portables (ulimit nofile, GID de NCCL, expert parallel) y numeros de rendimiento propios; el equipo objetivo es un solo nodo. Sin respuestas de NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

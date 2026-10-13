@@ -1,0 +1,48 @@
+{
+ "id": 352604,
+ "titulo": "Tutorial: Build llama.cpp from source and run Qwen3 235B",
+ "leido": true,
+ "posts_leidos": 29,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Compilar llama.cpp con CUDA en la Spark y servir con carga sin mmap",
+   "como": "cmake -B build -DGGML_CUDA=ON -DLLAMA_CURL=OFF; cmake --build build --config Release -j 20; ./llama-server --no-mmap --jinja --host 0.0.0.0 --port 5000 --ctx-size 32768 --model Qwen3-235B-A22B-Thinking-2507.i1-IQ3_M.gguf",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark de RazielAU (25 nov 2025); el autor reporta ~15 tok/s y ~107 GB de memoria usada",
+   "riesgo": null,
+   "verificable_aqui": "command -v nvcc; ls /usr/local/cuda/bin/nvcc"
+  },
+  {
+   "que": "Banderas recomendadas por eugr (usuario): --no-mmap porque sin ella la carga tarda mucho mas, -ngl 999 y -fa 1; usar -hf para descargar; llama.cpp recoge todas las particiones apuntando a la primera; no hace falta vaciar caches porque llama.cpp maneja bien la memoria unificada",
+   "como": "build/bin/llama-server -hf unsloth/Qwen3-VL-235B-A22B-Instruct-GGUF:Q3_K_XL -ngl 999 --jinja -c 64000 --host 0.0.0.0 -fa 1 --no-mmap",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark segun eugr, sin driver/kernel",
+   "riesgo": "El post 1 sugeria sync; echo 3 > /proc/sys/vm/drop_caches antes de cargar; eugr lo desmintio como innecesario.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Conflicto de dos nvcc: CMake toma /usr/bin/nvcc (12.0) en vez de /usr/local/cuda/bin/nvcc (13.0), causado por instalar el paquete nvidia-cuda-toolkit; soluciones: desinstalarlo o fijar el compilador",
+   "como": "cmake -B build -DCMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc -DLLAMA_CURL=ON -DGGML_CUDA=ON ; alternativa CUDACXX=/usr/local/cuda-13.0/bin/nvcc en /etc/environment",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS / Spark segun _cjg y ericcoco; recovery image dgx-spark-recovery-image-1.105.17 segun _cjg",
+   "riesgo": "RazielAU dice que necesitar esto indica una instalacion CUDA rota; no hay respuesta de NVIDIA.",
+   "verificable_aqui": "which -a nvcc; apt list --installed 2>/dev/null | grep -E 'nvidia-cuda-toolkit|cuda-toolkit-13'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Tutorial y comentarios de usuarios con banderas de llama.cpp y el diagnostico del conflicto de nvcc; sin respuesta de NVIDIA ni relacion directa con monitoreo de memoria o termica. Solo aporta la nota de que vaciar caches es innecesario con memoria unificada y que --no-mmap acelera la carga.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

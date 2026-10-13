@@ -1,0 +1,58 @@
+{
+ "id": 380585,
+ "titulo": "Get Running: nvidia/MiniMax-M3-NVFP4 - vLLM - No Ray - TP4",
+ "leido": true,
+ "posts_leidos": 37,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Pasar de 16 a 27.5 tok/s de decode con variables de entorno y sin eager, en cluster de 4 Spark con vLLM sin Ray",
+   "como": "-e NCCL_CUMEM_ENABLE=1 -e VLLM_USE_BREAKABLE_CUDAGRAPH=1 -e VLLM_USE_AOT_COMPILE=1 ; quitar --enforce-eager ; --kv-cache-dtype fp8 ; --gpu-memory-utilization 0.80",
+   "fuente_post": 17,
+   "repositorio": "https://github.com/tdwyer/nvidia-MiniMax-M3-NVFP4-vllm-08172026-no-ray-TP4-NVIDIA-DGX-Spark-4-node",
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark, switch MikroTik CRS504-4XQ-IN, vLLM compilado de main del 17-08-2026 (commit 4ab5e5012a27e2b751c679873f231bafa0f6b098)",
+   "riesgo": "Compilar vLLM en el Spark tardo ~3 horas con un solo nucleo; el autor usa una imagen de Docker Hub propia (dockerstudio123/vllm-4ab5e501-fastokens) que no es oficial",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Con speculative decoding DSpark la decodificacion pasa de 28 a 42.68 tok/s en contexto corto, pero a ~200K contexto el autor ve 16 tok/s con DSpark y 19 sin DSpark; el autor dice que su evidencia es anecdotica",
+   "como": "nvidia/MiniMax-M3-DSpark ; medicion: saib-llm --backend openai-compatible --base-url http://<host>:8000 --model minimax-m3 --concurrency 1 --repetitions 1",
+   "fuente_post": 17,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "4x Spark; cifras de un solo usuario; la lentitud aumenta al reiniciar el contenedor varias veces y se recupera al reiniciar los servidores (post 17)",
+   "riesgo": "Degradacion progresiva tras reinicios repetidos del contenedor",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Cuello de botella de red/memoria en cluster: con switch por debajo de 60K de contexto limita el switch; por encima de 120K limita la velocidad de RAM",
+   "como": "no indicado (recomienda switch mas rapido o nccl-mesh-plugin)",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x Spark, un usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Error de arranque de vLLM con bloque KV de 128 en SM121: 'No common block size for 128' y 'Unexpected FlashInfer page size 128 without trtllm-gen GQA'; se resolvio compilando vLLM de commit propio sin parches, sin que el hilo identifique el flag exacto",
+   "como": "no indicado",
+   "fuente_post": 12,
+   "repositorio": "https://github.com/vllm-project/vllm (PR 52708 Add SM121 a build targets)",
+   "licencia": null,
+   "probado_en": "4x GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de cluster TP4 sobre un modelo concreto; las variables de entorno y cifras no afectan monitoreo ni termica de una sola maquina, y el estado de los repositorios del autor cambia (imagenes de Docker Hub de terceros). Sin respuesta de staff NVIDIA.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

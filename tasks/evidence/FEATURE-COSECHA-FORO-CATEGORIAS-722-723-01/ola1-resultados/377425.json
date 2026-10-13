@@ -1,0 +1,27 @@
+{
+ "id": 377425,
+ "titulo": "NVFP4 vs FP8 KV Cache on RTX PRO 6000 Blackwell and DGX Spark",
+ "leido": true,
+ "posts_leidos": 2,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "KV cache NVFP4 en SGLang frente a FP8: capacidad medida de 2,309,504 tokens (nvfp4) frente a 1,371,456 (fp8_e4m3) en DGX Spark, relacion 1.68x; en RTX PRO 6000 1,808,192 frente a 1,067,328 tokens (1.69x)",
+   "como": "python3 -m sglang.launch_server --model-path Qwen/Qwen3-4B --kv-cache-dtype nvfp4 --prefill-attention-backend flashinfer --decode-attention-backend trtllm_mha --disable-radix-cache (imagen lmsysorg/sglang:dev-cu13); benchmark: python3 -m sglang.bench_serving --backend sglang --dataset-name random --random-input-len 1000 --random-output-len 1000 --num-prompts 100 --max-concurrency 100",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark y RTX PRO 6000 Blackwell segun el usuario shahizat (post 2 trae el benchmark: Spark 757.92 tok/s de salida, TPOT medio 118.65 ms)",
+   "riesgo": "El autor advierte validar la calidad antes de activar la cuantizacion agresiva del KV; el post 2 no muestra la comparacion de rendimiento nvfp4 frente a fp8, solo un benchmark por equipo sin indicar cual configuracion",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Medicion de capacidad de KV cache con comandos y cifras completas en Spark y otra GPU; sin respuestas de NVIDIA y sin relacion con monitoreo o termica.",
+ "lectura": "completa",
+ "nota_normalizacion": "lectura completa segun el agente; no verificable"
+}

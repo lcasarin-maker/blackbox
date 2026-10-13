@@ -1,0 +1,38 @@
+{
+ "id": 381027,
+ "titulo": "veloGB10 v0.4.0 RELEASE: Qwen 3.8-27b code sustained tok/s: 4x : 125 tok/s , 2x: 85/tok/s, 1x: 75tok/s",
+ "posts_leidos": 50,
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "prevenir"
+ ],
+ "utilidad_atom": "baja",
+ "mecanismos": [
+  {
+   "que": "Consulta de potencia, temperatura, utilizacion y reloj SM de la GPU en un Spark; un usuario reporta 84 C a 89.67 W y 96 por ciento de utilizacion durante un benchmark",
+   "como": "nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu,clocks.sm --format=csv,noheader",
+   "fuente_post": 31,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark de un usuario; salida 89.67 W, 84, 96 %, 2392 MHz",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu,clocks.sm --format=csv,noheader"
+  },
+  {
+   "que": "Limitar el reloj de la GPU (1500 MHz o 2000 MHz) en benchmarks y uso diario; un usuario dice que lo fijo a 2000 MHz porque en MoE no vio diferencia de rendimiento, y otro usa 1500 MHz como condicion de sus tablas",
+   "como": "no indicado (los posts dan el valor del tope, no el comando); lectura: nvidia-smi --query-gpu=name,pstate,clocks.current.graphics,clocks.current.sm,clocks.max.graphics,clocks.max.sm --format=csv (maximo 3003 MHz, actual 2411 MHz segun el post 44)",
+   "fuente_post": 46,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark / Asus GX10 de usuarios; sin version de driver ni kernel indicada",
+   "riesgo": "Reduce el rendimiento en modelos densos segun el propio usuario; los posts no dicen que el tope sea una medida termica",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.current.sm,clocks.max.sm --format=csv"
+  }
+ ],
+ "razon": "Hilo de lanzamiento de un motor de inferencia propio (veloGB10, repositorio sf-stav/veloGB10, licencia no indicada) con benchmarks. Solo hay dos datos sueltos sobre termica: 84 C a 89.67 W en un benchmark (post 31) y topes de reloj a 1500 o 2000 MHz sin comando ni medicion de su efecto termico; respuesta de NVIDIA ausente.",
+ "leido": true,
+ "omision_nvidia": null,
+ "lectura": "parcial",
+ "nota_normalizacion": "lectura parcial admitida por el agente en su informe; el archivo original declaraba mas"
+}
