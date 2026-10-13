@@ -1,0 +1,10 @@
+[Unit]
+Description=bb monitor de distros alternas para GB10 (interruptor monitor_distros; off por defecto)
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.monitor_distros --paso
+TimeoutStartSec=300
+MemoryMax=256M
+Nice=15
