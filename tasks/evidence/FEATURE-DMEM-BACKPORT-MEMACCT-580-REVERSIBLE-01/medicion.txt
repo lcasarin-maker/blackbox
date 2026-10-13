@@ -1,0 +1,28 @@
+== memacct_backport_probado (2026-10-12) ==
+Literal de la medicion con el modulo parcheado cargado (copiada de medicion-v2-cargado-20261012.txt):
+
+Medicion con el modulo parcheado v2 CARGADO (2026-10-12 ~18:50, kernel 6.17.0-1032-nvidia, driver 580.178.04, firmado con la MOK enrolada).
+Modulo: /lib/modules/6.17.0-1032-nvidia/updates/nvidia.ko ; dmem.capacity: nvidia/0000000F:01:00.0/vidmem 53794045952 (50.1 GiB).
+$ sudo bash tools/dmem_prueba_completa.sh   (primera version del script; rc=5 por el criterio de rechazo, ver abajo)
+ 1. Que cobra (cgroup sin tope, pide 256 MiB; base = contexto CUDA ya cobrado):
+    empty        base 206418192  despues 474853648   (+268435456)  COBRA
+    expandable   base 206418192  despues 479047952   (+272629760)  COBRA
+    async        base 313372944  despues 548253968   (+234881024)  COBRA
+    graph        base 206418192  despues 548253968   (+341835776)  COBRA
+    pinned       base 206418192  despues 206418192   (0)           NO COBRA (esperado: no entra por la clase 0x3e)
+    managed      base 206418192  despues 206418192   (0)           NO COBRA (esperado: solo UVM)
+ 3. Fuga: dmem.current tras salir el proceso = 0 en bb-dmem-empty y bb-dmem-tope.
+ 4. Contenedores (solo lectura): la lectura de las 18:49 dio 0 porque vLLM aun cargaba el modelo (la maquina llevaba 2 min arriba). Medido despues:
+    nemotron-server: dmem.current 19483439376 B ; nvidia-smi del mismo proceso (pid 30887): 18580 MiB = 19482542080 B ; diferencia 897296 B (0.005 %).
+$ sudo bash scratchpad/dmem_tope_diag.sh   (controles del rechazo)
+    d1 SIN tope, pide 1024 MiB            -> OK (dmem.current 1280160016); luego 32 MiB OK
+    d2 tope 512M, pide 1024 MiB           -> AcceleratorError: CUDA error: unknown error (cudaErrorUnknown); luego pide 32 MiB -> OK (el proceso sigue usable)
+    d3 tope 2048M, pide 1024 MiB          -> OK (cabe)
+    dmesg: "NVRM: nvCheckOkFailedNoLog: Check failed: Resource accounting rejected request (hard limit) [NV_ERR_RESOURCE_ACCOUNTING_HARD_LIMIT_EXCEEDED] (0x0000008D) returned from memacctTryCharge ... @ system_mem.c:563"
+Lectura: el tope se hace cumplir; el rechazo llega como cudaErrorUnknown porque el libcuda de 580 no conoce el estado 0x8D (NVIDIA lo introdujo con 615). Traducirlo a NV_ERR_NO_MEMORY en sysmemConstruct haria que PyTorch lo vea como OOM; no se hizo (exige recompilar y reiniciar).
+Controles negativos: d1 (sin tope, mismo pedido: OK) y d3 (tope que cabe: OK) prueban que la falla de d2 la produce el tope; pinned/managed (0 bytes) prueban que el instrumento sabe decir "no cobra".
+Limites: pinned (cudaHostAlloc) y managed (cudaMallocManaged) no se cobran; el cobro cuenta toda la memoria de sistema que el RM asigna al proceso; no se probo aun con un tope puesto en el cgroup de un contenedor.
+
+Limites declarados (no cerrados aqui): pinned y managed no se cobran (FEATURE-LIMITADOR-INTEGRAR-LANZADOR-FALLA-CERRADO-01); la traduccion 0x8D -> NV_ERR_NO_MEMORY esta en memacct-580.patch v3 y su corrida literal queda por repetir con `sudo bash tools/dmem_prueba_completa.sh`.
+
+memacct_backport_probado

@@ -3,7 +3,11 @@ id: FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01
 kind: task
 domain: GPU
 title: "Parchear memacct para dar tamano a la region dmem de GB10 y cobrar asignaciones sysmem"
-status: open
+status: done
+closed_at: 2026-10-12
+closure_type: fixed
+reason: "Ruta de cudaMalloc (clase RM 0x3e, barrido-ioctl-20261012.txt) y parche con control negativo: region registrada y cobro medido."
+evidence: {"pass": "tasks/evidence/FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01.pass.txt", "fail": "tasks/evidence/FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01.fail.txt"}
 severity: P3
 origin: asserted
 satd_family: BLIND_INSTRUMENT
