@@ -1,0 +1,37 @@
+{
+ "id": 353343,
+ "titulo": "PCIe power related and PCIe AER errors",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Identificar el aviso 'insufficient power on the PCIe slot (27W)' de mlx5_core en el arranque",
+   "como": "sudo dmesg | grep mlx5_core",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, firmware ConnectX 28.45.4028 segun el log del usuario",
+   "riesgo": "ninguno",
+   "verificable_aqui": "sudo dmesg | grep mlx5_core"
+  },
+  {
+   "que": "Comprobar el SlotPowerLimit 0W que provoca el aviso",
+   "como": "lspci -vvv (campo DevCap SlotPowerLimit 0W)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun usuario elsaco",
+   "riesgo": "ninguno",
+   "verificable_aqui": "sudo lspci -vvv | grep -i SlotPowerLimit"
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu, post 12) confirma que el host no anuncia limite de potencia y por eso se dispara el aviso; es benigno segun esa explicacion. No aborda el error fatal no corregible que el autor vio una vez.",
+ "utilidad_atom": "baja",
+ "razon": "NVIDIA confirma la causa del aviso de 27W (SlotPowerLimit 0W), de modo que sirve para descartar ruido en dmesg. El error PCIe fatal ocasional (post 1) queda sin respuesta."
+}

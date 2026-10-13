@@ -1,0 +1,48 @@
+{
+ "id": 380364,
+ "titulo": "Lot of PrismaQuant news",
+ "leido": true,
+ "posts_leidos": 23,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Un checkpoint de 87 GB en un archivo hace que la carga llegue a ~2x su tamano (staging CPU + asignacion UMA comparten pool) y el motor muere por OOM en 128 GB; se arregla repartiendo en 11 archivos de 8 GB",
+   "como": "re-shard local en 11 archivos de ~8 GB (script no publicado)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 128 GB, vLLM de eugr (declarado)",
+   "riesgo": "Afirmacion de usuario; el autor dijo que investigaria",
+   "verificable_aqui": "free -h; cat /proc/meminfo | grep -E 'MemAvailable|Swap'"
+  },
+  {
+   "que": "Variables y bandera de arranque que un usuario usa para servir el modelo grande en un Spark sin OOM, con earlyoom",
+   "como": "./launch-cluster.sh --solo --earlyoom exec env PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True MALLOC_ARENA_MAX=2 ... vllm serve ... --gpu-memory-utilization 0.92 --max-model-len 98304 --max-num-seqs 128 --max-num-batched-tokens 16384 --load-format instanttensor --kv-cache-dtype fp8 --block-size 256",
+   "fuente_post": 13,
+   "repositorio": "https://github.com/eugr (indicado solo como 'eugr vLLM', URL no dada)",
+   "licencia": "no indicada",
+   "probado_en": "Spark de NVIDIA headless, vLLM 0.27.2rc1.dev209 (declarado en post 17)",
+   "riesgo": "Otro usuario (post 15) con los mismos ajustes tuvo arranque de 15 min y 7 tok/s hasta cambiar la version de vLLM",
+   "verificable_aqui": "docker ps; docker images | head"
+  },
+  {
+   "que": "Resultado: el rendimiento depende de la version de vLLM; con la imagen estandar del dia ~19-20 tok/s con razonamiento activo",
+   "como": "no indicado (sin comando de medicion; log de vLLM: 'Avg generation throughput')",
+   "fuente_post": 18,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "un Spark, imagen eugr de 2026-08-21 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Tema de comunidad sobre cuantizacion PrismaQuant; la parte util para la ATOM es el OOM de carga por pico ~2x del archivo en memoria unificada, el re-shard y las variables expandable_segments/MALLOC_ARENA_MAX con earlyoom (posts 9, 13, 15). Sin respuesta de staff de NVIDIA; el resto es publicidad de modelos y benchmarks."
+}

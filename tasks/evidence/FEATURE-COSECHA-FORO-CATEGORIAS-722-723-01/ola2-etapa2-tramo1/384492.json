@@ -1,0 +1,48 @@
+{
+ "id": 384492,
+ "titulo": "GB10 abruptly powers off under heavy GPU load - nvidia-smi -lgc 300,2200 prevents it",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar el reloj de GPU como workaround del apagado abrupto bajo carga",
+   "como": "sudo nvidia-smi -lgc 300,2200",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "HP ZGX Nano G1n (GB10), kernel 7.0.0-1019-nvidia, modulo abierto 580.178.04; 96+ horas sin fallo segun el usuario",
+   "riesgo": "Reduce rendimiento; el usuario no afirma causa raiz (sospecha pico de potencia, no probado); el lock no se indica como persistente",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK  (lectura) y nvidia-smi -q | grep -i 'clocks'; comprobar si hay lock activo"
+  },
+  {
+   "que": "Rastrear un apagado sin traza: comprobar arranques sin cierre limpio y buscar errores en el journal del arranque previo",
+   "como": "last -x ; journalctl -b -1 -e ; journalctl -k -b -1 | grep -i -E \"nvrm|xid|thermal|oom\"",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "HP ZGX Nano G1n, kernel 7.0.0-1019-nvidia",
+   "riesgo": "Resultado vacio no prueba ausencia de causa; el journal se vuelca por lotes y la ultima linea no es el instante del corte (lo dice el post)",
+   "verificable_aqui": "last -x | head ; journalctl --list-boots"
+  },
+  {
+   "que": "Metodo de medicion: leer las 7 zonas termicas ACPI tras el arranque siguiente (TSOC, TS0E, TS0P, TS1E, TS1P, TGPU, TUNC)",
+   "como": "no indicado (el post no da el comando; solo reporta 35-38 C al reiniciar, instantanea no del momento del fallo)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "HP ZGX Nano",
+   "riesgo": "Instantanea tras el corte, no prueba termica",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El post da un comando exacto de limitacion de reloj con 96 h estable en un GB10 de HP y las consultas de journal para rastrear el corte sin traza. No hay respuesta de NVIDIA; el post 2 de un usuario sugiere curva de ventilador o mejor flujo de aire."
+}

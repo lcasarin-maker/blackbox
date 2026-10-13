@@ -1,0 +1,109 @@
+{
+ "id": 384436,
+ "titulo": "AER Storm on GX10",
+ "leido": true,
+ "posts_leidos": 14,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "medir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Firma de log para detectar la tormenta AER/Surprise Down del ConnectX-7",
+   "como": "buscar 'AER: Uncorrectable (Fatal)', 'SDES', 'mlx5_pci_err_detected', 'NETDEV WATCHDOG', 'soft lockup' en el journal",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10 kernel 6.17.0-1031-nvidia, driver 580.173.02",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k -b -1 | grep -iE 'SDES|AER|mlx5_pci_err'"
+  },
+  {
+   "que": "Leer registros BERT del arranque anterior (GUID 3c1e3f4b-1e1a-43df-af28-59820e958e3c, MediaTek MTKID)",
+   "como": "sudo dmesg | grep -iE \"BERT|GHES|APEI|hardware error|reset reason|SError\"; tabla en /sys/firmware/acpi/tables/BERT (post 14)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10 y HP ZGX",
+   "riesgo": "Linux no decodifica el payload; staff dice que variante B correlaciona con tormentas y A con reinicios limpios",
+   "verificable_aqui": "sudo dmesg | grep -iE 'BERT|hardware error'; ls -la /sys/firmware/acpi/tables/BERT"
+  },
+  {
+   "que": "Metodo de observabilidad para resets sin traza",
+   "como": "journalctl --list-boots; journalctl -b -1 -k | grep -iE 'xid|nvrm|panic|oops|thermal|watchdog|mlx5|cx7'; last -x reboot shutdown | head; ls -la /sys/fs/pstore/; nvidia-smi dmon -s pucv -d 2 -o T con vm.dirty_expire_centisecs=100 vm.dirty_writeback_centisecs=100",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "HP ZGX Nano G1n (usuario rustend)",
+   "riesgo": null,
+   "verificable_aqui": "last -x reboot shutdown | head; ls -la /sys/fs/pstore/; journalctl --list-boots | tail"
+  },
+  {
+   "que": "Capturar diagnostico de campo inmediatamente tras el evento",
+   "como": "dgx-spark-fieldiag (partnerdiag --field, ~35 min); pedido por staff antes de reiniciar",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Un PASS horas despues no descarta la falla intermitente (post 12); requiere DOCA-OFED y Secure Boot apagado segun usuario (post 6)",
+   "verificable_aqui": "dpkg -l | grep -i fieldiag"
+  },
+  {
+   "que": "iommu.passthrough=1 sube el throughput RDMA del ConnectX-7",
+   "como": "con iommu.passthrough=0 ~13 Gb/s por funcion; con =1 ~112 Gb/s por funcion y ~196 Gb/s sumado (ib_write_bw); TTFT 32K de 23.5 s a 17.1 s",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10; staff confirma que es el ajuste recomendado (post 5)",
+   "riesgo": "Seguridad: menos aislamiento por IOMMU; no evaluado en el hilo",
+   "verificable_aqui": "cat /proc/cmdline; cat /etc/default/grub.d/iommu.cfg"
+  },
+  {
+   "que": "Regresion ibv_reg_mr ENOMEM en kernel 7.0.0-1019-nvidia",
+   "como": "falla ~40% (4/10), 6.17.0-1031-nvidia 0/10; rompe NCCL",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "staff confirma la regresion (post 5)",
+   "riesgo": "Evitar kernel 7.0.0-1019 con NCCL/RDMA",
+   "verificable_aqui": "uname -r"
+  },
+  {
+   "que": "El GID RoCE se mueve de indice tras un reset; referenciar por IP, no por indice",
+   "como": "show_gids para verificar el mapeo",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "staff NVIDIA",
+   "riesgo": null,
+   "verificable_aqui": "show_gids"
+  },
+  {
+   "que": "Mensaje 'insufficient power on the PCIe slot (27W)' es benigno",
+   "como": "declaracion de staff: el slot no anuncia su capacidad de potencia al NIC",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "staff NVIDIA, en todas las unidades GB10",
+   "riesgo": null,
+   "verificable_aqui": "dmesg | grep -i 'insufficient power'"
+  },
+  {
+   "que": "Fuente de paquete fieldiag",
+   "como": "dgx-spark-fieldiag 2.0.4 depende de ofed-scripts, disponible en el repo DOCA host (linux.mellanox.com/public/repo/doca/latest/ubuntu24.04/arm64-sbsa/), clave doca_keyring.gpg",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Agrega un repo de terceros con su clave",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Staff (Neill) dice que no hay arreglo de software: el hilo de recuperacion AER gira sobre un dispositivo ausente y no existe mitigacion; atribuye la causa a un fallo de hardware aguas arriba (rail de potencia o PERST#) y manda el RMA al OEM. No pueden decodificar el registro BERT MediaTek, que requiere al OEM.",
+ "utilidad_atom": "alta",
+ "razon": "Staff de NVIDIA (Neill) responde en los posts 5, 12 y 14 y confirma iommu.passthrough=1 y la regresion ibv_reg_mr. Aporta firmas de log, comandos de rastreo de resets sin traza y el valor iommu.passthrough, ademas de la declaracion oficial de que el cuelgue AER no tiene mitigacion de software."
+}

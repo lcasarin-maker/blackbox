@@ -1,0 +1,78 @@
+{
+ "id": 382584,
+ "titulo": "DeepSeek-V4-Flash-Vision-Exp on one DGX Spark: text + images, 245k context, CUDA graphs",
+ "leido": true,
+ "posts_leidos": 17,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limite de utilizacion de memoria GPU en 128 GB: por encima de 0.93 el driver se queda sin memoria antes que el kernel y la maquina puede colgarse; el script lanza un vigilante de MemAvailable que detiene el contenedor primero",
+   "como": "UTIL no mayor de 0.93 (ejemplo del usuario: UTIL=0.919); RAMWATCH_FLOOR_MB=1100 (post 5); DROP_CACHES=1 antes de arrancar",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/GaelicThunder/DeepSeek-V4-Flash-Vision-One-DGX-Spark",
+   "licencia": "Apache-2.0",
+   "probado_en": "una DGX Spark GB10 128 GB (autor); otro usuario sufrio varios OOM y bajo CTX a 158464",
+   "riesgo": "Cuelgue duro si UTIL supera 0.93; el page cache cuenta como memoria unificada",
+   "verificable_aqui": "grep -E 'MemAvailable|Cached' /proc/meminfo"
+  },
+  {
+   "que": "La cache de paginas cuenta en memoria unificada: vaciar antes de cargar otro modelo; cualquier otro proceso (navegador, agente) come de los mismos 128 GB; sin entorno grafico no hubo OOM con 4 GB de uso maximo",
+   "como": "DROP_CACHES=1 antes del arranque",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark del autor, sin entorno grafico",
+   "riesgo": null,
+   "verificable_aqui": "free -m"
+  },
+  {
+   "que": "Metodo de medicion de retencion de calidad de un cuantizado: log-verosimilitud pareada por token contra el modelo original, '% kept' = exp(-delta NLL media)",
+   "como": "POST /v1/completions con max_tokens: 1 y prompt_logprobs: 0; scripts/nll_corpus.py, scripts/nll_probe.py y --compare A.json B.json",
+   "fuente_post": 3,
+   "repositorio": "https://github.com/GaelicThunder/DeepSeek-V4-Flash-Vision-One-DGX-Spark",
+   "licencia": "Apache-2.0",
+   "probado_en": "motores sparkinfer en Spark",
+   "riesgo": "Prueba forzada por prefill; no mide calidad de generacion de extremo a extremo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de velocidad con contadores de decodificacion especulativa de vLLM (aceptados/propuestos), medianas de 3, un solo flujo",
+   "como": "scripts/dsbench.py",
+   "fuente_post": 3,
+   "repositorio": "https://github.com/GaelicThunder/DeepSeek-V4-Flash-Vision-One-DGX-Spark",
+   "licencia": "Apache-2.0",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround del token ')Skip' (fallo de logits en la ruta de decodificacion, no del muestreo): un proxy anade bad_words a cada peticion; causa raiz abierta",
+   "como": "\"bad_words\": [\")Skip\", \",Skip\", \".Skip\"]",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/GaelicThunder/DeepSeek-V4-Flash-Vision-One-DGX-Spark",
+   "licencia": "Apache-2.0",
+   "probado_en": "Spark GB10 del autor",
+   "riesgo": "Solo enmascara; la causa sigue abierta",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Muestreo que, segun un usuario, elimina fallos de tool calling en OpenCode",
+   "como": "temperature 0.3 y top_k=0.95 (tal como lo escribe el usuario)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "una DGX Spark del usuario erlendboe",
+   "riesgo": "top_k=0.95 es dudoso como valor de top_k; reporte de un usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Receta de un tercero (sin NVIDIA staff) con un limite de memoria concreto y comprobado por el autor (UTIL maximo 0.93, vigilante MemAvailable, DROP_CACHES=1) directamente relevante a los colapsos de memoria por memoria unificada, mas un metodo de medicion reutilizable con scripts y licencia Apache-2.0. El resto es un modelo especifico que no aplica a vLLM de esta maquina."
+}

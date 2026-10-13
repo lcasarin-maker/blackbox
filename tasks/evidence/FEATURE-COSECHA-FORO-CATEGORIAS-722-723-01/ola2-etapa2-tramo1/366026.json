@@ -1,0 +1,110 @@
+{
+ "id": 366026,
+ "titulo": "[Root Cause Analysis] DGX Spark driver failure - kernel 6.17.0-1008-nvidia aarch64 panics cause DOE mailbox failure (pstore evidence)",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "rastrear",
+  "solucionar",
+  "monitorear",
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Evidencia de panics del kernel en EFI pstore (stack overflow de nbcon, carrera FPAC/PSCI/NMI, desbordamiento de indice en qspinlock durante writeback NVMe) que dejan el firmware con el mailbox DOE trabado",
+   "como": "revisar registros EFI pstore del sosreport; comando de extraccion no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, kernel 6.17.0-1008-nvidia, driver 580.126.09, analisis de un tercero que no posee el equipo",
+   "riesgo": "el autor declara que no tiene Spark y que se basa en logs ajenos; las causas son hipotesis del autor, no confirmadas por NVIDIA",
+   "verificable_aqui": "ls /sys/fs/pstore/ ; sudo journalctl -k -b -1 | grep -iE 'panic|stack overflow|DOE'"
+  },
+  {
+   "que": "Firma del estado DOE trabado: GPU a Gen1 x1, mailbox DOE con error, ningun modulo NVIDIA carga; solo se limpia retirando la alimentacion de la pared",
+   "como": "lspci muestra DOESta: Busy+ IntSta+ Error+ y LnkSta: Speed unknown, Width x0",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "sosreport de un usuario",
+   "riesgo": "los reinicios en caliente no lo recuperan",
+   "verificable_aqui": "sudo dmesg | grep -iE 'DOE|NVDA8800|NVDA8900'"
+  },
+  {
+   "que": "Recuperacion: ciclo de corriente en frio y arranque con el kernel anterior; no ejecutar apt upgrade hasta tener un kernel corregido",
+   "como": "apagar; desconectar de la pared 60 segundos; reconectar; en grub elegir Advanced options y luego 6.14.0-1013-nvidia",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "propuesta del autor, no validada en su equipo",
+   "riesgo": "el kernel 6.14.0-1013-nvidia debe seguir instalado; no es declaracion de NVIDIA",
+   "verificable_aqui": "ls /boot/vmlinuz-*"
+  },
+  {
+   "que": "Aviso: Field Diagnostic pasa los 8 tests aunque el driver de produccion falle, porque usa el driver mods que evita la cadena de inicializacion normal",
+   "como": "8 tests aprobados: GpuStress, C2CStress, PowerStress, ThermalStress, MemStress, FioSSD, CpuStress1, CpuStress2 (dgx-spark-fieldiag r9.257.3, mods v4.31)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "sosreport de un usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Herramienta spark-gpu-throttle-check ampliada para GB10 con decodificador de causas de throttling y deteccion de deriva",
+   "como": "fork de la herramienta de hoesing; invocacion no indicada",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/parallelArchitect/spark-gpu-throttle-check",
+   "licencia": "no indicada",
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Herramienta cuda-unified-memory-analyzer para presion de memoria UMA",
+   "como": "invocacion no indicada",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/parallelArchitect/cuda-unified-memory-analyzer",
+   "licencia": "no indicada",
+   "probado_en": "GB10 y GPU discretas",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metrica de memoria en GB10: nvmlDeviceGetMemoryInfo devuelve total igual a MemTotal (~121 GB); la capacidad usable sigue a MemAvailable; en un caso se vio 92.7% de uso con GPU 0% y CPU ~0.2%",
+   "como": "usar MemAvailable en lugar de MemTotal; heuristica: si total NVML >= 90% de la RAM del sistema, tratarla como memoria unificada",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/parallelArchitect/nvml-unified-shim",
+   "licencia": "no indicada",
+   "probado_en": "GB10, reportes de la comunidad; el PR a nvitop se declara sin validar en GB10",
+   "riesgo": "la correccion upstream (nvitop #208, nvtop PR 463, btop PR 1611) no esta validada en hardware GB10",
+   "verificable_aqui": "grep -E 'MemTotal|MemAvailable' /proc/meminfo"
+  },
+  {
+   "que": "Monitor sparkview como alternativa que cambia a MemAvailable en GB10",
+   "como": "detecta el caso en ejecucion; comando no indicado",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/parallelArchitect/sparkview",
+   "licencia": "no indicada",
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Afirmacion de que el cuelgue por asignacion no acotada de memoria unificada (PyTorch issue 174358) se resuelve con kernel 6.17, driver 580.142 y DGX OS 7.4.0",
+   "como": "verificar versiones: kernel 6.17 + driver 580.142 + DGX OS 7.4.0",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "afirmacion del autor, no de NVIDIA",
+   "riesgo": "sin prueba adjunta en el texto",
+   "verificable_aqui": "uname -r ; nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+  }
+ ],
+ "omision_nvidia": "El autor pregunta a NVIDIA si los panics de 6.17.0-1008-nvidia son conocidos y si se retira el kernel del canal OTA; no hay respuesta de NVIDIA en el tema.",
+ "utilidad_atom": "alta",
+ "razon": "Reune comandos y firmas concretos (lspci DOE, pstore, recuperacion por ciclo de corriente y kernel previo, MemAvailable frente a MemTotal) con repositorios, aunque sin licencia indicada, y todo viene de un tercero sin Spark y sin respuesta de NVIDIA. La nota sobre que el Field Diagnostic no detecta fallos del driver de produccion y la regla de usar MemAvailable son directamente aplicables al monitoreo."
+}

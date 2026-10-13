@@ -1,0 +1,58 @@
+{
+ "id": 369716,
+ "titulo": "Dgx spark shut down without rebooting",
+ "leido": true,
+ "posts_leidos": 23,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Capturar estado del enlace ConnectX-7 y del historial AER/PCIe/mlx5 para ver si el evento es aislado o recurrente",
+   "como": "lspci -nnvv | grep -A20 \"ConnectX-7\"; dmesg | grep -iE \"aer|pcie|mlx5\"",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun el usuario, kernel 6.17.0-1014-nvidia",
+   "riesgo": null,
+   "verificable_aqui": "sudo dmesg | grep -iE 'aer|pcie|mlx5'"
+  },
+  {
+   "que": "Monitor sparkview con PSI, deteccion de reloj y capa de red CX7; guarda logs en un directorio logs analizable tras un apagado",
+   "como": "ejecutar sparkview durante la carga; compartir su carpeta logs (comando de arranque no indicado)",
+   "fuente_post": 18,
+   "repositorio": "https://github.com/parallelArchitect/sparkview",
+   "licencia": "no indicada",
+   "probado_en": "GB10 / DGX Spark",
+   "riesgo": "herramienta de un usuario, sin respaldo de NVIDIA",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Alerta MEM_SWAP_PRESSURE de sparkview: uso 112.4 GB de 121.7 GB con swap activo; PSI memory en cero; picos de 91 C con 2-3 nucleos activos y reloj bajando a 2150-2200 MHz",
+   "como": "umbrales descritos, comando no indicado",
+   "fuente_post": 29,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario con carga vLLM",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Spark Field Diagnostic de NVIDIA para decidir si hay problema de refrigeracion",
+   "como": "enlace a la guia de usuario; comando no indicado",
+   "fuente_post": 31,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "respuesta de staff NVIDIA",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Un usuario pregunta si el perfil de ventilacion se ajusta en firmware (post 25); no hay respuesta de NVIDIA, que solo remite al Field Diagnostic.",
+ "utilidad_atom": "media",
+ "razon": "Contiene los comandos exactos de recoleccion de logs PCIe/AER/mlx5 y la herramienta sparkview con su repositorio (licencia no indicada), pero la causa del apagado queda sin cerrar y las mitigaciones termicas son fisicas (disipadores, ventiladores; 6 ventiladores bajan 6 C solo cargando modelos). NVIDIA (aniculescu) respondio solo con el Field Diagnostic; el log muestra el aviso de potencia insuficiente de 27 W en cada puerto mlx5 desde el arranque."
+}

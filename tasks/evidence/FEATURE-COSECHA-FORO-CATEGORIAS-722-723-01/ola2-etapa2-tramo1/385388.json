@@ -1,0 +1,38 @@
+{
+ "id": 385388,
+ "titulo": "Hard thermal shutdown during prefill on long context using latest spark-vllm-docker",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Modulo/servicio de control de ventilador de la comunidad (RPM minimos aditivos, curva por temperatura, firma Secure Boot, DKMS) como workaround del apagado en prefill largo",
+   "como": "no indicado (el post solo nombra el repositorio y dice que fijo el ventilador al 100% y luego uso el servicio systemd con curva dinamica)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/christopherowen/dgx-spark-fan-control",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark FE (usuario declara 2 nodos DGX+GX10), EC 0x03000508, vLLM b12x",
+   "riesgo": "Ventilador al 100% permanente es ruidoso; es modulo de comunidad, no de NVIDIA; afirmacion de un usuario",
+   "verificable_aqui": "systemctl status dgx-spark-fan-control (si esta instalado); no confirmado el nombre exacto del servicio"
+  },
+  {
+   "que": "Diagnostico de campo de NVIDIA como prueba de estres: si el equipo se apaga durante el, da derecho a RMA (respuesta de staff NVIDIA)",
+   "como": "sudo ./partnerdiag --field",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FE",
+   "riesgo": "Provoca apagado del equipo; corre con Secure Boot en las condiciones que exige la herramienta (no detallado aqui)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El usuario afirma que el firmware no sube los ventiladores al 100% pese a 98% de uso de GPU y picos de 97 W; NVIDIA solo responde (post 5, staff) que apagarse en el diagnostico de campo da derecho a RMA y no ofrece curva ni correccion de firmware.",
+ "utilidad_atom": "media",
+ "razon": "Reporta un apagado total reproducible en prefill largo con vLLM y un workaround de comunidad (fan control con DKMS) sin comando exacto; el rollback de EC 0x02 no lo arreglo segun el usuario. NVIDIA (aniculescu, post 5) solo indica RMA si el equipo se apaga durante partnerdiag --field."
+}

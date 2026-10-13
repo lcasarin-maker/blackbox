@@ -1,0 +1,141 @@
+{
+ "id": 368536,
+ "titulo": "DGX Spark stability / out of RAM / overheating",
+ "leido": true,
+ "posts_leidos": 52,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "rastrear",
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar el reloj de GPU como mitigacion de reinicios por calor (rafaelkallis, luego staff Neill sugiere 2300 como experimento)",
+   "como": "nvidia-smi --lock-gpu-clocks 0,2150 ; sudo nvidia-smi -rgc ; sudo nvidia-smi -lgc 0,2300",
+   "fuente_post": 4,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "GX10/Spark segun usuarios; benchmark en 2 nodos y en Asus GX10 con llama-benchy 0.3.7: tg128 c1 28.75 vs 30.77 tok/s",
+   "riesgo": "Costo ~7% en decode c1 segun el benchmark de post 10",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "earlyoom y tope de memoria de vLLM contra congelamientos por OOM en UMA (usuario nvidia3978)",
+   "como": "instalar earlyoom; vLLM gpu_memory_utilization no mas de 0.85, menos si hay monitor; deshabilitar servicios innecesarios",
+   "fuente_post": 46,
+   "repo": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "El autor dice que solo falla si un proceso salta 2 GB en segundos",
+   "verificable_aqui": "systemctl status earlyoom; pgrep -a earlyoom"
+  },
+  {
+   "que": "Staff NVIDIA (Neill): sysctl para fallar asignaciones antes de colgar, mas swap en NVMe y guardian de memoria",
+   "como": "vm.overcommit_memory=2 y vm.overcommit_ratio=90 en /etc/sysctl.d/ ; swapfile de 64-128 GB ; servicio que vigila MemAvailable (piso 4-8 GB) y mata el proceso mayor",
+   "fuente_post": 23,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "respuesta de staff, sin cifras de prueba",
+   "riesgo": "overcommit_memory=2 puede rechazar asignaciones de CUDA/contenedores; el propio autor del hilo no lo probo",
+   "verificable_aqui": "sysctl vm.overcommit_memory vm.overcommit_ratio vm.swappiness"
+  },
+  {
+   "que": "Parametros de VM probados por usuarios: swappiness 0 o 1 (usa swap solo al llenarse la RAM), swapoff, vfs_cache_pressure=200, movablecore al arranque; min_free_kbytes=2097152 NO ayudo",
+   "como": "sudo sysctl vm.swappiness=0 ; sudo swapoff -a ; sudo sysctl -w vm.vfs_cache_pressure=200 ; sudo sysctl -w vm.min_free_kbytes=2097152",
+   "fuente_post": 14,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "usuarios en Spark/GX10; post 42: tras actualizar firmware el truco de cero swap dejo de funcionar",
+   "riesgo": "swapoff da kill instantaneo por OOM; min_free_kbytes no evito el cuelgue (post 11)",
+   "verificable_aqui": "cat /proc/sys/vm/swappiness; swapon --show"
+  },
+  {
+   "que": "Servicio guardian de memoria generado por IA, sin probar: bucle bash cada 5 s que mata el mayor consumidor con kill -9 si MemAvailable cae bajo 5000000 kB",
+   "como": "/usr/local/bin/mem-guard.sh + mem-guard.service (grep MemAvailable /proc/meminfo; kill -9 del proceso mayor)",
+   "fuente_post": 26,
+   "repo": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "El autor declara que no lo probo; mata el proceso mas grande sin criterio",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Diagnostico de presion: reclaim directo y stall de memoria en lugar de swap (swap sale 0 pero la CPU sube); vigilar /proc/pressure/memory y los contadores del kernel",
+   "como": "pswpout; pgscan_direct y pgsteal_direct (/proc/vmstat); /proc/pressure/memory; posix_fadvise POSIX_FADV_DONTNEED sobre archivos ya escritos para acotar la cache",
+   "fuente_post": 50,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "2 Spark, 20 C ambiente (usuario tsarihan)",
+   "riesgo": "fadvise exige modificar el proceso que escribe",
+   "verificable_aqui": "grep -E 'pswpout|pgscan_direct|pgsteal_direct' /proc/vmstat; cat /proc/pressure/memory"
+  },
+  {
+   "que": "Estructura termica: 7 zonas con un solo trip critico a 104 C y sin cooling devices enlazados; sin pwm en hwmon; fan.speed N/A; el pico de CPU quedo en 92 C con governor performance, schedutil y tope a 2.0 GHz (la temperatura no depende del reloj segun la medicion)",
+   "como": "cat /sys/class/thermal/thermal_zone*/trip_point_0_temp; cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor; echo 2000000 | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq",
+   "fuente_post": 49,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "2 Spark, driver cppc_cpufreq 338-2808 MHz (usuario tsarihan)",
+   "riesgo": "El tope de frecuencia de CPU no baja el pico segun post 52; el mismo usuario retracta su sugerencia previa",
+   "verificable_aqui": "cat /sys/class/thermal/thermal_zone*/trip_point_0_type; nvidia-smi --query-gpu=fan.speed --format=csv"
+  },
+  {
+   "que": "Medir si el calor limita: contadores de Clocks Event Reasons; cero en slowdown termico con ventiladores externos",
+   "como": "nvidia-smi -q -d PERFORMANCE | grep -A6 \"Clocks Event Reasons\"",
+   "fuente_post": 47,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "2 Spark en estante, ventilador USB de 120 mm por unidad, 20 C",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi -q -d PERFORMANCE | grep -A6 'Clocks Event Reasons'"
+  },
+  {
+   "que": "Cuelgue de motor vLLM no detectable por util: nvidia-smi marca ~95% y /health responde 200, pero la potencia cae a 16-27 W (sano ~45 W); vigilar potencia y generation_tokens_total congelado, reiniciar el motor",
+   "como": "watchdog por potencia de GPU y contador generation_tokens_total; referencia vLLM issue 37729",
+   "fuente_post": 36,
+   "repo": "https://github.com/vllm-project/vllm (issue 37729)",
+   "licencia": "no indicada",
+   "probado_en": "GB10 segun el autor (jamieo1337); sin parche upstream en build publicado",
+   "riesgo": "Reinicia el servicio con peticiones en vuelo",
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,utilization.gpu --format=csv -l 5"
+  },
+  {
+   "que": "Configuracion de diagnostico post-mortem: watchdog systemd, kdump con 1 GB, scraping Prometheus de nv-monitor y vllm, logs de vLLM en carpeta montada",
+   "como": "RuntimeWatchdogUSec=5min ; crashkernel=1G ; kdump",
+   "fuente_post": 42,
+   "repo": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Un watchdog corto reinicia equipos que solo estan ocupados",
+   "verificable_aqui": "systemctl show -p RuntimeWatchdogUSec; cat /proc/cmdline"
+  },
+  {
+   "que": "Perfil de CPU+GPU que sobrevivio un prefill de 200k tokens en 2 Spark que se apagaban a 91 C",
+   "como": "nvidia-smi -lgc 200,1800 ; for p in /sys/devices/system/cpu/cpufreq/policy*; do echo 0 | sudo tee \"$p/auto_select\"; echo 2000000 | sudo tee \"$p/scaling_max_freq\"; done",
+   "fuente_post": 38,
+   "repo": null,
+   "licencia": null,
+   "probado_en": "2 Spark, eugr/spark-vllm-b12x, cuarto de servidores a 18 C; con solo -lgc 0,2000 aun se apago",
+   "riesgo": "Reduce rendimiento de CPU; el corte previo no dejo mensajes del kernel",
+   "verificable_aqui": "cat /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq"
+  },
+  {
+   "que": "Recuperacion remota de un equipo colgado: enchufe controlable (Zigbee o WiFi) y, con dos nodos, matar el cliente del nodo sano libero el nodo congelado en minutos; sshd puede aceptar TCP en el puerto 22 pero no entregar banner",
+   "como": "enchufe con zigbee2mqtt (post 43); matar el proceso cliente en el nodo sano (post 47)",
+   "fuente_post": 43,
+   "repo": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Corte de energia puede corromper escritura en curso",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Staff NVIDIA (aniculescu, post 32) afirma que una actualizacion de mayo introdujo un OOM killer, pero varios usuarios (posts 42, 43, 44) siguen colgandose con el sistema actualizado; nvidia-smi da N/A en limite de potencia y umbrales termicos (post 26); la curva de ventiladores es de firmware y no se expone al SO (post 49); el paquete dgx-spark-fieldiag no se pudo instalar por dependencia ofed-scripts no instalable (post 31) y exige desactivar Secure Boot (post 30).",
+ "utilidad_atom": "alta",
+ "razon": "Hilo largo con muchos mecanismos concretos: sysctl de memoria y swap, earlyoom, tope de gpu_memory_utilization, lectura de /proc/vmstat y /proc/pressure/memory, topes de reloj de GPU y CPU, contadores de Clocks Event Reasons, watchdog y kdump; staff NVIDIA (Neill, aniculescu) respondio con recomendaciones y con un OOM killer de la actualizacion de mayo. Hay medicion que retracta una hipotesis (el governor y el tope de CPU no bajan el pico de 92 C, posts 49 y 52), por lo que no todo lo propuesto sirve."
+}

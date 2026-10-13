@@ -1,0 +1,27 @@
+{
+ "id": 380669,
+ "titulo": "DGX Spark system hardware crashes at around 75W (system reboots) repeatedly (wattage cap workaround found)",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar el reloj de la GPU a 2100 MHz para evitar reinicios en torno a 75 W; liberar con -rgc",
+   "como": "sudo nvidia-smi -lgc 300,2100  (liberar: sudo nvidia-smi -rgc, vuelve a 3003 MHz)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "null (usuario no declara hardware/driver)",
+   "riesgo": "Afirmacion de un solo usuario, sin respuesta de NVIDIA; menos rendimiento de pico",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK | grep -iE 'graphics|max'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Un unico post de usuario da el comando exacto para topar el reloj y el de reversion, tras reinicios repetidos hacia 75 W; no hay respuesta de NVIDIA ni hardware declarado. Es un workaround concreto pero sin verificacion independiente."
+}

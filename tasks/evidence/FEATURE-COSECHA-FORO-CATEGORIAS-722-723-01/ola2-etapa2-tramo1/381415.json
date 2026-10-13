@@ -1,0 +1,48 @@
+{
+ "id": 381415,
+ "titulo": "Shutdowns after prolonged inference - how can I debug this?",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Leer el log del arranque previo tras un apagado (staff de NVIDIA lo propone); el usuario reporta que nvidia-bug-report y journalctl --since no mostraron nada",
+   "como": "journalctl -k -b -1 -e",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "El mismo usuario no pudo ver logs previos con journalctl --since; puede estar vacio",
+   "verificable_aqui": "journalctl --list-boots; journalctl -k -b -1 -e | tail"
+  },
+  {
+   "que": "Transmitir el log del kernel a una segunda maquina para probar que el corte es del controlador embebido (el flujo sigue sano y se calla sin mensaje final)",
+   "como": "netconsole hacia otra unidad (parametros no indicados)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "MSI EdgeXpert, SBIOS 5.36_1.8.0, EC 10800, PD 522 (declarado por el usuario)",
+   "riesgo": "Requiere segunda maquina receptora",
+   "verificable_aqui": "ls /sys/kernel/config/netconsole 2>&1; cat /proc/cmdline"
+  },
+  {
+   "que": "Muestreo a 10 Hz de registros de potencia del sistema por hwmon durante la carga, sin encontrar limitador activo ni PROCHOT al morir",
+   "como": "no indicado (sin comando)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "MSI EdgeXpert (declarado)",
+   "riesgo": null,
+   "verificable_aqui": "ls /sys/class/hwmon/*/"
+  }
+ ],
+ "omision_nvidia": "Un usuario afirma (sin verificacion) que la proteccion que corta la energia esta por debajo de lo que el SO ve; staff solo pide bug report y no ofrece mecanismo para ver el corte.",
+ "utilidad_atom": "media",
+ "razon": "El post 6 de un usuario describe un corte por EC/PD sin traza en el diario, con reproductor (video 70-100 W GPU mas rafagas CPU) y el metodo netconsole; staff (aniculescu) solo aporta journalctl -k -b -1 -e y nvidia-bug-report. Los comandos utiles son pocos y el resto es hipotesis de usuario sin verificar."
+}

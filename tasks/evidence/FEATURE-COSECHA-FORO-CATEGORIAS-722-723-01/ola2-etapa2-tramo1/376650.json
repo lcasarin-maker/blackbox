@@ -1,0 +1,46 @@
+{
+ "id": 376650,
+ "titulo": "Running a large LLM on DGX Spark Cluster while keeping ComfyUI usable?",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reducir la reserva de memoria de vLLM para dejar holgura a otras cargas (respuesta de usuario con rol AakankshaS; ejemplos 0.7 y 0.6)",
+   "como": "--gpu-memory-utilization 0.7 (o 0.6 para dejar 40% libre)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "menos KV cache disponible",
+   "verificable_aqui": "docker ps --format '{{.Names}} {{.Command}}' | grep -i gpu-memory"
+  },
+  {
+   "que": "Desactivar swap antes de cargar modelos grandes para evitar bloqueos del kernel por thrashing (afirmado en el post como documentado en troubleshooting de DGX Spark)",
+   "como": "sudo swapoff -a",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "sin swap, un exceso de memoria lleva a OOM directo",
+   "verificable_aqui": "swapon --show"
+  },
+  {
+   "que": "Un usuario bajo --gpu-memory-utilization a 0.8 en dos clusters vLLM para liberar recursos a otra carga; otro reporta pico de 114GB RAM con ComfyUI en modo bajo consumo",
+   "como": "--gpu-memory-utilization 0.8",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Los posts 2 y 3 dan valores concretos de --gpu-memory-utilization y swapoff para dejar holgura de memoria, pero sin medicion propia ni fuente verificable; la respuesta del post 2 es de un usuario con nombre de soporte sin cita. El post 5 afirma que la gestion de memoria de vLLM con memoria unificada es mala y que llama.cpp se porta mejor (opinion de usuario)."
+}

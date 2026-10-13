@@ -1,0 +1,58 @@
+{
+ "id": 382065,
+ "titulo": "DGX Spark (GB10): GPU idle temperature/power does not return to baseline after sustained load",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "monitorear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Hipotesis de causa: en reposo el EC (controlador embebido) pasa de control de ventiladores por temperatura a control por carga, sin lazo de retroalimentacion; el chip se cree el mismo en DGX FE y ASUS GX10 (Microchip MEC1723 o similar); sin arreglo de NVIDIA/Microchip a la fecha",
+   "como": "no indicado (sin comando; remite a pruebas en otro hilo)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "hipotesis de un usuario (x1917x), no verificada",
+   "riesgo": "Sobrecalentamiento en reposo segun calidad del ventilador y la pasta",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Linea base y plateau medibles: base 38-40 C, ~8-10 W, P0; tras 2 h de carga al 96% el reposo se quedo en 63-64 C, 11.3-11.6 W, P0 durante 50+ minutos; solo un reinicio completo lo limpio; liberar el tope de reloj no ayudo",
+   "como": "nvidia-smi -rgc (liberar tope); nvidia-smi -lgc 300,2300 (el usuario lo uso como tope); seguimiento de temperatura/potencia/pstate",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, kernel 6.17.0-1031-nvidia, driver 580.173.02, CUDA 13.0, Ubuntu 24.04.4 (usuario harsanys)",
+   "riesgo": "Un reinicio completo fue la unica recuperacion observada",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw,pstate,clocks.sm --format=csv"
+  },
+  {
+   "que": "Telemetria de ventilador no disponible: nvidia-smi da [N/A] y no existe nodo hwmon fan1_input",
+   "como": "nvidia-smi (campo de ventilador); ls /sys/class/hwmon/*/fan1_input",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark del usuario; dice coincidir con reportes de otros",
+   "riesgo": "Sin telemetria no se confirma si el enfriamiento responde",
+   "verificable_aqui": "ls /sys/class/hwmon/*/fan1_input; nvidia-smi --query-gpu=fan.speed --format=csv"
+  },
+  {
+   "que": "El supuesto remedio de iniciar sesion en el escritorio local no funciono vía GNOME Remote Desktop: loginctl no mostro la sesion RDP ligada a seat0/tty1",
+   "como": "grdctl --system ; loginctl list-sessions",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "misma Spark del usuario",
+   "riesgo": null,
+   "verificable_aqui": "loginctl list-sessions"
+  }
+ ],
+ "omision_nvidia": "Segun el usuario: no hay telemetria de ventilador en nvidia-smi ni hwmon, y no hay respuesta de NVIDIA a sus preguntas sobre el plateau, el pstate siempre en P0 ni la causa; segun x1917x, tampoco hay correccion del EC.",
+ "utilidad_atom": "media",
+ "razon": "Reporte de un usuario con metodo de medicion claro (base, carga, plateau, comandos nvidia-smi y rutas hwmon) y una hipotesis de EC sin verificar; no hay respuesta de NVIDIA staff. Aporta el comando de lectura para comparar con nuestro calor sostenido, pero no una solucion."
+}

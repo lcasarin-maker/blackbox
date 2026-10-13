@@ -1,0 +1,47 @@
+{
+ "id": 383821,
+ "titulo": "How I solved abrupt shutdown issue",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limpiar el polvo de la rejilla frontal con aspiradora: temperatura en reposo bajo de altas 40s a mediados 30s C y partnerdiag paso de fallo (GPU stress a los 3m18s) a aprobado; ademas 1 hora de soak sin apagado",
+   "como": "aspirar la rejilla frontal (varias sesiones de 60 s); partnerdiag; soak test de 1 hora",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario generaxltd, hardware/driver no indicado",
+   "riesgo": "Reporte de un solo usuario sin verificar",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Tope de reloj de GPU como paliativo de apagados bajo carga",
+   "como": "tope a 1800 (post 1) y a 2000 (post 3); comando exacto no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "modelo ASCENT segun bubexel (post 3)",
+   "riesgo": "El perfil de ventiladores depende sobre todo de sensores del lado GPU: bajar solo la GPU no enfria la CPU, que puede superar 86 C con ventiladores casi parados (usuario vedrin.jeliazkov, post 2)",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "Control de ventiladores personalizado, porque los perfiles por defecto priorizan silencio sobre disipar calor",
+   "como": "no indicado (remite a otro hilo 'dgx-spark-fan-control')",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GX10 del usuario edp10961, a relojes de fabrica",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Hilo de cuatro posts de usuarios sin NVIDIA staff; vincula apagados abruptos bajo carga con polvo/temperatura y con perfil de ventiladores, con tope de reloj 1800/2000 como paliativo. Los comandos exactos no aparecen, y un usuario advierte que topar solo la GPU deja la CPU caliente."
+}

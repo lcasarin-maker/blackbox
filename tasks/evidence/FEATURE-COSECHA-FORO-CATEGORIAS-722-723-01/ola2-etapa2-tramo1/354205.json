@@ -1,0 +1,89 @@
+{
+ "id": 354205,
+ "titulo": "Random reboots and 00 screen",
+ "leido": true,
+ "posts_leidos": 47,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "rastrear",
+  "solucionar",
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Verificar que el watchdog sbsa_gwdt esta cargado y cargarlo en el arranque",
+   "como": "lsmod | grep sbsa ; insmod sbsa_gwdt ; archivo /etc/modules-load.d/watchdog.conf con la linea: sbsa_gwdt",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark; kosta reporta que en su unidad el modulo estaba en lista negra tras una actualizacion de kernel y quitar el blacklist resolvio sus reinicios (post 15)",
+   "riesgo": "Desactivar el watchdog en BIOS (Advanced > Watchdog) evita los reinicios pero quita la proteccion (post 11); czankel (usuario con respuesta tecnica) dice que el kernel nuevo ya lo incluye (post 21)",
+   "verificable_aqui": "lsmod | grep sbsa; grep -r sbsa /etc/modprobe.d/ /etc/modules-load.d/"
+  },
+  {
+   "que": "Si se carga r8169 en vez de r8127 (NIC Realtek), instalar el paquete que lo pone en lista negra o crear alias modprobe",
+   "como": "sudo apt-get install nvidia-spark-realtek-mod-options ; o /etc/modprobe.d/nvidia-spark-r8169.conf con: alias pci:v000010ECd00008127sv*sd*bc*sc*i* r8127 ; luego apagar y desenchufar, y comprobar con lsmod | grep r8127",
+   "fuente_post": 29,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "aniculescu (staff NVIDIA) lo propuso tras un sosreport con errores FPAC/Out of Stack; mceballos confirma que el modulo cargo pero los panics continuaron (post 30)",
+   "riesgo": "No resolvio el caso del usuario",
+   "verificable_aqui": "lsmod | grep -E 'r8127|r8169'; dpkg -l nvidia-spark-realtek-mod-options"
+  },
+  {
+   "que": "Capturar el log del arranque previo tras un reinicio",
+   "como": "journalctl -k -b -1 -e",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "staff NVIDIA (aniculescu)",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k -b -1 -e | tail"
+  },
+  {
+   "que": "Generar informes para soporte",
+   "como": "sudo nvidia-bug-report.sh (genera nvidia-bug-report.log.gz); sudo sos report",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "staff NVIDIA los pide en posts 2, 4 y 27",
+   "riesgo": null,
+   "verificable_aqui": "command -v sos nvidia-bug-report.sh"
+  },
+  {
+   "que": "Correr Field Diagnostics",
+   "como": "sudo init 3 ; cd /opt/nvidia/dgx-spark-fieldiag ; sudo ./partnerdiag --field (deja el sistema en TTY; reiniciar para volver al escritorio)",
+   "fuente_post": 17,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "NVIDIA (aniculescu, post 19) confirma que init 3 solo pasa a modo TTY",
+   "riesgo": "Pierde el escritorio hasta reiniciar",
+   "verificable_aqui": "ls /opt/nvidia/dgx-spark-fieldiag"
+  },
+  {
+   "que": "Analisis de pstore: tras un panic, las trazas FPAC en ct_nmi_enter via PSCI/LPI y el panic 'SBSA Generic Watchdog timeout' quedan en pstore y muestran la causa",
+   "como": "revisar los registros pstore del sosreport; en 6.17.0-1014-nvidia el usuario parallelArchitect afirma que la carrera FPAC/PSCI/NMI no esta corregida",
+   "fuente_post": 45,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel 6.17.0-1014-nvidia, BIOS 5.36_0ACUM018 (segun el post, afirmacion de usuario)",
+   "riesgo": "Afirmacion de un usuario no confirmada por NVIDIA",
+   "verificable_aqui": "ls /sys/fs/pstore /var/lib/systemd/pstore 2>/dev/null"
+  },
+  {
+   "que": "Alinear paquetes de driver con el kernel instalado",
+   "como": "apt update ; apt full-upgrade ; nvidia-smi para confirmar el driver 580.142 ; instalar el paquete nvidia-spark-initcall-bl",
+   "fuente_post": 36,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "staff NVIDIA; jed10 dice que ya lo tenia todo y seguia fallando (post 37)",
+   "riesgo": null,
+   "verificable_aqui": "dpkg -l | grep -E 'linux-modules-nvidia|nvidia-spark-initcall-bl'; uname -r"
+  }
+ ],
+ "omision_nvidia": "NVIDIA no dio causa raiz ni parche tras meses; la respuesta final fue pedir RMA y llamar a un caso raro que necesita mas tiempo de ingenieria (post 47). Dos usuarios (posts 37, 45) muestran que el kernel 6.17.0-1014-nvidia seguia entrando en panic.",
+ "utilidad_atom": "alta",
+ "razon": "Contiene comandos exactos para comprobar y fijar el watchdog sbsa_gwdt, el cambio r8169 a r8127 y el uso de journalctl -b -1, pstore y sosreport, con respuesta de staff NVIDIA (aniculescu) en varios posts. Ninguna de las soluciones resolvio el caso del autor; el valor esta en las comprobaciones y el watchdog, no en una cura."
+}

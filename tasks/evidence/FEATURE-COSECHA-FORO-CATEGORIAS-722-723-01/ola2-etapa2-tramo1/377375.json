@@ -1,0 +1,110 @@
+{
+ "id": 377375,
+ "titulo": "What are normal temps under load? Is 94.6c too hot?",
+ "leido": true,
+ "posts_leidos": 30,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "prevenir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Leer las siete zonas termicas acpitz (genericas, sin documentar) por sysfs",
+   "como": "paste <(ls /sys/class/thermal/thermal_zone*/type) <(cat /sys/class/thermal/thermal_zone*/temp)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Founders Edition Spark",
+   "riesgo": null,
+   "verificable_aqui": "cat /sys/class/thermal/thermal_zone*/temp"
+  },
+  {
+   "que": "tegrastats copiado de un Jetson Orin Nano: no da mas que sysfs, imprime RAM, SWAP, CPU y las siete acpitz",
+   "como": "binario tegrastats (comando exacto no indicado)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Binario de origen ajeno, procedencia no verificada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Limitar rango de reloj de GPU; con 300-2200 el usuario bajo de 94.6 a ~78-80 C, con 2100 a 70-72 C bajo 27-28 W (el staff no responde en este tema)",
+   "como": "clock 300-2200 / 2100 (el comando nvidia-smi -lgc esta en el post 25 solo como consulta)",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Founders Edition Spark, ambiente 24-25 C",
+   "riesgo": "Reduce picos de rendimiento; el usuario duda de que oculte un defecto de pasta termica",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.current.graphics --format=csv"
+  },
+  {
+   "que": "Consulta del reloj grafico actual",
+   "como": "nvidia-smi --query-gpu=clocks.current.graphics --format=csv",
+   "fuente_post": 25,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario DannyTup",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.current.graphics --format=csv"
+  },
+  {
+   "que": "Barrido de relojes 1500-2400 MHz: punto optimo 2000 MHz, 2100 aun eficiente, desde 2150 rendimientos decrecientes por vatio; referencia de 63 C max en tanda larga a ~2086 MHz",
+   "como": "barrido 1500-2400 MHz; valor recomendado 2000-2100",
+   "fuente_post": 19,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Medicion de un usuario, no verificada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Repasteo con PTM7950, separadores de 10 mm y presion negativa en rack cerrado: 24/7 sin apagados, reposo en 40s, picos 82 C con 20 solicitudes de prefill",
+   "como": "PTM7950, 10mm standoffs, negative pressure",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark en rack cerrado mural segun el usuario",
+   "riesgo": "Abrir la carcasa; el autor admite que podria afectar la garantia",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Enfriamiento externo: ventilador frente al equipo (nvidia3978: limitar GPU solo no basto, un ventilador si; atribuye el esfuerzo de CPU al autotune de flashinfer); soporte STL para ventilador de 140 mm; ventilador Noctua que baja ~20 C",
+   "como": "no indicado el comando; soporte y software de control en el post 10 sin enlace dado",
+   "fuente_post": 29,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Materiales combustibles cerca (post 15)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Herramienta Sparkview para registrar fallos y su causa",
+   "como": "no indicado (nombre mencionado, sin enlace en el texto)",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Hilo enlazado sobre GB10 mas fresco casi sin perdida de rendimiento (cooler-gb10-temps)",
+   "como": "https://forums.developer.nvidia.com/t/cooler-gb10-temps-almost-no-performance-lost/372662",
+   "fuente_post": 17,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El usuario pide sin respuesta de NVIDIA que se documente que temperaturas son normales, que miden las zonas acpitz y por que los ventiladores no suben; no hay staff de NVIDIA en el tema. Dato del post 24: el reloj de 2.6 GHz se logra en cargas cortas y baja a ~2.45 GHz por throttling en cargas largas.",
+ "utilidad_atom": "alta",
+ "razon": "Contiene la lectura sysfs exacta de temperaturas, el limite de reloj con efecto medido (94.6 a ~70-80 C) y pistas de repasteo y refrigeracion externa; un usuario reporta que su equipo se apago y fallo FieldDiag (post 30). Los valores de otros usuarios son testimonios sin verificacion independiente."
+}

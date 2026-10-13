@@ -1,0 +1,90 @@
+{
+ "id": 348760,
+ "titulo": "DGX Spark. low fan speed, high temps, device very hot",
+ "leido": true,
+ "posts_leidos": 62,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "prevenir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Perro guardian termico que lee los thermal_zone del SoC (no solo nvidia-smi) y mata el proceso al pasar el umbral",
+   "como": "thermal_watchdog.py --target-pattern <patron> --cutoff 92 --interval 60 (lee /sys/class/thermal/thermal_zone*/temp y nvidia-smi --query-gpu=temperature.gpu; SIGKILL al superar; solo stdlib)",
+   "fuente_post": 64,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun griffith.mark; zona4 del SoC iba 15-20 C por encima de la temperatura GPU de nvidia-smi",
+   "riesgo": "SIGKILL al proceso objetivo; script de tercero sin licencia",
+   "verificable_aqui": "grep . /sys/class/thermal/thermal_zone*/type /sys/class/thermal/thermal_zone*/temp"
+  },
+  {
+   "que": "Descargar modelos cargados e inactivos reduce temperatura y duplica caudal",
+   "como": "parar los contenedores de modelos sin trafico: con 6 solicitudes concurrentes el pico bajo de ~93 C a 83 C y el caudal de 1.7 a 3.4 filas/s",
+   "fuente_post": 64,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, SGLang, medicion propia de un usuario (una sola unidad)",
+   "riesgo": "Causa propuesta ('best guess' del usuario) sin confirmar por NVIDIA",
+   "verificable_aqui": "nvidia-smi --query-compute-apps=pid,used_memory --format=csv"
+  },
+  {
+   "que": "Limitar el reloj de GPU para evitar apagados termicos",
+   "como": "bloquear el reloj en ~2000 MHz (didvip, post 31); reducir a 2200 MHz evito el apagado en un caso (azampatti, post 63); actualizar BIOS a 0103",
+   "fuente_post": 31,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios en DGX Spark; el comando exacto no aparece",
+   "riesgo": "Menor rendimiento; comando no indicado",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "Comprobar el estado de los bancos de firmware PD",
+   "como": "sudo dmidecode -t 45 | egrep -A4 \"PD\"",
+   "fuente_post": 40,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "eugr (usuario); varios reportes de FW1/FW2 distintos, incluso 0.0 (posts 43-49)",
+   "riesgo": "Actualizar firmware puede dejar bancos en 0.0; un usuario dice que NVIDIA ya arruino una unidad (post 49); un usuario perdio el driver tras actualizar y se recupero con diagnostico (posts 59, 62)",
+   "verificable_aqui": "sudo dmidecode -t 45 | egrep -A4 \"PD\""
+  },
+  {
+   "que": "Medir fan RPM contra TJ bajo carga sostenida con jtop para separar fallo de ventilador de calor",
+   "como": "capturar temperaturas por zona, potencia, RPM del ventilador y frecuencia EMC en reposo y bajo carga GPU sostenida; curva RPM vs TJ en minutos",
+   "fuente_post": 65,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "sugerencia de jesse75, sin medicion",
+   "riesgo": null,
+   "verificable_aqui": "sensors | grep -i fan"
+  },
+  {
+   "que": "Sparkview: registro de temperaturas GPU/CPU, relojes, potencia, PROCHOT/PL_LEVEL y presion PSI de memoria e IO con logs con marca de tiempo",
+   "como": "https://github.com/parallelArchitect/sparkview",
+   "fuente_post": 66,
+   "repositorio": "https://github.com/parallelArchitect/sparkview",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun el autor",
+   "riesgo": "Licencia no indicada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Zonas termicas: temp5 (nucleos de rendimiento CPU) activa el ventilador y temp6 puede llegar a 90 C sin que el ventilador reaccione",
+   "como": "sensors (acpitz-acpi-0 temp1..temp7); el ventilador acpi_fan reporta 2 RPM, que didvip llama erroneo",
+   "fuente_post": 26,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "eggman en DGX Spark con cargas GPU de ~100 W; apagados a ~95 C",
+   "riesgo": "Observacion de usuario",
+   "verificable_aqui": "sensors | grep -E 'acpitz|temp|fan'"
+  }
+ ],
+ "omision_nvidia": "El firmware gobierna el ventilador sin control por PWM ni BMC (afirmacion de usuario Mach_AI, post 5); el BIOS no ofrece ajustes de ventilador (post 1). Varios usuarios piden curva configurable (posts 19, 37, 63) y NVES (staff) solo pide Field Diagnostics por DM para decidir un RMA (post 34); no hay respuesta oficial sobre curva ni causa.",
+ "utilidad_atom": "alta",
+ "razon": "Contiene un watchdog termico concreto sobre /sys/class/thermal (post 64), la evidencia de que nvidia-smi subestima la temperatura del SoC y mediciones de descarga de modelos inactivos y limitacion de reloj ante apagados por calor sostenido. NVIDIA (NVES) solo respondio con Field Diagnostics; las causas son hipotesis de usuarios."
+}

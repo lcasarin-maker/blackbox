@@ -1,0 +1,58 @@
+{
+ "id": 362648,
+ "titulo": "DGX Spark OS crash on llama4 launch",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Ver logs del arranque anterior tras un cuelgue (aniculescu)",
+   "como": "journalctl -k -b -1 -e",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k -b -1 -e --no-pager | tail -50"
+  },
+  {
+   "que": "Firma del OOM en driver: NVRM Out of memory NV_ERR_NO_MEMORY desde _memdescAllocInternal; por debajo del runtime CUDA el sistema se cuelga en vez de dar OOM normal (diagnostico de usuario)",
+   "como": "journalctl -k -b -1 buscar: NVRM: nvCheckOkFailedNoLog: Check failed: Out of memory [NV_ERR_NO_MEMORY] (0x00000051)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 / DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k -b -1 --no-pager | grep -i NV_ERR_NO_MEMORY"
+  },
+  {
+   "que": "Liberar page cache antes de cargas grandes (cudaMemGetInfo no refleja buffer cache en UMA) y vigilar memoria durante la carga",
+   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'; watch -n1 free -h",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Efecto descrito como 'a veces'; sin verificacion",
+   "verificable_aqui": "free -h"
+  },
+  {
+   "que": "Limitar contexto del modelo para no asignar KV cache gigante",
+   "como": "--ctx-size 8192",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un cuelgue determinista al lanzar llama4 en Ollama resulta ser OOM del driver NVRM (posts 3, 5), diagnosticado con journalctl del boot previo. Sin respuesta de NVIDIA; las mitigaciones son opiniones o pasos de usuarios (limitar ctx, drop_caches, usar llama.cpp o vLLM)."
+}

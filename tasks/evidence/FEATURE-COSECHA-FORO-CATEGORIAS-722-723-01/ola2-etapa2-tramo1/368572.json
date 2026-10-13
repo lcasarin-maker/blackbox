@@ -1,0 +1,38 @@
+{
+ "id": 368572,
+ "titulo": "DGX Spark unexpected hard reset + GPU PCIe Gen1 x1 / root port Width x0 + mlx5 insufficient power + FieldDiag MODS-020000600139",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "rastrear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobar estado del enlace PCIe de GPU y del root port, y contar avisos de potencia mlx5 por arranque",
+   "como": "journalctl -k -b 0 --no-pager | grep -i 'mlx5_core.*insufficient power' ; lspci -vv -s 000f:00:00.0 ; lspci -vv -s 000f:01:00.0 ; nvidia-smi -q | sed -n '/GPU Link Info/,/Bridge Chip/p' ; dmesg | grep -i pcie",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS 7.5.0, kernel 6.17.0-1014-nvidia, driver 580.142",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k -b 0 --no-pager | grep -ci 'mlx5_core.*insufficient power'"
+  },
+  {
+   "que": "Declaracion de NVIDIA: los mensajes Mellanox y PCIe (aviso de 27 W) son esperados y no indican problema; el codigo MODS-020000600139 del Field Diagnostic indica un fallo de hardware que requiere RMA",
+   "como": "contactar soporte de consumo y pedir RMA; ejecutar el Spark Field Diagnostic (guia de usuario)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "respuesta de staff NVIDIA (aniculescu)",
+   "riesgo": "otro usuario con apagados en ComfyUI reporta el mismo aviso (post 3), asi que el aviso por si solo no discrimina",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA no responde como acceder a BMC/SEL cuando /dev/ipmi* no esta expuesto en el host; la pregunta del autor queda sin contestar.",
+ "utilidad_atom": "media",
+ "razon": "NVIDIA (post 2 y 4) afirma que el aviso de 27 W en mlx5 y los mensajes PCIe son esperados, lo que descarta ese aviso como pista de los cortes; los comandos de lectura del autor sirven para comprobar el enlace. Lo demas es una consulta de RMA sin mecanismo nuevo."
+}

@@ -1,0 +1,27 @@
+{
+ "id": 378934,
+ "titulo": "Earlyoom configuration (triggering too early...)",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Bajar el umbral de swap de earlyoom (de -s 80 a -s 20) para que no mate el contenedor vLLM durante el pico de memoria de arranque",
+   "como": "sudo sed -i '/^EARLYOOM_ARGS=/ s/-s 80/-s 20/' /etc/default/earlyoom ; sudo systemctl restart earlyoom",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark con Sparkrun, vLLM Qwen3.5-122B-A10B (hardware y driver no indicados)",
+   "riesgo": "Con -s 20 earlyoom actua mas tarde (solo con menos de 20% de swap libre); el autor espera que sparkrun lo sobrescriba al reconfigurar",
+   "verificable_aqui": "grep EARLYOOM_ARGS /etc/default/earlyoom; systemctl is-active earlyoom"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario reporta que bajar --gpu-memory-utilization a 0.8 y 0.75 no evito que earlyoom interceptara el arranque y que el cambio del umbral -s si lo resolvio. Es un caso unico sin respuesta de NVIDIA y sin medicion mas alla de lo que dice el autor."
+}

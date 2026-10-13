@@ -1,0 +1,37 @@
+{
+ "id": 372434,
+ "titulo": "Fine-tuning Nemotron-3-Nano-30B-A3B on ASUS Ascent GX10 / GB10: CUDA OOM at load, box freezes, 4-bit QLoRA fix",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Evitar el OOM en la carga del modelo y los cuelgues de la caja al ajustar el modelo 30B con QLoRA de 4 bits via el cargador force_hf de NeMo AutoModel",
+   "como": "4-bit QLoRA con `force_hf: true` + `device_map: 0` (y `low_cpu_mem_usage`); `attn_implementation: eager`; `activation_checkpointing: false`; mantener out_proj/lm_head fuera de 4-bit y de LoRA",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS Ascent GX10 (GB10 sm_121, aarch64, ~122 GB unificada, CUDA 13, NGC PyTorch 2.10 25.11, transformers 5.5.0, NeMo AutoModel 0.3.0)",
+   "riesgo": "Solo confirmado en GX10 segun el autor; el detalle completo esta en PDF/DOCX adjuntos que no vienen en el texto",
+   "verificable_aqui": "free -h"
+  },
+  {
+   "que": "Advertencia: un CUDA OOM en la memoria unificada de GB10 no puede volcarse a swap, produce espiral de swap, cuelgue de SSH y reinicio forzado; la memoria 'HBM' sobrante se reduce entre intentos fallidos",
+   "como": "no indicado (afirmacion del usuario sin comando de medicion)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS Ascent GX10 segun el autor",
+   "riesgo": "Cuelgue total de la maquina",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El post da parametros concretos de carga que mantienen el pico de carga en ~20 GB y el entrenamiento en ~35 GB, y describe el mecanismo del cuelgue por OOM sin swap en memoria unificada. El runbook y los parches estan en adjuntos no incluidos en el texto, y es un post de un solo usuario sin respuesta de NVIDIA."
+}

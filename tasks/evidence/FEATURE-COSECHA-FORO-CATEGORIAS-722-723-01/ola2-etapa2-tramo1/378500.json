@@ -1,0 +1,47 @@
+{
+ "id": 378500,
+ "titulo": "DGX Spark is not suitable for professional workloads due to thermal instability and missing enterprise features",
+ "leido": true,
+ "posts_leidos": 50,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar reloj de GPU como mitigacion termica (usuario dice estable incluso a 35 C ambiente)",
+   "como": "sudo nvidia-smi -lgc 0,2000 (el post lo escribe pegado como 'sudonvidia-smi -lgc 0,2000 asolout'; el valor 0,2000 es el que aparece)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario sin hardware declarado",
+   "riesgo": "Reduce rendimiento; afirmacion de usuario",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "Medicion de un usuario: bajar reloj a 2000 MHz casi no cambio el rendimiento de inferencia y reduce la potencia a la mitad (benchmark codeneedle, Qwen3.6-35b-a3b-NVFP4; stock 2400-2470 MHz; 43 W y ~113 tk/s en stock); extracto truncado en el post",
+   "como": "no indicado (extracto truncado en el post, sin comando)",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 segun el usuario",
+   "riesgo": "Extracto truncado; resultado de un solo usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Referencias externas a ajustes termicos: articulo 'Your DGX Spark Is Cooking Itself' (Wild Pines AI) y un post de blog sobre quitar la carcasa; no se da contenido tecnico",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Quitar la carcasa puede afectar la garantia (lo dice el post 24)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El autor y otros usuarios afirman que el equipo no se recupera solo del apagado aunque este activada la opcion de BIOS de encendido tras perdida de energia, y que no hay Wake-on-LAN; el usuario robin.s pide que NVIDIA reconozca y publique un workaround. No hay respuesta de staff NVIDIA.",
+ "utilidad_atom": "baja",
+ "razon": "Es un hilo mayormente de opinion con apoyo anecdotico: varios usuarios con rack y buen enfriamiento sin fallos y otros usando tope de reloj (2000 MHz) o ventilacion, sin comando propio mas que el -lgc. Post 9 describe el patron OOM como thrashing largo en vez de apagado y post 22 atribuye dos apagados a muchas corrientes concurrentes, ambos sin verificacion."
+}

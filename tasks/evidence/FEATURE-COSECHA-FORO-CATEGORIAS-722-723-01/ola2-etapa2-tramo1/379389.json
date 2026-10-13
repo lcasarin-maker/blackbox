@@ -1,0 +1,58 @@
+{
+ "id": 379389,
+ "titulo": "It makes no sense to me anymore to run my Sparks above a 1400-1700 MHz GPU clock",
+ "leido": true,
+ "posts_leidos": 17,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Barrido de 17 reloj-puntos con tope en ambos nodos; sobre ~1400-1800 MHz no sube el decode, baja la potencia en pared ~90-100 W y el transitorio de potencia, que el autor asocia a los apagados",
+   "como": "nvidia-smi -lgc <MHz> (tabla: 2400 MHz 51.34 tok/s 330 W; 1700 MHz 49.80 tok/s 242 W; 1400 MHz 47.74 tok/s 234 W; potencia de DOS Sparks)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark TP=2, vLLM, DeepSeek-V4-Flash FP8, medidor en pared (declarado)",
+   "riesgo": "-lgc no sobrevive al reinicio; GB10 salta a pasos discretos (pide 1200, obtiene 1098); el tope casi no enfria (GPU 63 a 56 C, zona SoC 90-96 C en todos los relojes); prefill pierde ~14% a 1400",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK | head -40"
+  },
+  {
+   "que": "nvidia-smi solo explica ~12-27% del consumo real en GB10; medir con medidor de pared",
+   "como": "medidor en toma de corriente (modelo no indicado)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw --format=csv"
+  },
+  {
+   "que": "Servicio systemd que reaplica el tope al arrancar",
+   "como": "[Service] Type=oneshot; ExecStart=/usr/bin/nvidia-smi -pm 1; ExecStart=/usr/bin/nvidia-smi -lgc 0,2100; ExecStop=/usr/bin/nvidia-smi -rgc; RemainAfterExit=yes; Wants/After=nvidia-persistenced.service; WantedBy=multi-user.target",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "2 nodos Acer, tope 2100 MHz (declarado)",
+   "riesgo": "Un tope aplicado en silencio puede enmascarar fallos; no hay verificacion de NVIDIA",
+   "verificable_aqui": "systemctl list-unit-files | grep -i clock; nvidia-smi -q -d CLOCK | grep -i app"
+  },
+  {
+   "que": "Nota de enfriamiento: la carcasa de serie no evita el estrangulamiento termico por encima de 2100 MHz segun un usuario; con la tapa quitada o repasta sube mas",
+   "como": "no indicado",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Sin verificacion; retirar la carcasa es riesgoso",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El post 1 aporta una medicion con comando y valores (nvidia-smi -lgc, tabla tok/s y vatios) y el post 2 una unit systemd concreta; ambos son reutilizables para prevenir el transitorio de potencia, con advertencias sobre la persistencia y la nula mejora termica. No hay respuesta de NVIDIA; todo son afirmaciones de usuarios."
+}

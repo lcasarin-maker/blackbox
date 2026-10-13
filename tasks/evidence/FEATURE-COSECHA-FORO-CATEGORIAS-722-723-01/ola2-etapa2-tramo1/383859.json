@@ -1,0 +1,58 @@
+{
+ "id": 383859,
+ "titulo": "Driver Issue with 580.178.04",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "SGLang calcula --mem-fraction-static sobre psutil.virtual_memory().available en GPU integrada, que incluye cache de paginas",
+   "como": "python3 -c \"import psutil; print(psutil.virtual_memory().available / 2**30)\" antes de cada arranque",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark driver 580.159.03 en contenedor lmsysorg/sglang; reportado por usuario con lectura de codigo",
+   "riesgo": "El mismo usuario retracta la hipotesis como causa del OOM (post 4)",
+   "verificable_aqui": "python3 -c \"import psutil; print(psutil.virtual_memory().available/2**30)\"; grep -E 'MemAvailable|^Cached' /proc/meminfo"
+  },
+  {
+   "que": "Reducir memoria por secuencia (max-running-requests y max-mamba-cache-size) libera KV",
+   "como": "--mem-fraction-static 0.85 --max-running-requests 4 --max-mamba-cache-size 20: KV de 75,520 a 432,640 tokens",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.173.02, SGLang dev build, modelo hibrido mamba",
+   "riesgo": "Menos concurrencia; el estado lineal de atencion es por secuencia",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Formula de coste por token de KV",
+   "como": "12 capas de atencion completa x 2 cabezas KV x 2 x 256 = 12,288 elementos por token; estado lineal ~54 MiB por secuencia en bf16",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Aritmetica del usuario desde la config del modelo, no medida en SGLang",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Verificar version de driver coherente",
+   "como": "nvidia-smi --query-gpu=driver_version; cat /sys/module/nvidia/version; dpkg del paquete nvidia-driver-580-open",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv,noheader; cat /sys/module/nvidia/version"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El titulo apunta al driver 580.178.04, pero el autor concluye en el post 8 que la causa fue una mala configuracion de un servicio systemd con condicion de carrera durante la carga, no el driver. Sin respuesta de NVIDIA; aporta una formula de memoria KV y el ajuste de concurrencia para modelos hibridos, sin verificacion independiente."
+}
