@@ -22,3 +22,16 @@ La primera version del detector (banda a umbral-2 C) no disparo nunca en la repr
 3. **Prueba con un `sobre_100` real**, que no ha ocurrido (maximo historico de zona 98.6 C).
 
 Medicion en `tasks/evidence/FEATURE-CALIBRAR-CALOR-SOSTENIDO-01/medicion.txt`; debe usar la frase `boot sano` solo si existe ese boot.
+
+## Avance 2026-10-13
+
+Medido con `tools/calibra_calor.py` (nuevo, solo lectura) sobre 17 boots terminados con telemetria + veredictos de
+`tools/reboot_verdict.py` (evidencia en `tasks/evidence/FEATURE-CALIBRAR-CALOR-SOSTENIDO-01/`): config vigente
+5/6 cortes con el detector disparado (IC95 0.44-0.97; el que falta es un corte frio a 63 C) y 3/8 sanos con falso
+positivo (IC95 0.14-0.69), 2/2 entre los sanos cargados. Hay un boot sano bajo carga media-alta (b8707961, reboot por
+sudo, mediana 26 W) y el detector dispara en el con cualquier config que conserve >= 4 aciertos: no separa. La
+re-ejecucion reproduce 17/17 eventos del servicio vivo (control: 2/17 con banda 2 C). Constantes NO cambiadas: la
+mejor del barrido (fraccion 0.9) difiere en un boot, dentro del ruido.
+
+Sigue faltando: un boot sano con carga tan pesada como los de 55 W que no termine en poweroff ambiguo; causa de los
+cortes (observador externo) para saber cuales fueron termicos; un `sobre_100` real.

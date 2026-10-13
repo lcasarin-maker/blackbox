@@ -60,3 +60,9 @@ Hilo 348453 es DGX Spark Ubuntu 22.04 con nvidia-550; este nodo es DGX OS 7.2.3/
 Version para un solo nodo Gigabyte AI TOP ATOM: Agregar a tools/huella_host.py una sonda de modulos HID (lsmod/modinfo/builtin) y dpkg --audit tras cambio de kernel, tratando host headless sin dispositivos HID como normal; sin autocarga de modulos.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Avance 2026-10-13
+- close_check antes: rc=2 (`unknown`, could_not_run=1: falta la captura cruda pareada post-update). Sin cambio tras este avance; la ficha sigue abierta.
+- Construido: `tools/hid_inventario.py` (sensor de solo lectura: sysfs USB clase 03 + /proc/bus/input/devices, estado por kernel en `$BLACKBOX_DATA/hid_inventario.json`, veredictos BASELINE/SIN_HALLAZGOS/HID_PERDIDO/INDETERMINADO, rc 0/0/1/2) y `tests/test_hid_inventario.py` (10 pruebas, cobertura 99%; controles negativos: dispositivo desaparecido, sin driver, sin nodo input, sin HID, estado corrupto).
+- Medido en esta maquina: teclado y receptor de raton con usbhid enlazado; la camara no cuenta como HID. Control negativo real con un HID fantasma inyectado y kernel simulado: HID_PERDIDO rc=1.
+- Falta: el sensor no esta integrado en bin/bb ni en timer, no hay captura post-update real (requiere actualizar kernel en un nodo canary con acceso alternativo), ni sondeo de dpkg --audit/modulos integrados; el criterio del close_check original sigue sin cubrirse.

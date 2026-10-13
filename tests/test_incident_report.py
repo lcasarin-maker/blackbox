@@ -759,3 +759,45 @@ def test_carga_de_atlas_el_markdown_la_imprime_como_seccion():
         "carga_de_atlas": {"estado": ir.NOT_COLLECTED},
     }
     assert "Carga de atlas" in ir.md(rep)
+
+
+def _ventana_viva(paso=60, n=11):
+    return [fila(i * paso) for i in range(n)]
+
+
+def _epoch(m) -> float:
+    e = ir.epoch_de(m["ts"])
+    assert e is not None
+    return e
+
+
+def test_aislamiento_wifi_red_caida_con_muestras_locales_vivas_no_es_cuelgue():
+    ms = _ventana_viva()
+    r = ir.clasifica_hueco_de_red(ms, _epoch(ms[0]), _epoch(ms[-1]), red_alcanzable=False)
+    assert r["etiqueta"] == "AISLAMIENTO_DE_RED"
+    assert r["muestras_locales_en_la_ventana"] == 11
+
+
+def test_aislamiento_wifi_control_negativo_sin_muestras_locales_es_cuelgue():
+    ms = _ventana_viva()
+    # el logger local muere a mitad de la ventana: el silencio final supera la tolerancia
+    r = ir.clasifica_hueco_de_red(ms[:4], _epoch(ms[0]), _epoch(ms[-1]), red_alcanzable=False)
+    assert r["etiqueta"] == "CUELGUE"
+    vacio = ir.clasifica_hueco_de_red([], 0.0, 600.0, red_alcanzable=False)
+    assert vacio["etiqueta"] == "CUELGUE" and vacio["muestras_locales_en_la_ventana"] == 0
+
+
+def test_aislamiento_wifi_sin_observacion_externa_no_se_infiere_y_red_ok_no_es_hueco():
+    ms = _ventana_viva()
+    desde, hasta = _epoch(ms[0]), _epoch(ms[-1])
+    assert ir.clasifica_hueco_de_red(ms, desde, hasta, None)["etiqueta"] == "NO_DETERMINADO"
+    assert ir.clasifica_hueco_de_red(ms, desde, hasta, True)["etiqueta"] == "RED_ALCANZABLE"
+
+
+def test_aislamiento_wifi_ignora_filas_que_no_son_muestra_ni_tienen_ts_valido():
+    ms = [fila(0), fila(30, evento="arranque"), {"ts": None, "evento": "muestra"}, fila(60), fila(120)]
+    r = ir.clasifica_hueco_de_red(ms, _epoch(ms[0]), _epoch(ms[4]), red_alcanzable=False)
+    assert r["muestras_locales_en_la_ventana"] == 3 and r["etiqueta"] == "AISLAMIENTO_DE_RED"
+    # control negativo: sin las muestras de 60 s el hueco de 120 s supera la tolerancia
+    solo_bordes = [ms[0], ms[4]]
+    assert ir.clasifica_hueco_de_red(solo_bordes, _epoch(ms[0]), _epoch(ms[4]), False)["etiqueta"] == "CUELGUE"

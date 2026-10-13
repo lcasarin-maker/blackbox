@@ -1,17 +1,18 @@
 {
   "claims_fingerprint": "dee20359f02de510930e066c731cda91f902f3ac18a1a8e07989300d7d34d912",
-  "panel": "1 auditor Opus, 2026-10-13: SPEC-L416 tras el arreglo de _secure_boot en huella_host",
+  "panel": "1 auditor Opus, 2026-10-13: L118/L146/L147/L416 tras clasifica_hueco_de_red, sonda gpu_gsp y cuatro casos de despacho en bin/bb",
   "profile": "general",
   "results": [
     {
       "cited": {
-        "tests/test_hallazgo.py": "22881b51eed8e1e62a3baf72e53d83277fba21c64ee51176111b57325d5ab327",
-        "tests/test_incident_report.py": "26100c4ca29e818fe5c44f04f7a659f741621c32554f350cd026020a501e2185",
-        "tools/atom_gpu_telemetry.py": "f4eb776d23c072ef6d82b82a3a889944d368751e1de03f5627638e4ec538a21a"
+        "tests/test_huella_host.py": "6d7c8992aef6e5d5a3bd7d2a3b32cc9c9ddc68aa7ff5f22fc9ac38cf18afeb74",
+        "tests/test_incident_report.py": "4636ad109e3dc481622888291523d99e2cc7c8ef428b05a65115970ec3a8200e",
+        "tools/atom_gpu_telemetry.py": "f4eb776d23c072ef6d82b82a3a889944d368751e1de03f5627638e4ec538a21a",
+        "tools/incident_report.py": "19810166266536f8ec328faa2efd9a7dcab4b8cf189229f3707342e6bc345a21"
       },
       "claim_id": "SPEC-L118",
-      "evidence": "`grep -rnE \"^\\s*(import|from)\\s+.*blackbox|sys\\.path.*blackbox|importlib.*blackbox\" --include=*.py` en ~/projects/Atlas (HEAD 47c08cf79, fuera de _retired) da 0 lineas; los `sys.path.insert` de Atlas que mencionan blackbox en el mismo archivo (tools/detect_atom_crash.py:56, tools/medir_consumo_de_job.py:35) apuntan a la raiz de Atlas, no a blackbox. Atlas consume la salida por proceso: tools/bb_consulta.py:31 fija la ruta de tools/atom_gpu_telemetry.py y lo lanza con subprocess (bb_consulta.py:51-53). En blackbox, `grep -nE \"^\\s*(import|from).*atlas\"` sobre tools/ y tests/ da 0; tests/test_incident_report.py:747 `test_carga_de_atlas_es_solo_lectura_y_sin_import_de_codigo_de_atlas` lo guarda, y tests/test_hallazgo.py:131 corre el validador de Atlas como PROCESO aparte. Control negativo: la misma forma de regex con `subprocess` sobre tools/bb_consulta.py da 1.",
-      "seal": "815744cbb984506fe43f65d0d5946e1b77bae0ff6c46242fec1991e59e526b64",
+      "evidence": "git diff HEAD -- tools/incident_report.py tests/test_incident_report.py: solo adiciones (32+42 lineas, 0 lineas '-'), ningun import nuevo; funcion clasifica_hueco_de_red y 4 tests aislamiento_wifi. grep de import/sys.path a Atlas en tools bin tests: 0 imports (unica coincidencia es un comentario en atom_gpu_telemetry.py:68 que dice 'sin sys.path'); git grep en ~/projects/Atlas de import blackbox|incident_report|huella_host: 0. Control negativo: la misma regex sobre 'import blackbox.tools' cuenta 1. pytest tests/test_incident_report.py tests/test_huella_host.py: 103 passed.",
+      "seal": "734a0dd17ac4cfe9d6e37376fafad8e5a0ba10c227d4e0c5e785dfbb14ca20da",
       "verdict": "PASS"
     },
     {
@@ -60,22 +61,20 @@
         "tools/accion_termica.py": "1e3739860cb2ef4aa6e3d00d8d28c4c8cc453b333b1b947875eed7f62d4f92ca",
         "tools/atom_gpu_telemetry.py": "f4eb776d23c072ef6d82b82a3a889944d368751e1de03f5627638e4ec538a21a",
         "tools/hallazgo.py": "910171e47fc9a4b99b41fa6e66e1a5d76188f140ef9868b3764ede3aa888ff1a",
-        "tools/incident_report.py": "3cc3d994a253d77ab09da2c60fea5b49de7229af1b2b0a24ab50375d3c5dacba",
-        "tools/reboot_verdict.py": "7b417bc5f8407f1a26b0a86e671ec9326097036c48b4220611a3c3d5a31b9368"
+        "tools/incident_report.py": "19810166266536f8ec328faa2efd9a7dcab4b8cf189229f3707342e6bc345a21"
       },
       "claim_id": "SPEC-L146",
-      "evidence": "blackbox->Atlas: tools/atom_gpu_telemetry.py:98 (`atom_gpu_telemetry.jsonl`), :100 (`estado_termico.json`), :1401 (`bb-estado-termico/2`) leido por Atlas via proceso `--gate-termico` (Atlas tools/bb_consulta.py:51-53); tools/reboot_verdict.py:67 `bb-reboot/1`, que Atlas tools/detect_atom_crash.py:16-17 solo LEE; tools/incident_report.py:1155 `bb-incident/1`; `--procesos-gpu` en atom_gpu_telemetry.py:1845, pedido por Atlas bb_consulta.py:75 para liberation_watchdog.py:1193; tools/hallazgo.py:2-5 `bb-hallazgo/1` en `$BLACKBOX_DATA/hallazgos/`, que Atlas tools/recoge_hallazgos_bb.py:71-74 solo lee (escribe solo en su `destino`, :86). Atlas->blackbox: rules/firmas_gb10.json trae `atlas_raiz` y cada firma un campo `atlas` (incident_report.py:44, :791-793); incident_report.py:57 lee `projects/Atlas/logs/liberation_watchdog.jsonl` (FEATURE-INCIDENTE-CARGA-DE-ATLAS-01 en tasks/done/); tools/accion_termica.py:32 lee `atlas_carga.json`, :62 exige `atlas-carga/1`, :36 `ESTADOS_CALIENTES = (\"sostenida\", \"sobre_100\")` y :118 ejecuta `freeze`; Atlas bb_consulta.py:130-143 publica ese archivo. Los tres sensores nuevos no cruzan la frontera: `grep -rlnE \"huella_host|canario_motor|gpumem_historial\" tools rag` en Atlas solo da rag/embeddings/index.json (corpus).",
-      "seal": "153eb4aca328f3600663ea0c0d0ea51173a475ab9931e086c94a6b526d00f542",
+      "evidence": "El diff de tools/incident_report.py solo anade TOLERANCIA_HUECO_LOCAL_S y clasifica_hueco_de_red; no toca las rutas afirmadas: incident_report.py:44 FIRMAS=rules/firmas_gb10.json, :57 ATLAS_BITACORA_COLA ~/projects/Atlas/logs/liberation_watchdog.jsonl, :1187 formato bb-incident/1. Citados existen: atom_gpu_telemetry.py:1845 --procesos-gpu; hallazgo.py:30 ESQUEMA bb-hallazgo/1; accion_termica.py:62 esquema atlas-carga/1 y :12 systemctl --user freeze en sostenida/sobre_100. Sin import cruzado (ver L118).",
+      "seal": "5ce30362d9754bc9f5af79c0d3a31b1695d06e171b93263f68378a3ef59e0528",
       "verdict": "PASS"
     },
     {
       "cited": {
-        "tests/test_hallazgo.py": "22881b51eed8e1e62a3baf72e53d83277fba21c64ee51176111b57325d5ab327",
-        "tests/test_incident_report.py": "26100c4ca29e818fe5c44f04f7a659f741621c32554f350cd026020a501e2185"
+        "tests/test_incident_report.py": "4636ad109e3dc481622888291523d99e2cc7c8ef428b05a65115970ec3a8200e"
       },
       "claim_id": "SPEC-L147",
-      "evidence": "Las pruebas de punteros se omiten sin Atlas: `python -m pytest -q tests/test_incident_report.py::test_los_punteros_a_atlas_existen_si_atlas_esta_y_la_comprobacion_puede_fallar tests/test_hallazgo.py::test_hallazgo_cumple_el_contrato_de_atlas` -> `2 passed in 0.34s`; control negativo con Atlas ausente (`HOME=<scratch vacio> PYTHONUSERBASE=~/.local` mismo comando) -> `SKIPPED [1] tests/test_incident_report.py:368: Atlas no esta en esta maquina`, `SKIPPED [1] tests/test_hallazgo.py:127: ...`, `2 skipped`. Atlas sin blackbox bloquea: ~/projects/Atlas/tools/bb_consulta.py:47-49 devuelve motivo de bloqueo si el gate no existe (y :55-59 si no responde o no se ejecuta), y liberation_watchdog.py:3048-3050 convierte ese motivo en `temperatura_elevada` antes de lanzar el job.",
-      "seal": "2157896e6e0407215e20977d76ebc7fc597630e517ccb4733835571b8ae00f93",
+      "evidence": "Los 4 tests nuevos (test_aislamiento_wifi_*) son puros, no leen Atlas; la prueba de punteros sigue omitiendose sin Atlas: tests/test_incident_report.py:368 pytest.skip(\"Atlas no esta en esta maquina\"). El cambio no toca freno termico ni bb-estado-termico/2. 103 passed en incident_report+huella_host.",
+      "seal": "461eaddec856d1ba784b1ed7a4a0907e00d863f64241b0ed67da660b860d41d9",
       "verdict": "PASS"
     },
     {
@@ -83,12 +82,11 @@
         "tests/test_bb_bash.py": "2b57ca26801521f6e77a030004bcbf2b67fadcf7208c313a67c15f6362841a5f",
         "tools/canario_motor.py": "4b5cbbc3d6a0930405333bd841d8588d92fd494af0c116b9e2b90f016744b98c",
         "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6",
-        "tools/huella_host.py": "d5506cb37094f39d7a4a1837994f6a6c8061ecd4fa9eaec046b0ef2b4adc4b29"
+        "tools/huella_host.py": "6a587db4715f32aab0fb7353caa4e0ae7fef7931a5b7b8fd3122c2104c94e906"
       },
       "claim_id": "SPEC-L416",
-      "evidence": "`git diff -- tools/huella_host.py` is empty, so the _secure_boot change is the one committed in HEAD cd6c877b. `git diff HEAD~1 -- tools/huella_host.py` only adds the sonda_drm_modeset and sonda_arranque_tras_actualizacion probes and their helpers (_secure_boot now records unreadable efivars in the NOT_COLLECTED text). Nothing in it touches bb status, freshness thresholds or the tests the row cites. pytest tests/test_bb_bash.py -k 'sensor or control_negativo or usable' -n0: 43 passed, 57 deselected. bash bin/bb status shows ARMADO for guardia de procesos; memavail/gpuoom/termico_predictivo/reloj_arranque '(observar; solo la unit, sin latido)'; huella del host, canario del motor, historial de memoria de GPU. bin/bb:2634 `_fresco huella_host.json 2880`, :2639 canario_motor.jsonl 75, :2644 gpumem_historial.jsonl 15. :2625-2628 the four sensors read only `systemctl is-active`. :2605 vigilante.timer and :2613 bb-guardia-proceso.service read only the unit. :2363 bb-usable heartbeat window is 120 seconds. All 6 tests the row cites by name exist (grep -c 'def <name>' = 1 each), plus 3 bb_usable tests (lines 651/657/666). Negative control on _fresco's primitive: `find viejo(3 days old) -mmin -2880` gave empty output, rc=1; `find fresco` gave a match, rc=0.",
-      "fix": null,
-      "seal": "926e2e89a60031a3800713ccfded2dfb2c153450f3e68eb6110b0405dcaaf695",
+      "evidence": "git diff HEAD -- bin/bb: +4 lineas de despacho (hid, proveedor-gpu, calor, enjambre), 0 lineas '-' (grep -cE '^-[^-]' = 0); cmd_status intacto. tools/huella_host.py: solo anade sonda_gpu_gsp y su entrada en SONDAS; no toca frescura. bin/bb:2605/2613 vigilante y guardia solo por unit; :2625 memavail/gpuoom/termico_predictivo/reloj_arranque solo unit; :2634 huella_host.json 2880 min (2 dias), :2639 canario_motor 75, :2644 gpumem_historial 15; :2364-2371 latido 'latencia del escritorio'. Los 6 tests citados por nombre existen (grep -c = 1 cada uno; control: nombre inventado = 0). pytest tests/test_bb_bash.py -k 'sensor or control_negativo or usable': 43 passed, 57 deselected. En vivo bash bin/bb status: las 7 filas de sensor aparecen ARMADO con el texto 'solo la unit, sin latido' para los cuatro sin artefacto.",
+      "seal": "0a7ca78c46452a146bdcff914e683678c3d4879ab7859979ff1043323456777c",
       "verdict": "PASS"
     },
     {
@@ -186,7 +184,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-13T14:26:10Z",
-  "tree_fingerprint": "0091640411e64fefcc4b0299636df5a5a5892745305d7f8b3da45e04840135c4",
+  "timestamp": "2026-10-13T14:38:49Z",
+  "tree_fingerprint": "5a2afd4a567d82c46de1f45bb12a98288ff430e647d47c10f06fb9a2d3f64237",
   "violations": []
 }

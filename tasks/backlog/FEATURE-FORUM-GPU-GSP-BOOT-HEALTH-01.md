@@ -58,3 +58,11 @@ Se reutilizó `gpu_runtime_capture` y se preservó resultado `could_not_run` de 
 - Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
 - Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_05.json`, `tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/commands.json`, `tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/preflight.json`, `tasks/evidence/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01/validator-run.json`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Avance 2026-10-13
+
+- close_check antes: rc=2, `could_not_run: 1` (faltan control negativo de incidente y recuperacion/rollback). Sigue igual: este avance no lo cierra.
+- Construido: sonda `gpu_gsp` en `tools/huella_host.py` (PCI display NVIDIA + nvidia-smi con timeout 10 s + `journalctl -k -b` filtrado en Python por GSP/NVRM; veredicto `disponible` / `PCI_SIN_GSP` / `INDETERMINADO`; nunca `disponible` sin respuesta de nvidia-smi ni sin journal legible; la ultima linea se guarda sin el prefijo con el hostname). Tests en `tests/test_huella_host.py` (57 pasan; cobertura de `tools/huella_host.py` 99%, la unica linea sin cubrir es el `sys.exit` de `__main__`).
+- Medido en esta maquina (boot actual): `disponible`, nvidia-smi `NVIDIA GB10, 580.178.04`, 0 lineas GSP en el journal del kernel.
+- Controles negativos corridos en tests: PCI presente + nvidia-smi falla/timeout -> PCI_SIN_GSP; PCI presente + smi ok + linea de error GSP/NVRM -> PCI_SIN_GSP; PCI ausente -> INDETERMINADO; journal ilegible -> INDETERMINADO.
+- Falta: un incidente real (o inyeccion de fallo soportada) con versiones y boot preservados, recuperacion/rollback OEM y verificador `verify_forum_finding` con esa evidencia. La sonda se probo con fixtures, no con un GSP fallido real (could_not_run).

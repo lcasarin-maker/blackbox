@@ -14,3 +14,9 @@ close_check: {"cmd": "python3 -m pytest -q tests/test_incident_report.py -k aisl
 Conocimiento en Atlas: `knowledge/investigations/gb10_cortes_2026-10-11/hilos/hilo_358951_*` (L20: un caso de "idle hard-lockup" resulto ser aislamiento WiFi del MT7925, demostrado porque el logger local siguio con 1473 muestras sanas). Un monitor externo que solo mira ping o SSH da falso positivo.
 
 Instrumento: cuando exista el observador externo (`FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01`), `reboot_verdict` cruza el hueco de ping con la ultima muestra local: telemetria local viva durante el hueco = `AISLAMIENTO_DE_RED`, no corte. Hoy no aplica porque la unica fuente es local.
+
+## Avance 2026-10-13
+
+- close_check antes: rc=5 (0 tests seleccionados, 42 deselected). Ahora: `python3 -m pytest -q tests/test_incident_report.py -k aislamiento_wifi` rc=0 (4 tests, con control negativo de silencio local y de borde).
+- Construido: `tools/incident_report.py::clasifica_hueco_de_red(muestras, desde, hasta, red_alcanzable)` -> AISLAMIENTO_DE_RED / CUELGUE / RED_ALCANZABLE / NO_DETERMINADO (sin observacion externa no se infiere).
+- Falta: la funcion no esta cableada en `reporte()` porque no existe fuente de `red_alcanzable` hasta FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01.

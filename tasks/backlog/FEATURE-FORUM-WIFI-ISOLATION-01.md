@@ -61,3 +61,8 @@ El agente hardware tiene asignada la entrada CLI con JSON literal y códigos 0/1
 - Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
 - Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_02.json`, `tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/host-observation.txt`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Avance 2026-10-13
+
+- close_check antes: rc=2, `status: unknown`, could_not_run=1 (falta `commands.json` de captura cruda). Sin cambio: requiere captura real de roam/soak en el stack citado, que implica tocar la red de la maquina.
+- Hecho: la regla de clasificacion aislamiento vs cuelgue (`tools/incident_report.py::clasifica_hueco_de_red`, ver FEATURE-BB-FALSO-CUELGUE-POR-AISLAMIENTO-WIFI-01). Falta: A/B de workarounds, fixture/captura del WRONG_KEY+no-secrets, recuperacion opt-in con rollback.
