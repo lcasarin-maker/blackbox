@@ -70,11 +70,11 @@ from pathlib import Path
 
 # `_argv_tokens` es la lectura token a token de /proc/<pid>/cmdline que el job
 # nocturno ya endureció contra el falso positivo de `pgrep -f` (self-match y
-# vecinos, pagado dos veces). Se IMPORTA aunque sea privada, exactamente como
-# ya la importa `tools/liberation_watchdog.py` y por el mismo motivo: una
-# segunda copia divergiría en la primera corrección. Costo medido de traerla
-# aquí: +36 MB de RSS en el sampler (9,992 -> 46,660 KB de ru_maxrss) y +0.36 s
-# de arranque, una sola vez -- este proceso vive semanas y muestrea cada 5 s.
+# vecinos, pagado dos veces). Aqui es una COPIA (DGX-585: blackbox no importa codigo
+# de Atlas), no un import: importarla costaba +36 MB de RSS en el sampler
+# (9,992 -> 46,660 KB de ru_maxrss) y +0.36 s de arranque, y este proceso vive
+# semanas y muestrea cada 5 s. El riesgo de la copia es que diverja de la original en
+# la primera correccion que se le haga a una de las dos.
 def _argv_tokens(pid: str) -> list[str]:
     """argv real de un proceso desde /proc/<pid>/cmdline (separado por NUL).
     Lista vacia si el proceso murio entre el listado y la lectura.
@@ -1829,7 +1829,7 @@ def _run_sampler(args) -> int:
                     print(json.dumps(evento, ensure_ascii=False))
             if args.once:
                 return 0
-            time.sleep(args.interval_seconds)  # blocking-sleep: intervalo del sampler de vida larga, no I/O a esperar -- DGX-334  # sunset-reviewed: 3.5 -- re-revisado 2026-10-13 contra 3.4: `git blame` de la linea 1832 (095c3a35) es anterior al bump 3.4.1 (eb89c383), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.3: `git blame` de la linea 1832 (b008b6ee) es anterior al bump 3.3.0 (3512a16a), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.2: `git blame` de la linea 1832 (804713d5) es anterior al bump 3.2.0 (e8e5aa8d), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.1: `git blame` de la linea 1832 (93850773) es anterior al bump 3.1.0 (7a5bd48b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 1832 (92598b79) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 1832 (dbc1017f) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-10: el sampler de vida larga requiere su intervalo entre muestras; closecheck positivo y neutralizado prueba el parámetro y el control. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-13 ; re-revisado 2026-10-13 contra 3.1: la linea no cambio desde 20256295 (git blame de esta linea)
+            time.sleep(args.interval_seconds)  # blocking-sleep: intervalo del sampler de vida larga, no I/O a esperar -- DGX-334  # sunset-reviewed: 3.6 -- re-revisado 2026-10-13 contra 3.5: `git blame` de la linea 1832 (7280a6a4) es anterior al bump 3.5.0 (b99560e8), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.4: `git blame` de la linea 1832 (095c3a35) es anterior al bump 3.4.1 (eb89c383), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.3: `git blame` de la linea 1832 (b008b6ee) es anterior al bump 3.3.0 (3512a16a), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.2: `git blame` de la linea 1832 (804713d5) es anterior al bump 3.2.0 (e8e5aa8d), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.1: `git blame` de la linea 1832 (93850773) es anterior al bump 3.1.0 (7a5bd48b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 1832 (92598b79) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 1832 (dbc1017f) no cambio desde su revision anterior; la razon sigue valiendo: revalidado 2026-10-10: el sampler de vida larga requiere su intervalo entre muestras; closecheck positivo y neutralizado prueba el parámetro y el control. Ver tasks/evidence/CLEAN-2026-10-03/renew-sleeps.txt#RENEW-13 ; re-revisado 2026-10-13 contra 3.1: la linea no cambio desde 20256295 (git blame de esta linea)
     except KeyboardInterrupt:
         return 0
 
