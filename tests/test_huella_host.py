@@ -147,6 +147,51 @@ def test_gpu(tmp_path: Path) -> None:
     assert h.es_nc(mal["smi"]) and mal["pci_nvidia"] == ["0000:01:00.0"]
 
 
+# 10b GPU/GSP
+def _pci_gpu(raiz: Path) -> None:
+    _w(raiz, "sys/bus/pci/devices/0000:01:00.0/vendor", "0x10de\n")
+    _w(raiz, "sys/bus/pci/devices/0000:01:00.0/class", "0x030000\n")
+
+
+_SMI_OK = (0, "NVIDIA GB10, 580.178.04")
+_KERNEL_SANO = (0, "oct 12 host kernel: NVRM: loaded\noct 12 host kernel: nvidia: GSP firmware 580.178.04 ok")
+
+
+def test_gpu_gsp_disponible(tmp_path: Path) -> None:
+    _pci_gpu(tmp_path)
+    r = h.sonda_gpu_gsp(tmp_path, _correr({"nvidia-smi": _SMI_OK, "journalctl": _KERNEL_SANO}))
+    assert r["veredicto"] == "disponible" and r["smi"] == "NVIDIA GB10, 580.178.04"
+    assert r["kernel_gsp"] == {"lineas": 1, "errores": 0, "ultima": "nvidia: GSP firmware 580.178.04 ok"}  # sin hostname
+    r = h.sonda_gpu_gsp(tmp_path, _correr({"nvidia-smi": _SMI_OK, "journalctl": (0, "")}))
+    assert r["veredicto"] == "disponible" and r["kernel_gsp"]["ultima"] is None
+
+
+def test_gpu_gsp_control_negativo_pci_sin_smi(tmp_path: Path) -> None:
+    _pci_gpu(tmp_path)
+    assert h.sonda_gpu_gsp(tmp_path, _correr({"nvidia-smi": (9, ""), "journalctl": _KERNEL_SANO}))["veredicto"] == "PCI_SIN_GSP"
+    assert h.sonda_gpu_gsp(tmp_path, _cae)["veredicto"] == "PCI_SIN_GSP"  # nvidia-smi excede el timeout
+
+
+def test_gpu_gsp_control_negativo_errores_con_smi_ok(tmp_path: Path) -> None:
+    _pci_gpu(tmp_path)
+    for linea in ("NVRM: GSP RPC timeout", "NVRM: rpc failed", "nvidia: GSP init error"):
+        r = h.sonda_gpu_gsp(tmp_path, _correr({"nvidia-smi": _SMI_OK, "journalctl": (0, f"oct 12 host kernel: {linea}")}))
+        assert r["veredicto"] == "PCI_SIN_GSP" and r["kernel_gsp"]["errores"] == 1, linea
+
+
+def test_gpu_gsp_pci_ausente_es_indeterminado(tmp_path: Path) -> None:
+    _w(tmp_path, "sys/bus/pci/devices/0000:00:00.0/vendor", "0x10de\n")
+    _w(tmp_path, "sys/bus/pci/devices/0000:00:00.0/class", "0x060400\n")  # puente, no display
+    r = h.sonda_gpu_gsp(tmp_path, _correr({"nvidia-smi": _SMI_OK, "journalctl": _KERNEL_SANO}))
+    assert r["veredicto"] == "INDETERMINADO" and r["pci_display_nvidia"] == []
+
+
+def test_gpu_gsp_sin_journal_nunca_disponible(tmp_path: Path) -> None:
+    _pci_gpu(tmp_path)
+    r = h.sonda_gpu_gsp(tmp_path, _correr({"nvidia-smi": _SMI_OK, "journalctl": (1, "")}))
+    assert r["veredicto"] == "INDETERMINADO" and h.es_nc(r["kernel_gsp"])
+
+
 # 11 pstore
 def test_pstore(tmp_path: Path) -> None:
     (tmp_path / "sys/fs/pstore").mkdir(parents=True)
@@ -169,7 +214,7 @@ def _huella(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kernel: str = "6.17
 
 def test_recoge_cubre_todas_las_sondas_sin_inventar(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     r = _huella(tmp_path, monkeypatch)
-    assert set(r) == set(h.SONDAS) and len(r) == 14 and h.es_nc(r["os_release"])
+    assert set(r) == set(h.SONDAS) and len(r) == 15 and h.es_nc(r["os_release"])
 
 
 def test_recoge_sonda_que_lanza_es_nc(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

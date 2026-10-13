@@ -159,6 +159,35 @@ def sonda_gpu(raiz: Path, correr: Correr) -> Any:
     return {"smi": smi, "pci_nvidia": pci}
 
 
+_GSP_LINEA = re.compile(r"GSP|NVRM.*(?:timeout|failed|RPC)", re.I)
+_GSP_ERROR = re.compile(r"NVRM.*(?:timeout|failed|RPC)|GSP.*(?:timeout|fail|error)", re.I)
+
+
+def sonda_gpu_gsp(raiz: Path, correr: Correr) -> Any:
+    """Veredicto de tres estados que NO se infiere del PCI: `disponible` exige PCI display NVIDIA + respuesta de nvidia-smi + journal
+    legible sin errores GSP; `PCI_SIN_GSP` si hay PCI y (nvidia-smi falla o hay errores GSP); `INDETERMINADO` en lo demas."""
+    pci = [p.name for p in _hijos(raiz / "sys/bus/pci/devices", "*") if (_lee(p / "vendor") or "") == "0x10de" and (_lee(p / "class") or "").startswith("0x03")]
+    smi = _smi(correr, "name,driver_version")
+    diario = _comando(correr, ["journalctl", "-k", "-b", "--no-pager"])
+    out: dict[str, Any] = {"pci_display_nvidia": pci, "smi": smi if smi else _nc("nvidia-smi sin respuesta")}
+    if diario is None:
+        out["kernel_gsp"] = _nc("journalctl -k -b no corre o sin permiso")
+        errores: list[str] = []
+    else:
+        lineas = [l.split("kernel: ", 1)[-1] for l in diario.splitlines() if _GSP_LINEA.search(l)]  # sin el prefijo con el hostname
+        errores = [l for l in lineas if _GSP_ERROR.search(l)]
+        out["kernel_gsp"] = {"lineas": len(lineas), "errores": len(errores), "ultima": lineas[-1] if lineas else None}
+    if not pci:
+        out["veredicto"] = "INDETERMINADO"  # sin PCI no hay GPU que juzgar, aunque nvidia-smi conteste
+    elif not smi or errores:
+        out["veredicto"] = "PCI_SIN_GSP"
+    elif diario is None:
+        out["veredicto"] = "INDETERMINADO"  # nvidia-smi contesta, pero sin journal no se descartan errores GSP
+    else:
+        out["veredicto"] = "disponible"
+    return out
+
+
 def sonda_pstore(raiz: Path, correr: Correr) -> Any:
     out: dict[str, Any] = {}
     for rel in ("sys/fs/pstore", "var/lib/systemd/pstore"):
@@ -317,6 +346,7 @@ SONDAS: dict[str, Callable[[Path, Correr], Any]] = {
     "apt": sonda_apt,
     "watchdog": sonda_watchdog,
     "gpu": sonda_gpu,
+    "gpu_gsp": sonda_gpu_gsp,
     "pstore": sonda_pstore,
     "clock_lock": sonda_clock_lock,
     "drm_modeset": sonda_drm_modeset,

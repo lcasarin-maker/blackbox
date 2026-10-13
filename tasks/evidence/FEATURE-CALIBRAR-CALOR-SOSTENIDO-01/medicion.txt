@@ -1,0 +1,62 @@
+FEATURE-CALIBRAR-CALOR-SOSTENIDO-01 -- medicion 2026-10-13 (solo lectura; el umbral vigente NO se cambio)
+
+Comandos literales
+  python -m tools.reboot_verdict --ultimos 18 > veredictos.jsonl        # sin --escribe: no toca reboots.jsonl
+     (proyectado a boot_idx/boot_id/etiqueta/horas/could_not_run en veredictos_reboot_verdict.jsonl, sin razones
+      porque las razones citan el hostname)
+  python -m tools.calibra_calor --veredictos tasks/evidence/FEATURE-CALIBRAR-CALOR-SOSTENIDO-01/veredictos_reboot_verdict.jsonl > informe.txt
+  Telemetria: ~/.local/share/blackbox/atom_gpu_telemetry.jsonl, 146095 muestras, 2026-10-04T15:41Z -> 2026-10-13T14:28Z
+  (archivo vivo; sha256 en el momento de medir abe198a4a675276e2828f12359c773680b4aa4263ef3506bbc76a6bdde83144e).
+  La telemetria anterior al 2026-10-04 ya fue rotada: los boots -24..-18 no tienen muestras (could_not_run para ellos).
+
+Corpus medido (n reales)
+  18 boots con telemetria: 6 corte (CORTE_ABRUPTO), 8 sano (CIERRE_ORDENADO_*), 3 colapso (COLAPSO_MEMORIA, fuera
+  del calculo), 1 vivo sin veredicto (a66787af, could_not_run: 1). Antes: 1 boot de 22 h. Ahora 17 boots terminados.
+  De los 8 sanos, 5 (4 de < 1 h y f6f10dc3 de 2.55 h) nunca pasaron de 89.2 C: son limpios por construccion y no prueban nada sobre
+  falsos positivos. Los sanos que SI ponen a prueba el detector son 3: 3c61716a (14 h, 10.5 W mediana, 96.6 C max),
+  295efc0f (42 h, 55.5 W, 98.6 C) y b8707961 (17.7 h, 26.4 W, 97.3 C).
+
+boot sano bajo carga (existe; con la salvedad de cuanta carga)
+  b8707961: reinicio pedido por sudo tras 17.7 h, gpu_power_w mediana 26.35 W / p90 41.24 W, zona max 97.3 C,
+  62.2 min >= 89.8 C y 6.1 min >= 94.8 C en el boot, 0.0 min >= 89.8 C en su ultima hora. Con la config vigente
+  el detector abre 4 episodios (30.9 min marcados) en este boot que NO se corto: falso positivo medido.
+  Es carga MEDIA-ALTA, no la mas pesada: los dos boots mas cargados tienen mediana 55-57 W (295efc0f, 54b71618).
+  295efc0f (mediana 55.5 W, 42 h) termino en poweroff ordenado pedido via logind (quien lo pidio no consta) con
+  60 de sus ultimos 60 min >= 89.8 C: se cuenta como sano porque la maquina no murio, pero es INFERIBLE (no medido)
+  que el poweroff fuera una reaccion al calor; si se excluye, el unico sano cargado es b8707961.
+  "Cargado" = mediana >= 20 W: corte elegido DESPUES de ver los datos, en el hueco 14.2 -> 26.4 W entre medianas.
+
+Resultado (config vigente: banda 5 C = 89.8 C, fraccion 0.8, ventana 60, fin 0.5; acierto = episodio vivo en los
+ultimos 60 min antes de la ultima muestra)
+  aciertos 5/6 (IC95 Wilson 0.44-0.97): 36ebc0d9, 0de3e072, e651544a, 54b71618, 0b00a7c2
+     anticipo (inicio del episodio -> ultima muestra): 35.1, 7.8, 3.2, 32.9, 0.7 min
+     -> 2 de los 5 aciertos avisan con menos de 4 min: poco accionables.
+  no detectados 1/6: 92a1de3d (13 min de boot, zona max 63.1 C: un corte FRIO, ningun detector termico lo ve)
+  falsos positivos 3/8 (IC95 0.14-0.69): 3c61716a, 295efc0f, b8707961; entre los cargados 2/2.
+
+Barrido (bandas 2..8 C x fracciones 0.6..0.9, 28 configs; tabla completa en informe.txt)
+  - Toda config con >= 4 aciertos tiene fp cargados 2/2. Ninguna separa los cortes de b8707961/295efc0f.
+  - banda <= 3 C pierde aciertos rapido (3/0.8: 2/6) y aun marca 295efc0f.
+  - La "recomendacion" que imprime la herramienta (max aciertos-fp) es banda 5 C, fraccion 0.9: 5/6 aciertos,
+    2/8 fp (IC95 0.07-0.59). Difiere de la vigente en UN boot (3c61716a deja de disparar); los IC se solapan casi
+    enteros. Con n_cortes=6 y n_sanos informativos=3 eso NO es evidencia para mover la constante.
+  Recomendacion: mantener banda 5 C / fraccion 0.8 en produccion (no se toco). El detector, con cualquier
+  constante del barrido, NO discrimina por si solo un boot que se va a cortar de uno caliente y sano: marca calor
+  sostenido real, no riesgo de corte. Lo que si separa en estos datos es la proximidad al final (b8707961 tuvo 0
+  min calientes en su ultima hora), y eso no es observable en tiempo real.
+
+Validacion del instrumento (con control negativo)
+  - Contra produccion: el detector re-ejecutado reproduce 17 de 17 eventos temp_sostenida que emitio el servicio
+    vivo (misma zona, +-30 s). Control: con banda 2 C reproduce 2/17; con banda 8 C, 4/17.
+  - Barrido extremo sobre datos reales: --bandas 60 --fracciones 0.6 -> 6/6 aciertos y 7/8 fp (el sano que falta,
+    05d62d81, tiene 50 muestras < ventana de 60); --bandas 0 --fracciones 1.0 -> 0/6 aciertos. El calculo puede
+    dar ambos veredictos.
+  - Corpus sintetico (tests/test_calibra_calor.py): sin cortes -> 0 aciertos y 0 no detectados en las 28 configs;
+    con un corte sintetico de 10 min a 93.0 C -> acierto con la vigente y no detectado con banda 1 C.
+
+could_not_run
+  - a66787af (boot vivo): sin veredicto.
+  - boots -24..-18: sin telemetria (rotada).
+  - observador externo: los 6 cortes son CORTE_ABRUPTO de causa INDETERMINADA (reboot_verdict); no se sabe cuales
+    fueron termicos, asi que "acierto" significa "el detector estaba disparado", no "el detector predijo una causa".
+  - sobre_100 real: no ocurrio (max historico 98.6 C, 295efc0f).

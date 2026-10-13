@@ -31,3 +31,16 @@ La auditoría de `tasks/backlog/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TEC
 `bin/bb sample` ahora conserva por scope Claude `memory.current`, `memory.peak`, conteo de procesos y estado de disponibilidad. Cuando PSI full cruza el corte calibrado de 10 con un scope presente, escribe un aviso diagnóstico con los scopes candidatos. La ruta solo lee cgroup v2 y emite telemetría: no envía señales ni cambia límites. Los registros rápidos reducidos de una ráfaga siguen sin recorrer cgroups para mantener bajo su coste.
 
 La ficha permanece abierta: la instrumentación aún necesita muestras reales para calibrar un techo, y el launcher Java histórico no se conserva en las fuentes disponibles.
+
+## Avance 2026-10-13
+
+close_check antes: `grep -q . tasks/evidence/.../quien-lanzo.txt` rc=2 (el archivo no existe). Sigue fallando: el launcher de los Java no se conserva en ninguna fuente.
+
+Construido (solo lectura, sin tocar produccion): `tools/atribucion_enjambre.py` y `tests/test_atribucion_enjambre.py` (11 tests, 99 % de cobertura; la linea sin cubrir es el `if __name__`). Uso: `python -m tools.atribucion_enjambre --desde <ISO> --hasta <ISO>`. Los datos del 04-05 oct SIGUEN en `samples` (RETAIN_DAYS no los purgo todavia, 2026-09-28 en adelante).
+
+Medido con el corpus real (comando literal arriba, ventana 2026-10-05 00:00 a 00:31):
+- `app.slice` pico 40.32 GiB, maximo con PSI sano en las 16 jornadas 39.66 GiB: margen 0.66 GiB. Un techo de memoria entre ambos cruza 0 s antes del PSI alto; todo techo que avisa con 1269-1328 s de adelanto (30-38 GiB) habria matado carga sana. La memoria agregada del slice no discrimina el enjambre.
+- Incidente del 11-oct 22:44 (primer corpus con `claude_scopes`): el scope `Claude-56782` llego a 36.84 GiB contra 32.92 GiB sano (margen 3.92 GiB); un techo de 34 GiB lo cruza con adelanto 0 s, uno de 30 GiB con 60 s pero mata carga sana. Una sola sesion, no calibra nada.
+- Quien crecio el 05-oct: `java` 8 pids distintos observados, hasta 34.5 GiB de crecimiento VIRTUAL (no RSS); `python3` 17 pids, `python` 26. Ningun pid coincide con un scope: las muestras no guardan scope por pid.
+
+Falta: el launcher de los Java (sin fuente), y calibrar un techo por scope con mas incidentes (decision de Luis: alertar sin matar, o techo por conteo de procesos, que `claude_scopes.process_count` ya registra pero que este corpus no permite calibrar).

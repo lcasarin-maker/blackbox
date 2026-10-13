@@ -1017,6 +1017,38 @@ def adjuntos_y_ruta(
 
 
 # --------------------------------------------------------------------- el reporte
+TOLERANCIA_HUECO_LOCAL_S = 90  # bb sample escribe cada 60 s: mas de 90 s sin muestra local es silencio, no latido
+
+
+def clasifica_hueco_de_red(
+    muestras: list[dict[str, Any]],
+    desde: float,
+    hasta: float,
+    red_alcanzable: bool | None,
+    tolerancia_s: float = TOLERANCIA_HUECO_LOCAL_S,
+) -> dict[str, Any]:
+    """Etiqueta una ventana en que el observador externo no alcanzo al host (FEATURE-BB-FALSO-CUELGUE-...).
+
+    Muestras locales vivas durante TODA la ventana (ningun silencio mayor que `tolerancia_s`, bordes
+    incluidos) con la red caida = AISLAMIENTO_DE_RED; el host siguio escribiendo. Silencio local = CUELGUE.
+    `red_alcanzable` None (sin ping ni conexion externa registrados) = NO_DETERMINADO: no se infiere."""
+    if red_alcanzable is None:
+        return {"etiqueta": "NO_DETERMINADO", "razon": f"{NOT_COLLECTED}: sin observacion externa de la red"}
+    if red_alcanzable:
+        return {"etiqueta": "RED_ALCANZABLE", "razon": "el observador externo alcanzo al host"}
+    ts = sorted(
+        t
+        for m in muestras
+        if m.get("evento", "muestra") == "muestra" and (t := epoch_de(m.get("ts"))) is not None and desde <= t <= hasta
+    )
+    puntos = [desde, *ts, hasta]
+    silencio = max(b - a for a, b in zip(puntos, puntos[1:]))
+    base = {"muestras_locales_en_la_ventana": len(ts), "silencio_local_maximo_s": round(silencio, 1)}
+    if ts and silencio <= tolerancia_s:
+        return {**base, "etiqueta": "AISLAMIENTO_DE_RED", "razon": "red caida con telemetria local continua: el host seguia vivo"}
+    return {**base, "etiqueta": "CUELGUE", "razon": "red caida y la telemetria local tambien se corto"}
+
+
 def seis_timestamps(
     ev: dict[str, Any],
     tele: list[dict[str, Any]],

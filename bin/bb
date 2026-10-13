@@ -3326,6 +3326,10 @@ case "${1:-}" in
   huella)   shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.huella_host "$@") ;;
   canario)  shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.canario_motor "$@") ;;
   gpumem-historial) shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.gpumem_historial "$@") ;;
+  hid)      shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.hid_inventario "$@") ;;
+  proveedor-gpu) shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.verifica_proveedor_gpu "$@") ;;
+  calor)    shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.calibra_calor "$@") ;;
+  enjambre) shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.atribucion_enjambre "$@") ;;
   install)  shift; cmd_install "$@" ;;
   ""|-h|--help|help) usage ;;
   *) echo "subcomando desconocido: $1" >&2; usage >&2; exit 2 ;;
