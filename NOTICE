@@ -40,3 +40,23 @@ Python la logica de estos archivos):
   - src/gpu.rs / README: muestreo de memoria GPU en un hilo aparte para que la decision nunca llame al driver.
 No se porto: mlockall, getdents64 sin asignaciones, pidfd/process_mrelease, el hook de notificacion ni la accion
 de matar (en `actuar` este modulo declara UNSUPPORTED).
+
+----------------------------------------------------------------------------------------------------
+
+Este repositorio incluye CODIGO DERIVADO (un parche) del siguiente proyecto, distribuido bajo la
+Licencia MIT:
+
+  open-gpu-kernel-modules -- modulos de kernel de codigo abierto de NVIDIA
+  Autor: NVIDIA CORPORATION & AFFILIATES (Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES)
+  Repositorio: https://github.com/NVIDIA/open-gpu-kernel-modules
+  Fuentes leidas: etiqueta 615.71.09 (de donde se porta el contabilizador de memoria `memacct`) y etiqueta
+  580.178.04 (el arbol al que se aplica el parche).
+
+Que se incluye, en data/dmem/memacct-580.patch: la implementacion de `memacct` (archivos memacct.c y memacct.h y el
+codigo de interfaz con el controlador `dmem` de cgroups) portada del arbol 615 al arbol 580, y los cambios propios
+de este repositorio (cobro de la memoria de sistema en `sysmemConstruct`, traduccion del limite excedido a falta de
+memoria, y las funciones que dan tamano a la region en chips sin memoria dedicada). Los archivos portados conservan
+las cabeceras `SPDX-License-Identifier: MIT` y `Copyright NVIDIA` que traian; el parche NO incluye binarios ni
+modulos compilados. Quien lo use compila su propio modulo (tools/dmem_reconstruye.sh), lo firma con su propia llave
+y asume el riesgo de cargarlo; no esta respaldado ni probado por NVIDIA.
+
