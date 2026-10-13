@@ -314,6 +314,14 @@ def _dpkg_consistente(correr: Correr) -> bool | str:
     return _nc("dpkg --audit no corrio") if salida is None else salida == ""
 
 
+def _kernel_grub(raiz: Path) -> str | None:
+    """Version que `GRUB_DEFAULT` fija con un nombre ('... with Linux <version>'); None si no esta fijado o no se pudo leer."""
+    texto = _lee(raiz / "etc/default/grub")
+    m = re.search(r'^GRUB_DEFAULT="?([^"\n]*)"?\s*$', texto or "", re.M)
+    v = re.search(r"Linux (\S+)", m.group(1)) if m else None
+    return v.group(1) if v else None
+
+
 def sonda_arranque_tras_actualizacion(raiz: Path, correr: Correr) -> Any:
     """Por kernel instalado: initrd no vacio, modulos nvidia.ko y DKMS sin firmar bajo Secure Boot. `listo_para_reiniciar` mira solo al mas alto;
     un dpkg a medio configurar tambien lo baja a False (nunca lo sube: sin leer queda como estaba)."""
@@ -331,7 +339,8 @@ def sonda_arranque_tras_actualizacion(raiz: Path, correr: Correr) -> Any:
             "dkms_sin_firmar": _dkms_sin_firmar(raiz, correr, v, mods / v, sb),
             "kernel_en_uso": v == en_uso,
         }
-    nuevo = list(kernels)[-1]
+    fijado = _kernel_grub(raiz)
+    nuevo = fijado if fijado in kernels else list(kernels)[-1]  # el que GRUB arrancara si esta fijado; si no, el mas alto
     k = kernels[nuevo]
     dpkg = _dpkg_consistente(correr)
     if k["initrd"] is False or k["modulos_nvidia"] is False or k["dkms_sin_firmar"] is True or dpkg is False:
@@ -340,7 +349,7 @@ def sonda_arranque_tras_actualizacion(raiz: Path, correr: Correr) -> Any:
         listo = True
     else:
         listo = _nc("initrd o firma DKMS del kernel nuevo sin leer")
-    return {"kernels": kernels, "kernel_nuevo": nuevo, "secure_boot": sb, "dpkg_consistente": dpkg, "listo_para_reiniciar": listo}
+    return {"kernels": kernels, "kernel_nuevo": nuevo, "secure_boot": sb, "kernel_grub": fijado, "dpkg_consistente": dpkg, "listo_para_reiniciar": listo}
 
 
 # Recomendaciones de personal de NVIDIA en hilos del foro (evidencia: tasks/evidence/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01/
@@ -352,7 +361,9 @@ _DPMS = re.compile(r"DPMS is (Enabled|Disabled)", re.I)
 _QUIEN_IOMMU = "personal de NVIDIA confirma el ajuste (post 5); el nombre no consta en la evidencia"
 
 
-def _rec(actual: Any, recomendado: str, hilo: int, post: int, quien: str, cumple: bool | None, nota: str) -> dict[str, Any]:
+def _rec(actual: Any, recomendado: str, fuente: tuple[int, int, str], cumple: bool | None, nota: str) -> dict[str, Any]:
+    """`fuente` = (hilo, post, quien lo recomendo)."""
+    hilo, post, quien = fuente
     return {"actual": actual, "recomendado": recomendado, "hilo": hilo, "post": post, "quien": quien, "cumple": cumple, "nota": nota}
 
 
@@ -360,11 +371,11 @@ def _rec_iommu(raiz: Path) -> dict[str, Any]:
     nota = "Medido por un usuario en GX10 (RDMA CX7); riesgo declarado en el hilo: menos aislamiento por IOMMU, no evaluado. No es una orden."
     cmd = _lee(raiz / "proc/cmdline")
     if cmd is None:
-        return _rec(_nc("/proc/cmdline ilegible"), "iommu.passthrough=1", 384436, 5, _QUIEN_IOMMU, None, nota)
+        return _rec(_nc("/proc/cmdline ilegible"), "iommu.passthrough=1", (384436, 5, _QUIEN_IOMMU), None, nota)
     m = _CMD_IOMMU.findall(cmd)
     if not m:
-        return _rec("ausente de /proc/cmdline", "iommu.passthrough=1", 384436, 5, _QUIEN_IOMMU, None, nota + " Ausente en cmdline: el valor efectivo depende del kernel y no se leyo.")
-    return _rec(f"iommu.passthrough={m[-1]}", "iommu.passthrough=1", 384436, 5, _QUIEN_IOMMU, m[-1] == "1", nota)
+        return _rec("ausente de /proc/cmdline", "iommu.passthrough=1", (384436, 5, _QUIEN_IOMMU), None, nota + " Ausente en cmdline: el valor efectivo depende del kernel y no se leyo.")
+    return _rec(f"iommu.passthrough={m[-1]}", "iommu.passthrough=1", (384436, 5, _QUIEN_IOMMU), m[-1] == "1", nota)
 
 
 def _rec_overcommit(raiz: Path) -> dict[str, Any]:
@@ -379,7 +390,7 @@ def _rec_overcommit(raiz: Path) -> dict[str, Any]:
         cumple = None
     else:
         cumple = True
-    return _rec(actual, "vm.overcommit_memory=2 y vm.overcommit_ratio=90", 368536, 23, "personal de NVIDIA (Neill)", cumple, nota)
+    return _rec(actual, "vm.overcommit_memory=2 y vm.overcommit_ratio=90", (368536, 23, "personal de NVIDIA (Neill)"), cumple, nota)
 
 
 def _rec_sbsa(raiz: Path) -> dict[str, Any]:
@@ -389,7 +400,7 @@ def _rec_sbsa(raiz: Path) -> dict[str, Any]:
     rec = "options sbsa_gwdt action=1"
     vivo = _lee(raiz / "sys/module/sbsa_gwdt/parameters/action")
     if vivo:
-        return _rec(f"action={vivo} (vivo)", rec, 379959, 3, quien, vivo == "1", nota)
+        return _rec(f"action={vivo} (vivo)", rec, (379959, 3, quien), vivo == "1", nota)
     decl: list[str] = []
     leidos = 0
     for d in ("usr/lib/modprobe.d", "etc/modprobe.d"):
@@ -401,9 +412,9 @@ def _rec_sbsa(raiz: Path) -> dict[str, Any]:
             for linea in _OPT_GWDT.findall(txt):
                 decl += _ACCION_GWDT.findall(linea)
     if decl:
-        return _rec(f"action={decl[-1]} (declarado en modprobe.d; el parametro no se expone en sysfs)", rec, 379959, 3, quien, decl[-1] == "1", nota)
+        return _rec(f"action={decl[-1]} (declarado en modprobe.d; el parametro no se expone en sysfs)", rec, (379959, 3, quien), decl[-1] == "1", nota)
     motivo = "parametro action no expuesto en /sys/module/sbsa_gwdt/parameters y sin declaracion en modprobe.d" if leidos else "action no expuesto en sysfs y sin modprobe.d legible"
-    return _rec(_nc(motivo), rec, 379959, 3, quien, None, nota)
+    return _rec(_nc(motivo), rec, (379959, 3, quien), None, nota)
 
 
 def _rec_dpms(correr: Correr) -> dict[str, Any]:
@@ -411,14 +422,14 @@ def _rec_dpms(correr: Correr) -> dict[str, Any]:
     quien = "personal de NVIDIA (post 20; el nombre no consta en la evidencia)"
     rec = "DPMS deshabilitado (xset -dpms)"
     if not os.environ.get("DISPLAY"):
-        return _rec(_nc("sin DISPLAY: no hay servidor X que consultar"), rec, 378945, 20, quien, None, nota)
+        return _rec(_nc("sin DISPLAY: no hay servidor X que consultar"), rec, (378945, 20, quien), None, nota)
     q = _comando(correr, ["xset", "q"])
     if q is None:
-        return _rec(_nc("`xset q` no corre o falla"), rec, 378945, 20, quien, None, nota)
+        return _rec(_nc("`xset q` no corre o falla"), rec, (378945, 20, quien), None, nota)
     m = _DPMS.search(q)
     if not m:
-        return _rec(_nc("`xset q` sin linea 'DPMS is ...'"), rec, 378945, 20, quien, None, nota)
-    return _rec(f"DPMS {m.group(1).lower()}", rec, 378945, 20, quien, m.group(1).lower() == "disabled", nota)
+        return _rec(_nc("`xset q` sin linea 'DPMS is ...'"), rec, (378945, 20, quien), None, nota)
+    return _rec(f"DPMS {m.group(1).lower()}", rec, (378945, 20, quien), m.group(1).lower() == "disabled", nota)
 
 
 def sonda_recomendaciones_personal(raiz: Path, correr: Correr) -> Any:
