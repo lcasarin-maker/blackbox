@@ -1,6 +1,6 @@
 {
   "claims_fingerprint": "b21a22c95297f93562bbcfa45c8a91fb820f28ddd4ca2bf1554f11aa365ffb1d",
-  "panel": "1 auditor Opus (2 pasadas), 2026-10-13: L118,L122,L145,L146,L416 tras 37 re-fechados sunset a 3.6 y la correccion del comentario de _argv_tokens (copia, no import); diff solo comentarios, control negativo",
+  "panel": "1 auditor Opus, 2026-10-13: SPEC-L416 tras corregir la sonda arranque_tras_actualizacion (kernel que GRUB arrancara) y agrupar los argumentos de _rec; salidas de recomendaciones_personal sin cambio, control negativo en copia",
   "profile": "general",
   "results": [
     {
@@ -77,14 +77,17 @@
     {
       "cited": {
         "tests/test_bb_bash.py": "4ae92ea629c024a8dcc65122b845032ccaaf010d2cc09d1e70c48bccf1d0c310",
+        "tests/test_huella_host.py": "a20b4538757ad953ed2ba6d50084a1d9429482972e0f65bfe0b2230eed369cc5",
         "tools/canario_motor.py": "4b5cbbc3d6a0930405333bd841d8588d92fd494af0c116b9e2b90f016744b98c",
         "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6",
-        "tools/huella_host.py": "6a8df4ffd59ab0647ffda2cdd3a9d49e7512761a8c0308d9da5a2d9a1036272f",
-        "tools/monitor_distros.py": "174785d51e69ddfedd1797a2327c50ceb7133607b8ab5f0334a255fdf265ae82"
+        "tools/huella_host.py": "709f40a9746cc5255b5183ad8895ed1591f3944774236a48783ec265be2ddf09",
+        "tools/interruptores.py": "22eb6152a8fe1a34c405ded283293523d1bb1ceedca74eeb08f0234a830b5408",
+        "tools/monitor_distros.py": "174785d51e69ddfedd1797a2327c50ceb7133607b8ab5f0334a255fdf265ae82",
+        "tools/reloj_atascado.py": "c63c9231c1d25b4951e1d711bfec663e7d35647946c7b5fd7d7e45dce19db750"
       },
       "claim_id": "SPEC-L416",
-      "evidence": "bin/bb:2634 `_fresco \"$DATA/huella_host.json\" 2880` (2 days), :2639 monitor_distros_estado.json 11520 (8 days), :2644 canario_motor.jsonl 75, :2649 gpumem_historial.jsonl 15. :2625 checks only the unit for memavail, gpuoom, termico_predictivo and reloj_arranque. :2605 and :2613 are the unit-only rows (vigilante, guardia). :2363-2372 is the bb-usable heartbeat (120 s, `journalctl -S`). `python3 -m pytest -q tests/test_bb_bash.py -k \"<5 cited controls> or bb_usable_activa or sensor_en_observar or monitor_de_distros_fresco or sensor_en_off\"` -> `12 passed, 89 deselected in 5.24s`. This includes test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FALTA. Negative control in a fresh copy scratchpad/neg416b with the gpumem limit changed from 15 to 2000: `-k sensor_en_observar` -> `1 failed, 1 passed, 99 deselected`.",
-      "seal": "da8d8c2437a3f2b1fef56a3525d3b20a6a48885bc33075c200c07fc047cb9b79",
+      "evidence": "`git diff -- tools/huella_host.py tests/test_huella_host.py SPEC.md`: tools/huella_host.py:317-322 adds `_kernel_grub`; :342-343 changes `nuevo = fijado if fijado in kernels else list(kernels)[-1]`; :352 adds key `kernel_grub`; `_rec` now takes `fuente=(hilo, post, quien)` (:364-367) and all callers are updated. tests/test_huella_host.py adds `test_el_kernel_a_evaluar_es_el_que_grub_arrancara_no_el_mas_alto`. The SPEC.md hunk is the tools/reloj_atascado.py table row, not line 416. `python3 -m pytest tests/test_huella_host.py -q` -> `67 passed in 0.15s`. Unchanged output: `python3 -I scratchpad/rec13.py` runs `recoge()` on a `git archive HEAD tools tests` copy (scratchpad/head13) and on the working tree. `recomendaciones_personal` is equal (dict of 4) -> `rec equal: True`; negative control on the comparator (one `post` set to 999) -> `equal: False`. `arranque_tras_actualizacion` only gains `kernel_grub` (`keys added: ['kernel_grub'] removed: []`). On this host (/etc/default/grub:6 pins `with Linux 6.17.0-1032-nvidia`) `kernel_nuevo` goes from `7.0.0-1019-nvidia` (HEAD) to `6.17.0-1032-nvidia`, `listo_para_reiniciar` True in both. Negative control in scratchpad/neg13 with `_kernel_grub` returning None: `1 failed, 66 passed`, `FAILED tests/test_huella_host.py::test_el_kernel_a_evaluar_es_el_que_grub_arrancara_no_el_mas_alto`, `AssertionError: assert (None == '6.17.0-1032-nvidia')`. L416 against bin/bb (no uncommitted diff in bin/bb, tests/test_bb_bash.py, tools/canario_motor.py, tools/gpumem_historial.py, tools/monitor_distros.py): bin/bb:2634 `_fresco \"$DATA/huella_host.json\" 2880` (2 days; the artifact tools/huella_host.py:497 writes); :2639 monitor_distros_estado.json 11520 (8 days; tools/monitor_distros.py:118); :2644 interruptores/canario_motor.jsonl 75 (tools/canario_motor.py:27,133 via tools/interruptores.py:33-37); :2649 gpumem_historial.jsonl 15 (tools/gpumem_historial.py:39); :2625 memavail/gpuoom/termico_predictivo/reloj_arranque checked by unit only; :2605 and :2613 the two unit-only rows. `python3 -m pytest -q tests/test_bb_bash.py -k \"<cited controls> or bb_usable_activa or sensor_en_observar or monitor_de_distros_fresco or sensor_en_off\"` -> `12 passed, 89 deselected in 5.28s`. The gpumem 15->2000 copy (scratchpad/neg416b) -> `1 failed, 1 passed` on `-k sensor_en_observar`. The huella_host change touches the content of the artifact, not its path or freshness, so the line-416 text stays true as written.",
+      "seal": "61d48772db6c0e93dec8483f732f4ace19d13658965f00e1243ec71e009f3da9",
       "verdict": "PASS"
     },
     {
@@ -179,7 +182,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-13T22:36:25Z",
-  "tree_fingerprint": "8ffb812d87fe67854d258f1145b118551f41fa177acc6eda1e3fd32b17e64dc2",
+  "timestamp": "2026-10-13T22:44:51Z",
+  "tree_fingerprint": "5c0021db80f85ed7fee3f79fb98429d7759cbbabe1dac0b6d52cc251361649e3",
   "violations": []
 }

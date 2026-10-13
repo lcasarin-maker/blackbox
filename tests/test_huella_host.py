@@ -433,6 +433,20 @@ def test_cx7_hotplug_marcador_y_bandera(tmp_path: Path) -> None:
     assert r["marcador"] is False and h.es_nc(r["hotplug_enabled"])  # sin bandera legible: NOT_COLLECTED, nunca 0 ni 1
 
 
+def test_el_kernel_a_evaluar_es_el_que_grub_arrancara_no_el_mas_alto(tmp_path: Path, en_uso: None) -> None:
+    _kernel(tmp_path, "6.17.0-1032-nvidia")
+    _kernel(tmp_path, "7.0.0-1019-nvidia", initrd=None)  # el mas alto esta roto, pero GRUB no lo arranca
+    sin_fijar = h.sonda_arranque_tras_actualizacion(tmp_path, _cae)
+    assert sin_fijar["kernel_nuevo"] == "7.0.0-1019-nvidia" and sin_fijar["kernel_grub"] is None and sin_fijar["listo_para_reiniciar"] is False
+    _w(tmp_path, "etc/default/grub", 'GRUB_TIMEOUT=5\nGRUB_DEFAULT="Advanced options for DGX OS GNU/Linux>DGX OS GNU/Linux, with Linux 6.17.0-1032-nvidia"\n')
+    fijado = h.sonda_arranque_tras_actualizacion(tmp_path, _cae)
+    assert fijado["kernel_grub"] == "6.17.0-1032-nvidia" and fijado["kernel_nuevo"] == "6.17.0-1032-nvidia"  # control negativo: sin la linea de GRUB manda el mas alto
+    _w(tmp_path, "etc/default/grub", "GRUB_DEFAULT=0\n")
+    assert h.sonda_arranque_tras_actualizacion(tmp_path, _cae)["kernel_grub"] is None  # un indice numerico no nombra ningun kernel
+    _w(tmp_path, "etc/default/grub", 'GRUB_DEFAULT="with Linux 9.9.9-fantasma"\n')
+    assert h.sonda_arranque_tras_actualizacion(tmp_path, _cae)["kernel_nuevo"] == "7.0.0-1019-nvidia"  # un kernel fijado que no existe no se evalua
+
+
 def test_arranque_sin_kernels_es_nc(tmp_path: Path) -> None:
     assert h.es_nc(h.sonda_arranque_tras_actualizacion(tmp_path, _cae))
 
