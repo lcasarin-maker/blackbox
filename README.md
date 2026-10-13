@@ -6,7 +6,8 @@ on the same chip. Born in response to crashes and hangs, `blackbox` aims to
 prevent recurrence and resolve failures. It combines bounded interventions,
 forensic capture and checks that show which instruments are armed before the
 next incident. Each protection claim depends on the mechanism's verified
-coverage; the CUDA containment gap described below remains under investigation.
+coverage. The CUDA containment gap described below now has a working, patched
+mitigation with declared limits (pinned and managed memory are not charged).
 
 This hardware class is new enough that a lot of the failure modes are still
 being figured out in public, one NVIDIA forum thread at a time: silent
@@ -66,6 +67,9 @@ bb drift               diff between what's adopted in the repo and what's deploy
 bb protect             raise the core-dump limit on processes already running (prlimit)
 bb who [pid]           which processes are heavy and WHO launched them (unit, parent, cwd)
 bb sample              one sample (fired by the per-minute timer)
+bb gpumem [--cabe GiB] GPU memory per cgroup/container (needs the patched module); "does it fit?"
+bb reloj [--prueba]    detects the stuck GPU clock (500-800 MHz, zero throttle reasons); also runs at boot (observe mode)
+bb limita              launches a command under the HAMi-core CUDA limiter, refusing to start without a limit
 bb install             install the user timers (per-minute sampling, daily drift check)
 ```
 
@@ -349,8 +353,8 @@ with a charge call in
 It also adds `__GFP_ACCOUNT` in
 [`nv-vm.c`](https://github.com/NVIDIA/open-gpu-kernel-modules/blob/615.71.09/kernel-open/nvidia/nv-vm.c#L287).
 These source observations establish existing mechanisms to investigate.
-Their coverage of our GB10 CUDA allocations, and the behavior of this release
-on our host, remain untested. The host measurements above used 580.178.04.
+Their coverage of our GB10 CUDA allocations was tested with the patch described
+below. The host measurements above used 580.178.04.
 
 Blackbox owns the reproductions, captures and comparisons. A driver change
 belongs in a fork of NVIDIA's module source, with an upstream patch and its
@@ -359,6 +363,23 @@ validation results. The investigation should distinguish `cudaMalloc`,
 check charging, limit rejection, sharing and release with two isolated cgroups.
 Correct accounting and controlled allocation failure are separate acceptance
 criteria from preventing the silent host wedges reported in issue #1358.
+
+### A patched module that charges CUDA memory to the cgroup (2026-10-12)
+
+`data/dmem/memacct-580.patch` ports NVIDIA's `memacct` from 615.71.09 to the
+580.178.04 open modules and adds what GB10 needs: on a chip without dedicated
+video memory, `cudaMalloc` enters RM class `0x3e` (system memory), so the charge
+is taken in `sysmemConstruct` and released in `sysmemDestruct`; the hard-limit
+error (`0x8D`) is translated to `NV_ERR_NO_MEMORY`, because libcuda 580 would
+otherwise report `cudaErrorUnknown`. Measured on this host after loading it:
+the vLLM container's `dmem.current` was 19483439376 B against 19482542080 B in
+`nvidia-smi` for the same process (0.005 %), an over-limit allocation was
+rejected cleanly, and the leak check after release read zero.
+Declared limits: pinned (`cudaHostAlloc`) and managed (`cudaMallocManaged`)
+memory are not charged. The patch is not NVIDIA-supported and not upstreamed;
+you build it with `tools/dmem_reconstruye.sh`, sign it with your own key
+(`tools/dmem_modulo.sh`) and accept the risk of loading it. The files taken
+from NVIDIA keep their MIT headers; see `NOTICE`.
 
 ### Reclaim and page migration remain hypotheses
 
