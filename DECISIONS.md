@@ -8,6 +8,15 @@ Meter cada voto aquí lo convierte en el log que la línea de arriba prohíbe.
 
 ---
 
+## 2026-10-13 · `docker.slice` sube de 14 a 16 GiB
+
+Voto de Luis. Medido el 2026-10-13: el slice usa 12,06 GiB de 14 (86 %, 1,94 GiB libres) con el pico de vLLM en 12,5 GiB y topes propios de 2 GiB en cada contenedor pequeño.
+Cada GiB del techo del slice es un GiB menos de presupuesto de GPU, así que el umbral de la alarma del abanico pasa de 53,1 a 51,1 GiB; sigue por encima del p90 de 50,1 de la serie de 18 944 muestras.
+Descartado: 18 GiB (umbral 49,1, por debajo del p90: dispara más del 10 % del tiempo y la alarma deja de discriminar) y dejarlo en 14 (1,94 GiB libres, un pico lo lleva al tope).
+El repo ya trae el drop-in y el instalador en 16G; el efecto en la máquina espera a `sudo systemctl daemon-reload && sudo systemctl restart docker` (reinicia los contenedores, incluido vLLM). Ficha: `DEBT-DOCKER-SLICE-TOPE-VS-TOPES-DE-CONTENEDORES-01`.
+
+---
+
 ## 2026-09-25 · Un `xfail` usado como señal de aterrizaje asierta el VEREDICTO del gate, nunca un interno
 
 **La decisión.** Cuando un test existe para avisar de que un arreglo aguas arriba

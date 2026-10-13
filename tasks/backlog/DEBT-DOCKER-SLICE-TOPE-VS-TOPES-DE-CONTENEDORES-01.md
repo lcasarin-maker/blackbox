@@ -17,3 +17,6 @@ close_check: {"cmd": "grep -q docker_slice_dimensionado tasks/evidence/DEBT-DOCK
 - Topes aplicados por `docker update` el 2026-10-12: librechat 3g, mongo-librechat 2g, proyecto-A-pg 2g (4x pico medido, sin swap, pids 2048) y atlas-pgvector swap 0.
 ## Que falta
 Decidir el tope de docker.slice frente al presupuesto de slices votado el 2026-09-27 (42/14/12) o bajar el de vLLM; persistir; revisar tras el despliegue del runtime OCI (`FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01`).
+
+## Avance 2026-10-13
+Voto de Luis: `docker.slice` a 16 GiB (registrado en `DECISIONS.md`). Medido en `tasks/evidence/DEBT-DOCKER-SLICE-TOPE-VS-TOPES-DE-CONTENEDORES-01/medicion.txt`: uso 12,06 GiB de 14 (1,94 libres); con 16 quedan 3,94. El repo ya lo trae: drop-in adoptado, `enable-privileged.sh` (valor esperado 17179869184) y `DECISIONS.md`. Sigue abierta porque faltan dos cosas: aplicarlo (`sudo systemctl daemon-reload && sudo systemctl restart docker`, tira vLLM) y persistir los topes de contenedor en quien los crea (`docker update` en vivo no sobrevive a recrearlos); el `close_check` exige el marcador que se escribe tras comprobar el techo en la maquina.
