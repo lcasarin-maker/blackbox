@@ -1,6 +1,6 @@
 {
   "claims_fingerprint": "b21a22c95297f93562bbcfa45c8a91fb820f28ddd4ca2bf1554f11aa365ffb1d",
-  "panel": "1 auditor Opus, 2026-10-13: 9 claims tras volver adopted/ e instalador a 14G (lo desplegado) y dejar el 16G en adopted/pendiente-de-despliegue; drift 0 divergencias con control negativo",
+  "panel": "1 auditor Opus, 2026-10-13: SPEC-L145 tras anadir el medidor externo a reboot_verdict (sin archivo del medidor el veredicto no cambia; control negativo en copia)",
   "profile": "general",
   "results": [
     {
@@ -49,12 +49,14 @@
       "cited": {
         "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-coverage-after-fixture-fix/command.json": "e50375cf3aed0133d1513deb92bbf6ce482d407cd4bacc3e8b2f543cf1177a61",
         "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-coverage-after-nvme/command.json": "252c845a8030e3a9a49471890b0cef8281ea3b5ddc6ec685bd1c5db5eeced8c8",
+        "tests/test_medidor_energia.py": "ad3eae7e67cf699cd339bd597af301ffc641d65f7d8452b8c3a91ee7eceb0f63",
+        "tests/test_reboot_verdict.py": "633fe45f630fab94d528441e25db62ed5784f1e4c237e1ae95a2e632869dd80e",
         "tools/atom_gpu_telemetry.py": "953cef70553855f90af37ba6b0df39d361d171befa033dbdabb0b76201e70045",
-        "tools/reboot_verdict.py": "7b417bc5f8407f1a26b0a86e671ec9326097036c48b4220611a3c3d5a31b9368"
+        "tools/reboot_verdict.py": "60cfd31a97c9868aa6023dd22bd054b5a0bd4c9ff74659337264796b2d19db2a"
       },
       "claim_id": "SPEC-L145",
-      "evidence": "Atlas/tools/liberation_watchdog.py:1033-1039 defines available_gb() with subprocess.run(['free','-b']). Atlas/tools/medir_consumo_de_job.py:37 imports that same available_gb. Atlas/tools/dgx401_medicion_pareada_dos_motores.py:84 reads Path('/proc/meminfo'). Atom_Local_AI_Audit.ps1 has 4 nvidia-smi on l.72-76 and ATOM_AUDIT_ at l.13. A sweep of Atlas tools/ and rag/ excluding _retired for executed nvidia-smi/smartctl/journalctl lists, open('/proc/meminfo|pressure') and /sys/class/thermal returns only gateway_control.py:432 and benchmark_network_isolation.py:357, both 'journalctl --user -u <unit>'. Atlas/tools/detect_atom_crash.py is 557 lines (wc -l). In blackbox: tools/reboot_verdict.py exists and carries bb-reboot/1; adopted/ holds ai-gpu-telemetry.service, ai-memory-monitor.service/.timer and the 3 nvrm-watch files; the ficha DEBT-CONTRATO-ATLAS-INSTRUMENTOS-EN-BLACKBOX-01 is in tasks/done/ and DEBT-CONTRATO-ATLAS-SONDAS-DE-MEMORIA-01 is in tasks/backlog/.",
-      "seal": "5b7e7560c9770ca81813c3e260982be60c699356fa9a6772a271b9605409a2bf",
+      "evidence": "`git show 1d564c37 -- tools/reboot_verdict.py` is +22/-1: the import `from tools import hallazgo, medidor_energia`, the new `_evidencia_externa`/`_anade_evidencia_externa` (tools/reboot_verdict.py:464-480), and one call `_anade_evidencia_externa(ev, fin)` inside `recoge`; `veredicto`/`_corte_abrupto` are untouched, and with no `externo` the verdict is still CORTE_ABRUPTO with 'causa INDETERMINADA (energia vs hardware interno): falta observador externo' (tools/reboot_verdict.py:110-116; test_corte_abrupto_es_el_caso_sin_nada_mas_y_declara_lo_que_no_pudo_correr). The forensic merge still holds: ESQUEMA = \"bb-reboot/1\" (tools/reboot_verdict.py:67), journal/Xid/kdump/SMART/EDAC at :64-85, :235, :268-299. `python3 -m pytest tests/test_reboot_verdict.py tests/test_medidor_energia.py -q` -> '34 passed in 0.12s'. Negative control on a git-archive copy in scratchpad/nc9 with `externo = None` forced in _corte_abrupto: '2 failed, 32 passed' (test_observador_externo_separa_red_de_apagado_interno, test_evidencia_externa_une_el_medidor_con_el_veredicto). Atlas facts re-checked: `git log -1 ecdf88cc8` = 'detect_atom_crash redacta desde reboots.jsonl de blackbox, ya no mide'; `wc -l tools/detect_atom_crash.py` = 557, and it has no subprocess; liberation_watchdog.py:1033-1039 available_gb() runs ['free','-b']; medir_consumo_de_job.py:37 imports it; dgx401_medicion_pareada_dos_motores.py:84 reads /proc/meminfo; the only journalctl calls are gateway_control.py:432 and benchmark_network_isolation.py:357, both `--user -u`; Atom_Local_AI_Audit.ps1 l.72-76 nvidia-smi, l.13 ATOM_AUDIT_; liberation_watchdog.py:137 imports procesos_gpu from tools/bb_consulta.py; blackbox atom_gpu_telemetry.py:1845 --procesos-gpu; adopted/systemd-user holds ai-gpu-telemetry.service and ai-memory-monitor.service/.timer, adopted/system-config holds the 3 nvrm-watch files; DEBT-CONTRATO-ATLAS-INSTRUMENTOS-EN-BLACKBOX-01 is in tasks/done/, DEBT-CONTRATO-ATLAS-SONDAS-DE-MEMORIA-01 is in tasks/backlog/.",
+      "seal": "95587ffc85de54347620a7a452c0f5909ab703437ae47a1e40cb5befd0649959",
       "verdict": "PASS"
     },
     {
@@ -186,7 +188,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-13T21:13:27Z",
-  "tree_fingerprint": "48cfa16211913e3c7c451d06e383c8225ac49efd0efe9137387c089b7940d005",
+  "timestamp": "2026-10-13T22:01:25Z",
+  "tree_fingerprint": "44164f76cf4fcde204bf7444ab08bfef46f6f89dfb552f2e6cef239299514155",
   "violations": []
 }
