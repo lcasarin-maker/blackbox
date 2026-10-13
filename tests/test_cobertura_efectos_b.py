@@ -33,7 +33,7 @@ def _corta_en(monkeypatch: pytest.MonkeyPatch, modulo: Any, iteraciones: int) ->
 
     def pausa(segundos: float) -> None:
         if threading.current_thread() is not threading.main_thread():
-            _dormir_real(segundos)  # blocking-sleep: los hilos que no son el principal (muestreador de GPU) conservan su pausa real; el principal levanta _Fin -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 3.1 -- re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 36 (4df311d3) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: revisado 2026-10-12: doble de prueba de `time.sleep`, acotado por el segundo parametro de cada prueba ; re-revisado 2026-10-13 contra 3.1: la linea no cambio desde 20256295 (git blame de esta linea)
+            _dormir_real(segundos)  # blocking-sleep: los hilos que no son el principal (muestreador de GPU) conservan su pausa real; el principal levanta _Fin -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 3.2 -- re-revisado 2026-10-13 contra 3.1: `git blame` de la linea 36 (93850773) es anterior al bump 3.1.0 (7a5bd48b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 36 (4df311d3) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: revisado 2026-10-12: doble de prueba de `time.sleep`, acotado por el segundo parametro de cada prueba ; re-revisado 2026-10-13 contra 3.1: la linea no cambio desde 20256295 (git blame de esta linea)
             return
         pausas.append(segundos)
         if len(pausas) >= iteraciones:
