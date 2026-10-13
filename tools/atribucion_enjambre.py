@@ -135,6 +135,44 @@ def techo(serie: list, sano: list, candidatos_gib: list[float]) -> dict:
             "candidatos": filas}
 
 
+def series_conteo(regs: list[dict]) -> dict[str, list[tuple[datetime, int, float | None]]]:
+    """unit -> [(ts, process_count, psi_full)] de cada scope Claude con estado ok."""
+    out: dict[str, list] = {}
+    for r in regs:
+        psi = _psi(r)
+        for s in r.get("claude_scopes") or []:
+            if s.get("state") == "ok" and isinstance(s.get("process_count"), int):
+                out.setdefault(s["unit"], []).append((_t(r), s["process_count"], psi))
+    return out
+
+
+def tasa_max(serie: list) -> float:
+    """Mayor crecimiento de procesos por minuto entre muestras consecutivas separadas 30-180 s (0.0 si no hay pares o solo hay caidas)."""
+    pares = [(b[1] - a[1]) / (b[0] - a[0]).total_seconds() * 60
+             for a, b in zip(serie, serie[1:]) if 30 <= (b[0] - a[0]).total_seconds() <= 180]
+    return round(max([0.0, *pares]), 1)  # solo cuenta crecimiento: una caida de procesos no es una tasa
+
+
+def conteo(serie: list, sano: dict[str, list]) -> dict:
+    """Si el CONTEO de procesos (nivel o velocidad de crecimiento) separa el incidente de la carga sana.
+    `serie`: puntos del scope en la ventana; `sano`: unit -> puntos de cada scope del corpus. Solo cuentan los
+    puntos con PSI sano; la tasa se mide por scope y solo entre muestras vecinas. `separable_*` es true solo si el
+    incidente supera el maximo sano, y `margen_*` dice por cuanto: un margen de 1-2 % no sostiene un techo."""
+    pico = max((n for _, n, _ in serie), default=0)
+    sanos = {u: [x for x in v if x[2] is not None and x[2] < CORTE_PSI] for u, v in sano.items()}
+    sano_max = max((n for v in sanos.values() for _, n, _ in v), default=0)
+    tasa_inc = tasa_max(serie)
+    tasa_sana = max((tasa_max(v) for v in sanos.values()), default=0.0)
+    def pct(a: float, b: float) -> float | None:
+        return round((a - b) / b * 100, 1) if b else None
+
+    return {"pico_incidente": pico, "maximo_sano": sano_max, "separable_por_nivel": pico > sano_max,
+            "margen_nivel_pct": pct(pico, sano_max),
+            "tasa_incidente_proc_min": tasa_inc, "tasa_maxima_sana_proc_min": tasa_sana,
+            "separable_por_tasa": tasa_inc > tasa_sana, "margen_tasa_pct": pct(tasa_inc, tasa_sana),
+            "puntos_sanos": sum(len(v) for v in sanos.values())}
+
+
 def analizar(registros: list[dict], desde: str, hasta: str, ilegibles: int = 0,
              candidatos_gib: list[float] | None = None) -> dict:
     regs = ventana(registros, desde, hasta)
@@ -165,6 +203,7 @@ def analizar(registros: list[dict], desde: str, hasta: str, ilegibles: int = 0,
                          for c in crecio[:10]],
         "series_sin_datos": [] if en_ventana else ["ni app.slice ni claude_scopes en la ventana"],
         "techos": {n: techo(s, todas[n], cand) for n, s in en_ventana.items()},
+        "conteo": {n: conteo(sc, series_conteo(registros)) for n, sc in series_conteo(regs).items()},
     }
 
 

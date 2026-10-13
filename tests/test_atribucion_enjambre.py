@@ -13,7 +13,7 @@ from tools import atribucion_enjambre as ae
 G = 1024 * 1024  # KiB por GiB
 
 
-def reg(ts, psi=0.0, app=None, scopes=None, pidio=None):
+def reg(ts, psi: float | None = 0.0, app=None, scopes=None, pidio=None):
     r = {"ts": f"2026-10-05T00:{ts}-0600", "psi": {"mem_full": psi}}
     if app is not None:
         r["slices"] = [{"slice": "app", "cur_kb": int(app * G)}]
@@ -120,3 +120,35 @@ def test_cli_ok_y_could_not_run(tmp_path, capsys):
     vacio.mkdir()
     assert ae.main(["--samples", str(vacio), "--desde", "2026-10-05T00:00:00-06:00",
                     "--hasta", "2026-10-05T01:00:00-06:00"]) == 2
+
+
+def sn(n, unit="app-com.anthropic.Claude-100.scope", state="ok"):
+    return {"unit": unit, "memory_current_kb": 1, "process_count": n, "state": state}
+
+
+def test_conteo_no_separa_si_un_scope_sano_llego_mas_alto():
+    sano = [reg("00:00", 1.0, scopes=[sn(224, "app-com.anthropic.Claude-1.scope")]), reg("01:00", 1.0, scopes=[sn(100, "app-com.anthropic.Claude-1.scope")])]
+    inc = [reg("10:00", 0.0, scopes=[sn(50)]), reg("11:00", 40.0, scopes=[sn(136)])]
+    r = ae.analizar(sano + inc, "2026-10-05T00:10:00-06:00", "2026-10-05T00:12:00-06:00")
+    c = r["conteo"]["app-com.anthropic.Claude-100.scope"]
+    assert c["pico_incidente"] == 136 and c["maximo_sano"] == 224
+    assert c["separable_por_nivel"] is False and c["margen_nivel_pct"] == -39.3
+
+
+def test_conteo_separa_cuando_el_incidente_supera_lo_sano_control_negativo_del_anterior():
+    sano = [reg("00:00", 1.0, scopes=[sn(60, "app-com.anthropic.Claude-1.scope")])]
+    inc = [reg("10:00", 0.0, scopes=[sn(50)]), reg("11:00", 40.0, scopes=[sn(136)])]
+    c = ae.analizar(sano + inc, "2026-10-05T00:10:00-06:00", "2026-10-05T00:12:00-06:00")["conteo"]["app-com.anthropic.Claude-100.scope"]
+    assert c["separable_por_nivel"] is True and c["margen_nivel_pct"] == 126.7
+    assert c["separable_por_tasa"] is True and c["tasa_incidente_proc_min"] == 86.0
+
+
+def test_tasa_max_ignora_pares_fuera_de_30_a_180_s_y_scopes_sin_conteo():
+    base = ae._t(reg("00:00"))
+    from datetime import timedelta
+    s = [(base, 10, 0.0), (base + timedelta(seconds=10), 500, 0.0), (base + timedelta(seconds=70), 40, 0.0), (base + timedelta(seconds=400), 900, 0.0)]
+    assert ae.tasa_max(s) == 0.0  # el unico par de 30-180 s es una caida (500 -> 40): no es crecimiento
+    s += [(base + timedelta(seconds=460), 930, 0.0)]
+    assert ae.tasa_max(s) == 30.0  # 900 -> 930 en 60 s
+    assert ae.tasa_max([]) == 0.0
+    assert ae.series_conteo([reg("00:00", 0.0, scopes=[sn(5, state="down"), {"unit": "x", "state": "ok"}])]) == {}

@@ -44,3 +44,6 @@ Medido con el corpus real (comando literal arriba, ventana 2026-10-05 00:00 a 00
 - Quien crecio el 05-oct: `java` 8 pids distintos observados, hasta 34.5 GiB de crecimiento VIRTUAL (no RSS); `python3` 17 pids, `python` 26. Ningun pid coincide con un scope: las muestras no guardan scope por pid.
 
 Falta: el launcher de los Java (sin fuente), y calibrar un techo por scope con mas incidentes (decision de Luis: alertar sin matar, o techo por conteo de procesos, que `claude_scopes.process_count` ya registra pero que este corpus no permite calibrar).
+
+## Decision de Luis y medicion (2026-10-13)
+Luis eligio un techo por conteo de procesos en `observar`. Medido con `python3 -m tools.atribucion_enjambre --desde 2026-10-11T22:30:00-06:00 --hasta 2026-10-11T22:56:00-06:00` (clave `conteo`): el scope del colapso llego a 136 procesos y crecio a 74.0 por minuto; un scope sano llego a 224 procesos y crecio a 72.8 por minuto (margen de tasa 1.6 %, de nivel -39.3 %). Un techo por conteo dispararia sobre carga legitima, asi que la accion queda descartada; `process_count` ya se registra cada minuto en las muestras y el calibrador (`conteo`, con tests) queda listo para recalcularse con cada incidente nuevo que traiga `claude_scopes`. Registro durable en `DECISIONS.md` (2026-10-13).
