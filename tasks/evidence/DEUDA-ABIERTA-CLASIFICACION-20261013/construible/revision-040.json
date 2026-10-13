@@ -1,0 +1,8 @@
+{
+ "id": "DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "reinicio",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "verify(id) corrido en solo lectura devuelve {\"could_not_run\": 1, \"status\": \"unknown\", \"reason\": \"raw capture unavailable: [Errno 2] No such file or directory\"} porque falta tasks/evidence/<id>/runtime-capture.json; tools/runtime_batch03_controls.py:985 _json_soak exige paired_runs BF16 vs candidate con oracle_sha256 por pareja y canario de larga duracion Qwen3.8; requiere dos checkpoints/modos servidos, no disponibles sin reiniciar o duplicar el motor."
+}

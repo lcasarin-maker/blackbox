@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-1358-CGROUP-04-PARCHE",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "otro_repo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "Ficha: 'El cambio vive en un fork de NVIDIA/open-gpu-kernel-modules'; _patch exige build del candidato, integridad del parche y runs antes/despues (tools/verify_cgroup_plan.py:481-). Depende de 02-traza y 03-nativo, que no tienen capture.json, y la ficha dice 'Activar esta implementacion unicamente si 02 y 03 demuestran un hueco restante'. Probado: `python3 -m tools.verify_cgroup_plan --phase 04-parche --evidence tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE` -> rc=2, status unknown, could_not_run 1 (capture.json ausente). Sin hueco demostrado, escribir un parche es lo que la ficha prohibe ('no fabricar un parche para cumplir el plan')."
+}

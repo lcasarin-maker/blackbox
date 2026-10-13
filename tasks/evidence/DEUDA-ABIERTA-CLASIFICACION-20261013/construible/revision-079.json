@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-MEMORYSAVER-04-PACKING-4K",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "nada: el cierre exige filas crudas por carga (tools/verify_memory_saver.py _packing_rows: owner_memcg, memory_current_held, tracker_before/after, gpu_base_address, descriptor_bytes) del backing de tablas UVM, y fuente del driver fijada con sha256.",
+ "por_que_no_mas": "Esas filas salen de trazar UVM en el kernel en ejecucion (depende de FEATURE-MEMORYSAVER-02-TRAZADOR, bloqueada por root: 'bpftrace currently only supports running as the root user.'). comparison.txt ya declara 'Could_not_run: 1 - coste real por carga de tablas hoja en esta pila 4 KiB no medido'. Fabricar filas falsearia la medicion."
+}

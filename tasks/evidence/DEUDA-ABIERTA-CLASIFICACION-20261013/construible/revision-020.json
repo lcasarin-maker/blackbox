@@ -1,0 +1,8 @@
+{
+ "id": "DEBT-VERIFICAR-DGX-30-OOM-LLAMADORES-CONCURRENTES-01",
+ "leido": true,
+ "construible": "si",
+ "bloqueador": "nada",
+ "que_se_puede_construir": "Escribir tasks/evidence/DEBT-VERIFICAR-DGX-30-OOM-LLAMADORES-CONCURRENTES-01/verificacion.txt con la frase dgx30_verificado y el resumen leido de /home/lcasarin/projects/Atlas/tasks/done/DGX-30.md (lectura probada: 157 lineas, test_watchdog_gpu_intruder.py existe en Atlas). Hallazgo: DGX-30 NO es 'OOM por llamadores LLM concurrentes'. Es el cuelgue del 2026-07-31 14:17: NVRM NV_ERR_NO_MEMORY (pool unificado del driver, 45 min de fallas), cero eventos del OOM-killer, causa = Nemotron 0.70 + BGE-M3 en CUDA + escritorio; cierre = liberation_watchdog.machine_is_free() con gpu_intruder() y GPU_ALLOWLIST (cgroup del contenedor, falla cerrada). Cubrir con el portero: el portero (tools/portero.py) topa y serializa arboles pytest por /proc, no vigila procesos ajenos con CUDA; no hay cobertura equivalente de la clase driver-NVRM. La estampida del 11-oct (31-33 peticiones) es otra clase (concurrencia de clientes vLLM).",
+ "por_que_no_mas": "Solo queda que alguien escriba el archivo (yo no edito el repo). El close_check no tiene control negativo propio: grep -q dgx30_verificado pasa con cualquier archivo que contenga la frase, asi que el contenido debe sostener la lectura. La relacion con la estampida del 11-oct se leyo de la ficha, no se midio."
+}

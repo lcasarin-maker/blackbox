@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "decision_de_luis",
+ "que_se_puede_construir": "nada (la etapa 1 ya existe: tools/portero.py; los 76 tests de tests/test_portero.py y tests/test_portero_efectos.py pasan hoy, pero eso ya estaba hecho y no produce la frase portero_universal_probado)",
+ "por_que_no_mas": "close_check = grep -q portero_universal_probado tasks/evidence/FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01/medicion.txt; medicion.txt no existe (solo validaciones.txt, grep -c = 0). La ficha exige 'una medicion con el portero activo: tres suites lanzadas a la vez' y su propio texto dice 'la medicion con tres suites reales tras el despliegue (Luis)'. `systemctl --user is-active bb-portero` = inactive. Desplegar el demonio es configuracion persistente que decide Luis; escribir la frase sin esa medicion seria fabricar evidencia. Salida literal de pytest: '76 passed in 1.12s'."
+}

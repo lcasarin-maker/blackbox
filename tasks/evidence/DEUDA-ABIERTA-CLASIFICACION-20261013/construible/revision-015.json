@@ -1,0 +1,8 @@
+{
+ "id": "DEBT-DOCKER-SLICE-TOPE-VS-TOPES-DE-CONTENEDORES-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "close_check exige docker_slice_dimensionado en medicion.txt, y esa linea 'se escribe tras comprobar el techo en la maquina'; medicion.txt dice 'Pendiente de Luis: sudo systemctl daemon-reload && sudo systemctl restart docker (tira los contenedores, incluido vLLM) y comprobar cat /sys/fs/cgroup/docker.slice/memory.max = 17179869184'. Probado: `sudo -n true` rc=1. La decision (16 GiB) y el repo ya estan hechos. La otra mitad (persistir topes en quien crea cada contenedor) vive fuera del repo: `grep -rn 'docker run'` solo da tools/dmem_prueba_completa.sh y tools/portero_docker_lab.sh (laboratorios), ningun creador de librechat/mongo/proyecto-A-pg; bloqueador secundario otro_repo."
+}

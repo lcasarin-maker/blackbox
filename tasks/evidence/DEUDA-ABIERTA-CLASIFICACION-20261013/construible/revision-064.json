@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-FORUM-GB10-RUNTIME-COMPAT-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "decision_de_luis",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "Corrido: `python3 -m tools.verify_forum_finding --id FEATURE-FORUM-GB10-RUNTIME-COMPAT-01 --evidence ...` -> rc=2, 'backend kernel/PTX architecture manifest is incomplete' (tools/preflight.py:47-48; preflight.json backend_manifest_complete=false, backend_arches 8.0..12.0 sin 12.1). Completar el manifiesto cubin/PTX exige ejecutar cuobjdump sobre los .so dentro de la imagen vllm/vllm-openai (docker run/exec/cp sobre el contenedor de produccion, vetado en este lote) y aun asi MISSING_CONTROLS (forum_finding.py:37) pide kernel de modelo probado, soporte OEM y rollback. Nota: cuobjdump existe en el host (/usr/local/cuda/bin) pero no hay artefacto del backend fuera de la imagen."
+}

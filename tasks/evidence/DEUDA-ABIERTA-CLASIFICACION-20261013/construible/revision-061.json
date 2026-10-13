@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-DMEM-BOOSTERS-ADAPTAR-A-GB10-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "Probado en solo lectura: `cat /sys/fs/cgroup/dmem.capacity` -> 'nvidia/0000000F:01:00.0/vidmem 53794045952' (hay region visible en la raiz), pero `cat /sys/fs/cgroup/cgroup.subtree_control` lista dmem y el cgroup de esta sesion tiene controllers 'memory pids' sin archivos dmem.* (ls | grep dmem vacio) y `sudo -n true` -> 'sudo: se requiere una contrasena'. Escribir dmem.low/dmem.max por cgroup exige root o delegacion del controlador; close_check pide grep booster_dmem_adaptado en medicion.txt tras 'el portero escriba dmem.low/dmem.max por cgroup con prueba y control negativo' (ficha, close_check.porque). Un medicion.txt sin esa escritura real seria evidencia falsa."
+}

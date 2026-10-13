@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-LECTOR-PSTORE-BERT-ROOT-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "close_check: `grep -q . /var/lib/blackbox/pstore/arranque.jsonl`; corrido: `ls /var/lib/blackbox` -> 'No existe el archivo o el directorio' y `ls /sys/fs/pstore` -> 'Permiso denegado'. Ficha Alcance: 'Requiere sudo, que el agente no tiene: lo corre Luis' (unidad systemd root + enable-privileged.sh). El archivo lo escribe un oneshot de root al arrancar."
+}

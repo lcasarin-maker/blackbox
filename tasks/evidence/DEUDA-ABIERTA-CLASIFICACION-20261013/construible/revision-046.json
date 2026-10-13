@@ -1,0 +1,8 @@
+{
+ "id": "DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01",
+ "leido": true,
+ "construible": "parcial",
+ "bloqueador": "decision_de_luis",
+ "que_se_puede_construir": "Ya existe y se corrio en solo lectura el control negativo (disco/mountpoint ausente bloquea): `python3 -m tools.host_diagnostics --check-backup-destination --backup-mountpoint /mnt/nonexistent-bb --backup-source /dev/null --backup-uuid 00000000-0000-0000-0000-000000000000` -> {\"reason\": \"mountpoint directory absent\", \"status\": \"block\"}; `python3 -m pytest -q tests/test_boot_storage_inventory.py` -> 36 passed. Nada nuevo que construir para cerrar; el caso sano requiere UUID/source autorizados por Luis.",
+ "por_que_no_mas": "tools/hardware_batch03_controls.py:986-988 exige las 4 corridas {mounted_after_boot, missing_device, wrong_uuid, mountpoint_only} con expected_uuid/expected_source y sha256 antes/despues; mounted_after_boot es post-reinicio (backup_postboot_matches) y la ficha dice 'no existe identidad de destino esperada autorizada'; el close_check es un xfail (pytest -k: 5 xfailed)."
+}

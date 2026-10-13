@@ -1,0 +1,8 @@
+{
+ "id": "DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "otro_repo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "tools/runtime_batch01_controls.py:1173-1223 (_verify_glm52) exige 7 tipos de conversacion (prefix_cache_growing, structured_thinking_on/off, reasoning_on/off, required_tool_loop...) con SSE crudo, digests de tokenizer/template y checkpoint GLM; el motor en produccion no sirve GLM-5.2 y servirlo exige otro contenedor/receta (prohibido tocar vLLM/contenedores). Corri en solo lectura el verificador; salida literal: {\"could_not_run\": 1, \"reason\": \"raw capture unavailable: [Errno 2] No such file or directory\", \"status\": \"unknown\"}"
+}

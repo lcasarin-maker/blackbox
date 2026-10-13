@@ -1,0 +1,8 @@
+{
+ "id": "DEBT-COBERTURA-PISO-REBAJADO-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "hardware_externo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "`python3 -m pytest -q --runxfail tests/test_cobertura_piso.py` -> 1 failed, \"assert '97.15' == '100.00'\" (.coverage_watermark). El test solo lee ese archivo; subirlo a 100.00 sin cerrar las 116 fichas xfail de tests/known_failures.json falsearia el piso (ficha: 'El piso vuelve a 100 % solo cuando las fichas de las pruebas xfail se cierren'). Depende de otras fichas, varias bloqueadas por sudo/reinicio/hardware; el bloqueador es transitivo, no propio."
+}

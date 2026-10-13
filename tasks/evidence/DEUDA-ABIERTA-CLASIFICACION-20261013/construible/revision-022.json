@@ -1,0 +1,8 @@
+{
+ "id": "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "decision_de_luis",
+ "que_se_puede_construir": "nada nuevo: el instrumento ya existe y corre en solo lectura (python3 -m tools.apt_sources imprime captura JSON arch arm64 con los index targets; verbatim arranque: '\"architecture\": \"arm64\"'). Los canarios sano/negativo y firmas ya estan en tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/.",
+ "por_que_no_mas": "tools.verify_apt_sources_closure.verify(commands.json, None) devuelve complete=true, fail=0, could_not_run=12, gates 'capture schema version 1 is required'; tools/verify_apt_sources_closure.py:32 'The external decision SHA must come from the recorded human approval channel'; :128-130 exige 'externally approved profile decision record' y SHA externo. Requiere perfil de repos aprobado por Luis. Control: el selector pytest sale xfailed (1 xfailed in 0.23s), no pass."
+}

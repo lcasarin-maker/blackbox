@@ -1,0 +1,8 @@
+{
+ "id": "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "forum_hardware_subjects.py:1081-1084 (_check_watchdog) exige owner_pids con exactamente un pid entero; y :1104-1121 exige una recuperacion con boot_id distinto y bootstatus con bit 0x20 (reinicio por watchdog = reinicio real). Corrido: `ls -l /proc/1/fd` -> 'Permiso denegado' (propietario probable systemd PID 1, root); el barrido de /proc/*/fd por 'watchdog' no devolvio ningun PID legible; tasks/evidence/.../owner-query.json: fuser rc=1 'No PID reported cannot prove that no privileged owner exists'. close_check actual: status unknown, could_not_run=1 (falta capture.json). Estado sysfs ya capturado (state=active) en progress.txt; no cierra."
+}

@@ -1,0 +1,8 @@
+{
+ "id": "DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "sudo",
+ "que_se_puede_construir": "nada",
+ "por_que_no_mas": "El close_check del lote es un xfail placeholder (salida literal: '1 xfailed in 0.2s', rc=0, probado con python3 -m pytest -q -p no:cacheprovider tests/test_debt_registration_controls.py::test_debt_close_check_verify_<x>_01); un xfail no verifica nada y convertirlo en pass sin sujeto real falsearia el cierre. Verificador ya existe (tools/verify_memory_saver.py, fases 02-trazador y 04-packing-4k) y fue endurecido el 2026-10-07. Falta captura experimental runtime/cuda: ficha 'requiere bpftrace root y probes accesibles'; sudo con contrasena inaccesible. "
+}

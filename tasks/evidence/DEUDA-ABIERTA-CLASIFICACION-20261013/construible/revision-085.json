@@ -1,0 +1,8 @@
+{
+ "id": "FORUM-00-DOCKER-OOM-RESTART-LOOP",
+ "leido": true,
+ "construible": "no",
+ "bloqueador": "reinicio",
+ "que_se_puede_construir": "nada (tools/workload_restart_policy.py y la politica ya existen; no hay nada nuevo que construir)",
+ "por_que_no_mas": "close_check pytest da '20 passed, 1 xfailed'; el xfail es test_restart_recovery_close_check_uses_real_cycle_evidence (tests/test_workload_restart_containment.py:1023-1030), que lee tasks/evidence/FORUM-00-DOCKER-OOM-RESTART-LOOP/restart-cycle (el directorio no existe) y exige ciclo real con boot ids distintos, reincidencia, reinicio ajeno al workload, reanudacion y rollback. Requiere reiniciar el host con un workload real; el motor vLLM en produccion no se toca, y simularlo seria evidencia falsa."
+}
