@@ -6,6 +6,7 @@ title: "apt_arm64_evidence: verify_capture nunca devuelve pass (veredicto final 
 status: open
 severity: P2
 origin: detected
+detector: {"rule": "coverage: tests/test_apt_arm64_evidence.py, linea 111 inalcanzable", "confidence": 1.0}
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-12
 close_check: {"cmd": "python -m pytest tests/test_apt_arm64_evidence.py -q -k pass_alcanzable", "porque": "Hasta que exista una captura que verify_capture califique pass, el instrumento solo puede decir unknown o fail: un gate sin salida positiva.", "expect": "exit_zero"}
