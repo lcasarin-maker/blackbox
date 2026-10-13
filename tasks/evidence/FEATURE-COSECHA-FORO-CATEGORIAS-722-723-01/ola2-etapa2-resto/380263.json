@@ -1,0 +1,37 @@
+{
+ "id": 380263,
+ "titulo": "Nvidia-suspend.service fails: nv_set_system_power_state WARNING (nv.c:4784) - s2idle suspend does not complete on DGX Spark GB10",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnostico de por que falla el suspend: el write a /proc/driver/nvidia/suspend desde nvidia-sleep.sh (linea 45) devuelve error de E/S y el driver emite un WARNING en nv_set_system_power_state; el suspend de PCI del GPU devuelve -5 y el sistema se reanuda de inmediato",
+   "como": "journalctl -u nvidia-suspend.service -b ; sudo dmesg -T",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, BIOS 5.36_0ACUM018, kernel 6.17.0-1029-nvidia, driver 580.173.02 open (reporte del usuario)",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -u nvidia-suspend.service -b; cat /proc/driver/nvidia/suspend; systemctl is-enabled nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service"
+  },
+  {
+   "que": "Comprobacion del usuario: /sys/module/nvidia/parameters/ no existe aunque modinfo declara NVreg_PreserveVideoMemoryAllocations, y no existe /etc/modprobe.d/nvidia-power-management.conf",
+   "como": "modinfo nvidia | grep -i preserve",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel 6.17.0-1029-nvidia, driver 580.173.02",
+   "riesgo": null,
+   "verificable_aqui": "modinfo nvidia | grep -i preserve; ls /sys/module/nvidia/parameters/ /etc/modprobe.d/nvidia-power-management.conf"
+  }
+ ],
+ "omision_nvidia": "El usuario pregunta si s2idle esta soportado en DGX Spark con este driver; no hay respuesta de NVIDIA en el tema (un unico mensaje).",
+ "utilidad_atom": "baja",
+ "razon": "Reporte de bug de un usuario sin respuesta de NVIDIA; solo aporta comandos de lectura para rastrear fallos de suspend. Suspend no esta en el alcance de colapsos de memoria ni calor."
+}

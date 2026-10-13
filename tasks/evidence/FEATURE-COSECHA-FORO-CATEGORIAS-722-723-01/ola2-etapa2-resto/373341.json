@@ -1,0 +1,47 @@
+{
+ "id": 373341,
+ "titulo": "From_pretrained SUPER slow on DGX Spark 100% CPU (my solution)",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Utilidad de carga GPU-first que evita la carga lenta y la duplicacion de memoria de from_pretrained (monkey patch)",
+   "como": "no indicado (el comando esta en el repositorio, no en el texto)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/boringcrypto/dgx-spark-model-loader",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark del autor, Gemma 4 E2B y 26B A4B",
+   "riesgo": "parche no oficial; con modelo pequeno la memoria queda en 20GB en vez de ~10GB",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: cargar con from_pretrained duplica o triplica la memoria; con un modelo de 62GB la maquina se congela y suele requerir reinicio fisico",
+   "como": "disable_mmap=True y low_cpu_mem_usage=True siguen necesitando al menos el doble del tamano del modelo",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark del autor",
+   "riesgo": "congelacion total por agotamiento de memoria unificada",
+   "verificable_aqui": "free -m; cat /proc/pressure/memory"
+  },
+  {
+   "que": "Un usuario sugiere que mmap sobre memoria unificada causa cargas muy lentas",
+   "como": "desactivar mmap (sin comando exacto)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "el autor reporta que sin mmap sube el uso de memoria",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Reporta un congelamiento por memoria al cargar modelos de 62GB con transformers y un parche comunitario cuyo comando solo esta en el repo (licencia no indicada). No hay respuesta de NVIDIA; participan solo usuarios."
+}

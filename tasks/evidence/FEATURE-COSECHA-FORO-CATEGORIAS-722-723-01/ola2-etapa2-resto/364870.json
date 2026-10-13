@@ -1,0 +1,37 @@
+{
+ "id": 364870,
+ "titulo": "Weird DGX Spark issues - unable to do a docker pull",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limpieza de estado de Docker ante digest sha256 inconsistente (sin efecto en el caso del autor)",
+   "como": "docker system prune -a --volumes; docker builder prune -a; sudo systemctl restart docker containerd",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Borra imagenes, volumenes y cache de construccion no usados (destructivo)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Sintoma de hardware: sha256sum del mismo archivo da resultados distintos entre ejecuciones mientras md5 y sha1 coinciden; NVIDIA (NVES) recomienda RMA",
+   "como": "sha256sum test3.tar.gz repetido varias veces; comparar con md5sum/sha1sum",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark nuevo, segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": "for i in 1 2 3; do sha256sum <archivo-grande>; done  (control: la salida debe ser identica)"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un hash inestable en el mismo archivo indica memoria o hardware defectuoso y personal de NVIDIA (NVES, posts 4, 6 y 8) recomienda diagnostico de campo y RMA; el metodo de deteccion es una repeticion de sha256sum, sin valor distinto del ya conocido para nuestro caso. La limpieza de Docker no resolvio."
+}

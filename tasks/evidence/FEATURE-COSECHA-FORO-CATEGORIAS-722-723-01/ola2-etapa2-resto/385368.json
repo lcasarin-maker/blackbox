@@ -1,0 +1,10 @@
+{"id": 385368, "titulo": "ConnectX-7 200G ports dead on DGX Spark - insufficient power on the PCIe slot (27W)", "leido": true, "posts_leidos": 7, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["solucionar", "medir"],
+ "mecanismos": [
+  {"que": "Los puertos CX-7 desaparecen del bus PCI sin cable por la funcion de ahorro de energia (paquete dgx-spark-mlnx-hotplug, driver hotplug MTKP0001); al conectar un cable QSFP/DAC se re-enumeran sin reiniciar. El aviso 'insufficient power on the PCIe slot (27W)' es benigno y aparece en unidades sanas.", "como": "Conectar un cable DAC/QSFP al puerto; manual: mtk-hotplug-handler.sh (nombre del script citado, sin ruta ni argumentos)", "fuente_post": 7, "repositorio": null, "licencia": "no indicada", "probado_en": "3 DGX Spark, kernel 7.0.0-1019-nvidia, firmware CX-7 28.45.4028 (declarado por el usuario)", "riesgo": "Diagnosticar como averia hardware una unidad sin cable; el propio autor reconoce el error de diagnostico.", "verificable_aqui": "lspci | grep -i mellanox; dpkg -l | grep -i mlnx-hotplug"},
+  {"que": "Un usuario (giles8) y luego el autor indican que el CX-7 se apaga por ahorro de energia sin cable; se cita el playbook 'Connect Two Sparks' de NVIDIA como configuracion de red.", "como": "no indicado", "fuente_post": 5, "repositorio": null, "licencia": "no indicada", "probado_en": null, "riesgo": null, "verificable_aqui": null}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo resuelto por usuarios (giles8 y el propio autor), sin respuesta de staff de NVIDIA: los puertos CX-7 se quitan del bus sin cable por ahorro de energia y el aviso de 27 W es benigno. Util solo para no confundir esa firma con un fallo; sin comando de medicion o prevencion relevante para los cortes por calor."}

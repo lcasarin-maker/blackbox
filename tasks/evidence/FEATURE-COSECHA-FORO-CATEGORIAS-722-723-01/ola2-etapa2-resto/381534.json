@@ -1,0 +1,57 @@
+{
+ "id": 381534,
+ "titulo": "GLM-5.3-Flash NVFP4 on 3x DGX Spark - TP=3, 512K context, 35 tok/s",
+ "posts_leidos": 11,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Medicion del efecto del tope de reloj GPU sobre decode y prefill (1500 vs 2100 MHz)",
+   "como": "comparacion en tabla: 35.2 vs 36.8 tok/s decode (+4.4%), prefill 64K 44.5 s vs 35.3 s (-26%)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3 DGX Spark, TP=3 (declarado)",
+   "riesgo": "Reloj mas alto implica mas calor; el post dice '+1 C' a 2100 MHz (post 6)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Benchmark de throughput llama-benchy via tool-eval-bench",
+   "como": "tool-eval-bench bench --perf-only --pp 2048 --tg 512 --depth 6144,63488,161792 --concurrency 1,2,3 --benchy-runs 3 --benchy-latency-mode generation",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3 DGX Spark",
+   "riesgo": "no indicado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Hipotesis: con prompts largos el decode concurrente colapsa por el presupuesto de paso; bajar max_num_batched_tokens de 8192 a 2048",
+   "como": "max_num_batched_tokens=8192 -> 2048 (sugerido, no probado)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Sugerencia sin verificar (texto generado por agente)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: TP=3 exige parches (cabezas 64->66, MoE 2048->2112, overlays de vLLM); TP=4 no los necesita",
+   "como": "no indicado como comando; descripcion de parches",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "3 DGX Spark",
+   "riesgo": "~3% de FLOPs en relleno de ceros; el motor moria con peticiones sobre ~25K tokens sin un overlay propio",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Receta de cluster de 3 nodos en vLLM con medidas de reloj y rendimiento de un usuario; la Atom es un solo nodo. Sin respuesta de NVIDIA y el unico dato transferible es el costo/beneficio del tope de reloj, ya conocido.",
+ "leido": true,
+ "lectura": "completa"
+}

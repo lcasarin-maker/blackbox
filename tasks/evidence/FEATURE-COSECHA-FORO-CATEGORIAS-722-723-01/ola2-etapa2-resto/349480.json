@@ -1,0 +1,46 @@
+{
+ "id": 349480,
+ "titulo": "Pre-installed Ollama Configuration",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Ollama preinstalado es un snap (/snap/bin/ollama), por eso systemctl edit ollama no encuentra ollama.service; el usuario expone el servicio en todas las interfaces con snap set",
+   "como": "snap set ollama host=\"0.0.0.0:11434\"",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark del usuario scott165",
+   "riesgo": "Escuchar en 0.0.0.0 expone la API sin autenticacion a la red",
+   "verificable_aqui": "snap get ollama; ss -ltn | grep 11434"
+  },
+  {
+   "que": "Recetario de eugr para compilar llama.cpp con CUDA y servir gpt-oss-120b en Spark (opinion del usuario: Ollama rinde menos que llama.cpp en Spark)",
+   "como": "cmake -B build -DGGML_CUDA=ON -DGGML_CURL=ON && cmake --build build --config Release -j 20; build/bin/llama-server -hf ggml-org/gpt-oss-120b-GGUF -fa on -ngl 999 --jinja --ctx-size 0 -b 2048 -ub 2048 --no-mmap --temp 1.0 --top-p 1.0 --top-k 0 --reasoning-format auto --chat-template-kwargs \"{\\\"reasoning_effort\\\": \\\"medium\\\"}\"",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": "no indicada",
+   "probado_en": "Spark segun eugr; tbnilles confirma que compilo (post 10)",
+   "riesgo": "--ctx-size 0 usa el contexto maximo del modelo y puede consumir mucha memoria unificada; --no-mmap carga todo el modelo en memoria",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Criterio de eleccion de motor: llama.cpp para un solo usuario, vLLM cuando el modelo nuevo aun no tiene soporte en llama.cpp; llama-swap como proxy para cargar modelos bajo demanda",
+   "como": "no indicado",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "setup personal de eugr",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Contiene comandos exactos de compilacion y servicio de llama.cpp y un ajuste de snap para Ollama; todo viene de usuarios, sin respuesta de NVIDIA en el tema. Util como referencia, ninguna medicion ni advertencia de estabilidad."
+}

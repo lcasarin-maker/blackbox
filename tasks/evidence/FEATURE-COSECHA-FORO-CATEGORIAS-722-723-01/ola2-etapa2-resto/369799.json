@@ -1,0 +1,57 @@
+{
+ "id": 369799,
+ "titulo": "Best 2026 model for agentic work on a 2-node Spark cluster?",
+ "leido": true,
+ "posts_leidos": 34,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta vLLM de un usuario para MiniMax-M2.7 AWQ en 2 nodos con memoria acotada",
+   "como": "VLLM_SPARK_EXTRA_DOCKER_ARGS=\"-v $HOME/models:/models\" ./launch-cluster.sh --no-ray exec vllm serve /models/MiniMax-M2.7-AWQ-4bit --gpu-memory-utilization 0.78 -tp 2 --max-model-len 131072 --max-num-seqs 4 --max-num-batched-tokens 8192 --enable-prefix-caching --kv-cache-dtype fp8 --load-format fastsafetensors",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 DGX Spark, llama-benchy 0.3.5, segun usuario",
+   "riesgo": "Valores de memoria altos en 2 nodos dan miedo a OOM segun otros usuarios",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Ajustes de estabilidad de un usuario para correr Qwen3.5-397B en 2 Sparks: arrancar en multi-user.target (sin GUI) en ambos nodos y usar --no-ray",
+   "como": "systemctl set-default multi-user.target (inferido del texto: 'set multi-user.target on both machines'); flag --no-ray",
+   "fuente_post": 19,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Sparks, segun usuario",
+   "riesgo": "Sin entorno grafico; el usuario no da el comando exacto",
+   "verificable_aqui": "systemctl get-default"
+  },
+  {
+   "que": "Informe de un usuario: nodo completamente colgado con reinicio necesario al terminar de cargar tensores de MiniMax-M2.7-AWQ con --gpu-memory-utilization=0.8 y --enforce-eager en 2 nodos con ray; sin causa ni solucion",
+   "como": "no indicado",
+   "fuente_post": 35,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "imagen nvcr.io/nvidia/vllm:26.05.post1-py3, 2 Sparks (segun usuario)",
+   "riesgo": "Cuelgue del nodo al cargar pesos con uso alto de memoria unificada; sin respuesta en el hilo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un usuario usa --mem-fraction-static 0.94 en sglang con Qwen3.5-397B en 2 nodos y declara temer OOM constante",
+   "como": "--mem-fraction-static 0.94",
+   "fuente_post": 30,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Sparks, segun usuario",
+   "riesgo": "OOM",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Hilo mayormente de opiniones sobre modelos; los mecanismos son recetas de usuarios (sin staff de NVIDIA) con valores de memoria y el arranque sin GUI. El informe del post 35 de un cuelgue total del nodo queda sin diagnostico."
+}

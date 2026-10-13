@@ -1,0 +1,56 @@
+{
+ "id": 343318,
+ "titulo": "Dgx spark benchmark performance",
+ "leido": true,
+ "posts_leidos": 18,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Benchmark de servido de vLLM dentro del contenedor con ShareGPT",
+   "como": "vllm bench serve --backend openai-chat --base-url ${BASE_URL} --endpoint /v1/chat/completions --model ${TOKENIZER_MODEL} --served-model-name ${MODEL} --dataset-name sharegpt --dataset-path ${DATASET_PATH} --num-prompts ${NUM_PROMPTS} --sharegpt-output-len ${OUTPUT_LEN} --max-concurrency 2",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, gpt-oss-120b, usuario christopher_owen (imagen spark-vllm:eugr)",
+   "riesgo": "--max-concurrency 2 limita la concurrencia aunque se pidan 10 prompts (post 6); ignorar el total token throughput porque suma prefill y generacion (post 8); TTFT depende de aciertos de prefix cache (posts 8, 10, 12).",
+   "verificable_aqui": "docker exec <contenedor-vllm> vllm bench serve --help"
+  },
+  {
+   "que": "Banderas de vllm serve usadas en Spark para gpt-oss-120b",
+   "como": "--gpu-memory-utilization 0.70 --max-model-len 131072 --max-num-seqs 2 --async-scheduling --max-num-batched-tokens 8192 --enable-prefix-caching --load-format fastsafetensors",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, gpt-oss-120b, usuario christopher_owen",
+   "riesgo": "Configuracion de usuario sin garantia de NVIDIA; eugr atribuye parte de la diferencia de TTFT a max-num-batched-tokens 8192 frente a 2048 por defecto (post 11).",
+   "verificable_aqui": "docker inspect <contenedor-vllm> --format '{{.Config.Cmd}}'"
+  },
+  {
+   "que": "Compilacion/uso de vLLM comunitario para Spark en lugar de la imagen de NVIDIA",
+   "como": "no indicado (se remite al repositorio eugr/spark-vllm-docker)",
+   "fuente_post": 3,
+   "repositorio": "GitHub eugr/spark-vllm-docker (nombre en el hilo; URL completa no copiada)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (un nodo funciona igual, post 16)",
+   "riesgo": "Segun eugr, la imagen de NVIDIA va por detras de vLLM principal y mxfp4 no usa aun las funciones fp4 de Blackwell en vLLM; SGLang rinde mas (post 3).",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Comparativa SGLang frente a vLLM (usuario eugr, gpt-oss-120b, un Spark)",
+   "como": "1 prompt: 52.37 tok/s SGLang (post 4) frente a 34.94 tok/s vLLM (post 3); 10 prompts: 80.29 frente a 74.90 tok/s de salida",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, usuario eugr",
+   "riesgo": "Medicion de un usuario, sin condiciones termicas ni de reloj declaradas.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Staff (post 2) solo remite a los playbooks y confirma sm121; no da cifras de benchmark de vLLM para oss-20b/120b ni responde si mxfp4 estara soportado.",
+ "utilidad_atom": "media",
+ "razon": "Aporta un metodo reproducible de medicion de rendimiento (vllm bench serve) con sus trampas, y numeros de referencia de usuarios; nada para monitoreo de memoria o calor. La respuesta de NVIDIA (post 2) es solo un puntero a playbooks."
+}

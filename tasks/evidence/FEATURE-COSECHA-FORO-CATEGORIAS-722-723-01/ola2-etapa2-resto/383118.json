@@ -1,0 +1,67 @@
+{
+ "leido": true,
+ "lectura": "completa",
+ "mecanismos": [
+  {
+   "que": "Localizar el pin ELD vivo y su monitor_name/speakers (staff de NVIDIA)",
+   "como": "for f in /proc/asound/card0/eld*; do grep -q \"monitor_present.1\" $f && { echo $f; cat $f; }; done",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "for f in /proc/asound/card0/eld*; do grep -q \"monitor_present.1\" $f && { echo $f; cat $f; }; done"
+  },
+  {
+   "que": "Comprobar si el pin se activa a 0x40 en reproduccion o queda en 0x00 (staff)",
+   "como": "cat /proc/fb ; cat /proc/asound/card0/codec#0 | grep \"Pin-ctls\"",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "cat /proc/fb; grep 'Pin-ctls' /proc/asound/card0/codec#0"
+  },
+  {
+   "que": "Evitar PipeWire en el dispositivo vivo y revisar sink por defecto (staff)",
+   "como": "aplay -D plughw:0,<N> /usr/share/sounds/alsa/Front_Center.wav ; wpctl status ; systemctl --user status pipewire wireplumber",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Activar perfil HDMI de la tarjeta ALSA",
+   "como": "pactl set-card-profile alsa_card.platform-NVDA2014_00 output:hdmi-stereo",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Causa raiz declarada por un usuario: kernel 6.17.0-1031 sin modulos nvidia precompilados ni dkms, y el paquete nvidia-drm-options-modeset0 fuerza modeset=0 en /etc/modprobe.d/zz-nvidia-drm-override.conf, lo que deja simple-framebuffer sin ELD y sin audio HDMI",
+   "como": "options nvidia-drm modeset=0 en /etc/modprobe.d/zz-nvidia-drm-override.conf",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, kernel 6.17.0-1031-nvidia (declarado por el usuario)",
+   "riesgo": "Con modeset=0 el driver no toma la pantalla; el usuario arranco el kernel 6.11.0-1016-nvidia como solucion.",
+   "verificable_aqui": "cat /etc/modprobe.d/zz-nvidia-drm-override.conf; cat /proc/fb"
+  }
+ ],
+ "omision_nvidia": "Staff (aniculescu) recomienda actualizar a kernel 7.0.0-1019-nvidia por DGX Dashboard; un segundo usuario sigue sin audio y la salida muestra framebuffer simpledrm; el staff sugiere posible incompatibilidad de monitor.",
+ "id": 383118,
+ "titulo": "DGX Spark (Gold Founders Edition) - HDMI Audio Codec Pin Control Stuck at 0x00, No Sound Output",
+ "posts_leidos": 12,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "utilidad_atom": "baja",
+ "razon": "Diagnostico de audio HDMI con comandos de lectura de /proc/asound y /proc/fb, con respuestas de staff de NVIDIA; los comandos son verificables pero el dominio (audio) no toca memoria ni calor. La causa raiz modeset=0 es afirmacion de usuario sin confirmacion de NVIDIA."
+}

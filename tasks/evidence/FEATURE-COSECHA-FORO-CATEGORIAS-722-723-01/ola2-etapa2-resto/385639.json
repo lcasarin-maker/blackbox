@@ -1,0 +1,27 @@
+{
+ "id": 385639,
+ "titulo": "ASUS Ascent GX10: Errors when connecting both sparks with an QSPF56 cable",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de un usuario: cable QSFP112 oficial de ASUS mas arranque en frio (cold boot) para que las interfaces ConnectX inicialicen bien; paso de 26 Gbps a 185 Gbps. Los errores AER correctables RxErr del puerto PCIe aparecian con un cable QSFP56 de terceros.",
+   "como": "no indicado como comando: cambiar a cable oficial QSFP112 y hacer cold boot (apagar y encender)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x ASUS Ascent GX10 (declarado por el usuario)",
+   "riesgo": "Un reinicio en caliente puede dejar el enlace a 26 Gbps; el usuario atribuye en parte la mejora a una actualizacion de firmware en el primer arranque",
+   "verificable_aqui": "journalctl -k | grep -c 'AER: Correctable'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario resuelve errores AER correctables y baja velocidad de enlace entre dos GX10 con cable oficial y cold boot; sin comandos y sin personal NVIDIA. El post 2 solo remite a otro tema sobre tormentas AER en GX10."
+}

@@ -1,0 +1,37 @@
+{
+ "id": 351028,
+ "titulo": "Acpi and EM errors from kernel log during boot (capacity mismatch)",
+ "leido": true,
+ "posts_leidos": 14,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo para listar la capacidad de CPU por nucleo y ver la heterogeneidad del GB10 que provoca los avisos EM",
+   "como": "for c in /sys/devices/system/cpu/cpu*/cpu_capacity; do cpu=$(basename \"$(dirname \"$c\")\"); printf \"%s: %s\\n\" \"$cpu\" \"$(cat \"$c\")\"; done | sort -n -k 1.4",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario j0n, GB10 (capacidades 718/997/731/1017/1024)",
+   "riesgo": null,
+   "verificable_aqui": "cat /sys/devices/system/cpu/cpu*/cpu_capacity; lscpu -e"
+  },
+  {
+   "que": "Localizar los avisos EM de capacidad en el log del kernel",
+   "como": "journalctl -b -p err",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario j0n, GB10",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k -b | grep -c 'must have the same capacity'"
+  }
+ ],
+ "omision_nvidia": "Personal NVIDIA (aniculescu) dice que son solo avisos sin efecto en el sistema y de baja prioridad, sin fecha de correccion (posts 5, 14).",
+ "utilidad_atom": "baja",
+ "razon": "Staff NVIDIA confirma que los mensajes EM y ACPI son inocuos; la hipotesis de Energy Aware Scheduler desactivado es de usuarios (j0n, elsaco) sin verificacion. Los comandos solo documentan la topologia, no previenen nada."
+}

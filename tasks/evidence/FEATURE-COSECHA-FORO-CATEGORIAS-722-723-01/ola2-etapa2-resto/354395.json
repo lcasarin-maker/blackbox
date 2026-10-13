@@ -1,0 +1,47 @@
+{
+ "id": 354395,
+ "titulo": "Can not reset Spark GPU",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reset de GPU sin reiniciar",
+   "como": "sudo systemctl stop nvidia-persistenced ; sudo nvidia-smi -r -i 0",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Staff (aniculescu) lo da como metodo; elsaco logra 'sudo nvidia-smi -r' en 2 Sparks FE en modo multi-user; el autor (unidad ASUS) sigue recibiendo que la GPU es la primaria",
+   "riesgo": "La pagina man exige que ninguna aplicacion use el dispositivo (CUDA, X, otro nvidia-smi); no se puede resetear la GPU primaria",
+   "verificable_aqui": "nvidia-smi -q | grep -i -E 'persistence|reset'"
+  },
+  {
+   "que": "Pasar a modo multi-user para liberar la GPU antes del reset",
+   "como": "systemctl isolate multi-user.target ; runlevel ; systemctl is-active graphical.target",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "elsaco en FE; no funciono para el autor (post 7)",
+   "riesgo": "Detiene la sesion grafica",
+   "verificable_aqui": "systemctl is-active graphical.target multi-user.target"
+  },
+  {
+   "que": "Pedir nvidia-bug-report si se repite el fallo",
+   "como": "nvidia-bug-report (sin argumentos indicados)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "command -v nvidia-bug-report.sh"
+  }
+ ],
+ "omision_nvidia": "NVIDIA staff confirma (post 10, enero 2026) que es posible resetear la GPU del Spark pero no explica por que falla en la unidad ASUS ni da el procedimiento completo; NVES indica que un reset normal puede no recuperar si hay una excepcion amplia.",
+ "utilidad_atom": "media",
+ "razon": "Hay un procedimiento de staff para resetear la GPU, aunque el autor lo intento en su unidad ASUS sin exito y el hilo queda sin causa. Es relevante para recuperar un estado ERR! sin reiniciar, con la condicion de GPU sin procesos y modo multi-user."
+}

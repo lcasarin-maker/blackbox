@@ -1,0 +1,67 @@
+{
+ "id": 353777,
+ "titulo": "Nvidia DGX Spark automatically suspends when running headless (despite power config changes)",
+ "leido": true,
+ "posts_leidos": 24,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Enmascarar los targets de suspension",
+   "como": "sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario raphael.amorim, 2 Sparks; el autor del hilo reporta que no resolvio su caso y otro usuario que no persiste tras reiniciar (post 20)",
+   "riesgo": "Eficacia contradictoria entre posts 5 y 20",
+   "verificable_aqui": "systemctl is-enabled sleep.target suspend.target hibernate.target hybrid-sleep.target"
+  },
+  {
+   "que": "Desactivar ahorro de energia del Wi-Fi con iw",
+   "como": "iw dev wlP9s9 get power_save ; iw dev wlP9s9 set power_save off",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario elsaco en Spark (nombre de interfaz declarado por el)",
+   "riesgo": "El autor confirmo power_save ya en off y el Wi-Fi seguia cayendo (post 9)",
+   "verificable_aqui": "iw dev wlP9s9 get power_save"
+  },
+  {
+   "que": "Quitar la restriccion de permisos de la conexion Wi-Fi para que no la elimine al cerrar la sesion de gdm (causa hallada en logs por un usuario)",
+   "como": "sudo nmcli connection modify \"YOUR_WIFI_SSID_GOES_HERE 1\" connection.permissions \"\"",
+   "fuente_post": 21,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario neek69, Spark en Wi-Fi (el dice que cree que lo resolvio)",
+   "riesgo": "Cambia la configuracion de NetworkManager; efecto no confirmado por terceros",
+   "verificable_aqui": "nmcli -f connection.permissions connection show --active"
+  },
+  {
+   "que": "Latido para mantener el enlace: ping periodico al gateway por cron",
+   "como": "ping -c 1 <gateway> cada minuto via crontab",
+   "fuente_post": 18,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "sugerencia de christopher_owen; Ama5u reporto que no resolvio (post 19)",
+   "riesgo": "No resolvio el caso reportado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Enchufe HDMI ficticio (dummy plug) y cable Ethernet en lugar de Wi-Fi",
+   "como": "no indicado (hardware: dummy HDMI + conexion cableada)",
+   "fuente_post": 26,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ThinkNight tras OTA2, estable pero con dos cambios simultaneos",
+   "riesgo": "No se aislo que cambio lo arreglo",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "No hay respuesta de NVIDIA sobre la causa; un usuario dice haber contactado al equipo de desarrollo (post 13) y personal pregunta por OTA2 (post 24).",
+ "utilidad_atom": "baja",
+ "razon": "El problema es perdida de red Wi-Fi en modo headless (la maquina sigue encendida segun el autor), no un corte de energia. Las soluciones de los usuarios son contradictorias y el reporte final atribuye la estabilidad a OTA2 o a los cambios de hardware sin poder separarlos."
+}

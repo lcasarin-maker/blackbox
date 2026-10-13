@@ -1,0 +1,37 @@
+{
+ "id": 367711,
+ "titulo": "Mixing Different GB10 Systems in a DGX Spark Cluster (NVIDIA + Lenovo) - Anyone Tried?",
+ "leido": true,
+ "posts_leidos": 14,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Advertencia: firmware distinto entre unidades GB10 cambia la memoria visible (una unidad en firmware antiguo mostraba 2 GB menos de VRAM) y los deltas de temperatura; comparar temperaturas solo con la misma version de firmware",
+   "como": "no indicado comando; criterio: igualar revisiones de firmware antes de comparar temperatura o memoria (posts 6 y 10)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Memoria utilizable menor (119 GB frente a 121 GB) puede impedir cargar modelos ajustados",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Actualizar firmware de un OEM por LVFS desde una base antigua y consultar el historial de actualizaciones",
+   "como": "fwupdmgr get-history (post 15); el autor del post 13 indica usar fwupdmgr para actualizar desde la base",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GIGABYTE AI TOP ATOM, fwupd 1.9.31 (segun el usuario del post 15)",
+   "riesgo": "El firmware de cada OEM llega con retraso respecto al de NVIDIA (Gigabyte 2.144.9 de noviembre de 2025 segun el post 11)",
+   "verificable_aqui": "fwupdmgr get-history"
+  }
+ ],
+ "omision_nvidia": "Los usuarios senalan que NVIDIA entrega firmware a los OEM y cada fabricante lo publica a su ritmo; no hay mensaje de personal de NVIDIA en el tema.",
+ "utilidad_atom": "media",
+ "razon": "Catorce mensajes de usuarios y un periodista tecnico (Patrick-ServeTheHome); ninguno de NVIDIA. Aporta dos hechos aplicables a la Gigabyte ATOM: el firmware OEM va por detras y la version determina la memoria visible y las temperaturas."
+}

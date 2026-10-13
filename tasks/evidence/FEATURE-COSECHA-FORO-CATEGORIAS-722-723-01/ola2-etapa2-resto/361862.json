@@ -1,0 +1,37 @@
+{
+ "id": 361862,
+ "titulo": "Llama.cpp rpc on dgx spark",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Advertencia de usuarios: llama.cpp rpc-server en dos Sparks acumula memoria durante la inferencia sin liberarla hasta OOM; al matar el nodo primario la memoria del nodo rpc no se libera y solo matar el propio rpc-server la libera. Uno de ellos reinicia ambos Sparks tras un GGUF de 397B",
+   "como": "no indicado (matar el proceso rpc-server)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 DGX Spark segun los usuarios (posts 1, 2)",
+   "riesgo": "OOM en el nodo rpc; sin causa raiz ni version afectada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Usuario eugr: llama.cpp RPC no tiene RDMA ni tensor parallel en Spark; vLLM/SGLang dan hasta ~1.8x en dos nodos con modelos densos",
+   "como": "no indicado (recomendacion)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Reporte de fuga de memoria de usuarios en llama.cpp rpc-server en cluster de dos Sparks, con la unica solucion de reiniciar el proceso o pasar a vLLM; el resto es un traceback de la receta mxfp4 de vLLM (Invalid thread config en gptq_marlin_gemm, post 4) que eugr atribuye a un repo roto aguas arriba (post 5). Sin respuesta de NVIDIA."
+}

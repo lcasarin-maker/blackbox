@@ -1,0 +1,67 @@
+{
+ "id": 355126,
+ "titulo": "DGX Spark Multi-Node LLM Inference Report for Qwen3-235B model",
+ "leido": true,
+ "posts_leidos": 36,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de segfault de llama.cpp con backend RPC: desactivar el ajuste automatico de memoria",
+   "como": "./llama-server -m $MODEL --rpc \"...\" -ngl 999 -fit off",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark (GB10), kernel 6.14.0-1015-nvidia segun el usuario",
+   "riesgo": "RPC va por TCP/IP sin NCCL; menos rendimiento",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Docker sin GPU en un nodo por falta de /etc/docker/daemon.json: runtime nvidia por defecto",
+   "como": "{\"default-runtime\": \"nvidia\", \"runtimes\": {\"nvidia\": {\"args\": [], \"path\": \"nvidia-container-runtime\"}}} en /etc/docker/daemon.json; systemctl daemon-reload && systemctl restart docker",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, 2 Sparks",
+   "riesgo": "reiniciar docker corta contenedores en curso",
+   "verificable_aqui": "docker info --format '{{.DefaultRuntime}} {{.Runtimes}}' ; cat /etc/docker/daemon.json"
+  },
+  {
+   "que": "Metodo de medicion: 'alg bandwidth' de NCCL perf es datos procesados dividido por tiempo; 'bus bandwidth' estima la velocidad fisica unidireccional",
+   "como": "no indicado (lectura de la salida de nccl-tests)",
+   "fuente_post": 19,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario eugr, Sparks",
+   "riesgo": "leer alg bandwidth como velocidad de enlace sobreestima",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Repositorio de usuario con script de lanzamiento de cluster vLLM con autodeteccion de interfaces IB/Ethernet para 2 Sparks",
+   "como": "spark-vllm/launch-cluster.sh -t <imagen> exec bash",
+   "fuente_post": 9,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "eugr, 2 Sparks",
+   "riesgo": "requiere SSH sin contrasena entre nodos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Declaracion de NVIDIA (Neill): el playbook de vLLM se actualizo y el fallo multi-nodo quedo corregido y verificado con vLLM 26.01",
+   "como": "no indicado",
+   "fuente_post": 36,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "vLLM 26.01 segun NVIDIA",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA reconocio (posts 2, 5, 10, 35) que revisaria con ingenieria; el usuario reporta que el segundo nodo no traia el runtime nvidia de Docker configurado de fabrica.",
+ "utilidad_atom": "media",
+ "razon": "Informe de un usuario de 2 Sparks con workarounds concretos (-fit off, daemon.json) y una aclaracion de metodo de medicion NCCL; NVIDIA responde con staff (NVES, cyuen1, Neill) y cierra con un playbook actualizado. Ningun mecanismo aborda calor ni memoria de un solo nodo."
+}

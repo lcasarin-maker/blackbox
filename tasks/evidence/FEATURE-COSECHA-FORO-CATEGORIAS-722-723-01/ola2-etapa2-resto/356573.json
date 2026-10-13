@@ -1,0 +1,79 @@
+{
+ "id": 356573,
+ "titulo": "Buyers beware: DGX Spark limited to 64GB in ComfyUI",
+ "leido": true,
+ "posts_leidos": 27,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Duplicacion de memoria al cargar safetensors (mmap en RAM + copia al 'VRAM' que es la misma RAM unificada): topa en ~64GB de 128GB",
+   "como": "reproducir: ComfyUI + plantilla 'Flux.2 Dev Text to Image'; vigilar con htop",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/comfyanonymous/ComfyUI/issues/10896",
+   "licencia": null,
+   "probado_en": "DGX Spark, reporte de usuario starkrun",
+   "riesgo": "OOM con modelos que caben (45GB libres)",
+   "verificable_aqui": "free -m; grep MemAvailable /proc/meminfo mientras carga un modelo"
+  },
+  {
+   "que": "Bandera de ComfyUI para evitar el mmap y la doble copia",
+   "como": "--disable-mmap (y --cache-none); parche citado: tensor.to(device, copy=False) en vez de copy=True",
+   "fuente_post": 8,
+   "repositorio": "https://github.com/comfyanonymous/ComfyUI/issues/10896",
+   "licencia": null,
+   "probado_en": "descrito por aniculescu (staff NVIDIA) como ayuda; parche descrito por usuario raphael.amorim, post 10",
+   "riesgo": "Parche no oficial; requiere editar comfy/utils.py",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Banderas adicionales reportadas por un usuario",
+   "como": "--disable-async-offload --disable-pinned-memory --cache-none, pesos FP8",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario TheAwakenOne, sin cifras propias",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Aumentar read-ahead del NVMe para acelerar carga con mmap (cita de otro hilo, usuario)",
+   "como": "sudo bash -c \"echo 8192 > /sys/block/nvme0n1/queue/read_ahead_kb\"",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario cita kernel 6.17: mmap -50% tiempo, no-mmap -35%; en 6.14 sin mejora",
+   "riesgo": "Cambio de sistema no persistente; afecta I/O",
+   "verificable_aqui": "cat /sys/block/nvme0n1/queue/read_ahead_kb"
+  },
+  {
+   "que": "Cargador alternativo con fastsafetensors (GPUDirect) para evitar la copia",
+   "como": "nodo ComfyUI-DGXSparkSafetensorsLoader; biblioteca foundation-model-stack/fastsafetensors",
+   "fuente_post": 11,
+   "repositorio": "https://github.com/phaserblast/ComfyUI-DGXSparkSafetensorsLoader",
+   "licencia": "no indicada",
+   "probado_en": "Spark, autor Phaserblast",
+   "riesgo": "Puentea la gestion de memoria de Comfy; el autor admite problemas de memoria",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Demo de reproduccion en Spark: mmap tocado y luego copiado dobla RSS (4GiB -> ~8GiB); lectura directa no",
+   "como": "experimento con stdlib Python: mmap_touch, mmap_touch_copy (bytearray(mm)), direct_read; compara VmRSS y MemAvailable",
+   "fuente_post": 19,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark kernel 6.17.0-1014-nvidia, aportado por johnny_nv (rol NVIDIA no confirmado en el texto)",
+   "riesgo": null,
+   "verificable_aqui": "grep -E 'VmRSS' /proc/self/status"
+  }
+ ],
+ "omision_nvidia": "aniculescu (staff) confirma que el kernel pasara a 6.17 en la proxima actualizacion mayor y reconoce que la memoria unificada reduce a la mitad la memoria utilizable en este patron; sin correccion propia de NVIDIA. Atencion al soporte: solo hardware; software va al foro (post 9).",
+ "utilidad_atom": "media",
+ "razon": "El tema documenta un patron de doble residencia por mmap en memoria unificada con banderas y un experimento de reproduccion con cifras, relevante para colapsos de memoria. La solucion final reportada (posts 21-23, usuarios) es el nightly de ComfyUI con Dynamic VRAM sin banderas; el resto es de uso de ComfyUI, no de nuestro stack vLLM."
+}

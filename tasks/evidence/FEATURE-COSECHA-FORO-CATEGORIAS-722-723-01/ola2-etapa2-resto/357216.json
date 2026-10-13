@@ -1,0 +1,37 @@
+{
+ "id": 357216,
+ "titulo": "DGX Spark constantly shut down after first set up",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Personal NVIDIA (NVES) pide instalar y ejecutar Spark Field Diagnostics y enviar los logs por mensaje privado para decidir RMA o triaje",
+   "como": "no indicado (comando no dado en el hilo; solo un enlace al articulo de soporte de NVIDIA)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark Founders (usuario, ene 2026)",
+   "riesgo": "La decision sobre RMA depende de NVIDIA; el hilo se cerro sin resultado publicado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Aviso del kernel mlx5 'Detected insufficient power on the PCIe slot (27W)' aparece en cada arranque aunque el ConnectX no se use; el usuario lo cita como senal de posible problema de potencia, sin respuesta de NVIDIA",
+   "como": "journalctl -b -1 | grep -iE \"acpi|power|volt|battery\"",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, apagados aleatorios en reposo (usuario)",
+   "riesgo": "Afirmacion del usuario sin verificacion; podria ser mensaje benigno",
+   "verificable_aqui": "journalctl -k -b 0 | grep -i 'insufficient power'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario relata apagados en seco en reposo, incluso tras recovery, sin trazas en el journal (no OOM, no panico), y que el kernel 1013 no ayudo; un usuario (christopher_owen) afirma que el Spark puede caer si se asigna demasiada memoria sin OOM ordenado. La unica respuesta de NVIDIA (NVES) es derivar a la herramienta de diagnostico; ningun comando concreto."
+}

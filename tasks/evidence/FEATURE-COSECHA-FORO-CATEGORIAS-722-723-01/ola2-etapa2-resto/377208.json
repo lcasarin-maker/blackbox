@@ -1,0 +1,48 @@
+{
+ "id": 377208,
+ "titulo": "MSI EdgeXpert DGX Spark having identical Machine IDs",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Regenerar machine-id y claves de host SSH en unidades con imagen clonada (afirmado por el usuario ohaibuzzle; tambien lo usa patrickkarle)",
+   "como": "sudo rm -f /etc/machine-id /var/lib/dbus/machine-id && sudo systemd-machine-id-setup && sudo rm -f /etc/ssh/ssh_host_* && sudo ssh-keygen -A && sudo reboot",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "MSI EdgeXpert; patrickkarle lo confirma en su unidad",
+   "riesgo": "Borra las claves de host SSH (los clientes veran cambio de clave) y reinicia la maquina",
+   "verificable_aqui": "cat /etc/machine-id (comparar con el de otra unidad o con el valor publico del tema; el valor existe y no se copia aqui)"
+  },
+  {
+   "que": "Detectar claves SSH generadas en fabrica: la etiqueta del comentario de la clave publica muestra root@localhost en vez del hostname",
+   "como": "ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "unidad de patrickkarle, sin hardware declarado",
+   "riesgo": null,
+   "verificable_aqui": "ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub"
+  },
+  {
+   "que": "Efecto colateral: con machine-id compartido fwupd envia el mismo ID de informe a LVFS y este lo bloquea como abuso, de modo que la telemetria de firmware se pierde en silencio",
+   "como": "no indicado (el mensaje de error es 'server rejected report: abuse detected ... is banned'; el arreglo es el one-liner del post 6)",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "unidad de patrickkarle",
+   "riesgo": "Reportes de firmware descartados sin aviso",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El boletin de seguridad NVIDIA DGX Spark de mayo 2026 (CVE-2026-24218, citado por el usuario emptysands) cubre las claves SSH compartidas; un usuario afirma que no menciona el efecto sobre fwupd. Sin respuesta de staff de NVIDIA en el tema.",
+ "utilidad_atom": "media",
+ "razon": "Una receta de un comando para regenerar machine-id y claves SSH, mas una comprobacion del comentario de la clave y un efecto sobre fwupd; todo de usuarios, sin staff. Util como control de higiene del ATOM (comparable con kit de seguridad), pero no atiende los colapsos de memoria ni los cortes por calor."
+}

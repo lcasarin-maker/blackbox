@@ -1,0 +1,109 @@
+{
+ "id": 381655,
+ "titulo": "DGX Spark GB10: hard freeze under sustained load (RCU stall on CPU 11), watchdog + kdump both fail — working pstore-only crash capture recipe + evidence",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "rastrear",
+  "prevenir",
+  "monitorear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Captura de panics solo por pstore (efi-pstore) cuando kdump y watchdog no producen vmcore: quitar crashkernel, enmascarar kdump-tools y anadir parametros de cmdline",
+   "como": "echo 'GRUB_CMDLINE_LINUX_DEFAULT=\"$GRUB_CMDLINE_LINUX_DEFAULT crash_kexec_post_notifiers=1 pstore.kmsg_bytes=65536\"' | sudo tee /etc/default/grub.d/91-pstore.cfg ; sudo update-grub ; sudo systemctl mask kdump-tools.service ; sudo apt-mark hold kdump-tools",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10, kernel 6.17.0-1008-nvidia, BIOS GX10DGX.0103.2026.0129.1152, aarch64",
+   "riesgo": "Requiere reinicio; renuncia a kdump; el propio autor solo probo 1 panic de prueba (78 chunks en pstore)",
+   "verificable_aqui": "grep -oE 'pstore\\.kmsg_bytes=[^ ]*' /proc/cmdline ; cat /sys/module/pstore/parameters/backend ; systemctl status systemd-pstore.service"
+  },
+  {
+   "que": "Convertir un RCU stall en panic con reinicio automatico para que quede traza en pstore en vez de congelarse horas",
+   "como": "printf 'kernel.panic_on_rcu_stall = 1\\nkernel.panic = 30\\n' | sudo tee /etc/sysctl.d/90-rcu-panic.conf ; sudo sysctl --system",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "kernel 6.17.0-1008-nvidia",
+   "riesgo": "El autor documenta que el watchdog no disparo en un cuelgue real (39 min) y que un evento posterior no paso por panic; no garantiza recuperacion",
+   "verificable_aqui": ""
+  },
+  {
+   "que": "Prueba de panic para validar la captura: tras el reinicio buscar dmesg-efi_pstore-* bajo /var/lib/systemd/pstore",
+   "como": "echo c | sudo tee /proc/sysrq-trigger (con kernel.panic_on_rcu_stall=1 y kernel.panic=30)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel 6.17.0-1008-nvidia",
+   "riesgo": "Provoca un panic deliberado: reinicia la maquina y mata todo lo que corra",
+   "verificable_aqui": "ls /var/lib/systemd/pstore/"
+  },
+  {
+   "que": "Atribucion de taint por modulo, para separar contribuyentes P y O",
+   "como": "for m in /sys/module/*/taint; do t=$(cat \"$m\" 2>/dev/null); [ -n \"$t\" ] && echo \"$m => $t\"; done ; cat /proc/sys/kernel/tainted",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel 6.17.0-1008-nvidia, taint 4097",
+   "riesgo": "Solo lectura",
+   "verificable_aqui": "cat /proc/sys/kernel/tainted"
+  },
+  {
+   "que": "Hallazgo: sbsa_gwdt viene en lista negra (blacklist-watchdog.conf) y sbsa_gwdt options action=1 queda sin efecto salvo carga explicita; el autor lo re-habilita con systemd RuntimeWatchdogSec=60",
+   "como": "/etc/modprobe.d/blacklist-watchdog.conf ; RuntimeWatchdogSec=60",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel 6.17.0-1008-nvidia",
+   "riesgo": "En Aug 27 el equipo colgo igualmente con sbsa-gwdt y watchdog de systemd a 1 min (post 2); el watchdog no es garantia",
+   "verificable_aqui": "ls /dev/watchdog0 ; systemctl show -p RuntimeWatchdogUSec ; grep -r sbsa /etc/modprobe.d/"
+  },
+  {
+   "que": "Telemetria fuera de la caja (temperaturas, relojes, throttle, MemAvailable, contenedores por UDP a otro host, mas potencia de pared) para discriminar hang de corte de alimentacion; el autor la tiene planeada, no implementada",
+   "como": "no indicado (planeado)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Idea citada de otro usuario (tema 383624)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Discriminador de eventos: un corte de alimentacion no deja RCU stall, Xid, NV_ERR_NO_MEMORY ni panic en el journal, pstore queda vacio, y con UEFI 'After Power Loss' en Auto Boot el equipo reinicia solo (38 s en el evento del 10 sep)",
+   "como": "journalctl -k -b <id> filtrado por RCU stall, Xid, NV_ERR_NO_MEMORY, thermal, hung_task, lockup",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10, kernel 6.17.0-1008-nvidia",
+   "riesgo": "Hipotesis del autor: no confirmada la causa del corte (unidad o adaptador)",
+   "verificable_aqui": ""
+  },
+  {
+   "que": "Mitigacion de usuario ante cuelgue por falta de RAM: reserva minima del kernel, reinicio tras panic, watchdog de systemd y earlyoom con escalada; el propio usuario declara el watchdog como no probado",
+   "como": "vm.min_free_kbytes = 2097152 ; kernel.panic = 10 ; RuntimeWatchdogSec=60 ; RebootWatchdogSec=5min ; earlyoom -m 8,4 -s 50,30 --prefer '(llama-server|vllm|ollama)'",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark P4242, kernel 7.0.0-1019-nvidia",
+   "riesgo": "earlyoom envio SIGTERM cada ~10 s y 'kill failed: Timer expired' porque el proceso quedo en D-state; el watchdog 'unproven'",
+   "verificable_aqui": "sysctl vm.min_free_kbytes kernel.panic"
+  },
+  {
+   "que": "Limites de memoria de contenedores y motores para prevenir el cuelgue por RAM",
+   "como": "gpu-memory-utilization <= 0.7 (vLLM); mem_limit = memswap_limit por contenedor",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark P4242",
+   "riesgo": "Recomendacion de usuario, sin medicion aportada",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El valor por defecto crashkernel 1G-:0M deja kdump efectivamente desactivado y el modulo sbsa_gwdt viene en lista negra; el autor pregunta (sin respuesta de staff en el tema) si NVIDIA lo pretende asi.",
+ "utilidad_atom": "alta",
+ "razon": "Receta reproducible de captura de crash por pstore con comandos exactos y verificacion (post 1), mas dos mecanismos complementarios del propio autor y de otro usuario (posts 2 y 3); ninguna respuesta de staff NVIDIA. El autor distingue un cuelgue por RCU de un corte de alimentacion, y declara los limites (watchdog no probado)."
+}

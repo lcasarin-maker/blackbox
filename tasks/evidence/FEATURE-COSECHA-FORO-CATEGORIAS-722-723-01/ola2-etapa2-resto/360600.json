@@ -1,0 +1,37 @@
+{
+ "id": 360600,
+ "titulo": "Which quantization should I pick for Qwen3-Coder-Next (80B) to run on a single DGX Spark?",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Para dimensionar KV cache de Qwen3-Coder-Next FP8 en un Spark: con --kv-cache-dtype fp8 caben unos 130K tokens con gpu-memory-utilization 0.7",
+   "como": "--kv-cache-dtype fp8 --gpu-memory-utilization 0.7 (KV cache disponible 6.01 GiB, 130,784 tokens)",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun el usuario eugr",
+   "riesgo": "Un usuario fijo max-model-len 96000 con 0.8 de memoria suponiendo 1 MB/token sin verificar (post 7)",
+   "verificable_aqui": "no aplicable sin lanzar vLLM"
+  },
+  {
+   "que": "Receta de la comunidad eugr/spark-vllm-docker para Qwen3-Coder-Next FP8 en un solo Spark",
+   "como": "./run-recipe.sh qwen3-coder-next-fp8 --solo",
+   "fuente_post": 4,
+   "repositorio": "eugr/spark-vllm-docker (GitHub, nombre en el post)",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "La receta aplica parches (crash al arrancar y degradacion de rendimiento, ya corregidos en vLLM main; mas uno para cluster) segun post 6",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Pregunta de eleccion de cuantizacion respondida por un usuario (eugr): FP8 nativo ~45 t/s, AWQ suele ser la mas rapida; no interviene NVIDIA. Los unicos valores medibles son los de KV cache en post 8, utiles solo al dimensionar vLLM y sin relacion con el calor ni los cortes."
+}

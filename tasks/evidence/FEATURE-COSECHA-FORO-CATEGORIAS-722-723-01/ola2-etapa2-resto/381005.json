@@ -1,0 +1,36 @@
+{
+ "id": 381005,
+ "titulo": "DeepSeek-V4-Flash-0731 on a 4-Node DGX Spark Cluster: 100K-token prefill at ~2.7K tok/s, decode at ~56 tok/s",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Tras conectar los cables de interconexion, apagar por completo y dejar reposar (cold boot) recupera el ancho de banda del enlace; un usuario reporta pasar de 157.35 a 369.61 tok/s en cold-boot con MTU mas cold boot",
+   "como": "no indicado (solo describe apagado completo tras enchufar cables; el valor de MTU no se da)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark, switch 200 Gbps, vLLM TP=4",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Benchmark de prefill/decode con llama-benchy 0.4.0 por profundidad de contexto y concurrencia (pp2048, tg128, c1/2/5/10)",
+   "como": "llama-benchy 0.4.0 (comando exacto no indicado)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark, vLLM",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Benchmark de un cluster de 4 nodos con tabla de rendimiento; la maquina de aqui es de un solo nodo y el post no da comandos de monitoreo ni prevencion. Sin respuesta de NVIDIA (un solo post de usuario)."
+}

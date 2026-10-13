@@ -1,0 +1,47 @@
+{
+ "id": 119374,
+ "titulo": "Cicc not in nvcr.io/nvidia/l4t-base:r32.3.1",
+ "leido": true,
+ "posts_leidos": 21,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Con runtime nvidia, los archivos de CUDA/nvvm se montan por bind solo en ejecucion, no en docker build; un usuario (mdegans) evita fijar nvidia como runtime por defecto e instala CUDA en la imagen durante el build y lo purga en la misma capa",
+   "como": "no indicado (descripcion en prosa; Dockerfile en un repo ajeno)",
+   "fuente_post": 3,
+   "repositorio": "repo de OpenCV del usuario mdegans (rama docker), URL no copiada aqui",
+   "licencia": "no indicada",
+   "probado_en": "Jetson Nano, JetPack 4.3/4.4, l4t-base r32.3.1",
+   "riesgo": "Runtime nvidia por defecto afecta a todas las imagenes y rompe repetibilidad: una imagen puede depender de archivos montados y no arrancar en otra maquina sin --runtime nvidia (post 20)",
+   "verificable_aqui": "docker info --format '{{.DefaultRuntime}} {{json .Runtimes}}'"
+  },
+  {
+   "que": "Sin --runtime nvidia, importar cv2 compilado con CUDA da segfault",
+   "como": "docker run --runtime nvidia ...",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Jetson Nano JetPack 4.3",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: usuario en grupo docker equivale a root sin contrasena ni registro (--privileged permite remontar /); preferir --device puntual a --privileged",
+   "como": "no indicado (consejo)",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "escalada de privilegios",
+   "verificable_aqui": "getent group docker"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Tema de Jetson Nano de 2020 (usuarios, sin staff de NVIDIA) sobre compilar OpenCV en docker build; los consejos de runtime por defecto y de seguridad son genericos y sin comando concreto. No aporta monitoreo ni prevencion de colapsos de memoria o calor en GB10."
+}

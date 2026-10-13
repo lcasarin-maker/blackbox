@@ -1,0 +1,58 @@
+{
+ "id": 377334,
+ "titulo": "FlashInfer sparse-MLA mbarrier livelock on GB10 - root-cause evidence and validated workaround",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround: usar los kernels Triton de sparse-MLA en vez de los de FlashInfer para evitar el livelock en prefill en frio",
+   "como": "vLLM --attention-backend FLASHMLA_SPARSE mas el parche sm12x Triton drop-in (sparse_mla_kernels.py + sm12x_sparse_mla_attn.py)",
+   "fuente_post": 1,
+   "repositorio": "GitHub marksunner/glm52-dgx-spark-deadlock-evidence",
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark GB10, driver 580.159.03, kernel 6.17.0-1026-nvidia, vLLM 0.23.1rc1.dev893, GLM-5.2 TP=4 (declarado por el usuario)",
+   "riesgo": "solo aplica a modelos sparse-MLA tipo DeepSeek-V4; requiere parches no oficiales",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Firma de un cuelgue de kernel (no de computo): utilizacion GPU 96%, potencia ~18 W, utilizacion de memoria 0%, reloj P0 2535 MHz",
+   "como": "nvidia-smi durante el cuelgue (campos utilization.gpu, power.draw, utilization.memory)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "mismo cluster",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=utilization.gpu,utilization.memory,power.draw,clocks.sm --format=csv"
+  },
+  {
+   "que": "Descartar la red RoCE: contadores de hardware en cero durante el cuelgue",
+   "como": "/sys/class/infiniband/*/ports/1/hw_counters",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "mismo cluster",
+   "riesgo": null,
+   "verificable_aqui": "ls /sys/class/infiniband/*/ports/1/hw_counters"
+  },
+  {
+   "que": "Adjuntar cuda-gdb a un kernel colgado dentro del contenedor",
+   "como": "docker exec -u root --privileged ... /usr/local/cuda/bin/cuda-gdb -p <pid> ; info cuda kernels",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "funciono en el cuelgue del kernel de prefill; el attach se cuelga en el del kernel de decode FP8",
+   "riesgo": "requiere --privileged y root",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Reporta un bug sin arreglar en los kernels sparse_mla_sm120 de FlashInfer para sm_121 y una fuga 0x51 de memdesc UMA en GB10 sin corregir; sin respuesta de NVIDIA.",
+ "utilidad_atom": "baja",
+ "razon": "Post 1 (usuario) es un diagnostico detallado cuyo workaround solo afecta a vLLM con modelos sparse-MLA (GLM-5.2/DeepSeek-V4), que esta maquina no declara usar. Post 2 solo agradece."
+}

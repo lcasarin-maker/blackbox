@@ -1,0 +1,27 @@
+{
+ "id": 381010,
+ "titulo": "DGX Spark stuck at \"Almost Done!\" during initial setup",
+ "leido": true,
+ "posts_leidos": 12,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround: en la configuracion inicial, un nombre de usuario que coincide con un grupo existente deja el asistente colgado en 'Almost done'; usar otro nombre de usuario. Staff NVIDIA (aniculescu) lo confirma y promete mas guardas en futuras actualizaciones",
+   "como": "elegir un nombre de usuario distinto de cualquier grupo existente (usuario probo con uno de 10 letras minusculas)",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 DGX Spark, imagen 1.145.33 (declarado por el usuario)",
+   "riesgo": "Sin la guarda, el asistente no avanza y reiniciar vuelve al inicio.",
+   "verificable_aqui": "getent group <nombre_usuario>"
+  }
+ ],
+ "omision_nvidia": "El asistente de configuracion inicial no valida colision de nombre de usuario con grupos; NVIDIA dice que agregara guardas.",
+ "utilidad_atom": "baja",
+ "razon": "Staff NVIDIA identifico que el usuario chocaba con un grupo existente y da el workaround. Solo afecta la configuracion inicial, no medicion ni prevencion de colapsos."
+}

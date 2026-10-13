@@ -1,0 +1,68 @@
+{
+ "id": 373421,
+ "titulo": "Minimax3 on 2 nodes decode ~10.7 tok/s, 4bits",
+ "leido": true,
+ "posts_leidos": 27,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta llama.cpp con division por capas via RPC en dos nodos GB10, con plantilla de chat hibrida para tool-calling",
+   "como": "CUDA_ARCH=121 bash scripts/build-llama-cpp.sh ; luego WORKER_HOST=... MODEL=... TEMPLATE=~/MiniMax-M3-hybrid.jinja bash scripts/run-minimax-m3.sh",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/karolpalys/minimax3-on-2-nodes",
+   "licencia": "MIT",
+   "probado_en": "2x DGX Spark GB10, sm_121",
+   "riesgo": "carga inicial 13-25 min; ~107-111 de 121 GiB usados por nodo, poco margen",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion del efecto de --ubatch-size en prefill: 512 -> ~469 tok/s, 1024 -> ~551, 2048 -> ~592",
+   "como": "--ubatch-size 2048 --batch-size 2048",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10, llama.cpp",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Formula de memoria de KV q8_0: ~45 KB/token (64k ~2.8 GiB, 128k ~5.6 GiB por nodo); a 256k exige q4_0 y cache-ram 2 GiB, q8 es riesgo de OOM",
+   "como": "--cache-type-k q8_0 --cache-type-v q8_0",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10",
+   "riesgo": "OOM al subir contexto",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: un matador de OOM (earlyoom) puede matar llama-server durante la carga",
+   "como": "detener earlyoom antes de lanzar",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10",
+   "riesgo": "sin earlyoom no hay proteccion ante OOM",
+   "verificable_aqui": "systemctl is-active earlyoom"
+  },
+  {
+   "que": "Aviso de que tras un reinicio el rendimiento RDMA puede colapsar y se recupera con un segundo reinicio limpio (quirk mlx5 WC + nvidia-peermem)",
+   "como": "no indicado (segundo reinicio de ambos nodos)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10",
+   "riesgo": "throughput cae sin aviso",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Receta de dos nodos con numeros medidos por el autor (MIT) y advertencias de memoria; sirve para quien opere dos Sparks, la maquina de este proyecto es una. Sin respuesta de NVIDIA; el resto del hilo compara calidad de modelos."
+}

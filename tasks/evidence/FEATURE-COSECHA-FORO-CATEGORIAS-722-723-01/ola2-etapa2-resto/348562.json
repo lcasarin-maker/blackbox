@@ -1,0 +1,120 @@
+{
+ "id": 348562,
+ "titulo": "Suggestions for reducing idle power consumption?",
+ "leido": true,
+ "posts_leidos": 19,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "monitorear",
+  "prevenir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Sesgo energia/rendimiento de CPU via ACPI CPPC (0-255, 0 = rendimiento)",
+   "como": "echo 1 | sudo tee /sys/devices/system/cpu/cpu*/acpi_cppc/energy_perf",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario)",
+   "riesgo": "El propio autor del tema (post 3) no vio cambio de potencia; valor alto reduce rendimiento",
+   "verificable_aqui": "cat /sys/devices/system/cpu/cpu0/acpi_cppc/energy_perf"
+  },
+  {
+   "que": "Persistir el sesgo con tmpfiles",
+   "como": "printf \"w /sys/devices/system/cpu/cpu*/acpi_cppc/energy_perf - - - - 1\\n\" > /etc/tmpfiles.d/efficiency.conf",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario)",
+   "riesgo": "Idem; no probado como efectivo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de consumo en toma: enchufe inteligente HS300 a Prometheus cada 15 s; tambien enchufes Zigbee/Tapo y medidor USB",
+   "como": "lectura por enchufe a Prometheus cada 15 s (sin comando literal)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark (usuarios)",
+   "riesgo": "Precision aproximada, el autor lo dice; AC-DC ~10% de perdida (post 19)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Herramientas de auditoria de ahorro de energia",
+   "como": "sudo powertop --auto-tune",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Efecto casi nulo segun brian3 (post 6); cambia Runtime PM",
+   "verificable_aqui": "powertop --time=5 (solo lectura requiere root)"
+  },
+  {
+   "que": "Aislar nucleos de rendimiento y fijar procesos del sistema a nucleos eficientes",
+   "como": "GRUB_CMDLINE_LINUX_DEFAULT += nohz_full=5-9,15-19 rcu_nocbs=5-9,15-19 ; AllowedCPUs=0-4,10-14 en user.slice.d/99-efficiency.conf y system.slice.d/99-efficiency.conf",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario eggman)",
+   "riesgo": "Edita GRUB y slices de systemd (root); no baja vatios en reposo segun el autor",
+   "verificable_aqui": "cat /proc/cmdline; systemctl show -p AllowedCPUs user.slice"
+  },
+  {
+   "que": "Cambiar gobernador de CPU a powersave (el kernel Spark solo trae powersave y performance; schedutil exige kernel 6.17 propio)",
+   "como": "probar powersave primero",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark con kernel 6.17 propio (usuario eugr)",
+   "riesgo": "Compilar kernel propio rompe Secure Boot/soporte; uso reportado: nucleos bajan a unos 300 MHz",
+   "verificable_aqui": "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+  },
+  {
+   "que": "Actualizar firmware y OS para bajar consumo en reposo (de ~40 W a ~24-25 W) y liberar 2 GB de RAM; en Ascent GX10 el firmware esta en lvfs-testing",
+   "como": "sudo fwupdmgr enable-remote lvfs-testing ; sudo fwupdmgr update",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Ascent GX10 / Spark (usuarios stefan132, brian3)",
+   "riesgo": "Firmware pre-release de LVFS (aviso en el post); el ahorro exige retirar el cable directo de la ConnectX-7 (post 17)",
+   "verificable_aqui": "fwupdmgr get-devices; fwupdmgr get-updates"
+  },
+  {
+   "que": "Cable de ConnectX-7 conectado sube el consumo en reposo (~4 W en 22 oct; ~20 W segun eggman tras firmware, post 13)",
+   "como": "desconectar el cable directo de la ConnectX-7",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuarios)",
+   "riesgo": "Perder la interconexion entre nodos",
+   "verificable_aqui": "ethtool <iface cx7> | grep 'Link detected'; ip -br link"
+  },
+  {
+   "que": "Desactivar WiFi y Bluetooth",
+   "como": "rfkill ; nmcli radio all off",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Efecto sin cambio notable segun el autor",
+   "verificable_aqui": "rfkill list"
+  },
+  {
+   "que": "Quitar ray de vLLM baja el consumo en reposo (~140 W a ~110 W en dos nodos)",
+   "como": "no usar ray en el despliegue vLLM (sin comando literal)",
+   "fuente_post": 21,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 GX10 con vLLM (usuario)",
+   "riesgo": "Solo anecdotico de un usuario con dos nodos",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Un usuario (post 20) afirma que con un proceso de GPU activo el estado queda en P0 y no baja a P8; nadie de NVIDIA responde en el tema. El tema enlaza notas de version de DGX Spark para el ahorro (post 13).",
+ "utilidad_atom": "media",
+ "razon": "Hilo de usuarios sobre consumo en reposo: la mejora medida (de ~40 W a ~24-25 W) viene de actualizacion de firmware con lvfs-testing y de retirar el cable CX7; los ajustes de sysfs y powertop sin efecto. Sin respuesta de NVIDIA en el hilo."
+}

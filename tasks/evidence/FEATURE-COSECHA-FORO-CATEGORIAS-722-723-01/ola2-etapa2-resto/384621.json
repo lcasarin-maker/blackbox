@@ -1,0 +1,47 @@
+{
+ "id": 384621,
+ "titulo": "Reclaim 2GiB of ram on headless sparks",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reclamar 2,046 MiB de memoria reservada para pantalla a RAM normal de Linux mediante driver NVIDIA parcheado mas ayudantes de kernel; activacion manual, el reinicio restaura el diseno de fabrica",
+   "como": "no indicado en el post; pasos en el repositorio (instrucciones de firma y guia)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/jontaylor/gb10-ram-reclaim",
+   "licencia": "no indicada",
+   "probado_en": "dos ASUS GX10, combinacion exacta de firmware/kernel/driver del repositorio; sin pruebas largas (2 dias)",
+   "riesgo": "Experimental, limitado a esa combinacion exacta; estabilidad a largo plazo sin probar; requiere driver parcheado y firma local (esta maquina tiene Secure Boot activo)",
+   "verificable_aqui": "free -m | head -2; grep MemTotal /proc/meminfo"
+  },
+  {
+   "que": "Alternativa: mover lm_head y embed_tokens (no el KV cache) a la memoria extra, porque mover el KV bajo el rendimiento en sus benchmarks; el autor reporta pasar de 128k a 256k de capacidad de KV sin regresion",
+   "como": "no indicado (ver repositorio)",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/christopherowen/spark3-vllm-ds41f",
+   "licencia": "no indicada",
+   "probado_en": "usuario, cluster de Sparks",
+   "riesgo": "parche de vLLM de un usuario, sin verificacion independiente",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion: los 2 GiB extra son mas lentos, alrededor de 70% de la velocidad del pool principal segun un usuario",
+   "como": "no indicado",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, hardware no detallado",
+   "riesgo": "solo afirmacion de usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Usuarios (sin respuesta de NVIDIA) comparten una tecnica experimental que requiere driver parcheado; el post 4 advierte que lleva dos dias de prueba y es territorio sin soporte. Util como dato de memoria recuperable en un equipo GB10, pero el riesgo con Secure Boot y driver propietario es alto y no hay licencia indicada en el texto."
+}

@@ -1,0 +1,11 @@
+{"id": 382459, "titulo": "GLM 5.3 Flash on TP4 DGX Sparks (switchless)", "leido": true, "posts_leidos": 21, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["prevenir"],
+ "mecanismos": [
+  {"que": "Receta de usuario para vLLM TP4 sobre 4 sparks con anillo ConnectX-7 directo (QSFP DAC, sin switch) y NCCL parcheado; el texto da solo el titulo del repositorio, sin URL ni licencia", "como": "no indicado", "fuente_post": 1, "repositorio": null, "licencia": "no indicada", "probado_en": "4x DGX Spark / ASUS GX10 (segun el autor)", "riesgo": "El autor admite memoria justa en TP4.", "verificable_aqui": null},
+  {"que": "Advertencia de riesgo con condicion: la receta soporta hasta 5 sesiones concurrentes a 256k de contexto; con 6 el cluster muere (agotamiento de memoria)", "como": "no indicado (limite operativo: 5 sesiones concurrentes a 256k)", "fuente_post": 7, "repositorio": null, "licencia": null, "probado_en": "cluster TP4 del autor", "riesgo": "Caida del cluster por OOM al pasar de 5 sesiones; el autor bajo el KV de 16 a 14 GB para dejar memoria al sistema (post 20).", "verificable_aqui": null},
+  {"que": "Un usuario con 2 Gigabyte ATOM y 2 Asus GX10 reporta correr con reloj limitado a 2200 MHz (tope de reloj, ya catalogado)", "como": "no indicado", "fuente_post": 6, "repositorio": null, "licencia": null, "probado_en": "2x Gigabyte ATOM AI + 2x Asus GX10", "riesgo": null, "verificable_aqui": null}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios sin respuesta de NVIDIA y sin comandos concretos: anuncio de una receta de 4 nodos, elogios y comparativas de calidad de modelos. Lo unico reutilizable es el limite de concurrencia por memoria (5 sesiones a 256k) y la mencion del tope de reloj, ambos para un cluster de 4 nodos."}

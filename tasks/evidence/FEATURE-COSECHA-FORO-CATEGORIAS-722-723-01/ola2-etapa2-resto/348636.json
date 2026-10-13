@@ -1,0 +1,10 @@
+{"id": 348636, "titulo": "TRT LLM for Inference with NVFP4 safetensors slower than LM studio GGUF on the Spark", "leido": true, "posts_leidos": 10, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["medir"],
+ "mecanismos": [
+  {"que": "Explicacion de un usuario (eugr): la inferencia esta limitada por ancho de banda de memoria, el tipo de cuantizacion acelera el prefill y no la generacion; las mejores cuantizaciones segun el, en marzo 2026: FP8, AWQ e INT4-Autoround", "como": "no indicado (sin comando; criterio de eleccion de cuantizacion)", "fuente_post": 11, "repositorio": null, "licencia": null, "probado_en": null, "riesgo": "Opinion de usuario sin cifras", "verificable_aqui": null},
+  {"que": "Un usuario reporta 12 tk/s con decodificacion especulativa en TensorRT para Llama 70B", "como": "no indicado", "fuente_post": 7, "repositorio": null, "licencia": null, "probado_en": "DGX Spark segun el usuario", "riesgo": "Sin configuracion ni comando", "verificable_aqui": null}
+ ],
+ "omision_nvidia": "Personal de NVIDIA (aniculescu) solo pidio scripts y comandos (post 3); no hay respuesta de fondo.",
+ "utilidad_atom": "baja",
+ "razon": "Un usuario mide 2.5 tk/s en TRT-LLM contra 4.6-4.9 en LM Studio con 90 GB frente a 43 GB de memoria; NVIDIA no respondio con solucion. Los comentarios de eugr son opiniones sin comando."}

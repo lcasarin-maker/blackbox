@@ -1,0 +1,26 @@
+{
+ "id": 164914,
+ "titulo": "Tensorflow docker can't detect gpu",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Un usuario resolvio 'No supported GPU(s) detected' y 'Failed to initialize NVML' dando --privileged al contenedor; atribuye el fallo a un permiso sin aviso",
+   "como": "--privileged (docker run)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "RTX 3070, driver 455.45.01, Fedora 33",
+   "riesgo": "--privileged da acceso total al host; causa raiz no identificada (probable SELinux en Fedora, no lo dice el post)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Mensaje unico de un usuario que se responde a si mismo con un workaround inseguro y sin causa raiz, en hardware x86 distinto. Sin respuesta de NVIDIA."
+}

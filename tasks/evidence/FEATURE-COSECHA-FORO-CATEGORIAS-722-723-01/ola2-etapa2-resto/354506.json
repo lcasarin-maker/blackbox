@@ -1,0 +1,48 @@
+{
+ "id": 354506,
+ "titulo": "(DGX Spark, ARM64, CUDA 13) pathological slowdown for many-small H2D copies from pageable CPU memory (~50x vs pinned)",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reproduccion minima de la caida de rendimiento pageable vs pinned (2500 copias de 1024x1024 fp16)",
+   "como": "t.to(device) en tensores pageable frente a t.pin_memory() y t.to(device, non_blocking=True), cronometrando con torch.cuda.synchronize (script completo en el post)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, driver 580.95.05, CUDA 13.0, PyTorch propio 2.10.0a0 sm_121 (declarado por el autor); medicion del autor: pageable 10.284 s frente a pinned 0.198 s; 1 GiB: 4.139 GB/s pageable frente a 20.681 GB/s pinned",
+   "riesgo": null,
+   "verificable_aqui": "python3 -c 'import torch;print(torch.cuda.get_arch_list())'"
+  },
+  {
+   "que": "Fijar la memoria al reservar (no despues) para evitar el cliff",
+   "como": "torch.empty((1024,1024), dtype=torch.float16, pin_memory=True)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "alan.dang, contenedor PyTorch oficial de NGC (confirma el problema y la mejora)",
+   "riesgo": "Memoria pinned no se puede paginar; en memoria unificada agota RAM del sistema si se abusa",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Evitar disable_mmap con pin_memory=False al cargar safetensors (38.451 s frente a 2.6 s con pin_memory auto)",
+   "como": "from_pretrained(..., pin_memory=auto) ; no usar disable_mmap=True con pin_memory=False",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "medicion del autor con drop_caches entre corridas",
+   "riesgo": "Mide con drop_caches",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El autor pide a NVIDIA confirmar si el comportamiento es esperado en GB10; no hay respuesta de personal de NVIDIA en el hilo. Un usuario (alan.dang) reproduce el problema en el contenedor oficial.",
+ "utilidad_atom": "media",
+ "razon": "Hay medicion cuantitativa reproducible y una mitigacion concreta (fijar memoria al reservar) confirmada por un segundo usuario en el contenedor NGC. NVIDIA no responde, y la explicacion de la causa (coordinacion CPU-GPU por pagina) es una analogia de un usuario, no verificada."
+}

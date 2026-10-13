@@ -1,0 +1,36 @@
+{
+ "id": 372748,
+ "titulo": "Optimizing DGX for Openclaw Brain",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Variables y banderas de vLLM para Nemotron-3-Super NVFP4 en una Spark",
+   "como": "VLLM_NVFP4_GEMM_BACKEND=marlin VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 VLLM_FLASHINFER_ALLREDUCE_BACKEND=trtllm vllm serve $MODEL_CKPT ... --attention-backend TRITON_ATTN --moe-backend marlin --mamba_ssm_cache_dtype float32 --gpu-memory-utilization 0.85",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "una DGX Spark, ~16 tok/s segun el autor",
+   "riesgo": "El propio autor reporta caidas con contextos moderadamente largos (post 7).",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround de caidas con contexto largo: quitar kv-cache fp8 y forzar modo eager",
+   "como": "--enforce-eager --max-model-len 131072 (sin --kv-cache-dtype fp8)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "una DGX Spark segun el autor",
+   "riesgo": "El autor aun lo prueba; --enforce-eager baja rendimiento.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El autor comparte su configuracion de vLLM (posts 3, 4) y un cambio para evitar caidas con KV fp8 (post 7), todavia en prueba. Otro usuario menciona un watchdog propio para bucles de Hermes sin repositorio ni comando (post 2); no hay respuesta de NVIDIA."
+}

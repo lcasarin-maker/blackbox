@@ -1,0 +1,48 @@
+{
+ "id": 355624,
+ "titulo": "Spark: cudaErrorNotPermitted in comfyui - but only after Docker sits idle for hours",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Causa: cualquier systemctl daemon-reload hace desaparecer las GPU de los contenedores Docker (que usan cgroup driver systemd); documentado en la guia de troubleshooting del NVIDIA Container Toolkit. Workaround: usar cgroupfs como cgroup driver de Docker. El usuario DannyTup dice que la pagina de NVIDIA sugiere el problema resuelto pero a el no se lo resolvio y el workaround si",
+   "como": "usar cgroupfs como cgroup driver para los contenedores (comando exacto no indicado); disparador: systemctl daemon-reload",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark / GB10 (declarado por el usuario)",
+   "riesgo": "cambiar el cgroup driver de Docker afecta la gestion de cgroups de todos los contenedores; requiere reiniciar Docker",
+   "verificable_aqui": "docker info --format '{{.CgroupDriver}}'"
+  },
+  {
+   "que": "Sintoma a vigilar: nvidia-smi dentro del contenedor falla con 'Failed to initialize NVML: Unknown Error' o CUDA devuelve cudaErrorNotPermitted tras horas/dias; reiniciar el contenedor lo restablece",
+   "como": "docker compose down && docker compose up -d",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "driver 580.95.05, CUDA 13.0, kernel 6.14.0-1013-nvidia, imagen nvcr.io/nvidia/pytorch:25.11-py3 (declarado)",
+   "riesgo": "reinicio de servicio",
+   "verificable_aqui": "docker exec <contenedor> nvidia-smi -L"
+  },
+  {
+   "que": "Consulta de monitoreo de GPU usada por el dashboard del usuario",
+   "como": "nvidia-smi --query-gpu=utilization.gpu,temperature.gpu,power.draw --format=csv,noheader,nounits -l=5",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/DanTup/dgx_dashboard",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (declarado)",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=utilization.gpu,temperature.gpu,power.draw --format=csv,noheader,nounits"
+  }
+ ],
+ "omision_nvidia": "La documentacion de NVIDIA Container Toolkit presenta el problema de daemon-reload/cgroup como resuelto, pero segun un usuario no lo esta en el Spark (post 2); sin respuesta de staff NVIDIA en el tema.",
+ "utilidad_atom": "media",
+ "razon": "El mecanismo (daemon-reload quita la GPU a contenedores con cgroup systemd) coincide con la configuracion Docker de esta maquina, pero el post no da el comando de cambio a cgroupfs y no hay confirmacion de NVIDIA. La verificacion local es de solo lectura con docker info."
+}

@@ -1,0 +1,57 @@
+{
+ "id": 352153,
+ "titulo": "Model Orchestration and Deployment",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Variable de entorno que un usuario llama critica contra fragmentacion de memoria en GB10 (vLLM y trtllm-serve)",
+   "como": "export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 en contenedor nvcr.io/nvidia/tensorrt-llm/release:spark-single-gpu-dev, segun el usuario WilliamD",
+   "riesgo": "Afirmacion de usuario sin medicion",
+   "verificable_aqui": null
+  },
+  {
+   "que": "vLLM con tope de memoria GPU para dejar margen al sistema (120B en 4 bits, ~70GB segun el usuario)",
+   "como": "--gpu-memory-utilization 0.65 --max-model-len 8192 --dtype auto",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "gpt-oss-120b, GB10, segun el usuario",
+   "riesgo": "Valor de un usuario, sin medicion",
+   "verificable_aqui": null
+  },
+  {
+   "que": "TRT-LLM con fraccion de KV cache reducida a 0.8 para evitar OOM",
+   "como": "free_gpu_memory_fraction: 0.8 (en extra_llm_api_options YAML)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "gpt-oss-120b, GB10, segun el usuario",
+   "riesgo": "El script reescribe config.json del modelo (architectures a LlamaForCausalLM), cambio invasivo de un usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Carga rapida de modelo con llama.cpp tras el update 6.14 y ajuste de readahead de NVMe, solo con --no-mmap",
+   "como": "--no-mmap (el ajuste de readahead no se indica)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark segun eugr; 15 s vs 8-9 min con vLLM",
+   "riesgo": "Valor del readahead no indicado",
+   "verificable_aqui": "cat /sys/block/nvme0n1/queue/read_ahead_kb"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Usuarios comparten scripts de lanzamiento con topes de memoria anti-OOM (post 4) y una carga rapida con --no-mmap (post 3), todos sin medicion ni respuesta de staff NVIDIA. Los valores de memoria son relevantes para los colapsos pero no medidos."
+}

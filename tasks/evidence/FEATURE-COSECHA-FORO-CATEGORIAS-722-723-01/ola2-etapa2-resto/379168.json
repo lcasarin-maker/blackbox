@@ -1,0 +1,48 @@
+{
+ "id": 379168,
+ "titulo": "Vllm:26.04-py3 compatibility mode UNAVAILABLE on driver 580.173.02; no DGX Dashboard path to >=595.58",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Bypass del chequeo de version de driver al arrancar el contenedor NGC (imagenes comunitarias de eugr lo traen activo); Neill (NVIDIA) lo cita como workaround no soportado",
+   "como": "NVIDIA_DISABLE_REQUIRE: 1",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuarios validan Qwen3.6-27B NVFP4 en DGX Spark segun Neill",
+   "riesgo": "Sin soporte oficial; si el contenedor emite llamadas CUDA 13.2 que exigen kernel >=595.58 pueden aparecer fallos en tiempo de ejecucion en vez de error limpio de arranque",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+  },
+  {
+   "que": "Diagnostico del tope de forward-compat: en driver 580.173.02 el contenedor 26.02 (vLLM 0.15.1) arranca en modo Forward Compatibility CUDA 13.1; las etiquetas 26.03+ (CUDA 13.2) exigen driver >=595.58",
+   "como": "docker run --gpus all <imagen> ; banner de arranque 'CUDA Forward Compatibility mode ENABLED' o 'compatibility mode is UNAVAILABLE'",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, driver 580.173.02",
+   "riesgo": "Tras un update del Dashboard que sube el driver 580.x una imagen que antes arrancaba en forward-compat puede dejar de hacerlo",
+   "verificable_aqui": "nvidia-smi | head -4; cat /proc/driver/nvidia/version"
+  },
+  {
+   "que": "Regenerar la especificacion CDI y reiniciar docker (sugerencia de usuario; el autor confirma que no cambio nada al lanzar con --gpus all)",
+   "como": "sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml ; sudo systemctl restart docker",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "no resolvio en 580.173.02",
+   "riesgo": "Reinicia docker (corta contenedores en marcha)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA (Neill, staff, post 9) admite que no hay etiqueta NGC de vLLM que haga forward-compat en driver 580 y soporte qwen3_5; el driver >=595.58 via DGX Dashboard esta en seguimiento sin fecha. Neill cito por error una etiqueta 25.05.1-py3 inexistente y lo corrigio.",
+ "utilidad_atom": "media",
+ "razon": "Hay respuesta de NVIDIA (Neill, post 6 y 9) que confirma la brecha driver 580 frente a contenedores CUDA 13.2 y propone NVIDIA_DISABLE_REQUIRE como workaround no soportado; el host usa vLLM en contenedor con driver 580.178.04, asi que aplica el riesgo de la brecha. No aporta monitoreo de memoria o calor."
+}

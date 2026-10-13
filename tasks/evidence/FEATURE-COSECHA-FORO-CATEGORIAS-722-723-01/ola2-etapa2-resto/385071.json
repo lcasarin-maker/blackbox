@@ -1,0 +1,37 @@
+{
+ "id": 385071,
+ "titulo": "Stable Qwen3.8-27B NVFP4 + DFlash2 on a Single DGX Spark",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Configuracion SGLang estable de un usuario en un Spark (mem-fraction-static, chunked prefill, KV fp8) con mas de dos semanas de produccion sin reinicios ni OOM",
+   "como": "mem-fraction-static: 0.65; Chunked prefill: 2048; Max prefill tokens: 16,384; Max running requests: 8; KV cache: fp8_e4m3; FlashInfer autotune: ON (OFF bajo decode de 107 a 67 tok/s a 2K)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10, kernel 6.17.0-1032-nvidia, driver 580.173.02, CUDA 13.0 (declarado)",
+   "riesgo": "KV fp8 encarece el prefill largo en torno a 19% (131K: 87 s a 103 s). Parametros especificos de SGLang, no de vLLM.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Chequeo de salud extremo a extremo que verifica que el motor genera, no solo que el proceso vive",
+   "como": "/health_generate",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "SGLang en Spark segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Reporte de usuario sin respuesta de NVIDIA; da cifras medidas y fija kernel 1032 con driver 580.173.02. Los parametros son de SGLang y solo el criterio de salud por generacion y la dejar margen (unos 40 GB libres) transfieren a vLLM."
+}

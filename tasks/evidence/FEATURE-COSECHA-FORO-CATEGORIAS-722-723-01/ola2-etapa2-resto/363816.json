@@ -1,0 +1,27 @@
+{
+ "id": 363816,
+ "titulo": "Abnormal CPU usage with long-running VLLM docker",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Evitar el bucle ocupado (100% CPU en procesos VLLM::EngineCore en reposo) usando el backend nativo Torch Distributed en lugar de Ray en el cluster comunitario",
+   "como": "--no-ray (opcion de launch-cluster.sh)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "vLLM comunitario 0.17.1rc1 en dos Sparks (segun el usuario que reporta); la opcion es experimental segun su autor",
+   "riesgo": "Experimental segun el autor",
+   "verificable_aqui": "ps -eo pid,pcpu,comm --sort=-pcpu | head"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El bucle ocupado es una decision de vLLM para reducir latencia (post 4); la salida es una opcion de un script comunitario para cluster multi-nodo. Sin respuesta de NVIDIA."
+}

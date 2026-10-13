@@ -1,0 +1,57 @@
+{
+ "id": 370304,
+ "titulo": "DGX Spark Performance Drop: GPU trapped in 15W / 650MHz loop with 50C T.Limit",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Recuperar el estado de baja potencia pegado: desenchufar la unidad Y la fuente de la pared (respuesta de NVIDIA, aniculescu)",
+   "como": "Unplugging the unit AND the power supply from the wall (el post no da tiempo; usuarios sugieren 1-2 min en post 4 y 10 min en post 3)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Cuando la causa es la fuente o el cable, reaparece",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Interpretar contadores de nvidia-smi: SW Power Capping esta en microsegundos acumulados desde el arranque; 1369386233 us son ~1369 s; lo relevante es si 'SW Power Cap' esta Activo ahora",
+   "como": "nvidia-smi -q (secciones Clocks Event Reasons y Clocks Event Reasons Counters)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario giles8, sistema Spark no especificado",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi -q -d PERFORMANCE"
+  },
+  {
+   "que": "Herramienta de diagnostico local para Spark (limites de potencia, presion de memoria unificada, riesgo termico, Docker)",
+   "como": "no indicado (solo se enlaza el repositorio)",
+   "fuente_post": 4,
+   "repositorio": "GitHub joeynyc/spark-doctor",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Licencia no indicada, no reutilizable",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Hipotesis de usuario: el fallo es de fuente/cable; una caida de voltaje hace que el controlador pase a perfil USB-C PD de 45 o 65 W",
+   "como": "no indicado (hipotesis; sugiere intercambiar fuentes o anadir ventilador)",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Sin verificacion",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu, post 9) dice que es parecido a otros casos en investigacion; no da causa ni correccion de firmware.",
+ "utilidad_atom": "media",
+ "razon": "Staff de NVIDIA confirma el workaround de desconectar unidad y fuente y que hay investigacion abierta; un usuario explica como leer los contadores SW Power Capping. Util para distinguir throttling real de lectura normal y vincularlo a la desconexion AC, que ya esta catalogada."
+}

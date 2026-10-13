@@ -1,0 +1,37 @@
+{
+ "id": 352253,
+ "titulo": "Only getting half the advertised performance and capping at 100W?",
+ "leido": true,
+ "posts_leidos": 15,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Declaracion de NVIDIA (staff NVES) sobre presupuesto de potencia: GPU hasta 120 W, resto del sistema (CPU, CX7, perifericos) 100 W, fuente de 240 W de pico; la documentacion se actualizaria",
+   "como": "no indicado (declaracion, sin comando)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10",
+   "riesgo": "Los usuarios solo ven 65 a 103 W en nvidia-smi; cargas de tensor cores rondan 65 W a 80 C (usuario eggman, post 13)",
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,temperature.gpu,utilization.gpu --format=csv"
+  },
+  {
+   "que": "Metodo de medicion usado por usuarios: nvidia-smi en bucle durante carga; el usuario eugr advierte que solo muestra potencia de GPU y que la temperatura puede ser de todo el SoC",
+   "como": "nvidia-smi (en bucle, sin comando exacto)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (usuarios)",
+   "riesgo": "No mide el consumo total; para ello hace falta medir en el enchufe (pregunta de eugr, post 4)",
+   "verificable_aqui": "nvidia-smi -q -d POWER,TEMPERATURE"
+  }
+ ],
+ "omision_nvidia": "La documentacion no desglosaba el presupuesto de potencia GPU 120 W / resto 100 W / fuente 240 W; NVIDIA dijo que lo agregaria.",
+ "utilidad_atom": "media",
+ "razon": "Staff de NVIDIA responde que es un malentendido y da el desglose de potencia; los usuarios reportan 65 a 103 W con GPU al 96 % y 81 a 85 C. Un usuario (post 15) vio 90 a 103 W en ComfyUI tras la actualizacion; no hay comando nuevo."
+}

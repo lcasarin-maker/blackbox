@@ -1,0 +1,58 @@
+{
+ "id": 356426,
+ "titulo": "DGX Spark GB10 GPU is stuck at ~5W power and 0% utilization even after all NVIDIA firmware updates",
+ "leido": true,
+ "posts_leidos": 16,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "monitorear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Linea base de nvidia-smi en Spark: idle ~4W con 'Power Limit' N/A; bajo gpu-burn 28W/96% util; el N/A es normal en GB10",
+   "como": "nvidia-smi (salida idle 4W / N/A, 34C P8; bajo gpu-burn 28W / N/A, 48C P0, 96%)",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark con driver 580.95.05, usuario elsaco (no staff)",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi"
+  },
+  {
+   "que": "Mensaje de kernel 'insufficient power on the PCIe slot' proviene de mlx5_core y puede ignorarse segun un usuario",
+   "como": "dmesg | grep -i firmware (diagnostico pedido); aviso de mlx5_core 'insufficient power'",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario elsaco, no verificado por NVIDIA",
+   "riesgo": null,
+   "verificable_aqui": "dmesg | grep -i 'insufficient power'"
+  },
+  {
+   "que": "Secuencia de actualizacion y diagnostico sugerida por un usuario (raphael.amorim)",
+   "como": "sudo apt update; sudo apt dist-upgrade; sudo fwupdmgr refresh; sudo fwupdmgr upgrade; luego nvidia-smi; nvcc --version; fwupdmgr get-devices; fwupdmgr history",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Actualiza firmware; solo con ventana de reinicio",
+   "verificable_aqui": "fwupdmgr get-devices; fwupdmgr history"
+  },
+  {
+   "que": "NVES pide para casos de rendimiento recoger bundle con workload en paralelo",
+   "como": "fwupdmgr, nvidia-smi, dmesg, journalctl + nvidia bug report (nvidia-bug-report.sh)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "staff NVIDIA (NVES)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Resuelto por el autor (post 15): driver antiguo 550.54.15/CUDA 12.4 sustituido por 580.95.05/CUDA 13.0, no firmware; NVES (staff) solo pidio logs y aclaro que idle ~5W/0% es esperado. Aporta una linea base de nvidia-smi y el aviso mlx5 ignorable, sin mecanismo nuevo de medicion."
+}

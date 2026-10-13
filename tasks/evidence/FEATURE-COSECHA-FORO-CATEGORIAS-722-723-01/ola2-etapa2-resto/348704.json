@@ -1,0 +1,11 @@
+{"id": 348704, "titulo": "Blackwell GB10 GPU, device plugin v0.18.0, driver 580.95.05", "leido": true, "posts_leidos": 11, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["solucionar", "omision_nvidia"],
+ "mecanismos": [
+  {"que": "Resolucion reportada por el autor: actualizar GPU Operator de v24.9.0 a v25.10.0 y desplegarlo con el driver preinstalado de la Spark (sin driver en contenedor), usando nvidia.com/gpu:1 y runtime class nvidia", "como": "driver.enabled=false (valor de Helm); recurso nvidia.com/gpu:1", "fuente_post": 10, "repositorio": "https://github.com/NVIDIA/gpu-operator", "licencia": "no indicada", "probado_en": "K3s sobre DGX Spark segun el usuario", "riesgo": "Afirmacion de usuario sin salida de comandos; el mismo usuario habia entregado datos que el staff califico de inconsistentes (post 2)", "verificable_aqui": null},
+  {"que": "Aviso de personal de NVIDIA (aniculescu): GPU Operator soporta DGX Spark siguiendo la guia para driver y container toolkit preinstalados; si se instalo un driver manualmente puede hacer falta reflashear; no usar imagenes de CUDA antiguas", "como": "no indicado (remite a la guia del GPU Operator y a la guia System Recovery)", "fuente_post": 8, "repositorio": null, "licencia": null, "probado_en": null, "riesgo": "Instalar un driver manual en la Spark puede exigir reflasheo", "verificable_aqui": null},
+  {"que": "Sintoma: nvidia-smi muestra memoria como N/A en la GB10 y NVML devuelve Not Supported en consultas de memoria", "como": "nvidia-smi (columna Memory-Usage en N/A)", "fuente_post": 3, "repositorio": null, "licencia": null, "probado_en": "driver 580.95.05, kernel 6.11.0-1016-nvidia segun el usuario", "riesgo": "Limita monitoreo de memoria GPU por NVML", "verificable_aqui": "nvidia-smi --query-gpu=memory.used,memory.total --format=csv"}
+ ],
+ "omision_nvidia": "NVML devuelve Not Supported en memoria de la GB10 (consultas de memoria con N/A en nvidia-smi); el staff no lo trata como defecto ni da fecha.",
+ "utilidad_atom": "media",
+ "razon": "Hilo de Kubernetes: el staff indica usar el driver preinstalado y las imagenes CUDA 13; el autor declara resolverlo con GPU Operator 25.10.0 y driver.enabled=false, sin evidencia en comandos. El dato util para esta maquina es que NVML no reporta memoria en la GB10, que condiciona como se monitorea."}

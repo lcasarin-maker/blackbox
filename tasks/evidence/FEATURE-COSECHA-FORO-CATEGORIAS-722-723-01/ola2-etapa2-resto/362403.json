@@ -1,0 +1,37 @@
+{
+ "id": 362403,
+ "titulo": "NCCL single-cable test caps at 100Gbps",
+ "leido": true,
+ "posts_leidos": 17,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo de medicion de ancho de banda entre dos Sparks con nccl-tests all_gather_perf via mpirun, con variables de interfaz y HCA; eugr obtiene 24.2 GB/s busbw tras la actualizacion de febrero (Founders Edition) y 16 GB/s antes",
+   "como": "export NCCL_IB_HCA=rocep1s0f1,roceP2p1s0f1 ; export NCCL_SOCKET_IFNAME=enp1s0f1np1 ; export UCX_NET_DEVICES=enp1s0f1np1 ; mpirun -np 2 ... $HOME/nccl-tests/build/all_gather_perf -b 16G -e 16G -f 2",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "dos DGX Spark Founders Edition (usuario eugr), nccl-tests 2.17.9; serapis con Asus Ascent aun obtiene 15.6 GB/s (post 9)",
+   "riesgo": "IPs de nodos omitidas; la correccion llego solo a Founders Edition y OEM sigue su propio calendario segun eugr",
+   "verificable_aqui": "ibdev2netdev"
+  },
+  {
+   "que": "Declaracion de staff NVIDIA (aniculescu): un solo cable basta para 200 Gbps; usar el playbook con dos cables limita el ancho de banda a 100 Gbps. Segun usuario eugr hay regresion de firmware CX7 (24 a 16 GB/s) corregida en febrero 2026 solo para Founders Edition",
+   "como": "no indicado (un cable por par)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Doble cable reduce a 100 Gbps segun staff",
+   "verificable_aqui": "ibdev2netdev"
+  }
+ ],
+ "omision_nvidia": "NVIDIA no publica en este tema el parche para ediciones OEM; eugr dice que cada OEM libera su actualizacion en su calendario (afirmacion de usuario).",
+ "utilidad_atom": "baja",
+ "razon": "Staff NVIDIA aclara que un cable da 200 Gbps y un usuario aporta un script de prueba NCCL con 24 GB/s de referencia; todo es red QSFP entre dos Sparks. No contiene mecanismo para memoria o calor."
+}

@@ -1,0 +1,57 @@
+{
+ "id": 356374,
+ "titulo": "Moving from Mac to NVIDIA: bought powerful hardware, but drowning in configs",
+ "leido": true,
+ "posts_leidos": 38,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Banderas de llama.cpp-server recomendadas por usuario (eugr) para gpt-oss-120b en un Spark; el mismo declara que -fa 1, --jinja y --no-mmap son casi universales y -ub depende del modelo",
+   "como": "-fa 1 ; -ub 2048 ; --jinja ; --reasoning-format auto ; --no-mmap",
+   "fuente_post": 12,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": null,
+   "probado_en": "DGX Spark, segun el usuario; el autor de la pregunta pasa de 43 a 56.43 tok/s (post 14)",
+   "riesgo": "--no-mmap carga el modelo entero en memoria; en memoria unificada de 128 GB compite con otros procesos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Compilar llama.cpp solo para sm_121 (usuario RazielAU)",
+   "como": "cmake -B build -DGGML_CUDA=ON -DLLAMA_CURL=ON -DGGML_NATIVE=ON -DCMAKE_CUDA_ARCHITECTURES=121a-real",
+   "fuente_post": 18,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario)",
+   "riesgo": "binario valido solo para GB10",
+   "verificable_aqui": "nvidia-smi --query-gpu=compute_cap --format=csv"
+  },
+  {
+   "que": "Un usuario reporta que actualizar llama.cpp de un commit de 1 feb a otro de 20 feb elevo la generacion de GLM-4.7 Flash de 27 a 62.6 tok/s; modelos densos casi sin cambio",
+   "como": "cmake -B build -DGGML_CUDA=ON -DLLAMA_CURL=ON -DGGML_NATIVE=ON -DCMAKE_CUDA_ARCHITECTURES=121a-real",
+   "fuente_post": 34,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": null,
+   "probado_en": "GB10 aarch64, CUDA 13.0, driver 580.95.05 (usuario)",
+   "riesgo": "medicion de un solo usuario sin repeticiones declaradas",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Script de usuario que apaga llama-server por inactividad usando la fecha de modificacion del log (stat -c %Y /tmp/llama-server.log) contra un umbral, con un monitor en segundo plano que revisa cada 30 s",
+   "como": "stat -c %Y /tmp/llama-server.log ; MONITOR_INTERVAL=30",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (usuario)",
+   "riesgo": "pkill -f llama-server mata cualquier proceso con ese nombre",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios sobre eleccion de motor y cuantizacion; ninguna respuesta de personal de NVIDIA. Los mecanismos son banderas de llama.cpp y un monitor de inactividad ajenos a colapsos de memoria o cortes por calor; la licencia del script no se indica."
+}

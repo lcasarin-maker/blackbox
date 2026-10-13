@@ -1,0 +1,26 @@
+{
+ "id": 366006,
+ "titulo": "Tensorrt-llm 1.3.0rc5",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de fallo ptxas sm_121a en TRT-LLM multinodo: el ptxas empaquetado en el contenedor no soporta GB10; hay que apuntar Triton al ptxas local y reenviar la variable a los rangos MPI",
+   "como": "docker run ... -e TRITON_PTXAS_PATH=/usr/local/cuda/bin/ptxas ... ; mpirun -x TRITON_PTXAS_PATH ...",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, imagen nvcr.io/nvidia/tensorrt-llm/release:1.3.0rc5, Qwen3-8B-NVFP4 (el usuario confirma que funciono en post 5); respuesta de aniculescu (personal NVIDIA)",
+   "riesgo": "Sin -x en mpirun la compilacion en runtime de kernels falla en los rangos remotos.",
+   "verificable_aqui": "ls -l /usr/local/cuda/bin/ptxas && /usr/local/cuda/bin/ptxas --version"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El personal de NVIDIA (aniculescu, post 4) explica que el ptxas del contenedor difiere del requerido para GB10 y que TRITON_PTXAS_PATH debe reenviarse con -x; el usuario lo confirma en post 5. El problema posterior de memoria insuficiente con Nemotron-3-Super FP8 queda sin respuesta."
+}

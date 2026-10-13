@@ -1,0 +1,37 @@
+{
+ "id": 349872,
+ "titulo": "Bonding Spark ConnectX-7 ports between two Sparks with Jumbo frames works fine",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Bond balance-rr de los dos puertos CX-7 entre dos Spark con MTU 9000 via systemd-networkd (bond0.netdev, bond0.network y un .network por interfaz con Bond=bond0)",
+   "como": "bond0.netdev: [NetDev] Name=bond0 Kind=bond MTUBytes=9000 / [Bond] Mode=balance-rr ; bond0.network: [Match] Name=bond0 / [Network] Address=<ip>/30 / [Link] MTUBytes=9000 ; enp1s0f0np0.network y enp1s0f1np1.network: [Network] Bond=bond0 / [Link] MTUBytes=9000",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Dos DGX Spark con cables QSFP56 (declarado por usuario, sin version de driver/kernel)",
+   "riesgo": "Afirmacion de usuario, no de NVIDIA; el propio autor dice en el post 5 que sus equipos estan lejos de la imagen de fabrica. rsync dio unos 404 MB/s (post 3).",
+   "verificable_aqui": "ip -d link show type bond; networkctl status"
+  },
+  {
+   "que": "Medicion de ancho de banda entre dos nodos con all_gather_perf de nccl-tests (resultado con bond: bus bandwidth medio unos 20.9 GB/s)",
+   "como": "all_gather_perf (nccl-tests 2.17.6), minBytes 1073741824 maxBytes 34359738368 factor 2, iters 20; invocacion exacta no indicada",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x NVIDIA GB10, nccl 22803",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Tema de red multi-Spark entre dos equipos; el ATOM es un solo equipo, sin relacion con los colapsos de memoria o cortes por calor. Sin respuesta de NVIDIA; las cifras son de un usuario."
+}

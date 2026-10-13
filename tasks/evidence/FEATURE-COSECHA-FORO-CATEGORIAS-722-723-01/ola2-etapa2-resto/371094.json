@@ -1,0 +1,37 @@
+{
+ "id": 371094,
+ "titulo": "Request for sm_121-tuned kernels in cuDNN/cuBLAS — DGX Spark training throughput gap",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Mediciones de ancho de banda LPDDR5X de GB10 bajo carga (usuario parallelArchitect, metodologia en otro hilo del foro)",
+   "como": "lectura GPU en reposo 161 GB/s; bajo carga de inferencia 90 GB/s; escritura en reposo 116 GB/s; bajo carga 62 GB/s (el pico teorico citado es 273 GB/s)",
+   "fuente_post": 4,
+   "repositorio": "https://forums.developer.nvidia.com/t/gb10-hardware-baseline-first-direct-measurements-and-findings/367851",
+   "licencia": null,
+   "probado_en": "GB10",
+   "riesgo": "Cifras de un usuario, sin reproducir aqui",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Distinguir kernels limitados por computo o por DRAM perfilando un paso en Nsight Compute",
+   "como": "profile one step in Nsight Compute (comando no indicado)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El autor pide hoja de ruta para kernels cuDNN/cuBLAS afinados a sm_121 y senala que NVIDIA no ha comprometido plazo; sin respuesta de NVIDIA en el hilo.",
+ "utilidad_atom": "baja",
+ "razon": "Peticion de kernels sm_121 y discusion de ancho de banda; las cifras de bajo carga son de un usuario y sin comando propio en este hilo. Sin respuesta de staff NVIDIA."
+}

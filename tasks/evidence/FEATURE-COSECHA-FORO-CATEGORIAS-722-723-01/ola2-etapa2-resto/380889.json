@@ -1,0 +1,58 @@
+{
+ "id": 380889,
+ "titulo": "DeepSeek-V4-Flash on 2x DGX Spark: intermittent token corruption with MTP + CUDA Graphs",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "monitorear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Senal de deteccion: la tasa de aceptacion de tokens especulativos cae cerca de 24% relativo a la linea base sana y se mueve unos 30 segundos antes de la corrupcion visible; el autor la usa como indicador (baseline sana 0.3464, parcheado 0.3450)",
+   "como": "vigilar la metrica de aceptacion especulativa de vLLM (no indica el nombre exacto de la metrica)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark GB10, TP=2, vLLM 0.26.1rc0, MTP=5",
+   "riesgo": "Un humo de prueba corto no demuestra que la compilacion este limpia: el lanzamiento fresco puede estar limpio horas",
+   "verificable_aqui": "no indicado"
+  },
+  {
+   "que": "Retroportar tres PR upstream de vLLM juntos para eliminar la corrupcion con CUDA graphs FULL_AND_PIECEWISE: #51318 (metadata C128A estable en captura), #52836 (revertir reuso de workspace eager de DSv4), #52492 (indexer scoring en breakable graphs)",
+   "como": "vLLM PR #51318, #52836, #52492 (retroporte; el autor no ablacionó)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "0 ventanas de corrupcion en 6.35 h y unas 2400 generaciones, 42.9 tok/s con prefix caching y MTP=5 (declarado por el autor)",
+   "riesgo": "Sin ablacion: no se sabe cual de los tres es el necesario; nazzysazzy (post 7) dice que #51318 y #52492 bastan en las imagenes vllm-b12x actuales",
+   "verificable_aqui": "no indicado"
+  },
+  {
+   "que": "Reproductor sintetico de la ventana de corrupcion",
+   "como": "repositorio provos/dsv4-sm121-armed-window en GitHub (enlace del post 2; URL completa no aparece en el texto)",
+   "fuente_post": 2,
+   "repositorio": "github.com/provos/dsv4-sm121-armed-window (inferido del titulo del enlace)",
+   "licencia": "no indicada",
+   "probado_en": "vLLM v0.27.0/v0.27.1 (segun el titulo del enlace)",
+   "riesgo": "No se leyo el repositorio; licencia no indicada",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia termica del autor: dos Sparks apilados verticalmente sin espaciadores causaron estrangulamiento termico fuerte en la unidad inferior; con espaciadores desaparecio el estrangulamiento, pero la corrupcion siguio",
+   "como": "separacion fisica entre las unidades (espaciadores)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark",
+   "riesgo": "Es observacion de usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El autor (usuario, sin respuesta de NVIDIA en el hilo) aisla la corrupcion a un bug de vLLM con CUDA graphs y descarta memoria, KV y termica con un reproductor y una metrica concreta de aceptacion especulativa. La metrica y la advertencia termica son transferibles, pero el caso es DeepSeek-V4-Flash con 2 Sparks y MTP, distinto de vLLM de una sola maquina."
+}

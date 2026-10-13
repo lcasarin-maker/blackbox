@@ -1,0 +1,47 @@
+{
+ "id": 363178,
+ "titulo": "How to automatically free shared system memory",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Vaciar page cache a mano (ya conocido); el usuario nota que la memoria compartida no se libera",
+   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "El kernel reconstruye la cache en la siguiente actividad de disco (post 3)",
+   "verificable_aqui": "cat /proc/sys/vm/drop_caches; grep -E 'Cached|MemAvailable' /proc/meminfo"
+  },
+  {
+   "que": "Subir vfs_cache_pressure; el propio autor lo retracta en el post 5 y el solicitante midio que no libera nada tras parar vLLM",
+   "como": "sudo sysctl -w vm.vfs_cache_pressure=200",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Ineficaz para el caso (post 4: memoria sigue en ~93GB tras 60 min con vLLM detenido)",
+   "verificable_aqui": "sysctl vm.vfs_cache_pressure"
+  },
+  {
+   "que": "Advertencia de regresion: con driver 590.48.01 la memoria UMA no se libera tras terminar un proceso CUDA; reportan que 580.126.09 funciona (enlace a otro hilo)",
+   "como": "no indicado (rollback a driver 580.126.09)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario; no verificado en el hilo",
+   "riesgo": "Afirmacion de usuario, el solicitante no la probo en el hilo",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Todo lo util es drop_caches ya conocido y un sysctl que el propio hilo demuestra ineficaz; el unico dato nuevo es una regresion del driver 590.48.01 (nuestro driver es 580.178.04) de un usuario sin verificar. Sin respuesta de personal de NVIDIA."
+}

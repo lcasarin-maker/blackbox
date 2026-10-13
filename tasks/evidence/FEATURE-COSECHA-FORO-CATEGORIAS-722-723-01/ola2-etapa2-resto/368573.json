@@ -1,0 +1,37 @@
+{
+ "id": 368573,
+ "titulo": "Thermal paste or chalk? Dropped 40C with PTM7950 on my Gigabyte AI TOP PCIe 5.0 cluster",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reemplazar la pasta termica de fabrica (descrita como dura y seca) por Honeywell PTM7950; el autor afirma una caida de 40C en dos unidades y que cesaron los apagados tras 1 hora de carga.",
+   "como": "retirar el disipador, limpiar y aplicar Honeywell PTM7950 (sin procedimiento detallado)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Gigabyte AI TOP Atom, 2 unidades, declarado por usuario; sin medicion publicada",
+   "riesgo": "Abrir la unidad puede invalidar garantia; no hay mediciones; los pads rigidos podrian dar mal contacto (duda del autor)",
+   "verificable_aqui": "nvidia-smi -q -d TEMPERATURE"
+  },
+  {
+   "que": "Otro usuario con un GX10 con apagados aleatorios dice que no volvio a tener ninguno tras repastar; planea pads de 0.5/1/2.5 mm y thermal putty sobre memoria y SSD (sin resultado todavia).",
+   "como": "repastar; pads 0.5mm/1mm/2.5mm y thermal putty (pedidos, sin probar)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Gigabyte GX10, usuario",
+   "riesgo": "Dimensiones de pads no confirmadas",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Dos usuarios independientes relacionan pasta de fabrica en mal estado con apagados por calor en Gigabyte ATOM/GX10, lo cual coincide con los cortes en seco de esta maquina. Sin mediciones ni procedimiento, y sin respuesta de NVIDIA."
+}

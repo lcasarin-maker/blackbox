@@ -1,0 +1,37 @@
+{
+ "id": 351513,
+ "titulo": "Is it possible to add CPU Utilisation to the DGX Dashboard?",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "dgx_dashboard de la comunidad: panel web en contenedor con CPU, temperaturas, memoria 'precisa' (el autor dice que la del panel oficial sigue mal) e inicio/parada de contenedores; contenedor ~45MB, 3-4 MiB RAM en reposo",
+   "como": "no indicado (el post remite al README del repositorio)",
+   "fuente_post": 8,
+   "repositorio": "https://github.com/DanTup/dgx_dashboard",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (usuarios)",
+   "riesgo": "el autor menciona la opcion de exponer el socket de docker al contenedor",
+   "verificable_aqui": null
+  },
+  {
+   "que": "btop como monitor de terminal en Spark",
+   "como": "btop",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario)",
+   "riesgo": null,
+   "verificable_aqui": "command -v btop"
+  }
+ ],
+ "omision_nvidia": "Staff de NVIDIA (aniculescu, post 2) dice que el DGX Dashboard no muestra CPU, lo pasa a ingenieria y sugiere top.",
+ "utilidad_atom": "media",
+ "razon": "Respuesta de NVIDIA en post 2 admite que el panel oficial carece de CPU. Un usuario ofrece alternativa comunitaria con repositorio (licencia no indicada) y afirma que la memoria del panel oficial es incorrecta."
+}

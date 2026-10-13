@@ -1,0 +1,49 @@
+{
+ "id": 356179,
+ "titulo": "Bug when connecting HDMI to AV receiver",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "rastrear",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Firma de kernel del fallo con HDMI conectado: lecturas de registro invalidas de la GPU, tarea nvidia-modeset bloqueada y gdm al 100 % de CPU que ni kill -9 mata; solo cura el apagado forzado",
+   "como": "NVRM: gpuHandleSanityCheckRegReadError_GH100: Possible bad register read ... regvalue: 0xbadf5600 ... Unknown SYS_PRI_ERROR_CODE  seguido de  INFO: task nvidia-modeset/ blocked for more than 614 seconds",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark con kernel 6.14.0-1015-nvidia y driver 580.95.05 (post 1); HP ZGX Nano reproduce la firma (post 6)",
+   "riesgo": "Pantalla en blanco y sistema que exige apagado forzado",
+   "verificable_aqui": "journalctl -k -b | grep -c 0xbadf5600"
+  },
+  {
+   "que": "Workaround: operar sin cable HDMI ni monitor conectado; un usuario reprodujo el fallo en dos unidades y siguio al cable/monitor; otro dejo de ver cuelgues tras desconectar el receptor; segun un tercero hay monitores que funcionan y otros no",
+   "como": "retirar el cable HDMI (no hay comando)",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario jcagle con dos HP ZGX Nano (3 dias estable); florin.andrei desconectado del receptor sin cuelgues desde entonces",
+   "riesgo": "Causa sin confirmar (jcagle lo califica de posible defecto de hardware, firmware o driver); estabilidad medida en pocos dias",
+   "verificable_aqui": "cat /sys/class/drm/card*-HDMI-A-*/status"
+  },
+  {
+   "que": "Recoger evidencia para NVIDIA con el script de informe mientras el equipo esta en estado fallido",
+   "como": "nvidia-bug-report.sh",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "personal NVIDIA (aniculescu) lo pide al usuario",
+   "riesgo": "El informe contiene datos de la maquina; en pruebas faltan glxinfo, vulkaninfo, ibstat, acpidump, mst (post 3)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Personal de NVIDIA (aniculescu) solo pidio un informe (post 2); no hay respuesta ni correccion publicada, y un usuario reclama su ausencia en el post 9.",
+ "utilidad_atom": "alta",
+ "razon": "Da una firma concreta para rastrear en el log del kernel (0xbadf5600, nvidia-modeset bloqueado) y un workaround reproducido en dos unidades: no conectar HDMI. Es una causa posible de congelaciones con pantalla conectada; las versiones citadas (kernel 6.14, driver 580.95.05) difieren de las de esta maquina."
+}

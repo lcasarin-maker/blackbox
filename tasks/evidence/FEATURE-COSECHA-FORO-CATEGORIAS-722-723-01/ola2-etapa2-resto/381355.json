@@ -1,0 +1,10 @@
+{"id": 381355, "titulo": "One dgx spark - more models + stt + tss on one API endpoint?", "leido": true, "posts_leidos": 7, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["solucionar"],
+ "mecanismos": [
+  {"que": "Proxy compatible con OpenAI que duerme y despierta modelos vLLM (nivel 2 de hibernacion) para repartir la memoria de una sola GPU entre varios modelos", "como": "no indicado (comando); el post nombra el proyecto vllm-sleeper-proxy delante de LiteLLM y vLLM level-2 sleep", "fuente_post": 2, "repositorio": "GitHub sailorjoe6/vllm-sleeper-proxy (URL exacta no visible en el texto)", "licencia": "no indicada", "probado_en": "DGX Spark de un usuario; despertar Qwen desde el modelo de embeddings tarda ~3 minutos frente a 9 minutos de arranque en frio", "riesgo": "Tiempos de conmutacion de minutos", "verificable_aqui": null},
+  {"que": "STT y TTS en CPU en la misma Spark: faster-whisper con compute type int8 y Piper", "como": "Systran/faster-whisper-small.en, device CPU, compute type int8; Piper voz en_US-lessac-medium", "fuente_post": 3, "repositorio": null, "licencia": "no indicada", "probado_en": "DGX Spark de un usuario", "riesgo": null, "verificable_aqui": null}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Solo usuarios, sin respuesta de NVIDIA. Hay benchmarks de throughput de dos modelos (sglang Qwen3.8-27B y vLLM Qwen3.6-35B NVFP4) y sugerencias de proxy sin comandos exactos."}

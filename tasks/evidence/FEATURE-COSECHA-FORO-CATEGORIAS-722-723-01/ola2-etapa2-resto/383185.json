@@ -1,0 +1,37 @@
+{
+ "id": 383185,
+ "titulo": "System very slow after update",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Aviso de NVIDIA (citado por un usuario): no actualizar a kernel 7.0.0-1019-nvidia con cargas NCCL/RoCE multinodo; el kernel 6.17.0-1032 funciona",
+   "como": "no indicado (hilo enlazado, solo se cita el aviso)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Actualizar via DGX Dashboard puede dejar el sistema en el kernel 7.0 con sistema lento, resolucion 800x600 y regresion RDMA",
+   "verificable_aqui": "uname -r"
+  },
+  {
+   "que": "Parametro de arranque cma=128M que un usuario dice que permite RDMA con kernel 7.0",
+   "como": "cma=128M",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario con kernel 7.0, RDMA, sin driver indicado",
+   "riesgo": "Afirmacion de un solo usuario, sin verificacion de NVIDIA; cambia la reserva CMA del kernel",
+   "verificable_aqui": "cat /proc/cmdline"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El aviso oficial (citado, no leido directamente) desaconseja el kernel 7.0.0-1019; el Atom corre 6.17.0-1032 y debe evitar esa actualizacion. cma=128M es un reporte unico de usuario, afecta RDMA multinodo."
+}

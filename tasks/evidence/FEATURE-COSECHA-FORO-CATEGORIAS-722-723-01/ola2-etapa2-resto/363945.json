@@ -1,0 +1,26 @@
+{
+ "id": 363945,
+ "titulo": "FSDP Training on DGX Spark GB10 UMA - from_pretrained loads full model on all ranks despite device_map=meta",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "pregunta_sin_respuesta",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Monkey-patch que elimina el kwarg _is_hf_initialized de nn.Parameter.__new__ (workaround de incompatibilidad Transformers 5.x con modelos VLM trust_remote_code); el autor no logra con ello resolver la carga completa por rango",
+   "como": "kwargs.pop('_is_hf_initialized', None) dentro de un _patched_param_new asignado a torch.nn.Parameter.__new__",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "3x GB10, torch 2.10.0+cu130, accelerate 1.13.0, transformers 5.3.0, NCCL 2.28.9",
+   "riesgo": "Parchea una clase base de PyTorch; el propio autor reporta que device_map=meta en rangos no-0 produce errores RDMA y que el problema de memoria (75GB por nodo) persiste",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario (jesse75) pregunta como evitar que from_pretrained cargue el modelo completo en cada rango FSDP en UMA; ninguno de sus intentos lo resuelve y no hay respuesta de NVIDIA ni de la comunidad. Solo aporta una observacion de que en UMA los tensores pre-shard no se liberan y un parche no resolutivo."
+}

@@ -1,0 +1,68 @@
+{
+ "id": 383450,
+ "titulo": "DGX Spark kernel panic after OOBE/update - missing initrd for 7.0.0-1019-nvidia and DKMS arm64/aarch64 conflict",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reparacion del staff (aniculescu, post 5) del panico por initrd ausente: cambiar nvidia-dkms por modulos precompilados firmados en una sola transaccion, verificar y reiniciar",
+   "como": "sudo apt update ; sudo apt-get install linux-modules-nvidia-580-open-nvidia-hwe-24.04 nvidia-dkms-580-open- ; sudo dpkg --audit ; sudo apt-get check ; test -s /boot/initrd.img-7.0.0-1019-nvidia && echo \"7.0 initrd is present\"",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, driver 580.178.04, kernel 7.0.0-1019-nvidia (staff y usuarios)",
+   "riesgo": "Requiere un shell: una maquina parada en el panico debe arrancar antes con un kernel anterior que conserve su initrd",
+   "verificable_aqui": "dpkg -l | grep -E '^(iF|iU)' ; dkms status ; modinfo nvidia | grep signer"
+  },
+  {
+   "que": "Deteccion previa: entradas duplicadas por etiqueta de arquitectura (arm64 y aarch64) en DKMS, y paquetes linux-image en estado iF",
+   "como": "dkms status ; dpkg -l | grep -E '^(iF|iU)' ; ls /boot/initrd.img-*",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario equigerminal: DGX Spark 4 TB, Secure Boot activo, driver 580.178.04",
+   "riesgo": "Un OTA posterior no reparo el estado roto (afirmacion del usuario)",
+   "verificable_aqui": "dkms status; for k in /boot/vmlinuz-*; do test -e /boot/initrd.img-${k#/boot/vmlinuz-} || echo SIN_INITRD $k; done"
+  },
+  {
+   "que": "Reparacion sin precompilados: forzar DKMS por kernel afectado",
+   "como": "sudo update-initramfs -c -k 7.0.0-1019-nvidia ; sudo dkms autoinstall --force -k 7.0.0-1019-nvidia ; sudo dpkg --configure -a ; sudo update-grub",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos usuarios, Spark",
+   "riesgo": "Con Secure Boot, los modulos DKMS firmados con la clave MOK local son rechazados ('Key was rejected by service')",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Arranque de rescate sin chroot desde la linea de comandos GRUB de un USB en vivo, con un kernel anterior que conserva su initrd",
+   "como": "c ; ls (hd0,gpt2)/boot/ ; linux (hd0,gpt2)/boot/vmlinuz-6.17.0-1032-nvidia root=/dev/nvme0n1p2 ro ; initrd (hd0,gpt2)/boot/initrd.img-6.17.0-1032-nvidia ; boot",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun el usuario; particion y version a adaptar",
+   "riesgo": "'Force boot to Grub menu' en UEFI no dio menu; /etc/default/grub.d/no-grubmenu.cfg parece anularlo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Rescate con chroot desde USB en vivo",
+   "como": "mount /dev/nvme0n1p2 /mnt ; mount /dev/nvme0n1p1 /mnt/boot/efi ; mount --bind /dev /mnt/dev (idem /proc /sys /run) ; chroot /mnt ; update-initramfs -c -k 7.0.0-1019-nvidia ; dpkg --configure -a ; apt-get install -f ; update-grub",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario hgardner, sin resultado confirmado en el hilo",
+   "riesgo": "Plan declarado, no resultado",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA no habia documentado la discrepancia arm64/aarch64 en DKMS ni una via de reparacion para equipos ya atascados antes del post 5; el staff dijo que habia actualizaciones desplegandose (post 3).",
+ "utilidad_atom": "alta",
+ "razon": "Hay respuesta de personal de NVIDIA (aniculescu: posts 2, 3, 5) con una secuencia exacta de reparacion y de verificacion, y usuarios aportan la deteccion previa y el arranque de rescate. Aplica directo a esta maquina (kernel 6.17.0-1032-nvidia, driver 580.178.04, Secure Boot activo): comprobar si hay dkms status duplicado antes de un OTA."
+}

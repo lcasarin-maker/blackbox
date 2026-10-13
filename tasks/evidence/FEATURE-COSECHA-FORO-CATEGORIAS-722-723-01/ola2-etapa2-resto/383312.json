@@ -1,0 +1,47 @@
+{
+ "id": 383312,
+ "titulo": "Latest update pulls in mis-matched kernal/driver",
+ "posts_leidos": 10,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Parametro de kernel kho=off (Kexec HandOver) para evitar fallos NCCL RDMA con kernel 7.0.0-1019; usuario reporta CmaTotal 0 en /proc/meminfo como sintoma",
+   "como": "GRUB_CMDLINE_LINUX=\"$GRUB_CMDLINE_LINUX kho=off\"",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "3 nodos Spark con kernel 7.0.0-1019 (declarado por el usuario); el post dice que coincide con el aviso fijado de NVIDIA",
+   "riesgo": "otro usuario (post 7) dice haber visto que kho=off solo no basta y que quiza haga falta cma=128M; sin confirmacion",
+   "verificable_aqui": "grep -i cma /proc/meminfo; cat /proc/cmdline"
+  },
+  {
+   "que": "Sintoma de CMA anomalo: CmaTotal 0 con CmaFree distinto de cero",
+   "como": "/proc/meminfo (campos CmaTotal y CmaFree)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "kernel 7.0.0-1019 segun el usuario",
+   "riesgo": null,
+   "verificable_aqui": "grep -i '^Cma' /proc/meminfo"
+  },
+  {
+   "que": "Procedimiento de downgrade del driver con paquetes firmados y hold, tras fallo de Secure Boot por DKMS (diagnostico generado por una IA y pegado por el usuario)",
+   "como": "sudo apt-get install --allow-downgrades <paquetes nvidia-*-580 en version 580.173.02>; sudo dpkg --configure -a; sudo apt-mark hold <paquetes>; comprobar con apt-cache show linux-modules-nvidia-580-open-nvidia-hwe-24.04 | grep Provides",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "solo apt dry run segun el propio texto; no probado de verdad",
+   "riesgo": "downgrade con hold deja el sistema sin actualizaciones de driver; el texto afirma que DKMS firma con clave local no enrolada y Secure Boot rechaza el modulo (modprobe: Key was rejected)",
+   "verificable_aqui": "apt-mark showhold; dkms status; mokutil --sb-state"
+  }
+ ],
+ "omision_nvidia": "El aviso oficial de NVIDIA (citado en post 4) cubre solo multi-nodo NCCL/RoCE y no el desajuste kernel/driver que rompe nvidia-smi bajo Secure Boot; usuarios dicen que el Dashboard sigue ofreciendo la actualizacion pese al aviso. No hay respuesta de personal de NVIDIA en el hilo.",
+ "utilidad_atom": "media",
+ "razon": "Hilo de usuarios, sin personal NVIDIA; el valor es kho=off y la comprobacion de CmaTotal, aplicables solo si se pasa al kernel 7.0.0-1019 (esta maquina usa 6.17.0-1032). El downgrade con apt-mark hold es una advertencia util sobre DKMS y Secure Boot, pero sin probar.",
+ "leido": true,
+ "lectura": "completa"
+}

@@ -1,0 +1,26 @@
+{
+ "id": 353478,
+ "titulo": "Non-functional PCIe width link",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Leer el enlace PCIe de la GPU: x1 / Gen1 en nvidia-smi es normal en GB10 porque la GPU se une a la CPU por C2C, no por PCIe (opinion de usuario eugr, sin respuesta de NVIDIA)",
+   "como": "nvidia-smi -q (seccion GPU Link Info: PCIe Generation / Link Width); lspci (LnkSta)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.95.05, kernel 6.14.0-1013-nvidia (el post 1 declara el hardware)",
+   "riesgo": "Falsa alarma al interpretar x1/Gen1 como degradacion; la explicacion C2C es de usuarios, no de NVIDIA.",
+   "verificable_aqui": "nvidia-smi -q | grep -A8 'GPU Link Info'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El usuario reporta x1/2.5GT/s bajo carga (gpu-burn al 96%) y usuarios responden que es caracteristica del enlace C2C; no hay staff de NVIDIA. Aporta solo el dato de que ese campo no sirve como alarma, ademas de que nvidia-smi -q muestra N/A en limites de potencia y ECC."
+}

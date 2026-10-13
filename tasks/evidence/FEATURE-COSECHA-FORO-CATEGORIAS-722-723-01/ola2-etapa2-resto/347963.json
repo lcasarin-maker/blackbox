@@ -1,0 +1,77 @@
+{
+ "id": 347963,
+ "titulo": "BOOT LOOP ISSUE RESOLVED",
+ "leido": true,
+ "posts_leidos": 74,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Recuperar un Spark atascado en el arranque tras la actualizacion defectuosa del 15-16 oct 2025: reflashear con la imagen de recuperacion de NVIDIA (anuncio oficial)",
+   "como": "no indicado (remite a la guia System Recovery del User Guide; sin comando)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Borra el dispositivo; NVIDIA dice que un sistema que funciona no requiere reflash (post 32)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Particionado personalizado en la recuperacion: renombrar el archivo de ejemplo que se escribe en la memoria USB para que la recuperacion lo use en vez de todo el NVMe (en el hilo relacionado 348177 lo dice el staff; aqui solo se menciona el nombre en lista de archivos)",
+   "como": "no indicado",
+   "fuente_post": 74,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround usuario: teclado que no responde en la pantalla del entorno de recuperacion; probar otro modelo de teclado cableado (Apple y Microsoft ergonomico fallaron, Dynex y Logitech K120 funcionaron); desconectar el adaptador USB-C con teclado y raton tambien destrabo un arranque (post 62)",
+   "como": "no indicado (cambiar de teclado / desconectar adaptador)",
+   "fuente_post": 43,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios, recuperacion DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround usuario: en macOS el script CreateUSBKeyMacOS.sh de la primera imagen tenia rutas erroneas; NVIDIA (aniculescu, post 50) dice que ya esta corregido en la imagen actual",
+   "como": "INSTALL_DIR=\"${SCRIPT_DIR}/usb\" ; VERSION_FILE=\"${SCRIPT_DIR}/fastos-release.txt\"",
+   "fuente_post": 33,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "recovery image 1.91.51",
+   "riesgo": "Obsoleto: corregido por NVIDIA",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Usuario: memoria USB para recuperacion debe ser de 32 GB o mas segun un usuario (otro usuario en post 68 dice lo contrario: menos de 32 GB); USB defectuoso causa que no aparezca en Boot Override; usar USB 2.0 funciono a un usuario; contradiccion entre usuarios",
+   "como": "no indicado",
+   "fuente_post": 75,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios",
+   "riesgo": "Afirmaciones contradictorias sin verificacion de NVIDIA",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Usuario: un USB de arranque con la firmware de Ubuntu daily permite actualizar firmware con fwupd antes de reintentar la recuperacion",
+   "como": "sudo fwupdmgr refresh --force; sudo fwupdmgr upgrade; sudo reboot",
+   "fuente_post": 75,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, no indicado hardware",
+   "riesgo": "Actualiza firmware; sin verificacion de NVIDIA",
+   "verificable_aqui": "fwupdmgr get-devices"
+  }
+ ],
+ "omision_nvidia": "NVIDIA no ofrece imagen de recuperacion arrancable sin actualizaciones en linea ni ISO (post 31, 52, usuarios piden); la guia de recuperacion carecia de detalles UEFI segun usuarios. Hay respuesta de NVIDIA (MackenzieNVIDIA, aroy2, aniculescu, kberger1).",
+ "utilidad_atom": "baja",
+ "razon": "Anuncio oficial de NVIDIA del incidente de actualizacion del 15-16 oct 2025 y largo hilo de usuarios sobre la recuperacion por USB; ningun mecanismo de monitoreo o prevencion de cortes por calor o memoria. El unico comando reutilizable (fwupdmgr) es del tipo excluido y sin respaldo de NVIDIA."
+}

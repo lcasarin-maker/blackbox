@@ -1,0 +1,88 @@
+{
+ "id": 368939,
+ "titulo": "Recovery from kernel panic after dashboard update - unable to mount root fs on unknown-block(0,0)",
+ "leido": true,
+ "posts_leidos": 16,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Causa raiz: el hook /etc/kernel/postinst.d/dkms falla (run-parts --exit-on-error) por mismatch arm64 vs aarch64 en nvidia-dkms y el initrd nunca se genera; la actualizacion desde el dashboard reinicia igual",
+   "como": "no indicado como comando; ver verificacion con dpkg -l | grep -E '^(iF|iU)'",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS, kernels 6.17.0-1014 a 7.0.0-1019, driver 595.84 (usuario OP)",
+   "riesgo": "Kernel panic sin menu GRUB si falla; sin acceso remoto",
+   "verificable_aqui": "dpkg -l | grep -E '^(iF|iU)'"
+  },
+  {
+   "que": "Verificar antes de reiniciar que existe el initrd del kernel nuevo y que no hay paquetes a medio configurar",
+   "como": "ls -l /boot/initrd.img-$(ls /boot | grep -oP 'vmlinuz-\\K.*nvidia' | sort -V | tail -1); sudo grep -n \"initrd\" /boot/grub/grub.cfg | grep <new-kernel-version>; dpkg -l | grep -E '^(iF|iU)'",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Es solo lectura; el chequeo no corrige nada",
+   "verificable_aqui": "ls /boot | grep -E 'vmlinuz|initrd'; dpkg -l | grep -E '^(iF|iU)'"
+  },
+  {
+   "que": "Fijar un menu GRUB no nulo para tener ruta de recuperacion con teclado/monitor",
+   "como": "/etc/default/grub: GRUB_TIMEOUT_STYLE=menu; GRUB_TIMEOUT=5; luego update-grub",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Edita el cargador de arranque; un error impide arrancar",
+   "verificable_aqui": "grep -E 'GRUB_TIMEOUT' /etc/default/grub"
+  },
+  {
+   "que": "Cambiar a modulos NVIDIA firmados y precompilados de Canonical (sin dkms) para que el initrd se genere",
+   "como": "sudo apt-mark unhold linux-image-nvidia-hwe-24.04 linux-image-<your-held-kernel>; sudo apt-mark manual nvidia-driver-595-open linux-nvidia-hwe-24.04; sudo apt install linux-nvidia-hwe-24.04 linux-image-nvidia-hwe-24.04 linux-headers-nvidia-hwe-24.04 linux-modules-nvidia-595-open-nvidia-hwe-24.04 nvidia-dkms-595-open- nvidia-dkms-590-open- nvidia-driver-590-open-",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "6.17.0-1014 a 7.0.0-1019-nvidia, driver 595.84, Secure Boot ok segun el autor",
+   "riesgo": "Cambia el metodo de instalacion del driver; el autor lo probo solo en su maquina",
+   "verificable_aqui": "apt-cache policy linux-modules-nvidia-595-open-nvidia-hwe-24.04; dkms status; modinfo nvidia | grep signer"
+  },
+  {
+   "que": "Recuperacion con USB live arm64: chroot, generar el initramfs y forzar dkms",
+   "como": "update-initramfs -c -k 6.17.0-1014-nvidia; dkms autoinstall --force -k 6.17.0-1014-nvidia; dpkg --configure -a; update-grub",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark aarch64 (usuario)",
+   "riesgo": "No ejecutar el instalador del live USB: borraria la particion; la fix se repite en cada kernel",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Congelar kernel para evitar la actualizacion; el propio autor documenta que fallo porque otros paquetes arrastraron el kernel",
+   "como": "sudo apt-mark hold linux-image-6.17.0-1014-nvidia; sudo apt-mark hold linux-image-nvidia-hwe-24.04; apt-mark showhold",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "El hold no evito la llegada del kernel nuevo (post 16)",
+   "verificable_aqui": "apt-mark showhold"
+  },
+  {
+   "que": "Acceder al menu GRUB aunque GRUB_TIMEOUT=0 manteniendo teclas durante el arranque (usuario)",
+   "como": "mantener Shift e Insert durante el arranque",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Una opinion de un solo usuario; otro dice que su menu sigue sin aparecer (post 2)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA no ofrece modo de rescate con terminal en el Rescue Disk y el dashboard reinicia pese a un error critico del paquete (posts 1-3); aniculescu (personal NVIDIA) dijo no haber visto el fallo y que el kernel 1018 lo evita, pero un usuario lo repite en 1029 (post 12).",
+ "utilidad_atom": "alta",
+ "razon": "El post 16 da la cadena de causa con comandos de verificacion y una migracion a modulos firmados de Canonical; los chequeos de initrd y dpkg son de solo lectura y aplicables a la ATOM antes de reiniciar tras una actualizacion de kernel. NVIDIA (aniculescu) respondio una vez sin dar solucion definitiva; el resto son usuarios."
+}

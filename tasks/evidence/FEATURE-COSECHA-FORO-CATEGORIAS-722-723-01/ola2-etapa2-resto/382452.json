@@ -1,0 +1,38 @@
+{
+ "id": 382452,
+ "titulo": "[DGX Spark] OTA update to DGX OS 7.5.0 kills all display output when nvidia-drm-options-modeset0 is installed",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Quitar el paquete de NVIDIA que fuerza nvidia-drm modeset=0, que con el driver 580.173.02 deja sin DRM connectors ni salida de video",
+   "como": "sudo apt purge nvidia-drm-options-modeset0 (o borrar /etc/modprobe.d/zz-nvidia-drm-override.conf), reiniciar, y ciclo completo de AC (desconectar la fuente ~1 min)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, DGX OS 7.2.3 a 7.5.0 OTA, kernel 6.17.0-1032-nvidia, driver 580.173.02",
+   "riesgo": "Con el paquete instalado, la actualizacion deja la pantalla muerta; recuperable solo por SSH",
+   "verificable_aqui": "dpkg -l nvidia-drm-options-modeset0; ls /etc/modprobe.d/zz-nvidia-drm-override.conf; ls /sys/class/drm"
+  },
+  {
+   "que": "Sintoma diagnostico: /sys/class/drm solo con card y render node, /proc/fb vacio",
+   "como": "ls /sys/class/drm; cat /proc/fb",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "mismo hardware",
+   "riesgo": null,
+   "verificable_aqui": "ls /sys/class/drm; cat /proc/fb"
+  }
+ ],
+ "omision_nvidia": "El OTA no detecta ni avisa de la configuracion modeset0 ya fatal, ni el paquete del driver declara Conflicts (segun el usuario); sin respuesta de NVIDIA en el tema.",
+ "utilidad_atom": "media",
+ "razon": "Reporte de usuario con causa raiz y arreglo concretos que ademas toca el mismo kernel 6.17.0-1032-nvidia de esta maquina. Afecta salida de video y no memoria ni cortes por calor."
+}

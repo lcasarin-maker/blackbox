@@ -1,0 +1,88 @@
+{
+ "id": 384438,
+ "titulo": "New Deepseek 4.1 flash recipe",
+ "leido": true,
+ "posts_leidos": 14,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Memory Saver: parche opcional del driver UVM que empaqueta 16 tablas de paginas GPU por pagina en kernel de 64 KiB; sin el, ~53,000 tablas usan 3.25 GiB por nodo (0.20 GiB en 4 KiB); con el, 0.22 GiB y 1.78-1.86 GiB netos mas que Linux 4 KiB",
+   "como": "Comando de instalacion no indicado en el hilo; el autor dice que se compila y firma localmente (Secure Boot activo), fijado a driver 580.178.04 y kernel 7.0.0-1019-nvidia-64k",
+   "fuente_post": 4,
+   "repositorio": "github.com/christopherowen/dgx-spark-memory-saver",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10, driver 580.178.04, kernel 7.0.0-1019-nvidia-64k (3 nodos)",
+   "riesgo": "Fuera de la configuracion validada por NVIDIA; experimental, sin soaks largos; requiere compilar y firmar el modulo; autor independiente",
+   "verificable_aqui": "getconf PAGESIZE; uname -r; nvidia-smi --query-gpu=driver_version --format=csv"
+  },
+  {
+   "que": "Display carve-out: el firmware GB10 reserva ~2.1 GiB en lo alto de memoria para scanout que las asignaciones normales no usan; el autor coloca ahi pesos (842.5 MiB por rank) via DRM dumb buffer y dma-buf",
+   "como": "no indicado (importacion por DRM dumb buffer y dma-buf)",
+   "fuente_post": 4,
+   "repositorio": "github.com/christopherowen/spark3-vllm-ds41f",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10",
+   "riesgo": "El post 6 dice que mover la cabeza fuera del carve-out no cambio nada; consola de texto conserva su framebuffer",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Guardas de memoria libre por nodo usadas para calificar cada cambio",
+   "como": "5 GiB free at startup, 3 GiB under load (minimo medido 5.83 GiB con cuatro contextos de 485K)",
+   "fuente_post": 2,
+   "repositorio": "github.com/christopherowen/spark3-vllm-ds41f",
+   "licencia": "no indicada",
+   "probado_en": "3x DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "grep -E 'MemAvailable|MemFree' /proc/meminfo"
+  },
+  {
+   "que": "Protocolo termico de benchmark: ventiladores al piso maximo 30 min y comprobar que cada nodo este bajo 55 C antes de medir; el candidato corre primero para que el calentamiento no lo penalice",
+   "como": "all four nodes held the maximum fan floor for 30 minutes; every node is below 55 °C before measuring",
+   "fuente_post": 15,
+   "repositorio": "github.com/christopherowen/spark-ds41f",
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark",
+   "riesgo": "Comando de control de ventiladores no indicado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Perfiles NCCL y herramientas de fabric para Sparks cableados sin switch (colectivas RoCE one-shot); en anillo de 4 nodos, 4 canales y buffer de 4 MiB, all-reduce de 2 MiB de 320 a 232 us",
+   "como": "repositorio dgx-spark-networking (paquete sparknet); valores: four channels and a 4 MiB buffer",
+   "fuente_post": 12,
+   "repositorio": "github.com/christopherowen/dgx-spark-networking",
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark en anillo",
+   "riesgo": "Derivado de RoCEnante de b12x (post 10, 11, 12); el autor reporta regresiones en algunos reduce-scatter pequenos y un compromiso termico",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Verificacion de red de la receta: ping con 9000 bytes por cada camino y GID RoCE indice 3 con la IPv4",
+   "como": "ping de 9000 bytes y RoCE GID index 3 (comando exacto no indicado)",
+   "fuente_post": 6,
+   "repositorio": "github.com/christopherowen/spark-ds41f",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "ibv_devinfo -v | grep -i gid"
+  },
+  {
+   "que": "Bug del hilo: PyTorch fill_defaults relee el esquema por argumento y su costo crece con el cuadrado; reemplazo de una lectura baja una custom op de 64 argumentos de 873 us a 48 us",
+   "como": "torch._library.utils.fill_defaults (parche del autor, sin comando)",
+   "fuente_post": 2,
+   "repositorio": "github.com/christopherowen/spark3-vllm-ds41f",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El autor dice que NVIDIA distribuye DGX Spark con kernels de 4 KiB y que el perfil de 64 KiB y el parche UVM quedan fuera de la configuracion validada (post 4). Sin respuesta de personal de NVIDIA; eugr_nv (post 8) solo menciona otra receta.",
+ "utilidad_atom": "media",
+ "razon": "Receta de un usuario con mediciones; lo aplicable a memoria son el parche UVM de tablas de paginas en kernel de 64 KiB, el carve-out de display de ~2.1 GiB y las guardas de 5/3 GiB, pero el post no da comando de instalacion y la licencia no aparece. Hay ademas un protocolo termico (nodos bajo 55 C) y una disputa de atribucion entre usuarios (posts 10 a 12)."
+}

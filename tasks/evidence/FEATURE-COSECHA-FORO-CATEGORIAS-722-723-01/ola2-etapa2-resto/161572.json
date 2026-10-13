@@ -1,0 +1,47 @@
+{
+ "id": 161572,
+ "titulo": "L4T Docker Cuda",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Depurar que monta el runtime nvidia: activar debug en su config y buscar 'mount jetson dirs' en el log",
+   "como": "/etc/nvidia-container-runtime/config.toml (debug) y /var/log/nvidia-container-toolkit.log",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Xavier NX, L4T con CUDA 10.2 (usuario joseph.swantek)",
+   "riesgo": "Teoria del usuario sin validar por completo (lo dice el post 2)",
+   "verificable_aqui": "ls -l /etc/nvidia-container-runtime/ /var/log/nvidia-container-toolkit.log"
+  },
+  {
+   "que": "Lo que se monta lo definen CSV de reglas por paquete (cuda, cudnn, l4t, tensorrt, visionworks)",
+   "como": "ls /etc/nvidia-container-runtime/host-files-for-container.d | xargs -n 1 sh -c 'dpkg -S $0'",
+   "fuente_post": 3,
+   "repositorio": "libnvidia-container rama jetson, mount_plugins.md (enlace en el post)",
+   "licencia": "no indicada",
+   "probado_en": "Xavier NX",
+   "riesgo": null,
+   "verificable_aqui": "ls /etc/nvidia-container-runtime/host-files-for-container.d"
+  },
+  {
+   "que": "Para construir y ejecutar, ademas de registrar el runtime, hay que poner default-runtime nvidia en daemon.json",
+   "como": "\"default-runtime\":\"nvidia\" en daemon.json",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Jetson con DeepStream 5.1 / L4T base",
+   "riesgo": "Afecta a todo docker build",
+   "verificable_aqui": "cat /etc/docker/daemon.json"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Usuarios sin respuesta de NVIDIA sobre builds Jetson con libcurand ausente; el metodo de depuracion del montaje es concreto pero de Jetson 2021. Util solo como referencia para diagnosticar fallos de montaje del runtime."
+}

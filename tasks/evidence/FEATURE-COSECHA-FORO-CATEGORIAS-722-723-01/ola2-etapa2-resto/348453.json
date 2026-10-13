@@ -1,0 +1,10 @@
+{"id": 348453, "titulo": "DGX Spark: Keyboard and Mouse Not Working After NVIDIA Driver Upgrade / DPKG Interruption", "leido": true, "posts_leidos": 4, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["solucionar"],
+ "mecanismos": [
+  {"que": "Workaround de usuario: cargar los modulos USB HID cuando teclado y raton dejan de funcionar tras el primer arranque (acceso por SSH)", "como": "sudo modprobe usbhid ; sudo modprobe hid_generic ; reboot", "fuente_post": 3, "repositorio": null, "licencia": "no indicada", "probado_en": "DGX Spark en primer arranque segun el usuario; version de driver/kernel no indicada", "riesgo": "Afirmacion de un usuario sin verificacion; requiere acceso SSH previo", "verificable_aqui": "lsmod | grep -E 'usbhid|hid_generic'"},
+  {"que": "Respuesta de personal NVIDIA (kberger1, rol no confirmado en el texto): la imagen ISO de recuperacion y su documentacion estan en la DGX Spark User Guide", "como": "no indicado (solo enlace a la guia de usuario)", "fuente_post": 2, "repositorio": null, "licencia": null, "probado_en": null, "riesgo": null, "verificable_aqui": null}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El autor rompio el driver al interrumpir dpkg tras apt upgrade; un usuario aporta modprobe usbhid/hid_generic y otro mensaje remite a la ISO de recuperacion. Sin relacion con memoria ni calor; no hay respuesta tecnica verificada de NVIDIA."}

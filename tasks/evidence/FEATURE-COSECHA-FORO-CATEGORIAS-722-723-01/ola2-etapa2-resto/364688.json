@@ -1,0 +1,47 @@
+{
+ "id": 364688,
+ "titulo": "595.58.03 Certified Linux-aarch64 (ARM64) Display Driver and CUDA 13.2 - when for DGX Spark GB10",
+ "leido": true,
+ "posts_leidos": 27,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "omision_nvidia",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Declaracion de NVIDIA: el driver 595 aun no tiene soporte en DGX Spark",
+   "como": "no indicado (afirmacion de aniculescu, respuesta de NVIDIA)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Instalar 595 en DGX OS queda fuera de soporte",
+   "verificable_aqui": "cat /proc/driver/nvidia/version"
+  },
+  {
+   "que": "Advertencia de un usuario: Ubuntu 26.04 con kernels 7.0.0-1009-nvidia, 7.0.0-1009-nvidia-64k y 7.0.0-14-generic consume unos 15 W mas que DGX OS (idle 40-43 W frente a 25-26 W; carga hasta 195 W frente a 180 W)",
+   "como": "no indicado (medicion sin comando)",
+   "fuente_post": 23,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Ubuntu 26.04, kernels 7.0.0-x, GB10 (usuario vasimv)",
+   "riesgo": "Cambiar de SO puede elevar consumo y calor; sin confirmacion de NVIDIA",
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,temperature.gpu --format=csv"
+  },
+  {
+   "que": "Un usuario corre Ubuntu 26.04 con driver 595.71.05, CUDA 13.2 y vLLM en contenedor sin problemas, tras instalar desde ISO y borrar DGX OS; menciona un bug de PD con el kernel generico",
+   "como": "cat /proc/driver/nvidia/version ; uname -m -r",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel 7.0.0-1006-nvidia, driver 595.71.05 (usuario fnerdman, servidor sin pantalla)",
+   "riesgo": "Fuera de DGX OS; otro usuario (post 16) reporta CUDA inestable en 26.04",
+   "verificable_aqui": "cat /proc/driver/nvidia/version"
+  }
+ ],
+ "omision_nvidia": "NVIDIA confirma que el driver 595 no esta soportado en DGX Spark y no da fecha; el resto del hilo son quejas.",
+ "utilidad_atom": "media",
+ "razon": "Hay una respuesta de NVIDIA (post 4) que fija el limite de soporte y una medicion de consumo de un usuario al migrar de SO. La receta NCCL/vLLM del post 22 es de cluster de dos nodos (contiene un marcador de token HF) y no aplica."
+}

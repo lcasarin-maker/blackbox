@@ -1,0 +1,78 @@
+{
+ "id": 378042,
+ "titulo": "Slow speeds on DGX spark cluster",
+ "leido": true,
+ "posts_leidos": 17,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Prueba de ancho de banda RDMA en la cola lossless de NCCL (DSCP 26): sin --tclass mide la cola equivocada",
+   "como": "ib_write_bw -d rocep1s0f0 -x 3 -F --report_gbits --tclass=104 -s 65536 -n 20000 <IP-del-servidor>",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 DGX Spark, kernel 6.17.0-1026-nvidia, firmware CX-7 28.45.4028, NCCL 2.28.9, MikroTik CRS804",
+   "riesgo": null,
+   "verificable_aqui": "ib_write_bw --help (solo comprueba que existe la herramienta; no hay segundo nodo)"
+  },
+  {
+   "que": "Contabilidad de bytes extremo a extremo (tx_prio3_bytes, rx_prio3_bytes, contadores de cola del switch) para localizar perdida silenciosa en el switch; en el caso, 75.5% perdido sin contadores de error",
+   "como": "no indicado como comando; se citan los contadores tx_prio3_bytes, rx_prio3_bytes, rx_prio3_pause, tx_prio3_pause, out_of_sequence, roce_adp_retrans, packet_seq_err",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark + MikroTik CRS804",
+   "riesgo": null,
+   "verificable_aqui": "ethtool -S enp1s0f0np0 | grep -E 'prio3|out_of_sequence|retrans|seq_err'"
+  },
+  {
+   "que": "Solucion final del autor: activar la descarga por hardware (hw-offload) del bridge en el switch",
+   "como": "no indicado (solo 'hardware offloading enabled for the bridge')",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "MikroTik CRS804 con RouterOS 7.23.2",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Tras conectar cables DAC por primera vez, el CX-7 necesita un drenaje completo de energia para aplicar sus ajustes (afirmacion de usuario mashie); el autor lo hizo y no resolvio su caso",
+   "como": "apagar todo, desconectar de la pared, esperar un minuto y encender",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reinicio del CX-7 sin apagar mediante el script de hotplug de DGX OS (usuario elsaco)",
+   "como": "sudo /opt/nvidia/dgx-spark-mlnx-hotplug/mtk-hotplug-handler.sh removal ; sudo /opt/nvidia/dgx-spark-mlnx-hotplug/mtk-hotplug-handlers plug-in",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Reinicia la interfaz CX-7; el segundo nombre de script en el post termina en 'handlers' y puede ser un error de tipeo",
+   "verificable_aqui": "ls /opt/nvidia/dgx-spark-mlnx-hotplug"
+  },
+  {
+   "que": "Config de red de los Spark: MTU 9000 y cada puerto logico CX-7 en una subred distinta; en el switch, autonegociacion apagada con velocidad forzada 200G-baseCR4",
+   "como": "netplan ethernets con mtu: 9000, dhcp4: no, direcciones por interfaz (enp1s0f0np0, enP2p1s0f0np0, enp1s0f1np1, enP2p1s0f1np1); speed 200G-baseCR4 en el switch",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4 DGX Spark con MikroTik CRS804",
+   "riesgo": null,
+   "verificable_aqui": "ip -br link; ethtool enp1s0f0np0 | grep -E 'Speed|Link detected'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Tema de red de cluster de varios Spark con un switch MikroTik; el metodo de contabilidad de bytes y ib_write_bw --tclass sirven para medir, pero requieren dos nodos y un switch que el ATOM no tiene. Solo usuarios, sin staff de NVIDIA."
+}

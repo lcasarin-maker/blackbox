@@ -1,0 +1,47 @@
+{
+ "id": 351828,
+ "titulo": "DGX Spark NVIDIA driver issue",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobar actualizaciones pendientes y que el driver se construyo para el kernel en uso",
+   "como": "apt update ; apt list --upgradable ; sudo dkms status ; uname -r",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "el autor aun no tenia el equipo; dkms status ejemplificado en x86_64 de nube",
+   "riesgo": null,
+   "verificable_aqui": "dkms status; uname -r; cat /etc/dgx-release"
+  },
+  {
+   "que": "Para Secure Boot usar nvidia-driver-580-open (firmado); nvidia-open apunta al repo CUDA con modulos dkms; el metapaquete nvidia-open pide 580.105.08 que no existe en el repo",
+   "como": "apt info nvidia-open ; apt info nvidia-driver-580-open",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark (usuario eugr); aclaracion post 6 (usuario kberger1)",
+   "riesgo": "instalar nvidia-open desde el repo CUDA cambia a dkms sin firma y rompe Secure Boot",
+   "verificable_aqui": "apt policy nvidia-driver-580-open; mokutil --sb-state"
+  },
+  {
+   "que": "El afectado resolvio desactivando Secure Boot",
+   "como": "no indicado (desactivar Secure Boot)",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark FASTOS 1.81.38",
+   "riesgo": "reduce la seguridad del arranque; nuestra maquina tiene Secure Boot activo",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Sin respuesta de staff de NVIDIA (el moderador solo aparece citado en post 2); usuarios aclaran que el driver firmado es nvidia-driver-580-open para Secure Boot. Aplica a nuestra maquina que corre con Secure Boot activo; los comandos son de lectura."
+}

@@ -1,0 +1,36 @@
+{
+ "id": 349229,
+ "titulo": "DGX Spark txt2kg playbook discrepancies / CPU fallback questions",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Ollama del playbook txt2kg cae a CPU; se corrige cambiando la biblioteca CUDA de ollama a cuda_v13 en docker-compose.yml (linea 61 segun el usuario).",
+   "como": "OLLAMA_LLM_LIBRARY=cuda_v13 (en lugar de cuda) en environment de docker-compose.yml, luego ./start.sh",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuarios Neurfer y PrinceHal en DGX Spark; imagen ollama/ollama",
+   "riesgo": "Nombre del directorio depende de la imagen de Ollama; cambia entre versiones",
+   "verificable_aqui": "docker exec ollama ls -l /usr/lib/ollama/ ; docker exec ollama ollama ps"
+  },
+  {
+   "que": "Metodo de medicion: confirmar que el modelo corre en GPU con ollama ps (columna PROCESSOR).",
+   "como": "docker exec ollama ollama run llama3.1:8b \"test\" && docker exec ollama ollama ps",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, usuario Neurfer",
+   "riesgo": null,
+   "verificable_aqui": "docker ps --format '{{.Names}}' | grep -i ollama"
+  }
+ ],
+ "omision_nvidia": "Staff (aniculescu, post 2) admite que es un fallo conocido del playbook y que lo corregira; no da fecha ni arreglo.",
+ "utilidad_atom": "baja",
+ "razon": "Mecanismo concreto pero acotado a Ollama/txt2kg, no al monitoreo ni a los cortes de la maquina. NVIDIA solo confirma el fallo; el arreglo es de un usuario."
+}

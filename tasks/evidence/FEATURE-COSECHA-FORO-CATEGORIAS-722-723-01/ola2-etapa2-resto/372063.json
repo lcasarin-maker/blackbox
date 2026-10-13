@@ -1,0 +1,57 @@
+{
+ "id": 372063,
+ "titulo": "Recovering bricked ASUS GX10 after apt updates (capsule via live image)",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Impedir que el firmware se aplique por sorpresa: retener el metapaquete OTA y desactivar temporizadores",
+   "como": "sudo apt-mark hold dgx-spark-ota-update-meta; sudo systemctl disable --now apt-daily-upgrade.timer fwupd-refresh.timer apt-daily.timer",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10, segun usuario",
+   "riesgo": "Se deja de recibir parches de seguridad y firmware hasta quitar la retencion",
+   "verificable_aqui": "apt-mark showhold; systemctl list-timers | grep -E 'apt|fwupd'"
+  },
+  {
+   "que": "Recuperar equipo tras flasheo interrumpido: copiar la capsula combinada SoC+BIOS+EC al ESP interno y armar OsIndications desde un live USB arm64",
+   "como": "sudo cp /mnt/fw/<vendor_folder>/bsp*signed.cap /mnt/esp/EFI/UpdateCapsule/ ; printf '\\x07\\x00\\x00\\x00\\x04\\x00\\x00\\x00\\x00\\x00\\x00\\x00' | sudo tee /sys/firmware/efi/efivars/OsIndications-<GUID EFI global, no copiado> > /dev/null",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10, procedimiento ASUS; el redactor dice que lo genero un modelo y no lo reviso",
+   "riesgo": "No apilar la capsula USB-C PD aparte (nota de ASUS: brick si se reinicia durante SoC); montar mal el ESP copia a RAM y no hace nada",
+   "verificable_aqui": "ls /sys/firmware/efi/efivars | head"
+  },
+  {
+   "que": "Comprobar version de BIOS tras el flasheo",
+   "como": "sudo dmidecode -s bios-version",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "sudo dmidecode -s bios-version"
+  },
+  {
+   "que": "Advertencia: flasheo de firmware dura minutos con varios reinicios y pantalla en blanco (peor con USB-C a HDMI); cortar la energia lo bricka. Reset de drenaje: desenchufar y mantener el boton de encendido unos 60 s",
+   "como": "no indicado como comando; procedimiento fisico de 60 s sin corriente",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10, 1 de 2 unidades recuperada",
+   "riesgo": "Interrumpir un flasheo",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "Un usuario documenta comandos exactos para retener el metapaquete de firmware OTA y para recuperar un equipo brickeado, con la advertencia de no interrumpir el flasheo (confirmada por otro usuario en post 2). Es experiencia de usuario en ASUS, sin respuesta de staff NVIDIA."
+}

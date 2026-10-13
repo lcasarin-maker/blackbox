@@ -1,0 +1,37 @@
+{
+ "id": 354800,
+ "titulo": "Error When Validating Qwen3-32B-FP8 Performance Using sglang (Fp8LinearMethod AttributeError)",
+ "leido": true,
+ "posts_leidos": 16,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Quitar la bandera de backend de atencion flashinfer al lanzar sglang en GB10; con ella el modelo MoE FP8 fallaba, sin ella arranca (el denso Qwen3-32B-FP8 sigue fallando)",
+   "como": "python3 -m sglang.launch_server --model-path Qwen/Qwen3-30B-A3B-Instruct-2507-FP8 --host 0.0.0.0 --port 30000 --trust-remote-code --tp 1 --mem-fraction-static 0.75  (sin --attention-backend flashinfer)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario con GB10 (ASUS GX10), sglang en venv; sin version de driver/kernel en el post",
+   "riesgo": "No resuelve Qwen3-32B-FP8: el AttributeError persiste",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Alternativa: ejecutar el modelo denso Qwen3-VL-32B-Instruct-FP8 en vLLM, que un usuario dice que funciona (7 t/s en un Spark, 12 t/s en dos)",
+   "como": "no indicado (solo se nombra vLLM y el modelo; sin comando)",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario eugr, 1 y 2 Sparks",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Un miembro de NVIDIA (NVES, post 2) dice que DGX Spark no fue probado contra los resultados de LMSYS y remite los fallos de sglang/FP8 al proyecto upstream.",
+ "utilidad_atom": "baja",
+ "razon": "Es un fallo de sglang con un modelo FP8 concreto; la unica respuesta de NVIDIA (post 2) declina el soporte y los usuarios solo aportan quitar flashinfer, que no lo arregla. Sin relacion con memoria ni calor; el post 9 menciona drop_caches, ya conocido."
+}

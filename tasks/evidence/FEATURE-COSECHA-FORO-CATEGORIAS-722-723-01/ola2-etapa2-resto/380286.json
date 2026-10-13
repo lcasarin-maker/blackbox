@@ -1,0 +1,9 @@
+{"id": 380286, "titulo": "DGX Spark GB10 hard-resets after vLLM silently exits 255 serving Qwen3.8-27B-FP8", "leido": true, "posts_leidos": 7, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["medir"],
+ "mecanismos": [
+  {"que": "Firma de reinicio en seco sin OOM: contenedor vLLM sale con codigo 255, Docker informa OOMKilled=false, contador oom_kill del kernel en 0, sin Xid en dmesg, y 2-3.5 min despues la maquina se reinicia (firma de corte de energia). Segun el autor la causa final fue un termostato defectuoso (RMA).", "como": "docker inspect (campo OOMKilled=false), contador oom_kill del kernel, dmesg sin Xid; comando exacto no indicado", "fuente_post": 3, "repositorio": null, "licencia": "no indicada", "probado_en": "DGX Spark GB10, driver 580.95.05, kernel 6.14.0-1013-nvidia, vllm/vllm-openai:cu130-nightly (declarado por el usuario)", "riesgo": "Atribuir el reinicio a vLLM/modelo denso cuando era hardware termico segun el autor.", "verificable_aqui": "grep oom_kill /proc/vmstat; journalctl -k -b -1 | grep -i xid"}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El autor atribuyo el reset a vLLM con un modelo denso FP8 pero luego dice que era un termostato defectuoso, con diagnostico fallido y RMA (post 3, 5). El staff (aniculescu) solo pide actualizar el sistema por el DGX Dashboard (post 4); sin comando de prevencion."}

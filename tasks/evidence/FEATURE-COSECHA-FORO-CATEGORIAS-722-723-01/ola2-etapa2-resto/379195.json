@@ -1,0 +1,58 @@
+{
+ "id": 379195,
+ "titulo": "DGX Spark hard-freezes under sustained few minutes inference; PowerStress thermal failure; support portal unavailable",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "monitorear",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Staff (Neill) pide capturar todas las zonas termicas durante la carga, antes del freeze",
+   "como": "sudo cat /sys/class/hwmon/hwmon*/temp*_input",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "cat /sys/class/hwmon/hwmon*/temp*_input"
+  },
+  {
+   "que": "Staff pide ultimo journal tras freeze",
+   "como": "journalctl -b -1 | tail -50",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "journalctl -b -1 | tail -50"
+  },
+  {
+   "que": "Instalar y correr Field Diagnostics (~30 min, PASS/FAIL); FAIL califica para RMA (staff)",
+   "como": "sudo apt-get update; sudo apt-get install dgx-spark-fieldiag; cd /opt/nvidia/dgx-spark-fieldiag; sudo ./partnerdiag --field",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "dpkg -l dgx-spark-fieldiag"
+  },
+  {
+   "que": "Workaround de usuario zc142365: bajar firmware y fijar reloj maximo a 2000 MHz; sin comando en el post",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Usuario admite que no resuelve la causa raiz",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Usuario reporta ACPI ~91-93 C y apagado duro con PowerStress MODS-020000610139; staff Neill da la secuencia de captura (hwmon, journal, partnerdiag). Un segundo usuario mide 62 C ACPI en otra carga, sin comparabilidad."
+}

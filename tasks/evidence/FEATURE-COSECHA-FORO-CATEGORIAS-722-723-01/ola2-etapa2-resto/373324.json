@@ -1,0 +1,26 @@
+{
+ "id": 373324,
+ "titulo": "DGX Spark no longer working",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Chequeo de solo lectura de un SSD danado sin escribir",
+   "como": "fsck.ext4 -fn",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, SSD Samsung segun el autor",
+   "riesgo": "Con un disco que da errores de E/S la lectura puede colgarse; el autor no logro montarlo ni copiar datos.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Personal de NVIDIA (aniculescu, post 2) responde que respaldar los datos es responsabilidad del cliente y pide abrir un ticket de soporte para el RMA; no ofrece ruta de recuperacion de datos.",
+ "utilidad_atom": "baja",
+ "razon": "Un usuario describe una Spark que degrada 72 horas, entra en bucle de BIOS y con el SSD con errores de E/S (post 1). La unica respuesta oficial remite a soporte y reafirma que el respaldo es del cliente (post 2)."
+}

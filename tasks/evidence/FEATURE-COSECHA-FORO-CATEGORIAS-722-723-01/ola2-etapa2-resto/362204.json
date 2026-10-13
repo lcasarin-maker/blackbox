@@ -1,0 +1,48 @@
+{
+ "id": 362204,
+ "titulo": "GPU running hot at the login screen, before user logs in",
+ "leido": true,
+ "posts_leidos": 27,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Script de monitoreo periodico propuesto por staff NVIDIA (aniculescu): nvidia-smi + sensors con marca de tiempo, en cron cada 10 min, para capturar temperaturas en estado pre-login",
+   "como": "*/10 * * * * /home/yourusername/monitor_temps.sh >> /home/yourusername/temperature_monitor.log 2>&1  (script: echo \"=== $(date) ===\"; /usr/bin/nvidia-smi; /usr/bin/sensors; echo \"\")",
+   "fuente_post": 21,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark del usuario; el staff no reporta resultado",
+   "riesgo": "Requiere apt install lm-sensors; el cron debe retirarse al terminar",
+   "verificable_aqui": "which sensors nvidia-smi; crontab -l"
+  },
+  {
+   "que": "Aislamiento de servicio sospechoso: detener gnome-remote-desktop y comprobar su estado (el usuario reporta que al pararlo y salir de sesion la unidad se mantuvo fria; luego dijo que seguia caliente tras parar GDM)",
+   "como": "sudo systemctl stop gnome-remote-desktop ; sudo systemctl status gnome-remote-desktop",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark del usuario (hostname omitido)",
+   "riesgo": "Detener gdm via systemctl provoco reinicio inmediato segun el usuario (post 17); cortar remote-desktop elimina el acceso RDP remoto",
+   "verificable_aqui": "systemctl is-enabled gnome-remote-desktop.service; systemctl status gnome-remote-desktop --no-pager"
+  },
+  {
+   "que": "Afirmacion de usuario (elsaco): una actualizacion del paquete gnome-remote-desktop (46.3-0ubuntu1.1 a 1.2, 9 feb 2026) dejo habilitado el demonio a nivel de sistema (--system), que mantiene contexto GPU en la pantalla de login; comprobar con is-enabled y configurar sesiones de usuario con grdctl",
+   "como": "systemctl --system is-enabled gnome-remote-desktop.service ; grdctl (para sesiones de usuario)",
+   "fuente_post": 19,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "null (deduccion de un usuario a partir de un log generado por Claude del OP, sin verificar por NVIDIA; NVIDIA dijo que no pudo reproducir)",
+   "riesgo": "Deshabilitar el servicio de sistema rompe acceso RDP remoto sin sesion local",
+   "verificable_aqui": "systemctl is-enabled gnome-remote-desktop.service; nvidia-smi --query-compute-apps=pid,process_name --format=csv"
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu) dijo que no logra reproducir y anuncio mejoras de comportamiento de ventiladores en una actualizacion futura sin fecha; no hay fix publicado en el tema.",
+ "utilidad_atom": "media",
+ "razon": "Staff NVIDIA ofrece un script de captura nvidia-smi+sensors por cron para diagnosticar calor en estado pre-login y un test de aislamiento de gnome-remote-desktop; la causa raiz es una hipotesis de usuario sin confirmar y el OP termino reemplazando la unidad (post 27), lo que sugiere fallo de hardware de unidad temprana. Staff (josephbreda, rol incierto) opino que 53-56 C no son anomalos."
+}

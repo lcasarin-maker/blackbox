@@ -1,0 +1,47 @@
+{
+ "id": 383505,
+ "titulo": "Kernel Panic on Dell Pro Max/GB10 After Update",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reparar arranque tras OTA que instalo el kernel nuevo sin generar su initrd (VFS unable to mount root fs), sin borrar datos: live USB Ubuntu 24.04 ARM64, chroot, update-initramfs. Usuario advierte NO usar el menu/imagen de recuperacion DGX OS porque borra el SSD.",
+   "como": "sudo mount /dev/nvme0n1p2 /mnt/dgx; sudo mount /dev/nvme0n1p1 /mnt/dgx/boot/efi; sudo mount --bind /dev /mnt/dgx/dev (idem /proc, /sys); sudo chroot /mnt/dgx; ls -l /boot/initrd-* /boot/vmlinuz-*; update-initramfs -c -k 7.0.0-1019-nvidia; update-grub",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Dell Pro Max GB10, kernel 7.0.0-1019-nvidia (usuario); un usuario confirma que funciono, con su raiz en otra particion (post 7)",
+   "riesgo": "Montar la particion raiz equivocada; verificar con lsblk. Procedimiento de usuario, no de NVIDIA.",
+   "verificable_aqui": "ls -l /boot/initrd.img-* /boot/vmlinuz-*"
+  },
+  {
+   "que": "Atajo de usuario: arrancar el kernel anterior y generar el initramfs del kernel nuevo desde ahi, sin live USB.",
+   "como": "no indicado (solo dice generar un initramfs para 7.0.0-1019-nvidia desde el kernel previo)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Recuperacion publicada por personal de NVIDIA (aniculescu) para el kernel panic: instalar paquetes de modulos nvidia hwe y verificar que existe el initrd del kernel 7.0.",
+   "como": "sudo apt update; sudo apt-get install linux-modules-nvidia-580-open-nvidia-hwe-24.04 nvidia-dkms-580-open-(sufijo cortado en el texto: pide quitar nvidia-dkms-580-open en la misma transaccion); sudo dpkg --audit; sudo apt-get check; test -s /boot/initrd.img-7.0.0-1019-nvidia && echo \"7.0 initrd is present\"",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "El comando de install esta truncado en el texto del foro; no copiar tal cual sin la fuente original.",
+   "verificable_aqui": "test -s /boot/initrd.img-$(uname -r) && echo present; dpkg --audit"
+  }
+ ],
+ "omision_nvidia": "El OTA puede dejar un kernel sin initrd; el menu oficial de recuperacion borra el SSD (afirmacion de usuario).",
+ "utilidad_atom": "media",
+ "razon": "Tema con procedimiento de recuperacion concreto (usuarios) y respuesta de personal NVIDIA con comandos apt; aplica si un OTA a 7.0.0-1019 deja la maquina sin arrancar. El comando NVIDIA esta truncado y la maquina corre 6.17, asi que es preventivo (comprobar que existe initrd antes de reiniciar)."
+}

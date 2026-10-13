@@ -1,0 +1,68 @@
+{
+ "id": 370007,
+ "titulo": "ASUS Ascent GX10 (GB10) hard shutdown under heavy vLLM load | of_root node is NULL and EM: CPUs must have same capacity dmesg errors",
+ "leido": true,
+ "posts_leidos": 12,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Distinguir corte de energia en seco de kernel panic: si pstore esta vacio tras el apagon, fue un corte de hardware",
+   "como": "sudo cat /sys/fs/pstore/*",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Usuario sin staff NVIDIA; en el caso del hilo el directorio no existia, lo que el usuario que respondio interpreta como corte de energia",
+   "verificable_aqui": "ls -la /sys/fs/pstore/ 2>&1"
+  },
+  {
+   "que": "Revisar el arranque anterior tras el apagon",
+   "como": "journalctl -b -1 --no-pager | tail -200",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "journalctl -b -1 --no-pager 2>&1 | tail -5"
+  },
+  {
+   "que": "Herramienta de terceros para comprobar si el GB10 hace throttling por entrega de potencia",
+   "como": "script spark-gpu-throttle-check (comando de uso no indicado)",
+   "fuente_post": 12,
+   "repositorio": "https://github.com/hoesing/spark-gpu-throttle-check",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Licencia no indicada; tratada como no reutilizable",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Las tres advertencias de arranque (of_root NULL, EM same capacity, mpam No MSC) segun un usuario no causaron el apagon",
+   "como": "dmesg | grep -i 'host bridge node'; dmesg | grep -i 'same capacity'; dmesg | grep -i mpam",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "sudo dmesg | grep -ciE 'host bridge node|same capacity|mpam'"
+  },
+  {
+   "que": "Cadena de fallos que un usuario propone: fallo de CDI nvidia.com/gpu=all en Docker, luego NV_ERR_NO_MEMORY en NVRM por agotamiento de la memoria unificada, luego apagado",
+   "como": "journalctl -k | grep -E 'NVRM|CDI'",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Interpretacion de un usuario sin verificacion",
+   "verificable_aqui": "journalctl -k -b 2>&1 | grep -c 'NV_ERR_NO_MEMORY'"
+  }
+ ],
+ "omision_nvidia": "Ninguna respuesta de personal de NVIDIA en el hilo; sin diagnostico oficial de apagones bajo carga.",
+ "utilidad_atom": "media",
+ "razon": "Un usuario propone el metodo pstore + journalctl -b -1 para distinguir corte de hardware de panic, y otro cita una herramienta de throttle de terceros sin licencia. Es el unico en el lote tocando apagones bajo carga vLLM, aunque la causa quedo sin confirmar y el autor pidio RMA."
+}

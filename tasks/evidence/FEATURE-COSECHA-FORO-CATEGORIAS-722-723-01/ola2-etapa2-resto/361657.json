@@ -1,0 +1,27 @@
+{
+ "id": 361657,
+ "titulo": "Warranty Claim - DGX Spark Unit Defective",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Ejecutar Field Diagnostics de NVIDIA; falla si el driver no se puede descargar (nvidia_drm en uso); hay que reiniciar en frio y repetir",
+   "como": "./partnerdiag --field",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (staff NVES)",
+   "riesgo": "Descarga drivers y detiene docker.service y systemd-udevd; no ejecutar con cargas vivas.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El post 1 (usuario) describe apagados en seco sin errores de kernel a los 30-60 min de carga GPU sostenida; NVIDIA (NVES) no dio causa, aprobo RMA tras los logs de field diag (posts 3, 6, 7).",
+ "utilidad_atom": "media",
+ "razon": "Caso de apagado en seco bajo carga sostenida sin logs de error, resuelto por RMA del staff; solo aporta el comando de field diagnostics y su precondicion. Relevante como evidencia de que NVIDIA lo trato como fallo de hardware."
+}

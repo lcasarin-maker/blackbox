@@ -1,0 +1,68 @@
+{
+ "id": 349886,
+ "titulo": "Very slow mmap on DGX Spark that affects model loading - questions to NVIDIA",
+ "posts_leidos": 28,
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Desactivar mmap al cargar modelos en llama.cpp; staff recomienda no-mmap si el modelo cabe en memoria libre",
+   "como": "build/bin/llama-server -hf ggml-org/gpt-oss-120b-GGUF -fa 1 -ngl 999 -ub 2048 -c 0 --no-mmap",
+   "fuente_post": 6,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": "no indicada",
+   "probado_en": "GB10, DGX OS kernel 6.11.0-1016-nvidia (1m48s mmap vs 1m08s no-mmap) y 6.17.1-nvidia (0m22s no-mmap)",
+   "riesgo": "En vLLM la carga eager consume unos 20 GB extra de RAM, reduciendo la memoria disponible para GPU (post 6)",
+   "verificable_aqui": "uname -r; free -g"
+  },
+  {
+   "que": "Aumentar read_ahead_kb del NVMe; staff (sumitg) midio mmap -50% y no-mmap -35% en 6.17",
+   "como": "sudo bash -c \"echo 8192 > /sys/block/nvme0n1/queue/read_ahead_kb\"",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Staff NVIDIA en kernel 6.17 y 6.14; usuario eugr en 6.17 NVIDIA: mmap 2 min a 28 s, no-mmap 25 s a 15 s (post 14)",
+   "riesgo": "No persiste tras reinicio; no mejoro la carga en vLLM segun eugr (post 14); valor por defecto observado 128",
+   "verificable_aqui": "cat /sys/block/nvme0n1/queue/read_ahead_kb"
+  },
+  {
+   "que": "Cargar pesos en vLLM con fastsafetensors: de 7.5 min a 1 min y -40 GB de memoria unificada (Llama 4 Scout NVFP4); Qwen3-Next FP8 de casi 9 min a 24 s",
+   "como": "uv pip install \"fastsafetensors>=0.1.10\" ; vllm ... --load-format fastsafetensors",
+   "fuente_post": 20,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun usuarios ben3241 y eugr (post 22)",
+   "riesgo": "eugr (post 30): cuelga o rompe los Spark cerca del limite de memoria (bug conocido, arreglado en main segun el, pero con otro bug critico); no funciona en cluster Ray (post 24); con GLM 4.6V y transformers 5.0.0 los pesos se corrompen",
+   "verificable_aqui": "python3 -c \"import importlib.metadata as m;print(m.version('fastsafetensors'))\""
+  },
+  {
+   "que": "Alternativa vLLM sin mmap (eager)",
+   "como": "--safetensors-load-strategy eager",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Qwen3-Next-80B-A3B-FP8: 8m41s a 1m28s en 6.17.1; 9m19s a 2m11s en 6.11",
+   "riesgo": "Consume unos 20 GB adicionales de RAM",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Aviso: el modo sleep de vLLM no sirve en Spark (solo mueve pesos de VRAM a RAM, que es la misma memoria)",
+   "como": "no indicado",
+   "fuente_post": 17,
+   "repositorio": "https://github.com/napmany/llmsnap",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "trabajo inutil sin beneficio en memoria unificada (afirmacion de usuario)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "mmap sigue lento en DGX Spark; staff (aniculescu, post 2) dijo que investigarian, sin solucion publicada. Staff (Bibek, post 5) anuncio kernel 6.17 para DGX OS en enero 2026. Otro usuario cita que GPUDirect RDMA no es compatible con memoria de iGPU.",
+ "utilidad_atom": "alta",
+ "razon": "Hilo con medidas y comandos concretos, con confirmacion parcial de staff (no-mmap y read_ahead_kb). El riesgo de fastsafetensors cerca del limite de memoria es relevante para los colapsos de memoria de esta maquina.",
+ "leido": true,
+ "lectura": "completa"
+}

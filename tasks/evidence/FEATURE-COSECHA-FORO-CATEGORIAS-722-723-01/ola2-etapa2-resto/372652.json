@@ -1,0 +1,47 @@
+{
+ "id": 372652,
+ "titulo": "MiMo-V2.5-Pro-FP4-DFlash",
+ "leido": true,
+ "posts_leidos": 14,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta vLLM+Ray con DFlash (decodificacion especulativa) para un modelo 1T en 8 nodos GB10; usuario declara 62 t/s en un prompt corto y 22.1 t/s con 256k de contexto",
+   "como": "--speculative-config '{\"method\":\"dflash\",\"model\":\"/root/models/models17/Mimo-2.5-Pro-FP4-Dflash/dflash\",\"num_speculative_tokens\":7,\"attention_backend\":\"triton_attn\",\"draft_tensor_parallel_size\":1}' --gpu-memory-utilization 0.69 --max-num-seqs 4 --max-num-batched-tokens 4096",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "8x DGX Spark GB10 (declarado por usuario ciprianveg); driver/kernel no indicados",
+   "riesgo": "Solo aplica a clusters de 8 nodos; los pesos pesan 570GB segun otro usuario, no caben en 4 nodos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables NCCL/PyTorch de la receta: NCCL 2.30.4 contra bloqueos (wedge) y asignador expandible",
+   "como": "LD_PRELOAD: /opt/nccl-2.30.4/lib/libnccl.so.2 ; PYTORCH_CUDA_ALLOC_CONF: \"expandable_segments:True\" ; NCCL_ASYNC_ERROR_HANDLING: \"1\"",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "8x GB10 (declarado)",
+   "riesgo": "Requiere la libreria NCCL 2.30.4 dentro del contenedor; solo relevante en multi-nodo",
+   "verificable_aqui": "python3 -c \"import torch;print(torch.cuda.nccl.version())\""
+  },
+  {
+   "que": "Metodo de medicion de benchmark de contexto largo (TTFT, prefill tok/s, gen tok/s, ITL medio) con entradas de 1k a 256k tokens",
+   "como": "no indicado (script propio no publicado; resultados en bench_long_coding_<N>.json)",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "8x GB10 (declarado)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Receta concreta de vLLM con DFlash y variables NCCL, pero declarada solo para 8 nodos GB10 y sin repositorio ni licencia; no hay respuesta de NVIDIA. Un usuario (CosmicRaisins) reporta que DFlash cae a partir de ~16k de contexto, el autor lo contradice con sus numeros."
+}

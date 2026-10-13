@@ -1,0 +1,47 @@
+{
+ "id": 365379,
+ "titulo": "Connect two sparks question",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Ver estado de enlaces RoCE/CX7 por interfaz",
+   "como": "ibdev2netdev",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark + Gigabyte AI TOP ATOM",
+   "riesgo": null,
+   "verificable_aqui": "ibdev2netdev"
+  },
+  {
+   "que": "Configuracion con sparkrun: no usar la misma subred en las dos interfaces gemelas del mismo puerto (eugr, post 2)",
+   "como": "sparkrun cluster create mylab --hosts <ips> --user <usuario>; sparkrun cluster set-default mylab; sparkrun setup ssh; sparkrun setup cx7; sparkrun setup wizard",
+   "fuente_post": 3,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "setup cx7 reescribe netplan",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reducir la memoria que reserva vLLM por sparkrun (consume ~80% de la RAM por defecto, independiente del tamano del modelo)",
+   "como": "sparkrun run @sparkrun-transitional/qwen3-1.7b-vllm --tp 2 --gpu-mem 0.3",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Soporte de usuarios (eugr, dbsci, raphael.amorim) para conectar dos Spark, sin respuesta de NVIDIA. Lo unico transferible es la explicacion de que gpu-mem fija la reserva de memoria independiente del modelo (post 10); lo demas es redes multinodo."
+}

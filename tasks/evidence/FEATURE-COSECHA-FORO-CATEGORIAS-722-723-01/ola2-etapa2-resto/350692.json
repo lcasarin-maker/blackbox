@@ -1,0 +1,48 @@
+{
+ "id": 350692,
+ "titulo": "DGX spark keeps rebooting every 20-30 minutes",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Causa de reinicio cada ~20 min segun usuario zocek: el modulo watchdog sbsa_gwdt queda en lista negra por un archivo de blacklist del kernel tras actualizacion; se descomenta la linea, se carga el modulo y se regenera initramfs",
+   "como": "grep -r \"blacklist.*sbsa\" /etc/modprobe.d/ /lib/modprobe.d/ ; sed -i 's/^blacklist sbsa_gwdt/#blacklist sbsa_gwdt/' /lib/modprobe.d/blacklist_linux_6.8.0-106-generic.conf ; modprobe sbsa_gwdt ; update-initramfs -u ; lsmod | grep sbsa_gwdt",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark con Ubuntu stock y kernel 6.8.0-106-generic segun el usuario",
+   "riesgo": "Un usuario (elsaco, post 7) refuta la generalidad: en el kernel 6.17.0-1008-nvidia el modulo sbsa NO esta en lista negra, y linux-generic no es parte de DGX OS y puede danar el sistema; la receta de apt install linux-generic es peligrosa",
+   "verificable_aqui": "lsmod | grep sbsa_gwdt; grep -r 'blacklist.*sbsa' /etc/modprobe.d/ /lib/modprobe.d/; ls /dev/watchdog*"
+  },
+  {
+   "que": "Apagar el watchdog del BIOS para depurar reinicios automaticos (a riesgo del usuario)",
+   "como": "BIOS/UEFI con tecla DEL: Advanced -> Advanced -> Watchdog",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (usuario Neurfer)",
+   "riesgo": "El propio usuario avisa que se hace bajo propio riesgo; quita el reinicio automatico ante fallo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Recuperacion con imagen de recuperacion de DGX OS rehecha en un PC con Ubuntu 24.04; la imagen inicial no resolvio el reinicio cada 30 min (kernels 1016 y 1014 fallaban, 1013 funciono, segun usuario)",
+   "como": "no indicado (remite a System Recovery de la guia de usuario de DGX Spark)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark; el usuario cita respuesta del servicio al cliente de NVIDIA",
+   "riesgo": "Reflasheo completo con perdida de datos",
+   "verificable_aqui": "uname -r"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El post 6 da comandos exactos y el control de verificacion (lsmod con sbsa_gwdt) para la cadena blacklist -> watchdog no cargado -> reinicio, util como diagnostico de reinicios; el post 7 la acota al kernel 6.8 de Ubuntu y la refuta para 6.17 nvidia. No hay respuesta de staff de NVIDIA, solo la cita del servicio al cliente en el post 5."
+}

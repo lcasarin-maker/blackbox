@@ -1,0 +1,88 @@
+{
+ "id": 368097,
+ "titulo": "MiMo-V2.5 (New model)",
+ "leido": true,
+ "posts_leidos": 58,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Desactivar swap por completo para evitar bloqueos por OOM al probar configuraciones de memoria sin validar en GB10",
+   "como": "swapoff -a mas quitar la entrada de swap de /etc/fstab (post 21: 'swapoff/remove the fstab entry'; post 57 lo cita como 'swapoff -a')",
+   "fuente_post": 21,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "cluster GB10 de 4 nodos segun los usuarios; sin verificacion independiente",
+   "riesgo": "Sin swap un OOM mata procesos en vez de degradar; el propio autor del post 57 declara no haberlo verificado por su cuenta",
+   "verificable_aqui": "swapon --show; grep -c swap /etc/fstab"
+  },
+  {
+   "que": "Aviso: cudaMemGetInfo subestima la memoria libre 3-4 GiB mientras la cache de paginas esta llena en memoria unificada; por eso fijar el limite de memoria estatica de SGLang/vLLM en 0.70-0.88 y no mas",
+   "como": "--mem-fraction-static 0.70 (SGLang, 0.78 ocasionalmente mata el nodo cabeza); --gpu-memory-utilization 0.78 (vLLM)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x ASUS Ascent GX10, sglang dev-cu13-mimo-v2.5 (segun el usuario mclenithan)",
+   "riesgo": "Valores sobre el techo estable provocan OOM del nodo; el autor avisa de que 0.88 se uso despues en el post 17",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Limitar hilos de CPU para que no compitan con la GPU por el ancho de banda LPDDR5x compartido",
+   "como": "OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 TORCH_NUM_THREADS=4",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Efecto en ancho de banda afirmado por el usuario del post 57, 'no verificado de primera mano'",
+   "verificable_aqui": "env | grep -E 'OMP_NUM_THREADS|MKL_NUM_THREADS'"
+  },
+  {
+   "que": "Variable de asignador CUDA contra fragmentacion y NCCL_CUMEM_ENABLE=0 contra bloqueo en la inicializacion de NCCL",
+   "como": "PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True ; NCCL_CUMEM_ENABLE=0",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "NCCL_CUMEM_ENABLE=0 se declara indispensable solo para clusters multinodo; MTU distinto entre nodos cuelga NCCL sin error",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reiniciar en modo texto para liberar memoria y evitar bloqueos durante la carga de pesos",
+   "como": "sudo systemctl set-default multi-user.target && sudo reboot (posts 6 y 57)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Quita el escritorio grafico de forma persistente hasta revertir el target",
+   "verificable_aqui": "systemctl get-default"
+  },
+  {
+   "que": "Reintento de arranque de vLLM tras reinicio fisico: el primer arranque se atasca en fused_moe/layer.py:1041 _load_w2 y un segundo docker stop, rm y start lo despeja",
+   "como": "docker stop && rm && start por segunda vez (post 31/37/57)",
+   "fuente_post": 31,
+   "repositorio": "https://github.com/rdoiron/mimo-mods-for-dgx-spark",
+   "licencia": "no indicada",
+   "probado_en": "4x GX10, vLLM 0.20.1rc1 y 0.21.1rc1.dev30",
+   "riesgo": "Causa raiz desconocida segun los propios autores",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de rendimiento correcta con speculative decoding: llama-benchy menor a 0.3.7 cuenta mal los chunks multi-token",
+   "como": "usar llama-benchy >= 0.3.7 (post 57); tool-eval-bench v1.5.0 para evaluar herramientas (post 17)",
+   "fuente_post": 57,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "cluster 4x GB10, vLLM + Ray V2 + MTP N=1",
+   "riesgo": "Versiones anteriores subestiman tok/s",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "No hay mensaje de personal de NVIDIA en los 58 posts; los usuarios senalan que vLLM no trae configuraciones tuneadas de fused_moe para el dispositivo GB10 y que las imagenes cutlass FP8 fallan en sm_121a.",
+ "utilidad_atom": "alta",
+ "razon": "Leidos los 58 mensajes; el contenido central es recetas de modelos en cluster de 4 nodos, pero hay controles aplicables a un nodo (swap fuera, techo de memoria por cudaMemGetInfo, hilos acotados, multi-user.target) todos de usuarios y sin verificacion independiente. El texto no contiene los numeros de post 35, 47, 49, 51, 52, 53 ni 58 (huecos de numeracion del original), por lo que los 58 mensajes presentes son todos los descargados."
+}

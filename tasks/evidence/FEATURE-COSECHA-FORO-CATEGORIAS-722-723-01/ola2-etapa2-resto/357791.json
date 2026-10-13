@@ -1,0 +1,26 @@
+{
+ "id": 357791,
+ "titulo": "TensorRT-LLM + nvidia/Llama-3.3-70B-Instruct-NVFP4 = 5 tok/s",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Formula de techo de decode por ancho de banda de memoria",
+   "como": "273 GB/s / 35 GB (70B en 4 bits) = 7.8 t/s teorico; esperar 6-7 t/s como maximo real",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario eugr, razonamiento, sin medicion propia",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El usuario esperaba 15-18 tok/s con trtllm-serve y un usuario (eugr) explica el techo por ancho de banda de memoria; el autor acepta (post 4). Post 5 enlaza tablas de 6 Spark sin datos legibles en el texto; sin respuesta de NVIDIA."
+}

@@ -1,0 +1,58 @@
+{
+ "id": 370458,
+ "titulo": "NV_ERR_NO_MEMORY despite having plenty of memory available when using Sway",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Firma de log del fallo de reserva de scanout en GB10 aunque haya memoria libre (no es agotamiento de UMA)",
+   "como": "NVRM: memmgrAllocScanoutCarveoutRegionResources_GB10B: EheapAlloc returns error 0x51 / NV_ERR_NO_MEMORY returned from rmStatus @ system_mem.c:330",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.142 y 580.159.03, kernel 6.17.0-1018-nvidia (usuario dlludllu)",
+   "riesgo": "Terminales y apps dejan de responder; los fallos se acumulan y cerrar ventanas no recupera",
+   "verificable_aqui": "dmesg -T | grep -E 'NV_ERR_NO_MEMORY|memmgrAllocScanoutCarveout'"
+  },
+  {
+   "que": "Segunda firma, con cache de paginas grande (copia de ficheros): fallos en _memdescAllocInternal y kgrctxAllocMainCtxBuffer incluso en X11",
+   "como": "NVRM: ... Out of memory [NV_ERR_NO_MEMORY] (0x00000051) returned from _memdescAllocInternal(pMemDesc) @ mem_desc.c:1359; luego kgrctxAllocMainCtxBuffer @ kernel_graphics_context.c:1387",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "misma maquina del usuario",
+   "riesgo": "El usuario lo atribuye a cache grande sin liberar; sin verificacion de NVIDIA",
+   "verificable_aqui": "dmesg -T | grep -E '_memdescAllocInternal|kgrctxAllocMainCtxBuffer'"
+  },
+  {
+   "que": "Mitigacion parcial: bajar la resolucion de 6144x3456 a 3840x2160 retrasa el fallo pero no lo elimina; WLR_SCENE_DISABLE_DIRECT_SCANOUT=1 no lo arregla",
+   "como": "3840x2160; export WLR_SCENE_DISABLE_DIRECT_SCANOUT=1 (no funciono)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Sway 1.13-dev, GB10",
+   "riesgo": "No resuelve",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Correccion de NVIDIA: actualizacion de julio 2026 con 'Adjustable Display Reserved Memory' y mejor manejo de OOM en el driver, via DGX Dashboard",
+   "como": "Actualizar mediante DGX Dashboard (release julio 2026); el post no da comando ni nombre del ajuste",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "respuesta de staff NVIDIA (aniculescu)",
+   "riesgo": "Efecto sin verificar por usuarios; el hilo se cerro sin confirmacion",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv,noheader; dmesg -T | grep -c NV_ERR_NO_MEMORY"
+  }
+ ],
+ "omision_nvidia": "Hasta julio 2026 el display reservaba memoria contigua sin ajuste del usuario; NVIDIA lo admite al anadir 'Adjustable Display Reserved Memory'.",
+ "utilidad_atom": "media",
+ "razon": "Staff NVIDIA confirma una correccion de driver (memoria reservada de display ajustable y mejor manejo de OOM) en la release de julio 2026, y el usuario aporta firmas de log grep-ables para detectar el fallo. El post 10 no da el nombre del parametro, por eso no es alta."
+}

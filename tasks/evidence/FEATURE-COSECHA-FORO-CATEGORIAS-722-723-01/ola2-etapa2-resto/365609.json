@@ -1,0 +1,10 @@
+{"id": 365609, "titulo": "NVIDIA DGX Spark continuously freezing, hanging, and or rebooting", "leido": true, "posts_leidos": 9, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["medir"],
+ "mecanismos": [
+  {"que": "El staff de NVIDIA (aniculescu) pide una autoprueba extendida del NVMe desde UEFI para descartar fallo de disco; el autor la paso (corta y extendida: Pass) y el caso termino en RMA.", "como": "UEFI > Advanced > NVMe Configuration > extended self-test", "fuente_post": 6, "repositorio": null, "licencia": "no indicada", "probado_en": "DGX Spark del usuario (version no indicada)", "riesgo": null, "verificable_aqui": null},
+  {"que": "El staff pide, con la maquina sin perifericos, entrar por SSH y generar el informe de diagnostico de NVIDIA.", "como": "nvidia-bug-report", "fuente_post": 2, "repositorio": null, "licencia": "no indicada", "probado_en": null, "riesgo": null, "verificable_aqui": "command -v nvidia-bug-report"}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario describe congelaciones y reinicios en bucle tras conectar un hub USB-C, con calor en el puerto USB-C; el staff (aniculescu) solo pide nvidia-bug-report y la autoprueba NVMe, y el caso acaba escalado a RMA (post 8) sin causa raiz. El intento de usbcore.autosuspend=-1 por GRUB no se pudo aplicar segun el usuario (post 1)."}

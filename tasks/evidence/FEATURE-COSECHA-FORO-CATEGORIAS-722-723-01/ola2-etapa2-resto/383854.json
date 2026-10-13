@@ -1,0 +1,89 @@
+{
+ "id": 383854,
+ "titulo": "Ugh... new problem -- instead of random shutdowns/throttles, now it hangs. Anyone else?",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "rastrear",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Localizar el poseedor del bloqueo en los hung-task reports del arranque previo (si el tope de pila esta en try_to_free_pages/shrink_node es presion de memoria; el 'blocked on an rw-semaphore likely owned by' solo existe en 6.17+)",
+   "como": "journalctl -b -1 -k | grep -A65 \"blocked for more than\"",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernels 6.11.0-1016-nvidia y 6.17.0-1026-nvidia, driver 580.159.03 (trazas del 6.17)",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -b -1 -k | grep -A65 \"blocked for more than\""
+  },
+  {
+   "que": "Contar mensajes de presion de memoria de journald del arranque previo (el filtro -k los oculta)",
+   "como": "journalctl -b -1 -t systemd-journald | grep -c \"Under memory pressure\"",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "journalctl -b -1 -t systemd-journald | grep -c \"Under memory pressure\""
+  },
+  {
+   "que": "Reinicio automatico ante hung task: armar el panico del detector; el post dice que ambas unidades traen el detector activo pero desarmado",
+   "como": "kernel.hung_task_panic=1 con kernel.panic=30 (valores de fabrica: kernel.hung_task_timeout_secs = 120, kernel.hung_task_panic = 0, kernel.panic = 0); persistir en un archivo de /etc/sysctl.d/",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ambas unidades del autor, kernels 6.11 y 6.17",
+   "riesgo": "El reinicio usa emergency_restart sin sync ni unmount; una tormenta de swap puede disparar el panico y reiniciar la maquina; el camino de pstore nunca se disparo de extremo a extremo",
+   "verificable_aqui": "sysctl kernel.hung_task_timeout_secs kernel.hung_task_panic kernel.panic"
+  },
+  {
+   "que": "Registro de panico: pstore con efi_pstore (record_size=1024, kmsg_bytes=10240), systemd-pstore.service lo mueve a /var/lib/systemd/pstore/ y al journal; volcado completo requeriria crashkernel= en GRUB y kdump-tools",
+   "como": "/etc/systemd/pstore.conf (Storage=external, Unlink=yes por defecto); ls /var/lib/systemd/pstore/",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "best effort: efi_pstore_write se rinde si no toma el candado de variables EFI; ambas unidades traen crashkernel=1G-:0M y USE_KDUMP: 0",
+   "verificable_aqui": "ls /sys/fs/pstore /var/lib/systemd/pstore/; cat /etc/systemd/pstore.conf; systemctl is-enabled systemd-pstore.service"
+  },
+  {
+   "que": "Watchdog de hardware SBSA presente e inactivo; systemd lo arma con RuntimeWatchdogSec y hace ping a la mitad del intervalo; dispara si PID 1 pierde un ping (disparador distinto al de hung task)",
+   "como": "RuntimeWatchdogSec= en systemd; leer /sys/class/watchdog/watchdog0/identity y state",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ambas unidades del autor",
+   "riesgo": "no indicado en el post",
+   "verificable_aqui": "cat /sys/class/watchdog/watchdog0/identity /sys/class/watchdog/watchdog0/state; systemctl show -p RuntimeWatchdogUSec"
+  },
+  {
+   "que": "SysRq: kernel.sysrq=176 permite sync, remount-ro y reboot por teclado (Alt+SysRq s, u, b); /proc/sysrq-trigger siempre esta permitido, por lo que se pueden volcar tareas bloqueadas",
+   "como": "echo w > /proc/sysrq-trigger",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "sysctl kernel.sysrq"
+  },
+  {
+   "que": "Metodo de medicion: comparar MemFree, MemAvailable, Cached y cuda_free antes/durante/despues de asignar 20 GiB de memoria de dispositivo; MemFree cae 20.52 GiB y cuda_free la sigue, no MemAvailable",
+   "como": "no indicado (el post da solo las lecturas, no el programa)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "unidad del autor, kernel 6.17, driver 580.159.03",
+   "riesgo": null,
+   "verificable_aqui": "grep -E 'MemFree|MemAvailable|Cached' /proc/meminfo; nvidia-smi --query-gpu=memory.free --format=csv"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El post 2 (usuario, sin rol de staff visible) aporta una traza con un poseedor de rwsem atascado en reclaim directo y una receta concreta de sysctl, watchdog, pstore y sysrq para recuperar o diagnosticar cuelgues; el autor admite que el camino de panico nunca se probo de extremo a extremo. No hay respuesta de NVIDIA; el post 1 (autor original) pregunta si alguien mas sufre cuelgues con memoria libre."
+}

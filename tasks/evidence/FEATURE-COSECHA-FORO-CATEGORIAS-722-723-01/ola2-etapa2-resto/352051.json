@@ -1,0 +1,58 @@
+{
+ "id": 352051,
+ "titulo": "Enabling GPU Direct RDMA for DGX Spark Clustering",
+ "leido": true,
+ "posts_leidos": 13,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobar por programa si la plataforma soporta GPUDirect RDMA / dma-buf (respuesta de NVIDIA, mfatica)",
+   "como": "consultar CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_SUPPORTED y CU_DEVICE_ATTRIBUTE_DMA_BUF_SUPPORT con la API de dispositivo CUDA",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (declaracion de NVIDIA)",
+   "riesgo": null,
+   "verificable_aqui": "python3 -c \"import ctypes;l=ctypes.CDLL('libcuda.so.1');print(l)\" (solo carga la libreria; la consulta del atributo requiere cuDeviceGetAttribute)"
+  },
+  {
+   "que": "Workaround RDMA sin GPUDirect: buffers de comunicacion en memoria de host fijada y registrados con ib verbs (sugerencia de NVIDIA)",
+   "como": "asignar con cudaHostAlloc y registrar con ib_reg_mr",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (staff); un usuario (post 9) dice haberlo probado tambien con malloc",
+   "riesgo": "Afirmacion de usuario en post 9: no probo si cudaMallocManaged se puede registrar con RDMA.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables NCCL para dos cables 200G (usuario)",
+   "como": "export NCCL_SOCKET_IFNAME=<dos interfaces>; export NCCL_IB_GID_INDEX=3; export NCCL_IB_HCA=<dos HCA roce>; export UCX_NET_DEVICES=<dos interfaces>",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark, kernel 6.14.0-1013-nvidia, driver 580.95.05, NCCL 2.28.3 (declarado por usuario)",
+   "riesgo": "Rendimiento medido 25.67 GB/s (~52% de 50 GB/s) con all_gather_perf 8GB; no es solucion, es punto de partida.",
+   "verificable_aqui": "ibv_devinfo -l; ip -br link"
+  },
+  {
+   "que": "Benchmark de ancho de banda GPU a GPU por 200GbE (usuario alan.dang), solo 2 nodos, sin seguridad",
+   "como": "no indicado (zip adjunto NCCLBenchmark-DGXSpark-AlanBCDang.zip; resultados 20-22 GB/s a 8-64 MB)",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (declarado por usuario)",
+   "riesgo": "El autor dice que copia y ejecuta codigo por ssh sin controles de seguridad.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA (mfatica, post 2) declara que GPUDirect RDMA no esta soportado en DGX Spark: nvidia-peermem, dma-buf y GDRCopy no funcionan por la memoria unificada.",
+ "utilidad_atom": "baja",
+ "razon": "Declaracion oficial util como omision (sin GPUDirect RDMA, workaround cudaHostAlloc+ib_reg_mr), pero aplica a clustering de dos Spark por red, no a colapsos de memoria ni calor en una sola maquina. Usuarios ofrecen variables NCCL y un benchmark sin licencia."
+}

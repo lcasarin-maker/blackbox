@@ -1,0 +1,47 @@
+{
+ "id": 378582,
+ "titulo": "Nvcr.io/nvidia/vllm:26.07-py3 — tool-calling requests 500 due to xgrammar/transformers version",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de imagen derivada: xgrammar 0.2.4 sin dependencias para no degradar transformers (variante mas corta de ramcs, evita el downgrade)",
+   "como": "FROM nvcr.io/nvidia/vllm:26.07-py3\nRUN pip install --no-cache-dir --no-deps xgrammar==0.2.4",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Gigabyte AI TOP ATOM (GB10), vLLM 0.24.0+nv26.7, solo tool calling probado (usuario ramcs)",
+   "riesgo": "NVIDIA (post 5) dice que subir xgrammar no arregla tool_choice=required ni tool nombrado forzado; no validado oficialmente",
+   "verificable_aqui": "docker image ls | grep vllm; docker run --rm --entrypoint python <img> -c 'import xgrammar;print(xgrammar.__version__)'"
+  },
+  {
+   "que": "Variante inicial: pip install -U xgrammar y re-fijar transformers",
+   "como": "RUN pip install -q -U xgrammar && pip install -q transformers==5.6.1",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, tool calling, json_schema y guided_regex segun el usuario (post 3)",
+   "riesgo": "xgrammar 0.2.4 declara transformers<5, forzar 5.6.1 queda fuera de lo soportado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Mitigacion oficial NVIDIA: usar el contenedor 26.06 en lugar de 26.07 si se necesita tool calling",
+   "como": "nvcr.io/nvidia/vllm:26.06-py3 (tag mencionado por usuario como rollback; NVIDIA dice 26.06)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "staff NVIDIA reprodujo el fallo en la imagen publica 26.07",
+   "riesgo": null,
+   "verificable_aqui": "docker image ls nvcr.io/nvidia/vllm"
+  }
+ ],
+ "omision_nvidia": "NVIDIA (staff Neill, posts 2 y 5) reconoce un defecto en la ruta de tool calling del contenedor vLLM 26.07, tiene ticket interno y no ofrece arreglo validado; recomienda 26.06.",
+ "utilidad_atom": "media",
+ "razon": "Staff NVIDIA confirma regresion en 26.07 y recomienda 26.06; usuarios dan Dockerfile exacto que NVIDIA no valida. Es un workaround de software de inferencia, util solo si se usa ese tag, sin relacion con memoria o calor."
+}

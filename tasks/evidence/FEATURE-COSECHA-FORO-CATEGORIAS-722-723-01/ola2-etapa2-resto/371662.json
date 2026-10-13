@@ -1,0 +1,37 @@
+{
+ "id": 371662,
+ "titulo": "Let's give Hy3 a high five!",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Bandera de vLLM para evitar OOM al cargar modelos grandes (autotune de FlashInfer)",
+   "como": "--no-enable-flashinfer-autotune",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Sin medicion ni confirmacion de otro usuario en el tema; efecto en rendimiento no indicado.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia de usuario: con FlashInfer en GB10 los modelos grandes colapsan la RAM al arrancar; usar otro backend (Triton, trtllm, marlin)",
+   "como": "no indicado (sin comando exacto)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Afirmacion de usuario sin verificacion; marlin recuantiza y es mas lento segun el mismo usuario.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario reporta que cargar Hy3 congela los Spark (post 8) y otro sugiere --no-enable-flashinfer-autotune contra el OOM (post 11) y cambiar de backend (post 9). Sin respuesta de NVIDIA; todo es afirmacion de usuarios sin medicion."
+}

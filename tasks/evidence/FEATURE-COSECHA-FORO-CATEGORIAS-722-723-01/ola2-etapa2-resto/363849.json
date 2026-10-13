@@ -1,0 +1,37 @@
+{
+ "id": 363849,
+ "titulo": "Difference in Total VRAM available for different Sparks",
+ "leido": true,
+ "posts_leidos": 20,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comparar memoria total visible entre OEMs; diferencia ~2 GiB atribuida por un usuario a reserva de firmware",
+   "como": "sudo dmidecode -t system | grep -A3 \"System Information\" ; free -g",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "varios OEM (HP, Lenovo, Dell, Asus, Acer, Gigabyte, FE) segun los usuarios",
+   "riesgo": null,
+   "verificable_aqui": "free -g; sudo dmidecode -t system | grep -A3 'System Information'"
+  },
+  {
+   "que": "Buscar actualizaciones de firmware/BIOS que liberan ~2 GB; dos usuarios reportan 119 a 121-122 GB tras actualizar firmware en Gigabyte",
+   "como": "sudo fwupdmgr refresh ; sudo fwupdmgr get-updates",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark y MSI (post 2); Gigabyte tras update de firmware (posts 17,18)",
+   "riesgo": "Gigabyte aun sin update para algunos usuarios (posts 3,5); el flasheo de BIOS no esta documentado por Gigabyte (post 19)",
+   "verificable_aqui": "fwupdmgr get-updates"
+  }
+ ],
+ "omision_nvidia": "Ninguna respuesta de NVIDIA; Gigabyte tampoco da changelog (post 19). El usuario del post 1 cuenta ademas que la particion NVMe venia con solo 625 GiB y tuvo que crecerla.",
+ "utilidad_atom": "baja",
+ "razon": "Tabla de comparacion entre OEM con free -g y reporte de que el firmware recupera ~2 GB, todo de usuarios y con comandos basicos ya conocidos. Sin respuesta de staff NVIDIA."
+}

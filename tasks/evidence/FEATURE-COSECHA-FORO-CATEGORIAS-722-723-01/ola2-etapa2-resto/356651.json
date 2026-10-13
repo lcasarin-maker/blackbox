@@ -1,0 +1,99 @@
+{
+ "id": 356651,
+ "titulo": "vLLM on GB10: gpt-oss-120b MXFP4 slower than SGLang/llama.cpp... what's missing?",
+ "leido": true,
+ "posts_leidos": 145,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Servir gpt-oss-120b con ruta MXFP4 nativa en vLLM (build de la comunidad, no upstream)",
+   "como": "vllm serve openai/gpt-oss-120b --quantization mxfp4 --mxfp4-backend CUTLASS --mxfp4-layers moe,qkv,o,lm_head --attention-backend FLASHINFER --kv-cache-dtype fp8 --gpu-memory-utilization 0.70 --enable-prefix-caching --load-format fastsafetensors --max-num-batched-tokens 8192",
+   "fuente_post": 90,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker (build: ./build-and-copy.sh -t vllm-node-mxfp4 --exp-mxfp4 -c) y https://github.com/christopherowen/spark-vllm-mxfp4-docker",
+   "licencia": "no indicada",
+   "probado_en": "Spark/GB10 SM121; usuarios miden ~57-62 tok/s decode TP=1 (post 18, 103, 106)",
+   "riesgo": "Build experimental; eugr aconseja usarlo solo con gpt-oss (post 90); optimizaciones no estan upstream (post 126); reportado crash CUDA illegal memory access a ~30k tokens con CUDA graphs/prefix caching (posts 50-51)",
+   "verificable_aqui": "docker images | grep -i vllm; nvidia-smi"
+  },
+  {
+   "que": "Arquitectura CUDA 12.1f en vez de 12.1a para habilitar instrucciones FP4 block-scaled en SM121",
+   "como": "cambio de TORCH_CUDA_ARCH/arch flags 12.1a -> 12.1f en el contenedor (descrito en SM121_TECHNICAL_GUIDE.md del repo)",
+   "fuente_post": 17,
+   "repositorio": "https://github.com/christopherowen/spark-vllm-mxfp4-docker",
+   "licencia": "no indicada",
+   "probado_en": "Spark, usuario christopher_owen; johnny_nv (post 25) contradice que 12.1a excluya funciones",
+   "riesgo": "Discrepancia no resuelta; podria ser bug de flashinfer",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medir con llama-benchy y vllm bench serve; desactivar prefix cache para evitar peticiones repetidas",
+   "como": "llama-benchy --base-url http://localhost:8000/v1 --model openai/gpt-oss-120b --tokenizer openai/gpt-oss-120b --pp 512 2048 8192 --tg 32 128 --runs 5 ; vllm bench serve --backend vllm --model openai/gpt-oss-120b --endpoint /v1/completions --dataset-name sharegpt --dataset-path ShareGPT_V3_unfiltered_cleaned_split.json --num-prompts 1024 --port 8000 (con vllm --no-enable-prefix-caching)",
+   "fuente_post": 34,
+   "repositorio": "https://github.com/christopherowen/spark-vllm-mxfp4-docker",
+   "licencia": null,
+   "probado_en": "Spark; eugr advierte que el log de vLLM puede no coincidir con la realidad",
+   "riesgo": "Variabilidad alta entre corridas (posts 119-120)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Monitoreo termico/potencia/reloj por CLI (usuario)",
+   "como": "nvidia-smi -q -d TEMPERATURE ; watch -n 1 nvidia-smi ; nvidia-smi --query-gpu=timestamp,temperature.gpu,fan.speed,power.draw,clocks.sm --format=csv -l 1",
+   "fuente_post": 99,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark driver 580.126.09; salida muestra 51-52C, 14W, 2444 MHz (post 100)",
+   "riesgo": "Temperatura previa alta sesga benchmarks (post 101); T.Limit mostrado como 45C/-2C en salida del post 100",
+   "verificable_aqui": "nvidia-smi --query-gpu=timestamp,temperature.gpu,power.draw,clocks.sm --format=csv -l 1"
+  },
+  {
+   "que": "Cluster 2 nodos: usar ambas mitades RoCE en NCCL y MTU 9000",
+   "como": "NCCL_IB_HCA con ambos dispositivos roce*; /etc/netplan/40-cx7.yaml con mtu: 9000 y link-local: []",
+   "fuente_post": 63,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark con CX7; tg ~70-77 tok/s TP=2 (posts 53, 73, 106)",
+   "riesgo": "CUDA graphs en cluster colgaron un nodo al 100% hasta cambiar a base pytorch (posts 65, 85)",
+   "verificable_aqui": "ip link show | grep mtu; ibdev2netdev"
+  },
+  {
+   "que": "Dependencia faltante que rompe el arranque (import circular NamedTuple/opencv): instalar libxcb1",
+   "como": "apt install libxcb1 en la imagen",
+   "fuente_post": 48,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker/commit/25a16ef",
+   "licencia": null,
+   "probado_en": "usuario eugr",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fallo de tiktoken/harmony al iniciar: faltan vocabularios",
+   "como": "variable TIKTOKEN_ENCODINGS_BASE=/workspace/tiktoken_encodings y sincronizar manualmente",
+   "fuente_post": 147,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario christopher_owen",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Alta concurrencia en una sola GB10 (RAG/batch)",
+   "como": "--max-num-seqs 1024 --max-num-batched-tokens 65535 --max-model-len 4096 --gpu-memory-utilization 0.85; pico ~2350 tok/s generacion y ~9840 tok/s prompt segun log; vllm bench serve 441.71 tok/s salida",
+   "fuente_post": 31,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario stor11, GB10, 1024 peticiones",
+   "riesgo": "KV cache llega a 99-100% en corridas largas (post 137); TTFT medio 139 s en 1024 peticiones (post 35)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun usuarios (raphael.amorim post 2, eugr post 126), NVFP4/MXFP4 no esta bien aprovechado en vLLM estandar para sm121; las optimizaciones solo existen en builds de la comunidad. Sin respuesta oficial de NVIDIA; johnny_nv interviene solo sobre etiquetas de arquitectura (posts 16, 25).",
+ "utilidad_atom": "alta",
+ "razon": "Hilo largo con banderas exactas de vLLM, comandos de benchmark, monitoreo nvidia-smi y fallos conocidos (CUDA graphs en cluster, illegal memory access, libxcb1, tiktoken) con cifras medidas por varios usuarios en Spark. No hay respuesta de NVIDIA sobre el rendimiento; todo es evidencia de usuarios y de un build experimental sin licencia indicada."
+}

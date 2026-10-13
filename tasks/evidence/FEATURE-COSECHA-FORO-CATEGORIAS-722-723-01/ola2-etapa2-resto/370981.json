@@ -1,0 +1,38 @@
+{
+ "id": 370981,
+ "titulo": "Request: DGX Spark OS Recovery Without Wiping User Data",
+ "leido": true,
+ "posts_leidos": 21,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Antes de reimagen con FastOS (recuperacion de NVIDIA) arrancar con un USB live de Ubuntu arm64, montar el NVMe y copiar los datos",
+   "como": "no indicado (USB live Ubuntu, montar NVMe)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "segun usuarios",
+   "riesgo": "Reimagen borra todo el disco",
+   "verificable_aqui": "lsblk"
+  },
+  {
+   "que": "Recuperacion tras kernel panic por actualizacion fallida del Dashboard: chroot en el NVMe, reconstruir initramfs, corregir DKMS y dpkg, regenerar GRUB con timeout no cero",
+   "como": "update-initramfs; dpkg --configure -a; editar /etc/default/grub; update-grub (nombres citados en post 9, sin sintaxis completa)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Pasos manuales; el detalle esta en otro tema enlazado y no se leyo aqui",
+   "verificable_aqui": "grep -E 'GRUB_TIMEOUT' /etc/default/grub"
+  }
+ ],
+ "omision_nvidia": "El unico camino oficial citado para una Spark que no arranca es la imagen de recuperacion que borra el SSD completo; sin particion de recuperacion, sin reparacion que preserve datos, sin rollback (afirmacion de usuarios; ninguna respuesta de NVIDIA, solo cierre del tema por moderador).",
+ "utilidad_atom": "baja",
+ "razon": "Debate de usuarios sin staff de NVIDIA que sustancie la omision: la recuperacion oficial borra todos los datos. Los mecanismos son nombres de comandos genericos de Linux sin procedimiento completo."
+}

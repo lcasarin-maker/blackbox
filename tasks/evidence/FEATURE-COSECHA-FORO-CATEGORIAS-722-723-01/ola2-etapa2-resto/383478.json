@@ -1,0 +1,27 @@
+{
+ "id": 383478,
+ "titulo": "NVMe write failures on DGX Spark",
+ "posts_leidos": 6,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Lectura de codigos NVMe para distinguir fallo de transporte de fallo de medios: sct 0x0 / sc 0x4 (Data Transfer Error) frente a SCT 2h (medios); se comprueba SMART, self-test, enlace PCIe y AER",
+   "como": "nvme0n1: I/O Cmd(0x1) ... (sct 0x0 / sc 0x4) en dmesg; SMART media_errors; current_link_speed/current_link_width",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark P4242, DGX OS 7.5.0, kernel 6.17.0-1029-nvidia (declarado por el usuario)",
+   "riesgo": "el propio usuario atribuye la causa al camino PCIe del host sin confirmacion; el unico personal NVIDIA solo pide Field Diagnostics y manda a RMA",
+   "verificable_aqui": "dmesg | grep -i nvme; cat /sys/bus/pci/devices/*/current_link_speed; smartctl -a /dev/nvme0n1"
+  }
+ ],
+ "omision_nvidia": "La herramienta de recuperacion del sistema (segun el usuario) declara exito aunque dd escribio 0 bytes y toda operacion devolvio EIO; sin respuesta de NVIDIA sobre eso.",
+ "utilidad_atom": "media",
+ "razon": "Caso de RMA de un usuario; el valor reutilizable es la lista de comprobaciones y la interpretacion de sct 0x0 sc 0x4, aplicable a esta maquina para rastrear fallos de disco. El personal NVIDIA solo respondio con Field Diagnostics y RMA.",
+ "leido": true,
+ "lectura": "completa"
+}

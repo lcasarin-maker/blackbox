@@ -1,0 +1,11 @@
+{"id": 348517, "titulo": "TRT LLM for Inference - two Sparks example is VERY slow", "leido": true, "posts_leidos": 7, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["medir"],
+ "mecanismos": [
+  {"que": "Personal de NVIDIA (aniculescu) pide medir el rendimiento con trtllm-bench, comparando una Spark contra dos", "como": "trtllm-bench (sin argumentos indicados)", "fuente_post": 6, "repositorio": null, "licencia": null, "probado_en": null, "riesgo": null, "verificable_aqui": null},
+  {"que": "Un usuario reporta mejor resultado al cambiar la imagen de contenedor TRT-LLM por una mas nueva", "como": "nvcr.io/nvidia/tensorrt-llm/release:1.2.0rc1", "fuente_post": 8, "repositorio": null, "licencia": null, "probado_en": "dos Sparks segun el usuario", "riesgo": "Imagen release candidate; afirmacion de usuario sin cifras", "verificable_aqui": "docker images --format '{{.Repository}}:{{.Tag}}' | grep tensorrt-llm"},
+  {"que": "Usuario eugr (no staff) senala que la comparacion es invalida: Qwen3-235B-A22B tiene 22B parametros activos frente a 3B de gpt-oss-120b", "como": "no indicado (argumento, sin comando)", "fuente_post": 9, "repositorio": null, "licencia": null, "probado_en": null, "riesgo": null, "verificable_aqui": null}
+ ],
+ "omision_nvidia": "El playbook de dos nodos usa una imagen distinta a la de un solo nodo; un usuario nota que no hay imagen explicita para dos nodos (post 2).",
+ "utilidad_atom": "baja",
+ "razon": "Queja de lentitud en TRT-LLM de dos Sparks; NVIDIA solo pide trtllm-bench y un usuario explica la diferencia por parametros activos. Sin mecanismo de monitoreo de memoria o calor."}

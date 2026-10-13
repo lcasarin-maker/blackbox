@@ -1,0 +1,47 @@
+{
+ "id": 379778,
+ "titulo": "What is your power management solution?",
+ "leido": true,
+ "posts_leidos": 18,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Governor de CPU en powersave para ahorrar 0.5-1 W en reposo (afirmacion de usuario)",
+   "como": "cpupower frequency-set -g powersave",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark (usuario)",
+   "riesgo": "Ahorro minimo; efecto en rendimiento no medido",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Patron de apagado por inactividad: guion que consulta consumo de GPU y sesiones SSH y apaga tras 30 min sin actividad; el corte de AC lo dispara un enchufe inteligente cuando cada toma baja de 1.5 W; BIOS en encendido al volver AC",
+   "como": "no indicado (el guion no se publica)",
+   "fuente_post": 18,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x ASUS GX-10, regleta Shelly (usuario)",
+   "riesgo": "El arranque en frio de GLM-5.2 tarda ~12 minutos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Apagar los puertos CX7 ahorra ~17 W en reposo por nodo (relato de segunda mano, sin comando)",
+   "como": "no indicado",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Referido de otro hilo, sin verificar",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Segun varios usuarios el Spark no soporta suspension S3 (solo s2idle, que despierta de inmediato), ni hibernacion, ni Wake-on-LAN desde apagado; la unica gestion de energia viable es apagar y cortar AC (posts 13, 15). Ninguna respuesta de staff NVIDIA en el tema.",
+ "utilidad_atom": "baja",
+ "razon": "Usuarios, sin staff NVIDIA; las cifras de reposo (27-40 W por equipo, ~238 W para 4 nodos con switch) son declaradas por ellos. El unico comando concreto ahorra 0.5-1 W y el tope de reloj de GPU mencionado ya esta cubierto."
+}

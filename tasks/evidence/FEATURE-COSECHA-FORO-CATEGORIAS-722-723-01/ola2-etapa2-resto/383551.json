@@ -1,0 +1,36 @@
+{
+ "id": 383551,
+ "titulo": "Qwen3.8-27B QUASAR NVFP4 on a single GB10",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Banderas vLLM con las que un usuario sirve el checkpoint NVFP4 en un GB10 (contenedor vllm/vllm-openai)",
+   "como": "--max-model-len 16384 --gpu-memory-utilization 0.70 --max-num-seqs 8 --max-num-batched-tokens 4096 --enable-prefix-caching --enable-chunked-prefill",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario jahnclawdmonet, GB10, driver 580.159.03, vLLM 0.28.1rc1, torch 2.13.0+cu130",
+   "riesgo": "Un nightly anterior (2026-09-06) seleccionaba el kernel weight-only FlashInferCuteDslNvFp4W4A16LinearKernel en un checkpoint W4A4; comprobar la linea de log del kernel elegido",
+   "verificable_aqui": "no indicado (comprobar en el log de vLLM la linea 'Using ... for NVFP4 GEMM')"
+  },
+  {
+   "que": "Metodo de medicion: leer en el log de vLLM la linea de seleccion del kernel NVFP4 GEMM y las lineas de memoria de gpu_worker y kv_cache_utils; throughput medido con solicitudes concurrentes a /v1/chat/completions",
+   "como": "no indicado (sin script; se describen N solicitudes simultaneas, prompt de 65 tokens, temperatura 0, 256 tokens max)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario jahnclawdmonet, GB10",
+   "riesgo": "Sin calentamiento, una corrida por fila, resultados de un usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario aporta banderas de vLLM y cifras medidas (12.2 tok/s con 1 solicitud, 88.9 tok/s agregado con 8; peso+no-torch 21.97 GiB) en GB10. Sin respuesta de NVIDIA; las cifras son de un usuario sin repeticion."
+}

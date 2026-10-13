@@ -1,0 +1,48 @@
+{
+ "id": 350359,
+ "titulo": "The DGX system itself takes up 20GB memory?",
+ "leido": true,
+ "posts_leidos": 21,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Causa declarada por usuario eugr: CUDA usa memoria libre en vez de disponible, por eso el cache de archivos aparece como ocupado; workaround: descargar modelos, vaciar cache y luego arrancar; llama.cpp no se ve afectado",
+   "como": "sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, LM Studio, Qwen3 235B Q3 (usuario mzhou4)",
+   "riesgo": "Afirmacion de usuario sin confirmacion de NVIDIA; hay que repetirlo en cada carga de contenedor",
+   "verificable_aqui": "grep -E 'MemFree|MemAvailable|^Cached' /proc/meminfo"
+  },
+  {
+   "que": "Medir memoria real leyendo /proc/meminfo o free, no el DGX Dashboard: un usuario (DannyTup) sostiene que el dashboard mezcla GiB y GB (3.3 usado de 128 con total real 119 GiB) incluso tras la actualizacion",
+   "como": "free -h --si ; free -h ; /proc/meminfo",
+   "fuente_post": 23,
+   "repositorio": "no indicado (el usuario menciona su propio dashboard sin enlace en el texto)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark tras actualizacion de noviembre (usuario)",
+   "riesgo": "Afirmacion de usuario; otro usuario (post 22) dice que ya es mas fiable",
+   "verificable_aqui": "free -h --si && free -h"
+  },
+  {
+   "que": "Ahorro de RAM arrancando el SO en modo multiusuario sin GUI: el OS puede quedar bajo 1 GB segun usuario eugr",
+   "como": "no indicado (solo dice 'multiuser (text only) mode' / non-graphical mode)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "null",
+   "riesgo": "No dice si CUDA deja margen de seguridad (post 5)",
+   "verificable_aqui": "systemctl get-default"
+  }
+ ],
+ "omision_nvidia": "El staff solo remite al FAQ de limpiar cache; no explica por que CUDA no cuenta el cache como disponible (el usuario eugr lo describe como bug).",
+ "utilidad_atom": "media",
+ "razon": "La respuesta de NVIDIA es una remision al FAQ (aniculescu); la explicacion causal y el workaround vienen de usuarios y coinciden con drop_caches. El valor propio es la advertencia de que el dashboard puede mentir en la unidad y el consejo de medir con meminfo."
+}

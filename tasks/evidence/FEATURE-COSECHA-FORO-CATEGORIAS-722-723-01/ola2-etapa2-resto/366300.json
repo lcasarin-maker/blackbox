@@ -1,0 +1,26 @@
+{
+ "id": 366300,
+ "titulo": "Firmware updates for EC (2.66.3 → 2.78.24) and UEFI BIOS (2.0.11 → 2.0.12) consistently fail",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de fallo de actualizacion de firmware EC/UEFI por capsule-on-disk: aplicar la actualizacion localmente con pantalla y teclado conectados y observar el reinicio; un usuario menciona ademas pulsar el boton reset",
+   "como": "no indicado comando; metodo: lanzar la actualizacion desde el DGX Dashboard con monitor y teclado locales (posts 3 y 5)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Lenovo ThinkStation PGX, Ubuntu 24.04.4, kernel 6.17.0-1014-nvidia (segun el autor del tema)",
+   "riesgo": "Sin pantalla el sistema se cuelga en el reinicio y exige apagado forzado (10 s); la version no cambia aunque LastAttemptStatus sea 0x0",
+   "verificable_aqui": "fwupdmgr get-history"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Siete mensajes, todos de usuarios; no hay respuesta de personal de NVIDIA. Dos usuarios confirman que con monitor local la actualizacion termina; un tercero (post 6) reproduce el fallo en dos nodos PGX, el metodo con iKVM queda sin probar."
+}

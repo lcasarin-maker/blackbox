@@ -1,0 +1,57 @@
+{
+ "id": 371805,
+ "titulo": "Caution upgrading to kernel 6.17.0-1021-nvidia: missing nvidia driver",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Procedimiento oficial de actualizacion (citado de la guia de DGX Spark) para evitar kernel nuevo sin driver",
+   "como": "sudo apt update; sudo apt dist-upgrade; sudo fwupdmgr refresh; sudo fwupdmgr upgrade; sudo reboot",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Sparks, kernel 6.17.0-1021-nvidia, driver 580.159.03, segun usuario",
+   "riesgo": "Un apt upgrade parcial dejo paquetes retenidos y driver ausente",
+   "verificable_aqui": "apt-mark showhold; modinfo nvidia | head"
+  },
+  {
+   "que": "Si falta el driver tras instalar kernel nuevo, completar paquetes retenidos",
+   "como": "sudo apt full-upgrade",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel 6.17.0-1021-nvidia, segun usuario",
+   "riesgo": null,
+   "verificable_aqui": "modinfo nvidia | head"
+  },
+  {
+   "que": "Volver al kernel anterior quitando el nuevo",
+   "como": "sudo aptitude purge linux-image-6.17.0-1021-nvidia linux-headers-6.17.0-1021-nvidia linux-modules-6.17.0-1021-nvidia linux-modules-nvidia-fs-6.17.0-1021-nvidia linux-nvidia-6.17-headers-6.17.0-1021",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "fallback a 6.17.0-1018-nvidia, segun usuario",
+   "riesgo": "El propio usuario dice que no es recomendable: depende de borrar el kernel actual",
+   "verificable_aqui": "aptitude search ~ilinux-"
+  },
+  {
+   "que": "Verificar el driver tras reiniciar",
+   "como": "modinfo nvidia | head",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "modinfo nvidia | head"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Varios usuarios reportan driver ausente tras kernel 1021 y se resuelve con la secuencia completa de actualizacion o full-upgrade; no hay respuesta de staff NVIDIA. Un usuario nota que el modulo instalado quedo autofirmado bajo Secure Boot (post 3)."
+}

@@ -1,0 +1,38 @@
+{
+ "id": 383780,
+ "titulo": "Please add GB10 (10de:2e12) to the signed nvgrace-gpu-vfio-pci in the DGX Spark kernel",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "omision_nvidia",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobar si el modulo firmado nvgrace-gpu-vfio-pci lista el ID del GB10",
+   "como": "modinfo -F alias nvgrace-gpu-vfio-pci | grep -i 2e12",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario Primcast, kernel 6.17.0-1031-nvidia",
+   "riesgo": "Sin salida significa que el GB10 no esta cubierto; el modulo reconstruido localmente es rechazado por Secure Boot (sig_enforce=Y)",
+   "verificable_aqui": "modinfo -F alias nvgrace-gpu-vfio-pci | grep -i 2e12"
+  },
+  {
+   "que": "Aviso para el bind de VFIO en GB10: no hacer PCI FLR antes; nvgrace_gpu_wait_device_ready() espera hasta 30 s y devuelve -ETIME si el GPU sigue reentrenando; funciona desacoplando nvidia sin reset y haciendo bind a nvgrace",
+   "como": "no indicado (sin comando de bind literal)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario Primcast, kernel 6.17.0-1031-nvidia",
+   "riesgo": "Un FLR previo deja el entrenamiento de HBM mas alla de la ventana de 30 s",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El modulo firmado nvgrace-gpu-vfio-pci del kernel Spark no incluye el ID 0x2E12 del GB10, por lo que no hay passthrough VFIO; la inscripcion de MOK es inviable porque la pantalla de MokManager no se muestra en la consola pre-arranque (segun el usuario).",
+ "utilidad_atom": "baja",
+ "razon": "Solicitud de un usuario (sin respuesta de NVIDIA) que documenta que el GB10 no esta en el modulo VFIO firmado, con un comando de comprobacion. Util solo si se quisiera passthrough a VM, que no es el uso del Atom."
+}

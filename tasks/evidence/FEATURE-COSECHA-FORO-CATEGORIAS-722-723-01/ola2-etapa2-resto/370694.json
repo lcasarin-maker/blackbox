@@ -1,0 +1,58 @@
+{
+ "id": 370694,
+ "titulo": "Vllm 0.21 release is bit broken",
+ "leido": true,
+ "posts_leidos": 14,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Detectar regresion de MTP leyendo la tasa de prediccion en los logs de vLLM: tras vLLM 0.21 la tasa de MTP en Qwen 3.6 27B cayo a 0% en cada peticion; el usuario volvio a 0.20",
+   "como": "revisar la tasa de aceptacion MTP en los logs de vLLM; no indicado comando exacto",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario 0rand, Spark propio, Qwen 3.6 27B",
+   "riesgo": "Afirmacion de un solo usuario; segundo usuario ve la imagen comunitaria 'broken' (post 8)",
+   "verificable_aqui": "docker logs <contenedor_vllm> 2>&1 | grep -i spec"
+  },
+  {
+   "que": "Fijar versiones de contenedores y mantener recetas YAML en git en vez de usar 'latest'",
+   "como": "mantener directorio de recetas yaml con imagenes versionadas, p. ej. ghcr.io/spark-arena/dgx-llama-cpp:b9253-cu131",
+   "fuente_post": 12,
+   "repositorio": "https://github.com/spark-arena/dgx-llama-cpp",
+   "licencia": "no indicada",
+   "probado_en": "dbsci (miembro del equipo Spark Arena, no NVIDIA)",
+   "riesgo": "Imagenes de terceros",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Conservar contenedores para ver logs y cambiar la imagen de una receta con sparkrun",
+   "como": "sparkrun run <recipe> --no-rm ; sparkrun run <recipe> --image alternate-container",
+   "fuente_post": 10,
+   "repositorio": "no indicado en el post (nombre sparkrun)",
+   "licencia": "no indicada",
+   "probado_en": "dbsci",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Bug de vLLM 0.21: al detener el servidor queda un semaforo filtrado y la memoria de GPU no se libera, y reiniciar vLLM falla",
+   "como": "mensaje citado: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "AGX Thor y RHEL 9.8 con RTX 3090 (NO es GB10)",
+   "riesgo": "Memoria de GPU no liberada tras parar el servicio",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Todo son usuarios (sin staff NVIDIA). Aporta una advertencia concreta sobre pinear versiones de vLLM y el sintoma medible de MTP en 0% (post 1), y un caso de memoria de GPU no liberada al parar vLLM (post 15) pero en hardware que no es GB10."
+}

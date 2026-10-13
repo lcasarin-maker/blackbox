@@ -1,0 +1,47 @@
+{
+ "id": 361628,
+ "titulo": "Ethernet does not come up after reboot after latest update",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Detectar la NIC Realtek ausente tras reinicio: listar hardware de red y buscar el dispositivo Realtek en la lista.",
+   "como": "sudo lshw -class network -short",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark tras actualizacion de software (declarado por usuario)",
+   "riesgo": null,
+   "verificable_aqui": "lshw -class network -short"
+  },
+  {
+   "que": "Workaround: apagado completo, desconectar cable de alimentacion y arrancar recupera la NIC; reboot normal no.",
+   "como": "apagado completo + desconectar y reconectar cable de alimentacion",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (dos unidades, post 2)",
+   "riesgo": "Impide gestion remota tras reinicio.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Solucion definitiva segun usuario: la del hilo vinculado (r8127, requiere cambiar linea de comandos del kernel/grub y evitar el modulo equivocado); funciono tras un ultimo arranque en frio. Detalle del cambio no figura en este tema.",
+   "como": "no indicado",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Editar grub y cmdline puede dejar el equipo sin arrancar.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Reporte de NIC Realtek r8127 que desaparece en reinicio caliente, resuelto por el usuario con una solucion publicada en otro hilo cuyo comando no esta aqui. Sin respuesta de staff NVIDIA."
+}

@@ -1,0 +1,57 @@
+{
+ "id": 364093,
+ "titulo": "GB10 QSFP56 ports speed? Connecting multiple GB10 with MIKROTIK CRS804 DDQ",
+ "leido": true,
+ "posts_leidos": 32,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limite real de red del GB10: dos enlaces PCIe Gen5 x4 y dos interfaces fisicas; con dos puertos solo ~109Gbps por enlace PCIe; con breakout por un solo puerto se satura 200Gbps (Patrick-ServeTheHome, usuario/prensa, no NVIDIA)",
+   "como": "no indicado como comando; ajustar manualmente velocidad del puerto del switch a 200Gbps, configurar MTU y usar los pares de interfaz correctos",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "cluster de 8 GB10 en CRS804 DDQ segun el autor",
+   "riesgo": "Cifra '109Gbps' dada de memoria ('IIRC')",
+   "verificable_aqui": "ip -br link; ethtool <interfaz> | grep -i speed"
+  },
+  {
+   "que": "Configuracion RouterOS que funciono (puerto 1 a 200G-baseCR4 sin autonegociacion, MTU 9216, puertos restantes deshabilitados en el extracto)",
+   "como": "set [ find default-name=qsfp56-dd-1-1 ] auto-negotiation=no l2mtu=9216 mtu=9216 speed=200G-baseCR4",
+   "fuente_post": 37,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10 + CRS804-4DDQ (segun el usuario)",
+   "riesgo": "Extracto parcial y ofuscado; es del switch, no del Spark",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un cable breakout 400G QSFP-DD a 2x200G exige configurar el puerto del switch como split (breakout) y L2MTU, o no hay enlace; el EEPROM del cable depende de la marca elegida",
+   "como": "no indicado (comandos RouterOS no copiados en el hilo; el usuario los pidio a un asistente de IA)",
+   "fuente_post": 38,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "RouterOS 7.23.3, CRS804, segun el usuario",
+   "riesgo": "Cable de marca equivocada no enlaza",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Cable QSFP28 de 100G enlaza dos Spark (ConnectX-7 retrocompatible); autonegocia o se fija 100G manual",
+   "como": "no indicado (seleccionar velocidad 100G en ambos extremos si no autonegocia)",
+   "fuente_post": 30,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Solo 100G",
+   "verificable_aqui": "ethtool <interfaz>"
+  }
+ ],
+ "omision_nvidia": "Un usuario dice que no hay recomendaciones oficiales para splitters/switch (post 3); es afirmacion de usuario.",
+ "utilidad_atom": "baja",
+ "razon": "Tema de topologia de red de cluster con switch MikroTik; la maquina del proyecto es un solo Spark y nada aqui monitorea o previene los cortes. No hay respuesta de personal de NVIDIA; los datos de rendimiento son de usuarios y prensa."
+}

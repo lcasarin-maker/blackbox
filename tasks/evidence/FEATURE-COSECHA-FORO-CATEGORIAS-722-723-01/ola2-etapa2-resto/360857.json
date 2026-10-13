@@ -1,0 +1,47 @@
+{
+ "id": 360857,
+ "titulo": "High GPU usage (96%) despite nothing using it",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Tras un crash de vLLM (CUDA illegal instruction) la GPU queda en 96% de uso sin proceso; el reset de GPU no lo arreglo y el usuario reinicio.",
+   "como": "sudo nvidia-smi --gpu-reset -i 0 (no funciono; se reinicio)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, contenedor nvcr.io/nvidia/vllm:26.01-py3 (declarado por usuario)",
+   "riesgo": "El reset no limpia el estado; solo el reinicio lo hizo, segun un usuario.",
+   "verificable_aqui": "nvidia-smi --query-gpu=utilization.gpu --format=csv"
+  },
+  {
+   "que": "Workaround reportado por usuario: el modelo Nemotron-3-Nano NVFP4 crashea en Spark; la variante FP8 es estable con algo menos de rendimiento.",
+   "como": "usar la variante FP8 en lugar de NVFP4 (sin comando indicado)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Afirmacion de usuario sin verificar; costo de rendimiento.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un usuario dice que un docker que no descarga bien con vLLM deja el estado pegado y un reinicio normalmente lo corrige.",
+   "como": "reinicio del equipo (no indicado comando)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Anecdota de usuario.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Staff (cyuen1) pide pasos de reproduccion; no ofrece limpieza ni diagnostico del estado de GPU pegado tras crash.",
+ "utilidad_atom": "baja",
+ "razon": "Reporte de GPU pegada tras crash de vLLM con NVFP4; unica solucion citada es reinicio o cambiar a FP8, ambas de usuarios. Hay una respuesta de staff NVIDIA solo pidiendo reproduccion; el post 6 incluye el comando docker completo del usuario sin credenciales."
+}

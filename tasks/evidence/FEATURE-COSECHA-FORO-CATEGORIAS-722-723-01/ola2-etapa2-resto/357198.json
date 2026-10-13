@@ -1,0 +1,57 @@
+{
+ "id": 357198,
+ "titulo": "Anyone have hard crashes on The DGX?",
+ "posts_leidos": 10,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Desactivar swap como workaround de bloqueos duros por OOM (usuario hoesing: con swap forzando OOM se bloquea; sin swap el kernel mata procesos sin bloqueo)",
+   "como": "no indicado (el post no da el comando; solo dice deshabilitar swap)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 segun el usuario, sin version declarada",
+   "riesgo": "Sin swap, el OOM killer actua antes; usuario lo llama no ideal",
+   "verificable_aqui": "swapon --show; cat /proc/sys/vm/swappiness"
+  },
+  {
+   "que": "Usar el contenedor NGC de PyTorch en vez de venv local con PyTorch de pip: el entrenamiento terminó y fue ~15% más rápido tras bloqueos repetidos",
+   "como": "nvcr.io/nvidia/pytorch:25.11-py3",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel 6.14.0-1015-nvidia (post 1), un solo usuario",
+   "riesgo": "Causalidad no demostrada; es la hipotesis del propio usuario",
+   "verificable_aqui": "docker images | grep pytorch"
+  },
+  {
+   "que": "Reducir numero de procesos de compilacion para evitar OOM al compilar cubins mientras vLLM tiene un modelo cargado",
+   "como": "no indicado (solo 'bajar el numero de procesos de build')",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Solo mitiga el caso general",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Dato de umbral: bloqueo con swap solo cuando swap >90% lleno (antes colgaba al empezar a usar swap)",
+   "como": "no indicado (observacion de eugr)",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "free -h; swapon --show"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Hilo de usuarios; solo aniculescu (NVIDIA) pidio pasos de reproduccion en post 2 y no hubo respuesta oficial de causa. El valor es la correlacion swap/OOM con bloqueo duro y el contenedor NGC como workaround, ambos de usuarios sin comando exacto.",
+ "leido": true,
+ "lectura": "completa"
+}

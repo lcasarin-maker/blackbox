@@ -1,0 +1,37 @@
+{
+ "id": 364160,
+ "titulo": "ASUS Ascent GX10 Firmware Update",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reaplicar a mano la capsula de firmware PD cuando falla desde el desktop (soporte ASUS); dos usuarios reportan menor temperatura y 8-10 W menos tras el firmware, sin medicion formal del OP",
+   "como": "sudo su ; ./capsule_update.sh usbpd_5.7.cap",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10 BIOS 0103, EC/PD 5.7 segun usuario",
+   "riesgo": "Firmware de ASUS en hardware ASUS, no necesariamente aplicable a esta GIGABYTE; flashear firmware puede dejar el equipo inutil",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Herramienta para ver cuan incompleta esta la actualizacion OTA instalada (torn-score 0 = aplicada por completo); la cita un usuario, no staff",
+   "como": "/opt/nvidia/spark-ota-check/check_ota_status.py torn-score (subcomandos: is-ota-available, installed-name, installed-versions, ota-versions, summary)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark OTA julio 2026",
+   "riesgo": "is-ota-available se actualiza a si mismo si el dashboard no lo gestiona (toca red)",
+   "verificable_aqui": "/opt/nvidia/spark-ota-check/check_ota_status.py installed-name"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Usuarios de GX10 reportan que el firmware 0103 baja temperaturas y consumo (8-10 W por UPS, 75/80 a 65-70 grados en comfyui) y que el bucle de reinicios de julio 2026 se diagnostica con torn-score. Ninguna respuesta de NVIDIA staff; el firmware es de ASUS."
+}

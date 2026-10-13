@@ -1,0 +1,26 @@
+{
+ "id": 368313,
+ "titulo": "2xGX10 / Poland / Cable?",
+ "leido": true,
+ "posts_leidos": 19,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de enlace mlx5 que solo sube si ambos nodos arrancan a la vez: reiniciar ambos nodos simultaneamente; el usuario descarta el cable y sostiene que dmesg muestra link down antes de cargar NCCL",
+   "como": "reiniciar ambos nodos a la vez (post 13); no indicado comando",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 nodos Spark con cable DAC 200G de 0.5 m (segun el usuario)",
+   "riesgo": "Causa en el driver mlx5 afirmada por un usuario sin verificar; otro sugiere revisar tablas GID y bibliotecas NCCL",
+   "verificable_aqui": "dmesg | grep -i mlx5"
+  }
+ ],
+ "omision_nvidia": "Solo se mencionan dos cables confirmados oficialmente en la guia de apilado de NVIDIA, segun el autor; no hay respuesta de personal de NVIDIA.",
+ "utilidad_atom": "baja",
+ "razon": "Diecinueve mensajes de usuarios sobre donde comprar un cable DAC 200G; un usuario obtiene 23-25 GB/s en nccl-tests con un cable de terceros (post 8). El mensaje 14 pregunta por el aviso de potencia PCIe de 27 W en dmesg sin recibir respuesta."
+}

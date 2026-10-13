@@ -1,0 +1,27 @@
+{
+ "id": 362258,
+ "titulo": "QSFP interface available on one Spark but not the other",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnostico de interfaces ConnectX-7 que no aparecen: listar mapeo RoCE a netdev y comprobar con lspci si mlx5_core esta enlazado; el OP lo resolvio desenchufando y reenchufando el Spark (power cycle)",
+   "como": "ibdev2netdev ; lspci (verificar driver mlx5_core enlazado) ; sudo dmesg ; /etc/netplan/*",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "dos DGX Spark, playbook Connect Two Sparks (usuario)",
+   "riesgo": "Solucion sin causa raiz: el driver mlx5_core no se enlazo y un ciclo de energia lo arreglo; sin respuesta de NVIDIA staff",
+   "verificable_aqui": "ibdev2netdev; lspci -k | grep -A3 -i mellanox"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario resolvio la ausencia de un puerto QSFP comprobando con lspci el enlace de mlx5_core y haciendo power cycle; no hay respuesta de NVIDIA. Es relevante solo a la red QSFP, ajena a los problemas de memoria y calor de esta maquina."
+}

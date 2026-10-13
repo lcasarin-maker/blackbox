@@ -1,0 +1,36 @@
+{
+ "id": 348942,
+ "titulo": "`test.img` info",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Staff de NVIDIA (aplattner, post 7 y 4) confirma que /test.img (10G) es un residuo de QA de fabrica y se puede borrar; no lo crea la instalacion de DGX OS (aniculescu, post 2)",
+   "como": "ls -lh /*.img",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, DGX OS de fabrica",
+   "riesgo": "Borrar solo si no lo creaste tu",
+   "verificable_aqui": "ls -lh /*.img"
+  },
+  {
+   "que": "Inspeccionar el rootfs de la imagen de recuperacion (usuario elsaco): unir las dos partes, montar en loop",
+   "como": "cat fastos.partaa fastos.partab > dgxos ; renombrar a dgxos.img ; sudo mount -o loop ./dgxos.img /mnt/dgx",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "imagen de recuperacion DGX Spark",
+   "riesgo": "Requiere sudo y espacio para la union",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Respuesta oficial de NVIDIA: archivo basura de fabrica, borrable (recupera 10G de disco). Es higiene de disco, no afecta memoria ni calor."
+}

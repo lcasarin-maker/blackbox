@@ -1,0 +1,58 @@
+{
+ "id": 372469,
+ "titulo": "DGX Spark shutting down under load - MODS-020000600139",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Monitoreo por segundo de potencia y temperatura de GPU hasta el corte; en la captura del usuario el corte llega con ~41-45 W y 80-81 C (no lo ve como sobrecalentamiento) y la sesion SSH se cae",
+   "como": "nvidia-smi dmon -s p -d 1",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus GX10 (GB10), 2 unidades en par por QSFP, vLLM en modo TP (usuario Teason2026)",
+   "riesgo": "Una captura de un usuario; no demuestra la causa",
+   "verificable_aqui": "nvidia-smi dmon -s p -c 3 -d 1"
+  },
+  {
+   "que": "Refrigeracion externa: ventilador USB de 120 mm sobre las unidades; el usuario reporta 83-85 C a los ~5 minutos de carga sin ventilador y 70-80 C con el, y que el apagado dejo de ocurrir",
+   "como": "ventilador externo (sin comando); disipadores + ventilador segun otro usuario (post 2)",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos Sparks en carcasa impresa en 3D (usuario corbett_korbett); NVFP4 en cluster (usuario susni)",
+   "riesgo": "Afirmacion de usuarios; susni duda de que sea termico porque vio temperaturas mayores sin caida",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw --format=csv -l 1"
+  },
+  {
+   "que": "Patron de apagado tras la actualizacion de firmware de abril: al restablecer la energia de pared la unidad se apaga bajo la primera carga y arranca bien en el siguiente encendido manual",
+   "como": "no indicado (descripcion de comportamiento, sin comando)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus GX10, firmware de abril 2026 (usuario)",
+   "riesgo": "Sin verificacion de NVIDIA",
+   "verificable_aqui": "journalctl --list-boots | tail -5"
+  },
+  {
+   "que": "Reproduccion: gpu burn, stress-ng e ib write por separado o juntos no reproducen el corte; solo vLLM con TP en 2 Sparks lo hace, y las dos unidades fallidas pasan fieldiag",
+   "como": "no indicado",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus GX10 x2 (usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Sin respuesta de personal NVIDIA en el hilo.",
+ "utilidad_atom": "alta",
+ "razon": "Cuatro usuarios coinciden en cortes en seco bajo inferencia sostenida con el mismo codigo MODS en fieldiag, uno con captura de dmon donde gtemp es 80-81 C y la potencia ~41 W justo antes del corte, y otro mide 83-85 C sin ventilador; el post 3 (limite de reloj) y el post 9 (enlace a guia de endurecimiento, contenido no incluido en el hilo) no aportan comando nuevo. Ningun usuario respalda con fuente oficial; ninguna respuesta de NVIDIA."
+}

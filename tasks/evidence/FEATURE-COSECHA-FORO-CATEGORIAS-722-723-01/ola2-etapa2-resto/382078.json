@@ -1,0 +1,26 @@
+{
+ "id": 382078,
+ "titulo": "Resource Monitor in NVIDIA Sync",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "El Device Power del Resource Monitor de NVIDIA Sync coincide con el que da nvidia-smi (solo el chip GB10), no el consumo de pared",
+   "como": "nvidia-smi (consumo de potencia); el usuario compara con medicion externa de 45-50 W en reposo contra 10-11 W mostrados",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark; segun usuarios, sin confirmar por NVIDIA",
+   "riesgo": "Usar esa lectura como consumo total subestima el consumo real",
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw --format=csv"
+  }
+ ],
+ "omision_nvidia": "Segun usuarios, NVIDIA Sync no muestra potencia total del sistema, solo la del GB10; sin respuesta de NVIDIA.",
+ "utilidad_atom": "baja",
+ "razon": "Dos usuarios dicen que la potencia mostrada es la de nvidia-smi y no la de sistema (10-12 W contra 36-50 W medidos externamente). Sirve de advertencia de medicion, sin respuesta de NVIDIA."
+}

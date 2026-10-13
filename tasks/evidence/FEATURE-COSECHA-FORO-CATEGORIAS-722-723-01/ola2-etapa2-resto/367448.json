@@ -1,0 +1,57 @@
+{
+ "id": 367448,
+ "titulo": "DGX Spark reboots every ~20 minutes",
+ "leido": true,
+ "posts_leidos": 12,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Prueba de descarte: bloquear mlx5 en el arranque; el reinicio cada ~19-20 min continuo, lo que descarta ConnectX-7 como causa",
+   "como": "/etc/modprobe.d/blacklist-mlx5-test.conf con blacklist mlx5_core, blacklist mlx5_ib, blacklist mlx5_fwctl ; sudo update-initramfs -u ; lsmod | grep mlx5",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, kernel 6.14.0-1015-nvidia, driver 580.95.05 (declarado por el usuario)",
+   "riesgo": "Deja la red de alta velocidad sin modulos; revertir el archivo despues.",
+   "verificable_aqui": "lsmod | grep mlx5"
+  },
+  {
+   "que": "Rastreo de causa de reinicio con registros del arranque anterior y del historial de arranques",
+   "como": "journalctl --list-boots --no-pager | tail -n 8 ; journalctl -b -k --no-pager -o short-iso | grep -A12 'BERT: Error records from previous boot' ; nvidia-bug-report.sh",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario; el comando journalctl -k -b -1 -e lo pidio el personal NVIDIA (post 3)",
+   "riesgo": null,
+   "verificable_aqui": "journalctl --list-boots --no-pager | tail -n 8"
+  },
+  {
+   "que": "Hipotesis de usuario (parallelArchitect): el watchdog SBSA genérico armado junto con enlace GPU degradado (DOE mailbox abort, 2.5GT/s x1) encaja con el reinicio periodico",
+   "como": "dmesg: 'ACPI GTDT: found 1 SBSA generic Watchdog(s)' ; 'pci 000f:01:00.0: DOE: [2c8] ABORT timed out'",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Hipotesis sin verificar; el propio autor dice que es consistente con, no demostrado.",
+   "verificable_aqui": "journalctl -k -b | grep -E 'SBSA|DOE'"
+  },
+  {
+   "que": "Advertencia de temperatura: un usuario atribuye cortes a sobrecalentamiento con frecuencia sin limite y carga alta, y menciona que limitar a 2100 mantuvo menos de 80C; el mismo usuario recuerda un bug de potencia con tope de 27-35W resuelto desconectando el adaptador 30 s",
+   "como": "capping freq to 2100; unplug adapter for 30s",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario door.blu, sin hardware detallado",
+   "riesgo": "Afirmacion de usuario sin verificacion.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Personal NVIDIA (aniculescu) dice en post 9 que los mensajes mlx5 de potencia insuficiente en la ranura PCIe (27W) son esperados y no significan nada, y sugiere reinstalar la imagen porque los errores DOE podrian venir de una mala instalacion de driver; no da causa del reinicio periodico. El hilo termina sin solucion confirmada (posts 10-12 son preguntas).",
+ "utilidad_atom": "media",
+ "razon": "Diagnostico de un equipo con reinicio periodico de ~20 min: descarta mlx5 por blacklist y recoge huellas (BERT, DOE abort, watchdog SBSA) sin causa confirmada; NVIDIA solo pide reimaginar. El post 11 sugiere calor o el bug de potencia, de forma anecdotica."
+}

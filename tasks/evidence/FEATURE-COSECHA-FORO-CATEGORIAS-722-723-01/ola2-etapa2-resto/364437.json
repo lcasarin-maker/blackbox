@@ -1,0 +1,37 @@
+{
+ "id": 364437,
+ "titulo": "DGX Spark Update",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Volver del driver DKMS al paquete prebuilt de DGX OS tras una actualizacion fallida",
+   "como": "dkms remove nvidia/580.142 -all ; reiniciar en modo texto ; instalar linux-modules-nvidia-580-open-6.17.0-1014-nvidia ; systemctl set-default graphical.target",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS, kernel 6.17.0-1014-nvidia (usuario elsaco; el autor del problema reporta que quedo en 580.126.09 con modulos prebuilt)",
+   "riesgo": "El paquete prebuilt exige nvidia-kernel-common-580 <= 580.126.09; con el PPA canonical-nvidia/nvidia-desktop-edge (580.142) no instala (post 9). Seguir sin criterio un `dkms autoinstall` sugerido por una IA saco al usuario de los paquetes aprobados (post 10)",
+   "verificable_aqui": "dkms status; dpkg -l | grep -i nvidia | head; systemctl is-enabled dkms"
+  },
+  {
+   "que": "Sintoma de actualizacion rota: nvidia-dkms-580-open no compila para el kernel nuevo y deja el paquete a medias (estado iU)",
+   "como": "sudo dkms install nvidia/580.142 -k 6.17.0-1014-nvidia",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel 6.17.0-1014-nvidia",
+   "riesgo": "Mantiene la maquina fuera del camino oficial (DKMS no forma parte de DGX OS segun elsaco, post 4)",
+   "verificable_aqui": "dpkg -l | grep nvidia | awk '{print $1,$2,$3}'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Receta de recuperacion de driver tras actualizacion fallida, de usuarios; NVIDIA (aniculescu, post 8) solo atribuye el fallo de configuracion inicial a una degradacion del servicio de conectividad de Canonical. Aplica a nuestro riesgo de actualizacion pero no a memoria ni calor."
+}

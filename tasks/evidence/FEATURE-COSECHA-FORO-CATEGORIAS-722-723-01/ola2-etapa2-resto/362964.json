@@ -1,0 +1,37 @@
+{
+ "id": 362964,
+ "titulo": "Vllm 100% CPU usage when idle - again?",
+ "leido": true,
+ "posts_leidos": 24,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Quitar Ray del arranque multinodo de vLLM elimina los 2 nucleos de CPU al 100% en reposo; un usuario midio ahorro de unos 10 W por nodo (50 W vs 60 W en reposo)",
+   "como": "./launch-cluster.sh ... --no-ray (con --nnodes N --node-rank X --master-addr Y --master-port Z y --headless segun el nodo; sin --distributed-processing-backend ray)",
+   "fuente_post": 19,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark/Asus Ascent, vLLM 0.17.0rc segun usuarios",
+   "riesgo": "Opcion mas nueva que Ray, el autor del repo advierte posibles asperezas; con el backend nativo se lanza vLLM en ambos nodos",
+   "verificable_aqui": "top -b -n1 | head -20"
+  },
+  {
+   "que": "Advertencia: VLLM_SLEEP_WHEN_IDLE=1 no corrige el problema (usuarios confirman que los 2 nucleos siguen al 100%); la variable fue eliminada del codigo de vLLM",
+   "como": "VLLM_SLEEP_WHEN_IDLE=1 (ineficaz)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 nodos Asus Ascent, vLLM v0.17.0rc1 segun el usuario",
+   "riesgo": "Falsa sensacion de solucion",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "alta",
+ "razon": "El spin de 2 nucleos al 100% en reposo con Ray esta confirmado por varios usuarios y atribuido por el mantenedor del repo comunitario (eugr, no staff) a Ray; --no-ray lo elimina con ahorro medido de 10 W por nodo. Sin respuesta de NVIDIA en el hilo."
+}

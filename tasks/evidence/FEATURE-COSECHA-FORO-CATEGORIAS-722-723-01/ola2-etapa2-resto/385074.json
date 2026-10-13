@@ -1,0 +1,47 @@
+{
+ "id": 385074,
+ "titulo": "2x DGX Spark DeepSeek-V4-Flash-0731 Stable Build",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Tope de reloj de GB10 a 2200 MHz que, segun el usuario, resolvio una inestabilidad reciente del cluster (mecanismo ya catalogado: tope de reloj).",
+   "como": "valor 2200 MHz; comando no indicado",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark, kernel 6.17.0-1029-nvidia, driver 580.173.02 (declarado por el usuario)",
+   "riesgo": "Reduce rendimiento maximo; causa de la inestabilidad no explicada",
+   "verificable_aqui": "nvidia-smi -q -d CLOCK"
+  },
+  {
+   "que": "Configuracion de servicio vLLM de 2 nodos TP=2 (max-num-seqs 8, max-num-batched-tokens 4096, long-prefill-token-threshold 1024, gpu-memory-utilization 0.9, KV FP8, bloques de 256, prefix caching) con tasas de aceptacion y tok/s medidos por el usuario.",
+   "como": "max-model-len 1,048,576; max-num-seqs 8; max-num-batched-tokens 4096; long-prefill-token-threshold 1024; gpu-memory-utilization 0.9",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10, vLLM dev 0.1.dev19043 d20260812, CUDA 13.0, NCCL 2.31.2 (declarado)",
+   "riesgo": "Receta especifica de DeepSeek-V4-Flash sobre dos nodos; no transferible a un nodo",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Verificacion de que RoCE esta activo y no cae a TCP: enlaces a 200 Gb/s, MTU 9000, contadores RDMA de hardware con trafico.",
+   "como": "no indicado (solo describe que miro MTU y contadores RDMA)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "ip -br link; ls /sys/class/infiniband/*/ports/*/counters"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Reporte de configuracion estable de un usuario (sin personal NVIDIA); el unico mecanismo de monitoreo/prevencion es el tope de reloj ya catalogado y los demas comandos no se indican. Los posts 3-4 son benchmarks comparativos contra GLM sin comandos."
+}

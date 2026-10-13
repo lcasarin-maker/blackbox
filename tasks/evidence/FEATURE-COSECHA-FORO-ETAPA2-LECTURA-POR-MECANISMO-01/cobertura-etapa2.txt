@@ -1,0 +1,33 @@
+cobertura-etapa2 de FEATURE-COSECHA-FORO-ETAPA2-LECTURA-POR-MECANISMO-01, 2026-10-13
+
+$ python3 -m tools.verifica_cosecha_foro --inventario tasks/evidence/FEATURE-COSECHA-FORO-ETAPA2-LECTURA-POR-MECANISMO-01/inventario-756.json --hilos <foro-721-33> --resultados <union de ola2-etapa2-tramo1 + tramo2 + resto>
+rc=0
+{
+ "temas": 756,
+ "descarga": {
+  "descargado": 756,
+  "vacio_del_producto": 0,
+  "no_se_pudo": 0
+ },
+ "fallos_de_descarga": {},
+ "sin_resultado": [],
+ "resultados_invalidos": {},
+ "lectura_parcial_por_completar": {},
+ "lectura_declarada_de_mas": {},
+ "diferencia_de_contabilidad_tolerada": {},
+ "cobertura_completa": true
+}
+
+# El inventario de 756 es exactamente los candidatos si + quizas de ola2-triaje:
+si 416 quizas 340 inventario 756 igual: True
+
+# Control negativo 1: copia de la union SIN el resultado del tema 348760
+rc=1 sin_resultado=[348760] cobertura_completa=False
+
+# Control negativo 2: posts_leidos del tema 348760 inflado en +50
+rc=1 lectura_declarada_de_mas={'348760': 'declara 112 mensajes leidos y el tema tiene 62'} cobertura_completa=False
+
+# Control negativo 3: los mismos resultados contra el directorio equivocado (foro-722-723)
+rc=1 descarga={'descargado': 0, 'vacio_del_producto': 0, 'no_se_pudo': 756} cobertura_completa=False
+
+etapa2_cobertura_completa: True  (candidatos 756 = 416 si + 340 quizas; descargados 756, sin resultado 0, parciales 0, declarados de mas 0, invalidos 0)

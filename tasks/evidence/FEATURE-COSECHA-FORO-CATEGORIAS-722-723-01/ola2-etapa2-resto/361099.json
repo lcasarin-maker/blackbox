@@ -1,0 +1,37 @@
+{
+ "id": 361099,
+ "titulo": "DGX Spark Hardware issue - Connectx7 card not discoverable, even with secureboot disabled",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobar si el ConnectX-7 aparece en el bus PCI",
+   "como": "lspci | grep -i -E \"mellanox|network|ethernet\"",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, Secure Boot desactivado",
+   "riesgo": null,
+   "verificable_aqui": "lspci | grep -i -E 'mellanox|network|ethernet'"
+  },
+  {
+   "que": "Ver estado de Secure Boot",
+   "como": "mokutil --sb-state",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "mokutil --sb-state"
+  }
+ ],
+ "omision_nvidia": "El staff (aniculescu, elsaco cita el anuncio de febrero 2026) dice que el hot-plug del CX7 apaga la tarjeta sin cable y la oculta de lspci; el post 1 afirma que dgx-spark-fieldiag dio PASS aunque el CX7 faltaba en el inventario (afirmacion de usuario).",
+ "utilidad_atom": "baja",
+ "razon": "El CX7 ausente se resolvio con arranque en frio y cable conectado; la funcion de ahorro de hasta 18 W fue citada por un usuario desde el anuncio de NVIDIA. Solo comandos triviales de inventario; sin relacion con colapsos de memoria o calor."
+}

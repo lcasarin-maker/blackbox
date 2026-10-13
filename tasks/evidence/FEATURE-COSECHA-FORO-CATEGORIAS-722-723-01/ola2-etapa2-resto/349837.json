@@ -1,0 +1,27 @@
+{
+ "id": 349837,
+ "titulo": "GPU Direct RDMA Not Working on DGX Spark Systems - nvidia-peermem Module Fails to Load",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnostico de GPUDirect RDMA: carga del modulo y comprobacion de simbolos y del directorio de peer memory (el usuario reporta Invalid argument y simbolo ib_register_peer_memory_client desconocido; NCCL informa GPU Direct RDMA desactivado)",
+   "como": "sudo modprobe nvidia-peermem ; sudo dmesg | tail ; ls /sys/kernel/mm/memory_peers/ ; NCCL_DEBUG=INFO",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 DGX Spark, DGX OS 7.2.3, kernel 6.11.0-1016-nvidia, driver 580.95.05, MLNX_OFED 24.07, NCCL 2.27.7 (segun el usuario)",
+   "riesgo": "Solo lectura salvo modprobe, que carga un modulo",
+   "verificable_aqui": "lsmod | grep -i peermem; ls /sys/kernel/mm/memory_peers/"
+  }
+ ],
+ "omision_nvidia": "Respuesta NVIDIA (NVES, post 2) solo remite a la FAQ de DGX Spark / GB10 sobre RDMA, sin dar workaround; la hipotesis del usuario (orden de instalacion driver y MLNX_OFED) es suya y sin confirmar.",
+ "utilidad_atom": "baja",
+ "razon": "Es un reporte de fallo de GPUDirect RDMA entre dos Spark, relevante solo para clusters multi-nodo y no para memoria ni calor de un nodo. NVIDIA no confirma la causa."
+}

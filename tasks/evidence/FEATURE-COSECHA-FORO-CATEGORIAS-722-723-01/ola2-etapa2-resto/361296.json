@@ -1,0 +1,79 @@
+{
+ "id": 361296,
+ "titulo": "Investigating 513MHz cap for GPU",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "rastrear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Muestreo a 1 s de reloj, potencia y razones de throttle para capturar la caida a ~513 MHz",
+   "como": "while true; do date '+%F %T' | tr -d '\\n'; echo -n ','; nvidia-smi --query-gpu=temperature.gpu,utilization.gpu,power.draw,clocks.current.graphics,pstate,clocks_throttle_reasons.active --format=csv,noheader,nounits; sleep 1; done",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario a149952, GB10, sin versiones declaradas",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.current.graphics,power.draw,pstate,clocks_throttle_reasons.active --format=csv,noheader"
+  },
+  {
+   "que": "Leer los topes de potencia PL1/SYSPL1 reales por hwmon spbm (con tope degradado: pl1 20 W, syspl1 30 W; sano: 140 W y 231 W)",
+   "como": "H=$(for f in /sys/class/hwmon/hwmon*/; do [ \"$(cat $f/name)\" = spbm ] && echo $f; done)cat $H/power11_cap $H/power13_cap   # want ~140000000 / ~231000000",
+   "fuente_post": 10,
+   "repositorio": "antheas/spark_hwmon (ingenieria inversa, citado)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark reference unit, usuario vladtemian",
+   "riesgo": "El autor admite que las etiquetas de spbm son su lectura, no especificacion; el comando tal como esta escrito en el post une dos lineas sin separador y requiere un salto o ; antes de cat.",
+   "verificable_aqui": "for f in /sys/class/hwmon/hwmon*/; do [ \"$(cat $f/name)\" = spbm ] && cat $f/power11_cap $f/power13_cap; done"
+  },
+  {
+   "que": "Capturar estado degradado, ciclar alimentacion y comparar con herramienta de diagnostico de throttle",
+   "como": "python3 spark-gpu-throttle-check.py --timeline -n 40 --save-baseline   (luego tras ciclo de alimentacion)   python3 spark-gpu-throttle-check.py --timeline -n 40 --compare",
+   "fuente_post": 8,
+   "repositorio": "https://github.com/parallelArchitect/spark-gpu-throttle-check (fork de https://github.com/hoesing/spark-gpu-throttle-check)",
+   "licencia": "no indicada",
+   "probado_en": "no indicado",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround: ciclo de alimentacion completo (desenchufar el adaptador de pared y del Spark ~1 min) restaura reloj y potencia",
+   "como": "no indicado comando; procedimiento fisico: desconectar el ladrillo de alimentacion de la pared y del Spark, esperar un minuto, reconectar",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "varios usuarios; un usuario reporta que un sudo reboot tambien lo limpio (post 10)",
+   "riesgo": "Un usuario dice que puede reaparecer tras dejarlo apagado pero enchufado un dia (post 9).",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Sintoma firma: reloj ~507-513 MHz con todas las razones de throttle inactivas, potencia ~13 W y utilidad 96%",
+   "como": "nvidia-smi -q (Clocks Event Reasons todo Not Active mientras el reloj esta topado)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel 6.17.0-1008-nvidia, driver 580.126.09",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi -q -d PERFORMANCE"
+  },
+  {
+   "que": "El aviso mlx5 'Detected insufficient power on the PCIe slot (27W)' es del driver de red Mellanox y no del GPU",
+   "como": "no indicado comando; la afirmacion la hace el usuario elsaco",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Ninguna respuesta de staff en el hilo; NVIDIA no expone una razon de throttle cuando el limite lo impone la negociacion de potencia de la fuente (afirmacion de usuarios parallelArchitect/hoesing, sin respuesta oficial).",
+ "utilidad_atom": "alta",
+ "razon": "Hilo de usuarios (sin staff) con un metodo de medicion concreto: lectura del tope de potencia en hwmon spbm (post 10, con valores sano/degradado) y un muestreador a 1 s. Complementa tope de potencia por PD que nvidia-smi no reporta."
+}

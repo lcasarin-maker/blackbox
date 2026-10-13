@@ -1,0 +1,26 @@
+{
+ "id": 350673,
+ "titulo": "Working Docker Image for Unsloth",
+ "leido": true,
+ "posts_leidos": 13,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround usuario: desinstalar torchao para destrabar conflicto con PyTorch nightly cu130 en contenedor pytorch:25.10-py3",
+   "como": "pip uninstall torchao -y",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, kernel 6.14.0-1013-nvidia declarado por el usuario (Neurfer), contenedor nvcr.io/nvidia/pytorch:25.10-py3",
+   "riesgo": "Mezclar PyTorch nightly con transformers estable; solo afirmacion de un usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Staff (aniculescu, post 10) admite que los playbooks pueden quedar desactualizados con herramientas externas como Unsloth.",
+ "utilidad_atom": "baja",
+ "razon": "Receta de un usuario para fine-tuning con Unsloth, ajena a monitoreo o a cortes. Staff NVIDIA solo remite al playbook actualizado (posts 3, 14); el post 13 reporta NaN en la perdida sin solucion."
+}

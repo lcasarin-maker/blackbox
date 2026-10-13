@@ -1,0 +1,28 @@
+{
+ "id": 384326,
+ "titulo": "DGX Spark (GB10): cuDevicePrimaryCtxRetain returns CUDA_ERROR_OUT_OF_MEMORY intermittently with 67-74 GiB available",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "rastrear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Sonda minima para reproducir: programa C que solo llama cuInit(0), cuDeviceGet y cuDevicePrimaryCtxRetain; fallo 12 de 20 intentos espaciados 3 s con MemAvailable 67-74 GiB",
+   "como": "no indicado (el post describe la sonda, no da el codigo)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Ubuntu 24.04.4, kernel 6.17.0-1031-nvidia, driver 580.173.02 (CUDA 13.0)",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Un miembro con respuesta de NVIDIA (aniculescu, aparece como personal por su respuesta oficial en el hilo; el rol no se verifica en el texto) reprodujo el fallo tras mantener presion de memoria durante mucho tiempo y abrira un ticket interno; no hay causa, limite de contextos ni mitigacion publicada.",
+ "utilidad_atom": "baja",
+ "razon": "El usuario reporta fallos intermitentes de creacion de contexto CUDA con memoria disponible; la unica respuesta dice haberlo reproducido bajo presion de memoria prolongada y abrir ticket, sin mitigacion. La sonda se describe pero sin codigo, por eso no hay mecanismo con comando concreto."
+}

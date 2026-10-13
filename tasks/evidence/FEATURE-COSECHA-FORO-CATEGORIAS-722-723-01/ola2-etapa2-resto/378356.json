@@ -1,0 +1,47 @@
+{
+ "id": 378356,
+ "titulo": "Defective onboard RTL8127 NIC on DGX Spark",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Para el RMA, NVIDIA (usuario Neill, respuesta de staff probable por su tono oficial) exige correr las herramientas de diagnostico de campo (fieldiag) antes de aceptar la unidad",
+   "como": "no indicado (guia PDF userguide-dgx-spark-fieldiag de docs.nvidia.com)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medir perdida del NIC onboard comparando unidades: ping largo al gateway y contadores del NIC",
+   "como": "ethtool -S enP7s7 (rx_errors, rx_mac_missed, rx_pause_on, rx_pause_off); ping al gateway durante unas 13 horas",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS OTA 7.5.0, kernel 6.17.0-1029-nvidia, driver r8127 11.014.00-NAPI",
+   "riesgo": null,
+   "verificable_aqui": "ethtool -S enP7s7 | grep -E 'rx_errors|rx_mac_missed|rx_pause'; modinfo r8127 | grep version"
+  },
+  {
+   "que": "Workaround de otro usuario (nekoseraph): el mismo driver r8127 11.014.00 produce caidas de enlace que desaparecen con el driver r8169 del kernel; la nota esta truncada en el texto descargado y menciona una advertencia sobre reinicio en caliente",
+   "como": "no indicado (el texto descargado se corta; el detalle esta en otro post externo)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, driver r8127 11.014.00",
+   "riesgo": "Advertencia de warm-reboot mencionada sin detalle en el texto",
+   "verificable_aqui": "ethtool -i enP7s7 | grep driver"
+  }
+ ],
+ "omision_nvidia": "El workaround documentado de NVIDIA, segun el usuario, es desactivar EEE; el usuario dice que no resolvio su caso. No hay solucion de NVIDIA para el driver r8127.",
+ "utilidad_atom": "baja",
+ "razon": "Reporte de un NIC onboard RTL8127 con perdida de paquetes y caidas de enlace; staff pide fieldiag para el RMA y un usuario propone cambiar al driver r8169, sin comando en el texto. No toca memoria ni calor; solo sirve si el ATOM mostrara perdida en la NIC."
+}

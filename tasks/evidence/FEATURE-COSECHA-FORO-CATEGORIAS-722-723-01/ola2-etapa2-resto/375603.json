@@ -1,0 +1,68 @@
+{
+ "id": 375603,
+ "titulo": "PSA: ib_write_bw falsely reports a >64 KiB RDMA WRITE failure on GB10",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "ib_write_bw falla de forma determinista por encima de 65536 bytes con error de proteccion local; segun el autor es defecto del instrumento y no del fabric (NCCL all_reduce_perf sin errores)",
+   "como": "ib_write_bw a 68 KiB y 4 MiB; error 'local protection error (0x3b 0x0 0x9d)'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Dell Pro Max FCM1253 x3, DGX OS 7.5.0, CX-7 FW 28.45.4028, NCCL 2.30.7",
+   "riesgo": "No fiarse de ib_write_bw para validar RoCE en GB10 con mensajes grandes",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Desactivar el plugin de red AWS OFI en NCCL porque falla con memoria unificada de GB10",
+   "como": "NCCL_NET_PLUGIN=none",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10, NCCL 2.30.7",
+   "riesgo": "Perdida del plugin; el autor dice que funciona con GDR apagado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medir trafico RoCE con contadores *_phy (totales de puerto) y *_vport_unicast_bytes (por MAC), porque netdev y tcpdump no ven datos offloaded",
+   "como": "contadores *_phy y *_vport_unicast_bytes (nombre exacto de la ruta no indicado)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "CX-7 en GB10 segun el autor",
+   "riesgo": "Los contadores de netdev y tcpdump dan lecturas vacias",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Evitar que el ARP cruzado junte dos MAC en una sola raiz PCIe x4: una interfaz por subred y arp_ignore=1 / arp_announce=2 solo en las interfaces del fabric",
+   "como": "arp_ignore=1 / arp_announce=2",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "cluster de 3 nodos GB10",
+   "riesgo": "Aplicar solo a interfaces del fabric",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Corregir la topologia que NCCL detecta (GPU PCIe leida como Gen1 x1, 0.9 GB/s) con un archivo de topologia",
+   "como": "NCCL_TOPO_FILE (contenido del archivo no indicado)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "cluster GB10",
+   "riesgo": "Archivo de topologia incorrecto puede falsear rendimiento",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "No hay respuesta de NVIDIA; el autor cita dos hilos antiguos sin resolver (CX-5 y CX-7/KVM).",
+ "utilidad_atom": "baja",
+ "razon": "Es de redes multinodo RoCE, esta maquina es de un solo nodo. Un solo mensaje de usuario, los detalles utiles no tienen comando completo."
+}

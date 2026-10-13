@@ -1,0 +1,10 @@
+{"id": 360492, "titulo": "Why doesn't the DGX Spark support Wake-on-LAN (WoL)?", "leido": true, "posts_leidos": 7, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["medir","omision_nvidia"],
+ "mecanismos": [
+  {"que": "Comprobar si la NIC de 10 Gb anuncia Wake-on-LAN: ethtool muestra Supports Wake-on y Wake-on actual (el usuario ve pumbg y g)", "como": "sudo ethtool enP7s7", "fuente_post": 2, "repositorio": null, "licencia": null, "probado_en": "DGX Spark del usuario elsaco (sin version declarada)", "riesgo": "El propio autor del tema (post 3) dice que con Wake-on: g igualmente no le funciono, asi que la bandera no prueba que WoL opere", "verificable_aqui": "ethtool enP7s7 | grep -i wake-on"},
+  {"que": "Comprobar capacidades de wake del Wi-Fi", "como": "iw phy | grep -i wake", "fuente_post": 2, "repositorio": null, "licencia": null, "probado_en": "DGX Spark del usuario elsaco", "riesgo": null, "verificable_aqui": "iw phy | grep -i wake"},
+  {"que": "Alternativa a WoL: enchufe inteligente con la opcion de BIOS de encender tras perdida de corriente", "como": "apagar la Spark, cortar y restaurar la corriente con un enchufe inteligente; activar en BIOS el arranque al volver la energia", "fuente_post": 4, "repositorio": null, "licencia": null, "probado_en": "ASUS DGX Spark (usuario alef204, post 7)", "riesgo": "Cortar la corriente sin apagado limpio puede dañar datos; el usuario alef204 reporta que funciona", "verificable_aqui": null}],
+ "omision_nvidia": "Un usuario (adi-sonusflow, sin rol de NVIDIA) dice que WoL no esta soportado; no hay respuesta de personal de NVIDIA. Un usuario afirma que con Secure Boot desactivado WoL funciona en otros sistemas, sin probarlo aqui.",
+ "utilidad_atom": "baja",
+ "razon": "Aporta dos comandos de lectura (ethtool, iw phy) y un workaround de enchufe inteligente, todos de usuarios sin respuesta de NVIDIA. Tambien mide un consumo en reposo de 31.5 a 40 W segun un usuario, util solo como referencia; el post 6 no esta en el texto descargado."}

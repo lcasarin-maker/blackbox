@@ -1,0 +1,46 @@
+{
+ "id": 368182,
+ "titulo": "Synchronous Exception at 0x8000000000000007",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de la excepcion sincrona al arrancar: usar HDMI en vez de monitor por USB-C (un usuario con GX10 lo confirma tras volver a fallar con USB-C)",
+   "como": "cambiar el monitor a HDMI",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus GX10 (usuario)",
+   "riesgo": "Solo un usuario lo reporta; el personal de NVIDIA no pudo reproducirlo con monitor USB-C",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Actualizacion completa y ciclo de energia completo (consejo de aparente personal NVIDIA, raphael.amorim)",
+   "como": "sudo apt update; sudo apt dist-upgrade; sudo fwupdmgr refresh; sudo fwupdmgr upgrade; luego apagar, desconectar spark y fuente, esperar 5-10 minutos",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Ninguno indicado",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Cargar 'optimized defaults' en el menu EFI permitio arrancar una vez; el fallo volvio en el siguiente arranque",
+   "como": "EFI settings > load optimized defaults",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Asus GX10 (usuario)",
+   "riesgo": "Efecto temporal segun el propio usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El unico arreglo reportado es cambiar a HDMI (usuario, un caso), mas el consejo generico de actualizacion y ciclo de energia; NVIDIA (aniculescu) no reprodujo el fallo. No hay medicion ni mecanismo reutilizable para calor o memoria."
+}

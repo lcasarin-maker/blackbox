@@ -1,0 +1,57 @@
+{
+ "id": 348787,
+ "titulo": "DGX Spark GPUDirect RDMA",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "omision_nvidia",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Declaracion de NVIDIA: GPUDirect RDMA no soportado en Spark (nvidia-peermem, dma-buf, GDRCopy no funcionan); modulo nvidia_peermem instalado esta vacio (init devuelve -EINVAL)",
+   "como": "sudo modprobe nvidia-peermem  ->  modprobe: ERROR: could not insert 'nvidia_peermem': Invalid argument",
+   "fuente_post": 6,
+   "repositorio": "https://github.com/NVIDIA/open-gpu-kernel-modules",
+   "licencia": "Dual BSD/GPL (modinfo, post 4)",
+   "probado_en": "usuarios: kernel 6.11.0-1016-nvidia, driver 580.95.05",
+   "riesgo": "Un registro ibv_reg_mr con buffer GPU da segfault",
+   "verificable_aqui": "modinfo nvidia-peermem | grep -E 'depends|version'"
+  },
+  {
+   "que": "Deteccion programatica de capacidades antes de usar RDMA directo",
+   "como": "consultar CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_SUPPORTED y CU_DEVICE_ATTRIBUTE_DMA_BUF_SUPPORT",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "NVIDIA staff (MackenzieNVIDIA)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Alternativa recomendada por NVIDIA para RDMA ib verbs: buffers con cudaHostAlloc registrados con ib_reg_mr",
+   "como": "cudaHostAlloc + ib_reg_mr",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "NVIDIA staff",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de diagnostico del modulo vacio por desensamblado",
+   "como": "objdump -d /lib/modules/6.11.0-1016-nvidia/kernel/nvidia-580-open/nvidia-peermem.ko",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, kernel 6.11.0-1016-nvidia",
+   "riesgo": null,
+   "verificable_aqui": "modinfo nvidia-peermem | grep depends"
+  }
+ ],
+ "omision_nvidia": "NVIDIA declara que GPUDirect RDMA (peermem, dma-buf, GDRCopy) no esta soportado en la memoria unificada del Spark (post 6, MackenzieNVIDIA).",
+ "utilidad_atom": "baja",
+ "razon": "Respuesta oficial de NVIDIA que fija una omision de plataforma, pero ligada a redes/RDMA y sin relacion con memoria o calor. Util solo como advertencia de que el modulo vacio no es un fallo local."
+}

@@ -1,0 +1,27 @@
+{
+ "id": 376106,
+ "titulo": "FLUX.2 on the Spark: ~3x faster with real NVFP4 compute - PR to spark-vllm-docker",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Cuantizar el transformer de FLUX.2 a NVFP4 W4A4 al vuelo con torchao (no modelopt_fp4) para reducir memoria; pico BF16 ~112 GB solo en la primera cuantizacion, luego ~66 GB",
+   "como": "no indicado (comando exacto no dado; PR #313 en eugr/spark-vllm-docker; error 'mslk is required for NVFP4 triton quantization' si falta mslk)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 sm_121a (declarado por el usuario)",
+   "riesgo": "Pico de ~112 GB en la primera cuantizacion puede agotar la memoria unificada si hay otros procesos",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Usuario reporta (sin staff) FLUX.2 con NVFP4 W4A4 via torchao: 2.3 min a 45 s, VRAM 112 a 66 GB; avisa de no usar la ruta modelopt_fp4 en sm_121a y de la dependencia mslk. Es un servidor de generacion de imagenes, ajeno a monitoreo/prevencion de colapsos de memoria; solo el ahorro de pico de memoria es tangencial."
+}

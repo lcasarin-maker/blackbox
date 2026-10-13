@@ -1,0 +1,10 @@
+{"id": 354194, "titulo": "My DGX System is getting shut itself down while running my LLM Fine tuning project . RAM Reaches to 100 percent along with GPU reaches 100 percent", "leido": true, "posts_leidos": 12, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["monitorear", "solucionar", "omision_nvidia"],
+ "mecanismos": [
+  {"que": "Desactivar swap como mitigacion: segun un usuario (raphael.amorim, rol de staff no indicado en el texto), con swap el sistema entero muere en lugar de matar el proceso; sin swap el entrenamiento falla pero el sistema sigue vivo", "como": "sudo swapoff -a", "fuente_post": 2, "repositorio": null, "licencia": null, "probado_en": "null (reportes de otro hilo, sin hardware en este)", "riesgo": "Sin swap el proceso se cae por OOM en vez de degradarse", "verificable_aqui": "swapon --show; cat /proc/swaps"},
+  {"que": "Comprobacion de la potencia de slot PCIe y de los avisos de energia de los NIC ConnectX-7", "como": "sudo lspci -vv -s 01:00.0 | grep -i \"SlotPowerLimit\"; sudo dmesg | grep -i \"insufficient\\|power\"; sudo dmesg | grep -i \"link down\"", "fuente_post": 1, "repositorio": null, "licencia": null, "probado_en": "DGX Spark, driver 580.95.05 (usuario jay.soni1)", "riesgo": "Interpretacion: el usuario lo toma como inestabilidad de rail PCIe; NVIDIA (posts 2 y 11) dice que el aviso 'insufficient power on the PCIe slot (27W)' no es error, el host no anuncia el limite", "verificable_aqui": "dmesg | grep -i 'insufficient power'"}
+ ],
+ "omision_nvidia": "Staff de NVIDIA (aniculescu, post 11) afirma que los avisos de energia PCIe 27W son advertencias por no anunciar el host el limite de potencia; no se ofrece diagnostico del apagado en seco del usuario, que sigue sin resolver.",
+ "utilidad_atom": "baja",
+ "razon": "El usuario sufre apagados con GPU, CPU y RAM al 100 por ciento (GPU a 79C y 55W en su nvidia-smi) y nadie los resuelve; la unica mitigacion es swapoff -a, citada de otro hilo. La hipotesis de falla de energia PCIe del usuario esta refutada por NVIDIA como aviso benigno."}

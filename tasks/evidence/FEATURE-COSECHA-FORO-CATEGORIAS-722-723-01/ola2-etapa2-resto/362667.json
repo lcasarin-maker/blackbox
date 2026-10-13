@@ -1,0 +1,27 @@
+{
+ "id": 362667,
+ "titulo": "My QSFP ports on my DGX Spark are not working",
+ "leido": true,
+ "posts_leidos": 13,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Desactivar el hot-plug del CX7 (ahorro de energia) borrando el archivo bandera y reiniciando",
+   "como": "sudo rm -f /etc/nvidia/cx7-hotplug-enabled",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark Founder's Edition tras la actualizacion de 2026; staff aniculescu",
+   "riesgo": "No resolvio el caso del usuario (post 10); anula el ahorro de energia del CX7.",
+   "verificable_aqui": "ls -l /etc/nvidia/cx7-hotplug-enabled"
+  }
+ ],
+ "omision_nvidia": "El staff (aniculescu, post 4) declara que sin cable el CX7 se apaga y no aparece en lspci (funcion de ahorro). NVES envio el caso a RMA (post 12) y solo atiende RMA del Founder's Edition.",
+ "utilidad_atom": "baja",
+ "razon": "Staff da el archivo bandera /etc/nvidia/cx7-hotplug-enabled para desactivar el hot-plug del CX7; sin efecto en este caso, que acabo en RMA. Tangencial al problema de memoria y calor."
+}

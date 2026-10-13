@@ -1,0 +1,179 @@
+{
+ "id": 370309,
+ "titulo": "DeepSeek-V4-Flash (official FP8) running across 2x DGX Spark — TP=2, MTP, 200K ctx, recipe + numbers",
+ "leido": true,
+ "posts_leidos": 262,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Variable de entorno que salta los asserts de memoria libre de vLLM en GB10, porque psutil y CUDA discrepan sobre la memoria libre (afirmacion de usuario)",
+   "como": "VLLM_SKIP_INIT_MEMORY_CHECK=1",
+   "fuente_post": 102,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark GB10, 121 GiB UMA, driver 595.71.05, TP=2 Ray",
+   "riesgo": "Un OOM real sigue apareciendo solo al cargar pesos; el usuario no mide el efecto de saltar el chequeo",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv,noheader; grep -E 'MemTotal|MemAvailable' /proc/meminfo"
+  },
+  {
+   "que": "Tras parar el contenedor quedan unos 100 GiB retenidos en el driver; rmmod nvidia_uvm no los libera, solo un reboot (afirmacion de usuario, sin comando de medicion)",
+   "como": "reiniciar entre corridas; no indicado comando de medicion",
+   "fuente_post": 102,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x GB10, driver 595.71.05",
+   "riesgo": "Una segunda corrida sin reboot empieza con memoria agotada",
+   "verificable_aqui": "free -m; grep -E 'MemAvailable|Cached' /proc/meminfo"
+  },
+  {
+   "que": "Borrar la cache de vLLM al cambiar de imagen: artefactos compilados viejos se reusan en silencio en sm_121 y dan salida corrupta sin fallo",
+   "como": "wipe ~/.cache/vllm cuando cambias imagen/build (texto: 'Wipe ~/.cache/vllm')",
+   "fuente_post": 102,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 sm_121",
+   "riesgo": "Salida corrupta sin crash si no se borra",
+   "verificable_aqui": "ls -la ~/.cache/vllm 2>/dev/null"
+  },
+  {
+   "que": "Reservar memoria libre del kernel y reclamar cache mas agresivo para evitar NV_ERR_NO_MEMORY al asignar KV cache tras cargar un checkpoint de 148 GiB",
+   "como": "vm.min_free_kbytes=5242880 (5 GiB, nodo de 119 GiB); vm.min_free_kbytes=3145728 (3 GiB, nodo de 121 GiB); vm.vfs_cache_pressure=200; vm.dirty_ratio=5; vm.dirty_background_ratio=2; blockdev --setra 16 durante la carga y 256 despues de 180 s",
+   "fuente_post": 100,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 nodos (uno 119 GiB, otro 121 GiB), TP=2, vLLM DeepSeek-V4-Flash",
+   "riesgo": "Otro usuario (wolttam, post 101) lo juzga sugerencias dudosas generadas por un LLM; bjk110 (post 102) dice que no las necesito y que tratan el sintoma; sin A/B",
+   "verificable_aqui": "sysctl vm.min_free_kbytes vm.vfs_cache_pressure vm.dirty_ratio vm.dirty_background_ratio; blockdev --getra /dev/nvme0n1"
+  },
+  {
+   "que": "Sincronizar firmware, driver y kernel en AMBOS nodos de un TP=2: con solo el nodo head actualizado no hubo ganancia; con ambos, pp +140% y tg +37% (sin A/B controlado, el propio autor lo admite)",
+   "como": "sudo fwupdmgr update -y && sudo reboot ; sudo apt install -y nvidia-driver-595-open linux-modules-nvidia-595-open-nvidia-hwe-24.04 ; sudo apt upgrade -y && sudo apt autoremove -y && sudo reboot",
+   "fuente_post": 60,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark, driver 595.71.05, kernel 6.17.0-1018-nvidia",
+   "riesgo": "Cambia de driver 580 a 595 en un sistema con Secure Boot; NVIDIA no lo respalda en este hilo; si hubo DKMS previo hay que limpiar con sudo dkms remove nvidia/595.71.05 --all",
+   "verificable_aqui": "fwupdmgr get-devices; nvidia-smi --query-gpu=driver_version --format=csv,noheader; uname -r"
+  },
+  {
+   "que": "Parche al bug de prefix caching en vLLM V1: kv_cache_usage_perc solo sube y el RSS crece lineal porque block.reset_hash() solo corre si pop() tiene exito",
+   "como": "aplicar PR #44237 sobre vllm/v1/core/block_pool.py (mover block.reset_hash() fuera del condicional)",
+   "fuente_post": 199,
+   "repositorio": "https://github.com/vllm-project/vllm (PR 44237)",
+   "licencia": "no indicada",
+   "probado_en": "vLLM V1 en 2-4 nodos Spark; confirmado por kan11 (post 200) y a.grmbl (post 201)",
+   "riesgo": "Parche manual dentro del contenedor; co-le (post 233) reporta que con la imagen parcheada el cache sigue perdiendose al alternar dos sesiones",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Sintoma medible del bug anterior: kv_cache_usage_perc que nunca baja y casi cero aciertos de prefix cache tras una hora",
+   "como": "observar kv_cache_usage_perc y la tasa de aciertos de prefix cache en el log/metricas de vLLM; no indicado comando exacto",
+   "fuente_post": 201,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "vLLM en Spark",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fix de asignacion en BlockPool: tomar primero bloques sin hash antes de expulsar bloques con hash",
+   "como": "codigo Python propuesto en el post (bucle con popleft y block_hash is None sobre free_block_queue)",
+   "fuente_post": 215,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Patch propio de un usuario, sin PR ni prueba independiente",
+   "verificable_aqui": null
+  },
+  {
+   "que": "En RoCE con NCCL pip: forzar IB y GID index para evitar ibv_modify_qp fallido y GID vacio",
+   "como": "NCCL_NET=IB ; NCCL_IB_DISABLE=0 ; NCCL_IB_GID_INDEX=0",
+   "fuente_post": 174,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark, switch MikroTik, RoCE sobre CX-7",
+   "riesgo": "Valor del GID index depende de la topologia de cada usuario",
+   "verificable_aqui": "ibdev2netdev 2>/dev/null; ls /sys/class/infiniband 2>/dev/null"
+  },
+  {
+   "que": "Silenciar avisos de cambio de tabla GID en interfaces roce",
+   "como": "sysctl net.ipv6.conf.roce*.accept_ra=0",
+   "fuente_post": 174,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "El usuario lo llama opcional (cosmetico)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Pin de nvidia-cutlass-dsl para evitar ImportError de fmin y una race condition conocida de cutlass 4.5.x",
+   "como": "uv pip install --force-reinstall --no-deps nvidia-cutlass-dsl-libs-cu13==4.5.2 (post 122); nvidia-cutlass-dsl[cu13]==4.5.0 funciona y 4.5.1 falla (post 89)",
+   "fuente_post": 122,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "vLLM en Spark dual",
+   "riesgo": "Afirmacion de usuario sobre un 'known issue' sin enlace",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Un enlace CX-7 quedo colgado tras churn de teardown con mlx5 ACCESS_REG timeout; solo un cold boot lo limpio",
+   "como": "cold boot (sin comando); mensaje de kernel citado: mlx5 ACCESS_REG timeout",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark GB10",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k -b --no-pager | grep -i mlx5"
+  },
+  {
+   "que": "Trampa de medicion: llama-benchy toma el nombre servido como tokenizer y cae a gpt2 (1024 tokens) con filas vacias; hay que pasar el tokenizer real",
+   "como": "llama-benchy ... --tokenizer deepseek-ai/DeepSeek-V4-Flash",
+   "fuente_post": 17,
+   "repositorio": "no indicado en el post",
+   "licencia": "no indicada",
+   "probado_en": "2x DGX Spark",
+   "riesgo": "Sin el flag las pruebas grandes dan cero filas sin error visible",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de aceptacion de especulativo y tasa de MTP con tool-eval-bench",
+   "como": "tool-eval-bench --spec-bench (y tool-eval-bench --short)",
+   "fuente_post": 90,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark, vLLM 0.1.dev17016",
+   "riesgo": null,
+   "verificable_aqui": "command -v tool-eval-bench"
+  },
+  {
+   "que": "Gotchas de congelamiento/OOM: ambos nodos suben a ~93 GB y luego ~130 GB y se cuelgan hasta reinicio duro, aun con gpu util 0.5; otro usuario ve congelamiento de ambos Spark y sospecha de nvcc",
+   "como": "sin solucion indicada; sintoma reportado",
+   "fuente_post": 179,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark dual TP=2",
+   "riesgo": "Cortes en seco/hard restart reportados por usuarios; sin diagnostico de NVIDIA",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Afirmacion de jasl (no NVIDIA): el problema de die de GPU estaria relacionado con un problema de firmware GSP que afecta a todos los productos SM12x",
+   "como": "no indicado (sin comando ni fuente)",
+   "fuente_post": 88,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Afirmacion no verificada de un colaborador de la comunidad",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "No hay respuesta de NVIDIA en el hilo. Los usuarios indican que vLLM upstream no tiene soporte SM12x para DeepSeek-V4-Flash (jasl, post 181 y 178) y que la recuperacion tras 'GPU die issue' no esta documentada; todo es afirmacion de usuarios.",
+ "utilidad_atom": "alta",
+ "razon": "Hilo de 262 posts de usuarios (sin staff NVIDIA identificado) con mecanismos concretos para memoria unificada en GB10: VLLM_SKIP_INIT_MEMORY_CHECK=1, reboot entre corridas por ~100 GiB retenidos, y sysctl vm.min_free_kbytes en post 100 (disputado en post 102). Los sintomas de colapso de memoria y cuelgues en seco aparecen en posts 64, 66, 100, 179, pero sin diagnostico oficial."
+}

@@ -1,0 +1,37 @@
+{
+ "id": 369711,
+ "titulo": "DGX Spark BIOS Update Request: 5.36_0ACUM018 0ACUM023",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Procedimiento oficial de actualizacion de firmware que da el staff de NVIDIA (abull)",
+   "como": "sudo apt update; sudo apt dist-upgrade; sudo fwupdmgr --version; sudo fwupdmgr refresh; sudo fwupdmgr upgrade; sudo reboot",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX OS 7.5.0, kernel 6.17.0-1014-nvidia (segun el usuario)",
+   "riesgo": "Reinicio; el usuario ya tenia 67 paquetes pendientes sin aplicar en un nodo productivo",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "La cadena de version de BIOS AMI que reporta dmidecode queda desfasada y solo avanza con el SoC FW (afirmacion del staff de NVIDIA); la version real se compara en la pantalla Firmware Version Information de BIOS Setup",
+   "como": "dmidecode (campo BIOS Version) vs BIOS Setup > Firmware Version Information; herramienta nvidia-spark-ota-check installed-versions",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario: 4 nodos DGX Spark FE, SoC FW 2.152.15 identico",
+   "riesgo": "Leer la cadena de dmidecode como version real da falsas alarmas de deriva de firmware; nvidia-spark-ota-check solo muestra el banco USB-PD activo, no el de respaldo (segun usuario)",
+   "verificable_aqui": "sudo dmidecode -s bios-version"
+  }
+ ],
+ "omision_nvidia": "Sin camino documentado para refrescar el banco inactivo de los controladores USB-PD; ni fwupd ni nvidia-spark-ota-check lo muestran (pregunta del usuario sin respuesta de NVIDIA). Staff indica que el driver 595 no es una version publicada para DGX Spark.",
+ "utilidad_atom": "media",
+ "razon": "El staff de NVIDIA (abull) confirma que la cadena BIOS de dmidecode es obsoleta y da la secuencia apt/fwupdmgr; el usuario verifica en BIOS Setup que UEFI y SoC FW son iguales. El hallazgo del banco PD de respaldo no tiene respuesta de NVIDIA y el caso se resolvio cambiando la unidad."
+}

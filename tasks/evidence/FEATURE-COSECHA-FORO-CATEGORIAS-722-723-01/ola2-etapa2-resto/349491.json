@@ -1,0 +1,67 @@
+{
+ "id": 349491,
+ "titulo": "One of My Two DGX Sparks Bricked After Update",
+ "leido": true,
+ "posts_leidos": 13,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Pantalla negra tras actualizacion: purgar y reinstalar gdm3 por SSH y reiniciar (reporte de usuario); ademas subir el timeout de acceso a UEFI en BIOS de 1 a 5 s",
+   "como": "sudo apt-get purge gdm3 && sudo apt-get install gdm3 && sudo reboot now",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark de teamaitken",
+   "riesgo": "No resolvio el caso del autor (post 11); purge elimina configuracion de gdm",
+   "verificable_aqui": "systemctl status gdm; systemctl get-default"
+  },
+  {
+   "que": "Aislar si el fallo es del escritorio: arrancar en modo multi-usuario; si llega al prompt de login el sistema esta sano y el fallo es de gdm",
+   "como": "sudo systemctl set-default multi-user.target  (revertir: sudo systemctl set-default graphical.target)",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Cambia el target por defecto hasta revertirlo",
+   "verificable_aqui": "systemctl get-default"
+  },
+  {
+   "que": "Personal de NVIDIA (aniculescu) sugiere iniciar a mano los servicios de escritorio si hay SSH pero no video",
+   "como": "sudo systemctl start gdm gnome-remote-desktop cups cups-browsed",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "El autor reporta que no lo soluciono (post 11)",
+   "verificable_aqui": "systemctl status gdm gnome-remote-desktop"
+  },
+  {
+   "que": "Recuperacion de energia (usuario OverworkedTokens): desconectar todo, mantener pulsado el boton de encendido 30 s, esperar 2 min sin corriente, reconectar solo AC y pulsar 3 s",
+   "como": "no indicado como comando; procedimiento fisico de 5 pasos en el post 18",
+   "fuente_post": 18,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dice que le funciono, sin hardware detallado",
+   "riesgo": "Afirma que reinicia el BMC; el post no verifica que un Spark tenga BMC",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Sintoma sin solucion: arranque en frio falla y solo arranca tras entrar a UEFI y guardar sin cambios; el autor envio la unidad a RMA",
+   "como": "no indicado",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "dos Sparks entregados el 23 de octubre",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA (aniculescu) solo hace preguntas y una sugerencia; no ofrece causa ni arreglo del arranque en frio fallido tras actualizacion.",
+ "utilidad_atom": "media",
+ "razon": "Los comandos systemctl de aislamiento de gdm son concretos y de solo diagnostico, pero ningun mecanismo resolvio el caso original (RMA) y el procedimiento de energia lo afirma un usuario sin verificacion. Respuesta de NVIDIA en posts 10 y 14, sin solucion."
+}

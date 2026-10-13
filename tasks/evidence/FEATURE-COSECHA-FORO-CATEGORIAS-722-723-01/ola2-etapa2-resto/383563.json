@@ -1,0 +1,27 @@
+{
+ "id": 383563,
+ "titulo": "DGX Spark regression: After updating to kernel 7.0.0-1019-nvidia, gdm no longer boots correctly [FIXED]",
+ "posts_leidos": 5,
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Rastreo del fallo de gdm tras actualizar el kernel con el journal; la causa fue libnvidia-cfg.so.1 ausente que impidio nvidia-persistenced",
+   "como": "sudo journalctl -b ; sudo ubuntu-drivers autoinstall (sube a driver 595.91.07)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "kernel 7.0.0-1019-nvidia; segundo usuario confirma en un GIGABYTE AI TOP ATOM (post 5)",
+   "riesgo": "personal NVIDIA (post 2): driver 595 aun no soportado en DGX Spark; recomienda volver a 580.178.04 ante problemas de rendimiento",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv; apt-mark showhold"
+  }
+ ],
+ "omision_nvidia": "NVIDIA indica que el driver 595 no esta soportado en DGX Spark todavia.",
+ "utilidad_atom": "baja",
+ "razon": "Respuesta de personal NVIDIA en post 2 contraria al arreglo propuesto; el mecanismo exige el kernel 7.0.0 y un driver no soportado, y esta maquina usa 6.17.0-1032 con 580.178.04.",
+ "leido": true,
+ "lectura": "completa"
+}

@@ -1,0 +1,26 @@
+{
+ "id": 364607,
+ "titulo": "SM121 (GB10) native NVFP4 compute — seeking guidance on software support",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Segun un usuario, el fallo tcgen05 en vLLM sobre SM12x tiene un PR (#37700, vllm-project) aprobado y no fusionado al momento del post",
+   "como": "no indicado (sin comando; solo referencia al PR)",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/vllm-project/vllm (PR 37700)",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "PR sin fusionar; el usuario dice que el rendimiento NVFP4 no es una panacea",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El autor pregunta por calendario de kernels NVFP4 nativos para SM121; los issues CUTLASS #2800, #2802 y #2947 excluyen sm_121a de tcgen05/FP4 MMA en el DSL. Ninguna respuesta de NVIDIA en el tema.",
+ "utilidad_atom": "baja",
+ "razon": "Estado de soporte NVFP4 en SM121 segun usuarios (Marlin dequantiza a BF16; en MoE como Nemotron y Qwen buena parte de los pesos no es NVFP4, post 3). Sin comando reutilizable ni respuesta de NVIDIA."
+}

@@ -1,0 +1,37 @@
+{
+ "id": 368523,
+ "titulo": "Low throughput on 200G QSFP56 DAC link between two NVIDIA DGX Spark systems",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Ciclo de energia completo para recuperar velocidad de enlace ConnectX-7 (usuarios)",
+   "como": "apagar, desconectar corriente de pared unos minutos, reconectar",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Anecdotico de un usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "iperf3 necesita varias sesiones sumadas para acercarse a 200G",
+   "como": "ejecutar multiples sesiones iperf3 y sumarlas",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El personal (aniculescu) solo pide bug report, versiones de FW e id de cable; las respuestas utiles son de usuarios y de aparente personal (raphael.amorim) que remite a otro hilo. Sin comandos concretos."
+}

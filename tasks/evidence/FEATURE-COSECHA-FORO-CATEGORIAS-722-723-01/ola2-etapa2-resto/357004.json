@@ -1,0 +1,38 @@
+{
+ "id": 357004,
+ "titulo": "DGX Spark freezes after few minutes",
+ "leido": true,
+ "posts_leidos": 21,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Congelamiento al arranque causado por un contenedor Docker con autoarranque que agota la memoria (OOM); recuperacion entrando por SSH/NVIDIA Sync en el momento justo y deshabilitando Docker",
+   "como": "no indicado (el usuario dice que ejecuto un comando para deshabilitar Docker, sin darlo)",
+   "fuente_post": 19,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, version no indicada",
+   "riesgo": "Ventana de tiempo corta tras el arranque; un contenedor con restart automatico y mala configuracion de memoria deja el equipo inutilizable",
+   "verificable_aqui": "docker ps -a --format '{{.Names}} {{.Status}}' ; docker inspect -f '{{.Name}} {{.HostConfig.RestartPolicy.Name}}' $(docker ps -aq)"
+  },
+  {
+   "que": "Acceso SSH sin configurar llaves via hostname .local o IP, para triage remoto de un equipo congelado",
+   "como": "ssh <user>@<spark-hostname>.local  o  ssh <user>@<spark_ip>",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Staff de NVIDIA (aniculescu, post 20) dice que el manejo de OOM mejorara en la siguiente actualizacion mayor; implica que el manejo actual de OOM es insuficiente. Reimaging borra todos los datos (post 8).",
+ "utilidad_atom": "media",
+ "razon": "Un usuario (christopher_owen, post 17) y el autor (post 19) atribuyen el congelamiento al arranque a un contenedor Docker con autoarranque que agota memoria; el staff reconoce mejor manejo de OOM pendiente (post 20). No se da el comando exacto de recuperacion, por eso no es alta."
+}

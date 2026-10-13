@@ -1,0 +1,22 @@
+{"id": 353523, "titulo": "With the same model and vLLM image, GB10 uses more VRAM than x86 + GPU", "leido": true, "posts_leidos": 3, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["medir"],
+ "mecanismos": [
+  {"que": "Medir el desglose de memoria de vLLM al arrancar con logging DEBUG para ver cuanta memoria 'non-torch' consume (en GB10: 4.78 GiB no-KV frente a 1.25 GiB en RTX 5090 con el mismo modelo, segun el usuario)",
+   "como": "docker run --rm -e VLLM_LOGGING_LEVEL=DEBUG -v ~/.cache/huggingface:/root/.cache/huggingface -v ~/.cache/vllm:/root/.cache/vllm --runtime=nvidia --name=vllm -e VLLM_ATTENTION_BACKEND=FLASHINFER nvcr.io/nvidia/vllm:25.09-py3 vllm serve Qwen/Qwen3-0.6B-FP8 --gpu-memory-utilization 0.18 --max-model-len 40960",
+   "fuente_post": 1,
+   "repositorio": null, "licencia": null,
+   "probado_en": "GB10 con vllm 25.09-py3 (segun el usuario)",
+   "riesgo": "Lanza un contenedor y ocupa memoria unificada; no es de solo lectura.",
+   "verificable_aqui": null},
+  {"que": "Explicacion del usuario tras leer el codigo: la memoria 'non-torch' es memoria CUDA que vLLM no rastrea, y en dispositivos UMA el uso de RAM por CPU/SO se cuenta tambien en ese incremento",
+   "como": "no indicado (hallazgo conceptual; la linea de log es 'non-torch forward increase memory')",
+   "fuente_post": 2,
+   "repositorio": null, "licencia": null,
+   "probado_en": "GB10 segun el usuario",
+   "riesgo": "Afirmacion de un usuario, sin respuesta de NVIDIA ni verificacion independiente.",
+   "verificable_aqui": null}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El tema explica por que vLLM en memoria unificada reporta mas uso que en una GPU discreta: el contador incluye memoria de CPU/SO (post 2), relevante para ajustar gpu-memory-utilization en esta maquina. No hay respuesta de personal NVIDIA y el hallazgo es de un solo usuario."}

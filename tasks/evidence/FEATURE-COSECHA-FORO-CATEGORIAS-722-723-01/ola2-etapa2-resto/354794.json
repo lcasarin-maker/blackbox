@@ -1,0 +1,27 @@
+{
+ "id": 354794,
+ "titulo": "Can not remove DOCA-HOST package, and it rebuilds when I try to remove",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "anuncio_oficial",
+ "proposito": [
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Advertencia de NVIDIA (aniculescu): DOCA no esta soportado ni recomendado en Spark porque instalar y desinstalar exige apagar Secure Boot",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario con Spark; instalo doca-host y fallo la carga de mst_pci con 'Key was rejected by service'",
+   "riesgo": "Con Secure Boot activo los modulos DKMS de DOCA/OFED no cargan; la purga dispara recompilacion fallida de modulos",
+   "verificable_aqui": "mokutil --sb-state ; dpkg --list | grep -E 'doca|mlnx'"
+  }
+ ],
+ "omision_nvidia": "NVIDIA no soporta DOCA/OFED en DGX Spark con Secure Boot activo.",
+ "utilidad_atom": "media",
+ "razon": "El staff confirma en post 2 que DOCA no se soporta y que requiere Secure Boot apagado; esta maquina tiene Secure Boot activo, asi que instalar DOCA es un riesgo a evitar. No hay solucion para quitar el paquete."
+}

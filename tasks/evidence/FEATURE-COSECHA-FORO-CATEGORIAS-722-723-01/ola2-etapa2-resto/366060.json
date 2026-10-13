@@ -1,0 +1,57 @@
+{
+ "id": 366060,
+ "titulo": "Gemma 4 on DGX Spark (GB10): System Freeze at >80% Utilization & sm_121 Kernel Issues",
+ "posts_leidos": 13,
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Desactivar swap para que vLLM no cuelgue el Spark: apagar ahora y quitar la linea de /etc/fstab para hacerlo permanente (usuario pfnguyen)",
+   "como": "swapoff -a ; comentar la linea /swap.img en /etc/fstab",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun usuario",
+   "riesgo": "sin swap un OOM mata procesos en vez de degradar",
+   "verificable_aqui": "swapon --show; grep swap /etc/fstab; sysctl vm.swappiness"
+  },
+  {
+   "que": "Alternativa de dbsci (autor de sparkrun): mantener swap con swappiness minimo",
+   "como": "vm.swappiness=1",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "no indicado",
+   "riesgo": null,
+   "verificable_aqui": "sysctl vm.swappiness"
+  },
+  {
+   "que": "Reportado: gpu_memory_utilization mayor que 0.8 en vLLM con gemma-4-31B cuelga el equipo hasta ciclo de energia (autor, sin verificacion); otro usuario corrio el MoE 26B-A4B horas con mas de 80% de uso sin problema con la receta de eugr",
+   "como": "gpu_memory_utilization > 0.8",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "CUDA 13.0, driver 580.126.xx segun autor",
+   "riesgo": "cuelgue duro que requiere ciclo de energia",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Herramienta comunitaria sparkrun (setup wizard, recetas, --collect-diagnostics)",
+   "como": "uvx sparkrun setup ; sparkrun run @experimental/gemma4-26b-a4b-online-fp8-vllm --collect-diagnostics diag.ndjson",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/spark-arena/recipe-registry",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "el instalador se baja por curl a sh (post 5)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Sin respuesta de staff NVIDIA; usuarios aportan la mitigacion swapoff -a / swappiness=1 contra cuelgues bajo presion de memoria, ademas de earlyoom y limpiar cache (ya conocidos). La afirmacion del tope 0.8 no esta verificada.",
+ "leido": true,
+ "lectura": "completa"
+}

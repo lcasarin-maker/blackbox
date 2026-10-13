@@ -1,0 +1,76 @@
+{
+ "id": 348863,
+ "titulo": "Run SGLang in Spark",
+ "leido": true,
+ "posts_leidos": 21,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Instalar SGLang con kernels cu130 y lanzar gpt-oss (staff NVIDIA johnny_nv)",
+   "como": "uv pip install sgl-kernel --prerelease=allow --index-url https://docs.sglang.ai/whl/cu130/ ; python3 -m sglang.launch_server --model-path openai/gpt-oss-120b --host 0.0.0.0 --port 30000 --reasoning-parser gpt-oss --tool-call-parser gpt-oss",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/sgl-project/whl",
+   "licencia": "no indicada",
+   "probado_en": "Spark/GB10",
+   "riesgo": "--host 0.0.0.0 expone el servidor en la red",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Workaround de fallo triton_kernels en gpt-oss: desinstalar triton_kernels",
+   "como": "rm -rf /home/spark/ray_test/.venv/lib/python3.12/site-packages/triton_kernels",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Limpiar cache de uv ante conflicto de transformers",
+   "como": "uv cache clean",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Recomendacion de versiones con fixes para Spark (staff)",
+   "como": "triton 3.5.1 y flashinfer 0.5.2",
+   "fuente_post": 16,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Alternativa llama.cpp en Spark (usuario eugr)",
+   "como": "cmake -B build -DGGML_CUDA=ON -DGGML_CURL=ON ; build/bin/llama-server -hf ggml-org/gpt-oss-120b-GGUF -fa 1 -ngl 999 -ub 2048 -b 2048 --jinja",
+   "fuente_post": 11,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": "no indicada",
+   "probado_en": "Spark segun usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "llama.cpp en paralelo: -np y --kv-unified",
+   "como": "-np <N> ; --kv-unified",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Guia de staff NVIDIA para SGLang con workarounds concretos y comparacion con llama.cpp aportada por usuario; es compatibilidad de software, sin relacion con monitoreo o prevencion de cortes. Incluye vm.drop_caches=3 (mecanismo ya conocido, no se cuenta)."
+}

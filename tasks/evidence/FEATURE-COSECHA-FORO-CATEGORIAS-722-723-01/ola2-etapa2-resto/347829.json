@@ -1,0 +1,47 @@
+{
+ "id": 347829,
+ "titulo": "GNOME “Oh no! Something has gone wrong.” on DGX Spark",
+ "leido": true,
+ "posts_leidos": 14,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Entrar al menu UEFI desde DGX OS cuando la tecla DEL no responde (en el caso, el teclado inalambrico USB fallaba; uno cableado funciono)",
+   "como": "systemctl reboot --firmware-setup",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, DGX OS 7 (aplattner, identificado como personal NVIDIA solo por el contexto del hilo)",
+   "riesgo": null,
+   "verificable_aqui": "systemctl --version | head -1"
+  },
+  {
+   "que": "Recoleccion de logs para soporte NVIDIA",
+   "como": "journalctl (salida completa) y sudo nvidia-bug-report.sh",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (aplattner)",
+   "riesgo": "El reporte puede contener datos del sistema; revisarlo antes de enviarlo",
+   "verificable_aqui": "ls -l /usr/bin/nvidia-bug-report.sh"
+  },
+  {
+   "que": "Recuperacion de usuario tras el error de GNOME (acceso por TTY/SSH): purgar y reinstalar el escritorio y luego reinstalar el paquete DGX",
+   "como": "sudo apt purge ubuntu-desktop gnome-shell gdm3 ; sudo apt autoremove ; sudo apt install --reinstall ubuntu-desktop gnome-shell gdm3 ; sudo apt autoclean ; sudo reboot ; sudo apt update ; sudo apt install nvidia-system-station ; sudo reboot",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario jontybowden; el texto del post parece generado por asistente)",
+   "riesgo": "Purga el escritorio y el Dashboard; sin confirmacion de NVIDIA; no investiga la causa raiz",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "No hay confirmacion de NVIDIA de que sea un fallo conocido de DGX OS 7; el autor pregunta y el hilo se cierra sin respuesta oficial sobre la causa.",
+ "utilidad_atom": "media",
+ "razon": "Varios usuarios (posts 10-13) reportan la pantalla de error de GNOME tras cargar modelos grandes o reiniciar; NVES pregunta por actualizaciones y teclado Bluetooth y aplattner pide los logs. Hay un comando de acceso a UEFI y la recoleccion de logs, y una receta de recuperacion de usuario sin verificacion; ningun tema de calor o memoria excepto que el primer fallo fue tras cargar un modelo de 65 GB en LM Studio."
+}

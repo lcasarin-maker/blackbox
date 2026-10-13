@@ -1,0 +1,46 @@
+{
+ "id": 355001,
+ "titulo": "Has Anyone Tried Getting ~1.5x+ Speedup on DGX/Spark/Grace/Blackwell using this?",
+ "leido": true,
+ "posts_leidos": 21,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Usar el contenedor NGC PyTorch en vez de la rueda PyPI de PyTorch da ~1.5x en el benchmark de cyuen1, porque la rueda base no cubre SM 12.1 (afirmacion de la cuenta cyuen1, respondiendo como soporte NVIDIA; el texto no declara su rol)",
+   "como": "contenedor NGC PyTorch 25.11-py3 (docker pull); comparado con torch==2.9.0+cu130 de PyPI",
+   "fuente_post": 7,
+   "repositorio": "https://github.com/GuigsEvt/dgx_spark_config",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 (declarado)",
+   "riesgo": "eugr (post 20) no ve mejora en cargas vLLM; vLLM sobre esa imagen fallo con assume_32bit_indexing (post 13)",
+   "verificable_aqui": "docker image ls --format '{{.Repository}}:{{.Tag}}' | grep -i pytorch"
+  },
+  {
+   "que": "Parche de usuario para vLLM: comprobar si la config de inductor tiene assume_32bit_indexing antes de activarla",
+   "como": "if \"assume_32bit_indexing\" in getattr(ic, \"_config\", {}):  (en vllm/compilation/decorators.py, sustituye la comparacion is_torch_equal_or_newer(\"2.10.0.dev\"))",
+   "fuente_post": 19,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "parche sin probar por terceros",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: compilar Triton desde main rompe vLLM (falta el modulo matmul_ogs)",
+   "como": "no indicado como comando; condicion: build de triton desde main",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "modelos que no cargan",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "La rueda PyPI de PyTorch no incluye SM 12.1 (post 7); la solucion ofrecida es la imagen NGC.",
+ "utilidad_atom": "baja",
+ "razon": "Tema de rendimiento de PyTorch/vLLM en sm_121; sin mecanismo de memoria, termica ni monitoreo. La respuesta tipo staff (posts 7 y 9) solo recomienda partir de la imagen NGC, y un usuario no ve mejora en vLLM."
+}

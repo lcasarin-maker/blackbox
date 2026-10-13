@@ -1,0 +1,48 @@
+{
+ "id": 371190,
+ "titulo": "Nsys CUDA Trace Empty in AI Workbench Container on DGX Spark GB10",
+ "leido": true,
+ "posts_leidos": 10,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnosticar por que nsys no traza CUDA en un contenedor",
+   "como": "nsys status --environment (la linea SYS_PTRACE: Fail es el bloqueo)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, driver 570, nsys 2024.2.3",
+   "riesgo": "Ninguno",
+   "verificable_aqui": "nsys status --environment"
+  },
+  {
+   "que": "Dar CAP_SYS_PTRACE al contenedor (docker run o compose) para que nsys trace CUDA; confirmado por el autor, el sandbox de Workbench no lo permite en spec.yaml",
+   "como": "docker run ... --cap-add CAP_SYS_PTRACE --ipc=host --ulimit=memlock=-1 ... ; en compose: cap_add: - SYS_PTRACE",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10, contenedor RAPIDS cuda13; confirmado por el autor",
+   "riesgo": "Anade una capacidad al contenedor (superficie de ataque mayor); con paranoid level 4 el perfilado de CPU sigue fallando",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Verificar la traza CUDA dentro del contenedor",
+   "como": "docker exec -it <project>-profiler-1 bash ; nsys profile --trace=cuda python3 -c \"import cupy as cp; x = cp.zeros((3,3)); print(x)\"",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Staff NVIDIA (twhitehouse, dkleissas) confirma que Workbench no se ejecuta en dos maquinas y que el contenedor de proyecto esta restringido; el campo de capacidades en spec.yaml no existe (se estudiara).",
+ "utilidad_atom": "baja",
+ "razon": "Perfilado nsys en contenedor de AI Workbench; util solo si se quiere trazar CUDA, sin relacion con colapsos de memoria ni calor. Hay respuesta de staff NVIDIA (twhitehouse, dkleissas) con el workaround de compose."
+}

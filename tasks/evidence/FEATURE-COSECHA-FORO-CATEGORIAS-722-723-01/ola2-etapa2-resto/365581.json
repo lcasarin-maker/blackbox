@@ -1,0 +1,36 @@
+{
+ "id": 365581,
+ "titulo": "NVFP4 issue root cause?",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Issue citado de CUTLASS: StageCountAutoCarveout usa la memoria compartida maxima de la familia SM12x (228 KiB) y SM121 (GB10) tiene 99 KiB, por lo que los kernels MoE grouped GEMM FP4 fallan y TRT-LLM autotuner pierde 13 de 16 tacticas",
+   "como": "cudaDevAttrMaxSharedMemoryPerBlockOptin = 101376 en SM121; error 'MoE grouped GEMM requires 102400 bytes shared memory but device supports 101376'",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/NVIDIA/cutlass",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 SM121, CUDA 13.1, TensorRT-LLM 1.3.0rc10 (segun el issue citado)",
+   "riesgo": "Contenido del issue de un tercero; el autor del post solo pregunta si es cierto",
+   "verificable_aqui": "nvidia-smi --query-gpu=compute_cap --format=csv"
+  },
+  {
+   "que": "Workaround citado: usar backend Triton MoE (32-40 tok/s) o filtrar tiles en TRT-LLM; llama.cpp con dequant por software dio 24 tok/s frente a 4.8 tok/s",
+   "como": "no indicado (sin comando)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "TRT-LLM en GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El issue indica que CUTLASS no soporta SM121 en tiempo de ejecucion para MoE FP4; no hay respuesta de NVIDIA en el tema.",
+ "utilidad_atom": "media",
+ "razon": "Un solo post que cita un issue de CUTLASS con cifras concretas del limite de memoria compartida de GB10 y el workaround de Triton. Sin respuestas; afecta rendimiento NVFP4, no colapsos de memoria ni calor."
+}

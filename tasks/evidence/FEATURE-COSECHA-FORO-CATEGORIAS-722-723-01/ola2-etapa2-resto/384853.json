@@ -1,0 +1,47 @@
+{
+ "id": 384853,
+ "titulo": "Kindling Spark OS - ~4GB+ free RAM",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Kernel de paginas de 64k libera 2 GB por si solo; demonio dispram permite mapear 2 GB del framebuffer sin uso a un contenedor (KV), mas instalacion minima; el OS se agrega como opcion de arranque desde DGX OS",
+   "como": "no indicado (imagen de SO minima de solo lectura; instalacion en el repositorio)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/kindlingai/kindling-spark-os",
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10 del autor; dice compatible con todas las Spark",
+   "riesgo": "Contenedores que carguen pesos con mmap desde safetensors fallan (bug del driver, sin reporte aun); requiere parche del servidor LLM; reemplaza el SO base",
+   "verificable_aqui": "getconf PAGESIZE; uname -r"
+  },
+  {
+   "que": "Bandera para evitar el fallo de mmap con safetensors: estrategia de carga eager",
+   "como": "--safetensors-load-strategy eager",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "modelos del autor en su OS",
+   "riesgo": "no indicado",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia de atribucion: la mayor parte de la ganancia de rendimiento proviene de copias FP8/NVFP4 de capas densas (costo de precision: aprox. 1% NLL en prosa), no del SO",
+   "como": "no indicado",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "comparacion de un usuario con MTP/DFlash2",
+   "riesgo": "afirmacion de usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario anuncia un SO alternativo que recupera memoria con kernel de 64k y framebuffer; solo participan usuarios, sin respuesta de NVIDIA. Reemplazar el SO base choca con DGX OS y Secure Boot, y otro usuario encontro que el rendimiento proviene sobre todo de la cuantizacion adicional."
+}

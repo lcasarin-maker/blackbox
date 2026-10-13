@@ -1,0 +1,58 @@
+{
+ "id": 363299,
+ "titulo": "Upgrading the GPU Driver from 580 to 590 on DGX Spark using CLI",
+ "leido": true,
+ "posts_leidos": 13,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Actualizar el driver GPU 580 a 590 por apt en el Spark (modulos precompilados en el kernel linux-nvidia, no DKMS; el repo CUDA esta fijado a prioridad -1)",
+   "como": "sudo apt install nvidia-driver-590-open linux-modules-nvidia-590-open-nvidia-hwe-24.04 nvidia-prime-",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, segun el autor; reversa no verificada",
+   "riesgo": "Staff NVIDIA (aniculescu) avisa que driver 590 y kernels hwe no estan soportados en el Spark (post 2); un usuario quedo con el sistema congelado al iniciar sesion (post 4); el proceso se rompio en junio por paquetes 610 del repo CUDA (post 10)",
+   "verificable_aqui": "apt-cache policy nvidia-driver-580-open; ls /etc/apt/preferences.d/"
+  },
+  {
+   "que": "Reversion a 580 tras una actualizacion fallida, incluso por SSH sin consola",
+   "como": "apt purge nvidia-driver-590-open ; apt install nvidia-driver-580-open ; reboot",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "no indicado",
+   "riesgo": "Respuesta de usuario sin verificar",
+   "verificable_aqui": "dpkg -l | grep nvidia-driver"
+  },
+  {
+   "que": "Simular cambios de apt antes de aplicar",
+   "como": "--dry-run",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "apt-get -s install nvidia-driver-580-open"
+  },
+  {
+   "que": "Retener un paquete de firmware para fijar la version",
+   "como": "apt-mark hold nvidia-firmware-595-595",
+   "fuente_post": 13,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Acer GB10 (segun el usuario)",
+   "riesgo": "El propio usuario dice no estar seguro de hacerlo bien",
+   "verificable_aqui": "apt-mark showhold"
+  }
+ ],
+ "omision_nvidia": "Staff NVIDIA (post 2): driver 590 y kernels hwe no soportados en el Spark. Un usuario (post 1) dice que la documentacion oficial no cubre actualizar el driver por CLI; otro (post 15) pide sin respuesta el ciclo oficial de drivers; no hay actualizacion automatica a drivers 595/610.",
+ "utilidad_atom": "media",
+ "razon": "Procedimiento apt concreto con reversa y advertencias reales (congelamiento, rotura por repo CUDA), pero la ruta esta declarada como no soportada por NVIDIA y no hay verificacion de la reversa. Hay una respuesta de staff NVIDIA que avisa del no soporte."
+}

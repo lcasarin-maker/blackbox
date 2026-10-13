@@ -1,0 +1,67 @@
+{
+ "id": 379766,
+ "titulo": "Measured inference benchmarks on a single DGX Spark - Ollama, llama.cpp and vLLM",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo de medicion usado por el autor: mismo prompt, 400 max_tokens, descartar la primera peticion de calentamiento, luego flujo unico, 8 concurrentes y prefill de prompt largo, con el mismo arnes en todas las pilas",
+   "como": "metodo descrito en texto (sin comando); repo del autor con los datos y pines de version",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/sergioamsilva/dgx-spark-field-notes",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10, 121 GiB, Ubuntu 24.04 ARM64, driver 580.173.02, CUDA 13.0, vLLM 0.26.1rc1.dev535+g83ad767ee",
+   "riesgo": "Una maquina, un operador; el autor dice que la concurrencia varia +-30% entre corridas.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Los NVFP4 pueden caer a emulacion (~1.1 tok/s en vLLM sin kernels) y llegar a 77.1 tok/s con kernels FlashInfer Cutlass; el autor recomienda leer la linea de log de arranque en vez del nombre del formato",
+   "como": "linea de log: SM12x detected - using native FlashInfer CUTLASS attention instead of TRT-LLM attention (cubins not available for SM12x)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, vLLM 0.26.1rc1",
+   "riesgo": "Afirmacion de usuario sin verificacion independiente.",
+   "verificable_aqui": "docker logs <contenedor_vllm> 2>&1 | grep -i -E 'SM12x|FlashInfer|emulat'"
+  },
+  {
+   "que": "Decodificacion especulativa con num_speculative_tokens: 2 supero a 4 (aceptacion por posicion 0.84, 0.60, 0.39, 0.27); MTP subio Gemma-4-26B-A4B-NVFP4 de 30.3 a 54.9 tok/s",
+   "como": "num_speculative_tokens: 2",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, vLLM 0.26.1rc1",
+   "riesgo": "Afirmacion de usuario; solo velocidad, calidad no medida.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fallos de tool-calling atribuidos al servidor: usar --tool-call-parser y --reasoning-parser que correspondan al modelo en vLLM",
+   "como": "--tool-call-parser / --reasoning-parser (valor no indicado)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Otro usuario remite a spark-arena.com como fuente de recetas de rendimiento (clasificacion con recetas por modelo)",
+   "como": "https://spark-arena.com/",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario declara >100 tok/s con un Qwen 3.6 35B A3B",
+   "riesgo": "Afirmacion de usuario.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Benchmark de un usuario con metodologia reutilizable y un par de datos de vLLM en GB10 (kernels NVFP4, speculative tokens). Sin respuesta de NVIDIA; nada sobre memoria ni calor; las cifras son de una maquina y un operador."
+}

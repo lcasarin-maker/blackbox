@@ -1,0 +1,26 @@
+{
+ "id": 374721,
+ "titulo": "Share your latest Ascent GX10 idle power",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Leer el estado de potencia del GPU para saber si llega a D3cold en reposo",
+   "como": "cat /sys/class/drm/card*/device/power_state",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "ASUS GX10 con Ubuntu 26.04; el usuario dice que la GPU queda en D0",
+   "riesgo": null,
+   "verificable_aqui": "cat /sys/class/drm/card*/device/power_state"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios que reportan consumo en reposo de 25 a 26 W (post 2 y 3); el unico metodo es leer power_state (post 3, pregunta sin salida de respuesta). Sin respuesta de NVIDIA."
+}

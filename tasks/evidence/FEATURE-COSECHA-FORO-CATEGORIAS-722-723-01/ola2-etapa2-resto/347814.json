@@ -1,0 +1,37 @@
+{
+ "id": 347814,
+ "titulo": "12gb of RAM in use on a freshly-booted Spark?! Disabling desktop mode?",
+ "posts_leidos": 5,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Detener el escritorio y servicios asociados para liberar memoria (recomendado por staff NVIDIA)",
+   "como": "systemctl stop gdm gnome-remote-desktop cups cups-browsed",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Pierde la sesion grafica y el escritorio remoto; no persiste tras reinicio.",
+   "verificable_aqui": "systemctl is-active gdm gnome-remote-desktop cups cups-browsed"
+  },
+  {
+   "que": "Usar free en vez del panel DGX Dashboard para medir memoria; NVIDIA reconoce que el panel sobrestima y planea correccion",
+   "como": "free -g",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark de un usuario, DGX OS recien instalado",
+   "riesgo": null,
+   "verificable_aqui": "free -g"
+  }
+ ],
+ "omision_nvidia": "NVIDIA admite (NVES, post 3) un fallo en la vista de uso de memoria del dashboard, a corregir en una actualizacion.",
+ "utilidad_atom": "media",
+ "razon": "El staff da el comando exacto para detener el escritorio (post 4) y confirma el error de medicion del dashboard (post 3). El usuario muestra que free da cifras mas realistas (post 2).",
+ "leido": true,
+ "lectura": "completa"
+}

@@ -1,0 +1,46 @@
+{
+ "id": 348801,
+ "titulo": "vLLM container out of date for new models",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Compilar vLLM desde fuente en el host con arquitectura CUDA explicita (staff NVIDIA johnny_nv; luego corregido por usuario eugr a 12.0f para CUDA 13)",
+   "como": "export TORCH_CUDA_ARCH_LIST=12.0f # CUDA 13 needs 12.1f ; export TRITON_PTXAS_PATH=/usr/local/cuda/bin/ptxas",
+   "fuente_post": 9,
+   "repositorio": "https://github.com/vllm-project/vllm",
+   "licencia": "no indicada",
+   "probado_en": "Spark/GB10, CUDA 13 segun usuarios",
+   "riesgo": "Variables deben fijarse ANTES de compilar o CMake no toma la arquitectura; sin el parche del PR sin fusionar aparece undefined symbol cutlass_moe_mm_sm100",
+   "verificable_aqui": "echo $TORCH_CUDA_ARCH_LIST; ls /usr/local/cuda/bin/ptxas"
+  },
+  {
+   "que": "Variables de include para error de cccl en la compilacion",
+   "como": "export CPLUS_INCLUDE_PATH=/usr/local/cuda/include/cccl${CPLUS_INCLUDE_PATH:+:${CPLUS_INCLUDE_PATH}}",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "ls /usr/local/cuda/include/cccl"
+  },
+  {
+   "que": "Sobre la imagen vLLM 25.09: NVIDIA publica v0.10.1; versiones nuevas requieren build propio",
+   "como": "no indicado (el usuario compilo vLLM main dentro del contenedor oficial, sin comando)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El contenedor vLLM de NVIDIA (25.09, vLLM 0.10.1) queda atras de upstream; ninguna respuesta de NVIDIA sobre cadencia de versiones.",
+ "utilidad_atom": "media",
+ "razon": "El staff NVIDIA (johnny_nv) da pasos de build de vLLM en host y un usuario corrige la arquitectura CUDA y aporta parche; es solucion de compatibilidad, no monitoreo ni prevencion de cortes. La pregunta de cadencia queda sin respuesta de NVIDIA."
+}

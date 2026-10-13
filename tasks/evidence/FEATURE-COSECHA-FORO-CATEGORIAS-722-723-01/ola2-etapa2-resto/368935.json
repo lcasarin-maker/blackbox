@@ -1,0 +1,37 @@
+{
+ "id": 368935,
+ "titulo": "vLLM Release 26.04",
+ "posts_leidos": 11,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Contenedor NVIDIA vLLM 26.04 corre con driver 580.142 gracias a CUDA Forward Compatibility (el banner del contenedor lo confirma)",
+   "como": "docker run --gpus all -it --rm nvcr.io/nvidia/vllm:26.04-py3",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario agustinr; kernel driver 580.142 con driver de compatibilidad 595.58.03",
+   "riesgo": "Usuario, no staff; solo probo vllm serve de un modelo 8B",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv"
+  },
+  {
+   "que": "Banner del contenedor NVIDIA: limite SHMEM por defecto 64MB insuficiente; recomienda banderas de docker",
+   "como": "docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 ...",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "memlock ilimitado afecta el aislamiento de memoria",
+   "verificable_aqui": "docker info --format '{{.CgroupDriver}} {{.Runtimes}}'"
+  }
+ ],
+ "utilidad_atom": "media",
+ "razon": "Un usuario muestra el banner NVIDIA del contenedor con las banderas recomendadas y la compatibilidad hacia adelante; el resto remite a repos de eugr/sparkrun y a un arreglo de plantilla de tool calls de Qwen (sin comando). No hay staff de NVIDIA respondiendo.",
+ "leido": true,
+ "lectura": "completa",
+ "omision_nvidia": null
+}

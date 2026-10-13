@@ -1,0 +1,36 @@
+{
+ "id": 359924,
+ "titulo": "New DGX. just set up. When installing AI workbench. It fails",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reparar docker tras fallo de AI Workbench con estado buildkit corrupto (usuario homedevopsllc, GX10, no staff)",
+   "como": "sudo systemctl stop docker docker.socket; sudo rm -f -r /var/lib/docker/buildkit; sudo systemctl reset-failed docker; sudo systemctl start docker; sudo systemctl status docker --no-pager -l; sudo docker ps",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS/GX10 segun usuario, sin version",
+   "riesgo": "Borra /var/lib/docker/buildkit (cache de build); solo aplicar si docker.service falla por estado corrupto",
+   "verificable_aqui": "systemctl status docker --no-pager -l; journalctl -u docker -n 50 --no-pager"
+  },
+  {
+   "que": "Actualizacion completa por linea de comandos (usuario christopher_owen, guia de actualizacion enlazada)",
+   "como": "sudo apt update; sudo apt dist-upgrade; sudo fwupdmgr refresh; sudo fwupdmgr upgrade; sudo reboot",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "Reinicio y actualizacion de firmware",
+   "verificable_aqui": "fwupdmgr get-updates"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Fallo de instalacion de AI Workbench; staff (aniculescu, post 5) reprodujo con apt en mal estado y recomienda reiniciar y adjuntar ~/.nvwb/logs/workbench.log; el autor resolvio desbloqueando 4 repositorios en su firewall. Mecanismos de reparacion de docker/apt sin relacion con memoria o calor."
+}

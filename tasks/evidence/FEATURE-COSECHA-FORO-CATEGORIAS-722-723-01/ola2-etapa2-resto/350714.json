@@ -1,0 +1,37 @@
+{
+ "id": 350714,
+ "titulo": "What is the RAM value shown on the DGX Dashboard? It doesn't seem to match `free`",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "El DGX Dashboard lee /proc/meminfo; un usuario ve que mezcla unidades (usado en GiB, total en GB). Comparar contra free/meminfo.",
+   "como": "cat /proc/meminfo | grep Mem ; free -h --si ; free -h",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario DannyTup); staff dice que una actualizacion del 19-nov-2025 lo corrige, el usuario dice que aun mezcla unidades",
+   "riesgo": "Cifras del dashboard no fiables para decidir sobre memoria",
+   "verificable_aqui": "grep -E 'MemTotal|MemFree|MemAvailable' /proc/meminfo ; free -h"
+  },
+  {
+   "que": "Advertencia de un usuario: en UMA /proc/meminfo solo refleja lo que conoce el kernel; sugiere cudaMemGetInfo() para ver la memoria que ve la GPU (pregunta sin respuesta del staff).",
+   "como": "cudaMemGetInfo()",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=memory.used,memory.total --format=csv"
+  }
+ ],
+ "omision_nvidia": "Staff (aniculescu) confirma que el dashboard usa /proc/meminfo y publica un fix; no explica como se calcula la cifra.",
+ "utilidad_atom": "media",
+ "razon": "Aviso de que la cifra del dashboard difiere de free por unidades y que /proc/meminfo es discutible en UMA, relevante para medir memoria. Los mecanismos son comandos comunes; el valor esta en la advertencia."
+}

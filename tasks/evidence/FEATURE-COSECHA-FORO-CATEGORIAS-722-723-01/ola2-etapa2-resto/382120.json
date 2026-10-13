@@ -1,0 +1,79 @@
+{
+ "id": 382120,
+ "titulo": "GLM-5.3-Flash on 2x DGX Spark - NVFP4 KV cache, 2.2M-token pool, full recipe",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Contra el livelock de memoria unificada de GB10 (nodo responde ping, ssh muere en el banner, solo el boton de encendido recupera): zram swap de 6G con prioridad 100 porque el swap de archivo de 16G es muy lento",
+   "como": "zram swap (6G, prio 100) [sin comandos de creacion en el post]",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/Plaaasma/glm53-flash-dual-dgx-spark",
+   "licencia": "MIT",
+   "probado_en": "2x DGX Spark GB10 sm_121",
+   "riesgo": "Comandos exactos solo en el repo, no en el post",
+   "verificable_aqui": "swapon --show; zramctl"
+  },
+  {
+   "que": "Sysctls de reclaim contra el livelock; advierte no subir watermark_scale_factor a 500 porque aparta ~12 GiB de MemAvailable y parece una fuga",
+   "como": "vm.swappiness=180, vm.watermark_scale_factor=100",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/Plaaasma/glm53-flash-dual-dgx-spark",
+   "licencia": "MIT",
+   "probado_en": "2x DGX Spark GB10",
+   "riesgo": "watermark_scale_factor=500 reserva ~12 GiB",
+   "verificable_aqui": "sysctl vm.swappiness vm.watermark_scale_factor"
+  },
+  {
+   "que": "Watchdog de memoria con cadencia de 0.2 s que envia SIGTERM a vLLM con menos de 0.75 GiB libres; SIGTERM primero porque SIGKILL en medio de CUDA filtro ~20 GiB de memoria del driver que tardaron minutos en volver",
+   "como": "watchdog (script en el repo): SIGTERM a vLLM si MemFree < 0.75 GiB, muestreo cada 0.2 s",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/Plaaasma/glm53-flash-dual-dgx-spark",
+   "licencia": "MIT",
+   "probado_en": "2x DGX Spark GB10",
+   "riesgo": "SIGKILL en CUDA filtra memoria del driver",
+   "verificable_aqui": "grep -E 'MemFree|MemAvailable' /proc/meminfo"
+  },
+  {
+   "que": "La traza del kernel antes de un cuelgue mostro el driver NVIDIA girando en try_to_free_pages sin nada recuperable; capturada con py-spy y journalctl",
+   "como": "sudo py-spy dump --nonblocking (desde el host, el contenedor carece de ptrace); journalctl",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k -b -1"
+  },
+  {
+   "que": "La utilizacion de GPU miente en pasos bloqueados por sincronizacion: 96% de util con 36 W; el consumo de potencia es la senal honesta (decode normal toma 70 W o mas)",
+   "como": "comparar util% contra potencia (nvidia-smi); util alta con potencia baja indica SMs parados en syncs",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi --query-gpu=utilization.gpu,power.draw --format=csv"
+  },
+  {
+   "que": "Tres trampas de medicion: iteration_tokens_total solo vuelca al terminar la peticion; contar chunks SSE subestima tok/s bajo decodificacion especulativa; colas de log obsoletas porque el lanzador anexa entre arranques",
+   "como": "no indicado como comando; leer tok/s de contadores del motor o del campo usage",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "vLLM fork con EXL3",
+   "riesgo": "Conclusiones falsas de starvation",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El post dice que GB10 no mata por OOM sino que se queda en livelock sin que el SO lo mate; no hay respuesta de NVIDIA.",
+ "utilidad_atom": "alta",
+ "razon": "Un usuario describe el mismo modo de falla de colapso de memoria unificada que sufre esta maquina, con tres arreglos de host (zram, watermark/swappiness, watchdog con SIGTERM) y valores concretos, repo MIT. Son afirmaciones de usuario con hardware GB10 declarado, sin respuesta de NVIDIA; los comandos de instalacion estan solo en el repo."
+}

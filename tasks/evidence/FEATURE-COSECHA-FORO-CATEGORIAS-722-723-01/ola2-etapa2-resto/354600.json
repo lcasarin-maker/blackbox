@@ -1,0 +1,26 @@
+{
+ "id": 354600,
+ "titulo": "Models not using Spark GPU?",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Compilar y servir llama.cpp con CUDA como alternativa a Ollama, que segun usuarios rinde mal en Spark",
+   "como": "cmake -B build -DGGML_CUDA=ON -DGGML_CURL=ON ; cmake --build build --config Release -j 20 ; build/bin/llama-server -hf ggml-org/gpt-oss-120b-GGUF -fa on -ngl 999 --jinja --ctx-size 0 -b 2048 -ub 2048 --no-mmap",
+   "fuente_post": 2,
+   "repositorio": "https://github.com/ggml-org/llama.cpp.git",
+   "licencia": "no indicada",
+   "probado_en": "usuario declara Spark (1 o 2 nodos); eugr dice 58 t/s con gpt-oss-120b",
+   "riesgo": "sin NCCL en 2 nodos con llama.cpp se pierde rendimiento (post 6)",
+   "verificable_aqui": "nvidia-smi --query-gpu=utilization.gpu --format=csv -l 1"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Solo usuarios responden (sin NVIDIA); la recomendacion es cambiar de Ollama a llama.cpp/vLLM. Es rendimiento de inferencia, ajeno a monitoreo o prevencion de cortes."
+}

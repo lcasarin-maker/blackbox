@@ -1,0 +1,47 @@
+{
+ "id": 348451,
+ "titulo": "Second NIM container won't start due to less than desired GPU memory utilization",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Fuente fiable de memoria disponible: MemAvailable de /proc/meminfo (nvidia-smi y DGX Dashboard imprecisos por memoria unificada)",
+   "como": "/proc/meminfo campo MemAvailable",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "NVIDIA staff (aniculescu); GB10, DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "grep MemAvailable /proc/meminfo"
+  },
+  {
+   "que": "Consejo de NVIDIA: el numero del Dashboard es memoria USADA, no libre; nvidia-smi no es del todo exacto con memoria unificada; el FAQ recomienda free -h",
+   "como": "free -h",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "NVIDIA staff",
+   "riesgo": null,
+   "verificable_aqui": "free -h"
+  },
+  {
+   "que": "Error de vLLM si la memoria libre al arrancar es menor que gpu_memory_utilization; el segundo contenedor falla",
+   "como": "-e GPU_MEMORY_UTILIZATION=0.4 (el usuario probo 0.4 y 0.3 sin exito; el error mostro 49.37/119.7 GiB libres frente a 0.5)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, NIM en DGX Spark",
+   "riesgo": "La variable no surtio efecto segun el usuario; sin solucion en el hilo",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA admite que Dashboard e nvidia-smi dan cifras erroneas de memoria en el Spark (fallo conocido); post 10 dice que una actualizacion de noviembre 2025 lo corrige y que el Dashboard pasara a usar /proc/meminfo, pero un usuario (post 6) dijo que seguia inflado.",
+ "utilidad_atom": "media",
+ "razon": "NVIDIA staff confirma que MemAvailable es la medida fiable y que Dashboard/nvidia-smi no lo son (posts 4, 8, 10). El resto es drop_caches de un usuario y una pregunta sin solucion."
+}

@@ -1,0 +1,47 @@
+{
+ "id": 375361,
+ "titulo": "MiniMax-M3-AWQ running TP=4 across 4x DGX Spark (GB10) 33 tok/s",
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Compilar la rueda de vLLM contra el toolkit CUDA 13.0 porque la rueda estandar usa 13.2 y el driver GB10 solo soporta 13.0 (cudaErrorUnsupportedPtxVersion)",
+   "como": "no indicado comando exacto; el recipe esta en el repositorio",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/tonyd2wild/MiniMax-M3-AWQ-TP4-EAGLE3-4x-DGX-Spark",
+   "licencia": "no indicada",
+   "probado_en": "4x DGX Spark GB10, RoCE",
+   "riesgo": "Receta WIP; usuario sin verificacion independiente",
+   "verificable_aqui": null
+  },
+  {
+   "que": "gpu-memory-utilization 0.80 estable; 0.85 carga pero da OOM en ejecucion con EAGLE3 y prefill largo",
+   "como": "valor 0.80 (bandera GMU de vLLM)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark GB10",
+   "riesgo": "Aplica a ese modelo y topologia",
+   "verificable_aqui": "docker ps --format '{{.Names}}' (revisar --gpu-memory-utilization del contenedor vLLM)"
+  },
+  {
+   "que": "nccl 2.30.4 en lugar de 2.28.9, que bloquea Ray multinodo en la primera inferencia",
+   "como": "no indicado comando",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Usuario comparte una receta multinodo de 4 Sparks con ajustes de vLLM y NCCL sin comandos literales en el texto; el repositorio comunitario citado (post 4) es eugr/spark-vllm-docker. Para una sola maquina solo el valor 0.80 de gpu-memory-utilization es aplicable y depende del modelo.",
+ "leido": true,
+ "lectura": "completa"
+}

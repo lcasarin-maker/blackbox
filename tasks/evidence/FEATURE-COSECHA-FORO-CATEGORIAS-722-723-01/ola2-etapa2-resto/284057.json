@@ -1,0 +1,26 @@
+{
+ "id": 284057,
+ "titulo": "Nvidia Linux Driver v550.54.14 Docker broken",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Regresion del driver 550.54.14 con Docker (libnvidia-container 1.14.5): la GPU no es utilizable en contenedor; con 550.40.07 funciona; el autor reporta que 550.67 lo resuelve",
+   "como": "no indicado (sin comando; solo versiones: 550.54.14 roto, 550.40.07 y 550.67 funcionan)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "kernels 6.1.74 y 6.6.18, Docker 24.0.7/25.0.2, runc 1.1.12 (segun el usuario)",
+   "riesgo": "fijar una version concreta de driver sin verificarla puede reintroducir la regresion",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Informe de un usuario sobre regresion de driver resuelta en 550.67; la maquina usa 580.178.04, asi que no aplica. Sin respuesta de staff NVIDIA."
+}

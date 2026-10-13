@@ -1,0 +1,69 @@
+{
+ "id": 364499,
+ "titulo": "System degraded, GPU inoperable",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "rastrear",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Firma de fallo: NVRM registra lecturas de registro invalidas (valor centinela 0xbadf5600, SYS_PRI) y nvidia-smi muestra 'GPU requires reset'; nvidia-smi --gpu-reset se rechaza por ser GPU primaria; solo reinicio",
+   "como": "dmesg | grep gpuHandleSanityCheckRegReadError_GH100",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.142, kernel 6.17.0-1014-nvidia",
+   "riesgo": "Con GPU colgada el apagado puede tardar varios minutos",
+   "verificable_aqui": "journalctl -k --no-pager | grep -c 'gpuHandleSanityCheckRegReadError_GH100'"
+  },
+  {
+   "que": "Comprobar si algun capsule de firmware UEFI esta por debajo de su version minima soportada (ESRT)",
+   "como": "for d in /sys/firmware/efi/esrt/entries/entry*; do echo \"$(sudo cat $d/fw_class) = $(sudo cat $d/fw_version) (min $(sudo cat $d/lowest_supported_fw_version))\"; done",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "HP ZGX Nano (GB10), segun jcagle",
+   "riesgo": "Lectura; el autor concluyo luego (post 5 actualizado y 7) que el firmware PD no era la causa en su unidad",
+   "verificable_aqui": "for d in /sys/firmware/efi/esrt/entries/entry*; do echo \"$(sudo cat $d/fw_class) = $(sudo cat $d/fw_version) (min $(sudo cat $d/lowest_supported_fw_version))\"; done"
+  },
+  {
+   "que": "Actualizar el firmware del controlador USB PD desde el repositorio lvfs-testing (remoto de pruebas, no publicado oficialmente)",
+   "como": "sudo fwupdmgr enable-remote lvfs-testing; sudo fwupdmgr refresh --force; fwupdmgr get-updates; sudo fwupdmgr update",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "HP ZGX Nano, driver 580.159.03",
+   "riesgo": "Remoto de pruebas; el fallo reaparecio ~36 h despues con firmware PD correcto (0x507); GUID de capsule es especifico de cada fabricante",
+   "verificable_aqui": "fwupdmgr get-devices"
+  },
+  {
+   "que": "Al siguiente fallo, capturar evidencia antes de reiniciar, y si reaparece hacer ciclo de potencia en frio y RMA",
+   "como": "nvidia-smi -q ; dmesg ; nvidia-bug-report.sh (antes de reiniciar)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "command -v nvidia-bug-report.sh"
+  },
+  {
+   "que": "Vigilante propio que reinicia el nodo si el motor muere y la GPU reporta 'requires reset' (script de usuario, no publicado)",
+   "como": "no indicado (llm-engine-watchdog.sh no se muestra)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "No actua mientras el motor sigue sirviendo con GPU degradada",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El usuario jcagle dice que el mecanismo de actualizacion de DGX OS no entrego el firmware PD y tuvo que habilitar un remoto no publicado (afirmacion de usuario).",
+ "utilidad_atom": "media",
+ "razon": "Aporta una firma de fallo grepeable y un comando de solo lectura para auditar el firmware ESRT, pero la causa PD se refuta en el propio hilo (recurrio con firmware correcto) y el primer afectado no obtuvo solucion. El personal de NVIDIA (aniculescu, posts 2 y 8) solo pide diagnostico de campo y nvidia-bug-report."
+}

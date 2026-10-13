@@ -1,0 +1,37 @@
+{
+ "id": 349220,
+ "titulo": "Docker nvidia runtime not enabled by default",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Un usuario debio ejecutar el paso de configuracion del runtime nvidia de Docker aunque la documentacion dice que viene preinstalado; el comando escribe /etc/docker/daemon.json y recomienda reiniciar el daemon de Docker",
+   "como": "sudo nvidia-ctk runtime configure --runtime=docker",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark del usuario, nvidia-container-toolkit 1.17.8 y 1.18.0 segun dpkg.log",
+   "riesgo": "Con config inexistente crea un daemon.json vacio con solo el runtime: sobrescribe configuracion previa si existiera; requiere reinicio de Docker",
+   "verificable_aqui": "cat /etc/docker/daemon.json; docker info | grep -i runtimes"
+  },
+  {
+   "que": "Respuesta de personal de NVIDIA (aniculescu): el runtime nvidia ya no es necesario, basta la bandera de GPU para tener visibilidad en contenedores",
+   "como": "--gpus all",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "docker run --rm --gpus all ubuntu nvidia-smi -L"
+  }
+ ],
+ "omision_nvidia": "La guia oficial afirma que la integracion Docker viene preinstalada, pero el usuario reporta que faltaba la configuracion del runtime; NVIDIA responde meses despues que el runtime ya no hace falta.",
+ "utilidad_atom": "media",
+ "razon": "Dos comandos concretos (nvidia-ctk runtime configure y --gpus all) con respuesta de NVIDIA en el post 2; la maquina ya tiene runtime nvidia, asi que sirve como verificacion de estado, no como arreglo nuevo."
+}

@@ -1,0 +1,11 @@
+{"id": 381099, "titulo": "DGX Spark PXE Recovery fails with Recovery Images 1.145.33 and 1.135.29", "leido": true, "posts_leidos": 12, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["solucionar"],
+ "mecanismos": [
+  {"que": "Recuperacion PXE falla (no encuentra efi.tar.xz ni fastos.part* en /mnt/usb): personal de NVIDIA (lhoang) indica que faltaba el parametro standalone noui en la linea de kernel de grub.cfg; entrada de menu de referencia con la linea linux completa", "como": "linux /fastos/vmlinuz nouveau.modeset=0 console=tty0 console=ttyS0,921600 sbsa_gwdt.action=1 noui pxeinstall=true fastos_usbimg_url=http://<Server IP>/fastos/usb.customer.tar.gz ip=dhcp static_ip=<static ip>:<SUBNET>[:<gateway ip>:<INTERFACE>]", "fuente_post": 10, "repositorio": null, "licencia": null, "probado_en": "DGX Spark Founders Edition, servidor PXE Oracle Linux 9.3, imagenes de recuperacion 1.145.33 y 1.135.29", "riesgo": "Una recuperacion fallida deja DGX OS sin arrancar", "verificable_aqui": "cat /proc/cmdline | tr ' ' '\\n' | grep -E 'sbsa_gwdt|nouveau|console'"},
+  {"que": "El usuario reporta que el problema se resolvio anadiendo el ajuste static_ip en grub.cfg (en la forma ip:mascara:gateway)", "como": "static_ip=<ip>:<mascara>:<gateway> (ejemplo del post: static_ip=<ip>:255.255.0.0:<ip>)", "fuente_post": 12, "repositorio": null, "licencia": null, "probado_en": "DGX Spark Founders Edition (declarado por el usuario)", "riesgo": "El usuario no aclara si noui o static_ip fue lo decisivo", "verificable_aqui": null},
+  {"que": "Pre-requisito citado por un usuario desde la guia de NVIDIA: con Secure Boot activo hay que enrolar grubnetaa64.efi.signed o desactivar Secure Boot antes de habilitar PXE", "como": "no indicado (menu UEFI)", "fuente_post": 4, "repositorio": null, "licencia": null, "probado_en": null, "riesgo": "Desactivar Secure Boot reduce la seguridad", "verificable_aqui": "mokutil --sb-state"}
+ ],
+ "omision_nvidia": "La guia de NVIDIA de PXE no dejo claro, segun el tema, que noui y static_ip eran necesarios; el staff lo senalo despues de varias iteraciones.",
+ "utilidad_atom": "media",
+ "razon": "El staff de NVIDIA (lhoang) da la linea de kernel correcta para recuperacion PXE y el usuario confirma la solucion en el post 12. Es un procedimiento de recuperacion, sin relacion con monitoreo de calor o memoria."}

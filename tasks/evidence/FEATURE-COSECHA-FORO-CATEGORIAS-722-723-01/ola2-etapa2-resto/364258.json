@@ -1,0 +1,26 @@
+{
+ "id": 364258,
+ "titulo": "How to switch from 64K page size back to 4K kernel (Qdrant compatibility issue)",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Cambiar de kernel de 64K a 4K de pagina: instalar el paquete del kernel 4K y reiniciar",
+   "como": "instalar linux-image-nvidia-hwe-24.04 y reiniciar con el kernel 4K",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10, driver 580.119.02 (declarado por quien pregunta)",
+   "riesgo": "Ambos paquetes (4K y 64K) tienen prioridad optional; respuesta de un usuario (elsaco), sin verificacion ni respuesta de NVIDIA. Cambia el kernel de arranque, relevante con Secure Boot y DGX OS",
+   "verificable_aqui": "getconf PAGE_SIZE ; dpkg -l 'linux-image-nvidia*'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Un usuario con 64K de pagina (getconf PAGE_SIZE=65536) incompatible con Qdrant recibe de otro usuario el paquete linux-image-nvidia-hwe-24.04 como via al kernel 4K. Respuesta de un usuario sin confirmacion; no hay intervencion de NVIDIA y el tema se cerro automaticamente."
+}

@@ -1,0 +1,37 @@
+{
+ "id": 370176,
+ "titulo": "What to run on 8 Sparks / GB10?",
+ "leido": true,
+ "posts_leidos": 13,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Metodo para medir latencia RDMA entre dos nodos con perftest",
+   "como": "Nodo 1: ib_write_lat -d rocep1s0f0 -i 1 -p 13000 -F ; Nodo 2: ib_write_lat -d rocep1s0f0 -i 1 -p 13000 -F <IP-nodo-1> ; analogo con ib_read_lat y puerto 13001",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "8 GB10 (Lenovo/Asus), segun usuarios; resultado: ib_write_lat media 2.49 us, ib_read_lat media 4.86 us (post 12)",
+   "riesgo": null,
+   "verificable_aqui": "which ib_write_lat ib_read_lat"
+  },
+  {
+   "que": "Advertencia de usuario: las unidades Spark apiladas sin espacio se calientan bajo carga y hay muchos casos de apagado por sobrecalentamiento; separarlas",
+   "como": "no indicado (separar las unidades fisicamente)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Apagado inesperado; el usuario del cluster reporta maximo 90 C sin incidentes (post 15)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Aporta los comandos exactos de perftest y valores de referencia de latencia RDMA en un cluster de 8 nodos, ademas de la advertencia de calor (usuarios, sin staff de NVIDIA). Resto: sugerencias de modelos."
+}

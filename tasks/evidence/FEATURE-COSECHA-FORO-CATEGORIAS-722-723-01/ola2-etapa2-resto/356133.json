@@ -1,0 +1,26 @@
+{
+ "id": 356133,
+ "titulo": "Apps using GPU crash While Using Remote Desktop",
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Anadir al usuario a los grupos video y render para que apps con GPU no tumben la sesion de escritorio remoto; repetir por usuario",
+   "como": "sudo usermod -aG video username; sudo usermod -aG render username",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun el usuario aceangel (confirma que funciono); staff solo remite a otro hilo (post 2)",
+   "riesgo": "Cambia pertenencia a grupos del usuario; reemplazar username por el real",
+   "verificable_aqui": "id <usuario> | tr ',' '\\n' | grep -E 'video|render'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Workaround concreto para crash de apps GPU bajo escritorio remoto, confirmado por el usuario (post 3). No toca memoria ni calor; solo aplica si se usa escritorio remoto.",
+ "leido": true,
+ "lectura": "completa"
+}

@@ -1,0 +1,27 @@
+{
+ "id": 371037,
+ "titulo": "Significant loss of speed after the update",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Tras actualizar a driver 580.159.03 un usuario ve la GPU a 565 MHz y 10 W bajo carga (25 T/s frente a >60 T/s antes); otro usuario sugiere quitar la alimentacion 30 s y el autor confirma que se normalizo. Fuente: usuarios, sin staff",
+   "como": "desconectar el cable de alimentacion unos 30 segundos (sin comando)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark/GB10, driver 580.159.03, kernel 6.17.0-1018-nvidia (declarado)",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi -q -d CLOCK,PERFORMANCE"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Unico remedio es un ciclo de corriente (desconexion AC, mecanismo ya conocido); el sintoma de reloj bajo carga se detecta con nvtop segun el autor. Sin respuesta de NVIDIA."
+}

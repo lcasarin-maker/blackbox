@@ -1,0 +1,37 @@
+{
+ "id": 375743,
+ "titulo": "nvcr.io/nvidia/vllm:26.06-py3 every OpenAI API request returns HTTP 500 on GB10",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "La imagen vllm:26.06-py3 devuelve 500 en todos los endpoints si el middleware de Prometheus no es compatible con FastAPI; workaround: usar 26.02-py3 o reconstruir con prometheus-fastapi-instrumentator actualizado",
+   "como": "curl -s http://localhost:8000/health",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10, kernel 6.17.0-1021-nvidia, driver 580.159.03, nerdctl",
+   "riesgo": "Afirmacion de usuario; en NVIDIA no se reproduce",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Comprobar versiones de paquetes dentro del contenedor vLLM",
+   "como": "docker exec vllm-repro pip show vllm fastapi starlette prometheus-fastapi-instrumentator prometheus-client 2>/dev/null | grep -E '^(Name|Version):'",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "vllm:26.06-py3 (quien responde dice no reproducir; version vllm 0.22.1, fastapi 0.136.3)",
+   "riesgo": "Una actualizacion de fastapi >= 0.137 dentro del contenedor rompe el middleware, segun la respuesta de aniculescu (que parece personal de NVIDIA, rol no etiquetado en el texto)",
+   "verificable_aqui": "docker exec <contenedor> pip show fastapi prometheus-fastapi-instrumentator"
+  }
+ ],
+ "omision_nvidia": "NVIDIA no reproduce el fallo; indica que fastapi >= 0.137 es incompatible con prometheus-fastapi-instrumentator.",
+ "utilidad_atom": "media",
+ "razon": "Hay un aviso concreto sobre la combinacion de versiones fastapi/instrumentator que aplica a vLLM en contenedor y un comando de verificacion (post 2). No es sobre memoria ni calor."
+}

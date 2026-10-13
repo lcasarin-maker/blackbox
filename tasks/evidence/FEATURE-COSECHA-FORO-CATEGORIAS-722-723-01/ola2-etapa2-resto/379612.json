@@ -1,0 +1,68 @@
+{
+ "id": 379612,
+ "titulo": "Lowest KLD DeepSeek-V4-Flash-0731 on a single GB10 (drafter converted, 31 t/s on code), 256k context recipe",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Regla de ajuste para GGUF grandes en 121 GB de memoria unificada: tamano residente en dispositivo + 12 GB <= MemAvailable; no volcar completo a GPU un GGUF de mas de ~100 GB porque llama.cpp CUDA copia los pesos a buffers de dispositivo",
+   "como": "device-resident size + 12GB <= MemAvailable",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS Ascent GX10, GB10, 121GB unificada, sm_121a (declarado por el usuario)",
+   "riesgo": "Incumplirla agota la memoria; el autor reinicio la maquina a la fuerza",
+   "verificable_aqui": "grep MemAvailable /proc/meminfo"
+  },
+  {
+   "que": "Watchdog propio que envia SIGTERM al servidor de inferencia cuando MemAvailable baja de 8 GB; el autor dice que earlyoom no reacciona cuando la memoria cae a 1 GB/s",
+   "como": "watchdog at 8GB MemAvailable (script no publicado en el post; sin comando exacto)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 121GB, declarado por el usuario",
+   "riesgo": "Umbral y script no entregados; solo el principio",
+   "verificable_aqui": "grep MemAvailable /proc/meminfo"
+  },
+  {
+   "que": "El primer prefill largo consume de forma transitoria ~3 GB extra de buffers de computo; validar configuraciones justas con un llenado real de contexto largo, no con la memoria tras arrancar",
+   "como": "prefill real de 227,399 tokens con contexto 256k; memoria minima disponible observada 9GB",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 121GB, llama.cpp, declarado por el usuario",
+   "riesgo": "Una config que parece caber al arrancar puede agotar memoria en el primer prefill",
+   "verificable_aqui": "grep -E 'MemAvailable|MemFree' /proc/meminfo"
+  },
+  {
+   "que": "Bandera de llama.cpp para decodificacion especulativa DSpark con el tamano de bloque del drafter",
+   "como": "--spec-type draft-dspark --spec-draft-n-max 5",
+   "fuente_post": 1,
+   "repositorio": "huggingface.co/GaelicThunder/DSpark-DeepSeek-V4-Flash-0731-drafter-dflash-GGUF",
+   "licencia": "no indicada",
+   "probado_en": "GB10, UD-IQ3_XXS, 16.6 a 30.5-31.5 t/s en codigo (declarado)",
+   "riesgo": "Con muchas capas de expertos en CPU la especulacion resulta mas lenta (6.8 vs 9.0 t/s con 7 capas)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Config de produccion declarada: KV q8_0 en objetivo y draft, expertos ruteados de las ultimas 2 capas en CPU, contexto 256k",
+   "como": "no indicado (parametros descritos en prosa, sin linea de comando)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 121GB",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Usuario sin respuesta de NVIDIA aporta mediciones propias en GB10 y la regla de ajuste de memoria (+12 GB sobre MemAvailable) y la advertencia de que earlyoom llega tarde con caidas de 1 GB/s. Util como criterio de prevencion de colapsos de memoria, pero el watchdog y los comandos completos no estan en el post."
+}

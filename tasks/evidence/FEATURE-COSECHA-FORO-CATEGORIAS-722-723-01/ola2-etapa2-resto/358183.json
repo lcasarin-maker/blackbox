@@ -1,0 +1,37 @@
+{
+ "id": 358183,
+ "titulo": "Distributed Inference - 200gb/s with bottleneck, am I missing something?",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "vLLM usa 90% de la memoria por defecto incluso para modelos chicos; limitarlo",
+   "como": "--gpu-memory-utilization 0.5",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "usuario eugr, Spark",
+   "riesgo": "Con memoria unificada el valor por defecto deja poco margen al sistema",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Ancho de banda de memoria 273 GB/s: elegir cuantizaciones bajas y MoE dispersos en vez de densos; llama.cpp RPC sin RDMA ni tensor parallel",
+   "como": "no indicado (guia)",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark, tabla de tok/s del usuario",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El staff (aniculescu, post 3) solo remite a playbooks; sin declaracion. Un usuario dice que NVFP4 esta en fase inicial en esta plataforma (post 4).",
+ "utilidad_atom": "baja",
+ "razon": "Consejos de rendimiento y de limitar la memoria de vLLM, ya cubiertos por otros temas. Sin mecanismo de monitoreo o prevencion de cortes."
+}

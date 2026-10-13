@@ -1,0 +1,49 @@
+{
+ "id": 384257,
+ "titulo": "Three DGX Dashboard update problems, with a working reference implementation",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "El aviso 'Update Available' del DGX Dashboard es una instantanea en cache del servicio root dgx-dashboard-admin (D-Bus GetOTAAvailabilitySnapshot muestra su hora de ultima comprobacion); la web la relee cada hora y recargar la pagina no fuerza revision. Workaround del autor.",
+   "como": "sudo systemctl restart dgx-dashboard-admin.service",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario: ASUS Ascent GX10, DGX OS 7.6",
+   "riesgo": "Reinicia un servicio root del Dashboard.",
+   "verificable_aqui": "systemctl status dgx-dashboard-admin.service"
+  },
+  {
+   "que": "Verificar que un flasheo fwupd 'exitoso' cambio de verdad la version: comparar el historial de fwupd con la version actual del dispositivo (el Dashboard muestra exito aunque no cambie). El post no da el comando exacto.",
+   "como": "no indicado (comparar historial de fwupd con version actual del dispositivo)",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/tiong6/spark-center",
+   "licencia": "MIT",
+   "probado_en": "usuario: ASUS Ascent GX10 solamente",
+   "riesgo": "Herramienta de un tercero que corre como servicio de usuario con polkit; no auditada.",
+   "verificable_aqui": "fwupdmgr get-history; fwupdmgr get-devices"
+  },
+  {
+   "que": "Herramienta spark-center del autor (stdlib de Python, sin servicio root, polkit para acciones privilegiadas, modo solo lectura): actualizaciones apt selectivas con simulacion previa, copia de los .deb reemplazados y rollback simulado, comprobacion fwupd, monitor NVML.",
+   "como": "git pull; systemctl --user restart spark-center (actualizacion, post 3)",
+   "fuente_post": 3,
+   "repositorio": "https://github.com/tiong6/spark-center",
+   "licencia": "MIT",
+   "probado_en": "usuario: ASUS Ascent GX10",
+   "riesgo": "Probado por el autor en una sola maquina; un unico usuario externo lo usa.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El Dashboard no permite elegir paquetes, ver lista de cambios previa ni revertir; actualiza todo con reinicio forzado; no verifica flasheos de firmware. NVIDIA (aniculescu, post 4) solo dice que pasara las sugerencias a ingenieria.",
+ "utilidad_atom": "media",
+ "razon": "Un usuario describe tres carencias del Dashboard con un workaround concreto (reiniciar dgx-dashboard-admin) y una herramienta MIT; NVIDIA responde solo que lo reenviara. Util como idea para la verificacion de firmware y el rollback, con comandos concretos escasos."
+}

@@ -1,0 +1,37 @@
+{
+ "id": 363514,
+ "titulo": "GB10 (SM12.1) vLLM FP8 inference - any progress on native SM12.1 kernels?",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Los kernels FP8 FlashInfer y CUTLASS de vLLM pasan is_supported() en SM12.1 pero producen logits NaN sin excepcion (corrupcion silenciosa); workaround: parchear is_supported() para rechazar SM12.1 y caer a PerTensorTorchFP8ScaledMMLinearKernel (~15 tok/s)",
+   "como": "parchear is_supported() de FlashInferFP8ScaledMMLinearKernel y CutlassFP8ScaledMMLinearKernel para rechazar SM12.1 (sin comando exacto en el post)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark GB10 SM12.1, vllm/vllm-openai:v0.17.1, Nemotron 3 Super 120B NVFP4 (usuario)",
+   "riesgo": "Salida basura sin error visible; rendimiento ~15 tok/s frente a 24+ esperado.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Causa raiz del trap 'This kernel only supports sm120' al compilar con 12.1f: la guarda enable_sm120_only mata SM12.1; la correccion usa enable_sm120_family",
+   "como": "sed -i 's/enable_sm120_only/enable_sm120_family/g' csrc/quantization/w8a8/cutlass/c3x/scaled_mm.cuh csrc/quantization/w8a8/cutlass/c3x/scaled_mm_sm120_fp8_dispatch.cuh",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/saifgithub/vllm-gb10-sm121",
+   "licencia": "no indicada",
+   "probado_en": "GB10 SM12.1, Nemotron-3-Super-120B-A12B-NVFP4, soak de 10 minutos con 32 peticiones concurrentes sin errores (usuario)",
+   "riesgo": "Requiere compilar vLLM desde fuente; solo aplica cuando se agrega 12.1f a SCALED_MM_ARCHS.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Un miembro de NVIDIA (aniculescu, post 2) solo remite a la imagen oficial de NGC y a la comunitaria; no ofrece kernels FP8 nativos para SM12.1. El autor (post 3) entiende que NVFP4 sigue sin aceleracion por hardware.",
+ "utilidad_atom": "media",
+ "razon": "Dos mecanismos concretos de usuario: la advertencia de NaN silencioso y el sed para el trap en SM12.1, con repositorio sin licencia indicada. Es util solo si se compila vLLM desde fuente; no toca memoria ni calor."
+}

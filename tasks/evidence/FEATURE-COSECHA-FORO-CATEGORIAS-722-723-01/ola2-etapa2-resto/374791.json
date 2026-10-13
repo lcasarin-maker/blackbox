@@ -1,0 +1,37 @@
+{
+ "id": 374791,
+ "titulo": "GB10 (Asus GX10) GPU maxing out at 60W, firmware/platform cap?",
+ "posts_leidos": 10,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Captura de potencia de GPU durante carga (pedida por staff NVIDIA)",
+   "como": "nvidia-smi -q -d POWER -l 1",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi -q -d POWER"
+  },
+  {
+   "que": "Lectura de versiones de firmware UEFI/EC/PD/FLASH (pedida por staff)",
+   "como": "sudo dmidecode -t 45 | grep -A2 -E \"UEFI|EC|PD|FLASH\"",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "sudo dmidecode -t 45"
+  }
+ ],
+ "omision_nvidia": "Staff (Neill) aclara que 140 W es el TDP del SoC GB10 completo, no un objetivo solo de GPU; nvidia-smi -pl y power-profiles no son soportados segun salida citada por el OP (post 1).",
+ "utilidad_atom": "baja",
+ "razon": "Staff NVIDIA aclara el significado de 140 W y pide medicion con nvidia-smi y dmidecode; usuarios reportan 35-90 W de GPU segun carga (vLLM 35-45 W, burn tests 90+ W, un workflow ComfyUI Wan 2.2 supera 100 W segun un usuario). Los comandos ya estan catalogados (dmidecode -t 45).",
+ "leido": true,
+ "lectura": "completa"
+}

@@ -1,0 +1,79 @@
+{
+ "id": 383003,
+ "titulo": "Blackbox: Open-source post-mortem tooling for GB10 boxes, and the cgroups gap",
+ "leido": true,
+ "posts_leidos": 1,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "rastrear",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Razones de throttle nombradas y contadores acumulados desde el ultimo reinicio del driver",
+   "como": "nvidia-smi -q -d PERFORMANCE",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Gigabyte AI TOP ATOM (el autor del post es el propietario de este repo)",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi -q -d PERFORMANCE"
+  },
+  {
+   "que": "Historial de procesos GPU que ya terminaron (modo accounting, solo root)",
+   "como": "nvidia-smi -am 1 ; nvidia-smi --query-accounted-apps=...",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Gigabyte AI TOP ATOM",
+   "riesgo": "Campos de la consulta no detallados en el texto",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Contadores de replay PCIe como segunda senal independiente de AER",
+   "como": "nvidia-smi -q (seccion PCI: Replays Since Reset / Replay Number Rollovers)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi -q | grep -i -A3 replay"
+  },
+  {
+   "que": "ECC, PAGE_RETIREMENT y ROW_REMAPPER devuelven N/A en GB10; nvidia-smi -pl no esta soportado (campos de POWER en N/A)",
+   "como": "nvidia-smi -q -d ECC,PAGE_RETIREMENT,ROW_REMAPPER ; nvidia-smi -q -d POWER",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Gigabyte AI TOP ATOM",
+   "riesgo": null,
+   "verificable_aqui": "nvidia-smi -q -d POWER"
+  },
+  {
+   "que": "Pin de fieldiag 1.0.9 evita el stack Mellanox/DKMS y el dialogo MOK no cancelable (atasco de mas de 7 h segun el autor)",
+   "como": "sudo apt-get install -y dgx-spark-fieldiag=1.0.9-1",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "autor, AI TOP ATOM; la version actual 2.0.4-1 depende de ofed-scripts, mft, opensm, infiniband-diags",
+   "riesgo": "1.0.9 no ejecuta CX7Stress",
+   "verificable_aqui": "apt-cache policy dgx-spark-fieldiag"
+  },
+  {
+   "que": "PSI de memoria como senal de estancamiento por memoria del host",
+   "como": "/proc/pressure/memory",
+   "fuente_post": 1,
+   "repositorio": "parallelArchitect/sparkview",
+   "licencia": "no indicada",
+   "probado_en": "mecanismo atribuido a sparkview",
+   "riesgo": null,
+   "verificable_aqui": "cat /proc/pressure/memory"
+  }
+ ],
+ "omision_nvidia": "Sin contabilidad cgroup de memoria GPU/UMA, sin gpu.pressure, sin evento OOM visible para agotamiento UMA, sin primitiva de cuota de computo; el hook prestart de nvidia-container-runtime cae en modo legacy sin avisar (afirmaciones del autor, sin respuesta de NVIDIA en el hilo).",
+ "utilidad_atom": "media",
+ "razon": "El post es del propio dueno de esta maquina presentando su repo (el del proyecto actual), de modo que es autorreferencial; sus comandos nvidia-smi son lecturas reales y el aviso sobre fieldiag 2.0.4-1 y el pin 1.0.9 es concreto. La teoria de livelock UVM se declara sin verificar por el autor y no cuenta como mecanismo."
+}

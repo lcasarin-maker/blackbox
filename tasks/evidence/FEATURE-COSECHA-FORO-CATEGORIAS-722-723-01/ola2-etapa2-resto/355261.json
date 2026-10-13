@@ -1,0 +1,36 @@
+{
+ "id": 355261,
+ "titulo": "DGX Spark, Nemotron3, and NVFP4: Getting to 65+ tps",
+ "leido": true,
+ "posts_leidos": 15,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Receta vLLM en un Spark para nemotron3-nano NVFP4: activar el MoE FP4 de flashinfer, KV en fp8, carga fastsafetensors y parser de razonamiento propio de Nemotron (67 t/s, 1 peticion)",
+   "como": "VLLM_USE_FLASHINFER_MOE_FP4=1 vllm serve cybermotaz/nemotron3-nano-nvfp4-w4a16 --trust-remote-code --kv-cache-dtype fp8 --load-format fastsafetensors --gpu-memory-utilization 0.7 --host 0.0.0.0 --port 8888 --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser-plugin nano_v3_reasoning_parser.py --reasoning-parser nano_v3",
+   "fuente_post": 3,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "usuario eugr y PrinceHal, un Spark; sin version de driver/kernel",
+   "riesgo": "Receta del autor original (avarok v11, VLLM_FLASHINFER_MOE_BACKEND=latency, util 0.85) produjo 'misaligned address' a otro usuario (post 4); el cuantizado tiene escalas sin declarar y emite avisos; eugr no lo recomienda para uso importante",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Para GLM-4.6V hace falta transformers 5 en el contenedor; el repo anade bandera de build para ello",
+   "como": "./build-and-copy.sh -t vllm-node-whl-tf5 --use-wheels --pre-tf --pre-flashinfer -c",
+   "fuente_post": 12,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "dos Sparks (usuarios eugr y PrinceHal, ~23 t/s)",
+   "riesgo": "Mantener la imagen separada de la normal por posibles incompatibilidades",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Aporta banderas vLLM reproducibles (KV fp8, gpu-memory-utilization 0.7, fastsafetensors) validadas por dos usuarios en un Spark, utiles para servir en contenedor. Es rendimiento de un modelo, sin vigilancia de memoria ni termica; no hay respuesta de personal NVIDIA."
+}

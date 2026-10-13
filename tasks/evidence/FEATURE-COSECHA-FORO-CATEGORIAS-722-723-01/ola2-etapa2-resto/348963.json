@@ -1,0 +1,26 @@
+{
+ "id": 348963,
+ "titulo": "Failed to run Qwen3-235B-A22B-FP4 model on a two spark's cluster",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround: fijar la version de TensorRT-LLM a 1.0.0rc3 (la 1.0.0 final y la 1.2.0rc1 fallan con OOM al cargar pesos en cluster de dos Spark)",
+   "como": "no indicado (el usuario solo dice que uso la version 1.0.0rc3)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "dos DGX Spark, playbook trt-llm de NVIDIA; version de driver/kernel no indicada",
+   "riesgo": "Afirmacion de usuario sin verificacion; el tema se cerro sin respuesta de NVIDIA a la causa",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El playbook no menciona la version requerida de tensorrt-llm (segun el usuario, post 7).",
+ "utilidad_atom": "baja",
+ "razon": "Un usuario reporta error 137 (OOM) en cluster de dos nodos y lo resuelve fijando una version de tensorrt-llm; el staff (aniculescu) solo remite al FAQ de limpiar cache. Maquina de un solo nodo, mecanismo sin comando."
+}

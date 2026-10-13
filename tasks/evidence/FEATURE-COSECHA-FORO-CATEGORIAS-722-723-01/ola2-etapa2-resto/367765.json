@@ -1,0 +1,37 @@
+{
+ "id": 367765,
+ "titulo": "Dear @nvidia - nvidia-smi is broken on the DGX Spark",
+ "leido": true,
+ "posts_leidos": 11,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Monitoreo de memoria en Spark: herramientas de comunidad de codigo abierto nv-monitor y dgxtop; Sparkview con manejo de memoria unificada GB10",
+   "como": "no indicado (solo nombres; sin comando ni URL en el texto)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada (se dice 'open source' sin licencia)",
+   "probado_en": "usuarios jwarner y azampatti",
+   "riesgo": "Herramientas de terceros no verificadas.",
+   "verificable_aqui": "command -v dgxtop nv-monitor"
+  },
+  {
+   "que": "Metodo oficial de NVIDIA para ver memoria: top, htop, free o el DGX Dashboard",
+   "como": "top; htop; free; https://localhost:11000",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "NVES (cuenta NVIDIA) y FAQ GB10",
+   "riesgo": null,
+   "verificable_aqui": "free -h"
+  }
+ ],
+ "omision_nvidia": "NVIDIA (NVES, posts 11-12 via FAQ): nvidia-smi no reporta uso de memoria en el GB10 por la memoria unificada (no hay VRAM dedicada); no hay CLI oficial para ello.",
+ "utilidad_atom": "baja",
+ "razon": "Respuesta de NVIDIA: nvidia-smi da 'Not Supported' por diseno y se remite a top/htop/free o al dashboard. Los monitores comunitarios se nombran sin comando ni repositorio."
+}

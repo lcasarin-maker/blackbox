@@ -1,0 +1,109 @@
+{
+ "id": 348862,
+ "titulo": "Run VLLM in Spark",
+ "leido": true,
+ "posts_leidos": 159,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "monitorear",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Parche de CMakeLists.txt para que vLLM compile para GB10 con CUDA 13 (error de simbolo cutlass_moe_mm_sm100 indefinido); luego sustituido por el PR de vLLM #28938 que fue fusionado",
+   "como": "curl -L https://patch-diff.githubusercontent.com/raw/vllm-project/vllm/pull/28938.diff | git apply",
+   "fuente_post": 72,
+   "repositorio": "https://github.com/vllm-project/vllm",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, CUDA 13, vLLM compilado de main (eugr)",
+   "riesgo": "El parche original excluye kernels FP4; la compilacion tarda cerca de 1 h a 1 h 20 min",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables que deben exportarse ANTES de compilar para que CMake incluya los kernels FP4; eugr corrige a 12.0f para CUDA 13 y johnny_nv (NVIDIA) recomienda 12.1a si se apunta a un solo dispositivo con tensor cores",
+   "como": "export TORCH_CUDA_ARCH_LIST=12.0f ; export TRITON_PTXAS_PATH=/usr/local/cuda/bin/ptxas",
+   "fuente_post": 46,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuarios y johnny_nv)",
+   "riesgo": "Desacuerdo explicito entre 12.0f y 12.1a en los posts 77-80",
+   "verificable_aqui": "echo $TORCH_CUDA_ARCH_LIST"
+  },
+  {
+   "que": "Si Triton falla con errores de PTXAS (feature .tile::gather4 no soportada en sm_121a), desinstalar triton-kernels y compilar Triton de main",
+   "como": "uv pip uninstall triton-kernels",
+   "fuente_post": 46,
+   "repositorio": "https://github.com/triton-lang/triton",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (eugr, johnny_nv)",
+   "riesgo": "Triton 3.5.0 con bug segun johnny_nv; una build de main llego a no compilar un dia",
+   "verificable_aqui": "uv pip freeze | grep -i triton"
+  },
+  {
+   "que": "Imagen Docker comunitaria para vLLM en Spark (cluster de 2 o mas nodos, build con wheels nocturnos, fastsafetensors, tf5); eugr afirma que el docker oficial de vLLM no funciona en Spark",
+   "como": "./build-and-copy.sh -t vllm-node-whl-tf5 --use-wheels --pre-tf --pre-flashinfer -c ; ./launch-cluster.sh -t vllm-node-whl-tf5 exec vllm serve ... --load-format fastsafetensors",
+   "fuente_post": 115,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark, 2 nodos QSFP (eugr)",
+   "riesgo": "Mantenido por la comunidad, no por NVIDIA; la imagen paso a fallar con cudaErrorUnsupportedPtxVersion en junio 2026",
+   "verificable_aqui": "docker images | grep -i vllm"
+  },
+  {
+   "que": "Banderas de docker run para vLLM en Spark (memlock sin limite, stack grande, ipc=host)",
+   "como": "docker run -it --gpus all -p 8888:8000 --ulimit memlock=-1 --ulimit stack=67108864 ... vllm serve ... --max-model-len 32768 ; docker run ... --ipc=host ... --gpu-memory-utilization 0.5",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, nvcr.io/nvidia/vllm 25.09/25.10 (eugr, Neurfer)",
+   "riesgo": null,
+   "verificable_aqui": "docker inspect --format '{{.HostConfig.Ulimits}} {{.HostConfig.IpcMode}}' <contenedor>"
+  },
+  {
+   "que": "Dos instancias de vLLM a la vez: ajustar --gpu-memory-utilization para que la suma quede bajo 0.9 del total",
+   "como": "--gpu-memory-utilization (ej. 0.2 + 0.7), una instancia por puerto",
+   "fuente_post": 145,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (eugr)",
+   "riesgo": "En memoria unificada el reparto compite con el sistema; sin verificacion de NVIDIA",
+   "verificable_aqui": "free -h"
+  },
+  {
+   "que": "Error cudaErrorUnsupportedPtxVersion (PTX compilado con toolchain no soportado) en junio 2026 con driver 580.159.03, toolkit 13.2 y paquete cuda-compat-13-2; eugr sospecha del driver 595.xx, reproduce en uno de sus Sparks y planea bajar la imagen base",
+   "como": "nvidia-smi ; nvcc --version ; apt list --installed | grep cuda-compat ; ./run-recipe.sh ... --no-cache-dirs",
+   "fuente_post": 154,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark unica, driver 580.159.03, CUDA 13.2 toolkit (usuario erlendboe)",
+   "riesgo": "Mezcla de toolkit/compat nueva sobre driver 580 puede romper vLLM; causa exacta no confirmada",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv; nvcc --version; dpkg -l | grep -E 'cuda-compat|cuda-libraries'"
+  },
+  {
+   "que": "Workaround usuario para el error 'sm_121a' no definido en gpu-name: desactivar torch.compile/Triton con modo eager (rendimiento menor)",
+   "como": "vllm serve ... --enforce-eager",
+   "fuente_post": 123,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, CUDA 13, vllm 0.13.0 cu130 (Davidlala)",
+   "riesgo": "Menor rendimiento",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Plugin vLLM para suspender/restaurar pesos en disco y cambiar de modelo en segundos en GB10; el autor declara prototipo de investigacion validado solo en GB10/SM121",
+   "como": "GitHub dgr237/vllm-snapshot (endpoints /suspend y /restore, autosuspend); numeros del autor: restore ~1.6 s, swap ~9 s",
+   "fuente_post": 160,
+   "repositorio": "https://github.com/dgr237/vllm-snapshot",
+   "licencia": "no indicada",
+   "probado_en": "GB10/SM121 (autor)",
+   "riesgo": "Prototipo; cifras sin verificar",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Personal NVIDIA (johnny_nv) reconoce que los fixes para Spark llegaban despues (flashinfer nocturno desde 14-nov-2025, vLLM cu13 'proximamente'); usuarios afirman que el contenedor oficial de NVIDIA iba por detras de vLLM upstream (0.10.1 frente a 0.11.0) y que NVFP4 en GB10 cae en Marlin de solo pesos o en kernels mas lentos que AWQ. No hay instrucciones oficiales estables.",
+ "utilidad_atom": "media",
+ "razon": "Hilo de 159 mensajes leido completo: guia colectiva de instalacion de vLLM en GB10 (iniciada por johnny_nv de NVIDIA, desarrollada por eugr y otros) con errores de PTXAS, simbolos CUTLASS y FP4, sin tratar calor ni cortes en seco. Lo mas reutilizable para esta maquina es el diagnostico del error cudaErrorUnsupportedPtxVersion (driver/toolkit/compat), la regla de suma de gpu-memory-utilization y las banderas de docker run; el resto es especifico de compilar vLLM."
+}

@@ -1,0 +1,26 @@
+{
+ "id": 366223,
+ "titulo": "LoRA training of MoE models and running in vLLM",
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Staff NVIDIA (aniculescu): receta AutoModel para LoRA de Gemma 4 26B-A4B y servir el adaptador en vLLM",
+   "como": "torchrun --nproc-per-node=8 examples/vlm_finetune/finetune.py -c examples/vlm_finetune/gemma4/gemma4_26b_a4b_moe_peft.yaml ; vllm serve <base-model> --enable-lora --max-lora-rank 16 --lora-modules automodel-adapter=/path/to/checkpoint/model",
+   "fuente_post": 4,
+   "repositorio": "https://github.com/NVIDIA-NeMo/Automodel",
+   "licencia": "no indicada",
+   "probado_en": "no indicado (ejemplo con 8 procesos)",
+   "riesgo": "ejemplo con 8 GPU; el post original reporta OOM entrenando estos modelos con Unsloth",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Respuesta de staff NVIDIA con recetas de fine-tuning LoRA; es tarea de entrenamiento, ajena a monitorear o prevenir los colapsos de memoria. El post 2 es spam de autopromocion.",
+ "leido": true,
+ "lectura": "completa"
+}

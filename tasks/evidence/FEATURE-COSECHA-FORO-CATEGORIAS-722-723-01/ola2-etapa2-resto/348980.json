@@ -1,0 +1,57 @@
+{
+ "id": 348980,
+ "titulo": "Vllm docker-compose on DGX Spark: suggestions and RAM utilization",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "vLLM reserva por defecto 90% de la memoria (cache KV incluida) sin importar el tamano del modelo; limitar con gpu-memory-utilization",
+   "como": "--gpu-memory-utilization (default 0.9; usuario sugiere 0.3-0.4 para varias instancias, una por puerto)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios; gpt-oss-20b en DGX Spark",
+   "riesgo": "Valor demasiado bajo deja sin cache KV; el hilo no mide el efecto",
+   "verificable_aqui": "docker ps --format '{{.Names}} {{.Image}}'"
+  },
+  {
+   "que": "Limitar concurrencia para reducir la reserva de memoria",
+   "como": "--max-num-seqs 10  (o --max-num-seqs 1 para una sola peticion)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario eugr, sin hardware declarado",
+   "riesgo": "Menor rendimiento con peticiones paralelas",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Ajustes de compose para vLLM: memlock sin limite, stack 64 MiB, ipc host",
+   "como": "ulimits: memlock: -1, stack: 67108864; ipc: host",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, imagen nvcr.io/nvidia/vllm:25.09-py3",
+   "riesgo": "ipc host reduce aislamiento",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fallo de tiktoken en gpt-oss resuelto actualizando imagen",
+   "como": "imagen nvcr.io/nvidia/vllm:25.11-py3 en lugar de 25.09-py3",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario sainbayrb1",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Tres usuarios (sin respuesta de NVIDIA) confirman que vLLM toma 90% por defecto y que --gpu-memory-utilization y --max-num-seqs lo acotan; util para prevenir el colapso por reserva de memoria en vLLM, pero sin medicion. Los demas ajustes son configuracion basica."
+}

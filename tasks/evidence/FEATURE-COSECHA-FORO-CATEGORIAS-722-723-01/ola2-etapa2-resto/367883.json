@@ -1,0 +1,22 @@
+{"id": 367883, "titulo": "My DGX Spark extra cooling solution", "leido": true, "posts_leidos": 16, "lectura": "completa",
+ "clase": "mecanismo", "proposito": ["prevenir", "medir"],
+ "mecanismos": [
+  {"que": "Refrigeracion externa: dos ventiladores USB de 40 mm que empujan aire al lado de admision; el autor reporta unos 10 grados menos (otro usuario con montaje casero reporta solo 2-3 C)",
+   "como": "modelo imprimible en https://makerworld.com/en/models/2717324-nvidia-dgx-spark-cooling-fans (dos ventiladores 40 mm por USB)",
+   "fuente_post": 1, "repositorio": "https://makerworld.com/en/models/2717324-nvidia-dgx-spark-cooling-fans", "licencia": "no indicada",
+   "probado_en": "DGX Spark, GPU hasta 80 C segun el autor (post 13)", "riesgo": "Eficacia dispar entre usuarios; la caja del ASUS Ascent toma aire por abajo y las jaulas impresas pueden no encajar sin modificar.",
+   "verificable_aqui": null},
+  {"que": "Jaula de enfriamiento para dos equipos con inserto estandar de 120x120x25 mm (para el DGX Spark las ranuras requieren 51 mm)",
+   "como": "https://www.printables.com/model/1658764-dual-nvidia-dgx-cooling-cage/files",
+   "fuente_post": 5, "repositorio": "https://www.printables.com/model/1658764-dual-nvidia-dgx-cooling-cage/files", "licencia": "no indicada",
+   "probado_en": "DGX Spark con ASUS Ascent tras ajuste, segun usuario", "riesgo": "Material de impresion: el autor del tema dice que PLA basta porque los lados y el fondo no pasan de 65 C; otro usuario cuestiona la temperatura del chasis.",
+   "verificable_aqui": null},
+  {"que": "Medicion comparada de mitigacion sin hardware: elevar el equipo de la superficie y ventilador de bajo turbulencia de frente hacia atras; reporta de 10 minutos: sin ventilador CPU 81 y GPU 69, con ventilador CPU 73 y GPU 66; elevado: unos 6 grados menos en menos de 2 horas y 4 menos en mas de 2 horas",
+   "como": "no indicado (colocacion fisica: equipo sobre malla metalica a 10 cm, ventilador Noctua NF-F12 a 20 cm)",
+   "fuente_post": 17, "repositorio": null, "licencia": null,
+   "probado_en": "DGX Spark con vLLM en Docker, GPU 95% y 35-40 W, segun el usuario; el resultado de 2 horas quedo sin publicar", "riesgo": "No dejar el fondo ni la parte trasera sin espacio: el aire caliente sale por detras y puede reentrar.",
+   "verificable_aqui": "nvidia-smi --query-gpu=temperature.gpu,power.draw --format=csv"}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Tema solo de usuarios (sin respuesta de NVIDIA) con soluciones fisicas de enfriamiento y cifras de temperatura declaradas: un usuario reporta que su par de Sparks sin ventilacion externa llega a 95 C en benchmarks. Mitigacion de calor sostenido plausible pero sin comando, sin licencia y con resultados dispares; no es un mecanismo de monitoreo."}

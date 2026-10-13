@@ -1,0 +1,48 @@
+{
+ "id": 366944,
+ "titulo": "Power delivery bug: How I'm catching it early",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Prueba de humo de potencia: multiplicacion de matrices fp16 8192x8192 durante 5 s que imprime TFLOPS; un valor bajo un umbral (THRESHOLD, no dado) indica el Power Delivery bug (modo de potencia degradado al arrancar)",
+   "como": "torch.mm(a, b) en bucle 5 s; tflops = (2 * size**3 * ops) / elapsed / 1e12 ; size=8192, dtype=torch.float16",
+   "fuente_post": 1,
+   "repositorio": "https://github.com/co-l/spark (citado por el autor; scripts spark-tune.sh etc.)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark (declarado por el usuario), PyTorch con CUDA",
+   "riesgo": "El umbral no se indica; el usuario lo define. Requiere reinicio en frio para recuperar.",
+   "verificable_aqui": "python3 -c 'import torch' (comprobar disponibilidad de torch)"
+  },
+  {
+   "que": "Recuperacion del Power Delivery bug: desenchufar de la pared y de la fuente, reenchufar y reiniciar",
+   "como": "Unplug node, unplug power brick, replug, reboot",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios; el post 9 indica que las notas de DGX OS 7 no mencionan arreglo",
+   "riesgo": "Corte fisico; sin arreglo oficial conocido en el hilo.",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Monitor TUI GB10 que vigila reloj, presion PSI de memoria e IO y termicas, y escribe summary.json con el disparador al detectar CLOCK_THROTTLED (caso citado: 611 MHz con 96% de carga)",
+   "como": "sparkview; registros en ~/sparkview_logs/ ; python3 tools/collect_psi_baseline.py --duration 120 --label idle",
+   "fuente_post": 3,
+   "repositorio": "https://github.com/parallelArchitect/sparkview",
+   "licencia": "no indicada",
+   "probado_en": "sin acceso a hardware GB10 segun el propio autor (post 7); umbrales de IO PSI no calibrados para GB10",
+   "riesgo": "El autor admite que PSI de IO marca HIGH/CRITICAL en reposo con vLLM cargado (falsos positivos).",
+   "verificable_aqui": "cat /proc/pressure/memory /proc/pressure/io"
+  }
+ ],
+ "omision_nvidia": "Sin arreglo oficial conocido: el post 9 afirma que las notas de DGX OS 7 no mencionan correccion de la negociacion PD y que el ciclo de energia es la unica recuperacion confirmada. NVIDIA no responde en el hilo.",
+ "utilidad_atom": "alta",
+ "razon": "Aporta un metodo concreto de deteccion previa (TFLOPS de matmul fp16 8192) y un monitor continuo con registro de anomalias, ambos de usuarios sin respuesta de NVIDIA; las licencias no se indican. Relevante porque el fallo de potencia degrada el rendimiento y solo se recupera cortando energia."
+}

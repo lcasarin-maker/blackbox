@@ -1,0 +1,27 @@
+{
+ "id": 363487,
+ "titulo": "DGX SPAK GPU power usage cap at 14W",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de tope de potencia GPU (14W, otro usuario 11W y 533 MHz) tras un crash/actualizacion: apagar y desenchufar el adaptador de pared para reiniciar su controlador, luego actualizar",
+   "como": "Apagar, desenchufar el ladrillo de alimentacion de la pared, volver a conectar e instalar las ultimas actualizaciones (sin comando)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios; un MSI Spark en post 3, sin driver declarado",
+   "riesgo": "Ninguno declarado; un reinicio normal no basta (post 3)",
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw,clocks.sm,utilization.gpu --format=csv -l 1  (bajo carga)"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Dos usuarios (eugr, rk119) confirman que el tope de potencia/reloj se resuelve con ciclo de potencia completo, no con reinicio; sin respuesta de personal de NVIDIA. Es solucion sin comando y sintoma observable con nvidia-smi."
+}

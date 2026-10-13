@@ -1,0 +1,68 @@
+{
+ "id": 375308,
+ "titulo": "LMCache on DGX Spark",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Advertencia: LMCache restaura el KV de una sesion solo si L1 tiene bloques libres; sin ellos hay recomputo silencioso del prefill (102 s vs 0.344 s)",
+   "como": "mensaje de log: Failed to batched allocate 125 memory blocks of size 14012416 because no enough memory is available",
+   "fuente_post": 5,
+   "repositorio": "LMCache (HEAD d1b6371, v0.5.0)",
+   "licencia": "no indicada",
+   "probado_en": "4x GB10, vLLM 0.23.1rc1.dev197, TP=4, GLM-5.2",
+   "riesgo": "En memoria unificada solo quedan ~4-6GB libres por nodo, no cabe un L1 del tamano de una sesion",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: el conector clasico LMCacheConnectorV1 interbloquea NCCL con MLA/TP (assert en ranks 1-3); usar el conector MP",
+   "como": "assert self.lmcache_engine is not None (vllm_v1_adapter.py:791); alternativa: LMCacheMPConnector con kv_role kv_both",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10, vLLM 0.23.1rc1.dev197",
+   "riesgo": "Fallo caro: cuelgue del motor en lugar de error de configuracion",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Sidecar LMCache por nodo con L2 en servidor externo",
+   "como": "lmcache server --l1-size-gb 3 --eviction-policy LRU --max-workers 4 --port 6555 --l2-adapter '{\"type\":\"resp\",\"host\":\"<host-L2>\",\"port\":6379,...}'",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10",
+   "riesgo": "El API HTTP por defecto usa 8080 y choca con vLLM; reiniciar el sidecar con vLLM vivo deja el motor colgado; expandable_segments:True es rechazado con cualquier conector KV",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Instalacion de LMCache en aarch64: la sdist de PyPI queda como version 0.0.0 y no hay wheels aarch64",
+   "como": "instalar desde tag git con SETUPTOOLS_SCM_PRETEND_VERSION; compilar c_ops desde fuente (compila para sm121)",
+   "fuente_post": 5,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 sm121",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Repositorio de scripts y benchmarks de LMCache con vLLM probado en DGX Spark",
+   "como": "no indicado (solo el nombre del repositorio umianta/lmcache-vllm)",
+   "fuente_post": 6,
+   "repositorio": "umianta/lmcache-vllm (github)",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark segun su descripcion",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "No hay imagen Docker lista de LMCache para DGX Spark ni guia oficial; la respuesta de NVIDIA (post 4, AakankshaS) solo pide mas datos sin aportar solucion.",
+ "utilidad_atom": "baja",
+ "razon": "Post 5 (usuario Zatz) es un informe de fallos detallado de LMCache en 4 GB10, con mensajes y rutas exactas, pero es de hardware multinodo que esta maquina no tiene y no da un arreglo. NVIDIA (post 4) responde con preguntas sin solucion.",
+ "respuesta_nvidia": "si, post 4, solo preguntas"
+}

@@ -1,0 +1,57 @@
+{
+ "id": 369446,
+ "titulo": "Kimi 2.6 and Qwen 3.5-397B -FP8 on 8xGB10 cluster",
+ "leido": true,
+ "posts_leidos": 30,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Expert parallelism en vLLM para Kimi-K2.6 NVFP4 en 8 nodos: igual decode de una peticion, mucho mas rendimiento con concurrencia (usuario ignaciomichelena)",
+   "como": "vllm serve nvidia/Kimi-K2.6-NVFP4 ... --tensor-parallel-size 8 --kv-cache-dtype fp8 --distributed-executor-backend ray --enable-expert-parallel",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "8x DGX Spark, kernel 6.17.0-1018-nvidia, driver 580.159.03 segun post 22",
+   "riesgo": "Cluster multi-nodo; no aplica a un solo ATOM",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables NCCL/RoCE y QoS por host (mlnx_qos con trust dscp y PFC en prioridad 3) para el cluster",
+   "como": "mlnx_qos -i enp1s0f0np0 --trust dscp ; mlnx_qos -i enp1s0f0np0 --pfc 0,0,0,1,0,0,0,0 ; NCCL_IB_TC=26 NCCL_PROTO=Simple NCCL_ALGO=Ring",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "8x DGX Spark con switch MikroTik",
+   "riesgo": "PFC mal configurado afecta el trafico RoCE; solo relevante con interconexion",
+   "verificable_aqui": "mlnx_qos -i <interfaz> -a (requiere nvidia-mlnx-tools; muestra DCBX mode y trust state)"
+  },
+  {
+   "que": "Un MTU distinto en una interfaz de un nodo causa cuelgue en la creacion de QP de NCCL durante el warmup; sintoma: GPU 96% con ~22W, bucle ncclIbReceiverQpsCreateToRts",
+   "como": "no indicado como comando; solucion: igualar MTU en todos los nodos",
+   "fuente_post": 24,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "8x GB10",
+   "riesgo": null,
+   "verificable_aqui": "ip link show | grep mtu"
+  },
+  {
+   "que": "Subir max_num_seqs de 8 a 16 sube el rendimiento total con concurrencia 16 de 64.9 a 117.2 tok/s",
+   "como": "max_num_seqs: 16",
+   "fuente_post": 30,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "8x GB10, vLLM upstream dev394",
+   "riesgo": "Con concurrencia 8 bajo de 86 a 72.4 tok/s",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "El tema trata de clusters de 8 nodos GB10 con interconexion RoCE; los mecanismos (EP, NCCL, mlnx_qos) no aplican a un solo ATOM ni a sus colapsos de memoria o calor. No hay respuesta de personal de NVIDIA; todo viene de usuarios, y el unico dato transferible es el ajuste de max_num_seqs en vLLM."
+}

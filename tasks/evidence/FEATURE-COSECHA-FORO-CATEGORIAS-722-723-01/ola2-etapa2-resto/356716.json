@@ -1,0 +1,67 @@
+{
+ "id": 356716,
+ "titulo": "DGX Spark performance",
+ "leido": true,
+ "posts_leidos": 51,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Herramienta de benchmark para medir tokens/s en cualquier backend, recomendada por usuario eugr",
+   "como": "GitHub eugr/llama-benchy (nombre dado en el post 11; salida con columnas t/s, ttfr, e2e_ttft)",
+   "fuente_post": 11,
+   "repositorio": "https://github.com/eugr/llama-benchy",
+   "licencia": null,
+   "probado_en": "DGX Spark (usuarios)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Receta de usuario para compilar llama.cpp con CUDA para GB10 y lanzar llama-server",
+   "como": "sudo apt install clang cmake libcurl4-openssl-dev libssl-dev ; cmake -B build -DGGML_NATIVE=ON -DGGML_CUDA=ON -DGGML_CURL=ON -DGGML_RPC=ON -DCMAKE_CUDA_ARCHITECTURES=121a-real ; cmake --build build --config Release -j",
+   "fuente_post": 38,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario)",
+   "riesgo": "sin libssl-dev el flag -hf falla con 'HTTPS is not supported' (posts 30-31)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Para que el contexto ocupe lo que cabe, usar --fit-ctx en lugar de un ctx fijo; cuantizar la cache KV",
+   "como": "--fit-ctx ; --dtk q8_0 --dtv q8_0",
+   "fuente_post": 46,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": null,
+   "probado_en": "usuario eugr, sin hardware citado explicito mas alla del hilo Spark",
+   "riesgo": "un ctx-size de 204800 con MiniMax Q3_K_XL produjo cudaMalloc OOM de 49600 MiB y segfault (post 43)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia de usuario: GPU utilization del dashboard parece un fallo del driver (nunca mas de 96%); Ollama usa contexto 4096 por defecto, por eso la memoria del sistema es baja",
+   "como": "no indicado (observacion)",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario)",
+   "riesgo": "afirmacion de usuario sin verificar",
+   "verificable_aqui": "nvidia-smi --query-gpu=utilization.gpu --format=csv"
+  },
+  {
+   "que": "Un proceso llama-server con MiniMax-M2.1 fue terminado ('Killed') al guardar prompt cache de 37166 tokens (estado 9001 MiB); el usuario no obtiene respuesta",
+   "como": "no indicado",
+   "fuente_post": 51,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario)",
+   "riesgo": "patron compatible con OOM killer; el post no diagnostica",
+   "verificable_aqui": "journalctl -k -b | grep -i 'out of memory'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de rendimiento donde el unico usuario con respuestas sustantivas es eugr (no personal de NVIDIA); no hay respuesta oficial. Aporta una herramienta de medicion y recetas de llama.cpp; el unico indicio de memoria (proceso Killed, post 51) queda sin diagnostico."
+}

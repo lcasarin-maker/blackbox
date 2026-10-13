@@ -1,0 +1,26 @@
+{
+ "id": 367075,
+ "titulo": "PD bug preventing ConnectX-6 interface from running over 10Gb",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Comprobar el limite de potencia que el slot PCIe anuncia a la NIC mlx5 (aviso 'insufficient power', 27W)",
+   "como": "sudo dmesg | grep -i \"power\"  /  sudo lspci -vvv | grep PowerLimit",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "dos DGX Spark (usuario), versiones al dia segun el usuario",
+   "riesgo": "Un usuario (elsaco, post 2) dice que el aviso no impide usar los puertos CX-7 a velocidad completa; el autor confirma enlace a velocidad completa tras ciclo de energia y recableado con el aviso aun presente (post 4).",
+   "verificable_aqui": "sudo dmesg | grep -i mlx5_pcie_event; sudo lspci -vvv | grep -i SlotPowerLimit"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Tema de red CX-7 sin relacion con memoria ni calor; el aviso de 27W se declara inocuo por un usuario y el autor lo ve resolverse solo. Sin respuesta de NVIDIA staff; los comandos son diagnostico generico."
+}

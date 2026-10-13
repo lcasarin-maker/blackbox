@@ -1,0 +1,37 @@
+{
+ "id": 364305,
+ "titulo": "Using CUDA 13.2 on the DGX Spark",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Usar un CUDA toolkit mas nuevo en Spark sin actualizar el driver del sistema mediante el paquete de compatibilidad",
+   "como": "instalar cuda-toolkit-13-2 y cuda-compat-13-2; export LD_LIBRARY_PATH=/usr/local/cuda-13.2/compat",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (sin version de driver)",
+   "riesgo": "La interoperabilidad OpenGL/Vulkan queda rota en esa configuracion segun el autor; la alternativa Minor Version Compatibility no requiere el paquete compat si no se usa compilacion PTX en runtime",
+   "verificable_aqui": "dpkg -l 'cuda-compat*' 'cuda-toolkit*'"
+  },
+  {
+   "que": "Comparacion del mismo build de llama.cpp con CUDA 13.1.1 vs 13.2: diferencias de 0-4% (p.ej. gpt-oss 20B tg128 70.80 vs 72.01 t/s; qwen3next 80B pp512 @ d64000 1142.44 vs 1149.42 t/s); pp512 @ d64000 de gpt-oss 20B 1764.61 vs 1953.58 t/s",
+   "como": "docker run -it -v <cache>:/root/.cache/llama.cpp --gpus=all ghcr.io/pontostroy/llama.cpp:full-cuda13 --bench --model <gguf> -fa 1 --mmap 0 -d 0,16000,64000",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 (usuario pontostroy), CUDA 13.1.1 y 13.2",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario (never_released) explica como usar CUDA 13.2 con cuda-compat-13-2 y LD_LIBRARY_PATH sin tocar el driver; otro (pontostroy) mide llama.cpp en 13.1.1 vs 13.2 con ganancias menores. Sin intervencion de NVIDIA; el mecanismo cambia la pila CUDA y no aporta monitoreo ni prevencion de cortes."
+}

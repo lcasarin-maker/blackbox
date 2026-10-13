@@ -1,0 +1,58 @@
+{
+ "id": 364736,
+ "titulo": "Why Turboquant saves DGX twice",
+ "leido": true,
+ "posts_leidos": 135,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Flag de vLLM para KV cache TurboQuant con modelos fp8 (un usuario; Qwen MTP roto con esta combinacion)",
+   "como": "--kv-cache-dtype turboquant_k8v4",
+   "fuente_post": 119,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario, vLLM con PR de TurboQuant; hardware no detallado",
+   "riesgo": "Con MTP de Qwen falla segun el usuario",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Limite de memoria compartida de 48KB en GB10: num_stages=4 en los configs de MoE excede el limite en BF16 y puede romper Triton/FlashInfer",
+   "como": "archivo vllm-<...>/build/moe-configs/ con num_stages=4; tabla del post 82: 2 etapas 40KB BF16 ok, 3 etapas 60KB BF16 excede, 4 etapas 80KB BF16 excede; FP8 4 etapas 40KB cabe",
+   "fuente_post": 80,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario flash3, GB10 (afirmacion sin verificar por terceros; otro usuario reporta crash FAULT_PTE ACCESS_TYPE_VIRT_READ en spark con un PR de kernel Triton)",
+   "riesgo": "Kernels Triton/FlashInfer pueden fallar por limite de smem en SM121",
+   "verificable_aqui": "grep -rn num_stages en el arbol de configs de vLLM del contenedor (solo lectura)"
+  },
+  {
+   "que": "Recomendacion de un usuario: mantener KV cache en f16 o q8_0 en llama.cpp; q4_0 cae en generacion ~37% a 110K de contexto (datos corregidos tras retractar el 'colapso de 92.5%')",
+   "como": "llama.cpp KV q8_0/q4_0/f16; KV buffer q4_0 216 MiB vs 768 MiB f16; gen 24 tps vs 38 tps a 110K",
+   "fuente_post": 97,
+   "repositorio": "https://github.com/Memoriant/dgx-spark-kv-cache-benchmark",
+   "licencia": "no indicada",
+   "probado_en": "usuario nmaine, GB10, llama.cpp build 8399, Nemotron-3-Nano-30B-A3B",
+   "riesgo": "Post 87 contenia datos erroneos (metodologia RSS), retractados en 97-98",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Metodo de medicion: medir memoria con nvidia-smi o el reporte interno de buffer KV de llama.cpp, no con RSS",
+   "como": "medicion con nvidia-smi / buffer KV de llama.cpp en lugar de RSS",
+   "fuente_post": 97,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10",
+   "riesgo": "RSS da conclusiones falsas en memoria unificada",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El usuario flash3 afirma que vLLM, NVIDIA y FlashInfer no atienden la caja GB10; sin respuesta de personal de NVIDIA en el tema.",
+ "utilidad_atom": "media",
+ "razon": "Hilo largo de un usuario que desarrolla forks propios (MultiQuant/XFP) para cuantizar KV y pesos; casi todo es experimental, de un solo autor, con repos sin licencia indicada en el texto. Lo reutilizable aqui es el flag turboquant_k8v4, la advertencia del limite de smem de 48KB con num_stages y la correccion metodologica sobre medir memoria; no hay respuesta de personal de NVIDIA."
+}

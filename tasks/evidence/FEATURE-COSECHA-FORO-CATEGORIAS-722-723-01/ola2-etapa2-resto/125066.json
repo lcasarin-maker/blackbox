@@ -1,0 +1,27 @@
+{
+ "id": 125066,
+ "titulo": "Docker container with CUDA, CUDNN, OPENCV installed on Jetson Xavier",
+ "leido": true,
+ "posts_leidos": 14,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Staff (dusty_nv, rol NVIDIA segun contexto del hilo) indica que los archivos de JetPack se montan desde el host con --runtime nvidia; para docker build hay que fijar nvidia como runtime por defecto",
+   "como": "docker run --runtime nvidia ... ; default-runtime nvidia en la config de docker (enlace a jetson-containers, no copiado)",
+   "fuente_post": 14,
+   "repositorio": "github jetson-containers (dusty-nv), URL en el post 5",
+   "licencia": "no indicada",
+   "probado_en": "Jetson Nano/Xavier NX, JetPack 4.5",
+   "riesgo": "Archivos de longitud cero en la imagen si falta el runtime",
+   "verificable_aqui": "docker info --format '{{.DefaultRuntime}}'"
+  }
+ ],
+ "omision_nvidia": "Staff reconoce que las imagenes L4T dependen de que el host tenga JetPack instalado; contenedores autonomos ('fat') solo planeados a futuro (posts 8 y 14).",
+ "utilidad_atom": "baja",
+ "razon": "Hilo Jetson 2020-2021 con respuestas de dusty_nv (NVIDIA): explica el mecanismo de montaje del runtime, sin relacion con memoria ni termica en GB10. Mecanismo ya cubierto por la configuracion actual de Docker con runtime nvidia."
+}

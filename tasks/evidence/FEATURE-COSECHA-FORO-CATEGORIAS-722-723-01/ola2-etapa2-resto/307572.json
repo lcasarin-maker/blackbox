@@ -1,0 +1,26 @@
+{
+ "id": 307572,
+ "titulo": "Launching pip-installed Isaac sim from Ubuntu-based docker container",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Variables de entorno en el Dockerfile para que Vulkan/CUDA funcionen en un contenedor Ubuntu propio, mas runtime nvidia en docker run",
+   "como": "ENV NVIDIA_VISIBLE_DEVICES=all NVIDIA_DRIVER_CAPABILITIES=all ; docker run --runtime=nvidia",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "capabilities=all expone todas las capacidades del driver al contenedor; afirmacion de un usuario, sin respuesta de NVIDIA",
+   "verificable_aqui": "docker info --format '{{.Runtimes}}'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario (post 3 y 4) resuelve el fallo de Vulkan de Isaac Sim con esas variables y --runtime=nvidia; es configuracion generica de NVIDIA Container Toolkit y la maquina ya tiene runtime nvidia. Sin staff NVIDIA."
+}

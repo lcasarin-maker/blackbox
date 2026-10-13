@@ -1,0 +1,58 @@
+{
+ "id": 374985,
+ "titulo": "NVIDIA Software update Bricked my 2 Sparks",
+ "posts_leidos": 22,
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Prevencion de fallo en actualizacion por Web UI: conectar monitor y teclado antes de actualizar y esperar 30-45 min en pantalla negra antes de forzar apagado",
+   "como": "no indicado comando; procedimiento (staff post 12, usuario post 22)",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Lenovo ThinkStation DGX/PGX y DGX Spark segun usuarios",
+   "riesgo": "Una actualizacion de firmware puede dejar pantalla negra 30-45 min",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Captura del journal de la sesion de actualizacion colgada",
+   "como": "sudo journalctl -b -1 --no-pager > journal_previous_boot.txt",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "journalctl -b -1 --no-pager | tail -50"
+  },
+  {
+   "que": "Rastrear que instalo una actualizacion",
+   "como": "/var/log/apt/history.log",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": "tail -50 /var/log/apt/history.log"
+  },
+  {
+   "que": "Advertencia: firmware PGX de Lenovo no se actualiza por SSH; BIOS 0DA o superior permite actualizar firmware sin pantalla",
+   "como": "no indicado comando",
+   "fuente_post": 21,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Aplica a Lenovo, no verificado para GIGABYTE",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA/Lenovo no tienen documentacion clara del procedimiento soportado de actualizacion en ThinkStation PGX (peticion explicita del usuario, post 18); staff dice que investiga el problema sin causa raiz publicada.",
+ "utilidad_atom": "media",
+ "razon": "Staff NVIDIA llama cosmetico el mensaje 'watchdog did not stop' y confirma que el apt termino bien y el cuelgue fue en el reinicio; usuarios aportan prevencion (monitor conectado). Aplicable de forma parcial a la maquina porque es otra OEM y la causa raiz sigue sin publicar.",
+ "leido": true,
+ "lectura": "completa"
+}

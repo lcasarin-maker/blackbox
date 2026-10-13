@@ -1,0 +1,46 @@
+{
+ "id": 347951,
+ "titulo": "DGX Spark boot failure after installing LLM model",
+ "leido": true,
+ "posts_leidos": 13,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Recoger diagnostico por SSH cuando el arranque se cuelga en GDM (peticion del staff de NVIDIA, aniculescu)",
+   "como": "journalctl completo y sudo nvidia-bug-report.sh",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark recien comprado, sin version declarada",
+   "riesgo": null,
+   "verificable_aqui": "command -v nvidia-bug-report.sh"
+  },
+  {
+   "que": "Recuperacion de bucle de arranque: entrar a modo recovery desde GRUB y purgar paquetes rotos (relato de un usuario, sin comandos)",
+   "como": "no indicado",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kernel 6.11.0-1014-nvidia segun el usuario",
+   "riesgo": "Sin comando concreto; afirmacion de usuario sin verificar",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Fallo 'Failed to mount after 10 attempts' en la imagen de recuperacion: el usuario lo resolvio conectando la memoria USB directo al equipo en lugar de por un hub",
+   "como": "no indicado (conectar USB directo, sin hub)",
+   "fuente_post": 12,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, imagen de recuperacion",
+   "riesgo": "Afirmacion de un usuario, un solo caso",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Tema de arranque fallido y recuperacion; el staff (aniculescu) solo pide journalctl y nvidia-bug-report.sh sin diagnostico final. Un usuario reporta un bug del script CreateUSBKeyMacOS.sh y la solucion del hub USB; nada sobre memoria ni calor."
+}

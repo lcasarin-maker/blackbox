@@ -1,0 +1,78 @@
+{
+ "id": 362721,
+ "titulo": "vLLM containers",
+ "leido": true,
+ "posts_leidos": 46,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "prevenir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Limitar la memoria de GPU de vLLM para que dos contenedores/modelos convivan (por defecto vLLM toma 0.9 del total)",
+   "como": "--gpu-memory-utilization <fraccion>",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario eugr (mantenedor de la imagen comunitaria) y ehfortin en Spark",
+   "riesgo": "Con 0.2 el modelo puede no arrancar tras actualizar; ehfortin tuvo que subir a 0.3 (post 29). Tambien limitar --max-model-len (post 20).",
+   "verificable_aqui": "docker ps --format '{{.Names}}' ; nvidia-smi --query-gpu=memory.used --format=csv"
+  },
+  {
+   "que": "Segundo contenedor vLLM sin choque de nombre con el primero",
+   "como": "--name vllm_node_2 (en run-recipe.sh, requiere git pull de spark-vllm-docker)",
+   "fuente_post": 17,
+   "repositorio": "github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "post 22: funciona tras actualizar el repo",
+   "riesgo": "Con repo desactualizado la opcion se toma como nombre de receta (post 19)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Reconstruir la imagen con wheels estables nocturnas en vez de compilar desde fuente (corrige perdida de soporte FP4)",
+   "como": "git pull ; rm wheels/*.whl wheels/.*-commit ; ./build-and-copy.sh  (evitar --rebuild-vllm)",
+   "fuente_post": 27,
+   "repositorio": "github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "eugr: build verificado nocturno con pruebas de regresion (post 4, 27, 31); kosta lo resolvio solo tras borrar por completo su entorno Docker (post 44)",
+   "riesgo": "Limpiar con docker system prune -a --volumes -f borra todo Docker (post 26)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Diagnostico de soporte FP4 en el contenedor",
+   "como": "docker run --rm --gpus all -it vllm-node:latest bash -lc 'python3 - <<PY ... hasattr(torch.ops._C, \"scaled_fp4_quant\") ... PY' (script completo en el post)",
+   "fuente_post": 26,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "kosta, torch 2.12.0.dev cu130",
+   "riesgo": null,
+   "verificable_aqui": "docker images --format '{{.Repository}}:{{.Tag}}' | head"
+  },
+  {
+   "que": "Impedir descargas de Hugging Face al arrancar (timeouts de red en la carga)",
+   "como": "-e HF_HUB_OFFLINE=1 en el script de lanzamiento; sparkrun anade HF_HUB_OFFLINE=1 y TRANSFORMERS_OFFLINE=1 por defecto",
+   "fuente_post": 45,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuarios AoE y dbsci",
+   "riesgo": "Los modelos y archivos auxiliares deben estar ya en cache",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Herramienta alternativa de lanzamiento que respeta --port y --gpu-mem",
+   "como": "sparkrun run nemotron-3-nano-nvfp4 --gpu-mem 0.2 --port 8001",
+   "fuente_post": 15,
+   "repositorio": "sparkrun.dev (mencionado, URL de GitHub no dada)",
+   "licencia": "no indicada",
+   "probado_en": "usuario dbsci",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El contenedor NGC de vLLM va dos versiones atras (0.15.1 frente a 0.17, posts 2 y 9) y sin las optimizaciones de Spark; eugr afirma que no hay beneficio en usarlo. Un empleado de NVIDIA (aniculescu) solo dice que el playbook vLLM se republica (post 7).",
+ "utilidad_atom": "media",
+ "razon": "Gran parte del tema son trazas de error; los mecanismos utiles son el limite de memoria por contenedor y la reconstruccion con wheels estables, ambos de usuarios y de uso comunitario. Hay una sola respuesta de NVIDIA (post 7), sin contenido tecnico."
+}

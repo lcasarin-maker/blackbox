@@ -1,0 +1,28 @@
+{
+ "id": 384721,
+ "titulo": "The DGX Spark firmware stack",
+ "leido": true,
+ "posts_leidos": 2,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "monitorear",
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Inventario del firmware del Spark segun un usuario (christopher_owen), tomado de fwupdmgr y LVFS: cinco componentes de NVIDIA (socfw 2.155.11, EC 3.5.8 y variante nofuse, TPM, USB-PD 0x516) todos capsulas UEFI firmadas; firmware fuera de LVFS: NIC ConnectX-7 (28.45.4028), SSD NVMe Samsung, bases de claves Secure Boot (via fwupd). Verificacion de firma en fwupd, UEFI y destino (EC con fusibles).",
+   "como": "fwupdmgr get-devices",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "usuario: un Spark, versiones listadas en el post",
+   "riesgo": null,
+   "verificable_aqui": "fwupdmgr get-devices"
+  }
+ ],
+ "omision_nvidia": "El firmware del EC es cerrado y no hay opcion oficial de firmware propio; el usuario pide a NVIDIA publicar las fuentes de la aplicacion del EC (post 2). Sin respuesta de NVIDIA en el tema.",
+ "utilidad_atom": "baja",
+ "razon": "Analisis de un usuario sobre la cadena de firmware con un solo comando (fwupdmgr get-devices); sin respuesta de NVIDIA y sin mecanismo de prevencion nuevo. Sirve de referencia para saber que componentes de firmware se pueden consultar con fwupd."
+}

@@ -1,0 +1,47 @@
+{
+ "id": 370983,
+ "titulo": "Help, team spark!",
+ "leido": true,
+ "posts_leidos": 7,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "rastrear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Revertir la regresion de memoria de vLLM: usar un tag anterior del repo eugr/spark-vllm-docker o build-and-copy.sh con un vllm-ref de varias iteraciones atras",
+   "como": "git checkout de un tag previo; build-and-copy.sh con vllm-ref anterior (sin valores exactos)",
+   "fuente_post": 3,
+   "repositorio": "eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "2 Spark, Qwen 397B (usuario jc2375 confirmo que funciono)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Rastrear en el log del kernel el fallo de memoria del RM tras un arranque que colgo los Spark",
+   "como": "journalctl -b -1 -k | grep -iE 'memory'",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark, tras actualizacion NVIDIA Sync (usuario j0n)",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -b -1 -k | grep -iE 'memory'"
+  },
+  {
+   "que": "Distincion de dos fenomenos: (1) NV_ERR_NO_MEMORY en _memdescAllocInternal, casi cosmetico; (2) a veces dispara una cascada de bloqueos del RM (relacionada con open-gpu-kernel-modules#968) que es fatal",
+   "como": "firma: NVRM: nvCheckOkFailedNoLog: Check failed: Out of memory [NV_ERR_NO_MEMORY] (0x00000051) returned from _memdescAllocInternal(pMemDesc) @ mem_desc.c:1359; luego os_acquire_rwlock_read en la cascada",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2 Spark, driver 580.159.03, kernel 6.17.0-1018-nvidia, vLLM 0.19.1rc1 dev, --gpu-memory-utilization 0.85 (usuario j0n)",
+   "riesgo": "La cascada es fatal",
+   "verificable_aqui": "dmesg -T | grep -E 'NV_ERR_NO_MEMORY|os_acquire_rwlock_read'"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "El mantenedor eugr_nv (usuario con alias de NVIDIA, sin afirmar rol de staff en el texto) reconoce un problema de calculo de memoria disponible en el build reciente de vLLM; el mecanismo util es la distincion entre el error cosmetico y la cascada fatal del RM con su firma de log. Sin respuesta oficial de NVIDIA."
+}

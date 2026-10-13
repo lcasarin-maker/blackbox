@@ -1,0 +1,17 @@
+{"id": 367271, "titulo": "DFlash Gemma4-31B-it on Spark is here. ~2.5x speedup. It will get better with more training", "leido": true, "posts_leidos": 7, "lectura": "completa",
+ "clase": "mecanismo", "proposito": ["medir", "solucionar"],
+ "mecanismos": [
+  {"que": "Banderas de lanzamiento vLLM para decodificacion especulativa DFlash con verificador Gemma 4 31B y borrador RedHatAI, con parches de runtime sobre vLLM nightly",
+   "como": "VLLM_DISABLE_COMPILE_CACHE=1 --quantization fp8 --max-model-len 16384 --max-num-batched-tokens 16384 --gpu-memory-utilization 0.80 --enforce-eager --limit-mm-per-prompt '{\"image\":0,\"video\":0}' --speculative-config '{\"method\":\"dflash\",\"model\":\"RedHatAI/gemma-4-31B-it-speculator.dflash\",\"num_speculative_tokens\":8}'",
+   "fuente_post": 1, "repositorio": "https://github.com/meanaverage/gemma4-dflash-spark-vllm", "licencia": "no indicada",
+   "probado_en": "Un DGX Spark / GB10, vllm/vllm-openai:nightly (0.19.2rc1.dev21); declarado por un usuario, no por NVIDIA",
+   "riesgo": "Requiere tres parches de runtime (omitir comprobaciones CUTLASS FP8 de GB10, anunciar soporte no causal en el selector Triton, forzar FlashAttention solo en la rama del borrador); no es ruta sin parches. En TP=2 y TP=4 el autor reporta RayChannelTimeoutError / EngineDeadError tras pocas peticiones.",
+   "verificable_aqui": null},
+  {"que": "Metodo de medicion de throughput con baseline vs especulativo: vllm bench serve, dataset mt-bench, concurrencia 1; reporta 5.53 tok/s base contra 15.44 tok/s con DFlash (aprox 2.79x, aceptacion media 28.82%)",
+   "como": "vllm bench serve; dataset philschmid/mt-bench; num-prompts=80; max-concurrency=1; hf-output-len=2048; temperature=0",
+   "fuente_post": 1, "repositorio": "https://github.com/meanaverage/gemma4-dflash-spark-vllm", "licencia": "no indicada",
+   "probado_en": "DGX Spark / GB10 segun el usuario", "riesgo": null, "verificable_aqui": null}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Receta de usuario (sin respuesta de NVIDIA) con banderas vLLM concretas y metodo de benchmark para acelerar inferencia en GB10; depende de parches no oficiales y el propio autor reporta inestabilidad multi-nodo. Es rendimiento de inferencia, no monitoreo ni prevencion de los colapsos de memoria o cortes por calor."}

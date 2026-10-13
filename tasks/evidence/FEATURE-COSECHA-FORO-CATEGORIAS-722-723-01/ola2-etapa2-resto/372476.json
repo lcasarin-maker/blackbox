@@ -1,0 +1,18 @@
+{"id": 372476, "titulo": "Single-Spark always on agent team (Qwen3.6-35B resident + 120B on-demand, two vLLM ports)-design sanity check before the hardware arrives", "leido": true, "posts_leidos": 16, "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": ["prevenir"],
+ "mecanismos": [
+  {"que": "Contra bucles de repeticion de Qwen3.6-35B-A3B: ajustar la penalizacion de presencia por la configuracion de generacion de vLLM (el valor no se da; solo se dice que valores bajos no penalizan y altos si).",
+   "como": "no indicado: clave \"presence_penalty\" dentro de --override-generation-config (sin valor)",
+   "fuente_post": 15, "repositorio": null, "licencia": "no indicada",
+   "probado_en": null, "riesgo": "Dicho 'de memoria' por un usuario; sin valor ni prueba.",
+   "verificable_aqui": null},
+  {"que": "Advertencia de operacion: parar un vLLM y esperar a que la VRAM quede libre no es instantaneo; cambiar de modelo tarda ~10 minutos segun usuarios que lo hicieron a mano.",
+   "como": "no indicado (practica manual: apagar vLLM y comprobar que la memoria se libero)",
+   "fuente_post": 9, "repositorio": null, "licencia": null,
+   "probado_en": "Sparks del usuario stu.miller (modelo de hardware no detallado)", "riesgo": "Lanzar el segundo modelo antes de liberar memoria unificada.",
+   "verificable_aqui": "free -m"}
+ ],
+ "omision_nvidia": "El autor pregunta por practicas termicas/de potencia para residencia 24/7 y por la mejora de cargas lentas con mmap; ningun participante da una respuesta con datos y no interviene NVIDIA. El autor menciona que los hilos de apagado bajo carga y degradacion de potencia existen pero no los resuelve.",
+ "utilidad_atom": "baja",
+ "razon": "Es una consulta de diseno con opiniones sobre que modelo servir (122B int4 resident vs 35B); no hay respuesta de NVIDIA. Las unicas pistas son la nota sobre presence_penalty (sin valor, post 15) y la practica de sync+drop_caches (ya conocida) antes de cargas en frio (posts 1 y 7)."}

@@ -1,0 +1,37 @@
+{
+ "id": 353228,
+ "titulo": "cudaMemcpy Latency Issues",
+ "posts_leidos": 3,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Benchmark propio de cudaMemcpy H2D/H2H comparado con x86 y perfilado con nsys: el HW completa rapido, la llamada API tarda en retornar; picos tambien en cudaStreamSynchronize",
+   "como": "no indicado (el codigo esta en un GitHub enlazado, sin URL ni licencia en el texto)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark vs AMD EPYC 7302P + RTX A5000, CUDA 12.9.1 (declarado por el usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Cita de documentacion NVIDIA: en GB10 la memoria devuelta por los asignadores pinned (p.ej. cudaMalloc) para contextos del iGPU no es accesible de forma coherente por CPU ni perifericos PCIe, por lo que GPUDirect RDMA no esta soportado",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Quien asuma GPUDirect RDMA en GB10 no lo tendra",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "GPUDirect RDMA no esta soportado en DGX Spark (cita de FAQ NVIDIA aportada por un usuario en post 2).",
+ "utilidad_atom": "baja",
+ "razon": "Un usuario mide picos en cudaMemcpy en Spark frente a x86 y pregunta sin respuesta de NVIDIA; otro usuario aporta la cita de que GPUDirect RDMA no esta soportado. Sin comando ni valor reutilizable.",
+ "leido": true,
+ "lectura": "completa"
+}

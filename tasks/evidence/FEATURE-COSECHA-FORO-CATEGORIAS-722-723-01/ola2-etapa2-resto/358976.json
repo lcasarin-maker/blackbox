@@ -1,0 +1,36 @@
+{
+ "id": 358976,
+ "titulo": "Need Help/ DGX system Kernel panic after update",
+ "posts_leidos": 4,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Recuperar de kernel panic tras actualizar arrancando un kernel anterior desde GRUB y completando la actualizacion",
+   "como": "Mantener Shift+Insert durante el arranque, elegir 'Advanced options for DGX OS GNU/Linux' y el kernel previo; luego sudo apt full-upgrade (o sudo apt dist-upgrade)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Requiere un kernel anterior instalado; consejo de usuario no verificado",
+   "verificable_aqui": "ls /boot/vmlinuz*"
+  },
+  {
+   "que": "Recuperacion oficial del sistema desde BIOS segun la guia System Recovery del DGX Spark User Guide (respuesta de NVIDIA)",
+   "como": "no indicado (solo remite a la guia)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Puede reinstalar el sistema; la guia no se leyo",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "NVIDIA (aniculescu) remite a la guia oficial de recuperacion y un usuario aporta la alternativa de kernel previo via GRUB con comandos concretos. Util como plan de recuperacion, no para monitoreo.",
+ "leido": true,
+ "lectura": "completa"
+}

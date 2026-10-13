@@ -1,0 +1,48 @@
+{
+ "id": 375986,
+ "titulo": "Script or app to load GB10 GPU to test for maximum power?",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "monitorear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Prueba de estres de GPU para ver tope de potencia/termico",
+   "como": "gpu-burn (repositorio wilicc/gpu-burn), sin flags indicados",
+   "fuente_post": 2,
+   "repositorio": "GitHub wilicc/gpu-burn",
+   "licencia": "no indicada",
+   "probado_en": "usuario reporta 93 W y 71 C sostenidos en su Spark (post 4)",
+   "riesgo": "carga la GPU al maximo; en una maquina con cortes por calor puede provocarlos",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Herramienta Spark-especifica que detecta throttling por USB-C PD: muestrea reloj GPU bajo carga (umbral 1400 MHz, 20 muestras cada ~0.5 s); sano ~2400 MHz, estado malo 500-850 MHz con P0",
+   "como": "GPU PD Throttle Check Tool (nombre; el comando de ejecucion no esta indicado en el texto)",
+   "fuente_post": 3,
+   "repositorio": "enlace a proyecto 'DGX Spark / GB10 Projects' (URL no visible en el texto)",
+   "licencia": "no indicada",
+   "probado_en": "Spark del autor; otro usuario obtuvo PASS 2406 MHz medio, 64.9 W (post 5)",
+   "riesgo": "carga la GPU",
+   "verificable_aqui": "nvidia-smi --query-gpu=clocks.sm,clocks.max.sm,pstate,power.draw --format=csv -l 1"
+  },
+  {
+   "que": "Remedio si hay el fallo PD: desconectar de pared Y del adaptador, esperar, reconectar y reiniciar",
+   "como": "no indicado como comando; procedimiento fisico",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Posts 2-3 dan dos herramientas de usuarios (no staff) para medir throttling bajo carga; el comando exacto de la segunda no esta en el texto, por eso no es alta. Post 5 muestra salida sana de referencia (reloj 2405 MHz, 65 W) y post 6 es cierre automatico."
+}

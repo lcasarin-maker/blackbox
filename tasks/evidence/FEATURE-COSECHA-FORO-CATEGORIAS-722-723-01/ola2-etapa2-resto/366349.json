@@ -1,0 +1,9 @@
+{"id": 366349, "titulo": "MSI edgeXpert wasted disk from factory", "leido": true, "posts_leidos": 6, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["monitorear","solucionar"],
+ "mecanismos": [
+  {"que": "Deteccion de archivos de prueba de fabrica olvidados (patron /~bittest*, ~550G en una unidad MSI edgeXpert, atribuido por usuarios a PassMark BurninTest) con comandos de solo lectura", "como": "sudo du -xh -d1 / | sort -h | tail ; sudo ls -lah /~bittest* 2>/dev/null ; sudo find / -xdev -size +1G -printf '%s\\t%p\\n' 2>/dev/null | sort -rn | head ; sudo lsof /~bittest00004.txt", "fuente_post": 3, "repositorio": null, "licencia": null, "probado_en": "MSI edgeXpert (clon de GB10), reportado por usuarios; el post 3 declara que no esta en la misma maquina y que es una pista", "riesgo": "Borrar con sudo rm /~bittest00004.txt solo tras comprobar que nada lo usa; la atribucion a BurninTest es inferencia de usuarios, sin confirmacion de NVIDIA ni de MSI.", "verificable_aqui": "ls -la /~bittest* 2>/dev/null; sudo find / -xdev -size +1G -printf '%s\\t%p\\n' 2>/dev/null | sort -rn | head"}
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Usuarios de MSI edgeXpert hallaron un archivo de ~550G dejado por pruebas de fabrica y dos usuarios confirmaron liberar espacio; no hay respuesta de personal de NVIDIA. El metodo de busqueda de archivos grandes es generico y la causa es especifica de MSI, sin relacion con memoria ni calor."}

@@ -1,0 +1,68 @@
+{
+ "id": 357012,
+ "titulo": "Help on llama.cpp command line arguments and compilation settings (performance testing included)",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "prevenir",
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Banderas minimas de llama-server en Spark",
+   "como": "-fa on --no-mmap -ngl 999 mas tamano de contexto; no usar --cache-ram (la RAM es unificada)",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark, usuario eugr",
+   "riesgo": "Test 1 del autor crasheo: memoria total ~110GB y cayo a ~3GB (post 1)",
+   "verificable_aqui": "free -m"
+  },
+  {
+   "que": "Limite practico de memoria en Spark",
+   "como": "no pasar de ~115GB de uso de VRAM; 96GB de pesos deja poco KV",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario eugr, sin medicion adjunta",
+   "riesgo": "Superar el limite produce crash de carga",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Techo teorico de decode: ancho de banda / tamano del modelo",
+   "como": "273 GB/s / ~35GB (70B 4-bit) = 7.8 tok/s; denso 123B 4-bit ~4 tok/s",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario eugr, razonamiento",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Desactivar autoajuste por inestable y usar plantilla jinja",
+   "como": "-fit off ; --jinja",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario coder543, experiencia propia",
+   "riesgo": "El autor uso --fit on --fit-target 2048 en su test 3 (1.97 t/s)",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Compilar sin GGML_NATIVE=OFF para que use arquitectura 121a-real",
+   "como": "cmake .. -B build -DGGML_CUDA=ON ; cmake --build build --config Release -j 16",
+   "fuente_post": 5,
+   "repositorio": "https://github.com/ggml-org/llama.cpp (tag b7681 citado)",
+   "licencia": null,
+   "probado_en": "Spark, usuario Neurfer; Qwen3-4B 66 t/s, Qwen3-32B 8 t/s",
+   "riesgo": "Devstral-123B genero texto incoherente en esa prueba (post 8)",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Respuestas de usuarios (ninguna de NVIDIA) con banderas concretas de llama.cpp y un limite de ~115GB que coincide con el comportamiento de crash por memoria reportado en el post 1. Util para prevenir cargas que colapsan memoria, pero solo para llama.cpp, no para nuestro vLLM."
+}

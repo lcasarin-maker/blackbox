@@ -1,0 +1,37 @@
+{
+ "id": 347956,
+ "titulo": "Ability to disable the need for the SSH Tunnel and hit the dashboard on local LAN",
+ "posts_leidos": 19,
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reenvio del puerto del dashboard con socat en contenedor para acceder por LAN (workaround de usuario, expone por http sin cifrar)",
+   "como": "services: dgx-dashboard: image: alpine/socat; command: tcp-listen:12000,fork,reuseaddr tcp-connect:127.0.0.1:11000; network_mode: \"host\"",
+   "fuente_post": 14,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "Spark del usuario chris4prez, version no indicada",
+   "riesgo": "Expone el dashboard sin autenticacion ni https a toda la LAN.",
+   "verificable_aqui": "ss -ltn | grep -E ':(11000|12000)'"
+  },
+  {
+   "que": "Tunel SSH con un -L por cada puerto necesario (dashboard 11000, Jupyter 11002); con solo 11000 el dashboard falla",
+   "como": "ssh -L 11000:localhost:11000 -L 11002:localhost:11002 user@spark",
+   "fuente_post": 18,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Spark del usuario elsaco",
+   "riesgo": null,
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "aniculescu (staff, post 19, 2026-01-20) dice que no se anadira acceso directo al dashboard por razones de seguridad; en el post 6 ya decia que no es posible.",
+ "utilidad_atom": "baja",
+ "razon": "Es una peticion de acceso remoto al dashboard con workarounds de red sin relacion con memoria, calor o cortes. NVIDIA rechaza la funcion (post 19).",
+ "leido": true,
+ "lectura": "completa"
+}

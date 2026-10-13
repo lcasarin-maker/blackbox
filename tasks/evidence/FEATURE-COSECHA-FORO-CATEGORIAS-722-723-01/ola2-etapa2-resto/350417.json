@@ -1,0 +1,129 @@
+{
+ "id": 350417,
+ "titulo": "ConnectX-7 NIC in DGX Spark",
+ "leido": true,
+ "posts_leidos": 68,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "monitorear",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Monitorear trafico RDMA por puerto leyendo contadores sysfs de infiniband",
+   "como": "watch -n 1 'for dev in rocep1s0f0 rocep1s0f1 roceP2p1s0f0 roceP2p1s0f1; do echo \"=== $dev ===\"; cat /sys/class/infiniband/$dev/ports/1/counters/port_rcv_data; cat /sys/class/infiniband/$dev/ports/1/counters/port_xmit_data; done'",
+   "fuente_post": 31,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark con dos nodos, usuario maiia",
+   "riesgo": null,
+   "verificable_aqui": "cat /sys/class/infiniband/*/ports/1/counters/port_rcv_data"
+  },
+  {
+   "que": "Monitorear actividad por interfaz con mlnx_perf",
+   "como": "mlnx_perf -i enP2p1s0f1np1 | grep bytes_phy",
+   "fuente_post": 29,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, usuario AndrewMyers",
+   "riesgo": null,
+   "verificable_aqui": "command -v mlnx_perf"
+  },
+  {
+   "que": "Medir ancho de banda RDMA entre Sparks con perftest",
+   "como": "ib_send_bw --report_gbits -d rocep1s0f1 -b (servidor) ; ib_send_bw <ip> -d rocep1s0f1 --report_gbits (cliente); tambien ib_write_bw ... -q 4 -R --force-link IB",
+   "fuente_post": 30,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, kernel 6.14.0-1013-nvidia en un post",
+   "riesgo": "Resultado ~100-111 Gb/s por interfaz logica, no 200",
+   "verificable_aqui": "command -v ib_send_bw"
+  },
+  {
+   "que": "Medir latencia RDMA real (no usar ping, que es TCP/IP)",
+   "como": "ib_send_lat <ip> -d rocep1s0f1 (y con -R --force-link IB)",
+   "fuente_post": 52,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, usuario eugr; mide ~1.98 us",
+   "riesgo": null,
+   "verificable_aqui": "command -v ib_send_lat"
+  },
+  {
+   "que": "Desactivar estados de idle de CPU: baja la latencia TCP entre Sparks (ping de ~0.5-1 ms a ~0.05 ms) y subio llama.cpp RPC de 86 a 95 tok/s en un modelo 3B (post 56) y tg32 de 49.59 a 55.49 en gpt-oss-120b (post 57)",
+   "como": "sudo cpupower idle-set -D 0",
+   "fuente_post": 51,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, usuarios s.matheny, geerlingguy, eugr",
+   "riesgo": "eugr (post 53) advierte mayor consumo en reposo; menos idle implica mas calor sostenido. No cambia RDMA/NCCL (post 55)",
+   "verificable_aqui": "sudo cpupower idle-info"
+  },
+  {
+   "que": "Listar los estados de idle disponibles y su uso para verificar C-states (LPI-0..3) y el governor",
+   "como": "sudo cpupower idle-info ; cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor",
+   "fuente_post": 67,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark: governor performance por defecto, idle driver acpi_idle",
+   "riesgo": null,
+   "verificable_aqui": "sudo cpupower idle-info"
+  },
+  {
+   "que": "Forzar mas colas NCCL por conexion para repartir trafico entre puertos (sugerencia de usuario; el probador no vio mejora)",
+   "como": "NCCL_IB_QPS_PER_CONNECTION=4 (u 8)",
+   "fuente_post": 27,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark dos nodos",
+   "riesgo": "En post 28 la medicion fue peor: 24.60 GB/s con QPS=4 vs 26.87 sin QPS",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Evitar el cuello de un solo core: NCCL ignora la afinidad de CPU que le da Ray",
+   "como": "NCCL_IGNORE_CPU_AFFINITY",
+   "fuente_post": 69,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, Ray, usuario eugr",
+   "riesgo": "Mejora pequena segun el autor; reparte la carga en tres cores",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Para jumbo frames, fijar MTU 9000 en ambas interfaces gemelas o la velocidad cae (all_gather 22.93 a 24.37 GB/s de busbw)",
+   "como": "MTU 9000 en las dos interfaces gemelas del mismo puerto",
+   "fuente_post": 46,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark dos nodos",
+   "riesgo": "Si solo una interfaz lo tiene, la velocidad baja",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: el kit DOCA actualiza controladores y renombra roceXXX a mlx5_x, firma con MOK y exige teclado y monitor en el reinicio",
+   "como": "paquete que habilita el repositorio DOCA en DGX OS (nombre no indicado)",
+   "fuente_post": 58,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, usuario eugr",
+   "riesgo": "Cambios profundos de pila; el autor tuvo que revertir. Con Secure Boot hace falta MOK",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia de topologia: cada puerto fisico son dos interfaces logicas de ~100G; una sola IP no pasa de ~100G, un bond XOR/LACP/rr no pasa de ~112G y rompe RDMA/NCCL; solo NCCL o varias IP/flujos suman 200G",
+   "como": "no indicado (hallazgo de medicion)",
+   "fuente_post": 47,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark dos nodos, usuarios eugr y AndrewMyers",
+   "riesgo": "El staff (isdias, post 65) dice que la agregacion XOR debe hacerse entre las mitades del mismo puerto; las pruebas de usuarios lo contradicen",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "NVIDIA (staff isdias, posts 2, 10, 65) confirma que el SoC limita PCIe a x4 por dispositivo y 200G exige agregar dos mitades; segun usuarios la documentacion no lo aclara. Un usuario (eugr, post 20) cita que GPUDirect RDMA no esta soportado por la memoria unificada.",
+ "utilidad_atom": "media",
+ "razon": "Tema largo sobre redes ConnectX-7 y clustering de dos Sparks, con comandos de medicion (ib_send_bw, ib_send_lat, contadores sysfs) y una afinacion de idle (cpupower idle-set -D 0) con medicion; staff de NVIDIA (isdias) participa. La atom es una sola maquina, y desactivar C-states sube consumo y calor, de modo que solo sirve como medicion, no como arreglo."
+}

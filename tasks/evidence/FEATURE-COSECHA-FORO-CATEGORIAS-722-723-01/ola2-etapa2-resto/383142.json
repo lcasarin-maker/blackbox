@@ -1,0 +1,37 @@
+{
+ "id": 383142,
+ "titulo": "DGX Spark: persistent direct-link failure and MST kernel fault",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Workaround de enlace directo 200G sin portadora en anillo de 4 Spark: forzar enlaces de 100G (cuatro lineas) con RS-FEC; el usuario confirma que los cuatro enlaces suben",
+   "como": "no indicado (el post 3 de elsaco sugiere 'setting 100G links instead'; el comando exacto no aparece)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario lambs, cluster de 4 Spark en anillo (sin version de driver)",
+   "riesgo": "Reduce el ancho de banda del enlace afectado a 100G",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Mensaje 'insufficient power (27W)' en la sonda de CX7 es cosmetico segun un usuario",
+   "como": "no indicado",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Afirmacion de usuario, sin respuesta de staff NVIDIA",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Tema de enlaces ConnectX-7 en anillo de 4 Spark; la solucion confirmada es bajar a 100G, sin comando literal. Sin respuesta de staff NVIDIA; no aplica a un solo Atom."
+}

@@ -1,0 +1,38 @@
+{
+ "id": 376825,
+ "titulo": "ASUS GX10 - ConnectX-7 Not Showing",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "monitorear"
+ ],
+ "mecanismos": [
+  {
+   "que": "Los puertos CX-7 son hot-plug: sin cable no aparecen; el log lo indica con 'Cable unplugged'",
+   "como": "sudo dmesg | grep -Ei 'mlx5|mellanox' | head -30",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "ASUS GX10, firmware CX-7 28.45.4028 (declarado por el usuario)",
+   "riesgo": "el dmesg tambien muestra aviso 'insufficient power on the PCIe slot (27W)' y errores AER correctables que el post no resuelve",
+   "verificable_aqui": "sudo dmesg | grep -Ei 'mlx5|insufficient power|AER'"
+  },
+  {
+   "que": "Desactivar el modo hot-plug de los puertos CX-7 borrando un archivo de bandera y reiniciando",
+   "como": "sudo rm -f /etc/nvidia/cx7-hotplug-enabled (y reiniciar; restaurar el archivo para reactivar)",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "con hot-plug desactivado o con cable conectado el consumo en reposo casi se duplica (post 4, usuario)",
+   "verificable_aqui": "ls -l /etc/nvidia/cx7-hotplug-enabled"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "media",
+ "razon": "Post 3 (usuario) da el archivo de bandera exacto que controla el hot-plug de CX-7 y post 4 su coste en potencia en reposo; sin respuesta de staff NVIDIA. No resuelve el aviso de potencia PCIe, que queda sin respuesta."
+}

@@ -1,0 +1,26 @@
+{
+ "id": 371099,
+ "titulo": "Nvidia-smi does not work after update/upgrade from terminal",
+ "leido": true,
+ "posts_leidos": 4,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Recuperar nvidia-smi tras un apt upgrade que dejo el driver a medias: reinstalar el paquete del driver y los modulos del kernel fijando version",
+   "como": "sudo apt install nvidia-driver-580-open=580.159.03-0ubuntu0.24.04.1 linux-modules-nvidia-580-open-6.17.0-1018-nvidia",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark con kernel 6.17.0-1018-nvidia; el autor reporta que la actualizacion desde el Dashboard lo resolvio",
+   "riesgo": "Version fijada distinta de la nuestra (580.178.04 / 6.17.0-1032); copiarlo tal cual haria downgrade",
+   "verificable_aqui": "dpkg -l | grep -E 'nvidia-driver|linux-modules-nvidia'; nvidia-smi"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Usuario con apt upgrade manual que rompio el driver; el arreglo concreto es de otro usuario con versiones distintas a las de esta maquina y el autor lo resolvio por el Dashboard. Sin respuesta de staff NVIDIA."
+}

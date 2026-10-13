@@ -1,0 +1,88 @@
+{
+ "id": 362368,
+ "titulo": "Qwen3.5-397B-A17B-int4-AutoRound - 4 x db10 node - updated results 37 - 94 tok/s",
+ "leido": true,
+ "posts_leidos": 27,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Advertencia (usuario adi-sonusflow, citando confirmacion de representantes NVIDIA sin enlace): driver 590 introduce fuga de memoria UMA (80-96 GiB sin liberar tras salir de CUDA) y deadlock en captura de CUDAGraph en GB10; usar driver 580",
+   "como": "no indicado (afirmacion: 'Driver 580 ONLY')",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x Asus Ascent GB10, vLLM v0.16.1rc1, driver 580.x (usuario)",
+   "riesgo": "No hay log ni comando; la confirmacion de NVIDIA es citada de segunda mano, no verificable en el tema. Se repite en el post 20 con 'UMA memory leak on GB10'",
+   "verificable_aqui": "nvidia-smi --query-gpu=driver_version --format=csv,noheader"
+  },
+  {
+   "que": "Afirmacion de usuario: gpu_memory_utilization de vLLM solo funciona como compuerta y no como tope en memoria unificada porque vLLM perfila todo el pool CPU/GPU; los limites de memoria de cgroup de Docker no limitan la memoria CUDA UMA; workaround para controlar KV cache",
+   "como": "--num-gpu-blocks-override",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10 DGX Spark (usuario)",
+   "riesgo": "Un limite cgroup en Docker no protege contra colapso de memoria UMA segun el usuario; sin verificacion independiente",
+   "verificable_aqui": "docker info --format '{{.CgroupDriver}}'; cat /sys/fs/cgroup/memory.max"
+  },
+  {
+   "que": "Config de swap citada para capturar CUDAGraph: aprox 23 GB de swap con swappiness bajo",
+   "como": "swappiness=1 (con ~23GB swap)",
+   "fuente_post": 15,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x GB10 (usuario); mars.fatih repite 24 GB/swappiness=1 sin que resolviera su deadlock (post 16)",
+   "riesgo": "No demostro evitar fallos en el post 16",
+   "verificable_aqui": "cat /proc/sys/vm/swappiness; swapon --show"
+  },
+  {
+   "que": "Requisitos de contenedor para que NCCL use RDMA y no caiga a TCP (~1 GB/s) y deteccion de fallo silencioso de indice GID",
+   "como": "docker run --device /dev/infiniband --ulimit memlock=-1 ; NCCL_IB_GID_INDEX=3 (requiere ipv6.method=disabled en conexiones NetworkManager RDMA)",
+   "fuente_post": 20,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x DGX Spark, kernel 6.17.0-1014-nvidia, driver 580.142 (usuario)",
+   "riesgo": "Sin el indice GID correcto NCCL falla silenciosamente segun el usuario",
+   "verificable_aqui": "ibdev2netdev; ls /dev/infiniband"
+  },
+  {
+   "que": "Lista de 7 fixes de red/config para vLLM nativo multinodo (hosts a 127.0.0.1 rompe Gloo, VLLM_HOST_IP propagado, HF offline, autotune de FlashInfer colgado en ARM, timeout de arranque, ninja en workers)",
+   "como": "HF_HUB_OFFLINE=1 ; --no-enable-flashinfer-autotune ; VLLM_ENGINE_READY_TIMEOUT_S=1800 ; ~/.config/vllm/ray_non_carry_over_env_vars.json ; GLOO_SOCKET_IFNAME (post 16)",
+   "fuente_post": 17,
+   "repositorio": "github.com/sonusflow/spark-vllm-docker (parche Marlin TP=4, post 7); github.com/eugr/spark-vllm-docker (post 8)",
+   "licencia": "no indicada",
+   "probado_en": "4x Acer Veriton GN100, vLLM 0.19.1+cu130 de fork, driver 580.x (usuario)",
+   "riesgo": "Solo aplica a clusters multinodo; el tema no es sobre un solo Spark",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Bandera Marlin ajustada para INT4 en la config de adi-sonusflow, y torch.compile+CUDAGraphs frente a enforce-eager: +76% en generacion segun medicion del usuario",
+   "como": "VLLM_MARLIN_USE_ATOMIC_ADD=1 ; quitar --enforce-eager",
+   "fuente_post": 7,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "4x Asus Ascent GB10 TP=4 (usuario); mars.fatih reporta torch.compile roto en ARM con Triton 3.6.0 (post 19)",
+   "riesgo": "CUDAGraph capture necesita holgura de swap segun post 15",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de potencia: el usuario trystan1 advierte que nvidia-smi no da el consumo completo; hace falta medicion en pared",
+   "como": "no indicado (medicion en pared)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "El OP medio solo con nvidia-smi: ~134 W para 4 nodos; trystan1 estima 400-500 W (estimacion de usuario sin medicion)",
+   "verificable_aqui": "nvidia-smi --query-gpu=power.draw --format=csv"
+  }
+ ],
+ "omision_nvidia": "Ninguna respuesta de staff NVIDIA en el tema; solo se cita de segunda mano que NVIDIA confirmo el driver 580 como soportado.",
+ "utilidad_atom": "media",
+ "razon": "Tema de benchmarking de vLLM en 4 Sparks, sin staff NVIDIA, con avisos de usuario sobre fuga UMA del driver 590, el limite de gpu_memory_utilization y de cgroup Docker en memoria unificada, y flags NCCL/Docker; son afirmaciones sin logs. Lo mas ligado a nuestro problema (colapso de memoria UMA, cgroups) es una afirmacion de usuario sin comando de verificacion."
+}

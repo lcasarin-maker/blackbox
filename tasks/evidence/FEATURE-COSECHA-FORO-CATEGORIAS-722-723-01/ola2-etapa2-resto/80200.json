@@ -1,0 +1,26 @@
+{
+ "id": 80200,
+ "titulo": "could not select device driver \"\" with capabilities: [[gpu]].",
+ "leido": true,
+ "posts_leidos": 14,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Causas y arreglos del error de Docker al pedir GPU: falta nvidia-container-toolkit, docker de snap junto a docker-ce, contexto de docker apuntando a otra maquina",
+   "como": "docker context use default (post 9); sudo apt install -y nvidia-docker2 ; sudo systemctl daemon-reload ; sudo systemctl restart docker (post 5)",
+   "fuente_post": 9,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Ubuntu 20.04, driver 535.86.05 (post 9); resto, versiones antiguas",
+   "riesgo": "Posts 2019 a 2025 de usuarios con GPU de escritorio; ninguno en GB10.",
+   "verificable_aqui": "docker context show"
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Hilo de usuarios, sin personal de NVIDIA, sobre plataformas distintas (x86). Solo el chequeo de contexto de docker es de lectura barata aqui."
+}

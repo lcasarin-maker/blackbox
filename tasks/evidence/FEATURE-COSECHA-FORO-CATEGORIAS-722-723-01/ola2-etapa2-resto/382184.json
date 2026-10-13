@@ -1,0 +1,26 @@
+{
+ "leido": true,
+ "lectura": "completa",
+ "mecanismos": [
+  {
+   "que": "Comprobar velocidad y enlace negociado de la NIC Realtek",
+   "como": "sudo ethtool enP7s7 | grep -E 'Speed|Link'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10, DGX OS 7.5.0, kernel 6.17.0-1029-nvidia (declarado por el usuario)",
+   "riesgo": null,
+   "verificable_aqui": "ethtool <interfaz> | grep -E 'Speed|Link detected'"
+  }
+ ],
+ "omision_nvidia": null,
+ "id": 382184,
+ "titulo": "Issues with real-time sample streaming on DGX Spark RTL8127 NIC",
+ "posts_leidos": 2,
+ "clase": "diagnostico",
+ "proposito": [
+  "medir"
+ ],
+ "utilidad_atom": "baja",
+ "razon": "Un usuario reporta que tras actualizar el sistema la NIC RTL8127 pierde paquetes con flujo IQ de 1.5-3 Gbps y pregunta por kernel realtime; el staff (aniculescu) solo pide la salida completa de ethtool. El unico comando es un ethtool trivial y no hay solucion."
+}

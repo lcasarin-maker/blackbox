@@ -1,0 +1,37 @@
+{
+ "id": 385286,
+ "titulo": "NVIDIA DGX Spark stuck on NVIDIA logo, recovery shows error",
+ "leido": true,
+ "posts_leidos": 6,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Diagnostico de almacenamiento solicitado por personal de NVIDIA (Neill, aniculescu): grep de dmesg y smart-log NVMe",
+   "como": "sudo dmesg | grep -iE \"nvme|ext4|i/o error|blk_update|critical\" ; sudo nvme smart-log /dev/nvme0",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "ninguno indicado",
+   "verificable_aqui": "sudo nvme smart-log /dev/nvme0"
+  },
+  {
+   "que": "Autodiagnostico NVMe desde BIOS (entrar con ESC o DEL al arrancar) y recuperacion del sistema de la guia de usuario",
+   "como": "mantener ESC o DEL durante el arranque; NVMe Self-Test en BIOS",
+   "fuente_post": 2,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "la recuperacion reinstala el sistema",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": null,
+ "utilidad_atom": "baja",
+ "razon": "Un usuario no arranca tras recuperacion; el personal de NVIDIA pide autotest NVMe y la salida de dmesg/smart-log, y el segundo dato apunta a fallo de E/S del almacenamiento (journald con Input/output error). Sin resolucion en el hilo; los comandos son diagnostico generico."
+}

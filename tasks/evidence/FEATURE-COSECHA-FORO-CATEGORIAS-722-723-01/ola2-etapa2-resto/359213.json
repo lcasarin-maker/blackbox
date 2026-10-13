@@ -1,0 +1,37 @@
+{
+ "id": 359213,
+ "titulo": "New NGC vLLM container image (vllm:26.01-py3)",
+ "leido": true,
+ "posts_leidos": 8,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "rastrear",
+  "solucionar"
+ ],
+ "mecanismos": [
+  {
+   "que": "Reconocer fallo de GPU en vLLM con contextos largos por Xid 13 (excepcion SM Warp, Illegal Instruction Parameter) seguido de Xid 43 en dmesg; el usuario concluye que es un problema de la version NVFP4 de nemotron nano 3, no de async scheduling",
+   "como": "dmesg con lineas 'NVRM: Xid (PCI:...): 13, Graphics SM Warp Exception' y 'NVRM: Xid ...: 43, ... name=VLLM::EngineCor'",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark, kernels 6.14 y 6.17, modulos 590 (segun el usuario)",
+   "riesgo": "Devuelve 500 en vLLM; sin causa raiz confirmada",
+   "verificable_aqui": "journalctl -k -b 0 | grep -c 'NVRM: Xid'"
+  },
+  {
+   "que": "Usuario dlewis.io reporta crashes de CUDA graph con --async-scheduling en vLLM 0.13.0 y los evita desactivandolo",
+   "como": "--async-scheduling desactivado",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2x DGX Spark segun el usuario",
+   "riesgo": "Despues el usuario trino (post 6) dice que el fallo ocurre tambien sin async; el workaround no esta confirmado",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Staff NVES (post 5) pide pasos de reproduccion pero no ofrece workaround ni confirma el fallo; las notas de version del contenedor no estaban actualizadas al publicarse (post 1).",
+ "utilidad_atom": "media",
+ "razon": "Anuncio de usuario del contenedor NGC vLLM 26.01 con tabla de versiones (vLLM 0.13.0, CUDA 13.1.1, NCCL 2.29) y reporte de Xid 13/43 en dmesg bajo carga vLLM; sirve como firma para rastrear Xid. Posts 7-9 (mayo) son configuracion de vLLM en RTX 6000 Pro/WSL, otro hardware, sin relacion con el Spark."
+}

@@ -1,0 +1,58 @@
+{
+ "id": 370503,
+ "titulo": "DGX Spark stuck in boot loop after first update — cannot access UEFI/BIOS or boot recovery USB",
+ "leido": true,
+ "posts_leidos": 5,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Instalar y correr el diagnostico de campo oficial dgx-spark-fieldiag (PASS/FAIL/RETEST, unos 30 minutos) y recoger summary.json y los logs",
+   "como": "sudo apt-get install dgx-spark-fieldiag ; dpkg -l | grep dgx-spark-fieldiag ; sudo init 3 ; cd /opt/nvidia/dgx-spark-fieldiag ; sudo ./partnerdiag --field (agrega primero el repo cuda sbsa ubuntu2404 con clave keyring segun el post)",
+   "fuente_post": 4,
+   "repositorio": "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/sbsa",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark Founders Edition (respuesta de Neill, a nombre de NVIDIA; rol no verificable en el texto)",
+   "riesgo": "Exige desactivar Secure Boot en UEFI y reactivarlo despues; si se interrumpe hay que apagar y encender; cambia a consola de texto con init 3",
+   "verificable_aqui": "dpkg -l | grep dgx-spark-fieldiag; ls /opt/nvidia/dgx-spark-fieldiag 2>/dev/null"
+  },
+  {
+   "que": "Comprobar el estado de Secure Boot y entrar a UEFI desde el sistema",
+   "como": "sudo mokutil --sb-state ; sudo systemctl reboot --firmware-setup",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark",
+   "riesgo": null,
+   "verificable_aqui": "mokutil --sb-state"
+  },
+  {
+   "que": "Ruta documentada de recuperacion: teclado cableado directo al Spark, Esc o Del en el arranque, restaurar defaults UEFI y claves de fabrica de Secure Boot, luego Save & Exit -> Boot Override al USB de recuperacion",
+   "como": "Esc/Del al arrancar; Save & Exit -> Boot Override",
+   "fuente_post": 4,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark segun guia System Recovery citada por Neill",
+   "riesgo": "Teclados Bluetooth pueden no funcionar",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Desconectar todos los dispositivos USB y el hub, dejando solo HDMI, para salir de un bucle de arranque (afirmacion de usuario)",
+   "como": "desenchufar todo excepto el cable HDMI",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "usuario hynek.cihlar2, su propio DGX Spark",
+   "riesgo": "No verificado por NVIDIA",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Neill indica que no ve en los docs publicos un reset por hardware ni un modo de recuperacion forzado fuera de UEFI + USB de recuperacion; si no se puede entrar a UEFI queda fuera del flujo documentado. Tambien advierte que apagar durante la primera actualizacion puede dañar el sistema y que adaptadores no oficiales pueden impedir el arranque o causar apagados inesperados (pagina Known Issues).",
+ "utilidad_atom": "alta",
+ "razon": "Una respuesta con aspecto oficial (post 4, Neill) da el comando completo para instalar y correr el diagnostico de campo de DGX Spark, util para medir hardware aqui, ademas de la advertencia sobre adaptadores no oficiales. El caso original queda sin resolver en el hilo (cerrado automaticamente, post 5)."
+}

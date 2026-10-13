@@ -1,0 +1,88 @@
+{
+ "id": 363175,
+ "titulo": "NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4",
+ "leido": true,
+ "posts_leidos": 90,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Variables de entorno de vLLM para forzar el backend Marlin de NVFP4 (dequant FP4 a BF16) en GB10, que evita el crash de CUTLASS y da ~16-17 tok/s en una Spark",
+   "como": "-e VLLM_NVFP4_GEMM_BACKEND=marlin -e VLLM_TEST_FORCE_FP8_MARLIN=1 -e VLLM_MARLIN_USE_ATOMIC_ADD=1",
+   "fuente_post": 8,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10 (usuarios; eugr no es de NVIDIA, lo dice en post 42); confirmado en produccion una semana por stor11 (post 84)",
+   "riesgo": "No usa FP4 nativo; rendimiento limitado. Probar CUTLASS en lugar de Marlin hizo crash (post 74).",
+   "verificable_aqui": "docker image ls | grep -i vllm; env | grep VLLM"
+  },
+  {
+   "que": "Receta de servicio vLLM para Nemotron-3-Super NVFP4 en una Spark (flags concretos, gpu-memory-utilization 0.7, max-num-seqs 10, moe-backend marlin, kv-cache fp8, fastsafetensors)",
+   "como": "vllm serve nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4 --async-scheduling --kv-cache-dtype fp8 -tp {tensor_parallel} --trust-remote-code --gpu-memory-utilization {gpu_memory_utilization} --max-model-len {max_model_len} --max-num-seqs {max_num_seqs} --enable-chunked-prefill --moe-backend marlin --load-format fastsafetensors --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser-plugin ./super_v3_reasoning_parser.py --reasoning-parser super_v3",
+   "fuente_post": 53,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "GB10 solo y dos nodos (usuarios)",
+   "riesgo": "La documentacion oficial usaba el parser nano_v3; el parser correcto es super_v3 (posts 17-20).",
+   "verificable_aqui": "nvidia-smi; free -m"
+  },
+  {
+   "que": "Lanzador de recetas de la comunidad que aplica la receta solo en un nodo",
+   "como": "./run-recipe.sh nemotron-3-super-nvfp4 --solo",
+   "fuente_post": 84,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": "una DGX Spark, una semana en produccion con contexto 262144 y ~110GB de memoria GPU (0.90), segun el usuario",
+   "riesgo": "0.90 de utilizacion deja poco margen en memoria unificada; un usuario reporta OOM del kernel y desconexion con este modelo (post 86).",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medicion de rendimiento de inferencia con llama-benchy (pp, tg, profundidad de contexto, concurrencia)",
+   "como": "benchmark: framework: llama-benchy; args: pp: [2048] tg: [128] depth: [0, 4096, 8192, 16384, 32768, 65535, 100000] concurrency: [1,2,5,10]",
+   "fuente_post": 49,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "TRT-LLM construido desde main en GB10 (usuario)",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia de memoria: TRT-LLM rc4/rc5 y una build desde main agotan la RAM unificada al cargar pesos (pico de CPU staging ~109 GiB de 128 GiB), con caida de la maquina entera",
+   "como": "no indicado como comando; sintoma: carga de pesos de 120B por staging en CPU; el post 36 cita la variable TRT_LLM_DISABLE_LOAD_WEIGHTS_IN_PARALLEL como cambio en main (sin confirmar que lo resuelva)",
+   "fuente_post": 54,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 128GB (usuarios)",
+   "riesgo": "Cuelga o tumba la maquina por agotamiento de RAM unificada.",
+   "verificable_aqui": "free -m; cat /proc/meminfo | head -5"
+  },
+  {
+   "que": "Evidencia de OOM del driver y del kernel con este modelo: NVRM Out of memory NV_ERR_NO_MEMORY seguido de oom-killer y desconexion del equipo",
+   "como": "journalctl -k | grep -E 'NVRM|oom'  (el post muestra las lineas del journal; no indica el comando)",
+   "fuente_post": 86,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 (usuario)",
+   "riesgo": null,
+   "verificable_aqui": "journalctl -k --no-pager | grep -E 'NVRM.*Out of memory|oom_kill' | tail"
+  },
+  {
+   "que": "Mitigacion de OpenClaw sobre este modelo: desactivar thinking y limitar maxTokens a 4096 en la configuracion del cliente",
+   "como": "openclaw.json: maxTokens 4096 (thinking desactivado)",
+   "fuente_post": 90,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 (usuario)",
+   "riesgo": "Sin el limite el modelo puede desbocarse a veces.",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "Sin soporte FP4 nativo (NVFP4 funciona solo como compresion con dequant Marlin) en GB10/SM121; los usuarios lo reclaman. La unica respuesta de personal de NVIDIA en el hilo (calexiuk, post 43) dice que el camino oficial es construir TRT-LLM desde main y anuncia mas contenido; no promete soporte FP4. La documentacion oficial usaba un parser erroneo (nano_v3).",
+ "utilidad_atom": "media",
+ "razon": "Aporta variables Marlin y receta vLLM verificadas por varios usuarios, y la advertencia de picos de RAM unificada de 109 GiB con TRT-LLM, pero el hilo trata de rendimiento de un modelo, no del corte por calor. Las afirmaciones de rendimiento y de produccion son de usuarios, no de NVIDIA."
+}

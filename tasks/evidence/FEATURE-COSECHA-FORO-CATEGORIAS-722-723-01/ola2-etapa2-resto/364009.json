@@ -1,0 +1,77 @@
+{
+ "id": 364009,
+ "titulo": "[SM121] 4 bugs causing ! output + gpt-oss-120B at 59 tok/s - root cause analysis and serve scripts",
+ "leido": true,
+ "posts_leidos": 3,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "solucionar",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Firma diagnostica de CUTLASS FP4 roto en SM121: todos los elementos de una fila de salida con el mismo valor repetido",
+   "como": "comprobar que cada elemento de una fila de salida tiene el mismo valor erroneo (ejemplo del post: [-28.625, -28.625, ...]); cutlass_scaled_mm_supports_fp4(device_id=0) devuelve False en GB10",
+   "fuente_post": 1,
+   "repositorio": "https://ai-muninn.com/en/blog/part1-why-your-dgx-spark-says-exclamation-marks",
+   "licencia": "no indicada",
+   "probado_en": "GB10 SM121, vLLM 0.17.1",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Variables de entorno para evitar el backend CUTLASS FP4 en SM121 (NVFP4/MXFP4) con vLLM",
+   "como": "export VLLM_NVFP4_GEMM_BACKEND=marlin; export VLLM_MXFP4_USE_MARLIN=1; export VLLM_USE_FLASHINFER_MOE_FP4=0; export VLLM_MARLIN_USE_ATOMIC_ADD=1",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 SM121, vLLM 0.17.1 (el propio autor corrige luego en el post que VLLM_NVFP4_GEMM_BACKEND no existe en 0.17.1)",
+   "riesgo": "Ignorada en silencio si el nombre de variable no existe; el autor dice que no afecta la ruta MoE",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Para gpt-oss-120B el nombre correcto es VLLM_MXFP4_BACKEND; verificacion por el log de arranque",
+   "como": "export VLLM_MXFP4_BACKEND=marlin ; log esperado '[MXFP4] Using backend: marlin (VLLM_MXFP4_BACKEND=marlin)' y no '[MXFP4] Auto-selected: CUTLASS_FP4'",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10 SM121, vLLM 0.17.1",
+   "riesgo": "Sin la variable correcta vLLM elige CUTLASS_FP4 y produce bucles de repeticion segun el autor",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Quitar --enforce-eager (desactiva CUDAGraph): 26 tok/s a 59 tok/s segun el autor",
+   "como": "vllm serve ... sin --enforce-eager; script completo: --quantization mxfp4 --kv-cache-dtype fp8 --max-model-len 131072 --max-num-batched-tokens 8192 --gpu-memory-utilization 0.90 --attention-backend TRITON_ATTN --moe-backend marlin",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "single GB10, vLLM 0.17.1",
+   "riesgo": "Medicion de un usuario; otro usuario (post 2) dice obtener 58-60 tok/s con otra imagen, sin contradecir la causa",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Cache de tiktoken para maquinas sin red (gpt-oss, openai_harmony)",
+   "como": "mkdir -p ~/models/tiktoken_cache; descargar o200k_base.tiktoken con wget al cache bajo nombre SHA1; export TIKTOKEN_RS_CACHE_DIR=~/models/tiktoken_cache",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": "no indicada",
+   "probado_en": "GB10",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Modelos de 35B y 120B no caben juntos: cada uno ocupa 65-75GB de los 128GB",
+   "como": "dato de capacidad (65-75GB por modelo, total excede 128GB)",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "GB10 128GB",
+   "riesgo": null,
+   "verificable_aqui": "free -h; nvidia-smi"
+  }
+ ],
+ "omision_nvidia": "Un usuario (raphael.amorim, post 2) dice que NVFP4 rinde peor que int4-autoround en Spark y que se espera mejor soporte de NVIDIA; el autor dice que no existe kernel SM121 funcional para W4A4 CUTLASS.",
+ "utilidad_atom": "media",
+ "razon": "Un usuario (coolthor) documenta cuatro bugs de SM121 con NVFP4/MXFP4 en vLLM 0.17.1 con variables de entorno y un script de servicio concretos; otro usuario (post 2) discute los benchmarks y un tercero (post 3) reporta 110GB de memoria y calor con Qwen3.5-35B BF16. No hay respuesta de NVIDIA; su aplicabilidad aqui depende de usar vLLM con NVFP4/MXFP4, no es monitoreo de colapso de memoria ni calor."
+}

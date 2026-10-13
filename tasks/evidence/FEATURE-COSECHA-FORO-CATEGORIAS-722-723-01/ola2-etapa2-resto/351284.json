@@ -1,0 +1,47 @@
+{
+ "id": 351284,
+ "titulo": "NVTOP with DGX Spark unified memory support",
+ "leido": true,
+ "posts_leidos": 39,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "monitorear",
+  "medir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Compilar nvtop 3.3.0 con soporte de memoria unificada GB10 (solo NVIDIA); versiones 3.3.1 y 3.3.2 rotas segun el usuario RazielAU",
+   "como": "git clone https://github.com/Syllo/nvtop.git; cd nvtop; git checkout tags/3.3.0; mkdir -p build; cd build; sudo apt-get update; sudo apt-get install libncurses5-dev libncursesw5-dev; cmake .. -DNVIDIA_SUPPORT=ON -DAMDGPU_SUPPORT=OFF -DINTEL_SUPPORT=OFF -DV3D_SUPPORT=OFF -DMSM_SUPPORT=OFF -DPANFROST_SUPPORT=OFF -DPANTHOR_SUPPORT=OFF -DMETAX_SUPPORT=OFF; make",
+   "fuente_post": 19,
+   "repositorio": "https://github.com/Syllo/nvtop",
+   "licencia": "no indicada",
+   "probado_en": "usuarios en DGX Spark/GB10; sin version de kernel/driver",
+   "riesgo": "Un usuario (eugr) dice que hay que instalar tambien libdrm-dev (post 5); el issue #449 de nvtop sigue abierto en mayo 2026; el binario adjunto de un usuario (post 1) es de terceros y otro usuario desaconseja compartir binarios; el uso por proceso de GPU muestra N/A (post 36)",
+   "verificable_aqui": "which nvtop; nvtop --version"
+  },
+  {
+   "que": "Interpretacion: en memoria unificada nvtop muestra como VRAM total lo que el sistema no ha usado, de modo que una VRAM total anormalmente baja delata uso alto de RAM de sistema por un proceso",
+   "como": "no indicado (lectura de la columna de memoria de nvtop junto a htop)",
+   "fuente_post": 30,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "opinion de usuario RazielAU, sin verificacion",
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Alternativa de telemetria para GB10 sin la columna de VRAM total",
+   "como": "no indicado (proyecto nv-monitor)",
+   "fuente_post": 25,
+   "repositorio": "https://github.com/wentbackward/nv-monitor",
+   "licencia": "no indicada",
+   "probado_en": "autor lo declara para Jetson, GB10, GB200, H100",
+   "riesgo": "No se vio su codigo ni licencia en el hilo",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "nvidia-smi no reporta memoria de GPU en la Spark por la memoria unificada (otros hilos); aqui personal NVIDIA solo dice 'very cool' sobre el trabajo del usuario (post 11).",
+ "utilidad_atom": "media",
+ "razon": "Hilo de usuarios; unico staff (NVES) solo felicita. Da receta concreta y reproducible para un monitor de memoria unificada pero con soporte roto en versiones posteriores y sin licencia declarada."
+}

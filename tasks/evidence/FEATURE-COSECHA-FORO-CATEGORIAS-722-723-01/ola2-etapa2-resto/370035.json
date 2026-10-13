@@ -1,0 +1,78 @@
+{
+ "id": 370035,
+ "titulo": "DGX Spark direct QSFP connection only getting ~13-16 Gbps instead of expected 200G performance",
+ "leido": true,
+ "posts_leidos": 12,
+ "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": [
+  "medir",
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Actualizar firmware de ConnectX-7 (1.108.20 segun el autor) llevo el enlace de ~13 a ~111 Gbit/s medido con iperf3",
+   "como": "iperf3 (suma [SUM] 111 Gbits/sec)",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "2-3 DGX Spark (usuario)",
+   "riesgo": "Tras armar topologia en anillo bajo a ~10 Gbps hasta repetir el ciclo de energia",
+   "verificable_aqui": "ethtool -i <iface> | grep firmware-version"
+  },
+  {
+   "que": "Ciclo de energia con drenaje: apagar, quitar corriente y QSFP, esperar, pulsar el boton de encendido sin corriente, reconectar",
+   "como": "apagar; desconectar energia y cables; esperar unos minutos; pulsar boton con equipo desconectado; reconectar",
+   "fuente_post": 10,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuario)",
+   "riesgo": "Anecdotico de un usuario; causa original desconocida",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Actualizacion y reinicio mas canal lvfs-testing para otros fabricantes GB10; conectar mismo cage en ambos nodos",
+   "como": "sudo apt update; sudo apt dist-upgrade; sudo fwupdmgr refresh; sudo fwupdmgr upgrade; sudo reboot; sudo fwupdmgr enable-remote lvfs-testing; sudo fwupdmgr refresh --force; sudo fwupdmgr update",
+   "fuente_post": 6,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "Aparente personal NVIDIA (raphael.amorim)",
+   "riesgo": "lvfs-testing instala firmware no estable",
+   "verificable_aqui": "fwupdmgr get-remotes"
+  },
+  {
+   "que": "El aviso 'Detected insufficient power on the PCIe slot (27W)' es benigno; SlotPowerLimit es 0W porque no hay ranuras PCIe",
+   "como": "lspci -vvv | grep SlotPowerLimit",
+   "fuente_post": 8,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": "DGX Spark (usuarios, raphael.amorim)",
+   "riesgo": "Un usuario (post 13) afirma que el firmware si limita potencia en ConnectX-7 hasta detectar cable",
+   "verificable_aqui": "lspci -vv | grep SlotPowerLimit"
+  },
+  {
+   "que": "Un usuario dice que el drenaje de energia tambien limpia un estado de CPU de bajo consumo posterior a OOM",
+   "como": "no indicado",
+   "fuente_post": 11,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Afirmacion de usuario sin verificacion",
+   "verificable_aqui": null
+  },
+  {
+   "que": "Medir en memoria, no en disco; recordar que 1 GB/s = 8 Gb/s; techo esperado ~180 Gbps con varias corrientes UDP",
+   "como": "iperf3 con multiples corrientes concurrentes",
+   "fuente_post": 3,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "Estimacion de un usuario",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "No hay garantia oficial de que el firmware ConnectX-7 de DGX Spark y los clones alcance 200G; el personal solo remite a otros hilos y a sparkrun (post 6).",
+ "utilidad_atom": "media",
+ "razon": "Da una receta medida (firmware a 111 Gbit/s) y el diagnostico de lspci para el aviso de 27W; el resto es anecdotico y de otros usuarios, sin personal NVIDIA confirmado. Aplicable solo si la ATOM usa enlace ConnectX-7 entre nodos."
+}

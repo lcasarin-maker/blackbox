@@ -1,0 +1,11 @@
+{"id": 373538, "titulo": "DGX Spark 200GbE direct QSFP link negotiates 200G but payload is ~12 Gbps", "leido": true, "posts_leidos": 5, "lectura": "completa",
+ "clase": "mecanismo",
+ "proposito": ["solucionar", "medir"],
+ "mecanismos": [
+  {"que": "Apagar y quitar la alimentacion unos 60 segundos (no basta reiniciar) para que ConnectX-7 recupere el ancho de banda completo tras conectar un cable por primera vez", "como": "apagar, desenchufar la alimentacion 1 minuto, volver a enchufar y encender", "fuente_post": 2, "repositorio": null, "licencia": "no indicada", "probado_en": "dos DGX Spark, driver 580.159.03, kernel 6.17.0-1021-nvidia; el autor confirma el arreglo en el post 3 (de 12 a unos 111 Gbit/s)", "riesgo": "Hace falta parar los equipos; la explicacion del mecanismo es conjetura del usuario que responde", "verificable_aqui": "cat /sys/class/net/*/speed"},
+  {"que": "Medicion de ancho de banda real entre nodos con iperf3 y perftest", "como": "iperf3 -c <ip> -P 8 -t 15 ; ib_write_bw -d rocep1s0f0 -x 0 -F --report_gbits -s 8388608 -D 10", "fuente_post": 1, "repositorio": null, "licencia": "no indicada", "probado_en": "dos DGX Spark conectados directo", "riesgo": null, "verificable_aqui": "ibdev2netdev"},
+  {"que": "Comprobar que el enlace PCIe de la ConnectX-7 negocia el maximo (32 GT/s, x4)", "como": "current_link_speed y current_link_width bajo la ruta sysfs del dispositivo PCIe", "fuente_post": 1, "repositorio": null, "licencia": "no indicada", "probado_en": "dos DGX Spark", "riesgo": null, "verificable_aqui": "cat /sys/class/net/*/device/current_link_speed /sys/class/net/*/device/current_link_width"}
+ ],
+ "omision_nvidia": "El usuario dice que la guia de NVIDIA para conectar dos Sparks no menciona la necesidad del drenaje de energia; no hay respuesta de personal de NVIDIA en el hilo.",
+ "utilidad_atom": "media",
+ "razon": "Un usuario ve un enlace de 200G con carga util de unos 12 Gbps; otro (sin rol de NVIDIA) indica el drenaje de energia, que el autor confirma con unos 111 Gbit/s, y un tercero dice haberlo visto tambien. Util para clusters; para una maquina sola solo aporta el metodo de medicion."}

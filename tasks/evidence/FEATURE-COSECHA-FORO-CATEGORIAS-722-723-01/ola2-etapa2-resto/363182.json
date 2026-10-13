@@ -1,0 +1,26 @@
+{
+ "id": 363182,
+ "titulo": "CUDA 13.2 DGX Spark impact",
+ "leido": true,
+ "posts_leidos": 9,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "prevenir"
+ ],
+ "mecanismos": [
+  {
+   "que": "Variable de entorno CUDA_DISABLE_PERF_BOOST anunciada en CUDA 13.2 para desactivar el boost de estados de potencia de la GPU (afirmacion de un usuario sobre notas de version, no probada)",
+   "como": "CUDA_DISABLE_PERF_BOOST",
+   "fuente_post": 1,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": "CUDA 13.2 no esta aprobado oficialmente para GB10; un usuario avisa de sistema roto o danado al instalar drivers de vanguardia (post 8)",
+   "verificable_aqui": "nvcc --version"
+  }
+ ],
+ "omision_nvidia": "No hay via oficial para actualizar a CUDA 13.2 en el Spark; usuarios esperan la actualizacion del sistema (posts 3,7,8). Sin respuesta de staff NVIDIA en el tema.",
+ "utilidad_atom": "baja",
+ "razon": "Resumen de un usuario de las novedades de CUDA 13.2 (cuBLASLt NVFP4, correccion de un bug de cublasLtMatmul, variable de boost), sin comandos probados; el resto son usuarios esperando el update. Sin respuesta de NVIDIA."
+}

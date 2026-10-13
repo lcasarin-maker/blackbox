@@ -1,0 +1,47 @@
+{
+ "id": 354771,
+ "titulo": "Help running Nemotron 3 Nano 30B-A3B-FP8 on DGX Spark (GB10)",
+ "leido": true,
+ "posts_leidos": 43,
+ "lectura": "completa",
+ "clase": "diagnostico",
+ "proposito": [
+  "solucionar",
+  "omision_nvidia"
+ ],
+ "mecanismos": [
+  {
+   "que": "Compilar llama.cpp con la arquitectura CUDA de GB10 para evitar kernels precompilados sin sm_121a (workaround de usuario)",
+   "como": "cmake .. -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=\"121\" -DLLAMA_CURL=OFF",
+   "fuente_post": 9,
+   "repositorio": "https://github.com/ggml-org/llama.cpp",
+   "licencia": "no indicada",
+   "probado_en": "DGX Spark GB10, kernel 6.14.0-1015-nvidia, driver 580.95.05 (declarado por el usuario)",
+   "riesgo": "El usuario uso una rama de PR no fusionada; post 41 indica que Nemotron ya esta en main y una build vieja da 'unknown model architecture'",
+   "verificable_aqui": "nvidia-smi --query-gpu=compute_cap --format=csv"
+  },
+  {
+   "que": "Bandera --no-mmap en llama-server acelera la carga del modelo (usuarios, sin medicion)",
+   "como": "--no-mmap (junto a -fa on -ngl 999 -b 2048 -ub 2048)",
+   "fuente_post": 28,
+   "repositorio": null,
+   "licencia": null,
+   "probado_en": null,
+   "riesgo": null,
+   "verificable_aqui": null
+  },
+  {
+   "que": "Advertencia: --enforce-eager de vLLM esquiva el error sm_121a pero desactiva CUDA graphs y mata el rendimiento (usuario eugr)",
+   "como": "--enforce-eager",
+   "fuente_post": 37,
+   "repositorio": "https://github.com/eugr/spark-vllm-docker",
+   "licencia": "no indicada",
+   "probado_en": null,
+   "riesgo": "perdida de rendimiento por desactivar CUDA graphs",
+   "verificable_aqui": null
+  }
+ ],
+ "omision_nvidia": "El blog de NVIDIA presentaba Nemotron 3 Nano como disenado para Spark, pero SGLang/vLLM/TRT-LLM no funcionaban al lanzamiento (sgl_kernel sin sm_121a); el staff (MackenzieNVIDIA, post 22) solo confirma soporte via llama.cpp y promete playbooks para SGLang y vLLM.",
+ "utilidad_atom": "baja",
+ "razon": "Tema de compatibilidad de modelo/kernels sm_121a; no hay mecanismo de monitoreo ni de memoria o termica. NVIDIA (post 22 y 25) confirma solo llama.cpp y publica un playbook; el resto son opiniones y comandos de build de usuarios."
+}
