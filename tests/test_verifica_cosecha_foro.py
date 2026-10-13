@@ -125,3 +125,37 @@ def test_resultado_sin_campo_lectura_es_invalido() -> None:
     d = _res(1)
     del d["lectura"]
     assert any("lectura" in m for m in v.valida_resultado(d, 1))
+
+
+def _tri(tid: int, **kw: object) -> dict:
+    base = {"id": tid, "leido": True, "mensajes_leidos": 2, "candidato": "no", "proposito": [], "senales": [], "una_frase": "pregunta sin respuesta sobre la instalacion inicial"}
+    base.update(kw)
+    return base
+
+
+def test_triaje_valido_y_conteo_de_candidatos(tmp_path: Path) -> None:
+    h, r = tmp_path / "h", tmp_path / "r"
+    _tema(h, 1)
+    _tema(h, 2)
+    _guarda(r, _tri(1))
+    _guarda(r, _tri(2, candidato="si", proposito=["medir"], senales=["reloj"]))
+    out = v.verifica_triaje([{"id": 1}, {"id": 2}], h, r)
+    assert out["cobertura_completa"] is True and out["candidatos"] == {"si": 1, "quizas": 0, "no": 1}
+
+
+def test_triaje_si_sin_proposito_es_invalido() -> None:
+    assert any("exige proposito" in m for m in v.valida_triaje(_tri(1, candidato="si"), 1))
+
+
+def test_triaje_tema_sin_resultado_no_es_cobertura(tmp_path: Path) -> None:
+    h, r = tmp_path / "h", tmp_path / "r"
+    _tema(h, 1)
+    out = v.verifica_triaje([{"id": 1}], h, r)
+    assert out["sin_resultado"] == [1] and out["cobertura_completa"] is False
+
+
+def test_triaje_declarar_de_mas_se_detecta(tmp_path: Path) -> None:
+    h, r = tmp_path / "h", tmp_path / "r"
+    _tema(h, 1, esperados=2, bajados=2)
+    _guarda(r, _tri(1, mensajes_leidos=30))
+    assert 1 in v.verifica_triaje([{"id": 1}], h, r)["lectura_declarada_de_mas"]
