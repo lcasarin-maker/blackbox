@@ -1,11 +1,13 @@
 {
   "command": "python3 -m tools.preflight runtime tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/preflight.json",
-  "exit_code": 2,
-  "stdout": "{\"findings\": [\"backend kernel/PTX architecture manifest is incomplete\"], \"status\": \"unknown\"}\n",
+  "exit_code": 0,
+  "stdout": "{\"findings\": [], \"status\": \"pass\"}\n",
   "stderr": "",
-  "status": "unknown",
+  "status": "pass",
   "could_not_run": [],
   "unverified": [
-    "Complete backend cubin/PTX manifest and tested model-kernel result are unavailable; native driver constraint evaluation was supplied from nvidia-container-cli info plus documented OR semantics."
+    "Tested model-kernel result, OEM support, soak/output comparison and rollback remain unavailable.",
+    "Flagged (no sm_121-compatible cubin/PTX): flashinfer_cubin, vllm:_flashmla_C.abi3.so, vllm:_flashmla_extension_C.abi3.so, vllm:_qutlass_C.abi3.so, vllm:_vllm_fa3_C.abi3.so.",
+    "Triton's bundled ptxas is CUDA 12.8 and lists no sm_121 target; whether the running engine overrides it was not read."
   ]
 }

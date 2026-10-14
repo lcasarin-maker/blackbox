@@ -448,3 +448,7 @@ Ficha acumulada de ~40 hilos; el nucleo (imagen ARM64, driver 580 frente a NVIDI
 Version para un solo nodo Gigabyte AI TOP ATOM: Reducir el alcance a un nodo: cerrar con preflight runtime (arquitectura, digest OCI, driver vs NVIDIA_REQUIRE_CUDA, GPU sm_121) mas un canario de finish_reason/usage/logits finitos sobre nemotron-local (extender tools/canario_motor.py) y rollback al digest de v0.27.1; mover todos los casos multinodo, Ray/NCCL y otros modelos a una ficha aparte marcada otro_hardware.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Avance 2026-10-14: manifiesto cubin/PTX medido
+
+`python3 -m tools.backend_arch_manifest capture` (contenedor desechable `--rm --network none --memory 4g`, sin GPU, sin montajes) + `build-evidence`. Núcleo (vllm `_C`/`_moe_C`, torch `libtorch_cuda`) cubre 12.1 de forma nativa (sm_120 / sm_121a); marcados NOT_COVERED: flashmla, qutlass, vllm_fa3, flashinfer_cubin (sólo sm_90a/sm_100). El ptxas de triton es CUDA 12.8 sin sm_121. El preflight `runtime` pasa a `pass`; el verificador sigue en `unknown` (faltan negativo de incidente, modelo-kernel probado, OEM, rollback): la ficha NO se cierra.
