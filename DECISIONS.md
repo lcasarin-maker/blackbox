@@ -273,3 +273,11 @@ camino es el que se toma, aunque cueste más pasos.
 - **Descarta:** conservar abiertas fichas sin sujeto aqui solo por tener un xfail, y cambiar el plazo del generador de volcados en produccion.
 - **Se reabre si:** el equipo gana un segundo nodo, CX7 en pareja u otro modelo servido (las fichas cerradas se reabren con `git mv tasks/done/<ID>.md tasks/backlog/`), o si Luis agenda una ventana con consola fisica.
 - **Enjambre de procesos (decision de Luis: techo por conteo en `observar`):** medido el 2026-10-13 con `python3 -m tools.atribucion_enjambre`, ni el nivel ni la velocidad de crecimiento de procesos separan el colapso del 11-oct (136 procesos, 74.0 por minuto) de los scopes sanos (hasta 224 procesos y 72.8 por minuto): un techo por conteo dispararia sobre carga legitima. Las muestras ya registran `process_count` cada minuto, asi que no hay sensor nuevo; el calibrador reproducible es `conteo` en `tools/atribucion_enjambre.py`, y la accion automatica queda descartada hasta que haya mas incidentes con `claude_scopes`.
+
+## 2026-10-13 — Regla sudoers acotada para el agente (voto de Luis: "Lista corta de comandos fijos")
+
+- **Decidido:** `/etc/sudoers.d/bb-claude` (0440 root:root, instalado por Luis) da `NOPASSWD` a `lcasarin` solo para seis comandos exactos: `auditctl -s`, `augenrules --load`, `auditctl -b 32768`, `systemctl restart bb-usable.service`, `nvidia-spark-ota-check summary`, `apt-mark showhold`.
+- **Motivo:** esas lecturas y reinicios acotados se repetian y bloqueaban el trabajo autonomo; ninguno puede dejar la maquina sin GPU ni cambiar reglas fuera del limite ya votado.
+- **Medido:** `sudo -n auditctl -s` corre sin clave; controles negativos `sudo -n auditctl -l` y `sudo -n systemctl restart docker` piden contraseña.
+- **Descarta:** NOPASSWD para `enable-privileged.sh`, `docker restart`, `daemon-reload` y comodines (`auditctl *`): un reinicio de docker tumba vLLM y el `daemon-reload` tiene riesgo P1 de perder la GPU.
+- **Revertir:** `sudo rm /etc/sudoers.d/bb-claude`. El archivo no se versiona en `adopted/`: es 0440 root y `bb drift` no podria leerlo.
