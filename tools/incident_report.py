@@ -100,6 +100,27 @@ def _leer(ruta: str) -> str:
         return COLLECTION_FAILED
 
 
+FORENSE_DIR = "/var/lib/blackbox"  # lo escribe `bb-root-run arranque-forense` (adopted/root-scripts/arranque-forense.sh)
+
+
+def firmware_recogido(directorio: str = FORENSE_DIR) -> str:
+    """Versiones de UEFI/EC/PD/FLASH y BIOS que dejo el arranque, o NOT_COLLECTED si el ejecutor de root no las escribio."""
+    base = Path(directorio)
+    try:
+        t45 = (base / "dmidecode-t45.txt").read_text(encoding="utf-8")
+        bios = (base / "dmidecode-bios.txt").read_text(encoding="utf-8")
+    except OSError:
+        return NOT_COLLECTED
+    comp = re.findall(r"Firmware Component Name:\s*(.+)\n\s*Firmware Version:\s*(.+)", t45)
+    version = re.search(r"^\s*Version:\s*(.+)$", bios, re.M)
+    if not comp and not version:
+        return NOT_COLLECTED
+    partes = [f"{n.strip()}={v.strip()}" for n, v in comp]
+    if version:
+        partes.append(f"BIOS={version.group(1).strip()}")
+    return "recogido por bb-root-run arranque-forense: " + "; ".join(partes)
+
+
 def _cmd(*args: str) -> str:
     try:
         r = subprocess.run(
@@ -989,7 +1010,7 @@ def adjuntos_y_ruta(
                 "que": "version de UEFI/EC/PD y BIOS",
                 "comando": 'sudo dmidecode -t 45 | grep -A2 -E "UEFI|EC|PD|FLASH"; sudo dmidecode -t bios',
                 "root": True,
-                "estado": NOT_COLLECTED,
+                "estado": firmware_recogido(),
             },
             {
                 "que": "sos report",
