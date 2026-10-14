@@ -34,3 +34,14 @@ Instalar el interruptor en `observar`. Hecho: `bb-vigilante-memavail.service` ac
 
 ## Candidato nuevo de la cosecha de distros (2026-10-12)
 `tom-doerr/gpuoom` (MIT, Rust, 2026-09-22): dispara por PSI + MemAvailable y rankea procesos contando memoria GPU por NVML, con `mlockall` para no paginarse y NVML cargado despues del bloqueo (README:34,45-47). Exige PSI activo (este kernel lo tiene). Estudiar su criterio de victima como segundo interruptor junto a `memavail`; sin ejecutarlo hasta leer su codigo (`src/`) y probarlo en un scope de laboratorio. Pendiente.
+
+## Root Cause
+El vigilante memavail solo observaba: su modo actuar estaba declarado UNSUPPORTED y no existia seleccion del culpable ni registro de su origen antes de detenerlo.
+
+## Regression Test
+tests/test_vigilante_memavail.py (12 tests): culpable sobre la linea, unidad protegida rechazada, culpable desconocido => NOT_COLLECTED sin parada, observar no detiene; mutantes de cada guarda fallan (mutantes.py.txt).
+
+## Verification Evidence
+- fail: `tasks/evidence/FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01/fail.txt`.
+- pass: `tasks/evidence/FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01/pass.txt`.
+- e2e: `tasks/evidence/FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01/e2e.txt`.

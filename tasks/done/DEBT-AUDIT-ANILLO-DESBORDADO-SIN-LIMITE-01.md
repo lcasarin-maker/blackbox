@@ -31,3 +31,14 @@ Tras correr el instalador, `sudo auditctl -s` dio `backlog_limit 8192` y `lost 0
 
 ## Avance 2026-10-13 19:30: limite activo medido
 Luis aplico `zz-blackbox-backlog.rules` + `augenrules --load` + `auditctl -b 32768`. Medido despues con `sudo -n /usr/sbin/auditctl -s | grep -E "backlog_limit|lost"` -> `backlog_limit 32768`, `lost 0`. Control negativo: el mismo comando dio `backlog_limit 8192` antes del `zz-` (avance 18:50). Falta: leer el mismo valor tras el proximo reinicio (prueba de que el archivo persiste) y que `bb scan` muestre cero perdidos en una ventana con carga; por eso la ficha sigue abierta.
+
+## Root Cause
+El instalador dejaba -b 32768 en 10-blackbox-signals.rules, pero rules.d/audit.rules (-b 8192) ordena despues y lo sobreescribia; el limite vivo seguia en 8192.
+
+## Regression Test
+tests/test_enable_privileged_audit_backlog.py (4 tests): el limite vive en zz-blackbox-backlog.rules, que ordena el ultimo; control negativo limite_gana (si un archivo posterior fija otro -b, el test falla) y bloque propio de --revert.
+
+## Verification Evidence
+- fail: `tasks/evidence/DEBT-AUDIT-ANILLO-DESBORDADO-SIN-LIMITE-01/fail.txt`.
+- pass: `tasks/evidence/DEBT-AUDIT-ANILLO-DESBORDADO-SIN-LIMITE-01/pass.txt`.
+- e2e: `tasks/evidence/DEBT-AUDIT-ANILLO-DESBORDADO-SIN-LIMITE-01/e2e.txt`.
