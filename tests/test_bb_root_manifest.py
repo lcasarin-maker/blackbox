@@ -49,9 +49,9 @@ def test_control_negativo_editar_un_script_cambia_la_propuesta(src: Path):
     assert bm.serializar(bm.proponer(src)) != bm.PROPUESTA.read_bytes()
 
 
-def test_la_propuesta_cubre_los_cuatro_scripts_y_nada_mas():
+def test_la_propuesta_cubre_los_cinco_scripts_y_nada_mas():
     m = bm.proponer(bm.SRC_DIR)
-    assert sorted(m) == ["audit-rules-leer", "crontabs-leer", "dmidecode-sistema", "pstore-preparar"]
+    assert sorted(m) == ["arranque-forense", "audit-rules-leer", "crontabs-leer", "dmidecode-sistema", "pstore-preparar"]
     assert sorted(str(e["file"]) for e in m.values()) == [p.name for p in SCRIPTS]
     for e in m.values():
         assert e["sha256"] == hashlib.sha256((bm.SRC_DIR / str(e["file"])).read_bytes()).hexdigest()
@@ -202,7 +202,7 @@ def _check(inst: Path, src: Path, runner: Path) -> int:
 def test_check_limpio_sale_0_e_imprime_los_ceros(tmp_path: Path, src: Path, capsys: pytest.CaptureFixture[str]):
     inst, runner = _instalado(tmp_path, src)
     assert _check(inst, src, runner) == 0
-    assert "aprobados iguales: 4, cambios: 0, could_not_run: 0" in capsys.readouterr().out
+    assert "aprobados iguales: 5, cambios: 0, could_not_run: 0" in capsys.readouterr().out
 
 
 def test_check_control_negativo_un_script_editado_se_reporta(
@@ -212,7 +212,7 @@ def test_check_control_negativo_un_script_editado_se_reporta(
         f.write("echo extra\n")
     assert _check(inst, src, runner) == 1
     out = capsys.readouterr().out
-    assert "cambiado desde la aprobacion: crontabs-leer" in out and "aprobados iguales: 3" in out
+    assert "cambiado desde la aprobacion: crontabs-leer" in out and "aprobados iguales: 4" in out
 
 
 def test_check_reporta_ausente_sin_aprobar_y_runner_cambiado(
@@ -255,6 +255,10 @@ PROHIBIDO = re.compile(
     r"|/dev/(tcp|udp)/|\$[1-9@*#]|\$\{(?:[1-9]|[@*#])[}:-]")
 ESCRIBE = re.compile(r"\b(mkdir|chown|chmod|touch|cp|mv|rm|tee|install|ln|dd|truncate|sed\s+-i)\b")
 REDIR = re.compile(r">>?\s*(&\d|[^\s;|&)]+)")
+# Escrituras declaradas, por script: solo a las rutas de su propia carpeta (variables fijadas arriba del script).
+ESCRITURA_OK = {"pstore-preparar.sh": re.compile(r'"\$(destino|padre)"'),
+                "arranque-forense.sh": re.compile(r'"\$(base|dest)[/"]')}
+REDIR_OK = {"arranque-forense.sh": re.compile(r'^"\$(base|dest)/[A-Za-z0-9._-]+"$')}
 FICHA = re.compile(r"^# Desbloquea: ([A-Z0-9-]+)\.$", re.M)
 
 
@@ -273,16 +277,15 @@ def hallazgos(nombre: str, texto: str) -> list[str]:
         if PROHIBIDO.search(linea):
             fuera.append(f"{nombre}:{i}: red, eval, exec o argumentos: {linea.strip()}")
         for destino in REDIR.findall(linea):
-            if destino not in ("/dev/null", "&2"):
+            if destino not in ("/dev/null", "&2") and not (nombre in REDIR_OK and REDIR_OK[nombre].match(destino)):
                 fuera.append(f"{nombre}:{i}: redirige a un fichero: {linea.strip()}")
-        if ESCRIBE.search(linea) and not (nombre == "pstore-preparar.sh"
-                                          and re.search(r'"\$(destino|padre)"', linea)):
+        if ESCRIBE.search(linea) and not (nombre in ESCRITURA_OK and ESCRITURA_OK[nombre].search(linea)):
             fuera.append(f"{nombre}:{i}: escribe fuera de lo declarado: {linea.strip()}")
     return fuera
 
 
-def test_los_cuatro_scripts_son_de_solo_lectura_sin_red_ni_argumentos():
-    assert len(SCRIPTS) == 4
+def test_los_cinco_scripts_solo_escriben_lo_declarado_sin_red_ni_argumentos():
+    assert len(SCRIPTS) == 5
     fuera: list[str] = []
     for p in SCRIPTS:
         fuera += hallazgos(p.name, p.read_text(encoding="utf-8"))
@@ -381,3 +384,88 @@ def test_pstore_preparar_rechaza_padre_que_no_es_de_root(tmp_path: Path):
     s, _, destino = _pstore(tmp_path, uid_root=UID + 1)
     assert _correr(s, str(UID)).returncode == 3
     assert not destino.exists()
+
+
+@pytest.mark.parametrize("linea", [
+    'echo x > /etc/passwd', 'echo x >> "$base/../../etc/f"', 'install -m 0644 /etc/shadow /tmp/x', 'rm -f -- /etc/hosts',
+    'cp /sys/fs/pstore/x /tmp/x', 'echo x > "$otra/f"',
+])
+def test_control_negativo_arranque_forense_no_escribe_fuera_de_su_carpeta(linea: str):
+    texto = "#!/bin/bash\n# Desbloquea: X-01.\nset -euo pipefail\n" + linea + "\n"
+    assert hallazgos("arranque-forense.sh", texto), linea
+
+
+def test_arranque_forense_si_puede_escribir_en_su_carpeta():
+    texto = "#!/bin/bash\n# Desbloquea: X-01.\nset -euo pipefail\nprintf x >> \"$dest/arranque.jsonl\"\nrm -f -- \"$base/a.nuevo\"\n"
+    assert hallazgos("arranque-forense.sh", texto) == []
+
+
+# --- arranque-forense: ejecutado sobre tmp_path (rutas y dueno de root sustituidos) -------
+
+def _forense(tmp_path: Path, uid_root: int = UID) -> tuple[Path, Path, Path]:
+    texto = (bm.SRC_DIR / "arranque-forense.sh").read_text(encoding="utf-8")
+    base = tmp_path / "varlib" / "blackbox"
+    pst = tmp_path / "sys_pstore"
+    pst.mkdir()
+    (tmp_path / "varlib").mkdir()
+    for viejo, nuevo in (("base=/var/lib/blackbox", f"base={base}"), ("/sys/fs/pstore/*", f"{pst}/*"),
+                         ('!= "0" ]]', f'!= "{uid_root}" ]]'), ("-o root -g root", f"-o {uid_root}"), ("root:root", f"{uid_root}:{os.getgid()}"),
+                         ("/sys/firmware/acpi/tables/BERT", str(tmp_path / "BERT"))):
+        assert viejo in texto, f"la sustitucion {viejo!r} no casa: prueba vacia"
+        texto = texto.replace(viejo, nuevo)
+    s = tmp_path / "forense.sh"
+    s.write_text(texto, encoding="utf-8")
+    return s, base, pst
+
+
+def test_arranque_forense_copia_pstore_y_escribe_una_fila_por_ejecucion(tmp_path: Path):
+    s, base, pst = _forense(tmp_path)
+    (pst / "dmesg-efi-1").write_text("panic", encoding="utf-8")
+    (tmp_path / "BERT").write_bytes(b"BERT")
+    for _ in range(2):
+        r = _correr(s, str(UID))
+        assert r.returncode == 0, r.stderr
+    filas = [json.loads(x) for x in (base / "pstore" / "arranque.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert len(filas) == 2 and all(f["pstore_archivos"] == 1 and f["bert"] == "copiada" for f in filas)
+    boot = filas[0]["boot_id"]
+    assert (base / "pstore" / f"{boot}-dmesg-efi-1").read_text(encoding="utf-8") == "panic"
+    assert (base / "pstore" / f"{boot}-BERT.bin").read_bytes() == b"BERT"
+
+
+def test_arranque_forense_declara_la_ausencia_con_cero_archivos(tmp_path: Path):
+    s, base, _ = _forense(tmp_path)
+    assert _correr(s, str(UID)).returncode == 0
+    fila = json.loads((base / "pstore" / "arranque.jsonl").read_text(encoding="utf-8").splitlines()[-1])
+    assert fila["pstore_archivos"] == 0 and fila["bert"] == "ausente"
+
+
+def test_arranque_forense_control_negativo_symlink_o_dueno_ajeno_aborta_sin_escribir(tmp_path: Path):
+    s, base, _ = _forense(tmp_path)
+    blanco = tmp_path / "blanco"
+    blanco.mkdir()
+    base.symlink_to(blanco)
+    r = _correr(s, str(UID))
+    assert r.returncode == 3 and "symlink" in r.stderr and not list(blanco.iterdir())
+    base.unlink()
+    base.mkdir(mode=0o777)
+    base.chmod(0o777)
+    r = _correr(s, str(UID))
+    assert r.returncode == 3 and "escribible" in r.stderr and not (base / "pstore" / "arranque.jsonl").exists()
+
+
+def test_arranque_forense_control_negativo_symlink_dentro_del_destino_no_se_sigue(tmp_path: Path):
+    s, base, _ = _forense(tmp_path)
+    assert _correr(s, str(UID)).returncode == 0  # control: crea el destino y escribe
+    blanco = tmp_path / "blanco.txt"
+    blanco.write_text("intacto", encoding="utf-8")
+    (base / "pstore" / "arranque.jsonl").unlink()
+    (base / "pstore" / "arranque.jsonl").symlink_to(blanco)
+    r = _correr(s, str(UID))
+    assert r.returncode == 3 and "symlink" in r.stderr and blanco.read_text(encoding="utf-8") == "intacto"
+
+
+def test_arranque_forense_control_negativo_base_de_otro_dueno_aborta(tmp_path: Path):
+    s, base, _ = _forense(tmp_path, uid_root=UID + 1)
+    base.mkdir()
+    r = _correr(s, str(UID))
+    assert r.returncode == 3 and "no es de root" in r.stderr and not (base / "pstore").exists()
