@@ -75,6 +75,11 @@ if [ "$REVERT" = 1 ]; then
     run augenrules --load
     echo "  regla de auditoria de senales retirada (DGX-438 se queda sin instrumento)"
   fi
+  if [ -f /etc/audit/rules.d/zz-blackbox-backlog.rules ]; then
+    run rm -f /etc/audit/rules.d/zz-blackbox-backlog.rules
+    run augenrules --load
+    echo "  limite de la cola de audit retirado (vuelve el -b 8192 de serie)"
+  fi
   if [ -f /etc/systemd/system/docker.slice.d/99-blackbox.conf ]; then
     run rm -f /etc/systemd/system/docker.slice.d/99-blackbox.conf
     run rmdir --ignore-fail-on-non-empty /etc/systemd/system/docker.slice.d
@@ -429,11 +434,9 @@ else
 ## regla estandar que genera el diluvio de abajo: auditd resuelve por primera
 ## coincidencia, asi que un `never` posterior no serviria de nada.
 
-## (0) El anillo. El kernel reporto audit_backlog=8193 > audit_backlog_limit=8192
-## y audit_lost=2662 en el boot del 07 al 08-oct (DEBT-AUDIT-ANILLO-DESBORDADO-
-## SIN-LIMITE-01): mientras desborda, la captura de abajo pierde eventos sin
-## avisar. `-b` es el limite de la cola del kernel; 32768 la cuadruplica.
--b 32768
+## (0) El limite de la cola (`-b`) NO va aqui: `rules.d/audit.rules` fija `-b 8192` y ordena
+## DESPUES de este archivo (medido 2026-10-13: `auditctl -s` seguia en 8192 con `-b 32768` en
+## el archivo 10-). Vive en `zz-blackbox-backlog.rules`, que ordena al final.
 
 ## (1) Callar el diluvio, sin cegar la regla que lo produce.
 ## La regla estandar `reboot_cmd` audita loginctl/systemctl para saber quien
@@ -459,6 +462,16 @@ else
 -a always,exit -F arch=b64 -S tgkill -F a2=9 -k blackbox_sigkill
 RULES
     augenrules --load >/dev/null 2>&1 || auditctl -R /etc/audit/rules.d/10-blackbox-signals.rules >/dev/null 2>&1 || true
+    cat >/etc/audit/rules.d/zz-blackbox-backlog.rules <<'RULES'
+## blackbox -- DEBT-AUDIT-ANILLO-DESBORDADO-SIN-LIMITE-01. El kernel reporto audit_backlog=8193 >
+## audit_backlog_limit=8192 y audit_lost=2662 en el boot del 07 al 08-oct: mientras la cola desborda
+## la captura de senales pierde eventos sin avisar. `-b` es el limite de la cola del kernel.
+## Este archivo se llama zz- A PROPOSITO: los de rules.d se concatenan en orden lexico y el
+## audit.rules de serie (`-b 8192`) ordena despues de 10-, asi que cualquier -b anterior queda pisado.
+-b 32768
+RULES
+    augenrules --load >/dev/null 2>&1 || auditctl -R /etc/audit/rules.d/zz-blackbox-backlog.rules >/dev/null 2>&1 || true
+    auditctl -b 32768 >/dev/null 2>&1 || true  # efecto inmediato en el kernel en marcha
   else
     echo "  [dry-run] escribiria /etc/audit/rules.d/10-blackbox-signals.rules y la cargaria"
   fi
