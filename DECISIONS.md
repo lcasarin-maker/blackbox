@@ -8,6 +8,12 @@ Meter cada voto aquí lo convierte en el log que la línea de arriba prohíbe.
 
 ---
 
+## 2026-10-13 · `apt-mark hold` sobre `dgx-spark-ota-update-meta`
+
+Aplicado por Luis con sudo. Medido despues: `apt-mark showhold` lista el paquete y `dpkg` lo marca `hi` en la version 26.09.2. Razon: NVIDIA aviso en el hilo 383185 que no se actualice al kernel 7.0.0-1019-nvidia; GRUB ya fija el kernel 6.17.0-1032, y el hold evita que una OTA lo cambie sin revision. Descartado: dejarlo sin retener (una OTA automatica podia traer el kernel 7.0). Costo: no llegan OTA de NVIDIA por esa via hasta `sudo apt-mark unhold dgx-spark-ota-update-meta`; antes de quitarlo, correr `sudo nvidia-spark-ota-check summary` y leer el foro.
+
+---
+
 ## 2026-10-13 · `docker.slice` sube de 14 a 16 GiB
 
 Voto de Luis. Medido el 2026-10-13: el slice usa 12,06 GiB de 14 (86 %, 1,94 GiB libres) con el pico de vLLM en 12,5 GiB y topes propios de 2 GiB en cada contenedor pequeño.
