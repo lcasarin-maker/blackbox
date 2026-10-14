@@ -44,7 +44,7 @@ import subprocess
 import sys
 import tempfile
 from dataclasses import dataclass
-from typing import BinaryIO, Mapping, TypeGuard
+from typing import Any, BinaryIO, Mapping, TypeGuard
 
 MANIFEST = "/etc/bb-root-run/manifest.json"
 # Relativo al home del llamante (SUDO_UID). No es frontera de seguridad: lo que corre lo
@@ -304,9 +304,11 @@ def run(name: str | None, manifest_path: str = MANIFEST, scripts_dir: str | None
     return rc
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None, **kw: Any) -> int:
+    """Exactamente un argumento es el nombre; cualquier otra forma llega a `run` como None y se rechaza. `kw` son los
+    parametros de `run` (rutas y opciones): en produccion no se pasan, las pruebas los usan para observar el resultado real."""
     argv = sys.argv[1:] if argv is None else argv
-    return run(argv[0] if len(argv) == 1 else None)
+    return run(argv[0] if len(argv) == 1 else None, **kw)
 
 
 if __name__ == "__main__":  # pragma: no cover
