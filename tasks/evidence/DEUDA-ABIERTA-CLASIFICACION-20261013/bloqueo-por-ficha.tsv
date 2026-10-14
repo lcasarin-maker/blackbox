@@ -62,7 +62,6 @@ FEATURE-1358-CGROUP-03-NATIVO	no	sudo	tools/verify_cgroup_plan.py ya existe (935
 FEATURE-1358-CGROUP-04-PARCHE	no	otro_repo	Ficha: 'El cambio vive en un fork de NVIDIA/open-gpu-kernel-modules'; _patch exige build del candidato, integridad del parche y runs antes/despues (tools/verify
 FEATURE-1358-CGROUP-05-CUELGUES	no	sudo	_hang_stacks exige exactamente dos corridas baseline y candidate con samples, journalctl -o json, bb JSONL y ensayos none/cpu_touch/cuda_malloc/cuda_malloc_mana
 FEATURE-APT-CRITICAL-METAPACKAGE-GUARD	no	decision_de_luis	El close_check ya corre y sale 2 por diseno. Probado: `python3 -m tools.verify_apt_critical_removals --cierre --evidence tasks/evidence/FEATURE-APT-CRITICAL-MET
-FEATURE-ATLAS-REINDEX-PAQUETE-GB10-01	no	otro_repo	Atlas debe reindexar su grafo de entidades; es su indice, en su repo
 FEATURE-BB-EVALUAR-CAP-DE-CPU-01	no	sudo	close_check es `grep -q 'scaling_max_freq' tasks/evidence/FEATURE-BB-EVALUAR-CAP-DE-CPU-01/ab.md`; el directorio no existe. Solo cierra con un A/B medido aqui (
 FEATURE-CALIBRAR-CALOR-SOSTENIDO-01	no	reinicio	faltan >=3 boots mas y un boot sano bajo carga pesada: datos que solo el tiempo y una carga real producen
 FEATURE-DMEM-BOOSTERS-ADAPTAR-A-GB10-01	no	sudo	Probado en solo lectura: `cat /sys/fs/cgroup/dmem.capacity` -> 'nvidia/0000000F:01:00.0/vidmem 53794045952' (hay region visible en la raiz), pero `cat /sys/fs/c
@@ -99,3 +98,4 @@ FORUM-02-GX10-READ-INTEGRITY	no	hardware_externo	tools/forum_hardware_subjects.p
 FORUM-02-PSTORE-KERNEL-REGRESSION	no	incidente_real	tools/verify_forum_pstore.py _pstore exige raw_records de pstore con hash cuyo contenido contenga FPAC/PSCI/NMI del boot_id objetivo ('raw pstore bytes lack a t
 FORUM-02-USB-UVC-EP0	no	captura_de_otro_caso	tools/forum_hardware_subjects.py _check_uvc (l.1424+): exige failing xhci_resets>0 (reproduccion del cuelgue en pila afectada, MT8901/RealSense) y corrected xhc
 FORUM-REALTEK-DRIVER-BINDING-01	no	reinicio	tools/forum_hardware_subjects.py l.879 exige casos warm_after y cold_after (warm/cold reboot A/B) mas rollback de GRUB (requiere sudo); la ficha ya registra la 
+FEATURE-ATLAS-REMEDIR-EVAL-TRAS-REINDEXADO-01	no	otro_repo	eval de Atlas con la ATOM fria (ventana de Luis) y 11 archivos sin entidad; vive en Atlas
