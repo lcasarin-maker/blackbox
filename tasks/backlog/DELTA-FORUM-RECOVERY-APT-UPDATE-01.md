@@ -51,3 +51,6 @@ Se reutilizó la captura local de fuentes, arquitectura e índices APT para expo
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Avance 2026-10-14: `dmidecode -t system` ya se obtiene sin contrasena
+`sudo -n bb-root-run dmidecode-sistema` devuelve fabricante, producto y version de la maquina (rc=0). Sigue sin cerrar porque `_recovery_apt` tambien exige la ruta de consola externa (`ssh <console_route>`, un segundo equipo) y el hash del medio OEM de recuperacion: ambos vienen de fuera de esta maquina.

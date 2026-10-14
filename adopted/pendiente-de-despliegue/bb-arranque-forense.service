@@ -1,0 +1,10 @@
+[Unit]
+Description=bb: copia pstore y BERT, guarda las versiones de firmware y anota una fila por arranque (via bb-root-run, sin unidad de sistema)
+After=default.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/sudo -n /usr/local/sbin/bb-root-run arranque-forense
+
+[Install]
+WantedBy=default.target
