@@ -1,0 +1,18 @@
+medicion 2026-10-14: portero desplegado como servicio de usuario en modo observar (voto de Luis); tres suites lanzadas a la vez con 'bb portero run --clase suite'
+$ systemctl --user is-active bb-portero.service
+active
+orden de admision medida en portero.jsonl (raices 297058/297059/297060, mismo instante de lanzamiento 13:44:41):
+  13:44:41.219 297059 esperar
+  13:44:41.221 297058 esperar
+  13:44:41.241 297060 esperar
+  13:45:48.328 297059 turno
+  13:45:50.397 297059 fin
+  13:45:50.557 297058 turno
+  13:45:52.738 297058 fin
+  13:45:54.572 297060 turno
+  13:45:56.688 297060 fin
+  [bb portero] python3 bajo bb-portero-suite-297059.scope en app.slice: MemoryMax=20G MemoryHigh=18G sin swap, TasksMax=1230
+  [bb portero] python3 bajo bb-portero-suite-297058.scope en app.slice: MemoryMax=20G MemoryHigh=18G sin swap, TasksMax=1230
+  [bb portero] python3 bajo bb-portero-suite-297060.scope en app.slice: MemoryMax=20G MemoryHigh=18G sin swap, TasksMax=1230
+lectura: las tres esperaron turno (205 filas 'esperar': el presupuesto de app.slice estaba comprometido por scopes con tope propio), entraron de una en una sin solaparse (turno->fin de cada una termina antes del turno de la siguiente) y cada una corrio bajo su scope con MemoryMax=20G, sin swap, TasksMax=1230; las tres 34 passed.
+LIMITE (por eso NO lleva la frase de cierre): se uso 'bb portero run' (el llamador cambio); la ficha pide el camino transparente (hooks sin cambiar) y el demonio esta en observar, solo registra. Tampoco se midio el estancamiento bajo carga alta real.
