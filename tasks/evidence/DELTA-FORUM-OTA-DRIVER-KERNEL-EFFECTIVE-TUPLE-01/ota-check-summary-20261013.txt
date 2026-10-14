@@ -1,0 +1,17 @@
+sudo nvidia-spark-ota-check summary, ejecutado por el dueño el 2026-10-13 (salida resumida; el JSON completo tiene 11 filas de OTA)
+
+detected_ota: OTA2607 (releaseDate 2026-07-15), match 96.8 %, torn 3.2, 149 de 154 comprobaciones pasan.
+fallan (5): nvidia-firmware-580-580.159.03, nvidia-mlnx-tools, nvidia-system-station-apps, nvidia-system-station-games, TPM.
+pasan (relevantes): SOCFW, EC, EC Unfused, USBPD (los cuatro niveles de firmware coinciden con OTA2607).
+siguiente mejor candidato: OTA2604.Computex con match 87.0 y required_satisfied false (faltan dgx-dashboard y dgx-oobe).
+
+Lectura contra la maquina (comandos de solo lectura, mismo dia):
+$ dpkg -l | awk '/nvidia-firmware-580|nvidia-mlnx-tools|nvidia-system-station/ {print $2, $3}'
+  nvidia-firmware-580-580.178.04 580.178.04-0ubuntu0.24.04.1   (el paquete del driver instalado es MAS NUEVO que el 580.159.03 que espera OTA2607: el fallo es esperado)
+  nvidia-firmware-580-580.95.05 580.95.05-0ubuntu0.24.04.3
+  nvidia-system-station{,-common,-core} 2404.26.01-1   (paquetes de estacion de trabajo; los *-apps y *-games que pide el chequeo no estan instalados)
+  (sin nvidia-mlnx-tools instalado; si esta dgx-spark-mlnx-hotplug 26.01-1)
+$ ls /dev/tpm*   -> No existe el archivo o el directorio   (esta unidad no expone un TPM al sistema; por eso TPM falla)
+$ cat /etc/dgx-release (sin el numero de serie): DGX_SWBUILD_VERSION="7.2.3", DGX_PLATFORM="AI TOP ATOM"
+
+Conclusion: la ATOM esta en el nivel OTA2607 en firmware (SOCFW, EC, EC Unfused, USBPD) y con un driver mas nuevo que el de ese OTA (580.178.04). Los fallos restantes son paquetes opcionales no instalados y el TPM ausente; ninguno apunta a un firmware desactualizado.
