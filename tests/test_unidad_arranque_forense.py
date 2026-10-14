@@ -3,7 +3,7 @@
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-UNIDAD = RAIZ / "adopted/pendiente-de-despliegue/bb-arranque-forense.service"
+UNIDAD = RAIZ / "systemd/bb-arranque-forense.service"
 SUDOERS = RAIZ / "adopted/pendiente-de-despliegue/etc_sudoers.d_bb-root-run"
 
 
