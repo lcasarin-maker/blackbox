@@ -28,3 +28,6 @@ close_check: {"cmd": "grep -q decisiones_de_revision_votadas tasks/evidence/DEBT
 
 ## Avance 2026-10-14: informe hecho, falta la segunda boleta
 `tasks/evidence/DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01/informe.txt` (solo lectura): contenedores con tamano y estado, disco de docker (112.1 GB de imagenes reclamables), timers de usuario y paquetes grandes. LibreChat votado por Luis: ya estaba parado (`RestartPolicy=no`, sin unidad ni timer), queda parado y sin borrar datos. Sin votar y por eso sin la frase `decisiones_de_revision_votadas`: `docker image prune -a`, open-webui parado y los contenedores de pruebas de otro proyecto. Cierra con esa segunda boleta.
+
+## Avance 2026-10-14 (2): segunda boleta votada y ejecutada
+Votos de Luis ejecutados (cifras y lo conservado en `DECISIONS.md`): imagenes de docker 144.4 -> 34.68 GB, cache de build 16.43 -> 0 GB, 36 volumenes sin uso, LibreChat/open-webui/sglang/ollama y las imagenes obsoletas de aequitas fuera, 347 MiB de datos del foro y de una compilacion vieja del modulo dmem archivados con zstd y verificados. Falta la ultima boleta de este informe: los paquetes grandes (cursor, code, chatgpt, antigravity, dcgm, fieldiag) y los timers de otros proyectos; sin ese voto no lleva la frase `decisiones_de_revision_votadas` y la ficha sigue abierta.
