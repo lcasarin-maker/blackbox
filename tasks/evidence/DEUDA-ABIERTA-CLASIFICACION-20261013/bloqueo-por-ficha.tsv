@@ -1,5 +1,4 @@
 id	construible	bloqueador	por_que_no_mas
-DEBT-AUDIT-ANILLO-DESBORDADO-SIN-LIMITE-01	n/a	cerrada	cerrada en este ciclo con evidencia
 DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01	no	hardware_externo	El close_check del lote es un xfail placeholder (salida literal: '1 xfailed in 0.2s', rc=0, probado con python3 -m pytest -q -p no:cacheprovider tests/test_debt
 DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01	no	captura_de_otro_caso	El close_check del lote es un xfail placeholder (salida literal: '1 xfailed in 0.2s', rc=0, probado con python3 -m pytest -q -p no:cacheprovider tests/test_debt
 DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01	no	hardware_externo	El close_check del lote es un xfail placeholder (salida literal: '1 xfailed in 0.2s', rc=0, probado con python3 -m pytest -q -p no:cacheprovider tests/test_debt
@@ -13,7 +12,6 @@ DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01	no	incidente_real	close_ch
 DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01	no	incidente_real	close_check exige la frase suites_pytest_con_techo en tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/medicion.txt; la ficha dice 'Cierra cuando 
 DEBT-CONTRATO-ATLAS-SONDAS-DE-MEMORIA-01	no	otro_repo	el cambio vive en tools/ de Atlas (liberation_watchdog.py, dgx401_...); otro repo con sesiones propias
 DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01	no	hardware_externo	close_check `grep -q . tasks/evidence/DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01/clasificacion.md` pasa con cualquier archivo no vacio (instrumento sin control negati
-DEBT-DATOS-PRIVADOS-EN-EVIDENCIA-HISTORICA-01	n/a	en_curso	agente Opus redactando 139 archivos
 DEBT-DESPLIEGUES-PENDIENTES-DE-LUIS-01	no	sudo	close_check exige despliegues_hechos en tasks/evidence/DEBT-DESPLIEGUES-PENDIENTES-DE-LUIS-01/despliegue.txt, tras `sudo cp ... /etc/systemd/system/` y `restart
 DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01	no	sudo	close_check exige recarga_probada en tasks/evidence/DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01/prueba.txt, que requiere un `systemctl daemon-reload` del ho
 DEBT-DOCKER-SLICE-TOPE-VS-TOPES-DE-CONTENEDORES-01	no	sudo	close_check exige docker_slice_dimensionado en medicion.txt, y esa linea 'se escribe tras comprobar el techo en la maquina'; medicion.txt dice 'Pendiente de Lui
@@ -66,7 +64,6 @@ FEATURE-1358-CGROUP-05-CUELGUES	no	sudo	_hang_stacks exige exactamente dos corri
 FEATURE-APT-CRITICAL-METAPACKAGE-GUARD	no	decision_de_luis	El close_check ya corre y sale 2 por diseno. Probado: `python3 -m tools.verify_apt_critical_removals --cierre --evidence tasks/evidence/FEATURE-APT-CRITICAL-MET
 FEATURE-ATLAS-REINDEX-PAQUETE-GB10-01	no	otro_repo	Atlas debe reindexar su grafo de entidades; es su indice, en su repo
 FEATURE-BB-EVALUAR-CAP-DE-CPU-01	no	sudo	close_check es `grep -q 'scaling_max_freq' tasks/evidence/FEATURE-BB-EVALUAR-CAP-DE-CPU-01/ab.md`; el directorio no existe. Solo cierra con un A/B medido aqui (
-FEATURE-BB-FALSO-CUELGUE-POR-AISLAMIENTO-WIFI-01	n/a	cerrada	cerrada en este ciclo; el cableado lo posee FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01
 FEATURE-CALIBRAR-CALOR-SOSTENIDO-01	no	reinicio	faltan >=3 boots mas y un boot sano bajo carga pesada: datos que solo el tiempo y una carga real producen
 FEATURE-DMEM-BOOSTERS-ADAPTAR-A-GB10-01	no	sudo	Probado en solo lectura: `cat /sys/fs/cgroup/dmem.capacity` -> 'nvidia/0000000F:01:00.0/vidmem 53794045952' (hay region visible en la raiz), pero `cat /sys/fs/c
 FEATURE-DMEM-PREENROLAMIENTO-LISTA-01	no	decision_de_luis	close_check: grep -q pre_enrolamiento_completo lista.txt; la ficha exige 'cada fila ... HECHO con su evidencia y la fila de la ventana de reinicio la fija Luis'
@@ -91,7 +88,6 @@ FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01	parcial	hardware_externo	close_check 
 FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE-LA-MAQUINA-01	no	sudo	faltan /etc/audit/rules.d/10-blackbox-signals.rules y los crontabs de otros usuarios, ilegibles sin root; bb drift corre como usuario y necesita un camino de comparacion
 FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01	no	decision_de_luis	close_check = grep -q portero_universal_probado tasks/evidence/FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01/medicion.txt; medicion.txt no existe (solo validacione
 FEATURE-USB-HID-POSTUPDATE-CHECK	no	reinicio	tools/verify_usb_hid_postupdate.py:_boot_observations/_boot_ids exige tres capturas en arranques distintos (pre-update, affected, recovery) con boot_id y kernel
-FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01	n/a	cerrada	cerrada en este ciclo: medicion real con control negativo
 FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01	no	incidente_real	exige medir antes/despues en el motor vLLM de produccion; parar el motor es una ventana de Luis
 FORUM-00-CX7-HOTPLUG-FAN-PROTECTION	no	hardware_externo	tools/forum_hardware_subjects.py:918-919 y 913-915: exige power_w del mismo medidor externo (meter_id) en baseline/candidate y fan_rpm de tacometro en baseline/
 FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT	no	sudo	El verificador reporta 'missing observation: effective_modeset; missing observation: target_requires_kms; missing observation: recovery_accessible' (status unkn
