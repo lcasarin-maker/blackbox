@@ -17,6 +17,12 @@ Type=notify
 # puede cambiar si cambia el display manager o el usuario de la sesion.
 Environment=DISPLAY=:1
 Environment=XAUTHORITY=/run/user/1000/gdm/Xauthority
+# DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01, 2026-10-12: el escalon antes
+# del reinicio escribe cada decision en $BLACKBOX_DATA/escalon/ y el origen de
+# los procesos en $BLACKBOX_DATA/origen/. Esta unit corre como root, y sin esto
+# el defecto (~/.local/share/blackbox) seria el de /root, donde nadie lo lee.
+# LIMITE DECLARADO: misma convencion de usuario fijo que XAUTHORITY arriba.
+Environment=BLACKBOX_DATA=/home/lcasarin/.local/share/blackbox
 ExecStart=/home/lcasarin/projects/blackbox/bin/bb-usable
 
 # El plazo que cobra. bb-usable acaricia cada PROBE_INTERVAL (30s) y se niega
