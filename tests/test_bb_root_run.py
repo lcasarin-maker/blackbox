@@ -137,21 +137,27 @@ def test_control_negativo_el_nombre_limite_de_41_caracteres_si_pasa(b: Banco):
     assert b.run(nombre) == 0
 
 
-def test_main_exige_exactamente_un_argumento(monkeypatch: pytest.MonkeyPatch):
-    vistos: list[object] = []
-    monkeypatch.setattr(rr, "run", lambda name: vistos.append(name) or 0)
-    rr.main([])
-    rr.main(["a", "b"])
-    rr.main(["saluda"])
-    assert vistos == [None, None, "saluda"]
+def _kw(b: Banco) -> dict[str, object]:
+    return {"manifest_path": str(b.manifest), "scripts_dir": str(b.scripts), "out_dir": str(b.out),
+            "opts": rr.Opciones(trusted_uid=b.trusted_uid, tmp_parent=str(b.tmp), environ=b.environ, salida=b.salida)}
 
 
-def test_main_sin_argv_lee_sys_argv(monkeypatch: pytest.MonkeyPatch):
-    vistos: list[object] = []
-    monkeypatch.setattr(rr, "run", lambda name: vistos.append(name) or 0)
-    monkeypatch.setattr(rr.sys, "argv", ["bb-root-run", "uno"])
-    rr.main()
-    assert vistos == ["uno"]
+def test_main_exige_exactamente_un_argumento(b: Banco):
+    b.aprobar("saluda", OK)
+    assert rr.main([], **_kw(b)) == 3
+    assert rr.main(["saluda", "otro"], **_kw(b)) == 3
+    assert [r["name"] for r in b.auditoria() if r.get("rc") == 3] == [None, None]
+    assert not b.salidas()  # nada se ejecuto con 0 o 2 argumentos
+    assert rr.main(["saluda"], **_kw(b)) == 0  # control: con exactamente uno si corre
+    assert len(b.salidas()) == 1
+
+
+def test_main_sin_argv_lee_sys_argv(b: Banco, monkeypatch: pytest.MonkeyPatch):
+    b.aprobar("saluda", OK)
+    monkeypatch.setattr(rr.sys, "argv", ["bb-root-run", "saluda"])
+    assert rr.main(**_kw(b)) == 0 and len(b.salidas()) == 1
+    monkeypatch.setattr(rr.sys, "argv", ["bb-root-run"])
+    assert rr.main(**_kw(b)) == 3
 
 
 # --- el script: symlink, no regular, tamano, hash ------------------------------------
