@@ -18,3 +18,6 @@ El kernel reporta `audit_backlog=8193 > audit_backlog_limit=8192` y `audit_lost`
 
 ## Avance 2026-10-13
 `enable-privileged.sh` fija ahora `-b 32768` antes de las reglas de captura (`tests/test_enable_privileged_audit_backlog.py`: la linea esta y precede a la primera regla; control negativo sin la linea o despues de la captura da False). El `close_check` (`grep -q -- "-b 32768" enable-privileged.sh`) pasa. Sigue abierta porque falta lo que pide el Hueco: aplicar el instalador (`sudo`, de Luis) y medir que `audit_lost` deja de subir; /etc/audit es root:root 0750.
+
+## Avance 2026-10-13 18:18: instalador aplicado por Luis
+`sudo ./enable-privileged.sh` corrio completo, incluida la regla de auditoria con `-b 32768`. `bb scan "2 hours ago"` muestra la linea de eventos de audit perdidos sin valor, y leer `auditctl -s` exige root, asi que NO se midio que `audit_lost` deje de subir: queda pendiente leer `audit_backlog_limit` (esperado 32768) y el contador `lost` con sudo, y compararlo con el del boot del 07 al 08-oct (2662).
