@@ -134,13 +134,6 @@ def log(msg: str) -> None:
     print(f"[bb-guardia-proceso] {msg}", file=sys.stderr, flush=True)
 
 
-def _leer_estado() -> dict:
-    try:
-        return json.loads(ESTADO.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
-
-
 def _escribir_estado(d: dict) -> None:
     tmp = ESTADO.with_suffix(".tmp")
     tmp.write_text(json.dumps(d), encoding="utf-8")

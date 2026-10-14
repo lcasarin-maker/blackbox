@@ -7,6 +7,7 @@ After=atom-gpu-telemetry.service
 # Lee /proc cada 2 s y actua solo sobre lo delegado al usuario (scopes bb-portero-*, cgroup.freeze).
 # Sin estado termico fresco, PSI o cgroup de app.slice, no actua y lo escribe en portero.jsonl.
 ExecStart=/usr/bin/python3 %h/projects/blackbox/tools/portero.py demonio
+ExecStopPost=-%h/projects/blackbox/bin/bb-parada-diagnostico %n $EXIT_STATUS $SERVICE_RESULT
 Restart=on-failure
 RestartSec=10
 # El portero no debe ser victima de lo que vigila: vive fuera de app.slice, con tope propio pequeno.
