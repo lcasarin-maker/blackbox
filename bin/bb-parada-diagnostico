@@ -5,8 +5,8 @@
 # --------------
 # bb-guardia-proceso se detuvo dos veces el 2026-10-06 (03:08 y 03:34 CST) y ningun
 # registro dijo quien mando la senal. systemd solo anota "code=killed, status=15/TERM"
-# o "status=9/KILL". El audit (regla senales_procesos: kill y tgkill) si registra el
-# emisor, pero sin este script nadie mira ese registro en el momento de la parada.
+# o "status=9/KILL". bb ya persiste las senales con su emisor en sigterm.jsonl (regla audit
+# blackbox_sigterm/blackbox_sigkill), pero sin este script nadie mira ese registro en el momento de la parada.
 #
 # Uso (lo llama systemd): bb-parada-diagnostico <unit> <EXIT_STATUS> <SERVICE_RESULT>
 # Escribe en $DATA/paradas.log. Sale 0 siempre: un diagnostico no debe cambiar la parada.
@@ -24,9 +24,13 @@ desde=$(date -d '-3 min' '+%Y-%m-%d %H:%M:%S')
   echo "=== $ahora unit=$unidad exit_status=$estado service_result=$resultado"
   echo "--- journal de la unit (3 min):"
   journalctl --user -u "$unidad" --since "$desde" --no-pager 2>&1 | tail -n 15
-  echo "--- audit senales_procesos (ultimos 10 min, ausearch -ts recent), emisor y senal:"
-  ausearch -k senales_procesos -ts recent -i 2>/dev/null \
-    | grep -E 'type=SYSCALL' | grep -E 'SIGTERM|SIGKILL|a1=9|a1=15|a2=9|a2=15' | cut -c1-400 | tail -n 20
+  echo "--- senales registradas por bb (sigterm.jsonl, ultimos 10 min): emisor y senal:"
+  # La regla audit instalada usa las claves blackbox_sigterm/blackbox_sigkill y ausearch pide root; bb ya las persiste en
+  # un archivo del usuario (bin/bb sigterm_persist), asi que se lee ese.
+  desde_ts=$(date -d '-10 min' '+%s')
+  tail -n 3000 "$data/sigterm.jsonl" 2>/dev/null \
+    | awk -v t="$desde_ts" 'match($0, /"ts":[0-9]+/) { if (substr($0, RSTART + 5, RLENGTH - 5) + 0 >= t) print }' \
+    | cut -c1-400 | tail -n 20
   echo "--- kernel (3 min), OOM o kill:"
   journalctl -k --since "$desde" --no-pager 2>&1 | grep -iE 'killed process|oom-kill|out of memory: kill' | tail -n 5
   echo

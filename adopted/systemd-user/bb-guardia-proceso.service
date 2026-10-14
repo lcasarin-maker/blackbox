@@ -10,6 +10,7 @@ After=blackbox-sample.timer
 [Service]
 Type=simple
 ExecStart=%h/projects/blackbox/bin/bb-guardia-proceso
+ExecStopPost=-%h/projects/blackbox/bin/bb-parada-diagnostico %n $EXIT_STATUS $SERVICE_RESULT
 # Una senal externa SIGTERM cuenta como salida limpia para systemd. Reiniciar
 # tambien tras esa salida evita dejar la guardia apagada; `systemctl stop`
 # explicito sigue suprimiendo el reinicio.

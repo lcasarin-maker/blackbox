@@ -5,6 +5,7 @@ Description=bb vigilante de MemAvailable (interruptor memavail; off por defecto)
 Type=simple
 WorkingDirectory=%h/projects/blackbox
 ExecStart=/usr/bin/python3 -m tools.vigilante_memavail
+ExecStopPost=-%h/projects/blackbox/bin/bb-parada-diagnostico %n $EXIT_STATUS $SERVICE_RESULT
 Restart=on-failure
 MemoryMax=64M
 

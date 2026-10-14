@@ -5,6 +5,7 @@ Description=bb guardia estilo gpuoom (interruptor gpuoom; off por defecto, solo 
 Type=simple
 WorkingDirectory=%h/projects/blackbox
 ExecStart=/usr/bin/python3 -m tools.gpuoom_bb
+ExecStopPost=-%h/projects/blackbox/bin/bb-parada-diagnostico %n $EXIT_STATUS $SERVICE_RESULT
 Restart=on-failure
 MemoryMax=96M
 
