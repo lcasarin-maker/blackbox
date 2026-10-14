@@ -16,6 +16,7 @@ import stat
 import subprocess
 import time
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -137,7 +138,7 @@ def test_control_negativo_el_nombre_limite_de_41_caracteres_si_pasa(b: Banco):
     assert b.run(nombre) == 0
 
 
-def _kw(b: Banco) -> dict[str, object]:
+def _kw(b: Banco) -> dict[str, Any]:
     return {"manifest_path": str(b.manifest), "scripts_dir": str(b.scripts), "out_dir": str(b.out),
             "opts": rr.Opciones(trusted_uid=b.trusted_uid, tmp_parent=str(b.tmp), environ=b.environ, salida=b.salida)}
 
