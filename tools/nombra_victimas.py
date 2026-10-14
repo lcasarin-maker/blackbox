@@ -58,10 +58,18 @@ def normaliza_pid(v) -> int | None:
 
     La conversion no es ambigua: `pid_max` en Linux llega a 2^22, asi que ningun
     pid legitimo alcanza 2^31.
+
+    Lo que pasa de 2^32 NO tiene arreglo y se devuelve None: son los a0 de 64
+    bits que `bin/bb` leia hasta el 2026-10-14 con un double de 53 bits de
+    mantisa (88061 filas, p.ej. 18446744069412587520). Los bits bajos, que son
+    el pid, se perdieron al escribirlos; cualquier numero que saliera de ahi
+    seria un pid inventado.
     """
     try:
         n = int(v)
     except (TypeError, ValueError):
+        return None
+    if n >= 2**32:
         return None
     return n - 2**32 if n >= 2**31 else n
 
@@ -94,16 +102,29 @@ def indice_pids(muestras: Path) -> dict[int, tuple[str, str]]:
 
 
 def capturas(fichero: Path) -> list[dict]:
-    if not fichero.is_file():
-        return []
-    out = []
-    for linea in fichero.read_text(encoding="utf-8", errors="replace").splitlines():
-        if not linea.strip():
+    """Las capturas de `fichero.1` (el rotado, mas viejo) y de `fichero`, cada
+    linea una vez.
+
+    `bin/bb` rota sigterm.jsonl a .1 desde el 2026-10-14, asi que leer solo el
+    actual perderia la semana anterior. Y lo ya acumulado antes de esa fecha
+    trae 577 ids repetidos -- las 577 veces la MISMA linea byte a byte -- y
+    tres registros pegados detras de NUL de un corte de luz: una linea repetida
+    se cuenta una vez y los NUL se quitan, que es lo mismo que hace la rotacion
+    al escribir el .1. Dos lineas distintas cuentan las dos, aunque compartan id.
+    """
+    out: list[dict] = []
+    vistas: set[str] = set()
+    for f in (fichero.with_name(fichero.name + ".1"), fichero):
+        if not f.is_file():
             continue
-        try:
-            out.append(json.loads(linea))
-        except ValueError:
-            continue
+        for linea in f.read_text(encoding="utf-8", errors="replace").replace("\0", "").splitlines():
+            if not linea.strip() or linea in vistas:
+                continue
+            vistas.add(linea)
+            try:
+                out.append(json.loads(linea))
+            except ValueError:
+                continue
     return out
 
 

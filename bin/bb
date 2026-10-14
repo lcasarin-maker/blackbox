@@ -48,6 +48,10 @@ JOURNALCTL="${BB_JOURNALCTL:-journalctl}"
 # que se vigila. Mismo precedente que `BB_VMSTAT`.
 PROC="${BB_PROC:-/proc}"
 
+# La fila por arranque que escribe `bb-root-run arranque-forense` (root, 0644),
+# sustituible SOLO para poder montar el caso negativo de su fila en `status`.
+ARRANQUE_JSONL="${BB_ARRANQUE_JSONL:-/var/lib/blackbox/pstore/arranque.jsonl}"
+
 mkdir -p "$SAMPLES" "$SNAPS"
 # $DATA guarda command-lines completas de procesos ajenos (bb who/scan/sample)
 # -- no depender del umask heredado para su permiso. chmod en cada arranque,
@@ -932,8 +936,12 @@ cmd_sample() {
   # propio porque el muestreador ya corre con la cadencia que hace falta.
   sigterm_persist
 
-  # rotacion: solo se borra lo que ya excedio la retencion declarada
-  find "$SAMPLES" -name '*.jsonl' -mtime +"$RETAIN_DAYS" -delete 2>/dev/null
+  # rotacion: solo se borra lo que ya excedio la retencion declarada.
+  # origen/ y escalon/ (un fichero por dia, los escribe bin/bb-usable) no se
+  # borraban NUNCA: medido el 2026-10-14, origen/ crece ~3.5 MB/dia. Misma
+  # regla que las muestras. sigterm.jsonl rota aparte (_sigterm_rota) y
+  # atom_gpu_telemetry.jsonl tiene su propia rotacion: no se tocan aqui.
+  find "$SAMPLES" "$DATA/origen" "$DATA/escalon" -maxdepth 1 -name '*.jsonl' -mtime +"$RETAIN_DAYS" -delete 2>/dev/null
   find "$SNAPS" -maxdepth 1 -type d -mtime +"$RETAIN_DAYS" -exec rm -rf {} + 2>/dev/null
 }
 
@@ -2240,6 +2248,67 @@ cmd_hw() {
 
 # -------------------------------------------------------------------- status
 
+# Las filas de `bb status` de lo que CORRE y no tenia fila hasta el 2026-10-14.
+# Va fuera de cmd_status como status_usable: cmd_status ya es largo y
+# tests/test_status_bus_unknown.py busca su resumen final por posicion. Usa
+# `chk` y `_fresco`, que cmd_status define antes de llamarla.
+status_lo_que_corre() {
+  # Siete cosas que CORREN en esta maquina y no tenian fila (revision de solo
+  # lectura del 2026-10-14): si dejaban de correr, `status` seguia igual. Por el
+  # DATO donde lo hay; donde no, por la ultima corrida de la unit, y el nombre
+  # de la fila lo declara.
+  #
+  # _corrida_ok unit max_min: la ULTIMA corrida de un oneshot acabo en success
+  # y cayo dentro de su plazo -- max_min=0 quiere decir "en este arranque". Un
+  # timer `active` cuyo servicio falla en cada disparo pasa `is-active`; esto no.
+  local ok _por="" _bid
+  _corrida_ok() {
+    local s res fin lim
+    s=$(systemctl --user show "$1" --timestamp=unix -p Result -p ExecMainExitTimestamp 2>/dev/null) ||
+      { _por="systemctl --user show $1 no contesta"; return 1; }
+    res=$(printf '%s\n' "$s" | sed -n 's/^Result=//p')
+    fin=$(printf '%s\n' "$s" | sed -n 's/^ExecMainExitTimestamp=@\([0-9][0-9]*\).*/\1/p')
+    if [ "$2" -eq 0 ]; then lim=$(awk '$1 == "btime" {print $2}' /proc/stat); else lim=$(( $(date +%s) - $2 * 60 )); fi
+    if [ -z "$fin" ] || [ "$fin" -lt "${lim:-0}" ]; then
+      _por="sin corrida $([ "$2" -eq 0 ] && echo "en este arranque" || echo "en $2 min")"; return 1
+    fi
+    [ "$res" = success ] || { _por="la ultima corrida dio Result=$res"; return 1; }
+  }
+  _bid=$(cat /proc/sys/kernel/random/boot_id 2>/dev/null)
+
+  _corrida_ok blackbox-drift.service 1560; ok=$?
+  chk "comparacion repo contra maquina (blackbox-drift; diaria)" "$ok" "$_por (falla tambien si vio divergencia): bb drift"
+
+  # La fila de reboots.jsonl cuyo boot_id_siguiente es ESTE arranque: esa es
+  # la que bb-reboot-verdict escribe a los 3 min de arrancar.
+  if grep -Eq "\"boot_id_siguiente\": ?\"${_bid//-/}\"" "$DATA/reboots.jsonl" 2>/dev/null; then ok=0; else ok=1; fi
+  chk "veredicto del reinicio anterior (bb-reboot-verdict; una fila por arranque)" "$ok" "reboots.jsonl sin fila para este arranque: systemctl --user status bb-reboot-verdict.timer"
+
+  # Los dos demonios no escriben latido -- aviso_termico solo LEE el estado y
+  # portero solo escribe cuando actua --, asi que se mira la unit (limite
+  # declarado, mismo que la guardia de procesos).
+  systemctl --user is-active bb-aviso-termico.service >/dev/null 2>&1; ok=$?
+  chk "aviso termico en pantalla (bb-aviso-termico; solo la unit, sin latido)" "$ok" "parado: systemctl --user start bb-aviso-termico.service"
+  systemctl --user is-active bb-portero.service >/dev/null 2>&1; ok=$?
+  chk "portero de app.slice (bb-portero, el actuador; solo la unit, sin latido)" "$ok" "parado: systemctl --user start bb-portero.service"
+
+  # Diario y a los 3 min del arranque: 26 h de plazo da una corrida perdida.
+  _fresco "$DATA/dmem_parche.jsonl" 1560; ok=$?
+  chk "monitor del parche dmem (bb-dmem-monitor; diario y al arrancar)" "$ok" "sin fila en 26 h: systemctl --user status bb-dmem-monitor.timer"
+
+  # Oneshot de root via bb-root-run: la corrida de la unit Y la fila de este
+  # arranque en arranque.jsonl. La unit puede acabar en success con el
+  # ejecutor de root sin escribir nada; la fila sola puede ser de otra corrida.
+  if _corrida_ok bb-arranque-forense.service 0; then
+    if grep -Eq "\"boot_id\": ?\"$_bid\"" "$ARRANQUE_JSONL" 2>/dev/null; then ok=0; else ok=1; _por="$ARRANQUE_JSONL sin fila para este arranque"; fi
+  else ok=1; fi
+  chk "arranque forense (bb-arranque-forense; pstore, BERT y firmware por arranque)" "$ok" "$_por: systemctl --user status bb-arranque-forense.service"
+
+  # El detector de Atlas escribe en Atlas: se mira su corrida, no su dato.
+  _corrida_ok atom-crash-detector.service 0; ok=$?
+  chk "detector de caidas de Atlas (atom-crash-detector; una corrida por arranque)" "$ok" "$_por: systemctl --user status atom-crash-detector.timer"
+}
+
 clock_lock_evaluate() {
   CLOCK_DECL="" CLOCK_START="" CLOCK_CONFIRMED="" CLOCK_CONFIRM_TS=""
   CLOCK_UNREAD=0 CLOCK_REASON=""
@@ -2650,6 +2719,8 @@ EOF
     chk "historial de memoria de GPU ($_m; fila al cambiar o cada 10 min)" "$ok" "sin fila en 15 min: systemctl --user status bb-gpumem-historial.timer"
   fi
 
+  status_lo_que_corre
+
   # Sin volcado CUDA, una caida por 'illegal memory access' no nombra el kernel
   # que fallo: CUDA la informa tarde, en otro punto de sincronizacion.
   if grep -q '"CUDA_ENABLE_COREDUMP_ON_EXCEPTION": *"1"' "$MOTOR_CONFIG" 2>/dev/null && [ -w "$MOTOR_VOLCADOS" ]; then ok=0; else ok=1; fi
@@ -2994,8 +3065,20 @@ _sig_eventos() {
         # nombrarlas jamas y las contaba como misterio. Se convierte a 32 bits
         # con signo y el signo se CONSERVA: quien lo lea distingue un pid de un
         # grupo por el signo, que es la convencion de kill(2) y no una propia.
+        #
+        # Y a0 es el REGISTRO entero, no el int: en aarch64 auditd lo escribe
+        # con 64 bits y extension de signo -- `a0=ffffffffffe1795a` es el grupo
+        # -2000550. Medido el 2026-10-14: 144 de las 225 capturas del anillo
+        # traian a0 de 16 cifras, y en sigterm.jsonl 88061 de 172073 lineas
+        # tenian una victima de 20 cifras (18446744069412587520): strtonum de
+        # 16 cifras hex da un double de 53 bits de mantisa -- ya sin los bits
+        # bajos -- y la resta de 2^32 de abajo no lo devolvia a un pid. kill(2)
+        # recibe un pid_t de 32 bits y el kernel usa SOLO los 32 bajos del
+        # registro, asi que se leen esos 8 digitos y nada mas.
         if (match($0, /[ ]a0=([0-9a-f]+)/, x)) {
-          vic = strtonum("0x" x[1])
+          h = x[1]
+          if (length(h) > 8) h = substr(h, length(h) - 7)
+          vic = strtonum("0x" h)
           if (vic >= 2147483648) vic -= 4294967296
           s_vic[id] = vic
         }
@@ -3025,7 +3108,16 @@ _sig_eventos() {
                (v_pid[id] != "" ? v_pid[id] : (s_vic[id] != "" ? s_vic[id] : "?")),
                (v_comm[id] == "" ? "?" : v_comm[id]), s_ppid[id]
       }
-    }' "${archivos[@]}" 2>/dev/null | sort -n
+    }' "${archivos[@]}" 2>/dev/null | LC_ALL=C sort -t. -k1,1n -k2,2n
+  # Por segundo y LUEGO por serial, y en LC_ALL=C. Medido el 2026-10-14: el
+  # manager de usuario arranca con LANG=es_ES.utf8 y solo despues la sesion
+  # le importa LC_NUMERIC=es_MX; en es_ES `sort -n` lee el punto como
+  # separador de MILES, asi que 1791851531.48078 (serial del arranque caido)
+  # quedaba DESPUES de 1791851636.577 (del nuevo), y la marca de agua tomaba la
+  # ultima linea de ese orden. 11 de las 24 rachas de repetidos siguen a un
+  # arranque sin ningun timeout de blackbox-sample cerca; la prueba
+  # test_sigterm_tras_un_REINICIO_en_es_ES_no_duplica reproduce el mecanismo.
+  # Y `-n` a secas, aun en C, pone X.1000 antes que X.999.
 }
 
 # Acumula las senales capturadas FUERA del anillo de auditoria.
@@ -3043,30 +3135,109 @@ _sig_eventos() {
 #
 # Lo minimo que lo arregla: el muestreador ya corre cada 60 s y el anillo
 # aguanta 136 min, asi que una pasada por muestra no puede perder un evento
-# -- 136 veces el intervalo. Se escribe lo nuevo y nada mas, con la marca de
-# agua del ultimo `ts.serial` guardado, porque el anillo se relee entero cada
-# vez y sin marca se duplicaria todo en cada muestra.
+# -- 136 veces el intervalo. Se escribe lo nuevo y nada mas, porque el anillo
+# se relee entero cada vez y sin un corte se duplicaria todo en cada muestra.
+#
+# El corte YA NO es una marca de agua aparte (sigterm_wm), medido el 2026-10-14
+# ---------------------------------------------------------------------------
+# sigterm.jsonl tenia 577 ids repetidos en 24 rachas y 3 lineas con NUL. Las
+# causas, cada una reproducida por su prueba en tests/test_bb_bash.py:
+#
+# 1. La marca vivia en OTRO fichero que el dato. Se anadia a sigterm.jsonl y
+#    DESPUES se reescribia sigterm_wm con `>`. blackbox-sample.service tiene
+#    TimeoutStartSec=45 y los incidentes son justo cuando una muestra tarda:
+#    matada entre las dos escrituras -- o un corte que deja sigterm_wm vacio,
+#    que el `case` leia como 0 -- la siguiente pasada volvia a escribir toda
+#    la ventana. 13 de las 24 rachas tienen un "start operation timed out" de
+#    blackbox-sample entre 60 s antes y 300 s despues. Las otras 11 siguen a
+#    un arranque: el orden de `sort -n` en es_ES (ver _sig_eventos). Ahora el
+#    corte se LEE del propio sigterm.jsonl: un id ya escrito no se escribe dos
+#    veces, pase lo que pase entre dos pasadas y en el orden que sea.
+# 2. Dos pasadas a la vez leian la misma marca y escribian lo mismo: no habia
+#    candado. Ahora `flock -n`; la que llega segunda no escribe y la siguiente
+#    muestra recoge lo que faltara (la ventana es 10x el intervalo).
+# 3. Las 3 lineas con NUL son cortes de luz: ext4 llego a fijar el tamano del
+#    fichero sin escribir los datos, y el hueco queda en ceros. Eso no lo causa
+#    bb, pero si lo empeoraba: el primer registro del arranque siguiente se
+#    pegaba DETRAS de los ceros, en la misma linea, y ningun lector lo leia --
+#    las 3 veces (ids 1791327043.387, 1791746655.387, 1791851628.384). Ahora,
+#    si el fichero no termina en salto de linea, se escribe uno antes.
+#
+# Y un defecto que la marca tenia ademas: comparaba `ts.serial` como numero
+# decimal, asi que en el mismo segundo X.1000 es MENOR que X.999 y el evento
+# se perdia. Con ids no hay comparacion numerica que pueda equivocarse.
+SIGTERM_MAX_BYTES="${BLACKBOX_SIGTERM_MAX_BYTES:-33554432}"
+
+# Rota sigterm.jsonl a sigterm.jsonl.1 y se queda con DOS ficheros, nunca mas.
+#
+# Medido el 2026-10-14: 40.8 MB, 171483 lineas, 2.36 MB/dia, sin rotacion
+# ninguna. Rota cuando su primer registro pasa de la MITAD de la retencion
+# declarada (RETAIN_DAYS/2, 7 dias), asi que entre los dos ficheros hay entre
+# 7 y RETAIN_DAYS de historia, o cuando pasa de SIGTERM_MAX_BYTES (32 MiB) por
+# si una avalancha llega antes que la fecha.
+#
+# Al rotar se quitan las lineas REPETIDAS byte a byte (se conserva la primera)
+# y los NUL, y nada mas: ningun emisor se filtra. Byte a byte y no por id, que
+# es lo mas estrecho que cubre lo medido: los 577 ids repetidos del 2026-10-14
+# eran las 577 veces la misma linea exacta. Quitar los NUL devuelve el
+# registro que el corte habia dejado pegado.
+# Orden de las escrituras: .1.tmp -> mv a .1 -> rm del actual. Matada entre el
+# mv y el rm, la siguiente pasada rota otra vez lo mismo; no pierde ni duplica.
+_sigterm_rota() {
+  local out="$1" tam primero
+  [ -s "$out" ] || return 0
+  tam=$(stat -c %s "$out" 2>/dev/null) || return 0
+  primero=$(head -c 4096 "$out" | tr -d '\000' | sed -n 's/^{"ts":\([0-9][0-9]*\),.*/\1/p' | head -1)
+  if [ "$tam" -le "$SIGTERM_MAX_BYTES" ] &&
+     { [ -z "$primero" ] || [ "$primero" -ge $(( $(date +%s) - RETAIN_DAYS * 86400 / 2 )) ]; }; then
+    return 0
+  fi
+  tr -d '\000' <"$out" | awk 'length($0) > 0 && !visto[$0]++' >"$out.1.tmp" &&
+    mv -f "$out.1.tmp" "$out.1" && rm -f "$out"
+}
+
+# Los ids ya escritos con ts >= $2, leyendo DESDE EL FINAL del fichero y del
+# rotado. Cada pasada solo escribe eventos de su ventana de 600 s, asi que lo
+# escrito despues de un instante T trae ts >= T - 600: la primera linea con ts
+# por debajo de $2 ya es de antes y se deja de leer. Solo cuenta una linea
+# COMPLETA (acaba en `}}`): una cortada a medias no tapa a su evento, que se
+# vuelve a escribir entero.
+# ponytail: un reloj que salta hacia ATRAS mas de 10 min deja de cortar bien; disparador: un salto de NTP de ese tamano en el journal.
+_sigterm_vistos() {
+  { tac "$1" 2>/dev/null; tac "$1.1" 2>/dev/null; } | tr -d '\000' | awk -v piso="$2" '
+    match($0, /^\{"ts":[0-9]+/) { if (substr($0, 7, RLENGTH - 6) + 0 < piso) exit }
+    /\}\}$/ && match($0, /"id":"[^"]*"/) { print substr($0, RSTART + 6, RLENGTH - 7) }'
+}
+
 sigterm_persist() {
-  local wm_f="$DATA/sigterm_wm" out="$DATA/sigterm.jsonl" wm
-  wm=$(cat "$wm_f" 2>/dev/null) || wm=0
-  case "$wm" in ""|*[!0-9.]*) wm=0 ;; esac
+  local out="$DATA/sigterm.jsonl"
+  (
+    flock -n 9 || exit 0
+    _sigterm_rota "$out"
 
-  # 10 min de ventana: holgura de 10x sobre el intervalo de muestreo, para que
-  # unas cuantas muestras perdidas seguidas no abran un hueco.
-  local nuevos
-  nuevos=$(_sig_eventos "$(( $(date +%s) - 600 ))" \
-           | awk -F'\t' -v wm="$wm" '$1 + 0 > wm + 0')
-  [ -n "$nuevos" ] || return 0
+    # 10 min de ventana: holgura de 10x sobre el intervalo de muestreo, para que
+    # unas cuantas muestras perdidas seguidas no abran un hueco.
+    local corte lineas
+    corte=$(( $(date +%s) - 600 ))
+    lineas=$(awk -F'\t' '
+      FILENAME == ARGV[1] { visto[$0] = 1; next }
+      $1 in visto { next }
+      {
+        split($1, p, ".")
+        # comm y exe van entre comillas en JSON: un backslash se dobla.
+        for (i = 4; i <= 5; i++) gsub(/\\/, "&&", $i)
+        printf "{\"ts\":%s,\"id\":\"%s\",\"senal\":\"%s\",\"emisor\":{\"pid\":%s,\"ppid\":%s,\"comm\":\"%s\",\"exe\":\"%s\",\"auid\":\"%s\",\"clase\":\"%s\"},\"victima\":{\"pid\":\"%s\",\"comm\":\"%s\"}}\n",
+          p[1], $1, $2, $3, $9, $4, $5, $6, ($6 == "4294967295" ? "demonio" : "humano"), $7, $8
+      }' <(_sigterm_vistos "$out" "$(( corte - 600 ))") <(_sig_eventos "$corte"))
+    [ -n "$lineas" ] || exit 0
 
-  printf "%s\n" "$nuevos" | while IFS=$'\t' read -r id sig spid scomm sexe sauid vpid vcomm sppid; do
-    [ -n "$id" ] || continue
-    printf '{"ts":%s,"id":"%s","senal":"%s","emisor":{"pid":%s,"ppid":%s,"comm":"%s","exe":"%s","auid":"%s","clase":"%s"},"victima":{"pid":"%s","comm":"%s"}}\n' \
-      "${id%%.*}" "$id" "$sig" "${spid:-0}" "${sppid:-0}" "$scomm" "$sexe" "$sauid" \
-      "$([ "$sauid" = "4294967295" ] && echo demonio || echo humano)" \
-      "$vpid" "$vcomm"
-  done >> "$out"
-
-  printf "%s\n" "$nuevos" | awk -F'\t' 'END{print $1}' > "$wm_f"
+    # Un fichero que no acaba en salto de linea es un corte (NUL) o una pasada
+    # matada a media linea: lo nuevo empieza en linea propia.
+    if [ -s "$out" ] && [ "$(tail -c1 "$out" | od -An -tx1 | tr -d ' ')" != 0a ]; then
+      printf '\n' >>"$out"
+    fi
+    printf '%s\n' "$lineas" >>"$out"
+  ) 9>"$DATA/sigterm.lock"
 }
 
 cmd_sigterm() {
@@ -3162,7 +3333,7 @@ cmd_sigterm() {
   local n; n=$(printf "%s" "$eventos" | grep -c . || true)
   if [ "$n" -gt 0 ]; then
     printf "  %-19s %-8s %-22s -> %s\n" "CUANDO" "SENAL" "EMISOR" "VICTIMA"
-    printf "%s\n" "$eventos" | while IFS=$'\t' read -r ts sig spid scomm sexe sauid vpid vcomm sppid; do
+    printf "%s\n" "$eventos" | while IFS=$'\t' read -r ts sig spid scomm sexe sauid vpid vcomm _; do
       ts=${ts%%.*}
       local quien="demonio"
       [ "$sauid" != "4294967295" ] && quien="humano auid=$sauid"
@@ -3270,6 +3441,11 @@ cmd_cap() {
          printf "[bb cap] pico de memoria: %.1f GiB de %s permitidos (%.0f%% del techo)\n",
                 p/1073741824, g"G", p*100/(g*1073741824) }' >&2 ;;
   esac
+  # Un scope que el techo mato queda `failed` PARA SIEMPRE: el nombre lleva el
+  # pid, asi que nunca se reusa, y systemd no recoge una unit fallida. Medido el
+  # 2026-10-14: 67 `bb-cap-*.scope` en failed, uno por cada OOM de la prueba de
+  # 3 GiB. Ya leido el pico, la unit no guarda nada que haga falta.
+  systemctl --user reset-failed "$nom.scope" 2>/dev/null || true
   [ "$rc" -eq 137 ] || [ "$rc" -eq 134 ] && \
     echo "[bb cap] salio con $rc: el kernel lo mato por el techo. Sube el numero o mira que pidio tanto." >&2
   return "$rc"

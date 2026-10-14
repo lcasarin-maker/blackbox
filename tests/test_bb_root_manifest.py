@@ -1,4 +1,4 @@
-"""`tools/bb_root_manifest.py`, el sudoers y los cuatro scripts root, con sus controles negativos.
+"""`tools/bb_root_manifest.py`, el sudoers y los seis scripts root, con sus controles negativos.
 
 Lo que exige root de verdad (install -o root, visudo sobre /etc/sudoers.d, la regex de
 sudo casando argv) se simula: el comando de instalacion se ejecuta con las rutas
@@ -49,9 +49,10 @@ def test_control_negativo_editar_un_script_cambia_la_propuesta(src: Path):
     assert bm.serializar(bm.proponer(src)) != bm.PROPUESTA.read_bytes()
 
 
-def test_la_propuesta_cubre_los_cinco_scripts_y_nada_mas():
+def test_la_propuesta_cubre_los_seis_scripts_y_nada_mas():
     m = bm.proponer(bm.SRC_DIR)
-    assert sorted(m) == ["arranque-forense", "audit-rules-leer", "crontabs-leer", "dmidecode-sistema", "pstore-preparar"]
+    assert sorted(m) == ["arranque-forense", "audit-rules-leer", "crontabs-leer", "dmidecode-sistema", "earlyoom-proteger",
+                         "pstore-preparar"]
     assert sorted(str(e["file"]) for e in m.values()) == [p.name for p in SCRIPTS]
     for e in m.values():
         assert e["sha256"] == hashlib.sha256((bm.SRC_DIR / str(e["file"])).read_bytes()).hexdigest()
@@ -202,7 +203,7 @@ def _check(inst: Path, src: Path, runner: Path) -> int:
 def test_check_limpio_sale_0_e_imprime_los_ceros(tmp_path: Path, src: Path, capsys: pytest.CaptureFixture[str]):
     inst, runner = _instalado(tmp_path, src)
     assert _check(inst, src, runner) == 0
-    assert "aprobados iguales: 5, cambios: 0, could_not_run: 0" in capsys.readouterr().out
+    assert "aprobados iguales: 6, cambios: 0, could_not_run: 0" in capsys.readouterr().out
 
 
 def test_check_control_negativo_un_script_editado_se_reporta(
@@ -212,7 +213,7 @@ def test_check_control_negativo_un_script_editado_se_reporta(
         f.write("echo extra\n")
     assert _check(inst, src, runner) == 1
     out = capsys.readouterr().out
-    assert "cambiado desde la aprobacion: crontabs-leer" in out and "aprobados iguales: 4" in out
+    assert "cambiado desde la aprobacion: crontabs-leer" in out and "aprobados iguales: 5" in out
 
 
 def test_check_reporta_ausente_sin_aprobar_y_runner_cambiado(
@@ -253,13 +254,63 @@ def test_check_runner_instalado_ilegible_es_could_not_run(
 PROHIBIDO = re.compile(
     r"\b(curl|wget|nc|ncat|socat|ssh|scp|rsync|eval|source|exec|apt|apt-get|systemctl|docker)\b"
     r"|/dev/(tcp|udp)/|\$[1-9@*#]|\$\{(?:[1-9]|[@*#])[}:-]")
-ESCRIBE = re.compile(r"\b(mkdir|chown|chmod|touch|cp|mv|rm|tee|install|ln|dd|truncate|sed\s+-i)\b")
+ESCRIBE = re.compile(r"\b(mkdir|mktemp|chown|chmod|touch|cp|mv|rm|tee|install|ln|dd|truncate|sed\s+-i)\b")
 REDIR = re.compile(r">>?\s*(&\d|[^\s;|&)]+)")
 # Escrituras declaradas, por script: solo a las rutas de su propia carpeta (variables fijadas arriba del script).
 ESCRITURA_OK = {"pstore-preparar.sh": re.compile(r'"\$(destino|padre)"'),
                 "arranque-forense.sh": re.compile(r'"\$(base|dest)[/"]')}
-REDIR_OK = {"arranque-forense.sh": re.compile(r'^"\$(base|dest)/[A-Za-z0-9._-]+"$')}
+REDIR_OK = {"arranque-forense.sh": re.compile(r'^"\$(base|dest)/[A-Za-z0-9._-]+"$'),
+            "earlyoom-proteger.sh": re.compile(r'^"\$tmp"$')}
 FICHA = re.compile(r"^# Desbloquea: ([A-Z0-9-]+)\.$", re.M)
+
+# earlyoom-proteger es el unico que escribe en /etc y reinicia un servicio; su clase es mas estrecha que la de
+# los otros: (1) en una linea que escribe, quitados los operandos declarados, no puede quedar ni '$' ni '/'
+# (ninguna otra variable ni ruta literal); (2) esas variables solo se asignan a sus constantes; (3) systemctl
+# solo como `restart earlyoom` o `is-active earlyoom`, terminando ahi el comando; (4) un heredoc solo con
+# delimitador entre comillas simples (sin expansion) y solo alimentando `mapfile -t args` o `cat > "$tmp"`:
+# su cuerpo es dato, no comando (el de `cat` se compara contra sha_nuevo antes de moverlo).
+EARLYOOM = "earlyoom-proteger.sh"
+OPERANDOS_EARLYOOM = re.compile(r'"\$\(mktemp "\$dir_conf/\.earlyoom\.XXXXXX"\)"|"\$(?:conf|base|bak|tmp2?)"')
+MKTEMP_EARLYOOM = '"$(mktemp "$dir_conf/.earlyoom.XXXXXX")"'
+CONSTANTES_EARLYOOM = {"conf": {"/etc/default/earlyoom"}, "dir_conf": {"/etc/default"}, "base": {"/var/lib/blackbox"},
+                       "bak": {'"$base/etc_default_earlyoom.$sha_viejo"'},
+                       "tmp": {"", MKTEMP_EARLYOOM}, "tmp2": {"", MKTEMP_EARLYOOM}}
+_VARS = "|".join(CONSTANTES_EARLYOOM)
+ASIGNA_EARLYOOM = re.compile(rf"^\s*(?:(?:local|declare|readonly|export)\s+(?:-\S+\s+)*)?({_VARS})=(.*)$")
+OTRA_ASIGNACION = re.compile(rf"\b(?:read|mapfile|readarray)\b[^;|&]*\b(?:{_VARS})\b|\bprintf\s+-v\s*(?:{_VARS})\b"
+                             rf"|\bfor\s+(?:{_VARS})\s+in\b")
+SYSTEMCTL_OK = re.compile(r"\bsystemctl (?:restart|is-active) earlyoom(?=\s*(?:$|[;|&)\"]))")
+HEREDOC = re.compile(r"<<")
+HEREDOC_OK = re.compile(r"""^(?:mapfile -t args|cat > "\$tmp") <<'([A-Z]+)'$""")
+
+
+def _hallazgos_earlyoom(i: int, linea: str) -> tuple[list[str], str]:
+    """(hallazgos de la clase estrecha, linea con los systemctl permitidos quitados para PROHIBIDO)."""
+    fuera: list[str] = []
+    m = ASIGNA_EARLYOOM.match(linea)
+    if m and m.group(2) not in CONSTANTES_EARLYOOM[m.group(1)]:
+        fuera.append(f"{EARLYOOM}:{i}: reasigna una ruta declarada: {linea.strip()}")
+    if OTRA_ASIGNACION.search(linea):
+        fuera.append(f"{EARLYOOM}:{i}: asigna una ruta declarada por read/mapfile/printf/for: {linea.strip()}")
+    if ESCRIBE.search(linea) and re.search(r"[$/]", OPERANDOS_EARLYOOM.sub("", linea)):
+        fuera.append(f"{EARLYOOM}:{i}: escribe fuera de lo declarado: {linea.strip()}")
+    return fuera, SYSTEMCTL_OK.sub("", linea)
+
+
+def _hallazgos_linea(nombre: str, i: int, linea: str) -> list[str]:
+    fuera: list[str] = []
+    para_prohibido = linea
+    if nombre == EARLYOOM:
+        fuera, para_prohibido = _hallazgos_earlyoom(i, linea)
+    if PROHIBIDO.search(para_prohibido):
+        fuera.append(f"{nombre}:{i}: red, eval, exec o argumentos: {linea.strip()}")
+    for destino in REDIR.findall(linea):
+        if destino not in ("/dev/null", "&2") and not (nombre in REDIR_OK and REDIR_OK[nombre].match(destino)):
+            fuera.append(f"{nombre}:{i}: redirige a un fichero: {linea.strip()}")
+    if nombre != EARLYOOM and ESCRIBE.search(linea) and not (
+            nombre in ESCRITURA_OK and ESCRITURA_OK[nombre].search(linea)):
+        fuera.append(f"{nombre}:{i}: escribe fuera de lo declarado: {linea.strip()}")
+    return fuera
 
 
 def hallazgos(nombre: str, texto: str) -> list[str]:
@@ -271,21 +322,26 @@ def hallazgos(nombre: str, texto: str) -> list[str]:
         fuera.append(f"{nombre}: sin set -euo pipefail")
     if not FICHA.search(texto):
         fuera.append(f"{nombre}: la cabecera no dice que ficha desbloquea")
+    fin_heredoc: str | None = None
     for i, linea in enumerate(lineas[1:], 2):
+        if fin_heredoc is not None:
+            fin_heredoc = None if linea == fin_heredoc else fin_heredoc
+            continue
         if linea.lstrip().startswith("#"):
             continue
-        if PROHIBIDO.search(linea):
-            fuera.append(f"{nombre}:{i}: red, eval, exec o argumentos: {linea.strip()}")
-        for destino in REDIR.findall(linea):
-            if destino not in ("/dev/null", "&2") and not (nombre in REDIR_OK and REDIR_OK[nombre].match(destino)):
-                fuera.append(f"{nombre}:{i}: redirige a un fichero: {linea.strip()}")
-        if ESCRIBE.search(linea) and not (nombre in ESCRITURA_OK and ESCRITURA_OK[nombre].search(linea)):
-            fuera.append(f"{nombre}:{i}: escribe fuera de lo declarado: {linea.strip()}")
+        if HEREDOC.search(linea):
+            m = HEREDOC_OK.match(linea) if nombre == EARLYOOM else None
+            fin_heredoc = m.group(1) if m else None
+            if not m:
+                fuera.append(f"{nombre}:{i}: heredoc no declarado: {linea.strip()}")
+        fuera += _hallazgos_linea(nombre, i, linea)
+    if fin_heredoc is not None:
+        fuera.append(f"{nombre}: heredoc {fin_heredoc} sin cerrar")
     return fuera
 
 
-def test_los_cinco_scripts_solo_escriben_lo_declarado_sin_red_ni_argumentos():
-    assert len(SCRIPTS) == 5
+def test_los_seis_scripts_solo_escriben_lo_declarado_sin_red_ni_argumentos():
+    assert len(SCRIPTS) == 6
     fuera: list[str] = []
     for p in SCRIPTS:
         fuera += hallazgos(p.name, p.read_text(encoding="utf-8"))
@@ -469,3 +525,223 @@ def test_arranque_forense_control_negativo_base_de_otro_dueno_aborta(tmp_path: P
     base.mkdir()
     r = _correr(s, str(UID))
     assert r.returncode == 3 and "no es de root" in r.stderr and not (base / "pstore").exists()
+
+
+# --- earlyoom-proteger: su clase estatica, con controles negativos ------------------------
+
+def _sembrado_earlyoom(linea: str) -> list[str]:
+    return hallazgos(EARLYOOM, "#!/bin/bash\n# Desbloquea: X-01.\nset -euo pipefail\n" + linea + "\n")
+
+
+@pytest.mark.parametrize("linea", [
+    "systemctl restart docker", "systemctl restart earlyoom sshd", "systemctl stop earlyoom", "systemctl daemon-reload",
+    "systemctl restart earlyoom; systemctl restart ssh", "systemctl restart earlyoom2", "systemctl is-active docker",
+    "echo x > /etc/passwd", 'echo x > "$conf"', 'mv -f -- "$tmp" /etc/passwd', 'install -m 0644 -- "$conf" /tmp/x',
+    'cp "$conf" "$otra"', 'rm -f -- "$dir_conf"', 'mv -f -- "$tmp" "$conf/../passwd"', "conf=/etc/passwd",
+    'bak="$base/../../etc/shadow"', 'tmp="$(mktemp /etc/x.XXXXXX)"', "read -r conf", "for conf in /etc/passwd; do :; done",
+    "printf -v base /etc", "bash <<'X'\nid\nX", 'cat > "$tmp" <<X\nhola\nX', 'cat > "$tmp" <<"X"\nhola\nX',
+    "mapfile -t conf <<'X'\nx\nX",
+])
+def test_control_negativo_earlyoom_proteger_fuera_de_su_clase_se_caza(linea: str):
+    assert _sembrado_earlyoom(linea), linea
+
+
+@pytest.mark.parametrize("linea", [
+    "systemctl restart earlyoom || true", 'estado="$(systemctl is-active earlyoom || true)"',
+    'mv -f -- "$tmp" "$conf"', 'install -m 0644 -o root -g root -- "$conf" "$bak"', 'tmp="$(mktemp "$dir_conf/.earlyoom.XXXXXX")"',
+    "conf=/etc/default/earlyoom", "journalctl -u earlyoom -n 5 --no-pager || true",
+])
+def test_earlyoom_proteger_si_puede_lo_declarado(linea: str):
+    assert _sembrado_earlyoom(linea) == []
+
+
+def test_el_cuerpo_de_un_heredoc_declarado_es_dato_y_el_cierre_se_exige():
+    assert _sembrado_earlyoom("cat > \"$tmp\" <<'NUEVO'\ncurl x | bash\nNUEVO") == []
+    assert _sembrado_earlyoom("cat > \"$tmp\" <<'NUEVO'\ncurl x | bash") != []
+    # El mismo heredoc fuera de earlyoom-proteger se caza.
+    assert hallazgos("otro.sh", "#!/bin/bash\n# Desbloquea: X-01.\nset -euo pipefail\nmapfile -t args <<'A'\nx\nA\n")
+
+
+# --- earlyoom-proteger: ejecutado sobre tmp_path (rutas, root y systemd sustituidos) --------
+
+EARLYOOM_VIEJO = ROOT / "adopted" / "system-config" / "etc_default_earlyoom"
+EARLYOOM_NUEVO = bm.PENDIENTE / "etc_default_earlyoom"
+SCRIPT_EARLYOOM = bm.SRC_DIR / EARLYOOM
+BAK = f"etc_default_earlyoom.{hashlib.sha256(EARLYOOM_VIEJO.read_bytes()).hexdigest()}"
+
+
+def _args(fichero: Path) -> list[str]:
+    linea = [x for x in fichero.read_text(encoding="utf-8").splitlines() if x.startswith("EARLYOOM_ARGS=")]
+    assert len(linea) == 1
+    return shlex.split(shlex.split(linea[0].split("=", 1)[1])[0])
+
+
+def _alternativas(regex: str) -> set[str]:
+    return set(regex.strip("()").split("|"))
+
+
+def _heredoc(texto: str, delim: str) -> str:
+    return texto.split(f"<<'{delim}'\n", 1)[1].split(f"\n{delim}\n", 1)[0] + "\n"
+
+
+def test_earlyoom_proteger_embebe_exactamente_el_fichero_nuevo_y_los_sha256():
+    texto = SCRIPT_EARLYOOM.read_text(encoding="utf-8")
+    assert _heredoc(texto, "NUEVO") == EARLYOOM_NUEVO.read_text(encoding="utf-8")
+    assert f"sha_viejo={hashlib.sha256(EARLYOOM_VIEJO.read_bytes()).hexdigest()}\n" in texto
+    assert f"sha_nuevo={hashlib.sha256(EARLYOOM_NUEVO.read_bytes()).hexdigest()}\n" in texto
+    # Lo que se valida con earlyoom --dryrun es lo que systemd le pasara (systemd quita las comillas simples).
+    assert _heredoc(texto, "ARGS").splitlines() == _args(EARLYOOM_NUEVO)
+
+
+def test_earlyoom_nuevo_conserva_umbrales_y_amplia_avoid_y_prefer():
+    viejo, nuevo = _args(EARLYOOM_VIEJO), _args(EARLYOOM_NUEVO)
+    assert viejo[:6] == nuevo[:6] == ["-r", "60", "-m", "10", "-s", "100,100"]
+    assert [viejo[6], viejo[8]] == [nuevo[6], nuevo[8]] == ["--avoid", "--prefer"] and len(nuevo) == len(viejo) == 10
+    assert _alternativas(nuevo[7]) - _alternativas(viejo[7]) == {"vllm", "VLLM", "docker", "containerd", "^bb-"}
+    assert _alternativas(nuevo[9]) - _alternativas(viejo[9]) == {"xdist", "bb-portero"}
+    assert _alternativas(viejo[7]) < _alternativas(nuevo[7]) and _alternativas(viejo[9]) < _alternativas(nuevo[9])
+
+
+@pytest.mark.parametrize("comm,avoid,prefer", [
+    ("VLLM::EngineCor", True, False), ("vllm", True, False), ("dockerd", True, False), ("containerd-shim", True, False),
+    ("bb-root-run", True, False), ("[pytest-xdist r", False, True), ("pytest", False, True),
+    ("python3", False, False), ("xbb-x", False, False),
+])
+def test_las_regex_nuevas_sobre_los_comm_reales(comm: str, avoid: bool, prefer: bool):
+    # re.search emula regexec sin anclar; estas regex no usan nada que difiera entre POSIX ERE y re.
+    nuevo = _args(EARLYOOM_NUEVO)
+    assert (re.search(nuevo[7], comm) is not None, re.search(nuevo[9], comm) is not None) == (avoid, prefer)
+
+
+@pytest.mark.skipif(shutil.which("earlyoom") is None, reason="earlyoom no instalado")
+def test_earlyoom_real_compila_las_regex_nuevas_y_el_control_negativo_no():
+    args = _args(EARLYOOM_NUEVO)
+    ok = subprocess.run(["timeout", "1", "earlyoom", "--dryrun", *args], capture_output=True, text=True)
+    assert ok.returncode == 124, ok.stdout + ok.stderr
+    malo = subprocess.run(["timeout", "1", "earlyoom", "--dryrun", *args[:7], args[7][:-1]],
+                          capture_output=True, text=True)
+    assert malo.returncode == 6 and "could not compile regexp" in malo.stdout + malo.stderr
+
+
+def _earlyoom(tmp_path: Path, uid_root: int = UID) -> tuple[Path, Path, Path, Path]:
+    texto = SCRIPT_EARLYOOM.read_text(encoding="utf-8")
+    etc = tmp_path / "etc_default"
+    etc.mkdir()
+    conf = etc / "earlyoom"
+    base = tmp_path / "varlib" / "blackbox"
+    (tmp_path / "varlib").mkdir()
+    for viejo, nuevo in (("conf=/etc/default/earlyoom", f"conf={conf}"), ("dir_conf=/etc/default", f"dir_conf={etc}"),
+                         ("base=/var/lib/blackbox", f"base={base}"), ("espera=3", "espera=0.4"),
+                         ('!= "0" ]]', f'!= "{uid_root}" ]]'), ("-o root -g root", f"-o {UID}"),
+                         ("chown root:root", f"chown {UID}:{os.getgid()}")):
+        assert viejo in texto, f"la sustitucion {viejo!r} no casa: prueba vacia"
+        texto = texto.replace(viejo, nuevo)
+    s = tmp_path / "earlyoom-proteger.sh"
+    s.write_text(texto, encoding="utf-8")
+    stub = tmp_path / "stub"
+    stub.mkdir()
+    log = tmp_path / "systemctl.log"
+    for nombre, cuerpo in (
+            ("systemctl", f'echo "$*" >> {log}\nif [ "$1" = is-active ]; then e=$(cat {stub}/estado); echo "$e"; '
+                          f'[ "$e" = active ]; fi\n'),
+            ("journalctl", 'echo "journal stub $*"\n'),
+            ("earlyoom", f'rc=$(cat {stub}/earlyoom_rc)\n[ "$rc" = vive ] && exec sleep 30\nexit "$rc"\n')):
+        (stub / nombre).write_text("#!/bin/sh\n" + cuerpo, encoding="utf-8")
+        (stub / nombre).chmod(0o755)
+    (stub / "estado").write_text("active\n", encoding="utf-8")
+    (stub / "earlyoom_rc").write_text("vive\n", encoding="utf-8")
+    shutil.copy(EARLYOOM_VIEJO, conf)
+    return s, conf, base, stub
+
+
+def _correr_earlyoom(s: Path, stub: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(["/bin/bash", str(s)], env={"PATH": f"{stub}:{rr.PATH_FIJO}", "LC_ALL": "C"},
+                          capture_output=True, text=True, timeout=60)
+
+
+def _llamadas(tmp_path: Path) -> list[str]:
+    log = tmp_path / "systemctl.log"
+    return log.read_text(encoding="utf-8").splitlines() if log.exists() else []
+
+
+def _restos(conf: Path) -> list[Path]:
+    return sorted(conf.parent.glob(".earlyoom.*"))
+
+
+def test_earlyoom_proteger_escribe_lo_nuevo_guarda_lo_viejo_y_es_idempotente(tmp_path: Path):
+    s, conf, base, stub = _earlyoom(tmp_path)
+    r = _correr_earlyoom(s, stub)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert conf.read_bytes() == EARLYOOM_NUEVO.read_bytes() and stat.S_IMODE(conf.stat().st_mode) == 0o644
+    assert (base / BAK).read_bytes() == EARLYOOM_VIEJO.read_bytes()
+    assert _restos(conf) == [] and _llamadas(tmp_path) == ["restart earlyoom", "is-active earlyoom"]
+    assert "tras el reinicio (is-active): active" in r.stdout and "journal stub -u earlyoom -n 5" in r.stdout
+    r2 = _correr_earlyoom(s, stub)
+    assert r2.returncode == 0 and "ya tiene el contenido nuevo" in r2.stdout, r2.stdout + r2.stderr
+    assert conf.read_bytes() == EARLYOOM_NUEVO.read_bytes()
+    assert _llamadas(tmp_path) == ["restart earlyoom", "is-active earlyoom", "is-active earlyoom"], "reinicio de mas"
+
+
+def test_earlyoom_proteger_control_negativo_contenido_desconocido_no_escribe_nada(tmp_path: Path):
+    s, conf, base, stub = _earlyoom(tmp_path)
+    conf.write_text(EARLYOOM_VIEJO.read_text(encoding="utf-8") + "# editado a mano\n", encoding="utf-8")
+    antes = conf.read_bytes()
+    r = _correr_earlyoom(s, stub)
+    assert r.returncode == 3 and "ni el conocido" in r.stderr
+    assert conf.read_bytes() == antes and not base.exists() and _restos(conf) == [] and _llamadas(tmp_path) == []
+
+
+def test_earlyoom_proteger_control_negativo_si_no_queda_activo_restaura_el_viejo(tmp_path: Path):
+    s, conf, base, stub = _earlyoom(tmp_path)
+    (stub / "estado").write_text("failed\n", encoding="utf-8")
+    r = _correr_earlyoom(s, stub)
+    assert r.returncode == 5 and "se restaura" in r.stderr, r.stdout + r.stderr
+    assert conf.read_bytes() == EARLYOOM_VIEJO.read_bytes() and stat.S_IMODE(conf.stat().st_mode) == 0o644
+    assert (base / BAK).exists() and _restos(conf) == []
+    assert _llamadas(tmp_path) == ["restart earlyoom", "is-active earlyoom", "restart earlyoom", "is-active earlyoom"]
+
+
+def test_earlyoom_proteger_control_negativo_regex_que_earlyoom_rechaza_no_escribe(tmp_path: Path):
+    s, conf, base, stub = _earlyoom(tmp_path)
+    (stub / "earlyoom_rc").write_text("6\n", encoding="utf-8")
+    r = _correr_earlyoom(s, stub)
+    assert r.returncode == 4 and "salio 6" in r.stderr
+    assert conf.read_bytes() == EARLYOOM_VIEJO.read_bytes() and not base.exists() and _restos(conf) == []
+    assert _llamadas(tmp_path) == []
+
+
+def test_earlyoom_proteger_control_negativo_conf_symlink_no_se_sigue(tmp_path: Path):
+    s, conf, _, stub = _earlyoom(tmp_path)
+    blanco = tmp_path / "blanco"
+    shutil.copy(EARLYOOM_VIEJO, blanco)
+    conf.unlink()
+    conf.symlink_to(blanco)
+    r = _correr_earlyoom(s, stub)
+    assert r.returncode == 3 and "symlink" in r.stderr
+    assert blanco.read_bytes() == EARLYOOM_VIEJO.read_bytes() and conf.is_symlink() and _llamadas(tmp_path) == []
+
+
+def test_earlyoom_proteger_con_base_ya_existente_y_segura_si_escribe(tmp_path: Path):
+    # Control del control: las guardas de base de abajo no rechazan TODO directorio existente.
+    s, conf, base, stub = _earlyoom(tmp_path)
+    base.mkdir()
+    base.chmod(0o755)
+    r = _correr_earlyoom(s, stub)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert conf.read_bytes() == EARLYOOM_NUEVO.read_bytes() and (base / BAK).read_bytes() == EARLYOOM_VIEJO.read_bytes()
+
+
+@pytest.mark.parametrize("caso", ["escribible", "otro_dueno", "bak_symlink"])
+def test_earlyoom_proteger_control_negativo_base_insegura_aborta_sin_tocar_conf(tmp_path: Path, caso: str):
+    s, conf, base, stub = _earlyoom(tmp_path, uid_root=UID + 1 if caso == "otro_dueno" else UID)
+    base.mkdir()
+    base.chmod(0o777 if caso == "escribible" else 0o755)  # chmod explicito: mkdir hereda el umask (002 aqui)
+    blanco = tmp_path / "blanco"
+    blanco.write_text("intacto", encoding="utf-8")
+    if caso == "bak_symlink":
+        (base / BAK).symlink_to(blanco)
+    r = _correr_earlyoom(s, stub)
+    motivo = "symlink" if caso == "bak_symlink" else "no es de root o es escribible por grupo/otros"
+    assert r.returncode == 3 and motivo in r.stderr, r.stdout + r.stderr
+    assert conf.read_bytes() == EARLYOOM_VIEJO.read_bytes() and _restos(conf) == [] and _llamadas(tmp_path) == []
+    assert blanco.read_text(encoding="utf-8") == "intacto"

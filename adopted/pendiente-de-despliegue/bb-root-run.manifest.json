@@ -23,6 +23,12 @@
     "sha256": "27dbd70d961ef037e61b3cbf8ea65a198b99ac2a54723eb5f99725ca3df863a2",
     "timeout": 30
   },
+  "earlyoom-proteger": {
+    "descripcion": "Sustituye /etc/default/earlyoom (conocido por sha256) por la version que protege vLLM/docker/containerd/bb- y prefiere pytest/xdist; reinicia earlyoom y restaura si no queda activo (DEBT-EARLYOOM-MATA-AL-MOTOR-VLLM-01)",
+    "file": "earlyoom-proteger.sh",
+    "sha256": "15c72a2eeaf3d698c21a147b8c82e87a11102ce8c144d305b4dcb6d7c650a894",
+    "timeout": 60
+  },
   "pstore-preparar": {
     "descripcion": "Crea /var/lib/blackbox/pstore para SUDO_UID (0755) y lista /sys/fs/pstore (FEATURE-LECTOR-PSTORE-BERT-ROOT-01)",
     "file": "pstore-preparar.sh",
