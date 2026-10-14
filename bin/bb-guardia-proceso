@@ -85,7 +85,8 @@ Seguridad, antes de matar nada
 -------------------------------
 Nunca actua sobre uid 0 (root), nunca sobre PID 1, nunca sobre su propio pid
 ni el de `bb-usable`, y nunca sobre un `comm` de la lista de intocables
-(systemd, sshd, dockerd, containerd). Si `/proc/<pid>` ya desaparecio para
+(data/procesos_protegidos.json: la sesion de Claude, el escritorio, systemd,
+sshd, docker/containerd, el motor vLLM y las piezas de bb). Si `/proc/<pid>` ya desaparecio para
 cuando llega a matar, no es un error: el proceso goloso ya se fue solo.
 """
 from __future__ import annotations
@@ -124,8 +125,51 @@ UMBRAL_AVISO = int(os.environ.get("BB_GUARDIA_UMBRAL_AVISO", "2"))
 UMBRAL_TERM = int(os.environ.get("BB_GUARDIA_UMBRAL_TERM", "3"))
 UMBRAL_KILL = int(os.environ.get("BB_GUARDIA_UMBRAL_KILL", "4"))
 
-# Nunca se tocan, pase lo que pase con su RSS.
-COMM_INTOCABLES = {"systemd", "sshd", "dockerd", "containerd", "init"}
+# Nunca se tocan, pase lo que pase con su RSS (antes una lista propia de cinco
+# nombres, sin la sesion de Claude ni el motor vLLM).
+# Lista unica de procesos protegidos: data/procesos_protegidos.json (voto de Luis
+# 2026-10-14). Se lee aqui mismo, sin importar nada del repo: este demonio no
+# puede caerse al arrancar por un modulo ausente. Si el fichero falta o esta mal
+# formado se usa esta copia de respaldo y main() lo dice al arrancar;
+# tests/test_procesos_protegidos.py exige que sea identica al fichero.
+PROTEGIDOS_RUTA = Path(__file__).resolve().parent.parent / "data" / "procesos_protegidos.json"
+PROTEGIDOS_RESPALDO = (
+    ("claude", True), ("node", False), ("cowork-linux-he", False), ("electron", False),
+    ("chrome_crashpad", False), ("Xorg", False), ("Xwayland", False), ("gnome-shell", True),
+    ("gnome-session", True), ("gdm", True), ("systemd", True), ("init", False), ("sshd", True),
+    ("dbus", True), ("pipewire", True), ("wireplumber", False), ("xdg-", True),
+    ("earlyoom", False), ("docker", True), ("containerd", True), ("vllm", True), ("VLLM", True),
+    ("bb", False), ("bb-", True),
+)
+
+
+def _cargar_protegidos(ruta: Path) -> tuple[frozenset[str], tuple[str, ...], str | None]:
+    """(comm exactos, prefijos, error). Nunca lanza: con error, es el RESPALDO."""
+    pares, error = PROTEGIDOS_RESPALDO, None
+    try:
+        leidos = tuple((e["nombre"], e["prefijo"])
+                       for e in json.loads(ruta.read_text(encoding="utf-8"))["comm"])
+        if not leidos or not all(isinstance(n, str) and n and isinstance(p, bool) for n, p in leidos):
+            raise ValueError("lista vacia o entrada mal formada")
+        pares = leidos
+    except Exception as exc:  # un fichero roto no puede tumbar el demonio: respaldo, y se dice
+        error = f"{type(exc).__name__}: {exc}"
+    return frozenset(n for n, p in pares if not p), tuple(n for n, p in pares if p), error
+
+
+COMM_PROTEGIDOS, COMM_PROTEGIDOS_PREFIJOS, PROTEGIDOS_ERROR = _cargar_protegidos(PROTEGIDOS_RUTA)
+
+
+def comm_protegido(comm: str) -> bool:
+    return comm in COMM_PROTEGIDOS or comm.startswith(COMM_PROTEGIDOS_PREFIJOS)
+
+
+def protegidos_origen() -> str:
+    """Una linea para el journal: de donde salio la lista que se esta usando."""
+    fuente = (f"la COPIA DE RESPALDO ({PROTEGIDOS_RUTA}: {PROTEGIDOS_ERROR})"
+              if PROTEGIDOS_ERROR else str(PROTEGIDOS_RUTA))
+    return (f"procesos protegidos: {len(COMM_PROTEGIDOS)} comm exactos y "
+            f"{len(COMM_PROTEGIDOS_PREFIJOS)} prefijos, de {fuente}")
 
 DRY_RUN = os.environ.get("BB_GUARDIA_DRY_RUN", "0") == "1"
 
@@ -201,7 +245,7 @@ def _es_intocable(pid: int, comm: str) -> str | None:
     """Devuelve el motivo si NO se puede tocar, o None si es seguro matarlo."""
     if pid in (1, os.getpid()):
         return "PID 1 o el propio guardian"
-    if comm in COMM_INTOCABLES:
+    if comm_protegido(comm):
         return f"comm '{comm}' esta en la lista de intocables"
     uid = _uid_de(pid)
     if uid is None:
@@ -368,7 +412,7 @@ def main() -> int:
         f"techo >= {CEILING_KB/1048576:.0f} GiB, escalada aviso={UMBRAL_AVISO} "
         f"term={UMBRAL_TERM} kill={UMBRAL_KILL} muestras, "
         f"poll cada {POLL_INTERVAL:.0f}s"
-        f"{' -- DRY-RUN, no mata nada de verdad' if DRY_RUN else ''}")
+        f"{' -- DRY-RUN, no mata nada de verdad' if DRY_RUN else ''}; {protegidos_origen()}")
     # No se recupera una racha a través de un reinicio: durante la parada no
     # hubo observación continua que autorice una escalada.
     estado = {}

@@ -1,0 +1,35 @@
+{
+  "_doc": "Fuente unica de los procesos que ningun vigilante de bb mata (voto de Luis 2026-10-14). La leen bin/bb-usable (escalon), bin/bb-guardia-proceso, tools/gpuoom_bb.py y tools/vigilante_memavail.py; cada uno lleva una copia de respaldo que tests/test_procesos_protegidos.py exige identica a este fichero. 'comm': nombre en /proc/<pid>/comm (el kernel lo trunca a 15 caracteres); prefijo=true protege todo comm que EMPIECE asi. 'unidad': fragmento de regex (sin anclar, sin mayusculas) que vigilante_memavail aplica al nombre de la unidad systemd; si falta, es el comm escapado. 'unidades': fragmentos que solo existen como nombre de unidad. earlyoom NO lee este fichero: su --avoid es configuracion desplegada (adopted/system-config/etc_default_earlyoom) y el test mide que nombres de aqui le faltan.",
+  "comm": [
+    {"nombre": "claude", "prefijo": true, "motivo": "la sesion de Claude: claude (CLI) y claude-desktop"},
+    {"nombre": "node", "prefijo": false, "motivo": "runtime de la sesion de Claude y de sus servidores MCP"},
+    {"nombre": "cowork-linux-he", "prefijo": false, "motivo": "cowork-linux-helper de Claude Desktop (comm truncado)"},
+    {"nombre": "electron", "prefijo": false, "motivo": "proceso de Claude Desktop"},
+    {"nombre": "chrome_crashpad", "prefijo": false, "motivo": "crashpad de Claude Desktop"},
+    {"nombre": "Xorg", "prefijo": false, "motivo": "servidor grafico"},
+    {"nombre": "Xwayland", "prefijo": false, "motivo": "servidor grafico"},
+    {"nombre": "gnome-shell", "prefijo": true, "motivo": "escritorio (gnome-shell, gnome-shell-calendar-server)"},
+    {"nombre": "gnome-session", "prefijo": true, "motivo": "sesion grafica (gnome-session-b, gnome-session-c)"},
+    {"nombre": "gdm", "prefijo": true, "motivo": "gestor de acceso (gdm3, gdm-x-session, gdm-session-wor)"},
+    {"nombre": "systemd", "prefijo": true, "motivo": "PID 1, gestor de usuario y demonios systemd-* (journal, oomd, logind)"},
+    {"nombre": "init", "prefijo": false, "motivo": "PID 1 cuando no es systemd; en memavail tambien cubre init.scope"},
+    {"nombre": "sshd", "prefijo": true, "motivo": "acceso remoto: la unica via de entrar si el escritorio cae"},
+    {"nombre": "dbus", "prefijo": true, "motivo": "bus de sesion y de sistema (dbus, dbus-daemon, dbus-broker)"},
+    {"nombre": "pipewire", "prefijo": true, "motivo": "audio (pipewire, pipewire-pulse)"},
+    {"nombre": "wireplumber", "prefijo": false, "motivo": "audio"},
+    {"nombre": "xdg-", "prefijo": true, "motivo": "portales del escritorio"},
+    {"nombre": "earlyoom", "prefijo": false, "motivo": "el propio asesino de ultimo recurso"},
+    {"nombre": "docker", "prefijo": true, "motivo": "docker, dockerd, docker-proxy: el contenedor del motor vLLM"},
+    {"nombre": "containerd", "prefijo": true, "motivo": "containerd y containerd-shim del contenedor del motor"},
+    {"nombre": "vllm", "prefijo": true, "motivo": "el motor vLLM"},
+    {"nombre": "VLLM", "prefijo": true, "motivo": "el motor vLLM (VLLM::EngineCor y sus workers)"},
+    {"nombre": "bb", "prefijo": false, "motivo": "el CLI de blackbox", "unidad": "bb-(?!lab-|portero-suite-)"},
+    {"nombre": "bb-", "prefijo": true, "motivo": "las piezas de bb (bb-usable, bb-guardia-proc, bb-vigilante-*, bb-portero); para memavail salvo las suites elegibles bb-lab-* y bb-portero-suite-*", "unidad": "bb-(?!lab-|portero-suite-)"}
+  ],
+  "unidades": [
+    {"patron": "anthropic", "motivo": "scopes app*com.anthropic.Claude-*.scope de la sesion"},
+    {"patron": "gnome", "motivo": "servicios org.gnome.* del escritorio"},
+    {"patron": "session", "motivo": "scopes de sesion de login (session-N.scope)"},
+    {"patron": "user@", "motivo": "el gestor de usuario"}
+  ]
+}
