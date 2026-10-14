@@ -18,7 +18,8 @@ ADOPTED = Path(__file__).resolve().parent.parent / "adopted"
 # (las plantillas del fabricante traen `#FTP_PASSWORD=""` y `SSH_KEY="<path>"`).
 _VALOR = r"""\s*[=:]\s*["']?[^"'\s<]{4,}"""
 SECRETO = re.compile(
-    r"(?i)\b[A-Z0-9_]*(?:API_?KEY|SECRET|TOKEN|PASSWORD|PASSWD)[A-Z0-9_]*" + _VALOR
+    # `NOPASSWD: /ruta` es la etiqueta de sudoers, no un valor: la regla de bb-root-run la lleva.
+    r"(?i)\b(?!NOPASSWD:\s)[A-Z0-9_]*(?:API_?KEY|SECRET|TOKEN|PASSWORD|PASSWD)[A-Z0-9_]*" + _VALOR
     + r"|DATABASE_URL"
     + r"|-----BEGIN [A-Z ]*PRIVATE KEY-----"
     + r"|\b[a-z][a-z0-9+.-]*://[^\s/:@]+:[^\s/@]+@"
@@ -56,6 +57,8 @@ def test_control_negativo_cada_secreto_sembrado_se_caza():
         "-----BEGIN OPENSSH " + "PRIVATE KEY-----",
         "mongodb://usuario:" + "clave@127.0.0.1/db",
         "sk-" + "a" * 24,
+        "ROOT_" + "PASSWD: " + "hunt" * 2,
+        "NO" + "PASSWD=" + "hunt" * 2,
         "echo x > /dev/udp/192.168.7.20/6666",
     ]
     for s in sembrados:
@@ -66,6 +69,7 @@ def test_control_negativo_cada_secreto_sembrado_se_caza():
 
 def test_control_negativo_lo_limpio_no_da_falsos_positivos():
     limpios = ['#FTP_PASSWORD=""', '#SSH_KEY="<path>"', "host 127.0.0.1",
-               "echo x > /dev/udp/<REDACTADO-IP-LAN>/6666", "token de prosa sin asignacion"]
+               "echo x > /dev/udp/<REDACTADO-IP-LAN>/6666", "token de prosa sin asignacion",
+               "lcasarin ALL=(root) NOPASSWD: /usr/local/sbin/bb-root-run ^[a-z0-9][a-z0-9-]*$"]
     for s in limpios:
         assert hallazgos("x.conf", s) == [], s
