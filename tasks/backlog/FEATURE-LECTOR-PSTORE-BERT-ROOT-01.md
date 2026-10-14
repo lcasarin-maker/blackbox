@@ -28,3 +28,6 @@ Lo primero que pide el personal de NVIDIA en los foros es `sudo dmidecode -t 45 
 
 ## Avance 2026-10-14 (2): manifiesto reinstalado por Luis y primera corrida real
 `sudo -n bb-root-run arranque-forense` rc=0: `/var/lib/blackbox/pstore/arranque.jsonl` tiene filas (`pstore_archivos` 0, `bert` copiada, `firmware` bios+t45), el directorio quedo de root, y `dmidecode-bios.txt` / `dmidecode-t45.txt` existen. El close_check de esta ficha (`grep -q . .../arranque.jsonl`) pasa. `bb incident` ya rellena `version de UEFI/EC/PD y BIOS` desde esos archivos (`tools/incident_report.py::firmware_recogido`, 2 tests, control negativo). No se cierra todavia: falta instalar la unidad de usuario que lo corre en cada arranque y ver una fila nueva tras el siguiente reinicio.
+
+## Avance 2026-10-14 (3): unidad de usuario desplegada por Luis
+`bb-arranque-forense.service` instalado y habilitado (`Result=success`, `ExecMainStatus=0`; escribio su fila en `arranque.jsonl` a las 15:02:13Z). La unidad vive en `systemd/` (como las demas unidades de usuario instaladas a mano; `bb drift` no la compara). Cierra cuando el proximo arranque (reinicio o corte) deje una fila NUEVA con un `boot_id` distinto de `934fa20f-...`: `cut -c1-80 /var/lib/blackbox/pstore/arranque.jsonl`.
