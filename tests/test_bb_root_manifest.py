@@ -564,8 +564,8 @@ def test_el_cuerpo_de_un_heredoc_declarado_es_dato_y_el_cierre_se_exige():
 
 # --- earlyoom-proteger: ejecutado sobre tmp_path (rutas, root y systemd sustituidos) --------
 
-EARLYOOM_VIEJO = ROOT / "adopted" / "system-config" / "etc_default_earlyoom"
-EARLYOOM_NUEVO = bm.PENDIENTE / "etc_default_earlyoom"
+EARLYOOM_VIEJO = ROOT / "tests" / "fixtures" / "etc_default_earlyoom.viejo"  # el archivo ANTES del cambio de 2026-10-14 (sha 7e8a44b6...)
+EARLYOOM_NUEVO = ROOT / "adopted" / "system-config" / "etc_default_earlyoom"  # lo desplegado desde 2026-10-14
 SCRIPT_EARLYOOM = bm.SRC_DIR / EARLYOOM
 BAK = f"etc_default_earlyoom.{hashlib.sha256(EARLYOOM_VIEJO.read_bytes()).hexdigest()}"
 

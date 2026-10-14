@@ -10,4 +10,11 @@
 #
 # --avoid: el escritorio y la sesión. El 2026-08-21 earlyoom mató 21 procesos
 # de claude-desktop y ninguno del consumidor real.
-EARLYOOM_ARGS="-r 60 -m 10 -s 100,100 --avoid '(claude-desktop|pipewire|wireplumber|dbus-daemon|gnome-shell|gnome-session|Xorg|gdm|sshd|systemd|journal|xdg-|antigravity)' --prefer '(pytest|triton)'"
+#
+# 2026-10-14 (voto de Luis, DEBT-EARLYOOM-MATA-AL-MOTOR-VLLM-01): --avoid suma el
+# motor vLLM ('vllm', 'VLLM::EngineCor'), docker, containerd y los procesos cuyo
+# nombre empieza por bb-; --prefer suma xdist y bb-portero. earlyoom 1.7 compara la
+# regex (POSIX extendida, sin anclar) contra /proc/<pid>/comm, 15 caracteres, y
+# --avoid solo RESTA 300 al oom_score (--prefer suma 300): no es una exclusion.
+# El contenedor vLLM tiene oom_score_adj 500; con badness 1038 quedaria en 738.
+EARLYOOM_ARGS="-r 60 -m 10 -s 100,100 --avoid '(claude-desktop|pipewire|wireplumber|dbus-daemon|gnome-shell|gnome-session|Xorg|gdm|sshd|systemd|journal|xdg-|antigravity|vllm|VLLM|docker|containerd|^bb-)' --prefer '(pytest|xdist|triton|bb-portero)'"

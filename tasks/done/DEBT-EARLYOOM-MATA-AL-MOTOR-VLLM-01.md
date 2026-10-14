@@ -3,7 +3,11 @@ id: DEBT-EARLYOOM-MATA-AL-MOTOR-VLLM-01
 kind: task
 domain: MEMORY
 title: "earlyoom mata al motor vLLM: --avoid no lo nombra y el contenedor tiene oom_score_adj 500"
-status: open
+status: done
+closed_at: 2026-10-13
+closure_type: fixed
+reason: "El archivo vivo de earlyoom ya protege vllm/VLLM/docker/containerd/bb- (--avoid) y prefiere pytest/xdist/triton/bb-portero (--prefer); aplicado por Luis con bb-root-run (sha 89fe78da..., copia del viejo guardada), earlyoom active, bb drift 0 divergentes. LIMITE declarado: --avoid resta 300 al oom_score y no excluye al motor (oom_score_adj 500 puesto a proposito en el gateway); el seguimiento medido es DEBT-EARLYOOM-MOTOR-SIGUE-ELEGIBLE-01."
+evidence: {"pass": "tasks/evidence/DEBT-EARLYOOM-MATA-AL-MOTOR-VLLM-01/pass.txt", "fail": "tasks/evidence/DEBT-EARLYOOM-MATA-AL-MOTOR-VLLM-01/fail.txt", "e2e": "tasks/evidence/DEBT-EARLYOOM-MATA-AL-MOTOR-VLLM-01/e2e.txt"}
 severity: P1
 origin: detected
 detector: {"rule": "journalctl -u earlyoom: sending SIGTERM to process ... VLLM::EngineCor", "confidence": 1.0}
@@ -27,3 +31,14 @@ close_check: {"cmd": "grep -qF '|vllm|VLLM|docker|containerd|^bb-)' /etc/default
 ## Limite declarado
 
 `--avoid` no es una exclusion: con badness 1038 el motor queda en 738, y con 988 (el caso de 58 MiB) en 688. Si en el proximo episodio ningun otro proceso pasa de esa badness (con el +300 de `--prefer` incluido), earlyoom lo vuelve a elegir; el journal solo registra a la victima, no a las demas candidatas, asi que cuanto margen hay no esta medido. Cerrar de verdad el riesgo pide ademas bajar el oom_score_adj del contenedor (hoy 500) o un earlyoom con exclusion absoluta; eso es decision de Luis y queda fuera de este script. `bb-portero` en `--prefer` no casa ningun comm hoy (los scopes `bb-portero-*` son cgroups, no nombres de proceso), y un comm `bb-portero...` casaria tambien `^bb-` en `--avoid`: neto 0.
+
+## Root Cause
+La lista `--avoid` de earlyoom no nombraba vllm ni docker, y el contenedor del motor tiene oom_score_adj 500: earlyoom lo elegia entre los candidatos (14 senales en el journal retenido, la ultima el 2026-10-10 18:16:47).
+
+## Regression Test
+`tests/test_bb_root_manifest.py` (123 tests del script sellado, con 8 mutaciones que mueren y 24 formas prohibidas sembradas) y `tests/test_verifica_earlyoom.py` para el seguimiento. Control negativo del close_check: el mismo grep sobre el archivo anterior da rc=1 (fail.txt).
+
+## Verification Evidence
+- fail: `tasks/evidence/DEBT-EARLYOOM-MATA-AL-MOTOR-VLLM-01/fail.txt`.
+- pass: `tasks/evidence/DEBT-EARLYOOM-MATA-AL-MOTOR-VLLM-01/pass.txt`.
+- e2e: `tasks/evidence/DEBT-EARLYOOM-MATA-AL-MOTOR-VLLM-01/e2e.txt`.

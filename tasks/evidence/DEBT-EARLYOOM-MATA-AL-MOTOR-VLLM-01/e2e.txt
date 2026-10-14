@@ -1,0 +1,8 @@
+e2e en la maquina (2026-10-14, aplicado por Luis con bb-root-run):
+$ tr "\0" " " < /proc/$(pgrep -xo earlyoom)/cmdline
+/usr/bin/earlyoom -r 60 -m 10 -s 100,100 --avoid (claude-desktop|pipewire|wireplumber|dbus-daemon|gnome-shell|gnome-session|Xorg|gdm|sshd|systemd|journal|xdg-|antigravity|vllm|VLLM|docker|containerd|^bb-) --prefer (pytest|xdist|triton|bb-portero) 
+$ systemctl is-active earlyoom
+active
+copia del archivo viejo:
+etc_default_earlyoom.7e8a44b63203bbcab11613f82f32fbf565dbc789efe395b944965a5a2e3abcbc
+LIMITE declarado: --avoid resta 300 al oom_score, no excluye; el motor (oom_score_adj 500, /srv/ai/gateway/main.py:112) puede seguir siendo la victima. Seguimiento medido en DEBT-EARLYOOM-MOTOR-SIGUE-ELEGIBLE-01.
