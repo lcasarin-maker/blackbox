@@ -281,3 +281,9 @@ camino es el que se toma, aunque cueste más pasos.
 - **Medido:** `sudo -n auditctl -s` corre sin clave; controles negativos `sudo -n auditctl -l` y `sudo -n systemctl restart docker` piden contraseña.
 - **Descarta:** NOPASSWD para `enable-privileged.sh`, `docker restart`, `daemon-reload` y comodines (`auditctl *`): un reinicio de docker tumba vLLM y el `daemon-reload` tiene riesgo P1 de perder la GPU.
 - **Revertir:** `sudo rm /etc/sudoers.d/bb-claude`. El archivo no se versiona en `adopted/`: es 0440 root y `bb drift` no podria leerlo.
+
+## 2026-10-13 — La linea base de ship-freeze incorpora 1 ficha nueva (el resto declarado de un cierre)
+
+- **Decidido:** `FEATURE-ATLAS-REMEDIR-EVAL-TRAS-REINDEXADO-01` entra a `.simplecode/backlog_baseline.json` con la caducidad vigente (2026-11-06).
+- **Motivo:** al cerrar `FEATURE-ATLAS-REINDEX-PAQUETE-GB10-01` (Atlas construyo el grafo: 425 de 436 archivos) quedaron un resto medido (11 archivos sin entidad, eval sin re-medir con la ATOM fria); la regla del repo prohibe declararlo sin abrirle ficha, y la ficha nueva bloquea el push si no esta en la lista.
+- **Descarta:** dejar el resto solo en la prosa del cierre (hueco sin ficha) y mantener la ficha original abierta (ocultaba que el indexado ya esta hecho).
