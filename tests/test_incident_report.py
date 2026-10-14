@@ -801,3 +801,19 @@ def test_aislamiento_wifi_ignora_filas_que_no_son_muestra_ni_tienen_ts_valido():
     # control negativo: sin las muestras de 60 s el hueco de 120 s supera la tolerancia
     solo_bordes = [ms[0], ms[4]]
     assert ir.clasifica_hueco_de_red(solo_bordes, _epoch(ms[0]), _epoch(ms[4]), False)["etiqueta"] == "CUELGUE"
+
+
+def test_firmware_recogido_lee_lo_que_dejo_el_arranque_forense(tmp_path):
+    (tmp_path / "dmidecode-t45.txt").write_text(
+        "Handle 0x1\n\tFirmware Component Name: UEFI\n\tFirmware Version: OEM_UEFI_0.0.8\n"
+        "Handle 0x2\n\tFirmware Component Name: EC Firmware\n\tFirmware Version: 3.5.8\n", encoding="utf-8")
+    (tmp_path / "dmidecode-bios.txt").write_text("BIOS Information\n\tVendor: AMI\n\tVersion: 5.36_0ACUM08\n", encoding="utf-8")
+    r = ir.firmware_recogido(str(tmp_path))
+    assert "UEFI=OEM_UEFI_0.0.8" in r and "EC Firmware=3.5.8" in r and "BIOS=5.36_0ACUM08" in r
+
+
+def test_firmware_recogido_control_negativo_sin_archivos_o_vacios_es_not_collected(tmp_path):
+    assert ir.firmware_recogido(str(tmp_path / "no-existe")) == ir.NOT_COLLECTED
+    (tmp_path / "dmidecode-t45.txt").write_text("", encoding="utf-8")
+    (tmp_path / "dmidecode-bios.txt").write_text("sin version aqui\n", encoding="utf-8")
+    assert ir.firmware_recogido(str(tmp_path)) == ir.NOT_COLLECTED
