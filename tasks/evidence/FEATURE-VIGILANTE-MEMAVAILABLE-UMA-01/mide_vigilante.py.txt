@@ -1,0 +1,77 @@
+"""Medicion real del vigilante memavail en `actuar` contra un acaparador de 768 MiB en un scope de laboratorio.
+
+Uso: python3 mide_vigilante.py <worktree> <dir_datos>. Sin sudo; nada fuera del scope que crea este script.
+"""
+import json
+import os
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, sys.argv[1])
+from tools import vigilante_memavail as v  # noqa: E402
+
+datos = Path(sys.argv[2])
+datos.mkdir(parents=True, exist_ok=True)
+os.environ["BLACKBOX_DATA"] = str(datos)  # interruptores.json PROPIO; el de produccion no se toca
+(datos / "interruptores.json").write_text(json.dumps({"esquema": "bb-interruptores/1", "modos": {"memavail": "actuar"}}))
+
+UNIDAD = f"bb-lab-acaparador-{os.getpid()}.scope"
+CMD = ["systemd-run", "--user", "--scope", f"--unit={UNIDAD}", "-p", "MemoryMax=1G", "--",
+       sys.executable, "-c", "import time; b = b'x' * (768 * 2**20); time.sleep(600)"]
+
+
+def sh(args):
+    r = subprocess.run(args, capture_output=True, text=True, check=False)
+    print(f"$ {' '.join(args)}\n{(r.stdout + r.stderr).strip()}\n(rc={r.returncode})")
+    return r
+
+
+print("$", " ".join(CMD), "&")
+acaparador = subprocess.Popen(CMD, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+cg = None
+for _ in range(100):
+    time.sleep(0.1)
+    us = {u.nombre: u for u in v.lee_unidades() or []}
+    if UNIDAD in us and us[UNIDAD].memoria_bytes >= 700 * 2**20:
+        cg = us[UNIDAD]
+        break
+print("unidad del acaparador:", cg)
+if cg is None:
+    acaparador.kill()
+    print("COULD_NOT_RUN: el acaparador no llego a 700 MiB")
+    sys.exit(2)
+sh(["systemctl", "--user", "show", UNIDAD, "-p", "ActiveState", "-p", "MemoryMax", "-p", "MemoryCurrent", "-p", "ControlGroup"])
+mem_gib = v.lee_meminfo() / 1048576
+print(f"MemAvailable ahora: {mem_gib:.2f} GiB")
+
+print("\n== CONTROL NEGATIVO: linea 1.0 GiB, por debajo de MemAvailable; mismo acaparador, modo actuar")
+neg = v.una_vuelta(linea_gib=1.0, elegibles=(UNIDAD,))
+print("una_vuelta ->", neg)
+r_neg = sh(["systemctl", "--user", "is-active", UNIDAD])
+print("acaparador vivo:", acaparador.poll() is None)
+neg_ok = neg is None and r_neg.stdout.strip() == "active" and acaparador.poll() is None
+
+print("\n== POSITIVO: linea de prueba 1000 GiB, por encima de MemAvailable; elegibles = solo", UNIDAD)
+pos = v.una_vuelta(linea_gib=1000.0, elegibles=(UNIDAD,))
+print("una_vuelta ->", json.dumps(pos, ensure_ascii=False, default=str)[:3000])
+try:
+    rc_hijo = acaparador.wait(timeout=30)
+except subprocess.TimeoutExpired:
+    rc_hijo = "TIMEOUT"
+print("systemd-run del acaparador termino con rc =", rc_hijo, "salida:", (acaparador.stdout.read() if acaparador.stdout else "").strip())
+r_pos = sh(["systemctl", "--user", "is-active", UNIDAD])
+origen = (pos or {}).get("origen")
+pos_ok = (pos is not None and pos.get("accion", {}).get("detenida") == UNIDAD and pos["accion"].get("rc") == 0
+          and r_pos.stdout.strip() != "active" and rc_hijo != "TIMEOUT"
+          and isinstance(origen, list) and origen and origen[0].get("unit") == UNIDAD)
+if origen and isinstance(origen, list):
+    o = origen[0]
+    print("origen registrado:", json.dumps({k: o.get(k) for k in ("pid", "comm", "cmdline", "unit", "fuente", "rss_kb")}, ensure_ascii=False, default=str))
+print("\nregistro", datos / "interruptores/memavail.jsonl", "lineas:",
+      len((datos / "interruptores/memavail.jsonl").read_text().splitlines()))
+print("VEREDICTO negativo_sin_parada =", neg_ok, "| positivo_detuvo_el_scope_con_origen =", pos_ok)
+if acaparador.poll() is None:
+    acaparador.kill()
+sys.exit(0 if neg_ok and pos_ok else 1)

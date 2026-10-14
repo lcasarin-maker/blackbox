@@ -1,0 +1,10 @@
+Extremo a extremo, sin sudo, en esta maquina (2026-10-13):
+systemd-run --user --scope --unit=bb-lab-acaparador-1185676.scope -p MemoryMax=1G con un python que retiene
+768 MiB (MemoryCurrent=810397696) -> tools.vigilante_memavail.una_vuelta en modo `actuar` (BLACKBOX_DATA propio):
+- linea 1.0 GiB < MemAvailable 54.10 GiB: una_vuelta -> None; `systemctl --user is-active` -> active (no para).
+- linea 1000 GiB > MemAvailable: culpable DETENER bb-lab-acaparador-1185676.scope, accion rc=0,
+  `systemctl --user is-active` -> inactive (rc=4), el hijo termino por SIGTERM (rc=-15); el registro guarda el
+  origen del pid 1185677 (cmdline del acaparador, unit, fuente shell, ancestros hasta la sesion claude
+  0cc436d1-...). Tras la corrida quedan 0 unidades bb-lab-*.
+Control negativo de la suite: 3 mutantes (guarda de protegidas, filtro de elegibles, linea) hacen fallar
+tests/test_vigilante_memavail.py (1, 2 y 3 fallos). Literal completo en medicion.txt.
