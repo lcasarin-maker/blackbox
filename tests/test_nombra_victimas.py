@@ -140,8 +140,11 @@ def test_la_marca_del_grupo_cuenta_cuantas_no_dice_alguna(tmp_path, capsys):
     """Marcar un grupo entero porque UNA fila coincide hace que dos filas
     distintas se lean como la misma. Se vio en la salida real: `3 pkill ->
     (sin nombre) [autolimpieza]` con 1 de 3."""
+    # Ids distintos: dos lineas IDENTICAS son el mismo evento escrito dos veces
+    # y `capturas` las cuenta una (los 577 repetidos del 2026-10-14).
     caps = [_cap(emisor={"comm": "pkill", "ppid": 777}, victima={"pid": "777", "comm": "x"}),
-            _cap(emisor={"comm": "pkill", "ppid": 777}, victima={"pid": "777", "comm": "x"})]
+            _cap(id="1790500000.2", emisor={"comm": "pkill", "ppid": 777},
+                 victima={"pid": "777", "comm": "x"})]
     # una tercera del MISMO grupo que no es autolimpieza
     caps.append(_cap(emisor={"comm": "pkill", "ppid": 555}, victima={"pid": "777", "comm": "x"}))
     c, m = _escribe(tmp_path, caps, muestra_pids=[(777, "x")])
@@ -230,9 +233,35 @@ def test_una_linea_en_blanco_no_cuenta_como_captura(tmp_path):
     ("200", 200, "un pid normal en texto, que es como llega del jsonl"),
     ("no-un-numero", None, "ilegible se dice, no se adivina"),
     (None, None, "ausente se dice, no se adivina"),
+    ("18446744069412587520", None,
+     "a0 de 64 bits leido con un double: los bits del pid se perdieron, no se inventa uno"),
+    (2**32 - 1, -1, "el borde: 32 bits todavia es un pid con signo"),
 ])
 def test_normaliza_pid_lee_las_dos_formas(crudo, esperado, porque):
     assert nv.normaliza_pid(crudo) == esperado, porque
+
+
+# --- sigterm.jsonl rota a .1 y trae repetidos de antes (2026-10-14) ---------
+
+
+def test_capturas_lee_el_ROTADO_y_cuenta_cada_id_UNA_vez(tmp_path):
+    """`bin/bb` rota sigterm.jsonl a .1: leer solo el actual perdia la semana
+    anterior. Y lo acumulado antes trae 577 ids repetidos y registros pegados
+    detras de NUL de un corte de luz."""
+    c = tmp_path / "sigterm.jsonl"
+    rot = tmp_path / "sigterm.jsonl.1"
+    rot.write_text(json.dumps(_cap(id="1.1")) + "\n", encoding="utf-8")
+    c.write_bytes((json.dumps(_cap(id="1.1")) + "\n").encode()
+                  + b"\0" * 50 + (json.dumps(_cap(id="2.2")) + "\n").encode()
+                  + (json.dumps({"sin_id": True}) + "\n").encode())
+    assert [x.get("id") for x in nv.capturas(c)] == ["1.1", "2.2", None]
+
+
+def test_control_negativo_ids_DISTINTOS_se_cuentan_todos(tmp_path):
+    c = tmp_path / "sigterm.jsonl"
+    c.write_text("".join(json.dumps(_cap(id=f"{i}.{i}")) + "\n" for i in range(5)),
+                 encoding="utf-8")
+    assert len(nv.capturas(c)) == 5
 
 
 def test_un_grupo_se_nombra_por_su_LIDER_y_lo_dice(tmp_path):

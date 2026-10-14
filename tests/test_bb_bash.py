@@ -138,6 +138,14 @@ def test_cap_MATA_lo_que_se_pasa_del_techo(datos):
                datos, timeout=180)
     assert r.returncode != 0, "pedir 3 GiB con techo de 1G tiene que morir"
     assert "bajo techo de 1G" in r.stderr
+    # Y el scope que el techo mato NO se queda `failed` para siempre. Medido el
+    # 2026-10-14: 67 `bb-cap-python*.scope` en failed, uno por corrida de esta
+    # misma prueba, porque el nombre lleva el pid y systemd no recoge una unit
+    # fallida. Antes del `reset-failed`, `is-failed` daba "failed" aqui.
+    nom = r.stderr.split("(scope ", 1)[1].split(")", 1)[0]
+    estado = subprocess.run(["systemctl", "--user", "is-failed", f"{nom}.scope"],
+                            capture_output=True, text=True).stdout.strip()
+    assert estado != "failed", f"{nom}.scope quedo en failed: bb cap no lo recoge"
 
 
 def test_control_negativo_cap_deja_pasar_lo_que_cabe(datos):
@@ -1471,6 +1479,214 @@ def test_sigterm_ACUMULA_fuera_del_anillo_y_no_duplica(datos, tmp_path):
         "esta cortando, asi que el fichero crece por muestra y no por evento")
 
 
+# ---------------------------------------------------------------------
+# sigterm.jsonl, los defectos medidos el 2026-10-14: 40.8 MB sin rotacion,
+# 577 ids repetidos, 3 lineas con NUL y 88061 victimas de 20 cifras. Cada
+# prueba llama a la FUNCION de bash (`sigterm_persist`) sobre un anillo de
+# mentira y reproduce un defecto; las seis fallaban contra bin/bb de 771b1113.
+# ---------------------------------------------------------------------
+
+
+def _bash(datos, guion, extra_env=None, timeout=60):
+    """Corre `guion` con las funciones de bin/bb cargadas. `bb help` no sale
+    con exit, asi que `source` deja las funciones definidas sin correr nada."""
+    env = {**os.environ, "BLACKBOX_DATA": str(datos), **(extra_env or {})}
+    return subprocess.run(["bash", "-c", f'source "{BB}" help >/dev/null\n{guion}'],
+                          capture_output=True, text=True, env=env, timeout=timeout)
+
+
+def _persistir(datos, aud, extra_env=None):
+    r = _bash(datos, "sigterm_persist", {"BLACKBOX_AUDIT_DIR": str(aud), **(extra_env or {})})
+    assert r.returncode == 0, r.stderr
+    return r
+
+
+def _ids(f):
+    """Los ids de las filas que un lector JSON PUEDE leer, en orden."""
+    if not f.exists():
+        return []
+    ids = []
+    for linea in f.read_bytes().split(b"\n"):
+        try:
+            ids.append(json.loads(linea)["id"])
+        except (ValueError, KeyError):
+            continue
+    return ids
+
+
+def test_sigterm_un_corte_ENTRE_dato_y_marca_no_duplica(datos, tmp_path):
+    """Causa 1 de los 577 repetidos. La marca de agua vivia en sigterm_wm y se
+    escribia DESPUES del dato; blackbox-sample.service tiene
+    TimeoutStartSec=45. Matada entre las dos escrituras -- o tras un corte que
+    deja sigterm_wm vacio -- la siguiente pasada reescribia la ventana entera.
+    Se monta el estado que deja ese corte: el dato escrito y la marca vacia."""
+    aud = tmp_path / "audit"; aud.mkdir()
+    ts = int(time.time())
+    (aud / "audit.log").write_text(
+        "".join(_syscall(ts - 100 + i, 9001 + i, pid=7000 + i) for i in range(3)),
+        encoding="utf-8")
+    acum = datos / "sigterm.jsonl"
+    _persistir(datos, aud)
+    assert len(_ids(acum)) == 3
+    (datos / "sigterm_wm").write_text("", encoding="utf-8")
+    _persistir(datos, aud)
+    ids = _ids(acum)
+    assert len(ids) == 3 and len(set(ids)) == 3, (
+        f"tras perder la marca se reescribio la ventana: {ids}")
+
+
+def test_sigterm_tras_un_REINICIO_en_es_ES_no_duplica(datos, tmp_path):
+    """Las otras 11 rachas de repetidos siguen a un arranque. El manager de
+    usuario arranca con LANG=es_ES.utf8 (LC_NUMERIC=es_MX llega despues, con
+    la sesion), y en es_ES `sort -n` lee el punto como separador de MILES: el
+    serial de 5 cifras del arranque caido queda DETRAS del de 3 cifras del
+    nuevo, la marca de agua tomaba esa ultima linea y la pasada siguiente
+    volvia a escribir todo el arranque nuevo. Caso medido: 1791851531.48078
+    y 1791851636.577."""
+    if "es_ES.utf8" not in subprocess.run(["locale", "-a"], capture_output=True,
+                                          text=True).stdout.split():
+        pytest.skip("COULD_NOT_RUN: el locale es_ES.utf8 no esta instalado")
+    aud = tmp_path / "audit"; aud.mkdir()
+    ts = int(time.time())
+    (aud / "audit.log").write_text(
+        _syscall(ts - 200, 48078, pid=1) + _syscall(ts - 100, 48322, pid=2)   # el arranque caido
+        + _syscall(ts - 30, 384, pid=3) + _syscall(ts - 20, 577, pid=4),     # el nuevo
+        encoding="utf-8")
+    _persistir(datos, aud, {"LC_ALL": "es_ES.utf8"})
+    _persistir(datos, aud, {"LC_ALL": "C"})
+    ids = _ids(datos / "sigterm.jsonl")
+    assert len(ids) == len(set(ids)) == 4, f"tras el arranque se reescribio: {ids}"
+
+
+def test_sigterm_dos_pasadas_A_LA_VEZ_no_duplican(datos, tmp_path):
+    """Causa 2: sin candado, dos pasadas leian la misma marca y escribian lo
+    mismo. 400 eventos hacen que cada pasada dure lo bastante para solaparse."""
+    aud = tmp_path / "audit"; aud.mkdir()
+    ts = int(time.time())
+    (aud / "audit.log").write_text(
+        "".join(_syscall(ts - 500 + i, 20000 + i, pid=8000 + i) for i in range(400)),
+        encoding="utf-8")
+    env = {**os.environ, "BLACKBOX_DATA": str(datos), "BLACKBOX_AUDIT_DIR": str(aud)}
+    guion = f'source "{BB}" help >/dev/null\nsigterm_persist'
+    ps = [subprocess.Popen(["bash", "-c", guion], env=env) for _ in range(2)]
+    assert [p.wait(timeout=120) for p in ps] == [0, 0]
+    ids = _ids(datos / "sigterm.jsonl")
+    assert len(ids) == len(set(ids)) == 400, (
+        f"{len(ids)} filas para 400 eventos: dos pasadas a la vez escribieron lo mismo")
+
+
+def test_sigterm_tras_un_corte_con_NUL_el_registro_siguiente_se_LEE(datos, tmp_path):
+    """Causa 3: las 3 lineas con NUL de sigterm.jsonl siguen a un corte de luz
+    (ext4 fijo el tamano sin escribir los datos). El primer registro del
+    arranque siguiente quedaba pegado detras de los ceros y ningun lector lo
+    leia -- medido en las 3: 1791327043.387, 1791746655.387, 1791851628.384."""
+    aud = tmp_path / "audit"; aud.mkdir()
+    ts = int(time.time())
+    (aud / "audit.log").write_text(_syscall(ts - 30, 9101, pid=9101), encoding="utf-8")
+    acum = datos / "sigterm.jsonl"
+    acum.write_bytes(b'{"ts":1,"id":"1.1","senal":"SIGTERM"}\n' + b"\0" * 300)
+    _persistir(datos, aud)
+    assert f"{ts - 30}.9101" in _ids(acum), (
+        "el registro nuevo quedo pegado a los NUL del corte y no se puede leer")
+
+
+def test_sigterm_X1000_tras_X999_en_el_MISMO_segundo_no_se_pierde(datos, tmp_path):
+    """La marca comparaba `ts.serial` como decimal: X.1000 < X.999, asi que el
+    evento posterior del mismo segundo se descartaba como ya visto."""
+    aud = tmp_path / "audit"; aud.mkdir()
+    ts = int(time.time()) - 60
+    (aud / "audit.log").write_text(_syscall(ts, 999, pid=1), encoding="utf-8")
+    _persistir(datos, aud)
+    with (aud / "audit.log").open("a", encoding="utf-8") as fh:
+        fh.write(_syscall(ts, 1000, pid=2))
+    _persistir(datos, aud)
+    assert _ids(datos / "sigterm.jsonl") == [f"{ts}.999", f"{ts}.1000"]
+
+
+def test_un_a0_de_64_BITS_es_el_pid_de_sus_32_bits_bajos(datos, tmp_path):
+    """En aarch64 auditd escribe a0 como el registro entero, con extension de
+    signo: `a0=ffffffffffe1795a` es el grupo -2000550. strtonum de 16 cifras
+    hex da un double sin los bits bajos y la victima salia
+    18446744069412587520 -- 88061 filas de sigterm.jsonl el 2026-10-14."""
+    aud = tmp_path / "audit"; aud.mkdir()
+    (aud / "audit.log").write_text(
+        _syscall(int(time.time()) - 60, 9201, pid=5555, a0="ffffffffffe1795a")
+        + _syscall(int(time.time()) - 59, 9202, pid=5556, a0="00000000000004d2"),
+        encoding="utf-8")
+    _persistir(datos, aud)
+    vics = [json.loads(l)["victima"]["pid"]
+            for l in (datos / "sigterm.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert vics == ["-2000550", "1234"], vics
+
+
+def test_sigterm_ROTA_por_tamano_y_la_marca_sobrevive_a_la_rotacion(datos, tmp_path):
+    """40.8 MB y 171483 lineas sin rotacion. Pasado el techo el fichero pasa a
+    .1, y lo que ya esta en .1 no se vuelve a escribir en el nuevo."""
+    aud = tmp_path / "audit"; aud.mkdir()
+    ts = int(time.time())
+    (aud / "audit.log").write_text(_syscall(ts - 60, 9301, pid=1), encoding="utf-8")
+    techo = {"BLACKBOX_SIGTERM_MAX_BYTES": "100"}
+    _persistir(datos, aud, techo)
+    with (aud / "audit.log").open("a", encoding="utf-8") as fh:
+        fh.write(_syscall(ts - 30, 9302, pid=2))
+    _persistir(datos, aud, techo)
+    assert _ids(datos / "sigterm.jsonl.1") == [f"{ts - 60}.9301"]
+    assert _ids(datos / "sigterm.jsonl") == [f"{ts - 30}.9302"], (
+        "tras rotar se reescribio lo que ya estaba en .1, o no se roto")
+
+
+def test_control_negativo_por_debajo_del_techo_NO_rota(datos, tmp_path):
+    aud = tmp_path / "audit"; aud.mkdir()
+    (aud / "audit.log").write_text(_syscall(int(time.time()) - 60, 9401, pid=1), encoding="utf-8")
+    _persistir(datos, aud)
+    _persistir(datos, aud)
+    assert not (datos / "sigterm.jsonl.1").exists()
+    assert len(_ids(datos / "sigterm.jsonl")) == 1
+
+
+def _legado(datos, ts_primero):
+    """Un sigterm.jsonl como el medido: un id repetido, un registro pegado tras
+    NUL, una fila sin id y emisores de las dos clases."""
+    def fila(ts, id_, clase):
+        return json.dumps({"ts": ts, "id": id_, "senal": "SIGTERM",
+                           "emisor": {"comm": "x", "clase": clase},
+                           "victima": {"pid": "1", "comm": "?"}},
+                          separators=(",", ":")).encode()
+    acum = datos / "sigterm.jsonl"
+    acum.write_bytes(b"\n".join([
+        fila(ts_primero, f"{ts_primero}.1", "demonio"),
+        fila(ts_primero, f"{ts_primero}.1", "demonio"),
+        b"\0" * 200 + fila(ts_primero + 5, f"{ts_primero + 5}.2", "humano"),
+        b'{"sin_id":true}',
+        fila(ts_primero + 9, f"{ts_primero + 9}.3", "humano"),
+    ]) + b"\n")
+    return acum
+
+
+def test_sigterm_ROTA_por_edad_quitando_SOLO_repetidos_y_NUL(datos, tmp_path):
+    """Rota cuando el primer registro pasa de RETAIN_DAYS/2 (7 dias). Al rotar
+    se quitan los ids repetidos y los NUL, y nada mas: ningun emisor se filtra,
+    la fila sin id se conserva y el registro pegado tras los NUL se recupera."""
+    aud = tmp_path / "audit"; aud.mkdir()
+    viejo = int(time.time()) - 8 * 86400
+    _legado(datos, viejo)
+    _persistir(datos, aud)
+    rotado = datos / "sigterm.jsonl.1"
+    assert _ids(rotado) == [f"{viejo}.1", f"{viejo + 5}.2", f"{viejo + 9}.3"]
+    assert b'{"sin_id":true}' in rotado.read_bytes().split(b"\n")
+    assert b"\0" not in rotado.read_bytes()
+    assert not (datos / "sigterm.jsonl").exists()
+
+
+def test_control_negativo_un_sigterm_RECIENTE_no_rota_ni_se_reescribe(datos, tmp_path):
+    aud = tmp_path / "audit"; aud.mkdir()
+    acum = _legado(datos, int(time.time()) - 86400)
+    antes = acum.read_bytes()
+    _persistir(datos, aud)
+    assert not (datos / "sigterm.jsonl.1").exists()
+    assert acum.read_bytes() == antes
+
+
 # `cmd_drift` en `bin/bb` derivaba `root` de `$0` sin forma de apuntarlo a otro
 # sitio, asi que la unica manera de probar una divergencia REAL era escribir
 # sobre los 39 sujetos adoptados de la maquina de verdad -- inaceptable para
@@ -1966,3 +2182,173 @@ def test_status_monitor_de_distros_fresco_ARMADO_y_sin_estado_FALTA(datos):
 def test_status_sensor_en_off_no_tiene_fila(datos):
     _modos(datos, huella_host="off")
     assert "huella del host" not in correr(["status"], datos).stdout
+
+
+# --- lo que CORRE y no tenia fila (revision del 2026-10-14) ----------------
+#
+# Siete unidades corrian sin fila en `bb status`: si dejaban de correr, nada lo
+# decia. Cada fila tiene su caso que DEBE dar FALTA, montado con un systemctl
+# de mentira delante en el PATH que solo contesta por esas siete; todo lo demas
+# va al systemctl real.
+
+_SIETE = ("blackbox-drift.service", "bb-reboot-verdict.service", "bb-aviso-termico.service",
+          "bb-portero.service", "bb-dmem-monitor.service", "bb-arranque-forense.service",
+          "atom-crash-detector.service")
+
+
+def _btime():
+    return next(int(l.split()[1]) for l in Path("/proc/stat").read_text(encoding="ascii").splitlines()
+                if l.startswith("btime "))
+
+
+def _boot_id():
+    return Path("/proc/sys/kernel/random/boot_id").read_text(encoding="ascii").strip()
+
+
+def _unidades(tmp_path, activas=(), corridas=None):
+    """`corridas`: unit -> (Result, ExecMainExitTimestamp unix o None)."""
+    real = subprocess.run(["bash", "-c", "command -v systemctl"],
+                          capture_output=True, text=True).stdout.strip()
+    d = tmp_path / "unidades"; d.mkdir(exist_ok=True)
+    for u in activas:
+        (d / f"{u}.activa").write_text("", encoding="utf-8")
+    for u, (res, fin) in (corridas or {}).items():
+        (d / f"{u}.show").write_text(
+            f"Result={res}\nExecMainExitTimestamp={'' if fin is None else '@' + str(fin)}\n",
+            encoding="utf-8")
+    b = tmp_path / "bin_unidades"; b.mkdir(exist_ok=True)
+    s = b / "systemctl"
+    s.write_text(f"""#!/usr/bin/env bash
+D={d}
+case " {' '.join(_SIETE)} " in *" $3 "*)
+  case "$2" in
+    is-active) [ -e "$D/$3.activa" ]; exit $? ;;
+    show) if [ -e "$D/$3.show" ]; then cat "$D/$3.show"; else printf 'Result=success\\nExecMainExitTimestamp=\\n'; fi; exit 0 ;;
+  esac ;;
+esac
+exec {real or "/bin/false"} "$@"
+""", encoding="utf-8")
+    s.chmod(0o755)
+    return {"PATH": f"{b}:{os.environ['PATH']}"}
+
+
+_DRIFT = "comparacion repo contra maquina"
+_VEREDICTO = "veredicto del reinicio anterior"
+_AVISO = "aviso termico en pantalla"
+_PORTERO = "portero de app.slice"
+_DMEM = "monitor del parche dmem"
+_FORENSE = "arranque forense"
+_DETECTOR = "detector de caidas de Atlas"
+
+
+def _sano(datos, tmp_path):
+    """El estado en que las siete filas dan ARMADO."""
+    ahora = int(time.time())
+    (datos / "reboots.jsonl").write_text(
+        json.dumps({"boot_id": "otro", "boot_id_siguiente": _boot_id().replace("-", "")}) + "\n",
+        encoding="utf-8")
+    (datos / "dmem_parche.jsonl").write_text("{}\n", encoding="utf-8")
+    arr = tmp_path / "arranque.jsonl"
+    arr.write_text(f'{{"ts":"x","boot_id":"{_boot_id()}","pstore_archivos":0}}\n', encoding="utf-8")
+    corridas: dict[str, tuple[str, int | None]] = {u: ("success", ahora - 60) for u in
+                ("blackbox-drift.service", "bb-arranque-forense.service", "atom-crash-detector.service")}
+    return arr, corridas
+
+
+def _status_siete(datos, tmp_path, activas=("bb-aviso-termico.service", "bb-portero.service"),
+                  corridas=None, arr=None):
+    env = _unidades(tmp_path, activas, corridas)
+    env["BB_ARRANQUE_JSONL"] = str(arr or tmp_path / "no-existe.jsonl")
+    return correr(["status"], datos, env)
+
+
+def test_status_las_SIETE_filas_nuevas_dan_ARMADO_en_el_estado_sano(datos, tmp_path):
+    arr, corridas = _sano(datos, tmp_path)
+    r = _status_siete(datos, tmp_path, corridas=corridas, arr=arr)
+    for fila in (_DRIFT, _VEREDICTO, _AVISO, _PORTERO, _DMEM, _FORENSE, _DETECTOR):
+        assert "ARMADO" in _fila(r, fila), fila
+
+
+@pytest.mark.parametrize("res,hace_s,por", [
+    ("exit-code", 60, "Result=exit-code"),
+    ("success", 27 * 3600, "sin corrida en 1560 min"),
+    ("success", None, "sin corrida"),
+], ids=["fallo_o_divergencia", "rancia", "nunca"])
+def test_control_negativo_drift_FALTA(datos, tmp_path, res, hace_s, por):
+    arr, corridas = _sano(datos, tmp_path)
+    corridas["blackbox-drift.service"] = (res, None if hace_s is None else int(time.time()) - hace_s)
+    f = _fila(_status_siete(datos, tmp_path, corridas=corridas, arr=arr), _DRIFT)
+    assert "FALTA" in f and por in f, f
+
+
+def test_control_negativo_veredicto_sin_fila_de_ESTE_arranque_FALTA(datos, tmp_path):
+    arr, corridas = _sano(datos, tmp_path)
+    (datos / "reboots.jsonl").write_text(
+        json.dumps({"boot_id": "a", "boot_id_siguiente": "b" * 32}) + "\n", encoding="utf-8")
+    assert "FALTA" in _fila(_status_siete(datos, tmp_path, corridas=corridas, arr=arr), _VEREDICTO)
+
+
+@pytest.mark.parametrize("fila,unidad", [(_AVISO, "bb-aviso-termico.service"),
+                                         (_PORTERO, "bb-portero.service")])
+def test_control_negativo_demonio_parado_FALTA(datos, tmp_path, fila, unidad):
+    arr, corridas = _sano(datos, tmp_path)
+    otras = tuple(u for u in ("bb-aviso-termico.service", "bb-portero.service") if u != unidad)
+    r = _status_siete(datos, tmp_path, activas=otras, corridas=corridas, arr=arr)
+    assert "FALTA" in _fila(r, fila)
+
+
+def test_control_negativo_dmem_sin_fila_en_26h_FALTA(datos, tmp_path):
+    arr, corridas = _sano(datos, tmp_path)
+    viejo = time.time() - 27 * 3600
+    os.utime(datos / "dmem_parche.jsonl", (viejo, viejo))
+    assert "FALTA" in _fila(_status_siete(datos, tmp_path, corridas=corridas, arr=arr), _DMEM)
+
+
+@pytest.mark.parametrize("caso", ["fila_de_otro_arranque", "corrida_de_otro_arranque", "corrida_fallida"])
+def test_control_negativo_arranque_forense_FALTA(datos, tmp_path, caso):
+    """Hacen falta las DOS cosas: la corrida de la unit en este arranque y su
+    fila en arranque.jsonl. La unit puede acabar bien sin que el ejecutor de
+    root escriba nada; la fila sola puede ser de otro arranque."""
+    arr, corridas = _sano(datos, tmp_path)
+    if caso == "fila_de_otro_arranque":
+        arr.write_text('{"boot_id":"00000000-0000-0000-0000-000000000000"}\n', encoding="utf-8")
+    elif caso == "corrida_de_otro_arranque":
+        corridas["bb-arranque-forense.service"] = ("success", _btime() - 60)
+    else:
+        corridas["bb-arranque-forense.service"] = ("exit-code", int(time.time()) - 60)
+    assert "FALTA" in _fila(_status_siete(datos, tmp_path, corridas=corridas, arr=arr), _FORENSE)
+
+
+def test_control_negativo_detector_que_no_corrio_en_ESTE_arranque_FALTA(datos, tmp_path):
+    arr, corridas = _sano(datos, tmp_path)
+    corridas["atom-crash-detector.service"] = ("success", _btime() - 60)
+    f = _fila(_status_siete(datos, tmp_path, corridas=corridas, arr=arr), _DETECTOR)
+    assert "FALTA" in f and "en este arranque" in f, f
+
+
+# --- retencion de origen/ y escalon/ ---------------------------------------
+
+
+def test_sample_borra_origen_y_escalon_PASADA_la_retencion_y_nada_mas(datos):
+    """origen/ (~3.5 MB/dia) y escalon/ eran ficheros diarios que no se borraban
+    nunca. Misma regla que las muestras: pasados RETAIN_DAYS. El control
+    negativo va en la misma corrida: lo de ayer se queda, y tambien un fichero
+    viejo de $DATA que no es de esos directorios."""
+    viejo = time.time() - 20 * 86400
+    vivos, muertos = [], []
+    for sub in ("origen", "escalon"):
+        (datos / sub).mkdir()
+        v = datos / sub / "2026-01-01.jsonl"
+        v.write_text("{}\n", encoding="utf-8")
+        os.utime(v, (viejo, viejo))
+        muertos.append(v)
+        n = datos / sub / "2026-10-13.jsonl"
+        n.write_text("{}\n", encoding="utf-8")
+        vivos.append(n)
+    ajeno = datos / "atom_gpu_telemetry.jsonl"
+    ajeno.write_text("{}\n", encoding="utf-8")
+    os.utime(ajeno, (viejo, viejo))
+    vivos.append(ajeno)
+    assert correr(["sample"], datos).returncode == 0
+    assert [m for m in muertos if m.exists()] == [], "lo pasado de retencion sigue ahi"
+    assert [v for v in vivos if not v.exists()] == [], "se borro algo dentro de la retencion o ajeno"

@@ -23,5 +23,10 @@
     "file": "arranque-forense.sh",
     "descripcion": "Copia pstore y BERT a /var/lib/blackbox/pstore, guarda dmidecode bios y -t 45 y anade una fila a arranque.jsonl (FEATURE-LECTOR-PSTORE-BERT-ROOT-01)",
     "timeout": 60
+  },
+  "earlyoom-proteger": {
+    "file": "earlyoom-proteger.sh",
+    "descripcion": "Sustituye /etc/default/earlyoom (conocido por sha256) por la version que protege vLLM/docker/containerd/bb- y prefiere pytest/xdist; reinicia earlyoom y restaura si no queda activo (DEBT-EARLYOOM-MATA-AL-MOTOR-VLLM-01)",
+    "timeout": 60
   }
 }
