@@ -1241,10 +1241,6 @@ def test_delta_forum_usb_raid_link_admission_01() -> None:
     _assert_hardware_batch03_closure('DELTA-FORUM-USB-RAID-LINK-ADMISSION-01')
 
 
-def test_delta_root_backup_mount_boot_identity_01() -> None:
-    _assert_hardware_batch03_closure('DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01')
-
-
 def test_delta_root_display_carveout_oem_fix_gate_01() -> None:
     _assert_hardware_batch03_closure('DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01')
 
@@ -1367,11 +1363,6 @@ def test_delta_forum_qwen_mtp_parser_cancel_state_check_01() -> None:
     _assert_runtime_batch03_closure('DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01')
 
 
-def test_delta_forum_qwen_service_oomd_cache_fail_01() -> None:
-    _assert_runtime_batch03_closure('DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01')
-
-
-
 def test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01() -> None:
     _assert_runtime_batch03_closure('DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01')
 
@@ -1401,32 +1392,6 @@ def _assert_runtime_batch04_closure(card_id: str) -> None:
 
 def test_delta_root_dsml_parser_recovery_boundary_01() -> None:
     _assert_runtime_batch04_closure('DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01')
-
-
-def test_delta_root_glm53_queued_request_progress_gate_01() -> None:
-    _assert_runtime_batch04_closure('DELTA-ROOT-GLM53-QUEUED-REQUEST-PROGRESS-GATE-01')
-
-
-
-
-
-def test_delta_root_recipe_memory_unknown_and_raw_evidence_01() -> None:
-    _assert_runtime_batch04_closure('DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01')
-
-
-def test_delta_root_tokenizer_patch_semantic_gate_01() -> None:
-    _assert_runtime_batch04_closure('DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01')
-
-
-
-def test_delta_forum_apt_arm64_source_validation_01() -> None:
-    from tools.verify_apt_sources_closure import verify
-    from test_closure_kernel_selectors import _require_pass as _assert_pass
-
-    evidence = Path(__file__).resolve().parents[1] / "tasks" / "evidence" / 'DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01' / "commands.json"
-    result = verify(evidence, os.environ.get("BB_APT_APPROVED_DECISION_SHA256"))
-    print(json.dumps(result, sort_keys=True))
-    _assert_pass('DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01', {**result, "could_not_run_count": result["could_not_run"]})
 
 
 def test_debt_close_check_verify_memory_saver_01() -> None:

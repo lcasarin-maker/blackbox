@@ -3,12 +3,16 @@ id: DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01
 kind: task
 domain: MEMORY
 title: "Atribuir y acotar el enjambre del scope de Claude Code que colapso la memoria el 04-05 oct"
-status: open
+status: done
+closed_at: 2026-10-14
+closure_type: void_wontfix
+reason: "Acotado, sin atribucion (Luis 2026-10-14, reabrible): quien lanzo el enjambre del 05-oct es irrecuperable (el launcher de los java no se conserva en ninguna fuente; el journal retenido de la ventana tiene 9136 lineas y ninguna de java). La clase del enjambre queda acotada: el portero adopta cada suite pesada de app.slice en un scope con MemoryMax=20G y le da turno de una en una, el escalon y los demas actores comparten una lista unica de protegidos (data/procesos_protegidos.json) y la ventana 2026-10-05 00:00-00:31 es un incidente etiquetado en tools/calibra_psi.py."
+evidence: {"pass": "tasks/evidence/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/pass.txt", "fail": "tasks/evidence/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/fail.txt", "e2e": "tasks/evidence/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/e2e.txt"}
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-10
-close_check: {"cmd": "grep -q . tasks/evidence/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/quien-lanzo.txt", "expect": "exit_zero", "porque": "Solo cierra con la evidencia de quien lanzo los procesos y con el techo medido que habria acotado el enjambre."}
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a `grep -q . tasks/evidence/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/quien-lanzo.txt`, que no puede cumplirse porque la atribucion es irrecuperable."}
 ---
 
 ## Medido (2026-10-10, muestras por minuto y journal de bb-usable)
@@ -47,3 +51,12 @@ Falta: el launcher de los Java (sin fuente), y calibrar un techo por scope con m
 
 ## Decision de Luis y medicion (2026-10-13)
 Luis eligio un techo por conteo de procesos en `observar`. Medido con `python3 -m tools.atribucion_enjambre --desde 2026-10-11T22:30:00-06:00 --hasta 2026-10-11T22:56:00-06:00` (clave `conteo`): el scope del colapso llego a 136 procesos y crecio a 74.0 por minuto; un scope sano llego a 224 procesos y crecio a 72.8 por minuto (margen de tasa 1.6 %, de nivel -39.3 %). Un techo por conteo dispararia sobre carga legitima, asi que la accion queda descartada; `process_count` ya se registra cada minuto en las muestras y el calibrador (`conteo`, con tests) queda listo para recalcularse con cada incidente nuevo que traiga `claude_scopes`. Registro durable en `DECISIONS.md` (2026-10-13).
+
+## Root Cause
+Un enjambre de procesos (pytest-xdist y java) bajo un scope de sesion de Claude Code llevo `app.slice` a 40.32 GiB con PSI full 49 % y el reinicio por watchdog. La guardia por proceso miraba un proceso, no muchos bajo un scope. El lanzador de los java no quedo en ninguna fuente, por eso la mitad de atribucion no puede cerrarse con evidencia.
+
+## Regression Test
+Ninguno: la ficha no tenia test por ficha; su close_check era un grep sobre `quien-lanzo.txt`. La cota de la clase la prueban `tests/test_portero.py`, `tests/test_procesos_protegidos.py` y `tests/test_calibra_psi.py`. La auditoria original sigue en `tasks/backlog/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/evidence/audit-2026-10-10.md` (no se mueve: la guarda de datos privados la cuenta por esa ruta).
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: las ordenes que buscan el sujeto salen con rc distinto de 0), `pass` (las tres piezas citadas por `grep`/`git log` (portero con 20G y turnos=1, lista unica de protegidos leida por los cuatro actores, ventana etiquetada en calibra_psi), el control positivo del journal y el limite medido: las unidades que leen la lista no se han reiniciado desde que llego (reinicio pendiente por voto de Luis)) y `e2e` (la decision registrada). Para reabrirla si el sujeto aparece: `git mv tasks/done/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01.md tasks/backlog/` y `status: open`.

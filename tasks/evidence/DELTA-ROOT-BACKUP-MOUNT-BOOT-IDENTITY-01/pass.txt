@@ -1,0 +1,71 @@
+Perfil medido de este equipo el 2026-10-14 (solo lectura pasiva; sin credenciales; sin escanear mas que el unico host anunciado). Hay un NAS QNAP en la LAN, pero el equipo NO tiene montaje ni trabajo de respaldo hacia el ni hacia ningun disco: fstab solo trae / , /boot/efi y swap. dpkg-db-backup es la copia local de la base de dpkg en /var/backups, no un destino externo. Deja Dup tiene backend google, sin respaldo hecho y sin periodicidad. IP, MAC y nombre del NAS redactados. Cada puerto se prueba con su propia orden (rc=0 abierto, rc distinto de 0 cerrado).
+
+$ cat /etc/fstab | grep -v "^#" | grep -v "^$"
+rc=0
+/dev/disk/by-uuid/14775751-e6a7-4614-8ee1-e3aedc5d7ada / ext4 errors=remount-ro 0 1
+/dev/disk/by-uuid/FBB1-72F3 /boot/efi vfat defaults 0 1
+/swap.img	none	swap	sw	0	0
+
+$ timeout 15 avahi-browse -art 2>/dev/null | grep -i qnap | sort -u
+rc=0
++ enP7s7 IPv4 <nas>                                     QNAP NAS             local
+= enP7s7 IPv4 <nas>                                     QNAP NAS             local
+
+$ avahi-resolve -n <nas>.local
+rc=0
+<nas>.local	<ip>
+
+$ timeout 3 bash -c "</dev/tcp/<ip>/445"
+rc=0
+
+$ timeout 3 bash -c "</dev/tcp/<ip>/443"
+rc=0
+
+$ timeout 3 bash -c "</dev/tcp/<ip>/8080"
+rc=0
+
+$ timeout 3 bash -c "</dev/tcp/<ip>/2049"
+rc=1
+bash: connect: Conexión rehusada
+bash: línea 1: /dev/tcp/<ip>/2049: Conexión rehusada
+
+$ timeout 3 bash -c "</dev/tcp/<ip>/22"
+rc=1
+bash: connect: Conexión rehusada
+bash: línea 1: /dev/tcp/<ip>/22: Conexión rehusada
+
+$ timeout 10 smbclient -L //<ip> -N
+rc=1
+Anonymous login successful
+tree connect failed: NT_STATUS_ACCESS_DENIED
+
+$ timeout 10 showmount -e <ip>
+rc=1
+clnt_create: RPC: Unable to receive
+
+$ systemctl list-timers --all --no-legend | grep -i backup
+rc=0
+Thu 2026-10-15 00:00:00 CST     7h Wed 2026-10-14 00:00:00 CST      16h ago dpkg-db-backup.timer           dpkg-db-backup.service
+
+$ gsettings get org.gnome.DejaDup backend; gsettings get org.gnome.DejaDup last-backup; gsettings get org.gnome.DejaDup periodic
+rc=0
+'google'
+''
+false
+
+Control positivo: las mismas herramientas SI encuentran lo que existe (los montajes reales de fstab y las unidades .mount del sistema):
+
+$ grep -v "^#" /etc/fstab | grep -E " / | /boot/efi "
+rc=0
+/dev/disk/by-uuid/14775751-e6a7-4614-8ee1-e3aedc5d7ada / ext4 errors=remount-ro 0 1
+/dev/disk/by-uuid/FBB1-72F3 /boot/efi vfat defaults 0 1
+
+$ findmnt -n / | grep -q .
+rc=0
+
+$ systemctl list-units --type=mount --all --no-legend --plain | grep -q "boot-efi.mount"
+rc=0
+
+$ awk '!/^#/ && NF && $2=="/boot/efi"' /etc/fstab | grep -q .
+rc=0
+

@@ -1,0 +1,71 @@
+Perfil medido de este equipo el 2026-10-14: el motor corre UNA configuracion fija (/srv/ai/gateway/active_engine.json) con su memoria fijada (container_memory_gb, admission_check_gb, gpu_memory_utilization); no hay recetas intercambiables de llama.cpp ni sparkrun. Hay copias .bak de configuraciones anteriores en /srv/ai/gateway (historial de cambios hechos a mano, no recetas que se alternen); solo una esta activa y es la que sirve el contenedor.
+
+$ cat /srv/ai/gateway/active_engine.json
+rc=0
+{
+ "engine": "vllm",
+ "image": "vllm/vllm-openai:v0.27.1",
+ "model_path": "/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4",
+ "served_model_name": "nemotron-local",
+ "host": "127.0.0.1",
+ "port": 8000,
+ "env": {
+  "VLLM_HOST_IP": "127.0.0.1",
+  "VLLM_USE_V2_MODEL_RUNNER": "0",
+  "CUDA_ENABLE_COREDUMP_ON_EXCEPTION": "1",
+  "CUDA_COREDUMP_FILE": "/models/_coredumps/vllm_%h_%p_%t",
+  "CUDA_COREDUMP_GENERATION_FLAGS": "skip_nonrelocated_elf_images,skip_global_memory,skip_shared_memory,skip_local_memory",
+  "CUDA_COREDUMP_SHOW_PROGRESS": "1"
+ },
+ "gpu_memory_utilization": 0.3,
+ "max_model_len": 32768,
+ "container_memory_gb": 75,
+ "admission_check_gb": 68,
+ "extra_args": [
+  "--trust-remote-code",
+  "--moe-backend",
+  "marlin",
+  "--mamba-backend",
+  "flashinfer",
+  "--mamba-cache-mode",
+  "align",
+  "--kv-cache-dtype",
+  "fp8",
+  "--enable-prefix-caching",
+  "--reasoning-parser",
+  "nemotron_v3",
+  "--enable-auto-tool-choice",
+  "--tool-call-parser",
+  "qwen3_xml",
+  "--max-num-batched-tokens",
+  "8192"
+ ]
+}
+
+$ ls /srv/ai/gateway | grep -c "bak"
+rc=0
+14
+
+$ docker ps --format "{{.Names}} {{.Image}}"
+rc=0
+nemotron-server vllm/vllm-openai:v0.27.1
+atlas-pgvector pgvector/pgvector:pg16
+otro proyecto-pg pgvector/pgvector:pg16
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | python3 -c "import json,sys;d=json.load(sys.stdin);print([(m[\"id\"],m[\"root\"],m[\"max_model_len\"]) for m in d[\"data\"]])"
+rc=0
+[('nemotron-local', '/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4', 32768)]
+
+Control positivo: las mismas herramientas SI encuentran lo que existe (los tres campos de memoria fijados, el binario de docker y el servidor vLLM):
+
+$ jq -e ".admission_check_gb != null and .container_memory_gb != null and .gpu_memory_utilization != null" /srv/ai/gateway/active_engine.json
+rc=0
+true
+
+$ which docker
+rc=0
+/usr/bin/docker
+
+$ pgrep -f "[v]llm serve|[v]llm.entrypoints" | head -1 | grep -q .
+rc=0
+

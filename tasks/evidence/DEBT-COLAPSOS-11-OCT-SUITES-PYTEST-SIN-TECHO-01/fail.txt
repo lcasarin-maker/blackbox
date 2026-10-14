@@ -1,0 +1,9 @@
+Control negativo (DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01), 2026-10-14: el close_check ANTES de escribir medicion.txt, y una version de medicion sin la frase. Las dos deben FALLAR:
+
+$ grep -q suites_pytest_con_techo tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/medicion.txt
+rc=2
+grep: tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/medicion.txt: No existe el archivo o el directorio
+
+$ printf "medicion sin la frase de cierre\n" | grep -q suites_pytest_con_techo
+rc=1
+

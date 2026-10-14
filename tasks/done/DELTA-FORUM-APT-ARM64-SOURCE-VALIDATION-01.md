@@ -3,12 +3,16 @@ id: DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01
 kind: task
 domain: VERDICT
 title: "Validar forum apt arm64 source validation 01"
-status: open
+status: done
+closed_at: 2026-10-14
+closure_type: void_wontfix
+reason: "DGX OS arm64 con las fuentes Ubuntu solo en ports.ubuntu.com y prioridades fijadas en preferences.d; no hay mezcla archive+ports ni incidente de apt (404, hash o firma) que validar. Decision de Luis 2026-10-14: cerrar sin sujeto; reabrir si aparece un incidente de apt o una fuente archive en arm64."
+evidence: {"pass": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/pass.txt", "fail": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/fail.txt", "e2e": "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01, un xfail que se retira con el cierre."}
 ---
 
 ## Registro y responsable
@@ -139,3 +143,12 @@ El host es arm64 con ports.ubuntu.com y ya hay tools/apt_sources.py (parser Deb8
 Version para un solo nodo Gigabyte AI TOP ATOM: Cerrar la ficha con el perfil aprobado de repos de este host (19 endpoints o solo Ubuntu/NVIDIA) y un guard en huella_host sobre apt_sources.py; sin ensamblar el verificador compuesto completo.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Root Cause
+No aplica a este equipo: el caso del foro es un `ubuntu.sources` que mezcla `archive.ubuntu.com` (404 en binary-arm64) con `ports.ubuntu.com`. Aqui la unica fuente Ubuntu es `ports.ubuntu.com/ubuntu-ports`, `apt-get -s check` sale limpio y los registros de apt no traen 404, hash ni firma rechazada (medido 2026-10-14).
+
+## Regression Test
+Ninguno: la ficha se cierra por no tener sujeto aqui. Los tests que la vigilaban (`tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01` y `tests/test_closure_hardware.py::test_delta_forum_apt_arm64_source_validation_01` (con su entrada en `_OWNED_IDS`, que lo regeneraba desde el JSON de cartas)) se retiran o dejan de parametrizarla, junto con sus entradas de `tests/known_failures.json`. Los instrumentos de apt (`tools/apt_sources.py`, `tools/verify_apt_sources_closure.py`, `tools/apt_arm64_evidence.py`) y sus pruebas siguen vivos: verifican el instrumento, no esta ficha.
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: las ordenes que buscan el sujeto salen con rc distinto de 0), `pass` (perfil medido: arm64, DGX OS 7.2.3/OTA 7.6.0, fuentes, preferences.d, `apt-get -s check` limpio, con control positivo) y `e2e` (la decision registrada). Para reabrirla si el sujeto aparece: `git mv tasks/done/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md tasks/backlog/` y `status: open`.

@@ -1,0 +1,13 @@
+Decision y recorrido de punta a punta de DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01, 2026-10-14:
+{
+ "voto": "Luis, 2026-10-14: 'cerrar con la medicion del portero'",
+ "closure_type": "fixed",
+ "recorrido": "suites reales de sesiones (pytest y hooks pre-push lanzados desde scopes de Chromium y de Claude, sin cambiar a los llamadores) -> el demonio bb-portero.service las ve con RSS >= 4.87 GB -> las adopta en bb-portero-suite-<raiz>.scope con MemoryMax=20G, MemoryHigh=18G, MemorySwapMax=0, TasksMax=1230 -> las congela si app.slice no tiene holgura y las descongela al volver -> una a la vez (turnos=1). 11 adopciones con efecto el 2026-10-14 (portero.jsonl), todas citadas en medicion.txt.",
+ "medicion": "tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/medicion.txt",
+ "admision_en_serie": "tasks/evidence/FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01/medicion.txt",
+ "prueba": "tests/test_portero.py::test_clase_suite_lleva_el_tope_que_cierra_los_colapsos_del_11_oct",
+ "limites_con_ficha": [
+  "DEBT-PORTERO-IGNORA-SU-INTERRUPTOR-01: el interruptor 'portero' no lo lee nadie; el demonio actua siempre",
+  "DEBT-PORTERO-ADOPCION-CHOCA-CON-PIDS-QUE-SALEN-01: 5 de 15 adopciones chocaron con procesos que salian (1 con scope marcado 'resources' por systemd y rc=0 en el portero); y el seguimiento bajo carga de colapso, que no se provoca"
+ ]
+}

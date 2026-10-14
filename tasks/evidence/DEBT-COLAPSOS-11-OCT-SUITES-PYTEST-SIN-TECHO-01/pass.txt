@@ -1,0 +1,13 @@
+Verificacion (DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01), 2026-10-14: el close_check DESPUES de escribir medicion.txt, la prueba que fija el tope de la clase suite y su control negativo por mutacion (MemoryMax de la clase a 42G: la prueba debe fallar con rc distinto de 0).
+
+$ grep -q suites_pytest_con_techo tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/medicion.txt
+rc=0
+
+$ python3 -m pytest -q -p no:cacheprovider tests/test_portero.py -k tope_que_cierra
+rc=0
+.                                                                        [100%]
+1 passed, 37 deselected in 0.10s
+
+$ python3 -c "import sys;sys.path.insert(0,\"tests\");from dataclasses import replace;from tools import portero as po;import test_portero as t;po.CLASES[\"suite\"]=replace(po.CLASES[\"suite\"],memory_max_kb=42*po.GIB_KB);t.test_clase_suite_lleva_el_tope_que_cierra_los_colapsos_del_11_oct()" 2>/dev/null
+rc=1
+

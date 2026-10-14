@@ -1,0 +1,11 @@
+Control negativo de aplicabilidad (DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (fuente archive.ubuntu.com mezclada en arm64 y un incidente de apt: 404, hash o firma). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ grep -l "archive.ubuntu.com" /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list /etc/apt/sources.list
+rc=1
+
+$ zgrep -hEi "hash sum mismatch|404 +Not Found|NO_PUBKEY|EXPKEYSIG" /var/log/apt/term.log* | grep -q .
+rc=1
+
+$ zgrep -hEi "hash sum mismatch|404 +Not Found|NO_PUBKEY|EXPKEYSIG" /var/log/apt/history.log* | grep -q .
+rc=1
+

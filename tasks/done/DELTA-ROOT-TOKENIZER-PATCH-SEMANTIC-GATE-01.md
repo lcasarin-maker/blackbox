@@ -3,12 +3,16 @@ id: DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01
 kind: task
 domain: VERDICT
 title: "Validar root tokenizer patch semantic gate 01"
-status: open
+status: done
+closed_at: 2026-10-14
+closure_type: void_wontfix
+reason: "El modelo con el tokenizer parcheado (multimodal truncado a 2048) y el checkpoint MXFP4 parcheado no se sirven aqui: el motor sirve solo nemotron-local (texto, NVFP4) y no hay checkpoint MXFP4 ni modelo de vision en disco. Decision de Luis 2026-10-14: cerrar sin sujeto; reabrir si se sirve uno de esos modelos."
+evidence: {"pass": "tasks/evidence/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01/pass.txt", "fail": "tasks/evidence/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01/fail.txt", "e2e": "tasks/evidence/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_tokenizer_patch_semantic_gate_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a tests/test_debt_registration_controls.py::test_delta_root_tokenizer_patch_semantic_gate_01, un xfail que se retira con el cierre."}
 ---
 
 ## Registro y responsable
@@ -60,3 +64,12 @@ El truncamiento a 2048 tokens era de un modelo/tokenizer multimodal concreto y e
 Version para un solo nodo Gigabyte AI TOP ATOM: Anadir al canario_motor una ronda de prompt largo con centinelas al inicio/medio/fin para detectar truncamiento silencioso de nemotron-local; ignorar patch MXFP4 e imagenes.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Root Cause
+No aplica a este equipo: el truncamiento a 2048 tokens era de un tokenizer multimodal concreto y el patch MXFP4 de otro checkpoint. Aqui `/v1/models` lista solo nemotron-local (NVFP4, texto), no hay directorios `*mxfp4*` y `/srv/ai/models/vision` esta vacio.
+
+## Regression Test
+Ninguno: la ficha se cierra por no tener sujeto aqui. Los tests que la vigilaban (`tests/test_debt_registration_controls.py::test_delta_root_tokenizer_patch_semantic_gate_01` y la parametrizacion `tests/test_runtime_batch04_controls.py::test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01]` (la filtra `_ficha_abierta`)) se retiran o dejan de parametrizarla, junto con sus entradas de `tests/known_failures.json`.
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: las ordenes que buscan el sujeto salen con rc distinto de 0), `pass` (perfil medido: modelo servido con su raiz y contexto, directorios de pesos y de tokenizers, con control positivo) y `e2e` (la decision registrada). Para reabrirla si el sujeto aparece: `git mv tasks/done/DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01.md tasks/backlog/` y `status: open`.

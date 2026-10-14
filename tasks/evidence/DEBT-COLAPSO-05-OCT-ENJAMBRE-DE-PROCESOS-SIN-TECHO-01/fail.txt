@@ -1,0 +1,9 @@
+Control negativo (DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01), 2026-10-14: la atribucion (quien lanzo el enjambre y los java del 05-oct) es irrecuperable. Cada orden busca el lanzador y debe FALLAR (rc distinto de 0): el close_check original (archivo de atribucion) y el journal retenido de la ventana, que tiene miles de lineas pero ninguna de java:
+
+$ grep -q . tasks/evidence/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/quien-lanzo.txt
+rc=2
+grep: tasks/evidence/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/quien-lanzo.txt: No existe el archivo o el directorio
+
+$ journalctl --since "2026-10-04 23:30" --until "2026-10-05 00:31" --no-pager -q | grep -qi java
+rc=1
+

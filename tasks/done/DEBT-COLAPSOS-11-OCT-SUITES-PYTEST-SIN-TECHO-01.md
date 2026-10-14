@@ -3,7 +3,11 @@ id: DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01
 kind: task
 domain: GPU
 title: "Dos colapsos de memoria el 11-oct coinciden con suites pytest de Atlas sin techo de memoria"
-status: open
+status: done
+closed_at: 2026-10-14
+closure_type: fixed
+reason: "Medicion del portero (voto de Luis 2026-10-14: 'cerrar con la medicion del portero'): bb-portero.service activo adopta por el camino transparente cada suite pesada de app.slice en un scope con MemoryMax=20G, MemoryHigh=18G, sin swap, TasksMax=1230 y una a la vez; 11 adopciones con efecto el 2026-10-14 y la admision en serie de tres suites simultaneas medida. LIMITES con ficha: el interruptor 'portero' no lo lee el demonio (DEBT-PORTERO-IGNORA-SU-INTERRUPTOR-01); 5 de 15 adopciones chocaron con procesos que salian y no se midio bajo carga de colapso (DEBT-PORTERO-ADOPCION-CHOCA-CON-PIDS-QUE-SALEN-01)."
+evidence: {"pass": "tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/pass.txt", "fail": "tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/fail.txt", "e2e": "tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/e2e.txt"}
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -76,3 +80,15 @@ Un `backlog_verifier --gate` completo (kit simplecode 9.9.0) en `systemd-run --u
 
 ## Voto de Luis 2026-10-12: el tope del verificador completo sigue en 20 GiB
 Datos de la sesion 020 (6 corridas, kit 9.9.0, scope 20G, sin swap): terminaron las 1, 2, 3 y 5 (11-16 min); murieron por OOM del scope las 4 (3 min 49 s... a los 4 min 30 s, cache fria) y 6 (3 min 49 s, cache tibia, load 31 al lanzar), ambas con otras suites en la maquina; el host sigui vivo las dos veces (literal del kernel: `oom-kill:constraint=CONSTRAINT_MEMCG`, `oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/run-...scope`). Decidido: mantener 20 GiB y serializar (el verificador se corre solo; el portero lo hara cuando se despliegue). Descartado: clase `verificador` de 28 GiB (sin medicion de que alcance y deja menos holgura en app.slice). Se reabre si una corrida muere estando sola en la maquina.
+
+## Medicion del portero y cierre (2026-10-14)
+`tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/medicion.txt`, con las ordenes literales: `bb-portero.service` activo; 11 suites pesadas reales (RSS 4.88 a 6.26 GB, lanzadas desde scopes de Chromium y de Claude sin cambiar al llamador) adoptadas en `bb-portero-suite-<raiz>.scope` con MemoryMax=20G, MemoryHigh=18G, MemorySwapMax=0, TasksMax=1230; 10 congeladas mientras app.slice no tenia holgura y descongeladas al volver; ninguna pytest queda congelada. La admision en serie de tres suites simultaneas esta en `tasks/evidence/FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01/medicion.txt`. El arranque actual (2026-10-13 14:07) sigue en pie.
+
+## Root Cause
+Dos o mas suites completas (hooks de suite completa, pytest-xdist) coincidian dentro de `app.slice` sin tope propio; el slice se pegaba a su `MemoryMax=42G`, PSI memory full llegaba a 98 % con 15-30 GB libres en el sistema y `bb-usable` reiniciaba la maquina por diseno a los 300 s de COLAPSO.
+
+## Regression Test
+`tests/test_portero.py::test_clase_suite_lleva_el_tope_que_cierra_los_colapsos_del_11_oct` fija el tope de la clase `suite` (20G/18G/sin swap/1230 tareas, un turno) y que una suite pesada de un scope de sesion sale admitida con esos topes; su control negativo (3 turnos de 20G en un slice de 42G) no actua. Mutacion medida: con MemoryMax de la clase a 42G la prueba falla (rc=1, en `pass.txt`). El comportamiento del demonio lo cubren las demas pruebas de `tests/test_portero.py`, incluida la prueba real con scopes desechables.
+
+## Verification Evidence
+`fail` (el close_check antes de escribir `medicion.txt`: rc=2; y una medicion sin la frase: rc=1), `pass` (el close_check despues: rc=0; la prueba nueva y su mutacion) y `e2e` (el recorrido suite real -> adopcion -> tope -> turno, y los limites con ficha). Limites declarados en `medicion.txt` con su ficha: `DEBT-PORTERO-IGNORA-SU-INTERRUPTOR-01` y `DEBT-PORTERO-ADOPCION-CHOCA-CON-PIDS-QUE-SALEN-01`.

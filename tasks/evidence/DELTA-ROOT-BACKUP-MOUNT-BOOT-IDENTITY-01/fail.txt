@@ -1,0 +1,20 @@
+Control negativo de aplicabilidad (DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (un destino de respaldo montado o configurado cuya identidad haya que verificar tras el arranque: montaje de red o USB en fstab, unidad .mount/.automount, trabajo de respaldo). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ awk '!/^#/ && NF && $2!="/" && $2!="/boot/efi" && $3!="swap"' /etc/fstab | grep -q .
+rc=1
+
+$ findmnt -t nfs,nfs4,cifs,smb3 -n | grep -q .
+rc=1
+
+$ systemctl list-units --type=mount,automount --all --no-legend --plain | grep -Ei "nfs|cifs|smb|backup|nas|media"
+rc=1
+
+$ crontab -l 2>/dev/null | grep -Ei "backup|rsync|restic|borg|duplicity"
+rc=1
+
+$ systemctl list-timers --all --no-legend | grep -Ei "rsync|restic|borg|duplicity|nas|deja"
+rc=1
+
+$ gsettings get org.gnome.DejaDup periodic | grep -q true
+rc=1
+

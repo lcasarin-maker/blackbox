@@ -1,0 +1,14 @@
+Control negativo de aplicabilidad (DELTA-FORUM-QWEN-SERVICE-OOMD-CACHE-FAIL-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (un servicio que sirve Qwen, Spark Studio o Hermes, y un kill de systemd-oomd). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | grep -qi qwen
+rc=1
+
+$ docker ps --format "{{.Names}} {{.Image}}" | grep -qi qwen
+rc=1
+
+$ systemctl --user list-units --all --no-legend --plain | grep -Ei "qwen|hermes|studio"; systemctl list-units --all --no-legend --plain | grep -Ei "qwen|hermes|studio"
+rc=1
+
+$ journalctl -u systemd-oomd --since 2026-09-01 --no-pager -q | grep -Eq "Killed "
+rc=1
+

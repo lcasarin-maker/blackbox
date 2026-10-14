@@ -174,6 +174,24 @@ def test_presupuesto_desbordado_no_actua():
 
 
 @pytest.mark.unit
+def test_clase_suite_lleva_el_tope_que_cierra_los_colapsos_del_11_oct():
+    """DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01: la suite pesada de un scope de sesion sale con 20G/18G, sin swap.
+
+    Los numeros son el contrato del cierre (medicion.txt de la ficha). Control negativo: con 3 turnos de 20G el
+    presupuesto de un app.slice de 42G se desborda y el portero no actua.
+    """
+    c = po.CLASES["suite"]
+    esperado = {"MemoryMax": 20 * 1024**3, "MemoryHigh": 18 * 1024**3, "MemorySwapMax": 0, "TasksMax": 1230}
+    assert po._topes(c) == esperado and c.turnos == 1
+    assert po.presupuesto_desbordado(42 * G, po.CLASES) == ""
+    acc = po.decide([arbol(1, 60, rss=c.umbral_rss_kb)], estado())
+    assert tipos(acc) == {(1, "admitir")} and acc[0].topes == esperado
+    tres = {"suite": replace(c, turnos=3)}
+    assert po.presupuesto_desbordado(42 * G, tres) != ""
+    assert [a.tipo for a in po.decide([arbol(1, 60, rss=c.umbral_rss_kb)], estado(), tres)] == ["no_actua"]
+
+
+@pytest.mark.unit
 def test_presupuesto_descuenta_lo_que_consumen_los_scopes_con_tope_propio():
     acc = po.decide([arbol(1, 60)], estado(consumo=23 * G))  # 23 + 20 > 42
     assert tipos(acc) == {(1, "congelar")} and "presupuesto" in acc[0].motivo

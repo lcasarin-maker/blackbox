@@ -83,13 +83,6 @@ def test_debt_close_check_verify_memory_saver_01() -> None:
         _assert_finding_passes(finding_id)
 
 
-def test_delta_forum_apt_arm64_source_validation_01() -> None:
-    evidence = ROOT / 'tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/commands.json'
-    result = verify_apt_arm64_capture(evidence)
-    assert result['status'] == 'pass', result
-    assert result['fail'] == 0 and result['could_not_run'] == 0, result
-
-
 def test_apt_arm64_raw_capture_preserves_missing_forum_negative() -> None:
     evidence = ROOT / 'tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/commands.json'
     result = verify_apt_arm64_capture(evidence)
@@ -438,7 +431,7 @@ def _make_selector(finding_id: str):
 _OWNED_IDS = set(FORUM_IDS) | {
     'FEATURE-FORUM-GPU-CLOCK-CAP-AB-01', 'FEATURE-MEMORYSAVER-02-TRAZADOR',
     'FEATURE-MEMORYSAVER-04-PACKING-4K', 'FEATURE-USB-HID-POSTUPDATE-CHECK',
-    'FEATURE-FORUM-WIFI-ISOLATION-01', 'DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01',
+    'FEATURE-FORUM-WIFI-ISOLATION-01',
     'DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01',
 }
 for _card in CARDS:

@@ -3,12 +3,16 @@ id: DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01
 kind: task
 domain: VERDICT
 title: "Validar root recipe memory unknown and raw evidence 01"
-status: open
+status: done
+closed_at: 2026-10-14
+closure_type: void_wontfix
+reason: "El motor corre UNA configuracion fija (/srv/ai/gateway/active_engine.json) con su memoria fijada (container_memory_gb, admission_check_gb, gpu_memory_utilization); no hay recetas intercambiables de vLLM, llama.cpp ni sparkrun con presupuesto desconocido. Decision de Luis 2026-10-14: cerrar sin sujeto; reabrir si se alternan recetas o se sirve con llama.cpp."
+evidence: {"pass": "tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/pass.txt", "fail": "tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/fail.txt", "e2e": "tasks/evidence/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_recipe_memory_unknown_and_raw_evidence_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a tests/test_debt_registration_controls.py::test_delta_root_recipe_memory_unknown_and_raw_evidence_01, un xfail que se retira con el cierre."}
 ---
 
 ## Registro y responsable
@@ -72,3 +76,12 @@ El principio (campos desconocidos de receta dan unknown, no cero) aplica a la ad
 Version para un solo nodo Gigabyte AI TOP ATOM: Usar tools/recipe_memory.py contra la receta real de nemotron-local (pesos, KV, graphs, reserva del host) antes de un reinicio del contenedor, con comparison_only frente a MemAvailable; descartar la parte de sparkrun y de cambio de backend.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Root Cause
+No aplica a este equipo: el caso del foro son recetas de comunidad (llama.cpp que imprime fit:YES con KV desconocido, sparkrun) cuyo presupuesto de memoria no se conoce. Aqui la receta activa declara `container_memory_gb: 75`, `admission_check_gb: 68` y `gpu_memory_utilization: 0.3`; no hay llama.cpp ni sparkrun instalados. Las copias `.bak` de `/srv/ai/gateway` son historial de cambios a mano, no recetas que se alternen.
+
+## Regression Test
+Ninguno: la ficha se cierra por no tener sujeto aqui. Los tests que la vigilaban (`tests/test_debt_registration_controls.py::test_delta_root_recipe_memory_unknown_and_raw_evidence_01` y la parametrizacion `tests/test_runtime_batch04_controls.py::test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01]` (la filtra `_ficha_abierta`)) se retiran o dejan de parametrizarla, junto con sus entradas de `tests/known_failures.json`. `tools/recipe_memory.py` y su prueba siguen vivos.
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: las ordenes que buscan el sujeto salen con rc distinto de 0), `pass` (perfil medido: `active_engine.json` completo, cuenta de copias .bak, contenedores, modelo servido, con control positivo) y `e2e` (la decision registrada). Para reabrirla si el sujeto aparece: `git mv tasks/done/DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01.md tasks/backlog/` y `status: open`.
