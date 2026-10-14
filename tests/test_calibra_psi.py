@@ -107,14 +107,17 @@ def test_ventanas_por_defecto_son_los_congelamientos_reales():
     rojo por la misma razon -- la muestra de las 04:24:02, dentro del sexto
     incidente, salia FALSO POSITIVO (asi llego a 6). Los dos reinicios por
     watchdog del 2026-10-11 (DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01)
-    dejaron la excursion de las 22:44 como FALSO POSITIVO (asi llego a 8)."""
+    dejaron la excursion de las 22:44 como FALSO POSITIVO (asi llego a 8); la ventana del 05-oct (ficha del colapso, corroborada con last -x y sar) lo lleva a 9."""
     vs = ventanas()
-    assert len(vs) == 8
+    assert len(vs) == 9
     assert vs[0][0] == dt.datetime(2026, 9, 22, 5, 45)
     assert vs[5][0] == dt.datetime(2026, 9, 28, 4, 18), (
         "el sexto es el segundo reinicio del 2026-09-28: un proceso ya estable "
         "en 30+ GiB cuando aparecio en la telemetria, sin brotar rapido")
-    assert vs[6] == (dt.datetime(2026, 10, 11, 22, 2), dt.datetime(2026, 10, 11, 22, 12)), (
+    assert vs[6] == (dt.datetime(2026, 10, 5, 0, 0), dt.datetime(2026, 10, 5, 0, 31)), (
+        "el 05-oct estaba sin etiquetar y el control lo daba como FALSO POSITIVO (479 s); "
+        "last -x y sar lo corroboran como colapso con reinicio a las 00:31:49 (voto de Luis 2026-10-14, racha-118)")
+    assert vs[7] == (dt.datetime(2026, 10, 11, 22, 2), dt.datetime(2026, 10, 11, 22, 12)), (
         "el septimo arranca con la primera lectura >= 10 de bb-usable (22:02:07): "
         "bb sample ya no escribia desde las 22:00:34")
     assert vs[-1] == (dt.datetime(2026, 10, 11, 22, 44), dt.datetime(2026, 10, 11, 22, 54)), (

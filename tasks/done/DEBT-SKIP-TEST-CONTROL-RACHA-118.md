@@ -3,16 +3,16 @@ id: DEBT-SKIP-TEST-CONTROL-RACHA-118
 kind: task
 domain: VERDICT
 title: "Revisar skip en test_control_racha.py:118"
+status: done
+closed_at: 2026-10-13
+closure_type: fixed
+reason: "El 05-oct 00:00-00:31 era un colapso real sin etiquetar (last -x: sesion caida y arranque a las 00:31:49; sar: ldavg-1 70-105 con 5905-6600 procesos contra 1.31 y 1897). Con la ventana en INCIDENTES el control sobre el corpus real da LIMPIO (margen 1.05x); antes FALSO POSITIVO a las 00:26 (479 s). Voto de Luis 2026-10-14."
+evidence: {"pass": "tasks/evidence/DEBT-SKIP-TEST-CONTROL-RACHA-118/pass.txt", "fail": "tasks/evidence/DEBT-SKIP-TEST-CONTROL-RACHA-118/fail.txt", "e2e": "tasks/evidence/DEBT-SKIP-TEST-CONTROL-RACHA-118/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_skip_test_control_racha_118", "expect": "exit_zero", "porque": "Ejecutar la rama del sujeto que hoy puede quedar skipped con fixture reproducible o entorno requerido identificado. Un informe con skip no se declara limpio. Control negativo: quitar la capacidad/fixture produce could_not_run visible; romper el comportamiento real hace fallar la prueba. Conservar el skip si corresponde, con razón, responsable y disparador revisables; no quitarlo para forzar éxito."}
-status: open
-closed_at: 2026-10-03
-closure_type: fixed
-reason: "El corpus real de 22653 muestras está disponible y el control positivo devuelve LIMPIO; la ausencia queda como COULD_NOT_RUN con owner y trigger visibles."
-evidence: {"pass":"tasks/evidence/DEBT-SKIP-TEST-CONTROL-RACHA-118.pass.txt","fail":"tasks/evidence/DEBT-SKIP-TEST-CONTROL-RACHA-118.fail.txt","e2e":"tasks/evidence/DEBT-SKIP-TEST-CONTROL-RACHA-118.e2e.txt"}
 ---
 
 ## Registro y responsable
@@ -57,3 +57,14 @@ Al re-verificar antes de mover esta ficha a `done/`, `python3 -m pytest -q -rs t
 
 ## Avance 2026-10-13: el cierre antiguo era falso; el corpus real da FALSO POSITIVO
 `python3 -m tools.control_racha` sobre el corpus real (22653 muestras) imprime `VEREDICTO: FALSO POSITIVO -- alguna regla reiniciaria la maquina fuera de todo incidente conocido` (regla "3 bajas para cortar" y "6 bajas para cortar", falso positivo en 2026-10-05 00:26:00, ventana 479 s). El close_check pasa solo porque `test_el_gate_sale_0_sobre_el_corpus_real` esta marcado xfail (`9 passed, 1 xfailed`); cerrarla con eso seria cerrar por supresion. Control negativo del instrumento: `--muestras /nonexistent` da COULD_NOT_RUN rc=2. Falta: decidir/calibrar la regla de racha de `bb-usable` (cambia cuando la maquina se reinicia sola: decision de Luis) y quitar el xfail.
+
+## Root Cause
+La lista de incidentes etiquetados de `tools/calibra_psi.py` no incluia el colapso del 05-oct; el control de la regla de racha lo leia como una excursion sana de 479 s y daba FALSO POSITIVO. El cierre antiguo era falso porque el test del corpus real estaba en xfail.
+
+## Regression Test
+`tests/test_calibra_psi.py::test_ventanas_por_defecto_son_los_congelamientos_reales` (9 ventanas, la del 05-oct en su lugar cronologico) y `tests/test_control_racha.py::test_el_gate_sale_0_sobre_el_corpus_real` (sin xfail). Control negativo corrido: sin la ventana, el control da FALSO POSITIVO (fail.txt). Limite declarado: el margen contra el peor caso sano es 1.05x.
+
+## Verification Evidence
+- fail: `tasks/evidence/DEBT-SKIP-TEST-CONTROL-RACHA-118/fail.txt`.
+- pass: `tasks/evidence/DEBT-SKIP-TEST-CONTROL-RACHA-118/pass.txt`.
+- e2e: `tasks/evidence/DEBT-SKIP-TEST-CONTROL-RACHA-118/e2e.txt`.
