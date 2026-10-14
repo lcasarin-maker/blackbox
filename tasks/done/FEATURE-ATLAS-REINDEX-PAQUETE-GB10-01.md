@@ -3,7 +3,11 @@ id: FEATURE-ATLAS-REINDEX-PAQUETE-GB10-01
 kind: task
 domain: INCIDENT_CAPTURE
 title: "Que Atlas indexe el paquete GB10 entregado el 2026-10-11 y re-mida su eval con la ATOM fria"
-status: open
+status: done
+closed_at: 2026-10-13
+closure_type: relocated_prior_verification
+reason: "El job de Atlas reindex_paquete_gb10_20261013_retry (commit 9a1ea7ce2) construyo el grafo: 425 de 436 archivos entregados nombrados; el close_check pasa (antes 0 coincidencias en 9a1ea7ce2~1). Quedan fuera y de Atlas: 11 archivos sin entidad y re-medir su eval con la ATOM fria."
+evidence: {"pass": "tasks/evidence/FEATURE-ATLAS-REINDEX-PAQUETE-GB10-01/pass.txt", "fail": "tasks/evidence/FEATURE-ATLAS-REINDEX-PAQUETE-GB10-01/fail.txt", "e2e": "tasks/evidence/FEATURE-ATLAS-REINDEX-PAQUETE-GB10-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -49,3 +53,14 @@ Siguen abiertos: (a) que la cola corra los dos jobs y se lea `logs/reindex_paque
 
 ## Avance 2026-10-13 (medido, solo lectura sobre Atlas)
 El `close_check` pasa: `entity_graph.json` (escrito el 2026-10-13 09:50) contiene `hilo_378315_hard-power-off`, y 425 de los 436 archivos de las dos carpetas entregadas aparecen por nombre. Pendiente 2 medido en `rag/embeddings/index.json` (131455 chunks): `gb10_cortes_2026-10-11` 4958 chunks y `gb10_mediciones_propias_blackbox_2026-10-11` 34. El build corrio como `incremental` (`logs/reindex_paquete_gb10_20261011.txt`, 70.89 s, 131455 reusados). El job de verificacion (`80_00_...`) no llego a correr. Sigue abierta por el pendiente 3: re-medir la eval congelada de Atlas contra su linea base, que es trabajo de Atlas (escribe un dictamen en su `docs/agent_findings/`) y no se encolo.
+
+## Root Cause
+El paquete GB10 entregado el 2026-10-11 no estaba en el grafo de entidades de Atlas porque nadie habia corrido su build; lo corrio el job encolado de Atlas el 2026-10-13.
+
+## Regression Test
+El close_check mismo (grep del hilo 378315 en el grafo) con su control negativo (nombre inexistente da rc=1); no hay codigo de bb que cambiar: el arreglo vive en el repo de Atlas.
+
+## Verification Evidence
+- fail: `tasks/evidence/FEATURE-ATLAS-REINDEX-PAQUETE-GB10-01/fail.txt`.
+- pass: `tasks/evidence/FEATURE-ATLAS-REINDEX-PAQUETE-GB10-01/pass.txt`.
+- e2e: `tasks/evidence/FEATURE-ATLAS-REINDEX-PAQUETE-GB10-01/e2e.txt`.
