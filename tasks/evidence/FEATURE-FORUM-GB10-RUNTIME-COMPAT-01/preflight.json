@@ -12,30 +12,310 @@
     "gpu_arch": "12.1",
     "backend_arches": [
       "8.0",
+      "8.6",
       "8.7",
       "8.9",
       "9.0",
       "10.0",
+      "10.3",
+      "10.7",
       "11.0",
-      "12.0"
+      "12.0",
+      "12.1"
     ],
-    "image_driver_constraint": "cuda>=13.0 brand=unknown,driver>=535,driver<536 … brand=cloudgaming,driver>=575,driver<576",
+    "image_driver_constraint": "cuda>=13.0 brand=unknown,driver>=535,driver<536 \u2026 brand=cloudgaming,driver>=575,driver<576",
     "driver_compatibility": "pass",
-    "backend_manifest_complete": false
+    "backend_manifest_complete": true
   },
   "preflight_result": {
-    "findings": [
-      "backend kernel/PTX architecture manifest is incomplete"
-    ],
-    "status": "unknown"
+    "status": "pass",
+    "findings": []
   },
   "could_not_run": [],
   "could_not_run_count": 0,
   "open_blockers": [
-    "The active image CUDA constraint has a satisfied cuda>=13.0 OR clause according to NVIDIA constraint semantics and nvidia-container-cli info. TORCH_CUDA_ARCH_LIST is only a partial build declaration; no complete backend cubin/PTX manifest or tested model-kernel result was supplied. No OEM support/soak/output comparison/rollback evidence."
+    "Static manifest proves code is present for 12.1 in the core backends; it does not prove those kernels execute correctly on GB10. No tested model-kernel result, OEM support, soak/output comparison or rollback evidence."
   ],
   "closure": "open",
   "unverified": [
-    "Complete backend cubin/PTX manifest and tested model-kernel result are unavailable; native driver constraint evaluation was supplied from nvidia-container-cli info plus documented OR semantics."
-  ]
+    "Tested model-kernel result, OEM support, soak/output comparison and rollback remain unavailable.",
+    "Flagged (no sm_121-compatible cubin/PTX): flashinfer_cubin, vllm:_flashmla_C.abi3.so, vllm:_flashmla_extension_C.abi3.so, vllm:_qutlass_C.abi3.so, vllm:_vllm_fa3_C.abi3.so.",
+    "Triton's bundled ptxas is CUDA 12.8 and lists no sm_121 target; whether the running engine overrides it was not read."
+  ],
+  "backend_manifest": {
+    "image": "vllm/vllm-openai:v0.27.1",
+    "method": "docker run --rm --network none --memory 4g, no GPU, no mounts; cuobjdump --list-elf/--list-ptx",
+    "core_backends": [
+      "torch:libtorch_cuda.so",
+      "vllm:_C_stable_libtorch.abi3.so",
+      "vllm:_moe_C_stable_libtorch.abi3.so"
+    ],
+    "flagged_not_covered": [
+      "flashinfer_cubin",
+      "vllm:_flashmla_C.abi3.so",
+      "vllm:_flashmla_extension_C.abi3.so",
+      "vllm:_qutlass_C.abi3.so",
+      "vllm:_vllm_fa3_C.abi3.so"
+    ],
+    "per_backend": {
+      "vllm:_C_stable_libtorch.abi3.so": {
+        "status": "native",
+        "elf": [
+          "100",
+          "110",
+          "120",
+          "80",
+          "87",
+          "89",
+          "90",
+          "90a"
+        ],
+        "ptx": [
+          "80",
+          "89",
+          "90"
+        ],
+        "core": true
+      },
+      "vllm:_flashkda_C.abi3.so": {
+        "status": "native",
+        "elf": [
+          "100",
+          "120",
+          "90a"
+        ],
+        "ptx": [],
+        "core": false
+      },
+      "vllm:_flashmla_C.abi3.so": {
+        "status": "NOT_COVERED",
+        "elf": [
+          "100",
+          "90a"
+        ],
+        "ptx": [],
+        "core": false
+      },
+      "vllm:_flashmla_extension_C.abi3.so": {
+        "status": "NOT_COVERED",
+        "elf": [
+          "100",
+          "90a"
+        ],
+        "ptx": [],
+        "core": false
+      },
+      "vllm:_moe_C_stable_libtorch.abi3.so": {
+        "status": "native",
+        "elf": [
+          "100",
+          "110",
+          "120",
+          "80",
+          "87",
+          "89",
+          "90",
+          "90a"
+        ],
+        "ptx": [
+          "80"
+        ],
+        "core": true
+      },
+      "vllm:_qutlass_C.abi3.so": {
+        "status": "NOT_COVERED",
+        "elf": [
+          "100"
+        ],
+        "ptx": [],
+        "core": false
+      },
+      "vllm:_rust_tool_parser.abi3.so": {
+        "status": "no_gpu_code",
+        "elf": [],
+        "ptx": [],
+        "core": false
+      },
+      "vllm:cumem_allocator.abi3.so": {
+        "status": "no_gpu_code",
+        "elf": [],
+        "ptx": [],
+        "core": false
+      },
+      "vllm:fs_io_C.abi3.so": {
+        "status": "no_gpu_code",
+        "elf": [],
+        "ptx": [],
+        "core": false
+      },
+      "vllm:spinloop.abi3.so": {
+        "status": "no_gpu_code",
+        "elf": [],
+        "ptx": [],
+        "core": false
+      },
+      "vllm:_C.cpython-310-aarch64-linux-gnu.so": {
+        "status": "no_gpu_code",
+        "elf": [],
+        "ptx": [],
+        "core": false
+      },
+      "vllm:_C.cpython-311-aarch64-linux-gnu.so": {
+        "status": "no_gpu_code",
+        "elf": [],
+        "ptx": [],
+        "core": false
+      },
+      "vllm:_C.cpython-312-aarch64-linux-gnu.so": {
+        "status": "no_gpu_code",
+        "elf": [],
+        "ptx": [],
+        "core": false
+      },
+      "vllm:_C.cpython-313-aarch64-linux-gnu.so": {
+        "status": "no_gpu_code",
+        "elf": [],
+        "ptx": [],
+        "core": false
+      },
+      "vllm:_C.cpython-314-aarch64-linux-gnu.so": {
+        "status": "no_gpu_code",
+        "elf": [],
+        "ptx": [],
+        "core": false
+      },
+      "vllm:_vllm_fa2_C.abi3.so": {
+        "status": "ptx_forward_compat",
+        "elf": [
+          "80"
+        ],
+        "ptx": [
+          "80"
+        ],
+        "core": false
+      },
+      "vllm:_vllm_fa3_C.abi3.so": {
+        "status": "NOT_COVERED",
+        "elf": [
+          "90a"
+        ],
+        "ptx": [],
+        "core": false
+      },
+      "torch:libc10_cuda.so": {
+        "status": "no_gpu_code",
+        "elf": [],
+        "ptx": [],
+        "core": false
+      },
+      "torch:libcaffe2_nvrtc.so": {
+        "status": "no_gpu_code",
+        "elf": [],
+        "ptx": [],
+        "core": false
+      },
+      "torch:libtorch_cuda.so": {
+        "status": "native",
+        "elf": [
+          "100",
+          "100a",
+          "103",
+          "110",
+          "110a",
+          "120",
+          "120a",
+          "121a",
+          "80",
+          "90",
+          "90a"
+        ],
+        "ptx": [],
+        "core": true
+      },
+      "torch:libtorch_cuda_linalg.so": {
+        "status": "no_gpu_code",
+        "elf": [],
+        "ptx": [],
+        "core": false
+      },
+      "torch:libtorch_nvshmem.so": {
+        "status": "native",
+        "elf": [
+          "100",
+          "110",
+          "120",
+          "80",
+          "90"
+        ],
+        "ptx": [],
+        "core": false
+      },
+      "nvidia_wheel_libs": {
+        "status": "native",
+        "elf": [
+          "100",
+          "100a",
+          "103",
+          "110",
+          "110a",
+          "120",
+          "121",
+          "70",
+          "75",
+          "80",
+          "86",
+          "87",
+          "89",
+          "90",
+          "90a"
+        ],
+        "ptx": [
+          "100",
+          "103",
+          "110",
+          "120",
+          "121",
+          "75",
+          "80",
+          "86",
+          "89",
+          "90"
+        ],
+        "core": false
+      },
+      "triton_native": {
+        "status": "no_gpu_code",
+        "elf": [],
+        "ptx": [],
+        "core": false
+      },
+      "flashinfer_jit_cache": {
+        "status": "native",
+        "elf": [
+          "100a",
+          "103a",
+          "110a",
+          "120",
+          "120a",
+          "75",
+          "80",
+          "89",
+          "90a"
+        ],
+        "ptx": [],
+        "core": false
+      },
+      "flashinfer_cubin": {
+        "status": "NOT_COVERED",
+        "elf": [
+          "100",
+          "100a",
+          "103a",
+          "107a"
+        ],
+        "ptx": [],
+        "core": false
+      }
+    }
+  }
 }
