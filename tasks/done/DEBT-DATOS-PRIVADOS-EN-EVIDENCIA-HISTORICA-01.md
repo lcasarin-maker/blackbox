@@ -26,3 +26,14 @@ La guarda impide archivos nuevos con estos datos. Las evidencias historicas llev
 - Ledger H1: no se edito a mano; SPEC-L135 quedo stale por run.json y se re-audito (1 auditor Opus, PASS), grabado con `audit --record --merge`; `audit --gate` en verde.
 - Control negativo (e2e.txt): reinsertar una MAC original en un archivo redactado hace fallar la guarda; restaurado, pasa.
 - Limite declarado: la historia de git conserva los valores originales; reescribirla (force-push) es decision del dueno y no se tomo. Las 86 entradas fuera de tasks/evidence siguen en la base (fuera del alcance de esta ficha).
+
+## Root Cause
+Las capturas de host (journal, ip link, iptables, recibos de root) se commitearon en crudo antes de que existiera la guarda; llevaban el hostname, MACs, IPs de LAN y nombres de proyectos privados, y su redaccion se aplazo porque sus sha256 estaban re-registrados en manifiestos y en el ledger H1.
+
+## Regression Test
+`tests/test_sin_datos_privados.py::test_el_repo_no_gana_datos_privados`: con la base sin rutas de tasks/evidence, cualquier dato privado que vuelva a uno de esos archivos lo hace "archivo nuevo" y el test falla. Control negativo corrido (e2e.txt): una MAC original reinsertada -> 1 failed; restaurado -> 2 passed.
+
+## Verification Evidence
+- fail: `tasks/evidence/DEBT-DATOS-PRIVADOS-EN-EVIDENCIA-HISTORICA-01/fail.txt` (close_check con 53 rutas, rc=0 con stdout no vacio).
+- pass: `tasks/evidence/DEBT-DATOS-PRIVADOS-EN-EVIDENCIA-HISTORICA-01/pass.txt` (close_check stdout vacio; guarda 2 passed).
+- e2e: `tasks/evidence/DEBT-DATOS-PRIVADOS-EN-EVIDENCIA-HISTORICA-01/e2e.txt` (control negativo, suite completa antes/despues con el mismo conjunto de fallos preexistentes, `audit --gate` verde, gates).
