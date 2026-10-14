@@ -1,6 +1,6 @@
 {
   "claims_fingerprint": "b21a22c95297f93562bbcfa45c8a91fb820f28ddd4ca2bf1554f11aa365ffb1d",
-  "panel": "1 auditor Opus, 2026-10-13: SPEC-L416 tras corregir la sonda arranque_tras_actualizacion (kernel que GRUB arrancara) y agrupar los argumentos de _rec; salidas de recomendaciones_personal sin cambio, control negativo en copia",
+  "panel": "1 auditor Opus (2 pasadas), 2026-10-13: L135,L418,L422 tras mover el -b 32768 a zz-blackbox-backlog.rules (ordena despues de audit.rules) y corregir el revert; control negativo en copia",
   "profile": "general",
   "results": [
     {
@@ -24,11 +24,24 @@
     },
     {
       "cited": {
-        "enable-privileged.sh": "d59a448564b0c49277e2179c8bd5c992a01c57b5cbd4047d91b7fe653baaff33"
+        "enable-privileged.sh": "3781bb35891f1e8a50bdb11c211806cf0261468905161c29985b986558ddba28",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/post-kit-9.3.3-validation/run.json": "83dc814d203d86c6be9a392ee4e6f3f5eadb3089662ce856eabcf8d5680af8c8",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/primary-shared-reader-full-suite/run.json": "6d9d64d8484a9e1925eae6e204fb22edc833427bd52b41ee7b7c9bdb00f8b8c1",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/runtime-root-close-check-run/run.json": "1422644281ad8de386c7c5ccb3845d2b083a142090d8c2cdb280f75de14171b2",
+        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/run.json": "9c2d2471d81acb34f60c7530090b01816b7a8a7a369d6503e4c4796a42d1f854",
+        "tasks/evidence/DEBT-PRUEBAS-SIN-FICHA-CRUDA-01/signature-canary/run.json": "6aed2cac31bac35b24c7923f988a31b73fcdd69464765551d58678adde91e279",
+        "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/run.json": "085b2944c2ee8434e115f93ce28edf79af912c73942c0744e6ac66d297c66077",
+        "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/healthy-source-canary/run.json": "d0f23da60fc3e6f9e387c4c13e17bce5f7c9b36ad155781a91ebbe7efbec17d5",
+        "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary/run.json": "365131997c0e383d0ca44f225812fcb0f06664a5417948e0f5ea81c9833b321e",
+        "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493",
+        "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/wrong-source-canary/run.json": "829db40b194eb4dba69ef385da07ff848708d2d0b827e4c6bdff5502f41c2e15",
+        "tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json": "7195ba4af224006754f4f75f33f12e1b7c407ae06c1031afc627dcd80621db3d",
+        "tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/export-copy-lab/run.json": "94fc5515e341be770b694c80ee107a69a87d8ad224b36cd7f74bbfb682b34654",
+        "tests/test_enable_privileged_audit_backlog.py": "24c90d8eb688e1e70f5fe7da0532606ccc201544a4bfe701c53dae9bffdc93ee"
       },
       "claim_id": "SPEC-L135",
-      "evidence": "enable-privileged.sh:651-666, block 10, reads LINGER_ANTES with loginctl show-user and runs 'run loginctl enable-linger \"$DUENO\"' (l.666). DUENO is set at l.34. Live: 'loginctl show-user lcasarin -p Linger' -> Linger=yes. The paragraph cites neither 16G nor 17179869184 (grep -cE '16G|17179869184|16 GiB' over the paragraph -> 0; negative control: the same grep on HEAD:enable-privileged.sh -> 2). 'bash -n enable-privileged.sh' -> rc=0; negative control on a copy with 'if then' appended -> rc=2. Negative control for the linger anchor: a scratch copy with enable-linger replaced -> grep -c enable-linger 0, versus 1 in the original.",
-      "seal": "1484363d370fc3f485845720367588b4cd9c18e93df56afd522923a6d7476b13",
+      "evidence": "Revert fix: `git diff -- enable-privileged.sh` adds a separate block at enable-privileged.sh:78-82, `if [ -f /etc/audit/rules.d/zz-blackbox-backlog.rules ]` with `run rm -f`, `run augenrules --load` and an echo. It is independent of the `10-blackbox-signals.rules` block at :73-77. `bash -n enable-privileged.sh` -> rc 0. `python3 -m pytest tests/test_enable_privileged_audit_backlog.py -q` -> `4 passed in 0.07s`. Simulation in scratchpad/sim15b: lines :73-82 extracted, `run` stubbed to echo, /etc/audit rewritten to a directory holding only zz-blackbox-backlog.rules (10- absent). Output: `RUN: rm -f /etc/audit/rules.d/zz-blackbox-backlog.rules` / `RUN: augenrules --load` / `limite de la cola de audit retirado`. The nested variant (rm inside the 10- if) prints nothing, which is the negative control. Linger is unaffected by the fix: enable-privileged.sh:664 `-- 10. linger`, :672 `LINGER_ANTES=$(loginctl show-user \"$DUENO\" -p Linger ...)`, :679 `run loginctl enable-linger \"$DUENO\"`. Live: `Linger=yes`. Negative control in scratchpad/neg15 with that line removed: `grep -cF 'run loginctl enable-linger \"$DUENO\"'` -> `0`, against :679 in the real tree.",
+      "seal": "568f77b762ee6b9a8a645275fe97d0d1548ff14a8f8798411abcc10a82485773",
       "verdict": "PASS"
     },
     {
@@ -106,12 +119,12 @@
     },
     {
       "cited": {
-        "enable-privileged.sh": "d59a448564b0c49277e2179c8bd5c992a01c57b5cbd4047d91b7fe653baaff33",
+        "enable-privileged.sh": "3781bb35891f1e8a50bdb11c211806cf0261468905161c29985b986558ddba28",
         "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6"
       },
       "claim_id": "SPEC-L418",
-      "evidence": "Declared values: systemd/blackbox-sample.service and adopted/systemd-user/atom-gpu-telemetry.service declare Nice=19 IOSchedulingClass=idle; systemd/bb-usable.service declares OOMScoreAdjust=-900 MemoryMin=128M and no Nice; the vigilante and nvrm-watch units declare no Nice; bb-gpumem-historial, bb-canario-motor, bb-huella and bb-guardia-proceso declare Nice=10. Timers: gpumem OnUnitActiveSec=1min, canario 30min, huella 1d, vigilante OnUnitInactiveSec=2min, nvrm-watch 5min. Live 'systemctl --user show <u> -p Nice -p IOSchedulingClass': blackbox-sample and atom-gpu-telemetry 19/3; ai-memory-monitor 0/2; ai-nemotron-vigilante 0/2; gpumem/canario/huella/guardia 10/2; ai-gpu-telemetry Nice=10 UnitFileState=disabled. Live 'systemctl show': bb-usable 0/2, nvrm-watch 0/2. enable-privileged.sh:302-316 (block 4b) installs nvrm-watch. Commits e782c77d and 1ec66b36 exist. The row cites neither 16G nor 17179869184.",
-      "seal": "e22a4d880f665cf59df55f4051626f97a9877a4c7efa1d4ed34bb3be95c6ce29",
+      "evidence": "Block 4b: enable-privileged.sh:307 `-- 4b. clock de la GPU y vigilante de NVRM OOM`, :325 `run systemctl enable --now nvrm-watch.timer`. `systemctl is-enabled nvrm-watch.timer` -> `enabled`. Negative control in scratchpad/neg15 with that line removed: grep count `0`. Live, `systemctl --user show <u>.service -p Nice -p IOSchedulingClass --value`: blackbox-sample `19 3`, atom-gpu-telemetry `19 3`, ai-memory-monitor `0 2`, ai-gpu-telemetry `10 3` (disabled), ai-nemotron-vigilante `0 2`, bb-guardia-proceso `10 2`, bb-gpumem-historial `10 2`, bb-canario-motor `10 2`, bb-huella `10 2`. System units: nvrm-watch `0 2`, bb-usable `0 2`. Unit files unchanged since the previous audit: adopted/systemd-user/{blackbox-sample,atom-gpu-telemetry}.service `Nice=19 IOSchedulingClass=idle`; systemd/bb-gpumem-historial.service `Nice=10` with no IOSchedulingClass and its timer `OnUnitActiveSec=1min`; systemd/bb-usable.service `OOMScoreAdjust=-900 MemoryMin=128M`; bin/bb-usable:98 `PROBE_INTERVAL = 30.0`; ai-nemotron-vigilante.timer `OnUnitInactiveSec=2min`; nvrm-watch.timer `OnUnitActiveSec=5min`; ai-memory-monitor.timer `OnCalendar=*:0/5`.",
+      "seal": "5c313bd274b3ce29e8ac2eddc8ebd2b7b6324a12edd1a7d5969f49ee6438a4b6",
       "verdict": "PASS"
     },
     {
@@ -150,12 +163,13 @@
         "adopted/system-config/etc_default_grub.d_kdump-tools.cfg": "8544d0c7f8658e4b8f197816206d50f279b63f979119a9a8fa6a5688a5fd81dc",
         "adopted/system-config/etc_docker_daemon.json": "ec299b052af3e5e8ec874b241fc42cda4317ad5dcf71cde1d02d1a2b7216aa67",
         "adopted/system-config/usr_local_bin_journal-udp-forward.sh": "24418ee035cfbded65c24df44e1f56807f9278a93ca8f84fbf271ccbcc1bed68",
-        "enable-privileged.sh": "d59a448564b0c49277e2179c8bd5c992a01c57b5cbd4047d91b7fe653baaff33",
+        "adopted/system-config/usr_local_bin_nvrm-watch.sh": "ff4e43c4009274f1c939de971535f1d3266da70fd3e2f5403488a25edbf9422f",
+        "enable-privileged.sh": "3781bb35891f1e8a50bdb11c211806cf0261468905161c29985b986558ddba28",
         "tasks/evidence/RELEASE-2.1.0/h1-items.json": "f83de679f314740d5cad19814f28d06a0234afd29f45642b69be8fa8a29145c5"
       },
       "claim_id": "SPEC-L422",
-      "evidence": "'git diff --diff-filter=A --name-only 1ec66b3^ 1ec66b3 -- adopted/ | wc -l' -> 12, and without the filter -> 13. 'git ls-tree -r --name-only 1ec66b3^ -- adopted/ | wc -l' -> 18. The adopted bb-usable.service and blackbox-sample.service/.timer are byte-identical (cmp) to systemd/ at 1ec66b3^. enable-privileged.sh mentions 99-blackbox-uvm.conf. Commits e4cb0e2 (09-28), 4daaf4f and 49390a5 (10-10), a38d157 (10-11) and 8cea8bd (10-12) add exactly the files listed, 12 of them in 8cea8bd. The evidence files exist and read 'revisados: 41   divergentes: 0' (e2e.txt) and 'revisados: 41   divergentes: 2' (drift-current.txt). tasks/evidence/RELEASE-2.1.0/h1-items.json exists. './bin/bb drift' today -> 'revisados: 59   divergentes: 0   ausentes: 0   suspendidos: 1' rc=0, which matches the '59 sujetos' and the 2026-10-12 line as written (the negative control in the copy gives divergentes: 1 rc=1). The row cites neither 16G nor 17179869184 (grep -> 0; the same grep on the pendiente file -> 8).",
-      "seal": "ce28cc050fa011147562960f501a13d8fb6cecf049402802b47422c13bc35090",
+      "evidence": "`./bin/bb drift` -> `revisados: 59   divergentes: 0   ausentes: 0   suspendidos: 1`, exit 0. Negative control (run earlier this session; bin/bb and adopted/ have no change since): a copy in scratchpad/neg14 with one line appended to adopted/system-config/usr_local_bin_nvrm-watch.sh -> `DIVERGE /usr/local/bin/nvrm-watch.sh`, `divergentes: 1`, exit 1. Counts: `git diff --diff-filter=A --name-only 1ec66b3^ 1ec66b3 -- adopted/ | wc -l` -> `12` (13 without the filter); `git ls-tree -r --name-only 1ec66b3^ -- adopted/ | wc -l` -> `18`; `git diff --diff-filter=A --name-only 8cea8bd^ 8cea8bd -- adopted/` lists exactly the 12 files the claim names. tasks/evidence/RELEASE-2.1.0/h1-items.json exists. The revert fix adds no adopted/ subject.",
+      "seal": "04d69e86b2a972c6701b685ab69479e11baf221790d5237fadb3fcf8ce62e221",
       "verdict": "PASS"
     },
     {
@@ -182,7 +196,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-13T22:44:51Z",
-  "tree_fingerprint": "5c0021db80f85ed7fee3f79fb98429d7759cbbabe1dac0b6d52cc251361649e3",
+  "timestamp": "2026-10-14T00:35:35Z",
+  "tree_fingerprint": "f17900da6f3572319f2def2780352f24cc97712001e8c4d4186b09a72a6d45f8",
   "violations": []
 }
