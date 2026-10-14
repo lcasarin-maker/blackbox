@@ -96,9 +96,9 @@ restaurado: True
 COMPARACION con el escalon y earlyoom (configuracion leida; la de earlyoom tambien de su propio journal)
 ------------------------------------------------------------------------------------------------
 $ journalctl -u earlyoom -b --no-pager | grep -iE "sending SIGTERM when|mem total|SIGKILL when"
-oct 13 14:07:48 aitopatom-41f1 earlyoom[2154]: mem total: 123967 MiB, swap total: 16383 MiB
-oct 13 14:07:48 aitopatom-41f1 earlyoom[2154]: sending SIGTERM when mem <= 10.00% and swap <= 100.00%,
-oct 13 14:07:48 aitopatom-41f1 earlyoom[2154]:         SIGKILL when mem <=  5.00% and swap <= 100.00%
+oct 13 14:07:48 <host> earlyoom[2154]: mem total: 123967 MiB, swap total: 16383 MiB
+oct 13 14:07:48 <host> earlyoom[2154]: sending SIGTERM when mem <= 10.00% and swap <= 100.00%,
+oct 13 14:07:48 <host> earlyoom[2154]:         SIGKILL when mem <=  5.00% and swap <= 100.00%
 
 earlyoom (adopted/system-config/etc_default_earlyoom: -r 60 -m 10 -s 100,100)
   senal: MemAvailable global; -s 100 neutraliza el swap.
