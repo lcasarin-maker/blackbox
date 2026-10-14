@@ -24,3 +24,14 @@ Instrumento: cuando exista el observador externo (`FEATURE-OBSERVADOR-EXTERNO-DE
 - close_check antes: rc=5 (0 tests seleccionados, 42 deselected). Ahora: `python3 -m pytest -q tests/test_incident_report.py -k aislamiento_wifi` rc=0 (4 tests, con control negativo de silencio local y de borde).
 - Construido: `tools/incident_report.py::clasifica_hueco_de_red(muestras, desde, hasta, red_alcanzable)` -> AISLAMIENTO_DE_RED / CUELGUE / RED_ALCANZABLE / NO_DETERMINADO (sin observacion externa no se infiere).
 - Falta: la funcion no esta cableada en `reporte()` porque no existe fuente de `red_alcanzable` hasta FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01.
+
+## Root Cause
+Un monitor externo que solo mira ping daba falso positivo de cuelgue cuando el logger local seguia vivo (aislamiento WiFi, no corte); no existia clasificador del hueco.
+
+## Regression Test
+tests/test_incident_report.py -k aislamiento_wifi (4 tests): red caida con muestras locales vivas => AISLAMIENTO_DE_RED; control negativo: sin muestras locales => CUELGUE; sin observacion externa => NO_DETERMINADO.
+
+## Verification Evidence
+- fail: `tasks/evidence/FEATURE-BB-FALSO-CUELGUE-POR-AISLAMIENTO-WIFI-01/fail.txt`.
+- pass: `tasks/evidence/FEATURE-BB-FALSO-CUELGUE-POR-AISLAMIENTO-WIFI-01/pass.txt`.
+- e2e: `tasks/evidence/FEATURE-BB-FALSO-CUELGUE-POR-AISLAMIENTO-WIFI-01/e2e.txt`.
