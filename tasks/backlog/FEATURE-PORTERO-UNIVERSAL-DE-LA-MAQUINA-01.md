@@ -47,3 +47,6 @@ La pieza vive en bb: mide y actua sobre la maquina y no necesita a Atlas (regla 
 - Drop-in de creacion `systemd/app-com.anthropic.Claude-.scope.d/50-bb-portero.conf`: MemoryMax=35G (calibracion de DEBT-COLAPSOS-11-OCT: 0/439 muestras con PSI >= 10 por debajo de 35 GB, 2/2 entre 35 y 40), TasksMax=1230. Probado con un scope desechable `app-bbprobe<tag>-1` y su control negativo.
 - GPU: el cgroup no ve la memoria GPU (validaciones.txt §4). Propuesta NO VALIDADA: admitir contenedores por su reclamo GPU declarado al crearlos (`--gpu-memory-utilization`) contra el suelo de GPU de 50.1 GiB; no implementada.
 - Falta: integrar `bb origen` en la costura; la medicion con tres suites reales tras el despliegue (Luis); que el demonio cubra java/dotnet (sin medicion, no hay clase).
+
+## Avance 2026-10-14: desplegado en observar y medido con 3 suites
+Voto de Luis (observar, medir, luego actuar). `bb-portero.service` corre como servicio de usuario con el interruptor en `observar`. Medicion en `tasks/evidence/FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01/medicion.txt`: tres suites con `bb portero run` entraron de una en una, cada una bajo su scope (20G, sin swap). Falta para la frase de cierre: la prueba por el camino transparente (hooks sin cambiar el llamador, demonio en `actuar`) y el estancamiento bajo carga alta real.
