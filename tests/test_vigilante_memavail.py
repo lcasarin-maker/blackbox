@@ -107,3 +107,17 @@ def test_lecturas_reales_o_none(tmp_path):
     assert v.lee_psi_full(tmp_path / "no") is None
     (tmp_path / "p").write_text("some avg10=1.00 avg60=0 avg300=0 total=0\nfull avg10=12.50 avg60=0 avg300=0 total=0\n", encoding="utf-8")
     assert v.lee_psi_full(tmp_path / "p") == 12.5
+
+
+def test_suite_del_portero_es_elegible_y_el_resto_de_bb_sigue_protegido(tmp_path):
+    """Voto de Luis 2026-10-14: `actuar` alcanza las suites bajo el portero, nada mas de bb ni de la sesion."""
+    suite = v.Unidad("bb-portero-suite-4242.scope", "/cg/suite", 9 * GIB * 1024)
+    assert v.elige_culpable([suite, CLAUDE])["veredicto"] != "REFUSED"
+    fx = _Efectos([suite, CLAUDE])
+    ev = v.paso("actuar", 1 * GIB, 0.0, tmp_path, fx.ctx())
+    assert ev is not None and fx.detenidas == ["bb-portero-suite-4242.scope"]
+    # control negativo: otras unidades bb-* y la sesion de Claude, aunque casen con un patron amplio, no se detienen
+    for nombre in ("bb-portero-contenedor-7.scope", "bb-usable.service", "bb-guardia-proceso.service",
+                   "app-com.anthropic.Claude-1.scope"):
+        u = v.Unidad(nombre, "/cg/x", 50 * GIB * 1024)
+        assert v.elige_culpable([u], elegibles=("*",))["veredicto"] == "REFUSED", nombre

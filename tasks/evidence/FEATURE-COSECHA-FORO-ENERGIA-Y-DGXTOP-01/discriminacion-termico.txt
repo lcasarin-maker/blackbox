@@ -1,0 +1,21 @@
+discriminacion del guardia termico predictivo, medida 2026-10-14 con --repasa sobre atom_gpu_telemetry.jsonl y las etiquetas de `bb reboots`
+boot      etiqueta                   horas  corta/h  acum/h  min_disparado(corta+acum)/h
+3c61716a  (sin etiqueta: fuera de las ultimas 10)  14.1    1.28    0.57    1.63
+36ebc0d9  (sin etiqueta: fuera de las ultimas 10)  39.6    2.12    1.04    2.58
+0de3e072  (sin etiqueta: fuera de las ultimas 10)  24.0    2.25    0.83    2.07
+e651544a  (sin etiqueta: fuera de las ultimas 10)  26.0    1.96    0.65    2.41
+295efc0f  (sin etiqueta: fuera de las ultimas 10)  42.1    3.25    0.69    8.43
+54b71618  (sin etiqueta: fuera de las ultimas 10)  22.4    2.72    1.25    6.62
+5461291a  COLAPSO_MEMORIA                          8.6    6.74    1.05   14.35
+7b217d8b  COLAPSO_MEMORIA                          0.7    1.43    1.43    4.71
+b8707961  CIERRE_ORDENADO_REBOOT                  17.7    2.60    0.73    2.36
+51888b82  CIERRE_ORDENADO_REBOOT                   0.5    0.00    0.00    0.00
+0b00a7c2  CORTE_ABRUPTO                            0.9    1.11    1.11   10.11
+f6f10dc3  CIERRE_ORDENADO_POWEROFF                 2.5    0.00    0.00    0.00
+a66787af  CORTE_ABRUPTO                           16.1    3.66    1.12    3.69
+934fa20f  (sin etiqueta: fuera de las ultimas 10)  18.1    2.82    0.94    3.38
+abrupto boots 2 corta/h [1.11, 3.66] acum/h [1.11, 1.12]
+otro boots 5 corta/h [6.74, 1.43, 2.6, 0.0, 0.0] acum/h [1.05, 1.43, 0.73, 0.0, 0.0]
+
+lectura: los boots con CORTE_ABRUPTO (n=2 con repasa) disparan a ritmos DENTRO del rango de los boots sanos; no hay umbral de ritmo que los separe.
+limite: con 2-3 cortes etiquetados no se puede calibrar nada, solo comprobar que no discrimina; el propio modulo ya declara que el nivel de temperatura solo no separa cortes de arranques que sobrevivieron (un arranque paso 260 min a >=95 C sin morir).
