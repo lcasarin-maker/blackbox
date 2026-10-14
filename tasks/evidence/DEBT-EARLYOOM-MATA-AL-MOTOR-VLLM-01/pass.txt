@@ -1,0 +1,6 @@
+close_check DESPUES (archivo vivo):
+$ grep -qF "|vllm|VLLM|docker|containerd|^bb-)" /etc/default/earlyoom
+rc=0
+sha256 vivo: 89fe78dade9afa4d8df1e51627d119b145102c3a21dd140a0f4a44f8b4b13c8e
+$ python3 -m pytest -q tests/test_bb_root_manifest.py
+123 passed in 5.48s
