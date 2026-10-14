@@ -132,13 +132,13 @@ INCIDENTES = [
     # las leia como excursion sana sin estas ventanas: la muestra de las
     # 04:24:02, DENTRO del sexto incidente, salia FALSO POSITIVO.
     ("2026-09-28 04:18", "2026-09-28 04:27"),
-    # SEPTIMO en orden cronologico, 2026-10-05 (voto de Luis 2026-10-14, DEBT-SKIP-TEST-CONTROL-RACHA-118). Estaba
+    # SEPTIMO, 2026-10-05 (voto de Luis 2026-10-14, DEBT-SKIP-TEST-CONTROL-RACHA-118). Estaba
     # sin etiquetar y el control lo leia como "sano con 479 s de PSI alto". No sale de PSI:
     # `last -x` muestra la sesion grafica caida ("crash") y un arranque nuevo a las 00:31:49,
     # y sar (sa20261005) mide ldavg-1 entre 20 y 70 con 2600-5900 procesos contra 1.31 y ~1900
     # a las 23:31 -- el mismo desenlace que los anteriores, ventana de la ficha del colapso.
     ("2026-10-05 00:00", "2026-10-05 00:31"),
-    # SEPTIMO y OCTAVO, 2026-10-11, dos arranques seguidos y el mismo mecanismo:
+    # OCTAVO y NOVENO, 2026-10-11, dos arranques seguidos y el mismo mecanismo:
     # enjambre de suites pytest/pre-push sin techo de memoria dentro de
     # `app.slice` (DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01, que atribuye
     # el origen por las transcripciones de las sesiones; etiquetarlos aqui era el
