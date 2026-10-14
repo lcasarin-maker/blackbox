@@ -1,2 +1,4 @@
-# 2026-10-11T20:40:44-06:00 grep -q hilo_378315_hard-power-off /home/lcasarin/projects/Atlas/rag/graphs/entity_graph.json
-rc=1
+close_check ANTES (grafo de Atlas en el commit previo al job de reindexado, 9a1ea7ce2~1):
+$ git -C Atlas show 9a1ea7ce2~1:rag/graphs/entity_graph.json | grep -c hilo_378315_hard-power-off
+0
+(0 coincidencias = el close_check fallaba)
