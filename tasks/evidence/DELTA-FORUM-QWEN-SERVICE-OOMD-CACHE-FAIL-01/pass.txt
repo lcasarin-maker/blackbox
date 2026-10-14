@@ -1,0 +1,40 @@
+Perfil medido de este equipo el 2026-10-14: el motor sirve un solo modelo (nemotron-local) en un contenedor vLLM; no hay servicio Qwen, Spark Studio ni Hermes. Hay pesos Qwen en disco (descargados, no servidos): eso no es el sujeto, que es un SERVICIO Qwen muerto por systemd-oomd. systemd-oomd esta activo y no registra kills desde 2026-09-01.
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | python3 -c "import json,sys;d=json.load(sys.stdin);print([(m[\"id\"],m[\"root\"]) for m in d[\"data\"]])"
+rc=0
+[('nemotron-local', '/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4')]
+
+$ docker ps --format "{{.Names}} {{.Image}}"
+rc=0
+nemotron-server vllm/vllm-openai:v0.27.1
+atlas-pgvector pgvector/pgvector:pg16
+otro proyecto-pg pgvector/pgvector:pg16
+
+$ ls /srv/ai/models/llm
+rc=0
+nemotron-3.5-lightning-30b-a3b-nvfp4
+nemotron-3.5-lightning-30b-a3b-nvfp4-dspark
+nemotron-3-super-120b-a12b-nvfp4
+qwen3-14b-nvfp4
+qwen3.6-27b-fp8
+qwen3-8b-nvfp4
+
+$ systemctl is-active systemd-oomd
+rc=0
+active
+
+$ journalctl -u systemd-oomd --since 2026-09-01 --no-pager -q | grep -Eic "Killed "
+rc=1
+0
+
+Control positivo: las mismas herramientas SI encuentran lo que existe (el modelo servido, su contenedor y el arranque de systemd-oomd en el journal):
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | grep -qi nemotron
+rc=0
+
+$ docker ps --format "{{.Names}} {{.Image}}" | grep -qi vllm
+rc=0
+
+$ journalctl -u systemd-oomd --since 2026-09-01 --no-pager -q | grep -q "Started systemd-oomd"
+rc=0
+

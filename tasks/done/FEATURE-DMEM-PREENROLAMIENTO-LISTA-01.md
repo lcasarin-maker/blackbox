@@ -3,12 +3,16 @@ id: FEATURE-DMEM-PREENROLAMIENTO-LISTA-01
 kind: task
 domain: GPU
 title: "Todo implementado y probado antes de enrolar la llave MOK y reiniciar con el modulo parcheado"
-status: open
+status: done
+closed_at: 2026-10-14
+closure_type: void_wontfix
+reason: "Superada por el reinicio del 12-oct (Luis 2026-10-14): la llave MOK esta enrolada y el modulo NVIDIA 580.178.04 parcheado esta cargado desde el arranque del 2026-10-12 21:57, con la region dmem de vidmem en cgroup v2; la lista era el requisito PREVIO a ese reinicio. La fila 11 (ajustes de vLLM) sigue sin hacer y vive en FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01; la fila 12 en FEATURE-DMEM-BOOSTERS-ADAPTAR-A-GB10-01; la fila 16 (ventana de reinicio) ya ocurrio."
+evidence: {"pass": "tasks/evidence/FEATURE-DMEM-PREENROLAMIENTO-LISTA-01/pass.txt", "fail": "tasks/evidence/FEATURE-DMEM-PREENROLAMIENTO-LISTA-01/fail.txt", "e2e": "tasks/evidence/FEATURE-DMEM-PREENROLAMIENTO-LISTA-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-12
-close_check: {"cmd": "grep -q pre_enrolamiento_completo tasks/evidence/FEATURE-DMEM-PREENROLAMIENTO-LISTA-01/lista.txt", "expect": "exit_zero", "porque": "Instruccion de Luis 2026-10-12: antes de enrolar la llave y reiniciar quiere que todo este implementado. Cierra cuando cada fila de la lista tiene estado HECHO con su evidencia y la fila de la ventana de reinicio la fija Luis."}
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/FEATURE-DMEM-PREENROLAMIENTO-LISTA-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a `grep -q pre_enrolamiento_completo tasks/evidence/FEATURE-DMEM-PREENROLAMIENTO-LISTA-01/lista.txt`, que ya no puede cumplirse porque el enrolamiento ocurrio antes de completar la lista."}
 ---
 
 ## Lista (estado al 2026-10-12)
@@ -40,3 +44,12 @@ close_check: {"cmd": "grep -q pre_enrolamiento_completo tasks/evidence/FEATURE-D
 
 ## Avance 2026-10-13
 Fila 10 (prueba del limitador con vLLM real): por voto de Luis se declara NO EJECUTABLE mientras el motor de produccion corra. Medido: el motor usa hasta 75 GiB de memoria unificada de 121 GiB (pico 76 968 MiB en la telemetria) y un segundo vLLM compartiria esa memoria; la imagen cabe en disco (2,0 TB libres) pero la prueba arriesgaria el unico motor. Quedan abiertas la fila 11 (ajustes de vLLM, de Luis) y la fila 16 (ventana de reinicio, de Luis).
+
+## Root Cause
+La lista se escribio para no enrolar la llave sin tener todo listo. El enrolamiento y el reinicio ocurrieron el 2026-10-12 21:57 con la guardia de arranque confirmando que la GPU responde; el estado que la lista preparaba ya no existe, asi que su close_check (`pre_enrolamiento_completo` en `lista.txt`) quedo sin objeto.
+
+## Regression Test
+Ninguno: la ficha no tenia test por ficha; su close_check era un grep sobre `lista.txt`, que nunca se escribio. Lo pendiente de la lista no se entierra: fila 11 en `FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01` y fila 12 en `FEATURE-DMEM-BOOSTERS-ADAPTAR-A-GB10-01`, ambas abiertas; la fila 10 quedo declarada no ejecutable por voto de Luis el 2026-10-13.
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: las ordenes que buscan el sujeto salen con rc distinto de 0), `pass` (estado medido: Secure Boot, `dmem.capacity`/`dmem.current` con vidmem, `last -x reboot`, modulo en updates/ firmado con la llave del equipo, guardia de arranque en los dos arranques, con control positivo) y `e2e` (la decision registrada). Para reabrirla si el sujeto aparece: `git mv tasks/done/FEATURE-DMEM-PREENROLAMIENTO-LISTA-01.md tasks/backlog/` y `status: open`.

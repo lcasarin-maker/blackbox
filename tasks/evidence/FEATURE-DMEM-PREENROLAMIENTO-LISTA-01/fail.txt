@@ -1,0 +1,17 @@
+Control negativo (FEATURE-DMEM-PREENROLAMIENTO-LISTA-01), 2026-10-14: el sujeto de la ficha es el estado PREVIO al enrolamiento (llave MOK sin enrolar, modulo de Canonical cargado, sin region dmem). Cada orden busca ese estado previo y debe FALLAR (rc distinto de 0) porque ya no existe: la llave esta enrolada y el modulo parcheado esta cargado desde el arranque del 2026-10-12 21:57. La ultima orden es el close_check original, que nunca se cumplio porque la lista se supero en vez de completarse:
+
+$ mokutil --test-key /var/lib/shim-signed/mok/MOK.der
+rc=1
+/var/lib/shim-signed/mok/MOK.der is already enrolled
+Failed to accesss kernel trusted keyring: Required key not available
+
+$ modinfo -F filename nvidia | grep -vq "/updates/"
+rc=1
+
+$ grep -vq "vidmem" /sys/fs/cgroup/dmem.capacity
+rc=1
+
+$ grep -q pre_enrolamiento_completo tasks/evidence/FEATURE-DMEM-PREENROLAMIENTO-LISTA-01/lista.txt
+rc=2
+grep: tasks/evidence/FEATURE-DMEM-PREENROLAMIENTO-LISTA-01/lista.txt: No existe el archivo o el directorio
+

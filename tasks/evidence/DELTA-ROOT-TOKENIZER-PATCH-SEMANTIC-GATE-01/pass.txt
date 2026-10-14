@@ -1,0 +1,36 @@
+Perfil medido de este equipo el 2026-10-14: el motor sirve un solo modelo de texto NVFP4 (nemotron-local); no hay checkpoint MXFP4 ni modelo de vision en disco, y el directorio de tokenizers solo trae las codificaciones tiktoken.
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | python3 -c "import json,sys;d=json.load(sys.stdin);print([(m[\"id\"],m[\"root\"],m[\"max_model_len\"]) for m in d[\"data\"]])"
+rc=0
+[('nemotron-local', '/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4', 32768)]
+
+$ ls /srv/ai/models/llm
+rc=0
+nemotron-3.5-lightning-30b-a3b-nvfp4
+nemotron-3.5-lightning-30b-a3b-nvfp4-dspark
+nemotron-3-super-120b-a12b-nvfp4
+qwen3-14b-nvfp4
+qwen3.6-27b-fp8
+qwen3-8b-nvfp4
+
+$ ls /srv/ai/models/tokenizers/tiktoken-encodings
+rc=0
+cl100k_base.tiktoken
+o200k_base.tiktoken
+
+Control positivo: las mismas herramientas SI encuentran lo que existe (el checkpoint NVFP4 servido y un directorio de modelos no vacio):
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | grep -qi nvfp4
+rc=0
+
+$ ls -d /srv/ai/models/*/*nvfp4*
+rc=0
+/srv/ai/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4
+/srv/ai/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4-dspark
+/srv/ai/models/llm/nemotron-3-super-120b-a12b-nvfp4
+/srv/ai/models/llm/qwen3-14b-nvfp4
+/srv/ai/models/llm/qwen3-8b-nvfp4
+
+$ ls -A /srv/ai/models/llm | grep -q .
+rc=0
+

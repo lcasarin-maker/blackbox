@@ -1,0 +1,64 @@
+Medido el 2026-10-14: la clase del enjambre (muchos procesos pesados bajo un scope de sesion dentro de app.slice) queda acotada por tres piezas en el repo, y la ventana del 2026-10-05 es un incidente etiquetado. Control positivo del journal: la ventana SI esta retenida (las lineas existen; solo falta java).
+
+$ journalctl --since "2026-10-04 23:30" --until "2026-10-05 00:31" --no-pager -q | wc -l
+rc=0
+9136
+
+$ grep -n "memory_max_kb=20 \* GIB_KB\|turnos=1" tools/portero.py
+rc=0
+78:# debajo de los 26-34 GiB del colapso). turnos=1: con una sola suite no hubo colapso (pushes de proyecto-A de 19:40,
+83:        memory_max_kb=20 * GIB_KB,
+86:        turnos=1,
+
+$ grep -n "MemoryMax=20G" tasks/evidence/FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01/medicion.txt
+rc=0
+14:  [bb portero] python3 bajo bb-portero-suite-297059.scope en app.slice: MemoryMax=20G MemoryHigh=18G sin swap, TasksMax=1230
+15:  [bb portero] python3 bajo bb-portero-suite-297058.scope en app.slice: MemoryMax=20G MemoryHigh=18G sin swap, TasksMax=1230
+16:  [bb portero] python3 bajo bb-portero-suite-297060.scope en app.slice: MemoryMax=20G MemoryHigh=18G sin swap, TasksMax=1230
+17:lectura: las tres esperaron turno (205 filas 'esperar': el presupuesto de app.slice estaba comprometido por scopes con tope propio), entraron de una en una sin solaparse (turno->fin de cada una termina antes del turno de la siguiente) y cada una corrio bajo su scope con MemoryMax=20G, sin swap, TasksMax=1230; las tres 34 passed.
+
+$ python3 -c "from tools import interruptores as i;print(i.modo(\"portero\"))"
+rc=0
+actuar
+
+$ systemctl --user is-active bb-portero.service
+rc=0
+active
+
+$ git log --oneline -1 -- data/procesos_protegidos.json
+rc=0
+731775a2 fix(protegidos): one shared protected-process list for the escalon, the guardia, memavail and gpuoom, with an in-code fallback that never raises; no unit restarted (pending, order recorded); earlyoom --avoid gap opened as a ficha
+
+$ grep -ln "procesos_protegidos" bin/bb-usable bin/bb-guardia-proceso tools/vigilante_memavail.py tools/gpuoom_bb.py
+rc=0
+bin/bb-usable
+bin/bb-guardia-proceso
+tools/vigilante_memavail.py
+tools/gpuoom_bb.py
+
+$ grep -n "2026-10-05 00:00" tools/calibra_psi.py
+rc=0
+140:    ("2026-10-05 00:00", "2026-10-05 00:31"),
+
+$ git log --oneline -1 -S "2026-10-05 00:31" -- tools/calibra_psi.py
+rc=0
+93de96fc fix(racha): label the 2026-10-05 collapse as an incident (last -x and sar corroborate it); the racha control gives LIMPIO on the real corpus; DEBT-SKIP-TEST-CONTROL-RACHA-118 closed; Luis's unblocking votes recorded
+
+Limite medido: la lista unica de protegidos llego al repo el 2026-10-14 14:43 y ninguna de las unidades que la leen se ha reiniciado desde entonces (decision de Luis registrada en DECISIONS.md 2026-10-14: reinicio pendiente), asi que el codigo en ejecucion todavia usa su copia anterior:
+
+$ git log -1 --format=%ci 731775a2
+rc=0
+2026-10-14 14:43:38 -0600
+
+$ systemctl show bb-usable.service -p ActiveEnterTimestamp
+rc=0
+ActiveEnterTimestamp=Tue 2026-10-13 18:28:14 CST
+
+$ systemctl --user show bb-guardia-proceso.service bb-vigilante-memavail.service -p Id -p ActiveEnterTimestamp
+rc=0
+Id=bb-guardia-proceso.service
+ActiveEnterTimestamp=Tue 2026-10-13 14:07:53 CST
+
+Id=bb-vigilante-memavail.service
+ActiveEnterTimestamp=Wed 2026-10-14 08:13:07 CST
+

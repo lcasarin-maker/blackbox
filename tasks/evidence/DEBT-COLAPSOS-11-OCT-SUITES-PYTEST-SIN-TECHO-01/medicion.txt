@@ -1,0 +1,145 @@
+medicion 2026-10-14 (DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01): el portero corre como servicio de usuario y, por el camino TRANSPARENTE (sin cambiar a los llamadores: hooks pre-push, pytest de sesiones), adopta cada suite pesada (RSS >= 4.87 GB) de app.slice en un scope bb-portero-suite-* con MemoryMax=20G, MemoryHigh=18G, sin swap, TasksMax=1230, y le da turno de una en una (turnos=1).
+
+$ systemctl --user is-active bb-portero.service
+rc=0
+active
+
+$ python3 -c "from tools import interruptores as i;print(i.modo(\"portero\"))"
+rc=0
+actuar
+
+$ grep -c "interruptores" tools/portero.py
+rc=1
+0
+
+$ python3 tools/portero.py estado | python3 -c "import json,sys;d=json.load(sys.stdin);print(\"medicion:\",d[\"medicion\"]);a=d[\"arboles\"];print(len(a),\"arboles suite;\",sum(1 for x in a if x[\"rss_kb\"]>=4873628),\"con RSS >= umbral;\",sum(1 for x in a if x[\"unidad\"]),\"ya en scope del portero\")"
+rc=0
+medicion: {'psi_full_avg10': 0.0, 'freno_termico': '', 'tope_app_kb': 44040192, 'uso_app_kb': 34140208, 'consumo_con_tope_propio_kb': 1146220}
+5 arboles suite; 0 con RSS >= umbral; 0 ya en scope del portero
+
+$ grep -n "memory_max_kb=20 \* GIB_KB\|memory_high_kb=18 \* GIB_KB\|tasks_max=1230\|turnos=1,\|^UMBRAL_RSS_SUITE_KB" tools/portero.py
+rc=0
+60:UMBRAL_RSS_SUITE_KB = 4_873_628
+83:        memory_max_kb=20 * GIB_KB,
+84:        memory_high_kb=18 * GIB_KB,
+85:        tasks_max=1230,
+86:        turnos=1,
+
+$ python3 -c "import json,collections;c=collections.Counter(json.loads(l)[\"accion\"] for l in open(\"/home/lcasarin/.local/share/blackbox/portero.jsonl\") if l.startswith(\"{\") and json.loads(l).get(\"ts\",\"\")>=\"2026-10-14\");print(dict(c))"
+rc=0
+{'esperar': 468, 'turno': 3, 'fin': 3, 'admitir': 2, 'congelar': 14, 'descongelar': 10, 'no_actua': 9}
+
+$ python3 -c "import json;[print(e[\"ts\"][:19],e[\"accion\"],e[\"raiz\"],e[\"rss_kb\"],e[\"cgroup\"].rsplit(\"/\",1)[-1],e.get(\"topes\")) for e in map(json.loads,open(\"/home/lcasarin/.local/share/blackbox/portero.jsonl\")) if e.get(\"ts\",\"\")>=\"2026-10-14\" and e.get(\"accion\") in (\"congelar\",\"admitir\") and e.get(\"cgroup\")]"
+rc=0
+2026-10-14T13:54:55 congelar 422984 5738408 app-org.chromium.Chromium-58710.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+2026-10-14T14:00:00 congelar 439107 5367436 app-org.chromium.Chromium-58710.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+2026-10-14T14:04:02 congelar 447207 4938408 app-org.chromium.Chromium-58710.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+2026-10-14T14:07:40 congelar 429971 5423464 app-org.chromium.Chromium-58710.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+2026-10-14T14:29:51 admitir 999080 4970604 app-org.chromium.Chromium-58710.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+2026-10-14T16:03:15 congelar 2234037 6034852 app-com.anthropic.Claude-56651.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+2026-10-14T16:10:48 congelar 2423202 6257148 app-com.anthropic.Claude-56651.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+2026-10-14T17:54:52 congelar 3377822 5012156 app-com.anthropic.Claude-56651.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+2026-10-14T19:45:53 congelar 243837 5389548 app-com.anthropic.Claude-56651.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+2026-10-14T19:53:57 congelar 374929 5450484 app-com.anthropic.Claude-56651.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+2026-10-14T19:55:37 congelar 448979 5408980 app-com.anthropic.Claude-56651.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+2026-10-14T20:01:13 congelar 692460 5586376 app-com.anthropic.Claude-56651.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+2026-10-14T20:05:47 congelar 983886 4884944 app-com.anthropic.Claude-56651.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+2026-10-14T20:15:53 congelar 1258031 5405440 app-com.anthropic.Claude-56651.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+2026-10-14T20:17:19 congelar 1337477 4948916 app-com.anthropic.Claude-56651.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
+
+$ journalctl --user -q --no-pager --since 2026-10-14 -g "bb-portero-suite" | grep -c "Started"
+rc=0
+41
+
+$ journalctl --user -q --no-pager --since 2026-10-14 -g "bb-portero-suite" | grep "Failed with result"
+rc=0
+oct 14 14:17:19 <host> systemd[2914]: bb-portero-suite-1337477.scope: Failed with result 'resources'.
+
+$ systemctl --user show bb-portero-suite-1337477.scope -p MemoryMax -p MemoryHigh -p MemorySwapMax -p TasksMax
+rc=0
+MemoryHigh=19327352832
+MemoryMax=21474836480
+MemorySwapMax=0
+TasksMax=1230
+
+$ sed -n 1,17p tasks/evidence/FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01/medicion.txt
+rc=0
+medicion 2026-10-14: portero desplegado como servicio de usuario en modo observar (voto de Luis); tres suites lanzadas a la vez con 'bb portero run --clase suite'
+$ systemctl --user is-active bb-portero.service
+active
+orden de admision medida en portero.jsonl (raices 297058/297059/297060, mismo instante de lanzamiento 13:44:41):
+  13:44:41.219 297059 esperar
+  13:44:41.221 297058 esperar
+  13:44:41.241 297060 esperar
+  13:45:48.328 297059 turno
+  13:45:50.397 297059 fin
+  13:45:50.557 297058 turno
+  13:45:52.738 297058 fin
+  13:45:54.572 297060 turno
+  13:45:56.688 297060 fin
+  [bb portero] python3 bajo bb-portero-suite-297059.scope en app.slice: MemoryMax=20G MemoryHigh=18G sin swap, TasksMax=1230
+  [bb portero] python3 bajo bb-portero-suite-297058.scope en app.slice: MemoryMax=20G MemoryHigh=18G sin swap, TasksMax=1230
+  [bb portero] python3 bajo bb-portero-suite-297060.scope en app.slice: MemoryMax=20G MemoryHigh=18G sin swap, TasksMax=1230
+lectura: las tres esperaron turno (205 filas 'esperar': el presupuesto de app.slice estaba comprometido por scopes con tope propio), entraron de una en una sin solaparse (turno->fin de cada una termina antes del turno de la siguiente) y cada una corrio bajo su scope con MemoryMax=20G, sin swap, TasksMax=1230; las tres 34 passed.
+
+$ last -x reboot | head -1
+rc=0
+reboot   system boot  6.17.0-1032-nvid Tue Oct 13 14:07   still running
+
+$ uptime -s
+rc=0
+2026-10-13 14:07:34
+
+Resultado de cada adopcion de hoy (rc del efecto) y estado actual de las raices cuya adopcion fallo:
+
+$ python3 -c "import json;[print(e[\"ts\"][:19],e[\"accion\"],e[\"raiz\"],\"rc=\"+str(e.get(\"rc\")),str(e.get(\"salida\",\"\"))[-70:]) for e in map(json.loads,open(\"/home/lcasarin/.local/share/blackbox/portero.jsonl\")) if e.get(\"ts\",\"\")>=\"2026-10-14\" and e.get(\"accion\") in (\"congelar\",\"admitir\",\"descongelar\") and e.get(\"cgroup\")]"
+rc=0
+2026-10-14T13:54:55 congelar 422984 rc=0 o "/org/freedesktop/systemd1/job/178444"
+2026-10-14T13:56:09 descongelar 422984 rc=0 
+2026-10-14T14:00:00 congelar 439107 rc=0 o "/org/freedesktop/systemd1/job/179448"
+2026-10-14T14:00:21 descongelar 439107 rc=0 
+2026-10-14T14:04:02 congelar 447207 rc=0 o "/org/freedesktop/systemd1/job/180354"
+2026-10-14T14:04:39 descongelar 447207 rc=0 
+2026-10-14T14:07:40 congelar 429971 rc=0 o "/org/freedesktop/systemd1/job/181105"
+2026-10-14T14:07:50 descongelar 429971 rc=0 
+2026-10-14T14:29:51 admitir 999080 rc=0 o "/org/freedesktop/systemd1/job/185204"
+2026-10-14T16:03:15 congelar 2234037 rc=0 o "/org/freedesktop/systemd1/job/200620"
+2026-10-14T16:04:33 descongelar 2234037 rc=0 
+2026-10-14T16:10:48 congelar 2423202 rc=0 o "/org/freedesktop/systemd1/job/201886"
+2026-10-14T16:10:50 descongelar 2423202 rc=0 
+2026-10-14T17:54:52 congelar 3377822 rc=0 o "/org/freedesktop/systemd1/job/218346"
+2026-10-14T17:54:56 descongelar 3377822 rc=0 
+2026-10-14T19:45:53 congelar 243837 rc=1 Call failed: Failed to set unit properties: No such process
+2026-10-14T19:53:57 congelar 374929 rc=1 op/systemd1/job/237402"; ProcessLookupError: [Errno 3] No such process
+2026-10-14T19:55:37 congelar 448979 rc=1 Call failed: Failed to set unit properties: No such process
+2026-10-14T20:01:13 congelar 692460 rc=1 Call failed: Failed to set unit properties: No such process
+2026-10-14T20:05:47 congelar 983886 rc=0 o "/org/freedesktop/systemd1/job/239598"
+2026-10-14T20:09:57 descongelar 983886 rc=0 
+2026-10-14T20:15:53 congelar 1258031 rc=0 o "/org/freedesktop/systemd1/job/241394"
+2026-10-14T20:15:55 descongelar 1258031 rc=0 
+2026-10-14T20:17:19 congelar 1337477 rc=0 o "/org/freedesktop/systemd1/job/241673"
+2026-10-14T20:18:39 descongelar 1337477 rc=0 
+
+$ for p in 243837 374929 448979 692460 1337477; do ps -o pid= -p $p >/dev/null && echo "$p sigue vivo" || echo "$p ya no existe"; done
+rc=0
+243837 ya no existe
+374929 ya no existe
+448979 ya no existe
+692460 ya no existe
+1337477 ya no existe
+
+$ for p in $(pgrep -f "[p]ytest"); do cat /sys/fs/cgroup$(cut -d: -f3 /proc/$p/cgroup)/cgroup.freeze 2>/dev/null; done | sort | uniq -c
+rc=0
+     24 0
+
+lectura:
+- El servicio esta activo y el camino transparente actua de verdad: hoy adopto 11 suites pesadas (RSS 4.88 a 6.26 GB) que vivian en scopes de sesion (Chromium, Claude) de app.slice, cada una en bb-portero-suite-<raiz>.scope con MemoryMax=20G, MemoryHigh=18G, MemorySwapMax=0, TasksMax=1230; 10 las congelo mientras app.slice no tenia holgura (< 4 GiB) y las descongelo al volver la holgura, 1 la admitio directo. 9 filas no_actua son suites que ya tenian su propio tope de 20 GiB (scopes run-*). Ninguna pytest queda congelada ahora (24 de 24 con cgroup.freeze=0).
+- La admision en serie de tres suites simultaneas esta medida en tasks/evidence/FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01/medicion.txt (turno -> fin de cada una antes del turno de la siguiente). Esa medicion uso `bb portero run`; las 11 adopciones de hoy son el camino transparente que aquella dejaba pendiente.
+- El colapso no se ha reproducido: el arranque actual (2026-10-13 14:07) sigue en pie; el portero adopta suites desde 2026-10-14 13:54 UTC.
+
+LIMITES (medidos, no escondidos):
+1. El interruptor `portero` dice `actuar`, pero tools/portero.py no lo lee (grep -c interruptores = 0): el demonio actua siempre. La medicion de FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01 que dice "en modo observar, solo registra" describe el interruptor, no el demonio. Ficha: DEBT-PORTERO-IGNORA-SU-INTERRUPTOR-01.
+2. 5 de 15 adopciones de hoy chocaron con procesos que salian: 4 dieron rc=1 (la suite ya no existia; sin dano) y 1 (raiz 1337477) dio rc=0 en el portero mientras systemd marco su scope "Failed with result 'resources'" por pids que desaparecieron durante el traslado; no se puede comprobar ya si sus procesos quedaron bajo el tope. Ficha: DEBT-PORTERO-ADOPCION-CHOCA-CON-PIDS-QUE-SALEN-01.
+3. No se midio el estancamiento bajo carga de colapso (PSI full 98 %): provocarlo tumbaria la maquina. El seguimiento queda en la misma ficha nueva.
+
+suites_pytest_con_techo

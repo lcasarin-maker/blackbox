@@ -1,0 +1,17 @@
+Control negativo de aplicabilidad (DELTA-ROOT-RECIPE-MEMORY-UNKNOWN-AND-RAW-EVIDENCE-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (recetas intercambiables de llama.cpp/sparkrun y una receta activa cuyo presupuesto de memoria es desconocido). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ which sparkrun llama-server llama-cli
+rc=1
+
+$ pgrep -x llama-server
+rc=1
+
+$ ls -d ~/.sparkrun ~/sparkrun
+rc=2
+ls: no se puede acceder a '/home/lcasarin/.sparkrun': No existe el archivo o el directorio
+ls: no se puede acceder a '/home/lcasarin/sparkrun': No existe el archivo o el directorio
+
+$ jq -e ".admission_check_gb == null or .container_memory_gb == null or .gpu_memory_utilization == null" /srv/ai/gateway/active_engine.json
+rc=1
+false
+

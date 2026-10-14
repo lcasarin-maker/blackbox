@@ -60,3 +60,10 @@ El caso (Qwen3.5/3.6, hilos 370834/367085) no corre aqui, pero el riesgo de inye
 Version para un solo nodo Gigabyte AI TOP ATOM: Anadir a tools/canario_motor.py un caso mock de dos turnos (resultado de herramienta con instruccion atacante y luego correo mock) contra nemotron-local, con control positivo de que el fixture llega al contexto.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Medicion contra el voto de cierre (2026-10-14): queda ABIERTA
+El voto de Luis del 2026-10-14 pedia cerrarla como `void_wontfix` porque "el motor local no ejecuta herramientas con efectos y aqui no hay pila de agente con herramienta". Medido en solo lectura, la premisa no se sostiene, asi que no se cierra y vuelve a Luis:
+- Atlas (otro repo del mismo equipo) corre un agente contra este motor: `~/projects/Atlas/tools/kb_investigator.py:115` usa `GATEWAY = "http://127.0.0.1:8000/v1/chat/completions"` (nemotron-local) con herramientas, entre ellas `write_finding`, que escribe un documento a disco (efecto). Es el patron de la ficha: resultado de herramienta no confiable en un turno, accion con efecto en otro.
+- Atlas ya tiene su propio arnes de inyeccion: `~/projects/Atlas/tools/adversarial_injection_probe.py` (rutas `evaluate_reference` y `scavenge_document`, ASR con y sin defensas).
+- Lo que si es cierto: en el momento de medir no habia conexiones abiertas al puerto 8000 (`ss -tnH state established "( dport = :8000 )" | wc -l` = 0) ni procesos de tool-eval-bench, openclaw, hermes o spark-studio.
+Decision pendiente de Luis: si el caso cross-turn lo cubre el arnes de Atlas (cerrar como `duplicate`/reubicada hacia Atlas, citando su evidencia) o se anade el caso de dos turnos al canario de bb.

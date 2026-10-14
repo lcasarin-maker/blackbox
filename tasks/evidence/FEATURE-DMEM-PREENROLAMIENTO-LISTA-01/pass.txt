@@ -1,0 +1,54 @@
+Estado medido el 2026-10-14: la llave MOK esta enrolada, el modulo NVIDIA 580.178.04 parcheado (updates/, firmado con la llave del equipo) esta cargado con Secure Boot activo, la region dmem de vidmem existe en cgroup v2 y la guardia de arranque confirmo que la GPU responde. Primer arranque con el modulo: 2026-10-12 21:57; el actual: 2026-10-13 14:07.
+
+$ mokutil --sb-state
+rc=0
+SecureBoot enabled
+
+$ cat /sys/fs/cgroup/dmem.capacity
+rc=0
+nvidia/0000000F:01:00.0/vidmem 53794045952
+
+$ cat /sys/fs/cgroup/dmem.current
+rc=0
+nvidia/0000000F:01:00.0/vidmem 40967888889
+
+$ last -x reboot | head -3
+rc=0
+reboot   system boot  6.17.0-1032-nvid Tue Oct 13 14:07   still running
+reboot   system boot  6.17.0-1032-nvid Mon Oct 12 21:57   still running
+reboot   system boot  6.17.0-1032-nvid Mon Oct 12 18:45 - 21:18  (02:33)
+
+$ uptime -s
+rc=0
+2026-10-13 14:07:34
+
+$ modinfo -F filename nvidia; modinfo -F version nvidia; modinfo -F signer nvidia
+rc=0
+/lib/modules/6.17.0-1032-nvidia/updates/nvidia.ko
+580.178.04
+<host> Secure Boot Module Signature key
+
+$ journalctl -b -u bb-dmem-guardia.service --no-pager -q -o cat | tail -3
+rc=0
+[dmem] la GPU responde; el modulo parcheado se queda
+bb-dmem-guardia.service: Deactivated successfully.
+Finished bb-dmem-guardia.service - bb: retrocede el modulo NVIDIA parcheado si la GPU no responde tras el arranque.
+
+$ nvidia-smi -L | sed "s/(UUID.*//"
+rc=0
+GPU 0: NVIDIA GB10 
+
+Control positivo: las mismas ordenes SI encuentran el estado actual (modulo en updates/ y region vidmem):
+
+$ modinfo -F filename nvidia | grep -q "/updates/"
+rc=0
+
+$ grep -q "vidmem" /sys/fs/cgroup/dmem.capacity
+rc=0
+
+Arranque anterior (el primero con el modulo parcheado), la misma guardia:
+
+$ journalctl -b -1 -u bb-dmem-guardia.service --no-pager -q -o short-iso | tail -1
+rc=0
+2026-10-12T21:57:42-06:00 <host> systemd[1]: Finished bb-dmem-guardia.service - bb: retrocede el modulo NVIDIA parcheado si la GPU no responde tras el arranque.
+

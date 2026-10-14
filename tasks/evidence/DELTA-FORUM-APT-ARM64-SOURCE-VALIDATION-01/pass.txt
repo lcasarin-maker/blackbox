@@ -1,0 +1,78 @@
+Perfil medido de este equipo el 2026-10-14: arm64 con DGX OS y fuentes Ubuntu solo en ports.ubuntu.com, prioridades fijadas en preferences.d, apt sano en simulacion y sin incidente registrado. El sujeto de la ficha (mezcla archive+ports, 404/hash/firma) no existe aqui.
+
+$ dpkg --print-architecture
+rc=0
+arm64
+
+$ grep -E "^DGX_(PRETTY_NAME|SWBUILD_VERSION|PLATFORM|OTA_VERSION)" /etc/dgx-release
+rc=0
+DGX_PRETTY_NAME="NVIDIA DGX Spark"
+DGX_SWBUILD_VERSION="7.2.3"
+DGX_PLATFORM="AI TOP ATOM"
+DGX_OTA_VERSION="7.5.0"
+DGX_OTA_VERSION="7.6.0"
+
+$ grep -h "^URIs:" /etc/apt/sources.list.d/*.sources; grep -hE "^deb " /etc/apt/sources.list.d/*.list
+rc=0
+URIs: https://workbench.download.nvidia.com/stable/linux/debian
+URIs: https://snapshot.ppa.launchpadcontent.net/canonical-nvidia/nvidia-desktop-edge/ubuntu/
+URIs: https://persistent.oaistatic.com/codex-app-prod/linux/deb
+URIs: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/sbsa/
+URIs: https://downloads.cursor.com/aptrepo
+URIs: https://repo.download.nvidia.com/baseos/ubuntu/noble/arm64/
+URIs: https://dl.google.com/linux/chrome-stable/deb/
+URIs: https://developer.download.nvidia.com/hpc-sdk/ubuntu/arm64/
+URIs: https://snapshot.ppa.launchpadcontent.net/canonical-nvidia/vulkan-packages-nv-desktop/ubuntu/
+URIs: https://repo.download.nvidia.com/spark/ubuntu/arm64/
+URIs: https://esm.ubuntu.com/cis/ubuntu
+URIs: https://esm.ubuntu.com/apps/ubuntu
+URIs: https://esm.ubuntu.com/infra/ubuntu
+URIs: http://ports.ubuntu.com/ubuntu-ports/
+URIs: https://packages.microsoft.com/repos/code
+deb [signed-by=/etc/apt/keyrings/antigravity-repo-key.gpg] https://us-central1-apt.pkg.dev/projects/antigravity-auto-updater-dev/ antigravity-debian main
+deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/claude-desktop-archive-keyring.asc] https://downloads.claude.ai/claude-desktop/apt/stable stable main
+deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/stable/deb/$(ARCH) /
+deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb noble main
+
+$ ls /etc/apt/preferences.d/
+rc=0
+cuda-compute-repo-lowpri
+cuda-compute-repo-lowpri2
+hpc-sdk-repo
+nvidia-dgx
+nvidia-spark-repo
+ubuntu-pro-esm-apps
+ubuntu-pro-esm-infra
+
+$ apt-get -s check
+rc=0
+NOTA: ¡Esto es sólo una simulación!
+      apt-get necesita privilegios de administrador para la ejecución real.
+      Tenga también en cuenta que se han desactivado los bloqueos,
+      ¡no dependa la situación real actual de la relevancia de esto!
+Leyendo lista de paquetes...
+Creando árbol de dependencias...
+Leyendo la información de estado...
+
+$ apt-cache policy | grep -c "^ *[0-9]* http"
+rc=0
+40
+
+$ apt-get -s upgrade | grep -c "^Inst "
+rc=0
+37
+
+$ ls -la --time-style=long-iso /var/lib/apt/lists/ | sort -k6,7 | tail -2
+rc=0
+drwx------ 2 _apt root    28672 2026-10-14 15:08 partial
+drwxr-xr-x 4 root root    24576 2026-10-14 15:08 .
+
+Control positivo: las mismas ordenes del control negativo SI encuentran lo que existe (la fuente ports y el registro de apt):
+
+$ grep -l "ports.ubuntu.com" /etc/apt/sources.list.d/*.sources
+rc=0
+/etc/apt/sources.list.d/ubuntu.sources
+
+$ zgrep -h "^Start-Date" /var/log/apt/history.log* | grep -q .
+rc=0
+

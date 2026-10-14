@@ -1,0 +1,13 @@
+Control negativo de aplicabilidad (DELTA-ROOT-TOKENIZER-PATCH-SEMANTIC-GATE-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (un modelo multimodal con el tokenizer parcheado o un checkpoint MXFP4 parcheado, servido o en disco). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | grep -Eqi "mxfp4|gpt-oss|-vl|vision"
+rc=1
+
+$ ls -d /srv/ai/models/*/*mxfp4* /srv/ai/models/*/*MXFP4*
+rc=2
+ls: no se puede acceder a '/srv/ai/models/*/*mxfp4*': No existe el archivo o el directorio
+ls: no se puede acceder a '/srv/ai/models/*/*MXFP4*': No existe el archivo o el directorio
+
+$ ls -A /srv/ai/models/vision | grep -q .
+rc=1
+

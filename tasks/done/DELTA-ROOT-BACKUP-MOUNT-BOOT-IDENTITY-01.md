@@ -3,12 +3,16 @@ id: DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01
 kind: task
 domain: VERDICT
 title: "Validar root backup mount boot identity 01"
-status: open
+status: done
+closed_at: 2026-10-14
+closure_type: void_wontfix
+reason: "Sin destino de respaldo configurado: fstab solo trae / , /boot/efi y swap, no hay montaje de red ni USB, unidad .mount/.automount ni trabajo de respaldo. Hay un NAS QNAP en la LAN (SMB en 445 con acceso anonimo denegado, sin NFS), pero el equipo no lo usa. Decision de Luis 2026-10-14 ('busca el NAS; si no, cerrar sin sujeto'): reabrir si se configura un respaldo al NAS (hace falta credencial de SMB y punto de montaje/UUID)."
+evidence: {"pass": "tasks/evidence/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01/pass.txt", "fail": "tasks/evidence/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01/fail.txt", "e2e": "tasks/evidence/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_backup_mount_boot_identity_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a tests/test_debt_registration_controls.py::test_delta_root_backup_mount_boot_identity_01, un xfail que se retira con el cierre."}
 ---
 
 ## Registro y responsable
@@ -62,3 +66,12 @@ El guard `tools.host_diagnostics --check-backup-destination` exige mountpoint, s
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Root Cause
+No aplica a este equipo: la ficha pide verificar UUID, dispositivo y mountpoint de un destino de respaldo tras el arranque. Medido 2026-10-14 en solo lectura: no existe ese destino. El NAS de la LAN responde por mDNS y SMB pero sus recursos exigen credencial y ningun montaje ni trabajo apunta a el; Deja Dup tiene backend google, nunca respaldo y sin periodicidad.
+
+## Regression Test
+Ninguno: la ficha se cierra por no tener sujeto aqui. Los tests que la vigilaban (`tests/test_debt_registration_controls.py::test_delta_root_backup_mount_boot_identity_01`) se retiran o dejan de parametrizarla, junto con sus entradas de `tests/known_failures.json`. El guard `tools.host_diagnostics --check-backup-destination` y `tools/hardware_batch03_controls.py` siguen vivos para cuando exista un destino.
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: las ordenes que buscan el sujeto salen con rc distinto de 0), `pass` (perfil medido: fstab, NAS por mDNS, puertos 445/443/8080 abiertos y 2049/22 cerrados, SMB anonimo denegado, sin NFS, timers y Deja Dup, con control positivo (IP, MAC y nombre del NAS redactados)) y `e2e` (la decision registrada). Para reabrirla si el sujeto aparece: `git mv tasks/done/DELTA-ROOT-BACKUP-MOUNT-BOOT-IDENTITY-01.md tasks/backlog/` y `status: open`.
