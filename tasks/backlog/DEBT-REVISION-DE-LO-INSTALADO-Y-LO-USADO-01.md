@@ -25,3 +25,6 @@ close_check: {"cmd": "grep -q decisiones_de_revision_votadas tasks/evidence/DEBT
 - Docker retiene 112 GB de imagenes reclamables (77 % de 144 GB); open-webui parado desde 2026-08-17 y nadie lo referencia.
 - Datos grandes: /srv/ai/models 155 GB, /srv/ai/_downloads 40 GB, ~/.cache/uv 34 GB, ~/.cache/pip 15 GB.
 - Recomendaciones (cada una con su inverso en el informe) esperan voto de Luis; nada se ha desinstalado.
+
+## Avance 2026-10-14: informe hecho, falta la segunda boleta
+`tasks/evidence/DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01/informe.txt` (solo lectura): contenedores con tamano y estado, disco de docker (112.1 GB de imagenes reclamables), timers de usuario y paquetes grandes. LibreChat votado por Luis: ya estaba parado (`RestartPolicy=no`, sin unidad ni timer), queda parado y sin borrar datos. Sin votar y por eso sin la frase `decisiones_de_revision_votadas`: `docker image prune -a`, open-webui parado y los contenedores de pruebas de otro proyecto. Cierra con esa segunda boleta.
