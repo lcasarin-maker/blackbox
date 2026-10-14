@@ -1,5 +1,5 @@
 id	construible	bloqueador	por_que_no_mas
-DEBT-AUDIT-ANILLO-DESBORDADO-SIN-LIMITE-01	SIN_REVISAR	(close_check rc1)	
+DEBT-AUDIT-ANILLO-DESBORDADO-SIN-LIMITE-01	n/a	cerrada	cerrada en este ciclo con evidencia
 DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01	no	hardware_externo	El close_check del lote es un xfail placeholder (salida literal: '1 xfailed in 0.2s', rc=0, probado con python3 -m pytest -q -p no:cacheprovider tests/test_debt
 DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01	no	captura_de_otro_caso	El close_check del lote es un xfail placeholder (salida literal: '1 xfailed in 0.2s', rc=0, probado con python3 -m pytest -q -p no:cacheprovider tests/test_debt
 DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01	no	hardware_externo	El close_check del lote es un xfail placeholder (salida literal: '1 xfailed in 0.2s', rc=0, probado con python3 -m pytest -q -p no:cacheprovider tests/test_debt
@@ -11,20 +11,20 @@ DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01	no	hardware_externo	El verificador exi
 DEBT-COBERTURA-PISO-REBAJADO-01	no	hardware_externo	`python3 -m pytest -q --runxfail tests/test_cobertura_piso.py` -> 1 failed, "assert '97.15' == '100.00'" (.coverage_watermark). El test solo lee ese archivo; su
 DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01	no	incidente_real	close_check `grep -q . tasks/evidence/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/quien-lanzo.txt`: el directorio no existe (ls -> no such file). La f
 DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01	no	incidente_real	close_check exige la frase suites_pytest_con_techo en tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/medicion.txt; la ficha dice 'Cierra cuando 
-DEBT-CONTRATO-ATLAS-SONDAS-DE-MEMORIA-01	SIN_CLASIFICAR		
+DEBT-CONTRATO-ATLAS-SONDAS-DE-MEMORIA-01	no	otro_repo	el cambio vive en tools/ de Atlas (liberation_watchdog.py, dgx401_...); otro repo con sesiones propias
 DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01	no	hardware_externo	close_check `grep -q . tasks/evidence/DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01/clasificacion.md` pasa con cualquier archivo no vacio (instrumento sin control negati
-DEBT-DATOS-PRIVADOS-EN-EVIDENCIA-HISTORICA-01	SIN_CLASIFICAR		
+DEBT-DATOS-PRIVADOS-EN-EVIDENCIA-HISTORICA-01	n/a	en_curso	agente Opus redactando 139 archivos
 DEBT-DESPLIEGUES-PENDIENTES-DE-LUIS-01	no	sudo	close_check exige despliegues_hechos en tasks/evidence/DEBT-DESPLIEGUES-PENDIENTES-DE-LUIS-01/despliegue.txt, tras `sudo cp ... /etc/systemd/system/` y `restart
 DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01	no	sudo	close_check exige recarga_probada en tasks/evidence/DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01/prueba.txt, que requiere un `systemctl daemon-reload` del ho
 DEBT-DOCKER-SLICE-TOPE-VS-TOPES-DE-CONTENEDORES-01	no	sudo	close_check exige docker_slice_dimensionado en medicion.txt, y esa linea 'se escribe tras comprobar el techo en la maquina'; medicion.txt dice 'Pendiente de Lui
-DEBT-ESTAMPIDA-DE-SYNC-DE-FLOTA-SIN-ESCALONAR-01	SIN_REVISAR	(close_check rc1)	
-DEBT-GPU-ACCOUNTING-MODE-APAGADO-01	SIN_REVISAR	(close_check rc1)	
+DEBT-ESTAMPIDA-DE-SYNC-DE-FLOTA-SIN-ESCALONAR-01	no	otro_repo	la regla necesita confirmacion escrita de twiner, 020 y atlas y que `simple` escalone el sync del kit; el portero que la hace cumplir espera despliegue de Luis
+DEBT-GPU-ACCOUNTING-MODE-APAGADO-01	no	reinicio	unidad construida en adopted/pendiente-de-despliegue; falta desplegarla (systemctl enable = recarga, riesgo P1) y verificar Enabled tras reiniciar
 DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01	no	decision_de_luis	close_check exige linea '^CUDA Exception: Warp' en cuda-gdb-kernel.txt, salida literal de cuda-gdb sobre un volcado real. La ficha (analisis 2026-10-13): los 28
 DEBT-MOTOR-VLLM-ATASCO-CON-32-PETICIONES-01	no	reinicio	Falta atribuir clientes (requiere registro de gateway/bb origen de un atasco que ya paso; tools/origen_proceso.py solo ve procesos vivos) y medir tope de concur
 DEBT-OOMD-PROBAR-Y-DIAGNOSTICAR-01	parcial	sudo	close_check exige la frase oomd_mata_y_medido, que solo se emite tras un kill medido de oomd bajo presion >60% 20 s; provocarlo arriesga matar user@1000 (aviso 
 DEBT-PUSHES-ACUMULADOS-BLOQUEADOS-POR-DEUDA-ABIERTA-01	parcial	decision_de_luis	El close_check exige la frase 'repositorio_publicado' en tasks/evidence/.../publicacion.txt (carpeta inexistente) y la 'porque' condiciona el cierre a 'tras el 
-DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01	SIN_REVISAR	(close_check rc1)	
-DEBT-SKIP-TEST-CONTROL-RACHA-118	SIN_CLASIFICAR		
+DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01	no	decision_de_luis	el close_check exige decisiones_de_revision_votadas: que se apaga o se retira (LibreChat, contenedores, paquetes) lo vota Luis
+DEBT-SKIP-TEST-CONTROL-RACHA-118	no	decision_de_luis	el corpus real da FALSO POSITIVO (2026-10-05 00:26) con la regla de racha de bb-usable; recalibrarla cambia cuando la maquina se reinicia sola
 DEBT-WATCHDOG-SIN-CONTROL-NEGATIVO-01	no	sudo	close_check exige 'bootstatus=[1-9]' en tasks/evidence/.../prueba.md, que solo existe tras provocar un panic/cuelgue real. Ficha: 'echo c | sudo tee /proc/sysrq
 DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01	no	decision_de_luis	tools.verify_apt_sources_closure.verify(commands.json, None) devuelve complete=true, fail=0, could_not_run=12, gates 'capture schema version 1 is required'; too
 DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01	no	sudo	python3 -c 'from tools.verify_clock_cap_tradeoff import verify;print(verify())' -> status unknown, could_not_run=1, checks matched_clock_runs=unknown, rollback=
@@ -64,10 +64,10 @@ FEATURE-1358-CGROUP-03-NATIVO	no	sudo	tools/verify_cgroup_plan.py ya existe (935
 FEATURE-1358-CGROUP-04-PARCHE	no	otro_repo	Ficha: 'El cambio vive en un fork de NVIDIA/open-gpu-kernel-modules'; _patch exige build del candidato, integridad del parche y runs antes/despues (tools/verify
 FEATURE-1358-CGROUP-05-CUELGUES	no	sudo	_hang_stacks exige exactamente dos corridas baseline y candidate con samples, journalctl -o json, bb JSONL y ensayos none/cpu_touch/cuda_malloc/cuda_malloc_mana
 FEATURE-APT-CRITICAL-METAPACKAGE-GUARD	no	decision_de_luis	El close_check ya corre y sale 2 por diseno. Probado: `python3 -m tools.verify_apt_critical_removals --cierre --evidence tasks/evidence/FEATURE-APT-CRITICAL-MET
-FEATURE-ATLAS-REINDEX-PAQUETE-GB10-01	SIN_CLASIFICAR		
+FEATURE-ATLAS-REINDEX-PAQUETE-GB10-01	no	otro_repo	Atlas debe reindexar su grafo de entidades; es su indice, en su repo
 FEATURE-BB-EVALUAR-CAP-DE-CPU-01	no	sudo	close_check es `grep -q 'scaling_max_freq' tasks/evidence/FEATURE-BB-EVALUAR-CAP-DE-CPU-01/ab.md`; el directorio no existe. Solo cierra con un A/B medido aqui (
-FEATURE-BB-FALSO-CUELGUE-POR-AISLAMIENTO-WIFI-01	SIN_CLASIFICAR		
-FEATURE-CALIBRAR-CALOR-SOSTENIDO-01	SIN_REVISAR	(close_check rc1)	
+FEATURE-BB-FALSO-CUELGUE-POR-AISLAMIENTO-WIFI-01	n/a	cerrada	cerrada en este ciclo; el cableado lo posee FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01
+FEATURE-CALIBRAR-CALOR-SOSTENIDO-01	no	reinicio	faltan >=3 boots mas y un boot sano bajo carga pesada: datos que solo el tiempo y una carga real producen
 FEATURE-DMEM-BOOSTERS-ADAPTAR-A-GB10-01	no	sudo	Probado en solo lectura: `cat /sys/fs/cgroup/dmem.capacity` -> 'nvidia/0000000F:01:00.0/vidmem 53794045952' (hay region visible en la raiz), pero `cat /sys/fs/c
 FEATURE-DMEM-PREENROLAMIENTO-LISTA-01	no	decision_de_luis	close_check: grep -q pre_enrolamiento_completo lista.txt; la ficha exige 'cada fila ... HECHO con su evidencia y la fila de la ventana de reinicio la fija Luis'
 FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01	no	incidente_real	Corrido: `python3 -m tools.verify_forum_finding --id FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01 --evidence tasks/evidence/...` -> rc=2, status unknown, 'raw ca
@@ -88,11 +88,11 @@ FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01	no	hardware_externo	close_check `grep -q .
 FEATURE-MEMORYSAVER-02-TRAZADOR	no	sudo	Salida literal: `bpftrace -l 'kprobe:__memcg_kmem_charge_page'` -> 'ERROR: bpftrace currently only supports running as the root user.' (uid 1000). La ficha: 'bp
 FEATURE-MEMORYSAVER-04-PACKING-4K	no	sudo	Esas filas salen de trazar UVM en el kernel en ejecucion (depende de FEATURE-MEMORYSAVER-02-TRAZADOR, bloqueada por root: 'bpftrace currently only supports runn
 FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01	parcial	hardware_externo	close_check `grep -q . .../externo/ping.jsonl` exige datos de OTRO equipo siempre encendido ('la evidencia tiene que venir de afuera'; el directorio externo/ no
-FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE-LA-MAQUINA-01	SIN_REVISAR	(close_check rc1)	
+FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE-LA-MAQUINA-01	no	sudo	faltan /etc/audit/rules.d/10-blackbox-signals.rules y los crontabs de otros usuarios, ilegibles sin root; bb drift corre como usuario y necesita un camino de comparacion
 FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01	no	decision_de_luis	close_check = grep -q portero_universal_probado tasks/evidence/FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01/medicion.txt; medicion.txt no existe (solo validacione
 FEATURE-USB-HID-POSTUPDATE-CHECK	no	reinicio	tools/verify_usb_hid_postupdate.py:_boot_observations/_boot_ids exige tres capturas en arranques distintos (pre-update, affected, recovery) con boot_id y kernel
-FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01	SIN_REVISAR	(close_check rc1)	
-FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01	SIN_REVISAR	(close_check rc1)	
+FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01	n/a	cerrada	cerrada en este ciclo: medicion real con control negativo
+FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01	no	incidente_real	exige medir antes/despues en el motor vLLM de produccion; parar el motor es una ventana de Luis
 FORUM-00-CX7-HOTPLUG-FAN-PROTECTION	no	hardware_externo	tools/forum_hardware_subjects.py:918-919 y 913-915: exige power_w del mismo medidor externo (meter_id) en baseline/candidate y fan_rpm de tacometro en baseline/
 FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT	no	sudo	El verificador reporta 'missing observation: effective_modeset; missing observation: target_requires_kms; missing observation: recovery_accessible' (status unkn
 FORUM-00-DOCKER-OOM-RESTART-LOOP	no	reinicio	close_check pytest da '20 passed, 1 xfailed'; el xfail es test_restart_recovery_close_check_uses_real_cycle_evidence (tests/test_workload_restart_containment.py

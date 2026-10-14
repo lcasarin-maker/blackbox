@@ -1,0 +1,22 @@
+"""Control negativo de la suite: cada mutante rompe una guarda; la suite debe FALLAR con cada uno."""
+import subprocess
+import sys
+from pathlib import Path
+
+f = Path(sys.argv[1]) / "tools/vigilante_memavail.py"
+orig = f.read_text()
+MUT = [
+    ("protegida ignorada", "if protegidas.search(mayor.nombre):", "if False:"),
+    ("elegibles ignorados", " if any(fnmatch.fnmatchcase(u.nombre, g) for g in elegibles)]", "]"),
+    ("linea ignorada", "dispara = mem_avail_kb / 1048576 < linea_gib", "dispara = True"),
+]
+try:
+    for nombre, a, b in MUT:
+        assert a in orig, nombre
+        f.write_text(orig.replace(a, b))
+        r = subprocess.run([sys.executable, "-m", "pytest", "-q", "tests/test_vigilante_memavail.py"],
+                           cwd=sys.argv[1], capture_output=True, text=True, timeout=120)
+        print(f"MUTANTE {nombre}: rc={r.returncode} :: {r.stdout.strip().splitlines()[-1]}")
+finally:
+    f.write_text(orig)
+print("restaurado:", f.read_text() == orig)

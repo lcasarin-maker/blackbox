@@ -3,7 +3,11 @@ id: FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01
 kind: task
 domain: MEMORY
 title: "Vigilante de MemAvailable para memoria unificada de GB10 que detenga la unidad antes del OOM del kernel"
-status: open
+status: done
+closed_at: 2026-10-13
+closure_type: fixed
+reason: "memavail en actuar detiene la unica unidad culpable elegible (bb-lab-*.scope por defecto, protegidas rechazadas) con su origen registrado; medido con un acaparador de 768 MiB y su control negativo (linea baja: sigue viva); comparacion con earlyoom y el escalon en medicion.txt. Limite: memoria de CPU, no CUDA/UVM."
+evidence: {"pass": "tasks/evidence/FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01/pass.txt", "fail": "tasks/evidence/FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01/fail.txt", "e2e": "tasks/evidence/FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT

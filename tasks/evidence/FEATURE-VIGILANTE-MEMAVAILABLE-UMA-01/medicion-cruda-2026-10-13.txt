@@ -1,0 +1,27 @@
+$ systemd-run --user --scope --unit=bb-lab-acaparador-1185676.scope -p MemoryMax=1G -- /opt/miniforge3/bin/python3 -c import time; b = b'x' * (768 * 2**20); time.sleep(600) &
+unidad del acaparador: Unidad(nombre='bb-lab-acaparador-1185676.scope', cgroup='/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-lab-acaparador-1185676.scope', memoria_bytes=810397696)
+$ systemctl --user show bb-lab-acaparador-1185676.scope -p ActiveState -p MemoryMax -p MemoryCurrent -p ControlGroup
+ControlGroup=/user.slice/user-1000.slice/user@1000.service/app.slice/bb-lab-acaparador-1185676.scope
+MemoryCurrent=810397696
+MemoryMax=1073741824
+ActiveState=active
+(rc=0)
+MemAvailable ahora: 54.10 GiB
+
+== CONTROL NEGATIVO: linea 1.0 GiB, por debajo de MemAvailable; mismo acaparador, modo actuar
+una_vuelta -> None
+$ systemctl --user is-active bb-lab-acaparador-1185676.scope
+active
+(rc=0)
+acaparador vivo: True
+
+== POSITIVO: linea de prueba 1000 GiB, por encima de MemAvailable; elegibles = solo bb-lab-acaparador-1185676.scope
+una_vuelta -> {"modo": "actuar", "habria_actuado": true, "dispara": true, "mem_avail_gib": 54.1, "linea_gib": 1000.0, "psi_full": 0.0, "confirmado_por_psi": false, "culpable": {"veredicto": "DETENER", "unidad": {"nombre": "bb-lab-acaparador-1185676.scope", "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-lab-acaparador-1185676.scope", "memoria_bytes": 810397696}, "elegibles_ilegibles": []}, "origen": [{"pid": 1185677, "estado": "S", "ppid": 1185676, "pgid": 1185675, "sid": 1185674, "comm": "python3", "starttime_ticks": 2689527, "tty": null, "rss_kb": 795884, "uid": 1000, "cmdline": ["/opt/miniforge3/bin/python3", "-c", "import time; b = b'x' * (768 * 2**20); time.sleep(600)"], "cwd": "/home/lcasarin/projects/blackbox/.claude/worktrees/agent-acdfb3ba2d5044229", "exe": "/opt/miniforge3/bin/python3.12", "cgroup": "/user.slice/user-1000.slice/user@1000.service/app.slice/bb-lab-acaparador-1185676.scope", "unit": "bb-lab-acaparador-1185676.scope", "env_nombres": [], "no_colectado": {}, "ancestros": [{"pid": 1185676, "ppid": 1185675, "sid": 1185674, "comm": "python3", "starttime_ticks": 2689524, "cmdline": ["python3", "/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/mide_vigilante.py", "/home/lcasarin/projects/blackbox/.claude/worktrees/agent-acdfb3ba2d5044229", "/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/datos-lab3"], "cwd": "/home/lcasarin/projects/blackbox/.claude/worktrees/agent-acdfb3ba2d5044229", "cgroup": "/user.slice/user-1000.slice/user@1000.service/app.slice/app-com.anthropic.Claude-56651.scope", "unit": "app-com.anthropic.Claude-56651.scope", "tty": null, "no_colectado": {}}, {"pid": 1185675, "ppid": 1185674, "sid": 1185674, "comm": "timeout", "starttime_ticks": 2689524, "cmdline": ["timeout", "120", "python3", "/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/mide_vigilante.py", "/home/lcasarin/projects/blackbox/.claude/worktrees/agent-acdfb3ba2d5044229", "/tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/datos-lab3"], "cwd": "/home/lcasarin/projects/blackbox/.claude/worktrees/agent-acdfb3ba2d5044229", "cgroup": "/user.slice/user-1000.slice/user@1000.service/app.slice/app-com.anthropic.Claude-56651.scope", "unit": "app-com.anthropic.Claude-56651.scope", "tty": null, "no_colectado": {}}, {"pid": 1185674, "ppid": 58055, "sid": 1185674, "comm": "bash", "starttime_ticks": 2689523, "cmdline": ["/bin/bash", "-c", "source /home/lcasarin/.claude/shell-snapshots/snapshot-bash-1791923013954-gzbd4e.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'timeout 120 python3 /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/mide_vigilante.py /home/lcasarin/projects/blackbox/.c
+systemd-run del acaparador termino con rc = -15 salida: Running as unit: bb-lab-acaparador-1185676.scope; invocation ID: 579983903d994e8c9b71b37d738b121e
+$ systemctl --user is-active bb-lab-acaparador-1185676.scope
+inactive
+(rc=4)
+origen registrado: {"pid": 1185677, "comm": "python3", "cmdline": ["/opt/miniforge3/bin/python3", "-c", "import time; b = b'x' * (768 * 2**20); time.sleep(600)"], "unit": "bb-lab-acaparador-1185676.scope", "fuente": {"tipo": "shell", "nombre": "python3", "pid": 1185676}, "rss_kb": 795884}
+
+registro /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/datos-lab3/interruptores/memavail.jsonl lineas: 1
+VEREDICTO negativo_sin_parada = True | positivo_detuvo_el_scope_con_origen = True

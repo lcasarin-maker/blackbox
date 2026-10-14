@@ -24,3 +24,114 @@ earlyoom en produccion (adopted/system-config/etc_default_earlyoom): -m 10 -s 10
 
 CONCLUSION memavailable_no_aporta_medido: a 8 GiB la linea ve 5 de 42 episodios y ninguno de los tres del 2026-10-11 (MemAvail minimo 14.6 y 29.5 GiB). PSI ya ve los 42 por definicion. Una linea de MemAvailable no se anade al portero.
 RESIDUO: la rampa rapida de carga de vLLM (29 a 2.5 GiB en 9 s, cosecha.txt) no tiene muestra propia en nuestras series (muestreo 2 s, sin arranque de modelo nuevo). Pasa a FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01: medir MemAvailable a 1 Hz durante el siguiente arranque de modelo.
+
+================================================================================================
+MEDICION 2026-10-13 - el vigilante en `actuar` contra un acaparador real en un scope (criterio del close_check)
+================================================================================================
+Codigo: tools/vigilante_memavail.py (se EXTIENDE el interruptor `memavail` que ya existia; no se crea un
+segundo vigilante). `actuar` dejo de ser UNSUPPORTED: detiene UNA unidad del gestor de usuario, la de mayor
+memory.current entre las que casan con ELEGIBLES (por defecto solo `bb-lab-*.scope`) y no casan con
+PROTEGIDAS (docker|containerd|vllm|claude|anthropic|gnome|session|user@|init.scope|dbus|pipewire|...|bb-
+salvo bb-lab-). Antes de detenerla registra el origen de sus procesos con tools.origen_proceso.origen.
+Sin unidad elegible -> NOT_COLLECTED, sin parada. Elegible pero protegida -> REFUSED, sin parada.
+Produccion NO cambia de modo: ~/.local/share/blackbox/interruptores.json sigue con memavail=observar; la
+medicion usa su PROPIO BLACKBOX_DATA en el scratchpad con memavail=actuar.
+
+Comando (sin sudo; copia del script en mide_vigilante.py.txt; salida completa en medicion-cruda-2026-10-13.txt):
+$ timeout 120 python3 <scratchpad>/mide_vigilante.py <worktree> <scratchpad>/datos-lab3   -> rc=0
+Salida literal (la linea del evento va recortada aqui; entera abajo, desde el registro):
+$ systemd-run --user --scope --unit=bb-lab-acaparador-1185676.scope -p MemoryMax=1G -- /opt/miniforge3/bin/python3 -c import time; b = b'x' * (768 * 2**20); time.sleep(600) &
+unidad del acaparador: Unidad(nombre='bb-lab-acaparador-1185676.scope', cgroup='/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-lab-acaparador-1185676.scope', memoria_bytes=810397696)
+$ systemctl --user show bb-lab-acaparador-1185676.scope -p ActiveState -p MemoryMax -p MemoryCurrent -p ControlGroup
+ControlGroup=/user.slice/user-1000.slice/user@1000.service/app.slice/bb-lab-acaparador-1185676.scope
+MemoryCurrent=810397696
+MemoryMax=1073741824
+ActiveState=active
+(rc=0)
+MemAvailable ahora: 54.10 GiB
+
+== CONTROL NEGATIVO: linea 1.0 GiB, por debajo de MemAvailable; mismo acaparador, modo actuar
+una_vuelta -> None
+$ systemctl --user is-active bb-lab-acaparador-1185676.scope
+active
+(rc=0)
+acaparador vivo: True
+
+== POSITIVO: linea de prueba 1000 GiB, por encima de MemAvailable; elegibles = solo bb-lab-acaparador-1185676.scope
+una_vuelta -> {"modo": "actuar", "habria_actuado": true, "dispara": true, "mem_avail_gib": 54.1, "linea_gib": 1000.0, ... (ver evento abajo)
+systemd-run del acaparador termino con rc = -15 salida: Running as unit: bb-lab-acaparador-1185676.scope; invocation ID: 579983903d994e8c9b71b37d738b121e
+$ systemctl --user is-active bb-lab-acaparador-1185676.scope
+inactive
+(rc=4)
+origen registrado: {"pid": 1185677, "comm": "python3", "cmdline": ["/opt/miniforge3/bin/python3", "-c", "import time; b = b'x' * (768 * 2**20); time.sleep(600)"], "unit": "bb-lab-acaparador-1185676.scope", "fuente": {"tipo": "shell", "nombre": "python3", "pid": 1185676}, "rss_kb": 795884}
+
+registro .../datos-lab3/interruptores/memavail.jsonl lineas: 1
+VEREDICTO negativo_sin_parada = True | positivo_detuvo_el_scope_con_origen = True
+
+Evento registrado (la unica linea de memavail.jsonl; campos de decision y accion):
+{"ts": "2026-10-14T03:35:50.345297+00:00", "modo": "actuar", "mem_avail_gib": 54.1, "linea_gib": 1000.0, "psi_full": 0.0, "confirmado_por_psi": false, "culpable": {"veredicto": "DETENER", "unidad": {"nombre": "bb-lab-acaparador-1185676.scope", "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-lab-acaparador-1185676.scope", "memoria_bytes": 810397696}, "elegibles_ilegibles": []}, "accion": {"detenida": "bb-lab-acaparador-1185676.scope", "rc": 0, "salida": ""}}
+Origen del mismo evento (leido ANTES de detener):
+{"origen[0]": {"pid": 1185677, "ppid": 1185676, "comm": "python3", "cmdline": ["/opt/miniforge3/bin/python3", "-c", "import time; b = b'x' * (768 * 2**20); time.sleep(600)"], "cwd": "/home/lcasarin/projects/blackbox/.claude/worktrees/agent-acdfb3ba2d5044229", "unit": "bb-lab-acaparador-1185676.scope", "fuente": {"tipo": "shell", "nombre": "python3", "pid": 1185676}, "rss_kb": 795884, "advertencias": []}, "rastros.claude.session_id": "0cc436d1-99b5-4899-90a9-885157401f41", "ancestros": [[1185676, "python3", "app-com.anthropic.Claude-56651.scope"], [1185675, "timeout", "app-com.anthropic.Claude-56651.scope"], [1185674, "bash", "app-com.anthropic.Claude-56651.scope"], [58055, "claude", "app-com.anthropic.Claude-56651.scope"], [58054, "disclaimer", "app-com.anthropic.Claude-56651.scope"], [56651, "claude-desktop", "app-com.anthropic.Claude-56651.scope"], [54676, "gnome-shell", "org.gnome.Shell@x11.service"], [2914, "systemd", "init.scope"], [1, "systemd", "init.scope"]]}
+
+Control negativo del instrumento: las dos vueltas usan el MISMO script, el MISMO acaparador vivo y el MISMO
+modo `actuar`; solo cambia la linea. Con la linea bajo MemAvailable (1.0 < 54.10 GiB) el vigilante devolvio
+None y el scope siguio `active`; con la linea sobre MemAvailable (1000 > 54.10) lo detuvo (`inactive`; el
+hijo recibio SIGTERM, rc=-15). El veredicto sale en los dos sentidos.
+Nada fuera del scope: elegibles = el nombre exacto del scope creado por el script; tras la corrida
+`systemctl --user list-units 'bb-lab-*' --all --no-legend | wc -l` -> 0. Dos corridas previas con el codigo
+anterior (antes de agrupar los argumentos de `paso` en `Contexto` por PLR0913, y antes de contar como
+`elegibles_ilegibles` las unidades cuyo memory.current no se pudo leer, por el detector silent_io_loop_swallow
+de zero-debt) dieron el mismo veredicto: True | True. Esta es la corrida del codigo que se commitea.
+
+Suite y su control negativo:
+$ python3 -m pytest -q tests/test_vigilante_memavail.py tests/test_cobertura_efectos_a.py
+52 passed in 0.37s
+$ python3 <scratchpad>/mutantes.py <worktree>     (copia en mutantes.py.txt; restaura el archivo al terminar)
+MUTANTE protegida ignorada: rc=1 :: 1 failed, 11 passed in 0.09s
+MUTANTE elegibles ignorados: rc=1 :: 2 failed, 10 passed in 0.10s
+MUTANTE linea ignorada: rc=1 :: 3 failed, 9 passed in 0.10s
+restaurado: True
+
+------------------------------------------------------------------------------------------------
+COMPARACION con el escalon y earlyoom (configuracion leida; la de earlyoom tambien de su propio journal)
+------------------------------------------------------------------------------------------------
+$ journalctl -u earlyoom -b --no-pager | grep -iE "sending SIGTERM when|mem total|SIGKILL when"
+oct 13 14:07:48 aitopatom-41f1 earlyoom[2154]: mem total: 123967 MiB, swap total: 16383 MiB
+oct 13 14:07:48 aitopatom-41f1 earlyoom[2154]: sending SIGTERM when mem <= 10.00% and swap <= 100.00%,
+oct 13 14:07:48 aitopatom-41f1 earlyoom[2154]:         SIGKILL when mem <=  5.00% and swap <= 100.00%
+
+earlyoom (adopted/system-config/etc_default_earlyoom: -r 60 -m 10 -s 100,100)
+  senal: MemAvailable global; -s 100 neutraliza el swap.
+  dispara: SIGTERM con MemAvailable <= 12.1 GiB (10 % de 123967 MiB); SIGKILL <= 6.05 GiB (5 %).
+  accion: mata UN proceso (mayor oom_score; --prefer pytest|triton; --avoid escritorio, sesion, systemd).
+  alcance: todo el sistema, docker/vLLM incluidos. Registro: una linea de journal, sin origen.
+escalon de bin/bb-usable (ESCALON_SOSTENIDO_S=60, ESCALON_FRACCION_SLICE=0.90, PSI_ACT_FULL_AVG10=10)
+  senal: PSI memory full avg10 >= 10 sostenido 60 s Y un app.slice >= 90 % de su MemoryMax. No mira MemAvailable.
+  accion: mata el proceso (o su grupo) de mayor RSS no protegido DENTRO de los scopes Claude; enfriamiento 300 s;
+  origen en $BLACKBOX_DATA/origen/.
+  alcance: app.slice de usuario.
+COLAPSO de bin/bb-usable: PSI full >= 10 sostenido 300 s -> deja de acariciar el watchdog -> reboot-immediate.
+vigilante memavail (este)
+  senal: MemAvailable global a 1 Hz. dispara: bajo LINEA_GIB = 8 GiB.
+  accion: detiene UNA unidad entera (scope/service), la elegible de mayor memory.current, con origen previo;
+  elegibles hoy = bb-lab-*.scope.
+  alcance: arbol user@UID.service; docker y vLLM (system.slice) quedan fuera por construccion.
+
+Lectura: a 8 GiB el vigilante dispara DESPUES del SIGTERM de earlyoom (12.1 GiB) y ANTES de su SIGKILL (6.05 GiB).
+Lo que anade sobre earlyoom es la unidad completa (todos los procesos del scope, no uno) y el registro de origen.
+Para adelantarse a earlyoom la linea tendria que estar sobre 12.1 GiB, donde la medicion de 2026-10-12 de arriba
+da 560 muestras marcadas y 431 falsas a 16 GiB. Sobre el escalon no anade deteccion en los colapsos del
+2026-10-11 (MemAvailable 14.6-29.5 GiB con el slice estancado): el escalon mira PSI + slice, este mira
+MemAvailable; cubren fallos distintos. En la rampa rapida de vLLM (29 -> 2.5 GiB en 9 s, cosecha.txt) solo
+earlyoom y este vigilante miran la senal correcta, y el motor vive en docker, fuera del alcance de este vigilante.
+
+LIMITES DECLARADOS:
+- Probado con un acaparador de memoria de CPU (bytes de Python), no con asignaciones CUDA/UVM: el
+  comportamiento con memoria GPU no esta medido aqui.
+- La rama `actuar` solo alcanza `bb-lab-*.scope` hasta que Luis decida ampliar ELEGIBLES (p.ej. bb-portero-*.scope).
+- origen_de no tiene plazo propio (marcado `ponytail:` en el codigo).
+- El servicio desplegado (bb-vigilante-memavail.service) corre el codigo del checkout principal y sigue en
+  `observar`; con este codigo, `observar` anade a cada disparo el culpable que detendria (NOT_COLLECTED mientras
+  no haya bb-lab-*). Ese efecto aparece cuando el servicio se reinicie tras aterrizar el commit.
+
+vigilante_uma_probado
