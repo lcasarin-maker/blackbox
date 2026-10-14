@@ -2352,3 +2352,19 @@ def test_sample_borra_origen_y_escalon_PASADA_la_retencion_y_nada_mas(datos):
     assert correr(["sample"], datos).returncode == 0
     assert [m for m in muertos if m.exists()] == [], "lo pasado de retencion sigue ahi"
     assert [v for v in vivos if not v.exists()] == [], "se borro algo dentro de la retencion o ajeno"
+
+
+def test_status_suspension_vigente_se_anuncia_y_vencida_o_ilegible_da_FALTA(datos):
+    marcas = datos / "suspendidos"
+    marcas.mkdir()
+    (marcas / "gpuoom").write_text("2999-01-01\n", encoding="utf-8")
+    salida = correr(["status"], datos).stdout
+    assert "SUSPENDIDO gpuoom (caduca 2999-01-01)" in salida
+    (marcas / "gpuoom").write_text("2020-01-01\n", encoding="utf-8")  # control negativo: ya vencio
+    assert "FALTA" in _fila(correr(["status"], datos), "gpuoom suspendido (vencio 2020-01-01)")
+    (marcas / "gpuoom").write_text("manana\n", encoding="utf-8")
+    assert "FALTA" in _fila(correr(["status"], datos), "gpuoom suspendido (marca ilegible)")
+
+
+def test_status_sin_carpeta_de_suspendidos_no_dice_nada(datos):
+    assert "SUSPENDIDO" not in correr(["status"], datos).stdout

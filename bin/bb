@@ -2252,6 +2252,26 @@ cmd_hw() {
 # Va fuera de cmd_status como status_usable: cmd_status ya es largo y
 # tests/test_status_bus_unknown.py busca su resumen final por posicion. Usa
 # `chk` y `_fresco`, que cmd_status define antes de llamarla.
+# Suspensiones vigentes (contrato de suspension: suspended/MANIFIESTO.md). Cada una deja
+# $DATA/suspendidos/<nombre> con su fecha de caducidad (YYYY-MM-DD) en la primera linea; sin quien las vigile una
+# suspension se vuelve permanente en silencio. Vigente: se anuncia sin contarla como armada; vencida o ilegible: FALTA.
+status_suspendidos() {
+  local f nombre cad hoy
+  hoy=$(date +%F)
+  for f in "$DATA"/suspendidos/*; do
+    [ -f "$f" ] || continue
+    nombre=$(basename "$f")
+    cad=$(head -n 1 "$f" | tr -d '[:space:]')
+    if [[ ! "$cad" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+      chk "$nombre suspendido (marca ilegible)" 1 "la primera linea de $f debe ser la fecha de caducidad YYYY-MM-DD"
+    elif [[ "$hoy" < "$cad" ]]; then
+      printf '  SUSPENDIDO %s (caduca %s)\n' "$nombre" "$cad"
+    else
+      chk "$nombre suspendido (vencio $cad)" 1 "suspension vencida: reactivar, renovar o retirar; ver suspended/MANIFIESTO.md"
+    fi
+  done
+}
+
 status_lo_que_corre() {
   # Siete cosas que CORREN en esta maquina y no tenian fila (revision de solo
   # lectura del 2026-10-14): si dejaban de correr, `status` seguia igual. Por el
@@ -2720,6 +2740,7 @@ EOF
   fi
 
   status_lo_que_corre
+  status_suspendidos
 
   # Sin volcado CUDA, una caida por 'illegal memory access' no nombra el kernel
   # que fallo: CUDA la informa tarde, en otro punto de sincronizacion.

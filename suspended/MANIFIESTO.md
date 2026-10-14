@@ -71,3 +71,21 @@ carga y responde. Además `own_chats` pasó a usar el gateway ya cargado
 
 Verificado: `50/1664 (área movida: 23)` contra los `área movida: 0` anteriores,
 0 errores del LLM y 0 volcados nuevos.
+
+## bb-vigilante-gpuoom.service — suspendido 2026-10-14
+
+| | |
+|---|---|
+| **Ruta original** | `~/.config/systemd/user/bb-vigilante-gpuoom.service` |
+| **Renombrado a** | `bb-vigilante-gpuoom.service.suspendido-2026-10-14` |
+| **sha256** | `9780615c3f685284409df1b5fe99144e10c9b581f750bb7bbcfd5ed47cae3ed9` |
+| **modo** | `664` |
+| **Unit parada** | `bb-vigilante-gpuoom.service` (disable --now); interruptor `gpuoom` en `off` |
+| **Caduca** | **2026-11-13** — si sigue suspendido sin decisión, se revisa |
+| **Vigila** | `bb status` (marca `$BLACKBOX_DATA/suspendidos/gpuoom`: FALTA al vencer) |
+
+**Por qué (voto de Luis 2026-10-14, tras estudio de solo lectura).** `tools/gpuoom_bb.py` no habría servido en ninguno de los
+incidentes con datos (0 disparos en INC7 e INC9; en ellos quedaba 22 a 24 % de RAM libre), solo disparó en 3 episodios sanos de
+unos 8 s que earlyoom ya estaba atendiendo, y su única víctima posible es el motor vLLM (su lista de protegidos no incluye vllm ni
+claude). Costaba ~15 cpu-s/h y 720 llamadas/h a `nvidia-smi` sin producir un registro. El código queda en `tools/gpuoom_bb.py`.
+Reactivar: `mv` de vuelta, `daemon-reload`, `enable --now`, interruptor en `observar` y borrar la marca de `suspendidos/`.
