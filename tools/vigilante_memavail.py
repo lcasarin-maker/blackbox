@@ -28,10 +28,10 @@ from tools import interruptores, origen_proceso
 NOMBRE = "memavail"
 LINEA_GIB = 8.0
 PSI_COLAPSO = 10.0
-ELEGIBLES = ("bb-lab-*.scope",)
+ELEGIBLES = ("bb-lab-*.scope", "bb-portero-suite-*.scope")  # suites reintentables bajo el portero (voto de Luis 2026-10-14)
 # Nunca se detienen aunque casen con ELEGIBLES (doble guarda): contenedores, motor, sesion, escritorio, bb.
 PROTEGIDAS = re.compile(r"docker|containerd|vllm|claude|anthropic|gnome|session|user@|init\.scope|dbus|"
-                        r"pipewire|wireplumber|xdg-|bb-(?!lab-)", re.IGNORECASE)
+                        r"pipewire|wireplumber|xdg-|bb-(?!lab-|portero-suite-)", re.IGNORECASE)
 ORIGEN_MAX_PIDS = 5
 
 
