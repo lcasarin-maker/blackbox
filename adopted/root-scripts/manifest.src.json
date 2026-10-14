@@ -28,5 +28,10 @@
     "file": "earlyoom-proteger.sh",
     "descripcion": "Sustituye /etc/default/earlyoom (conocido por sha256) por la version que protege vLLM/docker/containerd/bb- y prefiere pytest/xdist; reinicia earlyoom y restaura si no queda activo (DEBT-EARLYOOM-MATA-AL-MOTOR-VLLM-01)",
     "timeout": 60
+  },
+  "apt-guardia-instalar": {
+    "file": "apt-guardia-instalar.sh",
+    "descripcion": "Instala /usr/local/sbin/bb-apt-guardia y /etc/apt/apt.conf.d/00-bb-apt-guardia (hook DPkg::Pre-Install-Pkgs que aborta remociones de data/apt-paquetes-criticos.txt) y lo valida con APT real sobre una caja con dpkg sustituido; borra lo creado si la validacion falla (FEATURE-APT-CRITICAL-METAPACKAGE-GUARD)",
+    "timeout": 300
   }
 }

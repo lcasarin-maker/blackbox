@@ -1,0 +1,6 @@
+// bb-apt-guardia (FEATURE-APT-CRITICAL-METAPACKAGE-GUARD). Lo instala `sudo -n bb-root-run apt-guardia-instalar`.
+// Antes de cada llamada a dpkg, APT pasa el plan a /usr/local/sbin/bb-apt-guardia, que aborta la
+// transaccion si quita un paquete critico. Permitir una: sudo apt -o BB::Apt-Guardia::Permitir=1 ...
+// Desactivar: renombrar este fichero a 00-bb-apt-guardia.disabled (APT ignora .disabled en silencio).
+DPkg::Pre-Install-Pkgs { "/usr/local/sbin/bb-apt-guardia"; };
+DPkg::Tools::Options::/usr/local/sbin/bb-apt-guardia::Version "3";

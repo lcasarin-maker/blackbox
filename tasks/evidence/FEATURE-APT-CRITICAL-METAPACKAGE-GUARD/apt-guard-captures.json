@@ -1,0 +1,104 @@
+{
+ "commands": [
+  {
+   "argv": [
+    "dpkg-query",
+    "-W",
+    "--showformat=${Package} ${Status}\\n",
+    "nvidia-system-core",
+    "nvidia-system-extra",
+    "nvidia-system-station",
+    "nvidia-system-station-common",
+    "nvidia-system-station-core",
+    "nvidia-system-station-localization",
+    "nvidia-system-station-utils",
+    "nvidia-system-utils",
+    "dgx-release",
+    "dgx-repo",
+    "dgx-spark-mlnx-hotplug",
+    "dgx-spark-ota-update-meta",
+    "dgxstation-desktop",
+    "dgxstation-grub",
+    "gigabyte-oobe-customize",
+    "linux-image-6.17.0-1032-nvidia",
+    "linux-modules-6.17.0-1032-nvidia",
+    "linux-modules-nvidia-580-open-6.17.0-1032-nvidia",
+    "nvidia-driver-580-open",
+    "nvidia-kernel-common-580",
+    "grub-common",
+    "grub-efi-arm64",
+    "grub-efi-arm64-bin",
+    "grub-efi-arm64-signed",
+    "grub2-common",
+    "shim-signed",
+    "gdm3",
+    "network-manager",
+    "ubuntu-desktop",
+    "ubuntu-desktop-minimal"
+   ],
+   "exit_code": 0,
+   "nombre": "criticos_instalados",
+   "stderr": "",
+   "stdout": "dgx-release install ok installed\ndgx-repo install ok installed\ndgx-spark-mlnx-hotplug install ok installed\ndgx-spark-ota-update-meta hold ok installed\ndgxstation-desktop install ok installed\ndgxstation-grub install ok installed\ngdm3 install ok installed\ngigabyte-oobe-customize install ok installed\ngrub-common install ok installed\ngrub-efi-arm64 install ok installed\ngrub-efi-arm64-bin install ok installed\ngrub-efi-arm64-signed install ok installed\ngrub2-common install ok installed\nlinux-image-6.17.0-1032-nvidia install ok installed\nlinux-modules-6.17.0-1032-nvidia install ok installed\nlinux-modules-nvidia-580-open-6.17.0-1032-nvidia install ok installed\nnetwork-manager install ok installed\nnvidia-driver-580-open install ok installed\nnvidia-kernel-common-580 install ok installed\nnvidia-system-core install ok installed\nnvidia-system-extra install ok installed\nnvidia-system-station install ok installed\nnvidia-system-station-common install ok installed\nnvidia-system-station-core install ok installed\nnvidia-system-station-localization install ok installed\nnvidia-system-station-utils install ok installed\nnvidia-system-utils install ok installed\nshim-signed install ok installed\nubuntu-desktop install ok installed\nubuntu-desktop-minimal install ok installed\n"
+  },
+  {
+   "argv": [
+    "apt-config",
+    "dump",
+    "DPkg::Pre-Install-Pkgs"
+   ],
+   "exit_code": 0,
+   "nombre": "config",
+   "stderr": "",
+   "stdout": "DPkg::Pre-Install-Pkgs \"\";\nDPkg::Pre-Install-Pkgs:: \"/usr/sbin/dpkg-preconfigure --apt || true\";\n"
+  },
+  {
+   "argv": [
+    "apt-get",
+    "-s",
+    "-o",
+    "Debug::NoLocking=1",
+    "autoremove"
+   ],
+   "exit_code": 0,
+   "nombre": "autoremove_simulado",
+   "stderr": "",
+   "stdout": "NOTE: This is only a simulation!\n      apt-get needs root privileges for real execution.\n      Keep also in mind that locking is deactivated,\n      so don't depend on the relevance to the real current situation!\nReading package lists...\nBuilding dependency tree...\nReading state information...\n0 upgraded, 0 newly installed, 0 to remove and 44 not upgraded.\n"
+  },
+  {
+   "argv": [
+    "apt-get",
+    "<caja>",
+    "-y",
+    "remove",
+    "nvidia-system-station"
+   ],
+   "dpkg_log": "",
+   "exit_code": 100,
+   "nombre": "remove_critico",
+   "stderr": "bb-apt-guardia: esta transaccion quita paquetes criticos de la plataforma: nvidia-system-station\nbb-apt-guardia: no se aplica nada. Para permitir ESTA transaccion: sudo apt -o BB::Apt-Guardia::Permitir=1 <la misma orden>\nE: Sub-process /home/lcasarin/projects/blackbox/.claude/worktrees/agent-a3f80fc7c79100229/adopted/pendiente-de-despliegue/usr_local_sbin_bb-apt-guardia returned an error code (1)\nE: Failure running script /home/lcasarin/projects/blackbox/.claude/worktrees/agent-a3f80fc7c79100229/adopted/pendiente-de-despliegue/usr_local_sbin_bb-apt-guardia\n",
+   "stdout": "Reading package lists...\nBuilding dependency tree...\nThe following packages will be REMOVED:\n  nvidia-system-station\n0 upgraded, 0 newly installed, 1 to remove and 44 not upgraded.\nAfter this operation, 9216 B disk space will be freed.\n"
+  },
+  {
+   "argv": [
+    "apt-get",
+    "<caja>",
+    "-y",
+    "remove",
+    "tree"
+   ],
+   "dpkg_log": "--assert-multi-arch\n--set-selections\n--assert-multi-arch\n--assert-protected-field\n--status-fd 72 --no-triggers --force-depends --abort-after=1 --remove tree:arm64\n--status-fd 72 --configure --pending\n",
+   "exit_code": 0,
+   "nombre": "remove_inocuo",
+   "stderr": "W: APT had planned for dpkg to do more than it reported back (0 vs 3).\n   Affected packages: tree:arm64\n",
+   "stdout": "Reading package lists...\nBuilding dependency tree...\nThe following packages will be REMOVED:\n  tree\n0 upgraded, 0 newly installed, 1 to remove and 44 not upgraded.\nAfter this operation, 160 kB disk space will be freed.\n"
+  }
+ ],
+ "conf": "/home/lcasarin/projects/blackbox/.claude/worktrees/agent-a3f80fc7c79100229/adopted/pendiente-de-despliegue/etc_apt_apt.conf.d_00-bb-apt-guardia",
+ "conf_sha256": "3269efff042ce8ee68d49969fa107bb440fb7ec8aab900b268a6d6994e20ade6",
+ "critico": "nvidia-system-station",
+ "hook": "/home/lcasarin/projects/blackbox/.claude/worktrees/agent-a3f80fc7c79100229/adopted/pendiente-de-despliegue/usr_local_sbin_bb-apt-guardia",
+ "hook_sha256": "a7396902b2639f8eefd7bdd94090e0c3bed58e82c0e11c28ced506cc1416adb5",
+ "inocuo": "tree",
+ "instalado": false
+}
