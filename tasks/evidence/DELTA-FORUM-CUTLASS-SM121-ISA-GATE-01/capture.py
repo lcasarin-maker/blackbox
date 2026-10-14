@@ -58,7 +58,9 @@ wall = time.time() - t0
 out = r["stdout"]
 lg = next(l for l in out.splitlines() if l.startswith("BB_LOGITS")).split()[1:]
 rf = next(l for l in out.splitlines() if l.startswith("BB_REFERENCE")).split()[1:]
-avg = float(re.search(r"Avg runtime: ([0-9.eE+-]+) ms", out).group(1))
+m_avg = re.search(r"Avg runtime: ([0-9.eE+-]+) ms", out)
+assert m_avg is not None, "la salida del canario no trae Avg runtime"
+avg = float(m_avg.group(1))
 disp = "Disposition: Passed" in out
 completed = ITER if (r["exit"] == 0 and disp) else 0
 canary = {"requests": ITER, "completed": completed, "batch_size": 1, "concurrency": 1,
