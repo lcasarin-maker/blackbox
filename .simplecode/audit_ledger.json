@@ -1,6 +1,6 @@
 {
-  "claims_fingerprint": "b21a22c95297f93562bbcfa45c8a91fb820f28ddd4ca2bf1554f11aa365ffb1d",
-  "panel": "1 auditor Opus, 2026-10-13, refuto 5 afirmaciones (L118 L122 L145 L146 L416) con control negativo cada una",
+  "claims_fingerprint": "dec78f11329f14d1de244396280875014007f49027d73cc571d6a53d16ff1ae4",
+  "panel": "1 auditor Opus, 2026-10-14, refuto SPEC-L419 corregido (n=9, etiqueta del 05-oct, corrida del 14-oct) con control negativo --sostenido 0",
   "profile": "general",
   "results": [
     {
@@ -116,12 +116,15 @@
     },
     {
       "cited": {
-        "tests/test_calibra_psi.py": "4616d032d983afeecedcd42995f693876bea2e0a6a8f345e26297b897d66ad46",
-        "tools/calibra_psi.py": "c3c36049dda2fe8a2d53def9c05594013be2575551331d97b61b9fcad6a4637a"
+        "tests/test_calibra_psi.py": "35149ef2a5b54667d0d784f18f2350c2bbec5aa5d4c9e5d55fae40393f159ae6",
+        "tests/test_control_racha.py": "00891a1ec8508775da43e92a6ce56fe19052bc63cfe75d02b70e64ad46670dcf",
+        "tools/calibra_psi.py": "7a308996be21fab2c5ae3a8732cb6e40b1a53c7a373dce4e8062fcbde8bb187c",
+        "tools/control_racha.py": "3e397aad3275a417291971626d4b79cec776c43f63e7e73b5ce70b64ebb06959"
       },
       "claim_id": "SPEC-L419",
-      "evidence": "Arbol actual (SPEC.md y tools/calibra_psi.py con cambios sin commitear). `python3 -m tools.calibra_psi` -> rc=1, corpus 2026-09-28 00:00 -> 2026-10-13 08:12, 28132 muestras, COLAPSO 3 (09-28 04:18 6 min max 37.13; 10-05 00:18 7 min max 78.30; 10-11 22:44 8 min max 72.47), falsos positivos 1, no detectados 2, fuera del corpus 4, VEREDICTO CORTE INVALIDO. python -c con calibra(serie, incidentes=...): lista de 8 -> FP=[10-05 00:18:38->00:26:00, 7.4 min, max 78.3], ND=[09-28 03:28-03:39, 10-11 22:02-22:12], fuera 4. CONTROL NEGATIVO lista vieja INCIDENTES[:6] sobre la misma serie -> FP 2 (10-05 00:18 y 10-11 22:44:20->22:51:50, 7.5 min, max 72.47), ND 1 (09-28 03:28), fuera 4: el calculo SI cambia de veredicto con la lista. Muestras: 28130 = muestras con ts <= 2026-10-13 08:11 (08:10 da 28129, 08:13 da 28133); el corpus vivo crece, cifra fechada coherente. Corrida 2026-10-12: serie truncada a 10-12 07:10 con 6 incidentes -> FP 2, ND 1, fuera 4 (muestras 26485 porque 09-27 ya se purgo; 28239 no re-derivable). Corrida 2026-10-06 (23776) no re-derivable por RETAIN_DAYS; su FP 00:18:38->00:26:00 7.4 min si se reproduce. journalctl -b -9: 22:12:33 `bb-usable.service: Watchdog timeout (limit 6min)!` -> 22:12:46 `Failed with result 'watchdog'` + `Rebooting.`; -b -8: 22:54:40 Watchdog timeout -> 22:54:41 `Failed with result 'watchdog'` + `Rebooting.`. samples/2026-10-11.jsonl: ultima linea 22:00:34, siguiente 22:15:01. samples/2026-09-28.jsonl: linea 315 `burst_fin` 03:29:02, siguiente 03:41:52; journalctl --list-boots: arranque -20 termina 2026-09-28 03:39:21. INCIDENTES tiene 8 entradas incluidas (2026-10-11 22:02, 22:12) y (22:44, 22:54), comentario 'Anadidas el 2026-10-13'. No hallo cifra refutada.",
-      "seal": "ef3688ca697ef3f85ea2a091d5193facbb083844c0eb3f508fb234db2eb5c558",
+      "evidence": "`python3 -m tools.calibra_psi` (2026-10-14) -> rc=1, 'corpus: 2026-09-29 00:00 -> 2026-10-14 08:16', 'muestras con PSI: 27409', 'COLAPSO (>= 5 min) 2   10-05 00:18 (7 min, max 78.30 %), 10-11 22:44 (8 min, max 72.47 %)', 'falsos positivos: 0', 'incidentes no detectados: 1', '(incidentes fuera del corpus, sin observar: 6)', 'VEREDICTO: CORTE INVALIDO'; the 27408/08:15 figure in the claim is named as the dated 2026-10-14 run, and the live run differs by one sample and one minute because the corpus end moves. INCIDENTES has 9 windows (`python3 -c 'import tools.calibra_psi as c; print(len(c.INCIDENTES))'` -> 9); 6 fall before the corpus start of 09-29, and the 3 inside it are 10-05 00:00-00:31, 10-11 22:02-22:12 and 10-11 22:44-22:54. The two COLAPSO excursions cover 10-05 and 10-11 22:44 with 0 FP, so the one undetected incident is 10-11 22:02, as the claim says. tools/calibra_psi.py:135-140 labels ('2026-10-05 00:00','2026-10-05 00:31') under the 2026-10-14 Luis vote, citing `last -x` and sar, and that window contains the 00:29:49 boot end. `python3 -m tools.control_racha` -> rc=0, 'ventanas de incidente excluidas: 9', 'VEREDICTO: LIMPIO ... Margen del corte contra el peor caso sano: 1.05x'. Thresholds: tools/calibra_psi.py:42 UMBRAL_PCT = 10.0, :45 SOSTENIDO_MIN = 5.0. The docstring at :13-16 carries 19804 / 98.53 % / 48.80 %. The message of 90847b3 is 'calibrar los cortes contra los 2 congelamientos propios del 2026-09-22/23'. bin/bb:16 sets RETAIN_DAYS=14. The cited test exists at tests/test_calibra_psi.py:180. bin/bb:1857-1861 and :1923-1927 print io_some/cpu_some as 'SIN CALIBRAR' with '(pico sin etiqueta a proposito ...)', which bears out 'solo el canal de memoria esta calibrado' and the io/cpu clause. `python3 -m pytest -q tests/test_calibra_psi.py tests/test_control_racha.py` -> '34 passed in 1.44s'. Negative control: `python3 -m tools.calibra_psi --sostenido 0` -> rc=1, 'falsos positivos: 37', 'VEREDICTO: CORTE INVALIDO', so the instrument can report false positives and the 0-FP reading carries information. The historical runs dated 2026-10-06, -10-12, -10-13 and -09-28 cannot be re-derived on the current corpus and were not refuted; I took them as dated records.",
+      "fix": "",
+      "seal": "df193b8ff63b8ad1c5ad64a70e88a19f2213081da405e57367675d26c0c4fc2f",
       "verdict": "PASS"
     },
     {
@@ -183,7 +186,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-14T03:54:06Z",
-  "tree_fingerprint": "7f8ae7c40ed1336263ba41549ea4e8dd24cc6475d5ba8ce97f4934d12bc9f927",
+  "timestamp": "2026-10-14T14:18:14Z",
+  "tree_fingerprint": "637fb97020968439d0459051bad3cb36f86841cbe38807f8c10d811d8f5de0c7",
   "violations": []
 }
