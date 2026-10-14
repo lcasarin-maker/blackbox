@@ -1,3 +1,4 @@
 Cambios VOTADOS que aun no estan desplegados en la maquina. `adopted/` describe lo desplegado (`bb drift` compara contra /etc), asi que lo pendiente vive aqui.
 Al desplegar un archivo: copiarlo a su ruta (el nombre codifica la ruta con _ por /), y despues `git mv` a adopted/system-config/ (o la carpeta que corresponda) en el mismo commit.
 - etc_systemd_system_docker.slice.d_99-blackbox.conf: docker.slice 14 -> 16 GiB (voto de Luis 2026-10-13, ver DECISIONS.md).
+- etc_systemd_system_bb-gpu-accounting.service: oneshot que corre 'nvidia-smi -am 1' en cada arranque (el accounting mode se pierde al reiniciar el driver; DEBT-GPU-ACCOUNTING-MODE-APAGADO-01). Desplegar en la ventana sin vLLM junto con el resto: sudo cp a /etc/systemd/system/bb-gpu-accounting.service, sudo systemctl enable --now bb-gpu-accounting.service (enable recarga systemd: mismo riesgo P1 que daemon-reload), luego git mv a adopted/system-config/.

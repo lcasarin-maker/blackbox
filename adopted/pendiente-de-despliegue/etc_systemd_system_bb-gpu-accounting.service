@@ -1,0 +1,12 @@
+[Unit]
+Description=Enciende el accounting mode de la GPU en cada arranque (bb scan nombra los procesos de GPU ya salidos tras una caida CUDA)
+After=nvidia-persistenced.service
+Wants=nvidia-persistenced.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/nvidia-smi -am 1
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

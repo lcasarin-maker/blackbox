@@ -3,7 +3,11 @@ id: FEATURE-BB-FALSO-CUELGUE-POR-AISLAMIENTO-WIFI-01
 kind: task
 domain: INCIDENT_CAPTURE
 title: "Distinguir un cuelgue real de un aislamiento de red cuando el logger local sigue vivo"
-status: open
+status: done
+closed_at: 2026-10-13
+closure_type: fixed
+reason: "clasifica_hueco_de_red existe con 4 tests y control negativo (silencio local => CUELGUE). El cableado en reporte() lo posee FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01, que aporta la fuente red_alcanzable."
+evidence: {"pass": "tasks/evidence/FEATURE-BB-FALSO-CUELGUE-POR-AISLAMIENTO-WIFI-01/pass.txt", "fail": "tasks/evidence/FEATURE-BB-FALSO-CUELGUE-POR-AISLAMIENTO-WIFI-01/fail.txt", "e2e": "tasks/evidence/FEATURE-BB-FALSO-CUELGUE-POR-AISLAMIENTO-WIFI-01/e2e.txt"}
 severity: P3
 origin: asserted
 satd_family: BLIND_INSTRUMENT
