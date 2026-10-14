@@ -1,6 +1,6 @@
 {
   "claims_fingerprint": "b21a22c95297f93562bbcfa45c8a91fb820f28ddd4ca2bf1554f11aa365ffb1d",
-  "panel": "1 auditor Opus (2 pasadas), 2026-10-13: L135,L418,L422 tras mover el -b 32768 a zz-blackbox-backlog.rules (ordena despues de audit.rules) y corregir el revert; control negativo en copia",
+  "panel": "1 auditor Opus, 2026-10-13, re-audito SPEC-L135 (stale por redaccion de un hostname en FEATURE-1358-CGROUP-01-REPRO/run.json, DEBT-DATOS-PRIVADOS-EN-EVIDENCIA-HISTORICA-01): intento refutar leyendo enable-privileged.sh y las units; grep con control negativo; PASS",
   "profile": "general",
   "results": [
     {
@@ -25,23 +25,11 @@
     {
       "cited": {
         "enable-privileged.sh": "3781bb35891f1e8a50bdb11c211806cf0261468905161c29985b986558ddba28",
-        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/post-kit-9.3.3-validation/run.json": "83dc814d203d86c6be9a392ee4e6f3f5eadb3089662ce856eabcf8d5680af8c8",
-        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/primary-shared-reader-full-suite/run.json": "6d9d64d8484a9e1925eae6e204fb22edc833427bd52b41ee7b7c9bdb00f8b8c1",
-        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/runtime-root-close-check-run/run.json": "1422644281ad8de386c7c5ccb3845d2b083a142090d8c2cdb280f75de14171b2",
-        "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/run.json": "9c2d2471d81acb34f60c7530090b01816b7a8a7a369d6503e4c4796a42d1f854",
-        "tasks/evidence/DEBT-PRUEBAS-SIN-FICHA-CRUDA-01/signature-canary/run.json": "6aed2cac31bac35b24c7923f988a31b73fcdd69464765551d58678adde91e279",
-        "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/all-cached-release-signatures/run.json": "085b2944c2ee8434e115f93ce28edf79af912c73942c0744e6ac66d297c66077",
-        "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/healthy-source-canary/run.json": "d0f23da60fc3e6f9e387c4c13e17bce5f7c9b36ad155781a91ebbe7efbec17d5",
-        "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary/run.json": "365131997c0e383d0ca44f225812fcb0f06664a5417948e0f5ea81c9833b321e",
-        "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/ubuntu-index-signatures/run.json": "e1586a59515f31fa8642c116df1fb519a923d6798361b0e80cfd983a5cf02493",
-        "tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/wrong-source-canary/run.json": "829db40b194eb4dba69ef385da07ff848708d2d0b827e4c6bdff5502f41c2e15",
-        "tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json": "7195ba4af224006754f4f75f33f12e1b7c407ae06c1031afc627dcd80621db3d",
-        "tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/export-copy-lab/run.json": "94fc5515e341be770b694c80ee107a69a87d8ad224b36cd7f74bbfb682b34654",
-        "tests/test_enable_privileged_audit_backlog.py": "24c90d8eb688e1e70f5fe7da0532606ccc201544a4bfe701c53dae9bffdc93ee"
+        "tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json": "baec49aa04174cca6b214266afb4e9c34160686894deb003f04d4507f63d52e1"
       },
       "claim_id": "SPEC-L135",
-      "evidence": "Revert fix: `git diff -- enable-privileged.sh` adds a separate block at enable-privileged.sh:78-82, `if [ -f /etc/audit/rules.d/zz-blackbox-backlog.rules ]` with `run rm -f`, `run augenrules --load` and an echo. It is independent of the `10-blackbox-signals.rules` block at :73-77. `bash -n enable-privileged.sh` -> rc 0. `python3 -m pytest tests/test_enable_privileged_audit_backlog.py -q` -> `4 passed in 0.07s`. Simulation in scratchpad/sim15b: lines :73-82 extracted, `run` stubbed to echo, /etc/audit rewritten to a directory holding only zz-blackbox-backlog.rules (10- absent). Output: `RUN: rm -f /etc/audit/rules.d/zz-blackbox-backlog.rules` / `RUN: augenrules --load` / `limite de la cola de audit retirado`. The nested variant (rm inside the 10- if) prints nothing, which is the negative control. Linger is unaffected by the fix: enable-privileged.sh:664 `-- 10. linger`, :672 `LINGER_ANTES=$(loginctl show-user \"$DUENO\" -p Linger ...)`, :679 `run loginctl enable-linger \"$DUENO\"`. Live: `Linger=yes`. Negative control in scratchpad/neg15 with that line removed: `grep -cF 'run loginctl enable-linger \"$DUENO\"'` -> `0`, against :679 in the real tree.",
-      "seal": "568f77b762ee6b9a8a645275fe97d0d1548ff14a8f8798411abcc10a82485773",
+      "evidence": "SPEC.md:135-138 claims enable-privileged.sh activates linger for the owner and that full-boot proof requires observing the machine without a session. In the current tree, enable-privileged.sh:34 sets `DUENO=\"${SUDO_USER:-$(logname ...|| id -un)}\"`, :664 opens block `-- 10. linger`, :672 reads `LINGER_ANTES=$(loginctl show-user \"$DUENO\" -p Linger --value ...)`, and :679 runs `run loginctl enable-linger \"$DUENO\"` when it is not already yes. That block is unconditional in the deploy path: the only `exit 0` (:190) closes the revert branch, and the revert restores linger only from the backup at :100-108. The script prints the boot-time control itself at :690-693 (`systemd-analyze --user blame` after booting without logging in), which matches the claim's caveat. `grep -cF 'run loginctl enable-linger \"$DUENO\"' enable-privileged.sh` -> `1`; negative control `grep -cF 'run loginctl enable-linger \"$NOEXISTE\"' enable-privileged.sh` -> `0`. Live subject: `loginctl show-user <owner> -p Linger` -> `Linger=yes`, and the owner's file exists in /var/lib/systemd/linger/. The installed user units declare `WantedBy=default.target` (e.g. adopted/systemd-user/bb-guardia-proceso.service, adopted/systemd-user/ai-gpu-telemetry.service), so linger lets them start at boot. No test in tests/ covers linger (`grep -rli linger tests/` is empty), so this verdict rests on the grep and the live state, not on a suite. The stale trigger tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json differs from HEAD by 1 insertion and 1 deletion (`git diff --stat`), the hostname redaction, and does not touch this claim.",
+      "seal": "1a8bef195211ebe1270b34453b2643d4798334ba2e8cc7e19c41dc162c6efaef",
       "verdict": "PASS"
     },
     {
@@ -196,7 +184,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-14T00:35:35Z",
-  "tree_fingerprint": "f17900da6f3572319f2def2780352f24cc97712001e8c4d4186b09a72a6d45f8",
+  "timestamp": "2026-10-14T03:43:52Z",
+  "tree_fingerprint": "b453437dd2e9ec59629eeae31cf0733f6bdf66a9f9d96c446a554167e510ce87",
   "violations": []
 }
