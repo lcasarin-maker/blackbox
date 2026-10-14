@@ -16,6 +16,8 @@ Sin unidad elegible: NOT_COLLECTED y no se mata nada. La mayor unidad elegible p
 from __future__ import annotations
 
 import fnmatch
+import json
+import logging
 import os
 import re
 import subprocess
@@ -29,10 +31,76 @@ NOMBRE = "memavail"
 LINEA_GIB = 8.0
 PSI_COLAPSO = 10.0
 ELEGIBLES = ("bb-lab-*.scope", "bb-portero-suite-*.scope")  # suites reintentables bajo el portero (voto de Luis 2026-10-14)
-# Nunca se detienen aunque casen con ELEGIBLES (doble guarda): contenedores, motor, sesion, escritorio, bb.
-PROTEGIDAS = re.compile(r"docker|containerd|vllm|claude|anthropic|gnome|session|user@|init\.scope|dbus|"
-                        r"pipewire|wireplumber|xdg-|bb-(?!lab-|portero-suite-)", re.IGNORECASE)
 ORIGEN_MAX_PIDS = 5
+
+
+# --- Lista unica de procesos protegidos (voto de Luis 2026-10-14) ---
+# Antes habia cinco listas que no coincidian (escalon de bb-usable, bb-guardia-proceso, gpuoom, memavail y el
+# --avoid de earlyoom): la guardia podia mandar SIGTERM a un hijo de la sesion de Claude que el escalon protegia y
+# gpuoom elegia al motor vLLM. La fuente es data/procesos_protegidos.json; este lector lo usan memavail y gpuoom, y
+# bin/bb-usable y bin/bb-guardia-proceso llevan el suyo de pocas lineas para no importar nada desde un demonio.
+# `cargar_protegidos` NUNCA lanza: con el fichero ausente o mal formado devuelve la copia RESPALDO y el error, y se
+# avisa por stderr. tests/test_procesos_protegidos.py exige que RESPALDO sea identico al fichero.
+PROTEGIDOS_RUTA = Path(__file__).resolve().parent.parent / "data" / "procesos_protegidos.json"
+
+# (comm, prefijo, fragmento de unidad o None = comm escapado)
+_BB_UNIDAD = "bb-(?!lab-|portero-suite-)"
+RESPALDO_COMM: tuple[tuple[str, bool, str | None], ...] = (
+    ("claude", True, None), ("node", False, None), ("cowork-linux-he", False, None), ("electron", False, None),
+    ("chrome_crashpad", False, None), ("Xorg", False, None), ("Xwayland", False, None), ("gnome-shell", True, None),
+    ("gnome-session", True, None), ("gdm", True, None), ("systemd", True, None), ("init", False, None),
+    ("sshd", True, None), ("dbus", True, None), ("pipewire", True, None), ("wireplumber", False, None),
+    ("xdg-", True, None), ("earlyoom", False, None), ("docker", True, None), ("containerd", True, None),
+    ("vllm", True, None), ("VLLM", True, None), ("bb", False, _BB_UNIDAD), ("bb-", True, _BB_UNIDAD),
+)
+RESPALDO_UNIDADES: tuple[str, ...] = ("anthropic", "gnome", "session", "user@")
+
+
+class Protegidos(NamedTuple):
+    exactos: frozenset[str]
+    prefijos: tuple[str, ...]
+    unidades: re.Pattern[str]   # para nombres de unidad systemd (memavail)
+    error: str | None           # None = leido del fichero; si no, por que se uso RESPALDO
+
+    def comm(self, comm: str) -> bool:
+        return comm in self.exactos or comm.startswith(self.prefijos)
+
+
+def _construye(comm: tuple[tuple[str, bool, str | None], ...], unidades: tuple[str, ...], error: str | None) -> Protegidos:
+    fragmentos = [u if u is not None else re.escape(n) for n, _, u in comm] + list(unidades)
+    return Protegidos(frozenset(n for n, p, _ in comm if not p), tuple(n for n, p, _ in comm if p),
+                      re.compile("|".join(dict.fromkeys(fragmentos)), re.IGNORECASE), error)
+
+
+def _lee(ruta: Path) -> tuple[tuple[tuple[str, bool, str | None], ...], tuple[str, ...]]:
+    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    comm = tuple((e["nombre"], e["prefijo"], e.get("unidad")) for e in datos["comm"])
+    unidades = tuple(e["patron"] for e in datos["unidades"])
+    if not comm or not all(isinstance(n, str) and n and isinstance(p, bool) and (u is None or isinstance(u, str) and u)
+                           for n, p, u in comm) or not all(isinstance(u, str) and u for u in unidades):
+        raise ValueError("lista vacia o entrada mal formada")
+    return comm, unidades
+
+
+def cargar_protegidos(ruta: Path = PROTEGIDOS_RUTA) -> Protegidos:
+    """El fichero si es valido; si no, RESPALDO con el motivo en `error`. Nunca lanza."""
+    try:
+        comm, unidades = _lee(ruta)
+        return _construye(comm, unidades, None)
+    except Exception as exc:  # un fichero roto no puede tumbar a un vigilante: se usa el respaldo y se dice
+        error = f"{type(exc).__name__}: {exc}"
+        # sin handler configurado, logging lo saca por stderr (lastResort): llega al journal de la unidad
+        logging.getLogger("procesos_protegidos").warning(
+            "[procesos_protegidos] %s no se pudo usar (%s): se usa la copia de respaldo", ruta, error)
+        return _construye(RESPALDO_COMM, RESPALDO_UNIDADES, error)
+
+
+PROTEGIDOS = cargar_protegidos()
+
+
+# Nunca se detienen aunque casen con ELEGIBLES (doble guarda): contenedores, motor, sesion, escritorio, bb.
+# La lista unica traducida a nombres de unidad (incluye bb-(?!lab-|portero-suite-)).
+PROTEGIDAS = PROTEGIDOS.unidades
 
 
 class Unidad(NamedTuple):

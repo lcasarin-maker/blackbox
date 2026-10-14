@@ -26,7 +26,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from tools import interruptores
+from tools import interruptores, vigilante_memavail
 
 NOMBRE = "gpuoom"
 MIN_DISPONIBLE_PCT = 8.0
@@ -38,8 +38,8 @@ PESO_SWAP_PCT = 30
 VICTIMA_MIN_KIB = 256 * 1024
 GPU_INTERVALO_S = 5.0
 GPU_VIEJO_S = 30.0
-PROTEGIDOS = frozenset({"systemd", "sshd", "gnome-shell", "Xorg", "Xwayland", "pipewire", "wireplumber", "dbus-daemon",
-                        "earlyoom", "systemd-journal", "systemd-oomd", "containerd", "dockerd", "gdm", "gdm-x-session"})
+# Lista unica de data/procesos_protegidos.json, leida por vigilante_memavail (antes propia: no protegia ni a claude ni al motor vLLM).
+PROTEGIDOS = vigilante_memavail.PROTEGIDOS
 
 
 def evalua(disponible_pct: float, psi_some: float | None, ahora: float, desde: float | None) -> tuple[str, float | None, str]:
@@ -76,7 +76,7 @@ class Candidato:
 
 def elige_victima(cands: list[Candidato], propio_pid: int) -> tuple[Candidato | None, str]:
     """Pura. El mayor puntaje entre los elegibles (ni protegidos, ni oom_adj -1000, ni bajo el minimo)."""
-    elegibles = [c for c in cands if c.comm not in PROTEGIDOS and c.pid != propio_pid and c.oom_adj > -1000
+    elegibles = [c for c in cands if not PROTEGIDOS.comm(c.comm) and c.pid != propio_pid and c.oom_adj > -1000
                  and c.anon_kib + c.shmem_kib + c.swap_kib + c.gpu_kib >= VICTIMA_MIN_KIB]
     if not elegibles:
         return None, f"ninguno elegible entre {len(cands)} procesos vistos"

@@ -37,10 +37,20 @@ def test_evalua_se_reinicia_al_salir_de_la_zona():
 
 def test_la_gpu_decide_la_victima():
     cpu = g.Candidato(1, "pytest", 5_000_000, 0, 0, 0)
-    gpu = g.Candidato(2, "VLLM::EngineCor", 2_000_000, 0, 0, 60_000_000)
+    gpu = g.Candidato(2, "python3", 2_000_000, 0, 0, 60_000_000)
     assert gpu.anon_kib < cpu.anon_kib and gpu.puntaje() > cpu.puntaje()
     v, porque = g.elige_victima([cpu, gpu], propio_pid=999)
     assert v is not None and v.pid == 2 and "gpu 58593" in porque
+
+
+def test_el_motor_vllm_no_es_victima_aunque_tenga_la_mayor_huella():
+    """Lista unica (data/procesos_protegidos.json, voto de Luis 2026-10-14): antes gpuoom elegia al motor."""
+    cpu = g.Candidato(1, "pytest", 5_000_000, 0, 0, 0)
+    motor = g.Candidato(2, "VLLM::EngineCor", 2_000_000, 0, 0, 60_000_000)
+    sesion = g.Candidato(3, "claude", 9_000_000, 0, 0, 0)
+    assert motor.puntaje() > sesion.puntaje() > cpu.puntaje()
+    v, _ = g.elige_victima([cpu, motor, sesion], propio_pid=999)
+    assert v is not None and v.pid == 1
 
 
 def test_oom_adj_escala_y_menos_mil_exime():
@@ -85,7 +95,8 @@ def test_paso_observar_registra_victima_con_gpu_y_confirma_psi(tmp_path):
     gpu.muestrea(0.0)
     _, ev = g.paso("observar", 1.0, 50.0, 1.0, None, _cands, gpu, tmp_path)
     assert ev is not None and ev["victima"] is not None
-    assert ev["procesos_omitidos"] == 3 and ev["veredicto"] == "critico" and "VLLM::EngineCor" in ev["victima"] and ev["confirmado_por_psi"] is True
+    # la GPU es del motor (pid 11), protegido: la victima es pytest
+    assert ev["procesos_omitidos"] == 3 and ev["veredicto"] == "critico" and "pytest" in ev["victima"] and ev["confirmado_por_psi"] is True
     assert interruptores.resumen("gpuoom", tmp_path) == {"disparos": 1, "confirmados": 1, "falsos_positivos": 0}
 
 

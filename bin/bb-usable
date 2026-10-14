@@ -317,17 +317,53 @@ ESCALON_ENFRIAMIENTO_S = PSI_ACT_SOSTENIDO_S
 # app-gnome-com.* (los dos existen en esta maquina, medido el 2026-10-12).
 ESCALON_SCOPE_GLOB = "app*com.anthropic.Claude-*.scope"
 # `comm` que nunca se matan aunque sean los mayores. El kernel trunca comm a 15
-# caracteres: "bb-guardia-proc" es bb-guardia-proceso. Que esten dentro del
-# scope ya es requisito; esta lista protege lo que vive DENTRO de el y no es
-# el trabajo desbocado: la propia sesion (claude, node, claude-desktop,
-# cowork-linux-helper), el escritorio, docker/vLLM y las piezas de bb.
-ESCALON_COMM_PROTEGIDOS = frozenset({
-    "claude", "claude-desktop", "node", "cowork-linux-he", "electron",
-    "chrome_crashpad", "Xorg", "Xwayland", "gnome-shell", "systemd",
-    "dbus-daemon", "sshd", "dockerd", "containerd", "containerd-shim", "docker",
-    "VLLM::EngineCor", "vllm", "bb", "bb-usable", "bb-guardia-proc",
-    "bb-vigilante-mo",
-})
+# caracteres. Que esten dentro del scope ya es requisito; esta lista protege lo
+# que vive DENTRO de el y no es el trabajo desbocado: la propia sesion (claude,
+# node, claude-desktop, cowork-linux-helper), el escritorio, docker/vLLM y las
+# piezas de bb.
+# Lista unica de procesos protegidos: data/procesos_protegidos.json (voto de Luis
+# 2026-10-14). Se lee aqui mismo, sin importar nada del repo: este demonio no
+# puede caerse al arrancar por un modulo ausente. Si el fichero falta o esta mal
+# formado se usa esta copia de respaldo y main() lo dice al arrancar;
+# tests/test_procesos_protegidos.py exige que sea identica al fichero.
+PROTEGIDOS_RUTA = Path(__file__).resolve().parent.parent / "data" / "procesos_protegidos.json"
+PROTEGIDOS_RESPALDO = (
+    ("claude", True), ("node", False), ("cowork-linux-he", False), ("electron", False),
+    ("chrome_crashpad", False), ("Xorg", False), ("Xwayland", False), ("gnome-shell", True),
+    ("gnome-session", True), ("gdm", True), ("systemd", True), ("init", False), ("sshd", True),
+    ("dbus", True), ("pipewire", True), ("wireplumber", False), ("xdg-", True),
+    ("earlyoom", False), ("docker", True), ("containerd", True), ("vllm", True), ("VLLM", True),
+    ("bb", False), ("bb-", True),
+)
+
+
+def _cargar_protegidos(ruta: Path) -> tuple[frozenset[str], tuple[str, ...], str | None]:
+    """(comm exactos, prefijos, error). Nunca lanza: con error, es el RESPALDO."""
+    pares, error = PROTEGIDOS_RESPALDO, None
+    try:
+        leidos = tuple((e["nombre"], e["prefijo"])
+                       for e in json.loads(ruta.read_text(encoding="utf-8"))["comm"])
+        if not leidos or not all(isinstance(n, str) and n and isinstance(p, bool) for n, p in leidos):
+            raise ValueError("lista vacia o entrada mal formada")
+        pares = leidos
+    except Exception as exc:  # un fichero roto no puede tumbar el demonio: respaldo, y se dice
+        error = f"{type(exc).__name__}: {exc}"
+    return frozenset(n for n, p in pares if not p), tuple(n for n, p in pares if p), error
+
+
+COMM_PROTEGIDOS, COMM_PROTEGIDOS_PREFIJOS, PROTEGIDOS_ERROR = _cargar_protegidos(PROTEGIDOS_RUTA)
+
+
+def comm_protegido(comm: str) -> bool:
+    return comm in COMM_PROTEGIDOS or comm.startswith(COMM_PROTEGIDOS_PREFIJOS)
+
+
+def protegidos_origen() -> str:
+    """Una linea para el journal: de donde salio la lista que se esta usando."""
+    fuente = (f"la COPIA DE RESPALDO ({PROTEGIDOS_RUTA}: {PROTEGIDOS_ERROR})"
+              if PROTEGIDOS_ERROR else str(PROTEGIDOS_RUTA))
+    return (f"procesos protegidos: {len(COMM_PROTEGIDOS)} comm exactos y "
+            f"{len(COMM_PROTEGIDOS_PREFIJOS)} prefijos, de {fuente}")
 # Cuantos procesos del SISTEMA ENTERO entran en un registro de origen. No es un
 # umbral de decision: es el tamano de la foto. `top_rss` de bb sample guarda 5;
 # en el colapso de las 22:44 esos 5 los llenaban cuatro `claude` (+6 GB cada
@@ -423,7 +459,7 @@ def protegido(p: Proc, propio_pid: int) -> str | None:
         return "PID 1 o el propio bb-usable"
     if p.uid == 0:
         return "corre como root"
-    if p.comm in ESCALON_COMM_PROTEGIDOS:
+    if comm_protegido(p.comm):
         return f"comm '{p.comm}' protegido"
     if p.scope is None:
         return "fuera de los scopes app*com.anthropic.Claude-*.scope"
@@ -718,6 +754,7 @@ def main() -> int:
         f"({PROBE_DEADLINE/max(first, 1e-6):.0f}x ese valor)")
     notify("WATCHDOG=1")
     avisar_origen_no_cargado()
+    log(f"[bb-usable] {protegidos_origen()}")
 
     sostenido = 0  # sondas consecutivas con PSI por encima del umbral de accion
     bajas = 0      # sondas consecutivas por DEBAJO, para no cortar la racha con una

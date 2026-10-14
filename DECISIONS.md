@@ -313,3 +313,9 @@ camino es el que se toma, aunque cueste más pasos.
 - **Conservado a proposito:** el motor y su imagen (`/health` 200 tras cada paso), la imagen `aequitas-audit:aa47-20261002` y los contenedores etapa1, luna y documenso (la auditoria adversarial de aequitas sigue abierta: 220 hallazgos, AA45/AA46 pendientes), la compilacion vigente del modulo dmem y `foro-prio`.
 - **Descarta:** `docker image prune -a` a ciegas (habria tocado imagenes de otro proyecto sin revisar), borrar la imagen de la auditoria (irreversible), reconstruir nada.
 - **Pendiente de voto:** paquetes grandes y timers (el informe propone no tocarlos sin su dueno).
+
+## 2026-10-14 — Una sola lista de procesos protegidos; el reinicio de las unidades queda pendiente (voto de Luis: "arregla y deja el reinicio pendiente")
+
+- **Decidido:** `data/procesos_protegidos.json` es la unica fuente de los procesos que ningun actor de bb mata (24 comm + 4 fragmentos de unidad); `bin/bb-usable`, `bin/bb-guardia-proceso`, `tools/vigilante_memavail.py` y `tools/gpuoom_bb.py` la leen y, si falta o es invalida, caen a una copia de respaldo en el propio codigo (nunca lanzan). El cambio esta en el repo; NINGUNA unidad se reinicio: surte efecto cuando Luis las reinicie (orden: memavail, guardia, y bb-usable al final).
+- **Motivo medido:** habia cinco listas distintas; la guardia podia dar SIGTERM a un hijo de la sesion de Claude que el escalon protege, y gpuoom habria elegido al motor como victima.
+- **Limite declarado:** `--avoid` de earlyoom (desplegado) no cubre 10 nombres de la lista (claude, node, cowork-linux-he, electron, chrome_crashpad, Xwayland, init, dbus, earlyoom, bb): ficha `DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01`. No verificado: el comportamiento de systemd en el reinicio de una unidad con `FailureAction=reboot-immediate`.
