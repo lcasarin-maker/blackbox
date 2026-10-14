@@ -287,3 +287,9 @@ camino es el que se toma, aunque cueste más pasos.
 - **Decidido:** `FEATURE-ATLAS-REMEDIR-EVAL-TRAS-REINDEXADO-01` entra a `.simplecode/backlog_baseline.json` con la caducidad vigente (2026-11-06).
 - **Motivo:** al cerrar `FEATURE-ATLAS-REINDEX-PAQUETE-GB10-01` (Atlas construyo el grafo: 425 de 436 archivos) quedaron un resto medido (11 archivos sin entidad, eval sin re-medir con la ATOM fria); la regla del repo prohibe declararlo sin abrirle ficha, y la ficha nueva bloquea el push si no esta en la lista.
 - **Descarta:** dejar el resto solo en la prosa del cierre (hueco sin ficha) y mantener la ficha original abierta (ocultaba que el indexado ya esta hecho).
+
+## 2026-10-14 — Boleta de desbloqueo: racha-118, LibreChat, portero, freno termico, y tres mecanismos
+
+- **Decidido (voto de Luis 2026-10-14):** (1) `DEBT-SKIP-TEST-CONTROL-RACHA-118`: se etiqueta la ventana 2026-10-05 00:00-00:31 como incidente (evidencia independiente de PSI: `last -x` y sar), no se recalibra la regla; el control da LIMPIO con margen 1.05x. (2) LibreChat: parar y desactivar sin borrar datos. (3) Portero: desplegar en `observar`, medir con tres suites, y solo entonces `actuar`. (4) Freno termico: confirmar `ingest_batch` a 1800 s y `--force-free` solo de pruebas; probar el congelado real en el proximo job nocturno de Atlas. (5) Root para las fichas bloqueadas por sudo: scripts del repo sellados por hash (`bb-root-run`), revisados por Luis. (6) Ventana de vLLM de ~60 min cuando Luis la anuncie. (7) Boleta de las 13 decisiones ahora.
+- **Motivo:** el control de racha leia un colapso real sin etiquetar como excursion sana; el resto desbloquea fichas sin reiniciar la maquina.
+- **Descarta:** recalibrar el umbral de racha (la maquina tardaria mas en reiniciarse sola ante un colapso real), borrar LibreChat (irreversible), actuar directo en el portero y ampliar la lista de sudo con `bpftrace` (equivale a root total).
