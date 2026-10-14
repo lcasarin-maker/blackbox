@@ -260,7 +260,7 @@ index e68a3d7e..31897f8e 100644
  def _is_llm_generate_call(node: ast.AST) -> bool:
 @@ -1832,9 +1838,22 @@ def unsafe_eval(code: str) -> bool:  # noqa: C901 -- eval shadow resolution, DEB
  
- # flota 2026-08-17: 5 hits (Atlas 3, simplecode 1, aequitas_os 1). Primero: Atlas/tools/verify_dgx08_recovery.py.
+ # flota 2026-08-17: 5 hits (Atlas 3, simplecode 1, otro proyecto_os 1). Primero: Atlas/tools/verify_dgx08_recovery.py.
  # Es RESIDUAL, no capturas: mide lo que convictaría hoy.
 -def test_without_assert(code: str) -> bool:
 +def _is_test_source_path(path: str) -> bool:

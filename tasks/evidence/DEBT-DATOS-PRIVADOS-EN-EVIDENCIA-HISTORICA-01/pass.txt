@@ -1,0 +1,18 @@
+$ grep -F tasks/evidence/ tests/fixtures/datos_privados_baseline.json   (DESPUES de redactar)
+rc=1  (stdout vacio: expect=empty_stdout -> PASA)
+
+$ python3 -m pytest -q -p no:cacheprovider tests/test_sin_datos_privados.py
+2 passed in 2.75s
+
+Que se hizo:
+- Las 1963 ocurrencias de los 53 archivos se reemplazaron DENTRO de su linea con el PATRON importado del
+  propio test (no copiado): forma-MAC -> <mac>, hostname -> <host>, IP -> <ip>, proyecto -> "otro proyecto".
+  77 archivos cambiaron, 1236 lineas + / 1236 lineas - (git diff --stat): ninguna linea se perdio.
+- Los 24 archivos restantes son manifiestos/recibos que guardaban el sha256 de un archivo redactado
+  (o de un campo con el dato): se re-registro el digest nuevo, en cascada hasta punto fijo (4 pasadas,
+  14 digests de campo). No quedaron referencias a prefijos de digests viejos.
+- .simplecode/audit_ledger.json NO se edito a mano: el cambio de run.json dejo stale SPEC-L135; se
+  re-audito con /h1 (1 auditor Opus, PASS) y se grabo con `audit --record --merge`.
+- La base baja de 139 entradas / 2194 ocurrencias a 86 / 231 (ninguna en tasks/evidence). No se anadio
+  entrada ni exencion; PATRON no se toco.
+- Limite: la historia de git conserva los valores originales (reescribirla es decision del dueno, no se tomo).
