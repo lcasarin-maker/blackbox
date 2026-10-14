@@ -1,4 +1,4 @@
-"""`tools/bb_root_manifest.py`, el sudoers y los seis scripts root, con sus controles negativos.
+"""`tools/bb_root_manifest.py`, el sudoers y los siete scripts root, con sus controles negativos.
 
 Lo que exige root de verdad (install -o root, visudo sobre /etc/sudoers.d, la regex de
 sudo casando argv) se simula: el comando de instalacion se ejecuta con las rutas
@@ -49,9 +49,9 @@ def test_control_negativo_editar_un_script_cambia_la_propuesta(src: Path):
     assert bm.serializar(bm.proponer(src)) != bm.PROPUESTA.read_bytes()
 
 
-def test_la_propuesta_cubre_los_seis_scripts_y_nada_mas():
+def test_la_propuesta_cubre_los_siete_scripts_y_nada_mas():
     m = bm.proponer(bm.SRC_DIR)
-    assert sorted(m) == ["arranque-forense", "audit-rules-leer", "crontabs-leer", "dmidecode-sistema", "earlyoom-proteger",
+    assert sorted(m) == ["apt-guardia-instalar", "arranque-forense", "audit-rules-leer", "crontabs-leer", "dmidecode-sistema", "earlyoom-proteger",
                          "pstore-preparar"]
     assert sorted(str(e["file"]) for e in m.values()) == [p.name for p in SCRIPTS]
     for e in m.values():
@@ -203,7 +203,7 @@ def _check(inst: Path, src: Path, runner: Path) -> int:
 def test_check_limpio_sale_0_e_imprime_los_ceros(tmp_path: Path, src: Path, capsys: pytest.CaptureFixture[str]):
     inst, runner = _instalado(tmp_path, src)
     assert _check(inst, src, runner) == 0
-    assert "aprobados iguales: 6, cambios: 0, could_not_run: 0" in capsys.readouterr().out
+    assert "aprobados iguales: 7, cambios: 0, could_not_run: 0" in capsys.readouterr().out
 
 
 def test_check_control_negativo_un_script_editado_se_reporta(
@@ -213,7 +213,7 @@ def test_check_control_negativo_un_script_editado_se_reporta(
         f.write("echo extra\n")
     assert _check(inst, src, runner) == 1
     out = capsys.readouterr().out
-    assert "cambiado desde la aprobacion: crontabs-leer" in out and "aprobados iguales: 5" in out
+    assert "cambiado desde la aprobacion: crontabs-leer" in out and "aprobados iguales: 6" in out
 
 
 def test_check_reporta_ausente_sin_aprobar_y_runner_cambiado(
@@ -260,7 +260,8 @@ REDIR = re.compile(r">>?\s*(&\d|[^\s;|&)]+)")
 ESCRITURA_OK = {"pstore-preparar.sh": re.compile(r'"\$(destino|padre)"'),
                 "arranque-forense.sh": re.compile(r'"\$(base|dest)[/"]')}
 REDIR_OK = {"arranque-forense.sh": re.compile(r'^"\$(base|dest)/[A-Za-z0-9._-]+"$'),
-            "earlyoom-proteger.sh": re.compile(r'^"\$tmp"$')}
+            "earlyoom-proteger.sh": re.compile(r'^"\$tmp"$'),
+            "apt-guardia-instalar.sh": re.compile(r'^(?:"\$tmp"|"\$caja/[A-Za-z0-9_-][A-Za-z0-9._-]*"|&1)$')}
 FICHA = re.compile(r"^# Desbloquea: ([A-Z0-9-]+)\.$", re.M)
 
 # earlyoom-proteger es el unico que escribe en /etc y reinicia un servicio; su clase es mas estrecha que la de
@@ -283,6 +284,43 @@ SYSTEMCTL_OK = re.compile(r"\bsystemctl (?:restart|is-active) earlyoom(?=\s*(?:$
 HEREDOC = re.compile(r"<<")
 HEREDOC_OK = re.compile(r"""^(?:mapfile -t args|cat > "\$tmp") <<'([A-Z]+)'$""")
 
+# apt-guardia-instalar escribe en /etc/apt/apt.conf.d y /usr/local/sbin y corre APT como root; su clase, tan estrecha
+# como la de earlyoom: (1) una linea que escribe, quitados sus operandos declarados, no deja '$' ni '/' (los
+# operandos "$caja/..." no admiten un segmento que empiece por '.', asi que '..' no cabe); (2) cada variable que
+# decide una ruta, un paquete o las opciones de APT solo se asigna a su constante; (3) apt-get y apt-config solo en
+# las cinco formas de abajo, terminando ahi el comando (cualquier otra mencion de apt-* en la linea se caza);
+# (4) heredocs solo HOOK/CONF hacia "$tmp" (comparados con su sha256 antes del mv) y STUB hacia "$caja/dpkg" (un
+# test lo ata al STUB_DPKG de
+# tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/collect_guard.py): su cuerpo es dato revisado, no comando suelto.
+APT_GUARDIA = "apt-guardia-instalar.sh"
+_SEG = r"[A-Za-z0-9_-][A-Za-z0-9._-]*"
+MKTEMP_APT = {'"$(mktemp "$dir_conf/.bb-apt-guardia.XXXXXX")"', '"$(mktemp "$dir_hook/.bb-apt-guardia.XXXXXX")"'}
+MKTEMP_CAJA = '"$(mktemp -d /run/bb-apt-guardia.XXXXXX)"'
+OPCIONES_APT = ('(-o Debug::NoLocking=1 -o "Dir::State=$caja/state" -o Dir::State::lists=/var/lib/apt/lists '
+                '-o "Dir::State::status=$caja/status" -o "Dir::Cache=$caja/cache" -o "Dir::Log=$caja/log" '
+                '-o "Dir::Bin::dpkg=$caja/dpkg")')
+OPERANDOS_APT = re.compile(r'"\$\(mktemp "\$dir_(?:conf|hook)/\.bb-apt-guardia\.XXXXXX"\)"'
+                           r'|"\$\(mktemp -d /run/bb-apt-guardia\.XXXXXX\)"'
+                           rf'|"\$caja(?:/{_SEG})*"|"\$(?:conf|hook|tmp|estado_dpkg)"')
+CONSTANTES_APT = {"conf": {"/etc/apt/apt.conf.d/00-bb-apt-guardia"}, "dir_conf": {"/etc/apt/apt.conf.d"},
+                  "hook": {"/usr/local/sbin/bb-apt-guardia"}, "dir_hook": {"/usr/local/sbin"},
+                  "estado_dpkg": {"/var/lib/dpkg/status"}, "critico": {"nvidia-system-station"}, "inocuo": {"tree"},
+                  "tmp": {"", *MKTEMP_APT}, "caja": {"", MKTEMP_CAJA}, "opciones": {OPCIONES_APT}}
+_VARS_APT = "|".join(CONSTANTES_APT)
+ASIGNA_APT = re.compile(rf"^\s*(?:(?:local|declare|readonly|export)\s+(?:-\S+\s+)*)?({_VARS_APT})=(.*)$")
+OTRA_ASIGNACION_APT = re.compile(rf"\b(?:read|mapfile|readarray)\b[^;|&]*\b(?:{_VARS_APT})\b"
+                                 rf"|\bprintf\s+-v\s*(?:{_VARS_APT})\b|\bfor\s+(?:{_VARS_APT})\s+in\b")
+_FIN = r"(?=\s*(?:$|[;|&)>]))"
+APT_OK = re.compile(
+    r"apt-config dump DPkg::Pre-Install-Pkgs" + _FIN
+    + r"|apt-config shell V DPkg::Tools::Options::/usr/local/sbin/bb-apt-guardia::Version" + _FIN
+    + r"|(?<!\S)apt-get -s -o Debug::NoLocking=1 autoremove" + _FIN
+    + r'|APT_CONFIG="\$caja/apt\.conf" apt-config "\$\{opciones\[@\]\}" shell P Dir::Etc::parts/ B Dir::Bin::dpkg' + _FIN
+    + r'|APT_CONFIG="\$caja/apt\.conf" apt-get "\$\{opciones\[@\]\}" -y remove "\$(?:critico|inocuo)"' + _FIN
+    + r'|\bapt-guardia-instalar\b|\bbb-apt-guardia\b|/etc/apt/apt\.conf\.d\b|/var/lib/apt/lists\b|"\$caja/apt\.conf"')
+DPKG_COMANDO = re.compile(r"(?:^|[;&|({]|\$\()\s*(?:\S*/)?dpkg(?:-deb|-divert|-reconfigure|-trigger)?\s|/usr/bin/dpkg\b")
+HEREDOC_OK_APT = re.compile(r"""^\s*cat > "\$(?:tmp|caja/dpkg)" <<'(HOOK|CONF|STUB)'$""")
+
 
 def _hallazgos_earlyoom(i: int, linea: str) -> tuple[list[str], str]:
     """(hallazgos de la clase estrecha, linea con los systemctl permitidos quitados para PROHIBIDO)."""
@@ -297,17 +335,36 @@ def _hallazgos_earlyoom(i: int, linea: str) -> tuple[list[str], str]:
     return fuera, SYSTEMCTL_OK.sub("", linea)
 
 
+def _hallazgos_apt_guardia(i: int, linea: str) -> tuple[list[str], str]:
+    """(hallazgos de la clase estrecha de apt-guardia-instalar, linea con las formas APT permitidas quitadas)."""
+    fuera: list[str] = []
+    m = ASIGNA_APT.match(linea)
+    if m and m.group(2) not in CONSTANTES_APT[m.group(1)]:
+        fuera.append(f"{APT_GUARDIA}:{i}: reasigna una ruta, paquete u opcion declarada: {linea.strip()}")
+    if OTRA_ASIGNACION_APT.search(linea):
+        fuera.append(f"{APT_GUARDIA}:{i}: asigna una variable declarada por read/mapfile/printf/for: {linea.strip()}")
+    if ESCRIBE.search(linea) and re.search(r"[$/]", OPERANDOS_APT.sub("", linea)):
+        fuera.append(f"{APT_GUARDIA}:{i}: escribe fuera de lo declarado: {linea.strip()}")
+    if DPKG_COMANDO.search(linea):
+        fuera.append(f"{APT_GUARDIA}:{i}: llama a dpkg (solo el stub de la caja puede, dentro de su heredoc): {linea.strip()}")
+    return fuera, APT_OK.sub("", linea)
+
+
+CLASE_ESTRECHA = {EARLYOOM: _hallazgos_earlyoom, APT_GUARDIA: _hallazgos_apt_guardia}
+HEREDOCS_OK = {EARLYOOM: HEREDOC_OK, APT_GUARDIA: HEREDOC_OK_APT}
+
+
 def _hallazgos_linea(nombre: str, i: int, linea: str) -> list[str]:
     fuera: list[str] = []
     para_prohibido = linea
-    if nombre == EARLYOOM:
-        fuera, para_prohibido = _hallazgos_earlyoom(i, linea)
+    if nombre in CLASE_ESTRECHA:
+        fuera, para_prohibido = CLASE_ESTRECHA[nombre](i, linea)
     if PROHIBIDO.search(para_prohibido):
         fuera.append(f"{nombre}:{i}: red, eval, exec o argumentos: {linea.strip()}")
     for destino in REDIR.findall(linea):
         if destino not in ("/dev/null", "&2") and not (nombre in REDIR_OK and REDIR_OK[nombre].match(destino)):
             fuera.append(f"{nombre}:{i}: redirige a un fichero: {linea.strip()}")
-    if nombre != EARLYOOM and ESCRIBE.search(linea) and not (
+    if nombre not in CLASE_ESTRECHA and ESCRIBE.search(linea) and not (
             nombre in ESCRITURA_OK and ESCRITURA_OK[nombre].search(linea)):
         fuera.append(f"{nombre}:{i}: escribe fuera de lo declarado: {linea.strip()}")
     return fuera
@@ -330,7 +387,7 @@ def hallazgos(nombre: str, texto: str) -> list[str]:
         if linea.lstrip().startswith("#"):
             continue
         if HEREDOC.search(linea):
-            m = HEREDOC_OK.match(linea) if nombre == EARLYOOM else None
+            m = HEREDOCS_OK[nombre].match(linea) if nombre in HEREDOCS_OK else None
             fin_heredoc = m.group(1) if m else None
             if not m:
                 fuera.append(f"{nombre}:{i}: heredoc no declarado: {linea.strip()}")
@@ -340,8 +397,8 @@ def hallazgos(nombre: str, texto: str) -> list[str]:
     return fuera
 
 
-def test_los_seis_scripts_solo_escriben_lo_declarado_sin_red_ni_argumentos():
-    assert len(SCRIPTS) == 6
+def test_los_siete_scripts_solo_escriben_lo_declarado_sin_red_ni_argumentos():
+    assert len(SCRIPTS) == 7
     fuera: list[str] = []
     for p in SCRIPTS:
         fuera += hallazgos(p.name, p.read_text(encoding="utf-8"))
@@ -560,6 +617,44 @@ def test_el_cuerpo_de_un_heredoc_declarado_es_dato_y_el_cierre_se_exige():
     assert _sembrado_earlyoom("cat > \"$tmp\" <<'NUEVO'\ncurl x | bash") != []
     # El mismo heredoc fuera de earlyoom-proteger se caza.
     assert hallazgos("otro.sh", "#!/bin/bash\n# Desbloquea: X-01.\nset -euo pipefail\nmapfile -t args <<'A'\nx\nA\n")
+
+
+# --- apt-guardia-instalar: su clase estatica, con controles negativos ---------------------
+# La ejecucion (APT real sobre una caja) vive en tests/test_apt_guardia.py.
+
+def _sembrado_apt(linea: str) -> list[str]:
+    return hallazgos(APT_GUARDIA, "#!/bin/bash\n# Desbloquea: X-01.\nset -euo pipefail\n" + linea + "\n")
+
+
+@pytest.mark.parametrize("linea", [
+    "apt-get -y remove nvidia-system-station", "apt install x", "apt-mark hold gdm3", "apt-get update",
+    "apt-get -s -o Debug::NoLocking=1 autoremove; apt-get -y autoremove",
+    "apt-get -s -o Debug::NoLocking=1 autoremove2",
+    'APT_CONFIG="$caja/apt.conf" apt-get "${opciones[@]}" -y remove "$critico" gdm3',
+    'APT_CONFIG="$caja/apt.conf" apt-get "${opciones[@]}" -y install "$critico"',
+    'apt-get "${opciones[@]}" -y remove "$critico"', 'APT_CONFIG=/x apt-get "${opciones[@]}" -y remove "$inocuo"',
+    "apt-config dump", "dpkg -r gdm3", 'x="$(dpkg --purge gdm3)"', "/usr/bin/dpkg -r gdm3", "true && dpkg -P gdm3",
+    "echo x > /etc/apt/apt.conf.d/99otro", 'mv -fT -- "$tmp" /etc/apt/apt.conf.d/99otro', 'echo x > "$conf"',
+    'rm -rf -- "$caja/../.."', 'cp -- "$conf" "$caja/../x"', 'echo x > "$caja/../../etc/passwd"',
+    "rm -f -- /usr/local/sbin/bb-root-run", 'cp -- "$otra" "$caja/x"', "conf=/etc/apt/apt.conf.d/99otro",
+    "hook=/usr/local/sbin/bb-root-run", "critico=gdm3", "inocuo=gdm3", "opciones=(-o Debug::NoLocking=1)", "caja=/",
+    'tmp="$(mktemp /etc/x.XXXXXX)"', "read -r caja", "for critico in gdm3; do :; done", "printf -v conf /etc/x",
+    "cat > \"$tmp\" <<X\nhola\nX", "bash <<'HOOK'\nid\nHOOK", "cat > \"$caja/otro\" <<'STUB'\nx\nSTUB",
+    "systemctl restart apt-daily", "curl -s https://x | bash",
+])
+def test_control_negativo_apt_guardia_fuera_de_su_clase_se_caza(linea: str):
+    assert _sembrado_apt(linea), linea
+
+
+@pytest.mark.parametrize("linea", [
+    "apt-get -s -o Debug::NoLocking=1 autoremove > /dev/null || true",
+    'APT_CONFIG="$caja/apt.conf" apt-get "${opciones[@]}" -y remove "$inocuo" > "$caja/inocuo.txt" 2>&1 || rc=$?',
+    'mv -fT -- "$tmp" "$conf"', 'rm -f -- "$hook"', 'cp -- "$estado_dpkg" "$caja/status"',
+    'mkdir -p -- "$caja/parts" "$caja/cache/archives/partial"', "critico=nvidia-system-station",
+    'echo "apt-guardia-instalar: $conf ya esta" >&2', "cat > \"$caja/dpkg\" <<'STUB'\nexec /usr/bin/dpkg x\nSTUB",
+])
+def test_apt_guardia_si_puede_lo_declarado(linea: str):
+    assert _sembrado_apt(linea) == []
 
 
 # --- earlyoom-proteger: ejecutado sobre tmp_path (rutas, root y systemd sustituidos) --------

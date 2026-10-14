@@ -1,0 +1,44 @@
+# Paquetes cuya remocion bloquea bb-apt-guardia (FEATURE-APT-CRITICAL-METAPACKAGE-GUARD).
+# Un nombre por linea; '#' abre comentario de linea entera. Medido en el host el 2026-10-14
+# (dpkg -l, apt-mark showhold, GRUB_DEFAULT de adopted/system-config/etc_default_grub).
+# Esta lista la lee tools/verify_apt_critical_removals.py (verificador y colector); el hook
+# usr_local_sbin_bb-apt-guardia (en adopted/pendiente-de-despliegue/, o en adopted/system-config/
+# una vez desplegado) la lleva copiada y un test
+# exige que sean iguales. Cambiarla obliga a regenerar el hook y el script sellado.
+#
+# Metapaquetes DGX OS (componente common de repo.download.nvidia.com/baseos)
+nvidia-system-core
+nvidia-system-extra
+nvidia-system-station
+nvidia-system-station-common
+nvidia-system-station-core
+nvidia-system-station-localization
+nvidia-system-station-utils
+nvidia-system-utils
+# Identidad y actualizacion de la plataforma (dgx-spark-ota-update-meta esta en hold)
+dgx-release
+dgx-repo
+dgx-spark-mlnx-hotplug
+dgx-spark-ota-update-meta
+dgxstation-desktop
+dgxstation-grub
+gigabyte-oobe-customize
+# Kernel fijado en GRUB_DEFAULT (6.17.0-1032-nvidia) y su modulo NVIDIA
+linux-image-6.17.0-1032-nvidia
+linux-modules-6.17.0-1032-nvidia
+linux-modules-nvidia-580-open-6.17.0-1032-nvidia
+# Driver NVIDIA (rama 580, la soportada para Spark)
+nvidia-driver-580-open
+nvidia-kernel-common-580
+# Arranque
+grub-common
+grub-efi-arm64
+grub-efi-arm64-bin
+grub-efi-arm64-signed
+grub2-common
+shim-signed
+# Escritorio y red (hilos 348170 y 350340: autoremove ofrecia quitarlos)
+gdm3
+network-manager
+ubuntu-desktop
+ubuntu-desktop-minimal

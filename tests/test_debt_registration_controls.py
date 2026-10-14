@@ -59,7 +59,8 @@ def test_debt_close_check_verify_apt_critical_removals_01(
     assert result["status"] == "pass", result
     assert result["fail"] == 0
     assert result["could_not_run"] == 0
-    assert result["checks"] == {"captured_upgrade": "pass", "captured_critical_removal": "block"}
+    assert result["checks"] == {"captured_upgrade": "pass", "captured_critical_removal": "block",
+                                "installed_guard": "absent"}
     assert result["evidence_sha256"] == (evidence / "apt-captures.sha256").read_text(encoding="ascii").strip()
     assert result["closure"] == "open"
 

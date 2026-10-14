@@ -95,3 +95,33 @@ Corrige la sección «Compatibilidad y estado local»: la frase «no indica vuln
 
 ## Defecto del close_check corregido (2026-10-13)
 El CLI daba exit 0 (`status: pass`) mientras su propia salida declara `closure: open` y `open_blockers` (cobertura OEM y guarda APT instalada sin verificar): el `close_check` de esta ficha pasaba con la ficha abierta. Se anade `--cierre` (sale 2 si hay bloqueos abiertos) y el `close_check` lo usa; sin la bandera el comportamiento no cambia (la ficha cerrada `DEBT-CLOSE-CHECK-VERIFY-APT-CRITICAL-REMOVALS-01` sigue reproduciendo). Antes: rc=0; despues: rc=2; control: con `closure: closed` simulado sale 0 (`tests/test_debt_registration_controls.py::test_apt_critical_removals_flag_cierre_no_sale_0_con_bloqueos_abiertos`).
+
+## Avance — guardia por script sellado de root (2026-10-14)
+
+Luis autorizo el 2026-10-14 "un guardia por script sellado de root". Construido, sin desplegar:
+
+- Lista: `data/apt-paquetes-criticos.txt`, 30 nombres medidos hoy en el host (`dpkg -l`, `apt-mark showhold`: `dgx-spark-ota-update-meta`; `GRUB_DEFAULT` = 6.17.0-1032-nvidia): los 8 `nvidia-system-*`, `dgx-release`, `dgx-repo`, `dgx-spark-mlnx-hotplug`, `dgx-spark-ota-update-meta`, `dgxstation-desktop`, `dgxstation-grub`, `gigabyte-oobe-customize`, `linux-image-`/`linux-modules-`/`linux-modules-nvidia-580-open-6.17.0-1032-nvidia`, `nvidia-driver-580-open`, `nvidia-kernel-common-580`, `grub-common`, `grub-efi-arm64`, `-bin`, `-signed`, `grub2-common`, `shim-signed`, `gdm3`, `network-manager`, `ubuntu-desktop`, `ubuntu-desktop-minimal`. Los 30 estan instalados (fila `criticos_instalados` de la captura). La lee `tools/verify_apt_critical_removals.py` (`CRITICAL_PACKAGES`, y el colector `collect_guard.py` de la evidencia); el hook la lleva copiada y un test exige igualdad byte a byte.
+- Hook: `adopted/pendiente-de-despliegue/usr_local_sbin_bb-apt-guardia` (bash, solo builtins), registrado por `etc_apt_apt.conf.d_00-bb-apt-guardia` como `DPkg::Pre-Install-Pkgs` con protocolo 3. Sale 1 si una linea `**REMOVE**` nombra un critico (APT aborta antes de dpkg), 0 en otro caso; protocolo distinto de `VERSION 3` o stdin vacio sale 1. Excepcion por transaccion: `-o BB::Apt-Guardia::Permitir=1`. Suspension: renombrar el `.conf` a `.disabled`.
+- Instalador: `adopted/root-scripts/apt-guardia-instalar.sh` (manifiesto `apt-guardia-instalar`, timeout 300). Solo escribe sobre ausencia; contenido, dueno o modo desconocido, symlink, directorio no-root o `.disabled` presente: rc 3 sin tocar nada. Valida con APT real tras instalar y borra lo creado si falla (rc 5). Pasos de despliegue en `adopted/pendiente-de-despliegue/LEEME.txt`.
+- `apt-get -s` no ejecuta hooks de dpkg, asi que la simulacion no puede probar la guardia. La prueba es una transaccion APT real (`-y remove`) sobre una caja: `APT_CONFIG` que solo carga el `.conf` de la guardia (comprobado con `apt-config` antes de transaccionar), copia de `/var/lib/dpkg/status`, `Dir::Bin::dpkg` = stub que solo anota. Corre sin root.
+
+Medido hoy, sin root, con el hook del repo (`python3 tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/collect_guard.py --out tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD`, captura `apt-guard-captures.json` + `.sha256`):
+
+```
+criticos_instalados: rc=0 dpkg_remove=False
+config: rc=0 dpkg_remove=False
+autoremove_simulado: rc=0 dpkg_remove=False
+remove_critico: rc=100 dpkg_remove=False
+remove_inocuo: rc=0 dpkg_remove=True
+```
+
+`remove nvidia-system-station` aborta con rc 100 y "bb-apt-guardia: esta transaccion quita paquetes criticos de la plataforma: nvidia-system-station", y el stub de dpkg no recibe `--remove`. `remove tree` (control: no critico) llega al stub con `--remove tree:arm64`. `apt-get -s autoremove` con la configuracion real: 0 remociones, `check_apt` = pass. `caja-strace.txt` (colector `strace_caja.py`): en las dos transacciones, 0 escrituras fuera de la caja salvo 25 `O_TMPFILE` anonimos en `/tmp`; el dpkg real solo se invoca como `dpkg --print-foreign-architectures`. Control negativo del filtro: `touch <fuera>` da 1 escritura detectada.
+
+Verificador: `python3 -m tools.verify_apt_critical_removals --evidence tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD` sale 0 con `checks.installed_guard = "pre_deployment"` y dos `open_blockers` (OEM; guardia instalada sin verificar). `--cierre` sale 2. El campo nuevo `checks.installed_guard` solo dice `verified` con una captura `instalado: true` que leyo `/etc/apt/apt.conf.d/00-bb-apt-guardia` y `/usr/local/sbin/bb-apt-guardia`, con sha256 iguales a los del script sellado, la configuracion real registrando el hook, y las dos transacciones discriminando. Doce mutaciones de una captura instalada valida mantienen el bloqueo (`tests/test_apt_guardia.py::test_control_negativo_verificador_cada_prueba_faltante_mantiene_el_bloqueo`); seis danos de formato dan `unknown` con `could_not_run=1`.
+
+Tests: `tests/test_apt_guardia.py` (53: hook alimentado con el protocolo 3, 12 casos; script ejecutado sobre tmp_path con APT real; verificador) y la clase estatica de `apt-guardia-instalar.sh` en `tests/test_bb_root_manifest.py` (38 formas sembradas que se cazan, 9 permitidas). Mutaciones: 18 de 18 mueren, cada una por un test de comportamiento (se excluyo el test de propuesta vieja, que mataria cualquier cambio): 11 del script, 5 del hook, 2 del verificador.
+
+Queda abierto:
+1. Guardia instalada: requiere el sudo de Luis (LEEME pasos 1-2). Despues, sin sudo: `python3 tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD/collect_guard.py --instalado --out tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD` y el verificador debe dar `checks.installed_guard = "verified"`.
+2. Cobertura OEM: el grafo de metapaquetes de otros OEM no se observa desde este host. `open_blockers` conserva esa fila y `--cierre` sigue en 2 aunque la guardia quede verificada.
+3. La lista nombra versiones (kernel 6.17.0-1032, rama 580). `test_el_kernel_fijado_en_grub_esta_en_la_lista` falla cuando `adopted/system-config/etc_default_grub` fije otro kernel.

@@ -1,0 +1,94 @@
+#!/bin/bash
+# bb-apt-guardia: hook DPkg::Pre-Install-Pkgs de APT (protocolo version 3). Lo instala
+# `sudo -n bb-root-run apt-guardia-instalar` (FEATURE-APT-CRITICAL-METAPACKAGE-GUARD).
+# APT le pasa por stdin el plan que va a dar a dpkg. Si alguna linea **REMOVE** nombra un
+# paquete de la lista de abajo, sale 1 y APT aborta ANTES de llamar a dpkg: no se aplica nada.
+# Un plan sin esas remociones sale 0. No ejecuta ningun programa: solo builtins de bash.
+# No corre bajo `apt-get -s`: la simulacion de APT no invoca hooks de dpkg.
+# Permitir UNA transaccion: sudo apt -o BB::Apt-Guardia::Permitir=1 <la misma orden>
+# Desactivar: sudo mv /etc/apt/apt.conf.d/00-bb-apt-guardia /etc/apt/apt.conf.d/00-bb-apt-guardia.disabled
+set -euo pipefail
+
+declare -A critico=()
+while IFS= read -r p; do
+  if [[ -n "$p" && "$p" != \#* ]]; then
+    critico["$p"]=1
+  fi
+done <<'LISTA'
+# Paquetes cuya remocion bloquea bb-apt-guardia (FEATURE-APT-CRITICAL-METAPACKAGE-GUARD).
+# Un nombre por linea; '#' abre comentario de linea entera. Medido en el host el 2026-10-14
+# (dpkg -l, apt-mark showhold, GRUB_DEFAULT de adopted/system-config/etc_default_grub).
+# Esta lista la lee tools/verify_apt_critical_removals.py (verificador y colector); el hook
+# usr_local_sbin_bb-apt-guardia (en adopted/pendiente-de-despliegue/, o en adopted/system-config/
+# una vez desplegado) la lleva copiada y un test
+# exige que sean iguales. Cambiarla obliga a regenerar el hook y el script sellado.
+#
+# Metapaquetes DGX OS (componente common de repo.download.nvidia.com/baseos)
+nvidia-system-core
+nvidia-system-extra
+nvidia-system-station
+nvidia-system-station-common
+nvidia-system-station-core
+nvidia-system-station-localization
+nvidia-system-station-utils
+nvidia-system-utils
+# Identidad y actualizacion de la plataforma (dgx-spark-ota-update-meta esta en hold)
+dgx-release
+dgx-repo
+dgx-spark-mlnx-hotplug
+dgx-spark-ota-update-meta
+dgxstation-desktop
+dgxstation-grub
+gigabyte-oobe-customize
+# Kernel fijado en GRUB_DEFAULT (6.17.0-1032-nvidia) y su modulo NVIDIA
+linux-image-6.17.0-1032-nvidia
+linux-modules-6.17.0-1032-nvidia
+linux-modules-nvidia-580-open-6.17.0-1032-nvidia
+# Driver NVIDIA (rama 580, la soportada para Spark)
+nvidia-driver-580-open
+nvidia-kernel-common-580
+# Arranque
+grub-common
+grub-efi-arm64
+grub-efi-arm64-bin
+grub-efi-arm64-signed
+grub2-common
+shim-signed
+# Escritorio y red (hilos 348170 y 350340: autoremove ofrecia quitarlos)
+gdm3
+network-manager
+ubuntu-desktop
+ubuntu-desktop-minimal
+LISTA
+
+cabecera=
+IFS= read -r cabecera || true
+if [[ "$cabecera" != "VERSION 3" ]]; then
+  echo "bb-apt-guardia: APT no envio 'VERSION 3' (llego '$cabecera'); se aborta la transaccion" >&2
+  exit 1
+fi
+permitir=0
+while IFS= read -r linea; do
+  if [[ -z "$linea" ]]; then
+    break
+  fi
+  if [[ "$linea" == "BB::Apt-Guardia::Permitir=1" ]]; then
+    permitir=1
+  fi
+done
+bloqueados=()
+while read -r nombre _ _ _ _ _ _ _ accion; do
+  if [[ -n "$nombre" && "${accion:-}" == "**REMOVE**" && -n "${critico[$nombre]+x}" ]]; then
+    bloqueados+=("$nombre")
+  fi
+done
+if (( ${#bloqueados[@]} == 0 )); then
+  exit 0
+fi
+echo "bb-apt-guardia: esta transaccion quita paquetes criticos de la plataforma: ${bloqueados[*]}" >&2
+if (( permitir == 1 )); then
+  echo "bb-apt-guardia: permitida por -o BB::Apt-Guardia::Permitir=1" >&2
+  exit 0
+fi
+echo "bb-apt-guardia: no se aplica nada. Para permitir ESTA transaccion: sudo apt -o BB::Apt-Guardia::Permitir=1 <la misma orden>" >&2
+exit 1
