@@ -1,6 +1,6 @@
 {
-  "claims_fingerprint": "dec78f11329f14d1de244396280875014007f49027d73cc571d6a53d16ff1ae4",
-  "panel": "1 auditor Opus, 2026-10-14, refuto 6 afirmaciones (L118 L122 L145 L146 L147 L416) con control negativo cada una",
+  "claims_fingerprint": "19afdf0e39578f65ba1f5e7e22743db5d45340dfefee98e32f7c104cd5921530",
+  "panel": "4 rondas de auditor Opus, 2026-10-14, SPEC-L416 corregida 4 veces hasta PASS (filas por clase, 7 controles negativos, status_suspendidos)",
   "profile": "general",
   "results": [
     {
@@ -83,16 +83,16 @@
     },
     {
       "cited": {
-        "tests/test_bb_bash.py": "9c27b7bc7f0a38670ae6d3f5f84f7104a2cb4c9a1d7e0dcbda1b6504274338de",
+        "tests/test_bb_bash.py": "b1e613a11e68b20061b28038cd374b3ee919becb3d0731860796e614525c68d3",
         "tools/canario_motor.py": "4b5cbbc3d6a0930405333bd841d8588d92fd494af0c116b9e2b90f016744b98c",
         "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6",
         "tools/huella_host.py": "709f40a9746cc5255b5183ad8895ed1591f3944774236a48783ec265be2ddf09",
         "tools/monitor_distros.py": "174785d51e69ddfedd1797a2327c50ceb7133607b8ab5f0334a255fdf265ae82"
       },
       "claim_id": "SPEC-L416",
-      "evidence": "All six test names cited in the claim exist exactly once in tests/test_bb_bash.py (`grep -c \"def <name>\"` = 1 each). The three bb-usable heartbeat controls are there too: test_control_negativo_bb_usable_activa_con_latido_RANCIO (l.657) and the parametrized journal_vacio/solo_arranque (l.665-666). bin/bb matches the claim: the heartbeat window is `date -d '120 seconds ago'` with `journalctl -u bb-usable.service -S` matching '[bb-usable] latencia del escritorio:' (l.2363-2371; 30s loop at l.2579). The unit-only rows are at l.2605 `ai-nemotron-vigilante.timer` and l.2613 `bb-guardia-proceso.service`. The interruptores rows are memavail/gpuoom/termico_predictivo/reloj_arranque by unit (l.2625), and freshness rows are huella_host 2880 min = 2 d, monitor_distros 11520 min = 8 d, canario_motor 75, gpumem_historial 15 (l.2632-2649). `pytest -q tests/test_bb_bash.py -k \"control_negativo_sin_muestra_fresca or clock_lock or earlyoom or bb_usable or status_sensor_en_observar\"` -> `15 passed, 86 deselected`. Selector negative control: `-k nombre_que_no_existe_xyz` -> `101 deselected`, so the 15 come from real matches.",
+      "evidence": "Row counts in bin/bb match the text. status_lo_que_corre (bin/bb:2275, introduced in 71457133 dated 2026-10-14) emits seven rows: three by last run via `systemctl --user show --timestamp=unix -p Result -p ExecMainExitTimestamp` (blackbox-drift.service 1560 min = 26 h, bb-arranque-forense.service with max_min=0 meaning this boot plus a grep of this boot_id in $ARRANQUE_JSONL, atom-crash-detector.service with max_min=0); two by data (reboots.jsonl boot_id_siguiente, dmem_parche.jsonl _fresco 1560); and two unit-only (bb-aviso-termico.service, bb-portero.service). In source order the third of the three last-run rows is arranque-forense, so 'solo la tercera lee ademas un artefacto' holds. Together with the unconditional `vigilante del motor` row (ai-nemotron-vigilante.timer, bin/bb:2694, added in 4daaf4fc on 2026-10-10) and `guardia de procesos` (e1cfd94b, 2026-10-10), that makes four unit-only rows that always appear. The sensor loop (bin/bb:2705-2740, 93850773 dated 2026-10-13) checks memavail/gpuoom/termico_predictivo/reloj_arranque by unit only when the mode is not off, and checks huella 2880 min = 2 d, monitor_distros 11520 = 8 d, canario 75 and gpumem 15 by freshness. status_suspendidos (bin/bb:2258) prints SUSPENDIDO without calling chk; an unreadable or expired mark gets chk ... 1, which prints FALTA. bb-usable: `date -d '120 seconds ago'` plus `$JOURNALCTL -u bb-usable.service -S` matching '[bb-usable] latencia del escritorio:' (bin/bb:2452-2460); PROBE_INTERVAL = 30.0 (bin/bb-usable:98). Tests: each of the eight named tests has exactly one def in tests/ (grep counts 1/1 each). `python3 -m pytest -q tests/test_bb_bash.py -k \"<8 names> or test_control_negativo_bb_usable\"` gave '11 passed, 115 deselected in 5.52s' (8 named plus the 3 bb-usable cases: rancio, journal_vacio, solo_arranque). Negative control: `-k test_no_existe_zzz_inventado` gave '126 deselected in 0.25s', so it selected 0. History: 37ccd7db (2026-09-25) added muestreo, OTRO_rango, sin_confirmacion and both earlyoom tests, and its SPEC said 'con cuatro controles negativos corridos'. 'cinco' first appears 2026-09-28 (02ad391b/11e3cfb9). The two clock-lock start tests were added in 36e7a2ff on 2026-10-04. bb-usable got its heartbeat check in 87168fb0 on 2026-09-28. The 7 controls split 1+4+2 over the three original checks, and no two sentences contradict each other.",
       "fix": "",
-      "seal": "f650b29a0b9965c97f96bb00665027c15c6a97bd19744bb4235b029c5b56e713",
+      "seal": "3fa3588eaa029cc87ed178d7639cd012eee00b6ce7da0ad3b3c21bb9cbe289ea",
       "verdict": "PASS"
     },
     {
@@ -191,7 +191,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-14T15:07:06Z",
-  "tree_fingerprint": "f98288ef84ee2e1ef5fda1952f3b2b36c450543d4ad502522cd0503be86ee032",
+  "timestamp": "2026-10-14T16:52:28Z",
+  "tree_fingerprint": "626de8a279bbb9dd0f5583e234f3495d72b660e464cbdd9c03459efac2bc3f89",
   "violations": []
 }
