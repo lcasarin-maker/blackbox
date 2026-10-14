@@ -16,3 +16,6 @@ close_check: {"cmd": "bash tools/verifica_gpu_accounting.sh", "expect": "exit_ze
 `bb scan` imprime `accounting mode: COULD_NOT_RUN (apagado)`. Medido hoy: `nvidia-smi --query-gpu=accounting.mode` da Disabled.
 Activarlo exige root (`sudo nvidia-smi -am 1`) y no persiste al reiniciar: hace falta una unit que lo aplique al arrancar, con el mismo patron que `atom-clock-lock.service`.
 Quince caidas CUDA del motor (2026-10-08/10) ocurrieron sin que ningun instrumento pudiera nombrar el proceso que usaba la GPU.
+
+## Avance 2026-10-13: encendido en vivo; la persistencia queda lista para desplegar
+`nvidia-smi --query-gpu=accounting.mode` da `Enabled` (lo encendio el instalador que corrio Luis) y `bash tools/verifica_gpu_accounting.sh` sale 0. No sobrevive un reinicio del driver: el instalador lo dice ("hasta el proximo reinicio del driver"). Construido: `adopted/pendiente-de-despliegue/etc_systemd_system_bb-gpu-accounting.service` (oneshot `nvidia-smi -am 1` tras nvidia-persistenced) y `tests/test_unidad_gpu_accounting.py` (2 tests; el segundo distingue la unidad de la de clock). Falta: desplegar la unidad (pasos en `adopted/pendiente-de-despliegue/LEEME.txt`; `systemctl enable` recarga systemd, mismo riesgo P1 que el daemon-reload) y verificar `Enabled` tras el proximo reinicio. Cierra entonces, no antes.

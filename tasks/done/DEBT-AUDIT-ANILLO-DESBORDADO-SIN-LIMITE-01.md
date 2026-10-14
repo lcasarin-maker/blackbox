@@ -3,7 +3,11 @@ id: DEBT-AUDIT-ANILLO-DESBORDADO-SIN-LIMITE-01
 kind: task
 domain: AUDIT
 title: "Subir audit_backlog_limit: el anillo de audit pierde eventos y deja ciega la atribucion"
-status: open
+status: done
+closed_at: 2026-10-13
+closure_type: fixed
+reason: "El instalador fija -b 32768 en zz-blackbox-backlog.rules (ordena despues de audit.rules); medido en la maquina tras recargar desde disco: backlog_limit 32768, lost 0 (antes 8192). Sigue vigilado por bb scan (eventos perdidos)."
+evidence: {"pass": "tasks/evidence/DEBT-AUDIT-ANILLO-DESBORDADO-SIN-LIMITE-01/pass.txt", "fail": "tasks/evidence/DEBT-AUDIT-ANILLO-DESBORDADO-SIN-LIMITE-01/fail.txt", "e2e": "tasks/evidence/DEBT-AUDIT-ANILLO-DESBORDADO-SIN-LIMITE-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
