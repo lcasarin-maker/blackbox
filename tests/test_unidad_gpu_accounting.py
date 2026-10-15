@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-UNIDAD = Path(__file__).resolve().parent.parent / "adopted/pendiente-de-despliegue/etc_systemd_system_bb-gpu-accounting.service"
+UNIDAD = Path(__file__).resolve().parent.parent / "adopted/system-config/etc_systemd_system_bb-gpu-accounting.service"
 RELOJ = Path(__file__).resolve().parent.parent / "adopted/system-config/etc_systemd_system_atom-clock-lock.service"
 
 
