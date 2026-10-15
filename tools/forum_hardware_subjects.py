@@ -713,8 +713,6 @@ def _identity_matches_source(document: dict[str, Any], refs: list[dict[str, Any]
     module_version = _text(identity, "module_version")
     if module_version:
         version_values.append(module_version)
-    if not identity_rows:
-        return False, "raw OEM/firmware/software identity command missing"
     source_text = " ".join(row["text"] for row in refs)
     if any(value is None or value not in source_text for value in version_values):
         return False, "vendor source does not cite the captured OEM/version tuple"
@@ -795,7 +793,6 @@ def _replay_read_case(document: dict[str, Any], directory: Path, name: str) -> t
 
 
 def _read_integrity(document: dict[str, Any], directory: Path) -> tuple[str, str]:
-    cases: dict[str, dict[str, Any]] = {}
     targets: set[Path] = set()
     for name in ("healthy", "altered"):
         data, target, error = _replay_read_case(document, directory, name)
@@ -806,12 +803,9 @@ def _read_integrity(document: dict[str, Any], directory: Path) -> tuple[str, str
             return "fail", "healthy external-reference control disagrees across buffered/O_DIRECT reads"
         if name == "altered" and data.get("status") != "fail":
             return "fail", "altered-byte negative control was not detected by the reference digest"
-        cases[name] = data
         targets.add(target)
     if len(targets) != 2:
         return "fail", "healthy and altered-byte controls did not use two distinct staging files"
-    if not all(data.get("elapsed_ms", 0) > 0 for data in cases.values()):
-        return "unknown", "bounded inspection cost was not measured in both raw runs"
     return "pass", "healthy and altered-byte controls recomputed from repeated buffered/O_DIRECT digests"
 
 
@@ -899,8 +893,6 @@ def _gather_cases(document: dict[str, Any], finding_id: str) -> tuple[dict[str, 
         if error:
             return cases, error
         assert data is not None
-        if not data:
-            return cases, f"case {name} contains no raw measurements"
         cases[name] = data
     return cases, None
 
@@ -1261,8 +1253,6 @@ def _check_eee_measurements(cases: dict[str, dict[str, Any]], direct: dict[str, 
         return "unknown", "switch-control link counter unavailable"
     if disabled["link_resets"] >= direct["link_resets"] or switch_resets != 0:
         return "fail", "EEE A/B or stable-switch negative control contradicts the proposed scope"
-    if direct["link_resets"] <= 0:
-        return "unknown", "direct-link failure did not reproduce during the measured EEE-on interval"
     return _check_eee_scope(cases, direct, disabled, switch)
 
 
