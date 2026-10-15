@@ -1,0 +1,33 @@
+$ git archive 628f3383^ | tar -x -C <tmp>; cp tests/test_portero.py <tmp>/tests/   # pre-fix tools/portero.py + current test
+$ (cd <tmp> && python3 -m pytest -q tests/test_portero.py::test_demonio_respeta_el_interruptor)
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________________ test_demonio_respeta_el_interruptor ______________________
+tests/test_portero.py:356: in test_demonio_respeta_el_interruptor
+    fx, llamadas, lecturas, freeze = _mundo_congelable(tmp_path / "off", monkeypatch, "off")
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_portero.py:337: in _mundo_congelable
+    fx = EFECTOS(log=tmp_path / "portero.jsonl", cola=tmp_path / "cola", ejecutar=ejecutar, cg_raiz=cg_raiz, proc=proc)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: Efectos.__init__() got an unexpected keyword argument 'proc'
+=========================== short test summary info ============================
+FAILED tests/test_portero.py::test_demonio_respeta_el_interruptor - TypeError...
+1 failed in 0.21s
+rc=1
+
+# Segundo control: el mismo arbol viejo con DOS campos de inyeccion anadidos que el test usa para construir su mundo
+# (Efectos.proc y Arbol.inicio, solo declaraciones, ningun cambio de comportamiento) para que falle la ASERCION y no el constructor
+$ (cd <tmp> && sed -i '739a\    proc: Path = Path("/proc")' tools/portero.py && sed -i '112a\    inicio: int | None = None' tools/portero.py && python3 -m pytest -q tests/test_portero.py::test_demonio_respeta_el_interruptor)
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________________ test_demonio_respeta_el_interruptor ______________________
+tests/test_portero.py:358: in test_demonio_respeta_el_interruptor
+    assert lecturas == [] and llamadas == [] and not freeze.exists()
+E   AssertionError: assert (['estado', 'proc'] == []
+E     
+E     Left contains 2 more items, first extra item: 'estado'
+E     Use -v to get more diff)
+=========================== short test summary info ============================
+FAILED tests/test_portero.py::test_demonio_respeta_el_interruptor - Assertion...
+1 failed in 2.25s
+rc=1
