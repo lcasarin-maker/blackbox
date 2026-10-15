@@ -153,7 +153,7 @@ def _guardia(tmp_path: Path, *, hook: str | None = None, inocuo: str | None = No
         p.chmod(0o755)
     texto = SCRIPT.read_text(encoding="utf-8")
     for viejo, nuevo in (("/etc/apt/apt.conf.d", str(d["etc"])), ("/usr/local/sbin", str(d["sbin"])),
-                         ("/run/bb-apt-guardia.", f"{d['run']}/bb-apt-guardia."), ('!= "0" ]]', f'!= "{UID}" ]]'),
+                         ("/var/lib/bb-apt-guardia.", f"{d['run']}/bb-apt-guardia."), ('!= "0" ]]', f'!= "{UID}" ]]'),
                          ('== "0 755"', f'== "{UID} 755"'), ("chown root:root", f"chown {UID}:{os.getgid()}")):
         assert viejo in texto, f"la sustitucion {viejo!r} no casa: prueba vacia"
         texto = texto.replace(viejo, nuevo)

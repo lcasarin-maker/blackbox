@@ -295,12 +295,12 @@ HEREDOC_OK = re.compile(r"""^(?:mapfile -t args|cat > "\$tmp") <<'([A-Z]+)'$""")
 APT_GUARDIA = "apt-guardia-instalar.sh"
 _SEG = r"[A-Za-z0-9_-][A-Za-z0-9._-]*"
 MKTEMP_APT = {'"$(mktemp "$dir_conf/.bb-apt-guardia.XXXXXX")"', '"$(mktemp "$dir_hook/.bb-apt-guardia.XXXXXX")"'}
-MKTEMP_CAJA = '"$(mktemp -d /run/bb-apt-guardia.XXXXXX)"'
+MKTEMP_CAJA = '"$(mktemp -d /var/lib/bb-apt-guardia.XXXXXX)"'
 OPCIONES_APT = ('(-o Debug::NoLocking=1 -o "Dir::State=$caja/state" -o Dir::State::lists=/var/lib/apt/lists '
                 '-o "Dir::State::status=$caja/status" -o "Dir::Cache=$caja/cache" -o "Dir::Log=$caja/log" '
                 '-o "Dir::Bin::dpkg=$caja/dpkg")')
 OPERANDOS_APT = re.compile(r'"\$\(mktemp "\$dir_(?:conf|hook)/\.bb-apt-guardia\.XXXXXX"\)"'
-                           r'|"\$\(mktemp -d /run/bb-apt-guardia\.XXXXXX\)"'
+                           r'|"\$\(mktemp -d /var/lib/bb-apt-guardia\.XXXXXX\)"'
                            rf'|"\$caja(?:/{_SEG})*"|"\$(?:conf|hook|tmp|estado_dpkg)"')
 CONSTANTES_APT = {"conf": {"/etc/apt/apt.conf.d/00-bb-apt-guardia"}, "dir_conf": {"/etc/apt/apt.conf.d"},
                   "hook": {"/usr/local/sbin/bb-apt-guardia"}, "dir_hook": {"/usr/local/sbin"},
