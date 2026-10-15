@@ -6,12 +6,12 @@ to commands.json. No outcome flag is written; the verifier recomputes everything
 The only derived artifact is canary.json, produced by this script from the real
 canary binary's stdout (BB_LOGITS / BB_REFERENCE lines, iteration count, GPU-loop time).
 """
-import hashlib, json, re, subprocess, sys, time
+import hashlib, json, os, re, subprocess, sys, time
 from datetime import datetime, timezone
 from pathlib import Path
 
 EV = Path(__file__).resolve().parent
-LAB = Path.home() / ".cache" / "bb-trabajo" / "cutlass-lab"
+LAB = Path(os.path.expanduser("~" + os.environ.get("SUDO_USER", ""))) / ".cache" / "bb-trabajo" / "cutlass-lab"  # under sudo, ~ is /root
 SRC, CAN = LAB / "cutlass", LAB / "canary"
 BUILD = LAB / "canary-build"
 REV = "098de2a652cf8f00fd70b2df54051c7eccbb855a"  # v4.8.0
