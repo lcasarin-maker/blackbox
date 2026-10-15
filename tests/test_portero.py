@@ -661,11 +661,11 @@ def test_portero_como_script_cae_al_import_plano_de_interruptores(monkeypatch):
 
 
 def test_peticiones_con_la_cola_ilegible_devuelve_vacio_sin_propagar(tmp_path):
-    class ColaDenegada:
+    class ColaDenegada(type(tmp_path)):
         def glob(self, _patron):
             raise PermissionError("cola denegada")
 
-    assert po._peticiones({os.getpid(): object()}, time.time(), ColaDenegada()) == []
+    assert po._peticiones({os.getpid(): object()}, time.time(), ColaDenegada(tmp_path)) == []
     # control: la misma llamada con una cola real que contiene una peticion viva SI devuelve un arbol
     (tmp_path / "1.json").write_text(json.dumps({"pid": os.getpid(), "clase": "suite", "ts": 1.0}), encoding="utf-8")
     vivas = po._peticiones({os.getpid(): object()}, time.time(), tmp_path)
