@@ -359,3 +359,6 @@ camino es el que se toma, aunque cueste más pasos.
 - **Reabrir si:** se activa un drafter DFlash/DSpark o MTP en el motor local (las dos primeras), o se sirve un Qwen3.x o se pide un soak de agente largo contra nemotron-local (la tercera).
 - **Descarta:** dejar abiertas tres fichas cuyo sujeto (especulacion, modelo Qwen) se midio ausente en el motor y en cada ruta de lanzamiento.
 - **Retirado con los cierres:** 3 selectores xfail de `tests/test_debt_registration_controls.py`, 6 entradas de `tests/known_failures.json` (20 -> 14) y 3 de `.simplecode/backlog_baseline.json` (74 -> 71).
+
+## 2026-10-15 — Ultima boleta de la revision de lo instalado: todo lo grande se queda por uso medido
+Luis votó conservar `dgx-spark-fieldiag` (795 MB, el diagnóstico que el soporte pide para una RMA). Con uso medido ese día se conservan además cursor (config tocada 2026-10-14), antigravity (2026-10-12), chatgpt (app de OpenAI usada con Codex) y dcgm (`bin/bb` y `tools/incident_report.py` llaman `dcgmi`); los timers de otros proyectos corrieron en el último día y se quedan. Descartado: quitar fieldiag (reinstalarlo con la máquina ya inestable cuesta más que 795 MB) y retirar editores sin medir su uso. Cierra DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01.
