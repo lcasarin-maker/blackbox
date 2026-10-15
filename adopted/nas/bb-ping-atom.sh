@@ -27,11 +27,12 @@
 # El reloj del NAS decide los epoch: si esta desviado, la hora de "ultima respuesta" tambien. Hay que
 # tenerlo en NTP (QTS: Panel de control > Hora del sistema).
 
-BB_ATOM_IP="${BB_ATOM_IP:-192.168.1.50}"                       # EDITAR: IP o nombre de la ATOM
+BB_ATOM_IP="${BB_ATOM_IP:-}"                                    # EDITAR: IP o nombre de la ATOM (sin valor por defecto: el script se niega a arrancar)
 BB_LOG="${BB_LOG:-/share/Public/bb/ping-atom.log}"         # EDITAR: ruta del log en el NAS
 BB_MAX_LINEAS="${BB_MAX_LINEAS:-172800}"                            # 2 dias a 1 linea/s (~2.5 MB)
 BB_CADA_N="${BB_CADA_N:-600}"                                   # cada cuantas lineas se comprueba la rotacion
 
+[ -n "$BB_ATOM_IP" ] || { echo "bb-ping-atom: falta BB_ATOM_IP (edita la linea de arriba o exportala)" >&2; exit 2; }
 LOCK="$BB_LOG.lock"
 if ! mkdir "$LOCK" 2>/dev/null; then
     pid=$(cat "$LOCK/pid" 2>/dev/null)
