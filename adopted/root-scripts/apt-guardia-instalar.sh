@@ -265,6 +265,7 @@ if [[ -z "$fallo" ]]; then
   APT_CONFIG="$caja/apt.conf" apt-get "${opciones[@]}" -y remove "$inocuo" > "$caja/inocuo.txt" 2>&1 || rc=$?
   echo "== caja: remove $inocuo, rc $rc. El stub de dpkg recibio:"
   cat "$caja/dpkg.log" 2> /dev/null || true
+  grep -E '^(E:|W:|bb-apt-guardia:)' "$caja/inocuo.txt" || true  # el motivo si la transaccion inocua no llega a dpkg
   if [[ "$rc" != 0 ]] || ! grep -qs -e "--remove $inocuo" "$caja/dpkg.log"; then
     fallo="la remocion inocua de $inocuo no llego a dpkg (rc $rc)"
   fi
