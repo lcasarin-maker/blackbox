@@ -1,27 +1,28 @@
 {
   "claims_fingerprint": "19afdf0e39578f65ba1f5e7e22743db5d45340dfefee98e32f7c104cd5921530",
-  "panel": "4 rondas de auditor Opus, 2026-10-14, SPEC-L416 corregida 4 veces hasta PASS (filas por clase, 7 controles negativos, status_suspendidos)",
+  "panel": "1 auditor Opus, 2026-10-15, refuto 5 afirmaciones (L118 L122 L145 L146 L416) frase por frase con control negativo",
   "profile": "general",
   "results": [
     {
       "cited": {
-        "tools/atom_gpu_telemetry.py": "96d01bf714c731d3d4ab5ec47d8841bec9de698fef2215d009d5e848337cef9b",
-        "tools/mutacion_alcanza.py": "e4560d6152b249a988a8a330aa1e58e91f67029c380604155e2fc7a7363d1ed4"
+        "tools/atom_gpu_telemetry.py": "7032707dc1205b0a1efe83c1eb0acde6c1ba2f0db6cdb43348979172e01bd4f9",
+        "tools/incident_report.py": "4459e033d8f180090cbb9026d3bb691d4e5e3e01f7f8d7dc1c1710c7c3e3ed77",
+        "tools/saber.py": "98ec5ab16835b46f3178dec8ef0f9b5ff9d77322a8451f79235fc8540bcb1338"
       },
       "claim_id": "SPEC-L118",
-      "evidence": "No cross import exists in either direction. `grep -rnE \"^\\s*(import|from)\\s+.*(atlas|Atlas)\" tools bin tests` in blackbox returned nothing, and in Atlas `grep -rnlE \"^\\s*(import|from)\\s+(blackbox|bb_|atom_gpu_telemetry|reboot_verdict|incident_report)\" tools rag` (excluding _retired) also returned nothing; importlib/sys.path/runpy greps found no hit pointing at the other repo (blackbox's only sys.path.insert, tools/mutacion_alcanza.py:42, targets .simplecode/runtime.zip). Negative control: the same grep shape does find real imports when they exist (Atlas tools/utility_rating.py:97 `from tools.kb_ask import ...`). The consumed output is as written: tools/atom_gpu_telemetry.py:97-98 writes $BLACKBOX_DATA/atom_gpu_telemetry.jsonl, and Atlas tools/atom_degradacion_resuelta.py reads that file. The only change since the last PASS is commit 9aec733f, which touches tools/atom_gpu_telemetry.py in 1 line (2 +/- lines, 0 of them outside `sunset-reviewed`).",
+      "evidence": "The only change to tools/atom_gpu_telemetry.py since the last PASS is a comment: `git diff 9aec733f HEAD -- tools/atom_gpu_telemetry.py` = 1 line, the `# sunset-reviewed: 3.9` -> `4.0` suffix on line 1832. Cross-import search `grep -rnE \"sys\\.path.*(blackbox|bb)|from blackbox|import blackbox|importlib.*blackbox\" Atlas --include=*.py` -> empty, and in blackbox the Atlas mentions are declarations of not importing (tools/atom_gpu_telemetry.py:73-74 copy of _argv_tokens 'DGX-585: blackbox no importa codigo de Atlas', tools/incident_report.py:738, tools/saber.py:4); Atlas consumes `atom_gpu_telemetry.jsonl` (tools/atom_degradacion_resuelta.py) and the writer is JSONL_PATH = DATA_DIR/atom_gpu_telemetry.jsonl (tools/atom_gpu_telemetry.py:98). Negative control: the same regex on a planted line `sys.path.insert(0, \"/home/lcasarin/projects/blackbox\")` -> 1 match.",
       "fix": "",
-      "seal": "b1b81eb2323fa28e4f20932a2497c2a2f0ad245935f367f6d144e7c1c63b7a8a",
+      "seal": "1de139d9ee022dbb18d9821a9baa0b836ee418f268a898950d8999cb5af44509",
       "verdict": "PASS"
     },
     {
       "cited": {
-        "tools/atom_gpu_telemetry.py": "96d01bf714c731d3d4ab5ec47d8841bec9de698fef2215d009d5e848337cef9b"
+        "tools/atom_gpu_telemetry.py": "7032707dc1205b0a1efe83c1eb0acde6c1ba2f0db6cdb43348979172e01bd4f9"
       },
       "claim_id": "SPEC-L122",
-      "evidence": "Blackbox produces the physical state and the gates. tools/atom_gpu_telemetry.py:1401 emits `bb-estado-termico/2` with `admite_carga`, and it serves `--gate-termico` and `--procesos-gpu` (l.1845). Atlas consults them by running a process, in tools/bb_consulta.py:52 (`--gate-termico`) and :94 (`--procesos-gpu`). Atlas keeps the admission policy: liberation_watchdog.py:3048 and :3445 call `_motivo_termico()` before admitting load. Commit 9aec733f changed only a `sunset-reviewed` comment (0 non-comment lines in its diff of atom_gpu_telemetry.py).",
+      "evidence": "Comment-only change in tools/atom_gpu_telemetry.py (diff above). Blackbox exposes the gates: `--gate-termico` (tools/atom_gpu_telemetry.py:1849, contract `bb-estado-termico/2` at :1401) and `--procesos-gpu` (:1845), and Atlas calls them from tools/bb_consulta.py:52 and :94; admission policy stays in Atlas (liberation_watchdog imports motivo_termico/procesos_gpu from bb_consulta, :136-137). Negative control: `grep -c 'bb-estado-termico/1\"' tools/atom_gpu_telemetry.py` -> 0 (a wrong schema version is detectable).",
       "fix": "",
-      "seal": "aaf8e2f79a4ba7b4829f53356960ea420619efc337c4069de694c8b416459827",
+      "seal": "cfa3bb8daf049e3d48983db4e9eed10a8ac30578363f881a680a807a4936083f",
       "verdict": "PASS"
     },
     {
@@ -47,28 +48,27 @@
       "cited": {
         "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-coverage-after-fixture-fix/command.json": "e50375cf3aed0133d1513deb92bbf6ce482d407cd4bacc3e8b2f543cf1177a61",
         "tasks/evidence/CLOSURE-CONTROLS-2026-10-03/native-coverage-after-nvme/command.json": "252c845a8030e3a9a49471890b0cef8281ea3b5ddc6ec685bd1c5db5eeced8c8",
-        "tools/atom_gpu_telemetry.py": "96d01bf714c731d3d4ab5ec47d8841bec9de698fef2215d009d5e848337cef9b",
+        "tools/atom_gpu_telemetry.py": "7032707dc1205b0a1efe83c1eb0acde6c1ba2f0db6cdb43348979172e01bd4f9",
         "tools/reboot_verdict.py": "60cfd31a97c9868aa6023dd22bd054b5a0bd4c9ff74659337264796b2d19db2a"
       },
       "claim_id": "SPEC-L145",
-      "evidence": "Atlas tools/detect_atom_crash.py is still 557 lines (`wc -l`), ecdf88cc8 is a commit (`git cat-file -t`), and the file only reads reboots.jsonl / bb-reboot/1 (l.16-17); its `journalctl` mention at l.7 is a docstring. A re-run of the sweep today (`grep -rlE \"nvidia-smi|/proc/meminfo|/sys/class/thermal|smartctl|journalctl|/proc/pressure\" tools rag`, excluding _retired, rag/embeddings, rag/graphs and liberation_queue) gives 16 files. Each named prober is confirmed: liberation_watchdog.py:1033-1039 `available_gb()` runs `free -b`; medir_consumo_de_job.py:37 imports it; dgx401_medicion_pareada_dos_motores.py:84 reads /proc/meminfo; gateway_control.py:432 and benchmark_network_isolation.py:357 run `journalctl --user -u`; Atom_Local_AI_Audit.ps1:72-76 runs nvidia-smi and :12-13 writes Desktop/ATOM_AUDIT_<ts>. The 9 other hits (hybrid_retriever, atom_crash_registrado, bb_consulta, gather_failed_evidence, run_gpu_allowlist_mutation, tool_limits, verify_dgx22, verify_dgx499, atomic_blocks/rules/hardware.json) are comments, docstrings, message text or JSON prose, so the sweep has a negative control. bb_consulta.py:94 asks blackbox for `--procesos-gpu`. adopted/ holds ai-gpu-telemetry.service, ai-memory-monitor.{service,timer} and nvrm-watch.{sh,service,timer}. The tickets match: DEBT-CONTRATO-ATLAS-INSTRUMENTOS-EN-BLACKBOX-01 is in tasks/done/ and DEBT-CONTRATO-ATLAS-SONDAS-DE-MEMORIA-01 is in tasks/backlog/.",
+      "evidence": "Atlas tools/detect_atom_crash.py: `wc -l` -> 557; `grep -cE 'subprocess|check_output'` -> 0 (negative control: same grep on tools/liberation_watchdog.py -> 14); reads `reboots.jsonl` schema `bb-reboot/1` (:16, :65-66); `git log -1 ecdf88cc8` = 'detect_atom_crash redacta desde reboots.jsonl de blackbox, ya no mide'. blackbox tools/reboot_verdict.py:67 ESQUEMA='bb-reboot/1' and covers kdump(4)/SMART(11)/EDAC(12)/Xid(11)/journalctl(2) by grep -ci. Sweep of tools/ and rag/ (.py/.sh/.ps1, outside _retired) for the six patterns: executable hits only at liberation_watchdog.py:1039 `subprocess.run([\"free\", \"-b\"]` in available_gb() (:1033), medir_consumo_de_job.py:37 `from tools.liberation_watchdog import available_gb`, dgx401_medicion_pareada_dos_motores.py:84 Path(\"/proc/meminfo\"), gateway_control.py:432 and benchmark_network_isolation.py:357 `journalctl --user -u`, Atom_Local_AI_Audit.ps1:72-76 nvidia-smi with ATOM_AUDIT_<ts> on Desktop (:12-13); the rest (gather_failed_evidence, run_gpu_allowlist_mutation, verify_dgx499/dgx22, bb_consulta, atom_crash_registrado) are docstrings/strings. Data hits exist as named (liberation_queue JSON slugs, rag/embeddings/index.json, rag/graphs/entity_graph.json, finetuned iter_*/README.md). adopted/systemd-user/ai-gpu-telemetry.service, ai-memory-monitor.{service,timer}, adopted/system-config/*nvrm-watch* present; fichas: tasks/done/DEBT-CONTRATO-ATLAS-INSTRUMENTOS-EN-BLACKBOX-01.md, tasks/backlog/DEBT-CONTRATO-ATLAS-SONDAS-DE-MEMORIA-01.md (lists the three probes).",
       "fix": "",
-      "seal": "6d411742155cdceeb0a41ac7bc7711b6acc092864185ef40b6430548db63bba0",
+      "seal": "9bfb3cc6246afa0fe4ef97f773d3097007a2c5fa29cc6dce7f58c2db0b78e523",
       "verdict": "PASS"
     },
     {
       "cited": {
         "rules/firmas_gb10.json": "1fdee1398e1c44b2dfb26245be3a85dbbedd1126e314583928d828c46dc1d463",
-        "tests/test_incident_report.py": "64498ebe60b430f44a19347b453f6a55783b9aa888e39908b786cb7301dd3879",
         "tools/accion_termica.py": "1e3739860cb2ef4aa6e3d00d8d28c4c8cc453b333b1b947875eed7f62d4f92ca",
-        "tools/atom_gpu_telemetry.py": "96d01bf714c731d3d4ab5ec47d8841bec9de698fef2215d009d5e848337cef9b",
+        "tools/atom_gpu_telemetry.py": "7032707dc1205b0a1efe83c1eb0acde6c1ba2f0db6cdb43348979172e01bd4f9",
         "tools/hallazgo.py": "910171e47fc9a4b99b41fa6e66e1a5d76188f140ef9868b3764ede3aa888ff1a",
         "tools/incident_report.py": "4459e033d8f180090cbb9026d3bb691d4e5e3e01f7f8d7dc1c1710c7c3e3ed77"
       },
       "claim_id": "SPEC-L146",
-      "evidence": "Every link is still a data link with a schema. bb-reboot/1 is read by Atlas detect_atom_crash.py:16-17. bb-estado-termico/2 is at atom_gpu_telemetry.py:1401 and is read through `--gate-termico` (bb_consulta.py:52). bb-incident/1 is at incident_report.py:1208 and written to DATOS/incidentes (l.51). bb-hallazgo/1 is in tools/hallazgo.py:2-5 and collected by Atlas tools/recoge_hallazgos_bb.py:2-4. firmas_gb10.json is read at incident_report.py:44,812-814, and each signature points to its Atlas document. The queue log ATLAS_BITACORA_COLA = Atlas/logs/liberation_watchdog.jsonl is at incident_report.py:57, and FEATURE-INCIDENTE-CARGA-DE-ATLAS-01 is in tasks/done/. atlas_carga.json / atlas-carga/1 is checked at accion_termica.py:32,62, which runs `freeze` (l.118) in ESTADOS_CALIENTES=(sostenida, sobre_100) (l.36). The incident_report.py change (ee8a99d8, `firmware_recogido()` at l.106-121) reads only /var/lib/blackbox dmidecode files written by blackbox's own root script. It adds no Atlas link and no import. The claim text says nothing about the firmware entry being NOT_COLLECTED or needing sudo, so no text fix applies. `pytest tests/test_incident_report.py` -> 48 passed; that includes test_firmware_recogido_control_negativo_sin_archivos_o_vacios_es_not_collected (l.815).",
+      "evidence": "Each link checked: bb-estado-termico/2 via --gate-termico (atom_gpu_telemetry.py:1401, :1849; Atlas bb_consulta.py:52); bb-incident/1 (incident_report.py:1208); --procesos-gpu requested by Atlas bb_consulta.py:94 for liberation_watchdog (:137); bb-hallazgo/1 (tools/hallazgo.py:30, bandeja $BLACKBOX_DATA/hallazgos/ :5); Atlas recoge_hallazgos_bb.py reads BANDEJA (:32) and writes only into Atlas destino (:86, :110, no unlink); rules/firmas_gb10.json keys ['_nota','atlas_raiz','firmas'], each firma has an 'atlas' field; bb incident reads Atlas logs/liberation_watchdog.jsonl read-only (incident_report.py:57, :736-745), tasks/done/FEATURE-INCIDENTE-CARGA-DE-ATLAS-01.md; tools/accion_termica.py: atlas-carga/1 (:62), CARGA=DATOS/'atlas_carga.json' (:32), ESTADOS_CALIENTES=('sostenida','sobre_100') (:36), freeze (:118); Atlas publishes atlas-carga/1 (bb_consulta.py:130-143). Negative control: `grep -c 'atlas-carga/2' tools/accion_termica.py` -> 0.",
       "fix": "",
-      "seal": "12e4c6a321bf0ee82844eebc829dcabeb1bd892dddbacf3c9c9e818cc851438e",
+      "seal": "bffc2c7b97b800d2051d1451504ec575b253d68a7963c164b291b2e451aad30a",
       "verdict": "PASS"
     },
     {
@@ -83,16 +83,16 @@
     },
     {
       "cited": {
-        "tests/test_bb_bash.py": "b1e613a11e68b20061b28038cd374b3ee919becb3d0731860796e614525c68d3",
+        "tests/test_bb_bash.py": "075f0a182bec772d2d5b5e3fc3f60cc85647bdff9cae24de9975cdf586b99971",
         "tools/canario_motor.py": "4b5cbbc3d6a0930405333bd841d8588d92fd494af0c116b9e2b90f016744b98c",
         "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6",
         "tools/huella_host.py": "709f40a9746cc5255b5183ad8895ed1591f3944774236a48783ec265be2ddf09",
         "tools/monitor_distros.py": "174785d51e69ddfedd1797a2327c50ceb7133607b8ab5f0334a255fdf265ae82"
       },
       "claim_id": "SPEC-L416",
-      "evidence": "Row counts in bin/bb match the text. status_lo_que_corre (bin/bb:2275, introduced in 71457133 dated 2026-10-14) emits seven rows: three by last run via `systemctl --user show --timestamp=unix -p Result -p ExecMainExitTimestamp` (blackbox-drift.service 1560 min = 26 h, bb-arranque-forense.service with max_min=0 meaning this boot plus a grep of this boot_id in $ARRANQUE_JSONL, atom-crash-detector.service with max_min=0); two by data (reboots.jsonl boot_id_siguiente, dmem_parche.jsonl _fresco 1560); and two unit-only (bb-aviso-termico.service, bb-portero.service). In source order the third of the three last-run rows is arranque-forense, so 'solo la tercera lee ademas un artefacto' holds. Together with the unconditional `vigilante del motor` row (ai-nemotron-vigilante.timer, bin/bb:2694, added in 4daaf4fc on 2026-10-10) and `guardia de procesos` (e1cfd94b, 2026-10-10), that makes four unit-only rows that always appear. The sensor loop (bin/bb:2705-2740, 93850773 dated 2026-10-13) checks memavail/gpuoom/termico_predictivo/reloj_arranque by unit only when the mode is not off, and checks huella 2880 min = 2 d, monitor_distros 11520 = 8 d, canario 75 and gpumem 15 by freshness. status_suspendidos (bin/bb:2258) prints SUSPENDIDO without calling chk; an unreadable or expired mark gets chk ... 1, which prints FALTA. bb-usable: `date -d '120 seconds ago'` plus `$JOURNALCTL -u bb-usable.service -S` matching '[bb-usable] latencia del escritorio:' (bin/bb:2452-2460); PROBE_INTERVAL = 30.0 (bin/bb-usable:98). Tests: each of the eight named tests has exactly one def in tests/ (grep counts 1/1 each). `python3 -m pytest -q tests/test_bb_bash.py -k \"<8 names> or test_control_negativo_bb_usable\"` gave '11 passed, 115 deselected in 5.52s' (8 named plus the 3 bb-usable cases: rancio, journal_vacio, solo_arranque). Negative control: `-k test_no_existe_zzz_inventado` gave '126 deselected in 0.25s', so it selected 0. History: 37ccd7db (2026-09-25) added muestreo, OTRO_rango, sin_confirmacion and both earlyoom tests, and its SPEC said 'con cuatro controles negativos corridos'. 'cinco' first appears 2026-09-28 (02ad391b/11e3cfb9). The two clock-lock start tests were added in 36e7a2ff on 2026-10-04. bb-usable got its heartbeat check in 87168fb0 on 2026-09-28. The 7 controls split 1+4+2 over the three original checks, and no two sentences contradict each other.",
+      "evidence": "Recount of bin/bb: `awk '/^status_lo_que_corre\\(\\)/,/^}/' bin/bb | grep -cE '^\\s*chk '` -> 7 = 2 unit-only (aviso termico, portero; bin/bb ~2314-2317) + 3 last-run via `systemctl --user show -p Result -p ExecMainExitTimestamp` (blackbox-drift 1560 min=26 h, bb-arranque-forense with boot_id row in $ARRANQUE_JSONL, atom-crash-detector; max_min=0 = btime) + 2 data (reboots.jsonl boot_id_siguiente, dmem_parche.jsonl 1560 min); always-shown unit-only rows in cmd_status are vigilante del motor (ai-nemotron-vigilante.timer) and guardia de procesos (bb-guardia-proceso.service) plus those two = 4 (earlyoom/bb-usable is-active calls are ciego guards, not rows); sensor loop memavail/gpuoom/termico_predictivo/reloj_arranque unit-only, huella 2880 min, canario 75, gpumem 15, monitor_distros 11520 min; status_suspendidos at bin/bb:2258; bb-usable heartbeat 120 s via `journalctl -S` (status_usable). Commits: 71457133 2026-10-14 (introduces status_lo_que_corre, 'seven bb status rows'), 37ccd7db 2026-09-25, 36e7a2ff 2026-10-04 (adds the ANTERIOR/NO_FECHABLE tests), 11e3cfb9 2026-09-28 'cinco controles'. All 8 named tests exist once each; `python3 -m pytest -q tests/test_bb_bash.py -k \"control_negativo_sin_muestra_fresca or clock_lock or earlyoom or bb_usable or sensor_en_observar\"` -> 15 passed (bb_usable: rancio, journal_vacio, solo_arranque present at :665-674). Negative control in a `git archive HEAD` copy under scratchpad: unmutated copy `-k 'sensor_en_observar or earlyoom'` -> 5 passed; with `_fresco() { true; }` and `ok=0;` before the earlyoom case -> 3 failed (both earlyoom controls and the sensor control).",
       "fix": "",
-      "seal": "3fa3588eaa029cc87ed178d7639cd012eee00b6ce7da0ad3b3c21bb9cbe289ea",
+      "seal": "a0dd1de08292fa6707691768a05794aed9c24698bec916af76eb7dcc7a4563d1",
       "verdict": "PASS"
     },
     {
@@ -191,7 +191,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-14T16:52:28Z",
-  "tree_fingerprint": "626de8a279bbb9dd0f5583e234f3495d72b660e464cbdd9c03459efac2bc3f89",
+  "timestamp": "2026-10-15T02:48:52Z",
+  "tree_fingerprint": "1e83b25d9a776df18b9d52031e0e9426a8d36fc67f1588a0aa54d8e546b1af7b",
   "violations": []
 }
