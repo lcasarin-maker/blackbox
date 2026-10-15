@@ -1,0 +1,11 @@
+[Unit]
+Description=bb observador externo: sync del log del NAS cada 5 min (sin instalar hasta que exista nas.json)
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=10s
+Unit=bb-observador-ping-sync.service
+
+[Install]
+WantedBy=timers.target
