@@ -1,0 +1,48 @@
+Parte (1) de DEBT-PORTERO-ADOPCION-CHOCA-CON-PIDS-QUE-SALEN-01, 2026-10-14: el portero ya no registra rc=0 cuando
+systemd deja el scope en failed. La parte (2) (14 dias sin COLAPSO con el portero adoptando) sigue ABIERTA: este
+archivo NO es medicion.txt y no lleva la frase de cierre; el close_check de la ficha sigue dando rc=2.
+
+== Reproduccion real (systemd --user de esta maquina, scopes desechables bbtest-*/bb-portero-suite-<pid>, reset-failed al final)
+
+1) crea_scope directo con [vivo, hijo de 1-10 ms], 4 x 25 intentos (scratchpad carrera.py):
+   delay 0.001: 20 rc=0 active / 5 rc=0 Result=resources ActiveState=failed
+   delay 0.003: 21 / 4      delay 0.006: 22 / 3      delay 0.01: 20 / 5
+   En los failed la raiz viva SI quedo en el cgroup del scope y su memory.max SI se aplico (67108864 con MemoryMax=64M):
+   "FALLIDO cg /user.slice/user-1000.slice/user@1000.service/app.slice/bbtest-carrera-c41daa05.scope memory.max 67108864"
+   Un zombi NO lo reproduce (scope active); hace falta que el hijo salga Y se recoja entre la llamada y el attach.
+
+2) A/B por aplica() con el mismo mundo: hijo que se recoge justo despues de StartTransientUnit (carrera_ab.py), 40 intentos:
+   $ python3 carrera_ab.py portero.viejo.py 40     (tools/portero.py de HEAD a3a72a61)
+   portero.viejo.py 40 intentos: {('rc=0', 'ActiveState=active'): 22, ('rc=0', 'ActiveState=failed'): 18}
+   $ python3 carrera_ab.py portero.nuevo.py 40
+   portero.nuevo.py 40 intentos: {('rc=0', 'ActiveState=active'): 22, ('rc=1', 'ActiveState=failed'): 18}
+   Control negativo: el codigo viejo registra rc=0 en las 18 unidades failed (el falso exito de la raiz 1337477);
+   el nuevo da rc=1 en las 18 y sigue dando rc=0 en las 22 active.
+
+== Pruebas (tests/test_portero.py, tests/test_portero_efectos.py)
+- test_real_carrera_pid_que_sale_al_adoptar_el_rc_dice_lo_que_systemd_dejo (integracion, systemd real): el rc coincide
+  con el ActiveState real en los dos sentidos; si en 60 intentos no aparece un failed, se SALTA con COULD_NOT_RUN.
+- test_scope_que_systemd_deja_failed_no_se_registra_rc0_ni_se_congela (+ control active/success -> rc 0 y congela)
+- test_estado_unidad_que_no_se_puede_leer_no_cuenta_como_exito (rc!=0, campo ausente, activating)
+- test_raiz_que_salio_antes_de_adoptar_es_no_actua_sin_llamar_a_systemd (+ pid reusado, + control)
+- test_raiz_que_sale_durante_la_adopcion_es_no_actua_y_si_sigue_viva_es_fallo
+- test_adopta_no_pasa_a_systemd_los_hijos_que_ya_salieron (+ control con el hijo vivo)
+
+== Mutaciones (scratchpad mutar.py; cada una sobre tools/portero.py, suite del portero con -x; restaurado y cmp ok)
+KILLED M1 acepta unidad failed: 1 failed, 39 passed
+KILLED M2 no mira la unidad (codigo viejo): 1 failed, 30 passed
+KILLED M3 sin chequeo previo de la raiz: 1 failed, 65 passed
+KILLED M4 ignora pid reusado: 1 failed, 65 passed
+KILLED M5 no filtra hijos muertos: 1 failed, 67 passed
+KILLED M6 salida durante adopcion = fallo: 1 failed, 66 passed
+KILLED M14 rc de systemctl ignorado: 1 failed, 64 passed  (sobrevivio en la primera pasada; se anadio el caso rc=1 con salida sana)
+
+== Limites
+- Un scope failed deja la raiz en su cgroup con el tope puesto: el portero ya no lo congela (rc=1) y la vuelta
+  siguiente lo ve como arbol nuestro sin congelar (corriendo con tope). No se intenta reparar la unidad failed ni
+  se hace reset-failed: queda cargada con su nombre hasta que systemd la recoja. Sin medir que pasa si esa misma
+  raiz necesitara adoptarse de nuevo (StartTransientUnit con nombre ya cargado).
+- Los hijos se filtran solo por existencia (/proc/<pid>), sin instante de arranque: un pid de hijo reusado en <2 s
+  no se distingue. La raiz si se compara por instante de arranque.
+- La ventana entre el chequeo y la llamada sigue existiendo (TOCTOU); lo que cambia es que el resultado registrado
+  dice lo que systemd dejo.

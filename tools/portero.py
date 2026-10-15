@@ -21,6 +21,24 @@ hook pre-commit) ni actua fuera de `app.slice`. Un arbol que ya corre bajo su sc
 Uso: `bb portero estado` (solo lectura), `bb portero run --clase suite -- <cmd>` (pide turno a la misma cola y
 lanza bajo scope con tope), `bb portero demonio` (lo corre `systemd/bb-portero.service`).
 
+Interruptor `portero` (tools/interruptores.py, DEBT-PORTERO-IGNORA-SU-INTERRUPTOR-01). El demonio relee el modo en
+cada vuelta; `decide` sigue pura y solo la capa con efecto (`aplica`) mira el modo:
+
+* `off`: el demonio no lee /proc ni PSI ni mide cgroups y no actua; deja UNA fila `off` al entrar en ese modo.
+* `observar`: mide y decide igual que en `actuar`, pero no llama a systemd ni escribe `cgroup.freeze`: registra
+  `habria_<accion>` con `"modo": "observar"`, una vez por cambio de motivo (no una fila cada 2 s). Como nada se
+  adopta, los arboles nunca pasan a ser nuestros: lo registrado es la primera decision, no la secuencia de `actuar`.
+  Contenedores (`--contenedores`): registra `acotaria` sin `docker update`.
+* `actuar`: como antes del interruptor; las filas no llevan `modo`.
+
+Lo unico que el demonio hace fuera de `actuar` es deshacer lo propio: descongela los scopes bb-portero-* que dejo
+congelados (lista app.slice, nada mas). Sin eso, pasar a `off` con una suite congelada la dejaria asi para siempre.
+
+`bb portero run` es una peticion EXPLICITA de quien lanza su propio comando, no el demonio actuando sobre un arbol
+ajeno: en todo modo lanza el comando bajo su scope con el tope de la clase. Solo la cola cambia: en `actuar` espera
+turno; en `observar` decide una vez, registra `habria_esperar` si le habria tocado esperar y lanza sin esperar (y
+siempre en app.slice, nunca `mover`); en `off` no entra a la cola. El modo ilegible o desconocido vale `off`.
+
 Limites declarados: la memoria ya cargada NO se mueve con el proceso en cgroup v2 (mover sirve al arrancar, no al
 final); la deteccion tiene la latencia del intervalo; congelar un `git push` hace correr su `timeout`.
 """
@@ -40,6 +58,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
+try:
+    from tools import interruptores
+except ImportError:  # como script de `bb portero` (tools/ en sys.path, no la raiz del repo)
+    import interruptores
+
+NOMBRE = "portero"  # su clave en interruptores.json
 KIB = 1024
 GIB_KB = 1024 * 1024  # 1 GiB expresado en kB
 
@@ -110,6 +134,7 @@ class Arbol:
     virtual: bool = False  # peticion de `bb portero run` que aun no lanzo su comando
     pids: tuple[int, ...] = ()
     tope_propio_kb: int | None = None  # memory.max finito mas estricto de su cgroup bajo app.slice (None = max)
+    inicio: int | None = None  # ticks de arranque de la raiz: distingue la raiz observada de un pid reusado
 
     @property
     def nuestro(self) -> bool:
@@ -556,7 +581,7 @@ def _arboles_nuestros(t: _Tabla, cg_raiz: Path) -> list[Arbol]:
         out.append(Arbol(
             raiz=raiz.pid, clase=m.group(1), rss_kb=sum(p.rss_kb for p in miembros), procesos=len(miembros),
             edad_s=t.edad(raiz), cgroup=cg, ancestros=t.ancestros(raiz.pid), unidad=Path(cg).name,
-            congelado=_congelado(cg_raiz / cg.lstrip("/")), pids=tuple(sorted(p.pid for p in miembros)),
+            congelado=_congelado(cg_raiz / cg.lstrip("/")), pids=tuple(sorted(p.pid for p in miembros)), inicio=raiz.inicio,
         ))
     return out
 
@@ -573,7 +598,7 @@ def _arboles_por_forma(t: _Tabla, cg_raiz: Path) -> list[Arbol]:
         out.append(Arbol(
             raiz=pid, clase=c, rss_kb=sum(m.rss_kb for m in miembros), procesos=len(miembros), edad_s=t.edad(p),
             cgroup=p.cgroup, ancestros=t.ancestros(pid), pids=tuple(sorted(m.pid for m in miembros)),
-            tope_propio_kb=tope_propio_kb(p.cgroup, cg_raiz),
+            tope_propio_kb=tope_propio_kb(p.cgroup, cg_raiz), inicio=p.inicio,
         ))
     return out
 
@@ -679,24 +704,56 @@ def _cg_de(pid: int, proc: Path = Path("/proc")) -> str | None:
     return t.split("::", 1)[1] if t.startswith("0::") else None
 
 
-def _adopta(a: Arbol, accion: Accion, ejecutar: Ejecutor, cg_raiz: Path) -> tuple[int, str, Path | None]:
+def raiz_se_fue(a: Arbol, proc: Path = Path("/proc")) -> str:
+    """'' si la raiz observada sigue viva; el motivo si salio o su pid ya es otro proceso (otro instante de arranque)."""
+    p = _lee_proc(proc / str(a.raiz))
+    if p is None:
+        return f"la raiz {a.raiz} ya no existe"
+    if a.inicio is not None and p.inicio != a.inicio:
+        return f"el pid {a.raiz} ya es otro proceso (arranque {p.inicio} != {a.inicio} observado)"
+    return ""
+
+
+def estado_unidad(nombre: str, ejecutar: Ejecutor) -> str:
+    """'' si systemd dejo la unidad `active` con `Result=success`; el motivo si no, o si no se pudo leer.
+
+    Medido 2026-10-14 (DEBT-PORTERO-ADOPCION-CHOCA-CON-PIDS-QUE-SALEN-01): con un pid que sale justo despues de la
+    llamada, `StartTransientUnit` devuelve rc=0, la raiz SI queda en el cgroup del scope, y aun asi la unidad queda
+    `failed` con `Result=resources`. Mirar solo el cgroup de la raiz daba rc=0 falso."""
+    rc, txt = ejecutar(["systemctl", "--user", "show", nombre, "-p", "ActiveState", "-p", "Result"])
+    props = dict(linea.split("=", 1) for linea in txt.splitlines() if "=" in linea)
+    activo, resultado = props.get("ActiveState"), props.get("Result")
+    if rc != 0 or activo is None or resultado is None:
+        return f"estado de {nombre} NOT_COLLECTED (rc={rc}): {txt[:120]}"
+    if (activo, resultado) != ("active", "success"):
+        return f"systemd dejo {nombre} en ActiveState={activo} Result={resultado}"
+    return ""
+
+
+def _adopta(a: Arbol, accion: Accion, ejecutar: Ejecutor, cg_raiz: Path, proc: Path = Path("/proc")) -> tuple[int, str, Path | None]:
     nombre = nombre_unidad(accion.clase or "x", a.raiz)
-    rc, salida = crea_scope(nombre, a.pids or (a.raiz,), accion.slice, accion.topes, ejecutar)
+    # Un pid que ya salio hace fallar la llamada entera ("No such process"): se pasan solo los que siguen vivos. La
+    # raiz va siempre (aplica acaba de comprobarla); si sale ahora, el fallo lo resuelve aplica como `no_actua`.
+    pids = sorted({a.raiz, *(p for p in a.pids if (proc / str(p)).is_dir())})
+    rc, salida = crea_scope(nombre, pids, accion.slice, accion.topes, ejecutar)
     if rc != 0:
         return rc, salida, None
     # StartTransientUnit devuelve un job: la adopcion termina despues. Se espera acotado (medido 2026-10-12 con un
     # scope desechable: el job vuelve antes de que /proc/<pid>/cgroup cambie).
-    cg = _cg_de(a.raiz)
+    cg = _cg_de(a.raiz, proc)
     for _ in range(40):
         if cg is None or Path(cg).name == nombre:
             break
         time.sleep(0.05)  # blocking-sleep: espera acotada (2 s) a que systemd complete el job de adopcion -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 3.9 -- re-revisado 2026-10-14 contra 3.8 (`git log -L`: ultimo cambio de la linea anterior a la revision 3.8, a685387e); re-revisado 2026-10-13 contra 3.5: `git blame` de la linea 693 (7280a6a4) es anterior al bump 3.5.0 (b99560e8), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.4: `git blame` de la linea 693 (095c3a35) es anterior al bump 3.4.1 (eb89c383), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.3: `git blame` de la linea 693 (b008b6ee) es anterior al bump 3.3.0 (3512a16a), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.2: `git blame` de la linea 693 (804713d5) es anterior al bump 3.2.0 (e8e5aa8d), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.1: `git blame` de la linea 693 (93850773) es anterior al bump 3.1.0 (7a5bd48b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 693 (92598b79) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 693 (d6e26ff5) no cambio desde su revision anterior; la razon sigue valiendo: revisado 2026-10-12: el job de StartTransientUnit es asincrono; sin esta espera la raiz se lee aun en su scope de origen ; re-revisado 2026-10-13 contra 3.1: la linea no cambio desde 20256295 (git blame de esta linea)
-        cg = _cg_de(a.raiz)
+        cg = _cg_de(a.raiz, proc)
     if cg is None or Path(cg).name != nombre:
         return 1, f"{salida}; la raiz no quedo en {nombre} (cgroup {cg})", None
+    falla = estado_unidad(nombre, ejecutar)
+    if falla:
+        return 1, f"{salida}; {falla}", None
     destino = cg_raiz / cg.lstrip("/")
     # Hijos que nacieron entre la observacion y la adopcion: se mueven escribiendo cgroup.procs (dentro de lo delegado).
-    errores = [e for p in observar_pids(a.raiz) if _cg_de(p) != cg and (e := mueve_pid(p, destino))]
+    errores = [e for p in observar_pids(a.raiz, proc) if _cg_de(p, proc) != cg and (e := mueve_pid(p, destino))]
     return (0 if not errores else 1), "; ".join([salida, *errores[:3]]), destino
 
 
@@ -737,14 +794,45 @@ class Efectos:
     ejecutar: Ejecutor = _ejecuta
     origen: Origen = origen_no_integrado
     cg_raiz: Path = CGROUP_RAIZ
+    proc: Path = Path("/proc")
+    modo: str = "actuar"  # interruptor `portero`: fuera de `actuar` aplica y turno solo registran (ver docstring)
+
+
+def _adopta_y_congela(a: Arbol, ac: Accion, fx: Efectos) -> dict[str, Any]:
+    """Campos del evento de una adopcion. La raiz que salio (antes o durante) es `no_actua`, no un fallo."""
+    se_fue = raiz_se_fue(a, fx.proc)
+    if se_fue:  # salio entre la observacion y ahora: no hay nada que adoptar
+        return {"accion": "no_actua", "decidida": ac.tipo, "motivo": f"{se_fue}: no se adopta (decidido: {ac.motivo})"}
+    rc, salida, destino = _adopta(a, ac, fx.ejecutar, fx.cg_raiz, fx.proc)
+    if rc == 0 and ac.tipo == "congelar" and destino is not None:
+        err = congela(destino, True)
+        rc, salida = (1, f"{salida}; {err}") if err else (rc, salida)
+    ev = {"rc": rc, "salida": salida[:300], "unidad": nombre_unidad(ac.clase or "x", a.raiz), "slice": ac.slice, "topes": ac.topes}
+    se_fue = raiz_se_fue(a, fx.proc) if rc != 0 else ""
+    if se_fue:  # salio DURANTE la adopcion: el fallo de systemd es por eso, no un fallo del portero
+        del ev["rc"]
+        ev.update(accion="no_actua", decidida=ac.tipo, motivo=f"{se_fue} durante la adopcion (decidido: {ac.motivo})")
+    return ev
+
+
+def _habria(ac: Accion, modo: str) -> dict[str, Any]:
+    """Fuera de `actuar`: el modo, y la accion con efecto renombrada `habria_<accion>` (no se ejecuta nada)."""
+    if modo == "actuar":
+        return {}
+    if ac.tipo in ("esperar", "no_actua"):
+        return {"modo": modo}
+    return {"modo": modo, "accion": f"habria_{ac.tipo}", "topes": ac.topes, "slice": ac.slice}
 
 
 def aplica(
     acciones: list[Accion], arboles: list[Arbol], estado: Estado, fx: Efectos | None = None, ultimo: dict[Any, str] | None = None
 ) -> list[dict[str, Any]]:
-    """Ejecuta las acciones con efecto y registra cada una. `esperar`/`no_actua` se registran solo al cambiar."""
+    """Ejecuta las acciones con efecto y registra cada una. `esperar`/`no_actua` se registran solo al cambiar.
+
+    Con `fx.modo` fuera de `actuar` (interruptor en `observar`) no ejecuta nada: cada accion con efecto se registra
+    como `habria_<accion>` con `modo`, y tambien solo al cambiar su motivo."""
     fx = fx or Efectos()
-    log, ejecutar, origen, cg_raiz = fx.log, fx.ejecutar, fx.origen, fx.cg_raiz
+    log, origen, cg_raiz, modo = fx.log, fx.origen, fx.cg_raiz, fx.modo
     por_raiz = {a.raiz: a for a in arboles}
     ultimo = {} if ultimo is None else ultimo
     eventos = []
@@ -753,19 +841,16 @@ def aplica(
         ev: dict[str, Any] = {"accion": ac.tipo, "motivo": ac.motivo, "raiz": ac.raiz, "clase": ac.clase}
         if a is not None:
             ev.update(rss_kb=a.rss_kb, procesos=a.procesos, edad_s=round(a.edad_s, 1), cgroup=a.cgroup)
-        if ac.tipo in ("esperar", "no_actua") or (a is not None and a.virtual):
-            clave = (ac.raiz, ac.tipo)
+        ev.update(_habria(ac, modo))
+        if modo != "actuar" or ac.tipo in ("esperar", "no_actua") or (a is not None and a.virtual):
+            clave = (ac.raiz, ev["accion"])
             if ultimo.get(clave) == ac.motivo:
                 continue
             ultimo[clave] = ac.motivo
         elif a is None:
             ev.update(rc=1, salida="arbol no observado")
         elif ac.tipo in ("admitir", "congelar", "mover"):
-            rc, salida, destino = _adopta(a, ac, ejecutar, cg_raiz)
-            if rc == 0 and ac.tipo == "congelar" and destino is not None:
-                err = congela(destino, True)
-                rc, salida = (1, f"{salida}; {err}") if err else (rc, salida)
-            ev.update(rc=rc, salida=salida[:300], unidad=nombre_unidad(ac.clase or "x", a.raiz), slice=ac.slice, topes=ac.topes)
+            ev.update(_adopta_y_congela(a, ac, fx))
         elif ac.tipo == "descongelar":
             err = congela(cg_raiz / a.cgroup.lstrip("/"), False)
             ev.update(rc=1 if err else 0, salida=err, unidad=a.unidad)
@@ -869,10 +954,40 @@ def aplica_contenedores(acciones: list[Accion], fx: Efectos | None = None, aplic
 # --- CLI ----------------------------------------------------------------------------------------------------
 
 
-def _ciclo(ultimo: dict[Any, str]) -> list[dict[str, Any]]:
+def descongela_propios(fx: Efectos, modo: str) -> list[dict[str, Any]]:
+    """Fuera de `actuar`, deshace la congelacion que el propio portero dejo (scopes bb-portero-* con `frozen 1`).
+
+    Sin esto, pasar el interruptor de `actuar` a `off`/`observar` con una suite congelada la dejaria congelada para
+    siempre: nadie volveria a darle turno. Volver al comportamiento de antes del portero es descongelarla. Solo
+    lista app.slice (un directorio); no lee /proc."""
+    try:
+        propios = [d for d in cgroup_app(raiz=fx.cg_raiz).iterdir() if NOMBRE_UNIDAD.match(d.name) and _congelado(d)]
+    except OSError:
+        return []
+    eventos = []
+    for d in sorted(propios):
+        err = congela(d, False)
+        ev = {"accion": "descongelar", "modo": modo, "unidad": d.name, "rc": 1 if err else 0, "salida": err,
+              "motivo": f"interruptor {NOMBRE}={modo}: se deshace la congelacion que dejo el propio portero"}
+        _registra(ev, fx.log)
+        eventos.append(ev)
+    return eventos
+
+
+def _ciclo(ultimo: dict[Any, str], modo: str = "actuar") -> list[dict[str, Any]]:
+    deshechos = descongela_propios(Efectos(), modo) if modo != "actuar" else []
+    if modo == "off":
+        # Sin leer /proc, PSI ni medir cgroups: una sola fila al entrar en off, ninguna mientras siga en off.
+        if ultimo.get((None, "off")) == "off":
+            return deshechos
+        ultimo[(None, "off")] = "off"
+        ev: dict[str, Any] = {"accion": "off", "modo": "off", "motivo": f"interruptor {NOMBRE}=off: no observa ni actua"}
+        _registra(ev, Efectos().log)
+        return [*deshechos, ev]
+    ultimo.pop((None, "off"), None)  # al volver a off se vuelve a anunciar
     estado = lee_estado()
     arboles = observar()
-    return aplica(decide(arboles, estado), arboles or [], estado, ultimo=ultimo)
+    return [*deshechos, *aplica(decide(arboles, estado), arboles or [], estado, replace(Efectos(), modo=modo), ultimo)]
 
 
 def _ciclo_contenedores(aplicar: bool) -> list[dict[str, Any]]:
@@ -890,9 +1005,10 @@ def cmd_demonio(args: argparse.Namespace) -> int:
     ultimo: dict[Any, str] = {}
     vueltas = 0
     while True:
-        _ciclo(ultimo)
-        if args.contenedores and vueltas % CONTENEDORES_CADA == 0:
-            _ciclo_contenedores(aplicar=True)
+        modo = interruptores.modo(NOMBRE)  # cada vuelta: cambiar el interruptor no exige reiniciar el servicio
+        _ciclo(ultimo, modo)
+        if args.contenedores and modo != "off" and vueltas % CONTENEDORES_CADA == 0:
+            _ciclo_contenedores(aplicar=modo == "actuar")
         vueltas += 1
         if args.una_vez:
             return 0
@@ -909,6 +1025,7 @@ def cmd_estado(_args: argparse.Namespace) -> int:
         ultimos = [json.loads(linea) for linea in texto.splitlines()[-10:] if linea.strip().startswith("{")]
     print(json.dumps(
         {
+            "modo": interruptores.modo(NOMBRE),
             "medicion": _medicion(estado),
             "arboles": None if arboles is None else [
                 {"raiz": a.raiz, "clase": a.clase, "rss_kb": a.rss_kb, "procesos": a.procesos,
@@ -939,9 +1056,12 @@ def _fuente_real() -> tuple[Estado, list[Arbol] | None]:
 
 def turno(pid: int, clase: str, fuente: Fuente = _fuente_real, espera: Callable[[], None] | None = None,
           fx: Efectos | None = None) -> Accion:
-    """Pide turno en la cola compartida y espera hasta tenerlo. Devuelve la accion concedida (admitir/mover/no_actua)."""
+    """Pide turno en la cola compartida y espera hasta tenerlo. Devuelve la accion concedida (admitir/mover/no_actua).
+
+    Con `fx.modo` fuera de `actuar` no espera: si le habria tocado esperar lo registra (`habria_esperar`) y concede
+    `no_actua`."""
     fx = fx or Efectos()
-    cola, log = fx.cola, fx.log
+    cola, log, modo = fx.cola, fx.log, fx.modo
     ruta = cola / f"{pid}.json"
     peticion = {"pid": pid, "clase": clase, "ts": time.time()}
     _escribe_peticion(ruta, peticion)
@@ -955,9 +1075,14 @@ def turno(pid: int, clase: str, fuente: Fuente = _fuente_real, espera: Callable[
         if mia is not None and mia.tipo in ("admitir", "mover", "no_actua"):
             _escribe_peticion(ruta, {**peticion, "concedido": True})
             _registra({"accion": "turno", "raiz": pid, "clase": clase, "concedido": mia.tipo, "motivo": mia.motivo,
-                       "medicion": _medicion(estado)}, log)
+                       "medicion": _medicion(estado), **({"modo": modo} if modo != "actuar" else {})}, log)
             return mia
         motivo = mia.motivo if mia else "sin decision para esta peticion"
+        if modo != "actuar":
+            _escribe_peticion(ruta, {**peticion, "concedido": True})
+            _registra({"accion": "habria_esperar", "modo": modo, "raiz": pid, "clase": clase, "motivo": motivo,
+                       "medicion": _medicion(estado)}, log)
+            return Accion("no_actua", f"interruptor {NOMBRE}={modo}: habria esperado ({motivo}); lanza sin esperar", pid, clase)
         if motivo != ultimo:
             print(f"[bb portero] esperando turno ({clase}): {motivo}", file=sys.stderr)
             _registra({"accion": "esperar", "raiz": pid, "clase": clase, "motivo": motivo, "medicion": _medicion(estado)}, log)
@@ -975,10 +1100,15 @@ def cmd_run(args: argparse.Namespace) -> int:
         return 2
     c = CLASES[args.clase]
     pid = os.getpid()
-    concedida = turno(pid, args.clase)
+    modo = interruptores.modo(NOMBRE)
+    # Peticion explicita: el tope de la clase va en todo modo; el interruptor solo gobierna la cola (ver docstring).
+    if modo == "off":
+        concedida = Accion("no_actua", f"interruptor {NOMBRE}=off: sin cola, lanza con el tope de su clase", pid, args.clase)
+    else:
+        concedida = turno(pid, args.clase, fx=replace(Efectos(), modo=modo))
     topes = _topes(c)
     unidad = nombre_unidad(args.clase, pid)
-    slice_ = concedida.slice if concedida.tipo == "mover" else "app.slice"
+    slice_ = concedida.slice if concedida.tipo == "mover" and modo == "actuar" else "app.slice"
     print(f"[bb portero] {cmd[0]} bajo {unidad} en {slice_}: MemoryMax={c.memory_max_kb // GIB_KB}G "
           f"MemoryHigh={c.memory_high_kb // GIB_KB}G sin swap, TasksMax={c.tasks_max}", file=sys.stderr)
     try:
@@ -993,7 +1123,8 @@ def cmd_run(args: argparse.Namespace) -> int:
             (COLA / f"{pid}.json").unlink()
         except OSError:
             pass
-    _registra({"accion": "fin", "raiz": pid, "clase": args.clase, "rc": rc, "unidad": unidad}, LOG)
+    _registra({"accion": "fin", "raiz": pid, "clase": args.clase, "rc": rc, "unidad": unidad,
+               **({"modo": modo} if modo != "actuar" else {})}, LOG)
     return rc
 
 

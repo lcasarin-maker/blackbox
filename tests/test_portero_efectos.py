@@ -15,10 +15,11 @@ import threading
 import json
 import os
 import runpy
+import shutil
 import stat
 import sys
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -68,7 +69,22 @@ def banco(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Banco:
     monkeypatch.setattr(po, "LOG", fx.log)
     monkeypatch.setattr(po, "COLA", fx.cola)
     monkeypatch.setattr(po, "Efectos", lambda: fx)
+    interruptor(tmp_path, monkeypatch, "actuar")  # el de la maquina no decide el resultado de un test
     return Banco(fx, llamadas)
+
+
+def interruptor(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, modo: str) -> None:
+    """`interruptores.json` desechable con el portero en `modo`, via BLACKBOX_DATA (lo que lee interruptores.modo)."""
+    datos = tmp_path / "datos"
+    datos.mkdir(parents=True, exist_ok=True)
+    (datos / "interruptores.json").write_text(json.dumps({"modos": {"portero": modo}}), encoding="utf-8")
+    monkeypatch.setenv("BLACKBOX_DATA", str(datos))
+
+
+@pytest.fixture
+def poner_modo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
+    """Pone el interruptor del portero en el modo dado (ver `interruptor`)."""
+    return lambda modo: interruptor(tmp_path, monkeypatch, modo)
 
 
 @pytest.fixture
@@ -382,6 +398,221 @@ def test_aplica_registra_el_arbol_no_observado_y_control_con_el_arbol_presente(t
     ev = po.aplica([ac], [arbol(99, 5)], estado(), fx)  # control: observado, se intenta y el fallo es el del ejecutor
     assert ev[0]["salida"] == "busctl cayo" and ev[0]["unidad"] == "bb-portero-suite-99.scope"
     assert [f["accion"] for f in filas(fx.log)] == ["admitir", "admitir"]
+
+
+# --- Adopcion contra procesos que salen (DEBT-PORTERO-ADOPCION-CHOCA-CON-PIDS-QUE-SALEN-01) -----------------------
+
+RAIZ = 300
+INICIO = int(100.0 * HZ)  # ticks que escribe `_proc` con inicio_s=100
+
+
+def _vivo(proc: Path, pid: int) -> None:
+    _proc(proc, pid, 1, ["python", "-m", "pytest"], CLAUDE, 1)
+
+
+def _systemd(proc: Path, cg_raiz: Path, resultado: str = "ActiveState=active\nResult=success\n", al_llamar: Any = None):
+    """Ejecutor que hace de systemd: StartTransientUnit mueve la raiz a su scope; `systemctl show` dice `resultado`."""
+    llamadas: list[list[str]] = []
+    unidad = po.nombre_unidad("suite", RAIZ)
+
+    def ejecutar(args: list[str]) -> tuple[int, str]:
+        llamadas.append(args)
+        if args[0] == "busctl":
+            if al_llamar is not None:
+                return al_llamar()
+            (cg_raiz / APP.lstrip("/") / unidad).mkdir(parents=True, exist_ok=True)
+            (proc / str(RAIZ) / "cgroup").write_text(f"0::{APP}/{unidad}\n", encoding="utf-8")
+            return 0, 'o "/org/freedesktop/systemd1/job/1"'
+        return 0, resultado
+
+    return ejecutar, llamadas
+
+
+def _fx(tmp_path: Path, ejecutar: Any) -> po.Efectos:
+    return po.Efectos(log=tmp_path / "p.jsonl", cola=tmp_path / "cola", ejecutar=ejecutar, cg_raiz=tmp_path / "cg",
+                      proc=tmp_path / "proc")
+
+
+def _congelar(**kw: Any) -> tuple[po.Accion, po.Arbol]:
+    ac = po.Accion("congelar", "PSI alto", RAIZ, "suite", topes=po._topes(po.CLASES["suite"]))
+    return ac, arbol(RAIZ, 60, pids=kw.pop("pids", (RAIZ,)), inicio=kw.pop("inicio", INICIO), **kw)
+
+
+def _freeze(tmp_path: Path) -> Path:
+    return tmp_path / "cg" / APP.lstrip("/") / po.nombre_unidad("suite", RAIZ) / "cgroup.freeze"
+
+
+@pytest.mark.unit
+def test_scope_que_systemd_deja_failed_no_se_registra_rc0_ni_se_congela(tmp_path: Path):
+    # Raiz 1337477 del 2026-10-14: la raiz quedo en el cgroup del scope y systemd marco la unidad Result=resources.
+    _vivo(tmp_path / "proc", RAIZ)
+    ejecutar, llamadas = _systemd(tmp_path / "proc", tmp_path / "cg", "ActiveState=failed\nResult=resources\n")
+    ac, a = _congelar()
+    ev = po.aplica([ac], [a], estado(), _fx(tmp_path, ejecutar))[0]
+    assert ev["accion"] == "congelar" and ev["rc"] == 1 and "Result=resources" in ev["salida"]
+    assert [x[0] for x in llamadas] == ["busctl", "systemctl"] and not _freeze(tmp_path).exists()
+    # control negativo: el mismo mundo con la unidad active/success da rc=0 y congela
+    sano = tmp_path / "sano"
+    _vivo(sano / "proc", RAIZ)
+    ejecutar, _ = _systemd(sano / "proc", sano / "cg")
+    ev = po.aplica([ac], [a], estado(), _fx(sano, ejecutar))[0]
+    assert ev["rc"] == 0 and _freeze(sano).read_text(encoding="utf-8") == "1"
+
+
+@pytest.mark.unit
+def test_estado_unidad_que_no_se_puede_leer_no_cuenta_como_exito():
+    assert "NOT_COLLECTED" in po.estado_unidad("u.scope", lambda a: (1, "Failed to connect to bus"))
+    assert "NOT_COLLECTED" in po.estado_unidad("u.scope", lambda a: (0, "ActiveState=active\n"))  # falta Result
+    # rc distinto de 0 no vale aunque la salida parezca sana (p.ej. systemctl que imprime y luego falla)
+    assert "NOT_COLLECTED" in po.estado_unidad("u.scope", lambda a: (1, "ActiveState=active\nResult=success\n"))
+    assert "ActiveState=activating" in po.estado_unidad("u.scope", lambda a: (0, "ActiveState=activating\nResult=success"))
+    assert po.estado_unidad("u.scope", lambda a: (0, "ActiveState=active\nResult=success\n")) == ""  # control
+
+
+@pytest.mark.unit
+def test_raiz_que_salio_antes_de_adoptar_es_no_actua_sin_llamar_a_systemd(tmp_path: Path):
+    ejecutar, llamadas = _systemd(tmp_path / "proc", tmp_path / "cg")
+    (tmp_path / "proc").mkdir()
+    ac, a = _congelar()
+    ev = po.aplica([ac], [a], estado(), _fx(tmp_path, ejecutar))[0]
+    assert (ev["accion"], ev["decidida"]) == ("no_actua", "congelar") and "rc" not in ev and "ya no existe" in ev["motivo"]
+    assert llamadas == []
+    # pid reusado: el mismo numero con otro instante de arranque es otro proceso
+    _proc(tmp_path / "proc", RAIZ, 1, ["vim"], CLAUDE, 1, inicio_s=999.0)
+    ev = po.aplica([ac], [a], estado(), _fx(tmp_path, ejecutar))[0]
+    assert ev["accion"] == "no_actua" and "otro proceso" in ev["motivo"] and llamadas == []
+    # control negativo: la raiz con su arranque observado si se adopta
+    ev = po.aplica([ac], [replace(a, inicio=int(999.0 * HZ))], estado(), _fx(tmp_path, ejecutar))[0]
+    assert (ev["accion"], ev["rc"]) == ("congelar", 0) and llamadas[0][0] == "busctl"
+
+
+@pytest.mark.unit
+def test_raiz_que_sale_durante_la_adopcion_es_no_actua_y_si_sigue_viva_es_fallo(tmp_path: Path):
+    proc = tmp_path / "proc"
+    _vivo(proc, RAIZ)
+
+    def sale() -> tuple[int, str]:
+        shutil.rmtree(proc / str(RAIZ))
+        return 1, "Failed to set unit properties: No such process"
+
+    ejecutar, _ = _systemd(proc, tmp_path / "cg", al_llamar=sale)
+    ac, a = _congelar()
+    ev = po.aplica([ac], [a], estado(), _fx(tmp_path, ejecutar))[0]
+    assert ev["accion"] == "no_actua" and "durante la adopcion" in ev["motivo"] and "rc" not in ev
+    assert "No such process" in ev["salida"]
+    # control negativo: el mismo fallo de systemd con la raiz viva SI es un fallo del portero (rc=1)
+    _vivo(proc, RAIZ)
+    ejecutar, _ = _systemd(proc, tmp_path / "cg", al_llamar=lambda: (1, "Failed to set unit properties: No such process"))
+    ev = po.aplica([ac], [a], estado(), _fx(tmp_path, ejecutar))[0]
+    assert (ev["accion"], ev["rc"]) == ("congelar", 1)
+
+
+@pytest.mark.unit
+def test_adopta_no_pasa_a_systemd_los_hijos_que_ya_salieron(tmp_path: Path):
+    proc = tmp_path / "proc"
+    _vivo(proc, RAIZ)
+    _vivo(proc, RAIZ + 1)
+    ejecutar, llamadas = _systemd(proc, tmp_path / "cg")
+    ac, a = _congelar(pids=(RAIZ, RAIZ + 1, RAIZ + 2))  # el hijo 302 salio despues de observarlo
+    assert po.aplica([ac], [a], estado(), _fx(tmp_path, ejecutar))[0]["rc"] == 0
+    props = llamadas[0][llamadas[0].index("PIDs"):]
+    assert props[:5] == ["PIDs", "au", "2", str(RAIZ), str(RAIZ + 1)]
+    _vivo(proc, RAIZ + 2)  # control negativo: vivo, si se pasa
+    ejecutar, llamadas = _systemd(proc, tmp_path / "cg")
+    po.aplica([ac], [a], estado(), _fx(tmp_path, ejecutar))
+    assert llamadas[0][llamadas[0].index("PIDs") + 2] == "3"
+
+
+# --- Interruptor: aplica, run y contenedores (DEBT-PORTERO-IGNORA-SU-INTERRUPTOR-01) --------------------------------
+
+
+@pytest.mark.unit
+def test_aplica_en_observar_registra_habria_una_vez_por_motivo_y_no_ejecuta(tmp_path: Path):
+    _vivo(tmp_path / "proc", RAIZ)
+    ejecutar, llamadas = _systemd(tmp_path / "proc", tmp_path / "cg")
+    fx = _fx(tmp_path, ejecutar)
+    ac, a = _congelar()
+    ultimo: dict[Any, str] = {}
+    for _ in range(3):
+        po.aplica([ac], [a], estado(), replace(fx, modo="observar"), ultimo)
+    po.aplica([replace(ac, motivo="freno termico")], [a], estado(), replace(fx, modo="observar"), ultimo)
+    assert [(f["accion"], f["modo"], f["motivo"]) for f in filas(fx.log)] == [
+        ("habria_congelar", "observar", "PSI alto"), ("habria_congelar", "observar", "freno termico")]
+    assert llamadas == [] and not _freeze(tmp_path).exists()
+    ev = po.aplica([ac], [a], estado(), fx, ultimo)  # control negativo: actuar si llama a systemd
+    assert ev[0]["rc"] == 0 and [x[0] for x in llamadas] == ["busctl", "systemctl"]
+
+
+def _cola_llena(monkeypatch: pytest.MonkeyPatch, banco: Banco, e: po.Estado) -> list[str]:
+    """La medicion la da `e` y /proc solo la peticion de este proceso: el turno decide sobre un mundo conocido."""
+    leidas: list[str] = []
+    monkeypatch.setattr(po, "lee_estado", lambda: leidas.append("estado") or e)
+    monkeypatch.setattr(po, "observar", lambda: po._peticiones({os.getpid(): object()}, time.time(), banco.fx.cola))
+    return leidas
+
+
+class Esperando(Exception):
+    pass
+
+
+@pytest.mark.unit
+def test_cmd_run_lanza_con_tope_en_todo_modo_y_solo_actuar_hace_esperar(
+    banco: Banco, falso_systemd_run: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    leidas = _cola_llena(monkeypatch, banco, estado(psi=20.0))  # PSI alto: en actuar toca esperar
+    monkeypatch.setattr(po.time, "sleep", lambda s: (_ for _ in ()).throw(Esperando()))
+    run = argparse.Namespace(cmd=["--", "true"], clase="suite")
+    with pytest.raises(Esperando):  # actuar: espera turno (control negativo de las dos ramas de abajo)
+        po.cmd_run(run)
+    assert filas(banco.fx.log)[-1]["accion"] == "esperar"
+    interruptor(tmp_path, monkeypatch, "observar")
+    assert po.cmd_run(run) == 0
+    obs = filas(banco.fx.log)[-2:]
+    assert [(f["accion"], f.get("modo")) for f in obs] == [("habria_esperar", "observar"), ("fin", "observar")]
+    assert f"MemoryMax={20 * G * 1024}" in falso_systemd_run.read_text(encoding="utf-8").splitlines()
+    interruptor(tmp_path, monkeypatch, "off")
+    leidas.clear()
+    falso_systemd_run.unlink()
+    assert po.cmd_run(run) == 0
+    assert [(f["accion"], f.get("modo")) for f in filas(banco.fx.log)[-1:]] == [("fin", "off")]
+    assert leidas == [] and f"MemoryMax={20 * G * 1024}" in falso_systemd_run.read_text(encoding="utf-8").splitlines()
+    assert not (banco.fx.cola / f"{os.getpid()}.json").exists()
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("caso", [("actuar", "bb-jobs.slice"), ("observar", "app.slice")])
+def test_cmd_run_solo_mueve_a_otro_slice_en_actuar(
+    banco: Banco, falso_systemd_run: Path, monkeypatch: pytest.MonkeyPatch, poner_modo: Any, caso: tuple[str, str]
+):
+    modo, slice_ = caso
+    poca = 42 * G - po.HOLGURA_MIN_KB + 1
+    _cola_llena(monkeypatch, banco, po.Estado(0.0, "", 42 * G, poca, (po.SliceAlterno("bb-jobs.slice", 30 * G, 0),)))
+    poner_modo(modo)
+    assert po.cmd_run(argparse.Namespace(cmd=["--", "true"], clase="suite")) == 0
+    assert f"--slice={slice_}" in falso_systemd_run.read_text(encoding="utf-8").splitlines()
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("caso", [
+    ("actuar", ["no_actua", "acotar"], 1), ("observar", ["no_actua", "acotaria"], 0), ("off", ["off"], 0)])
+def test_demonio_con_contenedores_obedece_al_interruptor(
+    banco: Banco, docker_falso: None, sin_app_slice: None, poner_modo: Any, caso: tuple[str, list[str], int]
+):
+    modo, acciones, docker = caso
+    poner_modo(modo)
+    assert po.cmd_demonio(argparse.Namespace(una_vez=True, contenedores=True)) == 0
+    assert [f["accion"] for f in filas(banco.fx.log)] == acciones and len(banco.llamadas) == docker
+
+
+@pytest.mark.unit
+def test_cmd_estado_dice_el_modo_del_interruptor(banco: Banco, sin_app_slice: None, tmp_path: Path,
+                                                 monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]):
+    interruptor(tmp_path, monkeypatch, "observar")
+    assert po.cmd_estado(argparse.Namespace()) == 0
+    assert json.loads(capsys.readouterr().out)["modo"] == "observar"
+    interruptor(tmp_path, monkeypatch, "basura")  # control: un modo desconocido vale off
+    po.cmd_estado(argparse.Namespace())
+    assert json.loads(capsys.readouterr().out)["modo"] == "off"
 
 
 # --- Contenedores ----------------------------------------------------------------------------------------------
