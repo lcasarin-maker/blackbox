@@ -1,0 +1,34 @@
+Medido el 2026-10-14: bb pide al motor UNA tool call de un turno (la herramienta `suma`, sin ejecutarla); el agente con herramienta de efecto es el investigador de Atlas, que tiene su propio arnes de inyeccion. Limite medido: el arnes de Atlas no nombra el caso de dos turnos (`sleeper`/`cross-turn`: 0 coincidencias); ese caso le corresponde al dueno de las herramientas.
+
+$ grep -n "tool_choice" tools/canario_motor.py | cut -c1-160
+rc=0
+120:            rt = consulta(URL_CHAT, {"model": nombre, "messages": [{"role": "user", "content": "Usa la herramienta suma para sumar 2 y 3."}], "tools": TOOLS
+
+$ ls -la ~/projects/Atlas/tools/adversarial_injection_probe.py ~/projects/Atlas/tools/kb_investigator.py | cut -c1-200
+rc=0
+-rwxrwxr-x 1 lcasarin lcasarin  89391 oct 13 03:11 /home/lcasarin/projects/Atlas/tools/adversarial_injection_probe.py
+-rwxrwxr-x 1 lcasarin lcasarin 181967 oct 14 08:15 /home/lcasarin/projects/Atlas/tools/kb_investigator.py
+
+$ sed -n 115p ~/projects/Atlas/tools/kb_investigator.py
+rc=0
+GATEWAY = "http://127.0.0.1:8000/v1/chat/completions"
+
+$ grep -n '"name": "write_finding"' ~/projects/Atlas/tools/kb_investigator.py
+rc=0
+634:        "name": "write_finding",
+
+$ grep -ciE "sleeper|cross.?turn" ~/projects/Atlas/tools/adversarial_injection_probe.py
+rc=1
+0
+
+Control positivo: las mismas herramientas SI encuentran lo que existe:
+
+$ grep -q '"tools": TOOLS' tools/canario_motor.py
+rc=0
+
+$ grep -ciE "inject" ~/projects/Atlas/tools/adversarial_injection_probe.py
+rc=0
+23
+
+$ grep -q "127.0.0.1:8000" ~/projects/Atlas/tools/kb_investigator.py
+rc=0

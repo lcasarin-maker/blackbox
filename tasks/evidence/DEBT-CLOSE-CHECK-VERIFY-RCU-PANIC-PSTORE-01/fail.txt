@@ -1,0 +1,5 @@
+Control negativo (DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01), 2026-10-14: el verificador `tools.verify_rcu_panic_pstore` ya existe y, sin la captura real del sujeto, el close_check de cada ficha sujeto sale con rc distinto de 0 (could_not_run). La medicion pendiente vive en esas fichas; esta meta-ficha no tiene trabajo propio. Cada orden debe FALLAR hoy:
+
+$ python3 -m tools.verify_rcu_panic_pstore --evidence tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01
+rc=2
+{"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "findings": ["raw recovery evidence unavailable: [Errno 2] No such file or directory: 'tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/recovery.json'"], "status": "unknown"}

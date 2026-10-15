@@ -1,0 +1,29 @@
+Perfil medido de este equipo el 2026-10-14: una GIGABYTE AI TOP ATOM sola; ni configuracion SSH de otro nodo ni otro nodo en /etc/hosts.
+
+$ cat /sys/class/dmi/id/sys_vendor /sys/class/dmi/id/product_name
+rc=0
+GIGABYTE
+AI TOP ATOM
+
+$ hostname
+rc=0
+<host>
+
+$ grep -ciE "spark|gx10|atom" /etc/hosts
+rc=0
+1
+
+$ ls ~/.ssh/config
+rc=2
+ls: no se puede acceder a '/home/lcasarin/.ssh/config': No existe el archivo o el directorio
+
+Control positivo: las mismas herramientas SI encuentran lo que existe:
+
+$ grep -qi gigabyte /sys/class/dmi/id/sys_vendor
+rc=0
+
+$ grep -qiE "atom" /etc/hosts
+rc=0
+
+$ test -d ~/.ssh
+rc=0

@@ -66,3 +66,6 @@ El agente hardware tiene asignada la entrada CLI con JSON literal y códigos 0/1
 
 - close_check antes: rc=2, `status: unknown`, could_not_run=1 (falta `commands.json` de captura cruda). Sin cambio: requiere captura real de roam/soak en el stack citado, que implica tocar la red de la maquina.
 - Hecho: la regla de clasificacion aislamiento vs cuelgue (`tools/incident_report.py::clasifica_hueco_de_red`, ver FEATURE-BB-FALSO-CUELGUE-POR-AISLAMIENTO-WIFI-01). Falta: A/B de workarounds, fixture/captura del WRONG_KEY+no-secrets, recuperacion opt-in con rollback.
+
+## Criterios ejecutables de `tools.verify_wifi_isolation` (2026-10-14)
+Los criterios ejecutables de `tools.verify_wifi_isolation` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.

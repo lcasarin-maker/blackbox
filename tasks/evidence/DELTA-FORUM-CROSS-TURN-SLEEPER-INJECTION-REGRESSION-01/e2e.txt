@@ -1,0 +1,9 @@
+Decision registrada para DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01, 2026-10-14:
+{
+ "voto": "Luis, 2026-10-14",
+ "closure_type": "duplicate",
+ "duplicada_de": "~/projects/Atlas/tools/adversarial_injection_probe.py",
+ "reabrible": true,
+ "razon": "Duplicada del arnes de inyeccion de Atlas (~/projects/Atlas/tools/adversarial_injection_probe.py): quien ejecuta herramientas con efecto contra el motor local es Atlas (tools/kb_investigator.py:115 manda peticiones con herramientas a 127.0.0.1:8000 y su herramienta write_finding escribe un archivo), y bb solo pide una tool call de un turno sin ejecutarla. Decision de Luis 2026-10-14: la prueba de inyeccion vive con el dueno de las herramientas; reabrir si bb llega a ejecutar herramientas.",
+ "limite_medido": "el arnes de Atlas no nombra el caso de dos turnos (grep -ciE \"sleeper|cross.?turn\" = 0); queda con el dueno de las herramientas (Atlas)"
+}

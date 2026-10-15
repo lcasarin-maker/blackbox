@@ -1,0 +1,10 @@
+Control negativo de aplicabilidad (DELTA-FORUM-USB-RAID-LINK-ADMISSION-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (un disco o matriz USB conectado). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ lsblk -dn -o NAME,TRAN | grep -w usb
+rc=1
+
+$ lsusb | grep -iE "mass storage|nvme|jmicron|asmedia|RTL9210|ugreen|sabrent|seagate|western digital|sandisk|samsung"
+rc=1
+
+$ grep "^md" /proc/mdstat
+rc=1

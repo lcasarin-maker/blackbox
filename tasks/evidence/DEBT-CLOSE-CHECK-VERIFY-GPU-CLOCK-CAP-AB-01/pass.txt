@@ -1,0 +1,16 @@
+El verificador existe, la ficha sujeto lo nombra en su close_check y sus pruebas unitarias pasan (cubren casos que pasan y controles negativos que lo rechazan):
+
+$ ls -la tools/verify_gpu_clock_cap_ab.py
+rc=0
+-rw-rw-r-- 1 lcasarin lcasarin 22433 oct 14 19:29 tools/verify_gpu_clock_cap_ab.py
+
+$ grep -c "tools.verify_gpu_clock_cap_ab" tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md
+rc=0
+2
+
+Control positivo: el verificador SI puede dar el veredicto de pase sobre fixtures validos (y el de rechazo sobre los neutralizados):
+
+$ python3 -m pytest -q -p no:cacheprovider tests/test_gpu_capture_invariants.py
+rc=0
+.........                                                                [100%]
+9 passed in 0.08s

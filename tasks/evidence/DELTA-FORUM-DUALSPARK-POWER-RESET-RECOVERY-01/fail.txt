@@ -1,0 +1,16 @@
+Control negativo de aplicabilidad (DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (dos o mas nodos Spark enlazados por CX7). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ lspci | grep -iE "mellanox|connectx"
+rc=1
+
+$ ls /sys/class/infiniband | grep -q .
+rc=1
+
+$ test -e /dev/infiniband
+rc=1
+
+$ test "$(grep -ciE "spark|gx10|atom" /etc/hosts)" -ge 2
+rc=1
+
+$ test -e ~/.ssh/config
+rc=1

@@ -1,0 +1,13 @@
+Control negativo de aplicabilidad (FORUM-02-GX10-READ-INTEGRITY), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (un segundo ASUS GX10 alcanzable por SSH como referencia). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ grep -qi asus /sys/class/dmi/id/sys_vendor
+rc=1
+
+$ test -e ~/.ssh/config
+rc=1
+
+$ grep -iE "gx10|spark" /etc/hosts
+rc=1
+
+$ test "$(grep -ciE "spark|gx10|atom" /etc/hosts)" -ge 2
+rc=1

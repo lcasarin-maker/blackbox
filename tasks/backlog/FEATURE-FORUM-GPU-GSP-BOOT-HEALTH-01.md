@@ -66,3 +66,6 @@ Se reutilizó `gpu_runtime_capture` y se preservó resultado `could_not_run` de 
 - Medido en esta maquina (boot actual): `disponible`, nvidia-smi `NVIDIA GB10, 580.178.04`, 0 lineas GSP en el journal del kernel.
 - Controles negativos corridos en tests: PCI presente + nvidia-smi falla/timeout -> PCI_SIN_GSP; PCI presente + smi ok + linea de error GSP/NVRM -> PCI_SIN_GSP; PCI ausente -> INDETERMINADO; journal ilegible -> INDETERMINADO.
 - Falta: un incidente real (o inyeccion de fallo soportada) con versiones y boot preservados, recuperacion/rollback OEM y verificador `verify_forum_finding` con esa evidencia. La sonda se probo con fixtures, no con un GSP fallido real (could_not_run).
+
+## Criterios ejecutables de `tools.verify_forum_finding` (2026-10-14)
+Los criterios ejecutables de `tools.verify_forum_finding` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.

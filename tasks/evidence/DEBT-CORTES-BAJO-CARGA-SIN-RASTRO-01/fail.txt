@@ -1,0 +1,40 @@
+Control negativo (DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01), 2026-10-14: el close_check VIEJO (`grep -q .` sobre el archivo de clasificacion; antes apuntaba a `clasificacion.md`, renombrado a `.txt` porque ledger-schema no admite un `.md` dentro de una carpeta de evidencia) acepta basura y el NUEVO la rechaza. Se sustituye temporalmente clasificacion.txt por un archivo basura, luego por uno de una sola linea con la marca, y se corren los dos; despues se restaura el archivo real (sha256 comprobado).
+
+# 1) clasificacion.txt = "basura"
+
+$ grep -q . tasks/evidence/DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01/clasificacion.txt
+rc=0
+
+$ python3 -m pytest -q -p no:cacheprovider tests/test_clasificacion_cortes.py::test_la_clasificacion_real_cubre_los_tres_cortes 2>&1 | tail -3; exit ${PIPESTATUS[0]}
+rc=1
+=========================== short test summary info ============================
+FAILED tests/test_clasificacion_cortes.py::test_la_clasificacion_real_cubre_los_tres_cortes
+1 failed in 0.06s
+
+# 2) clasificacion.txt = una sola linea con la marca y las tres fechas
+
+$ grep -q . tasks/evidence/DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01/clasificacion.txt
+rc=0
+
+$ python3 -m pytest -q -p no:cacheprovider tests/test_clasificacion_cortes.py::test_la_clasificacion_real_cubre_los_tres_cortes 2>&1 | tail -3; exit ${PIPESTATUS[0]}
+rc=1
+=========================== short test summary info ============================
+FAILED tests/test_clasificacion_cortes.py::test_la_clasificacion_real_cubre_los_tres_cortes
+1 failed in 0.06s
+
+# 3) clasificacion.txt vacio
+
+$ grep -q . tasks/evidence/DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01/clasificacion.txt
+rc=1
+
+$ python3 -m pytest -q -p no:cacheprovider tests/test_clasificacion_cortes.py::test_la_clasificacion_real_cubre_los_tres_cortes 2>&1 | tail -3; exit ${PIPESTATUS[0]}
+rc=1
+=========================== short test summary info ============================
+FAILED tests/test_clasificacion_cortes.py::test_la_clasificacion_real_cubre_los_tres_cortes
+1 failed in 0.06s
+
+# restaurado
+
+$ sha256sum tasks/evidence/DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01/clasificacion.txt /tmp/claude-1000/-home-lcasarin-projects-blackbox/0cc436d1-99b5-4899-90a9-885157401f41/scratchpad/clasificacion.txt.bak | cut -c1-64 | uniq | wc -l
+rc=0
+1

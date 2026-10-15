@@ -1,0 +1,16 @@
+El verificador existe, la ficha sujeto lo nombra en su close_check y sus pruebas unitarias pasan (cubren casos que pasan y controles negativos que lo rechazan):
+
+$ ls -la tools/verify_wifi_isolation.py
+rc=0
+-rw-rw-r-- 1 lcasarin lcasarin 24130 oct 14 19:29 tools/verify_wifi_isolation.py
+
+$ grep -c "tools.verify_wifi_isolation" tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md
+rc=0
+1
+
+Control positivo: el verificador SI puede dar el veredicto de pase sobre fixtures validos (y el de rechazo sobre los neutralizados):
+
+$ python3 -m pytest -q -p no:cacheprovider tests/test_wifi_trial_invariants.py
+rc=0
+.........                                                                [100%]
+9 passed in 0.08s

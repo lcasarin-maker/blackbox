@@ -1,0 +1,64 @@
+El verificador existe, la ficha sujeto lo nombra en su close_check y sus pruebas unitarias pasan (cubren casos que pasan y controles negativos que lo rechazan):
+
+$ ls -la tools/verify_forum_finding.py
+rc=0
+-rw-rw-r-- 1 lcasarin lcasarin 1464 oct 14 19:29 tools/verify_forum_finding.py
+
+$ grep -c "tools.verify_forum_finding" tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md
+rc=0
+1
+
+$ grep -c "tools.verify_forum_finding" tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md
+rc=0
+1
+
+$ grep -c "tools.verify_forum_finding" tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md
+rc=0
+1
+
+$ grep -c "tools.verify_forum_finding" tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md
+rc=0
+1
+
+$ grep -c "tools.verify_forum_finding" tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md
+rc=0
+1
+
+$ grep -c "tools.verify_forum_finding" tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md
+rc=0
+1
+
+$ grep -c "tools.verify_forum_finding" tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md
+rc=0
+1
+
+$ grep -c "tools.verify_forum_finding" tasks/backlog/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT.md
+rc=0
+1
+
+$ grep -c "tools.verify_forum_finding" tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md
+rc=0
+1
+
+$ grep -c "tools.verify_forum_finding" tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md
+rc=0
+1
+
+$ grep -c "tools.verify_forum_finding" tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md
+rc=0
+1
+
+$ grep -c "tools.verify_forum_finding" tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md
+rc=0
+1
+
+$ grep -c "tools.verify_forum_finding" tasks/backlog/FORUM-02-USB-UVC-EP0.md
+rc=0
+1
+
+Control positivo: el verificador SI puede dar el veredicto de pase sobre fixtures validos (y el de rechazo sobre los neutralizados):
+
+$ python3 -m pytest -q -p no:cacheprovider tests/test_hardware_batch_routes.py
+rc=0
+.......                                                                  [100%]
+7 passed in 0.10s

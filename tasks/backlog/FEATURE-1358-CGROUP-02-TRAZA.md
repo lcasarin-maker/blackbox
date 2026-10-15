@@ -60,3 +60,6 @@ esta ficha conserva status open.
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md`, `tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/trace-map.txt`, `tools/kernel_charges.bt`, `tools/verify_cgroup_plan.py`, `tests/test_closure_kernel_selectors.py`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Criterios ejecutables de `tools.verify_cgroup_plan` (2026-10-14)
+Los criterios ejecutables de `tools.verify_cgroup_plan` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.

@@ -60,3 +60,6 @@ Compara el driver 615.71.09 contra el 580.178.04 de este host; el modulo 615 com
 Version para un solo nodo Gigabyte AI TOP ATOM: Reducir a informe estatico de compatibilidad 615 y rechazo documentado, sin cargar el driver; la contabilidad nativa se evalua con el modulo 580 parcheado (tools/dmem_*).
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Criterios ejecutables de `tools.verify_cgroup_plan` (2026-10-14)
+Los criterios ejecutables de `tools.verify_cgroup_plan` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.

@@ -1,0 +1,38 @@
+Perfil medido de este equipo el 2026-10-14: el motor sirve un solo modelo (nemotron-local); en disco hay tres directorios qwen3-* que ningun contenedor ni proceso sirve (ver fail: ningun proceso nombra una ruta de pesos qwen). Unica coincidencia de 'qwen' en procesos: el motor usa el parser de herramientas `qwen3_xml` con el modelo nemotron (ver el Cmd del contenedor), que no es un modelo Qwen servido.
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | python3 -c "import json,sys;d=json.load(sys.stdin);print([(m[\"id\"],m[\"root\"]) for m in d[\"data\"]])"
+rc=0
+[('nemotron-local', '/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4')]
+
+$ docker ps --format "{{.Names}} {{.Image}}"
+rc=0
+nemotron-server vllm/vllm-openai:v0.27.1
+atlas-pgvector pgvector/pgvector:pg16
+otro proyecto-pg pgvector/pgvector:pg16
+
+$ docker inspect nemotron-server --format '{{json .Config.Cmd}}'
+rc=0
+["/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4","--served-model-name","nemotron-local","--gpu-memory-utilization","0.3","--max-model-len","32768","--host","127.0.0.1","--port","8000","--trust-remote-code","--moe-backend","marlin","--mamba-backend","flashinfer","--mamba-cache-mode","align","--kv-cache-dtype","fp8","--enable-prefix-caching","--reasoning-parser","nemotron_v3","--enable-auto-tool-choice","--tool-call-parser","qwen3_xml","--max-num-batched-tokens","8192"]
+
+$ ls /srv/ai/models/llm
+rc=0
+nemotron-3.5-lightning-30b-a3b-nvfp4
+nemotron-3.5-lightning-30b-a3b-nvfp4-dspark
+nemotron-3-super-120b-a12b-nvfp4
+qwen3-14b-nvfp4
+qwen3.6-27b-fp8
+qwen3-8b-nvfp4
+
+Control positivo: las mismas herramientas SI encuentran lo que existe:
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | grep -qi nemotron
+rc=0
+
+$ pgrep -f -i '[v]llm' >/dev/null
+rc=0
+
+$ ls -d /srv/ai/models/llm/qwen3*
+rc=0
+/srv/ai/models/llm/qwen3-14b-nvfp4
+/srv/ai/models/llm/qwen3.6-27b-fp8
+/srv/ai/models/llm/qwen3-8b-nvfp4

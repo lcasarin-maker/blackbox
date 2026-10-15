@@ -1,0 +1,10 @@
+Control negativo (DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01), 2026-10-14: buscar en bb el sujeto de la ficha (un agente que ejecuta herramientas con efecto y lleva el resultado a un segundo turno). Cada orden debe FALLAR (rc distinto de 0) porque bb no lo hace:
+
+$ grep -nE "\"role\": ?\"tool\"|'role': ?'tool'" tools/canario_motor.py
+rc=1
+
+$ grep -nE "write_finding|send_mail|smtplib|subprocess" tools/canario_motor.py
+rc=1
+
+$ grep -rlE "\"role\": ?\"tool\"" bin/
+rc=1

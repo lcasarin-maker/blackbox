@@ -1,0 +1,13 @@
+Control negativo de aplicabilidad (DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (dos contenedores de motor, imagen reconstruida o modo offline). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ test "$(docker ps --format '{{.Image}}' | grep -c vllm)" -ge 2
+rc=1
+
+$ docker ps -a --format '{{.Image}}' | grep -i vllm | grep -vx 'vllm/vllm-openai:v0.27.1'
+rc=1
+
+$ docker inspect nemotron-server --format '{{json .Config.Env}}' | grep -E 'HF_HUB_OFFLINE=1|TRANSFORMERS_OFFLINE=1'
+rc=1
+
+$ docker ps --format '{{.Image}}' | grep -viE 'vllm|pgvector'
+rc=1

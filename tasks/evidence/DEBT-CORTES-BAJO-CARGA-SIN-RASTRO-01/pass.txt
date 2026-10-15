@@ -1,0 +1,29 @@
+Pase medido el 2026-10-14: el close_check nuevo acepta la clasificacion real, y sus controles negativos (vacio, basura, una linea, un corte quitado, boot equivocado, clasificacion cambiada, salida ausente, marca ausente) pasan como pruebas: el verificador sabe decir que no.
+
+$ python3 -m pytest -q -p no:cacheprovider tests/test_clasificacion_cortes.py::test_la_clasificacion_real_cubre_los_tres_cortes
+rc=0
+.                                                                        [100%]
+1 passed in 0.04s
+
+$ python3 -m pytest -q -p no:cacheprovider tests/test_clasificacion_cortes.py -v 2>&1 | grep -E "PASSED|FAILED|passed|failed"
+rc=0
+============================== 7 passed in 0.05s ===============================
+
+Fuente de la clasificacion: filas de `bb reboots` de los cortes (los demas boots son cierres ordenados o colapsos de memoria):
+
+$ ./bin/bb reboots --ultimos 18 2>/dev/null | python3 -c "import json,sys
+for l in sys.stdin:
+ d=json.loads(l)
+ if d['etiqueta']=='CORTE_ABRUPTO': print(d['boot_id'][:8], d['hora_fin_registrada'], d['hueco_s'], d['bert_palabra_0x14'], d['could_not_run'])"
+rc=0
+36ebc0d9 2026-10-06T22:07:47.739820+00:00 2558 00000100 ['observador_externo']
+0de3e072 2026-10-07T22:49:57.425294+00:00 346 00000020 ['observador_externo']
+e651544a 2026-10-09T00:55:48.043711+00:00 2265 None ['observador_externo']
+54b71618 2026-10-11T18:13:18.087597+00:00 4231 None ['observador_externo']
+92a1de3d 2026-10-12T23:08:21.066333+00:00 4 None ['observador_externo']
+0b00a7c2 2026-10-13T00:32:36.835753+00:00 59 00000010 ['observador_externo']
+a66787af 2026-10-13T20:03:27.482666+00:00 255 00000010 ['observador_externo']
+
+$ grep -c "^### Corte " tasks/evidence/DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01/clasificacion.txt
+rc=0
+5

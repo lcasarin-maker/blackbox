@@ -1,0 +1,5 @@
+Control negativo (DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01), 2026-10-14: el verificador `tools.verify_wifi_isolation` ya existe y, sin la captura real del sujeto, el close_check de cada ficha sujeto sale con rc distinto de 0 (could_not_run). La medicion pendiente vive en esas fichas; esta meta-ficha no tiene trabajo propio. Cada orden debe FALLAR hoy:
+
+$ python3 -m tools.verify_wifi_isolation --evidence tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01
+rc=2
+{"could_not_run": 1, "fail": 0, "files": ["tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01/commands.json"], "reason": "raw command capture missing or malformed; current snapshot cannot prove a roam sequence", "status": "unknown"}

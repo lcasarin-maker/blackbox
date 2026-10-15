@@ -52,35 +52,12 @@ def _assert_finding_passes(finding_id: str) -> None:
     assert result['files'], result
 
 
-def test_debt_close_check_verify_forum_finding_01() -> None:
-    for finding_id in FORUM_IDS:
-        _assert_finding_passes(finding_id)
-
-
 def test_forum_finding_supports_every_original_id() -> None:
     for finding_id in FORUM_IDS:
         result = cast(dict[str, Any], verify_forum_finding(finding_id))
         assert result['status'] in {'pass', 'fail', 'unknown'}, (finding_id, result)
         assert result['status'] != 'fail', (finding_id, result)
         assert result['status'] == 'pass' or result['could_not_run'] > 0, (finding_id, result)
-
-
-def test_debt_close_check_verify_gpu_clock_cap_ab_01() -> None:
-    _assert_finding_passes('FEATURE-FORUM-GPU-CLOCK-CAP-AB-01')
-
-
-def test_debt_close_check_verify_wifi_isolation_01() -> None:
-    _assert_finding_passes('FEATURE-FORUM-WIFI-ISOLATION-01')
-
-
-def test_debt_close_check_verify_usb_hid_postupdate_01() -> None:
-    _assert_finding_passes('FEATURE-USB-HID-POSTUPDATE-CHECK')
-
-
-def test_debt_close_check_verify_memory_saver_01() -> None:
-    # The two source cards concern trace/4K packing; this control rejects a report-only bundle.
-    for finding_id in ('FEATURE-MEMORYSAVER-02-TRAZADOR', 'FEATURE-MEMORYSAVER-04-PACKING-4K'):
-        _assert_finding_passes(finding_id)
 
 
 def test_apt_arm64_raw_capture_preserves_missing_forum_negative() -> None:

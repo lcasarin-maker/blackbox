@@ -171,3 +171,6 @@ Ficha madre grande (40 KB) con varios relatos; lo aplicable es el A/B de contenc
 Version para un solo nodo Gigabyte AI TOP ATOM: Ejecutar el A/B de presion RAM+CUDA con dmem cargado sobre el contenedor vLLM local con captura de PSI, tiempos de ultima respuesta y watchdog, y partir las sub-propuestas multinodo/otro modelo en fichas separadas o descartarlas.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Criterios ejecutables de `tools.verify_cgroup_plan` (2026-10-14)
+Los criterios ejecutables de `tools.verify_cgroup_plan` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.

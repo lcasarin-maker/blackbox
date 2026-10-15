@@ -1,0 +1,75 @@
+---
+id: DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01
+kind: task
+domain: VERDICT
+title: "Implementar criterios ejecutables de tools.verify_memory_saver"
+status: done
+closed_at: 2026-10-14
+closure_type: duplicate
+reason: "Duplicada de su(s) ficha(s) sujeto FEATURE-MEMORYSAVER-02-TRAZADOR, FEATURE-MEMORYSAVER-04-PACKING-4K: pedia implementar los criterios ejecutables de tools.verify_memory_saver, que ya existe y es el close_check de esas fichas; su propio close_check era un xfail de relleno. Decision de Luis 2026-10-14: consolidar; la medicion la lleva la ficha sujeto."
+evidence: {"pass": "tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01/pass.txt", "fail": "tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01/fail.txt", "e2e": "tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01/e2e.txt"}
+severity: P2
+origin: asserted
+satd_family: BLIND_INSTRUMENT
+created: 2026-10-02
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md", "expect": "exit_zero", "porque": "Cerrada como duplicate (decision de Luis 2026-10-14: consolidar en la ficha sujeto): no hay fix propio que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_memory_saver_01`, un xfail de relleno que se retira con el cierre; los criterios ejecutables los mide el close_check de la ficha sujeto."}
+---
+
+## Registro y responsable
+
+Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
+
+## Evidencia y alcance
+
+El módulo citado por 2 fichas ya está implementado; su presencia acredita disponibilidad, mientras el cierre exige capturas reales. Esta ficha agrupa la implementación compartida; las investigaciones originales conservan sus ensayos y no se duplican.
+
+- tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md
+- tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md
+
+Fuentes: tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md, tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md.
+
+## Criterio de cierre y control negativo
+
+Cada fase/id soportado evalúa su sujeto específico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo lógica realmente común; conservar comandos literales y demostrar discriminación entre fichas.
+
+## Estado del verificador
+
+La ficha permanece abierta. El selector original ya existe y ejecuta ambas fases. Resultado actual: 0 PASS, 0 FAIL, 2 UNKNOWN y 2 could_not_run por captura ausente. El lector seguro y sus negativos pasan con la suite focal (92 pruebas); la evidencia experimental sigue pendiente. Recibo: tasks/evidence/CLOSURE-CONTROLS-2026-10-03/memory-original-selector-primary-run.json.
+
+Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `privileged_access`.
+- Impedimento: Selector ya implementado; recibo registra 0 PASS, 0 FAIL, 2 UNKNOWN, 2 could_not_run por captura ausente. Evidencia experimental runtime/cuda requiere bpftrace root y probes accesibles.
+- Evidencia faltante para cierre: Selector ya implementado; recibo registra 0 PASS, 0 FAIL, 2 UNKNOWN, 2 could_not_run por captura ausente. Evidencia experimental runtime/cuda requiere bpftrace root y probes accesibles.
+- Siguiente acción: Coordinación BB: preservar/verificar el recibo y especificar schema; operador Luis: aportar captura autorizada de runtime/probes sin alterar el host. Ref explícita: tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md y tests/test_debt_registration_controls.py. Ref explícita: tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md y tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json.
+- Responsable del siguiente paso: Coordinación BB prepara/implementa; cuando la acción requiere root/lab/hardware, operador Luis aporta y ejecuta el sujeto indicado..
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/memory-original-selector-primary-run.json`, `tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Endurecimiento del verificador — 2026-10-07
+
+Cuatro agujeros de discriminación medidos en `tools/verify_memory_saver.py` (fase 02-trazador) y cerrados:
+
+- Captura honesta del control negativo `none` con `events=[]` daba `fail` ("no raw charge events for none"); el fixture sólo pasaba con un evento `failure` sintético. Ahora pasa si los heartbeats y el control CPU lo respaldan; los casos positivos sin eventos siguen en `fail`.
+- `cpu_touch` duplicado con una copia que filtra daba `pass`; `none` duplicado con cargos daba `pass` (control neutralizado). Ahora: exactamente una captura por caso, si no `unknown` + could_not_run=1.
+- Heartbeats fuera de `[start_ns, end_ns]` daban `pass`. Ahora `unknown` + could_not_run=1.
+
+Regresión: `tests/test_closure_kernel.py::test_memory_saver_negative_control_is_honest_unique_and_windowed` (falla con el código previo: `assert 'fail' == 'pass'`; pasa con el arreglo).
+
+La ficha sigue abierta: el close_check aún reporta por fase `status: unknown`, `fail: 0`, `could_not_run: 1` ("raw phase capture unavailable: ... 'capture.json'"). Falta la captura real, que exige bpftrace como root (`sudo -n` pide contraseña) y una carga CUDA medida; la aporta el operador.
+
+## Estado (2026-10-11, /0 + /vote)
+
+Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Root Cause
+Meta-ficha sin sujeto propio: pedia implementar los criterios ejecutables de `tools.verify_memory_saver`. El verificador existe (`tools/verify_memory_saver.py`) y es el close_check de `FEATURE-MEMORYSAVER-02-TRAZADOR`, `FEATURE-MEMORYSAVER-04-PACKING-4K`; hoy sale con rc=2 (could_not_run) porque falta la captura real del sujeto, que es el trabajo de esas fichas, no de esta. Su propio close_check era un selector xfail que no podia cerrar nada.
+
+## Regression Test
+Ninguno propio: la ficha se cierra como duplicada. Se retira `tests/test_debt_registration_controls.py::test_debt_close_check_verify_memory_saver_01` y `tests/test_closure_hardware.py::test_debt_close_check_verify_memory_saver_01`, xfail de relleno, junto con sus entradas de `tests/known_failures.json`; las pruebas unitarias de `tools.verify_memory_saver` siguen corriendo.
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: el close_check de cada ficha sujeto sale hoy con rc distinto de 0, el verificador sabe decir que no), `pass` (el verificador existe, cada ficha sujeto lo nombra y sus pruebas unitarias pasan: control positivo) y `e2e` (la decision registrada). Cada ficha sujeto lleva una nota que dice que los criterios de `tools.verify_memory_saver` se miden alli. Para reabrirla: `git mv tasks/done/DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01.md tasks/backlog/` y `status: open`.

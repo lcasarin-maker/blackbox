@@ -1,0 +1,20 @@
+El verificador existe, la ficha sujeto lo nombra en su close_check y sus pruebas unitarias pasan (cubren casos que pasan y controles negativos que lo rechazan):
+
+$ ls -la tools/verify_memory_saver.py
+rc=0
+-rw-rw-r-- 1 lcasarin lcasarin 29509 oct 14 19:29 tools/verify_memory_saver.py
+
+$ grep -c "tools.verify_memory_saver" tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md
+rc=0
+1
+
+$ grep -c "tools.verify_memory_saver" tasks/backlog/FEATURE-MEMORYSAVER-04-PACKING-4K.md
+rc=0
+2
+
+Control positivo: el verificador SI puede dar el veredicto de pase sobre fixtures validos (y el de rechazo sobre los neutralizados):
+
+$ python3 -m pytest -q -p no:cacheprovider tests/test_memory_saver_readers.py tests/test_closure_kernel.py -k memory_saver
+rc=0
+.....................                                                    [100%]
+21 passed, 78 deselected in 0.35s

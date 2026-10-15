@@ -119,3 +119,6 @@ Severidad P1: ficha 'standalone DGX Spark' es este caso (un nodo sin cable CX7, 
 Version para un solo nodo Gigabyte AI TOP ATOM: Sensor de solo lectura: presencia de /etc/nvidia/cx7-hotplug-enabled, estado del endpoint PCIe CX7 y journal de cx7-pcie-hotplug, correlacionado con temperatura en idle; no aplicar blacklist.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Criterios ejecutables de `tools.verify_forum_finding` (2026-10-14)
+Los criterios ejecutables de `tools.verify_forum_finding` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.

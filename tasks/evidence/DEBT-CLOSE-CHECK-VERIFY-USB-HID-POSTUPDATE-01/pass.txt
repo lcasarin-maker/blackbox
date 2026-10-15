@@ -1,0 +1,16 @@
+El verificador existe, la ficha sujeto lo nombra en su close_check y sus pruebas unitarias pasan (cubren casos que pasan y controles negativos que lo rechazan):
+
+$ ls -la tools/verify_usb_hid_postupdate.py
+rc=0
+-rw-rw-r-- 1 lcasarin lcasarin 13344 oct 14 19:29 tools/verify_usb_hid_postupdate.py
+
+$ grep -c "tools.verify_usb_hid_postupdate" tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md
+rc=0
+1
+
+Control positivo: el verificador SI puede dar el veredicto de pase sobre fixtures validos (y el de rechazo sobre los neutralizados):
+
+$ python3 -m pytest -q -p no:cacheprovider tests/test_usb_hid_admission_invariants.py
+rc=0
+....                                                                     [100%]
+4 passed in 0.05s

@@ -1,0 +1,38 @@
+Perfil medido de este equipo el 2026-10-14: el unico disco es el NVMe interno; el bus USB no tiene almacenamiento y no hay matrices md.
+
+$ lsblk -d -o NAME,TRAN,SIZE,TYPE -e 7
+rc=0
+NAME    TRAN    SIZE TYPE
+nvme0n1 nvme    3.7T disk
+
+$ lsusb
+rc=0
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 005 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 006 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 007 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 008 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 009 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 010 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 011 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 011 Device 002: ID 13d3:3630 IMC Networks Wireless_Device
+Bus 012 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+
+$ cat /proc/mdstat
+rc=0
+Personalities : [raid0] [raid1] [raid4] [raid5] [raid6] [raid10] [linear] 
+unused devices: <none>
+
+Control positivo: las mismas herramientas SI encuentran lo que existe:
+
+$ lsblk -dn -o NAME,TRAN | grep -qw nvme
+rc=0
+
+$ lsusb | grep -q Wireless_Device
+rc=0
+
+$ test -r /proc/mdstat
+rc=0
