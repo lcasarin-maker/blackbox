@@ -1,0 +1,38 @@
+recarga_probada
+control negativo: quitar nvidia-caps SI cambia la comparacion (veredicto del script ventana.sh)
+contenedor vllm/vllm-openai:v0.27.1, Docker version 29.6.2, build dfc4efb, driver 580.178.04, 2026-10-15; reconstruido del log literal tasks/evidence/VENTANA-VLLM-20261015/ventana-20261015T063058.txt porque el script no pudo escribir aqui (la carpeta no existia)
+
+== 1. prueba de recarga
+--- ANTES:
+GPU 0: NVIDIA GB10 (UUID: GPU-42b7575d-056e-d788-7367-7e538af60a3a)
+/dev/nvidia-modeset
+/dev/nvidia-uvm
+/dev/nvidia0
+/dev/nvidiactl
+
+/dev/nvidia-caps:
+nvidia-cap1
+nvidia-cap2
+--- CONTROL (60 s despues, SIN recarga):
+GPU 0: NVIDIA GB10 (UUID: GPU-42b7575d-056e-d788-7367-7e538af60a3a)
+/dev/nvidia-modeset
+/dev/nvidia-uvm
+/dev/nvidia0
+/dev/nvidiactl
+
+/dev/nvidia-caps:
+nvidia-cap1
+nvidia-cap2
+daemon-reload rc=0
+--- DESPUES de daemon-reload:
+GPU 0: NVIDIA GB10 (UUID: GPU-42b7575d-056e-d788-7367-7e538af60a3a)
+/dev/nvidia-modeset
+/dev/nvidia-uvm
+/dev/nvidia0
+/dev/nvidiactl
+
+/dev/nvidia-caps:
+nvidia-cap1
+nvidia-cap2
+tasks/evidence/VENTANA-VLLM-20261015/ventana.sh: línea 43: /home/lcasarin/projects/blackbox/tasks/evidence/DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01/prueba.txt: No existe el archivo o el directorio
+veredicto: recarga_probada (control negativo: quitar nvidia-caps SI cambia la comparacion)

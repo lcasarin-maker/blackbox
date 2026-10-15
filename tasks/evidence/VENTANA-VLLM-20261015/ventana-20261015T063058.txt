@@ -1,0 +1,51 @@
+== inicio 2026-10-15T06:30:58-06:00; motor: 0 contenedor(es) nemotron-server corriendo (debe ser 0)
+
+== 1. prueba de recarga
+--- ANTES:
+GPU 0: NVIDIA GB10 (UUID: GPU-42b7575d-056e-d788-7367-7e538af60a3a)
+/dev/nvidia-modeset
+/dev/nvidia-uvm
+/dev/nvidia0
+/dev/nvidiactl
+
+/dev/nvidia-caps:
+nvidia-cap1
+nvidia-cap2
+--- CONTROL (60 s despues, SIN recarga):
+GPU 0: NVIDIA GB10 (UUID: GPU-42b7575d-056e-d788-7367-7e538af60a3a)
+/dev/nvidia-modeset
+/dev/nvidia-uvm
+/dev/nvidia0
+/dev/nvidiactl
+
+/dev/nvidia-caps:
+nvidia-cap1
+nvidia-cap2
+daemon-reload rc=0
+--- DESPUES de daemon-reload:
+GPU 0: NVIDIA GB10 (UUID: GPU-42b7575d-056e-d788-7367-7e538af60a3a)
+/dev/nvidia-modeset
+/dev/nvidia-uvm
+/dev/nvidia0
+/dev/nvidiactl
+
+/dev/nvidia-caps:
+nvidia-cap1
+nvidia-cap2
+tasks/evidence/VENTANA-VLLM-20261015/ventana.sh: línea 43: /home/lcasarin/projects/blackbox/tasks/evidence/DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01/prueba.txt: No existe el archivo o el directorio
+veredicto: recarga_probada (control negativo: quitar nvidia-caps SI cambia la comparacion)
+
+== 2. docker.slice 14 -> 16 GiB
+b963e13b7fc59d658b8536da2bc549be5d44c9d80b39d0d51941058518c202b9  /var/lib/blackbox/99-blackbox.conf.14G
+antes: MemoryMax=15032385536
+restart docker rc=0
+despues: MemoryMax=17179869184 (esperado MemoryMax=17179869184)
+atlas-pgvector Up 8 seconds
+aequitas-pg Up 8 seconds
+
+== 3. bb-gpu-accounting.service
+Created symlink /etc/systemd/system/multi-user.target.wants/bb-gpu-accounting.service → /etc/systemd/system/bb-gpu-accounting.service.
+enable rc=0
+is-enabled: enabled is-active: active accounting.mode: Enabled
+
+== fin 2026-10-15T06:32:16-06:00. Dile a Claude que termino.
