@@ -388,3 +388,121 @@ def test_la_evidencia_commiteada_es_previa_al_despliegue_y_discrimina():
     assert filas["remove_critico"]["exit_code"] != 0 and ag.MENSAJE_BLOQUEO in filas["remove_critico"]["stderr"]
     assert "--remove" not in filas["remove_critico"]["dpkg_log"]
     assert filas["remove_inocuo"]["exit_code"] == 0 and f"--remove {ag.INOCUO}" in filas["remove_inocuo"]["dpkg_log"]
+
+
+# --- el verificador sobre evidencia de simulaciones: cada rama de _load/_classify/verify/main ----------
+
+COMMITEADA = ROOT / "tasks" / "evidence" / "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD"
+
+
+def _evidencia_apt(tmp_path: Path, mutar=None, *, raw: bytes | None = None, sha: str | None = None) -> Path:
+    """apt-captures.json (+ .sha256) en un directorio nuevo, partiendo de las simulaciones reales commiteadas."""
+    captura = json.loads((COMMITEADA / "apt-captures.json").read_text(encoding="utf-8"))
+    if mutar:
+        mutar(captura)
+    ev = tmp_path / "apt-ev"
+    ev.mkdir(parents=True)
+    raw = json.dumps(captura).encode() if raw is None else raw
+    (ev / "apt-captures.json").write_bytes(raw)
+    (ev / "apt-captures.sha256").write_text(sha or hashlib.sha256(raw).hexdigest(), encoding="ascii")
+    return ev
+
+
+def _invertir(c: dict[str, Any]) -> None:
+    c["commands"][0]["stdout"], c["commands"][1]["stdout"] = c["commands"][1]["stdout"], c["commands"][0]["stdout"]
+
+
+def test_control_positivo_las_simulaciones_commiteadas_pasan_sin_mutar(tmp_path: Path):
+    r = ag.verify(_evidencia_apt(tmp_path))
+    assert r["status"] == "pass" and r["checks"] == {
+        "captured_upgrade": "pass", "captured_critical_removal": "block", "installed_guard": "absent"}, r
+
+
+def test_evidencia_apt_ausente_es_could_not_run(tmp_path: Path):
+    vacio = tmp_path / "vacio"
+    vacio.mkdir()
+    r = ag.verify(vacio)
+    assert r["status"] == "unknown" and r["could_not_run"] == 1 and "evidence unreadable" in r["findings"][0], r
+
+
+@pytest.mark.parametrize("raw,sha,texto", [
+    (b"{", None, "evidence unreadable"),                          # JSON roto con hash coherente
+    (None, "0" * 64, "hash mismatch"),                            # contenido distinto del sellado
+    (b"[]", None, "missing or malformed"),                        # no es un objeto
+    (b'{"commands": "x"}', None, "missing or malformed"),         # commands no es lista
+])
+def test_evidencia_apt_danada_es_could_not_run(tmp_path: Path, raw, sha, texto: str):
+    r = ag.verify(_evidencia_apt(tmp_path, raw=raw, sha=sha))
+    assert r["status"] == "unknown" and r["could_not_run"] == 1 and texto in r["findings"][0], r
+
+
+@pytest.mark.parametrize("fila,campo,valor,texto", [
+    ("upgrade", "exit_code", "0", "exit/output malformed"),        # exit como texto
+    ("remove", "stdout", None, "exit/output malformed"),           # stdout no texto
+    ("upgrade", "stderr", 3, "exit/output malformed"),             # stderr no texto
+    ("remove", "exit_code", 100, "remove simulation exit=100"),
+    ("upgrade", "stderr", "E: algo\n", "upgrade simulation wrote to stderr"),
+    ("remove", "stdout", "basura sin resumen\n", "incomplete or unrecognized"),
+])
+def test_control_negativo_captura_apt_inservible_es_could_not_run_no_pass(tmp_path: Path, fila, campo, valor, texto):
+    def mutar(c: dict[str, Any]) -> None:
+        next(x for x in c["commands"] if x["name"] == fila)[campo] = valor
+    r = ag.verify(_evidencia_apt(tmp_path, mutar))
+    assert r["status"] == "unknown" and r["could_not_run"] == 1 and texto in r["findings"][0], r
+
+
+def test_captura_apt_con_numero_de_filas_o_argv_equivocado_es_could_not_run(tmp_path: Path):
+    uno = ag.verify(_evidencia_apt(tmp_path / "a", lambda c: c["commands"].pop()))
+    assert uno["status"] == "unknown" and "exactly two" in uno["findings"][0], uno
+    no_dict = ag.verify(_evidencia_apt(tmp_path / "b", lambda c: c["commands"].__setitem__(1, "x")))
+    assert no_dict["status"] == "unknown" and "exactly two" in no_dict["findings"][0], no_dict
+
+    def argv_otro(c: dict[str, Any]) -> None:
+        c["commands"][1]["argv"] = ["apt-get", "-s", "remove", "tree"]
+    r = ag.verify(_evidencia_apt(tmp_path / "c", argv_otro))
+    assert r["status"] == "unknown" and "exactly one raw" in r["findings"][0], r
+
+    def argv_ausente(c: dict[str, Any]) -> None:
+        del c["commands"][1]["argv"]
+    assert "exactly one raw" in ag.verify(_evidencia_apt(tmp_path / "d", argv_ausente))["findings"][0]
+
+    def duplicada(c: dict[str, Any]) -> None:
+        c["commands"][1] = dict(c["commands"][0])
+    assert "exactly one raw" in ag.verify(_evidencia_apt(tmp_path / "e", duplicada))["findings"][0]
+
+
+def test_instrumento_que_clasifica_al_reves_es_fail(tmp_path: Path):
+    """Control negativo del verdicto: el upgrade que quita un critico y el remove que no quita nada dan `fail`."""
+    r = ag.verify(_evidencia_apt(tmp_path, _invertir))
+    assert r["status"] == "fail" and r["fail"] == 1 and "upgrade=block, remove=pass" in r["findings"][0], r
+
+
+def test_guardia_con_filas_que_no_son_objetos_es_could_not_run(tmp_path: Path):
+    ev = _evidencia(tmp_path / "x", _captura_instalada())
+    cap = json.loads((ev / ag.CAPTURA).read_text(encoding="utf-8"))
+    cap["commands"][0] = "no soy un objeto"
+    raw = json.dumps(cap).encode()
+    (ev / ag.CAPTURA).write_bytes(raw)
+    (ev / "apt-guard-captures.sha256").write_text(hashlib.sha256(raw).hexdigest(), encoding="ascii")
+    r = ag.verify(ev)
+    assert r["status"] == "unknown" and "missing or malformed" in r["findings"][0], r
+    # control positivo: la misma evidencia sin tocar es verified
+    assert ag.verify(_evidencia(tmp_path / "ok", _captura_instalada()))["checks"]["installed_guard"] == "verified"
+
+
+def test_main_codigos_de_salida_pass_fail_unknown(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
+    assert ag.main(["--evidence", str(_evidencia_apt(tmp_path / "p"))]) == 0
+    assert ag.main(["--evidence", str(_evidencia_apt(tmp_path / "f", _invertir))]) == 1
+    assert ag.main(["--evidence", str(tmp_path / "no-existe")]) == 2
+    estados = [json.loads(linea)["status"] for linea in capsys.readouterr().out.splitlines()]
+    assert estados == ["pass", "fail", "unknown"]
+
+
+def test_ejecutado_como_script_sale_con_el_codigo_del_main(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    import runpy
+    import sys
+    monkeypatch.setattr(sys, "argv", ["verify", "--evidence", str(tmp_path / "no-existe")])
+    monkeypatch.delitem(sys.modules, "tools.verify_apt_critical_removals")
+    with pytest.raises(SystemExit) as salida:
+        runpy.run_module("tools.verify_apt_critical_removals", run_name="__main__")
+    assert salida.value.code == 2
