@@ -1,0 +1,13 @@
+Control negativo de aplicabilidad (DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (builds propios de vLLM (fuente, wheel o imagen construida aqui) cuya matriz de arquitectura/toolchain validar). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ find / -maxdepth 5 -type d -name vllm -path '*src*' -not -path '/proc/*' 2>/dev/null | grep -q .
+rc=1
+
+$ find $HOME /srv /opt -maxdepth 4 -name setup.py -path '*vllm*' 2>/dev/null | grep -q .
+rc=1
+
+$ pip list 2>/dev/null | grep -qi '^vllm '
+rc=1
+
+$ docker images --format '{{.Repository}}:{{.Tag}}' | grep -i vllm | grep -v '^vllm/vllm-openai:v0.27.1$'
+rc=1

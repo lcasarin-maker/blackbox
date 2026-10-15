@@ -1,0 +1,13 @@
+Control negativo de aplicabilidad (DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (el cliente OpenClaw hablando con el vLLM local). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ command -v openclaw
+rc=1
+
+$ pgrep -af -i openclaw
+rc=1
+
+$ ls -d ~/.openclaw ~/.config/openclaw /etc/openclaw
+rc=2
+ls: no se puede acceder a '/home/lcasarin/.openclaw': No existe el archivo o el directorio
+ls: no se puede acceder a '/home/lcasarin/.config/openclaw': No existe el archivo o el directorio
+ls: no se puede acceder a '/etc/openclaw': No existe el archivo o el directorio

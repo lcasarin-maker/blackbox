@@ -1,0 +1,12 @@
+Control negativo de aplicabilidad (DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (GLM-5.2 Hybrid FP8/MXFP4 servido). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | python3 -c "import json,sys;d=json.load(sys.stdin);print([(m[\"id\"],m[\"root\"]) for m in d[\"data\"]])" | grep -qi glm
+rc=1
+
+$ docker ps --format "{{.Names}} {{.Image}}" | grep -qi glm
+rc=1
+
+$ ls -d /srv/ai/models/llm/*glm* /srv/ai/models/llm/*GLM*
+rc=2
+ls: no se puede acceder a '/srv/ai/models/llm/*glm*': No existe el archivo o el directorio
+ls: no se puede acceder a '/srv/ai/models/llm/*GLM*': No existe el archivo o el directorio

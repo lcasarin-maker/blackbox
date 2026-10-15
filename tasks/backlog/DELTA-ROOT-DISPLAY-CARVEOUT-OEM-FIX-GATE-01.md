@@ -62,3 +62,28 @@ El hilo 370458 es un congelado de terminales Sway por NV_ERR_NO_MEMORY en scanou
 Version para un solo nodo Gigabyte AI TOP ATOM: Registrar en huella_host el valor efectivo de la reserva de display (si el firmware ATOM la expone) y el driver, sin reproducir el fallo ni cambiar la reserva.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Avance (2026-10-14, "cierra todas las pendientes conforme a la opcion recomendada") -- NO se cierra: dudosa
+
+Regla aplicada: `void_wontfix` solo si se mide que el sujeto no existe aqui. El verificador (`tools/hardware_batch03_controls.py::_display_carveout`) llama `_subject(context, vendor="GIGABYTE", product="AI TOP ATOM")`: el OEM del sujeto ES este equipo. Medido:
+
+```
+$ cat /sys/class/dmi/id/sys_vendor /sys/class/dmi/id/product_name
+GIGABYTE
+AI TOP ATOM
+$ command -v sway
+rc=1 (no instalado)
+$ loginctl show-session <sesion> -p Type
+Type=x11
+$ for c in /sys/class/drm/card*-*/status; do echo $c $(cat $c); done
+/sys/class/drm/card0-Unknown-1/status connected
+$ nvidia-smi --query-gpu=driver_version --format=csv,noheader
+580.178.04
+$ journalctl -k --no-pager -o short-iso | grep -i -E 'NV_ERR_NO_MEMORY|scanoutcarveout'
+2026-10-13T14:43:51-06:00 ... NVRM: nvCheckOkFailedNoLog: Check failed: Out of memory [NV_ERR_NO_MEMORY] (0x00000051) returned from _memdescAllocInternal(pMemDesc) @ mem_desc.c:1359
+$ journalctl -k --no-pager -o short-iso | head -1   (el journal del kernel retenido empieza el 2026-10-13T14:07)
+```
+
+- No existe: Sway (la sesion es X11) ni la ruta `scanoutcarveout` en el journal retenido; el driver es 580.178.04, posterior al 580.159.03 del hilo.
+- Existe: el OEM exacto que fija el verificador, una pantalla conectada, y UN `NV_ERR_NO_MEMORY` del driver el 2026-10-13 a las 14:43 (en `_memdescAllocInternal`, sin nombrar `scanoutcarveout`). No se puede decir con esta medicion si ese fallo de memoria fue de display o de otra asignacion.
+- Falta para cerrar o declarar: atribuir el `NV_ERR_NO_MEMORY` del 13-oct (que proceso pedia memoria a esa hora) y que Luis decida si el sujeto es "Sway + scanoutcarveout" (entonces `void_wontfix`) o "asignaciones del driver que fallan con UMA libre en este OEM" (entonces queda abierta).

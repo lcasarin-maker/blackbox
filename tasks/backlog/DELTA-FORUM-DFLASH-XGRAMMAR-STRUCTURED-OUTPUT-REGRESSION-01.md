@@ -104,3 +104,27 @@ Ficha-contenedor de ~12 hallazgos de foro sobre Qwen3.6/DFlash/DeepSeek/GLM/Gemm
 Version para un solo nodo Gigabyte AI TOP ATOM: Extender tools/canario_motor.py con tool call streamed, llamadas paralelas, follow-up tras respuesta de herramienta y `tool_calls: []` vacio en deltas, contra nemotron-local; dividir los hallazgos de otros modelos (DFlash, DSpark, GLM, Gemma) en una ficha aparte o cerrarlos.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Avance (2026-10-14, "cierra todas las pendientes conforme a la opcion recomendada") -- NO se cierra: dudosa
+
+Regla aplicada: `void_wontfix` solo si se mide que el sujeto no existe aqui. Aqui existe la mitad del sujeto:
+
+```
+$ docker exec nemotron-server pip show xgrammar | head -2
+Name: xgrammar
+Version: 0.2.3
+$ docker exec nemotron-server python3 -c 'from vllm.config import StructuredOutputsConfig as S;print(S().backend)'
+auto
+$ docker inspect nemotron-server --format '{{json .Args}}' | grep -c -E 'speculative|dflash|dspark'
+0   (rc=1)
+$ curl -s -m 10 http://127.0.0.1:8000/metrics | grep -c spec_decode
+0   (rc=1)
+$ docker logs nemotron-server 2>&1 | grep -i -m1 speculative_config   (extracto)
+... Initializing a V1 LLM engine (v0.27.1) with config: model='/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4', speculative_config=None, ...
+$ grep -c dflash_config /srv/ai/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4-dspark/config.json
+1   (rc=0; "architectures": ["Qwen3DSparkModel"], un drafter DFlash/DSpark para nemotron-local, en disco y sin usar)
+```
+
+- Existe: xgrammar 0.2.3 dentro de la imagen servida y el backend de salidas estructuradas en `auto` (el log de arranque dice `structured_outputs_config=StructuredOutputsConfig(backend='auto', ...)`), y un drafter DFlash para nemotron-local en disco (`nemotron-3.5-lightning-30b-a3b-nvfp4-dspark`, `dflash_config`).
+- No existe hoy: decodificacion especulativa activa (`speculative_config=None`, cero metricas `spec_decode`), que es la condicion del 500 reportado (xgrammar recibiendo el bloque especulativo entero). Tampoco se sirve Qwen3.6, GLM ni Gemma.
+- Falta para cerrar o declarar: que Luis decida si el drafter DSpark se va a activar. Si no se activa, el sujeto es solo "xgrammar sin especulacion", que es otra ficha; si se activa, la matriz JSON/tool calls streamed y no streamed con DFlash aplica tal cual a nemotron-local.

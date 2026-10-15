@@ -1,0 +1,10 @@
+Control negativo de aplicabilidad (DELTA-FORUM-MEMORY-RECOVERY-SOAK-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (un llama.cpp RPC (llama-rpc-server remoto y su cliente)). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ command -v llama-rpc-server rpc-server llama-server llama-cli
+rc=1
+
+$ pgrep -af 'rpc-server|llama'
+rc=1
+
+$ docker images --format '{{.Repository}}:{{.Tag}}' | grep -qi llama
+rc=1

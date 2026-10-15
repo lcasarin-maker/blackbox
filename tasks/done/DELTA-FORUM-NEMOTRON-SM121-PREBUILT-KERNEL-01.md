@@ -3,12 +3,16 @@ id: DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01
 kind: task
 domain: VERDICT
 title: "Validar forum nemotron sm121 prebuilt kernel 01"
-status: open
+status: done
+closed_at: 2026-10-14
+closure_type: void_wontfix
+reason: "El sujeto es SGLang/sgl_kernel sin kernels SM121 precompilados; aqui no hay SGLang (ni imagen, ni paquete, ni contenedor) y Nemotron se sirve con vLLM v0.27.1 marlin. Decision de Luis 2026-10-14: cerrar sin sujeto; reabrir si vuelve SGLang u otro backend sin kernels SM121, o si el vLLM local falla en primera inferencia."
+evidence: {"pass": "tasks/evidence/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01/pass.txt", "fail": "tasks/evidence/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01/fail.txt", "e2e": "tasks/evidence/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_nemotron_sm121_prebuilt_kernel_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_nemotron_sm121_prebuilt_kernel_01`, que sin captura real del sujeto no puede pasar; sin sujeto aqui no hay captura posible."}
 ---
 
 ## Registro y responsable
@@ -59,3 +63,12 @@ SM121 es la GPU de este nodo y nemotron-local es el modelo servido; el hilo 3547
 Version para un solo nodo Gigabyte AI TOP ATOM: Extender tools/canario_motor.py con una primera inferencia de referencia (salida no basura, mismo prompt fijo) tras cada cambio de imagen/driver del contenedor vLLM; sin SGLang ni llama.cpp.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Root Cause
+No aplica a este equipo: el fallo es de `sgl_kernel` (SGLang) sin kernels SM121 precompilados, y el verificador fija la pila `sglang/sgl_kernel`. Aqui Nemotron se sirve con vLLM v0.27.1 (`--moe-backend marlin`) y no hay SGLang (ni imagen, ni paquete, ni modulo en el contenedor).
+
+## Regression Test
+Ninguno: la ficha se cierra por no tener sujeto aqui. El test que la vigilaba (`tests/test_debt_registration_controls.py::test_delta_forum_nemotron_sm121_prebuilt_kernel_01`, un xfail) se retira junto con su entrada de `tests/known_failures.json`, y la parametrizacion `tests/test_runtime_batch02_controls.py::test_real_capture_close_gate_requires_raw_capture[DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01]` deja de generarse (la filtra `_ficha_abierta`) y pierde tambien su entrada. El verificador y sus pruebas unitarias con fixtures siguen vivos.
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: las ordenes que buscan el sujeto salen con rc distinto de 0), `pass` (perfil medido, con control positivo de que las mismas herramientas encuentran lo que si existe) y `e2e` (la decision registrada). Datos de la maquina redactados con el PATRON de `tests/test_sin_datos_privados.py`. Para reabrirla si el sujeto aparece: `git mv tasks/done/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01.md tasks/backlog/` y `status: open`.

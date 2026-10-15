@@ -60,3 +60,25 @@ El sintoma (finish_reason=stop sin tool_calls en sesiones largas) es del motor/m
 Version para un solo nodo Gigabyte AI TOP ATOM: Extender canario_motor a un soak de sesion larga con nemotron-local contando paradas sin tool_calls con tarea abierta; sin reintento automatico.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Avance (2026-10-14, "cierra todas las pendientes conforme a la opcion recomendada") -- NO se cierra: dudosa
+
+Regla aplicada: `void_wontfix` solo si se mide que el sujeto no existe aqui. Medido:
+
+```
+$ ls -d /srv/ai/models/llm/*qwen3.8* /srv/ai/models/llm/*Qwen3.8*
+rc=2 (no existe)
+$ ls /srv/ai/models/llm
+nemotron-3.5-lightning-30b-a3b-nvfp4  nemotron-3.5-lightning-30b-a3b-nvfp4-dspark  nemotron-3-super-120b-a12b-nvfp4
+qwen3-14b-nvfp4  qwen3.6-27b-fp8  qwen3-8b-nvfp4
+$ command -v hermes
+/home/lcasarin/.local/bin/hermes   (rc=0)
+$ grep -c -E '127.0.0.1:8000|localhost:8000|nemotron-local' ~/.hermes/config.yaml
+0   (rc=1: Hermes apunta a un proveedor remoto, no al vLLM local)
+$ docker inspect nemotron-server --format '{{json .Args}}'   (extracto)
+"--enable-auto-tool-choice","--tool-call-parser","qwen3_xml"
+```
+
+- No existe: Qwen3.8 (ni servido ni en disco) ni Hermes contra el motor local.
+- Existe: el cliente del reporte (Hermes Agent) esta instalado; el motor local corre el parser `qwen3_xml` de la familia Qwen; hay tres directorios `qwen3-*` en disco sin servir; y el verificador (`tools/runtime_batch03_controls.py::_long_stop`) no fija modelo: pide un soak de agente largo con `finish_reason`, `tool_call_count` y estado de tarea por turno, que aplica a cualquier agente contra nemotron-local. El reporte no atribuye la causa a modelo, parser ni motor.
+- Falta para cerrar o declarar: que Luis decida si el sujeto es "Qwen3.8" (entonces `void_wontfix` con esta medicion) o "paradas prematuras de un agente largo contra el motor local" (entonces queda abierta y necesita un soak real con un agente que use nemotron-local).

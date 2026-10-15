@@ -1,0 +1,15 @@
+Control negativo de aplicabilidad (DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (el parser DSML de DeepSeek (y, en su segunda mitad, un enlace ConnectX-7 entre nodos)). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ python3 -c "import json;d=json.load(open('/srv/ai/gateway/active_engine.json'));print(d['engine'],d['image'],d['served_model_name']);print(' '.join(d['extra_args']))" | grep -qi -E "deepseek|dsml"
+rc=1
+
+$ ls -d /srv/ai/models/llm/*eep[Ss]eek* /srv/ai/models/llm/*deepseek*
+rc=2
+ls: no se puede acceder a '/srv/ai/models/llm/*eep[Ss]eek*': No existe el archivo o el directorio
+ls: no se puede acceder a '/srv/ai/models/llm/*deepseek*': No existe el archivo o el directorio
+
+$ ls /sys/class/infiniband | grep -q .
+rc=1
+
+$ lspci | grep -qi -E "mellanox|connectx"
+rc=1

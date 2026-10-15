@@ -1,0 +1,26 @@
+Perfil medido de este equipo el 2026-10-14: no hay cliente OpenClaw (ni binario, ni proceso, ni configuracion); el vLLM local sirve nemotron-local.
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | python3 -c "import json,sys;d=json.load(sys.stdin);print([(m[\"id\"],m[\"root\"]) for m in d[\"data\"]])"
+rc=0
+[('nemotron-local', '/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4')]
+
+$ docker ps --format "{{.Names}} {{.Image}}"
+rc=0
+nemotron-server vllm/vllm-openai:v0.27.1
+atlas-pgvector pgvector/pgvector:pg16
+otro proyecto-pg pgvector/pgvector:pg16
+
+Control positivo: las mismas herramientas SI encuentran lo que existe:
+
+$ command -v docker
+rc=0
+/usr/bin/docker
+
+$ command -v hermes
+rc=0
+/home/lcasarin/.local/bin/hermes
+
+$ docker ps --format "{{.Names}} {{.Image}}" | grep -qi vllm
+rc=0
+
+Nota: `hermes` si esta instalado, pero apunta a un proveedor remoto, no al vLLM local; el contrato de nombre servido / max_tokens que pide esta ficha es de OpenClaw.

@@ -1,0 +1,24 @@
+Perfil medido de este equipo el 2026-10-14: Nemotron SI se sirve aqui en SM121, pero con vLLM v0.27.1 (--moe-backend marlin), no con SGLang; SGLang se retiro de este equipo.
+
+$ python3 -c "import json;d=json.load(open('/srv/ai/gateway/active_engine.json'));print(d['engine'],d['image'],d['served_model_name']);print(' '.join(d['extra_args']))"
+rc=0
+vllm vllm/vllm-openai:v0.27.1 nemotron-local
+--trust-remote-code --moe-backend marlin --mamba-backend flashinfer --mamba-cache-mode align --kv-cache-dtype fp8 --enable-prefix-caching --reasoning-parser nemotron_v3 --enable-auto-tool-choice --tool-call-parser qwen3_xml --max-num-batched-tokens 8192
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | python3 -c "import json,sys;d=json.load(sys.stdin);print([(m[\"id\"],m[\"root\"]) for m in d[\"data\"]])"
+rc=0
+[('nemotron-local', '/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4')]
+
+$ nvidia-smi --query-gpu=name,compute_cap,driver_version --format=csv,noheader
+rc=0
+NVIDIA GB10, 12.1, 580.178.04
+
+Control positivo: las mismas herramientas SI encuentran lo que existe:
+
+$ docker exec nemotron-server python3 -c 'import vllm'
+rc=0
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | python3 -c "import json,sys;d=json.load(sys.stdin);print([(m[\"id\"],m[\"root\"]) for m in d[\"data\"]])" | grep -qi nemotron
+rc=0
+
+El verificador (tools/runtime_batch02_controls.py::_nemotron) exige `_stack(doc, ("sglang", "sgl_kernel", "cuda", "driver"))`: el sujeto es la falta de kernels SM121 precompilados en sgl_kernel. El motor local carga y genera con vLLM; la primera inferencia la ejercita tools/canario_motor.py.

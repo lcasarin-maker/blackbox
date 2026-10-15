@@ -1209,9 +1209,6 @@ def _assert_hardware_batch03_closure(card_id: str) -> None:
     _assert_pass(card_id, result)
 
 
-def test_delta_forum_thermal_telemetry_coverage_01() -> None:
-    _assert_hardware_batch03_closure('DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01')
-
 
 def test_delta_root_display_carveout_oem_fix_gate_01() -> None:
     _assert_hardware_batch03_closure('DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01')
@@ -1244,9 +1241,6 @@ def test_delta_forum_kv_quant_metric_provenance_gate_01() -> None:
     _assert_hardware_batch02_closure('DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01')
 
 
-def test_delta_forum_memory_recovery_soak_01() -> None:
-    _assert_hardware_batch02_closure('DELTA-FORUM-MEMORY-RECOVERY-SOAK-01')
-
 
 def test_delta_forum_ota_driver_kernel_effective_tuple_01() -> None:
     _assert_hardware_batch02_closure('DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01')
@@ -1273,9 +1267,6 @@ def test_delta_forum_dflash_xgrammar_structured_output_regression_01() -> None:
 
 
 
-def test_delta_forum_glm52_multiturn_correctness_and_recipe_sensitivity_01() -> None:
-    _assert_runtime_batch01_closure('DELTA-FORUM-GLM52-MULTITURN-CORRECTNESS-AND-RECIPE-SENSITIVITY-01')
-
 
 def _assert_runtime_batch02_closure(card_id: str) -> None:
     from tools.runtime_batch02_controls import verify
@@ -1289,9 +1280,6 @@ def _assert_runtime_batch02_closure(card_id: str) -> None:
 
 
 
-def test_delta_forum_minimax_toolcall_functional_canary_01() -> None:
-    _assert_runtime_batch02_closure('DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01')
-
 
 def test_delta_forum_mtp_acceptance_and_semantic_control_01() -> None:
     _assert_runtime_batch02_closure('DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01')
@@ -1299,12 +1287,6 @@ def test_delta_forum_mtp_acceptance_and_semantic_control_01() -> None:
 
 
 
-def test_delta_forum_nemotron_sm121_prebuilt_kernel_01() -> None:
-    _assert_runtime_batch02_closure('DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01')
-
-
-def test_delta_forum_openclaw_vllm_request_contract_01() -> None:
-    _assert_runtime_batch02_closure('DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01')
 
 
 
@@ -1325,22 +1307,6 @@ def test_delta_forum_qwen_mtp_parser_cancel_state_check_01() -> None:
     _assert_runtime_batch03_closure('DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01')
 
 
-def test_delta_forum_vllm_gb10_arch_and_build_matrix_01() -> None:
-    _assert_runtime_batch03_closure('DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01')
-
-
-
-def _assert_runtime_batch04_closure(card_id: str) -> None:
-    from tools.runtime_batch04_controls import verify
-    from test_closure_kernel_selectors import _require_pass as _assert_pass
-
-    result = verify(card_id)
-    print(json.dumps(result, sort_keys=True))
-    _assert_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
-
-
-def test_delta_root_dsml_parser_recovery_boundary_01() -> None:
-    _assert_runtime_batch04_closure('DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01')
 
 
 def test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01() -> None:

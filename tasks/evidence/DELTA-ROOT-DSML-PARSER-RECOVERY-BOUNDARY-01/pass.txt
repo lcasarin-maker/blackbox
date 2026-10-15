@@ -1,0 +1,30 @@
+Perfil medido de este equipo el 2026-10-14: el motor usa --tool-call-parser qwen3_xml con nemotron-local; no hay pesos DeepSeek ni ConnectX-7.
+
+$ python3 -c "import json;d=json.load(open('/srv/ai/gateway/active_engine.json'));print(d['engine'],d['image'],d['served_model_name']);print(' '.join(d['extra_args']))"
+rc=0
+vllm vllm/vllm-openai:v0.27.1 nemotron-local
+--trust-remote-code --moe-backend marlin --mamba-backend flashinfer --mamba-cache-mode align --kv-cache-dtype fp8 --enable-prefix-caching --reasoning-parser nemotron_v3 --enable-auto-tool-choice --tool-call-parser qwen3_xml --max-num-batched-tokens 8192
+
+$ ls /srv/ai/models/llm
+rc=0
+nemotron-3.5-lightning-30b-a3b-nvfp4
+nemotron-3.5-lightning-30b-a3b-nvfp4-dspark
+nemotron-3-super-120b-a12b-nvfp4
+qwen3-14b-nvfp4
+qwen3.6-27b-fp8
+qwen3-8b-nvfp4
+
+$ ip -br link | awk '{print $1,$2}' | grep -v -E '^(lo|docker|veth|br-)'
+rc=0
+enP7s7 UP
+wlP9s9 DOWN
+
+Control positivo: las mismas herramientas SI encuentran lo que existe:
+
+$ python3 -c "import json;d=json.load(open('/srv/ai/gateway/active_engine.json'));print(d['engine'],d['image'],d['served_model_name']);print(' '.join(d['extra_args']))" | grep -q qwen3_xml
+rc=0
+
+$ lspci | grep -qi ethernet
+rc=0
+
+Los casos genericos de parser (tool_choice=none, marcador citado, argumentos truncados) para el parser que SI corre aqui (qwen3_xml) siguen abiertos en DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01.
