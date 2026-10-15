@@ -147,9 +147,13 @@ def test_rescue_and_restoration_cases_get_entry_aliases() -> None:
     boot = _row("rescue_boot", ["efibootmgr"], "BootCurrent: 0003\n", 2)
     restored = _row("restoration", ["efibootmgr"], "BootCurrent: 0001\n", 3)
     doc = {"captures": [entry, boot, restored]}
-    assert _case(doc, "rescue_entry", "efibootmgr")[0]["entry_id"] == "0003"
-    assert _case(doc, "rescue_boot", "efibootmgr")[0]["entry_id"] == "0003"
-    assert _case(doc, "restoration", "efibootmgr")[0]["restored_entry"] == "0001"
+    rescue_entry, _ = _case(doc, "rescue_entry", "efibootmgr")
+    rescue_boot, _ = _case(doc, "rescue_boot", "efibootmgr")
+    restoration, _ = _case(doc, "restoration", "efibootmgr")
+    assert rescue_entry is not None and rescue_boot is not None and restoration is not None
+    assert rescue_entry["entry_id"] == "0003"
+    assert rescue_boot["entry_id"] == "0003"
+    assert restoration["restored_entry"] == "0001"
 
 
 def test_case_missing_reports_name() -> None:
@@ -160,7 +164,7 @@ def test_case_missing_reports_name() -> None:
 
 def test_case_row_rejects_wrong_command_and_failed_command() -> None:
     data, error = _case_row("x", _row("x", ["uname", "-r"]), r"dmidecode")
-    assert data is None and "not captured by the required command" in error
+    assert data is None and error is not None and "not captured by the required command" in error
     failing = {**_row("x", ["dmidecode"]), "exit_code": 1, "stderr": "denied"}
     data, error = _case_row("x", failing, "dmidecode")
     assert data is None and error == "case x command failed: denied"
@@ -180,7 +184,7 @@ def test_case_row_failing_ssh_is_kept_as_measurement() -> None:
 def test_case_row_trusted_collector_output_must_be_json_object(stdout: str, fragment: str) -> None:
     row = _row("x", ["python3", "-m", "tools.host_diagnostics"], stdout)
     data, error = _case_row("x", row, "host_diagnostics")
-    assert data is None and fragment in error
+    assert data is None and error is not None and fragment in error
 
 
 def test_case_row_collector_object_and_thermal_wrapper() -> None:
@@ -194,7 +198,8 @@ def test_case_row_shelly_meter_valid_and_malformed() -> None:
     good = '{"sys": {"device": {"id": "shellyplug-1"}}, "switch:0": {"apower": 41.5}}'
     row = _row("x", ["curl", "http://m/rpc/Shelly.GetStatus"], good)
     data, error = _case_row("x", row, "Shelly")
-    assert error is None and data["meter_id"] == "shellyplug-1" and data["power_w"] == 41.5
+    assert error is None and data is not None
+    assert data["meter_id"] == "shellyplug-1" and data["power_w"] == 41.5
     bad = _row("x", ["curl", "http://m/rpc/Shelly.GetStatus"], "garbage")
     data, error = _case_row("x", bad, "Shelly")
     assert data is None and error == "case x external power meter status malformed"
@@ -446,21 +451,24 @@ def _identity_row() -> list[dict[str, Any]]:
 ])
 def test_references_reject_bad_sources(sources: Any, fragment: str) -> None:
     ok, reason = _references({"captures": _identity_row(), "vendor_sources": sources})
-    assert ok is False and fragment in reason
+    assert ok is False and reason is not None and fragment in reason
 
 
 def test_references_identity_tuple_must_be_complete_and_cited() -> None:
     incomplete = {"captures": [_row("identity", ["uname", "-r"], "6.17.0\n")], "vendor_sources": [_ref()]}
     ok, reason = _references(incomplete)
-    assert ok is False and "identity tuple incomplete: manufacturer, product_name, bios_version" in reason
+    assert ok is False and reason is not None
+    assert "identity tuple incomplete: manufacturer, product_name, bios_version" in reason
     uncited = {"captures": _identity_row(), "vendor_sources": [_ref(_SRC.replace("GX10", "ZZ99"))]}
     ok, reason = _references(uncited)
-    assert ok is False and "does not cite the captured OEM/version tuple" in reason
+    assert ok is False and reason is not None
+    assert "does not cite the captured OEM/version tuple" in reason
     ok, reason = _references({"captures": _identity_row(), "vendor_sources": [_ref()]})
     assert (ok, reason) == (True, None)
     with_module = _identity_row() + [_row("identity", ["modinfo", "-F", "version", "m"], "9.9.9\n", 3)]
     ok, reason = _references({"captures": with_module, "vendor_sources": [_ref()]})
-    assert ok is False and "does not cite" in reason
+    assert ok is False and reason is not None
+    assert "does not cite" in reason
 
 
 # --------------------------------------------------------------------------- GX10 read integrity
@@ -745,7 +753,9 @@ def test_thermal_zone_and_hwmon_value_extraction() -> None:
     assert fhs._thermal_hwmon_values([{"temperature_inputs": "x"}], channels) is None
     assert fhs._thermal_hwmon_values([{"temperature_inputs": ["x"]}], channels) is None
     capture = {**_tcap(), "hwmon": hw}
-    assert fhs._thermal_capture_observation(capture)["gpu_c"] == 71.0
+    observation = fhs._thermal_capture_observation(capture)
+    assert observation is not None
+    assert observation["gpu_c"] == 71.0
     assert fhs._thermal_capture_observation({**_tcap(), "hwmon": ["x"]}) is None
     assert fhs._thermal_capture_observation({**_tcap(), "thermal_zones": ["x"]}) is None
     assert fhs._thermal_capture_observation({"hwmon": []}) is None
@@ -948,10 +958,14 @@ def test_watchdog_profile_validation_edges() -> None:
     assert fhs._watchdog_profile(malformed)[2] == "device record malformed"
     no_identity = _profile()
     no_identity["watchdog"]["watchdog0"]["identity"] = {"status": "read", "value": "  "}
-    assert "identity is unavailable" in fhs._watchdog_profile(no_identity)[2]
+    identity_reason = fhs._watchdog_profile(no_identity)[2]
+    assert identity_reason is not None
+    assert "identity is unavailable" in identity_reason
     no_timeout = _profile()
     no_timeout["watchdog"]["watchdog0"]["timeout"] = {"status": "read", "value": "abc"}
-    assert "timeout is unavailable" in fhs._watchdog_profile(no_timeout)[2]
+    timeout_reason = fhs._watchdog_profile(no_timeout)[2]
+    assert timeout_reason is not None
+    assert "timeout is unavailable" in timeout_reason
 
 
 # --------------------------------------------------------------------------- realtek
@@ -1140,28 +1154,34 @@ def test_rescue_unknown_boot_identity_edge(tmp_path: Path) -> None:
     assert (status, reason) == ("unknown", "rescue boot identity unavailable")
 
 
+def _restored_reason(tmp_path: Path, when: Any) -> str:
+    reason = fhs._verify_restored_service(tmp_path, when)[1]
+    assert reason is not None
+    return reason
+
+
 def test_restored_service_manifest_failure_modes(tmp_path: Path) -> None:
     when = fhs.datetime.fromisoformat("2026-10-03T00:00:01+00:00")
     manifest_path = tmp_path / "service-restore-manifest.json"
-    assert fhs._verify_restored_service(tmp_path, when)[1].startswith("canary service restoration manifest unavailable")
+    assert _restored_reason(tmp_path, when).startswith("canary service restoration manifest unavailable")
     manifest_path.write_bytes(b" " * 65_537)
     assert fhs._verify_restored_service(tmp_path, when) == (False, "service restore manifest exceeds 64 KiB")
     manifest_path.write_text("{broken", encoding="utf-8")
-    assert fhs._verify_restored_service(tmp_path, when)[1].startswith("canary service restoration manifest unavailable")
+    assert _restored_reason(tmp_path, when).startswith("canary service restoration manifest unavailable")
     manifest_path.write_text("[1]", encoding="utf-8")
     assert fhs._verify_restored_service(tmp_path, when) == (False, "canary service restoration manifest malformed")
     _service_dir(tmp_path, watcher="  ")
-    assert "lacks exact path/hash/mode" in fhs._verify_restored_service(tmp_path, when)[1]
+    assert "lacks exact path/hash/mode" in _restored_reason(tmp_path, when)
     _service_dir(tmp_path, expiry="someday")
-    assert fhs._verify_restored_service(tmp_path, when)[1] == "service restore expiry is not an ISO date/time"
+    assert _restored_reason(tmp_path, when) == "service restore expiry is not an ISO date/time"
     _service_dir(tmp_path, expiry="2026-10-02")
-    assert "after the manifest expiry" in fhs._verify_restored_service(tmp_path, when)[1]
+    assert "after the manifest expiry" in _restored_reason(tmp_path, when)
     _service_dir(tmp_path, path="../escape.service")
-    assert "must stay relative" in fhs._verify_restored_service(tmp_path, when)[1]
+    assert "must stay relative" in _restored_reason(tmp_path, when)
     _service_dir(tmp_path, suspended_path="/abs/off")
-    assert "must stay relative" in fhs._verify_restored_service(tmp_path, when)[1]
+    assert "must stay relative" in _restored_reason(tmp_path, when)
     _service_dir(tmp_path, path="missing.service")
-    assert "unit is unavailable after restore" in fhs._verify_restored_service(tmp_path, when)[1]
+    assert "unit is unavailable after restore" in _restored_reason(tmp_path, when)
     _service_dir(tmp_path)
     assert fhs._verify_restored_service(tmp_path, when) == (True, None)
     (tmp_path / "canary.service.off").write_text("x", encoding="utf-8")

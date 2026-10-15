@@ -91,7 +91,7 @@ def test_plataforma_lee_dgx_release_modulo_y_secure_boot(monkeypatch, tmp_path):
         if ruta == "/etc/dgx-release"
         else "dato",
     )
-    sb = {"v": b"\x06\x00\x00\x00\x01"}
+    sb: dict[str, bytes | None] = {"v": b"\x06\x00\x00\x00\x01"}
     orig = Path.read_bytes
 
     def fake(self):

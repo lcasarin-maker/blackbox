@@ -433,8 +433,12 @@ def test_ultima_telemetria_toma_la_ultima_muestra_del_boot_y_acepta_id_con_o_sin
     ]
     t.write_text("\n".join(json.dumps(f) for f in filas) + "\n", encoding="utf-8")
     monkeypatch.setattr(rv, "TELEMETRIA", t)
-    assert rv._ultima_telemetria(plano)["n"] == 2  # el id plano se convierte a la forma con guiones
-    assert rv._ultima_telemetria(guiones)["n"] == 2
+    ultima_plano = rv._ultima_telemetria(plano)
+    assert ultima_plano is not None
+    assert ultima_plano["n"] == 2  # el id plano se convierte a la forma con guiones
+    ultima_guiones = rv._ultima_telemetria(guiones)
+    assert ultima_guiones is not None
+    assert ultima_guiones["n"] == 2
     assert rv._ultima_telemetria("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa") is None  # control negativo: boot sin muestras
     monkeypatch.setattr(rv, "TELEMETRIA", tmp_path / "ausente.jsonl")
     assert rv._ultima_telemetria(plano) is None
@@ -446,9 +450,13 @@ def test_disparador_boot_consulta_logind_y_sudo_y_prefiere_la_ultima_linea_que_n
                 '  sudo) [ -n "$SUDO_LINEA" ] && echo "$SUDO_LINEA";;\nesac')
     _solo_path(monkeypatch, tmp_path)
     monkeypatch.delenv("SUDO_LINEA", raising=False)
-    assert "systemd-logind" in rv._disparador_boot(-1)  # solo logind habla
+    solo_logind = rv._disparador_boot(-1)
+    assert solo_logind is not None
+    assert "systemd-logind" in solo_logind  # solo logind habla
     monkeypatch.setenv("SUDO_LINEA", "h sudo[1]: u : COMMAND=/usr/sbin/reboot")
-    assert "COMMAND=/usr/sbin/reboot" in rv._disparador_boot(-1)  # sudo es la ultima en el orden de consulta
+    con_sudo = rv._disparador_boot(-1)
+    assert con_sudo is not None
+    assert "COMMAND=/usr/sbin/reboot" in con_sudo  # sudo es la ultima en el orden de consulta
     _ejecutable(tmp_path, "journalctl", "exit 0")
     assert rv._disparador_boot(-1) is None  # control negativo: ninguna linea nombra la orden
 

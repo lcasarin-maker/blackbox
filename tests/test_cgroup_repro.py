@@ -535,7 +535,7 @@ def test_torch_cancellation_during_fill_releases_cache_and_propagates(monkeypatc
         calls[0] += 1
         return Cancelling(events) if calls[0] > 1 else real_empty(*args, **kwargs)
 
-    torch.empty = empty
+    setattr(torch, "empty", empty)
     monkeypatch.setitem(sys.modules, "torch", torch)
     monkeypatch.setattr(repro, "snapshot", lambda _pid: {"pid": 12})
     monkeypatch.setattr(repro.time, "sleep", lambda _seconds: None)
