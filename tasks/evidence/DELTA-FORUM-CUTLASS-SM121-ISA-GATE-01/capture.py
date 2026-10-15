@@ -50,7 +50,7 @@ run(["cmake", "-G", "Ninja", "-S", str(CAN), "-B", str(BUILD), f"-DBB_REV={REV}"
      f"-DCMAKE_CUDA_COMPILER={NVCC}", "-DCMAKE_BUILD_TYPE=Release"], phase="configure")
 b = run(["cmake", "--build", str(BUILD), "--", "-v"], phase="build")
 exe = BUILD / "canary79a"
-run(["cuobjdump", "--list-elf", str(exe)])
+run([NVCC.replace("nvcc", "cuobjdump"), "--list-elf", str(exe)])
 # canary: one verified GEMM + ITER timed iterations on the real GPU
 t0 = time.time()
 r = run([str(exe), "--m=1024", "--n=1024", "--k=1024", f"--iterations={ITER}"], phase="canary_run")
