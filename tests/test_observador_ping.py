@@ -203,3 +203,8 @@ def test_script_nas_una_linea_por_segundo_ok_y_fail_con_rotacion(tmp_path: Path)
     rot = _corre_script(tmp_path / "rot.log", "127.0.0.1", 5.5, BB_MAX_LINEAS="3", BB_CADA_N="2")
     assert 0 < len(rot) <= 4  # sin rotacion habria 5 o mas lineas
     assert not (tmp_path / "rot.log.lock").exists()  # el trap limpia el bloqueo
+
+
+def test_script_del_nas_se_niega_a_arrancar_sin_ip():
+    r = subprocess.run(["sh", str(SCRIPT)], env={"PATH": "/usr/bin:/bin", "BB_ATOM_IP": ""}, capture_output=True, text=True, timeout=10)
+    assert r.returncode == 2 and "falta BB_ATOM_IP" in r.stderr
