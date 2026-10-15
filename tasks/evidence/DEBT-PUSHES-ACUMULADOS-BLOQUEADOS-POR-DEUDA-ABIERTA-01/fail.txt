@@ -1,0 +1,5 @@
+close_check ANTES (sin publicacion.txt, carpeta inexistente al 2026-10-13):
+$ grep -q repositorio_publicado tasks/evidence/DEBT-PUSHES-ACUMULADOS-BLOQUEADOS-POR-DEUDA-ABIERTA-01/publicacion.txt
+rc=2 (grep: no existe el archivo; medido en el Avance 2026-10-13 de la ficha)
+$ git rev-list --count origin/master~3..master   # control: el comando SI distingue (3 = tres commits adelante)
+3
