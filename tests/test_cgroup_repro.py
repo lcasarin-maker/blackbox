@@ -463,3 +463,83 @@ def test_script_profile_import_fallback_is_narrow(monkeypatch, missing_name, rai
         return
     namespace = runpy.run_path(str(script), run_name="cgroup_repro_import_probe")
     assert callable(namespace["capture_memory_profile"])
+
+
+def test_main_empty_dmem_capacity_records_that_no_regions_are_registered(tmp_path, monkeypatch, capsys):
+    root = tmp_path / "sys"
+    root.mkdir()
+    (root / "dmem.capacity").write_text("", encoding="utf-8")
+    monkeypatch.setattr(repro, "CGROUP_ROOT", root)
+    output = tmp_path / "empty.json"
+    monkeypatch.setattr("sys.argv", ["cgroup_repro.py", "--output", str(output)])
+    monkeypatch.setattr(repro.shutil, "which", lambda _name: "/usr/bin/nvidia-smi")
+    monkeypatch.setattr(repro.subprocess, "run", lambda *_a, **_k: SimpleNamespace(returncode=0, stdout="GPU fake", stderr=""))
+    monkeypatch.setattr(repro, "run_case", lambda api, worker, _mib: {"api": api, "worker_api": worker, "could_not_run": []})
+    assert repro.main() == 0
+    host = json.loads(output.read_text(encoding="utf-8"))["host"]
+    assert host["dmem_registration"] == "capacity file empty; no regions registered"
+    capsys.readouterr()
+
+
+def test_cuda_primary_failure_keeps_cleanup_failure_as_note(monkeypatch, capsys):
+    _runtime, events = cuda_runtime(monkeypatch, memset_result=17, free_result=19)
+    assert repro.cuda_worker("cuda_malloc", 1) == 33
+    error = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert "cudaMemset returned CUDA error 17" in error["error"]
+    assert any("CUDA cleanup failures" in n and "cudaFree returned CUDA error 19" in n for n in error["notes"])
+    assert events.count("free") == 2
+
+
+def test_cuda_release_synchronize_error_code_is_reported_after_free(monkeypatch):
+    runtime, events = cuda_runtime(monkeypatch, fail_sync=4)
+    assert repro._release_cuda_allocation(runtime, object()) == []  # sync call 1: the fake only fails on call 4
+    runtime.sync_count = 3  # the next synchronize is call 4 and returns CUDA error 44
+    errors = repro._release_cuda_allocation(runtime, object())
+    assert [str(e) for e in errors] == ["release cudaDeviceSynchronize returned CUDA error 44"]
+    assert events[-2:] == ["free", "sync"]
+
+
+def test_torch_primary_failure_keeps_cleanup_failure_as_note(monkeypatch, capsys):
+    events = []
+    torch = fake_torch(events, fail_fill=True)
+    attempts = [0]
+
+    def release():
+        attempts[0] += 1
+        if attempts[0] == 2:
+            raise RuntimeError("cache release failed")
+
+    torch.cuda.empty_cache = release
+    monkeypatch.setitem(sys.modules, "torch", torch)
+    monkeypatch.setattr(repro, "snapshot", lambda _pid: {"pid": 12})
+    monkeypatch.setattr(repro.time, "sleep", lambda _seconds: None)
+    assert repro.torch_worker(1) == 30
+    lines = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert lines[-1]["phase"] == "error" and "fill failed" in lines[-1]["error"]
+    assert any("PyTorch cleanup failures" in n and "cache release failed" in n for n in lines[-1]["notes"])
+    assert not any(line["phase"] == "allocator_cache_released" for line in lines)
+
+
+def test_torch_cancellation_during_fill_releases_cache_and_propagates(monkeypatch, capsys):
+    events = []
+    torch = fake_torch(events)
+
+    class Cancelling(FakeTensor):
+        def fill_(self, _value):
+            raise KeyboardInterrupt("cancel fill")
+
+    real_empty = torch.empty
+    calls = [0]
+
+    def empty(*args, **kwargs):
+        calls[0] += 1
+        return Cancelling(events) if calls[0] > 1 else real_empty(*args, **kwargs)
+
+    torch.empty = empty
+    monkeypatch.setitem(sys.modules, "torch", torch)
+    monkeypatch.setattr(repro, "snapshot", lambda _pid: {"pid": 12})
+    monkeypatch.setattr(repro.time, "sleep", lambda _seconds: None)
+    with pytest.raises(KeyboardInterrupt, match="cancel fill"):
+        repro.torch_worker(1)
+    assert events.count("empty_cache") == 2  # warmup and the release after cancellation
+    assert "after_release" not in capsys.readouterr().out

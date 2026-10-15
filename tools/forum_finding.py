@@ -29,6 +29,7 @@ SUPPORTED = {
     "FORUM-02-USB-UVC-EP0",
 }
 MISSING_CONTROLS = {
+    "DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01": "raw apt capture verified by tools.apt_arm64_evidence (this evaluator has no apt route of its own)",
     "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION": "fan RPM observability, exact CX7/OEM firmware tuple, thermal A/B, and rollback",
     "FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01": "real per-request trace after worker restart, OEM support, and recovery/rollback",
     "FORUM-02-GX10-READ-INTEGRITY": "trusted external digest, repeated buffered/O_DIRECT reads, NVMe/RAS/firmware correlation",

@@ -127,3 +127,11 @@ def test_pass_alcanzable_sin_fila_sigue_unknown(tmp_path: Path) -> None:
     out = verify_capture(_escribe(tmp_path, _buenas()))
     assert out["status"] == "unknown" and out["checks"]["bad_source_negative"] == "unknown"
     assert "wrong-source negative remains unrun" in out["reason"]
+
+
+def test_comando_ausente_en_filas_validas_es_unknown_sin_arquitectura(tmp_path: Path) -> None:
+    sin_dpkg = [r for r in _buenas() if r["argv"][:1] != ["dpkg"]]
+    out = verify_capture(_escribe(tmp_path, sin_dpkg))
+    assert out["status"] == "unknown" and out["could_not_run"] == 1
+    assert "dpkg architecture query missing" in out["reason"]
+    assert out["checks"]["architecture"] == "unknown"

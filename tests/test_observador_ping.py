@@ -208,3 +208,62 @@ def test_script_nas_una_linea_por_segundo_ok_y_fail_con_rotacion(tmp_path: Path)
 def test_script_del_nas_se_niega_a_arrancar_sin_ip():
     r = subprocess.run(["sh", str(SCRIPT)], env={"PATH": "/usr/bin:/bin", "BB_ATOM_IP": ""}, capture_output=True, text=True, timeout=10)
     assert r.returncode == 2 and "falta BB_ATOM_IP" in r.stderr
+
+
+@pytest.mark.parametrize("clave,valor", [("host", ""), ("share", 7), ("ruta", 'bb/"x".log'), ("credenciales", "a\nb"), ("faltante", None)])
+def test_sync_con_nas_json_invalido_nombra_la_clave_y_no_invoca_smbclient(tmp_path: Path, clave: str, valor: Any) -> None:
+    cfg, ruta = _cfg(tmp_path), tmp_path / "externo" / "ping.jsonl"
+    datos = json.loads(cfg.read_text(encoding="utf-8"))
+    if clave == "faltante":
+        del datos["share"]
+        clave = "share"
+    else:
+        datos[clave] = valor
+    cfg.write_text(json.dumps(datos), encoding="utf-8")
+    visto: list[Any] = []
+    r = o.sync(cfg, ruta, _smb(LOG_NAS, visto=visto), ahora=T)
+    assert r["estado"] == "NOT_COLLECTED" and r["motivo"] == f"nas.json: falta o es invalido '{clave}'"
+    assert not visto and not ruta.exists()
+
+
+def test_sync_con_archivo_de_credenciales_inexistente_lo_declara_sin_invocar_smbclient(tmp_path: Path) -> None:
+    cfg, ruta = _cfg(tmp_path), tmp_path / "externo" / "ping.jsonl"
+    (tmp_path / "cred").unlink()
+    visto: list[Any] = []
+    r = o.sync(cfg, ruta, _smb(LOG_NAS, visto=visto), ahora=T)
+    assert (r["estado"], r["motivo"]) == ("NOT_COLLECTED", "archivo de credenciales ilegible")
+    assert not visto
+
+
+def test_sync_ignora_lineas_rotas_del_ping_existente_al_deduplicar(tmp_path: Path) -> None:
+    cfg, ruta = _cfg(tmp_path), tmp_path / "externo" / "ping.jsonl"
+    previas = ["esto no es json", '["una", "lista"]', json.dumps({"epoch": T, "ok": True, "fuente": "nas"}),
+               json.dumps({"epoch": T + 1, "ok": True, "fuente": "local"})]
+    ruta.write_text("\n".join(previas) + "\n", encoding="utf-8")
+    r = o.sync(cfg, ruta, _smb(LOG_NAS), ahora=T + 20)
+    assert r["estado"] == "OK" and r["nuevas"] == 11  # T ya estaba (fuente nas); T+1 era local y se vuelve a traer
+    assert ruta.read_text(encoding="utf-8").splitlines()[:4] == previas  # lo previo queda intacto, incluida la basura
+    assert o._epochs_nas(ruta) == set(range(T, T + 12))
+
+
+def test_sync_con_log_bajado_ilegible_es_not_collected(tmp_path: Path) -> None:
+    cfg, ruta = _cfg(tmp_path), tmp_path / "externo" / "ping.jsonl"
+
+    def smbclient_que_deja_un_directorio(args: list[str], **kw: Any) -> Any:
+        Path(args[-1].rsplit('" "', 1)[1].rstrip('"')).mkdir()
+        return types.SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    r = o.sync(cfg, ruta, smbclient_que_deja_un_directorio, ahora=T)
+    assert (r["estado"], r["motivo"], r["nuevas"]) == ("NOT_COLLECTED", "log bajado ilegible", 0)
+    assert not ruta.exists()
+
+
+def test_script_entrypoint_sin_argumentos_imprime_ayuda_y_sale_con_2(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    import runpy
+
+    monkeypatch.setenv("BLACKBOX_DATA", str(tmp_path))
+    monkeypatch.setattr("sys.argv", ["observador_ping.py"])
+    with pytest.raises(SystemExit) as exc:
+        runpy.run_path(o.__file__, run_name="__main__")
+    assert exc.value.code == 2
+    assert "--sync" in capsys.readouterr().out
