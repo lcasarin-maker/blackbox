@@ -3,7 +3,11 @@ id: DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01
 kind: debt
 domain: GPU
 title: "Docker en cgroup systemd: un daemon-reload puede quitarle la GPU al contenedor de vLLM"
-status: open
+status: done
+closed_at: 2026-10-15
+closure_type: relocated_prior_verification
+reason: "La prueba se midio en la ventana del motor del 2026-10-15 (ventana.sh con sudo de Luis) y su evidencia se commiteo en cc9a234e; este commit solo mueve la ficha. Control negativo: sin prueba.txt en HEAD el close_check sale 1 (fail.txt), con ella sale 0 (pass.txt)."
+evidence: {"pass": "tasks/evidence/DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01/pass.txt", "fail": "tasks/evidence/DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01/fail.txt", "e2e": "tasks/evidence/DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01/e2e.txt"}
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -27,3 +31,12 @@ Luis corrio `sudo ./enable-privileged.sh` con vLLM sirviendo. El instalador ejec
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Disparador: la ventana del motor de 60 min que anuncia Luis, con sudo de Luis (`daemon-reload` es una escritura de root sobre systemd; no cabe en un script sellado de solo lectura). Pasos exactos: `docker run -d --rm --name bb-recarga-prueba --runtime nvidia --gpus all --entrypoint sleep vllm/vllm-openai:v0.27.1 900`; `docker exec bb-recarga-prueba nvidia-smi -L` y `docker exec bb-recarga-prueba ls /dev/nvidia-caps /dev/nvidia-modeset` (antes); control sin recarga: repetir a los 60 s; `sudo systemctl daemon-reload`; repetir las dos ordenes; `docker stop bb-recarga-prueba`. Guardar las salidas con `recarga_probada` en `tasks/evidence/DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01/prueba.txt`.
+
+## Root Cause
+Un hilo ajeno afirmaba que `systemctl daemon-reload` hace que systemd reaplique las reglas de cgroup de los contenedores y les quita `/dev/nvidia-caps` y `/dev/nvidia-modeset` (driver de cgroup `systemd`). Aqui no existia medicion propia y cualquier reload (instaladores, despliegues) se trataba como riesgo P1 sin prueba.
+
+## Regression Test
+`close_check`: `grep -q recarga_probada tasks/evidence/DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01/prueba.txt`. El veredicto lo escribe `tasks/evidence/VENTANA-VLLM-20261015/ventana.sh` solo si la instantanea ANTES, la de CONTROL (60 s despues, sin recarga) y la de DESPUES son identicas y listan la GPU; su control negativo comprueba que quitar `nvidia-caps` del texto SI cambia la comparacion.
+
+## Verification Evidence
+Medido el 2026-10-15 con el motor parado, contenedor desechable `vllm/vllm-openai:v0.27.1`, Docker 29.6.2, driver 580.178.04: antes, control y despues listan `GPU 0: NVIDIA GB10` y `/dev/nvidia-caps` (cap1, cap2), `nvidia-modeset`, `nvidia-uvm`, `nvidia0`, `nvidiactl`; `daemon-reload rc=0`. Veredicto `recarga_probada`. Log literal: `tasks/evidence/VENTANA-VLLM-20261015/ventana-20261015T063058.txt`. Limite declarado: un solo `daemon-reload` sobre un contenedor desechable; no cubre `daemon-reexec` ni un reload con el motor sirviendo (el 2026-10-13 un instalador hizo ambos con vLLM sirviendo y la GPU siguio visible, ver el Avance de esa fecha).
