@@ -280,3 +280,15 @@ def test_mensajes_reales_no_cuenta_un_cuerpo_que_empieza_por_POST(tmp_path: Path
     )
     assert v.mensajes_reales(tmp_path, 7) == 3  # control negativo: contar "\nPOST " daria 4
     assert v.mensajes_reales(tmp_path, 8) == 0
+
+
+def test_script_entrypoint_sale_con_el_codigo_de_main(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    import runpy
+
+    _tema(tmp_path / "h", 1)
+    _guarda(tmp_path / "r", _res(1))
+    monkeypatch.setattr("sys.argv", ["verifica_cosecha_foro.py", *_carpetas(tmp_path, [{"id": 1}, {"id": 2}])])
+    with pytest.raises(SystemExit) as exc:
+        runpy.run_path(str(Path(v.__file__)), run_name="__main__")
+    assert exc.value.code == 1  # el tema 2 no existe
+    assert json.loads(capsys.readouterr().out)["cobertura_completa"] is False

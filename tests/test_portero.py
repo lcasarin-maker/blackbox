@@ -637,3 +637,36 @@ def test_real_dropin_por_prefijo_topa_el_scope_al_crearse_y_no_a_otro():
             p.wait(timeout=10)
         shutil.rmtree(d, ignore_errors=True)
         subprocess.run(["systemctl", "--user", "daemon-reload"], check=False, timeout=60)
+
+
+def test_portero_como_script_cae_al_import_plano_de_interruptores(monkeypatch):
+    """`bb portero` corre el archivo con tools/ en sys.path (no la raiz del repo): `from tools import ...` falla y se usa `import interruptores`."""
+    import builtins
+    import runpy
+
+    script = Path(po.__file__)
+    monkeypatch.syspath_prepend(str(script.parent))
+    original_import = builtins.__import__
+
+    def sin_paquete_tools(name, globals=None, locals=None, fromlist=(), level=0):
+        if name == "tools" and "interruptores" in (fromlist or ()):
+            raise ImportError("fixture: la raiz del repo no esta en sys.path")
+        return original_import(name, globals, locals, fromlist, level)
+
+    monkeypatch.setattr(builtins, "__import__", sin_paquete_tools)
+    ns = runpy.run_path(str(script), run_name="portero_import_probe")
+    assert ns["interruptores"].__name__ == "interruptores"  # el modulo plano, no `tools.interruptores`
+    assert ns["interruptores"] is not po.interruptores
+    assert callable(ns["observar"]) and ns["NOMBRE"] == "portero"
+
+
+def test_peticiones_con_la_cola_ilegible_devuelve_vacio_sin_propagar(tmp_path):
+    class ColaDenegada:
+        def glob(self, _patron):
+            raise PermissionError("cola denegada")
+
+    assert po._peticiones({os.getpid(): object()}, time.time(), ColaDenegada()) == []
+    # control: la misma llamada con una cola real que contiene una peticion viva SI devuelve un arbol
+    (tmp_path / "1.json").write_text(json.dumps({"pid": os.getpid(), "clase": "suite", "ts": 1.0}), encoding="utf-8")
+    vivas = po._peticiones({os.getpid(): object()}, time.time(), tmp_path)
+    assert len(vivas) == 1

@@ -103,3 +103,14 @@ def test_main_sin_config_sin_argumentos_y_con_config(tmp_path: Path, monkeypatch
 def test_abre_real_lee_una_url_local(tmp_path: Path) -> None:
     (tmp_path / "x.json").write_text("{}", encoding="utf-8")
     assert m._abre((tmp_path / "x.json").as_uri()) == b"{}"
+
+
+def test_script_entrypoint_sale_con_el_codigo_de_main(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    import runpy
+
+    monkeypatch.setenv("BLACKBOX_DATA", str(tmp_path))
+    monkeypatch.setattr("sys.argv", ["medidor_energia.py", "--paso"])
+    with pytest.raises(SystemExit) as exc:
+        runpy.run_path(str(Path(m.__file__)), run_name="__main__")
+    assert exc.value.code == 1  # sin medidor.json: NOT_COLLECTED
+    assert "NOT_COLLECTED" in capsys.readouterr().err

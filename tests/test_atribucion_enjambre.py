@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from tools import atribucion_enjambre as ae
 
 G = 1024 * 1024  # KiB por GiB
@@ -152,3 +154,15 @@ def test_tasa_max_ignora_pares_fuera_de_30_a_180_s_y_scopes_sin_conteo():
     assert ae.tasa_max(s) == 30.0  # 900 -> 930 en 60 s
     assert ae.tasa_max([]) == 0.0
     assert ae.series_conteo([reg("00:00", 0.0, scopes=[sn(5, state="down"), {"unit": "x", "state": "ok"}])]) == {}
+
+
+def test_script_entrypoint_sale_con_el_codigo_de_main(tmp_path, monkeypatch, capsys):
+    import runpy
+    from pathlib import Path
+
+    monkeypatch.setattr("sys.argv", ["atribucion_enjambre.py", "--samples", str(tmp_path),
+                                     "--desde", "2026-10-05T00:00:00-06:00", "--hasta", "2026-10-05T01:00:00-06:00"])
+    with pytest.raises(SystemExit) as exc:
+        runpy.run_path(str(Path(ae.__file__)), run_name="__main__")
+    assert exc.value.code == 2
+    assert json.loads(capsys.readouterr().out)["veredicto"] == "could_not_run"
