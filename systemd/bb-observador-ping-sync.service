@@ -1,0 +1,11 @@
+[Unit]
+Description=bb observador externo: trae el log de pings del NAS por smbclient hacia externo/ping.jsonl (interruptor observador_ping; sin instalar hasta que exista nas.json)
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.observador_ping --sync
+ExecStopPost=-%h/projects/blackbox/bin/bb-parada-diagnostico %n $EXIT_STATUS $SERVICE_RESULT
+TimeoutStartSec=90
+MemoryMax=64M
+Nice=10
