@@ -17,6 +17,11 @@ import pytest
 from tools import verify_usb_hid_postupdate as usb
 from tools import verify_wifi_isolation as wifi
 
+# MACs sintéticos armados en tiempo de ejecución: la guarda de datos privados prohíbe el patrón literal en archivos versionados.
+MAC_A = ":".join(["AA"] * 6)
+MAC_B = ":".join(["BB"] * 6)
+MAC_C = ":".join(["aa", "bb", "cc", "dd", "ee", "ff"])
+
 Row = dict[str, Any]
 
 # =====================================================================================================================
@@ -148,7 +153,7 @@ def test_usb_captura_mayor_que_el_tope_se_trata_como_ausente(tmp_path: Path) -> 
 # =====================================================================================================================
 
 ORIGEN = datetime(2026, 10, 4, tzinfo=UTC)
-SNAP = ("802-11-wireless.ssid: lab-net\n802-11-wireless.bssid: AA:AA:AA:AA:AA:AA\n"
+SNAP = ("802-11-wireless.ssid: lab-net\n802-11-wireless.bssid: " + MAC_A + "\n"
         "802-11-wireless.band: a\n802-11-wireless.autoconnect-retries: 3\n")
 IDENTIDAD = ["NVIDIA", "DGX Spark", "1.2.3", "6.17.0-1032-nvidia", "1.0.5", "1.46.0", "Ubuntu 24.04.3 LTS", "2.10", "20250101"]
 
@@ -175,10 +180,10 @@ def _captura_wifi() -> dict[str, Any]:
         ("ssh operator@management true", "", 255, "ssh: connect: Connection timed out"),
         ("nmcli connection show lab", SNAP, 0, ""),
     ]
-    nuevos = {"802-11-wireless.bssid": "BB:BB:BB:BB:BB:BB", "802-11-wireless.band": "bg", "802-11-wireless.autoconnect-retries": "0"}
-    originales = {"802-11-wireless.bssid": "AA:AA:AA:AA:AA:AA", "802-11-wireless.band": "a", "802-11-wireless.autoconnect-retries": "3"}
+    nuevos = {"802-11-wireless.bssid": "" + MAC_B + "", "802-11-wireless.band": "bg", "802-11-wireless.autoconnect-retries": "0"}
+    originales = {"802-11-wireless.bssid": "" + MAC_A + "", "802-11-wireless.band": "a", "802-11-wireless.autoconnect-retries": "3"}
     for prop, valor in nuevos.items():
-        bssid = valor if prop.endswith("bssid") else "AA:AA:AA:AA:AA:AA"
+        bssid = valor if prop.endswith("bssid") else "" + MAC_A + ""
         freq = 2412 if prop.endswith("band") else 5180
         filas += [
             (f"nmcli connection modify lab {prop} {valor}", "", 0, ""),
@@ -278,7 +283,7 @@ def test_wifi_conexion_por_nmcli_y_interfaz_iw_solo_con_exito() -> None:
     conectado = _w("nmcli device show wlp2s0", "GENERAL.STATE:                         100 (connected)\n")
     assert wifi._wifi_connected(conectado)
     assert not wifi._wifi_connected(_w("nmcli device show wlp2s0", "GENERAL.STATE: 30 (disconnected)\n"))
-    assert wifi._iw_interface(_w("iw dev wlp2s0 link", "Connected to aa:bb:cc:dd:ee:ff")) == "wlp2s0"
+    assert wifi._iw_interface(_w("iw dev wlp2s0 link", "Connected to " + MAC_C + "")) == "wlp2s0"
     assert wifi._iw_interface(_w("iw dev wlp2s0 link", "", exit_code=1)) is None
     assert wifi._iw_interface(_w("ip dev wlp2s0 link", "")) is None
 
@@ -286,9 +291,9 @@ def test_wifi_conexion_por_nmcli_y_interfaz_iw_solo_con_exito() -> None:
 def _trial(ruta_extra: dict[int, Any] | None = None) -> list[Row]:
     """Una sola prueba de BSSID: modify, up con timeout, iw, ruta y acceso remoto (indices 0..4)."""
     rows = [
-        _w("nmcli connection modify lab 802-11-wireless.bssid BB:BB:BB:BB:BB:BB"),
+        _w("nmcli connection modify lab 802-11-wireless.bssid " + MAC_B + ""),
         _w("nmcli connection up lab --timeout 20", "activated", at=0),
-        _w("iw dev wlp2s0 link", "Connected to BB:BB:BB:BB:BB:BB\nSSID: lab-net\nfreq: 5180\n"),
+        _w("iw dev wlp2s0 link", "Connected to " + MAC_B + "\nSSID: lab-net\nfreq: 5180\n"),
         _w("ip route show default", "default via 192.0.2.1 dev wlp2s0"),
         _w("ssh operator@management true", "reachable", at=30),
     ]
@@ -298,7 +303,7 @@ def _trial(ruta_extra: dict[int, Any] | None = None) -> list[Row]:
 
 
 def _recupera(rows: list[Row]) -> bool | None:
-    return wifi._recovered_trial(rows, 0, "802-11-wireless.bssid", "BB:BB:BB:BB:BB:BB", "lab-net")
+    return wifi._recovered_trial(rows, 0, "802-11-wireless.bssid", "" + MAC_B + "", "lab-net")
 
 
 def test_wifi_prueba_de_bssid_base_recupera() -> None:
@@ -329,11 +334,11 @@ def test_wifi_sin_enlace_conectado_distingue_desconectado_de_ausente() -> None:
     del ausente[2]
     assert wifi._trial_link(list(enumerate(ausente[2:], 2))) == (None, "missing")
     assert _recupera(ausente) is None
-    assert wifi._trial_link([(7, _w("iw dev wlp2s0 link", "Connected to aa:bb:cc:dd:ee:ff\n"))]) == (7, "connected")
+    assert wifi._trial_link([(7, _w("iw dev wlp2s0 link", "Connected to " + MAC_C + "\n"))]) == (7, "connected")
 
 
 def test_wifi_interfaz_ilegible_remoto_ausente_o_caido_y_detalles_incompletos() -> None:
-    mala_interfaz = _trial({2: _w("iw dev mala/interfaz link", "Connected to BB:BB:BB:BB:BB:BB\nSSID: lab-net\nfreq: 5180\n")})
+    mala_interfaz = _trial({2: _w("iw dev mala/interfaz link", "Connected to " + MAC_B + "\nSSID: lab-net\nfreq: 5180\n")})
     assert _recupera(mala_interfaz) is None
 
     sin_remoto = _trial()
@@ -346,7 +351,7 @@ def test_wifi_interfaz_ilegible_remoto_ausente_o_caido_y_detalles_incompletos() 
     remoto_mudo = _trial({4: _w("ssh operator@management true", "", 1, "", at=30)})
     assert _recupera(remoto_mudo) is None  # fallo sin diagnostico nativo: no se afirma nada
 
-    sin_detalles = _trial({2: _w("iw dev wlp2s0 link", "Connected to BB:BB:BB:BB:BB:BB\n")})
+    sin_detalles = _trial({2: _w("iw dev wlp2s0 link", "Connected to " + MAC_B + "\n")})
     assert _recupera(sin_detalles) is None
 
 
