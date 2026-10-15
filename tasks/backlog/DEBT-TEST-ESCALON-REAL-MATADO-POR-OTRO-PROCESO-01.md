@@ -2,10 +2,10 @@
 id: DEBT-TEST-ESCALON-REAL-MATADO-POR-OTRO-PROCESO-01
 kind: task
 domain: VERDICT
-title: "tests/test_escalon_app_slice.py::test_control_real_elige_y_mata_al_acaparador... falla en el pre-push cuando alguien mata a su acaparador antes de tiempo"
+title: "El test real del escalon pierde su acaparador por un SIGKILL ajeno en el pre-push"
 status: open
 severity: P3
-origin: measured
+origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-15
 close_check: {"cmd": "python3 -m pytest -q tests/test_escalon_app_slice.py -p no:cacheprovider", "expect": "exit_zero", "porque": "Hoy pasa solo (8 de 8) y con 4 copias en paralelo (12 de 12); falla en el pre-push completo con xdist. El cierre real exige identificar al emisor del SIGKILL y aislarlo, no relanzar hasta que pase."}
