@@ -1,0 +1,33 @@
+Perfil medido de este equipo el 2026-10-15 (DELTA-FORUM-QWEN-LONG-AGENT-STOP-01): el motor sirve nemotron-local sobre nemotron-3.5-lightning-30b-a3b-nvfp4 con --tool-call-parser qwen3_xml y SIN --speculative-config: no hay DFlash, ni MTP, ni modelo Qwen.
+
+$ docker inspect nemotron-server --format '{{join .Config.Cmd " "}}'
+rc=0
+/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4 --served-model-name nemotron-local --gpu-memory-utilization 0.3 --max-model-len 32768 --host 127.0.0.1 --port 8000 --trust-remote-code --moe-backend marlin --mamba-backend flashinfer --mamba-cache-mode align --kv-cache-dtype fp8 --enable-prefix-caching --reasoning-parser nemotron_v3 --enable-auto-tool-choice --tool-call-parser qwen3_xml --max-num-batched-tokens 8192
+
+Rutas de lanzamiento del repo (los archivos que nombran nemotron-local o nemotron-server; ningun .sh/.service/.yml/.yaml nombra nemotron-local: `grep -rln "nemotron-local" --include=*.sh --include=*.service --include=*.yml --include=*.yaml .` no devuelve nada):
+
+$ grep -rIl "nemotron-local\|nemotron-server" . --exclude-dir=.git --exclude-dir=evidence --exclude-dir=tasks --exclude-dir=docs --exclude-dir=tests --exclude-dir=__pycache__
+enable-privileged.sh
+DECISIONS.md
+bin/bb-vigilante-motor
+tools/dmem_prueba_completa.sh
+tools/portero.py
+tools/portero_docker_lab.sh
+adopted/system-config/etc_systemd_system_docker.slice.d_99-blackbox.conf
+adopted/pendiente-de-despliegue/etc_systemd_system_docker.slice.d_99-blackbox.conf
+adopted/gpu_governance/admission_check.sh
+
+$ grep -n -i "speculative\|dflash" enable-privileged.sh bin/bb-vigilante-motor tools/dmem_prueba_completa.sh tools/portero.py tools/portero_docker_lab.sh adopted/system-config/etc_systemd_system_docker.slice.d_99-blackbox.conf adopted/pendiente-de-despliegue/etc_systemd_system_docker.slice.d_99-blackbox.conf adopted/gpu_governance/admission_check.sh
+rc=1   (cero coincidencias en los ocho archivos distintos de DECISIONS.md: ninguna ruta de lanzamiento habilita especulacion)
+
+$ grep -rIn "vllm serve\|vllm/vllm-openai\|--served-model-name" . (mismas exclusiones)
+tools/portero_docker_lab.sh:314: (laboratorio del portero, imagen vllm/vllm-openai:v0.27.1)
+tools/portero_docker_lab.sh:336: --served-model-name prueba --gpu-memory-utilization ... (sin --speculative-config)
+tools/backend_arch_manifest.py:26: IMAGE = "vllm/vllm-openai:v0.27.1"
+
+Control positivo: el mismo grep encuentra 'speculative' donde existe:
+
+$ grep -c -i speculative DECISIONS.md
+2
+
+Dato medido el 2026-10-14 (consta en la ficha, no repetido hoy): el drafter nemotron-3.5-lightning-30b-a3b-nvfp4-dspark esta en disco sin cablear; speculative_config=None y cero metricas spec_decode.

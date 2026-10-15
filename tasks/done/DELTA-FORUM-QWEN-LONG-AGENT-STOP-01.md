@@ -3,12 +3,16 @@ id: DELTA-FORUM-QWEN-LONG-AGENT-STOP-01
 kind: task
 domain: VERDICT
 title: "Validar forum qwen long agent stop 01"
-status: open
+status: done
+closed_at: 2026-10-15
+closure_type: void_wontfix
+reason: "El reporte es de paradas prematuras (finish_reason=stop sin tool_calls) de Qwen3.8 en sesiones largas de agente; aqui no hay Qwen servido (el motor es nemotron-local, que usa el parser qwen3_xml pero no es un modelo Qwen) y Hermes no apunta al motor local. Decision de Luis 2026-10-15 (boleta 'Cerrar 3, mantener 2'): cerrar sin sujeto; reabrir si se sirve un Qwen3.x o se pide un soak de agente largo contra nemotron-local (la vigilancia de tool-call de una ronda ya la hace tools/canario_motor.py)."
+evidence: {"pass": "tasks/evidence/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01/pass.txt", "fail": "tasks/evidence/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01/fail.txt", "e2e": "tasks/evidence/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_long_agent_stop_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-15): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen_long_agent_stop_01`, un xfail que se retira con el cierre."}
 ---
 
 ## Registro y responsable
@@ -82,3 +86,12 @@ $ docker inspect nemotron-server --format '{{json .Args}}'   (extracto)
 - No existe: Qwen3.8 (ni servido ni en disco) ni Hermes contra el motor local.
 - Existe: el cliente del reporte (Hermes Agent) esta instalado; el motor local corre el parser `qwen3_xml` de la familia Qwen; hay tres directorios `qwen3-*` en disco sin servir; y el verificador (`tools/runtime_batch03_controls.py::_long_stop`) no fija modelo: pide un soak de agente largo con `finish_reason`, `tool_call_count` y estado de tarea por turno, que aplica a cualquier agente contra nemotron-local. El reporte no atribuye la causa a modelo, parser ni motor.
 - Falta para cerrar o declarar: que Luis decida si el sujeto es "Qwen3.8" (entonces `void_wontfix` con esta medicion) o "paradas prematuras de un agente largo contra el motor local" (entonces queda abierta y necesita un soak real con un agente que use nemotron-local).
+
+## Root Cause
+No aplica a este equipo: las paradas sin tool_calls de Qwen3.8 en agente largo no tienen sujeto aqui: el motor sirve nemotron-local (no Qwen; solo comparte el parser qwen3_xml) y el soak de agente largo no existe como requisito; tools/canario_motor.py cubre tool-call de una ronda.
+
+## Regression Test
+Ninguno: la ficha se cierra por no tener sujeto aqui. Los tests que la vigilaban (`tests/test_debt_registration_controls.py::test_delta_forum_qwen_long_agent_stop_01` y la parametrizacion de `tests/test_runtime_batch0*_controls.py` que la filtra `_ficha_abierta`) se retiran junto con sus entradas de `tests/known_failures.json` y de `.simplecode/backlog_baseline.json`.
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: el lanzamiento del motor no contiene `--speculative-config`, con control positivo de que la misma orden da 1 sobre una cadena que la contiene), `pass` (perfil medido del motor y de las rutas de lanzamiento del repo) y `e2e` (la decision registrada). Para reabrirla si el sujeto aparece: mover `tasks/done/DELTA-FORUM-QWEN-LONG-AGENT-STOP-01.md` a `tasks/backlog/` con `git mv` y poner `status: open`.

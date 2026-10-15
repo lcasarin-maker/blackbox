@@ -1261,8 +1261,6 @@ def _assert_runtime_batch01_closure(card_id: str) -> None:
 
 
 
-def test_delta_forum_dflash_xgrammar_structured_output_regression_01() -> None:
-    _assert_runtime_batch01_closure('DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01')
 
 
 
@@ -1281,8 +1279,6 @@ def _assert_runtime_batch02_closure(card_id: str) -> None:
 
 
 
-def test_delta_forum_mtp_acceptance_and_semantic_control_01() -> None:
-    _assert_runtime_batch02_closure('DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01')
 
 
 
@@ -1299,8 +1295,6 @@ def _assert_runtime_batch03_closure(card_id: str) -> None:
     _assert_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
 
 
-def test_delta_forum_qwen_long_agent_stop_01() -> None:
-    _assert_runtime_batch03_closure('DELTA-FORUM-QWEN-LONG-AGENT-STOP-01')
 
 
 def test_delta_forum_qwen_mtp_parser_cancel_state_check_01() -> None:

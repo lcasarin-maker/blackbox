@@ -1,0 +1,15 @@
+Control negativo de aplicabilidad (DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01), 2026-10-15: buscar en el lanzamiento del motor local el sujeto que la ficha exige (decodificacion especulativa: --speculative-config). La orden debe dar 0 coincidencias porque el sujeto no existe aqui; el control positivo prueba que la misma orden SI da 1 sobre una cadena que contiene la bandera.
+
+$ docker inspect nemotron-server --format '{{join .Config.Cmd " "}}' | grep -c speculative
+0
+
+$ docker inspect nemotron-server --format '{{join .Config.Cmd " "}}' | grep -c -i -E 'dflash|dspark|mtp'
+0
+
+Control positivo (la orden puede producir el veredicto contrario):
+
+$ printf 'x --speculative-config y' | grep -c speculative
+1
+
+$ grep -c -i speculative DECISIONS.md
+2
