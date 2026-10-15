@@ -1,0 +1,16 @@
+Control negativo de aplicabilidad (DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (SGLang con sgl_kernel sirviendo Nemotron en SM121 (el verificador fija la pila sglang/sgl_kernel)). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ docker images --format '{{.Repository}}:{{.Tag}}' | grep -qi sglang
+rc=1
+
+$ pip list 2>/dev/null | grep -qi -E '^(sglang|sgl.kernel) '
+rc=1
+
+$ docker exec nemotron-server python3 -c 'import sgl_kernel'
+rc=1
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'sgl_kernel'
+
+$ docker ps --format "{{.Names}} {{.Image}}" | grep -qi sglang
+rc=1

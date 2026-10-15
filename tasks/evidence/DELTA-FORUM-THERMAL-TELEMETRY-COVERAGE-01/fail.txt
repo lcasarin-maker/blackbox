@@ -1,0 +1,7 @@
+Control negativo de aplicabilidad (DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (un ASUS GX10 (el verificador llama _subject(vendor="ASUS", product="GX10"))). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ grep -qi asus /sys/class/dmi/id/sys_vendor
+rc=1
+
+$ grep -qi gx10 /sys/class/dmi/id/product_name
+rc=1

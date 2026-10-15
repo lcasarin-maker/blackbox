@@ -3,12 +3,16 @@ id: FORUM-02-USB-UVC-EP0
 kind: task
 domain: USB
 title: "Validar y prevenir el cuelgue xHCI por controles UVC EP0 durante streaming"
-status: open
+status: done
+closed_at: 2026-10-14
+closure_type: void_wontfix
+reason: "No hay dispositivo UVC aqui: lsusb muestra solo hubs raiz y el Bluetooth, uvcvideo no esta cargado y el journal del kernel retenido (desde 2026-10-13) no tiene firmas HC died / xhci halt / uvcvideo error. Decision de Luis 2026-10-14: cerrar sin sujeto; reabrir si se conecta una camara UVC y deja HC died o errores EP0 en el journal."
+evidence: {"pass": "tasks/evidence/FORUM-02-USB-UVC-EP0/pass.txt", "fail": "tasks/evidence/FORUM-02-USB-UVC-EP0/fail.txt", "e2e": "tasks/evidence/FORUM-02-USB-UVC-EP0/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-USB-UVC-EP0 --evidence tasks/evidence/FORUM-02-USB-UVC-EP0", "expect": "exit_zero", "porque": "Verificador específico pendiente: debe comprobar la reproducción A/B, la versión corregida y la recomendación preventiva para cada OEM probado."}
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/FORUM-02-USB-UVC-EP0.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m tools.verify_forum_finding --id FORUM-02-USB-UVC-EP0 --evidence tasks/evidence/FORUM-02-USB-UVC-EP0`, que sin captura real del sujeto no puede pasar; sin sujeto aqui no hay captura posible."}
 ---
 
 ## Fuente y evidencia
@@ -57,3 +61,12 @@ Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6
 
 ## Criterios ejecutables de `tools.verify_forum_finding` (2026-10-14)
 Los criterios ejecutables de `tools.verify_forum_finding` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
+
+## Root Cause
+No aplica a este equipo: el cuelgue xHCI exige una camara UVC en streaming con controles EP0; hoy `lsusb` muestra solo hubs raiz y el Bluetooth, `uvcvideo` no esta cargado, y el journal del kernel retenido (desde 2026-10-13T14:07) no tiene firmas HC died / xhci halt / uvcvideo error.
+
+## Regression Test
+Ninguno: la ficha se cierra por no tener sujeto aqui. No tenia test xfail propio; su close_check era `tools.verify_forum_finding`, que sigue vivo para las demas fichas de foro (y `tests/test_closure_hardware.py::test_forum_finding_supports_every_original_id` sigue comprobando que el verificador soporta este id).
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: las ordenes que buscan el sujeto salen con rc distinto de 0), `pass` (perfil medido, con control positivo de que las mismas herramientas encuentran lo que si existe) y `e2e` (la decision registrada). Datos de la maquina redactados con el PATRON de `tests/test_sin_datos_privados.py`. Para reabrirla si el sujeto aparece: `git mv tasks/done/FORUM-02-USB-UVC-EP0.md tasks/backlog/` y `status: open`.

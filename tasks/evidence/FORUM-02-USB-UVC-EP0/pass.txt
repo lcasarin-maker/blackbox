@@ -1,0 +1,39 @@
+Perfil medido de este equipo el 2026-10-14: ningun dispositivo UVC conectado (solo el Bluetooth btusb) y cero firmas de fallo xHCI/UVC en el journal del kernel.
+
+$ lsusb
+rc=0
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 005 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 006 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 007 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 008 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 009 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 010 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 011 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 011 Device 002: ID 13d3:3630 IMC Networks Wireless_Device
+Bus 012 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+
+$ journalctl -k --no-pager -o short-iso | head -1 | cut -c1-25
+rc=0
+2026-10-13T14:07:42-06:00
+
+$ journalctl -k --no-pager | grep -ci -E 'c920|046d|uvcvideo'
+rc=1
+0
+
+Control positivo: las mismas herramientas SI encuentran lo que existe:
+
+$ lsusb | grep -qi wireless
+rc=0
+
+$ journalctl -k --no-pager | grep -qi xhci
+rc=0
+
+$ journalctl -k --no-pager | grep -ci xhci
+rc=0
+67
+
+Limite declarado: el journal del kernel retenido empieza el 2026-10-13T14:07, asi que el grep de fallo cubre solo desde esa hora (el mismo journal SI contiene lineas xhci: control positivo). Evidencia anterior del repo (tasks/evidence/CLEAN-2026-10-03) menciona una Logitech C920; hoy no esta conectada, uvcvideo no esta cargado y el journal retenido no la nombra. Sin dispositivo UVC no hay STREAMON ni EP0 que medir.

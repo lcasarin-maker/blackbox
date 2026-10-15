@@ -3,12 +3,16 @@ id: DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01
 kind: task
 domain: VERDICT
 title: "Validar forum vllm gb10 arch and build matrix 01"
-status: open
+status: done
+closed_at: 2026-10-14
+closure_type: void_wontfix
+reason: "No hay builds de vLLM aqui: el unico vLLM es la imagen oficial v0.27.1 fijada en active_engine.json, y su cobertura de arquitecturas ya esta medida en tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01. Decision de Luis 2026-10-14: cerrar sin sujeto; reabrir si se construye vLLM localmente o se cambia a una imagen no oficial."
+evidence: {"pass": "tasks/evidence/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01/pass.txt", "fail": "tasks/evidence/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01/fail.txt", "e2e": "tasks/evidence/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_vllm_gb10_arch_and_build_matrix_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_vllm_gb10_arch_and_build_matrix_01`, que sin captura real del sujeto no puede pasar; sin sujeto aqui no hay captura posible."}
 ---
 
 ## Registro y responsable
@@ -66,3 +70,12 @@ Se sirve vLLM v0.27.1 en GB10 (sm_121), asi que la matriz arquitectura/build/PTX
 Version para un solo nodo Gigabyte AI TOP ATOM: Registrar en huella_host el digest de imagen, torch/CUDA/PTXAS y arquitecturas compiladas de vllm-openai:v0.27.1 y exigir carga+generacion finita en canario_motor al cambiar de imagen; descartar la parte de DeepSeek dual-Spark/MTP.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Root Cause
+No aplica a este equipo: los fallos del hilo 348862 son de builds propios de vLLM 0.11-0.12 (CUTLASS, Triton PTX, CMake); aqui no hay build local, el unico vLLM es la imagen oficial `vllm/vllm-openai:v0.27.1` fijada en `/srv/ai/gateway/active_engine.json`, cuya cobertura de arquitecturas (12.1 incluida) ya esta medida en `tasks/evidence/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01/preflight.json`.
+
+## Regression Test
+Ninguno: la ficha se cierra por no tener sujeto aqui. El test que la vigilaba (`tests/test_debt_registration_controls.py::test_delta_forum_vllm_gb10_arch_and_build_matrix_01`, un xfail) se retira junto con su entrada de `tests/known_failures.json`, y la parametrizacion `tests/test_runtime_batch03_controls.py::test_real_capture_close_gate_needs_actual_runtime_record[DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01]` deja de generarse (la filtra `_ficha_abierta`) y pierde tambien su entrada. El verificador y sus pruebas unitarias con fixtures siguen vivos.
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: las ordenes que buscan el sujeto salen con rc distinto de 0), `pass` (perfil medido, con control positivo de que las mismas herramientas encuentran lo que si existe) y `e2e` (la decision registrada). Datos de la maquina redactados con el PATRON de `tests/test_sin_datos_privados.py`. Para reabrirla si el sujeto aparece: `git mv tasks/done/DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01.md tasks/backlog/` y `status: open`.

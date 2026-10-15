@@ -1,0 +1,27 @@
+Perfil medido de este equipo el 2026-10-14: el motor sirve solo nemotron-local, sin Ray; no hay pesos MiniMax ni Qwen3.8 en disco.
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | python3 -c "import json,sys;d=json.load(sys.stdin);print([(m[\"id\"],m[\"root\"]) for m in d[\"data\"]])"
+rc=0
+[('nemotron-local', '/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4')]
+
+$ ls /srv/ai/models/llm
+rc=0
+nemotron-3.5-lightning-30b-a3b-nvfp4
+nemotron-3.5-lightning-30b-a3b-nvfp4-dspark
+nemotron-3-super-120b-a12b-nvfp4
+qwen3-14b-nvfp4
+qwen3.6-27b-fp8
+qwen3-8b-nvfp4
+
+Control positivo: las mismas herramientas SI encuentran lo que existe:
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | python3 -c "import json,sys;d=json.load(sys.stdin);print([(m[\"id\"],m[\"root\"]) for m in d[\"data\"]])" | grep -qi nemotron
+rc=0
+
+$ docker exec nemotron-server python3 -c 'import vllm'
+rc=0
+
+$ test -f tools/canario_motor.py
+rc=0
+
+La parte transferible (texto -> tool call -> texto en el mismo proceso) ya la cubre tools/canario_motor.py (`bb canario`).

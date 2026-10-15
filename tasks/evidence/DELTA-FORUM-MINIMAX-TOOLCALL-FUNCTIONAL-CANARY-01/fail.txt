@@ -1,0 +1,18 @@
+Control negativo de aplicabilidad (DELTA-FORUM-MINIMAX-TOOLCALL-FUNCTIONAL-CANARY-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (MiniMax-M2.7 (o Qwen3.8 dual-Spark) servido con Ray). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | python3 -c "import json,sys;d=json.load(sys.stdin);print([(m[\"id\"],m[\"root\"]) for m in d[\"data\"]])" | grep -qi minimax
+rc=1
+
+$ ls -d /srv/ai/models/llm/*inimax* /srv/ai/models/llm/*qwen3.8*
+rc=2
+ls: no se puede acceder a '/srv/ai/models/llm/*inimax*': No existe el archivo o el directorio
+ls: no se puede acceder a '/srv/ai/models/llm/*qwen3.8*': No existe el archivo o el directorio
+
+$ docker exec nemotron-server python3 -c 'import ray'
+rc=1
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'ray'
+
+$ command -v ray
+rc=1

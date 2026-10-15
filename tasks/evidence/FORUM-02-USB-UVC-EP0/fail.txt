@@ -1,0 +1,11 @@
+Control negativo de aplicabilidad (FORUM-02-USB-UVC-EP0), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (un dispositivo UVC sobre xHCI que falle con controles EP0 tras STREAMON). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ lsusb | grep -qi -E 'camera|webcam|046d:|8086:0b'
+rc=1
+
+$ ls /sys/bus/usb/drivers/uvcvideo/ | grep -q :
+rc=1
+ls: no se puede acceder a '/sys/bus/usb/drivers/uvcvideo/': No existe el archivo o el directorio
+
+$ journalctl -k --no-pager | grep -qi -E 'HC died|xhci.*(halt|died)|uvcvideo.*(error|timeout|failed)'
+rc=1

@@ -1,0 +1,17 @@
+Perfil medido de este equipo el 2026-10-14: una GIGABYTE AI TOP ATOM, no un ASUS GX10.
+
+$ cat /sys/class/dmi/id/sys_vendor /sys/class/dmi/id/product_name /sys/class/dmi/id/board_name
+rc=0
+GIGABYTE
+AI TOP ATOM
+P4242
+
+Control positivo: las mismas herramientas SI encuentran lo que existe:
+
+$ grep -qi gigabyte /sys/class/dmi/id/sys_vendor
+rc=0
+
+$ grep -qi 'ai top atom' /sys/class/dmi/id/product_name
+rc=0
+
+El inventario de canales termicos de ESTE equipo ya esta en tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/current-native-observation-summary.json (7 zonas, 3 hwmon, 0 fan_input, subject_match "does not prove ASUS GX10 scope"); la cobertura termica local sigue abierta en FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION y DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.

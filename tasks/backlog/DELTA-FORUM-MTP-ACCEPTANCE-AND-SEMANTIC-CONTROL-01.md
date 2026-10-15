@@ -64,3 +64,22 @@ El hilo 361163 trata de Qwen3-Coder-Next NVFP4 con MTP, que aqui no se sirve; el
 Version para un solo nodo Gigabyte AI TOP ATOM: Extender canario_motor o un sensor hermano para leer las metricas de aceptacion especulativa de nemotron-local (si la receta las activa) y comparar tok/s on/off con el mismo prompt, marcando aceptacion 0 como FALLA; si la receta no usa MTP, cerrar como no aplicable.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Avance (2026-10-14, "cierra todas las pendientes conforme a la opcion recomendada") -- NO se cierra: dudosa
+
+Regla aplicada: `void_wontfix` solo si se mide que el sujeto no existe aqui. La clasificacion del 2026-10-13 decia "si la receta no usa MTP, cerrar como no aplicable"; medido hoy:
+
+```
+$ docker inspect nemotron-server --format '{{json .Args}}' | grep -c -E 'speculative|dflash|dspark'
+0   (rc=1)
+$ curl -s -m 10 http://127.0.0.1:8000/metrics | grep -c spec_decode
+0   (rc=1)
+$ docker logs nemotron-server 2>&1 | grep -i -m1 speculative_config   (extracto)
+... Initializing a V1 LLM engine (v0.27.1) with config: model='/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4', speculative_config=None, ...
+$ grep -c dflash_config /srv/ai/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4-dspark/config.json
+1   (rc=0; "architectures": ["Qwen3DSparkModel"], un drafter DFlash/DSpark para nemotron-local, en disco y sin usar)
+```
+
+- No existe hoy: decodificacion especulativa activa en el motor (ni MTP ni DFlash/DSpark): `speculative_config=None` y cero metricas `spec_decode`, asi que no hay aceptacion que medir.
+- Existe: el drafter DSpark de nemotron-local esta en disco (`Qwen3DSparkModel` con `dflash_config`), descargado para activarse. Con el GLM se cerro porque no estaba "ni servido ni en disco"; aqui esta en disco.
+- Falta para cerrar o declarar: que Luis decida si el drafter se va a activar. Si no, cerrar `void_wontfix` con la medicion de arriba; si si, el A/B on/off con aceptacion por posicion (las metricas `vllm:spec_decode_*` de /metrics) aplica a nemotron-local.

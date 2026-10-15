@@ -3,12 +3,16 @@ id: DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01
 kind: task
 domain: VERDICT
 title: "Validar root dsml parser recovery boundary 01"
-status: open
+status: done
+closed_at: 2026-10-14
+closure_type: void_wontfix
+reason: "El parser DSML es de DeepSeek; aqui el motor usa qwen3_xml con nemotron-local, no hay pesos DeepSeek y no hay ConnectX-7 (la segunda mitad de la ficha). El riesgo de qwen3_xml sigue abierto en DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01. Decision de Luis 2026-10-14: cerrar sin sujeto; reabrir si se sirve un modelo con DSML."
+evidence: {"pass": "tasks/evidence/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01/pass.txt", "fail": "tasks/evidence/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01/fail.txt", "e2e": "tasks/evidence/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_dsml_parser_recovery_boundary_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_root_dsml_parser_recovery_boundary_01`, que sin captura real del sujeto no puede pasar; sin sujeto aqui no hay captura posible."}
 ---
 
 ## Registro y responsable
@@ -68,3 +72,12 @@ El parser de tool-calls del motor local es el mismo riesgo (JSON/tool-call), can
 Version para un solo nodo Gigabyte AI TOP ATOM: Pruebas de regresion locales de tool-calls de nemotron-local (stream/completo, truncado, tool_choice=none, marcador citado) sobre capturas SSE conservadas.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Root Cause
+No aplica a este equipo: DSML es el formato de herramientas de DeepSeek; aqui el motor corre `--tool-call-parser qwen3_xml` con nemotron-local, no hay pesos DeepSeek y no hay ConnectX-7 (la segunda mitad de la ficha). El riesgo del parser que si corre aqui sigue abierto en `DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01`.
+
+## Regression Test
+Ninguno: la ficha se cierra por no tener sujeto aqui. El test que la vigilaba (`tests/test_debt_registration_controls.py::test_delta_root_dsml_parser_recovery_boundary_01`, un xfail) se retira junto con su entrada de `tests/known_failures.json`, y la parametrizacion `tests/test_runtime_batch04_controls.py::test_real_capture_close_gate_requires_runtime_evidence[DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01]` deja de generarse (la filtra `_ficha_abierta`) y pierde tambien su entrada. El verificador y sus pruebas unitarias con fixtures siguen vivos.
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: las ordenes que buscan el sujeto salen con rc distinto de 0), `pass` (perfil medido, con control positivo de que las mismas herramientas encuentran lo que si existe) y `e2e` (la decision registrada). Datos de la maquina redactados con el PATRON de `tests/test_sin_datos_privados.py`. Para reabrirla si el sujeto aparece: `git mv tasks/done/DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01.md tasks/backlog/` y `status: open`.
