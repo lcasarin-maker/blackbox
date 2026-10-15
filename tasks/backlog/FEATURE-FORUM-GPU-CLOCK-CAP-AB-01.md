@@ -86,3 +86,6 @@ El agente hardware tiene asignada la entrada CLI con JSON literal y códigos 0/1
 
 ## Criterios ejecutables de `tools.verify_gpu_clock_cap_ab` (2026-10-14)
 Los criterios ejecutables de `tools.verify_gpu_clock_cap_ab` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
+
+## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
+Disparador: la ventana del motor de 60 min que anuncia Luis con sudo de Luis para `nvidia-smi -lgc` (escritura de root). Comparte la ventana con DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01. Pasos exactos: carga fija contra `nemotron-local` a 300,2800; `sudo nvidia-smi -lgc 300,2200`, misma carga y soak predeclarado; rollback `sudo nvidia-smi -lgc 300,2800` (no `-rgc`: el rango de bb es 300,2800); guardar en `tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/` y correr `python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01`.

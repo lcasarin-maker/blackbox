@@ -33,5 +33,15 @@
     "file": "apt-guardia-instalar.sh",
     "descripcion": "Instala /usr/local/sbin/bb-apt-guardia y /etc/apt/apt.conf.d/00-bb-apt-guardia (hook DPkg::Pre-Install-Pkgs que aborta remociones de data/apt-paquetes-criticos.txt) y lo valida con APT real sobre una caja con dpkg sustituido; borra lo creado si la validacion falla (FEATURE-APT-CRITICAL-METAPACKAGE-GUARD)",
     "timeout": 300
+  },
+  "watchdog-propietario": {
+    "file": "watchdog-propietario.sh",
+    "descripcion": "Solo lectura: fuser -v /dev/watchdog /dev/watchdog0 (stat, sin abrir el dispositivo), boot_id y estado sysfs de watchdog0 (FEATURE-FORUM-SBSA-WATCHDOG-STATE-01)",
+    "timeout": 30
+  },
+  "drm-modeset-leer": {
+    "file": "drm-modeset-leer.sh",
+    "descripcion": "Solo lectura: /sys/module/nvidia_drm/parameters/{modeset,fbdev} (0400 root) y el boot_id (FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT)",
+    "timeout": 30
   }
 }

@@ -26,3 +26,6 @@ Elegida la opcion "Medir un A/B aqui primero". No se aplica ningun cap permanent
 **Protocolo propuesto (lo corre el dueno con sudo, sin tocar produccion hasta tenerlo):** 1) Ventana A, 2 h de carga habitual sin cap; 2) Ventana B, 2 h con el cap, misma carga (mismas peticiones de vLLM); 3) comparar `residencia_termica_del_boot` y `throttle_del_boot` de `bb incident` y el tiempo de pared del trabajo; 4) restaurar y guardar el resultado en `tasks/evidence/FEATURE-BB-EVALUAR-CAP-DE-CPU-01/ab.md`.
 
 La carga debe ser equivalente: el 11-oct el calor del SoC convivio con otros procesos (24 `wineboot` huerfanos de otra sesion de 13:44 a 16:30, `load` 58.8), que contaminan un A/B si no se controlan.
+
+## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
+Disparador: dos ventanas de 2 h con carga equivalente y sudo de Luis (`scaling_max_freq` es escritura de root). Pasos exactos: ventana A sin cap; ventana B con `for p in /sys/devices/system/cpu/cpufreq/policy*; do echo 2400000 | sudo tee $p/scaling_max_freq; done`; rollback `for p in /sys/devices/system/cpu/cpufreq/policy*; do sudo cp $p/cpuinfo_max_freq $p/scaling_max_freq; done`; comparar `residencia_termica_del_boot` y `throttle_del_boot` de `bb incident` y guardar en `ab.md` con la linea `scaling_max_freq` de cada policy.

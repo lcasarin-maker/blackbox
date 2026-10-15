@@ -18,3 +18,6 @@ Depende de `FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01`. Cosechar su logica
 
 ## Avance 2026-10-13: la region dmem ya existe
 Lectura de solo lectura: `/sys/fs/cgroup/dmem.capacity` = `nvidia/0000000F:01:00.0/vidmem 53794045952` (50,1 GiB) y `bb gpumem` cobra por region (38,34 GiB de 50,1: contenedor nemotron-server 33,40, user.slice 4,72). La premisa de la ficha ("depende de que la prueba 5 de region") ya se cumple porque el modulo parcheado esta cargado desde el 12-oct 21:57. Sigue abierta porque escribir `dmem.low`/`dmem.max` por cgroup exige root o delegacion del controlador (el cgroup del usuario trae solo memory y pids) y una medicion con el motor en produccion.
+
+## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
+Disparador: la ventana del motor de 60 min que anuncia Luis con root de Luis: escribir `dmem.low`/`dmem.max` es escritura en cgroupfs (no cabe en un script de solo lectura), y `user.slice` no delega `dmem` (medido hoy: solo `cpu memory pids`). Paso exacto: con el motor sirviendo, `echo "nvidia/0000000F:01:00.0/vidmem <bytes>" | sudo tee <cgroup del contenedor>/dmem.low`, medir con `bb gpumem` y un control sin la escritura, y escribir `booster_dmem_adaptado` en `medicion.txt`.

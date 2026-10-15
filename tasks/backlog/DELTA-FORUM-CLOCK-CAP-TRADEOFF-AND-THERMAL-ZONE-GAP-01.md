@@ -60,3 +60,6 @@ El host tiene 7 thermal zones/11 canales hwmon (inventario de la ficha) y ya hay
 Version para un solo nodo Gigabyte AI TOP ATOM: Estudio A/B de un solo nodo: decode y prefill de nemotron-local a stock vs un cap elegido, registrando todas las zonas termicas; sin governor comunitario ni cap universal.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
+Disparador: la ventana del motor de 60 min que anuncia Luis con sudo de Luis (`nvidia-smi -lgc` es escritura de root; no cabe en un script de solo lectura). La misma ventana sirve a FEATURE-FORUM-GPU-CLOCK-CAP-AB-01. Pasos exactos: A (stock, 300,2800 del `atom-clock-lock`): carga fija de decode y prefill contra `nemotron-local` con `atom_gpu_telemetry` registrando las 7 zonas termicas; B: `sudo nvidia-smi -lgc 300,2100` y la misma carga; rollback `sudo nvidia-smi -lgc 300,2800` y comprobar el reloj aplicado bajo carga. El close_check sigue siendo el xfail original hasta que exista esa captura.

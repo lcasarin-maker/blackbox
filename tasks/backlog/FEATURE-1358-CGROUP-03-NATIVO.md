@@ -63,3 +63,6 @@ Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6
 
 ## Criterios ejecutables de `tools.verify_cgroup_plan` (2026-10-14)
 Los criterios ejecutables de `tools.verify_cgroup_plan` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
+
+## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
+Disparador: cargar el driver 615 en un arranque de prueba (instalacion firmada para Secure Boot y reinicio, ambos de Luis), o en otro equipo GB10 de laboratorio. Hoy corre 580.178.04 con el modulo dmem parcheado; los modulos 615 compilados no se instalaron. Paso exacto tras ese arranque: el arnes de 01 con limite inferior a una asignacion, segundo cgroup y liberacion, y `python3 -m tools.verify_cgroup_plan --phase 03-nativo --evidence tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO`; rollback al 580.

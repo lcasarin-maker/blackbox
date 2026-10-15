@@ -174,3 +174,6 @@ Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6
 
 ## Criterios ejecutables de `tools.verify_cgroup_plan` (2026-10-14)
 Los criterios ejecutables de `tools.verify_cgroup_plan` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
+
+## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
+Disparador: la ventana del motor de 60 min que anuncia Luis. El modulo 580 con dmem parcheado esta cargado (FEATURE-DMEM-BOOSTERS-ADAPTAR-A-GB10-01 midio la region de 50,1 GiB el 2026-10-13), asi que el A/B ya no espera a 03. Paso exacto: ejecutar el protocolo de `tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/protocol.txt` (presion RAM+CUDA acotada contra el contenedor vLLM, PSI, ultima respuesta util y watchdog) y `python3 -m tools.verify_cgroup_plan --phase 05-cuelgues --evidence tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES`. Las sub-propuestas multinodo siguen fuera de este equipo.
