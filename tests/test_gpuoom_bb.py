@@ -1,5 +1,6 @@
 import json
 import subprocess
+import threading
 from pathlib import Path
 
 import pytest
@@ -232,6 +233,11 @@ def test_principal_lee_el_host_decide_y_registra_hasta_que_el_sueno_lo_corta(tmp
     ciclos = []
 
     def duerme(segundos):
+        # `g.time` es el modulo `time` de TODO el proceso: un hilo demonio de muestreo que otro test dejo vivo en este worker
+        # tambien llama a este sleep. Sin esta guarda, ese hilo gastaba los ciclos (o giraba sin dormir a 100 % de CPU) y el
+        # hilo principal nunca llegaba al ciclo 2: el pre-push se colgo 3 h 31 min en este test (2026-10-15).
+        if threading.current_thread() is not threading.main_thread():
+            threading.Event().wait()
         ciclos.append(segundos)
         if len(ciclos) == 2:
             raise Alto
