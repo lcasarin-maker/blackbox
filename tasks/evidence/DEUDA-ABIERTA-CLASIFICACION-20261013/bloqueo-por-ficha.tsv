@@ -99,3 +99,8 @@ FORUM-02-PSTORE-KERNEL-REGRESSION	no	incidente_real	tools/verify_forum_pstore.py
 FORUM-02-USB-UVC-EP0	no	captura_de_otro_caso	tools/forum_hardware_subjects.py _check_uvc (l.1424+): exige failing xhci_resets>0 (reproduccion del cuelgue en pila afectada, MT8901/RealSense) y corrected xhc
 FORUM-REALTEK-DRIVER-BINDING-01	no	reinicio	tools/forum_hardware_subjects.py l.879 exige casos warm_after y cold_after (warm/cold reboot A/B) mas rollback de GRUB (requiere sudo); la ficha ya registra la 
 FEATURE-ATLAS-REMEDIR-EVAL-TRAS-REINDEXADO-01	no	otro_repo	eval de Atlas con la ATOM fria (ventana de Luis) y 11 archivos sin entidad; vive en Atlas
+DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01	no	sudo	cambiar /etc/default/earlyoom exige un script sellado nuevo aprobado con el sudo de Luis (el --avoid solo resta 300 al oom_score y no cubre la lista unica)
+DEBT-EARLYOOM-MOTOR-SIGUE-ELEGIBLE-01	no	otro	el close_check devuelve 2 hasta 14 dias despues del cambio de earlyoom (2026-10-14) sin muertes del motor; no se adelanta
+DEBT-PORTERO-ADOPCION-CHOCA-CON-PIDS-QUE-SALEN-01	no	otro	su close_check exige 14 dias desde 2026-10-14 sin reinicio por COLAPSO de bb-usable con el portero adoptando suites
+DEBT-TERMICO-PREDICTIVO-SIN-DISCRIMINACION-01	no	otro_repo	el freno termico se prueba en el siguiente trabajo nocturno de Atlas (voto de Luis 2026-10-14); sin esa corrida no hay discriminacion que medir
+DEBT-TEST-ESCALON-REAL-MATADO-POR-OTRO-PROCESO-01	no	otro	el emisor del SIGKILL ajeno no esta identificado; reproducirlo exige un pre-push completo con el poller de procesos durante un fallo
