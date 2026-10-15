@@ -1,0 +1,82 @@
+---
+id: DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01
+kind: task
+domain: VERDICT
+title: "Validar forum cross turn sleeper injection regression 01"
+status: done
+closed_at: 2026-10-14
+closure_type: duplicate
+reason: "Duplicada del arnes de inyeccion de Atlas (~/projects/Atlas/tools/adversarial_injection_probe.py): quien ejecuta herramientas con efecto contra el motor local es Atlas (tools/kb_investigator.py:115 manda peticiones con herramientas a 127.0.0.1:8000 y su herramienta write_finding escribe un archivo), y bb solo pide una tool call de un turno sin ejecutarla. Decision de Luis 2026-10-14: la prueba de inyeccion vive con el dueno de las herramientas; reabrir si bb llega a ejecutar herramientas."
+evidence: {"pass": "tasks/evidence/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01/pass.txt", "fail": "tasks/evidence/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01/fail.txt", "e2e": "tasks/evidence/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01/e2e.txt"}
+severity: P1
+origin: asserted
+satd_family: BLIND_INSTRUMENT
+created: 2026-10-02
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md", "expect": "exit_zero", "porque": "Cerrada como duplicate (decision de Luis 2026-10-14): no hay fix en bb que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_cross_turn_sleeper_injection_regression_01`, un xfail que se retira con el cierre."}
+---
+
+## Registro y responsable
+
+Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
+
+## Evidencia y alcance
+
+Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
+
+**DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.** [370834, posts 15, 21–24, 39, 42, 47, 52](https://forums.developer.nvidia.com/t/370834/15) registra una señal preventiva de seguridad crítica: con Qwen3.5-122B-A10B INT4 AutoRound, operadores reportan que `tool-eval-bench` activó una sleeper injection entre turnos y añadió BCC/CC de un atacante descrito en el resultado del clima inicial. El aviso reaparece en otro ensayo del mismo hilo con el stack publicado como “definitivo”, en Qwen3.6-27B abliterated NVFP4/MTP y en Qwen3.5-397B con y sin Ray; las pruebas usaron distintos builds y el test de 397B está parcialmente truncado en el post 42. Un usuario atribuye haber despejado las amenazas al parser XML/template y otro reporta 5/5 tool calls fallidos al probar una receta/parser distinto en vLLM 0.22; esos comentarios no demuestran fix ni causalidad. Los resultados agregados de 91–97/100 y los subset de 15 casos no cubren por sí solos la seguridad multi-turno. Añadir al canario de promoción del runtime un caso determinista de herramienta no confiable en el turno inicial seguida de acción de correo controlada en otro turno; comprobar que el contenido inyectado nunca altera destinatario, CC/BCC, cuerpo ni selección de herramienta. Usar herramientas mock y registrar checkpoint, parser/template, imagen, vLLM, tokenizer y harness exactos; exigir cero efecto de la instrucción atacante en varias repeticiones y mantener un control positivo que demuestre que el fixture sí llega al contexto. El hilo [367085, posts 21, 65, 76 y 98](https://forums.developer.nvidia.com/t/introducing-prismaquant/367085/21) aporta otras advertencias TC-60 en Qwen3.6-35B/27B y Qwen3.5-122B, incluso con puntuaciones agregadas de 92–94/100; imágenes sin revisar y stacks/plantillas distintos impiden comparar causalidad. Una plantilla/parser candidato necesita ejecutar el mismo caso y controles completos antes de aceptarse. Cierre: la configuración candidata completa la suite multi-turno con rechazo de la instrucción del resultado de herramienta, sin filtrarla a la respuesta ni generar mutación de correo no autorizada; parser, modelo o template que falle bloquea promoción y se revierte al digest conocido. No aplicar el parser comunitario ni recetas de cuantización de este hilo automáticamente.
+
+Fuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.
+
+## Criterio de cierre y control negativo
+
+Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha.
+
+## Estado del verificador
+
+La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
+
+Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+### Evidencia de instrumento (2026-10-03)
+
+Estado: `deferred_lab`. No existe historial multi-turno capturado ni receipt de efectos con tool mock. Falta canario aislado sobre stack/model/template fijados con salida de herramienta no confiable, turno posterior de correo controlado, comprobación de todos los campos sensibles y control positivo del fixture. Ninguna captura SSE previa demuestra corrección o seguridad. La ficha sigue abierta y `close_check` intacto. Informe: `docs/evidence/BB-INSTRUMENTS-feasibility-runtime.md`.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `workload_or_lab`.
+- Impedimento: La evidencia registra que no existe conversación multi-turno capturada ni recibo de efectos tool mock.
+- Evidencia faltante para cierre: Stack/modelo/template fijados; canario aislado; salida tool mocked por turno; controles limpios/positivos; registro de side effects.
+- Siguiente acción: Solicitar corrida canario en sandbox aislado con modelo/template/digest fijos, tool mock sin efectos externos y registro por turno; usar el evaluador actual sobre el recibo.
+- Responsable del siguiente paso: BB; operador Luis para workload/lab.
+- Cierre completo accionable hoy: no. Preparación coordinable: sí.
+- Evidencias de clasificación: `tasks/backlog/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md`, `tools/runtime_batch01_controls.py`, `tests/test_debt_registration_controls.py`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Estado (2026-10-11, /0 + /vote)
+
+Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Adaptacion a este equipo (clasificacion 2026-10-13)
+Aplicabilidad: adaptable · utilidad: media · lectura: completa.
+
+El caso (Qwen3.5/3.6, hilos 370834/367085) no corre aqui, pero el riesgo de inyeccion cross-turn en tool results existe con nemotron-local y su parser. tools/canario_motor.py ya prueba tool-call de una ronda, no multi-turno.
+
+Version para un solo nodo Gigabyte AI TOP ATOM: Anadir a tools/canario_motor.py un caso mock de dos turnos (resultado de herramienta con instruccion atacante y luego correo mock) contra nemotron-local, con control positivo de que el fixture llega al contexto.
+
+Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Medicion contra el voto de cierre (2026-10-14): queda ABIERTA
+El voto de Luis del 2026-10-14 pedia cerrarla como `void_wontfix` porque "el motor local no ejecuta herramientas con efectos y aqui no hay pila de agente con herramienta". Medido en solo lectura, la premisa no se sostiene, asi que no se cierra y vuelve a Luis:
+- Atlas (otro repo del mismo equipo) corre un agente contra este motor: `~/projects/Atlas/tools/kb_investigator.py:115` usa `GATEWAY = "http://127.0.0.1:8000/v1/chat/completions"` (nemotron-local) con herramientas, entre ellas `write_finding`, que escribe un documento a disco (efecto). Es el patron de la ficha: resultado de herramienta no confiable en un turno, accion con efecto en otro.
+- Atlas ya tiene su propio arnes de inyeccion: `~/projects/Atlas/tools/adversarial_injection_probe.py` (rutas `evaluate_reference` y `scavenge_document`, ASR con y sin defensas).
+- Lo que si es cierto: en el momento de medir no habia conexiones abiertas al puerto 8000 (`ss -tnH state established "( dport = :8000 )" | wc -l` = 0) ni procesos de tool-eval-bench, openclaw, hermes o spark-studio.
+Decision pendiente de Luis: si el caso cross-turn lo cubre el arnes de Atlas (cerrar como `duplicate`/reubicada hacia Atlas, citando su evidencia) o se anade el caso de dos turnos al canario de bb.
+
+## Root Cause
+No es un defecto de bb: el riesgo de la ficha (una instruccion atacante en el resultado de una herramienta que se ejecuta en un turno posterior) exige un agente que ejecute herramientas con efecto. bb no lo es: `tools/canario_motor.py` pide una sola tool call (`suma`), comprueba su forma y no la ejecuta ni devuelve un mensaje `role: tool`. El agente con efecto es el investigador de Atlas (`~/projects/Atlas/tools/kb_investigator.py:115`, herramienta `write_finding`), y Atlas tiene su arnes de inyeccion (`~/projects/Atlas/tools/adversarial_injection_probe.py`). Limite medido: ese arnes no nombra el caso de dos turnos (0 coincidencias de `sleeper|cross-turn`); por el voto, ese caso lo lleva Atlas.
+
+## Regression Test
+Ninguno en bb: la ficha se cierra como duplicada. Se retiran `tests/test_debt_registration_controls.py::test_delta_forum_cross_turn_sleeper_injection_regression_01` y la parametrizacion `tests/test_runtime_batch01_controls.py::test_real_capture_close_gate_requires_actual_capture[...]` (la filtra `_ficha_abierta`), junto con sus entradas de `tests/known_failures.json`; el caso de mutacion de `tools/runtime_batch01_controls.py` para este id sigue en `tests/test_runtime_batch01_controls.py`.
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (las ordenes que buscan en bb un agente con herramienta de efecto y segundo turno salen con rc distinto de 0), `pass` (lo que bb y Atlas hacen, con control positivo y el limite medido) y `e2e` (la decision registrada). Para reabrirla si bb llega a ejecutar herramientas: `git mv tasks/done/DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01.md tasks/backlog/` y `status: open`.

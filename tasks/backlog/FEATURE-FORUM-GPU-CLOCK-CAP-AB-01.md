@@ -83,3 +83,6 @@ El agente hardware tiene asignada la entrada CLI con JSON literal y códigos 0/1
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md`, `tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/progress.txt`, `tools/verify_gpu_clock_cap_ab.py`, `tools/hardware_evidence.py`, `tests/test_debt_registration_controls.py`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Criterios ejecutables de `tools.verify_gpu_clock_cap_ab` (2026-10-14)
+Los criterios ejecutables de `tools.verify_gpu_clock_cap_ab` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.

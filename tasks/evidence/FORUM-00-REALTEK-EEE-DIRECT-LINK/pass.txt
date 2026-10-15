@@ -1,0 +1,42 @@
+Perfil medido de este equipo el 2026-10-14: una sola interfaz cableada (Realtek r8127, enP7s7) a 10 Gb/s, con la ruta por defecto via una puerta de enlace DHCP: es una red con router, no un enlace directo a un PC con I225-V.
+
+$ lspci | grep -iE "ethernet|network"
+rc=0
+0007:01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. Device 8127 (rev 05)
+0009:01:00.0 Network controller: MEDIATEK Corp. Device 7925
+
+$ ip -br link | awk '{print $1, $2}'
+rc=0
+lo UNKNOWN
+enP7s7 UP
+wlP9s9 DOWN
+br-3d679de7306e DOWN
+br-420d1def4d77 UP
+docker0 UP
+br-cf071280853a DOWN
+br-f4146d0c48e9 DOWN
+veth924899e@if2 UP
+vethc4002d8@if2 UP
+veth5e15a8b@if3 UP
+
+$ ip route show default
+rc=0
+default via <ip> dev enP7s7 proto dhcp src <ip> metric 100 
+
+$ ethtool enP7s7 2>/dev/null | grep -E 'Speed|Duplex|Link detected|Link partner advertised auto'
+rc=0
+	Link partner advertised auto-negotiation: Yes
+	Speed: 10000Mb/s
+	Duplex: Full
+	Link detected: yes
+
+Control positivo: las mismas herramientas SI encuentran lo que existe:
+
+$ lspci | grep -qi "Realtek.*8127"
+rc=0
+
+$ ip route show default dev enP7s7 | grep -q via
+rc=0
+
+$ ip -br link | grep -q '^enP7s7 *UP'
+rc=0

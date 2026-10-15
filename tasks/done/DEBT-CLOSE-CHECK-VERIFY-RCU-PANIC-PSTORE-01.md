@@ -1,0 +1,74 @@
+---
+id: DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01
+kind: task
+domain: VERDICT
+title: "Implementar criterios ejecutables de tools.verify_rcu_panic_pstore"
+status: done
+closed_at: 2026-10-14
+closure_type: duplicate
+reason: "Duplicada de su(s) ficha(s) sujeto FEATURE-FORUM-RCU-PANIC-PSTORE-01: pedia implementar los criterios ejecutables de tools.verify_rcu_panic_pstore, que ya existe y es el close_check de esas fichas; su propio close_check era un xfail de relleno. Decision de Luis 2026-10-14: consolidar; la medicion la lleva la ficha sujeto."
+evidence: {"pass": "tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01/pass.txt", "fail": "tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01/fail.txt", "e2e": "tasks/evidence/DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01/e2e.txt"}
+severity: P2
+origin: asserted
+satd_family: BLIND_INSTRUMENT
+created: 2026-10-02
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.md", "expect": "exit_zero", "porque": "Cerrada como duplicate (decision de Luis 2026-10-14: consolidar en la ficha sujeto): no hay fix propio que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01`, un xfail de relleno que se retira con el cierre; los criterios ejecutables los mide el close_check de la ficha sujeto."}
+---
+
+## Registro y responsable
+
+Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
+
+## Evidencia y alcance
+
+Módulo ausente citado por 1 fichas. Esta ficha agrupa la implementación compartida; las investigaciones originales conservan sus ensayos y no se duplican.
+
+- tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md
+
+Fuentes: tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md.
+
+## Criterio de cierre y control negativo
+
+Cada fase/id soportado evalúa su sujeto específico con capturas reales y controles negativos. Rechazar evidencia ausente, incorrecta, incompleta o controles neutralizados. Separar fail de could_not_run e imprimir ceros. No cerrar investigaciones por existencia de un informe ni por fixtures sanos. Compartir solo lógica realmente común; conservar comandos literales y demostrar discriminación entre fichas.
+
+## Estado del verificador
+
+La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
+
+Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
+## Avance de ejecución 2026-10-03
+
+Se reutilizó `tools.recovery_profile.pstore` para huellas y señales textuales y se añadieron observaciones kernel en `tools.kernel_capture`. No se lanzó panic, reboot ni ensayo RCU; el lector informa `could_not_run` de `/sys/fs/pstore` en la captura local. Configuración/sysctl y pstore vacío no demuestran captura persistente ni recuperación; el selector específico de cierre permanece pendiente.
+
+Evidencia: `docs/evidence/BB-INSTRUMENTS-kernel.md` y `tasks/evidence/BB-INSTRUMENTS-2026-10-03/kernel-capture.json`. La ficha permanece abierta.
+
+## Clasificación del impedimento — 2026-10-04
+
+- Categoría principal: `privileged_access`.
+- Impedimento: El verificador y el selector ya existen. El close_check original exige evidencia real de una intervención de panic/reboot con backend pstore registrado, ajuste activo y rollback exacto; no hay recovery.json y el operador no tiene acceso root concedido.
+- Evidencia faltante para cierre: recovery.json con boot IDs, sysctl/cmdline/backend pstore crudos, marca de panic y captura post-reboot; sysctl original/restaurado iguales; salida systemctl show de kdump active/loaded
+- Siguiente acción: Conservar UNKNOWN y el criterio abierto. Cuando exista un canary con acceso root y recuperación aprobada, el operador debe recolectar la evidencia y verificar el ciclo pstore/rollback antes de ejecutar el selector original; no inducir panic en el host actual.
+- Responsable del siguiente paso: coordinación BB prepara el canary; operador Luis gestiona acceso root/lab y ejecuta el ciclo.
+- Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
+- Evidencias de clasificación: `tasks/backlog/DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.md`, `tools/verify_rcu_panic_pstore.py`, `tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-FORUM-RCU-PANIC-PSTORE-01-direct-close-current.log`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/pstore-root-negative.json`, `tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/progress.txt`.
+- Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Avance 2026-10-07 — discriminación fail/could_not_run en rollback y kdump
+
+- Defecto corregido en `tools/verify_rcu_panic_pstore.py::_validate_rollback`: un rollback sin `original_sysctl_text`/`restored_sysctl_text` capturados devolvía `fail` ("rollback does not restore..."), y un `systemctl show` sin `LoadState`/`ActiveState` devolvía `fail` ("kdump control failed"). Ninguno de los dos observó el sujeto; ahora ambos son `unknown` con `could_not_run=1`. Capturado y distinto sigue siendo `fail`.
+- Regresión: `tests/test_closure_kernel.py::test_rcu_absent_rollback_or_kdump_state_is_could_not_run_not_fail`. Control negativo corrido: antes del fix falla (`assert ('fail' == 'unknown')` para rollback `{}`); después, `12 passed, 76 deselected` en `-k rcu`. `test_rcu_fixture_backend_and_kdump_description_do_not_pass` pasa de exigir `fail` a exigir `unknown` + `could_not_run == 1` (sigue sin pasar, ahora con la clase correcta).
+- Close_check sin cambio: `1 xfailed`; con `--runxfail` el veredicto real es `status: unknown, could_not_run: 1` porque `tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01/recovery.json` no existe. El impedimento `privileged_access` de 2026-10-04 sigue vigente. La ficha permanece abierta.
+
+## Estado (2026-10-11, /0 + /vote)
+
+Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Root Cause
+Meta-ficha sin sujeto propio: pedia implementar los criterios ejecutables de `tools.verify_rcu_panic_pstore`. El verificador existe (`tools/verify_rcu_panic_pstore.py`) y es el close_check de `FEATURE-FORUM-RCU-PANIC-PSTORE-01`; hoy sale con rc=2 (could_not_run) porque falta la captura real del sujeto, que es el trabajo de esas fichas, no de esta. Su propio close_check era un selector xfail que no podia cerrar nada.
+
+## Regression Test
+Ninguno propio: la ficha se cierra como duplicada. Se retira `tests/test_debt_registration_controls.py::test_debt_close_check_verify_rcu_panic_pstore_01`, xfail de relleno, junto con sus entradas de `tests/known_failures.json` y el selector `tests/test_closure_kernel_selectors.py::closure_selector_rcu_panic_pstore_01` (y `open_closures`), que solo usaba ese test; las pruebas unitarias de `tools.verify_rcu_panic_pstore` siguen corriendo.
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: el close_check de cada ficha sujeto sale hoy con rc distinto de 0, el verificador sabe decir que no), `pass` (el verificador existe, cada ficha sujeto lo nombra y sus pruebas unitarias pasan: control positivo) y `e2e` (la decision registrada). Cada ficha sujeto lleva una nota que dice que los criterios de `tools.verify_rcu_panic_pstore` se miden alli. Para reabrirla: `git mv tasks/done/DEBT-CLOSE-CHECK-VERIFY-RCU-PANIC-PSTORE-01.md tasks/backlog/` y `status: open`.

@@ -1,0 +1,33 @@
+Perfil medido de este equipo el 2026-10-14: GIGABYTE AI TOP ATOM; el bus USB solo tiene los concentradores raiz y el adaptador inalambrico interno, ningun ventilador o enfriador auxiliar.
+
+$ cat /sys/class/dmi/id/sys_vendor /sys/class/dmi/id/product_name
+rc=0
+GIGABYTE
+AI TOP ATOM
+
+$ lsusb
+rc=0
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 005 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 006 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 007 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 008 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 009 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 010 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 011 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 011 Device 002: ID 13d3:3630 IMC Networks Wireless_Device
+Bus 012 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+
+Control positivo: las mismas herramientas SI encuentran lo que existe:
+
+$ grep -qi gigabyte /sys/class/dmi/id/sys_vendor
+rc=0
+
+$ grep -qi "ai top atom" /sys/class/dmi/id/product_name
+rc=0
+
+$ lsusb | grep -q Wireless_Device
+rc=0

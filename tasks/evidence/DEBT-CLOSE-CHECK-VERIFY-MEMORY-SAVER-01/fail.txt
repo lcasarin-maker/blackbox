@@ -1,0 +1,9 @@
+Control negativo (DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01), 2026-10-14: el verificador `tools.verify_memory_saver` ya existe y, sin la captura real del sujeto, el close_check de cada ficha sujeto sale con rc distinto de 0 (could_not_run). La medicion pendiente vive en esas fichas; esta meta-ficha no tiene trabajo propio. Cada orden debe FALLAR hoy:
+
+$ python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR
+rc=2
+{"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "findings": ["raw phase capture unavailable: [Errno 2] No such file or directory: 'capture.json'"], "status": "unknown"}
+
+$ python3 -m tools.verify_memory_saver --phase 04-packing-4k --evidence tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K
+rc=2
+{"could_not_run": 1, "could_not_run_count": 1, "fail": 0, "findings": ["raw phase capture unavailable: [Errno 2] No such file or directory: 'capture.json'"], "status": "unknown"}

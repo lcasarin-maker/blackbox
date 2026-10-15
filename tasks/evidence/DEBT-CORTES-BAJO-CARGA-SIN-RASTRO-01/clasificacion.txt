@@ -1,0 +1,55 @@
+# Clasificacion de los cortes bajo carga (DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01)
+
+Escrita el 2026-10-14 por voto de Luis ("cerrar con clasificacion INDETERMINADA por corte y un close_check que verifique de verdad"). Marca: `clasificacion_indeterminada_declarada`.
+
+Con los instrumentos de este equipo, un corte de red electrica y un apagado por el propio equipo (riel de potencia, PMIC, proteccion) dejan la misma huella: el journal calla sin cierre, sin panic y sin colapso de memoria. Por eso cada corte queda **INDETERMINADA (energia o hardware interno)**. No es un hueco sin dueno: la salida real son dos fichas abiertas, `FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01` (medidor de energia externo: separa "falto la red" de "el equipo se apago solo") y `FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01` (observador externo por ping: hora exacta de la muerte y si el enlace cayo con el equipo).
+
+## Fuentes medidas el 2026-10-14
+
+- `./bin/bb reboots --ultimos 18` (rc=0, 18 boots, 7 con could_not_run): etiqueta y razones de cada boot; los tres cortes del titulo salen `CORTE_ABRUPTO` con `could_not_run: ["observador_externo"]`.
+- `journalctl --list-boots` (36 boots retenidos, indices -35 a 0, desde 2026-09-01) y `journalctl -b <idx> -n 1`: ultima linea de cada boot.
+- `~/.local/share/blackbox/atom_gpu_telemetry.jsonl`: ultima muestra de 5 s de cada boot.
+- `~/.local/share/blackbox/hallazgos/bb-2026-10-0{6,7,8}-corte-abrupto-*.md`: hallazgos publicados por `bb reboots` con el mismo veredicto.
+- Registro BERT del arranque siguiente (palabra en 0x14, de `bb reboots`).
+
+## BERT palabra 0x14: no diagnostica
+
+Medido en los 18 boots: `00000010` tras los colapsos de memoria con reinicio por software (05-oct, 11-oct x2) y tras el corte del 13-oct; `00000100` tras el corte del 06-oct y tras el `poweroff` ordenado del 10-oct; `00000020` tras el corte del 07-oct; sin registro tras los cortes del 08-oct y 11-oct. La misma palabra aparece tras un apagado ordenado y tras un corte, y falta tras dos cortes: no separa causas. Decodificarla queda en `FEATURE-LECTOR-PSTORE-BERT-ROOT-01`.
+
+## Cortes del titulo
+
+### Corte 06-oct (boot 36ebc0d9)
+- Clasificacion: INDETERMINADA (energia o hardware interno).
+- Evidencia: `bb reboots` = `CORTE_ABRUPTO` ("el journal calla sin cierre, sin colapso de memoria y sin panic"; "PSI full avg10=0.0 en la ultima muestra: no fue memoria"); journal hasta 2026-10-06 16:07:47 CST con servicio normal (GET /metrics 200 OK), sin linea de apagado ni panic; ultima muestra de telemetria 16:08:13 CST: GPU 89 %, 82.4 W, 83 C, zona max 93.0 C, throttle 0x0, 60 115 MB disponibles, PSI full 0.0; hueco 2558 s (42 min) hasta el boot 0de3e072; BERT siguiente 0x14 = 00000100. Dato de Luis (2026-10-11): dos de los tres primeros cortes fueron cortes de energia, sin saber cuales; el hueco de 42 min encaja con un corte de red, pero es inferencia.
+- Falta: medidor de energia externo (`FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01`) y observador externo de reinicios (`FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01`); sin ellos no hay dato que separe red de hardware interno.
+
+### Corte 07-oct (boot 0de3e072)
+- Clasificacion: INDETERMINADA (energia o hardware interno).
+- Evidencia: `bb reboots` = `CORTE_ABRUPTO` (mismas razones); journal hasta 2026-10-07 16:49:57 CST (bb-usable y GET /metrics 200 OK), sin apagado ni panic; ultima muestra 16:50:01 CST: GPU 91 %, 74.5 W, 83 C, zona max 93.6 C, throttle 0x0, 48 596 MB disponibles, PSI full 0.0; hueco 346 s (6 min) hasta el boot e651544a; BERT siguiente 0x14 = 00000020. El hueco de 6 min encaja peor con un corte de red, pero sin observador externo es inferencia.
+- Falta: medidor de energia externo (`FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01`) y observador externo de reinicios (`FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01`).
+
+### Corte 08-oct (boot e651544a)
+- Clasificacion: INDETERMINADA (energia o hardware interno).
+- Evidencia: `bb reboots` = `CORTE_ABRUPTO` (mismas razones); journal hasta 2026-10-08 18:55:48 CST con peticiones POST /v1/chat/completions 200 OK en curso, sin apagado ni panic; ultima muestra 18:55:56 CST: GPU 96 %, 66.6 W, 85 C, zona max 93.4 C, throttle 0x0, 52 460 MB disponibles, PSI full 0.0; hueco 2265 s (38 min) hasta el boot 05d62d81; sin registro BERT en el boot siguiente.
+- Falta: medidor de energia externo (`FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01`) y observador externo de reinicios (`FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01`).
+
+## Otros cortes con el mismo veredicto (fuera del titulo, misma clasificacion)
+
+### Corte 11-oct (boot 54b71618)
+- Clasificacion: INDETERMINADA (energia o hardware interno).
+- Evidencia: `bb reboots` = `CORTE_ABRUPTO`; journal hasta 12:13:18 CST; ultima muestra 12:13:23 CST: GPU 96 %, 78.3 W, 84 C, zona max 95.7 C (alarma 94.8), throttle 0x0, 57 213 MB, PSI full 0.0; hueco 4231 s (70 min); sin BERT. Dato de Luis: hubo que pulsar el boton y la pantalla estaba sin imagen; con `kernel.panic=10` y watchdog de 1 min un cuelgue de software se habria reiniciado solo (configuracion, no probado: `DEBT-WATCHDOG-SIN-CONTROL-NEGATIVO-01`). Informe: `~/.local/share/blackbox/incidentes/bb-2026-10-11-54b71618.md`.
+- Falta: medidor de energia externo (`FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01`) y observador externo de reinicios (`FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01`).
+
+### Corte 13-oct (boot a66787af)
+- Clasificacion: INDETERMINADA (energia o hardware interno).
+- Evidencia: `bb reboots` = `CORTE_ABRUPTO`; journal hasta 14:03:27 CST con vLLM sirviendo; ultima muestra 14:03:40 CST: GPU 96 %, 39.2 W, 72 C, zona max 79.4 C, 59 214 MB, PSI full 0.0; hueco 255 s; BERT 0x14 = 00000010. Primer corte con el modulo `nvidia` parcheado de dmem cargado; una sola muestra no permite atribuirlo.
+- Falta: medidor de energia externo (`FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01`) y observador externo de reinicios (`FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01`).
+
+### Cortes 12-oct (boots 92a1de3d y 0b00a7c2), durante la sesion de reinicios del modulo parcheado
+- Clasificacion: INDETERMINADA (energia o hardware interno).
+- Evidencia: `bb reboots` = `CORTE_ABRUPTO` para los dos. 92a1de3d: journal hasta 17:08:21 CST, GPU en reposo (1 %, 8.6 W, 37 C), hueco 4 s, sin BERT. 0b00a7c2: journal hasta 18:32:36 CST, GPU 96 % a 13.4 W, zona max 96.3 C, hueco 59 s, BERT 0x14 = 00000010. Huecos de 4 s y 59 s no encajan con un corte de red; ocurrieron entre reinicios pedidos por Luis con sudo, y ningun registro dice si fueron reinicios fisicos.
+- Falta: medidor de energia externo (`FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01`) y observador externo de reinicios (`FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01`).
+
+## Lo que esta clasificacion NO dice
+
+No dice cual de los cortes fue de red electrica (el dato de Luis de "dos de los tres primeros" no trae fechas) ni descarta un apagado del propio equipo por termica o riel de potencia. Dice que con lo que mide este equipo hoy no se puede separar, y nombra las dos fichas que lo separarian.

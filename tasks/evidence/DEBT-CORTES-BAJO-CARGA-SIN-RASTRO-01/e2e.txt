@@ -1,0 +1,18 @@
+Decision registrada para DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01, 2026-10-14:
+{
+ "voto": "Luis, 2026-10-14",
+ "closure_type": "fixed",
+ "razon": "cerrar con clasificacion INDETERMINADA por corte y un close_check que verifique de verdad",
+ "clasificacion": "tasks/evidence/DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01/clasificacion.txt",
+ "por_corte": {
+  "06-oct/36ebc0d9": "INDETERMINADA (energia o hardware interno)",
+  "07-oct/0de3e072": "INDETERMINADA (energia o hardware interno)",
+  "08-oct/e651544a": "INDETERMINADA (energia o hardware interno)"
+ },
+ "salida_real": [
+  "FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01",
+  "FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01"
+ ],
+ "close_check_viejo": "grep -q . tasks/evidence/DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01/clasificacion.md",
+ "close_check_nuevo": "python3 -m pytest -q tests/test_clasificacion_cortes.py"
+}

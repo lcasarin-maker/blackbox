@@ -1,0 +1,12 @@
+Control negativo de aplicabilidad (DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (Qwen3.5 NVFP4 servido por la ruta CUTLASS). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | grep -qi qwen
+rc=1
+
+$ ls -d /srv/ai/models/llm/*qwen3.5* /srv/ai/models/llm/*Qwen3.5*
+rc=2
+ls: no se puede acceder a '/srv/ai/models/llm/*qwen3.5*': No existe el archivo o el directorio
+ls: no se puede acceder a '/srv/ai/models/llm/*Qwen3.5*': No existe el archivo o el directorio
+
+$ docker logs nemotron-server 2>&1 | grep -E "Using '(VLLM_CUTLASS|FLASHINFER_CUTLASS)' NvFp4 MoE backend"
+rc=1

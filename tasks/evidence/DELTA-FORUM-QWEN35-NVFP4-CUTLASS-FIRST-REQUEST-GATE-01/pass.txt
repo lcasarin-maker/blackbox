@@ -1,0 +1,24 @@
+Perfil medido de este equipo el 2026-10-14: el motor sirve nemotron-local (NVFP4) con backend MoE MARLIN, no CUTLASS.
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | python3 -c "import json,sys;d=json.load(sys.stdin);print([(m[\"id\"],m[\"root\"]) for m in d[\"data\"]])"
+rc=0
+[('nemotron-local', '/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4')]
+
+$ docker ps --format "{{.Names}} {{.Image}}"
+rc=0
+nemotron-server vllm/vllm-openai:v0.27.1
+atlas-pgvector pgvector/pgvector:pg16
+otro proyecto-pg pgvector/pgvector:pg16
+
+$ docker logs nemotron-server 2>&1 | grep -E 'NvFp4 MoE backend|NvFp4LinearKernel'
+rc=0
+(EngineCore pid=235) INFO 10-14 06:39:01 [__init__.py:1030] Using MarlinNvFp4LinearKernel for NVFP4 GEMM
+(EngineCore pid=235) INFO 10-14 06:39:01 [nvfp4.py:239] Using 'MARLIN' NvFp4 MoE backend out of potential backends: ['FLASHINFER_TRTLLM', 'FLASHINFER_CUTEDSL', 'FLASHINFER_CUTEDSL_BATCHED', 'FLASHINFER_CUTLASS', 'VLLM_CUTLASS', 'MARLIN', 'HUMMING', 'EMULATION'].
+
+Control positivo: las mismas herramientas SI encuentran lo que existe:
+
+$ docker logs nemotron-server 2>&1 | grep -q "Using 'MARLIN' NvFp4 MoE backend"
+rc=0
+
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | grep -qi nemotron
+rc=0

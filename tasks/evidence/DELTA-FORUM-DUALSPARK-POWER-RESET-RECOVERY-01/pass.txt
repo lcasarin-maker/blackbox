@@ -1,0 +1,64 @@
+Perfil medido de este equipo el 2026-10-14: un solo nodo GIGABYTE AI TOP ATOM; los modulos mlx5 estan cargados pero no hay ningun dispositivo ConnectX/InfiniBand; /etc/hosts solo nombra a este mismo host.
+
+$ cat /sys/class/dmi/id/sys_vendor /sys/class/dmi/id/product_name
+rc=0
+GIGABYTE
+AI TOP ATOM
+
+$ hostname
+rc=0
+<host>
+
+$ grep -ciE "spark|gx10|atom" /etc/hosts
+rc=0
+1
+
+$ lspci
+rc=0
+0000:00:00.0 PCI bridge: NVIDIA Corporation Device 22ce (rev 01)
+0002:00:00.0 PCI bridge: NVIDIA Corporation Device 22ce (rev 01)
+0004:00:00.0 PCI bridge: NVIDIA Corporation Device 22ce (rev 01)
+0004:01:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd Device a810
+0007:00:00.0 PCI bridge: NVIDIA Corporation Device 22d0 (rev 01)
+0007:01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. Device 8127 (rev 05)
+0009:00:00.0 PCI bridge: NVIDIA Corporation Device 22d0 (rev 01)
+0009:01:00.0 Network controller: MEDIATEK Corp. Device 7925
+000f:00:00.0 PCI bridge: NVIDIA Corporation Device 22d1
+000f:01:00.0 VGA compatible controller: NVIDIA Corporation Device 2e12 (rev a1)
+
+$ ip -br link | awk '{print $1, $2}'
+rc=0
+lo UNKNOWN
+enP7s7 UP
+wlP9s9 DOWN
+br-3d679de7306e DOWN
+br-420d1def4d77 UP
+docker0 UP
+br-cf071280853a DOWN
+br-f4146d0c48e9 DOWN
+veth924899e@if2 UP
+vethc4002d8@if2 UP
+veth5e15a8b@if3 UP
+
+$ ls -la /sys/class/infiniband
+rc=0
+total 0
+drwxr-xr-x  2 root root 0 oct 14 19:33 .
+drwxr-xr-x 86 root root 0 oct 14 19:33 ..
+
+$ lsmod | grep -E '^(mlx5_core|mlx5_ib|ib_core) '
+rc=0
+mlx5_ib               520192  0
+ib_core               528384  2 ib_uverbs,mlx5_ib
+mlx5_core            2760704  2 mlx5_fwctl,mlx5_ib
+
+Control positivo: las mismas herramientas SI encuentran lo que existe:
+
+$ lspci | grep -qi realtek
+rc=0
+
+$ lsmod | grep -q "^mlx5_core "
+rc=0
+
+$ grep -qi gigabyte /sys/class/dmi/id/sys_vendor
+rc=0

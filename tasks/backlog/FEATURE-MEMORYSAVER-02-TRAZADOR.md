@@ -57,3 +57,6 @@ disponibles. Esta ficha sigue abierta.
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md`, `tests/test_debt_registration_controls.py`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_03.json`, `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/FEATURE-MEMORYSAVER-02-TRAZADOR-direct-close-current.log`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Criterios ejecutables de `tools.verify_memory_saver` (2026-10-14)
+Los criterios ejecutables de `tools.verify_memory_saver` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.

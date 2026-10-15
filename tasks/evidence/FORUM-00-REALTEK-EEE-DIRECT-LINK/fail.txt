@@ -1,0 +1,10 @@
+Control negativo de aplicabilidad (FORUM-00-REALTEK-EEE-DIRECT-LINK), 2026-10-14: buscar en este equipo el sujeto que la ficha exige (enlace Ethernet directo contra un Intel I225-V). Cada orden debe FALLAR (rc distinto de 0) porque el sujeto no existe aqui:
+
+$ lspci | grep -iE "I225|Intel.*Ethernet"
+rc=1
+
+$ test "$(ip -br link | grep -cE "^en")" -ge 2
+rc=1
+
+$ ip route show default dev enP7s7 | grep -qv via
+rc=1

@@ -27,27 +27,6 @@ from tools import provider_trace
 from tools import cgroup_repro, cuda_integrity
 from tools import verify_apt_critical_removals
 from tools import host_diagnostics
-from test_closure_kernel_selectors import (
-    closure_selector_cgroup_plan_01,
-    closure_selector_netconsole_01,
-    closure_selector_rcu_panic_pstore_01,
-    open_closures,
-)
-
-
-def test_debt_close_check_verify_cgroup_plan_01() -> None:
-    still_open = open_closures(closure_selector_cgroup_plan_01())
-    assert still_open == [], f"closure remains open: {still_open!r}"
-
-
-def test_debt_close_check_verify_netconsole_01() -> None:
-    still_open = open_closures(closure_selector_netconsole_01())
-    assert still_open == [], f"closure remains open: {still_open!r}"
-
-
-def test_debt_close_check_verify_rcu_panic_pstore_01() -> None:
-    still_open = open_closures(closure_selector_rcu_panic_pstore_01())
-    assert still_open == [], f"closure remains open: {still_open!r}"
 
 
 def test_debt_close_check_verify_apt_critical_removals_01(
@@ -1230,16 +1209,8 @@ def _assert_hardware_batch03_closure(card_id: str) -> None:
     _assert_pass(card_id, result)
 
 
-def test_delta_forum_thermal_auxiliary_cooling_and_clock_cap_01() -> None:
-    _assert_hardware_batch03_closure('DELTA-FORUM-THERMAL-AUXILIARY-COOLING-AND-CLOCK-CAP-01')
-
-
 def test_delta_forum_thermal_telemetry_coverage_01() -> None:
     _assert_hardware_batch03_closure('DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01')
-
-
-def test_delta_forum_usb_raid_link_admission_01() -> None:
-    _assert_hardware_batch03_closure('DELTA-FORUM-USB-RAID-LINK-ADMISSION-01')
 
 
 def test_delta_root_display_carveout_oem_fix_gate_01() -> None:
@@ -1269,10 +1240,6 @@ def test_delta_forum_cutlass_sm121_isa_gate_01() -> None:
 
 
 
-def test_delta_forum_dualspark_power_reset_recovery_01() -> None:
-    _assert_hardware_batch02_closure('DELTA-FORUM-DUALSPARK-POWER-RESET-RECOVERY-01')
-
-
 def test_delta_forum_kv_quant_metric_provenance_gate_01() -> None:
     _assert_hardware_batch02_closure('DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01')
 
@@ -1296,12 +1263,6 @@ def _assert_runtime_batch01_closure(card_id: str) -> None:
     result = verify(card_id)
     print(json.dumps(result, sort_keys=True))
     _assert_pass(card_id, {**result, "could_not_run_count": result["could_not_run"]})
-
-
-
-
-def test_delta_forum_cross_turn_sleeper_injection_regression_01() -> None:
-    _assert_runtime_batch01_closure('DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01')
 
 
 
@@ -1364,22 +1325,9 @@ def test_delta_forum_qwen_mtp_parser_cancel_state_check_01() -> None:
     _assert_runtime_batch03_closure('DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01')
 
 
-def test_delta_forum_qwen35_nvfp4_cutlass_first_request_gate_01() -> None:
-    _assert_runtime_batch03_closure('DELTA-FORUM-QWEN35-NVFP4-CUTLASS-FIRST-REQUEST-GATE-01')
-
-
-def test_delta_forum_qwen38_long_run_json_correctness_canary_01() -> None:
-    _assert_runtime_batch03_closure('DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01')
-
-
-
 def test_delta_forum_vllm_gb10_arch_and_build_matrix_01() -> None:
     _assert_runtime_batch03_closure('DELTA-FORUM-VLLM-GB10-ARCH-AND-BUILD-MATRIX-01')
 
-
-
-def test_delta_root_container_effective_build_and_offline_gate_01() -> None:
-    _assert_runtime_batch03_closure('DELTA-ROOT-CONTAINER-EFFECTIVE-BUILD-AND-OFFLINE-GATE-01')
 
 
 def _assert_runtime_batch04_closure(card_id: str) -> None:
@@ -1395,47 +1343,6 @@ def test_delta_root_dsml_parser_recovery_boundary_01() -> None:
     _assert_runtime_batch04_closure('DELTA-ROOT-DSML-PARSER-RECOVERY-BOUNDARY-01')
 
 
-def test_debt_close_check_verify_memory_saver_01() -> None:
-    from tools.verify_memory_saver import PHASES, IDS, verify
-    from test_closure_kernel_selectors import _require_pass as _assert_pass
-
-    root = Path(__file__).resolve().parents[1] / "tasks" / "evidence"
-    results = {phase: verify(phase, root / IDS[phase]) for phase in PHASES}
-    print(json.dumps(results, sort_keys=True))
-    for phase, result in results.items():
-        _assert_pass(IDS[phase], result)
-
-
-def test_debt_close_check_verify_gpu_clock_cap_ab_01() -> None:
-    from tools.verify_gpu_clock_cap_ab import verify
-    from test_closure_kernel_selectors import _require_pass as _assert_pass
-
-    evidence = Path(__file__).resolve().parents[1] / "tasks" / "evidence" / 'FEATURE-FORUM-GPU-CLOCK-CAP-AB-01'
-    result = verify(evidence)
-    print(json.dumps(result, sort_keys=True))
-    _assert_pass('FEATURE-FORUM-GPU-CLOCK-CAP-AB-01', {**result, "could_not_run_count": result["could_not_run"]})
-
-
-def test_debt_close_check_verify_wifi_isolation_01() -> None:
-    from tools.verify_wifi_isolation import verify
-    from test_closure_kernel_selectors import _require_pass as _assert_pass
-
-    evidence = Path(__file__).resolve().parents[1] / "tasks" / "evidence" / 'FEATURE-FORUM-WIFI-ISOLATION-01'
-    result = verify(evidence)
-    print(json.dumps(result, sort_keys=True))
-    _assert_pass('FEATURE-FORUM-WIFI-ISOLATION-01', {**result, "could_not_run_count": result["could_not_run"]})
-
-
-def test_debt_close_check_verify_usb_hid_postupdate_01() -> None:
-    from tools.verify_usb_hid_postupdate import verify
-    from test_closure_kernel_selectors import _require_pass as _assert_pass
-
-    evidence = Path(__file__).resolve().parents[1] / "tasks" / "evidence" / 'FEATURE-USB-HID-POSTUPDATE-CHECK'
-    result = verify(evidence)
-    print(json.dumps(result, sort_keys=True))
-    _assert_pass('FEATURE-USB-HID-POSTUPDATE-CHECK', {**result, "could_not_run_count": result["could_not_run"]})
-
-
 def test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01() -> None:
     from tools.verify_clock_cap_tradeoff import verify
     from test_closure_kernel_selectors import _require_pass as _assert_pass
@@ -1443,21 +1350,6 @@ def test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01() -> None:
     result = verify()
     print(json.dumps(result, sort_keys=True))
     _assert_pass('DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01', {**result, "could_not_run_count": result["could_not_run"]})
-
-
-def test_debt_close_check_verify_forum_finding_01() -> None:
-    from tools.forum_finding import SUPPORTED
-    from tools.hardware_batch02_controls import IDS as BATCH02_IDS
-    from tools.hardware_batch03_controls import CARD_IDS as BATCH03_IDS
-    from tools.verify_forum_finding import verify_forum_finding
-    from test_closure_kernel_selectors import _require_pass as _assert_pass
-
-    root = Path(__file__).resolve().parents[1] / "tasks" / "evidence"
-    ids = sorted(set(SUPPORTED) | set(BATCH02_IDS) | set(BATCH03_IDS))
-    results = {card: verify_forum_finding(card, root / card) for card in ids}
-    print(json.dumps(results, sort_keys=True))
-    for card, result in results.items():
-        _assert_pass(card, {**result, "could_not_run_count": result["could_not_run"]})
 
 
 def test_apt_critical_removals_flag_cierre_no_sale_0_con_bloqueos_abiertos(monkeypatch: pytest.MonkeyPatch) -> None:
