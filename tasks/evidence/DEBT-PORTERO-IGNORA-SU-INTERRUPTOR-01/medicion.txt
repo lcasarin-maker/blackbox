@@ -1,0 +1,50 @@
+DEBT-PORTERO-IGNORA-SU-INTERRUPTOR-01, 2026-10-14: el demonio lee interruptores.modo('portero') en cada vuelta.
+
+== close_check
+Antes (HEAD a3a72a61, sin la prueba):
+$ python3 -m pytest -q tests/test_portero.py::test_demonio_respeta_el_interruptor
+rc=4  (no tests ran)
+
+Con la prueba y el tools/portero.py VIEJO (control negativo):
+$ python3 -m pytest -q tests/test_portero.py::test_demonio_respeta_el_interruptor
+E   TypeError: Efectos.__init__() got an unexpected keyword argument 'proc'
+rc=1
+(falla por firma; el control de comportamiento es la mutacion M9 de abajo: el codigo nuevo con el demonio sin leer
+el interruptor -- exactamente el comportamiento viejo -- tambien falla)
+
+Con el arreglo:
+$ python3 -m pytest -q tests/test_portero.py::test_demonio_respeta_el_interruptor
+rc=0
+
+== Lo que prueba (mismo mundo: arbol pesado + PSI alto => decide 'congelar'; /proc, cgroups y systemd falsos)
+- off: lee_estado/observar NO se llaman, el ejecutor no recibe llamadas, no hay cgroup.freeze; 1 fila {accion: off, modo: off}.
+- observar: se mide y decide; el ejecutor recibe CERO llamadas, no hay cgroup.freeze; fila habria_congelar, modo observar, sin rc.
+- actuar (control negativo de las otras dos): busctl + systemctl show, cgroup.freeze = 1, fila congelar rc=0 sin campo modo.
+- test_demonio_relee_el_interruptor_en_cada_vuelta_y_off_no_repite_su_fila: off -> observar sin reiniciar el
+  demonio; 4 vueltas = 2 filas (la repeticion del mismo motivo se suprime).
+- test_fuera_de_actuar_el_demonio_descongela_solo_lo_que_congelo_el_portero[off|observar|actuar]: fuera de actuar se
+  escribe cgroup.freeze=0 SOLO en el scope bb-portero-* congelado (ni en uno propio sin congelar ni en uno ajeno
+  congelado); en actuar (control negativo) no se deshace nada.
+
+== Mutaciones (scratchpad mutar.py, suite del portero con -x; restaurado y cmp ok)
+KILLED M7 observar ejecuta: 1 failed, 30 passed
+KILLED M8 off mide igual: 1 failed, 30 passed
+KILLED M9 demonio no lee el interruptor: 1 failed, 30 passed
+KILLED M10 contenedores aplican en observar: 1 failed, 73 passed
+KILLED M11 run espera en observar: 1 failed, 69 passed
+KILLED M12 run mueve de slice en observar: 1 failed, 71 passed
+KILLED M13 off repite su fila: 1 failed, 31 passed
+KILLED M15 observar sin habria: 1 failed, 30 passed
+KILLED M16 no descongela lo propio al salir de actuar: 1 failed, 32 passed
+KILLED M17 descongela tambien en actuar: 1 failed, 34 passed
+KILLED M18 descongela scopes ajenos: 1 failed, 32 passed
+KILLED M19 descongela los no congelados: 1 failed, 32 passed
+(pasada completa de las 19 mutaciones de ambas fichas: "no muertas: 0 de 19")
+
+== Modo real de la maquina al escribir esto
+$ python3 -c "from tools import interruptores as i; print(i.modo('portero'))"
+actuar
+$ python3 tools/portero.py estado | ... d['modo']      (como script: el import de reserva `import interruptores` funciona)
+modo real actuar
+Con BLACKBOX_DATA apuntando a un directorio sin interruptores.json: modo off (lo ilegible vale off).
+El servicio bb-portero corre el checkout principal; este cambio no se desplego ni se reinicio nada.

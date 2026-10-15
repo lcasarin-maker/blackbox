@@ -306,6 +306,115 @@ def test_aplica_lleva_el_origen_de_la_costura(tmp_path):
     assert po.origen_no_integrado(5)["estado"] == "NOT_COLLECTED"
 
 
+# --- Interruptor del demonio (DEBT-PORTERO-IGNORA-SU-INTERRUPTOR-01) -----------------------------------------
+
+
+EFECTOS = po.Efectos  # la clase real: los tests de abajo sustituyen `po.Efectos` por una fabrica
+
+
+def _mundo_congelable(tmp_path, monkeypatch, modo):
+    """Un arbol pesado con PSI alto (decide: congelar), /proc y cgroups falsos, un systemd falso y el interruptor."""
+    datos = tmp_path / "datos"
+    datos.mkdir(parents=True)
+    (datos / "interruptores.json").write_text(json.dumps({"esquema": "bb-interruptores/1", "modos": {"portero": modo}}),
+                                              encoding="utf-8")
+    monkeypatch.setenv("BLACKBOX_DATA", str(datos))
+    proc, cg_raiz = tmp_path / "proc", tmp_path / "cg"
+    (proc / "77").mkdir(parents=True)
+    (proc / "77" / "stat").write_text("77 (pytest) S 1 " + " ".join(["0"] * 17) + " 500 0 0\n", encoding="utf-8")
+    (proc / "77" / "cgroup").write_text(f"0::{CLAUDE}\n", encoding="utf-8")
+    llamadas = []
+    unidad = po.nombre_unidad("suite", 77)
+
+    def ejecutar(args):
+        llamadas.append(args)
+        if args[0] == "busctl":  # systemd mueve la raiz a su scope
+            (cg_raiz / APP.lstrip("/") / unidad).mkdir(parents=True)
+            (proc / "77" / "cgroup").write_text(f"0::{APP}/{unidad}\n", encoding="utf-8")
+            return 0, 'o "/org/freedesktop/systemd1/job/1"'
+        return 0, "ActiveState=active\nResult=success\n"
+
+    fx = EFECTOS(log=tmp_path / "portero.jsonl", cola=tmp_path / "cola", ejecutar=ejecutar, cg_raiz=cg_raiz, proc=proc)
+    monkeypatch.setattr(po, "Efectos", lambda: fx)
+    lecturas = []
+    monkeypatch.setattr(po, "lee_estado", lambda: lecturas.append("estado") or estado(psi=po.PSI_FULL_MAX + 1))
+    monkeypatch.setattr(po, "observar", lambda: lecturas.append("proc") or [arbol(77, 60, pids=(77,), inicio=500)])
+    freeze = cg_raiz / APP.lstrip("/") / unidad / "cgroup.freeze"
+    return fx, llamadas, lecturas, freeze
+
+
+def _filas(log):
+    return [json.loads(x) for x in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
+
+
+@pytest.mark.unit
+def test_demonio_respeta_el_interruptor(tmp_path, monkeypatch):
+    import argparse
+
+    una = argparse.Namespace(una_vez=True, contenedores=False)
+    # off: ni mide (/proc, PSI, cgroups) ni actua; una sola fila que lo dice.
+    fx, llamadas, lecturas, freeze = _mundo_congelable(tmp_path / "off", monkeypatch, "off")
+    assert po.cmd_demonio(una) == 0
+    assert lecturas == [] and llamadas == [] and not freeze.exists()
+    assert [(f["accion"], f["modo"]) for f in _filas(fx.log)] == [("off", "off")]
+    # observar: mide y decide lo mismo, registra lo que haria, y el ejecutor no recibe NINGUNA llamada.
+    fx, llamadas, lecturas, freeze = _mundo_congelable(tmp_path / "obs", monkeypatch, "observar")
+    assert po.cmd_demonio(una) == 0
+    assert lecturas == ["estado", "proc"] and llamadas == [] and not freeze.exists()
+    fila = _filas(fx.log)[0]
+    assert (fila["accion"], fila["modo"], fila["raiz"]) == ("habria_congelar", "observar", 77) and "rc" not in fila
+    # actuar (control negativo de los dos anteriores): el mismo mundo adopta en un scope y congela.
+    fx, llamadas, lecturas, freeze = _mundo_congelable(tmp_path / "act", monkeypatch, "actuar")
+    assert po.cmd_demonio(una) == 0
+    assert [a[0] for a in llamadas] == ["busctl", "systemctl"] and freeze.read_text(encoding="utf-8") == "1"
+    fila = _filas(fx.log)[0]
+    assert (fila["accion"], fila["rc"]) == ("congelar", 0) and "modo" not in fila  # filas de actuar: como antes
+
+
+@pytest.mark.unit
+def test_demonio_relee_el_interruptor_en_cada_vuelta_y_off_no_repite_su_fila(tmp_path, monkeypatch):
+    import argparse
+
+    fx, llamadas, lecturas, freeze = _mundo_congelable(tmp_path, monkeypatch, "off")
+    vueltas = []
+
+    def dormir(_s):
+        vueltas.append(1)
+        if len(vueltas) == 2:  # tras dos vueltas en off, Luis pasa el interruptor a observar
+            (tmp_path / "datos" / "interruptores.json").write_text(json.dumps({"modos": {"portero": "observar"}}), encoding="utf-8")
+        if len(vueltas) == 4:
+            raise KeyboardInterrupt
+
+    monkeypatch.setattr(po.time, "sleep", dormir)
+    with pytest.raises(KeyboardInterrupt):
+        po.cmd_demonio(argparse.Namespace(una_vez=False, contenedores=False))
+    # 2 vueltas off (1 fila) + 2 vueltas observar (1 fila: la repeticion del mismo motivo se suprime); nada ejecutado.
+    assert [f["accion"] for f in _filas(fx.log)] == ["off", "habria_congelar"]
+    assert lecturas == ["estado", "proc", "estado", "proc"] and llamadas == [] and not freeze.exists()
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("modo", ["off", "observar", "actuar"])
+def test_fuera_de_actuar_el_demonio_descongela_solo_lo_que_congelo_el_portero(tmp_path, monkeypatch, modo):
+    import argparse
+
+    fx, llamadas, lecturas, freeze = _mundo_congelable(tmp_path, monkeypatch, modo)
+    app = po.cgroup_app(raiz=fx.cg_raiz)
+    previos = (("bb-portero-suite-5.scope", 1), ("bb-portero-suite-6.scope", 0), ("app-ajeno-1.scope", 1))
+    for nombre, frozen in previos:
+        (app / nombre).mkdir(parents=True)
+        (app / nombre / "cgroup.events").write_text(f"populated 1\nfrozen {frozen}\n", encoding="utf-8")
+    assert po.cmd_demonio(argparse.Namespace(una_vez=True, contenedores=False)) == 0
+    escritos = [n for n, _ in previos if (app / n / "cgroup.freeze").exists()]
+    filas = [f["accion"] for f in _filas(fx.log)]
+    if modo == "actuar":  # control negativo: en actuar la congelacion propia es la politica, no se deshace
+        assert escritos == [] and "descongelar" not in filas
+    else:  # solo el scope propio congelado; ni el propio sin congelar ni el ajeno congelado
+        assert escritos == ["bb-portero-suite-5.scope"]
+        assert (app / "bb-portero-suite-5.scope" / "cgroup.freeze").read_text(encoding="utf-8") == "0"
+        assert filas[0] == "descongelar" and _filas(fx.log)[0]["modo"] == modo and llamadas == []
+
+
 # --- Prueba real: scopes desechables propios, cgroup v2 delegado ---------------------------------------------
 
 
@@ -454,6 +563,53 @@ def _scope_desechable(unidad):
             break
         time.sleep(0.05)  # blocking-sleep: espera a que systemd ponga el pid en su scope -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01  # sunset-reviewed: 3.9 -- re-revisado 2026-10-14 contra 3.8 (`git log -L`: ultimo cambio de la linea anterior a la revision 3.8, a685387e); re-revisado 2026-10-13 contra 3.5: `git blame` de la linea 437 (7280a6a4) es anterior al bump 3.5.0 (b99560e8), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.4: `git blame` de la linea 437 (095c3a35) es anterior al bump 3.4.1 (eb89c383), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.3: `git blame` de la linea 437 (b008b6ee) es anterior al bump 3.3.0 (3512a16a), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.2: `git blame` de la linea 437 (804713d5) es anterior al bump 3.2.0 (e8e5aa8d), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-13 contra 3.1: `git blame` de la linea 437 (93850773) es anterior al bump 3.1.0 (7a5bd48b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 3.0: `git blame` de la linea 437 (92598b79) es anterior al bump 2.9.1 (ab63e2b), la linea no cambio desde su revision anterior; la razon sigue valiendo: re-revisado 2026-10-12 contra 2.9: `git blame` de la linea 437 (7283bfb9) no cambio desde su revision anterior; la razon sigue valiendo: revisado 2026-10-12: sondeo acotado a 2.5 s de un scope desechable propio ; re-revisado 2026-10-13 contra 3.1: la linea no cambio desde 20256295 (git blame de esta linea)
     return p, cg
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(not _delegado(), reason="sin cgroup v2 delegado al usuario (systemd --user)")
+def test_real_carrera_pid_que_sale_al_adoptar_el_rc_dice_lo_que_systemd_dejo(tmp_path):
+    """DEBT-PORTERO-ADOPCION-CHOCA-CON-PIDS-QUE-SALEN-01 con systemd de verdad: un hijo que sale milisegundos despues
+    de pedir la adopcion deja a veces la unidad `failed` (Result=resources) con la raiz YA dentro del cgroup (medido
+    2026-10-14: 17 de 100 intentos llamando a crea_scope directo). El rc registrado tiene que coincidir con lo que systemd dejo, en los dos sentidos."""
+    vistos = {"failed": 0, "active": 0}
+    unidades = []
+    topes = {"MemoryMax": 64 * 1024 * 1024, "MemoryHigh": 60 * 1024 * 1024, "MemorySwapMax": 0, "TasksMax": 8}
+    try:
+        for intento in range(60):
+            if vistos["failed"] and vistos["active"]:
+                break
+            vivo = subprocess.Popen(["sleep", "30"])
+            corto = subprocess.Popen(["sleep", f"{0.002 * (1 + intento % 8):.3f}"])
+
+            def ejecutar(args, corto=corto):
+                r = po._ejecuta(args)
+                if args[0] == "busctl":
+                    corto.wait(timeout=10)  # el hijo sale Y se recoge entre la llamada y el attach (un zombi no basta)
+                return r
+
+            try:
+                p = po._lee_proc(Path("/proc") / str(vivo.pid))
+                assert p is not None
+                a = po.Arbol(raiz=vivo.pid, clase="suite", rss_kb=1, procesos=2, edad_s=1, cgroup=p.cgroup,
+                             pids=(vivo.pid, corto.pid), inicio=p.inicio)
+                unidades.append(po.nombre_unidad("suite", vivo.pid))
+                fx = po.Efectos(log=tmp_path / "p.jsonl", cola=tmp_path / "cola", ejecutar=ejecutar)
+                ev = po.aplica([po.Accion("admitir", "prueba", vivo.pid, "suite", topes=topes)], [a], estado(), fx)[0]
+                corto.wait(timeout=10)
+                real = subprocess.run(["systemctl", "--user", "show", unidades[-1], "-p", "ActiveState", "--value"],
+                                      capture_output=True, text=True, check=False).stdout.strip()
+                assert (ev.get("rc") == 0) == (real == "active"), (real, ev)  # el rc dice lo que systemd dejo
+                if real == "failed":
+                    assert ev.get("rc") == 1 and "Result=resources" in ev["salida"], ev
+                vistos["active" if real == "active" else "failed"] += 1
+            finally:
+                vivo.kill()
+                vivo.wait(timeout=10)
+    finally:
+        subprocess.run(["systemctl", "--user", "reset-failed", *unidades], capture_output=True, check=False)
+    if not vistos["failed"]:
+        pytest.skip(f"COULD_NOT_RUN: la carrera no se reprodujo en 60 intentos ({vistos}); la rama failed quedo sin medir")
+    assert vistos["active"], vistos  # control: la misma prueba tambien ve adopciones sanas con rc=0
 
 
 @pytest.mark.integration
