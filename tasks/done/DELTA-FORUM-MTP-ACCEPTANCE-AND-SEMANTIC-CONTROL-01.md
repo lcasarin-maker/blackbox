@@ -3,12 +3,16 @@ id: DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01
 kind: task
 domain: VERDICT
 title: "Validar forum mtp acceptance and semantic control 01"
-status: open
+status: done
+closed_at: 2026-10-15
+closure_type: void_wontfix
+reason: "La aceptacion MTP cero del hilo 361163 es de Qwen3-Coder-Next con MTP; aqui el motor sirve nemotron-local sin --speculative-config, asi que no hay MTP ni aceptacion que medir, y ninguna ruta de lanzamiento del repo la activa. Decision de Luis 2026-10-15 (boleta 'Cerrar 3, mantener 2'): cerrar sin sujeto; reabrir si se activa decodificacion especulativa (MTP, DFlash o DSpark) en el motor local."
+evidence: {"pass": "tasks/evidence/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01/pass.txt", "fail": "tasks/evidence/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01/fail.txt", "e2e": "tasks/evidence/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_mtp_acceptance_and_semantic_control_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-15): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_mtp_acceptance_and_semantic_control_01`, un xfail que se retira con el cierre."}
 ---
 
 ## Registro y responsable
@@ -83,3 +87,12 @@ $ grep -c dflash_config /srv/ai/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4-
 - No existe hoy: decodificacion especulativa activa en el motor (ni MTP ni DFlash/DSpark): `speculative_config=None` y cero metricas `spec_decode`, asi que no hay aceptacion que medir.
 - Existe: el drafter DSpark de nemotron-local esta en disco (`Qwen3DSparkModel` con `dflash_config`), descargado para activarse. Con el GLM se cerro porque no estaba "ni servido ni en disco"; aqui esta en disco.
 - Falta para cerrar o declarar: que Luis decida si el drafter se va a activar. Si no, cerrar `void_wontfix` con la medicion de arriba; si si, el A/B on/off con aceptacion por posicion (las metricas `vllm:spec_decode_*` de /metrics) aplica a nemotron-local.
+
+## Root Cause
+No aplica a este equipo: la aceptacion MTP de Qwen3-Coder-Next no tiene sujeto aqui: el motor corre sin --speculative-config (speculative_config=None), no hay metricas de aceptacion y ninguna ruta de lanzamiento del repo la habilita.
+
+## Regression Test
+Ninguno: la ficha se cierra por no tener sujeto aqui. Los tests que la vigilaban (`tests/test_debt_registration_controls.py::test_delta_forum_mtp_acceptance_and_semantic_control_01` y la parametrizacion de `tests/test_runtime_batch0*_controls.py` que la filtra `_ficha_abierta`) se retiran junto con sus entradas de `tests/known_failures.json` y de `.simplecode/backlog_baseline.json`.
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: el lanzamiento del motor no contiene `--speculative-config`, con control positivo de que la misma orden da 1 sobre una cadena que la contiene), `pass` (perfil medido del motor y de las rutas de lanzamiento del repo) y `e2e` (la decision registrada). Para reabrirla si el sujeto aparece: mover `tasks/done/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01.md` a `tasks/backlog/` con `git mv` y poner `status: open`.

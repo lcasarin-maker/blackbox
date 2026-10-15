@@ -3,12 +3,16 @@ id: DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01
 kind: task
 domain: VERDICT
 title: "Validar forum dflash xgrammar structured output regression 01"
-status: open
+status: done
+closed_at: 2026-10-15
+closure_type: void_wontfix
+reason: "El 500 reportado exige decodificacion especulativa (DFlash) con xgrammar recibiendo el bloque especulativo entero, sobre Qwen3.6. Aqui el motor sirve nemotron-local sin --speculative-config (speculative_config=None, cero metricas spec_decode) y ninguna ruta de lanzamiento del repo la activa; el drafter DSpark en disco no esta cableado. Decision de Luis 2026-10-15 (boleta 'Cerrar 3, mantener 2'): cerrar sin sujeto; reabrir si se activa un drafter DFlash/DSpark en el motor local."
+evidence: {"pass": "tasks/evidence/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01/pass.txt", "fail": "tasks/evidence/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01/fail.txt", "e2e": "tasks/evidence/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_dflash_xgrammar_structured_output_regression_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-15): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_dflash_xgrammar_structured_output_regression_01`, un xfail que se retira con el cierre."}
 ---
 
 ## Registro y responsable
@@ -128,3 +132,12 @@ $ grep -c dflash_config /srv/ai/models/llm/nemotron-3.5-lightning-30b-a3b-nvfp4-
 - Existe: xgrammar 0.2.3 dentro de la imagen servida y el backend de salidas estructuradas en `auto` (el log de arranque dice `structured_outputs_config=StructuredOutputsConfig(backend='auto', ...)`), y un drafter DFlash para nemotron-local en disco (`nemotron-3.5-lightning-30b-a3b-nvfp4-dspark`, `dflash_config`).
 - No existe hoy: decodificacion especulativa activa (`speculative_config=None`, cero metricas `spec_decode`), que es la condicion del 500 reportado (xgrammar recibiendo el bloque especulativo entero). Tampoco se sirve Qwen3.6, GLM ni Gemma.
 - Falta para cerrar o declarar: que Luis decida si el drafter DSpark se va a activar. Si no se activa, el sujeto es solo "xgrammar sin especulacion", que es otra ficha; si se activa, la matriz JSON/tool calls streamed y no streamed con DFlash aplica tal cual a nemotron-local.
+
+## Root Cause
+No aplica a este equipo: la regresion DFlash+xgrammar reportada de Qwen3.6 requiere decodificacion especulativa; aqui el motor corre nemotron-3.5-lightning sin --speculative-config y ninguna ruta de lanzamiento del repo la habilita. xgrammar 0.2.3 sin especulacion es otra ficha, no esta.
+
+## Regression Test
+Ninguno: la ficha se cierra por no tener sujeto aqui. Los tests que la vigilaban (`tests/test_debt_registration_controls.py::test_delta_forum_dflash_xgrammar_structured_output_regression_01` y la parametrizacion de `tests/test_runtime_batch0*_controls.py` que la filtra `_ficha_abierta`) se retiran junto con sus entradas de `tests/known_failures.json` y de `.simplecode/backlog_baseline.json`.
+
+## Verification Evidence
+Tres rutas del frontmatter: `fail` (control negativo: el lanzamiento del motor no contiene `--speculative-config`, con control positivo de que la misma orden da 1 sobre una cadena que la contiene), `pass` (perfil medido del motor y de las rutas de lanzamiento del repo) y `e2e` (la decision registrada). Para reabrirla si el sujeto aparece: mover `tasks/done/DELTA-FORUM-DFLASH-XGRAMMAR-STRUCTURED-OUTPUT-REGRESSION-01.md` a `tasks/backlog/` con `git mv` y poner `status: open`.
