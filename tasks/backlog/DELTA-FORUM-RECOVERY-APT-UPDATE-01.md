@@ -54,3 +54,6 @@ Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina e
 
 ## Avance 2026-10-14: `dmidecode -t system` ya se obtiene sin contrasena
 `sudo -n bb-root-run dmidecode-sistema` devuelve fabricante, producto y version de la maquina (rc=0). Sigue sin cerrar porque `_recovery_apt` tambien exige la ruta de consola externa (`ssh <console_route>`, un segundo equipo) y el hash del medio OEM de recuperacion: ambos vienen de fuera de esta maquina.
+
+## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
+Disparador: dos datos que solo existen fuera de esta maquina. (1) La ruta de consola externa: un segundo equipo desde el que Luis entre por SSH o consola serie cuando la ATOM no tenga escritorio (el NAS de la LAN ya observa por ping, pero no es consola). (2) El medio de recuperacion OEM de Gigabyte con su sha256 publicado. Paso exacto: Luis anota el equipo de consola y descarga la imagen OEM con su hash; con eso `_recovery_apt` deja de exigir lo que falta.

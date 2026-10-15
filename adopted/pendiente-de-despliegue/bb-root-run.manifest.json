@@ -29,6 +29,12 @@
     "sha256": "27dbd70d961ef037e61b3cbf8ea65a198b99ac2a54723eb5f99725ca3df863a2",
     "timeout": 30
   },
+  "drm-modeset-leer": {
+    "descripcion": "Solo lectura: /sys/module/nvidia_drm/parameters/{modeset,fbdev} (0400 root) y el boot_id (FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT)",
+    "file": "drm-modeset-leer.sh",
+    "sha256": "db2c85942945b7676280e7a17be94a0d4bed9eaa6b77ef1f5dead2038e9f3431",
+    "timeout": 30
+  },
   "earlyoom-proteger": {
     "descripcion": "Sustituye /etc/default/earlyoom (conocido por sha256) por la version que protege vLLM/docker/containerd/bb- y prefiere pytest/xdist; reinicia earlyoom y restaura si no queda activo (DEBT-EARLYOOM-MATA-AL-MOTOR-VLLM-01)",
     "file": "earlyoom-proteger.sh",
@@ -39,6 +45,12 @@
     "descripcion": "Crea /var/lib/blackbox/pstore para SUDO_UID (0755) y lista /sys/fs/pstore (FEATURE-LECTOR-PSTORE-BERT-ROOT-01)",
     "file": "pstore-preparar.sh",
     "sha256": "61b0dc267e6050b8b95890f3ad3f8608ae91c7bd4bc4df33d7757846802b43f3",
+    "timeout": 30
+  },
+  "watchdog-propietario": {
+    "descripcion": "Solo lectura: fuser -v /dev/watchdog /dev/watchdog0 (stat, sin abrir el dispositivo), boot_id y estado sysfs de watchdog0 (FEATURE-FORUM-SBSA-WATCHDOG-STATE-01)",
+    "file": "watchdog-propietario.sh",
+    "sha256": "0f8a2c3256e0eb55d7223ba3e5a018f6b6235e50981eb1950378c96efe9421e3",
     "timeout": 30
   }
 }

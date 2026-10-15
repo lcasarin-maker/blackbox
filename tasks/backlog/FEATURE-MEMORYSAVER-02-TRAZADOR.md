@@ -60,3 +60,6 @@ disponibles. Esta ficha sigue abierta.
 
 ## Criterios ejecutables de `tools.verify_memory_saver` (2026-10-14)
 Los criterios ejecutables de `tools.verify_memory_saver` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
+
+## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
+Disparador: una captura con bpftrace que corre Luis en persona (bpftrace es root total: no se sella en bb-root-run). Paso exacto: `sudo bpftrace tools/kernel_charges.bt` durante el control CPU, una corrida sin asignacion y una asignacion CUDA acotada de `tools/cgroup_repro.py`, guardando la salida en `tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/`; despues `python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR`. Es la misma captura que pide FEATURE-1358-CGROUP-02-TRAZA.

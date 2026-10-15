@@ -63,3 +63,6 @@ esta ficha conserva status open.
 
 ## Criterios ejecutables de `tools.verify_cgroup_plan` (2026-10-14)
 Los criterios ejecutables de `tools.verify_cgroup_plan` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
+
+## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
+Disparador: una captura con bpftrace que corre Luis en persona (bpftrace es root total: no se sella en bb-root-run). Paso exacto: en una ventana de laboratorio, `sudo bpftrace tools/kernel_charges.bt` mientras corre `python3 -m tools.cgroup_repro`, guardando stdout y stderr en `tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/`; despues `python3 -m tools.verify_cgroup_plan --phase 02-traza --evidence tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA`. La misma captura sirve a FEATURE-MEMORYSAVER-02-TRAZADOR.

@@ -31,3 +31,6 @@ Lo primero que pide el personal de NVIDIA en los foros es `sudo dmidecode -t 45 
 
 ## Avance 2026-10-14 (3): unidad de usuario desplegada por Luis
 `bb-arranque-forense.service` instalado y habilitado (`Result=success`, `ExecMainStatus=0`; escribio su fila en `arranque.jsonl` a las 15:02:13Z). La unidad vive en `systemd/` (como las demas unidades de usuario instaladas a mano; `bb drift` no la compara). Cierra cuando el proximo arranque (reinicio o corte) deje una fila NUEVA con un `boot_id` distinto de `934fa20f-...`: `cut -c1-80 /var/lib/blackbox/pstore/arranque.jsonl`.
+
+## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
+Disparador: el proximo arranque (reinicio o corte). Medido hoy: `boot_id` 934fa20f-d0ee-4d90-af73-d42abee3e09e y todas las filas de `arranque.jsonl` son de ese arranque. Paso exacto tras el arranque: `cut -c1-80 /var/lib/blackbox/pstore/arranque.jsonl` debe mostrar una fila con otro `boot_id` escrita por `bb-arranque-forense.service`.

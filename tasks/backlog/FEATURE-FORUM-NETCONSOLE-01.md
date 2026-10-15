@@ -63,3 +63,6 @@ Evidencia: `docs/evidence/BB-INSTRUMENTS-kernel.md` y `tasks/evidence/BB-INSTRUM
 
 ## Criterios ejecutables de `tools.verify_netconsole` (2026-10-14)
 Los criterios ejecutables de `tools.verify_netconsole` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-NETCONSOLE-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
+
+## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
+Disparador: Luis carga el modulo (escritura de root) con un receptor de la LAN que el controle, por ejemplo el NAS que ya hace de observador externo. Pasos exactos: en el receptor `nc -ul 6666 > netconsole.txt`; en la ATOM `sudo modprobe netconsole netconsole=@/<interfaz>,6666@<IP-del-receptor>/` y la marca `echo '<6>bb-netconsole-marca' | sudo tee /dev/kmsg`; controles: receptor apagado y ruta rota; rollback `sudo modprobe -r netconsole`; luego `python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01`.

@@ -1,4 +1,4 @@
-"""`tools/bb_root_manifest.py`, el sudoers y los siete scripts root, con sus controles negativos.
+"""`tools/bb_root_manifest.py`, el sudoers y los nueve scripts root, con sus controles negativos.
 
 Lo que exige root de verdad (install -o root, visudo sobre /etc/sudoers.d, la regex de
 sudo casando argv) se simula: el comando de instalacion se ejecuta con las rutas
@@ -49,10 +49,10 @@ def test_control_negativo_editar_un_script_cambia_la_propuesta(src: Path):
     assert bm.serializar(bm.proponer(src)) != bm.PROPUESTA.read_bytes()
 
 
-def test_la_propuesta_cubre_los_siete_scripts_y_nada_mas():
+def test_la_propuesta_cubre_los_nueve_scripts_y_nada_mas():
     m = bm.proponer(bm.SRC_DIR)
-    assert sorted(m) == ["apt-guardia-instalar", "arranque-forense", "audit-rules-leer", "crontabs-leer", "dmidecode-sistema", "earlyoom-proteger",
-                         "pstore-preparar"]
+    assert sorted(m) == ["apt-guardia-instalar", "arranque-forense", "audit-rules-leer", "crontabs-leer", "dmidecode-sistema",
+                         "drm-modeset-leer", "earlyoom-proteger", "pstore-preparar", "watchdog-propietario"]
     assert sorted(str(e["file"]) for e in m.values()) == [p.name for p in SCRIPTS]
     for e in m.values():
         assert e["sha256"] == hashlib.sha256((bm.SRC_DIR / str(e["file"])).read_bytes()).hexdigest()
@@ -203,7 +203,7 @@ def _check(inst: Path, src: Path, runner: Path) -> int:
 def test_check_limpio_sale_0_e_imprime_los_ceros(tmp_path: Path, src: Path, capsys: pytest.CaptureFixture[str]):
     inst, runner = _instalado(tmp_path, src)
     assert _check(inst, src, runner) == 0
-    assert "aprobados iguales: 7, cambios: 0, could_not_run: 0" in capsys.readouterr().out
+    assert "aprobados iguales: 9, cambios: 0, could_not_run: 0" in capsys.readouterr().out
 
 
 def test_check_control_negativo_un_script_editado_se_reporta(
@@ -213,7 +213,7 @@ def test_check_control_negativo_un_script_editado_se_reporta(
         f.write("echo extra\n")
     assert _check(inst, src, runner) == 1
     out = capsys.readouterr().out
-    assert "cambiado desde la aprobacion: crontabs-leer" in out and "aprobados iguales: 6" in out
+    assert "cambiado desde la aprobacion: crontabs-leer" in out and "aprobados iguales: 8" in out
 
 
 def test_check_reporta_ausente_sin_aprobar_y_runner_cambiado(
@@ -397,8 +397,8 @@ def hallazgos(nombre: str, texto: str) -> list[str]:
     return fuera
 
 
-def test_los_siete_scripts_solo_escriben_lo_declarado_sin_red_ni_argumentos():
-    assert len(SCRIPTS) == 7
+def test_los_nueve_scripts_solo_escriben_lo_declarado_sin_red_ni_argumentos():
+    assert len(SCRIPTS) == 9
     fuera: list[str] = []
     for p in SCRIPTS:
         fuera += hallazgos(p.name, p.read_text(encoding="utf-8"))
@@ -840,3 +840,119 @@ def test_earlyoom_proteger_control_negativo_base_insegura_aborta_sin_tocar_conf(
     assert r.returncode == 3 and motivo in r.stderr, r.stdout + r.stderr
     assert conf.read_bytes() == EARLYOOM_VIEJO.read_bytes() and _restos(conf) == [] and _llamadas(tmp_path) == []
     assert blanco.read_text(encoding="utf-8") == "intacto"
+
+
+# --- ningun script abre el watchdog: abrir /dev/watchdog lo arma y cerrarlo sin 'V' puede reiniciar ------------
+
+ABRE_WATCHDOG = re.compile(r"/dev/watchdog|\bwdctl\b")
+SOLO_FUSER = re.compile(r"^fuser -v(?: /dev/watchdog0?)+ \|\| rc=\$\?$")
+
+
+def abre_watchdog(nombre: str, texto: str) -> list[str]:
+    """Lineas (no comentario) que nombran /dev/watchdog o wdctl fuera de la unica forma permitida: `fuser -v`."""
+    return [f"{nombre}:{i}: {x.strip()}" for i, x in enumerate(texto.splitlines(), 1)
+            if not x.lstrip().startswith("#") and ABRE_WATCHDOG.search(x) and not SOLO_FUSER.match(x.strip())]
+
+
+def test_ningun_script_abre_el_dispositivo_watchdog():
+    fuera: list[str] = []
+    for p in SCRIPTS:
+        fuera += abre_watchdog(p.name, p.read_text(encoding="utf-8"))
+    assert fuera == []
+
+
+@pytest.mark.parametrize("linea", [
+    "cat /dev/watchdog0", "echo V > /dev/watchdog", "exec 3< /dev/watchdog", "wdctl", "wdctl /dev/watchdog0",
+    "fuser -v /dev/watchdog; cat /dev/watchdog", "dd if=/dev/watchdog0 of=/dev/null count=0",
+])
+def test_control_negativo_abrir_el_watchdog_se_caza(linea: str):
+    assert abre_watchdog("sembrado.sh", "#!/bin/bash\nset -euo pipefail\n" + linea + "\n"), linea
+
+
+def _con_stub(tmp_path: Path, script: str, sustituciones: tuple[tuple[str, str], ...],
+              stubs: dict[str, str]) -> subprocess.CompletedProcess[str]:
+    texto = (bm.SRC_DIR / script).read_text(encoding="utf-8")
+    for viejo, nuevo in sustituciones:
+        assert texto.count(viejo) == 1, f"la sustitucion {viejo!r} no casa: prueba vacia"
+        texto = texto.replace(viejo, nuevo)
+    s = tmp_path / script
+    s.write_text(texto, encoding="utf-8")
+    stub = tmp_path / "stub"
+    stub.mkdir(exist_ok=True)
+    for nombre, cuerpo in stubs.items():
+        (stub / nombre).write_text("#!/bin/sh\n" + cuerpo, encoding="utf-8")
+        (stub / nombre).chmod(0o755)
+    # stderr unido a stdout, como hace el runner (stderr=STDOUT): es lo que quedaria en /var/lib/bb-root-run.
+    return subprocess.run(["/bin/bash", str(s)], env={"PATH": f"{stub}:{rr.PATH_FIJO}", "LC_ALL": "C"},
+                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=30)
+
+
+# --- watchdog-propietario: ejecutado con fuser y sysfs sustituidos ------------------------
+
+FUSER_ROOT = ("                     USER        PID ACCESS COMMAND\n"
+              "/dev/watchdog:       root          1 F.... systemd\n"
+              "/dev/watchdog0:      root          1 F.... systemd\n")  # forma de psmisc con LC_ALL=C
+SYSFS_WD = {"identity": "SBSA Generic Watchdog\n", "state": "active\n", "timeout": "60\n", "nowayout": "0\n",
+            "bootstatus": "0\n"}
+
+
+def _watchdog(tmp_path: Path, fuser_cuerpo: str, sysfs: dict[str, str]) -> subprocess.CompletedProcess[str]:
+    wd = tmp_path / "watchdog0"
+    wd.mkdir()
+    for k, v in sysfs.items():
+        (wd / k).write_text(v, encoding="utf-8")
+    return _con_stub(tmp_path, "watchdog-propietario.sh", (("wd=/sys/class/watchdog/watchdog0", f"wd={wd}"),),
+                     {"fuser": fuser_cuerpo})
+
+
+def test_watchdog_propietario_da_el_pid_que_el_verificador_acepta(tmp_path: Path):
+    from tools import forum_hardware_subjects as fh
+    (tmp_path / "fuser.txt").write_text(FUSER_ROOT, encoding="utf-8")
+    r = _watchdog(tmp_path, f"cat {tmp_path / 'fuser.txt'} >&2\nexit 0\n", SYSFS_WD)
+    assert r.returncode == 0, r.stdout
+    assert "fuser rc=0" in r.stdout and "identity=SBSA Generic Watchdog" in r.stdout and "bootstatus=0" in r.stdout
+    assert fh._parse_fuser(["fuser", "-v", "/dev/watchdog", "/dev/watchdog0"], r.stdout) == {"owner_pids": [1]}
+
+
+def test_watchdog_propietario_control_negativo_fuser_sin_dueno_no_inventa_pid(tmp_path: Path):
+    # Es lo que da `fuser` como usuario (medido 2026-10-14: rc=1, sin salida): el verificador debe quedar en unknown.
+    from tools import forum_hardware_subjects as fh
+    r = _watchdog(tmp_path, "exit 1\n", {k: v for k, v in SYSFS_WD.items() if k != "bootstatus"})
+    assert r.returncode == 0, r.stdout
+    assert "fuser rc=1" in r.stdout and "bootstatus: ilegible o ausente" in r.stdout
+    assert fh._parse_fuser(["fuser", "-v", "/dev/watchdog0"], r.stdout) == {"owner_pids": []}
+
+
+# --- drm-modeset-leer: ejecutado con el sysfs de nvidia_drm sustituido -------------------
+
+def _modeset(tmp_path: Path, valores: dict[str, str] | None, ilegible: str | None = None) -> subprocess.CompletedProcess[str]:
+    params = tmp_path / "parameters"
+    if valores is not None:
+        params.mkdir()
+        for k, v in valores.items():
+            (params / k).write_text(v, encoding="utf-8")
+        if ilegible:
+            (params / ilegible).chmod(0)
+    return _con_stub(tmp_path, "drm-modeset-leer.sh",
+                     (("params=/sys/module/nvidia_drm/parameters", f"params={params}"),), {})
+
+
+@pytest.mark.parametrize("modeset", ["Y", "N"])
+def test_drm_modeset_leer_imprime_el_valor_efectivo(tmp_path: Path, modeset: str):
+    r = _modeset(tmp_path, {"modeset": modeset + "\n", "fbdev": "Y\n"})
+    assert r.returncode == 0, r.stdout
+    assert f"nvidia_drm.modeset={modeset}\n" in r.stdout and "nvidia_drm.fbdev=Y\n" in r.stdout
+
+
+def test_drm_modeset_leer_control_negativo_sin_modulo_lo_declara_y_no_inventa_valor(tmp_path: Path):
+    r = _modeset(tmp_path, None)
+    assert r.returncode == 0, r.stdout
+    assert "nvidia_drm.modeset: ilegible o ausente" in r.stdout and "modeset=" not in r.stdout
+
+
+@pytest.mark.skipif(os.geteuid() == 0, reason="root lee un fichero 0000")
+def test_drm_modeset_leer_control_negativo_fichero_ilegible_se_declara(tmp_path: Path):
+    # Es lo que ve el usuario en la maquina real (modeset es 0400 root).
+    r = _modeset(tmp_path, {"modeset": "Y\n", "fbdev": "N\n"}, ilegible="modeset")
+    assert r.returncode == 0, r.stdout
+    assert "nvidia_drm.modeset: ilegible o ausente" in r.stdout and "nvidia_drm.fbdev=N\n" in r.stdout

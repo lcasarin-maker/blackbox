@@ -40,3 +40,6 @@ El close_check queda especificado para implementarse junto al trabajo. Verificad
 
 ## Criterios ejecutables de `tools.verify_memory_saver` (2026-10-14)
 Los criterios ejecutables de `tools.verify_memory_saver` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-MEMORY-SAVER-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
+
+## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
+Dudosa entre sin sujeto y espera: `getconf PAGESIZE` = 4096 hoy, y el parche publicado (slots de 4096 con PAGE_SIZE 65536) aqui da un slot por pagina, asi que su sujeto literal no existe en este kernel; pero la ficha pide medir antes de decidir un diseno de slots menores, y esa medicion es la traza de FEATURE-MEMORYSAVER-02-TRAZADOR. Disparador: esa captura con bpftrace (la corre Luis). Paso exacto despues: medir el backing de tablas UVM por carga desde esa traza y decidir con el numero delante; si no justifica el port, cerrar por la via que la ficha nombra.

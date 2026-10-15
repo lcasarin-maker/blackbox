@@ -38,3 +38,6 @@ Dejar systemd-oomd activo y medir la presion por slice mientras se diagnostica e
 
 ## Avance 2026-10-13: medicion de solo lectura
 `tasks/evidence/DEBT-OOMD-PROBAR-Y-DIAGNOSTICAR-01/medicion-solo-lectura-20261013.txt`: oomd activo, presion del slice del usuario en 0 (some y full avg10/60/300 = 0,00) y `oomctl` con su configuracion (60 % durante 20 s, swap 90 %). La frase `oomd_mata_y_medido` sigue exigiendo un kill medido bajo presion real, que arriesga sesiones y motor; el log de depuracion necesita root.
+
+## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
+Disparador doble, ninguno es de solo lectura: (a) el log de depuracion exige un drop-in de root (`sudo systemctl edit systemd-oomd` con `Environment=SYSTEMD_LOG_LEVEL=debug` y `sudo systemctl restart systemd-oomd`; el `edit` recarga systemd, mismo riesgo P1 de la GPU: va en la ventana del motor de 60 min que anuncia Luis); (b) el kill medido arriesga sesiones y motor (la ficha lo dice desde el 2026-10-13): otra vez esa ventana, con Luis presente. Paso exacto que falta: repetir la prueba del slice `bbtest-oomd.slice` leyendo cada segundo su `memory.pressure` hasta que `some avg10` supere el 60 % durante 20 s, anotar que cgroup mata oomd y en cuanto tiempo, y escribir `oomd_mata_y_medido` en `medicion.txt`.
