@@ -38,3 +38,12 @@ Votos de Luis ejecutados (cifras y lo conservado en `DECISIONS.md`): imagenes de
 
 ## Cierre 2026-10-15
 Ultima boleta votada por Luis (conservar cursor, antigravity, chatgpt, dcgm y fieldiag; los timers ajenos se quedan; criterio: uso medido). El informe lleva la frase `decisiones_de_revision_votadas` con los votos de las tres boletas. close_check ANTES de escribirla: `grep -q decisiones_de_revision_votadas ...informe.txt` salia 1; DESPUES sale 0 (ver tasks/evidence/DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01/).
+
+## Root Cause
+Nadie había medido qué de lo instalado y corriendo se usaba: LibreChat llevaba meses parado y sin dueño, docker retenía 112 GB de imágenes reclamables y varios paquetes grandes (code, nvidia-ai-workbench) no tenían uso medido. No había inventario con último uso ni votos sobre él.
+
+## Regression Test
+El `close_check` original (`grep -q decisiones_de_revision_votadas` sobre `tasks/evidence/DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01/informe.txt`) exige la frase que sólo escribe el cierre de la última boleta. Control negativo medido: sobre el informe de `ec70ea4a` sale rc=1 (`fail.txt`); sobre el actual sale rc=0 (`pass.txt`).
+
+## Verification Evidence
+`tasks/evidence/DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01/`: `fail.txt` (rc=1 antes), `pass.txt` (rc=0 después), `e2e.txt` (`docker system df`: imágenes 34.68 GB, caché de build 0 B; `dpkg -l code nvidia-ai-workbench` ya sin los paquetes) e `informe.txt` con los votos de las tres boletas.
