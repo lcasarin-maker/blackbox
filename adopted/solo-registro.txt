@@ -146,3 +146,12 @@ usr_local_bin_journal-udp-forward.sh
     comparar. Limite declarado: un cambio de esa IP no se ve como divergencia.
     Remedio de una divergencia: no hay instalador; editar en la maquina y
     re-adoptar (redactando de nuevo la IP).
+
+etc_systemd_system_bb-gpu-accounting.service
+    Se desplego el 2026-10-15 con `tasks/evidence/VENTANA-VLLM-20261015/ventana.sh`
+    (sudo de Luis, con el motor parado): `install -m 0644` a /etc/systemd/system,
+    `daemon-reload` y `enable --now`. `enable-privileged.sh` no lo copia porque
+    habilitar la unidad recarga systemd, y esa recarga es la que
+    `DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01` midio en una ventana sin
+    motor (`recarga_probada`). Si `bb drift` marca una divergencia, el remedio es
+    repetir esas tres ordenes con el motor parado, no correr el instalador.
