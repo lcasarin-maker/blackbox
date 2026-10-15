@@ -2,7 +2,7 @@
 # bb-root-run apt-guardia-instalar -- instala bb-apt-guardia: un hook DPkg::Pre-Install-Pkgs que hace abortar a APT,
 #      antes de llamar a dpkg, cualquier transaccion que quite un paquete de data/apt-paquetes-criticos.txt.
 # Escribe: /usr/local/sbin/bb-apt-guardia (root:root 0755) y /etc/apt/apt.conf.d/00-bb-apt-guardia (root:root 0644),
-#      cada uno por temporal .bb-apt-guardia.XXXXXX en su directorio y mv; y una caja 0700 /run/bb-apt-guardia.XXXXXX
+#      cada uno por temporal .bb-apt-guardia.XXXXXX en su directorio y mv; y una caja 0700 /var/lib/bb-apt-guardia.XXXXXX  (no /run: es noexec y APT no podia ejecutar el stub de dpkg)
 #      que se borra al salir. Nada mas. No hay copia de respaldo porque nunca sobrescribe: cada destino debe estar
 #      ausente (se crea) o ser byte a byte el nuevo (no se toca); cualquier otro contenido hace que se niegue.
 # Ejecuta (sin red): `apt-config dump` y `apt-config shell` (lectura); `apt-get -s autoremove` con la configuracion
@@ -231,7 +231,7 @@ if [[ -z "$fallo" ]] && ! apt-get -s -o Debug::NoLocking=1 autoremove > /dev/nul
   fallo="la simulacion de autoremove falla con la guardia instalada"
 fi
 if [[ -z "$fallo" ]]; then
-  caja="$(mktemp -d /run/bb-apt-guardia.XXXXXX)"
+  caja="$(mktemp -d /var/lib/bb-apt-guardia.XXXXXX)"
   mkdir -p -- "$caja/parts" "$caja/state" "$caja/cache/archives/partial" "$caja/log"
   cp -- "$estado_dpkg" "$caja/status"
   cp -- "$conf" "$caja/parts/00-bb-apt-guardia"
@@ -246,6 +246,9 @@ STUB
   chmod 0755 -- "$caja/dpkg"
   printf 'Dir::Etc::main "/dev/null";\nDir::Etc::parts "%s/parts";\n' "$caja" > "$caja/apt.conf"
   opciones=(-o Debug::NoLocking=1 -o "Dir::State=$caja/state" -o Dir::State::lists=/var/lib/apt/lists -o "Dir::State::status=$caja/status" -o "Dir::Cache=$caja/cache" -o "Dir::Log=$caja/log" -o "Dir::Bin::dpkg=$caja/dpkg")
+  if ! "$caja/dpkg" --print-architecture > /dev/null; then
+    fallo="el stub de dpkg no se puede ejecutar en $caja (montaje noexec?); APT devolveria 100 sin llegar a dpkg"  # medido: /run es noexec
+  fi
   aislada="$(APT_CONFIG="$caja/apt.conf" apt-config "${opciones[@]}" shell P Dir::Etc::parts/ B Dir::Bin::dpkg || true)"
   if [[ "$aislada" != "P='$caja/parts/'"$'\n'"B='$caja/dpkg'" ]]; then
     fallo="la caja no aisla la configuracion de APT ($aislada); no se transacciona"
