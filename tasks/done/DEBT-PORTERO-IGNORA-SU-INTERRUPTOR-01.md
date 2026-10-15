@@ -3,7 +3,11 @@ id: DEBT-PORTERO-IGNORA-SU-INTERRUPTOR-01
 kind: task
 domain: MEMORY
 title: "El portero actua siempre: tools/portero.py no lee su interruptor (observar/actuar/off)"
-status: open
+status: done
+closed_at: 2026-10-15
+closure_type: relocated_prior_verification
+reason: "El arreglo y la prueba test_demonio_respeta_el_interruptor aterrizaron en 628f3383; este commit solo registra el antes (arbol previo + prueba actual: falla) y el despues (pasa)."
+evidence: {"pass": "tasks/evidence/DEBT-PORTERO-IGNORA-SU-INTERRUPTOR-01/pass.txt", "fail": "tasks/evidence/DEBT-PORTERO-IGNORA-SU-INTERRUPTOR-01/fail.txt", "e2e": "tasks/evidence/DEBT-PORTERO-IGNORA-SU-INTERRUPTOR-01/e2e.txt"}
 severity: P2
 origin: detected
 detector: {"rule": "grep -c interruptores tools/portero.py == 0 mientras interruptores.json declara un modo 'portero'", "confidence": 1.0}
@@ -35,3 +39,19 @@ Comportamiento por modo (docstring de `tools/portero.py`):
 `bb portero run --clase suite -- cmd` (decidido con el codigo): es una peticion EXPLICITA de quien lanza su propio comando, no el demonio actuando sobre un arbol ajeno, asi que en TODO modo lanza bajo `bb-portero-<clase>-<pid>.scope` con el tope de la clase. El interruptor solo gobierna la cola: `actuar` espera turno (como antes); `observar` decide una vez, registra `habria_esperar` si le habria tocado esperar y lanza sin esperar, siempre en `app.slice` (nunca `mover`); `off` no entra a la cola. Medido: ningun hook del repo llama hoy a `bb portero run` (`grep -rn "portero run"`: solo bin/bb ayuda, el docstring y las fichas).
 
 Modo real al arreglar: `actuar` -> el comportamiento de produccion de esta ficha no cambia (lee un archivo de pocos bytes por vuelta; `bb portero estado` gana la clave `modo`).
+
+## Root Cause
+`cmd_demonio` llamaba a `_ciclo` y este a `aplica` sin consultar `interruptores.modo('portero')` (`grep -c interruptores tools/portero.py` daba 0). Con el interruptor en `off` o en `observar` el demonio seguia leyendo /proc, creando scopes `bb-portero-*` y escribiendo `cgroup.freeze`: el interruptor no podia garantizar el "observar primero" que Luis voto el 2026-10-14. El arreglo (628f3383) relee el modo en cada vuelta.
+
+## Regression Test
+`tests/test_portero.py::test_demonio_respeta_el_interruptor` (el `close_check`), con `/proc`, cgroups, systemd y PSI falsos y un `interruptores.json` temporal por rama:
+- `off`: sin lecturas, sin llamadas al ejecutor, sin `cgroup.freeze`; una sola fila `{"accion": "off", "modo": "off"}`.
+- `observar`: mide y decide, registra `habria_congelar` con `"modo": "observar"` y sin `rc`; el ejecutor falso recibe cero llamadas.
+- `actuar` (control negativo de las dos anteriores): el mismo mundo adopta en un scope (`busctl`, `systemctl`), escribe `cgroup.freeze=1` y registra `congelar` rc 0 sin clave `modo`.
+Companeras: `test_demonio_relee_el_interruptor_en_cada_vuelta_y_off_no_repite_su_fila` y `test_fuera_de_actuar_el_demonio_descongela_solo_lo_que_congelo_el_portero[off|observar|actuar]`.
+
+## Verification Evidence
+- `fail.txt`: el arbol del padre de 628f3383 con la prueba actual: rc=1. El primer intento falla en el constructor del fixture (`Efectos.__init__() got an unexpected keyword argument 'proc'`); el segundo control, con solo dos campos de inyeccion anadidos (`Efectos.proc`, `Arbol.inicio`, sin cambio de comportamiento), falla la ASERCION de la rama `off`: `assert lecturas == [] ...` con `['estado', 'proc']`, es decir el demonio viejo media en `off`.
+- `pass.txt`: el `close_check` en el arbol actual: `1 passed`, rc=0.
+- `e2e.txt`: NO se corrio el demonio real en los tres modos (`actuar` congelaria cgroups reales y `off`/`observar` descongelan scopes `bb-portero-*` reales; regla del repo: no tocar produccion). Se muestra la prueba con `-v` sobre el mundo falso: 6 passed.
+- Limite declarado: la evidencia no cubre el demonio real contra systemd; la medicion anterior de 12 mutaciones muertas esta en `medicion.txt` de este mismo directorio.
