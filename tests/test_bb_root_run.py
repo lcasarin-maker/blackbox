@@ -316,7 +316,7 @@ def test_timeout_mata_el_grupo_entero_y_sale_124(b: Banco):
     # El nieto deja su pid y retiene el pipe de salida: si el runner solo matara al hijo,
     # el nieto seguiria vivo al volver run().
     b.aprobar("lento", f"#!/bin/bash\n(echo $BASHPID > {b.marca}; exec sleep 30) &\nsleep 30\n",
-              timeout=1)
+              timeout=3)  # margen para carga alta: este test fallo en la linea 324 durante el push 54 con load 36 (causa exacta sin medir)
     t0 = time.monotonic()
     assert b.run("lento") == rr.RC_TIMEOUT
     assert time.monotonic() - t0 < 10
