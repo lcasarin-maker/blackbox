@@ -3,7 +3,11 @@ id: DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01
 kind: task
 domain: MEMORY
 title: "Revisar lo instalado y corriendo contra lo que se usa (LibreChat sin uso desde agosto)"
-status: open
+status: done
+closed_at: 2026-10-15
+closure_type: relocated_prior_verification
+reason: "Las limpiezas (docker 144.4 -> 34.68 GB, LibreChat, code y nvidia-ai-workbench) se ejecutaron y verificaron en commits anteriores por voto de Luis; este commit solo registra la ultima boleta (conservar fieldiag, dcgm y editores por uso medido) y mueve la ficha. Control negativo: el close_check sobre el informe de HEAD antes de este commit sale 1, despues sale 0."
+evidence: {"pass": "tasks/evidence/DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01/pass.txt", "fail": "tasks/evidence/DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01/fail.txt", "e2e": "tasks/evidence/DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -31,3 +35,6 @@ close_check: {"cmd": "grep -q decisiones_de_revision_votadas tasks/evidence/DEBT
 
 ## Avance 2026-10-14 (2): segunda boleta votada y ejecutada
 Votos de Luis ejecutados (cifras y lo conservado en `DECISIONS.md`): imagenes de docker 144.4 -> 34.68 GB, cache de build 16.43 -> 0 GB, 36 volumenes sin uso, LibreChat/open-webui/sglang/ollama y las imagenes obsoletas de otro proyecto fuera, 347 MiB de datos del foro y de una compilacion vieja del modulo dmem archivados con zstd y verificados. Falta la ultima boleta de este informe: los paquetes grandes (cursor, code, chatgpt, antigravity, dcgm, fieldiag) y los timers de otros proyectos; sin ese voto no lleva la frase `decisiones_de_revision_votadas` y la ficha sigue abierta.
+
+## Cierre 2026-10-15
+Ultima boleta votada por Luis (conservar cursor, antigravity, chatgpt, dcgm y fieldiag; los timers ajenos se quedan; criterio: uso medido). El informe lleva la frase `decisiones_de_revision_votadas` con los votos de las tres boletas. close_check ANTES de escribirla: `grep -q decisiones_de_revision_votadas ...informe.txt` salia 1; DESPUES sale 0 (ver tasks/evidence/DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01/).

@@ -72,3 +72,10 @@ Propuesta sin votar: ninguno se toca (todos corrieron en la ultima hora o dia; u
   598485	gigabyte-ai-top-utility
   594701	datacenter-gpu-manager-4-cuda13-nccl
 Propuesta sin votar: ninguno se retira sin su dueno (cursor, code, chatgpt, antigravity son editores de escritorio de Luis; dcgm y fieldiag son de NVIDIA/GIGABYTE y los usa el diagnostico).
+
+== decisiones_de_revision_votadas (cierre 2026-10-15) ==
+Votos de Luis, todos ejecutados y registrados en DECISIONS.md:
+  - docker: imagenes 144.4 -> 34.68 GB, cache de build 16.43 -> 0 GB, 36 volumenes sin uso, open-webui/sglang/ollama y imagenes obsoletas de otro proyecto fuera (2026-10-14).
+  - LibreChat: parado sin unidad ni timer; /srv/ai/librechat borrado por voto de Luis (2026-10-14).
+  - code (VS Code) y nvidia-ai-workbench quitados por Luis con `sudo apt remove -y code nvidia-ai-workbench` (1896 MB liberados; ~/.config y ~/.nvwb conservados) (2026-10-14).
+  - Ultima boleta, votada 2026-10-15 con uso medido: cursor (config tocada 2026-10-14), antigravity (2026-10-12) y chatgpt (aplicacion de OpenAI, usada con Codex) SE QUEDAN; dcgm SE QUEDA (bin/bb y tools/incident_report.py llaman dcgmi); dgx-spark-fieldiag SE QUEDA por voto de Luis (diagnostico que el soporte pide para una RMA; 795 MB); los timers de otros proyectos SE QUEDAN (todos corrieron en el ultimo dia).
