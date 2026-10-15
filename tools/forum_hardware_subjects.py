@@ -745,6 +745,15 @@ def _references(document: dict[str, Any]) -> tuple[bool, str | None]:
     return True, None
 
 
+def _inspect_region(path: str, offset: int, length: int, digest: str, repeats: int) -> dict[str, Any]:
+    from tools.read_integrity import inspect
+
+    try:
+        return inspect(path, offset, length, digest, repeats)
+    except ValueError as exc:  # parameters the captured argv carried are invalid: unavailable, not a crash
+        return {"status": "could_not_run", "reason": f"ValueError: {exc}"}
+
+
 def _replay_read_case(document: dict[str, Any], directory: Path, name: str) -> tuple[dict[str, Any] | None, Path | None, str | None]:
     row = next((entry for entry in document["captures"] if entry["name"] == name), None)
     if row is None:
@@ -777,9 +786,7 @@ def _replay_read_case(document: dict[str, Any], directory: Path, name: str) -> t
     elapsed = row.get("elapsed_ms")
     if isinstance(elapsed, bool) or not isinstance(elapsed, (int, float)) or elapsed <= 0:
         return None, None, f"measured elapsed time absent for {name}"
-    from tools.read_integrity import inspect as inspect_region
-
-    derived = inspect_region(str(target), offset, length, digest, repeats)
+    derived = _inspect_region(str(target), offset, length, digest, repeats)
     if derived.get("status") == "could_not_run":
         return None, None, f"read_integrity replay unavailable for {name}: {derived.get('reason')}"
     if derived != actual:
@@ -823,7 +830,7 @@ def _check_nvme_snapshot(directory: Path) -> tuple[str, str]:
     if storage["status"] == "fail":
         return "fail", "read-only NVMe/RAS classifier found a failure signal: " + "; ".join(storage["findings"])
     if storage["status"] != "pass" or storage["could_not_run"]:
-        return "unknown", "read-only NVMe/RAS inventory incomplete: " + "; ".join(storage["unknowns"])
+        return "unknown", "read-only NVMe/RAS inventory incomplete: " + "; ".join(storage.get("unknowns") or storage["findings"])
     return "pass", "read-only NVMe/RAS snapshot classifies without a recorded failure"
 
 
