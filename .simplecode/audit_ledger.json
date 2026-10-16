@@ -1,6 +1,6 @@
 {
-  "claims_fingerprint": "0325e86476e937d4402f9f73133777562bd7fd958ddebadcf1ad497bf646d0b3",
-  "panel": "1 auditor Opus (solo lectura), 2026-10-16: refuto SPEC-L419 (el LIMPIO del control de racha dependia de la excepcion nueva y calibra_psi estaba rojo); texto corregido en a4c1dc9d y re-medido con control negativo (corpus hasta 10-15: 0 falsos positivos y 1 no detectado; sin la excepcion 642 s)",
+  "claims_fingerprint": "ef4553d464fedab373c98837c08af2ea1b48cf2655c6acba5a2a89db8d5441bb",
+  "panel": "Opus auditor, 2026-10-16, re-audit of 4 stale claims (refuted L419/L422 text, fixed, re-passed)",
   "profile": "general",
   "results": [
     {
@@ -27,12 +27,11 @@
     },
     {
       "cited": {
-        "enable-privileged.sh": "3781bb35891f1e8a50bdb11c211806cf0261468905161c29985b986558ddba28",
-        "tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json": "baec49aa04174cca6b214266afb4e9c34160686894deb003f04d4507f63d52e1"
+        "enable-privileged.sh": "4c5171e551af1f18198ddf00a7fdb4d55c0e492d659db1eff07b057de43dcbf0"
       },
       "claim_id": "SPEC-L135",
-      "evidence": "SPEC.md:135-138 claims enable-privileged.sh activates linger for the owner and that full-boot proof requires observing the machine without a session. In the current tree, enable-privileged.sh:34 sets `DUENO=\"${SUDO_USER:-$(logname ...|| id -un)}\"`, :664 opens block `-- 10. linger`, :672 reads `LINGER_ANTES=$(loginctl show-user \"$DUENO\" -p Linger --value ...)`, and :679 runs `run loginctl enable-linger \"$DUENO\"` when it is not already yes. That block is unconditional in the deploy path: the only `exit 0` (:190) closes the revert branch, and the revert restores linger only from the backup at :100-108. The script prints the boot-time control itself at :690-693 (`systemd-analyze --user blame` after booting without logging in), which matches the claim's caveat. `grep -cF 'run loginctl enable-linger \"$DUENO\"' enable-privileged.sh` -> `1`; negative control `grep -cF 'run loginctl enable-linger \"$NOEXISTE\"' enable-privileged.sh` -> `0`. Live subject: `loginctl show-user <owner> -p Linger` -> `Linger=yes`, and the owner's file exists in /var/lib/systemd/linger/. The installed user units declare `WantedBy=default.target` (e.g. adopted/systemd-user/bb-guardia-proceso.service, adopted/systemd-user/ai-gpu-telemetry.service), so linger lets them start at boot. No test in tests/ covers linger (`grep -rli linger tests/` is empty), so this verdict rests on the grep and the live state, not on a suite. The stale trigger tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run.json differs from HEAD by 1 insertion and 1 deletion (`git diff --stat`), the hostname redaction, and does not touch this claim.",
-      "seal": "1a8bef195211ebe1270b34453b2643d4798334ba2e8cc7e19c41dc162c6efaef",
+      "evidence": "enable-privileged.sh:665-680 (bloque '-- 10. linger') sigue llamando `run loginctl enable-linger \"$DUENO\"` cuando Linger no es yes (y guarda el estado previo en $BACKUP/linger-estaba para el revert de enable-privileged.sh:100-108); el cambio de 3ee077c6 solo toca las lineas 807-817 (drop-in memory-high.conf de app.slice), no el linger. Sujeto vivo: `loginctl show-user lcasarin -p Linger` -> `Linger=yes`. Control negativo corrido: `loginctl show-user gdm -p Linger` -> `Failed to get user: User ID 126 is not logged in or lingering` (el mismo instrumento devuelve otro veredicto para un usuario sin linger). La segunda mitad del renglon (arranque completo sin sesion requiere observar la maquina) es declarativa y sigue vigente.",
+      "seal": "08e0359338d75188111e4b052ed7548af8e380fdd779bc4f0fde4a290e2b22e2",
       "verdict": "PASS"
     },
     {
@@ -112,24 +111,23 @@
     },
     {
       "cited": {
-        "enable-privileged.sh": "3781bb35891f1e8a50bdb11c211806cf0261468905161c29985b986558ddba28",
+        "enable-privileged.sh": "4c5171e551af1f18198ddf00a7fdb4d55c0e492d659db1eff07b057de43dcbf0",
         "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6"
       },
       "claim_id": "SPEC-L418",
-      "evidence": "Block 4b: enable-privileged.sh:307 `-- 4b. clock de la GPU y vigilante de NVRM OOM`, :325 `run systemctl enable --now nvrm-watch.timer`. `systemctl is-enabled nvrm-watch.timer` -> `enabled`. Negative control in scratchpad/neg15 with that line removed: grep count `0`. Live, `systemctl --user show <u>.service -p Nice -p IOSchedulingClass --value`: blackbox-sample `19 3`, atom-gpu-telemetry `19 3`, ai-memory-monitor `0 2`, ai-gpu-telemetry `10 3` (disabled), ai-nemotron-vigilante `0 2`, bb-guardia-proceso `10 2`, bb-gpumem-historial `10 2`, bb-canario-motor `10 2`, bb-huella `10 2`. System units: nvrm-watch `0 2`, bb-usable `0 2`. Unit files unchanged since the previous audit: adopted/systemd-user/{blackbox-sample,atom-gpu-telemetry}.service `Nice=19 IOSchedulingClass=idle`; systemd/bb-gpumem-historial.service `Nice=10` with no IOSchedulingClass and its timer `OnUnitActiveSec=1min`; systemd/bb-usable.service `OOMScoreAdjust=-900 MemoryMin=128M`; bin/bb-usable:98 `PROBE_INTERVAL = 30.0`; ai-nemotron-vigilante.timer `OnUnitInactiveSec=2min`; nvrm-watch.timer `OnUnitActiveSec=5min`; ai-memory-monitor.timer `OnCalendar=*:0/5`.",
-      "seal": "5c313bd274b3ce29e8ac2eddc8ebd2b7b6324a12edd1a7d5969f49ee6438a4b6",
+      "evidence": "Todas las cifras verificadas en el arbol y en vivo (`systemctl --user show <u>.service -p Nice -p IOSchedulingClass`): blackbox-sample 19/3 (systemd/blackbox-sample.service:8-9 Nice=19, IOSchedulingClass=idle), atom-gpu-telemetry 19/3 (adopted/systemd-user/atom-gpu-telemetry.service:14-15), ai-memory-monitor Nice=0, ai-gpu-telemetry disabled Nice=10, ai-nemotron-vigilante 0/2 (timer OnUnitInactiveSec=2min, instalado por bin/bb:2800-2805), bb-gpumem-historial 10/2 (systemd/bb-gpumem-historial.service:9 Nice=10 sin IOSchedulingClass; .timer:6 OnUnitActiveSec=1min; tools/gpumem_historial.py:39 escribe gpumem_historial.jsonl), bb-canario-motor y bb-huella Nice=10, bb-guardia-proceso Nice=10 (adopted/systemd-user/bb-guardia-proceso.service:22), nvrm-watch.service Nice=0 IOSchedulingClass=2, timer OnUnitActiveSec=5min, instalado en el bloque 4b (enable-privileged.sh:302-318); bb-usable sin Nice, OOMScoreAdjust=-900 y MemoryMin=128M (systemd/bb-usable.service:47-48), PROBE_INTERVAL = 30.0 (bin/bb-usable:98). El cambio de enable-privileged.sh (drop-in memory-high.conf) no toca ninguna de estas units. Control negativo: la misma consulta devuelve valores distintos entre units (19, 10, 0; clase 3 frente a 2), asi que podia contradecir cualquier cifra del renglon.",
+      "seal": "915bb26b3179da92cf550155d52046ff00dd99a3dfe8993a36d37f560a040702",
       "verdict": "PASS"
     },
     {
       "cited": {
-        "tests/test_calibra_psi.py": "35149ef2a5b54667d0d784f18f2350c2bbec5aa5d4c9e5d55fae40393f159ae6",
-        "tests/test_control_racha.py": "4ad11d69df84e50c4a1b9808936472e3d0dfb5c51d588437aaae3b1faa468e60",
-        "tools/calibra_psi.py": "7a308996be21fab2c5ae3a8732cb6e40b1a53c7a373dce4e8062fcbde8bb187c",
-        "tools/control_racha.py": "5f046ac8d86968754be52baf1807daa201bc2232409717a4a854d5f586544250"
+        "tests/test_calibra_psi.py": "61a3ab282d14ff3b38ee80fd17341f2e418d349d12ed169b6b5ba3eb2fc4d2a1",
+        "tools/calibra_psi.py": "0741e05b984853d28d98a1e7891b2defee056a25fdc27771b00df3fc4c1b3e81",
+        "tools/control_racha.py": "581c6565cf0aa7b78e4631067642deeb604fd4925961546053f354b463b6ad71"
       },
       "claim_id": "SPEC-L419",
-      "evidence": "Cada cifra del texto insertado en SPEC.md:419 (commit a4c1dc9d) se re-midio. Sobre el corpus vivo cortado en 2026-10-16 12:39:59, calibra_psi.calibra() da: n=26952, rango 2026-10-01 00:00:00 -> 2026-10-16 12:39:00, falsos positivos 10:37:01-10:43:13 y 10:44:05-10:54:25, un no detectado (2026-10-11 22:02-22:12), 6 fuera del corpus, y `python3 -m tools.calibra_psi` (tools/calibra_psi.py:364-366) sale rc=1, CORTE INVALIDO. tools/control_racha.py: max_sostenido_sano da 286.0 s en las reglas 1/2/3/6 contra CORTE_S=300.0. Con exentas=[] da 642.0 s en 2026-10-16 10:54:25. FALSOS_POSITIVOS_CONOCIDOS[0] tiene la ventana ('2026-10-16 10:37','2026-10-16 10:55') y la ficha DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01, que existe en tasks/backlog/. Frase del coordinador: `python3 -m tools.calibra_psi --muestras <scratchpad>/hasta15` (symlinks a 2026-10-01..15.jsonl; 25977 muestras, 2026-10-01 00:00 -> 2026-10-15 23:59) da 'falsos positivos: 0', 'incidentes no detectados: 1' y CORTE INVALIDO con rc=1. La ficha tasks/backlog/DEBT-CALIBRA-PSI-CORTE-INVALIDO-INCIDENTE-11-OCT-22-02-NO-DETECTADO-01.md existe (la agrego a4c1dc9d). Controles negativos: el mismo comando con el dia 16 incluido da 'falsos positivos: 2', asi que el conteo de 0 puede salir distinto. Con un directorio vacio da COULD_NOT_RUN y rc=2, asi que un instrumento caido se distingue de un CORTE INVALIDO. Sin la excepcion, control_racha da 642 s, por encima del corte. `python3 -m pytest tests/test_calibra_psi.py tests/test_control_racha.py -q -p no:cacheprovider` -> 39 passed (corrido sobre el arbol anterior a a4c1dc9d; ese commit solo toca SPEC.md, la ficha nueva y .simplecode/backlog_baseline.json).",
-      "seal": "3785df1e3ace56e75629fbafb5d6518351b86d0941a37a5a90c4d7cd97aa0681",
+      "evidence": "El texto insertado en 0cfca4d3 es literal el propuesto (grep -cF de cada bloque nuevo en SPEC.md -> 1). Recalculado con el arbol actual, truncando el corpus de `carga(MUESTRAS)` a la hora que nombra cada frase: corte 2026-10-16 13:54:59 -> 27057 muestras, falsos_positivos 0, no_detectados 0, sin_muestras_en_ventana 1, falsos_positivos_conocidos 3, fuera_del_corpus 6 (calibra_psi.py:432-436 => rc 0, CALIBRADO con deuda); corte 12:39:59 -> 26952 muestras. Corpus completo ahora (27060, hasta 13:57) da lo mismo. Las 3 excursiones exentas son 10:37:01-10:43:13 (max 56.34), 10:44:05-10:54:25 (max 55.50) y 13:45:02-13:50:14 (max 68.46), en las 2 ventanas de FALSOS_POSITIVOS_CONOCIDOS (tools/calibra_psi.py:196-206: 10:37-10:55 y 13:44-13:52, ficha DEBT-COLAPSO-CONFINADO-...-01); control_racha.py:61 las importa de calibra_psi. `max_sostenido_sano(S,2)` -> (286.0, 2026-10-06 08:38:47); `bb sample` ultima muestra antes de la ventana: 2026-10-11 22:00:34. Commits: 2957bdac introduce sin_muestras_en_ventana y mueve la excepcion a calibra_psi; f9bfc2ac anade la ventana 13:44-13:52 (git show --stat). Ficha DEBT-CALIBRA-PSI-CORTE-INVALIDO-INCIDENTE-11-OCT-22-02-NO-DETECTADO-01: `status: open` en tasks/backlog. Las cifras historicas (12:39 rc=1, 2 FP + 1 no detectado; hasta 2026-10-15, 0 FP + 1 no detectado) las re-derive con el clasificador ANTERIOR (`git show 2957bdac^:tools/calibra_psi.py` importado aparte): 12:39:59 -> 26952, FP 2, no_det 1; 2026-10-15 23:59:59 -> 25977, FP 0, no_det 1. Controles negativos corridos: `calibra(S, conocidos=[])` -> FP 3 (CORTE INVALIDO) y `max_sostenido_sano(S,2,exentas=[])` -> (642.0, 2026-10-16 10:54:25); el clasificador viejo y el nuevo dan veredictos distintos sobre el mismo corpus. Las cifras de muestras van con su hora y se pueden re-derivar truncando el corpus hasta que RETAIN_DAYS=14 descarte octubre 1-2 (~2026-10-15+14 dias); a partir de ahi quedan como historicas, igual que las corridas anteriores del renglon.",
+      "seal": "417f8e08c903630ea04d56b17f61e98bdc3e41b31b21674c040d03e3d31b4126",
       "verdict": "PASS"
     },
     {
@@ -158,13 +156,12 @@
         "adopted/system-config/etc_default_grub.d_kdump-tools.cfg": "8544d0c7f8658e4b8f197816206d50f279b63f979119a9a8fa6a5688a5fd81dc",
         "adopted/system-config/etc_docker_daemon.json": "ec299b052af3e5e8ec874b241fc42cda4317ad5dcf71cde1d02d1a2b7216aa67",
         "adopted/system-config/usr_local_bin_journal-udp-forward.sh": "24418ee035cfbded65c24df44e1f56807f9278a93ca8f84fbf271ccbcc1bed68",
-        "adopted/system-config/usr_local_bin_nvrm-watch.sh": "ff4e43c4009274f1c939de971535f1d3266da70fd3e2f5403488a25edbf9422f",
-        "enable-privileged.sh": "3781bb35891f1e8a50bdb11c211806cf0261468905161c29985b986558ddba28",
+        "enable-privileged.sh": "4c5171e551af1f18198ddf00a7fdb4d55c0e492d659db1eff07b057de43dcbf0",
         "tasks/evidence/RELEASE-2.1.0/h1-items.json": "f83de679f314740d5cad19814f28d06a0234afd29f45642b69be8fa8a29145c5"
       },
       "claim_id": "SPEC-L422",
-      "evidence": "`./bin/bb drift` -> `revisados: 59   divergentes: 0   ausentes: 0   suspendidos: 1`, exit 0. Negative control (run earlier this session; bin/bb and adopted/ have no change since): a copy in scratchpad/neg14 with one line appended to adopted/system-config/usr_local_bin_nvrm-watch.sh -> `DIVERGE /usr/local/bin/nvrm-watch.sh`, `divergentes: 1`, exit 1. Counts: `git diff --diff-filter=A --name-only 1ec66b3^ 1ec66b3 -- adopted/ | wc -l` -> `12` (13 without the filter); `git ls-tree -r --name-only 1ec66b3^ -- adopted/ | wc -l` -> `18`; `git diff --diff-filter=A --name-only 8cea8bd^ 8cea8bd -- adopted/` lists exactly the 12 files the claim names. tasks/evidence/RELEASE-2.1.0/h1-items.json exists. The revert fix adds no adopted/ subject.",
-      "seal": "04d69e86b2a972c6701b685ab69479e11baf221790d5237fadb3fcf8ce62e221",
+      "evidence": "834a7063 cambia solo la cita: `desde \\`3ee077c6\\` neutro` pasa a `desde \\`5c612282\\` neutro` (git show 834a7063 -- SPEC.md); SPEC.md:422 ya no contiene 3ee077c6. Se sostiene: `git show 5c612282:adopted/system-config/home_lcasarin_.config_systemd_user_app.slice.d_memory-high.conf` -> `MemoryHigh=infinity` y `git show 5c612282^:...` -> `MemoryHigh=38G` (ese es el control negativo: el mismo comando da el valor contrario un commit antes). El desplegado ~/.config/systemd/user/app.slice.d/memory-high.conf dice MemoryHigh=infinity, y `systemctl --user show app.slice -p MemoryHigh` -> MemoryHigh=infinity. enable-privileged.sh:813-814 hace `run cp adopted/system-config/home_lcasarin_.config_systemd_user_app.slice.d_memory-high.conf`. `./bin/bb drift` -> `revisados: 61   divergentes: 0   ausentes: 0   suspendidos: 1`, rc=0, como dice la ultima corrida del renglon. El renglon conserva corridas con veredicto contrario (2026-10-03: divergentes 2, exit 1). `git diff --diff-filter=A --name-only 1ec66b3^ 1ec66b3 -- adopted/ | wc -l` -> 12. Los sujetos 60 (cc9a234e) y 61 (3141d9dd) ya los verifique en result9.",
+      "seal": "bbac932f13b0367e41e8d31e5aca5cba2a58a36d19ed1836604eb4837c6398e3",
       "verdict": "PASS"
     },
     {
@@ -191,7 +188,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-16T18:42:52Z",
-  "tree_fingerprint": "4818ac7c3f5e7b8f372a833287d2e6506557ca1de3d54777932e7e4b34184941",
+  "timestamp": "2026-10-16T20:00:07Z",
+  "tree_fingerprint": "5d41ad2378a5bd18b769ae708fd705d2fd2ec26dd5f0dc95f63951991ffb0e2d",
   "violations": []
 }
