@@ -697,6 +697,120 @@ def origen_al_declarar_colapso(sostenido: int) -> None:
         log(f"[bb-usable] origen del COLAPSO no registrado: {type(exc).__name__}: {exc}")
 
 
+# ----------------------------------------------------------------------------------------------------------
+# ATASCO CONFINADO A UNA SLICE -- anadido el 2026-10-16 (voto de Luis; DEBT-COLAPSO-CONFINADO-A-APP-SLICE-
+# REINICIA-LA-MAQUINA-ENTERA-01). El reinicio de las 10:54 siguio a 17 minutos de PSI full 45-57 que las muestras
+# de bb miden CONFINADOS a app.slice: docker.slice (el motor) y system.slice en 0.0 en todas, MemAvailable 20-24 GB.
+# El COLAPSO de arriba mira el PSI GLOBAL y no distingue. Interruptor `atasco_confinado` (tools/interruptores.py):
+#   off      -> nada de lo de abajo corre: el latido es el de siempre.
+#   observar -> clasifica y registra que habria hecho y captura memory.stat/swap/IO; SIGUE reteniendo la caricia.
+#   actuar   -> acaricia el watchdog mientras el atasco sea confinado y lleve menos de CONFINADO_MAX_S declarado.
+# Sin una accion de alivio que funcione, `actuar` solo RETRASA el reinicio (el ESCALON mato 3 procesos de 0.4-0.5 GiB
+# el 16-oct sin bajar el PSI). Cualquier fallo de este codigo cae al comportamiento de siempre: retener.
+ATASCO_OTRAS_MAX = 1.0
+# ponytail: tope duro sin medir; revisarlo con el primer atasco confinado visto en `actuar` -- DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01
+CONFINADO_MAX_S = 1200.0
+CONFINADO_MAX_SONDAS = max(1, round(CONFINADO_MAX_S / PROBE_INTERVAL))
+CONFINADO_DIAG_CADA = 10  # sondas entre capturas de diagnostico (5 min)
+INTERRUPTOR_CONFINADO = "atasco_confinado"
+MODOS_CONFINADO = ("off", "observar", "actuar")
+
+
+def _full_avg10_de(cg: Path) -> float | None:
+    try:
+        for linea in (cg / "memory.pressure").read_text(encoding="ascii").splitlines():
+            if linea.startswith("full "):
+                return float(dict(x.split("=") for x in linea.split()[1:])["avg10"])
+    except (OSError, ValueError, KeyError):
+        return None
+    return None
+
+
+def presiones_slices() -> dict[str, float | None]:
+    """`memory.pressure full avg10` de app.slice, docker.slice y system.slice. None = no se pudo leer."""
+    apps = sorted(CGROUP_ROOT.glob("user.slice/user-*.slice/user@*.service/app.slice"))
+    return {"app": _full_avg10_de(apps[0]) if apps else None,
+            "docker": _full_avg10_de(CGROUP_ROOT / "docker.slice"),
+            "system": _full_avg10_de(CGROUP_ROOT / "system.slice")}
+
+
+def clasifica_atasco(p: dict[str, float | None]) -> str:
+    """Pura. `confinado`: app.slice sobre el corte y docker/system sin presion; `general`: cualquier otra
+    combinacion con datos; `sin_dato`: falta alguna lectura (no se puede afirmar que este confinado)."""
+    app, otras = p.get("app"), [p.get("docker"), p.get("system")]
+    if app is None or any(o is None for o in otras):
+        return "sin_dato"
+    if app >= PSI_ACT_FULL_AVG10 and all(o is not None and o <= ATASCO_OTRAS_MAX for o in otras):
+        return "confinado"
+    return "general"
+
+
+def modo_confinado() -> str:
+    """Modo del interruptor, leido en cada vuelta. Ilegible o desconocido vale `off`."""
+    try:
+        m = json.loads((_datos() / "interruptores.json").read_text(encoding="utf-8"))["modos"][INTERRUPTOR_CONFINADO]
+    except (OSError, ValueError, KeyError, TypeError):
+        return "off"
+    return m if m in MODOS_CONFINADO else "off"
+
+
+def diagnostico_atasco() -> dict[str, Any]:
+    """Lo que faltaba el 16-oct para separar contencion de reclamo: memory.stat de app.slice, swap usado y la
+    presion de IO y CPU del host. Cada campo que no se pueda leer queda None."""
+    out: dict[str, Any] = {}
+    apps = sorted(CGROUP_ROOT.glob("user.slice/user-*.slice/user@*.service/app.slice"))
+    try:
+        stat = dict(x.split() for x in (apps[0] / "memory.stat").read_text(encoding="ascii").splitlines())
+        for k in ("anon", "file", "shmem", "pgscan", "pgsteal", "workingset_refault_file", "workingset_refault_anon"):
+            out[k] = int(stat[k]) if k in stat else None
+    except (OSError, ValueError, IndexError):
+        out["memory_stat"] = None
+    try:
+        mem = dict(x.replace(":", "").split()[:2] for x in (PROC_ROOT / "meminfo").read_text(encoding="ascii").splitlines())
+        out["swap_usado_kb"] = int(mem["SwapTotal"]) - int(mem["SwapFree"])
+    except (OSError, ValueError, KeyError):
+        out["swap_usado_kb"] = None
+    for nombre in ("io", "cpu"):
+        try:
+            linea = next(x for x in (PROC_ROOT / "pressure" / nombre).read_text(encoding="ascii").splitlines()
+                         if x.startswith("some "))
+            out[f"{nombre}_some_avg10"] = float(dict(x.split("=") for x in linea.split()[1:])["avg10"])
+        except (OSError, ValueError, StopIteration, KeyError):
+            out[f"{nombre}_some_avg10"] = None
+    return out
+
+
+def decide_confinado(modo: str, clase: str, confinadas: int) -> str:
+    """Pura. `acaricia` solo en `actuar` con atasco confinado dentro del tope duro; `habria_acariciado` es lo
+    mismo en `observar` (no acaricia); todo lo demas `retiene`, que es el comportamiento de siempre."""
+    if modo == "off" or clase != "confinado" or confinadas > CONFINADO_MAX_SONDAS:
+        return "retiene"
+    return "acaricia" if modo == "actuar" else "habria_acariciado"
+
+
+def paso_confinado(confinadas: int) -> tuple[str, int]:
+    """Un paso del criterio con el COLAPSO ya declarado. Devuelve (accion, nuevo contador). Nunca lanza: si algo
+    falla, `retiene`."""
+    try:
+        modo = modo_confinado()
+        if modo == "off":
+            return "retiene", 0
+        presiones = presiones_slices()
+        clase = clasifica_atasco(presiones)
+        confinadas = confinadas + 1 if clase == "confinado" else 0
+        accion = decide_confinado(modo, clase, confinadas)
+        fila: dict[str, Any] = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "modo": modo, "clase": clase,
+                                "presiones": presiones, "sondas_confinadas": confinadas,
+                                "max_sondas": CONFINADO_MAX_SONDAS, "accion": accion}
+        if clase == "confinado" and (confinadas - 1) % CONFINADO_DIAG_CADA == 0:
+            fila["diagnostico"] = diagnostico_atasco()
+        _anexar(_datos() / "interruptores" / f"{INTERRUPTOR_CONFINADO}.jsonl", fila)
+        return accion, confinadas
+    except Exception as exc:  # fallo cerrado: el latido de siempre
+        log(f"[bb-usable] ATASCO CONFINADO fallo ({type(exc).__name__}: {exc}): se retiene como siempre")
+        return "retiene", 0
+
+
 def _paso_escalon(psi: float | None, estado: EstadoEscalon, ahora: float,
                   salida: list[EstadoEscalon]) -> None:
     slices = leer_slices_app()
@@ -759,6 +873,7 @@ def main() -> int:
     sostenido = 0  # sondas consecutivas con PSI por encima del umbral de accion
     bajas = 0      # sondas consecutivas por DEBAJO, para no cortar la racha con una
     escalon = EstadoEscalon()  # independiente de la racha: no toca el latido
+    confinadas = 0  # sondas consecutivas con el atasco confinado a una slice (solo cuenta con el interruptor encendido)
 
     while True:
         time.sleep(PROBE_INTERVAL)
@@ -799,6 +914,17 @@ def main() -> int:
             sostenido += 1
             bajas = 0
             if sostenido >= PSI_ACT_SONDAS:
+                accion, confinadas = paso_confinado(confinadas)
+                if accion == "acaricia":
+                    log(f"[bb-usable] ATASCO CONFINADO a app.slice: PSI memory full avg10={psi:.1f} sostenido "
+                        f"{sostenido * PROBE_INTERVAL:.0f}s, docker.slice y system.slice sin presion -- se acaricia "
+                        f"el watchdog ({confinadas}/{CONFINADO_MAX_SONDAS} sondas del tope duro)")
+                    origen_al_declarar_colapso(sostenido)
+                    notify("WATCHDOG=1")
+                    continue
+                if accion == "habria_acariciado":
+                    log(f"[bb-usable] ATASCO CONFINADO a app.slice (observar): habria acariciado el watchdog "
+                        f"({confinadas}/{CONFINADO_MAX_SONDAS}); NO se acaricia")
                 # Esto es lo que no pasaba. No se acaricia: systemd deja de
                 # recibir la caricia, marca la unidad como fallida y
                 # FailureAction=reboot-immediate cobra dentro de WatchdogSec.
@@ -823,6 +949,7 @@ def main() -> int:
                 log_recovery(psi, bajas, sostenido)
                 sostenido = 0
                 bajas = 0
+                confinadas = 0
             elif sostenido:
                 log(f"[bb-usable] PSI bajo a {psi:.1f}, pero UNA sonda no "
                     f"absuelve: la racha sigue en {sostenido}/{PSI_ACT_SONDAS} "
