@@ -50,7 +50,7 @@
    "exit_code": 0,
    "nombre": "config",
    "stderr": "",
-   "stdout": "DPkg::Pre-Install-Pkgs \"\";\nDPkg::Pre-Install-Pkgs:: \"/usr/sbin/dpkg-preconfigure --apt || true\";\n"
+   "stdout": "DPkg::Pre-Install-Pkgs \"\";\nDPkg::Pre-Install-Pkgs:: \"/usr/local/sbin/bb-apt-guardia\";\nDPkg::Pre-Install-Pkgs:: \"/usr/sbin/dpkg-preconfigure --apt || true\";\n"
   },
   {
    "argv": [
@@ -63,7 +63,7 @@
    "exit_code": 0,
    "nombre": "autoremove_simulado",
    "stderr": "",
-   "stdout": "NOTE: This is only a simulation!\n      apt-get needs root privileges for real execution.\n      Keep also in mind that locking is deactivated,\n      so don't depend on the relevance to the real current situation!\nReading package lists...\nBuilding dependency tree...\nReading state information...\n0 upgraded, 0 newly installed, 0 to remove and 44 not upgraded.\n"
+   "stdout": "NOTE: This is only a simulation!\n      apt-get needs root privileges for real execution.\n      Keep also in mind that locking is deactivated,\n      so don't depend on the relevance to the real current situation!\nReading package lists...\nBuilding dependency tree...\nReading state information...\n0 upgraded, 0 newly installed, 0 to remove and 9 not upgraded.\n"
   },
   {
    "argv": [
@@ -76,8 +76,8 @@
    "dpkg_log": "",
    "exit_code": 100,
    "nombre": "remove_critico",
-   "stderr": "bb-apt-guardia: esta transaccion quita paquetes criticos de la plataforma: nvidia-system-station\nbb-apt-guardia: no se aplica nada. Para permitir ESTA transaccion: sudo apt -o BB::Apt-Guardia::Permitir=1 <la misma orden>\nE: Sub-process /home/lcasarin/projects/blackbox/.claude/worktrees/agent-a3f80fc7c79100229/adopted/pendiente-de-despliegue/usr_local_sbin_bb-apt-guardia returned an error code (1)\nE: Failure running script /home/lcasarin/projects/blackbox/.claude/worktrees/agent-a3f80fc7c79100229/adopted/pendiente-de-despliegue/usr_local_sbin_bb-apt-guardia\n",
-   "stdout": "Reading package lists...\nBuilding dependency tree...\nThe following packages will be REMOVED:\n  nvidia-system-station\n0 upgraded, 0 newly installed, 1 to remove and 44 not upgraded.\nAfter this operation, 9216 B disk space will be freed.\n"
+   "stderr": "bb-apt-guardia: esta transaccion quita paquetes criticos de la plataforma: nvidia-system-station\nbb-apt-guardia: no se aplica nada. Para permitir ESTA transaccion: sudo apt -o BB::Apt-Guardia::Permitir=1 <la misma orden>\nE: Sub-process /usr/local/sbin/bb-apt-guardia returned an error code (1)\nE: Failure running script /usr/local/sbin/bb-apt-guardia\n",
+   "stdout": "Reading package lists...\nBuilding dependency tree...\nThe following packages will be REMOVED:\n  nvidia-system-station\n0 upgraded, 0 newly installed, 1 to remove and 9 not upgraded.\nAfter this operation, 9216 B disk space will be freed.\n"
   },
   {
    "argv": [
@@ -87,18 +87,18 @@
     "remove",
     "tree"
    ],
-   "dpkg_log": "--assert-multi-arch\n--set-selections\n--assert-multi-arch\n--assert-protected-field\n--status-fd 72 --no-triggers --force-depends --abort-after=1 --remove tree:arm64\n--status-fd 72 --configure --pending\n",
+   "dpkg_log": "--assert-multi-arch\n--set-selections\n--assert-multi-arch\n--assert-protected-field\n--status-fd 71 --no-triggers --force-depends --abort-after=1 --remove tree:arm64\n--status-fd 71 --configure --pending\n",
    "exit_code": 0,
    "nombre": "remove_inocuo",
    "stderr": "W: APT had planned for dpkg to do more than it reported back (0 vs 3).\n   Affected packages: tree:arm64\n",
-   "stdout": "Reading package lists...\nBuilding dependency tree...\nThe following packages will be REMOVED:\n  tree\n0 upgraded, 0 newly installed, 1 to remove and 44 not upgraded.\nAfter this operation, 160 kB disk space will be freed.\n"
+   "stdout": "Reading package lists...\nBuilding dependency tree...\nThe following packages will be REMOVED:\n  tree\n0 upgraded, 0 newly installed, 1 to remove and 9 not upgraded.\nAfter this operation, 160 kB disk space will be freed.\n"
   }
  ],
- "conf": "/home/lcasarin/projects/blackbox/.claude/worktrees/agent-a3f80fc7c79100229/adopted/pendiente-de-despliegue/etc_apt_apt.conf.d_00-bb-apt-guardia",
+ "conf": "/etc/apt/apt.conf.d/00-bb-apt-guardia",
  "conf_sha256": "3269efff042ce8ee68d49969fa107bb440fb7ec8aab900b268a6d6994e20ade6",
  "critico": "nvidia-system-station",
- "hook": "/home/lcasarin/projects/blackbox/.claude/worktrees/agent-a3f80fc7c79100229/adopted/pendiente-de-despliegue/usr_local_sbin_bb-apt-guardia",
+ "hook": "/usr/local/sbin/bb-apt-guardia",
  "hook_sha256": "a7396902b2639f8eefd7bdd94090e0c3bed58e82c0e11c28ced506cc1416adb5",
  "inocuo": "tree",
- "instalado": false
+ "instalado": true
 }
