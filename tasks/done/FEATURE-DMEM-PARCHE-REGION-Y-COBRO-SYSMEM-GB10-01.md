@@ -64,3 +64,6 @@ tests/test_dmem_parche_contrato.py (estatico: cobro en sysmemConstruct, liberaci
 
 ## Verification Evidence
 Las tres rutas de evidencia del frontmatter: `tasks/evidence/FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01.fail.txt` (el close_check fallaba antes), `.pass.txt` (pasa despues) y `.e2e.txt` (sujeto vivo: dmem.capacity, `bb gpumem` contra `nvidia-smi`). Medicion literal en `tasks/evidence/FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01/medicion.txt`.
+
+## Correccion 2026-10-16: "pinned y managed no se cobran" ya esta medido
+Lo escrito arriba ("ABIERTO: pinned y managed no se cobran") habla solo de dmem.current. Medido en las dos columnas (`FEATURE-DMEM-CLASES-DE-MEMORIA-POR-CGROUP-01`): managed y pinned se cobran a memory.current y memory.max las frena (OOM del cgroup, exit 137); device se cobra a dmem y lo frena dmem.max. No queda un hueco de contencion por clase; quedan los limites declarados en esa ficha.

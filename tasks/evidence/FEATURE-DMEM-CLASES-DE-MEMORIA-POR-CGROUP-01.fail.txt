@@ -1,0 +1,5 @@
+Control negativo: la misma captura con la fila sobre-el-tope de managed alterada a exit=0 (managed 'sobrevive' a memory.max). El verificador debe decir fail.
+
+$ python3 -m tools.verify_clases_memoria tasks/evidence/FEATURE-DMEM-CLASES-DE-MEMORIA-POR-CGROUP-01/raw-control-negativo.json
+rc=1
+{"status": "fail", "findings": ["sobre el tope, managed: exit=0, se esperaba muerte por OOM"]}
