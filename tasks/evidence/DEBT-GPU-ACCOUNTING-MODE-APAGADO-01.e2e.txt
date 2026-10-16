@@ -1,0 +1,10 @@
+e2e sobre el sujeto vivo: la unidad bb-gpu-accounting.service (enabled) encendio el modo en el arranque 18a2ba7d-8be7-425e-bc78-f9ab52575248; antes del reinicio estaba apagado por defecto (Disabled) y la ficha dejaba el encendido a mano.
+
+$ systemctl is-enabled bb-gpu-accounting.service
+enabled
+
+$ journalctl -b 0 -u bb-gpu-accounting.service
+2026-10-16T10:56:54-06:00 aitopatom-41f1 systemd[1]: Starting bb-gpu-accounting.service - Enciende el accounting mode de la GPU en cada arranque (bb scan nombra los proce
+2026-10-16T10:56:54-06:00 aitopatom-41f1 nvidia-smi[3004]: Enabled Accounting Mode for GPU 0000000F:01:00.0.
+2026-10-16T10:56:54-06:00 aitopatom-41f1 nvidia-smi[3004]: All done.
+2026-10-16T10:56:54-06:00 aitopatom-41f1 systemd[1]: Finished bb-gpu-accounting.service - Enciende el accounting mode de la GPU en cada arranque (bb scan nombra los proce
