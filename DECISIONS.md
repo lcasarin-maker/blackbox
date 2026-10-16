@@ -384,3 +384,10 @@ Luis votó conservar `dgx-spark-fieldiag` (795 MB, el diagnóstico que el soport
 - **Lo votado a las ~11:30** (tercer frente del voto sobre el colapso de las 10:54) se probo y se suspende: a las 13:45 un atasco de 5 min con `app.slice` pegado a 38.0 GiB y ~600 000 eventos `high` por minuto llevo a `bb-usable` a la racha 17/10, a ~30 s de reiniciar la maquina. `memory.high` queda en `infinity`; el techo duro de 42G sigue.
 - **Por que se revierte sin nueva boleta:** es la misma maquina en riesgo de reinicio, la medicion es del propio dia, y la reversion es reversible y de usuario. Reponerlo exige una medicion que lo justifique. **Descarta:** dejarlo "una semana mas" para observar (la observacion costo un casi-reinicio).
 - **Caduca la suspension:** 2026-10-23.
+
+## 2026-10-16 — `sync_de_flota_escalonado`: un sync de flota no lanza a todos los proyectos a la vez (voto de Luis)
+- **Decision (voto de Luis):** regla durable `sync_de_flota_escalonado`. Un sync de flota (orden del kit de simplecode u otro) se escalona: a lo mas un proyecto empuja con `pre-push` (suite completa) a la vez. En este repo lo hace cumplir el portero (`tools/portero.py`, `bb-portero.service` en `actuar`, cola FIFO, una suite por turno; `tests/test_portero.py::test_turno_ocupado_congela_al_nuevo_y_al_liberarse_descongela_al_mas_antiguo`) con `memavail` sobre `bb-portero-suite-*.scope`.
+- **Por que:** la orden de sync del kit 9.9.0 provoco al menos seis `pre-push` simultaneos en el colapso 1 del 11-oct (`DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01`).
+- **Descarta:** dejar el sync simultaneo (la estampida repite el atasco que ya reinicio la maquina); confiar solo en la regla provisional escrita por los workers (sin mecanismo, depende de que cada sesion la lea).
+- **Costo aceptado:** un sync de flota tarda mas en completarse.
+- **Limite declarado:** el portero ordena las suites de ESTA maquina. Que el comando de sync del kit escalone el reparto vive en simplecode (otro repo) y queda en `DEBT-KIT-SYNC-DE-FLOTA-NO-ESCALONA-LOS-PROYECTOS-01`.
