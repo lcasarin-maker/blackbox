@@ -2088,11 +2088,14 @@ def _reservar(mib):
 
 def test_el_que_mas_crece_lleva_su_origen_en_la_muestra(datos):
     correr(["sample"], datos)
-    hijo = _reservar(300)
+    # 4 GiB de direcciones sin tocar (solo VmSize): el hijo tiene que ser el que mas crece aunque, bajo carga de otros proyectos,
+    # algun otro proceso de la maquina reserve y muera entre las dos muestras (el pre-push 60 fallo aqui con 300 MiB: la cadena
+    # del primero de `pidio` salio vacia).
+    hijo = _reservar(4096)
     try:
         correr(["sample"], datos, {"BLACKBOX_ORIGEN_CRECE_KB": "262144"})
         d = muestras(datos)[-1]
-        assert d["pidio"], "con 300 MiB reservados pidio no puede salir vacio"
+        assert d["pidio"], "con 4 GiB reservados pidio no puede salir vacio"
         o = d["pidio_origen"]
         assert o is not None and o["motivo"] == "crecimiento_pidio"
         assert o["procesos"][0]["pid"] == d["pidio"][0]["pid"]
