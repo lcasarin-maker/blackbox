@@ -1,0 +1,48 @@
+Evidencia del colapso 2026-10-16 (arranque 934fa20f, hora local -06:00). Fuentes: samples/2026-10-16.jsonl (bb sample), journal del arranque anterior, atom_gpu_telemetry.jsonl. Hostname redactado.
+
+== slices por muestra: app.slice vs docker.slice (motor) vs system.slice
+hora  app(cur GiB / tope 42.0)  app full_avg10  app max-events  app oom_kill | docker full_avg10 | system full_avg10 | PSI host full_avg10
+10:30:00   37.0 GiB  0.0  5166044  195 | 0.0 | 0.0 | {'mem_some': 0.0, 'mem_full': 0.0, 'io_some': 4.43, 'cpu_some': 14.88}
+10:31:00   37.1 GiB  0.02  5166044  195 | 0.0 | 0.0 | {'mem_some': 0.05, 'mem_full': 0.03, 'io_some': 5.93, 'cpu_some': 9.79}
+10:32:00   37.6 GiB  0.36  5166044  195 | 0.0 | 0.0 | {'mem_some': 0.48, 'mem_full': 0.43, 'io_some': 6.86, 'cpu_some': 1.77}
+10:33:00   38.1 GiB  0.0  5166044  195 | 0.0 | 0.0 | {'mem_some': 0.0, 'mem_full': 0.0, 'io_some': 4.37, 'cpu_some': 2.26}
+10:34:01   38.2 GiB  0.0  5166044  195 | 0.0 | 0.0 | {'mem_some': 0.0, 'mem_full': 0.0, 'io_some': 6.55, 'cpu_some': 2.04}
+10:35:08   38.2 GiB  0.05  5166044  195 | 0.0 | 0.0 | {'mem_some': 0.06, 'mem_full': 0.06, 'io_some': 5.55, 'cpu_some': 0.56}
+10:36:00   38.2 GiB  0.37  5166044  195 | 0.0 | 0.0 | {'mem_some': 0.25, 'mem_full': 0.25, 'io_some': 8.27, 'cpu_some': 1.7}
+10:37:01   38.3 GiB  45.09  5166044  195 | 0.0 | 0.0 | {'mem_some': 60.81, 'mem_full': 46.26, 'io_some': 37.05, 'cpu_some': 61.34}
+10:38:07   38.0 GiB  56.0  5166044  195 | 0.0 | 0.0 | {'mem_some': 69.65, 'mem_full': 51.56, 'io_some': 37.09, 'cpu_some': 71.27}
+10:39:01   38.6 GiB  45.65  5166044  195 | 0.0 | 0.0 | {'mem_some': 49.79, 'mem_full': 39.52, 'io_some': 36.8, 'cpu_some': 48.79}
+10:43:00   38.3 GiB  35.45  5166044  195 | 0.0 | 0.0 | {'mem_some': 60.54, 'mem_full': 42.22, 'io_some': 33.16, 'cpu_some': 67.75}
+10:44:05   38.5 GiB  29.89  5166044  195 | 0.0 | 0.0 | {'mem_some': 33.03, 'mem_full': 25.8, 'io_some': 23.21, 'cpu_some': 31.42}
+10:46:03   38.5 GiB  46.18  5166044  195 | 0.0 | 0.0 | {'mem_some': 57.52, 'mem_full': 45.59, 'io_some': 38.58, 'cpu_some': 64.67}
+10:48:04   38.3 GiB  55.28  5166044  195 | 0.0 | 0.0 | {'mem_some': 70.85, 'mem_full': 51.19, 'io_some': 38.24, 'cpu_some': 76.44}
+10:49:20   38.3 GiB  53.41  5166044  195 | 0.0 | 0.0 | {'mem_some': 63.82, 'mem_full': 47.68, 'io_some': 39.74, 'cpu_some': 71.72}
+10:51:11   38.6 GiB  44.96  5166044  195 | 0.0 | 0.0 | {'mem_some': 82.63, 'mem_full': 55.5, 'io_some': 43.22, 'cpu_some': 87.84}
+10:54:04   38.8 GiB  39.22  5166044  195 | 0.0 | 0.0 | {'mem_some': 51.42, 'mem_full': 38.92, 'io_some': 42.71, 'cpu_some': 56.53}
+
+== journal (hostname redactado)
+2026-10-16T10:35:11-06:00 <host> systemd[2914]: Started liberation_job.scope - /usr/bin/timeout -k 60s 45m bash -lc "{ echo \"=== auditoria grill-me ===\"; .venv/bin/python3 tools/local_llm_grill_me.py && cp docs/GRILL_ME_AUDIT.md docs/agent_findings/2026-10-16_grill_me_auditoria.md; } > logs/grill_me_auditoria.txt 2>&1;
+2026-10-16T10:35:21-06:00 <host> systemd[2914]: Started run-rc82701f7c072442894798ab89fc74705.scope - /opt/miniforge3/bin/python .simplecode/run.py simplecode.verification.gate_runner --root . --name pre-push --hook pre-push -- /home/lcasarin/projects/office2office/.simplecode/bin/prek run --config .simplecode/prek-sched
+2026-10-16T10:37:55-06:00 <host> bb-usable[2124742]: [bb-usable] ESCALON: PSI 56.5 sostenido 60s y /sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice al 91.1% de su tope: el mayor RSS no protegido -- pid=2194831 comm=python3 rss=0.5 GiB, grupo 1944212: 2 procesos, todos en scopes Claude y ninguno prote
+2026-10-16T10:41:25-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=56.8 >= 10 sostenido 300s >= 300s (sonda 32 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:41:56-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=53.8 >= 10 sostenido 330s >= 300s (sonda 34 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:42:26-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=56.4 >= 10 sostenido 360s >= 300s (sonda 31 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:42:56-06:00 <host> bb-usable[2124742]: [bb-usable] ESCALON: PSI 57.4 sostenido 361s y /sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice al 91.9% de su tope: el mayor RSS no protegido -- pid=2168817 comm=python3 rss=0.4 GiB, grupo 1944237: 2 procesos, todos en scopes Claude y ninguno prot
+2026-10-16T10:42:56-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=57.4 >= 10 sostenido 390s >= 300s (sonda 29 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:43:38-06:00 <host> systemd[2914]: Started run-r5ee6e0f2a54b45e4b3c99b53b34175ce.scope - /usr/bin/nice -n 10 /home/lcasarin/data/datasets/_consolidacion/jueces-viejos-b-2026-10-16/corre_pesado.sh.
+2026-10-16T10:47:56-06:00 <host> bb-usable[2124742]: [bb-usable] ESCALON: PSI 57.4 sostenido 211s y /sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice al 91.7% de su tope: el mayor RSS no protegido -- pid=1915333 comm=python3 rss=0.4 GiB, grupo 1870514: 2 procesos, todos en scopes Claude y ninguno prot
+2026-10-16T10:48:57-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=50.5 >= 10 sostenido 300s >= 300s (sonda 35 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:49:27-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=44.4 >= 10 sostenido 330s >= 300s (sonda 23 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:49:57-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=54.3 >= 10 sostenido 360s >= 300s (sonda 32 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:50:27-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=54.9 >= 10 sostenido 390s >= 300s (sonda 31 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:50:57-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=56.3 >= 10 sostenido 420s >= 300s (sonda 32 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:51:27-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=44.6 >= 10 sostenido 450s >= 300s (sonda 27 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:51:57-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=52.0 >= 10 sostenido 480s >= 300s (sonda 31 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:52:27-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=53.8 >= 10 sostenido 510s >= 300s (sonda 32 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:52:57-06:00 <host> bb-usable[2124742]: [bb-usable] ESCALON: PSI 53.9 sostenido 511s y /sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice al 91.8% de su tope: el mayor RSS no protegido -- pid=2081781 comm=soffice.bin rss=0.4 GiB, grupo 2077755: 1 procesos, todos en scopes Claude y ninguno 
+2026-10-16T10:52:57-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=53.9 >= 10 sostenido 540s >= 300s (sonda 30 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:53:28-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=54.2 >= 10 sostenido 570s >= 300s (sonda 34 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:53:58-06:00 <host> bb-usable[2124742]: [bb-usable] COLAPSO: PSI memory full avg10=39.6 >= 10 sostenido 600s >= 300s (sonda 29 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-16T10:54:27-06:00 <host> systemd[1]: bb-usable.service: Watchdog timeout (limit 6min)!
+
+== tope de app.slice hoy: memory.max=45097156608 B (42.0 GiB)
