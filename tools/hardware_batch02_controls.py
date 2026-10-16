@@ -144,10 +144,16 @@ def _identity(data: dict[str, Any], path: Path) -> tuple[dict[str, str] | None, 
         return None, error
     assert dmi is not None and kernel is not None
     fields: dict[str, str] = {}
+    block = ""
     for line in dmi["stdout"].splitlines():
+        if line and not line[0].isspace() and ":" not in line:
+            block = line.strip()  # dmidecode block title, e.g. "BIOS Information"
         key, separator, value = line.partition(":")
-        if separator and key.strip() in {"Manufacturer", "Product Name", "BIOS Version"}:
-            fields[key.strip()] = value.strip()
+        key = key.strip()
+        if separator and key in {"Manufacturer", "Product Name", "BIOS Version"}:
+            fields[key] = value.strip()
+        elif separator and key == "Version" and block == "BIOS Information":
+            fields.setdefault("BIOS Version", value.strip())  # real dmidecode names it "Version" inside the BIOS block
     if not all(fields.get(key) for key in ("Manufacturer", "Product Name", "BIOS Version")):
         return None, _result("unknown", "manufacturer/product/BIOS tuple incomplete", path)
     release = kernel["stdout"].strip()
