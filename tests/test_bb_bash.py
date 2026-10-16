@@ -2175,6 +2175,14 @@ def test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FA
     assert "FALTA" in _fila(salida, "canario del motor")  # el artefacto ni existe
 
 
+def test_status_tope_de_gpu_aparece_solo_si_el_interruptor_no_esta_off(datos):
+    _modos(datos, dmem_tope="off")
+    assert "tope de memoria de GPU" not in correr(["status"], datos).stdout  # control negativo: en off no hay fila
+    _modos(datos, dmem_tope="observar")
+    fila = _fila(correr(["status"], datos), "tope de memoria de GPU")
+    assert "observar" in fila and ("ARMADO" in fila or "FALTA" in fila)
+
+
 def test_status_monitor_de_distros_fresco_ARMADO_y_sin_estado_FALTA(datos):
     _modos(datos, monitor_distros="observar")
     assert "FALTA" in _fila(correr(["status"], datos), "monitor de distros alternas")  # sin estado no hay pasada

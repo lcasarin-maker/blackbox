@@ -55,6 +55,9 @@ def arbol(tmp_path: Path, motor: int | str = 30 * dt.GIB, user: int | str = 5 * 
     for cg, v in ((raiz / "docker.slice" / f"docker-{id_}.scope", motor), (raiz / "user.slice", user)):
         (cg / "dmem.current").write_text(f"{REGION} {v}\n", encoding="utf-8")
         (cg / "dmem.max").write_text(f"{REGION} max\n", encoding="utf-8")
+    (raiz / "docker.slice" / f"docker-{id_}.scope" / "memory.max").write_text("80530636800\n", encoding="utf-8")
+    (raiz / "user.slice" / f"user-{os.getuid()}.slice").mkdir()
+    (raiz / "user.slice" / f"user-{os.getuid()}.slice" / "memory.max").write_text("max\n", encoding="utf-8")
     proc = tmp_path / "proc"
     (proc / "4242").mkdir(parents=True)
     (proc / "4242" / "cgroup").write_text(f"0::/docker.slice/docker-{id_}.scope\n", encoding="utf-8")
@@ -63,6 +66,24 @@ def arbol(tmp_path: Path, motor: int | str = 30 * dt.GIB, user: int | str = 5 * 
     (proc / "1" / "comm").write_text("systemd\n", encoding="utf-8")
     (proc / "1" / "cgroup").write_text("0::/init.scope\n", encoding="utf-8")
     return raiz, proc
+
+
+def test_avisos_solo_cuando_managed_y_pinned_quedan_sin_tope():
+    assert dt.avisos({"motor": "80530636800", "user": "51539607552"}) == []
+    a = dt.avisos({"motor": "max", "user": None})
+    assert len(a) == 2 and "motor: memory.max=max" in a[0] and "user: memory.max=ilegible" in a[1]
+
+
+def test_estado_dice_si_el_tope_esta_puesto(tmp_path, capsys):
+    raiz, proc = arbol(tmp_path)
+    assert dt.principal(["--estado"], lambda a: (0, ""), raiz, proc) == 1  # dmem.max = max: sin tope
+    assert capsys.readouterr().out.strip() == "motor=sin tope user=sin tope"
+    (raiz / "docker.slice" / f"docker-{ID}.scope" / "dmem.max").write_text(f"{REGION} {40 * dt.GIB}\n", encoding="utf-8")
+    (raiz / "user.slice" / "dmem.max").write_text(f"{REGION} {8 * dt.GIB}\n", encoding="utf-8")
+    assert dt.principal(["--estado"], lambda a: (0, ""), raiz, proc) == 0
+    assert capsys.readouterr().out.strip() == "motor=40GiB user=8GiB"
+    (raiz / "dmem.capacity").write_text("", encoding="utf-8")  # sin region no se puede leer ningun tope
+    assert dt.topes_puestos(raiz, proc) == {"motor": None, "user": None}
 
 
 def test_cgroup_motor_y_sus_negativos(tmp_path):
@@ -85,12 +106,15 @@ def test_cgroup_motor_y_sus_negativos(tmp_path):
 def test_mide_lee_los_dos_consumos_y_se_calla_sin_region(tmp_path):
     raiz, proc = arbol(tmp_path)
     m = dt.mide(raiz, proc)
-    assert m == {"capacidad": CAPACIDAD, "consumo": {"motor": 30 * dt.GIB, "user": 5 * dt.GIB}}
+    assert m["capacidad"] == CAPACIDAD and m["consumo"] == {"motor": 30 * dt.GIB, "user": 5 * dt.GIB}
+    assert m["memory_max"] == {"motor": "80530636800", "user": "max"}
     (raiz / "dmem.capacity").write_text("", encoding="utf-8")
-    assert dt.mide(raiz, proc) == {"capacidad": None, "consumo": {"motor": None, "user": None}}
+    sin_region = dt.mide(raiz, proc)
+    assert sin_region["capacidad"] is None and sin_region["consumo"] == {"motor": None, "user": None}
     raiz2, proc2 = arbol(tmp_path / "b")
     (proc2 / "4242" / "comm").write_text("otro\n", encoding="utf-8")  # sin proceso del motor
-    assert dt.mide(raiz2, proc2)["consumo"] == {"motor": None, "user": 5 * dt.GIB}
+    sin_motor = dt.mide(raiz2, proc2)
+    assert sin_motor["consumo"] == {"motor": None, "user": 5 * dt.GIB} and sin_motor["memory_max"]["motor"] is None
 
 
 # ---- interruptor ----
@@ -128,6 +152,7 @@ def test_observar_registra_y_no_escribe(datos, tmp_path):
     assert dt.principal([], ejecuta, *arbol(tmp_path)) == 0
     assert llamadas == []  # observar nunca llama a sudo
     assert filas(datos)[0]["accion"] == "aplicaria"
+    assert filas(datos)[0]["avisos"] == ["user: memory.max=max; managed y pinned no tienen tope"]
 
 
 def test_observar_con_consumo_sobre_el_tope_rechaza(datos, tmp_path):
