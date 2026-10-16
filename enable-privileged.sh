@@ -807,14 +807,14 @@ done
 run mkdir -p "$DESK_BASE/app.slice.d"
 run cp adopted/system-config/home_lcasarin_.config_systemd_user_app.slice.d_99-blackbox.conf \
        "$DESK_BASE/app.slice.d/99-blackbox.conf"
-# MemoryHigh=38G (2026-10-16, voto de Luis tras el colapso confinado a app.slice,
+# MemoryHigh=infinity: la prueba de 38G (2026-10-16, voto de Luis tras el colapso confinado a app.slice,
 # DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01): que el slice reclame
 # cache antes de llegar al techo de 42G. Lo puso Luis a mano; aqui queda reproducible.
 run cp adopted/system-config/home_lcasarin_.config_systemd_user_app.slice.d_memory-high.conf \
        "$DESK_BASE/app.slice.d/memory-high.conf"
 run chown -R "$DUENO": "$DESK_BASE"
 echo "  techo de app.slice puesto: MemoryMax=42G"
-echo "  reclamo temprano de app.slice puesto: MemoryHigh=38G"
+echo "  MemoryHigh de app.slice: infinity (la prueba de 38G se suspendio el 2026-10-16, ver DECISIONS.md)"
 echo "  NO SURTE EFECTO HASTA:  systemctl --user daemon-reload   (como $DUENO,"
 echo "  no como root: es el gestor de usuario quien lo lee)"
 echo "  CONTROL NEGATIVO -- sobre el cgroup, no sobre este informe:"
