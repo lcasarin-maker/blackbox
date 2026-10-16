@@ -326,7 +326,7 @@ def test_control_negativo_un_servidor_que_se_cuelga_devuelve_el_PLAZO(
     devolver el plazo entero, no un numero pequeno -- si devolviera algo bajo,
     una grafica leeria 'rapido' justo durante el incidente."""
     monkeypatch.setenv("DISPLAY", ":1")
-    monkeypatch.setenv("BB_USABLE_XSET", _xset_falso(tmp_path, "sleep 30\n"))
+    monkeypatch.setenv("BB_USABLE_XSET", _xset_falso(tmp_path, "exec sleep 30\n"))
     monkeypatch.setenv("BB_USABLE_X_TIMEOUT_S", "1")
     assert bbu.latencia_x_ms() >= 900
 
