@@ -149,3 +149,56 @@ def test_sin_corpus_es_COULD_NOT_RUN_y_no_limpio(tmp_path, capsys):
     rc = cr.main(["--muestras", str(tmp_path / "no-existe")])
     assert rc == 2, "sin corpus, ni 0 ni 1: la tercera salida"
     assert "COULD_NOT_RUN" in capsys.readouterr().err
+
+
+# --- falsos positivos conocidos: excepcion con caducidad atada a su ficha (2026-10-16) ---
+
+RAIZ = Path(__file__).resolve().parent.parent
+
+
+def _serie_sostenida(desde: dt.datetime, minutos: int, psi: float = 50.0):
+    return [(desde + dt.timedelta(minutes=m), psi) for m in range(minutos)]
+
+
+def test_cada_falso_positivo_conocido_apunta_a_una_ficha_ABIERTA():
+    """La caducidad: cuando la ficha se cierra (sale de tasks/backlog/) esta excepcion tiene que borrarse, y este
+    test es el que obliga. Una excepcion sin ficha abierta es una supresion."""
+    assert cr.FALSOS_POSITIVOS_CONOCIDOS, "si ya no hay ninguno, borra tambien esta prueba"
+    for f in cr.FALSOS_POSITIVOS_CONOCIDOS:
+        ficha = RAIZ / "tasks" / "backlog" / f"{f['ficha']}.md"
+        assert ficha.is_file(), f"la ficha {f['ficha']} ya no esta abierta: quita la excepcion de control_racha"
+        assert "status: open" in ficha.read_text(encoding="utf-8")
+        assert f["motivo"].strip()
+
+
+def test_las_excepciones_NO_son_incidentes_ni_entran_a_la_calibracion():
+    from tools.calibra_psi import INCIDENTES
+    for f in cr.FALSOS_POSITIVOS_CONOCIDOS:
+        assert f["ventana"] not in INCIDENTES, "un falso positivo no se declara incidente"
+    assert len(cr.ventanas()) == len(INCIDENTES)
+
+
+def test_control_negativo_sin_la_excepcion_el_stall_conocido_SI_es_falso_positivo():
+    f = cr.FALSOS_POSITIVOS_CONOCIDOS[0]
+    ini = dt.datetime.strptime(f["ventana"][0], "%Y-%m-%d %H:%M")
+    serie = _serie_sostenida(ini, 15)  # 15 min sostenidos dentro de la ventana
+    con, _ = cr.max_sostenido_sano(serie, 2)
+    sin, instante = cr.max_sostenido_sano(serie, 2, exentas=[])
+    assert con == 0.0, "dentro de la excepcion no cuenta"
+    assert sin >= cr.CORTE_S and instante is not None, "sin la excepcion, el control SI dispara"
+
+
+def test_la_excepcion_no_tapa_un_stall_igual_FUERA_de_su_ventana():
+    f = cr.FALSOS_POSITIVOS_CONOCIDOS[0]
+    fin = dt.datetime.strptime(f["ventana"][1], "%Y-%m-%d %H:%M")
+    serie = _serie_sostenida(fin + dt.timedelta(hours=3), 15)
+    peor, _ = cr.max_sostenido_sano(serie, 2)
+    assert peor >= cr.CORTE_S, "un stall nuevo, fuera de la ventana exenta, tiene que seguir bloqueando"
+
+
+def test_el_gate_imprime_el_falso_positivo_conocido_como_deuda(capsys):
+    rc = cr.main([])
+    if rc == 2:
+        pytest.skip("COULD_NOT_RUN: corpus real ausente; owner=Blackbox; trigger=restaurar el corpus registrado")
+    salida = capsys.readouterr().out
+    assert "falso positivo CONOCIDO excluido (deuda abierta DEBT-COLAPSO-CONFINADO" in salida
