@@ -1,4 +1,4 @@
-# [DRAFT A, v2.1 2026-10-16] Category: Projects
+# [PUBLISHED as topic 386057 (edited 2026-10-16 with the measured rejection type)] [DRAFT A v2.2] Category: Projects
 **Title:** Per-cgroup GPU memory limits on GB10 (580 driver): a `memacct` backport, which cgroup pays for which CUDA allocation, and a request for review
 
 > Status: unpublished draft for Luis. Replaces the 2026-10-13 version. Every number comes from a command run on one unit; raw captures and the verifier are in the repo.
@@ -10,7 +10,7 @@
 ## What the patch does
 - Registers the `dmem` region (sized without dedicated video memory).
 - On GB10 `cudaMalloc` enters RM class `0x3e` (`NV01_MEMORY_SYSTEM`), not `VideoMemory` (ioctl sweep of the user-space calls). `video_mem.c`, where 615 charges, is not on that path, so the charge is taken in `sysmemConstruct` and released in `sysmemDestruct`; copy-constructs share the charge by refcount.
-- `NV_ERR_RESOURCE_ACCOUNTING_HARD_LIMIT_EXCEEDED` (0x8D) is translated to `NV_ERR_NO_MEMORY`, because the 580 `libcuda` does not know 0x8D and otherwise reports `cudaErrorUnknown`. **This translation is in the patch but I have only measured the earlier build, which still returned `cudaErrorUnknown`; the new build is compiled, not yet loaded on my unit.**
+- `NV_ERR_RESOURCE_ACCOUNTING_HARD_LIMIT_EXCEEDED` (0x8D) is translated to `NV_ERR_NO_MEMORY`, because the 580 `libcuda` does not know 0x8D and otherwise reports `cudaErrorUnknown`. **Measured on the loaded module (2026-10-16): with `dmem.max` = 512 MiB, a 1 GiB `cudaMalloc` fails as an out-of-memory error, not `cudaErrorUnknown`; the same request with no limit, or with a 2 GiB limit, succeeds; `dmem.current` is back to 0 after the process exits. My first build, measured on 2026-10-12, still returned `cudaErrorUnknown`.**
 
 ## Which cgroup pays for what (measured 2026-10-16)
 12 runs, each in its own systemd user scope; driver API (`cuMemAlloc`, `cuMemAllocManaged`, `cuMemHostAlloc`); pages touched. Control row "nothing" reads ~0, so the instrument sees zero.

@@ -1,0 +1,23 @@
+[dmem-completa] region: nvidia/0000000F:01:00.0/vidmem (53794045952 bytes); modulo: /lib/modules/6.17.0-1032-nvidia/updates/nvidia.ko
+[dmem-completa] --- 1. que formas de pedir memoria cobran (pide 256 MiB cada una, cgroup sin tope)
+[dmem-completa]   empty: esperado=cobra real=cobra (268435456 bytes) [ok]  <- OK base=nvidia/0000000F:01:00.0/vidmem 206418192 despues=nvidia/0000000F:01:00.0/vidmem 474853648
+[dmem-completa]   expandable: esperado=cobra real=cobra (272629760 bytes) [ok]  <- OK base=nvidia/0000000F:01:00.0/vidmem 206418192 despues=nvidia/0000000F:01:00.0/vidmem 479047952
+[dmem-completa]   async: esperado=cobra real=cobra (234881024 bytes) [ok]  <- OK base=nvidia/0000000F:01:00.0/vidmem 313372944 despues=nvidia/0000000F:01:00.0/vidmem 548253968
+[dmem-completa]   graph: esperado=cobra real=cobra (341835776 bytes) [ok]  <- OK base=nvidia/0000000F:01:00.0/vidmem 206418192 despues=nvidia/0000000F:01:00.0/vidmem 548253968
+[dmem-completa]   pinned: esperado=no_cobra real=no_cobra (0 bytes) [ok]  <- OK base=nvidia/0000000F:01:00.0/vidmem 206418192 despues=nvidia/0000000F:01:00.0/vidmem 206418192
+[dmem-completa]   managed: esperado=no_cobra real=no_cobra (0 bytes) [ok]  <- OK base=nvidia/0000000F:01:00.0/vidmem 206418192 despues=nvidia/0000000F:01:00.0/vidmem 206418192
+[dmem-completa] --- 2. rechazo sobre dmem.max, con controles (el rechazo llega como OOM o como cudaErrorUnknown: el libcuda de 580 no conoce el estado 0x8D)
+[dmem-completa]   tope 512M, pide 1024 MiB:               OOM
+[dmem-completa]   control sin tope, pide 1024 MiB:        OK   (debe ser OK)
+[dmem-completa]   control tope 2048M, pide 1024 MiB:      OK   (debe ser OK)
+[dmem-completa]   rechazo sobre el tope: SI
+[dmem-completa] --- 3. fuga: dmem.current de un cgroup tras salir su proceso debe ser 0
+[dmem-completa]   bb-dmem-empty: dmem.current tras salir = 0
+[dmem-completa]   bb-dmem-tope: dmem.current tras salir = 0
+[dmem-completa]   bb-dmem-libre: dmem.current tras salir = 0
+[dmem-completa]   bb-dmem-holgado: dmem.current tras salir = 0
+[dmem-completa] --- 4. contenedores en marcha (SOLO LECTURA, no se pone ningun tope; 0 es esperable si vLLM aun carga el modelo: comparar con nvidia-smi)
+[dmem-completa]   nemotron-server: nvidia/0000000F:01:00.0/vidmem 28492984592
+[dmem-completa]   atlas-pgvector: nvidia/0000000F:01:00.0/vidmem 0
+[dmem-completa]   aequitas-pg: nvidia/0000000F:01:00.0/vidmem 0
+[dmem-completa] rc=0 (0 = todo lo esperado)

@@ -1,4 +1,4 @@
-# [DRAFT C, 2026-10-16] Comment for NVIDIA/open-gpu-kernel-modules#1358
+# [PUBLISHED 2026-10-16 as issuecomment-6220079056, edited the same day] [DRAFT C] Comment for NVIDIA/open-gpu-kernel-modules#1358
 URL: https://github.com/NVIDIA/open-gpu-kernel-modules/issues/1358
 
 > Status: unpublished draft for Luis. Third comment of lcasarin-maker in this thread (previous: 2026-09-24, 2026-10-02 x2). Short on purpose; the long version is draft A.
@@ -18,7 +18,7 @@ So `MemoryMax=` / `docker --memory` already bound managed and pinned memory; the
 
 **Allocation path on GB10.** `cudaMalloc` reaches the RM as class `0x3e` (`NV01_MEMORY_SYSTEM`), not as video memory (ioctl sweep). In 615.71.09 the `memacct` charge is in `video_mem.c` according to my reading of the source; **I have not run 615**, so I cannot say whether it covers this path on GB10. Has anyone? If the charge is only in `video_mem.c`, that would leave device memory uncharged on GB10 even with `dmem` registered.
 
-**Limit enforcement (580 backport).** With `dmem.max` = 512 MiB, a 1 GiB `cudaMalloc` is rejected and the process stays usable; with no limit, or a limit that fits, it succeeds. The rejection status (0x8D) is unknown to the 580 `libcuda` and surfaces as `cudaErrorUnknown`; my patch maps it to `NV_ERR_NO_MEMORY` (built, not yet measured).
+**Limit enforcement (580 backport).** With `dmem.max` = 512 MiB, a 1 GiB `cudaMalloc` is rejected and the process stays usable; with no limit, or a limit that fits, it succeeds. The rejection status (0x8D) is unknown to the 580 `libcuda`, so my first build (measured 2026-10-12) surfaced it as `cudaErrorUnknown`. The patch maps it to `NV_ERR_NO_MEMORY`; with that mapping in the loaded module (measured 2026-10-16, same test) the 1 GiB request under a 512 MiB `dmem.max` fails as an out-of-memory error, the same request with no limit or with a 2 GiB limit succeeds, and `dmem.current` is 0 after the process exits.
 
 **What this is and is not.** It is a containment tool: it can stop one cgroup from taking the whole pool. It does not show that the wedge in this thread has a single cause, and I have no data that a limit prevents the wedge. I plan to observe a cap (engine 40 GiB, everything else 8 GiB, out of a 50.1 GiB region) for a week before enforcing it and will report what the log shows.
 
