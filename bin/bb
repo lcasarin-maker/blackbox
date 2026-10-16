@@ -3523,6 +3523,7 @@ case "${1:-}" in
   cap)      shift; cmd_cap "$@" ;;
   portero)  shift; python3 "$(dirname "$(readlink -f "$0")")/../tools/portero.py" "$@" ;;
   limita)   shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.limita_cuda "$@") ;;
+  dmem-tope) shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.dmem_tope "$@") ;;
   gpumem)   shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.gpumem "$@") ;;
   reloj)    shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.reloj_atascado "$@") ;;
   huella)   shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.huella_host "$@") ;;

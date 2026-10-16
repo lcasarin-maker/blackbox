@@ -1,4 +1,4 @@
-"""`tools/bb_root_manifest.py`, el sudoers y los nueve scripts root, con sus controles negativos.
+"""`tools/bb_root_manifest.py`, el sudoers y los once scripts root, con sus controles negativos.
 
 Lo que exige root de verdad (install -o root, visudo sobre /etc/sudoers.d, la regex de
 sudo casando argv) se simula: el comando de instalacion se ejecuta con las rutas
@@ -49,10 +49,10 @@ def test_control_negativo_editar_un_script_cambia_la_propuesta(src: Path):
     assert bm.serializar(bm.proponer(src)) != bm.PROPUESTA.read_bytes()
 
 
-def test_la_propuesta_cubre_los_nueve_scripts_y_nada_mas():
+def test_la_propuesta_cubre_los_once_scripts_y_nada_mas():
     m = bm.proponer(bm.SRC_DIR)
-    assert sorted(m) == ["apt-guardia-instalar", "arranque-forense", "audit-rules-leer", "crontabs-leer", "dmidecode-sistema",
-                         "drm-modeset-leer", "earlyoom-proteger", "pstore-preparar", "watchdog-propietario"]
+    assert sorted(m) == ["apt-guardia-instalar", "arranque-forense", "audit-rules-leer", "crontabs-leer", "dmem-tope-aplicar",
+                         "dmem-tope-quitar", "dmidecode-sistema", "drm-modeset-leer", "earlyoom-proteger", "pstore-preparar", "watchdog-propietario"]
     assert sorted(str(e["file"]) for e in m.values()) == [p.name for p in SCRIPTS]
     for e in m.values():
         assert e["sha256"] == hashlib.sha256((bm.SRC_DIR / str(e["file"])).read_bytes()).hexdigest()
@@ -203,7 +203,7 @@ def _check(inst: Path, src: Path, runner: Path) -> int:
 def test_check_limpio_sale_0_e_imprime_los_ceros(tmp_path: Path, src: Path, capsys: pytest.CaptureFixture[str]):
     inst, runner = _instalado(tmp_path, src)
     assert _check(inst, src, runner) == 0
-    assert "aprobados iguales: 9, cambios: 0, could_not_run: 0" in capsys.readouterr().out
+    assert "aprobados iguales: 11, cambios: 0, could_not_run: 0" in capsys.readouterr().out
 
 
 def test_check_control_negativo_un_script_editado_se_reporta(
@@ -213,7 +213,7 @@ def test_check_control_negativo_un_script_editado_se_reporta(
         f.write("echo extra\n")
     assert _check(inst, src, runner) == 1
     out = capsys.readouterr().out
-    assert "cambiado desde la aprobacion: crontabs-leer" in out and "aprobados iguales: 8" in out
+    assert "cambiado desde la aprobacion: crontabs-leer" in out and "aprobados iguales: 10" in out
 
 
 def test_check_reporta_ausente_sin_aprobar_y_runner_cambiado(
@@ -258,9 +258,12 @@ ESCRIBE = re.compile(r"\b(mkdir|mktemp|chown|chmod|touch|cp|mv|rm|tee|install|ln
 REDIR = re.compile(r">>?\s*(&\d|[^\s;|&)]+)")
 # Escrituras declaradas, por script: solo a las rutas de su propia carpeta (variables fijadas arriba del script).
 ESCRITURA_OK = {"pstore-preparar.sh": re.compile(r'"\$(destino|padre)"'),
-                "arranque-forense.sh": re.compile(r'"\$(base|dest)[/"]')}
+                "arranque-forense.sh": re.compile(r'"\$(base|dest)[/"]'),
+                "dmem-tope-quitar.sh": re.compile(r'^rm -f -- "\$previo"$')}
 REDIR_OK = {"arranque-forense.sh": re.compile(r'^"\$(base|dest)/[A-Za-z0-9._-]+"$'),
             "earlyoom-proteger.sh": re.compile(r'^"\$tmp"$'),
+            "dmem-tope-aplicar.sh": re.compile(r'^"\$(?:motor|usuario)/dmem\.max"$|^"\$base/dmem-tope-previo\.json"$'),
+            "dmem-tope-quitar.sh": re.compile(r'^"\$cg/dmem\.max"$'),
             "apt-guardia-instalar.sh": re.compile(r'^(?:"\$tmp"|"\$caja/[A-Za-z0-9_-][A-Za-z0-9._-]*"|&1)$')}
 FICHA = re.compile(r"^# Desbloquea: ([A-Z0-9-]+)\.$", re.M)
 
@@ -397,8 +400,8 @@ def hallazgos(nombre: str, texto: str) -> list[str]:
     return fuera
 
 
-def test_los_nueve_scripts_solo_escriben_lo_declarado_sin_red_ni_argumentos():
-    assert len(SCRIPTS) == 9
+def test_los_once_scripts_solo_escriben_lo_declarado_sin_red_ni_argumentos():
+    assert len(SCRIPTS) == 11
     fuera: list[str] = []
     for p in SCRIPTS:
         fuera += hallazgos(p.name, p.read_text(encoding="utf-8"))

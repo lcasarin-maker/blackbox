@@ -23,6 +23,18 @@
     "sha256": "a91e8f9725dd969e771ed3e869393047d8bce4a7c1932cd10ab6a61d59b919f7",
     "timeout": 30
   },
+  "dmem-tope-aplicar": {
+    "descripcion": "Pone dmem.max (tope de memoria de GPU) al contenedor nemotron-server (40 GiB) y a user.slice (8 GiB); guarda los previos y vuelve atras si la lectura no coincide (FEATURE-LIMITADOR-INTEGRAR-LANZADOR-FALLA-CERRADO-01)",
+    "file": "dmem-tope-aplicar.sh",
+    "sha256": "953a25a7f492261a0009070ca9a50c71638309f1ae2ce0f99ad2f46efdd3d244",
+    "timeout": 60
+  },
+  "dmem-tope-quitar": {
+    "descripcion": "Devuelve dmem.max del motor y de user.slice a los valores previos guardados por dmem-tope-aplicar",
+    "file": "dmem-tope-quitar.sh",
+    "sha256": "fa06422f3dd0f82099295a94afc8df080d9c83bf4eb49f9e97a37b3b3e246cce",
+    "timeout": 60
+  },
   "dmidecode-sistema": {
     "descripcion": "dmidecode -t system (DELTA-FORUM-RECOVERY-APT-UPDATE-01)",
     "file": "dmidecode-sistema.sh",
