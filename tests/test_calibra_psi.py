@@ -291,3 +291,79 @@ def test_main_usa_argv_cuando_no_se_le_pasa_nada(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(sys, "argv", ["calibra_psi.py", "--muestras", str(d)])
     assert main() == 0
     assert "VEREDICTO" in capsys.readouterr().out
+
+
+# --- ventana dentro del rango sin muestras dentro (2026-10-16) ---------------
+
+def test_ventana_en_rango_sin_muestras_dentro_no_es_no_detectada():
+    """La forma del 2026-10-11 22:02: el corpus llega antes y despues de la
+    ventana pero no tiene NI UNA muestra dentro. No es "el corte la dejo
+    pasar": es un hueco de muestreo, y va aparte."""
+    s = serie((0, 0), (4, 3.34), (60, 0))            # 05:40, 05:44, 06:40; ventana 05:45-06:30
+    r = calibra(s, incidentes=VENTANA)
+    assert r["no_detectados"] == []
+    assert r["sin_muestras_en_ventana"] == ventanas(VENTANA)
+    assert r["fuera_del_corpus"] == []
+
+
+def test_control_negativo_ventana_CON_muestras_y_sin_disparo_sigue_no_detectada():
+    """La otra direccion, sobre el mismo corpus mas UNA muestra dentro y baja:
+    el incidente se observo y el corte no disparo. Eso tiene que seguir rojo, o
+    el arreglo de arriba habria vuelto verde el instrumento por construccion."""
+    s = serie((0, 0), (4, 3.34), (10, 3.0), (60, 0))
+    r = calibra(s, incidentes=VENTANA)
+    assert r["no_detectados"] == ventanas(VENTANA)
+    assert r["sin_muestras_en_ventana"] == []
+
+
+def test_main_imprime_la_ventana_sin_muestras_y_sale_cero(tmp_path, capsys):
+    pares = [("2026-10-11 21:59", 0), ("2026-10-11 22:00", 3.34), ("2026-10-11 22:15", 0)]
+    assert main(["--muestras", str(_corpus(tmp_path, pares))]) == 0
+    salida = capsys.readouterr().out
+    assert "incidentes no detectados:  0" in salida
+    assert "ventanas de incidente sin muestras dentro:  1" in salida
+    assert "2026-10-11 22:02 -> 2026-10-11 22:12: hueco de muestreo" in salida
+    assert "VEREDICTO: CALIBRADO, con deuda impresa arriba" in salida
+
+
+# --- falsos positivos conocidos, atados a su ficha (2026-10-16) --------------
+
+FP_CONOCIDO_INI = dt.datetime(2026, 10, 16, 10, 37)
+
+
+def _stall(desde, minutos=7, psi=50.0):
+    return [(desde + dt.timedelta(minutes=m), psi) for m in range(minutos)]
+
+
+def test_el_stall_conocido_va_a_deuda_y_no_a_falsos_positivos():
+    r = calibra(_stall(FP_CONOCIDO_INI))
+    assert r["falsos_positivos"] == []
+    assert [f["ficha"] for _, f in r["falsos_positivos_conocidos"]] == [
+        "DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01"]
+
+
+def test_control_negativo_sin_la_excepcion_el_stall_conocido_es_falso_positivo():
+    r = calibra(_stall(FP_CONOCIDO_INI), conocidos=[])
+    assert len(r["falsos_positivos"]) == 1
+    assert r["falsos_positivos_conocidos"] == []
+
+
+def test_control_negativo_la_excepcion_no_tapa_un_stall_igual_fuera_de_su_ventana():
+    r = calibra(_stall(FP_CONOCIDO_INI + dt.timedelta(hours=3)))
+    assert len(r["falsos_positivos"]) == 1
+    assert r["falsos_positivos_conocidos"] == []
+
+
+def test_la_excepcion_no_es_un_incidente():
+    from tools.calibra_psi import FALSOS_POSITIVOS_CONOCIDOS
+    assert all(f["ventana"] not in INCIDENTES for f in FALSOS_POSITIVOS_CONOCIDOS)
+
+
+def test_main_imprime_el_falso_positivo_conocido_como_deuda_con_su_ficha(tmp_path, capsys):
+    pares = [(t.strftime("%Y-%m-%d %H:%M"), v) for t, v in _stall(FP_CONOCIDO_INI)]
+    assert main(["--muestras", str(_corpus(tmp_path, pares))]) == 0
+    salida = capsys.readouterr().out
+    assert "falsos positivos:          0" in salida
+    assert "falsos positivos conocidos (excepcion atada a ficha abierta):  1" in salida
+    assert "10-16 10:37 (6 min, max 50.00 %) -- deuda abierta DEBT-COLAPSO-CONFINADO-A-APP-SLICE" in salida
+    assert "VEREDICTO: CALIBRADO, con deuda impresa arriba" in salida

@@ -166,7 +166,7 @@ def test_cada_falso_positivo_conocido_apunta_a_una_ficha_ABIERTA():
     assert cr.FALSOS_POSITIVOS_CONOCIDOS, "si ya no hay ninguno, borra tambien esta prueba"
     for f in cr.FALSOS_POSITIVOS_CONOCIDOS:
         ficha = RAIZ / "tasks" / "backlog" / f"{f['ficha']}.md"
-        assert ficha.is_file(), f"la ficha {f['ficha']} ya no esta abierta: quita la excepcion de control_racha"
+        assert ficha.is_file(), f"la ficha {f['ficha']} ya no esta abierta: quita la excepcion de calibra_psi.FALSOS_POSITIVOS_CONOCIDOS"
         assert "status: open" in ficha.read_text(encoding="utf-8")
         assert f["motivo"].strip()
 
