@@ -1,6 +1,6 @@
 {
   "claims_fingerprint": "19afdf0e39578f65ba1f5e7e22743db5d45340dfefee98e32f7c104cd5921530",
-  "panel": "1 auditor Opus, 2026-10-15, 5 afirmaciones viejas (L118 L122 L145 L146 L416), refutadas con controles negativos sobre copia",
+  "panel": "1 auditor Opus, 2026-10-16, SPEC-L416 re-auditada tras el cambio de reserva del test del origen; control negativo sobre copia",
   "profile": "general",
   "results": [
     {
@@ -83,16 +83,16 @@
     },
     {
       "cited": {
-        "tests/test_bb_bash.py": "d214cfe0f9c56447ffc340c5c0d63c810bc3ae4f8e9452f8b477df6b965c5c3b",
+        "tests/test_bb_bash.py": "dd65d14571b62753a21f8615ad7361055faddbbc3fd20494351fac7424648362",
         "tools/canario_motor.py": "4b5cbbc3d6a0930405333bd841d8588d92fd494af0c116b9e2b90f016744b98c",
         "tools/gpumem_historial.py": "318ab3ea1f2c56766c55c81f9b9a24259e1bb3a8d72da2eb8156cfe572e469f6",
         "tools/huella_host.py": "709f40a9746cc5255b5183ad8895ed1591f3944774236a48783ec265be2ddf09",
         "tools/monitor_distros.py": "174785d51e69ddfedd1797a2327c50ceb7133607b8ab5f0334a255fdf265ae82"
       },
       "claim_id": "SPEC-L416",
-      "evidence": "All 8 cited test names exist once each in tests/test_bb_bash.py (`grep -c \"def <name>\\b\"` -> 1 for each), and the three bb-usable heartbeat controls are test_control_negativo_bb_usable_activa_con_latido_RANCIO plus the parametrized test_control_negativo_bb_usable_activa_sin_latido[journal_vacio|solo_arranque] (tests/test_bb_bash.py:665-680); `python3 -m pytest -q tests/test_bb_bash.py -k \"control_negativo_sin_muestra_fresca or clock_lock or earlyoom or bb_usable or status_sensor_en_observar\"` -> 15 passed. bin/bb matches the text: 120 s heartbeat via `journalctl -S` and \"latencia del escritorio\" (bin/bb:2452-2461), unit-only rows vigilante del motor (:2694), guardia (:2700s), aviso termico and portero (status_lo_que_corre, :2275+), last-run rows blackbox-drift 1560 min=26 h, bb-arranque-forense (also arranque.jsonl boot_id) and atom-crash-detector in this boot, data rows reboots.jsonl and dmem_parche.jsonl 1560 min, status_suspendidos (:2258), and the sensor rows with 2880/75/15/11520 min = 2 dias/75 min/15 min/8 dias plus 4 unit-only sensors (:2705-2740). Negative controls run on a scratch copy (repo untouched): forcing ok=0 on the four sensor freshness checks makes test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FALTA FAIL (1 failed, 1 passed), and forcing the no-heartbeat branch to chk 0 makes all 3 bb-usable controls FAIL (3 failed, 1 passed).",
+      "evidence": "All 8 tests named in the claim exist exactly once in tests/test_bb_bash.py (grep 'def <name>\\b': :494, :536, :549, :556, :566, :585, :603 for the seven original controls, :2167 for test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FALTA). The three bb-usable heartbeat controls are test_control_negativo_bb_usable_activa_con_latido_RANCIO (:665) plus test_control_negativo_bb_usable_activa_sin_latido parametrized [journal_vacio, solo_arranque] (:673-680), matching 'rancio, journal vacio, solo la linea de arranque'. The claim does not name test_el_que_mas_crece_lleva_su_origen_en_la_muestra, so its 300->4096 MiB reservation change does not touch the claim text. `python3 -m pytest -q -p no:cacheprovider tests/test_bb_bash.py -k \"control_negativo_sin_muestra_fresca or clock_lock or earlyoom or bb_usable or status_sensor_en_observar or el_que_mas_crece\"` -> '16 passed, 110 deselected in 22.50s'. bin/bb still matches every wiring detail: 120 s heartbeat via journalctl since (bin/bb:2452) matching '[bb-usable] latencia del escritorio:' (:2460); unit-only rows ai-nemotron-vigilante.timer (:2694), bb-guardia-proceso.service (:2702), bb-aviso-termico (:2310) and bb-portero (:2312) inside status_lo_que_corre (:2275); _corrida_ok on Result + ExecMainExitTimestamp via systemctl --user show, blackbox-drift 1560 min = 26 h (:2299), bb-arranque-forense in this boot plus the boot_id row in arranque.jsonl (:2322-2323), atom-crash-detector in this boot; reboots.jsonl row for this boot (:2304) and dmem_parche.jsonl 1560 min (:2316); status_suspendidos (:2258) prints SUSPENDIDO and FALTA for an expired or unreadable mark; sensor rows huella_host 2880 min = 2 days (:2723), monitor_distros 11520 min = 8 days (:2728), canario_motor 75 min (:2733), gpumem_historial 15 min (:2738), and memavail/gpuoom/termico_predictivo/reloj_arranque unit-only (:2714). Negative control on a scratch copy made with git archive HEAD (never in the repo): changing the gpumem_historial window from 15 to 99999 and the bb-usable window from '120 seconds ago' to '1 day ago' -> 'FAILED tests/test_bb_bash.py::test_control_negativo_bb_usable_activa_con_latido_RANCIO', 'FAILED tests/test_bb_bash.py::test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FALTA', '2 failed, 4 passed', so the cited controls can return the opposite verdict.",
       "fix": null,
-      "seal": "5c149c902f304416b98b377f36264e1ca167ecf849a190658f1cd72855a17df7",
+      "seal": "e69c0176177086314ec4ce4b742d98a72605c041967f5856f2b86ebf90ccad8e",
       "verdict": "PASS"
     },
     {
@@ -191,7 +191,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-15T14:37:49Z",
-  "tree_fingerprint": "f3531a7cc9aff484920a9f63e9028989703642e2dd4e209cfa5c960937a6de90",
+  "timestamp": "2026-10-16T02:12:25Z",
+  "tree_fingerprint": "d5bdb9992907e0dae35fc26e1fa8c7ea80bda20bfba49c20f3e9f84cfa5844fe",
   "violations": []
 }
