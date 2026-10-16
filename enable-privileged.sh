@@ -169,6 +169,7 @@ if [ "$REVERT" = 1 ]; then
   DESK_BASE_TECHO="$(getent passwd "$DUENO" | cut -d: -f6)/.config/systemd/user"
   if [ -f "$DESK_BASE_TECHO/app.slice.d/99-blackbox.conf" ]; then
     run rm -f "$DESK_BASE_TECHO/app.slice.d/99-blackbox.conf"
+    run rm -f "$DESK_BASE_TECHO/app.slice.d/memory-high.conf"
     run rmdir --ignore-fail-on-non-empty "$DESK_BASE_TECHO/app.slice.d"
     echo "  techo de app.slice retirado -- REQUIERE: systemctl --user daemon-reload"
     echo "  (vuelve a MemoryMax=infinity: nada limita las sesiones de agente)"
@@ -806,8 +807,14 @@ done
 run mkdir -p "$DESK_BASE/app.slice.d"
 run cp adopted/system-config/home_lcasarin_.config_systemd_user_app.slice.d_99-blackbox.conf \
        "$DESK_BASE/app.slice.d/99-blackbox.conf"
+# MemoryHigh=38G (2026-10-16, voto de Luis tras el colapso confinado a app.slice,
+# DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01): que el slice reclame
+# cache antes de llegar al techo de 42G. Lo puso Luis a mano; aqui queda reproducible.
+run cp adopted/system-config/home_lcasarin_.config_systemd_user_app.slice.d_memory-high.conf \
+       "$DESK_BASE/app.slice.d/memory-high.conf"
 run chown -R "$DUENO": "$DESK_BASE"
 echo "  techo de app.slice puesto: MemoryMax=42G"
+echo "  reclamo temprano de app.slice puesto: MemoryHigh=38G"
 echo "  NO SURTE EFECTO HASTA:  systemctl --user daemon-reload   (como $DUENO,"
 echo "  no como root: es el gestor de usuario quien lo lee)"
 echo "  CONTROL NEGATIVO -- sobre el cgroup, no sobre este informe:"
