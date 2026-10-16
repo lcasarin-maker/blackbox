@@ -57,7 +57,14 @@ import datetime as dt
 import sys
 from pathlib import Path
 
-from tools.calibra_psi import INCIDENTES, MUESTRAS, UMBRAL_PCT, carga
+from tools.calibra_psi import (
+    FALSOS_POSITIVOS_CONOCIDOS,
+    INCIDENTES,
+    MUESTRAS,
+    UMBRAL_PCT,
+    carga,
+    ventanas_exentas,
+)
 
 # El corte de accion de bb-usable, en segundos. No se importa del demonio
 # porque `bin/bb-usable` no es importable (sin extension, con guarda main):
@@ -70,23 +77,8 @@ CORTE_S = 300.0
 HUECO_MAX_S = 600.0
 
 
-# FALSOS POSITIVOS CONOCIDOS -- anadido el 2026-10-16. Una ventana donde la regla REINICIO la maquina y el control, con datos
-# reales, dice que no hubo un incidente que lo justificara. NO es un incidente: no entra en `calibra_psi.INCIDENTES` ni afirma
-# que el reinicio estuviera justificado. Se EXCLUYE del peor caso sano para que el gate siga vigilando todo lo demas, y se
-# IMPRIME como deuda. Cada una nombra su ficha ABIERTA; `tests/test_control_racha.py` falla en cuanto esa ficha sale de
-# `tasks/backlog/` (voto de Luis, 2026-10-16: excepcion con fecha de caducidad atada a la ficha, no supresion).
-FALSOS_POSITIVOS_CONOCIDOS = [
-    {"ventana": ("2026-10-16 10:37", "2026-10-16 10:55"),
-     "ficha": "DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01",
-     "motivo": "17 min de PSI full 45-57 confinado a app.slice (docker.slice y system.slice en 0.0, MemAvailable 20-24 GB); "
-               "el watchdog reinicio la maquina con el motor sano"},
-]
-
-
-def ventanas_exentas() -> list[tuple[dt.datetime, dt.datetime]]:
-    return [(dt.datetime.strptime(f["ventana"][0], "%Y-%m-%d %H:%M"),
-             dt.datetime.strptime(f["ventana"][1], "%Y-%m-%d %H:%M"))
-            for f in FALSOS_POSITIVOS_CONOCIDOS]
+# FALSOS_POSITIVOS_CONOCIDOS y ventanas_exentas viven en `tools.calibra_psi` desde el 2026-10-16 (una sola fuente:
+# los dos instrumentos excluyen la misma ventana atada a la misma ficha) y se reexportan aqui con su nombre de siempre.
 
 
 def ventanas() -> list[tuple[dt.datetime, dt.datetime]]:

@@ -164,9 +164,13 @@ INCIDENTES = [
     # telemetria de GPU a las 22:01:43 (psi_mem_full_avg10 1.72). Por eso el
     # inicio sale del journal de `bb-usable`, que lee /proc/pressure/memory
     # directo: 22:02:07 es su primera lectura >= 10 (avg10=42.6, racha 1/10), y
-    # declara COLAPSO sostenido desde las 22:08:18 (97.7, 360 s). `calibra()` la
-    # marca `no_detectados` y es la verdad sobre el instrumento, no un error de
-    # esta lista.
+    # declara COLAPSO sostenido desde las 22:08:18 (97.7, 360 s). Medido el
+    # 2026-10-16: CERO muestras de bin/bb dentro de [22:02, 22:12]. Hasta esa
+    # fecha `calibra()` la marcaba `no_detectados`, que afirmaba que el corte la
+    # dejo pasar sobre muestras que no existen; desde entonces la marca
+    # `sin_muestras_en_ventana` y el informe la imprime aparte. Sigue siendo la
+    # verdad sobre el instrumento (un hueco de muestreo), no un error de esta
+    # lista.
     ("2026-10-11 22:02", "2026-10-11 22:12"),
     # OCTAVO, arranque 7b217d8b, en el arranque SIGUIENTE al septimo. El inicio
     # sale de las muestras de bin/bb: 22:44:20 es la primera con mem_full >= 10
@@ -180,6 +184,27 @@ INCIDENTES = [
     # real como excursion sana.
     ("2026-10-11 22:44", "2026-10-11 22:54"),
 ]
+
+
+# FALSOS POSITIVOS CONOCIDOS -- anadido el 2026-10-16 en tools/control_racha.py y movido aqui el mismo dia para que
+# haya UNA sola fuente (control_racha la importa). Una ventana donde la regla REINICIO la maquina y el control, con
+# datos reales, dice que no hubo un incidente que lo justificara. NO es un incidente: no entra en `INCIDENTES` ni
+# afirma que el reinicio estuviera justificado. `calibra()` la saca de `falsos_positivos` y la devuelve en
+# `falsos_positivos_conocidos`, que `informe()` IMPRIME como deuda con su ficha. Cada una nombra su ficha ABIERTA;
+# `tests/test_control_racha.py` falla en cuanto esa ficha sale de `tasks/backlog/` (voto de Luis, 2026-10-16:
+# excepcion con fecha de caducidad atada a la ficha, no supresion).
+FALSOS_POSITIVOS_CONOCIDOS = [
+    {"ventana": ("2026-10-16 10:37", "2026-10-16 10:55"),
+     "ficha": "DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01",
+     "motivo": "17 min de PSI full 45-57 confinado a app.slice (docker.slice y system.slice en 0.0, MemAvailable 20-24 GB); "
+               "el watchdog reinicio la maquina con el motor sano"},
+]
+
+
+def ventanas_exentas(conocidos=None) -> list[tuple[dt.datetime, dt.datetime]]:
+    return [(dt.datetime.strptime(f["ventana"][0], "%Y-%m-%d %H:%M"),
+             dt.datetime.strptime(f["ventana"][1], "%Y-%m-%d %H:%M"))
+            for f in (FALSOS_POSITIVOS_CONOCIDOS if conocidos is None else conocidos)]
 
 
 def _naive(t: dt.datetime) -> dt.datetime:
@@ -261,16 +286,19 @@ def solapa(exc, ventana) -> bool:
 
 
 def calibra(serie, incidentes=None, umbral=UMBRAL_PCT, sostenido=SOSTENIDO_MIN,
-            pico_max=PICO_MAX_MIN) -> dict:
+            conocidos=None) -> dict:
     """Aplica el corte y coteja el instante medido de disparo con las etiquetas.
 
     Una excursión que solo empieza dentro de un incidente, pero alcanza la
     duración exigida después de su fin, no demuestra que el corte lo detectó.
+
+    `conocidos`: falsos positivos conocidos (deuda con ficha abierta); None = los
+    declarados en FALSOS_POSITIVOS_CONOCIDOS, [] = ninguno (el control negativo).
     """
     vs = ventanas(incidentes)
     colapsos, picos, sin_observar = [], [], []
     for exc in excursiones(serie, umbral):
-        veredicto = clasifica(duracion_min(exc), pico_max, sostenido)
+        veredicto = clasifica(duracion_min(exc), PICO_MAX_MIN, sostenido)
         {"COLAPSO": colapsos, "PICO": picos, "SIN OBSERVAR": sin_observar}[veredicto].append(exc)
 
     disparos = [
@@ -278,10 +306,19 @@ def calibra(serie, incidentes=None, umbral=UMBRAL_PCT, sostenido=SOSTENIDO_MIN,
                     if (ts - exc[0][0]).total_seconds() / 60.0 >= sostenido), None))
         for exc in colapsos
     ]
-    falsos_positivos = [
-        exc for exc, disparo in disparos
-        if disparo is None or not any(a <= disparo <= b for a, b in vs)
-    ]
+    conocidos = FALSOS_POSITIVOS_CONOCIDOS if conocidos is None else conocidos
+    falsos_positivos, falsos_positivos_conocidos = [], []
+    for exc, disparo in disparos:
+        if disparo is not None and any(a <= disparo <= b for a, b in vs):
+            continue
+        # La excepcion casa por el instante de DISPARO, igual que un incidente:
+        # un stall que dispara fuera de la ventana exenta sigue siendo falso positivo.
+        ficha = next((f for f, (a, b) in zip(conocidos, ventanas_exentas(conocidos))
+                      if disparo is not None and a <= disparo <= b), None)
+        if ficha is None:
+            falsos_positivos.append(exc)
+        else:
+            falsos_positivos_conocidos.append((exc, ficha))
     # Una ventana FUERA del rango del corpus no esta "sin detectar": esta sin
     # OBSERVAR, y son cosas distintas. Contarla como no detectada mide la lista
     # INCIDENTES contra un corpus que no llega hasta ella -- el instrumento en
@@ -289,12 +326,26 @@ def calibra(serie, incidentes=None, umbral=UMBRAL_PCT, sostenido=SOSTENIDO_MIN,
     # los corpus sinteticos de la suite abarcan hasta el 09-24 y el cuarto es del
     # 09-26, asi que tres tests se pusieron rojos afirmando que un corte bueno
     # dejaba pasar un incidente que sus muestras no contienen.
+    #
+    # Y estar DENTRO del rango tampoco basta (2026-10-16): la ventana del
+    # 2026-10-11 22:02 cae entre la primera y la ultima muestra del corpus pero
+    # no tiene NI UNA muestra dentro -- bb sample dejo de escribir a las
+    # 22:00:34 --, y contarla como no detectada era el mismo error un nivel mas
+    # abajo. Una ventana esta OBSERVADA si al menos UNA muestra cae en
+    # [inicio, fin]. Basta una y no se exige cobertura minima porque cualquier
+    # minimo mayor RECLASIFICA mas ventanas como sin observar, que es la
+    # direccion que tapa; y sobre el corpus real no hay caso intermedio que lo
+    # pida: las ventanas dentro del rango tienen 47 (10-05), 0 (10-11 22:02) y
+    # 43 (10-11 22:44) muestras. Una ventana CON muestras y sin disparo sigue
+    # siendo `no_detectados`.
     if serie:
         t0, t1 = serie[0][0], serie[-1][0]
-        observadas = [v for v in vs if v[1] >= t0 and v[0] <= t1]
+        en_rango = [v for v in vs if v[1] >= t0 and v[0] <= t1]
     else:
-        observadas = []
-    fuera_del_corpus = [v for v in vs if v not in observadas]
+        en_rango = []
+    observadas = [v for v in en_rango if any(v[0] <= ts <= v[1] for ts, _ in serie)]
+    sin_muestras_en_ventana = [v for v in en_rango if v not in observadas]
+    fuera_del_corpus = [v for v in vs if v not in en_rango]
     no_detectados = [
         v for v in observadas
         if not any(disparo is not None and v[0] <= disparo <= v[1]
@@ -309,8 +360,10 @@ def calibra(serie, incidentes=None, umbral=UMBRAL_PCT, sostenido=SOSTENIDO_MIN,
         "picos": picos,
         "sin_observar": sin_observar,
         "falsos_positivos": falsos_positivos,
+        "falsos_positivos_conocidos": falsos_positivos_conocidos,
         "no_detectados": no_detectados,
         "fuera_del_corpus": fuera_del_corpus,
+        "sin_muestras_en_ventana": sin_muestras_en_ventana,
         "umbral": umbral,
         "sostenido": sostenido,
     }
@@ -340,7 +393,18 @@ def informe(r: dict) -> list[str]:
         "  incidentes no detectados:  %d" % len(r["no_detectados"]),
         "  (incidentes fuera del corpus, sin observar: %d)"
         % len(r.get("fuera_del_corpus", [])),
+        "",
+        "deuda (no cuenta para el veredicto, y por eso se imprime entera):",
+        "  ventanas de incidente sin muestras dentro:  %d" % len(r["sin_muestras_en_ventana"]),
     ]
+    fmt = "%Y-%m-%d %H:%M"
+    out += ["    %s -> %s: hueco de muestreo, el corpus no puede decir si el corte la detecta"
+            % (a.strftime(fmt), b.strftime(fmt)) for a, b in r["sin_muestras_en_ventana"]]
+    out.append("  falsos positivos conocidos (excepcion atada a ficha abierta):  %d"
+               % len(r["falsos_positivos_conocidos"]))
+    out += ["    %s (%.0f min, max %.2f %%) -- deuda abierta %s"
+            % (e[0][0].strftime("%m-%d %H:%M"), duracion_min(e), max(v for _, v in e), f["ficha"])
+            for e, f in r["falsos_positivos_conocidos"]]
     return out
 
 
@@ -362,7 +426,9 @@ def main(argv=None) -> int:
     r = calibra(serie, umbral=args.umbral, sostenido=args.sostenido)
     print("\n".join(informe(r)))
     malo = len(r["falsos_positivos"]) + len(r["no_detectados"])
-    print("\nVEREDICTO: %s" % ("CALIBRADO" if not malo else "CORTE INVALIDO"))
+    deuda = len(r["sin_muestras_en_ventana"]) + len(r["falsos_positivos_conocidos"])
+    print("\nVEREDICTO: %s" % ("CORTE INVALIDO" if malo else
+                               "CALIBRADO, con deuda impresa arriba" if deuda else "CALIBRADO"))
     return 1 if malo else 0
 
 
