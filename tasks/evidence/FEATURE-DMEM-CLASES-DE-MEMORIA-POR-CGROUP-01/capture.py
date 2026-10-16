@@ -3,11 +3,12 @@
 
 Cada fila corre `prueba.py <tipo>` en su propio scope de systemd de usuario, y guarda argv, codigo de salida, stdout, los
 numeros que `prueba.py` imprime (delta de dmem.current de user.slice y delta de memory.current del scope) y la hora.
-No escribe ningun veredicto: lo recalcula `python3 -m tools.verify_clases_memoria`.
+Redacta el hostname del journal (<host>). No escribe ningun veredicto: lo recalcula `python3 -m tools.verify_clases_memoria`.
 Uso: python3 capture.py   (sin root; escribe raw.json junto a este archivo)
 """
 import json
 import re
+import socket
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -38,6 +39,6 @@ for tipo in ("managed", "pinned", "device"):
 filas.append(corre("managed", 512, "1G", "bajo-el-tope"))
 j = subprocess.run(["journalctl", "--user", "-n", "600", "--no-pager"], capture_output=True, text=True, timeout=60, check=False)
 (AQUI / "raw.json").write_text(json.dumps({"schema": 1, "id": AQUI.name, "filas": filas,
-                                           "journal_oom_kill_lineas": [x for x in j.stdout.splitlines() if "oom-kill" in x][-6:]},
+                                           "journal_oom_kill_lineas": [x.replace(socket.gethostname(), "<host>") for x in j.stdout.splitlines() if "oom-kill" in x][-6:]},
                                           indent=1), encoding="utf-8")
 print("filas", len(filas))
