@@ -6,7 +6,7 @@ title: "El hook post-commit llama a coverage_attestation, que el runtime.zip del
 status: open
 severity: P3
 origin: detected
-detector: python .simplecode/run.py simplecode.verification.coverage_attestation --help
+detector: {"rule": "python .simplecode/run.py simplecode.verification.coverage_attestation --help sale 1 con ImportError (el modulo no esta en runtime.zip)", "confidence": 1.0}
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-15
 close_check: {"cmd": "python .simplecode/run.py simplecode.verification.coverage_attestation --help", "expect": "exit_zero", "porque": "Hoy sale 1 con ImportError: No module named simplecode.verification.coverage_attestation. Cierra cuando el kit empaquete el modulo (o el hook deje de invocarlo) y el comando salga 0."}
