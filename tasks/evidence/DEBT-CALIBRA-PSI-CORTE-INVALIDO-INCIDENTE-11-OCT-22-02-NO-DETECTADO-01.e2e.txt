@@ -1,0 +1,43 @@
+# e2e sobre el host real (hostname sustituido por HOST)
+# a) lo que vio el detector real en la ventana: journal de bb-usable
+$ journalctl -u bb-usable.service -o short-iso --since '2026-10-11 22:02' --until '2026-10-11 22:18' | grep -E 'PSI memory|COLAPSO|Watchdog|Failed|Started'
+2026-10-11T22:02:07-06:00 HOST bb-usable[5770]: [bb-usable] PSI memory full avg10=42.6 >= 10 -- racha 1/10 (30s de 300s), sonda 43 ms
+2026-10-11T22:02:37-06:00 HOST bb-usable[5770]: [bb-usable] PSI memory full avg10=75.8 >= 10 -- racha 2/10 (60s de 300s), sonda 33 ms
+2026-10-11T22:03:07-06:00 HOST bb-usable[5770]: [bb-usable] PSI memory full avg10=82.5 >= 10 -- racha 3/10 (90s de 300s), sonda 29 ms
+2026-10-11T22:03:42-06:00 HOST bb-usable[5770]: [bb-usable] PSI memory full avg10=90.5 >= 10 -- racha 4/10 (120s de 300s), sonda 31 ms
+2026-10-11T22:04:17-06:00 HOST bb-usable[5770]: [bb-usable] PSI memory full avg10=98.1 >= 10 -- racha 5/10 (150s de 300s), sonda 25 ms
+2026-10-11T22:04:52-06:00 HOST bb-usable[5770]: [bb-usable] PSI memory full avg10=98.4 >= 10 -- racha 6/10 (180s de 300s), sonda 28 ms
+2026-10-11T22:05:27-06:00 HOST bb-usable[5770]: [bb-usable] PSI memory full avg10=98.0 >= 10 -- racha 7/10 (210s de 300s), sonda 31 ms
+2026-10-11T22:05:57-06:00 HOST bb-usable[5770]: [bb-usable] PSI memory full avg10=80.3 >= 10 -- racha 8/10 (240s de 300s), sonda 111 ms
+2026-10-11T22:06:32-06:00 HOST bb-usable[5770]: [bb-usable] PSI memory full avg10=95.2 >= 10 -- racha 9/10 (270s de 300s), sonda 31 ms
+2026-10-11T22:07:07-06:00 HOST bb-usable[5770]: [bb-usable] COLAPSO: PSI memory full avg10=98.0 >= 10 sostenido 300s >= 300s (sonda 28 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-11T22:07:43-06:00 HOST bb-usable[5770]: [bb-usable] COLAPSO: PSI memory full avg10=98.1 >= 10 sostenido 330s >= 300s (sonda 27 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-11T22:08:18-06:00 HOST bb-usable[5770]: [bb-usable] COLAPSO: PSI memory full avg10=97.7 >= 10 sostenido 360s >= 300s (sonda 22 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-11T22:08:53-06:00 HOST bb-usable[5770]: [bb-usable] COLAPSO: PSI memory full avg10=97.7 >= 10 sostenido 390s >= 300s (sonda 29 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-11T22:09:28-06:00 HOST bb-usable[5770]: [bb-usable] COLAPSO: PSI memory full avg10=97.9 >= 10 sostenido 420s >= 300s (sonda 33 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-11T22:10:03-06:00 HOST bb-usable[5770]: [bb-usable] COLAPSO: PSI memory full avg10=97.8 >= 10 sostenido 450s >= 300s (sonda 27 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-11T22:10:38-06:00 HOST bb-usable[5770]: [bb-usable] COLAPSO: PSI memory full avg10=98.0 >= 10 sostenido 480s >= 300s (sonda 26 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-11T22:11:13-06:00 HOST bb-usable[5770]: [bb-usable] COLAPSO: PSI memory full avg10=98.0 >= 10 sostenido 510s >= 300s (sonda 31 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-11T22:11:48-06:00 HOST bb-usable[5770]: [bb-usable] COLAPSO: PSI memory full avg10=97.8 >= 10 sostenido 540s >= 300s (sonda 30 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-11T22:12:23-06:00 HOST bb-usable[5770]: [bb-usable] COLAPSO: PSI memory full avg10=98.0 >= 10 sostenido 570s >= 300s (sonda 29 ms, que es justo por lo que la sonda sola no lo ve) -- NO se acaricia el watchdog, que reinicie
+2026-10-11T22:12:33-06:00 HOST systemd[1]: bb-usable.service: Watchdog timeout (limit 6min)!
+2026-10-11T22:12:46-06:00 HOST systemd[1]: bb-usable.service: Failed with result 'watchdog'.
+2026-10-11T22:15:05-06:00 HOST systemd[1]: Started bb-usable.service - blackbox: vigila si la maquina SIRVE (no si systemd sigue vivo).
+
+# b) muestras de bin/bb con ts dentro de [22:02, 22:12]
+$ grep -cE '"ts": ?"2026-10-11T22:(0[2-9]|1[0-2])' ~/.local/share/blackbox/samples/2026-10-11.jsonl
+0
+
+# c) control negativo real: sin journalctl en PATH el informe NO sale limpio, sale COULD_NOT_RUN rc 2
+$ PATH=/nonexistent /usr/bin/python3 -m tools.calibra_psi | tail -4
+
+ventanas sin muestras observadas por el journal de bb-usable:  0
+
+VEREDICTO: CALIBRADO, con deuda impresa arriba -- COULD_NOT_RUN: 1 ventana(s) sin muestras y sin journal legible
+rc=2
+
+# control del cero de b): el mismo patron SI cuenta muestras fuera del hueco
+$ grep -cE '"ts": ?"2026-10-11T22:00' ~/.local/share/blackbox/samples/2026-10-11.jsonl
+5
+$ grep -cE '"ts": ?"2026-10-11T22:(4[4-9]|5[0-4])' ~/.local/share/blackbox/samples/2026-10-11.jsonl
+49

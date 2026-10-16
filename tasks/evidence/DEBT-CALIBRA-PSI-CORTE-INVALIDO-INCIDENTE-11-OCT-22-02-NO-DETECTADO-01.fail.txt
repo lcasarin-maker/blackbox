@@ -1,0 +1,39 @@
+# 1) close_check ANTES del cambio, arbol b71ef875: sale 0 solo porque la ventana 10-11 22:02 se clasifica 'sin_muestras_en_ventana' (sin observar)
+$ python3 -m tools.calibra_psi
+corte:  mem_full >= 10 % sostenido >= 5 min
+corpus: 2026-10-01 00:00 -> 2026-10-16 16:15
+muestras con PSI:            27198
+linea base (mem_full 0.00):  22025  (80.98 %)
+
+excursiones sobre el 10 %:
+  PICO        (<= 3 min)    27   10-01 13:16 (0 min, max 15.57 %), 10-01 13:26 (0 min, max 10.03 %), 10-03 21:52 (1 min, max 32.79 %)
+  SIN OBSERVAR               0
+  COLAPSO     (>= 5 min)     5   10-05 00:18 (7 min, max 78.30 %), 10-11 22:44 (8 min, max 72.47 %), 10-16 10:37 (6 min, max 56.34 %)
+
+control negativo (lo que DEBE salir en cero):
+  falsos positivos:          0
+  incidentes no detectados:  0
+  (incidentes fuera del corpus, sin observar: 6)
+
+deuda (no cuenta para el veredicto, y por eso se imprime entera):
+  ventanas de incidente sin muestras dentro:  1
+    2026-10-11 22:02 -> 2026-10-11 22:12: hueco de muestreo, el corpus no puede decir si el corte la detecta
+  falsos positivos conocidos (excepcion atada a ficha abierta):  3
+    10-16 10:37 (6 min, max 56.34 %) -- deuda abierta DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01
+    10-16 10:44 (10 min, max 55.50 %) -- deuda abierta DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01
+    10-16 13:45 (5 min, max 68.46 %) -- deuda abierta DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01
+
+VEREDICTO: CALIBRADO, con deuda impresa arriba
+rc=0
+
+# 2) tests nuevos contra el codigo ANTERIOR (git show b71ef875:tools/calibra_psi.py > tools/calibra_psi.py)
+$ python -m pytest tests/test_calibra_psi.py -q -p no:cacheprovider -k "control_negativo_bb_usable_vivo or control_negativo_colapso_declarado or journal_ilegible or observa_la_ventana"
+E   AssertionError: assert 0 == 1
+E   AssertionError: assert 0 == 1
+E   AssertionError: assert 0 == 2
+FAILED tests/test_calibra_psi.py::test_el_journal_observa_la_ventana_sin_muestras_declara_colapso_y_reinicia
+FAILED tests/test_calibra_psi.py::test_control_negativo_bb_usable_vivo_sin_declarar_colapso_es_no_detectado
+FAILED tests/test_calibra_psi.py::test_control_negativo_colapso_declarado_despues_de_la_ventana_no_la_detecta
+FAILED tests/test_calibra_psi.py::test_journal_ilegible_es_could_not_run_junto_al_veredicto
+4 failed, 40 deselected in 0.12s
+# el control negativo (bb-usable vivo sin declarar COLAPSO) sale rc 0 con el codigo anterior: assert 0 == 1

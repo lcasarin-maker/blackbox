@@ -33,6 +33,7 @@ esto sale 1. Un gate que no puede salir en rojo no es un gate.
 import argparse
 import datetime as dt
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -48,6 +49,17 @@ SOSTENIDO_MIN = 5.0
 PICO_MAX_MIN = 3.0
 
 MUESTRAS = Path.home() / ".local/share/blackbox/samples"
+
+# El journal de `bb-usable`, el detector REAL (lee /proc/pressure/memory cada 30 s y aplica este mismo corte: avg10
+# >= 10 sostenido 300 s). Se consulta SOLO para las ventanas de incidente sin ninguna muestra de bin/bb dentro: ahi el
+# muestreador se quedo ciego durante el stall y sin esta segunda fuente el instrumento no puede validar el corte
+# contra los incidentes que mas importan (2026-10-11 22:02, DEBT-CALIBRA-PSI-CORTE-INVALIDO-INCIDENTE-11-OCT-22-02-NO-
+# DETECTADO-01). `-u` trae tambien las lineas de systemd sobre la unidad (el watchdog que reinicia). Sin `-q`, para
+# que el aviso de journal inaccesible por permisos llegue a stderr y se lea como COULD_NOT_RUN, no como silencio.
+JOURNAL_CMD = ["journalctl", "-u", "bb-usable.service", "-o", "short-iso", "--no-pager"]
+# WatchdogSec de systemd/bb-usable.service ("limit 6min" en el journal): el reinicio llega hasta 6 min despues de que
+# bb-usable deja de acariciar el watchdog, asi que la consulta se alarga eso mas alla del fin de la ventana.
+WATCHDOG_S = 360
 
 # Los dos congelamientos del 2026-09-22/23, ambos terminados en reset duro.
 # Son la verdad etiquetada de esta calibracion. No salen de PSI -- eso seria
@@ -164,13 +176,14 @@ INCIDENTES = [
     # telemetria de GPU a las 22:01:43 (psi_mem_full_avg10 1.72). Por eso el
     # inicio sale del journal de `bb-usable`, que lee /proc/pressure/memory
     # directo: 22:02:07 es su primera lectura >= 10 (avg10=42.6, racha 1/10), y
-    # declara COLAPSO sostenido desde las 22:08:18 (97.7, 360 s). Medido el
+    # declara COLAPSO sostenido desde las 22:07:07 (98.0, 300 s). Medido el
     # 2026-10-16: CERO muestras de bin/bb dentro de [22:02, 22:12]. Hasta esa
     # fecha `calibra()` la marcaba `no_detectados`, que afirmaba que el corte la
-    # dejo pasar sobre muestras que no existen; desde entonces la marca
-    # `sin_muestras_en_ventana` y el informe la imprime aparte. Sigue siendo la
-    # verdad sobre el instrumento (un hueco de muestreo), no un error de esta
-    # lista.
+    # dejo pasar sobre muestras que no existen. Marcarla solo
+    # `sin_muestras_en_ventana` dejaba el instrumento sin validar el corte contra
+    # el incidente que mas importa; desde entonces `main()` la OBSERVA por el
+    # journal de bb-usable (`lee_journal`/`observa_journal`): declara COLAPSO a
+    # las 22:07:07 y el watchdog reinicia a las 22:12:33.
     ("2026-10-11 22:02", "2026-10-11 22:12"),
     # OCTAVO, arranque 7b217d8b, en el arranque SIGUIENTE al septimo. El inicio
     # sale de las muestras de bin/bb: 22:44:20 es la primera con mem_full >= 10
@@ -368,9 +381,66 @@ def calibra(serie, incidentes=None, umbral=UMBRAL_PCT, sostenido=SOSTENIDO_MIN,
         "no_detectados": no_detectados,
         "fuera_del_corpus": fuera_del_corpus,
         "sin_muestras_en_ventana": sin_muestras_en_ventana,
+        "por_journal": [],
+        "journal_could_not_run": [],
         "umbral": umbral,
         "sostenido": sostenido,
     }
+
+
+def lee_journal(desde: dt.datetime, hasta: dt.datetime) -> list[str] | str:
+    """-> las lineas del journal de bb-usable en [desde, hasta], o un str con el motivo de COULD_NOT_RUN.
+
+    Un journal que no se pudo leer NUNCA vuelve como lista vacia: la lista vacia significa "el journal se leyo y no
+    tiene nada ahi", y confundir las dos cosas es leer el instrumento caido como sujeto sano."""
+    fmt = "%Y-%m-%d %H:%M:%S"
+    try:
+        p = subprocess.run(JOURNAL_CMD + ["--since", desde.strftime(fmt), "--until", hasta.strftime(fmt)],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace",
+                           timeout=60, check=False)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return "%s: %s" % (JOURNAL_CMD[0], e)
+    if p.returncode != 0 or "permission" in p.stderr.lower():
+        return "%s rc=%d: %s" % (JOURNAL_CMD[0], p.returncode, " ".join(p.stderr.split())[:200])
+    return p.stdout.splitlines()
+
+
+def eventos_journal(lineas: list[str]) -> list[tuple[dt.datetime, str]]:
+    """-> [(ts, tipo)] con tipo 'colapso' (bb-usable DECLARA COLAPSO: el corte disparo), 'reinicio' (systemd mata la
+    unidad por watchdog: la maquina reinicia) o 'vivo' (cualquier otra linea de bb-usable: estaba corriendo, y como
+    solo escribe PSI cuando PSI esta alta, su silencio mientras vive es PSI baja). Ignora lo que no tiene ts."""
+    out = []
+    for linea in lineas:
+        try:
+            t = _naive(dt.datetime.strptime(linea.split(" ", 1)[0], "%Y-%m-%dT%H:%M:%S%z"))
+        except ValueError:
+            continue
+        if "[bb-usable] COLAPSO:" in linea:
+            out.append((t, "colapso"))
+        elif "bb-usable.service: Watchdog timeout" in linea:
+            out.append((t, "reinicio"))
+        elif "[bb-usable]" in linea:
+            out.append((t, "vivo"))
+    return out
+
+
+def observa_journal(r: dict, ventana, eventos: list[tuple[dt.datetime, str]]) -> None:
+    """Mueve una ventana de `sin_muestras_en_ventana` a OBSERVADA si el journal tiene alguna linea de bb-usable dentro.
+
+    Detectada = bb-usable DECLARA COLAPSO dentro de [inicio, fin], la misma regla de disparo que las muestras. Si
+    bb-usable estaba vivo y no lo declaro, va a `no_detectados` y el veredicto sale rojo. Que REINICIE es aparte y se
+    imprime aparte: declarar colapso es el corte; reiniciar es el desenlace (watchdog hasta WATCHDOG_S despues)."""
+    a, b = ventana
+    dentro = [(t, k) for t, k in eventos if a <= t <= b]
+    if not dentro:
+        return
+    r["sin_muestras_en_ventana"].remove(ventana)
+    colapso = next((t for t, k in dentro if k == "colapso"), None)
+    reinicio = None if colapso is None else next(
+        (t for t, k in eventos if k == "reinicio" and colapso <= t <= b + dt.timedelta(seconds=WATCHDOG_S)), None)
+    r["por_journal"].append((ventana, colapso, reinicio))
+    if colapso is None:
+        r["no_detectados"].append(ventana)
 
 
 def informe(r: dict) -> list[str]:
@@ -402,13 +472,22 @@ def informe(r: dict) -> list[str]:
         "  ventanas de incidente sin muestras dentro:  %d" % len(r["sin_muestras_en_ventana"]),
     ]
     fmt = "%Y-%m-%d %H:%M"
-    out += ["    %s -> %s: hueco de muestreo, el corpus no puede decir si el corte la detecta"
+    out += ["    %s -> %s: hueco de muestreo, ni las muestras ni el journal de bb-usable dicen si el corte la detecta"
             % (a.strftime(fmt), b.strftime(fmt)) for a, b in r["sin_muestras_en_ventana"]]
+    out.append("  COULD_NOT_RUN, journal de bb-usable:  %d" % len(r["journal_could_not_run"]))
+    out += ["    %s -> %s: %s" % (a.strftime(fmt), b.strftime(fmt), motivo)
+            for (a, b), motivo in r["journal_could_not_run"]]
     out.append("  falsos positivos conocidos (excepcion atada a ficha abierta):  %d"
                % len(r["falsos_positivos_conocidos"]))
     out += ["    %s (%.0f min, max %.2f %%) -- deuda abierta %s"
             % (e[0][0].strftime("%m-%d %H:%M"), duracion_min(e), max(v for _, v in e), f["ficha"])
             for e, f in r["falsos_positivos_conocidos"]]
+    out += ["", "ventanas sin muestras observadas por el journal de bb-usable:  %d" % len(r["por_journal"])]
+    out += ["  %s -> %s: %s, %s" % (
+        a.strftime(fmt), b.strftime(fmt),
+        "declara COLAPSO %s" % colapso.strftime("%H:%M:%S") if colapso else "NO declara COLAPSO (bb-usable vivo)",
+        "reinicia %s (watchdog)" % reinicio.strftime("%H:%M:%S") if reinicio else "no reinicia")
+        for (a, b), colapso, reinicio in r["por_journal"]]
     return out
 
 
@@ -428,12 +507,22 @@ def main(argv=None) -> int:
         return 2
 
     r = calibra(serie, umbral=args.umbral, sostenido=args.sostenido)
+    for v in list(r["sin_muestras_en_ventana"]):
+        lineas = lee_journal(v[0], v[1] + dt.timedelta(seconds=WATCHDOG_S))
+        if isinstance(lineas, str):
+            r["journal_could_not_run"].append((v, lineas))
+        else:
+            observa_journal(r, v, eventos_journal(lineas))
     print("\n".join(informe(r)))
     malo = len(r["falsos_positivos"]) + len(r["no_detectados"])
     deuda = len(r["sin_muestras_en_ventana"]) + len(r["falsos_positivos_conocidos"])
-    print("\nVEREDICTO: %s" % ("CORTE INVALIDO" if malo else
-                               "CALIBRADO, con deuda impresa arriba" if deuda else "CALIBRADO"))
-    return 1 if malo else 0
+    cnr = len(r["journal_could_not_run"])
+    print("\nVEREDICTO: %s%s" % ("CORTE INVALIDO" if malo else
+                                 "CALIBRADO, con deuda impresa arriba" if deuda else "CALIBRADO",
+                                 " -- COULD_NOT_RUN: %d ventana(s) sin muestras y sin journal legible" % cnr
+                                 if cnr else ""))
+    # Un informe con COULD_NOT_RUN no es limpio aunque nada salga rojo: rc 2, la tercera salida.
+    return 1 if malo else 2 if cnr else 0
 
 
 if __name__ == "__main__":
