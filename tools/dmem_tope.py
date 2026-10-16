@@ -132,6 +132,9 @@ def principal(argv: list[str], ejecuta: Ejecutor = _ejecuta, raiz: Path = CGROUP
         puestos = topes_puestos(raiz, proc)
         print(" ".join(f"{q}={'sin tope' if v is None else f'{v / GIB:.0f}GiB'}" for q, v in puestos.items()))
         return 0 if all(v is not None for v in puestos.values()) else 1
+    if argv:
+        print("uso: bb dmem-tope [--estado]", file=sys.stderr)
+        return 2
     modo = interruptores.modo(NOMBRE)
     if modo == "off":
         print("dmem-tope: interruptor off; no hago nada")
