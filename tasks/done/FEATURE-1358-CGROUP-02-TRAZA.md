@@ -3,12 +3,16 @@ id: FEATURE-1358-CGROUP-02-TRAZA
 kind: task
 domain: GPU
 title: "Identificar el camino de asignación y el propietario del cargo"
-status: open
+status: done
+closed_at: 2026-10-16
+closure_type: relocated_prior_verification
+reason: "La pregunta (por que camino entra una asignacion CUDA y quien paga) se contesto por otra via el 2026-10-12: el barrido de ioctl (barrido-ioctl-20261012.txt) mostro que cudaMalloc entra por la clase RM 0x3e (NV01_MEMORY_SYSTEM) y no por video_mem.c, y el parche cobra ahi (sysmemConstruct_IMPL). La traza dinamica de memcg/flags que pedia esta ficha no se hizo."
+evidence: {"pass": "tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA.pass.txt", "fail": "tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA.fail.txt", "e2e": "tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA.e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m tools.verify_cgroup_plan --phase 02-traza --evidence tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA", "expect": "exit_zero", "porque": "Verificador específico pendiente: debe evaluar resultados reales y controles negativos descritos en esta ficha, no su mera existencia."}
+close_check: {"cmd": "grep -q \"class=0x3e\" tasks/evidence/FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01/barrido-ioctl-20261012.txt", "expect": "exit_zero", "porque": "La verificacion se relocalizo a FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01 (voto de Luis 2026-10-16). Comprueba el marcador de su medicion; no re-ejecuta el experimento ni acredita la autenticidad del origen. Control negativo: el mismo grep contra un marcador inexistente da rc 1."}
 ---
 
 ## Contexto y dependencias
@@ -66,3 +70,17 @@ Los criterios ejecutables de `tools.verify_cgroup_plan` se miden en esta ficha: 
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Disparador: una captura con bpftrace que corre Luis en persona (bpftrace es root total: no se sella en bb-root-run). Paso exacto: en una ventana de laboratorio, `sudo bpftrace tools/kernel_charges.bt` mientras corre `python3 -m tools.cgroup_repro`, guardando stdout y stderr en `tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA/`; despues `python3 -m tools.verify_cgroup_plan --phase 02-traza --evidence tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA`. La misma captura sirve a FEATURE-MEMORYSAVER-02-TRAZADOR.
+
+## Root Cause
+La ficha se abrio el 2026-10-02 como plan de un swarm (Luna/Codex): sus verificadores (`tools.verify_cgroup_plan --phase ...`) nunca recibieron capturas y daban `unknown`. Entre tanto el 2026-10-12 el modulo NVIDIA parcheado se cargo y se midio por otra ruta; la pregunta de esta ficha quedo contestada ahi. Leccion: un plan con verificador pendiente no es un cierre; esta ficha queda cerrada solo por la verificacion relocalizada de abajo.
+
+## Regression Test
+Ninguno propio: la verificacion vive en `FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01` (su close_check y su evidencia). El control negativo de arriba prueba que el comprobador distingue un marcador presente de uno ausente.
+
+## Verification Evidence
+- pass: `tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA.pass.txt`
+- fail: `tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA.fail.txt`
+- e2e: `tasks/evidence/FEATURE-1358-CGROUP-02-TRAZA.e2e.txt`
+
+## Limite declarado (cierre del 2026-10-16, voto de Luis)
+No se hizo la traza dinamica (kprobes/bpftrace de memcg, flags y worker); el camino se infirio de un barrido de ioctl del espacio de usuario y se confirmo midiendo el cobro con el modulo cargado. Una interpretacion de ensamblador sigue siendo inferencia.
