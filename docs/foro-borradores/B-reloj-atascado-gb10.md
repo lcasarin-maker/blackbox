@@ -1,4 +1,4 @@
-# [DRAFT B] Category: DGX Spark / GB10
+# [DRAFT B, corrected 2026-10-16] Category: DGX Spark / GB10
 **Title:** Stuck GPU clock on GB10 (500–800 MHz, zero throttle reasons): a measured case on a Gigabyte AI TOP ATOM, a detector, and a heat side-effect
 
 This is another confirmed case of the state described in threads 376039, 376239, 366944, 362737, 375687, 376542, 378150 and 382897, with numbers and a detector.
@@ -12,7 +12,7 @@ This is another confirmed case of the state described in threads 376039, 376239,
 
 **Stuck state**: SM clock 663 MHz (max 3003, default application clock 2418), 16.4 W, utilisation 95 %, throttle reasons `0x0`, 23.5 TFLOPS on an fp16 8192×8192 matmul. `nvidia-smi -lgc` is accepted and ignored. A reboot does not clear it.
 
-**Remedy** (as reported by NVIDIA staff in 376039/376239; one user in the threads reports it was not enough for them): power off, unplug the AC adapter from the wall, hold the power button ~10 s, wait a few minutes, reconnect. On my unit it cleared: 2080 MHz, 67 W, 77.4 TFLOPS on the same test. I have no healthy baseline from before, so 77.4 is a post-fix reading, not a spec.
+**Remedy** (reported by community members in 376039 and 376239 and repeated by an NVIDIA moderator in 376039; not an NVIDIA-documented procedure; the waits reported range from 5 minutes in 376239 to "up to 8 hours" in 376039, where one user says it did not work): power off, unplug the AC adapter from the wall (and USB), hold the power button ~10 s, wait a few minutes, reconnect. On my unit it cleared: 2080 MHz, 67 W, 77.4 TFLOPS on the same test. I have no healthy baseline from before, so 77.4 is a post-fix reading, not a spec.
 
 **Side-effect I could not rule out (hypothesis, not proven)**: threads 381549 and 383821 say the fan curve follows GPU temperature. With the GPU stuck and cold, the CPU/SoC zones heated with the fans low. My unit also cut power once after hours in that state. I have no evidence that the stuck clock caused the cut.
 
