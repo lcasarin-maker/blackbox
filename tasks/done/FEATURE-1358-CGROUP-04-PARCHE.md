@@ -3,12 +3,16 @@ id: FEATURE-1358-CGROUP-04-PARCHE
 kind: task
 domain: GPU
 title: "Preparar un parche NVIDIA condicionado al hueco demostrado"
-status: open
+status: done
+closed_at: 2026-10-16
+closure_type: relocated_prior_verification
+reason: "El parche condicionado se escribio, compilo, firmo, cargo y midio el 2026-10-12 (data/dmem/memacct-580.patch, FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01): cudaMalloc se cobra al cgroup y dmem.max se hace cumplir."
+evidence: {"pass": "tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE.pass.txt", "fail": "tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE.fail.txt", "e2e": "tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE.e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m tools.verify_cgroup_plan --phase 04-parche --evidence tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE", "expect": "exit_zero", "porque": "Verificador específico pendiente: debe evaluar resultados reales y controles negativos descritos en esta ficha, no su mera existencia."}
+close_check: {"cmd": "grep -q \"d2 tope 512M, pide 1024 MiB\" tasks/evidence/FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01/medicion-v2-cargado-20261012.txt", "expect": "exit_zero", "porque": "La verificacion se relocalizo a FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01 (voto de Luis 2026-10-16). Comprueba el marcador de su medicion; no re-ejecuta el experimento ni acredita la autenticidad del origen. Control negativo: el mismo grep contra un marcador inexistente da rc 1."}
 ---
 
 ## Contexto y dependencias
@@ -50,3 +54,17 @@ y resultados runtime. El verificador de cierre permanece pendiente.
 
 ## Criterios ejecutables de `tools.verify_cgroup_plan` (2026-10-14)
 Los criterios ejecutables de `tools.verify_cgroup_plan` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-CGROUP-PLAN-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
+
+## Root Cause
+La ficha se abrio el 2026-10-02 como plan de un swarm (Luna/Codex): sus verificadores (`tools.verify_cgroup_plan --phase ...`) nunca recibieron capturas y daban `unknown`. Entre tanto el 2026-10-12 el modulo NVIDIA parcheado se cargo y se midio por otra ruta; la pregunta de esta ficha quedo contestada ahi. Leccion: un plan con verificador pendiente no es un cierre; esta ficha queda cerrada solo por la verificacion relocalizada de abajo.
+
+## Regression Test
+Ninguno propio: la verificacion vive en `FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01` (su close_check y su evidencia). El control negativo de arriba prueba que el comprobador distingue un marcador presente de uno ausente.
+
+## Verification Evidence
+- pass: `tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE.pass.txt`
+- fail: `tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE.fail.txt`
+- e2e: `tasks/evidence/FEATURE-1358-CGROUP-04-PARCHE.e2e.txt`
+
+## Limite declarado (cierre del 2026-10-16, voto de Luis)
+El diff vive en este repo (data/dmem/memacct-580.patch), no en un fork de NVIDIA/open-gpu-kernel-modules, y no se propuso upstream; el texto para colaboracion no se publico.

@@ -1,0 +1,10 @@
+[Unit]
+Description=bb tope de memoria de GPU por cgroup, 5 minutos despues del arranque y cada dia
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=1d
+Unit=bb-dmem-tope.service
+
+[Install]
+WantedBy=timers.target

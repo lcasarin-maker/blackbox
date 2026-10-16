@@ -1,0 +1,9 @@
+e2e sobre el sujeto vivo (modulo NVIDIA 580.178.04 parcheado cargado), 2026-10-16. La region dmem existe y bb gpumem cobra por cgroup:
+
+$ cat /sys/fs/cgroup/dmem.capacity; python3 -m tools.gpumem | head -6
+nvidia/0000000F:01:00.0/vidmem 53794045952
+region nvidia/0000000F:01:00.0/vidmem  cobrado 32.49 GiB de 50.1 GiB (techo utilizable de la maquina 119.2 GiB)
+     31.70 GiB  contenedor nemotron-server
+      0.56 GiB  user.slice
+      0.22 GiB  system.slice
+      0.01 GiB  sin atribuir a una hoja

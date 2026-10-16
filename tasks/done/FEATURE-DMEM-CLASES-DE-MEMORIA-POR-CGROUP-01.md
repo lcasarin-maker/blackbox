@@ -37,7 +37,7 @@ Control bajo el tope: managed de 512 MiB en el mismo scope de 1G pasa (exit 0). 
 
 ## Lo desarrollado
 - `tools/verify_clases_memoria.py` y `tasks/evidence/FEATURE-DMEM-CLASES-DE-MEMORIA-POR-CGROUP-01/{capture.py,prueba.py}`: la captura reproducible y el verificador que recalcula.
-- `bb dmem-tope` avisa (sin bloquear) si `memory.max` del motor o del slice del usuario esta en `max`: ahi managed y pinned no tendrian tope. Hoy el motor tiene 75 GiB (80530636800 B) y `user-1000.slice` 48 GiB (51539607552 B); `user.slice` esta en `max` y por eso el aviso lo senala en la corrida real.
+- `bb dmem-tope` avisa (sin bloquear) si `memory.max` del motor o del slice del usuario esta en `max`: ahi managed y pinned no tendrian tope. Hoy el motor tiene 75 GiB (80530636800 B) y `user-1000.slice` 48 GiB (51539607552 B); `user.slice` esta en `max`, pero el aviso mira `user-<uid>.slice`, que es finito: la corrida real de `bb dmem-tope` (timer, 2026-10-16) registra `avisos: []`. El aviso se probo contra un arbol falso con `memory.max=max`, no contra el sistema real. (Correccion del 2026-10-16: la primera version de este texto decia que el aviso senalaba a user.slice en la corrida real; era falso.)
 - `bb status` muestra el tope puesto (`bb dmem-tope --estado`) cuando el interruptor `dmem_tope` no esta en off. Hoy: sin tope, porque nadie ha aprobado el manifiesto.
 
 ## Limites declarados

@@ -3,12 +3,16 @@ id: FEATURE-1358-CGROUP-03-NATIVO
 kind: task
 domain: GPU
 title: "Evaluar la contabilidad nativa de NVIDIA y dmem en GB10"
-status: open
+status: done
+closed_at: 2026-10-16
+closure_type: relocated_prior_verification
+reason: "La pregunta (sirve la contabilidad nativa dmem de NVIDIA 615 en GB10?) se contesto sin ejecutar el 615: la fuente 615 exige modulos, GSP y espacio de usuario de la misma version (comparison.txt), asi que se hizo el backport reversible de memacct a 580.178.04, que esta cargado y medido (FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01)."
+evidence: {"pass": "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO.pass.txt", "fail": "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO.fail.txt", "e2e": "tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO.e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m tools.verify_cgroup_plan --phase 03-nativo --evidence tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO", "expect": "exit_zero", "porque": "Verificador específico pendiente: debe evaluar resultados reales y controles negativos descritos en esta ficha, no su mera existencia."}
+close_check: {"cmd": "grep -q \"(+268435456)  COBRA\" tasks/evidence/FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01/medicion.txt", "expect": "exit_zero", "porque": "La verificacion se relocalizo a FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01 (voto de Luis 2026-10-16). Comprueba el marcador de su medicion; no re-ejecuta el experimento ni acredita la autenticidad del origen. Control negativo: el mismo grep contra un marcador inexistente da rc 1."}
 ---
 
 ## Contexto y dependencias
@@ -66,3 +70,17 @@ Los criterios ejecutables de `tools.verify_cgroup_plan` se miden en esta ficha: 
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Disparador: cargar el driver 615 en un arranque de prueba (instalacion firmada para Secure Boot y reinicio, ambos de Luis), o en otro equipo GB10 de laboratorio. Hoy corre 580.178.04 con el modulo dmem parcheado; los modulos 615 compilados no se instalaron. Paso exacto tras ese arranque: el arnes de 01 con limite inferior a una asignacion, segundo cgroup y liberacion, y `python3 -m tools.verify_cgroup_plan --phase 03-nativo --evidence tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO`; rollback al 580.
+
+## Root Cause
+La ficha se abrio el 2026-10-02 como plan de un swarm (Luna/Codex): sus verificadores (`tools.verify_cgroup_plan --phase ...`) nunca recibieron capturas y daban `unknown`. Entre tanto el 2026-10-12 el modulo NVIDIA parcheado se cargo y se midio por otra ruta; la pregunta de esta ficha quedo contestada ahi. Leccion: un plan con verificador pendiente no es un cierre; esta ficha queda cerrada solo por la verificacion relocalizada de abajo.
+
+## Regression Test
+Ninguno propio: la verificacion vive en `FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01` (su close_check y su evidencia). El control negativo de arriba prueba que el comprobador distingue un marcador presente de uno ausente.
+
+## Verification Evidence
+- pass: `tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO.pass.txt`
+- fail: `tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO.fail.txt`
+- e2e: `tasks/evidence/FEATURE-1358-CGROUP-03-NATIVO.e2e.txt`
+
+## Limite declarado (cierre del 2026-10-16, voto de Luis)
+El driver 615 nunca se ejecuto con la pila alineada: no se midio su cobro, ni sus limites independientes, ni la comparticion. Solo se evaluo por lectura de fuente y por compatibilidad. Si NVIDIA publica un 615 para GB10, la comparacion queda por hacer.
