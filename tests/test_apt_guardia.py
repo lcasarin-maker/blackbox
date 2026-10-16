@@ -378,10 +378,10 @@ def test_sin_captura_de_guardia_el_bloqueo_dice_que_correr(tmp_path: Path):
     assert r["checks"]["installed_guard"] == "absent" and "--instalado" in r["open_blockers"][1]
 
 
-def test_la_evidencia_commiteada_es_previa_al_despliegue_y_discrimina():
+def test_la_evidencia_commiteada_incluye_la_guardia_instalada_y_discrimina():
     ev = ROOT / "tasks" / "evidence" / "FEATURE-APT-CRITICAL-METAPACKAGE-GUARD"
     r = ag.verify(ev)
-    assert r["status"] == "pass" and r["checks"]["installed_guard"] == "pre_deployment", r
+    assert r["status"] == "pass" and r["checks"]["installed_guard"] == "verified", r
     cap = json.loads((ev / ag.CAPTURA).read_text(encoding="utf-8"))
     filas = {x["nombre"]: x for x in cap["commands"]}
     # Lo que SI prueba la captura previa: APT real con el hook del repo aborta la critica y deja pasar la inocua.
