@@ -390,6 +390,8 @@ def _cargar_origen() -> tuple[Any, str | None]:
     ruta = Path(__file__).resolve().parent.parent / "tools" / "origen_proceso.py"
     try:
         spec = importlib.util.spec_from_file_location("bb_usable_origen", ruta)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"sin cargador para {ruta}")
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         return mod, None
@@ -482,7 +484,7 @@ def decidir_escalon(m: MuestraEscalon, e: EstadoEscalon) -> Decision:
         return Decision("nada", False, "cgroup de app.slice ilegible: no se mata; "
                         "el COLAPSO sigue de respaldo", estado)
     llenos = [s for s in m.slices
-              if s.fraccion() is not None and s.fraccion() >= ESCALON_FRACCION_SLICE]
+              if (f := s.fraccion()) is not None and f >= ESCALON_FRACCION_SLICE]
     if not llenos:
         vistos = ", ".join("sin techo" if s.fraccion() is None else f"{s.fraccion():.1%}"
                            for s in m.slices) or "ninguno"
@@ -860,6 +862,87 @@ def paso_escalon(psi: float | None, estado: EstadoEscalon,
     return salida[0]
 
 
+# Las reacciones del latido a una lectura de PSI. Cada una recibe y devuelve los contadores de forma explicita
+# (`sostenido`, `bajas`, `confinadas`) y devuelve si esta vuelta ACARICIA el watchdog; quien acaricia es `main`.
+# Extraidas de `main` sin cambiar ni una linea de log ni el orden de los efectos (DEBT-RUFF-BB-USABLE-01; la
+# secuencia esta fijada en tests/fixtures/bb_usable_caracterizacion.json).
+
+
+def reaccion_psi_ilegible(sostenido: int) -> bool:
+    """PSI que no se pudo leer NO cuenta como colapso: "no se midio" y "la maquina esta bien" son cosas
+    distintas, y reiniciar por la primera seria reiniciar por ceguera. Tampoco reinicia la racha: una lectura
+    perdida en medio de un colapso no lo absuelve, asi que no toca ningun contador."""
+    log("[bb-usable] PSI ILEGIBLE -- no cuenta ni para actuar ni para "
+        f"absolver (racha sigue en {sostenido}/{PSI_ACT_SONDAS})")
+    if sostenido >= PSI_ACT_SONDAS:
+        log("[bb-usable] el colapso sigue declarado y PSI no permite "
+            "confirmar recuperacion -- no se acaricia el watchdog")
+        return False
+    return True
+
+
+def reaccion_colapso(psi: float, took: float, sostenido: int, confinadas: int) -> tuple[bool, int]:
+    """La racha llego al corte. Devuelve (acaricia, confinadas). Solo el atasco confinado en `actuar` acaricia."""
+    accion, confinadas = paso_confinado(confinadas)
+    if accion == "acaricia":
+        log(f"[bb-usable] ATASCO CONFINADO a app.slice: PSI memory full avg10={psi:.1f} sostenido "
+            f"{sostenido * PROBE_INTERVAL:.0f}s, docker.slice y system.slice sin presion -- se acaricia "
+            f"el watchdog ({confinadas}/{CONFINADO_MAX_SONDAS} sondas del tope duro)")
+        origen_al_declarar_colapso(sostenido)
+        return True, confinadas
+    if accion == "habria_acariciado":
+        log(f"[bb-usable] ATASCO CONFINADO a app.slice (observar): habria acariciado el watchdog "
+            f"({confinadas}/{CONFINADO_MAX_SONDAS}); NO se acaricia")
+    # Esto es lo que no pasaba. No se acaricia: systemd deja de
+    # recibir la caricia, marca la unidad como fallida y
+    # FailureAction=reboot-immediate cobra dentro de WatchdogSec.
+    log(f"[bb-usable] COLAPSO: PSI memory full avg10={psi:.1f} >= "
+        f"{PSI_ACT_FULL_AVG10:.0f} sostenido "
+        f"{sostenido * PROBE_INTERVAL:.0f}s "
+        f">= {PSI_ACT_SOSTENIDO_S:.0f}s (sonda {took*1000:.0f} ms, "
+        f"que es justo por lo que la sonda sola no lo ve) -- "
+        f"NO se acaricia el watchdog, que reinicie")
+    origen_al_declarar_colapso(sostenido)
+    return False, confinadas
+
+
+def reaccion_psi_alta(psi: float, took: float, sostenido: int, bajas: int,
+                      confinadas: int) -> tuple[bool, int, int, int]:
+    """PSI >= umbral de accion. Devuelve (acaricia, sostenido, bajas, confinadas)."""
+    sostenido += 1
+    bajas = 0
+    if sostenido >= PSI_ACT_SONDAS:
+        acaricia, confinadas = reaccion_colapso(psi, took, sostenido, confinadas)
+        return acaricia, sostenido, bajas, confinadas
+    log(f"[bb-usable] PSI memory full avg10={psi:.1f} >= "
+        f"{PSI_ACT_FULL_AVG10:.0f} -- racha {sostenido}/{PSI_ACT_SONDAS} "
+        f"({sostenido * PROBE_INTERVAL:.0f}s de {PSI_ACT_SOSTENIDO_S:.0f}s), "
+        f"sonda {took*1000:.0f} ms")
+    return True, sostenido, bajas, confinadas
+
+
+def reaccion_psi_baja(psi: float, sostenido: int, bajas: int,
+                      confinadas: int) -> tuple[bool, int, int, int]:
+    """PSI por debajo del umbral. Devuelve (acaricia, sostenido, bajas, confinadas)."""
+    bajas += 1
+    # Una sola sonda baja NO absuelve un colapso. El criterio de este
+    # demonio es la DURACION, y una duracion que cualquier muestra
+    # suelta puede poner a cero no es una duracion.
+    if bajas >= BAJAS_PARA_CORTAR:
+        log_recovery(psi, bajas, sostenido)
+        sostenido = 0
+        bajas = 0
+        confinadas = 0
+    elif sostenido:
+        log(f"[bb-usable] PSI bajo a {psi:.1f}, pero UNA sonda no "
+            f"absuelve: la racha sigue en {sostenido}/{PSI_ACT_SONDAS} "
+            f"(hacen falta {BAJAS_PARA_CORTAR} bajas seguidas)")
+    # Y si la racha SIGUE en colapso, esta sonda tampoco acaricia:
+    # absolver mientras el criterio de accion se cumple es lo que
+    # regalaba seis minutos de watchdog en cada bajada.
+    return sostenido < PSI_ACT_SONDAS, sostenido, bajas, confinadas
+
+
 def main() -> int:
     notify("READY=1")
     first = probe()
@@ -896,71 +979,14 @@ def main() -> int:
                 f"no se acaricia el watchdog")
             continue
 
-        # PSI que no se pudo leer NO cuenta como colapso: "no se midio" y
-        # "la maquina esta bien" son cosas distintas, y reiniciar por la
-        # primera seria reiniciar por ceguera. Tampoco reinicia la racha:
-        # una lectura perdida en medio de un colapso no lo absuelve.
         if psi is None:
-            log("[bb-usable] PSI ILEGIBLE -- no cuenta ni para actuar ni para "
-                f"absolver (racha sigue en {sostenido}/{PSI_ACT_SONDAS})")
-            if sostenido >= PSI_ACT_SONDAS:
-                log("[bb-usable] el colapso sigue declarado y PSI no permite "
-                    "confirmar recuperacion -- no se acaricia el watchdog")
-                continue
-            notify("WATCHDOG=1")
-            continue
-
-        if psi >= PSI_ACT_FULL_AVG10:
-            sostenido += 1
-            bajas = 0
-            if sostenido >= PSI_ACT_SONDAS:
-                accion, confinadas = paso_confinado(confinadas)
-                if accion == "acaricia":
-                    log(f"[bb-usable] ATASCO CONFINADO a app.slice: PSI memory full avg10={psi:.1f} sostenido "
-                        f"{sostenido * PROBE_INTERVAL:.0f}s, docker.slice y system.slice sin presion -- se acaricia "
-                        f"el watchdog ({confinadas}/{CONFINADO_MAX_SONDAS} sondas del tope duro)")
-                    origen_al_declarar_colapso(sostenido)
-                    notify("WATCHDOG=1")
-                    continue
-                if accion == "habria_acariciado":
-                    log(f"[bb-usable] ATASCO CONFINADO a app.slice (observar): habria acariciado el watchdog "
-                        f"({confinadas}/{CONFINADO_MAX_SONDAS}); NO se acaricia")
-                # Esto es lo que no pasaba. No se acaricia: systemd deja de
-                # recibir la caricia, marca la unidad como fallida y
-                # FailureAction=reboot-immediate cobra dentro de WatchdogSec.
-                log(f"[bb-usable] COLAPSO: PSI memory full avg10={psi:.1f} >= "
-                    f"{PSI_ACT_FULL_AVG10:.0f} sostenido "
-                    f"{sostenido * PROBE_INTERVAL:.0f}s "
-                    f">= {PSI_ACT_SOSTENIDO_S:.0f}s (sonda {took*1000:.0f} ms, "
-                    f"que es justo por lo que la sonda sola no lo ve) -- "
-                    f"NO se acaricia el watchdog, que reinicie")
-                origen_al_declarar_colapso(sostenido)
-                continue
-            log(f"[bb-usable] PSI memory full avg10={psi:.1f} >= "
-                f"{PSI_ACT_FULL_AVG10:.0f} -- racha {sostenido}/{PSI_ACT_SONDAS} "
-                f"({sostenido * PROBE_INTERVAL:.0f}s de {PSI_ACT_SOSTENIDO_S:.0f}s), "
-                f"sonda {took*1000:.0f} ms")
+            acaricia = reaccion_psi_ilegible(sostenido)
+        elif psi >= PSI_ACT_FULL_AVG10:
+            acaricia, sostenido, bajas, confinadas = reaccion_psi_alta(psi, took, sostenido, bajas, confinadas)
         else:
-            bajas += 1
-            # Una sola sonda baja NO absuelve un colapso. El criterio de este
-            # demonio es la DURACION, y una duracion que cualquier muestra
-            # suelta puede poner a cero no es una duracion.
-            if bajas >= BAJAS_PARA_CORTAR:
-                log_recovery(psi, bajas, sostenido)
-                sostenido = 0
-                bajas = 0
-                confinadas = 0
-            elif sostenido:
-                log(f"[bb-usable] PSI bajo a {psi:.1f}, pero UNA sonda no "
-                    f"absuelve: la racha sigue en {sostenido}/{PSI_ACT_SONDAS} "
-                    f"(hacen falta {BAJAS_PARA_CORTAR} bajas seguidas)")
-            # Y si la racha SIGUE en colapso, esta sonda tampoco acaricia:
-            # absolver mientras el criterio de accion se cumple es lo que
-            # regalaba seis minutos de watchdog en cada bajada.
-            if sostenido >= PSI_ACT_SONDAS:
-                continue
-
-        notify("WATCHDOG=1")
+            acaricia, sostenido, bajas, confinadas = reaccion_psi_baja(psi, sostenido, bajas, confinadas)
+        if acaricia:
+            notify("WATCHDOG=1")
 
 
 if __name__ == "__main__":
