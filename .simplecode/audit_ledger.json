@@ -1,6 +1,6 @@
 {
-  "claims_fingerprint": "ef4553d464fedab373c98837c08af2ea1b48cf2655c6acba5a2a89db8d5441bb",
-  "panel": "Opus auditor, 2026-10-16, re-audit of 4 stale claims (refuted L419/L422 text, fixed, re-passed)",
+  "claims_fingerprint": "f8105cb2fccce9abd887428c3c4f4212bf621fdbe75090ca5b14d5f1107c3a83",
+  "panel": "1 auditor Opus, 2026-10-16, refuto SPEC-L419 tras el cierre de calibra_psi (journal bb-usable); controles negativos corridos",
   "profile": "general",
   "results": [
     {
@@ -121,13 +121,15 @@
     },
     {
       "cited": {
-        "tests/test_calibra_psi.py": "61a3ab282d14ff3b38ee80fd17341f2e418d349d12ed169b6b5ba3eb2fc4d2a1",
-        "tools/calibra_psi.py": "0741e05b984853d28d98a1e7891b2defee056a25fdc27771b00df3fc4c1b3e81",
+        "tests/test_calibra_psi.py": "cfd659abd069d1f8131cfab5e428d4a704c7711d1e79885378095084412c92f0",
+        "tests/test_control_racha.py": "f611453e5ed08b653213ce312ccef32bcd6b564ae4861cba1b93e6f8fa8f8ca0",
+        "tools/calibra_psi.py": "a2c2e1b4020731ba02ac83bbb6b0f767717b93f6573c239f034ea1cf602ab02d",
         "tools/control_racha.py": "581c6565cf0aa7b78e4631067642deeb604fd4925961546053f354b463b6ad71"
       },
       "claim_id": "SPEC-L419",
-      "evidence": "El texto insertado en 0cfca4d3 es literal el propuesto (grep -cF de cada bloque nuevo en SPEC.md -> 1). Recalculado con el arbol actual, truncando el corpus de `carga(MUESTRAS)` a la hora que nombra cada frase: corte 2026-10-16 13:54:59 -> 27057 muestras, falsos_positivos 0, no_detectados 0, sin_muestras_en_ventana 1, falsos_positivos_conocidos 3, fuera_del_corpus 6 (calibra_psi.py:432-436 => rc 0, CALIBRADO con deuda); corte 12:39:59 -> 26952 muestras. Corpus completo ahora (27060, hasta 13:57) da lo mismo. Las 3 excursiones exentas son 10:37:01-10:43:13 (max 56.34), 10:44:05-10:54:25 (max 55.50) y 13:45:02-13:50:14 (max 68.46), en las 2 ventanas de FALSOS_POSITIVOS_CONOCIDOS (tools/calibra_psi.py:196-206: 10:37-10:55 y 13:44-13:52, ficha DEBT-COLAPSO-CONFINADO-...-01); control_racha.py:61 las importa de calibra_psi. `max_sostenido_sano(S,2)` -> (286.0, 2026-10-06 08:38:47); `bb sample` ultima muestra antes de la ventana: 2026-10-11 22:00:34. Commits: 2957bdac introduce sin_muestras_en_ventana y mueve la excepcion a calibra_psi; f9bfc2ac anade la ventana 13:44-13:52 (git show --stat). Ficha DEBT-CALIBRA-PSI-CORTE-INVALIDO-INCIDENTE-11-OCT-22-02-NO-DETECTADO-01: `status: open` en tasks/backlog. Las cifras historicas (12:39 rc=1, 2 FP + 1 no detectado; hasta 2026-10-15, 0 FP + 1 no detectado) las re-derive con el clasificador ANTERIOR (`git show 2957bdac^:tools/calibra_psi.py` importado aparte): 12:39:59 -> 26952, FP 2, no_det 1; 2026-10-15 23:59:59 -> 25977, FP 0, no_det 1. Controles negativos corridos: `calibra(S, conocidos=[])` -> FP 3 (CORTE INVALIDO) y `max_sostenido_sano(S,2,exentas=[])` -> (642.0, 2026-10-16 10:54:25); el clasificador viejo y el nuevo dan veredictos distintos sobre el mismo corpus. Las cifras de muestras van con su hora y se pueden re-derivar truncando el corpus hasta que RETAIN_DAYS=14 descarte octubre 1-2 (~2026-10-15+14 dias); a partir de ahi quedan como historicas, igual que las corridas anteriores del renglon.",
-      "seal": "417f8e08c903630ea04d56b17f61e98bdc3e41b31b21674c040d03e3d31b4126",
+      "evidence": "Current tree (HEAD 36bfff3f), run 2026-10-16 16:48. (1) `python3 -m tools.calibra_psi` -> rc=0, corpus 2026-10-01 00:00 -> 2026-10-16 16:48, 27231 samples, FP 0, no detectados 0, fuera del corpus 6, ventanas sin muestras 0, COULD_NOT_RUN journal 0, 3 falsos positivos conocidos (10-16 10:37 6 min max 56.34 %; 10:44 10 min max 55.50 %; 13:45 5 min max 68.46 %) tied to DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01; 'ventanas sin muestras observadas por el journal de bb-usable: 1 / 2026-10-11 22:02 -> 22:12: declara COLAPSO 22:07:07, reinicia 22:12:33 (watchdog)'; 'VEREDICTO: CALIBRADO, con deuda impresa arriba'. (2) Historical runs re-derived by truncating carga(MUESTRAS) at 12:39 and 13:54: 26952 and 27057 samples, ranges 2026-10-01 00:00 -> 12:39 / 13:54; at 13:54 calibra() gives FP 0, ND 0, fuera 6, sin_muestras 1, conocidos 3 -- matches the row. (3) Fichas: tasks/done/DEBT-CALIBRA-PSI-CORTE-INVALIDO-INCIDENTE-11-OCT-22-02-NO-DETECTADO-01.md (row says cerrada: true), tasks/backlog/DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01.md (open, row ties exceptions to it: true), tasks/done/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01.md (only cited as diagnosis). (4) Code anchors: tools/calibra_psi.py:13-16 docstring 19804 muestras / 98.53 % / 48.80 %; `git log -1 90847b3` body lines 8-14 same figures and 2026-09-08 07:57 -> 2026-09-23 10:53; bin/bb:16 RETAIN_DAYS default 14; INCIDENTES has 9 windows (09-22 05:45, 09-22 23:49, 09-24 00:02, 09-26 15:20, 09-28 03:28, 09-28 04:18, 10-05 00:00-00:31, 10-11 22:02-22:12, 10-11 22:44-22:54) = n=9; FALSOS_POSITIVOS_CONOCIDOS at tools/calibra_psi.py:209 with windows 10:37-10:55 and 13:44-13:52; calibra(conocidos=) at :305; lee_journal :391, observa_journal :427 (vivo sin COLAPSO -> no_detectados), main :494 returns `1 if malo else 2 if cnr else 0`; tools/control_racha.py:61,66 imports FALSOS_POSITIVOS_CONOCIDOS/ventanas_exentas, max_sostenido_sano(serie, bajas, exentas=None) at :98. Commits 2957bdac (2026-10-16 13:41) and f9bfc2ac (2026-10-16 13:53) exist. journalctl: COLAPSO 22:07:07, 'Watchdog timeout' 22:12:33, 'Rebooting.' 22:12:46. (5) `python3 -m tools.control_racha` -> rc=0, 'VEREDICTO: LIMPIO ... Margen 1.05x', 286 s; max_sostenido_sano(s,2) = (286.0, 2026-10-06 08:38:47); max_sostenido_sano(s,2,exentas=[]) = (642.0, 2026-10-16 10:54:25); calibra(s, conocidos=[]) -> 3 falsos positivos. (6) `python3 -m pytest -q tests/test_calibra_psi.py tests/test_control_racha.py` -> 58 passed in 2.54s; named test tests/test_calibra_psi.py:193 test_control_negativo_excursion_solapa_incidente_pero_dispara_despues exists; journal tests :429 test_control_negativo_bb_usable_vivo_sin_declarar_colapso_es_no_detectado and :445 test_journal_ilegible_es_could_not_run_junto_al_veredicto. NEGATIVE CONTROLS run on the real corpus: `python3 -m tools.calibra_psi --sostenido 0` -> 'VEREDICTO: CORTE INVALIDO' rc=1; JOURNAL_CMD=['false'] -> '... COULD_NOT_RUN: 1 ventana(s) sin muestras y sin journal legible' rc 2; JOURNAL_CMD echoing only a live bb-usable line without COLAPSO -> 'incidentes no detectados: 1', 'VEREDICTO: CORTE INVALIDO', rc 1. Nuance (not a falsehood): an unreadable journal yields rc 2 only when nothing else is red; with FP/ND present main() returns 1, still never green as the row says.",
+      "fix": "",
+      "seal": "ea5bc2704838165c7cdf9a8427b0ace8e5734616b6d3858d9fc006a21ecdb101",
       "verdict": "PASS"
     },
     {
@@ -188,7 +190,7 @@
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-16T20:00:07Z",
-  "tree_fingerprint": "5d41ad2378a5bd18b769ae708fd705d2fd2ec26dd5f0dc95f63951991ffb0e2d",
+  "timestamp": "2026-10-16T22:50:19Z",
+  "tree_fingerprint": "3283ef56eedbbea7da43cd0b0de3fe6e728261c5c4b133a35aeb14dadde65bdb",
   "violations": []
 }
