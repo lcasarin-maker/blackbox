@@ -2175,12 +2175,24 @@ def test_control_negativo_status_sensor_en_observar_sin_artefacto_fresco_esta_FA
     assert "FALTA" in _fila(salida, "canario del motor")  # el artefacto ni existe
 
 
-def test_status_tope_de_gpu_aparece_solo_si_el_interruptor_no_esta_off(datos):
+def test_status_tope_de_gpu_en_observar_mira_la_antiguedad_de_su_registro(datos):
     _modos(datos, dmem_tope="off")
-    assert "tope de memoria de GPU" not in correr(["status"], datos).stdout  # control negativo: en off no hay fila
+    assert "tope de memoria de GPU" not in correr(["status"], datos).stdout  # en off no hay fila
     _modos(datos, dmem_tope="observar")
+    assert "FALTA" in _fila(correr(["status"], datos), "tope de memoria de GPU")  # control negativo: sin registro
+    registro = datos / "interruptores" / "dmem_tope.jsonl"
+    registro.parent.mkdir(parents=True, exist_ok=True)
+    registro.write_text("{}\n", encoding="utf-8")
+    assert "ARMADO" in _fila(correr(["status"], datos), "tope de memoria de GPU")
+    hace_tres_dias = time.time() - 3 * 86400
+    os.utime(registro, (hace_tres_dias, hace_tres_dias))
+    assert "FALTA" in _fila(correr(["status"], datos), "tope de memoria de GPU")  # registro viejo
+
+
+def test_status_tope_de_gpu_en_actuar_lee_el_tope_puesto(datos):
+    _modos(datos, dmem_tope="actuar")
     fila = _fila(correr(["status"], datos), "tope de memoria de GPU")
-    assert "observar" in fila and ("ARMADO" in fila or "FALTA" in fila)
+    assert "actuar" in fila and ("motor=" in fila)
 
 
 def test_status_monitor_de_distros_fresco_ARMADO_y_sin_estado_FALTA(datos):
