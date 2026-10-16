@@ -1,9 +1,9 @@
-# [DRAFT A, v2 2026-10-16] Category: Projects
-**Title:** Per-cgroup GPU memory limits on GB10 with the 580 driver: a `memacct` backport, a table of which cgroup pays for which CUDA allocation, and a request for review
+# [DRAFT A, v2.1 2026-10-16] Category: Projects
+**Title:** Per-cgroup GPU memory limits on GB10 (580 driver): a `memacct` backport, which cgroup pays for which CUDA allocation, and a request for review
 
 > Status: unpublished draft for Luis. Replaces the 2026-10-13 version. Every number comes from a command run on one unit; raw captures and the verifier are in the repo.
 
-**The problem.** On GB10 with the 580.178.04 open modules, `nvidia-smi` shows no per-process memory (unified memory, by design per thread 367765) and, in my first measurement, holding 7 GiB through PyTorch raised that process's `memory.current` by 15 MiB. So `MemoryMax=` and `docker --memory` do not contain `cudaMalloc` memory, and nothing I found says which container holds how much. When the pool is exhausted the whole host stalls (issue #1358 and the threads linked there), so a per-cgroup limit on GPU memory is a containment tool, not a nicety.
+**The problem.** On GB10 with the 580.178.04 open modules, `nvidia-smi` reports `Memory-Usage: Not Supported` for the GPU as a whole (NVIDIA's DGX Spark known-issues page calls this expected on iGPUs; thread 367765 discusses it) and gives nothing per cgroup or per container, and, in my first measurement, holding 7 GiB through PyTorch raised that process's `memory.current` by 15 MiB. So `MemoryMax=` and `docker --memory` do not contain `cudaMalloc` memory, and nothing I found says which container holds how much. When the pool is exhausted the whole host stalls (issue #1358 and the threads linked there), so a per-cgroup limit on GPU memory is a containment tool, not a nicety.
 
 **What exists upstream.** 615.71.09 has `memacct`: it registers a `dmem` region and charges allocations. 580 does not (root `dmem.capacity` is empty). I ported it to 580.178.04 and added what GB10 needs. I have **not** run 615 on GB10, so I cannot say whether its hook catches GB10 allocations (see the question below).
 
