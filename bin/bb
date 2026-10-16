@@ -2739,9 +2739,12 @@ EOF
     chk "historial de memoria de GPU ($_m; fila al cambiar o cada 10 min)" "$ok" "sin fila en 15 min: systemctl --user status bb-gpumem-historial.timer"
   fi
   _m=$(_modo_inter dmem_tope)
-  if [ "$_m" != off ]; then
+  if [ "$_m" = observar ]; then
+    _fresco "$DATA/interruptores/dmem_tope.jsonl" 2880; ok=$?
+    chk "tope de memoria de GPU por cgroup ($_m; ciclo diario)" "$ok" "sin pasada en 2 dias: systemctl --user status bb-dmem-tope.timer"
+  elif [ "$_m" = actuar ]; then
     _t=$(cd "$(dirname "$(readlink -f "$0")")/.." && python3 -m tools.dmem_tope --estado 2>&1); ok=$?
-    chk "tope de memoria de GPU por cgroup ($_m; $_t)" "$ok" "sin tope puesto: bb dmem-tope y, tras aprobar el manifiesto, sudo bb-root-run dmem-tope-aplicar"
+    chk "tope de memoria de GPU por cgroup ($_m; $_t)" "$ok" "sin tope puesto: bb dmem-tope y sudo bb-root-run dmem-tope-aplicar"
   fi
 
   status_lo_que_corre
