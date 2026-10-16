@@ -30,4 +30,4 @@ Falta (por eso la ficha sigue abierta):
 1. Luis aprueba el manifiesto nuevo (`python3 -m tools.bb_root_manifest --propose` imprime el comando `sudo sh -c ...`; ahora lista 11 scripts).
 2. Poner `dmem_tope` en `observar` en `interruptores.json`, mirar 1 semana, y pasar a `actuar` en una ventana con el motor sirviendo; medir con `bb gpumem` y registrar `limitador_integrado_probado` en `medicion.txt`.
 3. Paso 3 original (vLLM real bajo el limitador): con dmem el motor ya corre cobrado; la prueba pendiente es que arranque y sirva con `dmem.max`=40 GiB sin que su presupuesto de arranque (`gpu-memory-utilization`) lo choque contra el tope.
-4. Paso 4 (memoria fijada): sigue sin cobro; ver la ficha del modulo.
+4. Paso 4 (memoria fijada): medido el 2026-10-16 (`FEATURE-DMEM-CLASES-DE-MEMORIA-POR-CGROUP-01`): la memoria fijada y la managed SI tienen tope, el de `memory.max` (el cgroup muere por OOM); el motor tiene 75 GiB y `user-1000.slice` 48 GiB. `bb dmem-tope` avisa si `memory.max` esta en `max`. Queda por decidir si el tope de `user.slice` entero (hoy `max`) debe ponerse.

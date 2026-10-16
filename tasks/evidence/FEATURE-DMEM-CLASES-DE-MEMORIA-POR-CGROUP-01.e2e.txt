@@ -1,0 +1,21 @@
+e2e sobre el sujeto vivo (modulo NVIDIA 580.178.04 parcheado cargado, GB10), captura 2026-10-16 con `python3 tasks/evidence/FEATURE-DMEM-CLASES-DE-MEMORIA-POR-CGROUP-01/capture.py`.
+Cada fila corre en su propio scope de systemd de usuario; 'nada' es el control que prueba que el instrumento ve cero.
+
+pequena-1      nada     n=  256 MiB memory.max=2G  exit=   0 dmem_delta=1.0 memcg_delta=0.0
+pequena-1      device   n=  256 MiB memory.max=2G  exit=   0 dmem_delta=253.1 memcg_delta=0.5
+pequena-1      managed  n=  256 MiB memory.max=2G  exit=   0 dmem_delta=-0.3 memcg_delta=257.0
+pequena-1      pinned   n=  256 MiB memory.max=2G  exit=   0 dmem_delta=0.7 memcg_delta=257.6
+pequena-2      nada     n=  256 MiB memory.max=2G  exit=   0 dmem_delta=-3.0 memcg_delta=0.0
+pequena-2      device   n=  256 MiB memory.max=2G  exit=   0 dmem_delta=256.4 memcg_delta=0.7
+pequena-2      managed  n=  256 MiB memory.max=2G  exit=   0 dmem_delta=-2.8 memcg_delta=257.0
+pequena-2      pinned   n=  256 MiB memory.max=2G  exit=   0 dmem_delta=0.0 memcg_delta=257.6
+sobre-el-tope  managed  n= 2048 MiB memory.max=1G  exit=  -9 dmem_delta=None memcg_delta=None
+sobre-el-tope  pinned   n= 2048 MiB memory.max=1G  exit=  -9 dmem_delta=None memcg_delta=None
+sobre-el-tope  device   n= 2048 MiB memory.max=1G  exit=   0 dmem_delta=2050.7 memcg_delta=4.0
+bajo-el-tope   managed  n=  512 MiB memory.max=1G  exit=   0 dmem_delta=-2.7 memcg_delta=514.0
+
+journal --user, lineas oom-kill (ultimas): 6
+
+$ python3 -m tools.dmem_tope --estado
+rc=1
+motor=sin tope user=sin tope
