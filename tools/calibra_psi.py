@@ -198,6 +198,10 @@ FALSOS_POSITIVOS_CONOCIDOS = [
      "ficha": "DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01",
      "motivo": "17 min de PSI full 45-57 confinado a app.slice (docker.slice y system.slice en 0.0, MemAvailable 20-24 GB); "
                "el watchdog reinicio la maquina con el motor sano"},
+    {"ventana": ("2026-10-16 13:44", "2026-10-16 13:52"),
+     "ficha": "DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01",
+     "motivo": "5 min de PSI full 57-69 confinado a app.slice (docker.slice y system.slice en 0.0) con el slice pegado a su memory.high de "
+               "38G; bb-usable declaro COLAPSO (racha 17/10) y se corto a ~30 s de reiniciar la maquina con el motor sano"},
 ]
 
 
