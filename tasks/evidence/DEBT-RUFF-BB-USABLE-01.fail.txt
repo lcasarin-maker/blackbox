@@ -1,3 +1,34 @@
+## Reapertura 2026-10-16 -- el close_check vuelve a fallar
+
+Sujeto: bin/bb-usable en b71ef875 (sha256 44cb54813a6855233df001cff582d8ead58f735d37aa5678416b04f4778b53d3).
+Causa: f8006e7c anadio la rama atasco_confinado a main().
+
+command: python3 -m ruff check bin/bb-usable
+exit: 1
+```text
+C901 `main` is too complex (12 > 10)
+   --> bin/bb-usable:863:5
+    |
+863 | def main() -> int:
+    |     ^^^^
+864 |     notify("READY=1")
+865 |     first = probe()
+    |
+
+PLR0915 Too many statements (55 > 50)
+   --> bin/bb-usable:863:5
+    |
+863 | def main() -> int:
+    |     ^^^^
+864 |     notify("READY=1")
+865 |     first = probe()
+    |
+
+Found 2 errors.
+```
+
+## Fallo original 2026-10-02 (se conserva)
+
 command: python3 -m ruff check bin/bb-usable --output-format=json
 exit: 1
 [

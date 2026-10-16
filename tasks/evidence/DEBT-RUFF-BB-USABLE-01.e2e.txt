@@ -1,12 +1,92 @@
-...............................                                          [100%]
-31 passed in 6.24s
+## Cierre 2026-10-16 -- caracterizacion del lazo real de main() y su control negativo
 
+Prueba: tests/test_bb_usable_caracterizacion.py. Corre el main() real de bin/bb-usable con sleep, sonda, PSI,
+latencia X, escalon, criterio confinado y origen anulados, sobre 11 secuencias de PSI (bajo el umbral; racha hasta
+COLAPSO; PSI ilegible en mitad de racha, con colapso declarado y sin racha; sonda fuera de plazo; confinado
+`acaricia` y `habria_acariciado`; recuperacion tras BAJAS_PARA_CORTAR bajas; una baja suelta que no absuelve ni el
+colapso ni la racha). Graba la lista ORDENADA de efectos: cada notify, cada linea de log, cada declaracion de origen
+(con `sostenido`) y cada paso confinado (con `confinadas`).
 
-## Reejecución posterior de DEBT-RUFF-BB-USABLE-01 — 2026-10-03
+Linea base: la secuencia se grabo (BB_USABLE_CARACTERIZA_GRABAR=1) contra main() SIN modificar, bin/bb-usable de
+b71ef875, sha256 44cb54813a6855233df001cff582d8ead58f735d37aa5678416b04f4778b53d3; la misma corrida dio
+`17 passed in 0.24s`. Fixture resultante: tests/fixtures/bb_usable_caracterizacion.json, sha256
+034cbb7cda48234c4e49821b5f41c3ea38a301d437cdc2aa7659a9cc2d9b24aa, y el refactor no lo toco (mismo sha despues).
 
-Comando sujeto: `python3 -m ruff check bin/bb-usable`
+### Contra el codigo refactorizado
 
-Salida literal (rc=0):
+command: python3 -m pytest -v -p no:cacheprovider tests/test_bb_usable_caracterizacion.py
+exit: 0
 ```text
-All checks passed!
+tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[bajo_el_umbral] PASSED [  5%]
+tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[confinado_acaricia] PASSED [ 11%]
+tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[confinado_habria_acariciado] PASSED [ 17%]
+tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[ilegible_con_colapso_declarado] PASSED [ 23%]
+tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[ilegible_en_mitad_de_racha] PASSED [ 29%]
+tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[ilegible_sin_racha] PASSED [ 35%]
+tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[racha_hasta_colapso] PASSED [ 41%]
+tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[recuperacion_tras_bajas] PASSED [ 47%]
+tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[sonda_fuera_de_plazo] PASSED [ 52%]
+tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[una_baja_no_absuelve_colapso] PASSED [ 58%]
+tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[una_baja_no_absuelve_racha] PASSED [ 64%]
+tests/test_bb_usable_caracterizacion.py::test_semantica_bajo_el_umbral_acaricia_cada_sonda PASSED [ 70%]
+tests/test_bb_usable_caracterizacion.py::test_semantica_colapso_deja_de_acariciar PASSED [ 76%]
+tests/test_bb_usable_caracterizacion.py::test_semantica_ilegible PASSED  [ 82%]
+tests/test_bb_usable_caracterizacion.py::test_semantica_fuera_de_plazo_no_acaricia PASSED [ 88%]
+tests/test_bb_usable_caracterizacion.py::test_semantica_confinado PASSED [ 94%]
+tests/test_bb_usable_caracterizacion.py::test_semantica_bajas PASSED     [100%]
+
+============================== 17 passed in 0.25s ==============================
 ```
+
+### Control negativo 1 -- el COLAPSO acaricia (mutacion aplicada y revertida)
+
+Mutacion en reaccion_colapso: `return False, confinadas` -> `return True, confinadas` (el COLAPSO llama a
+notify("WATCHDOG=1")). Archivo restaurado despues desde copia; sha256 de vuelta a
+a3d25c8768cee4bd38bc90950b9a18b47ddf39519556520f2a1f9fd6a325e35f y `grep -c MUTACION bin/bb-usable` = 0.
+
+command: python3 -m pytest -q -p no:cacheprovider tests/test_bb_usable_caracterizacion.py
+exit: 1
+```text
+FAILED tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[confinado_habria_acariciado]
+FAILED tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[ilegible_con_colapso_declarado]
+FAILED tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[racha_hasta_colapso]
+FAILED tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[recuperacion_tras_bajas]
+FAILED tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[una_baja_no_absuelve_colapso]
+FAILED tests/test_bb_usable_caracterizacion.py::test_semantica_colapso_deja_de_acariciar
+FAILED tests/test_bb_usable_caracterizacion.py::test_semantica_ilegible - Ass...
+FAILED tests/test_bb_usable_caracterizacion.py::test_semantica_confinado - As...
+FAILED tests/test_bb_usable_caracterizacion.py::test_semantica_bajas - Assert...
+9 failed, 8 passed in 0.28s
+```
+Ejemplo de diff (racha_hasta_colapso): `At index 46 diff: ['notify', 'WATCHDOG=1'] != ['log', '[bb-usable] latencia
+del escritorio: ...']`. La misma mutacion contra tests/test_bb_usable.py + tests/test_atasco_confinado.py:
+`7 failed, 48 passed in 2.41s`.
+
+### Control negativo 2 -- off-by-one en la baja (sobre el refactor sin las correcciones de pyright)
+
+Mutacion en reaccion_psi_baja: `sostenido < PSI_ACT_SONDAS` -> `sostenido <= PSI_ACT_SONDAS` (una baja suelta con
+la racha justo en el corte volveria a acariciar). Revertida igual.
+```text
+FAILED tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[recuperacion_tras_bajas]
+FAILED tests/test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[una_baja_no_absuelve_colapso]
+FAILED tests/test_bb_usable_caracterizacion.py::test_semantica_bajas - Assert...
+3 failed, 14 passed in 0.26s
+```
+
+### Suites que tocan bb-usable / atasco_confinado / escalon, mas tests/test_sin_datos_privados.py
+
+command: python3 -m pytest -q -p no:cacheprovider tests/test_1358_hitos_nvrm.py tests/test_atasco_confinado.py
+tests/test_auditoria_bb_regresiones.py tests/test_bb_bash.py tests/test_bb_guardia_proceso.py
+tests/test_bb_usable_caracterizacion.py tests/test_bb_usable.py tests/test_calibra_latencia_x.py
+tests/test_calibra_psi.py tests/test_closure_kernel.py tests/test_control_racha.py
+tests/test_debt_registration_controls.py tests/test_demonio_al_dia.py tests/test_escalon_app_slice.py
+tests/test_inventario.py tests/test_procesos_protegidos.py tests/test_reboot_verdict.py
+tests/test_status_bus_unknown.py tests/test_vigilante_memavail.py tests/test_sin_datos_privados.py
+exit: 0
+```text
+639 passed, 8 xfailed in 223.17s (0:03:43)
+```
+Los 8 xfailed son lineas base de tests/known_failures.json con ficha abierta, no de esta ficha. En la primera
+corrida 5 pruebas de tests/test_debt_registration_controls.py fallaron con FileNotFoundError sobre
+.simplecode/runtime.zip (artefacto ignorado por git, ausente en el worktree); con el archivo copiado del checkout
+principal pasan (55 passed, 7 xfailed) y la corrida de arriba ya lo incluye. could_not_run = 0.

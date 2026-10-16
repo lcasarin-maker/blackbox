@@ -1,1 +1,17 @@
+## Cierre 2026-10-16 -- main() partida en reaccion_psi_ilegible / reaccion_psi_alta / reaccion_colapso / reaccion_psi_baja
+
+command: python3 -m ruff check bin/bb-usable
+exit: 0
+```text
 All checks passed!
+```
+
+Control negativo: el mismo comando sobre b71ef875 sale 1 con C901 (12 > 10) y PLR0915 (55 > 50); ver el .fail.txt.
+
+command: pyright bin/bb-usable tests/test_bb_usable_caracterizacion.py
+```text
+0 errors, 0 warnings, 0 informations
+```
+Control negativo: pyright sobre bin/bb-usable de b71ef875 daba 4 errores previos (lineas 393, 394 x2, 485:
+spec opcional en _cargar_origen y `s.fraccion() >= ...` sin estrechar). Se corrigieron sin cambiar la conducta
+(guarda explicita de spec dentro del mismo try; walrus en la comprension que llama a la misma funcion pura).
