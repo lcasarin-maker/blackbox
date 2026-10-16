@@ -86,6 +86,14 @@ def test_estado_dice_si_el_tope_esta_puesto(tmp_path, capsys):
     assert dt.topes_puestos(raiz, proc) == {"motor": None, "user": None}
 
 
+def test_un_argumento_desconocido_se_rechaza_y_no_corre_una_pasada(datos, tmp_path, capsys):
+    fija_modo(datos, "observar")
+    llamadas: list[list[str]] = []
+    assert dt.principal(["--estadoX"], lambda a: (llamadas.append(a), (0, ""))[1], *arbol(tmp_path)) == 2
+    assert "uso:" in capsys.readouterr().err
+    assert llamadas == [] and not (datos / "interruptores").exists()  # no midio ni registro nada
+
+
 def test_cgroup_motor_y_sus_negativos(tmp_path):
     _, proc = arbol(tmp_path)
     assert dt.cgroup_motor(proc) == f"/docker.slice/docker-{ID}.scope"
