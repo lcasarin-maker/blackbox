@@ -11,7 +11,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 EV = Path(__file__).resolve().parent
-LAB = Path(os.path.expanduser("~" + os.environ.get("SUDO_USER", ""))) / ".cache" / "bb-trabajo" / "cutlass-lab"  # under sudo, ~ is /root
+HOME = Path(os.path.expanduser("~" + os.environ.get("SUDO_USER", "")))  # under sudo, ~ is /root
+LAB = HOME / ".cache" / "bb-trabajo" / "cutlass-lab"
+os.environ["PATH"] += os.pathsep + str(HOME / ".local" / "bin")  # ninja lives there; root's PATH lacks it
 SRC, CAN = LAB / "cutlass", LAB / "canary"
 BUILD = LAB / "canary-build"
 REV = "098de2a652cf8f00fd70b2df54051c7eccbb855a"  # v4.8.0
@@ -41,14 +43,16 @@ plan = {"cutlass_revision": REV, "cute_revision": REV, "backend": "cutlass3x_sm1
 (EV / "experiment-plan.json").write_text(json.dumps(plan), encoding="utf-8")
 run(["cat", str(EV / "experiment-plan.json")])
 run(["uname", "-r"])
-run(["dmidecode", "-t", "system"])
+run(["dmidecode", "-t", "system", "-t", "bios"])  # verifier also needs BIOS Version
 run(["nvidia-smi", "--query-gpu=name,compute_cap,driver_version", "--format=csv,noheader"])
 run(["git", "-C", str(SRC), "rev-parse", "HEAD"], phase="pin")
 run([NVCC, "--version"], phase="toolchain")
 run(["rm", "-rf", str(BUILD)])
-run(["cmake", "-G", "Ninja", "-S", str(CAN), "-B", str(BUILD), f"-DBB_REV={REV}",
-     f"-DCMAKE_CUDA_COMPILER={NVCC}", "-DCMAKE_BUILD_TYPE=Release"], phase="configure")
+cfg = run(["cmake", "-G", "Ninja", "-S", str(CAN), "-B", str(BUILD), f"-DBB_REV={REV}",
+           f"-DCMAKE_CUDA_COMPILER={NVCC}", "-DCMAKE_BUILD_TYPE=Release"], phase="configure")
+assert cfg["exit"] == 0, "configure fallo: " + cfg["stderr"][-800:]
 b = run(["cmake", "--build", str(BUILD), "--", "-v"], phase="build")
+assert b["exit"] == 0, "build fallo: " + b["stderr"][-800:]
 exe = BUILD / "canary79a"
 run([NVCC.replace("nvcc", "cuobjdump"), "--list-elf", str(exe)])
 # canary: one verified GEMM + ITER timed iterations on the real GPU
@@ -75,6 +79,8 @@ run(["cat", str(EV / "canary.json")], phase="canary")
     '__global__ void k(){ asm volatile("tcgen05.fence::before_thread_sync;"); }\nint main(){return 0;}\n', encoding="utf-8")
 run([NVCC, "-arch=sm_121", "-cubin", "-o", str(LAB / "isa" / "ok.cubin"), str(LAB / "isa" / "ok.cu")], phase="negative_positive_control")
 run([NVCC, "-arch=sm_121", "-cubin", "-o", str(LAB / "isa" / "mala.cubin"), str(LAB / "isa" / "mala_tcgen05.cu")], phase="negative")
+for _r in rows:  # privacy: dmidecode prints the machine serial and UUID
+    _r["stdout"] = re.sub(r"(?m)^(\s*(?:Serial Number|UUID):).*$", r"\1 <redacted>", _r["stdout"])
 (EV / "commands.json").write_text(json.dumps({"schema": 1, "id": "DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01",
                                                "experiment_plan": plan, "commands": rows}, indent=1), encoding="utf-8")
 print("rows", len(rows), "build exit", b["exit"], "canary", {k: canary[k] for k in ("requests", "completed", "duration_seconds", "wall_seconds")})

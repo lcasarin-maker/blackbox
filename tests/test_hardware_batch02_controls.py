@@ -35,6 +35,23 @@ def test_numeric_parser_rejects_nonfinite_boolean_and_strings(value: object) -> 
     assert controls._finite(value) is None
 
 
+REAL_DMI = ("BIOS Information\n\tVendor: AMI\n\tVersion: 5.36_0ACUM08\n\nSystem Information\n"
+            "\tManufacturer: ACME\n\tProduct Name: Board\n\tVersion: B.1\n")
+
+
+def test_identity_reads_bios_version_from_the_real_dmidecode_bios_block(tmp_path: Path) -> None:
+    """Real dmidecode prints `Version:` inside the BIOS block, never `BIOS Version:`."""
+    path = tmp_path / "commands.json"
+    kernel = {"argv": ["uname", "-r"], "exit": 0, "stdout": "6.17\n", "stderr": ""}
+    dmi = {"argv": ["dmidecode", "-t", "system", "-t", "bios"], "exit": 0, "stdout": REAL_DMI, "stderr": ""}
+    identity, error = controls._identity({"commands": [dmi, kernel]}, path)
+    assert error is None and identity is not None and identity["BIOS Version"] == "5.36_0ACUM08"
+    # negative control: the system block's own `Version: B.1` must not pass as BIOS version
+    only_system = {**dmi, "stdout": REAL_DMI.split("\n\n", 1)[1]}
+    identity, error = controls._identity({"commands": [only_system, kernel]}, path)
+    assert identity is None and error is not None and "tuple incomplete" in error["reason"]
+
+
 def test_native_output_parsers_reject_missing_and_malformed_identity_data(tmp_path: Path) -> None:
     path = tmp_path / "commands.json"
     dmi = {"argv": ["dmidecode", "-t", "system"], "exit": 0,
