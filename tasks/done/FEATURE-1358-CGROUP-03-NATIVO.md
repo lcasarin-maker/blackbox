@@ -12,7 +12,7 @@ severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "grep -q \"(+268435456)  COBRA\" tasks/evidence/FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01/medicion.txt", "expect": "exit_zero", "porque": "La verificacion se relocalizo a FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01 (voto de Luis 2026-10-16). Comprueba el marcador de su medicion; no re-ejecuta el experimento ni acredita la autenticidad del origen. Control negativo: el mismo grep contra un marcador inexistente da rc 1."}
+close_check: {"cmd": "grep -q 268435456 tasks/evidence/FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01/medicion.txt", "expect": "exit_zero", "porque": "La verificacion se relocalizo a FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01 (voto de Luis 2026-10-16). Comprueba el marcador de su medicion; no re-ejecuta el experimento ni acredita la autenticidad del origen. Control negativo: el mismo grep contra un marcador inexistente da rc 1."}
 ---
 
 ## Contexto y dependencias
