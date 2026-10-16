@@ -21,12 +21,12 @@ El 2026-10-16 a las 10:54:27 el watchdog de `bb-usable` (limite de 6 min) reinic
 - Los contadores `max` (5166044) y `oom_kill` (195) de `app.slice` NO cambiaron durante el atasco (son acumulados desde el arranque): no toco su tope en esa ventana.
 - Al mismo tiempo el host marcaba `cpu_some` 31 a 71 % e `io_some` 23 a 37 %.
 - `MemAvailable` del host 20 a 24 GB todo el rato (telemetria): la maquina no se quedo sin memoria.
-- Lo que arranco justo antes (journal): 10:35:11 un `liberation_job` de Atlas (`local_llm_grill_me.py`, usa el motor local); 10:35:21 la suite `pre-push` completa de office2office; 10:43 trabajos `nice -n 10` de Twiner y de `_consolidacion` (jueces). Tres sesiones de otros proyectos figuraban `busy`. Ninguno era de blackbox: el push 70 de esta sesion habia terminado antes de las 10:33.
+- Lo que arranco justo antes (journal): 10:35:11 un `liberation_job` de Atlas (`local_llm_grill_me.py`, usa el motor local); 10:35:21 la suite `pre-push` completa de otro proyecto privado (B); 10:43 trabajos `nice -n 10` de Twiner y de `_consolidacion` (jueces). Tres sesiones de otros proyectos figuraban `busy`. Ninguno era de blackbox: el push 70 de esta sesion habia terminado antes de las 10:33.
 - `ESCALON` de `bb-usable` mato procesos python3 de scopes Claude a las 10:37:55, 10:42:56 y 10:47:56; el PSI no bajo.
 - Los datos de esa madrugada: el archivo de muestras trae 377 bytes NUL (el corte abrupto).
 
 ## Quien estaba corriendo (medido: registros de origen de bb-usable, 10:42:26 y 10:48:57)
-Mayores RSS por scope: `pytest` de aequitas_os bajo el portero (`bb-portero-suite-91364.scope`, 3 procesos) 6.9 a 5.8 GiB; `liberation_job.scope` de Atlas (`python3`, usa el motor local) 3.1 a 5.8 GiB; `declutter-verificar-w4.service` 3.8 GiB; un job de Twiner 2.7 GiB; el motor (`VLLM::EngineCore`, en docker.slice) 5.3 GiB. Suma de RSS de los mayores: ~15 a 20 GiB; el resto de los ~38 GiB de `app.slice` es cache de archivos (hoy: anon 16.7 GiB, file 20.8 GiB con `app.slice` en 40.3 de 43.0 GiB).
+Mayores RSS por scope: `pytest` de un proyecto privado (A) bajo el portero (`bb-portero-suite-91364.scope`, 3 procesos) 6.9 a 5.8 GiB; `liberation_job.scope` de Atlas (`python3`, usa el motor local) 3.1 a 5.8 GiB; `un servicio de otro proyecto privado (C)` 3.8 GiB; un job de Twiner 2.7 GiB; el motor (`VLLM::EngineCore`, en docker.slice) 5.3 GiB. Suma de RSS de los mayores: ~15 a 20 GiB; el resto de los ~38 GiB de `app.slice` es cache de archivos (hoy: anon 16.7 GiB, file 20.8 GiB con `app.slice` en 40.3 de 43.0 GiB).
 El portero SI vio y congelo una suite (raiz 91364, 10:34:57, `holgura de app.slice 3936744 kB < 4194304 kB`) y la dejo pasar ~27 s despues; su puerta mide la holgura con `memory.current`, que cuenta la cache, y por eso `app.slice` vive casi siempre a 1-4 GiB del tope.
 
 ## Inferido (NO medido)
@@ -43,7 +43,7 @@ Cada una exige una prueba con control negativo antes de tocar el watchdog, porqu
 
 ## Voto de Luis 2026-10-16 (las tres, multiseleccion)
 1. `bb-usable` mira el PSI por slice. Se implementa tras el interruptor `atasco_confinado` (off/observar/actuar), empieza en `observar`: registra la clase del atasco y que habria hecho, y captura `memory.stat`, swap y presion de IO/CPU, SIN cambiar cuando se reinicia. `actuar` acaricia el watchdog solo mientras el atasco sea confinado y dure menos de `CONFINADO_MAX_S`; docker.slice o system.slice con presion lo devuelven al comportamiento de siempre. Limite declarado: sin una accion de alivio que funcione, `actuar` solo retrasa el reinicio (el ESCALON de bb-usable mato 3 procesos de 0.4-0.5 GiB sin bajar el PSI).
-2. Frenar jobs pesados de otros proyectos. El portero ya gobierna las suites; lo que no gobierna son `liberation_job` (Atlas), `declutter-verificar` y los jobs `nice` de Twiner, y su puerta usa `memory.current` (con cache). Cambiar la metrica exige recalibrar `HOLGURA_MIN_KB` contra las muestras: pendiente.
+2. Frenar jobs pesados de otros proyectos. El portero ya gobierna las suites; lo que no gobierna son `liberation_job` (Atlas), `otro proyecto privado (C)` y los jobs `nice` de Twiner, y su puerta usa `memory.current` (con cache). Cambiar la metrica exige recalibrar `HOLGURA_MIN_KB` contra las muestras: pendiente.
 3. Bajar `memory.high` de `app.slice`: aplicado en caliente (`systemctl --user set-property --runtime`, no sobrevive al reinicio) como prueba reversible; ver el avance.
 
 ## Avance 2026-10-16 (misma tarde del reinicio)

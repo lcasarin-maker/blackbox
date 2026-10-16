@@ -70,6 +70,25 @@ CORTE_S = 300.0
 HUECO_MAX_S = 600.0
 
 
+# FALSOS POSITIVOS CONOCIDOS -- anadido el 2026-10-16. Una ventana donde la regla REINICIO la maquina y el control, con datos
+# reales, dice que no hubo un incidente que lo justificara. NO es un incidente: no entra en `calibra_psi.INCIDENTES` ni afirma
+# que el reinicio estuviera justificado. Se EXCLUYE del peor caso sano para que el gate siga vigilando todo lo demas, y se
+# IMPRIME como deuda. Cada una nombra su ficha ABIERTA; `tests/test_control_racha.py` falla en cuanto esa ficha sale de
+# `tasks/backlog/` (voto de Luis, 2026-10-16: excepcion con fecha de caducidad atada a la ficha, no supresion).
+FALSOS_POSITIVOS_CONOCIDOS = [
+    {"ventana": ("2026-10-16 10:37", "2026-10-16 10:55"),
+     "ficha": "DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01",
+     "motivo": "17 min de PSI full 45-57 confinado a app.slice (docker.slice y system.slice en 0.0, MemAvailable 20-24 GB); "
+               "el watchdog reinicio la maquina con el motor sano"},
+]
+
+
+def ventanas_exentas() -> list[tuple[dt.datetime, dt.datetime]]:
+    return [(dt.datetime.strptime(f["ventana"][0], "%Y-%m-%d %H:%M"),
+             dt.datetime.strptime(f["ventana"][1], "%Y-%m-%d %H:%M"))
+            for f in FALSOS_POSITIVOS_CONOCIDOS]
+
+
 def ventanas() -> list[tuple[dt.datetime, dt.datetime]]:
     # Las ventanas las declara `calibra_psi.INCIDENTES` y no este modulo. Hasta el
     # 2026-09-27 aqui se anadia la del kernel panic aparte, porque aquel no la
@@ -84,7 +103,7 @@ def es_incidente(t: dt.datetime, vs=None) -> bool:
     return any(a <= t <= b for a, b in (vs or ventanas()))
 
 
-def max_sostenido_sano(serie, bajas_para_cortar: int, umbral=UMBRAL_PCT):
+def max_sostenido_sano(serie, bajas_para_cortar: int, umbral=UMBRAL_PCT, exentas=None):
     """-> (segundos, instante) del peor caso FUERA de un incidente.
 
     Acumula segundos REALES entre muestras, no numero de muestras: contar
@@ -93,7 +112,8 @@ def max_sostenido_sano(serie, bajas_para_cortar: int, umbral=UMBRAL_PCT):
     muestra alta, lo que sobreestima la racha en un intervalo -- el lado
     conservador para un control de falsos positivos.
     """
-    vs = ventanas()
+    # `exentas`: falsos positivos conocidos (deuda con ficha abierta); None = los declarados arriba, [] = ninguno.
+    vs = ventanas() + (ventanas_exentas() if exentas is None else exentas)
     prev = None
     sostenido = 0.0
     bajas = 0
@@ -136,6 +156,9 @@ def main(argv=None) -> int:
     print(f"corpus {len(serie)} muestras  {serie[0][0]} -> {serie[-1][0]}")
     print(f"ventanas de incidente excluidas: {len(ventanas())}  "
           f"corte de accion: {a.corte:.0f}s  umbral: {UMBRAL_PCT:.0f}%")
+    for f in FALSOS_POSITIVOS_CONOCIDOS:
+        print(f"falso positivo CONOCIDO excluido (deuda abierta {f['ficha']}): "
+              f"{f['ventana'][0]} -> {f['ventana'][1]}: {f['motivo']}")
     print()
     print(f"{'regla':40} {'max sostenido sano':>19}  veredicto")
     rc = 0
