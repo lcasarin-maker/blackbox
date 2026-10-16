@@ -331,6 +331,7 @@ disco.
 | `/etc/systemd/system/system.slice.d/99-blackbox.conf` | techo agregado de los servicios del sistema. Sin él entraba en el presupuesto por lo que USABA y no por lo que prometía, y los compromisos no cuadraban. Presion de memoria. |
 | `/etc/systemd/system/sysstat-collect.timer.d/override.conf` | cadencia de `sar`, la serie historica de memoria. |
 | `/home/lcasarin/.config/systemd/user/app.slice.d/99-blackbox.conf` | techo de la sesion grafica. Presion de memoria. |
+| `/home/lcasarin/.config/systemd/user/app.slice.d/memory-high.conf` | `MemoryHigh=38G` (2026-10-16, voto de Luis tras el colapso confinado a `app.slice`): que el slice reclame caché antes de llegar a su tope de 42 GiB. Efecto medido solo 2 minutos; ver `DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01`. |
 | `/etc/systemd/system/user.slice.d/99-blackbox-escritorio.conf` | nivel 1 de la cadena de `memory.low`. Sin ella los niveles de abajo no protegen nada. |
 | `/etc/systemd/system/user-.slice.d/99-blackbox-escritorio.conf` | nivel 2: el slice por UID. |
 | `/etc/systemd/system/session-.scope.d/99-blackbox-escritorio.conf` | nivel 3a: aqui vive **Xorg**, medido en `/proc/<pid>/cgroup`, no en `session.slice`. |
@@ -383,7 +384,6 @@ y `/srv/ai/models/_coredumps`, y actua sobre la unidad del motor solo por
 `systemctl` (vigilante y gate de admision), sin versionar su configuracion.
 
 ## Constraints
-
 Python version: 3.11+
 Deployment target: local
 

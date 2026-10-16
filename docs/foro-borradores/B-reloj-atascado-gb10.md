@@ -1,4 +1,4 @@
-# [DRAFT B, corrected and re-checked against the threads 2026-10-16] Category: DGX Spark / GB10
+# [PUBLISHED 2026-10-16 as topic 386060] [DRAFT B, corrected and re-checked against the threads] Category: DGX Spark / GB10
 **Title:** Stuck GPU clock on GB10 (500–800 MHz, zero throttle reasons): a measured case on a Gigabyte AI TOP ATOM, a detector, and a heat side-effect
 
 This is another confirmed case of the state described in threads 376039, 376239, 366944, 362737, 375687, 376542 and 378150, with numbers and a detector.
