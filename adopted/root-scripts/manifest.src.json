@@ -43,5 +43,15 @@
     "file": "drm-modeset-leer.sh",
     "descripcion": "Solo lectura: /sys/module/nvidia_drm/parameters/{modeset,fbdev} (0400 root) y el boot_id (FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT)",
     "timeout": 30
+  },
+  "dmem-tope-aplicar": {
+    "file": "dmem-tope-aplicar.sh",
+    "descripcion": "Pone dmem.max (tope de memoria de GPU) al contenedor nemotron-server (40 GiB) y a user.slice (8 GiB); guarda los previos y vuelve atras si la lectura no coincide (FEATURE-LIMITADOR-INTEGRAR-LANZADOR-FALLA-CERRADO-01)",
+    "timeout": 60
+  },
+  "dmem-tope-quitar": {
+    "file": "dmem-tope-quitar.sh",
+    "descripcion": "Devuelve dmem.max del motor y de user.slice a los valores previos guardados por dmem-tope-aplicar",
+    "timeout": 60
   }
 }
