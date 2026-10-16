@@ -331,7 +331,7 @@ disco.
 | `/etc/systemd/system/system.slice.d/99-blackbox.conf` | techo agregado de los servicios del sistema. Sin él entraba en el presupuesto por lo que USABA y no por lo que prometía, y los compromisos no cuadraban. Presion de memoria. |
 | `/etc/systemd/system/sysstat-collect.timer.d/override.conf` | cadencia de `sar`, la serie historica de memoria. |
 | `/home/lcasarin/.config/systemd/user/app.slice.d/99-blackbox.conf` | techo de la sesion grafica. Presion de memoria. |
-| `/home/lcasarin/.config/systemd/user/app.slice.d/memory-high.conf` | `MemoryHigh=38G` (2026-10-16, voto de Luis tras el colapso confinado a `app.slice`): que el slice reclame caché antes de llegar a su tope de 42 GiB. Efecto medido solo 2 minutos; ver `DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01`. |
+| `/home/lcasarin/.config/systemd/user/app.slice.d/memory-high.conf` | `MemoryHigh=infinity`: SUSPENDIDO el 2026-10-16. `MemoryHigh=38G` (voto de Luis tras el colapso de las 10:54) se probo y a las 13:45 un atasco de 5 min con `app.slice` pegado a 38.0 GiB y más de 600 000 eventos `high` por minuto llevó a `bb-usable` a la racha 17/10, a ~30 s de reiniciar la máquina; el techo duro de 42G sigue. Caduca la suspensión el 2026-10-23; ver `DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01`. |
 | `/etc/systemd/system/user.slice.d/99-blackbox-escritorio.conf` | nivel 1 de la cadena de `memory.low`. Sin ella los niveles de abajo no protegen nada. |
 | `/etc/systemd/system/user-.slice.d/99-blackbox-escritorio.conf` | nivel 2: el slice por UID. |
 | `/etc/systemd/system/session-.scope.d/99-blackbox-escritorio.conf` | nivel 3a: aqui vive **Xorg**, medido en `/proc/<pid>/cgroup`, no en `session.slice`. |

@@ -379,3 +379,8 @@ Luis votó conservar `dgx-spark-fieldiag` (795 MB, el diagnóstico que el soport
 - **Por que:** el reinicio de las 10:54:27 (verdicto `COLAPSO_MEMORIA`) siguio a 17 minutos de PSI full 45-57 confinado a `app.slice` (docker.slice y system.slice en 0.0, MemAvailable 20-24 GB), con 4-5 jobs pesados de otros proyectos a la vez. Evidencia y ficha: `DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01`.
 - **Descarta:** solo medir sin cambiar nada (el proximo atasco reiniciaria otra vez); un cambio directo del watchdog sin interruptor (su fallo es silencioso).
 - **Costo aceptado:** `memory.high` bajo puede desalojar mas cache y alentar las sesiones de desarrollo; el efecto no esta medido y se mide antes de dejarlo fijo.
+
+## 2026-10-16 (correccion, 13:55) — `memory.high` de app.slice a 38G: revertido el mismo dia
+- **Lo votado a las ~11:30** (tercer frente del voto sobre el colapso de las 10:54) se probo y se suspende: a las 13:45 un atasco de 5 min con `app.slice` pegado a 38.0 GiB y ~600 000 eventos `high` por minuto llevo a `bb-usable` a la racha 17/10, a ~30 s de reiniciar la maquina. `memory.high` queda en `infinity`; el techo duro de 42G sigue.
+- **Por que se revierte sin nueva boleta:** es la misma maquina en riesgo de reinicio, la medicion es del propio dia, y la reversion es reversible y de usuario. Reponerlo exige una medicion que lo justifique. **Descarta:** dejarlo "una semana mas" para observar (la observacion costo un casi-reinicio).
+- **Caduca la suspension:** 2026-10-23.
