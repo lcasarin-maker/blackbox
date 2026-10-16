@@ -10,10 +10,12 @@ tambien MOVIDO, para que el rojo este demostrado y no supuesto.
 
 import datetime as dt
 import json
+import subprocess
 import sys
 
 import pytest
 
+import tools.calibra_psi as cp
 from tools.calibra_psi import (
     INCIDENTES,
     calibra,
@@ -28,6 +30,17 @@ from tools.calibra_psi import (
 )
 
 pytestmark = pytest.mark.unit
+
+# `getattr`/`raising=False`: contra el codigo anterior (sin journal) los tests fallan por su VEREDICTO, no por un
+# AttributeError del fixture -- asi el control negativo de abajo mide lo que dice medir.
+LEE_JOURNAL_REAL = getattr(cp, "lee_journal", None)
+
+
+@pytest.fixture(autouse=True)
+def _journal_vacio(monkeypatch):
+    """Hermetico: `main` no lee el journal del host. Por defecto el journal se leyo y no tiene nada en la ventana;
+    cada test que necesita otra cosa lo vuelve a sustituir."""
+    monkeypatch.setattr(cp, "lee_journal", lambda desde, hasta: [], raising=False)
 
 T0 = dt.datetime(2026, 9, 22, 5, 40)
 
@@ -367,3 +380,107 @@ def test_main_imprime_el_falso_positivo_conocido_como_deuda_con_su_ficha(tmp_pat
     assert "falsos positivos conocidos (excepcion atada a ficha abierta):  1" in salida
     assert "10-16 10:37 (6 min, max 50.00 %) -- deuda abierta DEBT-COLAPSO-CONFINADO-A-APP-SLICE" in salida
     assert "VEREDICTO: CALIBRADO, con deuda impresa arriba" in salida
+
+
+# --- ventanas sin muestras observadas por el journal de bb-usable (2026-10-16) -----------------
+# DEBT-CALIBRA-PSI-CORTE-INVALIDO-INCIDENTE-11-OCT-22-02-NO-DETECTADO-01. Las lineas son las del journal real del
+# 2026-10-11 con el hostname sustituido por HOST.
+
+PARES_11_OCT = [("2026-10-11 21:59", 0), ("2026-10-11 22:00", 3.34), ("2026-10-11 22:15", 0)]
+
+J_VIVO = [
+    "2026-10-11T22:02:07-06:00 HOST bb-usable[5770]: [bb-usable] latencia del escritorio: 65 ms (observacion)",
+    "2026-10-11T22:02:07-06:00 HOST bb-usable[5770]: [bb-usable] PSI memory full avg10=42.6 >= 10 -- racha 1/10 "
+    "(30s de 300s), sonda 43 ms",
+    "2026-10-11T22:06:32-06:00 HOST bb-usable[5770]: [bb-usable] PSI memory full avg10=95.2 >= 10 -- racha 9/10 "
+    "(270s de 300s), sonda 31 ms",
+]
+J_COLAPSO = ["2026-10-11T22:07:07-06:00 HOST bb-usable[5770]: [bb-usable] COLAPSO: PSI memory full avg10=98.0 >= 10 "
+             "sostenido 300s >= 300s (sonda 28 ms) -- NO se acaricia el watchdog, que reinicie"]
+J_WATCHDOG = ["2026-10-11T22:12:33-06:00 HOST systemd[1]: bb-usable.service: Watchdog timeout (limit 6min)!"]
+
+
+def _main_11_oct(tmp_path, monkeypatch, lineas):
+    monkeypatch.setattr(cp, "lee_journal", lambda desde, hasta: lineas, raising=False)
+    return main(["--muestras", str(_corpus(tmp_path, PARES_11_OCT))])
+
+
+def test_eventos_journal_distingue_colapso_reinicio_y_vivo():
+    ev = cp.eventos_journal(["-- Boot 5461291a --", "basura sin ts"] + J_VIVO[:1] + J_COLAPSO + J_WATCHDOG
+                            + ["2026-10-11T22:12:46-06:00 HOST systemd[1]: bb-usable.service: Failed with result"])
+    assert ev == [(dt.datetime(2026, 10, 11, 22, 2, 7), "vivo"), (dt.datetime(2026, 10, 11, 22, 7, 7), "colapso"),
+                  (dt.datetime(2026, 10, 11, 22, 12, 33), "reinicio")]
+
+
+def test_el_journal_observa_la_ventana_sin_muestras_declara_colapso_y_reinicia(tmp_path, monkeypatch, capsys):
+    assert _main_11_oct(tmp_path, monkeypatch, J_VIVO + J_COLAPSO + J_WATCHDOG) == 0
+    salida = capsys.readouterr().out
+    assert "ventanas de incidente sin muestras dentro:  0" in salida
+    assert "incidentes no detectados:  0" in salida
+    assert "2026-10-11 22:02 -> 2026-10-11 22:12: declara COLAPSO 22:07:07, reinicia 22:12:33 (watchdog)" in salida
+
+
+def test_declarar_colapso_y_reiniciar_se_imprimen_por_separado(tmp_path, monkeypatch, capsys):
+    """Declarar COLAPSO es el corte (cuenta como detectado); reiniciar es el desenlace y puede faltar."""
+    assert _main_11_oct(tmp_path, monkeypatch, J_VIVO + J_COLAPSO) == 0
+    assert "declara COLAPSO 22:07:07, no reinicia" in capsys.readouterr().out
+
+
+def test_control_negativo_bb_usable_vivo_sin_declarar_colapso_es_no_detectado(tmp_path, monkeypatch, capsys):
+    """El caso que DEBE salir rojo, y que el codigo anterior daba verde (rc 0, 'hueco de muestreo'): el journal ve
+    a bb-usable vivo dentro de la ventana y el corte nunca dispara."""
+    assert _main_11_oct(tmp_path, monkeypatch, J_VIVO + J_WATCHDOG) == 1
+    salida = capsys.readouterr().out
+    assert "incidentes no detectados:  1" in salida
+    assert "NO declara COLAPSO (bb-usable vivo), no reinicia" in salida
+    assert "VEREDICTO: CORTE INVALIDO" in salida
+
+
+def test_control_negativo_colapso_declarado_despues_de_la_ventana_no_la_detecta(tmp_path, monkeypatch, capsys):
+    tarde = [J_COLAPSO[0].replace("22:07:07", "22:13:07")]
+    assert _main_11_oct(tmp_path, monkeypatch, J_VIVO + tarde) == 1
+    assert "incidentes no detectados:  1" in capsys.readouterr().out
+
+
+def test_journal_ilegible_es_could_not_run_junto_al_veredicto(tmp_path, monkeypatch, capsys):
+    assert _main_11_oct(tmp_path, monkeypatch, "journalctl: [Errno 2] No such file or directory") == 2
+    salida = capsys.readouterr().out
+    assert "ventanas de incidente sin muestras dentro:  1" in salida
+    assert "COULD_NOT_RUN, journal de bb-usable:  1" in salida
+    assert "2026-10-11 22:02 -> 2026-10-11 22:12: journalctl: [Errno 2]" in salida
+    assert ("VEREDICTO: CALIBRADO, con deuda impresa arriba -- COULD_NOT_RUN: 1 ventana(s) sin muestras y sin "
+            "journal legible") in salida
+
+
+def _lee_journal_real(desde, hasta):
+    assert LEE_JOURNAL_REAL is not None, "tools.calibra_psi ya no tiene lee_journal"
+    return LEE_JOURNAL_REAL(desde, hasta)
+
+
+class _Proc:
+    def __init__(self, rc=0, out="", err=""):
+        self.returncode, self.stdout, self.stderr = rc, out, err
+
+
+@pytest.mark.parametrize("efecto,esperado", [
+    (FileNotFoundError(2, "No such file or directory"), "journalctl: [Errno 2]"),
+    (subprocess.TimeoutExpired(["journalctl"], 60), "journalctl: Command"),
+    (_Proc(rc=1, err="Failed to\n open"), "journalctl rc=1: Failed to open"),
+    (_Proc(out="x\n", err="No journal files were opened due to insufficient permissions."), "journalctl rc=0: No"),
+])
+def test_lee_journal_que_no_pudo_leer_devuelve_el_motivo_nunca_lista_vacia(monkeypatch, efecto, esperado):
+    def run(*a, **k):
+        if isinstance(efecto, BaseException):
+            raise efecto
+        return efecto
+    monkeypatch.setattr(cp.subprocess, "run", run)
+    r = _lee_journal_real(dt.datetime(2026, 10, 11, 22, 2), dt.datetime(2026, 10, 11, 22, 18))
+    assert isinstance(r, str) and r.startswith(esperado)
+
+
+def test_lee_journal_devuelve_las_lineas_y_pide_la_ventana(monkeypatch):
+    vistos = []
+    monkeypatch.setattr(cp.subprocess, "run", lambda cmd, **k: vistos.append(cmd) or _Proc(out="a\nb\n"))
+    assert _lee_journal_real(dt.datetime(2026, 10, 11, 22, 2), dt.datetime(2026, 10, 11, 22, 18)) == ["a", "b"]
+    assert vistos[0][-4:] == ["--since", "2026-10-11 22:02:00", "--until", "2026-10-11 22:18:00"]
+    assert vistos[0][:3] == ["journalctl", "-u", "bb-usable.service"]

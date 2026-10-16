@@ -1,0 +1,37 @@
+# tests con el codigo nuevo
+$ python -m pytest tests/test_calibra_psi.py tests/test_control_racha.py tests/test_sin_datos_privados.py -q -p no:cacheprovider
+60 passed in 5.38s
+
+$ pyright tools/calibra_psi.py tests/test_calibra_psi.py
+0 errors, 0 warnings, 0 informations
+
+# close_check DESPUES
+$ python3 -m tools.calibra_psi
+corte:  mem_full >= 10 % sostenido >= 5 min
+corpus: 2026-10-01 00:00 -> 2026-10-16 16:20
+muestras con PSI:            27203
+linea base (mem_full 0.00):  22028  (80.98 %)
+
+excursiones sobre el 10 %:
+  PICO        (<= 3 min)    27   10-01 13:16 (0 min, max 15.57 %), 10-01 13:26 (0 min, max 10.03 %), 10-03 21:52 (1 min, max 32.79 %)
+  SIN OBSERVAR               0
+  COLAPSO     (>= 5 min)     5   10-05 00:18 (7 min, max 78.30 %), 10-11 22:44 (8 min, max 72.47 %), 10-16 10:37 (6 min, max 56.34 %)
+
+control negativo (lo que DEBE salir en cero):
+  falsos positivos:          0
+  incidentes no detectados:  0
+  (incidentes fuera del corpus, sin observar: 6)
+
+deuda (no cuenta para el veredicto, y por eso se imprime entera):
+  ventanas de incidente sin muestras dentro:  0
+  COULD_NOT_RUN, journal de bb-usable:  0
+  falsos positivos conocidos (excepcion atada a ficha abierta):  3
+    10-16 10:37 (6 min, max 56.34 %) -- deuda abierta DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01
+    10-16 10:44 (10 min, max 55.50 %) -- deuda abierta DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01
+    10-16 13:45 (5 min, max 68.46 %) -- deuda abierta DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01
+
+ventanas sin muestras observadas por el journal de bb-usable:  1
+  2026-10-11 22:02 -> 2026-10-11 22:12: declara COLAPSO 22:07:07, reinicia 22:12:33 (watchdog)
+
+VEREDICTO: CALIBRADO, con deuda impresa arriba
+rc=0
