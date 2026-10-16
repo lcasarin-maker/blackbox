@@ -362,3 +362,8 @@ camino es el que se toma, aunque cueste más pasos.
 
 ## 2026-10-15 — Ultima boleta de la revision de lo instalado: todo lo grande se queda por uso medido
 Luis votó conservar `dgx-spark-fieldiag` (795 MB, el diagnóstico que el soporte pide para una RMA). Con uso medido ese día se conservan además cursor (config tocada 2026-10-14), antigravity (2026-10-12), chatgpt (app de OpenAI usada con Codex) y dcgm (`bin/bb` y `tools/incident_report.py` llaman `dcgmi`); los timers de otros proyectos corrieron en el último día y se quedan. Descartado: quitar fieldiag (reinstalarlo con la máquina ya inestable cuesta más que 795 MB) y retirar editores sin medir su uso. Cierra DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01.
+
+## 2026-10-15 — Kit de simplecode 10.0.2 -> 10.1.2 integrado desde la sincronizacion de flota (orden de Luis)
+- **Hecho:** `.simplecode/kit.lock` pasa a `simplecode_version 10.1.2` (artefacto `6817563c...`, el `runtime.zip` local coincide). Medido antes de integrarlo: `version_bump --gate` OK, `sunset-audit` PASS, `telemetry-disposition` OK, ledger H1 verde; control negativo: con el hash del lock alterado el runner da `COULD_NOT_RUN: no runtime.zip matches kit.lock`.
+- **Lo que el kit nuevo destapo:** `backlog_verifier` marco un FRAUDE real, `DEBT-DOCKER-FUERA-DEL-TECHO` (su close_check fijaba 14 GiB y la maquina esta en 16 desde la ventana del motor del 2026-10-15); el criterio se movio al valor votado con su medicion y control negativo. Y un `COULD_NOT_RUN` (`DEBT-COVERAGE-TARGETS-BIN-USABLE-01`: el kit nuevo rechaza un comando que deja un grupo de procesos vivo); ese test pasa solo (`1 passed`).
+- **Limite:** `runtime.zip` esta en `.gitignore`; quien clone necesita traerlo de la flota. Esto solo fija el hash esperado.
