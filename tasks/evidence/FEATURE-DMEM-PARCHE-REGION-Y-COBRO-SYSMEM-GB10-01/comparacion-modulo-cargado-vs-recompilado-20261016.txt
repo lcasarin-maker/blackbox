@@ -1,0 +1,16 @@
+Comparacion del modulo CARGADO con una recompilacion del parche actual, 2026-10-16 (boot 18a2ba7d-8be7-425e-bc78-f9ab52575248). Pregunta: el modulo cargado ya trae la traduccion 0x8D -> NV_ERR_NO_MEMORY (parche v3)? Respuesta: SI, las cuatro funciones parcheadas son identicas instruccion por instruccion.
+
+$ bash tools/dmem_reconstruye.sh   (rc 0, 12:23, bajo MemoryMax 8G, -j2, guardia de PSI)
+sha256 del nvidia.ko recompilado (sin firmar): 017a02587c9fd5b9aeff53080ae7096e3d87c9773db4977d6744d68d47b20e05
+sha256 del parche usado: 9e007eb208771edbc25be9fad8f87972a29c76fee66272ff79efd75cc3041126 (commit 3b66b0ac)
+srcversion del modulo cargado: 73BC7E52961D5FE2E16A551
+
+Diferencia de desensamblado (objdump -d --no-show-raw-insn, direcciones normalizadas), nuevo vs instalado:
+  sysmemConstruct_IMPL: lineas nuevo=110 instalado=110 diferencias=0
+  sysmemDestruct_IMPL: lineas nuevo=70 instalado=70 diferencias=0
+  memacctTryCharge: lineas nuevo=307 instalado=307 diferencias=0
+  memacctReleaseCharge: lineas nuevo=86 instalado=86 diferencias=0
+Control negativo (sysmemConstruct_IMPL contra memacctTryCharge): 357 lineas distintas, asi que la comparacion SI distingue.
+
+Los binarios completos NO son identicos byte a byte (el instalado trae 349 B de firma y los .ko no son reproducibles bit a bit); la comparacion vale para el codigo de las cuatro funciones, no para todo el modulo.
+No medido: el tipo de error que ve CUDA tras un rechazo por dmem.max (la medicion del 2026-10-12 se hizo antes de esta version y dio cudaErrorUnknown). Se mide con: sudo bash tools/dmem_prueba_completa.sh (caso d2); esperado ahora: out of memory.

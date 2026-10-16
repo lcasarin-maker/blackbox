@@ -67,3 +67,6 @@ Las tres rutas de evidencia del frontmatter: `tasks/evidence/FEATURE-DMEM-PARCHE
 
 ## Correccion 2026-10-16: "pinned y managed no se cobran" ya esta medido
 Lo escrito arriba ("ABIERTO: pinned y managed no se cobran") habla solo de dmem.current. Medido en las dos columnas (`FEATURE-DMEM-CLASES-DE-MEMORIA-POR-CGROUP-01`): managed y pinned se cobran a memory.current y memory.max las frena (OOM del cgroup, exit 137); device se cobra a dmem y lo frena dmem.max. No queda un hueco de contencion por clase; quedan los limites declarados en esa ficha.
+
+## Correccion 2026-10-16: el modulo cargado YA trae la traduccion 0x8D -> NO_MEMORY
+La linea de arriba que dice "ABIERTO (menor): el rechazo llega a CUDA como cudaErrorUnknown ... exige recompilar y reiniciar" describe el modulo de las 18:50 del 2026-10-12; el modulo instalado a las 20:52 ya incluye el parche v3 (commit 3b66b0ac). Evidencia: `comparacion-modulo-cargado-vs-recompilado-20261016.txt` (cuatro funciones identicas instruccion por instruccion contra una recompilacion del parche actual; control negativo 357 lineas distintas). Falta MEDIR que CUDA vea "out of memory" y no cudaErrorUnknown: `sudo bash tools/dmem_prueba_completa.sh` (caso d2). Mientras no se mida, el texto publico que dice "compilado, sin cargar" sigue siendo inexacto en otro sentido (esta cargado, sin medir).
