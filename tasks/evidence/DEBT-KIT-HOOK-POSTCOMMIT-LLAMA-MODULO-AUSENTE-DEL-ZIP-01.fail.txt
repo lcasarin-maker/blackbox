@@ -1,0 +1,9 @@
+# Antes (kit 10.1.4, runtime.zip sha 3c429a6cf94d), medido el 2026-10-16 en la sesion:
+$ unzip -l .simplecode/runtime.zip | grep -c pyright_attestation
+0
+$ <hook post-commit, linea 35: python .simplecode/run.py simplecode.verification.pyright_attestation --root . --background>
+Traceback (most recent call last):
+  File "/home/lcasarin/projects/blackbox/.simplecode/run.py", line 88, in <module>
+    runpy.run_module(module, run_name="__main__")
+ImportError: No module named simplecode.verification.pyright_attestation
+(salida repetida en cada commit del dia)
