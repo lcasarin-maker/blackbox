@@ -662,8 +662,10 @@ def test_apt_guardia_si_puede_lo_declarado(linea: str):
 
 # --- earlyoom-proteger: ejecutado sobre tmp_path (rutas, root y systemd sustituidos) --------
 
-EARLYOOM_VIEJO = ROOT / "tests" / "fixtures" / "etc_default_earlyoom.viejo"  # el archivo ANTES del cambio de 2026-10-14 (sha 7e8a44b6...)
-EARLYOOM_NUEVO = ROOT / "adopted" / "system-config" / "etc_default_earlyoom"  # lo desplegado desde 2026-10-14
+EARLYOOM_VIEJO = ROOT / "adopted" / "system-config" / "etc_default_earlyoom"  # lo desplegado desde 2026-10-14 (sha 89fe78da...)
+# lo que despliega (DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01); al desplegarlo pasa a system-config/ y estas dos
+# constantes avanzan con el siguiente cambio, como paso con el del 2026-10-14
+EARLYOOM_NUEVO = ROOT / "adopted" / "pendiente-de-despliegue" / "etc_default_earlyoom"
 SCRIPT_EARLYOOM = bm.SRC_DIR / EARLYOOM
 BAK = f"etc_default_earlyoom.{hashlib.sha256(EARLYOOM_VIEJO.read_bytes()).hexdigest()}"
 
@@ -675,7 +677,17 @@ def _args(fichero: Path) -> list[str]:
 
 
 def _alternativas(regex: str) -> set[str]:
-    return set(regex.strip("()").split("|"))
+    """Las alternativas de nivel superior; un grupo anidado como '^(a|b)$' cuenta como una sola."""
+    cuerpo, partes, nivel, actual = regex[1:-1], [], 0, ""
+    assert regex[0] == "(" and regex[-1] == ")"
+    for c in cuerpo:
+        nivel += (c == "(") - (c == ")")
+        if c == "|" and nivel == 0:
+            partes.append(actual)
+            actual = ""
+        else:
+            actual += c
+    return set(partes + [actual])
 
 
 def _heredoc(texto: str, delim: str) -> str:
@@ -691,19 +703,23 @@ def test_earlyoom_proteger_embebe_exactamente_el_fichero_nuevo_y_los_sha256():
     assert _heredoc(texto, "ARGS").splitlines() == _args(EARLYOOM_NUEVO)
 
 
-def test_earlyoom_nuevo_conserva_umbrales_y_amplia_avoid_y_prefer():
+def test_earlyoom_nuevo_conserva_umbrales_y_prefer_y_amplia_avoid():
     viejo, nuevo = _args(EARLYOOM_VIEJO), _args(EARLYOOM_NUEVO)
     assert viejo[:6] == nuevo[:6] == ["-r", "60", "-m", "10", "-s", "100,100"]
     assert [viejo[6], viejo[8]] == [nuevo[6], nuevo[8]] == ["--avoid", "--prefer"] and len(nuevo) == len(viejo) == 10
-    assert _alternativas(nuevo[7]) - _alternativas(viejo[7]) == {"vllm", "VLLM", "docker", "containerd", "^bb-"}
-    assert _alternativas(nuevo[9]) - _alternativas(viejo[9]) == {"xdist", "bb-portero"}
-    assert _alternativas(viejo[7]) < _alternativas(nuevo[7]) and _alternativas(viejo[9]) < _alternativas(nuevo[9])
+    assert _alternativas(nuevo[7]) - _alternativas(viejo[7]) == {
+        "claude", "dbus", "Xwayland", "^(node|cowork-linux-he|electron|chrome_crashpad|init|earlyoom|bb)$"}
+    # las dos que salen quedan contenidas en las que entran: 'claude' casa con claude-desktop, 'dbus' con dbus-daemon
+    assert _alternativas(viejo[7]) - _alternativas(nuevo[7]) == {"claude-desktop", "dbus-daemon"}
+    assert nuevo[9] == viejo[9]
 
 
 @pytest.mark.parametrize("comm,avoid,prefer", [
     ("VLLM::EngineCor", True, False), ("vllm", True, False), ("dockerd", True, False), ("containerd-shim", True, False),
     ("bb-root-run", True, False), ("[pytest-xdist r", False, True), ("pytest", False, True),
     ("python3", False, False), ("xbb-x", False, False),
+    ("claude", True, False), ("claude-desktop", True, False), ("node", True, False), ("init", True, False),
+    ("bb", True, False), ("dbus-daemon", True, False), ("node_repl", False, False), ("initctl", False, False),
 ])
 def test_las_regex_nuevas_sobre_los_comm_reales(comm: str, avoid: bool, prefer: bool):
     # re.search emula regexec sin anclar; estas regex no usan nada que difiera entre POSIX ERE y re.
