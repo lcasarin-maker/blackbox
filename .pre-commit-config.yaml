@@ -96,12 +96,12 @@ repos:
         pass_filenames: false
 
       - id: coverage-floor
-        name: "coverage target (ratchet: never below watermark)"
+        name: "coverage attestation (immutable SHA; ratchet: never below watermark)"
         entry: >-
           python .simplecode/run.py simplecode.verification.gate_runner
           --root . --name coverage-100 --hook pre-push --
-          python .simplecode/run.py simplecode.verification.coverage_target
-          -q
+          python .simplecode/run.py simplecode.verification.coverage_attestation
+          --require
         language: system
         types: [python]
         stages: [pre-push]
@@ -112,7 +112,7 @@ repos:
         entry: >-
           python .simplecode/run.py simplecode.verification.gate_runner
           --root . --name pyright --hook pre-push --
-          python .simplecode/run.py simplecode.verification.pyright_gate --root .
+          python .simplecode/run.py simplecode.verification.pyright_attestation --require
         language: system
         types: [python]
         stages: [pre-push]
