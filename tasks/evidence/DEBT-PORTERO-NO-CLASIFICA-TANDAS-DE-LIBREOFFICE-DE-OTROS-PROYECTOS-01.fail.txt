@@ -1,0 +1,19 @@
+## Fallo 2026-10-17 -- clasifica() no da clase a una conversion soffice --headless
+
+Sujeto: tools/portero.py en 6ed1d1d0 (sha256 25dc644539c2db02955bdb18fb7575c9717674288cf487971f1d7fe4be802c5b).
+
+command: python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_portero_clase_trabajo_ajeno.py::test_una_conversion_de_libreoffice_headless_tiene_clase
+exit: 1
+```text
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_una_conversion_de_libreoffice_headless_tiene_clase ____________
+tests/test_portero_clase_trabajo_ajeno.py:14: in test_una_conversion_de_libreoffice_headless_tiene_clase
+    assert portero.clasifica(argv) is not None
+E   AssertionError: assert None is not None
+E    +  where None = <function clasifica at 0xee80ea82ea20>(['/usr/lib/libreoffice/program/soffice.bin', '-env:UserInstallation=file:///tmp/perfil', '--headless', '--convert-to', 'pdf', '--outdir', ...])
+E    +    where <function clasifica at 0xee80ea82ea20> = portero.clasifica
+=========================== short test summary info ============================
+FAILED tests/test_portero_clase_trabajo_ajeno.py::test_una_conversion_de_libreoffice_headless_tiene_clase
+1 failed in 0.07s
+```

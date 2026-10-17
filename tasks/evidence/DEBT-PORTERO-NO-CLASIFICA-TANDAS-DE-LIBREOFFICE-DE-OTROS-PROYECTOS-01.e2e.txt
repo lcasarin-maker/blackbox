@@ -1,0 +1,75 @@
+## E2E 2026-10-17 -- la clase nueva sobre una tanda REAL, de solo lectura, con el interruptor en `actuar`
+
+Durante el trabajo corria una tanda de conversiones `soffice --headless --convert-to pdf` de otro proyecto (un
+servicio de usuario en app.slice sin memory.max propio). Todo lo de abajo es lectura de /proc y de cgroups; nada se
+congelo, movio ni reinicio. El demonio `bb-portero.service` NO se reinicio (despliegue de Luis): sigue con el codigo
+anterior y el interruptor `portero` en `actuar`.
+
+### 1. Medicion de la tanda (fundamenta los topes de la clase)
+
+Muestreo de /proc cada 0.25 s durante 30 s (script en el scratchpad de la sesion, solo lectura):
+```text
+muestras 116 pids_distintos 545 max_soffice_bin_concurrentes 10 max_rss_suma_kB 1916156 max_rss_un_soffice_bin_kB 236220
+vida_observada_s p50 1.04 max 1.57
+formas (exe, headless, convert-to) {('soffice.bin', True, True), ('oosplash', True, True)}
+```
+Hilos de un soffice.bin, 10 s: `lecturas 427 max_threads_soffice_bin 4`.
+cgroup del servicio de la tanda: `memory.max max`, `memory.current 1938989056`, `memory.peak 2365497344`.
+`app.slice memory.max 45097156608` (42 GiB).
+
+### 2. El codigo nuevo contra /proc real, con el modo global `actuar`
+
+Script: lee_estado() y observar() reales; decide() real; aplica() con `Efectos(modo="actuar")`, log/cola/cg_raiz en
+el scratchpad y un ejecutor que solo anota (rc=1). Se aplican solo las acciones de la clase `libreoffice`.
+15 ciclos de 2 s (el intervalo del demonio):
+```text
+ciclos 15 en 30 s; arboles libreoffice vistos 148; max por ciclo 10
+filas por (accion, modo): {('habria_admitir', 'observar'): 15, ('habria_congelar', 'observar'): 133}
+filas 148, bytes 101195, filas/s 4.86
+filas con rc (accion ejecutada): 0 | llamadas al ejecutor: 0
+cg-falso creado: False
+ejemplo: {'accion': 'habria_admitir', 'modo': 'observar', 'clase': 'libreoffice', 'motivo': 'turno libre y puerta abierta', 'rss_kb': 211496, 'procesos': 2, 'topes': {'MemoryMax': 1073741824, 'MemoryHigh': 966367232, 'MemorySwapMax': 0, 'TasksMax': 64}}
+```
+Lectura: `clasifica` reconoce la tanda real (148 arboles oosplash -> soffice.bin en 15 ciclos), la cola admite de
+una en una (15 habria_admitir, uno por ciclo; 133 habria_congelar), y con el interruptor en `actuar` la clase solo
+registra `habria_*` con `"modo": "observar"`: 0 llamadas a systemd, 0 escrituras de cgroup.freeze.
+
+Costo medido para el despliegue: en `observar` hay una fila por conversion, 4.86 filas/s y 101 195 bytes en 30 s
+(3.4 kB/s mientras corre una tanda) en portero.jsonl, que hoy pesa 2 179 486 bytes en 3 735 filas.
+
+### 3. Caracterizacion de `suite` (antes y despues)
+
+tests/test_portero_caracterizacion_suite.py grabo tests/fixtures/portero_suite_caracterizacion.json con
+tools/portero.py SIN modificar (6ed1d1d0, commit 10db38c4 de este trabajo; fixture sha256
+fece1c741ef7a5b487dffeb4e88ad1e96d2b4367a16327fe2771f6a28a37dffa): `2 passed in 0.11s`. Con la clase nueva: pasa
+igual (126 passed en el .pass.txt) y el fixture no cambio (mismo sha).
+
+### 4. Control negativo por mutacion (script que restaura el archivo byte a byte)
+
+```text
+== mutacion: clase libreoffice con techo actuar -> rc=1
+FAILED tests/test_portero_clase_trabajo_ajeno.py::test_modo_efectivo_es_el_mas_restrictivo[actuar-libreoffice-observar]
+FAILED tests/test_portero_clase_trabajo_ajeno.py::test_con_el_interruptor_en_actuar_la_clase_solo_registra_habria_y_no_llama_a_nada
+FAILED tests/test_portero_clase_trabajo_ajeno.py::test_turno_de_libreoffice_no_espera_aunque_el_interruptor_diga_actuar
+3 failed, 22 passed in 0.12s
+== mutacion: aplica ignora el techo de la clase -> rc=1
+FAILED tests/test_portero_clase_trabajo_ajeno.py::test_con_el_interruptor_en_actuar_la_clase_solo_registra_habria_y_no_llama_a_nada
+1 failed, 24 passed in 0.10s
+== mutacion: turno ignora el techo de la clase -> rc=1
+FAILED tests/test_portero_clase_trabajo_ajeno.py::test_turno_de_libreoffice_no_espera_aunque_el_interruptor_diga_actuar
+1 failed, 24 passed in 0.11s
+== mutacion: clasifica no da clase a la conversion -> rc=1
+FAILED tests/test_portero_clase_trabajo_ajeno.py::test_una_conversion_de_libreoffice_headless_tiene_clase
+1 failed in 0.08s
+== mutacion: suite con 2 turnos (caracterizacion) -> rc=1
+FAILED tests/test_portero_caracterizacion_suite.py::test_la_clase_suite_decide_y_registra_igual_que_antes_de_la_clase_nueva
+1 failed in 0.08s
+restaurado identico: True
+```
+
+### Lo que NO corrio
+
+- El demonio real con este codigo: reiniciar `bb-portero.service` es de Luis (`systemctl --user restart
+  bb-portero.service`). Hasta entonces la clase no existe en la maquina.
+- La medicion en `observar` del demonio sobre varias tandas antes de pasar la clase a `actuar` (ver la nota de
+  cierre de la ficha).
