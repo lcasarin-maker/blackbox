@@ -31,6 +31,9 @@ cada vuelta; `decide` sigue pura y solo la capa con efecto (`aplica`) mira el mo
   Contenedores (`--contenedores`): registra `acotaria` sin `docker update`.
 * `actuar`: como antes del interruptor; las filas no llevan `modo`.
 
+Cada clase lleva ademas su techo de modo (`Clase.modo`): el modo efectivo de una accion es el mas restrictivo entre el
+interruptor y ese techo (`modo_efectivo`). `suite` tiene techo `actuar`; `libreoffice` entra con techo `observar`.
+
 Lo unico que el demonio hace fuera de `actuar` es deshacer lo propio: descongela los scopes bb-portero-* que dejo
 congelados (lista app.slice, nada mas). Sin eso, pasar a `off` con una suite congelada la dejaria asi para siempre.
 
@@ -95,6 +98,10 @@ class Clase:
     tasks_max: int
     turnos: int
     umbral_rss_kb: int
+    # Techo del modo para esta clase: el efectivo es el mas restrictivo entre el interruptor `portero` y este campo
+    # (`modo_efectivo`). `suite` queda en `actuar` (solo manda el interruptor, como antes); una clase nueva entra en
+    # `observar` hasta que su registro justifique `actuar` (voto de Luis 2026-10-17).
+    modo: str = "actuar"
 
 
 # Clase `suite` (pytest, hooks pre-push/pre-commit). MemoryMax=20G con swap 0 y MemoryHigh al 90 % es el tope que
@@ -110,7 +117,31 @@ CLASES: dict[str, Clase] = {
         turnos=1,
         umbral_rss_kb=UMBRAL_RSS_SUITE_KB,
     ),
+    # Clase `libreoffice` (DEBT-PORTERO-NO-CLASIFICA-TANDAS-DE-LIBREOFFICE-DE-OTROS-PROYECTOS-01): una conversion
+    # `soffice --headless --convert-to` es un arbol oosplash -> soffice.bin. Medido 2026-10-17 en /proc sobre una tanda
+    # viva de otro proyecto (30 s, 116 muestras): 545 pids distintos, hasta 10 soffice.bin a la vez, RSS de un
+    # soffice.bin <= 236 220 kB, suma de la tanda <= 1 916 156 kB, cada conversion vive ~1 s (p50 1.04 s, max 1.57 s);
+    # hilos de un soffice.bin <= 4 (427 lecturas en 10 s). MemoryMax 1 GiB es 4.4x el mayor medido, MemoryHigh al
+    # 90 % como `suite`; TasksMax 64 es 16x los hilos medidos. umbral 0: el riesgo es cuantas corren a la vez, no una
+    # pesada (ninguna se acerca al umbral de `suite`). turnos=1: la ficha pide admitirlas de una en una. 20 + 1 GiB
+    # caben en el app.slice de 42 GiB (`presupuesto_desbordado`). Entra en `observar`: no congela ni adopta nada.
+    "libreoffice": Clase(
+        memory_max_kb=GIB_KB,
+        memory_high_kb=GIB_KB * 9 // 10,
+        tasks_max=64,
+        turnos=1,
+        umbral_rss_kb=0,
+        modo="observar",
+    ),
 }
+
+
+def modo_efectivo(modo_global: str, clase: str | None, clases: dict[str, Clase] | None = None) -> str:
+    """El mas restrictivo (off < observar < actuar) entre el interruptor y el techo de la clase; sin clase, el global."""
+    c = (CLASES if clases is None else clases).get(clase or "")
+    if c is None or modo_global not in interruptores.MODOS or c.modo not in interruptores.MODOS:
+        return modo_global
+    return min(modo_global, c.modo, key=interruptores.MODOS.index)
 
 PREFIJO_UNIDAD = "bb-portero-"
 
@@ -210,14 +241,20 @@ def _marca_hook(argv: list[str], hook: str) -> bool:
     return False
 
 
+LIBREOFFICE_EJECUTABLES = ("soffice", "soffice.bin", "oosplash")
+
+
 def clasifica(argv: list[str]) -> str | None:
-    """Clase por la FORMA del comando, no por el nombre del repo: pytest o un hook pre-push/pre-commit -> suite."""
+    """Clase por la FORMA del comando, no por el nombre del repo: pytest o un hook pre-push/pre-commit -> suite;
+    soffice/soffice.bin/oosplash (o un shell que lo lanza) con --headless y --convert-to -> libreoffice."""
     for i, a in enumerate(argv):
         base = Path(a).name
         if base in ("pytest", "py.test") or (a == "-m" and i + 1 < len(argv) and argv[i + 1] == "pytest"):
             return "suite"
     if _marca_hook(argv, "pre-push") or _marca_hook(argv, "pre-commit"):
         return "suite"
+    if any(Path(a).name in LIBREOFFICE_EJECUTABLES for a in argv[:2]) and "--headless" in argv and "--convert-to" in argv:
+        return "libreoffice"
     return None
 
 
@@ -832,12 +869,13 @@ def aplica(
     Con `fx.modo` fuera de `actuar` (interruptor en `observar`) no ejecuta nada: cada accion con efecto se registra
     como `habria_<accion>` con `modo`, y tambien solo al cambiar su motivo."""
     fx = fx or Efectos()
-    log, origen, cg_raiz, modo = fx.log, fx.origen, fx.cg_raiz, fx.modo
+    log, origen, cg_raiz = fx.log, fx.origen, fx.cg_raiz
     por_raiz = {a.raiz: a for a in arboles}
     ultimo = {} if ultimo is None else ultimo
     eventos = []
     for ac in acciones:
         a = por_raiz.get(ac.raiz) if ac.raiz is not None else None
+        modo = modo_efectivo(fx.modo, ac.clase)  # una clase en `observar` no actua aunque el interruptor diga `actuar`
         ev: dict[str, Any] = {"accion": ac.tipo, "motivo": ac.motivo, "raiz": ac.raiz, "clase": ac.clase}
         if a is not None:
             ev.update(rss_kb=a.rss_kb, procesos=a.procesos, edad_s=round(a.edad_s, 1), cgroup=a.cgroup)
@@ -1061,7 +1099,7 @@ def turno(pid: int, clase: str, fuente: Fuente = _fuente_real, espera: Callable[
     Con `fx.modo` fuera de `actuar` no espera: si le habria tocado esperar lo registra (`habria_esperar`) y concede
     `no_actua`."""
     fx = fx or Efectos()
-    cola, log, modo = fx.cola, fx.log, fx.modo
+    cola, log, modo = fx.cola, fx.log, modo_efectivo(fx.modo, clase)
     ruta = cola / f"{pid}.json"
     peticion = {"pid": pid, "clase": clase, "ts": time.time()}
     _escribe_peticion(ruta, peticion)
@@ -1100,7 +1138,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         return 2
     c = CLASES[args.clase]
     pid = os.getpid()
-    modo = interruptores.modo(NOMBRE)
+    modo = modo_efectivo(interruptores.modo(NOMBRE), args.clase)
     # Peticion explicita: el tope de la clase va en todo modo; el interruptor solo gobierna la cola (ver docstring).
     if modo == "off":
         concedida = Accion("no_actua", f"interruptor {NOMBRE}=off: sin cola, lanza con el tope de su clase", pid, args.clase)

@@ -1,0 +1,39 @@
+## Cierre 2026-10-17 -- clase `libreoffice` por forma, con techo de modo `observar`
+
+Sujeto: tools/portero.py (sha256 03f87c4f76ee7f9404a0cf8fe3609906eff59da4e325186424e69ee3802df32b).
+
+command: python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_portero_clase_trabajo_ajeno.py::test_una_conversion_de_libreoffice_headless_tiene_clase
+exit: 0
+```text
+.                                                                        [100%]
+1 passed in 0.06s
+```
+
+Control negativo: el mismo comando sobre 6ed1d1d0 sale 1 (ver el .fail.txt), y con la mutacion
+`return "libreoffice"` -> `return None` en clasifica() vuelve a salir 1 (ver el .e2e.txt).
+
+command: python3 -m pytest -q -p no:cacheprovider tests/test_portero.py tests/test_portero_efectos.py tests/test_portero_caracterizacion_suite.py tests/test_portero_clase_trabajo_ajeno.py tests/test_sin_datos_privados.py -k "not test_real_mover_topar_en_caliente"
+exit: 0
+```text
+126 passed, 1 deselected in 4.56s
+```
+El deseleccionado (`tests/test_portero.py::test_real_mover_topar_en_caliente_congelar_y_control_negativo`) crea y
+congela scopes desechables propios con `systemd-run --user`; corrio y paso en la primera corrida de esta sesion
+(100 passed sobre test_portero + test_portero_efectos + caracterizacion) y se dejo fuera de las siguientes para no
+congelar nada mas en una maquina compartida. could_not_run 0 en la primera corrida.
+
+command: python3 -m pytest -q -p no:cacheprovider tests/test_inventario.py tests/test_vigilante_memavail.py tests/test_procesos_protegidos.py tests/test_hook_native_controls.py
+exit: 0
+```text
+70 passed in 10.94s
+```
+
+command: pyright tools/portero.py tests/test_portero_clase_trabajo_ajeno.py tests/test_portero_caracterizacion_suite.py
+```text
+0 errors, 0 warnings, 0 informations
+```
+
+command: python3 -m ruff check tools/portero.py tests/test_portero_clase_trabajo_ajeno.py tests/test_portero_caracterizacion_suite.py
+```text
+All checks passed!
+```
