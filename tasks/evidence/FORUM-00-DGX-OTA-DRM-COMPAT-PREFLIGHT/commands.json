@@ -1,28 +1,119 @@
 {
-  "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
-  "commands": [
-    {
-      "cmd": "uname -a",
-      "exit": 0,
-      "stdout": "Linux <host> 6.17.0-1032-nvidia #32-Ubuntu SMP PREEMPT_DYNAMIC Wed Aug 19 17:40:46 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n"
-    },
-    {
-      "cmd": "rg -n 'nvidia[-_]drm.*modeset|modeset=[01]' /etc/modprobe.d /lib/modprobe.d",
-      "exit": 0,
-      "stdout": "/etc/modprobe.d/zz-nvidia-drm-override.conf:1:options nvidia-drm modeset=0\n/etc/modprobe.d/nvidia-graphics-drivers-kms.conf:3:options nvidia_drm modeset=1\n"
-    },
-    {
-      "cmd": "cat /sys/module/nvidia_drm/parameters/modeset",
-      "exit": 1,
-      "stdout": "",
-      "stderr": "cat: /sys/module/nvidia_drm/parameters/modeset: Permission denied\n",
-      "could_not_run": true
-    },
-    {
-      "cmd": "mokutil --sb-state",
-      "exit": 0,
-      "stdout": "SecureBoot enabled\n"
-    }
-  ],
-  "could_not_run_count": 1
+ "id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT",
+ "commands": [
+  {
+   "argv": [
+    "cat",
+    "/proc/sys/kernel/random/boot_id"
+   ],
+   "exit_code": 0,
+   "stdout": "18a2ba7d-8be7-425e-bc78-f9ab52575248\n",
+   "stderr": ""
+  },
+  {
+   "argv": [
+    "uname",
+    "-r"
+   ],
+   "exit_code": 0,
+   "stdout": "6.17.0-1032-nvidia\n",
+   "stderr": ""
+  },
+  {
+   "argv": [
+    "grep",
+    "-E",
+    "^DGX_SWBUILD_VERSION=",
+    "/etc/dgx-release"
+   ],
+   "exit_code": 0,
+   "stdout": "DGX_SWBUILD_VERSION=\"7.2.3\"\n",
+   "stderr": ""
+  },
+  {
+   "argv": [
+    "dpkg-query",
+    "-W",
+    "-f=${Package} ${Version} ${db:Status-Abbrev}\n",
+    "nvidia-drm-options-modeset0"
+   ],
+   "exit_code": 0,
+   "stdout": "nvidia-drm-options-modeset0 25.07-1 ii \n",
+   "stderr": ""
+  },
+  {
+   "argv": [
+    "grep",
+    "-rHsE",
+    "^[[:space:]]*options[[:space:]]+nvidia[-_]drm",
+    "/etc/modprobe.d",
+    "/lib/modprobe.d",
+    "/usr/lib/modprobe.d"
+   ],
+   "exit_code": 0,
+   "stdout": "/etc/modprobe.d/nvidia-graphics-drivers-kms.conf:options nvidia_drm modeset=1\n/etc/modprobe.d/zz-nvidia-drm-override.conf:options nvidia-drm modeset=0\n",
+   "stderr": ""
+  },
+  {
+   "argv": [
+    "grep",
+    "-oE",
+    "(nvidia[-_]drm\\.[a-z_]+=[^ ]*|nomodeset)",
+    "/proc/cmdline"
+   ],
+   "exit_code": 1,
+   "stdout": "",
+   "stderr": ""
+  },
+  {
+   "argv": [
+    "cat",
+    "/sys/module/nvidia_drm/parameters/modeset"
+   ],
+   "exit_code": 1,
+   "stdout": "",
+   "stderr": "cat: /sys/module/nvidia_drm/parameters/modeset: Permission denied\n"
+  },
+  {
+   "argv": [
+    "ss",
+    "-Hltn",
+    "sport = :22"
+   ],
+   "exit_code": 0,
+   "stdout": "LISTEN 0      4096   0.0.0.0:22 0.0.0.0:*\nLISTEN 0      4096      [::]:22    [::]:*\n",
+   "stderr": ""
+  },
+  {
+   "argv": [
+    "ls",
+    "/sys/class/drm"
+   ],
+   "exit_code": 0,
+   "stdout": "card0\ncard0-Unknown-1\ncard1\nrenderD128\nversion\n",
+   "stderr": ""
+  },
+  {
+   "argv": [
+    "grep",
+    "-H",
+    ".",
+    "/sys/class/drm/card0-Unknown-1/status"
+   ],
+   "exit_code": 0,
+   "stdout": "/sys/class/drm/card0-Unknown-1/status:connected\n",
+   "stderr": ""
+  },
+  {
+   "argv": [
+    "readlink",
+    "-f",
+    "/sys/class/drm/card0/device/driver",
+    "/sys/class/drm/card1/device/driver"
+   ],
+   "exit_code": 0,
+   "stdout": "/sys/bus/platform/drivers/simple-framebuffer\n/sys/bus/pci/drivers/nvidia\n",
+   "stderr": ""
+  }
+ ]
 }

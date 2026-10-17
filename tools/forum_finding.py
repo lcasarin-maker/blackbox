@@ -218,4 +218,9 @@ def _evaluate_supported(finding_id: str, directory: Path) -> dict[str, Any]:
 
         status, reason = evaluar_cierre(raw_commands, snapshot_doc, directory)
         return _result(status, reason, files + [str(directory / TRIAL_FILE)])
+    if kind == "drm":
+        from tools import update_drm_coherence as drm
+
+        status, reason = drm.evaluar_cierre(raw_commands, snapshot_doc, directory)
+        return _result(status, reason, files + [str(directory / drm.DECLARATION_FILE), str(directory / drm.TRIAL_FILE)])
     return _result("unknown", "healthy preflight matches raw commands; incident negative and recovery/rollback controls are missing", files)
