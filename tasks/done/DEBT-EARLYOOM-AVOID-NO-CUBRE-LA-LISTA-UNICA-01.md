@@ -3,7 +3,11 @@ id: DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01
 kind: task
 domain: MEMORY
 title: "El --avoid desplegado de earlyoom no evita 10 nombres de la lista unica de procesos protegidos"
-status: open
+status: done
+closed_at: 2026-10-16
+closure_type: fixed
+reason: "el --avoid de earlyoom cubre los 24 nombres de la lista unica de procesos protegidos; desplegado por Luis con el script sellado el 2026-10-16, verificado en la maquina (hash igual al del repo, earlyoom active, bb drift sin divergentes)"
+evidence: {"pass": "tasks/evidence/DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01/pass.txt", "fail": "tasks/evidence/DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01/fail.txt", "e2e": "tasks/evidence/DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01/e2e.txt"}
 severity: P3
 origin: detected
 detector: {"rule": "tests/test_procesos_protegidos.py::test_earlyoom_hueco_medido_es_el_declarado", "confidence": 1.0}
@@ -66,3 +70,12 @@ El fichero es configuracion desplegada como root; cambiarlo es un despliegue de 
 
 ## Voto de Luis 2026-10-16: antigravity solo en earlyoom
 Registrado en `DECISIONS.md`: `antigravity` queda en el `--avoid` de earlyoom y fuera de `data/procesos_protegidos.json`. El archivo pendiente `adopted/pendiente-de-despliegue/etc_default_earlyoom` ya es el definitivo; el script sellado no se re-sella. Falta solo el despliegue con root de Luis (ver el comando en 'Avance 2026-10-16').
+
+## Root Cause
+El --avoid desplegado el 2026-10-14 se escribio antes de la lista unica de procesos protegidos y no casaba con 10 de sus 24 nombres (claude, node, cowork-linux-he, electron, chrome_crashpad, Xwayland, init, dbus, earlyoom, bb).
+
+## Regression Test
+`tests/test_procesos_protegidos.py::test_earlyoom_cubre_toda_la_lista` (antes xfail), con el control negativo `test_control_negativo_el_desplegado_anterior_dejaba_diez_nombres_fuera` y `test_control_negativo_quitar_un_nombre_del_pendiente_se_ve` (10 casos).
+
+## Verification Evidence
+Triada en tasks/evidence/DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01/: fail.txt (rojo contra lo desplegado antes), pass.txt (verde sobre el contenido nuevo) y e2e.txt (salida real del despliegue de Luis y verificacion en la maquina). antigravity queda solo en el --avoid por voto del 2026-10-16 (DECISIONS.md).

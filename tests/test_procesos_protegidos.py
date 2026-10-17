@@ -29,9 +29,11 @@ from tools import gpuoom_bb, vigilante_memavail
 RAIZ = Path(__file__).resolve().parent.parent
 DATOS = RAIZ / "data" / "procesos_protegidos.json"
 EARLYOOM = RAIZ / "adopted" / "system-config" / "etc_default_earlyoom"
-# El contenido que Luis despliega con `sudo -n bb-root-run earlyoom-proteger` (DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01).
-# Al desplegarlo se mueve a system-config/ (adopted/pendiente-de-despliegue/LEEME.txt) y sus pruebas pasan a medir EARLYOOM.
-EARLYOOM_PENDIENTE = RAIZ / "adopted" / "pendiente-de-despliegue" / "etc_default_earlyoom"
+# Desplegado por Luis con `sudo -n bb-root-run earlyoom-proteger` el 2026-10-16 (DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01):
+# el contenido nuevo vive ya en system-config/ y el que estuvo desplegado desde el 2026-10-14 queda como fixture, para que
+# las pruebas "solo amplia" y el control negativo sigan midiendo contra el estado anterior real (sha 89fe78da...).
+EARLYOOM_PENDIENTE = EARLYOOM
+EARLYOOM_VIEJO = RAIZ / "tests" / "fixtures" / "etc_default_earlyoom.viejo"
 
 # Lo votado, en comm reales de esta maquina (ps -eo comm, 2026-10-14). Independiente del fichero: si alguien borra
 # un nombre del fichero Y de los respaldos, esto sigue exigiendolo.
@@ -42,10 +44,11 @@ VOTADOS = ("claude", "claude-desktop", "node", "cowork-linux-he", "electron", "c
            "bb", "bb-usable", "bb-guardia-proc", "bb-vigilante-mo", "bb-portero")
 NO_PROTEGIDOS = ("python3", "pytest", "bash", "sleep")
 
-# Medido el 2026-10-14 contra el --avoid desplegado: nombres de la lista que earlyoom NO evita.
-# DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01. No se edita el fichero desplegado desde aqui.
-FALTAN_EN_EARLYOOM = {"claude", "node", "cowork-linux-he", "electron", "chrome_crashpad", "Xwayland", "init", "dbus",
-                      "earlyoom", "bb"}
+# Medido el 2026-10-14 contra el --avoid que estuvo desplegado: nombres de la lista que earlyoom NO evitaba.
+# DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01. Desde el despliegue del 2026-10-16 el desplegado los cubre todos.
+FALTABAN_ANTES = {"claude", "node", "cowork-linux-he", "electron", "chrome_crashpad", "Xwayland", "init", "dbus",
+                  "earlyoom", "bb"}
+FALTAN_EN_EARLYOOM: set[str] = set()
 
 
 def _cargar_bin(ruta: Path, nombre: str):
@@ -301,10 +304,13 @@ def test_earlyoom_instrumento_discrimina():
     assert avoid.search("VLLM::EngineCor") and avoid.search("bb-usable") and not avoid.search("python3")
 
 
-@pytest.mark.xfail(strict=True, reason="DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01: el --avoid desplegado no "
-                   "cubre 10 nombres de la lista unica")
 def test_earlyoom_cubre_toda_la_lista():
     assert faltan_en_earlyoom() == set()
+
+
+def test_control_negativo_el_desplegado_anterior_dejaba_diez_nombres_fuera():
+    """El instrumento puede salir rojo: contra el contenido que estuvo desplegado antes faltan exactamente los diez."""
+    assert faltan_en_earlyoom(EARLYOOM_VIEJO) == FALTABAN_ANTES
 
 
 # ------------------------------------------------------------------ earlyoom: el contenido pendiente de despliegue
@@ -322,7 +328,7 @@ def test_earlyoom_pendiente_cubre_toda_la_lista_y_no_evita_lo_no_protegido():
 
 def test_earlyoom_pendiente_solo_amplia_lo_desplegado():
     """Todo comm que el --avoid desplegado evita lo sigue evitando el pendiente (nombres medidos en ps -eo comm)."""
-    desplegado, pendiente = _avoid_earlyoom(), _avoid_earlyoom(EARLYOOM_PENDIENTE)
+    desplegado, pendiente = _avoid_earlyoom(EARLYOOM_VIEJO), _avoid_earlyoom(EARLYOOM_PENDIENTE)
     comms = ("claude-desktop", "dbus-daemon", "pipewire-pulse", "wireplumber", "gnome-shell", "gnome-session-b", "Xorg",
              "gdm3", "sshd", "systemd-journal", "journal-udp-for", "xdg-desktop-por", "antigravity", "vllm",
              "VLLM::EngineCor", "dockerd", "containerd-shim", "bb-usable")
@@ -330,7 +336,7 @@ def test_earlyoom_pendiente_solo_amplia_lo_desplegado():
     assert [c for c in comms if not pendiente.search(c)] == []
 
 
-@pytest.mark.parametrize("quitado", sorted(FALTAN_EN_EARLYOOM))
+@pytest.mark.parametrize("quitado", sorted(FALTABAN_ANTES))
 def test_control_negativo_quitar_un_nombre_del_pendiente_se_ve(tmp_path, quitado):
     """El instrumento de arriba puede salir rojo: sin uno de los diez nombres, faltan_en_earlyoom lo nombra."""
     texto = EARLYOOM_PENDIENTE.read_text(encoding="utf-8")
