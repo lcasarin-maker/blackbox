@@ -662,10 +662,10 @@ def test_apt_guardia_si_puede_lo_declarado(linea: str):
 
 # --- earlyoom-proteger: ejecutado sobre tmp_path (rutas, root y systemd sustituidos) --------
 
-EARLYOOM_VIEJO = ROOT / "adopted" / "system-config" / "etc_default_earlyoom"  # lo desplegado desde 2026-10-14 (sha 89fe78da...)
+EARLYOOM_VIEJO = ROOT / "tests" / "fixtures" / "etc_default_earlyoom.viejo"  # lo desplegado del 2026-10-14 al 2026-10-16 (sha 89fe78da...)
 # lo que despliega (DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01); al desplegarlo pasa a system-config/ y estas dos
 # constantes avanzan con el siguiente cambio, como paso con el del 2026-10-14
-EARLYOOM_NUEVO = ROOT / "adopted" / "pendiente-de-despliegue" / "etc_default_earlyoom"
+EARLYOOM_NUEVO = ROOT / "adopted" / "system-config" / "etc_default_earlyoom"
 SCRIPT_EARLYOOM = bm.SRC_DIR / EARLYOOM
 BAK = f"etc_default_earlyoom.{hashlib.sha256(EARLYOOM_VIEJO.read_bytes()).hexdigest()}"
 
