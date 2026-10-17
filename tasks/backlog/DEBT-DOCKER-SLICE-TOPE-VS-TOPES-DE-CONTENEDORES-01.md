@@ -26,3 +26,12 @@ Medido hoy: `systemctl show docker.slice -p MemoryMax` = 15032385536 (14 GiB): e
 
 ## Avance 2026-10-15: techo de 16 GiB aplicado en la maquina; falta la segunda mitad
 Ventana del motor con sudo de Luis (`tasks/evidence/VENTANA-VLLM-20261015/ventana.sh`, log literal ahi): copia del drop-in de 14 G en `/var/lib/blackbox/99-blackbox.conf.14G` (sha256 b963e13b...), instalado el drop-in votado, `daemon-reload` + `restart docker`. Medido: `MemoryMax=15032385536` antes y `MemoryMax=17179869184` despues (= 16 GiB); `cmp` del repo contra `/etc/systemd/system/docker.slice.d/99-blackbox.conf` sin diferencias; el drop-in ya vive en `adopted/system-config/`. Con el motor arriba `docker.slice` marca `MemoryCurrent` 11.47 GB. NO se escribe `docker_slice_dimensionado`: la ficha exige tambien persistir los topes por contenedor en quien los crea (sin root, pendiente aparte).
+
+## Avance 2026-10-16: BLOQUEADA, ningun creador vive en este repo
+Medido con `docker inspect` (tabla completa en `medicion.txt`). Librechat y mongo-librechat ya no existen. Los contenedores vivos y quien los crea:
+- `nemotron-server` (75 GiB, swap 75 GiB, sin pids): `/srv/ai/gateway/main.py`, `build_vllm_args`, fuera de todo repo (blackbox solo adopta `admission_check_wrapper.sh`). Ya persiste memory y memory-swap; falta `--pids-limit`.
+- `atlas-pgvector` (2 GiB, swap 2 GiB, sin pids): repo Atlas, `deploy/atlas-pgvector.sh`, comando `docker run` de `levantar()`. Ya persiste memory y memory-swap; añadir `--pids-limit=2048`.
+- `proyecto-A-pg` (2 GiB, swap 2 GiB, pids 2048): creador NO ENCONTRADO en ningun repo hermano. El tope se aplico con `docker update` y se pierde al recrearlo. Flags: `--memory=2g --memory-swap=2g --pids-limit=2048`.
+- `nemotron-bolt-test` (48 GiB, swap 96 GiB, sin pids): creador NO ENCONTRADO; la receta `Atlas/playbooks/nemotron-bolt/README.md` crea `nemotron-bolt` con `--memory 48g` y sin `--memory-swap`. Si ese contenedor debe vivir: `--memory-swap=48g --pids-limit=2048`.
+- Parados y de un solo uso (`proyecto-A-etapa1-20260912`, `proyecto-A-audit-20260927`, dos de documenso): sin accion, retirar con `docker rm` cuando Luis lo decida.
+Quedan por hacer: Atlas (una linea en su script), la sesion del gateway en `/srv/ai/gateway/main.py`, y localizar o crear el creador de `proyecto-A-pg`. Cuando los tres esten persistidos, escribir `docker_slice_dimensionado` con la salida de `docker inspect` recreado.
