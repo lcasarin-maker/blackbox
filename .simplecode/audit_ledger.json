@@ -1,6 +1,6 @@
 {
-  "claims_fingerprint": "f8105cb2fccce9abd887428c3c4f4212bf621fdbe75090ca5b14d5f1107c3a83",
-  "panel": "1 auditor Opus, 2026-10-16, re-audito SPEC-L118/L122/L145/L146/L416 tras el segundo re-fechado de etiquetas sunset (4.4 -> 4.5); controles negativos corridos",
+  "claims_fingerprint": "fd0185b9aa5ce6309134f1b032e6f7ba74cc7e8ad0fddeb5bf83ed92e3fc7d75",
+  "panel": "1 auditor Opus, 2026-10-17, refuto SPEC-L417/L421/L424 tras el sync del kit 10.2.4; L417 fallaba (seis -> nueve could_not_run), se corrigio el texto y se re-audito a PASS; recuento independiente del orquestador con control coverage-100 = 6",
   "profile": "general",
   "results": [
     {
@@ -99,16 +99,16 @@
     },
     {
       "cited": {
-        ".pre-commit-config.yaml": "b55226f8e245e224049a98275db1a3889f2a9020e45548353c283be1b6fe4fe9",
+        ".pre-commit-config.yaml": "a44d928e86c62308e964914207cb3ba201138799357badc15da801dc9c5dcff7",
         "tests/test_auditoria_bb_regresiones.py": "0400501561276d2273cf9caf5ff555e01d81f4a1b650f29357b7e2c94952fee0",
         "tests/test_bash_sintaxis.py": "e88177f8046be8e615efb81411d9ce817f0f7653011f9a4c4c50708430f18d95",
         "tests/test_hook_native_controls.py": "e3310194c72c9a6abfb58bb5309c3ecf8b3b11f18b9b8d67792b1f773ed068eb",
         "tests/test_ruff_gitleaks_controles_negativos.py": "4887944d36593eb387a74b61cac6e2844136a5dfa3dd0f6f2d2dedf03f5fc482"
       },
       "claim_id": "SPEC-L417",
-      "evidence": "Ran `python -m pytest <f> -q -p no:xdist -p no:cacheprovider`: tests/test_bash_sintaxis.py '2 passed'; tests/test_ruff_gitleaks_controles_negativos.py '4 passed'; tests/test_hook_native_controls.py '2 passed'. Those two tests (l.24 and l.79) each assert rc 0 on valid content and rc 1 plus '[spec-check] FAIL' / '[no-perder-lineas] FAIL' on an injected fault (l.68-98). test_auditoria_bb_regresiones.py::test_scan_fielddiag_summary_invalido_incrementa_cnr '1 passed'; its last block (l.421-429) analyses a valid summary with a hardware error as a result ('tests con error: 1'). .pre-commit-config.yaml:267-272 telemetry-bound ends in `|| true`. .simplecode/evidence/telemetry.jsonl is ignored by git (.gitignore:6) and untracked (`git ls-files` returns 0). A JSON walk of its rows with check in {spec-check, no-perder-lineas} counts 604 spec-check ok, 188 no-perder-lineas ok, 1 spec-check could_not_run and 5 no-perder-lineas could_not_run, for 6 in total. Four are dated 2026-09-08 (14:49 spec-check pre-commit db9240b; 14:52, 14:53 and 14:53 no-perder-lineas pre-push), plus 2026-10-11T01:12:42Z pre-push 66fb032 and 2026-10-13T02:52:05Z pre-push 5b3f389. The count of rows with fallos>0 or hallazgos>0 is 0. Negative control: the same walker returns non-zero could_not_run rows, so it can count; the hook tests' injected faults return rc 1.",
+      "evidence": "Current SPEC.md:417 (SPEC.md 490 lines; `git diff --stat` shows only SPEC.md 1+/1-). Named tests re-run: `python3 -m pytest -q tests/test_bash_sintaxis.py` -> '2 passed'; tests/test_ruff_gitleaks_controles_negativos.py -> '4 passed'; tests/test_hook_native_controls.py -> '2 passed' (test_spec_check_passes_then_rejects_missing_objective:24 asserts '[spec-check] FAIL' :76; test_no_perder_lineas_passes_then_rejects_deleted_tracked_lines:79 asserts '[no-perder-lineas] FAIL' :98); tests/test_auditoria_bb_regresiones.py::test_scan_fielddiag_summary_invalido_incrementa_cnr -> '1 passed'. telemetry-bound: .pre-commit-config.yaml:272 `bash -c '... telemetry_prune --root . --gate || true'`. Telemetry recount over .simplecode/evidence/telemetry.jsonl.until-2026-10-10.gz + .simplecode/evidence/telemetry.jsonl, check in {spec-check,no-perder-lineas}, could_not_run>0 or status=could_not_run: 9 rows = 2026-09-08T14:49 spec-check pre-commit db9240b; 14:52 and 14:53 no-perder-lineas pre-push 71ceaef; 14:53 pre-push 80cf1d0; 2026-10-11T01:12 pre-push 66fb032; 2026-10-13T02:52 pre-push 5b3f389; 2026-10-13T16:44 and 16:50 pre-push 633c31d; 16:58 pre-push-recheck 633c31d. Findings (hallazgos or fallos >0) for those two checks: 0; last row 2026-10-17T07:04:17Z, so 'al 2026-10-17' holds. Negative controls: the same could_not_run filter on coverage-100 returns 6 (matches coordinator's independent count); the findings filter returns non-zero for other checks (pre-push 183, pre-commit 116, version-bump 108, coverage-100 79), so zero for spec-check/no-perder-lineas is a reading, not a dead field. Both files gitignored (`git check-ignore -v` -> .gitignore:6 `.simplecode/*`).",
       "fix": "",
-      "seal": "60233aef32d67f09e9fed92d4d316ae6e8453d5009b2ce3845afbe743275b814",
+      "seal": "c285600dc37627a5938537debd760cf15b3cacaa188db06a8199d7808352cadd",
       "verdict": "PASS"
     },
     {
@@ -143,15 +143,13 @@
     },
     {
       "cited": {
-        ".pre-commit-config.yaml": "b55226f8e245e224049a98275db1a3889f2a9020e45548353c283be1b6fe4fe9",
-        "tests/test_inventario.py": "79d2fe7122be32ce7e7b43c48b7f803d457e9c5a7a99ff978508917e6ed7edce",
-        "tools/__init__.py": "bb8ee1c485dc48115add32f02ed100bd1e88fd7f010341073eac46310efef4a2",
+        ".pre-commit-config.yaml": "a44d928e86c62308e964914207cb3ba201138799357badc15da801dc9c5dcff7",
         "tools/inventario.py": "ee53807e883c7f515fec98654f2437342680ce6071751e84169254f87ddfdaa6"
       },
       "claim_id": "SPEC-L421",
-      "evidence": ".pre-commit-config.yaml:159-167 hook `inventario-spec` runs `python3 -m tools.inventario --check` at pre-commit. tools/inventario.py:35-44 `sujetos_ejecutables` builds the set from bb subcommands (`cmd_*()` in bin/bb) plus every file of bin/ and tools/, excluding IGNORADOS {__init__.py, __pycache__} (l.22) and bin/bb itself. inventario.py:70-73 builds `sujetos_adoptados` from every file under adopted/, and revisa (l.106-125) checks both tables in both directions. The two initial instrument defects are recorded in the docstrings at inventario.py:76-99: five subcommands with arguments (l.79-82) and prose read as a table row (l.94-96). `git show -s 1ec66b3` says 'Cazo 6 desajustes en su primera corrida; 2 eran defectos del propio instrumento'. `git show --stat 1ec66b3` lists 19 files and none is a run log; the only 'HALLAZGOS' strings in the diff are test asserts and the print statement. Current run: `python3 -m tools.inventario --check` prints '[inventario] HALLAZGOS: 0', rc=0. Negative control: tests/test_inventario.py '19 passed' includes test_main_sale_1_con_sujeto_mutado and test_fichero_nuevo_en_tools_sin_inventariar_lo_caza, which assert that the gate does block.",
+      "evidence": "Hook `inventario-spec` at .pre-commit-config.yaml:159-167 runs `python3 -m tools.inventario --check` through gate_runner with --hook pre-commit and no stages restriction; .git/hooks/pre-commit:54 runs `pre-commit run --config .pre-commit-config.yaml --hook-stage pre-commit`. tools/inventario.py:36-45 sujetos_ejecutables = `bb <cmd>` from `^cmd_...()` in bin/bb plus every file of bin/ and tools/; :68-73 sujetos_adoptados from adopted/; :108-127 revisa checks both sections `## Inventario de funciones` and `## Inventario de propiedad` in both directions. The two instrument defects are recorded at tools/inventario.py:76-91 (citados, 'encontrado en su primera corrida', line 82) and :93-99 (filas_de_tabla, 'el segundo defecto del instrumento en su primera corrida', line 98) -- inside the cited 76-99. `git log -1 --format=%B 1ec66b3` says 'Cazo 6 desajustes en su primera corrida; 2 eran defectos del propio instrumento' and carries no stdout. Run: `python3 -m tools.inventario --check` -> '[inventario] HALLAZGOS: 0 / OK', rc=0. Negative control: copy of SPEC.md, bin/, tools/, adopted/ into scratchpad plus `touch tools/sonda_nueva.py` -> 'funcion sin inventariar en SPEC.md: tools/sonda_nueva.py / HALLAZGOS: 1 / FAIL', rc=1. Commit 7eb17af5 did not touch inventario-spec.",
       "fix": "",
-      "seal": "2ea16757071c9876919ae2b1e70c2c9b532ca85459cb1d43bdbaba2531f2ba0b",
+      "seal": "3e385e91e642ac535d397828061863bba3ced065e7f3c9680b8d16fc03e9607e",
       "verdict": "PASS"
     },
     {
@@ -180,19 +178,19 @@
     },
     {
       "cited": {
-        ".pre-commit-config.yaml": "b55226f8e245e224049a98275db1a3889f2a9020e45548353c283be1b6fe4fe9",
+        ".pre-commit-config.yaml": "a44d928e86c62308e964914207cb3ba201138799357badc15da801dc9c5dcff7",
         "tests/test_cobertura_bash.py": "e93fcc6e7d8f18d2f287066d9effac2b17cc5d481213ba82a2ac641f83c5a555",
         "tools/cobertura_bash.sh": "842419f632f680877f57187d8521dcd36b9c95efa5f627aabd943216368854ff",
         "tools/piso_cobertura.sh": "4577ade3c8c7066373d7781d348cf500ee7715843263779f7c3fc84ca680e076"
       },
       "claim_id": "SPEC-L424",
-      "evidence": "Recomputed with `git ls-tree -r` over `*.sh` plus bin/bb and `git show <c>:<f> | wc -l`: 155a90a gives bb=3294 of total=5205 (63.3%); d3d7980 gives bb=2768 of total=4111 (67.3%). Excluding adopted/ and tests/fixtures/ at d3d7980 gives 3919 lines, 2768/3919 = 0.706, which reproduces the old '71%'. `git show -s 2a228fa`: the opening paragraph says '26.8 % contra un piso de 27.0' with no line count (254/947 = 26.8%); its table says 947 lines, 256 -> 313 covered, 27.0% -> 33.1%, '57 lineas', 'Nadie escribio un test', and floor 32.8 = minimum of three runs (33.1) minus 0.2-0.3. tests/cobertura_bb.piso holds 32.8; .pre-commit-config.yaml:149-156 bb-cobertura-piso (pre-push) runs tools/piso_cobertura.sh, which calls tools/cobertura_bash.sh. tools/cobertura_bash.sh:24 sets PS4='+${BASH_SOURCE}:${LINENO}:' and l.35-47 now anchors on `\\++`. `bash -xc '( echo a ); echo b | cat; x=$(echo c); ...'` traces '+ echo a', '+ echo b', '++ echo c': only $(...) repeats the '+', as the SPEC text says. 09deb5b's parent is 57ae066; `git show 57ae066:SPEC.md` carries '35.0%-35.3%'; the 09deb5b message carries '39.8%, piso 32.8%', and its diff adds exactly 5 test_drift_* tests. `git merge-base --is-ancestor 3a91866 09deb5b` gives 1, so 3a91866 is outside that history. tests/test_cobertura_bash.py:20-33 now says 33.1% and records the old 33.3%/59 together with the 58-59 lines measured 2026-10-06. Negative control: the same line count reproduces the different figures 67%/71%, so the measurement separates the scopes.",
+      "evidence": "Counts recomputed from git trees (all *.sh plus bin/bb, nothing excluded): 155a90a bin/bb=3294 total=5205 (63.3%); d3d7980 bin/bb=2768 total=4111 (67.3%). Negative control: same count at HEAD gives bb=3548 tot=6948, so the counter moves with the commit and the row correctly declines to cite a live figure. `bb-cobertura-piso` at .pre-commit-config.yaml:149-157, stages [pre-push], runs tools/piso_cobertura.sh, which reads tests/cobertura_bb.piso = '32.8' and fails when pct < piso (awk control: 32.7 -> FAIL, 32.8 -> pass, 33.0 -> pass). `coverage-target` wording after 7eb17af5: the pre-push coverage hook (id coverage-floor) now runs `coverage_attestation --require`, but that module still calls the coverage target: runtime.zip simplecode/verification/coverage_attestation.py:26 `from simplecode.verification import coverage_target` and :410 `coverage_target.main([\"--root\", str(workspace), \"-q\"])`; it is coverage.py and the row speaks of it in the past ('pasaba'), so the statement stays true. tools/cobertura_bash.sh:24 sets `PS4='+${BASH_SOURCE}:${LINENO}:'` and :47 now matches `^\\++`. `git log -1 --format=%B 2a228fa`: opening paragraph '26.8 %' with no line count; table '947 lineas 256 cubiertas 27.0 %' -> '313 cubiertas 33.1 %'; '57 lineas'. `git show 57ae066:SPEC.md` contains '35.0%-35.3%'; 09deb5b message line 19 '(39.8%, piso 32.8%)'; 09deb5b parent is 57ae066; `git merge-base --is-ancestor 3a91866 09deb5b` rc=1 and same for 57ae066 rc=1 (3a91866 is later, 2026-09-28 12:52 vs 12:46). tests/test_cobertura_bash.py docstring now says 256->313, 33.1%, 57 per message vs 58-59 measured, and records that it said 33.3%/59 until 2026-09-28. The 58-59 same-trace measurement was taken from the docstring, not re-run (would need the bash trace run).",
       "fix": "",
-      "seal": "4785ed8e5f986076de1b3b7f8217b870cc9b511b5fe5d512c2becd53659ad80f",
+      "seal": "ba15bd72bd2583818d81994208956b04f5e8af099eb97683ef8055a6c64047ef",
       "verdict": "PASS"
     }
   ],
-  "timestamp": "2026-10-17T04:34:23Z",
-  "tree_fingerprint": "b3d737268c5033a7cd471f0c5af74b9ce39c6425ea9e836f1403754c27d583f8",
+  "timestamp": "2026-10-17T07:09:45Z",
+  "tree_fingerprint": "fadc1cfa29b5da2b948722f3da5f335eb88ff4ec68feddacb67608aa17afd29c",
   "violations": []
 }
