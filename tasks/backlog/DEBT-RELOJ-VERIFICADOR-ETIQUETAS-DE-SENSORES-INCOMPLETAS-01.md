@@ -2,13 +2,14 @@
 id: DEBT-RELOJ-VERIFICADOR-ETIQUETAS-DE-SENSORES-INCOMPLETAS-01
 kind: task
 domain: THERMAL
-title: "El verificador de topes de reloj no puede dar pasa: solo 3 de 11 sensores de temperatura tienen etiqueta"
+title: "El verificador de topes de reloj no da pasa: solo 3 de 11 sensores tienen etiqueta"
 status: open
 severity: P3
 origin: detected
+detector: {"rule": "tests/test_reloj_verificador_limites.py::test_etiquetas_de_sensores_completas_en_la_captura_real", "confidence": 1.0}
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-16
-close_check: {"cmd": "python3 -c \"import sys; from tools import verify_clock_cap_tradeoff as v; sys.exit(0 if v.verify()['checks']['sensor_labels']=='pass' else 1)\"", "expect": "exit_zero", "porque": "Medido 2026-10-16 por el agente del verificador: sensor_labels=unknown con la captura del 2026-10-03; los sensores acpitz no exponen temp*_label. Mientras sea unknown, verify_clock_cap_tradeoff no puede dar pass en este equipo aunque se haga la ventana del motor. Cierra cuando una captura nueva etiquete todas las zonas o se decida con evidencia como identificar las que no traen etiqueta."}
+close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_reloj_verificador_limites.py::test_etiquetas_de_sensores_completas_en_la_captura_real", "expect": "exit_zero", "porque": "Medido 2026-10-16 por el agente del verificador: sensor_labels=unknown con la captura del 2026-10-03; los sensores acpitz no exponen temp*_label. Mientras sea unknown, verify_clock_cap_tradeoff no puede dar pass en este equipo aunque se haga la ventana del motor. Cierra cuando una captura nueva etiquete todas las zonas o se decida con evidencia como identificar las que no traen etiqueta."}
 ---
 
 ## Medido
