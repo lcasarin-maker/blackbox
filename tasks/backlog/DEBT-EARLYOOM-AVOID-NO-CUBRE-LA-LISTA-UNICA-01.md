@@ -63,3 +63,6 @@ El fichero es configuracion desplegada como root; cambiarlo es un despliegue de 
       detenible por memavail; ademas obliga a tocar los tres respaldos en codigo.
   C sacarlo tambien de --avoid: listas identicas; coste: earlyoom elige al editor 300 puntos antes.
   El contenido pendiente vale tal cual para A y B; solo C lo cambia (y re-sella el script).
+
+## Voto de Luis 2026-10-16: antigravity solo en earlyoom
+Registrado en `DECISIONS.md`: `antigravity` queda en el `--avoid` de earlyoom y fuera de `data/procesos_protegidos.json`. El archivo pendiente `adopted/pendiente-de-despliegue/etc_default_earlyoom` ya es el definitivo; el script sellado no se re-sella. Falta solo el despliegue con root de Luis (ver el comando en 'Avance 2026-10-16').

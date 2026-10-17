@@ -391,3 +391,27 @@ Luis votó conservar `dgx-spark-fieldiag` (795 MB, el diagnóstico que el soport
 - **Descarta:** dejar el sync simultaneo (la estampida repite el atasco que ya reinicio la maquina); confiar solo en la regla provisional escrita por los workers (sin mecanismo, depende de que cada sesion la lea).
 - **Costo aceptado:** un sync de flota tarda mas en completarse.
 - **Limite declarado:** el portero ordena las suites de ESTA maquina. Que el comando de sync del kit escalone el reparto vive en simplecode (otro repo) y queda en `DEBT-KIT-SYNC-DE-FLOTA-NO-ESCALONA-LOS-PROYECTOS-01`.
+
+## 2026-10-16 — `antigravity` queda solo en el `--avoid` de earlyoom, fuera de la lista compartida de protegidos (voto de Luis)
+- **Decision:** el editor `antigravity` se mantiene en el `--avoid` de earlyoom como diferencia declarada (igual que `journal`) y NO entra en `data/procesos_protegidos.json`. El archivo pendiente `adopted/pendiente-de-despliegue/etc_default_earlyoom` ya lo contempla; no hay que re-sellar el script.
+- **Por que:** 9 procesos de `antigravity` corren hoy y el voto del 2026-10-15 fue conservar el editor, pero el editor lanza pytest-xdist dentro de su propio scope y `memavail` debe poder detenerlo si una suite se desboca.
+- **Descarta:** ponerlo en la lista compartida (memavail se negaria a parar el scope del editor y hay que editar 3 copias de respaldo en codigo); quitarlo tambien de earlyoom (earlyoom elegiria al editor 300 puntos antes y habria que re-sellar el script).
+- **Costo aceptado:** `bb-usable`, la guardia y `memavail` pueden matar el editor y perder lo no guardado.
+
+## 2026-10-16 — `--pids-limit=2048` para el motor y `atlas-pgvector`; se persiste donde se crean (voto de Luis)
+- **Decision:** 2048 como en `proyecto-A-pg`. Se aplica en quien crea cada contenedor: `build_vllm_args` de `/srv/ai/gateway/main.py` (fuera de todo repo) y `levantar()` de `Atlas/deploy/atlas-pgvector.sh` (repo Atlas). Esta sesion no edita otros repos: la ficha `DEBT-DOCKER-SLICE-TOPE-VS-TOPES-DE-CONTENEDORES-01` lleva el archivo y los flags exactos.
+- **Por que:** ambos contenedores corren sin limite de procesos (medido con `docker inspect`, 2026-10-16) y el limite solo sobrevive a recrearlos si esta en el creador.
+- **Descarta:** medir una semana antes (una semana mas sin tope de procesos en el motor); fijarlo solo en Atlas (el motor, el que mas importa, seguiria sin limite).
+- **Costo aceptado:** vLLM no tiene medicion propia de procesos; si 2048 le queda corto, se rompe al recrearse. Se mide `ls /proc/<pid>/task` del motor antes de aplicarlo.
+
+## 2026-10-16 — `verify_clock_cap_tradeoff` gana una ruta a PASS cuando inventario, etiquetas y el A/B componen (voto de Luis)
+- **Decision:** el verificador puede dar `pass` si el inventario termico, las etiquetas y `verify_gpu_clock_cap_ab` pasan sobre la misma ventana. Reemplaza el estado en que todas sus ramas daban `unknown` o `fail`.
+- **Por que:** un verificador sin ruta a verde no puede cerrar la ficha aunque se haga la ventana de 60 min del motor (`DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01`).
+- **Descarta:** dejarlo como esta (la ficha no se cierra nunca).
+- **Costo aceptado:** cambia como se mide esa ficha; el cierre real sigue exigiendo la ventana del motor y la captura en vivo.
+
+## 2026-10-16 — El gate DRM de `FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT` gana una prueba de arranque, como el gate de kernel (voto de Luis)
+- **Decision:** misma estructura que `tools/update_boot_coherence.py`: lectura sin escribir, negativos de incidente derivados de las filas crudas y una prueba registrada de recuperacion (antes / durante / rollback, boot_ids distintos, conector de pantalla y SSH independiente).
+- **Por que:** la rama DRM de `forum_finding` termina siempre en `unknown`.
+- **Descarta:** no hacerlo por ahora (verificador defectuoso hasta decidir que lee la prueba).
+- **Costo aceptado:** codigo nuevo; el cierre exige tu consola y un reinicio.
