@@ -1,4 +1,4 @@
-# [DRAFT D] Reply to Croxatte's 16 October three-node update, NVIDIA/open-gpu-kernel-modules#1358
+# [PUBLISHED 2026-10-17 as issuecomment-6234458522] [DRAFT D] Reply to Croxatte's 16 October three-node update, NVIDIA/open-gpu-kernel-modules#1358
 URL: https://github.com/NVIDIA/open-gpu-kernel-modules/issues/1358 (reply to comment 6229928325)
 
 > Status: unpublished draft for Luis. Fourth comment of lcasarin-maker in this thread. Uses only numbers measured on one unit; nothing from the other nodes is restated as ours.
