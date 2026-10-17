@@ -27,3 +27,6 @@ Con `sostenida`: dejar de admitir carga (hecho en bb) y congelar el scope de Atl
 1. ~~Acciones de `sobre_100`~~ DECIDIDO 2026-10-11: solo congelar la carga de Atlas (lo mismo que con `sostenida`, ya construido). Descartado: `docker pause` de vLLM (congela peticiones en vuelo) y `-lgc 300,1500` (pide root no delegado). Reabrir si un `sobre_100` real muestra que congelar Atlas no baja el calor.
 2. Congelado real de `liberation_job.scope` con un job vivo: hasta hoy solo hay un scope de prueba (10 lineas -> congelado -> 20) y tests con doble de systemctl.
 3. `ingest_batch` sigue tras 1800 s caliente por decision de DGX-342 y `--force-free` es modo de pruebas: confirmar o cambiar.
+
+## Voto de Luis 2026-10-17: punto 3, `ingest_batch` a los 1800 s y `--force-free`
+Se conservan como estan. `ingest_batch` sigue tras 1800 s caliente por la decision de DGX-342 y `--force-free` queda como modo de pruebas; el costo aceptado es que una ingesta puede seguir hasta 30 min con calor sostenido antes de ceder y que `--force-free` salta el freno. Descartado: hacer que consulte el freno como el resto (el cambio vive en el repo de Atlas y la ingesta puede quedar detenida con calor sostenido). Quedan abiertos los puntos 1 y 2 (acciones de `sobre_100` y el congelado real de `liberation_job.scope` con un job vivo).
