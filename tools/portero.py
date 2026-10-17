@@ -897,6 +897,9 @@ def aplica(
         ev["medicion"] = _medicion(estado)
         eventos.append(ev)
         _registra(ev, log)
+    if arboles:  # sin lectura de /proc (lista vacia) no se sabe que murio: se conserva la memoria
+        for clave in [c for c in ultimo if c[0] is not None and c[0] not in por_raiz]:
+            del ultimo[clave]  # un lote de conversiones de ~1 s dejaba una clave por cada una, sin cota
     return eventos
 
 
