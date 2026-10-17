@@ -415,3 +415,9 @@ Luis votó conservar `dgx-spark-fieldiag` (795 MB, el diagnóstico que el soport
 - **Por que:** la rama DRM de `forum_finding` termina siempre en `unknown`.
 - **Descarta:** no hacerlo por ahora (verificador defectuoso hasta decidir que lee la prueba).
 - **Costo aceptado:** codigo nuevo; el cierre exige tu consola y un reinicio.
+
+## 2026-10-17 — El portero se extiende a las tandas de LibreOffice de otros proyectos, primero en `observar` (voto de Luis)
+- **Decision:** ficha `DEBT-PORTERO-NO-CLASIFICA-TANDAS-DE-LIBREOFFICE-DE-OTROS-PROYECTOS-01`. El portero clasifica por forma de comando; las conversiones `soffice --headless` no tienen clase y entran sin cola ni tope. Entra en `observar` antes de `actuar`.
+- **Por que:** el 2026-10-17 una tanda de 13 `soffice` mas las suites de Atlas y Twiner dejaron la memoria libre en 15 % y earlyoom mato workers del push de este repo (2 pushes caidos por `worker crashed`, sin test fallido).
+- **Descarta:** que cada proyecto se autorregule (cada push sigue expuesto a que earlyoom lo mate cuando otro proyecto llena la memoria).
+- **Costo aceptado:** congelar un trabajo ajeno puede alargarlo; se excluye lo que sostiene `index.lock` y se mide una tanda real antes de pasar a `actuar`.
