@@ -8,3 +8,17 @@ Libre en el slice: 1.94 GiB con 14G; 3.94 GiB con 16G.
 Voto de Luis 2026-10-13: 16 GiB. Umbral de la alarma del abanico (presupuesto de GPU): 14G -> 53.1 GiB; 16G -> 51.1; 18G -> 49.1, por debajo del p90 de 50.1 de la serie de 18 944 muestras (descartado).
 Repo: drop-in adoptado, enable-privileged.sh (mensaje y valor esperado 17179869184) y DECISIONS.md en 16G.
 Pendiente de Luis: sudo systemctl daemon-reload && sudo systemctl restart docker (tira los contenedores, incluido vLLM) y comprobar cat /sys/fs/cgroup/docker.slice/memory.max = 17179869184.
+
+--- 2026-10-16: topes por contenedor y quien los crea (lectura, sin tocar el motor) ---
+$ docker inspect (HostConfig.Memory / MemorySwap / PidsLimit / RestartPolicy)
+contenedor                       estado    memory   swap     pids   restart          creador
+nemotron-server                  Up        75 GiB   75 GiB   -      no (--rm)        /srv/ai/gateway/main.py (build_vllm_args), fuera de todo repo; mem/swap salen de container_memory_gb
+nemotron-bolt-test               Up        48 GiB   96 GiB   -      no               NO ENCONTRADO (la receta Atlas/playbooks/nemotron-bolt/README.md crea `nemotron-bolt`, con --memory 48g sin --memory-swap ni pids)
+atlas-pgvector                   Up        2 GiB    2 GiB    -      unless-stopped   Atlas/deploy/atlas-pgvector.sh (repo Atlas): lleva --memory y --memory-swap, FALTA --pids-limit
+proyecto-A-pg                      Up        2 GiB    2 GiB    2048   unless-stopped   NO ENCONTRADO (el puerto 5434 solo aparece en scripts de auditoria que lo usan, ninguno lo crea)
+proyecto-A-etapa1-20260912      Exited    0        0        -      no               NO ENCONTRADO (de un solo uso, parado)
+proyecto-A-audit-20260927     Exited    3 GiB    6 GiB    -      no               NO ENCONTRADO (de un solo uso, etiqueta expires=2026-09-28)
+otro-proyecto-audit-20261002-documenso-1 / -database-1   Exited   2 GiB / 1 GiB   4 GiB / 2 GiB   -   no   compose de otro proyecto (de un solo uso, parado)
+librechat y mongo-librechat: ya no existen (retirados el 2026-10-14, DECISIONS.md), sus topes dejan de importar.
+Este repo no crea ningun contenedor de larga vida (sus `docker run` son --rm de laboratorio): ningun creador vive aqui, no hay donde persistir.
+Pendiente de otros duenos: ver `Avance 2026-10-16` en la ficha. Sin marcador de cierre.
