@@ -35,3 +35,6 @@ Lo que cambia es la FUENTE del numero: la muestra que blackbox ya publica
 admision, igual que hoy falla cerrado `free -b` ilegible. Esta ficha es de dos
 repos: la parte de Atlas la ejecuta su propio flujo (tests, gates), con control
 negativo de la muestra vieja.
+
+## Hallazgo de la auditoria H1 de SPEC-L145 (2026-10-16): usos de `available_gb()` fuera de los seis patrones
+La busqueda de seis patrones fechada el 2026-10-12 no detecta las llamadas a `available_gb()`, que Atlas importa y usa en `measure_kv_cache_pressure.py`, `overnight_memory_guard.py`, `nightly_kb_consolidation.py` y `overnight_judge_orchestrator.py`. No contradice la fila (esta acotada a esa busqueda) pero son sondas de memoria de Atlas que esta ficha debe cubrir: al migrarlas al contrato de blackbox se cuentan junto a `liberation_watchdog.py` y `medir_consumo_de_job.py`. Medido por un auditor de solo lectura sobre el arbol de Atlas.
