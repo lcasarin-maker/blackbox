@@ -213,4 +213,9 @@ def _evaluate_supported(finding_id: str, directory: Path) -> dict[str, Any]:
                               for row in raw_commands)
     if "Permission denied" in captures_text or "could_not_run" in captures_text:
         return _result("unknown", "one or more required raw probes were inaccessible", files)
+    if kind == "kernel":
+        from tools.update_boot_coherence import TRIAL_FILE, evaluar_cierre
+
+        status, reason = evaluar_cierre(raw_commands, snapshot_doc, directory)
+        return _result(status, reason, files + [str(directory / TRIAL_FILE)])
     return _result("unknown", "healthy preflight matches raw commands; incident negative and recovery/rollback controls are missing", files)
