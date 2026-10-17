@@ -1,0 +1,12 @@
+# Despues (kit 10.2.4 aplicado por el commit 7eb17af5), medido el 2026-10-17:
+$ grep simplecode_version .simplecode/kit.lock
+  "simplecode_version": "10.2.4"
+$ unzip -l .simplecode/runtime.zip | grep -c pyright_attestation
+1
+$ python .simplecode/run.py simplecode.verification.pyright_attestation --help | head -3
+usage: simplecode.verification.pyright_attestation [-h] [--root ROOT]
+                                                   [--require] [--background]
+                                                   [--force]
+rc=0
+$ python .simplecode/run.py simplecode.verification.coverage_attestation --help (close_check de la ficha)
+rc=0
