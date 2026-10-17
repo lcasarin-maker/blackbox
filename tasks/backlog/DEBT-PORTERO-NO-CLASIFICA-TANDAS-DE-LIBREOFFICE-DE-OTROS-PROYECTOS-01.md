@@ -13,7 +13,7 @@ close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider --runxfail tests/
 ---
 
 ## Medido
-- 2026-10-17, tras 3 pushes fallidos: `ps` mostro 13 procesos `soffice.bin --headless` (perfiles `soffice_perfil_preparacion_*`, tanda del proyecto declutter) mas las suites `pre-push` de Atlas y Twiner. Carga 27-31 y `MemAvailable` 15 %.
+- 2026-10-17, tras 3 pushes fallidos: `ps` mostro 13 procesos `soffice.bin --headless` (perfiles `soffice_perfil_preparacion_*`, tanda del proyecto otro proyecto) mas las suites `pre-push` de Atlas y Twiner. Carga 27-31 y `MemAvailable` 15 %.
 - `journalctl -u earlyoom` 23:36:28: SIGTERM a un `python` de 1522 MiB (worker de xdist del push de este repo). Dos pushes cayeron por `worker crashed`, sin que ningun test fallara (pasan solos).
 - `tools/portero.py::clasifica` clasifica por la forma del comando: pytest y hooks pre-push/pre-commit -> `suite`, de cualquier proyecto. `soffice` devuelve `None`: sin clase, sin cola y sin tope.
 
