@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import json
+import re
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from tools import verify_gpu_clock_cap_ab as ab_verifier
 from tools.capture_io import read_regular_bytes, strict_json_loads
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,10 +20,59 @@ def _result(status: str, reason: str, files: list[str], checks: dict[str, str]) 
             "fail": int(status == "fail"), "could_not_run": int(status == "unknown")}
 
 
-def verify(evidence: str | Path | None = None) -> dict[str, Any]:
-    """Validate channel inventory consistency and preserve unrun experiment as unknown."""
+TRIP_TYPES = frozenset({"passive", "hot", "critical"})
+
+
+def _oem_threshold(zones: list[Any]) -> str:
+    """Firmware trip points are the OEM-declared limits; a zone at or above its lowest one fails."""
+    seen = False
+    for zone in zones:
+        if not isinstance(zone, dict):
+            continue
+        trips = [trip.get("temperature", {}).get("value") for trip in zone.get("trip_points", [])
+                 if isinstance(trip, dict) and trip.get("type", {}).get("value") in TRIP_TYPES
+                 and trip.get("temperature", {}).get("status") == "ok"]
+        limits = [value for value in trips if isinstance(value, (int, float)) and not isinstance(value, bool)]
+        if not limits:
+            continue
+        seen = True
+        reading = zone.get("temperature", {})
+        if reading.get("status") == "ok" and isinstance(reading.get("value"), (int, float)) \
+                and reading["value"] >= min(limits):
+            return "fail"
+    return "pass" if seen else "unknown"
+
+
+def _same_window(data: dict[str, Any], ab_path: Path) -> tuple[str, str]:
+    """The thermal inventory must be taken inside the A/B capture on the same OEM/product."""
+    parsed = ab_verifier._capture(ab_path)
+    try:
+        stamp = datetime.fromisoformat(str(data.get("captured_at_utc")).replace("Z", "+00:00"))
+    except ValueError:
+        return "unknown", "thermal inventory lacks a parseable captured_at_utc"
+    if parsed is None or stamp.tzinfo is None:
+        return "unknown", "A/B capture or thermal timestamp unavailable for the window comparison"
+    rows = parsed[1]
+    first = datetime.fromisoformat(rows[0]["captured_at"].replace("Z", "+00:00"))
+    last = datetime.fromisoformat(rows[-1]["captured_at"].replace("Z", "+00:00"))
+    if not first <= stamp <= last:
+        return "fail", "thermal inventory was captured outside the A/B evidence window"
+    dmi = data["host"]["dmi"]
+    vendor, product = (str(dmi[key].get("value", "")).strip() for key in ("sys_vendor", "product_name"))
+    for row in rows:
+        if ab_verifier._runs_program(row, "dmidecode"):
+            found = {key: match.group(1).strip() for key in ("Manufacturer", "Product Name")
+                     if (match := re.search(rf"(?im)^\s*{key}:\s*(.+)$", row["stdout"]))}
+            if found.get("Manufacturer") == vendor and found.get("Product Name") == product:
+                return "pass", ""
+    return "fail", "thermal inventory and A/B capture name different OEM/product identities"
+
+
+def verify(evidence: str | Path | None = None, ab_evidence: str | Path | None = None) -> dict[str, Any]:
+    """Pass only when inventory, labels, OEM threshold and the composed A/B verifier agree on one window."""
     capture = Path(evidence) if evidence else THERMAL_CAPTURE
-    checks = {key: "unknown" for key in ("thermal_inventory", "oem_identity", "sensor_labels", "matched_clock_runs", "rollback")}
+    checks = {key: "unknown" for key in ("thermal_inventory", "oem_identity", "sensor_labels", "matched_clock_runs",
+                                         "rollback", "oem_threshold", "same_window")}
     try:
         raw = read_regular_bytes(capture, MAX_CAPTURE_BYTES)
         if len(raw) > MAX_CAPTURE_BYTES:
@@ -53,4 +105,26 @@ def verify(evidence: str | Path | None = None) -> dict[str, Any]:
               for sensor in device.get("temperature_inputs", []) if isinstance(sensor, dict)]
     if labels and all(labels):
         checks["sensor_labels"] = "pass"
-    return _result("unknown", "thermal inventory is observational only; matched clock-cap/workload runs, OEM-safe threshold, and applied-policy rollback readback are missing", [str(capture)], checks)
+    ab_dir = Path(ab_evidence) if ab_evidence is not None else ab_verifier.ROOT / "tasks/evidence" / ab_verifier.FINDING
+    ab = ab_verifier.verify(ab_dir)
+    files = [str(capture), *ab["files"]]
+    # The A/B verifier owns matched runs and the stock/cap/rollback readback order; its verdict is not re-derived here.
+    checks["matched_clock_runs"] = ab["status"] if ab["status"] in ("pass", "fail") else "unknown"
+    checks["rollback"] = "pass" if ab["status"] == "pass" else "unknown"
+    checks["oem_threshold"] = _oem_threshold(zones)
+    checks["same_window"], window_reason = _same_window(data, ab_dir / "commands.json")
+    if ab["status"] == "fail":
+        return _result("fail", f"composed A/B verifier failed: {ab['reason']}", files, checks)
+    if checks["oem_threshold"] == "fail":
+        return _result("fail", "a thermal zone reads at or above its OEM firmware trip point", files, checks)
+    if checks["same_window"] == "fail":
+        return _result("fail", window_reason, files, checks)
+    if ab["status"] != "pass":
+        return _result("unknown", f"thermal inventory is observational only; matched clock-cap/workload runs, OEM-safe threshold, and applied-policy rollback readback are missing (A/B: {ab['reason']})", files, checks)
+    if checks["sensor_labels"] != "pass":
+        return _result("unknown", "hwmon temperature inputs lack labels; zones cannot be tied to OEM sensors", files, checks)
+    if checks["oem_threshold"] != "pass":
+        return _result("unknown", "no OEM-safe threshold: no thermal zone exposes a passive/hot/critical trip point", files, checks)
+    if checks["same_window"] != "pass":
+        return _result("unknown", window_reason, files, checks)
+    return _result("pass", f"thermal inventory, labels, OEM trip points and the composed A/B verifier agree on one window; {ab['reason']}", files, checks)
