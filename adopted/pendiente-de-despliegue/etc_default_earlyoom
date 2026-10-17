@@ -1,0 +1,29 @@
+# Configuración de DGX-201 (Atlas), 2026-08-21.
+#
+# Umbrales: los DEFAULT de earlyoom (SIGTERM 10%, SIGKILL 5%). No se copian los
+# del hilo de NVIDIA (-m 3): en 121 GB serían 3.6 GB, y el default ya disparó
+# tarde -- a 5.92% con el swap en cero.
+#
+# -r 60: un renglón por minuto en el journal. El default (-r 3600) deja una
+# lectura por hora, y la curva de memoria es justo lo que hizo falta
+# reconstruir a mano después de cada episodio.
+#
+# --avoid: el escritorio y la sesión. El 2026-08-21 earlyoom mató 21 procesos
+# de claude-desktop y ninguno del consumidor real.
+#
+# 2026-10-14 (voto de Luis, DEBT-EARLYOOM-MATA-AL-MOTOR-VLLM-01): --avoid suma el
+# motor vLLM ('vllm', 'VLLM::EngineCor'), docker, containerd y los procesos cuyo
+# nombre empieza por bb-; --prefer suma xdist y bb-portero. earlyoom 1.7 compara la
+# regex (POSIX extendida, sin anclar) contra /proc/<pid>/comm, 15 caracteres, y
+# --avoid solo RESTA 300 al oom_score (--prefer suma 300): no es una exclusion.
+# El contenedor vLLM tiene oom_score_adj 500; con badness 1038 quedaria en 738.
+#
+# 2026-10-16 (DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01): --avoid cubre toda
+# data/procesos_protegidos.json, la lista que leen los otros cuatro vigilantes.
+# 'claude' y 'dbus' sustituyen a 'claude-desktop' y 'dbus-daemon' (los contienen:
+# cubren el CLI y dbus-broker); Xwayland suma al servidor grafico; los nombres
+# cortos van anclados y exactos (^(node|...|bb)$) porque sin ancla 'init', 'node' o
+# 'bb' evitarian cualquier comm que los contenga. 'journal' y 'antigravity' siguen
+# aqui y no estan en la lista: asimetria declarada en la ficha. Umbrales y
+# --prefer sin cambios.
+EARLYOOM_ARGS="-r 60 -m 10 -s 100,100 --avoid '(claude|pipewire|wireplumber|dbus|gnome-shell|gnome-session|Xorg|Xwayland|gdm|sshd|systemd|journal|xdg-|antigravity|vllm|VLLM|docker|containerd|^bb-|^(node|cowork-linux-he|electron|chrome_crashpad|init|earlyoom|bb)$)' --prefer '(pytest|xdist|triton|bb-portero)'"

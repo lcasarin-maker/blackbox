@@ -1,0 +1,36 @@
+# 1. close_check de la ficha HOY, sobre el fichero desplegado (adopted/system-config): debe salir 1.
+$ python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_procesos_protegidos.py::test_earlyoom_cubre_toda_la_lista
+E   AssertionError: assert {'Xwayland', ..., 'dbus', ...} == set()
+E     
+E     Extra items in the left set:
+E     'chrome_crashpad'
+E     'node'
+E     'dbus'
+E     'bb'
+E     'electron'...
+E     
+E     ...Full output truncated (6 lines hidden), use '-vv' to show
+1 failed in 0.12s
+rc=1
+
+# 2. La prueba del contenido pendiente, corrida contra el ANTES y contra el pendiente sin un nombre: roja.
+$ python3 tasks/evidence/DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01/rojo_y_verde.py
+ANTES: contenido desplegado (adopted/system-config): FALLA; faltan_en_earlyoom = ['Xwayland', 'bb', 'chrome_crashpad', 'claude', 'cowork-linux-he', 'dbus', 'earlyoom', 'electron', 'init', 'node']
+pendiente SIN 'node': FALLA; faltan_en_earlyoom = ['node']
+pendiente tal cual: PASA; faltan_en_earlyoom = []
+rc=0
+
+# 3. Control negativo de la prueba del contenido pendiente: quitar UN nombre del --avoid pendiente la pone roja
+#    en una copia: faltan_en_earlyoom nombra exactamente al quitado, para cada uno de los diez.
+$ python3 -m pytest -v -p no:cacheprovider tests/test_procesos_protegidos.py -k control_negativo_quitar
+tests/test_procesos_protegidos.py::test_control_negativo_quitar_un_nombre_del_pendiente_se_ve[Xwayland] PASSED [ 10%]
+tests/test_procesos_protegidos.py::test_control_negativo_quitar_un_nombre_del_pendiente_se_ve[bb] PASSED [ 20%]
+tests/test_procesos_protegidos.py::test_control_negativo_quitar_un_nombre_del_pendiente_se_ve[chrome_crashpad] PASSED [ 30%]
+tests/test_procesos_protegidos.py::test_control_negativo_quitar_un_nombre_del_pendiente_se_ve[claude] PASSED [ 40%]
+tests/test_procesos_protegidos.py::test_control_negativo_quitar_un_nombre_del_pendiente_se_ve[cowork-linux-he] PASSED [ 50%]
+tests/test_procesos_protegidos.py::test_control_negativo_quitar_un_nombre_del_pendiente_se_ve[dbus] PASSED [ 60%]
+tests/test_procesos_protegidos.py::test_control_negativo_quitar_un_nombre_del_pendiente_se_ve[earlyoom] PASSED [ 70%]
+tests/test_procesos_protegidos.py::test_control_negativo_quitar_un_nombre_del_pendiente_se_ve[electron] PASSED [ 80%]
+tests/test_procesos_protegidos.py::test_control_negativo_quitar_un_nombre_del_pendiente_se_ve[init] PASSED [ 90%]
+tests/test_procesos_protegidos.py::test_control_negativo_quitar_un_nombre_del_pendiente_se_ve[node] PASSED [100%]
+====================== 10 passed, 25 deselected in 0.08s =======================

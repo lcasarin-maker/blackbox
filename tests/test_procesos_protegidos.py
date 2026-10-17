@@ -29,6 +29,9 @@ from tools import gpuoom_bb, vigilante_memavail
 RAIZ = Path(__file__).resolve().parent.parent
 DATOS = RAIZ / "data" / "procesos_protegidos.json"
 EARLYOOM = RAIZ / "adopted" / "system-config" / "etc_default_earlyoom"
+# El contenido que Luis despliega con `sudo -n bb-root-run earlyoom-proteger` (DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01).
+# Al desplegarlo se mueve a system-config/ (adopted/pendiente-de-despliegue/LEEME.txt) y sus pruebas pasan a medir EARLYOOM.
+EARLYOOM_PENDIENTE = RAIZ / "adopted" / "pendiente-de-despliegue" / "etc_default_earlyoom"
 
 # Lo votado, en comm reales de esta maquina (ps -eo comm, 2026-10-14). Independiente del fichero: si alguien borra
 # un nombre del fichero Y de los respaldos, esto sigue exigiendolo.
@@ -274,17 +277,17 @@ def test_el_demonio_arranca_y_sigue_vivo_con_el_fichero_roto(tmp_path, script):
 # ------------------------------------------------------------------ earlyoom (configuracion desplegada)
 
 
-def _avoid_earlyoom() -> re.Pattern[str]:
-    m = re.search(r'^EARLYOOM_ARGS="(.*)"$', EARLYOOM.read_text(encoding="utf-8"), re.M)
-    assert m, f"sin EARLYOOM_ARGS en {EARLYOOM}"
+def _avoid_earlyoom(ruta: Path = EARLYOOM) -> re.Pattern[str]:
+    m = re.search(r'^EARLYOOM_ARGS="(.*)"$', ruta.read_text(encoding="utf-8"), re.M)
+    assert m, f"sin EARLYOOM_ARGS en {ruta}"
     args = shlex.split(m.group(1))
     # earlyoom 1.7: regex POSIX extendida sin anclar contra /proc/<pid>/comm; esta es valida igual en Python
     return re.compile(args[args.index("--avoid") + 1])
 
 
-def faltan_en_earlyoom() -> set[str]:
+def faltan_en_earlyoom(ruta: Path = EARLYOOM) -> set[str]:
     _, d = _fichero()
-    avoid = _avoid_earlyoom()
+    avoid = _avoid_earlyoom(ruta)
     return {e["nombre"] for e in d["comm"] if not avoid.search(e["nombre"])}
 
 
@@ -302,3 +305,39 @@ def test_earlyoom_instrumento_discrimina():
                    "cubre 10 nombres de la lista unica")
 def test_earlyoom_cubre_toda_la_lista():
     assert faltan_en_earlyoom() == set()
+
+
+# ------------------------------------------------------------------ earlyoom: el contenido pendiente de despliegue
+
+
+def test_earlyoom_pendiente_cubre_toda_la_lista_y_no_evita_lo_no_protegido():
+    """Lo que el close_check pedira al fichero desplegado, medido ya sobre el contenido que Luis va a desplegar."""
+    avoid = _avoid_earlyoom(EARLYOOM_PENDIENTE)
+    assert faltan_en_earlyoom(EARLYOOM_PENDIENTE) == set()
+    assert [c for c in VOTADOS if not avoid.search(c)] == []
+    assert [c for c in NO_PROTEGIDOS if avoid.search(c)] == []
+    # sin ancla, estos nombres cortos casarian con cualquier comm que los contenga
+    assert [c for c in ("initctl", "nodejs-x", "dbbench", "xbb-x", "earlyoomx") if avoid.search(c)] == []
+
+
+def test_earlyoom_pendiente_solo_amplia_lo_desplegado():
+    """Todo comm que el --avoid desplegado evita lo sigue evitando el pendiente (nombres medidos en ps -eo comm)."""
+    desplegado, pendiente = _avoid_earlyoom(), _avoid_earlyoom(EARLYOOM_PENDIENTE)
+    comms = ("claude-desktop", "dbus-daemon", "pipewire-pulse", "wireplumber", "gnome-shell", "gnome-session-b", "Xorg",
+             "gdm3", "sshd", "systemd-journal", "journal-udp-for", "xdg-desktop-por", "antigravity", "vllm",
+             "VLLM::EngineCor", "dockerd", "containerd-shim", "bb-usable")
+    assert [c for c in comms if not desplegado.search(c)] == []  # control: el desplegado los evita todos
+    assert [c for c in comms if not pendiente.search(c)] == []
+
+
+@pytest.mark.parametrize("quitado", sorted(FALTAN_EN_EARLYOOM))
+def test_control_negativo_quitar_un_nombre_del_pendiente_se_ve(tmp_path, quitado):
+    """El instrumento de arriba puede salir rojo: sin uno de los diez nombres, faltan_en_earlyoom lo nombra."""
+    texto = EARLYOOM_PENDIENTE.read_text(encoding="utf-8")
+    regex = _avoid_earlyoom(EARLYOOM_PENDIENTE).pattern
+    # la alternativa exacta, vaya en medio ('|x|', '|x)') o la primera ('(x|')
+    nueva = re.sub(rf"\|{re.escape(quitado)}(?=[|)])|(?<=\(){re.escape(quitado)}\|", "", regex, count=1)
+    assert nueva != regex and texto.count(regex) == 1
+    copia = tmp_path / "etc_default_earlyoom"
+    copia.write_text(texto.replace(regex, nueva), encoding="utf-8")
+    assert faltan_en_earlyoom(copia) == {quitado}

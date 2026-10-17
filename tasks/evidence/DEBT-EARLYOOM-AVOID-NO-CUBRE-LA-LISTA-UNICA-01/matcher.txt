@@ -1,0 +1,18 @@
+$ python3 tasks/evidence/DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01/mide_avoid.py   # 2026-10-16, sin root
+== desplegado: adopted/system-config/etc_default_earlyoom
+   --avoid (claude-desktop|pipewire|wireplumber|dbus-daemon|gnome-shell|gnome-session|Xorg|gdm|sshd|systemd|journal|xdg-|antigravity|vllm|VLLM|docker|containerd|^bb-)
+   nombres de la lista: 24; faltan (re.search): 10 ['Xwayland', 'bb', 'chrome_crashpad', 'claude', 'cowork-linux-he', 'dbus', 'earlyoom', 'electron', 'init', 'node']
+   faltan (grep -E, POSIX ERE): 10 ['Xwayland', 'bb', 'chrome_crashpad', 'claude', 'cowork-linux-he', 'dbus', 'earlyoom', 'electron', 'init', 'node']
+   los dos instrumentos coinciden: True
+   NO_PROTEGIDOS ['python3', 'pytest', 'bash', 'sleep'] evitados: []
+== pendiente: adopted/pendiente-de-despliegue/etc_default_earlyoom
+   --avoid (claude|pipewire|wireplumber|dbus|gnome-shell|gnome-session|Xorg|Xwayland|gdm|sshd|systemd|journal|xdg-|antigravity|vllm|VLLM|docker|containerd|^bb-|^(node|cowork-linux-he|electron|chrome_crashpad|init|earlyoom|bb)$)
+   nombres de la lista: 24; faltan (re.search): 0 []
+   faltan (grep -E, POSIX ERE): 0 []
+   los dos instrumentos coinciden: True
+   NO_PROTEGIDOS ['python3', 'pytest', 'bash', 'sleep'] evitados: []
+== comm vivos distintos (ps -eo comm): 470
+   evitados por el desplegado: 34; por el pendiente: 40
+   evitados por el desplegado y NO por el pendiente (debe ser 0): 0
+   evitados solo por el pendiente: 6; de ellos fuera de la lista unica: 0 []
+rc=0

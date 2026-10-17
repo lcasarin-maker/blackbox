@@ -28,3 +28,38 @@ Decidir si `antigravity` entra en la lista unica es parte de esta ficha.
 
 ## Por que no se ataca ahora
 El fichero es configuracion desplegada como root; cambiarlo es un despliegue de Luis, no un commit.
+
+## Avance 2026-10-16 (todo lo que no exige root; la ficha sigue ABIERTA hasta que Luis despliegue)
+- Contenido nuevo: `adopted/pendiente-de-despliegue/etc_default_earlyoom` (sha256 0e8bc5de5b688de3b3a876298458f88096956a3a93ff402bd2900eb37a563733).
+  --avoid `(claude|pipewire|wireplumber|dbus|gnome-shell|gnome-session|Xorg|Xwayland|gdm|sshd|systemd|journal|xdg-|antigravity|vllm|VLLM|docker|containerd|^bb-|^(node|cowork-linux-he|electron|chrome_crashpad|init|earlyoom|bb)$)`.
+  `claude` y `dbus` sustituyen a `claude-desktop` y `dbus-daemon` (las contienen); los nombres cortos van exactos y anclados
+  porque sin ancla `init`, `node` o `bb` evitarian todo comm que los contenga. Umbrales y --prefer iguales.
+- Medido (`tasks/evidence/DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01/matcher.txt`): faltan 10 en el desplegado y 0 en el
+  pendiente, con el matcher del repo (re.search) y con `grep -E` (POSIX ERE de glibc) de acuerdo; ninguno de python3, pytest,
+  bash, sleep evitado; sobre los comm vivos, 0 que el desplegado evite y el pendiente no, y 6 nuevos evitados, todos de la lista.
+  earlyoom 1.7 real (`--dryrun`, como usuario) compila la regex nueva (rc 124) y rechaza la rota (rc 6).
+- Pruebas: `test_earlyoom_pendiente_cubre_toda_la_lista_y_no_evita_lo_no_protegido` (verde sobre el pendiente; roja sobre el
+  desplegado y sobre el pendiente sin `node`: `rojo_y_verde.py` en la evidencia), `test_earlyoom_pendiente_solo_amplia_lo_desplegado`
+  y `test_control_negativo_quitar_un_nombre_del_pendiente_se_ve` (10 casos). El close_check y su xfail no se tocan: hoy sale 1 (`fail.txt`).
+- Script sellado: `adopted/root-scripts/earlyoom-proteger.sh` actualizado en su sitio (misma clase estatica y mismas pruebas de
+  ejecucion sobre tmp_path), de 89fe78da... (lo desplegado el 2026-10-14) a 0e8bc5de...; copia del viejo en
+  /var/lib/blackbox/etc_default_earlyoom.<sha viejo>; reinicia solo earlyoom y restaura si no queda activo. Manifiesto propuesto
+  regenerado (`--propose`). Pasos, verificacion y reversion: `adopted/pendiente-de-despliegue/LEEME.txt`.
+- **La linea que pega Luis**, desde el checkout principal y con esta rama ya en master. Re-aprueba el manifiesto y corre el
+  script; si el manifiesto, el runner o el sudoers cambiaron desde hoy, `sha256sum -c` falla antes de mover nada y el `&&` no
+  corre el script: entonces se regenera con `python3 -m tools.bb_root_manifest --propose` y se pega su ultima linea con el mismo sufijo.
+
+      sudo sh -c 'set -e; install -d -m 0755 -o root -g root /etc/bb-root-run; install -m 0755 -o root -g root /home/lcasarin/projects/blackbox/tools/bb_root_run.py /usr/local/sbin/bb-root-run.nuevo; echo "0c9f47a49e925e930661d5f544d1a8647cc0e8b3b38c989ee364bcec446c2e2f  /usr/local/sbin/bb-root-run.nuevo" | sha256sum -c -; install -m 0644 -o root -g root /home/lcasarin/projects/blackbox/adopted/pendiente-de-despliegue/bb-root-run.manifest.json /etc/bb-root-run/manifest.json.nuevo; echo "dff36047b6f65450eae60614322ca98b97acfb1c4fc76b7d3d82a4ae12eb1d77  /etc/bb-root-run/manifest.json.nuevo" | sha256sum -c -; install -m 0440 -o root -g root /home/lcasarin/projects/blackbox/adopted/pendiente-de-despliegue/etc_sudoers.d_bb-root-run /etc/sudoers.d/bb-root-run.nuevo; echo "46ec14fbc0e741f54ce025426808210bb0437dccea3eae234c4ff44fa7fc1e93  /etc/sudoers.d/bb-root-run.nuevo" | sha256sum -c -; visudo -c -f /etc/sudoers.d/bb-root-run.nuevo; mv -f /usr/local/sbin/bb-root-run.nuevo /usr/local/sbin/bb-root-run; mv -f /etc/bb-root-run/manifest.json.nuevo /etc/bb-root-run/manifest.json; mv -f /etc/sudoers.d/bb-root-run.nuevo /etc/sudoers.d/bb-root-run' && sudo -n bb-root-run earlyoom-proteger
+
+- Despues del despliegue: `git mv adopted/pendiente-de-despliegue/etc_default_earlyoom adopted/system-config/etc_default_earlyoom`,
+  quitar el xfail, vaciar FALTAN_EN_EARLYOOM y re-apuntar EARLYOOM_PENDIENTE / EARLYOOM_VIEJO / EARLYOOM_NUEVO (LEEME paso 4).
+- NECESITA DECISION, antigravity (abierta, sin votar). Hechos: 9 procesos `antigravity` vivos hoy; Luis voto conservar el
+  editor el 2026-10-15 (DECISIONS.md); el editor lanza pytest-xdist bajo su scope `snap.antigravity.antigravity-*.scope`
+  (tasks/done/DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP.md). Opciones:
+  A (recomendada) dejarlo fuera de la lista unica y dentro de --avoid: asimetria declarada de un nombre (mas `journal`); coste:
+      los otros cuatro vigilantes pueden matar al editor (trabajo sin guardar).
+  B meterlo en la lista unica: coste: vigilante_memavail aplica la `unidad` (por defecto el comm) al nombre de la unidad y
+      rechazaria el scope del editor, que contiene los pytest-xdist que lanza: una suite desbocada desde el editor deja de ser
+      detenible por memavail; ademas obliga a tocar los tres respaldos en codigo.
+  C sacarlo tambien de --avoid: listas identicas; coste: earlyoom elige al editor 300 puntos antes.
+  El contenido pendiente vale tal cual para A y B; solo C lo cambia (y re-sella el script).
