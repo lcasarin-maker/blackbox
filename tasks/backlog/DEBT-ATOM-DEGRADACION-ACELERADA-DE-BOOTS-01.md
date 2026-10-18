@@ -24,7 +24,7 @@ $ bash tools/check_atom_degradacion_atlas.sh   # rc=2
 
 Control negativo del propio comando: el `NO` (rc=1) esta documentado en la ficha de Atlas el 2026-09-28; el estado verde exige un boot > 146.566 h.
 
-Hallazgo que viaja con la ficha: el evento `92a1de3d` figura como "sin crash confirmado" en el jsonl de Atlas, mientras el dictamen `2026-10-12_crash_atom_92a1de3d.md` lo clasifica CORTE_ABRUPTO. Instrumento y dictamen se contradicen; quien tome esto lo resuelve antes de leer el `rc`.
+Hallazgo que viaja con la ficha (corregido el 2026-10-17 tras verificarlo en el codigo de Atlas): Atlas exige dano de journal o una linea de panic para confirmar un crash (`detect_atom_crash.crash_confirmado()` solo acepta `diagnostico` = `journal_danado` o `panic`); la fila `92a1de3d` tiene `diagnostico: sin_senal` (journal intacto, sin panic) mientras el dictamen de blackbox la clasifica CORTE_ABRUPTO, asi que el criterio devuelve rc=2 hasta que Luis decida si el veredicto CORTE_ABRUPTO de blackbox basta como prueba. No es un error de ninguno de los dos instrumentos: Atlas decide no adivinar.
 
 ## Relacionadas
 
