@@ -3,12 +3,15 @@ id: DEBT-KIT-SYNC-DE-FLOTA-NO-ESCALONA-LOS-PROYECTOS-01
 kind: task
 domain: MEMORY
 title: "El comando de sync de flota del kit reparte a todos los proyectos a la vez; debe escalonarlos"
-status: open
+status: done
+closed_at: 2026-10-17
+closure_type: void_wontfix
+reason: "el kit de Simplecode que se sincronizaba a la flota se retiro entero de este repo el 2026-10-17 (DECISIONS.md); ya no hay sync de flota ni atestaciones por commit que escalonar"
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-16
-close_check: {"cmd": "grep -rqi escalon .simplecode/kit.lock", "expect": "exit_zero", "porque": "Falta que simplecode (otro repo) escalone el sync; cuando el kit lo declare en su lock/versionado este grep lo vera. Hasta entonces la regla sync_de_flota_escalonado solo la cumple el portero local."}
+close_check: {"cmd": "test ! -e .simplecode/run.py", "expect": "exit_zero", "porque": "El sujeto desaparecio: sin lanzador del kit no hay sync de flota ni atestacion por commit."}
 ---
 
 ## Medido
@@ -26,3 +29,6 @@ Conclusion: el escalonamiento que pide esta ficha debe cubrir tambien lo que un 
 
 ## Medido 2026-10-17, 20:50: el gate de pyright de los satelites resuelve `simplecode` del arbol del repo madre, no del kit fijado
 El push de 4.6.0 fallo en `pyright (type checking)`: `tools/mutacion_alcanza.py` -> `"mutation_verify" is unknown import symbol`. Causa: pyright usa el paquete `simplecode` instalado en editable desde el repo madre (`python3 -c "import simplecode; print(simplecode.__file__)"` -> `.../projects/simplecode/src/simplecode/__init__.py`) y otra sesion lo estaba reestructurando en ese momento (`git status` del madre: 417 borrados y 75 añadidos sin commitear desde las 20:27; `src/simplecode/verification/` quedo con `__init__.py` y `pii_scan.py`). Misma causa que `python3 -m simplecode.cli audit` dejando de existir ("choose from check, integrity, pii"). Un satelite puede quedar bloqueado en su push por trabajo sin commitear de otro proyecto. En este repo se corrigio la unica importacion afectada cargandola con `importlib` del zip del kit (commit del mismo dia); el defecto de fondo es del gate del kit: debe resolver `simplecode` desde `.simplecode/runtime.zip`, no del entorno. Quien use `python3 -m simplecode.cli` en este repo debe usar `python3 .simplecode/run.py simplecode.cli` (el ejecutor del kit).
+
+## Cierre 2026-10-17
+Voto de Luis: sustituir por completo el Simplecode anterior. Las mediciones de arriba (08:20 y 09:10) quedan como la razon medida de por que la pila anterior era lenta: cada commit lanzaba una suite completa de atestacion y un sync de flota la disparaba a la vez en todos los proyectos.
