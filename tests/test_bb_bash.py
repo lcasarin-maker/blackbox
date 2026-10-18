@@ -2075,6 +2075,56 @@ def test_control_negativo_sin_memory_events_es_null_y_no_ceros(datos, tmp_path):
     assert app["events"] is None and app["pressure"] is None, app
 
 
+# =====================================================================
+# DEBT-APP-SLICE-TOPE-42G-ESTRANGULA-LA-CACHE-DE-ARCHIVOS-01: contadores de
+# reclamo de memory.stat en cada muestra, para cruzar minuto a minuto los
+# reportes de maquina lenta contra la cache expulsada y releida bajo el tope
+# =====================================================================
+
+_STAT_APP = (
+    "anon 17894789120\nfile 22077599744\ninactive_file 12184195072\n"
+    "workingset_refault_file 48068590\npgscan_kswapd 2934489\n"
+    "pgscan_direct 315403098\npgsteal_direct 309857256\n")
+
+
+def _cg_con_stat(tmp_path, stat: str | None = _STAT_APP):
+    env = _cg_slices(tmp_path)
+    app = (Path(env["BB_CGROUP_ROOT"]) / "user.slice" / f"user-{os.getuid()}.slice"
+           / f"user@{os.getuid()}.service" / "app.slice")
+    if stat is not None:
+        (app / "memory.stat").write_text(stat, encoding="utf-8")
+    return env
+
+
+def _reclaim_app(datos):
+    return next(x for x in _slices_de_la_muestra(datos) if x["slice"] == "app")["reclaim"]
+
+
+def test_la_muestra_guarda_los_contadores_de_reclamo_de_memory_stat(datos, tmp_path):
+    """Acumulados tal cual: las tasas las calcula quien lee, con dos muestras."""
+    correr(["sample"], datos, _cg_con_stat(tmp_path))
+    assert _reclaim_app(datos) == {
+        "refault_file": 48068590, "pgscan_direct": 315403098, "pgscan_kswapd": 2934489,
+        "pgsteal_direct": 309857256, "inactive_file_kb": 12184195072 // 1024,
+        "anon_kb": 17894789120 // 1024, "file_kb": 22077599744 // 1024}
+
+
+def test_sin_memory_stat_cada_campo_de_reclamo_es_NOT_COLLECTED_y_no_cero(datos, tmp_path):
+    correr(["sample"], datos, _cg_con_stat(tmp_path, stat=None))
+    r = _reclaim_app(datos)
+    assert set(r) == {"refault_file", "pgscan_direct", "pgscan_kswapd", "pgsteal_direct",
+                      "inactive_file_kb", "anon_kb", "file_kb"}, r
+    assert set(r.values()) == {"NOT_COLLECTED"}, r
+
+
+def test_un_valor_ilegible_de_memory_stat_es_NOT_COLLECTED_y_los_demas_se_leen(datos, tmp_path):
+    correr(["sample"], datos, _cg_con_stat(tmp_path, _STAT_APP.replace(
+        "pgscan_direct 315403098", "pgscan_direct 31x5403098")))
+    r = _reclaim_app(datos)
+    assert r["pgscan_direct"] == "NOT_COLLECTED", r
+    assert r["pgscan_kswapd"] == 2934489 and r["refault_file"] == 48068590, r
+
+
 def _reservar(mib):
     """Reserva direcciones SIN tocarlas: crece VmSize (lo que mide `pidio`), no la RAM."""
     hijo = subprocess.Popen(
