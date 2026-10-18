@@ -143,8 +143,29 @@ cg_campos() { # fichero memory.events|memory.pressure -> objeto JSON o null
   if [ -n "$j" ]; then printf '{%s}' "$j"; else printf 'null'; fi
 }
 
+# `reclaim` (2026-10-17, DEBT-APP-SLICE-TOPE-42G-ESTRANGULA-LA-CACHE-DE-ARCHIVOS-01):
+# contadores ACUMULADOS de memory.stat que muestran la cache de archivos expulsada
+# y releida contra `memory.max` (refault, escaneo directo vs kswapd). Las tasas las
+# calcula quien lee con dos muestras (`tools/reclaim_ventana.py`). Campo ausente o
+# no numerico = "NOT_COLLECTED", nunca 0. Sin tuberia, por la misma razon de arriba.
+cg_reclaim() { # memory.stat -> objeto JSON con los siete campos
+  local f="$1"
+  [ -r "$f" ] || f=/dev/null
+  awk 'BEGIN { n = split("workingset_refault_file:refault_file pgscan_direct:pgscan_direct " \
+                         "pgscan_kswapd:pgscan_kswapd pgsteal_direct:pgsteal_direct " \
+                         "inactive_file:inactive_file_kb anon:anon_kb file:file_kb", c, " ") }
+       $2 ~ /^[0-9]+$/ { v[$1] = $2 }
+       END { printf "{"
+             for (i = 1; i <= n; i++) { split(c[i], p, ":")
+               printf "%s\"%s\":", (i > 1 ? "," : ""), p[2]
+               if (!(p[1] in v)) printf "\"NOT_COLLECTED\""
+               else if (p[2] ~ /_kb$/) printf "%.0f", int(v[p[1]] / 1024)
+               else printf "%s", v[p[1]] }
+             printf "}" }' "$f" 2>/dev/null
+}
+
 slices_mem() {
-  local cg="${BB_CGROUP_ROOT:-/sys/fs/cgroup}" uid n r cur pk pk_kb ev pr out=""
+  local cg="${BB_CGROUP_ROOT:-/sys/fs/cgroup}" uid n r cur pk pk_kb ev pr rc out=""
   uid=$(id -u)
   for n in app docker system; do
     case $n in
@@ -159,7 +180,8 @@ slices_mem() {
     pk=$(cat "$r/memory.peak" 2>/dev/null)
     if [ -n "$pk" ]; then pk_kb=$(( pk / 1024 )); else pk_kb=null; fi
     ev=$(cg_campos "$r/memory.events"); pr=$(cg_campos "$r/memory.pressure")
-    out="${out}{\"slice\":\"$n\",\"cur_kb\":$(( cur / 1024 )),\"peak_kb\":$pk_kb,\"events\":$ev,\"pressure\":$pr},"
+    rc=$(cg_reclaim "$r/memory.stat")
+    out="${out}{\"slice\":\"$n\",\"cur_kb\":$(( cur / 1024 )),\"peak_kb\":$pk_kb,\"events\":$ev,\"pressure\":$pr,\"reclaim\":${rc:-null}},"
   done
   printf '%s' "${out%,}"
 }
