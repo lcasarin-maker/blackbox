@@ -4,339 +4,83 @@ repos:
     rev: v0.15.22
     hooks:
       - id: ruff
-        name: "ruff (staged fatal blockers)"
-        args: [--select, "E9,F821,F632,F811"]
-        stages: [pre-commit, pre-merge-commit]
-
+        stages:
+          - pre-commit
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
     hooks:
       - id: gitleaks
-        name: "gitleaks (secrets staged)"
-        args: [--no-banner, --redact]
-        stages: [pre-commit, pre-merge-commit]
-
+        args:
+          - --no-banner
+          - --redact
+        stages:
+          - pre-commit
   - repo: local
     hooks:
-      # 2026-09-27: 25 hooks the kit's gate audit judged APARATO / AVISO /
-      # REDUNDANTE (they guarded the kit's own process, not your product)
-      # were retired from this template. Their modules still ship in
-      # runtime.zip, runnable by hand. See the kit's DECISIONS.md.
-      # `--staged`: this gate judges what the COMMIT introduces, never
-      # the repo's accumulated debt. Without the flag the module falls
-      # back to a whole-repo sweep, and one already-committed corrupt
-      # file freezes EVERY commit in the satellite -- measured in Atlas
-      # 2026-09-01, two sessions frozen over corruption verified already
-      # in HEAD. The repo-wide sweep stays available for `make`/manual.
-      - id: corruption-guard
-        name: "corruption guard (bytes, mojibake, CRLF, BOM) -- staged"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name corruption-guard --hook pre-commit --
-          python .simplecode/run.py simplecode.guards.corruption_guard --staged
+      - id: ruff-full
+        name: Ruff whole tree
+        entry: ruff check .
         language: system
-        stages: [pre-commit, pre-merge-commit]
+        stages:
+          - pre-push
         pass_filenames: false
-
-      - id: angry-path
-        name: "angry path dominance (Rule B3)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name angry-path --hook pre-commit --
-          python .simplecode/run.py simplecode.guards.angry_path --gate
-        language: system
-        types: [python]
-        stages: [pre-commit, pre-merge-commit]
-        pass_filenames: true
-
-      - id: staged-parity
-        name: "staged-parity (index vs working tree)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name staged-parity --hook pre-commit --
-          python .simplecode/run.py simplecode.worktree.staged_parity
-        language: system
-        stages: [pre-commit, pre-merge-commit]
-        pass_filenames: false
-
-      - id: truncation-guard
-        name: "truncation guard (integrity of edits)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name truncation-guard --hook pre-commit --
-          python .simplecode/run.py simplecode.guards.truncation_guard --gate
-        language: system
-        stages: [pre-commit, pre-merge-commit]
-        pass_filenames: false
-
-      # 2026-10-07 (Atlas DGX-531): an exemption enters WITH its
-      # `# sunset-reviewed: X.Y -- reason` tag or the commit is refused,
-      # not at push. `--staged` judges only the lines this commit ADDS, so
-      # a repo with old untagged exemptions is not frozen by them.
-      - id: sunset-audit-staged
-        name: "sunset audit (exemptions this commit adds carry a tag)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name sunset-audit-staged --hook pre-commit --
-          python .simplecode/run.py simplecode.verification.sunset_audit --root . --staged --gate
-        language: system
-        stages: [pre-commit, pre-merge-commit]
-        pass_filenames: false
-
-      - id: zero-debt-repo
-        name: "zero debt (repo-wide ship freeze)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name zero-debt-repo --hook pre-push --
-          python .simplecode/run.py simplecode.worktree.zero_debt
-          --root . --mode zero --gate
-        language: system
-        types: [python]
-        stages: [pre-push]
-        pass_filenames: false
-
-      - id: coverage-floor
-        name: "coverage attestation (immutable SHA; ratchet: never below watermark)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name coverage-100 --hook pre-push --
-          python .simplecode/run.py simplecode.verification.coverage_attestation
-          --require
-        language: system
-        types: [python]
-        stages: [pre-push]
-        pass_filenames: false
-
+        always_run: true
       - id: pyright
-        name: "pyright (type checking)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name pyright --hook pre-push --
-          python .simplecode/run.py simplecode.verification.pyright_attestation --require
+        name: Pyright
+        entry: pyright
         language: system
-        types: [python]
-        stages: [pre-push]
+        stages:
+          - pre-push
         pass_filenames: false
-
-      - id: pii-scan
-        name: "no third-party PII (RFC/CURP) in tasks/ or docs/"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name pii-scan --hook pre-push --
-          python .simplecode/run.py simplecode.verification.pii_scan --root .
+        always_run: true
+      - id: git-history-present
+        name: Git history enumerated
+        entry: sh -c 'count=$(git rev-list --all --count) && test "$count" -gt 0'
         language: system
-        stages: [pre-push]
+        stages:
+          - pre-push
         pass_filenames: false
-
-      - id: adversarial-judge
-        name: "Judge-Zero forensic auditor"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name adversarial-judge --hook pre-push --
-          python .simplecode/run.py simplecode.verification.adversarial_judge
-          --root . --gate
+        always_run: true
+      - id: gitleaks-history
+        name: Gitleaks history
+        entry: gitleaks git --no-banner --redact --log-opts=--all .
         language: system
-        stages: [pre-push]
+        stages:
+          - pre-push
         pass_filenames: false
+        always_run: true
+      - id: pytest
+        name: Product behavior
+        entry: python -m pytest -q
+        language: system
+        stages:
+          - pre-push
+        pass_filenames: false
+        always_run: true
       - id: bash-sintaxis
         name: sintaxis de los scripts bash
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name bash-sintaxis --hook pre-commit --
-          bash -n
+        entry: bash -n
         language: system
-        files: '^(bin/bb|.*\.sh)$'
+        files: ^(bin/bb|.*\.sh)$
       - id: bb-cobertura-piso
         name: cobertura de bin/bb no baja del piso
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name bb-cobertura-piso --hook pre-push --
-          tools/piso_cobertura.sh
+        entry: tools/piso_cobertura.sh
         language: system
-        stages: [pre-push]
+        stages:
+          - pre-push
         pass_filenames: false
         always_run: true
       - id: inventario-spec
         name: SPEC.md inventaria lo que el repo ejecuta y posee
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name inventario-spec --hook pre-commit --
-          python3 -m tools.inventario --check
+        entry: python3 -m tools.inventario --check
         language: system
         pass_filenames: false
         always_run: true
-      - id: version-bump
-        name: "version reflects what shipped (semver from Conventional Commits)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name version-bump --hook pre-push --
-          python .simplecode/run.py simplecode.verification.version_bump --root . --gate
+      - id: migration-parity
+        name: 'Migration parity pending: integrity, PII and product hooks'
+        entry: "sh -c 'echo COULD_NOT_RUN: restore integrity, PII, product hooks and old launcher references before delivery >&2; exit 2'"
         language: system
-        stages: [pre-push]
-        pass_filenames: false
-      - id: ledger-schema
-        name: "task schema is typed and closed tasks carry evidence"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name ledger-schema --hook pre-push --
-          python .simplecode/run.py simplecode.verification.ledger_schema --root .
-        language: system
-        stages: [pre-push]
-        pass_filenames: false
-      - id: gate-effectiveness
-        name: "gate effectiveness: no organ with many runs and zero catches"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name gate-effectiveness --hook pre-push --
-          python .simplecode/run.py simplecode.verification.gate_effectiveness --root . --gate
-        language: system
-        stages: [pre-push]
-        pass_filenames: false
-        always_run: true
-      - id: zero-debt
-        name: "zero debt (staged, blocks)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name zero-debt-staged --hook pre-commit --
-          python .simplecode/run.py simplecode.worktree.zero_debt
-          --root . --mode zero --staged --gate
-        language: system
-        types: [python]
-        stages: [pre-commit, pre-merge-commit]
-        pass_filenames: false
-      - id: ship-freeze
-        name: "ship freeze (no open backlog)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name ship-freeze --hook pre-push --propagate-only --
-          python .simplecode/run.py simplecode.verification.finding_backlog
-          --root . --gate
-        language: system
-        stages: [pre-push]
-        pass_filenames: false
-      - id: telemetry-disposition
-        name: "telemetry disposition: blocked rows after the cutoff need a verdict"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name telemetry-disposition --hook pre-push --
-          python .simplecode/run.py simplecode.verification.telemetry_dispositions --root . --gate
-        language: system
-        stages: [pre-push]
-        pass_filenames: false
-        always_run: true
-      - id: hook-receipts-gate
-        name: "hook receipts: no unverified commits reaching push"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name hook-receipts-gate --hook pre-push --
-          python .simplecode/run.py simplecode.verification.hook_receipts
-          --root . --audit --gate
-        language: system
-        stages: [pre-push]
-        pass_filenames: false
-        always_run: true
-      - id: backlog-verifier
-        name: "closed debt has executable evidence"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name backlog-verifier --hook pre-push --
-          python .simplecode/run.py simplecode.verification.backlog_verifier
-          --root . --gate
-        language: system
-        stages: [pre-push]
-        pass_filenames: false
-      - id: genuine-task-closure
-        name: "task closures are not synthetic (real fix, real close_check)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name genuine-task-closure --hook pre-commit --
-          python .simplecode/run.py simplecode.verification.genuine_task_closure
-          --root .
-        language: system
-        stages: [pre-commit, pre-merge-commit]
-        pass_filenames: false
-      - id: clean-worktree
-        name: "clean worktree (no dodged/partial-commit changes)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name clean-worktree --hook pre-commit --
-          python .simplecode/run.py simplecode.worktree.clean_worktree --root .
-        language: system
-        stages: [pre-commit, pre-merge-commit]
-        pass_filenames: false
-      - id: telemetry-bound
-        name: "telemetry stays under the 10 MiB horizon SPEC declares (advisory)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name telemetry-bound --hook pre-push --
-          bash -c 'python .simplecode/run.py simplecode.verification.telemetry_prune --root . --gate || true'
-        language: system
-        stages: [pre-push]
-        pass_filenames: false
-        always_run: true
-      - id: no-perder-lineas
-        name: "no tracked task entry loses lines vs HEAD"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name no-perder-lineas --hook pre-push --
-          python .simplecode/run.py simplecode.verification.no_perder_lineas --root .
-        language: system
-        stages: [pre-push]
-        pass_filenames: false
-      - id: close-check-discrimina
-        name: "close_check does not close two fichas at once (done only)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name close-check-discrimina --hook pre-commit --
-          python .simplecode/run.py simplecode.verification.close_check_discrimina --root .
-        language: system
-        stages: [pre-commit, pre-merge-commit]
-        pass_filenames: false
-      - id: spec-check
-        name: "SPEC.md is complete and verified"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name spec-check --hook pre-commit --
-          python .simplecode/run.py simplecode.cli_spec check
-        language: system
-        stages: [pre-commit, pre-merge-commit]
-        pass_filenames: false
-      - id: staged-mode-guard
-        name: "staged file modes (no typechange into/out of a symlink, no absolute targets)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name staged-mode-guard --hook pre-commit --
-          python .simplecode/run.py simplecode.guards.staged_mode_guard --root . --gate
-        language: system
-        stages: [pre-commit, pre-merge-commit]
-        pass_filenames: false
-        always_run: true
-      - id: sunset-audit
-        name: "no exemption enters without a sunset tag (staged diff)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name sunset-audit --hook pre-commit --
-          python .simplecode/run.py simplecode.verification.sunset_audit --root . --staged --gate
-        language: system
-        stages: [pre-commit, pre-merge-commit]
-        pass_filenames: false
-        always_run: true
-      - id: write-hook-receipt
-        name: "write hook receipt nonce (WP18/G3 producer)"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.gate_runner
-          --root . --name write-hook-receipt --hook pre-commit --
-          python .simplecode/run.py simplecode.verification.hook_receipts
-          --root . --write-receipt
-        language: system
-        stages: [pre-commit, pre-merge-commit]
-        pass_filenames: false
-      - id: post-commit-receipt
-        name: "post-commit receipt and telemetry ledger"
-        entry: >-
-          python .simplecode/run.py simplecode.verification.hook_receipts
-          --root . --stamp-head
-        language: system
-        stages: [post-commit]
+        stages:
+          - pre-push
         pass_filenames: false
         always_run: true
