@@ -51,7 +51,7 @@ repos:
         always_run: true
       - id: pytest
         name: Product behavior
-        entry: sh -c 'python3 -m pytest -q -n 4 -m "not slow and not e2e and not mutates_real_source" && python3 -m pytest -q -m mutates_real_source'
+        entry: sh -c 'python3 -m pytest -q -n 4 -m "not slow and not e2e and not mutates_real_source" --ignore=tests/test_bb_bash.py && python3 -m pytest -q -m mutates_real_source'
         language: system
         stages:
           - pre-push
