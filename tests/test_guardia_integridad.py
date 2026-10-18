@@ -54,7 +54,11 @@ def test_los_binarios_no_se_examinan(tmp_path: Path):
     assert gi.main([str(binario)]) == 0
 
 
-def test_fuera_de_un_repo_git_es_could_not_run(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
+def test_fuera_de_un_repo_git_es_could_not_run(tmp_path: Path, capsys: pytest.CaptureFixture[str],
+                                                 monkeypatch: pytest.MonkeyPatch):
+    # dentro de un hook de git (pre-push) el entorno trae GIT_DIR/GIT_INDEX_FILE y `git -C` encontraria el repo real
+    for var in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_PREFIX", "GIT_COMMON_DIR"):
+        monkeypatch.delenv(var, raising=False)
     assert gi.main(["--arbol"], raiz=tmp_path) == 2
     assert "COULD_NOT_RUN" in capsys.readouterr().err
 
