@@ -444,7 +444,17 @@ def lee_slice(d: Path) -> tuple[int | None, int | None]:
     tope, uso = _lee(d / "memory.max"), _lee(d / "memory.current")
     if tope is None or uso is None or not tope.strip().isdigit() or not uso.strip().isdigit():
         return None, None
-    return int(tope) // KIB, int(uso) // KIB
+    # memoria de trabajo: la cache de archivos inactiva se recupera sin costo y no es presion (medido 2026-10-17:
+    # 15.6 GiB de 38.7 en app.slice; contarla daba una holgura de 3.3 GiB cuando habia 19 reales)
+    return int(tope) // KIB, max(0, int(uso) - _inactive_file_bytes(d)) // KIB
+
+
+def _inactive_file_bytes(d: Path) -> int:
+    for linea in (_lee(d / "memory.stat") or "").splitlines():
+        campo, _, valor = linea.partition(" ")
+        if campo == "inactive_file" and valor.strip().isdigit():
+            return int(valor)
+    return 0
 
 
 def tope_propio_kb(cg: str, cg_raiz: Path = CGROUP_RAIZ) -> int | None:
