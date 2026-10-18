@@ -3,7 +3,7 @@
 set -eu
 root=$(git rev-parse --show-toplevel) || exit 2
 kit="$root/.simplecode/kit"
-expected="a8853293a91a8cecac596b21dd5d46742fc86273"
+expected="8408033056b0d48a3c2943454e3679a69fb78f0d"
 actual=$(git -C "$kit" rev-parse HEAD) || { echo "COULD_NOT_RUN: Simplecode kit is unavailable" >&2; exit 2; }
 test "$actual" = "$expected" || { echo "COULD_NOT_RUN: Simplecode kit SHA differs from pinned ref" >&2; exit 2; }
 exec "$kit/.venv/bin/python" -m simplecode.fleet_runner --root "$root" "$@"
