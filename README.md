@@ -427,9 +427,8 @@ Everything blackbox writes lives under `$BLACKBOX_DATA`
 and reversible (`--revert`, `--dry-run`).
 
 No dependencies beyond what a stock Ubuntu install already has: coreutils,
-procps, systemd, `nvidia-smi`. Python is only used for one small,
-fully-tested close-check helper (`tools/check_harvest_accepted.py`) — the
-tool itself is plain bash.
+procps, systemd, `nvidia-smi`. Python is used by the analysis tools in
+`tools/` (covered by `pytest`) — the main tool, `bin/bb`, is plain bash.
 
 ## Hardening
 

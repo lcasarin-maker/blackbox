@@ -1,28 +1,10 @@
-# Declaracion minima de VERSION, anadida 2026-09-15.
-#
-# Por que existe este fichero: la ley de caducidad de exenciones (ADR-0013 D4,
-# decision de Luis) exige que toda exencion `sunset-reviewed:` lleve un
-# MAJOR.MINOR contra el que vencer. Un repo que no declara version no tiene
-# reloj, asi que ninguna de sus exenciones puede caducar nunca -- el mismo
-# agujero que el literal `permanent` que se abolio ese dia, un nivel mas
-# arriba. `sunset_audit` lee exactamente `[project].version`.
-#
-# 0.1.0 es la primera version declarada: el repo no tenia ninguna y no hay etiquetas previas que honrar.
+# Version del producto. La lee `tools/` y la etiqueta de cada release; ya no hay un reloj de caducidad de exenciones.
 [project]
 name = "blackbox"
 version = "4.6.1"
 
-# GS2-192 (adversarial-judge / unselected_rules): la flota exige que estas 8
-# reglas esten SELECCIONADAS explicitamente, no solo instaladas -- una regla
-# que ruff sabe correr pero que el config no activa deja su propiedad sin
-# verificar y ningun output muestra el hueco. Sin ningun `[tool.ruff.lint]`
-# antes de este cambio, `unselected_rules.audit_linter_rules` no encontraba
-# config y reportaba las 8 como faltantes (medido:
-# `python .simplecode/run.py simplecode.verification.adversarial_judge --root . --gate`
-# fallaba con "Unselected Mandatory Rule" x8). Medido tambien el control
-# negativo: `ruff check --select E9,F821,F632,F811,C901,PLR0912,PLR0913,PLR0915 .`
-# sobre el repo completo (los 3 .py reales bajo tools/ y tests/) -- "All checks
-# passed!", cero hallazgos nuevos al activar las reglas.
+# Ruff protege de errores reales: sintaxis/ejecucion (E9), nombre indefinido (F821), comparacion de identidad con un
+# literal (F632) y funcion redefinida (F811). Los limites de complejidad y de argumentos (C901, PLR09xx) los exigia el
+# juez del kit anterior como estilo, no protegen de un fallo del producto, y se retiraron el 2026-10-17 (DECISIONS.md).
 [tool.ruff.lint]
-select = ["E9", "F821", "F632", "F811", "C901", "PLR0912", "PLR0913", "PLR0915"]
-
+select = ["E9", "F821", "F632", "F811"]
