@@ -31,6 +31,7 @@ sujeto de nuestros tests?**
 from __future__ import annotations
 
 import argparse
+import importlib
 import sys
 from pathlib import Path
 
@@ -40,7 +41,9 @@ RUNTIME = ".simplecode/runtime.zip"
 def resuelven(raiz: Path) -> tuple[int, int]:
     """Cuantos ficheros de `tests/` resuelven su sujeto, y cuantos hay."""
     sys.path.insert(0, str(raiz / RUNTIME))
-    from simplecode.verification import mutation_verify as mv
+    # Se carga del zip del kit recien puesto en sys.path, no del paquete `simplecode` que tenga el entorno (el arbol
+    # del repo madre cambia y pyright resolvia ese): la fuente de verdad de este modulo es el kit fijado de este repo.
+    mv = importlib.import_module("simplecode.verification.mutation_verify")
 
     ficheros = sorted((raiz / "tests").glob("test_*.py"))
     alcanzados = sum(1 for t in ficheros if mv.resolve_source_for_test(t, raiz) is not None)
