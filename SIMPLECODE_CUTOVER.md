@@ -1,9 +1,16 @@
-# Simplecode cutover — 2026-10-17
+# Simplecode cutover — 2026-10-17 (completado en este repo)
 
-The previous distributed Simplecode bundle was removed in full. The user chose a clean replacement across the fleet, even when a repository needs follow-up repairs. Mixing the old runtime with the new native checks would hide gaps and keep the slow gate stack alive. This change is intentionally fail-closed: `migration-parity` exits 2 until the repository agent restores independently tested integrity and Mexican PII checks or proves the profile does not apply, replaces any essential product hooks, and removes executable calls to the old launcher.
+El kit anterior se retiro entero (`.simplecode/run.py`, `runtime.zip`, `kit.lock`, ledger H1, baselines y hooks locales) y no
+hay llamadas activas a su lanzador. La decision, con lo retirado y lo descartado, esta en `DECISIONS.md` (2026-10-17).
 
-Native hooks now run Ruff, Pyright, Gitleaks history and product pytest. They must be adapted to this product's actual environment; a declared command is not evidence that it ran. The previous product-specific hooks kept as direct commands are: bash-sintaxis, bb-cobertura-piso, inventario-spec.
+| Antes (kit) | Ahora |
+|---|---|
+| corruption-guard, truncation-guard | `tools/guardia_integridad.py` (+ `tests/test_guardia_integridad.py`) |
+| pii-scan | `tools/guardia_pii.py` (+ `tests/test_guardia_pii.py`) |
+| ruff, gitleaks (staged) | igual, nativos |
+| pyright por atestacion de SHA | `pyright` directo en pre-push |
+| coverage-100 por atestacion | `pytest` del producto en pre-push; `bb-cobertura-piso` para `bin/bb` |
+| bash-sintaxis, inventario-spec | sin cambio |
+| version-bump, ledger-schema, zero-debt, ship-freeze, backlog-verifier, hook-receipts, sunset-audit, H1 y demas procesos | retirados (ver DECISIONS.md) |
 
-Product-specific hooks requiring replacement: version-bump, ledger-schema, gate-effectiveness, zero-debt, ship-freeze, telemetry-disposition, hook-receipts-gate, backlog-verifier, genuine-task-closure, clean-worktree, telemetry-bound, no-perder-lineas, close-check-discrimina, spec-check, staged-mode-guard, sunset-audit, write-hook-receipt, post-commit-receipt. Other tracked active files still referring to the old launcher: .pre-commit-config.yaml, pyproject.toml, tests/test_debt_registration_controls.py, tests/test_host_diagnostics.py, tests/test_portero.py. Review each against the product's actual objective; restore real checks with native tools or a minimal local implementation, and delete process-only checks and their tests. Do not restore `.simplecode/run.py`, `kit.lock`, or `runtime.zip`.
-
-Before merging: fix all `COULD_NOT_RUN` and failing native checks, add negative and legitimate controls for retained protections, measure old and new timings on the same clean subject, and verify CI on the exact commit. GitHub Actions jobs are currently unable to start on the Simplecode account because of a billing/spending-limit error; do not count an unstarted CI job as green. The source checkout may contain unpublished local work; this branch starts at the remote default branch to keep that work separate.
+`COULD_NOT_RUN` declarado: la CI de GitHub no arranca en la cuenta por un error de facturacion; no cuenta como verde.

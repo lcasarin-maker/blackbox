@@ -356,31 +356,6 @@ def test_apt_critical_verifier_cli_and_evidence_controls(tmp_path: Path) -> None
 
 
 
-def test_debt_schema_evidence_index_scope_01(tmp_path: Path) -> None:
-    root = Path(__file__).resolve().parent.parent
-    manifest = root / "tasks/evidence/DEBT-SCHEMA-EVIDENCE-INDEX-SCOPE-01/migration.json"
-    rows = json.loads(manifest.read_text(encoding="utf-8"))["files"]
-    assert len(rows) == 4
-    for row in rows:
-        assert not (root / row["old"]).exists()
-        assert hashlib.sha256((root / row["new"]).read_bytes()).hexdigest() == row["sha256"]
-    runner = root / ".simplecode/run.py"
-    positive = subprocess.run(
-        [sys.executable, str(runner), "simplecode.verification.ledger_schema", "--root", str(root), "--check"],
-        capture_output=True, text=True, timeout=60)
-    assert positive.returncode == 0, positive.stdout + positive.stderr
-    assert "could_not_run=0" in positive.stdout, positive.stdout
-    # A genuine task placed outside governed folders must remain visible to the gate.
-    misplaced = tmp_path / "tasks" / "misplaced"
-    misplaced.mkdir(parents=True)
-    card = root / "tasks/done/DEBT-RUFF-BB-USABLE-01.md"
-    (misplaced / card.name).write_bytes(card.read_bytes())
-    negative = subprocess.run(
-        [sys.executable, str(runner), "simplecode.verification.ledger_schema", "--root", str(tmp_path), "--check"],
-        capture_output=True, text=True, timeout=60)
-    assert negative.returncode != 0, negative.stdout + negative.stderr
-    assert card.name in negative.stdout + negative.stderr
-    assert "could_not_run=1" in negative.stdout, negative.stdout
 
 
 def test_bug_coverage_cli_subprocess_01(tmp_path: Path) -> None:
@@ -658,82 +633,16 @@ def test_debt_skip_test_demonio_al_dia_52():
     assert _run_without_skips("tests/test_demonio_al_dia.py") == 0
 
 
-def test_debt_skip_test_pii_scan_systemd_167():
-    assert _run_without_skips("tests/test_pii_scan_systemd.py") == 0
 
 
-def test_debt_skip_test_pii_scan_systemd_86():
-    assert _run_without_skips("tests/test_pii_scan_systemd.py") == 0
 
 
-def _simplecode_runner(tmp_path: Path) -> Path:
-    """Copy the pinned ignored kit into a disposable subject repo for organ tests."""
-    source = Path(__file__).resolve().parent.parent / ".simplecode"
-    target = tmp_path / ".simplecode"
-    target.mkdir()
-    for name in ("run.py", "runtime.zip", "kit.lock"):
-        (target / name).write_bytes((source / name).read_bytes())
-    return target / "run.py"
 
 
-def test_debt_exception_backlog_md_freeze_01() -> None:
-    """Simplecode retired the organ; BB retains neither its subject nor exemption."""
-    from zipfile import ZipFile
-
-    repo = Path(__file__).resolve().parent.parent
-    with ZipFile(repo / ".simplecode" / "runtime.zip") as runtime:
-        assert "simplecode/verification/backlog_md_freeze.py" not in runtime.namelist()
-    config = (repo / ".pre-commit-config.yaml").read_text(encoding="utf-8")
-    assert "backlog_md_freeze" not in config
-    exemptions = json.loads((repo / ".simplecode" / "organ_inapplicable.json").read_text(encoding="utf-8"))
-    assert "backlog_md_freeze" not in exemptions["entries"]
-    assert not (repo / "BACKLOG.md").exists()
-    assert not (repo / ".simplecode" / "backlog_md_frozen.json").exists()
 
 
-def test_debt_exception_lockfile_parity_01(tmp_path: Path) -> None:
-    runner = _simplecode_runner(tmp_path)
-    repo = Path(__file__).resolve().parent.parent
-    current = subprocess.run(
-        [sys.executable, str(runner), "simplecode.verification.lockfile_parity", "--root", str(repo)],
-        capture_output=True, text=True, check=False,
-    )
-    assert current.returncode == 0, current.stdout + current.stderr
-    assert "NO APLICA: no hay requirements-lock.txt" in current.stdout
-
-    root = tmp_path / "subject"
-    root.mkdir()
-    (root / "pyproject.toml").write_text('[project]\ndependencies = ["synthetic-pkg==1.0"]\n', encoding="utf-8")
-    (root / "requirements-lock.txt").write_text("synthetic-pkg==2.0\n", encoding="utf-8")
-    negative = subprocess.run(
-        [sys.executable, str(runner), "simplecode.verification.lockfile_parity", "--root", str(root)],
-        capture_output=True, text=True, check=False,
-    )
-    assert negative.returncode == 1, negative.stdout + negative.stderr
-    assert "DIVERGE synthetic-pkg" in negative.stdout
 
 
-def test_debt_exception_red_team_corpus_01(tmp_path: Path) -> None:
-    runner = _simplecode_runner(tmp_path)
-    repo = Path(__file__).resolve().parent.parent
-    current = subprocess.run(
-        [sys.executable, str(runner), "simplecode.verification.red_team_corpus", "--root", str(repo), "--gate"],
-        capture_output=True, text=True, check=False,
-    )
-    assert current.returncode == 0, current.stdout + current.stderr
-    assert "generados hoy: 91" in current.stdout
-    assert "casos registrados: 0" in current.stdout
-
-    root = tmp_path / "subject"
-    (root / "tasks").mkdir(parents=True)
-    (root / "tasks" / "red_team_corpus.json").write_text(
-        '{"casos":{"synthetic/removed":{"first_seen":"2026-10-02"}}}\n', encoding="utf-8")
-    negative = subprocess.run(
-        [sys.executable, str(runner), "simplecode.verification.red_team_corpus", "--root", str(root), "--gate"],
-        capture_output=True, text=True, check=False,
-    )
-    assert negative.returncode == 1, negative.stdout + negative.stderr
-    assert "FAIL: 1 caso(s) adversarial(es)" in negative.stderr
 
 
 def _fake_observation_clock(monkeypatch: pytest.MonkeyPatch, *, advances: bool) -> list[float]:
@@ -1143,8 +1052,6 @@ def test_debt_no_cover_calibra_techo_slice_226(tmp_path):
     _assert_no_cover_entrypoint("calibra_techo_slice.py", tmp_path)
 
 
-def test_debt_no_cover_check_harvest_accepted_157(tmp_path):
-    _assert_no_cover_entrypoint("check_harvest_accepted.py", tmp_path)
 
 
 def test_debt_no_cover_control_racha_160(tmp_path):
@@ -1155,8 +1062,6 @@ def test_debt_no_cover_inventario_146(tmp_path):
     _assert_no_cover_entrypoint("inventario.py", tmp_path)
 
 
-def test_debt_no_cover_mutacion_alcanza_66(tmp_path):
-    _assert_no_cover_entrypoint("mutacion_alcanza.py", tmp_path)
 
 
 def test_debt_no_cover_nombra_victimas_271(tmp_path):
