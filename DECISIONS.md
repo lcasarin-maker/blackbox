@@ -434,3 +434,13 @@ Luis votó conservar `dgx-spark-fieldiag` (795 MB, el diagnóstico que el soport
 - **Retirado por ser proceso y no producto:** version-bump, ledger-schema, gate-effectiveness, zero-debt, ship-freeze, telemetry-disposition y telemetry-bound, hook-receipts (y sus recibos), backlog-verifier, genuine-task-closure, close-check-discrimina, clean-worktree, spec-check, no-perder-lineas, staged-mode-guard, staged-parity, sunset-audit y sus etiquetas, angry-path, adversarial-judge, la atestacion de cobertura y de pyright por SHA, y la auditoria H1 con su ledger. Telemetria historica del 2026-09-08 al 2026-10-18 (20 126 filas): `coverage-100` y `pre-push` sumaron 2 894 min de los hooks y `bb-cobertura-piso` 518 min; los bloqueos de `version-bump` (105) eran bumps pendientes, no defectos del producto.
 - **Descarta:** dejar las dos generaciones en paralelo (esconde huecos y mantiene viva la pila lenta); pinnear el Simplecode nuevo a un commit (el repo madre estaba en reestructuracion con 417 archivos sin commitear, sin un commit estable que fijar); conservar el proceso de fichas como compuerta (las fichas siguen como registro de trabajo, ya no las verifica un gate).
 - **Costo aceptado:** un cierre de ficha ya no se re-comprueba solo; el limite del telefono de `guardia_pii` (solo con `-` o `.`, `+52` o parentesis); y la CI de GitHub no corre (error de facturacion de la cuenta), asi que su resultado es `COULD_NOT_RUN`.
+
+## 2026-10-18 — Simplecode 11.1.0 vuelve a ser el motor único de integridad y PII
+
+La elección nativa del 2026-10-17 fue una transición, no un ideal permanente. Tras comparar
+ambos detectores sobre el mismo árbol, Simplecode incorporó el alcance completo de BB,
+los dominios reservados y una regla contextual para teléfonos con espacios. Se retiraron
+`tools/guardia_integridad.py`, `tools/guardia_pii.py` y sus tests locales; el paquete
+fijado en `.pre-commit-config.yaml` ejecuta staged y árbol completo. Los cinco contactos
+institucionales adicionales del fixture APT están en `tasks/pii_allow.txt`, como excepciones
+exactas y versionadas. Se conserva el resto de controles nativos de producto.

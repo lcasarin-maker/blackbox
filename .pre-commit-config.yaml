@@ -77,30 +77,36 @@ repos:
         pass_filenames: false
         always_run: true
       - id: integridad-archivos
-        name: texto sin NUL, BOM, CRLF, UTF-8 invalido ni mojibake (staged)
-        entry: python3 -m tools.guardia_integridad
-        language: system
-        stages:
-          - pre-commit
+        name: Simplecode text integrity (staged)
+        entry: python -m simplecode.guards.corruption_guard --staged
+        language: python
+        additional_dependencies:
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@5c05ae60366a29693048ed6155a976fba78446b5
+        stages: [pre-commit]
+        pass_filenames: false
+        always_run: true
       - id: pii-staged
-        name: sin RFC, CURP, correos ni telefonos de personas (staged)
-        entry: python3 -m tools.guardia_pii
-        language: system
-        stages:
-          - pre-commit
+        name: Simplecode PII in changed files
+        entry: python -m simplecode.verification.pii_scan --root . --files
+        language: python
+        additional_dependencies:
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@5c05ae60366a29693048ed6155a976fba78446b5
+        stages: [pre-commit]
       - id: integridad-arbol
-        name: integridad de todo el texto versionado
-        entry: python3 -m tools.guardia_integridad --arbol
-        language: system
-        stages:
-          - pre-push
+        name: Simplecode text integrity (tracked tree)
+        entry: python -m simplecode.guards.corruption_guard
+        language: python
+        additional_dependencies:
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@5c05ae60366a29693048ed6155a976fba78446b5
+        stages: [pre-push]
         pass_filenames: false
         always_run: true
       - id: pii-arbol
-        name: PII en todo el arbol versionado
-        entry: python3 -m tools.guardia_pii --arbol
-        language: system
-        stages:
-          - pre-push
+        name: Simplecode PII in tracked tree
+        entry: python -m simplecode.verification.pii_scan --root . --all-tracked
+        language: python
+        additional_dependencies:
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@5c05ae60366a29693048ed6155a976fba78446b5
+        stages: [pre-push]
         pass_filenames: false
         always_run: true
