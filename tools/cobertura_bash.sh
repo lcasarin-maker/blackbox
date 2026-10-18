@@ -27,8 +27,13 @@ BASH_XTRACEFD=$__cov_fd
 set -x
 EOF
 
-BB_COV_TRAZA="$traza" BASH_ENV="$tmp/bashenv.sh" "$@" >"$tmp/suite.log" 2>&1 || true
-rc_suite=$?
+rc_suite=0
+BB_COV_TRAZA="$traza" BASH_ENV="$tmp/bashenv.sh" "$@" >"$tmp/suite.log" 2>&1 || rc_suite=$?
+if [ "$rc_suite" -ne 0 ]; then
+  echo "[bb-cobertura] COULD_NOT_RUN: suite fallo (exit $rc_suite)" >&2
+  tail -n 40 "$tmp/suite.log" >&2
+  exit "$rc_suite"
+fi
 
 # lineas vistas: las que la traza atribuye al sujeto.
 #

@@ -102,3 +102,12 @@ def test_control_negativo_la_llamada_DIRECTA_se_seguia_viendo():
     ancla no la pierda de rebote."""
     sin_cubrir, _ = _sin_cubrir()
     assert 5 not in sin_cubrir and 6 not in sin_cubrir, sorted(sin_cubrir)
+
+
+def test_control_negativo_suite_fallida_no_pasa_como_cobertura():
+    resultado = subprocess.run(
+        [str(MEDIDOR), SUJETO_REL, "bash", "-c", "exit 7"],
+        capture_output=True, text=True, cwd=RAIZ, timeout=TIMEOUT_S,
+    )
+    assert resultado.returncode == 7
+    assert "COULD_NOT_RUN" in resultado.stderr
