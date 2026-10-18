@@ -29,3 +29,6 @@ Hallazgo que viaja con la ficha (corregido el 2026-10-17 tras verificarlo en el 
 ## Relacionadas
 
 `DEBT-ATOM-CORTES-OCT-2026-CAUSA-NO-DETERMINADA-01` (la causa), `DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01`, `DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01`.
+
+## Voto de Luis 2026-10-17: el criterio de Atlas se mantiene estricto
+El veredicto CORTE_ABRUPTO de blackbox NO basta como prueba de crash para esta ficha: el evento `92a1de3d` (diagnostico `sin_senal`, sin journal danado ni linea de panic) sigue fuera de la serie y el criterio devuelve rc=2 hasta que una caida traiga evidencia real. Descartado: aceptar CORTE_ABRUPTO como prueba (baja la vara de la serie de record; se deduce de que el journal calla sin cierre, no de una señal de la caida). Costo aceptado: la ficha no se puede cerrar con lo que hay hoy.

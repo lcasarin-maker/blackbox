@@ -421,3 +421,10 @@ Luis votó conservar `dgx-spark-fieldiag` (795 MB, el diagnóstico que el soport
 - **Por que:** el 2026-10-17 una tanda de 13 `soffice` mas las suites de Atlas y Twiner dejaron la memoria libre en 15 % y earlyoom mato workers del push de este repo (2 pushes caidos por `worker crashed`, sin test fallido).
 - **Descarta:** que cada proyecto se autorregule (cada push sigue expuesto a que earlyoom lo mate cuando otro proyecto llena la memoria).
 - **Costo aceptado:** congelar un trabajo ajeno puede alargarlo; se excluye lo que sostiene `index.lock` y se mide una tanda real antes de pasar a `actuar`.
+
+## 2026-10-17 — El tope de 42 GiB de `app.slice` no se toca hasta medir la recarga de cache (voto de Luis)
+- **Decision:** medir primero. Las muestras de `bb` pasan a registrar los contadores acumulados de recarga de cache y de recuperacion directa de `app.slice`; el tope se revisa el 2026-10-23 junto con `memory.high`.
+- **Por que:** medido en esta ATOM con 60 GiB libres en la maquina: `memory.max` 42 GiB, `memory.current` 38.7 GiB de los que 15.6 eran `inactive_file`; `memory.events max` 55 588 choques en 3 h; `pgscan_direct` 308 M contra `pgscan_kswapd` 2.9 M (99 % recuperacion directa); `workingset_refault_file` 47.8 M (unos 182 GB de cache releida). La presion de memoria de la slice se mantuvo en ~0, asi que el efecto visible es disco, no memoria.
+- **Descarta:** subir `memory.max` a 56 GiB ya (el 2026-10-16 un cambio de topes sin medicion empeoro un atasco); quitar el tope duro (contradice el presupuesto de slices del 2026-09-27 y pierde el techo que contiene a las suites).
+- **Costo aceptado:** unos dias mas con el tope actual y la posible lentitud asociada.
+- **Hecho aparte, sin voto:** el portero medía la holgura sobre `memory.current` con la cache inactiva incluida (veia 3.3 GiB donde habia 19) y congelaba suites sin necesidad; ahora usa la memoria de trabajo.
