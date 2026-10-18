@@ -5,8 +5,8 @@ hay llamadas activas a su lanzador. La decision, con lo retirado y lo descartado
 
 | Antes (kit) | Ahora |
 |---|---|
-| corruption-guard, truncation-guard | `tools/guardia_integridad.py` (+ `tests/test_guardia_integridad.py`) |
-| pii-scan | `tools/guardia_pii.py` (+ `tests/test_guardia_pii.py`) |
+| corruption-guard, truncation-guard | Simplecode 11.1.0, `corruption_guard` staged y árbol completo |
+| pii-scan | Simplecode 11.1.0, `pii_scan --files` staged y `--all-tracked` pre-push; roles exactos en `tasks/pii_allow.txt` |
 | ruff, gitleaks (staged) | igual, nativos |
 | pyright por atestacion de SHA | `pyright` directo en pre-push |
 | coverage-100 por atestacion | `pytest` del producto en pre-push; `bb-cobertura-piso` para `bin/bb` |
@@ -14,3 +14,5 @@ hay llamadas activas a su lanzador. La decision, con lo retirado y lo descartado
 | version-bump, ledger-schema, zero-debt, ship-freeze, backlog-verifier, hook-receipts, sunset-audit, H1 y demas procesos | retirados (ver DECISIONS.md) |
 
 `COULD_NOT_RUN` declarado: la CI de GitHub no arranca en la cuenta por un error de facturacion; no cuenta como verde.
+
+La migración del 2026-10-18 retiró las dos copias nativas y sus tests; las pruebas de los motores viven en Simplecode. El pin de commit está en `.pre-commit-config.yaml`.
