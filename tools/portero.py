@@ -49,6 +49,7 @@ final); la deteccion tiene la latencia del intervalo; congelar un `git push` hac
 from __future__ import annotations
 
 import argparse
+import fcntl
 import importlib
 import json
 import os
@@ -416,6 +417,12 @@ def decide(arboles: list[Arbol] | None, estado: Estado, clases: dict[str, Clase]
 
 DATOS = Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox"))
 LOG = DATOS / "portero.jsonl"
+# Tope por generacion del log; `_registra` guarda la viva y UNA anterior (`.1`), asi que en disco son <= 2x esto.
+# Medido 2026-10-17 (DEBT-PORTERO-LOG-SIN-ROTACION-CON-OBSERVAR-DE-LIBREOFFICE-01): la clase libreoffice en observar
+# escribe 3.4 kB/s mientras corre un lote (una generacion = ~41 min de lote continuo, dos = ~82 min); fuera de lotes
+# el log crecio 2.53 MB en 5.6 dias (12 al 18-oct), ~450 kB/dia: una generacion = ~18 dias. El unico lector en codigo,
+# `bb portero estado`, muestra los ultimos 10 eventos y lee tambien `.1`.
+LOG_TOPE_BYTES = 8 * 1024 * 1024
 COLA = DATOS / "portero_cola"
 CGROUP_RAIZ = Path("/sys/fs/cgroup")
 NOMBRE_UNIDAD = re.compile(r"^bb-portero-([a-z]+)-(\d+)\.scope$")
@@ -809,12 +816,36 @@ def observar_pids(raiz: int, proc: Path = Path("/proc")) -> list[int]:
     return t.descendientes(raiz) if t else []
 
 
+def _anterior(log: Path) -> Path:
+    """La unica generacion vieja que se guarda del log (`portero.jsonl.1`)."""
+    return log.with_name(log.name + ".1")
+
+
 def _registra(evento: dict[str, Any], log: Path) -> None:
+    """Anexa una fila; nunca lanza hacia el demonio. Pasado `LOG_TOPE_BYTES`, el log vivo pasa a `.1` (pisando la
+    anterior) con os.replace: un lector ve el archivo viejo entero o el nuevo, y una caida no deja sin log vivo.
+    El flock serializa a los escritores (demonio y `bb portero run`): la fila entra entera y solo quien sostiene el
+    candado sobre el archivo que sigue en `log` lo rota, asi dos rotaciones a la vez no pisan una generacion."""
     evento = {"ts": datetime.now(timezone.utc).isoformat(), **evento}
     try:
         log.parent.mkdir(parents=True, exist_ok=True)
-        with log.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(evento, ensure_ascii=False) + "\n")
+        for intento in range(3):  # acotado: el demonio no se queda girando si alguien rota sin parar
+            with log.open("a", encoding="utf-8") as fh:
+                fcntl.flock(fh, fcntl.LOCK_EX)
+                try:
+                    vivo = os.stat(log).st_ino == os.fstat(fh.fileno()).st_ino
+                except FileNotFoundError:
+                    vivo = False
+                if not vivo and intento < 2:
+                    continue  # otro escritor lo roto entre el open y el candado: anexar al archivo nuevo
+                fh.write(json.dumps(evento, ensure_ascii=False) + "\n")
+                fh.flush()
+                if vivo and os.fstat(fh.fileno()).st_size > LOG_TOPE_BYTES:
+                    try:
+                        os.replace(log, _anterior(log))
+                    except OSError as e:
+                        print(f"[portero] no se pudo rotar {log}: {e}", file=sys.stderr)
+                return
     except OSError as e:
         print(f"[portero] no se pudo escribir {log}: {e}", file=sys.stderr)
 
@@ -1071,7 +1102,7 @@ def cmd_estado(_args: argparse.Namespace) -> int:
     arboles = observar()
     acciones = decide(arboles, estado)
     ultimos = []
-    texto = _lee(LOG)
+    texto = (_lee(_anterior(LOG)) or "") + (_lee(LOG) or "")  # justo tras rotar, el vivo tiene < 10 filas
     if texto:
         ultimos = [json.loads(linea) for linea in texto.splitlines()[-10:] if linea.strip().startswith("{")]
     print(json.dumps(

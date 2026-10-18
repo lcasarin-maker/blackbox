@@ -1,0 +1,17 @@
+command: python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_portero_observar_costo.py::test_el_log_del_portero_tiene_cota_de_tamano
+subject: tools/portero.py de HEAD 82aaa220 (sin rotacion), sha256 b55e62b1f661ef8825a8bd270bd61487199b5c1c15eb87ff74333288b3dd1082
+exit: 1
+```text
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________ test_el_log_del_portero_tiene_cota_de_tamano _________________
+tests/test_portero_observar_costo.py:64: in test_el_log_del_portero_tiene_cota_de_tamano
+    assert log.stat().st_size <= 16 * 1024 * 1024
+E   AssertionError: assert 26240000 <= ((16 * 1024) * 1024)
+E    +  where 26240000 = os.stat_result(st_mode=33204, st_ino=174851697, st_dev=66306, st_nlink=1, st_uid=1000, st_gid=1000, st_size=26240000, st_atime=1792291014, st_mtime=1792291015, st_ctime=1792291015).st_size
+E    +    where os.stat_result(st_mode=33204, st_ino=174851697, st_dev=66306, st_nlink=1, st_uid=1000, st_gid=1000, st_size=26240000, st_atime=1792291014, st_mtime=1792291015, st_ctime=1792291015) = stat()
+E    +      where stat = PosixPath('/tmp/pytest-of-lcasarin/pytest-399/test_el_log_del_portero_tiene_0/portero.jsonl').stat
+=========================== short test summary info ============================
+FAILED tests/test_portero_observar_costo.py::test_el_log_del_portero_tiene_cota_de_tamano
+1 failed in 1.20s
+```
