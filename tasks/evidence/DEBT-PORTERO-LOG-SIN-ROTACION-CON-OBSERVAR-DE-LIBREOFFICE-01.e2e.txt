@@ -1,0 +1,92 @@
+## Rotacion de portero.jsonl: suites, tamano real tras 80 000 filas y controles negativos por mutacion
+
+### Suites del portero sin cambios, mas la nueva y los gates de datos privados e inventario
+
+command: python3 -m pytest -q -p no:cacheprovider tests/test_portero.py tests/test_portero_efectos.py tests/test_portero_caracterizacion_suite.py tests/test_portero_clase_trabajo_ajeno.py tests/test_portero_holgura_trabajo.py tests/test_portero_observar_costo.py tests/test_portero_log_rotacion.py tests/test_sin_datos_privados.py tests/test_inventario.py --deselect tests/test_portero_efectos.py::test_real_mover_topar_en_caliente_congelar_y_control_negativo
+exit: 0
+```text
+160 passed in 8.76s
+```
+could_not_run: 1 -- tests/test_portero_efectos.py::test_real_mover_topar_en_caliente_congelar_y_control_negativo
+deseleccionado a proposito (crea scopes reales de systemd en una maquina compartida). La suite completa no se
+corrio aqui (memoria justa); la corre la atestacion del commit.
+
+### Tamano real tras las 80 000 filas del close_check
+
+command: python3 -c "... 80 000 llamadas a tools.portero._registra con la fila del close_check en un directorio temporal; imprime (archivo, bytes)"
+```text
+[('portero.jsonl', 1073216), ('portero.jsonl.1', 8388928)] tope 8388608
+```
+Sin rotacion el mismo lote deja UN archivo de 26 240 000 bytes (fail.txt). Con rotacion: vivo 1 073 216 + `.1`
+8 388 928 = 9 462 144 bytes en disco, y nunca un tercer archivo.
+
+### Controles negativos por mutacion
+
+command: bash mut.sh -- M0 pone tools/portero.py de HEAD 82aaa220; M1..M6 mutan UNA linea del arreglo con sed y
+restauran con cp; al final `cmp` contra la copia buena. Cada corrida: python3 -m pytest -q -p no:cacheprovider
+--runxfail tests/test_portero_log_rotacion.py tests/test_portero_observar_costo.py
+```text
+== M0 tools/portero.py de HEAD (sin el arreglo)
+FAILED tests/test_portero_log_rotacion.py::test_rota_a_una_sola_generacion_y_lo_que_cae_es_lo_mas_viejo
+FAILED tests/test_portero_log_rotacion.py::test_control_negativo_bajo_el_tope_no_rota_y_no_pierde_nada
+FAILED tests/test_portero_log_rotacion.py::test_si_la_rotacion_falla_no_lanza_y_la_fila_queda_escrita
+FAILED tests/test_portero_log_rotacion.py::test_dos_escritores_a_la_vez_no_cortan_filas_ni_pierden_una_generacion
+FAILED tests/test_portero_log_rotacion.py::test_estado_muestra_los_ultimos_eventos_aunque_el_log_vivo_acabe_de_rotar
+FAILED tests/test_portero_log_rotacion.py::test_si_otro_escritor_rota_mientras_se_espera_el_candado_la_fila_va_al_log_nuevo
+FAILED tests/test_portero_log_rotacion.py::test_otro_proceso_espera_el_candado_y_anexa_al_log_que_quedo_tras_rotar
+FAILED tests/test_portero_observar_costo.py::test_el_log_del_portero_tiene_cota_de_tamano
+8 failed, 2 passed in 1.43s
+== M1 rotacion desactivada
+lineas mutadas: 1
+FAILED tests/test_portero_log_rotacion.py::test_rota_a_una_sola_generacion_y_lo_que_cae_es_lo_mas_viejo
+FAILED tests/test_portero_log_rotacion.py::test_si_la_rotacion_falla_no_lanza_y_la_fila_queda_escrita
+FAILED tests/test_portero_log_rotacion.py::test_dos_escritores_a_la_vez_no_cortan_filas_ni_pierden_una_generacion
+FAILED tests/test_portero_observar_costo.py::test_el_log_del_portero_tiene_cota_de_tamano
+4 failed, 6 passed in 3.35s
+== M2 la rotacion borra el vivo en vez de reemplazar
+lineas mutadas: 1
+FAILED tests/test_portero_log_rotacion.py::test_rota_a_una_sola_generacion_y_lo_que_cae_es_lo_mas_viejo
+FAILED tests/test_portero_log_rotacion.py::test_dos_escritores_a_la_vez_no_cortan_filas_ni_pierden_una_generacion
+2 failed, 8 passed in 3.39s
+== M3 sin chequeo de inodo
+lineas mutadas: 1
+FAILED tests/test_portero_log_rotacion.py::test_si_otro_escritor_rota_mientras_se_espera_el_candado_la_fila_va_al_log_nuevo
+FAILED tests/test_portero_log_rotacion.py::test_otro_proceso_espera_el_candado_y_anexa_al_log_que_quedo_tras_rotar
+2 failed, 8 passed in 3.20s
+== M4.1 sin flock (3 corridas)
+lineas mutadas: 1
+FAILED tests/test_portero_log_rotacion.py::test_si_otro_escritor_rota_mientras_se_espera_el_candado_la_fila_va_al_log_nuevo
+FAILED tests/test_portero_log_rotacion.py::test_otro_proceso_espera_el_candado_y_anexa_al_log_que_quedo_tras_rotar
+2 failed, 8 passed in 2.05s
+== M4.2 sin flock (3 corridas)
+lineas mutadas: 1
+FAILED tests/test_portero_log_rotacion.py::test_si_otro_escritor_rota_mientras_se_espera_el_candado_la_fila_va_al_log_nuevo
+FAILED tests/test_portero_log_rotacion.py::test_otro_proceso_espera_el_candado_y_anexa_al_log_que_quedo_tras_rotar
+2 failed, 8 passed in 2.02s
+== M4.3 sin flock (3 corridas)
+lineas mutadas: 1
+FAILED tests/test_portero_log_rotacion.py::test_si_otro_escritor_rota_mientras_se_espera_el_candado_la_fila_va_al_log_nuevo
+FAILED tests/test_portero_log_rotacion.py::test_otro_proceso_espera_el_candado_y_anexa_al_log_que_quedo_tras_rotar
+2 failed, 8 passed in 1.99s
+== M5 estado no lee .1
+lineas mutadas: 1
+FAILED tests/test_portero_log_rotacion.py::test_estado_muestra_los_ultimos_eventos_aunque_el_log_vivo_acabe_de_rotar
+1 failed, 9 passed in 3.84s
+== M6 la rotacion fallida lanza
+lineas mutadas: 1
+FAILED tests/test_portero_log_rotacion.py::test_si_la_rotacion_falla_no_lanza_y_la_fila_queda_escrita
+1 failed, 9 passed in 3.46s
+== revertido
+identico
+10 passed in 3.33s
+```
+
+Lectura:
+- M1 (rotacion apagada) pone rojo el close_check: el instrumento puede decir "sin cota".
+- M2 (borrar el vivo en vez de os.replace) pone rojo el test de generacion unica y el de dos escritores.
+- M3 (sin chequeo de inodo) pone rojo la carrera determinista: la fila cae en el archivo rotado y `.1` se pisa.
+- M5 (estado sin `.1`) y M6 (la rotacion fallida lanza hacia el demonio) rojos en su test.
+- M4 (sin flock) pone rojos los dos tests de carrera; el de procesos es una carrera REAL entre dos procesos: el test
+  sostiene el flock, un `_registra` en otro interprete debe quedar bloqueado (TimeoutExpired a 1.5 s) y, tras la
+  rotacion, anexar al log nuevo. Sin flock el hijo escribe y sale antes. El test de 4 hilos pasa sin candado (las
+  filas son un solo write() en modo append); por eso la exclusion la prueba el test de procesos, no el de hilos.
