@@ -3,7 +3,11 @@ id: DEBT-IO-NO-DELEGADO-AL-USUARIO-LAS-SUITES-SATURAN-EL-DISCO-01
 kind: task
 domain: MEMORY
 title: "Las suites saturan el disco y el usuario no puede acotarlo: io no esta delegado"
-status: open
+status: done
+closed_at: 2026-10-18
+closure_type: fixed
+reason: "io delegado al arbol del usuario (drop-in 98-blackbox-io.conf, aplicado en caliente). LIMITE: delegar no acota nada; acotar el disco de las suites es DEBT-PORTERO-IO-MAX-EN-CLASE-SUITE-01."
+evidence: {"pass": "tasks/evidence/DEBT-IO-NO-DELEGADO-AL-USUARIO-LAS-SUITES-SATURAN-EL-DISCO-01/pass.txt", "fail": "tasks/evidence/DEBT-IO-NO-DELEGADO-AL-USUARIO-LAS-SUITES-SATURAN-EL-DISCO-01/fail.txt", "e2e": "tasks/evidence/DEBT-IO-NO-DELEGADO-AL-USUARIO-LAS-SUITES-SATURAN-EL-DISCO-01/e2e.txt"}
 severity: P2
 origin: detected
 detector: {"rule": "tests/test_io_delegado_al_usuario.py::test_io_esta_delegado_al_manager_del_usuario", "confidence": 1.0}
