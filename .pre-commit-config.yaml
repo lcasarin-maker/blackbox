@@ -4,6 +4,7 @@ repos:
     rev: v0.15.22
     hooks:
       - id: ruff
+        args: ["--extend-select", "S102,S301,S602,S608,S307,S506"]
         stages:
           - pre-commit
   - repo: https://github.com/gitleaks/gitleaks
@@ -19,7 +20,7 @@ repos:
     hooks:
       - id: ruff-full
         name: Ruff whole tree
-        entry: ruff check .
+        entry: "ruff check . --extend-select S102,S301,S602,S608,S307,S506"
         language: system
         stages:
           - pre-push
@@ -81,7 +82,7 @@ repos:
         entry: python -m simplecode.guards.corruption_guard --staged
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@5c05ae60366a29693048ed6155a976fba78446b5
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@586506a6465007975ed827a04d2bab23fa0905e9
         stages: [pre-commit]
         pass_filenames: false
         always_run: true
@@ -90,14 +91,14 @@ repos:
         entry: python -m simplecode.verification.pii_scan --root . --files
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@5c05ae60366a29693048ed6155a976fba78446b5
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@586506a6465007975ed827a04d2bab23fa0905e9
         stages: [pre-commit]
       - id: integridad-arbol
         name: Simplecode text integrity (tracked tree)
         entry: python -m simplecode.guards.corruption_guard
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@5c05ae60366a29693048ed6155a976fba78446b5
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@586506a6465007975ed827a04d2bab23fa0905e9
         stages: [pre-push]
         pass_filenames: false
         always_run: true
@@ -106,7 +107,7 @@ repos:
         entry: python -m simplecode.verification.pii_scan --root . --all-tracked
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@5c05ae60366a29693048ed6155a976fba78446b5
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@586506a6465007975ed827a04d2bab23fa0905e9
         stages: [pre-push]
         pass_filenames: false
         always_run: true
