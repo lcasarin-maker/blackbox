@@ -57,3 +57,29 @@ Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina e
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Disparador: dos datos que solo existen fuera de esta maquina. (1) La ruta de consola externa: un segundo equipo desde el que Luis entre por SSH o consola serie cuando la ATOM no tenga escritorio (el NAS de la LAN ya observa por ping, pero no es consola). (2) El medio de recuperacion OEM de Gigabyte con su sha256 publicado. Paso exacto: Luis anota el equipo de consola y descarga la imagen OEM con su hash; con eso `_recovery_apt` deja de exigir lo que falta.
+
+## Medido 2026-10-20 (boleta de Luis: cerrar void_wontfix solo con AUSENCIA MEDIDA): queda ABIERTA
+
+Regla: `void_wontfix` solo si la ausencia del sujeto se mide en este equipo con control positivo. Solo lectura (sin sudo, sin cargas, sin reiniciar nada). Resultado: el sujeto EXISTE o no es observable desde la maquina, asi que no se cierra.
+
+Sujeto: APT en el host que arranca el motor y la ruta de recovery. APT y su historial existen y estuvieron activos hoy:
+
+```
+$ dpkg -l apt | tail -1 | awk '{print $2, $3}'
+apt 2.8.3
+$ grep -h '^Start-Date' /var/log/apt/history.log | tail -3
+Start-Date: 2026-10-19  07:56:08
+Start-Date: 2026-10-20  18:13:13
+Start-Date: 2026-10-20  21:42:15
+$ ls /etc/apt/sources.list.d/ | head -4      (incluye dgx.sources, spark.sources, ubuntu.sources)
+ai-workbench-desktop.sources
+ai-workbench-desktop.sources.save
+antigravity.list
+antigravity.list.save
+$ docker inspect nemotron-server --format '{{.HostConfig.RestartPolicy.Name}}'
+no
+```
+
+Ausente (medido): la politica `--restart always` del relato; aqui el contenedor del motor tiene `RestartPolicy=no`. Es una diferencia de configuracion, no la ausencia del sujeto: el hilo trata de un freeze tras actualizacion APT en un GB10, y este es un GB10 con APT activo (tres corridas entre el 19 y el 20-oct) y con las fuentes DGX/Spark.
+
+Veredicto: ABIERTA. El sujeto (APT + DGX OS en GB10 + necesidad de runbook de recovery) existe; ademas la ficha ya declara su disparador (ruta de consola externa y sha256 del medio OEM, ver "Avance 2026-10-14"), que sigue sin llegar.

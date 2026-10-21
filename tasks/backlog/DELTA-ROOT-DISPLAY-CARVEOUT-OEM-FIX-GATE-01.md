@@ -87,3 +87,34 @@ $ journalctl -k --no-pager -o short-iso | head -1   (el journal del kernel reten
 - No existe: Sway (la sesion es X11) ni la ruta `scanoutcarveout` en el journal retenido; el driver es 580.178.04, posterior al 580.159.03 del hilo.
 - Existe: el OEM exacto que fija el verificador, una pantalla conectada, y UN `NV_ERR_NO_MEMORY` del driver el 2026-10-13 a las 14:43 (en `_memdescAllocInternal`, sin nombrar `scanoutcarveout`). No se puede decir con esta medicion si ese fallo de memoria fue de display o de otra asignacion.
 - Falta para cerrar o declarar: atribuir el `NV_ERR_NO_MEMORY` del 13-oct (que proceso pedia memoria a esa hora) y que Luis decida si el sujeto es "Sway + scanoutcarveout" (entonces `void_wontfix`) o "asignaciones del driver que fallan con UMA libre en este OEM" (entonces queda abierta).
+
+## Medido 2026-10-20 (boleta de Luis: cerrar void_wontfix solo con AUSENCIA MEDIDA): queda ABIERTA
+
+Regla: `void_wontfix` solo si la ausencia del sujeto se mide en este equipo con control positivo. Solo lectura (sin sudo, sin cargas, sin reiniciar nada). Resultado: el sujeto EXISTE o no es observable desde la maquina, asi que no se cierra.
+
+Se repitio la medicion del 2026-10-14. Ausente: Sway y la ruta `scanoutcarveout`. Presente: el OEM exacto que fija el verificador, una pantalla conectada y `NV_ERR_NO_MEMORY` del driver, ahora 4 en el journal retenido:
+
+```
+$ cat /sys/class/dmi/id/sys_vendor /sys/class/dmi/id/product_name
+GIGABYTE
+AI TOP ATOM
+$ command -v sway            -> rc=1 (sin salida)
+$ command -v Xorg gnome-shell      # control positivo del mismo command -v
+/usr/bin/Xorg
+/usr/bin/gnome-shell
+$ for c in /sys/class/drm/card*-*/status; do echo $c $(cat $c); done
+/sys/class/drm/card0-Unknown-1/status connected
+$ journalctl -k --no-pager -o short-iso | grep -c -i scanoutcarveout
+0           (rc=1)
+$ journalctl -k --no-pager -o short-iso | grep -c -E 'NV_ERR_NO_MEMORY'
+4
+$ journalctl -k --no-pager -o short-iso | grep -E 'NV_ERR_NO_MEMORY' | cut -c1-90
+2026-10-19T13:49:04-06:00 aitopatom-41f1 kernel: NVRM: nvCheckOkFailedNoLog: Check failed:
+2026-10-20T16:49:26-06:00 aitopatom-41f1 kernel: NVRM: nvCheckOkFailedNoLog: Check failed:
+2026-10-20T16:49:26-06:00 aitopatom-41f1 kernel: NVRM: nvCheckOkFailedNoLog: Check failed:
+2026-10-20T21:55:31-06:00 aitopatom-41f1 kernel: NVRM: nvCheckOkFailedNoLog: Check failed:
+$ journalctl -k --no-pager -o short-iso | head -1 | cut -c1-60     # el journal retenido empieza aqui
+2026-10-19T08:12:28-06:00 aitopatom-41f1 kernel: Booting Lin
+```
+
+Veredicto: ABIERTA. Hay cuatro `NV_ERR_NO_MEMORY` del driver en el journal retenido (desde el 2026-10-19; el del 2026-10-13 ya rotó) en el OEM exacto del sujeto. La ausencia de Sway y de `scanoutcarveout` esta medida, pero el sujeto posible de la ficha es "asignaciones del driver que fallan en este OEM", y eso existe y se repite. Sigue pendiente la atribucion (que proceso pedia memoria) y la decision de Luis sobre cual es el sujeto.

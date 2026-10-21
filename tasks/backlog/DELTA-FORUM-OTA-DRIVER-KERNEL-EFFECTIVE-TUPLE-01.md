@@ -51,3 +51,36 @@ Conservar comandos, salida literal y could_not_run incluso cero; una ejecución 
 ## Estado (2026-10-11, /0 + /vote)
 
 Bloqueada por criterio sin implementar: el `close_check` de esta ficha termina en `xfailed` y por eso sale con codigo 0 sin que el criterio real exista. Un `xfail` no es una verificacion y cerrar con el no es cierre. Cerrarla exige implementar la prueba real contra el sujeto (vLLM, NCCL, CX7 u otro hardware) con su control negativo. Decision del dueno el 2026-10-11: dejarla abierta y declarada, no cerrarla como `void_wontfix`.
+
+## Medido 2026-10-20 (boleta de Luis: cerrar void_wontfix solo con AUSENCIA MEDIDA): queda ABIERTA
+
+Regla: `void_wontfix` solo si la ausencia del sujeto se mide en este equipo con control positivo. Solo lectura (sin sudo, sin cargas, sin reiniciar nada). Resultado: el sujeto EXISTE o no es observable desde la maquina, asi que no se cierra.
+
+Sujeto: el tuple efectivo OTA/kernel/driver/DGX OS del equipo. Es ESTE equipo:
+
+```
+$ uname -r
+6.17.0-1032-nvidia
+$ nvidia-smi --query-gpu=driver_version --format=csv,noheader
+580.178.04
+$ cat /etc/dgx-release | head -8      (el numero de serie se omite aqui a proposito)
+DGX_NAME="DGX Spark"
+DGX_PRETTY_NAME="NVIDIA DGX Spark"
+DGX_SWBUILD_DATE="2025-10-04-06-28-28"
+DGX_SWBUILD_VERSION="7.2.3"
+DGX_COMMIT_ID="03dc741"
+DGX_PLATFORM="AI TOP ATOM"
+$ dpkg -l | grep -E '^ii +(dgx-|nvidia-driver|linux-image-6)' | awk '{print $2, $3}' | head -8
+dgx-dashboard 0.39.3-4
+dgx-oobe 0.26.3
+dgx-oobe-desktop 0.5.6-144
+dgx-release 7.6.0
+dgx-repo 25.10-2
+dgx-spark-fieldiag 1.0.9-1
+dgx-spark-mlnx-hotplug 26.01-1
+linux-image-6.11.0-1016-nvidia 6.11.0-1016.16
+```
+
+El control positivo es la propia salida: los comandos encuentran el tuple. `SWBUILD 7.2.3` frente a `dgx-release 7.6.0`, y un `linux-image-6.11` instalado junto al 6.17 en uso, son la desincronizacion entre componentes que la ficha pide distinguir.
+
+Veredicto: ABIERTA. El sujeto existe en su forma exacta; no hay ausencia que medir.

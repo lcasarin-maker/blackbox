@@ -60,3 +60,32 @@ Hilo 375158: ducto de aire acondicionado sobre dos unidades, con relato sin base
 Version para un solo nodo Gigabyte AI TOP ATOM: Reducir a registrar temperatura ambiente y punto de rocio junto a la residencia termica del boot si Luis prueba enfriamiento externo; sin canario ni protocolo propio.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Medido 2026-10-20 (boleta de Luis: cerrar void_wontfix solo con AUSENCIA MEDIDA): queda ABIERTA
+
+Regla: `void_wontfix` solo si la ausencia del sujeto se mide en este equipo con control positivo. Solo lectura (sin sudo, sin cargas, sin reiniciar nada). Resultado: el sujeto EXISTE o no es observable desde la maquina, asi que no se cierra.
+
+Sujeto: un montaje fisico de refrigeracion subambiente (ducto de aire acondicionado) y su efecto termico/UMA. La presencia o ausencia de ese ducto no se puede medir desde el sistema: ningun sensor lo ve. Lo que SI se midio:
+
+```
+$ for z in /sys/class/thermal/thermal_zone*; do echo $(cat $z/type) $(cat $z/temp); done
+acpitz 84000
+acpitz 69900
+acpitz 79500
+acpitz 70600
+acpitz 84000
+acpitz 63100
+acpitz 70000
+$ nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader
+60
+$ ls /sys/class/hwmon/*/temp*_input | head -3          # control positivo del patron de sensores
+/sys/class/hwmon/hwmon0/temp1_input
+/sys/class/hwmon/hwmon0/temp2_input
+/sys/class/hwmon/hwmon0/temp3_input
+$ ls /sys/class/hwmon/*/humidity*
+ls: no se puede acceder a '/sys/class/hwmon/*/humidity*': No existe el archivo o el directorio
+$ ls /sys/bus/iio/devices
+ls: no se puede acceder a '/sys/bus/iio/devices': No existe el archivo o el directorio
+```
+
+Veredicto: ABIERTA / NO PUDE medir la ausencia del sujeto. El problema termico existe en este equipo (zonas ACPI a 84 C ahora; 95-98 C en los cortes segun la ficha); solo se midio la ausencia de un sensor de humedad/punto de rocio, que es ausencia de instrumento y no del sujeto. Si Luis declara que no hay ni habra enfriamiento externo, esa es una decision suya, no una medicion.
