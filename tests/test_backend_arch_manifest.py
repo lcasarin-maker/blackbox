@@ -354,7 +354,7 @@ def test_capture_pipes_the_probe_to_a_no_gpu_no_network_container_and_records_wh
     assert seen[:2] == ["run", "--rm"] and "--network" in seen and seen[seen.index("--network") + 1] == "none"
     assert seen[seen.index("--name") + 1] == "bb-test" and seen[-2:] == [m.IMAGE, "-"]
     assert "NVIDIA_VISIBLE_DEVICES=void" in seen
-    assert record["stdout"] == '{"stub": true}\n�' and record["stderr"] == "warn\n"  # undecodable byte replaced
+    assert record["stdout"] == '{"stub": true}\n\ufffd' and record["stderr"] == "warn\n"  # undecodable byte replaced
 
 
 def _evidence_copy(tmp_path: Path) -> Path:
