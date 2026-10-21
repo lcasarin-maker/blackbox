@@ -64,3 +64,34 @@ El caso del foro es llama.cpp con KV q4_0/f16; aqui sirve vLLM, pero la regla (n
 Version para un solo nodo Gigabyte AI TOP ATOM: Capturar /metrics crudo de nemotron-server (puerto 8000) y etiquetar por separado bytes de KV de vLLM, cgroup (dmem), MemAvailable y RSS; sin comparacion f16/cuantizada de llama.cpp.
 
 Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6.17.0-1032-nvidia, driver 580.178.04, un contenedor vLLM (`nemotron-local`), sin InfiniBand/CX7 en pareja, sin Ray ni llama.cpp RPC. Clasificacion por lectura, sin control negativo: es una propuesta, no una verificacion.
+
+## Medido 2026-10-20 (boleta de Luis: cerrar void_wontfix solo con AUSENCIA MEDIDA): queda ABIERTA
+
+Regla: `void_wontfix` solo si la ausencia del sujeto se mide en este equipo con control positivo. Solo lectura (sin sudo, sin cargas, sin reiniciar nada). Resultado: el sujeto EXISTE o no es observable desde la maquina, asi que no se cierra.
+
+Sujeto de la ficha: contadores de KV separados del RSS/cgroup/MemAvailable (en el motor local, via `/metrics` de vLLM). Existe aqui:
+
+```
+$ curl -s -m 10 http://127.0.0.1:8000/metrics | grep -E '^# TYPE vllm:(kv_cache|gpu_cache|cache_config)' | head
+# TYPE vllm:kv_cache_usage_perc gauge
+# TYPE vllm:cache_config_info gauge
+rc=0
+$ curl -s -m 10 http://127.0.0.1:8000/metrics | grep -E '^vllm:cache_config_info' | cut -c1-260
+vllm:cache_config_info{_block_size_resolved="True",block_size="4176",cache_dtype="fp8",calculate_kv_scales="False",enable_prefix_caching="True",engine="0",gpu_memory_utilization="0.3",is_attention_free="False",kv_cache_dtype_skip_layers="[]",kv_cache_max_concurrency="44.3125",kv_cache_memory_bytes="None",kv_cache_size_tokens="1452032",...
+$ curl -s -m 10 http://127.0.0.1:8000/metrics | grep -c '^vllm:'
+388
+$ docker inspect nemotron-server --format '{{join .Config.Cmd " "}}' | grep -oE 'kv-cache-dtype [a-z0-9_]+'
+kv-cache-dtype fp8
+```
+
+Lo que SI esta ausente (llama.cpp del hilo 364736), con control positivo de que el instrumento dice "presente":
+
+```
+$ which llama-server llama-cli           -> rc=1 (sin salida)
+$ dpkg -l | grep -i llama                -> rc=1 (sin salida)
+$ ps -eo pid,comm | grep -E 'llama|vllm' -> 3563182 vllm       (control positivo: el mismo grep encuentra vllm)
+$ dpkg -l | grep -i docker | head -3     -> ii docker-buildx-plugin / docker-ce / docker-ce-cli   (control positivo del dpkg|grep)
+$ which docker python3                   -> /usr/bin/docker  /opt/miniforge3/bin/python3          (control positivo del which)
+```
+
+Veredicto: ABIERTA. La mitad llama.cpp esta ausente, pero la ficha pide una regla de procedencia (no mezclar RSS, cgroup, MemAvailable y bytes de KV) que aplica a vLLM, y el motor local expone `kv_cache_usage_perc`, `cache_config_info` y KV en fp8 (cuantizado). El sujeto existe; cerrar como `void_wontfix` seria suprimir. Siguiente paso: capturar `/metrics` crudo y etiquetar los contadores por separado, segun la "Version para un solo nodo".
