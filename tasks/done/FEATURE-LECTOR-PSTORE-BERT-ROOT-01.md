@@ -3,7 +3,13 @@ id: FEATURE-LECTOR-PSTORE-BERT-ROOT-01
 kind: task
 domain: HARDWARE
 title: "Copiar pstore y registros BERT a un directorio legible por el usuario en cada arranque"
-status: open
+status: done
+closed_at: 2026-10-20
+closure_type: fixed
+closure_reason: "El arranque forense corre en cada arranque: arranque.jsonl tiene filas de 3 boot_id distintos del 934fa20f (16, 17 y 19-oct) y las ultimas las escribio bb-arranque-forense.service (Result=success). El criterio estricto da rc 1 sobre el estado del 14-oct y rc 0 sobre hoy."
+evidence:
+  fail: tasks/evidence/FEATURE-LECTOR-PSTORE-BERT-ROOT-01/fail.txt
+  pass: tasks/evidence/FEATURE-LECTOR-PSTORE-BERT-ROOT-01/pass.txt
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -34,3 +40,6 @@ Lo primero que pide el personal de NVIDIA en los foros es `sudo dmidecode -t 45 
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Disparador: el proximo arranque (reinicio o corte). Medido hoy: `boot_id` 934fa20f-d0ee-4d90-af73-d42abee3e09e y todas las filas de `arranque.jsonl` son de ese arranque. Paso exacto tras el arranque: `cut -c1-80 /var/lib/blackbox/pstore/arranque.jsonl` debe mostrar una fila con otro `boot_id` escrita por `bb-arranque-forense.service`.
+
+## Cierre 2026-10-20 (/cerrar-deuda)
+Disparador cumplido: el criterio de la ultima nota (fila NUEVA con boot_id distinto de 934fa20f) se cumple con tres arranques. Evidencia y control negativo en `tasks/evidence/FEATURE-LECTOR-PSTORE-BERT-ROOT-01/{fail,pass}.txt`. Limite: el `close_check` original (`grep -q .`) ya pasaba desde el 14-oct y no discrimina; la prueba del cierre es el criterio estricto de `pass.txt`. La fila del 19-oct esta atribuida al servicio por su journal; las del 16 y 17-oct no (el journal de esos arranques no se consulto).

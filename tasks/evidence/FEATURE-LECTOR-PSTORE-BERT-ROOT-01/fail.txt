@@ -1,0 +1,7 @@
+# fail.txt -- control negativo del criterio de cierre (medido 2026-10-20)
+# Criterio de la ficha: una fila NUEVA en arranque.jsonl con boot_id distinto de 934fa20f (el arranque del 14-oct).
+# Estado del 14-oct reconstruido: solo las filas de 934fa20f del archivo actual.
+$ grep 934fa20f /var/lib/blackbox/pstore/arranque.jsonl > solo-934.jsonl
+filas de 934fa20f: 4
+$ criterio estricto sobre solo-934.jsonl
+boot_ids distintos de 934fa20f: 0 -> rc 1

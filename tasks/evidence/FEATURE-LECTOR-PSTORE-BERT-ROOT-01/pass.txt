@@ -1,0 +1,16 @@
+# pass.txt -- criterio de cierre sobre el archivo real (medido 2026-10-20)
+$ grep -q . /var/lib/blackbox/pstore/arranque.jsonl; echo rc=$?
+rc=0
+$ criterio estricto sobre /var/lib/blackbox/pstore/arranque.jsonl
+boot_ids distintos de 934fa20f: 3 ['18a2ba7d-8be7-425e-bc78-f9ab52575248', 'bc5b660b-e27b-4f24-a850-7d4a945f4fcc', 'cf445303-50fd-4798-9b61-018438392660'] -> rc 0
+$ filas nuevas y su origen
+{"ts":"2026-10-16T16:56:58Z","boot_id":"18a2ba7d-8be7-425e-bc78-f9ab52575248","pstore_archivos":0,"b
+{"ts":"2026-10-17T23:08:06Z","boot_id":"bc5b660b-e27b-4f24-a850-7d4a945f4fcc","pstore_archivos":0,"b
+{"ts":"2026-10-19T14:13:04Z","boot_id":"cf445303-50fd-4798-9b61-018438392660","pstore_archivos":0,"b
+$ systemctl --user show bb-arranque-forense.service -p Result -p ExecMainStatus -p ExecMainExitTimestamp
+Result=success
+ExecMainExitTimestamp=Mon 2026-10-19 08:13:04 CST
+ExecMainStatus=0
+$ firmware: archivos de dmidecode (la ampliacion del 11-oct)
+-rw-r--r-- 1 root root   783 2026-10-19 08:13 /var/lib/blackbox/dmidecode-bios.txt
+-rw-r--r-- 1 root root 24967 2026-10-19 08:13 /var/lib/blackbox/dmidecode-t45.txt
