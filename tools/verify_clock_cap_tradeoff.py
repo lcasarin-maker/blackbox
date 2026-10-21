@@ -51,6 +51,10 @@ def _unidentified_sensors(hwmon: list[Any], zones: list[Any]) -> list[str]:
     i-th zone of that type (in zone-id order) the input temp{i}_input. The bridge is accepted only
     when exactly one hwmon device carries that name and its input count equals the zone count of
     that type; anything else (no zone of that type, ambiguous name, count mismatch) stays unidentified.
+
+    Vote of Luis 2026-10-20 (second ballot): the hwmon `name` (captured as chip_name) also identifies an
+    unlabelled input, but only when that device has exactly ONE temp*_input and no other hwmon carries the
+    same non-empty name. A driver name identifies the chip, not the board component; that limit was accepted.
     """
     by_type: dict[str, list[str]] = {}
     for zone in sorted((z for z in zones if isinstance(z, dict)),
@@ -65,8 +69,10 @@ def _unidentified_sensors(hwmon: list[Any], zones: list[Any]) -> list[str]:
     for device, name in zip(devices, names):
         sensors = [sensor for sensor in device.get("temperature_inputs", []) if isinstance(sensor, dict)]
         bridged = by_type.get(str(name).strip()) if name is not None and names.count(name) == 1 else None
+        named = (len(sensors) == 1 and name is not None and str(name).strip() != ""
+                 and [str(other).strip() for other in names if other is not None].count(str(name).strip()) == 1)
         for sensor in sensors:
-            if sensor.get("label", {}).get("status") == "ok":
+            if sensor.get("label", {}).get("status") == "ok" or named:
                 continue
             index = re.search(r"temp([0-9]+)_input$", str(sensor.get("path", "")))
             if bridged is not None and len(bridged) == len(sensors) and index \

@@ -1,0 +1,100 @@
+# pass.txt -- DEBT-RELOJ-VERIFICADOR-ETIQUETAS-DE-SENSORES-INCOMPLETAS-01 (medido 2026-10-20)
+# Segunda boleta de Luis 2026-10-20: chip_name del hwmon identifica la entrada si el dispositivo tiene UNA
+# sola temp*_input y el nombre es no vacio y unico entre los hwmon.
+
+## ANTES (worktree con master mergeado, sin tocar nada)
+$ python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_reloj_verificador_limites.py::test_etiquetas_de_sensores_completas_en_la_captura_real
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_etiquetas_de_sensores_completas_en_la_captura_real ____________
+tests/test_reloj_verificador_limites.py:13: in test_etiquetas_de_sensores_completas_en_la_captura_real
+    assert verify_clock_cap_tradeoff.verify()["checks"]["sensor_labels"] == "pass"
+E   AssertionError: assert 'unknown' == 'pass'
+E     
+E     - pass
+E     + unknown
+=========================== short test summary info ============================
+FAILED tests/test_reloj_verificador_limites.py::test_etiquetas_de_sensores_completas_en_la_captura_real
+1 failed in 0.09s
+rc=1
+
+## DESPUES
+$ python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_reloj_verificador_limites.py::test_etiquetas_de_sensores_completas_en_la_captura_real
+.                                                                        [100%]
+1 passed in 0.07s
+rc=0
+
+$ python3 -c "import json; from tools import verify_clock_cap_tradeoff as v; d=json.loads(v.THERMAL_CAPTURE.read_text()); print('unidentified:', v._unidentified_sensors(d['hwmon'], d['thermal_zones'])); print('inputs:', sum(len(h.get('temperature_inputs', [])) for h in d['hwmon'])); r=v.verify(); print(r['status'], r['checks'])"
+unidentified: []
+inputs: 11
+unknown {'thermal_inventory': 'pass', 'oem_identity': 'pass', 'sensor_labels': 'pass', 'matched_clock_runs': 'unknown', 'rollback': 'unknown', 'oem_threshold': 'pass', 'same_window': 'unknown'}
+rc=0
+   (el status global sigue unknown por matched_clock_runs, rollback y same_window: otras fichas)
+
+## Controles negativos (plugin de pytest que sustituye _unidentified_sensors; nada versionado se toca)
+# <scratchpad>/neg/old_rule_plugin.py carga _unidentified_sensors de $MUTANT y lo inyecta con monkeypatch.
+# old_verifier.py = git show master:tools/verify_clock_cap_tradeoff.py (regla anterior al voto)
+$ PYTHONPATH=<scratchpad>/neg python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_reloj_verificador_limites.py::test_etiquetas_de_sensores_completas_en_la_captura_real tests/test_clock_tradeoff_composed_pass.py -p old_rule_plugin
+FAILED tests/test_reloj_verificador_limites.py::test_etiquetas_de_sensores_completas_en_la_captura_real
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_single_input_device_identified_by_unique_chip_name_pass
+2 failed, 17 passed in 0.36s
+rc=1
+
+# m_no_single.py: copia del verificador nuevo con una restriccion quitada:
+<         named = (len(sensors) == 1 and name is not None and str(name).strip() != ""
+>         named = (True and name is not None and str(name).strip() != ""
+$ MUTANT=m_no_single.py PYTHONPATH=<scratchpad>/neg python3 -m pytest -q -p no:cacheprovider -p old_rule_plugin tests/test_clock_tradeoff_composed_pass.py
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_zone_without_label_nor_type_is_not_pass
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_chip_name_rule_restrictions_keep_unknown[two_inputs]
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_bridge_count_mismatch_or_ambiguous_name_is_not_pass
+3 failed, 15 passed in 0.38s
+rc=1
+
+# m_no_unique.py: copia del verificador nuevo con una restriccion quitada:
+<                  and [str(other).strip() for other in names if other is not None].count(str(name).strip()) == 1)
+>                  and [str(other).strip() for other in names if other is not None].count(str(name).strip()) >= 1)
+$ MUTANT=m_no_unique.py PYTHONPATH=<scratchpad>/neg python3 -m pytest -q -p no:cacheprovider -p old_rule_plugin tests/test_clock_tradeoff_composed_pass.py
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_chip_name_rule_restrictions_keep_unknown[chip_name_repeated]
+1 failed, 17 passed in 0.28s
+rc=1
+
+# m_no_blank.py: copia del verificador nuevo con una restriccion quitada:
+<         named = (len(sensors) == 1 and name is not None and str(name).strip() != ""
+>         named = (len(sensors) == 1 and name is not None and True
+$ MUTANT=m_no_blank.py PYTHONPATH=<scratchpad>/neg python3 -m pytest -q -p no:cacheprovider -p old_rule_plugin tests/test_clock_tradeoff_composed_pass.py
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_chip_name_rule_restrictions_keep_unknown[chip_name_blank]
+1 failed, 17 passed in 0.29s
+rc=1
+
+# m_no_name.py: copia del verificador nuevo con una restriccion quitada:
+<         named = (len(sensors) == 1 and name is not None and str(name).strip() != ""
+<                  and [str(other).strip() for other in names if other is not None].count(str(name).strip()) == 1)
+>         named = (len(sensors) == 1 and True
+>                  and [str(other).strip() for other in names if other is not None].count(str(name).strip()) >= 0)
+$ MUTANT=m_no_name.py PYTHONPATH=<scratchpad>/neg python3 -m pytest -q -p no:cacheprovider -p old_rule_plugin tests/test_clock_tradeoff_composed_pass.py
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_label_missing_stays_unknown
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_chip_name_rule_restrictions_keep_unknown[no_chip_name]
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_chip_name_rule_restrictions_keep_unknown[chip_name_absent]
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_chip_name_rule_restrictions_keep_unknown[chip_name_blank]
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_chip_name_rule_restrictions_keep_unknown[chip_name_repeated]
+5 failed, 13 passed in 0.28s
+rc=1
+
+## Tests de la ficha y del verificador, con el verificador real
+$ python3 -m pytest -q -p no:cacheprovider tests/test_reloj_verificador_limites.py tests/test_clock_tradeoff_composed_pass.py
+.x..................                                                     [100%]
+19 passed, 1 xfailed in 0.27s
+rc=0
+   (el xfailed es test_hay_lectura_nativa_del_rango_lgc_aplicado, ficha DEBT-RELOJ-VERIFICADOR-SIN-LECTURA-DEL-RANGO-LGC-APLICADO-01, abierta)
+
+## Gates del repo (con la ficha ya en tasks/done y este pass.txt escrito)
+$ python3 -m pytest -q -n 4 -m "not slow and not e2e and not mutates_real_source" --ignore=tests/test_bb_bash.py -p no:cacheprovider
+3714 passed, 3 skipped, 13 xfailed in 84.67s (0:01:24)
+rc=0
+$ python3 -m tools.inventario --check
+[inventario] HALLAZGOS: 0
+[inventario] OK: los dos inventarios describen el repo y la maquina.
+rc=0
+$ ruff check .
+All checks passed!
+rc=0
