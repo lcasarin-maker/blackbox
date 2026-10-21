@@ -150,14 +150,41 @@ def test_zone_without_label_nor_type_is_not_pass(tmp_path: Path) -> None:
     assert "hwmon0/temp2_input" in result["reason"], result
 
 
-def test_unlabelled_device_without_thermal_zone_is_not_pass(tmp_path: Path) -> None:
+def _wifi(*, name: dict[str, Any] | None = None, inputs: int = 1, hwmon: str = "hwmon2") -> dict[str, Any]:
     """La forma de mt7925_phy0 en la captura real: hwmon sin label y sin thermal_zone de su type."""
-    wifi = {"name": "hwmon2", "chip_name": {"status": "ok", "value": "mt7925_phy0"},
-            "temperature_inputs": [{"path": "/sys/class/hwmon/hwmon2/temp1_input",
-                                    "label": {"status": "absent", "error": "label unavailable"}}]}
-    result = _run(tmp_path, _bridged(extra=[wifi]), _scenario())
+    device: dict[str, Any] = {"name": hwmon, "temperature_inputs": [
+        {"path": f"/sys/class/hwmon/{hwmon}/temp{i + 1}_input",
+         "label": {"status": "absent", "error": "label unavailable"}} for i in range(inputs)]}
+    if name is not None:
+        device["chip_name"] = name
+    return device
+
+
+WIFI_NAME = {"status": "ok", "value": "mt7925_phy0"}
+
+
+def test_single_input_device_identified_by_unique_chip_name_pass(tmp_path: Path) -> None:
+    """Voto de Luis 2026-10-20 (segunda boleta): name del hwmon unico + una sola temp*_input = identificado."""
+    result = _run(tmp_path, _bridged(extra=[_wifi(name=WIFI_NAME)]), _scenario())
+    assert result["checks"]["sensor_labels"] == "pass", result
+    assert result["status"] == "pass", result
+
+
+@pytest.mark.parametrize("case", ["no_chip_name", "chip_name_absent", "chip_name_blank", "chip_name_repeated",
+                                  "two_inputs"])
+def test_chip_name_rule_restrictions_keep_unknown(tmp_path: Path, case: str) -> None:
+    """Controles negativos de la regla del chip_name: cada restriccion rota deja la entrada sin identificar."""
+    extra = {
+        "no_chip_name": [_wifi()],
+        "chip_name_absent": [_wifi(name={"status": "absent", "error": "name unavailable"})],
+        "chip_name_blank": [_wifi(name={"status": "ok", "value": "  "})],
+        "chip_name_repeated": [_wifi(name=WIFI_NAME), _wifi(name=WIFI_NAME, hwmon="hwmon3")],
+        "two_inputs": [_wifi(name=WIFI_NAME, inputs=2)],
+    }[case]
+    result = _run(tmp_path, _bridged(extra=extra), _scenario())
     assert result["checks"]["sensor_labels"] == "unknown", result
-    assert "hwmon2/temp1_input" in result["reason"] and "hwmon0/" not in result["reason"], result
+    assert result["status"] == "unknown" and "hwmon2/temp1_input" in result["reason"], result
+    assert "hwmon0/" not in result["reason"], result
 
 
 def test_bridge_count_mismatch_or_ambiguous_name_is_not_pass(tmp_path: Path) -> None:
