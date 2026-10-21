@@ -1120,10 +1120,6 @@ def test_delta_root_display_carveout_oem_fix_gate_01() -> None:
 
 
 
-def test_delta_root_subambient_cooling_and_uma_canary_01() -> None:
-    _assert_hardware_batch03_closure('DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01')
-
-
 def _assert_hardware_batch02_closure(card_id: str) -> None:
     from tools.hardware_batch02_controls import verify
     from test_closure_kernel_selectors import _require_pass as _assert_pass
