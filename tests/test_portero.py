@@ -425,10 +425,13 @@ def _delegado() -> bool:
 
 def _espera_evento(cg, linea):
     """cgroup.freeze es asincrono: `frozen` cambia cuando el kernel termino con todas las tareas (medido: flaky sin esto)."""
+    _t0 = time.monotonic()
     for _ in range(40):
         if linea in (cg / "cgroup.events").read_text(encoding="utf-8"):
+            open(os.environ["MEDIR_ESPERA"], "a").write(f"OK {linea!r} {time.monotonic()-_t0:.3f}s\n")
             return True
         time.sleep(0.05)  # blocking-sleep: sondeo acotado (2 s) de cgroup.events tras escribir cgroup.freeze -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01
+    open(os.environ["MEDIR_ESPERA"], "a").write(f"FAIL {linea!r} {time.monotonic()-_t0:.3f}s events={(cg / 'cgroup.events').read_text(encoding='utf-8')!r} freeze={(cg / 'cgroup.freeze').read_text(encoding='utf-8')!r}\n")
     return False
 
 
