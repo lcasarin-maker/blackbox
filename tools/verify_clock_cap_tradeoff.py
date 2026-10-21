@@ -43,6 +43,39 @@ def _oem_threshold(zones: list[Any]) -> str:
     return "pass" if seen else "unknown"
 
 
+def _unidentified_sensors(hwmon: list[Any], zones: list[Any]) -> list[str]:
+    """Paths of hwmon temp inputs identified neither by temp*_label nor by a thermal_zone*/type.
+
+    Vote of Luis 2026-10-20: an unlabelled input counts as identified only through the kernel's
+    thermal_hwmon bridge, which registers ONE hwmon device named after the zone type and gives the
+    i-th zone of that type (in zone-id order) the input temp{i}_input. The bridge is accepted only
+    when exactly one hwmon device carries that name and its input count equals the zone count of
+    that type; anything else (no zone of that type, ambiguous name, count mismatch) stays unidentified.
+    """
+    by_type: dict[str, list[str]] = {}
+    for zone in sorted((z for z in zones if isinstance(z, dict)),
+                       key=lambda z: int(m.group(1)) if (m := re.search(r"([0-9]+)$", str(z.get("name")))) else -1):
+        kind = zone.get("type", {})
+        if isinstance(kind, dict) and kind.get("status") == "ok" and str(kind.get("value", "")).strip():
+            by_type.setdefault(str(kind["value"]).strip(), []).append(str(zone.get("name")))
+    devices = [device for device in hwmon if isinstance(device, dict)]
+    names = [device.get("chip_name", {}).get("value") if isinstance(device.get("chip_name"), dict)
+             and device["chip_name"].get("status") == "ok" else None for device in devices]
+    missing: list[str] = []
+    for device, name in zip(devices, names):
+        sensors = [sensor for sensor in device.get("temperature_inputs", []) if isinstance(sensor, dict)]
+        bridged = by_type.get(str(name).strip()) if name is not None and names.count(name) == 1 else None
+        for sensor in sensors:
+            if sensor.get("label", {}).get("status") == "ok":
+                continue
+            index = re.search(r"temp([0-9]+)_input$", str(sensor.get("path", "")))
+            if bridged is not None and len(bridged) == len(sensors) and index \
+                    and 1 <= int(index.group(1)) <= len(bridged):
+                continue
+            missing.append(str(sensor.get("path", f"{device.get('name')}/<unnamed temp input>")))
+    return missing
+
+
 def _same_window(data: dict[str, Any], ab_path: Path) -> tuple[str, str]:
     """The thermal inventory must be taken inside the A/B capture on the same OEM/product."""
     parsed = ab_verifier._capture(ab_path)
@@ -100,10 +133,10 @@ def verify(evidence: str | Path | None = None, ab_evidence: str | Path | None = 
     if not identity or any(not isinstance(item, dict) or item.get("status") != "ok" for item in identity):
         return _result("unknown", "OEM/product/revision identity is incomplete", [str(capture)], checks)
     checks["oem_identity"] = "pass"
-    labels = [sensor.get("label", {}).get("status") == "ok"
-              for device in hwmon if isinstance(device, dict)
-              for sensor in device.get("temperature_inputs", []) if isinstance(sensor, dict)]
-    if labels and all(labels):
+    sensors = [sensor for device in hwmon if isinstance(device, dict)
+               for sensor in device.get("temperature_inputs", []) if isinstance(sensor, dict)]
+    unidentified = _unidentified_sensors(hwmon, zones)
+    if sensors and not unidentified:
         checks["sensor_labels"] = "pass"
     ab_dir = Path(ab_evidence) if ab_evidence is not None else ab_verifier.ROOT / "tasks/evidence" / ab_verifier.FINDING
     ab = ab_verifier.verify(ab_dir)
@@ -122,7 +155,9 @@ def verify(evidence: str | Path | None = None, ab_evidence: str | Path | None = 
     if ab["status"] != "pass":
         return _result("unknown", f"thermal inventory is observational only; matched clock-cap/workload runs, OEM-safe threshold, and applied-policy rollback readback are missing (A/B: {ab['reason']})", files, checks)
     if checks["sensor_labels"] != "pass":
-        return _result("unknown", "hwmon temperature inputs lack labels; zones cannot be tied to OEM sensors", files, checks)
+        return _result("unknown", "hwmon temperature inputs lack labels and no thermal_zone type identifies them; "
+                       f"zones cannot be tied to OEM sensors (unidentified: {', '.join(unidentified) or 'no inputs'})",
+                       files, checks)
     if checks["oem_threshold"] != "pass":
         return _result("unknown", "no OEM-safe threshold: no thermal zone exposes a passive/hot/critical trip point", files, checks)
     if checks["same_window"] != "pass":
