@@ -1,0 +1,113 @@
+# medicion.txt -- DEBT-TEST-PORTERO-CONGELAR-REAL-INTERMITENTE-BAJO-GATE-01 (medido 2026-10-20)
+test_portero_congelar_estable
+
+## Corridas de cierre: 10 de la puerta paralela completa CON el arreglo, 0 fallos (de este test ni de otro)
+$ python3 -m pytest -q -n 4 -m "not slow and not e2e and not mutates_real_source" --ignore=tests/test_bb_bash.py -p no:cacheprovider   (fase 1)
+$ python3 -m pytest -q -m mutates_real_source -p no:cacheprovider   (fase 2, carril serial; el test arreglado NO esta en esta fase)
+=== fix corrida 1 23:12:18 load=33.49 34.01 37.36
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 174.92s (0:02:54)
+fase2 rc=0 1 passed, 3861 deselected in 5.61s
+=== fix corrida 2 23:15:24 load=31.12 33.27 36.51
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 170.34s (0:02:50)
+fase2 rc=0 1 passed, 3861 deselected in 9.42s
+=== fix corrida 3 23:18:27 load=35.56 33.99 36.18
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 121.18s (0:02:01)
+fase2 rc=0 1 passed, 3861 deselected in 6.41s
+=== fix corrida 4 23:20:37 load=37.40 35.18 36.32
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 117.59s (0:01:57)
+fase2 rc=0 1 passed, 3861 deselected in 10.35s
+=== fix corrida 5 23:22:49 load=37.45 35.94 36.44
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 109.96s (0:01:49)
+fase2 rc=0 1 passed, 3861 deselected in 6.76s
+=== fix corrida 6 23:24:49 load=32.70 35.04 36.07
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 122.51s (0:02:02)
+fase2 rc=0 1 passed, 3861 deselected in 9.45s
+=== fix corrida 7 23:27:04 load=34.78 35.37 36.09
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 110.87s (0:01:50)
+fase2 rc=0 1 passed, 3861 deselected in 7.60s
+=== fix corrida 8 23:29:06 load=36.54 36.09 36.28
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 153.08s (0:02:33)
+fase2 rc=0 1 passed, 3861 deselected in 4.92s
+=== fix corrida 9 23:31:48 load=19.66 32.01 34.94
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 101.01s (0:01:41)
+fase2 rc=0 1 passed, 3861 deselected in 7.80s
+=== fix corrida 10 23:33:41 load=14.98 26.71 32.71
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 195.89s (0:03:15)
+fase2 rc=0 1 passed, 3861 deselected in 10.55s
+FIN fix 23:37:11
+
+## Tasa base propia SIN arreglo: 5 corridas de la misma puerta, 0 fallos (la ficha midio 2 fallos de 4; mi tasa no reprodujo el fallo)
+=== base corrida 1 22:55:12 load=55.41 51.73 42.10
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 131.26s (0:02:11)
+fase2 rc=0 1 passed, 3861 deselected in 9.07s
+=== base corrida 2 22:57:36 load=44.08 48.69 42.37
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 114.54s (0:01:54)
+fase2 rc=0 1 passed, 3861 deselected in 6.79s
+=== base corrida 3 22:59:40 load=35.06 44.11 41.48
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 118.12s (0:01:58)
+fase2 rc=0 1 passed, 3861 deselected in 12.58s
+=== base corrida 4 23:01:56 load=44.40 42.73 41.22
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 125.64s (0:02:05)
+fase2 rc=0 1 passed, 3861 deselected in 8.35s
+=== base corrida 5 23:04:13 load=36.46 40.60 40.66
+fase1 rc=0 3714 passed, 3 skipped, 13 xfailed in 230.32s (0:03:50)
+fase2 rc=0 1 passed, 3861 deselected in 10.05s
+FIN base 23:08:17
+
+En esas 5 corridas el test llevaba instrumentacion temporal que registra el tiempo hasta 'frozen 1' / 'frozen 0': 0.000 s en las 10 lecturas.
+El plazo de 2 s NO es el limite. Las 5 corridas base y las 10 corridas con arreglo dan 0 fallos: las 15 corridas de la puerta SOLAS no
+discriminan entre test original y arreglado (la carrera es rara); la prueba que discrimina es el control de abajo.
+--- corrida 1
+OK 'frozen 1' 0.000s
+OK 'frozen 0' 0.000s
+--- corrida 2
+OK 'frozen 1' 0.000s
+OK 'frozen 0' 0.000s
+--- corrida 3
+OK 'frozen 1' 0.000s
+OK 'frozen 0' 0.000s
+--- corrida 4
+OK 'frozen 1' 0.000s
+OK 'frozen 0' 0.000s
+--- corrida 5
+OK 'frozen 1' 0.000s
+OK 'frozen 0' 0.000s
+
+## Causa medida: el portero vivo descongela el scope de la prueba
+El demonio de la maquina (modo actuar, tools/portero.py demonio) trata todo scope bb-portero-<clase>-<pid>.scope congelado como suyo y, con turno
+libre, lo descongela (tools/portero.py::_decide_clase, motivo 'turno libre y puerta abierta'; fuera de actuar lo hace descongela_propios). El scope de
+la prueba es bb-portero-suite-<pid>.scope. Su log (portero.jsonl) tiene 62 filas de descongelar de clase suite; 60 son suites reales (3-6 GB, 3-30
+procesos) y exactamente 2 tienen el perfil de la prueba (1 proceso, rss ~2 MB, edad 0.2 s):
+  2026-10-21T04:12:34Z descongelar raiz=3817592 rss_kb=2108 procesos=1 edad_s=0.2   <- bb-portero-suite-3817592.scope, el scope que cita la ficha
+  2026-10-21T04:31:05Z descongelar raiz=189262  rss_kb=2116 procesos=1 edad_s=0.2
+Dos filas = los dos fallos de las cuatro corridas de la ficha. Durante mis 15 corridas el demonio no escribio ninguna fila de clase suite.
+
+## Control (demonio_emulado.py): hilo que aplica la regla del demonio con el po.NOMBRE_UNIDAD real a scopes 'sleep 60' y simula 50 ms de carga tras congelar
+$ PYTHONPATH=<dir de demonio_emulado.py> python3 -m pytest -q tests/test_portero.py -k real_mover_topar -p demonio_emulado -p no:cacheprovider   (x10 por variante)
+--- test ORIGINAL (control negativo; debe fallar): 10 de 10 fallan con el assert de la ficha (tests/test_portero.py: assert _espera_evento(destino, "frozen 1"))
+DEMONIO_EMULADO descongelaciones=1 ['bb-portero-suite-1225167.scope']     assert _espera_evento(destino, "frozen 1") E   AssertionError: assert False 1 failed, 45 deselec
+DEMONIO_EMULADO descongelaciones=1 ['bb-portero-suite-1226860.scope']     assert _espera_evento(destino, "frozen 1") E   AssertionError: assert False 1 failed, 45 deselec
+DEMONIO_EMULADO descongelaciones=1 ['bb-portero-suite-1228960.scope']     assert _espera_evento(destino, "frozen 1") E   AssertionError: assert False 1 failed, 45 deselec
+DEMONIO_EMULADO descongelaciones=1 ['bb-portero-suite-1230516.scope']     assert _espera_evento(destino, "frozen 1") E   AssertionError: assert False 1 failed, 45 deselec
+DEMONIO_EMULADO descongelaciones=1 ['bb-portero-suite-1232060.scope']     assert _espera_evento(destino, "frozen 1") E   AssertionError: assert False 1 failed, 45 deselec
+DEMONIO_EMULADO descongelaciones=1 ['bb-portero-suite-1234138.scope']     assert _espera_evento(destino, "frozen 1") E   AssertionError: assert False 1 failed, 45 deselec
+DEMONIO_EMULADO descongelaciones=1 ['bb-portero-suite-1236497.scope']     assert _espera_evento(destino, "frozen 1") E   AssertionError: assert False 1 failed, 45 deselec
+DEMONIO_EMULADO descongelaciones=1 ['bb-portero-suite-1237511.scope']     assert _espera_evento(destino, "frozen 1") E   AssertionError: assert False 1 failed, 45 deselec
+DEMONIO_EMULADO descongelaciones=1 ['bb-portero-suite-1240018.scope']     assert _espera_evento(destino, "frozen 1") E   AssertionError: assert False 1 failed, 45 deselec
+DEMONIO_EMULADO descongelaciones=1 ['bb-portero-suite-1241837.scope']     assert _espera_evento(destino, "frozen 1") E   AssertionError: assert False 1 failed, 45 deselec
+--- test ARREGLADO (debe pasar): 10 de 10 pasan, 0 descongelaciones
+DEMONIO_EMULADO descongelaciones=0 [] 1 passed, 45 deselected in 0.59s
+DEMONIO_EMULADO descongelaciones=0 [] 1 passed, 45 deselected in 0.53s
+DEMONIO_EMULADO descongelaciones=0 [] 1 passed, 45 deselected in 0.43s
+DEMONIO_EMULADO descongelaciones=0 [] 1 passed, 45 deselected in 0.43s
+DEMONIO_EMULADO descongelaciones=0 [] 1 passed, 45 deselected in 0.39s
+DEMONIO_EMULADO descongelaciones=0 [] 1 passed, 45 deselected in 0.50s
+DEMONIO_EMULADO descongelaciones=0 [] 1 passed, 45 deselected in 0.78s
+DEMONIO_EMULADO descongelaciones=0 [] 1 passed, 45 deselected in 0.55s
+DEMONIO_EMULADO descongelaciones=0 [] 1 passed, 45 deselected in 0.36s
+DEMONIO_EMULADO descongelaciones=0 [] 1 passed, 45 deselected in 0.38s
+
+## Que cambie
+tests/test_portero.py::test_real_mover_topar_en_caliente_congelar_y_control_negativo: monkeypatch de po.PREFIJO_UNIDAD a 'bbtest-portero-' para que el
+scope desechable no case con po.NOMBRE_UNIDAD y el demonio vivo no lo reconozca; una asercion nueva comprueba que no casa. Sin reintentos, sin skip,
+sin subir el plazo, sin quitar aserciones. El carril serial (mutates_real_source) no resuelve esto: el demonio es otro proceso y corre tambien en la fase 2.

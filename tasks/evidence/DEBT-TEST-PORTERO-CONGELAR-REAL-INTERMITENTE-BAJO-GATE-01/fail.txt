@@ -1,0 +1,9 @@
+# fail.txt -- close_check ANTES del arreglo (medido 2026-10-20)
+$ grep -qx test_portero_congelar_estable tasks/evidence/DEBT-TEST-PORTERO-CONGELAR-REAL-INTERMITENTE-BAJO-GATE-01/medicion.txt; echo rc=$?
+grep: tasks/evidence/DEBT-TEST-PORTERO-CONGELAR-REAL-INTERMITENTE-BAJO-GATE-01/medicion.txt: No existe el archivo o el directorio
+rc=2
+# (rc=2 y no 1: grep distingue archivo ausente de linea ausente; ambos son distintos de 0)
+# Control negativo del criterio: con el archivo presente y sin la linea exacta el mismo grep da rc=1.
+$ printf 'otra cosa\n' > x.txt; grep -qx test_portero_congelar_estable x.txt; echo rc=$?
+rc=1
+# El fallo del test original se reproduce con un demonio emulado: medicion.txt, seccion Control (10 de 10 fallan).
