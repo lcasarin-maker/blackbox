@@ -3,7 +3,14 @@ id: DEBT-TEST-PORTERO-CONGELAR-REAL-INTERMITENTE-BAJO-GATE-01
 kind: task
 domain: MEMORY
 title: "tests/test_portero.py::test_real_mover_topar_en_caliente_congelar_y_control_negativo falla de forma intermitente bajo la puerta paralela"
-status: open
+status: done
+closed_at: 2026-10-20
+closure_type: fixed
+closure_reason: "Causa medida: el portero vivo (modo actuar) descongela todo scope bb-portero-<clase>-<pid>.scope congelado cuando hay turno libre, y el scope desechable de la prueba (bb-portero-suite-<pid>) casaba con esa regla; su log tiene 2 filas de descongelar con el perfil de la prueba (1 proceso, 2 MB, edad 0.2 s), una sobre el scope 3817592 que cita la ficha. No era el plazo (0.000 s en 10 lecturas) ni otra prueba. Arreglo: la prueba usa el prefijo bbtest-portero- (monkeypatch de po.PREFIJO_UNIDAD) y el demonio no la reconoce. Con un demonio emulado el test original falla 10 de 10 y el arreglado pasa 10 de 10; la puerta paralela completa con el arreglo dio 0 fallos en 10 corridas (la tasa base propia sin arreglo fue 0 de 5, asi que esas corridas solas no discriminan)."
+evidence:
+  fail: tasks/evidence/DEBT-TEST-PORTERO-CONGELAR-REAL-INTERMITENTE-BAJO-GATE-01/fail.txt
+  pass: tasks/evidence/DEBT-TEST-PORTERO-CONGELAR-REAL-INTERMITENTE-BAJO-GATE-01/pass.txt
+  medicion: tasks/evidence/DEBT-TEST-PORTERO-CONGELAR-REAL-INTERMITENTE-BAJO-GATE-01/medicion.txt
 severity: P3
 origin: detected
 satd_family: BLIND_INSTRUMENT
