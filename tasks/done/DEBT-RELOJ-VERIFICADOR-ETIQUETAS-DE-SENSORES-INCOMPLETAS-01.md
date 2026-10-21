@@ -3,7 +3,13 @@ id: DEBT-RELOJ-VERIFICADOR-ETIQUETAS-DE-SENSORES-INCOMPLETAS-01
 kind: task
 domain: THERMAL
 title: "El verificador de topes de reloj no da pasa: solo 3 de 11 sensores tienen etiqueta"
-status: open
+status: done
+closed_at: 2026-10-20
+closure_type: fixed
+closure_reason: "Segunda boleta de Luis 2026-10-20 (opcion 1): el name del hwmon (chip_name) identifica una entrada sin label solo si ese dispositivo tiene UNA sola temp*_input y el nombre es no vacio y unico entre los hwmon. Sobre la captura real hwmon2/temp1_input (mt7925_phy0) queda identificada: 11 de 11, sensor_labels=pass y el close_check pasa de rc 1 a rc 0. Los tests de la regla se ponen rojos contra el verificador de master y contra un mutante por cada restriccion quitada. El verificador completo sigue en unknown por matched_clock_runs, rollback y same_window, que no son de esta ficha."
+evidence:
+  fail: tasks/evidence/DEBT-RELOJ-VERIFICADOR-ETIQUETAS-DE-SENSORES-INCOMPLETAS-01/fail.txt
+  pass: tasks/evidence/DEBT-RELOJ-VERIFICADOR-ETIQUETAS-DE-SENSORES-INCOMPLETAS-01/pass.txt
 severity: P3
 origin: detected
 detector: {"rule": "tests/test_reloj_verificador_limites.py::test_etiquetas_de_sensores_completas_en_la_captura_real", "confidence": 1.0}
@@ -42,3 +48,13 @@ Falta una decision de Luis sobre la entrada del Wi-Fi:
    la captura nueva cae fuera de la ventana A/B actual (`same_window` ya es unknown).
 3. Dejarlo como esta. Costo: `verify_clock_cap_tradeoff` nunca da pass en este equipo mientras exista el Wi-Fi.
 Excluir del requisito los dispositivos fuera del subsistema thermal baja el requisito y queda fuera sin voto explicito.
+
+## Cerrada 2026-10-20 (segunda boleta de Luis: opcion 1)
+`_unidentified_sensors` acepta el `chip_name` del hwmon como identificador cuando el dispositivo tiene una sola
+`temp*_input`, el nombre existe, es no vacio y no se repite en otro hwmon. Nada mas: no se excluye ningun
+dispositivo ni se baja otro requisito. Sobre la captura real: 11 de 11 identificadas, `sensor_labels: pass`.
+Limite declarado (aceptado en la boleta): un nombre de driver identifica el chip, no el componente de la placa.
+Tests: `test_single_input_device_identified_by_unique_chip_name_pass` y
+`test_chip_name_rule_restrictions_keep_unknown[no_chip_name|chip_name_absent|chip_name_blank|chip_name_repeated|two_inputs]`;
+reemplazan a `test_unlabelled_device_without_thermal_zone_is_not_pass`, que fijaba la politica anterior al voto.
+Evidencia literal y controles negativos: `tasks/evidence/DEBT-RELOJ-VERIFICADOR-ETIQUETAS-DE-SENSORES-INCOMPLETAS-01/pass.txt`.
