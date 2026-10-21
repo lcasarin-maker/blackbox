@@ -66,3 +66,26 @@ El voto de Luis del 2026-10-14 pedia cerrarla como `void_wontfix` porque "Qwen n
 - Cierto: no hay modelo Qwen servido ni MTP. `curl -s -m 10 http://127.0.0.1:8000/v1/models | grep -qi qwen` -> rc=1; `docker logs nemotron-server 2>&1 | grep -o 'speculative_config=[A-Za-z]*' | sort -u` -> `speculative_config=None`; `docker logs nemotron-server 2>&1 | grep -ciE 'num_speculative_tokens|\bmtp\b'` -> 0.
 - No se sostiene: el motor nemotron-local corre con el MISMO parser de herramientas del reporte. `docker inspect nemotron-server --format '{{json .Config.Cmd}}' | grep -oE '"--(tool-call-parser|enable-auto-tool-choice)"(,"[a-z0-9_]+")?'` -> `"--enable-auto-tool-choice"` y `"--tool-call-parser","qwen3_xml"`. El fallo reportado tras cancelar (texto sigue, el parser deja de emitir tool calls hasta reiniciar vLLM) es del parser, y aqui hay clientes que usan herramientas contra ese motor (el investigador de Atlas, ver la medicion de `DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01`) y `tools/canario_motor.py` pide una tool call en cada ronda.
 Decision pendiente de Luis: cerrar solo la mitad MTP y dejar el caso "cancelar mid-stream y comprobar la siguiente tool call con `qwen3_xml`" (la version de un nodo de la adaptacion de 2026-10-13, en `tools/canario_motor.py`), o cerrarla entera como `void_wontfix` sabiendo que el parser si esta en uso.
+
+## Medido 2026-10-20 (boleta de Luis: cerrar void_wontfix solo con AUSENCIA MEDIDA): queda ABIERTA
+
+Regla: `void_wontfix` solo si la ausencia del sujeto se mide en este equipo con control positivo. Solo lectura (sin sudo, sin cargas, sin reiniciar nada). Resultado: el sujeto EXISTE o no es observable desde la maquina, asi que no se cierra.
+
+Se repitio la medicion del 2026-10-14 (sigue igual). Mitad MTP/Qwen, ausente; mitad parser + cancelacion, presente:
+
+```
+$ curl -s -m 10 http://127.0.0.1:8000/v1/models | grep -o '"id":"[^"]*"'
+"id":"nemotron-local"
+"id":"modelperm-8b72c82a39d6372e"
+$ docker logs nemotron-server 2>&1 | grep -o 'speculative_config=[A-Za-z]*' | sort -u
+speculative_config=None
+$ docker inspect nemotron-server --format '{{join .Config.Cmd " "}}' | grep -c speculative
+0           (rc=1)
+$ printf 'x --speculative-config y' | grep -c speculative      # control positivo
+1
+$ docker inspect nemotron-server --format '{{json .Config.Cmd}}' | grep -oE '"--(tool-call-parser|enable-auto-tool-choice)"(,"[a-z0-9_]+")?'
+"--enable-auto-tool-choice"
+"--tool-call-parser","qwen3_xml"
+```
+
+Veredicto: ABIERTA. Ausencia medida solo de Qwen y MTP; el motor corre con el mismo `--tool-call-parser qwen3_xml` del reporte, y el fallo descrito (el texto sigue, el parser deja de emitir tool calls tras cancelar) es del parser. La decision de Luis del 2026-10-14 (cerrar solo MTP y dejar el caso cancelacion, o cerrar entera) sigue pendiente; la regla de hoy exige ausencia medida del sujeto y aqui el sujeto parser existe.
