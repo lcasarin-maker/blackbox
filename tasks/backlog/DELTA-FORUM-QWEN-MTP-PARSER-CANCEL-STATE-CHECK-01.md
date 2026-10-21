@@ -89,3 +89,8 @@ $ docker inspect nemotron-server --format '{{json .Config.Cmd}}' | grep -oE '"--
 ```
 
 Veredicto: ABIERTA. Ausencia medida solo de Qwen y MTP; el motor corre con el mismo `--tool-call-parser qwen3_xml` del reporte, y el fallo descrito (el texto sigue, el parser deja de emitir tool calls tras cancelar) es del parser. La decision de Luis del 2026-10-14 (cerrar solo MTP y dejar el caso cancelacion, o cerrar entera) sigue pendiente; la regla de hoy exige ausencia medida del sujeto y aqui el sujeto parser existe.
+
+## Decision de Luis 2026-10-20 (boleta /vote): se cierra solo la mitad MTP; queda el caso del parser
+La mitad MTP del reporte (decodificacion especulativa) queda fuera de alcance: ausente en este equipo (medido el 2026-10-20: `speculative_config=None`, cero `--speculative-config` en el comando del contenedor). La ficha sigue abierta SOLO por el caso "cancelar a mitad del stream y comprobar que la siguiente tool call se emite con `qwen3_xml`" (version de un nodo en `tools/canario_motor.py`), porque el motor corre `--tool-call-parser qwen3_xml`, el mismo parser del reporte.
+Limite declarado: el `close_check` sigue siendo el original (evidencia real del sujeto, hoy `could_not_run`). Cuando el caso del parser tenga su prueba, el `close_check` se redefine para medirlo; hasta entonces no se relaja. Descartado por Luis: cerrarla entera como `void_wontfix` (motivo: sin motivo declarado).
+

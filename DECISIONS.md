@@ -444,3 +444,11 @@ los dominios reservados y una regla contextual para teléfonos con espacios. Se 
 fijado en `.pre-commit-config.yaml` ejecuta staged y árbol completo. Los cinco contactos
 institucionales adicionales del fixture APT están en `tasks/pii_allow.txt`, como excepciones
 exactas y versionadas. Se conserva el resto de controles nativos de producto.
+
+## 2026-10-20 — La rama de Codex que enrolaba el kit de Simplecode se archiva como etiqueta, no vive como rama (voto de Luis)
+
+- **Decisión:** `codex/simplecode-local-a8853293` (2 commits del 2026-10-18: `dd80df30` y `b970e330`, que enrolan el kit como submódulo `.simplecode/kit` con un lanzador `.simplecode/simplecode`) se conserva como la etiqueta `archive/codex-simplecode-kit` en la misma punta, y la rama se borra de `origin`.
+- **Por qué:** la decisión del 2026-10-17 retiró ese lanzador y la del 2026-10-18 dejó el motor fijado en `.pre-commit-config.yaml`; una rama viva con los 2 commits sin aterrizar hace que cada `/clean` la vuelva a encontrar como trabajo pendiente. La etiqueta conserva el historial sin ese ruido. Luis había restaurado la rama el mismo día; el motivo de conservarla no se declaró.
+- **Descarta:** dejar la rama viva exceptuada de la poda (mantiene a la vista una segunda generación del kit); borrarla sin etiqueta (los 2 commits solo se recuperarían por SHA mientras GitHub los conserve).
+- **Reabrir si:** se retoma el enrolamiento por submódulo; `git checkout archive/codex-simplecode-kit` trae los 2 commits.
+

@@ -3,12 +3,16 @@ id: DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01
 kind: task
 domain: VERDICT
 title: "Validar root subambient cooling and uma canary 01"
-status: open
+status: done
+closed_at: 2026-10-20
+closure_type: void_wontfix
+reason: "Sin sujeto que probar: Luis declaro el 2026-10-20 que no hay ni habra enfriamiento externo bajo la temperatura ambiente; ningun sensor de esta maquina lo ve (sin humedad ni IIO). El problema termico sigue en otras fichas. Reabrible si se instala enfriamiento externo o un sensor de punto de rocio."
+evidence: {"pass": "tasks/evidence/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01/pass.txt", "fail": "tasks/evidence/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01/fail.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_debt_registration_controls.py::test_delta_root_subambient_cooling_and_uma_canary_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+close_check: {"cmd": "grep -q sin_enfriamiento_externo_declarado tasks/evidence/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01/decision.txt", "expect": "exit_zero", "porque": "Cerrada sin sujeto (void_wontfix, voto de Luis 2026-10-20): lo verificable por maquina es que la declaracion quedo registrada con su centinela. Control negativo: sin decision.txt el comando da rc 2 (tasks/evidence/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01/fail.txt)."}
 ---
 
 ## Registro y responsable
@@ -89,3 +93,6 @@ ls: no se puede acceder a '/sys/bus/iio/devices': No existe el archivo o el dire
 ```
 
 Veredicto: ABIERTA / NO PUDE medir la ausencia del sujeto. El problema termico existe en este equipo (zonas ACPI a 84 C ahora; 95-98 C en los cortes segun la ficha); solo se midio la ausencia de un sensor de humedad/punto de rocio, que es ausencia de instrumento y no del sujeto. Si Luis declara que no hay ni habra enfriamiento externo, esa es una decision suya, no una medicion.
+
+## Cierre 2026-10-20 (boleta /vote)
+Voto de Luis: no hay ni habra enfriamiento externo; `void_wontfix` reabrible. Motivo: sin motivo declarado. Descartado: dejarla abierta esperando un montaje que Luis declaro inexistente. Evidencia en `tasks/evidence/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01/{decision,fail,pass}.txt`.
