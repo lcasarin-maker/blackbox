@@ -21,6 +21,10 @@ Dos corridas seguidas de la puerta de producto (`python3 -m pytest -q -n 4 -m "n
 
 Los cambios de esa sesion tocaron solo fichas de `tasks/`, asi que el fallo no viene de ellos. Es una prueba que congela un cgroup real y espera un evento con plazo; bajo cuatro workers y otras pruebas de la clase de cgroups el plazo no alcanza una vez de dos.
 
+## Actualizacion 2026-10-20 (cuatro corridas de la puerta en la misma sesion)
+
+Corridas 1 y 3 fallaron con este test (`1 failed, 3703 passed` y `2 failed, 3706 passed`; en la 3 el otro fallo era un archivo con el hostname, ya corregido en 4992fb9f). Corridas 2 y 4 pasaron (`3704 passed` y `3708 passed`). Total medido: 2 fallos de 4 corridas.
+
 ## Que falta
 
 Medir cuantas corridas de la puerta fallan en una serie (N fijo y declarado), identificar si el plazo de `_espera_evento` es el limite o si otra prueba mueve el cgroup, y marcar la prueba para el carril serial (`mutates_real_source`, como `DEBT-TEST-ESCALON-REAL-MATADO-POR-OTRO-PROCESO-01`) o dar a la espera un plazo medido. Una prueba que falla al azar en la puerta de push bloquea publicar sin que nada este roto; pasarla a ciegas con un reintento es el cierre por supresion que la ley prohibe.
