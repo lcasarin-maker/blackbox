@@ -109,12 +109,12 @@ $ journalctl -k --no-pager -o short-iso | grep -c -i scanoutcarveout
 $ journalctl -k --no-pager -o short-iso | grep -c -E 'NV_ERR_NO_MEMORY'
 4
 $ journalctl -k --no-pager -o short-iso | grep -E 'NV_ERR_NO_MEMORY' | cut -c1-90
-2026-10-19T13:49:04-06:00 aitopatom-41f1 kernel: NVRM: nvCheckOkFailedNoLog: Check failed:
-2026-10-20T16:49:26-06:00 aitopatom-41f1 kernel: NVRM: nvCheckOkFailedNoLog: Check failed:
-2026-10-20T16:49:26-06:00 aitopatom-41f1 kernel: NVRM: nvCheckOkFailedNoLog: Check failed:
-2026-10-20T21:55:31-06:00 aitopatom-41f1 kernel: NVRM: nvCheckOkFailedNoLog: Check failed:
+2026-10-19T13:49:04-06:00 <hostname> kernel: NVRM: nvCheckOkFailedNoLog: Check failed:
+2026-10-20T16:49:26-06:00 <hostname> kernel: NVRM: nvCheckOkFailedNoLog: Check failed:
+2026-10-20T16:49:26-06:00 <hostname> kernel: NVRM: nvCheckOkFailedNoLog: Check failed:
+2026-10-20T21:55:31-06:00 <hostname> kernel: NVRM: nvCheckOkFailedNoLog: Check failed:
 $ journalctl -k --no-pager -o short-iso | head -1 | cut -c1-60     # el journal retenido empieza aqui
-2026-10-19T08:12:28-06:00 aitopatom-41f1 kernel: Booting Lin
+2026-10-19T08:12:28-06:00 <hostname> kernel: Booting Lin
 ```
 
 Veredicto: ABIERTA. Hay cuatro `NV_ERR_NO_MEMORY` del driver en el journal retenido (desde el 2026-10-19; el del 2026-10-13 ya rotó) en el OEM exacto del sujeto. La ausencia de Sway y de `scanoutcarveout` esta medida, pero el sujeto posible de la ficha es "asignaciones del driver que fallan en este OEM", y eso existe y se repite. Sigue pendiente la atribucion (que proceso pedia memoria) y la decision de Luis sobre cual es el sujeto.
