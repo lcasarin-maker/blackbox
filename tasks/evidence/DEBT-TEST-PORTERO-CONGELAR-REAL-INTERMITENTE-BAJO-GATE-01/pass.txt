@@ -1,0 +1,5 @@
+# pass.txt -- close_check DESPUES del arreglo (medido 2026-10-20)
+$ grep -qx test_portero_congelar_estable tasks/evidence/DEBT-TEST-PORTERO-CONGELAR-REAL-INTERMITENTE-BAJO-GATE-01/medicion.txt; echo rc=$?
+rc=0
+# La linea la escribe medicion.txt solo tras 10 corridas de la puerta paralela completa (fase 1 y fase 2) con 0 fallos, mas el control
+# con demonio emulado: test original 10 de 10 fallan, test arreglado 10 de 10 pasan. Detalle literal en medicion.txt.
