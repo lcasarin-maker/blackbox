@@ -110,3 +110,64 @@ def test_oem_threshold_missing_is_unknown_and_exceeded_is_fail(tmp_path: Path) -
     assert missing["status"] == "unknown" and "OEM-safe threshold" in missing["reason"], missing
     hot = _run(tmp_path / "b", _thermal(zone_c=105.0), _scenario(capped_bench=_bench(80)))
     assert hot["status"] == "fail" and "trip point" in hot["reason"], hot
+
+
+def _bridged(*, zone_types: tuple[str | None, ...] = ("acpitz", "acpitz"),
+             extra: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """Forma de la captura real: hwmon `acpitz` sin temp*_label, puente thermal_hwmon a thermal_zone*/type."""
+    capture = _thermal()
+    trip = capture["thermal_zones"][0]["trip_points"]
+    capture["thermal_zones"] = [
+        {"name": f"thermal_zone{i}", "temperature": {"status": "ok", "value": 45.0}, "trip_points": trip,
+         "type": {"status": "ok", "value": kind} if kind else {"status": "absent", "error": "type unavailable"}}
+        for i, kind in enumerate(zone_types)]
+    capture["thermal_zone_scan"] = {"count": len(zone_types)}
+    unlabelled = {"status": "absent", "error": "label unavailable"}
+    capture["hwmon"] = [
+        {"name": "hwmon0", "chip_name": {"status": "ok", "value": "acpitz"},
+         "temperature_inputs": [{"path": f"/sys/class/hwmon/hwmon0/temp{i + 1}_input", "label": unlabelled}
+                                for i in range(len(zone_types))]},
+        {"name": "hwmon1", "chip_name": {"status": "ok", "value": "nvme"},
+         "temperature_inputs": [{"path": "/sys/class/hwmon/hwmon1/temp1_input",
+                                 "label": {"status": "ok", "value": "Composite"}}]},
+        *(extra or [])]
+    capture["hwmon_scan"] = {"count": len(capture["hwmon"])}
+    return capture
+
+
+def test_unlabelled_inputs_identified_by_thermal_zone_type_pass(tmp_path: Path) -> None:
+    """Voto de Luis 2026-10-20: sin temp*_label, la zona se identifica por thermal_zone*/type."""
+    result = _run(tmp_path, _bridged(), _scenario())
+    assert result["checks"]["sensor_labels"] == "pass", result
+    assert result["status"] == "pass", result
+
+
+def test_zone_without_label_nor_type_is_not_pass(tmp_path: Path) -> None:
+    """Control negativo: una zona sin label ni type rompe el puente y deja sensor_labels en unknown."""
+    result = _run(tmp_path, _bridged(zone_types=("acpitz", None)), _scenario())
+    assert result["checks"]["sensor_labels"] == "unknown", result
+    assert result["status"] == "unknown" and "hwmon0/temp1_input" in result["reason"], result
+    assert "hwmon0/temp2_input" in result["reason"], result
+
+
+def test_unlabelled_device_without_thermal_zone_is_not_pass(tmp_path: Path) -> None:
+    """La forma de mt7925_phy0 en la captura real: hwmon sin label y sin thermal_zone de su type."""
+    wifi = {"name": "hwmon2", "chip_name": {"status": "ok", "value": "mt7925_phy0"},
+            "temperature_inputs": [{"path": "/sys/class/hwmon/hwmon2/temp1_input",
+                                    "label": {"status": "absent", "error": "label unavailable"}}]}
+    result = _run(tmp_path, _bridged(extra=[wifi]), _scenario())
+    assert result["checks"]["sensor_labels"] == "unknown", result
+    assert "hwmon2/temp1_input" in result["reason"] and "hwmon0/" not in result["reason"], result
+
+
+def test_bridge_count_mismatch_or_ambiguous_name_is_not_pass(tmp_path: Path) -> None:
+    (tmp_path / "a").mkdir()
+    (tmp_path / "b").mkdir()
+    short = _bridged()
+    short["thermal_zones"] = short["thermal_zones"][:1]
+    short["thermal_zone_scan"] = {"count": 1}
+    assert _run(tmp_path / "a", short, _scenario())["checks"]["sensor_labels"] == "unknown"
+    twin = {"name": "hwmon2", "chip_name": {"status": "ok", "value": "acpitz"},
+            "temperature_inputs": [{"path": "/sys/class/hwmon/hwmon2/temp1_input",
+                                    "label": {"status": "ok", "value": "x"}}]}
+    assert _run(tmp_path / "b", _bridged(extra=[twin]), _scenario())["checks"]["sensor_labels"] == "unknown"

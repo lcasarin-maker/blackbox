@@ -1,0 +1,73 @@
+## 2026-10-20 ANTES de tocar nada
+$ python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_reloj_verificador_limites.py::test_etiquetas_de_sensores_completas_en_la_captura_real
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_etiquetas_de_sensores_completas_en_la_captura_real ____________
+tests/test_reloj_verificador_limites.py:13: in test_etiquetas_de_sensores_completas_en_la_captura_real
+    assert verify_clock_cap_tradeoff.verify()["checks"]["sensor_labels"] == "pass"
+E   AssertionError: assert 'unknown' == 'pass'
+E
+E     - pass
+E     + unknown
+=========================== short test summary info ============================
+FAILED tests/test_reloj_verificador_limites.py::test_etiquetas_de_sensores_completas_en_la_captura_real
+1 failed in 0.09s
+rc=1
+
+## 2026-10-20 DESPUES de implementar la identificacion por thermal_zone*/type (sigue rojo)
+$ python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_reloj_verificador_limites.py::test_etiquetas_de_sensores_completas_en_la_captura_real
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_etiquetas_de_sensores_completas_en_la_captura_real ____________
+tests/test_reloj_verificador_limites.py:13: in test_etiquetas_de_sensores_completas_en_la_captura_real
+    assert verify_clock_cap_tradeoff.verify()["checks"]["sensor_labels"] == "pass"
+E   AssertionError: assert 'unknown' == 'pass'
+E
+E     - pass
+E     + unknown
+=========================== short test summary info ============================
+FAILED tests/test_reloj_verificador_limites.py::test_etiquetas_de_sensores_completas_en_la_captura_real
+1 failed in 0.07s
+rc=1
+
+$ python3 -c "import json; from tools import verify_clock_cap_tradeoff as v; d=json.loads(v.THERMAL_CAPTURE.read_text()); print('unidentified:', v._unidentified_sensors(d['hwmon'], d['thermal_zones'])); print(v.verify()['checks'])"
+unidentified: ['/sys/class/hwmon/hwmon2/temp1_input']
+{'thermal_inventory': 'pass', 'oem_identity': 'pass', 'sensor_labels': 'unknown', 'matched_clock_runs': 'unknown', 'rollback': 'unknown', 'oem_threshold': 'pass', 'same_window': 'unknown'}
+
+## Lectura de solo lectura de /sys (2026-10-20, sin sudo, sin carga)
+$ for z in /sys/class/thermal/thermal_zone*; do echo "$z type=$(cat $z/type) hwmon_links=$(ls -d $z/hwmon* 2>/dev/null)"; done
+/sys/class/thermal/thermal_zone0 type=acpitz hwmon_links=/sys/class/thermal/thermal_zone0/hwmon0
+/sys/class/thermal/thermal_zone1 type=acpitz hwmon_links=
+/sys/class/thermal/thermal_zone2 type=acpitz hwmon_links=
+/sys/class/thermal/thermal_zone3 type=acpitz hwmon_links=
+/sys/class/thermal/thermal_zone4 type=acpitz hwmon_links=
+/sys/class/thermal/thermal_zone5 type=acpitz hwmon_links=
+/sys/class/thermal/thermal_zone6 type=acpitz hwmon_links=
+$ for h in /sys/class/hwmon/hwmon*; do echo "$h name=$(cat $h/name) device=$(readlink -f $h/device)"; done
+/sys/class/hwmon/hwmon0 name=acpitz device=/sys/devices/virtual/thermal/thermal_zone0   (temp1..temp7_input, sin temp*_label)
+/sys/class/hwmon/hwmon1 name=nvme device=/sys/devices/pci0004:00/0004:00:00.0/0004:01:00.0/nvme/nvme0   (temp1..3 con label)
+/sys/class/hwmon/hwmon2 name=mt7925_phy0 device=/sys/devices/pci0009:00/0009:00:00.0/0009:01:00.0/ieee80211/phy0   (temp1_input, sin label)
+
+Lectura: los 7 temp*_input de hwmon0 son el puente thermal_hwmon del kernel sobre thermal_zone0..6 (type acpitz,
+7 zonas = 7 entradas): quedan identificados por type. hwmon2/temp1_input es el radio Wi-Fi MediaTek mt7925; el
+kernel no le registra thermal_zone: ni label ni type lo identifican. 10 de 11 identificadas; 1 sin identificar.
+
+## Controles negativos (mutantes inyectados como plugin de pytest, sin tocar el codigo versionado)
+$ PYTHONPATH=<scratchpad>/mutants:. python3 -m pytest -q -p no:cacheprovider -p mutant_blind tests/test_clock_tradeoff_composed_pass.py -k "thermal_zone_type or label_nor_type or without_thermal_zone or ambiguous"
+   (mutant_blind: _unidentified_sensors devuelve [] siempre)
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_zone_without_label_nor_type_is_not_pass
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_unlabelled_device_without_thermal_zone_is_not_pass
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_bridge_count_mismatch_or_ambiguous_name_is_not_pass
+3 failed, 1 passed, 9 deselected in 0.18s
+rc=1
+$ PYTHONPATH=<scratchpad>/mutants:. python3 -m pytest -q -p no:cacheprovider -p mutant_label_only tests/test_clock_tradeoff_composed_pass.py -k "..."
+   (mutant_label_only: la regla anterior, solo temp*_label)
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_unlabelled_inputs_identified_by_thermal_zone_type_pass
+FAILED tests/test_clock_tradeoff_composed_pass.py::test_unlabelled_device_without_thermal_zone_is_not_pass
+2 failed, 2 passed, 9 deselected in 0.21s
+rc=1
+$ PYTHONPATH=<scratchpad>/mutants:. python3 -m pytest -q -p no:cacheprovider -p mutant_blind --runxfail tests/test_reloj_verificador_limites.py::test_etiquetas_de_sensores_completas_en_la_captura_real
+.                                                                        [100%]
+1 passed in 0.05s
+rc=0
+   (el close_check SI puede salir verde: con el instrumento ciego pasa; con el real queda rojo por hwmon2/temp1_input)

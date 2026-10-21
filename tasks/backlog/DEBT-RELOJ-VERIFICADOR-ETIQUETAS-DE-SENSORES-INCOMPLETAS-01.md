@@ -17,3 +17,28 @@ En la captura `THERMAL_CAPTURE` hay 11 entradas `temp*_input` en hwmon y solo 3 
 
 ## Que falta
 Decidir si las zonas sin etiqueta se identifican por `thermal_zone*/type` o por otra fuente, con un test que muestre rojo cuando una zona queda sin identificar. No se baja el requisito de etiquetas para que pase.
+
+## Medido 2026-10-20 (tras el voto de Luis: identificar por `thermal_zone*/type`)
+Implementado en `tools/verify_clock_cap_tradeoff.py::_unidentified_sensors`: una entrada sin `temp*_label`
+cuenta como identificada solo por el puente thermal_hwmon del kernel (un unico hwmon cuyo `name` es el type
+de la zona, con tantas `temp*_input` como zonas de ese type). Tests en `tests/test_clock_tradeoff_composed_pass.py`
+(positivo, zona sin label ni type, dispositivo sin thermal_zone, conteo distinto o nombre ambiguo).
+
+Sobre la captura real el resultado es 10 de 11 identificadas; queda una:
+`unidentified: ['/sys/class/hwmon/hwmon2/temp1_input']` y `sensor_labels: unknown`. Es `mt7925_phy0`
+(radio Wi-Fi MediaTek, `device -> .../ieee80211/phy0`); la lectura de solo lectura de `/sys/class/thermal`
+el 2026-10-20 muestra 7 zonas, todas `acpitz`, ninguna para el Wi-Fi. El `type` no puede identificarla:
+la ficha sigue abierta. Evidencia literal: `tasks/evidence/DEBT-RELOJ-VERIFICADOR-ETIQUETAS-DE-SENSORES-INCOMPLETAS-01/fail.txt`.
+
+Limite declarado de la identificacion por type: las 7 zonas se llaman `acpitz`; el type las vincula a
+`thermal_zone0..6` pero no dice que componente fisico mide cada una.
+
+Falta una decision de Luis sobre la entrada del Wi-Fi:
+1. Aceptar el `name` del hwmon (ya capturado como `chip_name`) como identificador cuando el dispositivo tiene una
+   sola `temp*_input`. Costo: ~10 lineas y un test rojo/verde; no requiere captura nueva. Riesgo: amplia la fuente
+   de identidad mas alla de `thermal_zone*/type`; un nombre de driver identifica el chip, no el componente.
+2. Extender `tools.thermal_coverage` para guardar `readlink hwmon*/device` y aceptar como identidad el dispositivo
+   del kernel (aqui `ieee80211/phy0`). Costo: cambio del capturador, captura nueva de solo lectura y sus tests;
+   la captura nueva cae fuera de la ventana A/B actual (`same_window` ya es unknown).
+3. Dejarlo como esta. Costo: `verify_clock_cap_tradeoff` nunca da pass en este equipo mientras exista el Wi-Fi.
+Excluir del requisito los dispositivos fuera del subsistema thermal baja el requisito y queda fuera sin voto explicito.
