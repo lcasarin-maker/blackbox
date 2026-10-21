@@ -1,0 +1,11 @@
+#!/bin/sh
+# simplecode-local-deployment v1
+set -eu
+kit=/home/lcasarin/projects/simplecode/.simplecode/releases/03cfc0bbba988c92af356d480263779458c5d726
+kit_git() { env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_COMMON_DIR git -C "$kit" "$@"; }
+test "$(kit_git rev-parse HEAD)" = 03cfc0bbba988c92af356d480263779458c5d726 || exit 2
+test -z "$(kit_git status --porcelain --untracked-files=no)" || { echo "COULD_NOT_RUN: modified Simplecode release" >&2; exit 2; }
+root=$(git rev-parse --show-toplevel) || exit 2
+export PYTHONPATH="$kit/src"
+export PATH="$kit/.venv/bin:$PATH"
+exec "$kit/.venv/bin/python" -m simplecode.fleet_runner --root "$root" "$@"

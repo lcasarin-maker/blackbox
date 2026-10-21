@@ -1,0 +1,112 @@
+fail_fast: false
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.22
+    hooks:
+      - id: ruff
+        stages:
+          - pre-commit
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+        args:
+          - --no-banner
+          - --redact
+        stages:
+          - pre-commit
+  - repo: local
+    hooks:
+      - id: ruff-full
+        name: Ruff whole tree
+        entry: ruff check .
+        language: system
+        stages:
+          - pre-push
+        pass_filenames: false
+        always_run: true
+      - id: pyright
+        name: Pyright
+        entry: pyright
+        language: system
+        stages:
+          - pre-push
+        pass_filenames: false
+        always_run: true
+      - id: git-history-present
+        name: Git history enumerated
+        entry: sh -c 'count=$(git rev-list --all --count) && test "$count" -gt 0'
+        language: system
+        stages:
+          - pre-push
+        pass_filenames: false
+        always_run: true
+      - id: gitleaks-history
+        name: Gitleaks history
+        entry: gitleaks git --no-banner --redact --log-opts=--all .
+        language: system
+        stages:
+          - pre-push
+        pass_filenames: false
+        always_run: true
+      - id: pytest
+        name: Product behavior
+        entry: sh -c 'python3 -m pytest -q -n 4 -m "not slow and not e2e and not mutates_real_source" --ignore=tests/test_bb_bash.py && python3 -m pytest -q -m mutates_real_source'
+        language: system
+        stages:
+          - pre-push
+        pass_filenames: false
+        always_run: true
+      - id: bash-sintaxis
+        name: sintaxis de los scripts bash
+        entry: bash -n
+        language: system
+        files: ^(bin/bb|.*\.sh)$
+      - id: bb-cobertura-piso
+        name: cobertura de bin/bb no baja del piso
+        entry: tools/piso_cobertura.sh
+        language: system
+        stages:
+          - pre-push
+        pass_filenames: false
+        always_run: true
+      - id: inventario-spec
+        name: SPEC.md inventaria lo que el repo ejecuta y posee
+        entry: python3 -m tools.inventario --check
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: integridad-archivos
+        name: Simplecode text integrity (staged)
+        entry: python -m simplecode.guards.corruption_guard --staged
+        language: python
+        additional_dependencies:
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@3981ed99e878102856f5ef5c078948a89044f37c
+        stages: [pre-commit]
+        pass_filenames: false
+        always_run: true
+      - id: pii-staged
+        name: Simplecode PII in changed files
+        entry: python -m simplecode.verification.pii_scan --root . --files
+        language: python
+        additional_dependencies:
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@3981ed99e878102856f5ef5c078948a89044f37c
+        stages: [pre-commit]
+      - id: integridad-arbol
+        name: Simplecode text integrity (tracked tree)
+        entry: python -m simplecode.guards.corruption_guard
+        language: python
+        additional_dependencies:
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@3981ed99e878102856f5ef5c078948a89044f37c
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+      - id: pii-arbol
+        name: Simplecode PII in tracked tree
+        entry: python -m simplecode.verification.pii_scan --root . --all-tracked
+        language: python
+        additional_dependencies:
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@3981ed99e878102856f5ef5c078948a89044f37c
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
