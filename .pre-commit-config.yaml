@@ -4,7 +4,7 @@ repos:
     rev: v0.15.22
     hooks:
       - id: ruff
-        args: ["--extend-select", "S102,S301,S602,S608,S307,S506"]
+        args: ["--extend-select", "S102,S301,S602,S608,S307,S506,S604,S605,PLE2502,PLE2510,PLE2512,PLE2513,PLE2514,PLE2515"]
         stages:
           - pre-commit
   - repo: https://github.com/gitleaks/gitleaks
@@ -20,7 +20,7 @@ repos:
     hooks:
       - id: ruff-full
         name: Ruff whole tree
-        entry: "ruff check . --extend-select S102,S301,S602,S608,S307,S506"
+        entry: "ruff check . --extend-select S102,S301,S602,S608,S307,S506,S604,S605,PLE2502,PLE2510,PLE2512,PLE2513,PLE2514,PLE2515"
         language: system
         stages:
           - pre-push
@@ -73,7 +73,7 @@ repos:
         always_run: true
       - id: inventario-spec
         name: SPEC.md inventaria lo que el repo ejecuta y posee
-        entry: python3 -m tools.inventario --check
+        entry: "/opt/miniforge3/bin/python3 -m tools.inventario --check"
         language: system
         pass_filenames: false
         always_run: true
@@ -82,7 +82,7 @@ repos:
         entry: python -m simplecode.guards.corruption_guard --staged
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@586506a6465007975ed827a04d2bab23fa0905e9
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@00a60fceaac15d914254d86fd20a02bf80b75f23
         stages: [pre-commit]
         pass_filenames: false
         always_run: true
@@ -91,14 +91,14 @@ repos:
         entry: python -m simplecode.verification.pii_scan --root . --files
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@586506a6465007975ed827a04d2bab23fa0905e9
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@00a60fceaac15d914254d86fd20a02bf80b75f23
         stages: [pre-commit]
       - id: integridad-arbol
         name: Simplecode text integrity (tracked tree)
         entry: python -m simplecode.guards.corruption_guard
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@586506a6465007975ed827a04d2bab23fa0905e9
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@00a60fceaac15d914254d86fd20a02bf80b75f23
         stages: [pre-push]
         pass_filenames: false
         always_run: true
@@ -107,7 +107,7 @@ repos:
         entry: python -m simplecode.verification.pii_scan --root . --all-tracked
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@586506a6465007975ed827a04d2bab23fa0905e9
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@00a60fceaac15d914254d86fd20a02bf80b75f23
         stages: [pre-push]
         pass_filenames: false
         always_run: true
