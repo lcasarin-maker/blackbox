@@ -434,7 +434,14 @@ def _espera_evento(cg, linea):
 
 @pytest.mark.integration
 @pytest.mark.skipif(not _delegado(), reason="sin cgroup v2 delegado al usuario (systemd --user)")
-def test_real_mover_topar_en_caliente_congelar_y_control_negativo(tmp_path):
+def test_real_mover_topar_en_caliente_congelar_y_control_negativo(tmp_path, monkeypatch):
+    # El portero vivo de la maquina (modo actuar) descongela todo scope `bb-portero-<clase>-<pid>.scope` congelado cuando
+    # hay turno libre (tools/portero.py::_decide_clase) y, fuera de actuar, descongela_propios hace lo mismo con cualquiera.
+    # El scope de esta prueba (un `sleep 60`, clase suite) casaba con esa regla: si el demonio escribia cgroup.freeze=0
+    # entre nuestro freeze=1 y la lectura de cgroup.events, la prueba veia `frozen 0` (assert frozen 1, medido en
+    # DEBT-TEST-PORTERO-CONGELAR-REAL-INTERMITENTE-BAJO-GATE-01). Con un prefijo propio el demonio no reconoce el scope.
+    monkeypatch.setattr(po, "PREFIJO_UNIDAD", "bbtest-portero-")
+    assert not po.NOMBRE_UNIDAD.match(po.nombre_unidad("suite", 1))  # el demonio vivo no lo ve como suyo
     tag = uuid.uuid4().hex[:8]
     p = subprocess.Popen(["systemd-run", "--user", "--scope", "--quiet", f"--unit=bbtest-a-{tag}", "--", "sleep", "60"])
     h = subprocess.Popen(["systemd-run", "--user", "--scope", "--quiet", f"--unit=bbtest-h-{tag}", "--", "sleep", "60"])
