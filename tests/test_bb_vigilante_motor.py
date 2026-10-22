@@ -162,6 +162,14 @@ def test_control_negativo_motor_que_avanza_no_reinicia(falso):
     assert _reinicios(tmp) == []
 
 
+def test_peticion_activa_que_avanza_no_sondea_chat_en_cola(falso):
+    tmp, env = falso
+    _atasco(env, 1, FAKE_RUN="1", FAKE_GEN="101", FAKE_PRO="501", FAKE_CHAT_CODE="000")
+    assert _reinicios(tmp) == []
+    assert (tmp / "d" / "vigilante_motor.fallos").read_text(encoding="utf-8").strip() == "0"
+    assert "omite sonda de chat en cola" in (tmp / "d" / "vigilante_motor.log").read_text(encoding="utf-8")
+
+
 def test_control_negativo_motor_ocioso_run_cero_no_reinicia(falso):
     tmp, env = falso
     _atasco(env, 6, FAKE_RUN="0")

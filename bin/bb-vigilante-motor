@@ -6,9 +6,12 @@
 # muere; este script cubre lo que systemd no ve: la unidad sigue activa y
 # /v1/models responde 200, pero el chat no vuelve. Medido el 2026-10-09: de 03:21
 # a 06:52 sin una sola ficha, y otras cuatro veces ese dia y el siguiente.
-# Prueba una llamada minima de chat; tras UMBRAL fallos seguidos reinicia la
-# unidad. No actua durante GRACIA_S tras un arranque (el modelo tarda ~4 min en
-# cargar). Lo dispara ai-nemotron-vigilante.timer cada 2 minutos.
+# Prueba una llamada minima de chat cuando el motor esta ocioso; tras UMBRAL
+# fallos seguidos reinicia la unidad. Si una peticion activa avanza en las
+# metricas, no encola esa sonda: con concurrencia serial, esperaria detras del
+# trabajo sano y lo confundiria con un cuelgue. No actua durante GRACIA_S tras
+# un arranque (el modelo tarda ~4 min en cargar). Lo dispara
+# ai-nemotron-vigilante.timer cada 2 minutos.
 #
 # Segundo disparador, desde 2026-10-10 (voto de Luis): un ATASCO por metricas.
 # Con peticiones corriendo, ni los tokens generados ni los de prompt avanzan
@@ -103,6 +106,14 @@ if [ -n "$m" ]; then
   if [ "$natasco" -ge "$ATASCO_N" ]; then
     echo "$gen $pro 0" > "$ESTADO_ATASCO"; echo 0 > "$ESTADO"
     reinicia "atasco por metricas"; exit 0
+  fi
+  if [ "$run" -gt 0 ]; then
+    # El endpoint admite una sola secuencia: una sonda de chat quedaria en
+    # cola y su timeout no mide salud. El proximo tick conserva la deteccion
+    # de atasco por contadores planos.
+    echo 0 > "$ESTADO"; alerta_resuelta
+    reg "peticion activa con tokens avanzando; omite sonda de chat en cola"
+    exit 0
   fi
 fi
 
