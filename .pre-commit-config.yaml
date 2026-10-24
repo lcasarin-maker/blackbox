@@ -82,7 +82,7 @@ repos:
         entry: python -m simplecode.guards.corruption_guard --staged
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@96f58b10c635760d07f6ec27a460f68e40cc566e
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@2358fdba8605bdde003f775ed7e9850358d65913
         stages: [pre-commit]
         pass_filenames: false
         always_run: true
@@ -91,14 +91,14 @@ repos:
         entry: python -m simplecode.verification.pii_scan --root . --files
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@96f58b10c635760d07f6ec27a460f68e40cc566e
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@2358fdba8605bdde003f775ed7e9850358d65913
         stages: [pre-commit]
       - id: integridad-arbol
         name: Simplecode text integrity (tracked tree)
         entry: python -m simplecode.guards.corruption_guard
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@96f58b10c635760d07f6ec27a460f68e40cc566e
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@2358fdba8605bdde003f775ed7e9850358d65913
         stages: [pre-push]
         pass_filenames: false
         always_run: true
@@ -107,7 +107,7 @@ repos:
         entry: python -m simplecode.verification.pii_scan --root . --all-tracked
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@96f58b10c635760d07f6ec27a460f68e40cc566e
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@2358fdba8605bdde003f775ed7e9850358d65913
         stages: [pre-push]
         pass_filenames: false
         always_run: true
