@@ -52,7 +52,7 @@ repos:
         always_run: true
       - id: pytest
         name: Product behavior
-        entry: sh -c 'python3 -m pytest -q -n 4 -m "not slow and not e2e and not mutates_real_source" --ignore=tests/test_bb_bash.py && python3 -m pytest -q -m mutates_real_source'
+        entry: "sh -c 'python3 -m simplecode.verification.test_impact -q -n 4 -m \"not slow and not e2e and not mutates_real_source\" --ignore=tests/test_bb_bash.py && python3 -m simplecode.verification.test_impact -q -m mutates_real_source'"
         language: system
         stages:
           - pre-push
@@ -82,7 +82,7 @@ repos:
         entry: python -m simplecode.guards.corruption_guard --staged
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@2358fdba8605bdde003f775ed7e9850358d65913
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@6c0f23ba0f36f244cb2d64062cc72a1ea2f68aea
         stages: [pre-commit]
         pass_filenames: false
         always_run: true
@@ -91,14 +91,14 @@ repos:
         entry: python -m simplecode.verification.pii_scan --root . --files
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@2358fdba8605bdde003f775ed7e9850358d65913
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@6c0f23ba0f36f244cb2d64062cc72a1ea2f68aea
         stages: [pre-commit]
       - id: integridad-arbol
         name: Simplecode text integrity (tracked tree)
         entry: python -m simplecode.guards.corruption_guard
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@2358fdba8605bdde003f775ed7e9850358d65913
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@6c0f23ba0f36f244cb2d64062cc72a1ea2f68aea
         stages: [pre-push]
         pass_filenames: false
         always_run: true
@@ -107,7 +107,7 @@ repos:
         entry: python -m simplecode.verification.pii_scan --root . --all-tracked
         language: python
         additional_dependencies:
-          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@2358fdba8605bdde003f775ed7e9850358d65913
+          - simplecode @ git+https://github.com/lcasarin-maker/simplecode.git@6c0f23ba0f36f244cb2d64062cc72a1ea2f68aea
         stages: [pre-push]
         pass_filenames: false
         always_run: true
