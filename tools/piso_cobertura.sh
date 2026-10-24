@@ -12,6 +12,19 @@ piso_f=tests/cobertura_bb.piso
 [ -f "$piso_f" ] || { echo "[bb-cobertura] falta $piso_f" >&2; exit 2; }
 piso=$(tr -d ' \n' < "$piso_f")
 
+# Si corre en hook de pre-push y ni bin/bb ni su suite cambiaron, la cobertura se mantiene
+if [ -n "${PRE_COMMIT_FROM_REF:-}" ] && [ -n "${PRE_COMMIT_TO_REF:-}" ]; then
+  zero="0000000000000000000000000000000000000000"
+  base="$PRE_COMMIT_FROM_REF"
+  if [ "$base" = "$zero" ]; then
+    base=$(git rev-parse --abbrev-ref --symbolic-full-name @{upstream} 2>/dev/null || echo "origin/HEAD")
+  fi
+  if ! git diff --name-only "$base..$PRE_COMMIT_TO_REF" 2>/dev/null | grep -qE '^bin/bb$|^tests/test_bb_bash.py$'; then
+    echo "[bb-cobertura] bin/bb y tests/test_bb_bash.py sin cambios en el rango del push; piso ${piso}% retenido (OK)"
+    exit 0
+  fi
+fi
+
 salida=$(tools/cobertura_bash.sh bin/bb \
          python3 -m pytest tests/test_bb_bash.py -q -p no:randomly) || {
   echo "[bb-cobertura] COULD_NOT_RUN: el medidor fallo" >&2; exit 2; }
