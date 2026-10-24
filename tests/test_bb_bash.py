@@ -40,6 +40,10 @@ def correr(args, datos=None, extra_env=None, timeout=120):
     env = dict(os.environ)
     if datos is not None:
         env["BLACKBOX_DATA"] = str(datos)
+    # Aislamiento hermético de red: evita colgarse si vLLM está activo en localhost:8000
+    env.setdefault("BLACKBOX_GATEWAY_URL", "http://127.0.0.1:1")
+    env.setdefault("BLACKBOX_GATEWAY_CHAT", "http://127.0.0.1:1")
+    env.setdefault("BLACKBOX_GATEWAY_METRICS", "http://127.0.0.1:1")
     env.update(extra_env or {})
     return subprocess.run([str(BB), *args], capture_output=True, text=True,
                           env=env, timeout=timeout)
