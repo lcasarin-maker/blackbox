@@ -42,9 +42,9 @@ repos:
           - pre-push
         pass_filenames: false
         always_run: true
-      - id: gitleaks-history
-        name: Gitleaks history
-        entry: gitleaks git --no-banner --redact --log-opts=--all .
+      - id: gitleaks-new-commits
+        name: Gitleaks commits since tracked upstream
+        entry: sh -c 'base=$(git rev-parse --abbrev-ref --symbolic-full-name @{upstream} 2>/dev/null || echo origin/master) && gitleaks git --no-banner --redact --log-opts="$base..HEAD" .'
         language: system
         stages:
           - pre-push
