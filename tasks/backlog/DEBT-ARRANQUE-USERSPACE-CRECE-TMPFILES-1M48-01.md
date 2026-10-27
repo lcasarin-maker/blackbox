@@ -51,3 +51,29 @@ El `close_check` falla hoy (132.6 s). Debe pasar solo con un boot real bajo 30 s
   no alcanza los 108 s medidos; con cache fria (metadatos leidos del disco) el borrado puede ser mucho mas lento, y no esta medido.
 - Pendiente: medicion en frio (`/tmp/claude-1000/.../scratchpad/bench_frio.sh`, necesita `sudo` para vaciar la cache) y comparar el
   tiempo de `tmpfiles-setup` del proximo arranque contra el conteo de `/tmp` antes de apagar.
+
+## Avance 2026-10-26 (serie por arranque desde el journal) y refutacion parcial
+
+Duracion de `systemd-tmpfiles-setup.service` (lineas Starting/Finished del journal de cada arranque guardado) y userspace total:
+
+| inicio del arranque | tmpfiles-setup | userspace |
+|---|---|---|
+| 10-12 18:33 | 2.9 s | 23 s |
+| 10-12 18:45 | 0.4 s | 23 s |
+| 10-12 21:57 | 0.7 s | 10 s |
+| 10-13 14:07 | 5.5 s | 15 s |
+| 10-16 10:56 | 22.0 s | 29 s |
+| 10-17 17:07 | 40.4 s | 48 s |
+| 10-19 08:12 | 30.4 s | 55 s |
+| 10-24 23:53 | 95.4 s | 120 s |
+| 10-26 19:58 | 108.2 s | 133 s |
+
+La unidad `systemd-tmpfiles-setup` explica casi todo el crecimiento del userspace. No hay relacion con el `Cable removal` del CX7 (aparece
+13 a 19 s tras el inicio de la unidad en 8 de 9 arranques, con tmpfiles de 0.4 a 108 s). Journal de este boot: 78.5 s de silencio total
+entre `systemd-fsckd.service: Deactivated` y `Finished systemd-tmpfiles-setup.service`.
+
+Banco de borrado en frio (`bench_frio.sh`, cache vaciada con `drop_caches=3`): 30000 archivos de 23 KiB en 0.52 s, 57193 archivos/s;
+356222 archivos tardarian 6 s. El conteo de `/tmp` que use (356222) lo hizo `find` como usuario normal y NO ve los directorios de root
+con modo 0700, entre ellos `/tmp/systemd-private-*` (que el arranque borra con la regla `R! /tmp/systemd-private-*`) y los
+`systemd-private-*` de `/var/tmp`. Es el candidato siguiente y no esta medido: puede contener caches de servicios con millones de archivos.
+Comando de medicion (root, solo lectura) en el reporte del 2026-10-26.
