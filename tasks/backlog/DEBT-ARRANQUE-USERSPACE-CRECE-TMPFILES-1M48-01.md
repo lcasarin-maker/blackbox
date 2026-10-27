@@ -37,3 +37,17 @@ Sin medir (exigen root): `/var/lib/docker` y `/var/lib/containerd` (`find` sin p
 ## Control negativo exigido
 
 El `close_check` falla hoy (132.6 s). Debe pasar solo con un boot real bajo 30 s, y el comando debe dar rc=1 sobre un boot lento.
+
+## Avance 2026-10-26 (medido con strace y un banco de borrado)
+
+- `systemd-tmpfiles --create --exclude-prefix=/dev` ejecutado ahora con `strace -f -ttt`: 2536 llamadas, **0.14 s** en total. La parte de
+  creacion no explica los 108 s del arranque. (`--dry-run` y `--verbose` no existen en systemd 255: dos comandos mios fallaron por eso.)
+- El arranque tambien ejecuta `--remove --boot`: las reglas `D /tmp 30d` y `D! /tmp/...` vacian `/tmp` al arrancar. `/tmp` vive en el
+  ext4 raiz (`/dev/nvme0n1p2`), no en tmpfs.
+- `/tmp` a los 34 min de este boot: **356222 archivos, 8.0 GB** (a los 3 min tenia 52): `cacheprof` 193892, `claude-1000` 70096, cuatro
+  directorios `.tmpXXXXXX` de ~19.6k cada uno (78k), `simple-next-cargo` 7644, `profiles-work` 2293. Se llena con la actividad de la sesion
+  y el siguiente arranque lo borra.
+- Banco con cache caliente (30000 archivos de 23 KiB, `rm -rf` + `sync`): 43145 archivos/s, **8 s** extrapolado a 356222 archivos. Eso
+  no alcanza los 108 s medidos; con cache fria (metadatos leidos del disco) el borrado puede ser mucho mas lento, y no esta medido.
+- Pendiente: medicion en frio (`/tmp/claude-1000/.../scratchpad/bench_frio.sh`, necesita `sudo` para vaciar la cache) y comparar el
+  tiempo de `tmpfiles-setup` del proximo arranque contra el conteo de `/tmp` antes de apagar.
