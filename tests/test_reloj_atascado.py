@@ -105,8 +105,11 @@ def _torch_falso(n_sync: list[int]) -> types.ModuleType:
     return mod
 
 
-def _prepara_prueba(monkeypatch: pytest.MonkeyPatch, salida: str) -> list[int]:
+def _prepara_prueba(monkeypatch: pytest.MonkeyPatch, salida: str, ocupantes: list[object] | None = None) -> list[int]:
+    """`ocupantes`: lo que devuelve cada consulta de procesos de computo, en orden (antes, al final); por defecto GPU libre."""
     n_sync: list[int] = []
+    respuestas = list(ocupantes) if ocupantes is not None else [[], []]
+    monkeypatch.setattr(r, "ocupantes", lambda *a, **k: respuestas.pop(0))
     monkeypatch.setitem(sys.modules, "torch", _torch_falso(n_sync))
     reloj = [1000.0]
 
@@ -167,3 +170,160 @@ def test_main_arranque_registra_con_el_modo_del_interruptor(monkeypatch: pytest.
     # control negativo: --prueba sola no registra
     _main_con(monkeypatch, {"estado": "SANO"}, capsys, ["--prueba"])
     assert len(llamadas) == 1
+
+
+# --- FEATURE-RELOJ-ATASCADO-SEGUNDO-EJE-TFLOPS-Y-GUARDA-DE-OCUPACION-01: segundo eje TFLOP/s ---
+
+
+def test_tflops_bajo_con_reloj_en_banda_y_sin_throttle_es_atascado() -> None:
+    d = r.decide([_f(96, 1200)] * 20, tflops=40.0)
+    assert d["estado"] == "ATASCADO" and d["tflops"] == 40.0
+    assert d["umbral_tflops"] == r.UMBRAL_TFLOPS and "PROVISIONAL" in d["umbral_tflops_estado"]  # se imprime provisional
+
+
+def test_tflops_control_negativo_mismo_reloj_con_tflops_sano_no_es_atascado() -> None:
+    d = r.decide([_f(96, 1200)] * 20, tflops=90.0)
+    assert d["estado"] == "INDETERMINADO"
+
+
+def test_tflops_frontera_del_umbral_es_estricta() -> None:
+    assert r.decide([_f(96, 1200)] * 20, tflops=r.UMBRAL_TFLOPS)["estado"] == "INDETERMINADO"
+    assert r.decide([_f(96, 1200)] * 20, tflops=r.UMBRAL_TFLOPS - 0.1)["estado"] == "ATASCADO"
+
+
+def test_tflops_bajo_con_throttle_o_sin_carga_no_es_atascado() -> None:
+    assert r.decide([_f(96, 1200, thr="0x0000000000000004")] * 20, tflops=40.0)["estado"] == "INDETERMINADO"
+    d = r.decide([_f(5, 1200)] * 20, tflops=10.0)  # sin carga: el segundo eje no rescata la falta de muestras
+    assert d["estado"] == "INDETERMINADO" and d["motivo"].startswith("NOT_COLLECTED")
+
+
+def test_tflops_ausente_deja_los_tres_estados_de_hoy() -> None:
+    assert r.decide([_f(96, 660)] * 20)["estado"] == "ATASCADO"
+    assert r.decide([_f(96, 2400, 55)] * 20)["estado"] == "SANO"
+    d = r.decide([_f(96, 1200)] * 20)
+    assert d["estado"] == "INDETERMINADO" and "umbral_tflops" not in d
+
+
+def test_tflops_la_prueba_entrega_sus_tflops_a_decide(monkeypatch: pytest.MonkeyPatch) -> None:
+    _prepara_prueba(monkeypatch, "1200, 20.0, 96, 0x0000000000000000")
+    v = r.prueba(segundos=15)
+    assert 0 < v["tflops"] < r.UMBRAL_TFLOPS and v["estado"] == "ATASCADO" and v["reloj_mediano_mhz"] == 1200.0
+    # control negativo: las mismas filas con un umbral por debajo de lo medido ya no son ATASCADO
+    monkeypatch.setattr(r, "UMBRAL_TFLOPS", 0.01)
+    _prepara_prueba(monkeypatch, "1200, 20.0, 96, 0x0000000000000000")
+    assert r.prueba(segundos=15)["estado"] == "INDETERMINADO"
+
+
+def test_main_atascado_remedio_alineado_con_el_hilo_387029(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    _, salida = _main_con(monkeypatch, {"estado": "ATASCADO"}, capsys, ["--prueba"])
+    remedio = salida["remedio"]
+    assert "adaptador" in remedio and "5 min" in remedio and "USB" in remedio and "387029" in remedio
+    assert "pared -> adaptador -> equipo" in remedio
+
+
+# --- FEATURE-RELOJ-PRUEBA-GUARDA-GPU-OCUPADA-01: guarda de GPU ocupada ---
+
+
+def _runner(rc: int, salida: str, llamadas: list[list[str]] | None = None) -> r.vpg.Runner:
+    def corre(argv: list[str]) -> tuple[int, str]:
+        if llamadas is not None:
+            llamadas.append(argv)
+        return rc, salida
+
+    return corre
+
+
+def test_ocupada_consulta_reutiliza_apps_cmd_y_excluye_el_pid_propio(tmp_path: Path) -> None:
+    (tmp_path / "4242").mkdir()
+    (tmp_path / "4242" / "comm").write_text("VLLM::EngineCor\n", encoding="utf-8")
+    llamadas: list[list[str]] = []
+    o = r.ocupantes(runner=_runner(0, "4242, 34669\n777, 170\n", llamadas), propio=777, proc=tmp_path)
+    assert llamadas == [r.vpg._APPS_CMD]
+    assert o == [{"pid": 4242, "nombre": "VLLM::EngineCor", "mib": 34669}]
+    # control negativo: solo el propio proceso en la lista es GPU libre
+    assert r.ocupantes(runner=_runner(0, "777, 170\n"), propio=777, proc=tmp_path) == []
+    assert r.ocupantes(runner=_runner(0, ""), propio=777, proc=tmp_path) == []
+
+
+def test_ocupada_consulta_que_falla_o_ilegible_es_none_nunca_libre(tmp_path: Path) -> None:
+    assert r.ocupantes(runner=_runner(127, "cannot run nvidia-smi"), propio=1, proc=tmp_path) is None
+    assert r.ocupantes(runner=_runner(0, "4242, [N/A]\n"), propio=1, proc=tmp_path) is None
+    # pid sin /proc legible: se lista igual, con el nombre como None (no se descarta)
+    assert r.ocupantes(runner=_runner(0, "4242, 5\n"), propio=1, proc=tmp_path) == [{"pid": 4242, "nombre": None, "mib": 5}]
+
+
+def test_ocupada_antes_de_la_prueba_da_indeterminado_sin_cargar_la_gpu(monkeypatch: pytest.MonkeyPatch) -> None:
+    ajeno = [{"pid": 4242, "nombre": "VLLM::EngineCor", "mib": 34669}]
+    n_sync = _prepara_prueba(monkeypatch, "660, 12.5, 96, 0x0000000000000000", ocupantes=[ajeno])
+    v = r.prueba(segundos=15)
+    assert v["estado"] == "INDETERMINADO" and v["motivo"].startswith("GPU_OCUPADA") and "4242" in v["motivo"]
+    assert v["ocupantes"] == ajeno and n_sync == []  # ni un matmul sobre una GPU compartida
+
+
+def test_ocupada_durante_la_prueba_anula_el_veredicto(monkeypatch: pytest.MonkeyPatch) -> None:
+    ajeno = [{"pid": 4242, "nombre": "python3", "mib": 900}]
+    _prepara_prueba(monkeypatch, "660, 12.5, 96, 0x0000000000000000", ocupantes=[[], ajeno])
+    v = r.prueba(segundos=15)
+    assert v["estado"] == "INDETERMINADO" and v["motivo"].startswith("GPU_OCUPADA") and v["ocupantes"] == ajeno
+    assert v["reloj_mediano_mhz"] == 660.0 and v["tflops"] > 0  # las cifras se conservan, el veredicto no
+
+
+def test_ocupada_control_negativo_gpu_libre_da_el_veredicto_de_siempre(monkeypatch: pytest.MonkeyPatch) -> None:
+    _prepara_prueba(monkeypatch, "660, 12.5, 96, 0x0000000000000000")
+    v = r.prueba(segundos=15)
+    assert v["estado"] == "ATASCADO" and "ocupantes" not in v
+    monkeypatch.setattr(r, "UMBRAL_TFLOPS", 0.01)  # el SANO de hoy, con TFLOP/s sobre el umbral
+    _prepara_prueba(monkeypatch, "2080, 67.0, 96, 0x0000000000000000")
+    assert r.prueba(segundos=15)["estado"] == "SANO"
+
+
+def test_ocupada_consulta_que_falla_es_not_collected_sin_cargar(monkeypatch: pytest.MonkeyPatch) -> None:
+    n_sync = _prepara_prueba(monkeypatch, "660, 12.5, 96, 0x0000000000000000", ocupantes=[None])
+    v = r.prueba(segundos=15)
+    assert v["estado"] == "INDETERMINADO" and v["motivo"].startswith("NOT_COLLECTED") and n_sync == []
+    # y si falla al final, tampoco se afirma nada
+    _prepara_prueba(monkeypatch, "660, 12.5, 96, 0x0000000000000000", ocupantes=[[], None])
+    v = r.prueba(segundos=15)
+    assert v["estado"] == "INDETERMINADO" and v["motivo"].startswith("NOT_COLLECTED")
+
+
+def test_ocupada_en_el_arranque_registra_sin_avisar(tmp_path: Path) -> None:
+    avisos: list[object] = []
+    res = {"estado": "INDETERMINADO", "motivo": "GPU_OCUPADA: pid 4242", "ocupantes": [{"pid": 4242, "nombre": "x", "mib": 1}]}
+    ev = r.arranque("observar", res, "b3", tmp_path, avisa=avisos.append)
+    assert ev is not None and ev["motivo"].startswith("GPU_OCUPADA") and ev["ocupantes"][0]["pid"] == 4242 and avisos == []
+    fila = json.loads((tmp_path / "reloj_arranque.jsonl").read_text(encoding="utf-8").splitlines()[-1])
+    assert fila["motivo"].startswith("GPU_OCUPADA")
+
+
+# --- FEATURE-RELOJ-VEREDICTO-BAJO-NO-ATASCADO-01: motivos separados dentro de INDETERMINADO ---
+
+
+def test_bajo_no_atascado_throttle_activo_lista_las_razones() -> None:
+    d = r.decide([_f(96, 1200, thr="0x0000000000000004")] * 20, tflops=40.0)
+    assert d["estado"] == "INDETERMINADO" and d["motivo"].startswith("THROTTLE_ACTIVO") and "0x0000000000000004" in d["motivo"]
+    d = r.decide([_f(96, 660, thr="0x0000000000000040")] * 20)
+    assert d["estado"] == "INDETERMINADO" and d["motivo"].startswith("THROTTLE_ACTIVO") and "0x0000000000000040" in d["motivo"]
+
+
+def test_bajo_no_atascado_reloj_alto_con_tflops_bajo_no_es_atascado() -> None:
+    d = r.decide([_f(96, 2000)] * 20, tflops=40.0)
+    assert d["estado"] == "INDETERMINADO" and d["motivo"].startswith("RELOJ_ALTO_RENDIMIENTO_BAJO")
+    d = r.decide([_f(96, 2000, thr="0x0000000000000004")] * 20, tflops=40.0)
+    assert d["estado"] == "INDETERMINADO" and d["motivo"].startswith("THROTTLE_ACTIVO")
+
+
+def test_bajo_no_atascado_reloj_en_banda_sin_throttle_da_la_mediana() -> None:
+    for tflops in (None, 90.0):
+        d = r.decide([_f(96, 1200)] * 20, tflops=tflops)
+        assert d["estado"] == "INDETERMINADO" and d["motivo"].startswith("RELOJ_EN_BANDA") and "1200" in d["motivo"]
+
+
+def test_bajo_no_atascado_control_negativo_las_filas_de_hoy_no_cambian() -> None:
+    for tflops in (None, 23.5):
+        d = r.decide([_f(96, 660)] * 20, tflops=tflops)
+        assert d["estado"] == "ATASCADO" and "motivo" not in d
+    for tflops in (None, 77.4):
+        d = r.decide([_f(96, 2080, 67)] * 20, tflops=tflops)
+        assert d["estado"] == "SANO" and "motivo" not in d
+    assert r.decide([_f(96, 2400, 55, thr="0x0000000000000004")] * 20)["estado"] == "SANO"  # sin TFLOP/s, como hoy
