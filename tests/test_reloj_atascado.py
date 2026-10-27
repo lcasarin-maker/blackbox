@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import json
+import os
+import re
+import subprocess
 import sys
 import types
 from pathlib import Path
 
 import pytest
+from test_bb_root_manifest import _forense  # reuso: arranque-forense sellado con las rutas de root sustituidas
 
+from tools import bb_root_run as rr
+from tools import incident_report
 from tools import reloj_atascado as r
 
 
@@ -138,6 +144,8 @@ def test_prueba_con_salida_malformada_es_indeterminado(monkeypatch: pytest.Monke
 def _main_con(monkeypatch: pytest.MonkeyPatch, resultado: dict, capsys: pytest.CaptureFixture[str], argv: list[str]) -> tuple[int, dict]:
     monkeypatch.setattr(r, "prueba", lambda: resultado)
     monkeypatch.setattr(r, "inicio", lambda: {"ultima_sana": "a", "primera_atascada": "b"})
+    if "BB_ARRANQUE_JSONL" not in os.environ:  # hermetico: nunca la fila real de /var/lib/blackbox
+        monkeypatch.setenv("BB_ARRANQUE_JSONL", "/nonexistent-bb-test/arranque.jsonl")
     codigo = r.main(argv)
     return codigo, json.loads(capsys.readouterr().out)
 
@@ -327,3 +335,213 @@ def test_bajo_no_atascado_control_negativo_las_filas_de_hoy_no_cambian() -> None
         d = r.decide([_f(96, 2080, 67)] * 20, tflops=tflops)
         assert d["estado"] == "SANO" and "motivo" not in d
     assert r.decide([_f(96, 2400, 55, thr="0x0000000000000004")] * 20)["estado"] == "SANO"  # sin TFLOP/s, como hoy
+
+
+# --- FEATURE-RELOJ-CAPTURA-PD-FIRMWARE-Y-TRANSICION-01: firmware por arranque y episodio cerrado ---
+DESCUBRIMIENTO = Path(__file__).resolve().parent.parent / "tasks/evidence/FEATURE-RELOJ-CAPTURA-PD-FIRMWARE-Y-TRANSICION-01/descubrimiento.txt"
+# La salida literal de `dmidecode -t 45` de esta unidad (2026-10-26) tal como quedo en la evidencia; no se inventa otra.
+T45_REAL = DESCUBRIMIENTO.read_text(encoding="utf-8").split("--- dmidecode 45\n", 1)[1].split("--- esrt", 1)[0]
+BIOS_REAL = ("# dmidecode 3.5\nHandle 0x0000, DMI type 0, 26 bytes\nBIOS Information\n"
+             "\tVendor: American Megatrends International, LLC.\n\tVersion: 5.36_0ACUM08\n\tBIOS Revision: 5.36\n")
+# Fila real de /var/lib/blackbox/pstore/arranque.jsonl (2026-10-25), anterior a esta ficha: solo el nombre de la fuente.
+FILA_VIEJA = '{"ts":"2026-10-25T05:55:32Z","boot_id":"463297c1-9c29-415d-b9a8-3315c8ffe956","pstore_archivos":0,"bert":"ausente","firmware":"bios+t45"}'
+PD0, PD1, EC, BIOS = "PD0 FW1: 5.22, FW2: 5.0", "PD1 FW1: 5.22, FW2: 5.0", "3.5.11", "5.36_0ACUM08"
+
+
+def _dmidecode_falso(d: Path, t45: str | None, bios: str | None) -> Path:
+    """Un `dmidecode` en el PATH: imprime el texto dado por tipo, o sale 1 si es None (un dmidecode que falla)."""
+    d.mkdir()
+    lineas = ["#!/bin/sh"]
+    for tipo, texto in (("45", t45), ("bios", bios)):
+        if texto is None:
+            lineas.append(f'if [ "$2" = {tipo} ]; then exit 1; fi')
+        else:
+            (d / f"{tipo}.txt").write_text(texto, encoding="utf-8")
+            lineas.append(f'if [ "$2" = {tipo} ]; then cat "{d / (tipo + ".txt")}"; fi')
+    (d / "dmidecode").write_text("\n".join(lineas) + "\n", encoding="utf-8")
+    (d / "dmidecode").chmod(0o755)
+    return d
+
+
+def _forense_con(tmp_path: Path, t45: str | None, bios: str | None = BIOS_REAL, copias_viejas: bool = False) -> tuple[Path, dict]:
+    """Corre arranque-forense (rutas sustituidas, sin root) con un dmidecode falso; devuelve base y la ultima fila."""
+    s, base, _ = _forense(tmp_path)
+    if copias_viejas:  # lo que dejo un arranque anterior con valores
+        base.mkdir()
+        base.chmod(0o755)
+        (base / "dmidecode-t45.txt").write_text(T45_REAL, encoding="utf-8")
+        (base / "dmidecode-bios.txt").write_text(BIOS_REAL, encoding="utf-8")
+    stub = _dmidecode_falso(tmp_path / "bin", t45, bios)
+    p = subprocess.run(["/bin/bash", str(s)], env={"PATH": f"{stub}:{rr.PATH_FIJO}", "LC_ALL": "C"}, capture_output=True, text=True, timeout=60)
+    assert p.returncode == 0, p.stderr
+    return base, json.loads((base / "pstore" / "arranque.jsonl").read_text(encoding="utf-8").splitlines()[-1])
+
+
+def test_pd_firmware_arranque_forense_anade_los_valores_a_la_fila(tmp_path: Path) -> None:
+    base, fila = _forense_con(tmp_path, T45_REAL)
+    assert (fila["pd0"], fila["pd1"], fila["ec"], fila["bios"]) == (PD0, PD1, EC, BIOS)
+    assert fila["firmware"] == "bios+t45" and fila["pstore_archivos"] == 0  # los campos de antes, iguales
+    # los consumidores de siempre siguen leyendo: bin/bb busca la fila por boot_id con esta regex y bb incident lee la copia
+    assert re.search(rf'"boot_id": ?"{fila["boot_id"]}"', (base / "pstore" / "arranque.jsonl").read_text(encoding="utf-8"))
+    assert "PD Firmware=PD0 FW1: 5.22, FW2: 5.0" in incident_report.firmware_recogido(str(base))
+
+
+def test_pd_firmware_control_negativo_dmidecode_que_falla_no_hereda_la_copia_de_otro_arranque(tmp_path: Path) -> None:
+    base, fila = _forense_con(tmp_path, None, None, copias_viejas=True)
+    assert (base / "dmidecode-t45.txt").read_text(encoding="utf-8") == T45_REAL  # la copia vieja sigue ahi...
+    assert fila["pd0"] == fila["pd1"] == fila["ec"] == "NOT_COLLECTED: dmidecode -t 45 fallo"  # ...y no se atribuye a este
+    assert fila["bios"] == "NOT_COLLECTED: dmidecode -t bios fallo" and fila["firmware"] == "NOT_COLLECTED"
+
+
+def test_pd_firmware_control_negativo_componente_ausente_es_not_collected_nunca_vacio(tmp_path: Path) -> None:
+    sin_pd = re.sub(r"Firmware Component Name: PD Firmware", "Firmware Component Name: OTRO", T45_REAL)
+    assert sin_pd != T45_REAL  # la sustitucion casa: prueba no vacia
+    _, fila = _forense_con(tmp_path, sin_pd, "# dmidecode 3.5\n# No SMBIOS nor DMI entry point found, sorry.\n")
+    assert fila["pd0"] == "NOT_COLLECTED: sin PD0 en dmidecode -t 45" and fila["pd1"] == "NOT_COLLECTED: sin PD1 en dmidecode -t 45"
+    assert fila["ec"] == EC  # lo que si esta, entra
+    assert fila["bios"] == "NOT_COLLECTED: sin Version en dmidecode -t bios"
+
+
+@pytest.mark.parametrize("malo", ['PD0 x", "pd1": "falso', "PD0 x\\u0000", "PD0 x\x01", "PD0 " + "9" * 90])
+def test_pd_firmware_control_negativo_texto_fuera_de_la_lista_blanca_no_entra_al_json(tmp_path: Path, malo: str) -> None:
+    t45 = T45_REAL.replace(f"Firmware Version: {PD0}", f"Firmware Version: {malo}")
+    assert t45 != T45_REAL
+    _, fila = _forense_con(tmp_path, t45)  # json.loads de la fila no falla: la inyeccion no rompio la fila
+    assert fila["pd0"] == "NOT_COLLECTED: valor fuera de la lista blanca" and fila["pd1"] == PD1
+
+
+def test_pd_firmware_atascado_lee_los_valores_de_la_ultima_fila(tmp_path: Path) -> None:
+    ruta = tmp_path / "arranque.jsonl"
+    nueva = json.loads(FILA_VIEJA) | {"ts": "2026-10-27T06:00:00Z", "boot_id": "b-nuevo", "pd0": PD0, "pd1": PD1, "ec": EC, "bios": BIOS}
+    ruta.write_text(FILA_VIEJA + "\n" + json.dumps(nueva) + "\n\n", encoding="utf-8")
+    fw = r.firmware(ruta)
+    assert isinstance(fw, dict) and (fw["pd0"], fw["pd1"], fw["ec"], fw["bios"]) == (PD0, PD1, EC, BIOS)
+    assert fw["boot_id"] == "b-nuevo" and fw["ts"] == "2026-10-27T06:00:00Z"
+    # control negativo: la ULTIMA fila manda; si la ultima es vieja, no se toma la anterior con valores
+    ruta.write_text(json.dumps(nueva) + "\n" + FILA_VIEJA + "\n", encoding="utf-8")
+    fw = r.firmware(ruta)
+    assert isinstance(fw, str) and fw.startswith("NOT_COLLECTED: ") and "no trae valores" in fw and "bios+t45" in fw
+
+
+def test_pd_firmware_control_negativo_fila_vieja_sin_archivo_o_ilegible_es_not_collected(tmp_path: Path) -> None:
+    ruta = tmp_path / "arranque.jsonl"
+    ruta.write_text(FILA_VIEJA + "\n", encoding="utf-8")
+    casos = {"vieja": r.firmware(ruta), "no existe": r.firmware(tmp_path / "no.jsonl"), "directorio": r.firmware(tmp_path)}
+    ruta.write_text("", encoding="utf-8")
+    casos["vacio"] = r.firmware(ruta)
+    ruta.write_text("{roto\n", encoding="utf-8")
+    casos["roto"] = r.firmware(ruta)
+    for caso, fw in casos.items():
+        assert isinstance(fw, str) and fw.startswith("NOT_COLLECTED: ") and len(fw) > len("NOT_COLLECTED: ") + 5, caso
+    # fila con solo parte de los valores: el que falta se declara, no queda vacio
+    ruta.write_text(json.dumps({"ts": "t", "pd0": PD0, "ec": ""}) + "\n", encoding="utf-8")
+    fw = r.firmware(ruta)
+    assert isinstance(fw, dict) and fw["pd0"] == PD0 and fw["ec"].startswith("NOT_COLLECTED") and fw["pd1"].startswith("NOT_COLLECTED")
+
+
+def test_pd_firmware_la_ruta_se_sustituye_por_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    ruta = tmp_path / "a.jsonl"
+    ruta.write_text(json.dumps({"pd0": PD0, "pd1": PD1, "ec": EC, "bios": BIOS}) + "\n", encoding="utf-8")
+    monkeypatch.setenv("BB_ARRANQUE_JSONL", str(ruta))
+    fw = r.firmware()
+    assert isinstance(fw, dict) and fw["pd0"] == PD0
+    monkeypatch.setenv("BB_ARRANQUE_JSONL", str(tmp_path / "otra.jsonl"))
+    assert str(r.firmware()).startswith("NOT_COLLECTED")
+
+
+def test_pd_firmware_de_punta_a_punta_la_fila_del_script_llega_al_veredicto(tmp_path: Path) -> None:
+    base, _ = _forense_con(tmp_path, T45_REAL)
+    fw = r.firmware(base / "pstore" / "arranque.jsonl")
+    assert isinstance(fw, dict) and (fw["pd0"], fw["pd1"], fw["ec"], fw["bios"]) == (PD0, PD1, EC, BIOS)
+
+
+def test_pd_firmware_atascado_lo_adjunta_y_sano_o_indeterminado_no(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    ruta = tmp_path / "arranque.jsonl"
+    ruta.write_text(json.dumps({"ts": "t", "pd0": PD0, "pd1": PD1, "ec": EC, "bios": BIOS}) + "\n", encoding="utf-8")
+    monkeypatch.setenv("BB_ARRANQUE_JSONL", str(ruta))
+    _, salida = _main_con(monkeypatch, {"estado": "ATASCADO"}, capsys, ["--prueba"])
+    assert salida["firmware"]["pd0"] == PD0 and salida["firmware"]["pd1"] == PD1
+    for estado in ("SANO", "INDETERMINADO"):
+        _, salida = _main_con(monkeypatch, {"estado": estado}, capsys, ["--prueba"])
+        assert "firmware" not in salida, estado
+    ruta.write_text(FILA_VIEJA + "\n", encoding="utf-8")
+    _, salida = _main_con(monkeypatch, {"estado": "ATASCADO"}, capsys, ["--prueba"])
+    assert salida["firmware"].startswith("NOT_COLLECTED: ")
+
+
+def test_pd_firmware_evento_de_arranque_solo_lo_lleva_si_el_veredicto_lo_trae() -> None:
+    assert r.evento_arranque({"estado": "ATASCADO", "firmware": {"pd0": PD0}}, "b")["firmware"] == {"pd0": PD0}
+    assert "firmware" not in r.evento_arranque({"estado": "SANO"}, "b")
+
+
+def _serie(tmp_path: Path, filas: list[dict]) -> Path:
+    ruta = tmp_path / "t.jsonl"
+    ruta.write_text("".join(json.dumps(x) + "\n" for x in filas), encoding="utf-8")
+    return ruta
+
+
+SANA_1 = _f(96, 2400, 55, ts="2026-10-12T22:00:00+00:00")
+ATASCADA_1 = _f(96, 663, 16, ts="2026-10-12T23:17:16+00:00")
+RECUPERADA_1 = _f(96, 2080, 67, ts="2026-10-13T08:00:00+00:00")
+
+
+def test_inicio_episodio_con_recuperacion_devuelve_el_episodio_cerrado(tmp_path: Path) -> None:
+    ruta = _serie(tmp_path, [SANA_1, ATASCADA_1, _f(96, 660, ts="2026-10-12T23:30:00+00:00"), RECUPERADA_1, _f(96, 2100, ts="2026-10-13T08:05:00+00:00")])
+    d = r.inicio(ruta)  # firma de antes de la ficha: el mismo llamado sobre el codigo viejo devuelve None
+    assert d is not None, "inicio() devolvio None sobre una serie con recuperacion: el episodio cerrado se perdio"
+    ep = d["ultimo_episodio_cerrado"]
+    assert ep == {k: r._local(v) for k, v in (("ultima_sana", SANA_1["ts"]), ("primera_atascada", ATASCADA_1["ts"]), ("primera_recuperada", RECUPERADA_1["ts"]))}
+    assert "primera_atascada" not in d  # nada abierto al final de la serie
+
+
+def test_inicio_episodio_control_negativo_sin_paso_no_devuelve_ni_escribe(tmp_path: Path) -> None:
+    ep = tmp_path / "ep.jsonl"
+    assert r.inicio(_serie(tmp_path, [SANA_1, RECUPERADA_1, _f(10, 600, ts="2026-10-13T09:00:00+00:00")]), ep) is None
+    assert not ep.exists()
+
+
+def test_inicio_episodio_se_persiste_sin_duplicar_y_el_abierto_tambien(tmp_path: Path) -> None:
+    ep = tmp_path / "ep.jsonl"
+    abierto = _serie(tmp_path, [SANA_1, ATASCADA_1])
+    d = r.inicio(abierto, ep)
+    assert d is not None and "ultimo_episodio_cerrado" not in d and d["primera_atascada"] == r._local(ATASCADA_1["ts"])
+    filas = [json.loads(x) for x in ep.read_text(encoding="utf-8").splitlines()]
+    assert filas == [{"ultima_sana": SANA_1["ts"], "primera_atascada": ATASCADA_1["ts"], "primera_recuperada": None}]
+    r.inicio(abierto, ep)
+    assert len(ep.read_text(encoding="utf-8").splitlines()) == 1  # idempotente: la misma corrida no duplica
+    # se recupera y luego se atasca otra vez: entra la fila cerrada del primero y la abierta del segundo, una vez cada una
+    atascada_2 = _f(96, 650, ts="2026-10-14T10:00:00+00:00")
+    serie = _serie(tmp_path, [SANA_1, ATASCADA_1, RECUPERADA_1, atascada_2])
+    for _ in range(2):
+        d = r.inicio(serie, ep)
+    filas = [json.loads(x) for x in ep.read_text(encoding="utf-8").splitlines()]
+    assert len(filas) == 3 and filas[1]["primera_recuperada"] == RECUPERADA_1["ts"]
+    assert filas[2] == {"ultima_sana": RECUPERADA_1["ts"], "primera_atascada": atascada_2["ts"], "primera_recuperada": None}
+    assert d is not None and d["primera_atascada"] == r._local(atascada_2["ts"]) and d["ultimo_episodio_cerrado"]["primera_recuperada"] == r._local(RECUPERADA_1["ts"])
+    # control negativo: el registro sobrevive a que la telemetria rote (aqui: desaparezca)
+    serie.unlink()
+    assert r.inicio(serie, ep) is None and len(ep.read_text(encoding="utf-8").splitlines()) == 3
+
+
+def test_inicio_episodio_por_defecto_junto_a_la_telemetria(tmp_path: Path) -> None:
+    r.inicio(_serie(tmp_path, [SANA_1, ATASCADA_1, RECUPERADA_1]))
+    assert (tmp_path / "episodios_reloj.jsonl").exists()
+
+
+def test_inicio_episodio_archivo_de_episodios_ilegible_no_duplica_ni_anula(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    ep = tmp_path / "ep.jsonl"
+    ep.write_text("{roto\n", encoding="utf-8")
+    d = r.inicio(_serie(tmp_path, [SANA_1, ATASCADA_1, RECUPERADA_1]), ep)
+    assert d is not None and "ultimo_episodio_cerrado" in d  # el veredicto no se anula
+    assert ep.read_text(encoding="utf-8") == "{roto\n" and "ilegible" in capsys.readouterr().err
+
+
+def test_inicio_episodio_main_arranque_recorre_la_telemetria_aunque_salga_sano(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    llamadas: list[int] = []
+    monkeypatch.setattr(r.interruptores, "modo", lambda nombre: "off")
+    _main_con(monkeypatch, {"estado": "SANO"}, capsys, ["--arranque"])
+    monkeypatch.setattr(r, "inicio", lambda: llamadas.append(1))
+    r.main(["--arranque"])
+    assert llamadas == [1] and "desde" not in json.loads(capsys.readouterr().out)
+    r.main(["--prueba"])  # control negativo: --prueba SANO no recorre los 235 MB
+    assert llamadas == [1]
