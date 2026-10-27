@@ -77,3 +77,14 @@ Banco de borrado en frio (`bench_frio.sh`, cache vaciada con `drop_caches=3`): 3
 con modo 0700, entre ellos `/tmp/systemd-private-*` (que el arranque borra con la regla `R! /tmp/systemd-private-*`) y los
 `systemd-private-*` de `/var/tmp`. Es el candidato siguiente y no esta medido: puede contener caches de servicios con millones de archivos.
 Comando de medicion (root, solo lectura) en el reporte del 2026-10-26.
+
+## Avance 2026-10-26: directorios privados de root descartados; captura del proximo arranque (voto de Luis)
+
+`sudo find`/`du` sobre `/tmp/systemd-private-*` y `/var/tmp/systemd-private-*` (arranque actual, 1.5 h de uptime): cada directorio tiene 2
+archivos y 8 KiB; ninguno se acerca al volumen que haria falta. Es el estado de este boot, no el que existia al apagar.
+Voto de Luis: capturar lo que hace tmpfiles en el proximo arranque con un drop-in que ejecuta el mismo comando bajo `strace -f -c -w`.
+Unidad base verificada: `ExecStart=systemd-tmpfiles --create --remove --boot --exclude-prefix=/dev`, sin `SystemCallFilter` y con
+`CAP_SYS_PTRACE` en el conjunto de capacidades, `ProtectKernelTunables=no`. Prueba del envoltorio con `/bin/ls`: el resumen sale en 1.4 KB;
+prueba del respaldo con un `strace` inexistente: el comando se ejecuta igual (rc=0). Resumen por arranque en
+`/var/lib/blackbox/tmpfiles-boot-<epoch>.strace-c` (tiempo de pared por llamada al sistema). Reversion: renombrar el drop-in a `.off`
+(systemd ignora ese sufijo) y `daemon-reload`.
