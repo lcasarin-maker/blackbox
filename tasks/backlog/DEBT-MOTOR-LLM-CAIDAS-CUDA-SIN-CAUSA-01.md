@@ -69,3 +69,10 @@ host con GPU/driver visible para cumplir el criterio de cierre.
 - **Hipotesis sin probar:** kernels compilados para sm120/sm80 corriendo en una GPU sm_121 encajan con una incompatibilidad SM12.0 sobre SM12.1; no la prueban.
 - **Defecto del `close_check` corregido:** `grep -qE "Warp|Exception|kernel"` daba exit 0 sobre una salida fallida de `cuda-gdb` y sobre el control negativo, porque la linea de comando impresa contiene "kernels". Ahora exige una linea que empiece por `CUDA Exception: Warp`.
 - **Decision pendiente de Luis:** para obtener un volcado completo hay que dejar que el generador termine (mas tiempo antes del reinicio o otras banderas de generacion). Eso cambia el motor de produccion y la ficha pide avisar antes a la otra sesion que usa el motor.
+
+## Voto de Luis 2026-10-26: volcado completo en una ventana anunciada
+
+Decidido: si, obtener un volcado completo del kernel que tumba el motor, en una ventana anunciada. Cambia el motor de produccion
+(mas tiempo antes del reinicio o banderas de generacion distintas), asi que la ficha exige avisar antes a la otra sesion que usa
+el motor. Costo aceptado: el motor queda abajo hasta ~622 s por caida (maximo medido en los 28 volcados truncados). Falta fijar
+la ventana (dia y hora) y los parametros exactos de generacion; hasta entonces no se toca el motor.

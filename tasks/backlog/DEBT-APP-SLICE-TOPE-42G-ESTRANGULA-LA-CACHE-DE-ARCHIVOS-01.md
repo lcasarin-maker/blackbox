@@ -30,3 +30,12 @@ MEDIR antes de tocar el tope. Ningun cambio de limites ahora. Revisitar en la re
 
 ## Que falta
 Una decision sobre el tope (o `memory.high`) de app.slice tomada con la serie por delante: cuantos minutos de reclamo directo y refault coinciden con los reportes de lentitud, y si subir el tope o poner `memory.high` lo baja sin dejar al resto de la maquina sin margen. Cambiar el tope es un despliegue de root de Luis.
+
+## Revision 2026-10-26 (vencida desde el 2026-10-23), voto de Luis: revisar con `reclaim_ventana`
+
+`python3 -m tools.reclaim_ventana --desde 2026-10-25T19:34 --hasta 2026-10-26T19:34` (solo lectura), 1440 intervalos, NOT_COLLECTED 0:
+`refault_file 150196976` paginas (~573 GiB releidos), `pgscan_direct 627202780`, `pgscan_kswapd 127087893`, reclamo directo 83.2 %.
+Contra la medicion del 2026-10-17: entonces 99 % de reclamo directo y unos 182 GB releidos en 3 h (~61 GB/h); ahora 83.2 % y
+~573 GiB en 24 h (~26 GB/h). La tasa baja a menos de la mitad y el reclamo directo sigue siendo la mayoria del escaneo. La
+decision de tope o `memory.high` sigue exigiendo cruzar estos minutos con los reportes de lentitud, que esta serie no trae.
+Sin cambio de limites hasta ese cruce.
