@@ -1,0 +1,28 @@
+# close_check: python3 -m pytest -q tests/test_reloj_atascado.py -k "ocupada"   (expect exit_zero)
+# 2026-10-26, worktree agent-af5195b17e2b6c1c1, base 3894bbc4
+
+## 1. Antes de tocar nada (codigo y tests de 3894bbc4). rc=5 (ningun test seleccionado: fallo esperado)
+18 deselected in 0.04s
+rc=5
+
+## 2. Tests nuevos escritos, codigo de 3894bbc4 sin tocar. rc=1
+FAILED tests/test_reloj_atascado.py::test_ocupada_consulta_reutiliza_apps_cmd_y_excluye_el_pid_propio
+FAILED tests/test_reloj_atascado.py::test_ocupada_consulta_que_falla_o_ilegible_es_none_nunca_libre
+FAILED tests/test_reloj_atascado.py::test_ocupada_antes_de_la_prueba_da_indeterminado_sin_cargar_la_gpu
+FAILED tests/test_reloj_atascado.py::test_ocupada_durante_la_prueba_anula_el_veredicto
+FAILED tests/test_reloj_atascado.py::test_ocupada_control_negativo_gpu_libre_da_el_veredicto_de_siempre
+FAILED tests/test_reloj_atascado.py::test_ocupada_consulta_que_falla_es_not_collected_sin_cargar
+FAILED tests/test_reloj_atascado.py::test_ocupada_en_el_arranque_registra_sin_avisar
+7 failed, 29 deselected in 0.16s
+rc=1
+
+## 3. Controles negativos sobre el codigo nuevo (cada uno restaurado despues; cmp OK)
+## 3a. sed -i '146s/    if antes:/    if False:/'  (la guarda previa a la carga ignora a los ajenos)
+E   IndexError: pop from empty list
+FAILED tests/test_reloj_atascado.py::test_ocupada_antes_de_la_prueba_da_indeterminado_sin_cargar_la_gpu
+1 failed, 6 passed, 29 deselected in 0.12s
+rc=1
+## 3b. sed -i 's/        if pid == propio:/        if False:/'  (el pid propio deja de excluirse)
+FAILED tests/test_reloj_atascado.py::test_ocupada_consulta_reutiliza_apps_cmd_y_excluye_el_pid_propio
+1 failed, 6 passed, 29 deselected in 0.12s
+rc=1
