@@ -229,6 +229,16 @@ other rows pass.
 
 ---
 
+## Field notes, 2026-10: mechanisms you can repeat on your unit
+
+[`docs/GB10-MECHANISMS-AND-METHOD-2026-10.md`](docs/GB10-MECHANISMS-AND-METHOD-2026-10.md) lists six mechanisms measured on one AI TOP
+ATOM, each with the command, the output measured here, its negative control and its limit: the stuck GPU clock detector (`bb reloj`,
+with a TFLOP/s axis and a busy-GPU guard), the per-boot firmware inventory (PD0, PD1, EC, BIOS), fan RPM through `acpi_fan`, the CX7
+hotplug precondition on an uncabled single node, the growth of boot userspace time, and `io.max` for user scopes. Numbers taken from
+forum threads are labeled as reported.
+
+---
+
 ## Known failure classes in the wild
 
 A sample of what other GB10 owners have hit and reported on the NVIDIA
