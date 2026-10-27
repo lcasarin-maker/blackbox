@@ -11,6 +11,7 @@ import sys
 from typing import Any
 
 from tools.host_diagnostics import read_names, read_text
+from tools.incident_report import FORENSE_DIR, firmware_recogido
 
 
 def _numeric_suffix(path: Path) -> int:
@@ -127,12 +128,83 @@ def capture(root: Path = Path("/")) -> dict[str, Any]:
     }
 
 
+def _fan_index(path: Path) -> int:
+    return int(path.name[len("fan"):-len("_input")])  # caller already fullmatched fan[0-9]+_input
+
+
+def acpi_fan(root: Path = Path("/"), forense_dir: str = FORENSE_DIR) -> dict[str, Any]:
+    """RPM per fan from every hwmon whose `name` is `acpi_fan` (FEATURE-FAN-RPM-LEER-ACPI-FAN-DONDE-EXISTA-01).
+
+    A read of 0 is a stopped fan and is returned as 0 rpm; a missing or unreadable
+    value is `NOT_COLLECTED` with its reason and `rpm: None`, never 0.
+    """
+    dmi = root / "sys/class/dmi/id"
+    identidad: dict[str, Any] = {name: read_text(dmi / name)
+                                 for name in ("sys_vendor", "product_name", "bios_version")}
+    identidad["firmware"] = firmware_recogido(forense_dir)
+    hwmon_root = root / "sys/class/hwmon"
+    listing = read_names(hwmon_root)
+    ventiladores: list[dict[str, Any]] = []
+    name_ilegible: list[str] = []
+    motivo = None
+    if listing["status"] != "ok":
+        motivo = f"NOT_COLLECTED: no se pudo listar {hwmon_root}: {listing.get('error')}"
+    else:
+        devices = sorted((hwmon_root / n for n in listing["value"] if re.fullmatch(r"hwmon[0-9]+", n)),
+                         key=_numeric_suffix)
+        fans = []
+        for device in devices:
+            chip = read_text(device / "name")
+            if chip["status"] != "ok":
+                name_ilegible.append(f"{device.name}: {chip.get('error')}")
+            elif chip["value"] == "acpi_fan":
+                fans.append(device)
+        if not fans:
+            motivo = "NOT_COLLECTED: sin hwmon acpi_fan"
+            if name_ilegible:
+                motivo += f" ({len(name_ilegible)} hwmon con name ilegible; no se descarta que alguno lo sea)"
+        for device in fans:
+            inputs = sorted((p for p in device.glob("fan*_input") if re.fullmatch(r"fan[0-9]+_input", p.name)),
+                            key=_fan_index)
+            if not inputs:
+                ventiladores.append({"hwmon": device.name, "canal": None, "path": str(device), "rpm": None,
+                                     "estado": "NOT_COLLECTED: hwmon acpi_fan sin fan*_input"})
+            for path in inputs:
+                channel = _channel(path, divisor=1, unit="rpm")
+                rpm, estado = None, None
+                if channel["status"] != "ok":
+                    estado = f"NOT_COLLECTED: {channel.get('error') or channel['read'].get('error')}"
+                elif channel["value_raw"] < 0:
+                    estado = f"NOT_COLLECTED: valor negativo {channel['value_raw']}"
+                else:
+                    rpm = channel["value_raw"]
+                    estado = "detenido" if rpm == 0 else "girando"
+                ventiladores.append({"hwmon": device.name, "canal": path.name.removesuffix("_input"),
+                                     "path": str(path), "rpm": rpm, "estado": estado})
+    could_not_run = int(motivo is not None) + sum(int(v["rpm"] is None) for v in ventiladores)
+    return {
+        "schema": 1,
+        "captured_at_utc": datetime.now(timezone.utc).isoformat(),
+        "fuente": f"{hwmon_root}/hwmon*/fan*_input con name == acpi_fan",
+        "identidad": identidad,
+        "ventiladores": ventiladores,
+        "motivo": motivo,
+        "hwmon_name_ilegible": name_ilegible,
+        "could_not_run": could_not_run,
+        "status": "NOT_COLLECTED" if motivo else ("partial" if could_not_run else "observed"),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path("/"), help="host root; fixture use")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--acpi-fan", action="store_true",
+                        help="only fan RPM from hwmon acpi_fan, with device identity")
+    parser.add_argument("--forense-dir", default=FORENSE_DIR,
+                        help="directory holding dmidecode-t45.txt/dmidecode-bios.txt; fixture use")
     args = parser.parse_args()
-    record = capture(args.root)
+    record = acpi_fan(args.root, args.forense_dir) if args.acpi_fan else capture(args.root)
     payload = json.dumps(record, indent=2, sort_keys=True) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
