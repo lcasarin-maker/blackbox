@@ -16,6 +16,7 @@ herramienta de la comunidad del hilo 362737, y TFLOP/s no bajos si se midieron),
 INDETERMINADO lleva un motivo que dice donde mirar: `NOT_COLLECTED` (sin carga o sin consulta), `GPU_OCUPADA` (otros procesos
 de computo en la GPU durante `--prueba`), `THROTTLE_ACTIVO` (con las razones: calor o potencia, no la firma del reloj
 atascado), `RELOJ_EN_BANDA` (mediana entre 1000 y 1400 MHz sin TFLOP/s bajos) y `RELOJ_ALTO_RENDIMIENTO_BAJO`.
+Todo ATASCADO adjunta `firmware`: pd0/pd1/ec/bios de la ultima fila de `arranque.jsonl`, o `NOT_COLLECTED: <motivo>`.
 Limite declarado: la causa de fondo (entrega de energia / negociacion PD) no se mide aqui.
 """
 
@@ -34,6 +35,7 @@ from typing import Any
 
 from tools import aviso_termico, interruptores
 from tools import guardia_termico_predictivo as g
+from tools import origen_proceso as op
 from tools import verifica_proveedor_gpu as vpg
 
 NOMBRE = "reloj_arranque"
@@ -50,6 +52,9 @@ REMEDIO = ("apagar, desconectar el adaptador del enchufe y tambien los USB, boto
            "reconectar en orden pared -> adaptador -> equipo y arrancar; algunas unidades necesitaron mas tiempo o no se "
            "recuperaron (reportes de usuarios sin verificar por NVIDIA, hilos 376039/376239/387029)")
 SIN_CONSULTA = "NOT_COLLECTED: nvidia-smi --query-compute-apps no se pudo leer; sin saber si la GPU esta libre no hay veredicto"
+# La fila por arranque de `bb-root-run arranque-forense` (root, 0644); BB_ARRANQUE_JSONL la sustituye, como en bin/bb.
+ARRANQUE_JSONL = "/var/lib/blackbox/pstore/arranque.jsonl"
+CAMPOS_FIRMWARE = ("pd0", "pd1", "ec", "bios")
 
 
 def _sin_throttle(t: Any) -> bool:
@@ -107,9 +112,64 @@ def _ocupada(ajenos: list[dict[str, Any]]) -> dict[str, Any]:
     return {"estado": "INDETERMINADO", "motivo": f"GPU_OCUPADA: {lista}; los TFLOP/s saldrian bajos por competencia, no por el estado de energia", "ocupantes": ajenos}
 
 
-def inicio(ruta: Path = g.TELEMETRIA) -> dict[str, str] | None:
-    """Cuando empezo: ultima muestra sana bajo carga y primera atascada posterior (recorre toda la telemetria)."""
+def firmware(ruta: Path | None = None) -> dict[str, Any] | str:
+    """Versiones pd0/pd1/ec/bios de la ULTIMA fila de `arranque.jsonl` (la escribe `bb-root-run arranque-forense`), o
+    `NOT_COLLECTED: <motivo>`: sin archivo, sin permiso, ilegible o fila vieja (anterior a
+    FEATURE-RELOJ-CAPTURA-PD-FIRMWARE-Y-TRANSICION-01) que solo nombra la fuente. Nunca un campo vacio."""
+    ruta = Path(os.environ.get("BB_ARRANQUE_JSONL", ARRANQUE_JSONL)) if ruta is None else ruta
+    try:
+        filas = [x for x in ruta.read_text(encoding="utf-8", errors="replace").splitlines() if x.strip()]
+    except FileNotFoundError:
+        return f"NOT_COLLECTED: {ruta} no existe (bb-root-run arranque-forense no ha escrito ninguna fila)"
+    except OSError as e:
+        return f"NOT_COLLECTED: {ruta} ilegible ({e.strerror})"
+    if not filas:
+        return f"NOT_COLLECTED: {ruta} sin filas"
+    try:
+        fila = json.loads(filas[-1])
+    except ValueError:
+        fila = None
+    if not isinstance(fila, dict):
+        return f"NOT_COLLECTED: la ultima fila de {ruta} no es un objeto JSON"
+    if not any(k in fila for k in CAMPOS_FIRMWARE):
+        return (f"NOT_COLLECTED: la ultima fila de {ruta} ({fila.get('ts')}) no trae valores, solo la fuente "
+                f"firmware={fila.get('firmware')!r}; falta reinstalar arranque-forense (ver la ficha FEATURE-RELOJ-CAPTURA-PD-FIRMWARE-Y-TRANSICION-01)")
+    vals = {k: fila[k] if isinstance(fila.get(k), str) and fila[k].strip() else "NOT_COLLECTED: campo ausente o vacio en la fila"
+            for k in CAMPOS_FIRMWARE}
+    return {**vals, "ts": fila.get("ts"), "boot_id": fila.get("boot_id"), "fuente": str(ruta)}
+
+
+def _local(ts: str | None) -> str | None:
+    return datetime.fromisoformat(ts).astimezone().isoformat(timespec="seconds") if ts else None
+
+
+def _persiste(episodios: list[dict[str, str | None]], ruta: Path) -> None:
+    """Anade a `ruta` los episodios que aun no estan (idempotente: la misma tupla de ts no se escribe dos veces). El
+    abierto se guarda tambien: es el que se pierde si la telemetria rota antes de recuperarse; al cerrarse entra su fila
+    cerrada (otra tupla). Fallar al escribir no anula el veredicto."""
+    try:
+        vistos = {(e.get("ultima_sana"), e.get("primera_atascada"), e.get("primera_recuperada"))
+                  for e in (json.loads(x) for x in ruta.read_text(encoding="utf-8").splitlines() if x.strip())}
+    except FileNotFoundError:
+        vistos = set()
+    except (OSError, ValueError, AttributeError) as e:
+        print(f"bb reloj: {ruta} ilegible ({e}); no se anade nada para no duplicar", file=sys.stderr)
+        return
+    try:
+        for ep in episodios:
+            if (ep["ultima_sana"], ep["primera_atascada"], ep["primera_recuperada"]) not in vistos:
+                op.anexar_jsonl(ruta, ep)
+    except OSError as e:
+        print(f"bb reloj: no se pudo escribir {ruta} ({e.strerror})", file=sys.stderr)
+
+
+def inicio(ruta: Path = g.TELEMETRIA, episodios: Path | None = None) -> dict[str, Any] | None:
+    """Cuando empezo: ultima muestra sana bajo carga y primera atascada posterior (recorre toda la telemetria en streaming).
+    Con una recuperacion posterior (muestra sana con carga) el episodio se cierra: va en `ultimo_episodio_cerrado` con su
+    `primera_recuperada`, en vez de perderse. Cada episodio (abierto o cerrado, ts tal como estan en la telemetria) se copia
+    a `episodios` (por defecto `episodios_reloj.jsonl` junto a la telemetria) para que sobreviva a la rotacion."""
     sana = bajo = None
+    cerrados: list[dict[str, str | None]] = []
     try:
         with ruta.open(encoding="utf-8", errors="ignore") as fh:
             for linea in fh:
@@ -121,14 +181,21 @@ def inicio(ruta: Path = g.TELEMETRIA) -> dict[str, str] | None:
                 if not isinstance(u, (int, float)) or not isinstance(c, (int, float)) or u < 50:
                     continue
                 if c >= 1500:
+                    if bajo is not None:
+                        cerrados.append({"ultima_sana": sana, "primera_atascada": bajo, "primera_recuperada": f["ts"]})
                     sana, bajo = f["ts"], None
                 elif c < UMBRAL_ATASCADO_MHZ and bajo is None and sana is not None:
                     bajo = f["ts"]
     except OSError:
         return None
-    if sana and bajo:
-        return {"ultima_sana": datetime.fromisoformat(sana).astimezone().isoformat(timespec="seconds"), "primera_atascada": datetime.fromisoformat(bajo).astimezone().isoformat(timespec="seconds")}
-    return None
+    abierto = [{"ultima_sana": sana, "primera_atascada": bajo, "primera_recuperada": None}] if sana and bajo else []
+    if not cerrados and not abierto:
+        return None
+    _persiste(cerrados + abierto, episodios or ruta.parent / "episodios_reloj.jsonl")
+    out: dict[str, Any] = {k: _local(v) for k, v in abierto[0].items() if v} if abierto else {}
+    if cerrados:
+        out["ultimo_episodio_cerrado"] = {k: _local(v) for k, v in cerrados[-1].items()}
+    return out
 
 
 def prueba(segundos: int = 15) -> dict[str, Any]:
@@ -176,8 +243,10 @@ def prueba(segundos: int = 15) -> dict[str, Any]:
 
 
 def evento_arranque(r: dict[str, Any], boot_id: str) -> dict[str, Any]:
-    """Pura. Lo que se registra tras la prueba de arranque: el veredicto y las cifras que lo sostienen."""
-    return {"boot_id": boot_id, "estado": r.get("estado"), "reloj_mediano_mhz": r.get("reloj_mediano_mhz"), "tflops": r.get("tflops"), "motivo": r.get("motivo"), "ocupantes": r.get("ocupantes")}
+    """Pura. Lo que se registra tras la prueba de arranque: el veredicto y las cifras que lo sostienen (y el firmware si el
+    veredicto lo trae, que solo pasa con ATASCADO)."""
+    ev = {"boot_id": boot_id, "estado": r.get("estado"), "reloj_mediano_mhz": r.get("reloj_mediano_mhz"), "tflops": r.get("tflops"), "motivo": r.get("motivo"), "ocupantes": r.get("ocupantes")}
+    return {**ev, "firmware": r["firmware"]} if "firmware" in r else ev
 
 
 def arranque(modo_actual: str, r: dict[str, Any], boot_id: str, directorio: Path | None = None, avisa: Any = aviso_termico.enviar) -> dict[str, Any] | None:
@@ -199,11 +268,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--arranque", action="store_true", help="prueba activa y registra el veredicto segun el interruptor reloj_arranque (lo corre bb-reloj-arranque.timer)")
     a = ap.parse_args(argv)
     r = prueba() if (a.prueba or a.arranque) else decide(g.lee_cola(filas=60))
+    atascado = r.get("estado") == "ATASCADO"
+    if atascado:
+        r["firmware"] = firmware()
+    # `--arranque` (una vez por boot) recorre la telemetria aunque salga SANO: asi el episodio cerrado se copia a
+    # episodios_reloj.jsonl antes de que la telemetria rote (~1 s sobre 235 MB, medido 2026-10-26).
+    desde = inicio() if (atascado or a.arranque) else None
     if a.arranque:
         boot = Path("/proc/sys/kernel/random/boot_id").read_text(encoding="utf-8").strip()
         arranque(interruptores.modo(NOMBRE), r, boot)
-    if r.get("estado") == "ATASCADO":
-        r["desde"] = inicio()
+    if atascado:
+        r["desde"] = desde
         r["remedio"] = REMEDIO
     print(json.dumps(r, indent=1, ensure_ascii=False))
     return {"SANO": 0, "ATASCADO": 1}.get(str(r.get("estado")), 2)

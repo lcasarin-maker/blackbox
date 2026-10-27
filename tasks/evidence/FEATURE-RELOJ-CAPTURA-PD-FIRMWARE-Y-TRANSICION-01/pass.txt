@@ -1,0 +1,40 @@
+close_check DESPUES del cambio (2026-10-26), worktree con el cambio de esta ficha.
+$ python3 -m pytest -q tests/test_reloj_atascado.py -k "pd_firmware"; echo "rc=$?"
+.............                                                            [100%]
+13 passed, 42 deselected in 0.54s
+rc=0
+
+Suite de los cinco archivos (ninguna cuenta empeora):
+$ python3 -m pytest -q tests/test_reloj_atascado.py tests/test_reloj_verificador_limites.py tests/test_unidad_arranque_forense.py tests/test_bb_root_manifest.py tests/test_incident_report.py
+ANTES (HEAD 70b272d5): 279 passed, 1 xfailed in 5.58s
+DESPUES:               298 passed, 1 xfailed in 6.04s
+
+CONTROL NEGATIVO: los 19 tests nuevos (-k "pd_firmware or episodio") corridos contra el codigo de ANTES
+(tools/reloj_atascado.py y adopted/root-scripts/arranque-forense.sh restaurados desde HEAD con `git checkout HEAD --`,
+el archivo de tests nuevo; despues se devolvieron los del cambio y su sha256 se comparo con la copia de respaldo):
+$ python3 -m pytest -q tests/test_reloj_atascado.py -k "pd_firmware or episodio" -p no:cacheprovider --tb=line
+19 failed, 36 deselected in 0.37s
+rc=1
+Los dos que fallan por el sujeto y no por la firma:
+$ python3 -m pytest -q tests/test_reloj_atascado.py::test_inicio_episodio_con_recuperacion_devuelve_el_episodio_cerrado tests/test_reloj_atascado.py::test_pd_firmware_arranque_forense_anade_los_valores_a_la_fila -p no:cacheprovider --tb=short
+tests/test_reloj_atascado.py:490: in test_inicio_episodio_con_recuperacion_devuelve_el_episodio_cerrado
+    assert d is not None, "inicio() devolvio None sobre una serie con recuperacion: el episodio cerrado se perdio"
+E   AssertionError: inicio() devolvio None sobre una serie con recuperacion: el episodio cerrado se perdio
+E   assert None is not None
+tests/test_reloj_atascado.py:382: in test_pd_firmware_arranque_forense_anade_los_valores_a_la_fila
+    assert (fila["pd0"], fila["pd1"], fila["ec"], fila["bios"]) == (PD0, PD1, EC, BIOS)
+E   KeyError: 'pd0'
+2 failed in 0.26s
+rc=1
+Y el codigo viejo, llamado a mano sobre sana(2400) -> atascada(663) -> recuperada(2080):
+codigo viejo, serie sana->atascada->recuperada: inicio() = None
+
+Lo que dice hoy la maquina real (lectura de /var/lib/blackbox/pstore/arranque.jsonl, sin reinstalar):
+$ python3 -c "from tools import reloj_atascado as r; print(r.firmware())"
+NOT_COLLECTED: la ultima fila de /var/lib/blackbox/pstore/arranque.jsonl (2026-10-25T05:55:32Z) no trae valores, solo la fuente firmware='bios+t45'; falta reinstalar arranque-forense (ver la ficha FEATURE-RELOJ-CAPTURA-PD-FIRMWARE-Y-TRANSICION-01)
+
+Manifiesto instalado frente al repo (lectura de /etc/bb-root-run/manifest.json):
+$ python3 -m tools.bb_root_manifest --check; echo rc=$?
+cambiado desde la aprobacion: arranque-forense (arranque-forense.sh: aprobado ad91459ff951, repo ee6d14a41a55)
+[bb-root-manifest] aprobados iguales: 10, cambios: 1, could_not_run: 0
+rc=1
