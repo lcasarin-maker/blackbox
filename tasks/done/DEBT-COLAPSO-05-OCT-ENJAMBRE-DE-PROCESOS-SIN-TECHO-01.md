@@ -30,7 +30,7 @@ Pasa despues del cierre de DEBT-PROCESO-SIN-TECHO-TUMBO-LA-MAQUINA-DOS-VECES (20
 
 ## Avance, 2026-10-10
 
-La auditoría de `tasks/backlog/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/evidence/audit-2026-10-10.md` recuperó 18 muestras válidas del `app.slice`: llegó a 40.32 GiB con PSI full de 49.21 % y carga 1 de 153.85. El `MemoryMax=42G` actual no frenó el episodio. El journal retuvo 40 lanzamientos de pruebas/scripts de Atlas en la ventana, pero cero líneas de Java; no atribuye el launcher de esos procesos.
+La auditoría de `tasks/evidence/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/audit-2026-10-10.md` recuperó 18 muestras válidas del `app.slice`: llegó a 40.32 GiB con PSI full de 49.21 % y carga 1 de 153.85. El `MemoryMax=42G` actual no frenó el episodio. El journal retuvo 40 lanzamientos de pruebas/scripts de Atlas en la ventana, pero cero líneas de Java; no atribuye el launcher de esos procesos.
 
 `bin/bb sample` ahora conserva por scope Claude `memory.current`, `memory.peak`, conteo de procesos y estado de disponibilidad. Cuando PSI full cruza el corte calibrado de 10 con un scope presente, escribe un aviso diagnóstico con los scopes candidatos. La ruta solo lee cgroup v2 y emite telemetría: no envía señales ni cambia límites. Los registros rápidos reducidos de una ráfaga siguen sin recorrer cgroups para mantener bajo su coste.
 
@@ -56,7 +56,7 @@ Luis eligio un techo por conteo de procesos en `observar`. Medido con `python3 -
 Un enjambre de procesos (pytest-xdist y java) bajo un scope de sesion de Claude Code llevo `app.slice` a 40.32 GiB con PSI full 49 % y el reinicio por watchdog. La guardia por proceso miraba un proceso, no muchos bajo un scope. El lanzador de los java no quedo en ninguna fuente, por eso la mitad de atribucion no puede cerrarse con evidencia.
 
 ## Regression Test
-Ninguno: la ficha no tenia test por ficha; su close_check era un grep sobre `quien-lanzo.txt`. La cota de la clase la prueban `tests/test_portero.py`, `tests/test_procesos_protegidos.py` y `tests/test_calibra_psi.py`. La auditoria original sigue en `tasks/backlog/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/evidence/audit-2026-10-10.md` (no se mueve: la guarda de datos privados la cuenta por esa ruta).
+Ninguno: la ficha no tenia test por ficha; su close_check era un grep sobre `quien-lanzo.txt`. La cota de la clase la prueban `tests/test_portero.py`, `tests/test_procesos_protegidos.py` y `tests/test_calibra_psi.py`. La auditoria original sigue en `tasks/evidence/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/audit-2026-10-10.md` (no se mueve: la guarda de datos privados la cuenta por esa ruta).
 
 ## Verification Evidence
 Tres rutas del frontmatter: `fail` (control negativo: las ordenes que buscan el sujeto salen con rc distinto de 0), `pass` (las tres piezas citadas por `grep`/`git log` (portero con 20G y turnos=1, lista unica de protegidos leida por los cuatro actores, ventana etiquetada en calibra_psi), el control positivo del journal y el limite medido: las unidades que leen la lista no se han reiniciado desde que llego (reinicio pendiente por voto de Luis)) y `e2e` (la decision registrada). Para reabrirla si el sujeto aparece: `git mv tasks/done/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01.md tasks/backlog/` y `status: open`.
