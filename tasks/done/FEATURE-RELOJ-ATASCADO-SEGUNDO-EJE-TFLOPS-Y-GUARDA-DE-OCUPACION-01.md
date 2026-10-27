@@ -14,7 +14,7 @@ severity: P3
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-26
-close_check: {"cmd": "python3 -m pytest -q tests/test_reloj_atascado.py -k \"tflops\"", "expect": "exit_zero", "porque": "Especificacion pendiente, no prueba existente: exige caso positivo (reloj en la banda 1000-1400 MHz con TFLOP/s bajo = ATASCADO) y caso negativo (mismo reloj con TFLOP/s sano = no ATASCADO)."}
+close_check: {"cmd": "python3 -m pytest -q tests/test_reloj_atascado.py -k \"test_tflops_\"", "expect": "exit_zero", "porque": "Especificacion pendiente, no prueba existente: exige caso positivo (reloj en la banda 1000-1400 MHz con TFLOP/s bajo = ATASCADO) y caso negativo (mismo reloj con TFLOP/s sano = no ATASCADO)."}
 ---
 
 ## Origen
