@@ -147,3 +147,13 @@ rechazaria igual); hay que volver el script en master y repetir 1-2.
 - Negociacion PD: sin fuente, no implementada (punto 5 de "Lo que SI falta").
 - SPEC.md (fila de `tools/reloj_atascado.py`, linea 283) dice que `inicio` "lo ubica en el historial": sigue siendo cierto y
   no menciona `firmware` ni `episodios_reloj.jsonl`. No se edito SPEC.md (invalidaria el ledger H1 por numero de linea).
+
+## Despliegue verificado 2026-10-26 (19:42 -0600)
+
+Luis corrio el bloque de instalacion; las tres sumas coincidieron y `visudo -c` dio "analisis OK".
+- `python3 -m tools.bb_root_manifest --check` antes: `aprobados iguales: 10, cambios: 1`, rc=1 (control negativo); despues:
+  `aprobados iguales: 11, cambios: 0, could_not_run: 0`, rc=0.
+- `systemctl --user start bb-arranque-forense.service`: `Result=success ExecMainStatus=0`. Fila nueva de
+  `/var/lib/blackbox/pstore/arranque.jsonl`: `"pd0":"PD0 FW1: 5.22, FW2: 5.0","pd1":"PD1 FW1: 5.22, FW2: 5.0","ec":"3.5.11","bios":"5.36_0ACUM08"`.
+- `reloj_atascado.firmware()` devuelve esos cuatro valores con el `boot_id` de la fila. Las 8 filas anteriores (2026-10-14 a
+  2026-10-25) no traen `pd0` (conteo 0): no hay version PD de ningun arranque previo, incluido el episodio del 2026-10-12.
