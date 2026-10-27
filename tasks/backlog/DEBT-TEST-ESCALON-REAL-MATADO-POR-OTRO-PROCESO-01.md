@@ -22,3 +22,11 @@ No se relanza hasta que pase como cierre.
 
 ## Avance 2026-10-15: segundo fallo igual, mitigado con el carril serial (no cerrada)
 El push 52 repitio el fallo: hog 2091742 muerto por `SIGKILL` de otro `python3.12` (pid 2088002, ppid 2087894) a las 08:47:54, otra vez a pid positivo (no killpg) y antes del kill propio del test. Con la compuerta de cobertura corrida sola (`python .simplecode/run.py simplecode.verification.coverage_target -q`, 08:56) el test PASA (3627 passed): el emisor aparece solo con otros hooks o workers en paralelo; el poller de procesos de esa corrida limpia (17549 pids vistos) no capturo ninguno porque no hubo fallo. Mitigacion: el test lleva el marcador `mutates_real_source` (registrado en pytest.ini), asi la compuerta lo corre solo en su fase 2 serial (medido: `1 passed, 3643 deselected`). Sigue abierta: el emisor no esta identificado; si el pre-push vuelve a fallar con este test, el siguiente paso es ejecutar el pre-push completo con el poller (`scratchpad/poller.py` en la sesion) y leer `sigterm.jsonl` por la victima.
+
+## Avance 2026-10-26: el close_check no discrimina
+
+`python3 -m pytest -q tests/test_escalon_app_slice.py -p no:cacheprovider` dio `29 passed in 1.22s`, rc=0, con el motor y
+otros procesos activos. El texto de la ficha dice que falla solo en el pre-push completo con xdist. Mientras el close_check
+siga siendo esa corrida aislada, pasa sin haber identificado al emisor del SIGKILL: no puede salir negativo y no mide el
+fallo descrito. El cierre exige reproducir el pre-push completo (275 a 300 s) y capturar al emisor. Registro de emisores
+`SIGKILL` en `~/.local/share/blackbox/paradas.log` (clases `humano` y `demonio`) como punto de partida.
