@@ -13,9 +13,11 @@ adaptador -> equipo. Despues volver a correr `bb reloj --prueba`.
 Veredicto con tres estados: ATASCADO (mediana < 1000 MHz con carga y sin throttle; o, con TFLOP/s medidos por `--prueba`,
 mediana < 1400 MHz sin throttle y TFLOP/s < `UMBRAL_TFLOPS`, la firma del hilo 387029), SANO (>= 1400 MHz, el umbral de la
 herramienta de la comunidad del hilo 362737, y TFLOP/s no bajos si se midieron), INDETERMINADO: nunca se afirma sano sin carga.
-INDETERMINADO lleva un motivo que dice donde mirar: `NOT_COLLECTED` (sin carga o sin consulta), `GPU_OCUPADA` (otros procesos
-de computo en la GPU durante `--prueba`), `THROTTLE_ACTIVO` (con las razones: calor o potencia, no la firma del reloj
-atascado), `RELOJ_EN_BANDA` (mediana entre 1000 y 1400 MHz sin TFLOP/s bajos) y `RELOJ_ALTO_RENDIMIENTO_BAJO`.
+INDETERMINADO lleva un motivo que dice donde mirar: `NOT_COLLECTED` (sin carga o sin consulta), `CARGA_NO_PUDO_CORRER` (la
+carga de `--prueba` fallo, p. ej. sin memoria porque el motor ocupa la GPU), `THROTTLE_ACTIVO` (con las razones: calor o potencia,
+no la firma del reloj atascado), `RELOJ_EN_BANDA` (mediana entre 1000 y 1400 MHz sin TFLOP/s bajos) y
+`RELOJ_ALTO_RENDIMIENTO_BAJO`. Con otros procesos de computo en la GPU, `--prueba` juzga solo por reloj y potencia y marca los
+TFLOP/s `tflops_valido: false` (DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01).
 Todo ATASCADO adjunta `firmware`: pd0/pd1/ec/bios de la ultima fila de `arranque.jsonl`, o `NOT_COLLECTED: <motivo>`.
 Limite declarado: la causa de fondo (entrega de energia / negociacion PD) no se mide aqui.
 """
@@ -107,9 +109,17 @@ def ocupantes(runner: vpg.Runner = vpg._docker_runner, propio: int | None = None
     return ajenos
 
 
-def _ocupada(ajenos: list[dict[str, Any]]) -> dict[str, Any]:
-    lista = ", ".join(f"pid {o['pid']} ({o['nombre']}, {o['mib']} MiB)" for o in ajenos)
-    return {"estado": "INDETERMINADO", "motivo": f"GPU_OCUPADA: {lista}; los TFLOP/s saldrian bajos por competencia, no por el estado de energia", "ocupantes": ajenos}
+def _lista(ajenos: list[dict[str, Any]]) -> str:
+    return ", ".join(f"pid {o['pid']} ({o['nombre']}, {o['mib']} MiB)" for o in ajenos)
+
+
+def _union(*listas: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Ocupantes de las dos consultas, uno por pid (gana la primera vez que se vio)."""
+    vistos: dict[int, dict[str, Any]] = {}
+    for lista in listas:
+        for o in lista:
+            vistos.setdefault(o["pid"], o)
+    return [vistos[k] for k in sorted(vistos)]
 
 
 def firmware(ruta: Path | None = None) -> dict[str, Any] | str:
@@ -198,23 +208,10 @@ def inicio(ruta: Path = g.TELEMETRIA, episodios: Path | None = None) -> dict[str
     return out
 
 
-def prueba(segundos: int = 15) -> dict[str, Any]:
-    """Prueba activa (la del hilo 366944): matmul fp16 8192x8192 durante `segundos`, reloj y potencia cada segundo.
-
-    Guarda de GPU ocupada (hilo 387029): consulta los procesos de computo ANTES de cargar (si hay ajenos no carga) y al final
-    de la carga con los tensores vivos; ajenos en cualquiera de las dos => INDETERMINADO/GPU_OCUPADA, consulta fallida =>
-    NOT_COLLECTED. Limite: un proceso que entre y salga entre las dos consultas no se ve.
-    En el temporizador de arranque (6 min tras el boot) con el motor de modelos ya arriba, la prueba sale GPU_OCUPADA sin
-    cargar la GPU y `arranque` registra esa fila con los ocupantes, sin avisar y SIN reintentar (el motor no se va solo y un
-    reintento competiria con el): el detector de arranque queda ciego en ese boot y la fila lo dice."""
-    antes = ocupantes()
-    if antes is None:
-        return {"estado": "INDETERMINADO", "motivo": SIN_CONSULTA, "segundos": segundos}
-    if antes:
-        return {**_ocupada(antes), "segundos": segundos}
+def _carga(segundos: int, n: int) -> tuple[int, list[dict[str, Any]]]:
+    """Matmul fp16 n x n durante `segundos`, con una muestra de reloj/potencia/util/throttle cada segundo."""
     import torch  # importado aqui: el detector pasivo no lo necesita
 
-    n = 8192
     a = torch.randn(n, n, device="cuda", dtype=torch.float16)
     b = torch.randn(n, n, device="cuda", dtype=torch.float16)
     torch.cuda.synchronize()
@@ -233,19 +230,51 @@ def prueba(segundos: int = 15) -> dict[str, Any]:
             o = subprocess.run(["nvidia-smi", "--query-gpu=clocks.sm,power.draw,utilization.gpu,clocks_throttle_reasons.active", "--format=csv,noheader,nounits"], capture_output=True, text=True, check=False, timeout=10).stdout.strip().split(", ")
             if len(o) == 4:
                 filas.append({"sm_clk_mhz": float(o[0]), "gpu_power_w": float(o[1]), "gpu_util_pct": float(o[2]), "throttle": o[3].strip()})  # `throttle` como en la telemetria
+    return hechos, filas
+
+
+def prueba(segundos: int = 15) -> dict[str, Any]:
+    """Prueba activa (la del hilo 366944): matmul fp16 8192x8192 durante `segundos`, reloj y potencia cada segundo.
+
+    Ocupacion (hilo 387029; DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01): consulta los procesos de computo ANTES de cargar y
+    al final con los tensores vivos; consulta fallida en cualquiera => NOT_COLLECTED. Con ajenos en alguna de las dos la carga
+    corre igual y el veredicto sale SOLO de reloj y potencia observados durante ella (`decide` sin segundo eje): la competencia
+    baja los TFLOP/s, no el reloj. Los TFLOP/s se miden y se marcan `tflops_valido: false` con el motivo. Con la GPU libre,
+    `tflops_valido: true` y el segundo eje se aplica como siempre. Si la carga no puede correr (sin memoria porque el motor
+    ocupa la GPU, sin torch, sin CUDA) => INDETERMINADO `CARGA_NO_PUDO_CORRER: <causa>`, nunca un traceback.
+    Limite: un proceso que entre y salga entre las dos consultas no se ve; sus TFLOP/s contarian como validos."""
+    antes = ocupantes()
+    if antes is None:
+        return {"estado": "INDETERMINADO", "motivo": SIN_CONSULTA, "segundos": segundos}
+    n = 8192
+    try:
+        hechos, filas = _carga(segundos, n)
+    except Exception as e:  # torch.cuda.OutOfMemoryError es RuntimeError; ImportError si falta torch
+        causa = f"{type(e).__name__}: {(str(e).splitlines() or [''])[0][:200]}"
+        motivo = f"CARGA_NO_PUDO_CORRER: {causa}" + (f"; GPU ocupada por {_lista(antes)}" if antes else "; GPU libre")
+        return {"estado": "INDETERMINADO", "motivo": motivo, "ocupantes": antes, "segundos": segundos}
     tflops = round(hechos * 2 * n**3 / segundos / 1e12, 1)
     despues = ocupantes()  # con los tensores vivos: el propio proceso sale en la lista y se excluye por pid
-    v = decide(filas[2:], minimas=8, tflops=tflops)  # descarta los 2 s de arranque; la prueba dura segundos, no minutos
-    medido = {**v, "tflops": tflops, "segundos": segundos}
     if despues is None:
-        return {**medido, "estado": "INDETERMINADO", "motivo": SIN_CONSULTA}
-    return {**medido, **_ocupada(despues)} if despues else medido
+        v = decide(filas[2:], minimas=8, tflops=tflops)
+        return {**v, "tflops": tflops, "segundos": segundos, "estado": "INDETERMINADO", "motivo": SIN_CONSULTA}
+    ajenos = _union(antes, despues)
+    if not ajenos:
+        v = decide(filas[2:], minimas=8, tflops=tflops)  # descarta los 2 s de arranque; la prueba dura segundos, no minutos
+        return {**v, "tflops": tflops, "tflops_valido": True, "segundos": segundos}
+    v = decide(filas[2:], minimas=8)  # sin segundo eje: con competencia los TFLOP/s no dicen nada del estado de energia
+    return {**v, "tflops": tflops, "tflops_valido": False,
+            "tflops_motivo": f"COMPETENCIA: {_lista(ajenos)} en la GPU durante la carga; los TFLOP/s salen bajos por competencia, no por el estado de energia",
+            "ocupantes": ajenos, "segundos": segundos}
 
 
 def evento_arranque(r: dict[str, Any], boot_id: str) -> dict[str, Any]:
     """Pura. Lo que se registra tras la prueba de arranque: el veredicto y las cifras que lo sostienen (y el firmware si el
     veredicto lo trae, que solo pasa con ATASCADO)."""
-    ev = {"boot_id": boot_id, "estado": r.get("estado"), "reloj_mediano_mhz": r.get("reloj_mediano_mhz"), "tflops": r.get("tflops"), "motivo": r.get("motivo"), "ocupantes": r.get("ocupantes")}
+    ev = {"boot_id": boot_id, "estado": r.get("estado"), "reloj_mediano_mhz": r.get("reloj_mediano_mhz"), "tflops": r.get("tflops"),
+          "tflops_valido": r.get("tflops_valido"), "motivo": r.get("motivo"), "ocupantes": r.get("ocupantes")}
+    if "tflops_motivo" in r:
+        ev["tflops_motivo"] = r["tflops_motivo"]
     return {**ev, "firmware": r["firmware"]} if "firmware" in r else ev
 
 
@@ -281,7 +310,18 @@ def main(argv: list[str] | None = None) -> int:
         r["desde"] = desde
         r["remedio"] = REMEDIO
     print(json.dumps(r, indent=1, ensure_ascii=False))
-    return {"SANO": 0, "ATASCADO": 1}.get(str(r.get("estado")), 2)
+    return codigo(r, a.arranque)
+
+
+def codigo(r: dict[str, Any], es_arranque: bool = False) -> int:
+    """Pura. 0 sano, 1 atascado, 2 indeterminado. Unica excepcion, solo en `--arranque`: INDETERMINADO porque la carga no pudo
+    correr con la GPU ocupada por otros procesos sale 0. Es el entorno (el motor arranca solo con la maquina), no el instrumento,
+    y la fila de `reloj_arranque.jsonl` ya lo dice; con 2 systemd marcaba `Failed` cada boot. CARGA_NO_PUDO_CORRER con la GPU
+    libre (sin torch, sin CUDA) y NOT_COLLECTED siguen en 2: eso es el instrumento roto y debe verse."""
+    estado = str(r.get("estado"))
+    if es_arranque and estado == "INDETERMINADO" and str(r.get("motivo")).startswith("CARGA_NO_PUDO_CORRER") and r.get("ocupantes"):
+        return 0
+    return {"SANO": 0, "ATASCADO": 1}.get(estado, 2)
 
 
 if __name__ == "__main__":

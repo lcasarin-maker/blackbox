@@ -260,20 +260,22 @@ def test_ocupada_consulta_que_falla_o_ilegible_es_none_nunca_libre(tmp_path: Pat
     assert r.ocupantes(runner=_runner(0, "4242, 5\n"), propio=1, proc=tmp_path) == [{"pid": 4242, "nombre": None, "mib": 5}]
 
 
-def test_ocupada_antes_de_la_prueba_da_indeterminado_sin_cargar_la_gpu(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_ocupada_antes_de_la_prueba_carga_igual_y_juzga_por_reloj(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Sustituye al test de FEATURE-RELOJ-PRUEBA-GUARDA-GPU-OCUPADA-01 que exigia NO cargar con ajenos (n_sync == []): ese
+    # diseno dejo ciego el arranque del 2026-10-26 y DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01 lo invierte.
     ajeno = [{"pid": 4242, "nombre": "VLLM::EngineCor", "mib": 34669}]
-    n_sync = _prepara_prueba(monkeypatch, "660, 12.5, 96, 0x0000000000000000", ocupantes=[ajeno])
+    n_sync = _prepara_prueba(monkeypatch, "660, 12.5, 96, 0x0000000000000000", ocupantes=[ajeno, ajeno])
     v = r.prueba(segundos=15)
-    assert v["estado"] == "INDETERMINADO" and v["motivo"].startswith("GPU_OCUPADA") and "4242" in v["motivo"]
-    assert v["ocupantes"] == ajeno and n_sync == []  # ni un matmul sobre una GPU compartida
+    assert v["estado"] == "ATASCADO" and v["ocupantes"] == ajeno and v["tflops_valido"] is False and len(n_sync) > 10
+    assert "GPU_OCUPADA" not in str(v.get("motivo")) and "4242" in v["tflops_motivo"]
 
 
-def test_ocupada_durante_la_prueba_anula_el_veredicto(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_ocupada_durante_la_prueba_invalida_los_tflops_no_el_reloj(monkeypatch: pytest.MonkeyPatch) -> None:
     ajeno = [{"pid": 4242, "nombre": "python3", "mib": 900}]
     _prepara_prueba(monkeypatch, "660, 12.5, 96, 0x0000000000000000", ocupantes=[[], ajeno])
     v = r.prueba(segundos=15)
-    assert v["estado"] == "INDETERMINADO" and v["motivo"].startswith("GPU_OCUPADA") and v["ocupantes"] == ajeno
-    assert v["reloj_mediano_mhz"] == 660.0 and v["tflops"] > 0  # las cifras se conservan, el veredicto no
+    assert v["estado"] == "ATASCADO" and v["ocupantes"] == ajeno and v["tflops_valido"] is False
+    assert v["reloj_mediano_mhz"] == 660.0 and v["tflops"] > 0  # las cifras se conservan; los TFLOP/s no cuentan
 
 
 def test_ocupada_control_negativo_gpu_libre_da_el_veredicto_de_siempre(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -545,3 +547,121 @@ def test_inicio_episodio_main_arranque_recorre_la_telemetria_aunque_salga_sano(m
     assert llamadas == [1] and "desde" not in json.loads(capsys.readouterr().out)
     r.main(["--prueba"])  # control negativo: --prueba SANO no recorre los 235 MB
     assert llamadas == [1]
+
+
+# --- DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01: con ocupantes la carga corre y se juzga por reloj ---
+MOTOR = [{"pid": 100762, "nombre": "VLLM::EngineCor", "mib": 30953}]
+ATLAS = [{"pid": 3382, "nombre": "python3", "mib": 4522}]
+
+
+def test_motor_a_gpu_ocupada_y_reloj_sano_es_sano_con_tflops_no_valido(monkeypatch: pytest.MonkeyPatch) -> None:
+    n_sync = _prepara_prueba(monkeypatch, "2080, 67.0, 96, 0x0000000000000000", ocupantes=[ATLAS, ATLAS + MOTOR])
+    v = r.prueba(segundos=15)
+    assert 0 < v["tflops"] < r.UMBRAL_TFLOPS  # los TFLOP/s del falso estan bajo el umbral: el segundo eje los veria bajos...
+    assert v["estado"] == "SANO" and v["reloj_mediano_mhz"] == 2080.0 and v["tflops_valido"] is False  # ...y no se aplica
+    assert v["tflops_motivo"].startswith("COMPETENCIA") and "3382" in v["tflops_motivo"] and "100762" in v["tflops_motivo"]
+    assert [o["pid"] for o in v["ocupantes"]] == [3382, 100762] and "umbral_tflops" not in v and len(n_sync) > 10
+
+
+def test_motor_b_gpu_ocupada_y_reloj_atascado_es_atascado(monkeypatch: pytest.MonkeyPatch) -> None:
+    # la firma medida el 2026-10-12 (663 MHz, 16 W, util alta, cero throttle) con el motor y Atlas en la GPU: hoy imposible
+    _prepara_prueba(monkeypatch, "663, 16.0, 97, 0x0000000000000000", ocupantes=[ATLAS + MOTOR, ATLAS + MOTOR])
+    v = r.prueba(segundos=15)
+    assert v["estado"] == "ATASCADO" and v["reloj_mediano_mhz"] == 663.0 and v["potencia_mediana_w"] == 16.0
+    assert v["sin_throttle"] is True and v["tflops_valido"] is False
+
+
+def test_motor_b_control_negativo_ocupada_con_throttle_no_es_atascado(monkeypatch: pytest.MonkeyPatch) -> None:
+    _prepara_prueba(monkeypatch, "663, 16.0, 97, 0x0000000000000004", ocupantes=[MOTOR, MOTOR])
+    v = r.prueba(segundos=15)
+    assert v["estado"] == "INDETERMINADO" and v["motivo"].startswith("THROTTLE_ACTIVO")
+
+
+def test_motor_c_gpu_libre_conserva_el_segundo_eje(monkeypatch: pytest.MonkeyPatch) -> None:
+    # las mismas filas que (a) con la GPU libre: el segundo eje se aplica y los TFLOP/s bajos impiden el SANO
+    _prepara_prueba(monkeypatch, "2080, 67.0, 96, 0x0000000000000000")
+    v = r.prueba(segundos=15)
+    assert v["estado"] == "INDETERMINADO" and v["motivo"].startswith("RELOJ_ALTO_RENDIMIENTO_BAJO") and v["tflops_valido"] is True
+    assert "ocupantes" not in v and "tflops_motivo" not in v and v["umbral_tflops"] == r.UMBRAL_TFLOPS
+    _prepara_prueba(monkeypatch, "1200, 20.0, 96, 0x0000000000000000")  # en banda: libre => ATASCADO por TFLOP/s
+    assert r.prueba(segundos=15)["estado"] == "ATASCADO"
+    _prepara_prueba(monkeypatch, "1200, 20.0, 96, 0x0000000000000000", ocupantes=[MOTOR, MOTOR])  # ocupada => solo reloj
+    v = r.prueba(segundos=15)
+    assert v["estado"] == "INDETERMINADO" and v["motivo"].startswith("RELOJ_EN_BANDA")
+
+
+def _torch_que_falla(error: Exception) -> types.ModuleType:
+    mod = _torch_falso([])
+
+    def randn(*a: object, **k: object) -> _Tensor:
+        raise error
+
+    setattr(mod, "randn", randn)
+    return mod
+
+
+def test_motor_d_la_carga_no_puede_correr_es_indeterminado(monkeypatch: pytest.MonkeyPatch) -> None:
+    _prepara_prueba(monkeypatch, "2080, 67.0, 96, 0x0000000000000000", ocupantes=[MOTOR])
+    oom = RuntimeError("CUDA out of memory. Tried to allocate 128.00 MiB\nsegunda linea")
+    monkeypatch.setitem(sys.modules, "torch", _torch_que_falla(oom))
+    v = r.prueba(segundos=15)
+    assert v["estado"] == "INDETERMINADO" and v["motivo"].startswith("CARGA_NO_PUDO_CORRER: RuntimeError: CUDA out of memory")
+    assert "100762" in v["motivo"] and "segunda linea" not in v["motivo"] and v["ocupantes"] == MOTOR
+    # sin torch y con la GPU libre: tambien sin traceback, y dice que la GPU estaba libre
+    _prepara_prueba(monkeypatch, "2080, 67.0, 96, 0x0000000000000000", ocupantes=[[]])
+    monkeypatch.setitem(sys.modules, "torch", None)
+    v = r.prueba(segundos=15)
+    assert v["estado"] == "INDETERMINADO" and v["motivo"].startswith("CARGA_NO_PUDO_CORRER: ModuleNotFoundError") and "GPU libre" in v["motivo"]
+
+
+def test_motor_e_consulta_que_falla_sigue_siendo_not_collected(monkeypatch: pytest.MonkeyPatch) -> None:
+    n_sync = _prepara_prueba(monkeypatch, "660, 12.5, 96, 0x0000000000000000", ocupantes=[None])
+    v = r.prueba(segundos=15)
+    assert v["estado"] == "INDETERMINADO" and v["motivo"] == r.SIN_CONSULTA and n_sync == []
+    _prepara_prueba(monkeypatch, "660, 12.5, 96, 0x0000000000000000", ocupantes=[MOTOR, None])  # ocupada y falla al final
+    v = r.prueba(segundos=15)
+    assert v["estado"] == "INDETERMINADO" and v["motivo"] == r.SIN_CONSULTA
+
+
+def test_motor_codigo_de_salida_en_arranque() -> None:
+    carga = {"estado": "INDETERMINADO", "motivo": "CARGA_NO_PUDO_CORRER: RuntimeError: CUDA out of memory", "ocupantes": MOTOR}
+    assert r.codigo(carga, es_arranque=True) == 0  # el entorno: la unidad no queda Failed en cada boot
+    assert r.codigo(carga) == 2  # control negativo: `--prueba` a mano sigue diciendo indeterminado
+    assert r.codigo({**carga, "ocupantes": []}, es_arranque=True) == 2  # GPU libre y la carga falla: el instrumento, se ve
+    assert r.codigo({"estado": "INDETERMINADO", "motivo": r.SIN_CONSULTA}, es_arranque=True) == 2
+    assert r.codigo({"estado": "INDETERMINADO", "motivo": "RELOJ_EN_BANDA: x", "ocupantes": MOTOR}, es_arranque=True) == 2
+    assert r.codigo({"estado": "ATASCADO", "ocupantes": MOTOR}, es_arranque=True) == 1  # un ATASCADO real sigue en 1
+    assert r.codigo({"estado": "SANO", "ocupantes": MOTOR}, es_arranque=True) == 0
+
+
+def test_motor_main_arranque_usa_el_codigo_de_arranque(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setattr(r.interruptores, "modo", lambda nombre: "observar")
+    monkeypatch.setattr(r, "arranque", lambda modo, res, boot: None)
+    carga = {"estado": "INDETERMINADO", "motivo": "CARGA_NO_PUDO_CORRER: RuntimeError: x", "ocupantes": MOTOR}
+    assert _main_con(monkeypatch, carga, capsys, ["--arranque"])[0] == 0
+    assert _main_con(monkeypatch, carga, capsys, ["--prueba"])[0] == 2
+    assert _main_con(monkeypatch, {"estado": "ATASCADO", "ocupantes": MOTOR}, capsys, ["--arranque"])[0] == 1
+
+
+def _pasa_el_close_check(ruta: Path) -> bool:
+    """La condicion del close_check de la ficha, sobre `ruta` en vez del archivo real."""
+    filas = [json.loads(x) for x in ruta.read_text(encoding="utf-8").splitlines() if x.strip()]
+    filas = [x for x in filas if x["ts"] > "2026-10-27T01:30"]
+    return bool(filas) and "GPU_OCUPADA" not in str(filas[-1].get("motivo"))
+
+
+def test_motor_la_fila_de_arranque_registra_ocupantes_y_tflops_valido(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    # la fila real del 2026-10-27T02:04:46Z (boot 56a1942a) no pasa el close_check: control negativo de la condicion
+    real = tmp_path / "real" / "reloj_arranque.jsonl"
+    real.parent.mkdir()
+    real.write_text(json.dumps({"ts": "2026-10-27T02:04:46.825766+00:00", "estado": "INDETERMINADO", "motivo": "GPU_OCUPADA: pid 3382 (python3, 4522 MiB); los TFLOP/s saldrian bajos por competencia, no por el estado de energia", "ocupantes": ATLAS}) + "\n", encoding="utf-8")
+    assert not _pasa_el_close_check(real)
+    _prepara_prueba(monkeypatch, "2080, 67.0, 96, 0x0000000000000000", ocupantes=[ATLAS, ATLAS + MOTOR])
+    ev = r.arranque("observar", r.prueba(segundos=15), "b-motor", tmp_path, avisa=lambda a: pytest.fail("SANO no avisa"))
+    assert ev is not None and ev["estado"] == "SANO" and ev["tflops_valido"] is False and ev["tflops_motivo"].startswith("COMPETENCIA")
+    fila = json.loads((tmp_path / "reloj_arranque.jsonl").read_text(encoding="utf-8").splitlines()[-1])
+    assert fila["tflops_valido"] is False and [o["pid"] for o in fila["ocupantes"]] == [3382, 100762] and fila["motivo"] is None
+    # la misma fila, fechada tras el merge, si pasa la condicion: el close_check puede salir en ambos sentidos
+    with real.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps({**fila, "ts": "2026-10-28T02:05:00+00:00"}) + "\n")
+    assert _pasa_el_close_check(real)
