@@ -1,0 +1,57 @@
+# FEATURE-FAN-RPM-LEER-ACPI-FAN-DONDE-EXISTA-01 -- DESPUES (2026-10-26)
+
+## close_check
+$ python3 -m pytest -q tests/test_fan_rpm.py -k acpi_fan; echo "rc=$?"
+.......                                                                  [100%]
+7 passed in 0.10s
+rc=0
+
+## Lector contra ESTA maquina, solo lectura de /sys y de /var/lib/blackbox (una corrida)
+$ python3 -m tools.thermal_coverage --acpi-fan; echo "rc=$?"
+{
+  "captured_at_utc": "2026-10-27T01:30:16.180503+00:00",
+  "could_not_run": 1,
+  "fuente": "/sys/class/hwmon/hwmon*/fan*_input con name == acpi_fan",
+  "hwmon_name_ilegible": [],
+  "identidad": {
+    "bios_version": {
+      "status": "ok",
+      "value": "5.36_0ACUM08"
+    },
+    "firmware": "recogido por bb-root-run arranque-forense: BIOS Firmware=5.36_0ACUM08; [... 60 componentes, recortado aqui ...]; UEFI=OEM_UEFI_0.0.8; EC Firmware=3.5.11; PD Firmware=PD0 FW1: 5.22, FW2: 5.0; PD Firmware=PD1 FW1: 5.22, FW2: 5.0; GOP Driver=9000D80; BIOS=5.36_0ACUM08",
+    "product_name": {
+      "status": "ok",
+      "value": "AI TOP ATOM"
+    },
+    "sys_vendor": {
+      "status": "ok",
+      "value": "GIGABYTE"
+    }
+  },
+  "motivo": "NOT_COLLECTED: sin hwmon acpi_fan",
+  "schema": 1,
+  "status": "NOT_COLLECTED",
+  "ventiladores": []
+}
+rc=2
+$ for d in /sys/class/hwmon/hwmon*; do echo "$d $(cat $d/name)"; done
+/sys/class/hwmon/hwmon0 acpitz
+/sys/class/hwmon/hwmon1 nvme
+/sys/class/hwmon/hwmon2 mt7925_phy0
+
+## Suites que el cambio toca, DESPUES (mismas cuentas que antes: 292 y 36; mas los 7 nuevos)
+$ python3 -m pytest -q tests/test_diagnostic_admission_prototypes.py tests/test_forum_hardware_subjects_branches.py tests/test_hardware_batch03_controls.py tests/test_forum_hardware_subjects.py tests/test_hardware_reader_safety.py tests/test_hardware_reader_command_ownership.py tests/test_incident_report.py
+292 passed in 1.16s
+$ python3 -m pytest -q tests/test_reloj_atascado.py
+36 passed in 0.12s
+$ python3 -m pytest -q tests/test_fan_rpm.py
+7 passed in 0.08s
+
+## Gates estaticos sobre los archivos tocados
+$ ruff check tools/thermal_coverage.py tests/test_fan_rpm.py
+All checks passed!
+$ pyright tools/thermal_coverage.py tests/test_fan_rpm.py
+0 errors, 0 warnings, 0 informations
+$ /opt/miniforge3/bin/python3 -m tools.inventario --check
+[inventario] HALLAZGOS: 0
+[inventario] OK: los dos inventarios describen el repo y la maquina.
