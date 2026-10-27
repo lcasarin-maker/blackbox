@@ -34,6 +34,18 @@ cada vuelta; `decide` sigue pura y solo la capa con efecto (`aplica`) mira el mo
 Cada clase lleva ademas su techo de modo (`Clase.modo`): el modo efectivo de una accion es el mas restrictivo entre el
 interruptor y ese techo (`modo_efectivo`). `suite` tiene techo `actuar`; `libreoffice` entra con techo `observar`.
 
+Interruptor `portero_io` (DEBT-PORTERO-IO-MAX-EN-CLASE-SUITE-01, voto de Luis 2026-10-27: opt-in, apagado por defecto).
+Gobierna SOLO el tope de disco (`io.max`) de las clases que lo declaran (`Clase.io_*_bps`; hoy solo `suite`), en los
+dos sitios donde nace un scope: la adopcion del demonio (`crea_scope`) y `bb portero run` (`systemd-run`):
+
+* `off` (por defecto, y lo ilegible): no deriva dispositivo, no pone propiedades IO, no escribe nada nuevo.
+* `observar`: deriva el disco y registra en la fila (`"io"`) lo que habria puesto, con `"puesto": false`.
+* `actuar`: pone `IOReadBandwidthMax`/`IOWriteBandwidthMax` sobre el DISCO entero (io.max no se aplica a una
+  particion) y lo registra con `"puesto": true`; en la adopcion relee el `io.max` del scope y dice si lo confirmo.
+
+Sin un disco derivable sin ambiguedad (tmpfs, overlay, dm/md/loop, nodo /dev que no cuadra) no se pone tope y la fila
+dice `NOT_COLLECTED` con el motivo: un tope sobre el dispositivo equivocado es peor que ninguno.
+
 Lo unico que el demonio hace fuera de `actuar` es deshacer lo propio: descongela los scopes bb-portero-* que dejo
 congelados (lista app.slice, nada mas). Sin eso, pasar a `off` con una suite congelada la dejaria asi para siempre.
 
@@ -54,6 +66,7 @@ import importlib
 import json
 import os
 import re
+import stat
 import subprocess
 import sys
 import time
@@ -68,6 +81,7 @@ except ImportError:  # como script de `bb portero` (tools/ en sys.path, no la ra
     import interruptores
 
 NOMBRE = "portero"  # su clave en interruptores.json
+NOMBRE_IO = "portero_io"  # clave del tope de disco (io.max), opt-in: ausente o ilegible vale `off`
 KIB = 1024
 GIB_KB = 1024 * 1024  # 1 GiB expresado en kB
 
@@ -103,6 +117,18 @@ class Clase:
     # (`modo_efectivo`). `suite` queda en `actuar` (solo manda el interruptor, como antes); una clase nueva entra en
     # `observar` hasta que su registro justifique `actuar` (voto de Luis 2026-10-17).
     modo: str = "actuar"
+    # Tope de disco en bytes/s (base 1000, como systemd), o None = la clase no lleva io.max. Solo se pone con el
+    # interruptor `portero_io` en `actuar` (ver docstring del modulo).
+    io_read_bps: int | None = None
+    io_write_bps: int | None = None
+
+
+# Tope de disco de `suite`: PROVISIONAL, SIN CALIBRAR (DEBT-PORTERO-IO-MAX-EN-CLASE-SUITE-01). Lo unico medido
+# (2026-10-27, nvme0n1, planificador `none`): `dd oflag=direct` de 1 GiB dio 4.0 GB/s sin tope y 509 MB/s con
+# IOWriteBandwidthMax=500M. Escritura 1 GB/s es la cuarta parte de lo medido sin tope; lectura 2 GB/s no tiene
+# medicion propia. Se calibran con el io_some y la duracion del pre-push medidos con `portero_io=actuar`.
+IO_SUITE_READ_BPS = 2_000_000_000
+IO_SUITE_WRITE_BPS = 1_000_000_000
 
 
 # Clase `suite` (pytest, hooks pre-push/pre-commit). MemoryMax=20G con swap 0 y MemoryHigh al 90 % es el tope que
@@ -117,6 +143,8 @@ CLASES: dict[str, Clase] = {
         tasks_max=1230,
         turnos=1,
         umbral_rss_kb=UMBRAL_RSS_SUITE_KB,
+        io_read_bps=IO_SUITE_READ_BPS,
+        io_write_bps=IO_SUITE_WRITE_BPS,
     ),
     # Clase `libreoffice` (DEBT-PORTERO-NO-CLASIFICA-TANDAS-DE-LIBREOFFICE-DE-OTROS-PROYECTOS-01): una conversion
     # `soffice --headless --convert-to` es un arbol oosplash -> soffice.bin. Medido 2026-10-17 en /proc sobre una tanda
@@ -721,14 +749,116 @@ def nombre_unidad(clase: str, raiz: int) -> str:
     return f"{PREFIJO_UNIDAD}{clase}-{raiz}.scope"
 
 
-def crea_scope(nombre: str, pids: Iterable[int], slice_: str, topes: dict[str, int], ejecutar: Ejecutor = _ejecuta) -> tuple[int, str]:
+@dataclass(frozen=True)
+class Disco:
+    """Disco entero (no particion) que respalda un sistema de archivos: lo que `io.max` acepta."""
+
+    ruta: str  # nodo en /dev, p. ej. /dev/nvme0n1
+    maj_min: str  # p. ej. 259:0, la clave de la linea de io.max
+
+
+Stat = Callable[[Path], os.stat_result]
+MAJ_MIN = re.compile(r"^\d+:\d+$")
+
+
+def _maj_min(dev: int) -> str:
+    return f"{os.major(dev)}:{os.minor(dev)}"
+
+
+def disco_de(objetivo: Path, sys_raiz: Path = Path("/sys"), dev_raiz: Path = Path("/dev"), stat_: Stat = os.stat) -> Disco | str:
+    """El disco entero que respalda `objetivo`, o el motivo por el que no se sabe sin ambiguedad (solo lectura).
+
+    st_dev del objetivo -> /sys/dev/block/<maj:min> -> si es particion, su padre -> `dev` del disco -> el nodo /dev
+    con ese nombre tiene que ser de bloques y con ese mismo maj:min. Dispositivos apilados (dm, md, loop) se rechazan:
+    su io.max no es el del disco fisico y elegir uno de sus esclavos seria adivinar."""
+    try:
+        origen = _maj_min(stat_(objetivo).st_dev)
+    except OSError as e:
+        return f"stat de {objetivo}: {e}"
+    nodo = sys_raiz / "dev" / "block" / origen
+    try:
+        real = nodo.resolve(strict=True)
+    except (OSError, RuntimeError):
+        return f"{objetivo} esta en {origen} sin {nodo}: no es un dispositivo de bloques (tmpfs, overlay, btrfs...)"
+    disco = real.parent if (real / "partition").exists() else real
+    if (disco / "partition").exists():
+        return f"{disco} es particion y tambien lo es su hijo {real.name}: no se adivina el disco"
+    apilado = [x for x in ("dm", "md", "loop") if (disco / x).exists()]
+    try:
+        apilado += [f"slaves/{x.name}" for x in (disco / "slaves").iterdir()]
+    except OSError:
+        pass  # sin directorio slaves: no esta apilado sobre otro
+    if apilado:
+        return f"{disco.name} es un dispositivo apilado ({', '.join(apilado)}): io.max no se pone sobre el disco fisico"
+    maj_min = (_lee(disco / "dev") or "").strip()
+    if not MAJ_MIN.match(maj_min):
+        return f"{disco / 'dev'} ilegible ({maj_min!r})"
+    if disco == real and maj_min != origen:
+        return f"{disco / 'dev'} dice {maj_min} y {objetivo} esta en {origen}"
+    try:
+        vuelta = (sys_raiz / "dev" / "block" / maj_min).resolve(strict=True)
+    except (OSError, RuntimeError):
+        vuelta = None
+    if vuelta != disco:
+        return f"/sys/dev/block/{maj_min} no resuelve a {disco} ({vuelta})"
+    ruta = dev_raiz / disco.name
+    try:
+        st = stat_(ruta)
+    except OSError as e:
+        return f"stat de {ruta}: {e}"
+    if not stat.S_ISBLK(st.st_mode) or _maj_min(st.st_rdev) != maj_min:
+        return f"{ruta} no es el nodo de bloques {maj_min} (modo {oct(st.st_mode)}, rdev {_maj_min(st.st_rdev)})"
+    return Disco(str(ruta), maj_min)
+
+
+TopesIO = dict[str, tuple[str, int]]  # propiedad systemd -> (dispositivo, bytes/s)
+
+
+def topes_io(clase: str | None, objetivo: Path, fx: Efectos) -> tuple[TopesIO, dict[str, Any] | None]:
+    """(propiedades IO a poner, bloque `io` de la fila) para un scope de `clase` cuyo trabajo escribe en `objetivo`.
+
+    Propiedades solo con `portero_io` efectivo en `actuar`; el bloque es None en `off` o si la clase no declara tope
+    (la fila queda como antes del interruptor)."""
+    c = CLASES.get(clase or "")
+    if c is None or (c.io_read_bps is None and c.io_write_bps is None):
+        return {}, None
+    modo = modo_efectivo(fx.modo_io, clase)
+    if modo not in ("observar", "actuar"):
+        return {}, None
+    d = disco_de(objetivo, fx.sys_raiz, fx.dev_raiz, fx.stat)
+    if isinstance(d, str):
+        return {}, {"modo": modo, "estado": "NOT_COLLECTED", "motivo": d, "objetivo": str(objetivo), "puesto": False}
+    topes = {k: (d.ruta, v) for k, v in (("IOReadBandwidthMax", c.io_read_bps), ("IOWriteBandwidthMax", c.io_write_bps))
+             if v is not None}
+    ev = {"modo": modo, "dispositivo": d.ruta, "maj_min": d.maj_min, "objetivo": str(objetivo),
+          **{k: v for k, (_, v) in topes.items()}, "puesto": modo == "actuar"}
+    return (topes if modo == "actuar" else {}), ev
+
+
+def confirma_io_max(cg: Path, ev: dict[str, Any]) -> dict[str, Any]:
+    """Relee `io.max` del scope recien creado: `confirmado` solo si la linea del disco trae los bytes pedidos."""
+    texto = _lee(cg / "io.max")
+    if texto is None:
+        return {"io_max": "NOT_COLLECTED: io.max ilegible", "confirmado": False}
+    linea = next((x for x in texto.splitlines() if x.split(" ", 1)[0] == ev["maj_min"]), "")
+    campos = dict(p.split("=", 1) for p in linea.split()[1:] if "=" in p)
+    pedido = {"rbps": ev.get("IOReadBandwidthMax"), "wbps": ev.get("IOWriteBandwidthMax")}
+    ok = bool(linea) and all(campos.get(k) == str(v) for k, v in pedido.items() if v is not None)
+    return {"io_max": texto.strip(), "confirmado": ok}
+
+
+def crea_scope(nombre: str, pids: Iterable[int], slice_: str, topes: dict[str, int], ejecutar: Ejecutor = _ejecuta,
+               io: TopesIO | None = None) -> tuple[int, str]:
     """Adopta procesos vivos en un scope transitorio del gestor de usuario, con sus topes, en una sola llamada."""
     pids_txt = [str(p) for p in pids]
     props: list[str] = ["PIDs", "au", str(len(pids_txt)), *pids_txt, "Slice", "s", slice_]
     for k in ("MemoryMax", "MemoryHigh", "MemorySwapMax", "TasksMax"):
         if k in topes:
             props += [k, "t", str(topes[k])]
-    n_props = 2 + sum(1 for k in ("MemoryMax", "MemoryHigh", "MemorySwapMax", "TasksMax") if k in topes)
+    io = io or {}
+    for k, (dev, bps) in io.items():
+        props += [k, "a(st)", "1", dev, str(bps)]
+    n_props = 2 + sum(1 for k in ("MemoryMax", "MemoryHigh", "MemorySwapMax", "TasksMax") if k in topes) + len(io)
     return ejecutar(
         ["busctl", "--user", "call", "org.freedesktop.systemd1", "/org/freedesktop/systemd1",
          "org.freedesktop.systemd1.Manager", "StartTransientUnit", "ssa(sv)a(sa(sv))",
@@ -784,12 +914,13 @@ def estado_unidad(nombre: str, ejecutar: Ejecutor) -> str:
     return ""
 
 
-def _adopta(a: Arbol, accion: Accion, ejecutar: Ejecutor, cg_raiz: Path, proc: Path = Path("/proc")) -> tuple[int, str, Path | None]:
+def _adopta(a: Arbol, accion: Accion, ejecutar: Ejecutor, cg_raiz: Path, proc: Path = Path("/proc"),
+            io: TopesIO | None = None) -> tuple[int, str, Path | None]:
     nombre = nombre_unidad(accion.clase or "x", a.raiz)
     # Un pid que ya salio hace fallar la llamada entera ("No such process"): se pasan solo los que siguen vivos. La
     # raiz va siempre (aplica acaba de comprobarla); si sale ahora, el fallo lo resuelve aplica como `no_actua`.
     pids = sorted({a.raiz, *(p for p in a.pids if (proc / str(p)).is_dir())})
-    rc, salida = crea_scope(nombre, pids, accion.slice, accion.topes, ejecutar)
+    rc, salida = crea_scope(nombre, pids, accion.slice, accion.topes, ejecutar, io)
     if rc != 0:
         return rc, salida, None
     # StartTransientUnit devuelve un job: la adopcion termina despues. Se espera acotado (medido 2026-10-12 con un
@@ -874,6 +1005,10 @@ class Efectos:
     cg_raiz: Path = CGROUP_RAIZ
     proc: Path = Path("/proc")
     modo: str = "actuar"  # interruptor `portero`: fuera de `actuar` aplica y turno solo registran (ver docstring)
+    modo_io: str = "off"  # interruptor `portero_io`: solo en `actuar` lleva io.max el scope (ver docstring)
+    sys_raiz: Path = Path("/sys")
+    dev_raiz: Path = Path("/dev")
+    stat: Stat = os.stat
 
 
 def _adopta_y_congela(a: Arbol, ac: Accion, fx: Efectos) -> dict[str, Any]:
@@ -881,11 +1016,17 @@ def _adopta_y_congela(a: Arbol, ac: Accion, fx: Efectos) -> dict[str, Any]:
     se_fue = raiz_se_fue(a, fx.proc)
     if se_fue:  # salio entre la observacion y ahora: no hay nada que adoptar
         return {"accion": "no_actua", "decidida": ac.tipo, "motivo": f"{se_fue}: no se adopta (decidido: {ac.motivo})"}
-    rc, salida, destino = _adopta(a, ac, fx.ejecutar, fx.cg_raiz, fx.proc)
+    # El disco es el del directorio de trabajo de la raiz (stat sigue el enlace /proc/<pid>/cwd).
+    io, io_ev = topes_io(ac.clase, fx.proc / str(a.raiz) / "cwd", fx)
+    rc, salida, destino = _adopta(a, ac, fx.ejecutar, fx.cg_raiz, fx.proc, io)
+    if io_ev is not None and io:  # `puesto` = iba en la llamada a systemd; `confirmado` = io.max releido lo trae
+        io_ev.update(confirma_io_max(destino, io_ev) if destino is not None else {"confirmado": False})
     if rc == 0 and ac.tipo == "congelar" and destino is not None:
         err = congela(destino, True)
         rc, salida = (1, f"{salida}; {err}") if err else (rc, salida)
     ev = {"rc": rc, "salida": salida[:300], "unidad": nombre_unidad(ac.clase or "x", a.raiz), "slice": ac.slice, "topes": ac.topes}
+    if io_ev is not None:
+        ev["io"] = io_ev
     se_fue = raiz_se_fue(a, fx.proc) if rc != 0 else ""
     if se_fue:  # salio DURANTE la adopcion: el fallo de systemd es por eso, no un fallo del portero
         del ev["rc"]
@@ -1056,7 +1197,7 @@ def descongela_propios(fx: Efectos, modo: str) -> list[dict[str, Any]]:
     return eventos
 
 
-def _ciclo(ultimo: dict[Any, str], modo: str = "actuar") -> list[dict[str, Any]]:
+def _ciclo(ultimo: dict[Any, str], modo: str = "actuar", modo_io: str = "off") -> list[dict[str, Any]]:
     deshechos = descongela_propios(Efectos(), modo) if modo != "actuar" else []
     if modo == "off":
         # Sin leer /proc, PSI ni medir cgroups: una sola fila al entrar en off, ninguna mientras siga en off.
@@ -1069,7 +1210,8 @@ def _ciclo(ultimo: dict[Any, str], modo: str = "actuar") -> list[dict[str, Any]]
     ultimo.pop((None, "off"), None)  # al volver a off se vuelve a anunciar
     estado = lee_estado()
     arboles = observar()
-    return [*deshechos, *aplica(decide(arboles, estado), arboles or [], estado, replace(Efectos(), modo=modo), ultimo)]
+    fx = replace(Efectos(), modo=modo, modo_io=modo_io)
+    return [*deshechos, *aplica(decide(arboles, estado), arboles or [], estado, fx, ultimo)]
 
 
 def _ciclo_contenedores(aplicar: bool) -> list[dict[str, Any]]:
@@ -1088,7 +1230,7 @@ def cmd_demonio(args: argparse.Namespace) -> int:
     vueltas = 0
     while True:
         modo = interruptores.modo(NOMBRE)  # cada vuelta: cambiar el interruptor no exige reiniciar el servicio
-        _ciclo(ultimo, modo)
+        _ciclo(ultimo, modo, interruptores.modo(NOMBRE_IO))
         if args.contenedores and modo != "off" and vueltas % CONTENEDORES_CADA == 0:
             _ciclo_contenedores(aplicar=modo == "actuar")
         vueltas += 1
@@ -1175,6 +1317,15 @@ def turno(pid: int, clase: str, fuente: Fuente = _fuente_real, espera: Callable[
             time.sleep(INTERVALO_S)  # blocking-sleep: espera de turno en la cola del portero, sondeo de /proc -- DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01
 
 
+def _cwd() -> Path:
+    """El directorio de trabajo; si su ruta ya no se lee, `/proc/self/cwd` (stat sigue el enlace; si tampoco se lee,
+    `disco_de` devuelve el motivo y el tope queda en NOT_COLLECTED)."""
+    try:
+        return Path.cwd()
+    except OSError:
+        return Path("/proc/self/cwd")
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     cmd = args.cmd[1:] if args.cmd[:1] == ["--"] else args.cmd
     if not cmd:
@@ -1191,13 +1342,18 @@ def cmd_run(args: argparse.Namespace) -> int:
     topes = _topes(c)
     unidad = nombre_unidad(args.clase, pid)
     slice_ = concedida.slice if concedida.tipo == "mover" and modo == "actuar" else "app.slice"
+    # Tope de disco: lo gobierna SOLO `portero_io` (apagado por defecto), sobre el disco del directorio de trabajo.
+    io, io_ev = topes_io(args.clase, _cwd(), replace(Efectos(), modo_io=interruptores.modo(NOMBRE_IO)))
     print(f"[bb portero] {cmd[0]} bajo {unidad} en {slice_}: MemoryMax={c.memory_max_kb // GIB_KB}G "
           f"MemoryHigh={c.memory_high_kb // GIB_KB}G sin swap, TasksMax={c.tasks_max}", file=sys.stderr)
+    if io_ev is not None:
+        print(f"[bb portero] io ({NOMBRE_IO}={io_ev['modo']}): {json.dumps(io_ev, ensure_ascii=False)}", file=sys.stderr)
     try:
         rc = subprocess.run(
             ["systemd-run", "--user", "--scope", "--quiet", f"--unit={unidad}", f"--slice={slice_}",
              "-p", f"MemoryMax={topes['MemoryMax']}", "-p", f"MemoryHigh={topes['MemoryHigh']}",
-             "-p", "MemorySwapMax=0", "-p", f"TasksMax={topes['TasksMax']}", "--", *cmd],
+             "-p", "MemorySwapMax=0", "-p", f"TasksMax={topes['TasksMax']}",
+             *(x for k, (dev, bps) in io.items() for x in ("-p", f"{k}={dev} {bps}")), "--", *cmd],
             check=False,
         ).returncode
     finally:
@@ -1206,7 +1362,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         except OSError:
             pass
     _registra({"accion": "fin", "raiz": pid, "clase": args.clase, "rc": rc, "unidad": unidad,
-               **({"modo": modo} if modo != "actuar" else {})}, LOG)
+               **({"modo": modo} if modo != "actuar" else {}), **({"io": io_ev} if io_ev is not None else {})}, LOG)
     return rc
 
 
