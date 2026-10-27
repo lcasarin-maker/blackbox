@@ -37,3 +37,15 @@ esta unidad.
 
 Arranque con motor ya activo => la fila trae un veredicto por reloj (no GPU_OCUPADA) y `tflops` marcado no valido; GPU libre =>
 el comportamiento de hoy; un reloj atascado con el motor activo (fixture) => ATASCADO.
+
+## Medido en el arranque del 2026-10-26 (boot 56a1942a): el detector quedo ciego
+
+`bb-reloj-arranque.timer` disparo a las 20:04:46 (6 min tras el boot de las 19:58:45). Fila nueva de `reloj_arranque.jsonl`:
+`"estado": "INDETERMINADO", "reloj_mediano_mhz": null, "tflops": null, "motivo": "GPU_OCUPADA: pid 3382 (python3, 4522 MiB)..."`. El
+servicio termino con `status=2/INVALIDARGUMENT` y systemd lo marco `Failed`. El ocupante fue el uvicorn de Atlas (pid 3382, 4.5 GiB),
+no el contenedor del motor; el motor (`nemotron-server`, StartedAt 02:00:44Z, 2 min tras el boot) ya estaba cargado. Tres procesos
+figuraban en `nvidia-smi --query-compute-apps` en ese momento y la guarda listo uno.
+Consecuencia: cualquier proceso residente en la GPU a los 6 minutos anula la prueba del arranque. Con motor y Atlas arrancando solos,
+eso ocurre en cada boot. El `close_check` falla hoy (rc=1), como corresponde.
+Direccion de arreglo: la ocupacion invalida los TFLOP/s, no el reloj. En el arranque, correr la carga igualmente, juzgar por reloj y
+potencia observados durante ella, marcar `tflops` no valido, y que `INDETERMINADO` por GPU_OCUPADA deje de ser un fallo de unidad.
