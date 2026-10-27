@@ -125,3 +125,15 @@ Los criterios ejecutables de `tools.verify_forum_finding` se miden en esta ficha
 
 ## Avance 2026-10-16 (lectura de solo lectura en el ATOM; responde la pregunta abierta de la adaptacion 2026-10-13)
 El handler existe aqui y el sintoma del foro se reproduce en este equipo standalone: `journalctl -k -b -o short-monotonic` muestra `mlx5_core` con firmware CX7 28.45.4028 a 32.0 GT/s x4 en [1.24], `Cable unplugged` y `insufficient power on the PCIe slot (27W)` en [1.63], `cx7-pcie-hotplug ... Hotplug enabled` en [9.06] y `Cable removal` en [28.19] (~19 s despues); `lspci -d 15b3:` sale vacio y `/etc/nvidia/cx7-hotplug-enabled` esta presente. Kernel 6.17.0-1032-nvidia, driver 580.178.04, DMI GIGABYTE / AI TOP ATOM. `ls /sys/class/hwmon/*/` cuenta 0 entradas `fan*_input` frente a 11 `temp*_input`: no hay tacometro, asi que la rama `fan_rpm` del verificador queda could_not_run por construccion. close_check re-corrido hoy: `{"checks": {}, "could_not_run": 1, "fail": 0, ... "reason": "raw case capture unavailable ..."}` rc=2. 0 cambios de marcador, 0 hotplug, 0 blacklist. Siguen faltando: tacometro de fan (OEM/externo), medidor externo de pared identificado, tupla de firmware UEFI/EC/SoC/PD con fuente OEM que la cite y el A/B en canary con rollback; la ficha sigue `open`.
+
+## Avance 2026-10-26: el mecanismo del hilo 378945 esta armado en esta unidad (medido)
+
+Lectura de solo lectura en la AI TOP ATOM de este repo, un solo nodo y sin cable en el CX7:
+
+- `journalctl -k -b 0`: `oct 24 23:53:51 ... cx7-pcie-hotplug MTKP0001:00: Hotplug enabled` y, 19 s despues, `23:54:10 ... Cable removal`. Boot anterior: `08:12:28 ... Hotplug enabled`, `08:12:48 ... Cable removal`. Dos de dos arranques revisados, mismo intervalo (~20 s) que el hilo (~16 s).
+- `/etc/nvidia/cx7-hotplug-enabled` existe (root, 278 bytes, 2026-07-12) y `bb huella` registra `cx7_hotplug = {"marcador": true, "hotplug_enabled": "1"}`: es la configuracion que el handler nativo lee para retirar los endpoints.
+- `lsmod`: `mtk_pcie_hotplug` cargado. `/sys/bus/arm_ffa/devices/arm-ffa-17` existe con el UUID `884a63a0-...` que usa el modulo `nvfancontrol` de Z841973620: no es senal de compatibilidad (ver abajo).
+- Sin sensor de ventilador: `/sys/class/hwmon` solo tiene `acpitz`, `nvme`, `mt7925_phy0`; ningun `acpi_fan`; los 26 `cooling_device` son 20 `Processor` y 6 `PCIe_Port_Link_Speed`, ninguno de ventilador.
+- Lectura puntual con el motor vLLM cargado y la GPU a 9.04 W, 47 C: zonas ACPI 49.7 a 56.7 C. No es una medicion en reposo limpio ni demuestra ventilador detenido; sin RPM no se puede saber.
+
+Esto no prueba que el ventilador de esta unidad se detenga: prueba que las dos condiciones del mecanismo reportado (CX7 retirado tras el boot, sin cable) se cumplen aqui. Falta ensayo A/B con medidor externo (ver arriba). No cargar `nvfancontrol` en esta unidad: su fuente fija la direccion fisica `0x933dd000` (pagina compartida de una unidad FE con EC 0x03000508), esta unidad tiene EC 0x0300050b, y Secure Boot esta activo.
