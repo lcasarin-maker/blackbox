@@ -3,9 +3,11 @@
 import json
 import os
 import shutil
+import stat
 import subprocess
 import time
 import uuid
+from argparse import Namespace
 from dataclasses import replace
 from pathlib import Path
 
@@ -677,3 +679,233 @@ def test_peticiones_con_la_cola_ilegible_devuelve_vacio_sin_propagar(tmp_path):
     (tmp_path / "1.json").write_text(json.dumps({"pid": os.getpid(), "clase": "suite", "ts": 1.0}), encoding="utf-8")
     vivas = po._peticiones({os.getpid(): object()}, time.time(), tmp_path)
     assert len(vivas) == 1
+
+
+# --- Tope de disco io.max, interruptor `portero_io` (DEBT-PORTERO-IO-MAX-EN-CLASE-SUITE-01) --------------------
+#
+# Todo con /sys, /dev y stat falsos: ningun scope real, ninguna escritura fuera de tmp_path. El /sys falso copia la
+# forma medida en la ATOM (2026-10-27): /sys/dev/block/259:2 -> .../nvme0n1/nvme0n1p2 (con `partition`) y 259:0 -> el
+# disco nvme0n1. El tope tiene que ir sobre el DISCO (259:0), nunca sobre la particion de la raiz (259:2).
+
+S_BLK = stat.S_IFBLK | 0o660
+S_DIR = stat.S_IFDIR | 0o755
+P2 = os.makedev(259, 2)  # nvme0n1p2, la particion de /
+TMPFS = os.makedev(0, 31)  # sin nodo en /sys/dev/block
+
+
+def _st(modo, dev=0, rdev=0):
+    return os.stat_result((modo, 0, dev, 1, 0, 0, 0, 0, 0, 0), {"st_rdev": rdev})
+
+
+def _sys_nvme(tmp_path):
+    sys_ = tmp_path / "sys"
+    disco = sys_ / "devices/pci0004:00/nvme/nvme0/nvme0n1"
+    (disco / "nvme0n1p2").mkdir(parents=True)
+    (disco / "dev").write_text("259:0\n", encoding="utf-8")
+    (disco / "nvme0n1p2" / "dev").write_text("259:2\n", encoding="utf-8")
+    (disco / "nvme0n1p2" / "partition").write_text("2\n", encoding="utf-8")
+    (disco / "slaves").mkdir()
+    bloque = sys_ / "dev/block"
+    bloque.mkdir(parents=True)
+    (bloque / "259:0").symlink_to(disco)
+    (bloque / "259:2").symlink_to(disco / "nvme0n1p2")
+    return sys_
+
+
+def _stat_falso(tabla, vistos=None):
+    def stat_(p):
+        if vistos is not None:
+            vistos.append(str(p))
+        if str(p) not in tabla:
+            raise FileNotFoundError(2, "no existe (fixture)", str(p))
+        return tabla[str(p)]
+    return stat_
+
+
+def _nodo_nvme(tmp_path, modo=S_BLK, rdev=os.makedev(259, 0)):
+    return {str(tmp_path / "dev" / "nvme0n1"): _st(modo, rdev=rdev)}
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("dev", [P2, os.makedev(259, 0)], ids=["particion", "disco_entero"])
+def test_io_max_disco_de_da_el_disco_entero_nunca_la_particion(tmp_path, dev):
+    obj = tmp_path / "trabajo"
+    d = po.disco_de(obj, _sys_nvme(tmp_path), tmp_path / "dev", _stat_falso({str(obj): _st(S_DIR, dev), **_nodo_nvme(tmp_path)}))
+    assert d == po.Disco(str(tmp_path / "dev" / "nvme0n1"), "259:0")
+
+
+def _sys_dm(tmp_path):
+    sys_ = _sys_nvme(tmp_path)
+    dm = sys_ / "devices/virtual/block/dm-0"
+    (dm / "dm").mkdir(parents=True)
+    (dm / "slaves").mkdir()
+    (dm / "slaves" / "nvme0n1p2").symlink_to(sys_ / "devices/pci0004:00/nvme/nvme0/nvme0n1/nvme0n1p2")
+    (dm / "dev").write_text("253:0\n", encoding="utf-8")
+    (sys_ / "dev/block/253:0").symlink_to(dm)
+    return sys_
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("caso,dev,nodo,pista", [
+    ("tmpfs", TMPFS, None, "0:31"),
+    ("dm_apilado", os.makedev(253, 0), None, "apilado"),
+    ("nodo_dev_ausente", P2, {}, "stat de"),
+    ("nodo_dev_no_es_de_bloques", P2, {"modo": stat.S_IFCHR | 0o660}, "no es el nodo de bloques"),
+    ("nodo_dev_con_otro_maj_min", P2, {"rdev": os.makedev(259, 5)}, "no es el nodo de bloques"),
+    ("stat_del_objetivo_falla", None, None, "stat de"),
+])
+def test_io_max_disco_de_sin_dispositivo_inequivoco_devuelve_el_motivo(tmp_path, caso, dev, nodo, pista):
+    obj = tmp_path / "trabajo"
+    sys_ = _sys_dm(tmp_path) if caso == "dm_apilado" else _sys_nvme(tmp_path)
+    tabla = {} if dev is None else {str(obj): _st(S_DIR, dev)}
+    tabla.update(_nodo_nvme(tmp_path) if nodo is None else (_nodo_nvme(tmp_path, **nodo) if nodo else {}))
+    d = po.disco_de(obj, sys_, tmp_path / "dev", _stat_falso(tabla))
+    assert isinstance(d, str) and pista in d, d
+
+
+@pytest.mark.unit
+def test_io_max_disco_de_con_dev_del_disco_ilegible_o_que_no_resuelve_devuelve_el_motivo(tmp_path):
+    obj = tmp_path / "trabajo"
+    sys_ = _sys_nvme(tmp_path)
+    stat_ = _stat_falso({str(obj): _st(S_DIR, P2), **_nodo_nvme(tmp_path)})
+    disco = sys_ / "devices/pci0004:00/nvme/nvme0/nvme0n1"
+    (sys_ / "dev/block/259:0").unlink()  # el maj:min del padre no vuelve al padre
+    assert "no resuelve" in str(po.disco_de(obj, sys_, tmp_path / "dev", stat_))
+    (disco / "dev").write_text("basura\n", encoding="utf-8")
+    assert "ilegible" in str(po.disco_de(obj, sys_, tmp_path / "dev", stat_))
+
+
+def _mundo_io(tmp_path, monkeypatch, modo_io, cwd_dev=P2, escribe_io_max=True):
+    """El mundo de `_mundo_congelable` en actuar (adopta y congela la suite 77) con `portero_io` en `modo_io`
+    (None = ausente de interruptores.json), /sys y /dev falsos y un systemd falso que escribe io.max si se lo piden."""
+    fx, llamadas, _lecturas, _freeze = _mundo_congelable(tmp_path, monkeypatch, "actuar")
+    modos = {"portero": "actuar", **({} if modo_io is None else {po.NOMBRE_IO: modo_io})}
+    (tmp_path / "datos" / "interruptores.json").write_text(json.dumps({"modos": modos}), encoding="utf-8")
+    unidad_cg = fx.cg_raiz / APP.lstrip("/") / po.nombre_unidad("suite", 77)
+    base = fx.ejecutar
+
+    def ejecutar(args):
+        r = base(args)
+        if args[0] == "busctl" and escribe_io_max and "IOWriteBandwidthMax" in args:  # lo que haria el kernel
+            (unidad_cg / "io.max").write_text(
+                f"259:0 rbps={po.IO_SUITE_READ_BPS} wbps={po.IO_SUITE_WRITE_BPS} riops=max wiops=max\n", encoding="utf-8")
+        return r
+
+    vistos: list[str] = []
+    stat_ = _stat_falso({str(fx.proc / "77" / "cwd"): _st(S_DIR, cwd_dev), **_nodo_nvme(tmp_path)}, vistos)
+    fx = replace(fx, ejecutar=ejecutar, sys_raiz=_sys_nvme(tmp_path), dev_raiz=tmp_path / "dev", stat=stat_)
+    monkeypatch.setattr(po, "Efectos", lambda: fx)
+    assert po.cmd_demonio(Namespace(una_vez=True, contenedores=False)) == 0
+    busctl = next(a for a in llamadas if a[0] == "busctl")
+    fila = next(f for f in _filas(fx.log) if f["accion"] == "congelar")
+    return busctl, fila, vistos, tmp_path / "dev" / "nvme0n1"
+
+
+def _n_props(busctl):
+    return busctl[busctl.index("ssa(sv)a(sa(sv))") + 3]
+
+
+def _tiene(args, seq):
+    return any(args[i:i + len(seq)] == seq for i in range(len(args)))
+
+
+@pytest.mark.unit
+def test_io_max_actuar_suite_pone_los_dos_topes_sobre_el_disco_y_lo_confirma(tmp_path, monkeypatch):
+    busctl, fila, _vistos, nodo = _mundo_io(tmp_path, monkeypatch, "actuar")
+    assert _tiene(busctl, ["IOReadBandwidthMax", "a(st)", "1", str(nodo), str(po.IO_SUITE_READ_BPS)])
+    assert _tiene(busctl, ["IOWriteBandwidthMax", "a(st)", "1", str(nodo), str(po.IO_SUITE_WRITE_BPS)])
+    assert _n_props(busctl) == "8"  # PIDs + Slice + 4 de memoria + 2 de disco
+    assert not any("nvme0n1p" in a for a in busctl)  # nunca la particion
+    assert fila["rc"] == 0
+    io = fila["io"]
+    assert (io["modo"], io["dispositivo"], io["maj_min"], io["puesto"], io["confirmado"]) == ("actuar", str(nodo), "259:0", True, True)
+    assert (io["IOReadBandwidthMax"], io["IOWriteBandwidthMax"]) == (po.IO_SUITE_READ_BPS, po.IO_SUITE_WRITE_BPS)
+
+
+@pytest.mark.unit
+def test_io_max_actuar_sin_io_max_en_el_scope_registra_confirmado_false(tmp_path, monkeypatch):
+    # control negativo de `confirmado`: systemd acepta la llamada pero el scope queda sin io.max
+    busctl, fila, _vistos, _nodo = _mundo_io(tmp_path, monkeypatch, "actuar", escribe_io_max=False)
+    assert "IOWriteBandwidthMax" in busctl and fila["io"]["puesto"] is True
+    assert fila["io"]["confirmado"] is False and "NOT_COLLECTED" in fila["io"]["io_max"]
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("modo_io", [None, "off", "valor-desconocido"], ids=["ausente", "off", "desconocido"])
+def test_io_max_off_no_pone_no_deriva_y_la_fila_queda_como_antes(tmp_path, monkeypatch, modo_io):
+    busctl, fila, vistos, _nodo = _mundo_io(tmp_path, monkeypatch, modo_io)
+    assert not any(a.startswith("IO") for a in busctl) and _n_props(busctl) == "6"
+    assert "io" not in fila and vistos == []  # ni un stat: off no deriva dispositivo
+    assert fila["rc"] == 0  # la memoria se topa igual que antes
+
+
+@pytest.mark.unit
+def test_io_max_observar_no_pone_y_registra_lo_que_habria_puesto(tmp_path, monkeypatch):
+    busctl, fila, _vistos, nodo = _mundo_io(tmp_path, monkeypatch, "observar")
+    assert not any(a.startswith("IO") for a in busctl) and _n_props(busctl) == "6"
+    io = fila["io"]
+    assert (io["modo"], io["dispositivo"], io["maj_min"], io["puesto"]) == ("observar", str(nodo), "259:0", False)
+    assert io["IOWriteBandwidthMax"] == po.IO_SUITE_WRITE_BPS and "confirmado" not in io
+
+
+@pytest.mark.unit
+def test_io_max_actuar_sin_dispositivo_derivable_no_pone_y_declara_not_collected(tmp_path, monkeypatch):
+    busctl, fila, _vistos, _nodo = _mundo_io(tmp_path, monkeypatch, "actuar", cwd_dev=TMPFS)
+    assert not any(a.startswith("IO") for a in busctl) and _n_props(busctl) == "6"
+    io = fila["io"]
+    assert (io["modo"], io["estado"], io["puesto"]) == ("actuar", "NOT_COLLECTED", False) and "0:31" in io["motivo"]
+
+
+@pytest.mark.unit
+def test_io_max_otra_clase_con_actuar_no_lleva_tope_y_el_techo_de_clase_manda(tmp_path, monkeypatch):
+    obj = tmp_path / "trabajo"
+    fx = po.Efectos(modo_io="actuar", sys_raiz=_sys_nvme(tmp_path), dev_raiz=tmp_path / "dev",
+                    stat=_stat_falso({str(obj): _st(S_DIR, P2), **_nodo_nvme(tmp_path)}))
+    assert po.topes_io("libreoffice", obj, fx) == ({}, None)
+    assert po.topes_io(None, obj, fx) == ({}, None)
+    assert po.topes_io("suite", obj, fx)[0]  # control: la misma llamada con suite SI da propiedades
+    # una clase con tope de disco pero techo `observar` registra y no pone, aunque el interruptor diga actuar
+    lo = replace(po.CLASES["libreoffice"], io_read_bps=1, io_write_bps=1)
+    monkeypatch.setitem(po.CLASES, "libreoffice", lo)
+    props, ev = po.topes_io("libreoffice", obj, fx)
+    assert props == {} and ev is not None and (ev["modo"], ev["puesto"]) == ("observar", False)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("clase,modo_io,con_io", [
+    ("suite", "actuar", True), ("suite", "off", False), ("suite", "observar", False), ("libreoffice", "actuar", False),
+])
+def test_io_max_bb_portero_run_pasa_el_tope_a_systemd_run_solo_en_actuar_y_suite(tmp_path, monkeypatch, clase, modo_io, con_io):
+    datos = tmp_path / "datos"
+    datos.mkdir()
+    (datos / "interruptores.json").write_text(json.dumps({"modos": {"portero": "off", po.NOMBRE_IO: modo_io}}), encoding="utf-8")
+    monkeypatch.setenv("BLACKBOX_DATA", str(datos))
+    monkeypatch.setattr(po, "LOG", tmp_path / "portero.jsonl")
+    monkeypatch.setattr(po, "COLA", tmp_path / "cola")
+    cwd = tmp_path / "repo"
+    monkeypatch.setattr(po, "_cwd", lambda: cwd)
+    fx = EFECTOS(sys_raiz=_sys_nvme(tmp_path), dev_raiz=tmp_path / "dev",
+                 stat=_stat_falso({str(cwd): _st(S_DIR, P2), **_nodo_nvme(tmp_path)}))
+    monkeypatch.setattr(po, "Efectos", lambda: fx)
+    lanzados = []
+
+    class _Hecho:
+        returncode = 0
+
+    def run(argv, **_kw):
+        lanzados.append(argv)
+        return _Hecho()
+
+    monkeypatch.setattr(po.subprocess, "run", run)
+    assert po.cmd_run(Namespace(clase=clase, cmd=["--", "true"])) == 0
+    argv = lanzados[0]
+    nodo = tmp_path / "dev" / "nvme0n1"
+    esperado = [["-p", f"IOReadBandwidthMax={nodo} {po.IO_SUITE_READ_BPS}"], ["-p", f"IOWriteBandwidthMax={nodo} {po.IO_SUITE_WRITE_BPS}"]]
+    assert all(_tiene(argv, e) for e in esperado) is con_io
+    assert con_io or not any("IO" in a for a in argv)
+    assert argv[argv.index("--") + 1:] == ["true"]
+    fin = _filas(po.LOG)[-1]
+    if clase == "libreoffice" or modo_io == "off":
+        assert "io" not in fin
+    else:
+        assert (fin["io"]["modo"], fin["io"]["puesto"], fin["io"]["dispositivo"]) == (modo_io, con_io, str(nodo))
