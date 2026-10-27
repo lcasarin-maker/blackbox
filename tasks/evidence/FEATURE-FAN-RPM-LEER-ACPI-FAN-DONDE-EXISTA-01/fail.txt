@@ -1,0 +1,59 @@
+# FEATURE-FAN-RPM-LEER-ACPI-FAN-DONDE-EXISTA-01 -- ANTES (2026-10-26, worktree en 8c703051)
+
+## close_check antes de tocar nada (rc=4: el archivo de tests no existe = "no hay tests", el fallo esperado)
+$ python3 -m pytest -q tests/test_fan_rpm.py -k acpi_fan; echo "rc=$?"
+ERROR: file or directory not found: tests/test_fan_rpm.py
+
+
+no tests ran in 0.00s
+rc=4
+
+## Control negativo 1: tests nuevos contra el codigo ANTERIOR
+## (tools/thermal_coverage.py de HEAD copiado en su lugar con `git show HEAD:...`, sin git stash; luego restaurado y comparado con cmp)
+$ python3 -m pytest -q tests/test_fan_rpm.py -k acpi_fan 2>&1 | tail -12
+----------------------------- Captured stderr call -----------------------------
+usage: thermal_coverage [-h] [--root ROOT] [--output OUTPUT]
+thermal_coverage: error: unrecognized arguments: --acpi-fan --forense-dir /tmp/pytest-of-lcasarin/pytest-2190/test_acpi_fan_cli_exit_code_tr0/f
+=========================== short test summary info ============================
+FAILED tests/test_fan_rpm.py::test_acpi_fan_reports_rpm_per_fan - AttributeEr...
+FAILED tests/test_fan_rpm.py::test_acpi_fan_absent_is_not_collected_never_zero
+FAILED tests/test_fan_rpm.py::test_acpi_fan_zero_is_stopped_not_missing - Att...
+FAILED tests/test_fan_rpm.py::test_acpi_fan_unreadable_input_is_not_collected_with_reason[directory]
+FAILED tests/test_fan_rpm.py::test_acpi_fan_unreadable_input_is_not_collected_with_reason[malformed]
+FAILED tests/test_fan_rpm.py::test_acpi_fan_carries_oem_and_firmware_identity
+FAILED tests/test_fan_rpm.py::test_acpi_fan_cli_exit_code_tracks_could_not_run
+7 failed in 0.13s
+$ python3 -m pytest -q tests/test_fan_rpm.py -k acpi_fan >/dev/null 2>&1; echo "rc=$?"
+rc=1
+
+## Control negativo 2 (mas fuerte que el anterior, que solo prueba que la funcion faltaba):
+## mutantes del lector nuevo, cada uno inyecta una de las fallas silenciosas que la ficha prohibe.
+## Script: escribe el mutante en tools/thermal_coverage.py, corre el close_check, restaura la version nueva.
+$ python3 <scratchpad>/mutantes.py <worktree> <scratchpad>/thermal_coverage.new.py
+== M1 ilegible->0 rpm: rc=1
+FAILED tests/test_fan_rpm.py::test_acpi_fan_unreadable_input_is_not_collected_with_reason[directory]
+FAILED tests/test_fan_rpm.py::test_acpi_fan_unreadable_input_is_not_collected_with_reason[malformed]
+2 failed, 5 passed in 0.10s
+== M2 cero->NOT_COLLECTED: rc=1
+FAILED tests/test_fan_rpm.py::test_acpi_fan_zero_is_stopped_not_missing - ass...
+FAILED tests/test_fan_rpm.py::test_acpi_fan_cli_exit_code_tracks_could_not_run
+2 failed, 5 passed in 0.10s
+== M3 ignora name==acpi_fan: rc=1
+FAILED tests/test_fan_rpm.py::test_acpi_fan_reports_rpm_per_fan - AssertionEr...
+FAILED tests/test_fan_rpm.py::test_acpi_fan_absent_is_not_collected_never_zero
+FAILED tests/test_fan_rpm.py::test_acpi_fan_cli_exit_code_tracks_could_not_run
+3 failed, 4 passed in 0.10s
+== M4 ausente->0 rpm: rc=1
+FAILED tests/test_fan_rpm.py::test_acpi_fan_reports_rpm_per_fan - AssertionEr...
+FAILED tests/test_fan_rpm.py::test_acpi_fan_absent_is_not_collected_never_zero
+FAILED tests/test_fan_rpm.py::test_acpi_fan_cli_exit_code_tracks_could_not_run
+3 failed, 4 passed in 0.10s
+restored new version
+$ cmp tools/thermal_coverage.py <scratchpad>/thermal_coverage.new.py && echo identical
+identical
+
+## Suites que el cambio toca, ANTES del cambio
+$ python3 -m pytest -q tests/test_diagnostic_admission_prototypes.py tests/test_forum_hardware_subjects_branches.py tests/test_hardware_batch03_controls.py tests/test_forum_hardware_subjects.py tests/test_hardware_reader_safety.py tests/test_hardware_reader_command_ownership.py tests/test_incident_report.py
+292 passed in 1.24s
+$ python3 -m pytest -q tests/test_reloj_atascado.py
+36 passed in 0.11s
