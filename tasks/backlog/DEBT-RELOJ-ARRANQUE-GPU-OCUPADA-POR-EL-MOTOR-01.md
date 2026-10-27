@@ -8,7 +8,7 @@ severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-26
-close_check: {"cmd": "bid=$(cat /proc/sys/kernel/random/boot_id); f=$HOME/.local/share/blackbox/interruptores/reloj_arranque.jsonl; grep \"$bid\" \"$f\" | tail -n 1 | grep -v GPU_OCUPADA | grep -q .", "expect": "exit_zero", "porque": "Especificacion pendiente: pasa solo si la fila del arranque actual existe y su estado no es GPU_OCUPADA. Hoy no hay fila del arranque posterior al cambio."}
+close_check: {"cmd": "python3 -c \"import json,os,sys;f=os.path.expanduser('~/.local/share/blackbox/interruptores/reloj_arranque.jsonl');r=[json.loads(l) for l in open(f) if l.strip()];r=[x for x in r if x['ts']>'2026-10-27T01:30'];sys.exit(0 if r and 'GPU_OCUPADA' not in str(r[-1].get('motivo')) else 1)\"", "expect": "exit_zero", "porque": "Especificacion pendiente: exige una fila posterior al merge de la guarda (2026-10-27T01:30Z) cuyo motivo no sea GPU_OCUPADA. Hoy no hay filas posteriores, asi que falla (control negativo)."}
 ---
 
 ## Origen
