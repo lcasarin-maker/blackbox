@@ -1,0 +1,15 @@
+# close_check: python3 -m pytest -q tests/test_reloj_atascado.py -k "ocupada"   (expect exit_zero)
+# 2026-10-26, despues del arreglo (worktree agent-af5195b17e2b6c1c1)
+.......                                                                  [100%]
+7 passed, 29 deselected in 0.10s
+rc=0
+
+# Lectura real de solo consulta en esta ATOM (2026-10-26), que muestra que `_APPS_CMD` y `parse_apps` sirven en GB10
+# (used_memory sale numerico por proceso, no [N/A]); NO se corrio `bb reloj --prueba`:
+# $ nvidia-smi --query-compute-apps=pid,used_memory --format=csv,noheader,nounits
+# 76149, 34669
+# 75653, 170
+# 3811715, 4522
+# 1442424, 205
+# rc=0
+# Con este estado de la GPU, `bb reloj --prueba` hoy saldria INDETERMINADO/GPU_OCUPADA sin cargar la GPU.

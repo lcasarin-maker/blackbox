@@ -1,0 +1,10 @@
+# close_check: python3 -m pytest -q tests/test_reloj_atascado.py -k "tflops"   (expect exit_zero)
+# 2026-10-26, despues del arreglo (worktree agent-af5195b17e2b6c1c1)
+........                                                                 [100%]
+8 passed, 28 deselected in 0.11s
+rc=0
+
+# suite completa del detector, antes (3894bbc4) y despues:
+# python3 -m pytest -q tests/test_reloj_atascado.py tests/test_reloj_verificador_limites.py
+# antes:   19 passed, 1 xfailed in 0.12s   (xfail previo: test_hay_lectura_nativa_del_rango_lgc_aplicado, ficha DEBT-RELOJ-VERIFICADOR-SIN-LECTURA-DEL-RANGO-LGC-APLICADO-01 abierta)
+# despues: 37 passed, 1 xfailed in 0.16s   (el mismo xfail; ningun test previo borrado ni marcado)

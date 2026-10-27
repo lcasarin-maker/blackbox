@@ -6,12 +6,16 @@ CONFIRMADO en esta maquina el 2026-10-12: bajo carga plena el reloj SM queda en 
 throttle, `nvidia-smi -lgc` aceptado e ignorado, y un reinicio no lo limpia. Personal de NVIDIA lo reconoce como una limitacion
 real de reloj y recomienda el ciclo de corriente. Ninguna razon de throttle lo anuncia: es una omision de NVIDIA.
 
-Remedio reportado (sin verificar por NVIDIA; funciono a varios usuarios y a otro no le basto ni con 8 h): apagar, desconectar
-el adaptador del enchufe, mantener pulsado el boton de encendido ~10 s para drenar condensadores, esperar unos minutos, volver
-a conectar y arrancar. Despues volver a correr `bb reloj --prueba`.
+Remedio reportado (sin verificar por NVIDIA; funciono a varios usuarios y a otro no le basto ni con 8 h): `REMEDIO`, alineado
+con el post de `gb10_clockcheck.py` (hilo 387029): minimo 5 min desconectado, tambien los USB, y reconexion en orden pared ->
+adaptador -> equipo. Despues volver a correr `bb reloj --prueba`.
 
-Veredicto con tres estados: ATASCADO (mediana < 1000 MHz con carga y sin throttle), SANO (>= 1400 MHz, el umbral de la
-herramienta de la comunidad del hilo 362737), INDETERMINADO (sin carga suficiente o entre ambos): nunca se afirma sano sin carga.
+Veredicto con tres estados: ATASCADO (mediana < 1000 MHz con carga y sin throttle; o, con TFLOP/s medidos por `--prueba`,
+mediana < 1400 MHz sin throttle y TFLOP/s < `UMBRAL_TFLOPS`, la firma del hilo 387029), SANO (>= 1400 MHz, el umbral de la
+herramienta de la comunidad del hilo 362737, y TFLOP/s no bajos si se midieron), INDETERMINADO: nunca se afirma sano sin carga.
+INDETERMINADO lleva un motivo que dice donde mirar: `NOT_COLLECTED` (sin carga o sin consulta), `GPU_OCUPADA` (otros procesos
+de computo en la GPU durante `--prueba`), `THROTTLE_ACTIVO` (con las razones: calor o potencia, no la firma del reloj
+atascado), `RELOJ_EN_BANDA` (mediana entre 1000 y 1400 MHz sin TFLOP/s bajos) y `RELOJ_ALTO_RENDIMIENTO_BAJO`.
 Limite declarado: la causa de fondo (entrega de energia / negociacion PD) no se mide aqui.
 """
 
@@ -19,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import statistics
 import subprocess
 import sys
@@ -29,32 +34,77 @@ from typing import Any
 
 from tools import aviso_termico, interruptores
 from tools import guardia_termico_predictivo as g
+from tools import verifica_proveedor_gpu as vpg
 
 NOMBRE = "reloj_arranque"
 UMBRAL_ATASCADO_MHZ = 1000.0
 UMBRAL_SANO_MHZ = 1400.0
 UTIL_CARGA = 80.0
 MUESTRAS_MINIMAS = 12  # ~1 min de carga a 5 s
+# ponytail: corte PROVISIONAL de TFLOP/s fp16 8192x8192; techo: viene de GX10 (gb10_clockcheck.py, hilo 387029), no de esta
+# ATOM, cuya unica lectura propia es posterior al arreglo (77.4 TFLOPS, hilo 386060 post 1), no una linea base; disparador:
+# una corrida sana propia con la GPU libre (`bb reloj --prueba`) o una segunda ATOM, antes de fijarlo.
+UMBRAL_TFLOPS = 60.0
+UMBRAL_TFLOPS_ESTADO = "PROVISIONAL: corte de GX10 (hilo 387029), sin linea base sana medida en esta ATOM"
+REMEDIO = ("apagar, desconectar el adaptador del enchufe y tambien los USB, boton de encendido ~10 s, minimo 5 min desconectado, "
+           "reconectar en orden pared -> adaptador -> equipo y arrancar; algunas unidades necesitaron mas tiempo o no se "
+           "recuperaron (reportes de usuarios sin verificar por NVIDIA, hilos 376039/376239/387029)")
+SIN_CONSULTA = "NOT_COLLECTED: nvidia-smi --query-compute-apps no se pudo leer; sin saber si la GPU esta libre no hay veredicto"
 
 
 def _sin_throttle(t: Any) -> bool:
     return t in (None, 0, "0x0", "0x0000000000000000")
 
 
-def decide(filas: list[dict[str, Any]], minimas: int = MUESTRAS_MINIMAS) -> dict[str, Any]:
-    """Pura. Solo cuentan las muestras con carga; sin suficientes no se afirma nada."""
+def decide(filas: list[dict[str, Any]], minimas: int = MUESTRAS_MINIMAS, tflops: float | None = None) -> dict[str, Any]:
+    """Pura. Solo cuentan las muestras con carga; sin suficientes no se afirma nada. `tflops` (de `prueba`) es el segundo eje."""
     carga = [f for f in filas if isinstance(f.get("gpu_util_pct"), (int, float)) and f["gpu_util_pct"] >= UTIL_CARGA and isinstance(f.get("sm_clk_mhz"), (int, float))]
     if len(carga) < minimas:
         return {"estado": "INDETERMINADO", "motivo": f"NOT_COLLECTED: {len(carga)} muestras con carga (hacen falta {minimas})"}
     clk = statistics.median(f["sm_clk_mhz"] for f in carga)
     pot = [f["gpu_power_w"] for f in carga if isinstance(f.get("gpu_power_w"), (int, float))]
-    throttle = all(_sin_throttle(f.get("throttle")) for f in carga)
-    out: dict[str, Any] = {"reloj_mediano_mhz": clk, "potencia_mediana_w": round(statistics.median(pot), 1) if pot else None, "muestras_con_carga": len(carga), "sin_throttle": throttle}
-    if clk < UMBRAL_ATASCADO_MHZ and throttle:
+    razones = sorted({str(f.get("throttle")) for f in carga if not _sin_throttle(f.get("throttle"))})
+    sin_thr = not razones
+    out: dict[str, Any] = {"reloj_mediano_mhz": clk, "potencia_mediana_w": round(statistics.median(pot), 1) if pot else None, "muestras_con_carga": len(carga), "sin_throttle": sin_thr}
+    bajo = tflops is not None and tflops < UMBRAL_TFLOPS
+    if tflops is not None:
+        out.update({"tflops": tflops, "umbral_tflops": UMBRAL_TFLOPS, "umbral_tflops_estado": UMBRAL_TFLOPS_ESTADO})
+    if sin_thr and (clk < UMBRAL_ATASCADO_MHZ or (bajo and clk < UMBRAL_SANO_MHZ)):
         return {**out, "estado": "ATASCADO"}
-    if clk >= UMBRAL_SANO_MHZ:
+    if clk >= UMBRAL_SANO_MHZ and not bajo:
         return {**out, "estado": "SANO"}
-    return {**out, "estado": "INDETERMINADO", "motivo": "reloj entre los umbrales o con razones de throttle activas"}
+    if not sin_thr:
+        motivo = f"THROTTLE_ACTIVO: razones {', '.join(razones)}; revisar calor y potencia, no es la firma del reloj atascado"
+    elif clk >= UMBRAL_SANO_MHZ:
+        motivo = f"RELOJ_ALTO_RENDIMIENTO_BAJO: mediana {clk} MHz con {tflops} TFLOP/s < {UMBRAL_TFLOPS}; no es la firma del reloj atascado, revisar refrigeracion"
+    else:
+        motivo = f"RELOJ_EN_BANDA: mediana {clk} MHz entre {UMBRAL_ATASCADO_MHZ} y {UMBRAL_SANO_MHZ} sin TFLOP/s bajos"
+    return {**out, "estado": "INDETERMINADO", "motivo": motivo}
+
+
+def ocupantes(runner: vpg.Runner = vpg._docker_runner, propio: int | None = None, proc: Path = Path("/proc")) -> list[dict[str, Any]] | None:
+    """Procesos de computo AJENOS en la GPU, con la consulta y el parser de `verifica_proveedor_gpu` (`_APPS_CMD`,
+    `parse_apps`). None si la consulta falla o sale ilegible: eso es NOT_COLLECTED, nunca 'libre'. Excluye el pid propio."""
+    rc, salida = runner(vpg._APPS_CMD)
+    apps = vpg.parse_apps(salida) if rc == 0 else None
+    if apps is None:
+        return None
+    propio = os.getpid() if propio is None else propio
+    ajenos = []
+    for pid, mib in sorted(apps.items()):
+        if pid == propio:
+            continue
+        try:
+            nombre: str | None = (proc / str(pid) / "comm").read_text(encoding="utf-8").strip() or None
+        except OSError:
+            nombre = None  # el pid se lista igual: no poder nombrarlo no lo vuelve ausente
+        ajenos.append({"pid": pid, "nombre": nombre, "mib": mib})
+    return ajenos
+
+
+def _ocupada(ajenos: list[dict[str, Any]]) -> dict[str, Any]:
+    lista = ", ".join(f"pid {o['pid']} ({o['nombre']}, {o['mib']} MiB)" for o in ajenos)
+    return {"estado": "INDETERMINADO", "motivo": f"GPU_OCUPADA: {lista}; los TFLOP/s saldrian bajos por competencia, no por el estado de energia", "ocupantes": ajenos}
 
 
 def inicio(ruta: Path = g.TELEMETRIA) -> dict[str, str] | None:
@@ -82,7 +132,19 @@ def inicio(ruta: Path = g.TELEMETRIA) -> dict[str, str] | None:
 
 
 def prueba(segundos: int = 15) -> dict[str, Any]:
-    """Prueba activa (la del hilo 366944): matmul fp16 8192x8192 durante `segundos`, reloj y potencia cada segundo."""
+    """Prueba activa (la del hilo 366944): matmul fp16 8192x8192 durante `segundos`, reloj y potencia cada segundo.
+
+    Guarda de GPU ocupada (hilo 387029): consulta los procesos de computo ANTES de cargar (si hay ajenos no carga) y al final
+    de la carga con los tensores vivos; ajenos en cualquiera de las dos => INDETERMINADO/GPU_OCUPADA, consulta fallida =>
+    NOT_COLLECTED. Limite: un proceso que entre y salga entre las dos consultas no se ve.
+    En el temporizador de arranque (6 min tras el boot) con el motor de modelos ya arriba, la prueba sale GPU_OCUPADA sin
+    cargar la GPU y `arranque` registra esa fila con los ocupantes, sin avisar y SIN reintentar (el motor no se va solo y un
+    reintento competiria con el): el detector de arranque queda ciego en ese boot y la fila lo dice."""
+    antes = ocupantes()
+    if antes is None:
+        return {"estado": "INDETERMINADO", "motivo": SIN_CONSULTA, "segundos": segundos}
+    if antes:
+        return {**_ocupada(antes), "segundos": segundos}
     import torch  # importado aqui: el detector pasivo no lo necesita
 
     n = 8192
@@ -104,13 +166,18 @@ def prueba(segundos: int = 15) -> dict[str, Any]:
             o = subprocess.run(["nvidia-smi", "--query-gpu=clocks.sm,power.draw,utilization.gpu,clocks_throttle_reasons.active", "--format=csv,noheader,nounits"], capture_output=True, text=True, check=False, timeout=10).stdout.strip().split(", ")
             if len(o) == 4:
                 filas.append({"sm_clk_mhz": float(o[0]), "gpu_power_w": float(o[1]), "gpu_util_pct": float(o[2]), "throttle": o[3].strip()})  # `throttle` como en la telemetria
-    v = decide(filas[2:], minimas=8)  # descarta los 2 s de arranque; la prueba dura segundos, no minutos
-    return {**v, "tflops": round(hechos * 2 * n**3 / segundos / 1e12, 1), "segundos": segundos}
+    tflops = round(hechos * 2 * n**3 / segundos / 1e12, 1)
+    despues = ocupantes()  # con los tensores vivos: el propio proceso sale en la lista y se excluye por pid
+    v = decide(filas[2:], minimas=8, tflops=tflops)  # descarta los 2 s de arranque; la prueba dura segundos, no minutos
+    medido = {**v, "tflops": tflops, "segundos": segundos}
+    if despues is None:
+        return {**medido, "estado": "INDETERMINADO", "motivo": SIN_CONSULTA}
+    return {**medido, **_ocupada(despues)} if despues else medido
 
 
 def evento_arranque(r: dict[str, Any], boot_id: str) -> dict[str, Any]:
     """Pura. Lo que se registra tras la prueba de arranque: el veredicto y las cifras que lo sostienen."""
-    return {"boot_id": boot_id, "estado": r.get("estado"), "reloj_mediano_mhz": r.get("reloj_mediano_mhz"), "tflops": r.get("tflops"), "motivo": r.get("motivo")}
+    return {"boot_id": boot_id, "estado": r.get("estado"), "reloj_mediano_mhz": r.get("reloj_mediano_mhz"), "tflops": r.get("tflops"), "motivo": r.get("motivo"), "ocupantes": r.get("ocupantes")}
 
 
 def arranque(modo_actual: str, r: dict[str, Any], boot_id: str, directorio: Path | None = None, avisa: Any = aviso_termico.enviar) -> dict[str, Any] | None:
@@ -137,7 +204,7 @@ def main(argv: list[str] | None = None) -> int:
         arranque(interruptores.modo(NOMBRE), r, boot)
     if r.get("estado") == "ATASCADO":
         r["desde"] = inicio()
-        r["remedio"] = "apagar, desconectar el adaptador del enchufe, boton de encendido ~10 s, esperar, reconectar (hilos 376039/376239)"
+        r["remedio"] = REMEDIO
     print(json.dumps(r, indent=1, ensure_ascii=False))
     return {"SANO": 0, "ATASCADO": 1}.get(str(r.get("estado")), 2)
 
