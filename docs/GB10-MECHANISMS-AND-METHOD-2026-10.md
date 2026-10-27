@@ -29,24 +29,26 @@ ignored, and a warm reboot does not clear it. Idle clock readings are not diagno
 between or without enough loaded samples. Second axis, active test only: TFLOP/s below **60** with clock below 1400 MHz and no throttle
 reason also gives `ATASCADO`. The 60 comes from healthy GX10 units (88.8-93.7 TFLOP/s reported in thread 387029); this unit read
 **77.4 TFLOPS** after recovery, so 60 stays **provisional** and the output says so. `INDETERMINADO` carries one of `THROTTLE_ACTIVO`,
-`RELOJ_EN_BANDA`, `RELOJ_ALTO_RENDIMIENTO_BAJO`, `GPU_OCUPADA` as its reason.
+`RELOJ_EN_BANDA`, `RELOJ_ALTO_RENDIMIENTO_BAJO`, `CARGA_NO_PUDO_CORRER`, `NOT_COLLECTED` as its reason. With other compute processes
+on the GPU the active test still loads it, judges by clock and power only, and marks the TFLOP/s `tflops_valido: false`.
 
 **Run it.** Passive verdict from the telemetry tail, or an active 15 s matmul that loads the GPU:
 
 ```bash
 ./bin/bb reloj            # passive
-./bin/bb reloj --prueba   # active; needs PyTorch with CUDA and a free GPU
+./bin/bb reloj --prueba   # active; needs PyTorch with CUDA; a busy GPU invalidates only the TFLOP/s
 ```
-Exit codes: 0 `SANO`, 1 `ATASCADO`, 2 `INDETERMINADO`.
+Exit codes: 0 `SANO`, 1 `ATASCADO`, 2 `INDETERMINADO`. Under `--arranque` only, `CARGA_NO_PUDO_CORRER` with other processes on the
+GPU exits 0, so the boot unit is not marked `Failed` by the environment; the row in `reloj_arranque.jsonl` keeps the reason.
 
 **Negative controls measured.** The new tests fail against the code before the change (`-k "ocupada"` and `-k "bajo_no_atascado"` returned
 exit 5 on the previous master, 7 and 4 passed after). The original `-k tflops` selector already passed before the change (exit 0), so
 that card's check was tightened to `-k "test_tflops_"` (exit 5 before, 6 passed after).
 
 **Declared limits.**
-- With another process on the GPU the active test stops before loading and reports `GPU_OCUPADA`. On 2026-10-26 the boot-time run
-  returned that verdict because an Atlas process held 4.5 GiB, so the boot check measured nothing. Card
-  DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01 holds the open fix.
+- Until card DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01, another process on the GPU stopped the active test before loading
+  (`GPU_OCUPADA`). On 2026-10-26 the boot-time run returned that verdict because an Atlas process held 4.5 GiB, so the boot check
+  measured nothing. The fix (load anyway, judge by clock, TFLOP/s marked invalid) is in code; a real boot has not run it yet.
 - `inicio()` now returns the last closed episode and appends each episode to `episodios_reloj.jsonl`. The telemetry that held the
   2026-10-12 transition was rotated before the instrument existed in this form.
 - Cause (power delivery or PD negotiation) is not measured.
