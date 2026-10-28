@@ -115,3 +115,12 @@ segunda solo oculta el sintoma en el arranque.
 
 Control negativo: el `close_check` sigue fallando (userspace 73.7 s, no baja de 30 s). Se mide de nuevo en el arranque siguiente:
 `/tmp` con pocas entradas al apagar debe dar `unlinkat` de miles y tmpfiles-setup de segundos.
+
+## Procedimiento acordado 2026-10-27 (pendiente: el enjambre de opencode sigue trabajando; Luis no quiere tocarlo en vivo)
+
+Lanzador localizado: no es un script, es el agente de opencode que obedece `aequitas_os/docs/architecture/RETOMAR_INGESTA_UNIFICADA_20261027.md`
+(linea 48: `git worktree add /tmp/opencode/wt-pdf-fN swarm/pdf-fN`; lineas 52-53: salidas en `/tmp/opencode/cohort`) y los `run.py`/`run_v5.py` de
+`tasks/evidence/ola1-{pdf,docx}-cohort-20261027/` (`/tmp/opencode/{cohort,docx-cohort,ingest-cache,docx-cache}`).
+Cuando el enjambre pare: `mkdir -p ~/worktrees/aequitas_os` (hecho), `git worktree move /tmp/opencode/wt-pdf-fN ~/worktrees/aequitas_os/wt-pdf-fN`
+para N=1..3, `git worktree list` sin `prunable`, cambiar las rutas del documento y de los scripts, y al terminar `git worktree remove`.
+Hasta entonces, un reinicio borra los worktrees de /tmp: el trabajo commiteado en `swarm/pdf-f*` sobrevive, el no commiteado se pierde.
