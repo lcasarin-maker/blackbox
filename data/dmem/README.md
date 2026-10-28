@@ -7,7 +7,7 @@
 - **No binaries are published.** The modules the author runs are signed with the author's own MOK key: useless to you and unsafe to trust. Build your own.
 - **Secure Boot** needs your own MOK enrolment (a reboot and a console). Nothing here reboots the machine for you.
 - **Updates.** The patch applies to 580.178.04 (built and measured) and 580.173.02 (applies, not built); it does **not** apply to 615 (`parche.json`). After a kernel or driver update the module must be rebuilt: `tools/dmem_reconstruye.sh`.
-- **Tested on:** one Gigabyte AI TOP ATOM, kernel 6.17.0-1032-nvidia, `uvm_disable_hmm=Y`. Not tested: other units or OEMs, other kernels, HMM enabled, PyTorch, the CUDA runtime API, untouched managed reservations.
+- **Tested on:** one Gigabyte AI TOP ATOM, kernel 6.17.0-1032-nvidia, `uvm_disable_hmm=Y`. **Built, not loaded:** kernel 7.0.0-1019-nvidia (`tools/dmem_reconstruye.sh 7.0.0-1019-nvidia 580.178.04` exits 0; the module imports only symbols that kernel 7.0 exports). Nobody has booted it. Not tested: other units or OEMs, other kernels, HMM enabled, PyTorch, the CUDA runtime API, untouched managed reservations.
 - **Known limit:** the charge is taken for allocations that reach RM class `0x3e` (`cudaMalloc`, `expandable_segments`, `cudaMallocAsync`, CUDA graphs). Managed and pinned memory are **not** charged to `dmem`; they are charged to the memory controller, so `memory.max` limits them (measured 2026-10-16, `tasks/evidence/FEATURE-DMEM-CLASES-DE-MEMORIA-POR-CGROUP-01/`).
 
 ## Files
