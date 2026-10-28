@@ -1,0 +1,362 @@
+{
+  "version": 1,
+  "checks": [
+    {
+      "id": "ruff",
+      "argv": [
+        "sh",
+        "-c",
+        "list=$(git diff --name-only -z --diff-filter=ACMR \"$SIMPLE_BASE\" HEAD | tr '\\0' '\\n')\nfiles=\nIFS='\n'\nfor f in $list; do\n  case \"$f\" in\n    *.py|*.pyi|*.ipynb) files=\"$files$f\n\" ;;\n    *) if [ -x \"$f\" ] && head -n1 \"$f\" 2>/dev/null | grep -qE '^#!.*python'; then files=\"$files$f\n\"; fi ;;\n  esac\ndone\nfiles=$(printf '%s' \"$files\" | sed '/^$/d')\nn=$(printf '%s' \"$files\" | grep -c .)\nprintf '{\"examined\":%s}' \"$n\" > \"$SIMPLE_SCOPE_FILE\"\necho \"changed_python_files=$n base=$SIMPLE_BASE\"\n[ \"$n\" -gt 0 ] || exit 0\nset -f\nset -- $files\nexec \"$0\" check --force-exclude --extend-select S102,S301,S602,S608,S307,S506,S604,S605,PLE2502,PLE2510,PLE2512,PLE2513,PLE2514,PLE2515 \"$@\"",
+        "/home/lcasarin/.local/bin/ruff"
+      ],
+      "timeout_ms": 300000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "hooks": [
+        "pre-commit"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "base": "origin/master",
+      "scope": {
+        "min_examined": 0
+      }
+    },
+    {
+      "id": "gitleaks",
+      "argv": [
+        "sh",
+        "-c",
+        "n=$(git rev-list --count \"$SIMPLE_BASE\"..HEAD)\necho \"range_commits=$n\"\nexec \"$0\" git --no-banner --redact --exit-code 23 --log-opts=\"$SIMPLE_BASE..HEAD\" .",
+        "/home/lcasarin/.local/bin/gitleaks"
+      ],
+      "timeout_ms": 300000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [
+        1,
+        2
+      ],
+      "hooks": [
+        "pre-commit"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "base": "origin/master"
+    },
+    {
+      "id": "ruff-full",
+      "argv": [
+        "sh",
+        "-c",
+        "n=$(\"$0\" check --show-files . | grep -c .)\nprintf '{\"examined\":%s}' \"$n\" > \"$SIMPLE_SCOPE_FILE\"\nexec \"$0\" check . --extend-select S102,S301,S602,S608,S307,S506,S604,S605,PLE2502,PLE2510,PLE2512,PLE2513,PLE2514,PLE2515",
+        "/home/lcasarin/.local/bin/ruff"
+      ],
+      "timeout_ms": 300000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": false,
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "hooks": [
+        "pre-push"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "scope": {
+        "min_examined": 1
+      }
+    },
+    {
+      "id": "pyright",
+      "policy": {
+        "kind": "types",
+        "python": "/usr/bin/python3",
+        "args": [
+          "--tool",
+          "/home/lcasarin/.local/bin/pyright"
+        ]
+      },
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "PYTHONUSERBASE": "/home/lcasarin/.local"
+      },
+      "timeout_ms": 600000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": false,
+      "could_not_run_exit_codes": [],
+      "hooks": [
+        "pre-push"
+      ]
+    },
+    {
+      "id": "git-history-present",
+      "argv": [
+        "sh",
+        "-c",
+        "count=$(git rev-list --all --count) && test \"$count\" -gt 0"
+      ],
+      "timeout_ms": 300000,
+      "cache": false,
+      "inputs": [
+        "simple.json"
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [],
+      "hooks": [
+        "pre-push"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      }
+    },
+    {
+      "id": "gitleaks-new-commits",
+      "argv": [
+        "sh",
+        "-c",
+        "n=$(git rev-list --count \"$SIMPLE_BASE\"..HEAD)\necho \"range_commits=$n\"\nexec \"$0\" git --no-banner --redact --exit-code 23 --log-opts=\"$SIMPLE_BASE..HEAD\" .",
+        "/home/lcasarin/.local/bin/gitleaks"
+      ],
+      "timeout_ms": 300000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [
+        1,
+        2
+      ],
+      "hooks": [
+        "pre-push"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "base": "origin/master"
+    },
+    {
+      "id": "pytest",
+      "argv": [
+        "sh",
+        "-c",
+        "\"$0\" -c 'import simplecode.verification.test_impact, xdist' || exit 2\n\"$0\" -m simplecode.verification.test_impact -q -n 4 --base \"$SIMPLE_BASE\" -m \"not slow and not e2e and not mutates_real_source\" --ignore=tests/test_bb_bash.py || exit $?\nexec \"$0\" -m simplecode.verification.test_impact -q --base \"$SIMPLE_BASE\" -m mutates_real_source",
+        "/opt/miniforge3/bin/python3"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "PYTHONUSERBASE": "/home/lcasarin/.local"
+      },
+      "timeout_ms": 900000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "hooks": [
+        "pre-push"
+      ],
+      "base": "origin/master",
+      "inherit_env": [
+        "XDG_RUNTIME_DIR",
+        "DBUS_SESSION_BUS_ADDRESS"
+      ]
+    },
+    {
+      "id": "bash-sintaxis",
+      "argv": [
+        "sh",
+        "-c",
+        "n=0; bad=0\nfor f in $(git ls-files | grep -E '^(bin/bb|.*\\.sh)$'); do\n  n=$((n+1))\n  bash -n -- \"$f\" || { bad=$((bad+1)); echo \"syntax error: $f\" >&2; }\ndone\nprintf '{\"examined\":%s}' \"$n\" > \"$SIMPLE_SCOPE_FILE\"\necho \"bash_files=$n bad=$bad\"\n[ \"$bad\" -eq 0 ]"
+      ],
+      "timeout_ms": 300000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [],
+      "hooks": [
+        "pre-commit",
+        "pre-push"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "scope": {
+        "min_examined": 1
+      }
+    },
+    {
+      "id": "bb-cobertura-piso",
+      "argv": [
+        "sh",
+        "-c",
+        "if ! git diff --name-only \"$SIMPLE_BASE..HEAD\" | grep -qE '^bin/bb$|^tests/test_bb_bash.py$'; then\n  echo \"[bb-cobertura] bin/bb y tests/test_bb_bash.py sin cambios en $SIMPLE_BASE..HEAD; piso retenido, no medido\"\n  printf '{\"examined\":0}' > \"$SIMPLE_SCOPE_FILE\"\n  exit 0\nfi\nprintf '{\"examined\":1}' > \"$SIMPLE_SCOPE_FILE\"\nexec tools/piso_cobertura.sh"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "PYTHONUSERBASE": "/home/lcasarin/.local"
+      },
+      "timeout_ms": 900000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "hooks": [
+        "pre-push"
+      ],
+      "base": "origin/master",
+      "scope": {
+        "min_examined": 0
+      },
+      "inherit_env": [
+        "XDG_RUNTIME_DIR",
+        "DBUS_SESSION_BUS_ADDRESS"
+      ]
+    },
+    {
+      "id": "inventario-spec",
+      "argv": [
+        "/opt/miniforge3/bin/python3",
+        "-m",
+        "tools.inventario",
+        "--check"
+      ],
+      "timeout_ms": 300000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "hooks": [
+        "pre-commit",
+        "pre-push"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      }
+    },
+    {
+      "id": "integridad-archivos",
+      "policy": {
+        "kind": "integrity",
+        "python": "/usr/bin/python3",
+        "args": []
+      },
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 300000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [],
+      "hooks": [
+        "pre-commit"
+      ]
+    },
+    {
+      "id": "pii-staged",
+      "policy": {
+        "kind": "pii",
+        "python": "/usr/bin/python3",
+        "args": [
+          "--push",
+          "--from-ref",
+          "origin/master",
+          "--to-ref",
+          "HEAD"
+        ]
+      },
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 300000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [],
+      "hooks": [
+        "pre-commit"
+      ]
+    },
+    {
+      "id": "integridad-arbol",
+      "policy": {
+        "kind": "integrity",
+        "python": "/usr/bin/python3",
+        "args": []
+      },
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 300000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [],
+      "hooks": [
+        "pre-push"
+      ]
+    },
+    {
+      "id": "pii-arbol",
+      "policy": {
+        "kind": "pii",
+        "python": "/usr/bin/python3",
+        "args": [
+          "--all-tracked"
+        ]
+      },
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 300000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [],
+      "hooks": [
+        "pre-push"
+      ]
+    }
+  ]
+}
