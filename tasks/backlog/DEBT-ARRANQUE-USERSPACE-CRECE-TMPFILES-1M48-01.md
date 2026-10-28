@@ -124,3 +124,7 @@ Lanzador localizado: no es un script, es el agente de opencode que obedece `aequ
 Cuando el enjambre pare: `mkdir -p ~/worktrees/aequitas_os` (hecho), `git worktree move /tmp/opencode/wt-pdf-fN ~/worktrees/aequitas_os/wt-pdf-fN`
 para N=1..3, `git worktree list` sin `prunable`, cambiar las rutas del documento y de los scripts, y al terminar `git worktree remove`.
 Hasta entonces, un reinicio borra los worktrees de /tmp: el trabajo commiteado en `swarm/pdf-f*` sobrevive, el no commiteado se pierde.
+
+## Actualizacion 2026-10-28 13:32
+
+El enjambre de opencode termino (ultimo registro 23:21 del 2026-10-27: `Your credit balance is too low`). Los worktrees `/tmp/opencode/wt-pdf-f*` y las ramas `swarm/*` ya no existen (`git worktree list` de `aequitas_os`: solo `main` y un worktree de codex); `/tmp` baja de 298779 a 105979 entradas. El procedimiento de mudanza queda para la proxima vez que un enjambre cree worktrees en `/tmp`; la causa del arranque lento (volumen de `/tmp` al apagar) sigue vigente.
