@@ -622,11 +622,15 @@ def test_real_carrera_pid_que_sale_al_adoptar_el_rc_dice_lo_que_systemd_dejo(tmp
 
 
 @pytest.mark.integration
-@pytest.mark.mutates_real_source  # ponytail: carril serial solo mientras escriba el drop-in real en ~/.config/systemd/user y recargue systemd; cuando use un directorio de unidades aislado, volver a xdist
+@pytest.mark.mutates_real_source  # ponytail: carril serial solo mientras recargue (daemon-reload) el gestor systemd real del usuario; cuando use un gestor aislado, volver a xdist
 @pytest.mark.skipif(not _delegado(), reason="sin cgroup v2 delegado al usuario (systemd --user)")
+@pytest.mark.skipif(not os.environ.get("XDG_RUNTIME_DIR"), reason="sin XDG_RUNTIME_DIR: no hay directorio de unidades de runtime del gestor")
 def test_real_dropin_por_prefijo_topa_el_scope_al_crearse_y_no_a_otro():
     tag = uuid.uuid4().hex[:8]
-    d = Path.home() / f".config/systemd/user/app-bbprobe{tag}-.scope.d"
+    # No Path.home(): el gate del pre-push corre con HOME en un directorio temporal (medido 2026-10-30: HOME=/tmp/.tmpXXXX), asi que un
+    # drop-in en ~/.config/systemd/user no lo lee el gestor REAL y el scope nacia sin tope. $XDG_RUNTIME_DIR/systemd/user esta en la
+    # ruta de busqueda de las unidades de usuario (`systemd-analyze --user unit-paths`) y es del gestor que crea el scope.
+    d = Path(os.environ["XDG_RUNTIME_DIR"]) / f"systemd/user/app-bbprobe{tag}-.scope.d"
     d.mkdir(parents=True)
     procs = []
     try:
