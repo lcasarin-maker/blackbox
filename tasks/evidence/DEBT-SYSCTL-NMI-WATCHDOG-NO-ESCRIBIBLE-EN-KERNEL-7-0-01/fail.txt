@@ -1,0 +1,12 @@
+# ANTES (2026-10-30 15:30, primer arranque en 7.0.0-1024-nvidia), salidas literales
+$ journalctl -b -u systemd-sysctl
+systemd-sysctl[3235]: Couldn't write '1' to 'kernel/nmi_watchdog': Unknown error 524
+systemd[1]: systemd-sysctl.service: Failed with result 'exit-code'.
+$ systemctl is-active --quiet systemd-sysctl.service; echo rc=$?
+rc=3
+$ echo 1 | sudo tee /proc/sys/kernel/nmi_watchdog
+tee: /proc/sys/kernel/nmi_watchdog: Error desconocido 524
+$ journalctl -k -b 0 | grep watchdog:
+watchdog: NMI not fully supported
+watchdog: Hard watchdog permanently disabled
+(mismas dos lineas en el arranque 6.17 del 27-oct: el detector de bloqueo duro nunca estuvo activo)

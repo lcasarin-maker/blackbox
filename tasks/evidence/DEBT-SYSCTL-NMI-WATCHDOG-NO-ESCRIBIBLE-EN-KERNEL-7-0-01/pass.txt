@@ -1,0 +1,12 @@
+# DESPUES (2026-10-30 16:01), tras instalar la copia adoptada con '-kernel.nmi_watchdog = 1'
+$ systemctl is-active systemd-sysctl
+active
+$ systemctl is-active --quiet systemd-sysctl.service; echo rc=$?
+rc=0
+$ diff adopted/system-config/etc_sysctl.d_99-freeze-panic.conf /etc/sysctl.d/99-freeze-panic.conf
+identica
+kernel.hung_task_panic=1
+kernel.softlockup_panic=1
+kernel.hardlockup_panic=1
+kernel.hung_task_timeout_secs=120
+kernel.nmi_watchdog=0

@@ -3,7 +3,11 @@ id: DEBT-SYSCTL-NMI-WATCHDOG-NO-ESCRIBIBLE-EN-KERNEL-7-0-01
 kind: task
 domain: SYSTEM
 title: "systemd-sysctl falla en el kernel 7.0: kernel.nmi_watchdog = 1 devuelve error 524 y el vigilante de bloqueos duros queda apagado"
-status: open
+status: done
+closed_at: 2026-10-30
+closure_type: fixed
+reason: "Causa medida: el kernel 6.17 y el 7.0 tienen el detector de bloqueo duro desactivado de por vida; el 7.0 solo hace fallar la escritura de nmi_watchdog (524). La copia adoptada marca esa linea con '-' y systemd-sysctl queda active; SPEC.md declara en una fila nueva que el bloqueo duro no tiene detector."
+evidence: {"pass": "tasks/evidence/DEBT-SYSCTL-NMI-WATCHDOG-NO-ESCRIBIBLE-EN-KERNEL-7-0-01/pass.txt", "fail": "tasks/evidence/DEBT-SYSCTL-NMI-WATCHDOG-NO-ESCRIBIBLE-EN-KERNEL-7-0-01/fail.txt", "e2e": "tasks/evidence/DEBT-SYSCTL-NMI-WATCHDOG-NO-ESCRIBIBLE-EN-KERNEL-7-0-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
