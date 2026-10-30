@@ -726,6 +726,7 @@ class _Maquina:
         return rc, "", ("" if rc == 0 else f"{clave} fallo")
 
     def captura(self, desde: dict | None = None, ahora: float = AHORA) -> dict:
+        assert _CAPTURA_REAL is not None, "el modulo no tiene captura_incidente"
         return _CAPTURA_REAL(self.desde if desde is None else desde, base=self.tmp / "incidentes", telemetria=self.telemetria,
                              forense=self.forense, manifiesto=self.manifiesto, ejecuta=self, ahora=lambda: ahora,
                              boot_id="b00t", arranque_s=AHORA - 3600 * 6)
