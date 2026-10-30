@@ -33,6 +33,14 @@ quito el 1019 (`/var/log/apt/history.log`). En `/boot` ya no existe `vmlinuz-7.0
 `close_check` acepta cualquier `7.0.0-<n>-nvidia` (con el 1019 fijo nunca pasaba); el parche compilado para el 1019 (`construidos/580.178.04-7.0.0-1019-nvidia/`) NO
 sirve para el 1024 y la Fase 2 empieza por recompilarlo contra las cabeceras del 1024 (`linux-headers-7.0.0-1024-nvidia` ya instaladas).
 
+## ota-check del 2026-10-30 (paso 1 hecho, antes de soltar el hold)
+
+`sudo nvidia-spark-ota-check summary`: `detected_ota` = `OTA2607`. El candidato mas cercano es `OTA2610` (2026-10-15), `match` 93.5, `torn` 6.5, 145 de 155 pruebas.
+Fallan: `dgx-spark-ota-update-meta`, `nvidia-spark-cloud-init`, `kernel` (se corrigen con el paso 2 y el reinicio al 7.0), y tambien `SOCFW`, `EC`, `USBPD`,
+`nvidia-mlnx-tools`, `nvidia-system-station-apps`, `nvidia-system-station-games`. Los tres de firmware (SOCFW, EC, USBPD) NO los trae apt: la foto "pura" tras
+esta fase quedara en software OTA2610 con firmware anterior. Decision pendiente de Luis: actualizar firmware por el DGX Dashboard en otra ventana de reinicio, y
+medir `reloj` antes y despues, porque EC y USBPD son exactamente lo que `pstore/arranque.jsonl` (pd0, pd1, ec, bios) registra.
+
 ## Fase 1: linea base pura (un reinicio; lo corre Luis con sudo)
 
 1. `sudo nvidia-spark-ota-check summary` (lo pide DECISIONS.md 2026-10-13 antes de quitar el hold) y pegar la salida.
