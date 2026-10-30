@@ -1,0 +1,5 @@
+# e2e: causa medida instrumentando la asercion en un commit desechable (rama tmp-debug-dropin, tip bcca7d3e, ya borrada) y corriendo `simple verify --hook pre-push`:
+AssertionError: DBG home=/tmp/.tmpA0WG00 HOME=/tmp/.tmpA0WG00 XDG_CONFIG_HOME=None drop_in_existe=True d=/tmp/.tmpA0WG00/.config/systemd/user/app-bbprobe98a20123-.scope.d show='Slice=app.slice\
+
+# Tres pushes consecutivos fallaron igual (2026-10-30) con el mismo valor (max, 152777), incluido uno sin ningun job de bb en curso: la hipotesis de la carrera con el post-commit queda REFUTADA.
+# Reproduccion local sin push: simple verify --hook pre-push --impact-base origin/master --fresh --no-observe  -> fail 1 (el mismo test).

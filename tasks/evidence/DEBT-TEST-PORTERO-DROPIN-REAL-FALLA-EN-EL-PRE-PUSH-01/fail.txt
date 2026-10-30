@@ -1,0 +1,6 @@
+# fail: el test VIEJO (commit 08ba8aa5) con HOME temporal, la condicion del runner del pre-push
+$ git show 08ba8aa5:tests/test_portero.py > tests/test_portero_viejo_tmp.py; HOME=<tmp> python3 -m pytest -q tests/test_portero.py::test_real_dropin_por_prefijo_topa_el_scope_al_crearse_y_no_a_otro
+    assert leidos[f"app-bbprobe{tag}-1"] == (str(35 * 1024**3), "1230")
+E   AssertionError: assert ('max', '152777') == ('37580963840', '1230')
+1 failed in 1.03s
+rc=1

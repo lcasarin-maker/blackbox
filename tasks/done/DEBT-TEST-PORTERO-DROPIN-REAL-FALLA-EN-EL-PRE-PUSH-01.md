@@ -3,12 +3,16 @@ id: DEBT-TEST-PORTERO-DROPIN-REAL-FALLA-EN-EL-PRE-PUSH-01
 kind: task
 domain: MEMORY
 title: "test_real_dropin_por_prefijo_topa_el_scope_al_crearse_y_no_a_otro falla en el pre-push y pasa suelto: carrera con systemd real"
-status: open
+status: done
+closed_at: 2026-10-30
+closure_type: fixed
+reason: "Causa medida: el runner del pre-push fija HOME=/tmp/.tmpXXXX y el drop-in iba a ~/.config del HOME temporal; la prueba usa ahora $XDG_RUNTIME_DIR/systemd/user. El test viejo con HOME temporal da rc=1, el nuevo rc=0; el push 465123ae..752012bc paso los gates tras 3 fallos identicos."
+evidence: {"pass": "tasks/evidence/DEBT-TEST-PORTERO-DROPIN-REAL-FALLA-EN-EL-PRE-PUSH-01/pass.txt", "fail": "tasks/evidence/DEBT-TEST-PORTERO-DROPIN-REAL-FALLA-EN-EL-PRE-PUSH-01/fail.txt", "e2e": "tasks/evidence/DEBT-TEST-PORTERO-DROPIN-REAL-FALLA-EN-EL-PRE-PUSH-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-30
-close_check: {"cmd": "grep -qx dropin_real_estable_en_prepush tasks/evidence/DEBT-TEST-PORTERO-DROPIN-REAL-FALLA-EN-EL-PRE-PUSH-01/medicion.txt", "expect": "exit_zero", "porque": "Especificacion pendiente: el archivo no existe hoy (grep sale 2). El test pasa suelto (3 de 3), en serie (67 de 67) y con xdist -n 4, asi que un pytest sobre el no discrimina; lo que falla es el pre-push. Pasa cuando medicion.txt traiga, con comando y salida literales, 5 pre-push consecutivos en verde incluyendo uno inmediatamente despues de un commit (con el job post-commit en curso), y termine con la linea completa dropin_real_estable_en_prepush."}
+close_check: {"cmd": "HOME=$(mktemp -d) PYTHONUSERBASE=/home/lcasarin/.local python3 -m pytest -q -p no:cacheprovider tests/test_portero.py::test_real_dropin_por_prefijo_topa_el_scope_al_crearse_y_no_a_otro", "expect": "exit_zero", "porque": "Enmienda 2026-10-30 con la causa MEDIDA: el runner del pre-push corre con HOME en un directorio temporal y la prueba escribia su drop-in en Path.home()/.config/systemd/user, que el gestor real no lee. El comando original (grep de un centinela) se sustituye por el que reproduce la condicion del gate: con HOME temporal el test viejo da rc=1 y el nuevo rc=0 (evidencia en fail.txt y pass.txt)."}
 ---
 
 ## Medido (2026-10-30, sesion de /cerrar-deuda)
@@ -39,3 +43,10 @@ Se marco la prueba `mutates_real_source` (carril serial) en `ba604567`. El marca
 3. Medir 5 pre-push consecutivos en verde, uno justo tras un commit.
 
 Mientras esta ficha este abierta, `/clean` puede encontrar el push bloqueado por esta prueba: no se reintenta a ciegas.
+
+## Cierre 2026-10-30 (/clean): la hipotesis de arriba estaba equivocada
+
+- **Causa real (medida):** `HOME=/tmp/.tmpXXXX` bajo el runner del pre-push. `Path.home()` apuntaba al directorio temporal, el drop-in nunca llego al gestor real y el scope nacia sin tope. Se midio instrumentando la asercion en un commit desechable (`bcca7d3e`, rama ya borrada) y corriendo `simple verify --hook pre-push`.
+- **Refutado:** la carrera con el job post-commit. El tercer push fallo igual sin ningun job de bb en curso.
+- **Arreglo:** `tests/test_portero.py` usa `$XDG_RUNTIME_DIR/systemd/user` (en la ruta de busqueda de `systemd-analyze --user unit-paths`) y se salta sin `XDG_RUNTIME_DIR`. El marcador `mutates_real_source` se conserva porque la prueba sigue recargando el gestor real; su comentario `ponytail:` dice ese motivo.
+- **Por que paso desapercibido:** la prueba pasaba en cualquier shell con HOME real (3 de 3 sueltas, 67 en serie, 145 con xdist).
