@@ -51,7 +51,9 @@ def test_huella_host_como_script_con_paso_off_sale_0_sin_escribir_nada(tmp_path:
 def _telemetria(tmp_path: Path, util: float, clk: float) -> subprocess.CompletedProcess[str]:
     fila = {"ts": "2026-10-12T22:00:00+00:00", "gpu_util_pct": util, "sm_clk_mhz": clk, "gpu_power_w": 15.0, "zonas": {"gpu": {"temp_c": 50.0}}, "throttle": "0x0000000000000000"}
     (tmp_path / "atom_gpu_telemetry.jsonl").write_text("".join(json.dumps(fila) + "\n" for _ in range(20)), encoding="utf-8")
-    return _script("reloj_atascado", env={"BLACKBOX_DATA": str(tmp_path)})
+    # BB_RELOJ_CAPTURA=off: el ATASCADO de esta prueba no pide root ni lanza una unidad de verdad (la captura se prueba con
+    # falsos en tests/test_reloj_atascado.py); la salida lo declara como could_not_run.
+    return _script("reloj_atascado", env={"BLACKBOX_DATA": str(tmp_path), "BB_RELOJ_CAPTURA": "off"})
 
 
 def test_reloj_atascado_como_script_con_telemetria_sana_sale_0(tmp_path: Path) -> None:
@@ -65,6 +67,7 @@ def test_reloj_atascado_como_script_con_telemetria_atascada_sale_1_con_el_remedi
     assert done.returncode == 1, done.stderr
     salida = json.loads(done.stdout)
     assert salida["estado"] == "ATASCADO" and "adaptador" in salida["remedio"]
+    assert salida["captura_incidente"]["estado"] == "could_not_run"  # desactivada y declarada, nunca callada
 
 
 def _docker_falso(bin_dir: Path, maps: str, apps: str) -> dict[str, str]:
