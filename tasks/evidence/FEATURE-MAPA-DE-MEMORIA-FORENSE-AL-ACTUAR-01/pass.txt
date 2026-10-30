@@ -1,0 +1,47 @@
+FEATURE-MAPA-DE-MEMORIA-FORENSE-AL-ACTUAR-01 -- DESPUES del cambio (2026-10-30), rama sobre fe42e666
+
+1) close_check
+$ python3 -m pytest -q tests/test_mapa_memoria_al_actuar.py
+..............................                                           [100%]
+30 passed in 0.34s
+rc=0
+
+2) suite relacionada (los mismos ficheros que en fail.txt)
+$ python3 -m pytest -q -p no:cacheprovider tests/test_vigilante_memavail.py tests/test_arbitro_prioridad_memoria.py tests/test_portero.py tests/test_portero_clase_trabajo_ajeno.py tests/test_portero_caracterizacion_suite.py tests/test_admision_holgura_real.py tests/test_bb_usable.py tests/test_atasco_confinado.py tests/test_escalon_app_slice.py tests/test_origen_proceso.py tests/test_bb_usable_caracterizacion.py
+280 passed in 7.65s
+rc=0
+Antes: 280 passed. Despues: 280 passed. Las que fijan filas byte a byte siguen en verde, con su control negativo:
+  test_portero_caracterizacion_suite.py::test_la_clase_suite_decide_y_registra_igual_que_antes_de_la_clase_nueva PASSED
+  test_portero_caracterizacion_suite.py::test_control_negativo_la_caracterizacion_detecta_un_cambio_de_suite PASSED
+  test_admision_holgura_real.py::test_off_no_cambia_ni_decide_ni_las_filas PASSED
+  test_bb_usable_caracterizacion.py::test_main_reproduce_la_secuencia_grabada[11 escenarios] PASSED
+  (fixtures sin regrabar: tests/fixtures/portero_suite_caracterizacion.json y bb_usable_caracterizacion.json intactos)
+
+3) otras pruebas de los modulos tocados
+$ python3 -m pytest -q -p no:cacheprovider tests/test_portero_efectos.py tests/test_portero_holgura_trabajo.py tests/test_portero_log_rotacion.py tests/test_portero_observar_costo.py tests/test_procesos_protegidos.py tests/test_cobertura_grupo4_vigilante.py tests/test_bb_vigilante_motor.py tests/test_gpumem.py
+165 passed in 28.76s
+$ python3 -m simplecode.verification.test_impact -q -n 4 -m "not slow and not e2e and not mutates_real_source" --ignore=tests/test_bb_bash.py
+test_impact: import graph: 280 modules parsed, 0 unparseable (skipped), 1 changed code file(s) reached by no test
+test_impact: running 17 impacted test file(s) for 9 code change(s):
+433 passed in 13.37s
+(el fichero "reached by no test" del grafo de imports es bin/bb-usable, sin extension .py: sus pruebas lo cargan por
+ruta con SourceFileLoader -- test_bb_usable*, test_escalon_app_slice, test_atasco_confinado y este archivo -- y corrieron arriba)
+
+4) gates
+$ /opt/miniforge3/bin/python3 -m tools.inventario --check      # antes de anadir la fila nueva de SPEC.md
+  funcion sin inventariar en SPEC.md: tools/mapa_memoria.py
+[inventario] HALLAZGOS: 1
+[inventario] FAIL: SPEC.md y el sujeto no coinciden.
+rc=1
+$ /opt/miniforge3/bin/python3 -m tools.inventario --check      # con la fila nueva (solo esa; ninguna existente tocada)
+[inventario] HALLAZGOS: 0
+[inventario] OK: los dos inventarios describen el repo y la maquina.
+rc=0
+$ ruff check tools/mapa_memoria.py tools/portero.py tools/vigilante_memavail.py bin/bb-usable tests/test_mapa_memoria_al_actuar.py
+All checks passed!
+$ ruff check . --extend-select S102,S301,S602,S608,S307,S506,S604,S605,PLE2502,PLE2510,PLE2512,PLE2513,PLE2514,PLE2515
+All checks passed!
+$ pyright
+  tools/reloj_atascado.py:225:13 - warning: Expression value is unused (reportUnusedExpression)
+0 errors, 1 warning, 0 informations
+(el aviso es de tools/reloj_atascado.py, fichero que este cambio no toca)

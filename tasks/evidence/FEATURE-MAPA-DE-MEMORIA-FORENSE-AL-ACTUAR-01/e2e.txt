@@ -1,0 +1,67 @@
+FEATURE-MAPA-DE-MEMORIA-FORENSE-AL-ACTUAR-01 -- e2e sobre los cgroups REALES de esta maquina y controles negativos (2026-10-30)
+
+A) e2e de solo lectura. Ninguna guardia actua: memavail corre `paso` en `observar` (no detiene) con MemAvailable
+   fingido de 1 GiB y unidades, origen y mapa reales; portero y bb-usable llaman a su funcion de mapa sobre el
+   app.slice real sin congelar ni matar (el objetivo de bb-usable es un Proc fingido, pid 0). El registro de memavail
+   fue a un directorio del scratchpad, no a $BLACKBOX_DATA. Nada de esto toca bb-usable.service ni ninguna unidad.
+$ python3 <scratchpad>/e2e_mapa.py <scratchpad>/e2e_reg
+memavail observar (MemAvailable fingido 1 GiB, unidades/origen/mapa reales): paso() 51.8 ms; veredicto=DETENER; fila=89535 bytes
+== memavail (unidades de user@1000.service): 3646 bytes de JSON; vistas=68 en_fila=10 omitidas=58 omitidas_bytes_legibles=546803712 omitidas_ilegibles=0 estado=OK
+    {'unidad': 'app-com.anthropic.Claude-1223356.scope', 'clase': 'sesion', 'rango': 3, 'memory.current': 5914009600, 'anon': 1813897216, 'file': 3087794176, 'shmem': 18313216, 'memory.swap.current': 464576512, 'gpu_dmem': 'NOT_COLLECTED'}
+    {'unidad': 'app-org.chromium.Chromium-540305.scope', 'clase': 'sesion', 'rango': 3, 'memory.current': 3293052928, 'anon': 979881984, 'file': 1757315072, 'shmem': 1138688, 'memory.swap.current': 637952000, 'gpu_dmem': 'NOT_COLLECTED'}
+    {'unidad': 'org.gnome.Shell@x11.service', 'clase': 'sin_clase', 'rango': 0, 'memory.current': 1712951296, 'anon': 1398202368, 'file': 257495040, 'shmem': 3215360, 'memory.swap.current': 764428288, 'gpu_dmem': 'NOT_COLLECTED'}
+    {'unidad': 'snap.antigravity.antigravity-76901a2c-83c9-4765-9d23-0ceb0f6a6688.scope', 'clase': 'sin_clase', 'rango': 0, 'memory.current': 1520095232, 'anon': 21512192, 'file': 1423237120, 'shmem': 274432, 'memory.swap.current': 0, 'gpu_dmem': 'NOT_COLLECTED'}
+portero mapa_al_actuar (sin congelar nada) 2.0 ms
+== portero (app.slice): 3651 bytes de JSON; vistas=33 en_fila=10 omitidas=23 omitidas_bytes_legibles=165572608 omitidas_ilegibles=0 estado=OK
+    (las 4 primeras: Claude-1223356 5.9 GB, Chromium 3.3 GB, antigravity 1.5 GB, app-gnome-com.anthropic.Claude 1.48 GB con shmem 443392000)
+bb-usable mapa_al_matar (objetivo FINGIDO, nadie muere) 1.6 ms; _MAPA_ERROR=None; scope del objetivo=app-gnome-com.anthropic.Claude-1223356.scope
+== bb-usable (app.slice): 3651 bytes de JSON; vistas=33 en_fila=10 omitidas=23 omitidas_bytes_legibles=165933056 omitidas_ilegibles=0 estado=OK
+scope del objetivo dentro del mapa: True
+
+$ python3 -c "...fila de memavail..."
+culpable bb-portero-suite-742407.scope 534118400
+en el mapa: True
+bytes de la fila sin origen: 4126 origen: 85396
+
+Lectura: el mapa cuesta 3.6 KB por fila con el tope de 10 (la fila de memavail pesa 89.5 KB, y 85.4 KB son el
+`origen` de 5 procesos que ya llevaba antes de este cambio). Las 10 mayores dejan fuera 0.55 GB de 68 unidades
+(memavail) y 0.17 GB de 33 (app.slice). `bin/bb-usable` carga tools/mapa_memoria.py por ruta sin error.
+`gpu_dmem` sale NOT_COLLECTED en todas: en esta maquina hoy no existe `dmem.current` por cgroup (modulo NVIDIA sin el
+parche dmem cargado); el mapa no inventa un cero. El veredicto DETENER de memavail en `observar` es el de la regla
+real sobre una suite viva; en `observar` no se detiene nada.
+
+B) controles negativos por mutante (copia del arbol nuevo en el scratchpad, cada mutante con sed y marcado MUTANTE)
+$ grep -c MUTANTE tools/portero.py bin/bb-usable    # mapa en toda fila del portero, en toda negativa, en todo evento del escalon
+bin/bb-usable:1
+tools/portero.py:2
+$ python3 -m pytest -q -p no:cacheprovider tests/test_mapa_memoria_al_actuar.py -k test_b_
+FAILED tests/test_mapa_memoria_al_actuar.py::test_b_portero_sin_congelar_ni_negar_no_lleva_mapa
+FAILED tests/test_mapa_memoria_al_actuar.py::test_b_portero_negativa_sin_medicion_no_es_accion_y_no_lleva_mapa
+FAILED tests/test_mapa_memoria_al_actuar.py::test_b_bb_usable_sin_muerte_no_lleva_mapa
+FAILED tests/test_mapa_memoria_al_actuar.py::test_b_bb_usable_con_condicion_pero_solo_protegidos_no_lleva_mapa
+4 failed, 1 passed, 25 deselected in 0.32s
+(la que pasa es test_b_memavail: sin disparo memavail no escribe fila, y ningun mutante le pone una)
+
+$ grep -c "MUTANTE[4-7]" tools/mapa_memoria.py tools/vigilante_memavail.py tools/portero.py bin/bb-usable
+tools/mapa_memoria.py:1        # memory.stat ilegible -> 0 en vez de NOT_COLLECTED
+bin/bb-usable:1                # cada guardia captura ZeroDivisionError en vez de Exception
+tools/vigilante_memavail.py:1
+tools/portero.py:1
+$ python3 -m pytest -q -p no:cacheprovider tests/test_mapa_memoria_al_actuar.py -k "test_c_ or test_d_"
+FAILED tests/test_mapa_memoria_al_actuar.py::test_c_memory_stat_ilegible_es_not_collected_campo_a_campo
+FAILED tests/test_mapa_memoria_al_actuar.py::test_c_memavail_con_memory_stat_ilegible_lo_dice_en_su_fila
+FAILED tests/test_mapa_memoria_al_actuar.py::test_d_memavail_con_el_mapa_roto_decide_y_detiene_igual
+FAILED tests/test_mapa_memoria_al_actuar.py::test_d_portero_con_el_mapa_roto_congela_igual
+FAILED tests/test_mapa_memoria_al_actuar.py::test_d_bb_usable_con_el_mapa_roto_mata_igual_y_guarda_el_enfriamiento[revienta]
+5 failed, 4 passed, 21 deselected in 0.32s
+(test_d_bb_usable[no_cargado] pasa: con el modulo ausente no hay excepcion que capturar; test_d_captura_nunca_lanza
+pasa porque su try es el de captura, que estos mutantes no tocan; las dos test_c_ de control pasan porque leen bien)
+
+$ grep -c MUTANTE8 tools/mapa_memoria.py     # sin tope: todas las unidades a la fila
+1
+$ python3 -m pytest -q -p no:cacheprovider tests/test_mapa_memoria_al_actuar.py -k test_e_
+FAILED tests/test_mapa_memoria_al_actuar.py::test_e_tope_las_mayores_mas_la_obligatoria_y_el_resto_contado
+FAILED tests/test_mapa_memoria_al_actuar.py::test_e_tope_se_respeta_en_la_fila_del_portero
+2 failed, 28 deselected in 0.25s
+
+C) control del control contra master: fail.txt (3) y la prueba permanente test_f_control_del_control_el_codigo_viejo_no_deja_mapa.
