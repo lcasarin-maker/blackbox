@@ -213,12 +213,15 @@ def inicio(ruta: Path = g.TELEMETRIA, episodios: Path | None = None) -> dict[str
     return out
 
 
-def _carga(segundos: int, n: int) -> tuple[int, list[dict[str, Any]]]:
-    """Matmul fp16 n x n durante `segundos`, con una muestra de reloj/potencia/util/throttle cada segundo."""
+def _carga(segundos: int, n: int, calentamiento: int = 0) -> tuple[int, list[dict[str, Any]]]:
+    """Matmul fp16 n x n durante `segundos`, con una muestra de reloj/potencia/util/throttle cada segundo. Los `calentamiento`
+    matmuls (y su sincronizacion) van ANTES del cronometro y fuera de `hechos` (FEATURE-RELOJ-PRUEBA-CALENTAMIENTO-ANTES-DE-MEDIR-01)."""
     import torch  # importado aqui: el detector pasivo no lo necesita
 
     a = torch.randn(n, n, device="cuda", dtype=torch.float16)
     b = torch.randn(n, n, device="cuda", dtype=torch.float16)
+    for _ in range(calentamiento):
+        a @ b
     torch.cuda.synchronize()
     inicio_t = time.time()
     fin = inicio_t + segundos
@@ -238,7 +241,14 @@ def _carga(segundos: int, n: int) -> tuple[int, list[dict[str, Any]]]:
     return hechos, filas
 
 
-def prueba(segundos: int = 15) -> dict[str, Any]:
+def prueba(segundos: int = 15, calentamiento: int = 0) -> dict[str, Any]:
+    """`_prueba` con `calentamiento` declarado en la salida: una medicion sin calentar se distingue de una calentada.
+    Por defecto 0, la medicion de siempre: el sesgo del arranque en frio es una hipotesis hasta que `ab` lo mida
+    (FEATURE-RELOJ-PRUEBA-CALENTAMIENTO-ANTES-DE-MEDIR-01)."""
+    return {**_prueba(segundos, calentamiento), "calentamiento": calentamiento}
+
+
+def _prueba(segundos: int, calentamiento: int) -> dict[str, Any]:
     """Prueba activa (la del hilo 366944): matmul fp16 8192x8192 durante `segundos`, reloj y potencia cada segundo.
 
     Ocupacion (hilo 387029; DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01): consulta los procesos de computo ANTES de cargar y
@@ -253,7 +263,7 @@ def prueba(segundos: int = 15) -> dict[str, Any]:
         return {"estado": "INDETERMINADO", "motivo": SIN_CONSULTA, "segundos": segundos}
     n = 8192
     try:
-        hechos, filas = _carga(segundos, n)
+        hechos, filas = _carga(segundos, n, calentamiento)
     except Exception as e:  # torch.cuda.OutOfMemoryError es RuntimeError; ImportError si falta torch
         causa = f"{type(e).__name__}: {(str(e).splitlines() or [''])[0][:200]}"
         motivo = f"CARGA_NO_PUDO_CORRER: {causa}" + (f"; GPU ocupada por {_lista(antes)}" if antes else "; GPU libre")
@@ -271,6 +281,40 @@ def prueba(segundos: int = 15) -> dict[str, Any]:
     return {**v, "tflops": tflops, "tflops_valido": False,
             "tflops_motivo": f"COMPETENCIA: {_lista(ajenos)} en la GPU durante la carga; los TFLOP/s salen bajos por competencia, no por el estado de energia",
             "ocupantes": ajenos, "segundos": segundos}
+
+
+CALENTAMIENTO_MATMULS = 10  # el script del hilo 387029: 10 matmuls con sincronizacion antes de cronometrar
+AB_MINIMO = 3  # con menos corridas por brazo el rango no es una dispersion
+
+
+def ab(n: int, mide: Callable[..., dict[str, Any]] | None = None) -> dict[str, Any]:
+    """El A/B que pide FEATURE-RELOJ-PRUEBA-CALENTAMIENTO-ANTES-DE-MEDIR-01: `n` corridas de `prueba` sin calentamiento y `n`
+    con `CALENTAMIENTO_MATMULS`, alternando el orden dentro de cada par (la deriva termica cae en los dos brazos). Solo cuentan
+    los TFLOP/s con `tflops_valido: true` (GPU libre): toda corrida que no lo sea va a `no_corrio` y entonces el veredicto es
+    COULD_NOT_RUN, nunca una cifra. Con todo valido: SESGO_MEDIDO si la diferencia de medianas supera el mayor rango
+    (max - min) de los dos brazos, DENTRO_DE_LA_DISPERSION si no. Carga la GPU ~2n x 15 s."""
+    mide = prueba if mide is None else mide
+    brazos: dict[str, list[float]] = {"sin": [], "con": []}
+    no_corrio: list[dict[str, Any]] = []
+    for i in range(n):
+        orden = (("sin", 0), ("con", CALENTAMIENTO_MATMULS))
+        for brazo, cal in orden if i % 2 == 0 else orden[::-1]:
+            v = mide(calentamiento=cal)
+            if v.get("tflops_valido") is True and isinstance(v.get("tflops"), (int, float)):
+                brazos[brazo].append(float(v["tflops"]))
+            else:
+                no_corrio.append({"corrida": i + 1, "brazo": brazo, "estado": v.get("estado"), "motivo": v.get("tflops_motivo") or v.get("motivo")})
+    out: dict[str, Any] = {"n": n, "calentamiento_matmuls": CALENTAMIENTO_MATMULS, "could_not_run": len(no_corrio), "no_corrio": no_corrio}
+    for brazo, xs in brazos.items():
+        out[brazo] = {"tflops": xs, "mediana": statistics.median(xs) if xs else None, "rango": round(max(xs) - min(xs), 2) if xs else None}
+    if n < AB_MINIMO:
+        return {**out, "veredicto": f"COULD_NOT_RUN: n={n} < {AB_MINIMO}; sin dispersion medible"}
+    if no_corrio:
+        return {**out, "veredicto": f"COULD_NOT_RUN: {len(no_corrio)} de {2 * n} corridas sin TFLOP/s validos (GPU ocupada o carga que no corrio)"}
+    dif = round(out["con"]["mediana"] - out["sin"]["mediana"], 2)
+    tope = max(out["sin"]["rango"], out["con"]["rango"])
+    return {**out, "diferencia_medianas": dif, "rango_mayor": tope,
+            "veredicto": "SESGO_MEDIDO" if abs(dif) > tope else "DENTRO_DE_LA_DISPERSION"}
 
 
 def evento_arranque(r: dict[str, Any], boot_id: str) -> dict[str, Any]:
@@ -555,9 +599,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--prueba", action="store_true", help="prueba activa de ~15 s con carga en la GPU")
     ap.add_argument("--arranque", action="store_true", help="prueba activa y registra el veredicto segun el interruptor reloj_arranque (lo corre bb-reloj-arranque.timer)")
     ap.add_argument("--completar-bug-report", metavar="CARPETA", help="uso interno: lo lanza la captura de incidente en una unidad transitoria")
+    ap.add_argument("--ab", type=int, metavar="N", help="A/B del calentamiento: N corridas de --prueba sin y N con calentamiento; carga la GPU ~2N x 15 s, solo con la GPU libre")
     a = ap.parse_args(argv)
     if a.completar_bug_report:
         return completar_bug_report(Path(a.completar_bug_report))
+    if a.ab is not None:
+        res = ab(a.ab)
+        print(json.dumps(res, indent=1, ensure_ascii=False))
+        return 2 if res["veredicto"].startswith("COULD_NOT_RUN") else 0
     r = prueba() if (a.prueba or a.arranque) else decide(g.lee_cola(filas=60))
     atascado = r.get("estado") == "ATASCADO"
     if atascado:
