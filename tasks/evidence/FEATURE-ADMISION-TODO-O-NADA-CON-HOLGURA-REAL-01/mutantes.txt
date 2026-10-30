@@ -1,0 +1,18 @@
+Control negativo de las pruebas (2026-10-30). Instrumento: mutantes.py.txt (en esta carpeta).
+$ python3 tasks/evidence/FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01/mutantes.py.txt; echo "rc=$?"
+== sin mutar
+test_a: PASA
+test_c off: PASA
+test_b: PASA
+== mutante 1: la puerta nueva nunca niega (admision_niega -> None)
+test_a: FALLA (AssertionError)
+test_a congelada: FALLA (AssertionError)
+== mutante 2: la puerta nueva niega en todo modo (ignora el interruptor)
+test_c off: FALLA (AssertionError)
+test_c observar: FALLA (AssertionError)
+== mutante 3: la puerta nueva niega siempre, quepa o no
+test_b: FALLA (AssertionError)
+rc=0
+
+Lectura: (a) cae si la puerta no niega; (c) cae si la puerta niega fuera de `actuar`; (b) cae si la puerta niega
+aunque la clase quepa. Ninguna de las tres pruebas pasa por construccion.
