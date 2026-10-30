@@ -44,9 +44,19 @@ Por que es de bb: `SPEC.md` ("Actuar sobre lo que mide, donde la inaccion cuesta
 Escalera ponytail, sin componente nuevo (el SPEC declara fuera de alcance duplicar mecanismos que ya cubren el problema):
 
 1. Un campo `rango` por unidad en un fichero hermano de `data/procesos_protegidos.json` (con copia de respaldo identica exigida por test, como la lista actual) y que `vigilante_memavail.elige_culpable` ordene por rango ascendente y despues por memoria, en vez de solo por memoria.
-2. Decidir con Luis la accion segun lo medido arriba: `stop` libera memoria y pierde el trabajo; `freeze` conserva ambos. Un arbitro que congela no cede memoria; solo detiene el avance.
+2. La accion segun lo medido arriba (`stop` libera y pierde el trabajo; `freeze` conserva ambos) la resuelve `FEATURE-ESCALERA-CEDER-CONGELAR-DETENER-VERIFICADA-01`; esta ficha solo aporta el rango.
 3. Pruebas en `tests/test_arbitro_prioridad_memoria.py` con control negativo, corridas bajo tope de memoria (`bb cap` o scope transitorio): (a) el acaparador de menor rango sobre la linea es el elegido aunque otra unidad de mayor rango tenga mas memoria; (b) negativo: si la de mayor rango es la unica elegible, `REFUSED` o `NOT_COLLECTED`, nunca se detiene; (c) el motor (`vllm`, `docker`) sigue sin ser elegible.
 4. Arrancar en `observar` (regla de `interruptores.py`: se decide con aciertos y falsos positivos). Precedente medido: a 16 GiB `memavail` marco 560 muestras y 431 fueron falsas.
+
+## Familia de adaptaciones (voto de Luis 2026-10-30: analizar las ideas y adecuarlas a huecos propios, no solo adoptar)
+
+Las ideas de Athena se adaptan a bb como un observador externo (rango declarado, efecto medido, escalada verificada), cada una atada a un hueco medido de bb:
+
+- Rango: esta ficha.
+- `FEATURE-MAPA-DE-MEMORIA-FORENSE-AL-ACTUAR-01`: el mapa por dueno al instante de actuar (hueco de `DEBT-COLAPSO-CONFINADO...`).
+- `FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01`: comprobar el espacio real antes de admitir (la puerta con `memory.current` dejo pasar la suite del 2026-10-16).
+- `FEATURE-ESCALERA-CEDER-CONGELAR-DETENER-VERIFICADA-01`: ceder de verdad, con cada escalon medido.
+- `FEATURE-RESIDENTES-INACTIVOS-CONTRA-CALOR-01`: descargar tras reposo, solo medir por ahora.
 
 ## Parte de Atlas (contrato de datos, sin importar codigo)
 
