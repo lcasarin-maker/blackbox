@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""G1 (tope - anon < 20 GiB) sobre las admisiones REALES de suite del portero (portero.jsonl.1 + portero.jsonl, solo
+lectura): cada fila `admitir`/`descongelar` de la clase suite en actuar se cruza con la muestra de app.slice mas
+reciente (<= 2 min antes) que trae anon. Colapso = app full_avg10 >= 10 en una muestra posterior dentro de 10 min."""
+
+import bisect
+import glob
+import json
+from datetime import datetime, timedelta
+
+D = "/home/lcasarin/.local/share/blackbox"
+TOPE, NECESARIO = 44040192, 20 * 1024 * 1024
+S = []
+for f in sorted(glob.glob(f"{D}/samples/*.jsonl")):
+    for linea in open(f, encoding="utf-8"):
+        try:
+            o = json.loads(linea)
+        except ValueError:
+            continue
+        a = next((s for s in o.get("slices") or [] if s.get("slice") == "app"), None)
+        if not a or "reclaim" not in a:
+            continue
+        S.append((datetime.strptime(o["ts"], "%Y-%m-%dT%H:%M:%S%z"), a["reclaim"]["anon_kb"], a["pressure"]["full_avg10"]))
+S.sort()
+T = [s[0] for s in S]
+tot = neg = negcol = admcol = 0
+casos = []
+for f in (f"{D}/portero.jsonl.1", f"{D}/portero.jsonl"):
+    for linea in open(f, encoding="utf-8"):
+        if '"suite"' not in linea:
+            continue
+        e = json.loads(linea)
+        if e.get("clase") != "suite" or e.get("accion") not in ("admitir", "descongelar") or e.get("modo"):
+            continue
+        t = datetime.fromisoformat(e["ts"])
+        i = bisect.bisect_right(T, t) - 1
+        if i < 0 or t - T[i] > timedelta(minutes=2):
+            continue
+        col = any(s[2] >= 10 for s in S[i + 1 : i + 15] if s[0] <= t + timedelta(minutes=10))
+        n = TOPE - S[i][1] < NECESARIO
+        tot += 1
+        neg += n
+        negcol += n and col
+        admcol += (not n) and col
+        if n:
+            casos.append((e["ts"], e["accion"], e["raiz"], TOPE - S[i][1], col))
+print(f"admisiones reales de suite (admitir/descongelar, actuar) con anon a <=2 min: {tot}")
+print(f"G1 habria negado: {neg} (seguidas de colapso en 10 min: {negcol}); admitidas por G1 y seguidas de colapso: {admcol}")
+for c in casos:
+    print(" ", c)

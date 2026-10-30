@@ -1,0 +1,170 @@
+#!/usr/bin/env python3
+"""Medicion de FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01 (solo lectura sobre samples/*.jsonl).
+
+Cada muestra de app.slice es una oportunidad hipotetica de admision: "si una suite pidiera turno ahora, la puerta
+la negaria?". Una negativa es ACIERTO si en los 10 minutos siguientes app.slice entra en colapso (PSI full avg10 >= 10
+en alguna muestra) y FALSA si no. Puertas:
+
+  G0   actual del 2026-10-16: tope - memory.current < 4 GiB (memory.current cuenta la cache)
+  G0b  actual del codigo hoy: tope - (memory.current - inactive_file) < 4 GiB (desde 2026-10-17, campo reclaim)
+  G1   todo o nada por anon: tope - anon < 20 GiB (MemoryMax de la clase suite). Sin shmem: la serie no lo trae,
+       asi que anon es cota inferior de anon+shmem y G1 niega de menos, no de mas.
+  G2   PSI full avg10 de app.slice >= 5 (el corte de PSI del portero, aplicado al slice en vez de al host)
+  G2b  PSI full avg60 de app.slice >= 1
+  G3   todo o nada con la cache: tope - memory.current < 20 GiB
+  G4   commit_pct del host >= 110 (senal global, para comparar)
+
+Uso: python3 mide_admision.py.txt [directorio_samples]
+"""
+
+import glob
+import json
+import sys
+from datetime import datetime, timedelta
+
+GIB = 1024 * 1024
+TOPE = 44040192  # kB: memory.max de app.slice (45097156608 B), el que registro el portero el 2026-10-16
+NECESARIO = 20 * GIB  # MemoryMax de la clase suite
+HOLGURA_MIN = 4 * GIB
+COLAPSO = 10.0
+HORIZONTE = timedelta(minutes=10)
+
+d = sys.argv[1] if len(sys.argv) > 1 else "/home/lcasarin/.local/share/blackbox/samples"
+filas = []
+ilegibles = 0
+for f in sorted(glob.glob(f"{d}/*.jsonl")):
+    for linea in open(f, encoding="utf-8"):
+        try:
+            o = json.loads(linea)
+        except ValueError:
+            ilegibles += 1
+            continue
+        app = next((s for s in o.get("slices") or [] if s.get("slice") == "app"), None)
+        if not app:
+            continue
+        r = app.get("reclaim") or {}
+        filas.append({
+            "ts": datetime.strptime(o["ts"], "%Y-%m-%dT%H:%M:%S%z"),
+            "cur": app["cur_kb"],
+            "inact": r.get("inactive_file_kb"),
+            "anon": r.get("anon_kb"),
+            "full10": app["pressure"]["full_avg10"],
+            "full60": app["pressure"]["full_avg60"],
+            "avail": o.get("mem_avail_kb"),
+            "commit": o.get("commit_pct"),
+        })
+filas.sort(key=lambda x: x["ts"])
+print(f"muestras con app.slice: {len(filas)} ({filas[0]['ts']:%Y-%m-%d} .. {filas[-1]['ts']:%Y-%m-%d}); lineas ilegibles: {ilegibles}")
+print(f"con anon (campo reclaim): {sum(1 for x in filas if x['anon'] is not None)}; sin anon: {sum(1 for x in filas if x['anon'] is None)}")
+
+# colapso futuro por muestra (ventana deslizante sobre la serie ordenada)
+for i, x in enumerate(filas):
+    fin = x["ts"] + HORIZONTE
+    x["colapso_pronto"] = False
+    for y in filas[i : i + 400]:  # 10 min a 1 muestra/min caben de sobra en 400
+        if y["ts"] > fin:
+            break
+        if y["full10"] >= COLAPSO:
+            x["colapso_pronto"] = True
+            break
+
+colapsos = [x for x in filas if x["full10"] >= COLAPSO]
+dias = sorted({x["ts"].strftime("%Y-%m-%d") for x in colapsos})
+print(f"muestras en colapso (app full10 >= {COLAPSO}): {len(colapsos)} en dias {dias}")
+
+PUERTAS = {
+    "G0  tope-cur<4GiB": lambda x: TOPE - x["cur"] < HOLGURA_MIN,
+    "G0b tope-(cur-inactive)<4GiB": lambda x: None if x["inact"] is None else TOPE - (x["cur"] - x["inact"]) < HOLGURA_MIN,
+    "G1  tope-anon<20GiB": lambda x: None if x["anon"] is None else TOPE - x["anon"] < NECESARIO,
+    "G3  tope-cur<20GiB": lambda x: TOPE - x["cur"] < NECESARIO,
+    "G4  commit_pct>=110 (host)": lambda x: None if x["commit"] is None else x["commit"] >= 110,
+    "G2  app full10>=5": lambda x: x["full10"] >= 5,
+    "G2b app full60>=1": lambda x: x["full60"] >= 1,
+}
+
+print("\n== por puerta, sobre muestras SANAS en el momento (full10 < 10): negativas, aciertos, falsas")
+for nombre, g in PUERTAS.items():
+    n = ok = falsas = sin = 0
+    for x in filas:
+        if x["full10"] >= COLAPSO:
+            continue
+        v = g(x)
+        if v is None:
+            sin += 1
+            continue
+        n += 1
+        if v:
+            if x["colapso_pronto"]:
+                ok += 1
+            else:
+                falsas += 1
+    print(f"{nombre:32s} evaluadas={n:6d} sin_dato={sin:6d} negaria={ok + falsas:6d} acierto={ok:5d} falsas={falsas:6d}")
+
+print("\n== distribucion de anon de app.slice (GiB), muestras con reclaim")
+an = sorted(x["anon"] / GIB for x in filas if x["anon"] is not None)
+if an:
+    q = lambda p: an[min(len(an) - 1, int(p * len(an)))]
+    print(f"n={len(an)} min={an[0]:.1f} p50={q(.5):.1f} p95={q(.95):.1f} p99={q(.99):.1f} max={an[-1]:.1f}")
+    print(f"disponible tope-anon (GiB): min={TOPE / GIB - an[-1]:.1f} p50={TOPE / GIB - q(.5):.1f}")
+ca = sorted((x["cur"] - x["inact"]) / GIB for x in filas if x["inact"] is not None)
+print(f"cur-inactive_file (GiB): p50={ca[len(ca) // 2]:.1f} max={ca[-1]:.1f}")
+cu = sorted(x["cur"] / GIB for x in filas)
+print(f"memory.current (GiB): p50={cu[len(cu) // 2]:.1f} p95={cu[int(.95 * len(cu))]:.1f} max={cu[-1]:.1f}")
+
+print("\n== la ventana del 2026-10-16 (suite congelada 10:34:57, admitida 10:35:28, colapso desde 10:37:01)")
+for x in filas:
+    if x["ts"].strftime("%Y-%m-%d %H:%M") in ("2026-10-16 10:33", "2026-10-16 10:34", "2026-10-16 10:35", "2026-10-16 10:36", "2026-10-16 10:37"):
+        res = {k.split()[0]: g(x) for k, g in PUERTAS.items()}
+        print(f"{x['ts']:%H:%M:%S} cur={x['cur']} anon={x['anon']} full10={x['full10']} full60={x['full60']} "
+              f"avail_host={x['avail']} colapso_en_10min={x['colapso_pronto']} niega={res}")
+
+print("\n== por episodio de colapso (inicio = primera muestra full10 >= 10 tras 30 min sin colapso):")
+print("   la puerta 'lo ve' si niega en alguna muestra sana de los 10 min previos al inicio")
+episodios = []
+ultimo = None
+for x in colapsos:
+    if ultimo is None or x["ts"] - ultimo > timedelta(minutes=30):
+        episodios.append(x["ts"])
+    ultimo = x["ts"]
+for t0 in episodios:
+    previas = [x for x in filas if t0 - HORIZONTE <= x["ts"] < t0 and x["full10"] < COLAPSO]
+    vistos = {}
+    for nombre, g in PUERTAS.items():
+        vs = [g(x) for x in previas]
+        vistos[nombre.split()[0]] = "sin_dato" if all(v is None for v in vs) else any(bool(v) for v in vs)
+    an_prev = [x["anon"] for x in previas if x["anon"] is not None]
+    print(f"{t0:%Y-%m-%d %H:%M} previas={len(previas)} anon_max_prev_GiB={max(an_prev) / GIB if an_prev else None!s:.5} ve={vistos}")
+
+print("\n== G1 a distintos 'necesario' (tope - anon < N): negativas, aciertos, falsas, episodios vistos con dato")
+for n_gib in (8, 12, 16, 20, 24, 28):
+    neg = ok = 0
+    for x in filas:
+        if x["full10"] >= COLAPSO or x["anon"] is None:
+            continue
+        if TOPE - x["anon"] < n_gib * GIB:
+            neg += 1
+            ok += x["colapso_pronto"]
+    ep = ep_dato = 0
+    for t0 in episodios:
+        previas = [x for x in filas if t0 - HORIZONTE <= x["ts"] < t0 and x["full10"] < COLAPSO and x["anon"] is not None]
+        if previas:
+            ep_dato += 1
+            ep += any(TOPE - x["anon"] < n_gib * GIB for x in previas)
+    print(f"N={n_gib:2d} GiB negaria={neg:6d} acierto={ok:4d} falsas={neg - ok:6d} episodios_vistos={ep}/{ep_dato}")
+
+print("\n== G4 (commit_pct>=110) por dia, muestras sanas:")
+por_dia = {}
+for x in filas:
+    if x["full10"] < COLAPSO and (x["commit"] or 0) >= 110:
+        k = x["ts"].strftime("%Y-%m-%d")
+        por_dia[k] = por_dia.get(k, 0) + 1
+print(por_dia)
+
+print("\n== caso real con anon medido: 2026-10-21, el portero ADMITIO la suite 41108 a las 16:36:27 (portero.jsonl.1),")
+print("   y app.slice entro en colapso a las 16:38:03. Muestras de app.slice alrededor:")
+for x in filas:
+    if x["ts"].strftime("%Y-%m-%d %H:%M") in ("2026-10-21 16:35", "2026-10-21 16:36", "2026-10-21 16:37", "2026-10-21 16:38"):
+        res = {k.split()[0]: g(x) for k, g in PUERTAS.items()}
+        disp = None if x["anon"] is None else TOPE - x["anon"]
+        print(f"{x['ts']:%H:%M:%S} cur={x['cur']} inactive={x['inact']} anon={x['anon']} disponible(tope-anon)={disp} "
+              f"necesario={NECESARIO} full10={x['full10']} niega={res}")

@@ -1,0 +1,137 @@
+MEDICION 2026-10-30 - que senal del scope habria negado la suite del 2026-10-16 10:34:57 y cuantas falsas da sobre la serie
+=========================================================================================================================
+
+Sujeto: ~/.local/share/blackbox/samples/*.jsonl (SOLO LECTURA), 2026-10-15 .. 2026-10-30, 22 175 muestras de app.slice
+(1 linea ilegible: la serie no tiene dias anteriores al 2026-10-15). Tope de app.slice = 44040192 kB (memory.max
+45097156608 B), el mismo que registro el portero el 2026-10-16 y el 2026-10-21; `techo` constante en escalon/2026-10-21.jsonl.
+
+Metodo: cada muestra sana (app full_avg10 < 10) es una peticion hipotetica de turno de una suite. Una negativa es
+ACIERTO si app.slice entra en colapso (full_avg10 >= 10) en los 10 min siguientes y FALSA si no. Copia del instrumento
+en esta carpeta: mide_admision.py.txt.
+
+Comando:
+  python3 tasks/evidence/FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01/mide_admision.py.txt
+Salida literal (rc=0):
+
+muestras con app.slice: 22175 (2026-10-15 .. 2026-10-30); lineas ilegibles: 1
+con anon (campo reclaim): 18076; sin anon: 4099
+muestras en colapso (app full10 >= 10.0): 41 en dias ['2026-10-16', '2026-10-17', '2026-10-21', '2026-10-22', '2026-10-24', '2026-10-29']
+
+== por puerta, sobre muestras SANAS en el momento (full10 < 10): negativas, aciertos, falsas
+G0  tope-cur<4GiB                evaluadas= 22134 sin_dato=     0 negaria=  4028 acierto=   66 falsas=  3962
+G0b tope-(cur-inactive)<4GiB     evaluadas= 18066 sin_dato=  4068 negaria=     0 acierto=    0 falsas=     0
+G1  tope-anon<20GiB              evaluadas= 18066 sin_dato=  4068 negaria=   168 acierto=   11 falsas=   157
+G3  tope-cur<20GiB               evaluadas= 22134 sin_dato=     0 negaria= 21730 acierto=  132 falsas= 21598
+G4  commit_pct>=110 (host)       evaluadas= 22134 sin_dato=     0 negaria=    47 acierto=   15 falsas=    32
+G2  app full10>=5                evaluadas= 22134 sin_dato=     0 negaria=    33 acierto=    9 falsas=    24
+G2b app full60>=1                evaluadas= 22134 sin_dato=     0 negaria=   366 acierto=   36 falsas=   330
+
+== distribucion de anon de app.slice (GiB), muestras con reclaim
+n=18076 min=0.1 p50=8.9 p95=16.8 p99=21.9 max=36.0
+disponible tope-anon (GiB): min=6.0 p50=33.1
+cur-inactive_file (GiB): p50=14.5 max=39.4
+memory.current (GiB): p50=35.6 p95=39.2 max=39.8
+
+== la ventana del 2026-10-16 (suite congelada 10:34:57, admitida 10:35:28, colapso desde 10:37:01)
+10:33:00 cur=39962120 anon=None full10=0.0 full60=0.19 avail_host=45621728 colapso_en_10min=True niega={'G0': True, 'G0b': None, 'G1': None, 'G3': True, 'G4': True, 'G2': False, 'G2b': False}
+10:34:01 cur=40066312 anon=None full10=0.0 full60=0.06 avail_host=45898532 colapso_en_10min=True niega={'G0': True, 'G0b': None, 'G1': None, 'G3': True, 'G4': True, 'G2': False, 'G2b': False}
+10:35:08 cur=40095808 anon=None full10=0.05 full60=0.04 avail_host=40917728 colapso_en_10min=True niega={'G0': True, 'G0b': None, 'G1': None, 'G3': True, 'G4': True, 'G2': False, 'G2b': False}
+10:36:00 cur=40078080 anon=None full10=0.37 full60=0.32 avail_host=34694144 colapso_en_10min=True niega={'G0': True, 'G0b': None, 'G1': None, 'G3': True, 'G4': True, 'G2': False, 'G2b': False}
+10:37:01 cur=40123824 anon=None full10=45.09 full60=26.82 avail_host=25667468 colapso_en_10min=True niega={'G0': True, 'G0b': None, 'G1': None, 'G3': True, 'G4': True, 'G2': True, 'G2b': True}
+
+== por episodio de colapso (inicio = primera muestra full10 >= 10 tras 30 min sin colapso):
+   la puerta 'lo ve' si niega en alguna muestra sana de los 10 min previos al inicio
+2026-10-16 09:34 previas=9 anon_max_prev_GiB=None ve={'G0': True, 'G0b': 'sin_dato', 'G1': 'sin_dato', 'G3': True, 'G4': True, 'G2': False, 'G2b': False}
+2026-10-16 10:37 previas=9 anon_max_prev_GiB=None ve={'G0': True, 'G0b': 'sin_dato', 'G1': 'sin_dato', 'G3': True, 'G4': True, 'G2': False, 'G2b': True}
+2026-10-16 13:45 previas=6 anon_max_prev_GiB=None ve={'G0': False, 'G0b': 'sin_dato', 'G1': 'sin_dato', 'G3': True, 'G4': False, 'G2': False, 'G2b': True}
+2026-10-17 02:06 previas=10 anon_max_prev_GiB=None ve={'G0': True, 'G0b': 'sin_dato', 'G1': 'sin_dato', 'G3': True, 'G4': False, 'G2': True, 'G2b': True}
+2026-10-17 13:59 previas=10 anon_max_prev_GiB=None ve={'G0': True, 'G0b': 'sin_dato', 'G1': 'sin_dato', 'G3': True, 'G4': False, 'G2': True, 'G2b': True}
+2026-10-21 14:52 previas=9 anon_max_prev_GiB=31.82 ve={'G0': True, 'G0b': False, 'G1': True, 'G3': True, 'G4': False, 'G2': True, 'G2b': True}
+2026-10-21 16:38 previas=9 anon_max_prev_GiB=31.72 ve={'G0': True, 'G0b': False, 'G1': True, 'G3': True, 'G4': False, 'G2': False, 'G2b': True}
+2026-10-22 19:37 previas=10 anon_max_prev_GiB=9.529 ve={'G0': True, 'G0b': False, 'G1': False, 'G3': True, 'G4': False, 'G2': False, 'G2b': False}
+2026-10-24 12:22 previas=10 anon_max_prev_GiB=18.63 ve={'G0': False, 'G0b': False, 'G1': False, 'G3': True, 'G4': False, 'G2': False, 'G2b': False}
+2026-10-29 21:45 previas=10 anon_max_prev_GiB=9.130 ve={'G0': False, 'G0b': False, 'G1': False, 'G3': True, 'G4': False, 'G2': False, 'G2b': False}
+2026-10-29 22:53 previas=10 anon_max_prev_GiB=13.78 ve={'G0': False, 'G0b': False, 'G1': False, 'G3': True, 'G4': False, 'G2': False, 'G2b': False}
+
+== G1 a distintos 'necesario' (tope - anon < N): negativas, aciertos, falsas, episodios vistos con dato
+N= 8 GiB negaria=     0 acierto=   0 falsas=     0 episodios_vistos=0/6
+N=12 GiB negaria=     5 acierto=   2 falsas=     3 episodios_vistos=2/6
+N=16 GiB negaria=    26 acierto=   3 falsas=    23 episodios_vistos=2/6
+N=20 GiB negaria=   168 acierto=  11 falsas=   157 episodios_vistos=2/6
+N=24 GiB negaria=   578 acierto=  20 falsas=   558 episodios_vistos=3/6
+N=28 GiB negaria=  2126 acierto=  23 falsas=  2103 episodios_vistos=3/6
+
+== G4 (commit_pct>=110) por dia, muestras sanas:
+{'2026-10-15': 5, '2026-10-16': 42}
+
+== caso real con anon medido: 2026-10-21, el portero ADMITIO la suite 41108 a las 16:36:27 (portero.jsonl.1),
+   y app.slice entro en colapso a las 16:38:03. Muestras de app.slice alrededor:
+16:35:00 cur=41295660 inactive=9635272 anon=26441996 disponible(tope-anon)=17598196 necesario=20971520 full10=0.84 niega={'G0': True, 'G0b': False, 'G1': True, 'G3': True, 'G4': False, 'G2': False, 'G2b': True}
+16:36:03 cur=41192020 inactive=8530800 anon=27267340 disponible(tope-anon)=16772852 necesario=20971520 full10=0.46 niega={'G0': True, 'G0b': False, 'G1': True, 'G3': True, 'G4': False, 'G2': False, 'G2b': False}
+16:37:03 cur=41305168 inactive=3165040 anon=33263036 disponible(tope-anon)=10777156 necesario=20971520 full10=1.12 niega={'G0': True, 'G0b': False, 'G1': True, 'G3': True, 'G4': False, 'G2': False, 'G2b': False}
+16:38:03 cur=41101372 inactive=901556 anon=36214692 disponible(tope-anon)=7825500 necesario=20971520 full10=18.38 niega={'G0': True, 'G0b': True, 'G1': True, 'G3': True, 'G4': False, 'G2': False, 'G2b': True}
+
+Fila real del portero de ese caso (portero.jsonl.1, 2026-10-21T22:36:27Z = 16:36:27 -06:00):
+  "accion": "admitir", "motivo": "turno libre y puerta abierta", "raiz": 41108, "clase": "suite",
+  "medicion": {"psi_full_avg10": 0.97, "freno_termico": "", "tope_app_kb": 44040192, "uso_app_kb": 35743284,
+               "consumo_con_tope_propio_kb": 4965588}
+  (holgura que vio la puerta actual: 44040192 - 35743284 = 8296908 kB >= 4194304: admitio.)
+
+anon+shmem medido DURANTE atascos confinados (interruptores/atasco_confinado.jsonl, campo diagnostico; comando:
+  python3 -c "...lee diagnostico..." sobre ese archivo):
+2026-10-16T13:46:18-0600 anon 36851680 shmem 417436 file 1993808 anon+shmem kB 37269116 disponible kB 6771076
+2026-10-21T16:44:11-0600 anon 38079188 shmem 1533048 file 1546336 anon+shmem kB 39612236 disponible kB 4427956
+2026-10-21T17:04:50-0600 anon 37867904 shmem 1703228 file 2090420 anon+shmem kB 39571132 disponible kB 4469060
+
+CONTROL NEGATIVO DEL INSTRUMENTO: cada puerta puede dar los dos veredictos sobre la misma serie. G1 niega 168 y
+admite 17 898; G0b (la puerta del codigo de hoy) admite las 18 066 muestras sanas, pero el mismo instrumento la da
+`True` a las 2026-10-21 16:38:03 (en colapso), asi que su cero es un hecho del sujeto, no un instrumento roto.
+
+RESULTADO (lo que esto dice y lo que no)
+1. La suite del 2026-10-16 10:34:57: la serie de ese dia NO trae anon ni shmem de app.slice (el campo `reclaim`
+   empieza el 2026-10-17 20:36). El veredicto de la puerta todo-o-nada (G1) sobre esa suite es NOT_COLLECTED. Las dos
+   mediciones de composicion del mismo dia dan veredictos opuestos: la de la ficha DEBT-COLAPSO ("hoy: anon 16.7 GiB,
+   file 20.8 GiB", tarde del 16) -> disponible 25.3 GiB >= 20, admitiria; la del atasco de 13:46 (anon+shmem
+   37269116 kB) -> disponible 6771076 kB < 20 GiB, negaria. Elegir una seria inventar el dato de las 10:35.
+2. PSI de app.slice NO habria negado esa suite: full_avg10 0.0-0.05 y full_avg60 0.04-0.06 en las muestras de
+   10:34:01 y 10:35:08; el atasco empieza a las 10:37. PSI llega tarde a la admision (G2 ve 3 de 11 episodios).
+3. MemAvailable del host a la hora de admision: 40.9-45.9 GB (no los 20-24 GB del atasco): habria admitido.
+4. Lo que si niega el 2026-10-16 tiene ruido inservible o no generaliza: G3 (todo o nada con memory.current, que
+   cuenta la cache) niega el 98.2 % del tiempo (21 730 de 22 134; 21 598 falsas); G0 (la puerta del 16-oct) niega el
+   18.2 % (3 962 falsas de 4 028) y dejo pasar la suite por 1 464 kB; G4 (commit_pct >= 110) solo dispara el 15 y el
+   16 de octubre (47 muestras) y ve 2 de 11 episodios.
+5. G1 (tope - anon < MemoryMax de la clase, 20 GiB) es la unica senal del scope con dato que separa algo: niega el
+   0.93 % del tiempo (168 de 18 066 muestras sanas; 11 aciertos, 157 falsas) y ve 2 de los 6 episodios con dato
+   (los dos del 21-oct, anon previo 31.7-31.8 GiB). En el caso real del 21-oct 16:36:27 la puerta actual ADMITIO una
+   suite (holgura vista 8296908 kB) y G1 la habria negado: necesario 20971520 kB, disponible 16772852 kB (anon de la
+   muestra de 16:36:03, sin shmem: cota que solo puede bajar el disponible). El colapso llego a las 16:38:03.
+   Los otros 4 episodios (22, 24 y 29-oct) llegaron con anon previo 9.1-18.6 GiB: ninguna senal de app.slice
+   medida aqui los vio venir (G0b, G1, G2 en False los cuatro).
+
+SEGUNDA VARA: G1 sobre las admisiones REALES de suite del portero (no sobre muestras hipoteticas).
+Comando:
+  python3 tasks/evidence/FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01/mide_admisiones_reales.py.txt
+Salida literal (rc=0):
+admisiones reales de suite (admitir/descongelar, actuar) con anon a <=2 min: 1168
+G1 habria negado: 10 (seguidas de colapso en 10 min: 1); admitidas por G1 y seguidas de colapso: 0
+  ('2026-10-18T02:47:14.215432+00:00', 'descongelar', 1664416, 18424428, False)
+  ('2026-10-18T02:57:56.294991+00:00', 'descongelar', 1901665, 17300832, False)
+  ('2026-10-18T03:22:08.692218+00:00', 'descongelar', 2289852, 14868300, False)
+  ('2026-10-18T03:22:12.790842+00:00', 'descongelar', 2306680, 14868300, False)
+  ('2026-10-21T06:40:06.642235+00:00', 'admitir', 2718737, 13960796, False)
+  ('2026-10-21T06:56:39.416637+00:00', 'descongelar', 2882270, 17971144, False)
+  ('2026-10-21T07:03:10.068861+00:00', 'admitir', 2978512, 19852064, False)
+  ('2026-10-21T07:19:11.297181+00:00', 'descongelar', 2978960, 17140308, False)
+  ('2026-10-21T21:45:07.274983+00:00', 'admitir', 3485397, 19094560, False)
+  ('2026-10-21T22:36:27.287791+00:00', 'admitir', 41108, 16772852, True)
+Lectura: de 1168 filas de admision real con anon medido, una sola precedio un colapso de app.slice en 10 min (la del
+21-oct 16:36:27) y G1 la niega; G1 habria retrasado ademas 9 admisiones sin colapso despues (0.77 % de las filas).
+La cuenta es por fila del log; las 10 negadas son 10 raices distintas.
+
+VEREDICTO: ninguna senal separa bien la ventana que pide la ficha. Sobre la suite del 2026-10-16 10:34:57 el veredicto
+de G1 es NOT_COLLECTED (sin anon/shmem en la serie de ese dia) y PSI y MemAvailable la habrian admitido. Donde hay
+dato, G1 es la mejor senal del scope: en muestras hipoteticas niega el 0.93 % del tiempo con 93 % de falsas y ve 2 de
+6 episodios; sobre las admisiones reales niega 10 de 1168, una de ellas la unica admision real seguida de colapso
+(21-oct 16:36:27). Los colapsos que llegan con anon bajo (22, 24 y 29-oct) no los ve ninguna puerta de admision de
+app.slice. El costo de cada negativa falsa es una suite congelada mientras corre su `timeout`; por eso la puerta entra
+como interruptor `portero_admision` en `off` y se decide con su registro en `observar` (voto de Luis 2026-10-12).
