@@ -1,0 +1,126 @@
+FEATURE-RESIDENTES-INACTIVOS-CONTRA-CALOR-01 -- medicion 2026-10-30
+Solo lectura sobre ~/.local/share/blackbox/{gpumem_historial.jsonl, atom_gpu_telemetry.jsonl}. No se detuvo ni cargo nada.
+
+== Senal de inactividad elegida ==
+Peticiones del motor vLLM: vllm_num_requests_running == 0 y vllm_num_requests_waiting == 0, sostenida >= 10 min seguidos
+(racha por boot, contigua: un hueco > 30 s entre muestras la rompe). Por que esa y no otra:
+ - Es del residente. gpu_util_pct viene de nvidia-smi y es global; en esta telemetria no hay utilizacion por proceso.
+ - Ya se mide cada 5 s en atom_gpu_telemetry.jsonl (vllm_*). Inactividad desconocida (vllm sin dato) se cuenta aparte, no se adivina.
+ - Es la definicion natural de "reposo" para un servicio que Athena descargaria tras un rato.
+ gpu_util_pct se usa solo como corroboracion cruzada (seccion [3]).
+Residencia: ultima fila de gpumem_historial.jsonl del mismo boot_id con ts <= la muestra y a no mas de 13 min (latido de 10 min
+mas margen); fuera de eso, DESCONOCIDA y la muestra no entra en ningun contraste de residencia.
+
+== Comando 0 (close_check ANTES) ==
+$ grep -qx residentes_medido tasks/evidence/FEATURE-RESIDENTES-INACTIVOS-CONTRA-CALOR-01/medicion.txt; echo "rc=$?"
+rc=2        (el archivo no existia)
+
+== Comando 1 (la medicion) ==
+$ python3 -I tasks/evidence/FEATURE-RESIDENTES-INACTIVOS-CONTRA-CALOR-01/mide_residentes.py
+(salida literal, corrida del 2026-10-30; las cifras de telemetria crecen unas decenas de muestras por corrida porque el sampler sigue escribiendo)
+
+historial: 3440 filas, 8 boots, 0 ilegibles
+telemetria: 135908 muestras (2026-10-22T09:41:08 a 2026-10-30T10:42:53 hora local), 4 boots, 0 lineas ilegibles
+
+[1] COBERTURA
+  residencia DESCONOCIDA (sin fila de historial a <=13 min en su boot): 19 muestras
+  residentes ['contenedor nemotron-server']: 135819 muestras (188.6 h)
+  residentes NINGUNO: 70 muestras (0.1 h)
+  CONTROL sin residentes: 70 muestras (0.10 h) de 135889 con residencia conocida
+  inactividad DESCONOCIDA (vllm sin dato): 1158 muestras
+
+[2] ESTRATOS CON RESIDENTE PRESENTE (inactividad = motor sin peticiones corriendo ni en cola)
+  ACTIVO (>=1 peticion corriendo)              n= 78150 ( 108.5 h)  tmax p50=70.2 [p10=62.4 p90=84.0]  tmed p50=65.4 [p10=58.4 p90=76.4]  tgpu p50=62.0 [p10=57.0 p90=70.0]  pot p50=25.1 [p10=24.0 p90=44.1]
+  TRANSICION (inactivo < 10 min)               n= 25542 (  35.5 h)  tmax p50=52.3 [p10=42.6 p90=73.0]  tmed p50=47.1 [p10=41.1 p90=65.7]  tgpu p50=43.0 [p10=40.0 p90=59.0]  pot p50=8.5 [p10=8.1 p90=23.0]
+  REPOSO >= 10 min                             n= 31039 (  43.1 h)  tmax p50=47.4 [p10=41.8 p90=69.8]  tmed p50=45.1 [p10=40.0 p90=62.3]  tgpu p50=42.0 [p10=39.0 p90=55.0]  pot p50=8.4 [p10=8.0 p90=9.9]
+  REPOSO >= 60 min                             n=     7 (   0.0 h)  tmax p50=41.7 [p10=39.8 p90=58.9]  tmed p50=39.8 [p10=38.6 p90=48.9]  tgpu p50=39.0 [p10=37.0 p90=43.0]  pot p50=8.1 [p10=8.0 p90=8.6]
+  REPOSO >= 10 min LIMPIO (sin otro cliente GPU, util<10) n=   592 (   0.8 h)  tmax p50=55.3 [p10=49.8 p90=63.0]  tmed p50=49.7 [p10=46.1 p90=55.2]  tgpu p50=45.0 [p10=42.0 p90=47.0]  pot p50=8.5 [p10=8.2 p90=8.8]
+  SIN RESIDENTES (control)                     n=0
+  ventanas de reposo >=10 min: 149; con residente presente: 149; SIN residente: 0 (por construccion: solo se cuentan con residente presente)
+  duracion (min, tras los primeros 10) p50=20 max=50
+  muestras de reposo >=10 min SIN residente: 0
+
+[3] CORROBORACION: gpu_util_pct y estado de reloj durante el reposo del motor
+  util en reposo: p50=2% p90=13% max=96%; muestras con util>=10%: 4693 de 31039
+  pstate en reposo: {'P0': 31039}
+  reloj SM en reposo (MHz): p10=2073 p50=2080 p90=2080
+  util en ACTIVO: p50=96% p90=96%
+
+[4] CONTROLES DEL INSTRUMENTO
+  control positivo: ACTIVO vs REPOSO (debe dar efecto grande si el instrumento ve diferencias reales)
+    tmax: mediana(activo)-mediana(reposo) = +22.80, n=78150/31039
+    tgpu: mediana(activo)-mediana(reposo) = +20.00, n=78150/31039
+    pot: mediana(activo)-mediana(reposo) = +16.69, n=78150/31039
+  control placebo: las ventanas de reposo >=10 min se parten ENTERAS al azar en dos mitades, 300 veces; |delta| debe ser chico
+    tmax: |delta| placebo p50=2.60 p95=7.20 (300 particiones)
+        el control positivo (22.80) es 3.2 veces el p95 del placebo
+    tgpu: |delta| placebo p50=1.00 p95=3.00 (300 particiones)
+        el control positivo (20.00) es 6.7 veces el p95 del placebo
+    pot: |delta| placebo p50=0.10 p95=0.28 (300 particiones)
+        el control positivo (16.69) es 59.6 veces el p95 del placebo
+
+[5] COSTO DEL RESIDENTE INACTIVO: REPOSO con residente vs REPOSO sin residente
+  NO CALCULABLE: reposo con residente n=31039, reposo sin residente n=0 (se piden >=30 de cada lado).
+  No hay control: el residente estuvo presente en todo el periodo de telemetria. No se puede concluir ni efecto ni ausencia de efecto.
+
+[6] PISO DE REPOSO DEL RESIDENTE Y VARIABILIDAD (limite de lo detectable)
+  por duracion del reposo (la caida tras la carga se enfria; un residente que cueste calor mostraria meseta, no caida a ambiente):
+  reposo 10-30 min                             n= 28917 (  40.2 h)  tmax p50=47.8 [p10=41.8 p90=70.0]  tmed p50=45.5 [p10=40.1 p90=62.6]  tgpu p50=42.0 [p10=39.0 p90=56.0]  pot p50=8.4 [p10=8.1 p90=13.1]
+  reposo 30-60 min                             n=  2115 (   2.9 h)  tmax p50=42.7 [p10=40.8 p90=66.6]  tmed p50=41.2 [p10=39.8 p90=57.2]  tgpu p50=40.0 [p10=38.0 p90=49.0]  pot p50=8.2 [p10=8.0 p90=8.9]
+  reposo 1-3 h                                 n=     7 (   0.0 h)  tmax p50=41.7 [p10=39.8 p90=58.9]  tmed p50=39.8 [p10=38.6 p90=48.9]  tgpu p50=39.0 [p10=37.0 p90=43.0]  pot p50=8.1 [p10=8.0 p90=8.6]
+  reposo >3 h                                  n=0
+  por boot (reposo >=10 min):
+  boot 1ac9b61a                                n= 12108 (  16.8 h)  tmax p50=48.5 [p10=41.7 p90=75.3]  tmed p50=45.6 [p10=39.8 p90=67.8]  tgpu p50=42.0 [p10=39.0 p90=61.0]  pot p50=8.4 [p10=8.0 p90=30.2]
+  boot 463297c1                                n=  9933 (  13.8 h)  tmax p50=43.8 [p10=42.6 p90=67.1]  tmed p50=42.7 [p10=41.4 p90=60.2]  tgpu p50=41.0 [p10=40.0 p90=51.0]  pot p50=8.2 [p10=8.0 p90=9.1]
+  boot 56a1942a                                n=  8173 (  11.4 h)  tmax p50=49.7 [p10=42.3 p90=65.4]  tmed p50=47.2 [p10=40.9 p90=58.6]  tgpu p50=44.0 [p10=40.0 p90=50.0]  pot p50=8.6 [p10=8.1 p90=9.2]
+  boot cf445303                                n=   825 (   1.1 h)  tmax p50=60.1 [p10=50.6 p90=68.9]  tmed p50=53.4 [p10=46.1 p90=58.8]  tgpu p50=47.0 [p10=42.0 p90=50.0]  pot p50=9.0 [p10=8.4 p90=9.3]
+  por bloque horario UTC (reposo >=10 min; ambiente no se mide, la hora lo aproxima):
+  00-06 UTC                                    n=  5965 (   8.3 h)  tmax p50=59.9 [p10=43.8 p90=79.8]  tmed p50=53.9 [p10=42.9 p90=69.2]  tgpu p50=47.0 [p10=41.0 p90=57.0]  pot p50=8.9 [p10=8.3 p90=9.8]
+  06-12 UTC                                    n= 10531 (  14.6 h)  tmax p50=42.9 [p10=41.7 p90=63.6]  tmed p50=42.0 [p10=39.9 p90=56.9]  tgpu p50=41.0 [p10=39.0 p90=49.0]  pot p50=8.2 [p10=8.0 p90=9.1]
+  12-18 UTC                                    n=  7186 (  10.0 h)  tmax p50=42.7 [p10=40.8 p90=56.4]  tmed p50=41.4 [p10=39.8 p90=50.5]  tgpu p50=40.0 [p10=39.0 p90=46.0]  pot p50=8.1 [p10=8.0 p90=9.0]
+  18-24 UTC                                    n=  7357 (  10.2 h)  tmax p50=58.1 [p10=43.6 p90=80.2]  tmed p50=53.1 [p10=42.1 p90=72.6]  tgpu p50=47.0 [p10=40.0 p90=69.0]  pot p50=8.9 [p10=8.3 p90=46.1]
+  dispersion entre boots de la mediana de tmax en reposo: min=43.8 max=60.1 (rango 16.3 C): cualquier efecto menor que esto queda tapado por el ambiente/boot.
+rc=0
+
+== Comando 2 (control negativo del close_check) ==
+$ echo 'NO cerrado: falta residentes_medido' > neg.txt; grep -qx residentes_medido neg.txt; echo "rc=$?"
+rc=1        (la linea 'NO cerrado: falta residentes_medido' NO satisface -x: el centinela necesita su propia linea)
+$ printf 'se dice residentes_medido en una frase\n' > frase.txt; grep -qx residentes_medido frase.txt; echo "rc=$?"
+rc=1        (una frase que contiene el centinela tampoco cierra)
+$ printf 'residentes_medido\n' > pos.txt; grep -qx residentes_medido pos.txt; echo "rc=$?"
+rc=0        (el caso positivo: el mismo comando puede dar el veredicto contrario)
+
+== CONCLUSION ==
+1. NO CONCLUYENTE sobre la hipotesis "un residente inactivo cuesta calor": no hay control. El residente (contenedor
+   nemotron-server, 32.2 GiB) estuvo presente en 135819 de 135889 muestras con residencia conocida; las 70 muestras sin
+   residentes (0.10 h) son un arranque de boot con vllm sin dato, y dan 0 muestras de reposo sin residente (se piden >= 30
+   de cada lado). La comparacion reposo-con-residente contra reposo-sin-residente es NO CALCULABLE, no es un efecto nulo.
+2. Cobertura del reposo: 149 ventanas de reposo >= 10 min, 31039 muestras = 43.1 h de 188.6 h (22.9%). La racha mas larga
+   mide 60 min; solo 7 muestras (35 s) pasan de 60 min de reposo continuo. El "rato de reposo" que Athena usaria para
+   descargar casi nunca ocurre aqui: el motor vuelve a recibir peticiones antes de la hora.
+3. Lo que SI se midio, descriptivo y sin control: en reposo el residente deja la GPU en P0 a 2080 MHz (31039 de 31039
+   muestras en P0, p50 2080 MHz) con 8.4 W de potencia GPU (p10 8.0, p90 9.9) y temperatura maxima de zonas p50 47.4 C
+   (reposo 10-30 min: 47.8 C; 30-60 min: 42.7 C; > 60 min: 41.7 C con n=7). Activo: 25.1 W y 70.2 C. El enfriamiento por
+   duracion (47.8 -> 42.7 -> 41.7) es el de la carga previa que se va, no prueba ni descarta costo del residente.
+4. Cota de lo detectable: el piso de ruido entre mitades de ventanas es |delta tmax| p95 = 7.2 C (placebo, 300 particiones)
+   y la mediana de tmax en reposo cambia 16.3 C entre boots (43.8 a 60.1 C; el boot cf445303 aporta solo 1.1 h). Un efecto
+   de residencia menor que ~7 C no se distinguiria del ruido aun con control. El control positivo (activo - reposo = +22.8 C
+   en tmax, +20.0 C en tgpu, +16.69 W) es 3.2x, 6.7x y 59.6x el p95 del placebo: el instrumento ve diferencias grandes.
+5. Efecto medido: NINGUNO que atribuir a la residencia. Por eso NO corresponde abrir ficha de accion (descargar tras reposo)
+   desde esta medicion. Para poder concluir hace falta un control sin residente con el mismo ambiente y carga previa; eso
+   exige descargar el modelo, decision de Luis (no se hizo aqui).
+
+== LIMITES ==
+ - El calor depende de ambiente, ventilador y carga; ninguno de los tres se mide en estas dos fuentes. La hora del dia solo
+   aproxima el ambiente, y el reposo nocturno (00-06 y 18-24 UTC, tmax p50 59.9 y 58.1 C) es mas caliente que el diurno
+   (42.9 y 42.7 C) por la carga previa, no por el residente.
+ - La inactividad por motor y la util global discrepan: en 4693 de 31039 muestras de reposo (15.1%) gpu_util_pct >= 10%
+   (otro cliente de GPU o cola de la carga previa). El subconjunto "limpio" (sin otro cliente > 2 GiB y util < 10%) tiene solo
+   592 muestras (0.8 h), de modo que no sostiene un contraste.
+ - El historial de memoria escribe por cambio o cada 10 min: 31 de 3431 intervalos pasan de 11 min; la residencia se asigna
+   a la ultima fila a <= 13 min y 19 muestras quedaron con residencia desconocida.
+ - Los p de permutacion por muestra se descartaron: el placebo dio p=0.0025 en la primera corrida (muestras vecinas
+   autocorrelacionadas). El script usa un piso de ruido por ventana.
+ - Una sola maquina, un solo residente, 8 dias de telemetria (4 boots) y 17 dias de historial de memoria.
+
+residentes_medido
