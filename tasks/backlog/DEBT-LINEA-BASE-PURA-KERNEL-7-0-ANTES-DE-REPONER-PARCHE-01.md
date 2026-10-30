@@ -41,6 +41,14 @@ Fallan: `dgx-spark-ota-update-meta`, `nvidia-spark-cloud-init`, `kernel` (se cor
 esta fase quedara en software OTA2610 con firmware anterior. Decision pendiente de Luis: actualizar firmware por el DGX Dashboard en otra ventana de reinicio, y
 medir `reloj` antes y despues, porque EC y USBPD son exactamente lo que `pstore/arranque.jsonl` (pd0, pd1, ec, bios) registra.
 
+## Linea base del reloj en estado puro (2026-10-30 16:08-16:15, kernel 7.0.0-1024, modulo de fabrica, motor parado)
+
+`bin/bb reloj --prueba` (15 s de matmul fp16): UNA corrida con la GPU totalmente libre dio 80.3 TFLOP/s, 2080 MHz, 68.6 W, `SANO`, `tflops_valido=true`
+(`reloj-puro.txt`, corrida 1). Otras seis, con `rustdesk` (200 MiB, el escritorio remoto de Luis) como unico ocupante, dieron 75.6 a 78.0 TFLOP/s a 2080 MHz y 66.4 a 69.0 W,
+`SANO`, `tflops_valido=false` por competencia (`reloj-puro-valido.txt`, a pesar del nombre del archivo: ninguna de sus seis corridas es valida). Linea base citable: 80.3 (n=1) y
+un rango 75.6-78.0 con `rustdesk` presente. Un n=1 limpio es poco; la comparacion con el modulo parchado se hace en las mismas condiciones. Algo relanzo `ai-nemotron.service` 31 s despues
+de pararlo (16:08:43 -> 16:09:14) y no se identifico quien.
+
 ## Fase 1: linea base pura (un reinicio; lo corre Luis con sudo)
 
 1. `sudo nvidia-spark-ota-check summary` (lo pide DECISIONS.md 2026-10-13 antes de quitar el hold) y pegar la salida.

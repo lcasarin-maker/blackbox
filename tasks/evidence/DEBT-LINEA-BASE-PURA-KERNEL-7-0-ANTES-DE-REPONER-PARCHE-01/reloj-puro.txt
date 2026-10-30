@@ -1,0 +1,72 @@
+# bb reloj --prueba x3, kernel 7.0.0-1024-nvidia, modulo 7.0.0-1024-nvidia/kernel/nvidia-580-open/nvidia.ko (fabrica), GPU libre (sin procesos de computo), 2026-10-30T16:08:49-06:00
+--- corrida 1
+{
+ "reloj_mediano_mhz": 2080.0,
+ "potencia_mediana_w": 68.6,
+ "muestras_con_carga": 12,
+ "sin_throttle": true,
+ "tflops": 80.3,
+ "umbral_tflops": 60.0,
+ "umbral_tflops_estado": "PROVISIONAL: corte de GX10 (hilo 387029), sin linea base sana medida en esta ATOM",
+ "estado": "SANO",
+ "tflops_valido": true,
+ "segundos": 15,
+ "calentamiento": 0
+}
+--- corrida 2
+{
+ "estado": "INDETERMINADO",
+ "motivo": "NOT_COLLECTED: 3 muestras con carga (hacen falta 8)",
+ "tflops": 66.9,
+ "tflops_valido": false,
+ "tflops_motivo": "COMPETENCIA: pid 132050 (rustdesk, 200 MiB), pid 133323 (vllm, 170 MiB), pid 133766 (VLLM::EngineCor, 23705 MiB) en la GPU durante la carga; los TFLOP/s salen bajos por competencia, no por el estado de energia",
+ "ocupantes": [
+  {
+   "pid": 132050,
+   "nombre": "rustdesk",
+   "mib": 200
+  },
+  {
+   "pid": 133323,
+   "nombre": "vllm",
+   "mib": 170
+  },
+  {
+   "pid": 133766,
+   "nombre": "VLLM::EngineCor",
+   "mib": 23705
+  }
+ ],
+ "segundos": 15,
+ "calentamiento": 0
+}
+--- corrida 3
+{
+ "reloj_mediano_mhz": 2073.0,
+ "potencia_mediana_w": 53.1,
+ "muestras_con_carga": 13,
+ "sin_throttle": true,
+ "estado": "SANO",
+ "tflops": 59.2,
+ "tflops_valido": false,
+ "tflops_motivo": "COMPETENCIA: pid 132050 (rustdesk, 200 MiB), pid 133323 (vllm, 170 MiB), pid 133766 (VLLM::EngineCor, 23705 MiB) en la GPU durante la carga; los TFLOP/s salen bajos por competencia, no por el estado de energia",
+ "ocupantes": [
+  {
+   "pid": 132050,
+   "nombre": "rustdesk",
+   "mib": 200
+  },
+  {
+   "pid": 133323,
+   "nombre": "vllm",
+   "mib": 170
+  },
+  {
+   "pid": 133766,
+   "nombre": "VLLM::EngineCor",
+   "mib": 23705
+  }
+ ],
+ "segundos": 15,
+ "calentamiento": 0
+}
