@@ -50,6 +50,33 @@ El retroceso devuelve el modulo de fabrica. Si despues la maquina aguanta, eso e
 3. Solo si la base aguanta >= 60 min con motor: reinstalar el modulo parchado SIN tocar nada mas y repetir exactamente la misma carga. Un corte aqui y ninguno en el paso 2 si aisla el parche.
 4. Si cortan los dos: la causa es kernel o firmware; no se vuelve a tocar el modulo y se abre la ficha de firmware.
 
+## Revision de registros antes del reinicio (2026-10-30 ~16:55, arranque estable sin motor)
+
+Evidencia preservada fuera del repo (el journal trae hostname y MAC): `~/.local/share/blackbox/incidentes/caidas-2026-10-30/` (journal y kernel de los 4 cortes y del arranque estable, telemetria, BERT).
+- Diferencia de logs de kernel entre las 4 caidas y el arranque estable: ninguna linea de error propia de las caidas (sin Xid, sin NVRM de error, sin AER). Lo unico comun a las 4: el modulo cargado es el compilado
+  localmente (esperado) y tres `mlx5_core ... Link down`.
+- BERT: identico byte a byte tras los 4 cortes y en los de octubre 14 y 16; solo marca "el arranque anterior acabo mal". No discrimina causa.
+- Reloj de pared: el journal pierde 20 a 26 s antes del corte (la telemetria llega mas lejos: c2 +20 s, c3 +26 s). Duracion real hasta el corte: c1 8:01, c2 >=2:33, c3 >=2:09, c4 >=1:58.
+- Watchdog de PID1: `RuntimeWatchdogSec=60` con el SBSA Generic Watchdog activo. PID1 registro lineas hasta 3 a 11 s antes de los cortes c1 y c4, asi que un atasco de PID1 de 60 s no explica esos dos;
+  `bootstatus=0` no es concluyente (no hay control positivo).
+- c1 empezo ~10 s despues de que `liberation-watchdog` parara `atlas-api` y lanzara un job de evaluacion contra el motor (GPU 8 -> 96 %). c3 y c4 coinciden con comandos mios (`disable` del temporizador a las 16:38:05;
+  parada del motor a las 16:42:26). c2 no coincide con nada mio ni del watchdog.
+
+## Donde NO estamos viendo (medido)
+
+1. Energia de la maquina entera: Linux no expone potencia de entrada, contrato USB-PD ni rieles del SoC (no hay `power_supply`, `typec` ni `usb_power_delivery`; `hwmon` solo trae temperaturas). La unica cifra de potencia es la de la GPU (8 a 9 W en reposo).
+2. EC y PD: solo registramos versiones (ec 3.5.11, pd0/pd1 FW1 5.22), ningun log de eventos.
+3. CPU: ninguna muestra en ningun instrumento; el portero no tiene CPU (ficha FEATURE-GUARDRAIL-CPU-POR-CLASE-DEL-PORTERO-01). Indicio debil en contra de saturacion sostenida: GPU a 45 C plana hasta la ultima muestra.
+4. Los ultimos 20 a 26 s del journal.
+5. Salida de kernel fuera de la maquina (ni serie ni netconsole; pstore con 0 archivos).
+6. Quien arranca o para unidades: el relanzamiento de `ai-nemotron.service` 31 s despues de pararlo sigue sin atribuir.
+
+## Instrumento armado (2026-10-30)
+
+`bb-muestreo-corte.service` (usuario, habilitado, autorizado por Luis): una linea por segundo con fsync en `incidentes/caidas-2026-10-30/muestreo-<boot>.jsonl` (CPU agregada, 3 procesos que mas consumen, carga, frecuencia,
+7 zonas termicas, GPU, PSI cpu y mem). Script suelto fuera del repo (marcador `ponytail:` dentro). NO esta probado que el fsync sobreviva a un corte duro: es justo lo que el proximo corte medira.
+Pendiente de Luis (root): `SyncIntervalSec=1s` en journald para no perder los ultimos segundos.
+
 ## Por hacer
 
 1. Estabilizar sin motor, luego reintroducir UNA unidad a la vez (primero el motor) y registrar el tiempo hasta el corte.
