@@ -99,12 +99,12 @@ el tiempo sigue al numero de archivos que habia al apagar (356222 -> 108 s en el
 arranque anterior arrastraba mas volumen que el que medi a los 34 min).
 
 Quien llena `/tmp`: tras este mismo arranque, `/tmp` tenia 877 entradas; 45 s despues tenia 275741. De ellas, **274858 estan en
-`/tmp/opencode`**: tres worktrees git de `aequitas_os` (`wt-pdf-f1`, `wt-pdf-f2`, `wt-pdf-f3`, ramas `swarm/pdf-f1..f3`, ~91.6k archivos
+`/tmp/opencode`**: tres worktrees git de `<proyecto-A>` (`wt-pdf-f1`, `wt-pdf-f2`, `wt-pdf-f3`, ramas `swarm/pdf-f1..f3`, ~91.6k archivos
 cada uno, checkout completo) creados por un enjambre de opencode (`opencode_desktop` con 133 s de vida al medir). Los tres sin cambios
 sin commitear. Cada enjambre agrega otro juego y nadie lo limpia hasta el siguiente arranque.
 
 Consecuencias:
-1. Cada arranque borra esos worktrees; el registro en `aequitas_os/.git/worktrees/` queda `prunable`. Todo trabajo sin commitear
+1. Cada arranque borra esos worktrees; el registro en `<proyecto-A>/.git/worktrees/` queda `prunable`. Todo trabajo sin commitear
    en ellos se pierde en el reinicio.
 2. El arranque lento viene del volumen de `/tmp`, no de una regla de tmpfiles ni del disco.
 
@@ -118,13 +118,13 @@ Control negativo: el `close_check` sigue fallando (userspace 73.7 s, no baja de 
 
 ## Procedimiento acordado 2026-10-27 (pendiente: el enjambre de opencode sigue trabajando; Luis no quiere tocarlo en vivo)
 
-Lanzador localizado: no es un script, es el agente de opencode que obedece `aequitas_os/docs/architecture/RETOMAR_INGESTA_UNIFICADA_20261027.md`
+Lanzador localizado: no es un script, es el agente de opencode que obedece `<proyecto-A>/docs/architecture/RETOMAR_INGESTA_UNIFICADA_20261027.md`
 (linea 48: `git worktree add /tmp/opencode/wt-pdf-fN swarm/pdf-fN`; lineas 52-53: salidas en `/tmp/opencode/cohort`) y los `run.py`/`run_v5.py` de
 `tasks/evidence/ola1-{pdf,docx}-cohort-20261027/` (`/tmp/opencode/{cohort,docx-cohort,ingest-cache,docx-cache}`).
-Cuando el enjambre pare: `mkdir -p ~/worktrees/aequitas_os` (hecho), `git worktree move /tmp/opencode/wt-pdf-fN ~/worktrees/aequitas_os/wt-pdf-fN`
+Cuando el enjambre pare: `mkdir -p ~/worktrees/<proyecto-A>` (hecho), `git worktree move /tmp/opencode/wt-pdf-fN ~/worktrees/<proyecto-A>/wt-pdf-fN`
 para N=1..3, `git worktree list` sin `prunable`, cambiar las rutas del documento y de los scripts, y al terminar `git worktree remove`.
 Hasta entonces, un reinicio borra los worktrees de /tmp: el trabajo commiteado en `swarm/pdf-f*` sobrevive, el no commiteado se pierde.
 
 ## Actualizacion 2026-10-28 13:32
 
-El enjambre de opencode termino (ultimo registro 23:21 del 2026-10-27: `Your credit balance is too low`). Los worktrees `/tmp/opencode/wt-pdf-f*` y las ramas `swarm/*` ya no existen (`git worktree list` de `aequitas_os`: solo `main` y un worktree de codex); `/tmp` baja de 298779 a 105979 entradas. El procedimiento de mudanza queda para la proxima vez que un enjambre cree worktrees en `/tmp`; la causa del arranque lento (volumen de `/tmp` al apagar) sigue vigente.
+El enjambre de opencode termino (ultimo registro 23:21 del 2026-10-27: `Your credit balance is too low`). Los worktrees `/tmp/opencode/wt-pdf-f*` y las ramas `swarm/*` ya no existen (`git worktree list` de `<proyecto-A>`: solo `main` y un worktree de codex); `/tmp` baja de 298779 a 105979 entradas. El procedimiento de mudanza queda para la proxima vez que un enjambre cree worktrees en `/tmp`; la causa del arranque lento (volumen de `/tmp` al apagar) sigue vigente.
