@@ -3,7 +3,11 @@ id: FEATURE-ARBITRO-MEMORIA-UNIFICADA-POR-PRIORIDAD-01
 kind: task
 domain: MEMORY
 title: "Arbitro de memoria unificada por prioridad: que el vigilante elija a quien ceder la memoria por rango, no por tamano (mecanismo del guardian de Athena's Engine, reubicado desde Atlas DGX-671)"
-status: open
+status: done
+closed_at: 2026-10-30
+closure_type: fixed
+reason: "vigilante_memavail.elige_culpable elige por rango ascendente (data/rangos_memoria.json, respaldo identico exigido por test, lector que nunca lanza) y dentro del rango por memoria; con un solo rango elige lo mismo que antes (test_vigilante_memavail 13/13 sin editar). Control del control: el codigo viejo detiene la suite de 9 GiB en vez del laboratorio de 1 GiB. Solo el rango: la accion es de FEATURE-ESCALERA-CEDER-CONGELAR-DETENER-VERIFICADA-01 y la declaracion de rango de Atlas en atlas-carga/1 sigue pendiente."
+evidence: {"pass": "tasks/evidence/FEATURE-ARBITRO-MEMORIA-UNIFICADA-POR-PRIORIDAD-01/pass.txt", "fail": "tasks/evidence/FEATURE-ARBITRO-MEMORIA-UNIFICADA-POR-PRIORIDAD-01/fail.txt", "e2e": "tasks/evidence/FEATURE-ARBITRO-MEMORIA-UNIFICADA-POR-PRIORIDAD-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
@@ -66,3 +70,20 @@ Que Atlas declare el rango de sus unidades en `atlas-carga/1` (`$BLACKBOX_DATA/a
 
 - Memoria de CPU y unificada visible en `memory.current`; la memoria CUDA no contabilizada por cgroup sigue fuera (`FEATURE-1358-CGROUP-*`).
 - No se leyeron DGX-673 ni DGX-674 de Atlas, ni los OOM del 2026-08-07 y 08-14.
+
+## Cierre (2026-10-30): solo el rango
+
+Hecho:
+
+- `data/rangos_memoria.json`, hermano de `data/procesos_protegidos.json`: cinco clases de menor a mayor rango, laboratorio (`bb-lab-*.scope`, 0), suites (`bb-portero-suite-*.scope`, 1), atlas (2, sin patrones), sesion (`app-*.scope`, `session-*.scope`, 3) y motor (`*vllm*`, `*docker*`, `*containerd*`, 4). Globs `fnmatch` sin distinguir mayusculas.
+- `tools/vigilante_memavail.py`: `RESPALDO_RANGOS` (identico al fichero, lo exige `test_el_respaldo_es_identico_al_fichero`), `cargar_rangos` (nunca lanza; con el fichero ausente o mal formado usa el respaldo y avisa por stderr con `logging`, igual que `cargar_protegidos`) y `elige_culpable` filtra las elegibles al rango minimo y dentro de el aplica el mismo `max` de antes. El veredicto lleva ahora el campo `rango`.
+- Decisiones documentadas en el `_doc` del fichero: una unidad que casa con varias clases toma la de MENOR rango, y una sin clase toma el rango mas bajo declarado; el rango alto se gana declarandolo, nunca por omision. El rango solo ordena: lo protegido sigue saliendo `REFUSED` si es lo elegido, como antes.
+- Pruebas: `tests/test_arbitro_prioridad_memoria.py` (24 casos, incluido el control del control contra el codigo de `c891d9a2`).
+
+NO hecho y pendiente:
+
+- **La parte de Atlas**: declarar el rango de sus unidades en `atlas-carga/1` (`$BLACKBOX_DATA/atlas_carga.json`). La clase `atlas` existe con la lista de patrones vacia porque bb no sabe los nombres de unidad de Atlas (`tools/accion_termica.py`); hasta que Atlas los declare, sus unidades caen en el rango mas bajo. Falta la ficha en Atlas y el lector en bb que lleve esa declaracion al arbitro.
+- **La accion** (ceder, congelar o detener a la elegida) depende de `FEATURE-ESCALERA-CEDER-CONGELAR-DETENER-VERIFICADA-01`. Hoy la accion sigue siendo `systemctl --user stop`, sin cambios.
+- Las pruebas son puras con fixtures; no se corrieron bajo `bb cap` ni scope transitorio (paso 3 de "Para cerrar"), porque esta ficha no ejecuta ninguna accion.
+- El interruptor `memavail` sigue en el modo en que estaba (no se toco). Si esta en `actuar`, el orden nuevo rige desde el despliegue: con `ELEGIBLES` por defecto, un `bb-lab-*` se detiene antes que una `bb-portero-suite-*` aunque tenga menos memoria.
+- Medido en `e2e.txt`: 58 de 69 unidades reales no tienen clase. Con `ELEGIBLES` por defecto no importa; si alguien ampliara `ELEGIBLES`, antes hay que declarar su rango.

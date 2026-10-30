@@ -1,0 +1,35 @@
+FEATURE-ARBITRO-MEMORIA-UNIFICADA-POR-PRIORIDAD-01 -- e2e de solo lectura (2026-10-30)
+
+Lee las unidades REALES del gestor de usuario (lee_unidades, solo lectura de /sys/fs/cgroup) y calcula el
+veredicto del arbitro sin llamar a detiene(). No se detuvo, congelo ni reinicio nada; el interruptor memavail no
+se toco.
+
+Script (scratchpad, no versionado):
+    from collections import Counter
+    from tools import vigilante_memavail as v
+    us = v.lee_unidades()
+    print("RANGOS.error =", v.RANGOS.error, "| clases:", [(c, r) for c, r, _ in v.RANGOS.clases])
+    print("unidades reales leidas:", None if us is None else len(us))
+    print("por rango:", dict(sorted(Counter(v.RANGOS.rango(u.nombre) for u in us or []).items())))
+    print("veredicto con ELEGIBLES por defecto:", {k: x for k, x in v.elige_culpable(us).items() if k != "elegibles_ilegibles"})
+    c = v.elige_culpable(us, elegibles=("*",))
+    print("veredicto con elegibles='*' (sin actuar):", c["veredicto"], c.get("rango"), (c.get("unidad") or {}).get("nombre"))
+
+$ PYTHONPATH=. python3 e2e.py
+RANGOS.error = None | clases: [('laboratorio', 0), ('suites', 1), ('atlas', 2), ('sesion', 3), ('motor', 4)]
+unidades reales leidas: 69
+por rango: {0: 58, 1: 1, 3: 10}
+veredicto con ELEGIBLES por defecto: {'veredicto': 'DETENER', 'unidad': {'nombre': 'bb-portero-suite-972652.scope', 'cgroup': '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/bb-portero-suite-972652.scope', 'memoria_bytes': 1500307456}, 'rango': 1}
+veredicto con elegibles='*' (sin actuar): DETENER 0 own-chats-sync.service
+rc=0
+
+Lectura:
+- El fichero real se leyo (RANGOS.error = None), no el respaldo.
+- 58 de 69 unidades reales no casan con ninguna clase y caen en el rango 0 (decision documentada: sin rango
+  declarado, el rango mas bajo). Con ELEGIBLES por defecto (bb-lab-*, bb-portero-suite-*) esto no cambia nada: solo
+  esas dos clases son elegibles y ambas tienen rango declarado.
+- Consecuencia medida de la decision si alguien ampliara ELEGIBLES a '*': una unidad sin declarar
+  (own-chats-sync.service) seria la primera candidata. Ampliar ELEGIBLES sigue siendo decision de Luis y antes
+  habria que declarar el rango de esas unidades.
+- Limite: estas pruebas son puras con fixtures; no se corrieron bajo `bb cap` ni scope transitorio, porque la
+  ficha solo aporta el orden de eleccion y no ejecuta ninguna accion.

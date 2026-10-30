@@ -3,8 +3,9 @@
 
 Dispara cuando MemAvailable baja de una linea dura. En `observar` registra, con el PSI full del mismo
 instante, la unidad que DETENDRIA y su origen, sin tocar nada, para medir sus falsos positivos en vivo.
-En `actuar` detiene (`systemctl --user stop`) UNA sola unidad: la de mayor `memory.current` entre las
-unidades del gestor de usuario cuyo nombre casa con `ELEGIBLES` y no casa con `PROTEGIDAS`. Antes de
+En `actuar` detiene (`systemctl --user stop`) UNA sola unidad: entre las unidades del gestor de usuario cuyo nombre
+casa con `ELEGIBLES`, la de MENOR rango (`data/rangos_memoria.json`) y, dentro de ese rango, la de mayor
+`memory.current`; si esa casa con `PROTEGIDAS`, no detiene nada (REFUSED). Antes de
 detenerla guarda el origen de sus procesos (`tools.origen_proceso.origen`, reusado).
 
 Alcance, por construccion: solo el arbol cgroup `user@UID.service` (docker y el motor vLLM viven en
@@ -103,6 +104,50 @@ PROTEGIDOS = cargar_protegidos()
 PROTEGIDAS = PROTEGIDOS.unidades
 
 
+# --- Rango de cada clase de unidad (FEATURE-ARBITRO-MEMORIA-UNIFICADA-POR-PRIORIDAD-01) ---
+# Fichero hermano de procesos_protegidos.json con la misma disciplina: `cargar_rangos` NUNCA lanza (fichero ausente o
+# mal formado: RESPALDO_RANGOS y aviso por stderr) y tests/test_arbitro_prioridad_memoria.py exige el respaldo identico.
+RANGOS_RUTA = PROTEGIDOS_RUTA.parent / "rangos_memoria.json"
+RESPALDO_RANGOS: tuple[tuple[str, int, tuple[str, ...]], ...] = (
+    ("laboratorio", 0, ("bb-lab-*.scope",)), ("suites", 1, ("bb-portero-suite-*.scope",)), ("atlas", 2, ()),
+    ("sesion", 3, ("app-*.scope", "session-*.scope")), ("motor", 4, ("*vllm*", "*docker*", "*containerd*")),
+)
+
+
+class Rangos(NamedTuple):
+    clases: tuple[tuple[str, int, tuple[str, ...]], ...]
+    error: str | None  # None = leido del fichero; si no, por que se uso RESPALDO_RANGOS
+
+    def rango(self, nombre: str) -> int:
+        """La clase de MENOR rango que casa; sin ninguna, el rango mas bajo declarado (nunca uno alto por omision)."""
+        n = nombre.lower()
+        casan = [r for _, r, pats in self.clases if any(fnmatch.fnmatchcase(n, p.lower()) for p in pats)]
+        return min(casan or [r for _, r, _ in self.clases])
+
+
+def _lee_rangos(ruta: Path) -> tuple[tuple[str, int, tuple[str, ...]], ...]:
+    crudas = [(e["clase"], e["rango"], e["patrones"]) for e in json.loads(ruta.read_text(encoding="utf-8"))["clases"]]
+    clases = tuple((c, r, tuple(pats)) for c, r, pats in crudas)
+    if not clases or not all(isinstance(c, str) and c and type(r) is int and isinstance(pats, list)
+                             and all(isinstance(p, str) and p for p in pats) for c, r, pats in crudas):
+        raise ValueError("lista vacia o clase mal formada")
+    return clases
+
+
+def cargar_rangos(ruta: Path = RANGOS_RUTA) -> Rangos:
+    """El fichero si es valido; si no, RESPALDO_RANGOS con el motivo en `error`. Nunca lanza."""
+    try:
+        return Rangos(_lee_rangos(ruta), None)
+    except Exception as exc:  # un fichero roto no puede tumbar a un vigilante: se usa el respaldo y se dice
+        error = f"{type(exc).__name__}: {exc}"
+        logging.getLogger("rangos_memoria").warning(
+            "[rangos_memoria] %s no se pudo usar (%s): se usa la copia de respaldo", ruta, error)
+        return Rangos(RESPALDO_RANGOS, error)
+
+
+RANGOS = cargar_rangos()
+
+
 class Unidad(NamedTuple):
     nombre: str
     cgroup: str
@@ -124,8 +169,9 @@ def decide(mem_avail_kb: int | None, psi_full: float | None, linea_gib: float = 
 
 
 def elige_culpable(unidades: list[Unidad] | None, elegibles: tuple[str, ...] = ELEGIBLES,
-                   protegidas: re.Pattern[str] = PROTEGIDAS) -> dict[str, Any]:
-    """Pura. La unidad elegible de mayor memoria; si es protegida, REFUSED; si no hay, NOT_COLLECTED."""
+                   protegidas: re.Pattern[str] = PROTEGIDAS, rangos: Rangos = RANGOS) -> dict[str, Any]:
+    """Pura. Entre las elegibles, las de MENOR rango y de ellas la de mayor memoria; si es protegida, REFUSED;
+    si no hay, NOT_COLLECTED. Con todas en el mismo rango elige exactamente lo que elegia antes (solo memoria)."""
     if unidades is None:
         return {"veredicto": "NOT_COLLECTED", "motivo": "cgroup del gestor de usuario ilegible"}
     todas = [u for u in unidades if any(fnmatch.fnmatchcase(u.nombre, g) for g in elegibles)]
@@ -134,11 +180,12 @@ def elige_culpable(unidades: list[Unidad] | None, elegibles: tuple[str, ...] = E
     if not casan:
         return {"veredicto": "NOT_COLLECTED", "motivo": f"ninguna unidad legible casa con {list(elegibles)}",
                 "unidades_vistas": len(unidades), "elegibles_ilegibles": ilegibles}
-    mayor = max(casan, key=lambda u: (u.memoria_bytes or 0, u.nombre))
+    menor = min(rangos.rango(u.nombre) for u in casan)
+    mayor = max((u for u in casan if rangos.rango(u.nombre) == menor), key=lambda u: (u.memoria_bytes or 0, u.nombre))
     if protegidas.search(mayor.nombre):
         return {"veredicto": "REFUSED", "motivo": f"{mayor.nombre} es protegida", "unidad": mayor._asdict(),
-                "elegibles_ilegibles": ilegibles}
-    return {"veredicto": "DETENER", "unidad": mayor._asdict(), "elegibles_ilegibles": ilegibles}
+                "rango": menor, "elegibles_ilegibles": ilegibles}
+    return {"veredicto": "DETENER", "unidad": mayor._asdict(), "rango": menor, "elegibles_ilegibles": ilegibles}
 
 
 def lee_meminfo(ruta: Path = Path("/proc/meminfo")) -> int | None:
