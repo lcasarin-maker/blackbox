@@ -1,0 +1,9 @@
+Extremo a extremo, solo lectura, 2026-10-30:
+$ python3 -I tasks/evidence/FEATURE-RESIDENTES-INACTIVOS-CONTRA-CALOR-01/mide_residentes.py   -> rc=0, unos 6 s
+Entradas reales: gpumem_historial.jsonl (3440 filas, 8 boots, 0 ilegibles) y atom_gpu_telemetry.jsonl (135908 muestras,
+4 boots, 0 ilegibles). Salida literal completa en medicion.txt.
+Resultado: residente presente en 135819 de 135889 muestras con residencia conocida; reposo del motor >= 10 min: 149 ventanas,
+31039 muestras (43.1 h), 0 sin residente. Contraste de costo del residente: NO CALCULABLE (sin control). Controles del
+instrumento: positivo activo-reposo +22.80 C en tmax (3.2x el p95 del placebo, 7.20 C); placebo por ventanas |delta| p95 7.20 C.
+No se detuvo servicio, no se uso sudo, no se cargo la GPU, no se toco el close_check.
+El script vive en tasks/evidence/, no en tools/ (no entra al inventario de SPEC).
