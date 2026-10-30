@@ -876,3 +876,90 @@ def test_captura_incidente_desactivada_por_variable_se_declara(monkeypatch: pyte
     _, salida = _main_con(monkeypatch, {"estado": "ATASCADO"}, capsys, ["--prueba"])
     assert salida["captura_incidente"] == {"estado": "could_not_run", "motivo": "desactivada por BB_RELOJ_CAPTURA=off"}
 
+
+# --- FEATURE-RELOJ-PRUEBA-CALENTAMIENTO-ANTES-DE-MEDIR-01: calentar fuera del cronometro y el A/B que decide si hace falta ---
+
+
+def _prueba_anotada(monkeypatch: pytest.MonkeyPatch, calentamiento: int | None) -> tuple[dict, list[str]]:
+    """`prueba` con torch y reloj falsos que anotan el orden: 'mm' (matmul), 'sync' y 't' (lectura del reloj)."""
+    eventos: list[str] = []
+
+    class _T:
+        def __matmul__(self, otro: object) -> "_T":
+            eventos.append("mm")
+            return self
+
+    mod = types.ModuleType("torch")
+    setattr(mod, "float16", "fp16")
+    setattr(mod, "randn", lambda *a, **k: _T())
+    setattr(mod, "cuda", types.SimpleNamespace(synchronize=lambda: eventos.append("sync")))
+    monkeypatch.setitem(sys.modules, "torch", mod)
+    respuestas: list[object] = [[], []]
+    monkeypatch.setattr(r, "ocupantes", lambda *a, **k: respuestas.pop(0))
+    reloj = [1000.0]
+
+    def ahora() -> float:
+        eventos.append("t")
+        reloj[0] += 0.1
+        return reloj[0]
+
+    monkeypatch.setattr(r, "time", types.SimpleNamespace(time=ahora))
+    monkeypatch.setattr(r, "subprocess", types.SimpleNamespace(run=lambda *a, **k: types.SimpleNamespace(stdout="2400, 60.0, 96, 0x0000000000000000\n")))
+    v = r.prueba(segundos=15) if calentamiento is None else r.prueba(segundos=15, calentamiento=calentamiento)
+    return v, eventos
+
+
+def test_calentamiento_va_antes_del_cronometro_y_fuera_del_conteo(monkeypatch: pytest.MonkeyPatch) -> None:
+    v10, ev10 = _prueba_anotada(monkeypatch, 10)
+    v0, ev0 = _prueba_anotada(monkeypatch, 0)
+    assert ev10[:12] == ["mm"] * 10 + ["sync", "t"]  # los 10 matmuls y su sincronizacion, antes de la primera lectura del reloj
+    assert ev10.count("mm") - ev0.count("mm") == 10
+    assert v10["tflops"] == v0["tflops"] > 0  # los 10 de calentamiento (0.7 TFLOP en 15 s) no entran en la cifra
+    assert v10["calentamiento"] == 10 and v0["calentamiento"] == 0
+    # control negativo: sin calentamiento el primer matmul ya corre bajo el cronometro y cuenta
+    assert ev0.index("t") < ev0.index("mm")
+
+
+def test_calentamiento_por_defecto_es_cero_mientras_el_ab_no_mida_el_sesgo(monkeypatch: pytest.MonkeyPatch) -> None:
+    v, ev = _prueba_anotada(monkeypatch, None)
+    assert v["calentamiento"] == 0 and ev.index("t") < ev.index("mm") and v["tflops_valido"] is True
+
+
+def _mide_falso(sin: list[float], con: list[float], llamadas: list[int], invalida: int | None = None):
+    colas = {0: list(sin), r.CALENTAMIENTO_MATMULS: list(con)}
+
+    def mide(calentamiento: int) -> dict:
+        llamadas.append(calentamiento)
+        if invalida is not None and len(llamadas) == invalida:
+            colas[calentamiento].pop(0)
+            return {"estado": "SANO", "tflops": 20.0, "tflops_valido": False, "tflops_motivo": "COMPETENCIA: pid 1 (vllm, 4000 MiB)"}
+        return {"estado": "SANO", "tflops": colas[calentamiento].pop(0), "tflops_valido": True}
+    return mide
+
+
+def test_calentamiento_ab_mide_el_sesgo_y_el_control_negativo_queda_dentro_de_la_dispersion() -> None:
+    llamadas: list[int] = []
+    res = r.ab(3, mide=_mide_falso([70.0, 71.0, 72.0], [76.0, 77.0, 78.0], llamadas))
+    assert res["veredicto"] == "SESGO_MEDIDO" and res["diferencia_medianas"] == 6.0 and res["rango_mayor"] == 2.0
+    assert res["sin"] == {"tflops": [70.0, 71.0, 72.0], "mediana": 71.0, "rango": 2.0} and res["could_not_run"] == 0
+    assert llamadas == [0, 10, 10, 0, 0, 10]  # el orden se alterna en cada par
+    # control negativo: los mismos brazos sin diferencia real no inventan un sesgo
+    res = r.ab(3, mide=_mide_falso([70.0, 71.0, 72.0], [72.0, 70.0, 71.5], []))
+    assert res["veredicto"] == "DENTRO_DE_LA_DISPERSION" and abs(res["diferencia_medianas"]) <= res["rango_mayor"]
+
+
+def test_calentamiento_ab_control_negativo_gpu_ocupada_o_pocas_corridas_es_could_not_run() -> None:
+    res = r.ab(3, mide=_mide_falso([70.0, 71.0, 72.0], [76.0, 77.0, 78.0], [], invalida=4))
+    assert res["veredicto"].startswith("COULD_NOT_RUN") and res["could_not_run"] == 1 and "diferencia_medianas" not in res
+    assert res["no_corrio"] == [{"corrida": 2, "brazo": "sin", "estado": "SANO", "motivo": "COMPETENCIA: pid 1 (vllm, 4000 MiB)"}]
+    res = r.ab(2, mide=_mide_falso([70.0, 71.0], [76.0, 77.0], []))
+    assert res["veredicto"].startswith("COULD_NOT_RUN: n=2") and "diferencia_medianas" not in res
+
+
+def test_calentamiento_main_ab_sale_2_sin_veredicto_y_0_con_el(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setattr(r, "prueba", lambda calentamiento=0: {"estado": "INDETERMINADO", "motivo": "CARGA_NO_PUDO_CORRER: RuntimeError: x"})
+    assert r.main(["--ab", "3"]) == 2
+    assert json.loads(capsys.readouterr().out)["could_not_run"] == 6
+    monkeypatch.setattr(r, "prueba", lambda calentamiento=0: {"estado": "SANO", "tflops": 77.0 + calentamiento / 100, "tflops_valido": True})
+    assert r.main(["--ab", "3"]) == 0
+    assert json.loads(capsys.readouterr().out)["veredicto"] == "SESGO_MEDIDO"

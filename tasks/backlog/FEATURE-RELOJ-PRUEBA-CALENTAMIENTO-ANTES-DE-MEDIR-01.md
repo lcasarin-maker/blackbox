@@ -36,3 +36,26 @@ El A/B con las cifras literales. Sin GPU libre la medicion es `could_not_run`, y
 ## Limite
 
 Hardware unico (AI TOP ATOM sana, 77.4 TFLOPS posterior al arreglo). No dice nada sobre unidades atascadas.
+
+## Avance 2026-10-30 (sigue ABIERTA: falta el A/B real)
+
+Escrito el instrumento del A/B, sin cambiar la medicion por defecto:
+
+- `prueba(segundos, calentamiento=0)`: los `calentamiento` matmuls y su `torch.cuda.synchronize()` van antes del cronometro
+  y fuera de `hechos`; la salida declara `calentamiento` (una medicion sin calentar se distingue de una calentada). Por
+  defecto 0, la de siempre: el sesgo sigue siendo hipotesis.
+- `ab(n)` y `bb reloj --ab N`: N corridas sin y N con `CALENTAMIENTO_MATMULS` (10, como el script del hilo 387029),
+  alternando el orden en cada par; mediana y rango (max - min) literales por brazo. Solo cuentan los TFLOP/s con
+  `tflops_valido: true`; una corrida con la GPU ocupada o que no pudo cargar va a `no_corrio` y el veredicto es
+  `COULD_NOT_RUN` (sale 2), nunca una cifra. Con todo valido: `SESGO_MEDIDO` si la diferencia de medianas supera el mayor
+  rango, `DENTRO_DE_LA_DISPERSION` si no. N < 3 es `COULD_NOT_RUN`.
+- Pruebas `-k calentamiento` (5), con sus controles negativos: sin calentamiento el primer matmul corre bajo el cronometro;
+  brazos sin diferencia real dan `DENTRO_DE_LA_DISPERSION`; una corrida con GPU ocupada deja el A/B en `COULD_NOT_RUN`.
+  Fallan las 5 contra el modulo anterior; la mutacion `hechos = calentamiento` (contar el calentamiento) rompe 1 y la que
+  quita la guarda de `tflops_valido` rompe 1.
+
+Lo que falta (could_not_run, no corrido por el agente: carga la GPU, prohibido en esa sesion): con la GPU libre (motor
+parado), `bb reloj --ab 5` (~2.5 min de carga). Pegar la salida aqui. Si sale `DENTRO_DE_LA_DISPERSION`, cerrar como
+`void_wontfix` con esas cifras y dejar `calentamiento=0`; si sale `SESGO_MEDIDO`, poner `calentamiento=CALENTAMIENTO_MATMULS`
+como defecto de `prueba` y cerrar `fixed`. El close_check (`-k calentamiento`) ya sale 0, pero el "porque" del close_check y el
+control negativo de esta ficha exigen el A/B real: con solo las pruebas la ficha no se cierra.
