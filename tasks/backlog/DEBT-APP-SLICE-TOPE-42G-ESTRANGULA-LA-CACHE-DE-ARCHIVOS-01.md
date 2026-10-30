@@ -39,3 +39,10 @@ Contra la medicion del 2026-10-17: entonces 99 % de reclamo directo y unos 182 G
 ~573 GiB en 24 h (~26 GB/h). La tasa baja a menos de la mitad y el reclamo directo sigue siendo la mayoria del escaneo. La
 decision de tope o `memory.high` sigue exigiendo cruzar estos minutos con los reportes de lentitud, que esta serie no trae.
 Sin cambio de limites hasta ese cruce.
+
+## Voto de Luis 2026-10-30 (boleta de /cerrar-deuda): sin cambio y seguir midiendo
+
+- **Decidido:** el tope de 42 GiB de `app.slice` no cambia. Se sigue la serie con `python3 -m tools.reclaim_ventana`.
+- **Por que:** la relectura de cache bajo de ~61 GB/h (2026-10-17) a ~26 GB/h (2026-10-26) y no hay reportes de lentitud con hora para cruzar con los minutos de reclamo directo.
+- **Descarta:** subir `MemoryMax` a ~48 GiB (sin efecto medido; los techos deben componer, `tools/presupuesto_memoria.py`); reponer `memory.high` (el 2026-10-16, a 38 GiB, coincidio con un segundo atasco a 30 s de reiniciar y se revirtio).
+- **Reabrir si:** aparecen reportes de lentitud con hora que coincidan con minutos de reclamo directo alto en la serie.
