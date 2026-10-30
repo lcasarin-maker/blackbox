@@ -8,7 +8,7 @@ severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m pytest tests/test_nvme_readonly.py -q", "expect": "exit_zero", "porque": "Prueba específica pendiente: debe distinguir errores de medio, remount read-only, consultas ilegibles y un dispositivo sano, con salida de evidencia utilizable sin escribir al medio sospechoso."}
+close_check: {"cmd": "python3 -m pytest tests/test_nvme_readonly.py -q --runxfail", "expect": "exit_zero", "porque": "Prueba específica pendiente: debe distinguir errores de medio, remount read-only, consultas ilegibles y un dispositivo sano, con salida de evidencia utilizable sin escribir al medio sospechoso. 2026-10-30: se agrego --runxfail; sin el, el selector de incidente real corria como xfail y el comando daba rc=0 con la evidencia ausente."}
 ---
 
 ## Fuente y evidencia

@@ -1,0 +1,9 @@
+# control negativo: el mismo verificador debe NEGAR cuando no corresponde (2026-10-30)
+$ BB_FORENSE_DIR=<dir con copia de hoy> bash tools/verifica_earlyoom_sin_muertes_motor.sh
+aun no: pasaron 0 dias desde 2026-10-30 10:33:37 (hacen falta 14)
+rc=2
+$ BB_FORENSE_DIR=<dir sin copia> bash tools/verifica_earlyoom_sin_muertes_motor.sh
+sin copia del archivo viejo: el cambio de earlyoom no se aplico
+rc=2
+$ journalctl -u earlyoom --since 2026-09-01 --until "2026-10-14 11:50:07" | grep -cE <patron del verificador>  # el patron SI cuenta senales reales
+3

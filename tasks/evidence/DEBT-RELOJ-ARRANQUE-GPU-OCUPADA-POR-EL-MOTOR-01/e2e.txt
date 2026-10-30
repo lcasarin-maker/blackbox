@@ -1,0 +1,36 @@
+$ tail -1 reloj_arranque.jsonl | python3 -m json.tool
+{
+    "ts": "2026-10-28T00:23:52.971468+00:00",
+    "modo": "observar",
+    "boot_id": "1ac9b61a-ee13-49e0-b299-f56412e60d27",
+    "estado": "SANO",
+    "reloj_mediano_mhz": 2067.0,
+    "tflops": 63.3,
+    "tflops_valido": false,
+    "motivo": null,
+    "ocupantes": [
+        {
+            "pid": 3220,
+            "nombre": "python3",
+            "mib": 4522
+        },
+        {
+            "pid": 4924,
+            "nombre": "vllm",
+            "mib": 170
+        },
+        {
+            "pid": 16098,
+            "nombre": "VLLM::EngineCor",
+            "mib": 31015
+        }
+    ],
+    "tflops_motivo": "COMPETENCIA: pid 3220 (python3, 4522 MiB), pid 4924 (vllm, 170 MiB), pid 16098 (VLLM::EngineCor, 31015 MiB) en la GPU durante la carga; los TFLOP/s salen bajos por competencia, no por el estado de energia"
+}
+$ systemctl --user show bb-reloj-arranque.service -p Result -p ExecMainStatus -p ExecMainExitTimestamp
+Result=success
+ExecMainExitTimestamp=Tue 2026-10-27 18:23:53 CST
+ExecMainStatus=0
+$ git merge-base --is-ancestor 30aaa9fe HEAD && echo en-master
+en-master
+LIMITE: un solo arranque real (boot 1ac9b61a, 2026-10-28) con el motor y Atlas ya en la GPU; el orden motor/temporizador no se midio en mas boots. La fila trae estado SANO con reloj_mediano_mhz numerico y tflops_valido false, que es lo que la ficha esperaba.
