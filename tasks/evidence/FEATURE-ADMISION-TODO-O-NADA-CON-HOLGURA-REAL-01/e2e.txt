@@ -1,0 +1,48 @@
+$ python3 -m pytest -v tests/test_admision_holgura_real.py   # (a) ventana 2026-10-21 16:36:27, (b) ventana sana, (c) la puerta actual admite (a)
+tests/test_admision_holgura_real.py::test_a_ventana_21_oct_la_puerta_nueva_niega_la_suite_que_la_actual_admitio PASSED
+tests/test_admision_holgura_real.py::test_a_actuar_mantiene_congelada_la_suite_que_no_cabe PASSED
+tests/test_admision_holgura_real.py::test_c_con_la_puerta_actual_la_ventana_21_oct_admite_la_suite[off] PASSED
+tests/test_admision_holgura_real.py::test_c_con_la_puerta_actual_la_ventana_21_oct_admite_la_suite[observar] PASSED
+tests/test_admision_holgura_real.py::test_c_la_ventana_16_oct_reproduce_lo_que_hizo_la_puerta_actual PASSED
+tests/test_admision_holgura_real.py::test_b_ventana_sana_la_puerta_nueva_admite PASSED
+tests/test_admision_holgura_real.py::test_ventana_16_oct_sin_anon_medido_actuar_no_niega_y_observar_lo_declara PASSED
+tests/test_admision_holgura_real.py::test_ventana_16_oct_el_veredicto_depende_de_un_numero_que_no_se_midio[37269116-esperar] PASSED
+tests/test_admision_holgura_real.py::test_ventana_16_oct_el_veredicto_depende_de_un_numero_que_no_se_midio[17511219-descongelar] PASSED
+tests/test_admision_holgura_real.py::test_off_no_cambia_ni_decide_ni_las_filas PASSED
+tests/test_admision_holgura_real.py::test_observar_registra_habria_negado_con_lo_necesario_y_lo_disponible_una_vez PASSED
+tests/test_admision_holgura_real.py::test_turno_en_observar_registra_habria_negado_y_concede PASSED
+tests/test_admision_holgura_real.py::test_interruptor_ausente_ilegible_o_desconocido_vale_off[None] PASSED
+tests/test_admision_holgura_real.py::test_interruptor_ausente_ilegible_o_desconocido_vale_off[{no es json] PASSED
+tests/test_admision_holgura_real.py::test_interruptor_ausente_ilegible_o_desconocido_vale_off[{"modos": {"portero_admision": "a_medias"}}] PASSED
+tests/test_admision_holgura_real.py::test_interruptor_ausente_ilegible_o_desconocido_vale_off[{"modos": {"portero": "actuar"}}] PASSED
+tests/test_admision_holgura_real.py::test_control_interruptor_legible_si_cambia_de_modo PASSED
+tests/test_admision_holgura_real.py::test_lee_no_recuperable_suma_anon_y_shmem_y_sin_uno_es_none PASSED
+tests/test_admision_holgura_real.py::test_lee_estado_solo_mide_anon_shmem_fuera_de_off[off-None] PASSED
+tests/test_admision_holgura_real.py::test_lee_estado_solo_mide_anon_shmem_fuera_de_off[observar-27268340] PASSED
+tests/test_admision_holgura_real.py::test_lee_estado_solo_mide_anon_shmem_fuera_de_off[actuar-27268340] PASSED
+============================== 21 passed in 0.11s ==============================
+
+$ python3 -m pytest -q tests/test_portero.py tests/test_portero_clase_trabajo_ajeno.py tests/test_portero_caracterizacion_suite.py   # con el interruptor en off nada cambia
+94 passed in 1.91s
+
+# mutantes (control negativo de las pruebas), ver mutantes.txt:
+Control negativo de las pruebas (2026-10-30). Instrumento: mutantes.py.txt (en esta carpeta).
+$ python3 tasks/evidence/FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01/mutantes.py.txt; echo "rc=$?"
+== sin mutar
+test_a: PASA
+test_c off: PASA
+test_b: PASA
+== mutante 1: la puerta nueva nunca niega (admision_niega -> None)
+test_a: FALLA (AssertionError)
+test_a congelada: FALLA (AssertionError)
+== mutante 2: la puerta nueva niega en todo modo (ignora el interruptor)
+test_c off: FALLA (AssertionError)
+test_c observar: FALLA (AssertionError)
+== mutante 3: la puerta nueva niega siempre, quepa o no
+test_b: FALLA (AssertionError)
+rc=0
+
+Lectura: (a) cae si la puerta no niega; (c) cae si la puerta niega fuera de `actuar`; (b) cae si la puerta niega
+aunque la clase quepa. Ninguna de las tres pruebas pasa por construccion.
+
+LIMITES: 1) la ventana del 2026-10-16 no tiene anon/shmem en la serie (NOT_COLLECTED); por voto de Luis 2026-10-30 la reproduccion aceptada es la del 2026-10-21 16:36:27. 2) portero_admision sigue en off: nunca se ha visto actuar en vivo. 3) Los colapsos del 22, 24 y 29-oct (anon 9-19 GiB) no los vio ninguna puerta de app.slice.

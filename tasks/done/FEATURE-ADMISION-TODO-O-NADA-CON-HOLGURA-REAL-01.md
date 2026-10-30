@@ -3,12 +3,16 @@ id: FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01
 kind: task
 domain: MEMORY
 title: "Admision de todo o nada con la holgura real: el portero y los arranques pesados niegan con ambos numeros cuando el espacio no existe (idea de la carga de modelos de Athena's Engine)"
-status: open
+status: done
+closed_at: 2026-10-30
+closure_type: fixed
+reason: "Puerta de todo o nada tras el interruptor portero_admision (off por defecto): en la ventana real del 2026-10-21 16:36:27 niega la suite que la puerta actual admitio (necesario 20971520 kB, disponible 16772852 kB) y admite la ventana sana; 21 pruebas con 3 mutantes muertos. Limite: la ventana del 16-oct no tiene anon medido, nunca se ha visto actuar en vivo, y los colapsos del 22, 24 y 29-oct no los vio ninguna puerta."
+evidence: {"pass": "tasks/evidence/FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01/pass.txt", "fail": "tasks/evidence/FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01/fail.txt", "e2e": "tasks/evidence/FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-30
-close_check: {"cmd": "python3 -m pytest -q tests/test_admision_holgura_real.py", "expect": "exit_zero", "porque": "Especificacion pendiente: el archivo de pruebas no existe hoy (rc=4 medido el 2026-10-30), asi que falla. Pasa solo cuando la prueba reproduzca la ventana del 2026-10-16 (10:34:57) y la puerta nueva niegue la suite que la puerta actual dejo pasar, con control negativo de una ventana sana que la puerta nueva admita."}
+close_check: {"cmd": "python3 -m pytest -q tests/test_admision_holgura_real.py", "expect": "exit_zero", "porque": "Pasa cuando la prueba reproduzca una ventana REAL con anon medido en que la puerta actual (memory.current) admitio la suite y un colapso siguio, y la puerta nueva la niegue, con el control negativo de una ventana sana que admita. Enmienda 2026-10-30 por voto de Luis: la ventana pedida originalmente (2026-10-16 10:34:57) no tiene anon ni shmem en la serie (NOT_COLLECTED), asi que la reproduccion aceptada es la del 2026-10-21 16:36:27 (necesario 20971520 kB, disponible 16772852 kB, colapso a las 16:38:03). El comando no cambia."}
 ---
 
 ## Idea de origen y hueco propio
@@ -40,3 +44,10 @@ Medido (`tasks/evidence/FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01/medicio
 Hecho: interruptor `portero_admision` en `tools/portero.py` (`off` por defecto y ante lo ilegible; `observar` registra `habria_negado` con `necesario_kb` y `disponible_kb`; `actuar` congela o mantiene congelada la suite que no cabe). `tests/test_admision_holgura_real.py`: (a) la ventana del 21-oct con fixture de filas reales; (b) ventana sana real (2026-10-17 21:17:24) que admite; (c) la puerta actual admite el caso (a) y reproduce el `descongelar` del 16-oct; mutantes en `mutantes.txt`. El close_check sale rc=0.
 
 Pendiente de Luis: el `porque` del close_check pide negar la suite del 16-oct, y ese dato no existe. Opciones: aceptar la ventana del 21-oct como reproduccion (y reescribir el `porque`), o dejarla abierta hasta tener registro de `observar`. Poner `portero_admision` en `observar` en `interruptores.json` (la ficha dice "arrancando en observar") tambien es suyo. El punto 3 (condicion previa al arranque del motor vLLM) no se toco.
+
+## Voto de Luis 2026-10-30 (boleta de /cerrar-deuda): aceptar la ventana del 21-oct y cerrar
+
+- **Decidido:** se acepta la ventana del 2026-10-21 16:36:27 como reproduccion y se enmienda el `porque` del close_check (el comando no cambia); la ficha se cierra.
+- **Por que:** el dato de anon/shmem del 16-oct no existe en la serie; las dos mediciones de ese dia dan veredictos opuestos y elegir una seria inventar el dato.
+- **Descarta:** dejarla abierta hasta tener 7 dias de `observar` (alternativa recomendada por el orquestador); cerrar como no se hara.
+- **Queda abierto fuera de esta ficha:** `portero_admision` sigue en `off` (ponerlo en `observar` en `interruptores.json` es de Luis); el punto 3 (condicion previa al arranque del motor vLLM) no se hizo; los colapsos del 22, 24 y 29-oct, con anon de 9 a 19 GiB, no los vio ninguna puerta de `app.slice`.
