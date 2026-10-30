@@ -1,0 +1,5 @@
+$ grep -qx residentes_medido tasks/evidence/FEATURE-RESIDENTES-INACTIVOS-CONTRA-CALOR-01/medicion.txt; echo "rc=$?"
+rc=2
+(2026-10-30, antes de este trabajo: el directorio y medicion.txt no existian; grep sale 2 por archivo ausente.)
+Control negativo del comando (literal en medicion.txt, "Comando 2"): sobre un archivo cuya unica linea es
+'NO cerrado: falta residentes_medido', el mismo grep -qx sale rc=1; sobre una frase que contiene el centinela, rc=1.
