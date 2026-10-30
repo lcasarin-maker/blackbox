@@ -60,3 +60,10 @@ Cada una exige una prueba con control negativo antes de tocar el watchdog, porqu
 - **Lo que NO se sabe:** si `memory.high` CAUSO el atasco o solo lo agravo (el primer colapso, 10:37, ocurrio sin `memory.high`, con el slice en ~38 GiB y los eventos `high` en 0). Lo medido es la asociacion: la tasa de eventos `high` fue ~100 veces mayor que en el resto del dia exactamente durante el atasco.
 - **Accion (reversible, sin sudo):** `systemctl --user set-property --runtime app.slice MemoryHigh=infinity` y el drop-in persistente reescrito neutro (`MemoryHigh=infinity`, con el motivo en el propio archivo; copia del anterior en `/tmp/claude-1000/memory-high.conf.antes`). Verificado: `memory.high = max` y el contador `high` dejo de crecer. El techo duro `MemoryMax=42G` sigue. Suspension con caducidad 2026-10-23; para reponer hay que medir antes (por ejemplo con un valor mas alto y el atasco registrado).
 - **Los 8 OOM kills de `app.slice` desde las 11:28 NO son de la maquina:** son procesos python de 1 GiB (`anon-rss` 1045888-1046240 kB) en scopes con tope propio de 1 GiB (`Memory cgroup out of memory`), es decir, los topes de los scripts de analisis de esta sesion; no hay victimas de otras sesiones.
+
+## Voto de Luis 2026-10-30 (boleta de /cerrar-deuda): mantener `observar`
+
+- **Decidido:** `atasco_confinado` sigue en `observar`. No pasa a `actuar` hasta que exista una accion de alivio (rango de `FEATURE-ARBITRO-MEMORIA-UNIFICADA-POR-PRIORIDAD-01` y la escalera de `FEATURE-ESCALERA-CEDER-CONGELAR-DETENER-VERIFICADA-01`).
+- **Por que:** sin alivio, `actuar` solo retrasa el reinicio (el escalon de `bb-usable` mato 3 procesos de 0.4 GiB sin bajar el PSI) y 1200 s (`CONFINADO_MAX_S`) no esta medido.
+- **Descarta:** pasar a `actuar` ya (hasta 20 min de maquina inservible en vez de 6 si el atasco no se resuelve solo); cerrar como no se hara (cada atasco de `app.slice` reinicia la maquina con el motor dentro).
+- **Efecto en esta ficha:** su `close_check` exige `"atasco_confinado": "actuar"` y por eso sigue fallando; queda bloqueada por las dos fichas de arriba.
