@@ -34,6 +34,22 @@ La causa. Cuatro cortes con el modulo parchado y ninguno con el de fabrica es co
 El 7.0 con el modulo parchado nunca se probo antes (solo compilado). Candidatos: el modulo parchado (fallo de contabilidad dmem al liberar o asignar memoria unificada), el arranque del motor
 de 40 GB, o la combinacion.
 
+## Corte de la causa: lo que el retroceso NO determina (2026-10-30, tras retroceder el modulo)
+
+El retroceso devuelve el modulo de fabrica. Si despues la maquina aguanta, eso es una correlacion mas, no el aislamiento de la causa: cambiaron a la vez el modulo, el kernel en uso
+(7.0.0-1024 desde el arranque de las 15:30), el estado de las unidades y yo mismo (comandos en vivo). Otros candidatos que NO se descartaron:
+- Firmware: `nvidia-spark-ota-check` del 2026-10-30 marca `SOCFW`, `EC` y `USBPD` por detras de OTA2610 (apt no los actualiza). Los cortes duros sin mensaje de kernel son la firma de un reset
+  de SoC, EC o PD, no de un panic de kernel (no hay panic, no hay volcado de kdump, el BERT solo trae el encabezado).
+- Cortes duros previos al parche en el 7.0: el repo documenta el colapso del 2026-10-16 y hay BERT del 14 y 16 de octubre (kernel 6.17).
+
+## Procedimiento que SI determina la causa (una variable por vez, con instrumento que sobreviva al corte)
+
+1. Instrumento primero: hoy el corte duro no deja nada. Antes de repetir la prueba, armar una captura que lo vea (consola serie `ttyS0` ya esta en la linea de comandos; netconsole hacia otra maquina;
+   telemetria de EC/PD con `fwupdmgr`), y registrar el resultado con su control negativo.
+2. Linea base de fabrica CON motor: reponer las 22 unidades de una en una, el motor primero, y medir el tiempo hasta el corte. Si el modulo de fabrica tambien corta, el parche queda exonerado.
+3. Solo si la base aguanta >= 60 min con motor: reinstalar el modulo parchado SIN tocar nada mas y repetir exactamente la misma carga. Un corte aqui y ninguno en el paso 2 si aisla el parche.
+4. Si cortan los dos: la causa es kernel o firmware; no se vuelve a tocar el modulo y se abre la ficha de firmware.
+
 ## Por hacer
 
 1. Estabilizar sin motor, luego reintroducir UNA unidad a la vez (primero el motor) y registrar el tiempo hasta el corte.
