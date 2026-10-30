@@ -29,3 +29,7 @@ vivos (`454119`, `3053639`, `2469924`) da `MemoryMax=37580963840` (35 GiB), y el
 con el archivo. Un scope inexistente da `DropInPaths=` vacio (control negativo). Esto contradice el comentario del propio archivo
 ("solo afecta a scopes NUEVOS"): el `daemon-reload` reaplica los topes a los scopes en marcha. Consumo en ese momento: 4.9, 0.1 y
 18.9 GiB de 35, `oom_kill` 0 en los tres. Punto 1 de esta ficha: hecho. Quedan los puntos 3 (laboratorio OCI, ventana del motor) y 4.
+
+## Anadido 2026-10-30 (/cerrar-deuda): script sellado de root para el bug-report de NVIDIA
+
+`FEATURE-RELOJ-CAPTURA-DE-INCIDENTE-ANTES-DE-QUITAR-AC-01` (cerrada) deja escrito y probado sin root `adopted/root-scripts/nvidia-bug-report.sh` y su entrada en el manifiesto propuesto, pero NO instalado: hasta que Luis lo instale, la pieza `nvidia_bug_report` de la captura sale `could_not_run NO_INSTALADO` (la captura nunca sale COMPLETA). Pasos exactos en `adopted/pendiente-de-despliegue/LEEME.txt`: `python3 -m tools.bb_root_manifest --propose` desde el checkout principal y el `sudo sh -c '...'` que imprime en su ultima linea. Lo ejecuta Luis con sudo.

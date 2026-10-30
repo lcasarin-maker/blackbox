@@ -8,7 +8,7 @@ severity: P3
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-26
-close_check: {"cmd": "python3 -m pytest -q tests/test_reloj_atascado.py -k \"calentamiento\"", "expect": "exit_zero", "porque": "Especificacion pendiente, no prueba existente: exige que los TFLOP/s excluyan la fase de calentamiento y que la ficha cargue la medicion A/B real (con y sin calentamiento) o declare could_not_run."}
+close_check: {"cmd": "python3 -m pytest -q tests/test_reloj_atascado.py -k \"calentamiento\" && grep -qx ab_calentamiento_medido tasks/evidence/FEATURE-RELOJ-PRUEBA-CALENTAMIENTO-ANTES-DE-MEDIR-01/ab.txt", "expect": "exit_zero", "porque": "Especificacion pendiente, no prueba existente: exige que los TFLOP/s excluyan la fase de calentamiento y que la ficha cargue la medicion A/B real (con y sin calentamiento) o declare could_not_run. 2026-10-30: las pruebas de calentamiento ya pasan (el codigo existe) pero la ficha exige el A/B real con la GPU libre; se exige tambien ab.txt con la salida literal de `bb reloj --ab 5` y la linea ab_calentamiento_medido."}
 ---
 
 ## Origen
