@@ -8,7 +8,7 @@ severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
-close_check: {"cmd": "python3 -m pytest tests/test_workload_restart_containment.py -q", "expect": "exit_zero", "porque": "Prueba pendiente: debe limitar la reincidencia de un workload identificado y permitir recuperación conservando datos, sin bloquear un reinicio sano ni atribuir todo reboot a OOM."}
+close_check: {"cmd": "python3 -m pytest tests/test_workload_restart_containment.py -q --runxfail", "expect": "exit_zero", "porque": "Prueba pendiente: debe limitar la reincidencia de un workload identificado y permitir recuperación conservando datos, sin bloquear un reinicio sano ni atribuir todo reboot a OOM. 2026-10-30: se agrego --runxfail; sin el, el ciclo real de reinicio corria como xfail y el comando daba rc=0 con el ensayo ausente."}
 ---
 
 ## Evidencia y límites

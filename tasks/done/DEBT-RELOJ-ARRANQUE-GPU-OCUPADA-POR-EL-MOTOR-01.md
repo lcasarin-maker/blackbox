@@ -3,7 +3,11 @@ id: DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01
 kind: task
 domain: GPU
 title: "bb reloj --arranque: la guarda de GPU ocupada puede dejar ciego el detector de arranque si el motor arranca antes"
-status: open
+status: done
+closed_at: 2026-10-30
+closure_type: verified
+reason: "El arranque real del 2026-10-28 (boot 1ac9b61a) con el motor y Atlas en la GPU dio estado SANO por reloj (2067 MHz) con tflops_valido false; unidad Result=success; el close_check falla sobre la fila vieja GPU_OCUPADA (rc=1). Limite: un solo boot."
+evidence: {"pass": "tasks/evidence/DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01/pass.txt", "fail": "tasks/evidence/DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01/fail.txt", "e2e": "tasks/evidence/DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01/e2e.txt"}
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT

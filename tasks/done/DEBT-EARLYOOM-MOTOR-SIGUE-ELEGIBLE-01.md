@@ -3,7 +3,11 @@ id: DEBT-EARLYOOM-MOTOR-SIGUE-ELEGIBLE-01
 kind: task
 domain: MEMORY
 title: "earlyoom sigue pudiendo elegir al motor vLLM: --avoid solo resta 300 puntos"
-status: open
+status: done
+closed_at: 2026-10-30
+closure_type: verified
+reason: "Pasaron 15 dias desde el cambio de earlyoom (2026-10-14 11:50:07) con 0 senales a VLLM::EngineCor o vllm; el verificador dice aun no con una copia de hoy (rc=2) y cuenta 3 senales reales antes del cambio. Limite: el contenedor del motor sigue con oom_score_adj 500."
+evidence: {"pass": "tasks/evidence/DEBT-EARLYOOM-MOTOR-SIGUE-ELEGIBLE-01/pass.txt", "fail": "tasks/evidence/DEBT-EARLYOOM-MOTOR-SIGUE-ELEGIBLE-01/fail.txt", "e2e": "tasks/evidence/DEBT-EARLYOOM-MOTOR-SIGUE-ELEGIBLE-01/e2e.txt"}
 severity: P3
 origin: asserted
 satd_family: BLIND_INSTRUMENT

@@ -1,0 +1,8 @@
+$ journalctl -u earlyoom --since "2026-10-14 11:50:07" | grep -cE "to process.*(VLLM|vllm)"   # patron laxo, mismo resultado
+0
+$ ls -l --time-style=full-iso /var/lib/blackbox/etc_default_earlyoom.*  # fecha del cambio; hay una segunda copia del 2026-10-16 (ampliacion de --avoid, conserva vllm|VLLM)
+2026-10-14 11:50:07.469544742 /var/lib/blackbox/etc_default_earlyoom.7e8a44b63203bbcab11613f82f32fbf565dbc789efe395b944965a5a2e3abcbc
+2026-10-16 22:18:08.064886418 /var/lib/blackbox/etc_default_earlyoom.89fe78dade9afa4d8df1e51627d119b145102c3a21dd140a0f4a44f8b4b13c8e
+$ journalctl -u earlyoom --since "2026-10-14 11:50:07" | grep -cE "Started earlyoom"   # reinicios por reboot o config, el servicio volvio a subir cada vez
+11
+LIMITE: oom_score_adj del contenedor del motor sigue en 500 (/srv/ai/gateway/main.py:112, puesto a proposito); cero senales en 15 dias no prueba que --avoid baste bajo una presion mayor.
