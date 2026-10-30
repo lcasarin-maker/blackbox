@@ -1,0 +1,38 @@
+FEATURE-MAPA-DE-MEMORIA-FORENSE-AL-ACTUAR-01 -- ANTES del cambio (2026-10-30), HEAD fe42e66670107f3f13d5cd447438af0ea41e907a (master)
+
+1) close_check
+$ python3 -m pytest -q tests/test_mapa_memoria_al_actuar.py
+ERROR: file or directory not found: tests/test_mapa_memoria_al_actuar.py
+
+
+no tests ran in 0.00s
+rc=4
+
+2) suite relacionada (los ficheros pedidos que existen; tests/test_bb_usable_caracterizacion.py anadido por cubrir bin/bb-usable)
+$ python3 -m pytest -q -p no:cacheprovider tests/test_vigilante_memavail.py tests/test_arbitro_prioridad_memoria.py tests/test_portero.py tests/test_portero_clase_trabajo_ajeno.py tests/test_portero_caracterizacion_suite.py tests/test_admision_holgura_real.py tests/test_bb_usable.py tests/test_atasco_confinado.py tests/test_escalon_app_slice.py tests/test_origen_proceso.py tests/test_bb_usable_caracterizacion.py
+280 passed in 17.65s
+rc=0
+
+3) las pruebas (a) del archivo nuevo, corridas contra el codigo de master (copia temporal en el scratchpad con
+   tools/vigilante_memavail.py, tools/portero.py y bin/bb-usable sacados con `git show fe42e666...:<ruta>`; el resto,
+   incluido tools/mapa_memoria.py, del arbol nuevo)
+$ grep -c mapa_memoria tools/vigilante_memavail.py tools/portero.py bin/bb-usable
+tools/vigilante_memavail.py:0
+bin/bb-usable:0
+tools/portero.py:0
+$ python3 -m pytest -q -p no:cacheprovider tests/test_mapa_memoria_al_actuar.py -k "test_a_ or test_b_ or test_d_"
+FAILED tests/test_mapa_memoria_al_actuar.py::test_a_memavail_al_detener_deja_el_mapa_en_su_fila
+FAILED tests/test_mapa_memoria_al_actuar.py::test_a_memavail_en_observar_deja_el_mapa_y_no_detiene
+FAILED tests/test_mapa_memoria_al_actuar.py::test_a_portero_al_congelar_deja_el_mapa_con_la_unidad_congelada
+FAILED tests/test_mapa_memoria_al_actuar.py::test_a_portero_al_negar_en_observar_deja_el_mapa
+FAILED tests/test_mapa_memoria_al_actuar.py::test_a_bb_usable_al_matar_deja_el_mapa_con_el_scope_del_objetivo
+FAILED tests/test_mapa_memoria_al_actuar.py::test_d_memavail_con_el_mapa_roto_decide_y_detiene_igual
+FAILED tests/test_mapa_memoria_al_actuar.py::test_d_portero_con_el_mapa_roto_congela_igual
+FAILED tests/test_mapa_memoria_al_actuar.py::test_d_bb_usable_con_el_mapa_roto_mata_igual_y_guarda_el_enfriamiento[revienta]
+FAILED tests/test_mapa_memoria_al_actuar.py::test_d_bb_usable_con_el_mapa_roto_mata_igual_y_guarda_el_enfriamiento[no_cargado]
+9 failed, 6 passed, 15 deselected in 0.37s
+rc=1
+
+Las cinco (a) fallan contra master: ninguna guardia deja `mapa_memoria`. Las (b) pasan tambien contra master (el codigo
+viejo nunca escribe mapa): contra master no discriminan; su control negativo son los mutantes de e2e.txt. El mismo
+control queda dentro del archivo como prueba permanente: test_f_control_del_control_el_codigo_viejo_no_deja_mapa.
