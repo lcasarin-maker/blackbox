@@ -1,0 +1,10 @@
+{
+  "_doc": "Rango de cada clase de unidad para el arbitro de memoria (FEATURE-ARBITRO-MEMORIA-UNIFICADA-POR-PRIORIDAD-01). Fichero hermano de data/procesos_protegidos.json, con la misma disciplina: tools/vigilante_memavail.py lo lee con una copia de respaldo (RESPALDO_RANGOS) que tests/test_arbitro_prioridad_memoria.py exige identica a este fichero, y con el fichero ausente o mal formado usa el respaldo y lo avisa por stderr. Uso: vigilante_memavail.elige_culpable elige entre las unidades elegibles la de MENOR rango y, dentro del mismo rango, la de mayor memory.current. 'patrones': globs fnmatch sin distinguir mayusculas contra el nombre de la unidad systemd. Una unidad que casa con varias clases toma la de MENOR rango, y una que no casa con ninguna toma el rango mas bajo declarado: el rango alto se gana declarandolo sin ambiguedad, nunca por omision. El rango solo ordena, no protege: lo protegido sigue en data/procesos_protegidos.json y sale REFUSED si es lo elegido. Que hacer con la elegida (ceder, congelar, detener) es de FEATURE-ESCALERA-CEDER-CONGELAR-DETENER-VERIFICADA-01.",
+  "clases": [
+    {"clase": "laboratorio", "rango": 0, "patrones": ["bb-lab-*.scope"], "motivo": "scopes de laboratorio de bb: desechables por construccion"},
+    {"clase": "suites", "rango": 1, "patrones": ["bb-portero-suite-*.scope"], "motivo": "suites de pruebas bajo el portero: reintentables (voto de Luis 2026-10-14)"},
+    {"clase": "atlas", "rango": 2, "patrones": [], "motivo": "jobs de Atlas: bb no sabe sus nombres de unidad; Atlas los declarara en atlas-carga/1 (pendiente). Hasta entonces sus unidades caen en el rango mas bajo"},
+    {"clase": "sesion", "rango": 3, "patrones": ["app-*.scope", "session-*.scope"], "motivo": "sesion interactiva: escritorio, aplicaciones y login"},
+    {"clase": "motor", "rango": 4, "patrones": ["*vllm*", "*docker*", "*containerd*"], "motivo": "el motor de inferencia y su contenedor"}
+  ]
+}
