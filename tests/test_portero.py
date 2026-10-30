@@ -622,6 +622,7 @@ def test_real_carrera_pid_que_sale_al_adoptar_el_rc_dice_lo_que_systemd_dejo(tmp
 
 
 @pytest.mark.integration
+@pytest.mark.mutates_real_source  # ponytail: carril serial solo mientras escriba el drop-in real en ~/.config/systemd/user y recargue systemd; cuando use un directorio de unidades aislado, volver a xdist
 @pytest.mark.skipif(not _delegado(), reason="sin cgroup v2 delegado al usuario (systemd --user)")
 def test_real_dropin_por_prefijo_topa_el_scope_al_crearse_y_no_a_otro():
     tag = uuid.uuid4().hex[:8]
