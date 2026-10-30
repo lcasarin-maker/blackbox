@@ -1,4 +1,4 @@
-"""`tools/bb_root_manifest.py`, el sudoers y los once scripts root, con sus controles negativos.
+"""`tools/bb_root_manifest.py`, el sudoers y los doce scripts root, con sus controles negativos.
 
 Lo que exige root de verdad (install -o root, visudo sobre /etc/sudoers.d, la regex de
 sudo casando argv) se simula: el comando de instalacion se ejecuta con las rutas
@@ -49,10 +49,11 @@ def test_control_negativo_editar_un_script_cambia_la_propuesta(src: Path):
     assert bm.serializar(bm.proponer(src)) != bm.PROPUESTA.read_bytes()
 
 
-def test_la_propuesta_cubre_los_once_scripts_y_nada_mas():
+def test_la_propuesta_cubre_los_doce_scripts_y_nada_mas():
     m = bm.proponer(bm.SRC_DIR)
     assert sorted(m) == ["apt-guardia-instalar", "arranque-forense", "audit-rules-leer", "crontabs-leer", "dmem-tope-aplicar",
-                         "dmem-tope-quitar", "dmidecode-sistema", "drm-modeset-leer", "earlyoom-proteger", "pstore-preparar", "watchdog-propietario"]
+                         "dmem-tope-quitar", "dmidecode-sistema", "drm-modeset-leer", "earlyoom-proteger", "nvidia-bug-report", "pstore-preparar",
+                         "watchdog-propietario"]
     assert sorted(str(e["file"]) for e in m.values()) == [p.name for p in SCRIPTS]
     for e in m.values():
         assert e["sha256"] == hashlib.sha256((bm.SRC_DIR / str(e["file"])).read_bytes()).hexdigest()
@@ -203,7 +204,7 @@ def _check(inst: Path, src: Path, runner: Path) -> int:
 def test_check_limpio_sale_0_e_imprime_los_ceros(tmp_path: Path, src: Path, capsys: pytest.CaptureFixture[str]):
     inst, runner = _instalado(tmp_path, src)
     assert _check(inst, src, runner) == 0
-    assert "aprobados iguales: 11, cambios: 0, could_not_run: 0" in capsys.readouterr().out
+    assert "aprobados iguales: 12, cambios: 0, could_not_run: 0" in capsys.readouterr().out
 
 
 def test_check_control_negativo_un_script_editado_se_reporta(
@@ -213,7 +214,7 @@ def test_check_control_negativo_un_script_editado_se_reporta(
         f.write("echo extra\n")
     assert _check(inst, src, runner) == 1
     out = capsys.readouterr().out
-    assert "cambiado desde la aprobacion: crontabs-leer" in out and "aprobados iguales: 10" in out
+    assert "cambiado desde la aprobacion: crontabs-leer" in out and "aprobados iguales: 11" in out
 
 
 def test_check_reporta_ausente_sin_aprobar_y_runner_cambiado(
@@ -259,7 +260,13 @@ REDIR = re.compile(r">>?\s*(&\d|[^\s;|&)]+)")
 # Escrituras declaradas, por script: solo a las rutas de su propia carpeta (variables fijadas arriba del script).
 ESCRITURA_OK = {"pstore-preparar.sh": re.compile(r'"\$(destino|padre)"'),
                 "arranque-forense.sh": re.compile(r'"\$(base|dest)[/"]'),
-                "dmem-tope-quitar.sh": re.compile(r'^rm -f -- "\$previo"$')}
+                "dmem-tope-quitar.sh": re.compile(r'^rm -f -- "\$previo"$'),
+                # nvidia-bug-report: cada escritura, linea entera, sobre sus dos nombres fijos en "$base" (nada mas cabe).
+                "nvidia-bug-report.sh": re.compile(
+                    r'^\s*(?:install -d -m 0755 -o root -g root -- "\$base"'
+                    r'|rm -f -- "\$base/nvidia-bug-report\.nuevo\.log" "\$base/nvidia-bug-report\.nuevo\.log\.gz"'
+                    r'|mv -f -- "\$base/nvidia-bug-report\.nuevo\.log\.gz" "\$base/nvidia-bug-report\.log\.gz"'
+                    r'|chmod 0644 -- "\$base/nvidia-bug-report\.log\.gz")$')}
 REDIR_OK = {"arranque-forense.sh": re.compile(r'^"\$(base|dest)/[A-Za-z0-9._-]+"$'),
             "earlyoom-proteger.sh": re.compile(r'^"\$tmp"$'),
             "dmem-tope-aplicar.sh": re.compile(r'^"\$(?:motor|usuario)/dmem\.max"$|^"\$base/dmem-tope-previo\.json"$'),
@@ -400,8 +407,8 @@ def hallazgos(nombre: str, texto: str) -> list[str]:
     return fuera
 
 
-def test_los_once_scripts_solo_escriben_lo_declarado_sin_red_ni_argumentos():
-    assert len(SCRIPTS) == 11
+def test_los_doce_scripts_solo_escriben_lo_declarado_sin_red_ni_argumentos():
+    assert len(SCRIPTS) == 12
     fuera: list[str] = []
     for p in SCRIPTS:
         fuera += hallazgos(p.name, p.read_text(encoding="utf-8"))
@@ -585,6 +592,72 @@ def test_arranque_forense_control_negativo_base_de_otro_dueno_aborta(tmp_path: P
     base.mkdir()
     r = _correr(s, str(UID))
     assert r.returncode == 3 and "no es de root" in r.stderr and not (base / "pstore").exists()
+
+
+# --- nvidia-bug-report: su clase estatica y ejecutado con un nvidia-bug-report.sh sustituido ---------
+# FEATURE-RELOJ-CAPTURA-DE-INCIDENTE-ANTES-DE-QUITAR-AC-01. El stub hace lo que hace el real con --output-file F: escribe F.gz.
+
+BUG_REPORT = "nvidia-bug-report.sh"
+STUB_BUG_REPORT = 'echo llamado > "$(dirname "$2")/../llamado"\nprintf "log" > "$2.gz"\n'
+
+
+@pytest.mark.parametrize("linea", [
+    'rm -f -- "$base/../../etc/passwd"', 'mv -f -- "$base/nvidia-bug-report.nuevo.log.gz" /etc/x',
+    'chmod 0644 -- "$base/otro"', 'install -m 0644 /etc/shadow "$base/x"', 'chmod 0644 -- "$base/nvidia-bug-report.log.gz" /etc/x',
+    'echo x > "$base/nvidia-bug-report.log.gz"',
+])
+def test_control_negativo_nvidia_bug_report_fuera_de_sus_dos_nombres_se_caza(linea: str):
+    assert hallazgos(BUG_REPORT, "#!/bin/bash\n# Desbloquea: X-01.\nset -euo pipefail\n" + linea + "\n"), linea
+
+
+def _bug_report(tmp_path: Path, stub: str = STUB_BUG_REPORT, uid_root: int = UID, crear: bool = True) -> tuple[subprocess.CompletedProcess[str], Path]:
+    base = tmp_path / "varlib" / "blackbox"
+    base.parent.mkdir(exist_ok=True)
+    if crear:
+        base.mkdir(mode=0o755)
+    r = _con_stub(tmp_path, BUG_REPORT, (("base=/var/lib/blackbox", f"base={base}"), ('!= "0" ]]', f'!= "{uid_root}" ]]'),
+                                         ("-o root -g root", f"-o {UID}")), {BUG_REPORT: stub})
+    return r, base
+
+
+def test_nvidia_bug_report_deja_el_gz_0644_sin_restos(tmp_path: Path):
+    r, base = _bug_report(tmp_path)
+    assert r.returncode == 0, r.stdout
+    gz = base / "nvidia-bug-report.log.gz"
+    assert gz.read_text(encoding="utf-8") == "log" and stat.S_IMODE(gz.stat().st_mode) == 0o644
+    assert sorted(x.name for x in base.iterdir()) == ["nvidia-bug-report.log.gz"]
+
+
+def test_nvidia_bug_report_control_negativo_si_falla_no_deja_gz(tmp_path: Path):
+    r, base = _bug_report(tmp_path, stub="exit 1\n")
+    assert r.returncode != 0 and not (base / "nvidia-bug-report.log.gz").exists()
+
+
+def test_nvidia_bug_report_control_negativo_symlink_en_la_salida_no_se_sigue(tmp_path: Path):
+    r, base = _bug_report(tmp_path)
+    assert r.returncode == 0, r.stdout  # control: la primera corrida escribe
+    blanco = tmp_path / "blanco.txt"
+    blanco.write_text("intacto", encoding="utf-8")
+    (base / "nvidia-bug-report.log.gz").unlink()
+    (base / "nvidia-bug-report.log.gz").symlink_to(blanco)
+    (base.parent / "llamado").unlink()
+    r, _ = _bug_report(tmp_path, crear=False)
+    assert r.returncode == 3 and "symlink" in r.stdout and blanco.read_text(encoding="utf-8") == "intacto"
+    assert not (base.parent / "llamado").exists()
+
+
+def test_nvidia_bug_report_control_negativo_base_de_otro_dueno_aborta_sin_llamar(tmp_path: Path):
+    r, base = _bug_report(tmp_path, uid_root=UID + 1)
+    assert r.returncode == 3 and "no es de root" in r.stdout and not (base.parent / "llamado").exists()
+
+
+def test_nvidia_bug_report_control_negativo_base_escribible_aborta_sin_llamar(tmp_path: Path):
+    base = tmp_path / "varlib" / "blackbox"
+    base.parent.mkdir()
+    base.mkdir()
+    base.chmod(0o777)
+    r, _ = _bug_report(tmp_path, crear=False)
+    assert r.returncode == 3 and "escribible" in r.stdout and not (base.parent / "llamado").exists()
 
 
 # --- earlyoom-proteger: su clase estatica, con controles negativos ------------------------

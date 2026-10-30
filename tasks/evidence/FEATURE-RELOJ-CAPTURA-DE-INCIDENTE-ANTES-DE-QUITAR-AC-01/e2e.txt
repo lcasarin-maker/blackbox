@@ -1,0 +1,91 @@
+FEATURE-RELOJ-CAPTURA-DE-INCIDENTE-ANTES-DE-QUITAR-AC-01 -- evidencia extremo a extremo (2026-10-30, sin root, sin carga de GPU)
+
+== 1. Captura real en esta maquina, SIN root ==
+Script de evidencia (fuera del repo): llama r.inicio(episodios=<scratch>) y r.captura_incidente(desde, base=<scratch>/incidentes,
+ejecuta=<envoltorio>) con la telemetria real (solo lectura), /etc/bb-root-run/manifest.json real (solo lectura) y
+/var/lib/blackbox real (solo lectura). El envoltorio deja pasar nvidia-smi y BLOQUEA sudo y systemd-run (rc 126): esta e2e no
+ejecuta scripts de root ni lanza unidades. Antes:
+$ ls -la --time-style=full-iso /var/lib/blackbox/dmidecode-t45.txt ; uptime -s
+-rw-r--r-- 1 root root 24967 2026-10-27 18:18:34.434534416 -0600 /var/lib/blackbox/dmidecode-t45.txt
+2026-10-27 18:17:34
+(la copia de arranque-forense es de ESTE arranque: se adjunta sin pedir root)
+Salida (valores literales; reformateada a una pieza por linea, rutas del scratchpad sustituidas por <scratch>, y los dos
+motivos de la linea final abreviados con "..." porque estan completos en el JSON):
+inicio() -> null
+{
+ "carpeta": "<scratch>/e2e/incidentes/reloj-1ac9b61a-ee13-49e0-b299-f56412e60d27",
+ "boot_id": "1ac9b61a-ee13-49e0-b299-f56412e60d27",
+ "creada": "2026-10-30T17:03:44+00:00",
+ "actualizada": "2026-10-30T17:03:44+00:00",
+ "piezas": {
+  "nvidia_smi_q": {"estado": "ok", "archivo": "nvidia-smi-q.txt"},
+  "telemetria_2h": {"estado": "ok", "archivo": "telemetria.jsonl", "filas": 1408, "desde": "2026-10-30T15:03:44+00:00"},
+  "telemetria_transicion": {"estado": "could_not_run", "motivo": "NOT_COLLECTED: inicio() no encontro en la telemetria el paso sano->atascado (sin ultima_sana/primera_atascada)"},
+  "dmidecode_t45": {"estado": "ok", "archivo": "dmidecode-t45.txt"},
+  "nvidia_bug_report": {"estado": "could_not_run", "motivo": "NO_INSTALADO: el script sellado `nvidia-bug-report` no esta en /etc/bb-root-run/manifest.json; Luis, desde el checkout principal: `python3 -m tools.bb_root_manifest --propose`, leer nvidia-bug-report.sh en la salida y correr el `sudo sh -c '...'` de su ultima linea (adopted/pendiente-de-despliegue/LEEME.txt)"}
+ },
+ "completa": false,
+ "could_not_run": 2,
+ "faltan": ["telemetria_transicion", "nvidia_bug_report"]
+}
+bb reloj: captura de incidente en <scratch>/e2e/incidentes/reloj-1ac9b61a-ee13-49e0-b299-f56412e60d27: INCOMPLETA, could_not_run=2 de 5 -- telemetria_transicion: NOT_COLLECTED: ...; nvidia_bug_report: NO_INSTALADO: ...
+llamadas externas: ['nvidia-smi']
+ficheros: ['captura.json', 'dmidecode-t45.txt', 'nvidia-smi-q.txt', 'telemetria.jsonl']
+real 0m1.279s
+Lectura: con la GPU SANA hoy no hay paso sano->atascado en la telemetria (inicio() = null), asi que la pieza de transicion es
+could_not_run, y el bug-report es NO_INSTALADO hasta que Luis apruebe el script sellado. could_not_run=2: este NO es un
+reporte limpio; la captura real de un incidente queda INCOMPLETA mientras falte el paso de root.
+
+== 2. Las pruebas nuevas FALLAN contra el modulo viejo (git show HEAD:tools/reloj_atascado.py en un arbol temporal) ==
+FAILED tests/test_reloj_atascado.py::test_captura_incidente_atascado_arma_la_carpeta_y_el_bug_report_en_curso_no_es_completa
+FAILED tests/test_reloj_atascado.py::test_captura_incidente_control_negativo_sano_o_indeterminado_no_crea_carpeta[SANO]
+FAILED tests/test_reloj_atascado.py::test_captura_incidente_control_negativo_sano_o_indeterminado_no_crea_carpeta[INDETERMINADO]
+FAILED tests/test_reloj_atascado.py::test_captura_incidente_control_negativo_bug_report_no_instalado_es_could_not_run
+FAILED tests/test_reloj_atascado.py::test_captura_incidente_control_negativo_una_pieza_que_falla_nunca_sale_completa[nvidia_smi_q]
+FAILED tests/test_reloj_atascado.py::test_captura_incidente_control_negativo_una_pieza_que_falla_nunca_sale_completa[telemetria_2h]
+FAILED tests/test_reloj_atascado.py::test_captura_incidente_control_negativo_una_pieza_que_falla_nunca_sale_completa[dmidecode_t45]
+FAILED tests/test_reloj_atascado.py::test_captura_incidente_control_negativo_una_pieza_que_falla_nunca_sale_completa[nvidia_bug_report]
+FAILED tests/test_reloj_atascado.py::test_captura_incidente_t45_solo_de_este_arranque
+FAILED tests/test_reloj_atascado.py::test_captura_incidente_telemetria_2h_y_la_transicion_con_sus_filas
+FAILED tests/test_reloj_atascado.py::test_captura_incidente_segunda_corrida_no_repite_lo_ok_ni_el_bug_report_en_curso
+FAILED tests/test_reloj_atascado.py::test_captura_incidente_completador_que_falla_o_gz_viejo_no_cierra_la_pieza
+FAILED tests/test_reloj_atascado.py::test_captura_incidente_evento_de_arranque_lleva_ruta_y_faltantes
+FAILED tests/test_reloj_atascado.py::test_captura_incidente_desactivada_por_variable_se_declara
+(los dos casos SANO/INDETERMINADO fallan contra el viejo porque el modulo no tiene `captura_incidente` que sustituir; su
+control negativo real es la mutacion `captura_en_todo_estado` de abajo)
+
+== 3. Controles negativos por mutacion sobre el modulo NUEVO (una regla rota cada vez; -k "captura_incidente or calentamiento") ==
+mutacion siempre_completa: rc=1 :: 8 failed, 11 passed, 64 deselected in 0.72s
+mutacion captura_en_todo_estado: rc=1 :: 2 failed, 17 passed, 64 deselected in 0.55s
+mutacion t45_de_cualquier_arranque: rc=1 :: 1 failed, 18 passed, 64 deselected in 0.57s
+mutacion calentamiento_contado: rc=1 :: 1 failed, 18 passed, 64 deselected in 0.56s
+mutacion ab_sin_guarda_de_validez: rc=1 :: 1 failed, 18 passed, 64 deselected in 0.60s
+sin mutacion (control): rc=0 :: 19 passed, 64 deselected in 0.49s
+(siempre_completa: `faltan = []`; captura_en_todo_estado: `if True:` en vez de `if atascado:`; t45_de_cualquier_arranque:
+la copia de dmidecode vale aunque sea de otro arranque)
+
+== 4. El script sellado nuevo (adopted/root-scripts/nvidia-bug-report.sh), probado sin root con un nvidia-bug-report.sh sustituido ==
+$ python3 -m pytest -q -p no:cacheprovider tests/test_bb_root_manifest.py -k "bug_report or doce" -rA
+PASSED tests/test_bb_root_manifest.py::test_la_propuesta_cubre_los_doce_scripts_y_nada_mas
+PASSED tests/test_bb_root_manifest.py::test_los_doce_scripts_solo_escriben_lo_declarado_sin_red_ni_argumentos
+PASSED tests/test_bb_root_manifest.py::test_control_negativo_nvidia_bug_report_fuera_de_sus_dos_nombres_se_caza[rm -f -- "$base/../../etc/passwd"]
+PASSED tests/test_bb_root_manifest.py::test_control_negativo_nvidia_bug_report_fuera_de_sus_dos_nombres_se_caza[mv -f -- "$base/nvidia-bug-report.nuevo.log.gz" /etc/x]
+PASSED tests/test_bb_root_manifest.py::test_control_negativo_nvidia_bug_report_fuera_de_sus_dos_nombres_se_caza[chmod 0644 -- "$base/otro"]
+PASSED tests/test_bb_root_manifest.py::test_control_negativo_nvidia_bug_report_fuera_de_sus_dos_nombres_se_caza[install -m 0644 /etc/shadow "$base/x"]
+PASSED tests/test_bb_root_manifest.py::test_control_negativo_nvidia_bug_report_fuera_de_sus_dos_nombres_se_caza[chmod 0644 -- "$base/nvidia-bug-report.log.gz" /etc/x]
+PASSED tests/test_bb_root_manifest.py::test_control_negativo_nvidia_bug_report_fuera_de_sus_dos_nombres_se_caza[echo x > "$base/nvidia-bug-report.log.gz"]
+PASSED tests/test_bb_root_manifest.py::test_nvidia_bug_report_deja_el_gz_0644_sin_restos
+PASSED tests/test_bb_root_manifest.py::test_nvidia_bug_report_control_negativo_si_falla_no_deja_gz
+PASSED tests/test_bb_root_manifest.py::test_nvidia_bug_report_control_negativo_symlink_en_la_salida_no_se_sigue
+PASSED tests/test_bb_root_manifest.py::test_nvidia_bug_report_control_negativo_base_de_otro_dueno_aborta_sin_llamar
+PASSED tests/test_bb_root_manifest.py::test_nvidia_bug_report_control_negativo_base_escribible_aborta_sin_llamar
+13 passed, 190 deselected in 0.29s
+Control negativo de la clase estatica (quitar la entrada declarada del script en ESCRITURA_OK):
+con clase declarada: []
+sin clase declarada (control negativo): 4 hallazgos
+
+== 5. Lo que NO corrio (could_not_run de esta evidencia) ==
+- `sudo -n bb-root-run nvidia-bug-report` real: el script no esta aprobado en /etc/bb-root-run/manifest.json (paso de root de
+  Luis, adopted/pendiente-de-despliegue/LEEME.txt). Ni su duracion ni su carga sobre una GPU atascada estan medidas.
+- `systemd-run --user` real lanzando el completador: no se lanzo (se bloqueo en la e2e); solo esta probado con falsos.
+- Un ATASCADO real: la GPU esta sana; el camino ATASCADO esta probado con falsos de subprocess y con la e2e de arriba.

@@ -8,6 +8,7 @@ import re
 import subprocess
 import sys
 import types
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,15 @@ from test_bb_root_manifest import _forense  # reuso: arranque-forense sellado co
 from tools import bb_root_run as rr
 from tools import incident_report
 from tools import reloj_atascado as r
+
+_CAPTURA_REAL = getattr(r, "captura_incidente", None)  # getattr: contra un modulo sin captura falla cada prueba, no la recoleccion
+
+
+@pytest.fixture(autouse=True)
+def _sin_captura_real(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Hermetico: ningun ATASCADO de estas pruebas pide root ni lanza unidades de verdad. Las pruebas `captura_incidente`
+    quitan la variable y entregan rutas y un `ejecuta` falso."""
+    monkeypatch.setenv("BB_RELOJ_CAPTURA", "off")
 
 
 def _f(util: float, clk: float, w: float = 15.0, thr: object = "0x0000000000000000", ts: str = "2026-10-12T22:00:00+00:00") -> dict:
@@ -665,3 +675,203 @@ def test_motor_la_fila_de_arranque_registra_ocupantes_y_tflops_valido(monkeypatc
     with real.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps({**fila, "ts": "2026-10-28T02:05:00+00:00"}) + "\n")
     assert _pasa_el_close_check(real)
+
+
+# --- FEATURE-RELOJ-CAPTURA-DE-INCIDENTE-ANTES-DE-QUITAR-AC-01: la captura que NVIDIA pide antes de quitar la corriente ---
+
+AHORA = 1793361600.0  # 2026-10-30T12:00:00Z
+DATMAN = "Handle 0x0045, DMI type 45\nFirmware Component Name: PD Firmware\nFirmware Version: PD0 1.2.3\n"
+ROOT_RUN = ["sudo", "-n", "bb-root-run"]
+
+
+def _iso(segundos_antes: float) -> str:
+    return datetime.fromtimestamp(AHORA - segundos_antes, timezone.utc).isoformat()
+
+
+class _Maquina:
+    """`ejecuta` falso con el estado que tocaria la maquina real: forense/ (lo escribe root) y el manifiesto instalado."""
+
+    def __init__(self, tmp: Path, sellados: tuple[str, ...] = ("arranque-forense", "nvidia-bug-report"), t45_fresca: bool = True) -> None:
+        tmp.mkdir(parents=True, exist_ok=True)
+        self.tmp, self.forense, self.manifiesto = tmp, tmp / "forense", tmp / "manifest.json"
+        self.forense.mkdir()
+        self.manifiesto.write_text(json.dumps({k: {"file": f"{k}.sh"} for k in sellados}), encoding="utf-8")
+        self.llamadas: list[list[str]] = []
+        self.rc = {"nvidia-smi": 0, "arranque-forense": 0, "systemd-run": 0, "nvidia-bug-report": 0}
+        self.escribe_gz = True
+        if t45_fresca:
+            self.t45(AHORA - 60)
+        self.telemetria = tmp / "datos" / "atom_gpu_telemetry.jsonl"
+        self.telemetria.parent.mkdir()
+        filas = [_f(96, 2400, ts=_iso(5 * 3600 + 30)), _f(96, 660, ts=_iso(5 * 3600 - 30)), _f(96, 660, ts=_iso(3 * 3600)),
+                 _f(96, 660, ts=_iso(3600)), _f(96, 660, ts=_iso(5)), _f(96, 660, ts="2026-10-30T11:30:00")]  # la ultima, sin zona
+        self.telemetria.write_text("".join(json.dumps(x) + "\n" for x in filas), encoding="utf-8")
+        self.desde = {"ultima_sana": _iso(5 * 3600 + 30), "primera_atascada": _iso(5 * 3600 - 30)}
+
+    def t45(self, mtime: float) -> None:
+        f = self.forense / "dmidecode-t45.txt"
+        f.write_text(DATMAN, encoding="utf-8")
+        os.utime(f, (mtime, mtime))
+
+    def __call__(self, argv: list[str], timeout: int) -> tuple[int, str, str]:
+        self.llamadas.append(argv)
+        clave = argv[3] if argv[:3] == ROOT_RUN else argv[0]
+        rc = self.rc[clave]
+        if clave == "nvidia-smi":
+            return rc, ("==============NVSMI LOG==============\nClocks\n    SM : 663 MHz\n" if rc == 0 else ""), ("" if rc == 0 else "nvidia-smi: not found")
+        if clave == "arranque-forense" and rc == 0:
+            self.t45(AHORA)
+        if clave == "nvidia-bug-report" and rc == 0 and self.escribe_gz:
+            (self.forense / r.BUG_REPORT_GZ).write_bytes(b"gz")
+        return rc, "", ("" if rc == 0 else f"{clave} fallo")
+
+    def captura(self, desde: dict | None = None, ahora: float = AHORA) -> dict:
+        return _CAPTURA_REAL(self.desde if desde is None else desde, base=self.tmp / "incidentes", telemetria=self.telemetria,
+                             forense=self.forense, manifiesto=self.manifiesto, ejecuta=self, ahora=lambda: ahora,
+                             boot_id="b00t", arranque_s=AHORA - 3600 * 6)
+
+    def nombres(self) -> list[str]:
+        return [x[3] if x[:3] == ROOT_RUN else x[0] for x in self.llamadas]
+
+
+def _main_captura(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], m: _Maquina, estado: str) -> tuple[int, dict, str]:
+    monkeypatch.delenv("BB_RELOJ_CAPTURA")
+    monkeypatch.setattr(r, "captura_incidente", lambda desde: m.captura(desde))
+    monkeypatch.setattr(r, "prueba", lambda: {"estado": estado, "reloj_mediano_mhz": 660.0})
+    monkeypatch.setattr(r, "inicio", lambda: m.desde)
+    monkeypatch.setenv("BB_ARRANQUE_JSONL", "/nonexistent-bb-test/arranque.jsonl")
+    codigo = r.main(["--prueba"])
+    out = capsys.readouterr()
+    return codigo, json.loads(out.out), out.err
+
+
+def test_captura_incidente_atascado_arma_la_carpeta_y_el_bug_report_en_curso_no_es_completa(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    m = _Maquina(tmp_path)
+    codigo, salida, err = _main_captura(monkeypatch, capsys, m, "ATASCADO")
+    c = salida["captura_incidente"]
+    carpeta = tmp_path / "incidentes" / "reloj-b00t"
+    assert codigo == 1 and c["carpeta"] == str(carpeta)
+    assert (carpeta / "nvidia-smi-q.txt").read_text(encoding="utf-8").startswith("==============NVSMI LOG")
+    assert (carpeta / "dmidecode-t45.txt").read_text(encoding="utf-8") == DATMAN
+    assert {k: c["piezas"][k]["estado"] for k in r.PIEZAS} == {"nvidia_smi_q": "ok", "telemetria_2h": "ok", "telemetria_transicion": "ok",
+                                                              "dmidecode_t45": "ok", "nvidia_bug_report": "could_not_run"}
+    # el bug-report sigue corriendo: la captura NO se presenta como completa y la linea final lo dice
+    assert c["completa"] is False and c["could_not_run"] == 1 and c["faltan"] == ["nvidia_bug_report"]
+    assert c["piezas"]["nvidia_bug_report"]["motivo"].startswith("EN_CURSO")
+    assert f"captura de incidente en {carpeta}: INCOMPLETA, could_not_run=1 de 5 -- nvidia_bug_report: EN_CURSO" in err
+    assert json.loads((carpeta / "captura.json").read_text(encoding="utf-8"))["completa"] is False
+    lanzado = [x for x in m.llamadas if x[0] == "systemd-run"]
+    assert len(lanzado) == 1 and lanzado[0][-2:] == ["--completar-bug-report", str(carpeta)] and "--user" in lanzado[0]
+    assert all(x[:3] == ROOT_RUN for x in m.llamadas if x[0] == "sudo")  # root solo via bb-root-run
+    # el completador cierra la pieza: solo entonces la captura es completa
+    assert r.completar_bug_report(carpeta, forense=m.forense, ejecuta=m, ahora=lambda: AHORA + 1) == 0
+    final = json.loads((carpeta / "captura.json").read_text(encoding="utf-8"))
+    assert final["completa"] is True and final["could_not_run"] == 0 and final["faltan"] == []
+    assert (carpeta / r.BUG_REPORT_GZ).read_bytes() == b"gz" and ROOT_RUN + ["nvidia-bug-report"] in m.llamadas
+
+
+@pytest.mark.parametrize("estado", ["SANO", "INDETERMINADO"])
+def test_captura_incidente_control_negativo_sano_o_indeterminado_no_crea_carpeta(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], estado: str) -> None:
+    m = _Maquina(tmp_path)
+    _, salida, err = _main_captura(monkeypatch, capsys, m, estado)
+    assert "captura_incidente" not in salida and "captura de incidente" not in err
+    assert not (tmp_path / "incidentes").exists() and m.llamadas == []
+
+
+def test_captura_incidente_control_negativo_bug_report_no_instalado_es_could_not_run(tmp_path: Path) -> None:
+    m = _Maquina(tmp_path, sellados=("arranque-forense",))
+    c = m.captura()
+    pieza = c["piezas"]["nvidia_bug_report"]
+    assert (tmp_path / "incidentes" / "reloj-b00t" / "nvidia-smi-q.txt").exists()  # la carpeta existe con lo demas
+    assert pieza["estado"] == "could_not_run" and pieza["motivo"].startswith("NO_INSTALADO") and "bb_root_manifest --propose" in pieza["motivo"]
+    assert c["completa"] is False and c["could_not_run"] == 1 and c["faltan"] == ["nvidia_bug_report"]
+    assert "systemd-run" not in m.nombres()
+
+
+@pytest.mark.parametrize("pieza", ["nvidia_smi_q", "telemetria_2h", "dmidecode_t45", "nvidia_bug_report"])
+def test_captura_incidente_control_negativo_una_pieza_que_falla_nunca_sale_completa(tmp_path: Path, pieza: str) -> None:
+    m = _Maquina(tmp_path, t45_fresca=pieza != "dmidecode_t45")
+    if pieza == "nvidia_smi_q":
+        m.rc["nvidia-smi"] = 127
+    elif pieza == "telemetria_2h":
+        m.telemetria.unlink()
+    elif pieza == "dmidecode_t45":
+        m.rc["arranque-forense"] = 1
+    else:
+        m.rc["systemd-run"] = 1
+    c = m.captura()
+    assert c["completa"] is False and pieza in c["faltan"] and c["piezas"][pieza]["estado"] == "could_not_run"
+    assert c["could_not_run"] == len(c["faltan"])
+    if pieza == "nvidia_bug_report":
+        assert c["piezas"][pieza]["motivo"].startswith("systemd-run rc=1")
+
+
+def test_captura_incidente_t45_solo_de_este_arranque(tmp_path: Path) -> None:
+    m = _Maquina(tmp_path / "a")
+    assert m.captura()["piezas"]["dmidecode_t45"]["estado"] == "ok" and "arranque-forense" not in m.nombres()  # fresca: sin root
+    otra = _Maquina(tmp_path / "b", t45_fresca=False)
+    otra.t45(AHORA - 3600 * 7)  # copia de un arranque anterior
+    otra.rc["arranque-forense"] = 1
+    p = otra.captura()["piezas"]["dmidecode_t45"]
+    assert p["estado"] == "could_not_run" and "anterior a este arranque" in p["motivo"] and "rc=1" in p["motivo"]
+    assert not (tmp_path / "b" / "incidentes" / "reloj-b00t" / "dmidecode-t45.txt").exists()
+    otra.rc["arranque-forense"] = 0  # control: el script sellado la refresca y entonces si se adjunta
+    assert otra.captura()["piezas"]["dmidecode_t45"]["estado"] == "ok"
+
+
+def test_captura_incidente_telemetria_2h_y_la_transicion_con_sus_filas(tmp_path: Path) -> None:
+    m = _Maquina(tmp_path / "a")
+    c = m.captura()
+    filas = [json.loads(x) for x in (tmp_path / "a" / "incidentes" / "reloj-b00t" / "telemetria.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert c["piezas"]["telemetria_2h"]["filas"] == 2 and c["piezas"]["telemetria_transicion"]["filas"] == 2
+    assert [x["ts"] for x in filas] == [_iso(5 * 3600 + 30), _iso(5 * 3600 - 30), _iso(3600), _iso(5)]  # ni la de -3 h ni la sin zona
+    # control negativo: sin el paso sano->atascado la pieza de transicion no se da por cubierta
+    p = _Maquina(tmp_path / "b").captura(desde={})["piezas"]
+    assert p["telemetria_2h"]["estado"] == "ok" and p["telemetria_transicion"]["estado"] == "could_not_run"
+    assert p["telemetria_transicion"]["motivo"].startswith("NOT_COLLECTED")
+
+
+def test_captura_incidente_segunda_corrida_no_repite_lo_ok_ni_el_bug_report_en_curso(tmp_path: Path) -> None:
+    m = _Maquina(tmp_path)
+    m.rc["nvidia-smi"] = 127
+    m.captura()
+    m.rc["nvidia-smi"] = 0
+    m.llamadas.clear()
+    c = m.captura(ahora=AHORA + 60)
+    assert m.nombres() == ["nvidia-smi"] and c["piezas"]["nvidia_smi_q"]["estado"] == "ok"  # solo lo que faltaba
+    m.llamadas.clear()
+    c = m.captura(ahora=AHORA + r.EN_CURSO_MAX_S + 1)  # el completador murio sin cerrar: se vuelve a pedir
+    assert m.nombres() == ["systemd-run"] and c["completa"] is False
+
+
+def test_captura_incidente_completador_que_falla_o_gz_viejo_no_cierra_la_pieza(tmp_path: Path) -> None:
+    m = _Maquina(tmp_path)
+    carpeta = Path(m.captura()["carpeta"])
+    m.rc["nvidia-bug-report"] = 3  # p. ej. bb-root-run rechaza un hash cambiado
+    assert r.completar_bug_report(carpeta, forense=m.forense, ejecuta=m, ahora=lambda: AHORA + 1) == 2
+    d = json.loads((carpeta / "captura.json").read_text(encoding="utf-8"))
+    assert d["completa"] is False and "rc=3" in d["piezas"]["nvidia_bug_report"]["motivo"]
+    assert (carpeta / "nvidia-bug-report.salida.txt").read_text(encoding="utf-8") == "nvidia-bug-report fallo"
+    gz = m.forense / r.BUG_REPORT_GZ  # rc 0 pero el .gz es de otra corrida: no se adjunta
+    gz.write_bytes(b"viejo")
+    os.utime(gz, (AHORA - 600, AHORA - 600))
+    m.rc["nvidia-bug-report"], m.escribe_gz = 0, False
+    assert r.completar_bug_report(carpeta, forense=m.forense, ejecuta=m, ahora=lambda: AHORA + 1) == 2
+    assert not (carpeta / r.BUG_REPORT_GZ).exists()
+    m.escribe_gz = True  # control: la corrida que si deja su .gz cierra la pieza
+    assert r.completar_bug_report(carpeta, forense=m.forense, ejecuta=m, ahora=lambda: AHORA + 1) == 0
+
+
+def test_captura_incidente_evento_de_arranque_lleva_ruta_y_faltantes() -> None:
+    c = {"carpeta": "/x/reloj-b", "completa": False, "could_not_run": 1, "faltan": ["nvidia_bug_report"], "piezas": {}}
+    ev = r.evento_arranque({"estado": "ATASCADO", "captura_incidente": c}, "b")
+    assert ev["captura_incidente"] == {"carpeta": "/x/reloj-b", "completa": False, "could_not_run": 1, "faltan": ["nvidia_bug_report"]}
+    assert "captura_incidente" not in r.evento_arranque({"estado": "SANO"}, "b")
+
+
+def test_captura_incidente_desactivada_por_variable_se_declara(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    _, salida = _main_con(monkeypatch, {"estado": "ATASCADO"}, capsys, ["--prueba"])
+    assert salida["captura_incidente"] == {"estado": "could_not_run", "motivo": "desactivada por BB_RELOJ_CAPTURA=off"}
+
