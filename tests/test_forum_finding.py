@@ -295,8 +295,8 @@ def test_traza_real_con_peticion_servida_por_cpu_es_un_bloqueo_con_hallazgo_y_si
 
 
 def test_traza_real_con_bloqueo_sin_hallazgos_por_peticion_no_se_da_por_buena(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    # ponytail: analyze_file no puede devolver block sin findings (block se construye a partir de ellos); el guardia es defensivo y
-    # solo se alcanza sustituyendo el colaborador, no la funcion bajo prueba. Techo: un cambio de contrato de provider_trace.
+    # ponytail: solo se alcanza sustituyendo el colaborador, hasta que cambie el contrato de provider_trace (analyze_file no devuelve
+    # block sin findings, porque block se construye a partir de ellos; el guardia es defensivo y no la funcion bajo prueba).
     monkeypatch.setattr(provider_trace, "analyze_file", lambda _p: {"status": "block", "findings": [], "unknowns": [], "could_not_run_count": 0})
     r = ff.evaluate(FALLBACK, _traza(tmp_path, TRAZA_SANA))
     assert r["status"] == "unknown" and r["reason"] == "real provider trace reports a block without request-level findings"

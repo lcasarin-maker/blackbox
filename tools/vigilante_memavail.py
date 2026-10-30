@@ -179,8 +179,8 @@ def lee_unidades(raiz: Path | None = None) -> list[Unidad] | None:
 
 def origen_de(cgroup: str) -> list[dict[str, Any]] | str:
     """Origen de hasta ORIGEN_MAX_PIDS procesos de la unidad, antes de detenerla."""
-    # ponytail: sin plazo propio; leer cmdline toma mmap_lock y bajo estancamiento puede tardar -- si el
-    # registro de `observar` muestra vueltas lentas, correrlo con plazo como hace bin/bb-usable.
+    # ponytail: solo sin plazo propio, si el registro de `observar` muestra vueltas lentas correrlo con plazo como hace bin/bb-usable
+    # (leer cmdline toma mmap_lock y bajo estancamiento puede tardar).
     try:
         pids = [int(x) for x in (Path(cgroup) / "cgroup.procs").read_text(encoding="ascii").split()]
     except (OSError, ValueError):

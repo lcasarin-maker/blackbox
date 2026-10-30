@@ -397,7 +397,7 @@ def _psi_full_avg10() -> float:
     return float(linea.split()[1].split("=")[1])
 
 
-@pytest.mark.mutates_real_source  # ponytail: carril serial, hasta identificar al emisor del SIGKILL ajeno; DEBT-TEST-ESCALON-REAL-MATADO-POR-OTRO-PROCESO-01
+@pytest.mark.mutates_real_source  # ponytail: carril serial solo mientras el emisor del SIGKILL ajeno siga sin identificar; cuando se identifique, aislarlo (DEBT-TEST-ESCALON-REAL-MATADO-POR-OTRO-PROCESO-01)
 @pytest.mark.skipif(shutil.which("systemd-run") is None, reason="sin systemd-run")
 def test_control_real_elige_y_mata_al_acaparador_y_no_al_senuelo_protegido(bbu, tmp_path, monkeypatch):
     """Selecciona sobre el cgroup REAL y mata de verdad, sin estresar la maquina.
