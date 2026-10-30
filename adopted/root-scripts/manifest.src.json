@@ -49,6 +49,11 @@
     "descripcion": "Pone dmem.max (tope de memoria de GPU) al contenedor nemotron-server (40 GiB) y a user.slice (8 GiB); guarda los previos y vuelve atras si la lectura no coincide (FEATURE-LIMITADOR-INTEGRAR-LANZADOR-FALLA-CERRADO-01)",
     "timeout": 60
   },
+  "nvidia-bug-report": {
+    "file": "nvidia-bug-report.sh",
+    "descripcion": "Corre nvidia-bug-report.sh y deja /var/lib/blackbox/nvidia-bug-report.log.gz (0644) para la carpeta de incidente del reloj atascado; NVIDIA lo pide antes de quitar la corriente (FEATURE-RELOJ-CAPTURA-DE-INCIDENTE-ANTES-DE-QUITAR-AC-01)",
+    "timeout": 600
+  },
   "dmem-tope-quitar": {
     "file": "dmem-tope-quitar.sh",
     "descripcion": "Devuelve dmem.max del motor y de user.slice a los valores previos guardados por dmem-tope-aplicar",
