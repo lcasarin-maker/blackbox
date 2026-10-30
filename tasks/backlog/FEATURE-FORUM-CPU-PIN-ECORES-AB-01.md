@@ -39,3 +39,11 @@ No cambiar la afinidad de vLLM en produccion ni el unit del reloj hasta que el A
 ## Limites
 
 Un usuario, una carga, un motor (tensorfold, no vLLM); el propio autor no midio vLLM. El mapeo zona-a-nucleo es desconocido (las zonas `acpitz` no tienen etiqueta; ver DEBT-RELOJ-VERIFICADOR-ETIQUETAS-DE-SENSORES-INCOMPLETAS-01). Un resultado nulo es valido y cierra la ficha como evidencia negativa.
+
+## Avance 2026-10-30
+
+El verificador del `close_check` existe: `tools/verify_cpu_pin_ab.py` (tests: `tests/test_verify_cpu_pin_ab.py`, fila nueva en `SPEC.md`). Antes el comando salia rc=1 con `No module named tools.verify_cpu_pin_ab` (instrumento caido); ahora sale rc=2 con `could_not_run: 1` mientras falte evidencia.
+
+Contrato: `verify(evidence_dir) -> dict` con `status` (`pass` / `fail` / `unknown`), `fail`, `could_not_run`, `reason`; `main()` sale 0 en pass, 1 en fail (evidencia contradictoria), 2 en unknown (falta o incompleta). Lee `<dir>/ab.json`; el esquema esta en el docstring del modulo. Exige los tres brazos (`unpinned`, `pin_a725` a 0-4,10-14, `pin_x925` a 5-9,15-19 como control negativo), >= 2 repeticiones por brazo de >= 1800 s con la GPU bajo carga, las 7 zonas `acpitz`, clocks efectivos, decode/prefill, potencia, `clocks_event_reasons`, mismo cap y misma tupla de workload en todas las corridas, readback de `taskset -p`, `midr_el1` de los dos conjuntos y rollback a 0-19 leido de vuelta. Si el control X925 tambien enfria, `fail`: el instrumento no discrimina. Un resultado nulo del pin A725 es valido y pasa con `effect: "null"`.
+
+El A/B real sigue pendiente y la ficha sigue `open` en `backlog/`: exige corridas de >= 30 min por brazo con carga en la GPU y repeticion, es decir hardware y tiempo que ningun agente produjo. No se capturo ninguna evidencia real; el verificador solo juzga lo que alguien le entregue (el origen de la captura no se autentica).
