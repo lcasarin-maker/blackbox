@@ -64,6 +64,10 @@ colapsos con dato; sobre 1168 admisiones reales de suite habria negado 10, una d
 (2026-10-21 16:36:27). Sobre la suite del 2026-10-16 no hay veredicto: la serie de ese dia no trae anon ni shmem.
 Por ese ruido arranca en `off` y se decide con el registro de `observar`.
 
+Mapa forense (FEATURE-MAPA-DE-MEMORIA-FORENSE-AL-ACTUAR-01): la fila de un `congelar` ejecutado y la de un
+`habria_negado` con su medicion llevan `mapa_memoria` (`tools/mapa_memoria.py`, unidades de app.slice con clase, rango,
+memory.current, anon/file/shmem, swap y dmem). Se toma con la accion ya decidida y hecha; ninguna otra fila cambia.
+
 Lo unico que el demonio hace fuera de `actuar` es deshacer lo propio: descongela los scopes bb-portero-* que dejo
 congelados (lista app.slice, nada mas). Sin eso, pasar a `off` con una suite congelada la dejaria asi para siempre.
 
@@ -94,9 +98,10 @@ from pathlib import Path
 from typing import Any, Callable, Iterable
 
 try:
-    from tools import interruptores
+    from tools import interruptores, mapa_memoria
 except ImportError:  # como script de `bb portero` (tools/ en sys.path, no la raiz del repo)
     import interruptores
+    import mapa_memoria
 
 NOMBRE = "portero"  # su clave en interruptores.json
 NOMBRE_IO = "portero_io"  # clave del tope de disco (io.max), opt-in: ausente o ilegible vale `off`
@@ -1104,6 +1109,20 @@ def _adopta_y_congela(a: Arbol, ac: Accion, fx: Efectos) -> dict[str, Any]:
     return ev
 
 
+def mapa_al_actuar(fx: Efectos, obligatoria: Path | None) -> dict[str, Any]:
+    """Mapa forense de las unidades de app.slice (tools/mapa_memoria.py) al congelar o negar. Se pide con la decision
+    ya tomada y ejecutada; nunca lanza: un fallo deja NOT_COLLECTED en la fila y nada mas."""
+    try:
+        return mapa_memoria.captura(mapa_memoria.unidades_de(cgroup_app(raiz=fx.cg_raiz)), mapa_memoria.lee_clases(),
+                                    [obligatoria] if obligatoria is not None else ())
+    except Exception as exc:  # forense puro: no puede cambiar lo que el portero hizo ni tumbar al demonio
+        return {"estado": "NOT_COLLECTED", "motivo": f"{type(exc).__name__}: {exc}"}
+
+
+def _cg_arbol(fx: Efectos, a: Arbol | None) -> Path | None:
+    return fx.cg_raiz / a.cgroup.lstrip("/") if a is not None and a.cgroup else None
+
+
 def _habria(ac: Accion, modo: str) -> dict[str, Any]:
     """Fuera de `actuar`: el modo, y la accion con efecto renombrada `habria_<accion>` (no se ejecuta nada)."""
     if modo == "actuar":
@@ -1147,6 +1166,8 @@ def aplica(
         if ac.raiz is not None:
             ev["origen"] = origen(ac.raiz)
         ev["medicion"] = _medicion(estado)
+        if ev["accion"] == "congelar" and a is not None and not a.virtual:  # congelo (o lo intento) de verdad
+            ev["mapa_memoria"] = mapa_al_actuar(fx, cgroup_app(raiz=cg_raiz) / ev["unidad"] if ev.get("unidad") else None)
         eventos.append(ev)
         _registra(ev, log)
         neg = habria_negado(ac, estado)
@@ -1154,6 +1175,8 @@ def aplica(
         if neg is not None and ultimo.get((ac.raiz, "habria_negado")) != clase_neg:
             ultimo[(ac.raiz, "habria_negado")] = clase_neg
             neg["medicion"] = ev["medicion"]
+            if "necesario_kb" in neg:  # una negativa medida; la fila NOT_COLLECTED no es una accion
+                neg["mapa_memoria"] = mapa_al_actuar(fx, _cg_arbol(fx, a))
             eventos.append(neg)
             _registra(neg, log)
     if arboles:  # sin lectura de /proc (lista vacia) no se sabe que murio: se conserva la memoria
@@ -1379,7 +1402,8 @@ def turno(pid: int, clase: str, fuente: Fuente = _fuente_real, espera: Callable[
                        "medicion": _medicion(estado), **({"modo": modo} if modo != "actuar" else {})}, log)
             neg = habria_negado(mia, estado)
             if neg is not None:
-                _registra({**neg, "medicion": _medicion(estado)}, log)
+                mapa = {"mapa_memoria": mapa_al_actuar(fx, None)} if "necesario_kb" in neg else {}
+                _registra({**neg, "medicion": _medicion(estado), **mapa}, log)
             return mia
         motivo = mia.motivo if mia else "sin decision para esta peticion"
         if modo != "actuar":
