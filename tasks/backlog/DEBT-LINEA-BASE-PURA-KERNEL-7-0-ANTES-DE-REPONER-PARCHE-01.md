@@ -8,7 +8,7 @@ severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-28
-close_check: {"cmd": "f=tasks/evidence/DEBT-LINEA-BASE-PURA-KERNEL-7-0-ANTES-DE-REPONER-PARCHE-01/estado-puro.txt; test -s $f && grep -q '^kernel=7.0.0-1019-nvidia$' $f && grep -q '^dmem_region_nvidia=0$' $f && grep -q '^ota_meta=26.09.3$' $f", "expect": "exit_zero", "porque": "Especificacion pendiente: el archivo no existe hoy, asi que falla. Pasa solo con una foto tomada tras reiniciar en el kernel 7.0 con el meta 26.09.3 y SIN region dmem de nvidia (modulo de fabrica)."}
+close_check: {"cmd": "f=tasks/evidence/DEBT-LINEA-BASE-PURA-KERNEL-7-0-ANTES-DE-REPONER-PARCHE-01/estado-puro.txt; test -s $f && grep -qE '^kernel=7\.0\.0-[0-9]+-nvidia$' $f && grep -q '^dmem_region_nvidia=0$' $f && grep -q '^ota_meta=26.09.3$' $f", "expect": "exit_zero", "porque": "Especificacion pendiente: el archivo no existe hoy, asi que falla. Pasa solo con una foto tomada tras reiniciar en el kernel 7.0 con el meta 26.09.3 y SIN region dmem de nvidia (modulo de fabrica)."}
 ---
 
 ## Decision de Luis 2026-10-28
@@ -26,13 +26,20 @@ Partir de un estado puro y lo mas nuevo, medir, y despues reponer lo desarrollad
   el menu de GRUB (5 s) permite arrancar el 6.17 con la contabilidad dmem.
 - Simulacion `apt-get -s`: soltar el hold instala solo `dgx-spark-ota-update-meta` 26.09.3 y `nvidia-spark-cloud-init`; ningun kernel ni driver.
 
+## Cambio 2026-10-30: el kernel 7.0 instalado es el 1024, no el 1019
+
+A las 14:28 un `apt upgrade` instalo `linux-image-7.0.0-1024-nvidia` (con sus modulos `linux-modules-nvidia-580-open-7.0.0-1024-nvidia` de fabrica) y a las 14:31 aptdaemon
+quito el 1019 (`/var/log/apt/history.log`). En `/boot` ya no existe `vmlinuz-7.0.0-1019-nvidia`. Consecuencias: el paso 3 de la Fase 1 nombra ahora el 1024; el
+`close_check` acepta cualquier `7.0.0-<n>-nvidia` (con el 1019 fijo nunca pasaba); el parche compilado para el 1019 (`construidos/580.178.04-7.0.0-1019-nvidia/`) NO
+sirve para el 1024 y la Fase 2 empieza por recompilarlo contra las cabeceras del 1024 (`linux-headers-7.0.0-1024-nvidia` ya instaladas).
+
 ## Fase 1: linea base pura (un reinicio; lo corre Luis con sudo)
 
 1. `sudo nvidia-spark-ota-check summary` (lo pide DECISIONS.md 2026-10-13 antes de quitar el hold) y pegar la salida.
 2. Con apt, no con el DGX Dashboard: `sudo apt-mark unhold dgx-spark-ota-update-meta && sudo apt update && sudo apt full-upgrade && sudo apt-mark hold dgx-spark-ota-update-meta`
 3. Respaldar y fijar el kernel 7.0: `sudo cp -a /etc/default/grub /etc/default/grub.bb-antes-7.0`; cambiar `GRUB_DEFAULT` a
-   `"Advanced options for DGX OS GNU/Linux>DGX OS GNU/Linux, with Linux 7.0.0-1019-nvidia"`; `sudo update-grub`;
-   comprobar con `sudo grep -c "with Linux 7.0.0-1019-nvidia'" /boot/grub/grub.cfg` (esperado 1 o mas).
+   `"Advanced options for DGX OS GNU/Linux>DGX OS GNU/Linux, with Linux 7.0.0-1024-nvidia"`; `sudo update-grub`;
+   comprobar con `sudo grep -c "with Linux 7.0.0-1024-nvidia'" /boot/grub/grub.cfg` (esperado 1 o mas).
 4. `sudo systemctl reboot` cuando no haya trabajo abierto.
 5. Despues del arranque Claude toma la foto PURA (bloque de abajo), la compara con la ANTES y corre `bb reloj --prueba`.
    Retroceso si la pantalla o el sistema fallan: elegir el 6.17 en GRUB, o por SSH restaurar `/etc/default/grub.bb-antes-7.0` y `sudo update-grub`.
@@ -52,7 +59,7 @@ cat /etc/dgx-release; nvidia-smi -q -d CLOCK,POWER,TEMPERATURE,PERFORMANCE; tail
 ## Fase 2: reponer lo desarrollado (segundo reinicio)
 
 Con el 7.0 ya en marcha, `uname -r` coincide y los scripts usan el `sign-file` correcto:
-`sudo bash tools/dmem_modulo.sh firma ~/.local/share/blackbox/dmem/construidos/580.178.04-7.0.0-1019-nvidia && sudo bash tools/dmem_modulo.sh instala`,
+`sudo bash tools/dmem_modulo.sh firma ~/.local/share/blackbox/dmem/construidos/580.178.04-7.0.0-<kernel>-nvidia (recompilado para el 1024, ver Cambio 2026-10-30) && sudo bash tools/dmem_modulo.sh instala`,
 reiniciar con la consola a mano, `sudo bash tools/dmem_modulo.sh verifica` y la foto con `ETIQUETA=parchado`. El 7.0 con el modulo parchado
 NO esta probado (solo compilado): `bb-dmem-guardia` retrocede solo si la GPU no responde 120 s tras el arranque.
 
