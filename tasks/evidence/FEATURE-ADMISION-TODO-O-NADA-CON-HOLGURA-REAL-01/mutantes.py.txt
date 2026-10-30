@@ -1,0 +1,43 @@
+"""Control negativo de tests/test_admision_holgura_real.py: tres mutantes de la puerta, cada uno debe hacer fallar
+al menos una prueba. Uso (desde la raiz del repo): python3 tasks/evidence/FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01/mutantes.py.txt"""
+
+import pathlib
+import sys
+import tempfile
+from dataclasses import replace
+
+sys.path.insert(0, ".")
+t = __import__("tests.test_admision_holgura_real", fromlist=["x"])
+po = __import__("tools.portero", fromlist=["x"])
+
+orig_niega, orig_clase = po.admision_niega, po._decide_clase
+
+
+def corre(nombre, f, *a):
+    try:
+        f(*a)
+        print(f"{nombre}: PASA")
+    except AssertionError as e:
+        print(f"{nombre}: FALLA ({type(e).__name__})")
+
+
+print("== sin mutar")
+corre("test_a", t.test_a_ventana_21_oct_la_puerta_nueva_niega_la_suite_que_la_actual_admitio)
+corre("test_c off", t.test_c_con_la_puerta_actual_la_ventana_21_oct_admite_la_suite, "off")
+with tempfile.TemporaryDirectory() as d:
+    corre("test_b", t.test_b_ventana_sana_la_puerta_nueva_admite, pathlib.Path(d))
+print("== mutante 1: la puerta nueva nunca niega (admision_niega -> None)")
+po.admision_niega = lambda e, c: None
+corre("test_a", t.test_a_ventana_21_oct_la_puerta_nueva_niega_la_suite_que_la_actual_admitio)
+corre("test_a congelada", t.test_a_actuar_mantiene_congelada_la_suite_que_no_cabe)
+po.admision_niega = orig_niega
+print("== mutante 2: la puerta nueva niega en todo modo (ignora el interruptor)")
+po._decide_clase = lambda arboles, estado, nombre, c, puerta: orig_clase(arboles, replace(estado, admision="actuar"), nombre, c, puerta)
+corre("test_c off", t.test_c_con_la_puerta_actual_la_ventana_21_oct_admite_la_suite, "off")
+corre("test_c observar", t.test_c_con_la_puerta_actual_la_ventana_21_oct_admite_la_suite, "observar")
+po._decide_clase = orig_clase
+print("== mutante 3: la puerta nueva niega siempre, quepa o no")
+po.admision_niega = lambda e, c: (c.memory_max_kb, 0)
+with tempfile.TemporaryDirectory() as d:
+    corre("test_b", t.test_b_ventana_sana_la_puerta_nueva_admite, pathlib.Path(d))
+po.admision_niega = orig_niega

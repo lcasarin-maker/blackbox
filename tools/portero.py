@@ -46,6 +46,24 @@ dos sitios donde nace un scope: la adopcion del demonio (`crea_scope`) y `bb por
 Sin un disco derivable sin ambiguedad (tmpfs, overlay, dm/md/loop, nodo /dev que no cuadra) no se pone tope y la fila
 dice `NOT_COLLECTED` con el motivo: un tope sobre el dispositivo equivocado es peor que ninguno.
 
+Interruptor `portero_admision` (FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01; ausente, ilegible o desconocido vale
+`off`). Admision de todo o nada, la idea de la carga de modelos de Athena: una clase entra solo si su tope ENTERO
+(`Clase.memory_max_kb`) cabe en lo que app.slice tiene fuera de la memoria que no se recupera sin matar a nadie
+(`anon + shmem` de su memory.stat); si no, se niega y la negativa dice los dos numeros, lo necesario y lo disponible.
+
+* `off` (por defecto): no lee nada nuevo y ni `decide` ni las filas cambian.
+* `observar`: decide igual que `off`; cuando el portero admitiria o descongelaria algo que no cabe, anade una fila
+  `habria_negado` con `necesario_kb` y `disponible_kb` (una por cambio de motivo). Sin memory.stat legible la fila dice
+  `NOT_COLLECTED` en vez de callar.
+* `actuar`: la negativa entra en `decide` como motivo de puerta: la suite que no cabe se congela o sigue congelada.
+  Sin medicion no niega (fallo cerrado hacia el comportamiento de antes).
+
+Medido en samples/*.jsonl (tasks/evidence/FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01/medicion.txt): con la clase
+`suite` (20 GiB) negaria el 0.93 % del tiempo (168 de 18 066 muestras sanas, 157 sin colapso despues) y vio 2 de 6
+colapsos con dato; sobre 1168 admisiones reales de suite habria negado 10, una de ellas la unica seguida de colapso
+(2026-10-21 16:36:27). Sobre la suite del 2026-10-16 no hay veredicto: la serie de ese dia no trae anon ni shmem.
+Por ese ruido arranca en `off` y se decide con el registro de `observar`.
+
 Lo unico que el demonio hace fuera de `actuar` es deshacer lo propio: descongela los scopes bb-portero-* que dejo
 congelados (lista app.slice, nada mas). Sin eso, pasar a `off` con una suite congelada la dejaria asi para siempre.
 
@@ -82,6 +100,7 @@ except ImportError:  # como script de `bb portero` (tools/ en sys.path, no la ra
 
 NOMBRE = "portero"  # su clave en interruptores.json
 NOMBRE_IO = "portero_io"  # clave del tope de disco (io.max), opt-in: ausente o ilegible vale `off`
+NOMBRE_ADMISION = "portero_admision"  # clave de la admision de todo o nada: ausente o ilegible vale `off`
 KIB = 1024
 GIB_KB = 1024 * 1024  # 1 GiB expresado en kB
 
@@ -218,6 +237,8 @@ class Estado:
     uso_app_kb: int | None
     alternos: tuple[SliceAlterno, ...] = ()
     consumo_con_tope_propio_kb: int = 0  # memory.current de los scopes de app.slice con tope propio (jobs de Atlas, bb cap)
+    admision: str = "off"  # interruptor `portero_admision`
+    no_recuperable_app_kb: int | None = None  # anon + shmem de app.slice (memory.stat); None = NOT_COLLECTED
 
     @property
     def holgura_app_kb(self) -> int | None:
@@ -366,6 +387,20 @@ def _puerta(e: Estado) -> str:
     return ""
 
 
+def admision_niega(e: Estado, c: Clase) -> tuple[int, int] | None:
+    """(necesario_kb, disponible_kb) si el tope entero de la clase no cabe fuera de anon+shmem de app.slice; None si
+    cabe o si no se midio (sin medicion no se niega)."""
+    if e.tope_app_kb is None or e.no_recuperable_app_kb is None:
+        return None
+    disponible = e.tope_app_kb - e.no_recuperable_app_kb
+    return (c.memory_max_kb, disponible) if disponible < c.memory_max_kb else None
+
+
+def motivo_admision(necesario_kb: int, disponible_kb: int) -> str:
+    return (f"holgura real de app.slice (todo o nada): la clase necesita {necesario_kb} kB y fuera de anon+shmem "
+            f"hay {disponible_kb} kB")
+
+
 def _alterno_que_cabe(e: Estado, c: Clase) -> SliceAlterno | None:
     for s in e.alternos:
         if s.comprometido_kb + c.memory_max_kb <= s.tope_kb:
@@ -409,6 +444,8 @@ def _decide_clase(arboles: list[Arbol], estado: Estado, nombre: str, c: Clase, p
     comprometido = estado.consumo_con_tope_propio_kb + corriendo * c.memory_max_kb
     for a in _candidatos(propios, c, nombre, acciones):
         motivo = puerta
+        if not motivo and estado.admision == "actuar" and (niega := admision_niega(estado, c)):
+            motivo = motivo_admision(*niega)
         if not motivo and comprometido + c.memory_max_kb > estado.tope_app_kb:
             motivo = (f"presupuesto: {comprometido} kB comprometidos (scopes con tope propio + admitidos) + "
                       f"{c.memory_max_kb} kB > tope de app.slice {estado.tope_app_kb} kB")
@@ -492,6 +529,16 @@ def _inactive_file_bytes(d: Path) -> int:
     return 0
 
 
+def lee_no_recuperable_kb(d: Path) -> int | None:
+    """anon + shmem del memory.stat de `d` en kB: lo que no se recupera soltando cache. None si falta alguno."""
+    campos: dict[str, int] = {}
+    for linea in (_lee(d / "memory.stat") or "").splitlines():
+        campo, _, valor = linea.partition(" ")
+        if campo in ("anon", "shmem") and valor.strip().isdigit():
+            campos[campo] = int(valor)
+    return (campos["anon"] + campos["shmem"]) // KIB if len(campos) == 2 else None
+
+
 def tope_propio_kb(cg: str, cg_raiz: Path = CGROUP_RAIZ) -> int | None:
     """El memory.max finito mas estricto entre el cgroup del proceso y app.slice (exclusivo). None = sin tope propio."""
     partes = cg.strip("/").split("/")
@@ -563,8 +610,10 @@ def lee_estado() -> Estado:
     consumo = consumo_con_tope_propio_kb(app)
     if consumo is None:
         tope = None  # sin saber lo comprometido fuera de la cola no se puede cuadrar el presupuesto: NOT_COLLECTED
+    admision = interruptores.modo(NOMBRE_ADMISION)
     return Estado(psi_full_avg10=lee_psi(), freno_termico=freno_termico(), tope_app_kb=tope, uso_app_kb=uso,
-                  consumo_con_tope_propio_kb=consumo or 0)
+                  consumo_con_tope_propio_kb=consumo or 0, admision=admision,
+                  no_recuperable_app_kb=lee_no_recuperable_kb(app) if admision != "off" else None)
 
 
 @dataclass
@@ -985,13 +1034,34 @@ def _medicion(estado: Estado) -> dict[str, Any]:
     def v(x: Any) -> Any:
         return "NOT_COLLECTED" if x is None else x
 
-    return {
+    m = {
         "psi_full_avg10": v(estado.psi_full_avg10),
         "freno_termico": v(estado.freno_termico),
         "tope_app_kb": v(estado.tope_app_kb),
         "uso_app_kb": v(estado.uso_app_kb),
         "consumo_con_tope_propio_kb": estado.consumo_con_tope_propio_kb,
     }
+    if estado.admision != "off":  # en `off` la fila queda byte a byte como antes del interruptor
+        m.update(admision=estado.admision, no_recuperable_app_kb=v(estado.no_recuperable_app_kb))
+    return m
+
+
+def habria_negado(ac: Accion, estado: Estado, clases: dict[str, Clase] | None = None) -> dict[str, Any] | None:
+    """Fila `habria_negado` de `portero_admision` en `observar` para una admision que no cabe; None si no aplica.
+
+    Solo admitir/descongelar en app.slice (mover va a otro slice con su propio presupuesto). Sin la medicion de
+    anon+shmem la fila dice NOT_COLLECTED: un `observar` que calla cuando no puede medir no distingue "cabe" de "ciego"."""
+    c = (CLASES if clases is None else clases).get(ac.clase or "")
+    if estado.admision != "observar" or c is None or ac.tipo not in ("admitir", "descongelar"):
+        return None
+    base = {"accion": "habria_negado", "interruptor": NOMBRE_ADMISION, "modo": "observar", "raiz": ac.raiz,
+            "clase": ac.clase, "decidida": ac.tipo}
+    if estado.tope_app_kb is None or estado.no_recuperable_app_kb is None:
+        return {**base, "motivo": "NOT_COLLECTED: anon+shmem de app.slice ilegible; sin medir no se sabe si cabe"}
+    niega = admision_niega(estado, c)
+    if niega is None:
+        return None
+    return {**base, "motivo": motivo_admision(*niega), "necesario_kb": niega[0], "disponible_kb": niega[1]}
 
 
 @dataclass(frozen=True)
@@ -1079,6 +1149,13 @@ def aplica(
         ev["medicion"] = _medicion(estado)
         eventos.append(ev)
         _registra(ev, log)
+        neg = habria_negado(ac, estado)
+        clase_neg = neg["motivo"].split(":", 1)[0] if neg else ""  # sin los kB, que cambian en cada vuelta
+        if neg is not None and ultimo.get((ac.raiz, "habria_negado")) != clase_neg:
+            ultimo[(ac.raiz, "habria_negado")] = clase_neg
+            neg["medicion"] = ev["medicion"]
+            eventos.append(neg)
+            _registra(neg, log)
     if arboles:  # sin lectura de /proc (lista vacia) no se sabe que murio: se conserva la memoria
         for clave in [c for c in ultimo if c[0] is not None and c[0] not in por_raiz]:
             del ultimo[clave]  # un lote de conversiones de ~1 s dejaba una clave por cada una, sin cota
@@ -1300,6 +1377,9 @@ def turno(pid: int, clase: str, fuente: Fuente = _fuente_real, espera: Callable[
             _escribe_peticion(ruta, {**peticion, "concedido": True})
             _registra({"accion": "turno", "raiz": pid, "clase": clase, "concedido": mia.tipo, "motivo": mia.motivo,
                        "medicion": _medicion(estado), **({"modo": modo} if modo != "actuar" else {})}, log)
+            neg = habria_negado(mia, estado)
+            if neg is not None:
+                _registra({**neg, "medicion": _medicion(estado)}, log)
             return mia
         motivo = mia.motivo if mia else "sin decision para esta peticion"
         if modo != "actuar":
