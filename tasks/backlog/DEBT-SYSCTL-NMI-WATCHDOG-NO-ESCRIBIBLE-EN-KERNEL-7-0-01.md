@@ -29,6 +29,6 @@ es solo que la escritura devuelve error y deja `systemd-sysctl` en `failed`. `hu
 
 1. HECHO en el repo: la copia adoptada marca la linea con `-` (systemd ignora el fallo de esa escritura, `man sysctl.d`) y explica el motivo en un comentario.
 2. Instalar la copia en `/etc/sysctl.d/` (lo hace Luis con sudo, sin reiniciar) y reiniciar la unidad; `close_check` pasa cuando la unidad queda `active`.
-3. Declarar en SPEC.md fila 320 que el bloqueo duro no tiene detector (hoy dice que el kernel entra en panic ante hardlockup, y es falso).
+3. Declarar en SPEC.md, con una fila NUEVA (las existentes no se editan), que el bloqueo duro no tiene detector: la fila de `99-freeze-panic` dice que el kernel entra en panic ante hardlockup, y es falso.
 4. Opcional y aparte (ficha nueva si se quiere): probar `irqchip.gicv3_pseudo_nmi=1` en la linea de comandos para tener un detector real. Cambia el manejo de interrupciones
    de toda la maquina y pide un reinicio propio; no se mezcla con el reinicio de la Fase 2.
