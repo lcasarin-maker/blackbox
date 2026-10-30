@@ -379,17 +379,17 @@ CGROUP_ROOT = Path("/sys/fs/cgroup")
 PROC_ROOT = Path("/proc")
 
 
-def _cargar_origen() -> tuple[Any, str | None]:
-    """tools/origen_proceso.py, cargado por ruta y sin tocar sys.path.
+def _cargar_origen(archivo: str = "origen_proceso.py", alias: str = "bb_usable_origen") -> tuple[Any, str | None]:
+    """tools/origen_proceso.py (o `archivo` de tools/), cargado por ruta y sin tocar sys.path.
 
     Un error aqui NO puede tumbar este demonio (un bb-usable que no arranca es
     un reinicio por FailureAction), asi que se guarda el error y el escalon lo
     declara en cada evento: sin modulo, el escalon sigue decidiendo y matando,
-    y solo el origen queda NOT_COLLECTED.
+    y solo el origen (o el mapa) queda NOT_COLLECTED.
     """
-    ruta = Path(__file__).resolve().parent.parent / "tools" / "origen_proceso.py"
+    ruta = Path(__file__).resolve().parent.parent / "tools" / archivo
     try:
-        spec = importlib.util.spec_from_file_location("bb_usable_origen", ruta)
+        spec = importlib.util.spec_from_file_location(alias, ruta)
         if spec is None or spec.loader is None:
             raise ImportError(f"sin cargador para {ruta}")
         mod = importlib.util.module_from_spec(spec)
@@ -400,6 +400,8 @@ def _cargar_origen() -> tuple[Any, str | None]:
 
 
 _ORIGEN, _ORIGEN_ERROR = _cargar_origen()
+# Mapa forense de memoria por unidad (FEATURE-MAPA-DE-MEMORIA-FORENSE-AL-ACTUAR-01), con la misma carga tolerante.
+_MAPA, _MAPA_ERROR = _cargar_origen("mapa_memoria.py", "bb_usable_mapa_memoria")
 
 
 # NamedTuple y no dataclass: un dataclass con `from __future__ import annotations`
@@ -813,6 +815,26 @@ def paso_confinado(confinadas: int) -> tuple[str, int]:
         return "retiene", 0
 
 
+def mapa_al_matar(slices: tuple[SliceApp, ...] | None, objetivo: Proc) -> dict[str, Any]:
+    """Mapa forense (tools/mapa_memoria.py) de las unidades de cada app.slice, con el scope del objetivo siempre
+    dentro, tomado con la muerte ya decidida y antes de la senal. Solo lee cgroupfs. Nunca lanza: un fallo deja
+    NOT_COLLECTED en el evento y el escalon mata igual (FEATURE-MAPA-DE-MEMORIA-FORENSE-AL-ACTUAR-01)."""
+    if _MAPA is None:
+        return {"estado": "NOT_COLLECTED", "motivo": f"modulo de mapa no cargado: {_MAPA_ERROR}"}
+    try:
+        rutas: list[Path] | None = []
+        for s in slices or ():
+            hijas = _MAPA.unidades_de(Path(s.ruta))
+            if hijas is None:
+                rutas = None
+                break
+            rutas.extend(hijas)
+        forzada = [Path(objetivo.slice_ruta) / objetivo.scope] if objetivo.scope and objetivo.slice_ruta else []
+        return _MAPA.captura(rutas, _MAPA.lee_clases(), forzada)
+    except Exception as exc:  # ver el encabezado del escalon: nada de esto puede impedir la muerte decidida
+        return {"estado": "NOT_COLLECTED", "motivo": f"{type(exc).__name__}: {exc}"}
+
+
 def _paso_escalon(psi: float | None, estado: EstadoEscalon, ahora: float,
                   salida: list[EstadoEscalon]) -> None:
     slices = leer_slices_app()
@@ -840,6 +862,7 @@ def _paso_escalon(psi: float | None, estado: EstadoEscalon, ahora: float,
                                                m.propio_pid, m.propio_pgid)
             evento["objetivo"] = d.objetivo._asdict()
             evento["en_grupo"], evento["grupo"] = en_grupo, por_que
+            evento["mapa_memoria"] = mapa_al_matar(slices, d.objetivo)
             evento["efecto"] = ejecutar_muerte(d.objetivo, en_grupo)
             log(f"[bb-usable] ESCALON: {d.motivo} -- pid={d.objetivo.pid} "
                 f"comm={d.objetivo.comm} rss={d.objetivo.rss_kb / 1048576:.1f} GiB, "

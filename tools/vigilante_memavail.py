@@ -6,7 +6,9 @@ instante, la unidad que DETENDRIA y su origen, sin tocar nada, para medir sus fa
 En `actuar` detiene (`systemctl --user stop`) UNA sola unidad: entre las unidades del gestor de usuario cuyo nombre
 casa con `ELEGIBLES`, la de MENOR rango (`data/rangos_memoria.json`) y, dentro de ese rango, la de mayor
 `memory.current`; si esa casa con `PROTEGIDAS`, no detiene nada (REFUSED). Antes de
-detenerla guarda el origen de sus procesos (`tools.origen_proceso.origen`, reusado).
+detenerla guarda el origen de sus procesos (`tools.origen_proceso.origen`, reusado). Cada fila que registra (en
+`observar` y en `actuar`) lleva `mapa_memoria` (`tools/mapa_memoria.py`): por unidad, clase, rango, memory.current,
+anon/file/shmem, swap y dmem de ese instante, tomado despues de decidir y antes de detener. Forense puro.
 
 Alcance, por construccion: solo el arbol cgroup `user@UID.service` (docker y el motor vLLM viven en
 system.slice y no se ven), y por defecto `ELEGIBLES` solo admite `bb-lab-*.scope` (scopes de laboratorio).
@@ -26,7 +28,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable, NamedTuple
 
-from tools import interruptores, origen_proceso
+from tools import interruptores, mapa_memoria, origen_proceso
 
 NOMBRE = "memavail"
 LINEA_GIB = 8.0
@@ -253,6 +255,15 @@ class Contexto(NamedTuple):
     detener: Callable[[str], dict[str, Any]] = detiene
 
 
+def mapa_de(unidades: list[Unidad] | None, culpable: str | None) -> dict[str, Any]:
+    """Mapa forense del instante (tools/mapa_memoria.py) sobre las mismas unidades que vio la decision. Nunca lanza."""
+    try:
+        return mapa_memoria.captura(None if unidades is None else [u.cgroup for u in unidades], RANGOS.clases,
+                                    [culpable] if culpable else ())
+    except Exception as exc:  # forense puro: no puede impedir la detencion
+        return {"estado": mapa_memoria.NOT_COLLECTED, "motivo": f"{type(exc).__name__}: {exc}"}
+
+
 def paso(modo_actual: str, meminfo: int | None, psi: float | None, directorio: Path | None = None,
          ctx: Contexto = Contexto()) -> dict | None:
     if modo_actual == "off":
@@ -260,8 +271,11 @@ def paso(modo_actual: str, meminfo: int | None, psi: float | None, directorio: P
     d = decide(meminfo, psi, ctx.linea_gib)
     if not d["dispara"]:
         return None
-    c = elige_culpable(ctx.unidades(), ctx.elegibles)
+    unidades = ctx.unidades()
+    c = elige_culpable(unidades, ctx.elegibles)
     ev: dict[str, Any] = {"modo": modo_actual, "habria_actuado": True, **d, "culpable": c}
+    # Despues de decidir y antes de detener: la unidad elegida aun existe en el mapa.
+    ev["mapa_memoria"] = mapa_de(unidades, c["unidad"]["cgroup"] if c["veredicto"] == "DETENER" else None)
     if c["veredicto"] == "DETENER":
         ev["origen"] = ctx.origen(c["unidad"]["cgroup"])
         if modo_actual == "actuar":
