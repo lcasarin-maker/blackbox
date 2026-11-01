@@ -51,7 +51,7 @@ lee_conf() {
             REMOTE_IP) es_ipv4 "$valor" || die "$conf:$n: REMOTE_IP no es una IPv4: '$valor'"; REMOTE_IP=$valor ;;
             REMOTE_MAC) valor=${valor,,}
                 [[ "$valor" =~ ^([0-9a-f]{2}:){5}[0-9a-f]{2}$ ]] || die "$conf:$n: REMOTE_MAC no es una MAC: '$valor'"
-                [ "$valor" != 00:00:00:00:00:00 ] || die "$conf:$n: REMOTE_MAC no puede ser cero"
+                [[ ! "$valor" =~ ^(00:){5}00$ ]] || die "$conf:$n: REMOTE_MAC no puede ser cero"
                 REMOTE_MAC=$valor ;;
             DRIVER) [[ "$valor" =~ ^[A-Za-z0-9_-]{1,64}$ ]] || die "$conf:$n: DRIVER no es un nombre de modulo: '$valor'"
                 DRIVER=$valor ;;

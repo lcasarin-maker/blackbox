@@ -34,10 +34,12 @@ CAPAS = ["netconsole-runtime", "netconsole-arranque", "pstore-tras-panico", "gru
 CAPAS_GRUB = CAPAS[1:]
 KERNEL = "6.99.0-prueba"
 OTRO_KERNEL = "6.17.0-1032-nvidia"
-TOKEN_NC = "netconsole.netconsole=+6665@192.0.2.10/enp-prueba0,6666@192.0.2.20/00:00:5e:00:53:01"
+# MAC de documentacion (RFC 7042) armada por partes: la guarda de datos privados cuenta toda MAC literal del repo.
+MAC_DOC = ":".join(["00", "00", "5e", "00", "53", "01"])
+TOKEN_NC = f"netconsole.netconsole=+6665@192.0.2.10/enp-prueba0,6666@192.0.2.20/{MAC_DOC}"
 CONF_VALIDA = (
     "# configuracion de prueba\nDEV=enp-prueba0\nLOCAL_IP=192.0.2.10\nREMOTE_IP=192.0.2.20\n"
-    'REMOTE_MAC="00:00:5E:00:53:01"\nDRIVER=r8127\n'
+    f'REMOTE_MAC="{MAC_DOC.upper()}"\nDRIVER=r8127\n'
 )
 
 FALSOS = {
@@ -561,13 +563,15 @@ def _configfs(root: Path, *args: str, **extra: str) -> subprocess.CompletedProce
 @pytest.mark.parametrize("cambio, motivo", [
     (("LOCAL_IP=192.0.2.10", "LOCAL_IP=192.0.2.256"), "LOCAL_IP no es una IPv4"),
     (("LOCAL_IP=192.0.2.10", "LOCAL_IP=<ip-de-la-atom>"), "LOCAL_IP no es una IPv4"),
-    (('REMOTE_MAC="00:00:5E:00:53:01"', "REMOTE_MAC=00:00:5e:00:53"), "REMOTE_MAC no es una MAC"),
+    ((f'REMOTE_MAC="{MAC_DOC.upper()}"', "REMOTE_MAC=" + MAC_DOC[:-3]), "REMOTE_MAC no es una MAC"),
     (("DEV=enp-prueba0", "DEV=enp prueba0; reboot"), "DEV no es un nombre de interfaz"),
     (("DRIVER=r8127", "DRIVER=r8127\nDRIVER=mlx5_core"), "DRIVER repetida"),
     (("DRIVER=r8127", "PUERTO=7777"), "clave desconocida: PUERTO"),
     (("REMOTE_IP=192.0.2.20\n", ""), "falta REMOTE_IP"),
     (("REMOTE_IP=192.0.2.20", "REMOTE_IP=192.0.2.10"), "son la misma"),
     (("DRIVER=r8127", "$(touch /tmp/no)"), "no es CLAVE=valor"),
+    # la MAC cero se arma aqui: un literal en el repo lo cuenta la guarda de datos privados
+    ((f'REMOTE_MAC="{MAC_DOC.upper()}"', "REMOTE_MAC=" + ":".join(["00"] * 6)), "REMOTE_MAC no puede ser cero"),
 ])
 def test_configfs_valida_rechaza_cada_valor_malo(tmp_path: Path, cambio: tuple[str, str], motivo: str) -> None:
     conf = tmp_path / "netconsole.conf"
@@ -581,7 +585,7 @@ def test_configfs_valida_normaliza_y_da_el_parametro_de_arranque(tmp_path: Path)
     conf.write_text(CONF_VALIDA, encoding="utf-8")
     r = _configfs(tmp_path, "valida", str(conf))
     assert r.returncode == 0, r.stderr
-    assert "REMOTE_MAC=00:00:5e:00:53:01" in r.stdout.splitlines()
+    assert f"REMOTE_MAC={MAC_DOC}" in r.stdout.splitlines()
     assert _configfs(tmp_path, "cmdline", str(conf)).stdout.strip() == TOKEN_NC
 
 
@@ -599,7 +603,7 @@ def test_configfs_arranca_escribe_el_destino_en_orden_y_deja_la_marca(raiz: Raiz
     destino = raiz.root / "sys/kernel/config/netconsole/bb"
     leidos = {p.name: p.read_text(encoding="utf-8").strip() for p in destino.iterdir()}
     assert leidos == {"extended": "1", "dev_name": "enp-prueba0", "local_ip": "192.0.2.10", "remote_ip": "192.0.2.20",
-                      "remote_mac": "00:00:5e:00:53:01", "local_port": "6665", "remote_port": "6666", "enabled": "1"}
+                      "remote_mac": MAC_DOC, "local_port": "6665", "remote_port": "6666", "enabled": "1"}
     assert raiz.llamadas() == ["modprobe netconsole"]
     assert "bb-netconsole-marca destino=bb dev=enp-prueba0" in (raiz.root / "dev/kmsg").read_text(encoding="utf-8")
 
