@@ -15,17 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01.md", "expect": "exit_zero", "porque": "Cerrada por aplicabilidad (void_wontfix, decision de Luis 2026-10-13): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a un test por ficha que se retiro con la deprecacion."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/381228/64
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-QWEN-COLD-COMPILE-OOM-01.** En el primer arranque de Qwen3.8-Flash-Next FP8 con imagen oficial vLLM `qwen38-flash-next` y TP2 en dos Spark, un operador informa que el `torch.compile`/Inductor predeterminado agota memoria en ambos nodos, pierde SSH/ICMP y requiere power-cycle; eager con compilation mode 0 permite arrancar, más lento ([381228, post 64](https://forums.developer.nvidia.com/t/381228/64)). El relato no incluye versión exacta de kernel/driver/torch y los logs adjuntos no se han revisado. Probar cold-start con el stack exacto, medir UMA/PSI y estado remoto por rank, preservar log fuera del host y bloquear la segunda etapa si el canary ya pierde headroom. Eager es fallback solo tras A/B del mismo stack; `gpu_memory_utilization=0.82` reportado no es umbral universal.
-
-Fuentes: tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md.
 
 ## Criterio de cierre y control negativo
 
@@ -36,6 +36,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
 ## Evaluación de instrumentos 2026-10-03
 
 Reusa `tools/memory_profile.py`/`tools/atom_gpu_telemetry.py` para observación de memoria/PSI del host, pero no hay series por etapa/rank ni logs de compilación adjuntos de esta reproducción; tampoco se correlaciona pérdida de acceso remoto. Estado `deferred_lab`: cold-start del stack exacto con captura externa por nodo/rank, headroom y control eager en el mismo stack. No se compiló ni se provocó presión/OOM.

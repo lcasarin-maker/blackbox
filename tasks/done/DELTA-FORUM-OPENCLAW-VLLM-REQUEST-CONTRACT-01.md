@@ -15,17 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_openclaw_vllm_request_contract_01`, que sin captura real del sujeto no puede pasar; sin sujeto aqui no hay captura posible."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/360299
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-OPENCLAW-VLLM-REQUEST-CONTRACT-01.** En un DGX Spark con GPT-OSS-120B, OpenClaw devolvió 404 porque el nombre pedido no coincidía con el servido; `--served-model-name gpt-oss-120b` más el mismo ID del cliente corrigió esa fase. Después, una configuración OpenClaw con ventana declarada de 200K para GPT-OSS-120B generó `400 max_tokens ... got -17474`; la respuesta señala límite soportado de 131072 y recomendó no fijar un `maxTokens` estático de 8192 ([360299](https://forums.developer.nvidia.com/t/360299)). El autor reportó 200 OK tras el alias, y luego corrección de ventana/token config; no se auditó el adjunto ni el stack externo. Añadir a canary de compatibilidad un GET `/v1/models`, comparación de model ID servido/configurado, petición chat/completions de control que incluya function/tools si aplica y contexto declarado ≤límite de modelo. Rechazar config con presupuesto de generación calculado <1 antes de lanzar la sesión; almacenar solo códigos/metadata, nunca prompts. No convertir 131072 en límite universal: asociarlo al modelo/checkpoint. Cierre con tests negativos 404, contexto excedido y max_tokens negativo, más control que genera y llama herramienta correctamente.
-
-Fuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.
 
 ## Criterio de cierre y control negativo
 

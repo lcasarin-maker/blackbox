@@ -15,13 +15,18 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/FORUM-00-REALTEK-EEE-DIRECT-LINK.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m tools.verify_forum_finding --id FORUM-00-REALTEK-EEE-DIRECT-LINK --evidence tasks/evidence/FORUM-00-REALTEK-EEE-DIRECT-LINK`, el verificador de hallazgos de foro, que sin captura real del sujeto sale con could_not_run; sin sujeto aqui no hay captura posible."}
 ---
 
-## Fallo y mitigación reportados
+## Referencia pública
 
-En el hilo NVIDIA [354764, posts 1–13](https://forums.developer.nvidia.com/t/dgx-spark-ethernet-connection-unstable-after-november-2025-update-eee-energy-efficient-ethernet-workaround/354764), DGX Spark con DGX OS 7.2.3/OTA 7.3.1 (2025-11-30), kernel `6.14.0-1015-nvidia`, NetworkManager 1.46.0 y NIC Realtek `r8127` versión `11.014.00-NAPI` pierde o estanca el tráfico después de minutos en enlace Ethernet directo a Windows 11 con Intel I225-V. SSH/NVIDIA Sync caen, `r8127` registra link down/up y puede quedar IPv4 rota/IPv6 link-local; DHCP/static no cambia el caso. El autor observa EEE activo/inactivo y partner no reportado en los estados problemáticos. Dice que `sudo ethtool --set-eee enP7s7 eee off` detuvo el flapping y estabilizó Ethernet. Un usuario de Lenovo ThinkStation PGX confirma que el mismo cambio le resolvió una conexión inestable, pero no proporciona versiones.
+Hilos de los que salió esta ficha (URL pública):
 
-La atribución EEE no es universal: otro Spark en kernel `6.14.0-1013-nvidia`, mismo DGX OS/driver, conectado a un switch Netgear, muestra EEE activo y no tiene problema. La topología sin switch y el Intel I225-V son un caso límite plausible; el participante enlaza una nota de Intel sobre problemas EEE con I225-V. La evidencia apoya una prueba A/B acotada, no desactivar EEE globalmente.
+- https://forums.developer.nvidia.com/t/dgx-spark-ethernet-connection-unstable-after-november-2025-update-eee-energy-efficient-ethernet-workaround/354764
+- https://forums.developer.nvidia.com/t/ethernet-connection-to-dgx-spark-is-unstable/357212
+- https://forums.developer.nvidia.com/t/dgx-spark-network-issue/358212
+- https://forums.developer.nvidia.com/t/dgx-spark-does-not-automatically-reconnect-to-saved-wi-fi-network/358982
+- https://forums.developer.nvidia.com/t/382184
+- https://forums.developer.nvidia.com/t/issues-with-real-time-sample-streaming-on-dgx-spark-rtl8127-nic/382184/1
 
-Los hilos [357212](https://forums.developer.nvidia.com/t/ethernet-connection-to-dgx-spark-is-unstable/357212) y [358212](https://forums.developer.nvidia.com/t/dgx-spark-network-issue/358212) describen pérdida de Ethernet/SSH/Sync o ausencia de IP con WLAN aún activa y remiten a este contexto, pero no añaden resultados de prueba. El hilo [358982](https://forums.developer.nvidia.com/t/dgx-spark-does-not-automatically-reconnect-to-saved-wi-fi-network/358982) trata recuperación Wi-Fi separada y su sugerencia NetworkManager no está validada.
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
 
 ## Cobertura y brecha
 
@@ -36,15 +41,6 @@ Mantener la mitigación opt-in y limitada al NIC/topología afectados. El ejempl
 ## Cierre
 
 Cerrar con reproducción y A/B repetido en la topología reportada o con resultado negativo que limite alcance; validación de una fuente primaria de Intel/NVIDIA para la combinación soportada; controles de switch/EEE y recuperación/rollback comprobados. Si `ethtool` o contadores del partner no están disponibles, declarar `could_not_run` sin inferir que EEE está desactivado o que el host está sano. Registrar toda la evidencia por modelo de NIC, kernel y versión exacta de driver.
-
-## Delta separado: deadlines de red tras actualización
-
-[382184](https://forums.developer.nvidia.com/t/382184) reporta OAI/USRP X310 en Spark FE, OS7.5/kernel6.17-1029/r8127: antes funcionaban20/40MHz, después hay late packets;10MHz aún funciona. Falta versión r8127 y respuesta ethtool pedida por NVIDIA; USB B210 es control de otro hardware. Separar deadline/loss de link flap y EEE. Reutilizar ethtool, drops/softnet stats y timestamps OAI, con carga/topología exactas y A/B de versión soportada o CX7; probar EEE solo si la evidencia lo relaciona. PREEMPT_RT o rollback driver exigen soporte OEM y recuperación. La detección existente de HARVEST354764 trata carga CPU de red; el delta preventivo EEE/deadlines permanece pendiente.
-
-
-## Índice de propuestas registradas del swarm NVIDIA categoría 721
-
-- **`FORUM-REALTIME-RTL8127-STREAM-DEADLINES`** — One user reports an OAI RAN workload with USRP X310 on RTL8127/r8127 stopped sustaining 20/40 MHz sample rates after DGX OS updates, producing late-packet warnings and eventual application failure; 10 MHz still works. Reported stack:… Fuente: [382184](https://forums.developer.nvidia.com/t/issues-with-real-time-sample-streaming-on-dgx-spark-rtl8127-nic/382184/1).
 
 ## Clasificación del impedimento — 2026-10-04
 

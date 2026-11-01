@@ -15,17 +15,18 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-CX7-POSTHOTPLUG-01.md", "expect": "exit_zero", "porque": "Cerrada por aplicabilidad (void_wontfix, decision de Luis 2026-10-13): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a un test por ficha que se retiro con la deprecacion."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/371031
+- https://forums.developer.nvidia.com/t/363193
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-CX7-POSTHOTPLUG-01.** En un clúster GB10 con CX7 firmware 28.45.4028, kernel 6.17.0-1018-nvidia, driver 580.159.03 y mlx5 26.01-1.0.0, el dueño reporta que tras desconectar/reconectar una NIC el all-gather NCCL cae de ~192 a ~25 Gbit/s; `mlxlink` conserva Active/200G y el dueño muestra AER y reenumeración PCIe, mientras reiniciar restaura throughput ([371031](https://forums.developer.nvidia.com/t/371031)). En [363193](https://forums.developer.nvidia.com/t/363193) hay relatos separados de root-port retraining/endpoint ausente y enlace/cable caído; FieldDiag PASS coexistió con NIC no disponible. El adjunto nvidia-bug-report.log.gz no fue leído y las causas siguen abiertas. Añadir un canary post-hotplug que compruebe tráfico NCCL/RDMA extremo a extremo, endpoint PCIe, AER y resultado/frescura de FieldDiag; el estado Active/200G o 27W aislados no cierran salud. Riesgo: reinicio o cambio de marcador altera el estado; registrar versión/cable/firmware y probar en nodo canary con rollback por OEM.
-
-Fuentes: tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md.
 
 ## Criterio de cierre y control negativo
 
