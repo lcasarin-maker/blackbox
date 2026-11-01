@@ -82,6 +82,34 @@ def test_ventana_no_concluyente_en_los_casos_dudosos(tmp_path: Path) -> None:
     assert r2 is not None and r2["voltaje_perdido"] is None
 
 
+def test_ventana_sin_voltaje_decide_por_potencia_y_lo_declara(tmp_path: Path) -> None:
+    """Lo que escribe el testigo con un Shelly Gen1: `voltaje_v: null`. Antes `None < 90.0` tumbaba el veredicto."""
+    ruta = tmp_path / "e.jsonl"
+    filas = [{"epoch": e, "ok": True, "voltaje_v": None, "potencia_w": w, "corriente_a": None, "tipo": "shelly1"}
+             for e, w in [(990, 31.0), (999, 30.0), (1001, 0.0), (1002, 0.0), (1003, 0.0)]]
+    ruta.write_text("".join(json.dumps(f) + "\n" for f in filas), encoding="utf-8")
+    r = m.ventana_de_corte(ruta, 1000, 255)
+    assert r is not None and r["voltaje_perdido"] is None and r["decidido_por"] == "potencia" and r["potencia_cayo"] is True
+    assert "sin voltaje medido" in r["motivo"]
+    # control: con 30 W despues (cuelgue energizado) la potencia no cayo, y tampoco se inventa un voltaje
+    ruta.write_text("".join(json.dumps({**f, "potencia_w": 30.0}) + "\n" for f in filas), encoding="utf-8")
+    r = m.ventana_de_corte(ruta, 1000, 255)
+    assert r is not None and r["voltaje_perdido"] is None and r["potencia_cayo"] is False
+    # control: el MISMO consumo con voltaje medido sigue dando APAGADO_INTERNO (voltaje_perdido False), no por potencia
+    con_v = [{**f, "voltaje_v": 120.0} for f in filas]
+    ruta.write_text("".join(json.dumps(f) + "\n" for f in con_v), encoding="utf-8")
+    r = m.ventana_de_corte(ruta, 1000, 255)
+    assert r is not None and r["voltaje_perdido"] is False and "decidido_por" not in r
+
+
+def test_ventana_mezcla_varias_series_por_hora(tmp_path: Path) -> None:
+    a, b = tmp_path / "medidor.jsonl", tmp_path / "testigo.jsonl"
+    _escribe(a, [(999, 120, 40)])
+    _escribe(b, [(1001, 120, 0.3), (1002, 121, 0.3), (1003, 120, 0.2)])
+    assert m.ventana_de_corte([b, a], 1000, 255)["voltaje_perdido"] is False  # el orden de los archivos no importa
+    assert m.ventana_de_corte([b, tmp_path / "no.jsonl"], 1000, 255)["voltaje_perdido"] is None  # sin "antes": no concluye
+
+
 def test_ventana_ignora_lineas_corruptas(tmp_path: Path) -> None:
     ruta = tmp_path / "e.jsonl"
     ruta.write_text("{roto\n" + json.dumps({"epoch": 999, "ok": True, "voltaje_v": 120, "potencia_w": 40}) + "\n[1,2]\n", encoding="utf-8")
